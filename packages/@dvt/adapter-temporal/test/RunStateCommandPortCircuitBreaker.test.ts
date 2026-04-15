@@ -105,4 +105,31 @@ describe('CircuitBreakingRunStateCommandPort', () => {
     expect(snapshot.failureCount).toBe(1);
     expect(snapshot.timeoutCount).toBe(1);
   });
+
+  it('anchors open cooldown to the failure timestamp, not operation start', async () => {
+    let now = 0;
+    const delegate = {
+      bootstrapRun: vi.fn(async () => ({ appended: [], deduped: [], lastSeq: 0 })),
+      appendTransitions: vi.fn(async () => {
+        now = 750;
+        throw new Error('db unavailable');
+      }),
+    };
+
+    const breaker = new CircuitBreakingRunStateCommandPort({
+      delegate,
+      failureThreshold: 1,
+      openDurationMs: 1000,
+      operationTimeoutMs: 100,
+      nowEpochMs: () => now,
+    });
+
+    await expect(breaker.appendTransitions('run-1', [])).rejects.toThrow(
+      /RUN_STATE_STORE_UNAVAILABLE:appendTransitions/
+    );
+
+    const snapshot = breaker.getSnapshot();
+    expect(snapshot.state).toBe('open');
+    expect(snapshot.openUntilEpochMs).toBe(1750);
+  });
 });

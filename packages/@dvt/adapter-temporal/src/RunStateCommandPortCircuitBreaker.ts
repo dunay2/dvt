@@ -69,9 +69,8 @@ export class CircuitBreakingRunStateCommandPort implements RunStateCommandPort {
     operationName: 'bootstrapRun' | 'appendTransitions',
     run: () => Promise<AppendResult>
   ): Promise<AppendResult> {
-    const nowEpochMs = this.nowEpochMs();
-
     if (this.state === 'open') {
+      const nowEpochMs = this.nowEpochMs();
       if (this.openUntilEpochMs !== null && nowEpochMs < this.openUntilEpochMs) {
         throw this.createCircuitOpenFailure(operationName);
       }
@@ -88,7 +87,7 @@ export class CircuitBreakingRunStateCommandPort implements RunStateCommandPort {
         this.resetCircuit();
         return result;
       } catch (error) {
-        this.registerFailure(nowEpochMs, operationName, error);
+        this.registerFailure(this.nowEpochMs(), operationName, error);
         throw this.createRetryableStoreFailure(operationName, error);
       } finally {
         this.halfOpenProbeInFlight = false;
@@ -104,7 +103,7 @@ export class CircuitBreakingRunStateCommandPort implements RunStateCommandPort {
       this.consecutiveFailures = 0;
       return result;
     } catch (error) {
-      this.registerFailure(nowEpochMs, operationName, error);
+      this.registerFailure(this.nowEpochMs(), operationName, error);
       throw this.createRetryableStoreFailure(operationName, error);
     }
   }
