@@ -28,6 +28,7 @@ import {
   type IProviderAdapter,
   type IRunEnrichmentService,
   type IRunHealthService,
+  type IRunExecutionContextBindingPolicy,
   type IRunExecutionContextResolver,
   type IRunAccessPolicy,
   type IRunStateStoreRead,
@@ -58,6 +59,7 @@ export interface EnginePersistenceConfig {
   intentStore: IStartRunIntentStore;
   planFetcher: IPlanFetcher;
   runExecutionContextResolver?: IRunExecutionContextResolver;
+  runExecutionContextBindingPolicy?: IRunExecutionContextBindingPolicy;
 }
 
 export interface EngineRuntimeConfig {
@@ -124,6 +126,12 @@ export function buildWorkflowEngine(config: EngineConfig): BuiltWorkflowEngineRu
       ...(config.persistence.runExecutionContextResolver !== undefined
         ? { runExecutionContextResolver: config.persistence.runExecutionContextResolver }
         : {}),
+      ...(config.persistence.runExecutionContextBindingPolicy !== undefined
+        ? {
+            runExecutionContextBindingPolicy:
+              config.persistence.runExecutionContextBindingPolicy,
+          }
+        : {}),
     }),
     stateStoreRead: config.persistence.stateStoreRead,
     stateStoreWrite: config.persistence.stateStoreWrite,
@@ -162,6 +170,12 @@ export function buildWorkflowEngine(config: EngineConfig): BuiltWorkflowEngineRu
     startRunApplicationService,
     ...(config.persistence.runExecutionContextResolver !== undefined
       ? { runExecutionContextResolver: config.persistence.runExecutionContextResolver }
+      : {}),
+    ...(config.persistence.runExecutionContextBindingPolicy !== undefined
+      ? {
+          runExecutionContextBindingPolicy:
+            config.persistence.runExecutionContextBindingPolicy,
+        }
       : {}),
   });
   const runHealthService = buildRunHealthService({

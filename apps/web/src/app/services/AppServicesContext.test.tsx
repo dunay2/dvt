@@ -4,9 +4,9 @@ import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import type { IRunsPort } from '../ports/runs';
 import type { CapabilitiesPort } from '../ports/capabilities';
 import type { IPlansPort } from '../ports/plans';
-import type { IRunsPort } from '../ports/runs';
 import type { IWorkspacePort } from '../ports/workspace';
 import { makeMockRunRef, makeRunContext } from '../testing/contractTestUtils';
 import {

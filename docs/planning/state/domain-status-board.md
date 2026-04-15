@@ -31,14 +31,16 @@ For full task-level tracking use the lane YAML registry linked from
 ### `API and Admission`
 
 - Current objective: keep the shipped preview-persist boundary truthful and use
-  it as the fixed ingress while the next runtime mode is sequenced behind the
-  same contract.
-- Active task IDs: `TF-C3`, `TF-C3-A`
+  it as the fixed ingress while `TF-C3` closes the remaining rollout and
+  acceptance prerequisites for the now-landed plugin-backed dbt runtime path.
+- Active task IDs: `TF-C3`, `TF-C3-E`
 - Roadmap lane affected: [API and Admission lane](../roadmap/roadmap-by-domain.md)
 - Primary blockers: the SQL-first preview-persist boundary is now closed in
-  code and planning, so the remaining blockers are phase-2 dbt executor
-  expansion under `TF-C3` and the broader runtime-boundary hardening tracked in
-  `WE-HX`.
+  code and planning. `TF-C3` now includes shared artifact-backed reader
+  convergence, a standalone `apps/temporal-worker` composition root, and an
+  adapter-owned DBT CLI host behind `DbtPluginRunner`, so the remaining
+  blockers are rollout/runbook acceptance and environment proof for that worker
+  path plus the broader runtime-boundary hardening tracked in `WE-HX`.
 
 ### `Planner and Contracts`
 

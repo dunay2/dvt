@@ -15,9 +15,11 @@ import {
   CONTRACTS_ERROR_CODE,
   CONTRACTS_ERROR_MESSAGE_KEY,
   ContractValidationError,
+  type ExecutionPlan,
   type EngineRunRef,
   type RunId,
 } from '@dvt/contracts';
+import { jcsCanonicalize, sha256Hex } from '@dvt/crypto';
 import { describe, expect, it, vi } from 'vitest';
 
 import {
@@ -30,12 +32,19 @@ import { WorkflowEngine } from '../../src/core/WorkflowEngine.js';
 import { RunHealthService } from '../../src/services/RunHealthService.js';
 import { InMemoryStartRunIntentStore } from '../../src/state/InMemoryStartRunIntentStore.js';
 import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
+import {
+  createWorkflowEngineFixture,
+  makeDefaultExecutionPlan,
+  makePlanFetcherForPlan,
+  makePlanRefForPlan,
+} from '../helpers/workflowEngine.fixture.js';
 
 import {
   createEngine,
   makeAdapters,
   makeContext,
   makePlanRef,
+  makeTemporalAdapter,
   makeTrackingObservability,
 } from './WorkflowEngine.helpers.js';
 
@@ -119,6 +128,35 @@ async function appendRunCompleted(store: InMemoryTxStore, runId: string): Promis
   };
 
   await store.appendAndEnqueueTx(runId, [event]);
+}
+
+function makeDbtBearingPlan(): ExecutionPlan {
+  const basePlan = makeDefaultExecutionPlan();
+  const steps: ExecutionPlan['steps'] = [
+    {
+      stepId: 'dbt-model-1',
+      kind: 'DBT_MODEL',
+      dependsOn: [],
+    },
+  ];
+  const planId = sha256Hex(
+    jcsCanonicalize({
+      metadata: {
+        planVersion: basePlan.metadata.planVersion,
+        inputHashSha256: basePlan.metadata.inputHashSha256,
+      },
+      steps,
+    })
+  );
+
+  return {
+    ...basePlan,
+    metadata: {
+      ...basePlan.metadata,
+      planId,
+    },
+    steps,
+  };
 }
 
 describe('WorkflowEngine (basic failure modes)', () => {
@@ -268,11 +306,19 @@ describe('WorkflowEngine (basic failure modes)', () => {
             createdBy: 'test',
             pluginContexts: {
               dbt: {
-                projectBundleRef: 'artifacts://run/project.tgz',
+                projectBundleRef: {
+                  uri: `s3://bundle-bucket/tenants/t/${'b'.repeat(64)}`,
+                  kind: 'dbt-project-bundle',
+                  sha256: 'b'.repeat(64),
+                  tenantId: 't',
+                },
               },
             },
           };
         },
+      },
+      runExecutionContextBindingPolicy: {
+        assertDbtProjectBundleRefAllowed() {},
       },
     });
 
@@ -294,6 +340,91 @@ describe('WorkflowEngine (basic failure modes)', () => {
         uri: 'dvt-runctx://t/ctx-ok-1',
       },
     });
+  });
+
+  it('rejects DBT-bearing runs without runExecutionContextRef before adapter dispatch', async () => {
+    const startRun = vi.fn(async () => {
+      throw new Error('adapter should not be called');
+    });
+    const plan = makeDbtBearingPlan();
+    const planRef = makePlanRefForPlan(plan);
+    const { engine } = createWorkflowEngineFixture({
+      adapter: makeTemporalAdapter({ startRun }),
+      planFetcher: makePlanFetcherForPlan(plan),
+    });
+
+    await expect(
+      engine.startRun(planRef, makeContext('dbt-missing-runctx-1'))
+    ).rejects.toMatchObject({
+      code: 'RUN_EXECUTION_CONTEXT_REJECTED',
+    });
+    expect(startRun).not.toHaveBeenCalled();
+  });
+
+  it('rejects DBT-bearing runs when the bundle locator is not allowed by admission binding policy', async () => {
+    const startRun = vi.fn(async () => {
+      throw new Error('adapter should not be called');
+    });
+    const plan = makeDbtBearingPlan();
+    const planRef = makePlanRefForPlan(plan);
+    const runExecutionContextRef = {
+      uri: 'dvt-runctx://t/dbt-store-mismatch-1',
+      sha256: 'ctxsha',
+      schemaVersion: 'v1.0',
+      planId: planRef.planId,
+      planVersion: planRef.planVersion,
+    };
+    const { engine } = createWorkflowEngineFixture({
+      adapter: makeTemporalAdapter({ startRun }),
+      planFetcher: makePlanFetcherForPlan(plan),
+      runExecutionContextResolver: {
+        async resolve() {
+          return {
+            schemaVersion: 'v1.0',
+            planId: planRef.planId,
+            planVersion: planRef.planVersion,
+            planSha256: planRef.sha256,
+            tenantId: 't',
+            projectId: 'p',
+            environmentId: 'dev',
+            targetAdapter: 'temporal',
+            createdAtIso: '2026-04-03T00:00:00.000Z',
+            createdBy: 'test',
+            pluginContexts: {
+              dbt: {
+                projectBundleRef: {
+                  uri: `s3://foreign-bucket/tenants/t/${'b'.repeat(64)}`,
+                  kind: 'dbt-project-bundle',
+                  sha256: 'b'.repeat(64),
+                  tenantId: 't',
+                },
+              },
+            },
+          };
+        },
+      },
+      runExecutionContextBindingPolicy: {
+        assertDbtProjectBundleRefAllowed() {
+          throw new Error(
+            'dbt project bundle artifact bucket mismatch: expected=canonical-bucket actual=foreign-bucket'
+          );
+        },
+      },
+    });
+
+    await expect(
+      engine.startRun(planRef, {
+        ...makeContext('dbt-store-mismatch-1'),
+        runExecutionContextRef,
+      })
+    ).rejects.toMatchObject({
+      code: 'RUN_EXECUTION_CONTEXT_REJECTED',
+      messageParams: {
+        reason:
+          'dbt project bundle artifact bucket mismatch: expected=canonical-bucket actual=foreign-bucket',
+      },
+    });
+    expect(startRun).not.toHaveBeenCalled();
   });
 
   it('signal rejects invalid runtime boundary payloads', async () => {

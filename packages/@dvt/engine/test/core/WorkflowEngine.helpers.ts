@@ -3,6 +3,7 @@ import { createNoopObservability } from '@dvt/observability';
 import type { IObservability } from '@dvt/observability';
 
 import type { IProviderAdapter } from '../../src/adapters/IProviderAdapter.js';
+import type { IRunExecutionContextBindingPolicy } from '../../src/ports/IRunExecutionContextBindingPolicy.js';
 import type { IRunExecutionContextResolver } from '../../src/ports/IRunExecutionContextResolver.js';
 import { InMemoryStartRunIntentStore } from '../../src/state/InMemoryStartRunIntentStore.js';
 import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
@@ -110,6 +111,7 @@ export function createEngine(input?: {
   observabilityFallbackThrottleMs?: number;
   clock?: IClock;
   runExecutionContextResolver?: IRunExecutionContextResolver;
+  runExecutionContextBindingPolicy?: IRunExecutionContextBindingPolicy;
 }): {
   engine: ReturnType<typeof createWorkflowEngineFixture>['engine'];
   store: InMemoryTxStore;
@@ -126,6 +128,7 @@ export function createEngine(input?: {
     observabilityFallbackThrottleMs: input?.observabilityFallbackThrottleMs,
     clock: input?.clock ?? new SequenceClock('2026-02-12T00:00:00.000Z'),
     runExecutionContextResolver: input?.runExecutionContextResolver,
+    runExecutionContextBindingPolicy: input?.runExecutionContextBindingPolicy,
   });
 
   return { engine: fixture.engine, store: fixture.store, intentStore: fixture.intentStore };

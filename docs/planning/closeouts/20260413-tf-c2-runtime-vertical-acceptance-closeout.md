@@ -27,7 +27,7 @@ those slices closed with their own evidence. The parent task never got its own
 acceptance artifact that answers the only remaining question:
 
 is the first runtime vertical now credible enough to treat as shipped while
-leaving repeatability/reset discipline and phase-2 executor expansion to their
+leaving repeatability/reset discipline and phase-2 plugin-backed dbt expansion to their
 own downstream tasks?
 
 Without that parent acceptance record, status surfaces kept presenting the
@@ -168,7 +168,7 @@ the still-open repeatability and phase-2 work.
 - Kept the remaining open work explicit:
   - `TF-D1` owns proof-environment reset and retention discipline
   - `TF-C1` still owns final preview-persist convergence
-  - `TF-C3` still owns phase-2 dbt executor mode
+  - `TF-C3` still owns phase-2 plugin-backed dbt execution
   - `WE-HX` still owns broader runtime boundary hardening
 
 ## Validation Run

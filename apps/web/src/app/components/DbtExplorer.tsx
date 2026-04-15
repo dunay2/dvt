@@ -39,7 +39,7 @@ export default function DbtExplorer({
   onNodeDragStart,
   onHide,
   onOpenDataRegistry,
-}: DbtExplorerProps) {
+}: Readonly<DbtExplorerProps>) {
   const groupedNodes = useMemo(() => {
     const groups: Record<string, CanonicalNode[]> = {};
 

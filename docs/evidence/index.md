@@ -57,6 +57,8 @@ Evidence documents that justify or validate relevant changes.
 - [ED 20260414 Contract Schema Packs And Eslint10 Compat](ED-20260414-contract-schema-packs-and-eslint10-compat.md)
 - [ED 20260414 Tf A1 B Compiler Mapping Freeze](ED-20260414-tf-a1-b-compiler-mapping-freeze.md)
 - [ED 20260414 Tf A1 C Srp Hardening](ED-20260414-tf-a1-c-srp-hardening.md)
+- [ED 20260414 Tf C3 Dbt Plugin Runtime Projection](ED-20260414-tf-c3-dbt-plugin-runtime-projection.md)
+- [ED 20260414 Tf C3 Production Temporal Worker Dbt Host](ED-20260414-tf-c3-production-temporal-worker-dbt-host.md)
 - [ED-20260402 RC-G1 governance startup and health reconciliation](ED-20260402-rc-g1-governance-startup-reconciliation.md)
 - [ED-20260402 S05 envelope boundary hardening](ED-20260402-s05-envelope-boundary-hardening.md)
 - [ED-20260402 S08 contract-layer hardening](ED-20260402-s08-contract-layer-hardening.md)

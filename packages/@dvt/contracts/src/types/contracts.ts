@@ -1,5 +1,7 @@
 import type { $brand } from 'zod';
 
+import type { DbtProjectBundleRef } from './artifacts.js';
+
 /**
  * @file packages/@dvt/contracts/src/types/contracts.ts
  * @baseline ADR-0005: Contract Formalization Tooling
@@ -140,6 +142,15 @@ export interface RunExecutionContextRef {
   pluginCompatibilityFingerprint?: Sha256HexString | undefined;
 }
 
+export type PluginContextScalar = NonBlankString;
+export type PluginContextValue = PluginContextScalar | DbtProjectBundleRef;
+export type GenericPluginContext = Record<string, PluginContextValue>;
+
+export interface DbtPluginContext {
+  projectBundleRef: DbtProjectBundleRef;
+  targetProfile?: NonBlankString | undefined;
+}
+
 export interface RunExecutionContext {
   schemaVersion: NonBlankString;
   planId: NonBlankString;
@@ -156,7 +167,7 @@ export interface RunExecutionContext {
   targetAdapter: Exclude<Provider, 'mock'> | 'mock';
   createdAtIso: IsoUtcString;
   createdBy: NonBlankString;
-  pluginContexts: Record<string, Record<string, NonBlankString>>;
+  pluginContexts: Record<string, GenericPluginContext>;
 }
 
 export interface RunContext {

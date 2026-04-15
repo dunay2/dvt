@@ -18,11 +18,14 @@
     "@temporalio/client": "1.16.0",
     "@temporalio/worker": "1.16.0",
     "@temporalio/workflow": "1.16.0",
+    "@dvt/artifacts": "workspace:*",
     "@dvt/contracts": "workspace:*",
+    "@dvt/crypto": "workspace:*",
     "@dvt/engine": "workspace:*",
     "@dvt/dsl": "workspace:*",
     "@dvt/observability": "workspace:*",
-    "@dvt/plan-interpreter": "workspace:*"
+    "@dvt/plan-interpreter": "workspace:*",
+    "tar": "^7.5.2"
   },
   "scripts": {
     "build:runtime-deps": "node ../../../scripts/build-workspace-runtime-deps.cjs @dvt/adapter-temporal",
@@ -32,6 +35,7 @@
     "postbuild": "echo '✅ Build complete'",
     "pretest": "node ../../../scripts/skip-pretest-if-ci.cjs || pnpm run build:runtime-deps",
     "test": "vitest run ./test/ --exclude ./test/integration.time-skipping.test.ts --exclude ./test/integration.transformation.time-skipping.test.ts --exclude ./test/integration.postgres.time-skipping.test.ts",
+    "typecheck:test": "tsc -p tsconfig.test.json --noEmit",
     "prepare:integration": "node ../../../scripts/build-workspace-runtime-deps.cjs @dvt/adapter-temporal --build-self",
     "prepare:integration:transformation": "node ../../../scripts/build-workspace-runtime-deps.cjs @dvt/adapter-temporal --build-self",
     "prepare:integration:postgres": "node ../../../scripts/build-workspace-runtime-deps.cjs @dvt/adapter-temporal --include-package @dvt/adapter-postgres --build-self",

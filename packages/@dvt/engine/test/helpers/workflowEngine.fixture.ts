@@ -22,6 +22,7 @@ import {
   buildRunControlService,
   WorkflowEngineCoreService,
 } from '../../src/core/WorkflowEngineCoreService.js';
+import type { IRunExecutionContextBindingPolicy } from '../../src/ports/IRunExecutionContextBindingPolicy.js';
 import type { IRunExecutionContextResolver } from '../../src/ports/IRunExecutionContextResolver.js';
 import { AllowAllAuthorizer } from '../../src/security/authorizer.js';
 import type { IAuthorizer } from '../../src/security/authorizer.js';
@@ -84,6 +85,7 @@ export function createWorkflowEngineFixture(input?: {
   requiredProviders?: EngineRunRef['provider'][];
   observabilityFallbackThrottleMs?: number;
   runExecutionContextResolver?: IRunExecutionContextResolver;
+  runExecutionContextBindingPolicy?: IRunExecutionContextBindingPolicy;
   planFetcher?: { fetch(planRef: PlanRef): Promise<StoredPlanArtifact> };
 }): {
   engine: WorkflowEngine;
@@ -133,6 +135,9 @@ export function createWorkflowEngineFixture(input?: {
       ...(input?.runExecutionContextResolver === undefined
         ? {}
         : { runExecutionContextResolver: input.runExecutionContextResolver }),
+      ...(input?.runExecutionContextBindingPolicy === undefined
+        ? {}
+        : { runExecutionContextBindingPolicy: input.runExecutionContextBindingPolicy }),
     }),
     stateStoreRead,
     stateStoreWrite,
@@ -173,6 +178,9 @@ export function createWorkflowEngineFixture(input?: {
     ...(input?.runExecutionContextResolver === undefined
       ? {}
       : { runExecutionContextResolver: input.runExecutionContextResolver }),
+    ...(input?.runExecutionContextBindingPolicy === undefined
+      ? {}
+      : { runExecutionContextBindingPolicy: input.runExecutionContextBindingPolicy }),
   });
   const engine = buildWorkflowEngineFacade({
     startRunApplicationService,

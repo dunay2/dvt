@@ -1,3 +1,6 @@
+import { readFileSync } from 'node:fs';
+import { URL } from 'node:url';
+
 import { asIsoUtcString } from '@dvt/contracts';
 import type { FastifyInstance } from 'fastify';
 import { describe, expect, it } from 'vitest';
@@ -5,6 +8,11 @@ import { describe, expect, it } from 'vitest';
 import { buildProtectedRuntimeModule } from '../src/modules/buildProtectedRuntimeModule.js';
 import { buildProviderAdapters } from '../src/modules/buildProviderAdapters.js';
 import { registerOperationalHooks } from '../src/modules/registerOperationalHooks.js';
+
+const BUILD_PROTECTED_RUNTIME_MODULE_SOURCE = readFileSync(
+  new URL('../src/modules/buildProtectedRuntimeModule.ts', import.meta.url),
+  'utf8'
+);
 
 describe('modules', () => {
   it('buildProtectedRuntimeModule fails fast without DATABASE_URL', async () => {
@@ -127,5 +135,16 @@ describe('modules', () => {
     expect(result.adapters.has('mock')).toBe(true);
 
     await expect(result.close()).resolves.toBeUndefined();
+  });
+
+  it('buildProtectedRuntimeModule wires an artifact-backed runExecutionContext resolver', () => {
+    expect(BUILD_PROTECTED_RUNTIME_MODULE_SOURCE).toContain(
+      'new ArtifactBackedRunExecutionContextResolver'
+    );
+    expect(BUILD_PROTECTED_RUNTIME_MODULE_SOURCE).toContain(
+      'new ArtifactStoreDbtProjectBundleBindingPolicy'
+    );
+    expect(BUILD_PROTECTED_RUNTIME_MODULE_SOURCE).toContain('runExecutionContextResolver,');
+    expect(BUILD_PROTECTED_RUNTIME_MODULE_SOURCE).toContain('runExecutionContextBindingPolicy,');
   });
 });

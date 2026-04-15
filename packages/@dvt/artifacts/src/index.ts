@@ -5,9 +5,26 @@
 //
 
 export type { ICompiledCodeStorage } from './ports/ICompiledCodeStorage.js';
+export type {
+  DbtProjectBundleReadOptions,
+  IDbtProjectBundleReader,
+} from './ports/IDbtProjectBundleReader.js';
 export type { IPlanStoreReader } from './ports/IPlanStoreReader.js';
 export type { IPlanStoreWriter } from './ports/IPlanStoreWriter.js';
 export type { IRunExecutionContextReader } from './ports/IRunExecutionContextReader.js';
+export { ArtifactReadError, type ArtifactReadErrorCode } from './runtime/ArtifactReadError.js';
+export {
+  ArtifactBackedDbtProjectBundleReader,
+  type ArtifactBackedDbtProjectBundleReaderOptions,
+} from './runtime/ArtifactBackedDbtProjectBundleReader.js';
+export {
+  assertDbtProjectBundleBinding,
+  type DbtProjectBundleArtifactStore,
+} from './runtime/assertDbtProjectBundleBinding.js';
+export {
+  ArtifactBackedRunExecutionContextReader,
+  type ArtifactBackedRunExecutionContextReaderOptions,
+} from './runtime/ArtifactBackedRunExecutionContextReader.js';
 export { computeSha256 } from './compiledCode/sha256.js';
 export {
   attachCompiledCodeRefs,

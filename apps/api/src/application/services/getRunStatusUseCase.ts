@@ -92,11 +92,11 @@ export class GetRunStatusUseCase implements IGetRunStatusUseCase {
         enriched: true,
         snapshotStaleness: snapshotStaleness.value,
         providerView,
-        ...(snapshot.substatus !== undefined ? { substatus: snapshot.substatus } : {}),
-        ...(snapshot.message !== undefined ? { message: snapshot.message } : {}),
-        ...(snapshot.startedAt !== undefined ? { startedAt: snapshot.startedAt } : {}),
-        ...(snapshot.completedAt !== undefined ? { completedAt: snapshot.completedAt } : {}),
-        ...(snapshot.execution !== undefined ? { execution: snapshot.execution } : {}),
+        ...(snapshot.substatus === undefined ? {} : { substatus: snapshot.substatus }),
+        ...(snapshot.message === undefined ? {} : { message: snapshot.message }),
+        ...(snapshot.startedAt === undefined ? {} : { startedAt: snapshot.startedAt }),
+        ...(snapshot.completedAt === undefined ? {} : { completedAt: snapshot.completedAt }),
+        ...(snapshot.execution === undefined ? {} : { execution: snapshot.execution }),
         ...(evidenceModel.executor === undefined ? {} : { executor: evidenceModel.executor }),
         ...(evidenceModel.currentStepId === undefined
           ? {}
@@ -146,11 +146,11 @@ export class GetRunStatusUseCase implements IGetRunStatusUseCase {
       enriched: query.enriched,
       snapshotStaleness: snapshotStaleness.value,
       ...(providerView === undefined ? {} : { providerView }),
-      ...(snapshot.substatus !== undefined ? { substatus: snapshot.substatus } : {}),
-      ...(snapshot.message !== undefined ? { message: snapshot.message } : {}),
-      ...(snapshot.startedAt !== undefined ? { startedAt: snapshot.startedAt } : {}),
-      ...(snapshot.completedAt !== undefined ? { completedAt: snapshot.completedAt } : {}),
-      ...(snapshot.execution !== undefined ? { execution: snapshot.execution } : {}),
+      ...(snapshot.substatus === undefined ? {} : { substatus: snapshot.substatus }),
+      ...(snapshot.message === undefined ? {} : { message: snapshot.message }),
+      ...(snapshot.startedAt === undefined ? {} : { startedAt: snapshot.startedAt }),
+      ...(snapshot.completedAt === undefined ? {} : { completedAt: snapshot.completedAt }),
+      ...(snapshot.execution === undefined ? {} : { execution: snapshot.execution }),
       ...(evidenceModel.executor === undefined ? {} : { executor: evidenceModel.executor }),
       ...(evidenceModel.currentStepId === undefined
         ? {}

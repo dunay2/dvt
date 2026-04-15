@@ -40,25 +40,25 @@ flowchart TD
   H --> I[Run starts by PlanRef]
   I --> J[Execute on relational SQL seam]
   J --> K[Show sink materialization and evidence]
-  K --> L[Phase 2 add dbt executor]
+  K --> L[Phase 2 add plugin-backed dbt path]
 ```
 
 ## Decision register
 
-| Decision area           | Accepted decision                                                               | Rejected now                                   | Why this is the right cut                                                    |
-| ----------------------- | ------------------------------------------------------------------------------- | ---------------------------------------------- | ---------------------------------------------------------------------------- |
-| Product promise         | first product value is execution of a real transformation                       | broad authoring platform                       | execution is the shortest path to demonstrable value                         |
-| First payload           | SQL is the first executable artifact                                            | model generation as the core value proposition | SQL is inspectable, testable, and executable in the first relational seam    |
-| Authoring source        | planning input is derived from the design graph                                 | hand-built raw plan payloads from the client   | the graph is the user-level intent we can validate and persist               |
-| Preview contract        | preview validates and persists immutable plans                                  | preview as a transient estimate                | runtime already wants `PlanRef`, so preview must produce it                  |
-| Preview discriminator   | every preview request declares an explicit `previewProfile`                     | inferring preview semantics from compiled plan | caller-visible rules must be governed at the request boundary                |
-| Runtime start boundary  | execution starts by `PlanRef`                                                   | execution starts by raw client plan bytes      | preserves runtime immutability and provenance                                |
-| Provider model          | one provider or executor profile per persisted plan in v1                       | multi-provider dispatch inside a single run    | fits the current runtime and keeps the first vertical finishable             |
-| First executor          | Postgres is the first implementation of the relational SQL execution capability | multi-target executor matrix in v1             | cheapest truthful proof target without making vendor semantics part of core  |
-| Local proof environment | Docker PostgreSQL is required for acceptance                                    | cloud-only or manual env setup                 | the first vertical must be repeatable by developers and CI-like local checks |
-| Artifact policy         | authoring artifacts are Git-first                                               | UI-only state or runtime-invented SQL          | Git-first gives provenance and repeatability                                 |
-| Canvas scope            | basic `source -> sql_transform -> sink` only                                    | generic workbench with many node types         | narrow graph is the only realistic way to close the loop now                 |
-| Phase 2                 | dbt is added as a provider or executor profile behind the same outer contract   | separate dbt product flow                      | preserves the investment in preview, `PlanRef`, and result UX                |
+| Decision area           | Accepted decision                                                                           | Rejected now                                       | Why this is the right cut                                                                                   |
+| ----------------------- | ------------------------------------------------------------------------------------------- | -------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| Product promise         | first product value is execution of a real transformation                                   | broad authoring platform                           | execution is the shortest path to demonstrable value                                                        |
+| First payload           | SQL is the first executable artifact                                                        | model generation as the core value proposition     | SQL is inspectable, testable, and executable in the first relational seam                                   |
+| Authoring source        | planning input is derived from the design graph                                             | hand-built raw plan payloads from the client       | the graph is the user-level intent we can validate and persist                                              |
+| Preview contract        | preview validates and persists immutable plans                                              | preview as a transient estimate                    | runtime already wants `PlanRef`, so preview must produce it                                                 |
+| Preview discriminator   | every preview request declares an explicit `previewProfile`                                 | inferring preview semantics from compiled plan     | caller-visible rules must be governed at the request boundary                                               |
+| Runtime start boundary  | execution starts by `PlanRef`                                                               | execution starts by raw client plan bytes          | preserves runtime immutability and provenance                                                               |
+| Provider model          | one provider or executor profile per persisted plan in v1                                   | multi-provider dispatch inside a single run        | fits the current runtime and keeps the first vertical finishable                                            |
+| First executor          | Postgres is the first implementation of the relational SQL execution capability             | multi-target executor matrix in v1                 | cheapest truthful proof target without making vendor semantics part of core                                 |
+| Local proof environment | Docker PostgreSQL is required for acceptance                                                | cloud-only or manual env setup                     | the first vertical must be repeatable by developers and CI-like local checks                                |
+| Artifact policy         | authoring artifacts are Git-first                                                           | UI-only state or runtime-invented SQL              | Git-first gives provenance and repeatability                                                                |
+| Canvas scope            | basic `source -> sql_transform -> sink` only                                                | generic workbench with many node types             | narrow graph is the only realistic way to close the loop now                                                |
+| Phase 2                 | dbt is added as a plugin-backed provider or executor profile behind the same outer contract | separate dbt product flow or kernel-owned dbt path | preserves the investment in preview, `PlanRef`, and result UX while keeping dbt semantics out of the kernel |
 
 ## What the product is and is not
 
@@ -155,11 +155,12 @@ Required outputs:
 
 ### Phase 2
 
-Add dbt execution without changing the outer loop.
+Add plugin-backed dbt execution without changing the outer loop.
 
 Required rule:
 
 - dbt is a provider or executor profile behind the same `design -> preview -> PlanRef -> run -> result` contract
+- dbt semantics stay in a plugin or adapter-owned path, not in engine-kernel logic
 - each persisted plan still binds exactly one provider profile for that run
 
 ## Benchmark posture

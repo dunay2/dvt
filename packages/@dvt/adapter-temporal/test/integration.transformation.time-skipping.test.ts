@@ -8,6 +8,7 @@
  */
 
 import type { MaterializationEvidence, ResolvedRunContext } from '@dvt/contracts';
+import { ApplicationFailure } from '@temporalio/activity';
 import { TestWorkflowEnvironment } from '@temporalio/testing';
 import { describe, expect, it } from 'vitest';
 
@@ -20,11 +21,7 @@ import {
 } from '../src/index.js';
 
 import {
-  materializationEvidenceExecutor,
-  permanentErrorExecutor,
-  withErrorExecutors,
-} from './helpers/testExecutors.js';
-import {
+  createDbtActivityDeps,
   INTEGRATION_TEST_TIMEOUT,
   RunId,
   TestOutbox,
@@ -32,13 +29,13 @@ import {
   TestStateStore,
   WORKFLOW_PATH,
   assertWorkflowArtifactPresentInCi,
-  createActivityDeps,
   createPlanRef,
   createRunContext,
   mkLinearThreeStepPlan,
   mkPermanentFailurePlan,
   waitForCondition,
   withTransformationRuntimeBinding,
+  withDbtRunExecutionContext,
 } from './integration.time-skipping.shared.js';
 
 assertWorkflowArtifactPresentInCi();
@@ -71,7 +68,7 @@ describe('temporal integration (transformation runtime)', () => {
 
       const planRef = createPlanRef('it-plan-linear-3', planBytes);
       const ctx: ResolvedRunContext = {
-        ...createRunContext(RunId.of('run-it-linear-3')),
+        ...withDbtRunExecutionContext(createRunContext(RunId.of('run-it-linear-3')), planRef),
         tenantId: 't-it',
       };
 
@@ -87,11 +84,19 @@ describe('temporal integration (transformation runtime)', () => {
           taskQueue: toTemporalTaskQueue(ctx.tenantId, temporalConfig),
         },
         workflowsPath: WORKFLOW_PATH,
-        activityDeps: createActivityDeps(store, outbox, planBytes),
-        stepExecutors: [
-          materializationEvidenceExecutor('s-3', resultEvidence),
-          ...DEFAULT_STEP_EXECUTORS,
-        ],
+        activityDeps: createDbtActivityDeps(store, outbox, planBytes, ctx, planRef, {
+          async execute(input) {
+            if (input.step.stepId === 's-3') {
+              return {
+                stepId: input.step.stepId,
+                status: 'COMPLETED',
+                resultEvidence,
+              };
+            }
+            return { stepId: input.step.stepId, status: 'COMPLETED' };
+          },
+        }),
+        stepExecutors: DEFAULT_STEP_EXECUTORS,
       });
 
       await worker.start(env.nativeConnection);
@@ -163,7 +168,10 @@ describe('temporal integration (transformation runtime)', () => {
 
       const planRef = createPlanRef('it-plan-permanent-failure', planBytes);
       const ctx: ResolvedRunContext = {
-        ...createRunContext(RunId.of('run-it-permanent-failure')),
+        ...withDbtRunExecutionContext(
+          createRunContext(RunId.of('run-it-permanent-failure')),
+          planRef
+        ),
         tenantId: 't-it',
       };
 
@@ -179,8 +187,16 @@ describe('temporal integration (transformation runtime)', () => {
           taskQueue: toTemporalTaskQueue(ctx.tenantId, temporalConfig),
         },
         workflowsPath: WORKFLOW_PATH,
-        activityDeps: createActivityDeps(store, outbox, planBytes),
-        stepExecutors: withErrorExecutors(permanentErrorExecutor('s-fail')),
+        activityDeps: createDbtActivityDeps(store, outbox, planBytes, ctx, planRef, {
+          async execute(input) {
+            throw ApplicationFailure.create({
+              type: 'PermanentStepError',
+              message: `PERMANENT_STEP_ERROR:${input.step.stepId}`,
+              nonRetryable: true,
+            });
+          },
+        }),
+        stepExecutors: DEFAULT_STEP_EXECUTORS,
       });
 
       await worker.start(env.nativeConnection);

@@ -7,6 +7,28 @@
     "sourceMap": true,
     "outDir": "dist",
     "rootDir": "src",
+    "paths": {
+      "@dvt/artifacts": ["../../../packages/@dvt/artifacts/dist/index.d.ts"],
+      "@dvt/artifacts/*": ["../../../packages/@dvt/artifacts/dist/*"],
+      "@dvt/contracts": ["../../../packages/@dvt/contracts/dist/index.d.ts"],
+      "@dvt/contracts/*": ["../../../packages/@dvt/contracts/dist/*"],
+      "@dvt/crypto": ["../../../packages/@dvt/canonical/dist/index.d.ts"],
+      "@dvt/crypto/*": ["../../../packages/@dvt/canonical/dist/*"],
+      "@dvt/engine": ["../../../packages/@dvt/engine/dist/index.d.ts"],
+      "@dvt/engine/*": ["../../../packages/@dvt/engine/dist/*"],
+      "@dvt/dsl": ["../../../packages/@dvt/dsl/dist/index.d.ts"],
+      "@dvt/dsl/*": ["../../../packages/@dvt/dsl/dist/*"],
+      "@dvt/observability": [
+        "../../../packages/@dvt/observability/dist/index.d.ts"
+      ],
+      "@dvt/observability/*": ["../../../packages/@dvt/observability/dist/*"],
+      "@dvt/plan-interpreter": [
+        "../../../packages/@dvt/plan-interpreter/dist/index.d.ts"
+      ],
+      "@dvt/plan-interpreter/*": [
+        "../../../packages/@dvt/plan-interpreter/dist/*"
+      ]
+    },
     "exactOptionalPropertyTypes": false,
     "noPropertyAccessFromIndexSignature": false
   },

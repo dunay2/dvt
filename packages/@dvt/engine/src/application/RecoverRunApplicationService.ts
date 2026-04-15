@@ -15,6 +15,7 @@ import { RecoverySourceNotTerminalError, RunMetadataNotFoundError } from '../con
 import { buildTraceContext } from '../core/lifecycle/coreRuntime.js';
 import { SnapshotProjector, snapshotToStatus } from '../core/SnapshotProjector.js';
 import type { IRunRecoveryService } from '../domain/IRunRecoveryService.js';
+import type { IRunExecutionContextBindingPolicy } from '../ports/IRunExecutionContextBindingPolicy.js';
 import type { IRunExecutionContextResolver } from '../ports/IRunExecutionContextResolver.js';
 import type {
   IPlanFetcher,
@@ -34,6 +35,7 @@ export interface RecoverRunApplicationServiceDeps {
   projector: SnapshotProjector;
   policy: IRunAccessPolicy;
   runExecutionContextResolver?: IRunExecutionContextResolver;
+  runExecutionContextBindingPolicy?: IRunExecutionContextBindingPolicy;
   planFetcher: IPlanFetcher;
   adapters: Map<EngineRunRef['provider'], IProviderAdapter>;
   observability: IObservability;
@@ -152,6 +154,9 @@ export class RecoverRunApplicationService implements IRunRecoveryService {
       ...(this.deps.runExecutionContextResolver === undefined
         ? {}
         : { runExecutionContextResolver: this.deps.runExecutionContextResolver }),
+      ...(this.deps.runExecutionContextBindingPolicy === undefined
+        ? {}
+        : { runExecutionContextBindingPolicy: this.deps.runExecutionContextBindingPolicy }),
     });
     const preflightContext: ResolvedRunContext = {
       ...context,
@@ -167,6 +172,7 @@ export class RecoverRunApplicationService implements IRunRecoveryService {
       this.deps.planFetcher
     );
     await guard.assertExecutionPolicyAllowed(
+      verifiedArtifact.plan,
       planRef,
       verifiedArtifact.executionPolicy,
       preflightContext,

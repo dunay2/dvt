@@ -1,17 +1,11 @@
 import { asIsoUtcString, asNonBlankString, asStepId } from '@dvt/contracts';
 
 import { mockRun } from '../../data/mockDbtData';
+import type { IRunsPort, RunEventTimelinePage, RunSnapshot, RunSummaryItem, StartRunInput } from '../../ports/runs';
 import type { SessionContextPort } from '../../ports/sessionContext';
 import type { Run, RunEvent as DbtRunEvent } from '../../types/dbt';
 import type { RunEvent } from '../../types/engine';
 import { createSessionContextPort } from '../session/sessionContextPort';
-import type {
-  RunEventTimelinePage,
-  RunSnapshot,
-  RunSummaryItem,
-  RunsService,
-  StartRunInput,
-} from './runsService';
 
 function buildMockRunList(): Run[] {
   const completedRun: Run = {
@@ -118,7 +112,7 @@ function buildMockRunEvents(
 
 export function createMockRunsService(
   sessionContext: SessionContextPort = createSessionContextPort()
-): RunsService {
+): IRunsPort {
   return {
     listRunSummaries: async () =>
       buildMockRunList().map(mapDbtRunToSnapshot).map(mapSnapshotToSummary),

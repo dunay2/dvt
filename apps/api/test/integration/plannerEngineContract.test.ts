@@ -9,9 +9,12 @@ import {
   asNonBlankString,
   asStepId,
   parseExecutionPlan,
+  parseRunExecutionContext,
+  parseRunExecutionContextRef,
   type PlanRef,
   type ResolvedRunContext,
   type RunContext,
+  type RunExecutionContext,
 } from '@dvt/contracts';
 import {
   AllowAllAuthorizer,
@@ -29,6 +32,8 @@ import {
   type EngineRunRef,
   type ExecutionPlan,
   type IProviderAdapter,
+  type IRunExecutionContextBindingPolicy,
+  type IRunExecutionContextResolver,
   type RunEventInput,
 } from '@dvt/engine';
 import { InMemoryStartRunIntentStore, InMemoryTxStore, MockAdapter } from '@dvt/engine/testing';
@@ -114,7 +119,13 @@ interface EngineTestStack {
   idempotency: IdempotencyKeyBuilder;
 }
 
-function createStack(enginePlan: ExecutionPlan): EngineTestStack {
+function createStack(
+  enginePlan: ExecutionPlan,
+  options?: {
+    runExecutionContextResolver?: IRunExecutionContextResolver;
+    runExecutionContextBindingPolicy?: IRunExecutionContextBindingPolicy;
+  }
+): EngineTestStack {
   const store = new InMemoryTxStore();
   const projector = new SnapshotProjector();
   const idempotency = new IdempotencyKeyBuilder();
@@ -143,6 +154,12 @@ function createStack(enginePlan: ExecutionPlan): EngineTestStack {
       policy,
       stateStoreRead: store,
       adapters,
+      ...(options?.runExecutionContextResolver === undefined
+        ? {}
+        : { runExecutionContextResolver: options.runExecutionContextResolver }),
+      ...(options?.runExecutionContextBindingPolicy === undefined
+        ? {}
+        : { runExecutionContextBindingPolicy: options.runExecutionContextBindingPolicy }),
     }),
     stateStoreRead: store,
     stateStoreWrite: store,
@@ -177,6 +194,12 @@ function createStack(enginePlan: ExecutionPlan): EngineTestStack {
     adapters,
     observability: createNoopObservability(),
     startRunApplicationService,
+    ...(options?.runExecutionContextResolver === undefined
+      ? {}
+      : { runExecutionContextResolver: options.runExecutionContextResolver }),
+    ...(options?.runExecutionContextBindingPolicy === undefined
+      ? {}
+      : { runExecutionContextBindingPolicy: options.runExecutionContextBindingPolicy }),
   });
   const engine = buildWorkflowEngineFacade({
     startRunApplicationService,
@@ -188,6 +211,47 @@ function createStack(enginePlan: ExecutionPlan): EngineTestStack {
   });
 
   return { engine, store, clock, idempotency };
+}
+
+function makeRunExecutionContextRef(
+  planRef: PlanRef,
+  runId: string
+): ReturnType<typeof parseRunExecutionContextRef> {
+  return parseRunExecutionContextRef({
+    uri: `dvt-runctx://test-tenant/${runId}/context.json`,
+    sha256: asNonBlankString('c'.repeat(64)),
+    schemaVersion: asNonBlankString('v1.0'),
+    planId: planRef.planId,
+    planVersion: planRef.planVersion,
+  });
+}
+
+function makeDbtRunExecutionContext(
+  planRef: PlanRef,
+  context: RunContext
+): RunExecutionContext {
+  return parseRunExecutionContext({
+    schemaVersion: 'v1.0',
+    planId: planRef.planId,
+    planVersion: planRef.planVersion,
+    planSha256: planRef.sha256,
+    tenantId: context.tenantId,
+    projectId: context.projectId,
+    environmentId: context.environmentId,
+    targetAdapter: context.targetAdapter,
+    createdAtIso: '2026-04-14T00:00:00.000Z',
+    createdBy: 'planner-engine-contract-test',
+    pluginContexts: {
+      dbt: {
+        projectBundleRef: {
+          uri: `s3://bundle-bucket/tenants/${context.tenantId}/${'d'.repeat(64)}`,
+          kind: 'dbt-project-bundle',
+          sha256: 'd'.repeat(64),
+          tenantId: context.tenantId,
+        },
+      },
+    },
+  });
 }
 
 function makeRunEvent(
@@ -317,9 +381,24 @@ describe('planner -> engine contract', () => {
       enginePlan
     );
     const runId = 'integration-run-1';
-    const runContext = makeRunContext(runId);
+    const runExecutionContextRef = makeRunExecutionContextRef(planRef, runId);
+    const runContext = {
+      ...makeRunContext(runId),
+      runExecutionContextRef,
+    };
+    const runExecutionContext = makeDbtRunExecutionContext(planRef, runContext);
 
-    const { engine, store, clock, idempotency } = createStack(enginePlan);
+    const { engine, store, clock, idempotency } = createStack(enginePlan, {
+      runExecutionContextResolver: {
+        async resolve(ref) {
+          expect(ref).toEqual(runExecutionContextRef);
+          return runExecutionContext;
+        },
+      },
+      runExecutionContextBindingPolicy: {
+        assertDbtProjectBundleRefAllowed() {},
+      },
+    });
     const runRef = await engine.startRun(planRef, runContext);
 
     const afterStart = await engine.getRunStatus(runRef);

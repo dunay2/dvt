@@ -1,4 +1,8 @@
 import {
+  DbtPluginContextSchema,
+  type DbtPluginContextSchemaT,
+} from '../contracts/engine/RunExecutionContext.v1.js';
+import {
   CanonicalRunStatusSchema,
   type CanonicalRunStatusSchemaT,
   EngineRunRefSchema,
@@ -53,6 +57,10 @@ export function parseRunExecutionContextRef(input: unknown): RunExecutionContext
 
 export function parseRunExecutionContext(input: unknown): RunExecutionContextSchemaT {
   return parseWithSchema(RunExecutionContextSchema, input);
+}
+
+export function parseDbtPluginContext(input: unknown): DbtPluginContextSchemaT {
+  return parseWithSchema(DbtPluginContextSchema, input);
 }
 
 export function parseRunContext(input: unknown): RunContextSchemaT {

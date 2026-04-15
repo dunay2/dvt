@@ -1,32 +1,53 @@
-import type {
-  PlanRef,
-  ResolvedRunContext,
-  RunExecutionContextRef,
-  RunExecutionPolicy,
+import {
+  KNOWN_STEP_KINDS,
+  parseDbtPluginContext,
+  type DbtPluginContext,
+  type ExecutionPlan,
+  type PlanRef,
+  type ResolvedRunContext,
+  type RunExecutionContext,
+  type RunExecutionContextRef,
+  type RunExecutionPolicy,
 } from '@dvt/contracts';
 
 import { RunExecutionContextRejectedError } from '../../contracts/errors.js';
+import type { IRunExecutionContextBindingPolicy } from '../../ports/IRunExecutionContextBindingPolicy.js';
 import type { IRunExecutionContextResolver } from '../../ports/IRunExecutionContextResolver.js';
+import { toErrorMessage } from '../../utils/errorUtils.js';
 
 export class RunExecutionContextAdmissionPolicy {
-  constructor(private readonly resolver?: IRunExecutionContextResolver) {}
+  constructor(
+    private readonly deps: {
+      resolver?: IRunExecutionContextResolver;
+      bindingPolicy?: IRunExecutionContextBindingPolicy;
+    } = {}
+  ) {}
 
   async assertAllowed(
+    plan: ExecutionPlan,
     planRef: PlanRef,
     executionPolicy: RunExecutionPolicy,
     context: ResolvedRunContext
   ): Promise<void> {
+    const requiresDbtPluginContext = plan.steps.some((step) => DBT_STEP_KINDS.has(step.kind));
     const ref = context.runExecutionContextRef;
-    if (ref === undefined) return;
+    if (ref === undefined) {
+      if (requiresDbtPluginContext) {
+        throw new RunExecutionContextRejectedError(
+          'runExecutionContextRef required for DBT-bearing plan'
+        );
+      }
+      return;
+    }
 
-    if (this.resolver === undefined) {
+    if (this.deps.resolver === undefined) {
       throw new RunExecutionContextRejectedError(
         'runExecutionContextRef provided but no runExecutionContextResolver is configured'
       );
     }
 
     this.assertRefAlignment(ref, planRef);
-    const resolved = await this.resolver.resolve(ref);
+    const resolved = await this.deps.resolver.resolve(ref);
 
     if (resolved.tenantId !== context.tenantId) {
       throw new RunExecutionContextRejectedError(
@@ -63,12 +84,40 @@ export class RunExecutionContextAdmissionPolicy {
         `targetAdapter mismatch: context=${context.targetAdapter} runExecutionContext=${resolved.targetAdapter}`
       );
     }
+    if (requiresDbtPluginContext) {
+      const pluginContext = assertDbtPluginContext(resolved, context.tenantId);
+      await this.assertDbtProjectBundleBindingAllowed(pluginContext, context.tenantId);
+    }
 
     this.assertPluginCompatibilityFingerprint(
       executionPolicy,
       ref,
       resolved.pluginCompatibilityFingerprint
     );
+  }
+
+  private async assertDbtProjectBundleBindingAllowed(
+    pluginContext: DbtPluginContext,
+    expectedTenantId: string
+  ): Promise<void> {
+    if (this.deps.bindingPolicy === undefined) {
+      throw new RunExecutionContextRejectedError(
+        'runExecutionContext DBT bundle binding policy is not configured'
+      );
+    }
+
+    try {
+      await this.deps.bindingPolicy.assertDbtProjectBundleRefAllowed(
+        pluginContext.projectBundleRef,
+        expectedTenantId
+      );
+    } catch (error) {
+      if (error instanceof RunExecutionContextRejectedError) {
+        throw error;
+      }
+
+      throw new RunExecutionContextRejectedError(toErrorMessage(error));
+    }
   }
 
   private assertRefAlignment(ref: RunExecutionContextRef, planRef: PlanRef): void {
@@ -116,3 +165,39 @@ export class RunExecutionContextAdmissionPolicy {
     }
   }
 }
+
+function assertDbtPluginContext(
+  resolved: RunExecutionContext,
+  expectedTenantId: string
+): DbtPluginContext {
+  const pluginContextInput = resolved.pluginContexts['dbt'];
+  if (pluginContextInput === undefined) {
+    throw new RunExecutionContextRejectedError(
+      'runExecutionContext.pluginContexts.dbt required for DBT-bearing plan'
+    );
+  }
+
+  let pluginContext: ReturnType<typeof parseDbtPluginContext>;
+  try {
+    pluginContext = parseDbtPluginContext(pluginContextInput);
+  } catch {
+    throw new RunExecutionContextRejectedError(
+      'runExecutionContext.pluginContexts.dbt invalid for DBT-bearing plan'
+    );
+  }
+
+  const bundleTenantId = pluginContext.projectBundleRef.tenantId;
+  if (bundleTenantId !== expectedTenantId) {
+    throw new RunExecutionContextRejectedError(
+      `runExecutionContext.pluginContexts.dbt.projectBundleRef.tenantId mismatch: expected=${expectedTenantId} actual=${bundleTenantId}`
+    );
+  }
+
+  return pluginContext;
+}
+
+const DBT_STEP_KINDS = new Set<string>([
+  KNOWN_STEP_KINDS.DBT_MODEL,
+  KNOWN_STEP_KINDS.DBT_TEST,
+  KNOWN_STEP_KINDS.DBT_SNAPSHOT,
+]);

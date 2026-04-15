@@ -1,11 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { ApiError } from '../api/createApiClient';
+import type { IRunsPort } from '../../ports/runs';
 import { iso, stepId } from '../../testing/contractTestUtils';
 import { createRunWorkspaceFacade, RunWorkspaceLoadError } from './runWorkspaceFacade';
-import type { RunsService } from './runsService';
 
-function createRunsServiceMock(): RunsService {
+function createRunsServiceMock(): IRunsPort {
   return {
     listRunSummaries: vi.fn(),
     getRunSnapshot: vi.fn(),

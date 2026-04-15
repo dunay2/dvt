@@ -159,12 +159,19 @@ export function registerValidationExecutionContextSuite(): void {
         createdBy: 'planner-runtime',
         pluginContexts: {
           dbt: {
-            projectBundleRef: 'artifacts://runs/run-1/dbt-project.tgz',
+            projectBundleRef: {
+              uri: `s3://bundle-bucket/tenants/tenant-a/${'b'.repeat(64)}`,
+              kind: 'dbt-project-bundle',
+              sha256: 'b'.repeat(64),
+              tenantId: 'tenant-a',
+            },
           },
         },
       });
 
-      expect(runExecutionContext.pluginContexts.dbt.projectBundleRef).toContain('artifacts://');
+      expect(runExecutionContext.pluginContexts.dbt?.projectBundleRef.uri).toBe(
+        `s3://bundle-bucket/tenants/tenant-a/${'b'.repeat(64)}`
+      );
       expect(runExecutionContext.pluginCompatibilityFingerprint).toHaveLength(64);
     });
 
@@ -180,7 +187,16 @@ export function registerValidationExecutionContextSuite(): void {
           targetAdapter: 'temporal',
           createdAtIso: '2026-04-03T10:00:00.000Z',
           createdBy: 'planner-runtime',
-          pluginContexts: { dbt: { projectBundleRef: 'artifacts://x' } },
+          pluginContexts: {
+            dbt: {
+              projectBundleRef: {
+                uri: `s3://bundle-bucket/tenants/tenant-a/${'b'.repeat(64)}`,
+                kind: 'dbt-project-bundle',
+                sha256: 'b'.repeat(64),
+                tenantId: 'tenant-a',
+              },
+            },
+          },
         })
       ).toThrow(ContractValidationError);
     });
