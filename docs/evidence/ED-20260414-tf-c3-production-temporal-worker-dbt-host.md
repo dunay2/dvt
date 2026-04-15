@@ -92,6 +92,13 @@ explicit, testable, and operable.
 2. Broader deployment wiring outside the repo.
 3. Richer DBT result-evidence materialization beyond the current `StepResult`
    boundary.
+4. Accepted residual debt: `recoverRun` still depends on live API artifact-store
+   configuration when rechecking DBT bundle binding, so sanctioned store
+   changes can invalidate recovery of already-accepted runs even when the
+   bundle bytes stay valid.
+5. Accepted residual debt: the protected API does not yet fail fast at startup
+   when DBT bundle-store configuration is missing or inconsistent; the current
+   rejection still happens on the first DBT-bearing admission request.
 
 ## System effect
 

@@ -131,3 +131,12 @@ owned". This slice closes that by moving the DBT path onto:
   hardening remains a follow-on.
 - The code topology is now real and in-repo; the remaining gap is operational
   proof, not missing composition.
+- Accepted debt remains on two system edges:
+  - `recoverRun` revalidates DBT bundle-store binding against live API config
+    rather than a persisted store identity, so config drift can invalidate
+    recovery of already-accepted runs.
+  - the protected API still discovers DBT bundle-store misconfiguration on the
+    first DBT-bearing request instead of failing fast at bootstrap.
+- Those residuals are tracked explicitly in
+  [R-20260414-TF-C3-DBT-PLUGIN-RUNTIME-PROJECTION.yaml](../../risk-register/quality/R-20260414-TF-C3-DBT-PLUGIN-RUNTIME-PROJECTION.yaml)
+  and are not being presented as closed in this slice.

@@ -12,11 +12,17 @@ context: >
   runtime readers, a standalone `apps/temporal-worker` composition root, and an adapter-owned
   `DbtCliPluginRunner`. Unit, package, and worker-level tests now prove the host composition and the
   DBT runtime handoff. The remaining risk is no longer missing topology; it is rollout drift between
-  this validated in-repo host and environment wiring outside the repo.
+  this validated in-repo host and environment wiring outside the repo, plus two explicit residual
+  governance gaps around artifact-store binding.
 risk: >
   If deployment or canary rollout wires the worker, DBT binary, or artifact locators differently
   from the validated in-repo composition, persisted DBT runs can fail closed or exhibit environment-
-  specific drift even though the repo-level host topology is now correct.
+  specific drift even though the repo-level host topology is now correct. In addition, `recoverRun`
+  currently re-evaluates DBT bundle store binding against live API configuration rather than a store
+  identity persisted with the accepted run, so changing sanctioned artifact-store config can
+  invalidate recovery of already-accepted runs without artifact drift. The protected API also does
+  not yet fail fast on DBT bundle-store misconfiguration at bootstrap; the first DBT-bearing
+  admission discovers that defect on request rather than during startup.
 mitigations:
   - '`DbtStepActivity` now fails closed for missing `runExecutionContextRef`, missing runtime
     wiring, missing `pluginContexts.dbt`, or mismatched plugin runner results.'
@@ -49,5 +55,8 @@ mitigations:
     is part of the repo truth instead of a follow-up guess.'
   - 'Lane C keeps the remaining rollout-acceptance work visible under `TF-C3-E` instead of treating
     code topology alone as full closure.'
+  - 'This risk entry now explicitly records the remaining recovery/store-identity drift and API
+    bootstrap fail-fast gap as accepted debt for the current development slice instead of implying
+    that only out-of-repo rollout work remains.'
 review_after: 2026-06-15
 ---
