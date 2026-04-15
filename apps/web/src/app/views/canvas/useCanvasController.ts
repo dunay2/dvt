@@ -2,11 +2,18 @@ import { type NodeTypes } from '@xyflow/react';
 import { useMemo } from 'react';
 
 import DbtNodeComponent from '../../components/canvas/DbtNodeComponent';
+import {
+  getPlatformConnectionDetail,
+  getPlatformHealthErrorMessageFromQuery,
+  isPlatformReady,
+  usePlatformHealthSnapshotQuery,
+} from '../../../capabilities/platform-health';
 import { resolveCanvasGraphStrategy } from '../../plugins/graphStrategyRegistry';
 import { getRegisteredPluginIds } from '../../plugins/registry';
 import { useCapabilitiesQuery } from '../../queries/useCapabilitiesQuery';
 import { resolveWorkspaceBootstrapConfig } from '../../services/config/workspaceConfig';
 import {
+  useAppDataSourceMode,
   usePlansService,
   useRunsService,
   useSessionContext,
@@ -28,7 +35,9 @@ const nodeTypes: NodeTypes = {
 };
 
 export function useCanvasController() {
+  const dataSourceMode = useAppDataSourceMode();
   const { data: capabilities } = useCapabilitiesQuery();
+  const platformHealthQuery = usePlatformHealthSnapshotQuery();
   const graphStrategy = useMemo(() => resolveCanvasGraphStrategy(), []);
   const canvasAuthoringMode: 'transformation' | 'dbt' =
     graphStrategy.id === 'transformation' ? 'transformation' : 'dbt';
@@ -39,6 +48,23 @@ export function useCanvasController() {
   const shellFeedback = useShellFeedback();
   const workspaceBootstrapConfig = useMemo(() => resolveWorkspaceBootstrapConfig(), []);
   const navigationActions = useCanvasNavigationActions();
+  const isBackendCheckPending =
+    dataSourceMode === 'api' &&
+    platformHealthQuery.isPending &&
+    !platformHealthQuery.data &&
+    !platformHealthQuery.isError;
+  const backendReady = dataSourceMode !== 'api' || isPlatformReady(platformHealthQuery.data);
+  const backendBlockMessage =
+    dataSourceMode !== 'api' || isBackendCheckPending || backendReady
+      ? null
+      : getPlatformConnectionDetail(
+            platformHealthQuery.isError ? 'offline' : 'degraded',
+            platformHealthQuery.data,
+            getPlatformHealthErrorMessageFromQuery(
+              platformHealthQuery.isError,
+              platformHealthQuery.error
+            )
+          ) ?? null;
 
   const store = useCanvasStoreFacade();
 
@@ -163,6 +189,10 @@ export function useCanvasController() {
   );
 
   return {
+    dataSourceMode,
+    isBackendCheckPending,
+    backendReady,
+    backendBlockMessage,
     isLoadingGraph: graphModel.graphSnapshotQuery.isPending,
     graphErrorMessage:
       graphModel.graphSnapshotQuery.error instanceof Error
@@ -183,6 +213,7 @@ export function useCanvasController() {
     edges: graphModel.edges,
     nodeTypes,
     gridSize: store.gridSize,
+    canvasPalette: store.canvasPalette,
     viewport: store.persistedViewport,
     onNodesChange: graphModel.onNodesChange,
     onEdgesChange: graphModel.onEdgesChange,

@@ -61,10 +61,10 @@ export function buildPreviewResponse(
 }
 
 export function normalizePlanRef(
-  planRef: Pick<PlanRef, 'uri' | 'sha256' | 'schemaVersion' | 'planId' | 'planVersion'> & {
-    sizeBytes?: number | undefined;
-    expiresAt?: PlanRef['expiresAt'] | undefined;
-  }
+  planRef: Pick<
+    PlanRef,
+    'uri' | 'sha256' | 'schemaVersion' | 'planId' | 'planVersion' | 'sizeBytes' | 'expiresAt'
+  >
 ): PlanRef {
   return {
     uri: planRef.uri,

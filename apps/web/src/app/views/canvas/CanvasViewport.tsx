@@ -1,5 +1,4 @@
 import {
-  Background,
   Controls,
   MiniMap,
   ReactFlow,
@@ -10,10 +9,41 @@ import {
   type ReactFlowProps,
 } from '@xyflow/react';
 import { PanelLeftOpen, PanelRightOpen } from 'lucide-react';
-import { useEffect } from 'react';
+import { useEffect, type CSSProperties } from 'react';
 
 import { Button } from '../../components/ui/button';
 import { resolveNodeKindRegistration } from '../../plugins/nodeTypeRegistry';
+import {
+  deriveCanvasPaletteTokens,
+  normalizeCanvasPaletteId,
+  type CanvasPaletteId,
+} from './canvasPalette';
+
+function resolveCanvasViewportStyle(
+  canvasPalette: CanvasPaletteId,
+  gridSize: number
+): CSSProperties {
+  const tokens = deriveCanvasPaletteTokens(canvasPalette);
+
+  return {
+    '--canvas-surface': tokens.surface,
+    '--canvas-grid': tokens.grid,
+    '--canvas-controls-surface': tokens.controlsSurface,
+    '--canvas-controls-button-surface': tokens.controlsButtonSurface,
+    '--canvas-controls-button-hover': tokens.controlsButtonHover,
+    '--canvas-controls-border': tokens.controlsBorder,
+    '--canvas-controls-foreground': tokens.controlsForeground,
+    '--canvas-minimap-surface': tokens.minimapSurface,
+    '--canvas-minimap-border': tokens.minimapBorder,
+    '--canvas-minimap-mask': tokens.minimapMask,
+    '--canvas-minimap-mask-stroke': tokens.minimapMaskStroke,
+    '--canvas-panel-toggle-surface': tokens.panelToggleSurface,
+    '--canvas-panel-toggle-hover': tokens.panelToggleHover,
+    '--canvas-panel-toggle-border': tokens.panelToggleBorder,
+    '--canvas-panel-toggle-foreground': tokens.panelToggleForeground,
+    '--canvas-grid-gap': `${gridSize}px`,
+  } as CSSProperties;
+}
 
 type CanvasViewportProps = {
   readonly focusMode: boolean;
@@ -24,6 +54,7 @@ type CanvasViewportProps = {
   readonly edges: Edge[];
   readonly nodeTypes: NodeTypes;
   readonly gridSize: number;
+  readonly canvasPalette: CanvasPaletteId;
   readonly viewport: { x: number; y: number; zoom: number } | null;
   readonly onNodesChange: NonNullable<ReactFlowProps<Node, Edge>['onNodesChange']>;
   readonly onEdgesChange: NonNullable<ReactFlowProps<Node, Edge>['onEdgesChange']>;
@@ -47,6 +78,7 @@ export default function CanvasViewport({
   edges,
   nodeTypes,
   gridSize,
+  canvasPalette,
   viewport,
   onNodesChange,
   onEdgesChange,
@@ -61,6 +93,8 @@ export default function CanvasViewport({
   onShowInspector,
 }: CanvasViewportProps) {
   const reactFlow = useReactFlow<Node, Edge>();
+  const resolvedCanvasPalette = normalizeCanvasPaletteId(canvasPalette);
+  const canvasStyle = resolveCanvasViewportStyle(resolvedCanvasPalette, gridSize);
 
   useEffect(() => {
     if (viewport == null) {
@@ -71,13 +105,25 @@ export default function CanvasViewport({
   }, [reactFlow, viewport]);
 
   return (
-    <div className="flex-1 relative overflow-hidden" onDrop={onDrop} onDragOver={onDragOver}>
+    <div
+      data-testid="canvas-viewport"
+      data-canvas-palette={resolvedCanvasPalette}
+      className="relative flex-1 overflow-hidden"
+      style={canvasStyle}
+      onDrop={onDrop}
+      onDragOver={onDragOver}
+    >
       {!focusMode && !explorerPanelVisible && (
         <Button
           type="button"
           variant="outline"
           size="sm"
-          className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-slate-900/90 border-slate-600 text-slate-50 hover:bg-slate-950"
+          style={{
+            backgroundColor: 'var(--canvas-panel-toggle-surface)',
+            borderColor: 'var(--canvas-panel-toggle-border)',
+            color: 'var(--canvas-panel-toggle-foreground)',
+          }}
+          className="absolute left-2 top-1/2 z-10 -translate-y-1/2 hover:bg-[var(--canvas-panel-toggle-hover)]"
           onClick={onShowExplorer}
           aria-label="Show explorer panel"
         >
@@ -90,7 +136,12 @@ export default function CanvasViewport({
           type="button"
           variant="outline"
           size="sm"
-          className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-slate-900/90 border-slate-600 text-slate-50 hover:bg-slate-950"
+          style={{
+            backgroundColor: 'var(--canvas-panel-toggle-surface)',
+            borderColor: 'var(--canvas-panel-toggle-border)',
+            color: 'var(--canvas-panel-toggle-foreground)',
+          }}
+          className="absolute right-2 top-1/2 z-10 -translate-y-1/2 hover:bg-[var(--canvas-panel-toggle-hover)]"
           onClick={onShowInspector}
           aria-label="Show inspector panel"
         >
@@ -120,16 +171,15 @@ export default function CanvasViewport({
         minZoom={0.35}
         defaultViewport={viewport ?? undefined}
         onMoveEnd={(_event, nextViewport) => onViewportChange(nextViewport)}
-        className="bg-slate-950"
+        className="bg-[var(--canvas-surface)]"
       >
-        <Background color="#374151" gap={gridSize} />
-        <Controls className="bg-slate-900 border-slate-600" />
+        <Controls />
         <MiniMap
           pannable
           zoomable
-          style={{ background: '#0f172a', border: '1px solid #334155', borderRadius: 6 }}
-          maskColor="rgba(2, 6, 23, 0.65)"
-          maskStrokeColor="#475569"
+          style={{ borderRadius: 8 }}
+          maskColor="var(--canvas-minimap-mask)"
+          maskStrokeColor="var(--canvas-minimap-mask-stroke)"
           maskStrokeWidth={3}
           nodeColor={(node) => {
             const pluginKind = (node.data as { pluginKind?: string }).pluginKind ?? 'dvt:unknown';

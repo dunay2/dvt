@@ -18,9 +18,24 @@ import Root, { RootShell } from './Root';
 import { AppServicesProvider, useAppDataSourceMode } from './services/AppServicesContext';
 import { useAppStore } from './stores/appStore';
 import { useUiLayoutStore } from './stores/uiLayoutStore';
+import { DEFAULT_CANVAS_PALETTE_ID } from './views/canvas/canvasPalette';
 
-function createRootShellNode(capability: PlatformHealthCapabilityApi): JSX.Element {
-  const capabilitiesPort: CapabilitiesPort = {
+const bootstrapScreenMocks = vi.hoisted(() => ({
+  completeBootstrapScreen: vi.fn(),
+  setBootstrapStepStatus: vi.fn(),
+}));
+
+vi.mock('./bootstrap/appBootstrapScreen', () => ({
+  completeBootstrapScreen: bootstrapScreenMocks.completeBootstrapScreen,
+  setBootstrapStepStatus: bootstrapScreenMocks.setBootstrapStepStatus,
+}));
+
+function createRootShellNode(
+  capability: PlatformHealthCapabilityApi,
+  initialEntries: string[] = ['/'],
+  capabilitiesPort?: CapabilitiesPort
+): JSX.Element {
+  const defaultCapabilitiesPort: CapabilitiesPort = {
     loadCapabilities: vi.fn().mockResolvedValue({
       apiVersion: '1.0.0',
       minFrontendVersion: '1.0.0',
@@ -29,11 +44,16 @@ function createRootShellNode(capability: PlatformHealthCapabilityApi): JSX.Eleme
   };
 
   return (
-    <AppServicesProvider overrides={{ mode: 'mock', capabilitiesPort }}>
-      <MemoryRouter>
+    <AppServicesProvider
+      overrides={{ mode: 'mock', capabilitiesPort: capabilitiesPort ?? defaultCapabilitiesPort }}
+    >
+      <MemoryRouter initialEntries={initialEntries}>
         <Routes>
           <Route element={<RootShell platformHealthCapability={capability} />} path="/">
             <Route element={<div>Workspace route</div>} index />
+            <Route element={<div>Canvas route</div>} path="canvas" />
+            <Route element={<div>Runs route</div>} path="runs" />
+            <Route element={<div>Run detail route</div>} path="runs/:runId" />
           </Route>
         </Routes>
       </MemoryRouter>
@@ -61,6 +81,7 @@ function resetUiLayoutStore(): void {
     consolePanelVisible: false,
     focusMode: false,
     gridSize: 20,
+    canvasPalette: DEFAULT_CANVAS_PALETTE_ID,
     activeTabs: [{ id: 'main-canvas', type: 'canvas', label: 'Main Graph' }],
     activeTabId: 'main-canvas',
     connectionStatus: { rest: 'ok', liveEvents: 'connected' },
@@ -72,18 +93,28 @@ function RootServicesProbe(): JSX.Element {
   return <div data-testid="root-services-probe">mode:{mode}</div>;
 }
 
+async function waitForShellBootstrapSurface(
+  mounted: Awaited<ReturnType<typeof withTestQueryClient>>
+): Promise<void> {
+  await waitFor(() => {
+    expect(mounted.container.querySelector('[data-slot="app-shell-frame"]')).not.toBeNull();
+  });
+}
+
 describe('RootShell platform health UX', () => {
   beforeEach(() => {
     localStorage.clear();
     resetAppStore();
     resetUiLayoutStore();
+    bootstrapScreenMocks.completeBootstrapScreen.mockReset();
+    bootstrapScreenMocks.setBootstrapStepStatus.mockReset();
   });
 
   afterEach(() => {
     vi.useRealTimers();
   });
 
-  it('does not falsely show ok while the first platform health query is still pending', async () => {
+  it('keeps health bootstrap pending until the first platform health query settles', async () => {
     const capability: PlatformHealthCapabilityApi = {
       loadSnapshot: vi.fn().mockImplementation(
         () =>
@@ -98,11 +129,42 @@ describe('RootShell platform health UX', () => {
       const view = within(mounted.container);
 
       await waitFor(() => {
-        expect(view.getByText('Checking')).toBeTruthy();
+        expect(bootstrapScreenMocks.setBootstrapStepStatus).toHaveBeenCalledWith(
+          'health',
+          'pending'
+        );
       });
-      expect(view.queryByText('Backend offline')).toBeNull();
-      expect(view.queryByText('Backend degraded')).toBeNull();
-      expect(mounted.container.textContent).not.toContain('REST API: ok');
+      expect(view.getByText('Checking')).toBeTruthy();
+      expect(mounted.container.querySelector('[data-slot="app-shell-frame"]')).not.toBeNull();
+    } finally {
+      await mounted.cleanup();
+    }
+  });
+
+  it('keeps capabilities bootstrap pending until runtime capabilities settle', async () => {
+    const capability: PlatformHealthCapabilityApi = {
+      loadSnapshot: vi.fn().mockResolvedValue(createPlatformHealthSnapshot()),
+    };
+    const pendingCapabilitiesPort: CapabilitiesPort = {
+      loadCapabilities: vi.fn().mockImplementation(
+        () =>
+          new Promise(() => {
+            // Intentionally unresolved for the initial pending state.
+          })
+      ),
+    };
+    const mounted = await withTestQueryClient(
+      createRootShellNode(capability, ['/'], pendingCapabilitiesPort)
+    );
+
+    try {
+      await waitFor(() => {
+        expect(bootstrapScreenMocks.setBootstrapStepStatus).toHaveBeenCalledWith(
+          'capabilities',
+          'pending'
+        );
+      });
+      expect(mounted.container.querySelector('[data-slot="app-shell-frame"]')).not.toBeNull();
     } finally {
       await mounted.cleanup();
     }
@@ -204,17 +266,10 @@ describe('RootShell platform health UX', () => {
     const capability: PlatformHealthCapabilityApi = {
       loadSnapshot: vi.fn().mockResolvedValue(createPlatformHealthSnapshot()),
     };
-    const mounted = await withTestQueryClient(createRootShellNode(capability));
+    const mounted = await withTestQueryClient(createRootShellNode(capability, ['/canvas']));
 
     try {
-      await waitForReactQuery(
-        () =>
-          mounted.queryClient.getQueryState(queryKeys.shell.platformHealthSnapshot())?.status ===
-          'success',
-        {
-          description: 'healthy platform health query',
-        }
-      );
+      await waitForShellBootstrapSurface(mounted);
 
       const appShellFrame = mounted.container.querySelector('[data-slot="app-shell-frame"]');
       const appShellBody = mounted.container.querySelector('[data-slot="app-shell-body"]');
@@ -243,7 +298,7 @@ describe('RootShell platform health UX', () => {
       expect(appShellLeftNavigation?.parentElement).toBe(appShellBody);
       expect(appShellMain?.parentElement).toBe(appShellBody);
       expect(appShellOutlet?.closest('[data-slot="app-shell-main"]')).toBe(appShellMain);
-      expect(appShellOutlet?.textContent).toContain('Workspace route');
+      expect(appShellOutlet?.textContent).toContain('Canvas route');
       expect(shellTopBar?.textContent).toContain('Raven');
       expect(shellTopBar?.textContent).toContain('View');
       expect(shellTopBar?.className).toContain('bg-[var(--surface-shell)]');
@@ -253,6 +308,7 @@ describe('RootShell platform health UX', () => {
       expect(shellGitRef?.className).toContain('bg-[var(--surface-app)]');
       expect(shellGitRef?.className).toContain('border-[color:var(--border-default)]');
       expect(shellWorkspaceSelectors).toBeTruthy();
+      expect(shellWorkspaceSelectors?.querySelectorAll('[role="combobox"]')).toHaveLength(3);
       expect(shellMenuTrigger?.textContent).toContain('View');
       expect(leftNavigationRail?.className).toContain('bg-[var(--surface-shell)]');
       expect(leftNavigationRail?.className).toContain('h-full');
@@ -267,6 +323,40 @@ describe('RootShell platform health UX', () => {
         '/plugins',
         '/admin',
       ]);
+      const leftNavigationCaptions = [
+        ...mounted.container.querySelectorAll<HTMLElement>('[data-slot="left-navigation-caption"]'),
+      ].map((node) => node.textContent?.trim());
+      const canvasNavigationLink = leftNavigationLinks.find(
+        (link) => link.getAttribute('href') === '/canvas'
+      );
+      expect(leftNavigationCaptions).toContain('Runs');
+      expect(leftNavigationCaptions).toContain('Canvas');
+      expect(canvasNavigationLink?.className).toContain('grid-cols-[18px_1fr]');
+      expect(canvasNavigationLink?.className).toContain('border-[color:var(--status-running)]');
+      expect(canvasNavigationLink?.className).not.toContain('isActive');
+    } finally {
+      await mounted.cleanup();
+    }
+  });
+
+  it('keeps the runs navigation item active for run detail routes', async () => {
+    const capability: PlatformHealthCapabilityApi = {
+      loadSnapshot: vi.fn().mockResolvedValue(createPlatformHealthSnapshot()),
+    };
+    const mounted = await withTestQueryClient(
+      createRootShellNode(capability, ['/runs/run_123'])
+    );
+
+    try {
+      await waitForShellBootstrapSurface(mounted);
+
+      const runsNavigationLink = [
+        ...mounted.container.querySelectorAll<HTMLAnchorElement>('[data-slot="left-navigation-link"]'),
+      ].find((link) => link.getAttribute('href') === '/runs');
+
+      expect(mounted.container.textContent).toContain('Run detail route');
+      expect(runsNavigationLink?.className).toContain('border-[color:var(--status-running)]');
+      expect(runsNavigationLink?.className).not.toContain('isActive');
     } finally {
       await mounted.cleanup();
     }
@@ -280,14 +370,7 @@ describe('RootShell platform health UX', () => {
     const mounted = await withTestQueryClient(createRootShellNode(capability));
 
     try {
-      await waitForReactQuery(
-        () =>
-          mounted.queryClient.getQueryState(queryKeys.shell.platformHealthSnapshot())?.status ===
-          'success',
-        {
-          description: 'healthy platform health query',
-        }
-      );
+      await waitForShellBootstrapSurface(mounted);
 
       expect(mounted.container.querySelector('[data-slot="left-navigation-rail"]')).toBeNull();
       expect(mounted.container.querySelector('[data-slot="app-shell-bottom-drawer"]')).toBeNull();
@@ -305,14 +388,7 @@ describe('RootShell platform health UX', () => {
     const mounted = await withTestQueryClient(createRootShellNode(capability));
 
     try {
-      await waitForReactQuery(
-        () =>
-          mounted.queryClient.getQueryState(queryKeys.shell.platformHealthSnapshot())?.status ===
-          'success',
-        {
-          description: 'healthy platform health query',
-        }
-      );
+      await waitForShellBootstrapSurface(mounted);
 
       const bottomDrawer = mounted.container.querySelector('[data-slot="app-shell-bottom-drawer"]');
       const appShellMain = mounted.container.querySelector('[data-slot="app-shell-main"]');

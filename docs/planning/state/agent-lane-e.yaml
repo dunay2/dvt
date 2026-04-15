@@ -222,18 +222,31 @@ tasks:
   - task_id: F-03
     priority: P0
     status: in_progress
-    objective: wire real backend health state into the top bar and a global degraded/offline banner.
+    objective: >-
+      wire real backend health state into the top bar, a global degraded/offline banner, and the
+      unified Raven startup bootstrap that gates the first route.
     dependency: F-02
     target: >-
       TopAppBar shows ok/degraded/offline from real API. A persistent banner appears in degraded and
-      offline states with retry and backoff. No mock connectivity state anywhere in the shell.
+      offline states with retry and backoff. Startup keeps one Raven surface visible until
+      capabilities, platform health, and the first route settle, and blocked readiness states do not
+      reveal misleading workbench content. No mock connectivity state anywhere in the shell.
     complexity: M
     effort_points: 5
-    progress_pct: 96
+    progress_pct: 98
     evidence_refs:
       - docs/planning/proposals/nice-to-have/frontend-and-ux/mvp-e1-f03-frontend-backend-contract-and-health-plan-20260404.md
       - docs/architecture/components/web/runs/frontend-backend-mvp-contract.md
+      - docs/architecture/components/web/workbench-ui-contract-and-component-inventory.md
+      - docs/architecture/components/web/screen-layout-and-cross-surface-behavior-rules.md
+      - docs/architecture/components/web/frontend-runtime-modes-user-manual.md
+      - docs/planning/state/lane-e-shell-baseline-target-guide.md
+      - docs/planning/closeouts/20260414-unified-raven-startup-bootstrap-closeout.md
       - apps/web/src/app/Root.tsx
+      - apps/web/src/app/AppRouteErrorBoundary.tsx
+      - apps/web/src/app/AppProviders.tsx
+      - apps/web/src/app/bootstrap/appBootstrapScreen.ts
+      - apps/web/src/app/views/Canvas.tsx
       - apps/web/src/app/components/TopAppBar.tsx
       - apps/web/src/app/components/ShellHealthBanner.tsx
       - apps/web/src/capabilities/platform-health/presentation/usePlatformHealthSnapshotQuery.ts
@@ -245,9 +258,11 @@ tasks:
     status_reason: >-
       F-03-A, F-03-B, and F-03-C are now explicit: canonical state machine, deterministic
       retry/backoff policy, and one presenter seam driving both top bar and banner from the same
-      health model. Negative-path coverage and final closure checks remain open before final
-      closure.
-    last_verified: '2026-04-13'
+      health model. The remaining active closure slice is startup ownership: replace stacked
+      loading/error surfaces with one Raven bootstrap screen that reports ordered startup progress,
+      keeps blocked routes hidden until they are truly operable, and hands off into the shell only
+      once the first route reaches an allowed terminal state.
+    last_verified: '2026-04-14'
   - task_id: F-04
     priority: P0
     status: in_progress

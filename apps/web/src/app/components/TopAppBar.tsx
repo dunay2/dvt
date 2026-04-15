@@ -3,7 +3,6 @@ import { useLocation } from 'react-router';
 import { resolveWorkspaceBootstrapConfig } from '../services/config/workspaceConfig';
 import { useSessionStore } from '../stores/sessionStore';
 import { useUiLayoutStore } from '../stores/uiLayoutStore';
-import { useShellRuntime } from '../shell/useShellRuntime';
 import AppBrandMark from './AppBrandMark';
 import { topAppBarClasses } from './shell/chrome';
 import { resolveShellTopBarCopy } from './shell/copy';
@@ -15,10 +14,6 @@ import { ShellWorkspaceSelectors } from './shell/ShellWorkspaceSelectors';
 import { TooltipProvider } from './ui/tooltip';
 
 const workspaceBootstrap = resolveWorkspaceBootstrapConfig();
-
-function matchesSurfacePath(pathname: string, itemPath: string): boolean {
-  return pathname === itemPath || pathname.startsWith(`${itemPath}/`);
-}
 
 export function ShellTopBar({
   connectionDetail,
@@ -42,16 +37,11 @@ export function ShellTopBar({
   const toggleInspectorPanel = useUiLayoutStore((state) => state.toggleInspectorPanel);
   const toggleConsolePanel = useUiLayoutStore((state) => state.toggleConsolePanel);
   const gridSize = useUiLayoutStore((state) => state.gridSize);
+  const canvasPalette = useUiLayoutStore((state) => state.canvasPalette);
   const setGridSize = useUiLayoutStore((state) => state.setGridSize);
+  const setCanvasPalette = useUiLayoutStore((state) => state.setCanvasPalette);
   const effectiveConnectionStatus = connectionStateOverride ?? connectionStatus;
   const copy = resolveShellTopBarCopy();
-  const {
-    navigationModel: { primaryItems, footerItems },
-  } = useShellRuntime();
-  const activeSurface = [...primaryItems, ...footerItems].find((item) =>
-    matchesSurfacePath(location.pathname, item.to)
-  );
-  const ActiveSurfaceIcon = activeSurface?.icon;
 
   return (
     <TooltipProvider>
@@ -75,18 +65,15 @@ export function ShellTopBar({
           gitSha={workspaceBootstrap.gitSha}
           copy={copy}
         />
-        {activeSurface && ActiveSurfaceIcon ? (
+        {location.pathname.startsWith('/canvas') ? (
           <div
-            data-slot="shell-active-surface"
-            className={topAppBarClasses.contextChip}
-            title={activeSurface.label}
-          >
-            <ActiveSurfaceIcon className={topAppBarClasses.contextChipIcon} />
-            <span className={topAppBarClasses.contextChipLabel}>{activeSurface.label}</span>
-          </div>
-        ) : null}
-
-        <div className="flex-1" />
+            id="shell-top-bar-canvas-controls"
+            data-slot="shell-top-bar-canvas-controls"
+            className="ml-1 flex min-w-0 flex-1 items-center justify-end gap-2 overflow-hidden"
+          />
+        ) : (
+          <div className="flex-1" />
+        )}
 
         <ShellConnectionStatus
           isConnectionChecking={isConnectionChecking}
@@ -100,11 +87,13 @@ export function ShellTopBar({
           consolePanelVisible={consolePanelVisible}
           focusMode={focusMode}
           gridSize={gridSize}
+          canvasPalette={canvasPalette}
           toggleExplorerPanel={toggleExplorerPanel}
           toggleInspectorPanel={toggleInspectorPanel}
           toggleConsolePanel={toggleConsolePanel}
           toggleFocusMode={toggleFocusMode}
           setGridSize={setGridSize}
+          setCanvasPalette={setCanvasPalette}
           copy={copy}
         />
       </div>

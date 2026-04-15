@@ -6,9 +6,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { IRunsPort } from '../ports/runs';
 import type { CapabilitiesPort } from '../ports/capabilities';
+import type { IPlansPort } from '../ports/plans';
+import type { IWorkspacePort } from '../ports/workspace';
 import { makeMockRunRef, makeRunContext } from '../testing/contractTestUtils';
-import type { PlansService } from './plans/plansService';
-import type { WorkspaceService } from './workspace/workspaceService';
 import {
   AppServicesProvider,
   useAppDataSourceMode,
@@ -20,6 +20,17 @@ import {
   useWorkspaceService,
 } from './AppServicesContext';
 
+function clearStableContextKey(): void {
+  Reflect.deleteProperty(
+    globalThis as typeof globalThis & { __dvtAppServicesContext?: unknown },
+    '__dvtAppServicesContext'
+  );
+  Reflect.deleteProperty(
+    globalThis as typeof globalThis & { __dvtAppServicesContext__?: unknown },
+    '__dvtAppServicesContext__'
+  );
+}
+
 describe('AppServicesProvider', () => {
   let container: HTMLDivElement;
   let root: Root;
@@ -27,9 +38,9 @@ describe('AppServicesProvider', () => {
 
   const captured: {
     mode: ReturnType<typeof useAppDataSourceMode> | null;
-    workspaceService: WorkspaceService | null;
+    workspaceService: IWorkspacePort | null;
     runsService: IRunsPort | null;
-    plansService: PlansService | null;
+    plansService: IPlansPort | null;
     capabilitiesPort: CapabilitiesPort | null;
     sessionContext: ReturnType<typeof useSessionContext> | null;
     shellFeedback: ReturnType<typeof useShellFeedback> | null;
@@ -42,13 +53,6 @@ describe('AppServicesProvider', () => {
     sessionContext: null,
     shellFeedback: null,
   };
-
-  function clearStableContextKey(): void {
-    Reflect.deleteProperty(
-      globalThis as typeof globalThis & { __dvtAppServicesContext?: unknown },
-      '__dvtAppServicesContext'
-    );
-  }
 
   function Probe(): null {
     captured.mode = useAppDataSourceMode();
@@ -239,28 +243,26 @@ describe('AppServicesProvider', () => {
     expect(captured.shellFeedback).toBe(shellFeedback);
   });
 
-  it('reuses the same context across module reloads so HMR consumers keep the provider binding', async () => {
+  it('reuses the same context across module reevaluation in dev', async () => {
     clearStableContextKey();
     vi.resetModules();
-
-    const firstModule = await import('./AppServicesContext');
+    const firstLoad = await import('./AppServicesContext');
     vi.resetModules();
-    const secondModule = await import('./AppServicesContext');
-    let observedMode: ReturnType<typeof secondModule.useAppDataSourceMode> | null = null;
+    const secondLoad = await import('./AppServicesContext');
 
-    function ProbeFromReloadedModule(): null {
-      observedMode = secondModule.useAppDataSourceMode();
+    function CrossReloadProbe(): null {
+      captured.mode = secondLoad.useAppDataSourceMode();
       return null;
     }
 
     await act(async () => {
       root.render(
-        <firstModule.AppServicesProvider overrides={{ mode: 'mock' }}>
-          <ProbeFromReloadedModule />
-        </firstModule.AppServicesProvider>
+        <firstLoad.AppServicesProvider overrides={{ mode: 'mock' }}>
+          <CrossReloadProbe />
+        </firstLoad.AppServicesProvider>
       );
     });
 
-    expect(observedMode).toBe('mock');
+    expect(captured.mode).toBe('mock');
   });
 });

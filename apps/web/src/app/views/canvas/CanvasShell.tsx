@@ -25,6 +25,7 @@ export default function CanvasShell({
   edges,
   nodeTypes,
   gridSize,
+  canvasPalette,
   viewport,
   onNodesChange,
   onNodeDragStop,
@@ -66,9 +67,7 @@ export default function CanvasShell({
               nodes={explorerNodes}
               canEditGraph={userPermissions.canEditEdges}
               onHide={onHideExplorer}
-              onOpenDataRegistry={
-                userPermissions.canEditEdges ? () => setDataRegistryOpen(true) : undefined
-              }
+              onOpenDataRegistry={() => setDataRegistryOpen(true)}
             />
           </ResizablePanel>
           <ResizableHandle />
@@ -86,9 +85,9 @@ export default function CanvasShell({
                 : 100
         }
       >
-        <div className="h-full flex flex-col bg-slate-950">
+        <div className="h-full flex flex-col bg-[var(--surface-panel)]">
           <CanvasToolbar
-            onOpenDataRegistry={() => setDataRegistryOpen(true)}
+            placement="top-bar"
             onAutoLayout={onAutoLayout}
             onToggleCostOverlay={onToggleCostOverlay}
             onToggleImpact={onToggleImpact}
@@ -120,6 +119,7 @@ export default function CanvasShell({
               edges={edges}
               nodeTypes={nodeTypes}
               gridSize={gridSize}
+              canvasPalette={canvasPalette}
               viewport={viewport}
               onNodesChange={onNodesChange}
               onNodeDragStop={onNodeDragStop}
