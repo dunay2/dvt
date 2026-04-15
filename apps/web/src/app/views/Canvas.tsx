@@ -142,6 +142,7 @@ function CanvasContent() {
         edges={controller.edges}
         nodeTypes={controller.nodeTypes}
         gridSize={controller.gridSize}
+        canvasPalette={controller.canvasPalette}
         viewport={controller.viewport}
         onNodesChange={controller.onNodesChange}
         onNodeDragStop={controller.handleNodeDragStop}

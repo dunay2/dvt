@@ -5,6 +5,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import Canvas from './Canvas';
+import { DEFAULT_CANVAS_PALETTE_ID } from './canvas/canvasPalette';
 import { useCanvasController } from './canvas/useCanvasController';
 
 const canvasRouteState = vi.hoisted(() => ({
@@ -91,6 +92,7 @@ function buildController(overrides?: Partial<CanvasController>): CanvasControlle
     edges: [],
     nodeTypes: {},
     gridSize: 24,
+    canvasPalette: DEFAULT_CANVAS_PALETTE_ID,
     viewport: null,
     onNodesChange: vi.fn(),
     onEdgesChange: vi.fn(),

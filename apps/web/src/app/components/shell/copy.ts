@@ -8,6 +8,7 @@ export type ShellTopBarCopy = {
   readonly inspectorPanel: string;
   readonly consolePanel: string;
   readonly focusMode: string;
+  readonly canvasPalette: string;
   readonly gridSize: string;
   readonly resetGrid: string;
   readonly gitTooltip: string;
@@ -27,6 +28,7 @@ const COPY_BY_KEY: Record<keyof ShellTopBarCopy, LocalizableString> = {
   inspectorPanel: { key: 'shell.inspectorPanel', fallback: 'Inspector Panel' },
   consolePanel: { key: 'shell.consolePanel', fallback: 'Console' },
   focusMode: { key: 'shell.focusMode', fallback: 'Focus Mode' },
+  canvasPalette: { key: 'shell.canvasPalette', fallback: 'Canvas background' },
   gridSize: { key: 'shell.gridSize', fallback: 'Grid size' },
   resetGrid: { key: 'shell.resetGrid', fallback: 'Reset grid to 20px' },
   gitTooltip: { key: 'shell.gitTooltip', fallback: 'Current Git branch and commit SHA' },
@@ -56,6 +58,7 @@ export function resolveShellTopBarCopy(locale?: string): ShellTopBarCopy {
     inspectorPanel: resolveString(COPY_BY_KEY.inspectorPanel, locale),
     consolePanel: resolveString(COPY_BY_KEY.consolePanel, locale),
     focusMode: resolveString(COPY_BY_KEY.focusMode, locale),
+    canvasPalette: resolveString(COPY_BY_KEY.canvasPalette, locale),
     gridSize: resolveString(COPY_BY_KEY.gridSize, locale),
     resetGrid: resolveString(COPY_BY_KEY.resetGrid, locale),
     gitTooltip: resolveString(COPY_BY_KEY.gitTooltip, locale),

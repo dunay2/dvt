@@ -213,6 +213,7 @@ export function useCanvasController() {
     edges: graphModel.edges,
     nodeTypes,
     gridSize: store.gridSize,
+    canvasPalette: store.canvasPalette,
     viewport: store.persistedViewport,
     onNodesChange: graphModel.onNodesChange,
     onEdgesChange: graphModel.onEdgesChange,

@@ -2,6 +2,7 @@ import type { Edge, Node, NodeTypes, ReactFlowProps } from '@xyflow/react';
 import type React from 'react';
 
 import type { CanonicalNode } from '../../types/canonical';
+import type { CanvasPaletteId } from './canvasPalette';
 import type { TransformationGraphValidationResult } from './transformationGraphValidation';
 
 export type UserPermissions = {
@@ -24,6 +25,7 @@ export type CanvasShellProps = {
   edges: Edge[];
   nodeTypes: NodeTypes;
   gridSize: number;
+  canvasPalette: CanvasPaletteId;
   viewport: { x: number; y: number; zoom: number } | null;
   onNodesChange: NonNullable<ReactFlowProps<Node, Edge>['onNodesChange']>;
   onNodeDragStop: NonNullable<ReactFlowProps<Node, Edge>['onNodeDragStop']>;

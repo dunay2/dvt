@@ -23,8 +23,10 @@ export function ShellTopBar({
   const location = useLocation();
   const selectedTenant = useSessionStore((state) => state.tenantId);
   const selectedProject = useSessionStore((state) => state.projectId);
+  const selectedEnvironment = useSessionStore((state) => state.environmentId);
   const setSelectedTenant = useSessionStore((state) => state.setTenantId);
   const setSelectedProject = useSessionStore((state) => state.setProjectId);
+  const setSelectedEnvironment = useSessionStore((state) => state.setEnvironmentId);
   const connectionStatus = useUiLayoutStore((state) => state.connectionStatus);
   const focusMode = useUiLayoutStore((state) => state.focusMode);
   const toggleFocusMode = useUiLayoutStore((state) => state.toggleFocusMode);
@@ -35,7 +37,9 @@ export function ShellTopBar({
   const toggleInspectorPanel = useUiLayoutStore((state) => state.toggleInspectorPanel);
   const toggleConsolePanel = useUiLayoutStore((state) => state.toggleConsolePanel);
   const gridSize = useUiLayoutStore((state) => state.gridSize);
+  const canvasPalette = useUiLayoutStore((state) => state.canvasPalette);
   const setGridSize = useUiLayoutStore((state) => state.setGridSize);
+  const setCanvasPalette = useUiLayoutStore((state) => state.setCanvasPalette);
   const effectiveConnectionStatus = connectionStateOverride ?? connectionStatus;
   const copy = resolveShellTopBarCopy();
 
@@ -51,8 +55,10 @@ export function ShellTopBar({
           workspaceBootstrap={workspaceBootstrap}
           selectedTenant={selectedTenant}
           selectedProject={selectedProject}
+          selectedEnvironment={selectedEnvironment}
           setSelectedTenant={setSelectedTenant}
           setSelectedProject={setSelectedProject}
+          setSelectedEnvironment={setSelectedEnvironment}
         />
         <ShellGitRef
           gitBranch={workspaceBootstrap.gitBranch}
@@ -81,11 +87,13 @@ export function ShellTopBar({
           consolePanelVisible={consolePanelVisible}
           focusMode={focusMode}
           gridSize={gridSize}
+          canvasPalette={canvasPalette}
           toggleExplorerPanel={toggleExplorerPanel}
           toggleInspectorPanel={toggleInspectorPanel}
           toggleConsolePanel={toggleConsolePanel}
           toggleFocusMode={toggleFocusMode}
           setGridSize={setGridSize}
+          setCanvasPalette={setCanvasPalette}
           copy={copy}
         />
       </div>
