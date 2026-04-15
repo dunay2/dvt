@@ -37,6 +37,10 @@ export async function runTemporalWorkerHost(options: RunTemporalWorkerHostOption
     }
 
     runtime = await createRuntime(options.env, options.logger);
+    const runtimeHandle = runtime;
+    options.monitor.setRunStateCircuitSnapshotProvider(() =>
+      runtimeHandle.getRunStateCircuitSnapshot()
+    );
     if (options.shutdownSignal.aborted) {
       return;
     }
@@ -73,6 +77,7 @@ export async function runTemporalWorkerHost(options: RunTemporalWorkerHostOption
     }
 
     options.monitor.onStopped();
+    options.monitor.setRunStateCircuitSnapshotProvider(null);
   }
 
   if (cleanupError !== null) {

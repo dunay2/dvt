@@ -1,4 +1,5 @@
 import type { Logger } from 'pino';
+import type { RunStateCommandCircuitSnapshot } from '@dvt/adapter-temporal';
 
 export type TemporalWorkerRuntimeState = 'starting' | 'running' | 'stopping' | 'failing' | 'stopped';
 
@@ -11,6 +12,7 @@ export interface TemporalWorkerHealthSnapshot {
   lastErrorMessage: string | null;
   lastErrorAt: string | null;
   startedAt: string | null;
+  runStateCircuitState: RunStateCommandCircuitSnapshot['state'] | null;
 }
 
 interface TemporalWorkerMonitorOptions {
@@ -41,6 +43,7 @@ export class TemporalWorkerMonitor {
   private startCount = 0;
   private stopCount = 0;
   private errorCount = 0;
+  private runStateCircuitSnapshotProvider: (() => RunStateCommandCircuitSnapshot) | null = null;
 
   public constructor(options: TemporalWorkerMonitorOptions) {
     this.serviceName = options.serviceName;
@@ -78,6 +81,7 @@ export class TemporalWorkerMonitor {
   }
 
   public getHealthSnapshot(): TemporalWorkerHealthSnapshot {
+    const runStateCircuitSnapshot = this.getRunStateCircuitSnapshot();
     return {
       ok: this.state !== 'stopped',
       ready: this.state === 'running',
@@ -87,11 +91,20 @@ export class TemporalWorkerMonitor {
       lastErrorMessage: this.lastErrorMessage,
       lastErrorAt: toIso(this.lastErrorAtMs),
       startedAt: toIso(this.startedAtMs),
+      runStateCircuitState: runStateCircuitSnapshot?.state ?? null,
     };
+  }
+
+  public setRunStateCircuitSnapshotProvider(
+    provider: (() => RunStateCommandCircuitSnapshot) | null
+  ): void {
+    this.runStateCircuitSnapshotProvider = provider;
   }
 
   public renderMetrics(): string {
     const snapshot = this.getHealthSnapshot();
+    const runStateCircuitSnapshot = this.getRunStateCircuitSnapshot();
+    const runStateCircuitState = runStateCircuitSnapshot?.state ?? 'closed';
     const lines = [
       '# HELP dvt_temporal_worker_up Whether the standalone temporal worker process is alive.',
       '# TYPE dvt_temporal_worker_up gauge',
@@ -122,9 +135,33 @@ export class TemporalWorkerMonitor {
       '# HELP dvt_temporal_worker_last_error_timestamp_seconds Unix timestamp of the last runtime error.',
       '# TYPE dvt_temporal_worker_last_error_timestamp_seconds gauge',
       `dvt_temporal_worker_last_error_timestamp_seconds ${this.lastErrorAtMs === null ? 0 : Math.floor(this.lastErrorAtMs / 1000)}`,
+      '# HELP dvt_temporal_worker_run_state_circuit_state Run-state command circuit state.',
+      '# TYPE dvt_temporal_worker_run_state_circuit_state gauge',
+      `dvt_temporal_worker_run_state_circuit_state{state="closed"} ${runStateCircuitState === 'closed' ? 1 : 0}`,
+      `dvt_temporal_worker_run_state_circuit_state{state="open"} ${runStateCircuitState === 'open' ? 1 : 0}`,
+      `dvt_temporal_worker_run_state_circuit_state{state="half_open"} ${runStateCircuitState === 'half_open' ? 1 : 0}`,
+      '# HELP dvt_temporal_worker_run_state_circuit_trip_total Number of circuit trips.',
+      '# TYPE dvt_temporal_worker_run_state_circuit_trip_total counter',
+      `dvt_temporal_worker_run_state_circuit_trip_total ${runStateCircuitSnapshot?.tripCount ?? 0}`,
+      '# HELP dvt_temporal_worker_run_state_circuit_rejection_total Number of fast-fail rejections while circuit is open.',
+      '# TYPE dvt_temporal_worker_run_state_circuit_rejection_total counter',
+      `dvt_temporal_worker_run_state_circuit_rejection_total ${runStateCircuitSnapshot?.rejectionCount ?? 0}`,
+      '# HELP dvt_temporal_worker_run_state_circuit_failure_total Number of guarded state-store failures observed by the breaker.',
+      '# TYPE dvt_temporal_worker_run_state_circuit_failure_total counter',
+      `dvt_temporal_worker_run_state_circuit_failure_total ${runStateCircuitSnapshot?.failureCount ?? 0}`,
+      '# HELP dvt_temporal_worker_run_state_circuit_timeout_total Number of state-store timeouts observed by the breaker.',
+      '# TYPE dvt_temporal_worker_run_state_circuit_timeout_total counter',
+      `dvt_temporal_worker_run_state_circuit_timeout_total ${runStateCircuitSnapshot?.timeoutCount ?? 0}`,
+      '# HELP dvt_temporal_worker_run_state_circuit_half_open_probe_total Number of half-open probe attempts.',
+      '# TYPE dvt_temporal_worker_run_state_circuit_half_open_probe_total counter',
+      `dvt_temporal_worker_run_state_circuit_half_open_probe_total ${runStateCircuitSnapshot?.halfOpenProbeCount ?? 0}`,
     ];
 
     return `${lines.join('\n')}\n`;
+  }
+
+  private getRunStateCircuitSnapshot(): RunStateCommandCircuitSnapshot | null {
+    return this.runStateCircuitSnapshotProvider?.() ?? null;
   }
 
   private transitionTo(nextState: TemporalWorkerRuntimeState, reason: string): void {

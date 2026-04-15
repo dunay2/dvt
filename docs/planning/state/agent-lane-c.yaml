@@ -570,7 +570,7 @@ tasks:
     last_verified: '2026-04-02'
   - task_id: AR-C4
     priority: P1
-    status: queued
+    status: review
     objective: >-
       add circuit breaker between Temporal activities and IRunStateStore to prevent state store
       unavailability from blocking all step execution with no fallback or degradation signal.
@@ -581,13 +581,19 @@ tasks:
       via metrics.
     complexity: M
     effort_points: 5
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
+      - docs/planning/closeouts/20260415-ar-c4-run-state-circuit-breaker-closeout.md
+      - packages/@dvt/adapter-temporal/src/RunStateCommandPortCircuitBreaker.ts
+      - packages/@dvt/adapter-temporal/test/RunStateCommandPortCircuitBreaker.test.ts
+      - apps/temporal-worker/src/runtime/createTemporalWorkerRuntime.ts
+      - apps/temporal-worker/src/ops/TemporalWorkerMonitor.ts
     status_reason: >-
-      Temporal activities write directly to IRunStateStore with no protection — state store latency
-      or unavailability cascades into workflow timeouts.
-    last_verified: '2026-04-02'
+      Temporal activity state-store writes now flow through a circuit-breaker-wrapped command port
+      with timeout protection and retryable fast-fail semantics; worker ops surfaces expose breaker
+      posture and counters so degradation is explicit.
+    last_verified: '2026-04-15'
   - task_id: AR-C5
     priority: P1
     status: queued
@@ -604,9 +610,10 @@ tasks:
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review-principal-architect.md
     status_reason: >-
-      The principal deep review identified timeout-only adapter failure handling as a cascade risk
-      when Temporal is degraded.
-    last_verified: '2026-04-04'
+      Temporal activity state-store writes now flow through a circuit-breaker-wrapped command
+      port`r`n      with timeout protection and retryable fast-fail semantics; worker ops surfaces
+      expose breaker`r`n      posture and counters so degradation is explicit.`r`n    last_verified:
+      '2026-04-15'
   - task_id: MW-C1
     priority: P0
     status: done

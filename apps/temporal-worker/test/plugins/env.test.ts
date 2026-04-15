@@ -15,6 +15,9 @@ describe('temporal worker env', () => {
     expect(env.DVT_TEMPORAL_DBT_ENABLED).toBe(false);
     expect(env.DVT_TEMPORAL_WORKER_RUN_MIGRATIONS).toBe(false);
     expect(env.DVT_DBT_BIN).toBe('dbt');
+    expect(env.DVT_RUNSTATE_CIRCUIT_BREAKER_FAILURE_THRESHOLD).toBe(3);
+    expect(env.DVT_RUNSTATE_CIRCUIT_BREAKER_OPEN_DURATION_MS).toBe(10000);
+    expect(env.DVT_RUNSTATE_CIRCUIT_BREAKER_OPERATION_TIMEOUT_MS).toBe(2000);
   });
 
   it('requires bundle store config when DBT mode is enabled', () => {
