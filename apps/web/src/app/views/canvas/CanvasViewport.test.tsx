@@ -5,10 +5,18 @@ import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import CanvasViewport from './CanvasViewport';
+import {
+  DEFAULT_CANVAS_PALETTE_ID,
+  deriveCanvasPaletteTokens,
+  normalizeCanvasPaletteId,
+} from './canvasPalette';
 
 const mockResolveNodeKindRegistration = vi.hoisted(() => vi.fn());
 const xyflowState = vi.hoisted(() => ({
   miniMapNodeColor: null as null | ((node: { data?: unknown }) => string),
+  miniMapMaskColor: null as null | string,
+  miniMapMaskStrokeColor: null as null | string,
+  miniMapStyle: null as null | Record<string, unknown>,
   lastReactFlowProps: null as null | Record<string, unknown>,
   setViewport: vi.fn(),
 }));
@@ -36,18 +44,31 @@ vi.mock('@xyflow/react', () => ({
         </div>
       );
     })(),
-  Background: ({ gap }: { gap: number }) => <div data-testid="background">gap:{gap}</div>,
+  Background: ({ color, gap }: { color?: string; gap: number }) => (
+    <div data-testid="background">
+      color:{color ?? 'none'}|gap:{gap}
+    </div>
+  ),
   Controls: () => <div data-testid="controls" />,
   MiniMap: ({
     nodeColor,
     pannable,
     zoomable,
+    maskColor,
+    maskStrokeColor,
+    style,
   }: {
     nodeColor: (node: { data?: unknown }) => string;
     pannable?: boolean;
     zoomable?: boolean;
+    maskColor?: string;
+    maskStrokeColor?: string;
+    style?: Record<string, unknown>;
   }) => {
     xyflowState.miniMapNodeColor = nodeColor;
+    xyflowState.miniMapMaskColor = maskColor ?? null;
+    xyflowState.miniMapMaskStrokeColor = maskStrokeColor ?? null;
+    xyflowState.miniMapStyle = style ?? null;
     return (
       <div
         data-testid="minimap"
@@ -73,6 +94,7 @@ function buildProps(
     edges: [],
     nodeTypes: {},
     gridSize: 24,
+    canvasPalette: DEFAULT_CANVAS_PALETTE_ID,
     viewport: null,
     onNodesChange: vi.fn(),
     onNodeDragStop: vi.fn(),
@@ -101,6 +123,9 @@ describe('CanvasViewport', () => {
       globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }
     ).IS_REACT_ACT_ENVIRONMENT = true;
     xyflowState.miniMapNodeColor = null;
+    xyflowState.miniMapMaskColor = null;
+    xyflowState.miniMapMaskStrokeColor = null;
+    xyflowState.miniMapStyle = null;
     xyflowState.lastReactFlowProps = null;
     xyflowState.setViewport.mockReset();
     mockResolveNodeKindRegistration.mockImplementation((kind: string) => ({
@@ -147,6 +172,10 @@ describe('CanvasViewport', () => {
   });
 
   it('hides restore buttons in focus mode and resolves minimap color from node registry', async () => {
+    const legacyCanvasPalette = 'blueprint';
+    const normalizedCanvasPalette = normalizeCanvasPaletteId(legacyCanvasPalette);
+    const expectedPaletteTokens = deriveCanvasPaletteTokens(normalizedCanvasPalette);
+
     await act(async () => {
       root.render(
         <CanvasViewport
@@ -155,13 +184,21 @@ describe('CanvasViewport', () => {
             explorerPanelVisible: false,
             inspectorPanelVisible: false,
             gridSize: 32,
+            canvasPalette:
+              legacyCanvasPalette as React.ComponentProps<typeof CanvasViewport>['canvasPalette'],
           })}
         />
       );
     });
 
+    const viewport = container.querySelector('[data-testid="canvas-viewport"]');
+    const viewportStyle = (viewport as HTMLDivElement).style;
+
     expect(container.querySelectorAll('button')).toHaveLength(0);
-    expect(container.textContent).toContain('gap:32');
+    expect(viewport?.getAttribute('data-canvas-palette')).toBe(normalizedCanvasPalette);
+    expect(viewportStyle.getPropertyValue('--canvas-surface')).toBe(expectedPaletteTokens.surface);
+    expect(viewportStyle.getPropertyValue('--canvas-grid')).toBe(expectedPaletteTokens.grid);
+    expect(viewportStyle.getPropertyValue('--canvas-grid-gap')).toBe('32px');
     expect(xyflowState.miniMapNodeColor).toBeTypeOf('function');
     expect(xyflowState.miniMapNodeColor?.({ data: { pluginKind: 'dbt:model' } })).toBe('#22c55e');
     expect(xyflowState.miniMapNodeColor?.({ data: {} })).toBe('#6b7280');
@@ -171,9 +208,13 @@ describe('CanvasViewport', () => {
       fitView: true,
       fitViewOptions: { padding: 0.2, maxZoom: 0.82 },
       minZoom: 0.35,
+      className: 'bg-[var(--canvas-surface)]',
       nodesDraggable: true,
       nodesConnectable: true,
     });
+    expect(xyflowState.miniMapMaskColor).toBe('var(--canvas-minimap-mask)');
+    expect(xyflowState.miniMapMaskStrokeColor).toBe('var(--canvas-minimap-mask-stroke)');
+    expect(xyflowState.miniMapStyle).toMatchObject({ borderRadius: 8 });
     const minimap = container.querySelector('[data-testid="minimap"]');
     expect(minimap?.getAttribute('data-pannable')).toBe('true');
     expect(minimap?.getAttribute('data-zoomable')).toBe('true');

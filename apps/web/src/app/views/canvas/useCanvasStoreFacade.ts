@@ -3,6 +3,7 @@ import { useCanvasInteractionStore } from '../../stores/canvasInteractionStore';
 import { useExecutionStore } from '../../stores/executionStore';
 import { useSessionStore } from '../../stores/sessionStore';
 import { useUiLayoutStore } from '../../stores/uiLayoutStore';
+import type { CanvasPaletteId } from './canvasPalette';
 
 type CanvasStoreFacade = {
   _hasHydrated: boolean;
@@ -28,6 +29,7 @@ type CanvasStoreFacade = {
   explorerPanelVisible: boolean;
   inspectorPanelVisible: boolean;
   gridSize: number;
+  canvasPalette: CanvasPaletteId;
   canvasLayouts: ReturnType<typeof useCanvasInteractionStore.getState>['canvasLayouts'];
   setCanvasViewport: ReturnType<typeof useCanvasInteractionStore.getState>['setCanvasViewport'];
   setCanvasNodePositions: ReturnType<
@@ -80,6 +82,7 @@ export function useCanvasStoreFacade(): CanvasStoreView {
   const explorerPanelVisible = useUiLayoutStore((state) => state.explorerPanelVisible);
   const inspectorPanelVisible = useUiLayoutStore((state) => state.inspectorPanelVisible);
   const gridSize = useUiLayoutStore((state) => state.gridSize);
+  const canvasPalette = useUiLayoutStore((state) => state.canvasPalette);
   const canvasLayouts = useCanvasInteractionStore((state) => state.canvasLayouts);
   const setCanvasViewport = useCanvasInteractionStore((state) => state.setCanvasViewport);
   const setCanvasNodePositions = useCanvasInteractionStore((state) => state.setCanvasNodePositions);
@@ -135,6 +138,7 @@ export function useCanvasStoreFacade(): CanvasStoreView {
     explorerPanelVisible,
     inspectorPanelVisible,
     gridSize,
+    canvasPalette,
     canvasLayouts,
     setCanvasViewport,
     setCanvasNodePositions,

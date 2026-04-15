@@ -5,6 +5,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import CanvasShell from './CanvasShell';
+import { DEFAULT_CANVAS_PALETTE_ID } from './canvasPalette';
 import type { CanvasShellProps } from './canvasShell.types';
 
 const shellState = vi.hoisted(() => ({
@@ -63,6 +64,7 @@ function buildProps(overrides?: Partial<CanvasShellProps>): CanvasShellProps {
     edges: [],
     nodeTypes: {},
     gridSize: 24,
+    canvasPalette: DEFAULT_CANVAS_PALETTE_ID,
     viewport: null,
     onNodesChange: vi.fn(),
     onNodeDragStop: vi.fn(),

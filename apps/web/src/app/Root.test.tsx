@@ -18,6 +18,7 @@ import Root, { RootShell } from './Root';
 import { AppServicesProvider, useAppDataSourceMode } from './services/AppServicesContext';
 import { useAppStore } from './stores/appStore';
 import { useUiLayoutStore } from './stores/uiLayoutStore';
+import { DEFAULT_CANVAS_PALETTE_ID } from './views/canvas/canvasPalette';
 
 const bootstrapScreenMocks = vi.hoisted(() => ({
   completeBootstrapScreen: vi.fn(),
@@ -80,6 +81,7 @@ function resetUiLayoutStore(): void {
     consolePanelVisible: false,
     focusMode: false,
     gridSize: 20,
+    canvasPalette: DEFAULT_CANVAS_PALETTE_ID,
     activeTabs: [{ id: 'main-canvas', type: 'canvas', label: 'Main Graph' }],
     activeTabId: 'main-canvas',
     connectionStatus: { rest: 'ok', liveEvents: 'connected' },
@@ -306,6 +308,7 @@ describe('RootShell platform health UX', () => {
       expect(shellGitRef?.className).toContain('bg-[var(--surface-app)]');
       expect(shellGitRef?.className).toContain('border-[color:var(--border-default)]');
       expect(shellWorkspaceSelectors).toBeTruthy();
+      expect(shellWorkspaceSelectors?.querySelectorAll('[role="combobox"]')).toHaveLength(3);
       expect(shellMenuTrigger?.textContent).toContain('View');
       expect(leftNavigationRail?.className).toContain('bg-[var(--surface-shell)]');
       expect(leftNavigationRail?.className).toContain('h-full');

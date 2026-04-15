@@ -25,6 +25,7 @@ export default function CanvasShell({
   edges,
   nodeTypes,
   gridSize,
+  canvasPalette,
   viewport,
   onNodesChange,
   onNodeDragStop,
@@ -84,7 +85,7 @@ export default function CanvasShell({
                 : 100
         }
       >
-        <div className="h-full flex flex-col bg-slate-950">
+        <div className="h-full flex flex-col bg-[var(--surface-panel)]">
           <CanvasToolbar
             placement="top-bar"
             onAutoLayout={onAutoLayout}
@@ -118,6 +119,7 @@ export default function CanvasShell({
               edges={edges}
               nodeTypes={nodeTypes}
               gridSize={gridSize}
+              canvasPalette={canvasPalette}
               viewport={viewport}
               onNodesChange={onNodesChange}
               onNodeDragStop={onNodeDragStop}
