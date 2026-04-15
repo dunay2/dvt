@@ -41,7 +41,7 @@
     "prepare:integration:postgres": "node ../../../scripts/build-workspace-runtime-deps.cjs @dvt/adapter-temporal --include-package @dvt/adapter-postgres --build-self",
     "test:integration": "vitest run ./test/integration.time-skipping.test.ts",
     "test:integration:transformation": "vitest run ./test/integration.transformation.time-skipping.test.ts",
-    "test:integration:postgres": "vitest run ./test/integration.postgres.time-skipping.test.ts",
+    "test:integration:postgres": "node ./scripts/run-postgres-integration.cjs",
     "test:integration:local": "pnpm run prepare:integration && pnpm run test:integration",
     "test:integration:transformation:local": "pnpm run prepare:integration:transformation && pnpm run test:integration:transformation",
     "test:integration:postgres:local": "pnpm run prepare:integration:postgres && pnpm run test:integration:postgres",

@@ -98,12 +98,25 @@ describe('PlannerFacade - canonical graph source boundary', () => {
   });
 
   it('supports non-DBT graphSource when stepFactory is injected', async () => {
+    const customStepRegistry = {
+      validate: (kind: string) =>
+        kind === 'API_CALL'
+          ? { success: true as const, data: {} }
+          : {
+              success: false as const,
+              error: `UNKNOWN_STEP_KIND[${kind}]: step kind is not registered in the canonical registry.`,
+            },
+      isKnown: (kind: string) => kind === 'API_CALL',
+      getKinds: () => ['API_CALL'],
+    };
+
     const facade = new PlannerFacade({
       stepFactory: (node) => ({
         stepId: node.nodeId,
         kind: node.stepKind,
         dependsOn: [...node.dependsOn],
       }),
+      stepTypeRegistry: customStepRegistry,
     });
 
     const result = await facade.buildPlan({

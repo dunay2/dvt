@@ -1,11 +1,13 @@
 import { PostgresRunStateCommandPortBridge, PostgresStateStoreAdapter } from '@dvt/adapter-postgres';
 import {
+  CircuitBreakingRunStateCommandPort,
   DbtCliPluginRunner,
   assertDbtCliAvailable,
   createDefaultStepActivityRegistry,
   loadTemporalAdapterConfig,
   TemporalWorkerHost,
   type DbtPluginRunner,
+  type RunStateCommandCircuitSnapshot,
   type TemporalAdapterConfig,
   type TemporalWorkerHostConfig,
 } from '@dvt/adapter-temporal';
@@ -26,6 +28,7 @@ import type { Env } from '../plugins/env.js';
 export interface RuntimeHandle {
   start(signal?: globalThis.AbortSignal): Promise<void>;
   stop(): Promise<void>;
+  getRunStateCircuitSnapshot(): RunStateCommandCircuitSnapshot;
 }
 
 interface StateStoreLike {
@@ -118,7 +121,12 @@ export async function createTemporalWorkerRuntime(
   }
 
   const activityDeps = {
-    runStateCommandPort: new PostgresRunStateCommandPortBridge(stateStore as never),
+    runStateCommandPort: new CircuitBreakingRunStateCommandPort({
+      delegate: new PostgresRunStateCommandPortBridge(stateStore as never),
+      failureThreshold: env.DVT_RUNSTATE_CIRCUIT_BREAKER_FAILURE_THRESHOLD,
+      openDurationMs: env.DVT_RUNSTATE_CIRCUIT_BREAKER_OPEN_DURATION_MS,
+      operationTimeoutMs: env.DVT_RUNSTATE_CIRCUIT_BREAKER_OPERATION_TIMEOUT_MS,
+    }),
     clock: { nowIsoUtc: () => asIsoUtcString(new Date().toISOString()) },
     idempotency: new IdempotencyKeyBuilder(),
     runExecutionContextReader,
@@ -185,6 +193,7 @@ export async function createTemporalWorkerRuntime(
       });
       await stopPromise;
     },
+    getRunStateCircuitSnapshot: () => activityDeps.runStateCommandPort.getSnapshot(),
   };
 }
 

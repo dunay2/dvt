@@ -27,6 +27,16 @@ describe('runTemporalWorkerHost', () => {
           await start();
         },
         stop,
+        getRunStateCircuitSnapshot: () => ({
+          state: 'closed',
+          consecutiveFailures: 0,
+          openUntilEpochMs: null,
+          tripCount: 0,
+          rejectionCount: 0,
+          failureCount: 0,
+          timeoutCount: 0,
+          halfOpenProbeCount: 0,
+        }),
       }),
     });
 
@@ -95,6 +105,9 @@ function createEnv(): {
   DVT_PG_SCHEMA: string;
   DVT_PG_STATEMENT_TIMEOUT_MS: number;
   DVT_PG_QUERY_TIMEOUT_MS: number;
+  DVT_RUNSTATE_CIRCUIT_BREAKER_FAILURE_THRESHOLD: number;
+  DVT_RUNSTATE_CIRCUIT_BREAKER_OPEN_DURATION_MS: number;
+  DVT_RUNSTATE_CIRCUIT_BREAKER_OPERATION_TIMEOUT_MS: number;
   DVT_TEMPORAL_WORKER_RUN_MIGRATIONS: boolean;
   TEMPORAL_ADDRESS: string;
   TEMPORAL_NAMESPACE: string;
@@ -121,6 +134,9 @@ function createEnv(): {
     DVT_PG_SCHEMA: 'dvt',
     DVT_PG_STATEMENT_TIMEOUT_MS: 0,
     DVT_PG_QUERY_TIMEOUT_MS: 0,
+    DVT_RUNSTATE_CIRCUIT_BREAKER_FAILURE_THRESHOLD: 3,
+    DVT_RUNSTATE_CIRCUIT_BREAKER_OPEN_DURATION_MS: 10000,
+    DVT_RUNSTATE_CIRCUIT_BREAKER_OPERATION_TIMEOUT_MS: 2000,
     DVT_TEMPORAL_WORKER_RUN_MIGRATIONS: false,
     TEMPORAL_ADDRESS: 'temporal:7233',
     TEMPORAL_NAMESPACE: 'default',

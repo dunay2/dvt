@@ -1,5 +1,3 @@
-import { URL } from 'node:url';
-
 import { z } from 'zod';
 
 import {
@@ -115,9 +113,9 @@ export function getDbtProjectBundleLocatorValidationError(
   tenantId: string,
   sha256: string
 ): string | undefined {
-  let parsedUri: URL;
+  let parsedUri: globalThis.URL;
   try {
-    parsedUri = new URL(uri);
+    parsedUri = new globalThis.URL(uri);
   } catch {
     return 'DBT project bundle URI must be a valid file:// or s3:// locator';
   }
@@ -146,7 +144,7 @@ export function getDbtProjectBundleLocatorValidationError(
   return 'DBT project bundle URI must use file:// or s3://';
 }
 
-function decodedPathname(uri: URL): string {
+function decodedPathname(uri: globalThis.URL): string {
   return decodeURIComponent(uri.pathname);
 }
 

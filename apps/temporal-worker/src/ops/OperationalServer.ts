@@ -94,6 +94,7 @@ async function handleRequest(
         state: health.state,
         service: health.service,
         dbtEnabled: health.dbtEnabled,
+        runStateCircuitState: health.runStateCircuitState,
       });
       return;
     case '/readyz':
@@ -103,6 +104,7 @@ async function handleRequest(
         state: health.state,
         service: health.service,
         dbtEnabled: health.dbtEnabled,
+        runStateCircuitState: health.runStateCircuitState,
         lastErrorMessage: health.lastErrorMessage,
         lastErrorAt: health.lastErrorAt,
       });

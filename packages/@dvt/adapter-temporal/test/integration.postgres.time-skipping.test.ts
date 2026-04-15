@@ -39,7 +39,10 @@ describe('temporal integration (postgres capability)', () => {
   it(
     'golden path: postgres relational capability executes through the Temporal runtime',
     async () => {
-      const connectionString = process.env.DVT_PG_URL ?? process.env.DATABASE_URL;
+      const connectionString =
+        process.env.DVT_PG_URL ??
+        process.env.DATABASE_URL ??
+        'postgresql://dvt:dvt@localhost:5432/dvt';
       if (!connectionString) {
         throw new Error('DVT_PG_URL or DATABASE_URL is required for Postgres runtime integration');
       }
