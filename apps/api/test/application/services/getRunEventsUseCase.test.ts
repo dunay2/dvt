@@ -61,7 +61,7 @@ describe('GetRunEventsUseCase', () => {
             payloadVersion: 1,
             stepId: 'step-evidence',
             payload: {
-              materialization: {
+              resultEvidence: {
                 executor: 'postgres',
                 environmentId: 'env-1',
                 sinkTable: 'analytics.orders_daily',
@@ -122,7 +122,7 @@ describe('GetRunEventsUseCase', () => {
           payloadVersion: 1,
           stepId: 'step-evidence',
           payload: {
-            materialization: {
+            resultEvidence: {
               executor: 'postgres',
               environmentId: 'env-1',
               sinkTable: 'analytics.orders_daily',

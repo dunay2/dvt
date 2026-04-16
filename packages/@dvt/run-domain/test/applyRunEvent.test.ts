@@ -346,7 +346,7 @@ describe('applyRunEvent - TF-C2-B read-surface evidence', () => {
     applyRunEvent(snap, {
       ...makeStepEvent('StepCompleted', 'step-evidence'),
       payload: {
-        materialization: {
+        resultEvidence: {
           executor: 'postgres',
           environmentId: 'env-1',
           sinkTable: 'analytics.orders_daily',
@@ -377,7 +377,7 @@ describe('applyRunEvent - TF-C2-B read-surface evidence', () => {
     applyRunEvent(snap, {
       ...makeStepEvent('StepCompleted', 'step-evidence'),
       payload: {
-        materialization: {
+        resultEvidence: {
           executor: 'postgres',
           environmentId: 'env-1',
           sinkTable: 'analytics.orders_daily',
@@ -411,7 +411,7 @@ describe('applyRunEvent - TF-C2-B read-surface evidence', () => {
     applyRunEvent(snap, {
       ...makeStepEvent('StepCompleted', 'step-evidence'),
       payload: {
-        materialization: {
+        resultEvidence: {
           executor: 'postgres',
           environmentId: 'env-1',
           sinkTable: 'analytics.orders_daily',

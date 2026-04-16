@@ -271,11 +271,6 @@ function deriveMaterialization(
     if (resultEvidence !== undefined) {
       return resultEvidence;
     }
-
-    const legacyMaterialization = parseMaterialization(event.payload['materialization']);
-    if (legacyMaterialization !== undefined) {
-      return legacyMaterialization;
-    }
   }
 
   return undefined;

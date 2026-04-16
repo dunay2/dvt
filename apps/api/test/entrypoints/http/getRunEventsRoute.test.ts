@@ -112,7 +112,7 @@ describe('getRunEventsRoute', () => {
           payloadVersion: 1,
           stepId: 'step-evidence',
           payload: {
-            materialization: {
+            resultEvidence: {
               executor: 'postgres',
               environmentId: 'env-1',
               sinkTable: 'analytics.orders_daily',
@@ -146,7 +146,7 @@ describe('getRunEventsRoute', () => {
           eventType: 'StepCompleted',
           stepId: 'step-evidence',
           payload: expect.objectContaining({
-            materialization: expect.objectContaining({
+            resultEvidence: expect.objectContaining({
               sinkTable: 'analytics.orders_daily',
               rowsWritten: 42,
             }),
