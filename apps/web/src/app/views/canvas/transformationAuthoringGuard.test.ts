@@ -22,30 +22,13 @@ describe('guardTransformationAuthoringNode', () => {
     });
   });
 
-  it('allows first supported node when transformation mode is enabled', () => {
+  it('keeps canvas authoring unrestricted when transformation mode is enabled', () => {
     expect(evaluate([], 'input', true)).toEqual({ allowed: true });
     expect(evaluate([], 'transform', true)).toEqual({ allowed: true });
     expect(evaluate([], 'output', true)).toEqual({ allowed: true });
-  });
-
-  it('rejects unsupported roles when transformation mode is enabled', () => {
-    expect(evaluate([], 'check', true)).toEqual({
-      allowed: false,
-      reason: 'Transformation mode supports only input, transform, and output nodes.',
-    });
-  });
-
-  it('rejects duplicate role when transformation mode is enabled', () => {
-    expect(evaluate(['input'], 'input', true)).toEqual({
-      allowed: false,
-      reason: 'Transformation mode allows exactly one node per role (input, transform, output).',
-    });
-  });
-
-  it('rejects adding a fourth node in constrained transformation graph', () => {
-    expect(evaluate(['input', 'transform', 'output'], 'input', true)).toEqual({
-      allowed: false,
-      reason: 'Transformation mode allows exactly 3 nodes: source, sql_transform, and sink.',
-    });
+    expect(evaluate([], 'check', true)).toEqual({ allowed: true });
+    expect(evaluate([], 'control', true)).toEqual({ allowed: true });
+    expect(evaluate(['input'], 'input', true)).toEqual({ allowed: true });
+    expect(evaluate(['input', 'transform', 'output'], 'check', true)).toEqual({ allowed: true });
   });
 });
