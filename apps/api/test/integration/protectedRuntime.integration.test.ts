@@ -19,6 +19,11 @@ import { Client } from 'pg';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { buildApp } from '../../src/app.js';
+import { WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION } from '../../src/application/ports/workspaceGraphDraft.js';
+import {
+  buildWorkspaceGraphDraft,
+  buildWorkspaceGraphDraftSaveRequest,
+} from '../fixtures/workspaceGraphDraftFixture.js';
 
 const DATABASE_URL = process.env['DVT_PG_URL'] ?? process.env['DATABASE_URL'];
 const describeIfPg = DATABASE_URL ? describe : describe.skip;
@@ -38,6 +43,8 @@ const TENANT_ACTIONS_FULL = [
   'run:signal',
   'run:cancel',
   'run:retry',
+  'workspace:graph-draft:view',
+  'workspace:graph-draft:save',
 ] as const;
 const TENANT_ACTIONS_WITH_ADMIN_REBUILD = [
   ...TENANT_ACTIONS_FULL,
@@ -233,6 +240,163 @@ describeIfPg('protected runtime integration', () => {
       'RunCancelRequested',
       'RunCancelled',
     ]);
+  });
+
+  it('persists workspace graph drafts with read-your-writes, idempotent retry, and CAS conflict behavior', async () => {
+    expect(app).toBeTruthy();
+
+    const token = await signBearerToken(signingKey!, {
+      sub: PRINCIPAL_ID,
+      tenant_ids: [TENANT_ID],
+      project_ids: [PROJECT_ID],
+    });
+    const saveRequest = buildWorkspaceGraphDraftSaveRequest({
+      idempotencyKey: 'draft-save-it-1',
+      draft: buildWorkspaceGraphDraft(),
+    });
+
+    const firstSave = await app!.inject({
+      method: 'PUT',
+      url: '/workspace/graph/draft',
+      headers: { authorization: `Bearer ${token}` },
+      payload: saveRequest,
+    });
+    expect(firstSave.statusCode).toBe(200);
+    expect(firstSave.json()).toMatchObject({
+      kind: 'saved',
+      capability: {
+        mode: 'writable',
+        canRead: true,
+        canWrite: true,
+      },
+      formatMeta: {
+        schemaVersion: WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
+        storedSchemaVersion: WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
+        migrationState: 'native',
+      },
+      revision: expect.any(String),
+    });
+    const firstRevision = firstSave.json().revision as string;
+
+    const retrySave = await app!.inject({
+      method: 'PUT',
+      url: '/workspace/graph/draft',
+      headers: { authorization: `Bearer ${token}` },
+      payload: saveRequest,
+    });
+    expect(retrySave.statusCode).toBe(200);
+    expect(retrySave.json()).toMatchObject({
+      kind: 'saved',
+      revision: firstRevision,
+    });
+
+    const readResponse = await app!.inject({
+      method: 'GET',
+      url: `/workspace/graph/draft?tenantId=${TENANT_ID}&projectId=${PROJECT_ID}&environmentId=${ENVIRONMENT_ID}`,
+      headers: { authorization: `Bearer ${token}` },
+    });
+    expect(readResponse.statusCode).toBe(200);
+    expect(readResponse.json()).toMatchObject({
+      kind: 'ok',
+      capability: {
+        mode: 'writable',
+        canRead: true,
+        canWrite: true,
+      },
+      formatMeta: {
+        schemaVersion: WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
+        storedSchemaVersion: WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
+        migrationState: 'native',
+      },
+      record: {
+        scope: {
+          tenantId: TENANT_ID,
+          projectId: PROJECT_ID,
+          environmentId: ENVIRONMENT_ID,
+        },
+        revision: firstRevision,
+        schemaVersion: WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
+        draft: saveRequest.draft,
+      },
+    });
+
+    const staleSave = await app!.inject({
+      method: 'PUT',
+      url: '/workspace/graph/draft',
+      headers: { authorization: `Bearer ${token}` },
+      payload: {
+        ...saveRequest,
+        idempotencyKey: 'draft-save-it-2',
+      },
+    });
+    expect(staleSave.statusCode).toBe(409);
+    expect(staleSave.json()).toMatchObject({
+      kind: 'conflict',
+      currentRevision: firstRevision,
+      capability: {
+        mode: 'writable',
+        canRead: true,
+        canWrite: true,
+      },
+    });
+  });
+
+  it('returns read_only denial when caller can read drafts but lacks write grant', async () => {
+    expect(app).toBeTruthy();
+    expect(adminClient).toBeTruthy();
+
+    await upsertPrincipalGrant(adminClient!, {
+      schema: SCHEMA,
+      principalId: PRINCIPAL_ID,
+      principalType: 'user',
+      tenantId: TENANT_ID,
+      projectId: PROJECT_ID,
+      environmentId: ENVIRONMENT_ID,
+      tenantActions: ['workspace:graph-draft:view'],
+    });
+
+    try {
+      const token = await signBearerToken(signingKey!, {
+        sub: PRINCIPAL_ID,
+        tenant_ids: [TENANT_ID],
+        project_ids: [PROJECT_ID],
+      });
+
+      const response = await app!.inject({
+        method: 'PUT',
+        url: '/workspace/graph/draft',
+        headers: { authorization: `Bearer ${token}` },
+        payload: buildWorkspaceGraphDraftSaveRequest({
+          idempotencyKey: 'draft-save-read-only',
+          expectedRevision: '11111111-1111-1111-1111-111111111111',
+        }),
+      });
+
+      expect(response.statusCode).toBe(403);
+      expect(response.json()).toMatchObject({
+        kind: 'denied',
+        capability: {
+          mode: 'read_only',
+          canRead: true,
+          canWrite: false,
+          reason: 'write_denied',
+        },
+        auditRef: {
+          action: 'draft_write',
+          outcome: 'read_only',
+        },
+      });
+    } finally {
+      await upsertPrincipalGrant(adminClient!, {
+        schema: SCHEMA,
+        principalId: PRINCIPAL_ID,
+        principalType: 'user',
+        tenantId: TENANT_ID,
+        projectId: PROJECT_ID,
+        environmentId: ENVIRONMENT_ID,
+        tenantActions: TENANT_ACTIONS_FULL,
+      });
+    }
   });
 
   it('persists and validates a planner-backed run before execution starts', async () => {

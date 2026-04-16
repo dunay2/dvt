@@ -5,6 +5,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { buildApp } from '../src/app.js';
 import * as pgPool from '../src/db/pool.js';
 import { PostgresPrincipalAccessRepository } from '../src/infrastructure/auth/postgresPrincipalAccessRepository.js';
+import { PostgresWorkspaceGraphDraftStore } from '../src/infrastructure/workspaceGraphDraft/PostgresWorkspaceGraphDraftStore.js';
 import { HTTP_STATUS } from '../src/routes/healthContract.js';
 
 const adapterPostgres = await import('@dvt/adapter-postgres');
@@ -178,6 +179,7 @@ describe('buildApp', () => {
     const originalPlanStoreMigrate = PostgresPlanStore.prototype.migrate;
     const originalStateStoreMigrate = PostgresStateStoreAdapter.prototype.migrate;
     const originalIntentStoreMigrate = PostgresStartRunIntentStore.prototype.migrate;
+    const originalWorkspaceGraphDraftStoreMigrate = PostgresWorkspaceGraphDraftStore.prototype.migrate;
     const queryMock = vi.fn(async () => ({ rows: [{ ok: 1 }] }));
     const getPgPoolSpy = vi.spyOn(pgPool, 'getPgPool').mockReturnValue({
       query: queryMock,
@@ -188,6 +190,7 @@ describe('buildApp', () => {
     PostgresPlanStore.prototype.migrate = async function migrate() {};
     PostgresStateStoreAdapter.prototype.migrate = async function migrate() {};
     PostgresStartRunIntentStore.prototype.migrate = async function migrate() {};
+    PostgresWorkspaceGraphDraftStore.prototype.migrate = async function migrate() {};
 
     process.env.OBS_ENABLED = 'false';
     process.env.NODE_ENV = 'test';
@@ -219,6 +222,8 @@ describe('buildApp', () => {
       PostgresPlanStore.prototype.migrate = originalPlanStoreMigrate;
       PostgresStateStoreAdapter.prototype.migrate = originalStateStoreMigrate;
       PostgresStartRunIntentStore.prototype.migrate = originalIntentStoreMigrate;
+      PostgresWorkspaceGraphDraftStore.prototype.migrate =
+        originalWorkspaceGraphDraftStoreMigrate;
       delete process.env.DVT_READYZ_ENABLED;
       delete process.env.DATABASE_URL;
       delete process.env.OIDC_JWKS_URI;
@@ -343,10 +348,12 @@ describe('buildApp', () => {
     const originalPlanStoreMigrate = PostgresPlanStore.prototype.migrate;
     const originalStateStoreMigrate = PostgresStateStoreAdapter.prototype.migrate;
     const originalIntentStoreMigrate = PostgresStartRunIntentStore.prototype.migrate;
+    const originalWorkspaceGraphDraftStoreMigrate = PostgresWorkspaceGraphDraftStore.prototype.migrate;
     let accessRepoMigrateCalls = 0;
     let planStoreMigrateCalls = 0;
     let stateStoreMigrateCalls = 0;
     let intentStoreMigrateCalls = 0;
+    let workspaceGraphDraftStoreMigrateCalls = 0;
 
     PostgresPrincipalAccessRepository.prototype.migrate = async function migrate() {
       accessRepoMigrateCalls += 1;
@@ -359,6 +366,9 @@ describe('buildApp', () => {
     };
     PostgresStartRunIntentStore.prototype.migrate = async function migrate() {
       intentStoreMigrateCalls += 1;
+    };
+    PostgresWorkspaceGraphDraftStore.prototype.migrate = async function migrate() {
+      workspaceGraphDraftStoreMigrateCalls += 1;
     };
 
     process.env.OBS_ENABLED = 'false';
@@ -376,6 +386,7 @@ describe('buildApp', () => {
       expect(planStoreMigrateCalls).toBe(1);
       expect(stateStoreMigrateCalls).toBe(1);
       expect(intentStoreMigrateCalls).toBe(1);
+      expect(workspaceGraphDraftStoreMigrateCalls).toBe(1);
 
       await app.close();
     } finally {
@@ -383,6 +394,8 @@ describe('buildApp', () => {
       PostgresPlanStore.prototype.migrate = originalPlanStoreMigrate;
       PostgresStateStoreAdapter.prototype.migrate = originalStateStoreMigrate;
       PostgresStartRunIntentStore.prototype.migrate = originalIntentStoreMigrate;
+      PostgresWorkspaceGraphDraftStore.prototype.migrate =
+        originalWorkspaceGraphDraftStoreMigrate;
       delete process.env.DATABASE_URL;
       delete process.env.OIDC_JWKS_URI;
       delete process.env.OIDC_ISSUER;

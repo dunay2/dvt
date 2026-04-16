@@ -89,9 +89,17 @@ export type AuthorizationAction =
         | 'run:cancel'
         | 'run:retry'
         | 'run:signal'
+        | 'workspace:graph-draft:save'
         | 'admin:rebuild-snapshot';
     }
-  | { readonly kind: 'query'; readonly name: 'run:view' | 'run:list' | 'run:logs:view' };
+  | {
+      readonly kind: 'query';
+      readonly name:
+        | 'run:view'
+        | 'run:list'
+        | 'run:logs:view'
+        | 'workspace:graph-draft:view';
+    };
 
 export interface RequestedScope {
   readonly tenantId: TenantId;
