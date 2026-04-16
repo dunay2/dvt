@@ -115,6 +115,9 @@ const state = vi.hoisted(() => ({
     },
   },
   store: { setCanvasViewport: vi.fn(), setCanvasNodePositions: vi.fn() },
+  queryClient: {
+    invalidateQueries: vi.fn(async () => undefined),
+  },
   graphHandlersResult: { handleDrop: vi.fn(), confirmEdgeCreation: vi.fn() },
   executionActionsResult: {
     canStartRun: false,
@@ -128,6 +131,7 @@ const state = vi.hoisted(() => ({
 })) as CanvasHarnessState;
 const mocks = vi.hoisted(() => ({
   useQuery: vi.fn(),
+  useQueryClient: vi.fn(),
   resolveCanvasGraphStrategy: vi.fn(),
   useCanvasInteractionStore: vi.fn(),
   useExecutionStore: vi.fn(),
@@ -145,7 +149,10 @@ const mocks = vi.hoisted(() => ({
   useCanvasGraphHandlers: vi.fn(),
   useCanvasNavigationActions: vi.fn(),
 })) as CanvasHarnessMocks;
-vi.mock('@tanstack/react-query', () => ({ useQuery: mocks.useQuery }));
+vi.mock('@tanstack/react-query', () => ({
+  useQuery: mocks.useQuery,
+  useQueryClient: mocks.useQueryClient,
+}));
 vi.mock('@xyflow/react', async () => {
   const ReactModule = await import('react');
   return {

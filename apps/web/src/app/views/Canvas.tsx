@@ -153,6 +153,9 @@ function CanvasContent() {
         onViewportChange={controller.handleViewportChange}
         onDrop={controller.handleDrop}
         onDragOver={controller.handleDragOver}
+        onSourceImportComplete={controller.handleSourceImportComplete}
+        importedNodeFocusIds={controller.importedNodeFocusIds}
+        onImportedNodeFocusComplete={controller.handleImportedNodeFocusComplete}
         onHideExplorer={controller.hideExplorerPanel}
         onShowExplorer={controller.showExplorerPanel}
         onHideInspector={controller.hideInspectorPanel}

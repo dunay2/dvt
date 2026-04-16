@@ -31,37 +31,36 @@ type CanvasToolbarProps = {
   readonly edgeCount: number;
 };
 
-function resolveModeLabel(canvasAuthoringMode: 'transformation' | 'dbt'): string {
-  return canvasAuthoringMode === 'transformation' ? 'SQL flow' : 'dbt graph';
-}
-
-function resolveValidationLabel(
-  transformationValidation: TransformationGraphValidationResult
+function resolveWorkflowStatusLabel(
+  canPlan: boolean,
+  canRun: boolean,
+  canStartRun: boolean
 ): string {
-  if (transformationValidation.valid) {
-    return 'Preview ready';
+  if (!canPlan && !canRun) {
+    return 'Read only';
   }
 
-  if (
-    transformationValidation.summary ===
-    'Plan requires exactly 3 nodes: source, sql_transform, and sink.'
-  ) {
-    return 'Need source, transform, sink';
-  }
-
-  return transformationValidation.summary;
-}
-
-function resolvePlanLabel(planStatusSummary: string, canStartRun: boolean): string {
   if (canStartRun) {
     return 'Run ready';
   }
 
-  if (planStatusSummary === 'Preview required before running.') {
-    return 'Plan required';
+  return 'Plan required';
+}
+
+function resolveWorkflowStatusClass(
+  canPlan: boolean,
+  canRun: boolean,
+  canStartRun: boolean
+): string {
+  if (!canPlan && !canRun) {
+    return 'text-slate-200';
   }
 
-  return planStatusSummary;
+  if (canStartRun) {
+    return 'text-emerald-200';
+  }
+
+  return 'text-amber-200';
 }
 
 export default function CanvasToolbar({
@@ -97,137 +96,104 @@ export default function CanvasToolbar({
     setPortalTarget(document.getElementById('shell-top-bar-canvas-controls'));
   }, [placement]);
 
+  const workflowStatusLabel = resolveWorkflowStatusLabel(canPlan, canRun, canStartRun);
+  const workflowStatusClass = resolveWorkflowStatusClass(canPlan, canRun, canStartRun);
   const canPlanTransformation = transformationValidation.valid;
-  const modeLabel = resolveModeLabel(canvasAuthoringMode);
-  const validationLabel = resolveValidationLabel(transformationValidation);
-  const planLabel = resolvePlanLabel(planStatusSummary, canStartRun);
-  const graphStatsLabel = `${nodeCount}N / ${edgeCount}E`;
 
   const content = (
     <div className="flex min-w-0 items-center gap-2">
-        <div className="hidden items-center gap-1.5 xl:flex">
-          <Badge
-            variant="outline"
-            className="h-7 border-slate-700 bg-slate-950/60 px-2 text-[11px] font-medium text-cyan-200"
-            title={
-              canvasAuthoringMode === 'transformation'
-                ? 'Mode: source -> sql_transform -> sink'
-                : 'Mode: dbt graph'
-            }
-          >
-            {modeLabel}
-          </Badge>
-          <Badge
-            variant="outline"
-            className="h-7 border-slate-700 bg-slate-950/60 px-2 text-[11px] font-medium text-slate-200"
-            title={`${nodeCount} node${nodeCount !== 1 ? 's' : ''} and ${edgeCount} edge${
-              edgeCount !== 1 ? 's' : ''
-            }`}
-          >
-            {graphStatsLabel}
-          </Badge>
-          <Badge
-            variant="outline"
-            className={cn(
-              'h-7 border-slate-700 bg-slate-950/60 px-2 text-[11px] font-medium',
-              canPlanTransformation ? 'text-emerald-200' : 'text-amber-200'
-            )}
-            title={transformationValidation.summary}
-          >
-            {validationLabel}
-          </Badge>
-          <Badge
-            variant="outline"
-            className={cn(
-              'h-7 max-w-[15rem] border-slate-700 bg-slate-950/60 px-2 text-[11px] font-medium',
-              canStartRun ? 'text-emerald-200' : 'text-slate-200'
-            )}
-            title={planStatusSummary}
-          >
-            <span className="truncate">{planLabel}</span>
-          </Badge>
-          <Separator orientation="vertical" className="h-5 bg-slate-700" />
-        </div>
-
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={onAutoLayout}
-          disabled={!canEditEdges}
-          className="h-8 gap-1.5 px-3 text-xs text-slate-300 hover:bg-slate-800 hover:text-white"
-        >
-          <LayoutGrid className="size-4" />
-          Layout
-        </Button>
-
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={onToggleImpact}
-          className={cn(
-            'h-8 gap-1.5 px-3 text-xs text-slate-300 hover:bg-slate-800 hover:text-white',
-            impactOverlayEnabled && 'bg-slate-700 text-white'
-          )}
-        >
-          <Target className="size-4" />
-          Impact
-        </Button>
-
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={onToggleColumns}
-          className={cn(
-            'h-8 gap-1.5 px-3 text-xs text-slate-300 hover:bg-slate-800 hover:text-white',
-            columnLevelLineageEnabled && 'bg-slate-700 text-white'
-          )}
-        >
-          <Columns className="size-4" />
-          Columns
-        </Button>
-
-        {canUseCostOverlay && (
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={onToggleCostOverlay}
-            className={cn(
-              'h-8 gap-1.5 px-3 text-xs text-slate-300 hover:bg-slate-800 hover:text-white',
-              exclusiveOverlayMode === 'cost' && 'bg-slate-700 text-white'
-            )}
-          >
-            <DollarSign className="size-4" />
-            Cost
-          </Button>
+      <Badge
+        data-slot="canvas-workflow-status"
+        variant="outline"
+        className={cn(
+          'h-7 border-slate-700 bg-slate-950/60 px-2 text-[11px] font-medium',
+          workflowStatusClass
         )}
-        <Separator orientation="vertical" className="h-5 bg-slate-700" />
+        title={`${canvasAuthoringMode}:${planStatusSummary}:${transformationValidation.summary}:${nodeCount}:${edgeCount}`}
+      >
+        {workflowStatusLabel}
+      </Badge>
+      <Separator orientation="vertical" className="h-5 bg-slate-700" />
+
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        onClick={onAutoLayout}
+        disabled={!canEditEdges}
+        className="h-8 gap-1.5 px-3 text-xs text-slate-300 hover:bg-slate-800 hover:text-white"
+      >
+        <LayoutGrid className="size-4" />
+        Layout
+      </Button>
+
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        onClick={onToggleImpact}
+        className={cn(
+          'h-8 gap-1.5 px-3 text-xs text-slate-300 hover:bg-slate-800 hover:text-white',
+          impactOverlayEnabled && 'bg-slate-700 text-white'
+        )}
+      >
+        <Target className="size-4" />
+        Impact
+      </Button>
+
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        onClick={onToggleColumns}
+        className={cn(
+          'h-8 gap-1.5 px-3 text-xs text-slate-300 hover:bg-slate-800 hover:text-white',
+          columnLevelLineageEnabled && 'bg-slate-700 text-white'
+        )}
+      >
+        <Columns className="size-4" />
+        Columns
+      </Button>
+
+      {canUseCostOverlay && (
         <Button
           type="button"
-          variant="outline"
+          variant="ghost"
           size="sm"
-          onClick={onPlan}
-          disabled={!canPlan || !canPlanTransformation}
-          className="h-8 border-slate-600 bg-transparent px-3 text-xs text-slate-200 hover:bg-slate-800 hover:text-white"
+          onClick={onToggleCostOverlay}
+          className={cn(
+            'h-8 gap-1.5 px-3 text-xs text-slate-300 hover:bg-slate-800 hover:text-white',
+            exclusiveOverlayMode === 'cost' && 'bg-slate-700 text-white'
+          )}
         >
-          <FileCheck className="mr-1.5 size-4" />
-          Plan
+          <DollarSign className="size-4" />
+          Cost
         </Button>
-        <Button
-          type="button"
-          variant="default"
-          size="sm"
-          onClick={onRun}
-          disabled={!canRun || !canStartRun}
-          className="h-8 px-3 text-xs"
-        >
-          <Play className="mr-1.5 size-4" />
-          Run
-        </Button>
-      </div>
+      )}
+      <Separator orientation="vertical" className="h-5 bg-slate-700" />
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        onClick={onPlan}
+        disabled={!canPlan || !canPlanTransformation}
+        className="h-8 border-slate-600 bg-transparent px-3 text-xs text-slate-200 hover:bg-slate-800 hover:text-white"
+      >
+        <FileCheck className="mr-1.5 size-4" />
+        Plan
+      </Button>
+      <Button
+        type="button"
+        variant="default"
+        size="sm"
+        onClick={onRun}
+        disabled={!canRun || !canStartRun}
+        className="h-8 px-3 text-xs"
+      >
+        <Play className="mr-1.5 size-4" />
+        Run
+      </Button>
+    </div>
   );
 
   if (placement === 'top-bar') {

@@ -103,6 +103,9 @@ function buildController(overrides?: Partial<CanvasController>): CanvasControlle
     handleNodeDragStop: vi.fn(),
     handleDrop: vi.fn(),
     handleDragOver: vi.fn(),
+    handleSourceImportComplete: vi.fn(),
+    importedNodeFocusIds: [],
+    handleImportedNodeFocusComplete: vi.fn(),
     hideExplorerPanel: vi.fn(),
     showExplorerPanel: vi.fn(),
     hideInspectorPanel: vi.fn(),
@@ -268,7 +271,6 @@ describe('Canvas route', () => {
     expect(planButton?.getAttribute('disabled')).not.toBeNull();
     expect(runButton?.getAttribute('disabled')).not.toBeNull();
   });
-
   it('blocks the canvas surface in api mode when backend readiness is not satisfied', async () => {
     mockedUseCanvasController.mockReturnValue(
       buildController({

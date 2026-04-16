@@ -111,7 +111,7 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
 
   useEffect(() => {
     if (location.pathname.startsWith('/canvas')) {
-      setBootstrapStepStatus('route', 'pending', 'Handing startup to the Canvas workbench');
+      setBootstrapStepStatus('route', 'complete', 'Canvas workbench route is ready');
       return;
     }
 

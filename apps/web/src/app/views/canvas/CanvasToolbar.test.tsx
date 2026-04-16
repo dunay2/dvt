@@ -26,9 +26,13 @@ function buildValidationResult(
 
 describe('CanvasToolbar', () => {
   let container: HTMLDivElement;
+  let portalHost: HTMLDivElement;
   let root: Root;
 
   beforeEach(() => {
+    portalHost = document.createElement('div');
+    portalHost.id = 'shell-top-bar-canvas-controls';
+    document.body.appendChild(portalHost);
     container = document.createElement('div');
     document.body.appendChild(container);
     root = createRoot(container);
@@ -41,13 +45,15 @@ describe('CanvasToolbar', () => {
     act(() => {
       root.unmount();
     });
+    portalHost.remove();
     container.remove();
   });
 
-  it('shows explicit transformation authoring mode summary', async () => {
+  it('renders one workflow status and actions without diagnostic badges', async () => {
     await act(async () => {
       root.render(
         <CanvasToolbar
+          placement="top-bar"
           onAutoLayout={vi.fn()}
           onToggleCostOverlay={vi.fn()}
           onToggleImpact={vi.fn()}
@@ -61,7 +67,7 @@ describe('CanvasToolbar', () => {
           planStatusSummary="Preview required before running."
           canvasAuthoringMode="transformation"
           exclusiveOverlayMode="runtime"
-          canUseCostOverlay={false}
+          canUseCostOverlay={true}
           impactOverlayEnabled={false}
           columnLevelLineageEnabled={false}
           transformationValidation={buildValidationResult()}
@@ -71,16 +77,26 @@ describe('CanvasToolbar', () => {
       );
     });
 
-    expect(container.textContent).toContain('SQL flow');
-    expect(container.textContent).toContain('3N / 2E');
-    expect(container.textContent).toContain('Preview ready');
-    expect(container.textContent).toContain('Plan required');
+    expect(portalHost.querySelectorAll('[data-slot="canvas-workflow-status"]')).toHaveLength(1);
+    expect(portalHost.textContent).toContain('Plan required');
+    expect(portalHost.textContent).toContain('Layout');
+    expect(portalHost.textContent).toContain('Impact');
+    expect(portalHost.textContent).toContain('Columns');
+    expect(portalHost.textContent).toContain('Cost');
+    expect(portalHost.textContent).toContain('Plan');
+    expect(portalHost.textContent).toContain('Run');
+    expect(portalHost.textContent).not.toContain('SQL flow');
+    expect(portalHost.textContent).not.toContain('dbt graph');
+    expect(portalHost.textContent).not.toContain('3N / 2E');
+    expect(portalHost.textContent).not.toContain('Preview ready');
+    expect(portalHost.textContent).not.toContain('Need source, transform, sink');
   });
 
-  it('disables Plan button when transformation validation is invalid', async () => {
+  it('keeps a generic plan-required state when plan creation is blocked', async () => {
     await act(async () => {
       root.render(
         <CanvasToolbar
+          placement="top-bar"
           onAutoLayout={vi.fn()}
           onToggleCostOverlay={vi.fn()}
           onToggleImpact={vi.fn()}
@@ -107,18 +123,51 @@ describe('CanvasToolbar', () => {
       );
     });
 
-    const planButton = Array.from(container.querySelectorAll('button')).find((button) =>
+    const planButton = Array.from(portalHost.querySelectorAll('button')).find((button) =>
       button.textContent?.includes('Plan')
     );
     expect(planButton).not.toBeNull();
     expect(planButton?.getAttribute('disabled')).not.toBeNull();
-    expect(container.textContent).toContain('Need source, transform, sink');
+    expect(portalHost.textContent).toContain('Plan required');
+    expect(portalHost.textContent).not.toContain('Need source, transform, sink');
   });
 
-  it('disables mutation buttons when route permissions gate graph edits and run controls', async () => {
+  it('shows run ready when execution can start', async () => {
     await act(async () => {
       root.render(
         <CanvasToolbar
+          placement="top-bar"
+          onAutoLayout={vi.fn()}
+          onToggleCostOverlay={vi.fn()}
+          onToggleImpact={vi.fn()}
+          onToggleColumns={vi.fn()}
+          onPlan={vi.fn()}
+          onRun={vi.fn()}
+          canPlan={true}
+          canRun={true}
+          canEditEdges={true}
+          canStartRun={true}
+          planStatusSummary="Transformation draft is ready to run."
+          canvasAuthoringMode="transformation"
+          exclusiveOverlayMode="runtime"
+          canUseCostOverlay={false}
+          impactOverlayEnabled={false}
+          columnLevelLineageEnabled={false}
+          transformationValidation={buildValidationResult()}
+          nodeCount={3}
+          edgeCount={2}
+        />
+      );
+    });
+
+    expect(portalHost.textContent).toContain('Run ready');
+  });
+
+  it('shows read only when plan and run are unavailable', async () => {
+    await act(async () => {
+      root.render(
+        <CanvasToolbar
+          placement="top-bar"
           onAutoLayout={vi.fn()}
           onToggleCostOverlay={vi.fn()}
           onToggleImpact={vi.fn()}
@@ -128,7 +177,7 @@ describe('CanvasToolbar', () => {
           canPlan={false}
           canRun={false}
           canEditEdges={false}
-          canStartRun={true}
+          canStartRun={false}
           planStatusSummary="Run start is unavailable in this context."
           canvasAuthoringMode="transformation"
           exclusiveOverlayMode="runtime"
@@ -142,14 +191,14 @@ describe('CanvasToolbar', () => {
       );
     });
 
-    const buttons = Array.from(container.querySelectorAll('button'));
+    const buttons = Array.from(portalHost.querySelectorAll('button'));
     const layoutButton = buttons.find((button) => button.textContent?.includes('Layout'));
     const planButton = buttons.find((button) => button.textContent?.includes('Plan'));
     const runButton = buttons.find((button) => button.textContent?.includes('Run'));
 
+    expect(portalHost.textContent).toContain('Read only');
     expect(layoutButton?.getAttribute('disabled')).not.toBeNull();
     expect(planButton?.getAttribute('disabled')).not.toBeNull();
     expect(runButton?.getAttribute('disabled')).not.toBeNull();
-    expect(container.textContent).toContain('Run ready');
   });
 });

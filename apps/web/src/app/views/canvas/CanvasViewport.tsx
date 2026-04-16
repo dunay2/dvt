@@ -65,6 +65,8 @@ type CanvasViewportProps = {
   readonly onNodeDragStop: NonNullable<ReactFlowProps<Node, Edge>['onNodeDragStop']>;
   readonly onDrop: React.DragEventHandler<HTMLDivElement>;
   readonly onDragOver: React.DragEventHandler<HTMLDivElement>;
+  readonly importedNodeFocusIds: string[];
+  readonly onImportedNodeFocusComplete: () => void;
   readonly onShowExplorer: () => void;
   readonly onShowInspector: () => void;
 };
@@ -89,6 +91,8 @@ export default function CanvasViewport({
   onNodeDragStop,
   onDrop,
   onDragOver,
+  importedNodeFocusIds,
+  onImportedNodeFocusComplete,
   onShowExplorer,
   onShowInspector,
 }: CanvasViewportProps) {
@@ -103,6 +107,26 @@ export default function CanvasViewport({
 
     void reactFlow.setViewport(viewport, { duration: 0 });
   }, [reactFlow, viewport]);
+
+  useEffect(() => {
+    if (importedNodeFocusIds.length === 0) {
+      return;
+    }
+
+    const importedNodeIdSet = new Set(importedNodeFocusIds);
+    const focusNodes = nodesWithImpact.filter((node) => importedNodeIdSet.has(node.id));
+    if (focusNodes.length === 0) {
+      return;
+    }
+
+    void reactFlow.fitView({
+      nodes: focusNodes,
+      padding: 0.24,
+      maxZoom: 0.9,
+      duration: 300,
+    });
+    onImportedNodeFocusComplete();
+  }, [importedNodeFocusIds, nodesWithImpact, onImportedNodeFocusComplete, reactFlow]);
 
   return (
     <div

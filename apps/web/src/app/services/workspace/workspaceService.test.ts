@@ -46,6 +46,7 @@ describe('workspaceService source import', () => {
     expect(result.sourcesCreated).toBe(1);
     expect(result.tablesImported).toBe(1);
     expect(result.yamlFiles).toEqual(['models/sources/src_finance.yml']);
+    expect(result.importedNodeIds).toEqual(['src_finance_invoices']);
     expect(after.nodes).toHaveLength(before.nodes.length + 1);
     expect(importedNode).toMatchObject({
       id: 'src_finance_invoices',

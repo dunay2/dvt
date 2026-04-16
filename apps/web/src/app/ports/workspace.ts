@@ -61,6 +61,7 @@ export type ImportSourcesResult = {
   sourcesCreated: number;
   tablesImported: number;
   yamlFiles: string[];
+  importedNodeIds?: string[];
   grouping: SourceImportGrouping;
   options: {
     includeColumns: boolean;

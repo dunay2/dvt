@@ -97,8 +97,10 @@ export const dbtContributions: PluginContributions = {
   ],
   connectionRules: [
     { sourceKind: 'dbt:macro', targetKind: '*', allowed: true },
+    { sourceKind: 'dbt:source', targetKind: 'dvt:sql_transform', allowed: true },
     { sourceKind: 'dbt:source', targetKind: 'dbt:model', allowed: true },
     { sourceKind: 'dbt:source', targetKind: 'dbt:test', allowed: true },
+    { sourceKind: 'dvt:sql_transform', targetKind: 'dvt:sink', allowed: true },
     { sourceKind: 'dbt:seed', targetKind: 'dbt:model', allowed: true },
     { sourceKind: 'dbt:seed', targetKind: 'dbt:test', allowed: true },
     { sourceKind: 'dbt:model', targetKind: 'dbt:model', allowed: true },
