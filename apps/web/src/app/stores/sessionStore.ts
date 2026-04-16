@@ -3,7 +3,10 @@ import { asNonBlankString } from '@dvt/contracts';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
 import { getRuntimeDataSourceMode } from '../services/config/runtimeDataSourceMode';
-import { resolveWorkspaceBootstrapConfig } from '../services/config/workspaceConfig';
+import {
+  resolveWorkspaceBootstrapConfig,
+  type WorkspaceBootstrapConfig,
+} from '../services/config/workspaceConfig';
 import type { RunContext } from '../types/engine';
 
 export interface SessionState {
@@ -25,6 +28,27 @@ const runtimeDataSourceMode = getRuntimeDataSourceMode();
 const workspaceBootstrap = resolveWorkspaceBootstrapConfig(runtimeDataSourceMode);
 const DEFAULT_TARGET_ADAPTER: RunContext['targetAdapter'] =
   runtimeDataSourceMode === 'api' ? 'temporal' : 'mock';
+
+type PersistedSessionState = Pick<SessionState, 'tenantId' | 'projectId' | 'environmentId'> & {
+  targetAdapter?: RunContext['targetAdapter'];
+};
+
+function resolvePersistedScopeValue(
+  persistedValue: unknown,
+  currentValue: string,
+  options: WorkspaceBootstrapConfig['tenantOptions']
+): string {
+  if (typeof persistedValue !== 'string') {
+    return currentValue;
+  }
+
+  const normalizedValue = persistedValue.trim();
+  if (normalizedValue.length === 0) {
+    return currentValue;
+  }
+
+  return options.some((option) => option.value === normalizedValue) ? normalizedValue : currentValue;
+}
 
 export const useSessionStore = create<SessionState>()(
   persist(
@@ -58,11 +82,38 @@ export const useSessionStore = create<SessionState>()(
     {
       name: 'dvt-web-session',
       storage: createJSONStorage(() => localStorage),
+      merge: (persistedState, currentState) => {
+        const persistedSessionState =
+          typeof persistedState === 'object' && persistedState != null
+            ? (persistedState as { state?: Partial<PersistedSessionState> }).state ??
+              (persistedState as Partial<PersistedSessionState>)
+            : {};
+
+        return {
+          ...currentState,
+          tenantId: resolvePersistedScopeValue(
+            persistedSessionState.tenantId,
+            currentState.tenantId,
+            workspaceBootstrap.tenantOptions
+          ),
+          projectId: resolvePersistedScopeValue(
+            persistedSessionState.projectId,
+            currentState.projectId,
+            workspaceBootstrap.projectOptions
+          ),
+          environmentId: resolvePersistedScopeValue(
+            persistedSessionState.environmentId,
+            currentState.environmentId,
+            workspaceBootstrap.environmentOptions
+          ),
+          // targetAdapter remains owned by current runtime mode and is not rehydrated from storage.
+          targetAdapter: currentState.targetAdapter,
+        };
+      },
       partialize: (state) => ({
         tenantId: state.tenantId,
         projectId: state.projectId,
         environmentId: state.environmentId,
-        targetAdapter: state.targetAdapter,
       }),
     }
   )
