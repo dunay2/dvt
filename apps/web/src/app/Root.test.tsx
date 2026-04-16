@@ -270,6 +270,14 @@ describe('RootShell platform health UX', () => {
 
     try {
       await waitForShellBootstrapSurface(mounted);
+      await waitForReactQuery(
+        () =>
+          mounted.queryClient.getQueryState(queryKeys.shell.platformHealthSnapshot())?.status ===
+          'success',
+        {
+          description: 'healthy platform health query for shell chrome',
+        }
+      );
 
       const appShellFrame = mounted.container.querySelector('[data-slot="app-shell-frame"]');
       const appShellBody = mounted.container.querySelector('[data-slot="app-shell-body"]');
@@ -280,6 +288,9 @@ describe('RootShell platform health UX', () => {
       const appShellOutlet = mounted.container.querySelector('[data-slot="app-shell-outlet"]');
       const shellTopBar = mounted.container.querySelector('[data-slot="shell-top-bar"]');
       const shellGitRef = mounted.container.querySelector('[data-slot="shell-git-ref"]');
+      const shellConnectionStatus = mounted.container.querySelector(
+        '[data-slot="shell-connection-status"]'
+      );
       const shellWorkspaceSelectors = mounted.container.querySelector(
         '[data-slot="shell-workspace-selectors"]'
       );
@@ -293,6 +304,12 @@ describe('RootShell platform health UX', () => {
         ),
       ];
 
+      await waitFor(() => {
+        expect(
+          mounted.container.querySelector('[data-slot="shell-connection-status"]')?.className
+        ).not.toContain('text-[var(--text-subtle)]');
+      });
+
       expect(appShellFrame).not.toBeNull();
       expect(appShellBody).not.toBeNull();
       expect(appShellLeftNavigation?.parentElement).toBe(appShellBody);
@@ -305,6 +322,8 @@ describe('RootShell platform health UX', () => {
       expect(shellTopBar?.querySelector('[data-slot="shell-git-ref"]')).toBeTruthy();
       expect(shellTopBar?.querySelector('[data-slot="shell-workspace-selectors"]')).toBeTruthy();
       expect(shellTopBar?.querySelector('[data-slot="shell-menu-trigger"]')).toBeTruthy();
+      expect(shellConnectionStatus).toBeTruthy();
+      expect(shellConnectionStatus?.className).toContain('text-[var(--text-default)]');
       expect(shellGitRef?.className).toContain('bg-[var(--surface-app)]');
       expect(shellGitRef?.className).toContain('border-[color:var(--border-default)]');
       expect(shellWorkspaceSelectors).toBeTruthy();
