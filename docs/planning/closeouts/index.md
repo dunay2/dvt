@@ -22,6 +22,7 @@ navigation. The folder contains additional historical entries.
 
 ## Representative Recent Closeouts
 
+- [20260416 TF-E2 Web Typecheck Hardening Closeout](./20260416-tf-e2-web-typecheck-hardening-closeout.md)
 - [20260414 TF-C3 Dbt Plugin Runtime Projection Slice Closeout](./20260414-tf-c3-dbt-plugin-runtime-projection-closeout.md)
 - [20260414 TF-C3 RunExecutionContext Resolver Slice Closeout](./20260414-tf-c3-run-execution-context-resolver-closeout.md)
 - [20260414 TF-C1 Preview-Persist Convergence Closeout](./20260414-tf-c1-preview-persist-convergence-closeout.md)
