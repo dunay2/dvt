@@ -29,6 +29,9 @@ export type CanvasHarnessState = {
     setCanvasViewport: MockFn;
     setCanvasNodePositions: MockFn;
   } & Record<string, unknown>;
+  queryClient: {
+    invalidateQueries: MockFn;
+  };
   graphHandlersResult: {
     handleDrop: MockFn;
     confirmEdgeCreation: MockFn;
@@ -46,6 +49,7 @@ export type CanvasHarnessState = {
 
 export type CanvasHarnessMocks = {
   useQuery: MockFn;
+  useQueryClient: MockFn;
   resolveCanvasGraphStrategy: MockFn;
   useCanvasInteractionStore: MockFn;
   useExecutionStore: MockFn;
@@ -196,6 +200,9 @@ export function createDefaultCanvasHarnessState(): CanvasHarnessState {
       sessionContext,
       shellFeedback,
     },
+    queryClient: {
+      invalidateQueries: vi.fn(async () => undefined),
+    },
     store: {
       _hasHydrated: true,
       focusMode: false,
@@ -272,6 +279,7 @@ export function configureDefaultCanvasHarnessMocks(
   mocks: CanvasHarnessMocks
 ): void {
   mocks.useQuery.mockReturnValue({ data: state.graphData, isPending: false, isError: false });
+  mocks.useQueryClient.mockReturnValue(state.queryClient);
   const selectFromStore = (selector?: (value: typeof state.store) => unknown) =>
     typeof selector === 'function' ? selector(state.store) : state.store;
   mocks.useCanvasInteractionStore.mockImplementation(selectFromStore);

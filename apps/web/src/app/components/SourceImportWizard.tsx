@@ -26,6 +26,10 @@ export default function SourceImportWizard({ open, onClose, onComplete }: Source
     onClose,
   });
   const { state } = controller;
+  const completeButtonLabel =
+    state.importResult?.importedNodeIds && state.importResult.importedNodeIds.length > 0
+      ? 'Add imported sources to canvas'
+      : 'Done';
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -44,7 +48,7 @@ export default function SourceImportWizard({ open, onClose, onComplete }: Source
         <DialogFooter className="mt-4">
           {state.currentStep === 'result' ? (
             <Button onClick={controller.handleComplete} className="w-full">
-              Done
+              {completeButtonLabel}
             </Button>
           ) : (
             <div className="flex w-full justify-between">

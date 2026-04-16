@@ -291,6 +291,7 @@ function buildImportResult(
     sourcesCreated: importedNodes.length,
     tablesImported: input.tables.length,
     yamlFiles: Array.from(yamlFiles),
+    importedNodeIds: importedNodes.map((node) => node.id),
     grouping: input.groupingStrategy,
     options: {
       includeColumns: input.includeColumns,

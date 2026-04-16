@@ -19,6 +19,7 @@ const xyflowState = vi.hoisted(() => ({
   miniMapStyle: null as null | Record<string, unknown>,
   lastReactFlowProps: null as null | Record<string, unknown>,
   setViewport: vi.fn(),
+  fitView: vi.fn(),
 }));
 
 vi.mock('../../plugins/nodeTypeRegistry', () => ({
@@ -79,6 +80,7 @@ vi.mock('@xyflow/react', () => ({
   },
   useReactFlow: () => ({
     setViewport: xyflowState.setViewport,
+    fitView: xyflowState.fitView,
   }),
 }));
 
@@ -105,6 +107,8 @@ function buildProps(
     onViewportChange: vi.fn(),
     onDrop: vi.fn(),
     onDragOver: vi.fn(),
+    importedNodeFocusIds: [],
+    onImportedNodeFocusComplete: vi.fn(),
     onShowExplorer: vi.fn(),
     onShowInspector: vi.fn(),
     ...overrides,
@@ -128,6 +132,7 @@ describe('CanvasViewport', () => {
     xyflowState.miniMapStyle = null;
     xyflowState.lastReactFlowProps = null;
     xyflowState.setViewport.mockReset();
+    xyflowState.fitView.mockReset();
     mockResolveNodeKindRegistration.mockImplementation((kind: string) => ({
       minimapColor: kind === 'dbt:model' ? '#22c55e' : '#6b7280',
     }));
@@ -263,5 +268,31 @@ describe('CanvasViewport', () => {
       onNodesChange: undefined,
       onEdgesChange: undefined,
     });
+  });
+
+  it('fits the viewport around explicitly imported nodes only once', async () => {
+    const props = buildProps({
+      nodesWithImpact: [
+        { id: 'src_erp_orders', position: { x: 0, y: 0 }, data: {}, type: 'dbtNode' },
+        { id: 'src_erp_customers', position: { x: 240, y: 0 }, data: {}, type: 'dbtNode' },
+      ] as React.ComponentProps<typeof CanvasViewport>['nodesWithImpact'],
+      importedNodeFocusIds: ['src_erp_orders', 'src_erp_customers'],
+      onImportedNodeFocusComplete: vi.fn(),
+    });
+
+    await act(async () => {
+      root.render(<CanvasViewport {...props} />);
+    });
+
+    expect(xyflowState.fitView).toHaveBeenCalledWith({
+      nodes: expect.arrayContaining([
+        expect.objectContaining({ id: 'src_erp_orders' }),
+        expect.objectContaining({ id: 'src_erp_customers' }),
+      ]),
+      padding: 0.24,
+      maxZoom: 0.9,
+      duration: 300,
+    });
+    expect(props.onImportedNodeFocusComplete).toHaveBeenCalledTimes(1);
   });
 });

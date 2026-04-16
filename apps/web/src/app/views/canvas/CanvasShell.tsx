@@ -20,7 +20,6 @@ export default function CanvasShell({
   activeRunId,
   registeredPlugins,
   userPermissions,
-  canvasAuthoringMode,
   nodesWithImpact,
   edges,
   nodeTypes,
@@ -36,6 +35,9 @@ export default function CanvasShell({
   onViewportChange,
   onDrop,
   onDragOver,
+  onSourceImportComplete,
+  importedNodeFocusIds,
+  onImportedNodeFocusComplete,
   onHideExplorer,
   onShowExplorer,
   onHideInspector,
@@ -52,6 +54,7 @@ export default function CanvasShell({
   canUseCostOverlay,
   impactOverlayEnabled,
   columnLevelLineageEnabled,
+  canvasAuthoringMode,
   transformationValidation,
   centerSurface,
   readOnlyBanner,
@@ -130,6 +133,8 @@ export default function CanvasShell({
               onViewportChange={onViewportChange}
               onDrop={onDrop}
               onDragOver={onDragOver}
+              importedNodeFocusIds={importedNodeFocusIds}
+              onImportedNodeFocusComplete={onImportedNodeFocusComplete}
               onShowExplorer={onShowExplorer}
               onShowInspector={onShowInspector}
             />
@@ -151,7 +156,11 @@ export default function CanvasShell({
         </>
       )}
 
-      <SourceImportWizard open={dataRegistryOpen} onClose={() => setDataRegistryOpen(false)} />
+      <SourceImportWizard
+        open={dataRegistryOpen}
+        onClose={() => setDataRegistryOpen(false)}
+        onComplete={onSourceImportComplete}
+      />
     </ResizablePanelGroup>
   );
 }

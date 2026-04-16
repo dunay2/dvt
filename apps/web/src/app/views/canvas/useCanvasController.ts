@@ -1,7 +1,9 @@
+import { useQueryClient } from '@tanstack/react-query';
 import { type NodeTypes } from '@xyflow/react';
-import { useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import DbtNodeComponent from '../../components/canvas/DbtNodeComponent';
+import type { ImportSourcesResult } from '../../ports/workspace';
 import {
   getPlatformConnectionDetail,
   getPlatformHealthErrorMessageFromQuery,
@@ -9,6 +11,7 @@ import {
   usePlatformHealthSnapshotQuery,
 } from '../../../capabilities/platform-health';
 import { resolveCanvasGraphStrategy } from '../../plugins/graphStrategyRegistry';
+import { queryKeys } from '../../queries/queryKeys';
 import { getRegisteredPluginIds } from '../../plugins/registry';
 import { useCapabilitiesQuery } from '../../queries/useCapabilitiesQuery';
 import { resolveWorkspaceBootstrapConfig } from '../../services/config/workspaceConfig';
@@ -35,6 +38,7 @@ const nodeTypes: NodeTypes = {
 };
 
 export function useCanvasController() {
+  const queryClient = useQueryClient();
   const dataSourceMode = useAppDataSourceMode();
   const { data: capabilities } = useCapabilitiesQuery();
   const platformHealthQuery = usePlatformHealthSnapshotQuery();
@@ -48,6 +52,7 @@ export function useCanvasController() {
   const shellFeedback = useShellFeedback();
   const workspaceBootstrapConfig = useMemo(() => resolveWorkspaceBootstrapConfig(), []);
   const navigationActions = useCanvasNavigationActions();
+  const [importedNodeFocusIds, setImportedNodeFocusIds] = useState<string[]>([]);
   const isBackendCheckPending =
     dataSourceMode === 'api' &&
     platformHealthQuery.isPending &&
@@ -188,6 +193,29 @@ export function useCanvasController() {
     ]
   );
 
+  const handleSourceImportComplete = useCallback(
+    (result: ImportSourcesResult) => {
+      const nextImportedNodeIds = result.importedNodeIds ?? [];
+      store.setCurrentPlan(null);
+
+      if (nextImportedNodeIds.length > 0) {
+        store.setSelectedNodes(nextImportedNodeIds);
+        store.setInspectorNode(nextImportedNodeIds[0] ?? null);
+        store.showInspectorPanel();
+        setImportedNodeFocusIds(nextImportedNodeIds);
+      }
+
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.workspace.graph(store.workspaceLayoutKey),
+      });
+    },
+    [queryClient, store]
+  );
+
+  const handleImportedNodeFocusComplete = useCallback(() => {
+    setImportedNodeFocusIds([]);
+  }, []);
+
   return {
     dataSourceMode,
     isBackendCheckPending,
@@ -224,6 +252,9 @@ export function useCanvasController() {
     handleNodeDragStop: persistence.handleNodeDragStop,
     handleDrop: graphHandlers.handleDrop,
     handleDragOver: graphHandlers.handleDragOver,
+    handleSourceImportComplete,
+    importedNodeFocusIds,
+    handleImportedNodeFocusComplete,
     hideExplorerPanel: store.hideExplorerPanel,
     showExplorerPanel: store.showExplorerPanel,
     hideInspectorPanel: store.hideInspectorPanel,

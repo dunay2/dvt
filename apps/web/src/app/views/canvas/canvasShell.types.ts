@@ -1,6 +1,7 @@
 import type { Edge, Node, NodeTypes, ReactFlowProps } from '@xyflow/react';
 import type React from 'react';
 
+import type { ImportSourcesResult } from '../../ports/workspace';
 import type { CanonicalNode } from '../../types/canonical';
 import type { CanvasPaletteId } from './canvasPalette';
 import type { TransformationGraphValidationResult } from './transformationGraphValidation';
@@ -36,6 +37,9 @@ export type CanvasShellProps = {
   onViewportChange: (viewport: { x: number; y: number; zoom: number }) => void;
   onDrop: React.DragEventHandler<HTMLDivElement>;
   onDragOver: React.DragEventHandler<HTMLDivElement>;
+  onSourceImportComplete: (result: ImportSourcesResult) => void;
+  importedNodeFocusIds: string[];
+  onImportedNodeFocusComplete: () => void;
   onHideExplorer: () => void;
   onShowExplorer: () => void;
   onHideInspector: () => void;

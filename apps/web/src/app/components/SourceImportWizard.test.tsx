@@ -36,6 +36,7 @@ function buildWorkspaceService(overrides?: Partial<IWorkspacePort>): IWorkspaceP
       sourcesCreated: 1,
       tablesImported: 1,
       yamlFiles: ['models/sources/erp.yml'],
+      importedNodeIds: ['src_erp_orders'],
       grouping: 'schema',
       options: {
         includeColumns: false,
@@ -202,5 +203,6 @@ describe('SourceImportWizard', () => {
     expect(document.body.textContent).toContain('Registry update complete');
     expect(document.body.textContent).toContain('Groups created:');
     expect(document.body.textContent).toContain('models/sources/erp.yml');
+    expect(document.body.textContent).toContain('Add imported sources to canvas');
   });
 });

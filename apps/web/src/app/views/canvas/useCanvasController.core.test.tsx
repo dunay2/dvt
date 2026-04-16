@@ -1,3 +1,4 @@
+import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { setupCanvasControllerHarness } from './useCanvasController.test.harness';
@@ -53,6 +54,7 @@ describe('useCanvasController core', () => {
     expect(result?.planStatusSummary).toBe('Preview required before running.');
     expect(result?.handleDrop).toBe(harness.state.graphHandlersResult.handleDrop);
     expect(result?.confirmEdgeCreation).toBe(harness.state.graphHandlersResult.confirmEdgeCreation);
+    expect(result?.importedNodeFocusIds).toEqual([]);
     expect(harness.mocks.useCanvasExecutionActions).toHaveBeenCalledWith(
       expect.objectContaining({
         plansService: harness.state.services.plansService,
@@ -107,5 +109,48 @@ describe('useCanvasController core', () => {
         canEditEdges: false,
       })
     );
+  });
+
+  it('invalidates the graph query and prepares focus when imported sources complete', async () => {
+    const storeState = harness.state.store as Record<string, unknown>;
+    storeState.inspectorPanelVisible = false;
+    await harness.renderProbe();
+
+    await act(async () => {
+      harness.getLatestResult()?.handleSourceImportComplete({
+        success: true,
+        sourcesCreated: 2,
+        tablesImported: 2,
+        yamlFiles: ['models/sources/src_erp.yml'],
+        importedNodeIds: ['src_erp_orders', 'src_erp_customers'],
+        grouping: 'schema',
+        options: {
+          includeColumns: true,
+          addTests: false,
+          addFreshness: false,
+        },
+      });
+    });
+
+    expect(harness.state.store.setCurrentPlan).toHaveBeenCalledWith(null);
+    expect(harness.state.store.setSelectedNodes).toHaveBeenCalledWith([
+      'src_erp_orders',
+      'src_erp_customers',
+    ]);
+    expect(harness.state.store.setInspectorNode).toHaveBeenCalledWith('src_erp_orders');
+    expect(harness.state.store.showInspectorPanel).toHaveBeenCalledTimes(1);
+    expect(harness.state.queryClient.invalidateQueries).toHaveBeenCalledWith({
+      queryKey: ['workspace', 'graph', 'tenant-a::project-a::dev'],
+    });
+    expect(harness.getLatestResult()?.importedNodeFocusIds).toEqual([
+      'src_erp_orders',
+      'src_erp_customers',
+    ]);
+
+    await act(async () => {
+      harness.getLatestResult()?.handleImportedNodeFocusComplete();
+    });
+
+    expect(harness.getLatestResult()?.importedNodeFocusIds).toEqual([]);
   });
 });

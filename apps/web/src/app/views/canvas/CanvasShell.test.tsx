@@ -10,6 +10,8 @@ import type { CanvasShellProps } from './canvasShell.types';
 
 const shellState = vi.hoisted(() => ({
   dbtExplorerProps: null as null | Record<string, unknown>,
+  canvasViewportProps: null as null | Record<string, unknown>,
+  sourceImportWizardProps: null as null | Record<string, unknown>,
 }));
 
 vi.mock('../../components/DbtExplorer', () => ({
@@ -24,7 +26,10 @@ vi.mock('../../components/InspectorPanel', () => ({
 }));
 
 vi.mock('../../components/SourceImportWizard', () => ({
-  default: () => <div data-testid="source-import-wizard" />,
+  default: (props: Record<string, unknown>) => {
+    shellState.sourceImportWizardProps = props;
+    return <div data-testid="source-import-wizard" />;
+  },
 }));
 
 vi.mock('./CanvasToolbar', () => ({
@@ -32,7 +37,10 @@ vi.mock('./CanvasToolbar', () => ({
 }));
 
 vi.mock('./CanvasViewport', () => ({
-  default: () => <div data-testid="canvas-viewport" />,
+  default: (props: Record<string, unknown>) => {
+    shellState.canvasViewportProps = props;
+    return <div data-testid="canvas-viewport" />;
+  },
 }));
 
 function buildProps(overrides?: Partial<CanvasShellProps>): CanvasShellProps {
@@ -59,7 +67,6 @@ function buildProps(overrides?: Partial<CanvasShellProps>): CanvasShellProps {
       canRun: true,
       canEditEdges: true,
     },
-    canvasAuthoringMode: 'transformation',
     nodesWithImpact: [],
     edges: [],
     nodeTypes: {},
@@ -75,6 +82,9 @@ function buildProps(overrides?: Partial<CanvasShellProps>): CanvasShellProps {
     onViewportChange: vi.fn(),
     onDrop: vi.fn(),
     onDragOver: vi.fn(),
+    onSourceImportComplete: vi.fn(),
+    importedNodeFocusIds: [],
+    onImportedNodeFocusComplete: vi.fn(),
     onHideExplorer: vi.fn(),
     onShowExplorer: vi.fn(),
     onHideInspector: vi.fn(),
@@ -91,6 +101,7 @@ function buildProps(overrides?: Partial<CanvasShellProps>): CanvasShellProps {
     canUseCostOverlay: false,
     impactOverlayEnabled: false,
     columnLevelLineageEnabled: false,
+    canvasAuthoringMode: 'transformation',
     transformationValidation: {
       valid: false,
       summary: 'Plan requires exactly 3 nodes: source, sql_transform, and sink.',
@@ -117,6 +128,8 @@ describe('CanvasShell', () => {
       globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }
     ).IS_REACT_ACT_ENVIRONMENT = true;
     shellState.dbtExplorerProps = null;
+    shellState.canvasViewportProps = null;
+    shellState.sourceImportWizardProps = null;
   });
 
   afterEach(() => {
@@ -157,5 +170,23 @@ describe('CanvasShell', () => {
       canEditGraph: true,
     });
     expect(shellState.dbtExplorerProps?.onOpenDataRegistry).toBeTypeOf('function');
+  });
+
+  it('wires source import completion and imported-node focus through the shell surfaces', async () => {
+    const props = buildProps({
+      importedNodeFocusIds: ['src_erp_orders', 'src_erp_customers'],
+    });
+
+    await act(async () => {
+      root.render(<CanvasShell {...props} />);
+    });
+
+    expect(shellState.canvasViewportProps).toMatchObject({
+      importedNodeFocusIds: ['src_erp_orders', 'src_erp_customers'],
+      onImportedNodeFocusComplete: props.onImportedNodeFocusComplete,
+    });
+    expect(shellState.sourceImportWizardProps).toMatchObject({
+      onComplete: props.onSourceImportComplete,
+    });
   });
 });
