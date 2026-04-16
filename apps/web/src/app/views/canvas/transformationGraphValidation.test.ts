@@ -96,6 +96,36 @@ describe('validateTransformationGraph', () => {
     );
   });
 
+  it('accepts a selected transformation subgraph within a larger canvas', () => {
+    const nodes = [
+      buildNode({ id: 'src', name: 'Source', role: 'input' }),
+      buildNode({ id: 'tx', name: 'Transform', role: 'transform' }),
+      buildNode({ id: 'sink', name: 'Sink', role: 'output' }),
+      buildNode({ id: 'qa', name: 'Quality check', role: 'check' }),
+    ];
+    const edges = [
+      buildEdge({ id: 'e1', sourceId: 'src', targetId: 'tx' }),
+      buildEdge({ id: 'e2', sourceId: 'tx', targetId: 'sink' }),
+      buildEdge({ id: 'e3', sourceId: 'sink', targetId: 'qa' }),
+    ];
+
+    expect(
+      validateTransformationGraph({
+        nodes,
+        edges,
+        selectedNodeIds: ['src', 'tx', 'sink'],
+        workspaceNodeIds: nodes.map((node) => node.id),
+      })
+    ).toEqual(
+      expect.objectContaining({
+        valid: true,
+        summary: 'Transformation draft is valid for preview.',
+        scopedNodeIds: ['src', 'tx', 'sink'],
+        scopedEdgeIds: ['e1', 'e2'],
+      })
+    );
+  });
+
   it('changes draftSignature when projected graph source changes without changing ids', () => {
     const nodes = [
       buildNode({ id: 'src', name: 'Source', role: 'input' }),

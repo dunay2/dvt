@@ -714,6 +714,66 @@ describe('resolvePlanRefForStartRun', () => {
     );
   });
 
+  it('plans against the selected transformation subgraph within a larger canvas', async () => {
+    const plansService = createPlansServiceMock();
+    const runsService = createRunsServiceMock();
+    const qualityNode: CanonicalNode = {
+      id: 'quality-node',
+      name: 'Quality check',
+      pluginId: 'dvt',
+      kind: 'dvt:test',
+      role: 'check',
+      status: 'idle',
+      tags: [],
+    };
+
+    await act(async () => {
+      root.render(
+        <HookHost
+          plansService={plansService}
+          runsService={runsService}
+          currentPlan={null}
+          onRunStarted={vi.fn()}
+          sessionContext={sessionContext}
+          shellFeedback={shellFeedback}
+          canonicalNodes={[...canonicalNodes, qualityNode]}
+          canonicalEdges={[
+            ...canonicalEdges,
+            {
+              id: 'edge-3',
+              sourceId: 'sink-node',
+              targetId: 'quality-node',
+              relation: 'lineage',
+            },
+          ]}
+          selectedNodeIds={['source-node', 'transform-node', 'sink-node']}
+          workspaceNodeIds={['source-node', 'transform-node', 'sink-node', 'quality-node']}
+        />
+      );
+    });
+
+    await act(async () => {
+      container
+        .querySelectorAll('button')[0]
+        ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    expect(plansService.previewPlan).toHaveBeenCalledTimes(1);
+    expect(plansService.previewPlan).toHaveBeenCalledWith(
+      expect.objectContaining({
+        selectedNodeIds: ['source-node', 'transform-node', 'sink-node'],
+        graphSource: expect.objectContaining({
+          nodes: expect.arrayContaining([
+            expect.objectContaining({ nodeId: 'source-node' }),
+            expect.objectContaining({ nodeId: 'transform-node' }),
+            expect.objectContaining({ nodeId: 'sink-node' }),
+          ]),
+        }),
+      })
+    );
+    expect(shellFeedback.success).toHaveBeenCalledWith('Execution plan created');
+  });
+
   it('stores a persisted preview result and enables Start Run after a valid plan', async () => {
     const persistedPlan = buildPersistedPreviewPlan();
     const plansService = createPlansServiceMock(persistedPlan);
