@@ -64,7 +64,13 @@ const baseDraft = {
   ],
 } as const;
 
-function buildWritableCapability() {
+function buildWritableCapability(): {
+  scope: typeof baseScope;
+  mode: 'writable';
+  canRead: true;
+  canWrite: true;
+  reason: 'authorized';
+} {
   return {
     scope: baseScope,
     mode: 'writable' as const,
@@ -74,7 +80,13 @@ function buildWritableCapability() {
   };
 }
 
-function buildReadOnlyCapability() {
+function buildReadOnlyCapability(): {
+  scope: typeof baseScope;
+  mode: 'read_only';
+  canRead: true;
+  canWrite: false;
+  reason: 'write_denied';
+} {
   return {
     scope: baseScope,
     mode: 'read_only' as const,
