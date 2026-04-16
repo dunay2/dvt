@@ -70,6 +70,7 @@ export type PluginContributions = {
 
 // Imported lazily to avoid circular deps during module init
 import { dbtContributions } from './dbt/dbtContributions';
+import { dvtContributions } from './dvt/dvtContributions';
 import { monitoringContributions } from './monitoring/monitoringContributions';
 
 export type RuntimeCapabilities = {
@@ -166,6 +167,7 @@ const costContributions: PluginContributions = {
 
 const ALL_PLUGIN_CONTRIBUTIONS: PluginContributions[] = [
   dbtContributions,
+  dvtContributions,
   monitoringContributions,
   costContributions,
 ];

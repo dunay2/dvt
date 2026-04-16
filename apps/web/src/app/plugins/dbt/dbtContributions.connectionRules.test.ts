@@ -17,21 +17,21 @@ function buildNode(kind: `${string}:${string}`, role: CanonicalNode['role']): Ca
 }
 
 describe('dbtContributions connection rules', () => {
-  it('allows source -> sql_transform and sql_transform -> sink for canvas authoring', () => {
+  it('keeps dbt-owned source rules inside the dbt plugin', () => {
     const rules = dbtContributions.connectionRules ?? [];
 
-    const sourceToTransform = evaluatePluginConnectionRules(
+    const sourceToModel = evaluatePluginConnectionRules(
       buildNode('dbt:source', 'input'),
-      buildNode('dvt:sql_transform', 'transform'),
+      buildNode('dbt:model', 'transform'),
       rules
     );
-    const transformToSink = evaluatePluginConnectionRules(
-      buildNode('dvt:sql_transform', 'transform'),
-      buildNode('dvt:sink', 'output'),
+    const sourceToTest = evaluatePluginConnectionRules(
+      buildNode('dbt:source', 'input'),
+      buildNode('dbt:test', 'check'),
       rules
     );
 
-    expect(sourceToTransform).toEqual({ allowed: true });
-    expect(transformToSink).toEqual({ allowed: true });
+    expect(sourceToModel).toEqual({ allowed: true });
+    expect(sourceToTest).toEqual({ allowed: true });
   });
 });

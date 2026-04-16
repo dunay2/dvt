@@ -63,32 +63,6 @@ export const DBT_NODE_KINDS: NodeKindRegistration[] = [
     supportsColumns: false,
   },
   {
-    kind: 'dvt:sql_transform',
-    pluginId: 'dvt',
-    label: 'SQL transform',
-    role: 'transform',
-    previewStepKind: 'CANVAS_TRANSFORM',
-    icon: Table,
-    borderClass: 'border-blue-500',
-    minimapColor: '#3b82f6',
-    allowsIncoming: true,
-    allowsOutgoing: true,
-    supportsColumns: false,
-  },
-  {
-    kind: 'dvt:sink',
-    pluginId: 'dvt',
-    label: 'Sink',
-    previewStepKind: 'CANVAS_SINK',
-    role: 'output',
-    icon: Presentation,
-    borderClass: 'border-pink-500',
-    minimapColor: '#ec4899',
-    allowsIncoming: true,
-    allowsOutgoing: false,
-    supportsColumns: false,
-  },
-  {
     kind: 'dbt:snapshot',
     pluginId: 'dbt',
     label: 'Snapshot',
@@ -153,6 +127,40 @@ export const DBT_NODE_KINDS: NodeKindRegistration[] = [
     allowsOutgoing: true,
     supportsColumns: false,
   },
+];
+
+export const DVT_AUTHORING_NODE_KINDS: NodeKindRegistration[] = [
+  {
+    kind: 'dvt:sql_transform',
+    pluginId: 'dvt',
+    label: 'SQL transform',
+    role: 'transform',
+    previewStepKind: 'CANVAS_TRANSFORM',
+    icon: Table,
+    borderClass: 'border-blue-500',
+    minimapColor: '#3b82f6',
+    allowsIncoming: true,
+    allowsOutgoing: true,
+    supportsColumns: false,
+  },
+  {
+    kind: 'dvt:sink',
+    pluginId: 'dvt',
+    label: 'Sink',
+    previewStepKind: 'CANVAS_SINK',
+    role: 'output',
+    icon: Presentation,
+    borderClass: 'border-pink-500',
+    minimapColor: '#ec4899',
+    allowsIncoming: true,
+    allowsOutgoing: false,
+    supportsColumns: false,
+  },
+];
+
+export const CANVAS_NODE_KINDS: NodeKindRegistration[] = [
+  ...DBT_NODE_KINDS,
+  ...DVT_AUTHORING_NODE_KINDS,
 ];
 
 export const DBT_TYPE_TO_KIND: Record<DbtNodeType, PluginNodeKind> = {
