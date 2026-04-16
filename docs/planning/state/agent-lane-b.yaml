@@ -286,7 +286,7 @@ tasks:
     last_verified: '2026-03-31'
   - task_id: AR-B1
     priority: P0
-    status: in_progress
+    status: done
     objective: >-
       add RunStatus state machine validation at the event append boundary in appendAndEnqueueTx so
       that invalid event sequences (e.g., StepCompleted before StepStarted) are rejected at write
@@ -298,18 +298,20 @@ tasks:
       rejected with a typed error before persisting.
     complexity: L
     effort_points: 8
-    progress_pct: 80
+    progress_pct: 100
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/ar-b1-run-status-write-boundary-plan-20260404.md
       - docs/guides/run-status-write-boundary-technical-manual-20260404.md
       - docs/guides/run-status-write-boundary-user-manual-20260404.md
       - docs/planning/roadmap/ar-b1-quality-hardening-roadmap-20260404.md
+      - docs/planning/closeouts/20260416-ar-b1-write-boundary-closeout.md
+      - docs/evidence/ED-20260416-ar-b1-write-boundary-closure.md
     status_reason: >-
-      Docs-first TDD now includes transition policy modularization, signal precheck extraction,
-      fixture modularization, and nightly postgres integration scheduling; final closeout artifact
-      publication remains.
-    last_verified: '2026-04-04'
+      `AR-B1-A..E` now has accepted closure evidence: append-boundary state-machine guards are
+      documented, implemented, and validated across run-domain, in-memory store, adapter-postgres,
+      and prepush gates with synchronized planning surfaces.
+    last_verified: '2026-04-16'
   - task_id: AR-B1-A
     parent_task: AR-B1
     priority: P0
@@ -386,7 +388,7 @@ tasks:
   - task_id: AR-B1-E
     parent_task: AR-B1
     priority: P0
-    status: in_progress
+    status: done
     objective: close AR-B1 with validation evidence, docs sync, and planning and status alignment.
     dependency: AR-B1-D
     target: >-
@@ -394,12 +396,16 @@ tasks:
       and closeout evidence is recorded.
     complexity: S
     effort_points: 1
-    progress_pct: 70
+    progress_pct: 100
     evidence_refs:
       - docs/planning/closeouts
       - docs/evidence
-    status_reason: Validation baselines are green; pending formal closeout/evidence publication.
-    last_verified: '2026-04-04'
+      - docs/planning/closeouts/20260416-ar-b1-write-boundary-closeout.md
+      - docs/evidence/ED-20260416-ar-b1-write-boundary-closure.md
+    status_reason: >-
+      Formal closeout and evidence are published; validation baseline includes targeted package
+      tests, markdown governance checks for changed docs, planning regeneration, and prepush gates.
+    last_verified: '2026-04-16'
   - task_id: AR-B2
     priority: P1
     status: done
@@ -601,9 +607,9 @@ dependency_notes:
     via accepted evidence dated 2026-03-30.
   - '`ADP-LINT-ORDER-01` and `RC-F2` remain review-stage hardening work.'
   - >-
-    `AR-B1` is the most critical gap from the 2026-04-02 deep architectural review: RunStatus state
-    machine validation at event append boundary to prevent invalid sequences from corrupting the
-    log.
+    `AR-B1` is now closed with accepted closeout/evidence: RunStatus state-machine validation at
+    event append boundary is documented, implemented, and validated as the canonical write-boundary
+    guardrail.
   - >-
     `AR-B2` is closed with accepted evidence, and `AR-B3` is now closed with deterministic
     ManifestGraphDeriver key-order handling plus golden-vector planId/inputHash stability coverage.
@@ -621,8 +627,8 @@ verification_summary:
   verified_on: '2026-04-16'
   total_tasks: 21
   total_effort_points: 81
-  completed_weighted_points: 56.6
-  lane_progress_pct: 70
+  completed_weighted_points: 58.9
+  lane_progress_pct: 73
   notes: >-
     Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry
     coordination-only effort.
