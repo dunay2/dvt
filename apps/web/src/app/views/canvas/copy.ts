@@ -5,8 +5,10 @@ export const canvasViewCopy = {
   backendLoadingMessage:
     'Canvas is waiting for the backend readiness checks to settle before loading the authoring surface.',
   routeEmptyTitle: 'No graph content loaded',
-  routeEmptyMessage:
+  routeEmptyEditableMessage:
     'This workspace does not expose graph nodes yet. Use Add data to import sources or load graph content before planning.',
+  routeEmptyReadOnlyMessage:
+    'This workspace does not expose graph nodes yet. Graph edits are disabled in this context.',
   routeErrorTitle: 'Canvas unavailable',
   routeErrorFallbackMessage: 'The workspace graph could not be loaded for Canvas.',
   routeErrorMessage:

@@ -60,12 +60,16 @@ export function CanvasLoadingStateView({
   return <CanvasSurfaceStateCard dataSlot="canvas-loading-state" title={title} message={message} />;
 }
 
-export function CanvasEmptyStateView() {
+export function CanvasEmptyStateView({
+  message = canvasViewCopy.routeEmptyEditableMessage,
+}: Readonly<{
+  message?: string;
+}>) {
   return (
     <CanvasSurfaceStateCard
       dataSlot="canvas-empty-state"
       title={canvasViewCopy.routeEmptyTitle}
-      message={canvasViewCopy.routeEmptyMessage}
+      message={message}
     />
   );
 }
