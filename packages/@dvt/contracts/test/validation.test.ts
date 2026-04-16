@@ -7,6 +7,7 @@ import { registerValidationPlannerGraphSuite } from './validation/planner-graph.
 import { registerValidationPreviewSuite } from './validation/preview.js';
 import { registerValidationRunLifecycleSuite } from './validation/run-lifecycle.js';
 import { registerValidationSignalAndErrorSuite } from './validation/signal-and-error.js';
+import { registerValidationWorkspaceGraphDraftSuite } from './validation/workspace-graph-draft.js';
 
 describe('contracts: validation helpers', () => {
   registerValidationSignalAndErrorSuite();
@@ -16,4 +17,5 @@ describe('contracts: validation helpers', () => {
   registerValidationPlannerGraphSuite();
   registerValidationPlanRecordsSuite();
   registerValidationPreviewSuite();
+  registerValidationWorkspaceGraphDraftSuite();
 });

@@ -1,0 +1,30 @@
+---
+id: R-20260416-TF-A2-WORKSPACE-GRAPH-DRAFT-ADOPTION-DRIFT
+title: Workspace graph-draft callers can drift from shared capability and CAS semantics
+status: Open
+date: 2026-04-16
+owners:
+  - packages/@dvt/contracts
+  - dvt-api
+  - '@dvt/web'
+severity: Medium
+probability: Medium
+context: >
+  `TF-A2` freezes the shared workspace graph-draft persistence contract in `@dvt/contracts`,
+  including capability posture, compare-and-swap revision semantics, idempotent retry identity,
+  audit correlation, and typed format-evolution outcomes. The protected API/store slice (`TF-C4`)
+  and Canvas adoption slice (`TF-E2-A`) still remain to be implemented.
+risk: >
+  If Lane C or Lane E reintroduce route-local DTOs, browser-local overwrite heuristics, or ad-hoc
+  permission handling while wiring the new draft path, the runtime boundary can diverge from the
+  frozen shared contract and silently weaken conflict handling, auditability, or read-only posture.
+mitigations:
+  - 'The shared contract pack now defines one typed read/write boundary in `@dvt/contracts`.'
+  - 'Validation helpers and dedicated contract tests enforce capability, audit, conflict, and format
+    outcomes.'
+  - 'The repo-local planner contract doc makes the boundary explicit for downstream implementation
+    lanes.'
+  - '`TF-C4` and `TF-E2-A` are explicitly sequenced behind the shared contract freeze in planning
+    state.'
+review_after: 2026-06-16
+---

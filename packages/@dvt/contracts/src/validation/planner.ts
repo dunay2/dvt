@@ -41,6 +41,12 @@ import {
   type PlanRefSchemaT,
   TransformationSqlFirstCompilerGraphSourceSchema,
   type TransformationSqlFirstCompilerGraphSourceSchemaT,
+  WorkspaceGraphDraftReadResponseSchema,
+  type WorkspaceGraphDraftReadResponseSchemaT,
+  WorkspaceGraphDraftSaveRequestSchema,
+  type WorkspaceGraphDraftSaveRequestSchemaT,
+  WorkspaceGraphDraftSaveResponseSchema,
+  type WorkspaceGraphDraftSaveResponseSchemaT,
 } from '../schemas.js';
 
 import { parseWithSchema } from './core.js';
@@ -127,4 +133,22 @@ export function parsePlanAdmissionLink(input: unknown): PlanAdmissionLink {
 
 export function parsePlanRef(input: unknown): PlanRefSchemaT {
   return parseWithSchema(PlanRefSchema, input);
+}
+
+export function parseWorkspaceGraphDraftSaveRequest(
+  input: unknown
+): WorkspaceGraphDraftSaveRequestSchemaT {
+  return parseWithSchema(WorkspaceGraphDraftSaveRequestSchema, input);
+}
+
+export function parseWorkspaceGraphDraftSaveResponse(
+  input: unknown
+): WorkspaceGraphDraftSaveResponseSchemaT {
+  return parseWithSchema(WorkspaceGraphDraftSaveResponseSchema, input);
+}
+
+export function parseWorkspaceGraphDraftReadResponse(
+  input: unknown
+): WorkspaceGraphDraftReadResponseSchemaT {
+  return parseWithSchema(WorkspaceGraphDraftReadResponseSchema, input);
 }
