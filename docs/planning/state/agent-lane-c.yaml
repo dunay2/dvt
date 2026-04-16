@@ -2,7 +2,7 @@ lane_id: C
 title: Runtime Safety And Admission
 owner: Product / Architecture / Delivery / Docs
 status: Active
-last_reviewed: '2026-04-14'
+last_reviewed: '2026-04-16'
 goal: Harden runtime behavior, admission checks, and caller-visible freshness.
 expected_outcome:
   - runtime failures are explicit
@@ -1089,6 +1089,43 @@ tasks:
       acceptance and environment-level canary evidence still remain outside this implementation
       slice.
     last_verified: '2026-04-14'
+  - task_id: TF-C4
+    priority: P0
+    status: queued
+    objective: >-
+      implement the protected workspace graph-draft read/write boundary so editable Canvas graphs
+      persist through one tenant-scoped API and store path instead of browser-local state.
+    dependency: TF-A2, read-your-writes contract
+    target: >-
+      Protected workspace graph-draft routes validate the shared contract, enforce authorization and
+      tenant or workspace scope, enforce compare-and-swap against the authoritative revision, reject
+      stale writes with typed conflict outcomes, preserve idempotent retry semantics for the same
+      logical save attempt, distinguish writable versus read-only callers explicitly, emit or
+      reference auditable authorization and write outcomes, emit governed metrics and traces for the
+      protected draft path, preserve audit/observability join keys, migrate governed compatible
+      legacy draft versions, reject corrupt or unsupported drafts with typed outcomes, define
+      backfill or write-back behavior for stored draft evolution, persist canonical draft records in
+      the backend-owned store path, and give callers explicit read-your-writes behavior plus one
+      operator-facing recovery runbook.
+    complexity: M
+    effort_points: 5
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/tf-a2-workspace-graph-draft-persistence-boundary-plan-20260416.md
+      - docs/architecture/components/web/frontend-data-boundary-architecture.md
+      - docs/architecture/reference-architecture.md
+      - docs/runbooks/backend-mvp-control-plane-runbook-20260329.md
+      - docs/runbooks/read-your-writes-freshness-slo-20260330.md
+    status_reason: >-
+      Planned slice. Runtime admission and persistence work for editable graph drafts must wait for
+      `TF-A2` to freeze the shared contract and port semantics, after which Lane C will own the
+      protected API plus store-backed write boundary instead of leaving frontend callers on
+      browser-local persistence. The API slice is also explicitly responsible for compare-and-swap,
+      stale-write rejection, idempotent retry behavior, tenant-scoped authorization, audit and
+      observability correlation, protected-path metrics and traces, read-only capability outcomes,
+      schemaVersion migration and typed format-failure handling, and operator runbook readiness at
+      the protected boundary.
+    last_verified: '2026-04-16'
 dependency_notes:
   - >-
     `MVP-C1` is now closed because its accepted runbook artifact no longer carries an open
@@ -1139,14 +1176,18 @@ dependency_notes:
     `TF-C1..TF-C3` are now decomposed into route, persistence, executor, evidence, and phase-2
     plugin-backed dbt subtasks so runtime closure can progress in smaller slices without losing the
     same outer contract.
+  - >-
+    `TF-C4` is the protected workspace graph-draft follow-up. It depends on `TF-A2` for the shared
+    contract freeze and on the `read-your-writes contract` for caller-visible freshness so Lane E
+    adopts a real backend-owned write path instead of continuing on UI-local persistence.
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
-  verified_on: '2026-04-13'
-  total_tasks: 37
-  total_effort_points: 137
-  completed_weighted_points: 78.25
-  lane_progress_pct: 57
+  verified_on: '2026-04-16'
+  total_tasks: 46
+  total_effort_points: 175
+  completed_weighted_points: 140.4
+  lane_progress_pct: 80
   notes: >-
     Weighted progress uses effort_points. `MW-C1`, `TF-C2-A`, and `TF-C2-B` now contribute accepted
     dispatcher, canonical proof, and caller-visible runtime-evidence closure rather than the older
@@ -1155,4 +1196,6 @@ verification_summary:
     dispatch (`TF-C3`), and broader hardening work rather than the first PostgreSQL vertical itself.
     `TF-C3` is now in progress through the protected-runtime `RunExecutionContext` resolver slice
     plus adapter-temporal DBT seam and fixture hardening, while production plugin-host composition
-    still remains open.
+    still remains open. `TF-C4` now reserves the protected workspace graph-draft read/write boundary
+    so backend-owned persistence is a blocking dependency for `TF-E2` instead of an implicit future
+    assumption.

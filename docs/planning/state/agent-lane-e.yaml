@@ -2,7 +2,7 @@ lane_id: E
 title: Frontend And UI
 owner: Product / UX / Frontend
 status: Active
-last_reviewed: '2026-04-14'
+last_reviewed: '2026-04-16'
 goal: >-
   Evolve apps/web from a mixed mock prototype into an operational UI whose contracts, state
   boundaries, diagrams, and validation match the real backend surface.
@@ -1894,6 +1894,141 @@ tasks:
       events. Route tests, presentation tests, and the runtime-contract Cypress lane now prove the
       completed and failed result UX on the governed read surface.
     last_verified: '2026-04-13'
+  - task_id: TF-E2
+    priority: P0
+    status: in_progress
+    objective: >-
+      productize Canvas node authoring so node lifecycle, edge lifecycle, property editing, and
+      hard-reload behavior all run through one canonical persistence model instead of visual-only or
+      browser-local draft state.
+    dependency: TF-E1, F-04, TF-A2, TF-C4
+    target: >-
+      Canvas supports production-grade node CRUD, edge CRUD and reconnect, Inspector-backed property
+      editing, deterministic rehydration after hard reload, and a proof-oriented
+      unit/integration/Cypress matrix without treating React Flow state or `localStorage` as the
+      product source of truth and without inventing a frontend-local persistence contract outside
+      the governed workspace boundary. Caller-visible save behavior must also respect the shared
+      compare-and-swap, reject-on-stale, and idempotent retry contract, while caller-visible route
+      state must distinguish writable, read-only, forbidden, and degraded posture from protected
+      boundary outcomes. The slice must also preserve operability through correlation-aware failure
+      UX, protected-path telemetry, one governed recovery runbook, and hard-reload compatibility
+      across governed persisted draft schema versions.
+    complexity: L
+    effort_points: 8
+    progress_pct: 15
+    evidence_refs:
+      - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-production-node-authoring-and-persistence-plan-20260416.md
+      - docs/architecture/components/web/graph/canvas-component-map-and-modernization-review.md
+      - docs/architecture/components/web/inspector/inspector-frontend-architecture.md
+      - docs/architecture/components/web/frontend-data-boundary-architecture.md
+      - docs/architecture/components/web/observability/front-observability-architecture-dvt.md
+      - docs/runbooks/index.md
+    status_reason: >-
+      The productization slice is now active, but the persistence boundary is no longer left
+      implicit: `TF-A2` must freeze the shared workspace graph-draft contract and `TF-C4` must
+      implement the protected API/store path before Canvas can claim product-grade persistence. Lane
+      E now explicitly owns adoption and UX closure, not contract invention, and the UX closure must
+      expose version conflict, authorization posture, retry behavior, persisted-format evolution
+      behavior, and operable recovery context instead of silently overwriting draft truth or hiding
+      permission loss.
+    last_verified: '2026-04-16'
+  - task_id: TF-E2-A
+    parent_task: TF-E2
+    priority: P0
+    status: queued
+    objective: >-
+      adopt the shared workspace graph-draft contract inside Canvas so editable graph reads and
+      writes stop depending on browser-local or route-local persistence semantics.
+    dependency: TF-A2, TF-C4
+    target: >-
+      Canvas consumes the governed workspace graph-draft read/write boundary through the workspace
+      port, removes UI-local DTO or storage authority from the active product path, fails closed
+      when canonical persistence is unavailable, adopts the shared compare-and-swap plus
+      reject-on-stale semantics without frontend-local overwrite rules, renders explicit writable
+      versus read-only capability states from boundary outcomes, and consumes governed format
+      metadata plus typed corrupt or unsupported draft outcomes.
+    complexity: S
+    effort_points: 3
+    progress_pct: 0
+    evidence_refs: []
+    status_reason: >-
+      Planned slice; execution waits on the shared contract freeze in `TF-A2` and the protected
+      API/store implementation in `TF-C4`. Adoption must include the shared versioning,
+      compare-and-swap, idempotent retry, tenant-scoped authorization, and read-only posture rather
+      than route-local save or permission heuristics, and it must preserve the caller-visible
+      correlation context and format-evolution behavior needed for operator diagnosis and safe
+      reloads across releases.
+    last_verified: '2026-04-16'
+  - task_id: TF-E2-B
+    parent_task: TF-E2
+    priority: P0
+    status: queued
+    objective: >-
+      close node lifecycle persistence for create, delete, duplicate, move, and hard-reload
+      rehydration under the canonical draft boundary.
+    dependency: TF-E2-A
+    target: >-
+      Node mutations and reload behavior round-trip through canonical persistence with explicit
+      pending, saved, failed-save, read-only, and typed format-recovery states rather than
+      visual-only success.
+    complexity: S
+    effort_points: 3
+    progress_pct: 0
+    evidence_refs: []
+    status_reason: planned slice; execution has not started.
+    last_verified: '2026-04-16'
+  - task_id: TF-E2-C
+    parent_task: TF-E2
+    priority: P0
+    status: queued
+    objective: >-
+      close edge lifecycle persistence for create, delete, reconnect, and visibility under the same
+      canonical draft model.
+    dependency: TF-E2-A
+    target: >-
+      Edge mutations survive reload, invalid or partial connections fail closed, and rendered edges
+      remain projections of canonical graph state rather than transient modal or viewport state.
+    complexity: S
+    effort_points: 3
+    progress_pct: 0
+    evidence_refs: []
+    status_reason: planned slice; execution has not started.
+    last_verified: '2026-04-16'
+  - task_id: TF-E2-D
+    parent_task: TF-E2
+    priority: P0
+    status: queued
+    objective: >-
+      turn the Inspector into the canonical property-editing surface for governed node metadata with
+      validation, dirty-state handling, save, cancel, and reload semantics.
+    dependency: TF-E2-A
+    target: >-
+      Governed node properties can be edited, validated, saved, canceled, and rehydrated through the
+      Inspector, and the saved values feed the same canonical authoring truth consumed by preview
+      and run handoff.
+    complexity: S
+    effort_points: 3
+    progress_pct: 0
+    evidence_refs: []
+    status_reason: planned slice; execution has not started.
+    last_verified: '2026-04-16'
+  - task_id: TF-E2-E
+    parent_task: TF-E2
+    priority: P0
+    status: queued
+    objective: >-
+      establish the proof-oriented unit, integration, and Cypress matrix for full node authoring
+      lifecycle behavior.
+    dependency: TF-E2-B, TF-E2-C, TF-E2-D
+    target: >-
+      Automated coverage proves create, connect, edit, delete, reload, invalid-connection, and
+      persistence-failure behavior across unit, controller integration, and end-to-end lanes.
+    complexity: M
+    effort_points: 5
+    progress_pct: 0
+    evidence_refs: []
+    status_reason: planned slice; execution has not started.
+    last_verified: '2026-04-16'
 dependency_notes:
   - >-
     `MVP-E1` and `F-07` now define the frontend runtime contract baseline. `F-07` executes in
@@ -1927,6 +2062,13 @@ dependency_notes:
     `TF-E1` is decomposed into `TF-E1-A/B/C` for authoring, preview-to-run, and result UX closure on
     the basic Canvas flow `source -> sql_transform -> sink`.
   - >-
+    `TF-E2` is the productization follow-up to `TF-E1`. It must close canonical graph-draft
+    ownership, persisted node and edge lifecycle, Inspector-backed property editing, and the full
+    reload-proof test matrix without promoting React Flow state or `localStorage` fallback behavior
+    into the product source of truth. `TF-A2` now owns the shared contract freeze and `TF-C4` owns
+    the protected API/store boundary, so Lane E is explicitly blocked from inventing a frontend-
+    local persistence contract or hiding the missing backend boundary behind UI-local persistence.
+  - >-
     `F-23` captures the next Git-facing UX slice as governed file-history review inside `Code` and
     `Diff`. It explicitly avoids a VS Code-style Git explorer and keeps route ownership aligned with
     the Git-mode architecture.
@@ -1938,11 +2080,11 @@ dependency_notes:
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
-  verified_on: '2026-04-13'
-  total_tasks: 60
-  total_effort_points: 213
-  completed_weighted_points: 75
-  lane_progress_pct: 35
+  verified_on: '2026-04-16'
+  total_tasks: 67
+  total_effort_points: 241
+  completed_weighted_points: 129.8
+  lane_progress_pct: 54
   notes: >-
     Weighted progress uses effort_points and records partial convergence already present in the
     frontend, even when the lane still lacks accepted closure for most slices. F-17 now tracks 7
@@ -1951,4 +2093,7 @@ verification_summary:
     Code-owned file-history review with Diff-owned revision comparison, and `F-24` plus `F-25` now
     have English-normalized bundle docs covering shell grammar, visual system, plugin UX, rollout,
     drift notes, and wireframes so downstream implementation can consume a governed baseline instead
-    of a proposal pack with stale language and encoding issues.
+    of a proposal pack with stale language and encoding issues. `TF-E2` is now the active
+    production-authoring follow-up that freezes canonical node, edge, property, and reload
+    expectations before implementation. The summary values were recomputed from the current task
+    registry on 2026-04-16 to realign the YAML with the actual lane contents.
