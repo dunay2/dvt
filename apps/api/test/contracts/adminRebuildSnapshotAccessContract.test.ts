@@ -2,17 +2,18 @@ import { readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION } from '@dvt/contracts';
-import type { IRunStateStoreMaintenance } from '@dvt/engine';
 import { RunNotFoundError } from '@dvt/engine';
 import { Ajv2020 } from 'ajv/dist/2020.js';
 import Fastify from 'fastify';
 import { describe, expect, it } from 'vitest';
 
+import {
+  type RebuildSnapshot,
+  type WorkflowSnapshotResult,
+  makeWorkflowSnapshot,
+} from '../fixtures/workflowSnapshotFixture.js';
 import { registerAdminRoutes } from '../../src/entrypoints/http/adminRoutes.js';
 
-type RebuildSnapshot = IRunStateStoreMaintenance['rebuildSnapshot'];
-type WorkflowSnapshotResult = Awaited<ReturnType<RebuildSnapshot>>;
 type AdminRebuildSnapshotAccessContract = {
   readonly route: {
     readonly method: 'POST';
@@ -134,20 +135,6 @@ const ADMIN_REBUILD_SNAPSHOT_ACCESS_CONTRACT: AdminRebuildSnapshotAccessContract
     ],
   },
 };
-
-function makeSnapshot(
-  runId: string,
-  status: WorkflowSnapshotResult['status'] = 'PENDING'
-): WorkflowSnapshotResult {
-  return {
-    schemaVersion: CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION,
-    runId,
-    status,
-    paused: false,
-    cancelling: false,
-    steps: {},
-  } as WorkflowSnapshotResult;
-}
 
 function createApp(
   rebuildSnapshot: RebuildSnapshot,
@@ -280,7 +267,7 @@ describe('AdminRebuildSnapshot access contract', () => {
   });
 
   it('exposes the documented success envelope', async () => {
-    const app = createApp(async (_tenantId, runId) => makeSnapshot(runId, 'RUNNING'));
+    const app = createApp(async (_tenantId, runId) => makeWorkflowSnapshot(runId, 'RUNNING'));
 
     try {
       const response = await app.inject({
@@ -300,7 +287,7 @@ describe('AdminRebuildSnapshot access contract', () => {
   });
 
   it('exposes bad_request envelope when tenantId is missing', async () => {
-    const app = createApp(async (_tenantId, runId) => makeSnapshot(runId));
+    const app = createApp(async (_tenantId, runId) => makeWorkflowSnapshot(runId));
 
     try {
       const response = await app.inject({
@@ -323,7 +310,7 @@ describe('AdminRebuildSnapshot access contract', () => {
   });
 
   it('exposes forbidden envelope for non-admin authorization', async () => {
-    const app = createApp(async (_tenantId, runId) => makeSnapshot(runId), {
+    const app = createApp(async (_tenantId, runId) => makeWorkflowSnapshot(runId), {
       authorize: async () => ({ ok: false, reason: 'ACTION_NOT_GRANTED' }),
     });
 

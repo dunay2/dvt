@@ -1,28 +1,15 @@
-import { CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION } from '@dvt/contracts';
-import type { IRunStateStoreMaintenance } from '@dvt/engine';
 import { RunNotFoundError } from '@dvt/engine';
 import Fastify from 'fastify';
 import { describe, expect, it, vi } from 'vitest';
 
+import {
+  type RebuildSnapshot,
+  type WorkflowSnapshotResult,
+  makeWorkflowSnapshot,
+} from '../../fixtures/workflowSnapshotFixture.js';
 import { registerAdminRoutes } from '../../../src/entrypoints/http/adminRoutes.js';
 
-type RebuildSnapshot = IRunStateStoreMaintenance['rebuildSnapshot'];
-type WorkflowSnapshotResult = Awaited<ReturnType<RebuildSnapshot>>;
 type RouteResponse = Awaited<ReturnType<ReturnType<typeof Fastify>['inject']>>;
-
-function makeSnapshot(
-  runId: string,
-  status: WorkflowSnapshotResult['status'] = 'PENDING'
-): WorkflowSnapshotResult {
-  return {
-    schemaVersion: CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION,
-    runId,
-    status,
-    paused: false,
-    cancelling: false,
-    steps: {},
-  };
-}
 
 function createApp(
   rebuildSnapshot: RebuildSnapshot,
@@ -194,7 +181,7 @@ describe('adminRoutes', () => {
   it('returns 401 when token is missing or invalid', async () => {
     await withRebuildSnapshotRequest(
       {
-        rebuildSnapshot: async (_tenantId, _runId) => makeSnapshot('r1', 'PENDING'),
+        rebuildSnapshot: async (_tenantId, _runId) => makeWorkflowSnapshot('r1', 'PENDING'),
         authenticateBearerToken: async () => ({ ok: false, code: 'MISSING_TOKEN' }),
       },
       ({ response, rebuildSnapshotSpy }) => {
@@ -213,7 +200,7 @@ describe('adminRoutes', () => {
   it('returns 403 when principal lacks explicit admin action', async () => {
     await withRebuildSnapshotRequest(
       {
-        rebuildSnapshot: async (_tenantId, _runId) => makeSnapshot('r1', 'PENDING'),
+        rebuildSnapshot: async (_tenantId, _runId) => makeWorkflowSnapshot('r1', 'PENDING'),
         authorize: async () => ({ ok: false, reason: 'ACTION_NOT_GRANTED' }),
       },
       ({ response, rebuildSnapshotSpy }) => {
@@ -232,7 +219,7 @@ describe('adminRoutes', () => {
   it('returns 403 when authorization context is not an admin action', async () => {
     await withRebuildSnapshotRequest(
       {
-        rebuildSnapshot: async (_tenantId, _runId) => makeSnapshot('r1', 'PENDING'),
+        rebuildSnapshot: async (_tenantId, _runId) => makeWorkflowSnapshot('r1', 'PENDING'),
         auth: { actionName: 'run:cancel' },
       },
       ({ response, rebuildSnapshotSpy }) => {
@@ -251,7 +238,7 @@ describe('adminRoutes', () => {
   it('returns 400 when tenantId is missing', async () => {
     await withRebuildSnapshotRequest(
       {
-        rebuildSnapshot: async (_tenantId, _runId) => makeSnapshot('r1', 'PENDING'),
+        rebuildSnapshot: async (_tenantId, _runId) => makeWorkflowSnapshot('r1', 'PENDING'),
         payload: {},
       },
       ({ response }) => {
@@ -270,7 +257,7 @@ describe('adminRoutes', () => {
   it('returns 400 when body is not an object', async () => {
     await withRebuildSnapshotRequest(
       {
-        rebuildSnapshot: async (_tenantId, _runId) => makeSnapshot('r1', 'PENDING'),
+        rebuildSnapshot: async (_tenantId, _runId) => makeWorkflowSnapshot('r1', 'PENDING'),
         payload: ['tenant-a'],
       },
       ({ response }) => {
@@ -291,7 +278,7 @@ describe('adminRoutes', () => {
   ])('returns 400 when %s', async (_desc, payload) => {
     await withRebuildSnapshotRequest(
       {
-        rebuildSnapshot: async (_tenantId, _runId) => makeSnapshot('r1', 'PENDING'),
+        rebuildSnapshot: async (_tenantId, _runId) => makeWorkflowSnapshot('r1', 'PENDING'),
         payload,
       },
       ({ response }) => {
@@ -310,7 +297,7 @@ describe('adminRoutes', () => {
   it('returns 200 with rebuilt snapshot status', async () => {
     await withRebuildSnapshotRequest(
       {
-        rebuildSnapshot: async (_tenantId, runId) => makeSnapshot(runId, 'RUNNING'),
+        rebuildSnapshot: async (_tenantId, runId) => makeWorkflowSnapshot(runId, 'RUNNING'),
         runId: 'r42',
       },
       ({ response }) => {
