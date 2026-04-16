@@ -2,7 +2,7 @@
 title: Contracts And State-Store Boundary
 owner: Product / Architecture / Delivery / Docs
 status: Active
-last_reviewed: '2026-04-10'
+last_reviewed: '2026-04-16'
 goal:
   Close the state-store boundary, retire contract ownership drift, and keep governance startup
   executable.
@@ -2273,6 +2273,44 @@ tasks:
       kinds instead of coercing them into `DBT_*`, and the canvas/store/modal/plugin preview path no
       longer depends on `types/dbt.ts` for plan semantics.
     last_verified: '2026-04-14'
+  - task_id: TF-A2
+    priority: P0
+    status: in_progress
+    objective: >-
+      formalize the canonical workspace graph-draft persistence contract so editable Canvas graphs
+      use one typed read and write boundary across web, api, and the persistence owner instead of
+      browser-local authority.
+    dependency: TF-A1, F-04
+    target: >-
+      A governed workspace graph-draft contract pack defines typed read/write semantics, revision or
+      concurrency tokens, explicit schema-version versus mutable-revision posture, compare-and-swap
+      semantics, reject-on-stale merge policy, idempotent write expectations, tenant and workspace
+      scope, explicit read/write/read-only capability outcomes, auditable protected-decision
+      obligations, exact caller-visible capability and audit envelope fields, shared
+      audit-observability join semantics, explicit format-evolution metadata and typed
+      corrupt/unsupported draft outcomes, compatibility-window and backfill posture, conflict
+      posture, and the workspace-port extension consumed by downstream API and web adoption without
+      local DTO drift.
+    complexity: M
+    effort_points: 5
+    progress_pct: 15
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/tf-a2-workspace-graph-draft-persistence-boundary-plan-20260416.md
+      - docs/contracts/planner/TransformationFlowPreview.v1.md
+      - docs/architecture/reference-architecture.md
+      - docs/architecture/components/engine/contracts/engine/SignalsAndAuth.v1.md
+      - docs/architecture/components/web/frontend-data-boundary-architecture.md
+    status_reason: >-
+      Docs-first contract freezing is now active. Lane A owns the missing typed persistence boundary
+      for editable workspace graphs so Lane C can implement one protected API and store path and
+      Lane E can adopt it without promoting `localStorage` or route-local save envelopes into
+      product authority. The active contract fix now explicitly includes versioning,
+      compare-and-swap, reject-on-stale, idempotent retry, tenant-scoped authorization outcomes,
+      auditable protected decisions, exact capability and audit envelope shapes, shared telemetry
+      correlation keys, schema evolution and migration posture, and caller-visible read-only posture
+      rather than leaving write correctness, permission semantics, reload compatibility, or
+      operability join logic implicit.
+    last_verified: '2026-04-16'
 dependency_notes:
   - >-
     `MVP-A1` is now closed as the contractual MVP baseline through the reviewed proposal plus the
@@ -2343,6 +2381,11 @@ dependency_notes:
     freeze before the graph-to-step compiler mapping lands; downstream runtime and UI work should
     depend on those narrower tasks instead of treating Lane A as one opaque block.
   - >-
+    `TF-A2` is the contract-first follow-up to `TF-A1`: it freezes the workspace graph-draft
+    read/write boundary, revision semantics, and port ownership so Lane C can implement the
+    protected API/store path and Lane E cannot continue productizing editable graphs on browser-
+    local authority.
+  - >-
     `AR-A12` now captures the Fowler-style reset of the engine-runtime contract pack and the
     run-status read boundary: `AR-A12-A` resets the active line to one canonical pre-stable `v1`
     pack, `AR-A12-B` separates canonical status from provider-live diagnostics, and `AR-A12-C`
@@ -2351,11 +2394,13 @@ dependency_notes:
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
-  verified_on: '2026-04-13'
-  total_tasks: 86
-  total_effort_points: 297
-  completed_weighted_points: 185.64
-  lane_progress_pct: 63
+  verified_on: '2026-04-16'
+  total_tasks: 103
+  total_effort_points: 335
+  completed_weighted_points: 253.64
+  lane_progress_pct: 76
   notes: >-
     Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry
-    coordination-only effort.
+    coordination-only effort. `TF-A2` now adds the missing contract-first workspace graph-draft
+    persistence boundary so typed web/api/store ownership is frozen before frontend productization
+    continues. Summary values were recomputed from the current lane registry on 2026-04-16.
