@@ -1,8 +1,8 @@
 import type { CoreNodeRole, PluginNodeKind } from '../types/canonical';
 
 import {
+  CANVAS_NODE_KINDS,
   CONNECTION_RULES,
-  DBT_NODE_KINDS,
   EDGE_TYPE_STRATEGIES,
   FALLBACK_NODE_KIND,
 } from './nodeTypeCatalog.dbt';
@@ -15,7 +15,7 @@ import type {
 export type { CanvasEdgeType, EdgeTypeStrategyContext, NodeKindRegistration };
 
 const registry = new Map<PluginNodeKind, NodeKindRegistration>(
-  DBT_NODE_KINDS.map((definition) => [definition.kind, definition])
+  CANVAS_NODE_KINDS.map((definition) => [definition.kind, definition])
 );
 
 export function resolveNodeKindRegistration(kind: string): NodeKindRegistration {
