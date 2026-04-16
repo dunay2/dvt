@@ -31,6 +31,10 @@ export const HTTP_ERROR_REASON = Object.freeze({
   tenantAccessDenied: 'tenant_access_denied',
   unsupportedCursor: 'unsupported_cursor',
   unsupportedPlanVersion: 'unsupported_plan_version',
+  workspaceGraphDraftIdempotencyKeyReused: 'workspace_graph_draft_idempotency_key_reused',
+  workspaceGraphDraftNotFound: 'workspace_graph_draft_not_found',
+  workspaceGraphDraftUnsupportedSchemaVersion:
+    'workspace_graph_draft_unsupported_schema_version',
 } as const);
 
 export type HttpErrorReason = (typeof HTTP_ERROR_REASON)[keyof typeof HTTP_ERROR_REASON];

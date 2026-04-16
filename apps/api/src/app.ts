@@ -23,7 +23,9 @@ import {
 } from './entrypoints/http/runtimeRoutes.constants.js';
 import { signalRunRoute } from './entrypoints/http/signalRunRoute.js';
 import { startRunRoute } from './entrypoints/http/startRunRoute.js';
+import { registerWorkspaceGraphDraftRoutes } from './entrypoints/http/workspaceGraphDraftRoutes.js';
 import { ObservabilityRunStatusStalenessTelemetry } from './infrastructure/telemetry/ObservabilityRunStatusStalenessTelemetry.js';
+import { ObservabilityWorkspaceGraphDraftTelemetry } from './infrastructure/telemetry/ObservabilityWorkspaceGraphDraftTelemetry.js';
 import { SafeRunSnapshotStalenessReader } from './infrastructure/telemetry/SafeRunSnapshotStalenessReader.js';
 import { buildProtectedRuntimeModule } from './modules/buildProtectedRuntimeModule.js';
 import { registerOperationalHooks } from './modules/registerOperationalHooks.js';
@@ -209,6 +211,9 @@ export async function buildApp(): Promise<{ app: FastifyInstance; ctx: AppContex
       protectedModule.engine,
       protectedModule.stateStore.read
     );
+    const workspaceGraphDraftTelemetry = new ObservabilityWorkspaceGraphDraftTelemetry({
+      observability,
+    });
 
     app.post<{ Body: Parameters<typeof startRunRoute>[0]['body'] }>(
       RUNTIME_ROUTE_PATH.start,
@@ -240,6 +245,13 @@ export async function buildApp(): Promise<{ app: FastifyInstance; ctx: AppContex
         planResolver: protectedModule.executablePlanResolver,
       })
     );
+    registerWorkspaceGraphDraftRoutes(app, {
+      capabilityService: protectedModule.workspaceGraphDraftCapabilityService,
+      getUseCase: protectedModule.getWorkspaceGraphDraftUseCase,
+      saveUseCase: protectedModule.saveWorkspaceGraphDraftUseCase,
+      telemetry: workspaceGraphDraftTelemetry,
+      observability,
+    });
 
     app.get(RUNTIME_ROUTE_PATH.list, async (request, reply) =>
       listRunsRoute(request as never, reply, { ...runtimeAuth, useCase: listRunsUseCase })

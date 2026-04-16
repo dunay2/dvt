@@ -10,9 +10,12 @@ import type { FastifyInstance } from 'fastify';
 import type { Logger } from 'pino';
 
 import { AuthorizeCommandScopeService } from '../application/services/authorizeCommandScopeService.js';
+import { AuthorizeWorkspaceGraphDraftCapabilityService } from '../application/services/authorizeWorkspaceGraphDraftCapabilityService.js';
 import { BackpressureAwareStartRunUseCase } from '../application/services/BackpressureAwareStartRunUseCase.js';
 import { EngineStartRunUseCase } from '../application/services/engineStartRunUseCase.js';
+import { GetWorkspaceGraphDraftUseCase } from '../application/services/getWorkspaceGraphDraftUseCase.js';
 import { PlannerBackedStartRunUseCase } from '../application/services/PlannerBackedStartRunUseCase.js';
+import { SaveWorkspaceGraphDraftUseCase } from '../application/services/saveWorkspaceGraphDraftUseCase.js';
 import { StartRunAuthorizedFacade } from '../application/services/startRunAuthorizedFacade.js';
 import { createStartRunTargetAdapterRegistryFromValues } from '../application/services/startRunTargetAdapterRegistry.js';
 import { StoredExecutablePlanResolver } from '../application/services/StoredExecutablePlanResolver.js';
@@ -35,6 +38,8 @@ import { ArtifactBackedRunExecutionContextResolver } from '../infrastructure/sta
 import { ArtifactStoreDbtProjectBundleBindingPolicy } from '../infrastructure/startRun/ArtifactStoreDbtProjectBundleBindingPolicy.js';
 import { PostgresDuplicateRunProbe } from '../infrastructure/startRun/PostgresDuplicateRunProbe.js';
 import { ObservabilityStartRunSlaTelemetry } from '../infrastructure/telemetry/ObservabilityStartRunSlaTelemetry.js';
+import { PostgresWorkspaceGraphDraftStore } from '../infrastructure/workspaceGraphDraft/PostgresWorkspaceGraphDraftStore.js';
+import { StructuredWorkspaceGraphDraftAuditLogger } from '../infrastructure/workspaceGraphDraft/StructuredWorkspaceGraphDraftAuditLogger.js';
 import type { Env } from '../plugins/env.js';
 
 import { buildProviderAdapters } from './buildProviderAdapters.js';
@@ -233,6 +238,28 @@ export async function buildProtectedRuntimeModule(
     })
   );
   const startRunSlaTelemetry = new ObservabilityStartRunSlaTelemetry({ observability });
+  const workspaceGraphDraftStore = new PostgresWorkspaceGraphDraftStore({
+    pool,
+    schema: env.DVT_PG_SCHEMA,
+    queryTimeoutMs: env.DVT_PG_QUERY_TIMEOUT_MS,
+  });
+  const workspaceGraphDraftAudit = new StructuredWorkspaceGraphDraftAuditLogger(
+    app.log as unknown as Logger
+  );
+  const workspaceGraphDraftCapabilityService = new AuthorizeWorkspaceGraphDraftCapabilityService(
+    authenticator,
+    commandAuthorizer,
+    () => new Date()
+  );
+  const getWorkspaceGraphDraftUseCase = new GetWorkspaceGraphDraftUseCase(
+    workspaceGraphDraftStore,
+    workspaceGraphDraftAudit
+  );
+  const saveWorkspaceGraphDraftUseCase = new SaveWorkspaceGraphDraftUseCase(
+    workspaceGraphDraftStore,
+    workspaceGraphDraftAudit,
+    () => new Date()
+  );
   const planner = new PlannerFacade();
   const planValidator = new StoredPlanExecutabilityValidator({
     fetcher: planStore,
@@ -273,16 +300,22 @@ export async function buildProtectedRuntimeModule(
     planStore,
     planValidator,
     executablePlanResolver,
+    workspaceGraphDraftStore,
+    workspaceGraphDraftCapabilityService,
+    getWorkspaceGraphDraftUseCase,
+    saveWorkspaceGraphDraftUseCase,
     migrate: async () => {
       await accessRepo.migrate();
       await stateStore.migrate();
       await intentStore.migrate();
       await planStore.migrate();
+      await workspaceGraphDraftStore.migrate();
     },
     close: async () => {
       await closeAllClosers([
         () => closeAdapters(),
         () => planStore.close(),
+        () => workspaceGraphDraftStore.close(),
         () => stateStore.close(),
         () => intentStore.close(),
         () => pool.end(),

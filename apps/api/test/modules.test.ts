@@ -60,6 +60,31 @@ describe('modules', () => {
       planStore: {} as never,
       planValidator: {} as never,
       executablePlanResolver: { fetch: async () => ({}) } as never,
+      workspaceGraphDraftStore: {
+        async migrate() {},
+        async close() {},
+        async read() {
+          return null;
+        },
+        async save() {
+          return { kind: 'idempotency_mismatch' as const };
+        },
+      },
+      workspaceGraphDraftCapabilityService: {
+        async authorize() {
+          return {} as never;
+        },
+      } as never,
+      getWorkspaceGraphDraftUseCase: {
+        async execute() {
+          return { kind: 'not_found' as const };
+        },
+      } as never,
+      saveWorkspaceGraphDraftUseCase: {
+        async execute() {
+          return { kind: 'unsupported_schema_version' as const };
+        },
+      } as never,
       async migrate() {
         migrateCalls += 1;
       },

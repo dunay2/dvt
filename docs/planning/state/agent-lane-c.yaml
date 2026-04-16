@@ -1091,7 +1091,7 @@ tasks:
     last_verified: '2026-04-14'
   - task_id: TF-C4
     priority: P0
-    status: queued
+    status: review
     objective: >-
       implement the protected workspace graph-draft read/write boundary so editable Canvas graphs
       persist through one tenant-scoped API and store path instead of browser-local state.
@@ -1109,22 +1109,24 @@ tasks:
       operator-facing recovery runbook.
     complexity: M
     effort_points: 5
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/tf-a2-workspace-graph-draft-persistence-boundary-plan-20260416.md
       - docs/architecture/components/web/frontend-data-boundary-architecture.md
       - docs/architecture/reference-architecture.md
-      - docs/runbooks/backend-mvp-control-plane-runbook-20260329.md
+      - docs/planning/closeouts/20260416-tf-c4-workspace-graph-draft-protected-boundary-closeout.md
+      - docs/runbooks/workspace-graph-draft-protected-boundary-20260416.md
       - docs/runbooks/read-your-writes-freshness-slo-20260330.md
     status_reason: >-
-      Planned slice. Runtime admission and persistence work for editable graph drafts must wait for
-      `TF-A2` to freeze the shared contract and port semantics, after which Lane C will own the
-      protected API plus store-backed write boundary instead of leaving frontend callers on
-      browser-local persistence. The API slice is also explicitly responsible for compare-and-swap,
-      stale-write rejection, idempotent retry behavior, tenant-scoped authorization, audit and
-      observability correlation, protected-path metrics and traces, read-only capability outcomes,
-      schemaVersion migration and typed format-failure handling, and operator runbook readiness at
-      the protected boundary.
+      Protected runtime now owns `GET /workspace/graph/draft` and `PUT /workspace/graph/draft`
+      through one store-backed API path with explicit `writable` versus `read_only` capability
+      outcomes, tenant/project/environment scope enforcement, compare-and-swap revision rejection,
+      scoped idempotent retry handling, auditable decision/write outcomes, and dedicated traces plus
+      metrics. The current compatibility window is intentionally active-writer-only:
+      `workspace-graph-draft.v1` reads and writes natively, unsupported or corrupt persisted drafts
+      fail closed with typed outcomes, and the operator runbook records the explicit no-legacy-
+      migration/no-backfill posture for this first backend-owned slice. Remaining follow-through is
+      frontend adoption under `TF-E2-A`, not missing protected-runtime ownership.
     last_verified: '2026-04-16'
 dependency_notes:
   - >-
