@@ -60,6 +60,7 @@ Evidence documents that justify or validate relevant changes.
 - [ED 20260414 Tf C3 Dbt Plugin Runtime Projection](ED-20260414-tf-c3-dbt-plugin-runtime-projection.md)
 - [ED 20260414 Tf C3 Production Temporal Worker Dbt Host](ED-20260414-tf-c3-production-temporal-worker-dbt-host.md)
 - [ED 20260415 Ar C4 Runtime Circuit Breaker And Integration Hardening](ED-20260415-ar-c4-runtime-circuit-breaker-and-integration-hardening.md)
+- [ED 20260416 Ar B1 Write Boundary Closure](ED-20260416-ar-b1-write-boundary-closure.md)
 - [ED-20260402 RC-G1 governance startup and health reconciliation](ED-20260402-rc-g1-governance-startup-reconciliation.md)
 - [ED-20260402 S05 envelope boundary hardening](ED-20260402-s05-envelope-boundary-hardening.md)
 - [ED-20260402 S08 contract-layer hardening](ED-20260402-s08-contract-layer-hardening.md)
