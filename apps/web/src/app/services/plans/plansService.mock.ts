@@ -1,7 +1,7 @@
 import { mockExecutionPlan } from '../../data/mockDbtData';
-import type { PlansService } from './plansService';
+import type { IPlansPort } from '../../ports/plans';
 
-export function createMockPlansService(): PlansService {
+export function createMockPlansService(): IPlansPort {
   return {
     previewPlan: async () => ({ ...mockExecutionPlan }),
     importPlan: async () => ({ ...mockExecutionPlan }),

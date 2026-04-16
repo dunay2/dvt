@@ -7,8 +7,8 @@ import {
 
 import type { PlanRef, RunContext } from '../../types/engine';
 import type { PlanViewModel } from '../../types/plans';
+import type { IPlansPort, PlanPreviewInput } from '../../ports/plans';
 import type { ApiClient } from '../api/createApiClient';
-import type { PlanPreviewInput, PlansService } from './plansService';
 
 type PlanPreviewView = NonNullable<PlanViewModel['preview']>;
 
@@ -196,7 +196,7 @@ function mapContractPlanToUi(
   };
 }
 
-export function createApiPlansService(apiClient: ApiClient): PlansService {
+export function createApiPlansService(apiClient: ApiClient): IPlansPort {
   return {
     previewPlan: async (input: PlanPreviewInput) => {
       const payload = await apiClient.postJson<PlanPreviewInput, unknown>('/plans/preview', input);
