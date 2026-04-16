@@ -1,4 +1,4 @@
-import { PanelLeftClose } from 'lucide-react';
+import { PanelLeftClose, Upload } from 'lucide-react';
 import { useMemo } from 'react';
 
 import { resolveNodeKindRegistration } from '../plugins/nodeTypeRegistry';
@@ -13,6 +13,7 @@ import { cn } from './ui/utils';
 
 interface DbtExplorerProps {
   nodes: CanonicalNode[];
+  canEditGraph?: boolean;
   onNodeDragStart?: (node: CanonicalNode) => void;
   onHide?: () => void;
   onOpenDataRegistry?: () => void;
@@ -34,12 +35,11 @@ function resolveNodeBadgeText(node: CanonicalNode): string {
 
 export default function DbtExplorer({
   nodes,
+  canEditGraph = true,
   onNodeDragStart,
   onHide,
   onOpenDataRegistry,
-}: DbtExplorerProps) {
-  const hasDbtNodes = nodes.some((node) => node.pluginId === 'dbt');
-
+}: Readonly<DbtExplorerProps>) {
   const groupedNodes = useMemo(() => {
     const groups: Record<string, CanonicalNode[]> = {};
 
@@ -61,6 +61,11 @@ export default function DbtExplorer({
   }, [nodes]);
 
   const handleDragStart = (e: React.DragEvent, node: CanonicalNode) => {
+    if (!canEditGraph) {
+      e.preventDefault();
+      return;
+    }
+
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData(CANONICAL_NODE_DRAG_MIME_TYPE, JSON.stringify(node));
     onNodeDragStart?.(node);
@@ -72,7 +77,11 @@ export default function DbtExplorer({
         <div className="flex items-start justify-between gap-2">
           <div>
             <h2 className="font-semibold text-sm">Project Nodes</h2>
-            <p className="mt-0.5 text-xs text-slate-300">Drag resources into the graph</p>
+            <p className="mt-0.5 text-xs text-slate-300">
+              {canEditGraph
+                ? 'Drag resources into the graph'
+                : 'Inspect available project resources'}
+            </p>
           </div>
           {onHide && (
             <Button
@@ -88,11 +97,23 @@ export default function DbtExplorer({
           )}
         </div>
 
-        {hasDbtNodes && onOpenDataRegistry && (
-          <p className="mt-2 text-[11px] leading-5 text-slate-400">
-            Use <span className="font-medium text-slate-200">Add data</span> in the graph toolbar to
-            register new objects in this workspace.
-          </p>
+        {onOpenDataRegistry && (
+          <div className="mt-2 space-y-2">
+            <p className="text-[11px] leading-5 text-slate-400">
+              Explore project nodes, discover dependencies, and add new objects to this workspace.
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={onOpenDataRegistry}
+              disabled={!canEditGraph}
+              className="h-8 w-full justify-start gap-1.5 border-slate-600 bg-slate-950/40 px-3 text-xs font-medium text-slate-100 hover:bg-slate-800 hover:text-white"
+            >
+              <Upload className="size-3.5" />
+              Add data
+            </Button>
+          </div>
         )}
       </div>
 
@@ -121,9 +142,14 @@ export default function DbtExplorer({
                     {kindNodes.map((node) => (
                       <div
                         key={node.id}
-                        draggable
+                        draggable={canEditGraph}
                         onDragStart={(event) => handleDragStart(event, node)}
-                        className="group flex cursor-move items-center gap-2 rounded px-3 py-2 text-sm hover:bg-slate-950"
+                        className={cn(
+                          'group flex items-center gap-2 rounded px-3 py-2 text-sm',
+                          canEditGraph
+                            ? 'cursor-move hover:bg-slate-950'
+                            : 'cursor-default text-slate-300'
+                        )}
                       >
                         <div className={cn('size-2 rounded-full', statusColors[node.status])} />
                         <div className="min-w-0 flex-1">

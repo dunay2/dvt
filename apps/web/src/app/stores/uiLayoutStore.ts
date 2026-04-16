@@ -1,6 +1,11 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { PlatformConnectionState } from '../../capabilities/platform-health';
+import {
+  DEFAULT_CANVAS_PALETTE_ID,
+  normalizeCanvasPaletteId,
+  type CanvasPaletteId,
+} from '../views/canvas/canvasPalette';
 
 type TabType = 'canvas' | 'run' | 'diff' | 'lineage' | 'code';
 
@@ -14,6 +19,7 @@ interface UiLayoutState {
   consolePanelVisible: boolean;
   focusMode: boolean;
   gridSize: number;
+  canvasPalette: CanvasPaletteId;
 
   activeTabs: Array<{
     id: string;
@@ -33,11 +39,13 @@ interface UiLayoutState {
   toggleExplorerPanel: () => void;
   toggleInspectorPanel: () => void;
   toggleConsolePanel: () => void;
+  hideConsolePanel: () => void;
   showExplorerPanel: () => void;
   hideExplorerPanel: () => void;
   showInspectorPanel: () => void;
   hideInspectorPanel: () => void;
   setGridSize: (size: number) => void;
+  setCanvasPalette: (palette: CanvasPaletteId) => void;
   addTab: (tab: { id: string; type: TabType; label: string; data?: unknown }) => void;
   closeTab: (tabId: string) => void;
   setActiveTab: (tabId: string) => void;
@@ -56,6 +64,7 @@ export const useUiLayoutStore = create<UiLayoutState>()(
       consolePanelVisible: false,
       focusMode: false,
       gridSize: 20,
+      canvasPalette: DEFAULT_CANVAS_PALETTE_ID,
 
       activeTabs: [{ id: 'main-canvas', type: 'canvas' as TabType, label: 'Main Graph' }],
       activeTabId: 'main-canvas',
@@ -76,11 +85,13 @@ export const useUiLayoutStore = create<UiLayoutState>()(
           const next = !state.consolePanelVisible;
           return { consolePanelVisible: next, consolePanelHeight: next ? 160 : 0 };
         }),
+      hideConsolePanel: () => set({ consolePanelVisible: false, consolePanelHeight: 0 }),
       showExplorerPanel: () => set({ explorerPanelVisible: true }),
       hideExplorerPanel: () => set({ explorerPanelVisible: false }),
       showInspectorPanel: () => set({ inspectorPanelVisible: true }),
       hideInspectorPanel: () => set({ inspectorPanelVisible: false }),
       setGridSize: (size) => set({ gridSize: size }),
+      setCanvasPalette: (palette) => set({ canvasPalette: normalizeCanvasPaletteId(palette) }),
 
       addTab: (tab) =>
         set((state) => ({
@@ -102,6 +113,20 @@ export const useUiLayoutStore = create<UiLayoutState>()(
     {
       name: 'dvt-web-ui-layout',
       storage: createJSONStorage(() => localStorage),
+      merge: (persistedState, currentState) => {
+        const persistedLayoutState =
+          typeof persistedState === 'object' && persistedState != null
+            ? (persistedState as Partial<UiLayoutState>)
+            : {};
+        const mergedState = { ...currentState, ...persistedLayoutState };
+
+        return {
+          ...mergedState,
+          canvasPalette: normalizeCanvasPaletteId(
+            persistedLayoutState.canvasPalette ?? currentState.canvasPalette
+          ),
+        };
+      },
       partialize: (state) => ({
         leftNavCollapsed: state.leftNavCollapsed,
         explorerPanelWidth: state.explorerPanelWidth,
@@ -112,6 +137,7 @@ export const useUiLayoutStore = create<UiLayoutState>()(
         consolePanelVisible: state.consolePanelVisible,
         focusMode: state.focusMode,
         gridSize: state.gridSize,
+        canvasPalette: state.canvasPalette,
       }),
     }
   )

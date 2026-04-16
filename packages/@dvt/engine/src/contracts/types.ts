@@ -6,16 +6,17 @@
  * @date 2026-03-03
  */
 export type {
-  AdapterScopedSubstatus,
+  CanonicalRunStatus,
   EngineRunRef,
   IsoUtcString,
   PlanRef,
   Provider,
+  ProviderRunStatusView,
   RecoverRunCommand,
   ResolvedRunContext,
   RunContext,
+  RunStatusEnrichment,
   RunStatus,
-  RunStatusSnapshot,
   RunSubstatus,
   SignalRequest,
   SignalType,

@@ -11,15 +11,28 @@ import { createNoopObservability } from '@dvt/observability';
 import type { IObservability } from '@dvt/observability';
 
 import type { IProviderAdapter } from '../../src/adapters/IProviderAdapter.js';
+import { buildRunRecoveryService } from '../../src/application/RecoverRunApplicationService.js';
+import { StartRunAdmissionGuard } from '../../src/application/StartRunAdmissionGuard.js';
+import { StartRunApplicationService } from '../../src/application/StartRunApplicationService.js';
+import { buildWorkflowEngineFacade } from '../../src/core/buildWorkflowEngineFacade.js';
 import { IdempotencyKeyBuilder } from '../../src/core/idempotency.js';
 import { SnapshotProjector } from '../../src/core/SnapshotProjector.js';
 import { WorkflowEngine } from '../../src/core/WorkflowEngine.js';
-import { WorkflowEngineCoreService } from '../../src/core/WorkflowEngineCoreService.js';
+import {
+  buildRunControlService,
+  WorkflowEngineCoreService,
+} from '../../src/core/WorkflowEngineCoreService.js';
+import type { IRunExecutionContextBindingPolicy } from '../../src/ports/IRunExecutionContextBindingPolicy.js';
 import type { IRunExecutionContextResolver } from '../../src/ports/IRunExecutionContextResolver.js';
 import { AllowAllAuthorizer } from '../../src/security/authorizer.js';
 import type { IAuthorizer } from '../../src/security/authorizer.js';
 import { PlanRefPolicy } from '../../src/security/planRefPolicy.js';
 import { RunAccessPolicy } from '../../src/security/RunAccessPolicy.js';
+import { RunEnrichmentService } from '../../src/services/RunEnrichmentService.js';
+import {
+  buildRunStatusQueryService,
+  RunStatusQueryService,
+} from '../../src/services/RunStatusQueryService.js';
 import { InMemoryStartRunIntentStore } from '../../src/state/InMemoryStartRunIntentStore.js';
 import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
 import type { IClock } from '../../src/utils/clock.js';
@@ -38,8 +51,8 @@ export function makeTemporalAdapter(overrides?: Partial<IProviderAdapter>): IPro
       } as EngineRunRef;
     },
     async cancelRun() {},
-    async getRunStatus(runRef) {
-      return { runId: runRef.runId, status: 'RUNNING' } as const;
+    async getProviderStatusView() {
+      return { provider: 'temporal', providerStatus: 'RUNNING' } as const;
     },
     async signal() {},
     signalSemanticsVersions() {
@@ -72,6 +85,7 @@ export function createWorkflowEngineFixture(input?: {
   requiredProviders?: EngineRunRef['provider'][];
   observabilityFallbackThrottleMs?: number;
   runExecutionContextResolver?: IRunExecutionContextResolver;
+  runExecutionContextBindingPolicy?: IRunExecutionContextBindingPolicy;
   planFetcher?: { fetch(planRef: PlanRef): Promise<StoredPlanArtifact> };
 }): {
   engine: WorkflowEngine;
@@ -91,6 +105,7 @@ export function createWorkflowEngineFixture(input?: {
   const projector = input?.projector ?? new SnapshotProjector();
   const idempotency = input?.idempotency ?? new IdempotencyKeyBuilder();
   const clock = input?.clock ?? new SequenceClock('2026-02-12T00:00:00.000Z');
+  const observability = input?.observability ?? createNoopObservability();
   const adapters =
     input?.adapters ??
     (input?.adapter
@@ -107,25 +122,75 @@ export function createWorkflowEngineFixture(input?: {
         };
       },
     } as const);
-
-  const engine = new WorkflowEngine({
+  const policy = new RunAccessPolicy({
+    authorizer: input?.authorizer ?? new AllowAllAuthorizer(),
+    planRefPolicy: new PlanRefPolicy({ allowedSchemes: input?.allowedSchemes ?? ['https'] }),
+  });
+  const startRunApplicationService = new StartRunApplicationService({
+    policy,
+    guard: new StartRunAdmissionGuard({
+      policy,
+      stateStoreRead,
+      adapters,
+      ...(input?.runExecutionContextResolver === undefined
+        ? {}
+        : { runExecutionContextResolver: input.runExecutionContextResolver }),
+      ...(input?.runExecutionContextBindingPolicy === undefined
+        ? {}
+        : { runExecutionContextBindingPolicy: input.runExecutionContextBindingPolicy }),
+    }),
+    stateStoreRead,
+    stateStoreWrite,
+    idempotency,
+    clock,
+    intentStore,
+    planFetcher,
+    observability,
+    ...(input?.observabilityFallbackThrottleMs === undefined
+      ? {}
+      : { observabilityFallbackThrottleMs: input.observabilityFallbackThrottleMs }),
+  });
+  const runControlService = buildRunControlService({
+    stateStoreRead,
+    stateStoreWrite,
+    idempotency,
+    policy,
+    adapters,
+    observability,
+    clock,
+  });
+  const runStatusQueryService = buildRunStatusQueryService({
+    stateStoreRead,
+    projector,
+    policy,
+    observability,
+    clock,
+  });
+  const runRecoveryService = buildRunRecoveryService({
     stateStoreRead,
     stateStoreWrite,
     projector,
-    idempotency,
-    clock,
-    policy: new RunAccessPolicy({
-      authorizer: input?.authorizer ?? new AllowAllAuthorizer(),
-      planRefPolicy: new PlanRefPolicy({ allowedSchemes: input?.allowedSchemes ?? ['https'] }),
-    }),
-    intentStore,
+    policy,
     planFetcher,
-    observability: input?.observability ?? createNoopObservability(),
+    adapters,
+    observability,
+    startRunApplicationService,
+    ...(input?.runExecutionContextResolver === undefined
+      ? {}
+      : { runExecutionContextResolver: input.runExecutionContextResolver }),
+    ...(input?.runExecutionContextBindingPolicy === undefined
+      ? {}
+      : { runExecutionContextBindingPolicy: input.runExecutionContextBindingPolicy }),
+  });
+  const engine = buildWorkflowEngineFacade({
+    startRunApplicationService,
+    runRecoveryService,
+    runControlService,
+    runStatusQueryService,
+    observability,
     adapters,
     requiredProviders: input?.requiredProviders,
-    observabilityFallbackThrottleMs: input?.observabilityFallbackThrottleMs,
-    runExecutionContextResolver: input?.runExecutionContextResolver,
-  });
+  }) as WorkflowEngine;
 
   return {
     engine,
@@ -214,6 +279,8 @@ export function createWorkflowEngineCoreFixture(input?: {
   };
 }): {
   core: WorkflowEngineCoreService;
+  runStatusQueryService: RunStatusQueryService;
+  runEnrichmentService: RunEnrichmentService;
   store: InMemoryTxStore;
   stateStoreRead: InMemoryTxStore;
   stateStoreWrite: InMemoryTxStore;
@@ -231,24 +298,42 @@ export function createWorkflowEngineCoreFixture(input?: {
   const clock = input?.clock ?? new SequenceClock('2026-03-26T00:00:00.000Z');
   const adapter = input?.adapter ?? makeTemporalAdapter(input?.adapterOverrides);
   const adapters = makeProviderMap(adapter);
+  const policy = new RunAccessPolicy({
+    authorizer: input?.authorizer ?? new AllowAllAuthorizer(),
+    planRefPolicy: new PlanRefPolicy({ allowedSchemes: input?.allowedSchemes ?? ['https'] }),
+  });
+  const observability = input?.observability ?? createNoopObservability();
 
   const core = new WorkflowEngineCoreService({
     stateStoreRead,
     stateStoreWrite,
-    projector,
     idempotency,
-    policy: new RunAccessPolicy({
-      authorizer: input?.authorizer ?? new AllowAllAuthorizer(),
-      planRefPolicy: new PlanRefPolicy({ allowedSchemes: input?.allowedSchemes ?? ['https'] }),
-    }),
+    policy,
     adapters,
-    observability: input?.observability ?? createNoopObservability(),
+    observability,
     clock,
+    ...(input?.timeouts ? { timeouts: input.timeouts } : {}),
+  });
+  const runStatusQueryService = new RunStatusQueryService({
+    stateStoreRead,
+    projector,
+    policy,
+    observability,
+    clock,
+  });
+  const runEnrichmentService = new RunEnrichmentService({
+    stateStoreRead,
+    projector,
+    policy,
+    adapters,
+    observability,
     ...(input?.timeouts ? { timeouts: input.timeouts } : {}),
   });
 
   return {
     core,
+    runStatusQueryService,
+    runEnrichmentService,
     store,
     stateStoreRead,
     stateStoreWrite,

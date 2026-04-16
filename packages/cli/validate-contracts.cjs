@@ -1,6 +1,4 @@
 #!/usr/bin/env node
-/* eslint-env node */
-/* global console, process, __dirname, Buffer */
 
 const fs = require('fs');
 const path = require('path');
@@ -9,7 +7,7 @@ const {
   parseRunContext,
   parseSignalRequest,
   parseEngineRunRef,
-  parseRunStatusSnapshot,
+  parseCanonicalRunStatus,
   parseCanonicalEngineEvent,
   parseRunSnapshot,
   parseExecuteStepRequest,
@@ -110,6 +108,7 @@ function validatePlanFile(filePath) {
     runCheck('EngineRunRef schema', () => {
       parseEngineRunRef({
         provider: 'mock',
+        tenantId: 'tenant-demo',
         workflowId: payload?.metadata?.planId || 'workflow',
         runId: 'run-1',
       });
@@ -117,8 +116,8 @@ function validatePlanFile(filePath) {
   );
 
   checks.push(
-    runCheck('RunStatusSnapshot schema', () => {
-      parseRunStatusSnapshot({
+    runCheck('CanonicalRunStatus schema', () => {
+      parseCanonicalRunStatus({
         runId: 'run-1',
         status: 'RUNNING',
         substatus: 'RETRYING',

@@ -1,18 +1,22 @@
-import type { PlanRef, ResolvedRunContext } from '@dvt/contracts';
-import type { RunStateCommandPort } from '@dvt/engine';
+import type { IRunExecutionContextReader } from '@dvt/artifacts';
+import type { PlanRef, ResolvedRunContext, RunExecutionContext } from '@dvt/contracts';
+import { RunExecutionContextRejectedError, type RunStateCommandPort } from '@dvt/engine';
 import { describe, expect, it } from 'vitest';
 
 import {
   createActivities,
+  DEFAULT_STEP_ACTIVITY_REGISTRY,
   type Activities,
   type ActivityDeps,
+  type DbtPluginExecutionInput,
+  type DbtPluginRunner,
   type StepActivity,
   type StepExecutor,
   type StepInput,
 } from '../src/activities/stepActivities.js';
 import type {
-  EventInput,
   EventEnvelope,
+  EventInput,
   EventType,
   IIdempotencyKeyBuilder,
   RunMetadata,
@@ -30,11 +34,19 @@ import {
 
 const PLAN_REF: PlanRef = {
   uri: 's3://bucket/plans/p1.json',
-  sha256: 'ignored-in-mock',
+  sha256: 'a'.repeat(64),
   schemaVersion: 's1',
   planId: 'p1',
   planVersion: 'v1',
 };
+
+const RUN_EXECUTION_CONTEXT_REF = {
+  uri: 's3://bucket/runctx/p1.json',
+  sha256: 'b'.repeat(64),
+  schemaVersion: 'v1.0',
+  planId: PLAN_REF.planId,
+  planVersion: PLAN_REF.planVersion,
+} as const;
 
 const CTX: ResolvedRunContext = {
   tenantId: 'tenant-1',
@@ -42,8 +54,33 @@ const CTX: ResolvedRunContext = {
   environmentId: 'env-1',
   runId: 'run-1',
   targetAdapter: 'temporal',
+  runExecutionContextRef: RUN_EXECUTION_CONTEXT_REF,
   logicalAttemptId: 1,
   originRunId: 'run-1',
+};
+
+const RUN_EXECUTION_CONTEXT: RunExecutionContext = {
+  schemaVersion: 'v1.0',
+  planId: PLAN_REF.planId,
+  planVersion: PLAN_REF.planVersion,
+  planSha256: PLAN_REF.sha256,
+  tenantId: CTX.tenantId,
+  projectId: CTX.projectId,
+  environmentId: CTX.environmentId,
+  targetAdapter: CTX.targetAdapter,
+  createdAtIso: '2026-04-14T00:00:00.000Z',
+  createdBy: 'test',
+  pluginContexts: {
+    dbt: {
+      projectBundleRef: {
+        uri: `s3://bundle-bucket/tenants/${CTX.tenantId}/${'b'.repeat(64)}`,
+        kind: 'dbt-project-bundle',
+        sha256: 'b'.repeat(64),
+        tenantId: CTX.tenantId,
+      },
+      targetProfile: 'dbt-dev',
+    },
+  },
 };
 
 const DEFAULT_LOGICAL_ATTEMPT_ID = 1;
@@ -68,6 +105,11 @@ const EXPECTED_ERRORS = {
   invalidGatewayDsl: 'INVALID_GATEWAY_DSL:gw-invalid-dsl',
   stepKindRequired: 'INVALID_STEP_SCHEMA: step_kind_required:s1',
   unsupportedStepKind: 'UNSUPPORTED_STEP_KIND:PYTHON_SCRIPT:s-python',
+  runExecutionContextRequired: 'RUN_EXECUTION_CONTEXT_REQUIRED:s1',
+  pluginRuntimeNotConfigured: 'DBT_PLUGIN_RUNTIME_NOT_CONFIGURED:s1',
+  dbtPluginContextRequired: 'DBT_PLUGIN_CONTEXT_REQUIRED:s1',
+  dbtPluginResultInvalid: 'DBT_PLUGIN_RESULT_INVALID: stepId_mismatch:s1:other-step',
+  runExecutionContextRejected: 'RUN_EXECUTION_CONTEXT_REJECTED_BY_FIXTURE',
 } as const;
 
 class TestClock {
@@ -204,29 +246,78 @@ interface TestActivityDeps extends ActivityDeps {
   testStore: TestTxStore;
 }
 
-function buildDeps(store: TestTxStore = new TestTxStore()): TestActivityDeps {
+class FakeRunExecutionContextReader implements IRunExecutionContextReader {
+  constructor(private readonly runExecutionContext: RunExecutionContext = RUN_EXECUTION_CONTEXT) {}
+
+  async resolve(): Promise<RunExecutionContext> {
+    return this.runExecutionContext;
+  }
+}
+
+class RecordingDbtPluginRunner implements DbtPluginRunner {
+  readonly invocations: DbtPluginExecutionInput[] = [];
+  private readonly implementation: (
+    input: DbtPluginExecutionInput
+  ) => Promise<Awaited<ReturnType<DbtPluginRunner['execute']>>>;
+
+  constructor(
+    implementation: (
+      input: DbtPluginExecutionInput
+    ) => Promise<Awaited<ReturnType<DbtPluginRunner['execute']>>> = async (input) => ({
+      stepId: input.step.stepId,
+      status: 'COMPLETED',
+    })
+  ) {
+    this.implementation = implementation;
+  }
+
+  async execute(
+    input: DbtPluginExecutionInput
+  ): Promise<Awaited<ReturnType<DbtPluginRunner['execute']>>> {
+    this.invocations.push(input);
+    return this.implementation(input);
+  }
+}
+
+function buildDeps(
+  store: TestTxStore = new TestTxStore(),
+  overrides: Partial<ActivityDeps> = {}
+): TestActivityDeps {
   const runStateCommandPort: RunStateCommandPort = {
     bootstrapRun: (input) => store.bootstrapRunTx(input),
     appendTransitions: (runId, events) => store.appendAndEnqueueTx(runId, events),
   };
+
+  const runExecutionContextReader = Object.hasOwn(overrides, 'runExecutionContextReader')
+    ? overrides.runExecutionContextReader
+    : new FakeRunExecutionContextReader();
+  const dbtPluginRunner = Object.hasOwn(overrides, 'dbtPluginRunner')
+    ? overrides.dbtPluginRunner
+    : new RecordingDbtPluginRunner();
 
   return {
     runStateCommandPort,
     testStore: store,
     clock: new TestClock(),
     idempotency: new TestIdempotencyKeyBuilder(),
+    ...(runExecutionContextReader === undefined ? {} : { runExecutionContextReader }),
+    ...(dbtPluginRunner === undefined ? {} : { dbtPluginRunner }),
+    ...(overrides.getEngineAttemptId === undefined
+      ? {}
+      : { getEngineAttemptId: overrides.getEngineAttemptId }),
   };
 }
 
 function setupActivities(
   store: TestTxStore = new TestTxStore(),
   stepExecutors?: readonly StepExecutor[],
-  stepActivitiesByKind?: ReadonlyMap<string, StepActivity>
+  stepActivitiesByKind?: ReadonlyMap<string, StepActivity>,
+  depOverrides: Partial<ActivityDeps> = {}
 ): {
   deps: TestActivityDeps;
   acts: Activities;
 } {
-  const deps = buildDeps(store);
+  const deps = buildDeps(store, depOverrides);
   const acts = createActivities(deps, stepExecutors, stepActivitiesByKind);
   return { deps, acts };
 }
@@ -492,6 +583,158 @@ describe('stepActivities', () => {
       });
 
       expect(result.status).toBe('COMPLETED');
+    });
+
+    it('passes resolved dbt plugin context to the configured plugin runner', async () => {
+      const runner = new RecordingDbtPluginRunner(async (input) => {
+        return {
+          stepId: input.step.stepId,
+          status: 'COMPLETED',
+          resultEvidence: {
+            executor: 'dbt',
+            environmentId: input.runContext.environmentId,
+            sinkTable: 'analytics.orders_daily',
+            rowsWritten: 7,
+            startedAt: '2026-01-01T00:00:00.000Z',
+            completedAt: '2026-01-01T00:00:03.000Z',
+            durationMs: 3000,
+          },
+        };
+      });
+      const { acts } = setupActivities(undefined, undefined, undefined, {
+        dbtPluginRunner: runner,
+      });
+
+      const result = await acts.executeStep({
+        step: { stepId: 's1', kind: 'DBT_MODEL' },
+        ctx: CTX,
+      });
+
+      expect(result).toMatchObject({
+        stepId: 's1',
+        status: 'COMPLETED',
+        resultEvidence: {
+          executor: 'dbt',
+          sinkTable: 'analytics.orders_daily',
+          rowsWritten: 7,
+        },
+      });
+      expect(runner.invocations).toHaveLength(1);
+      expect(runner.invocations[0]).toMatchObject({
+        executionIdentity: {
+          tenantId: CTX.tenantId,
+          runId: CTX.runId,
+          environmentId: CTX.environmentId,
+        },
+        runContext: {
+          runId: CTX.runId,
+        },
+        pluginContext: {
+          projectBundleRef: {
+            uri: `s3://bundle-bucket/tenants/${CTX.tenantId}/${'b'.repeat(64)}`,
+            kind: 'dbt-project-bundle',
+            sha256: 'b'.repeat(64),
+            tenantId: CTX.tenantId,
+          },
+          targetProfile: 'dbt-dev',
+        },
+        runExecutionContext: {
+          planId: PLAN_REF.planId,
+          planVersion: PLAN_REF.planVersion,
+        },
+      });
+    });
+
+    it('fails closed when dbt step executes without runExecutionContextRef', async () => {
+      const { acts } = setupActivities();
+
+      await expect(
+        acts.executeStep({
+          step: { stepId: 's1', kind: 'DBT_TEST' },
+          ctx: {
+            ...CTX,
+            runExecutionContextRef: undefined,
+          },
+        })
+      ).rejects.toThrow(EXPECTED_ERRORS.runExecutionContextRequired);
+    });
+
+    it('fails closed when dbt plugin runtime wiring is missing', async () => {
+      const { acts } = setupActivities(undefined, undefined, undefined, {
+        runExecutionContextReader: undefined,
+        dbtPluginRunner: undefined,
+      });
+
+      await expect(
+        acts.executeStep({
+          step: { stepId: 's1', kind: 'DBT_TEST' },
+          ctx: CTX,
+        })
+      ).rejects.toThrow(EXPECTED_ERRORS.pluginRuntimeNotConfigured);
+    });
+
+    it('rebuilds DBT activity wiring from runtime deps even when the default registry is passed explicitly', async () => {
+      const runner = new RecordingDbtPluginRunner();
+      const { acts } = setupActivities(undefined, undefined, DEFAULT_STEP_ACTIVITY_REGISTRY, {
+        dbtPluginRunner: runner,
+      });
+
+      await acts.executeStep({
+        step: { stepId: 's1', kind: 'DBT_TEST' },
+        ctx: CTX,
+      });
+
+      expect(runner.invocations).toHaveLength(1);
+    });
+
+    it('fails closed when resolved context omits the dbt plugin payload', async () => {
+      const { acts } = setupActivities(undefined, undefined, undefined, {
+        runExecutionContextReader: new FakeRunExecutionContextReader({
+          ...RUN_EXECUTION_CONTEXT,
+          pluginContexts: {},
+        }),
+      });
+
+      await expect(
+        acts.executeStep({
+          step: { stepId: 's1', kind: 'DBT_TEST' },
+          ctx: CTX,
+        })
+      ).rejects.toThrow(EXPECTED_ERRORS.dbtPluginContextRequired);
+    });
+
+    it('maps rejected runExecutionContext reads into a permanent step failure', async () => {
+      const { acts } = setupActivities(undefined, undefined, undefined, {
+        runExecutionContextReader: {
+          async resolve() {
+            throw new RunExecutionContextRejectedError('RUN_EXECUTION_CONTEXT_REJECTED_BY_FIXTURE');
+          },
+        },
+      });
+
+      await expect(
+        acts.executeStep({
+          step: { stepId: 's1', kind: 'DBT_TEST' },
+          ctx: CTX,
+        })
+      ).rejects.toThrow(EXPECTED_ERRORS.runExecutionContextRejected);
+    });
+
+    it('rejects invalid plugin runner results instead of accepting mismatched step ids', async () => {
+      const runner = new RecordingDbtPluginRunner(async () => ({
+        stepId: 'other-step',
+        status: 'COMPLETED',
+      }));
+      const { acts } = setupActivities(undefined, undefined, undefined, {
+        dbtPluginRunner: runner,
+      });
+
+      await expect(
+        acts.executeStep({
+          step: { stepId: 's1', kind: 'DBT_TEST' },
+          ctx: CTX,
+        })
+      ).rejects.toThrow(EXPECTED_ERRORS.dbtPluginResultInvalid);
     });
 
     it(

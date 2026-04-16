@@ -10,9 +10,10 @@ export type StartRunInput = {
 };
 
 export type UiRunStatus = 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
+export type RunExecutor = 'postgres' | 'dbt';
 
 export type MaterializationEvidence = {
-  executor: 'postgres' | 'dbt';
+  executor: RunExecutor;
   environmentId: string;
   sinkTable: string;
   rowsWritten: number;
@@ -34,6 +35,31 @@ export type RunExecutionEvidence = {
   materialization?: MaterializationEvidence;
 };
 
+export type RunGitArtifactRef = {
+  repo: string;
+  path: string;
+  ref?: string;
+  commitSha?: string;
+  contentSha256?: string;
+};
+
+export type RunPersistedPlanProvenance = {
+  planRecordId: string;
+  planVersion: string;
+  sourceRef: string;
+  canonicalPlanSha256: string;
+};
+
+export type RunAuthoringProvenance = {
+  graphArtifact?: RunGitArtifactRef;
+  sqlArtifact?: RunGitArtifactRef;
+};
+
+export type RunProvenanceChain = {
+  persistedPlan: RunPersistedPlanProvenance;
+  authoring?: RunAuthoringProvenance;
+};
+
 export type RunSummaryItem = {
   runId: string;
   planId?: string;
@@ -53,6 +79,7 @@ export type RunSnapshot = {
   runId: string;
   planId?: string;
   status: UiRunStatus;
+  executor?: RunExecutor;
   environment?: string;
   gitSha?: string;
   startedAt: string;
@@ -65,6 +92,7 @@ export type RunSnapshot = {
   failedStepId?: string;
   errorReason?: string;
   materialization?: MaterializationEvidence;
+  provenance?: RunProvenanceChain;
   execution?: RunExecutionEvidence;
 };
 

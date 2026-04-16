@@ -8,13 +8,18 @@
  * @version 1.0.0
  * @date 2026-03-03
  */
+import { readFileSync } from 'node:fs';
+import { URL } from 'node:url';
+
 import {
   CONTRACTS_ERROR_CODE,
   CONTRACTS_ERROR_MESSAGE_KEY,
   ContractValidationError,
+  type ExecutionPlan,
   type EngineRunRef,
   type RunId,
 } from '@dvt/contracts';
+import { jcsCanonicalize, sha256Hex } from '@dvt/crypto';
 import { describe, expect, it, vi } from 'vitest';
 
 import {
@@ -24,19 +29,31 @@ import {
 } from '../../src/contracts/errors.js';
 import { UnsupportedPlanVersionError } from '../../src/contracts/PlanVersionPolicy.js';
 import { WorkflowEngine } from '../../src/core/WorkflowEngine.js';
+import { RunHealthService } from '../../src/services/RunHealthService.js';
 import { InMemoryStartRunIntentStore } from '../../src/state/InMemoryStartRunIntentStore.js';
 import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
+import {
+  createWorkflowEngineFixture,
+  makeDefaultExecutionPlan,
+  makePlanFetcherForPlan,
+  makePlanRefForPlan,
+} from '../helpers/workflowEngine.fixture.js';
 
 import {
   createEngine,
   makeAdapters,
   makeContext,
   makePlanRef,
+  makeTemporalAdapter,
   makeTrackingObservability,
 } from './WorkflowEngine.helpers.js';
 
 type StoreEventInput = Parameters<InMemoryTxStore['appendAndEnqueueTx']>[1][number];
 const TEST_PLAN_REF = makePlanRef();
+const WORKFLOW_ENGINE_SOURCE = readFileSync(
+  new URL('../../src/core/WorkflowEngine.ts', import.meta.url),
+  'utf8'
+);
 
 async function expectContractValidationFailure(
   promise: Promise<unknown>
@@ -113,7 +130,77 @@ async function appendRunCompleted(store: InMemoryTxStore, runId: string): Promis
   await store.appendAndEnqueueTx(runId, [event]);
 }
 
+function makeDbtBearingPlan(): ExecutionPlan {
+  const basePlan = makeDefaultExecutionPlan();
+  const steps: ExecutionPlan['steps'] = [
+    {
+      stepId: 'dbt-model-1',
+      kind: 'DBT_MODEL',
+      dependsOn: [],
+    },
+  ];
+  const planId = sha256Hex(
+    jcsCanonicalize({
+      metadata: {
+        planVersion: basePlan.metadata.planVersion,
+        inputHashSha256: basePlan.metadata.inputHashSha256,
+      },
+      steps,
+    })
+  );
+
+  return {
+    ...basePlan,
+    metadata: {
+      ...basePlan.metadata,
+      planId,
+    },
+    steps,
+  };
+}
+
 describe('WorkflowEngine (basic failure modes)', () => {
+  it('exposes only the narrowed workflow facade at runtime', () => {
+    const { engine } = createEngine({ adapters: makeAdapters() });
+
+    expect(Reflect.has(engine as object, 'startRun')).toBe(true);
+    expect(Reflect.has(engine as object, 'recoverRun')).toBe(true);
+    expect(Reflect.has(engine as object, 'cancelRun')).toBe(true);
+    expect(Reflect.has(engine as object, 'getRunStatus')).toBe(true);
+    expect(Reflect.has(engine as object, 'signal')).toBe(true);
+    expect(Reflect.has(engine as object, 'getRunEnrichment')).toBe(false);
+    expect(Reflect.has(engine as object, 'healthCheck')).toBe(false);
+  });
+
+  it('keeps WorkflowEngine wired to delegated services instead of low-level collaborator regrowth', () => {
+    expect(WORKFLOW_ENGINE_SOURCE).toContain(
+      'startRunApplicationService: IStartRunApplicationService;'
+    );
+    expect(WORKFLOW_ENGINE_SOURCE).toContain('runRecoveryService: IRunRecoveryService;');
+    expect(WORKFLOW_ENGINE_SOURCE).toContain('runControlService: IRunControlService;');
+    expect(WORKFLOW_ENGINE_SOURCE).toContain('runStatusQueryService: IRunStatusQueryService;');
+
+    expect(WORKFLOW_ENGINE_SOURCE).toContain('return this.runRecoveryService.recoverRun(');
+    expect(WORKFLOW_ENGINE_SOURCE).toContain(
+      'return this.runStatusQueryService.getStatus(engineRunRef);'
+    );
+
+    expect(WORKFLOW_ENGINE_SOURCE).not.toContain('getRunEnrichment(');
+    expect(WORKFLOW_ENGINE_SOURCE).not.toContain('healthCheck(');
+    expect(WORKFLOW_ENGINE_SOURCE).not.toContain('stateStoreRead');
+    expect(WORKFLOW_ENGINE_SOURCE).not.toContain('stateStoreWrite');
+    expect(WORKFLOW_ENGINE_SOURCE).not.toContain('intentStore');
+    expect(WORKFLOW_ENGINE_SOURCE).not.toContain('planFetcher');
+    expect(WORKFLOW_ENGINE_SOURCE).not.toContain('runExecutionContextResolver');
+    expect(WORKFLOW_ENGINE_SOURCE).not.toContain('new StartRunApplicationService(');
+    expect(WORKFLOW_ENGINE_SOURCE).not.toContain('new RunHealthService(');
+    expect(WORKFLOW_ENGINE_SOURCE).not.toContain('new RunEnrichmentService(');
+    expect(WORKFLOW_ENGINE_SOURCE).not.toContain('buildRunControlService(');
+    expect(WORKFLOW_ENGINE_SOURCE).not.toContain('buildRunRecoveryService(');
+    expect(WORKFLOW_ENGINE_SOURCE).not.toContain('buildRunStatusQueryService(');
+    expect(WORKFLOW_ENGINE_SOURCE).not.toContain('buildRunHealthService(');
+  });
+
   it('startRun fails when no adapter registered for provider', async () => {
     const { engine } = createEngine();
 
@@ -219,11 +306,19 @@ describe('WorkflowEngine (basic failure modes)', () => {
             createdBy: 'test',
             pluginContexts: {
               dbt: {
-                projectBundleRef: 'artifacts://run/project.tgz',
+                projectBundleRef: {
+                  uri: `s3://bundle-bucket/tenants/t/${'b'.repeat(64)}`,
+                  kind: 'dbt-project-bundle',
+                  sha256: 'b'.repeat(64),
+                  tenantId: 't',
+                },
               },
             },
           };
         },
+      },
+      runExecutionContextBindingPolicy: {
+        assertDbtProjectBundleRefAllowed() {},
       },
     });
 
@@ -245,6 +340,91 @@ describe('WorkflowEngine (basic failure modes)', () => {
         uri: 'dvt-runctx://t/ctx-ok-1',
       },
     });
+  });
+
+  it('rejects DBT-bearing runs without runExecutionContextRef before adapter dispatch', async () => {
+    const startRun = vi.fn(async () => {
+      throw new Error('adapter should not be called');
+    });
+    const plan = makeDbtBearingPlan();
+    const planRef = makePlanRefForPlan(plan);
+    const { engine } = createWorkflowEngineFixture({
+      adapter: makeTemporalAdapter({ startRun }),
+      planFetcher: makePlanFetcherForPlan(plan),
+    });
+
+    await expect(
+      engine.startRun(planRef, makeContext('dbt-missing-runctx-1'))
+    ).rejects.toMatchObject({
+      code: 'RUN_EXECUTION_CONTEXT_REJECTED',
+    });
+    expect(startRun).not.toHaveBeenCalled();
+  });
+
+  it('rejects DBT-bearing runs when the bundle locator is not allowed by admission binding policy', async () => {
+    const startRun = vi.fn(async () => {
+      throw new Error('adapter should not be called');
+    });
+    const plan = makeDbtBearingPlan();
+    const planRef = makePlanRefForPlan(plan);
+    const runExecutionContextRef = {
+      uri: 'dvt-runctx://t/dbt-store-mismatch-1',
+      sha256: 'ctxsha',
+      schemaVersion: 'v1.0',
+      planId: planRef.planId,
+      planVersion: planRef.planVersion,
+    };
+    const { engine } = createWorkflowEngineFixture({
+      adapter: makeTemporalAdapter({ startRun }),
+      planFetcher: makePlanFetcherForPlan(plan),
+      runExecutionContextResolver: {
+        async resolve() {
+          return {
+            schemaVersion: 'v1.0',
+            planId: planRef.planId,
+            planVersion: planRef.planVersion,
+            planSha256: planRef.sha256,
+            tenantId: 't',
+            projectId: 'p',
+            environmentId: 'dev',
+            targetAdapter: 'temporal',
+            createdAtIso: '2026-04-03T00:00:00.000Z',
+            createdBy: 'test',
+            pluginContexts: {
+              dbt: {
+                projectBundleRef: {
+                  uri: `s3://foreign-bucket/tenants/t/${'b'.repeat(64)}`,
+                  kind: 'dbt-project-bundle',
+                  sha256: 'b'.repeat(64),
+                  tenantId: 't',
+                },
+              },
+            },
+          };
+        },
+      },
+      runExecutionContextBindingPolicy: {
+        assertDbtProjectBundleRefAllowed() {
+          throw new Error(
+            'dbt project bundle artifact bucket mismatch: expected=canonical-bucket actual=foreign-bucket'
+          );
+        },
+      },
+    });
+
+    await expect(
+      engine.startRun(planRef, {
+        ...makeContext('dbt-store-mismatch-1'),
+        runExecutionContextRef,
+      })
+    ).rejects.toMatchObject({
+      code: 'RUN_EXECUTION_CONTEXT_REJECTED',
+      messageParams: {
+        reason:
+          'dbt project bundle artifact bucket mismatch: expected=canonical-bucket actual=foreign-bucket',
+      },
+    });
+    expect(startRun).not.toHaveBeenCalled();
   });
 
   it('signal rejects invalid runtime boundary payloads', async () => {
@@ -705,15 +885,19 @@ describe('WorkflowEngine (basic failure modes)', () => {
     expect(orphaned[0]?.status).toBe('PENDING');
   });
 
-  it('healthCheck reports degraded when an adapter ping fails', async () => {
+  it('RunHealthService reports degraded when an adapter ping fails', async () => {
     const adapters = makeAdapters({
       async ping() {
         throw new Error('ping failed');
       },
     });
 
-    const { engine } = createEngine({ adapters });
-    const health = await engine.healthCheck();
+    const { store } = createEngine({ adapters });
+    const healthService = new RunHealthService({
+      stateStoreRead: store,
+      adapters,
+    });
+    const health = await healthService.healthCheck();
 
     expect(health.status).toBe('degraded');
     expect(health.components).toEqual(

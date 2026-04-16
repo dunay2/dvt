@@ -42,7 +42,7 @@ const requiredKeys = [
         'workspace_adapter_temporal',
         'workspace_cli',
       ]
-    : ['adapter_postgres', 'adapter_postgres_integration', 'adapter_postgres_relevant']),
+    : ['adapter_postgres', 'adapter_postgres_relevant']),
 ];
 let ok = true;
 for (const k of requiredKeys) {

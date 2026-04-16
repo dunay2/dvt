@@ -2,7 +2,7 @@
 title: Frontend Lineage
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-04-03
+last_reviewed: 2026-04-11
 ---
 
 # Frontend Lineage
@@ -34,8 +34,13 @@ Current behavior:
 - loads the workspace graph snapshot;
 - maps raw graph nodes and edges into canonical graph entities;
 - derives upstream and downstream reachability from a focus node;
+- uses an explicit route state model for `loading`, `error`, `empty`, and `ready`;
 - renders model-level lineage as layered cards;
-- optionally derives lightweight column-level lineage from node metadata.
+- optionally derives lightweight column-level lineage from node metadata;
+- degrades column-level mode through a governed metadata-missing state instead of
+  inline fallback copy;
+- treats zero-match column results separately from missing metadata so the route
+  does not misreport available metadata as absent.
 
 ## Relationship To Other Views
 
@@ -49,6 +54,9 @@ Current behavior:
 
 - the view must start from a bounded focus, not the full graph universe;
 - search should be the fastest way to recover context;
+- route-level loading must preserve the lineage frame;
+- route-level empty state must explain that no lineage focus is available;
+- route-level graph-load failures must stay distinct from empty focus;
 - column-level lineage should degrade clearly when the necessary metadata is
   absent;
 - the view should explain impact through counts and breadcrumbs before asking
@@ -67,6 +75,7 @@ Current behavior:
   target architecture;
 - pin-to-canvas is signaled in the UI but not yet fully realized as a governed
   flow;
+- toolbar extraction and richer route controls are still future work;
 - the current lineage engine is derived from graph metadata rather than a richer
   lineage-specific backend projection.
 

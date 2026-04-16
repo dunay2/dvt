@@ -171,7 +171,7 @@ describe('determinism', () => {
     expect(first.plan.metadata.planId).toBe(second.plan.metadata.planId);
     expect(first.plan.metadata.inputHashSha256).toBe(second.plan.metadata.inputHashSha256);
     expect(first.plan.metadata.planId).toBe(
-      'd990399e350492d320c7f3114fb3863a3f50e25972ba8f10486f3a30e673b866'
+      'bc0e5d6a24fb813fb5b44e8121f56106ee6318e14956267a67e0e5e8f93cb0db'
     );
   });
 
@@ -231,7 +231,7 @@ describe('determinism', () => {
       return;
     }
 
-    const expectedPlanId = 'a554dbfa21eae1fa1e57e9ec9260b92c9c278dcce42ff6c713d6dc87d67dfc5d';
+    const expectedPlanId = '930152ea7e21b3be5ccd7d07496b3ecaa682fb3fe53bcfc2297a84fba1ad12c7';
     expect(plan.metadata.planId).toBe(expectedPlanId);
   });
 });

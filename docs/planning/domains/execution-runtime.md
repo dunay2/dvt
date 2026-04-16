@@ -2,7 +2,7 @@
 title: Domain - Execution Runtime
 status: Review
 owner: Architecture / Engine / Docs
-last_reviewed: 2026-04-08
+last_reviewed: 2026-04-14
 planning_type: reference
 ---
 
@@ -24,7 +24,12 @@ runtime hardening.
 - [Review Sprint Critical Path 2026-04](../roadmap/diagrams/review-sprint-critical-path-2026-04.md)
 - [20260407 Engine boundary current/target review](../reviews/architecture-and-governance/20260407-engine-boundary-current-target-and-migration-review.md)
 - [WorkflowEngine hexagonal derivation plan 2026-04-03](../proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md)
+- [TF-C3 production plugin host composition plan 2026-04-14](../proposals/mandatory/runtime-and-contracts/tf-c3-production-plugin-host-composition-plan-20260414.md)
 - [Transformation Flow Delivery Plan 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md)
+
+## Active Runbooks
+
+- [Temporal worker DBT runtime runbook 2026-04-14](../../runbooks/temporal-worker-dbt-plugin-runtime-20260414.md)
 
 ## Historical Proposal Inputs
 
@@ -46,6 +51,7 @@ active source of truth for execution-runtime planning.
 - [20260321 Gap 5 PR1 Export Verifier Closeout](../closeouts/20260321-gap-5-pr1-export-verifier-closeout.md)
 - [20260321 Gap 5 PR2 Deferred Deletion Restore Closeout](../closeouts/20260321-gap-5-pr2-deferred-deletion-restore-closeout.md)
 - [20260321 Gap 5 PR3 Delivery Buffer Retention Closeout](../closeouts/20260321-gap-5-pr3-delivery-buffer-retention-closeout.md)
+- [20260414 TF-C3 production plugin host composition closeout](../closeouts/20260414-tf-c3-production-plugin-host-composition-closeout.md)
 
 ## Diagram Sources
 

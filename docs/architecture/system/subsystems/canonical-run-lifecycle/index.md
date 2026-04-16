@@ -2,7 +2,7 @@
 title: Canonical run lifecycle subsystem
 status: Active
 owner: Architecture / Engine / Docs
-last_reviewed: 2026-04-09
+last_reviewed: 2026-04-10
 ---
 
 # Canonical run lifecycle subsystem
@@ -24,14 +24,21 @@ stateDiagram-v2
   PAUSED --> RUNNING: RunResumed
   RUNNING --> RUNNING: StepStarted/StepCompleted
   RUNNING --> RUNNING: StepSkipped
-  RUNNING --> RUNNING: RunCancelRequested
+  PENDING --> CANCELLING: RunCancelRequested
+  RUNNING --> CANCELLING: RunCancelRequested
+  PAUSED --> CANCELLING: RunCancelRequested
+  CANCELLING --> CANCELLED: RunCancelled
   RUNNING --> COMPLETED: RunCompleted
   RUNNING --> FAILED: RunFailed or StepFailed
-  RUNNING --> CANCELLED: RunCancelled
-  PAUSED --> CANCELLED: RunCancelled
   COMPLETED --> [*]
   FAILED --> [*]
   CANCELLED --> [*]
+
+  note right of CANCELLING
+    Visual alias for the cancelling lifecycle window.
+    Canonical snapshot status remains event-log-backed
+    and uses substatus = CANCELLING until RunCancelled.
+  end note
 ```
 
 ## Flow Across Components
@@ -41,10 +48,12 @@ flowchart LR
   Caller["Operator or automation"] --> Web["web"]
   Caller --> Api["apps/api"]
   Web --> Api
-  Api --> Engine["@dvt/engine"]
+  Api --> Engine["@dvt/engine command + read boundary"]
   Engine --> Plan["plan fetch and integrity checks"]
-  Engine --> State["state-store read/write ports"]
-  Engine --> Provider["provider adapters"]
+  Engine --> State["event log + snapshot authority"]
+  Engine --> Provider["provider adapters / runtime"]
+  Provider --> Facts["runtime-owned lifecycle facts"]
+  Facts --> State
   State --> Delivery["@dvt/delivery"]
   Delivery --> Workers["outbox / projector / lineage workers"]
 ```
@@ -52,7 +61,9 @@ flowchart LR
 ## Source Of Truth Rules
 
 - lifecycle truth comes from persisted run events and derived snapshots;
-- the engine owns lifecycle semantics and provider dispatch;
+- the engine owns command validation, dispatch, and canonical read-model status;
+- provider runtimes own realized lifecycle facts once execution actually reaches
+  them;
 - the API owns authenticated command and query entrypoints;
 - delivery consumes emitted runtime facts downstream and does not redefine the
   lifecycle model.

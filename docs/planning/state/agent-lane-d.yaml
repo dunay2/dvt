@@ -2,7 +2,7 @@ lane_id: D
 title: Scale And Go-To-Market
 owner: Product / Architecture / Delivery / Docs
 status: Active
-last_reviewed: '2026-04-04'
+last_reviewed: '2026-04-13'
 goal: Prepare the system for scale and for the first enterprise customer.
 expected_outcome:
   - storage and read-path scale are bounded
@@ -166,7 +166,7 @@ tasks:
     effort_points: 8
     progress_pct: 0
     evidence_refs:
-      - docs/planning/strategic-product-roadmap-20260324.md
+      - docs/planning/roadmap/strategic-product-roadmap.md
     status_reason: Partitioning remains planned scale work with no implementation evidence.
     last_verified: '2026-03-31'
   - task_id: read replica query path
@@ -179,7 +179,7 @@ tasks:
     effort_points: 5
     progress_pct: 0
     evidence_refs:
-      - docs/planning/strategic-product-roadmap-20260324.md
+      - docs/planning/roadmap/strategic-product-roadmap.md
     status_reason: Read-replica routing remains backlog work after partitioning.
     last_verified: '2026-03-31'
   - task_id: projector event-driven invalidation
@@ -193,7 +193,7 @@ tasks:
     progress_pct: 0
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260326-dvt-principal-architectural-review.md
-      - docs/planning/strategic-product-roadmap-20260324.md
+      - docs/planning/roadmap/strategic-product-roadmap.md
     status_reason:
       The queue-shaped mitigation is identified, but the runtime invalidation slice has not started.
     last_verified: '2026-03-31'
@@ -207,7 +207,7 @@ tasks:
     effort_points: 5
     progress_pct: 0
     evidence_refs:
-      - docs/planning/strategic-product-roadmap-20260324.md
+      - docs/planning/roadmap/strategic-product-roadmap.md
     status_reason: Backpressure propagation remains planned admission hardening work.
     last_verified: '2026-03-31'
   - task_id: AR-D1
@@ -408,7 +408,7 @@ tasks:
     last_verified: '2026-04-04'
   - task_id: TF-D1
     priority: P1
-    status: queued
+    status: done
     objective: >-
       define the repeatable Docker PostgreSQL proof-environment lifecycle, cleanup rules, and
       retention or reset baseline for transformation execution acceptance.
@@ -419,14 +419,19 @@ tasks:
       artifacts.
     complexity: S
     effort_points: 3
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md
+      - docs/planning/closeouts/20260413-tf-d1-proof-environment-lifecycle-closeout.md
+      - docs/runbooks/temporal-postgres-proof-environment.md
+      - scripts/run-temporal-postgres-proof.cjs
+      - scripts/run-temporal-postgres-proof.test.cjs
     status_reason: >-
-      The delivery plan now requires a repeatable PostgreSQL proof environment, but reset and
-      retention behavior are not yet owned as a concrete Lane D slice.
-    last_verified: '2026-04-05'
+      The canonical proof wrapper now distinguishes destructive reset from warm cleanup, verifies
+      the seeded Docker PostgreSQL baseline after reset, documents the transient proof-schema
+      policy, and supports repeatable reruns without ambiguous retained sink state.
+    last_verified: '2026-04-13'
   - task_id: first enterprise pilot
     priority: P3
     status: blocked
@@ -437,7 +442,7 @@ tasks:
     effort_points: 8
     progress_pct: 0
     evidence_refs:
-      - docs/planning/strategic-product-roadmap-20260324.md
+      - docs/planning/roadmap/strategic-product-roadmap.md
     status_reason: Explicit GTM backlog item; no execution evidence exists yet.
     last_verified: '2026-03-31'
   - task_id: billing integration
@@ -450,7 +455,7 @@ tasks:
     effort_points: 5
     progress_pct: 0
     evidence_refs:
-      - docs/planning/strategic-product-roadmap-20260324.md
+      - docs/planning/roadmap/strategic-product-roadmap.md
       - docs/planning/reviews/event-lifecycle-and-retention/20260330-mvp-d1-residual-risk-baseline-review.md
     status_reason: Deferred GTM/finance integration with no implementation evidence yet.
     last_verified: '2026-03-31'
@@ -464,7 +469,7 @@ tasks:
     effort_points: 5
     progress_pct: 0
     evidence_refs:
-      - docs/planning/strategic-product-roadmap-20260324.md
+      - docs/planning/roadmap/strategic-product-roadmap.md
     status_reason: Deferred GTM/compliance packaging with no implementation evidence yet.
     last_verified: '2026-03-31'
   - task_id: acquisition positioning deck
@@ -477,7 +482,7 @@ tasks:
     effort_points: 5
     progress_pct: 0
     evidence_refs:
-      - docs/planning/strategic-product-roadmap-20260324.md
+      - docs/planning/roadmap/strategic-product-roadmap.md
     status_reason: Deferred GTM collateral with no implementation evidence yet.
     last_verified: '2026-03-31'
 dependency_notes:
@@ -506,17 +511,18 @@ dependency_notes:
     `MW-D1` and `MW-D2` are multi-workflow scale tasks: external plan SDK/API (P1, depends on MW-A2)
     and worker routing model by step kind (P2, depends on MW-C1).
   - >-
-    `TF-D1` is the transformation-vertical repeatability slice: it owns Docker PostgreSQL reset,
-    cleanup, and retention discipline so the first proof environment is rerunnable rather than
-    one-shot.
+    `TF-D1` is now closed: the transformation proof environment has a canonical reset, cleanup, and
+    rerun lifecycle, so remaining Lane D work shifts back to default retention hardening (`AR-D8`)
+    and broader scale slices.
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
-  verified_on: '2026-04-05'
+  verified_on: '2026-04-13'
   total_tasks: 26
   total_effort_points: 135
-  completed_weighted_points: 30
-  lane_progress_pct: 22
+  completed_weighted_points: 33
+  lane_progress_pct: 24
   notes: >-
-    Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry
-    coordination-only effort.
+    Weighted progress uses effort_points. `TF-D1` now contributes accepted proof-environment
+    lifecycle closure, so Lane D's remaining near-term work is default retention enforcement and
+    scale hardening rather than rerun discipline for the first PostgreSQL proof path.

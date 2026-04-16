@@ -47,7 +47,7 @@ Three layers are currently out of sync:
   adapter-local convention
 - `ADR-0015`: `getRunStatus` remains a read model over authoritative data; the
   engine snapshot stays minimal and the API may enrich separately
-- `docs/architecture/engine/contracts/engine/RunEvents.v2.0.md`: event
+- `docs/architecture/engine/contracts/engine/RunEvents.v1.md`: event
   payloads must be defined at the normative engine contract, not left implicit
   in UI code
 
@@ -115,7 +115,7 @@ flowchart LR
 
 - Mode: Full
 - Scope:
-  - `docs/architecture/engine/contracts/engine/RunEvents.v2.0.md`
+  - `docs/architecture/engine/contracts/engine/RunEvents.v1.md`
   - `docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md`
   - `packages/@dvt/contracts/**`
   - `packages/@dvt/adapter-temporal/**`

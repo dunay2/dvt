@@ -1,7 +1,7 @@
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { createDefaultStepTypeRegistry } from '@dvt/contracts';
+import { asIsoUtcString, createDefaultStepTypeRegistry } from '@dvt/contracts';
 import { StartRunAdmissionGuard } from '@dvt/delivery';
 import type { ExecutionPlan } from '@dvt/engine';
 import type { IObservability } from '@dvt/observability';
@@ -31,7 +31,8 @@ import { CircuitBreakingBackpressureStore } from '../infrastructure/backpressure
 import { FileBackpressureFallbackStore } from '../infrastructure/backpressure/FileBackpressureFallbackStore.js';
 import { MetricsEmittingBackpressureStore } from '../infrastructure/backpressure/MetricsEmittingBackpressureStore.js';
 import { RawSqlBackpressureStore } from '../infrastructure/backpressure/RawSqlBackpressureStore.js';
-import { GraphSourceArtifactResolver } from '../infrastructure/planner/ManifestArtifactResolver.js';
+import { ArtifactBackedRunExecutionContextResolver } from '../infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.js';
+import { ArtifactStoreDbtProjectBundleBindingPolicy } from '../infrastructure/startRun/ArtifactStoreDbtProjectBundleBindingPolicy.js';
 import { PostgresDuplicateRunProbe } from '../infrastructure/startRun/PostgresDuplicateRunProbe.js';
 import { ObservabilityStartRunSlaTelemetry } from '../infrastructure/telemetry/ObservabilityStartRunSlaTelemetry.js';
 import type { Env } from '../plugins/env.js';
@@ -57,6 +58,24 @@ function requireDatabaseUrl(env: Env): string {
 
 function resolveBackpressureFallbackPath(env: Env): string {
   return join(tmpdir(), 'dvt', `${env.SERVICE_NAME}-start-run-backpressure-fallback.json`);
+}
+
+function resolveDbtBundleArtifactStore(env: Env) {
+  if (env.DVT_DBT_BUNDLE_STORE_BACKEND === 's3') {
+    return {
+      kind: 's3' as const,
+      bucket: env.DVT_DBT_BUNDLE_S3_BUCKET as string,
+    };
+  }
+
+  if (env.DVT_DBT_BUNDLE_STORE_BACKEND === 'file') {
+    return {
+      kind: 'file' as const,
+      rootPath: env.DVT_DBT_BUNDLE_FILE_ROOT as string,
+    };
+  }
+
+  return undefined;
 }
 
 export async function buildProtectedRuntimeModule(
@@ -116,7 +135,7 @@ export async function buildProtectedRuntimeModule(
   const backpressureReader = new PostgresBackpressureSnapshotReader({
     pool,
     schema: env.DVT_PG_SCHEMA,
-    now: () => new Date().toISOString(),
+    now: () => asIsoUtcString(new Date().toISOString()),
     queryTimeoutMs: env.DVT_START_RUN_BACKPRESSURE_QUERY_TIMEOUT_MS,
     stuckEventAgeThresholdMs: env.DVT_START_RUN_STUCK_EVENT_AGE_THRESHOLD_MS,
     localOverloadPendingThreshold: env.DVT_START_RUN_MAX_PENDING_EVENTS_PER_TENANT,
@@ -153,7 +172,13 @@ export async function buildProtectedRuntimeModule(
     fetcher: planStore,
     stepTypeRegistry,
   });
-  const systemClock = { nowIsoUtc: () => new Date().toISOString() };
+  const systemClock = { nowIsoUtc: () => asIsoUtcString(new Date().toISOString()) };
+  const runExecutionContextResolver = new ArtifactBackedRunExecutionContextResolver({
+    nodeEnv: env.NODE_ENV,
+  });
+  const runExecutionContextBindingPolicy = new ArtifactStoreDbtProjectBundleBindingPolicy({
+    bundleStore: resolveDbtBundleArtifactStore(env),
+  });
 
   const { adapters, close: closeAdapters } = await buildProviderAdapters(env, {
     stateStore: stateStoreRoles.read,
@@ -170,7 +195,7 @@ export async function buildProtectedRuntimeModule(
     app.log.info(`Temporal adapter registered (address=${env.TEMPORAL_ADDRESS})`);
   }
 
-  const engine = buildWorkflowEngine({
+  const { engine, runEnrichmentService, runHealthService } = buildWorkflowEngine({
     security: {
       authorizer: new AllowAllAuthorizer(),
       planRefAllowedSchemes: ['https', 's3', 'gs', 'azure', 'dvt-plan'],
@@ -180,6 +205,8 @@ export async function buildProtectedRuntimeModule(
       stateStoreWrite: stateStoreRoles.write,
       intentStore,
       planFetcher: planStore,
+      runExecutionContextResolver,
+      runExecutionContextBindingPolicy,
     },
     runtime: { adapters },
     infrastructure: {
@@ -206,9 +233,7 @@ export async function buildProtectedRuntimeModule(
     })
   );
   const startRunSlaTelemetry = new ObservabilityStartRunSlaTelemetry({ observability });
-  const planner = new PlannerFacade({
-    graphSourceResolver: new GraphSourceArtifactResolver({ nodeEnv: env.NODE_ENV }),
-  });
+  const planner = new PlannerFacade();
   const planValidator = new StoredPlanExecutabilityValidator({
     fetcher: planStore,
     adapters,
@@ -239,6 +264,8 @@ export async function buildProtectedRuntimeModule(
     authenticator,
     authorizer: commandAuthorizer,
     engine,
+    runEnrichmentService,
+    runHealthService,
     adapters,
     startRunTargetAdapterRegistry,
     stateStore: stateStoreRoles,

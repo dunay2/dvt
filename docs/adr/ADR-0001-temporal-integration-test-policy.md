@@ -25,7 +25,14 @@ The adapter test suite depends on compiled workflow output in `dist/workflows/` 
 
 ### 1) Build precondition is mandatory and explicit
 
-Integration tests MUST be executed via [`test:integration`](../../packages/@dvt/adapter-temporal/package.json), and this script MUST run build explicitly before the test runner.
+Integration tests MUST be executed either through the canonical root wrapper
+`pnpm test:adapter-temporal:integration` or through an explicit CI pair of
+[`prepare:integration`](../../packages/@dvt/adapter-temporal/package.json) and
+[`test:integration`](../../packages/@dvt/adapter-temporal/package.json).
+
+The local wrapper MUST prepare the runtime closure before invoking the test
+runner. CI MUST perform that preparation in a dedicated step and MUST NOT rely
+on implicit package hooks to rebuild runtime dependencies.
 
 Integration tests MUST fail fast with a clear error message when `dist/workflows/RunPlanWorkflow.js` is missing.
 
@@ -69,10 +76,13 @@ In time-skipping environment, prefer `execute()/result()` style where tests rely
 
 ## Acceptance Criteria
 
-1. [`test:integration`](../../packages/@dvt/adapter-temporal/package.json) includes explicit build before test execution.
+1. The canonical local wrapper `pnpm test:adapter-temporal:integration` or the
+   CI `prepare:integration` + `test:integration` pair includes explicit runtime
+   preparation before test execution.
 2. [`integration.time-skipping.test.ts`](../../packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts) has a single teardown owner (`afterAll`) with no duplicate shutdown in test body.
 3. [`integration.time-skipping.test.ts`](../../packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts) fails fast with a targeted message if the workflow artifact is missing.
-4. `pnpm test:adapter-temporal:integration` passes in CI/local with compiled workflow resolution.
+4. `pnpm test:adapter-temporal:integration` passes locally and CI uses the
+   equivalent explicit prepare+run sequence with compiled workflow resolution.
 
 ---
 

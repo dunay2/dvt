@@ -96,10 +96,14 @@ jobs:
         uses: ./.github/actions/setup-node-pnpm
 
       - name: Build affected workspace (including workspace dependencies)
-        run: pnpm --filter "${{ matrix.pkg }}..." --if-present run build
+        run: pnpm --workspace-concurrency=4 --filter "${{ matrix.pkg }}..." --if-present run build
+        env:
+          DVT_CI: '1'
 
       - name: Type-check affected workspace
         run: pnpm --filter "${{ matrix.pkg }}" --if-present run typecheck
+        env:
+          DVT_CI: '1'
 
   no-affected-workspaces:
     name: No affected workspaces (PR)

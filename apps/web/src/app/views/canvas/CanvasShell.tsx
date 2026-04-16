@@ -20,11 +20,11 @@ export default function CanvasShell({
   activeRunId,
   registeredPlugins,
   userPermissions,
-  canvasAuthoringMode,
   nodesWithImpact,
   edges,
   nodeTypes,
   gridSize,
+  canvasPalette,
   viewport,
   onNodesChange,
   onNodeDragStop,
@@ -35,6 +35,9 @@ export default function CanvasShell({
   onViewportChange,
   onDrop,
   onDragOver,
+  onSourceImportComplete,
+  importedNodeFocusIds,
+  onImportedNodeFocusComplete,
   onHideExplorer,
   onShowExplorer,
   onHideInspector,
@@ -51,7 +54,10 @@ export default function CanvasShell({
   canUseCostOverlay,
   impactOverlayEnabled,
   columnLevelLineageEnabled,
+  canvasAuthoringMode,
   transformationValidation,
+  centerSurface,
+  readOnlyBanner,
 }: CanvasShellProps) {
   const [dataRegistryOpen, setDataRegistryOpen] = useState(false);
 
@@ -62,6 +68,7 @@ export default function CanvasShell({
           <ResizablePanel defaultSize={17} minSize={12} maxSize={25}>
             <DbtExplorer
               nodes={explorerNodes}
+              canEditGraph={userPermissions.canEditEdges}
               onHide={onHideExplorer}
               onOpenDataRegistry={() => setDataRegistryOpen(true)}
             />
@@ -81,15 +88,18 @@ export default function CanvasShell({
                 : 100
         }
       >
-        <div className="h-full flex flex-col bg-slate-950">
+        <div className="h-full flex flex-col bg-[var(--surface-panel)]">
           <CanvasToolbar
-            onOpenDataRegistry={() => setDataRegistryOpen(true)}
+            placement="top-bar"
             onAutoLayout={onAutoLayout}
             onToggleCostOverlay={onToggleCostOverlay}
             onToggleImpact={onToggleImpact}
             onToggleColumns={onToggleColumns}
             onPlan={onPlan}
             onRun={onRun}
+            canPlan={userPermissions.canPlan}
+            canRun={userPermissions.canRun}
+            canEditEdges={userPermissions.canEditEdges}
             canStartRun={canStartRun}
             planStatusSummary={planStatusSummary}
             canvasAuthoringMode={canvasAuthoringMode}
@@ -101,27 +111,34 @@ export default function CanvasShell({
             nodeCount={nodesWithImpact.length}
             edgeCount={edges.length}
           />
-          <CanvasViewport
-            focusMode={focusMode}
-            explorerPanelVisible={explorerPanelVisible}
-            inspectorPanelVisible={inspectorPanelVisible}
-            nodesWithImpact={nodesWithImpact}
-            edges={edges}
-            nodeTypes={nodeTypes}
-            gridSize={gridSize}
-            viewport={viewport}
-            onNodesChange={onNodesChange}
-            onNodeDragStop={onNodeDragStop}
-            onEdgesChange={onEdgesChange}
-            onConnect={onConnect}
-            onNodeClick={onNodeClick}
-            onSelectionChange={onSelectionChange}
-            onViewportChange={onViewportChange}
-            onDrop={onDrop}
-            onDragOver={onDragOver}
-            onShowExplorer={onShowExplorer}
-            onShowInspector={onShowInspector}
-          />
+          {readOnlyBanner ? <div className="shrink-0">{readOnlyBanner}</div> : null}
+          {centerSurface ?? (
+            <CanvasViewport
+              focusMode={focusMode}
+              explorerPanelVisible={explorerPanelVisible}
+              inspectorPanelVisible={inspectorPanelVisible}
+              canEditEdges={userPermissions.canEditEdges}
+              nodesWithImpact={nodesWithImpact}
+              edges={edges}
+              nodeTypes={nodeTypes}
+              gridSize={gridSize}
+              canvasPalette={canvasPalette}
+              viewport={viewport}
+              onNodesChange={onNodesChange}
+              onNodeDragStop={onNodeDragStop}
+              onEdgesChange={onEdgesChange}
+              onConnect={onConnect}
+              onNodeClick={onNodeClick}
+              onSelectionChange={onSelectionChange}
+              onViewportChange={onViewportChange}
+              onDrop={onDrop}
+              onDragOver={onDragOver}
+              importedNodeFocusIds={importedNodeFocusIds}
+              onImportedNodeFocusComplete={onImportedNodeFocusComplete}
+              onShowExplorer={onShowExplorer}
+              onShowInspector={onShowInspector}
+            />
+          )}
         </div>
       </ResizablePanel>
 
@@ -139,7 +156,11 @@ export default function CanvasShell({
         </>
       )}
 
-      <SourceImportWizard open={dataRegistryOpen} onClose={() => setDataRegistryOpen(false)} />
+      <SourceImportWizard
+        open={dataRegistryOpen}
+        onClose={() => setDataRegistryOpen(false)}
+        onComplete={onSourceImportComplete}
+      />
     </ResizablePanelGroup>
   );
 }

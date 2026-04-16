@@ -11,11 +11,8 @@
  * Requires a live PostgreSQL instance. Skips cleanly when DVT_PG_URL or
  * DATABASE_URL is absent.
  */
-import { createHash } from 'node:crypto';
-import { readFileSync } from 'node:fs';
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
 import process from 'node:process';
-import { URL } from 'node:url';
 
 import { exportJWK, generateKeyPair, SignJWT, type JWK } from 'jose';
 import { Client } from 'pg';
@@ -33,10 +30,6 @@ const ENVIRONMENT_ID = 'env-api-it';
 const PRINCIPAL_ID = 'principal-api-it';
 const ISSUER = 'https://issuer.integration.example/';
 const AUDIENCE = 'dvt-api';
-const PLANNER_MANIFEST_FIXTURE_URL = new URL(
-  '../fixtures/planner/basic-manifest.json',
-  import.meta.url
-);
 const TENANT_ACTIONS_FULL = [
   'run:start',
   'run:list',
@@ -220,7 +213,6 @@ describeIfPg('protected runtime integration', () => {
       headers: { authorization: `Bearer ${token}` },
       payload: {
         tenantId: TENANT_ID,
-        reason: 'integration-test',
       },
     });
     expect(signalResponse.statusCode).toBe(202);
@@ -309,52 +301,7 @@ describeIfPg('protected runtime integration', () => {
     });
   });
 
-  it('accepts planner-backed startRun requests using manifestRef', async () => {
-    expect(app).toBeTruthy();
-    expect(adminClient).toBeTruthy();
-
-    const token = await signBearerToken(signingKey!, {
-      sub: PRINCIPAL_ID,
-      tenant_ids: [TENANT_ID],
-      project_ids: [PROJECT_ID],
-    });
-    const manifestRef = makeManifestRef(PLANNER_MANIFEST_FIXTURE_URL);
-    const runId = 'api-integration-run-manifestref-1';
-
-    const startResponse = await app!.inject({
-      method: 'POST',
-      url: '/runs/start',
-      headers: { authorization: `Bearer ${token}` },
-      payload: {
-        tenantId: TENANT_ID,
-        projectId: PROJECT_ID,
-        environmentId: ENVIRONMENT_ID,
-        selection: ['model.analytics.order_items'],
-        manifestRef,
-        runId,
-        targetAdapter: 'mock',
-      },
-    });
-    expect(startResponse.statusCode).toBe(202);
-    expect(startResponse.json()).toEqual({ runId, accepted: true });
-
-    const storedPlan = await adminClient!.query<{
-      plan_id: string;
-      plan_uri: string;
-      validation_state: string;
-    }>(
-      `SELECT plan_id, plan_uri, validation_state
-         FROM ${quoteIdentifier(SCHEMA)}.stored_plans
-         ORDER BY stored_at DESC
-         LIMIT 1`
-    );
-    expect(storedPlan.rows[0]).toMatchObject({
-      validation_state: 'VALID',
-    });
-    expect(storedPlan.rows[0]?.plan_uri).toMatch(/^dvt-plan:\/\/postgres\//);
-  });
-
-  it('returns 422 plan_rejected when manifestRef sha256 does not match content', async () => {
+  it('returns 400 invalid_plan_source when manifestRef is sent to the hard-cut runtime', async () => {
     expect(app).toBeTruthy();
 
     const token = await signBearerToken(signingKey!, {
@@ -373,7 +320,7 @@ describeIfPg('protected runtime integration', () => {
         environmentId: ENVIRONMENT_ID,
         selection: ['model.analytics.order_items'],
         manifestRef: {
-          uri: PLANNER_MANIFEST_FIXTURE_URL.href,
+          uri: 's3://bucket/basic-manifest.json',
           sha256: '0'.repeat(64),
         },
         runId: 'api-integration-run-manifestref-bad-sha',
@@ -381,15 +328,8 @@ describeIfPg('protected runtime integration', () => {
       },
     });
 
-    expect(response.statusCode).toBe(422);
-    expect(response.json()).toEqual(
-      httpError('unprocessable', 'plan_rejected', {
-        details: {
-          message: 'Manifest artifact integrity mismatch.',
-          cause: 'manifest_ref_integrity_mismatch',
-        },
-      })
-    );
+    expect(response.statusCode).toBe(400);
+    expect(response.json()).toEqual(httpError('bad_request', 'invalid_plan_source'));
   });
 
   it('rejects a token whose asserted tenant conflicts with the requested tenant scope', async () => {
@@ -438,7 +378,6 @@ describeIfPg('protected runtime integration', () => {
         headers: { authorization: `Bearer ${token}` },
         payload: {
           tenantId: TENANT_ID,
-          reason: 'permission-check',
         },
       });
 
@@ -548,6 +487,88 @@ describeIfPg('protected runtime integration', () => {
         tenantActions: TENANT_ACTIONS_FULL,
       });
     }
+  });
+
+  it('rejects /runs/:runId/cancel when a non-empty reason is provided on the native cancel path', async () => {
+    expect(app).toBeTruthy();
+
+    const token = await signBearerToken(signingKey!, {
+      sub: PRINCIPAL_ID,
+      tenant_ids: [TENANT_ID],
+      project_ids: [PROJECT_ID],
+    });
+
+    const response = await app!.inject({
+      method: 'POST',
+      url: '/runs/native-cancel-reason/cancel',
+      headers: { authorization: `Bearer ${token}` },
+      payload: {
+        tenantId: TENANT_ID,
+        reason: 'operator cancel',
+      },
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.json()).toEqual(
+      httpError('bad_request', 'cancel_reason_not_supported', {
+        target: 'reason',
+      })
+    );
+  });
+
+  it('ignores empty /runs/:runId/cancel reason noise on the native cancel path', async () => {
+    expect(app).toBeTruthy();
+
+    const token = await signBearerToken(signingKey!, {
+      sub: PRINCIPAL_ID,
+      tenant_ids: [TENANT_ID],
+      project_ids: [PROJECT_ID],
+    });
+    const runId = 'api-integration-native-cancel-empty-reason';
+
+    const startResponse = await app!.inject({
+      method: 'POST',
+      url: '/runs/start',
+      headers: { authorization: `Bearer ${token}` },
+      payload: {
+        tenantId: TENANT_ID,
+        projectId: PROJECT_ID,
+        environmentId: ENVIRONMENT_ID,
+        selection: ['model.orders.cancel.empty_reason'],
+        graphSource: {
+          kind: 'generic-graph-v1',
+          sourceFamily: 'dbt',
+          sourceVersion: 'manifest-v10',
+          nodes: [
+            {
+              nodeId: 'model.orders.cancel.empty_reason',
+              stepKind: 'DBT_MODEL',
+              dependsOn: [],
+            },
+          ],
+        },
+        runId,
+        targetAdapter: 'mock',
+      },
+    });
+    expect(startResponse.statusCode).toBe(202);
+
+    const cancelResponse = await app!.inject({
+      method: 'POST',
+      url: `/runs/${runId}/cancel`,
+      headers: { authorization: `Bearer ${token}` },
+      payload: {
+        tenantId: TENANT_ID,
+        reason: '   ',
+      },
+    });
+
+    expect(cancelResponse.statusCode).toBe(202);
+    expect(cancelResponse.json()).toEqual({
+      runId,
+      signalType: 'CANCEL',
+      accepted: true,
+    });
   });
 
   it('rejects /runs/:runId/recover when principal lacks run:retry permission', async () => {
@@ -909,10 +930,3 @@ async function closeServer(server: Server): Promise<void> {
   });
 }
 
-function makeManifestRef(url: URL): { uri: string; sha256: string } {
-  const bytes = readFileSync(url);
-  return {
-    uri: url.href,
-    sha256: createHash('sha256').update(bytes).digest('hex'),
-  };
-}

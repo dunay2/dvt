@@ -2,7 +2,7 @@ import type { Edge, Node } from '@xyflow/react';
 
 type NodeActionHandlers = {
   onInspectNode: (nodeId: string) => void;
-  onRemoveNode: (nodeId: string) => void;
+  onRemoveNode?: (nodeId: string) => void;
   onToggleNodeSelection: (nodeId: string, shouldSelect: boolean) => void;
 };
 

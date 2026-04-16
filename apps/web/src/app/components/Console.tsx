@@ -2,75 +2,104 @@ import { Suspense, lazy } from 'react';
 import { Terminal, X } from 'lucide-react';
 
 import { useAppDataSourceMode } from '../services/AppServicesContext';
-import { useExecutionStore } from '../stores/executionStore';
 import { useUiLayoutStore } from '../stores/uiLayoutStore';
 import { useConsoleLogStream } from './console/useConsoleLogStream';
+import { buildBottomConsoleDrawerModel } from './shell/bottomConsoleDrawerModel';
+import { bottomConsoleDrawerClasses } from './shell/chrome';
+import { resolveShellTopBarCopy } from './shell/copy';
 
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 
 const XtermConsole = lazy(() => import('./console/XtermConsole'));
 
-export default function Console() {
-  const setConsolePanelHeight = useUiLayoutStore((state) => state.setConsolePanelHeight);
-  const currentRun = useExecutionStore((state) => state.currentRun);
+export function BottomConsoleDrawer() {
+  const copy = resolveShellTopBarCopy();
+  const hideConsolePanel = useUiLayoutStore((state) => state.hideConsolePanel);
   const dataSourceMode = useAppDataSourceMode();
   const { lines, isLoading, runId } = useConsoleLogStream();
-  const idleCopy =
-    dataSourceMode === 'api'
-      ? 'Start a run to see run events here. Live log streaming is not available in API mode yet.'
-      : 'Start a run to see execution output here.';
+  const model = buildBottomConsoleDrawerModel({
+    title: copy.consolePanel,
+    dataSourceMode,
+    runId,
+    isLoading,
+    lines,
+  });
 
   return (
-    <div className="h-full bg-slate-900 border-t border-slate-700 flex flex-col">
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 py-2 border-b border-slate-700">
-        <div className="flex items-center gap-2">
-          <Terminal className="size-4 text-slate-300" />
-          <span className="text-sm font-medium">Console</span>
-          {currentRun && (
-            <Badge variant="outline" className="text-xs">
-              Run {currentRun.runId}
+    <div data-slot="bottom-console-drawer" className={bottomConsoleDrawerClasses.drawer}>
+      <div data-slot="bottom-console-drawer-header" className={bottomConsoleDrawerClasses.header}>
+        <div
+          data-slot="bottom-console-drawer-title"
+          className={bottomConsoleDrawerClasses.headerMain}
+        >
+          <Terminal className={bottomConsoleDrawerClasses.titleIcon} />
+          <span className={bottomConsoleDrawerClasses.title}>{model.title}</span>
+          {model.runLabel && (
+            <Badge
+              variant="outline"
+              className="text-xs"
+              data-slot="bottom-console-drawer-run-badge"
+            >
+              {model.runLabel}
             </Badge>
           )}
-          {dataSourceMode === 'mock' && (
-            <Badge variant="secondary" className="text-[10px] uppercase tracking-wide">
-              Mock
+          {model.modeLabel && (
+            <Badge
+              variant="secondary"
+              className="text-[10px] uppercase tracking-wide"
+              data-slot="bottom-console-drawer-mode-badge"
+            >
+              {model.modeLabel}
             </Badge>
           )}
         </div>
         <Button
           variant="ghost"
           size="icon"
-          className="size-6 text-slate-300 hover:text-white"
-          onClick={() => setConsolePanelHeight(0)}
+          aria-label="Close console"
+          className={bottomConsoleDrawerClasses.closeButton}
+          onClick={hideConsolePanel}
+          data-slot="bottom-console-drawer-close"
         >
           <X className="size-4" />
         </Button>
       </div>
 
-      {/* Terminal */}
-      <div className="flex-1 min-h-0">
-        {!runId ? (
-          <div className="flex items-center justify-center h-full text-sm text-slate-400">
-            {idleCopy}
+      <div data-slot="bottom-console-drawer-body" className={bottomConsoleDrawerClasses.body}>
+        {model.kind === 'idle' ? (
+          <div
+            data-slot="bottom-console-drawer-idle"
+            className={bottomConsoleDrawerClasses.bodyMessage}
+          >
+            {model.message}
           </div>
-        ) : isLoading ? (
-          <div className="flex items-center justify-center h-full text-sm text-slate-400">
-            Loading run events...
+        ) : model.kind === 'loading' ? (
+          <div
+            data-slot="bottom-console-drawer-loading"
+            className={bottomConsoleDrawerClasses.bodyMessage}
+          >
+            {model.message}
           </div>
         ) : (
           <Suspense
             fallback={
-              <div className="flex items-center justify-center h-full text-sm text-slate-400">
+              <div
+                data-slot="bottom-console-drawer-terminal-loading"
+                className={bottomConsoleDrawerClasses.bodyMessage}
+              >
                 Loading terminal...
               </div>
             }
           >
-            <XtermConsole lines={lines} />
+            <div data-slot="bottom-console-drawer-stream" className="h-full w-full">
+              <XtermConsole lines={[...model.lines]} />
+            </div>
           </Suspense>
         )}
       </div>
     </div>
   );
 }
+
+export default BottomConsoleDrawer;

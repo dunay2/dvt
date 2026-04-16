@@ -38,7 +38,7 @@ function makeWorkflowHandleMock(describeImpl: () => Promise<unknown>): {
     query: vi.fn(async () => ({
       status: 'RUNNING',
       paused: false,
-      cancelled: false,
+      cancelRequested: false,
       currentStepIndex: 0,
       continuedAsNewCount: 0,
     })),
@@ -344,18 +344,11 @@ describe('TemporalAdapter.lookupRunRef', () => {
     );
   });
 
-  it('returns provider-native workflow query status without reading persisted projection', async () => {
-    const handle = makeWorkflowHandleMock(async () => ({}));
-    handle.query.mockResolvedValueOnce({
-      status: 'PAUSED',
-      paused: true,
-      cancelled: false,
-      currentStepIndex: 4,
-      continuedAsNewCount: 1,
-    });
+  it('returns Temporal-native runtime status from handle.describe()', async () => {
+    const handle = makeWorkflowHandleMock(async () => ({ status: { name: 'RUNNING', code: 1 } }));
     const { adapter, workflowClient } = makeAdapter(() => handle);
 
-    const status = await adapter.getRunStatus({
+    const status = await adapter.getProviderStatusView({
       provider: 'temporal',
       tenantId: 'tenant1',
       namespace: 'dvt-test',
@@ -365,23 +358,61 @@ describe('TemporalAdapter.lookupRunRef', () => {
     });
 
     expect(workflowClient.getHandle).toHaveBeenCalledWith('run-abc');
-    expect(handle.query).toHaveBeenCalledWith('status');
+    expect(handle.describe).toHaveBeenCalledOnce();
     expect(status).toEqual({
-      runId: 'run-abc',
-      status: 'PAUSED',
+      provider: 'temporal',
+      providerStatus: 'RUNNING',
     });
   });
 
-  it('fails cleanly when the workflow handle does not support query()', async () => {
-    const handle = {
-      cancel: vi.fn(async () => undefined),
-      signal: vi.fn(async () => undefined),
-      describe: vi.fn(async () => ({})),
-    };
-    const { adapter } = makeAdapter(() => handle as never);
+  it('maps terminal Temporal statuses through describe()', async () => {
+    const handle = makeWorkflowHandleMock(async () => ({
+      status: { name: 'TERMINATED', code: 5 },
+    }));
+    const { adapter } = makeAdapter(() => handle);
+
+    const status = await adapter.getProviderStatusView({
+      provider: 'temporal',
+      tenantId: 'tenant1',
+      namespace: 'dvt-test',
+      workflowId: 'run-abc',
+      runId: 'run-abc',
+      taskQueue: 'q-main-tenant1',
+    });
+
+    expect(status).toEqual({
+      provider: 'temporal',
+      providerStatus: 'TERMINATED',
+    });
+  });
+
+  it('preserves unknown Temporal describe statuses as provider diagnostics', async () => {
+    const handle = makeWorkflowHandleMock(async () => ({
+      status: { name: 'PAUSE_REQUESTED', code: 17 },
+    }));
+    const { adapter } = makeAdapter(() => handle);
+
+    const status = await adapter.getProviderStatusView({
+      provider: 'temporal',
+      tenantId: 'tenant1',
+      namespace: 'dvt-test',
+      workflowId: 'run-abc',
+      runId: 'run-abc',
+      taskQueue: 'q-main-tenant1',
+    });
+
+    expect(status).toEqual({
+      provider: 'temporal',
+      providerStatus: 'PAUSE_REQUESTED',
+    });
+  });
+
+  it('throws when describe() returns no status', async () => {
+    const handle = makeWorkflowHandleMock(async () => ({}));
+    const { adapter } = makeAdapter(() => handle);
 
     await expect(
-      adapter.getRunStatus({
+      adapter.getProviderStatusView({
         provider: 'temporal',
         tenantId: 'tenant1',
         namespace: 'dvt-test',
@@ -389,6 +420,6 @@ describe('TemporalAdapter.lookupRunRef', () => {
         runId: 'run-abc',
         taskQueue: 'q-main-tenant1',
       })
-    ).rejects.toThrow('TEMPORAL_WORKFLOW_QUERY_NOT_SUPPORTED');
+    ).rejects.toThrow('TEMPORAL_DESCRIBE_MISSING_STATUS');
   });
 });

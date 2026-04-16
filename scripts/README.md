@@ -52,6 +52,104 @@ Implementation notes:
 
 ## Changed-file Gates and Autofix
 
+### `skip-pretest-if-ci.cjs`
+
+Lifecycle-hook helper reused by `prebuild`, `pretypecheck`, and `pretest`
+scripts that normally build dependency graphs before the main command.
+
+Behavior:
+
+- exits `0` when `DVT_CI=1|true`, so the `|| pnpm ... build` fallback is skipped
+- exits `1` otherwise, so local builds keep the normal dependency prebuild path
+
+Use this only when CI already ran an explicit workspace-graph build step before
+the guarded command.
+
+### `build-workspace-runtime-deps.cjs`
+
+Builds the real workspace runtime dependency closure for a target package while
+excluding its `devDependencies`. Optional extra workspace packages can be added
+explicitly for integration-only lanes.
+
+Usage:
+
+```bash
+node scripts/build-workspace-runtime-deps.cjs @dvt/adapter-temporal
+node scripts/build-workspace-runtime-deps.cjs @dvt/adapter-temporal --include-package @dvt/adapter-postgres
+node scripts/build-workspace-runtime-deps.cjs @dvt/adapter-temporal --build-self
+```
+
+Behavior:
+
+- asks PNPM for the real runtime closure via `pnpm list --filter-prod <pkg>...`
+- follows only `dependencies` and `optionalDependencies` as resolved by PNPM
+- runs `pnpm ... run build` for the selected runtime closure with
+  `--workspace-concurrency=4` and `DVT_CI=1`, so dependency package hooks do
+  not recurse again inside the explicit orchestrator
+- `--build-self` rebuilds the target package afterward with `DVT_CI=1`, so its
+  own `prebuild` hook does not re-run the dependency closure
+
+Intended usage:
+
+- local package hooks keep dependency builds available for direct local runs
+- CI workflows call this helper explicitly before integration tests instead of
+  relying on implicit `pretest:*` hooks
+
+### `run-temporal-postgres-proof.cjs`
+
+Canonical local operator wrapper for the Temporal Postgres capability proof
+environment.
+
+Usage:
+
+```bash
+node scripts/run-temporal-postgres-proof.cjs up
+node scripts/run-temporal-postgres-proof.cjs test
+node scripts/run-temporal-postgres-proof.cjs reset
+node scripts/run-temporal-postgres-proof.cjs cleanup
+node scripts/run-temporal-postgres-proof.cjs test --reset
+node scripts/run-temporal-postgres-proof.cjs down
+```
+
+Behavior:
+
+- manages `infra/docker/postgres/docker-compose.yml`
+- prefers `docker compose` and falls back to `docker-compose` when only the
+  standalone Compose binary is available
+- waits for the `dvt-postgres` container healthcheck
+- verifies the seeded proof baseline after destructive reset
+- can drop transient proof schemas (`it_runtime_*`, `dvt_transform_it_*`)
+  without deleting the Docker volume
+- exports `DVT_PG_INTEGRATION=1`
+- always exports the canonical local Docker DSN as `DVT_PG_URL` and
+  `DATABASE_URL`
+- runs the `@dvt/adapter-temporal` Postgres capability integration lane
+
+### `run-dev-stack.cjs`
+
+Canonical local wrapper for coordinated backend + frontend startup.
+
+Usage:
+
+```bash
+node scripts/run-dev-stack.cjs
+node scripts/run-dev-stack.cjs --test-only
+node scripts/run-dev-stack.cjs --skip-postgres
+```
+
+Behavior:
+
+- starts `dvt-api` and `@dvt/web` together with coordinated shutdown
+- injects `DVT_READYZ_ENABLED=true` into the API process
+- injects `VITE_API_BASE_URL` into the web dev server
+- if `DATABASE_URL` is not already configured, bootstraps the canonical local
+  Docker Postgres proof environment before starting the API
+- exports the canonical local proof DSN as `DATABASE_URL` to the API when local
+  bootstrap is used
+- enables `/db/ready` and waits for that probe before declaring the API ready
+- `--skip-postgres` leaves database bootstrap disabled and preserves the old
+  degraded-local behavior when no `DATABASE_URL` is set
+
 ### `check-changed.cjs`
 
 Runs changed-file quality checks against the Git diff baseline. It is used by
@@ -64,8 +162,25 @@ Checks:
 
 Diff policy:
 
-- prefers `origin/main..HEAD` when `origin/main` exists
+- prefers `origin/main...HEAD` when `origin/main` exists
 - falls back to the configured upstream or `HEAD~1..HEAD`
+
+### `type-check-prepush.cjs`
+
+Runs `pnpm type-check` only when the changed diff includes files that can alter
+the TypeScript graph or workspace dependency surface.
+
+Type-check triggers:
+
+- changed `ts/tsx/mts/cts` files
+- `package.json`
+- `pnpm-lock.yaml`
+- `pnpm-workspace.yaml`
+- `tsconfig*.json`
+- `vitest.config.ts`
+
+When the diff contains only docs, scripts, Markdown, or workflow YAML changes,
+the script skips `pnpm type-check` cleanly.
 
 ### `lint-markdown-changed.cjs`
 

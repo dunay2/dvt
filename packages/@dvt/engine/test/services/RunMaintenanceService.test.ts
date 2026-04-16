@@ -56,8 +56,8 @@ function makeTemporalAdapter(): IProviderAdapter {
       } as EngineRunRef;
     },
     async cancelRun() {},
-    async getRunStatus(runRef) {
-      return { runId: runRef.runId, status: 'RUNNING' } as any;
+    async getProviderStatusView() {
+      return { provider: 'temporal', providerStatus: 'RUNNING' } as any;
     },
     async signal() {},
   };
@@ -263,8 +263,8 @@ function makeAdapterWithLookup(knownRunIds: Set<string>, cancelLog?: string[]): 
     async cancelRun(runRef) {
       cancelLog?.push(runRef.runId);
     },
-    async getRunStatus(runRef) {
-      return { runId: runRef.runId, status: 'RUNNING' } as any;
+    async getProviderStatusView() {
+      return { provider: 'temporal', providerStatus: 'RUNNING' } as any;
     },
     async signal() {},
     async lookupRunRef(runId, tenantId) {
@@ -305,8 +305,8 @@ function makeTemporalAdapterWithLog(cancelLog: string[]): IProviderAdapter {
     async cancelRun(runRef) {
       cancelLog.push(runRef.runId);
     },
-    async getRunStatus(runRef) {
-      return { runId: runRef.runId, status: 'RUNNING' } as any;
+    async getProviderStatusView() {
+      return { provider: 'mock', providerStatus: 'RUNNING' } as any;
     },
     async signal() {},
     async lookupRunRef(runId, tenantId) {
@@ -329,8 +329,8 @@ function makeMockAdapterWithLog(cancelLog: string[]): IProviderAdapter {
     async cancelRun(runRef) {
       cancelLog.push(runRef.runId);
     },
-    async getRunStatus(runRef) {
-      return { runId: runRef.runId, status: 'RUNNING' } as any;
+    async getProviderStatusView() {
+      return { provider: 'temporal', providerStatus: 'RUNNING' } as any;
     },
     async signal() {},
     async lookupRunRef(runId, tenantId) {

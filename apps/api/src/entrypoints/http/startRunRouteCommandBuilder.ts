@@ -4,7 +4,7 @@ import { DEFAULT_START_RUN_TARGET_ADAPTER_REGISTRY } from '../../application/ser
 
 import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
 import { badRequestResult, type RouteParseResult } from './routeParseIssue.js';
-import { asNonEmptyTrimmedStringOrUndefined } from './startRunRouteBodyValidation.js';
+import { asCanonicalNonEmptyStringOrUndefined } from './startRunRouteBodyValidation.js';
 import { parseStartRunPlannerEnvelope } from './startRunRoutePlannerEnvelopeMapper.js';
 import { parseStartRunPlanRef } from './startRunRoutePlanRefParser.js';
 import { evaluateStartRunPlanSource } from './startRunRoutePlanSourcePolicy.js';
@@ -96,7 +96,7 @@ export function buildPlannerBackedStartRunCommand(input: {
   readonly targetAdapter: StartRunCommand['targetAdapter'];
   readonly selection: ReadonlyArray<string>;
 }): RouteParseResult<StartRunCommand> {
-  const plannerInput = parseStartRunPlannerEnvelope(input.record, input.selection);
+  const plannerInput = parseStartRunPlannerEnvelope(input.record);
   if (!plannerInput.ok) {
     return plannerInput;
   }
@@ -123,7 +123,7 @@ export function buildPlannerBackedStartRunCommand(input: {
 }
 
 function parseStartRunRunId(rawRunId: unknown): RouteParseResult<string> {
-  const runId = asNonEmptyTrimmedStringOrUndefined(rawRunId);
+  const runId = asCanonicalNonEmptyStringOrUndefined(rawRunId);
   if (runId === undefined) {
     return badRequestResult(HTTP_ERROR_REASON.invalidRunId, { target: 'runId' });
   }

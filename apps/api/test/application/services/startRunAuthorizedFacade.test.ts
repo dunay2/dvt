@@ -1,3 +1,4 @@
+import { parsePlanRef } from '@dvt/contracts';
 import { describe, it, expect, vi } from 'vitest';
 
 import {
@@ -35,13 +36,13 @@ const INPUT = {
   token: 'token',
   requestId: 'req-1',
   command: {
-    planRef: {
+    planRef: parsePlanRef({
       uri: 'https://plans.example.com/plan.json',
       sha256: 'deadbeef',
       schemaVersion: '1.0.0',
       planId: 'plan-1',
       planVersion: '2.0',
-    },
+    }),
     runId: 'run-1',
     targetAdapter: 'temporal' as const,
     selection: ['step_a'],

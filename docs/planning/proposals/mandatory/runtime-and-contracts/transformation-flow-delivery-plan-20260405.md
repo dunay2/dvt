@@ -33,7 +33,7 @@ The plan is complete when a user can:
 1. build a basic `source -> sql_transform -> sink` graph in Canvas
 2. click `Plan` and receive a real persisted `PlanRef`
 3. click `Start run`
-4. execute the persisted plan against PostgreSQL in a repeatable Docker proof environment
+4. execute the persisted plan through a relational SQL executor seam, with PostgreSQL as the repeatable v1 proof environment
 5. inspect sink materialization evidence and failure diagnostics
 
 ## Phase dependency map
@@ -42,10 +42,10 @@ The plan is complete when a user can:
 flowchart LR
   P0[Phase 0 document freeze] --> P1[Phase 1 contract and graph freeze]
   P1 --> P2[Phase 2 preview and persist]
-  P2 --> P3[Phase 3 PostgreSQL execution]
+  P2 --> P3[Phase 3 relational execution seam]
   P3 --> P4[Phase 4 Canvas operator flow]
   P4 --> P5[Phase 5 evidence and environment closure]
-  P5 --> P6[Phase 6 dbt executor mode]
+  P5 --> P6[Phase 6 plugin-backed dbt mode]
 ```
 
 ## Lane critical path
@@ -55,7 +55,7 @@ flowchart TD
   A1[Lane A graph and compiler] --> B1[Lane B provenance]
   A1 --> C1[Lane C preview route]
   B1 --> C1
-  C1 --> C2[Lane C PostgreSQL executor]
+  C1 --> C2[Lane C relational executor seam]
   C2 --> D1[Lane D proof environment reset and retention]
   C1 --> E1[Lane E preview and start UX]
   C2 --> E2[Lane E result UX]
@@ -66,15 +66,15 @@ flowchart TD
 
 ## Phase summary
 
-| Phase | Goal                                             | Primary lanes               |
-| ----- | ------------------------------------------------ | --------------------------- |
-| 0     | freeze decisions and document set                | E plus planning surfaces    |
-| 1     | freeze graph, contract, and compiler model       | A and B                     |
-| 2     | implement validate-plus-persist preview boundary | C with A and B dependencies |
-| 3     | execute persisted plans against PostgreSQL       | C and D                     |
-| 4     | close operator flow in Canvas and result views   | E with C dependency         |
-| 5     | close evidence, reset, and repeatability         | B, C, D, E                  |
-| 6     | add dbt executor mode behind the same contract   | C and E                     |
+| Phase | Goal                                                | Primary lanes               |
+| ----- | --------------------------------------------------- | --------------------------- |
+| 0     | freeze decisions and document set                   | E plus planning surfaces    |
+| 1     | freeze graph, contract, and compiler model          | A and B                     |
+| 2     | implement validate-plus-persist preview boundary    | C with A and B dependencies |
+| 3     | execute plans through the first relational seam     | C and D                     |
+| 4     | close operator flow in Canvas and result views      | E with C dependency         |
+| 5     | close evidence, reset, and repeatability            | B, C, D, E                  |
+| 6     | add plugin-backed dbt mode behind the same contract | C and E                     |
 
 ## Task matrix
 
@@ -90,16 +90,16 @@ flowchart TD
 | `TF-C1`   | C    | preview and persist umbrella                                 | `TF-A1`, `TF-B1`     |
 | `TF-C1-A` | C    | protected `/plans/preview` route and typed validation errors | `TF-A1-A`, `TF-B1-A` |
 | `TF-C1-B` | C    | persisted plan store write and `PlanRef` issuance            | `TF-C1-A`, `TF-A1-B` |
-| `TF-C2`   | C    | PostgreSQL execution umbrella                                | `TF-C1`              |
-| `TF-C2-A` | C    | PostgreSQL executor and Docker baseline                      | `TF-C1-B`            |
+| `TF-C2`   | C    | first relational SQL execution umbrella                      | `TF-C1`              |
+| `TF-C2-A` | C    | relational SQL executor seam with PostgreSQL baseline        | `TF-C1-B`            |
 | `TF-C2-B` | C    | run read surfaces with materialization evidence              | `TF-C2-A`, `TF-B1-B` |
 | `TF-D1`   | D    | proof-environment reset, cleanup, retention, and runbook     | `TF-C2-A`            |
 | `TF-E1`   | E    | Canvas and result umbrella                                   | `TF-A1`, `TF-C1`     |
 | `TF-E1-A` | E    | Canvas graph authoring and inline validation                 | `TF-A1-A`            |
 | `TF-E1-B` | E    | preview/start UX with real `PlanRef`                         | `TF-C1-B`, `TF-E1-A` |
 | `TF-E1-C` | E    | result UX with success and failure evidence                  | `TF-C2-B`, `TF-E1-B` |
-| `TF-C3`   | C    | dbt executor phase-2 umbrella                                | `TF-C2`              |
-| `TF-C3-A` | C    | dbt executor mode under same preview and run contract        | `TF-C2-B`            |
+| `TF-C3`   | C    | plugin-backed dbt phase-2 umbrella                           | `TF-C2`              |
+| `TF-C3-A` | C    | plugin-backed dbt mode under same preview and run contract   | `TF-C2-B`            |
 
 ## Phase 0. Document and decision freeze
 
@@ -190,11 +190,12 @@ Turn preview into the real immutable plan boundary.
 3. the persisted plan captures provenance and canonical identity
 4. the route no longer infers provenance requirements from compiled step kinds
 
-## Phase 3. PostgreSQL execution and proof environment
+## Phase 3. Relational execution seam and PostgreSQL proof environment
 
 ### Objective
 
-Execute the persisted plan in a real database and make that execution repeatable.
+Execute the persisted plan through a governed relational SQL seam and make the
+first implementation repeatable.
 
 ### Tasks by lane
 
@@ -203,10 +204,10 @@ Execute the persisted plan in a real database and make that execution repeatable
 
 ### Required outputs
 
-- PostgreSQL execution seam for SQL-first plans
+- relational SQL execution seam for SQL-first plans
 - Docker PostgreSQL local proof environment
 - seed, reset, and cleanup procedure
-- failure semantics for SQL execution errors
+- failure semantics for SQL execution errors in the PostgreSQL implementation
 
 ### Validation expectation
 
@@ -216,7 +217,7 @@ Execute the persisted plan in a real database and make that execution repeatable
 
 ### Exit criteria
 
-1. one real transformation runs end to end against PostgreSQL
+1. one real transformation runs end to end through the relational seam with PostgreSQL as the first implementation
 2. the same local environment can be reset and rerun without manual cleanup
 3. SQL errors produce explicit runtime failure state and diagnostics
 
@@ -280,11 +281,11 @@ Close the outcome loop so the operator can trust the result and rerun it.
 2. repeated acceptance runs do not accumulate ambiguous leftover state
 3. success and failure outcomes are equally legible
 
-## Phase 6. dbt executor mode
+## Phase 6. plugin-backed dbt mode
 
 ### Objective
 
-Add dbt as a runtime mode without replacing the outer product loop.
+Add dbt as a plugin-backed runtime mode without replacing the outer product loop.
 
 ### Tasks by lane
 
@@ -293,14 +294,15 @@ Add dbt as a runtime mode without replacing the outer product loop.
 
 ### Required outputs
 
-- dbt preview profile and executor behind the same preview and run boundary
+- dbt preview profile and plugin-backed execution path behind the same preview and run boundary
 - `executor: dbt` visible in result surfaces
 - no second product flow for dbt users
+- no kernel-owned dbt semantics in engine core
 
 ### Validation expectation
 
 - contract compatibility tests
-- runtime executor selection tests
+- runtime plugin-host or executor selection tests
 - UI executor-label tests
 
 ### Exit criteria
@@ -309,6 +311,7 @@ Add dbt as a runtime mode without replacing the outer product loop.
 2. the UI loop stays `design -> plan -> run -> result`
 3. each persisted plan still binds a single provider profile
 4. the product does not fork into two unrelated execution paths
+5. dbt-specific runtime behavior stays in plugin or adapter-owned execution paths, not engine-kernel logic
 
 ## Test plan by area
 
@@ -334,8 +337,8 @@ Add dbt as a runtime mode without replacing the outer product loop.
 
 - `POST /runs/start` accepts valid `PlanRef`
 - runtime rejects missing or invalid `PlanRef`
-- PostgreSQL execution success produces sink evidence
-- PostgreSQL execution failure yields failed state and diagnostics
+- relational execution success via the PostgreSQL implementation produces sink evidence
+- relational execution failure via the PostgreSQL implementation yields failed state and diagnostics
 
 ### Frontend tests
 
@@ -346,7 +349,7 @@ Add dbt as a runtime mode without replacing the outer product loop.
 
 ### Environment and docs tests
 
-- Docker PostgreSQL proof environment is repeatable
+- Docker PostgreSQL proof environment is repeatable for the first implementation
 - cleanup path resets sink and proof data
 - Mermaid diagrams render
 - planning surfaces stay in sync
@@ -379,7 +382,7 @@ The roadmap must still be treated as incomplete if any of the following remain
 true:
 
 1. `PlanRef` is still synthetic or client-local
-2. PostgreSQL execution is mocked
+2. the first relational execution path is mocked
 3. result surfaces do not expose materialization evidence
 4. Docker proof environment is non-repeatable or undocumented
 5. dbt integration requires a second outer flow

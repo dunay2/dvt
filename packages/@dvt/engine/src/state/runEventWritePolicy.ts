@@ -1,10 +1,15 @@
-import { CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION, parseRunEventWrite } from '@dvt/contracts';
-import type { RunEventWriteSchemaT } from '@dvt/contracts';
+import {
+  CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION,
+  asIsoUtcString,
+  parseRunEventRecord,
+  parseRunEventWrite,
+} from '@dvt/contracts';
+import type { IsoUtcString, RunEventWriteSchemaT } from '@dvt/contracts';
 
 import { InvalidRunEventInputError, RunSequenceOverflowError } from '../contracts/errors.js';
-import type { RunEventInput, WorkflowSnapshot } from '../contracts/runEvents.js';
+import type { RunEventInput, RunEventPersisted, WorkflowSnapshot } from '../contracts/runEvents.js';
 
-export const IN_MEMORY_PERSISTED_AT_EPOCH_ISO = '1970-01-01T00:00:00.000Z';
+export const IN_MEMORY_PERSISTED_AT_EPOCH_ISO = asIsoUtcString('1970-01-01T00:00:00.000Z');
 
 export function createDefaultWorkflowSnapshot(runId: string): WorkflowSnapshot {
   return {
@@ -38,6 +43,27 @@ export function assertRunEventInput(event: RunEventInput, index: number): void {
       reason: 'persistedat_forbidden_in_write_input',
       index,
       runId: validated.runId,
+    });
+  }
+}
+
+export function buildPersistedRunEventRecord(
+  event: RunEventInput,
+  runSeq: number,
+  persistedAt: IsoUtcString,
+  index: number
+): RunEventPersisted {
+  try {
+    return parseRunEventRecord({
+      ...event,
+      runSeq,
+      persistedAt,
+    }) as RunEventPersisted;
+  } catch {
+    throw new InvalidRunEventInputError({
+      reason: 'persisted_record_validation_failed',
+      index,
+      runId: event?.runId,
     });
   }
 }

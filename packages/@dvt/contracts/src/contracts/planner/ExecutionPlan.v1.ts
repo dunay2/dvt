@@ -17,21 +17,11 @@ import type { SupportedPlanVersion } from './PlanVersion.v1.js';
 export type StepKind = string;
 
 /**
- * Immutable reference to a manifest artifact stored out-of-band.
- */
-export interface DbtManifestRef {
-  uri: string;
-  sha256: string;
-  artifactId?: string;
-}
-
-/**
  * Optional planning context used to bind environment-dependent knobs
  * without coupling planner logic to runtime adapters.
  */
 export interface PlannerEnvironmentContext {
   environmentId?: string;
-  targetProfile?: string;
   vars?: Record<string, unknown>;
 }
 
@@ -68,10 +58,30 @@ export interface PlannerSelection {
   includeDownstream?: boolean;
 }
 
+/**
+ * Explicit per-step activity retry profile materialized into the executable
+ * plan.
+ *
+ * `maxAttempts` counts total attempts, including the first execution.
+ * Interval fields intentionally use Temporal-compatible duration strings
+ * because the current adapter is the only production runtime and the review
+ * task for AR-A11 requires the plan to own the realized retry/backoff shape.
+ */
+export interface ExecutionStepRetryPolicyV1 {
+  maxAttempts: number;
+  initialInterval: `${number}s`;
+  maximumInterval: `${number}s`;
+  backoffCoefficient: number;
+}
+
 export interface ExecutionStepV1 {
   stepId: string;
   kind: StepKind;
   dependsOn: readonly string[];
+  /**
+   * Canonical per-step retry policy consumed by the runtime adapter.
+   */
+  retryPolicy?: ExecutionStepRetryPolicyV1;
   /**
    * Kind-specific configuration blob.
    *
@@ -138,33 +148,16 @@ export type ExecutionPlan = {
 /**
  * Normative public planner input for v1.
  *
- * ## One-active-source rule
+ * `graphSource` is the canonical planner ingress.
  *
- * Exactly **one** of `manifestRef` or `graphSource` may be active in a
- * single request. The planner MUST reject envelopes with:
- * - no graph source provided
- * - more than one graph source provided
- * - conflicting graph source content
- *
- * ## Graph source lifecycle
- *
- * - `manifestRef` is the artifact-ref path.
- * - `graphSource` is the canonical typed inline path.
+ * Compatibility translation from source-native inputs such as DBT manifest refs
+ * happens outside this shared-kernel contract before planner admission.
  */
 export interface PlannerInputEnvelopeV1 {
   /**
-   * Immutable reference to a manifest artifact stored out-of-band.
-   *
-   * When provided, `graphSource` MUST NOT also be provided.
-   */
-  manifestRef?: DbtManifestRef;
-
-  /**
    * Typed inline graph source.
-   *
-   * When provided, `manifestRef` MUST NOT also be provided.
    */
-  graphSource?: GenericGraphSourceV1;
+  graphSource: GenericGraphSourceV1;
 
   selection: PlannerSelection;
   policies?: PlannerPolicyClassSet;

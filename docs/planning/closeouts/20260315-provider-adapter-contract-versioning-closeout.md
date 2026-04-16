@@ -48,12 +48,17 @@ cross-references ambiguous.
 
 ## Changes made
 
-| File                                                                                                                                                 | Change                                      | Why                                                                             |
-| ---------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- | ------------------------------------------------------------------------------- |
-| [docs/architecture/engine/contracts/engine/IProviderAdapter.v1.md](../../architecture/components/engine/contracts/engine/IProviderAdapter.v1.md)     | Replaced monolithic content with redirect   | Preserve existing references while pointing readers to the right active version |
-| [docs/architecture/engine/contracts/engine/IProviderAdapter.v1.0.md](../../architecture/components/engine/contracts/engine/IProviderAdapter.v1.0.md) | Added archived baseline                     | Preserve the historical lifecycle-only contract                                 |
-| [docs/architecture/engine/contracts/engine/IProviderAdapter.v1.1.md](../../architecture/components/engine/contracts/engine/IProviderAdapter.v1.1.md) | Added current normative contract            | Make optional adapter capabilities and consumers explicit                       |
-| [docs/architecture/engine/contracts/README.md](../../architecture/components/engine/contracts/README.md)                                             | Updated registry entry and historical table | Keep contract discoverability aligned with the new version split                |
+- [docs/architecture/engine/contracts/engine/IProviderAdapter.v1.md](../../architecture/components/engine/contracts/engine/IProviderAdapter.v1.md):
+  replaced monolithic content with redirect to preserve existing references
+  while pointing readers to the right active version
+- [docs/architecture/engine/contracts/engine/IProviderAdapter.v1.md](../../architecture/components/engine/contracts/engine/IProviderAdapter.v1.md):
+  added archived baseline to preserve the historical lifecycle-only contract
+- [docs/architecture/engine/contracts/engine/IProviderAdapter.v1.md](../../architecture/components/engine/contracts/engine/IProviderAdapter.v1.md):
+  added current normative contract to make optional adapter capabilities and
+  consumers explicit
+- [docs/architecture/engine/contracts/README.md](../../architecture/components/engine/contracts/README.md):
+  updated registry entry and historical table to keep contract discoverability
+  aligned with the new version split
 
 ## Libraries evaluated
 
@@ -67,12 +72,12 @@ None.
 
 ## Test evidence
 
-| Command                                                                                                                                                                                                                                                                                                                                                                                                                                           | Result                                               |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
-| `pnpm docs:sync`                                                                                                                                                                                                                                                                                                                                                                                                                                  | Passed                                               |
-| `pnpm docs:quality:check`                                                                                                                                                                                                                                                                                                                                                                                                                         | Passed with pre-existing warnings outside this slice |
-| `pnpm docs:canonical:check`                                                                                                                                                                                                                                                                                                                                                                                                                       | Passed                                               |
-| `pnpm exec markdownlint-cli2 "docs/architecture/engine/contracts/engine/IProviderAdapter.v1.md" "docs/architecture/engine/contracts/engine/IProviderAdapter.v1.0.md" "docs/architecture/engine/contracts/engine/IProviderAdapter.v1.1.md" "docs/architecture/engine/contracts/README.md" "docs/planning/closeouts/20260315-provider-adapter-contract-versioning-closeout.md" --ignore-path .markdownlintignore --config .markdownlint-cli2.jsonc` | Passed                                               |
+- `pnpm docs:sync` -> Passed
+- `pnpm docs:quality:check` -> Passed with pre-existing warnings outside this
+  slice
+- `pnpm docs:canonical:check` -> Passed
+- `pnpm exec markdownlint-cli2 "docs/architecture/engine/contracts/engine/IProviderAdapter.v1.md" "docs/architecture/engine/contracts/engine/IProviderAdapter.v1.md" "docs/architecture/engine/contracts/engine/IProviderAdapter.v1.md" "docs/architecture/engine/contracts/README.md" "docs/planning/closeouts/20260315-provider-adapter-contract-versioning-closeout.md" --ignore-path .markdownlintignore --config .markdownlint-cli2.jsonc`
+  -> Passed
 
 ## Debt introduced
 

@@ -5,7 +5,7 @@
 **Version**: v1
 **Status**: DRAFT  
 **Phase**: Phase 1 (documentation), Phase 3 (implementation)  
-**Versioning**: See [VERSIONING.md](../../VERSIONING.md) for contract evolution policy
+**Versioning**: See [VERSIONING.md](../VERSIONING.md) for contract evolution policy
 
 ---
 
@@ -19,16 +19,16 @@ Define what events must be audited, the audit log schema, retention policy, and 
 
 ## Audit Event Types
 
-| Event Type            | When                                  | Who                          | Required     |
-| --------------------- | ------------------------------------- | ---------------------------- | ------------ |
-| `AUTH_DECISION`       | Authorization check (grant or deny)   | IAuthorization               | ✅ Phase 1   |
-| `STATE_MUTATION`      | Plan/run state changes                | Engine (via RunEventCatalog) | ✅ Phase 1   |
-| `SIGNAL_SENT`         | PAUSE, RESUME, CANCEL, custom signals | Engine                       | ✅ Phase 1   |
-| `API_CALL`            | API request/response                  | API gateway                  | ✅ Phase 2   |
-| `PLUGIN_INVOKED`      | Plugin code execution starts/ends     | Plugin runtime               | ⏳ Phase 3   |
-| `ARTIFACT_ACCESSED`   | Read/write artifact data              | Engine                       | ⏳ Phase 2   |
-| `CONFIG_CHANGED`      | Tenant config, RBAC role assignment   | Admin API                    | ⏳ Phase 4   |
-| `BACKPRESSURE_SIGNAL` | BACKPRESSURE_ON/OFF emitted           | Engine (Outbox)              | ⏳ Phase 1.5 |
+| Event Type            | When                                  | Who                       | Required     |
+| --------------------- | ------------------------------------- | ------------------------- | ------------ |
+| `AUTH_DECISION`       | Authorization check (grant or deny)   | IAuthorization            | ✅ Phase 1   |
+| `STATE_MUTATION`      | Plan/run state changes                | Engine (via RunEvents.v1) | ✅ Phase 1   |
+| `SIGNAL_SENT`         | PAUSE, RESUME, CANCEL, custom signals | Engine                    | ✅ Phase 1   |
+| `API_CALL`            | API request/response                  | API gateway               | ✅ Phase 2   |
+| `PLUGIN_INVOKED`      | Plugin code execution starts/ends     | Plugin runtime            | ⏳ Phase 3   |
+| `ARTIFACT_ACCESSED`   | Read/write artifact data              | Engine                    | ⏳ Phase 2   |
+| `CONFIG_CHANGED`      | Tenant config, RBAC role assignment   | Admin API                 | ⏳ Phase 4   |
+| `BACKPRESSURE_SIGNAL` | BACKPRESSURE_ON/OFF emitted           | Engine (Outbox)           | ⏳ Phase 1.5 |
 
 ---
 

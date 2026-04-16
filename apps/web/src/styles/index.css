@@ -21,11 +21,18 @@ body {
 
 /* React Flow Custom Styles */
 .react-flow {
-  background-color: transparent;
+  background-color: var(--canvas-surface, transparent);
   background-image:
-    linear-gradient(rgba(96, 165, 250, 0.08) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(96, 165, 250, 0.08) 1px, transparent 1px);
-  background-size: 28px 28px;
+    radial-gradient(circle at 14% 18%, rgba(255, 255, 255, 0.035), transparent 24%),
+    radial-gradient(circle at 82% 14%, rgba(255, 255, 255, 0.025), transparent 28%),
+    linear-gradient(var(--canvas-grid, rgba(148, 163, 184, 0.16)) 1px, transparent 1px),
+    linear-gradient(90deg, var(--canvas-grid, rgba(148, 163, 184, 0.16)) 1px, transparent 1px);
+  background-position: 0 0, 0 0, 0 0, 0 0;
+  background-size:
+    100% 100%,
+    100% 100%,
+    var(--canvas-grid-gap, 20px) var(--canvas-grid-gap, 20px),
+    var(--canvas-grid-gap, 20px) var(--canvas-grid-gap, 20px);
 }
 
 .react-flow__node {
@@ -37,26 +44,47 @@ body {
 }
 
 .react-flow__controls {
-  background: rgba(6, 10, 18, 0.92);
-  border: 1px solid #2f4368;
+  background: var(--canvas-controls-surface);
+  border: 1px solid var(--canvas-controls-border);
 }
 
 .react-flow__controls-button {
-  background: rgba(9, 17, 31, 0.94);
-  border-bottom: 1px solid #2f4368;
-  color: #e2e8f0;
+  background: var(--canvas-controls-button-surface);
+  border-bottom: 1px solid var(--canvas-controls-border);
+  color: var(--canvas-controls-foreground);
 }
 
 .react-flow__controls-button:hover {
-  background: rgba(23, 36, 60, 0.96);
+  background: var(--canvas-controls-button-hover);
 }
 
 .react-flow__minimap {
   overflow: hidden;
-  background: rgba(7, 11, 18, 0.86);
-  border: 1px solid #2f4368;
+  background: var(--canvas-minimap-surface);
+  border: 1px solid var(--canvas-minimap-border);
 }
 
 .react-flow__attribution {
   display: none;
+}
+
+.canvas-background-color-picker .react-colorful {
+  width: 100%;
+  height: 176px;
+}
+
+.canvas-background-color-picker .react-colorful__saturation {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px 10px 0 0;
+}
+
+.canvas-background-color-picker .react-colorful__hue {
+  height: 18px;
+  margin-top: 12px;
+  border-radius: 999px;
+}
+
+.canvas-background-color-picker .react-colorful__pointer {
+  width: 14px;
+  height: 14px;
 }

@@ -1,8 +1,10 @@
+import { parsePlanRef } from '@dvt/contracts';
+
 import type { StartRunPlanRef } from '../../application/ports/startRunCommandContract.js';
 
 import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
 import { badRequestResult, type RouteParseResult } from './routeParseIssue.js';
-import { asNonEmptyTrimmedStringOrUndefined } from './startRunRouteBodyValidation.js';
+import { asCanonicalNonEmptyStringOrUndefined } from './startRunRouteBodyValidation.js';
 
 export function parseStartRunPlanRef(raw: unknown): RouteParseResult<StartRunPlanRef> {
   if (raw === null || typeof raw !== 'object' || Array.isArray(raw)) {
@@ -10,24 +12,33 @@ export function parseStartRunPlanRef(raw: unknown): RouteParseResult<StartRunPla
   }
 
   const record = raw as Record<string, unknown>;
-  const uri = asNonEmptyTrimmedStringOrUndefined(record.uri);
-  const sha256 = asNonEmptyTrimmedStringOrUndefined(record.sha256);
-  const schemaVersion = asNonEmptyTrimmedStringOrUndefined(record.schemaVersion);
-  const planId = asNonEmptyTrimmedStringOrUndefined(record.planId);
-  const planVersion = asNonEmptyTrimmedStringOrUndefined(record.planVersion);
+  const normalized = {
+    uri: asCanonicalNonEmptyStringOrUndefined(record.uri),
+    sha256: asCanonicalNonEmptyStringOrUndefined(record.sha256),
+    schemaVersion: asCanonicalNonEmptyStringOrUndefined(record.schemaVersion),
+    planId: asCanonicalNonEmptyStringOrUndefined(record.planId),
+    planVersion: asCanonicalNonEmptyStringOrUndefined(record.planVersion),
+    ...(typeof record.sizeBytes === 'number' ? { sizeBytes: record.sizeBytes } : {}),
+    ...(asCanonicalNonEmptyStringOrUndefined(record.expiresAt) === undefined
+      ? {}
+      : { expiresAt: asCanonicalNonEmptyStringOrUndefined(record.expiresAt) }),
+  };
 
-  if (uri && sha256 && schemaVersion && planId && planVersion) {
+  try {
+    const parsedPlanRef = parsePlanRef(normalized);
     return {
       ok: true,
       value: {
-        uri,
-        sha256,
-        schemaVersion,
-        planId,
-        planVersion,
+        uri: parsedPlanRef.uri,
+        sha256: parsedPlanRef.sha256,
+        schemaVersion: parsedPlanRef.schemaVersion,
+        planId: parsedPlanRef.planId,
+        planVersion: parsedPlanRef.planVersion,
+        ...(parsedPlanRef.sizeBytes === undefined ? {} : { sizeBytes: parsedPlanRef.sizeBytes }),
+        ...(parsedPlanRef.expiresAt === undefined ? {} : { expiresAt: parsedPlanRef.expiresAt }),
       },
     };
+  } catch {
+    return badRequestResult(HTTP_ERROR_REASON.invalidPlanRef, { target: 'planRef' });
   }
-
-  return badRequestResult(HTTP_ERROR_REASON.invalidPlanRef, { target: 'planRef' });
 }

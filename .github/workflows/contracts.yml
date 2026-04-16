@@ -174,37 +174,11 @@ jobs:
       - name: Check for non-deterministic API usage
         run: node tools/ci/check-determinism.mjs
 
-  contract-compile:
-    name: Compile TypeScript Contracts
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    needs: [detect-changes]
-    if:
-      github.event_name != 'pull_request' || needs.detect-changes.outputs.contracts_relevant ==
-      'true'
-    steps:
-      - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
-
-      - name: Setup pnpm, cache and dependencies
-        uses: ./.github/actions/setup-node-pnpm
-
-      - name: Compile contracts
-        run: pnpm test:contracts:compile
-
-      - name: Upload compiled contracts artifact
-        if: always()
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
-        with:
-          name: compiled-contracts
-          path: |
-            packages/@dvt/contracts/dist/
-
   contract-validate:
     name: Validate Golden JSON Fixtures
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    needs: [detect-changes, contract-compile]
+    needs: [detect-changes]
     if: >
       github.event_name != 'pull_request' || needs.detect-changes.outputs.contracts_relevant ==
       'true'
@@ -215,12 +189,6 @@ jobs:
       - name: Setup pnpm, cache and dependencies
         uses: ./.github/actions/setup-node-pnpm
 
-      - name: Download compiled contracts artifact
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-        with:
-          name: compiled-contracts
-          path: .
-
       - name: Validate golden fixtures
         run: pnpm validate:contracts
 
@@ -228,7 +196,7 @@ jobs:
     name: Execute Golden Paths & Validate Hashes
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    needs: [detect-changes, contract-compile]
+    needs: [detect-changes]
     if: >
       github.event_name != 'pull_request' || needs.detect-changes.outputs.golden_relevant == 'true'
     services:
@@ -252,11 +220,8 @@ jobs:
       - name: Setup pnpm, cache and dependencies
         uses: ./.github/actions/setup-node-pnpm
 
-      - name: Download compiled contracts artifact
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-        with:
-          name: compiled-contracts
-          path: .
+      - name: Compile contracts inline
+        run: pnpm test:contracts:compile
 
       - name: Run database migrations
         run: node scripts/db-migrate.cjs
@@ -295,7 +260,7 @@ jobs:
 
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: contract-test-results
           path: |

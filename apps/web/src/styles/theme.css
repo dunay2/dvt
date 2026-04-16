@@ -58,12 +58,28 @@
   --focus-ring: #60a5fa;
   --status-success: #22c55e;
   --status-running: #4f8cff;
+  --status-degraded: #fbbf24;
   --status-warning: #f59e0b;
   --status-danger: #ef4444;
   --status-info: #38bdf8;
   --status-offline: #94a3b8;
   --status-readonly: #7dd3fc;
-  --graph-grid: rgba(96, 165, 250, 0.08);
+  --graph-grid: rgba(148, 163, 184, 0.16);
+  --canvas-surface: #101826;
+  --canvas-grid: rgba(143, 163, 189, 0.18);
+  --canvas-controls-surface: rgba(13, 21, 35, 0.94);
+  --canvas-controls-button-surface: rgba(16, 24, 38, 0.96);
+  --canvas-controls-button-hover: rgba(27, 40, 61, 0.98);
+  --canvas-controls-border: #31445f;
+  --canvas-controls-foreground: #e2e8f0;
+  --canvas-minimap-surface: rgba(13, 21, 35, 0.86);
+  --canvas-minimap-border: #31445f;
+  --canvas-minimap-mask: rgba(3, 8, 18, 0.62);
+  --canvas-minimap-mask-stroke: #4b5f84;
+  --canvas-panel-toggle-surface: rgba(13, 21, 35, 0.94);
+  --canvas-panel-toggle-hover: rgba(27, 40, 61, 0.98);
+  --canvas-panel-toggle-border: #31445f;
+  --canvas-panel-toggle-foreground: #f8fafc;
 }
 
 .dark {

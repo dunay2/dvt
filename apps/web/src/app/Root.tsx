@@ -1,40 +1,36 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useEffect } from 'react';
-import { Outlet } from 'react-router';
+import { Outlet, useLocation } from 'react-router';
 import {
   buildShellHealthPresentationModel,
   type PlatformHealthCapabilityApi,
   usePlatformHealthSnapshotQuery,
 } from '../capabilities/platform-health';
 
-import Console from './components/Console';
+import BottomConsoleDrawer from './components/Console';
 import LeftNavigation from './components/LeftNavigation';
 import ShellHealthBanner from './components/ShellHealthBanner';
 import TopAppBar from './components/TopAppBar';
-import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from './components/ui/resizable';
-import { AppServicesProvider } from './services/AppServicesContext';
+import AppShellFrame from './components/shell/AppShellFrame';
+import {
+  completeBootstrapScreen,
+  setBootstrapStepStatus,
+} from './bootstrap/appBootstrapScreen';
+import { useCapabilitiesQuery } from './queries/useCapabilitiesQuery';
 import { useUiLayoutStore } from './stores/uiLayoutStore';
 import '@xyflow/react/dist/style.css';
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      refetchOnWindowFocus: false,
-      retry: 1,
-    },
-  },
-});
 
 type RootShellProps = {
   readonly platformHealthCapability?: PlatformHealthCapabilityApi;
 };
 
 export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
+  const location = useLocation();
   const focusMode = useUiLayoutStore((state) => state.focusMode);
   const consolePanelHeight = useUiLayoutStore((state) => state.consolePanelHeight);
   const consolePanelVisible = useUiLayoutStore((state) => state.consolePanelVisible);
   const connectionStatus = useUiLayoutStore((state) => state.connectionStatus);
   const setConnectionStatus = useUiLayoutStore((state) => state.setConnectionStatus);
+  const capabilitiesQuery = useCapabilitiesQuery();
   const platformHealth = usePlatformHealthSnapshotQuery(platformHealthCapability);
   const shellHealth = buildShellHealthPresentationModel({
     data: platformHealth.data,
@@ -46,6 +42,8 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
     dataUpdatedAt: platformHealth.dataUpdatedAt,
     errorUpdatedAt: platformHealth.errorUpdatedAt,
   });
+  const isInitialCapabilitiesBootstrapPending =
+    capabilitiesQuery.isPending && !capabilitiesQuery.data && !capabilitiesQuery.isError;
 
   useEffect(() => {
     if (shellHealth.connectionState === null) {
@@ -62,61 +60,111 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
     setConnectionStatus(shellHealth.connectionState);
   }, [connectionStatus, setConnectionStatus, shellHealth.connectionState]);
 
+  useEffect(() => {
+    if (isInitialCapabilitiesBootstrapPending) {
+      setBootstrapStepStatus('capabilities', 'pending');
+      return;
+    }
+
+    if (capabilitiesQuery.isError) {
+      setBootstrapStepStatus(
+        'capabilities',
+        'degraded',
+        'Capabilities could not be loaded. Using the fallback shell configuration.'
+      );
+      return;
+    }
+
+    setBootstrapStepStatus('capabilities', 'complete');
+  }, [
+    capabilitiesQuery.isError,
+    capabilitiesQuery.isPending,
+    capabilitiesQuery.data,
+    isInitialCapabilitiesBootstrapPending,
+  ]);
+
+  useEffect(() => {
+    if (shellHealth.isInitialHealthCheckPending) {
+      setBootstrapStepStatus('health', 'pending');
+      return;
+    }
+
+    if (platformHealth.isError || shellHealth.connectionState?.rest !== 'ok') {
+      setBootstrapStepStatus(
+        'health',
+        'degraded',
+        shellHealth.connectionDetail ?? 'Platform health probes failed during startup.'
+      );
+      return;
+    }
+
+    setBootstrapStepStatus(
+      'health',
+      'complete',
+      shellHealth.connectionDetail ?? 'Platform health settled.'
+    );
+  }, [
+    platformHealth.isError,
+    shellHealth.connectionDetail,
+    shellHealth.isInitialHealthCheckPending,
+  ]);
+
+  useEffect(() => {
+    if (location.pathname.startsWith('/canvas')) {
+      setBootstrapStepStatus('route', 'complete', 'Canvas workbench route is ready');
+      return;
+    }
+
+    setBootstrapStepStatus('route', 'complete', 'Initial route is ready');
+  }, [
+    location.pathname,
+  ]);
+
+  useEffect(() => {
+    completeBootstrapScreen();
+  }, [
+    capabilitiesQuery.isError,
+    capabilitiesQuery.isPending,
+    capabilitiesQuery.data,
+    isInitialCapabilitiesBootstrapPending,
+    location.pathname,
+    platformHealth.isError,
+    shellHealth.connectionDetail,
+    shellHealth.connectionState,
+    shellHealth.isInitialHealthCheckPending,
+  ]);
+
   return (
-    <div className="app-shell-background h-screen w-screen flex flex-col text-foreground overflow-hidden">
-      <TopAppBar
-        connectionDetail={shellHealth.connectionDetail}
-        connectionStateOverride={shellHealth.connectionState}
-        isConnectionChecking={shellHealth.isInitialHealthCheckPending}
-      />
-      <ShellHealthBanner
-        autoRefreshIntervalMs={shellHealth.pollingIntervalMs}
-        connectionState={shellHealth.connectionState}
-        detailMessage={shellHealth.connectionDetail}
-        isFetching={shellHealth.isFetching}
-        lastSettledAtMs={shellHealth.lastSettledAtMs}
-        onRetry={() => {
-          void platformHealth.refetch();
-        }}
-      />
-
-      {/* Main Content */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* Left Navigation */}
-        {!focusMode && <LeftNavigation />}
-
-        {/* Main Workspace */}
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <ResizablePanelGroup direction="vertical">
-            {/* Main Content Area */}
-            <ResizablePanel defaultSize={consolePanelVisible && consolePanelHeight > 0 ? 78 : 100}>
-              <div className="h-full w-full overflow-hidden">
-                <Outlet />
-              </div>
-            </ResizablePanel>
-
-            {/* Bottom Console Drawer */}
-            {!focusMode && consolePanelVisible && consolePanelHeight > 0 && (
-              <>
-                <ResizableHandle />
-                <ResizablePanel defaultSize={22} minSize={12} maxSize={40}>
-                  <Console />
-                </ResizablePanel>
-              </>
-            )}
-          </ResizablePanelGroup>
-        </div>
-      </div>
-    </div>
+    <AppShellFrame
+      bottomDrawer={<BottomConsoleDrawer />}
+      focusMode={focusMode}
+      healthBanner={
+        <ShellHealthBanner
+          autoRefreshIntervalMs={shellHealth.pollingIntervalMs}
+          connectionState={shellHealth.connectionState}
+          detailMessage={shellHealth.connectionDetail}
+          isFetching={shellHealth.isFetching}
+          lastSettledAtMs={shellHealth.lastSettledAtMs}
+          onRetry={() => {
+            platformHealth.refetch().catch(() => undefined);
+          }}
+        />
+      }
+      leftNavigation={<LeftNavigation />}
+      showBottomDrawer={consolePanelVisible && consolePanelHeight > 0}
+      topBar={
+        <TopAppBar
+          connectionDetail={shellHealth.connectionDetail}
+          connectionStateOverride={shellHealth.connectionState}
+          isConnectionChecking={shellHealth.isInitialHealthCheckPending}
+        />
+      }
+    >
+      <Outlet />
+    </AppShellFrame>
   );
 }
 
 export default function Root() {
-  return (
-    <AppServicesProvider>
-      <QueryClientProvider client={queryClient}>
-        <RootShell />
-      </QueryClientProvider>
-    </AppServicesProvider>
-  );
+  return <RootShell />;
 }

@@ -1,8 +1,11 @@
 # Capabilities: Executable Contracts
 
-[← Back to Contracts Registry](../README.md)
+[â† Back to Contracts Registry](../README.md)
 
 This directory contains **executable, schema-validated** capability declarations. These are NOT prose; they drive validation logic.
+
+These assets are companions to the active engine-runtime `v1` pack. They do
+not publish a second contract line for engine-runtime behavior.
 
 ## Files
 
@@ -12,7 +15,7 @@ Universal capability enum. Defines all possible capabilities across all adapters
 
 **Usage**:
 
-- Typescript: Import and use as enum type (via JSON Schema → TypeScript generator).
+- Typescript: Import and use as enum type (via JSON Schema â†’ TypeScript generator).
 - Validation: Capabilities referenced in `RunExecutionPolicy.requiresCapabilities`
   MUST exist in this enum.
 
@@ -142,11 +145,14 @@ When adding a new capability:
 1. Add to `capabilities.schema.json` enum (in appropriate category: signaling, cancellation, etc.).
 2. Update which adapters support it in `adapters.capabilities.json`.
 3. Update `RunExecutionPolicy` validation rule (if gating a new feature, add to Phase roadmap).
-4. Version changes: If breaking (removing capability, changing semantics), bump contract version.
+4. Version changes: If a capability change alters the active engine-runtime
+   boundary, rewrite the active `v1` contract surfaces and companion
+   registries in the same slice. Do not preserve a second active engine-runtime
+   reading path or add an alias page that competes with the canonical pack.
 
 ## References
 
-- [IWorkflowEngine.reference.v1.md](../engine/IWorkflowEngine.reference.v1.md)
+- [IWorkflowEngine.v1.md](../engine/IWorkflowEngine.v1.md)
 - [ExecutionSemantics.v1.md](../engine/ExecutionSemantics.v1.md)
 - [TemporalAdapter.spec.md](../../adapters/temporal/TemporalAdapter.spec.md)
 - [Temporal Capabilities](https://docs.temporal.io/)

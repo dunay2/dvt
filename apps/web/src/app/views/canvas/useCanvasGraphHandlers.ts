@@ -16,6 +16,7 @@ import {
   createCanvasEdgeFromConnection,
   mapDroppedCanonicalNodeToCanvasNode,
 } from './canvasNodeMapper';
+import { canvasViewCopy } from './copy';
 import { guardTransformationAuthoringNode } from './transformationAuthoringGuard';
 import { guardTransformationConnection } from './transformationConnectionGuard';
 import type {
@@ -98,6 +99,7 @@ export function useCanvasGraphHandlers({
   nodes,
   selectedNodeIds,
   inspectorNodeId,
+  canEditEdges,
   focusMode,
   inspectorPanelVisible,
   columnLevelLineageEnabled,
@@ -119,6 +121,11 @@ export function useCanvasGraphHandlers({
   const onConnect = useCallback<NonNullable<ReactFlowProps<Node, Edge>['onConnect']>>(
     (connection) => {
       if (!connection.source || !connection.target) {
+        return;
+      }
+
+      if (!canEditEdges) {
+        toast.error(canvasViewCopy.mutationUnavailableMessage);
         return;
       }
 
@@ -170,10 +177,17 @@ export function useCanvasGraphHandlers({
       });
       pendingConnectionRef.current = connection;
     },
-    [canonicalNodesById, edges, pluginPortMap]
+    [canEditEdges, canonicalNodesById, edges, pluginPortMap]
   );
 
   const confirmEdgeCreation = useCallback(() => {
+    if (!canEditEdges) {
+      toast.error(canvasViewCopy.mutationUnavailableMessage);
+      pendingConnectionRef.current = null;
+      setConfirmEdgeModal({ open: false, edge: null });
+      return;
+    }
+
     const connection = pendingConnectionRef.current;
     if (connection?.source && connection.target) {
       setEdges((existingEdges) =>
@@ -190,7 +204,7 @@ export function useCanvasGraphHandlers({
 
     pendingConnectionRef.current = null;
     setConfirmEdgeModal({ open: false, edge: null });
-  }, [setEdges]);
+  }, [canEditEdges, setEdges]);
 
   const handleInspectNode = useCallback(
     (nodeId: string) => {
@@ -220,6 +234,11 @@ export function useCanvasGraphHandlers({
     [setSelectedNodes]
   );
   const handleAutoLayout = useCallback(() => {
+    if (!canEditEdges) {
+      toast.error(canvasViewCopy.mutationUnavailableMessage);
+      return;
+    }
+
     const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(nodes, edges);
     setNodes(layoutedNodes);
     setEdges(layoutedEdges);
@@ -227,11 +246,16 @@ export function useCanvasGraphHandlers({
     onLayoutComplete(
       Object.fromEntries(layoutedNodes.map((n) => [n.id, { x: n.position.x, y: n.position.y }]))
     );
-  }, [edges, nodes, onLayoutComplete, setEdges, setNodes]);
+  }, [canEditEdges, edges, nodes, onLayoutComplete, setEdges, setNodes]);
 
   const handleDrop = useCallback<React.DragEventHandler<HTMLDivElement>>(
     (event) => {
       event.preventDefault();
+      if (!canEditEdges) {
+        toast.error(canvasViewCopy.mutationUnavailableMessage);
+        return;
+      }
+
       const canonicalNode =
         parseCanonicalDropPayload(event.dataTransfer) ??
         graphStrategy.parseDropPayload(event.dataTransfer);
@@ -285,7 +309,7 @@ export function useCanvasGraphHandlers({
         return [...existingNodes, newNode];
       });
     },
-    [columnLevelLineageEnabled, graphStrategy, setNodes]
+    [canEditEdges, columnLevelLineageEnabled, graphStrategy, setNodes]
   );
 
   const handleDragOver = useCallback<React.DragEventHandler<HTMLDivElement>>((event) => {
@@ -309,6 +333,11 @@ export function useCanvasGraphHandlers({
 
   const handleRemoveNode = useCallback(
     (nodeId: string) => {
+      if (!canEditEdges) {
+        toast.error(canvasViewCopy.mutationUnavailableMessage);
+        return;
+      }
+
       const nodeName = nodes.find((node) => node.id === nodeId)?.data?.name ?? nodeId;
       setNodes((existingNodes) => existingNodes.filter((node) => node.id !== nodeId));
       setEdges((existingEdges) =>
@@ -323,6 +352,7 @@ export function useCanvasGraphHandlers({
       toast.success(`Removed ${nodeName}`);
     },
     [
+      canEditEdges,
       inspectorNodeId,
       nodes,
       selectedNodeIds,

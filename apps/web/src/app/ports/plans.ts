@@ -1,20 +1,15 @@
-import type { GenericGraphSourceV1 } from '@dvt/contracts';
+import type { GitArtifactRef, PlanPreviewProvenance, PlanPreviewRequest } from '@dvt/contracts';
 
-import type { ExecutionPlan } from '../types/dbt';
 import type { PlanRef, RunContext } from '../types/engine';
+import type { PlanViewModel } from '../types/plans';
+
+export type { GitArtifactRef, PlanPreviewProvenance };
 
 // ---------------------------------------------------------------------------
 // Presentation-facing DTOs for the plans domain
 // ---------------------------------------------------------------------------
 
-export type PlanPreviewInput = {
-  previewProfile: 'planner-generic-v1' | 'transformation-sql-first-v1';
-  graphSource: GenericGraphSourceV1;
-  selectedNodeIds: string[];
-  context: RunContext;
-  planName?: string;
-  persist: true;
-};
+export type PlanPreviewInput = PlanPreviewRequest;
 
 // ---------------------------------------------------------------------------
 // Plans port — presentation-layer contract for plan operations
@@ -27,6 +22,6 @@ export type PlanPreviewInput = {
  * in the composition root. Views and hooks depend only on this interface.
  */
 export interface IPlansPort {
-  previewPlan: (input: PlanPreviewInput) => Promise<ExecutionPlan>;
-  importPlan: (planRef: PlanRef, context: RunContext) => Promise<ExecutionPlan>;
+  previewPlan: (input: PlanPreviewInput) => Promise<PlanViewModel>;
+  importPlan: (planRef: PlanRef, context: RunContext) => Promise<PlanViewModel>;
 }

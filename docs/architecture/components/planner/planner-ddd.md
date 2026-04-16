@@ -2,7 +2,7 @@
 title: planner Structure and Module Map
 status: Active
 owner: Planning Domain / Architecture
-last_reviewed: 2026-04-08
+last_reviewed: 2026-04-10
 ---
 
 # planner Structure and Module Map
@@ -15,7 +15,6 @@ mutable `PlanAggregate` API in the active runtime path.
 ```mermaid
 flowchart LR
   Facade["PlannerFacade"] --> Mapper["PlannerEnvelopeMapper"]
-  Facade --> Resolver["IGraphSourceResolver"]
   Facade --> Planner["Planner"]
   Planner --> Validator["InputEnvelopeValidator"]
   Planner --> Graph["GraphBuilder"]
@@ -30,7 +29,7 @@ flowchart LR
 
 - `PlannerFacade`: contract boundary and orchestration entrypoint
 - `PlannerEnvelopeMapper`: converts contract-level input into planner-domain input
-- `IGraphSourceResolver`: resolves referenced graph artifacts without widening planner ownership
+- source-native adaptation: happens before planner admission and stays outside the planner package
 - `Planner`: coordinates validation, graph construction, selection, and assembly
 - `GraphBuilder` and `NodeSelector`: derive the executable subgraph
 - step factories plus `IStepTypeRegistry`: keep per-kind config validation explicit
@@ -40,7 +39,6 @@ flowchart LR
 
 - [PlannerFacade.ts](../../../../packages/@dvt/planner/src/application/PlannerFacade.ts)
 - [PlannerEnvelopeMapper.ts](../../../../packages/@dvt/planner/src/application/PlannerEnvelopeMapper.ts)
-- [IGraphSourceResolver.ts](../../../../packages/@dvt/planner/src/ports/IGraphSourceResolver.ts)
 - [Planner.ts](../../../../packages/@dvt/planner/src/domain/Planner.ts)
 - [GraphBuilder.ts](../../../../packages/@dvt/planner/src/domain/graph/GraphBuilder.ts)
 - [PlanAssembler.ts](../../../../packages/@dvt/planner/src/domain/PlanAssembler.ts)

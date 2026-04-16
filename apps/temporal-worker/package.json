@@ -1,0 +1,32 @@
+{
+  "name": "dvt-temporal-worker",
+  "private": true,
+  "type": "module",
+  "version": "0.1.0",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "prebuild": "pnpm --filter \"dvt-temporal-worker^...\" build",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/server.js",
+    "pretypecheck": "pnpm --filter \"dvt-temporal-worker^...\" build",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p test/tsconfig.json --noEmit",
+    "pretest": "node ../../scripts/skip-pretest-if-ci.cjs || pnpm --filter \"dvt-temporal-worker^...\" build",
+    "test": "vitest run --config vitest.config.ts"
+  },
+  "dependencies": {
+    "@dvt/adapter-postgres": "workspace:*",
+    "@dvt/adapter-temporal": "workspace:*",
+    "@dvt/artifacts": "workspace:*",
+    "@dvt/contracts": "workspace:*",
+    "@dvt/engine": "workspace:*",
+    "@temporalio/worker": "1.16.0",
+    "pino": "^10.3.1",
+    "zod": "^3.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0",
+    "vitest": "3.2.4"
+  }
+}

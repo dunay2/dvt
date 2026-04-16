@@ -2,7 +2,7 @@
 title: @dvt/planner
 status: Active
 owner: Planning Domain / Architecture / Docs
-last_reviewed: 2026-04-08
+last_reviewed: 2026-04-10
 ---
 
 # @dvt/planner
@@ -11,11 +11,12 @@ last_reviewed: 2026-04-08
 
 1. [Planner current state assessment](../../../planning/status/planner-current-state-assessment.md)
 2. [Planner contracts](../../../contracts/planner/index.md)
-3. [GenericGraphSource technical manual](../../../guides/generic-graph-source-technical-manual-20260404.md)
-4. [GenericGraphSource user manual](../../../guides/generic-graph-source-user-manual-20260404.md)
-5. [Planner cycle detection technical manual](../../../guides/planner-cycle-detection-technical-manual-20260404.md)
-6. [Planner cycle detection user manual](../../../guides/planner-cycle-detection-user-manual-20260404.md)
-7. [MW-A2 GenericGraphSource plan](../../../planning/proposals/mandatory/runtime-and-contracts/mw-a2-generic-graph-source-plan-20260404.md)
+3. [Transformation flow compiler mapping v1](../../../contracts/planner/TransformationFlowCompiler.v1.md)
+4. [GenericGraphSource technical manual](../../../guides/generic-graph-source-technical-manual-20260404.md)
+5. [GenericGraphSource user manual](../../../guides/generic-graph-source-user-manual-20260404.md)
+6. [Planner cycle detection technical manual](../../../guides/planner-cycle-detection-technical-manual-20260404.md)
+7. [Planner cycle detection user manual](../../../guides/planner-cycle-detection-user-manual-20260404.md)
+8. [MW-A2 GenericGraphSource plan](../../../planning/proposals/mandatory/runtime-and-contracts/mw-a2-generic-graph-source-plan-20260404.md)
 
 ## Scope and location
 
@@ -27,17 +28,23 @@ last_reviewed: 2026-04-08
 
 - public boundary: `PlannerFacade`
 - public envelope: `PlannerInputEnvelopeV1`
-- canonical input sources: `manifestRef` or `graphSource`
-- manifest-ref resolution port: `IGraphSourceResolver`
+- canonical input source: `graphSource`
+- the first SQL-first preview profile now freezes one compiler-governed
+  `graphSource` mapping into `PREPARE_POSTGRES_TRANSFORM ->
+POSTGRES_SQL_TRANSFORM -> CAPTURE_MATERIALIZATION_EVIDENCE`
+- source-native adaptation happens before planner admission
 - canonical plan artifact: `ExecutionPlan.v1.ts`
+- canonical per-step retry ownership: `ExecutionStep.retryPolicy`
 - plan version source: `CURRENT_EXECUTION_PLAN_VERSION`
-- current manifest normalization helper: `derivePlannerGraphSourceFromManifest`
+- retained manifest normalization utility: `derivePlannerGraphSourceFromManifest`
 
 ## Target truth
 
 - `graphSource` remains the canonical typed planner input boundary
-- `manifestRef` remains the production artifact-ref path
-- resolver composition stays outside the planner domain package
+- the SQL-first transformation profile is expressed as a typed compiler mapping
+  inside `graphSource`, not as a second planner ingress
+- source-native refs such as DBT manifest artifacts stay outside the planner
+  package and do not appear in the canonical planner ingress
 - planner component pages stay summary-only and point back to canonical planner docs
 
 ## Component map
@@ -46,7 +53,6 @@ last_reviewed: 2026-04-08
 flowchart LR
   Caller["API or integrator"] --> Facade["PlannerFacade"]
   Facade --> Mapper["PlannerEnvelopeMapper"]
-  Facade --> Resolver["IGraphSourceResolver"]
   Facade --> Planner["Planner domain service"]
   Planner --> Validator["InputEnvelopeValidator"]
   Planner --> Graph["GraphBuilder"]
@@ -60,7 +66,6 @@ flowchart LR
 
 - [PlannerFacade.ts](../../../../packages/@dvt/planner/src/application/PlannerFacade.ts)
 - [PlannerEnvelopeMapper.ts](../../../../packages/@dvt/planner/src/application/PlannerEnvelopeMapper.ts)
-- [IGraphSourceResolver.ts](../../../../packages/@dvt/planner/src/ports/IGraphSourceResolver.ts)
 - [Planner.ts](../../../../packages/@dvt/planner/src/domain/Planner.ts)
 - [PlanAssembler.ts](../../../../packages/@dvt/planner/src/domain/PlanAssembler.ts)
 - [ExecutionPlan.v1.ts](../../../../packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v1.ts)

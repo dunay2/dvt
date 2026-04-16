@@ -16,25 +16,275 @@
         display: flex;
         align-items: center;
         justify-content: center;
+        padding: 24px;
         background:
           radial-gradient(circle at 12% 18%, rgba(255, 122, 24, 0.18), transparent 18%),
           radial-gradient(circle at 78% 16%, rgba(62, 166, 255, 0.15), transparent 20%),
           radial-gradient(circle at 48% 112%, rgba(56, 189, 248, 0.12), transparent 22%),
           linear-gradient(180deg, #040712 0%, #050816 100%);
+        transition: opacity 120ms ease;
       }
-      #app-loading-screen img {
-        width: min(72vw, 520px);
-        max-height: 72vh;
-        object-fit: contain;
+      #app-loading-screen[data-state='complete'] {
+        opacity: 0;
+        pointer-events: none;
+      }
+      #app-loading-shell {
+        width: min(96vw, 840px);
+      }
+      #app-loading-status {
+        border: 1px solid rgba(120, 146, 182, 0.28);
+        border-radius: 16px;
+        background: rgba(5, 10, 22, 0.84);
+        -webkit-backdrop-filter: blur(10px);
+        backdrop-filter: blur(10px);
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.28);
+        padding: 18px 18px 14px;
+        color: #eff5ff;
+      }
+      #app-loading-status-main {
+        margin-top: 14px;
+        display: grid;
+        grid-template-columns: minmax(220px, 0.7fr) minmax(0, 1fr);
+        gap: 16px;
+        align-items: start;
+      }
+      #app-loading-status-media {
         border-radius: 12px;
-        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
+        padding: 8px;
+        background: rgba(255, 255, 255, 0.92);
+        box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.08);
+      }
+      #app-loading-status-media img {
+        width: 100%;
+        display: block;
+        border-radius: 8px;
+      }
+      #app-loading-status-flow {
+        min-width: 0;
+      }
+      #app-loading-title {
+        margin: 0;
+        font-size: 1.5rem;
+        font-weight: 700;
+        line-height: 1.2;
+      }
+      #app-loading-message {
+        margin: 8px 0 0;
+        color: rgba(223, 232, 249, 0.82);
+        font-size: 0.95rem;
+        line-height: 1.5;
+      }
+      #app-loading-steps {
+        margin: 16px 0 0;
+        padding: 0;
+        list-style: none;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      #app-loading-steps li {
+        display: grid;
+        grid-template-columns: 14px minmax(0, 1fr);
+        column-gap: 12px;
+        row-gap: 2px;
+        align-items: start;
+      }
+      #app-loading-steps li::before {
+        content: '';
+        display: block;
+        width: 10px;
+        height: 10px;
+        margin-top: 5px;
+        border-radius: 999px;
+        background: rgba(122, 144, 177, 0.52);
+        box-shadow: 0 0 0 4px rgba(122, 144, 177, 0.12);
+      }
+      #app-loading-steps li[data-status='pending']::before {
+        background: #f59e0b;
+        box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.18);
+      }
+      #app-loading-steps li[data-status='complete']::before {
+        background: #22c55e;
+        box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.18);
+      }
+      #app-loading-steps li[data-status='degraded']::before {
+        background: #f59e0b;
+        box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.18);
+      }
+      #app-loading-steps li[data-status='blocked']::before {
+        background: #fb7185;
+        box-shadow: 0 0 0 4px rgba(251, 113, 133, 0.18);
+      }
+      #app-loading-steps li[data-status='error']::before {
+        background: #ef4444;
+        box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.18);
+      }
+      .app-loading-step-label {
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: #eff5ff;
+      }
+      .app-loading-step-detail {
+        grid-column: 2;
+        color: rgba(223, 232, 249, 0.72);
+        font-size: 0.85rem;
+        line-height: 1.45;
+      }
+      #app-loading-progress {
+        margin-top: 16px;
+      }
+      .app-loading-progress-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 10px;
+      }
+      .app-loading-progress-kicker {
+        color: rgba(223, 232, 249, 0.76);
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+      }
+      .app-loading-progress-value {
+        color: rgba(239, 245, 255, 0.92);
+        font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+        font-size: 0.78rem;
+        letter-spacing: 0.04em;
+      }
+      .app-loading-progress-track {
+        position: relative;
+        margin-top: 8px;
+        height: 8px;
+        border-radius: 999px;
+        background: rgba(148, 163, 184, 0.25);
+        overflow: hidden;
+      }
+      .app-loading-progress-fill {
+        display: block;
+        width: 0;
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, #22c55e 0%, #10b981 100%);
+        transition: width 220ms ease-out, background-color 220ms ease-out;
+      }
+      #app-loading-progress[data-tone='loading'] .app-loading-progress-fill {
+        background: linear-gradient(90deg, #f59e0b 0%, #f97316 100%);
+      }
+      #app-loading-progress[data-tone='blocked'] .app-loading-progress-fill {
+        background: linear-gradient(90deg, #f97316 0%, #f43f5e 100%);
+      }
+      #app-loading-progress[data-tone='error'] .app-loading-progress-fill {
+        background: linear-gradient(90deg, #ef4444 0%, #dc2626 100%);
+      }
+      #app-loading-progress[data-tone='complete'] .app-loading-progress-fill {
+        background: linear-gradient(90deg, #22c55e 0%, #10b981 100%);
+      }
+      .app-loading-progress-label {
+        margin: 8px 0 0;
+        color: rgba(223, 232, 249, 0.74);
+        font-size: 0.83rem;
+        line-height: 1.45;
+      }
+      #app-loading-meta {
+        margin-top: 14px;
+        padding-top: 10px;
+        border-top: 1px solid rgba(120, 146, 182, 0.24);
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      .app-loading-meta-item {
+        color: rgba(162, 176, 201, 0.86);
+        font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+        font-size: 0.72rem;
+        letter-spacing: 0.04em;
+      }
+      #app-loading-screen[data-state='blocked'] #app-loading-title {
+        color: #fde68a;
+      }
+      #app-loading-screen[data-state='blocked'] #app-loading-message {
+        color: #fde68a;
+      }
+      #app-loading-screen[data-state='error'] #app-loading-title {
+        color: #fecaca;
+      }
+      #app-loading-screen[data-state='error'] #app-loading-message {
+        color: #fecaca;
+      }
+      @media (max-width: 900px) {
+        #app-loading-shell {
+          width: min(92vw, 620px);
+        }
+        #app-loading-status-main {
+          grid-template-columns: minmax(0, 1fr);
+        }
+        #app-loading-status-media {
+          max-width: 300px;
+        }
+      }
+      @media (max-width: 700px) {
+        #app-loading-status-media {
+          max-width: none;
+        }
       }
     </style>
   </head>
 
   <body>
     <div id="app-loading-screen" aria-label="Loading screen">
-      <img src="/favicon/raven-plan.jpg" alt="Raven plan loading screen" />
+      <div id="app-loading-shell">
+        <section id="app-loading-status" aria-live="polite" aria-atomic="true">
+          <h1 id="app-loading-title">Preparing Raven</h1>
+          <p id="app-loading-message">
+            Loading startup modules in order. The workspace opens once bootstrap settles.
+          </p>
+          <div id="app-loading-status-main">
+            <figure id="app-loading-status-media" aria-hidden="true">
+              <img src="/favicon/raven-plan.jpg" alt="Raven plan loading screen" />
+            </figure>
+            <div id="app-loading-status-flow">
+              <ul id="app-loading-steps">
+                <li data-bootstrap-step="hydrate" data-status="pending">
+                  <span class="app-loading-step-label">Hydrating application</span>
+                  <span class="app-loading-step-detail" data-bootstrap-detail>
+                    Mounting the Raven shell
+                  </span>
+                </li>
+                <li data-bootstrap-step="services" data-status="pending">
+                  <span class="app-loading-step-label">Preparing app services</span>
+                  <span class="app-loading-step-detail" data-bootstrap-detail>
+                    Building app services and query client
+                  </span>
+                </li>
+                <li data-bootstrap-step="capabilities" data-status="pending">
+                  <span class="app-loading-step-label">Loading runtime capabilities</span>
+                  <span class="app-loading-step-detail" data-bootstrap-detail>
+                    Resolving enabled plugins and workspace surfaces
+                  </span>
+                </li>
+                <li data-bootstrap-step="health" data-status="pending">
+                  <span class="app-loading-step-label">Checking platform health</span>
+                  <span class="app-loading-step-detail" data-bootstrap-detail>
+                    Polling health and readiness endpoints
+                  </span>
+                </li>
+                <li data-bootstrap-step="route" data-status="pending">
+                  <span class="app-loading-step-label">Preparing initial route</span>
+                  <span class="app-loading-step-detail" data-bootstrap-detail>
+                    Preparing the active workspace surface
+                  </span>
+                </li>
+              </ul>
+              <div id="app-loading-progress" aria-label="Startup progress"></div>
+            </div>
+          </div>
+          <footer id="app-loading-meta">
+            <span id="app-loading-version" class="app-loading-meta-item">Version --</span>
+            <span id="app-loading-build-date" class="app-loading-meta-item">Build --</span>
+          </footer>
+        </section>
+      </div>
     </div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>

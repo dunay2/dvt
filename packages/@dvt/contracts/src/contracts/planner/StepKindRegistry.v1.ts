@@ -57,7 +57,12 @@ export const KNOWN_STEP_KINDS = {
   DBT_MODEL: 'DBT_MODEL',
   DBT_TEST: 'DBT_TEST',
   DBT_SNAPSHOT: 'DBT_SNAPSHOT',
+  PREPARE_POSTGRES_TRANSFORM: 'PREPARE_POSTGRES_TRANSFORM',
+  POSTGRES_SQL_TRANSFORM: 'POSTGRES_SQL_TRANSFORM',
+  CAPTURE_MATERIALIZATION_EVIDENCE: 'CAPTURE_MATERIALIZATION_EVIDENCE',
 } as const;
+
+const KNOWN_STEP_KIND_VALUES = new Set<string>(Object.values(KNOWN_STEP_KINDS));
 
 /**
  * Union type of all canonical step kinds.
@@ -78,7 +83,7 @@ export type KnownStepKind = (typeof KNOWN_STEP_KINDS)[keyof typeof KNOWN_STEP_KI
  * kind is only bridge-registered.
  */
 export function isKnownStepKind(kind: string): kind is KnownStepKind {
-  return kind in KNOWN_STEP_KINDS;
+  return KNOWN_STEP_KIND_VALUES.has(kind);
 }
 
 // ── Bridge registry ───────────────────────────────────────────────────────────
@@ -149,10 +154,17 @@ export interface StepKindBridgeEntry {
  * Any execution path that dispatches a bridge-registered kind MUST emit a
  * warning-grade diagnostic identifying the kind and the provisional status.
  */
-export const STEP_KIND_BRIDGE_REGISTRY: readonly StepKindBridgeEntry[] = [
-  // No provisional kinds registered at Stage 1.1 canonicalization time.
-  // Add entries here when a new kind is staged for promotion.
-];
+function defineStepKindBridgeRegistry(
+  entries: readonly StepKindBridgeEntry[]
+): readonly StepKindBridgeEntry[] {
+  return Object.freeze([...entries]);
+}
+
+export const STEP_KIND_BRIDGE_REGISTRY: readonly StepKindBridgeEntry[] =
+  defineStepKindBridgeRegistry([
+    // No provisional kinds registered at Stage 1.1 canonicalization time.
+    // Add entries here when a new kind is staged for promotion.
+  ]);
 
 /**
  * Returns `true` if `kind` appears in the bridge registry.
@@ -161,7 +173,13 @@ export const STEP_KIND_BRIDGE_REGISTRY: readonly StepKindBridgeEntry[] = [
  * be treated as canonical. The caller MUST emit a warning-grade diagnostic.
  */
 export function isBridgeRegisteredStepKind(kind: string): boolean {
-  return STEP_KIND_BRIDGE_REGISTRY.some((e) => e.kind === kind);
+  for (const entry of STEP_KIND_BRIDGE_REGISTRY) {
+    if (entry.kind === kind) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 /**
@@ -169,5 +187,11 @@ export function isBridgeRegisteredStepKind(kind: string): boolean {
  * bridge-registered.
  */
 export function getBridgeEntry(kind: string): StepKindBridgeEntry | undefined {
-  return STEP_KIND_BRIDGE_REGISTRY.find((e) => e.kind === kind);
+  for (const entry of STEP_KIND_BRIDGE_REGISTRY) {
+    if (entry.kind === kind) {
+      return entry;
+    }
+  }
+
+  return undefined;
 }

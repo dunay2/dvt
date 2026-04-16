@@ -1,8 +1,7 @@
-import type { PlannerBuildResultV1 } from '@dvt/contracts';
+import { parsePlanRef, type PlannerBuildResultV1 } from '@dvt/contracts';
 import { PlannerFacade } from '@dvt/planner';
 import { describe, expect, it, vi } from 'vitest';
 
-import { ManifestArtifactResolutionError } from '../../../src/application/errors/ManifestArtifactResolutionError.js';
 import { PlannerBackedStartRunUseCase } from '../../../src/application/services/PlannerBackedStartRunUseCase.js';
 import { EnvironmentId, ProjectId, TenantId } from '../../../src/domain/auth/types.js';
 
@@ -40,13 +39,13 @@ const PLANNER_COMMAND = {
   selection: ['model.orders'],
 };
 
-const STORED_PLAN_REF = {
+const STORED_PLAN_REF = parsePlanRef({
   uri: 'dvt-plan://postgres/plan-1',
   sha256: 'abc123',
   schemaVersion: 'v1.2',
   planId: 'plan-1',
   planVersion: '1.0',
-};
+});
 
 describe('PlannerBackedStartRunUseCase', () => {
   it('keeps policy-first precedence through planner-backed flow', async () => {
@@ -94,7 +93,6 @@ describe('PlannerBackedStartRunUseCase', () => {
               stepKind: 'DBT_MODEL',
               dependsOn: [],
               stepTypeConfig: {
-                retries: 99,
                 stepTimeoutMs: 900000,
                 concurrency: 128,
               },
@@ -108,10 +106,13 @@ describe('PlannerBackedStartRunUseCase', () => {
     expect(capturedBuildResult).toBeDefined();
     expect(capturedBuildResult?.plan.steps[0]).toMatchObject({
       kind: 'DBT_MODEL',
+      retryPolicy: {
+        maxAttempts: 2,
+        initialInterval: '1s',
+        maximumInterval: '60s',
+        backoffCoefficient: 2,
+      },
       stepTypeConfig: {
-        retries: {
-          maxAttempts: 2,
-        },
         stepTimeoutMs: 30000,
         concurrency: {
           maxInFlight: 4,
@@ -178,11 +179,11 @@ describe('PlannerBackedStartRunUseCase', () => {
     expect(capturedBuildResult).toBeDefined();
     expect(capturedBuildResult?.plan.steps[0]).toMatchObject({
       kind: 'DBT_MODEL',
-      stepTypeConfig: {
-        retries: {
-          maxAttempts: 1,
-          backoffMs: 0,
-        },
+      retryPolicy: {
+        maxAttempts: 1,
+        initialInterval: '1s',
+        maximumInterval: '60s',
+        backoffCoefficient: 2,
       },
     });
     expect(capturedBuildResult?.plan.steps[0]?.stepTypeConfig).not.toHaveProperty('stepTimeoutMs');
@@ -245,7 +246,9 @@ describe('PlannerBackedStartRunUseCase', () => {
     expect(planStore.markInvalid).not.toHaveBeenCalled();
     expect(delegate.execute).toHaveBeenCalledWith(
       {
-        ...PLANNER_COMMAND,
+        runId: PLANNER_COMMAND.runId,
+        targetAdapter: PLANNER_COMMAND.targetAdapter,
+        selection: PLANNER_COMMAND.selection,
         planRef: STORED_PLAN_REF,
       },
       AUTHORIZED_CONTEXT
@@ -352,99 +355,6 @@ describe('PlannerBackedStartRunUseCase', () => {
     expect(delegate.execute).toHaveBeenCalledWith(command, AUTHORIZED_CONTEXT);
     expect(compileTelemetry.recordPlanCompileLatency).not.toHaveBeenCalled();
   });
-
-  it.each([
-    {
-      kind: 'unsupported_scheme' as const,
-      expectedReason: 'Unsupported manifestRef URI scheme: ftp.',
-      expectedCause: 'manifest_ref_unsupported_scheme',
-    },
-    {
-      kind: 'invalid_artifact_locator' as const,
-      expectedReason: 'Manifest artifact locator is invalid: missing key.',
-      expectedCause: 'manifest_ref_invalid_locator',
-    },
-    {
-      kind: 'file_scheme_prohibited' as const,
-      expectedReason: 'file:// manifestRef is not allowed in production.',
-      expectedCause: 'manifest_ref_file_scheme_prohibited',
-    },
-    {
-      kind: 'artifact_not_found' as const,
-      expectedReason: 'Manifest artifact could not be found.',
-      expectedCause: 'manifest_ref_not_found',
-    },
-    {
-      kind: 'integrity_mismatch' as const,
-      expectedReason: 'Manifest artifact integrity mismatch.',
-      expectedCause: 'manifest_ref_integrity_mismatch',
-    },
-    {
-      kind: 'invalid_manifest_payload' as const,
-      expectedReason: 'Manifest artifact payload is invalid.',
-      expectedCause: 'manifest_ref_invalid_payload',
-    },
-  ])(
-    'maps predictable manifest resolution failure $kind to plan_rejected',
-    async ({ kind, expectedReason, expectedCause }) => {
-      const compileTelemetry = { recordPlanCompileLatency: vi.fn() };
-      const planStore = {
-        storePlan: vi.fn(async () => STORED_PLAN_REF),
-        markValid: vi.fn(async () => {}),
-        markInvalid: vi.fn(async () => {}),
-      };
-      const delegate = {
-        execute: vi.fn(async () => ({
-          ok: true as const,
-          value: { kind: 'accepted' as const, runId: 'run-1', accepted: true },
-        })),
-      };
-      const useCase = new PlannerBackedStartRunUseCase({
-        planner: {
-          buildPlan: vi.fn(async () =>
-            Promise.reject(
-              new ManifestArtifactResolutionError(kind, `fixture failure for ${kind}`, {
-                ...(kind === 'unsupported_scheme'
-                  ? { detail: 'ftp' }
-                  : kind === 'invalid_artifact_locator'
-                    ? { detail: 'missing key' }
-                    : {}),
-              })
-            )
-          ),
-        } as never,
-        planStore: planStore as never,
-        validator: {
-          validatePlan: vi.fn(async () => ({
-            status: 'OK' as const,
-            planId: 'plan-1',
-            adapterId: 'mock',
-          })),
-        } as never,
-        delegate: delegate as never,
-        compileTelemetry: compileTelemetry as never,
-      });
-
-      await expect(useCase.execute(PLANNER_COMMAND, AUTHORIZED_CONTEXT)).resolves.toEqual({
-        ok: true,
-        value: {
-          kind: 'plan_rejected',
-          accepted: false,
-          code: 'REJECTED',
-          reason: expectedReason,
-          cause: expectedCause,
-        },
-      });
-      expect(planStore.storePlan).not.toHaveBeenCalled();
-      expect(planStore.markValid).not.toHaveBeenCalled();
-      expect(planStore.markInvalid).not.toHaveBeenCalled();
-      expect(delegate.execute).not.toHaveBeenCalled();
-      expect(compileTelemetry.recordPlanCompileLatency).toHaveBeenCalledTimes(1);
-      expect(compileTelemetry.recordPlanCompileLatency.mock.calls[0]?.[1]).toBe(
-        'manifest_resolution_error'
-      );
-    }
-  );
 
   it('rethrows unexpected planner errors', async () => {
     const compileTelemetry = { recordPlanCompileLatency: vi.fn() };

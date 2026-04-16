@@ -2,7 +2,7 @@
 title: Read subsystem
 status: Active
 owner: Architecture / Docs
-last_reviewed: 2026-04-09
+last_reviewed: 2026-04-12
 ---
 
 # Read subsystem
@@ -23,10 +23,12 @@ flowchart LR
   Api --> GetRun["GetRunStatusUseCase"]
   Api --> GetEvents["GetRunEventsUseCase"]
   ListRuns --> StateRead["IRunStateStoreRead.listRuns + getSnapshot"]
-  GetRun --> Engine["IWorkflowEngine.getRunStatus / enrichRunStatus"]
+  GetRun --> Engine["IWorkflowEngine.getRunStatus"]
+  GetRun --> Enrich["IRunEnrichmentService.getRunEnrichment when query.enriched = true"]
   GetRun --> Metadata["IRunStateStoreRead.getRunMetadataByRunId"]
   GetEvents --> EventStore["IRunStateStoreRead.listEvents"]
   Engine --> StateRead
+  Enrich --> Provider["IProviderAdapter.getProviderStatusView (live provider view)"]
   Api --> Web
 ```
 
@@ -34,6 +36,8 @@ flowchart LR
 
 - run-list summaries are read from state-store metadata plus snapshot status;
 - run detail starts from run metadata and engine-backed snapshot status;
+- provider live status can enrich operator detail, but it must not override the
+  canonical event-log-backed status returned by `getRunStatus`;
 - timeline events come from event-store reads, not from the summary list path;
 - the web shell renders read results, but it does not derive runtime truth by
   itself.
@@ -60,7 +64,8 @@ flowchart LR
   [listRunsUseCase.ts](../../../../../apps/api/src/application/services/listRunsUseCase.ts),
   [getRunStatusUseCase.ts](../../../../../apps/api/src/application/services/getRunStatusUseCase.ts)
 - engine read surface:
-  [WorkflowEngine.ts](../../../../../packages/@dvt/engine/src/core/WorkflowEngine.ts)
+  [WorkflowEngine.ts](../../../../../packages/@dvt/engine/src/core/WorkflowEngine.ts),
+  [RunEnrichmentService.ts](../../../../../packages/@dvt/engine/src/services/RunEnrichmentService.ts)
 
 ## Current Posture
 
@@ -70,8 +75,26 @@ patterns:
 - snapshot-backed summary and detail reads;
 - event-timeline reads for operator diagnostics.
 
+The current API shape keeps canonical status and optional enrichment inside one
+use case:
+
+- `GetRunStatusUseCase` calls `engine.getRunStatus(...)` by default;
+- the same use case switches to
+  `runEnrichmentService.getRunEnrichment(...)` when `query.enriched = true`;
+- the enriched response keeps canonical status at the top level and exposes
+  provider diagnostics under `providerView`;
+- there is no separate `EnrichRunStatusUseCase` in the current code.
+
 The documentation rule is to explain those two paths as one subsystem while
-keeping the source of truth explicit at each step.
+keeping the source of truth explicit at each step and avoiding target-state
+interactors on active/current pages.
+
+The contract reset under `AR-A12-B` is now reflected in the active boundary:
+`CanonicalRunStatus`, `RunStatusEnrichment`, and `ProviderRunStatusView` are
+explicit models. `AR-A12-C` is now closed with regression guards that keep
+enrichment on `IRunEnrichmentService` and keep the narrowed
+`IWorkflowEngine` facade from silently regrowing provider-backed read
+responsibilities.
 
 ## Related Pages
 

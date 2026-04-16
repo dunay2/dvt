@@ -2,7 +2,7 @@
 title: DVT Glossary
 status: Active
 owner: Docs / Architecture
-last_reviewed: 2026-03-08
+last_reviewed: 2026-04-13
 ---
 
 # DVT Glossary
@@ -45,5 +45,4 @@ definition layer for readers across code, planning, operations, and review.
 
 For engine-level canonical field and envelope terminology, see:
 
-- [Glossary Contract v2.0](../architecture/components/engine/contracts/engine/GlossaryContract.v2.0.md)
 - [Glossary Contract v1](../architecture/components/engine/contracts/engine/GlossaryContract.v1.md)

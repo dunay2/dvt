@@ -1,0 +1,21 @@
+/*
+  Density proposal
+  ----------------
+  Two modes only:
+  - comfortable: demos / onboarding / presentations
+  - compact: operational use
+*/
+
+:root[data-density='comfortable'] {
+  --dvt-density-control-height: 36px;
+  --dvt-density-row-height: 40px;
+  --dvt-density-table-cell-y: 10px;
+  --dvt-density-card-padding: 16px;
+}
+
+:root[data-density='compact'] {
+  --dvt-density-control-height: 32px;
+  --dvt-density-row-height: 34px;
+  --dvt-density-table-cell-y: 7px;
+  --dvt-density-card-padding: 12px;
+}

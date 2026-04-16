@@ -1,15 +1,23 @@
-import { CURRENT_SIGNAL_SEMANTICS_VERSION, type IStepTypeRegistry } from '@dvt/contracts';
+import {
+  CURRENT_SIGNAL_SEMANTICS_VERSION,
+  asNonBlankString,
+  type IStepTypeRegistry,
+  type PlanRefSchemaT,
+  type RunExecutionPolicy,
+} from '@dvt/contracts';
 import type { IProviderAdapter } from '@dvt/engine';
 import { describe, expect, it, vi } from 'vitest';
 
 import { StoredPlanExecutabilityValidator } from '../../../src/application/services/StoredPlanExecutabilityValidator.js';
 
-const PLAN_REF = {
-  uri: 'dvt-plan://postgres/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
-  sha256: 'abc123',
-  schemaVersion: 'v1.2',
-  planId: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
-  planVersion: '1.0',
+const PLAN_REF: PlanRefSchemaT = {
+  uri: asNonBlankString(
+    'dvt-plan://postgres/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'
+  ),
+  sha256: asNonBlankString('abc123'),
+  schemaVersion: asNonBlankString('v1.2'),
+  planId: asNonBlankString('bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'),
+  planVersion: asNonBlankString('1.0'),
 };
 
 describe('StoredPlanExecutabilityValidator', () => {
@@ -34,7 +42,9 @@ describe('StoredPlanExecutabilityValidator', () => {
     const validator = new StoredPlanExecutabilityValidator({
       fetcher: {
         fetchForValidation: vi.fn(async () =>
-          storedPlanArtifact({ executionPolicy: { requiresCapabilities: ['workflow.pause'] } })
+          storedPlanArtifact({
+            executionPolicy: { requiresCapabilities: [asNonBlankString('workflow.pause')] },
+          })
         ),
       },
       adapters: new Map([['mock', makeAdapter(['basic-execution'])]]),
@@ -57,7 +67,9 @@ describe('StoredPlanExecutabilityValidator', () => {
     const validator = new StoredPlanExecutabilityValidator({
       fetcher: {
         fetchForValidation: vi.fn(async () =>
-          storedPlanArtifact({ executionPolicy: { requiresCapabilities: ['workflow.pause'] } })
+          storedPlanArtifact({
+            executionPolicy: { requiresCapabilities: [asNonBlankString('workflow.pause')] },
+          })
         ),
       },
       adapters: new Map([
@@ -71,7 +83,7 @@ describe('StoredPlanExecutabilityValidator', () => {
             async cancelRun() {
               throw new Error('not used');
             },
-            async getRunStatus() {
+            async getProviderStatusView() {
               throw new Error('not used');
             },
             async signal() {
@@ -299,9 +311,9 @@ function storedPlanArtifact(
     schemaVersion: string;
     stepKind: string;
     stepTypeConfig: Record<string, unknown>;
-    executionPolicy: { requiresCapabilities?: string[] };
+    executionPolicy: RunExecutionPolicy;
   }>
-): { bytes: Uint8Array; executionPolicy: { requiresCapabilities?: string[] } } {
+): { bytes: Uint8Array; executionPolicy: RunExecutionPolicy } {
   return {
     bytes: Buffer.from(
       JSON.stringify({
@@ -340,7 +352,7 @@ function makeAdapter(capabilities: ReadonlyArray<string>): IProviderAdapter {
     async cancelRun() {
       throw new Error('not used');
     },
-    async getRunStatus() {
+    async getProviderStatusView() {
       throw new Error('not used');
     },
     async signal() {
@@ -350,7 +362,7 @@ function makeAdapter(capabilities: ReadonlyArray<string>): IProviderAdapter {
       return [CURRENT_SIGNAL_SEMANTICS_VERSION] as const;
     },
     capabilities() {
-      return [...capabilities];
+      return capabilities.map((value) => asNonBlankString(value));
     },
   };
 }
@@ -380,3 +392,4 @@ function makeRegistryForKind(
     },
   };
 }
+

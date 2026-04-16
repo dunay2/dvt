@@ -1,78 +1,62 @@
-import { parsePlannerInputEnvelopeV1 } from '@dvt/contracts';
-import type { GenericGraphNodeV1, GenericGraphSourceV1 } from '@dvt/contracts';
+import type {
+  GenericGraphNodeV1,
+  GenericGraphSourceV1SchemaT,
+  PlannerObservabilitySchemaT,
+} from '@dvt/contracts';
+import {
+  parseGenericGraphSourceV1,
+  parsePlannerEnvironmentContext,
+  parsePlannerObservability,
+  parsePlannerPolicyClassSet,
+} from '@dvt/contracts';
 
-import type { StartRunCommand } from '../../application/ports/startRunCommandContract.js';
+import type { StartRunCommand, StartRunPlannerEnvironmentInput } from '../../application/ports/startRunCommandContract.js';
 
 import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
 import { badRequestResult, type RouteParseResult } from './routeParseIssue.js';
 
 type PlannerCommandFields = {
-  -readonly [K in
-    | 'graphSource'
-    | 'manifestRef'
-    | 'policies'
-    | 'environment'
-    | 'observability']?: StartRunCommand[K];
+  -readonly [K in 'graphSource' | 'policies' | 'environment' | 'observability']?: StartRunCommand[K];
 };
 
 export function parseStartRunPlannerEnvelope(
-  record: Record<string, unknown>,
-  selection: ReadonlyArray<string>
-): RouteParseResult<
-  Pick<
-    StartRunCommand,
-    'graphSource' | 'manifestRef' | 'policies' | 'environment' | 'observability'
-  >
-> {
+  record: Record<string, unknown>
+): RouteParseResult<Pick<StartRunCommand, 'graphSource' | 'policies' | 'environment' | 'observability'>> {
   try {
-    const parsed = parsePlannerInputEnvelopeV1({
-      ...(record.graphSource === undefined ? {} : { graphSource: record.graphSource }),
-      ...(record.manifestRef === undefined ? {} : { manifestRef: record.manifestRef }),
-      ...(record.policies === undefined ? {} : { policies: record.policies }),
-      ...(record.environment === undefined ? {} : { environment: record.environment }),
-      ...(record.observability === undefined ? {} : { observability: record.observability }),
-      selection: { selectedNodeIds: selection },
-    });
+    assertNoForbiddenPlannerIngress(record);
+    const result: PlannerCommandFields = {};
+
+    if (record.graphSource !== undefined) {
+      result.graphSource = mapGraphSource(parseGenericGraphSourceV1(record.graphSource));
+    }
+
+    if (record.policies !== undefined) {
+      result.policies = parsePlannerPolicyClassSet(record.policies);
+    }
+
+    if (record.environment !== undefined) {
+      result.environment = parseStartRunPlannerEnvironment(record.environment);
+    }
+
+    if (record.observability !== undefined) {
+      const observability = parsePlannerObservability(record.observability);
+      if (observability !== undefined) {
+        result.observability = normalizePlannerObservability(observability);
+      }
+    }
 
     return {
       ok: true,
-      value: toPlannerCommandFields(parsed),
+      value: result,
     };
   } catch {
     return badRequestResult(HTTP_ERROR_REASON.invalidPlanSource);
   }
 }
 
-function toPlannerCommandFields(
-  parsed: ReturnType<typeof parsePlannerInputEnvelopeV1>
-): Pick<
-  StartRunCommand,
-  'graphSource' | 'manifestRef' | 'policies' | 'environment' | 'observability'
-> {
-  const result: PlannerCommandFields = {};
-
-  const graphSource = mapGraphSource(parsed.graphSource);
-  if (graphSource !== undefined) result.graphSource = graphSource;
-
-  const manifestRef = mapManifestRef(parsed.manifestRef);
-  if (manifestRef !== undefined) result.manifestRef = manifestRef;
-
-  if (parsed.policies !== undefined) result.policies = parsed.policies;
-
-  const environment = mapEnvironment(parsed.environment);
-  if (environment !== undefined) result.environment = environment;
-
-  const observability = mapObservability(parsed.observability);
-  if (observability !== undefined) result.observability = observability;
-
-  return result;
-}
-
 function mapGraphSource(
-  graphSource: ReturnType<typeof parsePlannerInputEnvelopeV1>['graphSource']
-): StartRunCommand['graphSource'] | undefined {
-  if (graphSource === undefined) return undefined;
-
+  graphSource: GenericGraphSourceV1SchemaT
+): NonNullable<StartRunCommand['graphSource']> {
   const nodes: GenericGraphNodeV1[] = graphSource.nodes.map((node) => {
     const mappedNode: GenericGraphNodeV1 = {
       nodeId: node.nodeId,
@@ -108,44 +92,48 @@ function mapGraphSource(
     sourceFamily: graphSource.sourceFamily,
     sourceVersion: graphSource.sourceVersion,
     nodes,
-  } satisfies GenericGraphSourceV1;
-}
-
-function mapManifestRef(
-  manifestRef: ReturnType<typeof parsePlannerInputEnvelopeV1>['manifestRef']
-): StartRunCommand['manifestRef'] | undefined {
-  if (manifestRef === undefined) return undefined;
-
-  return {
-    uri: manifestRef.uri,
-    sha256: manifestRef.sha256,
-    ...(manifestRef.artifactId === undefined ? {} : { artifactId: manifestRef.artifactId }),
   };
 }
 
-function mapEnvironment(
-  environment: ReturnType<typeof parsePlannerInputEnvelopeV1>['environment']
-): StartRunCommand['environment'] | undefined {
-  if (environment === undefined) return undefined;
+function normalizePlannerObservability(
+  observability: NonNullable<PlannerObservabilitySchemaT>
+): NonNullable<StartRunCommand['observability']> {
+  const normalized: NonNullable<StartRunCommand['observability']> = {};
+
+  for (const [key, value] of Object.entries(observability)) {
+    if (key !== 'tags' && key !== 'extra') {
+      normalized[key] = value;
+    }
+  }
+
+  if (observability.tags !== undefined) {
+    normalized.tags = observability.tags;
+  }
+
+  if (observability.extra !== undefined) {
+    normalized.extra = observability.extra;
+  }
+
+  return normalized;
+}
+
+function parseStartRunPlannerEnvironment(raw: unknown): StartRunPlannerEnvironmentInput {
+  const canonicalEnvironment = parsePlannerEnvironmentContext(raw);
 
   return {
-    ...(environment.environmentId === undefined
+    ...(canonicalEnvironment.environmentId === undefined
       ? {}
-      : { environmentId: environment.environmentId }),
-    ...(environment.targetProfile === undefined
-      ? {}
-      : { targetProfile: environment.targetProfile }),
-    ...(environment.vars === undefined ? {} : { vars: environment.vars }),
+      : { environmentId: canonicalEnvironment.environmentId }),
+    ...(canonicalEnvironment.vars === undefined ? {} : { vars: canonicalEnvironment.vars }),
   };
 }
 
-function mapObservability(
-  observability: ReturnType<typeof parsePlannerInputEnvelopeV1>['observability']
-): StartRunCommand['observability'] | undefined {
-  if (observability === undefined) return undefined;
-
-  return {
-    ...(observability.tags === undefined ? {} : { tags: observability.tags }),
-    ...(observability.extra === undefined ? {} : { extra: observability.extra }),
-  };
+function assertNoForbiddenPlannerIngress(record: Record<string, unknown>): void {
+  if (
+    record.manifestRef !== undefined ||
+    record.manifest !== undefined ||
+    record.nodes !== undefined
+  ) {
+    throw new Error('Forbidden planner ingress');
+  }
 }

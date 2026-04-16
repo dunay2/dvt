@@ -2,7 +2,7 @@
 title: Transformation Flow Architecture And Contracts 2026-04-05
 status: Proposed
 owner: Architecture / API / Web / Planner
-last_reviewed: 2026-04-05
+last_reviewed: 2026-04-12
 planning_type: proposal
 lane: E
 task_id: F-22
@@ -32,7 +32,7 @@ It answers four technical questions:
 | Runtime routes  | run start and run read routes exist                  | preview-persist route and SQL-first execution path         |
 | Planner         | deterministic planning boundary exists               | design-graph-to-step compiler for SQL-first flow           |
 | Runtime         | `PlanRef` is the execution boundary                  | persisted plan issuance for this flow                      |
-| Executor        | no PostgreSQL transformation executor is visible yet | governed PostgreSQL execution seam                         |
+| Executor        | no transformation executor capability is visible yet | governed relational SQL seam with Postgres as first impl   |
 
 ## Canonical terms for this vertical
 
@@ -71,16 +71,17 @@ under which executor and environment the write happened.
 
 ## Component responsibilities
 
-| Component            | Responsibility                                                      |
-| -------------------- | ------------------------------------------------------------------- |
-| Canvas               | collect design intent and show validation, run, and result states   |
-| Web services         | call preview and run routes and hold `PlanRef` between states       |
-| API                  | authenticate, validate, persist, and return runtime-safe references |
-| Planner and compiler | convert design graph to deterministic execution plan                |
-| Plan store           | persist immutable plan bytes plus provenance and issue `PlanRef`    |
-| Runtime engine       | start and track runs by `PlanRef`                                   |
-| Executor             | execute the step payload against PostgreSQL or dbt in phase 2       |
-| PostgreSQL           | first data target and first proof environment                       |
+| Component               | Responsibility                                                         |
+| ----------------------- | ---------------------------------------------------------------------- |
+| Canvas                  | collect design intent and show validation, run, and result states      |
+| Web services            | call preview and run routes and hold `PlanRef` between states          |
+| API                     | authenticate, validate, persist, and return runtime-safe references    |
+| Planner and compiler    | convert design graph to deterministic execution plan                   |
+| Plan store              | persist immutable plan bytes plus provenance and issue `PlanRef`       |
+| Runtime engine          | start and track runs by `PlanRef`                                      |
+| Executor capability     | execute step payloads through one governed capability                  |
+| Executor implementation | provide the concrete runtime implementation; Postgres first, dbt later |
+| PostgreSQL              | first data target and first proof environment                          |
 
 ## System boundary
 
@@ -90,10 +91,25 @@ flowchart LR
   API --> COMP[Planner and compiler]
   API --> STORE[Plan store]
   API --> RT[Runtime engine]
-  RT --> EXEC[Executor]
+  RT --> EXEC[Executor capability]
   EXEC --> PG[PostgreSQL]
   STORE --> RT
 ```
+
+## Executor capability rule
+
+The core runtime must depend on execution capability, not on a vendor name.
+
+For this vertical:
+
+- the plan binds one whole-plan provider or executor profile
+- the runtime exposes one execution capability for the run
+- PostgreSQL is the first implementation of the relational SQL execution capability
+- future relational implementations such as Oracle may fit the same capability
+- non-relational systems such as Kafka do not automatically fit the same contract and must be governed as a different capability or profile
+
+This preserves the v1 product decision without making PostgreSQL semantics the
+core runtime model.
 
 ## V1 design graph contract
 
@@ -136,6 +152,8 @@ type TransformationSqlFirstPreviewPolicy = {
 
 Future profiles may add other whole-plan providers such as dbt or NiFi, but a
 single persisted plan still binds exactly one provider profile for that run.
+That profile determines which executor capability and implementation the runtime
+uses; it does not mean the engine core is vendor-shaped.
 Non-transformation preview profiles, if exposed by the generic planner route,
 are outside the scope of this vertical document and must be governed elsewhere.
 
@@ -188,13 +206,19 @@ type DesignGraphDraft = {
     projectId: string;
     environmentId: string;
     executionTarget: 'postgres';
-    graphArtifact: GitArtifactRef;
     requestedBy?: string;
   };
   nodes: DesignNode[];
   edges: DesignEdge[];
 };
 ```
+
+Rule:
+
+- the materialized `DesignGraphDraft` artifact does not embed its own
+  `graphArtifact: GitArtifactRef` self-reference
+- request-side `provenance.graphArtifact` remains the canonical external
+  identity envelope for that saved authoring artifact
 
 ## V1 invariants
 
@@ -218,7 +242,8 @@ three-node graph into an ordered execution plan.
 
 The canonical `ExecutionPlan` contract remains open to heterogeneous step kinds,
 but this vertical still binds one provider profile for the whole plan. All
-emitted steps must therefore be executable on that single provider.
+emitted steps must therefore be executable through one governed execution
+capability and its selected implementation.
 
 ### Step kinds for v1
 
@@ -269,9 +294,9 @@ compiled plan.
 
 ### Preview profile rules
 
-| Preview profile               | Provider binding | Provenance | Notes                                     |
-| ----------------------------- | ---------------- | ---------- | ----------------------------------------- |
-| `transformation-sql-first-v1` | `postgres`       | required   | current v1 profile for the first vertical |
+| Preview profile               | Provider binding | Provenance | Notes                                                     |
+| ----------------------------- | ---------------- | ---------- | --------------------------------------------------------- |
+| `transformation-sql-first-v1` | `postgres`       | required   | current v1 profile; selects the first relational executor |
 
 ### Request
 
@@ -421,6 +446,18 @@ type MaterializationEvidence = {
 type RunOutcome = {
   runId: string;
   status: 'pending' | 'running' | 'completed' | 'failed';
+  provenance?: {
+    persistedPlan: {
+      planRecordId: string;
+      planVersion: string;
+      sourceRef: string;
+      canonicalPlanSha256: string;
+    };
+    authoring?: {
+      graphArtifact?: GitArtifactRef;
+      sqlArtifact?: GitArtifactRef;
+    };
+  };
   execution?: {
     activeStepId?: string;
     failure?: {
@@ -439,6 +476,10 @@ type RunOutcome = {
 `GET /runs/:runId` must expose at least:
 
 - current and final run status
+- persisted plan identity (`planRecordId`, `planVersion`, `sourceRef`,
+  `canonicalPlanSha256`)
+- preview-time authoring provenance (`graphArtifact`, `sqlArtifact`) when the
+  persisted plan carries it
 - executor identity
 - `execution.activeStepId` or `execution.failure.stepId` when applicable
 - `execution.materialization` on success

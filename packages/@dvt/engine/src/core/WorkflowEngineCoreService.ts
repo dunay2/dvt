@@ -1,13 +1,14 @@
-import type { EngineRunRef, EventType, RunStatusSnapshot, SignalRequest } from '@dvt/contracts';
+import type { EngineRunRef, EventType, SignalRequest } from '@dvt/contracts';
 import { getSignalDerivedEventType, parseEngineRunRef, parseSignalRequest } from '@dvt/contracts';
 import type { IObservability } from '@dvt/observability';
 import type { GuardedRunEventType } from '@dvt/run-domain';
 
 import type { IProviderAdapter } from '../adapters/IProviderAdapter.js';
-import type { IWorkflowEngineCore } from '../domain/IWorkflowEngineCore.js';
+import type { IRunControlService } from '../domain/IRunControlService.js';
 import type { IRunStateStoreRead, IRunStateStoreWrite } from '../ports/IRunStateStore.js';
 import type { IRunAccessPolicy } from '../security/RunAccessPolicy.js';
 import { SignalTransitionGuard } from '../services/signal/SignalTransitionGuard.js';
+import type { IClock } from '../utils/clock.js';
 import { toErrorMessage } from '../utils/errorUtils.js';
 
 import type { IdempotencyKeyBuilder } from './idempotency.js';
@@ -29,12 +30,10 @@ import {
   resolveMetaOrThrow,
   withTimeout,
 } from './lifecycle/coreRuntime.js';
-import { SnapshotProjector, snapshotToStatus } from './SnapshotProjector.js';
 
 export interface WorkflowEngineCoreDeps {
   stateStoreRead: IRunStateStoreRead;
   stateStoreWrite: IRunStateStoreWrite;
-  projector: SnapshotProjector;
   idempotency: IdempotencyKeyBuilder;
   policy: IRunAccessPolicy;
   adapters: Map<EngineRunRef['provider'], IProviderAdapter>;
@@ -43,10 +42,10 @@ export interface WorkflowEngineCoreDeps {
     adapterCallMs?: number;
     outboxEnqueueMs?: number;
   };
-  clock: { nowIsoUtc(): string };
+  clock: Pick<IClock, 'nowIsoUtc'>;
 }
 
-export class WorkflowEngineCoreService implements IWorkflowEngineCore {
+export class WorkflowEngineCoreService implements IRunControlService {
   private readonly signalTransitionGuard: SignalTransitionGuard;
 
   constructor(private readonly deps: WorkflowEngineCoreDeps) {
@@ -95,100 +94,6 @@ export class WorkflowEngineCoreService implements IWorkflowEngineCore {
               .histogram(CORE_METRIC.cancelDurationMs, metricTags)
               .record(Date.parse(this.deps.clock.nowIsoUtc()) - startMs);
             span.setStatus('ok');
-          } catch (error) {
-            span.recordException(error);
-            span.setStatus('error', toErrorMessage(error));
-            throw error;
-          }
-        }
-      )
-    );
-  }
-
-  async getStatus(ref: EngineRunRef): Promise<RunStatusSnapshot> {
-    const validatedRunRef = normalizeEngineRunRef(parseEngineRunRef(ref));
-    await this.deps.policy.assertTenantAccess(validatedRunRef.tenantId);
-    const meta = await resolveMetaOrThrow(this.deps.stateStoreRead, validatedRunRef);
-    const startMs = Date.parse(this.deps.clock.nowIsoUtc());
-    const metricTags = buildMetricTags(meta.providerRef.provider, meta.tenantId, {
-      operation: CORE_OPERATION.getRunStatus,
-    });
-    const traceContext = buildTraceContext(meta, meta.planId);
-
-    return this.deps.observability.withContext(traceContext, () =>
-      this.deps.observability.traces.withSpan(
-        CORE_SPAN.getRunStatus,
-        {
-          context: traceContext,
-          attributes: { provider: meta.providerRef.provider },
-        },
-        async (span) => {
-          try {
-            const storedSnap = await this.deps.stateStoreRead.getSnapshot(
-              meta.tenantId,
-              meta.runId
-            );
-            const result = storedSnap
-              ? snapshotToStatus(storedSnap)
-              : this.deps.projector.rebuild(
-                  meta.runId,
-                  await this.deps.stateStoreRead.listEvents(meta.tenantId, meta.runId)
-                );
-
-            this.deps.observability.metrics
-              .histogram(CORE_METRIC.statusDurationMs, metricTags)
-              .record(Date.parse(this.deps.clock.nowIsoUtc()) - startMs);
-            span.setStatus('ok');
-            return result;
-          } catch (error) {
-            span.recordException(error);
-            span.setStatus('error', toErrorMessage(error));
-            throw error;
-          }
-        }
-      )
-    );
-  }
-
-  async enrichStatus(ref: EngineRunRef): Promise<RunStatusSnapshot> {
-    const validatedRunRef = normalizeEngineRunRef(parseEngineRunRef(ref));
-    await this.deps.policy.assertTenantAccess(validatedRunRef.tenantId);
-    const meta = await resolveMetaOrThrow(this.deps.stateStoreRead, validatedRunRef);
-    const adapter = getAdapterOrThrow(this.deps.adapters, meta.providerRef.provider);
-    const traceContext = buildTraceContext(meta, meta.planId);
-
-    return this.deps.observability.withContext(traceContext, () =>
-      this.deps.observability.traces.withSpan(
-        CORE_SPAN.enrichRunStatus,
-        {
-          context: traceContext,
-          attributes: { provider: meta.providerRef.provider },
-        },
-        async (span) => {
-          try {
-            const storedSnap = await this.deps.stateStoreRead.getSnapshot(
-              meta.tenantId,
-              meta.runId
-            );
-            const base = storedSnap
-              ? snapshotToStatus(storedSnap)
-              : this.deps.projector.rebuild(
-                  meta.runId,
-                  await this.deps.stateStoreRead.listEvents(meta.tenantId, meta.runId)
-                );
-
-            const providerView = await withTimeout(
-              adapter.getRunStatus(validatedRunRef),
-              this.deps.timeouts?.adapterCallMs ?? CORE_TIMEOUT_MS.adapterCall,
-              CORE_TIMEOUT_OPERATION.adapterGetRunStatus
-            );
-            const substatus = providerView.substatus ?? base.substatus;
-            const message = providerView.message ?? base.message;
-            span.setStatus('ok');
-            const result = { ...base };
-            if (substatus !== undefined) result.substatus = substatus;
-            if (message !== undefined) result.message = message;
-            return result;
           } catch (error) {
             span.recordException(error);
             span.setStatus('error', toErrorMessage(error));
@@ -279,4 +184,8 @@ export class WorkflowEngineCoreService implements IWorkflowEngineCore {
         return null;
     }
   }
+}
+
+export function buildRunControlService(deps: WorkflowEngineCoreDeps): IRunControlService {
+  return new WorkflowEngineCoreService(deps);
 }

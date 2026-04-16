@@ -18,7 +18,7 @@ sources in this precedence order:
 - Normative drivers:
   - [ADR-0004 - Event Sourcing Strategy](../../adr/ADR-0004-event-sourcing-strategy.md)
   - [ADR-0015 - getRunStatus Read Model Separation](../../adr/ADR-0015-getRunStatus-read-model-separation.md)
-  - [Execution Semantics Contract v2.0.0](../../architecture/engine/contracts/engine/ExecutionSemantics.v2.0.md)
+  - [Execution Semantics Contract v2.0.0](../../architecture/engine/contracts/engine/ExecutionSemantics.v1.md)
   - [State Store Overview](../../architecture/engine/contracts/state-store/overview.md)
 - Architectural context:
   - [DVT+ Execution Model Specification](../execution-model/dvt-execution-model.md)
@@ -56,11 +56,11 @@ Update this section before any substantial implementation turn.
 
 ## Remaining G7 Roadmap
 
-- `Slice 0 / planning` — **Done** 2026-03-13
+- `Slice 0 / planning` â€” **Done** 2026-03-13
   scope: write the think-first baseline, identify governing invariants, and
   reduce `G7` from a broad label into implementation-sized slices
   exit signal: tracker committed; sources, options, and open questions explicit
-- `Slice 1 / run_snapshots formalization + rebuildSnapshot API` — **Done** 2026-03-14
+- `Slice 1 / run_snapshots formalization + rebuildSnapshot API` â€” **Done** 2026-03-14
   scope: promote `run_snapshots` DDL to a numbered migration, add
   `rebuildSnapshot` to `IRunStateStore`, implement it in the Postgres adapter,
   add a generated-column index on status, and wire an admin rebuild endpoint
@@ -101,7 +101,7 @@ Update this section before any substantial implementation turn.
 7. When a slice closes, create `docs/planning/closeouts/<slice>-closeout.md`
    first, then sync this tracker, [GAP_EXECUTION_PLANS.md](./GAP_EXECUTION_PLANS.md),
    and any affected architecture/runbook docs in the same change. The closeout
-   file is the gate — a slice is not done until the file exists and its
+   file is the gate â€” a slice is not done until the file exists and its
    "Docs synced" checklist is fully checked.
 
 ## Stage Detail
@@ -125,7 +125,7 @@ Think-first analysis:
   - default `getRunStatus` MUST remain projected-state only and MUST NOT call
     the provider (`ADR-0015`)
   - projectors MUST order by `runSeq`, not timestamps, and MUST advance
-    progress by persisted event sequence (`ExecutionSemantics.v2.0`)
+    progress by persisted event sequence (`ExecutionSemantics.v1`)
   - snapshots are derived from persisted events and may lag, but must remain
     consistent with a prefix of the event log (`State Store Overview`)
   - the state store is not the business read-model service by itself (`State Store Overview`)
@@ -192,16 +192,16 @@ Current pre-implementation brief:
   - `pnpm docs:quality:check`
   - `pnpm docs:canonical:check`
 
-### G7.1 — run_snapshots formalization + rebuildSnapshot API
+### G7.1 â€” run_snapshots formalization + rebuildSnapshot API
 
 **Open question resolutions (fixed in this session):**
 
-- which read path first: recovery/rebuild for `run_snapshots` — the happy-path
+- which read path first: recovery/rebuild for `run_snapshots` â€” the happy-path
   inline maintenance already works; the missing capability is the ability to
   repair or rebuild a snapshot when inline maintenance fails
 - where the worker lives: `apps/projector-worker` for Slice 2; Slice 1 stays
   inside existing packages with no new app
-- whether a port must be formalized in `@dvt/contracts`: no — `rebuildSnapshot`
+- whether a port must be formalized in `@dvt/contracts`: no â€” `rebuildSnapshot`
   belongs on `IRunStateStore` in `@dvt/engine`; a separate contracts port is
   not justified for this scope
 - rebuild surface for Slice 1: admin HTTP endpoint on `dvt-api`; CLI in Slice 4
@@ -211,19 +211,19 @@ Current pre-implementation brief:
 
 - `run_snapshots` table (`run_id TEXT PK`, `snapshot JSONB`, `last_run_seq
 INTEGER`, `updated_at TIMESTAMPTZ`) exists but is created by
-  `ensureRunSnapshotsTable()` called inside `migrate()` — it is not a numbered
+  `ensureRunSnapshotsTable()` called inside `migrate()` â€” it is not a numbered
   SQL migration file; this means schema managers outside `PostgresStateStoreAdapter`
   cannot track or replay it
 - `appendEventsTxWithClient` updates `run_snapshots` inline in the same Postgres
-  transaction as the event append — so `last_run_seq` in the snapshot row equals
+  transaction as the event append â€” so `last_run_seq` in the snapshot row equals
   the max `run_seq` in `run_events` for that run under normal operation
 - `getSnapshot(tenantId, runId)` exists on `IRunStateStore` and is used by
-  `WorkflowEngine.getRunStatus()` and `enrichRunStatus()` — the O(1) read path
+  `WorkflowEngine.getRunStatus()` and `enrichRunStatus()` â€” the O(1) read path
   is already in production
 - `listRuns()` already joins `run_snapshots` for status-filtered listing via
-  `s.snapshot->>'status' = $1` — a JSONB expression query, not an index-backed
+  `s.snapshot->>'status' = $1` â€” a JSONB expression query, not an index-backed
   lookup; under high volume this becomes a sequential scan
-- `listEvents()` has `afterSeq` keyset cursor and `limit` — the interface
+- `listEvents()` has `afterSeq` keyset cursor and `limit` â€” the interface
   supports incremental pagination, which `rebuildSnapshot` will use
 - `SnapshotProjector.applyRunEvent` is already exported as a pure function from
   `@dvt/engine/src/core/SnapshotProjector.ts` and now throws
@@ -251,7 +251,7 @@ Think-first analysis:
 - constraints and invariants:
   - rebuild MUST replay from `runSeq=1` and apply events in `run_seq ASC`
     order; it MUST NOT use `emittedAt` timestamps for ordering (ADR-0004)
-  - `applyRunEvent` terminal guards must be bypassed during full rebuild — use
+  - `applyRunEvent` terminal guards must be bypassed during full rebuild â€” use
     the raw `applyEventToSnapshot` pattern in `PostgresStateStoreAdapter` (no
     terminal guard) rather than the engine's `applyRunEvent` with guards
   - rebuild MUST be idempotent: calling it twice for the same run produces the
@@ -263,12 +263,12 @@ Think-first analysis:
   - migration numbering: `004_run_snapshots_and_status_index.sql`
 - options considered:
   - option A: keep inline DDL, just add `rebuildSnapshot` as a method
-    — does not fix schema tracking; rejected for governance reasons
+    â€” does not fix schema tracking; rejected for governance reasons
   - option B: move DDL to numbered migration, add `rebuildSnapshot` on
-    `IRunStateStore`, add generated column index — fixes all three problems
+    `IRunStateStore`, add generated column index â€” fixes all three problems
     in one coherent slice
   - option C: extract a separate `IReadModelStore` port in `@dvt/contracts`
-    — premature abstraction; the store port already exists; rejected for
+    â€” premature abstraction; the store port already exists; rejected for
     this scope
 - selected option and rationale:
   - option B; the `run_snapshots` table and its status index must be first-class
@@ -305,16 +305,16 @@ run_id)` with a partial filter for non-null status
 - touched files or paths:
   - `packages/@dvt/adapter-postgres/migrations/004_run_snapshots_and_status_index.sql`
     (new)
-  - `packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts` —
+  - `packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts` â€”
     `ensureRunSnapshotsTable`, `listRuns` query update, new `rebuildSnapshot`
     public method
-  - `packages/@dvt/engine/src/ports/IRunStateStore.ts` — add
+  - `packages/@dvt/engine/src/ports/IRunStateStore.ts` â€” add
     `rebuildSnapshot` method signature
-  - `packages/@dvt/engine/src/state/InMemoryRunStateStore.ts` — implement
+  - `packages/@dvt/engine/src/state/InMemoryRunStateStore.ts` â€” implement
     `rebuildSnapshot`
-  - `apps/api/src/plugins/env.ts` — add `DVT_ADMIN_ROUTES_ENABLED`
+  - `apps/api/src/plugins/env.ts` â€” add `DVT_ADMIN_ROUTES_ENABLED`
   - `apps/api/src/entrypoints/http/routes/adminRoutes.ts` (new)
-  - `apps/api/src/app.ts` — register admin routes if flag is set
+  - `apps/api/src/app.ts` â€” register admin routes if flag is set
   - test files for the new Postgres `rebuildSnapshot` method and admin route
 - expected outcome:
   - `pnpm --filter @dvt/adapter-postgres test` green with `rebuildSnapshot`
@@ -333,7 +333,7 @@ run_id)` with a partial filter for non-null status
 
 ---
 
-### G7.2 — Standalone projector runtime
+### G7.2 â€” Standalone projector runtime
 
 Think-first analysis:
 
@@ -353,18 +353,18 @@ Think-first analysis:
   - stale-snapshot detection query: `SELECT m.run_id FROM run_metadata m LEFT
 JOIN run_snapshots s ON s.run_id = m.run_id WHERE s.run_id IS NULL OR
 s.last_run_seq < (SELECT MAX(run_seq) FROM run_events WHERE run_id =
-m.run_id) LIMIT $batchSize` — or an approximation using `updated_at` lag
+m.run_id) LIMIT $batchSize` â€” or an approximation using `updated_at` lag
   - the worker must expose a `lag` metric (number of runs with stale snapshots)
     for operational observability
   - it MUST NOT acquire the per-run advisory lock used by `appendEventsTxWithClient`;
     it reads and writes in its own transaction
 - options considered:
   - option A: embed a projection catch-up loop inside the existing
-    `dvt-outbox-worker` — reuses runtime, but couples delivery and projection
+    `dvt-outbox-worker` â€” reuses runtime, but couples delivery and projection
     concerns; rejected
   - option B: a new `apps/projector-worker` app, thin composition root,
     runtime loop in `packages/@dvt/delivery` alongside `OutboxWorkerRuntime`
-  - option C: add a projection loop to `dvt-api` as a background task —
+  - option C: add a projection loop to `dvt-api` as a background task â€”
     couples the API to projection; rejected
 - selected option and rationale:
   - option B; follows the established G5 pattern (`dvt-outbox-worker` /
@@ -388,12 +388,12 @@ Pre-implementation brief:
   - add a `GET /healthz` endpoint to `apps/projector-worker` exposing lag count
 - touched files or paths:
   - `packages/@dvt/delivery/src/application/ProjectorWorkerRuntime.ts` (new)
-  - `packages/@dvt/delivery/src/index.ts` — export new runtime
+  - `packages/@dvt/delivery/src/index.ts` â€” export new runtime
   - `apps/projector-worker/` (new app: `package.json`, `src/server.ts`,
     `src/env.ts`, `tsconfig.json`)
-  - `packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts` — add
+  - `packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts` â€” add
     `listStaleSnapshotRunIds(batchSize: number): Promise<string[]>` query
-  - `packages/@dvt/engine/src/ports/IRunStateStore.ts` — add
+  - `packages/@dvt/engine/src/ports/IRunStateStore.ts` â€” add
     `listStaleSnapshotRunIds?(batchSize: number): Promise<string[]>` optional
     method
   - `docs/architecture/system-delivery-status.md`
@@ -411,7 +411,7 @@ Pre-implementation brief:
 
 ---
 
-### G7.3 — Provider run-id reconciliation
+### G7.3 â€” Provider run-id reconciliation
 
 Think-first analysis:
 
@@ -419,7 +419,7 @@ Think-first analysis:
   - `WorkflowEngine.startRun()` now calls `bootstrapRunTx` before
     `adapter.startRun()` when `adapter.estimateRunRef` is available; the
     estimated `providerRunId` used for bootstrapping is `ctx.runId`, which is
-    the DVT run id — not Temporal's `firstExecutionRunId` (a UUID assigned by
+    the DVT run id â€” not Temporal's `firstExecutionRunId` (a UUID assigned by
     Temporal at workflow start time)
   - `run_metadata.provider_run_id` therefore stores an approximation for all
     runs using the pre-bootstrap path; any consumer that depends on the real
@@ -437,7 +437,7 @@ Think-first analysis:
     `adapter.startRun()` returns the real ref, only if the adapter used the
     pre-bootstrap path and the returned `runRef.runId` differs from the
     estimated `runId`
-  - no new DB migration is needed — `provider_run_id` column already exists
+  - no new DB migration is needed â€” `provider_run_id` column already exists
 - options considered:
   - option A: add `updateProviderRunId(runId, realProviderRunId)` to
     `IRunStateStore`; call it in `_startRunCore` after `adapter.startRun()`
@@ -445,7 +445,7 @@ Think-first analysis:
   - option B: accept the approximation as a known residual and document it;
     the column exists for correlation/observability, not for routing
   - option C: require the real `providerRunId` to match the estimated
-    `runId` by design — change `TemporalAdapter.startRun()` to use
+    `runId` by design â€” change `TemporalAdapter.startRun()` to use
     `ctx.runId` as `firstExecutionRunId` hint (not possible with Temporal SDK)
 - selected option and rationale:
   - option A; the residual is a real data quality gap when users inspect
@@ -468,18 +468,18 @@ provider_run_id = $2 WHERE run_id = $1`
   - implement `InMemoryRunStateStore.updateProviderRunRef` as a no-op or
     in-memory update for test compatibility
 - touched files or paths:
-  - `packages/@dvt/engine/src/ports/IRunStateStore.ts` — add optional method
-  - `packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts` —
+  - `packages/@dvt/engine/src/ports/IRunStateStore.ts` â€” add optional method
+  - `packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts` â€”
     implement `updateProviderRunRef`
-  - `packages/@dvt/engine/src/state/InMemoryRunStateStore.ts` — implement
-  - `packages/@dvt/engine/src/core/WorkflowEngine.ts` — call update in the
+  - `packages/@dvt/engine/src/state/InMemoryRunStateStore.ts` â€” implement
+  - `packages/@dvt/engine/src/core/WorkflowEngine.ts` â€” call update in the
     pre-bootstrap branch of `_startRunCore`
-  - `packages/@dvt/engine/test/core/WorkflowEngine.test.ts` — assert that
+  - `packages/@dvt/engine/test/core/WorkflowEngine.test.ts` â€” assert that
     `updateProviderRunRef` is called when adapter returns a different `runId`
 - expected outcome:
   - `run_metadata.provider_run_id` stores the actual Temporal
     `firstExecutionRunId` for all new runs; existing runs retain their
-    approximation (acceptable — no backfill)
+    approximation (acceptable â€” no backfill)
   - `pnpm --filter @dvt/engine test` green with new assertion
 - validation plan:
   - `pnpm --filter @dvt/engine typecheck`
@@ -489,18 +489,18 @@ provider_run_id = $2 WHERE run_id = $1`
 
 ---
 
-### G7.4 — Evidence + closeout
+### G7.4 â€” Evidence + closeout
 
 Pre-implementation brief:
 
 - scope:
   - write `docs/evidence/ED-2026XXXX-g7-standalone-projector-readmodels.md`
   - update `docs/architecture/system-delivery-status.md`:
-    - Read models row: Partial → Closed
-    - Executive Summary G7 row: Partial → Closed
+    - Read models row: Partial â†’ Closed
+    - Executive Summary G7 row: Partial â†’ Closed
   - update `docs/planning/gaps/GAP_EXECUTION_PLANS.md`:
-    - G7 row: Partial → Closed; add Delivered, test_paths, verification_cmd
-  - update this tracker: state → Closed, update Execution Log
+    - G7 row: Partial â†’ Closed; add Delivered, test_paths, verification_cmd
+  - update this tracker: state â†’ Closed, update Execution Log
 - touched files or paths:
   - `docs/evidence/ED-2026XXXX-g7-standalone-projector-readmodels.md` (new)
   - `docs/architecture/system-delivery-status.md`
@@ -522,13 +522,13 @@ Pre-implementation brief:
 - `2026-03-13` `G7` `planning`
   summary: created `G7-AI-EXECUTION-TRACKER.md`; confirmed that `G7` has no
   dedicated spec file yet, but it is not zero-context; normalized the governing
-  drivers around `ADR-0004`, `ADR-0015`, `ExecutionSemantics.v2.0`, the state
+  drivers around `ADR-0004`, `ADR-0015`, `ExecutionSemantics.v1`, the state
   store overview, and current architecture/status docs; selected the baseline
   direction that the standalone projector must consume persisted ordered events
   from the state store rather than the outbox
   validation: repo inspection of `GAP_EXECUTION_PLANS.md`,
   `system-delivery-status.md`, `SnapshotProjector.ts`,
-  `WorkflowEngine.getRunStatus`, `ExecutionSemantics.v2.0.md`,
+  `WorkflowEngine.getRunStatus`, `ExecutionSemantics.v1.md`,
   `ADR-0004`, `ADR-0015`, `State Store Overview`, and `c4-engine.md`
 - `2026-03-14` `G7` `hardening`
   summary: hardened the in-process projection baseline while keeping `G7`
@@ -552,7 +552,7 @@ Pre-implementation brief:
   `docs/planning/reviews/**`, and
   `docs/planning/status/canonical-doc-code-matrix.md`;
   `pnpm docs:canonical:check` PASS
-- `2026-03-14` `G7.1` `implementation — run_snapshots formalization + rebuildSnapshot API`
+- `2026-03-14` `G7.1` `implementation â€” run_snapshots formalization + rebuildSnapshot API`
   summary: G7.1 fully delivered; migration `004_run_snapshots_and_status_index.sql` added
   with `snapshot_status TEXT GENERATED ALWAYS AS (snapshot->>'status') STORED` column and
   B-tree index; `rebuildSnapshot(tenantId, runId)` added to `IRunStateStore` in both the
@@ -568,7 +568,7 @@ Pre-implementation brief:
   `pnpm --filter dvt-api build` PASS; `pnpm --filter dvt-api test` PASS (35/35);
   `pnpm --filter @dvt/engine test` PASS (165/165)
 
-- `2026-03-14` `G7` `planning — Slices 1-4 detailed`
+- `2026-03-14` `G7` `planning â€” Slices 1-4 detailed`
   summary: resolved all open questions from G7.0; inspected codebase to
   validate design assumptions; key findings: `run_snapshots` exists and is
   maintained inline per transaction but is not in a numbered migration and has

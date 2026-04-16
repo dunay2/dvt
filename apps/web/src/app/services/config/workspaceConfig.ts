@@ -12,6 +12,8 @@ export type WorkspaceBootstrapConfig = {
   environmentId: string;
   gitBranch: string;
   gitSha: string;
+  gitRepo?: string;
+  graphArtifactPath?: string;
   tenantOptions: WorkspaceOption[];
   projectOptions: WorkspaceOption[];
   environmentOptions: WorkspaceOption[];
@@ -23,6 +25,8 @@ const MOCK_WORKSPACE_EXAMPLE: WorkspaceBootstrapConfig = {
   environmentId: 'dev',
   gitBranch: 'main',
   gitSha: 'local',
+  gitRepo: 'dunay2/dvt',
+  graphArtifactPath: 'pipelines/sales_pipeline.yaml',
   tenantOptions: [
     { value: 'acme-corp', label: 'ACME Corp' },
     { value: 'globex', label: 'Globex Inc' },
@@ -121,6 +125,9 @@ export function resolveWorkspaceBootstrapConfig(
     readOptionalEnv(import.meta.env.VITE_DEFAULT_ENVIRONMENT_ID) ?? base.environmentId;
   const gitBranch = readOptionalEnv(import.meta.env.VITE_GIT_BRANCH) ?? base.gitBranch;
   const gitSha = readOptionalEnv(import.meta.env.VITE_GIT_SHA) ?? base.gitSha;
+  const gitRepo = readOptionalEnv(import.meta.env.VITE_GIT_REPO) ?? base.gitRepo;
+  const graphArtifactPath =
+    readOptionalEnv(import.meta.env.VITE_GRAPH_ARTIFACT_PATH) ?? base.graphArtifactPath;
 
   const tenantOptionsFromEnv = parseOptionList(import.meta.env.VITE_TENANT_OPTIONS);
   const projectOptionsFromEnv = parseOptionList(import.meta.env.VITE_PROJECT_OPTIONS);
@@ -147,6 +154,8 @@ export function resolveWorkspaceBootstrapConfig(
     environmentId,
     gitBranch,
     gitSha,
+    ...(gitRepo ? { gitRepo } : {}),
+    ...(graphArtifactPath ? { graphArtifactPath } : {}),
     tenantOptions: dedupeOptions(tenantOptions),
     projectOptions: dedupeOptions(projectOptions),
     environmentOptions: dedupeOptions(environmentOptions),

@@ -1,6 +1,7 @@
 export type {
+  CanonicalRunStatus,
   EngineRunRef,
   RunContext,
-  RunStatusSnapshot,
+  RunStatusEnrichment,
   SignalRequest,
 } from '../../types/contracts.js';

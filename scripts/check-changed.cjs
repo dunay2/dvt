@@ -131,8 +131,8 @@ function runNodeCli(toolName, cliPath, args) {
 }
 
 function resolveDiffCommand() {
-  if (hasRef('origin/main')) return 'git diff --name-only origin/main..HEAD';
-  if (hasUpstream()) return 'git diff --name-only @{u}..HEAD';
+  if (hasRef('origin/main')) return 'git diff --name-only origin/main...HEAD';
+  if (hasUpstream()) return 'git diff --name-only @{u}...HEAD';
   return 'git diff --name-only HEAD~1..HEAD';
 }
 
@@ -152,9 +152,9 @@ if (changed.length === 0) {
   process.exit(0);
 }
 
-const prettierFiles = changed.filter((f) => /\.(ts|js|json|md|yml|yaml|tsx)$/.test(f));
+const prettierFiles = changed.filter((f) => /\\.(ts|tsx|js|cjs|mjs|json|md|yml|yaml)$/.test(f));
 const eslintFiles = changed
-  .filter((f) => /\.(ts|tsx|js)$/.test(f))
+  .filter((f) => /\\.(ts|tsx|js|cjs|mjs)$/.test(f))
   // Exclude declaration files: ESLint typically ignores them and emits
   // "File ignored because of a matching ignore pattern" warnings.
   .filter((f) => !f.endsWith('.d.ts'))

@@ -7,9 +7,11 @@ import { PlannerError, PlannerErrorCode } from './errors.js';
 import type { ResolvedPolicies } from './types.js';
 
 const DEFAULT_TIMEOUT_MS = 60_000;
-const DEFAULT_RETRIES: NonNullable<ResolvedPolicies['retries']> = {
+const DEFAULT_RETRY_POLICY: NonNullable<ResolvedPolicies['retryPolicy']> = {
   maxAttempts: 1,
-  backoffMs: 0,
+  initialInterval: '1s',
+  maximumInterval: '60s',
+  backoffCoefficient: 2,
 };
 const DEFAULT_CONCURRENCY: NonNullable<ResolvedPolicies['concurrency']> = {
   maxInFlight: 256,
@@ -19,7 +21,7 @@ export function resolvePolicies(policies?: PlannerPolicyClassSet): ResolvedPolic
   if (policies === undefined) {
     return {
       stepTimeoutMs: DEFAULT_TIMEOUT_MS,
-      retries: DEFAULT_RETRIES,
+      retryPolicy: DEFAULT_RETRY_POLICY,
       concurrency: DEFAULT_CONCURRENCY,
     };
   }
@@ -31,16 +33,20 @@ export function resolvePolicies(policies?: PlannerPolicyClassSet): ResolvedPolic
     timeout = policies.timeout.maxSeconds * 1000;
   }
 
-  let retries: NonNullable<ResolvedPolicies['retries']> = DEFAULT_RETRIES;
+  let retryPolicy: NonNullable<ResolvedPolicies['retryPolicy']> = DEFAULT_RETRY_POLICY;
   if (policies.retry?.kind === 'at-most-once') {
-    retries = {
+    retryPolicy = {
       maxAttempts: 1,
-      backoffMs: 0,
+      initialInterval: '1s',
+      maximumInterval: '60s',
+      backoffCoefficient: 2,
     };
   } else if (policies.retry?.kind === 'at-most-N') {
-    retries = {
+    retryPolicy = {
       maxAttempts: policies.retry.maxAttempts,
-      backoffMs: 0,
+      initialInterval: '1s',
+      maximumInterval: '60s',
+      backoffCoefficient: 2,
     };
   }
 
@@ -54,13 +60,13 @@ export function resolvePolicies(policies?: PlannerPolicyClassSet): ResolvedPolic
   }
 
   // Example of a policy conflict placeholder (kept for future expansion):
-  if (concurrency !== undefined && retries.maxAttempts > 1 && concurrency.maxInFlight <= 0) {
+  if (concurrency !== undefined && retryPolicy.maxAttempts > 1 && concurrency.maxInFlight <= 0) {
     throw new PlannerError(PlannerErrorCode.POLICY_CONFLICT, 'Invalid policy combination.');
   }
 
   return {
     ...(timeout === undefined ? {} : { stepTimeoutMs: timeout }),
-    retries,
+    retryPolicy,
     ...(concurrency === undefined ? {} : { concurrency }),
   };
 }

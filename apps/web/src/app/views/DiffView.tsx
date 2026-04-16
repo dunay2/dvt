@@ -1,24 +1,37 @@
-import { ScrollArea } from '../components/ui/scroll-area';
+import { RouteWorkbenchFrame } from '../components/workbench/RouteWorkbenchFrame';
 import { DiffHeader } from './diff/DiffHeader';
+import {
+  DiffEmptyStateView,
+  DiffErrorStateView,
+  DiffLoadingStateView,
+} from './diff/DiffStateViews';
 import { DiffSummaryCards } from './diff/DiffSummaryCards';
 import { DiffTabs } from './diff/DiffTabs';
+import {
+  buildDiffCompareContextState,
+  buildDiffSqlContextState,
+  buildDiffWorkbenchState,
+} from './diff/diffWorkbenchStateModel';
 import { useDiffData } from './diff/useDiffData';
 
 export default function DiffView() {
   const {
     catalogDocument,
     compareMode,
+    comparePreset,
+    diffChangesQuery,
+    fileContentQuery,
+    graphSnapshotQuery,
+    primaryNode,
     severityFilter,
     filteredChanges,
     sqlDocument,
     summary,
-    comparePreset,
     setCompareMode,
     setSeverityFilter,
   } = useDiffData();
-
-  return (
-    <div className="flex h-full flex-col bg-slate-950 text-slate-50">
+  const header = (
+    <>
       <DiffHeader
         compareMode={compareMode}
         severityFilter={severityFilter}
@@ -27,15 +40,56 @@ export default function DiffView() {
         onSeverityFilterChange={setSeverityFilter}
       />
       <DiffSummaryCards summary={summary} />
-      <ScrollArea className="flex-1">
-        <div className="p-6">
-          <DiffTabs
-            catalogDocument={catalogDocument}
-            changes={filteredChanges}
-            sqlDocument={sqlDocument}
-          />
-        </div>
-      </ScrollArea>
-    </div>
+    </>
+  );
+  const workbenchState = buildDiffWorkbenchState({
+    diffChanges: diffChangesQuery.data ?? [],
+    isLoadingDiffChanges: diffChangesQuery.isPending,
+    diffChangesError: diffChangesQuery.error,
+    diffChangesErrorMessage:
+      diffChangesQuery.error instanceof Error
+        ? diffChangesQuery.error.message
+        : 'Unable to load diff changes.',
+  });
+  const compareContextState = buildDiffCompareContextState({
+    primaryNode,
+    isLoadingGraphSnapshot: graphSnapshotQuery.isPending,
+    graphSnapshotError: graphSnapshotQuery.error,
+  });
+  const sqlContextState = buildDiffSqlContextState({
+    primaryNode,
+    isLoadingGraphSnapshot: graphSnapshotQuery.isPending,
+    graphSnapshotError: graphSnapshotQuery.error,
+    isLoadingFileContent: fileContentQuery.isPending,
+    fileContentError: fileContentQuery.error,
+    fileContentErrorMessage:
+      fileContentQuery.error instanceof Error
+        ? fileContentQuery.error.message
+        : 'Unable to load SQL preview.',
+    hasFileContent: fileContentQuery.data != null,
+  });
+
+  if (workbenchState.kind === 'loading') {
+    return <DiffLoadingStateView header={header} />;
+  }
+
+  if (workbenchState.kind === 'error') {
+    return <DiffErrorStateView header={header} message={workbenchState.message} />;
+  }
+
+  if (workbenchState.kind === 'empty') {
+    return <DiffEmptyStateView header={header} />;
+  }
+
+  return (
+    <RouteWorkbenchFrame header={header}>
+      <DiffTabs
+        catalogDocument={catalogDocument}
+        compareContextState={compareContextState}
+        changes={filteredChanges}
+        sqlDocument={sqlDocument}
+        sqlContextState={sqlContextState}
+      />
+    </RouteWorkbenchFrame>
   );
 }

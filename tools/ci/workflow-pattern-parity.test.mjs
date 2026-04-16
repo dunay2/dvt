@@ -25,14 +25,6 @@ test('adapter-postgres policy stays wired into the PR quality gate and test work
   assertWorkflowContains(prQualityGate, 'node tools/ci/emit-scope.mjs --mode pr-quality');
   assertWorkflowContains(
     testWorkflow,
-    'node .github/scripts/generate-paths-filter.js tools/ci/policy/adapter-postgres-relevance.json adapter_postgres'
-  );
-  assertWorkflowContains(
-    testWorkflow,
-    'node .github/scripts/generate-paths-filter.js tools/ci/policy/adapter-postgres-relevance.json adapter_postgres_integration'
-  );
-  assertWorkflowContains(
-    testWorkflow,
     'node .github/scripts/generate-paths-filter.js tools/ci/policy/adapter-postgres-relevance.json adapter_postgres_relevant'
   );
 
@@ -46,6 +38,72 @@ test('adapter-postgres policy stays wired into the PR quality gate and test work
     matchesAnyPattern(
       'packages/@dvt/adapter-postgres/src/index.ts',
       ADAPTER_POSTGRES_RELEVANT_PATTERNS
+    )
+  );
+  assert.ok(
+    matchesAnyPattern(
+      'packages/@dvt/adapter-postgres/src/index.ts',
+      PR_QUALITY_SCOPE_PATTERNS.temporal_postgres_changed
+    )
+  );
+  assert.ok(
+    matchesAnyPattern(
+      'packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts',
+      PR_QUALITY_SCOPE_PATTERNS.temporal_postgres_changed
+    )
+  );
+  assert.ok(
+    matchesAnyPattern(
+      'packages/@dvt/adapter-temporal/test/integration.postgres.time-skipping.test.ts',
+      PR_QUALITY_SCOPE_PATTERNS.temporal_postgres_changed
+    )
+  );
+  assert.ok(
+    matchesAnyPattern(
+      'scripts/build-workspace-runtime-deps.cjs',
+      PR_QUALITY_SCOPE_PATTERNS.temporal_changed
+    )
+  );
+  assert.ok(
+    matchesAnyPattern(
+      'scripts/build-workspace-runtime-deps.cjs',
+      PR_QUALITY_SCOPE_PATTERNS.temporal_postgres_changed
+    )
+  );
+  assert.ok(
+    matchesAnyPattern(
+      'scripts/build-workspace-runtime-deps.cjs',
+      PR_QUALITY_SCOPE_PATTERNS.temporal_transformation_changed
+    )
+  );
+  assert.ok(
+    matchesAnyPattern(
+      'packages/@dvt/adapter-temporal/test/integration.transformation.time-skipping.test.ts',
+      PR_QUALITY_SCOPE_PATTERNS.temporal_transformation_changed
+    )
+  );
+  assert.ok(
+    matchesAnyPattern(
+      'packages/@dvt/adapter-temporal/src/index.ts',
+      PR_QUALITY_SCOPE_PATTERNS.temporal_transformation_changed
+    )
+  );
+  assert.ok(
+    matchesAnyPattern(
+      'packages/@dvt/adapter-temporal/src/TemporalWorkerHost.ts',
+      PR_QUALITY_SCOPE_PATTERNS.temporal_transformation_changed
+    )
+  );
+  assert.ok(
+    matchesAnyPattern(
+      'packages/@dvt/adapter-temporal/src/index.ts',
+      PR_QUALITY_SCOPE_PATTERNS.temporal_postgres_changed
+    )
+  );
+  assert.ok(
+    matchesAnyPattern(
+      'packages/@dvt/adapter-temporal/src/TemporalWorkerHost.ts',
+      PR_QUALITY_SCOPE_PATTERNS.temporal_postgres_changed
     )
   );
   assert.ok(matchesAnyPattern('tsconfig.base.json', ADAPTER_POSTGRES_RELEVANT_PATTERNS));
@@ -77,6 +135,8 @@ test('workflow scope policy stays wired into ci and pr quality workflows', () =>
     'node tools/ci/validate-policy.js tools/ci/policy/workflow-scope.json'
   );
   assertWorkflowContains(prQualityGate, 'node tools/ci/emit-scope.mjs --mode workflow');
+  assertWorkflowContains(prQualityGate, 'run_temporal_transformation_integration');
+  assertWorkflowContains(prQualityGate, 'temporal_transformation_changed');
 
   assert.deepEqual(WORKFLOW_SCOPE_PATTERNS, {
     any_code: workflowScopePolicy.any_code,

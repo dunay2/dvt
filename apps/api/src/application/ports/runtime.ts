@@ -1,8 +1,9 @@
 import type {
+  CanonicalRunStatus,
   EventEnvelope,
   MaterializationEvidence,
+  ProviderRunStatusView,
   RunExecutionContextRef,
-  RunStatusSnapshot,
   TransformationExecutor,
 } from '@dvt/contracts';
 
@@ -42,18 +43,45 @@ export interface IRunStatusStalenessTelemetry {
   ): void;
 }
 
+export interface RunGitArtifactRef {
+  readonly repo: string;
+  readonly path: string;
+  readonly ref?: string;
+  readonly commitSha?: string;
+  readonly contentSha256?: string;
+}
+
+export interface RunPersistedPlanProvenance {
+  readonly planRecordId: string;
+  readonly planVersion: string;
+  readonly sourceRef: string;
+  readonly canonicalPlanSha256: string;
+}
+
+export interface RunAuthoringProvenance {
+  readonly graphArtifact?: RunGitArtifactRef;
+  readonly sqlArtifact?: RunGitArtifactRef;
+}
+
+export interface RunProvenanceChain {
+  readonly persistedPlan: RunPersistedPlanProvenance;
+  readonly authoring?: RunAuthoringProvenance;
+}
+
 export type GetRunStatusResult = Pick<
-  RunStatusSnapshot,
+  CanonicalRunStatus,
   'runId' | 'status' | 'substatus' | 'message' | 'startedAt' | 'completedAt' | 'execution'
 > & {
   readonly tenantId: string;
   readonly enriched: boolean;
+  readonly providerView?: ProviderRunStatusView;
   readonly snapshotStaleness: RunSnapshotStaleness;
   readonly executor?: TransformationExecutor;
   readonly currentStepId?: string;
   readonly failedStepId?: string;
   readonly errorReason?: string;
   readonly materialization?: MaterializationEvidence;
+  readonly provenance?: RunProvenanceChain;
 };
 
 export interface IGetRunStatusUseCase {
@@ -77,7 +105,7 @@ export interface RunListItemDto {
   readonly logicalAttemptId: number;
   readonly provider: 'temporal' | 'conductor' | 'mock';
   readonly createdAt?: string;
-  readonly status?: RunStatusSnapshot['status'];
+  readonly status?: CanonicalRunStatus['status'];
 }
 
 export interface ListRunsResult {
@@ -113,9 +141,10 @@ export interface SignalRunCommand {
   readonly reason?: string;
 }
 
-export type CancelRunCommand = SignalRunCommand & {
+export interface CancelRunCommand {
+  readonly runId: string;
   readonly signalType: 'CANCEL';
-};
+}
 
 export interface SignalRunResult {
   readonly runId: string;

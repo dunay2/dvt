@@ -8,7 +8,7 @@
  * @version 1.0.0
  * @date 2026-04-08
  */
-import type { EventEnvelope, WorkflowSnapshot } from '@dvt/contracts';
+import type { EventEnvelope, IsoUtcString, StepId, WorkflowSnapshot } from '@dvt/contracts';
 
 import { InvalidStateTransitionError } from './errors.js';
 import {
@@ -71,6 +71,7 @@ const PROJECTION_HANDLERS: ProjectionHandlerMap = {
     snap.status = 'CANCELLED';
     snap.cancelling = false;
     clearActiveStep(snap);
+    clearMaterializationEvidence(snap);
     snap.completedAt = event.emittedAt;
   },
   RunCompleted: (snap, event) => {
@@ -83,6 +84,7 @@ const PROJECTION_HANDLERS: ProjectionHandlerMap = {
     assertRunNotTerminal(snap, event.kind);
     snap.status = 'FAILED';
     clearActiveStep(snap);
+    clearMaterializationEvidence(snap);
     snap.completedAt = event.emittedAt;
   },
   StepStarted: (snap, event) => {
@@ -138,9 +140,9 @@ export function applyRunEvent(snap: WorkflowSnapshot, eventEnvelope: EventEnvelo
 
 function applyStepTransition(
   snap: WorkflowSnapshot,
-  event: Extract<ProjectableRunEvent, { stepId: string }>,
+  event: Extract<ProjectableRunEvent, { stepId: StepId }>,
   allowedStatuses: StepStatus[],
-  mutator: (step: StepSnapshot, emittedAt: string) => void
+  mutator: (step: StepSnapshot, emittedAt: IsoUtcString) => void
 ): void {
   assertStepNotTerminal(snap, event.stepId, event.kind);
   const step = snap.steps[event.stepId] ?? { status: 'PENDING', attempts: 0 };
@@ -171,7 +173,7 @@ function trimExecutionEvidence(snap: WorkflowSnapshot): void {
   }
 }
 
-function setActiveStep(snap: WorkflowSnapshot, stepId: string): void {
+function setActiveStep(snap: WorkflowSnapshot, stepId: StepId): void {
   const execution = ensureExecutionEvidence(snap);
   execution.activeStepId = stepId;
   delete execution.failure;
@@ -185,7 +187,7 @@ function clearActiveStep(snap: WorkflowSnapshot): void {
   }
 }
 
-function clearActiveStepIfMatches(snap: WorkflowSnapshot, stepId: string): void {
+function clearActiveStepIfMatches(snap: WorkflowSnapshot, stepId: StepId): void {
   if (snap.execution?.activeStepId === stepId) {
     delete snap.execution.activeStepId;
     trimExecutionEvidence(snap);
@@ -198,6 +200,7 @@ function setFailureEvidence(
 ): void {
   const execution = ensureExecutionEvidence(snap);
   delete execution.activeStepId;
+  delete execution.materialization;
   execution.failure = failure;
 }
 
@@ -207,6 +210,13 @@ function setMaterializationEvidence(
 ): void {
   const execution = ensureExecutionEvidence(snap);
   execution.materialization = materialization;
+}
+
+function clearMaterializationEvidence(snap: WorkflowSnapshot): void {
+  if (snap.execution?.materialization !== undefined) {
+    delete snap.execution.materialization;
+    trimExecutionEvidence(snap);
+  }
 }
 
 function assertRunNotTerminal(snap: WorkflowSnapshot, eventType: string): void {
@@ -219,7 +229,7 @@ function assertRunNotTerminal(snap: WorkflowSnapshot, eventType: string): void {
   }
 }
 
-function assertStepNotTerminal(snap: WorkflowSnapshot, stepId: string, eventType: string): void {
+function assertStepNotTerminal(snap: WorkflowSnapshot, stepId: StepId, eventType: string): void {
   const step = snap.steps[stepId];
   if (step !== undefined && TERMINAL_STEP_STATUSES.has(step.status)) {
     throw new InvalidStateTransitionError({
@@ -249,7 +259,7 @@ function assertRunStatusIn(
 
 function assertStepStatusIn(
   snap: WorkflowSnapshot,
-  stepId: string,
+  stepId: StepId,
   eventType: string,
   currentStatus: StepStatus,
   allowedStatuses: StepStatus[]

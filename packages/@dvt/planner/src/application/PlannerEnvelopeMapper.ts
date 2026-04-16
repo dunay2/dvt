@@ -1,6 +1,5 @@
 import type { GraphNode, PlannerInputEnvelopeV1 as DomainEnvelope } from '../domain/types.js';
 
-type DbtManifestRef = import('@dvt/contracts').DbtManifestRef;
 type ExecutionPlan = import('@dvt/contracts').ExecutionPlan;
 type GenericGraphSourceV1 = import('@dvt/contracts').GenericGraphSourceV1SchemaT;
 type PlannerInputEnvelopeV1SchemaT = import('@dvt/contracts').PlannerInputEnvelopeV1SchemaT;
@@ -21,21 +20,6 @@ export class PlannerEnvelopeMapper {
     if (input.requestedAtIso !== undefined) domainInput.requestedAtIso = input.requestedAtIso;
 
     return domainInput;
-  }
-
-  toManifestRef(
-    manifestRef: NonNullable<PlannerInputEnvelopeV1SchemaT['manifestRef']>
-  ): DbtManifestRef {
-    const normalizedManifestRef: DbtManifestRef = {
-      uri: manifestRef.uri,
-      sha256: manifestRef.sha256,
-    };
-
-    if (manifestRef.artifactId !== undefined) {
-      normalizedManifestRef.artifactId = manifestRef.artifactId;
-    }
-
-    return normalizedManifestRef;
   }
 
   toInternalGraphSource(graphSource: GenericGraphSourceV1): { nodes: readonly GraphNode[] } {

@@ -2,7 +2,7 @@
 title: Review Status Board
 status: Active
 owner: Product / Architecture / Docs
-last_reviewed: 2026-04-09
+last_reviewed: 2026-04-10
 planning_type: review
 ---
 
@@ -56,6 +56,20 @@ Sprint execution board:
 
 Additional active rationale:
 
+- [20260411 Project architecture strengths, weaknesses, and priority review](./architecture-and-governance/20260411-project-architecture-strengths-weaknesses-fowler-review.md)
+  - domain: `architecture-and-governance`
+  - role: current module-by-module architectural valuation and priority baseline
+  - linkage: `none`
+  - status: `reference`
+  - progress: `n/a`
+
+- [20260410 Runtime and shared-kernel risk triage review](./architecture-and-governance/20260410-runtime-and-shared-kernel-risk-triage-review.md)
+  - domain: `architecture-and-governance`
+  - role: current triage reference for shared-kernel and runtime risks
+  - linkage: `RC-G1-B`, `AR-A7`, `AR-A12`, `AR-C6`, `AR-D8`, `AR-C2-T2..T4`
+  - status: `reference`
+  - progress: `n/a`
+
 - [20260407 Execution plan and run execution policy rationale](./architecture-and-governance/20260407-execution-plan-and-run-execution-policy-rationale.md)
   - domain: `architecture-and-governance`
   - role: current plan-definition vs execution-policy rationale
@@ -90,6 +104,27 @@ Additional active rationale:
   - linkage: `WE-HX-4-A`, `WE-HX-4-B`, `WE-HX-4-C`
   - status: `done`
   - progress: `100%`
+
+- [20260410 Contract pack and read boundary reset Fowler review](./architecture-and-governance/20260410-contract-pack-and-read-boundary-reset-fowler-review.md)
+  - domain: `architecture-and-governance`
+  - role: current review of record for resetting the engine-runtime contract pack and the run-status read boundary
+  - linkage: `AR-A12`, `AR-A12-A`, `AR-A12-B`, `AR-A12-C`
+  - status: `in_progress`
+  - progress: `35%`
+
+- [20260411 AR-A12-B status model split Fowler review](./architecture-and-governance/20260411-ar-a12-b-status-model-split-fowler-review.md)
+  - domain: `architecture-and-governance`
+  - role: slice-specific architecture review for splitting canonical status, enrichment, and provider-live diagnostics
+  - linkage: `AR-A12-B`
+  - status: `done`
+  - progress: `100%`
+
+- [20260413 DVT+ architectural audit review](./architecture-and-governance/20260413-dvt-plus-architectural-audit-review.md)
+  - domain: `architecture-and-governance`
+  - role: principal/staff architectural audit and recommendation baseline
+  - linkage: `none`
+  - status: `reference`
+  - progress: `n/a`
 
 Additional active QA:
 

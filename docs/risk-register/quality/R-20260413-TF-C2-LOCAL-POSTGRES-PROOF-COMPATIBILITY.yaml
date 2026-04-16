@@ -1,0 +1,27 @@
+---
+id: R-20260413-TF-C2-LOCAL-POSTGRES-PROOF-COMPATIBILITY
+title: TF-C2 local Postgres proof can drift from workspace and Docker CLI compatibility assumptions
+status: Open
+date: 2026-04-13
+owners:
+  - packages/@dvt/adapter-temporal
+  - packages/@dvt/adapter-postgres
+severity: Low
+probability: Medium
+context: >
+  The canonical local Postgres proof for TF-C2 depends on two environment-facing seams: the Temporal
+  integration lane must resolve the built adapter-postgres package, and the proof wrapper must
+  launch the Docker Compose stack on developer machines that can expose either `docker compose` or
+  `docker-compose`.
+risk: >
+  If the Temporal Postgres proof wrapper assumes a preexisting workspace symlink or only one Compose
+  CLI variant, local acceptance can fail before exercising the actual runtime semantics, creating
+  false negatives and slowing closure of runtime slices.
+mitigations:
+  - The Vitest config now resolves `@dvt/adapter-postgres` to the built dist entry produced by
+    `prepare:integration:postgres`.
+  - The wrapper now prefers `docker compose` and falls back to `docker-compose`.
+  - The runbook and evidence record now document the local proof-path compatibility assumptions
+    explicitly.
+review_after: 2026-06-01
+---

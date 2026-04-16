@@ -6,6 +6,7 @@ import type { IRunsPort } from '../../ports/runs';
 import type { SessionContextPort } from '../../ports/sessionContext';
 import type { ShellFeedbackPort } from '../../ports/shellFeedback';
 import type { IWorkspacePort } from '../../ports/workspace';
+import { makeRunContext } from '../../testing/contractTestUtils';
 import type { ApiClient } from '../api/createApiClient';
 import { getRuntimeDataSourceMode } from '../config/runtimeDataSourceMode';
 import { buildAppServices } from './appServices';
@@ -90,13 +91,13 @@ describe('buildAppServices', () => {
         targetAdapter: 'temporal',
       }),
       subscribeWorkspaceScope: () => () => undefined,
-      buildRunContext: (runId) => ({
-        tenantId: 'tenant-1',
-        projectId: 'project-1',
-        environmentId: 'env-1',
-        targetAdapter: 'temporal',
-        runId,
-      }),
+      buildRunContext: (runId) =>
+        makeRunContext(runId, {
+          tenantId: 'tenant-1',
+          projectId: 'project-1',
+          environmentId: 'env-1',
+          targetAdapter: 'temporal',
+        }),
     };
     const shellFeedback: ShellFeedbackPort = {
       success: vi.fn(),

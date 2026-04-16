@@ -1,12 +1,15 @@
-import { CURRENT_SIGNAL_SEMANTICS_VERSION } from '@dvt/contracts';
+import {
+  CURRENT_SIGNAL_SEMANTICS_VERSION,
+  asIsoUtcString,
+  asNonBlankString,
+} from '@dvt/contracts';
 import {
   AllowAllAuthorizer,
   StartRunApplicationService,
   type IProviderAdapter,
+  type ProviderRunStatusView,
   type ResolvedRunContext,
-  type RunStatusSnapshot,
   type SignalRequest,
-  type WorkflowEngine,
   type WorkflowEngineDeps,
 } from '@dvt/engine';
 import { createNoopObservability } from '@dvt/observability';
@@ -23,15 +26,12 @@ class FakeWorkflowEngine {
 
 function makeDeps(): WorkflowEngineDeps {
   return {
-    stateStoreRead: {} as never,
-    stateStoreWrite: {} as never,
-    projector: {} as never,
-    idempotency: {} as never,
-    clock: {} as never,
-    policy: {} as never,
-    intentStore: {} as never,
     adapters: new Map(),
     observability: {} as never,
+    startRunApplicationService: {} as never,
+    runRecoveryService: {} as never,
+    runControlService: {} as never,
+    runStatusQueryService: {} as never,
   };
 }
 
@@ -40,7 +40,8 @@ describe('createWorkflowEngine', () => {
     const deps = makeDeps();
     const engine = createWorkflowEngine(
       deps,
-      FakeWorkflowEngine as unknown as new (deps: WorkflowEngineDeps) => WorkflowEngine
+      (receivedDeps) =>
+        new FakeWorkflowEngine(receivedDeps) as unknown as ReturnType<typeof createWorkflowEngine>
     ) as unknown as FakeWorkflowEngine;
 
     expect(engine instanceof FakeWorkflowEngine).toBe(true);
@@ -56,20 +57,20 @@ describe('buildWorkflowEngine', () => {
         return {
           provider: 'temporal',
           tenantId: context.tenantId,
-          namespace: 'default',
-          workflowId: `wf-${context.runId}`,
+          namespace: asNonBlankString('default'),
+          workflowId: asNonBlankString(`wf-${context.runId}`),
           runId: context.runId,
         };
       },
       async cancelRun(_engineRunRef) {},
-      async getRunStatus(_engineRunRef): Promise<RunStatusSnapshot> {
+      async getProviderStatusView(_engineRunRef): Promise<ProviderRunStatusView> {
         throw new Error('not used');
       },
       async signal(_engineRunRef, _request: SignalRequest) {},
       signalSemanticsVersions: () => [CURRENT_SIGNAL_SEMANTICS_VERSION],
     };
 
-    const engine = buildWorkflowEngine({
+    const runtime = buildWorkflowEngine({
       security: {
         authorizer: new AllowAllAuthorizer(),
         planRefAllowedSchemes: ['https'],
@@ -84,13 +85,19 @@ describe('buildWorkflowEngine', () => {
         adapters: new Map([['temporal', adapter]]),
       },
       infrastructure: {
-        clock: { nowIsoUtc: () => '2026-04-05T00:00:00.000Z' },
+        clock: { nowIsoUtc: () => asIsoUtcString('2026-04-05T00:00:00.000Z') },
         observability: createNoopObservability(),
       },
     });
 
-    const startRunService = (engine as unknown as { startRunApplicationService: unknown })
+    const startRunService = (runtime.engine as unknown as { startRunApplicationService: unknown })
       .startRunApplicationService;
     expect(startRunService).toBeInstanceOf(StartRunApplicationService);
+    expect(Reflect.has(runtime.engine as object, 'getRunEnrichment')).toBe(false);
+    expect(Reflect.has(runtime.engine as object, 'healthCheck')).toBe(false);
+    expect(runtime.runEnrichmentService).toBeDefined();
+    expect(Reflect.has(runtime.runEnrichmentService as object, 'getRunEnrichment')).toBe(true);
+    expect(runtime.runHealthService).toBeDefined();
+    expect(Reflect.has(runtime.runHealthService as object, 'healthCheck')).toBe(true);
   });
 });

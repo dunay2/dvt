@@ -206,7 +206,9 @@ flowchart LR
 - `EngineRunRef`
 - `RunContext`
 - `SignalRequest`
-- `RunStatusSnapshot`
+- `CanonicalRunStatus`
+- `ProviderRunStatusView`
+- `RunStatusEnrichment`
 
 ### 7.3 Aggregate boundary
 
@@ -229,7 +231,6 @@ Normative operations:
 - `startRun(planRef, context)`
 - `cancelRun(engineRunRef)`
 - `getRunStatus(engineRunRef)`
-- `enrichRunStatus(engineRunRef)`
 - `signal(engineRunRef, request)`
 
 ```mermaid
@@ -237,11 +238,14 @@ classDiagram
     class IWorkflowEngine {
       +startRun(planRef, context) EngineRunRef
       +cancelRun(engineRunRef) void
-      +getRunStatus(engineRunRef) RunStatusSnapshot
-      +enrichRunStatus(engineRunRef) RunStatusSnapshot
+      +getRunStatus(engineRunRef) CanonicalRunStatus
       +signal(engineRunRef, request) void
     }
 ```
+
+Optional provider-backed enrichment is a separate boundary:
+
+- `IRunEnrichmentService.getRunEnrichment(engineRunRef): RunStatusEnrichment`
 
 ### 8.2 IRunStateStore
 
@@ -261,7 +265,7 @@ Normative responsibilities:
 - provider-native `startRun`
 - provider-native `cancelRun`
 - provider-native `signal`
-- provider-native `getRunStatus` for enrichment only
+- provider-native `getProviderStatusView` for enrichment only
 - capability disclosure where implemented
 
 ---
@@ -585,9 +589,9 @@ It must **not** call the provider adapter on the default path.
 
 ### 17.2 Enriched status path
 
-`enrichRunStatus` may call the provider adapter to obtain:
+`IRunEnrichmentService.getRunEnrichment()` may call the provider adapter to obtain:
 
-- substatus
+- provider substatus
 - transient message
 - runtime-native diagnostics
 

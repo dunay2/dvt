@@ -34,15 +34,19 @@ async function main(): Promise<void> {
     await stateStore.migrate();
     const lineageStore = getLineageStore();
 
-    runtime = new LineageWorkerRuntime(lineageStore, sink, mapper, logger, {
+    const runtimeOptions = {
       batchSize: env.DVT_LINEAGE_BATCH_SIZE,
       pollIntervalMs: env.DVT_LINEAGE_POLL_INTERVAL_MS,
       errorBackoffMs: env.DVT_LINEAGE_ERROR_BACKOFF_MS,
-      deadLetterTenantId: env.DVT_LINEAGE_DLQ_ALERT_TENANT_ID,
       deadLetterAlertThreshold: env.DVT_LINEAGE_DLQ_ALERT_THRESHOLD,
       autoReplayEnabled: env.DVT_LINEAGE_DLQ_AUTO_REPLAY_ENABLED,
       autoReplayBatchSize: env.DVT_LINEAGE_DLQ_AUTO_REPLAY_BATCH_SIZE,
-    });
+      ...(env.DVT_LINEAGE_DLQ_ALERT_TENANT_ID === undefined
+        ? {}
+        : { deadLetterTenantId: env.DVT_LINEAGE_DLQ_ALERT_TENANT_ID }),
+    };
+
+    runtime = new LineageWorkerRuntime(lineageStore, sink, mapper, logger, runtimeOptions);
 
     await new Promise<void>((resolve, reject) => {
       adminServer.once('error', reject);

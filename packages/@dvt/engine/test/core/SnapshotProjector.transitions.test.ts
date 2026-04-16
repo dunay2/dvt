@@ -11,7 +11,7 @@ import { InvalidStateTransitionError } from '@dvt/run-domain';
 import { describe, expect, it } from 'vitest';
 
 import type { EventEnvelope, WorkflowSnapshot } from '../../src/contracts/runEvents.js';
-import { applyRunEvent } from '../../src/core/SnapshotProjector.js';
+import { applyRunEvent, snapshotToStatus } from '../../src/core/SnapshotProjector.js';
 
 // Helpers
 
@@ -158,5 +158,72 @@ describe('applyRunEvent - step terminal guard', () => {
   it('allows all step events on new (unseen) steps', () => {
     const snap = makeSnap('RUNNING');
     expect(() => applyRunEvent(snap, makeStepEvent('StepStarted', 'step-new'))).not.toThrow();
+  });
+});
+
+describe('snapshotToStatus - execution materialization visibility', () => {
+  it('omits materialization from failed snapshots while preserving failure evidence', () => {
+    const snap = makeSnap('FAILED');
+    snap.execution = {
+      failure: {
+        stepId: 'step-transform',
+        reason: 'STEP_FAILURE',
+        message: 'duplicate key',
+        failedAt: '2026-04-08T00:00:20.000Z',
+      },
+      materialization: {
+        executor: 'postgres',
+        environmentId: 'env-1',
+        sinkTable: 'analytics.orders_daily',
+        rowsWritten: 42,
+        startedAt: '2026-04-08T00:00:05.000Z',
+        completedAt: '2026-04-08T00:00:25.000Z',
+        durationMs: 20000,
+      },
+    };
+
+    const status = snapshotToStatus(snap);
+
+    expect(status.execution?.failure?.reason).toBe('STEP_FAILURE');
+    expect(status.execution?.materialization).toBeUndefined();
+  });
+
+  it('omits materialization from cancelled snapshots', () => {
+    const snap = makeSnap('CANCELLED');
+    snap.execution = {
+      materialization: {
+        executor: 'postgres',
+        environmentId: 'env-1',
+        sinkTable: 'analytics.orders_daily',
+        rowsWritten: 42,
+        startedAt: '2026-04-08T00:00:05.000Z',
+        completedAt: '2026-04-08T00:00:25.000Z',
+        durationMs: 20000,
+      },
+    };
+
+    const status = snapshotToStatus(snap);
+
+    expect(status.execution?.materialization).toBeUndefined();
+  });
+
+  it('keeps materialization for completed snapshots', () => {
+    const snap = makeSnap('COMPLETED');
+    snap.execution = {
+      materialization: {
+        executor: 'postgres',
+        environmentId: 'env-1',
+        sinkTable: 'analytics.orders_daily',
+        rowsWritten: 42,
+        startedAt: '2026-04-08T00:00:05.000Z',
+        completedAt: '2026-04-08T00:00:25.000Z',
+        durationMs: 20000,
+      },
+    };
+
+    const status = snapshotToStatus(snap);
+
+    expect(status.execution?.materialization?.executor).toBe('postgres');
+    expect(status.execution?.materialization?.rowsWritten).toBe(42);
   });
 });

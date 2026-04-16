@@ -1,12 +1,12 @@
 import type { PlanPreviewInput as ShellPlanPreviewInput } from '../../ports/plans';
 import type {
+  CanonicalRunStatus,
   EngineRunRef,
   PlanRef,
   RunContext,
   RunEvent,
-  RunStatusSnapshot,
 } from '../../types/engine';
-import type { ExecutionPlan } from '../../types/dbt';
+import type { PlanViewModel } from '../../types/plans';
 import type { NodeBadgeContribution, NodeRendererRegistration } from './NodeRendering';
 import type { CanvasOverlayContribution } from './NodeRendering';
 import type { LocalizableString } from './PluginManifest';
@@ -24,7 +24,7 @@ export interface RunObserveOptions {
   afterSeq?: number;
   onEvent: (event: RunEvent) => void;
   onError: (error: Error) => void;
-  onStatusChange?: (status: RunStatusSnapshot) => void;
+  onStatusChange?: (status: CanonicalRunStatus) => void;
 }
 
 export interface RunObserveHandle {
@@ -47,7 +47,7 @@ export interface RunOperations {
 export type PlanPreviewInput = ShellPlanPreviewInput;
 
 export interface PlanOperations {
-  preview?: (input: PlanPreviewInput) => Promise<ExecutionPlan>;
+  preview?: (input: PlanPreviewInput) => Promise<PlanViewModel>;
 }
 
 // ---------------------------------------------------------------------------

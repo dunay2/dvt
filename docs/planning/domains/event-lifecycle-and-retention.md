@@ -2,7 +2,7 @@
 title: Domain - Event Lifecycle And Retention
 status: Review
 owner: Engine / Adapters / Docs
-last_reviewed: 2026-04-08
+last_reviewed: 2026-04-13
 planning_type: reference
 ---
 
@@ -44,6 +44,7 @@ they are archived inputs rather than active planning authorities.
 - [20260321 Gap 5 PR1 Export Verifier Closeout](../closeouts/20260321-gap-5-pr1-export-verifier-closeout.md)
 - [20260321 Gap 5 PR2 Deferred Deletion Restore Closeout](../closeouts/20260321-gap-5-pr2-deferred-deletion-restore-closeout.md)
 - [20260321 Gap 5 PR3 Delivery Buffer Retention Closeout](../closeouts/20260321-gap-5-pr3-delivery-buffer-retention-closeout.md)
+- [20260413 TF-D1 Proof Environment Lifecycle Closeout](../closeouts/20260413-tf-d1-proof-environment-lifecycle-closeout.md)
 
 ## Diagram Sources
 

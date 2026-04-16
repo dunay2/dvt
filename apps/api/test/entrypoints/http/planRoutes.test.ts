@@ -1,10 +1,6 @@
 import { jcsCanonicalize, sha256HexUtf8 } from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
-import {
-  MANIFEST_ARTIFACT_RESOLUTION_ERROR_KIND,
-  ManifestArtifactResolutionError,
-} from '../../../src/application/errors/ManifestArtifactResolutionError.js';
 import { importPlanRoute, previewPlanRoute } from '../../../src/entrypoints/http/planRoutes.js';
 
 function createReply(): {
@@ -81,6 +77,87 @@ const VALID_PREVIEW_PROVENANCE = {
     contentSha256: 'd'.repeat(64),
   },
 } as const;
+
+const VALID_TRANSFORMATION_GRAPH_SOURCE = {
+  kind: 'generic-graph-v1',
+  sourceFamily: 'transformation-design-graph',
+  sourceVersion: 'transformation-sql-first-v1',
+  nodes: [
+    {
+      nodeId: 'source-node',
+      stepKind: 'PREPARE_POSTGRES_TRANSFORM',
+      dependsOn: [],
+      stepTypeConfig: {
+        targetSchema: 'analytics',
+        sourceSchema: 'raw',
+        sourceTable: 'orders',
+        sourceAlias: 'orders_src',
+      },
+    },
+    {
+      nodeId: 'transform-node',
+      stepKind: 'POSTGRES_SQL_TRANSFORM',
+      dependsOn: ['source-node'],
+      stepTypeConfig: {
+        dialect: 'postgres',
+        entrypoint: 'models/model.sql',
+        sql: 'select * from raw.orders',
+        sqlArtifact: VALID_PREVIEW_PROVENANCE.sqlArtifact,
+        sourceSchema: 'raw',
+        sourceTable: 'orders',
+        sourceAlias: 'orders_src',
+        sinkSchema: 'analytics',
+        sinkTable: 'orders_daily',
+        materialization: 'table',
+        writeMode: 'replace',
+      },
+    },
+    {
+      nodeId: 'sink-node',
+      stepKind: 'CAPTURE_MATERIALIZATION_EVIDENCE',
+      dependsOn: ['transform-node'],
+      stepTypeConfig: {
+        sinkSchema: 'analytics',
+        sinkTable: 'orders_daily',
+        materialization: 'table',
+        writeMode: 'replace',
+      },
+    },
+  ],
+} as const;
+
+function buildTransformationStoredPlan(): Record<string, unknown> {
+  return {
+    metadata: {
+      planId: VALID_PLAN_REF.planId,
+      planVersion: VALID_PLAN_REF.planVersion,
+      schemaVersion: VALID_PLAN_REF.schemaVersion,
+      contractVersion: '1.0.0',
+      inputHashSha256: VALID_PLAN_REF.sha256,
+      createdAtIso: '2026-04-05T00:00:00.000Z',
+    },
+    steps: [
+      {
+        stepId: 'source-node',
+        kind: 'PREPARE_POSTGRES_TRANSFORM',
+        dependsOn: [],
+        stepTypeConfig: VALID_TRANSFORMATION_GRAPH_SOURCE.nodes[0].stepTypeConfig,
+      },
+      {
+        stepId: 'transform-node',
+        kind: 'POSTGRES_SQL_TRANSFORM',
+        dependsOn: ['source-node'],
+        stepTypeConfig: VALID_TRANSFORMATION_GRAPH_SOURCE.nodes[1].stepTypeConfig,
+      },
+      {
+        stepId: 'sink-node',
+        kind: 'CAPTURE_MATERIALIZATION_EVIDENCE',
+        dependsOn: ['transform-node'],
+        stepTypeConfig: VALID_TRANSFORMATION_GRAPH_SOURCE.nodes[2].stepTypeConfig,
+      },
+    ],
+  } as const;
+}
 
 function buildStoredPlan(): {
   readonly metadata: {
@@ -408,19 +485,11 @@ describe('planRoutes', () => {
     );
   });
 
-  it('returns 422 plan_rejected when planner manifest resolution fails', async () => {
+  it('returns 400 when preview receives forbidden manifestRef input', async () => {
     const reply = createReply();
     const deps = {
       ...okAuthDeps(),
-      planner: {
-        buildPlan: vi.fn(async () => {
-          throw new ManifestArtifactResolutionError(
-            MANIFEST_ARTIFACT_RESOLUTION_ERROR_KIND.integrityMismatch,
-            'Manifest artifact integrity mismatch.',
-            { detail: 'sha256_mismatch' }
-          );
-        }),
-      },
+      planner: { buildPlan: vi.fn() },
       planStore: { storePlan: vi.fn(), markValid: vi.fn(), markInvalid: vi.fn() },
       planValidator: { validatePlan: vi.fn(async () => ({ status: 'OK' })) },
       planResolver: { fetch: vi.fn() },
@@ -451,18 +520,94 @@ describe('planRoutes', () => {
       deps as never
     );
 
-    expect(reply.statusCode).toBe(422);
+    expect(reply.statusCode).toBe(400);
     expect(reply.payload).toEqual({
-      error: {
-        type: 'unprocessable',
-        reason: 'plan_rejected',
-        details: {
-          message: 'Manifest artifact integrity mismatch.',
-          cause: 'manifest_ref_integrity_mismatch',
-        },
-      },
+      error: { type: 'bad_request', reason: 'invalid_plan_source' },
     });
     expect(deps.planStore.storePlan).not.toHaveBeenCalled();
+    expect(deps.planner.buildPlan).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 when preview receives planRef without graphSource', async () => {
+    const reply = createReply();
+    const deps = {
+      ...okAuthDeps(),
+      planner: { buildPlan: vi.fn() },
+      planStore: { storePlan: vi.fn(), markValid: vi.fn(), markInvalid: vi.fn() },
+      planValidator: { validatePlan: vi.fn(async () => ({ status: 'OK' })) },
+      planResolver: { fetch: vi.fn() },
+    };
+
+    await previewPlanRoute(
+      {
+        id: 'req-preview-plan-ref-invalid',
+        headers: { authorization: 'Bearer token' },
+        body: {
+          context: {
+            runId: 'run_1',
+            tenantId: 'tenant-1',
+            projectId: 'project-1',
+            environmentId: 'env-1',
+            targetAdapter: 'mock',
+          },
+          previewProfile: PREVIEW_PROFILE_GENERIC,
+          selectedNodeIds: ['node_1'],
+          planRef: VALID_PLAN_REF,
+        },
+      } as never,
+      reply as never,
+      deps as never
+    );
+
+    expect(reply.statusCode).toBe(400);
+    expect(reply.payload).toEqual({
+      error: { type: 'bad_request', reason: 'invalid_plan_source' },
+    });
+    expect(deps.planner.buildPlan).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 when preview receives both planRef and graphSource', async () => {
+    const reply = createReply();
+    const deps = {
+      ...okAuthDeps(),
+      planner: { buildPlan: vi.fn() },
+      planStore: { storePlan: vi.fn(), markValid: vi.fn(), markInvalid: vi.fn() },
+      planValidator: { validatePlan: vi.fn(async () => ({ status: 'OK' })) },
+      planResolver: { fetch: vi.fn() },
+    };
+
+    await previewPlanRoute(
+      {
+        id: 'req-preview-conflicting-sources',
+        headers: { authorization: 'Bearer token' },
+        body: {
+          context: {
+            runId: 'run_1',
+            tenantId: 'tenant-1',
+            projectId: 'project-1',
+            environmentId: 'env-1',
+            targetAdapter: 'mock',
+          },
+          previewProfile: PREVIEW_PROFILE_GENERIC,
+          selectedNodeIds: ['node_1'],
+          planRef: VALID_PLAN_REF,
+          graphSource: {
+            kind: 'generic-graph-v1',
+            sourceFamily: 'dbt',
+            sourceVersion: 'manifest-v10',
+            nodes: [{ nodeId: 'node_1', stepKind: 'DBT_MODEL', dependsOn: [] }],
+          },
+        },
+      } as never,
+      reply as never,
+      deps as never
+    );
+
+    expect(reply.statusCode).toBe(400);
+    expect(reply.payload).toEqual({
+      error: { type: 'bad_request', reason: 'conflicting_plan_inputs' },
+    });
+    expect(deps.planner.buildPlan).not.toHaveBeenCalled();
   });
 
   it('returns 422 when postgres transformation preview omits required provenance', async () => {
@@ -584,7 +729,7 @@ describe('planRoutes', () => {
     expect(deps.planner.buildPlan).not.toHaveBeenCalled();
   });
 
-  it('returns 422 when previewProfile does not allow manifestRef input', async () => {
+  it('returns 400 when transformation preview receives forbidden manifestRef input', async () => {
     const reply = createReply();
     const deps = {
       ...okAuthDeps(),
@@ -619,15 +764,55 @@ describe('planRoutes', () => {
       deps as never
     );
 
-    expect(reply.statusCode).toBe(422);
+    expect(reply.statusCode).toBe(400);
+    expect(reply.payload).toEqual({
+      error: { type: 'bad_request', reason: 'invalid_plan_source' },
+    });
+    expect(deps.planner.buildPlan).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 when previewProfile contains surrounding whitespace', async () => {
+    const reply = createReply();
+    const deps = {
+      ...okAuthDeps(),
+      planner: { buildPlan: vi.fn() },
+      planStore: { storePlan: vi.fn(), markValid: vi.fn(), markInvalid: vi.fn() },
+      planValidator: { validatePlan: vi.fn(async () => ({ status: 'OK' })) },
+      planResolver: { fetch: vi.fn() },
+    };
+
+    await previewPlanRoute(
+      {
+        id: 'req-preview-profile-whitespace',
+        headers: { authorization: 'Bearer token' },
+        body: {
+          context: {
+            runId: 'run_1',
+            tenantId: 'tenant-1',
+            projectId: 'project-1',
+            environmentId: 'env-1',
+            targetAdapter: 'mock',
+          },
+          previewProfile: ' planner-generic-v1 ',
+          selectedNodeIds: ['node_1'],
+          graphSource: {
+            kind: 'generic-graph-v1',
+            sourceFamily: 'dbt',
+            sourceVersion: 'manifest-v10',
+            nodes: [{ nodeId: 'node_1', stepKind: 'DBT_MODEL', dependsOn: [] }],
+          },
+        },
+      } as never,
+      reply as never,
+      deps as never
+    );
+
+    expect(reply.statusCode).toBe(400);
     expect(reply.payload).toEqual({
       error: {
-        type: 'unprocessable',
-        reason: 'plan_rejected',
-        details: {
-          cause: 'preview_profile_source_not_allowed',
-          message: 'transformation-sql-first-v1 does not allow manifestRef plan input.',
-        },
+        type: 'bad_request',
+        reason: 'invalid_preview_profile',
+        target: 'previewProfile',
       },
     });
     expect(deps.planner.buildPlan).not.toHaveBeenCalled();
@@ -635,7 +820,7 @@ describe('planRoutes', () => {
 
   it('forwards preview provenance into planner observability extra payload', async () => {
     const reply = createReply();
-    const plan = buildStoredPlan();
+    const plan = buildTransformationStoredPlan();
     const buildPlan = vi.fn(async () => ({
       plan,
       canonicalPlanJson: '{}',
@@ -671,13 +856,8 @@ describe('planRoutes', () => {
             targetAdapter: 'mock',
           },
           previewProfile: PREVIEW_PROFILE_TRANSFORMATION,
-          selectedNodeIds: ['node_1'],
-          graphSource: {
-            kind: 'generic-graph-v1',
-            sourceFamily: 'dbt',
-            sourceVersion: 'manifest-v10',
-            nodes: [{ nodeId: 'node_1', stepKind: 'DBT_MODEL', dependsOn: [] }],
-          },
+          selectedNodeIds: ['source-node', 'transform-node', 'sink-node'],
+          graphSource: VALID_TRANSFORMATION_GRAPH_SOURCE,
           provenance: VALID_PREVIEW_PROVENANCE,
         },
         log: { error: vi.fn() },
@@ -694,10 +874,10 @@ describe('planRoutes', () => {
         planRef: VALID_PLAN_REF,
         planSummary: {
           executor: 'postgres',
-          nodeCount: 1,
-          stepCount: 0,
-          sourceTables: [],
-          sinkTables: [],
+          nodeCount: 3,
+          stepCount: 3,
+          sourceTables: ['raw.orders'],
+          sinkTables: ['analytics.orders_daily'],
         },
         persisted: {
           planRecordId: VALID_PLAN_REF.planId,

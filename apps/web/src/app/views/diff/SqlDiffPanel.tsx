@@ -2,22 +2,58 @@ import { Code } from 'lucide-react';
 
 import { MonacoDiffViewer } from '../../components/monaco/MonacoDiffViewer';
 import { Card } from '../../components/ui/card';
+import { routeWorkbenchPanelClassName } from '../../components/workbench/RouteWorkbenchFrame';
+import { cn } from '../../components/ui/utils';
+import { diffViewCopy as copy } from './copy';
+import type { DiffSqlContextState } from './diffWorkbenchStateModel';
+import { DiffPanelStateView } from './DiffStateViews';
 import type { SqlDiffDocument } from './diffReviewModel';
 
 type SqlDiffPanelProps = {
   document: SqlDiffDocument;
+  sqlContextState: DiffSqlContextState;
 };
 
-export function SqlDiffPanel({ document }: SqlDiffPanelProps) {
+export function SqlDiffPanel({ document, sqlContextState }: SqlDiffPanelProps) {
+  if (sqlContextState.kind === 'loading') {
+    return (
+      <DiffPanelStateView
+        dataSlot="diff-sql-loading-state"
+        title={copy.states.sqlPreviewLoadingTitle}
+        message={copy.states.sqlPreviewLoadingMessage}
+      />
+    );
+  }
+
+  if (sqlContextState.kind === 'unavailable') {
+    return (
+      <DiffPanelStateView
+        dataSlot="diff-sql-unavailable-state"
+        title={copy.states.compareContextUnavailableTitle}
+        message={copy.states.compareContextUnavailableMessage}
+      />
+    );
+  }
+
+  if (sqlContextState.kind === 'error') {
+    return (
+      <DiffPanelStateView
+        dataSlot="diff-sql-error-state"
+        title={copy.states.sqlPreviewErrorTitle}
+        message={sqlContextState.message}
+      />
+    );
+  }
+
   return (
-    <Card className="border-slate-700 bg-slate-900 p-4 text-slate-50">
-      <h3 className="mb-4 flex items-center gap-2 font-semibold text-slate-50">
+    <Card className={cn(routeWorkbenchPanelClassName, 'p-4')}>
+      <h3 className="mb-4 flex items-center gap-2 font-semibold text-[var(--text-strong)]">
         <Code className="size-5" />
         {document.title}
       </h3>
-      <div className="mb-3 flex items-center gap-2 text-xs text-slate-300">
+      <div className="mb-3 flex items-center gap-2 text-xs text-[var(--text-muted)]">
         <span>{document.previousLabel}</span>
-        <span className="text-slate-500">vs</span>
+        <span className="text-[var(--text-subtle)]">vs</span>
         <span>{document.currentLabel}</span>
       </div>
       <MonacoDiffViewer

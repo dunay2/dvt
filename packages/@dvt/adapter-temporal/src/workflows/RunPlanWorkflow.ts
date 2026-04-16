@@ -21,17 +21,23 @@
  *  - Zero `process.env`
  *  - Zero Node.js / DOM APIs
  */
+import type { MaterializationEvidence } from '@dvt/contracts';
 import { collectDownstreamStepIds, planExecutionLayers } from '@dvt/plan-interpreter';
 import {
+  ActivityCancellationType,
   ActivityFailure,
   ApplicationFailure,
+  CancellationScope,
   continueAsNew,
   condition,
   defineQuery,
   defineSignal,
+  isCancellation,
+  proxyLocalActivities,
   proxyActivities,
   rootCause,
   setHandler,
+  sleep,
 } from '@temporalio/workflow';
 
 import type {
@@ -50,6 +56,7 @@ import {
   normalizeDependsOn,
   parseOptionalNonNegativeInt,
   parseOptionalStringArray,
+  resolveStepActivityRetryPolicy,
   resolveMaterializationEvidence,
   resolveTransformationExecutor,
   shouldTriggerContinueAsNew,
@@ -62,15 +69,7 @@ type ExecutedStepResult = {
   stepId: string;
   status: 'COMPLETED' | 'FAILED';
   gatewayDecision?: boolean;
-  resultEvidence?: {
-    executor: 'postgres' | 'dbt';
-    environmentId: string;
-    sinkTable: string;
-    rowsWritten: number;
-    startedAt: string;
-    completedAt: string;
-    durationMs: number;
-  };
+  resultEvidence?: MaterializationEvidence;
   failureReason?: string;
   retriable?: boolean;
   error?: string;
@@ -135,10 +134,10 @@ export interface RunPlanWorkflowResult {
 }
 
 // ---------------------------------------------------------------------------
-// Workflow state (visible via query)
+// Runtime-internal workflow state (visible only through the internal runtime query)
 // ---------------------------------------------------------------------------
 
-export interface WorkflowState {
+interface RuntimeWorkflowState {
   status: 'RUNNING' | 'PAUSED' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
   /** Dedicated pause flag: used by condition() predicate to avoid TypeScript CFA cast. */
   paused: boolean;
@@ -157,19 +156,39 @@ export interface WorkflowState {
 export const pauseSignal = defineSignal<[string]>('pause');
 export const resumeSignal = defineSignal<[string]>('resume');
 export const cancelSignal = defineSignal<[string | undefined]>('cancel');
-export const statusQuery = defineQuery<WorkflowState>('status');
+const runtimeStateQuery = defineQuery<RuntimeWorkflowState>('runtimeState');
 
 // ---------------------------------------------------------------------------
 // Activity proxy (all side-effects delegated to activities)
 // ---------------------------------------------------------------------------
 
-const activities = proxyActivities<WorkflowActivitiesPort>({
+function createStepActivities(step: WorkflowStep): Pick<WorkflowActivitiesPort, 'executeStep'> {
+  return proxyActivities<Pick<WorkflowActivitiesPort, 'executeStep'>>({
+    startToCloseTimeout: '30m',
+    cancellationType: ActivityCancellationType.TRY_CANCEL,
+    retry: resolveStepActivityRetryPolicy(step),
+  });
+}
+
+const eventActivities = proxyActivities<Pick<WorkflowActivitiesPort, 'emitEvent'>>({
   startToCloseTimeout: '30m',
   retry: {
     initialInterval: '1s',
     maximumInterval: '60s',
     backoffCoefficient: 2,
     // Technical retries only. These must not create new logical attempts.
+    maximumAttempts: 3,
+    nonRetryableErrorTypes: ['PermanentStepError'],
+  },
+});
+
+const terminalEventActivities = proxyLocalActivities<Pick<WorkflowActivitiesPort, 'emitEvent'>>({
+  startToCloseTimeout: '1m',
+  cancellationType: ActivityCancellationType.WAIT_CANCELLATION_COMPLETED,
+  retry: {
+    initialInterval: '1s',
+    maximumInterval: '5s',
+    backoffCoefficient: 2,
     maximumAttempts: 3,
     nonRetryableErrorTypes: ['PermanentStepError'],
   },
@@ -234,6 +253,19 @@ export async function runPlanWorkflow(input: RunPlanWorkflowInput): Promise<RunP
       completedStepResults,
     });
   } catch (err) {
+    const nativeCancellationFinalized = await finalizeNativeCancellationIfNeeded({
+      error: err,
+      state,
+      ctx,
+      planRef,
+      continuedAsNewCount: ctrl.continuedAsNewCount,
+    });
+    if (nativeCancellationFinalized) {
+      // Re-throw the original cancellation after persisting the canonical
+      // lifecycle so Temporal records the workflow execution as provider-native
+      // cancelled instead of normal completion.
+      throw err;
+    }
     await markWorkflowFailedIfNeeded(state, ctx, planRef, runtimeExecutor);
     throw err;
   }
@@ -281,7 +313,7 @@ async function resolveLayerLoopOutcome(args: {
   layerOutcome: LayerLoopOutcome;
   ctx: RunPlanWorkflowInput['ctx'];
   planRef: RunPlanWorkflowInput['planRef'];
-  state: WorkflowState;
+  state: RuntimeWorkflowState;
   continuedAsNewCount: number;
   runtimeExecutor?: 'postgres' | 'dbt';
   completedStepResults: Record<string, Record<string, unknown>>;
@@ -298,6 +330,16 @@ async function resolveLayerLoopOutcome(args: {
   if (cancelled) {
     return cancelled;
   }
+  await awaitNativeCancellationCheckpoint();
+  const cancelledAfterCheckpoint = await finalizeCancellationIfRequested({
+    state: args.state,
+    ctx: args.ctx,
+    planRef: args.planRef,
+    continuedAsNewCount: args.continuedAsNewCount,
+  });
+  if (cancelledAfterCheckpoint) {
+    return cancelledAfterCheckpoint;
+  }
   if (args.layerOutcome.kind === 'continue_as_new') {
     return continueAsNew<typeof runPlanWorkflow>(args.layerOutcome.nextInput);
   }
@@ -310,7 +352,7 @@ async function resolveLayerLoopOutcome(args: {
           ...(args.runtimeExecutor === undefined ? {} : { executor: args.runtimeExecutor }),
           ...(resultEvidence === undefined ? {} : { resultEvidence }),
         };
-  await activities.emitEvent({
+  await eventActivities.emitEvent({
     ctx: args.ctx,
     planRef: args.planRef,
     eventType: 'RunCompleted',
@@ -325,14 +367,14 @@ async function resolveLayerLoopOutcome(args: {
 }
 
 async function markWorkflowFailedIfNeeded(
-  state: WorkflowState,
+  state: RuntimeWorkflowState,
   ctx: RunPlanWorkflowInput['ctx'],
   planRef: RunPlanWorkflowInput['planRef'],
   runtimeExecutor?: 'postgres' | 'dbt'
 ): Promise<void> {
   if (state.status === 'CANCELLED' || state.status === 'FAILED') return;
   try {
-    await activities.emitEvent({
+    await eventActivities.emitEvent({
       ctx,
       planRef,
       eventType: 'RunFailed',
@@ -347,6 +389,14 @@ async function markWorkflowFailedIfNeeded(
   state.status = 'FAILED';
 }
 
+async function awaitNativeCancellationCheckpoint(): Promise<void> {
+  // Provider-native WorkflowHandle.cancel() can arrive after the last activity
+  // result is applied but before the workflow emits its terminal completion
+  // command. Yield one timer tick so a pending native cancel can preempt
+  // RunCompleted / continue-as-new.
+  await sleep(1);
+}
+
 // ---------------------------------------------------------------------------
 // State initialisation & signal handlers
 // ---------------------------------------------------------------------------
@@ -354,7 +404,7 @@ async function markWorkflowFailedIfNeeded(
 function createInitialWorkflowState(
   continuedAsNewCount: number,
   gatewayDecisions: Record<string, boolean> | undefined
-): WorkflowState {
+): RuntimeWorkflowState {
   return {
     status: 'RUNNING',
     paused: false,
@@ -366,7 +416,7 @@ function createInitialWorkflowState(
 }
 
 function registerSignalHandlers(
-  state: WorkflowState,
+  state: RuntimeWorkflowState,
   processedControlSignalIds: Set<string>
 ): void {
   setHandler(pauseSignal, (signalId: string) => {
@@ -393,7 +443,7 @@ function registerSignalHandlers(
     }
   });
 
-  setHandler(statusQuery, () => state);
+  setHandler(runtimeStateQuery, () => state);
 }
 
 // ---------------------------------------------------------------------------
@@ -409,7 +459,7 @@ async function bootstrapFirstExecutionIfNeeded(
   if (resumeFromLayerIndex !== 0) return;
   // run_metadata + RunQueued are committed by WorkflowEngine before adapter.startRun(),
   // so the event store is guaranteed to exist by the time this activity executes.
-  await activities.emitEvent({
+  await eventActivities.emitEvent({
     ctx,
     planRef,
     eventType: 'RunStarted',
@@ -443,7 +493,7 @@ interface ExecutePlanLayersArgs {
   runtimeExecutor?: 'postgres' | 'dbt';
   ctx: RunPlanWorkflowInput['ctx'];
   planRef: RunPlanWorkflowInput['planRef'];
-  state: WorkflowState;
+  state: RuntimeWorkflowState;
   runtime: LayerRuntimeState;
   processedControlSignalIds: ReadonlySet<string>;
 }
@@ -602,7 +652,7 @@ async function emitSkippedStepsInLayer(args: {
   for (const step of args.layer) {
     if (executableIds.has(step.stepId)) continue;
     args.skippedSteps.add(step.stepId);
-    await activities.emitEvent({
+    await eventActivities.emitEvent({
       ctx: args.ctx,
       planRef: args.planRef,
       eventType: 'StepSkipped',
@@ -612,7 +662,7 @@ async function emitSkippedStepsInLayer(args: {
 }
 
 async function handlePreLayerLifecycle(args: {
-  state: WorkflowState;
+  state: RuntimeWorkflowState;
   ctx: RunPlanWorkflowInput['ctx'];
   planRef: RunPlanWorkflowInput['planRef'];
   continuedAsNewCount: number;
@@ -622,34 +672,77 @@ async function handlePreLayerLifecycle(args: {
 
   if (!args.state.paused) return null;
 
-  await activities.emitEvent({ ctx: args.ctx, planRef: args.planRef, eventType: 'RunPaused' });
+  await eventActivities.emitEvent({ ctx: args.ctx, planRef: args.planRef, eventType: 'RunPaused' });
   await condition(() => !args.state.paused || args.state.cancelRequested);
 
   const cancelledWhilePaused = await finalizeCancellationIfRequested(args);
   if (cancelledWhilePaused) return cancelledWhilePaused;
 
-  await activities.emitEvent({ ctx: args.ctx, planRef: args.planRef, eventType: 'RunResumed' });
+  await eventActivities.emitEvent({
+    ctx: args.ctx,
+    planRef: args.planRef,
+    eventType: 'RunResumed',
+  });
   return null;
 }
 
 async function finalizeCancellationIfRequested(args: {
-  state: WorkflowState;
+  state: RuntimeWorkflowState;
   ctx: RunPlanWorkflowInput['ctx'];
   planRef: RunPlanWorkflowInput['planRef'];
   continuedAsNewCount: number;
 }): Promise<RunPlanWorkflowResult | null> {
-  if (!args.state.cancelRequested) {
+  const nativeCancellationRequested = CancellationScope.current().consideredCancelled;
+  if (!args.state.cancelRequested && !nativeCancellationRequested) {
     return null;
   }
 
-  await activities.emitEvent({
+  return emitTerminalCancellation(args, { includeRequestEvent: true });
+}
+
+async function finalizeNativeCancellationIfNeeded(args: {
+  error: unknown;
+  state: RuntimeWorkflowState;
+  ctx: RunPlanWorkflowInput['ctx'];
+  planRef: RunPlanWorkflowInput['planRef'];
+  continuedAsNewCount: number;
+}): Promise<boolean> {
+  if (!isCancellation(args.error)) {
+    return false;
+  }
+
+  await CancellationScope.nonCancellable(async () => {
+    await emitTerminalCancellation(args, { includeRequestEvent: !args.state.cancelRequested });
+  });
+  return true;
+}
+
+async function emitTerminalCancellation(
+  args: {
+    state: RuntimeWorkflowState;
+    ctx: RunPlanWorkflowInput['ctx'];
+    planRef: RunPlanWorkflowInput['planRef'];
+    continuedAsNewCount: number;
+  },
+  options: { includeRequestEvent: boolean }
+): Promise<RunPlanWorkflowResult> {
+  args.state.cancelRequested = true;
+  args.state.paused = false;
+  args.state.status = 'CANCELLED';
+
+  if (options.includeRequestEvent) {
+    await terminalEventActivities.emitEvent({
+      ctx: args.ctx,
+      planRef: args.planRef,
+      eventType: 'RunCancelRequested',
+    });
+  }
+
+  await terminalEventActivities.emitEvent({
     ctx: args.ctx,
     planRef: args.planRef,
-    eventType: 'RunCancelRequested',
+    eventType: 'RunCancelled',
   });
-  await activities.emitEvent({ ctx: args.ctx, planRef: args.planRef, eventType: 'RunCancelled' });
-  args.state.status = 'CANCELLED';
-  args.state.paused = false;
   return {
     runId: args.ctx.runId,
     status: 'CANCELLED',
@@ -664,7 +757,7 @@ async function emitStepStartedForLayer(
 ): Promise<void> {
   for (const step of layer) {
     const stepStartedPayload = buildStepStartedPayload(step);
-    await activities.emitEvent({
+    await eventActivities.emitEvent({
       ctx,
       planRef,
       eventType: 'StepStarted',
@@ -688,7 +781,7 @@ async function executeLayerSteps(args: {
   layer: ReadonlyArray<WorkflowStep>;
   planSteps: ReadonlyArray<WorkflowStep>;
   ctx: RunPlanWorkflowInput['ctx'];
-  state: WorkflowState;
+  state: RuntimeWorkflowState;
   runtime: LayerRuntimeState;
 }): Promise<LayerStepExecution[]> {
   return Promise.all(args.layer.map((step) => executeLayerStep({ ...args, step })));
@@ -698,7 +791,7 @@ async function executeLayerStep(args: {
   step: WorkflowStep;
   planSteps: ReadonlyArray<WorkflowStep>;
   ctx: RunPlanWorkflowInput['ctx'];
-  state: WorkflowState;
+  state: RuntimeWorkflowState;
   runtime: LayerRuntimeState;
 }): Promise<LayerStepExecution> {
   try {
@@ -707,7 +800,7 @@ async function executeLayerStep(args: {
       args.runtime.completedStepResults
     );
 
-    const result = await activities.executeStep({
+    const result = await createStepActivities(args.step).executeStep({
       step: args.step,
       ctx: args.ctx,
       ...(gatewayContext ? { gatewayContext } : {}),
@@ -724,6 +817,9 @@ async function executeLayerStep(args: {
 
     return { stepId: args.step.stepId, gatewayDecision, result };
   } catch (error) {
+    if (isCancellation(error)) {
+      throw error;
+    }
     return buildFailedLayerStepExecution(args.step.stepId, error);
   }
 }
@@ -749,7 +845,7 @@ function applyGatewayDecisionEffects(args: {
   gatewayDecision: boolean | undefined;
   stepId: string;
   planSteps: ReadonlyArray<WorkflowStep>;
-  state: WorkflowState;
+  state: RuntimeWorkflowState;
   runtime: LayerRuntimeState;
 }): void {
   if (typeof args.gatewayDecision !== 'boolean') return;
@@ -851,7 +947,7 @@ async function applyLayerResults(args: {
   layerResults: ReadonlyArray<LayerStepExecution>;
   ctx: RunPlanWorkflowInput['ctx'];
   planRef: RunPlanWorkflowInput['planRef'];
-  state: WorkflowState;
+  state: RuntimeWorkflowState;
   runtime: LayerRuntimeState;
   continuedAsNewCount: number;
   runtimeExecutor?: 'postgres' | 'dbt';
@@ -867,7 +963,7 @@ async function applyLayerResults(args: {
                 : { resultEvidence: result.resultEvidence }),
             }
           : undefined;
-      await activities.emitEvent({
+      await eventActivities.emitEvent({
         ctx: args.ctx,
         planRef: args.planRef,
         eventType: 'StepCompleted',
@@ -892,14 +988,14 @@ async function applyLayerResults(args: {
             ...(result.error === undefined ? {} : { message: result.error }),
           }
         : undefined;
-    await activities.emitEvent({
+    await eventActivities.emitEvent({
       ctx: args.ctx,
       planRef: args.planRef,
       eventType: 'StepFailed',
       stepId,
       ...(stepFailedPayload === undefined ? {} : { payload: stepFailedPayload }),
     });
-    await activities.emitEvent({
+    await eventActivities.emitEvent({
       ctx: args.ctx,
       planRef: args.planRef,
       eventType: 'RunFailed',

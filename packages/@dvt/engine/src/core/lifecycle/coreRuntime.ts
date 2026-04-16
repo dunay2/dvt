@@ -1,5 +1,6 @@
 import { parseEngineRunRef, parseSignalRequest } from '@dvt/contracts';
 import type {
+  CanonicalRunStatus,
   EngineRunRef,
   EventType,
   RunEventInput,
@@ -8,8 +9,10 @@ import type {
 } from '@dvt/contracts';
 
 import { AdapterNotRegisteredError, RunMetadataNotFoundError } from '../../contracts/errors.js';
+import type { IClock } from '../../utils/clock.js';
 import { toErrorMessage } from '../../utils/errorUtils.js';
 import type { IdempotencyKeyBuilder } from '../idempotency.js';
+import { SnapshotProjector, snapshotToStatus } from '../SnapshotProjector.js';
 
 import {
   CORE_ERROR_MESSAGE,
@@ -38,6 +41,23 @@ export async function resolveMetaOrThrow(
   const m = await stateStoreRead.getRunMetadataByRunId(runRef.tenantId, runRef.runId);
   if (!m) throw new RunMetadataNotFoundError(runRef.runId);
   return m;
+}
+
+export async function readCanonicalRunStatus(input: {
+  stateStoreRead: IRunStateStoreRead;
+  projector: SnapshotProjector;
+  tenantId: string;
+  runId: string;
+}): Promise<CanonicalRunStatus> {
+  const storedSnap = await input.stateStoreRead.getSnapshot(input.tenantId, input.runId);
+  if (storedSnap) {
+    return snapshotToStatus(storedSnap);
+  }
+
+  return input.projector.rebuild(
+    input.runId,
+    await input.stateStoreRead.listEvents(input.tenantId, input.runId)
+  );
 }
 
 export async function withTimeout<T>(
@@ -109,7 +129,7 @@ export function normalizeSignalRequest(
 export async function emitRunEvent(input: {
   stateStoreWrite: IRunStateStoreWrite;
   idempotency: IdempotencyKeyBuilder;
-  clock: { nowIsoUtc(): string };
+  clock: Pick<IClock, 'nowIsoUtc'>;
   meta: RunMetadata;
   eventType: EventType;
   payload?: Record<string, unknown>;
@@ -131,7 +151,7 @@ export async function emitRunEvent(input: {
 export async function emitSignalDerivedRunEvent(input: {
   stateStoreWrite: IRunStateStoreWrite;
   idempotency: IdempotencyKeyBuilder;
-  clock: { nowIsoUtc(): string };
+  clock: Pick<IClock, 'nowIsoUtc'>;
   meta: RunMetadata;
   req: SignalRequest;
   eventType: EventType;
@@ -142,7 +162,7 @@ export async function emitSignalDerivedRunEvent(input: {
 
 export function buildSignalDerivedRunEventInput(input: {
   idempotency: IdempotencyKeyBuilder;
-  clock: { nowIsoUtc(): string };
+  clock: Pick<IClock, 'nowIsoUtc'>;
   meta: RunMetadata;
   req: SignalRequest;
   eventType: EventType;
@@ -175,7 +195,7 @@ export function buildSignalDerivedRunEventInput(input: {
 export function buildRunEvents(
   inputs: Array<{
     idempotency: IdempotencyKeyBuilder;
-    clock: { nowIsoUtc(): string };
+    clock: Pick<IClock, 'nowIsoUtc'>;
     meta: RunMetadata;
     eventType: EventType;
     payload?: Record<string, unknown>;
@@ -194,7 +214,7 @@ export function buildRunEvents(
 
 function buildRunEvent(input: {
   idempotency: IdempotencyKeyBuilder;
-  clock: { nowIsoUtc(): string };
+  clock: Pick<IClock, 'nowIsoUtc'>;
   meta: RunMetadata;
   eventType: EventType;
   payload?: Record<string, unknown>;

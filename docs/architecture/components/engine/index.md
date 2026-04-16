@@ -2,7 +2,7 @@
 title: '@dvt/engine'
 status: Active
 owner: Architecture / Engine
-last_reviewed: 2026-04-09
+last_reviewed: 2026-04-12
 ---
 
 # @dvt/engine
@@ -13,23 +13,59 @@ This page is the single active home for the component's public surface, the
 main methods a caller cares about, and the supporting folders that explain how
 this component is wired today.
 
+## Southbound Port Surface
+
+`@dvt/engine` exposes seven southbound ports as its declared architecture
+surface. Four are wired on the default runtime path, one is optional runtime
+wiring, and two remain intentionally visible as target seams while their
+dedicated runtime adoption is still in progress.
+
+This table is the canonical doc-level inventory for engine port membership and
+posture. Deeper architecture pages refine usage and ownership, but they should
+not redefine which ports belong to the seven-port surface.
+
+| Port                           | Current posture               | Notes                                                                                         |
+| ------------------------------ | ----------------------------- | --------------------------------------------------------------------------------------------- |
+| `IRunStateStore`               | `runtime-wired`               | Canonical run metadata, event log, snapshot, and maintenance store seam                       |
+| `IStartRunIntentStore`         | `runtime-wired`               | Crash-consistency seam for pre-dispatch start-run intents                                     |
+| `IProviderAdapter`             | `runtime-wired`               | Provider runtime seam                                                                         |
+| `IPlanFetcher`                 | `runtime-wired`               | Plan/artifact fetch seam on the start-run path                                                |
+| `IRunExecutionContextResolver` | `optional runtime wiring`     | Conditional seam when `runExecutionContextRef` is supplied                                    |
+| `IProjector`                   | `package-exposed target seam` | Kept visible as a projector seam even though mainline uses `SnapshotProjector` directly today |
+| `IMetricsCollector`            | `source-tree target seam`     | Declared in source; current runtime still injects `IObservability` instead                    |
+
+`IObservability` remains the current telemetry facade in the shipped runtime.
+It is not counted inside the seven-port southbound surface.
+
+Target note:
+
+- the active transformation-runtime target keeps executor seams capability-led,
+  not vendor-led
+- PostgreSQL is the first implementation of the relational SQL execution
+  capability, not the semantic shape of the engine core
+- see
+  [workflow-engine-target-architecture.v1](./architecture/workflow-engine-target-architecture.v1.md)
+  for the target seam and its rationale
+
 ## Current Responsibilities
 
 - own run lifecycle semantics and provider dispatch;
 - enforce run access policy, plan integrity, and start-run admission;
-- project and enrich run status from state-store reads and emitted events;
+- project canonical run status through `RunStatusQueryService`;
+- expose optional provider-backed enrichment through `RunEnrichmentService`
+  and `IRunEnrichmentService`;
 - expose operational health and maintenance services around the workflow
-  runtime.
+  runtime through explicit non-facade service boundaries.
 
 ## Public Operations
 
-- `WorkflowEngine.startRun(...)`
-- `WorkflowEngine.recoverRun(...)`
-- `WorkflowEngine.cancelRun(...)`
-- `WorkflowEngine.getRunStatus(...)`
-- `WorkflowEngine.enrichRunStatus(...)`
-- `WorkflowEngine.signal(...)`
-- `WorkflowEngine.healthCheck()`
+- `IWorkflowEngine.startRun(...)`
+- `IWorkflowEngine.recoverRun(...)`
+- `IWorkflowEngine.cancelRun(...)`
+- `IWorkflowEngine.getRunStatus(...)`
+- `IRunEnrichmentService.getRunEnrichment(...)`
+- `IWorkflowEngine.signal(...)`
+- `IRunHealthService.healthCheck()`
 - `StartRunApplicationService.startRun(...)`
 
 ## Primary Code Anchors
@@ -40,23 +76,47 @@ this component is wired today.
   [WorkflowEngine.ts](../../../../packages/@dvt/engine/src/core/WorkflowEngine.ts)
 - start-run application path:
   [StartRunApplicationService.ts](../../../../packages/@dvt/engine/src/application/StartRunApplicationService.ts)
+- recover-run application path:
+  [RecoverRunApplicationService.ts](../../../../packages/@dvt/engine/src/application/RecoverRunApplicationService.ts)
 - lifecycle core:
   [WorkflowEngineCoreService.ts](../../../../packages/@dvt/engine/src/core/WorkflowEngineCoreService.ts)
+- canonical status query:
+  [RunStatusQueryService.ts](../../../../packages/@dvt/engine/src/services/RunStatusQueryService.ts)
+- health service:
+  [RunHealthService.ts](../../../../packages/@dvt/engine/src/services/RunHealthService.ts)
+- enrichment service:
+  [RunEnrichmentService.ts](../../../../packages/@dvt/engine/src/services/RunEnrichmentService.ts)
 - public contract:
-  [IWorkflowEngine.v1_1_1.ts](../../../../packages/@dvt/engine/src/contracts/IWorkflowEngine.v1_1_1.ts)
+  [IWorkflowEngine.v1.ts](../../../../packages/@dvt/engine/src/contracts/IWorkflowEngine.v1.ts)
 
 ## Component Topology
 
 ```mermaid
 flowchart LR
-  Api["apps/api"] --> Engine["WorkflowEngine facade"]
+  Api["apps/api"] --> Engine["IWorkflowEngine facade"]
+  Api --> HealthApi["IRunHealthService"]
+  Api --> Enrich["RunEnrichmentService"]
   Engine --> StartRun["StartRunApplicationService"]
+  Engine --> Recover["RecoverRunApplicationService"]
+  Engine --> Query["RunStatusQueryService"]
   Engine --> Core["WorkflowEngineCoreService"]
+  HealthApi --> Health["RunHealthService"]
+  Recover --> Policy["RunAccessPolicy and StartRunAdmissionGuard"]
   StartRun --> Policy["RunAccessPolicy and StartRunAdmissionGuard"]
-  StartRun --> Plan["plan fetch and integrity validation"]
-  Core --> State["IRunStateStoreRead / Write"]
-  Core --> Providers["IProviderAdapter"]
-  Core --> Projector["SnapshotProjector"]
+  StartRun --> Ports["Declared southbound ports"]
+  Recover --> Ports
+  Query --> Ports
+  Health --> Ports
+  Core --> Ports
+  Enrich --> Ports
+  Ports --> State["IRunStateStore<br/>(runtime-wired)"]
+  Ports --> Intent["IStartRunIntentStore<br/>(runtime-wired)"]
+  Ports --> Providers["IProviderAdapter<br/>(runtime-wired)"]
+  Ports --> Plan["IPlanFetcher<br/>(runtime-wired)"]
+  Ports --> RunCtx["IRunExecutionContextResolver<br/>(optional runtime wiring)"]
+  Ports -.-> Projector["IProjector<br/>(package-exposed target seam)"]
+  Ports -.-> Metrics["IMetricsCollector<br/>(source-tree target seam)"]
+  Engine --> Obs["IObservability<br/>(current telemetry facade)"]
 ```
 
 ## Component Folders

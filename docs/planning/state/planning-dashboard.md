@@ -2,7 +2,7 @@
 title: Planning Dashboard
 status: Active
 owner: Product / Architecture / Delivery / Docs
-last_reviewed: 2026-04-08
+last_reviewed: 2026-04-09
 planning_type: operational
 ---
 
@@ -26,6 +26,8 @@ updates. This dashboard explains the current board.
 
 - Portfolio board:
   [Execution Workboard](./execution-workboard.md)
+- Strategic direction:
+  [Strategic Product Roadmap](../roadmap/strategic-product-roadmap.md)
 - Strictly unblocked work:
   [Open Task Route](./open-task-route.md)
 - Task registry and ownership:
@@ -41,12 +43,13 @@ updates. This dashboard explains the current board.
 
 ```mermaid
 flowchart TD
-    Start[Need to know what is going on] --> Dash[Planning Dashboard]
-    Dash --> Board[Execution Workboard<br/>overall progress]
-    Dash --> Route[Open Task Route<br/>what is unblocked now]
-    Dash --> Lanes[Lane YAML registry<br/>task owner, blockers, next action]
-    Dash --> Roadmap[Roadmap By Domain<br/>cross-domain ordering]
-    Dash --> Status[System Delivery Status<br/>what is already true in code]
+    Start["Need to know what is going on"] --> Dash["Planning Dashboard"]
+    Dash --> Board["Execution Workboard: overall progress"]
+    Dash --> Strategy["Strategic Product Roadmap: why current work exists"]
+    Dash --> Route["Open Task Route: what is unblocked now"]
+    Dash --> Lanes["Lane YAML registry: owner, blockers, next action"]
+    Dash --> Roadmap["Roadmap By Domain: cross-domain ordering"]
+    Dash --> Status["System Delivery Status: what is already true in code"]
 ```
 
 ## Lane Roles
@@ -66,11 +69,11 @@ high-level rule of thumb for the active repo shape.
 
 ```mermaid
 flowchart LR
-    A[Lane A<br/>Contracts and state-store boundary]
-    B[Lane B<br/>Event contract and traceability]
-    C[Lane C<br/>Runtime safety and admission]
-    D[Lane D<br/>Scale and go-to-market]
-    E[Lane E<br/>Frontend and UI]
+    A["Lane A: Contracts and state-store boundary"]
+    B["Lane B: Event contract and traceability"]
+    C["Lane C: Runtime safety and admission"]
+    D["Lane D: Scale and go-to-market"]
+    E["Lane E: Frontend and UI"]
 
     A --> C
     A --> E
@@ -86,6 +89,7 @@ flowchart LR
 | If you need...                                                  | Open this                                                              |
 | --------------------------------------------------------------- | ---------------------------------------------------------------------- |
 | overall progress and active items                               | [Execution Workboard](./execution-workboard.md)                        |
+| long-range product direction and why current work matters       | [Strategic Product Roadmap](../roadmap/strategic-product-roadmap.md)   |
 | the next strictly unblocked slice                               | [Open Task Route](./open-task-route.md)                                |
 | the real owner, blocker, target, and evidence refs for one task | the relevant `agent-lane-*.yaml` file                                  |
 | cross-domain sequence and why a lane is blocked                 | [Roadmap By Domain](../roadmap/roadmap-by-domain.md)                   |

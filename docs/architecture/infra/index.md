@@ -40,6 +40,8 @@ Concept anchors for this page:
 
 - Local Postgres compose:
   [infra/docker/postgres/docker-compose.yml](../../../infra/docker/postgres/docker-compose.yml)
+- Canonical Temporal Postgres proof runbook:
+  [Temporal Postgres Proof Environment](../../runbooks/temporal-postgres-proof-environment.md)
 - Local bootstrap SQL:
   [infra/docker/postgres/init/001_bootstrap.sql](../../../infra/docker/postgres/init/001_bootstrap.sql)
 - Database migrations:

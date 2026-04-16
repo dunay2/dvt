@@ -51,6 +51,20 @@ describe('evaluateStartRunPlanSource', () => {
     });
   });
 
+  it('rejects planRef with planner-backed metadata', () => {
+    expect(
+      evaluateStartRunPlanSource({
+        planRef: VALID_PLAN_REF,
+        environment: {
+          environmentId: 'prod',
+        },
+      })
+    ).toEqual({
+      ok: false,
+      issue: { type: 'bad_request', reason: 'conflicting_plan_inputs' },
+    });
+  });
+
   it('rejects missing planner source when planRef is absent', () => {
     expect(evaluateStartRunPlanSource({})).toEqual({
       ok: false,
@@ -58,7 +72,22 @@ describe('evaluateStartRunPlanSource', () => {
     });
   });
 
-  it('rejects multiple planner sources when planRef is absent', () => {
+  it('rejects planner metadata without graphSource when planRef is absent', () => {
+    expect(
+      evaluateStartRunPlanSource({
+        observability: {
+          tags: {
+            route: 'start-run',
+          },
+        },
+      })
+    ).toEqual({
+      ok: false,
+      issue: { type: 'bad_request', reason: 'invalid_plan_source' },
+    });
+  });
+
+  it('rejects manifestRef as a forbidden planner source', () => {
     expect(
       evaluateStartRunPlanSource({
         graphSource: {

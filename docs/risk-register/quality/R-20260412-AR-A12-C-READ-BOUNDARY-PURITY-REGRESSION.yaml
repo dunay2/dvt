@@ -1,0 +1,33 @@
+---
+id: R-20260412-AR-A12-C-READ-BOUNDARY-PURITY-REGRESSION
+title: Narrowed engine read boundary could regress through facade re-growth
+status: Closed
+date: 2026-04-12
+owners:
+  - packages/@dvt/engine
+  - apps/api
+severity: Medium
+probability: Low
+context: >
+  `AR-A12-C1` through `AR-A12-C4` narrowed `IWorkflowEngine` to commands plus canonical read and
+  moved enrichment and health to explicit service boundaries. Without closeout guards, future slices
+  could silently reattach `getRunEnrichment()`, `healthCheck()`, or low-level collaborator wiring to
+  the facade implementation or API factory seam.
+risk: >
+  If the engine facade regrew provider-backed enrichment or local health/recovery orchestration,
+  callers and current docs could drift back to a mixed boundary where `IWorkflowEngine` once again
+  implied responsibilities that belong on explicit non-facade services. That would recreate the
+  read-boundary purity problem under a narrower name.
+mitigations:
+  - 'WorkflowEngine runtime tests now assert the facade exposes only startRun, recoverRun,
+    cancelRun, getRunStatus, and signal.'
+  - 'WorkflowEngine source guards now fail if getRunEnrichment(), healthCheck(), or low-level
+    collaborator construction reappear in WorkflowEngine.ts.'
+  - 'WorkflowEngineFactory tests now assert enrichment and health remain on dedicated non-facade
+    services.'
+  - 'Active status and contract docs now describe the shipped split as closed rather than as pending
+    follow-up.'
+  - 'AR-A12-C5 lane state, ARC evidence, and verify:prepush closeout now capture the hardened
+    boundary explicitly.'
+review_after: 2026-06-30
+---

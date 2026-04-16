@@ -1,10 +1,15 @@
 import { describe, it, expect } from 'vitest';
 
-import { RunStatusSnapshot, RunStatus, AdapterScopedSubstatus } from '../../src/contracts/types.js';
+import {
+  CanonicalRunStatus,
+  ProviderRunStatusView,
+  RunStatus,
+  RunStatusEnrichment,
+} from '../../src/contracts/types.js';
 
 describe('engine-types', () => {
-  it('RunStatusSnapshot accepts substatus and message', () => {
-    const snap: RunStatusSnapshot = {
+  it('CanonicalRunStatus accepts substatus and message', () => {
+    const snap: CanonicalRunStatus = {
       runId: 'r',
       status: 'FAILED',
       substatus: 'RETRYING',
@@ -15,8 +20,8 @@ describe('engine-types', () => {
     expect(snap.message).toBe('error');
   });
 
-  it('RunStatusSnapshot accepts TF-C2-B outcome fields', () => {
-    const snap: RunStatusSnapshot = {
+  it('CanonicalRunStatus accepts TF-C2-B outcome fields', () => {
+    const snap: CanonicalRunStatus = {
       runId: 'r',
       status: 'COMPLETED',
       execution: {
@@ -43,9 +48,30 @@ describe('engine-types', () => {
     expect(snap.execution?.materialization?.rowsWritten).toBe(42);
   });
 
-  it('AdapterScopedSubstatus accepts adapter/value format', () => {
-    const sub: AdapterScopedSubstatus = 'temporal/WORKFLOW_TASK_BACKLOG';
-    expect(sub.startsWith('temporal/')).toBe(true);
+  it('ProviderRunStatusView accepts diagnostic provider fields', () => {
+    const providerView: ProviderRunStatusView = {
+      provider: 'temporal',
+      providerStatus: 'RUNNING',
+      providerSubstatus: 'temporal/WORKFLOW_TASK_BACKLOG',
+      message: 'simulated runtime state',
+    };
+    expect(providerView.provider).toBe('temporal');
+    expect(providerView.providerSubstatus).toBe('temporal/WORKFLOW_TASK_BACKLOG');
+  });
+
+  it('RunStatusEnrichment composes canonical and provider views', () => {
+    const enrichment: RunStatusEnrichment = {
+      canonical: {
+        runId: 'r',
+        status: 'RUNNING',
+      },
+      providerView: {
+        provider: 'mock',
+        providerStatus: 'RUNNING',
+      },
+    };
+    expect(enrichment.canonical.status).toBe('RUNNING');
+    expect(enrichment.providerView.providerStatus).toBe('RUNNING');
   });
 
   it('RunStatus accepts all valid values', () => {

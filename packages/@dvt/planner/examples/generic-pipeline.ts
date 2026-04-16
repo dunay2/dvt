@@ -8,9 +8,9 @@ const genericStepFactory: StepFactory = (node: GraphNode, resolved: ResolvedPoli
     stepId: node.nodeId,
     kind: node.stepKind, // e.g. EXTRACT / TRANSFORM / LOAD
     dependsOn: node.dependsOn,
+    ...(resolved.retryPolicy === undefined ? {} : { retryPolicy: resolved.retryPolicy }),
     stepTypeConfig: {
       timeoutMs: resolved.stepTimeoutMs,
-      retries: resolved.retries,
     },
   };
 };

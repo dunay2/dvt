@@ -2,7 +2,7 @@
 title: Planning Closeouts
 status: Review
 owner: Product / Architecture / Docs
-last_reviewed: 2026-04-04
+last_reviewed: 2026-04-14
 ---
 
 # Planning Closeouts
@@ -22,6 +22,15 @@ navigation. The folder contains additional historical entries.
 
 ## Representative Recent Closeouts
 
+- [20260414 TF-C3 Dbt Plugin Runtime Projection Slice Closeout](./20260414-tf-c3-dbt-plugin-runtime-projection-closeout.md)
+- [20260414 TF-C3 RunExecutionContext Resolver Slice Closeout](./20260414-tf-c3-run-execution-context-resolver-closeout.md)
+- [20260414 TF-C1 Preview-Persist Convergence Closeout](./20260414-tf-c1-preview-persist-convergence-closeout.md)
+- [20260414 Dev Stack Local Postgres Bootstrap Hotfix Closeout](./20260414-hotfix-dev-stack-local-postgres-bootstrap-closeout.md)
+- [20260414 App Services Context HMR Stability Hotfix Closeout](./20260414-hotfix-app-services-context-hmr-stability-closeout.md)
+- [20260414 Frontend AppServicesProvider Startup Hotfix Closeout](./20260414-hotfix-frontend-app-services-provider-startup-closeout.md)
+- [20260414 TF-A1-C SRP Hardening Closeout](./20260414-tf-a1-c-srp-hardening-closeout.md)
+- [20260414 TF-A1-B Compiler Mapping Closeout](./20260414-tf-a1-b-compiler-mapping-closeout.md)
+- [20260413 TF-D1 Proof Environment Lifecycle Closeout](./20260413-tf-d1-proof-environment-lifecycle-closeout.md)
 - [20260404 AR-C2 SLA and Manuals Closeout](./20260404-ar-c2-sla-and-manuals-closeout.md)
 - [20260403 API Current To Target Architecture Closeout](./20260403-api-current-to-target-architecture-closeout.md)
 - [20260331 MVP-A1 Contractual Inventory Closeout](./20260331-mvp-a1-contractual-inventory-closeout.md)

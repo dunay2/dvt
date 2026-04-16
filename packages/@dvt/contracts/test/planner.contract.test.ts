@@ -23,8 +23,8 @@ import { jcsCanonicalize } from '../src/utils/jcsCanonicalize.js';
 import { ContractValidationError, parsePlannerBuildResultV1 } from '../src/validation.js';
 
 import {
+  INVALID_NO_GRAPH_SOURCE_PLANNER_INPUT_FIXTURE,
   INVALID_PLANNER_INPUT_FIXTURE,
-  MULTI_SOURCE_PLANNER_INPUT_FIXTURE,
   NO_SOURCE_PLANNER_INPUT_FIXTURE,
   VALID_EXECUTION_PLAN_V2_FIXTURE,
   VALID_PLANNER_BUILD_RESULT_V2_FIXTURE,
@@ -66,7 +66,7 @@ describe('contracts: planner normative contract (GAP-P0-02)', () => {
     const input = PlannerInputEnvelopeV1Schema.parse(VALID_PLANNER_INPUT_FIXTURE);
     const typed: PlannerInputEnvelopeV1SchemaT = input;
 
-    expect(typed.graphSource?.kind).toBe(GENERIC_GRAPH_SOURCE_KIND);
+    expect(typed.graphSource.kind).toBe(GENERIC_GRAPH_SOURCE_KIND);
     expect(typed.selection.selectedNodeIds).toContain('model.analytics.orders');
   });
 
@@ -75,26 +75,15 @@ describe('contracts: planner normative contract (GAP-P0-02)', () => {
     expect(result.success).toBe(false);
   });
 
-  it('rechaza input inválido cuando hay más de una fuente activa', () => {
-    const result = PlannerInputEnvelopeV1Schema.safeParse(MULTI_SOURCE_PLANNER_INPUT_FIXTURE);
+  it('rechaza input inválido cuando falta graphSource en el contrato canónico', () => {
+    const result = PlannerInputEnvelopeV1Schema.safeParse(
+      INVALID_NO_GRAPH_SOURCE_PLANNER_INPUT_FIXTURE
+    );
     expect(result.success).toBe(false);
   });
 
-  it('rechaza input inválido cuando manifestRef.sha256 no es hash hex de 64 chars', () => {
+  it('rechaza input inválido cuando graphSource viola invariantes canónicos', () => {
     const result = PlannerInputEnvelopeV1Schema.safeParse(INVALID_PLANNER_INPUT_FIXTURE);
-    expect(result.success).toBe(false);
-  });
-
-  it('rechaza input inválido cuando manifestRef.uri no es URI absoluta', () => {
-    const result = PlannerInputEnvelopeV1Schema.safeParse({
-      manifestRef: {
-        uri: 'manifest.json',
-        sha256: 'a'.repeat(64),
-      },
-      selection: {
-        selectedNodeIds: ['model.analytics.orders'],
-      },
-    });
     expect(result.success).toBe(false);
   });
 
@@ -139,6 +128,12 @@ describe('contracts: planner normative contract (GAP-P0-02)', () => {
     expect(plan.metadata.schemaVersion).toBe('v1.2');
     expect(plan.metadata.contractVersion).toBe('1.0.0');
     expect(plan.metadata.planId).toMatch(/^[a-f0-9]{64}$/);
+    expect(plan.steps[0]?.retryPolicy).toEqual({
+      maxAttempts: 3,
+      initialInterval: '1s',
+      maximumInterval: '60s',
+      backoffCoefficient: 2,
+    });
     expect(plan.steps.map((s) => s.stepId)).toEqual([
       'model.analytics.customers',
       'model.analytics.orders',

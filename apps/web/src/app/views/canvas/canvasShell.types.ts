@@ -1,7 +1,9 @@
 import type { Edge, Node, NodeTypes, ReactFlowProps } from '@xyflow/react';
 import type React from 'react';
 
+import type { ImportSourcesResult } from '../../ports/workspace';
 import type { CanonicalNode } from '../../types/canonical';
+import type { CanvasPaletteId } from './canvasPalette';
 import type { TransformationGraphValidationResult } from './transformationGraphValidation';
 
 export type UserPermissions = {
@@ -24,6 +26,7 @@ export type CanvasShellProps = {
   edges: Edge[];
   nodeTypes: NodeTypes;
   gridSize: number;
+  canvasPalette: CanvasPaletteId;
   viewport: { x: number; y: number; zoom: number } | null;
   onNodesChange: NonNullable<ReactFlowProps<Node, Edge>['onNodesChange']>;
   onNodeDragStop: NonNullable<ReactFlowProps<Node, Edge>['onNodeDragStop']>;
@@ -34,6 +37,9 @@ export type CanvasShellProps = {
   onViewportChange: (viewport: { x: number; y: number; zoom: number }) => void;
   onDrop: React.DragEventHandler<HTMLDivElement>;
   onDragOver: React.DragEventHandler<HTMLDivElement>;
+  onSourceImportComplete: (result: ImportSourcesResult) => void;
+  importedNodeFocusIds: string[];
+  onImportedNodeFocusComplete: () => void;
   onHideExplorer: () => void;
   onShowExplorer: () => void;
   onHideInspector: () => void;
@@ -51,4 +57,6 @@ export type CanvasShellProps = {
   impactOverlayEnabled: boolean;
   columnLevelLineageEnabled: boolean;
   transformationValidation: TransformationGraphValidationResult;
+  centerSurface?: React.ReactNode;
+  readOnlyBanner?: React.ReactNode;
 };

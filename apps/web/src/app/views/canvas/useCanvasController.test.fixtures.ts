@@ -4,8 +4,9 @@ import type { IRunsPort } from '../../ports/runs';
 import type { SessionContextPort } from '../../ports/sessionContext';
 import type { ShellFeedbackPort } from '../../ports/shellFeedback';
 import type { IWorkspacePort } from '../../ports/workspace';
+import { makeMockRunRef, makeRunContext } from '../../testing/contractTestUtils';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
-import type { ExecutionPlan } from '../../types/dbt';
+import type { PlanViewModel } from '../../types/plans';
 
 type OverlayDecoration = { borderColor?: string; dimmed?: boolean } | null;
 
@@ -16,7 +17,7 @@ export type CanvasHarnessState = {
   canonicalNodes: CanonicalNode[];
   canonicalEdges: CanonicalEdge[];
   overlayDecorations: Map<string, OverlayDecoration>;
-  currentPlan: ExecutionPlan | null;
+  currentPlan: PlanViewModel | null;
   services: {
     workspaceService: IWorkspacePort;
     plansService: IPlansPort;
@@ -28,6 +29,9 @@ export type CanvasHarnessState = {
     setCanvasViewport: MockFn;
     setCanvasNodePositions: MockFn;
   } & Record<string, unknown>;
+  queryClient: {
+    invalidateQueries: MockFn;
+  };
   graphHandlersResult: {
     handleDrop: MockFn;
     confirmEdgeCreation: MockFn;
@@ -45,6 +49,7 @@ export type CanvasHarnessState = {
 
 export type CanvasHarnessMocks = {
   useQuery: MockFn;
+  useQueryClient: MockFn;
   resolveCanvasGraphStrategy: MockFn;
   useCanvasInteractionStore: MockFn;
   useExecutionStore: MockFn;
@@ -64,7 +69,7 @@ export type CanvasHarnessMocks = {
 };
 
 export function createDefaultCanvasHarnessState(): CanvasHarnessState {
-  const currentPlan: ExecutionPlan = {
+  const currentPlan: PlanViewModel = {
     planId: 'plan_1',
     planVersion: '1',
     generatedAt: '2026-03-28T00:00:00Z',
@@ -150,13 +155,13 @@ export function createDefaultCanvasHarnessState(): CanvasHarnessState {
       targetAdapter: 'mock',
     }),
     subscribeWorkspaceScope: () => () => undefined,
-    buildRunContext: (runId: string) => ({
-      tenantId: 'tenant-a',
-      projectId: 'project-a',
-      environmentId: 'dev',
-      targetAdapter: 'mock',
-      runId,
-    }),
+    buildRunContext: (runId: string) =>
+      makeRunContext(runId, {
+        tenantId: 'tenant-a',
+        projectId: 'project-a',
+        environmentId: 'dev',
+        targetAdapter: 'mock',
+      }),
   };
   const shellFeedback: ShellFeedbackPort = {
     success: vi.fn(),
@@ -169,12 +174,13 @@ export function createDefaultCanvasHarnessState(): CanvasHarnessState {
   const runsService: IRunsPort = {
     listRunSummaries: vi.fn(async () => []),
     getRunSnapshot: vi.fn(async () => null),
-    startRun: vi.fn(async () => ({
-      provider: 'mock' as const,
-      tenantId: 'tenant-a',
-      workflowId: 'workflow_ui_1',
-      runId: 'run_ui_1',
-    })),
+    startRun: vi.fn(async () =>
+      makeMockRunRef({
+        tenantId: 'tenant-a',
+        workflowId: 'workflow_ui_1',
+        runId: 'run_ui_1',
+      })
+    ),
     listRunEvents: vi.fn(async () => ({ events: [] })),
   };
 
@@ -193,6 +199,9 @@ export function createDefaultCanvasHarnessState(): CanvasHarnessState {
       runsService,
       sessionContext,
       shellFeedback,
+    },
+    queryClient: {
+      invalidateQueries: vi.fn(async () => undefined),
     },
     store: {
       _hasHydrated: true,
@@ -270,6 +279,7 @@ export function configureDefaultCanvasHarnessMocks(
   mocks: CanvasHarnessMocks
 ): void {
   mocks.useQuery.mockReturnValue({ data: state.graphData, isPending: false, isError: false });
+  mocks.useQueryClient.mockReturnValue(state.queryClient);
   const selectFromStore = (selector?: (value: typeof state.store) => unknown) =>
     typeof selector === 'function' ? selector(state.store) : state.store;
   mocks.useCanvasInteractionStore.mockImplementation(selectFromStore);

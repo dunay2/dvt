@@ -2,7 +2,7 @@
 title: App Shell
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-04-03
+last_reviewed: 2026-04-10
 planning_type: architecture
 ---
 
@@ -22,17 +22,22 @@ Primary code anchors:
 - [App.tsx](../../../../../apps/web/src/app/App.tsx)
 - [Root.tsx](../../../../../apps/web/src/app/Root.tsx)
 - [routes.ts](../../../../../apps/web/src/app/routes.ts)
+- [AppShellFrame.tsx](../../../../../apps/web/src/app/components/shell/AppShellFrame.tsx)
 - [TopAppBar.tsx](../../../../../apps/web/src/app/components/TopAppBar.tsx)
 - [LeftNavigation.tsx](../../../../../apps/web/src/app/components/LeftNavigation.tsx)
+- [Console.tsx](../../../../../apps/web/src/app/components/Console.tsx)
+- [bottomConsoleDrawerModel.ts](../../../../../apps/web/src/app/components/shell/bottomConsoleDrawerModel.ts)
 
 Current shell regions:
 
 ```mermaid
 flowchart TB
-  Root["Root shell"] --> TopBar["TopAppBar"]
-  Root --> Health["ShellHealthBanner"]
-  Root --> Main["Main content"]
-  Main --> Nav["LeftNavigation"]
+  Root["Root shell"] --> Frame["AppShellFrame"]
+  Frame --> TopBar["TopAppBar"]
+  Frame --> Health["ShellHealthBanner"]
+  Frame --> Body["Shell body"]
+  Body --> Nav["LeftNavigation"]
+  Body --> Main["Main content"]
   Main --> Outlet["Route outlet"]
   Main --> Console["Console drawer"]
 ```
@@ -47,6 +52,121 @@ composes typed service instances for views and plugins through hooks.
 
 This prevents route-level components from instantiating mode-aware services or
 reading `resolveDataSource()` directly.
+
+## Shell Navigation Ownership
+
+The left rail now follows the same boundary rule as the rest of the shell:
+
+- runtime capability data decides which plugin-contributed views are available;
+- the shell normalizes those runtime views into a render-ready navigation model;
+- the rail renders plain navigation items and does not know plugin manifest
+  structure, label resolution, or shell footer ownership.
+
+Current flow:
+
+```mermaid
+flowchart LR
+  Query["useCapabilitiesQuery()"] --> Runtime["useShellRuntime()"]
+  Runtime --> State["buildShellRuntimeState(capabilities)"]
+  State --> Views["getNavigationViews(capabilities)"]
+  Views --> Model["buildShellNavigationModel(navigationViews)"]
+  Model --> Primary["primaryItems"]
+  Model --> Footer["footerItems"]
+  Primary --> Rail["LeftNavigationRail"]
+  Footer --> Rail
+```
+
+Responsibility split:
+
+```mermaid
+flowchart TB
+  subgraph Runtime["Runtime-owned truth"]
+    Caps["Capabilities DTO"]
+    Reg["Plugin registry navigation views"]
+  end
+
+  subgraph Shell["Shell-owned normalization"]
+    State["buildShellRuntimeState"]
+    Model["buildShellNavigationModel"]
+    Footer["Shell footer items: Plugins, Admin"]
+  end
+
+  subgraph Render["Render-only rail"]
+    Rail["LeftNavigationRail"]
+    Link["NavLink + Tooltip"]
+  end
+
+  Caps --> State
+  Reg --> State
+  State --> Model
+  Footer --> Model
+  Model --> Rail
+  Rail --> Link
+```
+
+## Bottom Console Drawer Ownership
+
+The bottom drawer now follows the same separation rule as the rest of the shell:
+
+- shell copy and shell chrome stay in shell-owned modules;
+- the drawer resolves a small, explicit state model before rendering;
+- the render surface stays focused on header, badges, close action, and body slot ownership.
+- the drawer is a shell companion surface, not the durable run workspace authority.
+
+Current state model:
+
+```mermaid
+flowchart LR
+  Inputs["dataSourceMode + runId + isLoading + lines"] --> Model["buildBottomConsoleDrawerModel(...)"]
+  Model --> Idle["idle: empty-state guidance"]
+  Model --> Loading["loading: run badge + loading copy"]
+  Model --> Streaming["streaming: run badge + xterm surface"]
+```
+
+Authority split with the Runs route:
+
+```mermaid
+flowchart LR
+  Events["GET /runs/:runId/events"] --> DrawerHook["useConsoleLogStream()"]
+  Events --> RunsFacade["RunWorkspaceFacade"]
+  Snapshot["GET /runs/:runId"] --> RunsFacade
+  DrawerHook --> Drawer["BottomConsoleDrawer"]
+  RunsFacade --> Runs["Runs workspace"]
+```
+
+Boundary rules for these two surfaces:
+
+- `BottomConsoleDrawer` mirrors the currently active run as a shell-level live companion;
+- `BottomConsoleDrawer` does not claim snapshot authority, failure-diagnostics authority, or full run-detail ownership;
+- `Runs` owns durable run monitoring through snapshot plus timeline composition;
+- `Runs` is the place where degraded timeline state, runtime snapshot truth, result evidence, and failure diagnostics are explained.
+
+Shared event presentation seam:
+
+```mermaid
+flowchart LR
+  Events["RunEvent"] --> SharedModel["buildRunEventPresentationModel(event)"]
+  SharedModel --> SharedCopy["resolveRunEventHeadline(...)"]
+  SharedCopy --> DrawerRender["formatRunEventAsLogLine(...)"]
+  SharedCopy --> RunsRender["RunWorkspaceStateView timeline cards"]
+```
+
+Rules for the shared seam:
+
+- the shared model owns event level, headline key, optional detail, and step identity;
+- the shared copy resolver owns human-readable event headline text for shared event surfaces;
+- the shell drawer may render terminal-style lines from that shared semantics plus shared copy;
+- the Runs route may render structured timeline cards from the same shared semantics plus shared copy;
+- the shared model must not collapse snapshot authority or failure-diagnostics authority back into the drawer.
+
+Rules for this seam:
+
+- `LeftNavigation.tsx` must not import `resolveString`, plugin manifests, or
+  fixed shell footer item definitions;
+- plugin-contributed views become `primaryItems` inside the shell model;
+- shell-owned routes such as `Plugins` and `Admin` stay in `footerItems`;
+- the rail consumes render-ready `{ to, label, icon }` items and stays focused
+  on navigation chrome and routing behavior.
 
 ## UX Rules
 
@@ -68,21 +188,32 @@ reading `resolveDataSource()` directly.
 - the shell store still carries too much non-shell state through `appStore.ts`;
 - some shell quick actions are placeholders and not yet connected to governed
   behavior;
-- the console drawer exists as a shell primitive, but the product-level console
-  story is not yet fully hardened.
+- the console drawer now has an explicit shell-owned content model, but richer
+  live-stream semantics and typed log states remain future work;
+- shared event presentation semantics now align on level, headline key, shared
+  headline copy, detail, and step identity, but typed live-log states and the
+  final structured-versus-terminal presentation choice remain future work.
 
 ## Current-To-Target Mapping
 
-The shell already exists in working form. The missing step is to turn implicit
-composition into explicit primitives.
+The shell already exists in working form. The current step is to keep making
+the extracted primitives honest and small.
 
-| Target primitive      | Current anchor                                                                                                                                               | Decision                                                                  |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------- |
-| `AppShellFrame`       | [`Root.tsx`](../../../../../apps/web/src/app/Root.tsx)                                                                                                       | extract the current shell composition instead of rewriting it             |
-| `ShellTopBar`         | [`TopAppBar.tsx`](../../../../../apps/web/src/app/components/TopAppBar.tsx)                                                                                  | keep the global context behavior, narrow the contract, and token-clean it |
-| `LeftNavigationRail`  | [`LeftNavigation.tsx`](../../../../../apps/web/src/app/components/LeftNavigation.tsx)                                                                        | keep plugin routing logic, normalize shell chrome and labels              |
-| `ShellHealthBanner`   | [`ShellHealthBanner.tsx`](../../../../../apps/web/src/app/components/ShellHealthBanner.tsx)                                                                  | keep and restyle through semantic tokens                                  |
-| `BottomConsoleDrawer` | [`Console.tsx`](../../../../../apps/web/src/app/components/Console.tsx) plus `ResizablePanelGroup` in [`Root.tsx`](../../../../../apps/web/src/app/Root.tsx) | keep the drawer pattern, harden content model later                       |
+- `AppShellFrame`
+  Current anchor: [AppShellFrame.tsx](../../../../../apps/web/src/app/components/shell/AppShellFrame.tsx) plus [Root.tsx](../../../../../apps/web/src/app/Root.tsx)
+  Decision: keep the extracted shell frame small and behavior-preserving.
+- `ShellTopBar`
+  Current anchor: [TopAppBar.tsx](../../../../../apps/web/src/app/components/TopAppBar.tsx)
+  Decision: keep the global context behavior, narrow the contract, and token-clean it.
+- `LeftNavigationRail`
+  Current anchor: [LeftNavigation.tsx](../../../../../apps/web/src/app/components/LeftNavigation.tsx) plus [shellNavigationModel.ts](../../../../../apps/web/src/app/shell/shellNavigationModel.ts)
+  Decision: keep a render-only rail plus a shell-owned navigation model.
+- `ShellHealthBanner`
+  Current anchor: [ShellHealthBanner.tsx](../../../../../apps/web/src/app/components/ShellHealthBanner.tsx)
+  Decision: keep and restyle through semantic tokens.
+- `BottomConsoleDrawer`
+  Current anchor: [Console.tsx](../../../../../apps/web/src/app/components/Console.tsx) plus [bottomConsoleDrawerModel.ts](../../../../../apps/web/src/app/components/shell/bottomConsoleDrawerModel.ts)
+  Decision: keep the drawer pattern, with a shell-owned state model and future log hardening.
 
 ## Shell Organization Rules
 

@@ -1,4 +1,4 @@
-# DVT+ — Technical Architectural Review (AI) — 2026-02-26
+# DVT+ â€” Technical Architectural Review (AI) â€” 2026-02-26
 
 **Author:** AI Architect Review
 **Date:** 2026-02-26
@@ -8,10 +8,10 @@
 
 ## Sources Used (Agreed)
 
-1. `dvt_workflow_engine_artifact` → `docs/architecture/engine/index.md`
-2. `dvt_v2_architecture_explanation` → `docs/archive/DVT+_Architectural_Review_20260225.md`
+1. `dvt_workflow_engine_artifact` â†’ `docs/architecture/engine/index.md`
+2. `dvt_v2_architecture_explanation` â†’ `docs/archive/DVT+_Architectural_Review_20260225.md`
 3. Product Definition Principle validated by indirect normative references in:
-   - `docs/architecture/engine/contracts/engine/RunEvents.v2.0.md`
+   - `docs/architecture/engine/contracts/engine/RunEvents.v1.md`
    - `docs/architecture/engine/security/SECURITY_INVARIANTS.v1.md`
 
 ---

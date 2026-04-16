@@ -2,7 +2,7 @@
 title: Roadmap Of Record
 status: Active
 owner: Product / Architecture / Docs
-last_reviewed: 2026-04-09
+last_reviewed: 2026-04-10
 ---
 
 # Roadmap Of Record
@@ -23,6 +23,8 @@ Concept anchors for this page:
 ## Canonical Planning Surfaces
 
 - Roadmap of record: this page
+- Strategic product direction:
+  [Strategic Product Roadmap](strategic-product-roadmap.md)
 - Current implementation state:
   [System Delivery Status](../../architecture/system-delivery-status.md)
 - Current planning dashboard:
@@ -38,8 +40,14 @@ Concept anchors for this page:
 - `docs/planning/roadmap/index.md`
   Classification: canonical roadmap of record
   Use it for: repository-wide planning entry point
+- `docs/planning/roadmap/strategic-product-roadmap.md`
+  Classification: strategic roadmap overlay
+  Use it for: multi-quarter product direction and why the active lanes exist
 - `docs/planning/archive/proposals/gap-5-executive-delivery-roadmap-20260319.md`
   Classification: archived subsystem roadmap
+  Use it for: historical context only
+- `docs/planning/archive/proposals/strategic-product-roadmap-20260324.md`
+  Classification: archived dated strategic snapshot
   Use it for: historical context only
 - `docs/planning/archive/proposals/planner-target-state-roadmap-20260320.md`
   Classification: archived subsystem roadmap proposal
@@ -63,6 +71,11 @@ Concept anchors for this page:
   Classification: subsystem delivery plan
   Use it for: phase sequencing and cross-lane execution for the transformation
   vertical
+- `docs/planning/proposals/mandatory/runtime-and-contracts/runtime-hardening-shared-kernel-and-operations-roadmap-20260410.md`
+  Classification: subsystem remediation roadmap
+  Use it for: the ordered correction wave across `T-01`, `EngineRunRef`,
+  shared-kernel ownership cleanup, worker runtime harnessing, SLA evidence
+  closure, and retention/reset discipline
 - `docs/planning/roadmap/review-remediation-roadmap-20260402.md`
   Classification: subsystem roadmap
   Use it for: sprint-based execution sequencing of review findings and blockers
@@ -105,10 +118,12 @@ Repository-wide planning should currently be read in this order:
 
 Current subsystem roadmaps worth consulting:
 
+- [Strategic Product Roadmap](strategic-product-roadmap.md)
 - [MVP Backend Operability Baseline Roadmap](../proposals/nice-to-have/architecture/mvp-backend-operability-baseline-roadmap-20260329.md)
 - [Frontend Roadmap - Prototype To Operational UI](../proposals/nice-to-have/frontend-and-ux/frontend-roadmap-20260219.md)
 - [Transformation Flow Proposal Set](../proposals/mandatory/runtime-and-contracts/plan-creation-interface-route-proposal-20260405.md)
 - [Transformation Flow Delivery Plan 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md)
+- [Runtime hardening, shared-kernel, and operations roadmap](../proposals/mandatory/runtime-and-contracts/runtime-hardening-shared-kernel-and-operations-roadmap-20260410.md)
 - [Engine Roadmap](../../architecture/components/engine/roadmap/engine-phases.md)
 - [Roadmap By Domain](./roadmap-by-domain.md)
 - [Review Remediation Roadmap 2026-04](./review-remediation-roadmap-20260402.md)

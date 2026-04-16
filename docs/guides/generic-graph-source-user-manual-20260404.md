@@ -36,16 +36,28 @@ This arc is delivered in two explicit stages:
 No implementation wave is considered valid if it is not traceable to the
 accepted documentation gate.
 
+## Current implementation note
+
+As of `2026-04-10`, the protected runtime hard-cut planner-backed ingress to
+canonical `graphSource`.
+
+That means:
+
+- inline `graphSource` is the only active planner-backed runtime input
+- legacy `manifestRef` is not accepted by `POST /runs/start` or
+  `POST /plans/preview`
+- source-native adaptation such as dbt manifest parsing must happen before the
+  planner/runtime boundary
+
 ## What path to use
 
 ### Current supported input policy (implemented)
 
 The currently implemented public planner-source paths are:
 
-| Path                                                   | Use when                             | Notes                               |
-| ------------------------------------------------------ | ------------------------------------ | ----------------------------------- |
-| inline `graphSource` with `GenericGraphSourceV1` shape | caller has a non-dbt normalized DAG  | canonical typed inline source       |
-| `manifestRef`                                          | source graph comes from dbt artifact | adapter-backed source normalization |
+| Path                                                   | Use when                             | Notes                           |
+| ------------------------------------------------------ | ------------------------------------ | ------------------------------- |
+| inline `graphSource` with `GenericGraphSourceV1` shape | caller has a normalized workflow DAG | canonical planner-backed source |
 
 Planned but not yet implemented in this arc:
 
@@ -67,10 +79,10 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-  Caller["Integrator"] --> Inputs["manifestRef | graphSource"]
+  Caller["Integrator"] --> Inputs["graphSource"]
   Inputs --> Facade["PlannerFacade"]
-  Facade --> DbtPath["dbt manifest derivation path is central"]
-  DbtPath --> Plan["ExecutionPlan"]
+  Facade --> Validator["canonical graph validation"]
+  Validator --> Plan["ExecutionPlan"]
 ```
 
 ### To-be (target usage, planned)
@@ -214,7 +226,7 @@ Those concerns belong to later slices and other bounded contexts.
 ### `more than one active source`
 
 You sent more than one active planner source (for example inline
-`graphSource` and `manifestRef` together).
+`graphSource` and a forbidden legacy key such as `manifestRef`).
 
 ### `missing dependency target`
 
@@ -230,11 +242,11 @@ yet.
 The graph uses a known `stepKind`, but `stepTypeConfig` does not match that
 kind's schema.
 
-### `manifest integrity mismatch`
+### `legacy planner source rejected`
 
-Current-state (`manifestRef`) error.
-
-The bytes resolved from the manifest ref do not match the declared hash.
+The planner-backed runtime rejects legacy source inputs such as `manifestRef`,
+raw `manifest`, or direct `nodes`. Convert those inputs into canonical
+`graphSource` before calling the protected runtime.
 
 ## Determinism rules for authors
 

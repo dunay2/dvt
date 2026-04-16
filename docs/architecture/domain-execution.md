@@ -60,8 +60,8 @@ model rewrite. Start-run metadata now persists a single discriminated
 - `S02`: split state-store responsibilities more cleanly.
 - `S03`: extract start-run coordination without moving runtime authority out of
   the engine.
-- `TF-C2-A/B`: finish executor payload emission and caller-visible runtime
-  evidence on top of the hardened `providerRef` contract.
+- `TF-C2`: finish the remaining runtime-vertical acceptance on top of the
+  landed executor payload and caller-visible runtime-evidence slices.
 - `DHM` and `RC-G1`: continue DDD or hexagonal modularization and shared-kernel
   cleanup without widening composition-root leakage.
 

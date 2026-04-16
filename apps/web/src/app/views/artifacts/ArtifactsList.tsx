@@ -2,6 +2,7 @@ import { Download, Eye, FileText } from 'lucide-react';
 
 import { Button } from '../../components/ui/button';
 import { Card } from '../../components/ui/card';
+import { routeWorkbenchSectionTitleClassName } from '../../components/workbench/RouteWorkbenchFrame';
 import { artifactsViewCopy } from './copy';
 import type { ArtifactPreview } from './types';
 
@@ -13,24 +14,22 @@ type ArtifactsListProps = {
 export function ArtifactsList({ artifacts, panelClassName }: ArtifactsListProps) {
   return (
     <div>
-      <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-300">
-        {artifactsViewCopy.artifactsTitle}
-      </h2>
+      <h2 className={routeWorkbenchSectionTitleClassName}>{artifactsViewCopy.artifactsTitle}</h2>
       <div className="space-y-3">
         {artifacts.map((artifact) => (
-          <Card key={`${artifact.type}-${artifact.gitSha}`} className={panelClassName}>
+          <Card key={artifact.id} className={panelClassName}>
             <div className="flex items-start justify-between gap-4">
               <div className="flex items-start gap-3">
-                <div className="flex size-10 shrink-0 items-center justify-center rounded bg-blue-900/30">
-                  <FileText className="size-5 text-blue-400" />
+                <div className="flex size-10 shrink-0 items-center justify-center rounded bg-[var(--surface-elevated)]">
+                  <FileText className="size-5 text-[var(--status-info)]" />
                 </div>
                 <div>
                   <h3 className="mb-1 font-semibold">{artifact.type}</h3>
-                  <p className="mb-2 text-sm text-slate-200">{artifact.description}</p>
-                  <div className="flex flex-wrap gap-3 text-xs text-slate-400">
+                  <p className="mb-2 text-sm text-[var(--text-default)]">{artifact.description}</p>
+                  <div className="flex flex-wrap gap-3 text-xs text-[var(--text-muted)]">
                     <span>Size: {artifact.size}</span>
                     <span>Updated: {new Date(artifact.lastUpdated).toLocaleString()}</span>
-                    <span>SHA: {artifact.gitSha}</span>
+                    <span>Source: {artifact.sourceLabel}</span>
                   </div>
                 </div>
               </div>

@@ -1,4 +1,5 @@
 export type { IWorkflowEngine } from './IWorkflowEngine.v1.js';
+export type { IRunEnrichmentService } from './IRunEnrichmentService.v1.js';
 export type {
   IRunStateStore,
   ListEventsOptions,
@@ -21,15 +22,17 @@ export type {
   RunMetadata,
   WorkflowSnapshot,
   AppendResult,
-} from './RunEvents.v2.js';
+} from './RunEvents.v1.js';
 
 export type { ExecutionPlan } from './ExecutionPlan.v1.js';
 export type {
   EngineRunRef,
   PlanRef,
+  CanonicalRunStatus,
+  ProviderRunStatusView,
   RunContext,
+  RunStatusEnrichment,
   RunStatus,
-  RunStatusSnapshot,
   SignalRequest,
   SignalType,
-} from './ExecutionSemantics.v2.js';
+} from './ExecutionSemantics.v1.js';

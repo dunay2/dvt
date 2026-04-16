@@ -29,6 +29,8 @@ Primary anchors:
 - [CanvasShell.tsx](../../../../../apps/web/src/app/views/canvas/CanvasShell.tsx)
 - [CanvasViewport.tsx](../../../../../apps/web/src/app/views/canvas/CanvasViewport.tsx)
 - [CanvasToolbar.tsx](../../../../../apps/web/src/app/views/canvas/CanvasToolbar.tsx)
+- [CanvasStateViews.tsx](../../../../../apps/web/src/app/views/canvas/CanvasStateViews.tsx)
+- [canvasWorkbenchStateModel.ts](../../../../../apps/web/src/app/views/canvas/canvasWorkbenchStateModel.ts)
 - [useCanvasController.ts](../../../../../apps/web/src/app/views/canvas/useCanvasController.ts)
 - [useCanvasGraphHandlers.ts](../../../../../apps/web/src/app/views/canvas/useCanvasGraphHandlers.ts)
 - [useCanvasExecutionActions.ts](../../../../../apps/web/src/app/views/canvas/useCanvasExecutionActions.ts)
@@ -81,6 +83,7 @@ flowchart LR
 | `CanvasContent`             | Composition component           | Calls `useCanvasController`, adapts controller output to shell and modals                              | Good composition seam                            |
 | `CanvasShell`               | Workbench composition component | Orchestrates 3-panel layout (explorer/viewport/inspector), toolbar, and route-local import modal state | Good route-local composition boundary            |
 | `CanvasToolbar`             | Presentational/action bar       | Exposes graph commands and state toggles (`impact`, `columns`, `cost`, `plan`, `run`)                  | Good UI boundary                                 |
+| `CanvasStateViews`          | Route-state presentation        | Keeps `loading`, `empty`, and `error` inside the existing workbench center surface                     | Good route-state boundary                        |
 | `CanvasViewport`            | React Flow adapter component    | Binds graph state to `ReactFlow`, minimap, controls, viewport sync                                     | Good render boundary                             |
 | `DbtExplorer`               | Contextual side panel           | Graph source browsing and import entry point                                                           | Correct contextual panel, not shell chrome       |
 | `InspectorPanel`            | Contextual side panel           | Selection-driven node detail                                                                           | Correct contextual panel, not route authority    |
@@ -88,6 +91,7 @@ flowchart LR
 | `PlanPreviewModal`          | Route-local modal               | Shows planned execution before run start                                                               | Good handoff surface between graph and execution |
 | `ConfirmEdgeModal`          | Route-local modal               | Confirms graph dependency creation                                                                     | Good guard rail for graph mutation               |
 | `useCanvasController`       | Orchestration hook              | Query + canonical mapping + overlays + persisted layout + action wiring + output facade                | Overloaded boundary                              |
+| `canvasWorkbenchStateModel` | Route-state classifier          | Converts graph-query and permission signals into explicit route and read-only states                   | Good route acceptance seam                       |
 | `useCanvasGraphHandlers`    | Interaction hook                | Connect, drag/drop, selection, auto-layout, edge confirmation, node removal                            | Reusable, mostly cohesive                        |
 | `useCanvasExecutionActions` | Run-plan action hook            | Plan preview and run start flow + console side effects + navigation callback                           | Cohesive action boundary                         |
 | `canvasNodeMapper`          | Mapper utility                  | Canonical node/edge to React Flow node/edge mappings                                                   | Pure mapping boundary                            |
@@ -221,6 +225,9 @@ Decision after review:
 - route responsibility bleed:
   keep Monaco, diff-heavy review, artifact browsing, and source generation out
   of Canvas even when Canvas provides the originating workflow context.
+- route state opacity:
+  loading, empty, error, and permission gating should be explicit route states
+  instead of implicit blank-graph or toast-only behavior.
 
 ## UX And Design Review
 
@@ -255,6 +262,8 @@ Confirmed decisions:
 - `useCanvasController` still needs decomposition.
 - Canvas remains the main authoring workbench.
 - Overlays, persistence, and route handoff must be separable and testable.
+- Canvas state hardening should preserve the current shell and panel grammar
+  rather than replacing the workbench with a generic route frame.
 
 Changed decision:
 

@@ -1,3 +1,4 @@
+import { asIsoUtcString, asNonBlankString, type IsoUtcString } from '@dvt/contracts';
 import type { IRunStateStoreRead, IWorkflowEngine } from '@dvt/engine';
 import { RunMetadataNotFoundError } from '@dvt/engine';
 
@@ -10,7 +11,7 @@ export class SignalRunUseCase implements ISignalRunUseCase {
   public constructor(
     private readonly engine: IWorkflowEngine,
     private readonly stateStore: IRunStateStoreRead,
-    private readonly nowIsoUtc: () => string = () => new Date().toISOString()
+    private readonly nowIsoUtc: () => IsoUtcString = () => asIsoUtcString(new Date().toISOString())
   ) {}
 
   public async execute(
@@ -26,7 +27,7 @@ export class SignalRunUseCase implements ISignalRunUseCase {
     }
 
     await this.engine.signal(runMetadataToEngineRunRef(metadata), {
-      signalId: `${context.requestId}:${command.runId}:${command.signalType}`,
+      signalId: asNonBlankString(`${context.requestId}:${command.runId}:${command.signalType}`),
       type: command.signalType,
       ...(command.reason !== undefined ? { reason: command.reason } : {}),
       requestedAt: this.nowIsoUtc(),

@@ -19,7 +19,7 @@ import type {
 } from '../../types/canonical';
 import type { InspectorPanelContribution, InspectorPanelProps } from '../contracts/PluginManifest';
 import type { NodeRendererProps } from '../contracts/NodeRendering';
-import { DBT_NODE_KINDS } from '../nodeTypeCatalog.dbt';
+import { CANVAS_NODE_KINDS } from '../nodeTypeCatalog.dbt';
 
 const STATUS_RING: Record<string, string> = {
   running: 'ring-2 ring-blue-400',
@@ -57,7 +57,7 @@ type ColumnMeta = {
 };
 
 function resolveKindMeta(kind: string) {
-  return DBT_NODE_KINDS.find((entry) => entry.kind === kind);
+  return CANVAS_NODE_KINDS.find((entry) => entry.kind === kind);
 }
 
 function buildOverlayProps(

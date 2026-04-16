@@ -4,6 +4,7 @@ import type { ChangeEvent, DragEvent, RefObject } from 'react';
 import { Button } from '../../components/ui/button';
 import { Card } from '../../components/ui/card';
 import { cn } from '../../components/ui/utils';
+import { routeWorkbenchSectionTitleClassName } from '../../components/workbench/RouteWorkbenchFrame';
 import { artifactsViewCopy } from './copy';
 import type { ImportState } from './types';
 
@@ -36,9 +37,7 @@ export function ManifestImportPanel({
 }: ManifestImportPanelProps) {
   return (
     <div>
-      <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-300">
-        {artifactsViewCopy.importTitle}
-      </h2>
+      <h2 className={routeWorkbenchSectionTitleClassName}>{artifactsViewCopy.importTitle}</h2>
 
       <input
         ref={fileInputRef}
@@ -53,54 +52,64 @@ export function ManifestImportPanel({
         <Card
           className={cn(
             'border-2 border-dashed p-8 text-center transition-colors',
-            'border-slate-600 bg-slate-900 hover:border-blue-500 hover:bg-slate-800/60',
+            'border-[color:var(--border-default)] bg-[var(--surface-panel)] hover:border-[color:var(--status-info)] hover:bg-[var(--surface-elevated)]',
             state.status === 'loading' ? 'pointer-events-none opacity-60' : 'cursor-pointer'
           )}
           onDrop={onDrop}
           onDragOver={onDragOver}
           onClick={onOpenFilePicker}
         >
-          <Upload className="mx-auto mb-3 size-8 text-slate-400" />
-          <p className="mb-1 text-sm font-medium text-slate-200">
+          <Upload className="mx-auto mb-3 size-8 text-[var(--text-muted)]" />
+          <p className="mb-1 text-sm font-medium text-[var(--text-default)]">
             {state.status === 'loading'
               ? artifactsViewCopy.importDropLoading
               : artifactsViewCopy.importDropIdle}
           </p>
-          <p className="text-xs text-slate-400">{artifactsViewCopy.importDropHint}</p>
+          <p className="text-xs text-[var(--text-muted)]">{artifactsViewCopy.importDropHint}</p>
 
           {state.status === 'error' ? (
-            <div className="mt-4 flex items-center justify-center gap-2 text-xs text-red-400">
+            <div className="mt-4 flex items-center justify-center gap-2 text-xs text-[var(--status-danger)]">
               <XCircle className="size-4 shrink-0" />
               {state.message}
             </div>
           ) : null}
         </Card>
       ) : (
-        <Card className="border-green-700 bg-green-950/30 p-4">
+        <Card className="border-[color:var(--status-success)] bg-[var(--surface-elevated)] p-4">
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-start gap-3">
-              <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-green-400" />
+              <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-[var(--status-success)]" />
               <div>
-                <p className="mb-1 text-sm font-medium text-green-200">
+                <p className="mb-1 text-sm font-medium text-[var(--text-strong)]">
                   {state.fileName} {artifactsViewCopy.importSuccess}
                 </p>
-                <div className="flex flex-wrap gap-3 text-xs text-slate-300">
+                <div className="flex flex-wrap gap-3 text-xs text-[var(--text-default)]">
                   <span>
-                    <span className="font-mono text-white">{importedStats?.models ?? 0}</span>{' '}
+                    <span className="font-mono text-[var(--text-strong)]">
+                      {importedStats?.models ?? 0}
+                    </span>{' '}
                     models
                   </span>
                   <span>
-                    <span className="font-mono text-white">{importedStats?.sources ?? 0}</span>{' '}
+                    <span className="font-mono text-[var(--text-strong)]">
+                      {importedStats?.sources ?? 0}
+                    </span>{' '}
                     sources
                   </span>
                   <span>
-                    <span className="font-mono text-white">{importedStats?.tests ?? 0}</span> tests
+                    <span className="font-mono text-[var(--text-strong)]">
+                      {importedStats?.tests ?? 0}
+                    </span>{' '}
+                    tests
                   </span>
                   <span>
-                    <span className="font-mono text-white">{importedStats?.edges ?? 0}</span> edges
+                    <span className="font-mono text-[var(--text-strong)]">
+                      {importedStats?.edges ?? 0}
+                    </span>{' '}
+                    edges
                   </span>
                   {importedStats?.dbtVersion ? (
-                    <span className="text-slate-400">dbt {importedStats.dbtVersion}</span>
+                    <span className="text-[var(--text-muted)]">dbt {importedStats.dbtVersion}</span>
                   ) : null}
                 </div>
               </div>

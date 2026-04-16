@@ -12,8 +12,8 @@ import type { ExecutionPlan } from '../contracts/planner/ExecutionPlan.v1.js';
 import type {
   EngineRunRef,
   PlanRef,
+  ProviderRunStatusView,
   ResolvedRunContext,
-  RunStatusSnapshot,
   SignalRequest,
 } from '../types/contracts.js';
 
@@ -22,7 +22,7 @@ export interface IProviderAdapter {
 
   startRun(plan: ExecutionPlan, planRef: PlanRef, ctx: ResolvedRunContext): Promise<EngineRunRef>;
   cancelRun(runRef: EngineRunRef): Promise<void>;
-  getRunStatus(runRef: EngineRunRef): Promise<RunStatusSnapshot>;
+  getProviderStatusView(runRef: EngineRunRef): Promise<ProviderRunStatusView>;
   signal(runRef: EngineRunRef, request: SignalRequest): Promise<void>;
   signalSemanticsVersions(): readonly SignalSemanticsVersion[];
 

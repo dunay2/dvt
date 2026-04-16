@@ -4,10 +4,10 @@ import {
   ObservedTemporalAdapter,
   TemporalAdapter,
   TemporalClientManager,
+  extractRuntimeStatusFromDescribe,
   loadTemporalAdapterConfig,
   mapTemporalStatusToRunStatus,
-  toRunStatusSnapshotFromWorkflowState,
-  toRunStatusSnapshot,
+  toProviderRunStatusView,
   toTemporalRunRef,
   toTemporalTaskQueue,
   toTemporalWorkflowId,
@@ -119,34 +119,53 @@ describe('adapter-temporal foundation', () => {
     const status = mapTemporalStatusToRunStatus('COMPLETED');
     expect(status).toBe('COMPLETED');
 
-    const snapshot = toRunStatusSnapshot({
-      runId: 'run-1',
+    const providerView = toProviderRunStatusView({
       runtimeStatus: 'RUNNING',
       message: 'ok',
     });
-    expect(snapshot).toEqual({
-      runId: 'run-1',
-      status: 'RUNNING',
+    expect(providerView).toEqual({
+      provider: 'temporal',
+      providerStatus: 'RUNNING',
       message: 'ok',
     });
+  });
 
-    expect(
-      toRunStatusSnapshotFromWorkflowState({
-        runId: 'run-1',
-        state: {
-          status: 'CANCELLED',
-          paused: false,
-          cancelled: true,
-          cancelReason: 'user request',
-          currentStepIndex: 2,
-          continuedAsNewCount: 0,
-        },
+  it('rejects blank provider status tokens when building provider views', () => {
+    expect(() =>
+      toProviderRunStatusView({
+        runtimeStatus: '   ',
       })
-    ).toEqual({
-      runId: 'run-1',
-      status: 'CANCELLED',
-      message: 'user request',
-    });
+    ).toThrow('String must contain at least one non-whitespace character');
+  });
+
+  it('maps CONTINUED_AS_NEW to RUNNING in run-status mapping', () => {
+    expect(mapTemporalStatusToRunStatus('CONTINUED_AS_NEW')).toBe('RUNNING');
+  });
+
+  it('maps PAUSED to PAUSED in run-status mapping', () => {
+    expect(mapTemporalStatusToRunStatus('PAUSED')).toBe('PAUSED');
+  });
+
+  it('extracts Temporal-native runtime status from describe result', () => {
+    expect(extractRuntimeStatusFromDescribe({ status: { name: 'RUNNING', code: 1 } })).toBe(
+      'RUNNING'
+    );
+    expect(extractRuntimeStatusFromDescribe({ status: { name: 'COMPLETED' } })).toBe('COMPLETED');
+    expect(extractRuntimeStatusFromDescribe({ status: { name: 'PAUSED' } })).toBe('PAUSED');
+    expect(extractRuntimeStatusFromDescribe({ status: { name: 'CONTINUED_AS_NEW' } })).toBe(
+      'CONTINUED_AS_NEW'
+    );
+  });
+
+  it('throws for missing status in describe result and preserves unknown provider tokens', () => {
+    expect(() => extractRuntimeStatusFromDescribe({})).toThrow('TEMPORAL_DESCRIBE_MISSING_STATUS');
+    expect(() => extractRuntimeStatusFromDescribe(null)).toThrow(
+      'TEMPORAL_DESCRIBE_MISSING_STATUS'
+    );
+    expect(extractRuntimeStatusFromDescribe({ status: { name: 'UNKNOWN' } })).toBe('UNKNOWN');
+    expect(extractRuntimeStatusFromDescribe({ status: { name: 'PAUSE_REQUESTED' } })).toBe(
+      'PAUSE_REQUESTED'
+    );
   });
 
   it('builds temporal run refs and task queue from config', () => {

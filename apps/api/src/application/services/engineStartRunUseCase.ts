@@ -1,3 +1,4 @@
+import { asNonBlankString, parsePlanRef } from '@dvt/contracts';
 import {
   AdapterNotRegisteredError,
   OutboxRateLimitExceededError,
@@ -157,12 +158,24 @@ function validateAndExtractPlanRef(
 }
 
 function toEnginePlanRef(planRef: StartRunPlanRef): PlanRef {
+  const parsedPlanRef = parsePlanRef({
+    uri: asNonBlankString(planRef.uri),
+    sha256: asNonBlankString(planRef.sha256),
+    schemaVersion: asNonBlankString(planRef.schemaVersion),
+    planId: asNonBlankString(planRef.planId),
+    planVersion: asNonBlankString(planRef.planVersion),
+    ...(planRef.sizeBytes === undefined ? {} : { sizeBytes: planRef.sizeBytes }),
+    ...(planRef.expiresAt === undefined ? {} : { expiresAt: planRef.expiresAt }),
+  });
+
   return {
-    uri: planRef.uri,
-    sha256: planRef.sha256,
-    schemaVersion: planRef.schemaVersion,
-    planId: planRef.planId,
-    planVersion: planRef.planVersion,
+    uri: parsedPlanRef.uri,
+    sha256: parsedPlanRef.sha256,
+    schemaVersion: parsedPlanRef.schemaVersion,
+    planId: parsedPlanRef.planId,
+    planVersion: parsedPlanRef.planVersion,
+    ...(parsedPlanRef.sizeBytes === undefined ? {} : { sizeBytes: parsedPlanRef.sizeBytes }),
+    ...(parsedPlanRef.expiresAt === undefined ? {} : { expiresAt: parsedPlanRef.expiresAt }),
   };
 }
 
@@ -171,10 +184,10 @@ function toEngineRunContext(
   context: AuthorizedCommandExecutionContext
 ): RunContext {
   const runContext: RunContext = {
-    tenantId: context.scope.tenantId.value,
-    projectId: context.scope.projectId?.value ?? '',
-    environmentId: context.scope.environmentId?.value ?? '',
-    runId: command.runId,
+    tenantId: asNonBlankString(context.scope.tenantId.value),
+    projectId: asNonBlankString(context.scope.projectId?.value ?? ''),
+    environmentId: asNonBlankString(context.scope.environmentId?.value ?? ''),
+    runId: asNonBlankString(command.runId),
     targetAdapter: command.targetAdapter,
   };
   if (command.runExecutionContextRef !== undefined) {

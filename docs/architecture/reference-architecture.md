@@ -47,7 +47,9 @@ Value objects:
 - `StepId`
 - `RunContext`
 - `SignalRequest`
-- `RunStatusSnapshot`
+- `CanonicalRunStatus`
+- `ProviderRunStatusView`
+- `RunStatusEnrichment`
 
 Aggregate:
 

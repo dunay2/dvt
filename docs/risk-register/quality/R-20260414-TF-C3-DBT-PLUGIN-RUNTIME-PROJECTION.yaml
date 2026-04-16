@@ -1,0 +1,62 @@
+---
+id: R-20260414-TF-C3-DBT-PLUGIN-RUNTIME-PROJECTION
+title: TF-C3 rollout can drift from the validated in-repo Temporal worker host
+status: Open
+date: 2026-04-14
+owners:
+  - packages/@dvt/adapter-temporal
+severity: Medium
+probability: Medium
+context: >
+  `TF-C3` now includes the in-repo worker topology that phase 2 needed: shared artifact-backed
+  runtime readers, a standalone `apps/temporal-worker` composition root, and an adapter-owned
+  `DbtCliPluginRunner`. Unit, package, and worker-level tests now prove the host composition and the
+  DBT runtime handoff. The remaining risk is no longer missing topology; it is rollout drift between
+  this validated in-repo host and environment wiring outside the repo, plus two explicit residual
+  governance gaps around artifact-store binding.
+risk: >
+  If deployment or canary rollout wires the worker, DBT binary, or artifact locators differently
+  from the validated in-repo composition, persisted DBT runs can fail closed or exhibit environment-
+  specific drift even though the repo-level host topology is now correct. In addition, `recoverRun`
+  currently re-evaluates DBT bundle store binding against live API configuration rather than a store
+  identity persisted with the accepted run, so changing sanctioned artifact-store config can
+  invalidate recovery of already-accepted runs without artifact drift. The protected API also does
+  not yet fail fast on DBT bundle-store misconfiguration at bootstrap; the first DBT-bearing
+  admission discovers that defect on request rather than during startup.
+mitigations:
+  - '`DbtStepActivity` now fails closed for missing `runExecutionContextRef`, missing runtime
+    wiring, missing `pluginContexts.dbt`, or mismatched plugin runner results.'
+  - 'The repo now contains a canonical `apps/temporal-worker` composition root instead of relying on
+    test-only host wiring.'
+  - 'Adapter-temporal unit and worker-composition tests now prove the reader-to-plugin-runner
+    handoff explicitly.'
+  - 'The DBT runtime no longer dereferences a mutable string-only bundle URI: `projectBundleRef` is
+    now a typed immutable bundle ref with `kind=dbt-project-bundle`, required `sha256`, required
+    `tenantId`, and a canonical tenant-scoped locator, and the worker verifies both tenant alignment
+    and bytes before execution.'
+  - 'Start-run admission now rejects DBT-bearing plans before queueing when `runExecutionContextRef`
+    is missing, `pluginContexts.dbt` is absent, or the resolved DBT bundle tenant or canonical
+    locator does not match the run tenant.'
+  - 'The DBT integration fixtures now bind `runExecutionContextRef.sha256` to canonical context
+    bytes and reject unregistered refs, so same-worker multi-run tests cannot silently reuse one
+    fake context.'
+  - 'The same fixture seam now registers plan bytes per `PlanRef`, rejects stale
+    `runExecutionContextRef` to plan bindings up front, and preserves engine rejection reasons when
+    DBT step execution fails closed.'
+  - 'Artifact runtime reads no longer instantiate a fresh S3 client per fetch; the runtime now uses
+    a long-lived client path so bundle/context reads do not pay read-scoped SDK churn.'
+  - 'Fixture lookup no longer depends on optional `PlanRef.sizeBytes`, and synthetic DBT runtime
+    refs now hash RFC-8785/JCS canonical bytes so harmless property-order churn cannot masquerade as
+    execution-context drift.'
+  - 'The DBT multi-run fixture path now requires per-binding `planBytes` and uses the public
+    `@dvt/crypto` package boundary, so tests no longer rely on sibling source imports or a silent
+    worker-global blob fallback when multiple plans share one worker.'
+  - 'The worker now ships `/healthz`, `/readyz`, `/metrics`, and a canonical runbook so operability
+    is part of the repo truth instead of a follow-up guess.'
+  - 'Lane C keeps the remaining rollout-acceptance work visible under `TF-C3-E` instead of treating
+    code topology alone as full closure.'
+  - 'This risk entry now explicitly records the remaining recovery/store-identity drift and API
+    bootstrap fail-fast gap as accepted debt for the current development slice instead of implying
+    that only out-of-repo rollout work remains.'
+review_after: 2026-06-15
+---

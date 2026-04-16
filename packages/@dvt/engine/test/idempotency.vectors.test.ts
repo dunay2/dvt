@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { IdempotencyKeyBuilder } from '../src/core/idempotency.js';
 
-describe('IdempotencyKeyBuilder vectors (RunEvents v2.0.1)', () => {
+describe('IdempotencyKeyBuilder vectors (RunEvents v1)', () => {
   const builder = new IdempotencyKeyBuilder();
 
   it('matches all 5 canonical vectors', () => {

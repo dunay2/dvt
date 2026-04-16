@@ -1,6 +1,6 @@
 import { ApiError } from '../api/createApiClient';
+import type { IRunsPort, RunSnapshot } from '../../ports/runs';
 import type { RunEvent } from '../../types/engine';
-import type { RunsService, RunSnapshot } from './runsService';
 
 export type RunWorkspaceTimeline =
   | {
@@ -103,7 +103,7 @@ function describeTimelineError(error: unknown): { message: string; statusCode?: 
   return { message: 'Timeline could not be loaded due to an unexpected error.' };
 }
 
-export function createRunWorkspaceFacade(runsService: RunsService): RunWorkspaceFacade {
+export function createRunWorkspaceFacade(runsService: IRunsPort): RunWorkspaceFacade {
   return {
     async loadRunWorkspace(runId: string): Promise<RunWorkspaceViewModel | null> {
       let snapshot: RunSnapshot | null;

@@ -22,7 +22,7 @@ The target is concrete:
 2. derive the planning input from that design graph
 3. validate and persist an immutable plan
 4. start execution by `PlanRef`
-5. execute against PostgreSQL
+5. execute against a relational SQL executor seam, with PostgreSQL as the v1 implementation
 6. inspect materialization evidence and failure diagnostics
 
 ## Governing sources
@@ -74,17 +74,17 @@ This overview document remains the entry point for the set.
 
 ## Locked direction at a glance
 
-| Topic                   | Locked choice                                        | Explicitly not chosen for v1   |
-| ----------------------- | ---------------------------------------------------- | ------------------------------ |
-| Product value           | execute a real transformation                        | generic authoring breadth      |
-| Authoring surface       | basic Canvas graph `source -> sql_transform -> sink` | open-ended workbench           |
-| Executable payload      | SQL tracked in Git                                   | autonomous SQL generation      |
-| Planning input          | derived from the design graph                        | dbt-only input surface         |
-| Preview behavior        | validate and persist immutable plan                  | ephemeral preview              |
-| Runtime start           | `PlanRef`                                            | raw client-supplied plan bytes |
-| First execution target  | PostgreSQL                                           | multi-target first release     |
-| First proof environment | Docker PostgreSQL                                    | cloud-only acceptance          |
-| Future extension        | dbt executor in phase 2                              | separate dbt product fork      |
+| Topic                   | Locked choice                                        | Explicitly not chosen for v1                       |
+| ----------------------- | ---------------------------------------------------- | -------------------------------------------------- |
+| Product value           | execute a real transformation                        | generic authoring breadth                          |
+| Authoring surface       | basic Canvas graph `source -> sql_transform -> sink` | open-ended workbench                               |
+| Executable payload      | SQL tracked in Git                                   | autonomous SQL generation                          |
+| Planning input          | derived from the design graph                        | dbt-only input surface                             |
+| Preview behavior        | validate and persist immutable plan                  | ephemeral preview                                  |
+| Runtime start           | `PlanRef`                                            | raw client-supplied plan bytes                     |
+| First execution target  | Postgres as first relational executor implementation | multi-target first release                         |
+| First proof environment | Docker PostgreSQL                                    | cloud-only acceptance                              |
+| Future extension        | plugin-backed dbt path in phase 2                    | separate dbt product fork or kernel-owned dbt path |
 
 ## Reading order
 
@@ -115,7 +115,7 @@ flowchart TD
 | ---- | ------------------------------------------------------------------------ | ----------------------------------------------------------- |
 | A    | graph model, compiler boundary, plan contract                            | governed `DesignGraphDraft` and graph-to-step mapping       |
 | B    | Git provenance, evidence linkage, artifact traceability                  | `GitArtifactRef` and run evidence chain                     |
-| C    | preview/persist API, `PlanRef`, runtime bridge, PostgreSQL execution     | working `POST /plans/preview` plus first SQL execution path |
+| C    | preview/persist API, `PlanRef`, runtime bridge, first relational path    | working `POST /plans/preview` plus first SQL execution path |
 | D    | reproducible proof environment lifecycle, reset and retention discipline | repeatable Docker PostgreSQL baseline with cleanup policy   |
 | E    | Canvas authoring, preview/start UX, result UX                            | operator-visible `design -> plan -> run -> result` flow     |
 

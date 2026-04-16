@@ -66,7 +66,7 @@ export interface PlannerOptions {
    * Registry used to validate stepTypeConfig per step kind at plan build-time (G9).
    * Defaults to the built-in registry (DBT_MODEL, DBT_TEST, DBT_SNAPSHOT).
    * Known kinds with invalid config throw INVALID_STEP_CONFIG.
-   * Unknown kinds pass through (fail-open per ADR-0006).
+   * Unknown kinds are rejected at the registry boundary.
    */
   stepTypeRegistry?: IStepTypeRegistry;
 }

@@ -1,8 +1,8 @@
-import type { RunExecutionContextRef } from '@dvt/contracts';
+import { parseRunExecutionContextRef, type RunExecutionContextRef } from '@dvt/contracts';
 
 import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
 import { badRequestResult, type RouteParseResult } from './routeParseIssue.js';
-import { asNonEmptyTrimmedStringOrUndefined } from './startRunRouteBodyValidation.js';
+import { asCanonicalNonEmptyStringOrUndefined } from './startRunRouteBodyValidation.js';
 
 export function parseStartRunRunExecutionContextRef(
   raw: unknown
@@ -14,30 +14,27 @@ export function parseStartRunRunExecutionContextRef(
   }
 
   const record = raw as Record<string, unknown>;
-  const uri = asNonEmptyTrimmedStringOrUndefined(record.uri);
-  const sha256 = asNonEmptyTrimmedStringOrUndefined(record.sha256);
-  const schemaVersion = asNonEmptyTrimmedStringOrUndefined(record.schemaVersion);
-  const planId = asNonEmptyTrimmedStringOrUndefined(record.planId);
-  const planVersion = asNonEmptyTrimmedStringOrUndefined(record.planVersion);
-  const pluginCompatibilityFingerprint = asNonEmptyTrimmedStringOrUndefined(
-    record.pluginCompatibilityFingerprint
-  );
+  const normalized = {
+    uri: asCanonicalNonEmptyStringOrUndefined(record.uri),
+    sha256: asCanonicalNonEmptyStringOrUndefined(record.sha256),
+    schemaVersion: asCanonicalNonEmptyStringOrUndefined(record.schemaVersion),
+    planId: asCanonicalNonEmptyStringOrUndefined(record.planId),
+    planVersion: asCanonicalNonEmptyStringOrUndefined(record.planVersion),
+    ...(Object.prototype.hasOwnProperty.call(record, 'pluginCompatibilityFingerprint')
+      ? {
+          pluginCompatibilityFingerprint: record.pluginCompatibilityFingerprint,
+        }
+      : {}),
+  };
 
-  if (uri && sha256 && schemaVersion && planId && planVersion) {
+  try {
     return {
       ok: true,
-      value: {
-        uri,
-        sha256,
-        schemaVersion,
-        planId,
-        planVersion,
-        ...(pluginCompatibilityFingerprint === undefined ? {} : { pluginCompatibilityFingerprint }),
-      },
+      value: parseRunExecutionContextRef(normalized),
     };
+  } catch {
+    return badRequestResult(HTTP_ERROR_REASON.invalidRunExecutionContextRef, {
+      target: 'runExecutionContextRef',
+    });
   }
-
-  return badRequestResult(HTTP_ERROR_REASON.invalidRunExecutionContextRef, {
-    target: 'runExecutionContextRef',
-  });
 }

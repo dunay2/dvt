@@ -2,12 +2,26 @@ import { FileCode2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 import { ViewHeader } from '../components/domain';
+import { WorkbenchReadOnlyState } from '../components/workbench/state/WorkbenchStates';
+import {
+  RouteWorkbenchFrame,
+  routeWorkbenchHeaderBandClassName,
+} from '../components/workbench/RouteWorkbenchFrame';
 import { MonacoCodeViewer } from '../components/monaco/MonacoCodeViewer';
 import {
   useWorkspaceFileContentQuery,
   useWorkspaceFileTreeQuery,
 } from '../queries/workspaceQueries';
 import type { WorkspaceFileEntry } from '../ports/workspace';
+import {
+  CodePreviewEmptyStateView,
+  CodePreviewErrorStateView,
+  CodeRouteEmptyStateView,
+  CodeRouteErrorStateView,
+  CodeRouteLoadingStateView,
+} from './code/CodeStateViews';
+import { resolveCodeWorkbenchErrorPresentation } from './code/codeWorkbenchErrorModel';
+import { codeViewCopy as copy } from './code/codeViewCopy';
 import FileTreePanel from './code/FileTreePanel';
 
 function flattenFiles(entries: WorkspaceFileEntry[]): WorkspaceFileEntry[] {
@@ -20,66 +34,100 @@ function firstFilePath(entries: WorkspaceFileEntry[]): string | undefined {
   return flattenFiles(entries)[0]?.path;
 }
 
+function hasWorkspaceFiles(entries: WorkspaceFileEntry[]): boolean {
+  return firstFilePath(entries) !== undefined;
+}
+
 export default function CodeView() {
   const fileTreeQuery = useWorkspaceFileTreeQuery();
   const [selectedPath, setSelectedPath] = useState<string | undefined>(undefined);
+  const workspaceFileTree = fileTreeQuery.data ?? [];
   const resolvedPath = useMemo(
-    () => selectedPath ?? firstFilePath(fileTreeQuery.data ?? []),
-    [fileTreeQuery.data, selectedPath]
+    () => selectedPath ?? firstFilePath(workspaceFileTree),
+    [workspaceFileTree, selectedPath]
   );
   const fileContentQuery = useWorkspaceFileContentQuery(resolvedPath);
 
+  if (fileTreeQuery.isPending) {
+    return <CodeRouteLoadingStateView />;
+  }
+
+  if (fileTreeQuery.isError) {
+    return (
+      <CodeRouteErrorStateView
+        error={resolveCodeWorkbenchErrorPresentation({
+          scope: 'file-tree',
+          error: fileTreeQuery.error,
+        })}
+      />
+    );
+  }
+
+  if (!hasWorkspaceFiles(workspaceFileTree)) {
+    return <CodeRouteEmptyStateView />;
+  }
+
+  const previewPane = fileContentQuery.isPending ? (
+    <div className="flex h-full items-center justify-center text-sm text-[var(--text-muted)]">
+      {copy.previewLoadingMessage}
+    </div>
+  ) : fileContentQuery.isError ? (
+    <CodePreviewErrorStateView
+      error={resolveCodeWorkbenchErrorPresentation({
+        scope: 'file-preview',
+        error: fileContentQuery.error,
+        selectedPath: resolvedPath,
+      })}
+    />
+  ) : !fileContentQuery.data ? (
+    <CodePreviewEmptyStateView />
+  ) : (
+    <MonacoCodeViewer
+      ariaLabel={`Previewing ${fileContentQuery.data.name}`}
+      language={fileContentQuery.data.language}
+      path={fileContentQuery.data.path}
+      value={fileContentQuery.data.content}
+    />
+  );
+
   return (
-    <div className="flex h-full min-h-0 flex-col bg-slate-950 text-slate-50">
-      <div className="border-b border-slate-700 bg-slate-900 px-6 py-4">
-        <ViewHeader
-          className="border-0 bg-transparent px-0 py-0"
-          title="Code"
-          icon={<FileCode2 className="size-6 text-blue-400" />}
-          subtitle="Browse workspace files and preview source content read-only."
+    <RouteWorkbenchFrame
+      scroll={false}
+      bodyClassName="flex min-h-0 flex-1"
+      header={
+        <div className={routeWorkbenchHeaderBandClassName}>
+          <ViewHeader
+            className="border-0 bg-transparent px-0 py-0"
+            title={copy.title}
+            icon={<FileCode2 className="size-6 text-[var(--status-info)]" />}
+            subtitle={copy.subtitle}
+          />
+        </div>
+      }
+    >
+      <div className="w-80 shrink-0">
+        <FileTreePanel
+          tree={workspaceFileTree}
+          selectedPath={resolvedPath}
+          onSelect={(entry) => {
+            if (entry.kind === 'file') {
+              setSelectedPath(entry.path);
+            }
+          }}
         />
       </div>
 
-      <div className="flex min-h-0 flex-1">
-        <div className="w-80 shrink-0">
-          <FileTreePanel
-            tree={fileTreeQuery.data ?? []}
-            selectedPath={resolvedPath}
-            onSelect={(entry) => {
-              if (entry.kind === 'file') {
-                setSelectedPath(entry.path);
-              }
-            }}
+      <div className="min-w-0 flex flex-1 flex-col">
+        <div className="shrink-0 p-4 pb-0">
+          <WorkbenchReadOnlyState
+            dataSlot="code-readonly-state"
+            title={copy.readOnlyTitle}
+            message={copy.readOnlyMessage}
+            note={copy.readOnlyNote}
           />
         </div>
-
-        <div className="min-w-0 flex-1">
-          {fileTreeQuery.isPending ? (
-            <div className="flex h-full items-center justify-center text-sm text-slate-400">
-              Loading workspace files...
-            </div>
-          ) : fileTreeQuery.isError ? (
-            <div className="flex h-full items-center justify-center text-sm text-red-300">
-              Unable to load workspace files.
-            </div>
-          ) : fileContentQuery.isPending ? (
-            <div className="flex h-full items-center justify-center text-sm text-slate-400">
-              Loading file preview...
-            </div>
-          ) : fileContentQuery.isError || !fileContentQuery.data ? (
-            <div className="flex h-full items-center justify-center text-sm text-slate-400">
-              Select a file to preview its contents.
-            </div>
-          ) : (
-            <MonacoCodeViewer
-              ariaLabel={`Previewing ${fileContentQuery.data.name}`}
-              language={fileContentQuery.data.language}
-              path={fileContentQuery.data.path}
-              value={fileContentQuery.data.content}
-            />
-          )}
-        </div>
+        <div className="min-h-0 flex-1 p-4">{previewPane}</div>
       </div>
-    </div>
+    </RouteWorkbenchFrame>
   );
 }

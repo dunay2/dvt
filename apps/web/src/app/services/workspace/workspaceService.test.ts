@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
 import type { WorkspaceFileEntry } from '../../ports/workspace';
+import { ApiError } from '../api/createApiClient';
 import { createMockWorkspaceService, createMockWorkspaceState } from './workspaceService.mock';
+import { createApiWorkspaceService } from './workspaceService.api';
 import { createWorkspaceService } from './workspaceService';
+import { WorkspaceFileLoadError, WORKSPACE_HTTP_ERROR_REASON } from './workspaceErrors';
 
 function flattenWorkspaceEntries(entries: readonly WorkspaceFileEntry[]): string[] {
   return entries.flatMap((entry) => [
@@ -43,6 +46,7 @@ describe('workspaceService source import', () => {
     expect(result.sourcesCreated).toBe(1);
     expect(result.tablesImported).toBe(1);
     expect(result.yamlFiles).toEqual(['models/sources/src_finance.yml']);
+    expect(result.importedNodeIds).toEqual(['src_finance_invoices']);
     expect(after.nodes).toHaveLength(before.nodes.length + 1);
     expect(importedNode).toMatchObject({
       id: 'src_finance_invoices',
@@ -154,6 +158,82 @@ describe('workspaceService source import', () => {
     expect(firstTree).toContain(newFilePath);
     expect(secondTree).not.toContain(newFilePath);
     expect(firstFile.content).toBe('select 1 as id');
+  });
+
+  it('maps missing mock files to a typed workspace file load error', async () => {
+    const service = createWorkspaceService('mock');
+
+    await expect(service.getFileContent('models/missing.sql')).rejects.toEqual(
+      expect.objectContaining<Partial<WorkspaceFileLoadError>>({
+        name: 'WorkspaceFileLoadError',
+        kind: 'not_found',
+        path: 'models/missing.sql',
+      })
+    );
+  });
+
+  it('maps canonical workspace file-not-found envelopes to a typed workspace file load error', async () => {
+    const service = createApiWorkspaceService({
+      baseUrl: '',
+      requestRaw: async () => {
+        throw new Error('not used in this test');
+      },
+      getJson: async () => {
+        throw new ApiError({
+          message: 'Request to /workspace/files/models%2Fmissing.sql failed (404)',
+          endpoint: '/workspace/files/models%2Fmissing.sql',
+          statusCode: 404,
+          category: 'client',
+          responseBody: {
+            error: {
+              type: 'not_found',
+              reason: WORKSPACE_HTTP_ERROR_REASON.fileNotFound,
+            },
+          },
+        });
+      },
+      postJson: async () => {
+        throw new Error('not used in this test');
+      },
+    });
+
+    await expect(service.getFileContent('models/missing.sql')).rejects.toEqual(
+      expect.objectContaining<Partial<WorkspaceFileLoadError>>({
+        name: 'WorkspaceFileLoadError',
+        kind: 'not_found',
+        path: 'models/missing.sql',
+      })
+    );
+  });
+
+  it('does not collapse unrelated not-found envelopes into workspace file load errors', async () => {
+    const unrelatedNotFound = new ApiError({
+      message: 'Request to /workspace/files/models%2Fmissing.sql failed (404)',
+      endpoint: '/workspace/files/models%2Fmissing.sql',
+      statusCode: 404,
+      category: 'client',
+      responseBody: {
+        error: {
+          type: 'not_found',
+          reason: 'run_not_found',
+        },
+      },
+    });
+
+    const service = createApiWorkspaceService({
+      baseUrl: '',
+      requestRaw: async () => {
+        throw new Error('not used in this test');
+      },
+      getJson: async () => {
+        throw unrelatedNotFound;
+      },
+      postJson: async () => {
+        throw new Error('not used in this test');
+      },
+    });
+
+    await expect(service.getFileContent('models/missing.sql')).rejects.toBe(unrelatedNotFound);
   });
 
   it('fails explicitly in api mode until the backend endpoint exists', async () => {

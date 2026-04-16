@@ -1,0 +1,125 @@
+/*
+  DVT professional theme token proposal
+  ------------------------------------
+  This is not a drop-in patch.
+  It is a product/UX token proposal aligned with the current `theme.css`
+  semantic model, intended to guide a refactor away from raw slate/hex usage.
+*/
+
+:root,
+html.dark {
+  /* Typography */
+  --dvt-font-ui: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --dvt-font-code: "JetBrains Mono", "SFMono-Regular", ui-monospace, Consolas, monospace;
+
+  /* Density / size */
+  --dvt-topbar-height: 44px;
+  --dvt-activity-rail-width: 60px;
+  --dvt-route-header-height: 56px;
+  --dvt-local-toolbar-height: 40px;
+  --dvt-inspector-width: 360px;
+  --dvt-diagnostics-height: 240px;
+
+  /* Spacing */
+  --dvt-space-1: 4px;
+  --dvt-space-2: 8px;
+  --dvt-space-3: 12px;
+  --dvt-space-4: 16px;
+  --dvt-space-5: 24px;
+  --dvt-space-6: 32px;
+
+  /* Radius */
+  --dvt-radius-control: 10px;
+  --dvt-radius-panel: 12px;
+  --dvt-radius-chip: 9999px;
+
+  /* Surfaces */
+  --dvt-surface-app: #0b1020;
+  --dvt-surface-shell: #10172a;
+  --dvt-surface-route: #0d1425;
+  --dvt-surface-panel: #111a2f;
+  --dvt-surface-elevated: #16223b;
+  --dvt-surface-selected: #1a2d4f;
+  --dvt-surface-overlay: rgba(8, 13, 24, 0.78);
+  --dvt-canvas-bg: #08111c;
+  --dvt-canvas-grid: rgba(123, 167, 255, 0.07);
+
+  /* Text */
+  --dvt-text-strong: #f8fbff;
+  --dvt-text-default: #dde7f5;
+  --dvt-text-muted: #afbdd2;
+  --dvt-text-subtle: #7f93af;
+  --dvt-text-disabled: #5f7088;
+
+  /* Borders */
+  --dvt-border-subtle: rgba(148, 163, 184, 0.12);
+  --dvt-border-default: rgba(110, 132, 173, 0.32);
+  --dvt-border-strong: rgba(138, 162, 206, 0.42);
+
+  /* Brand / interaction */
+  --dvt-accent: #6ba4ff;
+  --dvt-accent-strong: #8bb7ff;
+  --dvt-focus-ring: #90bfff;
+
+  /* States */
+  --dvt-success: #34d399;
+  --dvt-warning: #fbbf24;
+  --dvt-danger: #fb7185;
+  --dvt-info: #38bdf8;
+  --dvt-offline: #94a3b8;
+  --dvt-readonly: #7dd3fc;
+
+  /* Compatibility bridge to current token names */
+  --background: var(--dvt-surface-app);
+  --foreground: var(--dvt-text-strong);
+  --card: var(--dvt-surface-shell);
+  --card-foreground: var(--dvt-text-strong);
+  --popover: var(--dvt-surface-panel);
+  --popover-foreground: var(--dvt-text-strong);
+  --primary: var(--dvt-accent);
+  --primary-foreground: #eff6ff;
+  --secondary: var(--dvt-surface-elevated);
+  --secondary-foreground: var(--dvt-text-default);
+  --muted: var(--dvt-surface-panel);
+  --muted-foreground: var(--dvt-text-muted);
+  --accent: var(--dvt-surface-selected);
+  --accent-foreground: var(--dvt-text-strong);
+  --destructive: var(--dvt-danger);
+  --destructive-foreground: #ffffff;
+  --border: var(--dvt-border-default);
+  --input: var(--dvt-surface-panel);
+  --input-background: var(--dvt-surface-route);
+  --ring: var(--dvt-focus-ring);
+  --surface-app: var(--dvt-surface-app);
+  --surface-shell: var(--dvt-surface-shell);
+  --surface-route: var(--dvt-surface-route);
+  --surface-panel: var(--dvt-surface-panel);
+  --surface-elevated: var(--dvt-surface-elevated);
+  --surface-selected: var(--dvt-surface-selected);
+  --surface-overlay: var(--dvt-surface-overlay);
+  --text-strong: var(--dvt-text-strong);
+  --text-default: var(--dvt-text-default);
+  --text-muted: var(--dvt-text-muted);
+  --text-subtle: var(--dvt-text-subtle);
+  --border-subtle: var(--dvt-border-subtle);
+  --border-default: var(--dvt-border-default);
+  --border-strong: var(--dvt-border-strong);
+  --graph-grid: var(--dvt-canvas-grid);
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  font-family: var(--dvt-font-ui);
+  background: var(--dvt-surface-app);
+  color: var(--dvt-text-default);
+}
+
+code,
+pre,
+.monaco-editor,
+.monaco-editor * {
+  font-family: var(--dvt-font-code);
+}

@@ -7,10 +7,10 @@ describe('parseStartRunSelection', () => {
     expect(parseStartRunSelection([])).toEqual({ ok: true, value: [] });
   });
 
-  it('accepts and trims valid selections', () => {
+  it('rejects selections with surrounding whitespace', () => {
     expect(parseStartRunSelection([' model_a ', 'model_b'])).toEqual({
-      ok: true,
-      value: ['model_a', 'model_b'],
+      ok: false,
+      issue: { type: 'bad_request', reason: 'invalid_selection', target: 'selection' },
     });
   });
 

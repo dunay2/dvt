@@ -16,6 +16,7 @@ export type UseCanvasGraphHandlersParams = {
   nodes: Node[];
   selectedNodeIds: string[];
   inspectorNodeId: string | null;
+  canEditEdges: boolean;
   focusMode: boolean;
   inspectorPanelVisible: boolean;
   columnLevelLineageEnabled: boolean;

@@ -1,18 +1,28 @@
+import { useQueryClient } from '@tanstack/react-query';
 import { type NodeTypes } from '@xyflow/react';
-import { useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import DbtNodeComponent from '../../components/canvas/DbtNodeComponent';
+import type { ImportSourcesResult } from '../../ports/workspace';
+import {
+  getPlatformConnectionDetail,
+  getPlatformHealthErrorMessageFromQuery,
+  isPlatformReady,
+  usePlatformHealthSnapshotQuery,
+} from '../../../capabilities/platform-health';
 import { resolveCanvasGraphStrategy } from '../../plugins/graphStrategyRegistry';
+import { queryKeys } from '../../queries/queryKeys';
 import { getRegisteredPluginIds } from '../../plugins/registry';
 import { useCapabilitiesQuery } from '../../queries/useCapabilitiesQuery';
+import { resolveWorkspaceBootstrapConfig } from '../../services/config/workspaceConfig';
 import {
+  useAppDataSourceMode,
   usePlansService,
   useRunsService,
   useSessionContext,
   useShellFeedback,
   useWorkspaceService,
 } from '../../services/AppServicesContext';
-import type { ExecutionPlan } from '../../types/dbt';
 import { buildNodesWithImpact } from './canvasImpactOverlay';
 import { useCanvasExecutionActions } from './useCanvasExecutionActions';
 import { useCanvasGraphHandlers } from './useCanvasGraphHandlers';
@@ -28,7 +38,10 @@ const nodeTypes: NodeTypes = {
 };
 
 export function useCanvasController() {
+  const queryClient = useQueryClient();
+  const dataSourceMode = useAppDataSourceMode();
   const { data: capabilities } = useCapabilitiesQuery();
+  const platformHealthQuery = usePlatformHealthSnapshotQuery();
   const graphStrategy = useMemo(() => resolveCanvasGraphStrategy(), []);
   const canvasAuthoringMode: 'transformation' | 'dbt' =
     graphStrategy.id === 'transformation' ? 'transformation' : 'dbt';
@@ -37,7 +50,26 @@ export function useCanvasController() {
   const runsService = useRunsService();
   const sessionContext = useSessionContext();
   const shellFeedback = useShellFeedback();
+  const workspaceBootstrapConfig = useMemo(() => resolveWorkspaceBootstrapConfig(), []);
   const navigationActions = useCanvasNavigationActions();
+  const [importedNodeFocusIds, setImportedNodeFocusIds] = useState<string[]>([]);
+  const isBackendCheckPending =
+    dataSourceMode === 'api' &&
+    platformHealthQuery.isPending &&
+    !platformHealthQuery.data &&
+    !platformHealthQuery.isError;
+  const backendReady = dataSourceMode !== 'api' || isPlatformReady(platformHealthQuery.data);
+  const backendBlockMessage =
+    dataSourceMode !== 'api' || isBackendCheckPending || backendReady
+      ? null
+      : getPlatformConnectionDetail(
+            platformHealthQuery.isError ? 'offline' : 'degraded',
+            platformHealthQuery.data,
+            getPlatformHealthErrorMessageFromQuery(
+              platformHealthQuery.isError,
+              platformHealthQuery.error
+            )
+          ) ?? null;
 
   const store = useCanvasStoreFacade();
 
@@ -73,6 +105,7 @@ export function useCanvasController() {
     nodes: graphModel.nodes,
     selectedNodeIds: store.selectedNodeIds,
     inspectorNodeId: store.inspectorNodeId,
+    canEditEdges: store.userPermissions.canEditEdges,
     focusMode: store.focusMode,
     inspectorPanelVisible: store.inspectorPanelVisible,
     columnLevelLineageEnabled: store.columnLevelLineageEnabled,
@@ -87,6 +120,7 @@ export function useCanvasController() {
   const executionActions = useCanvasExecutionActions({
     plansService,
     runsService,
+    workspaceService,
     canonicalNodes: graphModel.canonicalNodes,
     canonicalEdges: graphModel.canonicalEdges,
     selectedNodeIds: store.selectedNodeIds,
@@ -95,8 +129,9 @@ export function useCanvasController() {
     canRun: store.userPermissions.canRun,
     sessionContext,
     shellFeedback,
+    previewProvenanceConfig: workspaceBootstrapConfig,
     consolePanelVisible: store.consolePanelVisible,
-    currentPlan: store.currentPlan as ExecutionPlan | null,
+    currentPlan: store.currentPlan,
     setCurrentPlan: store.setCurrentPlan,
     setConsolePanelHeight: store.setConsolePanelHeight,
     toggleConsolePanel: store.toggleConsolePanel,
@@ -128,7 +163,9 @@ export function useCanvasController() {
         columnLevelLineageEnabled: store.columnLevelLineageEnabled,
         handlers: {
           onInspectNode: graphHandlers.handleInspectNode,
-          onRemoveNode: graphHandlers.handleRemoveNode,
+          onRemoveNode: store.userPermissions.canEditEdges
+            ? graphHandlers.handleRemoveNode
+            : undefined,
           onToggleNodeSelection: graphHandlers.handleToggleNodeSelection,
         },
       }).map((node) => ({
@@ -148,6 +185,7 @@ export function useCanvasController() {
       graphModel.edges,
       graphModel.nodes,
       store.impactOverlayEnabled,
+      store.userPermissions.canEditEdges,
       overlayModel.activeRunId,
       overlayModel.overlayDecorations,
       overlayModel.runStatusByNodeId,
@@ -155,7 +193,39 @@ export function useCanvasController() {
     ]
   );
 
+  const handleSourceImportComplete = useCallback(
+    (result: ImportSourcesResult) => {
+      const nextImportedNodeIds = result.importedNodeIds ?? [];
+      store.setCurrentPlan(null);
+
+      if (nextImportedNodeIds.length > 0) {
+        store.setSelectedNodes(nextImportedNodeIds);
+        store.setInspectorNode(nextImportedNodeIds[0] ?? null);
+        store.showInspectorPanel();
+        setImportedNodeFocusIds(nextImportedNodeIds);
+      }
+
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.workspace.graph(store.workspaceLayoutKey),
+      });
+    },
+    [queryClient, store]
+  );
+
+  const handleImportedNodeFocusComplete = useCallback(() => {
+    setImportedNodeFocusIds([]);
+  }, []);
+
   return {
+    dataSourceMode,
+    isBackendCheckPending,
+    backendReady,
+    backendBlockMessage,
+    isLoadingGraph: graphModel.graphSnapshotQuery.isPending,
+    graphErrorMessage:
+      graphModel.graphSnapshotQuery.error instanceof Error
+        ? graphModel.graphSnapshotQuery.error.message
+        : null,
     focusMode: store.focusMode,
     explorerPanelVisible: store.explorerPanelVisible,
     inspectorPanelVisible: store.inspectorPanelVisible,
@@ -171,6 +241,7 @@ export function useCanvasController() {
     edges: graphModel.edges,
     nodeTypes,
     gridSize: store.gridSize,
+    canvasPalette: store.canvasPalette,
     viewport: store.persistedViewport,
     onNodesChange: graphModel.onNodesChange,
     onEdgesChange: graphModel.onEdgesChange,
@@ -181,6 +252,9 @@ export function useCanvasController() {
     handleNodeDragStop: persistence.handleNodeDragStop,
     handleDrop: graphHandlers.handleDrop,
     handleDragOver: graphHandlers.handleDragOver,
+    handleSourceImportComplete,
+    importedNodeFocusIds,
+    handleImportedNodeFocusComplete,
     hideExplorerPanel: store.hideExplorerPanel,
     showExplorerPanel: store.showExplorerPanel,
     hideInspectorPanel: store.hideInspectorPanel,
@@ -200,7 +274,7 @@ export function useCanvasController() {
     transformationValidation,
     planModalOpen: executionActions.planModalOpen,
     setPlanModalOpen: executionActions.setPlanModalOpen,
-    currentPlan: store.currentPlan as ExecutionPlan | null,
+    currentPlan: store.currentPlan,
     confirmEdgeModal: graphHandlers.confirmEdgeModal,
     setConfirmEdgeModal: graphHandlers.setConfirmEdgeModal,
     confirmEdgeCreation: graphHandlers.confirmEdgeCreation,

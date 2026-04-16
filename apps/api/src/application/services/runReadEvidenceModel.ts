@@ -1,39 +1,61 @@
 import {
   MaterializationEvidenceSchema,
+  type CanonicalRunStatus,
   parseExecutionPlan,
   TransformationExecutorSchema,
   type EventEnvelope,
+  type MaterializationEvidence,
   type PlanRecord,
-  type RunStatusSnapshot,
   type WorkflowSnapshot,
 } from '@dvt/contracts';
 
 type TransformationExecutor = 'postgres' | 'dbt';
+
+interface RunGitArtifactRef {
+  readonly repo: string;
+  readonly path: string;
+  readonly ref?: string;
+  readonly commitSha?: string;
+  readonly contentSha256?: string;
+}
 
 export interface RunReadEvidenceModel {
   readonly executor?: TransformationExecutor;
   readonly currentStepId?: string;
   readonly failedStepId?: string;
   readonly errorReason?: string;
+  readonly provenance?: {
+    persistedPlan: {
+      planRecordId: PlanRecord['planId'];
+      planVersion: PlanRecord['planVersion'];
+      sourceRef: PlanRecord['sourceRef'];
+      canonicalPlanSha256: PlanRecord['canonicalHash'];
+    };
+    authoring?: {
+      graphArtifact?: RunGitArtifactRef;
+      sqlArtifact?: RunGitArtifactRef;
+    };
+  };
   readonly materialization?: {
-    executor: TransformationExecutor;
-    environmentId: string;
-    sinkTable: string;
+    executor: MaterializationEvidence['executor'];
+    environmentId: MaterializationEvidence['environmentId'];
+    sinkTable: MaterializationEvidence['sinkTable'];
     rowsWritten: number;
-    startedAt: string;
-    completedAt: string;
+    startedAt: MaterializationEvidence['startedAt'];
+    completedAt: MaterializationEvidence['completedAt'];
     durationMs: number;
   };
 }
 
 export function deriveRunReadEvidenceModel(args: {
-  snapshot: Pick<RunStatusSnapshot, 'status' | 'execution'>;
+  snapshot: Pick<CanonicalRunStatus, 'status' | 'execution'>;
   workflowSnapshot: WorkflowSnapshot | null;
   events?: ReadonlyArray<EventEnvelope>;
   planRecord?: PlanRecord;
 }): RunReadEvidenceModel {
   const currentAttemptEvents = selectLatestLogicalAttemptEvents(args.events ?? []);
-  const executor = deriveExecutor(currentAttemptEvents, args.snapshot.execution, args.planRecord);
+  const planExtra = readPlanObservabilityExtra(args.planRecord);
+  const executor = deriveExecutor(currentAttemptEvents, args.snapshot.execution, planExtra);
   const currentStepId = deriveCurrentStepId(
     args.snapshot.status,
     args.workflowSnapshot,
@@ -49,21 +71,27 @@ export function deriveRunReadEvidenceModel(args: {
     args.snapshot.status === 'FAILED'
       ? deriveErrorReason(currentAttemptEvents, args.snapshot.execution)
       : undefined;
-  const materialization = deriveMaterialization(currentAttemptEvents, args.snapshot.execution);
+  const provenance = deriveProvenance(args.planRecord, planExtra);
+  const materialization = deriveMaterialization(
+    args.snapshot.status,
+    currentAttemptEvents,
+    args.snapshot.execution
+  );
 
   return {
     ...(executor === undefined ? {} : { executor }),
     ...(currentStepId === undefined ? {} : { currentStepId }),
     ...(failedStepId === undefined ? {} : { failedStepId }),
     ...(errorReason === undefined ? {} : { errorReason }),
+    ...(provenance === undefined ? {} : { provenance }),
     ...(materialization === undefined ? {} : { materialization }),
   };
 }
 
 function deriveExecutor(
   events: ReadonlyArray<EventEnvelope>,
-  snapshotExecution: RunStatusSnapshot['execution'],
-  planRecord?: PlanRecord
+  snapshotExecution: CanonicalRunStatus['execution'],
+  planExtra?: Record<string, unknown>
 ): TransformationExecutor | undefined {
   if (snapshotExecution?.materialization) {
     return snapshotExecution.materialization.executor;
@@ -86,28 +114,20 @@ function deriveExecutor(
     }
   }
 
-  if (!planRecord) {
+  if (!planExtra) {
     return undefined;
   }
 
-  try {
-    const plan = parseExecutionPlan(JSON.parse(planRecord.canonicalPlanJson));
-    const extra = plan.observability?.extra;
-    if (!isRecord(extra)) {
-      return undefined;
-    }
-    const runtimeBinding = extra['transformationFlowRuntime'];
-    if (!isRecord(runtimeBinding)) {
-      return undefined;
-    }
-    return parseExecutor(runtimeBinding['executor']);
-  } catch {
+  const runtimeBinding = planExtra['transformationFlowRuntime'];
+  if (!isRecord(runtimeBinding)) {
     return undefined;
   }
+
+  return parseExecutor(runtimeBinding['executor']);
 }
 
 function deriveCurrentStepId(
-  status: RunStatusSnapshot['status'],
+  status: CanonicalRunStatus['status'],
   workflowSnapshot: WorkflowSnapshot | null,
   events: ReadonlyArray<EventEnvelope>
 ): string | undefined {
@@ -145,10 +165,10 @@ function deriveCurrentStepId(
 }
 
 function deriveFailedStepId(
-  status: RunStatusSnapshot['status'],
+  status: CanonicalRunStatus['status'],
   workflowSnapshot: WorkflowSnapshot | null,
   events: ReadonlyArray<EventEnvelope>,
-  snapshotExecution: RunStatusSnapshot['execution']
+  snapshotExecution: CanonicalRunStatus['execution']
 ): string | undefined {
   if (status !== 'FAILED') {
     return undefined;
@@ -176,7 +196,7 @@ function deriveFailedStepId(
 
 function deriveErrorReason(
   events: ReadonlyArray<EventEnvelope>,
-  snapshotExecution: RunStatusSnapshot['execution']
+  snapshotExecution: CanonicalRunStatus['execution']
 ): string | undefined {
   const failure = snapshotExecution?.failure;
   if (failure) {
@@ -229,9 +249,14 @@ function deriveErrorReason(
 }
 
 function deriveMaterialization(
+  status: CanonicalRunStatus['status'],
   events: ReadonlyArray<EventEnvelope>,
-  snapshotExecution: RunStatusSnapshot['execution']
+  snapshotExecution: CanonicalRunStatus['execution']
 ) {
+  if (status !== 'COMPLETED') {
+    return undefined;
+  }
+
   if (snapshotExecution?.materialization) {
     return snapshotExecution.materialization;
   }
@@ -342,6 +367,74 @@ function parseExecutor(value: unknown): TransformationExecutor | undefined {
 function parseMaterialization(value: unknown) {
   const parsed = MaterializationEvidenceSchema.safeParse(value);
   return parsed.success ? parsed.data : undefined;
+}
+
+function readPlanObservabilityExtra(planRecord?: PlanRecord): Record<string, unknown> | undefined {
+  if (!planRecord) {
+    return undefined;
+  }
+
+  try {
+    const plan = parseExecutionPlan(JSON.parse(planRecord.canonicalPlanJson));
+    return isRecord(plan.observability?.extra) ? plan.observability.extra : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function deriveProvenance(
+  planRecord: PlanRecord | undefined,
+  planExtra: Record<string, unknown> | undefined
+): RunReadEvidenceModel['provenance'] | undefined {
+  if (!planRecord) {
+    return undefined;
+  }
+
+  const provenance = planExtra?.['transformationFlowProvenance'];
+  const provenanceRecord = isRecord(provenance) ? provenance : undefined;
+  const graphArtifact = parseGitArtifactRef(provenanceRecord?.['graphArtifact']);
+  const sqlArtifact = parseGitArtifactRef(provenanceRecord?.['sqlArtifact']);
+
+  return {
+    persistedPlan: {
+      planRecordId: planRecord.planId,
+      planVersion: planRecord.planVersion,
+      sourceRef: planRecord.sourceRef,
+      canonicalPlanSha256: planRecord.canonicalHash,
+    },
+    ...(graphArtifact || sqlArtifact
+      ? {
+          authoring: {
+            ...(graphArtifact === undefined ? {} : { graphArtifact }),
+            ...(sqlArtifact === undefined ? {} : { sqlArtifact }),
+          },
+        }
+      : {}),
+  };
+}
+
+function parseGitArtifactRef(value: unknown): RunGitArtifactRef | undefined {
+  if (!isRecord(value)) {
+    return undefined;
+  }
+
+  const repo = readNonBlankString(value['repo']);
+  const path = readNonBlankString(value['path']);
+  if (repo === undefined || path === undefined) {
+    return undefined;
+  }
+
+  const ref = readNonBlankString(value['ref']);
+  const commitSha = readNonBlankString(value['commitSha']);
+  const contentSha256 = readNonBlankString(value['contentSha256']);
+
+  return {
+    repo,
+    path,
+    ...(ref === undefined ? {} : { ref }),
+    ...(commitSha === undefined ? {} : { commitSha }),
+    ...(contentSha256 === undefined ? {} : { contentSha256 }),
+  };
 }
 
 function readNonBlankString(value: unknown): string | undefined {

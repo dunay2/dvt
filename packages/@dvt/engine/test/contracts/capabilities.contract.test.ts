@@ -163,7 +163,7 @@ describe('capability gate — engine enforces requiresCapabilities', () => {
       provider: 'mock',
       startRun: base.startRun.bind(base),
       cancelRun: base.cancelRun.bind(base),
-      getRunStatus: base.getRunStatus.bind(base),
+      getProviderStatusView: base.getProviderStatusView.bind(base),
       signal: base.signal.bind(base),
       signalSemanticsVersions: () => [CURRENT_SIGNAL_SEMANTICS_VERSION],
       // capabilities intentionally absent

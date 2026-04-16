@@ -2,7 +2,7 @@
 title: Workbench UI Contract And Component Inventory
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-04-07
+last_reviewed: 2026-04-11
 planning_type: architecture
 ---
 
@@ -125,21 +125,21 @@ These are the cross-route UI building blocks that should exist once and be reuse
 
 | Component             | Responsibility                                                            | Status                              |
 | --------------------- | ------------------------------------------------------------------------- | ----------------------------------- |
-| `AppShellFrame`       | Full-screen shell layout wrapper                                          | Needed as explicit contract         |
+| `AppShellFrame`       | Full-screen shell layout wrapper                                          | Current, v1 shell frame primitive   |
 | `ShellTopBar`         | Global context and global actions                                         | Current, should be hardened         |
 | `ShellHealthBanner`   | Health and degraded-state visibility                                      | Current                             |
 | `LeftNavigationRail`  | Primary route navigation                                                  | Current, should be standardized     |
-| `RouteWorkbenchFrame` | Shared route layout with optional left/right panels                       | Needed                              |
+| `RouteWorkbenchFrame` | Shared route layout with header plus body or scroll ownership contract    | Current, v1 frame primitive         |
 | `RouteToolbar`        | Standard route command bar                                                | Needed as explicit shared primitive |
 | `ContextPanel`        | Shared side-panel container with title, collapse, scroll, and actions     | Needed                              |
 | `PrimarySurfaceFrame` | Shared main surface wrapper with route-level spacing and loading handling | Needed                              |
-| `BottomConsoleDrawer` | Shared shell console surface                                              | Current, needs product hardening    |
+| `BottomConsoleDrawer` | Shared shell console surface                                              | Current, content model now explicit |
 | `AppIcon`             | Shared icon wrapper for size, stroke, color, and state                    | Needed                              |
-| `LoadingState`        | Standard loading treatment                                                | Needed as reusable primitive        |
-| `EmptyState`          | Standard empty treatment                                                  | Needed as reusable primitive        |
-| `ErrorState`          | Standard error treatment                                                  | Needed as reusable primitive        |
-| `DegradedState`       | Standard stale or partial-data treatment                                  | Needed as reusable primitive        |
-| `ReadOnlyState`       | Standard non-mutation treatment                                           | Needed as reusable primitive        |
+| `LoadingState`        | Standard loading treatment                                                | Current, seeded from `Runs`         |
+| `EmptyState`          | Standard empty treatment                                                  | Current, seeded from `Runs`         |
+| `ErrorState`          | Standard error treatment                                                  | Current, seeded from `Runs`         |
+| `DegradedState`       | Standard stale or partial-data treatment                                  | Current, seeded from `Runs`         |
+| `ReadOnlyState`       | Standard non-mutation treatment                                           | Current, seeded from `Code`         |
 | `PermissionGate`      | Explains disabled or unavailable actions                                  | Needed                              |
 | `CommandPalette`      | Global search or command surface                                          | Optional later                      |
 
@@ -150,19 +150,53 @@ zero.
 
 The current problem is organization and extraction, not total absence.
 
-| Target primitive                                                             | Current implementation                                                                                                                                                                                                                                                                                              | Reuse decision                     | Current gap                                                                                         |
-| ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- | --------------------------------------------------------------------------------------------------- |
-| `AppShellFrame`                                                              | [`Root.tsx`](../../../../apps/web/src/app/Root.tsx) plus `RootShell` composition                                                                                                                                                                                                                                    | Reuse and extract                  | shell contract is implicit in one file, not a reusable frame                                        |
-| `ShellTopBar`                                                                | [`TopAppBar.tsx`](../../../../apps/web/src/app/components/TopAppBar.tsx)                                                                                                                                                                                                                                            | Reuse core behavior                | hard-coded colors, mixed shell controls, no tokenized wrapper                                       |
-| `ShellHealthBanner`                                                          | [`ShellHealthBanner.tsx`](../../../../apps/web/src/app/components/ShellHealthBanner.tsx)                                                                                                                                                                                                                            | Reuse as-is with styling cleanup   | still directly styled per component                                                                 |
-| `LeftNavigationRail`                                                         | [`LeftNavigation.tsx`](../../../../apps/web/src/app/components/LeftNavigation.tsx)                                                                                                                                                                                                                                  | Reuse plugin-aware routing logic   | icon-only rail, hard-coded chrome, direct capability query still bypasses governed service boundary |
-| `BottomConsoleDrawer`                                                        | [`Root.tsx`](../../../../apps/web/src/app/Root.tsx) plus [`Console.tsx`](../../../../apps/web/src/app/components/Console.tsx)                                                                                                                                                                                       | Reuse layout pattern               | live streaming and product-ready console states are not hardened yet                                |
-| `RouteToolbar`                                                               | [`CanvasToolbar.tsx`](../../../../apps/web/src/app/views/canvas/CanvasToolbar.tsx)                                                                                                                                                                                                                                  | Use as the first extraction source | other routes still hand-build headers instead of using one toolbar primitive                        |
-| `RouteWorkbenchFrame`                                                        | ad hoc route wrappers in [`RunsView.tsx`](../../../../apps/web/src/app/views/RunsView.tsx), [`DiffView.tsx`](../../../../apps/web/src/app/views/DiffView.tsx), [`LineageView.tsx`](../../../../apps/web/src/app/views/LineageView.tsx), [`ArtifactsView.tsx`](../../../../apps/web/src/app/views/ArtifactsView.tsx) | Missing shared primitive           | route header, body padding, and scrolling are duplicated                                            |
-| `ContextPanel`                                                               | [`DbtExplorer.tsx`](../../../../apps/web/src/app/components/DbtExplorer.tsx) and [`InspectorPanel.tsx`](../../../../apps/web/src/app/components/InspectorPanel.tsx)                                                                                                                                                 | Reuse panel behavior and content   | panel frame, header, collapse affordance, and scroll treatment are duplicated                       |
-| `PrimarySurfaceFrame`                                                        | repeated `div` wrappers per route                                                                                                                                                                                                                                                                                   | Missing shared primitive           | each route owns its own surface chrome and spacing                                                  |
-| `LoadingState`, `EmptyState`, `ErrorState`, `DegradedState`, `ReadOnlyState` | partial ad hoc states in [`RunStates.tsx`](../../../../apps/web/src/app/views/runs/RunStates.tsx) and inline route markup                                                                                                                                                                                           | Missing reusable primitives        | route states are inconsistent and mostly text-plus-card implementations                             |
-| `AppIcon`                                                                    | direct `lucide-react` imports across shell and routes                                                                                                                                                                                                                                                               | Missing shared wrapper             | size, stroke, semantic color, and accessibility are not standardized                                |
+### `RouteWorkbenchFrame` v1 contract
+
+The current shared frame is intentionally smaller than the long-term workbench
+vision.
+
+Its active contract is:
+
+- header stack lives outside the route-owned scroll body;
+- summary or secondary header bands stay in that header stack unless a governed
+  UX change says otherwise;
+- the scrollable body owns route padding for standard routes;
+- `scroll={false}` exists for routes like `Code` that own split-pane body
+  geometry directly;
+- left or right contextual panels are not part of the current primitive and
+  remain future work under `ContextPanel` and route-toolbar extraction.
+
+Shell-specific current fit:
+
+- `AppShellFrame`
+  Current implementation: [AppShellFrame.tsx](../../../../apps/web/src/app/components/shell/AppShellFrame.tsx) plus [Root.tsx](../../../../apps/web/src/app/Root.tsx)
+  Reuse decision: reuse within the v1 shell contract.
+  Current gap: shell frame exists, but console product hardening and richer frame API remain future work.
+- `ShellTopBar`
+  Current implementation: [TopAppBar.tsx](../../../../apps/web/src/app/components/TopAppBar.tsx) plus shell controls under `components/shell/*`
+  Reuse decision: reuse core behavior.
+  Current gap: shell ownership is aligned, but the top-bar composition still needs a deeper split.
+- `ShellHealthBanner`
+  Current implementation: [ShellHealthBanner.tsx](../../../../apps/web/src/app/components/ShellHealthBanner.tsx)
+  Reuse decision: reuse as-is with styling cleanup.
+  Current gap: still directly styled per component.
+- `LeftNavigationRail`
+  Current implementation: [LeftNavigation.tsx](../../../../apps/web/src/app/components/LeftNavigation.tsx) plus shell navigation model under `apps/web/src/app/shell/*`
+  Reuse decision: reuse plugin-aware routing logic.
+  Current gap: route badges and richer unavailable-state treatment still need a shared navigation state.
+- `BottomConsoleDrawer`
+  Current implementation: [AppShellFrame.tsx](../../../../apps/web/src/app/components/shell/AppShellFrame.tsx) plus [Console.tsx](../../../../apps/web/src/app/components/Console.tsx) and [bottomConsoleDrawerModel.ts](../../../../apps/web/src/app/components/shell/bottomConsoleDrawerModel.ts)
+  Reuse decision: reuse the layout pattern and explicit state model.
+  Current gap: shared event presentation semantics plus headline copy now exist, but typed live-log states and the final structured-versus-terminal decision remain future work while durable run-detail authority stays with the Runs workspace.
+
+| Target primitive                                                             | Current implementation                                                                                                                                              | Reuse decision                                 | Current gap                                                                              |
+| ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `RouteToolbar`                                                               | [`CanvasToolbar.tsx`](../../../../apps/web/src/app/views/canvas/CanvasToolbar.tsx)                                                                                  | Use as the first extraction source             | other routes still hand-build headers instead of using one toolbar primitive             |
+| `RouteWorkbenchFrame`                                                        | Shared frame already adopted by the `Code`, `Diff`, `Lineage`, `Artifacts`, `Admin`, and `Plugins` routes                                                           | Reuse within the v1 frame contract             | side panels, shared route toolbars, and richer shell extraction remain future primitives |
+| `ContextPanel`                                                               | [`DbtExplorer.tsx`](../../../../apps/web/src/app/components/DbtExplorer.tsx) and [`InspectorPanel.tsx`](../../../../apps/web/src/app/components/InspectorPanel.tsx) | Reuse panel behavior and content               | panel frame, header, collapse affordance, and scroll treatment are duplicated            |
+| `PrimarySurfaceFrame`                                                        | repeated `div` wrappers per route                                                                                                                                   | Missing shared primitive                       | each route owns its own surface chrome and spacing                                       |
+| `LoadingState`, `EmptyState`, `ErrorState`, `DegradedState`, `ReadOnlyState` | shared workbench primitives in [`WorkbenchStates.tsx`](../../../../apps/web/src/app/components/workbench/state/WorkbenchStates.tsx) consumed by `Runs` and `Code`   | Shared primitive seeded from `Runs` and `Code` | broader route adoption still needs delivery                                              |
+| `AppIcon`                                                                    | direct `lucide-react` imports across shell and routes                                                                                                               | Missing shared wrapper                         | size, stroke, semantic color, and accessibility are not standardized                     |
 
 ## Reuse, Extract, Retire
 
@@ -255,53 +289,54 @@ Main screen composition:
 
 ### Canvas
 
-| Component              | Responsibility                        | Status                                                |
-| ---------------------- | ------------------------------------- | ----------------------------------------------------- |
-| `CanvasWorkbench`      | Route composition root                | Current, implicit through `Canvas` plus `CanvasShell` |
-| `CanvasToolbar`        | Graph-local commands and toggles      | Current                                               |
-| `CanvasExplorerPanel`  | Graph source browser and entry points | Current as `DbtExplorer`, should be normalized        |
-| `CanvasViewport`       | React Flow graph surface              | Current                                               |
-| `CanvasInspectorPanel` | Selection detail                      | Current through `InspectorPanel`                      |
-| `PlanPreviewModal`     | Plan review before run                | Current                                               |
-| `ConfirmEdgeModal`     | Graph mutation confirmation           | Current                                               |
-| `SourceImportWizard`   | Import source flow                    | Current                                               |
-| `CanvasLoadingState`   | Graph-specific loading treatment      | Needed                                                |
-| `CanvasEmptyState`     | Empty graph treatment                 | Needed                                                |
-| `CanvasErrorState`     | Graph route failure treatment         | Needed                                                |
-| `CanvasReadOnlyBanner` | Permission or mutation gating         | Needed                                                |
+| Component              | Responsibility                        | Status                                         |
+| ---------------------- | ------------------------------------- | ---------------------------------------------- |
+| `CanvasWorkbench`      | Route composition root                | Current, state model explicit                  |
+| `CanvasToolbar`        | Graph-local commands and toggles      | Current                                        |
+| `CanvasExplorerPanel`  | Graph source browser and entry points | Current as `DbtExplorer`, should be normalized |
+| `CanvasViewport`       | React Flow graph surface              | Current                                        |
+| `CanvasInspectorPanel` | Selection detail                      | Current through `InspectorPanel`               |
+| `PlanPreviewModal`     | Plan review before run                | Current                                        |
+| `ConfirmEdgeModal`     | Graph mutation confirmation           | Current                                        |
+| `SourceImportWizard`   | Import source flow                    | Current                                        |
+| `CanvasLoadingState`   | Graph-specific loading treatment      | Current                                        |
+| `CanvasEmptyState`     | Empty graph treatment                 | Current                                        |
+| `CanvasErrorState`     | Graph route failure treatment         | Current                                        |
+| `CanvasReadOnlyBanner` | Permission or mutation gating         | Current                                        |
 
 ### Runs
 
-| Component            | Responsibility                                       | Status                   |
-| -------------------- | ---------------------------------------------------- | ------------------------ |
-| `RunsWorkbench`      | Route composition root                               | Current, needs hardening |
-| `RunsToolbar`        | Route-local filters and actions                      | Needed                   |
-| `RunsListTable`      | Dense operational run list                           | Needed                   |
-| `RunsListFilters`    | status, tenant, environment, time filters            | Needed                   |
-| `RunWorkspaceHeader` | run identity and global run actions                  | Current in partial form  |
-| `RunTabs`            | tabs for timeline, steps, events, metrics, artifacts | Current                  |
-| `RunTimelinePanel`   | timeline view                                        | Current in partial form  |
-| `RunStepsTable`      | dense step-level execution view                      | Needed                   |
-| `RunEventsTable`     | event stream view                                    | Needed                   |
-| `RunMetricsPanel`    | metrics and charts                                   | Current in partial form  |
-| `RunArtifactsPanel`  | artifact handoff surface                             | Current in partial form  |
-| `RunsEmptyState`     | guides user back to `Canvas`                         | Needed                   |
-| `RunMissingState`    | run-not-found state                                  | Needed                   |
-| `RunDegradedState`   | stale or partial data visibility                     | Needed                   |
+| Component            | Responsibility                                       | Status                             |
+| -------------------- | ---------------------------------------------------- | ---------------------------------- |
+| `RunsWorkbench`      | Route composition root                               | Current, state model explicit      |
+| `RunsToolbar`        | Route-local filters and actions                      | Needed                             |
+| `RunsListTable`      | Dense operational run list                           | Needed                             |
+| `RunsListFilters`    | status, tenant, environment, time filters            | Needed                             |
+| `RunWorkspaceHeader` | run identity and global run actions                  | Current in partial form            |
+| `RunTabs`            | tabs for timeline, steps, events, metrics, artifacts | Current                            |
+| `RunTimelinePanel`   | timeline view                                        | Current in partial form            |
+| `RunStepsTable`      | dense step-level execution view                      | Needed                             |
+| `RunEventsTable`     | event stream view                                    | Needed                             |
+| `RunMetricsPanel`    | metrics and charts                                   | Current in partial form            |
+| `RunArtifactsPanel`  | artifact handoff surface                             | Current in partial form            |
+| `RunsEmptyState`     | guides user back to `Canvas`                         | Current, built on shared primitive |
+| `RunsErrorState`     | governed list-load failure explanation               | Current, built on shared primitive |
+| `RunMissingState`    | run-not-found state                                  | Current                            |
+| `RunDegradedState`   | stale or partial data visibility                     | Current, built on shared primitive |
 
 ### Lineage
 
-| Component                     | Responsibility              | Status                   |
-| ----------------------------- | --------------------------- | ------------------------ |
-| `LineageWorkbench`            | Route composition root      | Current, needs hardening |
-| `LineageToolbar`              | search and mode controls    | Needed                   |
-| `LineageSearchBar`            | node lookup                 | Current in basic form    |
-| `LineageBreadcrumb`           | lineage focus path          | Current                  |
-| `LineageImpactSummary`        | upstream/downstream summary | Current in basic form    |
-| `LineageGraphCards`           | layered lineage cards       | Current                  |
-| `LineageColumnsToggle`        | column-lineage mode         | Current                  |
-| `LineageEmptyState`           | no focus available          | Needed                   |
-| `LineageMetadataMissingState` | missing column metadata     | Needed                   |
+| Component                     | Responsibility              | Status                        |
+| ----------------------------- | --------------------------- | ----------------------------- |
+| `LineageWorkbench`            | Route composition root      | Current, state model explicit |
+| `LineageToolbar`              | search and mode controls    | Needed                        |
+| `LineageSearchBar`            | node lookup                 | Current in basic form         |
+| `LineageBreadcrumb`           | lineage focus path          | Current                       |
+| `LineageImpactSummary`        | upstream/downstream summary | Current in basic form         |
+| `LineageGraphCards`           | layered lineage cards       | Current                       |
+| `LineageColumnsToggle`        | column-lineage mode         | Current                       |
+| `LineageEmptyState`           | no focus available          | Current                       |
+| `LineageMetadataMissingState` | missing column metadata     | Current                       |
 
 ### Code
 
@@ -312,39 +347,39 @@ Main screen composition:
 | `FileTreePanel`     | workspace file selection                  | Current                  |
 | `CodePreviewPane`   | read-only Monaco file preview             | Current                  |
 | `FileHistoryPanel`  | recent commit history for selected file   | Planned                  |
-| `CodeEmptyState`    | no file or no workspace files available   | Needed                   |
-| `CodeErrorState`    | preserve selected-file context on failure | Needed                   |
-| `CodeReadOnlyState` | explicit non-editing treatment            | Needed                   |
+| `CodeEmptyState`    | no file or no workspace files available   | Current                  |
+| `CodeErrorState`    | preserve selected-file context on failure | Current                  |
+| `CodeReadOnlyState` | explicit non-editing treatment            | Current via shared state |
 
 ### Diff
 
-| Component                 | Responsibility                      | Status                   |
-| ------------------------- | ----------------------------------- | ------------------------ |
-| `DiffWorkbench`           | Route composition root              | Current, needs hardening |
-| `DiffToolbar`             | compare mode and filters            | Needed                   |
-| `DiffCompareModeSelector` | diff mode selection                 | Current in basic form    |
-| `DiffSeverityFilters`     | review prioritization               | Current in basic form    |
-| `DiffSummaryCards`        | summary and deltas                  | Current                  |
-| `DiffTabs`                | graph, SQL, catalog segmentation    | Current                  |
-| `GraphDiffPane`           | structural graph review             | Current in basic form    |
-| `SqlDiffPane`             | Monaco-backed SQL diff              | Needed                   |
-| `CatalogDiffPane`         | structured catalog diff             | Needed                   |
-| `DiffEmptyState`          | no diff available                   | Needed                   |
-| `DiffErrorState`          | preserve compare context on failure | Needed                   |
+| Component                 | Responsibility                      | Status                        |
+| ------------------------- | ----------------------------------- | ----------------------------- |
+| `DiffWorkbench`           | Route composition root              | Current, state model explicit |
+| `DiffToolbar`             | compare mode and filters            | Needed                        |
+| `DiffCompareModeSelector` | diff mode selection                 | Current in basic form         |
+| `DiffSeverityFilters`     | review prioritization               | Current in basic form         |
+| `DiffSummaryCards`        | summary and deltas                  | Current                       |
+| `DiffTabs`                | graph, SQL, catalog segmentation    | Current                       |
+| `GraphDiffPane`           | structural graph review             | Current in basic form         |
+| `SqlDiffPane`             | Monaco-backed SQL diff              | Current                       |
+| `CatalogDiffPane`         | structured catalog diff             | Current                       |
+| `DiffEmptyState`          | no diff available                   | Current                       |
+| `DiffErrorState`          | preserve compare context on failure | Current                       |
 
 ### Artifacts
 
-| Component                     | Responsibility                      | Status                   |
-| ----------------------------- | ----------------------------------- | ------------------------ |
-| `ArtifactsWorkbench`          | Route composition root              | Current, needs hardening |
-| `ArtifactsToolbar`            | import, filter, and inspect actions | Needed                   |
-| `ArtifactImportZone`          | local manifest import               | Current                  |
-| `ArtifactList`                | artifact inventory                  | Current in basic form    |
-| `ArtifactPreviewTabs`         | manifest, run results, catalog      | Current                  |
-| `ArtifactJsonViewer`          | structured read-only payload view   | Needed                   |
-| `ArtifactSearch`              | payload navigation                  | Needed                   |
-| `ArtifactsEmptyState`         | no artifact loaded                  | Needed                   |
-| `ArtifactsInvalidImportState` | import rejection explanation        | Needed                   |
+| Component                     | Responsibility                      | Status                        |
+| ----------------------------- | ----------------------------------- | ----------------------------- |
+| `ArtifactsWorkbench`          | Route composition root              | Current, state model explicit |
+| `ArtifactsToolbar`            | import, filter, and inspect actions | Needed                        |
+| `ArtifactImportZone`          | local manifest import               | Current                       |
+| `ArtifactList`                | artifact inventory                  | Current in basic form         |
+| `ArtifactPreviewTabs`         | manifest, run results, catalog      | Current                       |
+| `ArtifactJsonViewer`          | structured read-only payload view   | Needed                        |
+| `ArtifactSearch`              | payload navigation                  | Needed                        |
+| `ArtifactsEmptyState`         | no artifact loaded                  | Current                       |
+| `ArtifactsInvalidImportState` | import rejection explanation        | Current                       |
 
 ### Templates
 

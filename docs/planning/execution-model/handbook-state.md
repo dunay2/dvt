@@ -20,7 +20,7 @@ Overall handbook alignment is about 58%. The executable core remains much strong
 | Section 3  | Execution bounded context | Complete   | Workflow lifecycle and engine core are aligned.                                             |
 | Section 3  | State bounded context     | Complete   | Postgres and in-memory state stores match the documented model.                             |
 | Section 3  | Aggregate root (`Run`)    | Complete   | Event log, `RunMetadata`, and snapshot handling are aligned.                                |
-| Section 3  | Value objects             | Complete   | `PlanRef`, `EngineRunRef`, `RunContext`, `SignalRequest`, and `RunStatusSnapshot` exist.    |
+| Section 3  | Value objects             | Complete   | Canonical status, provider diagnostics, and enrichment value objects exist.                 |
 | Section 5  | Component diagram         | Complete   | The documented ports are implemented in code.                                               |
 | Section 6  | Execution lifecycle       | Complete   | `startRun(planRef, context)` plus intent -> adapter -> bootstrap flow is aligned.           |
 | Section 7  | State model               | Complete   | Twelve run events, four step events, and the envelope are aligned.                          |

@@ -21,9 +21,9 @@ export type { ObservedTemporalAdapterDeps } from './ObservedTemporalAdapter.js';
 export { ObservedTemporalAdapter } from './ObservedTemporalAdapter.js';
 
 export {
+  extractRuntimeStatusFromDescribe,
   mapTemporalStatusToRunStatus,
-  toRunStatusSnapshot,
-  toRunStatusSnapshotFromWorkflowState,
+  toProviderRunStatusView,
   toTemporalRunRef,
   toTemporalTaskQueue,
   toTemporalWorkflowId,
@@ -42,6 +42,8 @@ export { TemporalPolicyMapper } from './TemporalPolicyMapper.js';
 export type {
   ActivityDeps,
   Activities,
+  DbtPluginExecutionInput,
+  DbtPluginRunner,
   EmitEventInput,
   StepActivity,
   StepActivityRegistry,
@@ -57,10 +59,9 @@ export {
   StepActivityDispatcher,
   UnsupportedStepKindError,
 } from './activities/stepActivities.js';
+export { DbtCliPluginRunner, assertDbtCliAvailable } from './plugins/dbt/DbtCliPluginRunner.js';
+export type { RunStateCommandCircuitSnapshot } from './RunStateCommandPortCircuitBreaker.js';
+export { CircuitBreakingRunStateCommandPort } from './RunStateCommandPortCircuitBreaker.js';
 
 // PR-2: Workflow types (workflow function itself is loaded by Worker bundler)
-export type {
-  RunPlanWorkflowInput,
-  RunPlanWorkflowResult,
-  WorkflowState,
-} from './workflows/RunPlanWorkflow.js';
+export type { RunPlanWorkflowInput, RunPlanWorkflowResult } from './workflows/RunPlanWorkflow.js';

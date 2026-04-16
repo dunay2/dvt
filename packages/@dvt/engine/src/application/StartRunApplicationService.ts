@@ -135,6 +135,7 @@ export class StartRunApplicationService {
       this.deps.planFetcher
     );
     await this.deps.guard.assertExecutionPolicyAllowed(
+      verifiedArtifact.plan,
       planRef,
       verifiedArtifact.executionPolicy,
       resolvedContext,

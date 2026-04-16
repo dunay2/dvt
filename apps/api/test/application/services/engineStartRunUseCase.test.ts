@@ -1,3 +1,4 @@
+import { asNonBlankString, parsePlanRef } from '@dvt/contracts';
 import {
   AdapterNotRegisteredError,
   OutboxRateLimitExceededError,
@@ -17,13 +18,15 @@ import {
 import { EngineStartRunUseCase } from '../../../src/application/services/engineStartRunUseCase.js';
 import { TenantId, ProjectId, EnvironmentId } from '../../../src/domain/auth/types.js';
 
-const PLAN_REF = {
+const PLAN_REF = parsePlanRef({
   uri: 'https://plans.example.com/my-plan.json',
   sha256: 'deadbeef',
   schemaVersion: '1.0.0',
   planId: 'plan-123',
   planVersion: '3.0',
-};
+  sizeBytes: 512,
+  expiresAt: '2026-04-13T10:00:00.000Z',
+});
 
 function mkContext(tenantId = 'tenant-1'): AuthorizedCommandExecutionContext {
   return {
@@ -131,11 +134,21 @@ describe('EngineStartRunUseCase', () => {
       pluginCompatibilityFingerprint: string;
       requiresCapabilities: string[];
     } = {
-      ...PLAN_REF,
+      uri: PLAN_REF.uri,
+      sha256: PLAN_REF.sha256,
+      schemaVersion: PLAN_REF.schemaVersion,
+      planId: PLAN_REF.planId,
+      planVersion: PLAN_REF.planVersion,
       pluginCompatibilityFingerprint:
         '1111111111111111111111111111111111111111111111111111111111111111',
       requiresCapabilities: ['basic-execution'],
     };
+    if (PLAN_REF.sizeBytes !== undefined) {
+      noisyPlanRef.sizeBytes = PLAN_REF.sizeBytes;
+    }
+    if (PLAN_REF.expiresAt !== undefined) {
+      noisyPlanRef.expiresAt = PLAN_REF.expiresAt;
+    }
     await useCase.execute(
       {
         ...mkCommand(),
@@ -167,11 +180,11 @@ describe('EngineStartRunUseCase', () => {
       {
         ...mkCommand(),
         runExecutionContextRef: {
-          uri: 'dvt-runctx://tenant-1/run-test-1/context.json',
-          sha256: 'ctxsha',
-          schemaVersion: 'v1.0',
-          planId: PLAN_REF.planId,
-          planVersion: PLAN_REF.planVersion,
+          uri: asNonBlankString('dvt-runctx://tenant-1/run-test-1/context.json'),
+          sha256: asNonBlankString('ctxsha'),
+          schemaVersion: asNonBlankString('v1.0'),
+          planId: asNonBlankString(PLAN_REF.planId),
+          planVersion: asNonBlankString(PLAN_REF.planVersion),
         },
       },
       mkContext()

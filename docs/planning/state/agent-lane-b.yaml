@@ -2,7 +2,7 @@ lane_id: B
 title: Event Contract And Traceability
 owner: Product / Architecture / Delivery / Docs
 status: Active
-last_reviewed: '2026-04-05'
+last_reviewed: '2026-04-14'
 goal: Stabilize event payload versioning and lineage wiring.
 expected_outcome:
   - event contracts are versioned
@@ -165,6 +165,31 @@ tasks:
     status_reason:
       Accepted evidence explicitly records the per-eventType payload-content validation slice.
     last_verified: '2026-03-31'
+  - task_id: S05-TRUTH-SYNC
+    priority: P1
+    status: done
+    objective: >-
+      reconcile active planning and architecture surfaces that still describe `S05
+      EventEnvelope.payloadVersion` hardening as open after accepted closure.
+    dependency: S05
+    target: >-
+      `system-delivery-status`, planning boards, and active architecture summaries agree that `S05`
+      is closed while any residual work is tracked under narrower follow-up tasks instead of
+      re-opening the umbrella.
+    complexity: S
+    effort_points: 2
+    progress_pct: 100
+    evidence_refs:
+      - docs/planning/reviews/architecture-and-governance/20260410-runtime-and-shared-kernel-risk-triage-review.md
+      - docs/architecture/system-delivery-status.md
+      - docs/planning/state/agent-lane-b.yaml
+      - docs/evidence/ED-20260402-s05-envelope-boundary-hardening.md
+      - docs/planning/closeouts/20260411-s05-truth-sync-closeout.md
+    status_reason: >-
+      Active status and architecture surfaces now agree that `S05` closed on the accepted
+      payload-version evidence path; residual delivery and lineage work remains explicitly tracked
+      under narrower follow-up tasks instead of re-opening the umbrella slice.
+    last_verified: '2026-04-11'
   - task_id: RC-B1
     priority: P1
     status: done
@@ -177,7 +202,7 @@ tasks:
     evidence_refs:
       - docs/planning/archive/reviews/architecture-and-governance/20260322-dvt-code-grounded-corrective-task-list-review.md
       - apps/lineage-worker/src/server.ts
-      - docs/planning/strategic-product-roadmap-20260324.md
+      - docs/planning/roadmap/strategic-product-roadmap.md
     status_reason: >-
       The lineage worker no longer needs adapter-internal reach-through and the mainline code
       matches the corrective review target.
@@ -377,7 +402,7 @@ tasks:
     last_verified: '2026-04-04'
   - task_id: AR-B2
     priority: P1
-    status: queued
+    status: done
     objective: >-
       document the distributed consistency model: map all eventual consistency windows (event append
       to snapshot, bootstrap to adapter start, outbox enqueue to delivery), their maximum expected
@@ -388,13 +413,17 @@ tasks:
       failure mode, and monitoring signal; referenced from operational runbooks.
     complexity: M
     effort_points: 5
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
+      - docs/architecture/system/distributed-consistency-model.md
+      - docs/evidence/ED-20260414-ar-b2-distributed-consistency-model.md
+      - docs/planning/closeouts/20260414-ar-b2-distributed-consistency-model-closeout.md
     status_reason: >-
-      Implicit consistency assumptions become production incidents at scale; no unified document
-      exists mapping all eventual consistency windows.
-    last_verified: '2026-04-02'
+      The cross-domain consistency story is now explicit: one canonical architecture document maps
+      start-run, snapshot, enrichment, outbox, and reconciler windows to current code anchors,
+      threshold sources, failure modes, and operator runbooks.
+    last_verified: '2026-04-14'
   - task_id: AR-B3
     priority: P1
     status: queued
@@ -455,7 +484,7 @@ tasks:
     last_verified: '2026-03-31'
   - task_id: TF-B1
     priority: P1
-    status: queued
+    status: done
     objective: >-
       define Git-first provenance and execution evidence linkage for the transformation flow so the
       design graph, SQL artifact, persisted plan, and runtime outcome remain traceable end to end.
@@ -466,19 +495,22 @@ tasks:
       versus what remains Git-owned authoring truth.
     complexity: S
     effort_points: 3
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/plan-creation-interface-route-proposal-20260405.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
+      - docs/planning/closeouts/20260412-tf-b1-b-provenance-evidence-linkage-closeout.md
       - docs/evidence/index.md
     status_reason: >-
-      Git-first is now a locked product decision in the roadmap, but no Lane B provenance contract
-      or evidence chain has yet been formalized for implementation.
-    last_verified: '2026-04-05'
+      Preview-time provenance capture and run-detail linkage are now both code-grounded: SQL-first
+      preview persists graph and SQL artifact provenance into the canonical plan, and `GET
+      /runs/:runId` now projects the caller-visible chain from authoring artifacts through persisted
+      plan identity to runtime outcome evidence.
+    last_verified: '2026-04-12'
   - task_id: TF-B1-A
     priority: P0
-    status: queued
+    status: done
     objective: >-
       formalize the Git artifact reference and preview-time provenance rules for graph and SQL
       inputs.
@@ -488,18 +520,20 @@ tasks:
       authoring artifacts must travel through preview and into the persisted plan record.
     complexity: S
     effort_points: 2
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-product-decisions-20260405.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md
+      - docs/planning/closeouts/20260412-tf-b1-b-provenance-evidence-linkage-closeout.md
       - docs/evidence/index.md
     status_reason: >-
-      Git-first is now frozen as a product rule, but the concrete artifact-ref contract and capture
-      rules are not yet isolated as a Lane B slice.
-    last_verified: '2026-04-05'
+      SQL-first preview now enforces graph and SQL Git artifact provenance at the request boundary,
+      writes that provenance into the persisted canonical plan, and returns the same authoring
+      linkage in preview responses consumed by the frontend.
+    last_verified: '2026-04-12'
   - task_id: TF-B1-B
     priority: P0
-    status: queued
+    status: done
     objective: >-
       define the evidence model that links runtime outcome, sink materialization, and failure events
       back to the persisted plan and Git-tracked authoring inputs.
@@ -509,15 +543,39 @@ tasks:
       record to run outcome, including sink evidence and failure-event attribution.
     complexity: S
     effort_points: 3
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
+      - docs/planning/closeouts/20260412-tf-b1-b-provenance-evidence-linkage-closeout.md
       - docs/evidence/index.md
     status_reason: >-
-      The roadmap now requires caller-visible provenance and evidence, but the result-side linkage
-      is not yet broken into a concrete Lane B execution slice.
-    last_verified: '2026-04-05'
+      `GET /runs/:runId` now projects persisted plan identity plus preview-time authoring provenance
+      from the canonical plan and links that caller-visible chain to the existing runtime outcome
+      evidence used by run detail.
+    last_verified: '2026-04-12'
+  - task_id: AR-B4
+    priority: P1
+    status: done
+    objective: >-
+      define the canonical ownership boundary between the event contract, mapper normalization, and
+      projected read-evidence shapes for step-failure and adjacent runtime evidence.
+    dependency: none
+    target: >-
+      One governed proposal isolates which invariants belong to the append boundary, which
+      derivations belong to the mapper, and what downstream projectors may rely on as canonical.
+    complexity: S
+    effort_points: 2
+    progress_pct: 100
+    evidence_refs:
+      - docs/planning/proposals/contract-mapper-event-boundary-study-20260409.md
+      - docs/evidence/ED-20260410-contract-mapper-boundary-option-a.md
+    status_reason: >-
+      The narrow Option A slice is now implemented and validated: append-boundary invariants own
+      trusted step-failure fields, persisted records validate enriched timestamps, mapper cleanup
+      policy was removed, and the public contract surface now aligns on semantic aliases for
+      step-scoped evidence fields.
+    last_verified: '2026-04-10'
 dependency_notes:
   - >-
     `EVD-IA-03` completes the structural move from metadata-only classification to class-aware
@@ -550,13 +608,18 @@ dependency_notes:
   - >-
     `TF-B1` is now decomposed into `TF-B1-A` and `TF-B1-B` so preview-time provenance and
     result-time evidence linkage can move independently while remaining under one Git-first policy.
+  - >-
+    `S05-TRUTH-SYNC` is the explicit follow-up that keeps payload-version closure truthful in active
+    status and architecture surfaces after `S05` landed with accepted evidence. `AR-B4` is now
+    closed with a governed proposal, implemented narrow Option A hardening, and ARC evidence for the
+    contract-to-mapper-to-projector ownership boundary.
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
-  verified_on: '2026-04-05'
-  total_tasks: 20
-  total_effort_points: 79
-  completed_weighted_points: 52.6
+  verified_on: '2026-04-10'
+  total_tasks: 21
+  total_effort_points: 81
+  completed_weighted_points: 54.6
   lane_progress_pct: 67
   notes: >-
     Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry

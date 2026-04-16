@@ -2,7 +2,7 @@
 title: WorkflowEngine target architecture v1
 status: Draft
 owner: Architecture / Engine / API
-last_reviewed: 2026-04-03
+last_reviewed: 2026-04-10
 ---
 
 # WorkflowEngine target architecture v1
@@ -10,13 +10,14 @@ last_reviewed: 2026-04-03
 ## Purpose
 
 Define the target architecture for the full `WorkflowEngine` subsystem as a
-hexagonal, compatibility-first derivation path that keeps the public contract
-stable while narrowing responsibilities internally.
+hexagonal derivation path that narrows the engine facade to commands plus
+canonical read while moving optional enrichment behind a separate service
+boundary.
 
 ## Target shape
 
-The target keeps `IWorkflowEngine` as a transitional compatibility facade, and
-moves actual behavior into narrow application services.
+The target keeps `IWorkflowEngine` as the command plus canonical-read facade
+and moves actual behavior into narrow application services.
 
 Target inbound use-case services:
 
@@ -35,14 +36,15 @@ Target outbound engine-owned ports:
 - run execution context resolution
 - status projection
 - observability/telemetry policy
+- execution capability dispatch inside provider-owned runtime internals
 
 ```mermaid
 flowchart LR
-  Facade["IWorkflowEngine compatibility facade"] --> U1["IStartRunUseCase"]
+  Facade["IWorkflowEngine public facade"] --> U1["IStartRunUseCase"]
   Facade --> U2["ICancelRunUseCase"]
   Facade --> U3["IRunStatusQueryService"]
   Facade --> U4["IRunSignalUseCase"]
-  Facade --> U5["IRunEnrichmentService"]
+  Caller["Enrichment callers"] --> U5["IRunEnrichmentService"]
 
   U1 --> P1["IRunStateReadPort + IRunStateWritePort"]
   U1 --> P2["IStartRunIntentPort"]
@@ -77,6 +79,18 @@ Boundary rule to lock:
 - composition root adapts artifacts-owned reader to engine-owned resolver.
 - peer-domain runtime logic must not leak into engine internals.
 
+Additional target rule for the first transformation runtime vertical:
+
+- the core runtime must depend on execution capability, not on a vendor name
+- a whole-plan provider or executor profile may select a capability and then a
+  concrete implementation
+- PostgreSQL is the first implementation of the relational SQL execution
+  capability
+- future relational implementations such as Oracle may fit the same capability
+- non-relational systems such as Kafka do not automatically fit the same
+  contract and must be introduced as a different capability or provider
+  profile
+
 ## Inbound/outbound port model
 
 ```mermaid
@@ -88,12 +102,54 @@ flowchart TB
   Adapters --> Runtime["Provider runtimes + stores + artifacts + telemetry backends"]
 ```
 
-## Compatibility strategy
+## Target execution capability seam
 
-1. Keep `IWorkflowEngine` method surface stable.
-2. Move method internals to dedicated use-case services.
-3. Keep current tests green with facade delegation checks.
-4. Deprecate internal wide services only after functional parity and
+This target architecture keeps the run-driven adapter model from `ADR-0014`,
+but it narrows the runtime internals so execution semantics are capability-led
+instead of vendor-led.
+
+That means:
+
+- the engine still starts a run by `PlanRef`
+- the provider-owned runtime still owns step dispatch
+- executor selection inside that runtime should be modeled by capability first
+- vendor implementations sit behind that capability boundary
+
+```mermaid
+flowchart LR
+  Plan["Persisted plan plus provider profile"] --> Adapter["Run-driven provider adapter"]
+  Adapter --> Capability["Relational SQL execution capability"]
+  Capability --> Pg["PostgreSQL implementation"]
+  Capability -. future .-> Ora["Oracle implementation"]
+  Adapter -. separate capability or profile .-> Other["Non-relational path, for example Kafka"]
+```
+
+Mainline now partially realizes this seam:
+
+- `@dvt/adapter-temporal` dispatches runtime task steps through
+  `StepActivityDispatcher`
+- provider-owned capability registries can register non-dbt step activity
+  implementations
+- `@dvt/adapter-postgres` supplies the first relational implementation through
+  `PostgresRelationalExecutionCapability`
+
+What remains target-state rather than normative public contract is the broader
+promotion of this seam into a repository-wide adapter policy or ADR-backed
+contract.
+
+If a future slice promotes this distinction into a normative public contract or
+repo-wide adapter policy, that change should be captured in an ADR. At this
+stage, the architecture document is enough because it is refining target shape
+under already accepted principles from `ADR-0003` and `ADR-0014`.
+
+## Cutover strategy
+
+1. Narrow `IWorkflowEngine` to commands plus canonical read.
+2. Move enrichment to `IRunEnrichmentService`.
+3. Move method internals to dedicated use-case services.
+4. Keep current tests green with facade delegation checks and service-level
+   query coverage.
+5. Deprecate internal wide services only after functional parity and
    architecture fitness checks pass.
 
 ## Class responsibility rules (target)
@@ -120,7 +176,8 @@ flowchart TB
 
 ## Patterns used and why
 
-- Compatibility Facade: preserve public API while refactoring internals.
+- Narrow Facade: keep the public engine surface small while behavior moves into
+  dedicated services.
 - Use Case Interactor: keep orchestration explicit and testable per behavior.
 - Policy Objects: isolate rules and keep logic composable.
 - Adapter + Port: enforce hexagonal boundary and replaceability.
@@ -135,16 +192,35 @@ flowchart TB
 - infrastructure selection inside domain policies
 - hidden collaborator construction inside orchestration classes
 
-## Current vs target gap table
+## Current vs target gaps
 
-| Area                      | Current                                    | Target                                      | Gap signal           |
-| ------------------------- | ------------------------------------------ | ------------------------------------------- | -------------------- |
-| Public boundary           | `WorkflowEngine` does more than delegation | facade-only delegation                      | width still high     |
-| startRun application flow | coordinator/guard mix concerns             | split into narrow use cases + policies      | SRP drift            |
-| status/read path          | core service mixes query + enrichment      | dedicated query vs enrichment services      | ADR-0015 clarity gap |
-| provider resolution       | repeated in multiple paths                 | single resolver seam                        | duplication          |
-| telemetry handling        | spread across core services                | decorator/policy boundary                   | cross-cutting noise  |
-| artifacts/engine seam     | partially explicit                         | documented adapter seam in composition root | ownership ambiguity  |
+- Public boundary
+  Current: `WorkflowEngine` now exposes commands plus canonical read only.
+  Target: facade-only delegation plus separate enrichment/query services with no
+  residual mixed responsibility in current docs.
+  Gap signal: start-run/control decomposition convergence.
+- `startRun` application flow
+  Current: coordinator/guard mix concerns.
+  Target: split into narrow use cases plus policies.
+  Gap signal: SRP drift.
+- status/read path
+  Current: dedicated canonical query and enrichment services are now shipped,
+  but control operations still share one runtime-control service.
+  Target: dedicated query vs enrichment services plus narrower control and
+  telemetry seams.
+  Gap signal: residual control-service breadth.
+- provider resolution
+  Current: repeated in multiple paths.
+  Target: single resolver seam.
+  Gap signal: duplication.
+- telemetry handling
+  Current: spread across core services.
+  Target: decorator/policy boundary.
+  Gap signal: cross-cutting noise.
+- artifacts/engine seam
+  Current: partially explicit.
+  Target: documented adapter seam in composition root.
+  Gap signal: ownership ambiguity.
 
 ## Retain vs improve
 
@@ -197,23 +273,37 @@ sequenceDiagram
   participant Client as Caller
   participant Facade as IWorkflowEngine facade
   participant Query as IRunStatusQueryService
-  participant Enrich as IRunEnrichmentService
   participant State as RunStateReadPort
-  participant Provider as ProviderAdapter
 
   Client->>Facade: getRunStatus(runRef)
   Facade->>Query: execute(runRef)
   Query->>State: snapshot/events only
-  Query-->>Facade: deterministic status
-  Facade-->>Client: deterministic status
-
-  Client->>Facade: enrichRunStatus(runRef)
-  Facade->>Enrich: execute(runRef)
-  Enrich->>State: deterministic base
-  Enrich->>Provider: provider substatus/message
-  Enrich-->>Facade: enriched status
-  Facade-->>Client: enriched status
+  Query-->>Facade: CanonicalRunStatus
+  Facade-->>Client: CanonicalRunStatus
 ```
+
+```mermaid
+sequenceDiagram
+  participant Client as Caller
+  participant Enrich as IRunEnrichmentService
+  participant State as RunStateReadPort
+  participant Provider as ProviderAdapter
+
+  Client->>Enrich: getRunEnrichment(runRef)
+  Enrich->>State: CanonicalRunStatus
+  Enrich->>Provider: getProviderStatusView(runRef)
+  Provider-->>Enrich: ProviderRunStatusView
+  Enrich-->>Client: RunStatusEnrichment
+```
+
+Target model note:
+
+- `CanonicalRunStatus` is the only canonical caller-visible lifecycle object
+- `ProviderRunStatusView` remains diagnostic-only
+- `RunStatusEnrichment` is engine-owned composition, not a second canonical
+  status source
+- `IRunEnrichmentService` is the only target boundary that may return
+  `RunStatusEnrichment`
 
 ## Derivation roadmap
 

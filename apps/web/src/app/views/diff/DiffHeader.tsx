@@ -3,6 +3,13 @@ import { GitCompare } from 'lucide-react';
 import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
 import {
+  routeWorkbenchFieldClassName,
+  routeWorkbenchHeaderBandClassName,
+  routeWorkbenchMutedTextClassName,
+  routeWorkbenchPanelClassName,
+  routeWorkbenchSubtleTextClassName,
+} from '../../components/workbench/RouteWorkbenchFrame';
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -10,6 +17,7 @@ import {
   SelectValue,
 } from '../../components/ui/select';
 import { ViewHeader } from '../../components/domain';
+import { cn } from '../../components/ui/utils';
 import { diffViewCopy as copy } from './copy';
 import type { DiffCompareMode, DiffSeverityFilter } from './diffViewModel';
 
@@ -29,21 +37,21 @@ export function DiffHeader({
   onSeverityFilterChange,
 }: DiffHeaderProps) {
   return (
-    <div className="space-y-4 border-b border-slate-700 bg-slate-900 px-6 py-4">
+    <div data-slot="diff-header" className={cn('space-y-4', routeWorkbenchHeaderBandClassName)}>
       <ViewHeader
         className="border-0 bg-transparent p-0"
         title={copy.title}
         subtitle={copy.subtitle}
-        icon={<GitCompare className="size-6 text-blue-400" />}
+        icon={<GitCompare className="size-6 text-[var(--status-info)]" />}
         actions={
           <Select
             value={compareMode}
             onValueChange={(value) => onCompareModeChange(value as DiffCompareMode)}
           >
-            <SelectTrigger className="w-[150px] border-slate-600 bg-slate-950 text-slate-50">
+            <SelectTrigger className={cn('w-[150px]', routeWorkbenchFieldClassName)}>
               <SelectValue />
             </SelectTrigger>
-            <SelectContent className="border-slate-600 bg-slate-900 text-slate-50">
+            <SelectContent className={routeWorkbenchPanelClassName}>
               <SelectItem value="git">{copy.compareModes.git}</SelectItem>
               <SelectItem value="run">{copy.compareModes.run}</SelectItem>
             </SelectContent>
@@ -53,12 +61,14 @@ export function DiffHeader({
 
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-2">
-          <span className="text-sm text-slate-300">{copy.compareLabel}</span>
-          <code className="rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm text-slate-50">
+          <span className={cn('text-sm', routeWorkbenchMutedTextClassName)}>
+            {copy.compareLabel}
+          </span>
+          <code className={cn('rounded px-2 py-1 text-sm font-mono', routeWorkbenchFieldClassName)}>
             {comparePreset.left}
           </code>
-          <span className="text-slate-400">...</span>
-          <code className="rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm text-slate-50">
+          <span className={routeWorkbenchSubtleTextClassName}>...</span>
+          <code className={cn('rounded px-2 py-1 text-sm font-mono', routeWorkbenchFieldClassName)}>
             {comparePreset.right}
           </code>
         </div>

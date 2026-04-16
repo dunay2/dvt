@@ -2,7 +2,7 @@ lane_id: C
 title: Runtime Safety And Admission
 owner: Product / Architecture / Delivery / Docs
 status: Active
-last_reviewed: '2026-04-05'
+last_reviewed: '2026-04-16'
 goal: Harden runtime behavior, admission checks, and caller-visible freshness.
 expected_outcome:
   - runtime failures are explicit
@@ -428,7 +428,7 @@ tasks:
     last_verified: '2026-04-03'
   - task_id: AR-C2
     priority: P0
-    status: in_progress
+    status: done
     objective: >-
       define and document formal SLA targets for event delivery latency, snapshot freshness, plan
       compilation time, run start latency, and outbox drain rate with measurable thresholds and
@@ -570,7 +570,7 @@ tasks:
     last_verified: '2026-04-02'
   - task_id: AR-C4
     priority: P1
-    status: queued
+    status: review
     objective: >-
       add circuit breaker between Temporal activities and IRunStateStore to prevent state store
       unavailability from blocking all step execution with no fallback or degradation signal.
@@ -581,13 +581,19 @@ tasks:
       via metrics.
     complexity: M
     effort_points: 5
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
+      - docs/planning/closeouts/20260415-ar-c4-run-state-circuit-breaker-closeout.md
+      - packages/@dvt/adapter-temporal/src/RunStateCommandPortCircuitBreaker.ts
+      - packages/@dvt/adapter-temporal/test/RunStateCommandPortCircuitBreaker.test.ts
+      - apps/temporal-worker/src/runtime/createTemporalWorkerRuntime.ts
+      - apps/temporal-worker/src/ops/TemporalWorkerMonitor.ts
     status_reason: >-
-      Temporal activities write directly to IRunStateStore with no protection — state store latency
-      or unavailability cascades into workflow timeouts.
-    last_verified: '2026-04-02'
+      Temporal activity state-store writes now flow through a circuit-breaker-wrapped command port
+      with timeout protection and retryable fast-fail semantics; worker ops surfaces expose breaker
+      posture and counters so degradation is explicit.
+    last_verified: '2026-04-15'
   - task_id: AR-C5
     priority: P1
     status: queued
@@ -604,12 +610,13 @@ tasks:
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review-principal-architect.md
     status_reason: >-
-      The principal deep review identified timeout-only adapter failure handling as a cascade risk
-      when Temporal is degraded.
-    last_verified: '2026-04-04'
+      Temporal activity state-store writes now flow through a circuit-breaker-wrapped command
+      port`r`n      with timeout protection and retryable fast-fail semantics; worker ops surfaces
+      expose breaker`r`n      posture and counters so degradation is explicit.`r`n    last_verified:
+      '2026-04-15'
   - task_id: MW-C1
     priority: P0
-    status: queued
+    status: done
     objective: >-
       abstract step execution in Temporal adapter by separating DbtStepActivity from a
       StepActivityDispatcher that routes by StepKind to the correct activity implementation,
@@ -621,16 +628,19 @@ tasks:
       kinds; adding a new kind requires registering an activity, not modifying workflow code.
     complexity: L
     effort_points: 8
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
-      - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
+      - docs/evidence/ED-20260408-mw-c1-step-activity-dispatcher.md
+      - packages/@dvt/adapter-temporal/src/activities/stepActivities.ts
+      - packages/@dvt/adapter-temporal/test/workflow-compiled-code-ref.test.ts
     status_reason: >-
-      Current Temporal activities assume every step is a dbt operation — this is the execution-layer
-      blocker for multi-workflow support.
-    last_verified: '2026-04-02'
+      `StepActivityDispatcher` is now the runtime dispatch seam in `@dvt/adapter-temporal`; dbt and
+      gateway steps route by `StepKind`, and unregistered kinds fail closed through
+      `UnsupportedStepKindError` instead of editing workflow control flow.
+    last_verified: '2026-04-10'
   - task_id: RC-C2
     priority: P2
-    status: review
+    status: in_progress
     objective: >-
       institutionalize shared preflight (`hygiene.ps1`), log-first CI triage, and structured AI
       efficiency measurement for Lane C before scaling the workflow repo-wide.
@@ -654,7 +664,7 @@ tasks:
       Shared tooling, guide, structured measurement, and a canonical friction review are shipped;
       final closure still depends on three qualifying Lane C PR cycles logged against the new
       workflow.
-    last_verified: '2026-04-01'
+    last_verified: '2026-04-13'
   - task_id: RC-E1
     priority: P1
     status: done
@@ -695,7 +705,7 @@ tasks:
     last_verified: '2026-03-31'
   - task_id: TF-C1
     priority: P0
-    status: in_progress
+    status: done
     objective: >-
       implement the SQL-first `POST /plans/preview` boundary so design-graph input is validated,
       canonical plan bytes are persisted with Git provenance, and callers receive the real `PlanRef`
@@ -707,26 +717,33 @@ tasks:
       `PlanRef` used by `POST /runs/start`.
     complexity: M
     effort_points: 5
-    progress_pct: 80
+    progress_pct: 100
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/plan-creation-interface-route-proposal-20260405.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
+      - docs/planning/closeouts/20260414-tf-c1-preview-persist-convergence-closeout.md
       - docs/planning/closeouts/20260408-tf-c1-b-preview-profile-contract-closeout.md
+      - docs/planning/closeouts/20260414-tf-a1-c-srp-hardening-closeout.md
+      - docs/planning/closeouts/20260414-tf-a1-d-web-plan-anti-corruption-closeout.md
+      - docs/planning/closeouts/20260412-tf-b1-b-provenance-evidence-linkage-closeout.md
       - apps/api/src/entrypoints/http/runtimeRoutes.constants.ts
       - apps/api/src/entrypoints/http/planRoutes.ts
       - apps/api/src/entrypoints/http/previewProfilePolicy.ts
       - apps/api/src/entrypoints/http/previewProvenanceParser.ts
     status_reason: >-
-      The protected preview boundary now validates explicit `previewProfile` intent, enforces
-      request-boundary graph and provenance rules, persists canonical plan bytes, and returns the
-      real runtime-safe `PlanRef`. Remaining closure is to finish Lane A or B contract adoption for
-      the transformation profile so the generic preview caller and SQL-first persisted path stop
-      diverging operationally.
-    last_verified: '2026-04-08'
+      Closed. The protected preview boundary now validates explicit `previewProfile` intent,
+      enforces request-boundary graph and provenance rules, persists canonical plan bytes, and
+      returns the real runtime-safe `PlanRef`, while the downstream convergence that kept the parent
+      open is now landed through the Lane A and B adoption chain: the active Canvas caller emits the
+      governed `transformation-sql-first-v1` request plus required Git provenance, the anti-
+      corruption layer preserves the persisted-plan contract at the web boundary, and the first
+      caller-visible provenance chain is already accepted. The next runtime-mode expansion now moves
+      to `TF-C3`, not back into `TF-C1`.
+    last_verified: '2026-04-14'
   - task_id: TF-C1-A
     priority: P0
-    status: review
+    status: done
     objective: >-
       implement the protected preview route, typed validation failures, and authorization behavior
       for SQL-first design-graph requests.
@@ -749,10 +766,10 @@ tasks:
       The protected route, auth flow, and typed error envelope are now exercised against explicit
       `previewProfile` parsing and request-boundary validation. Remaining follow-up belongs to the
       parent TF-C1 convergence chain, not to the route behavior itself.
-    last_verified: '2026-04-08'
+    last_verified: '2026-04-13'
   - task_id: TF-C1-B
     priority: P0
-    status: review
+    status: done
     objective: >-
       persist canonical plan bytes plus provenance and issue the real `PlanRef` consumed by runtime
       start.
@@ -774,10 +791,10 @@ tasks:
       explicit preview-profile contract instead of step-kind heuristics. Remaining work is
       downstream caller adoption of the transformation profile and provenance path, not persistence
       correctness on the API boundary.
-    last_verified: '2026-04-08'
+    last_verified: '2026-04-13'
   - task_id: TF-C2
     priority: P0
-    status: queued
+    status: done
     objective: >-
       deliver the first execution-first vertical for SQL transformations against PostgreSQL,
       including the local Docker PostgreSQL proof environment and caller-visible materialization
@@ -789,19 +806,25 @@ tasks:
       diagnostics.
     complexity: M
     effort_points: 5
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/plan-creation-interface-route-proposal-20260405.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
+      - docs/evidence/ED-20260410-temporal-baseline-and-capability-lane-partition.md
+      - docs/evidence/ED-20260408-tf-c2-b-read-surface-evidence.md
+      - docs/evidence/ED-20260413-tf-c2-runtime-vertical-acceptance.md
+      - docs/planning/closeouts/20260413-tf-c2-runtime-vertical-acceptance-closeout.md
     status_reason: >-
-      PostgreSQL is now the first locked execution target for the product roadmap, but no governed
-      runtime slice yet executes the persisted plan against PostgreSQL and returns materialization
-      evidence.
-    last_verified: '2026-04-05'
+      The first PostgreSQL-backed execution-first runtime vertical is now accepted: persisted
+      `PlanRef` execution, the canonical Docker proof wrapper, and caller-visible runtime evidence
+      are all code-grounded and acceptance-backed. Remaining follow-through stays explicit in
+      downstream tasks such as `TF-D1` repeatability/reset discipline and `TF-C3` phase-2
+      plugin-backed dbt dispatch, not in the parent runtime vertical itself.
+    last_verified: '2026-04-13'
   - task_id: TF-C2-A
     priority: P0
-    status: queued
+    status: done
     objective: >-
       add the PostgreSQL executor path and the first repeatable Docker PostgreSQL proof baseline for
       SQL-first persisted plans.
@@ -811,17 +834,25 @@ tasks:
       Docker PostgreSQL environment exists for local proof of success and failure paths.
     complexity: M
     effort_points: 5
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
+      - docs/evidence/ED-20260410-temporal-baseline-and-capability-lane-partition.md
+      - docs/runbooks/temporal-postgres-proof-environment.md
+      - scripts/run-temporal-postgres-proof.cjs
+      - packages/@dvt/adapter-postgres/src/PostgresRelationalExecutionCapability.ts
+      - packages/@dvt/adapter-temporal/test/integration.postgres.time-skipping.test.ts
     status_reason: >-
-      PostgreSQL is the locked v1 target, but the executor seam and its proof environment still need
-      a dedicated Lane C delivery slice.
-    last_verified: '2026-04-05'
+      The capability-led PostgreSQL execution seam now exists in `adapter-postgres`, CI runs a
+      dedicated Temporal Postgres integration lane, and the local Docker proof environment now has a
+      canonical operator-facing wrapper and runbook. Remaining downstream follow-through belongs to
+      Lane D repeatability discipline and final runtime-vertical acceptance, not to the executor
+      path itself.
+    last_verified: '2026-04-13'
   - task_id: TF-C2-B
     priority: P0
-    status: in_progress
+    status: done
     objective: >-
       expose caller-visible materialization evidence and step-attributed failure diagnostics on the
       runtime read surfaces.
@@ -831,7 +862,7 @@ tasks:
       target, failure step attribution, and timestamps needed for operator inspection.
     complexity: S
     effort_points: 3
-    progress_pct: 80
+    progress_pct: 100
     evidence_refs:
       - docs/evidence/ED-20260408-tf-c2-b-read-surface-evidence.md
       - docs/planning/closeouts/20260408-tf-c2-b-read-surface-evidence-closeout.md
@@ -842,55 +873,259 @@ tasks:
       - docs/risk-register/quality/R-20260409-TF-C2-B-CANONICAL-CONTRACT-DOC-DRIFT.yaml
       - docs/risk-register/quality/R-20260409-TF-C2-B-FAILED-RUN-MATERIALIZATION-SEMANTICS.yaml
     status_reason: >-
-      Hard QA no longer treats snapshot versioning as an active blocker on this branch: the
-      development baseline stays on `schemaVersion = 1` and the disposable local Docker posture does
-      not maintain a second snapshot-schema line. Two follow-up items remain explicitly accepted as
-      debt and logged in the quality risk register: canonical contract/architecture doc drift and
-      failed-run materialization semantics. Real executor payload emission from TF-C2-A or TF-B1-B
-      remains the downstream dependency for full TF-C2-B closure.
-    last_verified: '2026-04-09'
-  - task_id: TF-C3
-    priority: P1
-    status: queued
+      `GET /runs/:runId` and `GET /runs/:runId/events` now expose executor identity, rows written,
+      sink target, failure step attribution, and timestamps on the governed runtime read surfaces.
+      The hard-QA follow-up work is closed: snapshot posture remains on one development schema line,
+      failed-run materialization semantics are locked to success-only reads, canonical docs and
+      diagrams are aligned, and the former `TF-B1-B` provenance dependency is now accepted closure
+      rather than an open blocker.
+    last_verified: '2026-04-13'
+  - task_id: AR-C6
+    priority: P0
+    status: done
     objective: >-
-      add phase-2 dbt engine integration behind the same preview-persist-run contract so dbt becomes
-      an execution mode instead of a second product path.
-    dependency: TF-C2
+      normalize Temporal cancellation semantics so provider-native cancel, runtime-owned lifecycle
+      facts, and caller-visible status authority follow one governed model.
+    dependency: none
     target: >-
-      dbt-backed execution reuses the same `POST /plans/preview` and `POST /runs/start` boundary,
-      executor identity is caller-visible, and the roadmap does not fork into a separate outer
-      product loop.
+      Temporal cancellation no longer relies on signal aliasing, and the component-level ownership
+      model for `RunCancelRequested`, `RunCancelled`, and provider status authority is explicit
+      across planning and architecture surfaces.
     complexity: M
     effort_points: 3
-    progress_pct: 0
+    progress_pct: 100
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/ar-c6-temporal-cancel-semantics-plan-20260410.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/ar-c6-cancel-lifecycle-ownership-truth-sync-plan-20260410.md
+      - docs/evidence/critical/ED-20260401-cancel-lifecycle-workflow-owned-ordering.md
+      - docs/evidence/ED-20260413-temporal-native-cancel-provider-status-convergence.md
+      - docs/planning/closeouts/20260413-ar-c6-provider-status-convergence-closeout.md
+    status_reason: >-
+      Native Temporal cancellation now preserves runtime-owned canonical cancel ordering and
+      converges provider-live terminal status on `CANCELLED` after workflow-local cleanup. The
+      provider-native boundary, ownership truth, and provider-status semantics are now aligned
+      across code, tests, and active docs.
+    last_verified: '2026-04-13'
+  - task_id: AR-C6-A
+    parent_task: AR-C6
+    priority: P0
+    status: done
+    objective: >-
+      capture the cancel-lifecycle ownership lesson and hand it off to the broader engine-runtime
+      contract-pack reset without leaving a second active contract direction in planning.
+    dependency: none
+    target: >-
+      A governed proposal records the target ownership model across `WorkflowEngineCoreService`,
+      `IProviderAdapter`, runtime workflow, projector/read model, and caller-visible status
+      consumption, while the contract-pack reset and active registry cleanup continue only under
+      `AR-A12-A`.
+    complexity: S
+    effort_points: 2
+    progress_pct: 100
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/ar-c6-cancel-lifecycle-ownership-truth-sync-plan-20260410.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/ar-c6-temporal-cancel-semantics-plan-20260410.md
+    status_reason: >-
+      The cancel-lifecycle ownership lesson is captured and accepted as local rationale. Further
+      contract-pack normalization is now explicitly absorbed by `AR-A12-A`, so Lane C no longer
+      carries a parallel active direction.
+    last_verified: '2026-04-10'
+  - task_id: TF-C3
+    priority: P1
+    status: in_progress
+    objective: >-
+      add phase-2 dbt plugin-backed execution behind the same preview-persist-run contract so dbt
+      stays out of engine-kernel semantics instead of becoming a second product path.
+    dependency: TF-C2
+    target: >-
+      plugin-backed dbt execution reuses the same `POST /plans/preview` and `POST /runs/start`
+      boundary, executor identity is caller-visible, and the roadmap does not fork into a separate
+      outer product loop or push dbt semantics into the engine kernel.
+    complexity: M
+    effort_points: 3
+    progress_pct: 85
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/plan-creation-interface-route-proposal-20260405.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/tf-c3-production-plugin-host-composition-plan-20260414.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-product-decisions-20260405.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
+      - docs/planning/closeouts/20260414-tf-c3-run-execution-context-resolver-closeout.md
+      - docs/planning/closeouts/20260414-tf-c3-dbt-plugin-runtime-projection-closeout.md
+      - docs/planning/closeouts/20260414-tf-c3-production-plugin-host-composition-closeout.md
     status_reason: >-
-      Phase 2 is now explicitly sequenced after the PostgreSQL execution-first closure and must be
-      tracked as the next runtime mode, not as an ambiguous future idea.
-    last_verified: '2026-04-05'
+      Phase 2 now spans four concrete slices. Protected runtime already wires the governed
+      `runExecutionContextRef` boundary through shared artifact-backed readers, the standalone
+      `apps/temporal-worker` composition root now owns `TemporalWorkerHost` lifecycle and ops
+      endpoints, and the adapter now runs DBT through an adapter-owned CLI host without pushing
+      semantics into the engine kernel. Remaining work is rollout acceptance and environment proof,
+      not missing in-repo host topology or a second outer product path.
+    last_verified: '2026-04-14'
   - task_id: TF-C3-A
     priority: P1
-    status: queued
+    status: done
     objective: >-
-      add the dbt executor mode under the same preview-persist-run contract without creating a
-      second product loop.
+      add the dbt plugin-backed execution mode under the same preview-persist-run contract without
+      creating a second product loop or a kernel-owned dbt path.
     dependency: TF-C2-B
     target: >-
-      Runtime can dispatch eligible persisted plans to a dbt-backed executor while preserving the
+      Runtime can dispatch eligible persisted plans to a plugin-backed dbt path while preserving the
       same `PlanRef`, result model, and caller-visible flow used by the PostgreSQL path.
     complexity: S
     effort_points: 3
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/tf-c3-production-plugin-host-composition-plan-20260414.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-product-decisions-20260405.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
+      - docs/planning/closeouts/20260414-tf-c3-run-execution-context-resolver-closeout.md
+      - docs/planning/closeouts/20260414-tf-c3-dbt-plugin-runtime-projection-closeout.md
+      - docs/planning/closeouts/20260414-tf-c3-production-plugin-host-composition-closeout.md
     status_reason: >-
-      Phase 2 is now product-scoped, but the dbt execution mode still needs its own explicit Lane C
-      slice instead of remaining a generic future note.
-    last_verified: '2026-04-05'
+      Runtime can now dispatch eligible persisted plans through the same outer `PlanRef` flow into a
+      plugin-backed DBT path: shared artifact readers resolve immutable execution inputs,
+      `apps/temporal-worker` composes the production-style worker host, and DBT runs through the
+      adapter-owned CLI host while failing closed when wiring or payloads are invalid.
+    last_verified: '2026-04-14'
+  - task_id: TF-C3-B
+    parent_task: TF-C3
+    priority: P1
+    status: done
+    objective: >-
+      converge the artifact-backed execution-context and DBT bundle readers under `@dvt/artifacts`
+      so API ingress and the Temporal worker consume one governed artifact boundary instead of
+      divergent local implementations.
+    dependency: TF-C1
+    target: >-
+      `ArtifactBackedRunExecutionContextReader` and `ArtifactBackedDbtProjectBundleReader` live in
+      `@dvt/artifacts`, support the governed `file://` or `s3://` rules, and `apps/api` consumes the
+      shared execution-context reader through the existing resolver boundary.
+    complexity: S
+    effort_points: 3
+    progress_pct: 100
+    evidence_refs:
+      - docs/evidence/ED-20260414-tf-c3-production-temporal-worker-dbt-host.md
+      - docs/planning/closeouts/20260414-tf-c3-production-plugin-host-composition-closeout.md
+      - packages/@dvt/artifacts/src/runtime/ArtifactBackedRunExecutionContextReader.ts
+      - packages/@dvt/artifacts/src/runtime/ArtifactBackedDbtProjectBundleReader.ts
+      - apps/api/src/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.ts
+    status_reason: >-
+      The shared artifact package now owns both runtime readers, enforces the governed URI posture,
+      and `apps/api` has been reduced to a thin rejection-mapping wrapper instead of carrying a
+      second artifact-loading implementation.
+    last_verified: '2026-04-14'
+  - task_id: TF-C3-C
+    parent_task: TF-C3
+    priority: P1
+    status: done
+    objective: >-
+      create the canonical standalone Temporal worker composition root so worker lifecycle,
+      readiness, and DBT host wiring are owned outside `apps/api`.
+    dependency: TF-C3-B
+    target: >-
+      `apps/temporal-worker` exists with validated env loading, worker-host bootstrap, clean
+      shutdown, and operational endpoints for `/healthz`, `/readyz`, and `/metrics`.
+    complexity: M
+    effort_points: 5
+    progress_pct: 100
+    evidence_refs:
+      - docs/evidence/ED-20260414-tf-c3-production-temporal-worker-dbt-host.md
+      - docs/planning/closeouts/20260414-tf-c3-production-plugin-host-composition-closeout.md
+      - apps/temporal-worker/src/server.ts
+      - apps/temporal-worker/src/host/runTemporalWorkerHost.ts
+      - apps/temporal-worker/src/runtime/createTemporalWorkerRuntime.ts
+      - docs/runbooks/temporal-worker-dbt-plugin-runtime-20260414.md
+    status_reason: >-
+      The repo now contains a real worker composition root with explicit env parsing, runtime
+      lifecycle ownership, operational endpoints, and shutdown semantics; the missing topology is no
+      longer hypothetical or test-only.
+    last_verified: '2026-04-14'
+  - task_id: TF-C3-D
+    parent_task: TF-C3
+    priority: P1
+    status: done
+    objective: >-
+      run DBT through an adapter-owned CLI host behind `DbtPluginRunner` so DBT execution stays out
+      of engine semantics while using real artifact-backed project bundles.
+    dependency: TF-C3-C
+    target: >-
+      `DbtCliPluginRunner` materializes the DBT bundle, maps DBT step kinds to CLI subcommands, runs
+      `dbt` under worker policy, and returns governed `StepResult` values without changing the
+      engine contract.
+    complexity: M
+    effort_points: 8
+    progress_pct: 100
+    evidence_refs:
+      - docs/evidence/ED-20260414-tf-c3-production-temporal-worker-dbt-host.md
+      - docs/planning/closeouts/20260414-tf-c3-production-plugin-host-composition-closeout.md
+      - packages/@dvt/adapter-temporal/src/plugins/dbt/DbtCliPluginRunner.ts
+      - packages/@dvt/adapter-temporal/src/activities/activityFactory.ts
+      - packages/@dvt/adapter-temporal/test/DbtCliPluginRunner.test.ts
+    status_reason: >-
+      The adapter now owns a concrete DBT CLI host, the worker injects it through the real
+      composition path, and the activity registry can no longer accidentally retain dep-less DBT
+      handlers from the default registry path.
+    last_verified: '2026-04-14'
+  - task_id: TF-C3-E
+    parent_task: TF-C3
+    priority: P1
+    status: in_progress
+    objective: >-
+      close rollout, runbook, and acceptance truth for the standalone Temporal worker so the repo
+      not only contains the host topology but also tells operators how to validate and deploy it.
+    dependency: TF-C3-D
+    target: >-
+      The worker ships a canonical runbook and aligned planning surfaces, and the remaining gap is
+      limited to environment rollout or canary evidence rather than missing code topology.
+    complexity: S
+    effort_points: 3
+    progress_pct: 60
+    evidence_refs:
+      - docs/runbooks/temporal-worker-dbt-plugin-runtime-20260414.md
+      - docs/evidence/ED-20260414-tf-c3-production-temporal-worker-dbt-host.md
+      - docs/planning/closeouts/20260414-tf-c3-production-plugin-host-composition-closeout.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/tf-c3-production-plugin-host-composition-plan-20260414.md
+    status_reason: >-
+      The in-repo worker now has a runbook baseline and aligned planning truth, but rollout
+      acceptance and environment-level canary evidence still remain outside this implementation
+      slice.
+    last_verified: '2026-04-14'
+  - task_id: TF-C4
+    priority: P0
+    status: queued
+    objective: >-
+      implement the protected workspace graph-draft read/write boundary so editable Canvas graphs
+      persist through one tenant-scoped API and store path instead of browser-local state.
+    dependency: TF-A2, read-your-writes contract
+    target: >-
+      Protected workspace graph-draft routes validate the shared contract, enforce authorization and
+      tenant or workspace scope, enforce compare-and-swap against the authoritative revision, reject
+      stale writes with typed conflict outcomes, preserve idempotent retry semantics for the same
+      logical save attempt, distinguish writable versus read-only callers explicitly, emit or
+      reference auditable authorization and write outcomes, emit governed metrics and traces for the
+      protected draft path, preserve audit/observability join keys, migrate governed compatible
+      legacy draft versions, reject corrupt or unsupported drafts with typed outcomes, define
+      backfill or write-back behavior for stored draft evolution, persist canonical draft records in
+      the backend-owned store path, and give callers explicit read-your-writes behavior plus one
+      operator-facing recovery runbook.
+    complexity: M
+    effort_points: 5
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/tf-a2-workspace-graph-draft-persistence-boundary-plan-20260416.md
+      - docs/architecture/components/web/frontend-data-boundary-architecture.md
+      - docs/architecture/reference-architecture.md
+      - docs/runbooks/backend-mvp-control-plane-runbook-20260329.md
+      - docs/runbooks/read-your-writes-freshness-slo-20260330.md
+    status_reason: >-
+      Planned slice. Runtime admission and persistence work for editable graph drafts must wait for
+      `TF-A2` to freeze the shared contract and port semantics, after which Lane C will own the
+      protected API plus store-backed write boundary instead of leaving frontend callers on
+      browser-local persistence. The API slice is also explicitly responsible for compare-and-swap,
+      stale-write rejection, idempotent retry behavior, tenant-scoped authorization, audit and
+      observability correlation, protected-path metrics and traces, read-only capability outcomes,
+      schemaVersion migration and typed format-failure handling, and operator runbook readiness at
+      the protected boundary.
+    last_verified: '2026-04-16'
 dependency_notes:
   - >-
     `MVP-C1` is now closed because its accepted runbook artifact no longer carries an open
@@ -928,20 +1163,39 @@ dependency_notes:
     The 2026-04-02 principal deep architectural review adds `AR-C5` for adapter-call circuit
     breaking and health surfacing at the engine-adapter boundary.
   - >-
-    `MW-C1` is the P0 multi-workflow execution-layer blocker: abstract step execution in Temporal to
-    support non-dbt step kinds via StepActivityDispatcher.
+    `MW-C1`, `TF-C2-A`, `TF-C2-B`, and `AR-C6` now contribute accepted dispatcher, Postgres proof,
+    caller-visible runtime evidence, and converged native-cancel provider semantics. `TF-C2` is now
+    accepted as the first PostgreSQL-backed runtime vertical; downstream work has shifted to
+    repeatability discipline under `TF-D1`, phase-2 plugin-backed dbt dispatch under `TF-C3`, and
+    broader runtime boundary hardening rather than missing executor or read-surface behavior.
   - >-
-    `TF-C1..TF-C3` are now decomposed into route, persistence, executor, evidence, and phase-2 dbt
-    subtasks so runtime closure can progress in smaller slices without losing the same outer
-    contract.
+    `AR-C6` now explicitly splits the provider-native Temporal cancel implementation from the
+    follow-on cancel-lifecycle ownership truth-sync so runtime work does not keep expanding against
+    stale ADR and contract surfaces.
+  - >-
+    `TF-C1..TF-C3` are now decomposed into route, persistence, executor, evidence, and phase-2
+    plugin-backed dbt subtasks so runtime closure can progress in smaller slices without losing the
+    same outer contract.
+  - >-
+    `TF-C4` is the protected workspace graph-draft follow-up. It depends on `TF-A2` for the shared
+    contract freeze and on the `read-your-writes contract` for caller-visible freshness so Lane E
+    adopts a real backend-owned write path instead of continuing on UI-local persistence.
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
-  verified_on: '2026-04-05'
-  total_tasks: 35
-  total_effort_points: 132
-  completed_weighted_points: 50.3
-  lane_progress_pct: 38
+  verified_on: '2026-04-16'
+  total_tasks: 46
+  total_effort_points: 175
+  completed_weighted_points: 140.4
+  lane_progress_pct: 80
   notes: >-
-    Weighted progress uses effort_points. `RC-C2` currently contributes 33% execution evidence while
-    parent umbrella tasks with subtasks carry coordination-only effort.
+    Weighted progress uses effort_points. `MW-C1`, `TF-C2-A`, and `TF-C2-B` now contribute accepted
+    dispatcher, canonical proof, and caller-visible runtime-evidence closure rather than the older
+    queued-only posture. `TF-C2` is now closed with parent-level acceptance evidence, so remaining
+    runtime follow-through is repeatability/reset discipline (`TF-D1`), phase-2 plugin-backed dbt
+    dispatch (`TF-C3`), and broader hardening work rather than the first PostgreSQL vertical itself.
+    `TF-C3` is now in progress through the protected-runtime `RunExecutionContext` resolver slice
+    plus adapter-temporal DBT seam and fixture hardening, while production plugin-host composition
+    still remains open. `TF-C4` now reserves the protected workspace graph-draft read/write boundary
+    so backend-owned persistence is a blocking dependency for `TF-E2` instead of an implicit future
+    assumption.

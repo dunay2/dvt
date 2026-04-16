@@ -4,6 +4,7 @@ export * from './workflows.js';
 export * from './contracts/engine/IOutboxStorage.v1.js';
 export * from './contracts/engine/RunExecutionPolicy.v1.js';
 export * from './contracts/engine/RunExecutionContext.v1.js';
+export * from './contracts/engine/StartRunBoundary.v1.js';
 export {
   CURRENT_SIGNAL_SEMANTICS_VERSION,
   getSignalDerivedEventType,
@@ -27,9 +28,9 @@ export {
 } from './contracts/planner/PlanVersion.v1.js';
 export type { SupportedPlanVersion } from './contracts/planner/PlanVersion.v1.js';
 export type {
-  DbtManifestRef,
   ExecutionPlan,
   ExecutionStep,
+  ExecutionStepRetryPolicyV1,
   ExecutionStepV1,
   GenericGraphNodeV1,
   GenericGraphSourceV1,
@@ -42,6 +43,57 @@ export type {
   VersionedExecutionPlan,
   VersionedPlanCore,
 } from './contracts/planner/ExecutionPlan.v1.js';
+export { PREVIEW_PROFILE } from './contracts/planner/TransformationFlowPreview.v1.js';
+export type {
+  PlanPreviewPersistedRecord,
+  PlanPreviewPersistResponse,
+  PlanPreviewRequest,
+  PlanPreviewSummary,
+  PlanPreviewValidation,
+  PreviewProfile,
+  TransformationSqlFirstPlanPreviewPersistResponse,
+  TransformationSqlFirstPlanPreviewRequest,
+} from './contracts/planner/TransformationFlowPreview.v1.js';
+export {
+  TRANSFORMATION_DESIGN_GRAPH_SOURCE_FAMILY,
+  TRANSFORMATION_EXECUTION_TARGET,
+  TRANSFORMATION_SQL_FIRST_SOURCE_VERSION,
+  DesignGraphDraftSchema,
+  GitArtifactRefSchema,
+  PlanPreviewProvenanceSchema,
+} from './contracts/planner/TransformationFlowDesignGraph.v1.js';
+export type {
+  DesignGraphContext,
+  DesignGraphDraft,
+  DesignGraphEdge,
+  DesignGraphNode,
+  DesignGraphSinkNode,
+  DesignGraphSourceNode,
+  DesignGraphSqlTransformNode,
+  DesignNodeType,
+  GitArtifactRef,
+  PlanPreviewProvenance,
+  TransformationExecutionTarget,
+  TransformationSqlFirstGraphSourceV1,
+} from './contracts/planner/TransformationFlowDesignGraph.v1.js';
+export {
+  CaptureMaterializationEvidenceStepTypeConfigSchema,
+  PostgresSqlTransformStepTypeConfigSchema,
+  PreparePostgresTransformStepTypeConfigSchema,
+  TRANSFORMATION_STEP_KIND,
+  TransformationCompilerGraphNodeV1Schema,
+  TransformationSqlFirstCompilerGraphSourceSchema,
+  summarizeTransformationSqlFirstPlan,
+} from './contracts/planner/TransformationFlowCompiler.v1.js';
+export type {
+  CaptureMaterializationEvidenceStepTypeConfig,
+  PostgresSqlTransformStepTypeConfig,
+  PreparePostgresTransformStepTypeConfig,
+  TransformationCompilerGraphNodeV1,
+  TransformationSqlFirstCompilerGraphSourceV1,
+  TransformationSqlFirstPlanSummary,
+  TransformationStepKind,
+} from './contracts/planner/TransformationFlowCompiler.v1.js';
 export {
   ConcurrencyPolicySchema,
   MAX_RETRY_POLICY_ATTEMPTS,
@@ -120,6 +172,7 @@ export * from './schemas.js';
 export * from './step-registry/StepTypeRegistry.js';
 export * from './utils/jcsCanonicalize.js';
 export * from './utils/sha256HexUtf8.js';
+export * from './utils/contractPrimitives.js';
 export * from './validation.js';
 export type {
   AppendResult,
@@ -129,8 +182,6 @@ export type {
   EventIdempotencyInput,
   EventInput,
   EventType,
-  IPlanFetcher,
-  IPlanIntegrityValidator,
   ListEventsOptions,
   ListRunsOptions,
   ProviderRefUpdate,

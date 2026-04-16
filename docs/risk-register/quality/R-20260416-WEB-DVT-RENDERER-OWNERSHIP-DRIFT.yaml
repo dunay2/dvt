@@ -1,0 +1,28 @@
+---
+id: R-20260416-WEB-DVT-RENDERER-OWNERSHIP-DRIFT
+title: DVT authoring nodes can drift behind dbt-owned renderer and inspector behavior
+status: Open
+date: 2026-04-16
+owners:
+  - '@dvt/web'
+severity: Low
+probability: Low
+context: >
+  The follow-up fix for `dbt:source -> dvt:sql_transform -> dvt:sink` moved connection-rule
+  ownership to a dedicated `dvt` plugin and registered `dvt` node kinds separately. The current UI
+  surface still reuses `DbtNodeRenderer` for `dvt:sql_transform` and `dvt:sink`, and those nodes do
+  not yet have `dvt`-owned inspector panels or editing affordances.
+risk: >
+  If future product work adds DVT-specific node properties, validation, or inspector behavior
+  without first separating presentation ownership from dbt, `dvt` authoring nodes can inherit or
+  leak dbt-oriented copy, panel visibility, and renderer assumptions, creating subtle UX drift even
+  though connection ownership is now correct.
+mitigations:
+  - 'Connection ownership now lives in a dedicated `dvt` plugin instead of `dbt` cross-plugin rules.'
+  - 'Canvas connection evaluation is covered by real `getPluginPortMap()` + `evaluateConnection()`
+    tests.'
+  - 'The current `dvt` node set is intentionally narrow: SQL transform and sink only.'
+  - 'Future DVT-specific inspector or editor work should add `dvt`-owned panels instead of extending
+    dbt panels further.'
+review_after: 2026-06-16
+---

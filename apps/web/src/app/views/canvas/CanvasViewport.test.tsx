@@ -5,12 +5,21 @@ import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import CanvasViewport from './CanvasViewport';
+import {
+  DEFAULT_CANVAS_PALETTE_ID,
+  deriveCanvasPaletteTokens,
+  normalizeCanvasPaletteId,
+} from './canvasPalette';
 
 const mockResolveNodeKindRegistration = vi.hoisted(() => vi.fn());
 const xyflowState = vi.hoisted(() => ({
   miniMapNodeColor: null as null | ((node: { data?: unknown }) => string),
+  miniMapMaskColor: null as null | string,
+  miniMapMaskStrokeColor: null as null | string,
+  miniMapStyle: null as null | Record<string, unknown>,
   lastReactFlowProps: null as null | Record<string, unknown>,
   setViewport: vi.fn(),
+  fitView: vi.fn(),
 }));
 
 vi.mock('../../plugins/nodeTypeRegistry', () => ({
@@ -36,18 +45,31 @@ vi.mock('@xyflow/react', () => ({
         </div>
       );
     })(),
-  Background: ({ gap }: { gap: number }) => <div data-testid="background">gap:{gap}</div>,
+  Background: ({ color, gap }: { color?: string; gap: number }) => (
+    <div data-testid="background">
+      color:{color ?? 'none'}|gap:{gap}
+    </div>
+  ),
   Controls: () => <div data-testid="controls" />,
   MiniMap: ({
     nodeColor,
     pannable,
     zoomable,
+    maskColor,
+    maskStrokeColor,
+    style,
   }: {
     nodeColor: (node: { data?: unknown }) => string;
     pannable?: boolean;
     zoomable?: boolean;
+    maskColor?: string;
+    maskStrokeColor?: string;
+    style?: Record<string, unknown>;
   }) => {
     xyflowState.miniMapNodeColor = nodeColor;
+    xyflowState.miniMapMaskColor = maskColor ?? null;
+    xyflowState.miniMapMaskStrokeColor = maskStrokeColor ?? null;
+    xyflowState.miniMapStyle = style ?? null;
     return (
       <div
         data-testid="minimap"
@@ -58,6 +80,7 @@ vi.mock('@xyflow/react', () => ({
   },
   useReactFlow: () => ({
     setViewport: xyflowState.setViewport,
+    fitView: xyflowState.fitView,
   }),
 }));
 
@@ -68,10 +91,12 @@ function buildProps(
     focusMode: false,
     explorerPanelVisible: true,
     inspectorPanelVisible: true,
+    canEditEdges: true,
     nodesWithImpact: [],
     edges: [],
     nodeTypes: {},
     gridSize: 24,
+    canvasPalette: DEFAULT_CANVAS_PALETTE_ID,
     viewport: null,
     onNodesChange: vi.fn(),
     onNodeDragStop: vi.fn(),
@@ -82,6 +107,8 @@ function buildProps(
     onViewportChange: vi.fn(),
     onDrop: vi.fn(),
     onDragOver: vi.fn(),
+    importedNodeFocusIds: [],
+    onImportedNodeFocusComplete: vi.fn(),
     onShowExplorer: vi.fn(),
     onShowInspector: vi.fn(),
     ...overrides,
@@ -100,8 +127,12 @@ describe('CanvasViewport', () => {
       globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }
     ).IS_REACT_ACT_ENVIRONMENT = true;
     xyflowState.miniMapNodeColor = null;
+    xyflowState.miniMapMaskColor = null;
+    xyflowState.miniMapMaskStrokeColor = null;
+    xyflowState.miniMapStyle = null;
     xyflowState.lastReactFlowProps = null;
     xyflowState.setViewport.mockReset();
+    xyflowState.fitView.mockReset();
     mockResolveNodeKindRegistration.mockImplementation((kind: string) => ({
       minimapColor: kind === 'dbt:model' ? '#22c55e' : '#6b7280',
     }));
@@ -146,6 +177,10 @@ describe('CanvasViewport', () => {
   });
 
   it('hides restore buttons in focus mode and resolves minimap color from node registry', async () => {
+    const legacyCanvasPalette = 'blueprint';
+    const normalizedCanvasPalette = normalizeCanvasPaletteId(legacyCanvasPalette);
+    const expectedPaletteTokens = deriveCanvasPaletteTokens(normalizedCanvasPalette);
+
     await act(async () => {
       root.render(
         <CanvasViewport
@@ -154,13 +189,21 @@ describe('CanvasViewport', () => {
             explorerPanelVisible: false,
             inspectorPanelVisible: false,
             gridSize: 32,
+            canvasPalette:
+              legacyCanvasPalette as React.ComponentProps<typeof CanvasViewport>['canvasPalette'],
           })}
         />
       );
     });
 
+    const viewport = container.querySelector('[data-testid="canvas-viewport"]');
+    const viewportStyle = (viewport as HTMLDivElement).style;
+
     expect(container.querySelectorAll('button')).toHaveLength(0);
-    expect(container.textContent).toContain('gap:32');
+    expect(viewport?.getAttribute('data-canvas-palette')).toBe(normalizedCanvasPalette);
+    expect(viewportStyle.getPropertyValue('--canvas-surface')).toBe(expectedPaletteTokens.surface);
+    expect(viewportStyle.getPropertyValue('--canvas-grid')).toBe(expectedPaletteTokens.grid);
+    expect(viewportStyle.getPropertyValue('--canvas-grid-gap')).toBe('32px');
     expect(xyflowState.miniMapNodeColor).toBeTypeOf('function');
     expect(xyflowState.miniMapNodeColor?.({ data: { pluginKind: 'dbt:model' } })).toBe('#22c55e');
     expect(xyflowState.miniMapNodeColor?.({ data: {} })).toBe('#6b7280');
@@ -170,7 +213,13 @@ describe('CanvasViewport', () => {
       fitView: true,
       fitViewOptions: { padding: 0.2, maxZoom: 0.82 },
       minZoom: 0.35,
+      className: 'bg-[var(--canvas-surface)]',
+      nodesDraggable: true,
+      nodesConnectable: true,
     });
+    expect(xyflowState.miniMapMaskColor).toBe('var(--canvas-minimap-mask)');
+    expect(xyflowState.miniMapMaskStrokeColor).toBe('var(--canvas-minimap-mask-stroke)');
+    expect(xyflowState.miniMapStyle).toMatchObject({ borderRadius: 8 });
     const minimap = container.querySelector('[data-testid="minimap"]');
     expect(minimap?.getAttribute('data-pannable')).toBe('true');
     expect(minimap?.getAttribute('data-zoomable')).toBe('true');
@@ -195,5 +244,55 @@ describe('CanvasViewport', () => {
       { x: 120, y: 48, zoom: 0.68 },
       { duration: 0 }
     );
+  });
+
+  it('disables graph mutation, selection, and keyboard shortcuts when graph edits are gated', async () => {
+    await act(async () => {
+      root.render(
+        <CanvasViewport
+          {...buildProps({
+            canEditEdges: false,
+          })}
+        />
+      );
+    });
+
+    expect(xyflowState.lastReactFlowProps).toMatchObject({
+      nodesDraggable: false,
+      nodesConnectable: false,
+      nodesFocusable: false,
+      edgesFocusable: false,
+      elementsSelectable: false,
+      deleteKeyCode: null,
+      disableKeyboardA11y: true,
+      onNodesChange: undefined,
+      onEdgesChange: undefined,
+    });
+  });
+
+  it('fits the viewport around explicitly imported nodes only once', async () => {
+    const props = buildProps({
+      nodesWithImpact: [
+        { id: 'src_erp_orders', position: { x: 0, y: 0 }, data: {}, type: 'dbtNode' },
+        { id: 'src_erp_customers', position: { x: 240, y: 0 }, data: {}, type: 'dbtNode' },
+      ] as React.ComponentProps<typeof CanvasViewport>['nodesWithImpact'],
+      importedNodeFocusIds: ['src_erp_orders', 'src_erp_customers'],
+      onImportedNodeFocusComplete: vi.fn(),
+    });
+
+    await act(async () => {
+      root.render(<CanvasViewport {...props} />);
+    });
+
+    expect(xyflowState.fitView).toHaveBeenCalledWith({
+      nodes: expect.arrayContaining([
+        expect.objectContaining({ id: 'src_erp_orders' }),
+        expect.objectContaining({ id: 'src_erp_customers' }),
+      ]),
+      padding: 0.24,
+      maxZoom: 0.9,
+      duration: 300,
+    });
+    expect(props.onImportedNodeFocusComplete).toHaveBeenCalledTimes(1);
   });
 });

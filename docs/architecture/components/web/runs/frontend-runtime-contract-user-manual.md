@@ -2,7 +2,7 @@
 title: Frontend Runtime Contract User Manual
 status: Review
 owner: Frontend / Product
-last_reviewed: 2026-04-04
+last_reviewed: 2026-04-13
 domain: frontend
 ---
 
@@ -51,6 +51,12 @@ flowchart LR
 ### Run Detail (`/runs/:runId`)
 
 - single snapshot authority is `GET /runs/:runId`
+- the same snapshot may carry persisted plan identity and authoring provenance
+  for the run
+- completed snapshots show executor identity, sink table, rows written, and
+  started or completed timestamps from persisted snapshot fields
+- failed snapshots show executor identity, failed-step attribution, failure
+  reason or message, and failed-at timestamp from persisted snapshot fields
 - when only snapshot data is available, the UI shows a runtime snapshot state;
 - when events are available, timeline appears in the same run workspace context;
 - the route never invents step, artifact, or metrics detail from empty
@@ -64,6 +70,16 @@ flowchart LR
 - timeline is treated as supplemental run evidence, not as run-status authority
 - the dedicated timeline workbench remains a later convergence slice beyond the
   snapshot baseline
+
+### Shell Drawer Versus Runs Detail
+
+- the shell drawer is a quick live companion for the currently active run
+  stream;
+- the Runs detail route is the durable monitoring workspace for one run;
+- the shell drawer does not replace runtime snapshot, degraded timeline, or
+  failure-diagnostics treatment from `/runs/:runId`;
+- if an operator needs authoritative run explanation, they should use the Runs
+  workspace rather than the shell drawer.
 
 ## Failure Semantics For Operators
 
@@ -87,9 +103,10 @@ flowchart LR
 
 1. predictable run-start behavior
 2. one consistent run detail authority
-3. explicit separation between run snapshot and event timeline
-4. fewer ambiguous error messages during execution monitoring
-5. no fake detail panels that imply data the backend has not provided
+3. caller-visible linkage from authoring artifacts to persisted plan to outcome
+4. explicit separation between run snapshot and event timeline
+5. fewer ambiguous error messages during execution monitoring
+6. no fake detail panels that imply data the backend has not provided
 
 ## Related Pages
 

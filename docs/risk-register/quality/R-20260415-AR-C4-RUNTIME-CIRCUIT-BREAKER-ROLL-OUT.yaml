@@ -1,0 +1,29 @@
+---
+id: R-20260415-AR-C4-RUNTIME-CIRCUIT-BREAKER-ROLL-OUT
+title: Runtime circuit-breaker and worker operation tuning can drift after merge
+status: Open
+date: 2026-04-15
+owners:
+  - packages/@dvt/adapter-temporal
+  - apps/temporal-worker
+severity: Medium
+probability: Medium
+context: >
+  AR-C4 introduced a run-state command circuit breaker in `@dvt/adapter-temporal`, updated Temporal
+  worker operational wiring, and strengthened local integration execution defaults for
+  Postgres-backed runs.
+risk: >
+  If environment-specific thresholds, health-gate assumptions, or Temporal operation settings
+  diverge from validated repository defaults, runtime behavior can shift under sustained failure
+  pressure and lead to premature trip/open states or delayed recovery visibility.
+mitigations:
+  - 'Circuit-breaker behavior is covered by dedicated adapter tests and integrated in adapter
+    exports.'
+  - 'Temporal worker runtime startup and monitoring paths are covered by temporal-worker unit tests.'
+  - 'Integration-local commands now include deterministic Postgres URL fallbacks for reproducible
+    local verification.'
+  - 'Cancellation integration assertions now validate unique per-run bundle references instead of
+    raw runner invocation counts.'
+  - 'Pre-push governance checks and ARC validation were executed for this slice.'
+review_after: 2026-06-15
+---

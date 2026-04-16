@@ -25,8 +25,11 @@ describe('parseStartRunTargetAdapter', () => {
     expect(parseStartRunTargetAdapter('temporal')).toEqual({ ok: true, value: 'temporal' });
   });
 
-  it('accepts valid trimmed adapter value', () => {
-    expect(parseStartRunTargetAdapter('  mock  ')).toEqual({ ok: true, value: 'mock' });
+  it('rejects adapter values with surrounding whitespace', () => {
+    expect(parseStartRunTargetAdapter('  mock  ')).toEqual({
+      ok: false,
+      issue: { type: 'bad_request', reason: 'invalid_target_adapter', target: 'targetAdapter' },
+    });
   });
 
   it('rejects unsupported adapter value', () => {

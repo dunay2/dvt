@@ -2,7 +2,7 @@
 title: Frontend-Facing Backend MVP Contract (MVP-E1)
 status: Review
 owner: Frontend / API / Architecture
-last_reviewed: 2026-04-04
+last_reviewed: 2026-04-12
 domain: frontend
 lane: E
 task_id: MVP-E1
@@ -37,16 +37,26 @@ This contract is route-truth only. It does not introduce new backend behavior.
 
 ### Protected runtime routes (OIDC-gated)
 
-| Method | Path                  | Frontend intent          | Auth posture                                                         | Request shape (frontend-consumed)                                                       | Success shape (frontend-consumed)                                                    | Error envelope                                                             |
-| ------ | --------------------- | ------------------------ | -------------------------------------------------------------------- | --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ | -------------------------------------------------------------------------- |
-| `POST` | `/plans/preview`      | preview and persist plan | authenticated + action `run:start`                                   | `PlanPreviewInput` (`selectedNodeIds`, `context`, `persist: true`, optional `planName`) | `{ plan, planRef, planSummary?, persisted?, provenance? }` mapped to `ExecutionPlan` | `HttpErrorEnvelope` (`error.type`, `reason`, optional `target`, `details`) |
-| `POST` | `/plans/import`       | import persisted plan    | authenticated + action `run:start`                                   | `{ planRef, context }` via `plansService.importPlan`                                    | `{ plan, planRef }` mapped to `ExecutionPlan`                                        | `HttpErrorEnvelope`                                                        |
-| `POST` | `/runs/start`         | start run                | authenticated + action `run:start`                                   | `StartRunInput` (`planRef`, `context`) via `runsService.startRun`                       | `EngineRunRef` (`runId`)                                                             | `HttpErrorEnvelope`                                                        |
-| `GET`  | `/runs`               | list run summaries       | authenticated + action `run:list`                                    | query: `tenantId` required; `projectId`, `environmentId`, `limit`, `cursor` optional    | list payload mapped to `RunSummaryItem[]`                                            | `HttpErrorEnvelope`                                                        |
-| `GET`  | `/runs/:runId`        | fetch run snapshot       | authenticated + action `run:view`                                    | query: `tenantId` required; `enriched` optional                                         | snapshot payload mapped to `RunSnapshot` \| `null`                                   | `HttpErrorEnvelope`                                                        |
-| `GET`  | `/runs/:runId/events` | fetch run timeline page  | authenticated + action `run:logs:view`                               | query: `tenantId` required; `afterSeq`, `limit` optional                                | payload mapped to `RunEventTimelinePage` (`events`, `nextAfterSeq`)                  | `HttpErrorEnvelope`                                                        |
-| `POST` | `/runs/:runId/signal` | send run signal          | authenticated + action by signal type (`run:signal` or `run:cancel`) | body: `tenantId`, `signalType`, optional `reason`                                       | command acceptance or runtime command outcome                                        | `HttpErrorEnvelope`                                                        |
-| `POST` | `/runs/:runId/cancel` | cancel run               | authenticated + action `run:cancel`                                  | body: `tenantId`, optional `reason`                                                     | command acceptance or runtime command outcome                                        | `HttpErrorEnvelope`                                                        |
+| Method | Path                  | Frontend intent          | Auth posture                                                         | Request shape (frontend-consumed)                                                    | Success shape (frontend-consumed)                                                    | Error envelope                                                             |
+| ------ | --------------------- | ------------------------ | -------------------------------------------------------------------- | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------ | -------------------------------------------------------------------------- |
+| `POST` | `/plans/preview`      | preview and persist plan | authenticated + action `run:start`                                   | `PlanPreviewInput` via `plansService.previewPlan`                                    | `{ plan, planRef, planSummary?, persisted?, provenance? }` mapped to `ExecutionPlan` | `HttpErrorEnvelope` (`error.type`, `reason`, optional `target`, `details`) |
+| `POST` | `/plans/import`       | import persisted plan    | authenticated + action `run:start`                                   | `{ planRef, context }` via `plansService.importPlan`                                 | `{ plan, planRef }` mapped to `ExecutionPlan`                                        | `HttpErrorEnvelope`                                                        |
+| `POST` | `/runs/start`         | start run                | authenticated + action `run:start`                                   | `StartRunInput` (`planRef`, `context`) via `runsService.startRun`                    | `EngineRunRef` (`runId`)                                                             | `HttpErrorEnvelope`                                                        |
+| `GET`  | `/runs`               | list run summaries       | authenticated + action `run:list`                                    | query: `tenantId` required; `projectId`, `environmentId`, `limit`, `cursor` optional | list payload mapped to `RunSummaryItem[]`                                            | `HttpErrorEnvelope`                                                        |
+| `GET`  | `/runs/:runId`        | fetch run snapshot       | authenticated + action `run:view`                                    | query: `tenantId` required; `enriched` optional                                      | snapshot payload mapped to `RunSnapshot` \| `null`                                   | `HttpErrorEnvelope`                                                        |
+| `GET`  | `/runs/:runId/events` | fetch run timeline page  | authenticated + action `run:logs:view`                               | query: `tenantId` required; `afterSeq`, `limit` optional                             | payload mapped to `RunEventTimelinePage` (`events`, `nextAfterSeq`)                  | `HttpErrorEnvelope`                                                        |
+| `POST` | `/runs/:runId/signal` | send run signal          | authenticated + action by signal type (`run:signal` or `run:cancel`) | body: `tenantId`, `signalType`, optional `reason`                                    | command acceptance or runtime command outcome                                        | `HttpErrorEnvelope`                                                        |
+| `POST` | `/runs/:runId/cancel` | cancel run               | authenticated + action `run:cancel`                                  | body: `tenantId`; non-empty `reason` is rejected on the native cancel route          | command acceptance or runtime command outcome                                        | `HttpErrorEnvelope`                                                        |
+
+Preview-route rule:
+
+- `transformation-sql-first-v1` requires request-side `provenance.graphArtifact`
+  and `provenance.sqlArtifact`
+- frontend callers must materialize the current `DesignGraphDraft` authoring
+  artifact at the configured `graphArtifactPath` before calling preview and
+  hash that saved content for `provenance.graphArtifact.contentSha256`
+- frontend callers must fail closed when Git repo, graph artifact path, branch,
+  or commit are not explicitly configured for that profile
 
 ### Public operational routes (shell health contract)
 
@@ -94,6 +104,26 @@ In `api` mode, `ExecutionPlan.planRef` is backend-owned.
   if the envelope omits it.
 - `POST /runs/start` remains the only start authority and consumes that same
   immutable `PlanRef`.
+
+## Run provenance linkage contract
+
+`GET /runs/:runId` may expose one caller-visible provenance object in addition
+to snapshot outcome fields:
+
+- `provenance.persistedPlan.planRecordId`
+- `provenance.persistedPlan.planVersion`
+- `provenance.persistedPlan.sourceRef`
+- `provenance.persistedPlan.canonicalPlanSha256`
+- `provenance.authoring.graphArtifact`
+- `provenance.authoring.sqlArtifact`
+
+Rules:
+
+- persisted-plan provenance comes from the stored immutable plan record
+- authoring provenance is optional and only present when preview-time SQL-first
+  capture wrote it into the persisted canonical plan
+- timeline artifact refs from `GET /runs/:runId/events` remain execution-time
+  evidence, not authoring truth
 
 ## Canonical Envelope Examples
 

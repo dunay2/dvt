@@ -2,9 +2,9 @@
 
 **Status**: Normative (MUST / MUST NOT)  
 **Version**: 2.0.0  
-**Stability**: Contracts — breaking changes require major version bump  
+**Stability**: Contracts â€” breaking changes require major version bump  
 **Consumers**: Engine, adapters, projector pipelines  
-**Related Contracts**: [RunEvents.v2.0.md](../engine/RunEvents.v2.0.md), [ExecutionSemantics.v2.0.md](../engine/ExecutionSemantics.v2.0.md)
+**Related Contracts**: [RunEvents.v1.md](../engine/RunEvents.v1.md), [ExecutionSemantics.v1.md](../engine/ExecutionSemantics.v1.md)
 
 > NOTE
 > This markdown file is retained as a historical contract snapshot.
@@ -112,4 +112,4 @@ Implementations MUST enforce:
 
 ## 5) Change Log
 
-- **2.0.0 (2026-02-16)**: **MAJOR** — canonicalized write vs record split; made `eventId` REQUIRED; made attempts required numeric fields; standardized duplicate handling to return existing metadata; formalized `persistedAt` as append-authority timestamp.
+- **2.0.0 (2026-02-16)**: **MAJOR** â€” canonicalized write vs record split; made `eventId` REQUIRED; made attempts required numeric fields; standardized duplicate handling to return existing metadata; formalized `persistedAt` as append-authority timestamp.

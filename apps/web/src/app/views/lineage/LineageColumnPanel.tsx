@@ -31,9 +31,7 @@ export function LineageColumnPanel({ focusNode, columnLineage }: LineageColumnPa
           ))}
         </div>
       ) : (
-        <p className="text-sm text-slate-400">
-          {focusNode ? copy.noColumnMetadata : copy.selectNodeForColumns}
-        </p>
+        <p className="text-sm text-slate-400">{copy.noColumnMatchesMessage}</p>
       )}
     </Card>
   );

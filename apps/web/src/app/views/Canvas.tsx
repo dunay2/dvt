@@ -1,12 +1,130 @@
+import { useEffect } from 'react';
 import { ReactFlowProvider } from '@xyflow/react';
 
 import { ConfirmEdgeModal, PlanPreviewModal } from '../components/Modals';
-import type { ExecutionPlan } from '../types/dbt';
+import {
+  completeBootstrapScreen,
+  setBootstrapStepStatus,
+} from '../bootstrap/appBootstrapScreen';
+import {
+  CanvasBlockedStateView,
+  CanvasEmptyStateView,
+  CanvasErrorStateView,
+  CanvasLoadingStateView,
+  CanvasReadOnlyBannerView,
+} from './canvas/CanvasStateViews';
 import CanvasShell from './canvas/CanvasShell';
+import {
+  getCanvasReadOnlyState,
+  getCanvasWorkbenchState,
+} from './canvas/canvasWorkbenchStateModel';
+import { canvasViewCopy } from './canvas/copy';
 import { useCanvasController } from './canvas/useCanvasController';
 
 function CanvasContent() {
   const controller = useCanvasController();
+  const workbenchState = getCanvasWorkbenchState({
+    canonicalNodeCount: controller.explorerNodes.length,
+    isLoadingGraph: controller.isLoadingGraph,
+    graphErrorMessage: controller.graphErrorMessage,
+  });
+  const shouldBlockCanvasInApiMode = controller.dataSourceMode === 'api' && !controller.backendReady;
+  const shouldDisableCanvasInteractions = shouldBlockCanvasInApiMode || controller.isBackendCheckPending;
+  const isCanvasRuntimeBlocked = shouldDisableCanvasInteractions;
+  const effectiveUserPermissions = shouldDisableCanvasInteractions
+    ? {
+        ...controller.userPermissions,
+        canPlan: false,
+        canRun: false,
+        canEditEdges: false,
+      }
+    : controller.userPermissions;
+  const readOnlyState = isCanvasRuntimeBlocked
+    ? null
+    : getCanvasReadOnlyState(effectiveUserPermissions);
+  const isCanvasStartupPending =
+    controller.isBackendCheckPending || workbenchState.kind === 'loading';
+  const workbenchErrorMessage =
+    workbenchState.kind === 'error' ? workbenchState.message : null;
+
+  useEffect(() => {
+    if (isCanvasStartupPending) {
+      setBootstrapStepStatus(
+        'route',
+        'pending',
+        controller.isBackendCheckPending
+          ? 'Checking backend readiness for canvas'
+          : 'Loading workspace graph for canvas'
+      );
+      return;
+    }
+
+    if (workbenchState.kind === 'error') {
+      setBootstrapStepStatus(
+        'route',
+        'error',
+        workbenchErrorMessage || canvasViewCopy.routeErrorFallbackMessage
+      );
+      return;
+    }
+
+    if (shouldBlockCanvasInApiMode) {
+      setBootstrapStepStatus(
+        'route',
+        'blocked',
+        controller.backendBlockMessage ?? canvasViewCopy.backendBlockedFallbackMessage
+      );
+      return;
+    }
+
+    setBootstrapStepStatus(
+      'route',
+      'complete',
+      workbenchState.kind === 'empty' ? 'Canvas is ready with no graph content yet' : 'Canvas is ready'
+    );
+    completeBootstrapScreen();
+  }, [
+    controller.backendBlockMessage,
+    controller.isBackendCheckPending,
+    isCanvasStartupPending,
+    shouldBlockCanvasInApiMode,
+    workbenchErrorMessage,
+    workbenchState.kind,
+  ]);
+
+  function renderCenterSurface() {
+    if (controller.dataSourceMode === 'api' && controller.isBackendCheckPending) {
+      return (
+        <CanvasLoadingStateView
+          title={canvasViewCopy.backendLoadingTitle}
+          message={canvasViewCopy.backendLoadingMessage}
+        />
+      );
+    }
+
+    if (shouldBlockCanvasInApiMode) {
+      return (
+        <CanvasBlockedStateView
+          message={controller.backendBlockMessage ?? canvasViewCopy.backendBlockedFallbackMessage}
+        />
+      );
+    }
+
+    switch (workbenchState.kind) {
+      case 'loading':
+        return <CanvasLoadingStateView />;
+      case 'error':
+        return (
+          <CanvasErrorStateView
+            message={workbenchState.message || canvasViewCopy.routeErrorFallbackMessage}
+          />
+        );
+      case 'empty':
+        return <CanvasEmptyStateView />;
+      case 'ready':
+        return undefined;
+    }
+  }
 
   return (
     <>
@@ -18,12 +136,13 @@ function CanvasContent() {
         inspectorNode={controller.inspectorNode}
         activeRunId={controller.activeRunId}
         registeredPlugins={controller.registeredPlugins}
-        userPermissions={controller.userPermissions}
+        userPermissions={effectiveUserPermissions}
         canvasAuthoringMode={controller.canvasAuthoringMode}
         nodesWithImpact={controller.nodesWithImpact}
         edges={controller.edges}
         nodeTypes={controller.nodeTypes}
         gridSize={controller.gridSize}
+        canvasPalette={controller.canvasPalette}
         viewport={controller.viewport}
         onNodesChange={controller.onNodesChange}
         onNodeDragStop={controller.handleNodeDragStop}
@@ -34,6 +153,9 @@ function CanvasContent() {
         onViewportChange={controller.handleViewportChange}
         onDrop={controller.handleDrop}
         onDragOver={controller.handleDragOver}
+        onSourceImportComplete={controller.handleSourceImportComplete}
+        importedNodeFocusIds={controller.importedNodeFocusIds}
+        onImportedNodeFocusComplete={controller.handleImportedNodeFocusComplete}
         onHideExplorer={controller.hideExplorerPanel}
         onShowExplorer={controller.showExplorerPanel}
         onHideInspector={controller.hideInspectorPanel}
@@ -55,12 +177,14 @@ function CanvasContent() {
         impactOverlayEnabled={controller.impactOverlayEnabled}
         columnLevelLineageEnabled={controller.columnLevelLineageEnabled}
         transformationValidation={controller.transformationValidation}
+        centerSurface={renderCenterSurface()}
+        readOnlyBanner={<CanvasReadOnlyBannerView state={readOnlyState} />}
       />
 
       <PlanPreviewModal
         open={controller.planModalOpen}
         onClose={() => controller.setPlanModalOpen(false)}
-        plan={controller.currentPlan as ExecutionPlan | null}
+        plan={controller.currentPlan}
         startRunDisabled={!controller.canStartRun}
         startRunMessage={controller.planStatusSummary}
         onStartRun={() => {

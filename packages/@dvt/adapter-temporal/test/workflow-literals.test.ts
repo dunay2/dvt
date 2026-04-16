@@ -28,7 +28,8 @@ describe('workflow literal parity', () => {
   it('keeps gateway DSL evaluation outside workflow code (activity boundary)', () => {
     expect(src).not.toContain('parseDslV1');
     expect(src).not.toContain('evaluateDslV1');
-    expect(src).toContain('activities.executeStep({');
+    expect(src).toContain('createStepActivities(args.step).executeStep({');
+    expect(src).toContain('eventActivities.emitEvent({');
     expect(src).toContain('gatewayContext');
   });
 });

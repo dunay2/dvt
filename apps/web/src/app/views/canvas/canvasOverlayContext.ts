@@ -9,7 +9,7 @@ import type { CanvasOverlayContribution } from '../../plugins/contracts/NodeRend
 import { mergeDecorations } from '../../plugins/mergeDecorations';
 import type { NodeCostData } from '../../plugins/contracts/PluginServices';
 import type { CanonicalNode } from '../../types/canonical';
-import type { RunStatusSnapshot } from '../../types/engine';
+import type { CanonicalRunStatus } from '../../types/engine';
 
 // ---------------------------------------------------------------------------
 // buildImpactSets — BFS upstream/downstream from all selected nodes
@@ -64,7 +64,7 @@ function buildImpactSets(
 export function buildOverlayContext(
   edges: Edge[],
   selectedNodeIds: string[],
-  activeRun: RunStatusSnapshot | null,
+  activeRun: CanonicalRunStatus | null,
   runStatusByNodeId: ReadonlyMap<string, string>,
   costByNodeId: ReadonlyMap<string, NodeCostData>
 ): OverlayContext {

@@ -20,8 +20,8 @@ export function parseStoredExecutablePlan(
     });
   } catch (error) {
     if (error instanceof PlanVerifierError) {
-      throw new Error(`${error.code}: ${error.message}`);
+      throw new Error(`${error.code}: ${error.message}`, { cause: error });
     }
-    throw new Error('INVALID_EXECUTABLE_PLAN');
+    throw new Error('INVALID_EXECUTABLE_PLAN', { cause: error });
   }
 }

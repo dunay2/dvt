@@ -2,7 +2,7 @@ lane_id: E
 title: Frontend And UI
 owner: Product / UX / Frontend
 status: Active
-last_reviewed: '2026-04-08'
+last_reviewed: '2026-04-16'
 goal: >-
   Evolve apps/web from a mixed mock prototype into an operational UI whose contracts, state
   boundaries, diagrams, and validation match the real backend surface.
@@ -166,24 +166,36 @@ tasks:
     last_verified: '2026-04-04'
   - task_id: F-01
     priority: P1
-    status: queued
+    status: in_progress
     objective: >-
-      clean up the shell - remove redundant sidebar headers, keep nav icon-only with tooltips, unify
-      secondary controls into a contextual menu.
+      clean up shell chrome so the top bar keeps only global context, the Canvas toolbar uses
+      compact signals instead of verbose prose, and secondary controls live in a contextual menu.
     dependency: none
     target: >-
-      Shell navigation is icon-only with tooltips. No persistent sidebar text labels. TopBar
-      secondary controls are collapsed into a single contextual menu. Canvas area gains visible
-      vertical space.
+      TopBar exposes global context, active surface context, health, and real view controls only.
+      Canvas toolbar uses compact operational chips plus plan and run actions without long helper
+      prose. Degraded and offline shell health render as a compact status strip. Canvas area gains
+      visible vertical space.
     complexity: M
     effort_points: 5
-    progress_pct: 0
+    progress_pct: 55
     evidence_refs:
       - docs/planning/proposals/frontend-roadmap-20260219.md
+      - docs/architecture/components/web/workbench-ui-contract-and-component-inventory.md
+      - docs/architecture/components/web/screen-layout-and-cross-surface-behavior-rules.md
+      - docs/architecture/components/web/iconography-and-design-tokens-contract.md
       - docs/planning/state/lane-e-shell-baseline-target-guide.md
-    status_reason:
-      Shell cleanup is still a planned lane-E slice with no implementation evidence in this pass.
-    last_verified: '2026-03-31'
+      - docs/planning/closeouts/20260414-shell-chrome-signal-compaction-closeout.md
+      - apps/web/src/app/components/TopAppBar.tsx
+      - apps/web/src/app/components/ShellHealthBanner.tsx
+      - apps/web/src/app/views/canvas/CanvasToolbar.tsx
+    status_reason: >-
+      The shell cleanup slice is now active with docs-first rationale and a first implementation
+      pass: fake shell-menu actions were removed, the top bar now exposes route context plus real
+      view controls, the global health banner is compact, and the Canvas toolbar status line is
+      reduced to compact operational chips. Remaining work is left-rail convergence and broader
+      route-toolbar extraction under shared workbench primitives.
+    last_verified: '2026-04-14'
   - task_id: F-02
     priority: P0
     status: done
@@ -209,19 +221,32 @@ tasks:
     last_verified: '2026-03-31'
   - task_id: F-03
     priority: P0
-    status: review
-    objective: wire real backend health state into the top bar and a global degraded/offline banner.
+    status: in_progress
+    objective: >-
+      wire real backend health state into the top bar, a global degraded/offline banner, and the
+      unified Raven startup bootstrap that gates the first route.
     dependency: F-02
     target: >-
       TopAppBar shows ok/degraded/offline from real API. A persistent banner appears in degraded and
-      offline states with retry and backoff. No mock connectivity state anywhere in the shell.
+      offline states with retry and backoff. Startup keeps one Raven surface visible until
+      capabilities, platform health, and the first route settle, and blocked readiness states do not
+      reveal misleading workbench content. No mock connectivity state anywhere in the shell.
     complexity: M
     effort_points: 5
-    progress_pct: 96
+    progress_pct: 98
     evidence_refs:
       - docs/planning/proposals/nice-to-have/frontend-and-ux/mvp-e1-f03-frontend-backend-contract-and-health-plan-20260404.md
       - docs/architecture/components/web/runs/frontend-backend-mvp-contract.md
+      - docs/architecture/components/web/workbench-ui-contract-and-component-inventory.md
+      - docs/architecture/components/web/screen-layout-and-cross-surface-behavior-rules.md
+      - docs/architecture/components/web/frontend-runtime-modes-user-manual.md
+      - docs/planning/state/lane-e-shell-baseline-target-guide.md
+      - docs/planning/closeouts/20260414-unified-raven-startup-bootstrap-closeout.md
       - apps/web/src/app/Root.tsx
+      - apps/web/src/app/AppRouteErrorBoundary.tsx
+      - apps/web/src/app/AppProviders.tsx
+      - apps/web/src/app/bootstrap/appBootstrapScreen.ts
+      - apps/web/src/app/views/Canvas.tsx
       - apps/web/src/app/components/TopAppBar.tsx
       - apps/web/src/app/components/ShellHealthBanner.tsx
       - apps/web/src/capabilities/platform-health/presentation/usePlatformHealthSnapshotQuery.ts
@@ -233,8 +258,11 @@ tasks:
     status_reason: >-
       F-03-A, F-03-B, and F-03-C are now explicit: canonical state machine, deterministic
       retry/backoff policy, and one presenter seam driving both top bar and banner from the same
-      health model. Negative-path coverage and final closure checks remain in review.
-    last_verified: '2026-04-04'
+      health model. The remaining active closure slice is startup ownership: replace stacked
+      loading/error surfaces with one Raven bootstrap screen that reports ordered startup progress,
+      keeps blocked routes hidden until they are truly operable, and hands off into the shell only
+      once the first route reaches an allowed terminal state.
+    last_verified: '2026-04-14'
   - task_id: F-04
     priority: P0
     status: in_progress
@@ -268,7 +296,8 @@ tasks:
       `F-04-RISK-B` now isolates mutable mock workspace state per service instance with an explicit
       shared-state seam plus instance-local file-tree discoverability with unique workspace paths
       for newly saved files. Documentary hard QA found no blocking issues. The remaining open work
-      is final residual cleanup under `F-04-RESIDUAL`.
+      is parent-level acceptance and closure consolidation across the `F-04` chain rather than
+      residual implementation.
     definition_of_done:
       - F-04-A through F-04-F are all review or done with evidence refs
       - route-level views no longer decide data-source mode directly
@@ -315,7 +344,7 @@ tasks:
       migration chain, and system-level improvements.
     complexity: M
     effort_points: 3
-    progress_pct: 80
+    progress_pct: 85
     evidence_refs:
       - docs/architecture/components/web/frontend-data-boundary-architecture.md
       - docs/architecture/components/web/index.md
@@ -430,7 +459,7 @@ tasks:
   - task_id: F-04-F
     parent_task: F-04
     priority: P0
-    status: review
+    status: done
     objective: >-
       remove direct resolveDataSource, createRunsService, createWorkspaceService,
       createPlansService, and raw fetch usage from route-level view and query surfaces.
@@ -457,19 +486,19 @@ tasks:
     status_reason: >-
       TDD-first guard tests now exist and pass, `useCapabilitiesQuery` consumes a composition-owned
       `CapabilitiesPort`, and route/query surfaces no longer rely on raw capability transport or
-      direct mode/service-factory ownership. Documentary hard QA found no blocking issues; the slice
-      remains in `review` pending normal commit/PR publication rather than further implementation.
+      direct mode/service-factory ownership. Documentary hard QA found no blocking issues, and the
+      slice is implementation-complete with closure recorded in its closeout and hard-QA surfaces.
     definition_of_done:
       - no route-level view or controller imports resolveDataSource
       - no route-level view imports createRunsService/createWorkspaceService/createPlansService
       - capabilities query uses governed client boundary instead of raw fetch
       - failing guard tests are defined before code rewiring (TDD red phase)
       - route/query tests and typecheck pass after implementation (green + refactor phases)
-    last_verified: '2026-04-07'
+    last_verified: '2026-04-13'
   - task_id: F-04-RISK
     parent_task: F-04
     priority: P1
-    status: review
+    status: done
     objective: >-
       close the active risk findings from the hard QA pass of the data-source service boundary
       implementation.
@@ -494,13 +523,13 @@ tasks:
       branch (`F-04-RISK-A`) is closed in code and review, and `F-04-RISK-B` now hardens the mock
       workspace adapter so mutable state is isolated by default and shared only through an explicit,
       tested seam, including unique file-tree paths and discoverability for newly saved paths.
-      Documentary hard QA found no blocking issues. The parent risk chain is ready for normal
-      review/PR flow.
-    last_verified: '2026-04-07'
+      Documentary hard QA found no blocking issues, and the parent risk chain is now closure-backed
+      in planning.
+    last_verified: '2026-04-13'
   - task_id: F-04-RISK-A
     parent_task: F-04-RISK
     priority: P1
-    status: review
+    status: done
     objective: >-
       remove mock-only PlanRef semantics from the shared start-run flow so API mode no longer
       depends on placeholder plan identity fields.
@@ -521,11 +550,11 @@ tasks:
       QA-01 through QA-04 are now closed. The shared start-run path no longer depends on mock-only
       `PlanRef` construction, preview/import payloads carry backend-owned canonical `planRef`, and
       the web adapter path is regression-tested for both preview and import envelopes.
-    last_verified: '2026-04-07'
+    last_verified: '2026-04-13'
   - task_id: F-04-RISK-A-QA-03
     parent_task: F-04-RISK-A
     priority: P1
-    status: review
+    status: done
     objective: >-
       move planRef ownership to backend plan preview/import payload and remove frontend PlanRef
       synthesis from the API plans adapter.
@@ -554,11 +583,11 @@ tasks:
       - frontend API adapter does not synthesize PlanRef
       - start-run path remains fail-closed when planRef is absent
       - '`@dvt/web` tests and typecheck pass and `pnpm verify:prepush` is green'
-    last_verified: '2026-04-07'
+    last_verified: '2026-04-13'
   - task_id: F-04-RISK-B
     parent_task: F-04-RISK
     priority: P1
-    status: review
+    status: done
     objective: >-
       isolate mock workspace graph state per service or per test seam to prevent cross-instance
       mutation bleed.
@@ -582,11 +611,11 @@ tasks:
       provides an explicit opt-in shared-state seam for tests that require it. Newly saved file
       paths now enter the instance-local file tree, and the default mock tree no longer duplicates
       nested workspace paths. Documentary hard QA found no blocking issues.
-    last_verified: '2026-04-07'
+    last_verified: '2026-04-13'
   - task_id: F-04-RESIDUAL
     parent_task: F-04
     priority: P2
-    status: review
+    status: done
     objective: >-
       close residual quality drifts after the boundary refactor, focused on test seam policy and
       shell UX contract consistency.
@@ -606,16 +635,16 @@ tasks:
       - docs/planning/closeouts/F-04-RESIDUAL-B-provider-override-test-seams-closeout.md
       - docs/planning/reviews/20260408-f04-residual-a-root-provider-guard-hard-qa-review.md
     status_reason: >-
-      Residual cleanup is now functionally complete and pending final acceptance review:
+      Residual cleanup is now functionally complete and accepted at the planning layer:
       `F-04-RESIDUAL-A` moved Root-level provider ownership to the real shell entrypoint and added a
       direct integration guard, `F-04-RESIDUAL-B` rewired `useCanvasController` consumer tests to
       provider overrides, and `F-04-RESIDUAL-C` normalized API-mode console empty-state copy to
       product language without internal planning terminology.
-    last_verified: '2026-04-08'
+    last_verified: '2026-04-13'
   - task_id: F-04-RESIDUAL-A
     parent_task: F-04-RESIDUAL
     priority: P2
-    status: review
+    status: done
     objective: >-
       add a Root-level shell integration guard so provider wiring regressions fail fast.
     dependency: F-04-RESIDUAL
@@ -634,11 +663,11 @@ tasks:
       `Root` now owns `AppServicesProvider` in runtime code, `App` no longer shadows that ownership,
       and the dedicated integration guard mounts `Root` directly so provider regression fails fast
       at the real shell boundary. Documentary hard QA found no blocking residual-A defects.
-    last_verified: '2026-04-08'
+    last_verified: '2026-04-13'
   - task_id: F-04-RESIDUAL-B
     parent_task: F-04-RESIDUAL
     priority: P2
-    status: review
+    status: done
     objective: >-
       refit canvas controller tests to provider overrides so test seams match the documented
       boundary contract.
@@ -659,11 +688,11 @@ tasks:
       overrides, the controller tests assert those provider-owned identities reach execution seams,
       and `AppServicesContext` override coverage now includes session and feedback ports. Hard QA
       follow-up remains separate.
-    last_verified: '2026-04-08'
+    last_verified: '2026-04-13'
   - task_id: F-04-RESIDUAL-C
     parent_task: F-04-RESIDUAL
     priority: P3
-    status: review
+    status: done
     objective: >-
       normalize API-mode console copy to product language and remove process-internal roadmap
       wording.
@@ -681,7 +710,7 @@ tasks:
       API-mode console empty-state copy now uses product-facing wording about run events and
       explicitly states that live log streaming is not yet available in API mode, without exposing
       internal roadmap or implementation-slice language.
-    last_verified: '2026-04-08'
+    last_verified: '2026-04-13'
   - task_id: F-05
     priority: P0
     status: in_progress
@@ -949,7 +978,7 @@ tasks:
   - task_id: F-07-B
     parent_task: F-07
     priority: P0
-    status: review
+    status: done
     objective: >-
       create failing service tests that codify the runtime route and error expectations before
       implementation changes.
@@ -972,11 +1001,11 @@ tasks:
       - listRunEvents test validates GET /runs/:runId/events
       - legacy /runs/:runId/status behavior is rejected or absent from accepted API tests
       - error tests cover 401, 403, 404, 409, 422, and 5xx categories
-    last_verified: '2026-04-04'
+    last_verified: '2026-04-13'
   - task_id: F-07-C
     parent_task: F-07
     priority: P0
-    status: review
+    status: done
     objective: >-
       align runsService runtime endpoints to the protected route map and update consumers to the new
       contract behavior.
@@ -1000,7 +1029,7 @@ tasks:
       - no active consumer depends on /runs/:runId/status
       - runs route composes snapshot plus timeline via facade without fake detail fields
       - route ownership and shell topology remain unchanged
-    last_verified: '2026-04-04'
+    last_verified: '2026-04-13'
   - task_id: F-07-D
     parent_task: F-07
     priority: P1
@@ -1028,7 +1057,7 @@ tasks:
   - task_id: F-07-E
     parent_task: F-07
     priority: P1
-    status: review
+    status: done
     objective: >-
       validate docs and planning outputs for the F-07 docs-first baseline and keep generated views
       in sync.
@@ -1049,11 +1078,11 @@ tasks:
       - pnpm docs:workboard:generate passes
       - pnpm docs:workboard:check passes
       - pnpm docs:sync:check passes
-    last_verified: '2026-04-04'
+    last_verified: '2026-04-13'
   - task_id: F-07-F
     parent_task: F-07
     priority: P1
-    status: review
+    status: done
     objective: >-
       complete the TDD implementation verification baseline and hand off to F-08 through F-11.
     dependency: F-07-C, F-07-D, F-07-E
@@ -1075,7 +1104,7 @@ tasks:
       - pnpm --filter @dvt/web typecheck passes
       - pnpm verify:prepush passes
       - F-08 through F-11 dependencies reference the updated F-07 baseline
-    last_verified: '2026-04-04'
+    last_verified: '2026-04-13'
   - task_id: F-08
     priority: P1
     status: blocked
@@ -1099,7 +1128,7 @@ tasks:
     last_verified: '2026-04-03'
   - task_id: F-09
     priority: P1
-    status: blocked
+    status: in_progress
     objective:
       wire RunsView to real GET /runs and GET /runs/:id data - list, detail, and status polling.
     dependency: F-06, F-07
@@ -1108,16 +1137,25 @@ tasks:
       when available. Empty states, loading, and error states are implemented.
     complexity: M
     effort_points: 5
-    progress_pct: 0
+    progress_pct: 80
     evidence_refs:
       - docs/planning/proposals/frontend-roadmap-20260219.md
+      - apps/web/src/app/views/RunsView.tsx
+      - apps/web/src/app/views/runs/useRunWorkspace.ts
+      - apps/web/src/app/components/workbench/state/WorkbenchStates.tsx
+      - apps/web/src/app/queries/runsQueries.ts
+      - apps/web/src/app/services/runs/runWorkspaceFacade.ts
     status_reason: >-
-      Real runs list and detail wiring depends on the governed DTO baseline and consistent query
-      patterns before it can become an operational surface.
-    last_verified: '2026-04-03'
+      RunsView now consumes real run list and run-detail surfaces via scoped summaries query plus
+      `RunWorkspaceFacade` over governed runtime reads, the route chooses explicit workbench states
+      for list-error, empty, loading, missing, focused-run error, and workspace treatment, and those
+      route states now seed shared workbench state primitives instead of remaining fully route-local
+      chrome. Remaining closure is status-refresh policy, broader primitive adoption, and final
+      acceptance of polling/SSE behavior rather than missing runtime wiring.
+    last_verified: '2026-04-13'
   - task_id: F-10
     priority: P1
-    status: blocked
+    status: in_progress
     objective: >-
       implement a run event timeline using GET /runs/:id/events (polling or SSE) and unify the
       Console with real log output.
@@ -1127,13 +1165,20 @@ tasks:
       across reconnects. Log entries have timestamp, step, and severity.
     complexity: M
     effort_points: 5
-    progress_pct: 0
+    progress_pct: 60
     evidence_refs:
       - docs/planning/proposals/frontend-roadmap-20260219.md
+      - docs/architecture/components/web/appshell/app-shell.md
+      - docs/architecture/components/web/runs/frontend-runtime-contract-technical-manual.md
+      - apps/web/src/app/components/console/useConsoleLogStream.ts
+      - apps/web/src/app/views/runs/RunWorkspaceStateView.tsx
+      - apps/web/src/app/services/runs/runEventPresentationModel.ts
     status_reason: >-
-      Event timeline and console convergence remain blocked until the real runs surface is governed
-      and the runtime events contract is available to the UI.
-    last_verified: '2026-04-03'
+      Console and Runs timeline now consume real `GET /runs/:runId/events` surfaces, and log lines
+      already carry timestamp, severity, and step identity for the active run. Remaining closure is
+      durable reconnect or live-refresh guarantees across both surfaces, typed live-log behavior,
+      and final convergence UX rather than runtime contract availability.
+    last_verified: '2026-04-13'
   - task_id: F-11
     priority: P2
     status: blocked
@@ -1467,16 +1512,21 @@ tasks:
       and implementation choice between structured log panels and xterm.js-backed streaming view.
     complexity: S
     effort_points: 3
-    progress_pct: 0
+    progress_pct: 40
     evidence_refs:
       - docs/architecture/components/web/ux-implementation-guide.md
       - docs/architecture/components/web/observability/front-observability-architecture-dvt.md
+      - docs/architecture/components/web/appshell/app-shell.md
+      - docs/architecture/components/web/runs/frontend-runtime-contract-technical-manual.md
+      - apps/web/src/app/services/runs/runEventPresentationModel.ts
     status_reason: >-
       The shell already has a console drawer and the current frontend includes an xterm-backed
-      implementation, but there is still no accepted governed slice for typed live-log behavior,
-      run-log UX states, or the authority boundary between structured logs and terminal-grade
-      streaming.
-    last_verified: '2026-04-03'
+      implementation. The authority split between shell live-stream companionship and Runs workspace
+      snapshot-plus-timeline monitoring is now documented, and shared event presentation semantics
+      now align level, headline key, shared headline copy, detail, and step identity across drawer
+      and timeline surfaces. Typed live-log behavior, richer run-log UX states, and the final
+      structured-versus-terminal presentation choice remain open in the F-10/F-18 convergence chain.
+    last_verified: '2026-04-10'
   - task_id: F-19
     priority: P2
     status: in_progress
@@ -1549,7 +1599,7 @@ tasks:
     last_verified: '2026-04-03'
   - task_id: F-22
     priority: P1
-    status: review
+    status: done
     objective: >-
       publish the governed document set for the SQL-first execution-first transformation product,
       including the decision register, architecture and contract model, renderable diagrams,
@@ -1563,13 +1613,14 @@ tasks:
       suitable for downstream implementation slicing.
     complexity: S
     effort_points: 3
-    progress_pct: 99
+    progress_pct: 100
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/plan-creation-interface-route-proposal-20260405.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-product-decisions-20260405.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
       - docs/planning/closeouts/20260408-tf-c1-b-preview-profile-contract-closeout.md
+      - docs/planning/closeouts/20260413-f22-sql-first-transformation-handoff-closeout.md
       - docs/architecture/components/web/screen-manuals-and-user-stories.md
       - docs/architecture/components/web/ux-implementation-guide.md
     status_reason: >-
@@ -1577,9 +1628,9 @@ tasks:
       SQL-first execution, design-graph planning input, explicit `previewProfile` routing,
       one-provider-per-plan semantics for v1, PostgreSQL as the first data target, Docker PostgreSQL
       as the first proof environment, Git-first artifacts, phase-2 dbt as a later provider profile,
-      and cross-lane execution ownership. Remaining work is implementation review and acceptance,
-      not roadmap ambiguity.
-    last_verified: '2026-04-08'
+      and cross-lane execution ownership. The handoff package is now explicitly accepted as the
+      governing baseline for downstream `TF-A1`, `TF-C1`, and `TF-E1` implementation slices.
+    last_verified: '2026-04-13'
   - task_id: F-23
     priority: P1
     status: in_progress
@@ -1610,6 +1661,109 @@ tasks:
       - docs, route ownership, and runtime expectations remain aligned with the Git-mode
         architecture
     last_verified: '2026-04-07'
+  - task_id: F-24
+    priority: P1
+    status: in_progress
+    objective: >-
+      formalize the operator-workbench visual system and token-convergence path so the shell,
+      canvas, Monaco, and dense route surfaces stop mixing semantic tokens with route-level visual
+      hardcodes.
+    dependency: F-15
+    target: >-
+      A governed operator-workbench visual system defines token usage, density modes, route-header
+      and panel primitives, React Flow and Monaco theming rules, and the migration path away from
+      route-level `slate-*` and hex hardcodes in the main product surfaces.
+    complexity: M
+    effort_points: 5
+    progress_pct: 75
+    evidence_refs:
+      - docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/README.md
+      - docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/docs/04-visual-system-and-style-guide.md
+      - docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/docs/06-impact-matrix.md
+      - docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/docs/07-rollout-plan.md
+      - docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/docs/08-doc-and-code-drift-notes.md
+      - docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/docs/09-wireframes-and-layouts.md
+      - docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/docs/10-governed-slice-extraction-and-lane-e-mapping.md
+      - docs/architecture/components/web/workbench-ui-contract-and-component-inventory.md
+      - apps/web/src/app/components/domain/ViewHeader.tsx
+      - apps/web/src/app/components/workbench/RouteWorkbenchFrame.tsx
+      - apps/web/src/app/views/AdminView.tsx
+      - apps/web/src/app/views/ArtifactsView.tsx
+      - apps/web/src/app/views/CodeView.tsx
+      - apps/web/src/app/views/DiffView.tsx
+      - apps/web/src/app/views/LineageView.tsx
+      - apps/web/src/styles/theme.css
+    status_reason: >-
+      The bundle is normalized in English and now governs an explicit `RouteWorkbenchFrame` v1
+      contract instead of an over-broad future shape: header and summary bands stay outside the
+      scroll-owned body, `scroll={false}` remains available for split-pane routes, and contextual
+      side panels remain future primitives. The implementation restores `Diff` summary ownership to
+      the header stack, fixes the shared field token so it works on neutral elements like compare
+      pills, applies shared tab and Monaco tokens across the first `Diff` and `Artifacts` cleanup
+      slice, now moves the shell top bar plus left navigation rail away from route-level `slate-*`
+      chrome into governed shell tokens, extracts the shared shell controls under
+      `components/shell/*`, and routes left-rail navigation through an explicit shell navigation
+      model so the rail no longer knows plugin view internals or fixed footer item ownership. The
+      shell layout itself now lives in an explicit `AppShellFrame` instead of remaining embedded in
+      `Root.tsx`, while preserving focus-mode rail hiding and bottom-console drawer ownership.
+      Root-shell characterization now covers top-bar presence, navigation order, focus-mode rail
+      hiding, stable shell-control seams, frame-owned console rendering, and a shell-owned bottom
+      drawer state model for `idle`, `loading`, and `streaming` console states. Remaining work is
+      broader panel, table, Canvas, and deeper Monaco convergence across the rest of the operator
+      path.
+    definition_of_done:
+      - operator-workbench tokens and density modes are documented in active frontend governance
+      - route-level hardcode cleanup targets are mapped to concrete surfaces and components
+      - Monaco and React Flow visual integration rules are documented without changing shell
+        ownership
+      - downstream implementation slices can remove route-level `slate-*` and hex usage without
+        inventing a parallel style system
+      - the shared frame documents its v1 scope precisely and does not imply left or right panels
+        that do not exist yet
+      - header bands, summary bands, and scroll-owned bodies preserve prior route behavior unless a
+        governed UX change says otherwise
+      - shared field or tab tokens work on both primitives and neutral elements used in route chrome
+      - tests cover the frame scroll contract and at least one route-level header or body ownership
+        assertion
+    last_verified: '2026-04-09'
+  - task_id: F-25
+    priority: P1
+    status: in_progress
+    objective: >-
+      formalize the plugin UX integration contract and governed docks so plugin contributions extend
+      the shell predictably instead of deforming route chrome or inventing local integration rules.
+    dependency: F-15
+    target: >-
+      A governed plugin UX contract defines allowed docks, route metadata, route-header
+      contributions, local-toolbar rules, inspector rules, bottom-diagnostics contributions,
+      command-palette contributions, and plugin readiness semantics for frontend surfaces.
+    complexity: S
+    effort_points: 3
+    progress_pct: 50
+    evidence_refs:
+      - docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/README.md
+      - docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/docs/03-target-product-grammar-and-flows.md
+      - docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/docs/05-plugin-ux-integration-contract.md
+      - docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/docs/07-rollout-plan.md
+      - docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/docs/09-wireframes-and-layouts.md
+      - docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/docs/10-governed-slice-extraction-and-lane-e-mapping.md
+      - apps/web/src/app/plugins/contracts/PluginManifest.ts
+      - apps/web/src/app/plugins/registry.ts
+      - apps/web/src/app/views/PluginsView.tsx
+      - apps/web/src/app/views/PluginsView.test.tsx
+    status_reason: >-
+      The repo has strong technical plugin seams, and the professionalization bundle is now
+      normalized in English across shell grammar, plugin docking, rollout, and wireframe docs.
+      `PluginsView` now adopts the shared route frame and exposes route-level probe plus
+      declared/frontend/backend/executable readiness states inside governed cards, so the contract
+      has a first live surface adoption. Remaining work is broader dock integration and denser
+      shared plugin capability surfaces.
+    definition_of_done:
+      - allowed and forbidden plugin docks are documented against the stable shell grammar
+      - proposed frontend contract extensions are named and scoped in active docs
+      - plugin readiness and availability states are tied to user-facing surfaces
+      - downstream plugin workbench slices reference this contract instead of inventing local chrome
+    last_verified: '2026-04-10'
   - task_id: TF-E1
     priority: P0
     status: in_progress
@@ -1624,7 +1778,7 @@ tasks:
       outcome and materialization evidence.
     complexity: M
     effort_points: 5
-    progress_pct: 65
+    progress_pct: 90
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/plan-creation-interface-route-proposal-20260405.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md
@@ -1635,14 +1789,17 @@ tasks:
       - apps/web/src/app/views/canvas/useCanvasExecutionActions.ts
       - apps/web/src/app/views/runs/RunWorkspaceStateView.tsx
     status_reason: >-
-      Lane E now ships explicit transformation authoring mode in Canvas, persisted-preview gating
-      before `Start run`, and snapshot-owned result evidence rendering in run detail. The parent
-      slice remains open until Lane A finishes the transformation contract pack and Lane C publishes
-      the runtime-side materialization and failure evidence needed for full end-to-end closure.
-    last_verified: '2026-04-08'
+      Lane E now ships the full frontend operator loop for the first SQL-first transformation
+      vertical: constrained Canvas authoring, persisted preview with the real `PlanRef`, governed
+      `Start run` handoff, and run-detail rendering of executor identity, sink evidence, row counts,
+      timestamps, and failed-step diagnostics from the snapshot read model. The former upstream
+      dependency blocker is now cleared because `TF-A1` and `TF-C1` are closed in the registry; the
+      remaining parent work is acceptance and closeout consolidation for the Lane E umbrella rather
+      than missing authoring, preview, or result behavior.
+    last_verified: '2026-04-14'
   - task_id: TF-E1-A
     priority: P0
-    status: review
+    status: done
     objective: >-
       implement basic Canvas authoring for one source, one SQL transform, and one sink with inline
       graph validation.
@@ -1671,10 +1828,10 @@ tasks:
       keeping the one-source/one-transform/one-sink guards active at composition, connection, and
       preview time. Remaining work sits in downstream preview or runtime slices rather than in the
       authoring surface itself.
-    last_verified: '2026-04-08'
+    last_verified: '2026-04-13'
   - task_id: TF-E1-B
     priority: P0
-    status: in_progress
+    status: done
     objective: >-
       wire preview and start-run UX to the real persisted-plan path so the UI no longer depends on
       mock plan state.
@@ -1684,7 +1841,7 @@ tasks:
       runtime detail flow using the persisted plan path.
     complexity: S
     effort_points: 3
-    progress_pct: 80
+    progress_pct: 100
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
@@ -1696,14 +1853,17 @@ tasks:
       - apps/web/src/app/views/canvas/useCanvasExecutionActions.ts
       - apps/web/src/app/views/canvas/useCanvasExecutionActions.test.tsx
     status_reason: >-
-      Frontend handoff now enforces persisted preview proof bound to the active `planRef` hash,
-      keeps the preview modal open when re-plan is required, and routes successful starts through
-      the governed run navigation callback. Remaining closure is to prove the full transformation
-      profile plus provenance path once the upstream Lane A or B contract pack is implemented.
-    last_verified: '2026-04-08'
+      Frontend preview now uses the governed `transformation-sql-first-v1` profile, resolves
+      request-side graph and SQL provenance from configured workspace artifacts, materializes the
+      current `DesignGraphDraft` authoring artifact into the configured graph artifact path before
+      hashing and previewing, fails closed when explicit Git provenance settings are missing or
+      source or sink artifact payloads are absent, persists the real `PlanRef`, keeps stale-preview
+      and re-plan guards active, and routes successful starts through the governed run navigation
+      callback without mock plan identity fallback.
+    last_verified: '2026-04-13'
   - task_id: TF-E1-C
     priority: P0
-    status: in_progress
+    status: done
     objective: >-
       implement the result UX that shows executor identity, sink materialization evidence, and
       failed-step diagnostics.
@@ -1713,20 +1873,162 @@ tasks:
       attribution so operators can decide what happened without backend log inspection.
     complexity: S
     effort_points: 3
-    progress_pct: 55
+    progress_pct: 100
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
       - docs/architecture/components/web/ux-implementation-guide.md
+      - docs/architecture/components/web/runs/frontend-runtime-contract-technical-manual.md
+      - docs/architecture/components/web/runs/frontend-runtime-contract-user-manual.md
+      - apps/web/src/app/services/runs/runsService.api.ts
+      - apps/web/src/app/services/runs/runsService.test.ts
+      - apps/web/src/app/views/RunsView.test.tsx
       - apps/web/src/app/views/runs/RunWorkspaceStateView.tsx
       - apps/web/src/app/views/runs/RunStates.test.tsx
       - apps/web/src/app/views/runs/runStatesCopy.ts
+      - apps/web/cypress/e2e/runs/runs-runtime-contract.cy.ts
     status_reason: >-
-      Run detail now consumes result evidence and failure diagnostics only from the governed
-      snapshot read model, leaving timeline events for chronology and artifact refs instead of
-      frontend-side outcome inference. Full closure still depends on TF-C2-B publishing
-      materialization payloads and failure timestamps on the runtime read surfaces.
-    last_verified: '2026-04-08'
+      Run detail now preserves top-level executor identity from `GET /runs/:runId`, renders
+      success-only sink materialization evidence plus timestamps from the snapshot read model, and
+      shows failed-step attribution plus failure reason without inferring outcome from timeline
+      events. Route tests, presentation tests, and the runtime-contract Cypress lane now prove the
+      completed and failed result UX on the governed read surface.
+    last_verified: '2026-04-13'
+  - task_id: TF-E2
+    priority: P0
+    status: in_progress
+    objective: >-
+      productize Canvas node authoring so node lifecycle, edge lifecycle, property editing, and
+      hard-reload behavior all run through one canonical persistence model instead of visual-only or
+      browser-local draft state.
+    dependency: TF-E1, F-04, TF-A2, TF-C4
+    target: >-
+      Canvas supports production-grade node CRUD, edge CRUD and reconnect, Inspector-backed property
+      editing, deterministic rehydration after hard reload, and a proof-oriented
+      unit/integration/Cypress matrix without treating React Flow state or `localStorage` as the
+      product source of truth and without inventing a frontend-local persistence contract outside
+      the governed workspace boundary. Caller-visible save behavior must also respect the shared
+      compare-and-swap, reject-on-stale, and idempotent retry contract, while caller-visible route
+      state must distinguish writable, read-only, forbidden, and degraded posture from protected
+      boundary outcomes. The slice must also preserve operability through correlation-aware failure
+      UX, protected-path telemetry, one governed recovery runbook, and hard-reload compatibility
+      across governed persisted draft schema versions.
+    complexity: L
+    effort_points: 8
+    progress_pct: 15
+    evidence_refs:
+      - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-production-node-authoring-and-persistence-plan-20260416.md
+      - docs/architecture/components/web/graph/canvas-component-map-and-modernization-review.md
+      - docs/architecture/components/web/inspector/inspector-frontend-architecture.md
+      - docs/architecture/components/web/frontend-data-boundary-architecture.md
+      - docs/architecture/components/web/observability/front-observability-architecture-dvt.md
+      - docs/runbooks/index.md
+    status_reason: >-
+      The productization slice is now active, but the persistence boundary is no longer left
+      implicit: `TF-A2` must freeze the shared workspace graph-draft contract and `TF-C4` must
+      implement the protected API/store path before Canvas can claim product-grade persistence. Lane
+      E now explicitly owns adoption and UX closure, not contract invention, and the UX closure must
+      expose version conflict, authorization posture, retry behavior, persisted-format evolution
+      behavior, and operable recovery context instead of silently overwriting draft truth or hiding
+      permission loss.
+    last_verified: '2026-04-16'
+  - task_id: TF-E2-A
+    parent_task: TF-E2
+    priority: P0
+    status: queued
+    objective: >-
+      adopt the shared workspace graph-draft contract inside Canvas so editable graph reads and
+      writes stop depending on browser-local or route-local persistence semantics.
+    dependency: TF-A2, TF-C4
+    target: >-
+      Canvas consumes the governed workspace graph-draft read/write boundary through the workspace
+      port, removes UI-local DTO or storage authority from the active product path, fails closed
+      when canonical persistence is unavailable, adopts the shared compare-and-swap plus
+      reject-on-stale semantics without frontend-local overwrite rules, renders explicit writable
+      versus read-only capability states from boundary outcomes, and consumes governed format
+      metadata plus typed corrupt or unsupported draft outcomes.
+    complexity: S
+    effort_points: 3
+    progress_pct: 0
+    evidence_refs: []
+    status_reason: >-
+      Planned slice; execution waits on the shared contract freeze in `TF-A2` and the protected
+      API/store implementation in `TF-C4`. Adoption must include the shared versioning,
+      compare-and-swap, idempotent retry, tenant-scoped authorization, and read-only posture rather
+      than route-local save or permission heuristics, and it must preserve the caller-visible
+      correlation context and format-evolution behavior needed for operator diagnosis and safe
+      reloads across releases.
+    last_verified: '2026-04-16'
+  - task_id: TF-E2-B
+    parent_task: TF-E2
+    priority: P0
+    status: queued
+    objective: >-
+      close node lifecycle persistence for create, delete, duplicate, move, and hard-reload
+      rehydration under the canonical draft boundary.
+    dependency: TF-E2-A
+    target: >-
+      Node mutations and reload behavior round-trip through canonical persistence with explicit
+      pending, saved, failed-save, read-only, and typed format-recovery states rather than
+      visual-only success.
+    complexity: S
+    effort_points: 3
+    progress_pct: 0
+    evidence_refs: []
+    status_reason: planned slice; execution has not started.
+    last_verified: '2026-04-16'
+  - task_id: TF-E2-C
+    parent_task: TF-E2
+    priority: P0
+    status: queued
+    objective: >-
+      close edge lifecycle persistence for create, delete, reconnect, and visibility under the same
+      canonical draft model.
+    dependency: TF-E2-A
+    target: >-
+      Edge mutations survive reload, invalid or partial connections fail closed, and rendered edges
+      remain projections of canonical graph state rather than transient modal or viewport state.
+    complexity: S
+    effort_points: 3
+    progress_pct: 0
+    evidence_refs: []
+    status_reason: planned slice; execution has not started.
+    last_verified: '2026-04-16'
+  - task_id: TF-E2-D
+    parent_task: TF-E2
+    priority: P0
+    status: queued
+    objective: >-
+      turn the Inspector into the canonical property-editing surface for governed node metadata with
+      validation, dirty-state handling, save, cancel, and reload semantics.
+    dependency: TF-E2-A
+    target: >-
+      Governed node properties can be edited, validated, saved, canceled, and rehydrated through the
+      Inspector, and the saved values feed the same canonical authoring truth consumed by preview
+      and run handoff.
+    complexity: S
+    effort_points: 3
+    progress_pct: 0
+    evidence_refs: []
+    status_reason: planned slice; execution has not started.
+    last_verified: '2026-04-16'
+  - task_id: TF-E2-E
+    parent_task: TF-E2
+    priority: P0
+    status: queued
+    objective: >-
+      establish the proof-oriented unit, integration, and Cypress matrix for full node authoring
+      lifecycle behavior.
+    dependency: TF-E2-B, TF-E2-C, TF-E2-D
+    target: >-
+      Automated coverage proves create, connect, edit, delete, reload, invalid-connection, and
+      persistence-failure behavior across unit, controller integration, and end-to-end lanes.
+    complexity: M
+    effort_points: 5
+    progress_pct: 0
+    evidence_refs: []
+    status_reason: planned slice; execution has not started.
+    last_verified: '2026-04-16'
 dependency_notes:
   - >-
     `MVP-E1` and `F-07` now define the frontend runtime contract baseline. `F-07` executes in
@@ -1760,20 +2062,38 @@ dependency_notes:
     `TF-E1` is decomposed into `TF-E1-A/B/C` for authoring, preview-to-run, and result UX closure on
     the basic Canvas flow `source -> sql_transform -> sink`.
   - >-
+    `TF-E2` is the productization follow-up to `TF-E1`. It must close canonical graph-draft
+    ownership, persisted node and edge lifecycle, Inspector-backed property editing, and the full
+    reload-proof test matrix without promoting React Flow state or `localStorage` fallback behavior
+    into the product source of truth. `TF-A2` now owns the shared contract freeze and `TF-C4` owns
+    the protected API/store boundary, so Lane E is explicitly blocked from inventing a frontend-
+    local persistence contract or hiding the missing backend boundary behind UI-local persistence.
+  - >-
     `F-23` captures the next Git-facing UX slice as governed file-history review inside `Code` and
     `Diff`. It explicitly avoids a VS Code-style Git explorer and keeps route ownership aligned with
     the Git-mode architecture.
+  - >-
+    The UX professionalization bundle extracted three governed slices: shell grammar stays under
+    `F-15` with `F-01`, `F-18`, and `F-23` as downstream consumers, while `F-24` now owns the
+    operator-workbench visual system and `F-25` owns the plugin UX integration contract so neither
+    concern remains hidden inside generic shell cleanup or Monaco planning.
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
-  verified_on: '2026-04-08'
-  total_tasks: 58
-  total_effort_points: 205
-  completed_weighted_points: 71.17
-  lane_progress_pct: 35
+  verified_on: '2026-04-16'
+  total_tasks: 67
+  total_effort_points: 241
+  completed_weighted_points: 129.8
+  lane_progress_pct: 54
   notes: >-
     Weighted progress uses effort_points and records partial convergence already present in the
     frontend, even when the lane still lacks accepted closure for most slices. F-17 now tracks 7
     tasks (parent + 6 subtasks) for Monaco embedded review surfaces across Diff, Artifacts, and
     Templates rather than a Canvas takeover. `F-23` now has a governed docs-first baseline for
-    Code-owned file-history review with Diff-owned revision comparison.
+    Code-owned file-history review with Diff-owned revision comparison, and `F-24` plus `F-25` now
+    have English-normalized bundle docs covering shell grammar, visual system, plugin UX, rollout,
+    drift notes, and wireframes so downstream implementation can consume a governed baseline instead
+    of a proposal pack with stale language and encoding issues. `TF-E2` is now the active
+    production-authoring follow-up that freezes canonical node, edge, property, and reload
+    expectations before implementation. The summary values were recomputed from the current task
+    registry on 2026-04-16 to realign the YAML with the actual lane contents.

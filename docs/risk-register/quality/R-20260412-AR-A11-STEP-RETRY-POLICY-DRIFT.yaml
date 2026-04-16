@@ -1,0 +1,35 @@
+---
+id: R-20260412-AR-A11-STEP-RETRY-POLICY-DRIFT
+title: Step retry policy could drift back into adapter-local ownership
+status: Closed
+date: 2026-04-12
+owners:
+  - packages/@dvt/contracts
+  - packages/@dvt/planner
+  - packages/@dvt/adapter-temporal
+severity: Medium
+probability: Low
+context: >
+  The principal architecture review identified that Temporal step retry/backoff behavior was
+  effectively hardcoded in the adapter workflow. The planner contract did not expose a canonical
+  per-step retry policy, which left retry ownership implicit and prevented step-kind-specific
+  behavior from being governed in the executable plan.
+risk: >
+  If retry ownership returned to adapter-local defaults, runtime behavior could diverge from the
+  persisted plan artifact and from planner intent. That would weaken contract CI, make review of
+  retry semantics harder, and reintroduce hidden policy drift between planner, API previews, and
+  adapter execution.
+mitigations:
+  - 'ExecutionStep.retryPolicy now owns the canonical per-step retry/backoff shape in
+    packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v1.ts.'
+  - 'Shared schemas reject invalid retry bounds and unsupported retry object shapes before adapter
+    execution.'
+  - 'Planner policy resolution materializes retry/backoff onto top-level execution steps instead of
+    hiding it in stepTypeConfig.'
+  - 'Built-in DBT step config no longer accepts `retries`, and dbtStepFactory strips that dead field
+    before canonical plan assembly.'
+  - 'Temporal workflow retry settings are resolved from canonical step.retryPolicy only, and
+    stepTypeConfig.retries is not interpreted as runtime retry policy.'
+  - 'Active planner and Temporal policy docs now describe the canonical retry ownership split.'
+review_after: 2026-06-30
+---

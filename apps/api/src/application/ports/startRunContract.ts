@@ -1,8 +1,11 @@
 export { type IStartRunTargetAdapterRegistry } from './IStartRunTargetAdapterRegistry.js';
 export {
   START_RUN_TARGET_ADAPTER,
+  SUPPORTED_START_RUN_TARGET_ADAPTERS,
+  isStartRunTargetAdapter,
   type StartRunTargetAdapter,
   type StartRunPlanRef,
+  type StartRunPlannerEnvironmentInput,
   type StartRunCommand,
 } from './startRunCommandContract.js';
 export {

@@ -2,6 +2,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/ta
 import { MonacoCodeViewer } from '../../components/monaco/MonacoCodeViewer';
 import { Button } from '../../components/ui/button';
 import { Card } from '../../components/ui/card';
+import { routeWorkbenchTabListClassName } from '../../components/workbench/RouteWorkbenchFrame';
+import { ArtifactPreviewUnavailableStateView } from './ArtifactsStateViews';
 import { artifactsViewCopy } from './copy';
 import type { ArtifactPreviewDocumentMap } from './constants';
 import { formatStructuredArtifactContent } from './structuredArtifactContent';
@@ -45,10 +47,14 @@ export function ArtifactPreviewTabs({
   panelClassName,
   tabTriggerClassName,
 }: ArtifactPreviewTabsProps) {
+  const manifestDocument = previewDocuments['manifest.json'];
+  const runResultsDocument = previewDocuments['run_results.json'];
+  const catalogDocument = previewDocuments['catalog.json'];
+
   return (
     <Card className={panelClassName}>
       <Tabs defaultValue="manifest">
-        <TabsList className="border border-slate-700 bg-slate-950">
+        <TabsList className={routeWorkbenchTabListClassName}>
           <TabsTrigger value="manifest" className={tabTriggerClassName}>
             manifest.json
           </TabsTrigger>
@@ -61,25 +67,37 @@ export function ArtifactPreviewTabs({
         </TabsList>
 
         <TabsContent value="manifest" className="mt-4">
-          <PreviewPane
-            title={artifactsViewCopy.previewManifest}
-            fileName="manifest.json"
-            content={previewDocuments['manifest.json'].content}
-          />
+          {manifestDocument ? (
+            <PreviewPane
+              title={artifactsViewCopy.previewManifest}
+              fileName="manifest.json"
+              content={manifestDocument.content}
+            />
+          ) : (
+            <ArtifactPreviewUnavailableStateView fileName="manifest.json" />
+          )}
         </TabsContent>
         <TabsContent value="run_results" className="mt-4">
-          <PreviewPane
-            title={artifactsViewCopy.previewRunResults}
-            fileName="run_results.json"
-            content={previewDocuments['run_results.json'].content}
-          />
+          {runResultsDocument ? (
+            <PreviewPane
+              title={artifactsViewCopy.previewRunResults}
+              fileName="run_results.json"
+              content={runResultsDocument.content}
+            />
+          ) : (
+            <ArtifactPreviewUnavailableStateView fileName="run_results.json" />
+          )}
         </TabsContent>
         <TabsContent value="catalog" className="mt-4">
-          <PreviewPane
-            title={artifactsViewCopy.previewCatalog}
-            fileName="catalog.json"
-            content={previewDocuments['catalog.json'].content}
-          />
+          {catalogDocument ? (
+            <PreviewPane
+              title={artifactsViewCopy.previewCatalog}
+              fileName="catalog.json"
+              content={catalogDocument.content}
+            />
+          ) : (
+            <ArtifactPreviewUnavailableStateView fileName="catalog.json" />
+          )}
         </TabsContent>
       </Tabs>
     </Card>

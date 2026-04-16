@@ -21,6 +21,12 @@ repository.
 
 It does not introduce a new execution path.
 
+The shared API orchestration boundary that feeds this protocol is now governed
+separately in [StartRunBoundary.v1.md](./StartRunBoundary.v1.md). This document
+starts at the narrower engine-facing `IWorkflowEngine.startRun(planRef,
+context)` handoff after API orchestration has already classified planner-backed
+or persisted-plan ingress.
+
 Its job is to make the existing protocol reviewable without forcing readers to
 reconstruct it from `WorkflowEngine`, `StartRunApplicationService`,
 `StartRunAdmissionGuard`, `StartRunExecutionService`, and
@@ -72,7 +78,7 @@ sequenceDiagram
     Engine->>App: startRun(validatedPlanRef, resolvedContext, traceContext)
     App->>Guard: assertStartRunAllowed(planRef, resolvedContext)
     App->>Verifier: fetchAndValidate(planRef, planFetcher)
-    App->>Guard: assertExecutionPolicyAllowed(planRef, executionPolicy, resolvedContext, adapter)
+    App->>Guard: assertExecutionPolicyAllowed(plan, planRef, executionPolicy, resolvedContext, adapter)
     App->>Intent: createIntent(intentId, tenantId, runId, provider)
     App->>Exec: executeStartRun(...)
 
@@ -142,7 +148,14 @@ The admission phase currently performs:
 10. rate-limit check
 11. adapter lookup
 12. execution-policy capability checks
-13. optional `runExecutionContextRef` alignment and compatibility checks
+13. `runExecutionContextRef` alignment and compatibility checks when present
+14. DBT-bearing plans reject before queueing when:
+
+- `runExecutionContextRef` is missing
+- resolved `pluginContexts.dbt` is missing
+- `pluginContexts.dbt.projectBundleRef.tenantId` mismatches the run tenant
+- `pluginContexts.dbt.projectBundleRef.uri` is not a canonical
+  tenant-scoped locator for the declared tenant and bundle hash
 
 This phase rejects before any provider side effect.
 

@@ -7,18 +7,24 @@ owners:
   - packages/@dvt/engine
   - packages/@dvt/planner
 severity: Medium
-probability: Medium
+probability: Low
 context: >
   The reconciler runtime review identified contract ownership drift across the `engine`, `planner`,
   and `shared` taxonomy. The active proposal already existed, but the workboard tracker was missing
   and a local execution note reintroduced already-closed health work as if it were still open.
+  `RC-G1-B` has now closed the engine-owned portion of the migration, but delivery/traceability,
+  artifacts, and planner-private ownership moves remain open.
 risk: >
   Future ownership moves can diverge between proposal, lane tracker, and real package changes. That
-  would weaken ADR-0018 / ADR-0034 boundaries, leave `@dvt/contracts` oversized, and make ARC-2
-  changes less auditable.
+  would weaken ADR-0018 / ADR-0034 boundaries, leave `@dvt/contracts` oversized in the remaining
+  domains, and make ARC-2 changes less auditable.
 mitigations:
   - Lane A now tracks the work explicitly as `RC-G1` with sequenced slices `RC-G1-A..D`.
   - The ownership proposal now freezes each affected family to `stay shared` or `move to owner`.
   - The reconciler runtime review now points to the canonical Lane A tracker instead of an orphan
     workboard reference.
   - ARC-2 evidence is required for the future `RC-G1-B/C/D` package migrations.
+  - >-
+    `RC-G1-B4` removed the remaining root `@dvt/contracts` exports for equivalent engine-owned
+    behavioral ports, cut the last residual `RunStateCommandPort` import to `@dvt/engine`, and added
+    lint guards to block reintroduction in governed engine/adapters/state-store/API code.

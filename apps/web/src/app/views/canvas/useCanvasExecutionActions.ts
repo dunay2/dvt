@@ -4,15 +4,26 @@ import type { IPlansPort } from '../../ports/plans';
 import type { IRunsPort } from '../../ports/runs';
 import type { SessionContextPort } from '../../ports/sessionContext';
 import type { ShellFeedbackPort } from '../../ports/shellFeedback';
+import type { IWorkspacePort } from '../../ports/workspace';
+import type { WorkspaceBootstrapConfig } from '../../services/config/workspaceConfig';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
-import type { ExecutionPlan } from '../../types/dbt';
-import type { PlanRef } from '../../types/engine';
-import { buildPreviewGraphSource } from './previewGraphSource';
+import type { PlanViewModel } from '../../types/plans';
+import { executeCanvasPlanAction } from './canvasPlanAction';
+import {
+  buildPlanStatusSummary,
+  hasPersistedPreviewProof,
+  hasPlanRefHashMismatch,
+  resolvePlanRefForStartRun,
+} from './canvasPlanReadiness';
+import { executeCanvasRunStartAction } from './canvasRunStartAction';
 import { validateTransformationGraph } from './transformationGraphValidation';
+
+export { resolvePlanRefForStartRun } from './canvasPlanReadiness';
 
 type UseCanvasExecutionActionsParams = {
   plansService: IPlansPort;
   runsService: IRunsPort;
+  workspaceService: IWorkspacePort;
   canonicalNodes: CanonicalNode[];
   canonicalEdges: CanonicalEdge[];
   selectedNodeIds: string[];
@@ -21,9 +32,13 @@ type UseCanvasExecutionActionsParams = {
   canRun: boolean;
   sessionContext: SessionContextPort;
   shellFeedback: ShellFeedbackPort;
+  previewProvenanceConfig: Pick<
+    WorkspaceBootstrapConfig,
+    'gitBranch' | 'gitSha' | 'gitRepo' | 'graphArtifactPath'
+  >;
   consolePanelVisible: boolean;
-  currentPlan: ExecutionPlan | null;
-  setCurrentPlan: (plan: ExecutionPlan | null) => void;
+  currentPlan: PlanViewModel | null;
+  setCurrentPlan: (plan: PlanViewModel | null) => void;
   setConsolePanelHeight: (height: number) => void;
   toggleConsolePanel: () => void;
   onRunStarted: (runId: string) => void;
@@ -39,47 +54,10 @@ type UseCanvasExecutionActionsResult = {
   handleStartRun: () => Promise<void>;
 };
 
-export function resolvePlanRefForStartRun(plan: ExecutionPlan): PlanRef | null {
-  return plan.planRef ?? null;
-}
-
-function hasPersistedPreviewProof(plan: ExecutionPlan | null): boolean {
-  if (!plan?.preview?.persisted || !plan.planRef) {
-    return false;
-  }
-
-  const hasPersistenceRecord = Boolean(
-    plan.preview.persisted.planRecordId && plan.preview.persisted.canonicalPlanSha256
-  );
-  if (!hasPersistenceRecord) {
-    return false;
-  }
-
-  return plan.preview.persisted.canonicalPlanSha256 === plan.planRef.sha256;
-}
-
-function hasPersistedPreviewRecord(plan: ExecutionPlan | null): boolean {
-  return Boolean(
-    plan?.preview?.persisted?.planRecordId && plan.preview?.persisted?.canonicalPlanSha256
-  );
-}
-
-function hasPlanRefHashMismatch(plan: ExecutionPlan | null): boolean {
-  if (!plan?.planRef || !hasPersistedPreviewRecord(plan)) {
-    return false;
-  }
-
-  const persistedSha = plan.preview?.persisted?.canonicalPlanSha256;
-  if (!persistedSha) {
-    return false;
-  }
-
-  return persistedSha !== plan.planRef.sha256;
-}
-
 export function useCanvasExecutionActions({
   plansService,
   runsService,
+  workspaceService,
   canonicalNodes,
   canonicalEdges,
   selectedNodeIds,
@@ -88,6 +66,7 @@ export function useCanvasExecutionActions({
   canRun,
   sessionContext,
   shellFeedback,
+  previewProvenanceConfig,
   consolePanelVisible,
   currentPlan,
   setCurrentPlan,
@@ -110,22 +89,18 @@ export function useCanvasExecutionActions({
     lastPlannedDraftSignature != null &&
     lastPlannedDraftSignature !== transformationValidation.draftSignature;
   const canStartRun =
+    canRun &&
     currentPlan != null &&
     hasPersistedPlanForRun &&
     transformationValidation.valid &&
     !isCurrentPlanStale;
-  const planStatusSummary =
-    currentPlan == null
-      ? 'Preview required before running.'
-      : isCurrentPlanStale
-        ? 'Preview is stale. Re-run Plan before starting.'
-        : !currentPlan?.planRef
-          ? 'Plan reference is unavailable. Re-run Plan before starting.'
-          : planRefHashMismatch
-            ? 'Preview is not aligned with the active plan reference. Re-run Plan before starting.'
-            : !hasPersistedPlanForRun
-              ? 'Preview is not persisted. Re-run Plan to create a persisted plan.'
-              : 'Preview is current and ready to run.';
+  const planStatusSummary = buildPlanStatusSummary({
+    canRun,
+    currentPlan,
+    isCurrentPlanStale,
+    planRefHashMismatch,
+    hasPersistedPlanForRun,
+  });
 
   useEffect(() => {
     if (currentPlan == null) {
@@ -134,39 +109,34 @@ export function useCanvasExecutionActions({
   }, [currentPlan]);
 
   const handlePlan = useCallback(async () => {
-    if (!canPlan) {
-      shellFeedback.error('You do not have permission to create plans');
+    const result = await executeCanvasPlanAction({
+      canPlan,
+      canonicalEdges,
+      canonicalNodes,
+      plansService,
+      previewProvenanceConfig,
+      selectedNodeIds,
+      sessionContext,
+      transformationValidation,
+      workspaceNodeIds,
+      workspaceService,
+    });
+
+    if (!result.ok) {
+      shellFeedback.error(result.message);
       return;
     }
 
-    if (!transformationValidation.valid) {
-      shellFeedback.error(transformationValidation.summary);
-      return;
-    }
-
-    try {
-      const selectedForPlan = selectedNodeIds.length > 0 ? selectedNodeIds : workspaceNodeIds;
-      const graphSource = buildPreviewGraphSource(canonicalNodes, canonicalEdges, selectedForPlan);
-      const plan = await plansService.previewPlan({
-        previewProfile: 'planner-generic-v1',
-        graphSource,
-        selectedNodeIds: selectedForPlan,
-        context: sessionContext.buildRunContext(`run_ui_${Date.now()}`),
-        persist: true,
-      });
-      setCurrentPlan(plan);
-      setLastPlannedDraftSignature(transformationValidation.draftSignature);
-      setPlanModalOpen(true);
-      shellFeedback.success('Execution plan created');
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unable to create execution plan';
-      shellFeedback.error(message);
-    }
+    setCurrentPlan(result.plan);
+    setLastPlannedDraftSignature(result.draftSignature);
+    setPlanModalOpen(true);
+    shellFeedback.success('Execution plan created');
   }, [
     canPlan,
     canonicalEdges,
     canonicalNodes,
     plansService,
+    previewProvenanceConfig,
     selectedNodeIds,
     sessionContext,
     setCurrentPlan,
@@ -174,61 +144,37 @@ export function useCanvasExecutionActions({
     transformationValidation.draftSignature,
     transformationValidation.summary,
     transformationValidation.valid,
+    workspaceService,
     workspaceNodeIds,
   ]);
 
   const handleStartRun = useCallback(async () => {
-    if (!canRun) {
-      shellFeedback.error('You do not have permission to start runs');
-      return;
-    }
+    const result = await executeCanvasRunStartAction({
+      canRun,
+      currentPlan,
+      hasPersistedPlanForRun,
+      isCurrentPlanStale,
+      runsService,
+      sessionContext,
+    });
 
-    if (!currentPlan) {
-      shellFeedback.error('No execution plan available - run Plan first');
-      return;
-    }
-
-    if (isCurrentPlanStale) {
-      shellFeedback.error('Preview is stale. Re-run Plan before starting.');
-      setPlanModalOpen(true);
-      return;
-    }
-
-    const planRef = resolvePlanRefForStartRun(currentPlan);
-    if (!planRef) {
-      shellFeedback.error('Plan reference is unavailable for this mode');
-      setPlanModalOpen(true);
-      return;
-    }
-
-    if (!hasPersistedPlanForRun) {
-      shellFeedback.error(
-        'Run start requires a persisted preview plan bound to the current plan reference. Re-run Plan first.'
-      );
-      setPlanModalOpen(true);
+    if (!result.ok) {
+      shellFeedback.error(result.message);
+      if (result.shouldOpenPlanModal) {
+        setPlanModalOpen(true);
+      }
       return;
     }
 
     setPlanModalOpen(false);
-
-    try {
-      const runId = `run_ui_${Date.now()}`;
-      const context = sessionContext.buildRunContext(runId);
-      const runRef = await runsService.startRun({ planRef, context });
-
-      if (!consolePanelVisible) {
-        toggleConsolePanel();
-      } else {
-        setConsolePanelHeight(160);
-      }
-
-      shellFeedback.success('Run started');
-      onRunStarted(runRef.runId);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to start run';
-      shellFeedback.error(message);
-      setPlanModalOpen(true);
+    if (!consolePanelVisible) {
+      toggleConsolePanel();
+    } else {
+      setConsolePanelHeight(160);
     }
+
+    shellFeedback.success('Run started');
+    onRunStarted(result.runId);
   }, [
     canRun,
     consolePanelVisible,

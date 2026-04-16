@@ -8,7 +8,7 @@ describe('parseCancelRunRequest', () => {
   it('maps cancel request to run:cancel action and CANCEL signal', () => {
     const parsed = parseCancelRunRequest({
       runId: ' run-1 ',
-      body: { tenantId: ' tenant-a ', reason: ' operator ' },
+      body: { tenantId: ' tenant-a ' },
     });
 
     expect(parsed).toEqual({
@@ -17,7 +17,6 @@ describe('parseCancelRunRequest', () => {
         command: {
           runId: 'run-1',
           signalType: 'CANCEL',
-          reason: 'operator',
         },
         authorization: {
           tenantId: { value: 'tenant-a' },
@@ -27,13 +26,67 @@ describe('parseCancelRunRequest', () => {
     });
   });
 
-  it('omits reason when provided as whitespace only', () => {
+  it('rejects non-empty reason because native cancel does not accept reason payloads', () => {
     const parsed = parseCancelRunRequest({
       runId: 'run-1',
-      body: { tenantId: 'tenant-a', reason: '   ' },
+      body: { tenantId: 'tenant-a', reason: 'operator cancel' },
     });
 
     expect(parsed).toEqual({
+      ok: false,
+      issue: {
+        type: 'bad_request',
+        reason: HTTP_ERROR_REASON.cancelReasonNotSupported,
+        target: 'reason',
+      },
+    });
+  });
+
+  it('ignores empty or null reason values on the native cancel route', () => {
+    expect(
+      parseCancelRunRequest({
+        runId: 'run-1',
+        body: { tenantId: 'tenant-a', reason: '' },
+      })
+    ).toEqual({
+      ok: true,
+      value: {
+        command: {
+          runId: 'run-1',
+          signalType: 'CANCEL',
+        },
+        authorization: {
+          tenantId: { value: 'tenant-a' },
+          actionName: SIGNAL_COMMAND_ACTION.CANCEL,
+        },
+      },
+    });
+
+    expect(
+      parseCancelRunRequest({
+        runId: 'run-1',
+        body: { tenantId: 'tenant-a', reason: '   ' },
+      })
+    ).toEqual({
+      ok: true,
+      value: {
+        command: {
+          runId: 'run-1',
+          signalType: 'CANCEL',
+        },
+        authorization: {
+          tenantId: { value: 'tenant-a' },
+          actionName: SIGNAL_COMMAND_ACTION.CANCEL,
+        },
+      },
+    });
+
+    expect(
+      parseCancelRunRequest({
+        runId: 'run-1',
+        body: { tenantId: 'tenant-a', reason: null },
+      })
+    ).toEqual({
       ok: true,
       value: {
         command: {
