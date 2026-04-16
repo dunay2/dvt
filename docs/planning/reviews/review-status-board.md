@@ -126,6 +126,13 @@ Additional active rationale:
   - status: `reference`
   - progress: `n/a`
 
+- [20260414 DVT+ principal/staff architecture review](./architecture-and-governance/20260414-principal-architect-review-dvtplus.md)
+  - domain: `architecture-and-governance`
+  - role: follow-up principal/staff architecture review with prioritized action plan
+  - linkage: `none`
+  - status: `reference`
+  - progress: `n/a`
+
 Additional active QA:
 
 - [20260407 Execution plan and policy hard QA review](./architecture-and-governance/20260407-execution-plan-and-run-execution-policy-hard-qa-review.md)
