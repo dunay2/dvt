@@ -120,7 +120,15 @@ function CanvasContent() {
           />
         );
       case 'empty':
-        return <CanvasEmptyStateView />;
+        return (
+          <CanvasEmptyStateView
+            message={
+              effectiveUserPermissions.canEditEdges
+                ? canvasViewCopy.routeEmptyEditableMessage
+                : canvasViewCopy.routeEmptyReadOnlyMessage
+            }
+          />
+        );
       case 'ready':
         return undefined;
     }

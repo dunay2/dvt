@@ -214,6 +214,32 @@ describe('Canvas route', () => {
     expect(bootstrapScreenMocks.completeBootstrapScreen).toHaveBeenCalled();
   });
 
+  it('renders read-only empty guidance without suggesting Add data when edits are gated', async () => {
+    mockedUseCanvasController.mockReturnValue(
+      buildController({
+        explorerNodes: [],
+        userPermissions: {
+          canPlan: false,
+          canRun: false,
+          canEditEdges: false,
+          canManagePlugins: false,
+          canManageRBAC: false,
+        },
+      })
+    );
+
+    await act(async () => {
+      root.render(<Canvas />);
+    });
+
+    expect(container.textContent).toContain('No graph content loaded');
+    expect(container.textContent).toContain(
+      'This workspace does not expose graph nodes yet. Graph edits are disabled in this context.'
+    );
+    expect(container.textContent).not.toContain('Use Add data');
+    expect(canvasRouteState.explorerProps?.onOpenDataRegistry).toBeUndefined();
+  });
+
   it('renders a governed error state when the graph snapshot fails before any nodes are available', async () => {
     mockedUseCanvasController.mockReturnValue(
       buildController({
