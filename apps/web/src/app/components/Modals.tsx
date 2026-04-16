@@ -54,7 +54,14 @@ export function PlanPreviewModal({
   if (!plan) return null;
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
+    <Dialog
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) {
+          onClose();
+        }
+      }}
+    >
       <DialogContent className="max-w-3xl bg-slate-950 border-slate-600 text-slate-50">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-slate-50">
@@ -293,7 +300,14 @@ export function ConfirmEdgeModal({ open, onClose, edge, onConfirm }: ConfirmEdge
   };
 
   return (
-    <AlertDialog open={open} onOpenChange={onClose}>
+    <AlertDialog
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) {
+          onClose();
+        }
+      }}
+    >
       <AlertDialogContent className="bg-slate-950 border-slate-600 text-slate-50">
         <AlertDialogHeader>
           <AlertDialogTitle>Confirm Dependency</AlertDialogTitle>
@@ -331,7 +345,14 @@ interface PermissionDeniedModalProps {
 
 export function PermissionDeniedModal({ open, onClose, action }: PermissionDeniedModalProps) {
   return (
-    <AlertDialog open={open} onOpenChange={onClose}>
+    <AlertDialog
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) {
+          onClose();
+        }
+      }}
+    >
       <AlertDialogContent className="bg-slate-950 border-slate-600 text-slate-50">
         <AlertDialogHeader>
           <AlertDialogTitle className="flex items-center gap-2 text-red-400">
@@ -357,7 +378,14 @@ interface NetworkDegradedModalProps {
 
 export function NetworkDegradedModal({ open, onClose }: NetworkDegradedModalProps) {
   return (
-    <AlertDialog open={open} onOpenChange={onClose}>
+    <AlertDialog
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) {
+          onClose();
+        }
+      }}
+    >
       <AlertDialogContent className="bg-slate-950 border-slate-600 text-slate-50">
         <AlertDialogHeader>
           <AlertDialogTitle className="flex items-center gap-2 text-yellow-400">
@@ -386,7 +414,14 @@ interface RePlanRequiredModalProps {
 
 export function RePlanRequiredModal({ open, onClose, onRePlan }: RePlanRequiredModalProps) {
   return (
-    <AlertDialog open={open} onOpenChange={onClose}>
+    <AlertDialog
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) {
+          onClose();
+        }
+      }}
+    >
       <AlertDialogContent className="bg-slate-950 border-slate-600 text-slate-50">
         <AlertDialogHeader>
           <AlertDialogTitle className="flex items-center gap-2 text-orange-400">
