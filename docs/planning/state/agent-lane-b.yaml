@@ -426,7 +426,7 @@ tasks:
     last_verified: '2026-04-14'
   - task_id: AR-B3
     priority: P1
-    status: queued
+    status: done
     objective: >-
       verify that ManifestGraphDeriver sorts node keys before processing to prevent Object.keys()
       ordering variance across dbt versions from changing plan identity (planId hash).
@@ -436,13 +436,15 @@ tasks:
       identical planId across different dbt manifest key orderings.
     complexity: S
     effort_points: 2
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
+      - packages/@dvt/planner/src/domain/manifest.ts
+      - packages/@dvt/planner/test/unit/determinism.test.ts
     status_reason: >-
       If Object.keys() order changes between dbt versions, the topo sort input changes, and the plan
       identity silently drifts — a determinism violation.
-    last_verified: '2026-04-02'
+    last_verified: '2026-04-16'
   - task_id: ADP-LINT-ORDER-01
     priority: P2
     status: review
@@ -603,8 +605,8 @@ dependency_notes:
     machine validation at event append boundary to prevent invalid sequences from corrupting the
     log.
   - >-
-    `AR-B2` addresses the missing distributed consistency model documentation, and `AR-B3` verifies
-    ManifestGraphDeriver key ordering for determinism safety.
+    `AR-B2` is closed with accepted evidence, and `AR-B3` is now closed with deterministic
+    ManifestGraphDeriver key-order handling plus golden-vector planId/inputHash stability coverage.
   - >-
     `TF-B1` is now decomposed into `TF-B1-A` and `TF-B1-B` so preview-time provenance and
     result-time evidence linkage can move independently while remaining under one Git-first policy.
@@ -616,11 +618,11 @@ dependency_notes:
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
-  verified_on: '2026-04-10'
+  verified_on: '2026-04-16'
   total_tasks: 21
   total_effort_points: 81
-  completed_weighted_points: 54.6
-  lane_progress_pct: 67
+  completed_weighted_points: 56.6
+  lane_progress_pct: 70
   notes: >-
     Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry
     coordination-only effort.
