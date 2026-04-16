@@ -14,8 +14,11 @@ type CanvasToolbarProps = {
   readonly onToggleCostOverlay: () => void;
   readonly onToggleImpact: () => void;
   readonly onToggleColumns: () => void;
+  readonly onReloadLatestDraft: () => void;
   readonly onPlan: () => void;
   readonly onRun: () => void;
+  readonly draftSaveStatus: 'idle' | 'saving' | 'saved';
+  readonly hasStaleDraftVersion: boolean;
   readonly canPlan: boolean;
   readonly canRun: boolean;
   readonly canEditEdges: boolean;
@@ -69,8 +72,11 @@ export default function CanvasToolbar({
   onToggleCostOverlay,
   onToggleImpact,
   onToggleColumns,
+  onReloadLatestDraft,
   onPlan,
   onRun,
+  draftSaveStatus,
+  hasStaleDraftVersion,
   canPlan,
   canRun,
   canEditEdges,
@@ -193,6 +199,30 @@ export default function CanvasToolbar({
         <Play className="mr-1.5 size-4" />
         Run
       </Button>
+      <Separator orientation="vertical" className="h-5 bg-slate-700" />
+      {hasStaleDraftVersion ? (
+        <Button
+          type="button"
+          variant="destructive"
+          size="sm"
+          onClick={onReloadLatestDraft}
+          className="h-8 px-3 text-xs"
+        >
+          Stale version
+        </Button>
+      ) : (
+        <Badge
+          data-slot="canvas-draft-save-status"
+          variant="outline"
+          className="h-7 border-slate-700 bg-slate-950/60 px-2 text-[11px] text-slate-200"
+        >
+          {draftSaveStatus === 'saving'
+            ? 'Saving draft'
+            : draftSaveStatus === 'saved'
+              ? 'Draft saved'
+              : 'Draft synced'}
+        </Badge>
+      )}
     </div>
   );
 

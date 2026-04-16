@@ -46,8 +46,11 @@ export default function CanvasShell({
   onToggleCostOverlay,
   onToggleImpact,
   onToggleColumns,
+  onReloadLatestDraft,
   onPlan,
   onRun,
+  draftSaveStatus,
+  hasStaleDraftVersion,
   canStartRun,
   planStatusSummary,
   exclusiveOverlayMode,
@@ -97,8 +100,11 @@ export default function CanvasShell({
             onToggleCostOverlay={onToggleCostOverlay}
             onToggleImpact={onToggleImpact}
             onToggleColumns={onToggleColumns}
+            onReloadLatestDraft={onReloadLatestDraft}
             onPlan={onPlan}
             onRun={onRun}
+            draftSaveStatus={draftSaveStatus}
+            hasStaleDraftVersion={hasStaleDraftVersion}
             canPlan={userPermissions.canPlan}
             canRun={userPermissions.canRun}
             canEditEdges={userPermissions.canEditEdges}

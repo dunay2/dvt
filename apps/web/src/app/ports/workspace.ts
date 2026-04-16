@@ -24,6 +24,34 @@ export type WorkspaceGraphSnapshot = {
   edges: DbtEdge[];
 };
 
+export type WorkspaceGraphDraft = {
+  nodeIds: string[];
+  nodePositions: Record<string, { x: number; y: number }>;
+  edges: Array<{ sourceId: string; targetId: string }>;
+};
+
+export type WorkspaceGraphDraftRecord = {
+  revision: string;
+  draft: WorkspaceGraphDraft;
+  savedAt: string;
+};
+
+export type SaveWorkspaceGraphDraftInput = {
+  expectedRevision: string | null;
+  idempotencyKey: string;
+  draft: WorkspaceGraphDraft;
+};
+
+export type SaveWorkspaceGraphDraftResult =
+  | {
+      outcome: 'saved';
+      record: WorkspaceGraphDraftRecord;
+    }
+  | {
+      outcome: 'conflict';
+      current: WorkspaceGraphDraftRecord;
+    };
+
 export type WarehouseConnection = {
   id: string;
   name: string;
@@ -82,6 +110,8 @@ export type ImportSourcesResult = {
  */
 export interface IWorkspacePort {
   getGraphSnapshot: () => Promise<WorkspaceGraphSnapshot>;
+  getGraphDraft: () => Promise<WorkspaceGraphDraftRecord | null>;
+  saveGraphDraft: (input: SaveWorkspaceGraphDraftInput) => Promise<SaveWorkspaceGraphDraftResult>;
   getDiffChanges: () => Promise<DiffChange[]>;
   getPlugins: () => Promise<Plugin[]>;
   getRoles: () => Promise<Role[]>;

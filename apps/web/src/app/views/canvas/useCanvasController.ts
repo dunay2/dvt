@@ -1,9 +1,9 @@
-import { useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { type NodeTypes } from '@xyflow/react';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import DbtNodeComponent from '../../components/canvas/DbtNodeComponent';
-import type { ImportSourcesResult } from '../../ports/workspace';
+import type { ImportSourcesResult, WorkspaceGraphDraftRecord } from '../../ports/workspace';
 import {
   getPlatformConnectionDetail,
   getPlatformHealthErrorMessageFromQuery,
@@ -36,6 +36,38 @@ import { validateTransformationGraph } from './transformationGraphValidation';
 const nodeTypes: NodeTypes = {
   dbtNode: DbtNodeComponent,
 };
+
+const DRAFT_SAVE_DEBOUNCE_MS = 400;
+
+function createDraftIdempotencyKey(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return `canvas-draft:${crypto.randomUUID()}`;
+  }
+
+  return `canvas-draft:${Date.now()}:${Math.random().toString(16).slice(2)}`;
+}
+
+function serializeGraphDraft(draft: {
+  nodeIds: string[];
+  nodePositions: Record<string, { x: number; y: number }>;
+  edges: Array<{ sourceId: string; targetId: string }>;
+}): string {
+  return JSON.stringify({
+    nodeIds: [...draft.nodeIds],
+    nodePositions: Object.fromEntries(
+      Object.entries(draft.nodePositions)
+        .sort(([left], [right]) => left.localeCompare(right))
+        .map(([nodeId, position]) => [nodeId, { x: position.x, y: position.y }])
+    ),
+    edges: [...draft.edges]
+      .map((edge) => ({ sourceId: edge.sourceId, targetId: edge.targetId }))
+      .sort(
+        (left, right) =>
+          left.sourceId.localeCompare(right.sourceId) ||
+          left.targetId.localeCompare(right.targetId)
+      ),
+  });
+}
 
 export function useCanvasController() {
   const queryClient = useQueryClient();
@@ -72,9 +104,37 @@ export function useCanvasController() {
           ) ?? null;
 
   const store = useCanvasStoreFacade();
+  const graphDraftQuery = useQuery({
+    queryKey: queryKeys.workspace.graphDraft(store.workspaceLayoutKey),
+    queryFn: () => workspaceService.getGraphDraft(),
+  });
+  const [draftRevision, setDraftRevision] = useState<string | null>(null);
+  const [draftConflictRevision, setDraftConflictRevision] = useState<string | null>(null);
+  const [draftSaveStatus, setDraftSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
+  const [draftSyncState, setDraftSyncState] = useState<
+    'initializing' | 'hydrating_remote' | 'ready' | 'conflict'
+  >('initializing');
+  const [draftHydrationRecord, setDraftHydrationRecord] = useState<WorkspaceGraphDraftRecord | null>(
+    null
+  );
+  const lastSavedSignatureRef = useRef<string | null>(null);
+  const remoteDraftBaselineRef = useRef<{ revision: string | null; signature: string | null }>({
+    revision: null,
+    signature: null,
+  });
+  const hasInitializedDraftSyncRef = useRef(false);
+  const reloadRemoteDraftRequestedRef = useRef(false);
+  const saveDebounceTimerRef = useRef<number | null>(null);
+  const canPersistGraphDraft =
+    store.userPermissions.canEditEdges &&
+    (dataSourceMode !== 'api' || (!isBackendCheckPending && backendReady));
+  const activeDraftHydrationRecord =
+    draftHydrationRecord ?? (!hasInitializedDraftSyncRef.current ? graphDraftQuery.data ?? null : null);
 
   const graphModel = useCanvasGraphModel({
     workspaceLayoutKey: store.workspaceLayoutKey,
+    draftHydrationRecord: activeDraftHydrationRecord,
+    draftModeEnabled: graphDraftQuery.data != null || draftRevision != null,
     workspaceService,
     graphStrategy,
     columnLevelLineageEnabled: store.columnLevelLineageEnabled,
@@ -152,6 +212,225 @@ export function useCanvasController() {
       store.selectedNodeIds,
     ]
   );
+  const currentDraftPayload = useMemo(
+    () => ({
+      nodeIds: graphModel.nodes.map((node) => node.id),
+      nodePositions: Object.fromEntries(
+        graphModel.nodes.map((node) => [node.id, { x: node.position.x, y: node.position.y }])
+      ),
+      edges: graphModel.edges.map((edge) => ({
+        sourceId: edge.source,
+        targetId: edge.target,
+      })),
+    }),
+    [graphModel.edges, graphModel.nodes]
+  );
+  const currentDraftSignature = useMemo(
+    () => serializeGraphDraft(currentDraftPayload),
+    [currentDraftPayload]
+  );
+  const hydrationTargetSignature = useMemo(
+    () => (draftHydrationRecord ? serializeGraphDraft(draftHydrationRecord.draft) : null),
+    [draftHydrationRecord]
+  );
+
+  useEffect(() => {
+    if (
+      graphModel.graphSnapshotQuery.isPending ||
+      graphModel.graphSnapshotQuery.isError ||
+      graphDraftQuery.isPending ||
+      graphDraftQuery.isError
+    ) {
+      return;
+    }
+
+    const remoteRecord = graphDraftQuery.data;
+    const remoteSignature = remoteRecord ? serializeGraphDraft(remoteRecord.draft) : null;
+
+    if (!hasInitializedDraftSyncRef.current) {
+      hasInitializedDraftSyncRef.current = true;
+      remoteDraftBaselineRef.current = {
+        revision: remoteRecord?.revision ?? null,
+        signature: remoteSignature,
+      };
+      setDraftRevision(remoteRecord?.revision ?? null);
+      if (remoteRecord == null) {
+        setDraftSyncState('ready');
+        lastSavedSignatureRef.current = null;
+        return;
+      }
+
+      setDraftHydrationRecord(remoteRecord);
+      setDraftSyncState('hydrating_remote');
+      return;
+    }
+
+    if (reloadRemoteDraftRequestedRef.current) {
+      reloadRemoteDraftRequestedRef.current = false;
+      remoteDraftBaselineRef.current = {
+        revision: remoteRecord?.revision ?? null,
+        signature: remoteSignature,
+      };
+      setDraftRevision(remoteRecord?.revision ?? null);
+      if (remoteRecord == null) {
+        setDraftHydrationRecord(null);
+        setDraftConflictRevision(null);
+        setDraftSyncState('ready');
+        lastSavedSignatureRef.current = null;
+        return;
+      }
+
+      setDraftHydrationRecord(remoteRecord);
+      setDraftSyncState('hydrating_remote');
+      return;
+    }
+
+    if (
+      remoteRecord != null &&
+      remoteRecord.revision !== remoteDraftBaselineRef.current.revision
+    ) {
+      remoteDraftBaselineRef.current = {
+        revision: remoteRecord.revision,
+        signature: remoteSignature,
+      };
+      setDraftRevision(remoteRecord.revision);
+    }
+  }, [
+    graphDraftQuery.data,
+    graphDraftQuery.isError,
+    graphDraftQuery.isPending,
+    graphModel.graphSnapshotQuery.isError,
+    graphModel.graphSnapshotQuery.isPending,
+  ]);
+
+  useEffect(() => {
+    if (draftSyncState !== 'hydrating_remote' || hydrationTargetSignature == null) {
+      return;
+    }
+    if (currentDraftSignature !== hydrationTargetSignature) {
+      return;
+    }
+
+    lastSavedSignatureRef.current = hydrationTargetSignature;
+    setDraftHydrationRecord(null);
+    setDraftConflictRevision(null);
+    setDraftSaveStatus('idle');
+    setDraftSyncState('ready');
+  }, [currentDraftSignature, draftSyncState, hydrationTargetSignature]);
+
+  useEffect(() => {
+    if (
+      graphModel.graphSnapshotQuery.isPending ||
+      graphModel.graphSnapshotQuery.isError ||
+      graphDraftQuery.isPending ||
+      graphDraftQuery.isError
+    ) {
+      return;
+    }
+    if (!canPersistGraphDraft) {
+      if (saveDebounceTimerRef.current != null) {
+        window.clearTimeout(saveDebounceTimerRef.current);
+      }
+      if (draftSaveStatus !== 'idle') {
+        setDraftSaveStatus('idle');
+      }
+      return;
+    }
+    if (draftSaveStatus === 'saving') {
+      return;
+    }
+    if (draftSyncState !== 'ready') {
+      return;
+    }
+    const nextSignature = currentDraftSignature;
+    if (nextSignature === lastSavedSignatureRef.current) {
+      if (draftSaveStatus !== 'idle') {
+        setDraftSaveStatus('idle');
+      }
+      return;
+    }
+
+    if (saveDebounceTimerRef.current != null) {
+      window.clearTimeout(saveDebounceTimerRef.current);
+    }
+
+    saveDebounceTimerRef.current = window.setTimeout(() => {
+      setDraftSaveStatus('saving');
+      void workspaceService
+        .saveGraphDraft({
+          draft: currentDraftPayload,
+          expectedRevision: draftRevision,
+          idempotencyKey: createDraftIdempotencyKey(),
+        })
+        .then((result) => {
+          if (result.outcome === 'conflict') {
+            const conflictSignature = serializeGraphDraft(result.current.draft);
+            remoteDraftBaselineRef.current = {
+              revision: result.current.revision,
+              signature: conflictSignature,
+            };
+            queryClient.setQueryData(
+              queryKeys.workspace.graphDraft(store.workspaceLayoutKey),
+              result.current
+            );
+            setDraftConflictRevision(result.current.revision);
+            setDraftRevision(result.current.revision);
+            setDraftSaveStatus('idle');
+            setDraftSyncState('conflict');
+            return;
+          }
+
+          const savedSignature = serializeGraphDraft(result.record.draft);
+          remoteDraftBaselineRef.current = {
+            revision: result.record.revision,
+            signature: savedSignature,
+          };
+          queryClient.setQueryData(
+            queryKeys.workspace.graphDraft(store.workspaceLayoutKey),
+            result.record
+          );
+          setDraftRevision(result.record.revision);
+          setDraftConflictRevision(null);
+          lastSavedSignatureRef.current = savedSignature;
+          setDraftSaveStatus('saved');
+          setDraftSyncState('ready');
+        })
+        .catch(() => {
+          setDraftSaveStatus('idle');
+        });
+    }, DRAFT_SAVE_DEBOUNCE_MS);
+
+    return () => {
+      if (saveDebounceTimerRef.current != null) {
+        window.clearTimeout(saveDebounceTimerRef.current);
+      }
+    };
+  }, [
+    canPersistGraphDraft,
+    currentDraftPayload,
+    currentDraftSignature,
+    draftRevision,
+    draftSaveStatus,
+    graphDraftQuery.isPending,
+    graphDraftQuery.isError,
+    graphModel.graphSnapshotQuery.isError,
+    graphModel.graphSnapshotQuery.isPending,
+    draftSyncState,
+    queryClient,
+    store.workspaceLayoutKey,
+    workspaceService,
+  ]);
+
+  const reloadLatestDraft = useCallback(() => {
+    if (saveDebounceTimerRef.current != null) {
+      window.clearTimeout(saveDebounceTimerRef.current);
+    }
+    reloadRemoteDraftRequestedRef.current = true;
+    setDraftSaveStatus('idle');
+    void queryClient.invalidateQueries({
+      queryKey: queryKeys.workspace.graphDraft(store.workspaceLayoutKey),
+    });
+  }, [queryClient, store.workspaceLayoutKey]);
 
   const nodesWithImpact = useMemo(
     () =>
@@ -274,6 +553,10 @@ export function useCanvasController() {
     transformationValidation,
     planModalOpen: executionActions.planModalOpen,
     setPlanModalOpen: executionActions.setPlanModalOpen,
+    draftSaveStatus,
+    draftConflictRevision,
+    hasStaleDraftVersion: draftConflictRevision != null,
+    reloadLatestDraft,
     currentPlan: store.currentPlan,
     confirmEdgeModal: graphHandlers.confirmEdgeModal,
     setConfirmEdgeModal: graphHandlers.setConfirmEdgeModal,

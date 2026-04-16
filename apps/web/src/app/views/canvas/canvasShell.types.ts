@@ -48,8 +48,11 @@ export type CanvasShellProps = {
   onToggleCostOverlay: () => void;
   onToggleImpact: () => void;
   onToggleColumns: () => void;
+  onReloadLatestDraft: () => void;
   onPlan: () => void;
   onRun: () => void;
+  draftSaveStatus: 'idle' | 'saving' | 'saved';
+  hasStaleDraftVersion: boolean;
   canStartRun: boolean;
   planStatusSummary: string;
   exclusiveOverlayMode: 'runtime' | 'cost';

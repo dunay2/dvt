@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { ReactFlowProvider } from '@xyflow/react';
 
 import { ConfirmEdgeModal, PlanPreviewModal } from '../components/Modals';
+import { Button } from '../components/ui/button';
 import {
   completeBootstrapScreen,
   setBootstrapStepStatus,
@@ -46,6 +47,22 @@ function CanvasContent() {
     controller.isBackendCheckPending || workbenchState.kind === 'loading';
   const workbenchErrorMessage =
     workbenchState.kind === 'error' ? workbenchState.message : null;
+  const staleDraftBanner = controller.hasStaleDraftVersion ? (
+    <div
+      data-slot="canvas-stale-draft-state"
+      className="border-b border-amber-500/40 bg-amber-950/40 px-4 py-3 text-sm text-amber-100"
+    >
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <p className="font-semibold">{canvasViewCopy.staleDraftTitle}</p>
+          <p className="text-amber-200">{canvasViewCopy.staleDraftMessage}</p>
+        </div>
+        <Button size="sm" variant="outline" onClick={controller.reloadLatestDraft}>
+          Reload latest draft
+        </Button>
+      </div>
+    </div>
+  ) : null;
 
   useEffect(() => {
     if (isCanvasStartupPending) {
@@ -172,12 +189,15 @@ function CanvasContent() {
         onToggleCostOverlay={controller.handleToggleCostOverlay}
         onToggleImpact={controller.toggleImpactOverlay}
         onToggleColumns={controller.toggleColumnLevelLineage}
+        onReloadLatestDraft={controller.reloadLatestDraft}
         onPlan={() => {
           void controller.handlePlan();
         }}
         onRun={() => {
           void controller.handleStartRun();
         }}
+        draftSaveStatus={controller.draftSaveStatus}
+        hasStaleDraftVersion={controller.hasStaleDraftVersion}
         canStartRun={controller.canStartRun}
         planStatusSummary={controller.planStatusSummary}
         exclusiveOverlayMode={controller.exclusiveOverlayMode}
@@ -186,7 +206,12 @@ function CanvasContent() {
         columnLevelLineageEnabled={controller.columnLevelLineageEnabled}
         transformationValidation={controller.transformationValidation}
         centerSurface={renderCenterSurface()}
-        readOnlyBanner={<CanvasReadOnlyBannerView state={readOnlyState} />}
+        readOnlyBanner={
+          <>
+            {staleDraftBanner}
+            <CanvasReadOnlyBannerView state={readOnlyState} />
+          </>
+        }
       />
 
       <PlanPreviewModal

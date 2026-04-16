@@ -22,4 +22,7 @@ export const canvasViewCopy = {
     'Inspect the graph and overlays here, but planning, run start, and graph edits are disabled in this context.',
   limitedAccessTitle: 'Limited mutation access',
   readOnlyNote: 'Graph inspection and overlays remain available while mutation is gated.',
+  staleDraftTitle: 'Stale draft version',
+  staleDraftMessage:
+    'A newer draft was saved elsewhere. Reload the latest draft before continuing edits.',
 } as const;

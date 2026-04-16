@@ -8,6 +8,10 @@ import { createMockWorkspaceService } from './workspaceService.mock';
 // to importing from '../../ports/workspace' or '../../ports' directly.
 export type {
   WorkspaceGraphSnapshot,
+  WorkspaceGraphDraft,
+  WorkspaceGraphDraftRecord,
+  SaveWorkspaceGraphDraftInput,
+  SaveWorkspaceGraphDraftResult,
   WarehouseConnection,
   WarehouseColumn,
   WarehouseTable,

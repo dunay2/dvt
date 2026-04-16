@@ -1,5 +1,5 @@
 import { act } from 'react';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { setupCanvasControllerHarness } from './useCanvasController.test.harness';
 
@@ -152,5 +152,176 @@ describe('useCanvasController core', () => {
     });
 
     expect(harness.getLatestResult()?.importedNodeFocusIds).toEqual([]);
+  });
+
+  it('surfaces stale draft state when saveGraphDraft returns a CAS conflict', async () => {
+    harness.state.services.workspaceService.saveGraphDraft = async () => ({
+      outcome: 'conflict',
+      current: {
+        revision: 'rev-conflict',
+        savedAt: '2026-04-16T00:00:00Z',
+        draft: {
+          nodeIds: ['node_1', 'node_2'],
+          nodePositions: {
+            node_1: { x: 0, y: 0 },
+            node_2: { x: 100, y: 0 },
+          },
+          edges: [{ sourceId: 'node_1', targetId: 'node_2' }],
+        },
+      },
+    });
+
+    await harness.renderProbe();
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 450));
+    });
+
+    expect(harness.getLatestResult()?.hasStaleDraftVersion).toBe(true);
+    expect(harness.getLatestResult()?.draftConflictRevision).toBe('rev-conflict');
+  });
+
+  it('does not overwrite the remote draft while reloading after a CAS conflict', async () => {
+    let saveAttempts = 0;
+    harness.state.services.workspaceService.saveGraphDraft = async () => {
+      saveAttempts += 1;
+      return {
+        outcome: 'conflict',
+        current: {
+          revision: 'rev-remote',
+          savedAt: '2026-04-16T00:00:00Z',
+          draft: {
+            nodeIds: ['node_2'],
+            nodePositions: {
+              node_2: { x: 220, y: 120 },
+            },
+            edges: [],
+          },
+        },
+      };
+    };
+
+    await harness.renderProbe();
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 450));
+    });
+
+    expect(harness.getLatestResult()?.hasStaleDraftVersion).toBe(true);
+    harness.state.graphDraftRecord = {
+      revision: 'rev-remote',
+      savedAt: '2026-04-16T00:00:00Z',
+      draft: {
+        nodeIds: ['node_2'],
+        nodePositions: {
+          node_2: { x: 220, y: 120 },
+        },
+        edges: [],
+      },
+    };
+
+    await act(async () => {
+      harness.getLatestResult()?.reloadLatestDraft();
+    });
+    await harness.renderProbe();
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 450));
+    });
+
+    expect(saveAttempts).toBe(1);
+    expect(harness.getLatestResult()?.hasStaleDraftVersion).toBe(false);
+    expect(harness.getLatestResult()?.nodesWithImpact.map((node) => node.id)).toEqual(['node_2']);
+  });
+
+  it('continues autosaving local edits after hydrating an existing remote draft', async () => {
+    harness.state.graphDraftRecord = {
+      revision: 'rev-1',
+      savedAt: '2026-04-16T00:00:00Z',
+      draft: {
+        nodeIds: ['node_1', 'node_2'],
+        nodePositions: {
+          node_1: { x: 0, y: 0 },
+          node_2: { x: 100, y: 0 },
+        },
+        edges: [{ sourceId: 'node_1', targetId: 'node_2' }],
+      },
+    };
+    harness.state.services.workspaceService.saveGraphDraft = vi.fn(async ({ draft }) => ({
+      outcome: 'saved' as const,
+      record: {
+        revision: 'rev-2',
+        savedAt: '2026-04-16T00:00:01Z',
+        draft,
+      },
+    }));
+
+    await harness.renderProbe();
+
+    const workspaceLayoutKey = 'tenant-a::project-a::dev';
+    const storeState = harness.state.store as unknown as {
+      canvasLayouts: Record<
+        string,
+        { nodePositions?: Record<string, { x: number; y: number }>; viewport?: unknown }
+      >;
+    };
+    storeState.canvasLayouts = {
+      ...storeState.canvasLayouts,
+      [workspaceLayoutKey]: {
+        nodePositions: {
+          node_1: { x: 48, y: 24 },
+          node_2: { x: 148, y: 24 },
+        },
+      },
+    };
+
+    await harness.renderProbe();
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 450));
+    });
+
+    expect(harness.state.services.workspaceService.saveGraphDraft).toHaveBeenCalled();
+    expect(harness.state.queryClient.setQueryData).toHaveBeenCalledWith(
+      ['workspace', 'graph-draft', workspaceLayoutKey],
+      expect.objectContaining({
+        revision: 'rev-2',
+      })
+    );
+  });
+
+  it('does not snap node positions back to the hydrated remote draft after a local move', async () => {
+    harness.state.graphDraftRecord = {
+      revision: 'rev-1',
+      savedAt: '2026-04-16T00:00:00Z',
+      draft: {
+        nodeIds: ['node_2'],
+        nodePositions: {
+          node_2: { x: 220, y: 120 },
+        },
+        edges: [],
+      },
+    };
+
+    await harness.renderProbe();
+
+    const workspaceLayoutKey = 'tenant-a::project-a::dev';
+    const storeState = harness.state.store as unknown as {
+      canvasLayouts: Record<
+        string,
+        { nodePositions?: Record<string, { x: number; y: number }>; viewport?: unknown }
+      >;
+    };
+    storeState.canvasLayouts = {
+      ...storeState.canvasLayouts,
+      [workspaceLayoutKey]: {
+        nodePositions: {
+          node_2: { x: 420, y: 260 },
+        },
+      },
+    };
+
+    await harness.renderProbe();
+
+    expect(
+      harness.getLatestResult()?.nodesWithImpact.find((node) => node.id === 'node_2')?.position
+    ).toEqual({ x: 420, y: 260 });
   });
 });
