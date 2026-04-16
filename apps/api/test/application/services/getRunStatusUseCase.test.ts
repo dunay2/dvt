@@ -1122,6 +1122,93 @@ describe('GetRunStatusUseCase', () => {
     });
   });
 
+  it('ignores legacy StepCompleted materialization payloads when snapshot evidence is absent', async () => {
+    const engine = {
+      async getRunStatus() {
+        return {
+          runId: 'provider-run-1',
+          status: 'COMPLETED' as const,
+          startedAt: '2026-04-08T10:00:00.000Z',
+          completedAt: '2026-04-08T10:10:00.000Z',
+        };
+      },
+      async getRunEnrichment() {
+        throw new Error('should not be called');
+      },
+    };
+
+    const stateStore = {
+      ...createStateStore(),
+      async getSnapshot() {
+        return {
+          schemaVersion: 1,
+          runId: 'run-1',
+          status: 'COMPLETED' as const,
+          paused: false,
+          cancelling: false,
+          startedAt: '2026-04-08T10:00:00.000Z',
+          completedAt: '2026-04-08T10:10:00.000Z',
+          steps: {},
+        };
+      },
+      async listEvents() {
+        return [
+          {
+            eventId: 'evt-step-completed',
+            eventType: 'StepCompleted',
+            runId: 'run-1',
+            tenantId: 'tenant-a',
+            projectId: 'proj-1',
+            environmentId: 'env-1',
+            planId: 'plan-1',
+            planVersion: '1.0',
+            engineAttemptId: 1,
+            logicalAttemptId: 1,
+            idempotencyKey: 'idem-step-completed',
+            payloadVersion: 1,
+            emittedAt: '2026-04-08T10:10:00.000Z',
+            persistedAt: '2026-04-08T10:10:00.100Z',
+            runSeq: 1,
+            stepId: 'step-evidence',
+            payload: {
+              materialization: {
+                executor: 'postgres',
+                environmentId: 'env-1',
+                sinkTable: 'analytics.legacy_shape',
+                rowsWritten: 42,
+                startedAt: '2026-04-08T10:09:55.000Z',
+                completedAt: '2026-04-08T10:10:00.000Z',
+                durationMs: 5000,
+              },
+            },
+          },
+        ];
+      },
+    };
+
+    const useCase = new GetRunStatusUseCase(
+      engine as never,
+      engine as never,
+      stateStore as never,
+      {
+        isSnapshotStale: vi.fn().mockResolvedValue(false),
+      } as never
+    );
+
+    await expect(
+      useCase.execute({ runId: 'run-1', enriched: false }, queryContext as never)
+    ).resolves.toMatchObject({
+      runId: 'provider-run-1',
+      status: 'COMPLETED',
+    });
+
+    await expect(
+      useCase.execute({ runId: 'run-1', enriched: false }, queryContext as never)
+    ).resolves.not.toMatchObject({
+      materialization: expect.anything(),
+    });
+  });
+
   it('skips full event history read when a workflow snapshot is available', async () => {
     const engine = {
       async getRunStatus() {

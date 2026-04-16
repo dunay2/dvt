@@ -370,36 +370,6 @@ describe('applyRunEvent - TF-C2-B read-surface evidence', () => {
     });
   });
 
-  it('keeps compatibility with legacy materialization payloads on step completion', () => {
-    const snap = makeSnap('RUNNING');
-
-    applyRunEvent(snap, makeStepEvent('StepStarted', 'step-legacy-evidence'));
-    applyRunEvent(snap, {
-      ...makeStepEvent('StepCompleted', 'step-legacy-evidence'),
-      payload: {
-        materialization: {
-          executor: 'postgres',
-          environmentId: 'env-1',
-          sinkTable: 'analytics.orders_legacy',
-          rowsWritten: 21,
-          startedAt: '2026-01-01T00:00:05.000Z',
-          completedAt: '2026-01-01T00:00:07.000Z',
-          durationMs: 2000,
-        },
-      },
-    } as unknown as EventEnvelope);
-
-    expect(snap.execution?.materialization).toEqual({
-      executor: 'postgres',
-      environmentId: 'env-1',
-      sinkTable: 'analytics.orders_legacy',
-      rowsWritten: 21,
-      startedAt: '2026-01-01T00:00:05.000Z',
-      completedAt: '2026-01-01T00:00:07.000Z',
-      durationMs: 2000,
-    });
-  });
-
   it('clears materialization evidence when a later step failure occurs', () => {
     const snap = makeSnap('RUNNING');
 
@@ -407,7 +377,7 @@ describe('applyRunEvent - TF-C2-B read-surface evidence', () => {
     applyRunEvent(snap, {
       ...makeStepEvent('StepCompleted', 'step-evidence'),
       payload: {
-        materialization: {
+        resultEvidence: {
           executor: 'postgres',
           environmentId: 'env-1',
           sinkTable: 'analytics.orders_daily',
@@ -441,7 +411,7 @@ describe('applyRunEvent - TF-C2-B read-surface evidence', () => {
     applyRunEvent(snap, {
       ...makeStepEvent('StepCompleted', 'step-evidence'),
       payload: {
-        materialization: {
+        resultEvidence: {
           executor: 'postgres',
           environmentId: 'env-1',
           sinkTable: 'analytics.orders_daily',

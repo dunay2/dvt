@@ -46,6 +46,10 @@ const MATRIX_PATH_CANDIDATES = [
     __dirname,
     '../../../../../docs/architecture/components/engine/contracts/capabilities/adapters.capabilities.json'
   ),
+  path.resolve(
+    __dirname,
+    '../../../../../docs/architecture/engine/contracts/capabilities/adapters.capabilities.json'
+  ),
   path.resolve(__dirname, '../../../../../specs/contracts/capabilities/adapters.capabilities.json'),
 ];
 

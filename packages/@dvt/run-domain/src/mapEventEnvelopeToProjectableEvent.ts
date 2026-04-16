@@ -102,9 +102,7 @@ export function mapEventEnvelopeToProjectableEvent(
 
     case 'StepCompleted': {
       const payload = asRecord(event.payload);
-      const materialization =
-        readMaterializationEvidence(payload?.['resultEvidence']) ??
-        readMaterializationEvidence(payload?.['materialization']);
+      const materialization = readMaterializationEvidence(payload?.['resultEvidence']);
       return {
         kind: 'StepCompleted',
         emittedAt: event.emittedAt,
