@@ -228,6 +228,12 @@ Interpretation:
 | preview lifecycle seam               | client or neighboring boundary | plan lifecycle services          | optional persisted plan request                   | compile does not cross this seam implicitly                    |
 | start-run seam                       | client or neighboring boundary | runtime admission                | `planRef`, `targetAdapter`, run intent            | provider selection stays outside compile                       |
 
+Observability note:
+
+- compile request observability supports extension keys
+- compile envelope mapping must preserve extension keys instead of narrowing to
+  a fixed field subset
+
 ## Domain and class relationship view
 
 ```mermaid
@@ -337,6 +343,8 @@ Interpretation:
 - external compile must remain compile-only
 - compile policy must come from a canonical catalog or approved contribution
   pack
+- compile planner registry must be fail-closed to profile-selected
+  `allowedStepKinds`
 - step-family semantics must not be inferred from naming conventions
 - route modules must not become the home of planner policy
 - free-form JSON must not become the authority for schemas or handlers

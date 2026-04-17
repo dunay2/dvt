@@ -1,6 +1,6 @@
 import {
   CaptureMaterializationEvidenceStepTypeConfigSchema,
-  createDefaultStepTypeRegistry,
+  StepTypeRegistry,
   PostgresSqlTransformStepTypeConfigSchema,
   PreparePostgresTransformStepTypeConfigSchema,
 } from '@dvt/contracts';
@@ -26,7 +26,7 @@ export function buildExternalCompilePlanner(
   spec: ExternalCompileProfileSpec = EXTERNAL_COMPILE_PROFILE_SPEC
 ): PlannerFacade {
   const plannerOptions: PlannerFacadeOptions = {
-    stepTypeRegistry: createDefaultStepTypeRegistry(resolveExternalCompileStepSchemas(spec)),
+    stepTypeRegistry: new StepTypeRegistry(resolveExternalCompileStepSchemas(spec)),
   };
 
   return new PlannerFacade(plannerOptions);

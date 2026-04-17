@@ -288,6 +288,12 @@ If the external compile boundary should expose the new family or kind:
 The compile profile is the policy seam. The route and use case must not carry
 raw policy literals.
 
+Implementation rule:
+
+- build the compile planner registry from `allowedStepKinds` only
+- do not compose external compile with `createDefaultStepTypeRegistry(...)`
+  because that re-introduces unrelated built-in kinds into the boundary
+
 ### 7. Add validation and negative paths
 
 Required coverage:
@@ -332,6 +338,13 @@ Put differently:
 - code defines behavior
 - typed profile specs define boundary policy
 - config may only enable or disable predeclared policy artifacts
+
+## Observability extension rule
+
+`PlannerObservabilitySchema` is extension-friendly (`catchall`).
+
+Compile envelope mapping therefore must preserve custom observability keys and
+must not reduce payloads to only `tags` and `extra`.
 
 ## Illustrative typed profile example
 

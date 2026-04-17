@@ -40,8 +40,11 @@ function normalizeCompileEnvironment(
 function normalizeCompileObservability(
   observability: NonNullable<ParsedExternalPlanCompileRouteInput['observability']>
 ) {
+  const { tags, extra, ...customFields } = observability;
+
   return {
-    ...(observability.tags === undefined ? {} : { tags: observability.tags }),
-    ...(observability.extra === undefined ? {} : { extra: observability.extra }),
+    ...customFields,
+    ...(tags === undefined ? {} : { tags }),
+    ...(extra === undefined ? {} : { extra }),
   };
 }

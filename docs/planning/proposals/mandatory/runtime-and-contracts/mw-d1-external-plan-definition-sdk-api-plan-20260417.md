@@ -614,6 +614,9 @@ Interpretation:
   contribution must resolve into the same catalog model as built-ins.
 - `ExternalCompileProfileSpec` is the only place where the external compile
   boundary chooses which families and kinds are exposed.
+- The external compile planner must be instantiated from the profile-filtered
+  kind map only; it must not include default built-in kinds outside
+  `allowedStepKinds`.
 - Builders must reject duplicate family ids, duplicate step kinds, orphan step
   kinds, and contributions with missing execution profile metadata.
 - Builders must reject compile profiles that reference families or kinds absent
@@ -641,6 +644,16 @@ The route parser must reject these fields instead of silently adapting them:
 
 No compatibility mapper is allowed from preview payloads, manifest-shaped
 payloads, or older compile aliases into the new request DTO.
+
+## Observability mapping rule
+
+`ExternalPlanCompileRequestV1.observability` is extension-friendly and allows
+additional keys beyond `tags` and `extra`.
+
+The compile envelope mapper must preserve those custom keys when building the
+canonical planner envelope.
+
+The mapper must not narrow observability to a fixed pair of fields.
 
 ## Current-state sequence
 

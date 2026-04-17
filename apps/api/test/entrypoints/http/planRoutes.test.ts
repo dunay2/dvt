@@ -426,6 +426,53 @@ describe('planRoutes', () => {
     expect(buildPlan).toHaveBeenCalledOnce();
   });
 
+  it('preserves custom observability keys when mapping compile envelope', async () => {
+    const reply = createReply();
+    const buildPlan = vi.fn(async () => ({
+      plan: buildTransformationStoredPlan(),
+      canonicalPlanJson: '{}',
+    }));
+
+    await compilePlanRoute(
+      {
+        id: 'req-compile-observability-custom',
+        headers: { authorization: 'Bearer token' },
+        body: {
+          context: {
+            tenantId: 'tenant-1',
+            projectId: 'project-1',
+            environmentId: 'env-1',
+          },
+          selection: {
+            selectedNodeIds: ['source-node', 'transform-node', 'sink-node'],
+          },
+          observability: {
+            tags: { surface: 'compile' },
+            extra: { traceParent: '00-abcdef' },
+            correlationKey: 'ext-compile-123',
+          },
+          graphSource: VALID_TRANSFORMATION_GRAPH_SOURCE,
+        },
+        log: { error: vi.fn() },
+      } as never,
+      reply as never,
+      {
+        ...okAuthDeps(),
+        planner: { buildPlan },
+      } as never
+    );
+
+    expect(buildPlan).toHaveBeenCalledWith(
+      expect.objectContaining({
+        observability: expect.objectContaining({
+          tags: { surface: 'compile' },
+          extra: { traceParent: '00-abcdef' },
+          correlationKey: 'ext-compile-123',
+        }),
+      })
+    );
+  });
+
   it('returns 400 when compile receives preview or legacy ingress fields', async () => {
     const reply = createReply();
     const buildPlan = vi.fn();
