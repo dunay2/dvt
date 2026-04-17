@@ -6,6 +6,8 @@ import {
   type RouteBootstrapPresentation,
 } from '../../bootstrap/routeBootstrapPresentation';
 
+export const COST_ROUTE_ID = 'cost.dashboard';
+
 export const COST_ROUTE_BOOTSTRAP_HANDLE = createPublishedRouteBootstrapHandle({
   pendingDetail: 'Preparing Cost route',
 });

@@ -16,7 +16,10 @@ import {
   buildLineageColumnState,
   buildLineageWorkbenchState,
 } from './lineage/lineageWorkbenchStateModel';
-import { deriveLineageRouteBootstrapPresentation } from './lineage/lineageRouteBootstrap';
+import {
+  LINEAGE_ROUTE_ID,
+  deriveLineageRouteBootstrapPresentation,
+} from './lineage/lineageRouteBootstrap';
 import { useLineageViewData } from './lineage/useLineageViewData';
 
 export default function LineageView() {
@@ -62,6 +65,7 @@ export default function LineageView() {
     snapshotErrorMessage: snapshotError?.message ?? copy.routeErrorFallbackMessage,
   });
   usePublishedRouteBootstrap(
+    LINEAGE_ROUTE_ID,
     deriveLineageRouteBootstrapPresentation(workbenchState)
   );
 

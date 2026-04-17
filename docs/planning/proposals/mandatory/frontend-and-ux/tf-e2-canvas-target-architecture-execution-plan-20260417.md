@@ -38,6 +38,7 @@ clarification, and small reviewable slices.
 - `docs/planning/reviews/20260417-dvt-plus-deep-architectural-review.md`
 - `docs/architecture/components/web/frontend-data-boundary-architecture.md`
 - `docs/architecture/components/web/graph/graph-frontend-architecture.md`
+- `docs/architecture/components/web/graph/graph-route-bootstrap-architecture.md`
 - `docs/architecture/components/web/graph/canvas-controller-current-to-target-architecture.md`
 - `docs/architecture/components/web/graph/canvas-component-map-and-modernization-review.md`
 
@@ -46,6 +47,8 @@ clarification, and small reviewable slices.
 - The existing TF-E2 plan remains the parent proposal for scope, dependency
   chain, and high-level functional closure.
 - The graph architecture pack remains the technical target description.
+- `graph-route-bootstrap-architecture.md` is the canonical source for bootstrap
+  invariants, route classification, and acceptance posture.
 - The deep review remains the rationale and risk intake.
 - This document is the execution companion that converts those sources into
   phased work, user stories, bounded contexts, ports, and acceptance slices.
@@ -91,7 +94,9 @@ Rules for execution:
 - remote draft record is authoritative for persisted draft baseline
 - `CanvasDraftSession` is authoritative for in-flight authoring truth in the
   route
-- `RouteBootstrapRegistration` is authoritative for route startup posture
+- the startup contract stack is authoritative for route startup posture:
+  `routeBootstrapContract` + `routeBootstrapRegistration` +
+  `routeBootstrapRegistry`
 
 ### 2. Projection is not authority
 
@@ -139,9 +144,10 @@ flowchart LR
   end
 
   subgraph RouteContract["Bounded context: Route startup contract"]
+    Contract["RouteBootstrapContract"]
     Registration["RouteBootstrapRegistration"]
     Registry["RouteBootstrapRegistry"]
-    Publisher["RouteBootstrapPublisher"]
+    Publisher["RouteBootstrapPublisher adapter\n(usePublishedRouteBootstrap + useActiveRouteBootstrapRegistration)"]
   end
 
   subgraph CanvasAuthoring["Bounded context: Canvas authoring"]
@@ -168,6 +174,7 @@ flowchart LR
 
   Root --> Registry
   Bootstrap --> Root
+  Contract --> Registration
   Registration --> Registry
   Publisher --> Registry
   DraftSession --> DraftScope
@@ -231,22 +238,25 @@ Owned invariants:
 - members missing from the canonical snapshot are either pruned or represented
   as a projection-gap posture, never silently invented
 
-### Owned aggregate root: `RouteBootstrapRegistration`
+### Owned startup contract model: `RouteBootstrapRegistration`
 
-`RouteBootstrapRegistration` is the aggregate root for the active route startup
-contract.
+`RouteBootstrapRegistration` is the typed startup-contract model for the active
+route. It is not treated as a frontend aggregate root in the SRP-split
+bootstrap implementation.
 
 Owned state:
 
 - `routeId`
 - `mode`
 - `initialPresentation`
-- current published presentation while mounted
 
 Owned invariants:
 
-- publication is scoped to one explicit `routeId`
-- publication is monotonic while the same route instance remains mounted
+- registration binds one explicit `routeId` and startup mode from route handle
+  metadata
+- registration does not own mutable publication lifecycle state
+- publication lifecycle is owned by `RouteBootstrapRegistry` through publisher
+  adapters and is monotonic while the same route instance remains mounted
 - reset occurs only on unmount or route identity change
 - a route without an explicit contract fails closed
 
@@ -262,18 +272,33 @@ These are important to the plan but are not frontend-owned aggregate roots:
 
 ## Port Inventory
 
-The target architecture keeps backend ports stable and clarifies internal ports.
+The target architecture keeps backend ports stable and clarifies internal ports:
 
-| Port                          | Kind     | Current anchor                                        | Target role                                                     |
-| ----------------------------- | -------- | ----------------------------------------------------- | --------------------------------------------------------------- |
-| `WorkspaceGraphSnapshotPort`  | external | `IWorkspacePort.getGraph`                             | read canonical graph members                                    |
-| `WorkspaceGraphDraftPort`     | external | `IWorkspacePort.getGraphDraft` and `saveGraphDraft`   | read/write persisted draft with CAS semantics                   |
-| `PlanPreviewPort`             | external | `plansService`                                        | preview the current authoring scope                             |
-| `RunStartPort`                | external | `runsService`                                         | start an execution from canonical authoring truth               |
-| `RouteBootstrapRegistryPort`  | internal | `routeBootstrapPresentation.ts`                       | shell-facing startup registry keyed by `route.id`               |
-| `RouteBootstrapPublisherPort` | internal | currently implicit in `usePublishedRouteBootstrap.ts` | publish route posture against one explicit registration         |
-| `CanvasNavigationPort`        | internal | `useNavigate` in route code                           | isolate route-only handoff side effects                         |
-| `CanvasTelemetryPort`         | internal | currently mixed across route code and logs            | capture correlation-aware failure evidence and degraded posture |
+- `WorkspaceGraphSnapshotPort` (external)
+  current anchor: `IWorkspacePort.getGraph`
+  target role: read canonical graph members.
+- `WorkspaceGraphDraftPort` (external)
+  current anchor: `IWorkspacePort.getGraphDraft` and `saveGraphDraft`
+  target role: read/write persisted draft with CAS semantics.
+- `PlanPreviewPort` (external)
+  current anchor: `plansService`
+  target role: preview the current authoring scope.
+- `RunStartPort` (external)
+  current anchor: `runsService`
+  target role: start an execution from canonical authoring truth.
+- `RouteBootstrapRegistryPort` (internal)
+  current anchor: `routeBootstrapRegistry.ts`
+  target role: shell-facing startup registry keyed by `route.id`.
+- `RouteBootstrapPublisherPort` (internal)
+  current anchor: `usePublishedRouteBootstrap.ts` plus
+  `useActiveRouteBootstrapRegistration.ts`
+  target role: publish posture for one explicit `route.id` registration.
+- `CanvasNavigationPort` (internal)
+  current anchor: `useNavigate` in route code
+  target role: isolate route-only handoff side effects.
+- `CanvasTelemetryPort` (internal)
+  current anchor: currently mixed across route code and logs
+  target role: capture correlation-aware failure evidence and degraded posture.
 
 ### Port rules
 
@@ -282,6 +307,19 @@ The target architecture keeps backend ports stable and clarifies internal ports.
 - internal ports must not smuggle domain truth through generic hooks or
   pathname heuristics
 - the publisher port is an adapter seam, not a domain model
+
+### Publisher binding to current implementation
+
+In this plan, `RouteBootstrapPublisher` is an architectural role name, not a
+new class to introduce by default.
+
+Current concrete binding:
+
+- publication adapter: `usePublishedRouteBootstrap.ts`
+- active registration resolution: `useActiveRouteBootstrapRegistration.ts`
+- publication store: `routeBootstrapRegistry.ts`
+- registration contract source: `routeBootstrapRegistration.ts` and
+  `routeBootstrapContract.ts`
 
 ## C4 Component View
 
@@ -367,6 +405,11 @@ classDiagram
     +reset(routeId)
   }
 
+  class RouteBootstrapPublisherAdapter {
+    +publish(routeId, presentation)
+    +reset(routeId)
+  }
+
   class CanvasDraftSession {
     +syncState: CanvasDraftSyncState
     +baseline: CanvasDraftBaseline
@@ -441,7 +484,9 @@ classDiagram
   CanvasDraftScope --> CanvasDraftSession
   CanvasDraftPresentationModel --> CanvasDraftScope
   CanvasDraftPresentationModel --> RouteBootstrapRegistration
-  RouteBootstrapRegistration --> RouteBootstrapRegistry
+  CanvasDraftPresentationModel --> RouteBootstrapPublisherAdapter
+  RouteBootstrapPublisherAdapter --> RouteBootstrapRegistration
+  RouteBootstrapPublisherAdapter --> RouteBootstrapRegistry
   RouteBootstrapRegistration --> RouteBootstrapPresentation
 ```
 
@@ -455,7 +500,7 @@ sequenceDiagram
   participant Root as Root.tsx
   participant Canvas as Canvas.tsx
   participant Presentation as CanvasDraftPresentationModel
-  participant Publisher as RouteBootstrapPublisher
+  participant Publisher as RouteBootstrapPublisher adapter (usePublishedRouteBootstrap + useActiveRouteBootstrapRegistration)
   participant Registry as RouteBootstrapRegistry
 
   Router->>Root: resolve active route id + handle
@@ -624,7 +669,7 @@ It is the canonical order and acceptance posture.
 
 | Backlog ID   | Maps to lane task | Slice                              | Output                                                                                                 |
 | ------------ | ----------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| `E2-ARCH-01` | `TF-E2-A`         | Route bootstrap registry hardening | split contract, registry, and publisher ownership with explicit `route.id` publication                 |
+| `E2-ARCH-01` | `TF-E2-A`         | Route bootstrap registry hardening | split contract, registration, registry, and publisher ownership with explicit `route.id` publication   |
 | `E2-ARCH-02` | `TF-E2-A`         | Draft repository seam              | isolate draft read/write operations as one repository-facing seam over `IWorkspacePort`                |
 | `E2-ARCH-03` | `TF-E2-B`         | Draft aggregate completion         | finish `CanvasDraftSession` ownership over baseline, working set, conflict, and missing-remote posture |
 | `E2-ARCH-04` | `TF-E2-B`         | Graph projector seam               | make graph rendering a projection over visible scope and persisted positions only                      |
@@ -729,8 +774,8 @@ Exit criteria:
 
 | Story       | Backlog                    | Aggregate / model                                    | Ports                                                       | Diagrams and sequences                              | Proof anchor                               |
 | ----------- | -------------------------- | ---------------------------------------------------- | ----------------------------------------------------------- | --------------------------------------------------- | ------------------------------------------ |
-| `US-E2-001` | `E2-ARCH-01`               | `RouteBootstrapRegistration`                         | `RouteBootstrapRegistryPort`, `RouteBootstrapPublisherPort` | DDD context map, C4 L3, Sequence 1                  | route bootstrap + root startup tests       |
-| `US-E2-002` | `E2-ARCH-01`               | `RouteBootstrapRegistration`                         | `RouteBootstrapPublisherPort`                               | Sequence 1, published route lifecycle state machine | publisher lifecycle tests                  |
+| `US-E2-001` | `E2-ARCH-01`               | route startup contract model                         | `RouteBootstrapRegistryPort`, `RouteBootstrapPublisherPort` | DDD context map, C4 L3, Sequence 1                  | route bootstrap + root startup tests       |
+| `US-E2-002` | `E2-ARCH-01`               | route startup contract model                         | `RouteBootstrapPublisherPort`                               | Sequence 1, published route lifecycle state machine | publisher lifecycle tests                  |
 | `US-E2-003` | `E2-ARCH-03`               | `CanvasDraftSession`                                 | `WorkspaceGraphDraftPort`                                   | Sequence 2, `CanvasDraftSession` state machine      | aggregate conflict tests                   |
 | `US-E2-004` | `E2-ARCH-03`               | `CanvasDraftSession`                                 | `WorkspaceGraphDraftPort`, `WorkspaceGraphSnapshotPort`     | Sequence 2, `CanvasDraftSession` state machine      | missing-remote recovery tests              |
 | `US-E2-005` | `E2-ARCH-03`               | `CanvasDraftPresentationModel`                       | `WorkspaceGraphDraftPort`                                   | C4 L3, class diagram                                | read-only posture tests                    |

@@ -15,7 +15,11 @@ import {
 import { useExecutionStore } from '../stores/executionStore';
 import type { Run } from '../types/dbt';
 import { useRunWorkspace } from './runs/useRunWorkspace';
-import { deriveRunsRouteBootstrapPresentation } from './runs/runsRouteBootstrap';
+import {
+  deriveRunsRouteBootstrapPresentation,
+  RUN_DETAIL_ROUTE_ID,
+  RUNS_ROUTE_ID,
+} from './runs/runsRouteBootstrap';
 import { buildRunsWorkbenchState } from './runs/runWorkbenchStateModel';
 
 function toFocusedRunModel(workspace: RunWorkspaceViewModel): Run {
@@ -84,7 +88,10 @@ export default function RunsView() {
     workspaceError,
     workspaceErrorMessage,
   });
-  usePublishedRouteBootstrap(deriveRunsRouteBootstrapPresentation(state));
+  usePublishedRouteBootstrap(
+    runId ? RUN_DETAIL_ROUTE_ID : RUNS_ROUTE_ID,
+    deriveRunsRouteBootstrapPresentation(state)
+  );
 
   switch (state.kind) {
     case 'runs-error':

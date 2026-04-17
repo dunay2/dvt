@@ -1940,6 +1940,8 @@ tasks:
       - docs/planning/closeouts/20260417-tf-e2-canvas-draft-aggregate-alignment-closeout.md
       - docs/planning/closeouts/20260417-tf-e2-canvas-bootstrap-presentation-handoff-closeout.md
       - docs/planning/closeouts/20260417-tf-e2-route-bootstrap-contract-generalization-closeout.md
+      - docs/planning/closeouts/20260417-tf-e2-route-bootstrap-srp-refactor-closeout.md
+      - docs/planning/closeouts/20260417-graph-architecture-doc-pack-split-closeout.md
       - docs/runbooks/index.md
     status_reason: >-
       The productization slice remains active, but the current worktree has materially advanced the
@@ -1962,7 +1964,11 @@ tasks:
       stories, roadmap, and executable backlog for the remaining closure work. `TF-A2` and `TF-C4`
       still govern the shared boundary, while the remaining `TF-E2` work is now the broader node,
       edge, Inspector, operability, and end-to-end proof matrix required before the parent task can
-      move to review.
+      move to review. A follow-up SRP refactor now also split route-bootstrap ownership into
+      contract, registration, and registry modules plus one shared active-registration hook, without
+      changing startup behavior. The graph architecture docs are now split into one short entrypoint
+      plus dedicated detail docs for startup contract, runtime model, sequence/state, and decision
+      rationale and patterns, with explicit current-point and evolution posture.
     last_verified: '2026-04-17'
   - task_id: TF-E2-A
     parent_task: TF-E2

@@ -30,9 +30,22 @@ Primary anchors:
 - [CanvasViewport.tsx](../../../../../apps/web/src/app/views/canvas/CanvasViewport.tsx)
 - [CanvasToolbar.tsx](../../../../../apps/web/src/app/views/canvas/CanvasToolbar.tsx)
 - [CanvasStateViews.tsx](../../../../../apps/web/src/app/views/canvas/CanvasStateViews.tsx)
-- [routeBootstrapPresentation.ts](../../../../../apps/web/src/app/bootstrap/routeBootstrapPresentation.ts)
+- [routeBootstrapContract.ts](../../../../../apps/web/src/app/bootstrap/routeBootstrapContract.ts)
+- [routeBootstrapRegistration.ts](../../../../../apps/web/src/app/bootstrap/routeBootstrapRegistration.ts)
+- [routeBootstrapRegistry.ts](../../../../../apps/web/src/app/bootstrap/routeBootstrapRegistry.ts)
+- [useActiveRouteBootstrapRegistration.ts](../../../../../apps/web/src/app/bootstrap/useActiveRouteBootstrapRegistration.ts)
+- [routeBootstrapErrors.ts](../../../../../apps/web/src/app/bootstrap/routeBootstrapErrors.ts)
+- [routeBootstrapErrorCopy.ts](../../../../../apps/web/src/app/bootstrap/routeBootstrapErrorCopy.ts)
 - [StaticRouteBootstrapBoundary.tsx](../../../../../apps/web/src/app/bootstrap/StaticRouteBootstrapBoundary.tsx)
 - [usePublishedRouteBootstrap.ts](../../../../../apps/web/src/app/bootstrap/usePublishedRouteBootstrap.ts)
+
+Compatibility note:
+
+- `routeBootstrapPresentation.ts` remains as a compatibility barrel, but it is
+  not the ownership anchor for startup registration or registry behavior.
+- typed bootstrap failures and code-based diagnostics are owned by
+  `routeBootstrapErrors.ts`; bootstrap copy and locale resolution are owned by
+  `routeBootstrapErrorCopy.ts`.
 - [canvasWorkbenchStateModel.ts](../../../../../apps/web/src/app/views/canvas/canvasWorkbenchStateModel.ts)
 - [useCanvasController.ts](../../../../../apps/web/src/app/views/canvas/useCanvasController.ts)
 - [canvasDraftSession.ts](../../../../../apps/web/src/app/views/canvas/canvasDraftSession.ts)
@@ -111,7 +124,7 @@ flowchart LR
 ```mermaid
 flowchart TB
   Root["Root.tsx"] --> RouteMeta["Route id + handle.routeBootstrap"]
-  RouteMeta --> Registry["routeBootstrapPresentation"]
+  RouteMeta --> Registry["routeBootstrapRegistry"]
   RouteMeta --> StaticBoundary["StaticRouteBootstrapBoundary"]
   Canvas["Canvas route"] --> Provider["ReactFlowProvider"]
   Provider --> Content["CanvasContent"]
@@ -243,7 +256,7 @@ The canonical split for this slice is now:
 - one route-level presentation read model:
   `CanvasDraftPresentationState` (required architectural seam)
 - one shell-facing startup contract:
-  `routeBootstrapPresentation.ts` (required route-bootstrap seam)
+  `routeBootstrapRegistry.ts` (required route-bootstrap seam)
 - one publisher adapter for published routes:
   `usePublishedRouteBootstrap.ts` (must own explicit registration publication
   and reset only on unmount or route change)
@@ -263,7 +276,7 @@ route-level states, not ad hoc JSX branches.
 not own Canvas operability semantics. The shell may only hand off from Raven to
 the workbench by consuming the active route bootstrap contract declared through
 route metadata and published by the Canvas slice via
-`routeBootstrapPresentation.ts`.
+`routeBootstrapRegistry.ts`.
 
 ## Route Bootstrap Modes Diagram
 
@@ -279,7 +292,7 @@ flowchart LR
   Handle --> PublishedMode["Mode: published\nUsed by Canvas, Lineage, Code, Diff, Artifacts, and Runs"]
   StaticMode --> Boundary["StaticRouteBootstrapBoundary\nMount => publish complete only when mount already means usable"]
   PublishedMode --> RouteReadModel["Route startup read model\nExample: CanvasDraftPresentationState"]
-  Boundary --> Registry["routeBootstrapPresentation registry"]
+  Boundary --> Registry["routeBootstrapRegistry"]
   RouteReadModel --> Registry
   Registry --> Root["Root.tsx\nReads active-route posture"]
 ```
@@ -291,28 +304,35 @@ publisher ownership plus a monotonic lifecycle for published routes.
 
 ```mermaid
 flowchart LR
-  subgraph CurrentDrift["Current drift to avoid"]
+  subgraph CurrentDrift["Historical drift (closed)"]
     ViewCurrent["Published route view"] --> HookCurrent["Publisher helper\nfind deepest active match"]
-    HookCurrent --> RegistryCurrent["routeBootstrapPresentation"]
+    HookCurrent --> RegistryCurrent["routeBootstrapRegistry"]
     HookCurrent -. "cleanup on ordinary update" .-> Rebound["rebounds to initial pending"]
   end
 
   subgraph TargetPattern["Target pattern"]
     ViewTarget["Published route view"] --> Registration["Explicit registration\nroute.id + startup mode"]
     Registration --> HookTarget["Publisher adapter\npublish next posture in place"]
-    HookTarget --> RegistryTarget["routeBootstrapPresentation"]
+    HookTarget --> RegistryTarget["routeBootstrapRegistry"]
     HookTarget -. "reset only on unmount or route change" .-> Unmount["unmount / active-route change"]
   end
 ```
 
 Target reading:
 
-- a published route should own one explicit registration, not discover a target
-  by whatever match is deepest today;
+- a published route should own one explicit registration; active registration
+  resolution is centralized through `useActiveRouteBootstrapRegistration`;
 - `initialPresentation` is the startup seed, not a reusable interstitial state
   between normal updates;
 - lifecycle reset belongs to teardown or route change, not to every
   re-derivation of route posture.
+- missing Data Router context is mapped to a typed bootstrap failure only for
+  the known router-context case; non-router runtime exceptions are rethrown
+  without remapping.
+- missing registration in published mode fails closed with
+  `ROUTE_BOOTSTRAP_REGISTRATION_NOT_FOUND` outside test runtime.
+- bootstrap error messages are locale-resolved from runtime
+  (`navigator.language`, fallback `en`) and are not hardcoded in route hooks.
 
 ## Canonical Startup Classification
 
@@ -358,7 +378,7 @@ Architecture reading for this rule:
 - Fowler:
   `Root` is the application shell, `useCanvasController` is the application
   service for the route, `CanvasDraftPresentationState` is the route read
-  model, and `routeBootstrapPresentation.ts` is the shell-facing contract.
+  model, and `routeBootstrapRegistry.ts` is the shell-facing contract.
 - DDD:
   the startup shell and the graph-authoring route are adjacent contexts; the
   shell consumes an operability read model instead of re-deriving authoring
@@ -482,11 +502,11 @@ Decision after review:
 - startup-mode opacity:
   route startup classification must be explicit per route; blanket `static`
   defaults are not a valid end state for the workbench.
-- publisher-ownership opacity:
-  a published route should not discover its target registration implicitly by
-  active-match depth; ownership should be explicit.
-- lifecycle non-monotonicity:
-  a published route should not rebound to `initialPresentation` during normal
+- publisher-ownership governance:
+  published-route ownership must remain explicit through typed registration and
+  centralized active-registration resolution.
+- lifecycle monotonicity governance:
+  published routes must continue replacing posture in place during ordinary
   updates; reset belongs only to teardown or route change.
 
 ## UX And Design Review

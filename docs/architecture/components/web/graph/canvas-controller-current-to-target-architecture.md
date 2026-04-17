@@ -30,9 +30,22 @@ Primary implementation anchors:
 - [Canvas.tsx](../../../../../apps/web/src/app/views/Canvas.tsx)
 - [Root.tsx](../../../../../apps/web/src/app/Root.tsx)
 - [appBootstrapScreen.ts](../../../../../apps/web/src/app/bootstrap/appBootstrapScreen.ts)
-- [routeBootstrapPresentation.ts](../../../../../apps/web/src/app/bootstrap/routeBootstrapPresentation.ts)
+- [routeBootstrapContract.ts](../../../../../apps/web/src/app/bootstrap/routeBootstrapContract.ts)
+- [routeBootstrapRegistration.ts](../../../../../apps/web/src/app/bootstrap/routeBootstrapRegistration.ts)
+- [routeBootstrapRegistry.ts](../../../../../apps/web/src/app/bootstrap/routeBootstrapRegistry.ts)
+- [useActiveRouteBootstrapRegistration.ts](../../../../../apps/web/src/app/bootstrap/useActiveRouteBootstrapRegistration.ts)
+- [routeBootstrapErrors.ts](../../../../../apps/web/src/app/bootstrap/routeBootstrapErrors.ts)
+- [routeBootstrapErrorCopy.ts](../../../../../apps/web/src/app/bootstrap/routeBootstrapErrorCopy.ts)
 - [StaticRouteBootstrapBoundary.tsx](../../../../../apps/web/src/app/bootstrap/StaticRouteBootstrapBoundary.tsx)
 - [usePublishedRouteBootstrap.ts](../../../../../apps/web/src/app/bootstrap/usePublishedRouteBootstrap.ts)
+
+Compatibility note:
+
+- `routeBootstrapPresentation.ts` remains as a compatibility barrel, but the
+  startup contract ownership is defined by `routeBootstrapContract.ts`,
+  `routeBootstrapRegistration.ts`, and `routeBootstrapRegistry.ts`.
+- runtime bootstrap failures are typed through `routeBootstrapErrors.ts`, and
+  user-facing bootstrap copy is locale-resolved via `routeBootstrapErrorCopy.ts`.
 
 ## Current Responsibility Inventory
 
@@ -127,9 +140,12 @@ The target state is a slim composition facade:
   becomes the route-level presentation read model that refines
   `canvasWorkbenchStateModel` with recovery posture and is the only accepted
   Canvas operability source
-- `routeBootstrapPresentation`
+- `routeBootstrapRegistry`
   owns the generic shell-facing startup contract keyed by router route ID so
   `Root.tsx` can consume active-route operability without knowing Canvas
+- `routeBootstrapRegistration` and `useActiveRouteBootstrapRegistration`
+  own typed registration extraction and active-route resolution for that
+  contract
 - `usePublishedRouteBootstrap`
   is the adapter seam for published routes and should bind publication to an
   explicit route registration rather than discovering a route implicitly
@@ -188,7 +204,7 @@ flowchart LR
   subgraph Shell["Shell / bootstrap layer"]
     Root["Root.tsx\nResponsibility: shell bootstrap and route reveal"]
     Bootstrap["appBootstrapScreen\nResponsibility: Raven visibility and route completion"]
-    RouteBootstrap["routeBootstrapPresentation\nResponsibility: generic active-route bootstrap contract"]
+    RouteBootstrap["routeBootstrapRegistry\nResponsibility: generic active-route bootstrap contract"]
     StaticBoundary["StaticRouteBootstrapBoundary\nResponsibility: publish static-route settled posture"]
   end
 
@@ -238,7 +254,7 @@ flowchart LR
 
 Responsibility boundaries in this target:
 
-- shell bootstrap depends on `routeBootstrapPresentation`, with
+- shell bootstrap depends on `routeBootstrapRegistry`, with
   `CanvasDraftPresentationState` translating Canvas operability into that
   shell-facing contract instead of exposing route-local booleans or query
   heuristics;
@@ -274,8 +290,8 @@ Hard rules:
 - any route whose first useful surface depends on asynchronous data must be
   `published`;
 - a published route must publish against its explicit registration keyed by
-  router `route.id`; scanning "the deepest active match" is implementation
-  drift, not target design;
+  router `route.id`; active registration resolution is centralized through
+  `useActiveRouteBootstrapRegistration`;
 - the handle `initialPresentation` seeds startup once per mounted route and
   must not be re-entered during ordinary updates;
 - reset is allowed only when the route unmounts or the active registration
@@ -312,7 +328,8 @@ Role mapping:
 | Route handle plus registration    | Shell-facing contract boundary             | Own `route.id`, startup mode, and initial seed posture               |
 | Route startup read model          | Presentation Model / route read model      | Derive `pending`, `blocked`, `error`, or `complete` from route truth |
 | Published-route publisher adapter | Adapter between route read model and shell | Publish against one explicit registration and reset only on unmount  |
-| `routeBootstrapPresentation`      | Passive shell-facing registry              | Store the latest posture keyed by `route.id`                         |
+| `routeBootstrapRegistry`          | Passive shell-facing registry              | Store the latest posture keyed by `route.id`                         |
+| `routeBootstrapRegistration`      | Typed registration extraction              | Bind `route.id` and startup mode from route handle metadata          |
 | `Root.tsx`                        | Application shell consumer                 | Read the active-route posture, but never infer route operability     |
 
 Canonical publisher invariants:
@@ -322,6 +339,15 @@ Canonical publisher invariants:
 - `initialPresentation` is the first seed, not a fallback on every update;
 - reset is an unmount or route-change concern, not a normal state-transition
   step.
+- missing Data Router context is a typed operational failure
+  (`ROUTE_BOOTSTRAP_DATA_ROUTER_CONTEXT_MISSING`) unless test runtime explicitly
+  allows missing context for isolated view tests.
+- missing registration for a published route is a typed failure
+  (`ROUTE_BOOTSTRAP_REGISTRATION_NOT_FOUND`) and must fail closed outside test
+  runtime.
+- locale for bootstrap errors resolves from runtime (`navigator.language`,
+  fallback `en`) through `routeBootstrapErrorCopy.ts`, not by hardcoded hook
+  literals.
 
 ## Published Route Startup State Machine
 
@@ -361,7 +387,7 @@ sequenceDiagram
   participant DraftSession as canvasDraftSession
   participant DraftScope as canvasDraftScope
   participant Presentation as CanvasDraftPresentationState
-  participant RouteBootstrap as routeBootstrapPresentation
+  participant RouteBootstrap as routeBootstrapRegistry
   participant GraphModel as useCanvasGraphModel
   participant Workspace as workspaceService
   participant Persistence as useCanvasLayoutPersistence
@@ -393,7 +419,7 @@ sequenceDiagram
   participant Controller as useCanvasController
   participant Presentation as CanvasDraftPresentationState
   participant Publisher as Published-route publisher
-  participant RouteBootstrap as routeBootstrapPresentation
+  participant RouteBootstrap as routeBootstrapRegistry
   participant Bootstrap as appBootstrapScreen
   participant Shell as App shell
 
@@ -451,7 +477,7 @@ sequenceDiagram
   participant Router as React Router
   participant Handle as route handle metadata
   participant Boundary as StaticRouteBootstrapBoundary
-  participant Registry as routeBootstrapPresentation
+  participant Registry as routeBootstrapRegistry
   participant Bootstrap as appBootstrapScreen
 
   Raven->>Root: initial route is /plugins or /admin
@@ -470,8 +496,9 @@ sequenceDiagram
   `useCanvasController` is the application service, `canvasDraftSession` is the
   aggregate-like domain model, `canvasDraftScope` is the projection model,
   `CanvasDraftPresentationState` is the Canvas route read model, and
-  `routeBootstrapPresentation` plus `StaticRouteBootstrapBoundary` form the
-  generic shell contract consumed by the startup shell.
+  `routeBootstrapRegistry` plus `StaticRouteBootstrapBoundary` form the
+  generic shell contract consumed by the startup shell, with contract and
+  registration ownership split into dedicated modules.
 - DDD:
   Canvas authoring owns draft and projection semantics, while startup shell
   ownership stays in `Root.tsx`; the shell consumes an explicit operability

@@ -22,7 +22,10 @@ import {
   CodeRouteLoadingStateView,
 } from './code/CodeStateViews';
 import { resolveCodeWorkbenchErrorPresentation } from './code/codeWorkbenchErrorModel';
-import { deriveCodeRouteBootstrapPresentation } from './code/codeRouteBootstrap';
+import {
+  CODE_ROUTE_ID,
+  deriveCodeRouteBootstrapPresentation,
+} from './code/codeRouteBootstrap';
 import { codeViewCopy as copy } from './code/codeViewCopy';
 import FileTreePanel from './code/FileTreePanel';
 
@@ -64,6 +67,7 @@ export default function CodeView() {
     : null;
 
   usePublishedRouteBootstrap(
+    CODE_ROUTE_ID,
     deriveCodeRouteBootstrapPresentation({
       isLoadingFileTree: fileTreeQuery.isPending,
       fileTreeErrorMessage: fileTreeErrorPresentation?.message ?? null,

@@ -7,6 +7,8 @@ import {
 } from '../../bootstrap/routeBootstrapPresentation';
 import type { LineageWorkbenchState } from './lineageWorkbenchStateModel';
 
+export const LINEAGE_ROUTE_ID = 'dbt.lineage';
+
 export const LINEAGE_ROUTE_BOOTSTRAP_HANDLE = createPublishedRouteBootstrapHandle({
   pendingDetail: 'Preparing Lineage route',
 });

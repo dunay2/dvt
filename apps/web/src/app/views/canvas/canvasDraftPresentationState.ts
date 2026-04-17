@@ -63,6 +63,8 @@ const INITIAL_CANVAS_DRAFT_PRESENTATION_STATE: CanvasDraftPresentationState = {
   canCompleteBootstrap: false,
 };
 
+export const CANVAS_ROUTE_ID = 'dbt.canvas';
+
 export const CANVAS_ROUTE_BOOTSTRAP_HANDLE: RouteBootstrapHandle =
   createPublishedRouteBootstrapHandle({
     pendingDetail: INITIAL_CANVAS_DRAFT_PRESENTATION_STATE.bootstrapDetail,

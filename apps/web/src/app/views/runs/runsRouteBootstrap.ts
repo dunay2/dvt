@@ -7,6 +7,9 @@ import {
 } from '../../bootstrap/routeBootstrapPresentation';
 import type { RunsWorkbenchState } from './runWorkbenchStateModel';
 
+export const RUNS_ROUTE_ID = 'monitoring.runs';
+export const RUN_DETAIL_ROUTE_ID = 'monitoring.run-detail';
+
 export const RUNS_ROUTE_BOOTSTRAP_HANDLE = createPublishedRouteBootstrapHandle({
   pendingDetail: 'Preparing Runs route',
 });

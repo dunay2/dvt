@@ -11,6 +11,8 @@ import type {
   DiffWorkbenchState,
 } from './diffWorkbenchStateModel';
 
+export const DIFF_ROUTE_ID = 'dbt.diff';
+
 export const DIFF_ROUTE_BOOTSTRAP_HANDLE = createPublishedRouteBootstrapHandle({
   pendingDetail: 'Preparing Diff route',
 });

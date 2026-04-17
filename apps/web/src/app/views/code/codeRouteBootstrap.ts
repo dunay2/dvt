@@ -6,6 +6,8 @@ import {
   type RouteBootstrapPresentation,
 } from '../../bootstrap/routeBootstrapPresentation';
 
+export const CODE_ROUTE_ID = 'dbt.code';
+
 export const CODE_ROUTE_BOOTSTRAP_HANDLE = createPublishedRouteBootstrapHandle({
   pendingDetail: 'Preparing Code route',
 });

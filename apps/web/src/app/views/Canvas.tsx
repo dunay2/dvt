@@ -18,6 +18,7 @@ import {
 } from './canvas/canvasWorkbenchStateModel';
 import { canvasViewCopy } from './canvas/copy';
 import {
+  CANVAS_ROUTE_ID,
   deriveCanvasDraftPresentationState,
   publishCanvasDraftPresentationState,
   resetCanvasDraftPresentationState,
@@ -126,7 +127,10 @@ function CanvasContent() {
       </div>
     ) : null;
 
-  usePublishedRouteBootstrap(toRouteBootstrapPresentation(presentationState));
+  usePublishedRouteBootstrap(
+    CANVAS_ROUTE_ID,
+    toRouteBootstrapPresentation(presentationState)
+  );
 
   useEffect(() => {
     publishCanvasDraftPresentationState(presentationState);
