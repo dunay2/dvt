@@ -1,4 +1,47 @@
-﻿# Changelog
+# Changelog
+
+## [5.15.0](https://github.com/dunay2/dvt/compare/v5.14.0...v5.15.0) (2026-04-16)
+
+
+### Features
+
+* **api:** Add protected workspace graph-draft boundary ([#969](https://github.com/dunay2/dvt/issues/969)) ([f082d77](https://github.com/dunay2/dvt/commit/f082d77b6d2680b0399a782c9600e008873e7772))
+* **api:** Expose run provenance linkage on status reads ([#918](https://github.com/dunay2/dvt/issues/918)) ([990d954](https://github.com/dunay2/dvt/commit/990d954b7aa968d2ac4a59f33076760107c6fab7))
+* **contracts:** Formalize shared start-run boundary ([#916](https://github.com/dunay2/dvt/issues/916)) ([83070c1](https://github.com/dunay2/dvt/commit/83070c16f61d5ccdd00a79360ae7f904987c14c0))
+* **contracts:** Freeze SQL-first preview boundary ([#934](https://github.com/dunay2/dvt/issues/934)) ([1508fe8](https://github.com/dunay2/dvt/commit/1508fe868e38c5b7156a46f49961e8aaacf0983c))
+* **contracts:** Freeze workspace graph-draft persistence boundary ([#968](https://github.com/dunay2/dvt/issues/968)) ([9eaad20](https://github.com/dunay2/dvt/commit/9eaad2067d645e239175c4651ac9333be796dc50))
+* **contracts:** Govern step retry policy in execution plans ([#917](https://github.com/dunay2/dvt/issues/917)) ([db5e213](https://github.com/dunay2/dvt/commit/db5e213af05dacafb3dad73fa514ec5390b5e3a3))
+* **temporal:** Add production DBT worker host and binding hardening ([#951](https://github.com/dunay2/dvt/issues/951)) ([34669c6](https://github.com/dunay2/dvt/commit/34669c62270c7c520453543e1df9548c02f4bf71))
+* **web:** Add canvas palette control and restore grid visibility ([#950](https://github.com/dunay2/dvt/issues/950)) ([c36d61d](https://github.com/dunay2/dvt/commit/c36d61d98f735b137cd01ecebb1ca9eddf90cacc))
+* **web:** Close selection-scoped transformation authoring ([#958](https://github.com/dunay2/dvt/issues/958)) ([7e33d0c](https://github.com/dunay2/dvt/commit/7e33d0ce132b5dcd203cca58e1e61af8a28fbf9a))
+* **web:** Compact shell chrome and canvas status ([#942](https://github.com/dunay2/dvt/issues/942)) ([717ce1e](https://github.com/dunay2/dvt/commit/717ce1e2f82661d6e12e326983e3cc8d666df965))
+* **web:** Finalize TF-E1-C result UX ([#928](https://github.com/dunay2/dvt/issues/928)) ([d2b5551](https://github.com/dunay2/dvt/commit/d2b5551c2c119ef32c930e0c97b0f98d836fa540))
+* **web:** Harden canvas authoring shell flows ([#954](https://github.com/dunay2/dvt/issues/954)) ([50a8505](https://github.com/dunay2/dvt/commit/50a85054a5890125e7824509cdf8ebb19f36fb6d))
+* **web:** Persist transformation preview provenance before start-run ([#920](https://github.com/dunay2/dvt/issues/920)) ([f01f22e](https://github.com/dunay2/dvt/commit/f01f22ea96c2acd96fed01fc16983b2d22a20fff))
+
+
+### Bug Fixes
+
+* **api:** Add local dev stack startup helper and fix lineage worker build ([#939](https://github.com/dunay2/dvt/issues/939)) ([5d5ddc5](https://github.com/dunay2/dvt/commit/5d5ddc5df0b7eb23d840a277f0a1068daf8d37b1))
+* **api:** Remove legacy StepCompleted materialization payload support ([#960](https://github.com/dunay2/dvt/issues/960)) ([42a3c87](https://github.com/dunay2/dvt/commit/42a3c87daeeb5d6ef00eed60b7ef558758959bf7))
+* **contracts:** Close boundary hardening and canonicalize risk records ([#892](https://github.com/dunay2/dvt/issues/892)) ([94ca7ff](https://github.com/dunay2/dvt/commit/94ca7ff835ea62bf416ecc0d1161b5e907b94272))
+* **engine:** Enforce success-only materialization reads ([#914](https://github.com/dunay2/dvt/issues/914)) ([98418ea](https://github.com/dunay2/dvt/commit/98418ea8e633b4c99ae09833f16bdcc4cdebefe3))
+* **temporal:** Accept first PostgreSQL runtime vertical ([#935](https://github.com/dunay2/dvt/issues/935)) ([8b8d76d](https://github.com/dunay2/dvt/commit/8b8d76d216422d434ab4c336a6071ee3c336bec0))
+* **temporal:** Converge native cancel provider status ([#932](https://github.com/dunay2/dvt/issues/932)) ([ddde66e](https://github.com/dunay2/dvt/commit/ddde66ec6802f01289acdedfd423801b53748963))
+* **temporal:** Harden PostgreSQL proof environment lifecycle ([#936](https://github.com/dunay2/dvt/issues/936)) ([8e01c6c](https://github.com/dunay2/dvt/commit/8e01c6c2bcbb6d1ea2be1843bd2f63aedc331e2e))
+* **temporal:** Harden runtime safeguards and integration reliability ([#952](https://github.com/dunay2/dvt/issues/952)) ([74d4b44](https://github.com/dunay2/dvt/commit/74d4b44d23f6e268683319920c2378a512ad9a59))
+* **web:** Align diff review context with severity filter ([#908](https://github.com/dunay2/dvt/issues/908)) ([99e1ca2](https://github.com/dunay2/dvt/commit/99e1ca23e3940b98967f5d2070cfe6dd9379df70))
+* **web:** Align empty canvas guidance with read-only state ([#957](https://github.com/dunay2/dvt/issues/957)) ([d5c5078](https://github.com/dunay2/dvt/commit/d5c5078cc5b4636a7407762dc43125fcb282c6f9))
+* **web:** Harden canvas read-only state handling ([#913](https://github.com/dunay2/dvt/issues/913)) ([6c5c7e2](https://github.com/dunay2/dvt/commit/6c5c7e285c0860539f68ccb1bdb456c0c6b930c1))
+* **web:** Harden shell startup and route readiness ([#945](https://github.com/dunay2/dvt/issues/945)) ([5c68214](https://github.com/dunay2/dvt/commit/5c682140ff02113d710e2dae7f1134c64442d60a))
+* **web:** Keep shell copy English and show active surface ([#948](https://github.com/dunay2/dvt/issues/948)) ([14d581c](https://github.com/dunay2/dvt/commit/14d581ca1349019afe925860ebb2153c94c59047))
+* **web:** Move app service providers to app root ([#941](https://github.com/dunay2/dvt/issues/941)) ([0c3c9b9](https://github.com/dunay2/dvt/commit/0c3c9b9330e6c1553f97c21082c2b4f2f233efc9))
+* **web:** Move DVT connection rules to owning plugin ([#955](https://github.com/dunay2/dvt/issues/955)) ([f6fe6f7](https://github.com/dunay2/dvt/commit/f6fe6f7bc6d84a212335e2e65adb4ee1aa4ccecd))
+* **web:** Persist shell session context safely ([#956](https://github.com/dunay2/dvt/issues/956)) ([92163d2](https://github.com/dunay2/dvt/commit/92163d29e1678ef1d1cff3feefd132c3b4af5840))
+* **web:** Refine shell bootstrap and workspace evidence model ([#947](https://github.com/dunay2/dvt/issues/947)) ([c13a410](https://github.com/dunay2/dvt/commit/c13a410485e7878d0638112cd358726aba57bc08))
+* **web:** Replace deprecated PlansService usage with IPlansPort ([#961](https://github.com/dunay2/dvt/issues/961)) ([06f22f7](https://github.com/dunay2/dvt/commit/06f22f7349c9fc137a933797373e7aa9fee20fcd))
+* **web:** Stabilize local dev stack and app services context ([#943](https://github.com/dunay2/dvt/issues/943)) ([93c17ee](https://github.com/dunay2/dvt/commit/93c17ee44b537cab0392bf1752698c76549cf76c))
+* **web:** Unify Raven startup bootstrap and health gating ([#946](https://github.com/dunay2/dvt/issues/946)) ([ad3afc3](https://github.com/dunay2/dvt/commit/ad3afc399a67b9e5ed2afde04f007bf4cc40f19d))
 
 ## [5.15.0](https://github.com/dunay2/dvt/compare/v5.14.0...v5.15.0) (2026-04-13)
 
