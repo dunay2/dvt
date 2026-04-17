@@ -2293,23 +2293,24 @@ tasks:
       local DTO drift.
     complexity: M
     effort_points: 5
-    progress_pct: 15
+    progress_pct: 45
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/tf-a2-workspace-graph-draft-persistence-boundary-plan-20260416.md
+      - packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphDraft.v1.ts
+      - docs/contracts/planner/WorkspaceGraphDraftPersistence.v1.md
+      - docs/evidence/ED-20260416-tf-a2-workspace-graph-draft-boundary.md
+      - docs/risk-register/quality/R-20260416-TF-A2-WORKSPACE-GRAPH-DRAFT-ADOPTION-DRIFT.yaml
       - docs/contracts/planner/TransformationFlowPreview.v1.md
       - docs/architecture/reference-architecture.md
       - docs/architecture/components/engine/contracts/engine/SignalsAndAuth.v1.md
       - docs/architecture/components/web/frontend-data-boundary-architecture.md
     status_reason: >-
-      Docs-first contract freezing is now active. Lane A owns the missing typed persistence boundary
-      for editable workspace graphs so Lane C can implement one protected API and store path and
-      Lane E can adopt it without promoting `localStorage` or route-local save envelopes into
-      product authority. The active contract fix now explicitly includes versioning,
-      compare-and-swap, reject-on-stale, idempotent retry, tenant-scoped authorization outcomes,
-      auditable protected decisions, exact capability and audit envelope shapes, shared telemetry
-      correlation keys, schema evolution and migration posture, and caller-visible read-only posture
-      rather than leaving write correctness, permission semantics, reload compatibility, or
-      operability join logic implicit.
+      Contract freeze is now partially delivered as executable shared-kernel artifacts plus the
+      planner contract doc: `WorkspaceGraphDraft.v1` now defines typed scope/capability envelopes,
+      auditable read/write outcomes, compare-and-swap request posture, idempotent retry key, and
+      typed format-evolution metadata/failures. ARC-2 evidence and residual adoption risk are now
+      published. Remaining work in `TF-A2` is final contract review acceptance and downstream wiring
+      handoff to `TF-C4` and `TF-E2-A`.
     last_verified: '2026-04-16'
 dependency_notes:
   - >-

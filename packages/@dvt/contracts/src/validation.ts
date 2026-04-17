@@ -41,6 +41,9 @@ export {
   parsePlanRecord,
   parsePlanRef,
   parseTransformationSqlFirstCompilerGraphSource,
+  parseWorkspaceGraphDraftReadResponse,
+  parseWorkspaceGraphDraftSaveRequest,
+  parseWorkspaceGraphDraftSaveResponse,
 } from './validation/planner.js';
 export {
   parseCanonicalRunStatus,
