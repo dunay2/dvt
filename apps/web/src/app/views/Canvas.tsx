@@ -30,7 +30,12 @@ function CanvasContent() {
     graphErrorMessage: controller.graphErrorMessage,
   });
   const shouldBlockCanvasInApiMode = controller.dataSourceMode === 'api' && !controller.backendReady;
-  const shouldDisableCanvasInteractions = shouldBlockCanvasInApiMode || controller.isBackendCheckPending;
+  const shouldDisableCanvasInteractions =
+    shouldBlockCanvasInApiMode ||
+    controller.isBackendCheckPending ||
+    controller.hasMissingRemoteDraft ||
+    controller.hasStaleDraftVersion ||
+    controller.hasDraftProjectionGap;
   const isCanvasRuntimeBlocked = shouldDisableCanvasInteractions;
   const effectiveUserPermissions = shouldDisableCanvasInteractions
     ? {
@@ -63,6 +68,55 @@ function CanvasContent() {
       </div>
     </div>
   ) : null;
+  const missingRemoteDraftBanner = controller.hasMissingRemoteDraft ? (
+    <div
+      data-slot="canvas-missing-remote-draft-state"
+      className="border-b border-rose-500/40 bg-rose-950/40 px-4 py-3 text-sm text-rose-100"
+    >
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <p className="font-semibold">{canvasViewCopy.missingRemoteDraftTitle}</p>
+          <p className="text-rose-200">{canvasViewCopy.missingRemoteDraftMessage}</p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button size="sm" variant="outline" onClick={controller.reloadLatestDraft}>
+            {canvasViewCopy.reloadLatestDraftLabel}
+          </Button>
+          <Button size="sm" variant="outline" onClick={controller.adoptCurrentWorkspaceSnapshot}>
+            {canvasViewCopy.adoptCurrentWorkspaceSnapshotLabel}
+          </Button>
+        </div>
+      </div>
+    </div>
+  ) : null;
+  const draftProjectionGapBanner =
+    !controller.hasStaleDraftVersion &&
+    !controller.hasMissingRemoteDraft &&
+    controller.hasDraftProjectionGap ? (
+      <div
+        data-slot="canvas-draft-projection-gap-state"
+        className="border-b border-sky-500/40 bg-sky-950/40 px-4 py-3 text-sm text-sky-100"
+      >
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="font-semibold">{canvasViewCopy.draftProjectionGapTitle}</p>
+            <p className="text-sky-200">{canvasViewCopy.draftProjectionGapMessage}</p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button size="sm" variant="outline" onClick={controller.reloadLatestDraft}>
+              {canvasViewCopy.reloadLatestDraftLabel}
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={controller.adoptCurrentWorkspaceSnapshot}
+            >
+              {canvasViewCopy.adoptCurrentWorkspaceSnapshotLabel}
+            </Button>
+          </div>
+        </div>
+      </div>
+    ) : null;
 
   useEffect(() => {
     if (isCanvasStartupPending) {
@@ -209,6 +263,8 @@ function CanvasContent() {
         readOnlyBanner={
           <>
             {staleDraftBanner}
+            {draftProjectionGapBanner}
+            {missingRemoteDraftBanner}
             <CanvasReadOnlyBannerView state={readOnlyState} />
           </>
         }

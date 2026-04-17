@@ -119,7 +119,10 @@ function buildController(overrides?: Partial<CanvasController>): CanvasControlle
     draftSaveStatus: 'idle',
     draftConflictRevision: null,
     hasStaleDraftVersion: false,
+    hasMissingRemoteDraft: false,
+    hasDraftProjectionGap: false,
     reloadLatestDraft: vi.fn(),
+    adoptCurrentWorkspaceSnapshot: vi.fn(),
     canStartRun: false,
     planStatusSummary: 'Preview required before running.',
     exclusiveOverlayMode: 'runtime',
@@ -301,6 +304,132 @@ describe('Canvas route', () => {
     expect(planButton?.getAttribute('disabled')).not.toBeNull();
     expect(runButton?.getAttribute('disabled')).not.toBeNull();
   });
+
+  it('shows the missing-remote draft banner and disables canvas actions while keeping inspection visible', async () => {
+    const reloadLatestDraft = vi.fn();
+    const adoptCurrentWorkspaceSnapshot = vi.fn();
+    mockedUseCanvasController.mockReturnValue(
+      buildController({
+        hasMissingRemoteDraft: true,
+        reloadLatestDraft,
+        adoptCurrentWorkspaceSnapshot,
+      })
+    );
+
+    await act(async () => {
+      root.render(<Canvas />);
+    });
+
+    const buttons = Array.from(container.querySelectorAll('button'));
+    const layoutButton = buttons.find((button) => button.textContent?.includes('Layout'));
+    const planButton = buttons.find((button) => button.textContent?.includes('Plan'));
+    const runButton = buttons.find((button) => button.textContent?.includes('Run'));
+    const reloadButton = buttons.find((button) => button.textContent?.includes('Reload latest draft'));
+    const adoptButton = buttons.find((button) =>
+      button.textContent?.includes('Adopt current workspace snapshot')
+    );
+
+    expect(container.querySelector('[data-slot="canvas-viewport"]')).not.toBeNull();
+    expect(container.querySelector('[data-slot="canvas-missing-remote-draft-state"]')).not.toBeNull();
+    expect(container.textContent).toContain('Persisted draft no longer exists');
+    expect(layoutButton?.getAttribute('disabled')).not.toBeNull();
+    expect(planButton?.getAttribute('disabled')).not.toBeNull();
+    expect(runButton?.getAttribute('disabled')).not.toBeNull();
+    expect(reloadButton).not.toBeNull();
+    expect(adoptButton).not.toBeNull();
+
+    await act(async () => {
+      reloadButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    expect(reloadLatestDraft).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      adoptButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    expect(adoptCurrentWorkspaceSnapshot).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows the stale-draft banner and disables canvas actions until reload recovers the draft', async () => {
+    const reloadLatestDraft = vi.fn();
+    mockedUseCanvasController.mockReturnValue(
+      buildController({
+        hasStaleDraftVersion: true,
+        reloadLatestDraft,
+      })
+    );
+
+    await act(async () => {
+      root.render(<Canvas />);
+    });
+
+    const buttons = Array.from(container.querySelectorAll('button'));
+    const layoutButton = buttons.find((button) => button.textContent?.includes('Layout'));
+    const planButton = buttons.find((button) => button.textContent?.includes('Plan'));
+    const runButton = buttons.find((button) => button.textContent?.includes('Run'));
+    const reloadButton = buttons.find((button) => button.textContent?.includes('Reload latest draft'));
+
+    expect(container.querySelector('[data-slot="canvas-viewport"]')).not.toBeNull();
+    expect(container.querySelector('[data-slot="canvas-stale-draft-state"]')).not.toBeNull();
+    expect(layoutButton?.getAttribute('disabled')).not.toBeNull();
+    expect(planButton?.getAttribute('disabled')).not.toBeNull();
+    expect(runButton?.getAttribute('disabled')).not.toBeNull();
+    expect(reloadButton).not.toBeNull();
+
+    await act(async () => {
+      reloadButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    expect(reloadLatestDraft).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows the projection-gap banner and pauses canvas actions until recovery resolves it', async () => {
+    const reloadLatestDraft = vi.fn();
+    const adoptCurrentWorkspaceSnapshot = vi.fn();
+    mockedUseCanvasController.mockReturnValue(
+      buildController({
+        hasDraftProjectionGap: true,
+        reloadLatestDraft,
+        adoptCurrentWorkspaceSnapshot,
+      })
+    );
+
+    await act(async () => {
+      root.render(<Canvas />);
+    });
+
+    const buttons = Array.from(container.querySelectorAll('button'));
+    const layoutButton = buttons.find((button) => button.textContent?.includes('Layout'));
+    const planButton = buttons.find((button) => button.textContent?.includes('Plan'));
+    const runButton = buttons.find((button) => button.textContent?.includes('Run'));
+    const reloadButton = buttons.find((button) => button.textContent?.includes('Reload latest draft'));
+    const adoptButton = buttons.find((button) =>
+      button.textContent?.includes('Adopt current workspace snapshot')
+    );
+
+    expect(container.querySelector('[data-slot="canvas-viewport"]')).not.toBeNull();
+    expect(container.querySelector('[data-slot="canvas-draft-projection-gap-state"]')).not.toBeNull();
+    expect(container.textContent).toContain(
+      'Persisted draft is ahead of the current graph snapshot'
+    );
+    expect(layoutButton?.getAttribute('disabled')).not.toBeNull();
+    expect(planButton?.getAttribute('disabled')).not.toBeNull();
+    expect(runButton?.getAttribute('disabled')).not.toBeNull();
+
+    await act(async () => {
+      reloadButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    expect(reloadLatestDraft).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      adoptButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    expect(adoptCurrentWorkspaceSnapshot).toHaveBeenCalledTimes(1);
+  });
+
   it('blocks the canvas surface in api mode when backend readiness is not satisfied', async () => {
     mockedUseCanvasController.mockReturnValue(
       buildController({

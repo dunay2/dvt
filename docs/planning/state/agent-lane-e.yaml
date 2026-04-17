@@ -1923,23 +1923,36 @@ tasks:
       across governed persisted draft schema versions.
     complexity: L
     effort_points: 8
-    progress_pct: 15
+    progress_pct: 42
     evidence_refs:
       - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-production-node-authoring-and-persistence-plan-20260416.md
       - docs/architecture/components/web/graph/canvas-component-map-and-modernization-review.md
       - docs/architecture/components/web/inspector/inspector-frontend-architecture.md
       - docs/architecture/components/web/frontend-data-boundary-architecture.md
       - docs/architecture/components/web/observability/front-observability-architecture-dvt.md
+      - docs/planning/reviews/20260417-dvt-plus-deep-architectural-review.md
+      - docs/planning/closeouts/20260417-tf-e2-canvas-draft-session-refactor-closeout.md
+      - docs/planning/closeouts/20260417-tf-e2-canvas-draft-scope-fowler-refactor-closeout.md
+      - docs/planning/closeouts/20260417-tf-e2-canvas-draft-followup-qa-hardening-closeout.md
+      - docs/planning/closeouts/20260417-tf-e2-canvas-draft-race-and-import-edge-hardening-closeout.md
+      - docs/planning/closeouts/20260417-tf-e2-canvas-draft-reload-recovery-hardening-closeout.md
+      - docs/planning/closeouts/20260417-tf-e2-canvas-draft-aggregate-alignment-closeout.md
       - docs/runbooks/index.md
     status_reason: >-
-      The productization slice is now active, but the persistence boundary is no longer left
-      implicit: `TF-A2` must freeze the shared workspace graph-draft contract and `TF-C4` must
-      implement the protected API/store path before Canvas can claim product-grade persistence. Lane
-      E now explicitly owns adoption and UX closure, not contract invention, and the UX closure must
-      expose version conflict, authorization posture, retry behavior, persisted-format evolution
-      behavior, and operable recovery context instead of silently overwriting draft truth or hiding
-      permission loss.
-    last_verified: '2026-04-16'
+      The productization slice remains active, but the current worktree has materially advanced the
+      governed draft-persistence adoption path: Canvas now carries explicit draft session and scope
+      models, validated stale-save and `missing_remote` recovery hardening, and explicit import-edge
+      promotion instead of heuristic overwrite behavior. The latest hardening also treats CAS
+      `conflict` as a blocked recovery posture, coordinates reload through fresh draft plus graph
+      fetches under React Query ownership, and prevents stale local canon from truncating recovered
+      remote drafts. The Fowler-alignment follow-up now makes the draft aggregate authoritative over
+      remote members that the current workspace snapshot cannot project yet, exposes projection-gap
+      state explicitly, and fail-closes edit, `Plan`, `Run`, and autosave until the projection is
+      complete or the operator adopts the current workspace snapshot. `TF-A2` and `TF-C4` still
+      govern the shared boundary, while the remaining `TF-E2` work must close the rest of node,
+      edge, Inspector, operability, and end-to-end proof requirements before this parent task can
+      move to review.
+    last_verified: '2026-04-17'
   - task_id: TF-E2-A
     parent_task: TF-E2
     priority: P0

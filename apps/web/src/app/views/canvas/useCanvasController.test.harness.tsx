@@ -130,6 +130,8 @@ const state = vi.hoisted(() => ({
   },
   store: { setCanvasViewport: vi.fn(), setCanvasNodePositions: vi.fn() },
   queryClient: {
+    cancelQueries: vi.fn(async () => undefined),
+    fetchQuery: vi.fn(),
     invalidateQueries: vi.fn(async () => undefined),
     setQueryData: vi.fn(),
   },
@@ -171,6 +173,28 @@ vi.mock('@tanstack/react-query', () => ({
 vi.mock('@xyflow/react', async () => {
   const ReactModule = await import('react');
   return {
+    applyNodeChanges: <T extends { id: string },>(
+      changes: Array<{ id?: string; type?: string }>,
+      nodes: T[]
+    ) =>
+      changes.reduce((currentNodes, change) => {
+        if (change.type === 'remove' && change.id != null) {
+          return currentNodes.filter((node) => node.id !== change.id);
+        }
+
+        return currentNodes;
+      }, nodes),
+    applyEdgeChanges: <T extends { id: string },>(
+      changes: Array<{ id?: string; type?: string }>,
+      edges: T[]
+    ) =>
+      changes.reduce((currentEdges, change) => {
+        if (change.type === 'remove' && change.id != null) {
+          return currentEdges.filter((edge) => edge.id !== change.id);
+        }
+
+        return currentEdges;
+      }, edges),
     useNodesState: <T,>(initial: T[]) => {
       const [nodes, setNodes] = ReactModule.useState(initial);
       return [nodes, setNodes, vi.fn()] as const;

@@ -31,6 +31,8 @@ export type CanvasHarnessState = {
     setCanvasNodePositions: MockFn;
   } & Record<string, unknown>;
   queryClient: {
+    cancelQueries: MockFn;
+    fetchQuery: MockFn;
     invalidateQueries: MockFn;
     setQueryData: MockFn;
   };
@@ -220,6 +222,8 @@ export function createDefaultCanvasHarnessState(): CanvasHarnessState {
       shellFeedback,
     },
     queryClient: {
+      cancelQueries: vi.fn(async () => undefined),
+      fetchQuery: vi.fn(),
       invalidateQueries: vi.fn(async () => undefined),
       setQueryData: vi.fn(),
     },
@@ -298,6 +302,34 @@ export function configureDefaultCanvasHarnessMocks(
   state: CanvasHarnessState,
   mocks: CanvasHarnessMocks
 ): void {
+  const storeState = state.store as typeof state.store & {
+    selectedNodes: string[];
+    setSelectedNodes: MockFn;
+    inspectorNodeId: string | null;
+    setInspectorNode: MockFn;
+    currentPlan: PlanViewModel | null;
+    setCurrentPlan: MockFn;
+  };
+
+  storeState.setSelectedNodes.mockImplementation((nodeIds: string[]) => {
+    storeState.selectedNodes = nodeIds;
+  });
+  storeState.setInspectorNode.mockImplementation((nodeId: string | null) => {
+    storeState.inspectorNodeId = nodeId;
+  });
+  storeState.setCurrentPlan.mockImplementation((plan: PlanViewModel | null) => {
+    storeState.currentPlan = plan;
+    state.currentPlan = plan;
+  });
+  (
+    state.services.workspaceService.getGraphSnapshot as MockFn
+  ).mockImplementation(async () => ({
+    nodes: [...state.graphData.nodes],
+    edges: [...state.graphData.edges],
+  }));
+  (state.services.workspaceService.getGraphDraft as MockFn).mockImplementation(
+    async () => state.graphDraftRecord
+  );
   mocks.useQuery.mockImplementation((queryConfig?: { queryKey?: readonly string[] }) => {
     const queryKey = queryConfig?.queryKey ?? [];
     if (queryKey[1] === 'graph-draft') {
@@ -307,6 +339,77 @@ export function configureDefaultCanvasHarnessMocks(
     return { data: state.graphData, isPending: false, isError: false };
   });
   mocks.useQueryClient.mockReturnValue(state.queryClient);
+  state.queryClient.setQueryData.mockImplementation(
+    (
+      queryKey: readonly unknown[],
+      value:
+        | WorkspaceGraphDraftRecord
+        | null
+        | { nodes: Array<{ id: string }>; edges: Array<{ id: string }> }
+    ) => {
+      if (queryKey[1] === 'graph-draft') {
+        state.graphDraftRecord = value as WorkspaceGraphDraftRecord | null;
+      }
+
+      if (queryKey[1] === 'graph') {
+        state.graphData = value as { nodes: Array<{ id: string }>; edges: Array<{ id: string }> };
+      }
+    }
+  );
+  state.queryClient.fetchQuery.mockImplementation(
+    async ({
+      queryKey,
+      queryFn,
+    }: {
+      queryKey?: readonly unknown[];
+      queryFn?: () => Promise<unknown>;
+    }) => {
+      const resolvedValue = queryFn ? await queryFn() : undefined;
+
+      if (queryKey?.[1] === 'graph-draft') {
+        state.graphDraftRecord = resolvedValue as WorkspaceGraphDraftRecord | null;
+      }
+
+      if (queryKey?.[1] === 'graph') {
+        state.graphData = resolvedValue as {
+          nodes: Array<{ id: string }>;
+          edges: Array<{ id: string }>;
+        };
+      }
+
+      return resolvedValue;
+    }
+  );
+  state.store.setCanvasNodePositions.mockImplementation(
+    (workspaceLayoutKey: string, positions: Record<string, { x: number; y: number }>) => {
+      const canvasLayouts = state.store.canvasLayouts as Record<
+        string,
+        { nodePositions?: Record<string, { x: number; y: number }>; viewport?: unknown }
+      >;
+      state.store.canvasLayouts = {
+        ...canvasLayouts,
+        [workspaceLayoutKey]: {
+          ...canvasLayouts[workspaceLayoutKey],
+          nodePositions: positions,
+        },
+      };
+    }
+  );
+  state.store.setCanvasViewport.mockImplementation(
+    (workspaceLayoutKey: string, viewport: { x: number; y: number; zoom: number }) => {
+      const canvasLayouts = state.store.canvasLayouts as Record<
+        string,
+        { nodePositions?: Record<string, { x: number; y: number }>; viewport?: unknown }
+      >;
+      state.store.canvasLayouts = {
+        ...canvasLayouts,
+        [workspaceLayoutKey]: {
+          ...canvasLayouts[workspaceLayoutKey],
+          viewport,
+        },
+      };
+    }
+  );
   const selectFromStore = (selector?: (value: typeof state.store) => unknown) =>
     typeof selector === 'function' ? selector(state.store) : state.store;
   mocks.useCanvasInteractionStore.mockImplementation(selectFromStore);

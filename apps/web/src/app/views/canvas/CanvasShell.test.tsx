@@ -192,4 +192,40 @@ describe('CanvasShell', () => {
       onComplete: props.onSourceImportComplete,
     });
   });
+
+  it('closes the import wizard if edit permissions are revoked while it is open', async () => {
+    await act(async () => {
+      root.render(<CanvasShell {...buildProps()} />);
+    });
+
+    await act(async () => {
+      const openDataRegistry = shellState.dbtExplorerProps?.onOpenDataRegistry as
+        | (() => void)
+        | undefined;
+      openDataRegistry?.();
+    });
+
+    expect(shellState.sourceImportWizardProps).toMatchObject({
+      open: true,
+    });
+
+    await act(async () => {
+      root.render(
+        <CanvasShell
+          {...buildProps({
+            userPermissions: {
+              canPlan: false,
+              canRun: false,
+              canEditEdges: false,
+            },
+          })}
+        />
+      );
+    });
+
+    expect(shellState.dbtExplorerProps?.onOpenDataRegistry).toBeUndefined();
+    expect(shellState.sourceImportWizardProps).toMatchObject({
+      open: false,
+    });
+  });
 });
