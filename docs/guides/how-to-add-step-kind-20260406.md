@@ -11,6 +11,10 @@ This guide defines the governed protocol for adding a new `StepKind` end to end.
 
 Use this for examples like `PYTHON_SCRIPT`, `SPARK_JOB`, or `API_CALL`.
 
+If the work introduces a new step family, a plugin-backed catalog contribution,
+or a new external compile profile, also follow
+[External Compile Catalog Extension Technical Manual](external-compile-catalog-extension-technical-manual-20260417.md).
+
 ## Prerequisites
 
 - A concrete execution owner for the new kind.

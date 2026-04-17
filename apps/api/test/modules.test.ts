@@ -57,6 +57,7 @@ describe('modules', () => {
         snapshotStaleness: {} as never,
       },
       planner: {} as never,
+      externalCompilePlanner: {} as never,
       planStore: {} as never,
       planValidator: {} as never,
       executablePlanResolver: { fetch: async () => ({}) } as never,

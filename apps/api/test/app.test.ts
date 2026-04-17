@@ -480,10 +480,31 @@ describe('buildApp', () => {
           },
         },
       });
+      const compileResponse = await app.inject({
+        method: 'POST',
+        url: '/plans/compile',
+        payload: {
+          context: {
+            tenantId: 'tenant-a',
+            projectId: 'project-a',
+            environmentId: 'env-a',
+          },
+          selection: {
+            selectedNodeIds: ['model.orders'],
+          },
+          graphSource: {
+            kind: 'generic-graph-v1',
+            sourceFamily: 'transformation-design-graph',
+            sourceVersion: 'transformation-sql-first-v1',
+            nodes: [],
+          },
+        },
+      });
 
       expect(adminResponse.statusCode).toBe(404);
       expect(protectedResponse.statusCode).toBe(404);
       expect(previewResponse.statusCode).toBe(404);
+      expect(compileResponse.statusCode).toBe(404);
 
       await app.close();
     } finally {
@@ -552,10 +573,31 @@ describe('buildApp', () => {
           },
         },
       });
+      const compileResponse = await app.inject({
+        method: 'POST',
+        url: '/plans/compile',
+        payload: {
+          context: {
+            tenantId: 'tenant-a',
+            projectId: 'project-a',
+            environmentId: 'env-a',
+          },
+          selection: {
+            selectedNodeIds: ['model.orders'],
+          },
+          graphSource: {
+            kind: 'generic-graph-v1',
+            sourceFamily: 'transformation-design-graph',
+            sourceVersion: 'transformation-sql-first-v1',
+            nodes: [],
+          },
+        },
+      });
 
       expect(adminResponse.statusCode).toBe(404);
       expect(protectedResponse.statusCode).toBe(404);
       expect(previewResponse.statusCode).toBe(404);
+      expect(compileResponse.statusCode).toBe(404);
 
       await app.close();
     } finally {
@@ -663,6 +705,116 @@ describe('buildApp', () => {
             sourceFamily: 'dbt',
             sourceVersion: 'manifest-v10',
             nodes: [{ nodeId: 'model.orders', stepKind: 'DBT_MODEL', dependsOn: [] }],
+          },
+        },
+      });
+
+      expect(response.statusCode).toBe(401);
+      expect(response.json()).toEqual(httpError('unauthorized', 'missing_token'));
+
+      await app.close();
+    } finally {
+      getPgPoolSpy.mockRestore();
+      PostgresPrincipalAccessRepository.prototype.migrate = originalAccessRepoMigrate;
+      PostgresPlanStore.prototype.migrate = originalPlanStoreMigrate;
+      PostgresStateStoreAdapter.prototype.migrate = originalStateStoreMigrate;
+      PostgresStartRunIntentStore.prototype.migrate = originalIntentStoreMigrate;
+      delete process.env.DATABASE_URL;
+      delete process.env.OIDC_JWKS_URI;
+      delete process.env.OIDC_ISSUER;
+      delete process.env.OIDC_AUDIENCE;
+    }
+  });
+
+  it('mounts /plans/compile only behind protected runtime auth and returns typed missing-bearer-token', async () => {
+    const originalAccessRepoMigrate = PostgresPrincipalAccessRepository.prototype.migrate;
+    const originalPlanStoreMigrate = PostgresPlanStore.prototype.migrate;
+    const originalStateStoreMigrate = PostgresStateStoreAdapter.prototype.migrate;
+    const originalIntentStoreMigrate = PostgresStartRunIntentStore.prototype.migrate;
+    const queryMock = vi.fn(async () => ({ rows: [{ ok: 1 }] }));
+    const getPgPoolSpy = vi.spyOn(pgPool, 'getPgPool').mockReturnValue({
+      query: queryMock,
+      end: vi.fn(async () => undefined),
+    } as never);
+
+    PostgresPrincipalAccessRepository.prototype.migrate = async function migrate() {};
+    PostgresPlanStore.prototype.migrate = async function migrate() {};
+    PostgresStateStoreAdapter.prototype.migrate = async function migrate() {};
+    PostgresStartRunIntentStore.prototype.migrate = async function migrate() {};
+
+    process.env.OBS_ENABLED = 'false';
+    process.env.NODE_ENV = 'test';
+    process.env.DATABASE_URL = 'postgres://user:pass@localhost:5432/dvt';
+    process.env.OIDC_JWKS_URI = 'https://issuer.example/.well-known/jwks.json';
+    process.env.OIDC_ISSUER = 'https://issuer.example/';
+    process.env.OIDC_AUDIENCE = 'dvt-api';
+
+    try {
+      const { app } = await buildApp();
+      const response = await app.inject({
+        method: 'POST',
+        url: '/plans/compile',
+        payload: {
+          context: {
+            tenantId: 'tenant-a',
+            projectId: 'project-a',
+            environmentId: 'env-a',
+          },
+          selection: {
+            selectedNodeIds: ['source-1', 'transform-1', 'sink-1'],
+          },
+          graphSource: {
+            kind: 'generic-graph-v1',
+            sourceFamily: 'transformation-design-graph',
+            sourceVersion: 'transformation-sql-first-v1',
+            nodes: [
+              {
+                nodeId: 'source-1',
+                stepKind: 'PREPARE_POSTGRES_TRANSFORM',
+                dependsOn: [],
+                stepTypeConfig: {
+                  targetSchema: 'analytics',
+                  sourceSchema: 'raw',
+                  sourceTable: 'orders',
+                  sourceAlias: 'orders_src',
+                },
+              },
+              {
+                nodeId: 'transform-1',
+                stepKind: 'POSTGRES_SQL_TRANSFORM',
+                dependsOn: ['source-1'],
+                stepTypeConfig: {
+                  dialect: 'postgres',
+                  entrypoint: 'models/orders.sql',
+                  sql: 'select * from raw.orders',
+                  sqlArtifact: {
+                    repo: 'org/repo',
+                    path: 'models/orders.sql',
+                    ref: 'refs/heads/main',
+                    commitSha: 'commit-sql-1',
+                    contentSha256: 'a'.repeat(64),
+                  },
+                  sourceSchema: 'raw',
+                  sourceTable: 'orders',
+                  sourceAlias: 'orders_src',
+                  sinkSchema: 'analytics',
+                  sinkTable: 'orders_daily',
+                  materialization: 'table',
+                  writeMode: 'replace',
+                },
+              },
+              {
+                nodeId: 'sink-1',
+                stepKind: 'CAPTURE_MATERIALIZATION_EVIDENCE',
+                dependsOn: ['transform-1'],
+                stepTypeConfig: {
+                  sinkSchema: 'analytics',
+                  sinkTable: 'orders_daily',
+                  materialization: 'table',
+                  writeMode: 'replace',
+                },
+              },
+            ],
           },
         },
       });

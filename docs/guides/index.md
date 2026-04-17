@@ -22,6 +22,8 @@ Developer guides, contribution guides, and quality standards.
 - [AR-C2 Observability User Manual](ar-c2-observability-user-manual-20260404.md)
 - [Documentation maintenance guide](documentation-maintenance-guide-20260407.md)
 - [DVT+ Design Guide](dvt-code-style-solid-hexagonal-cqrs.md)
+- [External Compile Catalog Extension Technical Manual](external-compile-catalog-extension-technical-manual-20260417.md)
+- [External Compile Target Architecture Technical Manual](external-compile-target-architecture-technical-manual-20260417.md)
 - [F-04 Frontend Data Boundary User Manual](f04-frontend-data-boundary-user-manual-20260404.md)
 - [Gap 5 Operator Guide](gap-5-operator-guide-20260319.md)
 - [Gap 5 User Reference](gap-5-user-reference-20260319.md)
