@@ -56,6 +56,10 @@ interface EventPayloadRow {
   payload: EventEnvelope;
 }
 
+interface MaxSeqRow {
+  max_seq: number | string | bigint;
+}
+
 // ---------------------------------------------------------------------------
 // PostgresRunSnapshotStore
 // ---------------------------------------------------------------------------
@@ -287,6 +291,16 @@ export class PostgresRunSnapshotStore implements TerminalSnapshotPinStore {
       // Acquire per-run advisory lock to prevent concurrent snapshot mutations.
       await this.acquireRunLock(client, runId);
 
+      const maxSeqResult = await client.query<MaxSeqRow>(
+        `
+          SELECT COALESCE(MAX(run_seq), 0) AS max_seq
+          FROM ${quoteIdentifier(this.schema)}.run_events
+          WHERE run_id = $1
+        `,
+        [runId]
+      );
+      const maxRunSeq = parsePersistedRunSequence(maxSeqResult.rows[0]?.max_seq ?? 0, runId);
+
       const checkpoint = await client.query<SnapshotWithSeqRow>(
         `
           SELECT snapshot, last_run_seq
@@ -301,7 +315,8 @@ export class PostgresRunSnapshotStore implements TerminalSnapshotPinStore {
         persisted?.snapshot !== undefined &&
         persisted.snapshot.schemaVersion === CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION &&
         persisted.last_run_seq !== null &&
-        persisted.last_run_seq !== undefined;
+        persisted.last_run_seq !== undefined &&
+        parsePersistedRunSequence(persisted.last_run_seq, runId) <= maxRunSeq;
 
       const replayFromRunSeq = canUseIncrementalCheckpoint
         ? parsePersistedRunSequence(persisted.last_run_seq, runId)

@@ -240,6 +240,10 @@ describe('PostgresRunSnapshotStore', () => {
         return { rows: [] as T[], rowCount: 1 };
       }
 
+      if (sql.includes('COALESCE(MAX(run_seq), 0)')) {
+        return { rows: [{ max_seq: 3 }] as T[], rowCount: 1 };
+      }
+
       if (
         sql.includes('SELECT snapshot, last_run_seq') &&
         sql.includes('FROM "dvt".run_snapshots')
@@ -316,6 +320,10 @@ describe('PostgresRunSnapshotStore', () => {
         return { rows: [] as T[], rowCount: 1 };
       }
 
+      if (sql.includes('COALESCE(MAX(run_seq), 0)')) {
+        return { rows: [{ max_seq: 2 }] as T[], rowCount: 1 };
+      }
+
       if (
         sql.includes('SELECT snapshot, last_run_seq') &&
         sql.includes('FROM "dvt".run_snapshots')
@@ -333,6 +341,80 @@ describe('PostgresRunSnapshotStore', () => {
                 steps: {},
               } satisfies WorkflowSnapshot,
               last_run_seq: 9,
+            },
+          ] as T[],
+          rowCount: 1,
+        };
+      }
+
+      if (sql.includes('FROM "dvt".run_events') && sql.includes('run_seq > $2')) {
+        expect(params).toEqual(['run-1', 0]);
+        return {
+          rows: [
+            {
+              payload: makeEvent({ runId: 'run-1', runSeq: 1, eventType: 'RunQueued' }),
+            },
+            {
+              payload: makeEvent({ runId: 'run-1', runSeq: 2, eventType: 'RunStarted' }),
+            },
+          ] as T[],
+          rowCount: 2,
+        };
+      }
+
+      if (sql.includes('INSERT INTO "dvt".run_snapshots')) {
+        return { rows: [] as T[], rowCount: 1 };
+      }
+
+      return { rows: [] as T[], rowCount: 0 };
+    });
+    const store = new PostgresRunSnapshotStore(
+      'dvt',
+      () => '2026-03-20T00:00:01.000Z',
+      async (fn) => fn(client as never),
+      async (fn) => fn(client as never)
+    );
+
+    const snapshot = await store.rebuildSnapshot('tenant-1', 'run-1');
+
+    expect(snapshot).toMatchObject({
+      schemaVersion: CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION,
+      runId: 'run-1',
+      status: 'RUNNING',
+    });
+  });
+
+  it('rebuildSnapshot falls back to full replay when checkpoint sequence is ahead of event head', async () => {
+    const client = new ScriptedClient(async <T>(sql: string, params?: unknown[]) => {
+      if (sql.includes('FROM "dvt".run_metadata')) {
+        return { rows: [{ run_id: 'run-1' }] as T[], rowCount: 1 };
+      }
+
+      if (sql.includes('pg_advisory_xact_lock')) {
+        return { rows: [] as T[], rowCount: 1 };
+      }
+
+      if (sql.includes('COALESCE(MAX(run_seq), 0)')) {
+        return { rows: [{ max_seq: 2 }] as T[], rowCount: 1 };
+      }
+
+      if (
+        sql.includes('SELECT snapshot, last_run_seq') &&
+        sql.includes('FROM "dvt".run_snapshots')
+      ) {
+        return {
+          rows: [
+            {
+              snapshot: {
+                schemaVersion: CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION,
+                runId: 'run-1',
+                status: 'RUNNING',
+                paused: false,
+                cancelling: false,
+                gatewayDecisions: {},
+                steps: {},
+              } satisfies WorkflowSnapshot,
+              last_run_seq: 99,
             },
           ] as T[],
           rowCount: 1,
