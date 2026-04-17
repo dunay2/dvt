@@ -1,0 +1,25 @@
+---
+id: R-20260416-AR-D1-INCREMENTAL-SNAPSHOT-PROJECTION
+title: Incremental snapshot checkpoint drift can mask replay assumptions
+status: Open
+date: 2026-04-16
+owners:
+  - packages/@dvt/engine
+  - packages/@dvt/adapter-postgres
+severity: Medium
+probability: Low
+context: >
+  AR-D1 changes snapshot rebuild behavior from full replay-by-default to checkpoint-plus-delta
+  replay. Correctness now depends on checkpoint validity (`schemaVersion` compatibility and
+  monotonic `last_run_seq`).
+risk: >
+  If a stale or malformed checkpoint is accepted as valid, replay may omit required events and
+  project an incorrect status surface.
+mitigations:
+  - Keep strict checkpoint guards (schema compatibility and bounded sequence checks) before delta
+    replay.
+  - Preserve full-replay fallback when checkpoint state is missing or incompatible.
+  - Keep rebuild tests that cover checkpoint and fallback paths in both in-memory and Postgres
+    stores.
+review_after: 2026-06-30
+---
