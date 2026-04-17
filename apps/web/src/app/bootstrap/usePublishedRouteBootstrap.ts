@@ -1,30 +1,16 @@
-import { useEffect, useMemo } from 'react';
-import { useMatches } from 'react-router';
+import { useEffect } from 'react';
 
 import {
-  getRouteBootstrapRegistration,
   publishRouteBootstrapPresentation,
   resetRouteBootstrapPresentation,
   type RouteBootstrapPresentation,
 } from './routeBootstrapPresentation';
+import { useActiveRouteBootstrapRegistration } from './useActiveRouteBootstrapRegistration';
 
 export function usePublishedRouteBootstrap(
   presentation: RouteBootstrapPresentation
 ): void {
-  const matches = useMatches();
-  const registration = useMemo(() => {
-    for (let index = matches.length - 1; index >= 0; index -= 1) {
-      const candidate = getRouteBootstrapRegistration(
-        matches[index]?.id,
-        matches[index]?.handle
-      );
-      if (candidate) {
-        return candidate;
-      }
-    }
-
-    return null;
-  }, [matches]);
+  const registration = useActiveRouteBootstrapRegistration();
 
   useEffect(() => {
     if (registration?.routeBootstrap.mode !== 'published') {

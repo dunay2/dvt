@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useSyncExternalStore } from 'react';
-import { Outlet, useMatches } from 'react-router';
+import { useEffect, useSyncExternalStore } from 'react';
+import { Outlet } from 'react-router';
 import {
   buildShellHealthPresentationModel,
   type PlatformHealthCapabilityApi,
@@ -17,9 +17,9 @@ import {
 } from './bootstrap/appBootstrapScreen';
 import {
   getPublishedRouteBootstrapPresentation,
-  getRouteBootstrapRegistration,
   subscribeRouteBootstrapPresentations,
 } from './bootstrap/routeBootstrapPresentation';
+import { useActiveRouteBootstrapRegistration } from './bootstrap/useActiveRouteBootstrapRegistration';
 import { useCapabilitiesQuery } from './queries/useCapabilitiesQuery';
 import { useUiLayoutStore } from './stores/uiLayoutStore';
 import '@xyflow/react/dist/style.css';
@@ -29,7 +29,6 @@ type RootShellProps = {
 };
 
 export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
-  const matches = useMatches();
   const focusMode = useUiLayoutStore((state) => state.focusMode);
   const consolePanelHeight = useUiLayoutStore((state) => state.consolePanelHeight);
   const consolePanelVisible = useUiLayoutStore((state) => state.consolePanelVisible);
@@ -47,19 +46,7 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
     dataUpdatedAt: platformHealth.dataUpdatedAt,
     errorUpdatedAt: platformHealth.errorUpdatedAt,
   });
-  const activeRouteBootstrapRegistration = useMemo(() => {
-    for (let index = matches.length - 1; index >= 0; index -= 1) {
-      const registration = getRouteBootstrapRegistration(
-        matches[index]?.id,
-        matches[index]?.handle
-      );
-      if (registration) {
-        return registration;
-      }
-    }
-
-    return null;
-  }, [matches]);
+  const activeRouteBootstrapRegistration = useActiveRouteBootstrapRegistration();
   const routeBootstrapPresentation = useSyncExternalStore(
     subscribeRouteBootstrapPresentations,
     () => getPublishedRouteBootstrapPresentation(activeRouteBootstrapRegistration),
