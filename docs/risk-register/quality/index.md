@@ -42,6 +42,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [Future recover-run feature could leak back into the generic signal boundary](R-20260408-RECOVER-RUN-BOUNDARY-DRIFT.yaml)
 - [Graph source cardinality drift between JSON schema and runtime parser](R-20260404-MWA2-GRAPH-SOURCE-CARDINALITY-DRIFT.yaml)
 - [In-memory engine state-store invariant drift on snapshot and outbox paths](R-20260404-INMEMORY-STATE-STORE-INVARIANTS.yaml)
+- [Incremental snapshot checkpoint drift can mask replay assumptions](R-20260416-AR-D1-INCREMENTAL-SNAPSHOT-PROJECTION.yaml)
 - [Integration-smoke drift from shared schema test state in S08-4](R-20260403-S08-4-CI-REGRESSION-FIX.yaml)
 - [Intent reconciliation outcomes can overreport cancelled workflows](R-20260408-INTENT-RECONCILE-OUTCOME-CLASSIFICATION.yaml)
 - [Legacy ExecutionPlanV2 imports can break after canonical naming retirement](R-20260401-EXECUTIONPLANV2-CANONICAL-NAMING-BREAK.yaml)

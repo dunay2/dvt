@@ -212,7 +212,7 @@ tasks:
     last_verified: '2026-03-31'
   - task_id: AR-D1
     priority: P1
-    status: queued
+    status: done
     objective: >-
       implement incremental snapshot projection (apply event delta instead of full replay) so that
       getRunStatus does not degrade to O(n) for high-step-count DAGs when snapshot is stale.
@@ -223,13 +223,17 @@ tasks:
       O(total).
     complexity: L
     effort_points: 8
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
+      - docs/planning/closeouts/20260416-ar-d1-incremental-snapshot-projection-closeout.md
+      - docs/evidence/ED-20260416-ar-d1-incremental-snapshot-projection.md
+      - docs/risk-register/quality/R-20260416-AR-D1-INCREMENTAL-SNAPSHOT-PROJECTION.yaml
     status_reason: >-
-      At 1000-step DAGs with 3000+ events, full replay on cache miss is unacceptable for status
-      polling latency.
-    last_verified: '2026-04-02'
+      Rebuild and read paths now consume snapshot checkpoints and replay only event deltas across
+      Postgres and in-memory stores, while retaining full-replay fallback when checkpoint state is
+      missing or incompatible.
+    last_verified: '2026-04-16'
   - task_id: AR-D2
     priority: P2
     status: queued
@@ -501,9 +505,8 @@ dependency_notes:
     `first enterprise pilot`, billing, compliance, and acquisition collateral remain explicit GTM
     backlog rather than implementation work.
   - >-
-    `AR-D1` through `AR-D6` originate from the 2026-04-02 deep architectural review: incremental
-    snapshot projection (P1), continueAsNew governance (P2), worker scaling docs (P2), zero-downtime
-    rollback (P2), tenant-configurable retention (P2), and triple versioning assessment (P2).
+    `AR-D2` through `AR-D6` remain the open scale backlog from the 2026-04-02 deep architectural
+    review; `AR-D1` is closed with incremental snapshot projection and fallback replay evidence.
   - >-
     The 2026-04-02 principal deep architectural review adds `AR-D7` (tenant-aware outbox sharding)
     and `AR-D8` (default retention policy plus retention health alerting) as scale hardening tasks.
@@ -517,12 +520,11 @@ dependency_notes:
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
-  verified_on: '2026-04-13'
+  verified_on: '2026-04-16'
   total_tasks: 26
   total_effort_points: 135
-  completed_weighted_points: 33
-  lane_progress_pct: 24
+  completed_weighted_points: 41
+  lane_progress_pct: 30
   notes: >-
-    Weighted progress uses effort_points. `TF-D1` now contributes accepted proof-environment
-    lifecycle closure, so Lane D's remaining near-term work is default retention enforcement and
-    scale hardening rather than rerun discipline for the first PostgreSQL proof path.
+    Weighted progress uses effort_points. `AR-D1` now contributes accepted incremental projection
+    closure, so remaining Lane D near-term work is retention enforcement and scale hardening.

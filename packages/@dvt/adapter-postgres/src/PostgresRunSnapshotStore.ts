@@ -57,7 +57,7 @@ interface EventPayloadRow {
 }
 
 interface MaxSeqRow {
-  max_seq: number | string;
+  max_seq: number | string | bigint;
 }
 
 // ---------------------------------------------------------------------------
@@ -268,7 +268,8 @@ export class PostgresRunSnapshotStore implements TerminalSnapshotPinStore {
   }
 
   /**
-   * ADR-0004 section 2.2 - Full event replay from runSeq=1 overwrites the materialized snapshot.
+   * ADR-0004 section 2.2 - Event replay preserves runSeq ordering while allowing
+   * incremental catch-up from the latest persisted snapshot checkpoint.
    * ADR-0031 - Tenant isolation is verified before replay; mismatches raise RunNotFoundError.
    */
   async rebuildSnapshot(tenantId: string, runId: RunId): Promise<WorkflowSnapshot> {
@@ -290,40 +291,61 @@ export class PostgresRunSnapshotStore implements TerminalSnapshotPinStore {
       // Acquire per-run advisory lock to prevent concurrent snapshot mutations.
       await this.acquireRunLock(client, runId);
 
+      const maxSeqResult = await client.query<MaxSeqRow>(
+        `
+          SELECT COALESCE(MAX(run_seq), 0) AS max_seq
+          FROM ${quoteIdentifier(this.schema)}.run_events
+          WHERE run_id = $1
+        `,
+        [runId]
+      );
+      const maxRunSeq = parsePersistedRunSequence(maxSeqResult.rows[0]?.max_seq ?? 0, runId);
+
+      const checkpoint = await client.query<SnapshotWithSeqRow>(
+        `
+          SELECT snapshot, last_run_seq
+          FROM ${quoteIdentifier(this.schema)}.run_snapshots
+          WHERE run_id = $1
+          LIMIT 1
+        `,
+        [runId]
+      );
+      const persisted = checkpoint.rows[0];
+      const canUseIncrementalCheckpoint =
+        persisted?.snapshot !== undefined &&
+        persisted.snapshot.schemaVersion === CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION &&
+        persisted.last_run_seq !== null &&
+        persisted.last_run_seq !== undefined &&
+        parsePersistedRunSequence(persisted.last_run_seq, runId) <= maxRunSeq;
+
+      const replayFromRunSeq = canUseIncrementalCheckpoint
+        ? parsePersistedRunSequence(persisted.last_run_seq, runId)
+        : 0;
+      const snapshot = canUseIncrementalCheckpoint
+        ? cloneWorkflowSnapshot(persisted.snapshot)
+        : this.createEmptySnapshot(runId);
+
       // ADR-0004 section 2.2: replay MUST use runSeq ASC.
       const eventsResult = await client.query<EventPayloadRow>(
         `
           SELECT payload
           FROM ${quoteIdentifier(this.schema)}.run_events
           WHERE run_id = $1
+            AND run_seq > $2
           ORDER BY run_seq ASC
         `,
-        [runId]
+        [runId, replayFromRunSeq]
       );
-
-      const snap: WorkflowSnapshot = {
-        schemaVersion: CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION,
-        runId,
-        status: 'PENDING',
-        paused: false,
-        cancelling: false,
-        gatewayDecisions: {},
-        steps: {},
-      };
       for (const row of eventsResult.rows) {
-        applyRunEvent(snap, row.payload);
+        applyRunEvent(snapshot, row.payload);
       }
 
-      const seqResult = await client.query<MaxSeqRow>(
-        `SELECT COALESCE(MAX(run_seq), 0) AS max_seq FROM ${quoteIdentifier(this.schema)}.run_events WHERE run_id = $1`,
-        [runId]
-      );
-      const lastSeq = Number(seqResult.rows[0]?.max_seq ?? 0);
+      const lastSeq = eventsResult.rows.at(-1)?.payload.runSeq ?? replayFromRunSeq;
 
       // Pass lastSeq directly; 0 is valid when the run has no events (degenerate case).
       // persistWithClient only rejects null, not 0.
-      await this.persistWithClient(client, runId, snap, lastSeq);
-      return snap;
+      await this.persistWithClient(client, runId, snapshot, lastSeq);
+      return snapshot;
     });
   }
 
