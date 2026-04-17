@@ -38,6 +38,12 @@ Current open warnings in `planning`: 0.
 | `docs/planning/reviews/DVT+_Architectural_Review_Pass_2.md`                     | Residual Spanish roadmap section translated in place.                                                               |
 | `docs/planning/reviews/DVT_ARCH_REVIEW_CONSOLIDATED_20260305.md`                | Residual Spanish effort labels and roadmap text translated in place.                                                |
 | `docs/planning/proposals/documentation-restructuring-diagnostic-and-roadmap.md` | Rewritten in English; the last temporary warning in `planning` is now closed.                                       |
+| `docs/planning/archive/proposals/frontend-plan-back-alignment.md`               | Rewritten as an English archive digest after canonical integration.                                                 |
+| `docs/planning/archive/proposals/frontend-sprint-tasks-and-risks.md`            | Rewritten as an English archive digest after canonical integration.                                                 |
+| `docs/planning/archive/architecture/frontend-plugin-architecture-v1-hybrid.md`  | Rewritten as an English archive digest after canonical integration.                                                 |
+| `docs/planning/archive/architecture/frontend-dialect-codegen-boundary.md`       | Rewritten as an English archive digest after canonical integration.                                                 |
+| `docs/planning/archive/architecture/plugin-developer-guide-v1.md`               | Rewritten as an English archive digest after canonical integration.                                                 |
+| `docs/planning/archive/architecture/api-prototype-evaluation.md`                | Rewritten as an English archive digest after canonical integration.                                                 |
 
 ## Current Queue
 

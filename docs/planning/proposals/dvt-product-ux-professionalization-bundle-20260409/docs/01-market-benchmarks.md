@@ -1,223 +1,189 @@
-# 01. Market Benchmarks: productos con tableros grandes y trabajo iterativo
+---
+title: 01 Market Benchmarks
+status: Draft
+owner: Product / UX / Frontend
+last_reviewed: 2026-04-17
+planning_type: proposal
+---
 
-## Por qué estos referentes
+# 01. Market Benchmarks: large workboards and iterative operator workflows
 
-No basta con mirar productos “bonitos”.
-Para DVT hacen falta referentes que resuelvan al menos una de estas tensiones:
+## Why these references
 
-- tablero o superficie grande,
-- navegación repetitiva entre contexto y detalle,
-- operación técnica densa,
-- edición/inspección de artefactos,
-- y extensibilidad por plugins.
+It is not enough to copy products that simply look polished. DVT needs
+references that solve at least one of these tensions well:
 
-## Referentes clave
+- a large board or surface,
+- repeated movement between overview and detail,
+- dense technical operations,
+- artifact editing and inspection,
+- extension through plugins.
+
+## Key references
 
 ### 1. VS Code
 
-**Qué aporta**
+**What it contributes**
 
-- Shell muy estable.
-- Activity bar clara.
-- Explorer + editor + panel inferior.
-- Quick Open y command palette.
-- Persistencia fuerte de contexto.
+- very stable shell structure
+- clear activity rail
+- explorer, editor, and bottom panel working together
+- quick open and command palette
+- strong context persistence
 
-**Qué conviene copiar**
+**What DVT should borrow**
 
-- Gramática de layout.
-- Prioridad de teclado y quick switch.
-- Separación entre navegación global y contenido activo.
-- Panel inferior como diagnóstico, no como pantalla aparte.
+- layout grammar
+- keyboard-first switching
+- separation between global navigation and active content
+- bottom panel as diagnostics, not as a disconnected screen
 
-**Qué no conviene copiar tal cual**
+**What DVT should not copy literally**
 
-- Exceso de densidad críptica.
-- Demasiadas affordances “developer IDE” si el público de DVT no es 100% ingeniería.
+- cryptic density
+- overly developer-IDE affordances if the operator audience is broader than
+  full-time engineers
 
 ### 2. dbt Studio IDE
 
-**Qué aporta**
+**What it contributes**
 
-- Unificación entre build/test/run/versionado en una sola interfaz.
-- Lenguaje de trabajo centrado en proyecto y ejecución.
+- one interface for build, test, run, and versioning
+- a work language centered on project and execution
 
-**Qué conviene copiar**
+**What DVT should borrow**
 
-- Que el usuario no cambie de “aplicación mental” para editar, comparar y ejecutar.
-- Unión entre artefacto, compilación y monitorización.
+- the operator should not feel like they are switching mental applications when
+  editing, comparing, and running
+- tighter connection between artifact, compilation, and monitoring
 
-**Qué no conviene copiar tal cual**
+**What DVT should not copy literally**
 
-- Visión demasiado centrada en editor textual si DVT quiere conservar el canvas como ventaja diferencial.
+- an editor-first posture if DVT wants Canvas to remain a differentiating
+  surface
 
 ### 3. Miro
 
-**Qué aporta**
+**What it contributes**
 
-- Estructuración de board mediante frames.
-- Navegación entre zonas de trabajo.
-- Presentación y wayfinding sobre superficies grandes.
+- board structure through frames
+- navigation between working zones
+- wayfinding on large surfaces
 
-**Qué conviene copiar**
+**What DVT should borrow**
 
-- Frames / sections / saved areas.
-- Navegación por zonas en tableros extensos.
-- Pensar el canvas como espacio navegable, no sólo como render de nodos.
+- frames, sections, and saved areas
+- zone navigation on large boards
+- treating Canvas as navigable space, not just a node renderer
 
-**Qué no conviene copiar tal cual**
+**What DVT should not copy literally**
 
-- Libertad total de colocación y caos visual.
-- Multiplicación de herramientas flotantes.
+- unconstrained placement and visual chaos
+- too many floating tools competing for attention
 
 ### 4. FigJam / Figma
 
-**Qué aporta**
+**What it contributes**
 
-- Sections para agrupar objetos.
-- Inspector lateral muy claro.
-- Jerarquía limpia entre canvas, propiedades y librería.
+- clear grouping through sections
+- strong contextual inspector
+- clean hierarchy between canvas, properties, and library
 
-**Qué conviene copiar**
+**What DVT should borrow**
 
-- Inspector contextual.
-- Agrupación semántica de áreas.
-- Estructura clara entre panel izquierdo, superficie central y panel derecho.
+- contextual inspector posture
+- semantically grouped work areas
+- explicit left / center / right structure
 
-**Qué no conviene copiar tal cual**
+**What DVT should not copy literally**
 
-- Exceso de tooling visual si la tarea principal es operativa y no de diseño.
+- a toolset optimized for visual design rather than operations
 
-### 5. Grafana (Explore + Dashboards)
+### 5. Grafana
 
-**Qué aporta**
+**What it contributes**
 
-- Diferencia muy bien “explorar” de “monitorizar”.
-- Soporta iteración rápida y vistas densas.
-- Tiene una cultura fuerte de plugins.
+- sharp separation between exploration and monitoring
+- dense views that still stay readable
+- a strong plugin culture
 
-**Qué conviene copiar**
+**What DVT should borrow**
 
-- Separación entre vista de exploración y vista operacional resumida.
-- Alta densidad con claridad.
-- Modelo de plugins como producto, no como hack.
+- clear split between investigative and summarized operational views
+- high density with hierarchy
+- plugins as product capability, not as ad hoc hacks
 
-**Qué no conviene copiar tal cual**
+**What DVT should not copy literally**
 
-- Panelitis.
-- Demasiadas superficies simultáneas sin jerarquía.
+- panel sprawl
+- too many simultaneous surfaces without a strong hierarchy
 
 ### 6. Dagster
 
-**Qué aporta**
+**What it contributes**
 
-- Relación fuerte entre grafo/lineage y ejecución.
-- Navegación por assets y dependencias.
-- Modelo de operación centrado en flows y estados.
+- tight relationship between graph, lineage, and execution
+- navigation through assets and dependencies
+- an operational model centered on flows and states
 
-**Qué conviene copiar**
+**What DVT should borrow**
 
-- Cercanía entre grafo, ejecución y contexto de activos.
-- Jump paths entre nodo, lineage y runtime.
+- closeness between graph, execution, and asset context
+- jump paths between node, lineage, and runtime evidence
 
-**Qué no conviene copiar tal cual**
+**What DVT should not copy literally**
 
-- Complejidad conceptual expuesta demasiado pronto.
+- exposing too much conceptual complexity too early
 
 ### 7. Backstage
 
-**Qué aporta**
+**What it contributes**
 
-- Composición app-first mediante plugins.
-- Navegación y rutas desacopladas mediante referencias.
-- Escalabilidad estructural del frontend.
+- application composition through plugins
+- route and navigation composition through governed references
+- structural scalability in the frontend
 
-**Qué conviene copiar**
+**What DVT should borrow**
 
-- Que el plugin se adapte a la shell y no al revés.
-- Integración gobernada de navegación y vistas.
+- plugins adapting to the shell, not the shell adapting to each plugin
+- governed integration of navigation and views
 
-**Qué no conviene copiar tal cual**
+**What DVT should not copy literally**
 
-- Exceso de “portal corporativo” si DVT quiere una experiencia más afilada y operativa.
+- the "corporate portal" feel if DVT wants a sharper operational workbench
 
-## Patrones transversales que sí convienen a DVT
+## Cross-cutting patterns DVT should adopt
 
-### 1. Shell grammar fija
+### 1. Fixed shell grammar
 
-Todos los productos maduros tienen una gramática estable de layout.
-DVT debe evitar que cada ruta invente su propia composición.
+Every mature product keeps a stable layout grammar. DVT should avoid letting
+each route invent its own composition model.
 
-### 2. Jerarquía de acciones
+### 2. Action hierarchy
 
-- globales arriba,
-- de navegación a la izquierda,
-- locales cerca del contenido,
-- contextuales en inspector,
-- diagnósticos abajo.
+- global actions at the top
+- navigation on the left
+- local actions near active content
+- contextual actions in the inspector
+- diagnostics at the bottom
 
-### 3. Persistencia de contexto
+### 3. Context persistence
 
-Los usuarios iterativos no quieren “empezar de cero” cada vez.
-Conviene persistir:
+Iterative users do not want to restart from zero. Persist:
 
-- layout,
-- ruta reciente,
-- selección,
-- filtros,
-- tab activo,
-- vista guardada.
+- layout
+- recent route
+- selection
+- filters
+- active tab
+- saved view
 
-### 4. Progresive disclosure
+### 4. Progressive disclosure
 
-Las capacidades avanzadas deben existir, pero no saturar la primera capa.
-Primero la tarea.
-Luego el detalle.
+Advanced capability should exist without overwhelming the first layer. Start
+with the task, then reveal the detail.
 
-### 5. Densidad con orden
+### 5. Density with order
 
-La densidad es buena si ayuda a:
-
-- buscar,
-- comparar,
-- revisar,
-- accionar.
-  Es mala si sólo mete más ruido.
-
-## Traducción directa a DVT
-
-### DVT debería tomar de VS Code / dbt Studio
-
-- shell de workbench,
-- tabs contextuales,
-- panel inferior útil,
-- command palette,
-- Monaco bien integrado.
-
-### DVT debería tomar de Miro / FigJam
-
-- frames o zonas para canvas grande,
-- navegación entre áreas,
-- inspector contextual más claro.
-
-### DVT debería tomar de Grafana / Dagster
-
-- vistas densas para operación,
-- clara relación entre estado, ejecución y superficie visual,
-- overlays y filtros que realmente aporten señal.
-
-### DVT debería tomar de Backstage
-
-- disciplina de pluginización,
-- extensión por contratos,
-- experiencia integrada y no oportunista.
-
-## Conclusión del benchmark
-
-El mejor posicionamiento no es “mezclar un graph viewer con varias pantallas”.
-Es construir un **workflow workbench** donde:
-
-- el grafo sea el mapa,
-- el editor/diff sean la mesa de trabajo,
-- los runs sean el runtime cockpit,
-- y los plugins entren por docks previsibles.
+Density is useful when it improves comparison, scanning, and action speed. It
+fails when it destroys hierarchy or increases visual noise.
