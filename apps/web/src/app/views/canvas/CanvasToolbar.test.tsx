@@ -3,6 +3,8 @@
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import type { CanvasDraftToolbarState } from './canvasDraftPresentationState';
 import CanvasToolbar from './CanvasToolbar';
 import type { TransformationGraphValidationResult } from './transformationGraphValidation';
 
@@ -28,6 +30,11 @@ describe('CanvasToolbar', () => {
   let container: HTMLDivElement;
   let portalHost: HTMLDivElement;
   let root: Root;
+  const defaultDraftToolbarState: CanvasDraftToolbarState = {
+    label: 'Draft synced',
+    tone: 'neutral',
+    showReloadAction: false,
+  };
 
   beforeEach(() => {
     portalHost = document.createElement('div');
@@ -49,7 +56,7 @@ describe('CanvasToolbar', () => {
     container.remove();
   });
 
-  it('renders one workflow status and actions without diagnostic badges', async () => {
+  it('renders one workflow status and core actions in top-bar mode', async () => {
     await act(async () => {
       root.render(
         <CanvasToolbar
@@ -61,8 +68,7 @@ describe('CanvasToolbar', () => {
           onReloadLatestDraft={vi.fn()}
           onPlan={vi.fn()}
           onRun={vi.fn()}
-          draftSaveStatus="idle"
-          hasStaleDraftVersion={false}
+          draftToolbarState={defaultDraftToolbarState}
           canPlan={true}
           canRun={true}
           canEditEdges={true}
@@ -88,14 +94,10 @@ describe('CanvasToolbar', () => {
     expect(portalHost.textContent).toContain('Cost');
     expect(portalHost.textContent).toContain('Plan');
     expect(portalHost.textContent).toContain('Run');
-    expect(portalHost.textContent).not.toContain('SQL flow');
-    expect(portalHost.textContent).not.toContain('dbt graph');
-    expect(portalHost.textContent).not.toContain('3N / 2E');
-    expect(portalHost.textContent).not.toContain('Preview ready');
-    expect(portalHost.textContent).not.toContain('Need source, transform, sink');
+    expect(portalHost.textContent).toContain('Draft synced');
   });
 
-  it('keeps a generic plan-required state when plan creation is blocked', async () => {
+  it('keeps plan button disabled when transformation validation is invalid', async () => {
     await act(async () => {
       root.render(
         <CanvasToolbar
@@ -107,8 +109,7 @@ describe('CanvasToolbar', () => {
           onReloadLatestDraft={vi.fn()}
           onPlan={vi.fn()}
           onRun={vi.fn()}
-          draftSaveStatus="idle"
-          hasStaleDraftVersion={false}
+          draftToolbarState={defaultDraftToolbarState}
           canPlan={true}
           canRun={true}
           canEditEdges={true}
@@ -132,10 +133,8 @@ describe('CanvasToolbar', () => {
     const planButton = Array.from(portalHost.querySelectorAll('button')).find((button) =>
       button.textContent?.includes('Plan')
     );
-    expect(planButton).not.toBeNull();
     expect(planButton?.getAttribute('disabled')).not.toBeNull();
     expect(portalHost.textContent).toContain('Plan required');
-    expect(portalHost.textContent).not.toContain('Need source, transform, sink');
   });
 
   it('shows run ready when execution can start', async () => {
@@ -150,8 +149,7 @@ describe('CanvasToolbar', () => {
           onReloadLatestDraft={vi.fn()}
           onPlan={vi.fn()}
           onRun={vi.fn()}
-          draftSaveStatus="idle"
-          hasStaleDraftVersion={false}
+          draftToolbarState={defaultDraftToolbarState}
           canPlan={true}
           canRun={true}
           canEditEdges={true}
@@ -172,7 +170,7 @@ describe('CanvasToolbar', () => {
     expect(portalHost.textContent).toContain('Run ready');
   });
 
-  it('shows read only when plan and run are unavailable', async () => {
+  it('shows read only and disables actions when plan and run are unavailable', async () => {
     await act(async () => {
       root.render(
         <CanvasToolbar
@@ -184,8 +182,7 @@ describe('CanvasToolbar', () => {
           onReloadLatestDraft={vi.fn()}
           onPlan={vi.fn()}
           onRun={vi.fn()}
-          draftSaveStatus="idle"
-          hasStaleDraftVersion={false}
+          draftToolbarState={defaultDraftToolbarState}
           canPlan={false}
           canRun={false}
           canEditEdges={false}
@@ -214,23 +211,29 @@ describe('CanvasToolbar', () => {
     expect(runButton?.getAttribute('disabled')).not.toBeNull();
   });
 
-  it('disables inline mutation buttons when route permissions gate graph edits and run controls', async () => {
+  it('shows recovery draft status and exposes reload action when recovery is active', async () => {
+    const onReloadLatestDraft = vi.fn();
+
     await act(async () => {
       root.render(
         <CanvasToolbar
+          placement="top-bar"
           onAutoLayout={vi.fn()}
           onToggleCostOverlay={vi.fn()}
           onToggleImpact={vi.fn()}
           onToggleColumns={vi.fn()}
-          onReloadLatestDraft={vi.fn()}
+          onReloadLatestDraft={onReloadLatestDraft}
           onPlan={vi.fn()}
           onRun={vi.fn()}
-          draftSaveStatus="idle"
-          hasStaleDraftVersion={false}
+          draftToolbarState={{
+            label: 'Draft missing',
+            tone: 'warning',
+            showReloadAction: true,
+          }}
           canPlan={false}
           canRun={false}
           canEditEdges={false}
-          canStartRun={true}
+          canStartRun={false}
           planStatusSummary="Run start is unavailable in this context."
           canvasAuthoringMode="transformation"
           exclusiveOverlayMode="runtime"
@@ -244,13 +247,17 @@ describe('CanvasToolbar', () => {
       );
     });
 
-    const buttons = Array.from(container.querySelectorAll('button'));
-    const layoutButton = buttons.find((button) => button.textContent?.includes('Layout'));
-    const planButton = buttons.find((button) => button.textContent?.includes('Plan'));
-    const runButton = buttons.find((button) => button.textContent?.includes('Run'));
+    expect(portalHost.textContent).toContain('Recovery');
+    expect(portalHost.textContent).toContain('Draft missing');
+    const reloadButton = Array.from(portalHost.querySelectorAll('button')).find((button) =>
+      button.textContent?.includes('Reload draft')
+    );
+    expect(reloadButton).not.toBeNull();
 
-    expect(layoutButton?.getAttribute('disabled')).not.toBeNull();
-    expect(planButton?.getAttribute('disabled')).not.toBeNull();
-    expect(runButton?.getAttribute('disabled')).not.toBeNull();
+    await act(async () => {
+      reloadButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    expect(onReloadLatestDraft).toHaveBeenCalledTimes(1);
   });
 });

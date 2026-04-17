@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import CanvasShell from './CanvasShell';
 import { DEFAULT_CANVAS_PALETTE_ID } from './canvasPalette';
+import type { CanvasDraftToolbarState } from './canvasDraftPresentationState';
 import type { CanvasShellProps } from './canvasShell.types';
 
 const shellState = vi.hoisted(() => ({
@@ -44,6 +45,12 @@ vi.mock('./CanvasViewport', () => ({
 }));
 
 function buildProps(overrides?: Partial<CanvasShellProps>): CanvasShellProps {
+  const defaultDraftToolbarState: CanvasDraftToolbarState = {
+    label: 'Draft synced',
+    tone: 'neutral',
+    showReloadAction: false,
+  };
+
   return {
     focusMode: false,
     explorerPanelVisible: true,
@@ -96,8 +103,7 @@ function buildProps(overrides?: Partial<CanvasShellProps>): CanvasShellProps {
     onReloadLatestDraft: vi.fn(),
     onPlan: vi.fn(),
     onRun: vi.fn(),
-    draftSaveStatus: 'idle',
-    hasStaleDraftVersion: false,
+    draftToolbarState: defaultDraftToolbarState,
     canStartRun: false,
     planStatusSummary: 'Preview required before running.',
     exclusiveOverlayMode: 'runtime',

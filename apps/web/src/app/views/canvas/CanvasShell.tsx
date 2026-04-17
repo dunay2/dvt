@@ -49,8 +49,7 @@ export default function CanvasShell({
   onReloadLatestDraft,
   onPlan,
   onRun,
-  draftSaveStatus,
-  hasStaleDraftVersion,
+  draftToolbarState,
   canStartRun,
   planStatusSummary,
   exclusiveOverlayMode,
@@ -109,8 +108,7 @@ export default function CanvasShell({
             onReloadLatestDraft={onReloadLatestDraft}
             onPlan={onPlan}
             onRun={onRun}
-            draftSaveStatus={draftSaveStatus}
-            hasStaleDraftVersion={hasStaleDraftVersion}
+            draftToolbarState={draftToolbarState}
             canPlan={userPermissions.canPlan}
             canRun={userPermissions.canRun}
             canEditEdges={userPermissions.canEditEdges}

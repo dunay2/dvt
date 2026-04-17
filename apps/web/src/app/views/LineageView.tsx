@@ -1,3 +1,4 @@
+import { usePublishedRouteBootstrap } from '../bootstrap/usePublishedRouteBootstrap';
 import { RouteWorkbenchFrame } from '../components/workbench/RouteWorkbenchFrame';
 import { LineageBreadcrumb } from './lineage/LineageBreadcrumb';
 import { LineageColumnPanel } from './lineage/LineageColumnPanel';
@@ -15,6 +16,7 @@ import {
   buildLineageColumnState,
   buildLineageWorkbenchState,
 } from './lineage/lineageWorkbenchStateModel';
+import { deriveLineageRouteBootstrapPresentation } from './lineage/lineageRouteBootstrap';
 import { useLineageViewData } from './lineage/useLineageViewData';
 
 export default function LineageView() {
@@ -59,6 +61,9 @@ export default function LineageView() {
     snapshotError,
     snapshotErrorMessage: snapshotError?.message ?? copy.routeErrorFallbackMessage,
   });
+  usePublishedRouteBootstrap(
+    deriveLineageRouteBootstrapPresentation(workbenchState)
+  );
 
   switch (workbenchState.kind) {
     case 'loading':

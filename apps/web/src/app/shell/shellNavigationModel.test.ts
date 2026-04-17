@@ -1,6 +1,7 @@
 import { FileCode2, GitCompareArrows } from 'lucide-react';
 import { describe, expect, it } from 'vitest';
 
+import { createPublishedRouteBootstrapHandle } from '../bootstrap/routeBootstrapPresentation';
 import { buildShellNavigationModel } from './shellNavigationModel';
 
 describe('buildShellNavigationModel', () => {
@@ -11,6 +12,11 @@ describe('buildShellNavigationModel', () => {
         id: 'code.view',
         path: '/code',
         component: (() => null) as never,
+        handle: {
+          routeBootstrap: createPublishedRouteBootstrapHandle({
+            pendingDetail: 'Preparing code route',
+          }),
+        },
         nav: {
           label: 'Code',
           icon: FileCode2,
@@ -23,6 +29,11 @@ describe('buildShellNavigationModel', () => {
         id: 'diff.view',
         path: '/diff',
         component: (() => null) as never,
+        handle: {
+          routeBootstrap: createPublishedRouteBootstrapHandle({
+            pendingDetail: 'Preparing diff route',
+          }),
+        },
         nav: {
           label: { key: 'nav.diff', fallback: 'Diff' },
           icon: GitCompareArrows,

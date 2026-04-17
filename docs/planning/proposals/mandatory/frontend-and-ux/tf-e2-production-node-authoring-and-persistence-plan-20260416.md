@@ -22,6 +22,15 @@ editable properties, deterministic reload, and a proof-oriented test matrix.
 The decision is to keep this work in `Lane E`. A new lane is not required. A
 new planning slice is required.
 
+## Related execution companion
+
+The target-architecture execution companion for this proposal lives in
+[TF-E2 Canvas Target Architecture Execution Plan 2026-04-17](./tf-e2-canvas-target-architecture-execution-plan-20260417.md).
+
+Use that document when the question is not "what is the scope of TF-E2" but
+"how do we arrive at the target architecture through executable backlog,
+bounded contexts, ports, aggregates, and phased validation".
+
 ## Governing sources
 
 - `docs/planning/status/governance-document-rule-inventory.md`

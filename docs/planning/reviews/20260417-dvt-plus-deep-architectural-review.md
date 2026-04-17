@@ -465,6 +465,11 @@ the stated target load.
 Tasks sized to a single slice each. Owners, target dates, validation hooks
 follow the repository's existing lane model ([`docs/planning/state/`](../state/)).
 
+Frontend and route-startup execution is now also canonicalized through
+[TF-E2 Canvas Target Architecture Execution Plan 2026-04-17](../proposals/mandatory/frontend-and-ux/tf-e2-canvas-target-architecture-execution-plan-20260417.md),
+which is the companion plan for the Canvas and route-bootstrap target
+architecture under `Lane E`.
+
 ### 12.1 Dependency chart
 
 ```mermaid

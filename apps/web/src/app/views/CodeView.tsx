@@ -1,6 +1,7 @@
 import { FileCode2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
+import { usePublishedRouteBootstrap } from '../bootstrap/usePublishedRouteBootstrap';
 import { ViewHeader } from '../components/domain';
 import { WorkbenchReadOnlyState } from '../components/workbench/state/WorkbenchStates';
 import {
@@ -21,6 +22,7 @@ import {
   CodeRouteLoadingStateView,
 } from './code/CodeStateViews';
 import { resolveCodeWorkbenchErrorPresentation } from './code/codeWorkbenchErrorModel';
+import { deriveCodeRouteBootstrapPresentation } from './code/codeRouteBootstrap';
 import { codeViewCopy as copy } from './code/codeViewCopy';
 import FileTreePanel from './code/FileTreePanel';
 
@@ -47,6 +49,29 @@ export default function CodeView() {
     [workspaceFileTree, selectedPath]
   );
   const fileContentQuery = useWorkspaceFileContentQuery(resolvedPath);
+  const fileTreeErrorPresentation = fileTreeQuery.isError
+    ? resolveCodeWorkbenchErrorPresentation({
+        scope: 'file-tree',
+        error: fileTreeQuery.error,
+      })
+    : null;
+  const filePreviewErrorPresentation = fileContentQuery.isError
+    ? resolveCodeWorkbenchErrorPresentation({
+        scope: 'file-preview',
+        error: fileContentQuery.error,
+        selectedPath: resolvedPath,
+      })
+    : null;
+
+  usePublishedRouteBootstrap(
+    deriveCodeRouteBootstrapPresentation({
+      isLoadingFileTree: fileTreeQuery.isPending,
+      fileTreeErrorMessage: fileTreeErrorPresentation?.message ?? null,
+      hasWorkspaceFiles: hasWorkspaceFiles(workspaceFileTree),
+      isLoadingFilePreview: resolvedPath !== undefined && fileContentQuery.isPending,
+      filePreviewErrorMessage: filePreviewErrorPresentation?.message ?? null,
+    })
+  );
 
   if (fileTreeQuery.isPending) {
     return <CodeRouteLoadingStateView />;
@@ -55,10 +80,7 @@ export default function CodeView() {
   if (fileTreeQuery.isError) {
     return (
       <CodeRouteErrorStateView
-        error={resolveCodeWorkbenchErrorPresentation({
-          scope: 'file-tree',
-          error: fileTreeQuery.error,
-        })}
+        error={fileTreeErrorPresentation!}
       />
     );
   }
@@ -73,11 +95,7 @@ export default function CodeView() {
     </div>
   ) : fileContentQuery.isError ? (
     <CodePreviewErrorStateView
-      error={resolveCodeWorkbenchErrorPresentation({
-        scope: 'file-preview',
-        error: fileContentQuery.error,
-        selectedPath: resolvedPath,
-      })}
+      error={filePreviewErrorPresentation!}
     />
   ) : !fileContentQuery.data ? (
     <CodePreviewEmptyStateView />

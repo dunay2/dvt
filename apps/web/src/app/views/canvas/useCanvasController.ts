@@ -60,6 +60,10 @@ import {
   deriveVisibleScope,
   reconcileUiScope,
 } from './canvasDraftScope';
+import {
+  deriveCanvasDraftToolbarState,
+  deriveDraftRecoveryReason,
+} from './canvasDraftPresentationState';
 import { useCanvasExecutionActions } from './useCanvasExecutionActions';
 import { useCanvasGraphHandlers } from './useCanvasGraphHandlers';
 import { useCanvasGraphModel } from './useCanvasGraphModel';
@@ -221,6 +225,15 @@ export function useCanvasController() {
   const isStaleDraftConflict = draftSession.syncState === 'conflict';
   const hasDraftProjectionGap =
     draftSession.syncState !== 'bootstrapping' && !visibleScope.isProjectionComplete;
+  const draftRecoveryReason = deriveDraftRecoveryReason({
+    hasMissingRemoteDraft: isMissingRemoteDraft,
+    hasStaleDraftVersion: isStaleDraftConflict,
+    hasDraftProjectionGap,
+  });
+  const draftToolbarState = deriveCanvasDraftToolbarState({
+    draftSaveStatus,
+    recoveryReason: draftRecoveryReason,
+  });
   const isDraftRecoveryBlocked =
     isMissingRemoteDraft || isStaleDraftConflict || hasDraftProjectionGap;
   const canMutateGraph =
@@ -872,6 +885,8 @@ export function useCanvasController() {
     planModalOpen: executionActions.planModalOpen,
     setPlanModalOpen: executionActions.setPlanModalOpen,
     draftSaveStatus,
+    draftRecoveryReason,
+    draftToolbarState,
     draftConflictRevision:
       draftSession.syncState === 'conflict' ? draftSession.draftRevision : null,
     hasStaleDraftVersion: isStaleDraftConflict,

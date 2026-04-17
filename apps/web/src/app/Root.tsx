@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
-import { Outlet, useLocation } from 'react-router';
+import { useEffect, useMemo, useSyncExternalStore } from 'react';
+import { Outlet, useMatches } from 'react-router';
 import {
   buildShellHealthPresentationModel,
   type PlatformHealthCapabilityApi,
@@ -15,6 +15,11 @@ import {
   completeBootstrapScreen,
   setBootstrapStepStatus,
 } from './bootstrap/appBootstrapScreen';
+import {
+  getPublishedRouteBootstrapPresentation,
+  getRouteBootstrapRegistration,
+  subscribeRouteBootstrapPresentations,
+} from './bootstrap/routeBootstrapPresentation';
 import { useCapabilitiesQuery } from './queries/useCapabilitiesQuery';
 import { useUiLayoutStore } from './stores/uiLayoutStore';
 import '@xyflow/react/dist/style.css';
@@ -24,7 +29,7 @@ type RootShellProps = {
 };
 
 export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
-  const location = useLocation();
+  const matches = useMatches();
   const focusMode = useUiLayoutStore((state) => state.focusMode);
   const consolePanelHeight = useUiLayoutStore((state) => state.consolePanelHeight);
   const consolePanelVisible = useUiLayoutStore((state) => state.consolePanelVisible);
@@ -42,6 +47,24 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
     dataUpdatedAt: platformHealth.dataUpdatedAt,
     errorUpdatedAt: platformHealth.errorUpdatedAt,
   });
+  const activeRouteBootstrapRegistration = useMemo(() => {
+    for (let index = matches.length - 1; index >= 0; index -= 1) {
+      const registration = getRouteBootstrapRegistration(
+        matches[index]?.id,
+        matches[index]?.handle
+      );
+      if (registration) {
+        return registration;
+      }
+    }
+
+    return null;
+  }, [matches]);
+  const routeBootstrapPresentation = useSyncExternalStore(
+    subscribeRouteBootstrapPresentations,
+    () => getPublishedRouteBootstrapPresentation(activeRouteBootstrapRegistration),
+    () => getPublishedRouteBootstrapPresentation(activeRouteBootstrapRegistration)
+  );
   const isInitialCapabilitiesBootstrapPending =
     capabilitiesQuery.isPending && !capabilitiesQuery.data && !capabilitiesQuery.isError;
 
@@ -110,24 +133,28 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
   ]);
 
   useEffect(() => {
-    if (location.pathname.startsWith('/canvas')) {
-      setBootstrapStepStatus('route', 'complete', 'Canvas workbench route is ready');
-      return;
-    }
-
-    setBootstrapStepStatus('route', 'complete', 'Initial route is ready');
+    setBootstrapStepStatus(
+      'route',
+      routeBootstrapPresentation.status,
+      routeBootstrapPresentation.detail
+    );
   }, [
-    location.pathname,
+    routeBootstrapPresentation.detail,
+    routeBootstrapPresentation.status,
   ]);
 
   useEffect(() => {
+    if (!routeBootstrapPresentation.canComplete) {
+      return;
+    }
+
     completeBootstrapScreen();
   }, [
     capabilitiesQuery.isError,
     capabilitiesQuery.isPending,
     capabilitiesQuery.data,
+    routeBootstrapPresentation.canComplete,
     isInitialCapabilitiesBootstrapPending,
-    location.pathname,
     platformHealth.isError,
     shellHealth.connectionDetail,
     shellHealth.connectionState,

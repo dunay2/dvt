@@ -255,6 +255,182 @@ The mature-system invariant for this slice is:
 
 That is the architectural adjustment implemented in this slice.
 
+### Presentation-state rationale
+
+The follow-up QA exposed a second architectural layer that the first draft
+diagram did not model explicitly enough:
+
+- the draft aggregate can be correct while the route still reports the wrong
+  workbench state
+- the toolbar can still claim `Draft synced` while the route is blocked in
+  recovery
+- shell bootstrap can still mark Canvas as ready because it only sees the
+  canonical snapshot, not the draft recovery posture
+
+That means the slice needs one more explicit model:
+
+- domain model:
+  `CanvasDraftSession`
+- projection model:
+  `VisibleCanvasScope`
+- presentation model:
+  `CanvasDraftPresentationState`
+
+The presentation model is not domain truth and it is not a React convenience
+object. It is a read model that translates authoritative draft state plus
+projection completeness into one coherent route posture for:
+
+- Canvas bootstrap readiness
+- center-surface state (`loading`, `empty`, `error`, `ready`, `recovery`)
+- toolbar draft signal
+- recovery banner copy and actions
+- effective action gating for `Layout`, `Plan`, and `Run`
+
+Without that model, route code keeps re-deriving state from partial inputs in
+different places, which is exactly the failure mode QA found.
+
+### Corrected architecture split
+
+The corrected Fowler-style split is:
+
+- `useCanvasController.ts`:
+  application service and orchestrator
+- `canvasDraftSession.ts`:
+  authoritative draft aggregate
+- `canvasDraftScope.ts`:
+  graph/execution projection read model
+- `canvasDraftPresentationState.ts`:
+  route-level presentation read model
+- `Canvas.tsx`, `CanvasShell.tsx`, `CanvasToolbar.tsx`:
+  passive consumers of presentation state
+
+This keeps the concerns aligned with mature systems:
+
+- authoritative persisted state is not inferred from UI
+- projections are not allowed to rewrite the authority
+- presentation does not independently interpret the aggregate in multiple
+  places
+
+### DDD Class Diagram: Full Route Architecture
+
+```mermaid
+classDiagram
+  class CanvasController {
+    +reloadLatestDraft()
+    +adoptCurrentWorkspaceSnapshot()
+    +handlePlan()
+    +handleStartRun()
+    +deriveRouteViewModel()
+  }
+
+  class CanvasDraftSession {
+    +syncState
+    +baseline
+    +workingSet
+    +draftRevision
+    +bootstrapSession()
+    +reconcileSnapshot()
+    +applySaveSuccess()
+    +applyConflict()
+  }
+
+  class VisibleCanvasScope {
+    +visibleNodeIds
+    +visibleEdges
+    +unresolvedNodeIds
+    +unresolvedEdges
+    +isProjectionComplete
+  }
+
+  class CanvasDraftPresentationState {
+    +routeState
+    +recoveryReason
+    +toolbarDraftState
+    +canMutateGraph
+    +canPlan
+    +canRun
+  }
+
+  class CanvasRecoveryBannerState {
+    +title
+    +message
+    +primaryAction
+    +secondaryAction
+  }
+
+  class CanvasToolbarState {
+    +draftStatusLabel
+    +draftStatusTone
+    +showReloadAction
+  }
+
+  class CanvasWorkbenchState {
+    +kind
+    +message
+  }
+
+  class CanvasGraphModel {
+    +canonicalNodes
+    +canonicalEdges
+    +nodes
+    +edges
+  }
+
+  class WorkspacePort {
+    +getGraphDraft()
+    +saveGraphDraft()
+    +getGraphSnapshot()
+  }
+
+  class CanvasView {
+    +renderCenterSurface()
+    +renderReadOnlyBanner()
+  }
+
+  class CanvasToolbar {
+    +renderDraftSignal()
+  }
+
+  CanvasController --> CanvasDraftSession : orchestrates
+  CanvasController --> VisibleCanvasScope : derives
+  CanvasController --> CanvasDraftPresentationState : derives
+  CanvasDraftPresentationState *-- CanvasRecoveryBannerState
+  CanvasDraftPresentationState *-- CanvasToolbarState
+  CanvasDraftPresentationState --> CanvasWorkbenchState : refines
+  CanvasController --> CanvasGraphModel : projects
+  CanvasController --> WorkspacePort : reads/writes
+  CanvasView --> CanvasDraftPresentationState : consumes
+  CanvasToolbar --> CanvasToolbarState : consumes
+```
+
+### Rationale for the new classes
+
+`CanvasDraftPresentationState`
+
+- exists to stop `Canvas.tsx`, `CanvasShell.tsx`, and `CanvasToolbar.tsx` from
+  each inventing their own interpretation of recovery state
+- makes route-level readiness and recovery explicit and testable
+
+`CanvasRecoveryBannerState`
+
+- turns recovery copy and CTA policy into data, not ad hoc JSX branches
+- keeps `stale_conflict`, `missing_remote`, and `projection_gap` mutually
+  exclusive and coherent
+
+`CanvasToolbarState`
+
+- fixes the current contradiction where the route can be blocked while the
+  toolbar still says `Draft synced`
+- makes draft signal semantics derived from the same presentation state used by
+  the route banner
+
+`CanvasWorkbenchState` as an input, not the only route truth
+
+- the canonical graph snapshot still matters for `loading`, `empty`, and
+  `error`
+- but it must now be refined by draft recovery posture before the route
+  declares itself ready
+
 ### DDD Class Diagram
 
 ```mermaid

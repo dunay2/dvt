@@ -9,6 +9,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import AppProviders from './AppProviders';
 import { createAppRoutes } from './routes';
 import { createTestQueryClient, waitForReactQuery } from '../testing/reactQueryHarness';
+import { CANVAS_ROUTE_BOOTSTRAP_HANDLE } from './views/canvas/canvasDraftPresentationState';
 
 describe('app routes', () => {
   let container: HTMLDivElement;
@@ -103,5 +104,43 @@ describe('app routes', () => {
     ].map((node) => node.textContent?.trim());
     expect(leftNavigationCaptions).toContain('Canvas');
     expect(capabilitiesPort.loadCapabilities).toHaveBeenCalledTimes(1);
+  });
+
+  it('declares bootstrap contracts for the active route set in route metadata', () => {
+    const rootRoute = createAppRoutes()[0];
+    const canvasRoute = rootRoute?.children?.find((route) => route.path === 'canvas');
+    const lineageRoute = rootRoute?.children?.find((route) => route.path === 'lineage');
+    const runsRoute = rootRoute?.children?.find((route) => route.path === 'runs');
+    const costRoute = rootRoute?.children?.find((route) => route.path === 'cost');
+    const pluginsRoute = rootRoute?.children?.find((route) => route.path === 'plugins');
+
+    expect(canvasRoute?.id).toBe('dbt.canvas');
+    expect(canvasRoute?.handle).toEqual({
+      routeBootstrap: CANVAS_ROUTE_BOOTSTRAP_HANDLE,
+    });
+    expect(lineageRoute?.id).toBe('dbt.lineage');
+    expect(lineageRoute?.handle).toMatchObject({
+      routeBootstrap: {
+        mode: 'published',
+      },
+    });
+    expect(runsRoute?.id).toBe('monitoring.runs');
+    expect(runsRoute?.handle).toMatchObject({
+      routeBootstrap: {
+        mode: 'published',
+      },
+    });
+    expect(costRoute?.id).toBe('cost.dashboard');
+    expect(costRoute?.handle).toMatchObject({
+      routeBootstrap: {
+        mode: 'published',
+      },
+    });
+    expect(pluginsRoute?.id).toBe('shell.plugins');
+    expect(pluginsRoute?.handle).toMatchObject({
+      routeBootstrap: {
+        mode: 'static',
+      },
+    });
   });
 });

@@ -6,6 +6,7 @@ import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
 import { Separator } from '../../components/ui/separator';
 import { cn } from '../../components/ui/utils';
+import type { CanvasDraftToolbarState } from './canvasDraftPresentationState';
 import type { TransformationGraphValidationResult } from './transformationGraphValidation';
 
 type CanvasToolbarProps = {
@@ -17,8 +18,7 @@ type CanvasToolbarProps = {
   readonly onReloadLatestDraft: () => void;
   readonly onPlan: () => void;
   readonly onRun: () => void;
-  readonly draftSaveStatus: 'idle' | 'saving' | 'saved';
-  readonly hasStaleDraftVersion: boolean;
+  readonly draftToolbarState: CanvasDraftToolbarState;
   readonly canPlan: boolean;
   readonly canRun: boolean;
   readonly canEditEdges: boolean;
@@ -35,10 +35,15 @@ type CanvasToolbarProps = {
 };
 
 function resolveWorkflowStatusLabel(
+  isRecoveryActive: boolean,
   canPlan: boolean,
   canRun: boolean,
   canStartRun: boolean
 ): string {
+  if (isRecoveryActive) {
+    return 'Recovery';
+  }
+
   if (!canPlan && !canRun) {
     return 'Read only';
   }
@@ -51,10 +56,16 @@ function resolveWorkflowStatusLabel(
 }
 
 function resolveWorkflowStatusClass(
+  isRecoveryActive: boolean,
+  draftTone: CanvasDraftToolbarState['tone'],
   canPlan: boolean,
   canRun: boolean,
   canStartRun: boolean
 ): string {
+  if (isRecoveryActive) {
+    return draftTone === 'danger' ? 'text-rose-200' : 'text-amber-200';
+  }
+
   if (!canPlan && !canRun) {
     return 'text-slate-200';
   }
@@ -75,8 +86,7 @@ export default function CanvasToolbar({
   onReloadLatestDraft,
   onPlan,
   onRun,
-  draftSaveStatus,
-  hasStaleDraftVersion,
+  draftToolbarState,
   canPlan,
   canRun,
   canEditEdges,
@@ -102,8 +112,20 @@ export default function CanvasToolbar({
     setPortalTarget(document.getElementById('shell-top-bar-canvas-controls'));
   }, [placement]);
 
-  const workflowStatusLabel = resolveWorkflowStatusLabel(canPlan, canRun, canStartRun);
-  const workflowStatusClass = resolveWorkflowStatusClass(canPlan, canRun, canStartRun);
+  const isRecoveryActive = draftToolbarState.showReloadAction;
+  const workflowStatusLabel = resolveWorkflowStatusLabel(
+    isRecoveryActive,
+    canPlan,
+    canRun,
+    canStartRun
+  );
+  const workflowStatusClass = resolveWorkflowStatusClass(
+    isRecoveryActive,
+    draftToolbarState.tone,
+    canPlan,
+    canRun,
+    canStartRun
+  );
   const canPlanTransformation = transformationValidation.valid;
 
   const content = (
@@ -200,27 +222,37 @@ export default function CanvasToolbar({
         Run
       </Button>
       <Separator orientation="vertical" className="h-5 bg-slate-700" />
-      {hasStaleDraftVersion ? (
-        <Button
-          type="button"
-          variant="destructive"
-          size="sm"
-          onClick={onReloadLatestDraft}
-          className="h-8 px-3 text-xs"
-        >
-          Stale version
-        </Button>
+      {draftToolbarState.showReloadAction ? (
+        <div className="flex items-center gap-2">
+          <Badge
+            data-slot="canvas-draft-save-status"
+            variant="outline"
+            className={cn(
+              'h-7 border px-2 text-[11px]',
+              draftToolbarState.tone === 'danger'
+                ? 'border-rose-500/60 bg-rose-950/40 text-rose-100'
+                : 'border-amber-500/60 bg-amber-950/40 text-amber-100'
+            )}
+          >
+            {draftToolbarState.label}
+          </Badge>
+          <Button
+            type="button"
+            variant={draftToolbarState.tone === 'danger' ? 'destructive' : 'outline'}
+            size="sm"
+            onClick={onReloadLatestDraft}
+            className="h-8 px-3 text-xs"
+          >
+            Reload draft
+          </Button>
+        </div>
       ) : (
         <Badge
           data-slot="canvas-draft-save-status"
           variant="outline"
           className="h-7 border-slate-700 bg-slate-950/60 px-2 text-[11px] text-slate-200"
         >
-          {draftSaveStatus === 'saving'
-            ? 'Saving draft'
-            : draftSaveStatus === 'saved'
-              ? 'Draft saved'
-              : 'Draft synced'}
+          {draftToolbarState.label}
         </Badge>
       )}
     </div>

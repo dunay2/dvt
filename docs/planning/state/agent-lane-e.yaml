@@ -1923,9 +1923,10 @@ tasks:
       across governed persisted draft schema versions.
     complexity: L
     effort_points: 8
-    progress_pct: 42
+    progress_pct: 50
     evidence_refs:
       - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-production-node-authoring-and-persistence-plan-20260416.md
+      - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-canvas-target-architecture-execution-plan-20260417.md
       - docs/architecture/components/web/graph/canvas-component-map-and-modernization-review.md
       - docs/architecture/components/web/inspector/inspector-frontend-architecture.md
       - docs/architecture/components/web/frontend-data-boundary-architecture.md
@@ -1937,6 +1938,8 @@ tasks:
       - docs/planning/closeouts/20260417-tf-e2-canvas-draft-race-and-import-edge-hardening-closeout.md
       - docs/planning/closeouts/20260417-tf-e2-canvas-draft-reload-recovery-hardening-closeout.md
       - docs/planning/closeouts/20260417-tf-e2-canvas-draft-aggregate-alignment-closeout.md
+      - docs/planning/closeouts/20260417-tf-e2-canvas-bootstrap-presentation-handoff-closeout.md
+      - docs/planning/closeouts/20260417-tf-e2-route-bootstrap-contract-generalization-closeout.md
       - docs/runbooks/index.md
     status_reason: >-
       The productization slice remains active, but the current worktree has materially advanced the
@@ -1947,10 +1950,18 @@ tasks:
       fetches under React Query ownership, and prevents stale local canon from truncating recovered
       remote drafts. The Fowler-alignment follow-up now makes the draft aggregate authoritative over
       remote members that the current workspace snapshot cannot project yet, exposes projection-gap
-      state explicitly, and fail-closes edit, `Plan`, `Run`, and autosave until the projection is
-      complete or the operator adopts the current workspace snapshot. `TF-A2` and `TF-C4` still
-      govern the shared boundary, while the remaining `TF-E2` work must close the rest of node,
-      edge, Inspector, operability, and end-to-end proof requirements before this parent task can
+      state explicitly, fail-closes edit, `Plan`, `Run`, and autosave until the projection is
+      complete or the operator adopts the current workspace snapshot. The canonical handoff is now
+      also in place at shell level: Canvas publishes a generic route-bootstrap contract, route
+      metadata declares which surface owns startup gating, route IDs are now the canonical startup
+      keys, non-Canvas top-level routes settle through an explicit static mount boundary, and
+      `Root.tsx` consumes that active-route contract instead of branching on `/canvas` or inheriting
+      implicit route readiness. The target architecture and its execution order are now also
+      canonicalized in the TF-E2 execution companion plan, which freezes the bounded contexts,
+      ports, aggregate roots, C4/component relationships, sequence/state-machine behavior, user
+      stories, roadmap, and executable backlog for the remaining closure work. `TF-A2` and `TF-C4`
+      still govern the shared boundary, while the remaining `TF-E2` work is now the broader node,
+      edge, Inspector, operability, and end-to-end proof matrix required before the parent task can
       move to review.
     last_verified: '2026-04-17'
   - task_id: TF-E2-A

@@ -4,6 +4,10 @@ import { Activity, Check, GitMerge, Minus, Play, X } from 'lucide-react';
 
 import type { PluginContributions } from '../registry';
 import type { LucideIcon } from 'lucide-react';
+import {
+  RUN_DETAIL_ROUTE_BOOTSTRAP_HANDLE,
+  RUNS_ROUTE_BOOTSTRAP_HANDLE,
+} from '../../views/runs/runsRouteBootstrap';
 
 // ---------------------------------------------------------------------------
 // monitoring plugin - static contributions v1
@@ -41,6 +45,9 @@ export const monitoringContributions: PluginContributions = {
       id: 'monitoring.runs',
       path: '/runs',
       component: React.lazy(() => import('../../views/RunsView')),
+      handle: {
+        routeBootstrap: RUNS_ROUTE_BOOTSTRAP_HANDLE,
+      },
       nav: {
         label: 'Runs',
         icon: Activity,
@@ -54,6 +61,9 @@ export const monitoringContributions: PluginContributions = {
       path: '/runs/:runId',
       // Same component - RunsView reads :runId from params internally
       component: React.lazy(() => import('../../views/RunsView')),
+      handle: {
+        routeBootstrap: RUN_DETAIL_ROUTE_BOOTSTRAP_HANDLE,
+      },
     },
   ],
 

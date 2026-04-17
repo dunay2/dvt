@@ -1,5 +1,6 @@
 import { DollarSign } from 'lucide-react';
 
+import { usePublishedRouteBootstrap } from '../bootstrap/usePublishedRouteBootstrap';
 import { ViewHeader, ViewStateOverlay } from '../components/domain';
 import {
   RouteWorkbenchFrame,
@@ -14,12 +15,19 @@ import { CostCoverageCard } from './cost/CostCoverageCard';
 import { CostDriverList } from './cost/CostDriverList';
 import { CostStatGrid } from './cost/CostStatGrid';
 import { resolveCostViewCopy } from './cost/copy';
+import { deriveCostRouteBootstrapPresentation } from './cost/costRouteBootstrap';
 import { formatCurrency } from './cost/costViewModel';
 import { useCostData } from './cost/useCostData';
 
 export default function CostView() {
   const copy = resolveCostViewCopy();
   const { currentRun, isLoading, loadError, runsQuery, viewModel } = useCostData();
+  usePublishedRouteBootstrap(
+    deriveCostRouteBootstrapPresentation({
+      isLoading,
+      errorMessage: loadError instanceof Error ? loadError.message : null,
+    })
+  );
 
   return (
     <RouteWorkbenchFrame
