@@ -1,0 +1,27 @@
+id: R-20260417-MW-D1-EXTERNAL-COMPILE-BOUNDARY
+title:
+  External compile SRP seams could regress into route-local policy and mixed transport-domain logic
+status: Open
+date: 2026-04-17
+owners:
+  - apps/api
+  - packages/@dvt/contracts
+severity: Medium
+probability: Medium
+context: >
+  MW-D1 introduces a dedicated compile boundary and split parser/mapper/route modules, but the same
+  teams still own neighboring preview and start-run routes that historically accumulated mixed
+  responsibilities and inline policy literals.
+risk: >
+  Future changes could reintroduce SRP drift by moving compile policy and normalization logic back
+  into multi-purpose route files, or by bypassing the typed compile profile and expanding accepted
+  step kinds through route-local hardcodes.
+mitigations:
+  - Keep compile route, compile parser, and compile envelope mapper in separate modules with focused
+    tests.
+  - Keep compile step-kind exposure controlled by `ExternalCompileProfileSpec` and composition root
+    wiring.
+  - Keep negative tests that reject legacy ingress on `/plans/compile`.
+  - Require proposal and closeout updates for boundary changes under MW-D1 and lane D planning
+    state.
+  - Enforce package-level and pre-push validation before merge.
