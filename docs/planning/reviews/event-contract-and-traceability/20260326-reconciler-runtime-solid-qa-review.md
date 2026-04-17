@@ -2,239 +2,240 @@
 title: Reconciler Runtime SOLID QA Review
 status: Draft
 owner: API / Runtime / QA
-last_reviewed: 2026-04-02
+last_reviewed: 2026-04-17
 planning_type: review
 ---
 
 # Reconciler Runtime SOLID QA Review
 
-## Prioridad 1 (Alta) - Cerrado
+## Priority 1 (High) - Closed
 
-### Hallazgo (original)
+### Finding (original)
 
-`server.ts` mantiene logging con texto libre en shutdown y rompe la
-homogeneidad de eventos estructurados.
+`server.ts` used free-text logging during shutdown and broke the consistency of
+structured runtime events.
 
-### Evidencia (historica)
+### Evidence (historical)
 
 - `apps/api/src/server.ts`
   - `app.log.error({ err }, 'intent reconciler shutdown failed')`
 
-### Riesgo (historico)
+### Risk (historical)
 
-Inconsistencia en observabilidad, menor capacidad de filtrado/alertado por
-evento y deriva de convenciones en runtime.
+Inconsistent observability, weaker filtering and alerting, and drift from the
+runtime event catalog.
 
-### Recomendacion (aplicada)
+### Recommendation (applied)
 
-Convertir el shutdown failure a evento estructurado y reutilizar catalogo de
-eventos del modulo runtime.
+Convert shutdown failure logging into a structured runtime event and reuse the
+runtime event catalog.
 
-### Estado actual
+### Current status
 
-Resuelto: `server.ts` emite evento estructurado de shutdown fallido usando
-`RECONCILER_RUNTIME_EVENTS.shutdownFailed`, sin texto libre.
+Resolved: `server.ts` now emits a structured shutdown failure event through
+`RECONCILER_RUNTIME_EVENTS.shutdownFailed` with no free-text fallback.
 
-## Prioridad 2 (Media) - Cerrado
+## Priority 2 (Medium) - Closed
 
-### Hallazgo (original)
+### Finding (original)
 
-`startReconcilerHealthWatchdog` no valida `staleMs` y `pollMs` de entrada.
+`startReconcilerHealthWatchdog` did not validate `staleMs` or `pollMs`.
 
-### Evidencia (historica)
+### Evidence (historical)
 
 - `apps/api/src/runtime/reconcilerHealthWatchdog.ts`
-  - uso directo de `config.staleMs` y `config.pollMs` sin guardas
+  - direct use of `config.staleMs` and `config.pollMs` with no guards
 
-### Riesgo (historico)
+### Risk (historical)
 
-Con valores invalidos (`<= 0`, `NaN`, `Infinity`) puede haber polling
-patologico o degradaciones inconsistentes.
+Invalid values such as `<= 0`, `NaN`, or `Infinity` could cause pathological
+polling or inconsistent degradation behavior.
 
-### Recomendacion (aplicada)
+### Recommendation (applied)
 
-Agregar validacion defensiva de config al inicio y fallar rapido con error
-explicito.
+Add defensive config validation at startup and fail fast with an explicit error.
 
-### Estado actual
+### Current status
 
-Resuelto: `startReconcilerHealthWatchdog` valida `staleMs` y `pollMs` como
-numeros finitos positivos y falla rapido con error explicito.
+Resolved: `startReconcilerHealthWatchdog` validates `staleMs` and `pollMs` as
+positive finite numbers and fails fast when the values are invalid.
 
-## Prioridad 3 (Media) - Cerrado
+## Priority 3 (Medium) - Closed
 
-### Hallazgo (original)
+### Finding (original)
 
-`reconcilerRuntimeBootstrap.ts` concentra varias responsabilidades:
-orquestacion de bootstrap, mapeo de hooks y transiciones de estado inicial.
+`reconcilerRuntimeBootstrap.ts` concentrated too many responsibilities:
+bootstrap orchestration, health-hook mapping, and initial lifecycle
+transitions.
 
-### Evidencia (historica)
+### Evidence (historical)
 
 - `apps/api/src/runtime/reconcilerRuntimeBootstrap.ts`
   - `buildReconcilerHealthHooks`
   - `withWatchdogSweepSignalHooks`
   - `bootstrapIntentReconciler`
 
-### Riesgo (historico)
+### Risk (historical)
 
-Mayor costo de cambio y menor aislacion de decisiones de dominio frente a
-adaptadores de infraestructura.
+Higher change cost and weaker isolation between domain decisions and
+infrastructure adapters.
 
-### Recomendacion (aplicada)
+### Recommendation (applied)
 
-Extraer fabrica de hooks de salud y orquestador de bootstrap en modulos
-separados para cumplir SRP estricto.
+Extract the health-hook factory and bootstrap orchestrator into dedicated
+modules to satisfy strict SRP boundaries.
 
-### Estado actual
+### Current status
 
-Resuelto: bootstrap separado en modulos dedicados:
-`reconcilerRuntimeHealthHooks.ts` (hooks) y
-`reconcilerRuntimeLifecycle.ts` (orquestacion), dejando
-`reconcilerRuntimeBootstrap.ts` como fachada de exportacion.
+Resolved: bootstrap is now split into dedicated modules:
 
-## Prioridad 4 (Alta) - Cerrado
+- `reconcilerRuntimeHealthHooks.ts` for hooks
+- `reconcilerRuntimeLifecycle.ts` for lifecycle orchestration
+- `reconcilerRuntimeBootstrap.ts` as the export facade
 
-### Hallazgo (original)
+## Priority 4 (High) - Closed
 
-Inversion de dependencias en la capa de health: `healthContract.ts` depende de
-`healthPresenter.ts` para construir el schema HTTP.
+### Finding (original)
 
-### Evidencia (historica)
+Dependency inversion was broken in the health layer:
+`healthContract.ts` depended on `healthPresenter.ts` to build the HTTP schema.
+
+### Evidence (historical)
 
 - `apps/api/src/routes/healthContract.ts`
-  - importa `OVERALL_HEALTH_STATUS_VALUES`, `READINESS_STATUS`,
-    `READINESS_REASON_CODE_VALUES` desde `healthPresenter.ts`
+  - imported `OVERALL_HEALTH_STATUS_VALUES`, `READINESS_STATUS`, and
+    `READINESS_REASON_CODE_VALUES` from `healthPresenter.ts`
 
-### Riesgo (historico)
+### Risk (historical)
 
-Acoplamiento entre contrato y presenter; evoluciones de schema quedan atadas a
-la implementacion de mapeo.
+The contract and presenter were coupled, so schema evolution depended on the
+mapping implementation.
 
-### Recomendacion (aplicada)
+### Recommendation (applied)
 
-Extraer valores de contrato a modulo de contrato puro y hacer que presenter
-dependa del contrato (no al reves).
+Extract contract values into a pure contract module and make the presenter
+depend on the contract, not the other way around.
 
-### Estado actual
+### Current status
 
-Resuelto: `healthContract.ts` ya no importa `healthPresenter.ts`; el contrato
-es independiente y el presenter depende del contrato.
+Resolved: `healthContract.ts` no longer imports `healthPresenter.ts`; the
+contract is independent and the presenter now depends on the contract.
 
-## Prioridad 5 (Media) - Cerrado
+## Priority 5 (Medium) - Closed
 
-### Hallazgo (original)
+### Finding (original)
 
-`/readyz` mejoro (200/503), pero readiness sigue basarse solo en estado del
-reconciler y no en dependencias operativas reales.
+`/readyz` improved to `200/503`, but readiness still depended only on the
+reconciler status and not on real operational dependencies.
 
-### Evidencia (historica)
+### Evidence (historical)
 
 - `apps/api/src/routes/health.ts`
-  - handler usa `evaluateReadiness(opts.getIntentReconcilerHealth())`
+  - the handler used `evaluateReadiness(opts.getIntentReconcilerHealth())`
 - `apps/api/src/routes/healthPresenter.ts`
-  - `evaluateReadiness` solo evalua estados del reconciler
+  - `evaluateReadiness` only evaluated reconciler states
 
-### Riesgo (historico)
+### Risk (historical)
 
-Persisten falsos positivos de readiness si otras dependencias (DB/infra) fallan
-mientras reconciler no esta `starting/degraded`.
+False-positive readiness remained possible when DB or other critical runtime
+dependencies failed while the reconciler was not `starting` or `degraded`.
 
-### Recomendacion (aplicada)
+### Recommendation (applied)
 
-Agregar checks de readiness reales por puerto (DB/adaptadores criticos) e
-integrarlos a la decision de `/readyz`.
+Add real readiness checks by port and integrate them into `/readyz`.
 
-### Estado actual
+### Current status
 
-Resuelto: `/readyz` evalua policy por puertos reales (estado reconciler, DB y
-runtime adapters) via modulos dedicados de readiness.
+Resolved: `/readyz` now evaluates readiness through real ports
+(reconciler state, DB, and runtime adapters) via dedicated readiness modules.
 
-## Prioridad 6 (Baja) - Cerrado
+## Priority 6 (Low) - Closed
 
-### Hallazgo (original)
+### Finding (original)
 
-`buildReadyzPayload` quedo sin uso tras la nueva evaluacion de readiness.
+`buildReadyzPayload` became unused after the readiness redesign.
 
-### Evidencia (historica)
+### Evidence (historical)
 
 - `apps/api/src/routes/healthPresenter.ts`
-  - funcion exportada no referenciada por `health.ts`
+  - exported function no longer referenced by `health.ts`
 
-### Riesgo (historico)
+### Risk (historical)
 
-Ruido accidental y deuda menor de mantenimiento.
+Accidental noise and minor maintenance debt.
 
-### Recomendacion (aplicada)
+### Recommendation (applied)
 
-Eliminar la funcion muerta y mantener el modulo sin exports huerfanos.
+Delete the dead function and keep the module free of orphan exports.
 
-### Estado actual
+### Current status
 
-Resuelto: `buildReadyzPayload` fue eliminado y no hay referencias activas.
+Resolved: `buildReadyzPayload` was removed and there are no active references.
 
-## Reconciliacion H0 - Baseline real del slice health
+## H0 Reconciliation - Real baseline for the health slice
 
-Los items que reaparecieron en `LOCAL_EXECUTION_LOG_20260401.md` como trabajo
-abierto de health/readiness ya estaban entregados en codigo y no deben volver a
-entrar al backlog de implementacion.
+Items that reappeared in `LOCAL_EXECUTION_LOG_20260401.md` as open
+health/readiness work had already been delivered in code and must not be
+reintroduced into the implementation backlog.
 
-### Estado real verificado
+### Verified current status
 
 - `apps/api/src/routes/healthContractMapper.ts`
-  - ya existe como traductor explicito `runtime -> contrato`.
+  - already exists as the explicit `runtime -> contract` translator
 - `apps/api/src/routes/healthPresenter.ts`
-  - ya es una fachada minima que solo reexporta el mapper.
+  - is already a minimal facade that re-exports the mapper
 - `apps/api/src/runtime/reconcilerHealth.ts`
-  - ya modela `ReconcilerHealthState` como discriminated union; `reasonCode`
-    solo existe en `status: 'degraded'`.
+  - already models `ReconcilerHealthState` as a discriminated union and keeps
+    `reasonCode` only on `status: 'degraded'`
 
-### Decision operativa
+### Operational decision
 
-1. No reabrir como implementacion los items "crear mapper", "crear DU" o
-   "limpiar presenter".
-2. Mantener ese trabajo como cerrado y usar `apps/api` tests como baseline de
-   validacion.
-3. Concentrar el trabajo abierto restante en `RC-G1` (ownership contractual).
+1. Do not reopen "create mapper," "create discriminated union," or
+   "clean up presenter" as implementation work.
+2. Keep that work closed and use `apps/api` tests as the validation baseline.
+3. Keep the remaining open work focused on `RC-G1` contract ownership.
 
-## Prioridad 7 (Alta) - Abierto
+## Priority 7 (High) - Open
 
-### Hallazgo
+### Finding
 
-Deuda de ownership contractual: la taxonomia `engine/planner/shared` no refleja
-todavia una asignacion clara en la frontera fisica de contratos y puede derivar
-en concentracion accidental en shared.
+Contract ownership debt remains: the `engine/planner/shared` taxonomy still
+does not map clearly onto the physical contract boundary and can drift into
+accidental concentration in `shared`.
 
-### Evidencia
+### Evidence
 
 - `docs/contracts/engine/index.md`
 - `docs/contracts/planner/index.md`
 - `docs/contracts/shared/index.md`
 - `packages/@dvt/contracts/src/contracts/planner/*`
 - `packages/@dvt/contracts/src/engine/*`
-- `docs/planning/proposals/contracts-domain-ownership-migration-plan-20260327.md`
-- seguimiento operativo en `docs/planning/state/agent-lane-a.yaml` como `RC-G1`
+- `docs/planning/proposals/mandatory/runtime-and-contracts/contracts-domain-ownership-migration-plan-20260327.md`
+- operational tracking in `docs/planning/state/agent-lane-a.yaml` as `RC-G1`
 
-### Riesgo
+### Risk
 
-- Ambiguedad de ownership semantico vs fisico.
-- Deriva de reglas/literales entre runtime y contrato.
-- Evolucion menos auditable por bounded context.
+- ambiguous semantic vs physical ownership
+- rule and literal drift between runtime and contracts
+- less auditable evolution by bounded context
 
-### Recomendacion
+### Recommendation
 
-Ejecutar `RC-G1`: matriz de ownership por familia (`engine`/`planner`/`shared`)
-y plan de migracion por slices bajo ADR-0041 Contract-First.
+Execute `RC-G1`: establish an ownership matrix by family
+(`engine` / `planner` / `shared`) and migrate by slice under
+ADR-0041 Contract-First.
 
-### Estado actual
+### Current status
 
-Pendiente, pero ya reconciliado con la superficie canonica:
+Pending, but already reconciled with the canonical planning surface:
 
-- `RC-G1` vive en Lane A como tarea paraguas.
-- `RC-G1-A` congela la matriz de ownership.
-- `RC-G1-B`, `RC-G1-C` y `RC-G1-D` secuencian la migracion restante.
+- `RC-G1` lives in Lane A as the umbrella task
+- `RC-G1-A` freezes the ownership matrix
+- `RC-G1-B`, `RC-G1-C`, and `RC-G1-D` sequence the remaining migration
 
-## Resumen Ejecutivo
+## Executive Summary
 
-El runtime cierra los hallazgos priorizados de health/readiness y bootstrap con
-separacion modular, validacion defensiva y contrato independiente. El trabajo
-abierto real queda reducido a la deuda de ownership contractual bajo `RC-G1`.
+The runtime closed the prioritized health/readiness and bootstrap findings
+through cleaner modular separation, defensive validation, and an independent
+contract boundary. The only real open work left in this slice is contract
+ownership under `RC-G1`.

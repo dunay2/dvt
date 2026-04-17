@@ -1,10 +1,18 @@
-# 02. DVT Current-State Audit (repo real)
+---
+title: 02 DVT Current-State Audit
+status: Draft
+owner: Product / UX / Frontend
+last_reviewed: 2026-04-17
+planning_type: proposal
+---
 
-## 2.1. Lo que ya está bien orientado
+# 02. DVT Current-State Audit (real repo)
 
-### Shell persistente
+## 2.1. What is already pointing in the right direction
 
-La estructura base ya apunta en la dirección correcta:
+### Persistent shell
+
+The base structure already points in the right direction:
 
 - `Root.tsx`
 - `TopAppBar.tsx`
@@ -12,58 +20,58 @@ La estructura base ya apunta en la dirección correcta:
 - `Console.tsx`
 - `ShellHealthBanner.tsx`
 
-Eso ya es una base de “workbench shell” y es mejor que una app de pantallas aisladas.
+That is already a workbench shell baseline and is stronger than a collection of
+isolated screens.
 
-### Pluginización real
+### Real plugin capability
 
-El frontend no está improvisando plugins:
+The frontend is not improvising plugins:
 
 - `app/plugins/contracts/PluginManifest.ts`
 - `app/plugins/registry.ts`
 - `app/shell/useShellRuntime.ts`
 - `app/routes.ts`
 
-Ya hay capacidad para:
+The system already supports:
 
-- vistas,
-- navegación,
+- views,
+- navigation,
 - toolbar contributions,
 - inspector panels,
 - overlays,
 - badges,
-- puertos `produces/consumes`.
+- `produces` / `consumes` ports.
 
-Eso es muy valioso y hay que protegerlo.
+That is a meaningful asset and should be protected.
 
-### Canvas como núcleo de producto
+### Canvas as product nucleus
 
-La ruta Canvas ya se apoya en:
+The Canvas route already rests on:
 
 - `views/Canvas.tsx`
 - `views/canvas/CanvasShell.tsx`
 - `views/canvas/CanvasToolbar.tsx`
 - `views/canvas/CanvasViewport.tsx`
 
-La composición de paneles laterales + viewport ya es un punto de partida sólido.
+The left panels plus viewport composition is already a solid starting point.
 
-### Monaco ya existe
+### Monaco already exists
 
-No estamos ante una idea futura abstracta.
-Existen:
+This is not a future abstraction. The repo already has:
 
-- `components/monaco/MonacoCodeSurface.tsx`
-- `components/monaco/MonacoDiffSurface.tsx`
-- `components/monaco/MonacoViewerFallback.tsx`
+- `components/monaco/monacoCodeSurface.tsx`
+- `components/monaco/monacoDiffSurface.tsx`
+- `components/monaco/monacoViewerFallback.tsx`
 - `views/CodeView.tsx`
 - `views/DiffView.tsx`
 
-Por tanto, el trabajo no consiste en “añadir editor”, sino en **integrarlo bien**.
+The work is not "add an editor." The work is **integrate it correctly**.
 
-## 2.2. Problemas de producto/UX detectados
+## 2.2. Product and UX problems detected
 
-### A. Fragmentación de rutas
+### A. Route fragmentation
 
-Hoy el repo presenta demasiada separación entre:
+The repo still creates too much separation between:
 
 - Canvas
 - Lineage
@@ -72,73 +80,75 @@ Hoy el repo presenta demasiada separación entre:
 - Runs
 - Artifacts
 
-Eso es técnicamente válido, pero desde UX divide un flujo que debería sentirse continuo:
+That is technically valid, but from a UX standpoint it breaks a flow that
+should feel continuous:
 
-1. veo el nodo,
-2. inspecciono,
-3. comparo,
-4. ejecuto,
-5. monitorizo.
+1. inspect the node,
+2. review details,
+3. compare,
+4. execute,
+5. monitor.
 
-### B. Top bar sobrecargada
+### B. Top bar overload
 
-`TopAppBar.tsx` y `topAppBar/TopAppBarShellMenu.tsx` cargan:
+`TopAppBar.tsx` and `topAppBar/TopAppBarShellMenu.tsx` currently mix:
 
-- contexto de workspace,
-- estado de conexión,
+- workspace context,
+- connection status,
 - git ref,
-- toggles de explorer/inspector/console,
+- explorer / inspector / console toggles,
 - focus mode,
 - grid size.
 
-Conclusión:
+Conclusion:
 
-- hay demasiado control global en una sola franja;
-- parte de eso debería estar más cerca del canvas o del route-local toolbar.
+- too much global control is concentrated in one strip;
+- some of that belongs closer to Canvas or to a route-local toolbar.
 
-### C. Ruido visual todavía alto
+### C. Visual noise is still too high
 
-Aunque `styles/theme.css` ya tiene buena base de tokens, siguen existiendo hardcodes y decoración fuerte en:
+Even with a good token baseline in `styles/theme.css`, there are still
+hard-coded treatments and heavy decoration in:
 
 - `styles/index.css`
 - `views/canvas/CanvasViewport.tsx`
 - `views/ArtifactsView.tsx`
 - `components/Console.tsx`
-- `components/monaco/MonacoViewerFallback.tsx`
-- y muchas clases `bg-slate-* / text-slate-*`
+- `components/monaco/monacoViewerFallback.tsx`
+- many `bg-slate-*` and `text-slate-*` utility chains
 
-Visualmente esto produce:
+That creates:
 
-- demasiada mezcla de superficies,
-- menor lectura jerárquica,
-- sensación más “prototype dark UI” que “producto operativo”.
+- too many competing surface treatments,
+- weaker hierarchy,
+- a stronger "prototype dark UI" feeling than "operational product."
 
-### D. El panel inferior es útil pero demasiado estrecho
+### D. The bottom panel is useful but too narrow
 
-`Console.tsx` resuelve una necesidad real, pero como experiencia:
+`Console.tsx` solves a real need, but as a product experience:
 
-- está demasiado ligado al concepto “console”,
-- no cubre bien eventos, problemas, salidas y runtime detail,
-- y en modo API ya admite explícitamente que el streaming no está disponible.
+- it is too tightly bound to the word "console,"
+- it does not cover events, problems, outputs, and runtime detail well,
+- and API mode already admits that streaming is unavailable.
 
-La dirección correcta es convertirlo en una **bandeja de diagnósticos**.
+The right direction is a governed diagnostics tray.
 
-### E. Falta estructura específica para boards grandes
+### E. Large boards still need real structure
 
-`CanvasViewport.tsx` ya usa minimap y grid, pero eso no basta para grafos grandes.
-Faltan:
+`CanvasViewport.tsx` already has minimap and grid, but that is not enough for
+large graphs. Missing capabilities include:
 
-- zonas/frames,
+- zones or frames,
 - saved views,
 - quick focus,
 - bookmarks,
-- presets de filtro,
-- restauración de contexto de tarea.
+- filter presets,
+- restoration of task context.
 
-### F. Densidad no estandarizada
+### F. Density is not standardized
 
-Hay vistas que todavía parecen “pantalla compuesta por bloques” y no “surface operacional”.
-Esto afecta sobre todo a:
+Some views still look like "screens assembled from blocks" rather than
+"operational surfaces." This affects especially:
 
 - Runs
 - Plugins
@@ -146,119 +156,121 @@ Esto afecta sobre todo a:
 - Artifacts
 - Diff
 
-### G. Falta una gramática de integración visual para plugins
+### G. Plugin visuals still lack a product grammar
 
-La infraestructura técnica ya existe, pero falta una regla de producto del tipo:
+The technical extension system already exists, but the product still needs
+rules such as:
 
-- qué puede entrar en top bar,
-- qué entra en route header,
-- qué entra en toolbar local,
-- qué entra en inspector,
-- qué entra en bottom panel,
-- qué nunca debe entrar como UI arbitraria.
+- what can enter the top bar,
+- what belongs in the route header,
+- what belongs in the local toolbar,
+- what belongs in the inspector,
+- what belongs in the bottom panel,
+- what must never appear as arbitrary plugin chrome.
 
-## 2.3. Oportunidades claras
+## 2.3. Clear opportunities
 
-### Opportunity 1: unificar shell + workbench
+### Opportunity 1: unify shell and workbench
 
-El repo ya tiene suficiente base para convertir la app en una experiencia unificada de trabajo.
+The repo already has enough structure to become one coherent work experience.
 
-### Opportunity 2: usar el sistema de plugins como ventaja competitiva
+### Opportunity 2: turn plugins into a product advantage
 
-Pocos productos medianos tienen ya esta estructura tan preparada para extensión de vistas y overlays.
+Many products this size do not already have this much extension infrastructure
+for views and overlays.
 
-### Opportunity 3: profesionalizar sin rehacer todo
+### Opportunity 3: professionalize without a rewrite
 
-No hace falta reescribir `apps/web`.
-El salto grande vendrá de:
+`apps/web` does not need a full rebuild. The biggest gain comes from:
 
 - grammar,
-- simplificación,
-- tokenización,
-- densidad,
-- y relación ordenada entre superficies.
+- simplification,
+- tokenization,
+- density,
+- and an ordered relationship between surfaces.
 
-## 2.4. Hallazgos concretos por superficie
+## 2.4. Surface-specific findings
 
 ### Root shell
 
-**Ficheros**
+**Files**
 
 - `app/Root.tsx`
 - `app/components/TopAppBar.tsx`
 - `app/components/LeftNavigation.tsx`
 - `app/components/Console.tsx`
 
-**Lectura**
-Base fuerte para workbench.
+**Reading**
+Strong workbench base.
 
-**Problema**
-Le falta una separación más limpia entre:
+**Problem**
+It still needs cleaner separation between:
 
-- navegación,
-- acción local,
-- estado contextual,
-- diagnóstico.
+- navigation,
+- local action,
+- contextual status,
+- diagnostics.
 
 ### Canvas
 
-**Ficheros**
+**Files**
 
 - `app/views/Canvas.tsx`
 - `app/views/canvas/CanvasShell.tsx`
 - `app/views/canvas/CanvasToolbar.tsx`
 - `app/views/canvas/CanvasViewport.tsx`
 
-**Lectura**
-Es la mejor base actual del producto.
+**Reading**
+This is the strongest current product surface.
 
-**Problema**
-Todavía se siente “graph route” más que “workspace operacional”.
+**Problem**
+It still feels more like a graph route than an operational workspace.
 
 ### Code / Diff / Artifacts
 
-**Ficheros**
+**Files**
 
 - `app/views/CodeView.tsx`
 - `app/views/DiffView.tsx`
 - `app/views/ArtifactsView.tsx`
 - `app/components/monaco/*`
 
-**Lectura**
-Son útiles, pero todavía orbitan como rutas separadas.
+**Reading**
+Useful capabilities, but they still orbit as separate routes.
 
-**Problema**
-Deberían sentirse cada vez más como extensiones contextuales del workspace.
+**Problem**
+They should increasingly feel like contextual extensions of the workspace.
 
 ### Runs
 
-**Ficheros**
+**Files**
 
 - `app/views/RunsView.tsx`
 - `app/views/runs/*`
 
-**Lectura**
-Necesita convertirse en cockpit operacional denso.
+**Reading**
+This should evolve into a dense operational cockpit.
 
 ### Plugins
 
-**Ficheros**
+**Files**
 
 - `app/views/PluginsView.tsx`
 - `app/plugins/registry.ts`
 - `app/plugins/contracts/PluginManifest.ts`
 
-**Lectura**
-Hoy es más “diagnóstico técnico” que “experiencia de gestión de extensiones”.
+**Reading**
+Today it still feels closer to technical diagnostics than to extension
+management as a product capability.
 
-## 2.5. Veredicto
+## 2.5. Verdict
 
-DVT ya tiene la arquitectura visual mínima para convertirse en un producto profesional.
-Lo que le falta no es más feature count.
-Le falta:
+DVT already has the minimum visual architecture required to become a
+professional product. What it lacks is not more feature count. It lacks:
 
-- más gramática,
-- menos fragmentación,
-- más densidad útil,
-- menos ruido,
-- y una política explícita para cómo se acopla todo, incluidos plugins.
+- more grammar,
+- less fragmentation,
+- more useful density,
+- less noise,
+- and an explicit policy for how the full experience fits together, including
+  plugins.

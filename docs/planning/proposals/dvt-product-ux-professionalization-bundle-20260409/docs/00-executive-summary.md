@@ -1,136 +1,147 @@
+---
+title: 00 Executive Summary
+status: Draft
+owner: Product / UX / Frontend
+last_reviewed: 2026-04-17
+planning_type: proposal
+---
+
 # 00. Executive Summary
 
-## Posicionamiento recomendado
+## Recommended Positioning
 
-DVT no debería presentarse como “otro dashboard técnico oscuro”.
-Debería presentarse como un **workbench operativo para diseñar, ejecutar, inspeccionar y extender workflows**.
+DVT should not present itself as "another dark technical dashboard." It should
+present itself as an **operational workbench for designing, running,
+inspecting, and extending workflows**.
 
-Eso cambia varias decisiones:
+That positioning changes several product decisions:
 
-1. **La shell manda.**  
-   La navegación, el estado persistente y los paneles deben comportarse como gramática fija del producto, no como decisiones dispersas por pantalla.
+1. **The shell owns the product grammar.**
+   Navigation, persistent state, and core panels should behave like a stable
+   product language, not like route-by-route accidents.
+2. **Canvas is central, but not the only surface.**
+   The graph must coexist with code, diff, artifacts, and monitoring inside a
+   single workbench experience.
+3. **The top bar cannot become a junk drawer.**
+   Identity, workspace selection, connection status, and layout controls should
+   not compete for the same visual zone.
+4. **Primary navigation must group tasks, not subtools.**
+   `Canvas`, `Runs`, and `Lineage` fit as core operator tasks. `Code`, `Diff`,
+   and much of `Artifacts` fit better as contextual workbench surfaces.
+5. **Density must increase without losing order.**
+   Operational views should prefer tables, splits, stable headers, and governed
+   panels instead of ad hoc cards and mixed visual treatments.
+6. **Plugins need governed docks.**
+   The repo already has strong plugin-contribution primitives. The missing step
+   is a visual and operational contract that makes extensions feel native.
 
-2. **El canvas es el centro, pero no el único surface.**  
-   El grafo debe convivir con código, diff, artefactos y monitorización en la misma experiencia, sin hacer que el operador salte de contexto todo el rato.
+## Most Important Product Decision
 
-3. **La top bar no puede ser un cajón de sastre.**  
-   Hoy mezcla identidad, selectores de workspace, estado de conexión y controles de layout. Hay que separar controles globales de controles locales.
+The correct direction is:
 
-4. **La navegación primaria debe agrupar tareas, no subherramientas.**  
-   `Canvas`, `Runs` y `Lineage` encajan como tareas core.  
-   `Code`, `Diff` y parte de `Artifacts` encajan mejor como superficies contextuales o tabs del workbench.
+**Persistent shell + activity rail + route header + contextual workbench +
+inspector + diagnostics panel**
 
-5. **La densidad tiene que subir, pero con orden.**  
-   Para operaciones, listas, eventos, plugins y administración, el patrón dominante deben ser tablas, splits, headers consistentes y paneles estables; no una mezcla de cards y bloques.
+and not:
 
-6. **Los plugins deben entrar por docks conocidos.**  
-   El repo ya tiene una base muy buena de plugin contributions. Falta convertir esa capacidad técnica en una experiencia visual y operativa gobernada.
+**each route shipping its own disconnected mini-UI**
 
-## Decisión de producto más importante
+## Critical Recommendations
 
-La dirección correcta es:
+### A. Simplify core navigation
 
-**“Persistent shell + activity rail + route header + contextual workbench + inspector + diagnostics panel”**
+Keep as primary:
 
-y no
+- `Canvas`
+- `Runs`
+- `Lineage`
 
-**“cada ruta con su propia mini-UI independiente”**.
+Reposition:
 
-## Recomendaciones críticas
+- `Code`
+- `Diff`
+- `Artifacts`
 
-### A. Simplificar la navegación core
+These views should remain available, but increasingly as:
 
-Mantener como principales:
+- workbench tabs,
+- node- or run-derived contextual surfaces,
+- or secondary routes instead of shell-defining destinations.
 
-- Canvas
-- Runs
-- Lineage
+### B. Detox the top bar
 
-Replantear:
+The top bar should focus on:
 
-- Code
-- Diff
-- Artifacts
+- brand and workspace context,
+- global health,
+- quick switching and command palette,
+- shell-level actions.
 
-Estas vistas siguen existiendo, pero conviene tratarlas cada vez más como:
+It should not absorb every density toggle and route-local control.
 
-- tabs del workbench,
-- vistas derivadas del nodo o del run actual,
-- o rutas secundarias.
+### C. Turn the bottom panel into a diagnostics workspace
 
-### B. Detox de la top bar
-
-La top bar debería quedarse con:
-
-- marca y contexto de workspace,
-- estado global,
-- selector rápido / command palette,
-- acciones globales.
-
-No debería concentrar tantos controles de layout y densidad.
-
-### C. Convertir el panel inferior en “Diagnostics Workspace”
-
-El componente `Console` es una base útil, pero demasiado estrecha.
-Debería crecer hacia un panel inferior con tabs:
+`Console` is a useful base, but too narrow. The target should be a governed
+bottom panel with tabs such as:
 
 - Events
 - Logs
 - Problems
 - Output
 
-### D. Bajar el ruido visual
+### D. Reduce visual noise
 
-El producto ya tiene tokens semánticos en `theme.css`, pero sigue manteniendo gradientes decorativos, hardcodes `slate-*` y colores directos en varias superficies.
-Hay que:
+The product already has semantic tokens in `theme.css`, but several surfaces
+still rely on decorative gradients, direct `slate-*` utilities, and hard-coded
+colors. The direction should be:
 
-- bajar brillo,
-- bajar decoración,
-- subir jerarquía,
-- subir consistencia.
+- less decoration,
+- lower brightness,
+- stronger hierarchy,
+- more consistency.
 
-### E. Estructurar mejor los tableros grandes
+### E. Structure large boards better
 
-Para trabajo iterativo sobre grafos grandes, conviene introducir:
+Large-graph work needs more than pan and zoom. The workbench should add:
 
-- **saved views**
-- **frames / zones**
-- filtros persistentes
-- quick switch
+- saved views,
+- frames or named zones,
+- persistent filters,
+- quick switching,
+- command palette support,
+- task-context restoration.
+
+## What I Would Do First
+
+### First block: fast, high-return
+
+- standard route header
+- top-bar cleanup
+- shell visual simplification
+- hard-code tokenization
+- upgraded bottom diagnostics grammar
+- productized `PluginsView`
+
+### Second block
+
+- real workbench tabs in Canvas
+- `Code`, `Diff`, and `Artifacts` opened from context
+- DVT Monaco theme alignment
+- denser and more analytical `Runs`
+
+### Third block
+
+- governed plugin UX contract
 - command palette
-- restauración de layout y contexto
+- saved views, frames, and quick open
+- future step-kind plugins and source-generation workbenches
 
-## Qué haría primero
+## Expected Result
 
-### Primer bloque (rápido, alto retorno)
+If executed well, DVT should feel:
 
-- Route header estándar
-- Limpieza de top bar
-- Simplificación visual del shell
-- Tokenización de hardcodes
-- Panel inferior con gramática mejorada
-- Productizar `PluginsView`
-
-### Segundo bloque
-
-- Workbench tabs reales en Canvas
-- Code/Diff/Artifacts abiertos desde contexto
-- Monaco theme DVT
-- Runs más denso y más analítico
-
-### Tercer bloque
-
-- Contrato UX para plugins
-- Command palette
-- Saved views / frames / quick open
-- Extensión a futuros step-kind plugins y source-generation workbenches
-
-## Resultado esperado
-
-Si se ejecuta bien, DVT pasará a sentirse como:
-
-- más profesional,
-- más rápido de usar,
-- más ordenado para usuarios repetitivos/power users,
-- más claro para demos y presentación de startup,
-- y mucho más preparado para crecer por plugins sin perder coherencia.
+- more professional,
+- faster to operate,
+- more ordered for repeat users and power users,
+- clearer in demos and product storytelling,
+- and much better prepared to grow through plugins without losing coherence.

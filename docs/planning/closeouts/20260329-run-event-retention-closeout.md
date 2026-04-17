@@ -1,116 +1,104 @@
 ---
-title: Closeout QA Dura Fowler — Retención y Archivado de Eventos
+title: Closeout - Fowler Hard QA for run event retention and archiving
 status: Closeout
-last_reviewed: 2026-03-29
+last_reviewed: 2026-04-17
 owner: Architecture / Runtime / QA
 ---
 
-# Closeout: QA Dura Fowler — DDD / SOLID
+# Closeout: Fowler Hard QA - DDD / SOLID
 
-Cierre crítico del slice de retención y archivado de eventos en `outbox-worker`, bajo principios DDD y SOLID, con formato explícito de errores, incumplimientos, riesgos, mitigaciones y controles de calidad.
+Critical closeout for the retention and run-event archiving slice in
+`outbox-worker`, recorded under DDD and SOLID review criteria with explicit
+coverage for errors, non-compliance, risks, mitigations, and quality controls.
 
----
+## Errors detected
 
-## Errores detectados
+- No functional or integration errors were found in the slice tests and
+  validations.
+- No wiring failures or regressions were observed in the main worker.
 
-- No se detectaron errores funcionales ni de integración en los tests y validaciones del slice.
-- No se observaron fallos de wiring ni de regresión en el worker principal.
+## Non-compliance
 
----
+- No ADR, governance, DDD, or SOLID violations were found in the delivered
+  design and implementation.
+- The slice complies with the no-debt, no-stub, and validation-evidence rules.
+- Deletion and restore automation are intentionally deferred to the next slice;
+  that is explicit scope, not a compliance failure.
 
-## Incumplimientos
+## Risk 1: workload and I/O spikes
 
-- No se detectan incumplimientos de ADRs, gobernanza ni de los principios DDD/SOLID en el diseño y la implementación.
-- El slice cumple con la política de no deuda, no stubs y evidencia de validación.
-- El borrado y restauración están planificados para el siguiente slice, no como incumplimiento sino como scope explícito.
+**Mitigation**
 
----
+- configurable intervals and bounded batch size
+- duration and failure observability
+- QA check: load simulation and verification of no impact on the main worker
 
-## Riesgo 1: Carga de trabajo y picos de I/O
+## Risk 2: data loss or archive corruption
 
-**Mitigación:**
+**Mitigation**
 
-- Intervalos configurables y batch size limitado.
-- Observabilidad de duración y fallos.
-- QA: Simulación de carga y verificación de no impacto en el worker principal.
+- checksums and manifest files for integrity
+- logs and failure metrics
+- QA check: export tests, failure simulation, and consistency verification
 
----
+## Risk 3: unsafe production configuration
 
-## Riesgo 2: Pérdida de datos o corrupción en el archivado
+**Mitigation**
 
-**Mitigación:**
+- strict validation in the env loader
+- tests that reject unsafe configurations
+- QA check: attempt production activation with `file://` and verify rejection
 
-- Checksums y manifest para integridad.
-- Logs y métricas de fallos.
-- QA: Tests de exportación, simulación de fallos y verificación de consistencia.
+## Risk 4: no real deletion yet
 
----
+**Mitigation**
 
-## Riesgo 3: Configuración insegura en producción
+- deletion is planned in the next slice
+- table-size monitoring remains required
+- QA check: verify that archiving does not remove hot-store data prematurely
 
-**Mitigación:**
+## Risk 5: no operational restore flow yet
 
-- Validación estricta en loader de env.
-- Tests de rechazo de configuraciones inseguras.
-- QA: Intento de activación en prod con file:// y verificación de error.
+**Mitigation**
 
----
+- restore interfaces are already designed
+- QA check: manual recovery of archived data
 
-## Riesgo 4: No eliminación real (acumulación de datos)
+## Risk 6: regressions or impact on the main worker
 
-**Mitigación:**
+**Mitigation**
 
-- Eliminar está planificado en el siguiente slice.
-- Monitoreo de tamaño de tablas.
-- QA: Validar que el archivado no elimina datos del hot store prematuramente.
+- retention runtime remains isolated and opt-in
+- QA check: clean startup and shutdown plus no interference with the main
+  worker
 
----
+## Risk 7: weak observability and alerting
 
-## Riesgo 5: No restauración operativa
+**Mitigation**
 
-**Mitigación:**
+- logs and metrics for archived and failed units
+- QA check: failure simulation and verification of logs and alerts
 
-- Interfaces de restauración diseñadas.
-- QA: Recuperación manual de datos archivados.
+## Risk 8: compliance posture not fully closed
 
----
+**Mitigation**
 
-## Riesgo 6: Regresiones o impacto en el worker principal
+- explicit documented retention policies
+- QA check: validate retention behavior and prepare the redaction / erasure
+  slice
 
-**Mitigación:**
+## Fowler Hard QA - DDD / SOLID Summary
 
-- Runtime de retención aislado y opt-in.
-- QA: Tests de arranque/parada limpia y no interferencia.
+- **Separated domain:** retention and archiving logic lives in
+  `@dvt/state-store`.
+- **Ports and adapters:** the slice remains hexagonal without accidental
+  coupling.
+- **SRP:** each class keeps a single clear responsibility.
+- **Opt-in and debt-free:** no stubs, no bypasses, and no hidden debt were
+  introduced.
+- **Test coverage:** unit, integration, env-validation, and failure-path checks
+  exist for the delivered slice.
+- **Governance:** the slice aligns with ADRs and closes without debt or
+  regression.
 
----
-
-## Riesgo 7: Falta de observabilidad y alertas
-
-**Mitigación:**
-
-- Logs y métricas de unidades archivadas/fallidas.
-- QA: Simulación de fallos y verificación de logs/alertas.
-
----
-
-## Riesgo 8: No cumplimiento de compliance
-
-**Mitigación:**
-
-- Políticas de retención explícitas y documentadas.
-- QA: Validar retención y preparar slice de redacción/erasure.
-
----
-
-## QA Dura Fowler — DDD / SOLID
-
-- **Dominio separado:** Lógica de retención y archivado en `@dvt/state-store`.
-- **Puertos y adaptadores:** Hexagonal, sin acoplamientos indebidos.
-- **SRP:** Cada clase con responsabilidad única.
-- **Opt-in y sin deuda:** Sin stubs, sin bypasses, sin deuda oculta.
-- **Cobertura de tests:** Unitarios, integración, validación de env y errores.
-- **Gobernanza:** Cumple ADRs, slice cerrado sin deuda ni regresión.
-
----
-
-> Slice cerrado según QA dura Fowler, DDD/SOLID y gobernanza del repositorio.
+> Slice closed under Fowler hard QA, DDD/SOLID, and repository governance.

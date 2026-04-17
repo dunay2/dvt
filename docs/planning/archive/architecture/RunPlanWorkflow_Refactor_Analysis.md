@@ -1,182 +1,62 @@
 ---
-title: RunPlanWorkflow — Refactor Analysis (DVT+)
+title: RunPlanWorkflow refactor analysis
 status: Archived
-owner: docs
-last_reviewed: 2026-03-28
+owner: Engine / Temporal / Docs
+last_reviewed: 2026-04-17
+planning_type: archive
+superseded_by:
+  - docs/planning/reviews/execution-runtime/20260315-run-plan-workflow-architecture-review.md
+  - docs/architecture/components/engine/architecture/workflows.md
+  - docs/architecture/components/engine/adapters/temporal/EnginePolicies.md
 ---
 
-# RunPlanWorkflow — Refactor Analysis (DVT+)
+# RunPlanWorkflow refactor analysis
 
-## Governing Sources
+This archive digest summarizes a March 2026 refactor note for
+`packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts`.
 
-- AGENTS.md
-- ADR-0001: Temporal Integration Test Policy
-- ADR-0003: Execution Model
-- 20260315-run-plan-workflow-architecture-review.md
+The original note was useful because it made one architectural boundary
+explicit: `RunPlanWorkflow` should remain a deterministic orchestrator around
+run execution, not become the domain root or a second source of truth.
 
----
+## Historical conclusions preserved from the note
 
-## Refactor Points Extracted
+- keep Temporal workflow code deterministic and side-effect-thin
+- move lifecycle, gateway, and continue-as-new policy into pure collaborators
+- avoid growing a shadow in-memory state model beside persisted run facts
+- prefer typed lifecycle event builders over a generic event emission surface
+- document that workflow query state is operational visibility, not canonical
+  persisted truth
 
-### 1. Extraer políticas de dominio del workflow a módulos puros
+## Current repository posture
 
-- Políticas de ciclo de vida, skip/gateway, continue-as-new, reducción de estado.
+The historical note proposed a broader workflow-package split, but the current
+repository does not implement that target layout as written.
 
-### 2. Reducir duplicación de estado en memoria
+Today the workflow package still centers on:
 
-- Mantener solo lo necesario para orquestación.
+- `packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts`
+- `packages/@dvt/adapter-temporal/src/workflows/workflowHelpers.ts`
 
-### 3. Reemplazar emitEvent genérico por puertos tipados para eventos
+That means this document is no longer the right source for current file layout
+or execution behavior. The authoritative guidance moved into governed runtime
+reviews and engine architecture docs.
 
-- Usar actividades específicas: emitRunStarted, emitRunCompleted, etc.
+## Why this note is archived
 
-### 4. Centralizar la emisión de eventos de ciclo de vida
+- It describes a historical refactor direction, not the current package shape.
+- More recent review material captures the actual workflow boundary and risks.
+- Active engine workflow docs now route readers to the real Temporal adapter
+  surface directly.
 
-- Crear un módulo puro para transiciones de ciclo de vida.
+## Current reader route
 
-### 5. Extraer lógica de skip/gateway a un módulo engine-agnóstico
-
-- GatewaySkipPolicy.
-
-### 6. Documentar diferencia entre statusQuery y persisted state
-
-- Aclarar en comentarios y docs.
-
-### 7. Mejorar fidelidad del payload de fallos
-
-- Incluir mensaje de error y clasificación retriable.
-
-### 8. Renombrar métricas ambiguas
-
-- currentStepIndex → completedStepCount/progressCursor.
-
-### 9. Dividir el workflow en archivos colaborativos
-
-- Evitar God File, usar layout modular.
-
----
-
-## Módulos Propuestos
-
-- workflowLifecyclePolicy.ts
-- gatewaySkipPolicy.ts
-- continueAsNewPolicy.ts
-- layerRuntimeReducer.ts
-- workflowSignals.ts
-- workflowEventBuilders.ts
-- workflowTypes.ts
-- workflowHelpers.ts
-- layerExecutionLoop.ts
-
----
-
-## Diagrama Mermaid — Placement Actual
-
-```mermaid
-flowchart LR
-  subgraph CORE[Core Contracts]
-    IWE[IWorkflowEngine]
-    IRSS[IRunStateStore]
-  end
-
-  subgraph TEMPORAL[Temporal Adapter Layer]
-    WF[RunPlanWorkflow.ts]
-    ACT[Temporal Activities]
-  end
-
-  subgraph STATE[State Layer]
-    STORE[(RunStateStore)]
-  end
-
-  subgraph PLAN[Planning Layer]
-    EP[ExecutionPlan]
-    PI[Plan Interpreter]
-  end
-
-  EP --> WF
-  PI --> WF
-  WF --> ACT
-  ACT --> STORE
-  WF -.runtime state.-> WF
-
-  WF:::hot
-  classDef hot fill:#ffe5e5,stroke:#b30000,stroke-width:2px;
-```
-
----
-
-## Diagrama Mermaid — Placement Target
-
-```mermaid
-flowchart LR
-  subgraph CORE[Core Contracts]
-    IWE[IWorkflowEngine]
-    IRSS[IRunStateStore]
-  end
-
-  subgraph ENGINE_APP[Engine Application / Pure Policies]
-    LIFECYCLE[WorkflowLifecyclePolicy]
-    GATEWAY[GatewaySkipPolicy]
-    CAN[ContinueAsNewPolicy]
-    REDUCER[LayerRuntimeReducer]
-  end
-
-  subgraph TEMPORAL[Temporal Adapter Layer]
-    WF[RunPlanWorkflow.ts]
-    ACT[Temporal Activities Port]
-  end
-
-  subgraph STATE[State Layer]
-    STORE[(RunStateStore)]
-  end
-
-  subgraph PLAN[Planning Layer]
-    EP[ExecutionPlan]
-    PI[Plan Interpreter]
-  end
-
-  EP --> WF
-  PI --> WF
-  LIFECYCLE --> WF
-  GATEWAY --> WF
-  CAN --> WF
-  REDUCER --> WF
-  WF --> ACT
-  ACT --> STORE
-
-  WF:::cool
-  classDef cool fill:#e8fff0,stroke:#1f7a1f,stroke-width:2px;
-```
-
----
-
-## Layout Modular Propuesto
-
-```text
-packages/@dvt/adapter-temporal/src/
-  workflows/
-    RunPlanWorkflow.ts
-    workflowTypes.ts
-    workflowSignals.ts
-    workflowEventBuilders.ts
-    workflowLifecyclePolicy.ts
-    layerExecutionLoop.ts
-    layerRuntimeReducer.ts
-    gatewaySkipPolicy.ts
-    continueAsNewPolicy.ts
-    workflowHelpers.ts
-  activities/
-    TemporalWorkflowActivities.ts
-    emitRunLifecycleEvent.ts
-    executeWorkflowStep.ts
-    fetchExecutionPlan.ts
-```
-
----
-
-## Notas
-
-- El workflow debe ser un orquestador determinista, no el root de dominio.
-- Las políticas deben ser engine-agnósticas y colaborativas.
-- Los diagramas Mermaid muestran el placement actual y el target tras refactor.
-- El layout modular facilita la mantenibilidad y alineamiento DVT+.
+- Use
+  [20260315 RunPlanWorkflow architecture review](../../reviews/execution-runtime/20260315-run-plan-workflow-architecture-review.md)
+  for the detailed architectural review and refactor map.
+- Use
+  [Engine workflows](../../../architecture/components/engine/architecture/workflows.md)
+  for the canonical engine workflow navigation surface.
+- Use
+  [Engine Policies](../../../architecture/components/engine/adapters/temporal/EnginePolicies.md)
+  for the current Temporal adapter policy surface.
