@@ -166,6 +166,7 @@ flowchart TD
   - `pnpm build`
   - `pnpm --filter @dvt/web typecheck`
   - `pnpm --filter @dvt/web test`
+  - `cmd /c "set VITE_APP_BUILD_DATE=2026-04-18T10:20:00.000Z&& pnpm --filter @dvt/web build"`
   - `pnpm exec turbo run build --filter=@dvt/web --force`
   - `pnpm exec turbo run build --filter=@dvt/web`
   - `pnpm --filter @dvt/web build`
@@ -196,6 +197,9 @@ flowchart TD
 - Removed the synthetic `@dvt/web` build timestamp so the Turbo cache does not
   replay stale bundle metadata as if it were a fresh build, and hid the
   bootstrap build-date line when no explicit metadata is injected.
+- Moved `VITE_APP_BUILD_DATE` onto the same `loadEnv(...)` path as the other
+  web `VITE_*` values, while preserving one-shot shell-env injection as an
+  explicit fallback.
 - Added `scripts/skip-prebuild-if-orchestrated.cjs` so `prebuild` hooks skip
   only when `DVT_CI` or a real `TURBO_HASH` proves an orchestrator already owns
   the graph.
@@ -213,6 +217,12 @@ flowchart TD
 - `pnpm --filter @dvt/web test`:
   passed, including the bootstrap metadata coverage that now hides the build
   date row unless `VITE_APP_BUILD_DATE` is injected explicitly.
+- `pnpm --filter @dvt/web build` with a temporary
+  `apps/web/.env.production.local` carrying `VITE_APP_BUILD_DATE`:
+  passed, and the built bundle contained the injected ISO timestamp.
+- `cmd /c "set VITE_APP_BUILD_DATE=2026-04-18T10:20:00.000Z&& pnpm --filter
+@dvt/web build"`:
+  passed, and the built bundle contained the injected ISO timestamp.
 - `pnpm exec turbo run build --filter=dvt-api`:
   passed; repeated execution restored the entire filtered graph from the local
   Turbo cache.
@@ -251,8 +261,8 @@ Root `pnpm build` is now cache-aware through `turbo`, but direct package
 2026-03-16 baseline required. The slice therefore removes duplicate root build
 orchestration without pretending the known `outbox-worker` type failure is part
 of this change, and the `@dvt/web` target now invalidates correctly on
-package-local env changes without degrading the bootstrap metadata UX to
-`Build unknown`.
+package-local env changes, including explicit build metadata, without degrading
+the bootstrap metadata UX to `Build unknown`.
 
 ## Debt And Stub Check
 
