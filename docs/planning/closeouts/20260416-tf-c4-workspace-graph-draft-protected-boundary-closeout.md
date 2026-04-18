@@ -50,6 +50,9 @@ This slice stayed SRP-aligned by separating the boundary into five concerns:
   the protected draft path.
 - Added route, service, and integration coverage for authorization posture,
   first-save, conflict, and idempotent retry behavior.
+- Split the protected-runtime integration lane into SRP seams so workspace-draft
+  coverage now lives in explicit runtime/auth/bootstrap/persistence/assertion
+  helpers instead of a monolithic integration spec.
 
 ## Format And Compatibility Posture
 
@@ -90,3 +93,6 @@ This slice stayed SRP-aligned by separating the boundary into five concerns:
   environment-gated in the normal integration suite; when no integration
   database is configured, the protected-runtime draft tests skip rather than
   faking the path.
+- The protected-runtime integration lane is now documented and maintained as a
+  seam-split suite under `apps/api/test/integration/protectedRuntime.integration.*.ts`;
+  the executable entrypoint stays stable at `protectedRuntime.integration.test.ts`.
