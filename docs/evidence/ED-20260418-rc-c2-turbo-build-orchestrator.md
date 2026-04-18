@@ -42,6 +42,7 @@ evidence:
     - pnpm build
     - pnpm --filter @dvt/web typecheck
     - pnpm --filter @dvt/web test
+    - cmd /c "set VITE_APP_BUILD_DATE=2026-04-18T10:20:00.000Z&& pnpm --filter @dvt/web build"
     - pnpm exec turbo run build --filter=dvt-api
     - pnpm exec turbo run build --filter=dvt-api
     - pnpm exec turbo run build --filter=@dvt/web --force
@@ -78,7 +79,7 @@ fresh-worktree direct-package build baseline intact by making the affected
   invalidate every build task.
 - The web build no longer injects a fresh timestamp into every bundle, and the
   `@dvt/web` task hash now includes package-local `.env*` files plus `VITE_*`
-  environment variables.
+  environment variables, including explicit build metadata.
 - The bootstrap screen now hides the build-date line when no explicit build
   metadata is injected, instead of showing `Build unknown`.
 - Direct package `build` commands retain their dependency fallback outside
@@ -92,6 +93,14 @@ fresh-worktree direct-package build baseline intact by making the affected
 - `pnpm --filter @dvt/web typecheck`, `pnpm --filter @dvt/web test`, and
   `pnpm --filter @dvt/web build` all passed, so the web-target code and UI
   guardrail changed for this follow-up are covered directly.
+- `pnpm --filter @dvt/web build` with a temporary
+  `apps/web/.env.production.local` carrying `VITE_APP_BUILD_DATE` emitted the
+  injected ISO timestamp into the bundle, so package-local env-based build
+  metadata now uses the same hashed path as the rest of the web target.
+- `cmd /c "set VITE_APP_BUILD_DATE=2026-04-18T10:20:00.000Z&& pnpm --filter
+@dvt/web build"` also emitted the injected timestamp, so one-shot shell env
+  injection still works after moving build metadata onto the `loadEnv(...)`
+  path.
 - Re-running `pnpm exec turbo run build --filter=dvt-api` restored the filtered
   graph from the local Turbo cache, confirming that the declared `outputs`
   surface is active.

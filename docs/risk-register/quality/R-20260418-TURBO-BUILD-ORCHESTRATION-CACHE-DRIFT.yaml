@@ -32,6 +32,10 @@ mitigations:
     `apps/web/turbo.json` so cache hits cannot replay a bundle built from stale local env
     configuration.
   - >-
+    Resolve `VITE_APP_BUILD_DATE` through the same `loadEnv(...)` path as the rest of the web
+    `VITE_*` values, with a shell-env fallback, so explicit build metadata uses the same hashed
+    inputs instead of bypassing package-local env files.
+  - >-
     Remove synthetic per-build metadata from the web bundle so Turbo does not replay a stale
     timestamp as if it were a fresh artifact.
   - >-
