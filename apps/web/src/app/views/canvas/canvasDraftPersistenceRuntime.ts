@@ -40,7 +40,7 @@ export function isStaleSaveResolution(
 
   return (
     activeSaveAttempt?.id !== saveAttempt.id ||
-    activeSaveAttempt.generation !== saveAttempt.generation ||
+    activeSaveAttempt?.generation !== saveAttempt.generation ||
     refs.saveAttemptGenerationRef.current !== saveAttempt.generation
   );
 }
