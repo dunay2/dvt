@@ -379,7 +379,8 @@ export class OutboxWorkerMonitor
     this.eventDeliveryLatencySumMs += elapsedMs;
     for (const [index, bucketUpperBound] of DELIVERY_EVENT_LATENCY_BUCKETS_MS.entries()) {
       if (elapsedMs <= bucketUpperBound) {
-        this.eventDeliveryLatencyBucketCounts[index] += 1;
+        const bucketCount = this.eventDeliveryLatencyBucketCounts[index] ?? 0;
+        this.eventDeliveryLatencyBucketCounts[index] = bucketCount + 1;
       }
     }
   }
