@@ -130,7 +130,6 @@ describe('@dvt/plan-verifier stepTypeConfig admission', () => {
       kind: 'DBT_MODEL',
       stepTypeConfig: {
         stepTimeoutMs: 30_000,
-        retries: { maxAttempts: 2, backoffMs: 500 },
       },
     });
     expect(() => verifyStepTypeConfigsOrThrow({ plan })).not.toThrow();
@@ -150,6 +149,18 @@ describe('@dvt/plan-verifier stepTypeConfig admission', () => {
     const plan = makeExecutionPlan({
       kind: 'DBT_MODEL',
       stepTypeConfig: { unknownField: true },
+    });
+    expect(() => verifyStepTypeConfigsOrThrow({ plan })).toThrow(
+      /INVALID_STEP_TYPE_CONFIG|Invalid stepTypeConfig/
+    );
+  });
+
+  it('rejects retries under built-in DBT stepTypeConfig', () => {
+    const plan = makeExecutionPlan({
+      kind: 'DBT_MODEL',
+      stepTypeConfig: {
+        retries: { maxAttempts: 2, backoffMs: 500 },
+      },
     });
     expect(() => verifyStepTypeConfigsOrThrow({ plan })).toThrow(
       /INVALID_STEP_TYPE_CONFIG|Invalid stepTypeConfig/
