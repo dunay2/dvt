@@ -7,7 +7,7 @@ import {
   mockRoles,
 } from '../../data/mockDbtData';
 import type { DbtNode } from '../../types/dbt';
-import type { FileContent, WorkspaceFileEntry } from '../../ports/workspace';
+import type { FileContent, IWorkspacePort, WorkspaceFileEntry } from '../../ports/workspace';
 import type {
   ImportSourcesInput,
   ImportSourcesResult,
@@ -17,8 +17,7 @@ import type {
   WarehouseConnection,
   WarehouseTable,
   WorkspaceGraphDraftRecord,
-  WorkspaceGraphSnapshot,
-  WorkspaceService,
+  WorkspaceGraphSnapshot
 } from './workspaceService';
 import { WorkspaceFileLoadError } from './workspaceErrors';
 
@@ -170,6 +169,11 @@ function cloneFileContents(fileContents: Record<string, FileContent>): Record<st
   );
 }
 
+function ensureWorkspaceDirectoryChildren(directory: WorkspaceFileEntry): WorkspaceFileEntry[] {
+  directory.children ??= [];
+  return directory.children;
+}
+
 export interface MockWorkspaceState {
   graphSnapshot: WorkspaceGraphSnapshot;
   graphDraftRecord: WorkspaceGraphDraftRecord | null;
@@ -213,11 +217,7 @@ function ensureWorkspaceFileEntry(entries: WorkspaceFileEntry[], path: string): 
       currentEntries.push(directory);
     }
 
-    if (!directory.children) {
-      directory.children = [];
-    }
-
-    currentEntries = directory.children;
+    currentEntries = ensureWorkspaceDirectoryChildren(directory);
   }
 
   const fileName = segments.at(-1) ?? path;
@@ -589,23 +589,29 @@ function inferLanguage(path: string): string {
   return langMap[ext] ?? 'plaintext';
 }
 
+function cloneWorkspaceGraphDraft(
+  draft: WorkspaceGraphDraftRecord['draft']
+): WorkspaceGraphDraftRecord['draft'] {
+  return {
+    nodeIds: [...draft.nodeIds],
+    nodePositions: Object.fromEntries(
+      Object.entries(draft.nodePositions).map(([nodeId, position]) => [
+        nodeId,
+        { x: position.x, y: position.y },
+      ])
+    ),
+    edges: draft.edges.map((edge) => ({
+      sourceId: edge.sourceId,
+      targetId: edge.targetId,
+    })),
+  };
+}
+
 function cloneGraphDraftRecord(record: WorkspaceGraphDraftRecord): WorkspaceGraphDraftRecord {
   return {
     revision: record.revision,
     savedAt: record.savedAt,
-    draft: {
-      nodeIds: [...record.draft.nodeIds],
-      nodePositions: Object.fromEntries(
-        Object.entries(record.draft.nodePositions).map(([nodeId, position]) => [
-          nodeId,
-          { x: position.x, y: position.y },
-        ])
-      ),
-      edges: record.draft.edges.map((edge) => ({
-        sourceId: edge.sourceId,
-        targetId: edge.targetId,
-      })),
-    },
+    draft: cloneWorkspaceGraphDraft(record.draft),
   };
 }
 
@@ -613,25 +619,13 @@ function createNextGraphDraftRecord(input: SaveWorkspaceGraphDraftInput): Worksp
   return {
     revision: crypto.randomUUID(),
     savedAt: new Date().toISOString(),
-    draft: {
-      nodeIds: [...input.draft.nodeIds],
-      nodePositions: Object.fromEntries(
-        Object.entries(input.draft.nodePositions).map(([nodeId, position]) => [
-          nodeId,
-          { x: position.x, y: position.y },
-        ])
-      ),
-      edges: input.draft.edges.map((edge) => ({
-        sourceId: edge.sourceId,
-        targetId: edge.targetId,
-      })),
-    },
+    draft: cloneWorkspaceGraphDraft(input.draft),
   };
 }
 
 export function createMockWorkspaceService(
   state: MockWorkspaceState = createMockWorkspaceState()
-): WorkspaceService {
+): IWorkspacePort {
   return {
     getGraphSnapshot: async () => cloneGraphSnapshot(state.graphSnapshot),
     getGraphDraft: async () =>
@@ -698,3 +692,4 @@ export function createMockWorkspaceService(
     },
   };
 }
+

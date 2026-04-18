@@ -15,8 +15,8 @@ Generated automatically from repository code on 2026-04-18.
 | Metric                       | Value |
 | ---------------------------- | ----- |
 | Total workspaces             | 24    |
-| Total source files           | 889   |
-| Total test files             | 371   |
+| Total source files           | 900   |
+| Total test files             | 383   |
 | Workspaces with build script | 24/24 |
 | Workspaces with test script  | 23/24 |
 
@@ -24,12 +24,12 @@ Generated automatically from repository code on 2026-04-18.
 
 | Workspace                 | Path                                 | Src Files | Test Files | Build | Test | Typecheck | Exports in src/index.ts |
 | ------------------------- | ------------------------------------ | --------- | ---------- | ----- | ---- | --------- | ----------------------- |
-| dvt-api                   | `apps/api`                           | 158       | 68         | yes   | yes  | yes       | -                       |
+| dvt-api                   | `apps/api`                           | 158       | 77         | yes   | yes  | yes       | -                       |
 | dvt-lineage-worker        | `apps/lineage-worker`                | 5         | 5          | yes   | yes  | yes       | -                       |
 | dvt-outbox-worker         | `apps/outbox-worker`                 | 16        | 20         | yes   | yes  | yes       | -                       |
 | dvt-projector-worker      | `apps/projector-worker`              | 2         | 1          | yes   | yes  | yes       | -                       |
 | dvt-temporal-worker       | `apps/temporal-worker`               | 6         | 4          | yes   | yes  | yes       | -                       |
-| @dvt/web                  | `apps/web`                           | 329       | 96         | yes   | yes  | yes       | -                       |
+| @dvt/web                  | `apps/web`                           | 340       | 99         | yes   | yes  | yes       | -                       |
 | @dvt/adapter-postgres     | `packages/@dvt/adapter-postgres`     | 49        | 29         | yes   | yes  | yes       | 24                      |
 | @dvt/adapter-temporal     | `packages/@dvt/adapter-temporal`     | 24        | 28         | yes   | yes  | no        | 20                      |
 | @dvt/artifacts            | `packages/@dvt/artifacts`            | 18        | 2          | yes   | yes  | no        | 16                      |

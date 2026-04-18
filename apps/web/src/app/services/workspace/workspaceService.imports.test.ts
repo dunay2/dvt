@@ -1,0 +1,125 @@
+import { describe, expect, it } from 'vitest';
+
+import { createWorkspaceService } from './workspaceService';
+import { createMockWorkspaceService, createMockWorkspaceState } from './workspaceService.mock';
+
+describe('workspaceService source import', () => {
+  it('imports selected warehouse tables into the mock workspace graph', async () => {
+    const service = createWorkspaceService('mock');
+    const before = await service.getGraphSnapshot();
+
+    const result = await service.importSources({
+      connectionId: 'conn-1',
+      tables: [
+        {
+          database: 'RAW',
+          schema: 'FINANCE',
+          table: 'INVOICES',
+          rowCount: 1200,
+          columns: [
+            { name: 'invoice_id', type: 'INTEGER', nullable: false },
+            { name: 'customer_id', type: 'INTEGER', nullable: false },
+          ],
+        },
+      ],
+      groupingStrategy: 'schema',
+      includeColumns: true,
+      addTests: false,
+      addFreshness: false,
+    });
+
+    const after = await service.getGraphSnapshot();
+    const importedNode = after.nodes.find((node) => node.id === 'src_finance_invoices');
+
+    expect(result.success).toBe(true);
+    expect(result.sourcesCreated).toBe(1);
+    expect(result.tablesImported).toBe(1);
+    expect(result.yamlFiles).toEqual(['models/sources/src_finance.yml']);
+    expect(result.importedNodeIds).toEqual(['src_finance_invoices']);
+    expect(after.nodes).toHaveLength(before.nodes.length + 1);
+    expect(importedNode).toMatchObject({
+      id: 'src_finance_invoices',
+      type: 'SOURCE',
+      path: 'models/sources/src_finance.yml',
+    });
+    expect(importedNode?.columns).toEqual([
+      { name: 'invoice_id', type: 'INTEGER', nullable: false },
+      { name: 'customer_id', type: 'INTEGER', nullable: false },
+    ]);
+  });
+
+  it('isolates graph mutations between default mock service instances', async () => {
+    const firstService = createWorkspaceService('mock');
+    const secondService = createWorkspaceService('mock');
+    const secondBefore = await secondService.getGraphSnapshot();
+
+    await firstService.importSources({
+      connectionId: 'conn-1',
+      tables: [
+        {
+          database: 'RAW',
+          schema: 'OPERATIONS',
+          table: 'SHIPMENTS',
+          rowCount: 6400,
+          columns: [{ name: 'shipment_id', type: 'INTEGER', nullable: false }],
+        },
+      ],
+      groupingStrategy: 'schema',
+      includeColumns: true,
+      addTests: false,
+      addFreshness: false,
+    });
+
+    const firstAfter = await firstService.getGraphSnapshot();
+    const secondAfter = await secondService.getGraphSnapshot();
+
+    expect(firstAfter.nodes.some((node) => node.id === 'src_operations_shipments')).toBe(true);
+    expect(secondAfter.nodes.some((node) => node.id === 'src_operations_shipments')).toBe(false);
+    expect(secondAfter.nodes).toHaveLength(secondBefore.nodes.length);
+  });
+
+  it('shares mutable mock workspace state only when explicitly requested', async () => {
+    const sharedState = createMockWorkspaceState();
+    const firstService = createMockWorkspaceService(sharedState);
+    const secondService = createMockWorkspaceService(sharedState);
+
+    await firstService.importSources({
+      connectionId: 'conn-1',
+      tables: [
+        {
+          database: 'RAW',
+          schema: 'SUPPORT',
+          table: 'TICKETS',
+          rowCount: 1500,
+          columns: [{ name: 'ticket_id', type: 'INTEGER', nullable: false }],
+        },
+      ],
+      groupingStrategy: 'schema',
+      includeColumns: true,
+      addTests: false,
+      addFreshness: false,
+    });
+
+    const secondAfter = await secondService.getGraphSnapshot();
+
+    expect(secondAfter.nodes.some((node) => node.id === 'src_support_tickets')).toBe(true);
+  });
+
+  it('fails explicitly in api mode until the backend endpoint exists', async () => {
+    const service = createWorkspaceService('api');
+
+    await expect(service.listWarehouseConnections()).rejects.toThrow(
+      'Warehouse source import is not available in API mode'
+    );
+    await expect(
+      service.importSources({
+        connectionId: 'conn-1',
+        tables: [],
+        groupingStrategy: 'schema',
+        includeColumns: false,
+        addTests: false,
+        addFreshness: false,
+      })
+    ).rejects.toThrow('Warehouse source import is not available in API mode');
+  });
+});
