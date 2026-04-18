@@ -183,18 +183,28 @@ Planning-generated pages that are intentionally untracked:
 
 ## Shared CI Scope Logic
 
-The current branch centralizes workflow scope detection in:
+The repository centralizes workflow scope detection in:
 
 - [`tools/ci/scope-config.mjs`](../../tools/ci/scope-config.mjs)
 - [`tools/ci/emit-workspace-matrix.mjs`](../../tools/ci/emit-workspace-matrix.mjs)
 - [`tools/ci/emit-scope.mjs`](../../tools/ci/emit-scope.mjs)
 
-These files are intended to become the canonical source of truth for:
+These files are the canonical source of truth for:
 
 - affected workspace detection
-- package test scope detection
+- package test scope detection in [`.github/workflows/test.yml`](../../.github/workflows/test.yml)
 - contracts/determinism scope detection
 - Temporal integration scope detection
+
+Current workflow consumers:
+
+- [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml) uses the shared policy plus
+  workspace matrix emission for affected build/type-check routing.
+- [`.github/workflows/test.yml`](../../.github/workflows/test.yml) uses `emit-scope --mode test`
+  for PR test routing across the web app, workers, and library workspaces, while
+  `@dvt/adapter-postgres` remains on its dedicated PostgreSQL-backed lane.
+- [`.github/workflows/pr-quality-gate.yml`](../../.github/workflows/pr-quality-gate.yml) uses the
+  same shared scope surfaces for workflow/global change routing and Temporal capability lanes.
 
 ## Notes
 

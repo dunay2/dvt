@@ -24,35 +24,21 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
-
-      - name: Detect package changes (PR only)
-        id: changes
-        if: github.event_name == 'pull_request'
-        uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d # v4
         with:
-          filters: |
-            engine:
-              - 'packages/@dvt/engine/**'
-            contracts:
-              - 'packages/@dvt/contracts/**'
-            adapter_temporal:
-              - 'packages/@dvt/adapter-temporal/**'
-            cli:
-              - 'packages/@dvt/cli/**'
-            api:
-              - 'apps/api/**'
-            planner:
-              - 'packages/@dvt/planner/**'
+          fetch-depth: ${{ github.event_name == 'pull_request' && '0' || '1' }}
 
-              - '.github/actions/setup-node-pnpm/**'
-              - 'scripts/skip-pretest-if-ci.cjs'
+      - name: Validate workflow scope policy JSON
+        run: node tools/ci/validate-policy.js tools/ci/policy/workflow-scope.json
+
+      - name: Emit test scope outputs
+        id: scope
+        run: node tools/ci/emit-scope.mjs --mode test
+        env:
+          GIT_BASE: origin/${{ github.base_ref }}
+          GIT_HEAD: ${{ github.sha }}
 
       - name: Setup pnpm, cache and dependencies
-        if:
-          github.event_name != 'pull_request' || steps.changes.outputs.engine == 'true' ||
-          steps.changes.outputs.contracts == 'true' || steps.changes.outputs.adapter_temporal ==
-          'true' || steps.changes.outputs.cli == 'true' || steps.changes.outputs.api == 'true' ||
-          steps.changes.outputs.planner == 'true' || steps.changes.outputs.root_config == 'true'
+        if: github.event_name != 'pull_request' || steps.scope.outputs.any_test == 'true'
         uses: ./.github/actions/setup-node-pnpm
         with:
           node-version: 22.x
@@ -68,10 +54,15 @@ jobs:
           DVT_CI: '1'
 
       - name: Build affected dependency graphs (PR only)
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && steps.scope.outputs.any_test == 'true'
         shell: bash
         run: |
           set -euo pipefail
+
+          if [[ "${{ steps.scope.outputs.root_config }}" == "true" ]]; then
+            pnpm -r --workspace-concurrency=4 build
+            exit 0
+          fi
 
           declare -A seen
 
@@ -86,64 +77,263 @@ jobs:
             eval "$cmd"
           }
 
-          if [[ "${{ steps.changes.outputs.engine }}" == "true" || "${{ steps.changes.outputs.root_config }}" == "true" ]]; then
+          if [[ "${{ steps.scope.outputs.web }}" == "true" ]]; then
+            run_once 'pnpm --filter "@dvt/web^..." --workspace-concurrency=4 build'
+          fi
+
+          if [[ "${{ steps.scope.outputs.engine }}" == "true" ]]; then
             run_once 'pnpm --filter "@dvt/engine^..." --workspace-concurrency=4 build'
           fi
 
-          if [[ "${{ steps.changes.outputs.adapter_temporal }}" == "true" || "${{ steps.changes.outputs.root_config }}" == "true" ]]; then
+          if [[ "${{ steps.scope.outputs.adapter_temporal }}" == "true" ]]; then
             run_once 'pnpm --filter "@dvt/adapter-temporal^..." --workspace-concurrency=4 build'
           fi
 
-          if [[ "${{ steps.changes.outputs.api }}" == "true" || "${{ steps.changes.outputs.root_config }}" == "true" ]]; then
+          if [[ "${{ steps.scope.outputs.api }}" == "true" ]]; then
             run_once 'pnpm --filter "dvt-api^..." --workspace-concurrency=4 build'
           fi
 
-          if [[ "${{ steps.changes.outputs.planner }}" == "true" || "${{ steps.changes.outputs.contracts }}" == "true" || "${{ steps.changes.outputs.root_config }}" == "true" ]]; then
-            run_once 'pnpm --filter @dvt/contracts --workspace-concurrency=4 build'
-            run_once 'pnpm --filter @dvt/artifacts --workspace-concurrency=4 build'
+          if [[ "${{ steps.scope.outputs.contracts }}" == "true" ]]; then
+            run_once 'pnpm --filter "@dvt/contracts^..." --workspace-concurrency=4 build'
           fi
+
+          if [[ "${{ steps.scope.outputs.cli }}" == "true" ]]; then
+            run_once 'pnpm --filter "@dvt/cli^..." --workspace-concurrency=4 build'
+          fi
+
+          if [[ "${{ steps.scope.outputs.planner }}" == "true" || "${{ steps.scope.outputs.contracts }}" == "true" ]]; then
+            run_once 'pnpm --filter "@dvt/planner^..." --workspace-concurrency=4 build'
+          fi
+
+          if [[ "${{ steps.scope.outputs.delivery }}" == "true" ]]; then
+            run_once 'pnpm --filter "@dvt/delivery^..." --workspace-concurrency=4 build'
+          fi
+
+          if [[ "${{ steps.scope.outputs.dsl }}" == "true" ]]; then
+            run_once 'pnpm --filter "@dvt/dsl^..." --workspace-concurrency=4 build'
+          fi
+
+          if [[ "${{ steps.scope.outputs.observability }}" == "true" ]]; then
+            run_once 'pnpm --filter "@dvt/observability^..." --workspace-concurrency=4 build'
+          fi
+
+          if [[ "${{ steps.scope.outputs.observability_otel }}" == "true" ]]; then
+            run_once 'pnpm --filter "@dvt/observability-otel^..." --workspace-concurrency=4 build'
+          fi
+
+          if [[ "${{ steps.scope.outputs.plan_interpreter }}" == "true" ]]; then
+            run_once 'pnpm --filter "@dvt/plan-interpreter^..." --workspace-concurrency=4 build'
+          fi
+
+          if [[ "${{ steps.scope.outputs.plan_verifier }}" == "true" ]]; then
+            run_once 'pnpm --filter "@dvt/plan-verifier^..." --workspace-concurrency=4 build'
+          fi
+
+          if [[ "${{ steps.scope.outputs.run_domain }}" == "true" ]]; then
+            run_once 'pnpm --filter "@dvt/run-domain^..." --workspace-concurrency=4 build'
+          fi
+
+          if [[ "${{ steps.scope.outputs.state_store }}" == "true" ]]; then
+            run_once 'pnpm --filter "@dvt/state-store^..." --workspace-concurrency=4 build'
+          fi
+
+          if [[ "${{ steps.scope.outputs.artifacts }}" == "true" ]]; then
+            run_once 'pnpm --filter "@dvt/artifacts^..." --workspace-concurrency=4 build'
+          fi
+
+          if [[ "${{ steps.scope.outputs.crypto }}" == "true" ]]; then
+            run_once 'pnpm --filter "@dvt/crypto^..." --workspace-concurrency=4 build'
+          fi
+
+          if [[ "${{ steps.scope.outputs.traceability_service }}" == "true" ]]; then
+            run_once 'pnpm --filter "@dvt/traceability-service^..." --workspace-concurrency=4 build'
+          fi
+
+          if [[ "${{ steps.scope.outputs.lineage_worker }}" == "true" ]]; then
+            run_once 'pnpm --filter "dvt-lineage-worker^..." --workspace-concurrency=4 build'
+          fi
+
+          if [[ "${{ steps.scope.outputs.outbox_worker }}" == "true" ]]; then
+            run_once 'pnpm --filter "dvt-outbox-worker^..." --workspace-concurrency=4 build'
+          fi
+
+          if [[ "${{ steps.scope.outputs.projector_worker }}" == "true" ]]; then
+            run_once 'pnpm --filter "dvt-projector-worker^..." --workspace-concurrency=4 build'
+          fi
+
+          if [[ "${{ steps.scope.outputs.temporal_worker }}" == "true" ]]; then
+            run_once 'pnpm --filter "dvt-temporal-worker^..." --workspace-concurrency=4 build'
+          fi
+
+      - name: Run web tests (affected package)
+        if:
+          github.event_name == 'pull_request' && (steps.scope.outputs.web == 'true' ||
+          steps.scope.outputs.root_config == 'true')
+        run: pnpm test:web
+        env:
+          DVT_CI: '1'
 
       - name: Run engine tests (affected package)
         if:
-          github.event_name == 'pull_request' && (steps.changes.outputs.engine == 'true' ||
-          steps.changes.outputs.root_config == 'true')
+          github.event_name == 'pull_request' && (steps.scope.outputs.engine == 'true' ||
+          steps.scope.outputs.root_config == 'true')
         run: pnpm test:engine
         env:
           DVT_CI: '1'
 
       - name: Run contracts tests (affected package)
         if:
-          github.event_name == 'pull_request' && (steps.changes.outputs.contracts == 'true' ||
-          steps.changes.outputs.root_config == 'true')
+          github.event_name == 'pull_request' && (steps.scope.outputs.contracts == 'true' ||
+          steps.scope.outputs.root_config == 'true')
         run: pnpm test:contracts
 
       - name: Run adapter-temporal tests (affected package)
         if:
-          github.event_name == 'pull_request' && (steps.changes.outputs.adapter_temporal == 'true'
-          || steps.changes.outputs.root_config == 'true')
+          github.event_name == 'pull_request' && (steps.scope.outputs.adapter_temporal == 'true' ||
+          steps.scope.outputs.root_config == 'true')
         run: pnpm test:adapter-temporal
         env:
           DVT_CI: '1'
 
       - name: Run cli tests (affected package)
         if:
-          github.event_name == 'pull_request' && (steps.changes.outputs.cli == 'true' ||
-          steps.changes.outputs.root_config == 'true')
+          github.event_name == 'pull_request' && (steps.scope.outputs.cli == 'true' ||
+          steps.scope.outputs.root_config == 'true')
         run: pnpm test:cli
 
       - name: Run api tests (affected package)
         if:
-          github.event_name == 'pull_request' && (steps.changes.outputs.api == 'true' ||
-          steps.changes.outputs.root_config == 'true')
+          github.event_name == 'pull_request' && (steps.scope.outputs.api == 'true' ||
+          steps.scope.outputs.root_config == 'true')
         run: pnpm test:api
         env:
           DVT_CI: '1'
 
       - name: Run planner tests (affected package)
         if:
-          github.event_name == 'pull_request' && (steps.changes.outputs.planner == 'true' ||
-          steps.changes.outputs.contracts == 'true' || steps.changes.outputs.root_config == 'true')
+          github.event_name == 'pull_request' && (steps.scope.outputs.planner == 'true' ||
+          steps.scope.outputs.contracts == 'true' || steps.scope.outputs.root_config == 'true')
         run: pnpm test:planner
+        env:
+          DVT_CI: '1'
+
+      - name: Run delivery tests (affected package)
+        if:
+          github.event_name == 'pull_request' && (steps.scope.outputs.delivery == 'true' ||
+          steps.scope.outputs.root_config == 'true')
+        run: pnpm --filter @dvt/delivery test
+        env:
+          DVT_CI: '1'
+
+      - name: Run dsl tests (affected package)
+        if:
+          github.event_name == 'pull_request' && (steps.scope.outputs.dsl == 'true' ||
+          steps.scope.outputs.root_config == 'true')
+        run: pnpm --filter @dvt/dsl test
+        env:
+          DVT_CI: '1'
+
+      - name: Run observability tests (affected package)
+        if:
+          github.event_name == 'pull_request' && (steps.scope.outputs.observability == 'true' ||
+          steps.scope.outputs.root_config == 'true')
+        run: pnpm --filter @dvt/observability test
+        env:
+          DVT_CI: '1'
+
+      - name: Run observability-otel tests (affected package)
+        if:
+          github.event_name == 'pull_request' && (steps.scope.outputs.observability_otel == 'true'
+          || steps.scope.outputs.root_config == 'true')
+        run: pnpm --filter @dvt/observability-otel test
+        env:
+          DVT_CI: '1'
+
+      - name: Run plan-interpreter tests (affected package)
+        if:
+          github.event_name == 'pull_request' && (steps.scope.outputs.plan_interpreter == 'true' ||
+          steps.scope.outputs.root_config == 'true')
+        run: pnpm --filter @dvt/plan-interpreter test
+        env:
+          DVT_CI: '1'
+
+      - name: Run plan-verifier tests (affected package)
+        if:
+          github.event_name == 'pull_request' && (steps.scope.outputs.plan_verifier == 'true' ||
+          steps.scope.outputs.root_config == 'true')
+        run: pnpm --filter @dvt/plan-verifier test
+        env:
+          DVT_CI: '1'
+
+      - name: Run run-domain tests (affected package)
+        if:
+          github.event_name == 'pull_request' && (steps.scope.outputs.run_domain == 'true' ||
+          steps.scope.outputs.root_config == 'true')
+        run: pnpm --filter @dvt/run-domain test
+        env:
+          DVT_CI: '1'
+
+      - name: Run state-store tests (affected package)
+        if:
+          github.event_name == 'pull_request' && (steps.scope.outputs.state_store == 'true' ||
+          steps.scope.outputs.root_config == 'true')
+        run: pnpm --filter @dvt/state-store test
+        env:
+          DVT_CI: '1'
+
+      - name: Run artifacts tests (affected package)
+        if:
+          github.event_name == 'pull_request' && (steps.scope.outputs.artifacts == 'true' ||
+          steps.scope.outputs.root_config == 'true')
+        run: pnpm --filter @dvt/artifacts test
+        env:
+          DVT_CI: '1'
+
+      - name: Run crypto tests (affected package)
+        if:
+          github.event_name == 'pull_request' && (steps.scope.outputs.crypto == 'true' ||
+          steps.scope.outputs.root_config == 'true')
+        run: pnpm --filter @dvt/crypto test
+        env:
+          DVT_CI: '1'
+
+      - name: Run traceability-service tests (affected package)
+        if:
+          github.event_name == 'pull_request' && (steps.scope.outputs.traceability_service == 'true'
+          || steps.scope.outputs.root_config == 'true')
+        run: pnpm --filter @dvt/traceability-service test
+        env:
+          DVT_CI: '1'
+
+      - name: Run lineage-worker tests (affected package)
+        if:
+          github.event_name == 'pull_request' && (steps.scope.outputs.lineage_worker == 'true' ||
+          steps.scope.outputs.root_config == 'true')
+        run: pnpm --filter dvt-lineage-worker test
+        env:
+          DVT_CI: '1'
+
+      - name: Run outbox-worker tests (affected package)
+        if:
+          github.event_name == 'pull_request' && (steps.scope.outputs.outbox_worker == 'true' ||
+          steps.scope.outputs.root_config == 'true')
+        run: pnpm --filter dvt-outbox-worker test
+        env:
+          DVT_CI: '1'
+
+      - name: Run projector-worker tests (affected package)
+        if:
+          github.event_name == 'pull_request' && (steps.scope.outputs.projector_worker == 'true' ||
+          steps.scope.outputs.root_config == 'true')
+        run: pnpm --filter dvt-projector-worker test
+        env:
+          DVT_CI: '1'
+
+      - name: Run temporal-worker tests (affected package)
+        if:
+          github.event_name == 'pull_request' && (steps.scope.outputs.temporal_worker == 'true' ||
+          steps.scope.outputs.root_config == 'true')
+        run: pnpm --filter dvt-temporal-worker test
         env:
           DVT_CI: '1'
 
