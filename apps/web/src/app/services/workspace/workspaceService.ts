@@ -4,8 +4,6 @@ import type { DataSourceMode } from '../config/dataSource';
 import { createApiWorkspaceService } from './workspaceService.api';
 import { createMockWorkspaceService } from './workspaceService.mock';
 
-// Re-export port types for backward compatibility — consumers should migrate
-// to importing from '../../ports/workspace' or '../../ports' directly.
 export type {
   WorkspaceGraphSnapshot,
   WorkspaceGraphDraft,
@@ -21,11 +19,6 @@ export type {
   FileContent,
   WorkspaceFileEntry,
 } from '../../ports/workspace';
-
-/**
- * @deprecated Use {@link IWorkspacePort} from `../../ports/workspace` instead.
- */
-export type WorkspaceService = IWorkspacePort;
 
 export function createWorkspaceService(
   mode: DataSourceMode,

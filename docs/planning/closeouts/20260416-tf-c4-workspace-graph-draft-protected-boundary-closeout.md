@@ -2,7 +2,7 @@
 title: Closeout - TF-C4 protected workspace graph-draft boundary
 status: Review
 owner: API / Runtime / Docs
-last_reviewed: 2026-04-16
+last_reviewed: 2026-04-18
 planning_type: closeout
 slice: TF-C4-workspace-graph-draft-protected-boundary
 ---
@@ -69,6 +69,23 @@ This slice stayed SRP-aligned by separating the boundary into five concerns:
 
 - The slice is backend-complete for the protected draft boundary, but Canvas
   adoption still belongs to `TF-E2-A`.
+- Web adoption is now splitting into two seams:
+  - a protected draft authoring port that preserves contract-native read/write
+    outcomes
+  - a separate projection into presentation-facing workspace DTOs
+- That split is intentional. The protected boundary is structural and
+  capability-aware; route-local DTOs remain consumers, not owners, of that
+  language.
+- `web` API-mode adoption now consumes the protected boundary through scoped
+  draft reads and canonical envelope parsing:
+  - reads carry `tenantId`, `projectId`, and `environmentId` as query params
+  - writes send `WorkspaceGraphDraftSaveRequest` with protected `scope`,
+    active `schemaVersion`, and explicit revision token
+  - `saved` and `conflict` outcomes are followed by a scoped read when the UI
+    needs the full materialized record
+- The protected draft contract remains structural rather than
+  presentation-layout authoritative; web adapters projecting it into
+  view-facing DTOs must not fabricate backend-owned canvas coordinates.
 - Integration coverage for the PostgreSQL-backed protected runtime remains
   environment-gated in the normal integration suite; when no integration
   database is configured, the protected-runtime draft tests skip rather than
