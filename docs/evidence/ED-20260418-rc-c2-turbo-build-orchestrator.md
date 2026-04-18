@@ -19,6 +19,10 @@ breaking: false
 code_refs:
   - package.json
   - turbo.json
+  - apps/web/turbo.json
+  - apps/web/vite.config.ts
+  - apps/web/src/app/bootstrap/appBootstrapScreen.ts
+  - apps/web/src/app/bootstrap/appBootstrapScreen.test.ts
   - scripts/skip-prebuild-if-orchestrated.cjs
   - apps/api/package.json
   - apps/lineage-worker/package.json
@@ -36,8 +40,13 @@ code_refs:
 evidence:
   tests:
     - pnpm build
+    - pnpm --filter @dvt/web typecheck
+    - pnpm --filter @dvt/web test
     - pnpm exec turbo run build --filter=dvt-api
     - pnpm exec turbo run build --filter=dvt-api
+    - pnpm exec turbo run build --filter=@dvt/web --force
+    - pnpm exec turbo run build --filter=@dvt/web
+    - pnpm --filter @dvt/web build
     - pnpm --filter dvt-api build
     - pnpm --filter dvt-lineage-worker build
     - pnpm --filter dvt-outbox-worker build
@@ -49,6 +58,7 @@ evidence:
     - pnpm --filter @dvt/engine build
     - pnpm --filter @dvt/run-domain build
     - pnpm --filter @dvt/traceability-service build
+    - pnpm docs:status:generate
     - pnpm docs:sync
     - pnpm docs:workboard:generate
     - pnpm docs:arc:evidence:check
@@ -66,6 +76,11 @@ fresh-worktree direct-package build baseline intact by making the affected
 - Root `pnpm build` now routes through `turbo run build`.
 - The build graph declares cacheable outputs and the root files that must
   invalidate every build task.
+- The web build no longer injects a fresh timestamp into every bundle, and the
+  `@dvt/web` task hash now includes package-local `.env*` files plus `VITE_*`
+  environment variables.
+- The bootstrap screen now hides the build-date line when no explicit build
+  metadata is injected, instead of showing `Build unknown`.
 - Direct package `build` commands retain their dependency fallback outside
   `turbo`.
 
@@ -74,9 +89,19 @@ fresh-worktree direct-package build baseline intact by making the affected
 - `pnpm build` still fails first at the known pre-existing
   `apps/outbox-worker/src/ops/OutboxWorkerMonitor.ts:382` `TS2532` defect; no
   new root-build failure was introduced by the Turbo slice.
+- `pnpm --filter @dvt/web typecheck`, `pnpm --filter @dvt/web test`, and
+  `pnpm --filter @dvt/web build` all passed, so the web-target code and UI
+  guardrail changed for this follow-up are covered directly.
 - Re-running `pnpm exec turbo run build --filter=dvt-api` restored the filtered
   graph from the local Turbo cache, confirming that the declared `outputs`
   surface is active.
+- Re-running `pnpm exec turbo run build --filter=@dvt/web` after mutating a
+  temporary `apps/web/.env.production.local` changed the web task hash from a
+  forced build to a real cache miss, and the emitted bundle switched from
+  `tenant-3010` to `tenant-4010` as expected.
+- `pnpm docs:status:generate` refreshed generated code-state after adding
+  `apps/web/turbo.json`, so the governed structural inventory stays aligned
+  with the new workspace file.
 - Direct package `build` validation passed for every touched workspace except
   `dvt-outbox-worker`, which still fails at the same pre-existing `TS2532`
   baseline.
