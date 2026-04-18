@@ -85,6 +85,24 @@ Guardrail:
   hooks intentionally skip their dependency-build fallback when the variable is
   set
 
+### `skip-prebuild-if-orchestrated.cjs`
+
+Lifecycle-hook helper reused by `prebuild` scripts that should keep direct
+package builds safe, but skip redundant dependency graph builds when a
+top-level orchestrator already owns the current build.
+
+Behavior:
+
+- exits `0` when `DVT_CI=1|true`, so CI and explicit warm-build flows skip the
+  fallback dependency build
+- exits `0` when `TURBO_HASH` is present, so `turbo run build` does not recurse
+  back into package-local dependency builds
+- exits `1` otherwise, so direct package `build` commands still keep their
+  fresh-worktree dependency fallback
+
+Use this only for `prebuild` hooks whose dependency closure is now owned by the
+root `turbo` build graph.
+
 ### `build-workspace-runtime-deps.cjs`
 
 Builds the real workspace runtime dependency closure for a target package while

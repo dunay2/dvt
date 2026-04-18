@@ -42,6 +42,9 @@ Warm-build note:
   on POSIX or `cmd /c "set DVT_CI=1&& pnpm -r build"` from PowerShell.
   See the guardrail note in the `Notes` section below; this is not the
   fresh-worktree default path.
+- Root `pnpm build` is now a Turborepo-backed build graph. In this slice only
+  `build` uses `turbo`; `typecheck`, `test`, and docs commands keep their
+  existing repo-local orchestration.
 
 ## Operational Preflight Helpers
 
@@ -229,6 +232,9 @@ These files are intended to become the canonical source of truth for:
   `cmd /c "set DVT_CI=1&& pnpm -r build"` from PowerShell. It is not the
   canonical fresh-worktree build path, because lifecycle hooks skip their
   dependency-build fallback when `DVT_CI` is set.
+- `pnpm build` routes through `turbo run build` in the current repo state.
+  Direct package `build` commands still keep their package-local dependency
+  fallback when they are not running under `turbo`.
 - For slices that change code, config, tests, CI, or docs, include
   `pnpm verify:prepush` in the end-of-task validation baseline before claiming
   the work is ready.

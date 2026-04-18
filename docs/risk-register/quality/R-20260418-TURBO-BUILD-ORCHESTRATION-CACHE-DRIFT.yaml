@@ -1,0 +1,37 @@
+id: R-20260418-TURBO-BUILD-ORCHESTRATION-CACHE-DRIFT
+title: Turbo build cache or orchestration drift could hide missing dependency rebuilds
+status: Open
+date: 2026-04-18
+owners:
+  - apps/api
+  - apps/lineage-worker
+  - apps/outbox-worker
+  - apps/projector-worker
+  - apps/temporal-worker
+  - packages/@dvt/adapter-postgres
+  - packages/@dvt/adapter-temporal
+  - packages/@dvt/delivery
+  - packages/@dvt/engine
+  - packages/@dvt/run-domain
+  - packages/@dvt/traceability-service
+severity: Medium
+probability: Medium
+context: >
+  This slice replaces root `pnpm -r build` orchestration with `turbo run build` and makes the
+  affected `prebuild` hooks skip only when `turbo` already owns the current build task.
+risk: >
+  If the Turbo task hash omits a root shared input, or if the orchestration-aware prebuild skip
+  broadens beyond real `turbo` ownership, cached or direct builds can reuse stale `dist` artifacts
+  and hide a missing dependency rebuild.
+mitigations:
+  - >-
+    Declare the root shared `tsconfig` files, workspace file, and orchestration helper under
+    `turbo.json` `globalDependencies`.
+  - >-
+    Scope the new helper to `prebuild` and require a real `TURBO_HASH` or `DVT_CI` signal before
+    skipping the fallback dependency build.
+  - >-
+    Keep direct package `build` validation in this slice so the 2026-03-16 fresh-worktree baseline
+    is not silently regressed.
+  - >-
+    Keep remote cache out of scope until the local task graph and hash inputs are proven stable.

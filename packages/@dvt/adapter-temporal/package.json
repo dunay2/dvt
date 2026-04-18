@@ -31,7 +31,7 @@
     "build:runtime-deps": "node ../../../scripts/build-workspace-runtime-deps.cjs @dvt/adapter-temporal",
     "build:runtime-deps:postgres": "node ../../../scripts/build-workspace-runtime-deps.cjs @dvt/adapter-temporal --include-package @dvt/adapter-postgres",
     "build": "tsc -p tsconfig.json",
-    "prebuild": "node ../../../scripts/skip-pretest-if-ci.cjs || pnpm run build:runtime-deps",
+    "prebuild": "node ../../../scripts/skip-prebuild-if-orchestrated.cjs || pnpm run build:runtime-deps",
     "postbuild": "echo '✅ Build complete'",
     "pretest": "node ../../../scripts/skip-pretest-if-ci.cjs || pnpm run build:runtime-deps",
     "test": "vitest run ./test/ --exclude ./test/integration.time-skipping.test.ts --exclude ./test/integration.transformation.time-skipping.test.ts --exclude ./test/integration.postgres.time-skipping.test.ts",

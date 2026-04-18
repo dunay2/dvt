@@ -6,7 +6,7 @@
   "scripts": {
     "predev": "pnpm --filter \"dvt-api^...\" build",
     "dev": "tsx watch src/server.ts",
-    "prebuild": "node ../../scripts/skip-pretest-if-ci.cjs || pnpm --filter \"dvt-api^...\" build",
+    "prebuild": "node ../../scripts/skip-prebuild-if-orchestrated.cjs || pnpm --filter \"dvt-api^...\" build",
     "build": "tsc -p tsconfig.json",
     "start": "node dist/server.js",
     "pretypecheck": "node ../../scripts/skip-pretest-if-ci.cjs || pnpm --filter \"dvt-api^...\" build",
