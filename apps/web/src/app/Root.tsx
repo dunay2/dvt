@@ -18,7 +18,9 @@ import {
 import {
   getPublishedRouteBootstrapPresentation,
   subscribeRouteBootstrapPresentations,
-} from './bootstrap/routeBootstrapPresentation';
+} from './bootstrap/routeBootstrapRegistry';
+import { detectRouteBootstrapLocale } from './bootstrap/routeBootstrapErrorCopy';
+import { RouteBootstrapActiveRegistrationMissingError } from './bootstrap/routeBootstrapErrors';
 import { useActiveRouteBootstrapRegistration } from './bootstrap/useActiveRouteBootstrapRegistration';
 import { useCapabilitiesQuery } from './queries/useCapabilitiesQuery';
 import { useUiLayoutStore } from './stores/uiLayoutStore';
@@ -46,11 +48,23 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
     dataUpdatedAt: platformHealth.dataUpdatedAt,
     errorUpdatedAt: platformHealth.errorUpdatedAt,
   });
-  const activeRouteBootstrapRegistration = useActiveRouteBootstrapRegistration();
+  const bootstrapLocale = detectRouteBootstrapLocale();
+  const activeRouteBootstrapRegistration = useActiveRouteBootstrapRegistration(undefined, {
+    locale: bootstrapLocale,
+  });
+  const getRouteBootstrapSnapshot = () => {
+    if (!activeRouteBootstrapRegistration) {
+      throw new RouteBootstrapActiveRegistrationMissingError({
+        locale: bootstrapLocale,
+      });
+    }
+
+    return getPublishedRouteBootstrapPresentation(activeRouteBootstrapRegistration);
+  };
   const routeBootstrapPresentation = useSyncExternalStore(
     subscribeRouteBootstrapPresentations,
-    () => getPublishedRouteBootstrapPresentation(activeRouteBootstrapRegistration),
-    () => getPublishedRouteBootstrapPresentation(activeRouteBootstrapRegistration)
+    getRouteBootstrapSnapshot,
+    getRouteBootstrapSnapshot
   );
   const isInitialCapabilitiesBootstrapPending =
     capabilitiesQuery.isPending && !capabilitiesQuery.data && !capabilitiesQuery.isError;

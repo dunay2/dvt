@@ -1,12 +1,6 @@
 import type { RouteBootstrapPresentation } from './routeBootstrapContract';
 import type { RouteBootstrapRegistration } from './routeBootstrapRegistration';
 
-const MISSING_ROUTE_BOOTSTRAP_PRESENTATION: RouteBootstrapPresentation = {
-  status: 'pending',
-  detail: 'Active route bootstrap contract is missing',
-  canComplete: false,
-};
-
 const routeBootstrapPresentations = new Map<string, RouteBootstrapPresentation>();
 const listeners = new Set<() => void>();
 
@@ -28,12 +22,8 @@ function emitRouteBootstrapChange(): void {
 }
 
 export function getPublishedRouteBootstrapPresentation(
-  registration: RouteBootstrapRegistration | null | undefined
+  registration: RouteBootstrapRegistration
 ): RouteBootstrapPresentation {
-  if (!registration) {
-    return MISSING_ROUTE_BOOTSTRAP_PRESENTATION;
-  }
-
   return (
     routeBootstrapPresentations.get(registration.routeId) ??
     registration.routeBootstrap.initialPresentation

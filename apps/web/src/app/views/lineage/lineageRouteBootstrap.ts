@@ -4,7 +4,7 @@ import {
   createPendingRouteBootstrapPresentation,
   createPublishedRouteBootstrapHandle,
   type RouteBootstrapPresentation,
-} from '../../bootstrap/routeBootstrapPresentation';
+} from '../../bootstrap/routeBootstrapContract';
 import type { LineageWorkbenchState } from './lineageWorkbenchStateModel';
 
 export const LINEAGE_ROUTE_ID = 'dbt.lineage';

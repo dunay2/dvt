@@ -1,11 +1,10 @@
 import { useEffect, type ReactNode } from 'react';
 
+import { publishRouteBootstrapPresentation, resetRouteBootstrapPresentation } from './routeBootstrapRegistry';
 import {
   getStaticRouteSettledPresentation,
-  publishRouteBootstrapPresentation,
-  resetRouteBootstrapPresentation,
   type RouteBootstrapRegistration,
-} from './routeBootstrapPresentation';
+} from './routeBootstrapRegistration';
 
 type StaticRouteBootstrapBoundaryProps = {
   registration: RouteBootstrapRegistration | null;

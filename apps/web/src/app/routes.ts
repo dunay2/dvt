@@ -4,12 +4,12 @@ import { Navigate, createBrowserRouter, type RouteObject } from 'react-router';
 import AppRouteErrorBoundary from './AppRouteErrorBoundary';
 import StaticRouteBootstrapBoundary from './bootstrap/StaticRouteBootstrapBoundary';
 import {
+  type AppRouteHandle,
   createPendingRouteBootstrapPresentation,
   createPublishedRouteBootstrapHandle,
   createStaticRouteBootstrapHandle,
-  getRouteBootstrapRegistration,
-  type AppRouteHandle,
-} from './bootstrap/routeBootstrapPresentation';
+} from './bootstrap/routeBootstrapContract';
+import { getRouteBootstrapRegistration } from './bootstrap/routeBootstrapRegistration';
 import { usePublishedRouteBootstrap } from './bootstrap/usePublishedRouteBootstrap';
 import type { ViewContribution } from './plugins/contracts/PluginManifest';
 import { getAllViews } from './plugins/registry';

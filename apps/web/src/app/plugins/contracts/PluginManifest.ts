@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react';
-import type { AppRouteHandle } from '../../bootstrap/routeBootstrapPresentation';
+import type { AppRouteHandle } from '../../bootstrap/routeBootstrapContract';
 
 import type {
   CanonicalEdge,

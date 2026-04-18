@@ -3,16 +3,16 @@ import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { RouteBootstrapRegistrationNotFoundError } from './routeBootstrapErrors';
-import type { RouteBootstrapRegistration } from './routeBootstrapPresentation';
+import type { RouteBootstrapRegistration } from './routeBootstrapRegistration';
 import { usePublishedRouteBootstrap } from './usePublishedRouteBootstrap';
 
 const mockPublishRouteBootstrapPresentation = vi.hoisted(() => vi.fn());
 const mockResetRouteBootstrapPresentation = vi.hoisted(() => vi.fn());
 const mockUseActiveRouteBootstrapRegistration = vi.hoisted(() => vi.fn());
 
-vi.mock('./routeBootstrapPresentation', async () => {
-  const actual = await vi.importActual<typeof import('./routeBootstrapPresentation')>(
-    './routeBootstrapPresentation'
+vi.mock('./routeBootstrapRegistry', async () => {
+  const actual = await vi.importActual<typeof import('./routeBootstrapRegistry')>(
+    './routeBootstrapRegistry'
   );
   return {
     ...actual,

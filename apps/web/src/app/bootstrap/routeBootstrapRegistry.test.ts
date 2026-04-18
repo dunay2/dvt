@@ -3,12 +3,16 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import {
   createPublishedRouteBootstrapHandle,
   createStaticRouteBootstrapHandle,
+} from './routeBootstrapContract';
+import {
   getPublishedRouteBootstrapPresentation,
-  getRouteBootstrapRegistration,
-  getStaticRouteSettledPresentation,
   publishRouteBootstrapPresentation,
   resetRouteBootstrapPresentation,
-} from './routeBootstrapPresentation';
+} from './routeBootstrapRegistry';
+import {
+  getRouteBootstrapRegistration,
+  getStaticRouteSettledPresentation,
+} from './routeBootstrapRegistration';
 
 const TEST_PUBLISHED_ROUTE_HANDLE = {
   routeBootstrap: createPublishedRouteBootstrapHandle({
@@ -33,18 +37,10 @@ const TEST_STATIC_ROUTE_BOOTSTRAP_REGISTRATION = getRouteBootstrapRegistration(
   TEST_STATIC_ROUTE_HANDLE
 )!;
 
-describe('routeBootstrapPresentation', () => {
+describe('routeBootstrapRegistry', () => {
   beforeEach(() => {
     resetRouteBootstrapPresentation(TEST_PUBLISHED_ROUTE_BOOTSTRAP_REGISTRATION);
     resetRouteBootstrapPresentation(TEST_STATIC_ROUTE_BOOTSTRAP_REGISTRATION);
-  });
-
-  it('fails closed when a route has no bootstrap registration', () => {
-    expect(getPublishedRouteBootstrapPresentation(null)).toEqual({
-      status: 'pending',
-      detail: 'Active route bootstrap contract is missing',
-      canComplete: false,
-    });
   });
 
   it('falls back to the registration initial presentation until a route publishes runtime posture', () => {

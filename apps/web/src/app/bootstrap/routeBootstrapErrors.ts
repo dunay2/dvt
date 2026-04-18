@@ -1,10 +1,12 @@
 import {
+  formatRouteBootstrapActiveRegistrationMissingMessage,
   formatRouteBootstrapRegistrationNotFoundMessage,
   resolveRouteBootstrapErrorCopy,
 } from './routeBootstrapErrorCopy';
 
 export type RouteBootstrapErrorCode =
   | 'ROUTE_BOOTSTRAP_DATA_ROUTER_CONTEXT_MISSING'
+  | 'ROUTE_BOOTSTRAP_ACTIVE_REGISTRATION_MISSING'
   | 'ROUTE_BOOTSTRAP_REGISTRATION_NOT_FOUND';
 
 type RouteBootstrapErrorOptions = {
@@ -37,6 +39,20 @@ export class RouteBootstrapDataRouterContextError extends RouteBootstrapError {
       cause: options.cause,
     });
     this.name = 'RouteBootstrapDataRouterContextError';
+  }
+}
+
+type RouteBootstrapActiveRegistrationMissingErrorOptions = {
+  readonly locale?: string;
+};
+
+export class RouteBootstrapActiveRegistrationMissingError extends RouteBootstrapError {
+  constructor(options: RouteBootstrapActiveRegistrationMissingErrorOptions = {}) {
+    super(
+      'ROUTE_BOOTSTRAP_ACTIVE_REGISTRATION_MISSING',
+      formatRouteBootstrapActiveRegistrationMissingMessage(options.locale)
+    );
+    this.name = 'RouteBootstrapActiveRegistrationMissingError';
   }
 }
 

@@ -1,7 +1,7 @@
 import { FileCode2, GitCompareArrows } from 'lucide-react';
 import { describe, expect, it } from 'vitest';
 
-import { createPublishedRouteBootstrapHandle } from '../bootstrap/routeBootstrapPresentation';
+import { createPublishedRouteBootstrapHandle } from '../bootstrap/routeBootstrapContract';
 import { buildShellNavigationModel } from './shellNavigationModel';
 
 describe('buildShellNavigationModel', () => {

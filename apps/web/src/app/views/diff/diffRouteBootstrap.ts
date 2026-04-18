@@ -4,7 +4,7 @@ import {
   createPendingRouteBootstrapPresentation,
   createPublishedRouteBootstrapHandle,
   type RouteBootstrapPresentation,
-} from '../../bootstrap/routeBootstrapPresentation';
+} from '../../bootstrap/routeBootstrapContract';
 import type {
   DiffCompareContextState,
   DiffSqlContextState,

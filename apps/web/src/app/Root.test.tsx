@@ -6,20 +6,23 @@ import { RouterProvider, createMemoryRouter } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { PlatformHealthCapabilityApi } from '../capabilities/platform-health';
-import type { RouteBootstrapPresentation } from './bootstrap/routeBootstrapPresentation';
+import type { RouteBootstrapPresentation } from './bootstrap/routeBootstrapContract';
 import StaticRouteBootstrapBoundary from './bootstrap/StaticRouteBootstrapBoundary';
 import {
   createPublishedRouteBootstrapHandle,
   createStaticRouteBootstrapHandle,
-  getRouteBootstrapRegistration,
+} from './bootstrap/routeBootstrapContract';
+import {
   publishRouteBootstrapPresentation,
   resetRouteBootstrapPresentation,
-} from './bootstrap/routeBootstrapPresentation';
+} from './bootstrap/routeBootstrapRegistry';
+import { getRouteBootstrapRegistration } from './bootstrap/routeBootstrapRegistration';
 import type { CapabilitiesPort } from './ports/capabilities';
 import {
   createHealthzProbe,
   createPlatformHealthSnapshot,
 } from '../capabilities/platform-health/testing/platformHealthFixtures';
+import AppRouteErrorBoundary from './AppRouteErrorBoundary';
 import { queryKeys } from './queries/queryKeys';
 import { waitForReactQuery, withTestQueryClient } from '../testing/reactQueryHarness';
 import AppProviders from './AppProviders';
@@ -36,12 +39,16 @@ const CANVAS_ROUTE_BOOTSTRAP_REGISTRATION = getRouteBootstrapRegistration('dbt.c
 
 const bootstrapScreenMocks = vi.hoisted(() => ({
   completeBootstrapScreen: vi.fn(),
+  isBootstrapScreenVisible: vi.fn(() => false),
   setBootstrapStepStatus: vi.fn(),
+  showBootstrapFailure: vi.fn(),
 }));
 
 vi.mock('./bootstrap/appBootstrapScreen', () => ({
   completeBootstrapScreen: bootstrapScreenMocks.completeBootstrapScreen,
+  isBootstrapScreenVisible: bootstrapScreenMocks.isBootstrapScreenVisible,
   setBootstrapStepStatus: bootstrapScreenMocks.setBootstrapStepStatus,
+  showBootstrapFailure: bootstrapScreenMocks.showBootstrapFailure,
 }));
 
 function createRootShellNode(
@@ -177,6 +184,43 @@ function createRootShellNode(
     <AppServicesProvider
       overrides={{ mode: 'mock', capabilitiesPort: capabilitiesPort ?? defaultCapabilitiesPort }}
     >
+      <RouterProvider router={router} />
+    </AppServicesProvider>
+  );
+}
+
+function createBrokenRootShellNode(
+  capability: PlatformHealthCapabilityApi,
+  initialEntries: string[] = ['/broken']
+): JSX.Element {
+  const defaultCapabilitiesPort: CapabilitiesPort = {
+    loadCapabilities: vi.fn().mockResolvedValue({
+      apiVersion: '1.0.0',
+      minFrontendVersion: '1.0.0',
+      plugins: {},
+    }),
+  };
+
+  const router = createMemoryRouter(
+    [
+      {
+        path: '/',
+        element: <RootShell platformHealthCapability={capability} />,
+        errorElement: <AppRouteErrorBoundary />,
+        children: [
+          {
+            id: 'broken.route',
+            path: 'broken',
+            element: <div>Broken route</div>,
+          },
+        ],
+      },
+    ],
+    { initialEntries }
+  );
+
+  return (
+    <AppServicesProvider overrides={{ mode: 'mock', capabilitiesPort: defaultCapabilitiesPort }}>
       <RouterProvider router={router} />
     </AppServicesProvider>
   );
@@ -802,7 +846,14 @@ describe('Root integration guard', () => {
           element: <Root />,
           children: [
             {
+              id: 'test.workspace',
               index: true,
+              handle: {
+                routeBootstrap: createStaticRouteBootstrapHandle({
+                  pendingDetail: 'Preparing workspace route',
+                  readyDetail: 'Workspace is ready',
+                }),
+              },
               element: <RootServicesProbe />,
             },
           ],
@@ -822,6 +873,37 @@ describe('Root integration guard', () => {
           'mode:'
         );
       });
+    } finally {
+      await mounted.cleanup();
+    }
+  });
+});
+
+describe('Root bootstrap contract guard', () => {
+  it('fails fast with a typed localized error when the active route lacks bootstrap registration', async () => {
+    document.documentElement.lang = 'en';
+    vi.spyOn(window.navigator, 'language', 'get').mockReturnValue('es-ES');
+
+    const capability: PlatformHealthCapabilityApi = {
+      loadSnapshot: vi.fn().mockResolvedValue(
+        createPlatformHealthSnapshot({
+          fetchedAt: '2026-04-18T10:00:00.000Z',
+        })
+      ),
+    };
+
+    const mounted = await withTestQueryClient(createBrokenRootShellNode(capability));
+
+    try {
+      await waitFor(() => {
+        expect(
+          mounted.container.querySelector('[data-slot="app-route-error-boundary"]')
+        ).not.toBeNull();
+      });
+
+      expect(mounted.container.textContent).toContain(
+        'Falta el registro activo de route bootstrap para la ruta actual.'
+      );
     } finally {
       await mounted.cleanup();
     }

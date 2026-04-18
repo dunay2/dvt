@@ -39,10 +39,8 @@ Primary anchors:
 - [StaticRouteBootstrapBoundary.tsx](../../../../../apps/web/src/app/bootstrap/StaticRouteBootstrapBoundary.tsx)
 - [usePublishedRouteBootstrap.ts](../../../../../apps/web/src/app/bootstrap/usePublishedRouteBootstrap.ts)
 
-Compatibility note:
+Ownership note:
 
-- `routeBootstrapPresentation.ts` remains as a compatibility barrel, but it is
-  not the ownership anchor for startup registration or registry behavior.
 - typed bootstrap failures and code-based diagnostics are owned by
   `routeBootstrapErrors.ts`; bootstrap copy and locale resolution are owned by
   `routeBootstrapErrorCopy.ts`.
@@ -346,6 +344,9 @@ Target reading:
   remapping.
 - missing registration in published mode fails closed with
   `ROUTE_BOOTSTRAP_REGISTRATION_NOT_FOUND` outside test runtime.
+- missing active registration at shell-consumption time fails closed with
+  `ROUTE_BOOTSTRAP_ACTIVE_REGISTRATION_MISSING`; the registry no longer
+  supplies a synthetic pending fallback when registration is absent.
 - bootstrap error messages are locale-resolved from runtime
   (`navigator.language`, then `navigator.languages[0]`, then
   `document.documentElement.lang`, fallback `en`) and are not hardcoded in

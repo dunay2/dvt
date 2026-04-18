@@ -43,11 +43,10 @@ responsibilities merged in one file.
 
 ### Selected option and rationale
 
-Split by SRP while preserving API compatibility through a barrel module:
+Split by SRP with direct ownership modules:
 
 - explicit ownership boundaries
 - no route behavior regression
-- low-cost migration path for existing imports
 
 ## Phase 2. Pre-Implementation Brief
 
@@ -57,7 +56,6 @@ Split by SRP while preserving API compatibility through a barrel module:
   - `apps/web/src/app/bootstrap/routeBootstrapRegistration.ts`
   - `apps/web/src/app/bootstrap/routeBootstrapRegistry.ts`
   - `apps/web/src/app/bootstrap/useActiveRouteBootstrapRegistration.ts`
-  - `apps/web/src/app/bootstrap/routeBootstrapPresentation.ts` (barrel)
   - `apps/web/src/app/bootstrap/usePublishedRouteBootstrap.ts`
   - `apps/web/src/app/Root.tsx`
   - planning and architecture docs updated in this closeout
@@ -86,8 +84,6 @@ Split by SRP while preserving API compatibility through a barrel module:
   registration discovery.
 - updated `usePublishedRouteBootstrap.ts` and `Root.tsx` to consume the shared
   registration hook.
-- kept compatibility exports via `routeBootstrapPresentation.ts` so callers can
-  migrate without behavioral change.
 - updated planning/architecture docs to reflect the SRP split.
 
 ## Hardening follow-up (same slice, post-SRP split)
@@ -97,6 +93,7 @@ remain part of the accepted outcome:
 
 - typed bootstrap error taxonomy:
   - `RouteBootstrapDataRouterContextError`
+  - `RouteBootstrapActiveRegistrationMissingError`
   - `RouteBootstrapRegistrationNotFoundError`
   - shared base `RouteBootstrapError` with stable `code` values.
 - runtime i18n wiring for bootstrap errors:
@@ -117,6 +114,15 @@ remain part of the accepted outcome:
   missing explicit registration for a published route throws typed
   `RouteBootstrapRegistrationNotFoundError` (test runtime keeps the isolated
   fallback behavior).
+- shell-consumption invariant in `Root.tsx` + `routeBootstrapRegistry.ts`:
+  active route registration is required before the shell reads route posture;
+  missing active registration throws typed
+  `RouteBootstrapActiveRegistrationMissingError`, and the registry no longer
+  synthesizes a shell-owned pending fallback.
+- compatibility removal:
+  - deleted `routeBootstrapPresentation.ts`
+  - consumers now import directly from contract/registration/registry owners
+    instead of a compatibility barrel.
 - default redirect route hardening:
   - `shell.default-core-redirect` now publishes explicit pending posture
     through `usePublishedRouteBootstrap` while mounted instead of relying only
@@ -139,7 +145,7 @@ Affected implementation paths:
 
 ## Validation
 
-- `pnpm --filter @dvt/web exec vitest run src/app/bootstrap/routeBootstrapPresentation.test.ts src/app/Root.test.tsx src/app/views/Canvas.test.tsx src/app/routes.test.tsx` - PASS
+- `pnpm --filter @dvt/web exec vitest run src/app/bootstrap/routeBootstrapRegistry.test.ts src/app/Root.test.tsx src/app/views/Canvas.test.tsx src/app/routes.test.tsx` - PASS
 - `pnpm --filter @dvt/web exec vitest run src/app/bootstrap/routeBootstrapErrorCopy.test.ts src/app/bootstrap/useActiveRouteBootstrapRegistration.test.tsx src/app/bootstrap/usePublishedRouteBootstrap.test.tsx` - PASS
 - `pnpm --filter @dvt/web typecheck` - PASS
 - `pnpm verify:prepush` - PASS

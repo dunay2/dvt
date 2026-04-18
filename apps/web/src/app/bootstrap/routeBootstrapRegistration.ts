@@ -1,11 +1,8 @@
 import type {
+  AppRouteHandle,
   RouteBootstrapHandle,
   RouteBootstrapPresentation,
 } from './routeBootstrapContract';
-
-export type AppRouteHandle = {
-  routeBootstrap?: RouteBootstrapHandle;
-};
 
 export type RouteBootstrapRegistration = {
   routeId: string;

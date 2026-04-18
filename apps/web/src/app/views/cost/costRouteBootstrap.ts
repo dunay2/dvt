@@ -4,7 +4,7 @@ import {
   createPendingRouteBootstrapPresentation,
   createPublishedRouteBootstrapHandle,
   type RouteBootstrapPresentation,
-} from '../../bootstrap/routeBootstrapPresentation';
+} from '../../bootstrap/routeBootstrapContract';
 
 export const COST_ROUTE_ID = 'cost.dashboard';
 

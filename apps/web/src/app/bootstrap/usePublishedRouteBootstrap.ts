@@ -3,8 +3,8 @@ import { useEffect } from 'react';
 import {
   publishRouteBootstrapPresentation,
   resetRouteBootstrapPresentation,
-  type RouteBootstrapPresentation,
-} from './routeBootstrapPresentation';
+} from './routeBootstrapRegistry';
+import type { RouteBootstrapPresentation } from './routeBootstrapContract';
 import { detectRouteBootstrapLocale } from './routeBootstrapErrorCopy';
 import { RouteBootstrapRegistrationNotFoundError } from './routeBootstrapErrors';
 import { useActiveRouteBootstrapRegistration } from './useActiveRouteBootstrapRegistration';

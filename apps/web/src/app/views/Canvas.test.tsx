@@ -7,9 +7,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
   getPublishedRouteBootstrapPresentation,
-  getRouteBootstrapRegistration,
   resetRouteBootstrapPresentation,
-} from '../bootstrap/routeBootstrapPresentation';
+} from '../bootstrap/routeBootstrapRegistry';
+import { getRouteBootstrapRegistration } from '../bootstrap/routeBootstrapRegistration';
 import Canvas from './Canvas';
 import { DEFAULT_CANVAS_PALETTE_ID } from './canvas/canvasPalette';
 import {

@@ -2,6 +2,7 @@ import { resolveString, type LocalizableString } from '../plugins/contracts/Plug
 
 export type RouteBootstrapErrorCopy = {
   readonly dataRouterContextMissing: string;
+  readonly activeRegistrationMissing: string;
   readonly registrationNotFoundPrefix: string;
 };
 
@@ -12,6 +13,10 @@ const COPY_BY_KEY: Record<keyof RouteBootstrapErrorCopy, LocalizableString> = {
     key: 'bootstrap.route.dataRouterContextMissing',
     fallback:
       'Route bootstrap requires a React Router data router context (RouterProvider).',
+  },
+  activeRegistrationMissing: {
+    key: 'bootstrap.route.activeRegistrationMissing',
+    fallback: 'Active route bootstrap registration is missing.',
   },
   registrationNotFoundPrefix: {
     key: 'bootstrap.route.registrationNotFoundPrefix',
@@ -24,6 +29,8 @@ const LOCALIZED_COPY_BY_LANGUAGE: Record<RouteBootstrapLanguage, RouteBootstrapE
   es: {
     dataRouterContextMissing:
       'El bootstrap de ruta requiere un contexto de React Router data router (RouterProvider).',
+    activeRegistrationMissing:
+      'Falta el registro activo de route bootstrap para la ruta actual.',
     registrationNotFoundPrefix:
       'No se encontro el registro de route bootstrap para route id',
   },
@@ -63,6 +70,7 @@ export function resolveRouteBootstrapErrorCopy(locale?: string): RouteBootstrapE
 
   return {
     dataRouterContextMissing: resolveString(COPY_BY_KEY.dataRouterContextMissing, locale),
+    activeRegistrationMissing: resolveString(COPY_BY_KEY.activeRegistrationMissing, locale),
     registrationNotFoundPrefix: resolveString(COPY_BY_KEY.registrationNotFoundPrefix, locale),
   };
 }
@@ -73,4 +81,10 @@ export function formatRouteBootstrapRegistrationNotFoundMessage(
 ): string {
   const copy = resolveRouteBootstrapErrorCopy(locale);
   return `${copy.registrationNotFoundPrefix}: ${routeId}`;
+}
+
+export function formatRouteBootstrapActiveRegistrationMissingMessage(
+  locale?: string
+): string {
+  return resolveRouteBootstrapErrorCopy(locale).activeRegistrationMissing;
 }

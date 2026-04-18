@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { getRouteBootstrapRegistration } from '../../bootstrap/routeBootstrapPresentation';
+import { getRouteBootstrapRegistration } from '../../bootstrap/routeBootstrapRegistration';
 import {
   CANVAS_ROUTE_BOOTSTRAP_HANDLE,
   deriveCanvasDraftPresentationState,

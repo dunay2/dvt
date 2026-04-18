@@ -2,7 +2,7 @@ import {
   createPublishedRouteBootstrapHandle,
   type RouteBootstrapHandle,
   type RouteBootstrapPresentation,
-} from '../../bootstrap/routeBootstrapPresentation';
+} from '../../bootstrap/routeBootstrapContract';
 import type { CanvasWorkbenchState } from './canvasWorkbenchStateModel';
 import { canvasViewCopy } from './copy';
 

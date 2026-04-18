@@ -17,6 +17,10 @@ export type RouteBootstrapHandle =
       settledPresentation: RouteBootstrapPresentation;
     };
 
+export type AppRouteHandle = {
+  routeBootstrap?: RouteBootstrapHandle;
+};
+
 export function createPendingRouteBootstrapPresentation(
   detail: string
 ): RouteBootstrapPresentation {

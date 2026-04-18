@@ -39,10 +39,9 @@ Primary implementation anchors:
 - [StaticRouteBootstrapBoundary.tsx](../../../../../apps/web/src/app/bootstrap/StaticRouteBootstrapBoundary.tsx)
 - [usePublishedRouteBootstrap.ts](../../../../../apps/web/src/app/bootstrap/usePublishedRouteBootstrap.ts)
 
-Compatibility note:
+Ownership note:
 
-- `routeBootstrapPresentation.ts` remains as a compatibility barrel, but the
-  startup contract ownership is defined by `routeBootstrapContract.ts`,
+- startup contract ownership is defined by `routeBootstrapContract.ts`,
   `routeBootstrapRegistration.ts`, and `routeBootstrapRegistry.ts`.
 - runtime bootstrap failures are typed through `routeBootstrapErrors.ts`, and
   user-facing bootstrap copy is locale-resolved via `routeBootstrapErrorCopy.ts`.
