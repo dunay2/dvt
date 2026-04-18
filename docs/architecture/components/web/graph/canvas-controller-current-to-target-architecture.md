@@ -2,7 +2,7 @@
 title: Canvas Controller Current To Target Architecture
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-04-17
+last_reviewed: 2026-04-18
 planning_type: architecture
 ---
 
@@ -46,6 +46,15 @@ Compatibility note:
   `routeBootstrapRegistration.ts`, and `routeBootstrapRegistry.ts`.
 - runtime bootstrap failures are typed through `routeBootstrapErrors.ts`, and
   user-facing bootstrap copy is locale-resolved via `routeBootstrapErrorCopy.ts`.
+
+## Reading Posture
+
+- Sections labeled `Current` describe active runtime truth as of 2026-04-18.
+- Sections labeled `Target` remain target-state design guidance for controller
+  extraction and are not claims about already-shipped Canvas internals.
+- Route-bootstrap rules in this document describe active implementation
+  requirements and must stay aligned with
+  `graph-route-bootstrap-architecture.md`.
 
 ## Current Responsibility Inventory
 
@@ -147,7 +156,7 @@ The target state is a slim composition facade:
   own typed registration extraction and active-route resolution for that
   contract
 - `usePublishedRouteBootstrap`
-  is the adapter seam for published routes and should bind publication to an
+  is the adapter seam for published routes and must bind publication to an
   explicit route registration rather than discovering a route implicitly
 - `StaticRouteBootstrapBoundary`
   owns the mount-time bridge only for routes whose first useful surface is
@@ -222,6 +231,8 @@ flowchart LR
   end
 
   subgraph Adapters["Adapters and infrastructure-facing seams"]
+    Publisher["usePublishedRouteBootstrap\nResponsibility: publish by explicit route registration"]
+    ActiveRegistration["useActiveRouteBootstrapRegistration\nResponsibility: resolve active typed registration"]
     GraphModel["useCanvasGraphModel\nResponsibility: canonical graph mapping and identity maps"]
     OverlayModel["useCanvasOverlayModel\nResponsibility: overlay decoration projection"]
     Persistence["useCanvasLayoutPersistence\nResponsibility: viewport and node-position persistence"]
@@ -242,7 +253,9 @@ flowchart LR
   Controller --> Execution
   DraftSession --> DraftScope
   DraftScope --> Presentation
-  Presentation -->|"publish route bootstrap contract"| RouteBootstrap
+  Presentation -->|"derive next route posture"| Publisher
+  Publisher -->|"resolve explicit route registration"| ActiveRegistration
+  Publisher -->|"publish route bootstrap contract"| RouteBootstrap
   StaticBoundary -->|"publish settled static route contract"| RouteBootstrap
   Root -->|"resolve active route handle"| RouteBootstrap
   GraphModel --> Workspace
@@ -275,7 +288,6 @@ surface is actually operable".
 
 Canonical startup taxonomy:
 
-- `none`: the route does not participate in startup gating.
 - `static`: mount is enough because the route has no startup query, no startup
   validation, and no route-local blocked/error/recovery posture before first
   useful interaction.
@@ -297,8 +309,8 @@ Hard rules:
 - reset is allowed only when the route unmounts or the active registration
   changes;
 - no helper may infer `static` merely because a route is lazy-loaded;
-- an unclassified route is a design error and should fail closed in the target
-  architecture instead of being treated as implicitly `complete`.
+- an unclassified route is a design error and must fail closed in the active
+  bootstrap architecture instead of being treated as implicitly `complete`.
 
 Canonical classification for the current route set:
 
@@ -311,6 +323,7 @@ Canonical classification for the current route set:
 | `dbt.artifacts`               | `published`  | Artifact load and import-validation states                       |
 | `monitoring.runs`             | `published`  | Runs summary query and empty/error/list startup outcomes         |
 | `monitoring.run-detail`       | `published`  | Run workspace loading, missing-run, and error outcomes           |
+| `cost.dashboard`              | `published`  | Cost load, error, and ready startup postures                     |
 | `shell.plugins`               | `static`     | Shell-only surface, useful immediately after mount               |
 | `shell.admin`                 | `static`     | Shell-only surface, useful immediately after mount               |
 | `shell.default-core-redirect` | `published`  | Redirect still governs startup progress until the target settles |
@@ -346,6 +359,7 @@ Canonical publisher invariants:
   (`ROUTE_BOOTSTRAP_REGISTRATION_NOT_FOUND`) and must fail closed outside test
   runtime.
 - locale for bootstrap errors resolves from runtime (`navigator.language`,
+  then `navigator.languages[0]`, then `document.documentElement.lang`,
   fallback `en`) through `routeBootstrapErrorCopy.ts`, not by hardcoded hook
   literals.
 
@@ -387,6 +401,7 @@ sequenceDiagram
   participant DraftSession as canvasDraftSession
   participant DraftScope as canvasDraftScope
   participant Presentation as CanvasDraftPresentationState
+  participant Publisher as usePublishedRouteBootstrap
   participant RouteBootstrap as routeBootstrapRegistry
   participant GraphModel as useCanvasGraphModel
   participant Workspace as workspaceService
@@ -402,7 +417,8 @@ sequenceDiagram
   GraphModel-->>Controller: canonical graph + identity maps
   Controller->>DraftScope: derive visible and execution scope
   Controller->>Presentation: refine workbench state and recovery posture
-  Presentation->>RouteBootstrap: publish status/detail/canComplete
+  Presentation->>Publisher: publish next route posture
+  Publisher->>RouteBootstrap: publish status/detail/canComplete
   Controller->>Persistence: read viewport and node positions
   Persistence-->>Controller: persisted layout and guarded save callbacks
   Controller-->>Shell: render props for viewport, nodes, edges, and handlers
@@ -418,7 +434,8 @@ sequenceDiagram
   participant Registration as Route bootstrap registration
   participant Controller as useCanvasController
   participant Presentation as CanvasDraftPresentationState
-  participant Publisher as Published-route publisher
+  participant Publisher as usePublishedRouteBootstrap
+  participant ActiveRegistration as useActiveRouteBootstrapRegistration
   participant RouteBootstrap as routeBootstrapRegistry
   participant Bootstrap as appBootstrapScreen
   participant Shell as App shell
@@ -430,6 +447,8 @@ sequenceDiagram
   Root->>Controller: mount canvas route
   Controller->>Presentation: derive route posture
   Presentation-->>Publisher: next route posture
+  Publisher->>ActiveRegistration: resolve(routeId)
+  ActiveRegistration-->>Publisher: registration
   Publisher->>RouteBootstrap: publish(routeId, status/detail/canComplete)
   Note over Publisher,RouteBootstrap: Replace posture in place; do not reset to initial pending during ordinary updates
   Root->>RouteBootstrap: read active route contract

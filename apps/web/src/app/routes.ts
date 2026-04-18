@@ -4,11 +4,13 @@ import { Navigate, createBrowserRouter, type RouteObject } from 'react-router';
 import AppRouteErrorBoundary from './AppRouteErrorBoundary';
 import StaticRouteBootstrapBoundary from './bootstrap/StaticRouteBootstrapBoundary';
 import {
+  createPendingRouteBootstrapPresentation,
   createPublishedRouteBootstrapHandle,
   createStaticRouteBootstrapHandle,
   getRouteBootstrapRegistration,
   type AppRouteHandle,
 } from './bootstrap/routeBootstrapPresentation';
+import { usePublishedRouteBootstrap } from './bootstrap/usePublishedRouteBootstrap';
 import type { ViewContribution } from './plugins/contracts/PluginManifest';
 import { getAllViews } from './plugins/registry';
 import Root from './Root';
@@ -44,7 +46,17 @@ function PluginAvailabilityGuard({
   return createElement(Fragment, null, children);
 }
 
+const DEFAULT_CORE_REDIRECT_ROUTE_ID = 'shell.default-core-redirect';
+const DEFAULT_CORE_REDIRECT_PENDING_DETAIL = 'Selecting initial workspace route';
+const DEFAULT_CORE_REDIRECT_PRESENTATION = createPendingRouteBootstrapPresentation(
+  DEFAULT_CORE_REDIRECT_PENDING_DETAIL
+);
+
 function DefaultCoreRouteRedirect() {
+  usePublishedRouteBootstrap(
+    DEFAULT_CORE_REDIRECT_ROUTE_ID,
+    DEFAULT_CORE_REDIRECT_PRESENTATION
+  );
   const { defaultCoreViewPath } = useShellRuntime();
 
   return createElement(Navigate, { to: defaultCoreViewPath, replace: true });
@@ -146,11 +158,11 @@ export function createAppRoutes(): RouteObject[] {
       errorElement: createElement(AppRouteErrorBoundary),
       children: [
         {
-          id: 'shell.default-core-redirect',
+          id: DEFAULT_CORE_REDIRECT_ROUTE_ID,
           index: true,
           handle: {
             routeBootstrap: createPublishedRouteBootstrapHandle({
-              pendingDetail: 'Selecting initial workspace route',
+              pendingDetail: DEFAULT_CORE_REDIRECT_PENDING_DETAIL,
             }),
           },
           element: createElement(DefaultCoreRouteRedirect),

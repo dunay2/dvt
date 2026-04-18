@@ -2,7 +2,7 @@
 title: Canvas Component Map And Modernization Review
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-04-17
+last_reviewed: 2026-04-18
 planning_type: architecture
 ---
 
@@ -57,6 +57,15 @@ Compatibility note:
 - [canvasOverlayContext.ts](../../../../../apps/web/src/app/views/canvas/canvasOverlayContext.ts)
 - [canvasImpactOverlay.ts](../../../../../apps/web/src/app/views/canvas/canvasImpactOverlay.ts)
 - [canvasGraphUtils.ts](../../../../../apps/web/src/app/views/canvas/canvasGraphUtils.ts)
+
+## Reading Posture
+
+- Sections labeled `Current` describe active runtime truth as of 2026-04-18.
+- Sequence/refactor/review sections remain target-state design guidance for
+  future Canvas extraction work.
+- Startup-contract rules in this document describe active implementation
+  requirements and must stay aligned with
+  `graph-route-bootstrap-architecture.md`.
 
 ## Canvas In Final DVT Workbench
 
@@ -151,10 +160,13 @@ flowchart TB
   Controller --> Capabilities["useCapabilitiesQuery"]
   Controller --> Services["AppServicesContext hooks"]
   Controller --> Plugins["plugin and node registries"]
+  Controller --> Publisher["usePublishedRouteBootstrap"]
+  Publisher --> ActiveRegistration["useActiveRouteBootstrapRegistration"]
+  Publisher --> Registry
   Presentation --> Shell
   Presentation --> Toolbar
   Presentation --> Content
-  Presentation --> Registry
+  Presentation --> Publisher
 
   GraphHandlers --> GraphUtils["canvasGraphUtils"]
   ExecActions --> Plans["plansService"]
@@ -287,13 +299,15 @@ shapes.
 ```mermaid
 flowchart LR
   RouteId["Route id\nOwned by router"] --> Handle["handle.routeBootstrap"]
-  Handle --> NoneMode["Mode: none\nDoes not affect Raven reveal"]
   Handle --> StaticMode["Mode: static\nUsed only by truly static shell routes such as Plugins and Admin"]
-  Handle --> PublishedMode["Mode: published\nUsed by Canvas, Lineage, Code, Diff, Artifacts, and Runs"]
+  Handle --> PublishedMode["Mode: published\nUsed by Canvas, Lineage, Code, Diff, Artifacts, Runs, Cost, and the default redirect"]
   StaticMode --> Boundary["StaticRouteBootstrapBoundary\nMount => publish complete only when mount already means usable"]
   PublishedMode --> RouteReadModel["Route startup read model\nExample: CanvasDraftPresentationState"]
+  PublishedMode --> Publisher["usePublishedRouteBootstrap\nPublish by explicit route registration"]
+  Publisher --> ActiveRegistration["useActiveRouteBootstrapRegistration"]
   Boundary --> Registry["routeBootstrapRegistry"]
-  RouteReadModel --> Registry
+  RouteReadModel --> Publisher
+  Publisher --> Registry
   Registry --> Root["Root.tsx\nReads active-route posture"]
 ```
 
@@ -320,19 +334,22 @@ flowchart LR
 
 Target reading:
 
-- a published route should own one explicit registration; active registration
+- a published route must own one explicit registration; active registration
   resolution is centralized through `useActiveRouteBootstrapRegistration`;
 - `initialPresentation` is the startup seed, not a reusable interstitial state
   between normal updates;
 - lifecycle reset belongs to teardown or route change, not to every
   re-derivation of route posture.
-- missing Data Router context is mapped to a typed bootstrap failure only for
-  the known router-context case; non-router runtime exceptions are rethrown
-  without remapping.
+- missing Data Router context is identified through a contained React Router
+  Data Router context seam and mapped to a typed bootstrap failure; when that
+  context is present, non-router runtime exceptions are rethrown without
+  remapping.
 - missing registration in published mode fails closed with
   `ROUTE_BOOTSTRAP_REGISTRATION_NOT_FOUND` outside test runtime.
 - bootstrap error messages are locale-resolved from runtime
-  (`navigator.language`, fallback `en`) and are not hardcoded in route hooks.
+  (`navigator.language`, then `navigator.languages[0]`, then
+  `document.documentElement.lang`, fallback `en`) and are not hardcoded in
+  route hooks.
 
 ## Canonical Startup Classification
 
@@ -340,7 +357,6 @@ Target reading:
 
 Route startup modes:
 
-- `none`: the route does not affect Raven reveal.
 - `static`: first useful interaction is already correct at mount time.
 - `published`: the route must publish a startup read model because first useful
   interaction still depends on startup data, validation, or recovery posture.
@@ -369,6 +385,7 @@ Canonical route table:
 | `dbt.artifacts`               | `/artifacts`   | `published`  | Artifact loading and import-validation states                   |
 | `monitoring.runs`             | `/runs`        | `published`  | Runs summary load and list-state outcomes                       |
 | `monitoring.run-detail`       | `/runs/:runId` | `published`  | Run-workspace load and missing/error outcomes                   |
+| `cost.dashboard`              | `/cost`        | `published`  | Cost load, error, and ready startup outcomes                    |
 | `shell.plugins`               | `/plugins`     | `static`     | Shell-only route, useful immediately after mount                |
 | `shell.admin`                 | `/admin`       | `static`     | Shell-only route, useful immediately after mount                |
 | `shell.default-core-redirect` | `/` index      | `published`  | Redirect continues startup until the target route settles       |

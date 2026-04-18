@@ -2,6 +2,7 @@ import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { RouteBootstrapRegistrationNotFoundError } from './routeBootstrapErrors';
 import type { RouteBootstrapRegistration } from './routeBootstrapPresentation';
 import { usePublishedRouteBootstrap } from './usePublishedRouteBootstrap';
 
@@ -42,6 +43,7 @@ const PUBLISHED_REGISTRATION: RouteBootstrapRegistration = {
 describe('usePublishedRouteBootstrap', () => {
   let container: HTMLDivElement;
   let root: Root;
+  const originalDocumentLang = document.documentElement.lang;
 
   function Probe({ detail }: { detail: string }): null {
     usePublishedRouteBootstrap('dbt.canvas', {
@@ -56,6 +58,7 @@ describe('usePublishedRouteBootstrap', () => {
     container = document.createElement('div');
     document.body.appendChild(container);
     root = createRoot(container);
+    document.documentElement.lang = 'es-ES';
     mockPublishRouteBootstrapPresentation.mockReset();
     mockResetRouteBootstrapPresentation.mockReset();
     mockUseActiveRouteBootstrapRegistration.mockReset();
@@ -70,9 +73,15 @@ describe('usePublishedRouteBootstrap', () => {
       root.unmount();
     });
     container.remove();
+    document.documentElement.lang = originalDocumentLang;
+    vi.unstubAllEnvs();
+    vi.restoreAllMocks();
   });
 
   it('publishes presentation updates in place and only resets on unmount', () => {
+    document.documentElement.lang = 'en';
+    vi.spyOn(window.navigator, 'language', 'get').mockReturnValue('es-ES');
+
     act(() => {
       root.render(<Probe detail="Loading canvas route data" />);
     });
@@ -82,7 +91,7 @@ describe('usePublishedRouteBootstrap', () => {
     expect(mockUseActiveRouteBootstrapRegistration).toHaveBeenCalledWith(
       'dbt.canvas',
       expect.objectContaining({
-        locale: navigator.language || 'en',
+        locale: 'es-ES',
       })
     );
 
@@ -99,5 +108,40 @@ describe('usePublishedRouteBootstrap', () => {
 
     expect(mockResetRouteBootstrapPresentation).toHaveBeenCalledTimes(1);
     expect(mockResetRouteBootstrapPresentation).toHaveBeenCalledWith(PUBLISHED_REGISTRATION);
+  });
+
+  it('fails closed with a localized typed error when a published route registration is missing', () => {
+    document.documentElement.lang = 'en';
+    vi.stubEnv('MODE', 'production');
+    vi.stubEnv('VITEST', '');
+    vi.spyOn(window.navigator, 'language', 'get').mockReturnValue('es-ES');
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    mockUseActiveRouteBootstrapRegistration.mockReturnValue(null);
+
+    let thrown: unknown;
+
+    try {
+      act(() => {
+        root.render(<Probe detail="Missing route bootstrap registration" />);
+      });
+    } catch (error) {
+      thrown = error;
+    }
+
+    expect(mockUseActiveRouteBootstrapRegistration).toHaveBeenCalledWith(
+      'dbt.canvas',
+      expect.objectContaining({
+        allowMissingDataRouterContext: false,
+        locale: 'es-ES',
+      })
+    );
+    expect(thrown).toBeInstanceOf(RouteBootstrapRegistrationNotFoundError);
+    expect(thrown).toMatchObject({
+      code: 'ROUTE_BOOTSTRAP_REGISTRATION_NOT_FOUND',
+      routeId: 'dbt.canvas',
+      message: 'No se encontro el registro de route bootstrap para route id: dbt.canvas',
+    });
+    expect(mockPublishRouteBootstrapPresentation).not.toHaveBeenCalled();
+    expect(mockResetRouteBootstrapPresentation).not.toHaveBeenCalled();
   });
 });

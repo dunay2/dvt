@@ -2,7 +2,7 @@
 title: TF-E2 Canvas Target Architecture Execution Plan 2026-04-17
 status: Draft
 owner: Product / Frontend / Architecture
-last_reviewed: 2026-04-17
+last_reviewed: 2026-04-18
 planning_type: proposal
 lane: E
 task_id: TF-E2
@@ -86,6 +86,16 @@ Rules for execution:
 - future slices must map to the bounded contexts, ports, aggregates, and
   sequences frozen in this document
 
+## Bootstrap Ownership Decision
+
+- Explicit registration ownership is a current implementation requirement for
+  every `published` route.
+- `usePublishedRouteBootstrap` must publish through one explicit registration
+  resolved by `useActiveRouteBootstrapRegistration`; publication by shared
+  active-match fallback is not an accepted implementation shape.
+- Future work may strengthen enforcement through more contract tests or review
+  gates, but it must not relax route-id-bound publication semantics.
+
 ## Execution Principles
 
 ### 1. One source of truth per concern
@@ -146,8 +156,10 @@ flowchart LR
   subgraph RouteContract["Bounded context: Route startup contract"]
     Contract["RouteBootstrapContract"]
     Registration["RouteBootstrapRegistration"]
+    ActiveResolution["ActiveRegistrationResolution\n(useActiveRouteBootstrapRegistration)"]
     Registry["RouteBootstrapRegistry"]
-    Publisher["RouteBootstrapPublisher adapter\n(usePublishedRouteBootstrap + useActiveRouteBootstrapRegistration)"]
+    Publisher["RouteBootstrapPublisher adapter\n(usePublishedRouteBootstrap)"]
+    Failures["BootstrapFailurePolicy\n(routeBootstrapErrors + routeBootstrapErrorCopy)"]
   end
 
   subgraph CanvasAuthoring["Bounded context: Canvas authoring"]
@@ -175,8 +187,11 @@ flowchart LR
   Root --> Registry
   Bootstrap --> Root
   Contract --> Registration
-  Registration --> Registry
+  ActiveResolution --> Registration
+  Publisher --> ActiveResolution
   Publisher --> Registry
+  ActiveResolution --> Failures
+  Publisher --> Failures
   DraftSession --> DraftScope
   DraftScope --> Presentation
   Presentation --> Publisher
@@ -192,14 +207,14 @@ flowchart LR
 
 ### Context responsibilities
 
-| Context                       | Owns                                                                    | Must not own                                           |
-| ----------------------------- | ----------------------------------------------------------------------- | ------------------------------------------------------ |
-| `Shell startup`               | Raven reveal, step progress, active-route consumption                   | Canvas domain logic, draft reconciliation              |
-| `Route startup contract`      | `route.id`, startup mode, published posture lifecycle                   | graph truth, toolbar UX, route query logic             |
-| `Canvas authoring`            | draft aggregate, scope projection, command validation, recovery posture | backend persistence semantics beyond the governed port |
-| `Workspace draft persistence` | authoritative snapshot and persisted draft record                       | route-local view state                                 |
-| `Plan and run handoff`        | plan preview and run start contracts                                    | graph authoring rules                                  |
-| `Operability and telemetry`   | failure evidence, correlation, diagnosis support                        | route truth or command semantics                       |
+| Context                       | Owns                                                                            | Must not own                                           |
+| ----------------------------- | ------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| `Shell startup`               | Raven reveal, step progress, active-route consumption                           | Canvas domain logic, draft reconciliation              |
+| `Route startup contract`      | `route.id`, startup mode, published posture lifecycle, typed bootstrap failures | graph truth, toolbar UX, route query logic             |
+| `Canvas authoring`            | draft aggregate, scope projection, command validation, recovery posture         | backend persistence semantics beyond the governed port |
+| `Workspace draft persistence` | authoritative snapshot and persisted draft record                               | route-local view state                                 |
+| `Plan and run handoff`        | plan preview and run start contracts                                            | graph authoring rules                                  |
+| `Operability and telemetry`   | failure evidence, correlation, diagnosis support                                | route truth or command semantics                       |
 
 ## Composition Roots
 
@@ -274,6 +289,19 @@ These are important to the plan but are not frontend-owned aggregate roots:
 
 The target architecture keeps backend ports stable and clarifies internal ports:
 
+### Current SRP anchors for route startup contract
+
+- contract factory and types: `apps/web/src/app/bootstrap/routeBootstrapContract.ts`
+- typed registration extraction: `apps/web/src/app/bootstrap/routeBootstrapRegistration.ts`
+- publication store: `apps/web/src/app/bootstrap/routeBootstrapRegistry.ts`
+- active registration resolution:
+  `apps/web/src/app/bootstrap/useActiveRouteBootstrapRegistration.ts`
+- published-route adapter:
+  `apps/web/src/app/bootstrap/usePublishedRouteBootstrap.ts`
+- typed failure policy:
+  `apps/web/src/app/bootstrap/routeBootstrapErrors.ts` +
+  `apps/web/src/app/bootstrap/routeBootstrapErrorCopy.ts`
+
 - `WorkspaceGraphSnapshotPort` (external)
   current anchor: `IWorkspacePort.getGraph`
   target role: read canonical graph members.
@@ -290,9 +318,11 @@ The target architecture keeps backend ports stable and clarifies internal ports:
   current anchor: `routeBootstrapRegistry.ts`
   target role: shell-facing startup registry keyed by `route.id`.
 - `RouteBootstrapPublisherPort` (internal)
-  current anchor: `usePublishedRouteBootstrap.ts` plus
-  `useActiveRouteBootstrapRegistration.ts`
+  current anchor: `usePublishedRouteBootstrap.ts`
   target role: publish posture for one explicit `route.id` registration.
+- `ActiveRouteBootstrapRegistrationPort` (internal support seam)
+  current anchor: `useActiveRouteBootstrapRegistration.ts`
+  target role: resolve one typed registration for the active `route.id`.
 - `CanvasNavigationPort` (internal)
   current anchor: `useNavigate` in route code
   target role: isolate route-only handoff side effects.
@@ -320,6 +350,8 @@ Current concrete binding:
 - publication store: `routeBootstrapRegistry.ts`
 - registration contract source: `routeBootstrapRegistration.ts` and
   `routeBootstrapContract.ts`
+- failure taxonomy and copy:
+  `routeBootstrapErrors.ts` and `routeBootstrapErrorCopy.ts`
 
 ## C4 Component View
 
@@ -350,6 +382,8 @@ flowchart TB
     Session["CanvasDraftSession"]
     Scope["CanvasDraftScope"]
     Presentation["CanvasDraftPresentationModel"]
+    Publisher["usePublishedRouteBootstrap"]
+    ActiveResolution["useActiveRouteBootstrapRegistration"]
     GraphModel["Canvas graph projector"]
     Commands["Graph and execution commands"]
     ShellView["CanvasShell / Toolbar / Viewport"]
@@ -370,10 +404,13 @@ flowchart TB
   Controller --> Session
   Controller --> Scope
   Controller --> Presentation
+  Controller --> Publisher
   Controller --> GraphModel
   Controller --> Commands
   Controller --> ShellView
-  Presentation --> Registry
+  Presentation --> Publisher
+  Publisher --> ActiveResolution
+  Publisher --> Registry
   Session --> SnapshotPort
   Session --> DraftPort
   Commands --> PlanPort
@@ -393,6 +430,11 @@ classDiagram
     +initialPresentation: RouteBootstrapPresentation
   }
 
+  class RouteBootstrapContract {
+    +mode: RouteBootstrapMode
+    +initialPresentation: RouteBootstrapPresentation
+  }
+
   class RouteBootstrapPresentation {
     +status: RouteBootstrapStatus
     +detail: string
@@ -408,6 +450,15 @@ classDiagram
   class RouteBootstrapPublisherAdapter {
     +publish(routeId, presentation)
     +reset(routeId)
+  }
+
+  class ActiveRouteBootstrapRegistrationResolver {
+    +resolve(routeId)
+  }
+
+  class RouteBootstrapFailurePolicy {
+    +dataRouterContextMissing(locale)
+    +registrationNotFound(routeId, locale)
   }
 
   class CanvasDraftSession {
@@ -483,10 +534,13 @@ classDiagram
   CanvasDraftSession --> WorkspaceGraphSnapshot
   CanvasDraftScope --> CanvasDraftSession
   CanvasDraftPresentationModel --> CanvasDraftScope
-  CanvasDraftPresentationModel --> RouteBootstrapRegistration
+  CanvasDraftPresentationModel --> RouteBootstrapPresentation
   CanvasDraftPresentationModel --> RouteBootstrapPublisherAdapter
-  RouteBootstrapPublisherAdapter --> RouteBootstrapRegistration
+  RouteBootstrapRegistration --> RouteBootstrapContract
+  RouteBootstrapPublisherAdapter --> ActiveRouteBootstrapRegistrationResolver
+  ActiveRouteBootstrapRegistrationResolver --> RouteBootstrapRegistration
   RouteBootstrapPublisherAdapter --> RouteBootstrapRegistry
+  RouteBootstrapPublisherAdapter --> RouteBootstrapFailurePolicy
   RouteBootstrapRegistration --> RouteBootstrapPresentation
 ```
 
@@ -500,25 +554,35 @@ sequenceDiagram
   participant Root as Root.tsx
   participant Canvas as Canvas.tsx
   participant Presentation as CanvasDraftPresentationModel
-  participant Publisher as RouteBootstrapPublisher adapter (usePublishedRouteBootstrap + useActiveRouteBootstrapRegistration)
+  participant Publisher as RouteBootstrapPublisher adapter (usePublishedRouteBootstrap)
+  participant ActiveResolution as ActiveRegistrationResolution (useActiveRouteBootstrapRegistration)
   participant Registry as RouteBootstrapRegistry
 
   Router->>Root: resolve active route id + handle
   Root->>Registry: read(activeRouteId)
   Root->>Canvas: mount route
   Canvas->>Presentation: derive route posture
-  Presentation->>Publisher: publish(pending or blocked)
+  Presentation->>Publisher: publish next posture
+  Publisher->>ActiveResolution: resolve(routeId)
+  ActiveResolution-->>Publisher: registration
   Publisher->>Registry: publish(routeId, presentation)
   Registry-->>Root: notify updated posture
   alt route operable
     Presentation->>Publisher: publish(complete)
+    Publisher->>ActiveResolution: resolve(routeId)
+    ActiveResolution-->>Publisher: registration
     Publisher->>Registry: publish(routeId, complete)
     Registry-->>Root: notify complete
     Root->>Root: reveal shell
   else route blocked or error
     Presentation->>Publisher: publish(blocked or error)
+    Publisher->>ActiveResolution: resolve(routeId)
+    ActiveResolution-->>Publisher: registration
     Publisher->>Registry: publish(routeId, blocked or error)
     Root->>Root: keep Raven visible
+  end
+  opt registration missing outside test runtime
+    Publisher-->>Canvas: typed bootstrap failure
   end
 ```
 

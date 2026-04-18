@@ -6,7 +6,7 @@ task_id: TF-E2
 mode: Slim
 status: Completed
 author: AI (Codex)
-last_reviewed: 2026-04-17
+last_reviewed: 2026-04-18
 ---
 
 # TF-E2 route bootstrap SRP refactor closeout
@@ -100,30 +100,47 @@ remain part of the accepted outcome:
   - `RouteBootstrapRegistrationNotFoundError`
   - shared base `RouteBootstrapError` with stable `code` values.
 - runtime i18n wiring for bootstrap errors:
-  - locale resolved from runtime through `detectRouteBootstrapLocale()`
-  - copy resolved via `routeBootstrapErrorCopy.ts` using `resolveString(...)`.
-- selective exception remapping in
+  - locale resolved from runtime through
+    `navigator.language -> navigator.languages[0] -> document.documentElement.lang -> en`
+  - copy resolved via `routeBootstrapErrorCopy.ts` with Spanish bootstrap-local
+    overrides while English continues through fallback copy resolution.
+- structural Data Router detection in
   `useActiveRouteBootstrapRegistration.ts`:
-  - only missing Data Router context errors are mapped to typed bootstrap error
-  - non-router runtime exceptions are rethrown without masking.
+  - missing Data Router context is identified via React Router Data Router
+    contexts instead of string-matching upstream exception text
+  - the unstable React Router context dependency is isolated in
+    `routeBootstrapDataRouterContext.ts`
+  - `useMatches()` stays on a stable hook path and non-router runtime
+    exceptions are rethrown without masking when Data Router context is
+    present.
 - production/runtime invariant in `usePublishedRouteBootstrap.ts`:
   missing explicit registration for a published route throws typed
   `RouteBootstrapRegistrationNotFoundError` (test runtime keeps the isolated
   fallback behavior).
+- default redirect route hardening:
+  - `shell.default-core-redirect` now publishes explicit pending posture
+    through `usePublishedRouteBootstrap` while mounted instead of relying only
+    on handle seed metadata.
+  - the redirect remains a transient `published` route and hands startup
+    ownership to the navigated target route after navigation resolves.
 
 Affected implementation paths:
 
 - `apps/web/src/app/bootstrap/routeBootstrapErrors.ts`
 - `apps/web/src/app/bootstrap/routeBootstrapErrorCopy.ts`
+- `apps/web/src/app/bootstrap/routeBootstrapDataRouterContext.ts`
 - `apps/web/src/app/bootstrap/useActiveRouteBootstrapRegistration.ts`
 - `apps/web/src/app/bootstrap/usePublishedRouteBootstrap.ts`
+- `apps/web/src/app/routes.ts`
+- `apps/web/src/app/routes.test.tsx`
 - `apps/web/src/app/bootstrap/useActiveRouteBootstrapRegistration.test.tsx`
 - `apps/web/src/app/bootstrap/usePublishedRouteBootstrap.test.tsx`
+- `apps/web/src/app/bootstrap/routeBootstrapErrorCopy.test.ts`
 
 ## Validation
 
 - `pnpm --filter @dvt/web exec vitest run src/app/bootstrap/routeBootstrapPresentation.test.ts src/app/Root.test.tsx src/app/views/Canvas.test.tsx src/app/routes.test.tsx` - PASS
-- `pnpm --filter @dvt/web exec vitest run src/app/bootstrap/useActiveRouteBootstrapRegistration.test.tsx src/app/bootstrap/usePublishedRouteBootstrap.test.tsx` - PASS
+- `pnpm --filter @dvt/web exec vitest run src/app/bootstrap/routeBootstrapErrorCopy.test.ts src/app/bootstrap/useActiveRouteBootstrapRegistration.test.tsx src/app/bootstrap/usePublishedRouteBootstrap.test.tsx` - PASS
 - `pnpm --filter @dvt/web typecheck` - PASS
 - `pnpm verify:prepush` - PASS
 

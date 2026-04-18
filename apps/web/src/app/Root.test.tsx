@@ -70,6 +70,12 @@ function createRootShellNode(
       readyDetail: 'Plugins is ready',
     }),
   };
+  const adminRouteHandle = {
+    routeBootstrap: createStaticRouteBootstrapHandle({
+      pendingDetail: 'Preparing Admin route',
+      readyDetail: 'Admin is ready',
+    }),
+  };
   const runsRouteHandle = {
     routeBootstrap: createPublishedRouteBootstrapHandle({
       pendingDetail: 'Preparing Runs route',
@@ -114,6 +120,18 @@ function createRootShellNode(
                 registration={getRouteBootstrapRegistration('test.plugins', pluginsRouteHandle)}
               >
                 <div>Plugins route</div>
+              </StaticRouteBootstrapBoundary>
+            ),
+          },
+          {
+            id: 'shell.admin',
+            path: 'admin',
+            handle: adminRouteHandle,
+            element: (
+              <StaticRouteBootstrapBoundary
+                registration={getRouteBootstrapRegistration('shell.admin', adminRouteHandle)}
+              >
+                <div>Admin route</div>
               </StaticRouteBootstrapBoundary>
             ),
           },
@@ -429,6 +447,28 @@ describe('RootShell platform health UX', () => {
           'route',
           'complete',
           'Plugins is ready'
+        );
+      });
+      await waitFor(() => {
+        expect(bootstrapScreenMocks.completeBootstrapScreen).toHaveBeenCalled();
+      });
+    } finally {
+      await mounted.cleanup();
+    }
+  });
+
+  it('completes Raven startup for the shell admin static route through its route contract', async () => {
+    const capability: PlatformHealthCapabilityApi = {
+      loadSnapshot: vi.fn().mockResolvedValue(createPlatformHealthSnapshot()),
+    };
+    const mounted = await withTestQueryClient(createRootShellNode(capability, ['/admin']));
+
+    try {
+      await waitFor(() => {
+        expect(bootstrapScreenMocks.setBootstrapStepStatus).toHaveBeenCalledWith(
+          'route',
+          'complete',
+          'Admin is ready'
         );
       });
       await waitFor(() => {

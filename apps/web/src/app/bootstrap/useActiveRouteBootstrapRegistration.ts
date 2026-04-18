@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { useMatches } from 'react-router';
 
 import { detectRouteBootstrapLocale } from './routeBootstrapErrorCopy';
+import { useHasDataRouterContext } from './routeBootstrapDataRouterContext';
 import { RouteBootstrapDataRouterContextError } from './routeBootstrapErrors';
 import { getRouteBootstrapRegistration } from './routeBootstrapRegistration';
 
@@ -10,21 +11,16 @@ type UseActiveRouteBootstrapRegistrationOptions = {
   readonly locale?: string;
 };
 
-function isDataRouterContextMissingError(cause: unknown): boolean {
-  return (
-    cause instanceof Error &&
-    cause.message.includes('useMatches must be used within a data router')
-  );
-}
-
 function useMatchesSafely({
   allowMissingDataRouterContext,
   locale,
 }: Required<UseActiveRouteBootstrapRegistrationOptions>) {
+  const hasDataRouterContext = useHasDataRouterContext();
+
   try {
     return useMatches();
   } catch (cause) {
-    if (!isDataRouterContextMissingError(cause)) {
+    if (hasDataRouterContext) {
       throw cause;
     }
 
