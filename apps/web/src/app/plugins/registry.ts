@@ -2,6 +2,7 @@ import React from 'react';
 import { DollarSign } from 'lucide-react';
 
 import type { PluginPortMap } from './contracts/ConnectionRules';
+import { COST_ROUTE_BOOTSTRAP_HANDLE } from '../views/cost/costRouteBootstrap';
 
 import type { CanonicalNode, CanonicalRun, PluginNodeKind } from '../types/canonical';
 import type { NodeCostData } from './contracts/PluginServices';
@@ -144,6 +145,9 @@ const costContributions: PluginContributions = {
       id: 'cost.dashboard',
       path: '/cost',
       component: React.lazy(() => import('../views/CostView')),
+      handle: {
+        routeBootstrap: COST_ROUTE_BOOTSTRAP_HANDLE,
+      },
       nav: {
         label: 'Cost',
         icon: DollarSign,

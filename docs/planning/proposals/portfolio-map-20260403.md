@@ -38,6 +38,7 @@ planning_type: proposal
 ## Mandatory (continued)
 
 - [F-04 Frontend Data Boundary Hexagonal Convergence](./mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md)
+- [TF-E2 Canvas Target Architecture Execution Plan 2026-04-17](./mandatory/frontend-and-ux/tf-e2-canvas-target-architecture-execution-plan-20260417.md)
 
 ## Nice To Have
 

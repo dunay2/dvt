@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
-import { Outlet, useLocation } from 'react-router';
+import { useEffect, useSyncExternalStore } from 'react';
+import { Outlet } from 'react-router';
 import {
   buildShellHealthPresentationModel,
   type PlatformHealthCapabilityApi,
@@ -15,6 +15,13 @@ import {
   completeBootstrapScreen,
   setBootstrapStepStatus,
 } from './bootstrap/appBootstrapScreen';
+import {
+  getPublishedRouteBootstrapPresentation,
+  subscribeRouteBootstrapPresentations,
+} from './bootstrap/routeBootstrapRegistry';
+import { detectRouteBootstrapLocale } from './bootstrap/routeBootstrapErrorCopy';
+import { RouteBootstrapActiveRegistrationMissingError } from './bootstrap/routeBootstrapErrors';
+import { useActiveRouteBootstrapRegistration } from './bootstrap/useActiveRouteBootstrapRegistration';
 import { useCapabilitiesQuery } from './queries/useCapabilitiesQuery';
 import { useUiLayoutStore } from './stores/uiLayoutStore';
 import '@xyflow/react/dist/style.css';
@@ -24,7 +31,6 @@ type RootShellProps = {
 };
 
 export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
-  const location = useLocation();
   const focusMode = useUiLayoutStore((state) => state.focusMode);
   const consolePanelHeight = useUiLayoutStore((state) => state.consolePanelHeight);
   const consolePanelVisible = useUiLayoutStore((state) => state.consolePanelVisible);
@@ -42,6 +48,24 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
     dataUpdatedAt: platformHealth.dataUpdatedAt,
     errorUpdatedAt: platformHealth.errorUpdatedAt,
   });
+  const bootstrapLocale = detectRouteBootstrapLocale();
+  const activeRouteBootstrapRegistration = useActiveRouteBootstrapRegistration(undefined, {
+    locale: bootstrapLocale,
+  });
+  const getRouteBootstrapSnapshot = () => {
+    if (!activeRouteBootstrapRegistration) {
+      throw new RouteBootstrapActiveRegistrationMissingError({
+        locale: bootstrapLocale,
+      });
+    }
+
+    return getPublishedRouteBootstrapPresentation(activeRouteBootstrapRegistration);
+  };
+  const routeBootstrapPresentation = useSyncExternalStore(
+    subscribeRouteBootstrapPresentations,
+    getRouteBootstrapSnapshot,
+    getRouteBootstrapSnapshot
+  );
   const isInitialCapabilitiesBootstrapPending =
     capabilitiesQuery.isPending && !capabilitiesQuery.data && !capabilitiesQuery.isError;
 
@@ -110,24 +134,28 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
   ]);
 
   useEffect(() => {
-    if (location.pathname.startsWith('/canvas')) {
-      setBootstrapStepStatus('route', 'complete', 'Canvas workbench route is ready');
-      return;
-    }
-
-    setBootstrapStepStatus('route', 'complete', 'Initial route is ready');
+    setBootstrapStepStatus(
+      'route',
+      routeBootstrapPresentation.status,
+      routeBootstrapPresentation.detail
+    );
   }, [
-    location.pathname,
+    routeBootstrapPresentation.detail,
+    routeBootstrapPresentation.status,
   ]);
 
   useEffect(() => {
+    if (!routeBootstrapPresentation.canComplete) {
+      return;
+    }
+
     completeBootstrapScreen();
   }, [
     capabilitiesQuery.isError,
     capabilitiesQuery.isPending,
     capabilitiesQuery.data,
+    routeBootstrapPresentation.canComplete,
     isInitialCapabilitiesBootstrapPending,
-    location.pathname,
     platformHealth.isError,
     shellHealth.connectionDetail,
     shellHealth.connectionState,

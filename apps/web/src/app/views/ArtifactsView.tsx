@@ -1,5 +1,6 @@
 import { FileText } from 'lucide-react';
 
+import { usePublishedRouteBootstrap } from '../bootstrap/usePublishedRouteBootstrap';
 import { ViewHeader } from '../components/domain';
 import {
   RouteWorkbenchFrame,
@@ -18,6 +19,10 @@ import {
 import { ArtifactsInfoCard } from './artifacts/ArtifactsInfoCard';
 import { ArtifactsList } from './artifacts/ArtifactsList';
 import { getArtifactsWorkbenchState } from './artifacts/artifactsWorkbenchStateModel';
+import {
+  ARTIFACTS_ROUTE_ID,
+  deriveArtifactsRouteBootstrapPresentation,
+} from './artifacts/artifactsRouteBootstrap';
 import { artifactsViewCopy } from './artifacts/copy';
 import { ManifestImportPanel } from './artifacts/ManifestImportPanel';
 import { useArtifactsViewModel } from './artifacts/useArtifactsViewModel';
@@ -35,6 +40,10 @@ export default function ArtifactsView() {
     isLoadingWorkspaceArtifacts: isLoading,
     workspaceArtifactsErrorMessage: errorMessage,
   });
+  usePublishedRouteBootstrap(
+    ARTIFACTS_ROUTE_ID,
+    deriveArtifactsRouteBootstrapPresentation(workbenchState)
+  );
 
   function renderRouteBody() {
     switch (workbenchState.kind) {

@@ -1,11 +1,9 @@
 import { useEffect } from 'react';
 import { ReactFlowProvider } from '@xyflow/react';
 
+import { usePublishedRouteBootstrap } from '../bootstrap/usePublishedRouteBootstrap';
 import { ConfirmEdgeModal, PlanPreviewModal } from '../components/Modals';
-import {
-  completeBootstrapScreen,
-  setBootstrapStepStatus,
-} from '../bootstrap/appBootstrapScreen';
+import { Button } from '../components/ui/button';
 import {
   CanvasBlockedStateView,
   CanvasEmptyStateView,
@@ -19,6 +17,13 @@ import {
   getCanvasWorkbenchState,
 } from './canvas/canvasWorkbenchStateModel';
 import { canvasViewCopy } from './canvas/copy';
+import {
+  CANVAS_ROUTE_ID,
+  deriveCanvasDraftPresentationState,
+  publishCanvasDraftPresentationState,
+  resetCanvasDraftPresentationState,
+  toRouteBootstrapPresentation,
+} from './canvas/canvasDraftPresentationState';
 import { useCanvasController } from './canvas/useCanvasController';
 
 function CanvasContent() {
@@ -29,7 +34,10 @@ function CanvasContent() {
     graphErrorMessage: controller.graphErrorMessage,
   });
   const shouldBlockCanvasInApiMode = controller.dataSourceMode === 'api' && !controller.backendReady;
-  const shouldDisableCanvasInteractions = shouldBlockCanvasInApiMode || controller.isBackendCheckPending;
+  const shouldDisableCanvasInteractions =
+    shouldBlockCanvasInApiMode ||
+    controller.isBackendCheckPending ||
+    controller.draftRecoveryReason != null;
   const isCanvasRuntimeBlocked = shouldDisableCanvasInteractions;
   const effectiveUserPermissions = shouldDisableCanvasInteractions
     ? {
@@ -42,83 +50,132 @@ function CanvasContent() {
   const readOnlyState = isCanvasRuntimeBlocked
     ? null
     : getCanvasReadOnlyState(effectiveUserPermissions);
-  const isCanvasStartupPending =
-    controller.isBackendCheckPending || workbenchState.kind === 'loading';
   const workbenchErrorMessage =
     workbenchState.kind === 'error' ? workbenchState.message : null;
+  const presentationState = deriveCanvasDraftPresentationState({
+    isBackendCheckPending: controller.isBackendCheckPending,
+    shouldBlockCanvasInApiMode,
+    backendBlockMessage: controller.backendBlockMessage,
+    workbenchState,
+    recoveryReason: controller.draftRecoveryReason,
+    draftToolbarState: controller.draftToolbarState,
+  });
+  const showRecoveryBanner = presentationState.routeState === 'recovery';
+  const staleDraftBanner =
+    showRecoveryBanner && controller.draftRecoveryReason === 'stale_conflict' ? (
+    <div
+      data-slot="canvas-stale-draft-state"
+      className="border-b border-amber-500/40 bg-amber-950/40 px-4 py-3 text-sm text-amber-100"
+    >
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <p className="font-semibold">{canvasViewCopy.staleDraftTitle}</p>
+          <p className="text-amber-200">{canvasViewCopy.staleDraftMessage}</p>
+        </div>
+        <Button size="sm" variant="outline" onClick={controller.reloadLatestDraft}>
+          Reload latest draft
+        </Button>
+      </div>
+    </div>
+  ) : null;
+  const missingRemoteDraftBanner =
+    showRecoveryBanner && controller.draftRecoveryReason === 'missing_remote' ? (
+    <div
+      data-slot="canvas-missing-remote-draft-state"
+      className="border-b border-rose-500/40 bg-rose-950/40 px-4 py-3 text-sm text-rose-100"
+    >
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <p className="font-semibold">{canvasViewCopy.missingRemoteDraftTitle}</p>
+          <p className="text-rose-200">{canvasViewCopy.missingRemoteDraftMessage}</p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button size="sm" variant="outline" onClick={controller.reloadLatestDraft}>
+            {canvasViewCopy.reloadLatestDraftLabel}
+          </Button>
+          <Button size="sm" variant="outline" onClick={controller.adoptCurrentWorkspaceSnapshot}>
+            {canvasViewCopy.adoptCurrentWorkspaceSnapshotLabel}
+          </Button>
+        </div>
+      </div>
+    </div>
+  ) : null;
+  const draftProjectionGapBanner =
+    showRecoveryBanner && controller.draftRecoveryReason === 'projection_gap' ? (
+      <div
+        data-slot="canvas-draft-projection-gap-state"
+        className="border-b border-sky-500/40 bg-sky-950/40 px-4 py-3 text-sm text-sky-100"
+      >
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="font-semibold">{canvasViewCopy.draftProjectionGapTitle}</p>
+            <p className="text-sky-200">{canvasViewCopy.draftProjectionGapMessage}</p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button size="sm" variant="outline" onClick={controller.reloadLatestDraft}>
+              {canvasViewCopy.reloadLatestDraftLabel}
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={controller.adoptCurrentWorkspaceSnapshot}
+            >
+              {canvasViewCopy.adoptCurrentWorkspaceSnapshotLabel}
+            </Button>
+          </div>
+        </div>
+      </div>
+    ) : null;
+
+  usePublishedRouteBootstrap(
+    CANVAS_ROUTE_ID,
+    toRouteBootstrapPresentation(presentationState)
+  );
 
   useEffect(() => {
-    if (isCanvasStartupPending) {
-      setBootstrapStepStatus(
-        'route',
-        'pending',
-        controller.isBackendCheckPending
-          ? 'Checking backend readiness for canvas'
-          : 'Loading workspace graph for canvas'
-      );
-      return;
-    }
-
-    if (workbenchState.kind === 'error') {
-      setBootstrapStepStatus(
-        'route',
-        'error',
-        workbenchErrorMessage || canvasViewCopy.routeErrorFallbackMessage
-      );
-      return;
-    }
-
-    if (shouldBlockCanvasInApiMode) {
-      setBootstrapStepStatus(
-        'route',
-        'blocked',
-        controller.backendBlockMessage ?? canvasViewCopy.backendBlockedFallbackMessage
-      );
-      return;
-    }
-
-    setBootstrapStepStatus(
-      'route',
-      'complete',
-      workbenchState.kind === 'empty' ? 'Canvas is ready with no graph content yet' : 'Canvas is ready'
-    );
-    completeBootstrapScreen();
+    publishCanvasDraftPresentationState(presentationState);
   }, [
-    controller.backendBlockMessage,
-    controller.isBackendCheckPending,
-    isCanvasStartupPending,
-    shouldBlockCanvasInApiMode,
-    workbenchErrorMessage,
-    workbenchState.kind,
+    presentationState.bootstrapDetail,
+    presentationState.bootstrapStatus,
+    presentationState.canCompleteBootstrap,
+    presentationState.draftToolbarState.label,
+    presentationState.draftToolbarState.showReloadAction,
+    presentationState.draftToolbarState.tone,
+    presentationState.recoveryReason,
+    presentationState.routeState,
   ]);
 
+  useEffect(() => {
+    return () => {
+      resetCanvasDraftPresentationState();
+    };
+  }, []);
+
   function renderCenterSurface() {
-    if (controller.dataSourceMode === 'api' && controller.isBackendCheckPending) {
-      return (
-        <CanvasLoadingStateView
-          title={canvasViewCopy.backendLoadingTitle}
-          message={canvasViewCopy.backendLoadingMessage}
-        />
-      );
-    }
-
-    if (shouldBlockCanvasInApiMode) {
-      return (
-        <CanvasBlockedStateView
-          message={controller.backendBlockMessage ?? canvasViewCopy.backendBlockedFallbackMessage}
-        />
-      );
-    }
-
-    switch (workbenchState.kind) {
-      case 'loading':
-        return <CanvasLoadingStateView />;
-      case 'error':
+    switch (presentationState.routeState) {
+      case 'loading_backend':
         return (
-          <CanvasErrorStateView
-            message={workbenchState.message || canvasViewCopy.routeErrorFallbackMessage}
+          <CanvasLoadingStateView
+            title={canvasViewCopy.backendLoadingTitle}
+            message={canvasViewCopy.backendLoadingMessage}
           />
         );
+      case 'blocked_backend':
+        return (
+          <CanvasBlockedStateView
+            message={controller.backendBlockMessage ?? canvasViewCopy.backendBlockedFallbackMessage}
+          />
+        );
+      case 'loading_graph':
+        return <CanvasLoadingStateView />;
+      case 'error_graph':
+        return (
+          <CanvasErrorStateView
+            message={workbenchErrorMessage || canvasViewCopy.routeErrorFallbackMessage}
+          />
+        );
+      case 'recovery':
+        return undefined;
       case 'empty':
         return (
           <CanvasEmptyStateView
@@ -172,12 +229,14 @@ function CanvasContent() {
         onToggleCostOverlay={controller.handleToggleCostOverlay}
         onToggleImpact={controller.toggleImpactOverlay}
         onToggleColumns={controller.toggleColumnLevelLineage}
+        onReloadLatestDraft={controller.reloadLatestDraft}
         onPlan={() => {
           void controller.handlePlan();
         }}
         onRun={() => {
           void controller.handleStartRun();
         }}
+        draftToolbarState={presentationState.draftToolbarState}
         canStartRun={controller.canStartRun}
         planStatusSummary={controller.planStatusSummary}
         exclusiveOverlayMode={controller.exclusiveOverlayMode}
@@ -186,7 +245,14 @@ function CanvasContent() {
         columnLevelLineageEnabled={controller.columnLevelLineageEnabled}
         transformationValidation={controller.transformationValidation}
         centerSurface={renderCenterSurface()}
-        readOnlyBanner={<CanvasReadOnlyBannerView state={readOnlyState} />}
+        readOnlyBanner={
+          <>
+            {staleDraftBanner}
+            {draftProjectionGapBanner}
+            {missingRemoteDraftBanner}
+            <CanvasReadOnlyBannerView state={readOnlyState} />
+          </>
+        }
       />
 
       <PlanPreviewModal

@@ -1,6 +1,11 @@
 import React from 'react';
 import { FileCode2, FileText, GitCompare, GitGraph, LayoutDashboard } from 'lucide-react';
 
+import { ARTIFACTS_ROUTE_BOOTSTRAP_HANDLE } from '../../views/artifacts/artifactsRouteBootstrap';
+import { CODE_ROUTE_BOOTSTRAP_HANDLE } from '../../views/code/codeRouteBootstrap';
+import { DIFF_ROUTE_BOOTSTRAP_HANDLE } from '../../views/diff/diffRouteBootstrap';
+import { LINEAGE_ROUTE_BOOTSTRAP_HANDLE } from '../../views/lineage/lineageRouteBootstrap';
+import { CANVAS_ROUTE_BOOTSTRAP_HANDLE } from '../../views/canvas/canvasDraftPresentationState';
 import type { PluginContributions } from '../registry';
 import { DBT_NODE_KINDS } from '../nodeTypeCatalog.dbt';
 import { DbtNodeRenderer, dbtInspectorPanels, mapRunToCanonical } from './DbtNodeRenderer';
@@ -39,6 +44,9 @@ export const dbtContributions: PluginContributions = {
       id: 'dbt.canvas',
       path: '/canvas',
       component: React.lazy(() => import('../../views/Canvas')),
+      handle: {
+        routeBootstrap: CANVAS_ROUTE_BOOTSTRAP_HANDLE,
+      },
       nav: {
         label: 'Canvas',
         icon: LayoutDashboard,
@@ -51,6 +59,9 @@ export const dbtContributions: PluginContributions = {
       id: 'dbt.lineage',
       path: '/lineage',
       component: React.lazy(() => import('../../views/LineageView')),
+      handle: {
+        routeBootstrap: LINEAGE_ROUTE_BOOTSTRAP_HANDLE,
+      },
       nav: {
         label: 'Lineage',
         icon: GitGraph,
@@ -63,6 +74,9 @@ export const dbtContributions: PluginContributions = {
       id: 'dbt.code',
       path: '/code',
       component: React.lazy(() => import('../../views/CodeView')),
+      handle: {
+        routeBootstrap: CODE_ROUTE_BOOTSTRAP_HANDLE,
+      },
       nav: {
         label: 'Code',
         icon: FileCode2,
@@ -75,6 +89,9 @@ export const dbtContributions: PluginContributions = {
       id: 'dbt.diff',
       path: '/diff',
       component: React.lazy(() => import('../../views/DiffView')),
+      handle: {
+        routeBootstrap: DIFF_ROUTE_BOOTSTRAP_HANDLE,
+      },
       nav: {
         label: 'Diff',
         icon: GitCompare,
@@ -87,6 +104,9 @@ export const dbtContributions: PluginContributions = {
       id: 'dbt.artifacts',
       path: '/artifacts',
       component: React.lazy(() => import('../../views/ArtifactsView')),
+      handle: {
+        routeBootstrap: ARTIFACTS_ROUTE_BOOTSTRAP_HANDLE,
+      },
       nav: {
         label: 'Artifacts',
         icon: FileText,

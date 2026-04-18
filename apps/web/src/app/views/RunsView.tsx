@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useParams } from 'react-router';
 
+import { usePublishedRouteBootstrap } from '../bootstrap/usePublishedRouteBootstrap';
 import type { RunWorkspaceViewModel } from '../services/runs/runWorkspaceFacade';
 import {
   RunDetailErrorState,
@@ -14,6 +15,11 @@ import {
 import { useExecutionStore } from '../stores/executionStore';
 import type { Run } from '../types/dbt';
 import { useRunWorkspace } from './runs/useRunWorkspace';
+import {
+  deriveRunsRouteBootstrapPresentation,
+  RUN_DETAIL_ROUTE_ID,
+  RUNS_ROUTE_ID,
+} from './runs/runsRouteBootstrap';
 import { buildRunsWorkbenchState } from './runs/runWorkbenchStateModel';
 
 function toFocusedRunModel(workspace: RunWorkspaceViewModel): Run {
@@ -82,6 +88,10 @@ export default function RunsView() {
     workspaceError,
     workspaceErrorMessage,
   });
+  usePublishedRouteBootstrap(
+    runId ? RUN_DETAIL_ROUTE_ID : RUNS_ROUTE_ID,
+    deriveRunsRouteBootstrapPresentation(state)
+  );
 
   switch (state.kind) {
     case 'runs-error':

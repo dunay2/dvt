@@ -116,6 +116,79 @@ describe('workspaceService source import', () => {
     expect(secondAfter.nodes.some((node) => node.id === 'src_support_tickets')).toBe(true);
   });
 
+  it('persists graph draft revisions with compare-and-swap semantics', async () => {
+    const service = createWorkspaceService('mock');
+
+    const firstSave = await service.saveGraphDraft({
+      expectedRevision: null,
+      idempotencyKey: 'idem-1',
+      draft: {
+        nodeIds: ['node_1'],
+        nodePositions: { node_1: { x: 10, y: 20 } },
+        edges: [],
+      },
+    });
+    expect(firstSave.outcome).toBe('saved');
+
+    if (firstSave.outcome !== 'saved') {
+      throw new Error('expected saved outcome');
+    }
+
+    const conflictSave = await service.saveGraphDraft({
+      expectedRevision: null,
+      idempotencyKey: 'idem-2',
+      draft: {
+        nodeIds: ['node_1'],
+        nodePositions: { node_1: { x: 99, y: 88 } },
+        edges: [],
+      },
+    });
+
+    expect(conflictSave).toEqual({
+      outcome: 'conflict',
+      current: expect.objectContaining({
+        revision: firstSave.record.revision,
+      }),
+    });
+
+    const currentDraft = await service.getGraphDraft();
+    expect(currentDraft).not.toBeNull();
+    expect(currentDraft?.draft.nodePositions.node_1).toEqual({ x: 10, y: 20 });
+  });
+
+  it('deduplicates graph draft retries by idempotency key', async () => {
+    const service = createWorkspaceService('mock');
+
+    const firstAttempt = await service.saveGraphDraft({
+      expectedRevision: null,
+      idempotencyKey: 'idem-retry',
+      draft: {
+        nodeIds: ['node_1'],
+        nodePositions: { node_1: { x: 20, y: 30 } },
+        edges: [],
+      },
+    });
+    const secondAttempt = await service.saveGraphDraft({
+      expectedRevision: null,
+      idempotencyKey: 'idem-retry',
+      draft: {
+        nodeIds: ['node_1'],
+        nodePositions: { node_1: { x: 999, y: 999 } },
+        edges: [],
+      },
+    });
+
+    expect(secondAttempt).toEqual(firstAttempt);
+    if (firstAttempt.outcome !== 'saved') {
+      throw new Error('expected saved outcome');
+    }
+    expect(secondAttempt.outcome).toBe('saved');
+    if (secondAttempt.outcome !== 'saved') {
+      throw new Error('expected saved outcome');
+    }
+    expect(secondAttempt.record.revision).toBe(firstAttempt.record.revision);
+  });
+
   it('keeps file-content edits local to each default mock service instance', async () => {
     const firstService = createWorkspaceService('mock');
     const secondService = createWorkspaceService('mock');

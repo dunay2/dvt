@@ -1,9 +1,7 @@
-import { addEdge, type Connection, type Edge, type Node, type ReactFlowProps } from '@xyflow/react';
+import { type Connection, type Edge, type Node, type ReactFlowProps } from '@xyflow/react';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
-import { evaluateConnection } from '../../plugins/contracts/ConnectionRules';
 import { getPluginPortMap } from '../../plugins/registry';
-import { resolveCanvasEdgeType } from '../../plugins/nodeTypeRegistry';
 import {
   CANONICAL_NODE_DRAG_MIME_TYPE,
   type CanonicalNode,
@@ -13,12 +11,13 @@ import {
 } from '../../types/canonical';
 import { getLayoutedElements } from './canvasGraphUtils';
 import {
-  createCanvasEdgeFromConnection,
-  mapDroppedCanonicalNodeToCanvasNode,
-} from './canvasNodeMapper';
+  confirmConnection,
+  dropCanonicalNode,
+  proposeConnection,
+  removeEdgesForNode,
+  removeNodeFromGraph,
+} from './canvasGraphAggregate';
 import { canvasViewCopy } from './copy';
-import { guardTransformationAuthoringNode } from './transformationAuthoringGuard';
-import { guardTransformationConnection } from './transformationConnectionGuard';
 import type {
   ConfirmEdgeModalState,
   UseCanvasGraphHandlersParams,
@@ -109,6 +108,9 @@ export function useCanvasGraphHandlers({
   setInspectorNode,
   toggleInspectorPanel,
   onLayoutComplete,
+  onNodeAddedToCanvas,
+  onNodeRemovedFromCanvas,
+  onVisibleEdgesChanged,
 }: UseCanvasGraphHandlersParams): UseCanvasGraphHandlersResult {
   const pendingConnectionRef = useRef<Connection | null>(null);
   const [confirmEdgeModal, setConfirmEdgeModal] = useState<ConfirmEdgeModalState>({
@@ -120,59 +122,28 @@ export function useCanvasGraphHandlers({
 
   const onConnect = useCallback<NonNullable<ReactFlowProps<Node, Edge>['onConnect']>>(
     (connection) => {
-      if (!connection.source || !connection.target) {
-        return;
-      }
-
       if (!canEditEdges) {
         toast.error(canvasViewCopy.mutationUnavailableMessage);
         return;
       }
 
-      const sourceNode = canonicalNodesById.get(connection.source);
-      const targetNode = canonicalNodesById.get(connection.target);
-      if (!sourceNode || !targetNode) {
-        return;
-      }
-
-      const transformationGuard = guardTransformationConnection({
-        sourceNode,
-        targetNode,
-        canonicalNodes: canonicalNodesById.values(),
+      const proposedConnection = proposeConnection({
+        connection,
+        canonicalNodesById,
         edges,
+        pluginPortMap,
       });
-      if (!transformationGuard.allowed) {
-        toast.error(transformationGuard.reason);
+      if (proposedConnection.outcome === 'rejected') {
+        toast.error(proposedConnection.reason);
         return;
       }
-
-      // Convert ReactFlow edges to CanonicalEdge shape for evaluateConnection
-      const canonicalEdges = edges.map((e) => ({
-        id: e.id,
-        sourceId: e.source,
-        targetId: e.target,
-        relation: 'lineage' as const,
-      }));
-
-      const result = evaluateConnection(sourceNode, targetNode, canonicalEdges, pluginPortMap);
-      if (!result.allowed) {
-        toast.error(result.reason);
-        return;
-      }
-
-      const edgeType = resolveCanvasEdgeType({
-        sourceRole: sourceNode.role,
-        targetRole: targetNode.role,
-        sourceKind: sourceNode.kind,
-        targetKind: targetNode.kind,
-      });
 
       setConfirmEdgeModal({
         open: true,
         edge: {
-          source: sourceNode.name,
-          target: targetNode.name,
-          type: edgeType,
+          source: proposedConnection.sourceNode.name,
+          target: proposedConnection.targetNode.name,
+          type: proposedConnection.edgeType,
         },
       });
       pendingConnectionRef.current = connection;
@@ -190,21 +161,33 @@ export function useCanvasGraphHandlers({
 
     const connection = pendingConnectionRef.current;
     if (connection?.source && connection.target) {
-      setEdges((existingEdges) =>
-        addEdge(
-          createCanvasEdgeFromConnection({
-            source: connection.source,
-            target: connection.target,
-          }),
-          existingEdges
-        )
-      );
-      toast.success('Dependency added');
+      setEdges((existingEdges) => {
+        const edgeConfirmation = confirmConnection({
+          connection,
+          canonicalNodesById,
+          edges: existingEdges,
+          pluginPortMap,
+        });
+        if (edgeConfirmation.outcome === 'rejected') {
+          toast.error(edgeConfirmation.reason);
+          return existingEdges;
+        }
+
+        const nextEdges = edgeConfirmation.nextEdges;
+        onVisibleEdgesChanged?.(
+          nextEdges.map((edge) => ({
+            sourceId: edge.source,
+            targetId: edge.target,
+          }))
+        );
+        toast.success('Dependency added');
+        return nextEdges;
+      });
     }
 
     pendingConnectionRef.current = null;
     setConfirmEdgeModal({ open: false, edge: null });
-  }, [canEditEdges, setEdges]);
+  }, [canEditEdges, canonicalNodesById, onVisibleEdgesChanged, pluginPortMap, setEdges]);
 
   const handleInspectNode = useCallback(
     (nodeId: string) => {
@@ -269,47 +252,36 @@ export function useCanvasGraphHandlers({
         y: event.clientY - reactFlowBounds.top - 40,
       };
 
-      const newNode = mapDroppedCanonicalNodeToCanvasNode(
-        canonicalNode,
-        position,
-        columnLevelLineageEnabled
-      );
-
       setNodes((existingNodes) => {
-        if (existingNodes.find((node) => node.id === canonicalNode.id)) {
-          toast.info('Node already on canvas');
-          return existingNodes;
-        }
-
-        const transformationAuthoringModeEnabled = graphStrategy.id === 'transformation';
-        const existingRoles = existingNodes
-          .map((node) => node.data)
-          .map((data) =>
-            data && typeof data === 'object' ? (data as { role?: unknown }).role : null
-          )
-          .filter(
-            (role): role is CoreNodeRole =>
-              role === 'input' ||
-              role === 'transform' ||
-              role === 'check' ||
-              role === 'output' ||
-              role === 'control'
-          );
-        const authoringGuard = guardTransformationAuthoringNode({
-          authoringModeEnabled: transformationAuthoringModeEnabled,
-          existingRoles,
-          nextRole: canonicalNode.role,
+        const dropResult = dropCanonicalNode({
+          canonicalNode,
+          position,
+          nodes: existingNodes,
+          graphStrategy,
+          columnLevelLineageEnabled,
         });
-        if (!authoringGuard.allowed) {
-          toast.error(authoringGuard.reason);
+
+        if (dropResult.outcome === 'noop') {
+          toast.info(dropResult.reason);
+          return existingNodes;
+        }
+        if (dropResult.outcome === 'rejected') {
+          toast.error(dropResult.reason);
           return existingNodes;
         }
 
+        onNodeAddedToCanvas?.(canonicalNode.id);
         toast.success(`Added ${canonicalNode.name} to canvas`);
-        return [...existingNodes, newNode];
+        return dropResult.nextNodes;
       });
     },
-    [canEditEdges, columnLevelLineageEnabled, graphStrategy, setNodes]
+    [
+      canEditEdges,
+      columnLevelLineageEnabled,
+      graphStrategy,
+      onNodeAddedToCanvas,
+      setNodes,
+    ]
   );
 
   const handleDragOver = useCallback<React.DragEventHandler<HTMLDivElement>>((event) => {
@@ -338,23 +310,38 @@ export function useCanvasGraphHandlers({
         return;
       }
 
-      const nodeName = nodes.find((node) => node.id === nodeId)?.data?.name ?? nodeId;
-      setNodes((existingNodes) => existingNodes.filter((node) => node.id !== nodeId));
-      setEdges((existingEdges) =>
-        existingEdges.filter((edge) => edge.source !== nodeId && edge.target !== nodeId)
-      );
-      setSelectedNodes(selectedNodeIds.filter((id) => id !== nodeId));
+      setNodes((existingNodes) => {
+        const removeResult = removeNodeFromGraph(existingNodes, nodeId);
+        if (removeResult.outcome === 'noop') {
+          return existingNodes;
+        }
 
-      if (inspectorNodeId === nodeId) {
-        setInspectorNode(null);
-      }
+        setSelectedNodes(selectedNodeIds.filter((id) => id !== nodeId));
+        onNodeRemovedFromCanvas?.(nodeId);
 
-      toast.success(`Removed ${nodeName}`);
+        if (inspectorNodeId === nodeId) {
+          setInspectorNode(null);
+        }
+
+        toast.success(`Removed ${removeResult.nodeName}`);
+        return removeResult.nextNodes;
+      });
+      setEdges((existingEdges) => {
+        const nextEdges = removeEdgesForNode(existingEdges, nodeId);
+        onVisibleEdgesChanged?.(
+          nextEdges.map((edge) => ({
+            sourceId: edge.source,
+            targetId: edge.target,
+          }))
+        );
+        return nextEdges;
+      });
     },
     [
       canEditEdges,
       inspectorNodeId,
-      nodes,
+      onNodeRemovedFromCanvas,
+      onVisibleEdgesChanged,
       selectedNodeIds,
       setEdges,
       setInspectorNode,

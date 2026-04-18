@@ -5,6 +5,7 @@ import type { ImportSourcesResult } from '../../ports/workspace';
 import type { CanonicalNode } from '../../types/canonical';
 import type { CanvasPaletteId } from './canvasPalette';
 import type { TransformationGraphValidationResult } from './transformationGraphValidation';
+import type { CanvasDraftToolbarState } from './canvasDraftPresentationState';
 
 export type UserPermissions = {
   canPlan: boolean;
@@ -48,8 +49,10 @@ export type CanvasShellProps = {
   onToggleCostOverlay: () => void;
   onToggleImpact: () => void;
   onToggleColumns: () => void;
+  onReloadLatestDraft: () => void;
   onPlan: () => void;
   onRun: () => void;
+  draftToolbarState: CanvasDraftToolbarState;
   canStartRun: boolean;
   planStatusSummary: string;
   exclusiveOverlayMode: 'runtime' | 'cost';

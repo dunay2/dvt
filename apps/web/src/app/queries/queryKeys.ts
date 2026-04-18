@@ -20,6 +20,8 @@ export const queryKeys = {
   // -------------------------------------------------------------------------
   workspace: {
     graph: (workspaceLayoutKey: string) => ['workspace', 'graph', workspaceLayoutKey] as const,
+    graphDraft: (workspaceLayoutKey: string) =>
+      ['workspace', 'graph-draft', workspaceLayoutKey] as const,
     graphForView: (viewId: string) => ['workspace', 'graph', viewId] as const,
     diffChanges: () => ['workspace', 'diff-changes'] as const,
     roles: () => ['workspace', 'roles'] as const,

@@ -22,4 +22,15 @@ export const canvasViewCopy = {
     'Inspect the graph and overlays here, but planning, run start, and graph edits are disabled in this context.',
   limitedAccessTitle: 'Limited mutation access',
   readOnlyNote: 'Graph inspection and overlays remain available while mutation is gated.',
+  staleDraftTitle: 'Stale draft version',
+  staleDraftMessage:
+    'A newer draft was saved elsewhere. Reload the latest draft before continuing edits.',
+  draftProjectionGapTitle: 'Persisted draft is ahead of the current graph snapshot',
+  draftProjectionGapMessage:
+    'Canvas has paused editing because the current workspace graph cannot represent the full persisted draft yet. Reload the latest draft or adopt the current workspace snapshot before continuing.',
+  missingRemoteDraftTitle: 'Persisted draft no longer exists',
+  missingRemoteDraftMessage:
+    'Canvas has paused draft editing because the persisted draft disappeared. Adopt the current workspace snapshot before continuing.',
+  reloadLatestDraftLabel: 'Reload latest draft',
+  adoptCurrentWorkspaceSnapshotLabel: 'Adopt current workspace snapshot',
 } as const;

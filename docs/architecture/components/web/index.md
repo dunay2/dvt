@@ -27,7 +27,12 @@ out of the active tree.
   [App shell](./appshell/app-shell.md),
   [Data source service boundary](./appshell/data-source-service-boundary.md)
 - graph and authoring surfaces:
+  [Graph docs entrypoint](./graph/index.md),
   [Graph frontend architecture](./graph/graph-frontend-architecture.md),
+  [Graph route bootstrap architecture](./graph/graph-route-bootstrap-architecture.md),
+  [Graph canvas runtime model](./graph/graph-canvas-runtime-model.md),
+  [Graph sequences and state machines](./graph/graph-sequences-and-state-machines.md),
+  [Graph decision rationale and patterns](./graph/graph-decision-rationale-and-patterns.md),
   [Canvas controller current-to-target](./graph/canvas-controller-current-to-target-architecture.md)
 - runtime and run-inspection surfaces:
   [Runs architecture](./runs/dvt-runs-frontend-architecture.md),

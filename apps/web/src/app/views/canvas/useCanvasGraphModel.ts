@@ -3,7 +3,7 @@ import { useEdgesState, useNodesState, type Edge, type Node } from '@xyflow/reac
 import { useEffect, useMemo } from 'react';
 
 import { queryKeys } from '../../queries/queryKeys';
-import { mapCanonicalEdgeToCanvasEdge, mapCanonicalNodeToCanvasNode } from './canvasNodeMapper';
+import { mapCanonicalNodeToCanvasNode } from './canvasNodeMapper';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 
 const EMPTY_WORKSPACE_NODES: Array<{ id: string }> = [];
@@ -17,8 +17,34 @@ function isCanonicalEdge(value: CanonicalEdge | null): value is CanonicalEdge {
   return value !== null;
 }
 
+function draftEdgesEqual(left: Edge[], right: Edge[]): boolean {
+  return (
+    left.length === right.length &&
+    left.every(
+      (edge, index) =>
+        edge.id === right[index]?.id &&
+        edge.source === right[index]?.source &&
+        edge.target === right[index]?.target
+    )
+  );
+}
+
+function buildVisibleEdgeId(sourceId: string, targetId: string): string {
+  return `draft_edge_${sourceId}_${targetId}`;
+}
+
+function resolveVisibleEdgeId(
+  sourceId: string,
+  targetId: string,
+  canonicalEdgeIdBySignature: Map<string, string>
+): string {
+  return canonicalEdgeIdBySignature.get(`${sourceId}::${targetId}`) ?? buildVisibleEdgeId(sourceId, targetId);
+}
+
 type UseCanvasGraphModelArgs = {
   workspaceLayoutKey: string;
+  visibleNodeIds: string[];
+  visibleEdges: Array<{ sourceId: string; targetId: string }>;
   workspaceService: {
     getGraphSnapshot: () => Promise<{ nodes: Array<{ id: string }>; edges: Array<{ id: string }> }>;
   };
@@ -32,6 +58,8 @@ type UseCanvasGraphModelArgs = {
 
 export function useCanvasGraphModel({
   workspaceLayoutKey,
+  visibleNodeIds,
+  visibleEdges,
   workspaceService,
   graphStrategy,
   columnLevelLineageEnabled,
@@ -65,25 +93,44 @@ export function useCanvasGraphModel({
     () => new Map(canonicalNodes.map((node) => [node.id, node])),
     [canonicalNodes]
   );
+  const canonicalEdgeIdBySignature = useMemo(
+    () =>
+      new Map(
+        canonicalEdges.map((edge) => [`${edge.sourceId}::${edge.targetId}`, edge.id])
+      ),
+    [canonicalEdges]
+  );
 
   const initialNodes: Node[] = useMemo(
     () =>
-      canonicalNodes.map((node, i) =>
-        mapCanonicalNodeToCanvasNode(
-          node,
-          i,
-          columnLevelLineageEnabled,
-          undefined,
-          persistedNodePositions[node.id]
-        )
-      ),
-    [canonicalNodes, columnLevelLineageEnabled, persistedNodePositions]
+      visibleNodeIds
+        .map((nodeId) => canonicalNodesById.get(nodeId))
+        .filter((node): node is CanonicalNode => node != null)
+        .map((node, index) =>
+          mapCanonicalNodeToCanvasNode(
+            node,
+            index,
+            columnLevelLineageEnabled,
+            undefined,
+            persistedNodePositions[node.id]
+          )
+        ),
+    [canonicalNodesById, columnLevelLineageEnabled, persistedNodePositions, visibleNodeIds]
   );
 
-  const initialEdges: Edge[] = useMemo(
-    () => canonicalEdges.map((canonicalEdge) => mapCanonicalEdgeToCanvasEdge(canonicalEdge)),
-    [canonicalEdges]
-  );
+  const initialEdges: Edge[] = useMemo(() => {
+    const visibleNodeIdSet = new Set(visibleNodeIds);
+
+    return visibleEdges
+      .filter(
+        (edge) => visibleNodeIdSet.has(edge.sourceId) && visibleNodeIdSet.has(edge.targetId)
+      )
+      .map((edge) => ({
+        id: resolveVisibleEdgeId(edge.sourceId, edge.targetId, canonicalEdgeIdBySignature),
+        source: edge.sourceId,
+        target: edge.targetId,
+      }));
+  }, [canonicalEdgeIdBySignature, visibleEdges, visibleNodeIds]);
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
@@ -91,18 +138,18 @@ export function useCanvasGraphModel({
   useEffect(() => {
     setNodes((currentNodes) => {
       const currentNodesById = new Map(currentNodes.map((node) => [node.id, node]));
-      const nextNodes = canonicalNodes.map((node, index) => {
-        const currentNode = currentNodesById.get(node.id);
-        const persisted = persistedNodePositions[node.id];
-
-        return mapCanonicalNodeToCanvasNode(
-          node,
-          index,
-          columnLevelLineageEnabled,
-          undefined,
-          persisted ?? currentNode?.position
+      const nextNodes = visibleNodeIds
+        .map((nodeId) => canonicalNodesById.get(nodeId))
+        .filter((node): node is CanonicalNode => node != null)
+        .map((node, index) =>
+          mapCanonicalNodeToCanvasNode(
+            node,
+            index,
+            columnLevelLineageEnabled,
+            undefined,
+            persistedNodePositions[node.id] ?? currentNodesById.get(node.id)?.position
+          )
         );
-      });
 
       const isSameNodeLayout =
         currentNodes.length === nextNodes.length &&
@@ -120,15 +167,30 @@ export function useCanvasGraphModel({
 
       return isSameNodeLayout ? currentNodes : nextNodes;
     });
-    setEdges(initialEdges);
   }, [
-    canonicalNodes,
+    canonicalNodesById,
     columnLevelLineageEnabled,
-    initialEdges,
     persistedNodePositions,
-    setEdges,
     setNodes,
+    visibleNodeIds,
   ]);
+
+  useEffect(() => {
+    setEdges((currentEdges) => {
+      const allowedNodeIds = new Set(nodes.map((node) => node.id));
+      const nextEdges = visibleEdges
+        .filter(
+          (edge) => allowedNodeIds.has(edge.sourceId) && allowedNodeIds.has(edge.targetId)
+        )
+        .map((edge) => ({
+          id: resolveVisibleEdgeId(edge.sourceId, edge.targetId, canonicalEdgeIdBySignature),
+          source: edge.sourceId,
+          target: edge.targetId,
+        }));
+
+      return draftEdgesEqual(currentEdges, nextEdges) ? currentEdges : nextEdges;
+    });
+  }, [canonicalEdgeIdBySignature, nodes, setEdges, visibleEdges]);
 
   return {
     graphSnapshotQuery,

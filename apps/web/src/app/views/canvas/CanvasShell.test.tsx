@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import CanvasShell from './CanvasShell';
 import { DEFAULT_CANVAS_PALETTE_ID } from './canvasPalette';
+import type { CanvasDraftToolbarState } from './canvasDraftPresentationState';
 import type { CanvasShellProps } from './canvasShell.types';
 
 const shellState = vi.hoisted(() => ({
@@ -44,6 +45,12 @@ vi.mock('./CanvasViewport', () => ({
 }));
 
 function buildProps(overrides?: Partial<CanvasShellProps>): CanvasShellProps {
+  const defaultDraftToolbarState: CanvasDraftToolbarState = {
+    label: 'Draft synced',
+    tone: 'neutral',
+    showReloadAction: false,
+  };
+
   return {
     focusMode: false,
     explorerPanelVisible: true,
@@ -93,8 +100,10 @@ function buildProps(overrides?: Partial<CanvasShellProps>): CanvasShellProps {
     onToggleCostOverlay: vi.fn(),
     onToggleImpact: vi.fn(),
     onToggleColumns: vi.fn(),
+    onReloadLatestDraft: vi.fn(),
     onPlan: vi.fn(),
     onRun: vi.fn(),
+    draftToolbarState: defaultDraftToolbarState,
     canStartRun: false,
     planStatusSummary: 'Preview required before running.',
     exclusiveOverlayMode: 'runtime',
@@ -187,6 +196,42 @@ describe('CanvasShell', () => {
     });
     expect(shellState.sourceImportWizardProps).toMatchObject({
       onComplete: props.onSourceImportComplete,
+    });
+  });
+
+  it('closes the import wizard if edit permissions are revoked while it is open', async () => {
+    await act(async () => {
+      root.render(<CanvasShell {...buildProps()} />);
+    });
+
+    await act(async () => {
+      const openDataRegistry = shellState.dbtExplorerProps?.onOpenDataRegistry as
+        | (() => void)
+        | undefined;
+      openDataRegistry?.();
+    });
+
+    expect(shellState.sourceImportWizardProps).toMatchObject({
+      open: true,
+    });
+
+    await act(async () => {
+      root.render(
+        <CanvasShell
+          {...buildProps({
+            userPermissions: {
+              canPlan: false,
+              canRun: false,
+              canEditEdges: false,
+            },
+          })}
+        />
+      );
+    });
+
+    expect(shellState.dbtExplorerProps?.onOpenDataRegistry).toBeUndefined();
+    expect(shellState.sourceImportWizardProps).toMatchObject({
+      open: false,
     });
   });
 });

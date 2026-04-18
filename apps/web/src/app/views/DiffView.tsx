@@ -1,3 +1,4 @@
+import { usePublishedRouteBootstrap } from '../bootstrap/usePublishedRouteBootstrap';
 import { RouteWorkbenchFrame } from '../components/workbench/RouteWorkbenchFrame';
 import { DiffHeader } from './diff/DiffHeader';
 import {
@@ -12,6 +13,10 @@ import {
   buildDiffSqlContextState,
   buildDiffWorkbenchState,
 } from './diff/diffWorkbenchStateModel';
+import {
+  DIFF_ROUTE_ID,
+  deriveDiffRouteBootstrapPresentation,
+} from './diff/diffRouteBootstrap';
 import { useDiffData } from './diff/useDiffData';
 
 export default function DiffView() {
@@ -68,6 +73,14 @@ export default function DiffView() {
         : 'Unable to load SQL preview.',
     hasFileContent: fileContentQuery.data != null,
   });
+  usePublishedRouteBootstrap(
+    DIFF_ROUTE_ID,
+    deriveDiffRouteBootstrapPresentation({
+      workbenchState,
+      compareContextState,
+      sqlContextState,
+    })
+  );
 
   if (workbenchState.kind === 'loading') {
     return <DiffLoadingStateView header={header} />;

@@ -14,6 +14,7 @@ import {
 
 const state = vi.hoisted(() => ({
   graphData: { nodes: [], edges: [] },
+  graphDraftRecord: null,
   canonicalNodes: [],
   canonicalEdges: [],
   overlayDecorations: new Map(),
@@ -21,6 +22,19 @@ const state = vi.hoisted(() => ({
   services: {
     workspaceService: {
       getGraphSnapshot: vi.fn(async () => ({ nodes: [], edges: [] })),
+      getGraphDraft: vi.fn(async () => null),
+      saveGraphDraft: vi.fn(async () => ({
+        outcome: 'saved' as const,
+        record: {
+          revision: 'rev-1',
+          savedAt: '2026-04-08T00:00:00Z',
+          draft: {
+            nodeIds: [],
+            nodePositions: {},
+            edges: [],
+          },
+        },
+      })),
       getDiffChanges: vi.fn(async () => []),
       getPlugins: vi.fn(async () => []),
       getRoles: vi.fn(async () => []),
@@ -116,7 +130,10 @@ const state = vi.hoisted(() => ({
   },
   store: { setCanvasViewport: vi.fn(), setCanvasNodePositions: vi.fn() },
   queryClient: {
+    cancelQueries: vi.fn(async () => undefined),
+    fetchQuery: vi.fn(),
     invalidateQueries: vi.fn(async () => undefined),
+    setQueryData: vi.fn(),
   },
   graphHandlersResult: { handleDrop: vi.fn(), confirmEdgeCreation: vi.fn() },
   executionActionsResult: {
@@ -156,6 +173,28 @@ vi.mock('@tanstack/react-query', () => ({
 vi.mock('@xyflow/react', async () => {
   const ReactModule = await import('react');
   return {
+    applyNodeChanges: <T extends { id: string },>(
+      changes: Array<{ id?: string; type?: string }>,
+      nodes: T[]
+    ) =>
+      changes.reduce((currentNodes, change) => {
+        if (change.type === 'remove' && change.id != null) {
+          return currentNodes.filter((node) => node.id !== change.id);
+        }
+
+        return currentNodes;
+      }, nodes),
+    applyEdgeChanges: <T extends { id: string },>(
+      changes: Array<{ id?: string; type?: string }>,
+      edges: T[]
+    ) =>
+      changes.reduce((currentEdges, change) => {
+        if (change.type === 'remove' && change.id != null) {
+          return currentEdges.filter((edge) => edge.id !== change.id);
+        }
+
+        return currentEdges;
+      }, edges),
     useNodesState: <T,>(initial: T[]) => {
       const [nodes, setNodes] = ReactModule.useState(initial);
       return [nodes, setNodes, vi.fn()] as const;
@@ -223,10 +262,21 @@ export function setupCanvasControllerHarness() {
     mocks,
     getLatestResult: () => latestResult,
     setGraphQueryError: () => {
-      mocks.useQuery.mockReturnValue({
-        data: undefined,
-        isPending: false,
-        isError: true,
+      mocks.useQuery.mockImplementation((queryConfig?: { queryKey?: readonly string[] }) => {
+        const queryKey = queryConfig?.queryKey ?? [];
+        if (queryKey[1] === 'graph-draft') {
+          return {
+            data: state.graphDraftRecord,
+            isPending: false,
+            isError: false,
+          };
+        }
+
+        return {
+          data: undefined,
+          isPending: false,
+          isError: true,
+        };
       });
     },
     removeNodeCostsAndRefreshGraphSnapshot: () => {
@@ -234,13 +284,24 @@ export function setupCanvasControllerHarness() {
         const { lastCost, ...rest } = node;
         return rest;
       });
-      mocks.useQuery.mockReturnValue({
-        data: {
-          nodes: [...state.graphData.nodes],
-          edges: [...state.graphData.edges],
-        },
-        isPending: false,
-        isError: false,
+      mocks.useQuery.mockImplementation((queryConfig?: { queryKey?: readonly string[] }) => {
+        const queryKey = queryConfig?.queryKey ?? [];
+        if (queryKey[1] === 'graph-draft') {
+          return {
+            data: state.graphDraftRecord,
+            isPending: false,
+            isError: false,
+          };
+        }
+
+        return {
+          data: {
+            nodes: [...state.graphData.nodes],
+            edges: [...state.graphData.edges],
+          },
+          isPending: false,
+          isError: false,
+        };
       });
     },
     toggleCostOverlay: async () =>

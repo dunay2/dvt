@@ -22,6 +22,10 @@ navigation. The folder contains additional historical entries.
 
 ## Representative Recent Closeouts
 
+- [20260417 Graph Architecture Doc Pack Split Closeout](./20260417-graph-architecture-doc-pack-split-closeout.md)
+- [20260417 TF-E2 Route Bootstrap SRP Refactor Closeout](./20260417-tf-e2-route-bootstrap-srp-refactor-closeout.md)
+- [20260417 TF-E2 Route Bootstrap Contract Generalization Closeout](./20260417-tf-e2-route-bootstrap-contract-generalization-closeout.md)
+- [20260417 TF-E2 Canvas Bootstrap Presentation Handoff Closeout](./20260417-tf-e2-canvas-bootstrap-presentation-handoff-closeout.md)
 - [20260417 Root-Local Doc English Integration Closeout](./20260417-root-local-doc-english-integration-closeout.md)
 - [20260417 Root-Local Doc Canonicalization Closeout](./20260417-root-local-doc-canonicalization-closeout.md)
 - [20260417 Planning Gaps Governance Refresh Closeout](./20260417-planning-gaps-governance-refresh-closeout.md)

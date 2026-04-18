@@ -2,18 +2,30 @@
 
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
+import { RouterProvider, createMemoryRouter } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import {
+  getPublishedRouteBootstrapPresentation,
+  resetRouteBootstrapPresentation,
+} from '../bootstrap/routeBootstrapRegistry';
+import { getRouteBootstrapRegistration } from '../bootstrap/routeBootstrapRegistration';
 import Canvas from './Canvas';
 import { DEFAULT_CANVAS_PALETTE_ID } from './canvas/canvasPalette';
+import {
+  CANVAS_ROUTE_BOOTSTRAP_HANDLE,
+  getCanvasDraftPresentationState,
+  resetCanvasDraftPresentationState,
+  type CanvasDraftToolbarState,
+} from './canvas/canvasDraftPresentationState';
 import { useCanvasController } from './canvas/useCanvasController';
+
+const CANVAS_ROUTE_BOOTSTRAP_REGISTRATION = getRouteBootstrapRegistration('dbt.canvas', {
+  routeBootstrap: CANVAS_ROUTE_BOOTSTRAP_HANDLE,
+})!;
 
 const canvasRouteState = vi.hoisted(() => ({
   explorerProps: null as null | Record<string, unknown>,
-}));
-const bootstrapScreenMocks = vi.hoisted(() => ({
-  completeBootstrapScreen: vi.fn(),
-  setBootstrapStepStatus: vi.fn(),
 }));
 
 vi.mock('@xyflow/react', () => ({
@@ -22,11 +34,6 @@ vi.mock('@xyflow/react', () => ({
 
 vi.mock('./canvas/useCanvasController', () => ({
   useCanvasController: vi.fn(),
-}));
-
-vi.mock('../bootstrap/appBootstrapScreen', () => ({
-  completeBootstrapScreen: bootstrapScreenMocks.completeBootstrapScreen,
-  setBootstrapStepStatus: bootstrapScreenMocks.setBootstrapStepStatus,
 }));
 
 vi.mock('../components/DbtExplorer', () => ({
@@ -56,6 +63,12 @@ vi.mock('../components/Modals', () => ({
 type CanvasController = ReturnType<typeof useCanvasController>;
 
 function buildController(overrides?: Partial<CanvasController>): CanvasController {
+  const defaultDraftToolbarState: CanvasDraftToolbarState = {
+    label: 'Draft synced',
+    tone: 'neutral',
+    showReloadAction: false,
+  };
+
   return {
     dataSourceMode: 'mock',
     isBackendCheckPending: false,
@@ -116,6 +129,15 @@ function buildController(overrides?: Partial<CanvasController>): CanvasControlle
     toggleColumnLevelLineage: vi.fn(),
     handlePlan: vi.fn(),
     handleStartRun: vi.fn(),
+    draftSaveStatus: 'idle',
+    draftRecoveryReason: null,
+    draftToolbarState: defaultDraftToolbarState,
+    draftConflictRevision: null,
+    hasStaleDraftVersion: false,
+    hasMissingRemoteDraft: false,
+    hasDraftProjectionGap: false,
+    reloadLatestDraft: vi.fn(),
+    adoptCurrentWorkspaceSnapshot: vi.fn(),
     canStartRun: false,
     planStatusSummary: 'Preview required before running.',
     exclusiveOverlayMode: 'runtime',
@@ -140,6 +162,28 @@ function buildController(overrides?: Partial<CanvasController>): CanvasControlle
   };
 }
 
+async function renderCanvasRoute(root: Root): Promise<void> {
+  const router = createMemoryRouter(
+    [
+      {
+        id: 'dbt.canvas',
+        path: '/canvas',
+        handle: {
+          routeBootstrap: CANVAS_ROUTE_BOOTSTRAP_HANDLE,
+        },
+        element: <Canvas />,
+      },
+    ],
+    {
+      initialEntries: ['/canvas'],
+    }
+  );
+
+  await act(async () => {
+    root.render(<RouterProvider router={router} />);
+  });
+}
+
 describe('Canvas route', () => {
   let container: HTMLDivElement;
   let root: Root;
@@ -158,14 +202,16 @@ describe('Canvas route', () => {
     ).IS_REACT_ACT_ENVIRONMENT = true;
     mockedUseCanvasController.mockReset();
     canvasRouteState.explorerProps = null;
-    bootstrapScreenMocks.completeBootstrapScreen.mockReset();
-    bootstrapScreenMocks.setBootstrapStepStatus.mockReset();
+    resetCanvasDraftPresentationState();
+    resetRouteBootstrapPresentation(CANVAS_ROUTE_BOOTSTRAP_REGISTRATION);
   });
 
   afterEach(() => {
     act(() => {
       root.unmount();
     });
+    resetCanvasDraftPresentationState();
+    resetRouteBootstrapPresentation(CANVAS_ROUTE_BOOTSTRAP_REGISTRATION);
     document.getElementById('shell-top-bar-canvas-controls')?.remove();
     container.remove();
   });
@@ -178,18 +224,24 @@ describe('Canvas route', () => {
       })
     );
 
-    await act(async () => {
-      root.render(<Canvas />);
-    });
+    await renderCanvasRoute(root);
 
     expect(container.textContent).toContain('Loading canvas');
     expect(container.querySelector('[data-slot="canvas-loading-state"]')).not.toBeNull();
     expect(container.querySelector('[data-slot="canvas-viewport"]')).toBeNull();
-    expect(bootstrapScreenMocks.setBootstrapStepStatus).toHaveBeenCalledWith(
-      'route',
-      'pending',
-      'Loading workspace graph for canvas'
-    );
+    expect(getCanvasDraftPresentationState()).toMatchObject({
+      routeState: 'loading_graph',
+      bootstrapStatus: 'pending',
+      bootstrapDetail: 'Loading workspace graph for canvas',
+      canCompleteBootstrap: false,
+    });
+    expect(
+      getPublishedRouteBootstrapPresentation(CANVAS_ROUTE_BOOTSTRAP_REGISTRATION)
+    ).toMatchObject({
+      status: 'pending',
+      detail: 'Loading workspace graph for canvas',
+      canComplete: false,
+    });
   });
 
   it('renders a governed empty state when the workspace graph has no nodes', async () => {
@@ -199,19 +251,24 @@ describe('Canvas route', () => {
       })
     );
 
-    await act(async () => {
-      root.render(<Canvas />);
-    });
+    await renderCanvasRoute(root);
 
     expect(container.textContent).toContain('No graph content loaded');
     expect(container.querySelector('[data-slot="canvas-empty-state"]')).not.toBeNull();
     expect(container.querySelector('[data-slot="canvas-viewport"]')).toBeNull();
-    expect(bootstrapScreenMocks.setBootstrapStepStatus).toHaveBeenCalledWith(
-      'route',
-      'complete',
-      'Canvas is ready with no graph content yet'
-    );
-    expect(bootstrapScreenMocks.completeBootstrapScreen).toHaveBeenCalled();
+    expect(getCanvasDraftPresentationState()).toMatchObject({
+      routeState: 'empty',
+      bootstrapStatus: 'complete',
+      bootstrapDetail: 'Canvas is ready with no graph content yet',
+      canCompleteBootstrap: true,
+    });
+    expect(
+      getPublishedRouteBootstrapPresentation(CANVAS_ROUTE_BOOTSTRAP_REGISTRATION)
+    ).toMatchObject({
+      status: 'complete',
+      detail: 'Canvas is ready with no graph content yet',
+      canComplete: true,
+    });
   });
 
   it('renders read-only empty guidance without suggesting Add data when edits are gated', async () => {
@@ -228,9 +285,7 @@ describe('Canvas route', () => {
       })
     );
 
-    await act(async () => {
-      root.render(<Canvas />);
-    });
+    await renderCanvasRoute(root);
 
     expect(container.textContent).toContain('No graph content loaded');
     expect(container.textContent).toContain(
@@ -248,20 +303,18 @@ describe('Canvas route', () => {
       })
     );
 
-    await act(async () => {
-      root.render(<Canvas />);
-    });
+    await renderCanvasRoute(root);
 
     expect(container.textContent).toContain('Canvas unavailable');
     expect(container.textContent).toContain('workspace graph unavailable');
     expect(container.querySelector('[data-slot="canvas-error-state"]')).not.toBeNull();
     expect(container.querySelector('[data-slot="canvas-viewport"]')).toBeNull();
-    expect(bootstrapScreenMocks.setBootstrapStepStatus).toHaveBeenCalledWith(
-      'route',
-      'error',
-      'workspace graph unavailable'
-    );
-    expect(bootstrapScreenMocks.completeBootstrapScreen).not.toHaveBeenCalled();
+    expect(getCanvasDraftPresentationState()).toMatchObject({
+      routeState: 'error_graph',
+      bootstrapStatus: 'error',
+      bootstrapDetail: 'workspace graph unavailable',
+      canCompleteBootstrap: false,
+    });
   });
 
   it('keeps the viewport visible and shows a read-only banner when mutations are gated', async () => {
@@ -277,9 +330,7 @@ describe('Canvas route', () => {
       })
     );
 
-    await act(async () => {
-      root.render(<Canvas />);
-    });
+    await renderCanvasRoute(root);
 
     const buttons = Array.from(container.querySelectorAll('button'));
     const layoutButton = buttons.find((button) => button.textContent?.includes('Layout'));
@@ -297,6 +348,141 @@ describe('Canvas route', () => {
     expect(planButton?.getAttribute('disabled')).not.toBeNull();
     expect(runButton?.getAttribute('disabled')).not.toBeNull();
   });
+
+  it('shows the missing-remote draft banner and disables canvas actions while keeping inspection visible', async () => {
+    const reloadLatestDraft = vi.fn();
+    const adoptCurrentWorkspaceSnapshot = vi.fn();
+    mockedUseCanvasController.mockReturnValue(
+      buildController({
+        draftRecoveryReason: 'missing_remote',
+        draftToolbarState: {
+          label: 'Draft missing',
+          tone: 'warning',
+          showReloadAction: true,
+        },
+        reloadLatestDraft,
+        adoptCurrentWorkspaceSnapshot,
+      })
+    );
+
+    await renderCanvasRoute(root);
+
+    const buttons = Array.from(container.querySelectorAll('button'));
+    const layoutButton = buttons.find((button) => button.textContent?.includes('Layout'));
+    const planButton = buttons.find((button) => button.textContent?.includes('Plan'));
+    const runButton = buttons.find((button) => button.textContent?.includes('Run'));
+    const reloadButton = buttons.find((button) => button.textContent?.includes('Reload latest draft'));
+    const adoptButton = buttons.find((button) =>
+      button.textContent?.includes('Adopt current workspace snapshot')
+    );
+
+    expect(container.querySelector('[data-slot="canvas-viewport"]')).not.toBeNull();
+    expect(container.querySelector('[data-slot="canvas-missing-remote-draft-state"]')).not.toBeNull();
+    expect(container.textContent).toContain('Persisted draft no longer exists');
+    expect(layoutButton?.getAttribute('disabled')).not.toBeNull();
+    expect(planButton?.getAttribute('disabled')).not.toBeNull();
+    expect(runButton?.getAttribute('disabled')).not.toBeNull();
+    expect(reloadButton).not.toBeNull();
+    expect(adoptButton).not.toBeNull();
+
+    await act(async () => {
+      reloadButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    expect(reloadLatestDraft).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      adoptButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    expect(adoptCurrentWorkspaceSnapshot).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows the stale-draft banner and disables canvas actions until reload recovers the draft', async () => {
+    const reloadLatestDraft = vi.fn();
+    mockedUseCanvasController.mockReturnValue(
+      buildController({
+        draftRecoveryReason: 'stale_conflict',
+        draftToolbarState: {
+          label: 'Stale version',
+          tone: 'danger',
+          showReloadAction: true,
+        },
+        reloadLatestDraft,
+      })
+    );
+
+    await renderCanvasRoute(root);
+
+    const buttons = Array.from(container.querySelectorAll('button'));
+    const layoutButton = buttons.find((button) => button.textContent?.includes('Layout'));
+    const planButton = buttons.find((button) => button.textContent?.includes('Plan'));
+    const runButton = buttons.find((button) => button.textContent?.includes('Run'));
+    const reloadButton = buttons.find((button) => button.textContent?.includes('Reload latest draft'));
+
+    expect(container.querySelector('[data-slot="canvas-viewport"]')).not.toBeNull();
+    expect(container.querySelector('[data-slot="canvas-stale-draft-state"]')).not.toBeNull();
+    expect(layoutButton?.getAttribute('disabled')).not.toBeNull();
+    expect(planButton?.getAttribute('disabled')).not.toBeNull();
+    expect(runButton?.getAttribute('disabled')).not.toBeNull();
+    expect(reloadButton).not.toBeNull();
+
+    await act(async () => {
+      reloadButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    expect(reloadLatestDraft).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows the projection-gap banner and pauses canvas actions until recovery resolves it', async () => {
+    const reloadLatestDraft = vi.fn();
+    const adoptCurrentWorkspaceSnapshot = vi.fn();
+    mockedUseCanvasController.mockReturnValue(
+      buildController({
+        draftRecoveryReason: 'projection_gap',
+        draftToolbarState: {
+          label: 'Projection gap',
+          tone: 'warning',
+          showReloadAction: true,
+        },
+        reloadLatestDraft,
+        adoptCurrentWorkspaceSnapshot,
+      })
+    );
+
+    await renderCanvasRoute(root);
+
+    const buttons = Array.from(container.querySelectorAll('button'));
+    const layoutButton = buttons.find((button) => button.textContent?.includes('Layout'));
+    const planButton = buttons.find((button) => button.textContent?.includes('Plan'));
+    const runButton = buttons.find((button) => button.textContent?.includes('Run'));
+    const reloadButton = buttons.find((button) => button.textContent?.includes('Reload latest draft'));
+    const adoptButton = buttons.find((button) =>
+      button.textContent?.includes('Adopt current workspace snapshot')
+    );
+
+    expect(container.querySelector('[data-slot="canvas-viewport"]')).not.toBeNull();
+    expect(container.querySelector('[data-slot="canvas-draft-projection-gap-state"]')).not.toBeNull();
+    expect(container.textContent).toContain(
+      'Persisted draft is ahead of the current graph snapshot'
+    );
+    expect(layoutButton?.getAttribute('disabled')).not.toBeNull();
+    expect(planButton?.getAttribute('disabled')).not.toBeNull();
+    expect(runButton?.getAttribute('disabled')).not.toBeNull();
+
+    await act(async () => {
+      reloadButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    expect(reloadLatestDraft).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      adoptButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    expect(adoptCurrentWorkspaceSnapshot).toHaveBeenCalledTimes(1);
+  });
+
   it('blocks the canvas surface in api mode when backend readiness is not satisfied', async () => {
     mockedUseCanvasController.mockReturnValue(
       buildController({
@@ -306,9 +492,7 @@ describe('Canvas route', () => {
       })
     );
 
-    await act(async () => {
-      root.render(<Canvas />);
-    });
+    await renderCanvasRoute(root);
 
     const buttons = Array.from(container.querySelectorAll('button'));
     const layoutButton = buttons.find((button) => button.textContent?.includes('Layout'));
@@ -322,11 +506,64 @@ describe('Canvas route', () => {
     expect(layoutButton?.getAttribute('disabled')).not.toBeNull();
     expect(planButton?.getAttribute('disabled')).not.toBeNull();
     expect(runButton?.getAttribute('disabled')).not.toBeNull();
-    expect(bootstrapScreenMocks.setBootstrapStepStatus).toHaveBeenCalledWith(
-      'route',
-      'blocked',
-      'Readiness not satisfied: database_not_configured.'
+    expect(getCanvasDraftPresentationState()).toMatchObject({
+      routeState: 'blocked_backend',
+      bootstrapStatus: 'blocked',
+      bootstrapDetail: 'Readiness not satisfied: database_not_configured.',
+      canCompleteBootstrap: false,
+    });
+  });
+
+  it('prioritizes backend blocked route state over draft recovery banners', async () => {
+    mockedUseCanvasController.mockReturnValue(
+      buildController({
+        dataSourceMode: 'api',
+        backendReady: false,
+        backendBlockMessage: 'Readiness not satisfied: database_not_configured.',
+        draftRecoveryReason: 'missing_remote',
+        draftToolbarState: {
+          label: 'Draft missing',
+          tone: 'warning',
+          showReloadAction: true,
+        },
+      })
     );
-    expect(bootstrapScreenMocks.completeBootstrapScreen).not.toHaveBeenCalled();
+
+    await renderCanvasRoute(root);
+
+    expect(container.querySelector('[data-slot="canvas-blocked-state"]')).not.toBeNull();
+    expect(container.querySelector('[data-slot="canvas-missing-remote-draft-state"]')).toBeNull();
+    expect(getCanvasDraftPresentationState()).toMatchObject({
+      routeState: 'blocked_backend',
+      bootstrapStatus: 'blocked',
+      bootstrapDetail: 'Readiness not satisfied: database_not_configured.',
+      canCompleteBootstrap: false,
+    });
+  });
+
+  it('prioritizes graph error route state over draft recovery banners', async () => {
+    mockedUseCanvasController.mockReturnValue(
+      buildController({
+        explorerNodes: [],
+        graphErrorMessage: 'workspace graph unavailable',
+        draftRecoveryReason: 'stale_conflict',
+        draftToolbarState: {
+          label: 'Stale version',
+          tone: 'danger',
+          showReloadAction: true,
+        },
+      })
+    );
+
+    await renderCanvasRoute(root);
+
+    expect(container.querySelector('[data-slot="canvas-error-state"]')).not.toBeNull();
+    expect(container.querySelector('[data-slot="canvas-stale-draft-state"]')).toBeNull();
+    expect(getCanvasDraftPresentationState()).toMatchObject({
+      routeState: 'error_graph',
+      bootstrapStatus: 'error',
+      bootstrapDetail: 'workspace graph unavailable',
+      canCompleteBootstrap: false,
+    });
   });
 });

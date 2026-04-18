@@ -1,4 +1,5 @@
 import type { LucideIcon } from 'lucide-react';
+import type { AppRouteHandle } from '../../bootstrap/routeBootstrapContract';
 
 import type {
   CanonicalEdge,
@@ -68,6 +69,7 @@ export interface ViewContribution {
   path: string;
   // Lazily loaded component — plugins use React.lazy
   component: React.ComponentType;
+  handle: AppRouteHandle;
   nav?: {
     label: LocalizableString;
     icon: LucideIcon;

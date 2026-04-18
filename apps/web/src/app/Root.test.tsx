@@ -1,16 +1,28 @@
 // @vitest-environment jsdom
 
 import { fireEvent, waitFor, within } from '@testing-library/dom';
-import { act } from 'react';
-import { MemoryRouter, Route, Routes } from 'react-router';
+import { act, useEffect } from 'react';
+import { RouterProvider, createMemoryRouter } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { PlatformHealthCapabilityApi } from '../capabilities/platform-health';
+import type { RouteBootstrapPresentation } from './bootstrap/routeBootstrapContract';
+import StaticRouteBootstrapBoundary from './bootstrap/StaticRouteBootstrapBoundary';
+import {
+  createPublishedRouteBootstrapHandle,
+  createStaticRouteBootstrapHandle,
+} from './bootstrap/routeBootstrapContract';
+import {
+  publishRouteBootstrapPresentation,
+  resetRouteBootstrapPresentation,
+} from './bootstrap/routeBootstrapRegistry';
+import { getRouteBootstrapRegistration } from './bootstrap/routeBootstrapRegistration';
 import type { CapabilitiesPort } from './ports/capabilities';
 import {
   createHealthzProbe,
   createPlatformHealthSnapshot,
 } from '../capabilities/platform-health/testing/platformHealthFixtures';
+import AppRouteErrorBoundary from './AppRouteErrorBoundary';
 import { queryKeys } from './queries/queryKeys';
 import { waitForReactQuery, withTestQueryClient } from '../testing/reactQueryHarness';
 import AppProviders from './AppProviders';
@@ -19,21 +31,31 @@ import { AppServicesProvider, useAppDataSourceMode } from './services/AppService
 import { useAppStore } from './stores/appStore';
 import { useUiLayoutStore } from './stores/uiLayoutStore';
 import { DEFAULT_CANVAS_PALETTE_ID } from './views/canvas/canvasPalette';
+import { CANVAS_ROUTE_BOOTSTRAP_HANDLE } from './views/canvas/canvasDraftPresentationState';
+
+const CANVAS_ROUTE_BOOTSTRAP_REGISTRATION = getRouteBootstrapRegistration('dbt.canvas', {
+  routeBootstrap: CANVAS_ROUTE_BOOTSTRAP_HANDLE,
+})!;
 
 const bootstrapScreenMocks = vi.hoisted(() => ({
   completeBootstrapScreen: vi.fn(),
+  isBootstrapScreenVisible: vi.fn(() => false),
   setBootstrapStepStatus: vi.fn(),
+  showBootstrapFailure: vi.fn(),
 }));
 
 vi.mock('./bootstrap/appBootstrapScreen', () => ({
   completeBootstrapScreen: bootstrapScreenMocks.completeBootstrapScreen,
+  isBootstrapScreenVisible: bootstrapScreenMocks.isBootstrapScreenVisible,
   setBootstrapStepStatus: bootstrapScreenMocks.setBootstrapStepStatus,
+  showBootstrapFailure: bootstrapScreenMocks.showBootstrapFailure,
 }));
 
 function createRootShellNode(
   capability: PlatformHealthCapabilityApi,
   initialEntries: string[] = ['/'],
-  capabilitiesPort?: CapabilitiesPort
+  capabilitiesPort?: CapabilitiesPort,
+  canvasRouteElement: JSX.Element = <div>Canvas route</div>
 ): JSX.Element {
   const defaultCapabilitiesPort: CapabilitiesPort = {
     loadCapabilities: vi.fn().mockResolvedValue({
@@ -43,20 +65,163 @@ function createRootShellNode(
     }),
   };
 
+  const workspaceRouteHandle = {
+    routeBootstrap: createStaticRouteBootstrapHandle({
+      pendingDetail: 'Preparing workspace route',
+      readyDetail: 'Workspace is ready',
+    }),
+  };
+  const pluginsRouteHandle = {
+    routeBootstrap: createStaticRouteBootstrapHandle({
+      pendingDetail: 'Preparing Plugins route',
+      readyDetail: 'Plugins is ready',
+    }),
+  };
+  const adminRouteHandle = {
+    routeBootstrap: createStaticRouteBootstrapHandle({
+      pendingDetail: 'Preparing Admin route',
+      readyDetail: 'Admin is ready',
+    }),
+  };
+  const runsRouteHandle = {
+    routeBootstrap: createPublishedRouteBootstrapHandle({
+      pendingDetail: 'Preparing Runs route',
+    }),
+  };
+  const runDetailRouteHandle = {
+    routeBootstrap: createPublishedRouteBootstrapHandle({
+      pendingDetail: 'Preparing Run detail route',
+    }),
+  };
+
+  const router = createMemoryRouter(
+    [
+      {
+        path: '/',
+        element: <RootShell platformHealthCapability={capability} />,
+        children: [
+          {
+            id: 'test.workspace',
+            index: true,
+            handle: workspaceRouteHandle,
+            element: (
+              <StaticRouteBootstrapBoundary
+                registration={getRouteBootstrapRegistration('test.workspace', workspaceRouteHandle)}
+              >
+                <div>Workspace route</div>
+              </StaticRouteBootstrapBoundary>
+            ),
+          },
+          {
+            id: 'dbt.canvas',
+            path: 'canvas',
+            handle: { routeBootstrap: CANVAS_ROUTE_BOOTSTRAP_HANDLE },
+            element: canvasRouteElement,
+          },
+          {
+            id: 'test.plugins',
+            path: 'plugins',
+            handle: pluginsRouteHandle,
+            element: (
+              <StaticRouteBootstrapBoundary
+                registration={getRouteBootstrapRegistration('test.plugins', pluginsRouteHandle)}
+              >
+                <div>Plugins route</div>
+              </StaticRouteBootstrapBoundary>
+            ),
+          },
+          {
+            id: 'shell.admin',
+            path: 'admin',
+            handle: adminRouteHandle,
+            element: (
+              <StaticRouteBootstrapBoundary
+                registration={getRouteBootstrapRegistration('shell.admin', adminRouteHandle)}
+              >
+                <div>Admin route</div>
+              </StaticRouteBootstrapBoundary>
+            ),
+          },
+          {
+            id: 'test.runs',
+            path: 'runs',
+            handle: runsRouteHandle,
+            element: (
+              <PublishedRouteBootstrapProbe
+                registration={getRouteBootstrapRegistration('test.runs', runsRouteHandle)!}
+                presentationState={buildRouteBootstrapPresentation({
+                  detail: 'Runs route is ready',
+                })}
+              >
+                <div>Runs route</div>
+              </PublishedRouteBootstrapProbe>
+            ),
+          },
+          {
+            id: 'test.run-detail',
+            path: 'runs/:runId',
+            handle: runDetailRouteHandle,
+            element: (
+              <PublishedRouteBootstrapProbe
+                registration={
+                  getRouteBootstrapRegistration('test.run-detail', runDetailRouteHandle)!
+                }
+                presentationState={buildRouteBootstrapPresentation({
+                  detail: 'Run detail route is ready',
+                })}
+              >
+                <div>Run detail route</div>
+              </PublishedRouteBootstrapProbe>
+            ),
+          },
+        ],
+      },
+    ],
+    { initialEntries }
+  );
+
   return (
     <AppServicesProvider
       overrides={{ mode: 'mock', capabilitiesPort: capabilitiesPort ?? defaultCapabilitiesPort }}
     >
-      <MemoryRouter initialEntries={initialEntries}>
-        <Routes>
-          <Route element={<RootShell platformHealthCapability={capability} />} path="/">
-            <Route element={<div>Workspace route</div>} index />
-            <Route element={<div>Canvas route</div>} path="canvas" />
-            <Route element={<div>Runs route</div>} path="runs" />
-            <Route element={<div>Run detail route</div>} path="runs/:runId" />
-          </Route>
-        </Routes>
-      </MemoryRouter>
+      <RouterProvider router={router} />
+    </AppServicesProvider>
+  );
+}
+
+function createBrokenRootShellNode(
+  capability: PlatformHealthCapabilityApi,
+  initialEntries: string[] = ['/broken']
+): JSX.Element {
+  const defaultCapabilitiesPort: CapabilitiesPort = {
+    loadCapabilities: vi.fn().mockResolvedValue({
+      apiVersion: '1.0.0',
+      minFrontendVersion: '1.0.0',
+      plugins: {},
+    }),
+  };
+
+  const router = createMemoryRouter(
+    [
+      {
+        path: '/',
+        element: <RootShell platformHealthCapability={capability} />,
+        errorElement: <AppRouteErrorBoundary />,
+        children: [
+          {
+            id: 'broken.route',
+            path: 'broken',
+            element: <div>Broken route</div>,
+          },
+        ],
+      },
+    ],
+    { initialEntries }
+  );
+
+  return (
+    <AppServicesProvider overrides={{ mode: 'mock', capabilitiesPort: defaultCapabilitiesPort }}>
+      <RouterProvider router={router} />
     </AppServicesProvider>
   );
 }
@@ -93,6 +258,60 @@ function RootServicesProbe(): JSX.Element {
   return <div data-testid="root-services-probe">mode:{mode}</div>;
 }
 
+function buildRouteBootstrapPresentation(
+  overrides?: Partial<RouteBootstrapPresentation>
+): RouteBootstrapPresentation {
+  return {
+    status: 'complete',
+    detail: 'Canvas is ready',
+    canComplete: true,
+    ...overrides,
+  };
+}
+
+function CanvasBootstrapProbe({
+  presentationState,
+}: {
+  presentationState: RouteBootstrapPresentation;
+}): JSX.Element {
+  useEffect(() => {
+    publishRouteBootstrapPresentation(CANVAS_ROUTE_BOOTSTRAP_REGISTRATION, presentationState);
+
+    return () => {
+      resetRouteBootstrapPresentation(CANVAS_ROUTE_BOOTSTRAP_REGISTRATION);
+    };
+  }, [presentationState.canComplete, presentationState.detail, presentationState.status]);
+
+  return <div>Canvas route</div>;
+}
+
+function PublishedRouteBootstrapProbe({
+  registration,
+  presentationState,
+  children,
+}: {
+  registration: NonNullable<
+    ReturnType<typeof getRouteBootstrapRegistration>
+  >;
+  presentationState: RouteBootstrapPresentation;
+  children: JSX.Element;
+}): JSX.Element {
+  useEffect(() => {
+    publishRouteBootstrapPresentation(registration, presentationState);
+
+    return () => {
+      resetRouteBootstrapPresentation(registration);
+    };
+  }, [
+    presentationState.canComplete,
+    presentationState.detail,
+    presentationState.status,
+    registration,
+  ]);
+
+  return children;
+}
+
 async function waitForShellBootstrapSurface(
   mounted: Awaited<ReturnType<typeof withTestQueryClient>>
 ): Promise<void> {
@@ -106,11 +325,13 @@ describe('RootShell platform health UX', () => {
     localStorage.clear();
     resetAppStore();
     resetUiLayoutStore();
+    resetRouteBootstrapPresentation(CANVAS_ROUTE_BOOTSTRAP_REGISTRATION);
     bootstrapScreenMocks.completeBootstrapScreen.mockReset();
     bootstrapScreenMocks.setBootstrapStepStatus.mockReset();
   });
 
   afterEach(() => {
+    resetRouteBootstrapPresentation(CANVAS_ROUTE_BOOTSTRAP_REGISTRATION);
     vi.useRealTimers();
   });
 
@@ -165,6 +386,138 @@ describe('RootShell platform health UX', () => {
         );
       });
       expect(mounted.container.querySelector('[data-slot="app-shell-frame"]')).not.toBeNull();
+    } finally {
+      await mounted.cleanup();
+    }
+  });
+
+  it('keeps canvas route bootstrap pending until the route presentation seam publishes operability', async () => {
+    const capability: PlatformHealthCapabilityApi = {
+      loadSnapshot: vi.fn().mockResolvedValue(createPlatformHealthSnapshot()),
+    };
+    const mounted = await withTestQueryClient(createRootShellNode(capability, ['/canvas']));
+
+    try {
+      await waitFor(() => {
+        expect(bootstrapScreenMocks.setBootstrapStepStatus).toHaveBeenCalledWith(
+          'route',
+          'pending',
+          'Preparing canvas route'
+        );
+      });
+      expect(bootstrapScreenMocks.setBootstrapStepStatus).not.toHaveBeenCalledWith(
+        'route',
+        'complete',
+        'Canvas workbench route is ready'
+      );
+      expect(bootstrapScreenMocks.completeBootstrapScreen).not.toHaveBeenCalled();
+    } finally {
+      await mounted.cleanup();
+    }
+  });
+
+  it('keeps Raven blocked when the canvas presentation seam publishes blocked recovery posture', async () => {
+    const capability: PlatformHealthCapabilityApi = {
+      loadSnapshot: vi.fn().mockResolvedValue(createPlatformHealthSnapshot()),
+    };
+    const mounted = await withTestQueryClient(
+      createRootShellNode(
+        capability,
+        ['/canvas'],
+        undefined,
+        <CanvasBootstrapProbe
+          presentationState={buildRouteBootstrapPresentation({
+            status: 'blocked',
+            detail:
+              'Canvas has paused draft editing because the persisted draft disappeared. Adopt the current workspace snapshot before continuing.',
+            canComplete: false,
+          })}
+        />
+      )
+    );
+
+    try {
+      await waitFor(() => {
+        expect(bootstrapScreenMocks.setBootstrapStepStatus).toHaveBeenCalledWith(
+          'route',
+          'blocked',
+          'Canvas has paused draft editing because the persisted draft disappeared. Adopt the current workspace snapshot before continuing.'
+        );
+      });
+      expect(bootstrapScreenMocks.completeBootstrapScreen).not.toHaveBeenCalled();
+    } finally {
+      await mounted.cleanup();
+    }
+  });
+
+  it('completes Raven startup when the canvas presentation seam publishes complete posture', async () => {
+    const capability: PlatformHealthCapabilityApi = {
+      loadSnapshot: vi.fn().mockResolvedValue(createPlatformHealthSnapshot()),
+    };
+    const mounted = await withTestQueryClient(
+      createRootShellNode(
+        capability,
+        ['/canvas'],
+        undefined,
+        <CanvasBootstrapProbe presentationState={buildRouteBootstrapPresentation()} />
+      )
+    );
+
+    try {
+      await waitFor(() => {
+        expect(bootstrapScreenMocks.setBootstrapStepStatus).toHaveBeenCalledWith(
+          'route',
+          'complete',
+          'Canvas is ready'
+        );
+      });
+      await waitFor(() => {
+        expect(bootstrapScreenMocks.completeBootstrapScreen).toHaveBeenCalled();
+      });
+    } finally {
+      await mounted.cleanup();
+    }
+  });
+
+  it('completes Raven startup when a truly static route settles through its route contract', async () => {
+    const capability: PlatformHealthCapabilityApi = {
+      loadSnapshot: vi.fn().mockResolvedValue(createPlatformHealthSnapshot()),
+    };
+    const mounted = await withTestQueryClient(createRootShellNode(capability, ['/plugins']));
+
+    try {
+      await waitFor(() => {
+        expect(bootstrapScreenMocks.setBootstrapStepStatus).toHaveBeenCalledWith(
+          'route',
+          'complete',
+          'Plugins is ready'
+        );
+      });
+      await waitFor(() => {
+        expect(bootstrapScreenMocks.completeBootstrapScreen).toHaveBeenCalled();
+      });
+    } finally {
+      await mounted.cleanup();
+    }
+  });
+
+  it('completes Raven startup for the shell admin static route through its route contract', async () => {
+    const capability: PlatformHealthCapabilityApi = {
+      loadSnapshot: vi.fn().mockResolvedValue(createPlatformHealthSnapshot()),
+    };
+    const mounted = await withTestQueryClient(createRootShellNode(capability, ['/admin']));
+
+    try {
+      await waitFor(() => {
+        expect(bootstrapScreenMocks.setBootstrapStepStatus).toHaveBeenCalledWith(
+          'route',
+          'complete',
+          'Admin is ready'
+        );
+      });
+      await waitFor(() => {
+        expect(bootstrapScreenMocks.completeBootstrapScreen).toHaveBeenCalled();
+      });
     } finally {
       await mounted.cleanup();
     }
@@ -486,15 +839,31 @@ describe('RootShell platform health UX', () => {
 
 describe('Root integration guard', () => {
   it('keeps service wiring available when app-level providers wrap the routed shell', async () => {
+    const router = createMemoryRouter(
+      [
+        {
+          path: '/',
+          element: <Root />,
+          children: [
+            {
+              id: 'test.workspace',
+              index: true,
+              handle: {
+                routeBootstrap: createStaticRouteBootstrapHandle({
+                  pendingDetail: 'Preparing workspace route',
+                  readyDetail: 'Workspace is ready',
+                }),
+              },
+              element: <RootServicesProbe />,
+            },
+          ],
+        },
+      ],
+      { initialEntries: ['/'] }
+    );
     const mounted = await withTestQueryClient(
       <AppProviders>
-        <MemoryRouter initialEntries={['/']}>
-          <Routes>
-            <Route element={<Root />} path="/">
-              <Route element={<RootServicesProbe />} index />
-            </Route>
-          </Routes>
-        </MemoryRouter>
+        <RouterProvider router={router} />
       </AppProviders>
     );
 
@@ -504,6 +873,37 @@ describe('Root integration guard', () => {
           'mode:'
         );
       });
+    } finally {
+      await mounted.cleanup();
+    }
+  });
+});
+
+describe('Root bootstrap contract guard', () => {
+  it('fails fast with a typed localized error when the active route lacks bootstrap registration', async () => {
+    document.documentElement.lang = 'en';
+    vi.spyOn(window.navigator, 'language', 'get').mockReturnValue('es-ES');
+
+    const capability: PlatformHealthCapabilityApi = {
+      loadSnapshot: vi.fn().mockResolvedValue(
+        createPlatformHealthSnapshot({
+          fetchedAt: '2026-04-18T10:00:00.000Z',
+        })
+      ),
+    };
+
+    const mounted = await withTestQueryClient(createBrokenRootShellNode(capability));
+
+    try {
+      await waitFor(() => {
+        expect(
+          mounted.container.querySelector('[data-slot="app-route-error-boundary"]')
+        ).not.toBeNull();
+      });
+
+      expect(mounted.container.textContent).toContain(
+        'Falta el registro activo de route bootstrap para la ruta actual.'
+      );
     } finally {
       await mounted.cleanup();
     }

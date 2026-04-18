@@ -3,7 +3,7 @@ import type { IPlansPort } from '../../ports/plans';
 import type { IRunsPort } from '../../ports/runs';
 import type { SessionContextPort } from '../../ports/sessionContext';
 import type { ShellFeedbackPort } from '../../ports/shellFeedback';
-import type { IWorkspacePort } from '../../ports/workspace';
+import type { IWorkspacePort, WorkspaceGraphDraftRecord } from '../../ports/workspace';
 import { makeMockRunRef, makeRunContext } from '../../testing/contractTestUtils';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { PlanViewModel } from '../../types/plans';
@@ -14,6 +14,7 @@ type MockFn = ReturnType<typeof vi.fn>;
 
 export type CanvasHarnessState = {
   graphData: { nodes: Array<{ id: string }>; edges: Array<{ id: string }> };
+  graphDraftRecord: WorkspaceGraphDraftRecord | null;
   canonicalNodes: CanonicalNode[];
   canonicalEdges: CanonicalEdge[];
   overlayDecorations: Map<string, OverlayDecoration>;
@@ -30,7 +31,10 @@ export type CanvasHarnessState = {
     setCanvasNodePositions: MockFn;
   } & Record<string, unknown>;
   queryClient: {
+    cancelQueries: MockFn;
+    fetchQuery: MockFn;
     invalidateQueries: MockFn;
+    setQueryData: MockFn;
   };
   graphHandlersResult: {
     handleDrop: MockFn;
@@ -107,6 +111,22 @@ export function createDefaultCanvasHarnessState(): CanvasHarnessState {
   ];
   const workspaceService: IWorkspacePort = {
     getGraphSnapshot: vi.fn(async () => ({ nodes: [], edges: [] })),
+    getGraphDraft: vi.fn(async () => null),
+    saveGraphDraft: vi.fn(async () => ({
+      outcome: 'saved' as const,
+      record: {
+        revision: 'rev-1',
+        savedAt: '2026-04-08T00:00:00Z',
+        draft: {
+          nodeIds: ['node_1', 'node_2'],
+          nodePositions: {
+            node_1: { x: 0, y: 0 },
+            node_2: { x: 100, y: 0 },
+          },
+          edges: [{ sourceId: 'node_1', targetId: 'node_2' }],
+        },
+      },
+    })),
     getDiffChanges: vi.fn(async () => []),
     getPlugins: vi.fn(async () => []),
     getRoles: vi.fn(async () => []),
@@ -187,6 +207,7 @@ export function createDefaultCanvasHarnessState(): CanvasHarnessState {
   return {
     currentPlan,
     graphData: { nodes: [{ id: 'node_1' }, { id: 'node_2' }], edges: [{ id: 'edge_1' }] },
+    graphDraftRecord: null,
     canonicalNodes,
     canonicalEdges,
     overlayDecorations: new Map([
@@ -201,7 +222,10 @@ export function createDefaultCanvasHarnessState(): CanvasHarnessState {
       shellFeedback,
     },
     queryClient: {
+      cancelQueries: vi.fn(async () => undefined),
+      fetchQuery: vi.fn(),
       invalidateQueries: vi.fn(async () => undefined),
+      setQueryData: vi.fn(),
     },
     store: {
       _hasHydrated: true,
@@ -278,8 +302,114 @@ export function configureDefaultCanvasHarnessMocks(
   state: CanvasHarnessState,
   mocks: CanvasHarnessMocks
 ): void {
-  mocks.useQuery.mockReturnValue({ data: state.graphData, isPending: false, isError: false });
+  const storeState = state.store as typeof state.store & {
+    selectedNodes: string[];
+    setSelectedNodes: MockFn;
+    inspectorNodeId: string | null;
+    setInspectorNode: MockFn;
+    currentPlan: PlanViewModel | null;
+    setCurrentPlan: MockFn;
+  };
+
+  storeState.setSelectedNodes.mockImplementation((nodeIds: string[]) => {
+    storeState.selectedNodes = nodeIds;
+  });
+  storeState.setInspectorNode.mockImplementation((nodeId: string | null) => {
+    storeState.inspectorNodeId = nodeId;
+  });
+  storeState.setCurrentPlan.mockImplementation((plan: PlanViewModel | null) => {
+    storeState.currentPlan = plan;
+    state.currentPlan = plan;
+  });
+  (
+    state.services.workspaceService.getGraphSnapshot as MockFn
+  ).mockImplementation(async () => ({
+    nodes: [...state.graphData.nodes],
+    edges: [...state.graphData.edges],
+  }));
+  (state.services.workspaceService.getGraphDraft as MockFn).mockImplementation(
+    async () => state.graphDraftRecord
+  );
+  mocks.useQuery.mockImplementation((queryConfig?: { queryKey?: readonly string[] }) => {
+    const queryKey = queryConfig?.queryKey ?? [];
+    if (queryKey[1] === 'graph-draft') {
+      return { data: state.graphDraftRecord, isPending: false, isError: false };
+    }
+
+    return { data: state.graphData, isPending: false, isError: false };
+  });
   mocks.useQueryClient.mockReturnValue(state.queryClient);
+  state.queryClient.setQueryData.mockImplementation(
+    (
+      queryKey: readonly unknown[],
+      value:
+        | WorkspaceGraphDraftRecord
+        | null
+        | { nodes: Array<{ id: string }>; edges: Array<{ id: string }> }
+    ) => {
+      if (queryKey[1] === 'graph-draft') {
+        state.graphDraftRecord = value as WorkspaceGraphDraftRecord | null;
+      }
+
+      if (queryKey[1] === 'graph') {
+        state.graphData = value as { nodes: Array<{ id: string }>; edges: Array<{ id: string }> };
+      }
+    }
+  );
+  state.queryClient.fetchQuery.mockImplementation(
+    async ({
+      queryKey,
+      queryFn,
+    }: {
+      queryKey?: readonly unknown[];
+      queryFn?: () => Promise<unknown>;
+    }) => {
+      const resolvedValue = queryFn ? await queryFn() : undefined;
+
+      if (queryKey?.[1] === 'graph-draft') {
+        state.graphDraftRecord = resolvedValue as WorkspaceGraphDraftRecord | null;
+      }
+
+      if (queryKey?.[1] === 'graph') {
+        state.graphData = resolvedValue as {
+          nodes: Array<{ id: string }>;
+          edges: Array<{ id: string }>;
+        };
+      }
+
+      return resolvedValue;
+    }
+  );
+  state.store.setCanvasNodePositions.mockImplementation(
+    (workspaceLayoutKey: string, positions: Record<string, { x: number; y: number }>) => {
+      const canvasLayouts = state.store.canvasLayouts as Record<
+        string,
+        { nodePositions?: Record<string, { x: number; y: number }>; viewport?: unknown }
+      >;
+      state.store.canvasLayouts = {
+        ...canvasLayouts,
+        [workspaceLayoutKey]: {
+          ...canvasLayouts[workspaceLayoutKey],
+          nodePositions: positions,
+        },
+      };
+    }
+  );
+  state.store.setCanvasViewport.mockImplementation(
+    (workspaceLayoutKey: string, viewport: { x: number; y: number; zoom: number }) => {
+      const canvasLayouts = state.store.canvasLayouts as Record<
+        string,
+        { nodePositions?: Record<string, { x: number; y: number }>; viewport?: unknown }
+      >;
+      state.store.canvasLayouts = {
+        ...canvasLayouts,
+        [workspaceLayoutKey]: {
+          ...canvasLayouts[workspaceLayoutKey],
+          viewport,
+        },
+      };
+    }
+  );
   const selectFromStore = (selector?: (value: typeof state.store) => unknown) =>
     typeof selector === 'function' ? selector(state.store) : state.store;
   mocks.useCanvasInteractionStore.mockImplementation(selectFromStore);

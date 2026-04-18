@@ -1923,23 +1923,53 @@ tasks:
       across governed persisted draft schema versions.
     complexity: L
     effort_points: 8
-    progress_pct: 15
+    progress_pct: 50
     evidence_refs:
       - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-production-node-authoring-and-persistence-plan-20260416.md
+      - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-canvas-target-architecture-execution-plan-20260417.md
       - docs/architecture/components/web/graph/canvas-component-map-and-modernization-review.md
       - docs/architecture/components/web/inspector/inspector-frontend-architecture.md
       - docs/architecture/components/web/frontend-data-boundary-architecture.md
       - docs/architecture/components/web/observability/front-observability-architecture-dvt.md
+      - docs/planning/reviews/20260417-dvt-plus-deep-architectural-review.md
+      - docs/planning/closeouts/20260417-tf-e2-canvas-draft-session-refactor-closeout.md
+      - docs/planning/closeouts/20260417-tf-e2-canvas-draft-scope-fowler-refactor-closeout.md
+      - docs/planning/closeouts/20260417-tf-e2-canvas-draft-followup-qa-hardening-closeout.md
+      - docs/planning/closeouts/20260417-tf-e2-canvas-draft-race-and-import-edge-hardening-closeout.md
+      - docs/planning/closeouts/20260417-tf-e2-canvas-draft-reload-recovery-hardening-closeout.md
+      - docs/planning/closeouts/20260417-tf-e2-canvas-draft-aggregate-alignment-closeout.md
+      - docs/planning/closeouts/20260417-tf-e2-canvas-bootstrap-presentation-handoff-closeout.md
+      - docs/planning/closeouts/20260417-tf-e2-route-bootstrap-contract-generalization-closeout.md
+      - docs/planning/closeouts/20260417-tf-e2-route-bootstrap-srp-refactor-closeout.md
+      - docs/planning/closeouts/20260417-graph-architecture-doc-pack-split-closeout.md
       - docs/runbooks/index.md
     status_reason: >-
-      The productization slice is now active, but the persistence boundary is no longer left
-      implicit: `TF-A2` must freeze the shared workspace graph-draft contract and `TF-C4` must
-      implement the protected API/store path before Canvas can claim product-grade persistence. Lane
-      E now explicitly owns adoption and UX closure, not contract invention, and the UX closure must
-      expose version conflict, authorization posture, retry behavior, persisted-format evolution
-      behavior, and operable recovery context instead of silently overwriting draft truth or hiding
-      permission loss.
-    last_verified: '2026-04-16'
+      The productization slice remains active, but the current worktree has materially advanced the
+      governed draft-persistence adoption path: Canvas now carries explicit draft session and scope
+      models, validated stale-save and `missing_remote` recovery hardening, and explicit import-edge
+      promotion instead of heuristic overwrite behavior. The latest hardening also treats CAS
+      `conflict` as a blocked recovery posture, coordinates reload through fresh draft plus graph
+      fetches under React Query ownership, and prevents stale local canon from truncating recovered
+      remote drafts. The Fowler-alignment follow-up now makes the draft aggregate authoritative over
+      remote members that the current workspace snapshot cannot project yet, exposes projection-gap
+      state explicitly, fail-closes edit, `Plan`, `Run`, and autosave until the projection is
+      complete or the operator adopts the current workspace snapshot. The canonical handoff is now
+      also in place at shell level: Canvas publishes a generic route-bootstrap contract, route
+      metadata declares which surface owns startup gating, route IDs are now the canonical startup
+      keys, non-Canvas top-level routes settle through an explicit static mount boundary, and
+      `Root.tsx` consumes that active-route contract instead of branching on `/canvas` or inheriting
+      implicit route readiness. The target architecture and its execution order are now also
+      canonicalized in the TF-E2 execution companion plan, which freezes the bounded contexts,
+      ports, aggregate roots, C4/component relationships, sequence/state-machine behavior, user
+      stories, roadmap, and executable backlog for the remaining closure work. `TF-A2` and `TF-C4`
+      still govern the shared boundary, while the remaining `TF-E2` work is now the broader node,
+      edge, Inspector, operability, and end-to-end proof matrix required before the parent task can
+      move to review. A follow-up SRP refactor now also split route-bootstrap ownership into
+      contract, registration, and registry modules plus one shared active-registration hook, without
+      changing startup behavior. The graph architecture docs are now split into one short entrypoint
+      plus dedicated detail docs for startup contract, runtime model, sequence/state, and decision
+      rationale and patterns, with explicit current-point and evolution posture.
+    last_verified: '2026-04-17'
   - task_id: TF-E2-A
     parent_task: TF-E2
     priority: P0

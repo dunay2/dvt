@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import DbtExplorer from '../../components/DbtExplorer';
 import InspectorPanel from '../../components/InspectorPanel';
 import SourceImportWizard from '../../components/SourceImportWizard';
@@ -6,7 +7,6 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from '../../components/ui/resizable';
-import { useState } from 'react';
 import CanvasToolbar from './CanvasToolbar';
 import CanvasViewport from './CanvasViewport';
 import type { CanvasShellProps } from './canvasShell.types';
@@ -46,8 +46,10 @@ export default function CanvasShell({
   onToggleCostOverlay,
   onToggleImpact,
   onToggleColumns,
+  onReloadLatestDraft,
   onPlan,
   onRun,
+  draftToolbarState,
   canStartRun,
   planStatusSummary,
   exclusiveOverlayMode,
@@ -60,6 +62,12 @@ export default function CanvasShell({
   readOnlyBanner,
 }: CanvasShellProps) {
   const [dataRegistryOpen, setDataRegistryOpen] = useState(false);
+
+  useEffect(() => {
+    if (!userPermissions.canEditEdges && dataRegistryOpen) {
+      setDataRegistryOpen(false);
+    }
+  }, [dataRegistryOpen, userPermissions.canEditEdges]);
 
   return (
     <ResizablePanelGroup direction="horizontal" className="h-full">
@@ -97,8 +105,10 @@ export default function CanvasShell({
             onToggleCostOverlay={onToggleCostOverlay}
             onToggleImpact={onToggleImpact}
             onToggleColumns={onToggleColumns}
+            onReloadLatestDraft={onReloadLatestDraft}
             onPlan={onPlan}
             onRun={onRun}
+            draftToolbarState={draftToolbarState}
             canPlan={userPermissions.canPlan}
             canRun={userPermissions.canRun}
             canEditEdges={userPermissions.canEditEdges}
