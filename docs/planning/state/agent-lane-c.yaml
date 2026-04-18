@@ -2,7 +2,7 @@ lane_id: C
 title: Runtime Safety And Admission
 owner: Product / Architecture / Delivery / Docs
 status: Active
-last_reviewed: '2026-04-16'
+last_reviewed: '2026-04-18'
 goal: Harden runtime behavior, admission checks, and caller-visible freshness.
 expected_outcome:
   - runtime failures are explicit
@@ -651,20 +651,25 @@ tasks:
       20% round-reduction rule.
     complexity: S
     effort_points: 3
-    progress_pct: 67
+    progress_pct: 75
     evidence_refs:
       - docs/planning/reviews/ci-and-delivery/20260328-lane-c-ai-efficiency-and-cost-review.md
       - docs/planning/reviews/ci-and-delivery/20260402-rc-c2-operational-friction-intake-review.md
       - docs/guides/pr-preflight-and-ci-triage.md
       - docs/planning/proposals/rc-c2-shared-preflight-and-ci-log-first-triage-plan-20260401.md
       - docs/planning/closeouts/20260401-rc-c2-preflight-and-log-triage-rollout-closeout.md
+      - docs/planning/closeouts/20260418-local-build-hook-warm-cache-p0-closeout.md
+      - docs/evidence/ED-20260418-local-build-hook-warm-cache-p0.md
+      - docs/risk-register/quality/R-20260418-LOCAL-BUILD-HOOK-WARM-CACHE-P0.yaml
       - docs/planning/status/ai-efficiency-adoption-log.yaml
       - docs/planning/status/ai-efficiency-adoption-status.md
     status_reason:
-      Shared tooling, guide, structured measurement, and a canonical friction review are shipped;
-      final closure still depends on three qualifying Lane C PR cycles logged against the new
-      workflow.
-    last_verified: '2026-04-13'
+      Shared tooling, guide, structured measurement, and a canonical friction review are shipped.
+      The lane now also carries a governed local warm-build optimization slice that extends `DVT_CI`
+      hook short-circuiting to the remaining worker apps and removes forced rebuilds from
+      `@dvt/contracts`; final closure still depends on three qualifying Lane C PR cycles logged
+      against the new workflow.
+    last_verified: '2026-04-18'
   - task_id: RC-E1
     priority: P1
     status: done
@@ -1185,10 +1190,10 @@ dependency_notes:
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
-  verified_on: '2026-04-16'
+  verified_on: '2026-04-18'
   total_tasks: 46
   total_effort_points: 175
-  completed_weighted_points: 140.4
+  completed_weighted_points: 140.64
   lane_progress_pct: 80
   notes: >-
     Weighted progress uses effort_points. `MW-C1`, `TF-C2-A`, and `TF-C2-B` now contribute accepted

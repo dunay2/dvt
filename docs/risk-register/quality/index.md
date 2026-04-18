@@ -32,6 +32,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [Documentary misalignment risk for snapshot ownership and fallback polling traceability](R-20260402-SNAPSHOT-RETRY-FALLBACK-CADENCE.yaml)
 - [Downstream consumers may still depend on retired status helper exports or mixed status semantics](R-20260413-AR-A12-B-STATUS-MODEL-CONSUMER-DRIFT.yaml)
 - [DVT authoring nodes can drift behind dbt-owned renderer and inspector behavior](R-20260416-WEB-DVT-RENDERER-OWNERSHIP-DRIFT.yaml)
+- [DVT_CI warm-build shortcut could hide missing dependency builds on stale local worktrees](R-20260418-LOCAL-BUILD-HOOK-WARM-CACHE-P0.yaml)
 - [Empty temporal taskQueue values can re-enter provider-ref runtime state](R-20260409-PROVIDER-REF-EMPTY-STRING-PERSISTENCE.yaml)
 - [Engine-owned plan verification increases adapter payload size and replay pressure](R-20260407-ENGINE-ENTRYPOINT-PLAN-PAYLOAD.yaml)
 - [Envelope boundary gating can drift if payloadVersion checks stay implicit](R-20260402-S05-ENVELOPE-BOUNDARY-GATING.yaml)

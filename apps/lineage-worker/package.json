@@ -5,11 +5,11 @@
   "version": "0.1.0",
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "prebuild": "pnpm --filter \"dvt-lineage-worker^...\" build",
+    "prebuild": "node ../../scripts/skip-pretest-if-ci.cjs || pnpm --filter \"dvt-lineage-worker^...\" build",
     "build": "tsc -p tsconfig.json",
     "start": "node dist/server.js",
     "pretest": "node ../../scripts/skip-pretest-if-ci.cjs || pnpm --filter \"dvt-lineage-worker^...\" build",
-    "pretypecheck": "pnpm --filter \"dvt-lineage-worker^...\" build",
+    "pretypecheck": "node ../../scripts/skip-pretest-if-ci.cjs || pnpm --filter \"dvt-lineage-worker^...\" build",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run --config vitest.config.ts"
   },
