@@ -28,6 +28,16 @@ mitigations:
     Declare the root shared `tsconfig` files, workspace file, and orchestration helper under
     `turbo.json` `globalDependencies`.
   - >-
+    Declare package-local `.env*` files and `VITE_*` variables for `@dvt/web` under
+    `apps/web/turbo.json` so cache hits cannot replay a bundle built from stale local env
+    configuration.
+  - >-
+    Remove synthetic per-build metadata from the web bundle so Turbo does not replay a stale
+    timestamp as if it were a fresh artifact.
+  - >-
+    Hide the bootstrap build-date row when no explicit `VITE_APP_BUILD_DATE` is injected so the
+    deterministic bundle fix does not degrade the normal startup metadata UX to `Build unknown`.
+  - >-
     Scope the new helper to `prebuild` and require a real `TURBO_HASH` or `DVT_CI` signal before
     skipping the fallback dependency build.
   - >-

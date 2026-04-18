@@ -120,6 +120,10 @@ flowchart TD
   - `.gitignore`
   - `turbo.json`
   - `scripts/skip-prebuild-if-orchestrated.cjs`
+  - `apps/web/turbo.json`
+  - `apps/web/vite.config.ts`
+  - `apps/web/src/app/bootstrap/appBootstrapScreen.ts`
+  - `apps/web/src/app/bootstrap/appBootstrapScreen.test.ts`
   - `scripts/README.md`
   - `docs/guides/testing-and-ci-capabilities.md`
   - `apps/api/package.json`
@@ -160,7 +164,13 @@ flowchart TD
   - switching heavy packages to `tsup`/`swc`
 - Validation plan:
   - `pnpm build`
+  - `pnpm --filter @dvt/web typecheck`
+  - `pnpm --filter @dvt/web test`
+  - `pnpm exec turbo run build --filter=@dvt/web --force`
+  - `pnpm exec turbo run build --filter=@dvt/web`
+  - `pnpm --filter @dvt/web build`
   - targeted direct package builds for the touched `prebuild` workspaces
+  - `pnpm docs:status:generate`
   - `pnpm docs:sync`
   - `pnpm docs:workboard:generate`
   - `pnpm docs:arc:evidence:check`
@@ -181,6 +191,11 @@ flowchart TD
 - Added `turbo.json` with the minimal `build` graph, `dependsOn: ["^build"]`,
   cacheable `outputs`, and the root shared files that must invalidate build
   tasks.
+- Added `apps/web/turbo.json` so the web build hash includes package-local
+  `.env*` files and `VITE_*` variables that Vite injects into the bundle.
+- Removed the synthetic `@dvt/web` build timestamp so the Turbo cache does not
+  replay stale bundle metadata as if it were a fresh build, and hid the
+  bootstrap build-date line when no explicit metadata is injected.
 - Added `scripts/skip-prebuild-if-orchestrated.cjs` so `prebuild` hooks skip
   only when `DVT_CI` or a real `TURBO_HASH` proves an orchestrator already owns
   the graph.
@@ -194,9 +209,21 @@ flowchart TD
 - `pnpm build`:
   failed at the pre-existing `dvt-outbox-worker` TypeScript blocker
   `apps/outbox-worker/src/ops/OutboxWorkerMonitor.ts:382` (`TS2532`).
+- `pnpm --filter @dvt/web typecheck`: passed
+- `pnpm --filter @dvt/web test`:
+  passed, including the bootstrap metadata coverage that now hides the build
+  date row unless `VITE_APP_BUILD_DATE` is injected explicitly.
 - `pnpm exec turbo run build --filter=dvt-api`:
   passed; repeated execution restored the entire filtered graph from the local
   Turbo cache.
+- `pnpm exec turbo run build --filter=@dvt/web --force`:
+  passed.
+- `pnpm exec turbo run build --filter=@dvt/web`:
+  passed; after mutating a temporary `apps/web/.env.production.local`, the web
+  task reran as a cache miss and the emitted bundle switched from
+  `tenant-3010` to `tenant-4010`, confirming the package-local env inputs now
+  participate in the Turbo hash.
+- `pnpm --filter @dvt/web build`: passed
 - `pnpm --filter dvt-api build`: passed
 - `pnpm --filter dvt-lineage-worker build`: passed
 - `pnpm --filter dvt-outbox-worker build`:
@@ -210,6 +237,12 @@ flowchart TD
 - `pnpm --filter @dvt/engine build`: passed
 - `pnpm --filter @dvt/run-domain build`: passed
 - `pnpm --filter @dvt/traceability-service build`: passed
+- `pnpm docs:status:generate`: passed
+- `pnpm docs:sync`: passed
+- `pnpm docs:workboard:generate`: passed
+- `pnpm docs:arc:evidence:check`: passed
+- `pnpm docs:gov:locations`: passed
+- `pnpm verify:prepush`: passed
 
 ## Outcome
 
@@ -217,7 +250,9 @@ Root `pnpm build` is now cache-aware through `turbo`, but direct package
 `build` commands still retain the package-local dependency fallback that the
 2026-03-16 baseline required. The slice therefore removes duplicate root build
 orchestration without pretending the known `outbox-worker` type failure is part
-of this change.
+of this change, and the `@dvt/web` target now invalidates correctly on
+package-local env changes without degrading the bootstrap metadata UX to
+`Build unknown`.
 
 ## Debt And Stub Check
 

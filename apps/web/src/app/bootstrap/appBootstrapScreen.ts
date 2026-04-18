@@ -86,6 +86,16 @@ function updateBootstrapText(id: string, text: string): void {
   }
 }
 
+function setBootstrapMetaItem(id: string, text: string, visible: boolean): void {
+  const node = document.getElementById(id);
+  if (!node) {
+    return;
+  }
+
+  node.textContent = text;
+  node.hidden = !visible;
+}
+
 function getDefaultDetail(step: BootstrapStep, status: BootstrapStepStatus): string {
   switch (status) {
     case 'complete':
@@ -226,10 +236,13 @@ function formatBuildDate(isoString: string): string {
 function updateBootstrapBuildMeta(): void {
   const appVersion = import.meta.env.VITE_APP_VERSION?.trim() || '0.0.0';
   const rawBuildDate = import.meta.env.VITE_APP_BUILD_DATE?.trim() || '';
-  const buildDate = rawBuildDate.length > 0 ? formatBuildDate(rawBuildDate) : 'unknown';
 
   updateBootstrapText(VERSION_ID, `Version ${appVersion}`);
-  updateBootstrapText(BUILD_DATE_ID, `Build ${buildDate}`);
+  setBootstrapMetaItem(
+    BUILD_DATE_ID,
+    rawBuildDate.length > 0 ? `Build ${formatBuildDate(rawBuildDate)}` : '',
+    rawBuildDate.length > 0
+  );
 }
 
 export function startBootstrapScreen(): void {
