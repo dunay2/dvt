@@ -4,7 +4,12 @@ import { promisify } from 'node:util';
 
 const execFileAsync = promisify(execFile);
 
-const ROOT_CONFIG_PATTERNS = ['package.json', 'pnpm-lock.yaml', 'pnpm-workspace.yaml'];
+const ROOT_CONFIG_PATTERNS = [
+  'package.json',
+  'pnpm-lock.yaml',
+  'pnpm-workspace.yaml',
+  'turbo.json',
+];
 
 function readWorkflowScopePolicy() {
   const policyPath = new URL('./policy/workflow-scope.json', import.meta.url);
@@ -18,9 +23,26 @@ function readWorkflowScopePolicy() {
     'generated_capability_relevant',
     'workspace_global',
     'workspace_api',
+    'workspace_lineage_worker',
+    'workspace_outbox_worker',
+    'workspace_projector_worker',
+    'workspace_temporal_worker',
     'workspace_web',
+    'workspace_artifacts',
+    'workspace_crypto',
     'workspace_contracts',
+    'workspace_delivery',
+    'workspace_dsl',
     'workspace_engine',
+    'workspace_observability',
+    'workspace_observability_otel',
+    'workspace_plan_interpreter',
+    'workspace_plan_verifier',
+    'workspace_planner',
+    'workspace_planner_contracts',
+    'workspace_run_domain',
+    'workspace_state_store',
+    'workspace_traceability_service',
     'workspace_adapter_postgres',
     'workspace_adapter_temporal',
     'workspace_cli',
@@ -63,7 +85,43 @@ export const WORKFLOW_SCOPE_PATTERNS = {
 
 export const WORKSPACE_ENTRIES = [
   { key: 'api', name: 'api', pkg: 'dvt-api', patterns: WORKFLOW_SCOPE_POLICY.workspace_api },
+  {
+    key: 'lineage_worker',
+    name: 'lineage-worker',
+    pkg: 'dvt-lineage-worker',
+    patterns: WORKFLOW_SCOPE_POLICY.workspace_lineage_worker,
+  },
+  {
+    key: 'outbox_worker',
+    name: 'outbox-worker',
+    pkg: 'dvt-outbox-worker',
+    patterns: WORKFLOW_SCOPE_POLICY.workspace_outbox_worker,
+  },
+  {
+    key: 'projector_worker',
+    name: 'projector-worker',
+    pkg: 'dvt-projector-worker',
+    patterns: WORKFLOW_SCOPE_POLICY.workspace_projector_worker,
+  },
+  {
+    key: 'temporal_worker',
+    name: 'temporal-worker',
+    pkg: 'dvt-temporal-worker',
+    patterns: WORKFLOW_SCOPE_POLICY.workspace_temporal_worker,
+  },
   { key: 'web', name: 'web', pkg: '@dvt/web', patterns: WORKFLOW_SCOPE_POLICY.workspace_web },
+  {
+    key: 'artifacts',
+    name: 'artifacts',
+    pkg: '@dvt/artifacts',
+    patterns: WORKFLOW_SCOPE_POLICY.workspace_artifacts,
+  },
+  {
+    key: 'crypto',
+    name: 'crypto',
+    pkg: '@dvt/crypto',
+    patterns: WORKFLOW_SCOPE_POLICY.workspace_crypto,
+  },
   {
     key: 'contracts',
     name: 'contracts',
@@ -71,10 +129,71 @@ export const WORKSPACE_ENTRIES = [
     patterns: WORKFLOW_SCOPE_POLICY.workspace_contracts,
   },
   {
+    key: 'delivery',
+    name: 'delivery',
+    pkg: '@dvt/delivery',
+    patterns: WORKFLOW_SCOPE_POLICY.workspace_delivery,
+  },
+  { key: 'dsl', name: 'dsl', pkg: '@dvt/dsl', patterns: WORKFLOW_SCOPE_POLICY.workspace_dsl },
+  {
     key: 'engine',
     name: 'engine',
     pkg: '@dvt/engine',
     patterns: WORKFLOW_SCOPE_POLICY.workspace_engine,
+  },
+  {
+    key: 'observability',
+    name: 'observability',
+    pkg: '@dvt/observability',
+    patterns: WORKFLOW_SCOPE_POLICY.workspace_observability,
+  },
+  {
+    key: 'observability_otel',
+    name: 'observability-otel',
+    pkg: '@dvt/observability-otel',
+    patterns: WORKFLOW_SCOPE_POLICY.workspace_observability_otel,
+  },
+  {
+    key: 'plan_interpreter',
+    name: 'plan-interpreter',
+    pkg: '@dvt/plan-interpreter',
+    patterns: WORKFLOW_SCOPE_POLICY.workspace_plan_interpreter,
+  },
+  {
+    key: 'plan_verifier',
+    name: 'plan-verifier',
+    pkg: '@dvt/plan-verifier',
+    patterns: WORKFLOW_SCOPE_POLICY.workspace_plan_verifier,
+  },
+  {
+    key: 'planner',
+    name: 'planner',
+    pkg: '@dvt/planner',
+    patterns: WORKFLOW_SCOPE_POLICY.workspace_planner,
+  },
+  {
+    key: 'planner_contracts',
+    name: 'planner-contracts',
+    pkg: '@dvt/planner-contracts',
+    patterns: WORKFLOW_SCOPE_POLICY.workspace_planner_contracts,
+  },
+  {
+    key: 'run_domain',
+    name: 'run-domain',
+    pkg: '@dvt/run-domain',
+    patterns: WORKFLOW_SCOPE_POLICY.workspace_run_domain,
+  },
+  {
+    key: 'state_store',
+    name: 'state-store',
+    pkg: '@dvt/state-store',
+    patterns: WORKFLOW_SCOPE_POLICY.workspace_state_store,
+  },
+  {
+    key: 'traceability_service',
+    name: 'traceability-service',
+    pkg: '@dvt/traceability-service',
+    patterns: WORKFLOW_SCOPE_POLICY.workspace_traceability_service,
   },
   {
     key: 'adapter_postgres',
@@ -94,16 +213,53 @@ export const WORKSPACE_ENTRIES = [
 export const CI_GLOBAL_PATTERNS = WORKFLOW_SCOPE_POLICY.workspace_global;
 
 export const TEST_SCOPE_PATTERNS = {
+  any_test: [
+    'apps/**',
+    'packages/**',
+    '.github/actions/setup-node-pnpm/**',
+    '.github/scripts/**',
+    '.github/workflows/test.yml',
+    'tools/ci/**',
+    'scripts/skip-pretest-if-ci.cjs',
+    'scripts/skip-prebuild-if-orchestrated.cjs',
+    'scripts/build-workspace-runtime-deps.cjs',
+    ...ROOT_CONFIG_PATTERNS,
+    'vitest.config.ts',
+    'tsconfig*.json',
+  ],
   engine: ['packages/@dvt/engine/**'],
   contracts: ['packages/@dvt/contracts/**'],
-  adapter_postgres: ['packages/@dvt/adapter-postgres/**'],
   adapter_temporal: ['packages/@dvt/adapter-temporal/**'],
   cli: ['packages/@dvt/cli/**'],
+  api: ['apps/api/**'],
+  lineage_worker: ['apps/lineage-worker/**'],
+  outbox_worker: ['apps/outbox-worker/**'],
+  projector_worker: ['apps/projector-worker/**'],
+  temporal_worker: ['apps/temporal-worker/**'],
+  web: ['apps/web/**'],
+  artifacts: ['packages/@dvt/artifacts/**'],
+  crypto: ['packages/@dvt/canonical/**'],
+  delivery: ['packages/@dvt/delivery/**'],
+  dsl: ['packages/@dvt/dsl/**'],
+  observability: ['packages/@dvt/observability/**'],
+  observability_otel: ['packages/@dvt/observability-otel/**'],
+  plan_interpreter: ['packages/@dvt/plan-interpreter/**'],
+  plan_verifier: ['packages/@dvt/plan-verifier/**'],
+  planner: ['packages/@dvt/planner/**'],
+  run_domain: ['packages/@dvt/run-domain/**'],
+  state_store: ['packages/@dvt/state-store/**'],
+  traceability_service: ['packages/@dvt/traceability-service/**'],
   root_config: [
     ...ROOT_CONFIG_PATTERNS,
     'vitest.config.ts',
     'tsconfig*.json',
+    '.github/actions/setup-node-pnpm/**',
+    '.github/scripts/**',
     '.github/workflows/test.yml',
+    'tools/ci/**',
+    'scripts/skip-pretest-if-ci.cjs',
+    'scripts/skip-prebuild-if-orchestrated.cjs',
+    'scripts/build-workspace-runtime-deps.cjs',
   ],
 };
 

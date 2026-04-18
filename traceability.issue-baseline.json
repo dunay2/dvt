@@ -1,0 +1,980 @@
+{
+  "version": "1.0",
+  "issues": [
+    {
+      "code": "ADR_NOT_ACCEPTED",
+      "filePath": "packages/@dvt/adapter-temporal/test/integration.postgres.time-skipping.test.ts",
+      "adrNumber": "ADR-0010"
+    },
+    {
+      "code": "ADR_NOT_ACCEPTED",
+      "filePath": "packages/@dvt/adapter-temporal/test/integration.postgres.time-skipping.test.ts",
+      "adrNumber": "ADR-0011"
+    },
+    {
+      "code": "ADR_NOT_ACCEPTED",
+      "filePath": "packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts",
+      "adrNumber": "ADR-0010"
+    },
+    {
+      "code": "ADR_NOT_ACCEPTED",
+      "filePath": "packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts",
+      "adrNumber": "ADR-0011"
+    },
+    {
+      "code": "ADR_NOT_ACCEPTED",
+      "filePath": "packages/@dvt/adapter-temporal/test/integration.transformation.time-skipping.test.ts",
+      "adrNumber": "ADR-0010"
+    },
+    {
+      "code": "ADR_NOT_ACCEPTED",
+      "filePath": "packages/@dvt/adapter-temporal/test/integration.transformation.time-skipping.test.ts",
+      "adrNumber": "ADR-0011"
+    },
+    {
+      "code": "ADR_NOT_ACCEPTED",
+      "filePath": "packages/@dvt/engine/src/services/RunMaintenanceService.ts",
+      "adrNumber": "ADR-0009"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/adapter-postgres/src/PostgresAdapterConnectionString.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/adapter-postgres/src/PostgresArchiveLeaseStore.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/adapter-postgres/src/PostgresBackpressureSnapshotReader.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/adapter-postgres/src/PostgresDeliveryBufferPurgeStore.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/adapter-postgres/src/PostgresLineageOutboxStore.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/adapter-postgres/src/PostgresOutboxStore.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/adapter-postgres/src/PostgresPlanStore.admission-repository.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/adapter-postgres/src/PostgresPlanStore.executability-repository.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/adapter-postgres/src/PostgresPlanStore.executable-blob-repository.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/adapter-postgres/src/PostgresPlanStore.mappers.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/adapter-postgres/src/PostgresPlanStore.plan-record-repository.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/adapter-postgres/src/PostgresPlanStore.schema-manager.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/adapter-postgres/src/PostgresPlanStore.sql.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/adapter-postgres/src/PostgresPlanStore.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/adapter-postgres/src/PostgresPlanStore.tx.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/adapter-postgres/src/PostgresPlanStoreComposer.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/adapter-postgres/src/PostgresRunArchiveStore.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/adapter-postgres/src/PostgresRunEventStorage.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/adapter-postgres/src/PostgresSchemaManager.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/adapter-postgres/src/PostgresSnapshotWorkQueue.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/adapter-postgres/src/PostgresStateStoreRuntimeComposer.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/adapter-postgres/src/PostgresStateStoreRuntimeConfig.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/adapter-postgres/src/runEventEnvelopePolicy.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/adapter-postgres/src/types.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/adapter-temporal/src/activities/activityFactory.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/adapter-temporal/src/activities/activityFailures.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/adapter-temporal/src/activities/activityTypes.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/adapter-temporal/src/activities/dbtStepActivity.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/adapter-temporal/src/activities/gatewayStepActivity.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/adapter-temporal/src/activities/stepActivities.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/adapter-temporal/src/activities/stepActivityDispatcher.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/adapter-temporal/src/activities/stepActivityValidation.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/adapter-temporal/src/engine-types.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/adapter-temporal/src/ObservedTemporalAdapter.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/adapter-temporal/src/plugins/dbt/DbtCliPluginRunner.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/adapter-temporal/src/RunStateCommandPortCircuitBreaker.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/adapter-temporal/src/temporalErrorPolicy.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/adapter-temporal/src/temporalObservability.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/adapter-temporal/src/TemporalPolicyMapper.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/adapter-temporal/src/workflows/workflowHelpers.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/adapter-temporal/test/activities.test.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/adapter-temporal/test/DbtCliPluginRunner.test.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/adapter-temporal/test/dbtRuntimeFixtures.test.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/adapter-temporal/test/helpers/integration/dbtRuntimeFixtures.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/adapter-temporal/test/helpers/integration/runtimeState.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/adapter-temporal/test/helpers/integration/testActivities.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/adapter-temporal/test/helpers/integration/testPlans.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/adapter-temporal/test/helpers/integration/waitForCondition.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/adapter-temporal/test/helpers/integration/workflowArtifacts.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/adapter-temporal/test/helpers/mockObservability.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/adapter-temporal/test/helpers/testExecutors.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/adapter-temporal/test/integration.time-skipping.shared.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/adapter-temporal/test/ObservedTemporalAdapter.test.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/adapter-temporal/test/RunStateCommandPortCircuitBreaker.test.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/adapter-temporal/test/smoke.test.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/adapter-temporal/test/TemporalAdapter.startRun.test.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/adapter-temporal/test/temporalErrorPolicy.test.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/adapter-temporal/test/TemporalPolicyMapper.test.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/adapter-temporal/test/TemporalWorkerHost.lifecycle.test.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/adapter-temporal/test/workflow-compiled-code-ref.test.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/adapter-temporal/test/workflow-continue-as-new.test.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/adapter-temporal/test/workflow-dag-scheduler.test.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/adapter-temporal/test/workflow-literals.test.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/adapter-temporal/test/workflow-retry-policy.test.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/contracts/src/contracts/engine/ExecutionSemantics.v1.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/contracts/src/contracts/engine/IOutboxStorage.v1.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/contracts/src/contracts/engine/IProjector.v1.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/contracts/src/contracts/engine/IWorkflowEngine.v1.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/contracts/src/contracts/engine/RunEvents.v1.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/contracts/src/contracts/engine/RunExecutionContext.v1.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/contracts/src/contracts/engine/RunExecutionPolicy.v1.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/contracts/src/contracts/engine/StartRunBoundary.v1.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/contracts/src/contracts/lineage/ILineageSink.v1.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/contracts/src/contracts/planner/CustomPolicyNamespaceRegistry.v1.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/contracts/src/contracts/planner/ExecutionBindingVerification.v1.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v1.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/contracts/src/contracts/planner/IExecutionPlanner.v1.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionLink.v1.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/contracts/src/contracts/planner/PlanExecutabilityRecord.v1.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/contracts/src/contracts/planner/PlanExecutabilityValidation.v1.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/contracts/src/contracts/planner/PlannerPolicyVocabulary.v2.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/contracts/src/contracts/planner/PlanRecord.v1.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/contracts/src/contracts/planner/PlanValidationLifecycle.v1.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/contracts/src/contracts/planner/PlanVersion.v1.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/contracts/src/contracts/planner/PolicyMappingTable.v1.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/contracts/src/contracts/planner/StepKindRegistry.v1.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/contracts/src/contracts/planner/TransformationFlowCompiler.v1.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/contracts/src/contracts/planner/TransformationFlowCompilerSummary.v1.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/contracts/src/contracts/planner/TransformationFlowDesignGraph.v1.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/contracts/src/contracts/planner/TransformationFlowPreview.v1.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/contracts/src/contracts/planner/TransformationFlowStepKinds.v1.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/contracts/src/contracts/planner/TransformationFlowStepTypeConfigs.v1.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphDraft.v1.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/contracts/src/engine/IRunSnapshotStalenessQuery.v1.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/contracts/src/engine/IRunStateStore.v1.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/contracts/src/index.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/contracts/src/ports/artifact-store.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/contracts/src/schema-packs/common.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/contracts/src/schema-packs/execution-plan.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/contracts/src/schema-packs/external-plan-compile.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/contracts/src/schema-packs/planner.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/contracts/src/schema-packs/planner-build.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/contracts/src/schema-packs/planner-context.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/contracts/src/schema-packs/planner-graph.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/contracts/src/schema-packs/plan-preview.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/contracts/src/schema-packs/plan-preview-profile.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/contracts/src/schema-packs/plan-preview-request.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/contracts/src/schema-packs/plan-preview-response.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/contracts/src/schema-packs/plan-records.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/contracts/src/schema-packs/run-events.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/contracts/src/schema-packs/shared.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/contracts/src/schema-packs/start-run.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/contracts/src/schema-packs/workspace-graph-draft.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/contracts/src/step-registry/BuiltInStepTypeEntries.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/contracts/src/step-registry/DbtStepTypeConfig.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/contracts/src/step-registry/StepTypeRegistry.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/contracts/src/utils/contractPrimitives.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/contracts/src/validation/core.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/contracts/src/validation/events.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/contracts/src/validation/planner.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/contracts/src/validation/runtime.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/engine/src/application/IStartRunApplicationService.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/engine/src/application/RecoverRunApplicationService.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/engine/src/application/StartRunAdmissionGuard.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/engine/src/application/StartRunApplicationService.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/engine/src/contracts/engine/ExecutionPlan.v1.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/engine/src/contracts/engine/ExecutionSemantics.v1.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/engine/src/contracts/engine/index.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/engine/src/contracts/engine/IPlanResolver.v1.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/engine/src/contracts/engine/IProvider.v1.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/engine/src/contracts/engine/IRunEnrichmentService.v1.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/engine/src/contracts/engine/IWorkflowEngine.v1.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/engine/src/contracts/engine/RunEvents.v1.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/engine/src/contracts/errors/adapterErrors.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/engine/src/contracts/errors/baseError.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/engine/src/contracts/errors/errorCodes.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/engine/src/contracts/errors/errorMessages.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/engine/src/contracts/errors/planErrors.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/engine/src/contracts/errors/runErrors.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/engine/src/contracts/executionPlan.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/engine/src/contracts/planUriPolicyViolation.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/engine/src/contracts/PlanVersionPolicy.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/engine/src/core/buildWorkflowEngineFacade.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/engine/src/core/lifecycle/coreDomainConstants.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/engine/src/core/lifecycle/coreRuntime.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/engine/src/core/lifecycle/StartRunTraceContext.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/engine/src/core/WorkflowEngineCoreService.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/engine/src/domain/IRunControlService.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/engine/src/domain/IRunHealthService.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/engine/src/domain/IRunRecoveryService.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/engine/src/domain/IRunStatusQueryService.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/engine/src/ports/IProjector.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/engine/src/ports/IRunExecutionContextBindingPolicy.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/engine/src/ports/IRunExecutionContextResolver.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/engine/src/ports/IRunSnapshotStalenessQuery.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/engine/src/ports/IRunStateStore.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/engine/src/security/hostRiskClassifier.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/engine/src/security/planRefPolicyRules.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/engine/src/security/planUri.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/engine/src/services/RunEnrichmentService.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/engine/src/services/RunHealthService.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/engine/src/services/runMaintenance/DispatchedIntentReconciliationPolicy.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/engine/src/services/runMaintenance/PendingIntentReconciliationPolicy.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/engine/src/services/runMaintenance/RunMaintenanceContracts.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/engine/src/services/runMaintenance/RunMaintenanceDomainConstants.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/engine/src/services/runMaintenance/RunMaintenanceEventFactory.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/engine/src/services/runMaintenance/RunMaintenanceObservabilityFacade.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/engine/src/services/runMaintenance/RunMaintenanceOrphanedIntentService.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/engine/src/services/runMaintenance/RunMaintenanceStuckRunService.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/engine/src/services/RunStatusQueryService.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/engine/src/services/signal/SignalTransitionGuard.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/engine/src/services/startRun/RunExecutionContextAdmissionPolicy.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/engine/src/services/startRun/StartRunDomainConstants.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/engine/src/services/startRun/StartRunEventFactory.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/engine/src/services/startRun/StartRunExecutionService.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/engine/src/services/startRun/StartRunFailurePolicy.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/engine/src/services/startRun/StartRunTypes.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/engine/src/services/startRun/StartRunValidationPolicy.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/engine/src/state/InMemoryOutboxState.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/engine/src/state/retryLineagePolicy.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/engine/src/state/runEventWritePolicy.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/engine/src/state/snapshotStaleness.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/engine/src/testing.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/engine/src/utils/errorUtils.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/traceability-service/src/lineage/cache/InMemoryCompiledCodeCache.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/traceability-service/src/lineage/compiledCodeRef.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/traceability-service/src/lineage/contracts.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/traceability-service/src/lineage/errors.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/traceability-service/src/lineage/facets/SqlJobFacetBuilder.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/traceability-service/src/lineage/HttpOpenLineageSink.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/traceability-service/src/lineage/index.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/traceability-service/src/lineage/mapper/StepStartedLineageMapper.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/traceability-service/src/lineage/openlineageSchema.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/traceability-service/src/lineage/readers/CompositeCompiledCodeReader.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/traceability-service/src/lineage/readers/FileUriCompiledCodeReader.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/traceability-service/src/lineage/readers/InMemoryCompiledCodeReader.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/traceability-service/src/lineage/resolver/CachedRetryCompiledCodeResolver.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/traceability-service/src/lineage/types.ts"
+    },
+    {
+      "code": "MISSING_VERSION",
+      "filePath": "packages/@dvt/contracts/src/utils/jcsCanonicalize.ts"
+    },
+    {
+      "code": "MISSING_VERSION",
+      "filePath": "packages/@dvt/contracts/src/utils/sha256HexUtf8.ts"
+    },
+    {
+      "code": "MISSING_VERSION",
+      "filePath": "packages/@dvt/engine/src/adapters/IProviderAdapter.ts"
+    },
+    {
+      "code": "MISSING_VERSION",
+      "filePath": "packages/@dvt/engine/src/core/WorkflowEngine.ts"
+    },
+    {
+      "code": "MISSING_VERSION",
+      "filePath": "packages/@dvt/engine/src/security/planIntegrity.ts"
+    },
+    {
+      "code": "MISSING_VERSION",
+      "filePath": "packages/@dvt/engine/src/state/InMemoryRunStateStore.ts"
+    },
+    {
+      "code": "MISSING_VERSION",
+      "filePath": "packages/@dvt/engine/src/state/InMemoryTxStore.ts"
+    },
+    {
+      "code": "MISSING_VERSION",
+      "filePath": "packages/@dvt/engine/src/types/index.ts"
+    },
+    {
+      "code": "MISSING_VERSION",
+      "filePath": "packages/@dvt/engine/src/types/types.ts"
+    },
+    {
+      "code": "MISSING_VERSION",
+      "filePath": "packages/@dvt/engine/src/utils/clock.ts"
+    },
+    {
+      "code": "MISSING_VERSION",
+      "filePath": "packages/@dvt/engine/src/utils/jcs.ts"
+    },
+    {
+      "code": "MISSING_VERSION",
+      "filePath": "packages/@dvt/engine/src/utils/sha256.ts"
+    },
+    {
+      "code": "NON_TEST_MISSING_DECISION",
+      "filePath": "packages/@dvt/contracts/src/utils/jcsCanonicalize.ts"
+    },
+    {
+      "code": "NON_TEST_MISSING_DECISION",
+      "filePath": "packages/@dvt/contracts/src/utils/sha256HexUtf8.ts"
+    },
+    {
+      "code": "NON_TEST_MISSING_DECISION",
+      "filePath": "packages/@dvt/engine/src/state/InMemoryRunStateStore.ts"
+    },
+    {
+      "code": "NON_TEST_MISSING_DECISION",
+      "filePath": "packages/@dvt/engine/src/state/InMemoryTxStore.ts"
+    },
+    {
+      "code": "NON_TEST_MISSING_DECISION",
+      "filePath": "packages/@dvt/engine/src/types/index.ts"
+    },
+    {
+      "code": "NON_TEST_MISSING_DECISION",
+      "filePath": "packages/@dvt/engine/src/types/types.ts"
+    },
+    {
+      "code": "NON_TEST_MISSING_DECISION",
+      "filePath": "packages/@dvt/engine/src/utils/clock.ts"
+    },
+    {
+      "code": "NON_TEST_MISSING_DECISION",
+      "filePath": "packages/@dvt/engine/src/utils/jcs.ts"
+    },
+    {
+      "code": "NON_TEST_MISSING_DECISION",
+      "filePath": "packages/@dvt/engine/src/utils/sha256.ts"
+    },
+    {
+      "code": "REVERSE_COVERAGE_FAIL",
+      "adrNumber": "ADR-0008"
+    },
+    {
+      "code": "REVERSE_COVERAGE_FAIL",
+      "adrNumber": "ADR-0032"
+    },
+    {
+      "code": "REVERSE_COVERAGE_FAIL",
+      "adrNumber": "ADR-0033"
+    },
+    {
+      "code": "REVERSE_COVERAGE_FAIL",
+      "adrNumber": "ADR-0035"
+    },
+    {
+      "code": "REVERSE_COVERAGE_FAIL",
+      "adrNumber": "ADR-0036"
+    },
+    {
+      "code": "REVERSE_COVERAGE_FAIL",
+      "adrNumber": "ADR-0038"
+    },
+    {
+      "code": "REVERSE_COVERAGE_FAIL",
+      "adrNumber": "ADR-0039"
+    },
+    {
+      "code": "REVERSE_COVERAGE_FAIL",
+      "adrNumber": "ADR-0040"
+    },
+    {
+      "code": "REVERSE_COVERAGE_FAIL",
+      "adrNumber": "ADR-0041"
+    },
+    {
+      "code": "REVERSE_COVERAGE_FAIL",
+      "adrNumber": "ADR-0042"
+    },
+    {
+      "code": "REVERSE_COVERAGE_FAIL",
+      "adrNumber": "ADR-0043"
+    },
+    {
+      "code": "REVERSE_COVERAGE_FAIL",
+      "adrNumber": "ADR-0044"
+    },
+    {
+      "code": "REVERSE_COVERAGE_FAIL",
+      "adrNumber": "ADR-0046"
+    },
+    {
+      "code": "REVERSE_COVERAGE_FAIL",
+      "adrNumber": "ADR-0047"
+    },
+    {
+      "code": "REVERSE_COVERAGE_FAIL",
+      "adrNumber": "ADR-0048"
+    },
+    {
+      "code": "REVERSE_COVERAGE_FAIL",
+      "adrNumber": "ADR-0049"
+    }
+  ]
+}

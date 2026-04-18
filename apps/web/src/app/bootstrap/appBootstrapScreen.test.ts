@@ -22,6 +22,10 @@ function mountBootstrapDom(): void {
         <li data-bootstrap-step="route" data-status="pending"><span data-bootstrap-detail></span></li>
       </ul>
       <div id="app-loading-progress"></div>
+      <footer id="app-loading-meta">
+        <span id="app-loading-version"></span>
+        <span id="app-loading-build-date">Build --</span>
+      </footer>
     </div>
   `;
 }
@@ -34,6 +38,7 @@ describe('appBootstrapScreen', () => {
 
   afterEach(() => {
     vi.useRealTimers();
+    vi.unstubAllEnvs();
     document.body.innerHTML = '';
   });
 
@@ -79,5 +84,24 @@ describe('appBootstrapScreen', () => {
     vi.advanceTimersByTime(120);
 
     expect(document.getElementById('app-loading-screen')).not.toBeNull();
+  });
+
+  it('hides the build-date meta item when no explicit build date is injected', () => {
+    startBootstrapScreen();
+
+    expect(document.getElementById('app-loading-version')?.textContent).toBe('Version 0.0.0');
+    expect(document.getElementById('app-loading-build-date')?.textContent).toBe('');
+    expect(document.getElementById('app-loading-build-date')?.hidden).toBe(true);
+  });
+
+  it('shows a formatted build date when explicit metadata is injected', () => {
+    vi.stubEnv('VITE_APP_BUILD_DATE', '2026-04-18T10:20:00.000Z');
+
+    startBootstrapScreen();
+
+    expect(document.getElementById('app-loading-build-date')?.textContent).toBe(
+      'Build 2026-04-18 10:20 UTC'
+    );
+    expect(document.getElementById('app-loading-build-date')?.hidden).toBe(false);
   });
 });

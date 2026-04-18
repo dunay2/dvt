@@ -17,7 +17,7 @@
  * storage/worker boundary and does not require a live database.
  */
 
-import type { EventEnvelope as RunEventPersisted } from '@dvt/contracts';
+import { asIsoUtcString, type EventEnvelope as RunEventPersisted } from '@dvt/contracts';
 import { OutboxWorker } from '@dvt/delivery';
 import { InMemoryEventBus, InMemoryOutboxStorage } from '@dvt/delivery/testing';
 import { describe, it, expect } from 'vitest';
@@ -43,8 +43,8 @@ function makeEvent(
     planVersion: '1.0.0',
     logicalAttemptId: 1,
     engineAttemptId: 1,
-    emittedAt: '2026-03-12T00:00:00.000Z',
-    persistedAt: '2026-03-12T00:00:00.000Z',
+    emittedAt: asIsoUtcString('2026-03-12T00:00:00.000Z'),
+    persistedAt: asIsoUtcString('2026-03-12T00:00:00.000Z'),
     idempotencyKey,
     payloadVersion: 1,
     runSeq,

@@ -1,0 +1,15 @@
+{
+  "$schema": "https://turborepo.dev/schema.json",
+  "globalDependencies": [
+    "pnpm-workspace.yaml",
+    "tsconfig.node-runtime.base.json",
+    "tsconfig.package-bundler.base.json",
+    "scripts/skip-prebuild-if-orchestrated.cjs"
+  ],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**", "**/*.tsbuildinfo"]
+    }
+  }
+}

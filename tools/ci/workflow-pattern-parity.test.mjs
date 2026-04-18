@@ -5,6 +5,7 @@ import test from 'node:test';
 import {
   ADAPTER_POSTGRES_RELEVANT_PATTERNS,
   PR_QUALITY_SCOPE_PATTERNS,
+  TEST_SCOPE_PATTERNS,
   WORKFLOW_SCOPE_PATTERNS,
   matchesAnyPattern,
 } from './scope-config.mjs';
@@ -22,6 +23,11 @@ test('adapter-postgres policy stays wired into the PR quality gate and test work
   const prQualityGate = readFileSync('.github/workflows/pr-quality-gate.yml', 'utf8');
   const testWorkflow = readFileSync('.github/workflows/test.yml', 'utf8');
 
+  assertWorkflowContains(
+    testWorkflow,
+    'node tools/ci/validate-policy.js tools/ci/policy/workflow-scope.json'
+  );
+  assertWorkflowContains(testWorkflow, 'node tools/ci/emit-scope.mjs --mode test');
   assertWorkflowContains(prQualityGate, 'node tools/ci/emit-scope.mjs --mode pr-quality');
   assertWorkflowContains(
     testWorkflow,
@@ -110,6 +116,26 @@ test('adapter-postgres policy stays wired into the PR quality gate and test work
   assert.ok(matchesAnyPattern('tsconfig.json', ADAPTER_POSTGRES_RELEVANT_PATTERNS));
   assert.ok(
     matchesAnyPattern('.github/workflows/pr-quality-gate.yml', ADAPTER_POSTGRES_RELEVANT_PATTERNS)
+  );
+  assert.ok(
+    matchesAnyPattern('apps/outbox-worker/src/server.ts', TEST_SCOPE_PATTERNS.outbox_worker)
+  );
+  assert.ok(
+    matchesAnyPattern(
+      'packages/@dvt/delivery/test/OutboxWorker.test.ts',
+      TEST_SCOPE_PATTERNS.delivery
+    )
+  );
+  assert.ok(matchesAnyPattern('turbo.json', TEST_SCOPE_PATTERNS.any_test));
+  assert.ok(matchesAnyPattern('turbo.json', TEST_SCOPE_PATTERNS.root_config));
+  assert.ok(matchesAnyPattern('turbo.json', workflowScopePolicy.any_code));
+  assert.ok(matchesAnyPattern('turbo.json', workflowScopePolicy.workspace_global));
+  assert.ok(matchesAnyPattern('tools/ci/emit-scope.mjs', TEST_SCOPE_PATTERNS.root_config));
+  assert.ok(
+    matchesAnyPattern('scripts/skip-prebuild-if-orchestrated.cjs', TEST_SCOPE_PATTERNS.any_test)
+  );
+  assert.ok(
+    matchesAnyPattern('scripts/skip-prebuild-if-orchestrated.cjs', TEST_SCOPE_PATTERNS.root_config)
   );
   assert.ok(
     !matchesAnyPattern(

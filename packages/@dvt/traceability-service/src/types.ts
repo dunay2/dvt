@@ -48,6 +48,17 @@ export type ValidationIssue = {
   message: string;
 };
 
+export type ValidationIssueBaselineEntry = {
+  code: ValidationIssueCode;
+  filePath?: string;
+  adrNumber?: string;
+};
+
+export type ValidationIssueBaselineFile = {
+  version: string;
+  issues: ValidationIssueBaselineEntry[];
+};
+
 export type ValidationResult = {
   ok: boolean;
   issues: ValidationIssue[];

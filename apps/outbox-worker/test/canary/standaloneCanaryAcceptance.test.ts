@@ -4,6 +4,7 @@ import { setTimeout as sleep } from 'node:timers/promises';
 import { PostgresStateStoreAdapter } from '@dvt/adapter-postgres';
 import {
   MAX_OUTBOX_ATTEMPTS,
+  asIsoUtcString,
   type EventEnvelope as RunEventPersisted,
   type OutboxRecord,
 } from '@dvt/contracts';
@@ -603,11 +604,11 @@ function makeRunQueuedEvent(runSeq = 1): RunEventPersisted {
     planVersion: '1.0.0',
     logicalAttemptId: 1,
     engineAttemptId: 1,
-    emittedAt: '2026-03-10T00:00:00.000Z',
+    emittedAt: asIsoUtcString('2026-03-10T00:00:00.000Z'),
     idempotencyKey: `key-canary-${runSeq}`,
     payloadVersion: 1,
     runSeq,
-    persistedAt: '2026-03-10T00:00:00.000Z',
+    persistedAt: asIsoUtcString('2026-03-10T00:00:00.000Z'),
   };
 }
 

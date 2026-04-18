@@ -8,7 +8,10 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
   const proxyTarget = env.VITE_API_BASE_URL?.trim() || 'http://127.0.0.1:3000';
   const appVersion = process.env.npm_package_version?.trim() || '0.0.0';
-  const appBuildDate = new Date().toISOString();
+  // Keep the bundle deterministic under Turbo cache; callers may inject an
+  // explicit build date when they need one, whether it comes from package-local
+  // .env files or the invoking shell environment.
+  const appBuildDate = env.VITE_APP_BUILD_DATE?.trim() || process.env.VITE_APP_BUILD_DATE?.trim() || '';
   const allowedHosts =
     env.VITE_ALLOWED_HOSTS
       ?.split(',')

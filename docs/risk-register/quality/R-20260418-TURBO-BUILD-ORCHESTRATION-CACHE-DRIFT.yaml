@@ -1,0 +1,63 @@
+id: R-20260418-TURBO-BUILD-ORCHESTRATION-CACHE-DRIFT
+title: Turbo build cache or orchestration drift could hide missing dependency rebuilds
+status: Open
+date: 2026-04-18
+owners:
+  - apps/api
+  - apps/lineage-worker
+  - apps/outbox-worker
+  - apps/projector-worker
+  - apps/temporal-worker
+  - packages/@dvt/adapter-postgres
+  - packages/@dvt/adapter-temporal
+  - packages/@dvt/delivery
+  - packages/@dvt/engine
+  - packages/@dvt/run-domain
+  - packages/@dvt/traceability-service
+severity: Medium
+probability: Medium
+context: >
+  This slice replaces root `pnpm -r build` orchestration with `turbo run build` and makes the
+  affected `prebuild` hooks skip only when `turbo` already owns the current build task.
+risk: >
+  If the Turbo task hash omits a root shared input, or if the orchestration-aware prebuild skip
+  broadens beyond real `turbo` ownership, cached or direct builds can reuse stale `dist` artifacts
+  and hide a missing dependency rebuild.
+mitigations:
+  - >-
+    Declare the root shared `tsconfig` files, workspace file, and orchestration helper under
+    `turbo.json` `globalDependencies`.
+  - >-
+    Declare package-local `.env*` files and `VITE_*` variables for `@dvt/web` under
+    `apps/web/turbo.json` so cache hits cannot replay a bundle built from stale local env
+    configuration.
+  - >-
+    Resolve `VITE_APP_BUILD_DATE` through the same `loadEnv(...)` path as the rest of the web
+    `VITE_*` values, with a shell-env fallback, so explicit build metadata uses the same hashed
+    inputs instead of bypassing package-local env files.
+  - >-
+    Remove synthetic per-build metadata from the web bundle so Turbo does not replay a stale
+    timestamp as if it were a fresh artifact.
+  - >-
+    Hide the bootstrap build-date row when no explicit `VITE_APP_BUILD_DATE` is injected so the
+    deterministic bundle fix does not degrade the normal startup metadata UX to `Build unknown`.
+  - >-
+    Scope the new helper to `prebuild` and require a real `TURBO_HASH` or `DVT_CI` signal before
+    skipping the fallback dependency build.
+  - >-
+    Run `pnpm build` in `Test Suite` full-root lanes so merge-gate coverage executes the same
+    Turbo-backed root path as local root builds instead of only validating the retired `pnpm -r
+    build` route.
+  - >-
+    Include `turbo.json` and `scripts/skip-prebuild-if-orchestrated.cjs` in the shared `Test Suite`
+    `root_config` scope so PRs that alter the Turbo graph or orchestration helper cannot skip the
+    merge-gate root build lane.
+  - >-
+    Include `turbo.json` in the shared workflow-scope `any_code` and `workspace_global` policy so
+    `CI - Code Quality` expands to the full affected-workspace matrix when the root Turbo graph
+    changes.
+  - >-
+    Keep direct package `build` validation in this slice so the 2026-03-16 fresh-worktree baseline
+    is not silently regressed.
+  - >-
+    Keep remote cache out of scope until the local task graph and hash inputs are proven stable.
