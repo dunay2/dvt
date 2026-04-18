@@ -1194,6 +1194,7 @@ tasks:
     progress_pct: 0
     evidence_refs:
       - docs/planning/proposals/frontend-roadmap-20260219.md
+      - docs/planning/reviews/architecture-and-governance/20260417-dvt-artifacts-review.md
     status_reason: >-
       Artifacts, diff, and Level-C surface rollout remain backlog work until the core runtime flow
       and event-monitoring surfaces are operational.
@@ -1489,6 +1490,7 @@ tasks:
     progress_pct: 0
     evidence_refs:
       - docs/planning/proposals/monaco-workbench-integration-rationale-20260402.md
+      - docs/planning/reviews/architecture-and-governance/20260417-dvt-artifacts-review.md
       - apps/web/src/app/views/DiffView.tsx
       - apps/web/src/app/views/ArtifactsView.tsx
     status_reason: >-
@@ -1973,7 +1975,7 @@ tasks:
   - task_id: TF-E2-A
     parent_task: TF-E2
     priority: P0
-    status: queued
+    status: in_progress
     objective: >-
       adopt the shared workspace graph-draft contract inside Canvas so editable graph reads and
       writes stop depending on browser-local or route-local persistence semantics.
@@ -1987,16 +1989,27 @@ tasks:
       metadata plus typed corrupt or unsupported draft outcomes.
     complexity: S
     effort_points: 3
-    progress_pct: 0
-    evidence_refs: []
+    progress_pct: 60
+    evidence_refs:
+      - docs/planning/closeouts/20260418-tf-e2-canvas-draft-repository-seam-closeout.md
+      - docs/planning/closeouts/20260418-tf-e2-canvas-srp-seams-closeout.md
+      - docs/architecture/components/web/graph/canvas-controller-current-to-target-architecture.md
+      - apps/web/src/app/views/canvas/canvasBackendPosture.ts
+      - apps/web/src/app/views/canvas/canvasAuthoringState.ts
+      - apps/web/src/app/views/canvas/useCanvasDraftLifecycle.ts
     status_reason: >-
-      Planned slice; execution waits on the shared contract freeze in `TF-A2` and the protected
-      API/store implementation in `TF-C4`. Adoption must include the shared versioning,
-      compare-and-swap, idempotent retry, tenant-scoped authorization, and read-only posture rather
-      than route-local save or permission heuristics, and it must preserve the caller-visible
-      correlation context and format-evolution behavior needed for operator diagnosis and safe
-      reloads across releases.
-    last_verified: '2026-04-16'
+      Execution has started. The first Fowler/SRP cut is now in place: Canvas draft reads, saves,
+      and reload-time snapshot access no longer live directly in `useCanvasController` and instead
+      flow through `canvasDraftRepository` over `IWorkspacePort`. A second seam is now explicit:
+      `useCanvasDraftLifecycle` now composes dedicated bootstrap/reconcile and autosave/reload hooks
+      over controller-owned query/state inputs, so the controller no longer carries the save/reload
+      effect choreography inline. The controller itself has also narrowed: backend
+      readiness/blocking posture now lives in `canvasBackendPosture`, and visible scope, recovery
+      flags, toolbar state, and mutation gating now live in `canvasAuthoringState` instead of being
+      assembled inline. The wider `TF-E2-A` slice still remains open for the shared graph-draft
+      contract adoption posture, especially explicit capability/read-only semantics and the
+      remaining boundary alignment with `TF-A2` and `TF-C4`.
+    last_verified: '2026-04-18'
   - task_id: TF-E2-B
     parent_task: TF-E2
     priority: P0

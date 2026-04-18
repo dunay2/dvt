@@ -1,0 +1,64 @@
+import type { Dispatch, MutableRefObject, SetStateAction } from 'react';
+
+import type { WorkspaceGraphDraftRecord } from '../../ports/workspace';
+import type { CanvasDraftRepository } from './canvasDraftRepository';
+import type { CanvasDraftSession } from './canvasDraftSession';
+import type {
+  CanvasDraftLifecycleCanonicalSnapshot,
+  CanvasDraftLifecycleGraphNode,
+  CanvasDraftLifecycleGraphStrategy,
+} from './canvasDraftLifecycleSnapshot';
+
+export type GraphSnapshotQueryState = {
+  isPending: boolean;
+  isError: boolean;
+};
+
+export type GraphDraftQueryState = {
+  data: WorkspaceGraphDraftRecord | null | undefined;
+  isPending: boolean;
+  isError: boolean;
+};
+
+export type QueryClientLike = {
+  cancelQueries: (args: { queryKey: readonly unknown[] }) => Promise<unknown>;
+  fetchQuery: <T>(args: {
+    queryKey: readonly unknown[];
+    queryFn: () => Promise<T>;
+  }) => Promise<T>;
+  setQueryData: (queryKey: readonly unknown[], value: unknown) => void;
+};
+
+export type DraftSaveStatus = 'idle' | 'saving' | 'saved';
+
+export type DraftAttemptRefs = {
+  saveDebounceTimerRef: MutableRefObject<ReturnType<typeof globalThis.setTimeout> | null>;
+  lastSavedSignatureRef: MutableRefObject<string | null>;
+  saveAttemptGenerationRef: MutableRefObject<number>;
+  nextSaveAttemptIdRef: MutableRefObject<number>;
+  activeSaveAttemptRef: MutableRefObject<{ id: number; generation: number } | null>;
+};
+
+export type UseCanvasDraftLifecycleArgs = {
+  draftRepository: CanvasDraftRepository;
+  graphDraftQuery: GraphDraftQueryState;
+  queryClient: QueryClientLike;
+  workspaceLayoutKey: string;
+  draftSession: CanvasDraftSession;
+  setDraftSession: Dispatch<SetStateAction<CanvasDraftSession>>;
+  canonicalSnapshot: CanvasDraftLifecycleCanonicalSnapshot;
+  graphNodes: CanvasDraftLifecycleGraphNode[];
+  graphSnapshotQuery: GraphSnapshotQueryState;
+  canPersistGraphDraft: boolean;
+  setCanvasNodePositions: (
+    workspaceLayoutKey: string,
+    positions: Record<string, { x: number; y: number }>
+  ) => void;
+  graphStrategy: CanvasDraftLifecycleGraphStrategy;
+};
+
+export type CanvasDraftLifecycle = {
+  draftSaveStatus: DraftSaveStatus;
+  reloadLatestDraft: () => void;
+  adoptCurrentWorkspaceSnapshot: () => void;
+};
