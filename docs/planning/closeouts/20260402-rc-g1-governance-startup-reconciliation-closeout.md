@@ -84,7 +84,7 @@ has been absorbed.
 - Scope:
   - `packages/@dvt/engine/src/adapters/mock/MockAdapter.ts`
   - `docs/planning/state/agent-lane-a.yaml`
-  - `docs/planning/proposals/contracts-domain-ownership-migration-plan-20260327.md`
+  - `docs/planning/proposals/mandatory/runtime-and-contracts/contracts-domain-ownership-migration-plan-20260327.md`
   - `docs/planning/reviews/event-contract-and-traceability/20260326-reconciler-runtime-solid-qa-review.md`
   - `docs/planning/proposals/governance-startup-card-router-plan-20260402.md`
   - `docs/planning/status/governance-document-rule-inventory.md`
@@ -132,7 +132,7 @@ has been absorbed.
   - `ADR-0041A`
 - Canonical planning sources:
   - `docs/planning/state/agent-lane-a.yaml`
-  - `docs/planning/proposals/contracts-domain-ownership-migration-plan-20260327.md`
+  - `docs/planning/proposals/mandatory/runtime-and-contracts/contracts-domain-ownership-migration-plan-20260327.md`
   - `docs/planning/reviews/event-contract-and-traceability/20260326-reconciler-runtime-solid-qa-review.md`
   - `docs/planning/proposals/governance-startup-card-router-plan-20260402.md`
 

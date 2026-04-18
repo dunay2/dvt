@@ -12,6 +12,7 @@ import { RecoverRunUseCase } from './application/services/recoverRunUseCase.js';
 import { SignalRunUseCase } from './application/services/signalRunUseCase.js';
 import { registerAdminRoutes } from './entrypoints/http/adminRoutes.js';
 import { cancelRunRoute } from './entrypoints/http/cancelRunRoute.js';
+import { compilePlanRoute } from './entrypoints/http/compilePlanRoute.js';
 import { getRunEventsRoute } from './entrypoints/http/getRunEventsRoute.js';
 import { getRunRoute } from './entrypoints/http/getRunRoute.js';
 import { listRunsRoute } from './entrypoints/http/listRunsRoute.js';
@@ -23,7 +24,9 @@ import {
 } from './entrypoints/http/runtimeRoutes.constants.js';
 import { signalRunRoute } from './entrypoints/http/signalRunRoute.js';
 import { startRunRoute } from './entrypoints/http/startRunRoute.js';
+import { registerWorkspaceGraphDraftRoutes } from './entrypoints/http/workspaceGraphDraftRoutes.js';
 import { ObservabilityRunStatusStalenessTelemetry } from './infrastructure/telemetry/ObservabilityRunStatusStalenessTelemetry.js';
+import { ObservabilityWorkspaceGraphDraftTelemetry } from './infrastructure/telemetry/ObservabilityWorkspaceGraphDraftTelemetry.js';
 import { SafeRunSnapshotStalenessReader } from './infrastructure/telemetry/SafeRunSnapshotStalenessReader.js';
 import { buildProtectedRuntimeModule } from './modules/buildProtectedRuntimeModule.js';
 import { registerOperationalHooks } from './modules/registerOperationalHooks.js';
@@ -209,6 +212,9 @@ export async function buildApp(): Promise<{ app: FastifyInstance; ctx: AppContex
       protectedModule.engine,
       protectedModule.stateStore.read
     );
+    const workspaceGraphDraftTelemetry = new ObservabilityWorkspaceGraphDraftTelemetry({
+      observability,
+    });
 
     app.post<{ Body: Parameters<typeof startRunRoute>[0]['body'] }>(
       RUNTIME_ROUTE_PATH.start,
@@ -230,6 +236,13 @@ export async function buildApp(): Promise<{ app: FastifyInstance; ctx: AppContex
         planResolver: protectedModule.executablePlanResolver,
       })
     );
+    app.post(RUNTIME_ROUTE_PATH.plansCompile, async (request, reply) =>
+      compilePlanRoute(request as never, reply, {
+        authenticator: protectedModule.authenticator,
+        authorizer: protectedModule.authorizer,
+        planner: protectedModule.externalCompilePlanner,
+      })
+    );
     app.post(RUNTIME_ROUTE_PATH.plansImport, async (request, reply) =>
       importPlanRoute(request as never, reply, {
         authenticator: protectedModule.authenticator,
@@ -240,6 +253,13 @@ export async function buildApp(): Promise<{ app: FastifyInstance; ctx: AppContex
         planResolver: protectedModule.executablePlanResolver,
       })
     );
+    registerWorkspaceGraphDraftRoutes(app, {
+      capabilityService: protectedModule.workspaceGraphDraftCapabilityService,
+      getUseCase: protectedModule.getWorkspaceGraphDraftUseCase,
+      saveUseCase: protectedModule.saveWorkspaceGraphDraftUseCase,
+      telemetry: workspaceGraphDraftTelemetry,
+      observability,
+    });
 
     app.get(RUNTIME_ROUTE_PATH.list, async (request, reply) =>
       listRunsRoute(request as never, reply, { ...runtimeAuth, useCase: listRunsUseCase })

@@ -16,7 +16,7 @@ navigation, working context, and one surface type (graph). The correct
 evolution is a Workspace-first operational workbench where Canvas becomes one
 tab or surface among many.
 
-Recommendation: adopt Model D (hybrid): global shell session selectors
+Recommendation: adopt model D (hybrid): global shell session selectors
 (`tenant`, `workspace-or-project`, `gitRef`) plus a workspace container and
 workbench tabs (`Graph`, `SQL`, `JSON`, `Diff`, `Artifacts`, `Log`). Keep the
 frontend as a pure client under hexagonal boundaries
@@ -48,7 +48,7 @@ The shell also mixes authoring context with operational or runtime scope. When
 creates a false equivalence between source selection and deployed runtime
 selection.
 
-## 3. Domain Model Clarification
+## 3. Domain model Clarification
 
 ### Canonical terms
 
@@ -56,7 +56,7 @@ selection.
 - `Project`: business or repo scope selected in shell context.
 - `Environment`: runtime evidence scope describing where a run, artifact, or
   log was produced or observed.
-- `GitRef`: selected source revision used for read-model and authoring views.
+- `GitRef`: selected source review used for read-model and authoring views.
 - `Workspace`: operational container in UI that binds session context, content
   scope, open surfaces, and layout state.
 - `Canvas`: graph surface or document inside a workspace, not the workspace
@@ -121,21 +121,21 @@ selection.
 
 ## 5. Canonical Recommendation
 
-Choose Model D: session context plus workspace container plus canvas tabs plus
+Choose model D: session context plus workspace container plus canvas tabs plus
 editor tabs.
 
 Reject:
 
-- Model A (`project == workspace`): too rigid for multi-root or multi-surface
+- model A (`project == workspace`): too rigid for multi-root or multi-surface
   future.
-- Model B (`workspace` above `project` only): may over-abstract and weaken
+- model B (`workspace` above `project` only): may over-abstract and weaken
   context clarity.
-- Model C (`canvas` primary plus inner tabs): still graph-centric and preserves
+- model C (`canvas` primary plus inner tabs): still graph-centric and preserves
   the core flaw.
 
 Tradeoff:
 
-Model D adds more concepts, but cleanly separates authoring context,
+model D adds more concepts, but cleanly separates authoring context,
 workspace-owned surfaces, and runtime evidence without re-architecting later.
 
 ## 6. UX Grammar
@@ -194,7 +194,7 @@ responsibility. Route state belongs in the router plus minimal synchronization
 keys (`workspaceId`, `tabId`); canvas viewport and editor cursor remain
 store-local.
 
-## 8. Routing Model
+## 8. Routing model
 
 ### Authoring routes
 
@@ -229,7 +229,7 @@ Ephemeral:
 - temporary filter chips unless they are explicitly shareable
 - runtime environment filter for authoring routes
 
-## 9. TypeScript Model
+## 9. TypeScript model
 
 ```ts
 export type TenantId = string & { readonly __brand: 'TenantId' };
@@ -397,9 +397,9 @@ merging both makes the interface too broad.
 - Adapter implements the port for `api` or `mock`.
 - Composition root selects adapter mode once.
 
-### TanStack Query integration
+### TanStack query integration
 
-- Query keys include session and workspace dimensions.
+- query keys include session and workspace dimensions.
 - Runtime environment may participate in runs or artifact query keys, but not
   in authoring shell identity.
 - No raw fetch in views or hooks.
@@ -475,7 +475,7 @@ top-level product center. The product center is the workspace workbench.
 
 - Introduce `workspaceStore`, `workbenchStore`, `statusStore`.
 - Remove environment from `sessionStore` and shell selectors.
-- Move responsibilities out of `appStore` incrementally.
+- move responsibilities out of `appStore` incrementally.
 
 ### Phase 2: workspace entity introduction
 
@@ -510,7 +510,7 @@ top-level product center. The product center is the workspace workbench.
 
 - No view or controller directly instantiates services.
 - All flows follow `View -> Hook -> Facade -> Port -> Adapter`.
-- Mode selection happens only in the composition root.
+- mode selection happens only in the composition root.
 - Environment is not part of `SessionContext` or workspace authoring routes.
 
 ### UX
@@ -539,7 +539,7 @@ top-level product center. The product center is the workspace workbench.
 - Generated tabs (`SQL`, `JSON`, `Artifact`, `Log`, `Diff`) reopen reliably per
   workspace.
 
-### Mock/API parity
+### mock/API parity
 
 - Same facades and view logic run in both modes.
 - No direct fetch exists in components.
@@ -572,7 +572,7 @@ top-level product center. The product center is the workspace workbench.
 
 ## 18. Final Recommendation
 
-Adopt Workspace-first Model D.
+Adopt Workspace-first model D.
 
 Naming recommendation:
 

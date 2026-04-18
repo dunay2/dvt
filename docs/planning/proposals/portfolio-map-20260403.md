@@ -46,7 +46,7 @@ planning_type: proposal
 - [Frontend And UX](./nice-to-have/frontend-and-ux/frontend-roadmap-20260219.md)
 - [DVT UI workbench architecture proposal 2026-04-04](./nice-to-have/frontend-and-ux/dvt-ui-workbench-architecture-proposal-20260404.md)
 - [Canvas Controller Document First Hard Gate](./nice-to-have/frontend-and-ux/canvas-controller-document-first-hard-gate-20260404.md)
-- [Platform And AI](./nice-to-have/platform-and-ai/propuesta-cli-dvt-ai.md)
+- [Platform And AI](./nice-to-have/platform-and-ai/dvt-ai-first-cli-proposal.md)
 
 ## Superseded
 

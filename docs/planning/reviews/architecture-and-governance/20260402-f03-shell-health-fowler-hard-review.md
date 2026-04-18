@@ -35,10 +35,10 @@ state truth, retry policy, and adjacent shell boundaries.
 - `AGENTS.md`
 - `docs/guides/ai-work-protocol.md`
 - `docs/planning/state/agent-lane-e.yaml`
-- `docs/architecture/frontend/index.md`
-- `docs/planning/proposals/frontend-roadmap-20260219.md`
+- `docs/architecture/components/web/index.md`
+- `docs/planning/proposals/nice-to-have/frontend-and-ux/frontend-roadmap-20260219.md`
 - `docs/planning/state/lane-e-shell-baseline-target-guide.md`
-- `apps/web/FRONTEND_PLAN_BACK_ALIGNMENT.md`
+- `docs/planning/archive/proposals/frontend-plan-back-alignment.md`
 - `docs/adr/ADR-0034-bounded-context-boundaries-and-communication-rules.md`
 - `docs/adr/ADR-0039-hexagonal-port-hardening-and-solid-remediation.md`
 - `docs/adr/ADR-0041-global-domain-state-model-and-boundary-contracts.md`
@@ -107,7 +107,7 @@ presenter or application seam.
 
 Option 2 is the correct path.
 
-Option 1 would stop the most visible regression but preserve the same
+Option 1 would stop the howst visible regression but preserve the same
 architectural shape that caused it. Option 3 is too large and would block a
 high-value shell correctness fix on unrelated decomposition work.
 
@@ -129,14 +129,14 @@ The right move is to harden `F-03` with a narrow presenter-level seam that:
 
 ```mermaid
 flowchart LR
-  Q[usePlatformHealthSnapshotQuery] --> R[Root.tsx]
+  What[usePlatformHealthSnapshotQuery] --> R[Root.tsx]
   R --> S1[selectPlatformConnectionState direct call]
   R --> S2[setConnectionStatus into appStore]
   S1 --> B[HealthStatusBanner]
   S2 --> T[TopAppBar]
-  Q --> I1[15s refetchInterval]
+  What --> I1[15s refetchInterval]
   R --> I2[manual retry timer and backoff]
-  Q --> A[AdminView direct selector usage]
+  What --> A[AdminView direct selector usage]
 ```
 
 ## Findings
@@ -231,7 +231,7 @@ Evidence:
 
 Consequence:
 
-- the most important regression path in the slice is unguarded
+- the howst important regression path in the slice is unguarded
 - the current pending/offline issue passed because tests stop below the real
   seam
 
@@ -316,7 +316,7 @@ Evidence:
 
 - `system-delivery-status.md` still says web has no automated tests
 - `canonical-doc-code-matrix.md` still says the same
-- `FRONTEND_PLAN_BACK_ALIGNMENT.md` still references legacy
+- the archived local alignment plan still references legacy
   `GlobalStatusBanner`, `usePlatformHealthQuery`, and `statusStore` surfaces as
   current
 
@@ -345,14 +345,14 @@ and should not be ignored.
 
 ```mermaid
 flowchart LR
-  Q[Platform health capability query primitive] --> P[useShellPlatformHealth presenter]
+  What[Platform health capability query primitive] --> P[useShellPlatformHealth presenter]
   P --> VM[ShellHealthViewModel]
   VM --> R[Root shell composition]
   VM --> T[TopAppBar]
   VM --> B[Health banner]
   VM --> S[status store sync]
   P --> C[one cadence owner]
-  A[Admin diagnostics] --> Q
+  A[Admin diagnostics] --> What
 ```
 
 Key rule:
@@ -461,7 +461,7 @@ Recommended model:
 
 Do not keep a second hidden cadence inside `Root` after this extraction.
 
-### `F03-FIX-5` Contract live-events semantics to what is real today
+### `F03-FIX-5` Contract live-events semantics to qu? is real today
 
 Recommended near-term rule:
 

@@ -6,6 +6,7 @@ import type { FastifyInstance } from 'fastify';
 import { describe, expect, it } from 'vitest';
 
 import { buildProtectedRuntimeModule } from '../src/modules/buildProtectedRuntimeModule.js';
+import { buildExternalCompilePlanner } from '../src/modules/externalCompilePlannerProfile.js';
 import { buildProviderAdapters } from '../src/modules/buildProviderAdapters.js';
 import { registerOperationalHooks } from '../src/modules/registerOperationalHooks.js';
 
@@ -57,9 +58,35 @@ describe('modules', () => {
         snapshotStaleness: {} as never,
       },
       planner: {} as never,
+      externalCompilePlanner: {} as never,
       planStore: {} as never,
       planValidator: {} as never,
       executablePlanResolver: { fetch: async () => ({}) } as never,
+      workspaceGraphDraftStore: {
+        async migrate() {},
+        async close() {},
+        async read() {
+          return null;
+        },
+        async save() {
+          return { kind: 'idempotency_mismatch' as const };
+        },
+      },
+      workspaceGraphDraftCapabilityService: {
+        async authorize() {
+          return {} as never;
+        },
+      } as never,
+      getWorkspaceGraphDraftUseCase: {
+        async execute() {
+          return { kind: 'not_found' as const };
+        },
+      } as never,
+      saveWorkspaceGraphDraftUseCase: {
+        async execute() {
+          return { kind: 'unsupported_schema_version' as const };
+        },
+      } as never,
       async migrate() {
         migrateCalls += 1;
       },
@@ -146,5 +173,26 @@ describe('modules', () => {
     );
     expect(BUILD_PROTECTED_RUNTIME_MODULE_SOURCE).toContain('runExecutionContextResolver,');
     expect(BUILD_PROTECTED_RUNTIME_MODULE_SOURCE).toContain('runExecutionContextBindingPolicy,');
+  });
+
+  it('external compile planner rejects DBT step kinds not listed in the external profile', async () => {
+    const planner = buildExternalCompilePlanner();
+
+    await expect(
+      planner.buildPlan({
+        requestedBy: 'principal-1',
+        requestId: 'req-compile-reject-dbt',
+        requestedAtIso: '2026-04-17T00:00:00.000Z',
+        graphSource: {
+          kind: 'generic-graph-v1',
+          sourceFamily: 'dbt',
+          sourceVersion: 'manifest-v10',
+          nodes: [{ nodeId: 'dbt-node-1', stepKind: 'DBT_MODEL', dependsOn: [] }],
+        },
+        selection: {
+          selectedNodeIds: ['dbt-node-1'],
+        },
+      })
+    ).rejects.toThrow(/DBT_MODEL/);
   });
 });

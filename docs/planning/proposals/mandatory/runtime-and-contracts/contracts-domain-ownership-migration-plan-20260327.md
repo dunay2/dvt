@@ -2,456 +2,370 @@
 title: Contracts Domain Ownership Migration Plan
 status: Active
 owner: Architecture / Contracts / Engine / Planner / Delivery / Artifacts / Traceability
-last_reviewed: 2026-04-02
+last_reviewed: 2026-04-17
 planning_type: proposal
 ---
 
 # Contracts Domain Ownership Migration Plan
 
-## Contexto
+## Context
 
-La base actual centraliza en `@dvt/contracts` contratos que son de dos tipos:
+The current baseline still centralizes two different kinds of contracts in
+`@dvt/contracts`:
 
-1. Tipos serializables cross-context (shared kernel real).
-2. Puertos de comportamiento y politicas de dominio (no shared).
+1. serializable cross-context types that genuinely belong to the shared kernel
+2. behavioral ports and domain policies that belong to one bounded context
 
-Segun ADR-0018 y ADR-0034, el punto 2 debe vivir en el paquete dueno del dominio.
-Segun ADR-0035, los contratos publicos de planner (`ExecutionPlanV2`,
-`PlannerInputEnvelopeV2`, `IExecutionPlanner`) se mantienen en `@dvt/contracts`.
+Per ADR-0018 and ADR-0034, category 2 should live in the package that owns the
+domain. Per ADR-0035, the public planner contracts
+`ExecutionPlanV2`, `PlannerInputEnvelopeV2`, and `IExecutionPlanner` remain in
+`@dvt/contracts`.
 
-## Objetivo
+## Objective
 
-Separar ownership fisico y semantico de contratos para que:
+Separate physical and semantic ownership so that:
 
-1. `@dvt/contracts` retenga solo shared serializable contracts.
-2. Los puertos no-shared se muevan a su bounded context dueno.
-3. El grafo de dependencias refleje dominio real y no conveniencia historica.
+1. `@dvt/contracts` keeps only shared serializable contracts
+2. non-shared behavioral ports move to the package that owns the domain
+3. the dependency graph reflects real domain ownership instead of historical
+   convenience
 
-## Tracker operativo activo
+## Active tracker
 
-Este documento es la propuesta canonica activa para `RC-G1`.
+This document is the active canonical proposal for `RC-G1`.
 
-- tracker operativo: `docs/planning/state/agent-lane-a.yaml`
-- tarea paraguas: `RC-G1`
-- slices activos:
-  - `RC-G1-A`: freeze de ownership matrix
+- operational tracker: `docs/planning/state/agent-lane-a.yaml`
+- umbrella task: `RC-G1`
+- active slices:
+  - `RC-G1-A`: ownership-matrix freeze
   - `RC-G1-B`: engine ports migration
-    - `RC-G1-B1`: docs/contracts-first inventory freeze + residual-import baseline
+    - `RC-G1-B1`: docs/contracts-first inventory freeze plus residual-import
+      baseline
     - `RC-G1-B2`: owner-package move inside `@dvt/engine`
-    - `RC-G1-B3`: downstream imports cutover in adapters + state-store
+    - `RC-G1-B3`: downstream import cutover in adapters and state-store
     - `RC-G1-B4`: guards, ARC-2, and closeout validation
   - `RC-G1-C`: delivery / traceability / artifacts migration
-  - `RC-G1-D`: planner-private migration + final shared-kernel cleanup
+  - `RC-G1-D`: planner-private migration plus final shared-kernel cleanup
 
-No se debe abrir una segunda propuesta paralela para este mismo trabajo.
+Do not open a second proposal for this same migration.
 
-## Regla de clasificacion (por que se mueve y por que no)
+## Classification rule
 
-Se mueve un contrato fuera de `@dvt/contracts` cuando:
+Move a contract out of `@dvt/contracts` when it:
 
-1. Expresa comportamiento de dominio (puerto, policy o workflow contract).
-2. Define operaciones y side effects (metodos), no solo shape serializable.
-3. Su evolucion semantica depende del owner del bounded context.
+1. expresses domain behavior such as a port, policy, or workflow contract
+2. defines operations and side effects, not only a serializable shape
+3. evolves semantically under one bounded-context owner
 
-No se mueve un contrato cuando:
+Keep a contract in `@dvt/contracts` when it:
 
-1. Es shape serializable cross-context (DTO, ref, envelope, id, schema).
-2. Es contrato de compatibilidad y validacion de frontera entre contextos.
-3. ADR vigente fija su hogar canonico en shared (`@dvt/contracts`).
+1. is a serializable cross-context shape such as a DTO, ref, envelope, id, or
+   schema
+2. acts as a compatibility or boundary-validation contract between contexts
+3. is explicitly fixed in the shared kernel by an accepted ADR
 
-## Freeze de taxonomia por familia
+## Family taxonomy freeze
 
-| Familia                   | Disposicion     | Hogar canonico              | Regla de decision                                                           |
-| ------------------------- | --------------- | --------------------------- | --------------------------------------------------------------------------- |
-| `shared` serializable     | `stay shared`   | `@dvt/contracts`            | DTOs, refs, envelopes, ids, schemas y contratos publicos cross-context      |
-| `engine` behavioral ports | `move to owner` | `@dvt/engine`               | puertos/policies cuyo significado semantico depende de engine               |
-| `planner` private ports   | `move to owner` | `@dvt/planner`              | puertos/policies privados de planner que no son contratos publicos ADR-0035 |
-| `delivery` ports          | `move to owner` | `@dvt/delivery`             | puertos operativos de outbox/delivery que no son shape shared               |
-| `traceability` ports      | `move to owner` | `@dvt/traceability-service` | puertos de emision/publicacion de lineage                                   |
-| `artifacts` ports         | `move to owner` | `@dvt/artifacts`            | puertos hexagonales de storage/reader/writer de artefactos                  |
+| Family                    | Disposition     | Canonical home              | Decision rule                                                             |
+| ------------------------- | --------------- | --------------------------- | ------------------------------------------------------------------------- |
+| `shared` serializable     | `stay shared`   | `@dvt/contracts`            | DTOs, refs, envelopes, ids, schemas, and public cross-context contracts   |
+| `engine` behavioral ports | `move to owner` | `@dvt/engine`               | ports and policies whose semantics belong to engine                       |
+| `planner` private ports   | `move to owner` | `@dvt/planner`              | planner-private ports and policies that are not public ADR-0035 contracts |
+| `delivery` ports          | `move to owner` | `@dvt/delivery`             | operational outbox and delivery ports that are not pure shared shapes     |
+| `traceability` ports      | `move to owner` | `@dvt/traceability-service` | lineage emission and publication ports                                    |
+| `artifacts` ports         | `move to owner` | `@dvt/artifacts`            | artifact storage, reader, and writer ports                                |
 
-La decision binaria permitida para cada contrato afectado por `RC-G1` es solo:
+The only allowed binary decision for each affected contract is:
 
 1. `stay shared`
 2. `move to owner`
 
-No se usan categorias intermedias, "semi-shared", ni wrappers permanentes de
-conveniencia.
+There are no intermediate categories, "semi-shared" contracts, or permanent
+convenience wrappers.
 
-## Que
+## What moves
 
-### Contratos no-shared a trasladar
+### Non-shared contracts to relocate
 
-| Contrato actual                                             | Owner actual (fisico) | Owner destino (dominio)     | Razon de mover (no-shared)                                                    |
-| ----------------------------------------------------------- | --------------------- | --------------------------- | ----------------------------------------------------------------------------- |
-| `src/adapters/IProviderAdapter.v1.ts`                       | `@dvt/contracts`      | `@dvt/engine`               | Puerto de comportamiento del dominio de ejecucion; no es DTO compartido       |
-| `src/engine/IRunStateStore.v1.ts` (puerto)                  | `@dvt/contracts`      | `@dvt/engine`               | Puerto write/read/maintenance del agregado Run; ownership semantico de engine |
-| `src/engine/IRunSnapshotStalenessQuery.v1.ts`               | `@dvt/contracts`      | `@dvt/engine`               | Query port operativo de engine, no contrato serializable cross-context        |
-| `src/contracts/engine/IStartRunIntentStore.v1.ts`           | `@dvt/contracts`      | `@dvt/engine`               | Puerto de crash-consistency/startRun intent lifecycle (ADR-0030)              |
-| `src/contracts/engine/StartRunIntentPolicy.v1.ts`           | `@dvt/contracts`      | `@dvt/engine`               | Policy de transicion de estado de intent; comportamiento de dominio           |
-| `src/contracts/engine/IProjector.v1.ts`                     | `@dvt/contracts`      | `@dvt/engine`               | Puerto de proyeccion ligado al modelo de ejecucion                            |
-| `src/contracts/engine/IOutboxStorage.v1.ts` (interfaces)    | `@dvt/contracts`      | `@dvt/delivery`             | Puerto operativo de delivery/outbox worker; no shape compartido puro          |
-| `src/contracts/lineage/ILineageSink.v1.ts` (interfaces)     | `@dvt/contracts`      | `@dvt/traceability-service` | Puerto de publicacion lineage del bounded context de traceabilidad            |
-| `src/ports/artifact-store.ts`                               | `@dvt/contracts`      | `@dvt/artifacts`            | Puerto hexagonal de almacenamiento de artefactos; ownership de artifacts      |
-| `src/contracts/planner/PlanExecutabilityValidation.v1.ts`   | `@dvt/contracts`      | `@dvt/planner`              | Puerto de validacion de ejecutabilidad del flujo planner->engine              |
-| `src/contracts/planner/ExecutionBindingVerification.v1.ts`  | `@dvt/contracts`      | `@dvt/planner`              | Puerto/policy de verificacion de binding de plan en lifecycle de planner      |
-| `src/contracts/planner/PlanValidationLifecycle.v1.ts`       | `@dvt/contracts`      | `@dvt/planner`              | Puerto de lifecycle store para estados de validacion de plan                  |
-| `src/contracts/planner/CustomPolicyNamespaceRegistry.v1.ts` | `@dvt/contracts`      | `@dvt/planner`              | Puerto de registro y gobernanza de custom policy namespace                    |
+| Current contract                                            | Current physical home | Target owner                | Why it moves                                               |
+| ----------------------------------------------------------- | --------------------- | --------------------------- | ---------------------------------------------------------- |
+| `src/adapters/IProviderAdapter.v1.ts`                       | `@dvt/contracts`      | `@dvt/engine`               | behavioral execution port, not a shared DTO                |
+| `src/engine/IRunStateStore.v1.ts`                           | `@dvt/contracts`      | `@dvt/engine`               | run aggregate write/read/maintenance port                  |
+| `src/engine/IRunSnapshotStalenessQuery.v1.ts`               | `@dvt/contracts`      | `@dvt/engine`               | engine operational read port, not a cross-context contract |
+| `src/contracts/engine/IStartRunIntentStore.v1.ts`           | `@dvt/contracts`      | `@dvt/engine`               | crash-consistency and start-run intent lifecycle port      |
+| `src/contracts/engine/StartRunIntentPolicy.v1.ts`           | `@dvt/contracts`      | `@dvt/engine`               | domain policy for intent transitions                       |
+| `src/contracts/engine/IProjector.v1.ts`                     | `@dvt/contracts`      | `@dvt/engine`               | projection port coupled to the execution model             |
+| `src/contracts/engine/IOutboxStorage.v1.ts`                 | `@dvt/contracts`      | `@dvt/delivery`             | delivery/outbox worker operational port                    |
+| `src/contracts/lineage/ILineageSink.v1.ts`                  | `@dvt/contracts`      | `@dvt/traceability-service` | traceability publication port                              |
+| `src/ports/artifact-store.ts`                               | `@dvt/contracts`      | `@dvt/artifacts`            | artifact storage port family                               |
+| `src/contracts/planner/PlanExecutabilityValidation.v1.ts`   | `@dvt/contracts`      | `@dvt/planner`              | planner-owned executability validation behavior            |
+| `src/contracts/planner/ExecutionBindingVerification.v1.ts`  | `@dvt/contracts`      | `@dvt/planner`              | planner-owned binding verification behavior                |
+| `src/contracts/planner/PlanValidationLifecycle.v1.ts`       | `@dvt/contracts`      | `@dvt/planner`              | planner validation lifecycle store                         |
+| `src/contracts/planner/CustomPolicyNamespaceRegistry.v1.ts` | `@dvt/contracts`      | `@dvt/planner`              | planner-owned policy namespace registry                    |
 
-### Contratos que NO se mueven
+### Contracts that do not move
 
-| Contrato                 | Motivo de NO mover                                                                   |
-| ------------------------ | ------------------------------------------------------------------------------------ |
-| `ExecutionPlanV2`        | Contrato publico cross-context; ADR-0035 define `@dvt/contracts` como hogar canonico |
-| `PlannerInputEnvelopeV2` | Contrato publico de borde planner; ADR-0035 fija shared kernel como home             |
-| `IExecutionPlanner`      | Contrato publico de integracion; ADR-0035 fija shared kernel como home               |
+| Contract                 | Why it stays shared                                                                |
+| ------------------------ | ---------------------------------------------------------------------------------- |
+| `ExecutionPlanV2`        | public cross-context planner contract; ADR-0035 fixes its home in `@dvt/contracts` |
+| `PlannerInputEnvelopeV2` | public planner boundary contract; ADR-0035 fixes its home in `@dvt/contracts`      |
+| `IExecutionPlanner`      | public integration contract; ADR-0035 fixes its home in `@dvt/contracts`           |
 
-## Donde
+## Where
 
-### Origen y destino de paths
+### Source and target paths
 
-| Dominio             | Paths origen                                                                                                                                                           | Paths destino                                        |
-| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
-| Engine              | `packages/@dvt/contracts/src/{adapters,engine,contracts/engine}/*`                                                                                                     | `packages/@dvt/engine/src/{adapters,ports,domain}/*` |
-| Planner (no-public) | `packages/@dvt/contracts/src/contracts/planner/{PlanExecutabilityValidation,ExecutionBindingVerification,PlanValidationLifecycle,CustomPolicyNamespaceRegistry}.v1.ts` | `packages/@dvt/planner/src/contracts/*`              |
-| Delivery            | `packages/@dvt/contracts/src/contracts/engine/IOutboxStorage.v1.ts`                                                                                                    | `packages/@dvt/delivery/src/contracts/*`             |
-| Traceability        | `packages/@dvt/contracts/src/contracts/lineage/ILineageSink.v1.ts`                                                                                                     | `packages/@dvt/traceability-service/src/contracts/*` |
-| Artifacts           | `packages/@dvt/contracts/src/ports/artifact-store.ts`                                                                                                                  | `packages/@dvt/artifacts/src/ports/*`                |
+| Domain             | Source paths                                                                                                                                                           | Target paths                                         |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| Engine             | `packages/@dvt/contracts/src/{adapters,engine,contracts/engine}/*`                                                                                                     | `packages/@dvt/engine/src/{adapters,ports,domain}/*` |
+| Planner non-public | `packages/@dvt/contracts/src/contracts/planner/{PlanExecutabilityValidation,ExecutionBindingVerification,PlanValidationLifecycle,CustomPolicyNamespaceRegistry}.v1.ts` | `packages/@dvt/planner/src/contracts/*`              |
+| Delivery           | `packages/@dvt/contracts/src/contracts/engine/IOutboxStorage.v1.ts`                                                                                                    | `packages/@dvt/delivery/src/contracts/*`             |
+| Traceability       | `packages/@dvt/contracts/src/contracts/lineage/ILineageSink.v1.ts`                                                                                                     | `packages/@dvt/traceability-service/src/contracts/*` |
+| Artifacts          | `packages/@dvt/contracts/src/ports/artifact-store.ts`                                                                                                                  | `packages/@dvt/artifacts/src/ports/*`                |
 
-## Impacto
+## Impact
 
-### Impacto tecnico (uso actual en repositorio)
+### Technical impact: current consumer counts
 
-Conteo de archivos que referencian cada contrato principal:
+| Contract                                                 | Consumer files |
+| -------------------------------------------------------- | -------------- |
+| `IRunStateStore`                                         | `44`           |
+| `IProviderAdapter`                                       | `38`           |
+| `IOutboxStorage`                                         | `19`           |
+| `IStartRunIntentStore`                                   | `14`           |
+| `IRunSnapshotStalenessQuery`                             | `10`           |
+| `IEventBus`                                              | `9`            |
+| `IPlanExecutabilityValidator`                            | `6`            |
+| `ILineageSink`                                           | `5`            |
+| `ILineageOutboxStore`                                    | `5`            |
+| `IStepTypeRegistry`                                      | `5`            |
+| `IPlanValidationLifecycleStore`                          | `4`            |
+| `IProjector`                                             | `2`            |
+| `IExecutionBindingVerifier`                              | `2`            |
+| `ICustomPolicyNamespaceRegistry`                         | `2`            |
+| `IArtifactStore` / `IArtifactReader` / `IArtifactWriter` | `1` each       |
 
-| Contrato                                                 | Archivos consumidores |
-| -------------------------------------------------------- | --------------------- |
-| `IRunStateStore`                                         | 44                    |
-| `IProviderAdapter`                                       | 38                    |
-| `IOutboxStorage`                                         | 19                    |
-| `IStartRunIntentStore`                                   | 14                    |
-| `IRunSnapshotStalenessQuery`                             | 10                    |
-| `IEventBus`                                              | 9                     |
-| `IPlanExecutabilityValidator`                            | 6                     |
-| `ILineageSink`                                           | 5                     |
-| `ILineageOutboxStore`                                    | 5                     |
-| `IStepTypeRegistry`                                      | 5                     |
-| `IPlanValidationLifecycleStore`                          | 4                     |
-| `IProjector`                                             | 2                     |
-| `IExecutionBindingVerifier`                              | 2                     |
-| `ICustomPolicyNamespaceRegistry`                         | 2                     |
-| `IArtifactStore` / `IArtifactReader` / `IArtifactWriter` | 1 c/u                 |
+### System impact
 
-### Impacto por sistema
+| System                                                | Expected impact                                                |
+| ----------------------------------------------------- | -------------------------------------------------------------- |
+| `@dvt/engine`                                         | high: main receiver of behavioral ports                        |
+| `@dvt/adapter-postgres`                               | high: implements engine, delivery, and planner lifecycle ports |
+| `@dvt/adapter-temporal`                               | medium-high: implements `IProviderAdapter` and policy mappers  |
+| `apps/api`                                            | medium: wiring and plan-validation use cases                   |
+| `@dvt/delivery` and `apps/outbox-worker`              | medium: consolidates outbox contract ownership                 |
+| `@dvt/traceability-service` and `apps/lineage-worker` | medium: owns lineage sink and outbox contracts                 |
+| `@dvt/artifacts`                                      | medium: owns artifact-store ports                              |
 
-| Sistema                                             | Impacto esperado                                              |
-| --------------------------------------------------- | ------------------------------------------------------------- |
-| `@dvt/engine`                                       | Alto: principal receptor de puertos de comportamiento         |
-| `@dvt/adapter-postgres`                             | Alto: implementa puertos engine/delivery/planner lifecycle    |
-| `@dvt/adapter-temporal`                             | Medio-alto: implementa `IProviderAdapter` y mappers de policy |
-| `apps/api`                                          | Medio: wiring y casos de uso de plan validation               |
-| `@dvt/delivery` + `apps/outbox-worker`              | Medio: consolidacion de outbox contracts                      |
-| `@dvt/traceability-service` + `apps/lineage-worker` | Medio: ownership de lineage sink/outbox contracts             |
-| `@dvt/artifacts`                                    | Medio: ownership de artifact store ports                      |
+## How
 
-## Como
+### Phase 0 - preparation and move-and-cut baseline
 
-### Fase 0 - Preparacion y baseline de move-and-cut
+- inventory current imports and freeze the destination owner package before the
+  cut
+- ensure structural-equivalence tests and package-level validation exist for
+  touched packages
+- disallow dual `owner + shared` exports in the engine-ownership slice
 
-- Inventariar imports actuales y fijar el owner package destino antes del corte.
-- Asegurar tests de equivalencia estructural y validacion por paquetes tocados.
-- Prohibir dual exports owner+shared en el slice de engine ownership.
+### Phase 1 - engine ownership
 
-### Fase 1 - Engine ownership
+- move `IProviderAdapter`, `IRunStateStore`, `IStartRunIntentStore`,
+  `IRunSnapshotStalenessQuery`, `IProjector`, and `StartRunIntentPolicy` into
+  `@dvt/engine`
+- treat that list as the minimum mandatory scope of `RC-G1-B`
+- migrate internal engine imports to owner-local paths
+- migrate implementations in `adapter-postgres`, `adapter-temporal`, and
+  `state-store`
 
-- Mover `IProviderAdapter`, `IRunStateStore`, `IStartRunIntentStore`,
-  `IRunSnapshotStalenessQuery`, `IProjector`, `StartRunIntentPolicy` a `@dvt/engine`.
-- Tratar esa lista como el scope minimo obligatorio de `RC-G1-B`; cualquier puerto adicional solo
-  entra en la slice si el inventario de imports residuales demuestra que tambien es un behavioral
-  port engine-owned bajo la regla de ADR-0018 §2/§2-b.
-- Migrar imports internos de `engine` para consumir `src/ports` y `src/adapters`.
-- Migrar implementaciones en `adapter-postgres`, `adapter-temporal`, `state-store`.
+### Phase 2 - delivery / traceability / artifacts ownership
 
-### Fase 2 - Delivery / Traceability / Artifacts ownership
+- move outbox ports to `@dvt/delivery`
+- move lineage ports to `@dvt/traceability-service`
+- move artifact-store ports to `@dvt/artifacts`
+- keep serializable DTOs such as `EventEnvelope`, `OutboxRecord`, refs, and
+  event shapes in the shared kernel
 
-- Mover puertos outbox a `@dvt/delivery`.
-- Mover puertos lineage a `@dvt/traceability-service`.
-- Mover `artifact-store` port a `@dvt/artifacts`.
-- Mantener DTOs serializables (`EventEnvelope`, `OutboxRecord`, refs) en shared kernel.
+### Phase 3 - planner non-shared ownership
 
-### Fase 3 - Planner no-shared ownership
+- move `IPlanExecutabilityValidator`, `IExecutionBindingVerifier`,
+  `IPlanValidationLifecycleStore`, and `ICustomPolicyNamespaceRegistry` into
+  `@dvt/planner`
+- keep the three ADR-0035 public contracts in `@dvt/contracts`
 
-- Mover `IPlanExecutabilityValidator`, `IExecutionBindingVerifier`,
-  `IPlanValidationLifecycleStore`, `ICustomPolicyNamespaceRegistry` a `@dvt/planner`.
-- Mantener en `@dvt/contracts` los 3 contratos publicos fijados por ADR-0035.
+### Phase 4 - hardening and closure
 
-### Fase 4 - Endurecimiento y cierre del corte
+- restrict imports with guards such as `no-restricted-imports` or equivalent
+  architecture tests
+- adjust package exports so only approved surfaces remain public
+- close the source package with residual references equal to zero for the moved
+  behavioral-port set
+- confirm `@dvt/contracts` is limited to truly shared DTOs, schemas, parsers,
+  refs, and event shapes
 
-- Restringir imports con `no-restricted-imports` y/o arch tests.
-- Ajustar `exports` por paquete para exponer solo superficies aprobadas.
-- Cerrar el source package con referencias residuales = 0 en el mismo slice; no dejar re-exports
-  transicionales en `@dvt/contracts`.
-- Confirmar que `@dvt/contracts` queda limitado a DTOs serializables cross-package, esquemas y
-  parsers de frontera, y refs/event shapes realmente shared.
+## Executable sub-slices for `RC-G1-B`
 
-## Sub-slices ejecutables de `RC-G1-B`
+### `RC-G1-B1` - docs/contracts-first inventory freeze
 
-### `RC-G1-B1` - Docs/contracts-first inventory freeze
+**Objective**
 
-- touched scope:
-  - `docs/planning/proposals/mandatory/runtime-and-contracts`
-  - `docs/planning/state`
-  - `docs/contracts`
-  - `docs/architecture/components/engine/contracts`
-- objective:
-  - congelar el inventario exacto de puertos engine-owned que salen de `@dvt/contracts`
-  - fijar path origen -> owner path destino
-  - medir el baseline de imports residuales que la slice debe llevar a cero
-- definition of done:
-  - la lista minima obligatoria de `RC-G1-B` queda cerrada sin ambiguedad
-  - cualquier puerto adicional solo entra con evidencia de inventario residual y regla ADR-0018
-  - los docs/contratos activos describen el corte antes de tocar codigo
-- validation baseline:
-  - `pnpm docs:workboard:generate`
-  - `pnpm verify:prepush`
+- freeze the exact inventory of engine-owned ports leaving `@dvt/contracts`
+- fix source-path to owner-path targets
+- measure the residual-import baseline that later slices must drive to zero
 
-#### Frozen mandatory scope manifest
+**Frozen mandatory scope manifest**
 
-- `IProviderAdapter`
-  - source path: `packages/@dvt/contracts/src/adapters/IProviderAdapter.v1.ts`
-  - owner path target: `packages/@dvt/engine/src/adapters/IProviderAdapter.ts`
-  - residual-import baseline: `31` TypeScript files still import the symbol from `@dvt/contracts`
-  - package split:
-    - `@dvt/engine`: `22`
-    - `@dvt/adapter-temporal`: `2`
-    - `apps/api` (`src` + `test`): `6`
-    - `@dvt/contracts`: `1`
-- `IRunStateStore`
-  - source path: `packages/@dvt/contracts/src/engine/IRunStateStore.v1.ts`
-  - owner path target: `packages/@dvt/engine/src/ports/IRunStateStore.ts`
-  - residual-import baseline: `24` TypeScript files
-  - package split:
-    - `@dvt/engine`: `14`
-    - `@dvt/adapter-postgres`: `3`
-    - `@dvt/adapter-temporal`: `1`
-    - `apps/api` (`src` + `test`): `5`
-    - `@dvt/contracts`: `1`
-- `IStartRunIntentStore`
-  - source path: `packages/@dvt/contracts/src/contracts/engine/IStartRunIntentStore.v1.ts`
-  - owner path target: `packages/@dvt/engine/src/ports/IStartRunIntentStore.ts`
-  - residual-import baseline: `11` TypeScript files
-  - package split:
-    - `@dvt/engine`: `8`
-    - `@dvt/adapter-postgres`: `1`
-    - `@dvt/contracts`: `2`
-- `IRunSnapshotStalenessQuery`
-  - source path: `packages/@dvt/contracts/src/engine/IRunSnapshotStalenessQuery.v1.ts`
-  - owner path target: `packages/@dvt/engine/src/ports/IRunSnapshotStalenessQuery.ts`
-  - residual-import baseline: `5` TypeScript files
-  - package split:
-    - `@dvt/adapter-postgres`: `3`
-    - `@dvt/engine`: `2`
-- `IProjector`
-  - source path: `packages/@dvt/contracts/src/contracts/engine/IProjector.v1.ts`
-  - owner path target: `packages/@dvt/engine/src/ports/IProjector.ts`
-  - residual-import baseline: `0` downstream TypeScript files
-  - note: the owner-local path already exists; `RC-G1-B2/B4` still need to retire the shared source/export surface
-- `StartRunIntentPolicy`
-  - source path: `packages/@dvt/contracts/src/contracts/engine/StartRunIntentPolicy.v1.ts`
-  - owner path target: `packages/@dvt/engine/src/domain/startRunIntentPolicy.ts`
-  - residual-import baseline: `2` TypeScript files
-  - package split:
-    - `@dvt/engine`: `1`
-    - `@dvt/contracts`: `1`
+| Symbol                       | Source path                                                               | Owner path target                                              | Residual imports | Package split                                                                                                 |
+| ---------------------------- | ------------------------------------------------------------------------- | -------------------------------------------------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------- |
+| `IProviderAdapter`           | `packages/@dvt/contracts/src/adapters/IProviderAdapter.v1.ts`             | `packages/@dvt/engine/src/adapters/IProviderAdapter.ts`        | `31`             | `@dvt/engine: 22`, `@dvt/adapter-temporal: 2`, `apps/api: 6`, `@dvt/contracts: 1`                             |
+| `IRunStateStore`             | `packages/@dvt/contracts/src/engine/IRunStateStore.v1.ts`                 | `packages/@dvt/engine/src/ports/IRunStateStore.ts`             | `24`             | `@dvt/engine: 14`, `@dvt/adapter-postgres: 3`, `@dvt/adapter-temporal: 1`, `apps/api: 5`, `@dvt/contracts: 1` |
+| `IStartRunIntentStore`       | `packages/@dvt/contracts/src/contracts/engine/IStartRunIntentStore.v1.ts` | `packages/@dvt/engine/src/ports/IStartRunIntentStore.ts`       | `11`             | `@dvt/engine: 8`, `@dvt/adapter-postgres: 1`, `@dvt/contracts: 2`                                             |
+| `IRunSnapshotStalenessQuery` | `packages/@dvt/contracts/src/engine/IRunSnapshotStalenessQuery.v1.ts`     | `packages/@dvt/engine/src/ports/IRunSnapshotStalenessQuery.ts` | `5`              | `@dvt/adapter-postgres: 3`, `@dvt/engine: 2`                                                                  |
+| `IProjector`                 | `packages/@dvt/contracts/src/contracts/engine/IProjector.v1.ts`           | `packages/@dvt/engine/src/ports/IProjector.ts`                 | `0` downstream   | owner-local path already exists; shared export still had to be retired                                        |
+| `StartRunIntentPolicy`       | `packages/@dvt/contracts/src/contracts/engine/StartRunIntentPolicy.v1.ts` | `packages/@dvt/engine/src/domain/startRunIntentPolicy.ts`      | `2`              | `@dvt/engine: 1`, `@dvt/contracts: 1`                                                                         |
 
-#### Residual-import baseline method
+**Residual-import baseline method**
 
-- scan scope:
-  - `packages/**`
-  - `apps/**`
-- included files:
-  - `*.ts`
-- excluded files:
-  - `dist/**`
-  - `node_modules/**`
-- counting rule:
-  - a file is counted for a symbol when it imports from `@dvt/contracts` and references that
-    symbol name
-- purpose:
-  - `RC-G1-B3` closes only when this baseline for the moved symbol set reaches `0` outside the
-    permitted shared-kernel surfaces that remain after the cut
+- scan scope: `packages/**` and `apps/**`
+- included files: `*.ts`
+- excluded files: `dist/**` and `node_modules/**`
+- counting rule: a file counts when it imports from `@dvt/contracts` and
+  references the symbol name
+- closure rule: `RC-G1-B3` closes only when that residual baseline reaches `0`
+  outside the permitted shared-kernel surfaces
 
-### `RC-G1-B2` - Owner-package move in `@dvt/engine`
+### `RC-G1-B2` - owner-package move in `@dvt/engine`
 
-- touched scope:
-  - `packages/@dvt/engine`
-  - `packages/@dvt/contracts`
-  - docs contract surfaces touched by the move
-- objective:
-  - mover `IProviderAdapter`, `IRunStateStore`, `IStartRunIntentStore`,
-    `IRunSnapshotStalenessQuery`, `IProjector`, `StartRunIntentPolicy`
-    a `@dvt/engine`
-  - cortar imports internos de `@dvt/engine` hacia los paths owner-local
-- definition of done:
-  - los puertos obligatorios viven fisicamente en `@dvt/engine`
-  - `@dvt/engine` ya no importa esos puertos desde `@dvt/contracts`
-  - no aparecen aliases duales owner+shared
-- validation baseline:
-  - package-level build/test para `@dvt/engine` y `@dvt/contracts`
-  - `pnpm verify:prepush`
+**Definition of done**
 
-#### Current repo-state closure note
+- the mandatory ports physically live in `@dvt/engine`
+- `@dvt/engine` no longer imports them from `@dvt/contracts`
+- no dual owner/shared aliases remain
 
-- mandatory owner-local targets already exist:
-  - `packages/@dvt/engine/src/adapters/IProviderAdapter.ts`
-  - `packages/@dvt/engine/src/ports/IRunStateStore.ts`
-  - `packages/@dvt/engine/src/ports/IStartRunIntentStore.ts`
-  - `packages/@dvt/engine/src/ports/IRunSnapshotStalenessQuery.ts`
-  - `packages/@dvt/engine/src/ports/IProjector.ts`
-  - `packages/@dvt/engine/src/domain/startRunIntentPolicy.ts`
-- direct-import verification:
-  - no TypeScript file under `packages/@dvt/engine/src/**` imports the moved port set from
-    `@dvt/contracts`
-- consequence:
-  - `RC-G1-B2` is materially satisfied by current repo state; the remaining cleanup is not the
-    owner-local move but the legacy shared-kernel publication surface closed in `RC-G1-B4`
+**Current repo-state closure note**
 
-### `RC-G1-B3` - Downstream imports cutover
+- all mandatory owner-local targets already exist
+- no TypeScript file under `packages/@dvt/engine/src/**` imports the moved port
+  set from `@dvt/contracts`
+- consequence: `RC-G1-B2` is materially satisfied; remaining work is closure of
+  the legacy shared publication surface in `RC-G1-B4`
 
-- touched scope:
-  - `packages/@dvt/adapter-postgres`
-  - `packages/@dvt/adapter-temporal`
-  - `packages/@dvt/state-store`
-  - cualquier consumidor adicional gobernado que aparezca en el inventario residual
-- objective:
-  - cortar imports de adapters y state-store hacia los puertos owner-local
-  - cerrar referencias residuales desde `@dvt/contracts` a cero para el set movido
-- definition of done:
-  - adapters, state-store y consumidores gobernados importan desde `@dvt/engine`
-  - residual imports of the moved port set from `@dvt/contracts` = `0`
-  - el shared kernel ya no actua como host fisico de esos behavioral ports
-- validation baseline:
-  - package-level build/test para los paquetes tocados
-  - `pnpm verify:prepush`
+### `RC-G1-B3` - downstream import cutover
 
-#### Current repo-state closure note
+**Definition of done**
 
-- direct-import verification:
-  - no TypeScript file under
-    `packages/@dvt/adapter-postgres/src/**`,
-    `packages/@dvt/adapter-temporal/src/**`,
-    `packages/@dvt/state-store/src/**`,
-    or `apps/api/src/**`
-    imports the moved engine-owned port set from `@dvt/contracts`
-- consequence:
-  - governed downstream consumers are already cut over to `@dvt/engine`
-  - the remaining work is hardening and removal of the legacy shared-kernel publication path in
-    `RC-G1-B4`
+- adapters, state-store, and governed consumers import from `@dvt/engine`
+- residual imports of the moved engine-owned port set from `@dvt/contracts`
+  equal `0`
+- the shared kernel no longer acts as the physical host for those ports
 
-### `RC-G1-B4` - Hardening and closeout
+**Current repo-state closure note**
 
-- touched scope:
-  - export maps / barrels de `@dvt/engine` y `@dvt/contracts`
-  - docs/contracts/planning surfaces touched by the cutover
-  - ARC-2 evidence + risk updates
-- objective:
-  - impedir regresion de imports
-  - cerrar exports legacy de los puertos movidos y de los engine-owned behavioral ports
-    equivalentes detectados durante el cierre
-  - publicar evidence/risk del corte atomico
-- definition of done:
-  - no legacy exports remain for the moved ports ni para los engine-owned behavioral ports
-    equivalentes que seguian publicados desde `@dvt/contracts`
-  - import guards or equivalent enforcement prevent regression
-  - ARC-2 evidence and risk update are committed
-  - docs/contracts/planning remain in sync
-  - `pnpm verify:prepush` closes green
-- validation baseline:
-  - `GIT_BASE=origin/main GIT_HEAD=HEAD node tools/ci/arc-check.mjs`
-  - `pnpm docs:sync` when docs structure changes
-  - `pnpm verify:prepush`
+- no TypeScript file under `packages/@dvt/adapter-postgres/src/**`,
+  `packages/@dvt/adapter-temporal/src/**`, `packages/@dvt/state-store/src/**`,
+  or `apps/api/src/**` imports the moved engine-owned port set from
+  `@dvt/contracts`
+- consequence: governed downstream consumers are already cut over to
+  `@dvt/engine`; remaining work is hardening and legacy export removal in
+  `RC-G1-B4`
 
-#### Current repo-state closure note
+### `RC-G1-B4` - hardening and closeout
 
-- root publication cleanup:
-  - `packages/@dvt/contracts/src/index.ts` no longer re-exports
-    `IPlanFetcher` or `IPlanIntegrityValidator`
-  - `packages/@dvt/contracts/src/contracts/engine/ExecutionSemantics.v1.ts`
-    no longer re-exports `IClock`, `IIdempotencyKeyBuilder`, `IPlanFetcher`, or
-    `IPlanIntegrityValidator`
-- residual-import closure:
-  - the last direct TypeScript consumer of an equivalent engine-owned behavioral
-    port from `@dvt/contracts`
-    (`packages/@dvt/adapter-temporal/test/integration.time-skipping.shared.ts`
-    importing `RunStateCommandPort`) is now cut over to `@dvt/engine`
-  - verification scan result: no TypeScript file under `packages/**` or `apps/**`
-    imports `IPlanFetcher`, `IPlanIntegrityValidator`, `IIdempotencyKeyBuilder`,
-    `IClock`, or `RunStateCommandPort` from `@dvt/contracts`
-- regression guard:
-  - `eslint.config.cjs` now blocks imports of the moved engine-owned ports and the
-    equivalent behavioral ports from `@dvt/contracts` in `@dvt/engine`,
-    `@dvt/adapter-postgres`, `@dvt/adapter-temporal`, `@dvt/state-store`, and
-    `apps/api`
+**Definition of done**
+
+- no legacy exports remain for the moved ports or their equivalent
+  engine-owned behavioral ports
+- regression guards prevent those imports from returning
+- ARC-2 evidence and risk updates are committed
+- docs, contracts, and planning surfaces remain in sync
+- `pnpm verify:prepush` closes green
+
+**Current repo-state closure note**
+
+- `packages/@dvt/contracts/src/index.ts` no longer re-exports
+  `IPlanFetcher` or `IPlanIntegrityValidator`
+- `packages/@dvt/contracts/src/contracts/engine/ExecutionSemantics.v1.ts`
+  no longer re-exports `IClock`, `IIdempotencyKeyBuilder`, `IPlanFetcher`, or
+  `IPlanIntegrityValidator`
+- the last direct TypeScript consumer of an equivalent engine-owned behavioral
+  port from `@dvt/contracts`
+  (`packages/@dvt/adapter-temporal/test/integration.time-skipping.shared.ts`
+  importing `RunStateCommandPort`) is already cut over to `@dvt/engine`
+- `eslint.config.cjs` now blocks imports of the moved engine-owned ports and
+  equivalent behavioral ports from `@dvt/contracts` in `@dvt/engine`,
+  `@dvt/adapter-postgres`, `@dvt/adapter-temporal`, `@dvt/state-store`, and
+  `apps/api`
 - consequence:
   - `RC-G1-B4` is closed
   - `RC-G1-B` is closed
-  - the remaining `RC-G1` execution is `RC-G1-C` and `RC-G1-D`
+  - remaining `RC-G1` execution is `RC-G1-C` and `RC-G1-D`
 
-## Tracker operativo de ejecucion
+## Execution tracker
 
-Este documento actua como tracker dedicado para el trabajo bajo ADR-0034.
+This document acts as the dedicated tracker for the work governed by ADR-0034.
 
 - `RC-G1-A`
   - owner: Architecture + Contracts + Docs
   - target date: `2026-04-02`
-  - touched packages: `docs/planning/proposals`, `docs/planning/reviews`, `docs/planning/state`, `docs/contracts`
-  - validation baseline: `pnpm docs:sync`, `pnpm docs:workboard:generate`, `pnpm verify:prepush`
-  - rollback note: N/A - doc and tracker freeze only
+  - touched scope: `docs/planning/proposals`, `docs/planning/reviews`,
+    `docs/planning/state`, `docs/contracts`
+  - validation baseline: `pnpm docs:sync`, `pnpm docs:workboard:generate`,
+    `pnpm verify:prepush`
+  - rollback note: not applicable; docs and tracker freeze only
 - `RC-G1-B`
   - owner: Engine + Contracts
   - target date: `2026-04-03`
-  - touched packages: `@dvt/engine`, `@dvt/contracts`, `@dvt/adapter-postgres`, `@dvt/adapter-temporal`, `@dvt/state-store`
-  - validation baseline: ARC-2 evidence + touched-package tests + `pnpm verify:prepush`
-  - rollback note: revertir la slice completa si el cutover no cierra limpio
+  - touched scope: `@dvt/engine`, `@dvt/contracts`, `@dvt/adapter-postgres`,
+    `@dvt/adapter-temporal`, `@dvt/state-store`
+  - validation baseline: ARC-2 evidence, touched-package tests, and
+    `pnpm verify:prepush`
+  - rollback note: revert the full slice if the cutover does not close cleanly
   - execution order: `RC-G1-B1 -> RC-G1-B2 -> RC-G1-B3 -> RC-G1-B4`
 - `RC-G1-C`
   - owner: Delivery + Traceability + Artifacts + Contracts
   - target date: `2026-04-10`
-  - touched packages: `@dvt/delivery`, `@dvt/traceability-service`, `@dvt/artifacts`, `@dvt/contracts`, `apps/outbox-worker`, `apps/lineage-worker`
-  - validation baseline: ARC-2 evidence + touched-package tests + `pnpm verify:prepush`
-  - rollback note: revertir uso a alias shared temporalmente
+  - touched scope: `@dvt/delivery`, `@dvt/traceability-service`,
+    `@dvt/artifacts`, `@dvt/contracts`, `apps/outbox-worker`,
+    `apps/lineage-worker`
+  - validation baseline: ARC-2 evidence, touched-package tests, and
+    `pnpm verify:prepush`
+  - rollback note: temporarily revert usage to shared aliases if necessary
 - `RC-G1-D`
   - owner: Planner + Contracts + API + Adapter-postgres
   - target date: `2026-04-24`
-  - touched packages: `@dvt/planner`, `@dvt/contracts`, `apps/api`, `@dvt/adapter-postgres`, docs governance
-  - validation baseline: ARC-2 evidence + touched-package tests + `pnpm verify:prepush`
-  - rollback note: conservar dual export hasta cierre total
+  - touched scope: `@dvt/planner`, `@dvt/contracts`, `apps/api`,
+    `@dvt/adapter-postgres`, and docs governance
+  - validation baseline: ARC-2 evidence, touched-package tests, and
+    `pnpm verify:prepush`
+  - rollback note: preserve dual exports only until the full closure is ready
 
-## Riesgos y mitigaciones
+## Risks and mitigations
 
-- Ruptura de imports transversales
-  - severidad: Alta
-  - mitigacion: inventario previo, cutover atomico, y cierre con residual imports = 0
-- Drift de ownership entre docs y codigo
-  - severidad: Media
-  - mitigacion: actualizar docs contracts por fase y forzar `docs:sync`
-- Wrapper/satellite packages reintroducidos
-  - severidad: Media
-  - mitigacion: bloquear por ADR-0034 + revision de export maps
-- Cambios semanticos accidentales al mover tipos
-  - severidad: Alta
-  - mitigacion: tests de equivalencia + validacion de comportamiento por paquete
+- broken cross-package imports
+  - severity: high
+  - mitigation: pre-migration inventory, atomic cutover, residual imports closed
+    to `0`
+- ownership drift between docs and code
+  - severity: medium
+  - mitigation: update contracts and planning docs by phase and force
+    `docs:sync`
+- wrapper or satellite packages being reintroduced
+  - severity: medium
+  - mitigation: enforce ADR-0034 posture and review export maps explicitly
+- accidental semantic change while moving types
+  - severity: high
+  - mitigation: structural-equivalence checks plus package-level behavioral
+    validation
 
-## Criterio de cierre
+## Closure criteria
 
-1. Todos los puertos no-shared listados estan en su paquete owner.
-2. `@dvt/contracts` conserva solo DTOs serializables cross-package, esquemas/parsers de frontera,
-   y refs/event shapes realmente shared.
-3. No hay imports residuales invalidos entre bounded contexts.
-4. Validaciones por slice y `pnpm verify:prepush` pasan.
-5. Documentacion de contratos y planning sync sin drift.
+1. Every listed non-shared port lives in its owner package.
+2. `@dvt/contracts` keeps only truly shared cross-package DTOs, schemas,
+   boundary parsers, refs, and event shapes.
+3. No invalid residual imports remain between bounded contexts.
+4. Slice validations and `pnpm verify:prepush` pass.
+5. Contract and planning documentation stay in sync with no drift.
 
-## Referencias
+## References
 
 - `docs/adr/ADR-0018_Shared_Kernel_Ownership_Governance.md`
 - `docs/adr/ADR-0034-bounded-context-boundaries-and-communication-rules.md`

@@ -1,7 +1,11 @@
 import { jcsCanonicalize, sha256HexUtf8 } from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
-import { importPlanRoute, previewPlanRoute } from '../../../src/entrypoints/http/planRoutes.js';
+import { compilePlanRoute } from '../../../src/entrypoints/http/compilePlanRoute.js';
+import {
+  importPlanRoute,
+  previewPlanRoute,
+} from '../../../src/entrypoints/http/planRoutes.js';
 
 function createReply(): {
   statusCode: number;
@@ -377,6 +381,134 @@ describe('planRoutes', () => {
     expect(validatePlan).toHaveBeenCalledWith(VALID_PLAN_REF, 'mock');
     expect(markValid).toHaveBeenCalledWith(VALID_PLAN_REF);
     expect(markInvalid).not.toHaveBeenCalled();
+  });
+
+  it('returns compiled plan from compile route without persistence side effects', async () => {
+    const reply = createReply();
+    const plan = buildTransformationStoredPlan();
+    const buildPlan = vi.fn(async () => ({
+      plan,
+      canonicalPlanJson: '{}',
+    }));
+
+    await compilePlanRoute(
+      {
+        id: 'req-compile-ok',
+        headers: { authorization: 'Bearer token' },
+        body: {
+          context: {
+            tenantId: 'tenant-1',
+            projectId: 'project-1',
+            environmentId: 'env-1',
+          },
+          selection: {
+            selectedNodeIds: ['source-node', 'transform-node', 'sink-node'],
+          },
+          graphSource: VALID_TRANSFORMATION_GRAPH_SOURCE,
+        },
+        log: { error: vi.fn() },
+      } as never,
+      reply as never,
+      {
+        ...okAuthDeps(),
+        planner: { buildPlan },
+      } as never
+    );
+
+    expect(reply.statusCode).toBe(200);
+    expect(reply.payload).toEqual({
+      plan,
+      compile: {
+        persisted: false,
+        executabilityValidated: false,
+      },
+    });
+    expect(buildPlan).toHaveBeenCalledOnce();
+  });
+
+  it('preserves custom observability keys when mapping compile envelope', async () => {
+    const reply = createReply();
+    const buildPlan = vi.fn(async () => ({
+      plan: buildTransformationStoredPlan(),
+      canonicalPlanJson: '{}',
+    }));
+
+    await compilePlanRoute(
+      {
+        id: 'req-compile-observability-custom',
+        headers: { authorization: 'Bearer token' },
+        body: {
+          context: {
+            tenantId: 'tenant-1',
+            projectId: 'project-1',
+            environmentId: 'env-1',
+          },
+          selection: {
+            selectedNodeIds: ['source-node', 'transform-node', 'sink-node'],
+          },
+          observability: {
+            tags: { surface: 'compile' },
+            extra: { traceParent: '00-abcdef' },
+            correlationKey: 'ext-compile-123',
+          },
+          graphSource: VALID_TRANSFORMATION_GRAPH_SOURCE,
+        },
+        log: { error: vi.fn() },
+      } as never,
+      reply as never,
+      {
+        ...okAuthDeps(),
+        planner: { buildPlan },
+      } as never
+    );
+
+    expect(buildPlan).toHaveBeenCalledWith(
+      expect.objectContaining({
+        observability: expect.objectContaining({
+          tags: { surface: 'compile' },
+          extra: { traceParent: '00-abcdef' },
+          correlationKey: 'ext-compile-123',
+        }),
+      })
+    );
+  });
+
+  it('returns 400 when compile receives preview or legacy ingress fields', async () => {
+    const reply = createReply();
+    const buildPlan = vi.fn();
+
+    await compilePlanRoute(
+      {
+        id: 'req-compile-forbidden-ingress',
+        headers: { authorization: 'Bearer token' },
+        body: {
+          context: {
+            tenantId: 'tenant-1',
+            projectId: 'project-1',
+            environmentId: 'env-1',
+          },
+          selection: {
+            selectedNodeIds: ['source-node', 'transform-node', 'sink-node'],
+          },
+          manifestRef: {
+            uri: 'file://manifest.json',
+            sha256: 'a'.repeat(64),
+          },
+          graphSource: VALID_TRANSFORMATION_GRAPH_SOURCE,
+        },
+      } as never,
+      reply as never,
+      {
+        ...okAuthDeps(),
+        planner: { buildPlan },
+      } as never
+    );
+
+    expect(reply.statusCode).toBe(400);
+    expect(reply.payload).toEqual({
+      error: { type: 'bad_request', reason: 'invalid_plan_source' },
+    });
+    expect(buildPlan).not.toHaveBeenCalled();
   });
 
   it('returns 400 on import when planRef is invalid', async () => {

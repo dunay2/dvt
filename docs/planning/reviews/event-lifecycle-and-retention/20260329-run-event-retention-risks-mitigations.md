@@ -1,110 +1,100 @@
 ---
-title: Riesgos y mitigaciones - Retención y Archivado de Eventos
+title: Risks And Mitigations - Run Event Retention And Archiving
 status: Draft
 owner: Architecture / Runtime / QA
-last_reviewed: 2026-03-29
+last_reviewed: 2026-04-17
 planning_type: review
 ---
 
-# Riesgos y Mitigaciones
+# Risks And Mitigations
 
-## QA Dura Fowler — DDD / SOLID
+## Fowler Hard QA - DDD / SOLID
 
-Revisión crítica del slice de retención y archivado de eventos en `outbox-worker`, bajo principios DDD y SOLID, con enfoque en riesgos, mitigaciones y controles de calidad.
+Critical review of the retention and event-archiving slice in
+`outbox-worker`, using DDD and SOLID principles with a focus on risks,
+mitigations, and quality controls.
 
----
+## Risk 1: workload and I/O spikes
 
-## Riesgo 1: Carga de trabajo y picos de I/O
+**Mitigations**
 
-**Mitigación:**
+- configurable execution intervals (`DVT_RUN_EVENT_RETENTION_INTERVAL_MS`)
+- bounded batch size and concurrency control
+- recommended execution outside peak hours
+- observability for duration and failure metrics
 
-- Intervalos de ejecución configurables (`DVT_RUN_EVENT_RETENTION_INTERVAL_MS`).
-- Límite de tamaño de batch y control de concurrencia.
-- Ejecución fuera de horas pico recomendada.
-- Observabilidad de métricas de duración y fallos.
+## Risk 2: data loss or archive corruption
 
----
+**Mitigations**
 
-## Riesgo 2: Pérdida de datos o corrupción en el archivado
+- integrity verification through SHA256 checksums and manifest files
+- structured logs and failure metrics
+- fail-soft policy so one failed unit does not stop the full cycle
+- integration tests and failure simulation
 
-**Mitigación:**
+## Risk 3: unsafe production configuration
 
-- Verificación de integridad (checksums SHA256, manifest).
-- Logs estructurados y métricas de fallos.
-- Política fail-soft: un fallo en una unidad no detiene el ciclo completo.
-- Tests de integración y simulación de fallos.
+**Mitigations**
 
----
+- strict validation in the env loader, including rejection of `file://` in
+  production
+- tests that reject unsafe configurations
+- visible documentation in `.env.example` and the governing ADR set
 
-## Riesgo 3: Configuración insegura en producción
+## Risk 4: no real deletion yet, only data accumulation relief
 
-**Mitigación:**
+**Mitigations**
 
-- Validación estricta en el loader de env: prohíbe `file://` en producción.
-- Tests que rechazan configuraciones inseguras.
-- Documentación visible en `.env.example` y ADRs.
+- this slice only archives; deletion is intentionally deferred to `G5-PR2`
+- monitor table growth and alert on size increase
+- QA check: verify that archiving does not delete hot-store data prematurely
 
----
+## Risk 5: no operational restore flow yet
 
-## Riesgo 4: No eliminación real (acumulación de datos)
+**Mitigations**
 
-**Mitigación:**
+- restore interfaces (`RunArchiveRestorer`) are already designed
+- QA check: verify that archived data can be restored manually
+- next phase: automate and test restore paths
 
-- Este slice solo archiva; la eliminación está planificada en el siguiente slice (`G5-PR2`).
-- Monitoreo del tamaño de tablas y alertas de crecimiento.
-- QA: Validar que el archivado no elimina datos del hot store prematuramente.
+## Risk 6: regressions or impact on the main worker
 
----
+**Mitigations**
 
-## Riesgo 5: No restauración operativa
+- retention runtime is fully isolated and opt-in
+- integration tests cover clean startup and shutdown without interfering with
+  the main worker
+- QA check: validate that enabling or disabling retention does not affect event
+  delivery
 
-**Mitigación:**
+## Risk 7: weak observability and alerting
 
-- Interfaces de restauración (`RunArchiveRestorer`) ya diseñadas.
-- QA: Validar que los datos archivados sean recuperables manualmente.
-- Siguiente fase: automatizar y testear restauración.
+**Mitigations**
 
----
+- structured logs and metrics for archived and failed units
+- QA check: simulate failure and verify that logs and alerts are emitted
+- future plan: integrate with alerting systems such as Prometheus or Sentry
 
-## Riesgo 6: Regresiones o impacto en el worker principal
+## Risk 8: compliance posture not fully closed
 
-**Mitigación:**
+**Mitigations**
 
-- Runtime de retención completamente aislado y opt-in.
-- Tests de integración: arranque/parada limpia, sin interferencia con el worker principal.
-- QA: Validar que la activación/desactivación no afecta la entrega de eventos.
+- explicit and documented retention policies, with 90-day hot retention as the
+  baseline
+- QA check: verify that data is not retained beyond the configured period
+- next phase: implement redaction and erasure support for GDPR-like needs
 
----
+## Fowler Hard QA - DDD / SOLID Summary
 
-## Riesgo 7: Falta de observabilidad y alertas
-
-**Mitigación:**
-
-- Logs estructurados y métricas de unidades archivadas/fallidas.
-- QA: Simular fallos y verificar que se registran y alertan correctamente.
-- Plan futuro: integración con sistemas de alertas (Prometheus, Sentry, etc).
-
----
-
-## Riesgo 8: No cumplimiento de políticas de compliance
-
-**Mitigación:**
-
-- Políticas de retención explícitas y documentadas (90 días hot, configurable).
-- QA: Validar que los datos no se retienen más allá del periodo configurado.
-- Siguiente fase: implementar redacción/erasure para GDPR.
-
----
-
-## QA Dura Fowler — DDD / SOLID
-
-- **Dominio separado:** La lógica de retención y archivado está en `@dvt/state-store`, no en el worker.
-- **Puertos y adaptadores:** Separación clara entre dominio, adaptador y runtime.
-- **SRP:** Cada clase tiene una única responsabilidad (scheduler, coordinator, exporter, deleter).
-- **Opt-in y sin deuda:** El feature es opt-in, sin stubs ni bypasses.
-- **Cobertura de tests:** Tests unitarios y de integración para wiring, errores y validación de env.
-- **Gobernanza:** Cumple ADRs y reglas de cierre de slice (no deuda, no stubs, evidencia de validación).
-
----
-
-> Documento generado por QA duro Fowler siguiendo principios DDD/SOLID y gobernanza del repositorio.
+- **Separated domain:** retention and archiving logic lives in
+  `@dvt/state-store`, not in the worker.
+- **Ports and adapters:** domain, adapter, and runtime concerns are clearly
+  separated.
+- **SRP:** each class has one responsibility such as scheduler, coordinator,
+  exporter, or deleter.
+- **Opt-in and debt-free:** the feature is opt-in with no stubs or hidden
+  bypasses.
+- **Test coverage:** unit and integration coverage exists for wiring, failure
+  handling, and env validation.
+- **Governance:** the slice aligns with ADRs and repository closeout rules for
+  no debt, no stubs, and validation evidence.

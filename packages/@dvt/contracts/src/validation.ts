@@ -23,6 +23,8 @@ export {
 export {
   parseArtifactRef,
   parseDesignGraphDraft,
+  parseExternalPlanCompileRequest,
+  parseExternalPlanCompileResponse,
   parseExecutionPlan,
   parseExecutionStepV1,
   parseGenericGraphSourceV1,
@@ -41,6 +43,9 @@ export {
   parsePlanRecord,
   parsePlanRef,
   parseTransformationSqlFirstCompilerGraphSource,
+  parseWorkspaceGraphDraftReadResponse,
+  parseWorkspaceGraphDraftSaveRequest,
+  parseWorkspaceGraphDraftSaveResponse,
 } from './validation/planner.js';
 export {
   parseCanonicalRunStatus,

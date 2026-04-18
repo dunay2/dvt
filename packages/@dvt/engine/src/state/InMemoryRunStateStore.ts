@@ -1,7 +1,7 @@
 /**
  * @baseline ADR-0003
  */
-import { parseEngineRunRef } from '@dvt/contracts';
+import { CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION, parseEngineRunRef } from '@dvt/contracts';
 
 import {
   InvalidRunIdError,
@@ -216,16 +216,33 @@ export class InMemoryRunStateStore implements IRunStateStore, IRunSnapshotStalen
     if (meta?.tenantId !== tenantId) {
       throw new RunNotFoundError(runId);
     }
+
     const events = (this.eventsByRunId.get(runId) ?? [])
       .slice()
       .sort((a, b) => a.runSeq - b.runSeq);
-    const snap: WorkflowSnapshot = createDefaultWorkflowSnapshot(runId);
-    for (const e of events) {
-      applyRunEvent(snap, e);
+    const latestRunSeq = events.at(-1)?.runSeq ?? 0;
+    const persistedSnapshot = this.snapshotByRunId.get(runId);
+    const persistedLastRunSeq = this.snapshotLastRunSeqByRunId.get(runId) ?? 0;
+    const canUseIncrementalCheckpoint =
+      persistedSnapshot !== undefined &&
+      persistedSnapshot.schemaVersion === CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION &&
+      persistedLastRunSeq >= 0 &&
+      persistedLastRunSeq <= latestRunSeq;
+
+    const snapshot = canUseIncrementalCheckpoint
+      ? cloneWorkflowSnapshot(persistedSnapshot)
+      : createDefaultWorkflowSnapshot(runId);
+    const replayFromRunSeq = canUseIncrementalCheckpoint ? persistedLastRunSeq : 0;
+    for (const event of events) {
+      if (event.runSeq <= replayFromRunSeq) {
+        continue;
+      }
+      applyRunEvent(snapshot, event);
     }
-    this.snapshotByRunId.set(runId, snap);
-    this.snapshotLastRunSeqByRunId.set(runId, events.at(-1)?.runSeq ?? 0);
-    return snap;
+
+    this.snapshotByRunId.set(runId, snapshot);
+    this.snapshotLastRunSeqByRunId.set(runId, latestRunSeq);
+    return snapshot;
   }
 
   async listStaleSnapshotRuns(

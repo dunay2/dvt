@@ -212,7 +212,7 @@ tasks:
     last_verified: '2026-03-31'
   - task_id: AR-D1
     priority: P1
-    status: queued
+    status: done
     objective: >-
       implement incremental snapshot projection (apply event delta instead of full replay) so that
       getRunStatus does not degrade to O(n) for high-step-count DAGs when snapshot is stale.
@@ -223,13 +223,17 @@ tasks:
       O(total).
     complexity: L
     effort_points: 8
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
+      - docs/planning/closeouts/20260416-ar-d1-incremental-snapshot-projection-closeout.md
+      - docs/evidence/ED-20260416-ar-d1-incremental-snapshot-projection.md
+      - docs/risk-register/quality/R-20260416-AR-D1-INCREMENTAL-SNAPSHOT-PROJECTION.yaml
     status_reason: >-
-      At 1000-step DAGs with 3000+ events, full replay on cache miss is unacceptable for status
-      polling latency.
-    last_verified: '2026-04-02'
+      Rebuild and read paths now consume snapshot checkpoints and replay only event deltas across
+      Postgres and in-memory stores, while retaining full-replay fallback when checkpoint state is
+      missing or incompatible.
+    last_verified: '2026-04-16'
   - task_id: AR-D2
     priority: P2
     status: queued
@@ -310,7 +314,7 @@ tasks:
     last_verified: '2026-04-02'
   - task_id: MW-D1
     priority: P1
-    status: queued
+    status: in_progress
     objective: >-
       create an SDK/API for external plan definition that allows systems outside the dbt ecosystem
       to submit DAGs to the planner without going through the dbt manifest format.
@@ -321,13 +325,23 @@ tasks:
       Python script DAG or a Spark job dependency graph).
     complexity: L
     effort_points: 8
-    progress_pct: 0
+    progress_pct: 35
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/mw-d1-external-plan-definition-sdk-api-plan-20260417.md
+      - docs/guides/external-compile-target-architecture-technical-manual-20260417.md
+      - docs/guides/external-compile-catalog-extension-technical-manual-20260417.md
+      - docs/planning/closeouts/20260417-mw-d1-planning-closeout.md
     status_reason: >-
-      This opens the door to multi-workflow integrations; depends on GenericGraphSource format
-      (MW-A2) being defined first.
-    last_verified: '2026-04-02'
+      Think-first analysis, DDD boundary map, Fowler-style sequence diagrams, the SRP module split
+      for compile, the English user-story framing, the executable roadmap and backlog, the target
+      architecture package with C4, DDD, ports, aggregates, roots, and class relations, the
+      canonical family-and-kind catalog model, the plugin contribution and typed profile design, the
+      semantic split between step kind, family, target adapter, and worker routing, and the
+      no-legacy compile-ingress rule are now frozen; remaining work is to land the dedicated compile
+      route, use case, compile profile spec plus factory, resolved-catalog composition, and non-dbt
+      integration tests.
+    last_verified: '2026-04-17'
   - task_id: MW-D2
     priority: P2
     status: queued
@@ -501,9 +515,8 @@ dependency_notes:
     `first enterprise pilot`, billing, compliance, and acquisition collateral remain explicit GTM
     backlog rather than implementation work.
   - >-
-    `AR-D1` through `AR-D6` originate from the 2026-04-02 deep architectural review: incremental
-    snapshot projection (P1), continueAsNew governance (P2), worker scaling docs (P2), zero-downtime
-    rollback (P2), tenant-configurable retention (P2), and triple versioning assessment (P2).
+    `AR-D2` through `AR-D6` remain the open scale backlog from the 2026-04-02 deep architectural
+    review; `AR-D1` is closed with incremental snapshot projection and fallback replay evidence.
   - >-
     The 2026-04-02 principal deep architectural review adds `AR-D7` (tenant-aware outbox sharding)
     and `AR-D8` (default retention policy plus retention health alerting) as scale hardening tasks.
@@ -517,12 +530,13 @@ dependency_notes:
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
-  verified_on: '2026-04-13'
+  verified_on: '2026-04-17'
   total_tasks: 26
   total_effort_points: 135
-  completed_weighted_points: 33
-  lane_progress_pct: 24
+  completed_weighted_points: 41.8
+  lane_progress_pct: 31
   notes: >-
-    Weighted progress uses effort_points. `TF-D1` now contributes accepted proof-environment
-    lifecycle closure, so Lane D's remaining near-term work is default retention enforcement and
-    scale hardening rather than rerun discipline for the first PostgreSQL proof path.
+    Weighted progress uses effort_points. `MW-D1` now includes the frozen compile-boundary structure
+    plus the documented family-and-plugin catalog model, while remaining Lane D near-term work is
+    retention enforcement, scale hardening, and implementation follow-through on the external
+    compile slice.

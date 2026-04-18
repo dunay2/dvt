@@ -41,7 +41,8 @@ out of the active tree.
 - cross-cutting UX:
   [UX implementation guide](./ux-implementation-guide.md),
   [Workbench UI contract and component inventory](./workbench-ui-contract-and-component-inventory.md),
-  [Library and open-source reference stack](./library-and-open-source-reference-stack.md)
+  [Library and open-source reference stack](./library-and-open-source-reference-stack.md),
+  [Plugin Contributions Developer Guide](./plugin-contributions-developer-guide.md)
 
 ## Public Operational Surface
 
@@ -59,6 +60,7 @@ out of the active tree.
   [workspaceService.ts](../../../../apps/web/src/app/services/workspace/workspaceService.ts),
   [runWorkspaceFacade.ts](../../../../apps/web/src/app/services/runs/runWorkspaceFacade.ts)
 - plugin and contribution boundary:
+  [Plugin Contributions Developer Guide](./plugin-contributions-developer-guide.md),
   [registry.ts](../../../../apps/web/src/app/plugins/registry.ts)
 
 ## Component Topology
@@ -91,7 +93,8 @@ flowchart LR
 
 This component is real product code. The remaining work is around tightening
 service boundaries, removing mock-heavy paths, and aligning route-level flows
-with the protected backend contracts.
+with the protected backend contracts. Historical `apps/web/*.md` design and
+planning packs have been archived so this page stays the canonical entry point.
 
 ## Related Pages
 

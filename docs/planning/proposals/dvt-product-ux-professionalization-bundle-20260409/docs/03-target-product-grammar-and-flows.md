@@ -1,3 +1,11 @@
+---
+title: 03 Target Product Grammar And Flows
+status: Draft
+owner: Product / UX / Frontend
+last_reviewed: 2026-04-17
+planning_type: proposal
+---
+
 # 03. Target Product Grammar And Flows
 
 This document defines the target product grammar for the operator-facing DVT

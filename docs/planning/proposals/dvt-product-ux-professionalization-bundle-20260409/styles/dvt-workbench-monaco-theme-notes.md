@@ -1,41 +1,50 @@
+---
+title: DVT Monaco Theme Notes
+status: Draft
+owner: Product / UX / Frontend
+last_reviewed: 2026-04-17
+planning_type: proposal
+---
+
 # DVT Monaco Theme Notes
 
-## Objetivo
+## Objective
 
-Que Monaco no parezca un widget externo pegado al producto.
+Make Monaco feel like a native DVT workbench surface instead of an embedded
+third-party widget.
 
-## Recomendación
+## Recommendation
 
-Definir un tema propio estable, por ejemplo:
+Define one stable product theme, for example:
 
 - `dvt-workbench-dark`
 
-## Tokens mínimos a mapear
+## Minimum Tokens To Map
 
-- editor.background
-- editor.foreground
-- editorCursor.foreground
-- editorLineNumber.foreground
-- editorLineHighlightBackground
-- editor.selectionBackground
-- editor.inactiveSelectionBackground
-- editorWhitespace.foreground
-- editorIndentGuide.background1
-- minimap.background
-- minimap.selectionHighlight
-- diffEditor.insertedTextBackground
-- diffEditor.removedTextBackground
+- `editor.background`
+- `editor.foreground`
+- `editorCursor.foreground`
+- `editorLineNumber.foreground`
+- `editorLineHighlightBackground`
+- `editor.selectionBackground`
+- `editor.inactiveSelectionBackground`
+- `editorWhitespace.foreground`
+- `editorIndentGuide.background1`
+- `minimap.background`
+- `minimap.selectionHighlight`
+- `diffEditor.insertedTextBackground`
+- `diffEditor.removedTextBackground`
 
-## Recomendación tipográfica
+## Typography Recommendation
 
 - UI: Inter
 - Code: JetBrains Mono
 
-## Regla visual
+## Visual Rule
 
-Monaco debe compartir:
+Monaco should share:
 
-- fondo,
-- contraste,
-- tono de borde,
-- y ritmo vertical con el canvas y los paneles.
+- background,
+- contrast,
+- border tone,
+- and vertical rhythm with Canvas and the surrounding panels.
