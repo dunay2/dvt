@@ -45,6 +45,18 @@ mitigations:
     Scope the new helper to `prebuild` and require a real `TURBO_HASH` or `DVT_CI` signal before
     skipping the fallback dependency build.
   - >-
+    Run `pnpm build` in `Test Suite` full-root lanes so merge-gate coverage executes the same
+    Turbo-backed root path as local root builds instead of only validating the retired `pnpm -r
+    build` route.
+  - >-
+    Include `turbo.json` and `scripts/skip-prebuild-if-orchestrated.cjs` in the shared `Test Suite`
+    `root_config` scope so PRs that alter the Turbo graph or orchestration helper cannot skip the
+    merge-gate root build lane.
+  - >-
+    Include `turbo.json` in the shared workflow-scope `any_code` and `workspace_global` policy so
+    `CI - Code Quality` expands to the full affected-workspace matrix when the root Turbo graph
+    changes.
+  - >-
     Keep direct package `build` validation in this slice so the 2026-03-16 fresh-worktree baseline
     is not silently regressed.
   - >-

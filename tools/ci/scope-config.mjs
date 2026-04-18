@@ -4,7 +4,12 @@ import { promisify } from 'node:util';
 
 const execFileAsync = promisify(execFile);
 
-const ROOT_CONFIG_PATTERNS = ['package.json', 'pnpm-lock.yaml', 'pnpm-workspace.yaml'];
+const ROOT_CONFIG_PATTERNS = [
+  'package.json',
+  'pnpm-lock.yaml',
+  'pnpm-workspace.yaml',
+  'turbo.json',
+];
 
 function readWorkflowScopePolicy() {
   const policyPath = new URL('./policy/workflow-scope.json', import.meta.url);
@@ -216,6 +221,7 @@ export const TEST_SCOPE_PATTERNS = {
     '.github/workflows/test.yml',
     'tools/ci/**',
     'scripts/skip-pretest-if-ci.cjs',
+    'scripts/skip-prebuild-if-orchestrated.cjs',
     'scripts/build-workspace-runtime-deps.cjs',
     ...ROOT_CONFIG_PATTERNS,
     'vitest.config.ts',
@@ -252,6 +258,7 @@ export const TEST_SCOPE_PATTERNS = {
     '.github/workflows/test.yml',
     'tools/ci/**',
     'scripts/skip-pretest-if-ci.cjs',
+    'scripts/skip-prebuild-if-orchestrated.cjs',
     'scripts/build-workspace-runtime-deps.cjs',
   ],
 };

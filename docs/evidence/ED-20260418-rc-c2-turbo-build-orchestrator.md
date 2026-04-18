@@ -18,6 +18,10 @@ arc_level: ARC-2
 breaking: false
 code_refs:
   - package.json
+  - .github/workflows/test.yml
+  - tools/ci/scope-config.mjs
+  - tools/ci/workflow-pattern-parity.test.mjs
+  - tools/ci/workflow-scope-classification.test.mjs
   - turbo.json
   - apps/web/turbo.json
   - apps/web/vite.config.ts
@@ -75,6 +79,16 @@ fresh-worktree direct-package build baseline intact by making the affected
 # Key checks
 
 - Root `pnpm build` now routes through `turbo run build`.
+- `Test Suite` full-root lanes now run `pnpm build`, so merge-gate coverage
+  executes the same Turbo-backed root build path instead of the retired
+  `pnpm -r build` path.
+- `CI - Code Quality` now also treats `turbo.json` as both `any_code` and
+  `workspace_global`, so Turbo graph changes cannot fall through to an empty
+  affected-workspace matrix while `Test Suite` runs the Turbo-backed root path.
+- The shared test-scope routing now treats both `turbo.json` and
+  `scripts/skip-prebuild-if-orchestrated.cjs` as `root_config` inputs, so PRs
+  that change the Turbo graph or its orchestration helper cannot bypass the
+  `Test Suite` full-root build lane.
 - The build graph declares cacheable outputs and the root files that must
   invalidate every build task.
 - The web build no longer injects a fresh timestamp into every bundle, and the
@@ -87,9 +101,16 @@ fresh-worktree direct-package build baseline intact by making the affected
 
 # Validation results
 
-- `pnpm build` still fails first at the known pre-existing
-  `apps/outbox-worker/src/ops/OutboxWorkerMonitor.ts:382` `TS2532` defect; no
-  new root-build failure was introduced by the Turbo slice.
+- On the current mainline integration baseline, `pnpm build` passes, so the
+  Turbo-backed root build path is both locally green and executable by the
+  `Test Suite` merge gate after the workflow follow-up.
+- `computeBooleanScope(...)` now classifies `turbo.json` as `any_code=true`
+  under workflow scope, and `computeWorkspaceMatrix(['turbo.json'])` expands to
+  the full workspace matrix, so the `CI - Code Quality` gate stays aligned with
+  the Turbo-backed root build policy.
+- `computeBooleanScope(...)` now classifies both `turbo.json` and
+  `scripts/skip-prebuild-if-orchestrated.cjs` as `any_test=true` and
+  `root_config=true`, and the CI-scope regression tests lock that coverage in.
 - `pnpm --filter @dvt/web typecheck`, `pnpm --filter @dvt/web test`, and
   `pnpm --filter @dvt/web build` all passed, so the web-target code and UI
   guardrail changed for this follow-up are covered directly.
@@ -111,9 +132,9 @@ fresh-worktree direct-package build baseline intact by making the affected
 - `pnpm docs:status:generate` refreshed generated code-state after adding
   `apps/web/turbo.json`, so the governed structural inventory stays aligned
   with the new workspace file.
-- Direct package `build` validation passed for every touched workspace except
-  `dvt-outbox-worker`, which still fails at the same pre-existing `TS2532`
-  baseline.
+- Direct package `build` validation now also passes for `dvt-outbox-worker` on
+  the current mainline integration baseline; the earlier `TS2532` blocker was
+  resolved independently after the original Turbo slice landed.
 
 # Risk posture
 

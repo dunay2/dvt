@@ -174,8 +174,8 @@ Planning-generated pages that are intentionally untracked:
 - `CI - Code Quality`: affected workspace matrix, changed-file lint/format,
   changed-only markdown lint on PRs.
   Source: [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml)
-- `Test Suite`: package tests, affected test routing, coverage,
-  determinism/replay tests.
+- `Test Suite`: package tests, affected test routing, Turbo-backed root build
+  coverage for full-root lanes, coverage, determinism/replay tests.
   Source: [`.github/workflows/test.yml`](../../.github/workflows/test.yml)
 - `Contracts & Determinism`: schema validation, determinism scan, contract
   compile, golden validation, hash comparison.
@@ -202,10 +202,18 @@ These files are the canonical source of truth for:
 Current workflow consumers:
 
 - [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml) uses the shared policy plus
-  workspace matrix emission for affected build/type-check routing.
+  workspace matrix emission for affected build/type-check routing. Its shared
+  `any_code` and `workspace_global` policy now include `turbo.json`, so Turbo
+  graph changes trigger the affected-workspace lane instead of falling through
+  to `No affected workspaces`.
 - [`.github/workflows/test.yml`](../../.github/workflows/test.yml) uses `emit-scope --mode test`
-  for PR test routing across the web app, workers, and library workspaces, while
-  `@dvt/adapter-postgres` remains on its dedicated PostgreSQL-backed lane.
+  for PR test routing across the web app, workers, and library workspaces. Its
+  push/manual full-suite lane and PR `root_config` fast-path both run
+  `pnpm build`, so the merge gate exercises the same Turbo-backed root build
+  path that local root builds now use. The shared `root_config` scope now also
+  includes `turbo.json` and `scripts/skip-prebuild-if-orchestrated.cjs`, so PRs
+  that change the Turbo graph or its orchestration helper cannot skip `Test Suite`,
+  while `@dvt/adapter-postgres` remains on its dedicated PostgreSQL-backed lane.
 - [`.github/workflows/pr-quality-gate.yml`](../../.github/workflows/pr-quality-gate.yml) uses the
   same shared scope surfaces for workflow/global change routing and Temporal capability lanes.
 

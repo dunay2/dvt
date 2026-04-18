@@ -43,9 +43,9 @@ jobs:
         with:
           node-version: 22.x
 
-      - name: Build all packages (once, before tests)
+      - name: Build root graph (once, before tests)
         if: github.event_name != 'pull_request'
-        run: pnpm -r --workspace-concurrency=4 build
+        run: pnpm build
 
       - name: Run tests (push/workflow_dispatch full suite)
         if: github.event_name != 'pull_request'
@@ -60,7 +60,7 @@ jobs:
           set -euo pipefail
 
           if [[ "${{ steps.scope.outputs.root_config }}" == "true" ]]; then
-            pnpm -r --workspace-concurrency=4 build
+            pnpm build
             exit 0
           fi
 

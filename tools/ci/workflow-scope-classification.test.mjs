@@ -8,6 +8,7 @@ import {
   WORKFLOW_SCOPE_PATTERNS,
   WORKSPACE_ENTRIES,
   computeBooleanScope,
+  computeWorkspaceMatrix,
   matchesAnyPattern,
 } from './scope-config.mjs';
 
@@ -75,6 +76,28 @@ test('classifies app/package structural changes as code and generated-status rel
   assert.equal(scope.any_code, true);
   assert.equal(scope.generated_status_relevant, true);
   assert.equal(scope.generated_capability_relevant, true);
+});
+
+test('classifies turbo root-build surfaces for test-suite root config routing', () => {
+  const turboScope = computeBooleanScope(['turbo.json'], TEST_SCOPE_PATTERNS);
+  assert.equal(turboScope.any_test, true);
+  assert.equal(turboScope.root_config, true);
+
+  const helperScope = computeBooleanScope(
+    ['scripts/skip-prebuild-if-orchestrated.cjs'],
+    TEST_SCOPE_PATTERNS
+  );
+  assert.equal(helperScope.any_test, true);
+  assert.equal(helperScope.root_config, true);
+});
+
+test('classifies turbo root-build surfaces for workflow scope and workspace matrix routing', () => {
+  const scope = computeBooleanScope(['turbo.json'], WORKFLOW_SCOPE_PATTERNS);
+  assert.equal(scope.any_code, true);
+
+  const matrix = computeWorkspaceMatrix(['turbo.json']);
+  assert.equal(matrix.anyChanged, true);
+  assert.equal(matrix.include.length, WORKSPACE_ENTRIES.length);
 });
 
 test('workspace matrix covers every workspace with a build or typecheck script', () => {

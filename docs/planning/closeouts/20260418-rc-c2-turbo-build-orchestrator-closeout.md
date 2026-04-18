@@ -205,14 +205,30 @@ flowchart TD
   the graph.
 - Updated the affected app/library `prebuild` hooks to use the new helper while
   keeping direct package `build` commands safe outside `turbo`.
+- Updated `Test Suite` full-root build steps to call `pnpm build`, so merge
+  gates now exercise the same Turbo-backed root build path used locally instead
+  of the retired `pnpm -r build` route.
+- Updated the shared test-scope routing so `turbo.json` and
+  `scripts/skip-prebuild-if-orchestrated.cjs` both classify as `root_config`,
+  preventing Turbo-graph or orchestration-helper PRs from skipping the
+  Turbo-backed `Test Suite` lane.
+- Updated the shared workflow-scope policy so `turbo.json` classifies as both
+  `any_code` and `workspace_global`, keeping the `CI - Code Quality`
+  affected-workspace matrix aligned with the same root Turbo graph changes.
 - Updated operator docs so the repo documents both the Turbo-backed root build
   path and the direct-package fallback invariant that must remain true.
 
 ## Validation
 
 - `pnpm build`:
-  failed at the pre-existing `dvt-outbox-worker` TypeScript blocker
-  `apps/outbox-worker/src/ops/OutboxWorkerMonitor.ts:382` (`TS2532`).
+  passed on the current mainline integration baseline, so the Turbo-backed root
+  build path is green both locally and in the `Test Suite` full-root lanes.
+- `computeBooleanScope(...)` over `turbo.json` in workflow scope and
+  `computeWorkspaceMatrix(['turbo.json'])`:
+  passed, returning `any_code=true` and a full affected-workspace matrix.
+- `computeBooleanScope(...)` over `turbo.json` and
+  `scripts/skip-prebuild-if-orchestrated.cjs`:
+  passed, returning `any_test=true` and `root_config=true` for both files.
 - `pnpm --filter @dvt/web typecheck`: passed
 - `pnpm --filter @dvt/web test`:
   passed, including the bootstrap metadata coverage that now hides the build
@@ -237,8 +253,8 @@ flowchart TD
 - `pnpm --filter dvt-api build`: passed
 - `pnpm --filter dvt-lineage-worker build`: passed
 - `pnpm --filter dvt-outbox-worker build`:
-  failed at the same pre-existing `TS2532` baseline under
-  `apps/outbox-worker/src/ops/OutboxWorkerMonitor.ts:382`
+  passed on the current mainline integration baseline; the earlier `TS2532`
+  blocker was resolved independently after the original Turbo slice landed
 - `pnpm --filter dvt-projector-worker build`: passed
 - `pnpm --filter dvt-temporal-worker build`: passed
 - `pnpm --filter @dvt/adapter-postgres build`: passed
@@ -256,13 +272,13 @@ flowchart TD
 
 ## Outcome
 
-Root `pnpm build` is now cache-aware through `turbo`, but direct package
-`build` commands still retain the package-local dependency fallback that the
-2026-03-16 baseline required. The slice therefore removes duplicate root build
-orchestration without pretending the known `outbox-worker` type failure is part
-of this change, and the `@dvt/web` target now invalidates correctly on
-package-local env changes, including explicit build metadata, without degrading
-the bootstrap metadata UX to `Build unknown`.
+Root `pnpm build` is now cache-aware through `turbo`, direct package `build`
+commands still retain the package-local dependency fallback that the
+2026-03-16 baseline required, and the `Test Suite` merge gate now exercises the
+same Turbo-backed root build path instead of the retired `pnpm -r build`
+variant. The `@dvt/web` target now invalidates correctly on package-local env
+changes, including explicit build metadata, without degrading the bootstrap
+metadata UX to `Build unknown`.
 
 ## Debt And Stub Check
 

@@ -126,7 +126,17 @@ test('adapter-postgres policy stays wired into the PR quality gate and test work
       TEST_SCOPE_PATTERNS.delivery
     )
   );
+  assert.ok(matchesAnyPattern('turbo.json', TEST_SCOPE_PATTERNS.any_test));
+  assert.ok(matchesAnyPattern('turbo.json', TEST_SCOPE_PATTERNS.root_config));
+  assert.ok(matchesAnyPattern('turbo.json', workflowScopePolicy.any_code));
+  assert.ok(matchesAnyPattern('turbo.json', workflowScopePolicy.workspace_global));
   assert.ok(matchesAnyPattern('tools/ci/emit-scope.mjs', TEST_SCOPE_PATTERNS.root_config));
+  assert.ok(
+    matchesAnyPattern('scripts/skip-prebuild-if-orchestrated.cjs', TEST_SCOPE_PATTERNS.any_test)
+  );
+  assert.ok(
+    matchesAnyPattern('scripts/skip-prebuild-if-orchestrated.cjs', TEST_SCOPE_PATTERNS.root_config)
+  );
   assert.ok(
     !matchesAnyPattern(
       'packages/@dvt/adapter-postgresx/src/index.ts',
