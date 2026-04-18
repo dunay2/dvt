@@ -20,6 +20,12 @@ export type {
   ImportSourcesInput,
   ImportSourcesResult,
 } from './workspace';
+export type { IWorkspaceGraphDraftAuthoringPort } from './workspaceGraphDraftAuthoring';
+export type {
+  SaveWorkspaceGraphDraftAuthoringInput,
+  WorkspaceGraphDraftAuthoringReadResult,
+  WorkspaceGraphDraftAuthoringSaveResult,
+} from './workspaceGraphDraftAuthoring';
 
 export type { SessionContextPort, WorkspaceScope } from './sessionContext';
 export type { ShellFeedbackPort } from './shellFeedback';

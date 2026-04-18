@@ -219,6 +219,11 @@ These files are intended to become the canonical source of truth for:
 - `pnpm --filter dvt-api test:integration` skips cleanly when `DATABASE_URL` or
   `DVT_PG_URL` is absent; when configured it exercises the real API protected
   runtime with JWKS-backed OIDC verification plus PostgreSQL authorization data.
+- The protected-runtime lane keeps one executable entrypoint
+  (`apps/api/test/integration/protectedRuntime.integration.test.ts`) while its
+  support seams are split under `protectedRuntime.integration.*.ts` for
+  bootstrap, auth, persistence, runtime scenarios, workspace-draft scenarios,
+  and assertions.
 - In the agent sandbox used for this repository, `vitest`/`vite`/`esbuild`
   commands may fail with `spawn EPERM`; when that happens, re-run the same
   validation command with escalated execution before treating it as a real code

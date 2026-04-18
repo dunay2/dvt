@@ -2,7 +2,7 @@
 title: Workspace graph draft persistence v1
 status: Draft
 owner: docs
-last_reviewed: 2026-04-16
+last_reviewed: 2026-04-18
 ---
 
 # Workspace graph draft persistence v1
@@ -91,6 +91,31 @@ concurrent edits in this contract line.
   authority from product paths.
 - `web` and `api` must preserve capability, audit, and format metadata to keep
   diagnosis and recovery deterministic.
+- `web` draft reads in `api` mode must call
+  `GET /workspace/graph/draft?tenantId=<...>&projectId=<...>&environmentId=<...>`
+  and parse the canonical `WorkspaceGraphDraftReadResponse` envelope instead of
+  assuming a bare record payload.
+- `web` draft writes in `api` mode must send the canonical
+  `WorkspaceGraphDraftSaveRequest` body, including protected `scope`, active
+  `schemaVersion`, explicit `expectedRevision`, `idempotencyKey`, and typed
+  draft payload.
+- `web` should isolate that protected boundary behind a dedicated draft
+  authoring port that preserves boundary-native outcomes before any projection
+  into route-level DTOs:
+  - read path: canonical `WorkspaceGraphDraftReadResponse` plus explicit
+    `not_found`
+  - write path: canonical `WorkspaceGraphDraftSaveResponse` plus explicit
+    transport-governed `unsupported_schema_version` and `idempotency_mismatch`
+  - capability, audit, and format metadata must survive that seam intact
+- `web` must treat `WorkspaceGraphDraftSaveResponse` as an outcome envelope:
+  `saved` returns `revision`, `conflict` returns `currentRevision`, and callers
+  that need the materialized record must perform a follow-up scoped read rather
+  than inventing `{ record }` or `{ current }` response shapes.
+- `WorkspaceGraphDraft.v1` is structural draft authority. It governs scoped
+  node identity, typed node payloads, and typed edges, but it does not promise
+  presentation-only canvas coordinates. Any web projection back into
+  view-specific DTOs must treat visual layout as a separate concern instead of
+  inventing backend layout fields.
 
 ## Related
 

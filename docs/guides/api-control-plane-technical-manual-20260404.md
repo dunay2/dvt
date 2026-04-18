@@ -114,6 +114,12 @@ Required negative suites:
 - `apps/api/test/contracts/adminRebuildSnapshotAccessContract.test.ts`
 - `apps/api/test/integration/protectedRuntime.integration.test.ts`
 
+The protected runtime integration lane now uses seam files under
+`apps/api/test/integration/protectedRuntime.integration.*.ts` for auth,
+bootstrap, persistence, runtime scenarios, workspace-draft scenarios, and
+assertions. The executable entrypoint remains
+`protectedRuntime.integration.test.ts`.
+
 Instrumentation-negative review scenarios (documentation gate):
 
 - fail review if a document claims alerting on a metric not emitted in code
