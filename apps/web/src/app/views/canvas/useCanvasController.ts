@@ -71,6 +71,7 @@ import { useCanvasLayoutPersistence } from './useCanvasLayoutPersistence';
 import { useCanvasNavigationActions } from './useCanvasNavigationActions';
 import { useCanvasOverlayModel } from './useCanvasOverlayModel';
 import { useCanvasStoreFacade } from './useCanvasStoreFacade';
+import { createCanvasDraftRepository } from './canvasDraftRepository';
 import { validateTransformationGraph } from './transformationGraphValidation';
 
 const nodeTypes: NodeTypes = {
@@ -152,6 +153,10 @@ export function useCanvasController() {
   const canvasAuthoringMode: 'transformation' | 'dbt' =
     graphStrategy.id === 'transformation' ? 'transformation' : 'dbt';
   const workspaceService = useWorkspaceService();
+  const draftRepository = useMemo(
+    () => createCanvasDraftRepository(workspaceService),
+    [workspaceService]
+  );
   const plansService = usePlansService();
   const runsService = useRunsService();
   const sessionContext = useSessionContext();
@@ -189,7 +194,7 @@ export function useCanvasController() {
 
   const graphDraftQuery = useQuery({
     queryKey: queryKeys.workspace.graphDraft(store.workspaceLayoutKey),
-    queryFn: () => workspaceService.getGraphDraft(),
+    queryFn: () => draftRepository.readGraphDraft(),
   });
   const graphModel = useCanvasGraphModel({
     workspaceLayoutKey: store.workspaceLayoutKey,
@@ -545,7 +550,7 @@ export function useCanvasController() {
       activeSaveAttemptRef.current = saveAttempt;
       setDraftSession((currentSession) => markSaving(currentSession));
       setDraftSaveStatus('saving');
-      void workspaceService
+      void draftRepository
         .saveGraphDraft({
           draft: currentDraftPayload,
           expectedRevision: draftSession.draftRevision,
@@ -623,8 +628,8 @@ export function useCanvasController() {
     graphModel.graphSnapshotQuery.isError,
     graphModel.graphSnapshotQuery.isPending,
     queryClient,
+    draftRepository,
     store.workspaceLayoutKey,
-    workspaceService,
   ]);
 
   const reloadLatestDraft = useCallback(() => {
@@ -648,11 +653,11 @@ export function useCanvasController() {
         await Promise.all([
           queryClient.fetchQuery<WorkspaceGraphDraftRecord | null>({
             queryKey: graphDraftKey,
-            queryFn: () => workspaceService.getGraphDraft(),
+            queryFn: () => draftRepository.readGraphDraft(),
           }),
           queryClient.fetchQuery<WorkspaceGraphSnapshot>({
             queryKey: graphKey,
-            queryFn: () => workspaceService.getGraphSnapshot(),
+            queryFn: () => draftRepository.readGraphSnapshot(),
           }),
         ])
       )
@@ -678,8 +683,8 @@ export function useCanvasController() {
     graphStrategy,
     invalidateInFlightSaveAttempt,
     queryClient,
+    draftRepository,
     store.workspaceLayoutKey,
-    workspaceService,
   ]);
 
   const adoptCurrentWorkspaceSnapshot = useCallback(() => {

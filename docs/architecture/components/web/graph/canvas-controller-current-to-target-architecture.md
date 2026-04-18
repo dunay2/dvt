@@ -21,6 +21,7 @@ under `F-05`.
 Primary implementation anchors:
 
 - [useCanvasController.ts](../../../../../apps/web/src/app/views/canvas/useCanvasController.ts)
+- [canvasDraftRepository.ts](../../../../../apps/web/src/app/views/canvas/canvasDraftRepository.ts)
 - [canvasDraftSession.ts](../../../../../apps/web/src/app/views/canvas/canvasDraftSession.ts)
 - [canvasDraftScope.ts](../../../../../apps/web/src/app/views/canvas/canvasDraftScope.ts)
 - [useCanvasGraphHandlers.ts](../../../../../apps/web/src/app/views/canvas/useCanvasGraphHandlers.ts)
@@ -59,17 +60,18 @@ Ownership note:
 
 `useCanvasController` currently owns too many concerns in one hook:
 
-| Responsibility                 | Current ownership in controller                                             | Why it matters                                                  |
-| ------------------------------ | --------------------------------------------------------------------------- | --------------------------------------------------------------- |
-| Query ownership                | Runs the workspace graph query through TanStack Query                       | Server-state acquisition and UI composition are coupled         |
-| Canonical mapping              | Maps workspace nodes and edges into canonical graph types and identity maps | Graph truth and rendering prep are mixed                        |
-| Overlay projection             | Builds runtime, impact, and cost overlay projections                        | Overlay policy is coupled to graph hydration                    |
-| Layout persistence             | Reads persisted viewport and node positions and writes them back            | Persistence rules are mixed with render sync                    |
-| Draft session orchestration    | Bootstraps, reloads, and saves the authoritative draft working set          | Aggregate policy still passes through the controller seam       |
-| Projection and recovery policy | Derives visible scope and blocked recovery posture                          | Projection safety and route posture are still partly coupled    |
-| Selection and inspector wiring | Binds selected nodes, inspector node, and panel toggles                     | UI coordination is mixed with graph derivation                  |
-| Run navigation side effects    | Navigates to `/runs/:runId` after execution start                           | Route side effects are coupled to graph controller state        |
-| Execution orchestration        | Composes planning and run-start actions with selection context              | Controller acts as both graph facade and execution orchestrator |
+| Responsibility                 | Current ownership in controller                                                     | Why it matters                                                    |
+| ------------------------------ | ----------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| Query ownership                | Runs the workspace graph query through TanStack Query                               | Server-state acquisition and UI composition are coupled           |
+| Draft repository seam          | Delegates draft read/save and reload snapshot reads through `canvasDraftRepository` | Workspace persistence IO is now isolated from route orchestration |
+| Canonical mapping              | Maps workspace nodes and edges into canonical graph types and identity maps         | Graph truth and rendering prep are mixed                          |
+| Overlay projection             | Builds runtime, impact, and cost overlay projections                                | Overlay policy is coupled to graph hydration                      |
+| Layout persistence             | Reads persisted viewport and node positions and writes them back                    | Persistence rules are mixed with render sync                      |
+| Draft session orchestration    | Bootstraps, reloads, and saves the authoritative draft working set                  | Aggregate policy still passes through the controller seam         |
+| Projection and recovery policy | Derives visible scope and blocked recovery posture                                  | Projection safety and route posture are still partly coupled      |
+| Selection and inspector wiring | Binds selected nodes, inspector node, and panel toggles                             | UI coordination is mixed with graph derivation                    |
+| Run navigation side effects    | Navigates to `/runs/:runId` after execution start                                   | Route side effects are coupled to graph controller state          |
+| Execution orchestration        | Composes planning and run-start actions with selection context                      | Controller acts as both graph facade and execution orchestrator   |
 
 ## Current Topology
 
@@ -157,6 +159,9 @@ The target state is a slim composition facade:
 - `usePublishedRouteBootstrap`
   is the adapter seam for published routes and must bind publication to an
   explicit route registration rather than discovering a route implicitly
+- `canvasDraftRepository`
+  owns draft read, save, and reload-time snapshot access over `IWorkspacePort`
+  so route orchestration no longer speaks directly to draft persistence calls
 - `StaticRouteBootstrapBoundary`
   owns the mount-time bridge only for routes whose first useful surface is
   already correct as soon as the lazy route module has mounted
@@ -232,6 +237,7 @@ flowchart LR
   subgraph Adapters["Adapters and infrastructure-facing seams"]
     Publisher["usePublishedRouteBootstrap\nResponsibility: publish by explicit route registration"]
     ActiveRegistration["useActiveRouteBootstrapRegistration\nResponsibility: resolve active typed registration"]
+    DraftRepository["canvasDraftRepository\nResponsibility: draft read/save and reload snapshot seam"]
     GraphModel["useCanvasGraphModel\nResponsibility: canonical graph mapping and identity maps"]
     OverlayModel["useCanvasOverlayModel\nResponsibility: overlay decoration projection"]
     Persistence["useCanvasLayoutPersistence\nResponsibility: viewport and node-position persistence"]
@@ -245,6 +251,7 @@ flowchart LR
   Controller --> DraftSession
   Controller --> DraftScope
   Controller --> Presentation
+  Controller --> DraftRepository
   Controller --> GraphModel
   Controller --> OverlayModel
   Controller --> Persistence
@@ -257,6 +264,7 @@ flowchart LR
   Publisher -->|"publish route bootstrap contract"| RouteBootstrap
   StaticBoundary -->|"publish settled static route contract"| RouteBootstrap
   Root -->|"resolve active route handle"| RouteBootstrap
+  DraftRepository --> Workspace
   GraphModel --> Workspace
   Persistence --> Workspace
   Execution --> Plans

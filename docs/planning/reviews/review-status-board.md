@@ -56,6 +56,13 @@ Sprint execution board:
 
 Additional active rationale:
 
+- [20260417 DVT artifacts review](./architecture-and-governance/20260417-dvt-artifacts-review.md)
+  - domain: `architecture-and-governance`
+  - role: current artifacts-boundary and consumer-gap review distilled to active execution conclusions
+  - linkage: `RC-G1-C`, `F-11`, `F-17-F`
+  - status: `reference`
+  - progress: `n/a`
+
 - [20260411 Project architecture strengths, weaknesses, and priority review](./architecture-and-governance/20260411-project-architecture-strengths-weaknesses-fowler-review.md)
   - domain: `architecture-and-governance`
   - role: current module-by-module architectural valuation and priority baseline
