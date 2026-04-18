@@ -43,6 +43,9 @@ Warm-build note:
   on POSIX or `cmd /c "set DVT_CI=1&& pnpm -r build"` from PowerShell.
   See the guardrail note in the `Notes` section below; this is not the
   fresh-worktree default path.
+- Root `pnpm build` is now a Turborepo-backed build graph. In this slice only
+  `build` uses `turbo`; `typecheck`, `test`, and docs commands keep their
+  existing repo-local orchestration.
 
 ## Operational Preflight Helpers
 
@@ -171,8 +174,8 @@ Planning-generated pages that are intentionally untracked:
 - `CI - Code Quality`: affected workspace matrix, changed-file lint/format,
   changed-only markdown lint on PRs.
   Source: [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml)
-- `Test Suite`: package tests, affected test routing, coverage,
-  determinism/replay tests.
+- `Test Suite`: package tests, affected test routing, Turbo-backed root build
+  coverage for full-root lanes, coverage, determinism/replay tests.
   Source: [`.github/workflows/test.yml`](../../.github/workflows/test.yml)
 - `Contracts & Determinism`: schema validation, determinism scan, contract
   compile, golden validation, hash comparison.
@@ -183,18 +186,36 @@ Planning-generated pages that are intentionally untracked:
 
 ## Shared CI Scope Logic
 
-The current branch centralizes workflow scope detection in:
+The repository centralizes workflow scope detection in:
 
 - [`tools/ci/scope-config.mjs`](../../tools/ci/scope-config.mjs)
 - [`tools/ci/emit-workspace-matrix.mjs`](../../tools/ci/emit-workspace-matrix.mjs)
 - [`tools/ci/emit-scope.mjs`](../../tools/ci/emit-scope.mjs)
 
-These files are intended to become the canonical source of truth for:
+These files are the canonical source of truth for:
 
 - affected workspace detection
-- package test scope detection
+- package test scope detection in [`.github/workflows/test.yml`](../../.github/workflows/test.yml)
 - contracts/determinism scope detection
 - Temporal integration scope detection
+
+Current workflow consumers:
+
+- [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml) uses the shared policy plus
+  workspace matrix emission for affected build/type-check routing. Its shared
+  `any_code` and `workspace_global` policy now include `turbo.json`, so Turbo
+  graph changes trigger the affected-workspace lane instead of falling through
+  to `No affected workspaces`.
+- [`.github/workflows/test.yml`](../../.github/workflows/test.yml) uses `emit-scope --mode test`
+  for PR test routing across the web app, workers, and library workspaces. Its
+  push/manual full-suite lane and PR `root_config` fast-path both run
+  `pnpm build`, so the merge gate exercises the same Turbo-backed root build
+  path that local root builds now use. The shared `root_config` scope now also
+  includes `turbo.json` and `scripts/skip-prebuild-if-orchestrated.cjs`, so PRs
+  that change the Turbo graph or its orchestration helper cannot skip `Test Suite`,
+  while `@dvt/adapter-postgres` remains on its dedicated PostgreSQL-backed lane.
+- [`.github/workflows/pr-quality-gate.yml`](../../.github/workflows/pr-quality-gate.yml) uses the
+  same shared scope surfaces for workflow/global change routing and Temporal capability lanes.
 
 ## Notes
 
@@ -236,6 +257,9 @@ These files are intended to become the canonical source of truth for:
   `cmd /c "set DVT_CI=1&& pnpm -r build"` from PowerShell. It is not the
   canonical fresh-worktree build path, because lifecycle hooks skip their
   dependency-build fallback when `DVT_CI` is set.
+- `pnpm build` routes through `turbo run build` in the current repo state.
+  Direct package `build` commands still keep their package-local dependency
+  fallback when they are not running under `turbo`.
 - For slices that change code, config, tests, CI, or docs, include
   `pnpm verify:prepush` in the end-of-task validation baseline before claiming
   the work is ready.
