@@ -1,6 +1,6 @@
 import { setTimeout as sleep } from 'node:timers/promises';
 
-import type { EventEnvelope as RunEventPersisted } from '@dvt/contracts';
+import { asIsoUtcString, type EventEnvelope as RunEventPersisted } from '@dvt/contracts';
 
 import { closePgPool } from '../../src/db/pool.js';
 import { loadEnv, type ActiveEnv, isActiveEnv } from '../../src/plugins/env.js';
@@ -36,11 +36,11 @@ export function makePendingEvent(): RunEventPersisted {
     planVersion: '1.0.0',
     logicalAttemptId: 1,
     engineAttemptId: 1,
-    emittedAt: '2026-03-08T00:00:00.000Z',
+    emittedAt: asIsoUtcString('2026-03-08T00:00:00.000Z'),
     idempotencyKey: 'key-1',
     payloadVersion: 1,
     runSeq: 1,
-    persistedAt: '2026-03-08T00:00:00.000Z',
+    persistedAt: asIsoUtcString('2026-03-08T00:00:00.000Z'),
   };
 }
 

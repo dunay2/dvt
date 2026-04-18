@@ -1,4 +1,8 @@
-import type { EventEnvelope as RunEventPersisted, OutboxRecord } from '@dvt/contracts';
+import {
+  asIsoUtcString,
+  type EventEnvelope as RunEventPersisted,
+  type OutboxRecord,
+} from '@dvt/contracts';
 import { describe, it, expect } from 'vitest';
 
 import { OutboxWorkerMonitor } from '../../src/ops/OutboxWorkerMonitor.js';
@@ -41,11 +45,11 @@ function makeEvent(id: string): RunEventPersisted {
     planVersion: '1.0.0',
     logicalAttemptId: 1,
     engineAttemptId: 1,
-    emittedAt: '2026-03-08T00:00:00.000Z',
+    emittedAt: asIsoUtcString('2026-03-08T00:00:00.000Z'),
     idempotencyKey: `key-${id}`,
     payloadVersion: 1,
     runSeq: 1,
-    persistedAt: '2026-03-08T00:00:00.000Z',
+    persistedAt: asIsoUtcString('2026-03-08T00:00:00.000Z'),
   };
 }
 
