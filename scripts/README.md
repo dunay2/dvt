@@ -63,7 +63,27 @@ Behavior:
 - exits `1` otherwise, so local builds keep the normal dependency prebuild path
 
 Use this only when CI already ran an explicit workspace-graph build step before
-the guarded command.
+the guarded command, or when a local operator intentionally runs a warm rebuild
+on an already-built worktree.
+
+Safe local warm-build usage:
+
+```powershell
+cmd /c "set DVT_CI=1&& pnpm -r build"
+```
+
+```bash
+env DVT_CI=1 pnpm -r build
+```
+
+Guardrail:
+
+- use this only on an already-built worktree or after an explicit graph build
+- prefer one-shot command forms that do not leave `DVT_CI` exported in the
+  current shell
+- do not treat `DVT_CI=1` as a fresh-worktree substitute, because the guarded
+  hooks intentionally skip their dependency-build fallback when the variable is
+  set
 
 ### `build-workspace-runtime-deps.cjs`
 

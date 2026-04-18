@@ -14,7 +14,7 @@
   "private": true,
   "license": "MIT",
   "scripts": {
-    "build": "tsc -b tsconfig.json --force",
+    "build": "tsc -b tsconfig.json",
     "test": "vitest run --passWithNoTests",
     "schema:verify": "vitest run --passWithNoTests test/schema-sync.test.ts"
   },
