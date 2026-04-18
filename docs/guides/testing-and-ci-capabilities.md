@@ -35,6 +35,14 @@ See also:
 | Affected workspace test        | `pnpm ci:affected:test`          | [`package.json`](../../package.json)                           |
 | Affected workspace type-check  | `pnpm ci:affected:typecheck`     | [`package.json`](../../package.json)                           |
 
+Warm-build note:
+
+- On an already-built worktree, a local warm recursive rebuild can use
+  a shell-scoped one-shot form such as `env DVT_CI=1 pnpm -r build`
+  on POSIX or `cmd /c "set DVT_CI=1&& pnpm -r build"` from PowerShell.
+  See the guardrail note in the `Notes` section below; this is not the
+  fresh-worktree default path.
+
 ## Operational Preflight Helpers
 
 | Capability                  | Command                                                                                                                | Source                                             |
@@ -215,6 +223,12 @@ These files are intended to become the canonical source of truth for:
   commands may fail with `spawn EPERM`; when that happens, re-run the same
   validation command with escalated execution before treating it as a real code
   failure.
+- A shell-scoped one-shot `DVT_CI` build shortcut is available for
+  already-built local worktrees or flows that already ran an explicit
+  workspace-graph build: use `env DVT_CI=1 pnpm -r build` on POSIX or
+  `cmd /c "set DVT_CI=1&& pnpm -r build"` from PowerShell. It is not the
+  canonical fresh-worktree build path, because lifecycle hooks skip their
+  dependency-build fallback when `DVT_CI` is set.
 - For slices that change code, config, tests, CI, or docs, include
   `pnpm verify:prepush` in the end-of-task validation baseline before claiming
   the work is ready.

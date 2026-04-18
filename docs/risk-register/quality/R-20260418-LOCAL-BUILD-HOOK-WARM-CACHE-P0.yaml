@@ -1,0 +1,28 @@
+id: R-20260418-LOCAL-BUILD-HOOK-WARM-CACHE-P0
+title: DVT_CI warm-build shortcut could hide missing dependency builds on stale local worktrees
+status: Open
+date: 2026-04-18
+owners:
+  - packages/@dvt/contracts
+  - apps/lineage-worker
+  - apps/outbox-worker
+  - apps/projector-worker
+  - apps/temporal-worker
+severity: Medium
+probability: Medium
+context: >
+  This slice broadens the existing `DVT_CI` hook-short-circuit model from CI and selected workspaces
+  to the four worker apps, and it removes the forced rebuild behavior from `@dvt/contracts` to
+  reduce repeated warm-build cost.
+risk: >
+  If contributors set `DVT_CI=1` on a fresh or stale worktree without first building the dependency
+  graph, lifecycle hooks will intentionally skip their fallback dependency builds and package
+  commands can fail later with missing or stale `dist` artifacts.
+mitigations:
+  - Keep the shortcut limited to `DVT_CI=1` rather than making it the default local path.
+  - >-
+    Document the guardrail on canonical script and testing docs: use it only on already-built
+    worktrees or after an explicit graph build.
+  - Keep the normal non-`DVT_CI` local path unchanged so direct local builds still rebuild
+    dependency closures when needed.
+  - Preserve package-level validation plus `pnpm verify:prepush` before merge.
