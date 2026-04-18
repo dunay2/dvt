@@ -23,6 +23,8 @@ export {
 export {
   parseArtifactRef,
   parseDesignGraphDraft,
+  parseExternalPlanCompileRequest,
+  parseExternalPlanCompileResponse,
   parseExecutionPlan,
   parseExecutionStepV1,
   parseGenericGraphSourceV1,

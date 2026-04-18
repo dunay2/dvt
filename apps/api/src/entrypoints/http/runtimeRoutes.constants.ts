@@ -1,5 +1,6 @@
 export const RUNTIME_ROUTE_PATH = {
   start: '/runs/start',
+  plansCompile: '/plans/compile',
   plansPreview: '/plans/preview',
   plansImport: '/plans/import',
   workspaceGraphDraft: '/workspace/graph/draft',
@@ -13,6 +14,7 @@ export const RUNTIME_ROUTE_PATH = {
 
 export const PROTECTED_RUNTIME_ROUTE_SUMMARY = [
   `POST ${RUNTIME_ROUTE_PATH.start}`,
+  `POST ${RUNTIME_ROUTE_PATH.plansCompile}`,
   `POST ${RUNTIME_ROUTE_PATH.plansPreview}`,
   `POST ${RUNTIME_ROUTE_PATH.plansImport}`,
   `GET ${RUNTIME_ROUTE_PATH.workspaceGraphDraft}`,

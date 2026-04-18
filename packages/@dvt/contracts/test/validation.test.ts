@@ -2,6 +2,7 @@ import { describe } from 'vitest';
 
 import { registerValidationExecutionContextSuite } from './validation/execution-context.js';
 import { registerValidationExecutionPlanSuite } from './validation/execution-plan.js';
+import { registerValidationExternalPlanCompileSuite } from './validation/external-plan-compile.js';
 import { registerValidationPlanRecordsSuite } from './validation/plan-records.js';
 import { registerValidationPlannerGraphSuite } from './validation/planner-graph.js';
 import { registerValidationPreviewSuite } from './validation/preview.js';
@@ -14,6 +15,7 @@ describe('contracts: validation helpers', () => {
   registerValidationRunLifecycleSuite();
   registerValidationExecutionPlanSuite();
   registerValidationExecutionContextSuite();
+  registerValidationExternalPlanCompileSuite();
   registerValidationPlannerGraphSuite();
   registerValidationPlanRecordsSuite();
   registerValidationPreviewSuite();

@@ -1,7 +1,10 @@
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { asIsoUtcString, createDefaultStepTypeRegistry } from '@dvt/contracts';
+import {
+  asIsoUtcString,
+  createDefaultStepTypeRegistry,
+} from '@dvt/contracts';
 import { StartRunAdmissionGuard } from '@dvt/delivery';
 import type { ExecutionPlan } from '@dvt/engine';
 import type { IObservability } from '@dvt/observability';
@@ -43,6 +46,7 @@ import { StructuredWorkspaceGraphDraftAuditLogger } from '../infrastructure/work
 import type { Env } from '../plugins/env.js';
 
 import { buildProviderAdapters } from './buildProviderAdapters.js';
+import { buildExternalCompilePlanner } from './externalCompilePlannerProfile.js';
 import { bindStateStoreRoles } from './stateStoreRoles.js';
 import type { ProtectedRuntimeModule } from './types.js';
 
@@ -261,6 +265,7 @@ export async function buildProtectedRuntimeModule(
     () => new Date()
   );
   const planner = new PlannerFacade();
+  const externalCompilePlanner = buildExternalCompilePlanner();
   const planValidator = new StoredPlanExecutabilityValidator({
     fetcher: planStore,
     adapters,
@@ -297,6 +302,7 @@ export async function buildProtectedRuntimeModule(
     startRunTargetAdapterRegistry,
     stateStore: stateStoreRoles,
     planner,
+    externalCompilePlanner,
     planStore,
     planValidator,
     executablePlanResolver,

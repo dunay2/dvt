@@ -10,6 +10,10 @@ import {
   type ArtifactRefSchemaT,
   DesignGraphDraftSchema,
   type DesignGraphDraftSchemaT,
+  ExternalPlanCompileRequestV1Schema,
+  type ExternalPlanCompileRequestV1SchemaT,
+  ExternalPlanCompileResponseV1Schema,
+  type ExternalPlanCompileResponseV1SchemaT,
   ExecutionPlanSchema,
   type ExecutionPlanSchemaT,
   ExecutionStepV1Schema,
@@ -57,6 +61,18 @@ export function parseArtifactRef(input: unknown): ArtifactRefSchemaT {
 
 export function parseDesignGraphDraft(input: unknown): DesignGraphDraftSchemaT {
   return parseWithSchema(DesignGraphDraftSchema, input);
+}
+
+export function parseExternalPlanCompileRequest(
+  input: unknown
+): ExternalPlanCompileRequestV1SchemaT {
+  return parseWithSchema(ExternalPlanCompileRequestV1Schema, input);
+}
+
+export function parseExternalPlanCompileResponse(
+  input: unknown
+): ExternalPlanCompileResponseV1SchemaT {
+  return parseWithSchema(ExternalPlanCompileResponseV1Schema, input);
 }
 
 export function parsePlanPreviewProvenance(input: unknown): PlanPreviewProvenanceSchemaT {

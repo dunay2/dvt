@@ -12,6 +12,7 @@ import { RecoverRunUseCase } from './application/services/recoverRunUseCase.js';
 import { SignalRunUseCase } from './application/services/signalRunUseCase.js';
 import { registerAdminRoutes } from './entrypoints/http/adminRoutes.js';
 import { cancelRunRoute } from './entrypoints/http/cancelRunRoute.js';
+import { compilePlanRoute } from './entrypoints/http/compilePlanRoute.js';
 import { getRunEventsRoute } from './entrypoints/http/getRunEventsRoute.js';
 import { getRunRoute } from './entrypoints/http/getRunRoute.js';
 import { listRunsRoute } from './entrypoints/http/listRunsRoute.js';
@@ -233,6 +234,13 @@ export async function buildApp(): Promise<{ app: FastifyInstance; ctx: AppContex
         planStore: protectedModule.planStore,
         planValidator: protectedModule.planValidator,
         planResolver: protectedModule.executablePlanResolver,
+      })
+    );
+    app.post(RUNTIME_ROUTE_PATH.plansCompile, async (request, reply) =>
+      compilePlanRoute(request as never, reply, {
+        authenticator: protectedModule.authenticator,
+        authorizer: protectedModule.authorizer,
+        planner: protectedModule.externalCompilePlanner,
       })
     );
     app.post(RUNTIME_ROUTE_PATH.plansImport, async (request, reply) =>
