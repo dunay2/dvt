@@ -15,7 +15,12 @@ import type {
   ITraceabilityService,
   ITraceValidator,
 } from './contracts.js';
-import type { TraceabilityManifest, ValidationResult } from './types.js';
+import { filterValidationIssues } from './core/issue-baseline.js';
+import type {
+  TraceabilityManifest,
+  ValidationIssueBaselineEntry,
+  ValidationResult,
+} from './types.js';
 
 type TraceabilityDeps = {
   adrCatalog: IAdrCatalog;
@@ -37,6 +42,7 @@ export class TraceabilityService implements ITraceabilityService {
     generated: string;
     requireDecision?: boolean;
     failOnMissingVersion?: boolean;
+    issueBaseline?: ValidationIssueBaselineEntry[];
   }): Promise<{ validation: ValidationResult; manifest?: TraceabilityManifest }> {
     const traces = await this.deps.scanner.scan({
       repoRoot: input.repoRoot,
@@ -44,23 +50,29 @@ export class TraceabilityService implements ITraceabilityService {
       excludeGlobs: input.excludeGlobs,
     });
 
-    const validation = await this.deps.validator.validate({
-      traces,
-      adrCatalog: this.deps.adrCatalog,
-      ...(typeof input.requireDecision === 'boolean'
-        ? { requireDecision: input.requireDecision }
-        : {}),
-      ...(typeof input.failOnMissingVersion === 'boolean'
-        ? { failOnMissingVersion: input.failOnMissingVersion }
-        : {}),
-    });
+    const validation = filterValidationIssues(
+      await this.deps.validator.validate({
+        traces,
+        adrCatalog: this.deps.adrCatalog,
+        ...(typeof input.requireDecision === 'boolean'
+          ? { requireDecision: input.requireDecision }
+          : {}),
+        ...(typeof input.failOnMissingVersion === 'boolean'
+          ? { failOnMissingVersion: input.failOnMissingVersion }
+          : {}),
+      }),
+      input.issueBaseline
+    );
     if (!validation.ok) return { validation };
 
     const accepted = await this.deps.adrCatalog.listAdrs('Accepted');
-    const reverse = await this.deps.validator.validateReverseCoverage({
-      traces,
-      acceptedAdrs: accepted,
-    });
+    const reverse = filterValidationIssues(
+      await this.deps.validator.validateReverseCoverage({
+        traces,
+        acceptedAdrs: accepted,
+      }),
+      input.issueBaseline
+    );
     if (!reverse.ok) return { validation: reverse };
 
     const manifest = await this.deps.manifestBuilder.build({
@@ -72,6 +84,9 @@ export class TraceabilityService implements ITraceabilityService {
       adrCatalog: this.deps.adrCatalog,
     });
 
-    return { validation: { ok: true, issues: [] }, manifest };
+    return {
+      validation: { ok: true, issues: [...validation.issues, ...reverse.issues] },
+      manifest,
+    };
   }
 }

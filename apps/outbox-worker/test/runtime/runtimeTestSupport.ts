@@ -5,6 +5,7 @@ import type {
   IOutboxStorage,
   OutboxRecord,
 } from '@dvt/contracts';
+import { asIsoUtcString } from '@dvt/contracts';
 import { InMemoryEventBus } from '@dvt/delivery/testing';
 import { it } from 'vitest';
 
@@ -126,8 +127,8 @@ export const runtimeEventFixture: EventFixtureContext = {
   planVersion: '1.0.0',
   logicalAttemptId: 1,
   engineAttemptId: 1,
-  emittedAt: '2026-03-08T00:00:00.000Z',
-  persistedAt: '2026-03-08T00:00:00.000Z',
+  emittedAt: asIsoUtcString('2026-03-08T00:00:00.000Z'),
+  persistedAt: asIsoUtcString('2026-03-08T00:00:00.000Z'),
   runSeq: 1,
 };
 

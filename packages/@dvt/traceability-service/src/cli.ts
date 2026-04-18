@@ -13,9 +13,15 @@ import path from 'node:path';
 
 import { FileSystemAdrCatalog } from './adapters/adr-catalog-filesystem.js';
 import { GlobHeaderScanner } from './adapters/header-scanner-glob.js';
+import { toValidationIssueBaselineEntry } from './core/issue-baseline.js';
 import { ManifestBuilder } from './core/manifest.js';
 import { TraceValidator } from './core/validator.js';
 import { TraceabilityService } from './service.js';
+import type {
+  ValidationIssueBaselineEntry,
+  ValidationIssueBaselineFile,
+  ValidationIssueCode,
+} from './types.js';
 
 type CliArgs = Record<string, string | boolean>;
 
@@ -29,8 +35,20 @@ type TraceabilityConfig = {
     failOnMissingVersion: boolean;
   };
   adrCatalog: { path: string; pattern: string };
+  regressionBaseline?: { path: string };
   adrPolicy?: { requiredAdrs?: string[] };
 };
+
+const validationIssueCodes = new Set<ValidationIssueCode>([
+  'MISSING_BASELINE',
+  'ADR_NOT_FOUND',
+  'ADR_NOT_ACCEPTED',
+  'NON_TEST_MISSING_DECISION',
+  'MISSING_DECISION',
+  'MISSING_VERSION',
+  'INVALID_FORMAT',
+  'REVERSE_COVERAGE_FAIL',
+]);
 
 function parseArgs(argv: string[]): { cmd: string | null; args: CliArgs } {
   const [, , cmd, ...rest] = argv;
@@ -58,6 +76,62 @@ async function loadConfig(configPath: string): Promise<TraceabilityConfig> {
   const cfg = JSON.parse(text) as unknown;
   if (typeof cfg !== 'object' || cfg === null) throw new Error('Invalid config JSON');
   return cfg as TraceabilityConfig;
+}
+
+function isValidationIssueCode(code: string): code is ValidationIssueCode {
+  return validationIssueCodes.has(code as ValidationIssueCode);
+}
+
+function parseBaselineIssue(issue: unknown, index: number): ValidationIssueBaselineEntry {
+  if (typeof issue !== 'object' || issue === null) {
+    throw new Error(`Invalid regression baseline issue at index ${index}`);
+  }
+
+  const candidate = issue as {
+    code?: unknown;
+    filePath?: unknown;
+    adrNumber?: unknown;
+  };
+
+  if (typeof candidate.code !== 'string' || !isValidationIssueCode(candidate.code)) {
+    throw new Error(`Invalid regression baseline issue code at index ${index}`);
+  }
+
+  if (candidate.filePath !== undefined && typeof candidate.filePath !== 'string') {
+    throw new Error(`Invalid regression baseline filePath at index ${index}`);
+  }
+
+  if (candidate.adrNumber !== undefined && typeof candidate.adrNumber !== 'string') {
+    throw new Error(`Invalid regression baseline adrNumber at index ${index}`);
+  }
+
+  return toValidationIssueBaselineEntry({
+    code: candidate.code,
+    ...(typeof candidate.filePath === 'string' ? { filePath: candidate.filePath } : {}),
+    ...(typeof candidate.adrNumber === 'string' ? { adrNumber: candidate.adrNumber } : {}),
+  });
+}
+
+async function loadRegressionBaseline(
+  configPath: string,
+  baseline: TraceabilityConfig['regressionBaseline']
+): Promise<ValidationIssueBaselineEntry[] | undefined> {
+  if (!baseline?.path) return undefined;
+
+  const baselinePath = path.resolve(path.dirname(configPath), baseline.path);
+  const text = await fs.readFile(baselinePath, 'utf-8');
+  const parsed = JSON.parse(text) as unknown;
+
+  if (typeof parsed !== 'object' || parsed === null) {
+    throw new Error(`Invalid regression baseline JSON: ${baselinePath}`);
+  }
+
+  const baselineFile = parsed as Partial<ValidationIssueBaselineFile>;
+  if (!Array.isArray(baselineFile.issues)) {
+    throw new Error(`Regression baseline must define an issues array: ${baselinePath}`);
+  }
+
+  return baselineFile.issues.map((issue, index) => parseBaselineIssue(issue, index));
 }
 
 function asString(v: string | boolean | undefined, name: string): string {
@@ -89,6 +163,7 @@ async function main(): Promise<void> {
 
   const configPath = asString(parsed.args['config'], 'config');
   const cfg = await loadConfig(configPath);
+  const issueBaseline = await loadRegressionBaseline(configPath, cfg.regressionBaseline);
 
   const repoRoot = asString(parsed.args['repoRoot'], 'repoRoot');
   const component = asString(parsed.args['component'], 'component');
@@ -124,6 +199,7 @@ async function main(): Promise<void> {
     generated,
     requireDecision,
     failOnMissingVersion,
+    ...(issueBaseline ? { issueBaseline } : {}),
   });
 
   if (!result.validation.ok) {

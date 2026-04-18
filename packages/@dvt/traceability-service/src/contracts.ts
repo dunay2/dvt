@@ -12,6 +12,7 @@ import type {
   AdrStatus,
   HeaderTrace,
   TraceabilityManifest,
+  ValidationIssueBaselineEntry,
   ValidationResult,
 } from './types.js';
 
@@ -63,5 +64,6 @@ export interface ITraceabilityService {
     generated: string;
     requireDecision?: boolean;
     failOnMissingVersion?: boolean;
+    issueBaseline?: ValidationIssueBaselineEntry[];
   }): Promise<{ validation: ValidationResult; manifest?: TraceabilityManifest }>;
 }

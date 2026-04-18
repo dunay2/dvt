@@ -2,7 +2,7 @@
 title: Testing and CI Capabilities
 status: Active
 owner: engineering
-last_reviewed: 2026-03-20
+last_reviewed: 2026-04-18
 ---
 
 # Testing and CI Capabilities
@@ -22,18 +22,19 @@ See also:
 
 ## Root Commands
 
-| Capability                     | Command                          | Source                                                         |
-| ------------------------------ | -------------------------------- | -------------------------------------------------------------- |
-| Full workspace build           | `pnpm build`                     | [`package.json`](../../package.json)                           |
-| Full recursive test run        | `pnpm test`                      | [`package.json`](../../package.json)                           |
-| Web E2E test run               | `pnpm test:web:e2e`              | [`package.json`](../../package.json)                           |
-| Full type-check gate           | `pnpm type-check`                | [`package.json`](../../package.json)                           |
-| Pre-push verification gate     | `pnpm verify:prepush`            | [`package.json`](../../package.json)                           |
-| Changed-files auto-fix         | `pnpm fix:changed`               | [`package.json`](../../package.json)                           |
-| Changed-files lint/format gate | `node scripts/check-changed.cjs` | [`scripts/check-changed.cjs`](../../scripts/check-changed.cjs) |
-| Affected workspace build       | `pnpm ci:affected:build`         | [`package.json`](../../package.json)                           |
-| Affected workspace test        | `pnpm ci:affected:test`          | [`package.json`](../../package.json)                           |
-| Affected workspace type-check  | `pnpm ci:affected:typecheck`     | [`package.json`](../../package.json)                           |
+| Capability                     | Command                          | Source                                                                                             |
+| ------------------------------ | -------------------------------- | -------------------------------------------------------------------------------------------------- |
+| Full workspace build           | `pnpm build`                     | [`package.json`](../../package.json)                                                               |
+| Full recursive test run        | `pnpm test`                      | [`package.json`](../../package.json)                                                               |
+| Web E2E test run               | `pnpm test:web:e2e`              | [`package.json`](../../package.json)                                                               |
+| Full type-check gate           | `pnpm type-check`                | [`package.json`](../../package.json)                                                               |
+| Pre-push verification gate     | `pnpm verify:prepush`            | [`package.json`](../../package.json)                                                               |
+| Changed-files auto-fix         | `pnpm fix:changed`               | [`package.json`](../../package.json)                                                               |
+| Changed-files lint/format gate | `node scripts/check-changed.cjs` | [`scripts/check-changed.cjs`](../../scripts/check-changed.cjs)                                     |
+| Affected workspace build       | `pnpm ci:affected:build`         | [`package.json`](../../package.json)                                                               |
+| Affected workspace test        | `pnpm ci:affected:test`          | [`package.json`](../../package.json)                                                               |
+| Affected workspace type-check  | `pnpm ci:affected:typecheck`     | [`package.json`](../../package.json)                                                               |
+| ADR-0000 regression gate       | `pnpm traceability:adr0`         | [`package.json`](../../package.json), [`traceability.config.json`](../../traceability.config.json) |
 
 Warm-build note:
 
@@ -153,6 +154,7 @@ Command semantics:
 - `pnpm docs:status:check` and `pnpm docs:capability:check` remain strict drift gates for their tracked generated outputs.
 - `pnpm verify:prepush` uses `node scripts/docs-workboard-check-changed.cjs`, so workboard drift is enforced when lane YAML changed, not for every module-only commit.
 - GitHub workflows keep using explicit strict checks rather than relying on `pnpm docs:ci` as a merge gate.
+- `pnpm traceability:adr0` remains a blocking governance gate on push to `main`, but it now compares current ADR-0000 issues against the tracked baseline in [`traceability.issue-baseline.json`](../../traceability.issue-baseline.json) so CI fails on regressions rather than re-reporting the known historical backlog on every run.
 
 Planning-generated pages that are intentionally untracked:
 

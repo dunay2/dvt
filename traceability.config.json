@@ -21,5 +21,8 @@
   "adrCatalog": {
     "path": "docs/adr",
     "pattern": "ADR-.*\\.md$"
+  },
+  "regressionBaseline": {
+    "path": "traceability.issue-baseline.json"
   }
 }
