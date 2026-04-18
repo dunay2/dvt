@@ -1,0 +1,49 @@
+import { useMemo } from 'react';
+
+import { usePlatformHealthSnapshotQuery } from '../../../capabilities/platform-health';
+import { resolveCanvasGraphStrategy } from '../../plugins/graphStrategyRegistry';
+import { useCapabilitiesQuery } from '../../queries/useCapabilitiesQuery';
+import { resolveWorkspaceBootstrapConfig } from '../../services/config/workspaceConfig';
+import {
+  useAppDataSourceMode,
+  usePlansService,
+  useRunsService,
+  useSessionContext,
+  useShellFeedback,
+  useWorkspaceService,
+} from '../../services/AppServicesContext';
+import { useCanvasNavigationActions } from './useCanvasNavigationActions';
+import { useCanvasStoreFacade } from './useCanvasStoreFacade';
+
+export function useCanvasControllerEnvironment() {
+  const dataSourceMode = useAppDataSourceMode();
+  const { data: capabilities } = useCapabilitiesQuery();
+  const platformHealthQuery = usePlatformHealthSnapshotQuery();
+  const graphStrategy = useMemo(() => resolveCanvasGraphStrategy(), []);
+  const canvasAuthoringMode: 'transformation' | 'dbt' =
+    graphStrategy.id === 'transformation' ? 'transformation' : 'dbt';
+  const workspaceService = useWorkspaceService();
+  const plansService = usePlansService();
+  const runsService = useRunsService();
+  const sessionContext = useSessionContext();
+  const shellFeedback = useShellFeedback();
+  const workspaceBootstrapConfig = useMemo(() => resolveWorkspaceBootstrapConfig(), []);
+  const navigationActions = useCanvasNavigationActions();
+  const store = useCanvasStoreFacade();
+
+  return {
+    dataSourceMode,
+    capabilities,
+    platformHealthQuery,
+    graphStrategy,
+    canvasAuthoringMode,
+    workspaceService,
+    plansService,
+    runsService,
+    sessionContext,
+    shellFeedback,
+    workspaceBootstrapConfig,
+    navigationActions,
+    store,
+  };
+}

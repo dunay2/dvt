@@ -1989,16 +1989,26 @@ tasks:
       metadata plus typed corrupt or unsupported draft outcomes.
     complexity: S
     effort_points: 3
-    progress_pct: 30
+    progress_pct: 60
     evidence_refs:
       - docs/planning/closeouts/20260418-tf-e2-canvas-draft-repository-seam-closeout.md
+      - docs/planning/closeouts/20260418-tf-e2-canvas-srp-seams-closeout.md
       - docs/architecture/components/web/graph/canvas-controller-current-to-target-architecture.md
+      - apps/web/src/app/views/canvas/canvasBackendPosture.ts
+      - apps/web/src/app/views/canvas/canvasAuthoringState.ts
+      - apps/web/src/app/views/canvas/useCanvasDraftLifecycle.ts
     status_reason: >-
       Execution has started. The first Fowler/SRP cut is now in place: Canvas draft reads, saves,
       and reload-time snapshot access no longer live directly in `useCanvasController` and instead
-      flow through `canvasDraftRepository` over `IWorkspacePort`. The wider `TF-E2-A` slice still
-      remains open for the shared graph-draft contract adoption posture, especially explicit
-      capability/read-only semantics and the remaining boundary alignment with `TF-A2` and `TF-C4`.
+      flow through `canvasDraftRepository` over `IWorkspacePort`. A second seam is now explicit:
+      `useCanvasDraftLifecycle` now composes dedicated bootstrap/reconcile and autosave/reload hooks
+      over controller-owned query/state inputs, so the controller no longer carries the save/reload
+      effect choreography inline. The controller itself has also narrowed: backend
+      readiness/blocking posture now lives in `canvasBackendPosture`, and visible scope, recovery
+      flags, toolbar state, and mutation gating now live in `canvasAuthoringState` instead of being
+      assembled inline. The wider `TF-E2-A` slice still remains open for the shared graph-draft
+      contract adoption posture, especially explicit capability/read-only semantics and the
+      remaining boundary alignment with `TF-A2` and `TF-C4`.
     last_verified: '2026-04-18'
   - task_id: TF-E2-B
     parent_task: TF-E2
