@@ -33,6 +33,8 @@ import {
 } from './workspaceServiceCopy';
 import { WorkspaceFileLoadError, WORKSPACE_HTTP_ERROR_REASON } from './workspaceErrors';
 
+type WorkspaceGraphDraftScope = ReturnType<typeof readWorkspaceGraphDraftScope>;
+
 function isWorkspaceFileNotFoundApiError(error: ApiError): boolean {
   if (!isWorkspaceHttpErrorEnvelope(error.responseBody)) {
     return false;
@@ -44,12 +46,15 @@ function isWorkspaceFileNotFoundApiError(error: ApiError): boolean {
   );
 }
 
-async function requestWorkspaceGraphDraftRecord(apiClient: ApiClient): Promise<{
+async function requestWorkspaceGraphDraftRecord(
+  apiClient: ApiClient,
+  scope: WorkspaceGraphDraftScope
+): Promise<{
   endpoint: string;
   response: Response;
   responseBody: unknown;
 }> {
-  const endpoint = buildWorkspaceGraphDraftEndpoint(readWorkspaceGraphDraftScope());
+  const endpoint = buildWorkspaceGraphDraftEndpoint(scope);
   const response = await apiClient.requestRaw(endpoint, {
     method: 'GET',
   });
@@ -116,9 +121,12 @@ function isProtectedDraftSaveResponseStatus(statusCode: number): boolean {
     : statusCode === 403 || statusCode === 409;
 }
 
-function buildWorkspaceGraphDraftSaveRequestBody(input: SaveWorkspaceGraphDraftInput) {
+function buildWorkspaceGraphDraftSaveRequestBody(
+  scope: WorkspaceGraphDraftScope,
+  input: SaveWorkspaceGraphDraftInput
+) {
   return {
-    scope: readWorkspaceGraphDraftScope(),
+    scope,
     schemaVersion: WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
     expectedRevision: input.expectedRevision ?? WORKSPACE_GRAPH_DRAFT_INITIAL_REVISION,
     idempotencyKey: input.idempotencyKey,
@@ -128,9 +136,10 @@ function buildWorkspaceGraphDraftSaveRequestBody(input: SaveWorkspaceGraphDraftI
 
 async function readWorkspaceGraphDraftRecord(
   apiClient: ApiClient,
+  scope: WorkspaceGraphDraftScope,
   options?: { requireRecord?: boolean }
 ): Promise<WorkspaceGraphDraftRecord | null> {
-  const draftResponse = await requestWorkspaceGraphDraftRecord(apiClient);
+  const draftResponse = await requestWorkspaceGraphDraftRecord(apiClient, scope);
   const missingRecord = resolveMissingWorkspaceGraphDraftRecord({
     ...draftResponse,
     requireRecord: options?.requireRecord ?? false,
@@ -147,9 +156,10 @@ async function readWorkspaceGraphDraftRecord(
 }
 
 async function readRequiredWorkspaceGraphDraftRecord(
-  apiClient: ApiClient
+  apiClient: ApiClient,
+  scope: WorkspaceGraphDraftScope
 ): Promise<WorkspaceGraphDraftRecord> {
-  const record = await readWorkspaceGraphDraftRecord(apiClient, { requireRecord: true });
+  const record = await readWorkspaceGraphDraftRecord(apiClient, scope, { requireRecord: true });
   if (record == null) {
     throw new Error('Workspace graph draft record unexpectedly missing after required read.');
   }
@@ -161,9 +171,10 @@ async function saveWorkspaceGraphDraft(
   apiClient: ApiClient,
   input: SaveWorkspaceGraphDraftInput
 ): Promise<SaveWorkspaceGraphDraftResult> {
+  const scope = readWorkspaceGraphDraftScope();
   const response = await apiClient.requestRaw(WORKSPACE_GRAPH_DRAFT_ENDPOINT, {
     method: 'PUT',
-    jsonBody: buildWorkspaceGraphDraftSaveRequestBody(input),
+    jsonBody: buildWorkspaceGraphDraftSaveRequestBody(scope, input),
   });
   const responseBody = await parseJsonResponse(response);
 
@@ -179,14 +190,14 @@ async function saveWorkspaceGraphDraft(
   if (parsedResponse.kind === 'saved') {
     return {
       outcome: 'saved',
-      record: await readRequiredWorkspaceGraphDraftRecord(apiClient),
+      record: await readRequiredWorkspaceGraphDraftRecord(apiClient, scope),
     };
   }
 
   if (parsedResponse.kind === 'conflict') {
     return {
       outcome: 'conflict',
-      current: await readRequiredWorkspaceGraphDraftRecord(apiClient),
+      current: await readRequiredWorkspaceGraphDraftRecord(apiClient, scope),
     };
   }
 
@@ -195,7 +206,7 @@ async function saveWorkspaceGraphDraft(
 
 export function createApiWorkspaceService(apiClient: ApiClient): IWorkspacePort {
   async function getGraphDraft(): Promise<WorkspaceGraphDraftRecord | null> {
-    return await readWorkspaceGraphDraftRecord(apiClient);
+    return await readWorkspaceGraphDraftRecord(apiClient, readWorkspaceGraphDraftScope());
   }
 
   async function saveGraphDraft(

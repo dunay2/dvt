@@ -193,4 +193,62 @@ describe('workspaceService graph draft', () => {
       },
     });
   });
+
+  it('reuses the original scope for save follow-up reads when session scope changes in flight', async () => {
+    const initialScope = buildWorkspaceScope({
+      tenantId: 'tenant-initial',
+      projectId: 'project-initial',
+      environmentId: 'env-initial',
+    });
+    const driftedScope = buildWorkspaceScope({
+      tenantId: 'tenant-drifted',
+      projectId: 'project-drifted',
+      environmentId: 'env-drifted',
+    });
+    setWorkspaceScope(initialScope);
+
+    const { requestRaw, service } = createApiWorkspaceServiceHarness({
+      requestRaw: async (_endpoint, options) => {
+        if (options?.method === 'PUT') {
+          setWorkspaceScope(driftedScope);
+          return jsonResponse(buildDraftSaveSavedResponse(initialScope));
+        }
+
+        return jsonResponse(
+          buildDraftReadOkResponse(initialScope, {
+            record: buildProtectedDraftRecord(initialScope, { revision: 'rev-stable' }),
+          })
+        );
+      },
+    });
+
+    await expect(
+      service.saveGraphDraft({
+        expectedRevision: null,
+        idempotencyKey: 'idem-api-save-scope-stability',
+        draft: buildPresentationGraphDraft(),
+      })
+    ).resolves.toEqual({
+      outcome: 'saved',
+      record: buildProjectedDraftRecord({ revision: 'rev-stable' }),
+    });
+
+    expect(requestRaw).toHaveBeenNthCalledWith(1, '/workspace/graph/draft', {
+      method: 'PUT',
+      jsonBody: {
+        scope: initialScope,
+        schemaVersion: 'workspace-graph-draft.v1',
+        expectedRevision: 'initial',
+        idempotencyKey: 'idem-api-save-scope-stability',
+        draft: buildPresentationGraphDraft(),
+      },
+    });
+    expect(requestRaw).toHaveBeenNthCalledWith(
+      2,
+      buildWorkspaceGraphDraftEndpoint(initialScope),
+      {
+        method: 'GET',
+      }
+    );
+  });
 });
