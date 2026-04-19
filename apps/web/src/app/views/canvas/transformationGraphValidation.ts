@@ -2,10 +2,17 @@ import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { buildPreviewGraphSignature } from './previewGraphSource';
 
 export type TransformationNodeRole = 'source' | 'sql_transform' | 'sink';
+export type TransformationGraphValidationSummaryCode =
+  | 'valid'
+  | 'requires_three_nodes'
+  | 'unsupported_roles'
+  | 'requires_one_of_each_role'
+  | 'requires_two_edges'
+  | 'invalid_edge_order';
 
 export type TransformationGraphValidationResult = {
   valid: boolean;
-  summary: string;
+  summaryCode: TransformationGraphValidationSummaryCode;
   draftSignature: string;
   scopedNodeIds: string[];
   scopedEdgeIds: string[];
@@ -19,6 +26,18 @@ type ValidateTransformationGraphArgs = {
   workspaceNodeIds?: string[];
 };
 
+type ScopedTransformationGraph = {
+  scopedNodes: CanonicalNode[];
+  scopedNodeIds: string[];
+  scopedEdges: CanonicalEdge[];
+  scopedEdgeIds: string[];
+};
+
+type TransformationValidationContext = ScopedTransformationGraph & {
+  allNodes: CanonicalNode[];
+  allEdges: CanonicalEdge[];
+};
+
 function buildDraftSignature(
   allNodes: readonly CanonicalNode[],
   allEdges: readonly CanonicalEdge[],
@@ -28,7 +47,7 @@ function buildDraftSignature(
 }
 
 function buildInvalidResult(
-  summary: string,
+  summaryCode: Exclude<TransformationGraphValidationSummaryCode, 'valid'>,
   allNodes: readonly CanonicalNode[],
   allEdges: readonly CanonicalEdge[],
   scopedNodeIds: string[],
@@ -37,12 +56,47 @@ function buildInvalidResult(
   const signature = buildDraftSignature(allNodes, allEdges, scopedNodeIds);
   return {
     valid: false,
-    summary,
+    summaryCode,
     draftSignature: signature,
     scopedNodeIds,
     scopedEdgeIds,
     nodeRolesById: {},
   };
+}
+
+function buildValidResult(
+  context: TransformationValidationContext,
+  nodeRolesById: Record<string, TransformationNodeRole>
+): TransformationGraphValidationResult {
+  const draftSignature = buildDraftSignature(
+    context.allNodes,
+    context.allEdges,
+    context.scopedNodeIds
+  );
+
+  const result: TransformationGraphValidationResult = {
+    valid: true,
+    summaryCode: 'valid',
+    draftSignature,
+    scopedNodeIds: context.scopedNodeIds,
+    scopedEdgeIds: context.scopedEdgeIds,
+    nodeRolesById,
+  };
+
+  return result;
+}
+
+function buildContextInvalidResult(
+  context: TransformationValidationContext,
+  summaryCode: Exclude<TransformationGraphValidationSummaryCode, 'valid'>
+): TransformationGraphValidationResult {
+  return buildInvalidResult(
+    summaryCode,
+    context.allNodes,
+    context.allEdges,
+    context.scopedNodeIds,
+    context.scopedEdgeIds
+  );
 }
 
 function mapCanonicalRole(node: CanonicalNode): TransformationNodeRole | null {
@@ -58,55 +112,105 @@ function mapCanonicalRole(node: CanonicalNode): TransformationNodeRole | null {
   }
 }
 
-export function validateTransformationGraph({
+function resolveScopeNodeIds({
   nodes,
-  edges,
-  selectedNodeIds = [],
-  workspaceNodeIds = [],
-}: ValidateTransformationGraphArgs): TransformationGraphValidationResult {
-  const scopeNodeIds =
-    selectedNodeIds.length > 0
-      ? selectedNodeIds
-      : workspaceNodeIds.length > 0
-        ? workspaceNodeIds
-        : nodes.map((node) => node.id);
-  const scopeNodeIdSet = new Set(scopeNodeIds);
-  const scopedNodes = nodes.filter((node) => scopeNodeIdSet.has(node.id));
-  const scopedNodeIds = scopedNodes.map((node) => node.id);
-  const scopedNodeIdSet = new Set(scopedNodeIds);
-  const scopedEdges = edges.filter(
-    (edge) => scopedNodeIdSet.has(edge.sourceId) && scopedNodeIdSet.has(edge.targetId)
-  );
-  const scopedEdgeIds = scopedEdges.map((edge) => edge.id);
-
-  if (scopedNodes.length !== 3) {
-    return buildInvalidResult(
-      'Plan requires exactly 3 nodes: source, sql_transform, and sink.',
-      nodes,
-      edges,
-      scopedNodeIds,
-      scopedEdgeIds
-    );
+  selectedNodeIds,
+  workspaceNodeIds,
+}: ValidateTransformationGraphArgs): string[] {
+  if (selectedNodeIds?.length) {
+    return selectedNodeIds;
   }
 
+  if (workspaceNodeIds?.length) {
+    return workspaceNodeIds;
+  }
+
+  return nodes.map((node) => node.id);
+}
+
+function scopeTransformationGraph(
+  nodes: CanonicalNode[],
+  edges: CanonicalEdge[],
+  scopeNodeIds: readonly string[]
+): ScopedTransformationGraph {
+  const scopedNodeIdSet = new Set(scopeNodeIds);
+  const scopedNodes = nodes.filter((node) => scopedNodeIdSet.has(node.id));
+  const scopedNodeIds = scopedNodes.map((node) => node.id);
+  const resolvedScopedNodeIdSet = new Set(scopedNodeIds);
+  const scopedEdges = edges.filter(
+    (edge) =>
+      resolvedScopedNodeIdSet.has(edge.sourceId) && resolvedScopedNodeIdSet.has(edge.targetId)
+  );
+
+  return {
+    scopedNodes,
+    scopedNodeIds,
+    scopedEdges,
+    scopedEdgeIds: scopedEdges.map((edge) => edge.id),
+  };
+}
+
+function resolveTransformationValidationContext(
+  args: ValidateTransformationGraphArgs
+): TransformationValidationContext {
+  const scopeNodeIds = resolveScopeNodeIds(args);
+
+  return {
+    allNodes: args.nodes,
+    allEdges: args.edges,
+    ...scopeTransformationGraph(args.nodes, args.edges, scopeNodeIds),
+  };
+}
+
+function validateScopedNodeCount(
+  context: TransformationValidationContext
+): TransformationGraphValidationResult | null {
+  if (context.scopedNodes.length === 3) {
+    return null;
+  }
+
+  return buildContextInvalidResult(context, 'requires_three_nodes');
+}
+
+function resolveTransformationNodeRoles(
+  scopedNodes: readonly CanonicalNode[]
+): Record<string, TransformationNodeRole> | null {
   const nodeRolesById: Record<string, TransformationNodeRole> = {};
+
   for (const node of scopedNodes) {
     const mappedRole = mapCanonicalRole(node);
     if (!mappedRole) {
-      return buildInvalidResult(
-        'Plan supports only input, transform, and output nodes in this vertical.',
-        nodes,
-        edges,
-        scopedNodeIds,
-        scopedEdgeIds
-      );
+      return null;
     }
     nodeRolesById[node.id] = mappedRole;
   }
 
-  const roleCounts = scopedNodes.reduce(
+  return nodeRolesById;
+}
+
+function resolveValidatedNodeRoles(
+  context: TransformationValidationContext
+):
+  | { ok: true; nodeRolesById: Record<string, TransformationNodeRole> }
+  | { ok: false; result: TransformationGraphValidationResult } {
+  const nodeRolesById = resolveTransformationNodeRoles(context.scopedNodes);
+  if (!nodeRolesById) {
+    return {
+      ok: false,
+      result: buildContextInvalidResult(context, 'unsupported_roles'),
+    };
+  }
+
+  return { ok: true, nodeRolesById };
+}
+
+function countTransformationRoles(
+  scopedNodes: readonly CanonicalNode[],
+  nodeRolesById: Record<string, TransformationNodeRole>
+): Record<TransformationNodeRole, number> {
+  return scopedNodes.reduce(
     (acc, node) => {
-      const mappedRole = nodeRolesById[node.id] as TransformationNodeRole | undefined;
+      const mappedRole = nodeRolesById[node.id];
       if (!mappedRole) {
         return acc;
       }
@@ -119,27 +223,30 @@ export function validateTransformationGraph({
       sink: 0,
     } satisfies Record<TransformationNodeRole, number>
   );
+}
 
-  if (roleCounts.source !== 1 || roleCounts.sql_transform !== 1 || roleCounts.sink !== 1) {
-    return buildInvalidResult(
-      'Plan requires exactly 1 source, 1 sql_transform, and 1 sink.',
-      nodes,
-      edges,
-      scopedNodeIds,
-      scopedEdgeIds
-    );
+function hasExactlyOneOfEachTransformationRole(
+  roleCounts: Record<TransformationNodeRole, number>
+): boolean {
+  return roleCounts.source === 1 && roleCounts.sql_transform === 1 && roleCounts.sink === 1;
+}
+
+function validateRoleCardinality(
+  context: TransformationValidationContext,
+  nodeRolesById: Record<string, TransformationNodeRole>
+): TransformationGraphValidationResult | null {
+  const roleCounts = countTransformationRoles(context.scopedNodes, nodeRolesById);
+  if (hasExactlyOneOfEachTransformationRole(roleCounts)) {
+    return null;
   }
 
-  if (scopedEdges.length !== 2) {
-    return buildInvalidResult(
-      'Plan requires exactly 2 edges: source -> sql_transform and sql_transform -> sink.',
-      nodes,
-      edges,
-      scopedNodeIds,
-      scopedEdgeIds
-    );
-  }
+  return buildContextInvalidResult(context, 'requires_one_of_each_role');
+}
 
+function hasValidTransformationEdgeOrder(
+  scopedEdges: readonly CanonicalEdge[],
+  nodeRolesById: Record<string, TransformationNodeRole>
+): boolean {
   const hasSourceToTransform = scopedEdges.some(
     (edge) =>
       nodeRolesById[edge.sourceId] === 'source' && nodeRolesById[edge.targetId] === 'sql_transform'
@@ -149,24 +256,67 @@ export function validateTransformationGraph({
       nodeRolesById[edge.sourceId] === 'sql_transform' && nodeRolesById[edge.targetId] === 'sink'
   );
 
-  if (!hasSourceToTransform || !hasTransformToSink) {
-    return buildInvalidResult(
-      'Plan edges must follow source -> sql_transform -> sink.',
-      nodes,
-      edges,
-      scopedNodeIds,
-      scopedEdgeIds
-    );
+  return hasSourceToTransform && hasTransformToSink;
+}
+
+function validateEdgeCount(
+  context: TransformationValidationContext
+): TransformationGraphValidationResult | null {
+  if (context.scopedEdges.length === 2) {
+    return null;
   }
 
-  const draftSignature = buildDraftSignature(nodes, edges, scopedNodeIds);
+  return buildContextInvalidResult(context, 'requires_two_edges');
+}
 
-  return {
-    valid: true,
-    summary: 'Transformation draft is valid for preview.',
-    draftSignature,
-    scopedNodeIds,
-    scopedEdgeIds,
-    nodeRolesById,
-  };
+function validateEdgeOrder(
+  context: TransformationValidationContext,
+  nodeRolesById: Record<string, TransformationNodeRole>
+): TransformationGraphValidationResult | null {
+  if (hasValidTransformationEdgeOrder(context.scopedEdges, nodeRolesById)) {
+    return null;
+  }
+
+  return buildContextInvalidResult(context, 'invalid_edge_order');
+}
+
+export function validateTransformationGraph({
+  nodes,
+  edges,
+  selectedNodeIds = [],
+  workspaceNodeIds = [],
+}: ValidateTransformationGraphArgs): TransformationGraphValidationResult {
+  const context = resolveTransformationValidationContext({
+    nodes,
+    edges,
+    selectedNodeIds,
+    workspaceNodeIds,
+  });
+
+  const nodeCountResult = validateScopedNodeCount(context);
+  if (nodeCountResult) {
+    return nodeCountResult;
+  }
+
+  const nodeRoles = resolveValidatedNodeRoles(context);
+  if (!nodeRoles.ok) {
+    return nodeRoles.result;
+  }
+
+  const roleCardinalityResult = validateRoleCardinality(context, nodeRoles.nodeRolesById);
+  if (roleCardinalityResult) {
+    return roleCardinalityResult;
+  }
+
+  const edgeCountResult = validateEdgeCount(context);
+  if (edgeCountResult) {
+    return edgeCountResult;
+  }
+
+  const edgeOrderResult = validateEdgeOrder(context, nodeRoles.nodeRolesById);
+  if (edgeOrderResult) {
+    return edgeOrderResult;
+  }
+
+  return buildValidResult(context, nodeRoles.nodeRolesById);
 }

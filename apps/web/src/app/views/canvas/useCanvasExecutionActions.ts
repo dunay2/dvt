@@ -8,17 +8,10 @@ import type { IWorkspacePort } from '../../ports/workspace';
 import type { WorkspaceBootstrapConfig } from '../../services/config/workspaceConfig';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { PlanViewModel } from '../../types/plans';
+import { canvasViewCopy } from './copy';
+import { deriveCanvasExecutionState } from './canvasExecutionState';
 import { executeCanvasPlanAction } from './canvasPlanAction';
-import {
-  buildPlanStatusSummary,
-  hasPersistedPreviewProof,
-  hasPlanRefHashMismatch,
-  resolvePlanRefForStartRun,
-} from './canvasPlanReadiness';
 import { executeCanvasRunStartAction } from './canvasRunStartAction';
-import { validateTransformationGraph } from './transformationGraphValidation';
-
-export { resolvePlanRefForStartRun } from './canvasPlanReadiness';
 
 type UseCanvasExecutionActionsParams = {
   plansService: IPlansPort;
@@ -54,6 +47,25 @@ type UseCanvasExecutionActionsResult = {
   handleStartRun: () => Promise<void>;
 };
 
+type RevealStartedRunConsoleArgs = {
+  consolePanelVisible: boolean;
+  setConsolePanelHeight: (height: number) => void;
+  toggleConsolePanel: () => void;
+};
+
+function revealStartedRunConsole({
+  consolePanelVisible,
+  setConsolePanelHeight,
+  toggleConsolePanel,
+}: RevealStartedRunConsoleArgs): void {
+  if (consolePanelVisible) {
+    setConsolePanelHeight(160);
+    return;
+  }
+
+  toggleConsolePanel();
+}
+
 export function useCanvasExecutionActions({
   plansService,
   runsService,
@@ -76,31 +88,22 @@ export function useCanvasExecutionActions({
 }: UseCanvasExecutionActionsParams): UseCanvasExecutionActionsResult {
   const [planModalOpen, setPlanModalOpen] = useState(false);
   const [lastPlannedDraftSignature, setLastPlannedDraftSignature] = useState<string | null>(null);
-  const hasPersistedPlanForRun = hasPersistedPreviewProof(currentPlan);
-  const planRefHashMismatch = hasPlanRefHashMismatch(currentPlan);
-  const transformationValidation = validateTransformationGraph({
-    nodes: canonicalNodes,
-    edges: canonicalEdges,
+  const executionState = deriveCanvasExecutionState({
+    canRun,
+    currentPlan,
+    lastPlannedDraftSignature,
+    canonicalNodes,
+    canonicalEdges,
     selectedNodeIds,
     workspaceNodeIds,
   });
-  const isCurrentPlanStale =
-    currentPlan != null &&
-    lastPlannedDraftSignature != null &&
-    lastPlannedDraftSignature !== transformationValidation.draftSignature;
-  const canStartRun =
-    canRun &&
-    currentPlan != null &&
-    hasPersistedPlanForRun &&
-    transformationValidation.valid &&
-    !isCurrentPlanStale;
-  const planStatusSummary = buildPlanStatusSummary({
-    canRun,
-    currentPlan,
-    isCurrentPlanStale,
-    planRefHashMismatch,
+  const {
+    transformationValidation,
     hasPersistedPlanForRun,
-  });
+    isCurrentPlanStale,
+    canStartRun,
+    planStatusSummary,
+  } = executionState;
 
   useEffect(() => {
     if (currentPlan == null) {
@@ -130,7 +133,7 @@ export function useCanvasExecutionActions({
     setCurrentPlan(result.plan);
     setLastPlannedDraftSignature(result.draftSignature);
     setPlanModalOpen(true);
-    shellFeedback.success('Execution plan created');
+    shellFeedback.success(canvasViewCopy.planCreatedMessage);
   }, [
     canPlan,
     canonicalEdges,
@@ -142,7 +145,7 @@ export function useCanvasExecutionActions({
     setCurrentPlan,
     shellFeedback,
     transformationValidation.draftSignature,
-    transformationValidation.summary,
+    transformationValidation.summaryCode,
     transformationValidation.valid,
     workspaceService,
     workspaceNodeIds,
@@ -167,13 +170,13 @@ export function useCanvasExecutionActions({
     }
 
     setPlanModalOpen(false);
-    if (!consolePanelVisible) {
-      toggleConsolePanel();
-    } else {
-      setConsolePanelHeight(160);
-    }
+    revealStartedRunConsole({
+      consolePanelVisible,
+      setConsolePanelHeight,
+      toggleConsolePanel,
+    });
 
-    shellFeedback.success('Run started');
+    shellFeedback.success(canvasViewCopy.runStartedMessage);
     onRunStarted(result.runId);
   }, [
     canRun,

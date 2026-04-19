@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import CanvasShell from './CanvasShell';
 import { DEFAULT_CANVAS_PALETTE_ID } from './canvasPalette';
 import type { CanvasDraftToolbarState } from './canvasDraftPresentationState';
+import { canvasViewCopy } from './copy';
 import type { CanvasShellProps } from './canvasShell.types';
 
 const shellState = vi.hoisted(() => ({
@@ -46,7 +47,7 @@ vi.mock('./CanvasViewport', () => ({
 
 function buildProps(overrides?: Partial<CanvasShellProps>): CanvasShellProps {
   const defaultDraftToolbarState: CanvasDraftToolbarState = {
-    label: 'Draft synced',
+    label: canvasViewCopy.draftSyncedLabel,
     tone: 'neutral',
     showReloadAction: false,
   };
@@ -105,7 +106,7 @@ function buildProps(overrides?: Partial<CanvasShellProps>): CanvasShellProps {
     onRun: vi.fn(),
     draftToolbarState: defaultDraftToolbarState,
     canStartRun: false,
-    planStatusSummary: 'Preview required before running.',
+    planStatusSummary: canvasViewCopy.planStatusPreviewRequiredMessage,
     exclusiveOverlayMode: 'runtime',
     canUseCostOverlay: false,
     impactOverlayEnabled: false,
@@ -113,7 +114,7 @@ function buildProps(overrides?: Partial<CanvasShellProps>): CanvasShellProps {
     canvasAuthoringMode: 'transformation',
     transformationValidation: {
       valid: false,
-      summary: 'Plan requires exactly 3 nodes: source, sql_transform, and sink.',
+      summaryCode: 'requires_three_nodes',
       draftSignature: 'draft',
       scopedNodeIds: [],
       scopedEdgeIds: [],

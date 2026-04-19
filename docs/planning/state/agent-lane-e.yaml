@@ -1803,7 +1803,7 @@ tasks:
       resolves the governed `transformation-sql-first-v1` contract, and `Start run` plus run detail
       remain wired to the real persisted-plan path. The former residual frontend gap between
       authoring freedom and selection-scoped preview execution is now closed.
-    last_verified: '2026-04-15'
+    last_verified: '2026-04-19'
   - task_id: TF-E1-A
     priority: P0
     status: done
@@ -1830,7 +1830,8 @@ tasks:
       - apps/web/src/app/views/canvas/transformationConnectionGuard.test.ts
       - apps/web/src/app/views/canvas/transformationAuthoringGuard.ts
       - apps/web/src/app/views/canvas/transformationAuthoringGuard.test.ts
-      - apps/web/src/app/views/canvas/useCanvasGraphHandlers.test.tsx
+      - apps/web/src/app/views/canvas/useCanvasGraphHandlers.selection.test.tsx
+      - apps/web/src/app/views/canvas/useCanvasGraphHandlers.edgeAuthoring.test.tsx
       - apps/web/src/app/views/canvas/useCanvasController.ts
     status_reason: >-
       Canvas authoring now exposes an explicit transformation strategy and keeps connection guards
@@ -1944,6 +1945,7 @@ tasks:
       - docs/planning/closeouts/20260417-tf-e2-route-bootstrap-contract-generalization-closeout.md
       - docs/planning/closeouts/20260417-tf-e2-route-bootstrap-srp-refactor-closeout.md
       - docs/planning/closeouts/20260417-graph-architecture-doc-pack-split-closeout.md
+      - docs/planning/closeouts/20260418-tf-e2-canvas-interaction-command-seam-closeout.md
       - docs/runbooks/index.md
     status_reason: >-
       The productization slice remains active, but the current worktree has materially advanced the
@@ -1970,8 +1972,13 @@ tasks:
       contract, registration, and registry modules plus one shared active-registration hook, without
       changing startup behavior. The graph architecture docs are now split into one short entrypoint
       plus dedicated detail docs for startup contract, runtime model, sequence/state, and decision
-      rationale and patterns, with explicit current-point and evolution posture.
-    last_verified: '2026-04-17'
+      rationale and patterns, with explicit current-point and evolution posture. The current hard
+      cut also introduced `canvasInteractionCommands.ts` as the single working-set command catalog
+      for remove-node, visible-edge replacement, explicit-node admission, and source-import
+      queueing, deleted the dead alternate admission hook, and pushed `draftSession` through the
+      mutation seam so node and edge adapters no longer reconstruct aggregate state through
+      compatibility callbacks.
+    last_verified: '2026-04-19'
   - task_id: TF-E2-A
     parent_task: TF-E2
     priority: P0
@@ -2013,7 +2020,7 @@ tasks:
   - task_id: TF-E2-B
     parent_task: TF-E2
     priority: P0
-    status: queued
+    status: in_progress
     objective: >-
       close node lifecycle persistence for create, delete, duplicate, move, and hard-reload
       rehydration under the canonical draft boundary.
@@ -2024,14 +2031,24 @@ tasks:
       visual-only success.
     complexity: S
     effort_points: 3
-    progress_pct: 0
-    evidence_refs: []
-    status_reason: planned slice; execution has not started.
-    last_verified: '2026-04-16'
+    progress_pct: 35
+    evidence_refs:
+      - docs/planning/closeouts/20260418-tf-e2-canvas-interaction-command-seam-closeout.md
+      - docs/architecture/components/web/graph/canvas-controller-current-to-target-architecture.md
+      - apps/web/src/app/views/canvas/canvasInteractionCommands.ts
+      - apps/web/src/app/views/canvas/useCanvasNodeChangeHandlers.ts
+      - apps/web/src/app/views/canvas/useCanvasNodeChangeHandlers.test.tsx
+    status_reason: >-
+      Execution has started. Node-removal semantics are now centralized under
+      `canvasInteractionCommands.ts`, `draftSession` is passed explicitly through the mutation seam,
+      and node-change handling applies graph, selection, inspector, and aggregate fallout from one
+      command result instead of reconstructing draft state through adapter-local logic. Duplicate,
+      move, and hard-reload closure still remain open.
+    last_verified: '2026-04-18'
   - task_id: TF-E2-C
     parent_task: TF-E2
     priority: P0
-    status: queued
+    status: in_progress
     objective: >-
       close edge lifecycle persistence for create, delete, reconnect, and visibility under the same
       canonical draft model.
@@ -2041,10 +2058,20 @@ tasks:
       remain projections of canonical graph state rather than transient modal or viewport state.
     complexity: S
     effort_points: 3
-    progress_pct: 0
-    evidence_refs: []
-    status_reason: planned slice; execution has not started.
-    last_verified: '2026-04-16'
+    progress_pct: 35
+    evidence_refs:
+      - docs/planning/closeouts/20260418-tf-e2-canvas-interaction-command-seam-closeout.md
+      - docs/architecture/components/web/graph/canvas-controller-current-to-target-architecture.md
+      - apps/web/src/app/views/canvas/canvasInteractionCommands.ts
+      - apps/web/src/app/views/canvas/useCanvasEdgeChangeHandlers.ts
+      - apps/web/src/app/views/canvas/useCanvasGraphHandlers.ts
+      - apps/web/src/app/views/canvas/useCanvasGraphHandlers.edgeAuthoring.test.tsx
+    status_reason: >-
+      Execution has started. Edge replacement during connect, delete, and graph-change fallout now
+      routes through the centralized command catalog, and the graph handlers no longer keep
+      callback-based compatibility paths for visible-edge persistence. Reconnect semantics and full
+      reload-proof lifecycle closure still remain open.
+    last_verified: '2026-04-18'
   - task_id: TF-E2-D
     parent_task: TF-E2
     priority: P0

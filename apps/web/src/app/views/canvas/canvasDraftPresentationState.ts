@@ -50,16 +50,21 @@ type CanvasDraftPresentationStateArgs = {
   draftToolbarState: CanvasDraftToolbarState;
 };
 
+type CanvasDraftPresentationWorkbenchArgs = Pick<
+  CanvasDraftPresentationStateArgs,
+  'workbenchState' | 'recoveryReason' | 'draftToolbarState'
+>;
+
 const INITIAL_CANVAS_DRAFT_PRESENTATION_STATE: CanvasDraftPresentationState = {
   routeState: 'loading_graph',
   recoveryReason: null,
   draftToolbarState: {
-    label: 'Draft synced',
+    label: canvasViewCopy.draftSyncedLabel,
     tone: 'neutral',
     showReloadAction: false,
   },
   bootstrapStatus: 'pending',
-  bootstrapDetail: 'Preparing canvas route',
+  bootstrapDetail: canvasViewCopy.preparingCanvasRouteDetail,
   canCompleteBootstrap: false,
 };
 
@@ -102,6 +107,24 @@ function getRecoveryBootstrapDetail(recoveryReason: CanvasDraftRecoveryReason): 
   }
 }
 
+function createCanvasDraftPresentationState({
+  routeState,
+  recoveryReason,
+  draftToolbarState,
+  bootstrapStatus,
+  bootstrapDetail,
+  canCompleteBootstrap,
+}: CanvasDraftPresentationState): CanvasDraftPresentationState {
+  return {
+    routeState,
+    recoveryReason,
+    draftToolbarState,
+    bootstrapStatus,
+    bootstrapDetail,
+    canCompleteBootstrap,
+  };
+}
+
 export function deriveDraftRecoveryReason({
   hasMissingRemoteDraft,
   hasStaleDraftVersion,
@@ -123,6 +146,19 @@ export function deriveDraftRecoveryReason({
   return null;
 }
 
+function resolveNeutralDraftToolbarLabel(
+  draftSaveStatus: CanvasDraftToolbarStateArgs['draftSaveStatus']
+): string {
+  switch (draftSaveStatus) {
+    case 'saving':
+      return canvasViewCopy.savingDraftLabel;
+    case 'saved':
+      return canvasViewCopy.draftSavedLabel;
+    default:
+      return canvasViewCopy.draftSyncedLabel;
+  }
+}
+
 export function deriveCanvasDraftToolbarState({
   draftSaveStatus,
   recoveryReason,
@@ -130,34 +166,88 @@ export function deriveCanvasDraftToolbarState({
   switch (recoveryReason) {
     case 'stale_conflict':
       return {
-        label: 'Stale version',
+        label: canvasViewCopy.staleVersionLabel,
         tone: 'danger',
         showReloadAction: true,
       };
     case 'missing_remote':
       return {
-        label: 'Draft missing',
+        label: canvasViewCopy.draftMissingLabel,
         tone: 'warning',
         showReloadAction: true,
       };
     case 'projection_gap':
       return {
-        label: 'Projection gap',
+        label: canvasViewCopy.projectionGapLabel,
         tone: 'warning',
         showReloadAction: true,
       };
     default:
       return {
-        label:
-          draftSaveStatus === 'saving'
-            ? 'Saving draft'
-            : draftSaveStatus === 'saved'
-              ? 'Draft saved'
-              : 'Draft synced',
+        label: resolveNeutralDraftToolbarLabel(draftSaveStatus),
         tone: 'neutral',
         showReloadAction: false,
       };
   }
+}
+
+function deriveWorkbenchCanvasDraftPresentationState({
+  workbenchState,
+  recoveryReason,
+  draftToolbarState,
+}: CanvasDraftPresentationWorkbenchArgs): CanvasDraftPresentationState {
+  if (workbenchState.kind === 'loading') {
+    return createCanvasDraftPresentationState({
+      routeState: 'loading_graph',
+      recoveryReason,
+      draftToolbarState,
+      bootstrapStatus: 'pending',
+      bootstrapDetail: canvasViewCopy.loadingWorkspaceGraphDetail,
+      canCompleteBootstrap: false,
+    });
+  }
+
+  if (workbenchState.kind === 'error') {
+    return createCanvasDraftPresentationState({
+      routeState: 'error_graph',
+      recoveryReason,
+      draftToolbarState,
+      bootstrapStatus: 'error',
+      bootstrapDetail: workbenchState.message || canvasViewCopy.routeErrorFallbackMessage,
+      canCompleteBootstrap: false,
+    });
+  }
+
+  if (recoveryReason != null) {
+    return createCanvasDraftPresentationState({
+      routeState: 'recovery',
+      recoveryReason,
+      draftToolbarState,
+      bootstrapStatus: 'blocked',
+      bootstrapDetail: getRecoveryBootstrapDetail(recoveryReason),
+      canCompleteBootstrap: false,
+    });
+  }
+
+  if (workbenchState.kind === 'empty') {
+    return createCanvasDraftPresentationState({
+      routeState: 'empty',
+      recoveryReason,
+      draftToolbarState,
+      bootstrapStatus: 'complete',
+      bootstrapDetail: canvasViewCopy.emptyCanvasReadyDetail,
+      canCompleteBootstrap: true,
+    });
+  }
+
+  return createCanvasDraftPresentationState({
+    routeState: 'ready',
+    recoveryReason,
+    draftToolbarState,
+    bootstrapStatus: 'complete',
+    bootstrapDetail: canvasViewCopy.canvasReadyDetail,
+    canCompleteBootstrap: true,
+  });
 }
 
 export function deriveCanvasDraftPresentationState({
@@ -169,18 +259,18 @@ export function deriveCanvasDraftPresentationState({
   draftToolbarState,
 }: CanvasDraftPresentationStateArgs): CanvasDraftPresentationState {
   if (isBackendCheckPending) {
-    return {
+    return createCanvasDraftPresentationState({
       routeState: 'loading_backend',
       recoveryReason,
       draftToolbarState,
       bootstrapStatus: 'pending',
-      bootstrapDetail: 'Checking backend readiness for canvas',
+      bootstrapDetail: canvasViewCopy.checkingBackendReadinessDetail,
       canCompleteBootstrap: false,
-    };
+    });
   }
 
   if (shouldBlockCanvasInApiMode) {
-    return {
+    return createCanvasDraftPresentationState({
       routeState: 'blocked_backend',
       recoveryReason,
       draftToolbarState,
@@ -188,61 +278,14 @@ export function deriveCanvasDraftPresentationState({
       bootstrapDetail:
         backendBlockMessage ?? canvasViewCopy.backendBlockedFallbackMessage,
       canCompleteBootstrap: false,
-    };
+    });
   }
 
-  if (workbenchState.kind === 'loading') {
-    return {
-      routeState: 'loading_graph',
-      recoveryReason,
-      draftToolbarState,
-      bootstrapStatus: 'pending',
-      bootstrapDetail: 'Loading workspace graph for canvas',
-      canCompleteBootstrap: false,
-    };
-  }
-
-  if (workbenchState.kind === 'error') {
-    return {
-      routeState: 'error_graph',
-      recoveryReason,
-      draftToolbarState,
-      bootstrapStatus: 'error',
-      bootstrapDetail: workbenchState.message || canvasViewCopy.routeErrorFallbackMessage,
-      canCompleteBootstrap: false,
-    };
-  }
-
-  if (recoveryReason != null) {
-    return {
-      routeState: 'recovery',
-      recoveryReason,
-      draftToolbarState,
-      bootstrapStatus: 'blocked',
-      bootstrapDetail: getRecoveryBootstrapDetail(recoveryReason),
-      canCompleteBootstrap: false,
-    };
-  }
-
-  if (workbenchState.kind === 'empty') {
-    return {
-      routeState: 'empty',
-      recoveryReason,
-      draftToolbarState,
-      bootstrapStatus: 'complete',
-      bootstrapDetail: 'Canvas is ready with no graph content yet',
-      canCompleteBootstrap: true,
-    };
-  }
-
-  return {
-    routeState: 'ready',
+  return deriveWorkbenchCanvasDraftPresentationState({
+    workbenchState,
     recoveryReason,
     draftToolbarState,
-    bootstrapStatus: 'complete',
-    bootstrapDetail: 'Canvas is ready',
-    canCompleteBootstrap: true,
-  };
+  });
 }
 
 export function toRouteBootstrapPresentation(

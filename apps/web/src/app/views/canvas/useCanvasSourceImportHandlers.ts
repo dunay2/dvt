@@ -2,7 +2,7 @@ import { useCallback, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 
 import { queryKeys } from '../../queries/queryKeys';
-import { queueExplicitNodeIds } from './canvasDraftSession';
+import { queueImportedCanvasSourceNodes } from './canvasInteractionCommands';
 import type {
   CanvasSourceImportHandlers,
   UseCanvasMutationHandlersArgs,
@@ -53,7 +53,7 @@ export function useCanvasSourceImportHandlers({
 
       if (nextImportedNodeIds.length > 0) {
         setDraftSession((currentSession) =>
-          queueExplicitNodeIds(currentSession, nextImportedNodeIds)
+          queueImportedCanvasSourceNodes(currentSession, nextImportedNodeIds)
         );
         setSelectedNodes(nextImportedNodeIds);
         setInspectorNode(nextImportedNodeIds[0] ?? null);

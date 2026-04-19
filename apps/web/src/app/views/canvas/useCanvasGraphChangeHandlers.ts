@@ -3,12 +3,12 @@ import type {
   UseCanvasMutationHandlersArgs,
 } from './canvasMutationHandlers.types';
 import { useCanvasEdgeChangeHandlers } from './useCanvasEdgeChangeHandlers';
-import { useCanvasExplicitNodeAdmission } from './useCanvasExplicitNodeAdmission';
 import { useCanvasNodeChangeHandlers } from './useCanvasNodeChangeHandlers';
 
 type UseCanvasGraphChangeHandlersArgs = Pick<
   UseCanvasMutationHandlersArgs,
   | 'graphModel'
+  | 'draftSession'
   | 'uiScope'
   | 'selectedNodeIds'
   | 'setDraftSession'
@@ -18,6 +18,7 @@ type UseCanvasGraphChangeHandlersArgs = Pick<
 
 export function useCanvasGraphChangeHandlers({
   graphModel,
+  draftSession,
   uiScope,
   selectedNodeIds,
   setDraftSession,
@@ -26,6 +27,7 @@ export function useCanvasGraphChangeHandlers({
 }: UseCanvasGraphChangeHandlersArgs): CanvasGraphChangeHandlers {
   const nodeChangeHandlers = useCanvasNodeChangeHandlers({
     graphModel,
+    draftSession,
     uiScope,
     selectedNodeIds,
     setDraftSession,
@@ -38,13 +40,8 @@ export function useCanvasGraphChangeHandlers({
     setDraftSession,
   });
 
-  const explicitNodeAdmission = useCanvasExplicitNodeAdmission({
-    setDraftSession,
-  });
-
   return {
     ...nodeChangeHandlers,
     ...edgeChangeHandlers,
-    ...explicitNodeAdmission,
   };
 }

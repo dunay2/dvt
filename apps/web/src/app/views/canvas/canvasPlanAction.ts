@@ -6,6 +6,7 @@ import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { PlanViewModel } from '../../types/plans';
 
 import { resolvePreviewProvenance } from './canvasPreviewProvenance';
+import { canvasViewCopy, formatTransformationGraphValidationSummary } from './copy';
 import { buildPreviewGraphSource } from './previewGraphSource';
 import type { TransformationGraphValidationResult } from './transformationGraphValidation';
 
@@ -49,11 +50,14 @@ export async function executeCanvasPlanAction({
   workspaceService: IWorkspacePort;
 }): Promise<CanvasPlanActionResult> {
   if (!canPlan) {
-    return { ok: false, message: 'You do not have permission to create plans' };
+    return { ok: false, message: canvasViewCopy.planPermissionDeniedMessage };
   }
 
   if (!transformationValidation.valid) {
-    return { ok: false, message: transformationValidation.summary };
+    return {
+      ok: false,
+      message: formatTransformationGraphValidationSummary(transformationValidation.summaryCode),
+    };
   }
 
   try {
@@ -74,8 +78,7 @@ export async function executeCanvasPlanAction({
     if (previewProvenance.sqlArtifact === undefined || previewProvenance.sqlText === undefined) {
       return {
         ok: false,
-        message:
-          'Preview provenance must resolve the SQL artifact before creating a persisted plan.',
+        message: canvasViewCopy.planSqlArtifactRequiredMessage,
       };
     }
 
@@ -102,7 +105,7 @@ export async function executeCanvasPlanAction({
   } catch (error) {
     return {
       ok: false,
-      message: error instanceof Error ? error.message : 'Unable to create execution plan',
+      message: error instanceof Error ? error.message : canvasViewCopy.planUnableToCreateMessage,
     };
   }
 }

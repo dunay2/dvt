@@ -7,6 +7,10 @@ import { Button } from '../../components/ui/button';
 import { Separator } from '../../components/ui/separator';
 import { cn } from '../../components/ui/utils';
 import type { CanvasDraftToolbarState } from './canvasDraftPresentationState';
+import {
+  canvasViewCopy,
+  formatTransformationGraphValidationSummary,
+} from './copy';
 import type { TransformationGraphValidationResult } from './transformationGraphValidation';
 
 type CanvasToolbarProps = {
@@ -41,18 +45,18 @@ function resolveWorkflowStatusLabel(
   canStartRun: boolean
 ): string {
   if (isRecoveryActive) {
-    return 'Recovery';
+    return canvasViewCopy.toolbarWorkflowRecoveryLabel;
   }
 
   if (!canPlan && !canRun) {
-    return 'Read only';
+    return canvasViewCopy.toolbarWorkflowReadOnlyLabel;
   }
 
   if (canStartRun) {
-    return 'Run ready';
+    return canvasViewCopy.toolbarWorkflowRunReadyLabel;
   }
 
-  return 'Plan required';
+  return canvasViewCopy.toolbarWorkflowPlanRequiredLabel;
 }
 
 function resolveWorkflowStatusClass(
@@ -77,30 +81,62 @@ function resolveWorkflowStatusClass(
   return 'text-amber-200';
 }
 
-export default function CanvasToolbar({
-  placement = 'inline',
-  onAutoLayout,
-  onToggleCostOverlay,
-  onToggleImpact,
-  onToggleColumns,
-  onReloadLatestDraft,
-  onPlan,
-  onRun,
+type CanvasToolbarViewModel = {
+  workflowStatusLabel: string;
+  workflowStatusClass: string;
+  workflowStatusTitle: string;
+  canPlanTransformation: boolean;
+};
+
+function deriveCanvasToolbarViewModel({
   draftToolbarState,
   canPlan,
   canRun,
-  canEditEdges,
   canStartRun,
-  planStatusSummary,
   canvasAuthoringMode,
-  exclusiveOverlayMode,
-  canUseCostOverlay,
-  impactOverlayEnabled,
-  columnLevelLineageEnabled,
+  planStatusSummary,
   transformationValidation,
   nodeCount,
   edgeCount,
-}: CanvasToolbarProps) {
+}: Pick<
+  CanvasToolbarProps,
+  | 'draftToolbarState'
+  | 'canPlan'
+  | 'canRun'
+  | 'canStartRun'
+  | 'canvasAuthoringMode'
+  | 'planStatusSummary'
+  | 'transformationValidation'
+  | 'nodeCount'
+  | 'edgeCount'
+>): CanvasToolbarViewModel {
+  const isRecoveryActive = draftToolbarState.showReloadAction;
+  const transformationValidationSummary = formatTransformationGraphValidationSummary(
+    transformationValidation.summaryCode
+  );
+
+  return {
+    workflowStatusLabel: resolveWorkflowStatusLabel(
+      isRecoveryActive,
+      canPlan,
+      canRun,
+      canStartRun
+    ),
+    workflowStatusClass: resolveWorkflowStatusClass(
+      isRecoveryActive,
+      draftToolbarState.tone,
+      canPlan,
+      canRun,
+      canStartRun
+    ),
+    workflowStatusTitle: `${canvasAuthoringMode}:${planStatusSummary}:${transformationValidationSummary}:${nodeCount}:${edgeCount}`,
+    canPlanTransformation: transformationValidation.valid,
+  };
+}
+
+function useCanvasToolbarPortalTarget(
+  placement: NonNullable<CanvasToolbarProps['placement']>
+): HTMLElement | null {
   const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
 
   useEffect(() => {
@@ -112,24 +148,53 @@ export default function CanvasToolbar({
     setPortalTarget(document.getElementById('shell-top-bar-canvas-controls'));
   }, [placement]);
 
-  const isRecoveryActive = draftToolbarState.showReloadAction;
-  const workflowStatusLabel = resolveWorkflowStatusLabel(
-    isRecoveryActive,
-    canPlan,
-    canRun,
-    canStartRun
-  );
-  const workflowStatusClass = resolveWorkflowStatusClass(
-    isRecoveryActive,
-    draftToolbarState.tone,
-    canPlan,
-    canRun,
-    canStartRun
-  );
-  const canPlanTransformation = transformationValidation.valid;
+  return portalTarget;
+}
 
-  const content = (
-    <div className="flex min-w-0 items-center gap-2">
+type CanvasToolbarPrimaryControlsProps = Pick<
+  CanvasToolbarProps,
+  | 'onAutoLayout'
+  | 'onToggleCostOverlay'
+  | 'onToggleImpact'
+  | 'onToggleColumns'
+  | 'onPlan'
+  | 'onRun'
+  | 'canPlan'
+  | 'canRun'
+  | 'canEditEdges'
+  | 'canStartRun'
+  | 'exclusiveOverlayMode'
+  | 'canUseCostOverlay'
+  | 'impactOverlayEnabled'
+  | 'columnLevelLineageEnabled'
+> &
+  Pick<
+    CanvasToolbarViewModel,
+    'workflowStatusLabel' | 'workflowStatusClass' | 'workflowStatusTitle' | 'canPlanTransformation'
+  >;
+
+function CanvasToolbarPrimaryControls({
+  onAutoLayout,
+  onToggleCostOverlay,
+  onToggleImpact,
+  onToggleColumns,
+  onPlan,
+  onRun,
+  canPlan,
+  canRun,
+  canEditEdges,
+  canStartRun,
+  exclusiveOverlayMode,
+  canUseCostOverlay,
+  impactOverlayEnabled,
+  columnLevelLineageEnabled,
+  workflowStatusLabel,
+  workflowStatusClass,
+  workflowStatusTitle,
+  canPlanTransformation,
+}: CanvasToolbarPrimaryControlsProps): JSX.Element {
+  return (
+    <>
       <Badge
         data-slot="canvas-workflow-status"
         variant="outline"
@@ -137,7 +202,7 @@ export default function CanvasToolbar({
           'h-7 border-slate-700 bg-slate-950/60 px-2 text-[11px] font-medium',
           workflowStatusClass
         )}
-        title={`${canvasAuthoringMode}:${planStatusSummary}:${transformationValidation.summary}:${nodeCount}:${edgeCount}`}
+        title={workflowStatusTitle}
       >
         {workflowStatusLabel}
       </Badge>
@@ -152,7 +217,7 @@ export default function CanvasToolbar({
         className="h-8 gap-1.5 px-3 text-xs text-slate-300 hover:bg-slate-800 hover:text-white"
       >
         <LayoutGrid className="size-4" />
-        Layout
+        {canvasViewCopy.toolbarLayoutLabel}
       </Button>
 
       <Button
@@ -166,7 +231,7 @@ export default function CanvasToolbar({
         )}
       >
         <Target className="size-4" />
-        Impact
+        {canvasViewCopy.toolbarImpactLabel}
       </Button>
 
       <Button
@@ -180,7 +245,7 @@ export default function CanvasToolbar({
         )}
       >
         <Columns className="size-4" />
-        Columns
+        {canvasViewCopy.toolbarColumnsLabel}
       </Button>
 
       {canUseCostOverlay && (
@@ -195,7 +260,7 @@ export default function CanvasToolbar({
           )}
         >
           <DollarSign className="size-4" />
-          Cost
+          {canvasViewCopy.toolbarCostLabel}
         </Button>
       )}
       <Separator orientation="vertical" className="h-5 bg-slate-700" />
@@ -208,7 +273,7 @@ export default function CanvasToolbar({
         className="h-8 border-slate-600 bg-transparent px-3 text-xs text-slate-200 hover:bg-slate-800 hover:text-white"
       >
         <FileCheck className="mr-1.5 size-4" />
-        Plan
+        {canvasViewCopy.toolbarPlanLabel}
       </Button>
       <Button
         type="button"
@@ -219,42 +284,92 @@ export default function CanvasToolbar({
         className="h-8 px-3 text-xs"
       >
         <Play className="mr-1.5 size-4" />
-        Run
+        {canvasViewCopy.toolbarRunLabel}
       </Button>
-      <Separator orientation="vertical" className="h-5 bg-slate-700" />
-      {draftToolbarState.showReloadAction ? (
-        <div className="flex items-center gap-2">
-          <Badge
-            data-slot="canvas-draft-save-status"
-            variant="outline"
-            className={cn(
-              'h-7 border px-2 text-[11px]',
-              draftToolbarState.tone === 'danger'
-                ? 'border-rose-500/60 bg-rose-950/40 text-rose-100'
-                : 'border-amber-500/60 bg-amber-950/40 text-amber-100'
-            )}
-          >
-            {draftToolbarState.label}
-          </Badge>
-          <Button
-            type="button"
-            variant={draftToolbarState.tone === 'danger' ? 'destructive' : 'outline'}
-            size="sm"
-            onClick={onReloadLatestDraft}
-            className="h-8 px-3 text-xs"
-          >
-            Reload draft
-          </Button>
-        </div>
-      ) : (
+    </>
+  );
+}
+
+type CanvasToolbarDraftStatusProps = Pick<
+  CanvasToolbarProps,
+  'draftToolbarState' | 'onReloadLatestDraft'
+>;
+
+function CanvasToolbarDraftStatus({
+  draftToolbarState,
+  onReloadLatestDraft,
+}: CanvasToolbarDraftStatusProps): JSX.Element {
+  if (draftToolbarState.showReloadAction) {
+    return (
+      <div className="flex items-center gap-2">
         <Badge
           data-slot="canvas-draft-save-status"
           variant="outline"
-          className="h-7 border-slate-700 bg-slate-950/60 px-2 text-[11px] text-slate-200"
+          className={cn(
+            'h-7 border px-2 text-[11px]',
+            draftToolbarState.tone === 'danger'
+              ? 'border-rose-500/60 bg-rose-950/40 text-rose-100'
+              : 'border-amber-500/60 bg-amber-950/40 text-amber-100'
+          )}
         >
           {draftToolbarState.label}
         </Badge>
-      )}
+        <Button
+          type="button"
+          variant={draftToolbarState.tone === 'danger' ? 'destructive' : 'outline'}
+          size="sm"
+          onClick={onReloadLatestDraft}
+          className="h-8 px-3 text-xs"
+        >
+          {canvasViewCopy.reloadLatestDraftLabel}
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <Badge
+      data-slot="canvas-draft-save-status"
+      variant="outline"
+      className="h-7 border-slate-700 bg-slate-950/60 px-2 text-[11px] text-slate-200"
+    >
+      {draftToolbarState.label}
+    </Badge>
+  );
+}
+
+export default function CanvasToolbar(props: CanvasToolbarProps) {
+  const placement = props.placement ?? 'inline';
+  const portalTarget = useCanvasToolbarPortalTarget(placement);
+  const viewModel = deriveCanvasToolbarViewModel(props);
+
+  const content = (
+    <div className="flex min-w-0 items-center gap-2">
+      <CanvasToolbarPrimaryControls
+        onAutoLayout={props.onAutoLayout}
+        onToggleCostOverlay={props.onToggleCostOverlay}
+        onToggleImpact={props.onToggleImpact}
+        onToggleColumns={props.onToggleColumns}
+        onPlan={props.onPlan}
+        onRun={props.onRun}
+        canPlan={props.canPlan}
+        canRun={props.canRun}
+        canEditEdges={props.canEditEdges}
+        canStartRun={props.canStartRun}
+        exclusiveOverlayMode={props.exclusiveOverlayMode}
+        canUseCostOverlay={props.canUseCostOverlay}
+        impactOverlayEnabled={props.impactOverlayEnabled}
+        columnLevelLineageEnabled={props.columnLevelLineageEnabled}
+        workflowStatusLabel={viewModel.workflowStatusLabel}
+        workflowStatusClass={viewModel.workflowStatusClass}
+        workflowStatusTitle={viewModel.workflowStatusTitle}
+        canPlanTransformation={viewModel.canPlanTransformation}
+      />
+      <Separator orientation="vertical" className="h-5 bg-slate-700" />
+      <CanvasToolbarDraftStatus
+        draftToolbarState={props.draftToolbarState}
+        onReloadLatestDraft={props.onReloadLatestDraft}
+      />
     </div>
   );
 

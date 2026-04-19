@@ -2,6 +2,7 @@ import type { IRunsPort } from '../../ports/runs';
 import type { SessionContextPort } from '../../ports/sessionContext';
 import type { PlanViewModel } from '../../types/plans';
 
+import { canvasViewCopy } from './copy';
 import { resolvePlanRefForStartRun } from './canvasPlanReadiness';
 
 type CanvasRunStartActionFailure = {
@@ -37,7 +38,7 @@ export async function executeCanvasRunStartAction({
   if (!canRun) {
     return {
       ok: false,
-      message: 'You do not have permission to start runs',
+      message: canvasViewCopy.runPermissionDeniedMessage,
       shouldOpenPlanModal: false,
     };
   }
@@ -45,7 +46,7 @@ export async function executeCanvasRunStartAction({
   if (!currentPlan) {
     return {
       ok: false,
-      message: 'No execution plan available - run Plan first',
+      message: canvasViewCopy.runNoPlanMessage,
       shouldOpenPlanModal: false,
     };
   }
@@ -53,7 +54,7 @@ export async function executeCanvasRunStartAction({
   if (isCurrentPlanStale) {
     return {
       ok: false,
-      message: 'Preview is stale. Re-run Plan before starting.',
+      message: canvasViewCopy.runPreviewStaleMessage,
       shouldOpenPlanModal: true,
     };
   }
@@ -62,7 +63,7 @@ export async function executeCanvasRunStartAction({
   if (!planRef) {
     return {
       ok: false,
-      message: 'Plan reference is unavailable for this mode',
+      message: canvasViewCopy.runPlanRefUnavailableMessage,
       shouldOpenPlanModal: true,
     };
   }
@@ -70,8 +71,7 @@ export async function executeCanvasRunStartAction({
   if (!hasPersistedPlanForRun) {
     return {
       ok: false,
-      message:
-        'Run start requires a persisted preview plan bound to the current plan reference. Re-run Plan first.',
+      message: canvasViewCopy.runPersistedPreviewRequiredMessage,
       shouldOpenPlanModal: true,
     };
   }
@@ -84,7 +84,7 @@ export async function executeCanvasRunStartAction({
   } catch (error) {
     return {
       ok: false,
-      message: error instanceof Error ? error.message : 'Failed to start run',
+      message: error instanceof Error ? error.message : canvasViewCopy.runFailedMessage,
       shouldOpenPlanModal: true,
     };
   }

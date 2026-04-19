@@ -146,7 +146,7 @@ function buildController(overrides?: Partial<CanvasController>): CanvasControlle
     columnLevelLineageEnabled: false,
     transformationValidation: {
       valid: false,
-      summary: 'Plan requires exactly 3 nodes: source, sql_transform, and sink.',
+      summaryCode: 'requires_three_nodes',
       draftSignature: 'draft',
       scopedNodeIds: [],
       scopedEdgeIds: [],

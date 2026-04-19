@@ -1,5 +1,5 @@
-import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
-import type { PluginConnectionRule } from './PluginManifest';
+import type { CanonicalEdge, CanonicalNode, CoreNodeRole } from '../../types/canonical';
+import type { PluginConnectionRule, PluginDataPort } from './PluginManifest';
 
 // ---------------------------------------------------------------------------
 // Shell-level graph invariants (non-overridable)
@@ -12,7 +12,38 @@ import type { PluginConnectionRule } from './PluginManifest';
 // These rules are always evaluated FIRST, before plugin connection rules.
 // ---------------------------------------------------------------------------
 
-export type ConnectionRuleResult = { allowed: true } | { allowed: false; reason: string };
+export type ConnectionRuleReasonCode =
+  | 'plugin_rule_blocked'
+  | 'cross_plugin_bridge_missing'
+  | 'self_connection'
+  | 'duplicate_edge'
+  | 'cycle_detected';
+
+export type ConnectionRuleResult =
+  | { allowed: true }
+  | {
+      allowed: false;
+      reasonCode: 'plugin_rule_blocked';
+      reason?: string;
+    }
+  | {
+      allowed: false;
+      reasonCode: 'cross_plugin_bridge_missing';
+      sourcePluginId: string;
+      sourceRole: CoreNodeRole;
+      targetPluginId: string;
+      targetRole: CoreNodeRole;
+    }
+  | {
+      allowed: false;
+      reasonCode: 'self_connection' | 'duplicate_edge' | 'cycle_detected';
+    };
+
+export type PluginPortDescriptor = {
+  connectionRules: readonly PluginConnectionRule[];
+  produces: readonly PluginDataPort[];
+  consumes: readonly PluginDataPort[];
+};
 
 /**
  * Full cycle detection via BFS.
@@ -25,14 +56,21 @@ export function wouldCreateCycle(
 ): boolean {
   const adj = new Map<string, string[]>();
   for (const e of edges) {
-    if (!adj.has(e.sourceId)) adj.set(e.sourceId, []);
-    adj.get(e.sourceId)!.push(e.targetId);
+    const adjacentTargets = adj.get(e.sourceId);
+    if (adjacentTargets) {
+      adjacentTargets.push(e.targetId);
+      continue;
+    }
+    adj.set(e.sourceId, [e.targetId]);
   }
 
   const visited = new Set<string>();
   const queue: string[] = [targetId];
   while (queue.length > 0) {
-    const current = queue.shift()!;
+    const current = queue.shift();
+    if (current === undefined) {
+      continue;
+    }
     if (current === sourceId) return true;
     if (visited.has(current)) continue;
     visited.add(current);
@@ -72,11 +110,49 @@ export function evaluatePluginConnectionRules(
     if (sourceMatches && targetMatches) {
       return rule.allowed
         ? { allowed: true }
-        : { allowed: false, reason: rule.reason ?? 'Connection not permitted by plugin rules' };
+        : {
+            allowed: false,
+            reasonCode: 'plugin_rule_blocked',
+            ...(rule.reason ? { reason: rule.reason } : {}),
+          };
     }
   }
   // No rule matched — allow by default
   return { allowed: true };
+}
+
+function portSupportsRole(port: PluginDataPort, role: CanonicalNode['role']): boolean {
+  return port.forRoles.includes(role);
+}
+
+function portsShareType(producer: PluginDataPort, consumer: PluginDataPort): boolean {
+  return consumer.portType === producer.portType;
+}
+
+function producerCanBridgeToTarget(
+  producer: PluginDataPort,
+  sourceRole: CoreNodeRole,
+  targetRole: CoreNodeRole,
+  consumerPorts: readonly PluginDataPort[]
+): boolean {
+  if (!portSupportsRole(producer, sourceRole)) {
+    return false;
+  }
+
+  return consumerPorts.some(
+    (consumer) => portsShareType(producer, consumer) && portSupportsRole(consumer, targetRole)
+  );
+}
+
+function hasCompatibleCrossPluginBridge(
+  source: CanonicalNode,
+  target: CanonicalNode,
+  producerPorts: readonly PluginDataPort[],
+  consumerPorts: readonly PluginDataPort[]
+): boolean {
+  return producerPorts.some((producer) =>
+    producerCanBridgeToTarget(producer, source.role, target.role, consumerPorts)
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -90,20 +166,20 @@ export function evaluatePluginConnectionRules(
 export function evaluateCrossPluginBridge(
   source: CanonicalNode,
   target: CanonicalNode,
-  producerPorts: ReadonlyArray<{ portType: string; forRoles: string[] }>,
-  consumerPorts: ReadonlyArray<{ portType: string; forRoles: string[] }>
+  producerPorts: readonly PluginDataPort[],
+  consumerPorts: readonly PluginDataPort[]
 ): ConnectionRuleResult {
-  for (const producer of producerPorts) {
-    if (!producer.forRoles.includes(source.role)) continue;
-    for (const consumer of consumerPorts) {
-      if (consumer.portType !== producer.portType) continue;
-      if (!consumer.forRoles.includes(target.role)) continue;
-      return { allowed: true };
-    }
+  if (hasCompatibleCrossPluginBridge(source, target, producerPorts, consumerPorts)) {
+    return { allowed: true };
   }
+
   return {
     allowed: false,
-    reason: `No compatible data port bridge between ${source.pluginId} (${source.role}) and ${target.pluginId} (${target.role})`,
+    reasonCode: 'cross_plugin_bridge_missing',
+    sourcePluginId: source.pluginId,
+    sourceRole: source.role,
+    targetPluginId: target.pluginId,
+    targetRole: target.role,
   };
 }
 
@@ -113,11 +189,7 @@ export function evaluateCrossPluginBridge(
 
 export type PluginPortMap = ReadonlyMap<
   string,
-  {
-    connectionRules: PluginConnectionRule[];
-    produces: { portType: string; forRoles: string[] }[];
-    consumes: { portType: string; forRoles: string[] }[];
-  }
+  PluginPortDescriptor
 >;
 
 /**
@@ -142,17 +214,17 @@ export function evaluateConnection(
 ): ConnectionRuleResult {
   // SHELL-002
   if (source.id === target.id) {
-    return { allowed: false, reason: 'Self-connections are not allowed' };
+    return { allowed: false, reasonCode: 'self_connection' };
   }
 
   // SHELL-003
   if (hasDuplicateEdge(source.id, target.id, currentEdges)) {
-    return { allowed: false, reason: 'Connection already exists' };
+    return { allowed: false, reasonCode: 'duplicate_edge' };
   }
 
   // SHELL-001
   if (wouldCreateCycle(source.id, target.id, currentEdges)) {
-    return { allowed: false, reason: 'Would create a cycle in the DAG' };
+    return { allowed: false, reasonCode: 'cycle_detected' };
   }
 
   // Intra-plugin

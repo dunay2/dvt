@@ -1,4 +1,8 @@
-import { canvasViewCopy } from './copy';
+import {
+  canvasViewCopy,
+  formatCanvasLimitedAccessMessage,
+  type CanvasDisabledCapability,
+} from './copy';
 
 export type CanvasWorkbenchState =
   | { kind: 'loading' }
@@ -23,22 +27,6 @@ type CanvasReadOnlyStateArgs = {
   canRun: boolean;
   canEditEdges: boolean;
 };
-
-function formatDisabledCapabilities(capabilities: string[]): string {
-  if (capabilities.length === 0) {
-    return '';
-  }
-
-  if (capabilities.length === 1) {
-    return capabilities[0] ?? '';
-  }
-
-  if (capabilities.length === 2) {
-    return `${capabilities[0]} and ${capabilities[1]}`;
-  }
-
-  return `${capabilities.slice(0, -1).join(', ')}, and ${capabilities.at(-1)}`;
-}
 
 export function getCanvasWorkbenchState({
   canonicalNodeCount,
@@ -68,18 +56,18 @@ export function getCanvasReadOnlyState({
   canRun,
   canEditEdges,
 }: CanvasReadOnlyStateArgs): CanvasReadOnlyState {
-  const disabledCapabilities: string[] = [];
+  const disabledCapabilities: CanvasDisabledCapability[] = [];
 
   if (!canPlan) {
-    disabledCapabilities.push('plan preview');
+    disabledCapabilities.push('plan_preview');
   }
 
   if (!canRun) {
-    disabledCapabilities.push('run start');
+    disabledCapabilities.push('run_start');
   }
 
   if (!canEditEdges) {
-    disabledCapabilities.push('graph edits');
+    disabledCapabilities.push('graph_edits');
   }
 
   if (disabledCapabilities.length === 0) {
@@ -94,12 +82,9 @@ export function getCanvasReadOnlyState({
     };
   }
 
-  const disabledSummary = formatDisabledCapabilities(disabledCapabilities);
-  const verb = disabledCapabilities.length === 1 ? 'is' : 'are';
-
   return {
     title: canvasViewCopy.limitedAccessTitle,
-    message: `You can keep inspecting the graph, but ${disabledSummary} ${verb} unavailable in this context.`,
+    message: formatCanvasLimitedAccessMessage(disabledCapabilities),
     note: canvasViewCopy.readOnlyNote,
   };
 }

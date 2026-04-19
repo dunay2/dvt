@@ -1,9 +1,8 @@
 import { useCallback } from 'react';
 import { applyNodeChanges, type Node, type NodeChange } from '@xyflow/react';
 
-import { removeNode, replaceEdges } from './canvasDraftSession';
-import { areNodeIdsEqual } from './canvasDraftScope';
-import { mapCanvasEdgesToDraftEdges } from './canvasGraphChangeRuntime';
+import { removeNodeFromCanvasWorkingSet } from './canvasInteractionCommands';
+import { applyCanvasInteractionStateFallout } from './canvasInteractionStateFallout';
 import type {
   CanvasGraphChangeHandlers,
   UseCanvasMutationHandlersArgs,
@@ -12,6 +11,7 @@ import type {
 type UseCanvasNodeChangeHandlersArgs = Pick<
   UseCanvasMutationHandlersArgs,
   | 'graphModel'
+  | 'draftSession'
   | 'uiScope'
   | 'selectedNodeIds'
   | 'setDraftSession'
@@ -21,6 +21,7 @@ type UseCanvasNodeChangeHandlersArgs = Pick<
 
 export function useCanvasNodeChangeHandlers({
   graphModel,
+  draftSession,
   uiScope,
   selectedNodeIds,
   setDraftSession,
@@ -34,36 +35,37 @@ export function useCanvasNodeChangeHandlers({
       const removedNodeIds = graphModel.nodes
         .map((node) => node.id)
         .filter((nodeId) => !nextNodeIds.has(nodeId));
-      const nextEdges = removedNodeIds.length
-        ? graphModel.edges.filter(
-            (edge) => nextNodeIds.has(edge.source) && nextNodeIds.has(edge.target)
-          )
-        : graphModel.edges;
 
-      graphModel.setNodes(nextNodes);
       if (removedNodeIds.length === 0) {
+        graphModel.setNodes(nextNodes);
         return;
       }
 
-      const nextSelectedNodeIds = selectedNodeIds.filter(
-        (nodeId) => !removedNodeIds.includes(nodeId)
-      );
-      graphModel.setEdges(nextEdges);
-      if (!areNodeIdsEqual(nextSelectedNodeIds, uiScope.selectedNodeIds)) {
-        setSelectedNodes(nextSelectedNodeIds);
+      let nextInteractionState = {
+        draftSession,
+        nodes: graphModel.nodes,
+        edges: graphModel.edges,
+        selectedNodeIds,
+        inspectorNodeId: uiScope.inspectorNodeId,
+      };
+
+      for (const nodeId of removedNodeIds) {
+        const removeResult = removeNodeFromCanvasWorkingSet(nextInteractionState, nodeId);
+        nextInteractionState = removeResult.state;
       }
-      if (uiScope.inspectorNodeId != null && removedNodeIds.includes(uiScope.inspectorNodeId)) {
-        setInspectorNode(null);
-      }
-      setDraftSession((currentSession) => {
-        let nextSession = currentSession;
-        for (const nodeId of removedNodeIds) {
-          nextSession = removeNode(nextSession, nodeId);
-        }
-        return replaceEdges(nextSession, mapCanvasEdgesToDraftEdges(nextEdges));
+
+      applyCanvasInteractionStateFallout({
+        nextState: nextInteractionState,
+        currentUiScope: uiScope,
+        setNodes: graphModel.setNodes,
+        setEdges: graphModel.setEdges,
+        setDraftSession,
+        setSelectedNodes,
+        setInspectorNode,
       });
     },
     [
+      draftSession,
       graphModel,
       selectedNodeIds,
       setDraftSession,

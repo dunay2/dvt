@@ -24,24 +24,51 @@ function buildEdge(
   };
 }
 
+function buildValidTransformationNodes(args?: {
+  transformNode?: Partial<CanonicalNode>;
+  extraNodes?: CanonicalNode[];
+}): CanonicalNode[] {
+  return [
+    buildNode({ id: 'src', name: 'Source', role: 'input' }),
+    buildNode({
+      id: 'tx',
+      name: 'Transform',
+      role: 'transform',
+      ...(args?.transformNode ?? {}),
+    }),
+    buildNode({ id: 'sink', name: 'Sink', role: 'output' }),
+    ...(args?.extraNodes ?? []),
+  ];
+}
+
+function buildOrderedTransformationEdges(): CanonicalEdge[] {
+  return [
+    buildEdge({ id: 'e1', sourceId: 'src', targetId: 'tx' }),
+    buildEdge({ id: 'e2', sourceId: 'tx', targetId: 'sink' }),
+  ];
+}
+
+function expectValidationSummary(
+  result: ReturnType<typeof validateTransformationGraph>,
+  args: {
+    valid: boolean;
+    summaryCode: ReturnType<typeof validateTransformationGraph>['summaryCode'];
+    scopedNodeIds?: string[];
+    scopedEdgeIds?: string[];
+  }
+): void {
+  expect(result).toEqual(expect.objectContaining(args));
+}
+
 describe('validateTransformationGraph', () => {
   it('accepts exactly one input, one transform, one output, and two ordered edges', () => {
-    const nodes = [
-      buildNode({ id: 'src', name: 'Source', role: 'input' }),
-      buildNode({ id: 'tx', name: 'Transform', role: 'transform' }),
-      buildNode({ id: 'sink', name: 'Sink', role: 'output' }),
-    ];
-    const edges = [
-      buildEdge({ id: 'e1', sourceId: 'src', targetId: 'tx' }),
-      buildEdge({ id: 'e2', sourceId: 'tx', targetId: 'sink' }),
-    ];
+    const nodes = buildValidTransformationNodes();
+    const edges = buildOrderedTransformationEdges();
 
-    expect(validateTransformationGraph({ nodes, edges })).toEqual(
-      expect.objectContaining({
-        valid: true,
-        summary: 'Transformation draft is valid for preview.',
-      })
-    );
+    expectValidationSummary(validateTransformationGraph({ nodes, edges }), {
+      valid: true,
+      summaryCode: 'valid',
+    });
   });
 
   it('rejects graphs with the wrong node count', () => {
@@ -50,12 +77,10 @@ describe('validateTransformationGraph', () => {
       buildNode({ id: 'tx', name: 'Transform', role: 'transform' }),
     ];
 
-    expect(validateTransformationGraph({ nodes, edges: [] })).toEqual(
-      expect.objectContaining({
-        valid: false,
-        summary: 'Plan requires exactly 3 nodes: source, sql_transform, and sink.',
-      })
-    );
+    expectValidationSummary(validateTransformationGraph({ nodes, edges: [] }), {
+      valid: false,
+      summaryCode: 'requires_three_nodes',
+    });
   });
 
   it('rejects graphs with unsupported node roles', () => {
@@ -69,78 +94,55 @@ describe('validateTransformationGraph', () => {
       buildEdge({ id: 'e2', sourceId: 'tx', targetId: 'chk' }),
     ];
 
-    expect(validateTransformationGraph({ nodes, edges })).toEqual(
-      expect.objectContaining({
-        valid: false,
-        summary: 'Plan supports only input, transform, and output nodes in this vertical.',
-      })
-    );
+    expectValidationSummary(validateTransformationGraph({ nodes, edges }), {
+      valid: false,
+      summaryCode: 'unsupported_roles',
+    });
   });
 
   it('rejects graphs whose edges do not follow source -> sql_transform -> sink', () => {
-    const nodes = [
-      buildNode({ id: 'src', name: 'Source', role: 'input' }),
-      buildNode({ id: 'tx', name: 'Transform', role: 'transform' }),
-      buildNode({ id: 'sink', name: 'Sink', role: 'output' }),
-    ];
+    const nodes = buildValidTransformationNodes();
     const edges = [
       buildEdge({ id: 'e1', sourceId: 'src', targetId: 'sink' }),
       buildEdge({ id: 'e2', sourceId: 'sink', targetId: 'tx' }),
     ];
 
-    expect(validateTransformationGraph({ nodes, edges })).toEqual(
-      expect.objectContaining({
-        valid: false,
-        summary: 'Plan edges must follow source -> sql_transform -> sink.',
-      })
-    );
+    expectValidationSummary(validateTransformationGraph({ nodes, edges }), {
+      valid: false,
+      summaryCode: 'invalid_edge_order',
+    });
   });
 
   it('accepts a selected transformation subgraph within a larger canvas', () => {
-    const nodes = [
-      buildNode({ id: 'src', name: 'Source', role: 'input' }),
-      buildNode({ id: 'tx', name: 'Transform', role: 'transform' }),
-      buildNode({ id: 'sink', name: 'Sink', role: 'output' }),
-      buildNode({ id: 'qa', name: 'Quality check', role: 'check' }),
-    ];
+    const nodes = buildValidTransformationNodes({
+      extraNodes: [buildNode({ id: 'qa', name: 'Quality check', role: 'check' })],
+    });
     const edges = [
-      buildEdge({ id: 'e1', sourceId: 'src', targetId: 'tx' }),
-      buildEdge({ id: 'e2', sourceId: 'tx', targetId: 'sink' }),
+      ...buildOrderedTransformationEdges(),
       buildEdge({ id: 'e3', sourceId: 'sink', targetId: 'qa' }),
     ];
 
-    expect(
+    expectValidationSummary(
       validateTransformationGraph({
         nodes,
         edges,
         selectedNodeIds: ['src', 'tx', 'sink'],
         workspaceNodeIds: nodes.map((node) => node.id),
-      })
-    ).toEqual(
-      expect.objectContaining({
+      }),
+      {
         valid: true,
-        summary: 'Transformation draft is valid for preview.',
+        summaryCode: 'valid',
         scopedNodeIds: ['src', 'tx', 'sink'],
         scopedEdgeIds: ['e1', 'e2'],
-      })
+      }
     );
   });
 
   it('changes draftSignature when projected graph source changes without changing ids', () => {
-    const nodes = [
-      buildNode({ id: 'src', name: 'Source', role: 'input' }),
-      buildNode({
-        id: 'tx',
-        name: 'Transform',
-        role: 'transform',
-        kind: 'dvt:sql_transform',
-      }),
-      buildNode({ id: 'sink', name: 'Sink', role: 'output' }),
-    ];
-    const edges = [
-      buildEdge({ id: 'e1', sourceId: 'src', targetId: 'tx' }),
-      buildEdge({ id: 'e2', sourceId: 'tx', targetId: 'sink' }),
-    ];
+    const nodes = buildValidTransformationNodes({
+      transformNode: { kind: 'dvt:sql_transform' },
+    });
+    const edges = buildOrderedTransformationEdges();
     const [sourceNode, transformNode, sinkNode] = nodes;
 
     const baseline = validateTransformationGraph({ nodes, edges });
@@ -163,20 +165,10 @@ describe('validateTransformationGraph', () => {
   });
 
   it('keeps draftSignature stable when only raw metadata changes outside the preview projection', () => {
-    const nodes = [
-      buildNode({ id: 'src', name: 'Source', role: 'input' }),
-      buildNode({
-        id: 'tx',
-        name: 'Transform',
-        role: 'transform',
-        kind: 'dvt:sql_transform',
-      }),
-      buildNode({ id: 'sink', name: 'Sink', role: 'output' }),
-    ];
-    const edges = [
-      buildEdge({ id: 'e1', sourceId: 'src', targetId: 'tx' }),
-      buildEdge({ id: 'e2', sourceId: 'tx', targetId: 'sink' }),
-    ];
+    const nodes = buildValidTransformationNodes({
+      transformNode: { kind: 'dvt:sql_transform' },
+    });
+    const edges = buildOrderedTransformationEdges();
     const [sourceNode, transformNode, sinkNode] = nodes;
 
     const baseline = validateTransformationGraph({ nodes, edges });

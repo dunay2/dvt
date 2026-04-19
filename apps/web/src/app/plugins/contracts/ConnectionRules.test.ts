@@ -53,7 +53,11 @@ describe('evaluateConnection', () => {
 
     expect(sourceToSink).toEqual({
       allowed: false,
-      reason: 'No compatible data port bridge between dbt (input) and dvt (output)',
+      reasonCode: 'cross_plugin_bridge_missing',
+      sourcePluginId: 'dbt',
+      sourceRole: 'input',
+      targetPluginId: 'dvt',
+      targetRole: 'output',
     });
   });
 });

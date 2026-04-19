@@ -6,6 +6,7 @@ export function useCanvasMutationHandlers({
   canMutateGraph,
   workspaceLayoutKey,
   graphModel,
+  draftSession,
   uiScope,
   selectedNodeIds,
   setDraftSession,
@@ -16,6 +17,7 @@ export function useCanvasMutationHandlers({
 }: UseCanvasMutationHandlersArgs) {
   const graphChangeHandlers = useCanvasGraphChangeHandlers({
     graphModel,
+    draftSession,
     uiScope,
     selectedNodeIds,
     setDraftSession,

@@ -2,7 +2,6 @@ import type { LucideIcon } from 'lucide-react';
 import type { AppRouteHandle } from '../../bootstrap/routeBootstrapContract';
 
 import type {
-  CanonicalEdge,
   CanonicalNode,
   CoreNodeRole,
   PluginNodeKind,
@@ -217,12 +216,3 @@ export interface PluginManifest {
   createServices: (deps: PluginServiceDeps) => PluginServices;
 }
 
-// ---------------------------------------------------------------------------
-// Connection rule result (used by shell evaluateConnection)
-// ---------------------------------------------------------------------------
-
-export interface ConnectionRuleResult {
-  allowed: boolean;
-  reason?: string;
-  suggestedEdgeType?: string;
-}

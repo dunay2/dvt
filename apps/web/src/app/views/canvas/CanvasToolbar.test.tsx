@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { CanvasDraftToolbarState } from './canvasDraftPresentationState';
 import CanvasToolbar from './CanvasToolbar';
+import { canvasViewCopy } from './copy';
 import type { TransformationGraphValidationResult } from './transformationGraphValidation';
 
 function buildValidationResult(
@@ -13,7 +14,7 @@ function buildValidationResult(
 ): TransformationGraphValidationResult {
   return {
     valid: true,
-    summary: 'Transformation draft is valid for preview.',
+    summaryCode: 'valid',
     draftSignature: 'nodes:src,tx,sink|edges:e1,e2',
     scopedNodeIds: ['src', 'tx', 'sink'],
     scopedEdgeIds: ['e1', 'e2'],
@@ -31,7 +32,7 @@ describe('CanvasToolbar', () => {
   let portalHost: HTMLDivElement;
   let root: Root;
   const defaultDraftToolbarState: CanvasDraftToolbarState = {
-    label: 'Draft synced',
+    label: canvasViewCopy.draftSyncedLabel,
     tone: 'neutral',
     showReloadAction: false,
   };
@@ -73,7 +74,7 @@ describe('CanvasToolbar', () => {
           canRun={true}
           canEditEdges={true}
           canStartRun={false}
-          planStatusSummary="Preview required before running."
+          planStatusSummary={canvasViewCopy.planStatusPreviewRequiredMessage}
           canvasAuthoringMode="transformation"
           exclusiveOverlayMode="runtime"
           canUseCostOverlay={true}
@@ -87,14 +88,14 @@ describe('CanvasToolbar', () => {
     });
 
     expect(portalHost.querySelectorAll('[data-slot="canvas-workflow-status"]')).toHaveLength(1);
-    expect(portalHost.textContent).toContain('Plan required');
-    expect(portalHost.textContent).toContain('Layout');
-    expect(portalHost.textContent).toContain('Impact');
-    expect(portalHost.textContent).toContain('Columns');
-    expect(portalHost.textContent).toContain('Cost');
-    expect(portalHost.textContent).toContain('Plan');
-    expect(portalHost.textContent).toContain('Run');
-    expect(portalHost.textContent).toContain('Draft synced');
+    expect(portalHost.textContent).toContain(canvasViewCopy.toolbarWorkflowPlanRequiredLabel);
+    expect(portalHost.textContent).toContain(canvasViewCopy.toolbarLayoutLabel);
+    expect(portalHost.textContent).toContain(canvasViewCopy.toolbarImpactLabel);
+    expect(portalHost.textContent).toContain(canvasViewCopy.toolbarColumnsLabel);
+    expect(portalHost.textContent).toContain(canvasViewCopy.toolbarCostLabel);
+    expect(portalHost.textContent).toContain(canvasViewCopy.toolbarPlanLabel);
+    expect(portalHost.textContent).toContain(canvasViewCopy.toolbarRunLabel);
+    expect(portalHost.textContent).toContain(canvasViewCopy.draftSyncedLabel);
   });
 
   it('keeps plan button disabled when transformation validation is invalid', async () => {
@@ -114,7 +115,7 @@ describe('CanvasToolbar', () => {
           canRun={true}
           canEditEdges={true}
           canStartRun={false}
-          planStatusSummary="Preview required before running."
+          planStatusSummary={canvasViewCopy.planStatusPreviewRequiredMessage}
           canvasAuthoringMode="transformation"
           exclusiveOverlayMode="runtime"
           canUseCostOverlay={false}
@@ -122,7 +123,7 @@ describe('CanvasToolbar', () => {
           columnLevelLineageEnabled={false}
           transformationValidation={buildValidationResult({
             valid: false,
-            summary: 'Plan requires exactly 3 nodes: source, sql_transform, and sink.',
+            summaryCode: 'requires_three_nodes',
           })}
           nodeCount={2}
           edgeCount={1}
@@ -131,10 +132,10 @@ describe('CanvasToolbar', () => {
     });
 
     const planButton = Array.from(portalHost.querySelectorAll('button')).find((button) =>
-      button.textContent?.includes('Plan')
+      button.textContent?.includes(canvasViewCopy.toolbarPlanLabel)
     );
     expect(planButton?.getAttribute('disabled')).not.toBeNull();
-    expect(portalHost.textContent).toContain('Plan required');
+    expect(portalHost.textContent).toContain(canvasViewCopy.toolbarWorkflowPlanRequiredLabel);
   });
 
   it('shows run ready when execution can start', async () => {
@@ -154,7 +155,7 @@ describe('CanvasToolbar', () => {
           canRun={true}
           canEditEdges={true}
           canStartRun={true}
-          planStatusSummary="Transformation draft is ready to run."
+          planStatusSummary={canvasViewCopy.planStatusPreviewReadyMessage}
           canvasAuthoringMode="transformation"
           exclusiveOverlayMode="runtime"
           canUseCostOverlay={false}
@@ -167,7 +168,7 @@ describe('CanvasToolbar', () => {
       );
     });
 
-    expect(portalHost.textContent).toContain('Run ready');
+    expect(portalHost.textContent).toContain(canvasViewCopy.toolbarWorkflowRunReadyLabel);
   });
 
   it('shows read only and disables actions when plan and run are unavailable', async () => {
@@ -187,7 +188,7 @@ describe('CanvasToolbar', () => {
           canRun={false}
           canEditEdges={false}
           canStartRun={false}
-          planStatusSummary="Run start is unavailable in this context."
+          planStatusSummary={canvasViewCopy.planStatusRunUnavailableMessage}
           canvasAuthoringMode="transformation"
           exclusiveOverlayMode="runtime"
           canUseCostOverlay={false}
@@ -201,11 +202,17 @@ describe('CanvasToolbar', () => {
     });
 
     const buttons = Array.from(portalHost.querySelectorAll('button'));
-    const layoutButton = buttons.find((button) => button.textContent?.includes('Layout'));
-    const planButton = buttons.find((button) => button.textContent?.includes('Plan'));
-    const runButton = buttons.find((button) => button.textContent?.includes('Run'));
+    const layoutButton = buttons.find((button) =>
+      button.textContent?.includes(canvasViewCopy.toolbarLayoutLabel)
+    );
+    const planButton = buttons.find((button) =>
+      button.textContent?.includes(canvasViewCopy.toolbarPlanLabel)
+    );
+    const runButton = buttons.find((button) =>
+      button.textContent?.includes(canvasViewCopy.toolbarRunLabel)
+    );
 
-    expect(portalHost.textContent).toContain('Read only');
+    expect(portalHost.textContent).toContain(canvasViewCopy.toolbarWorkflowReadOnlyLabel);
     expect(layoutButton?.getAttribute('disabled')).not.toBeNull();
     expect(planButton?.getAttribute('disabled')).not.toBeNull();
     expect(runButton?.getAttribute('disabled')).not.toBeNull();
@@ -226,7 +233,7 @@ describe('CanvasToolbar', () => {
           onPlan={vi.fn()}
           onRun={vi.fn()}
           draftToolbarState={{
-            label: 'Draft missing',
+            label: canvasViewCopy.draftMissingLabel,
             tone: 'warning',
             showReloadAction: true,
           }}
@@ -234,7 +241,7 @@ describe('CanvasToolbar', () => {
           canRun={false}
           canEditEdges={false}
           canStartRun={false}
-          planStatusSummary="Run start is unavailable in this context."
+          planStatusSummary={canvasViewCopy.planStatusRunUnavailableMessage}
           canvasAuthoringMode="transformation"
           exclusiveOverlayMode="runtime"
           canUseCostOverlay={false}
@@ -247,10 +254,10 @@ describe('CanvasToolbar', () => {
       );
     });
 
-    expect(portalHost.textContent).toContain('Recovery');
-    expect(portalHost.textContent).toContain('Draft missing');
+    expect(portalHost.textContent).toContain(canvasViewCopy.toolbarWorkflowRecoveryLabel);
+    expect(portalHost.textContent).toContain(canvasViewCopy.draftMissingLabel);
     const reloadButton = Array.from(portalHost.querySelectorAll('button')).find((button) =>
-      button.textContent?.includes('Reload draft')
+      button.textContent?.includes(canvasViewCopy.reloadLatestDraftLabel)
     );
     expect(reloadButton).not.toBeNull();
 

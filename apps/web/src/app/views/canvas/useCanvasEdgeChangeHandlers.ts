@@ -1,8 +1,7 @@
 import { useCallback } from 'react';
 import { applyEdgeChanges, type Edge, type EdgeChange } from '@xyflow/react';
 
-import { replaceEdges } from './canvasDraftSession';
-import { mapCanvasEdgesToDraftEdges } from './canvasGraphChangeRuntime';
+import { replaceCanvasVisibleEdges } from './canvasInteractionCommands';
 import type {
   CanvasGraphChangeHandlers,
   UseCanvasMutationHandlersArgs,
@@ -23,7 +22,7 @@ export function useCanvasEdgeChangeHandlers({
 
       graphModel.setEdges(nextEdges);
       setDraftSession((currentSession) =>
-        replaceEdges(currentSession, mapCanvasEdgesToDraftEdges(nextEdges))
+        replaceCanvasVisibleEdges(currentSession, nextEdges)
       );
     },
     [graphModel, setDraftSession]
