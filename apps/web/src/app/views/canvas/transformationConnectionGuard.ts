@@ -1,7 +1,17 @@
 import type { Edge } from '@xyflow/react';
 import type { CanonicalNode, CoreNodeRole } from '../../types/canonical';
 
-type TransformationConnectionGuardResult = { allowed: true } | { allowed: false; reason: string };
+export type TransformationConnectionGuardReasonCode =
+  | 'invalid_edge_order'
+  | 'edge_count_exceeded'
+  | 'duplicate_edge';
+
+type TransformationConnectionGuardResult =
+  | { allowed: true }
+  | {
+      allowed: false;
+      reasonCode: TransformationConnectionGuardReasonCode;
+    };
 
 type GuardArgs = {
   sourceNode: CanonicalNode;
@@ -10,13 +20,10 @@ type GuardArgs = {
   edges: Edge[];
 };
 
-const ALLOWED_ROLES: ReadonlySet<CoreNodeRole> = new Set(['input', 'transform', 'output']);
+const ALLOWED_ROLES = new Set<CoreNodeRole>(['input', 'transform', 'output']);
 
 function isConstrainedTransformationGraph(canonicalNodes: CanonicalNode[]): boolean {
-  return (
-    canonicalNodes.length === 3 &&
-    canonicalNodes.every((node) => ALLOWED_ROLES.has(node.role as CoreNodeRole))
-  );
+  return canonicalNodes.length === 3 && canonicalNodes.every((node) => ALLOWED_ROLES.has(node.role));
 }
 
 function isAllowedTransformationEdge(sourceRole: CoreNodeRole, targetRole: CoreNodeRole): boolean {
@@ -40,14 +47,14 @@ export function guardTransformationConnection({
   if (!isAllowedTransformationEdge(sourceNode.role, targetNode.role)) {
     return {
       allowed: false,
-      reason: 'Plan edges must follow source -> sql_transform -> sink.',
+      reasonCode: 'invalid_edge_order',
     };
   }
 
   if (edges.length >= 2) {
     return {
       allowed: false,
-      reason: 'Plan requires exactly 2 edges: source -> sql_transform and sql_transform -> sink.',
+      reasonCode: 'edge_count_exceeded',
     };
   }
 
@@ -57,7 +64,7 @@ export function guardTransformationConnection({
   if (duplicateEdge) {
     return {
       allowed: false,
-      reason: 'Dependency already exists in this transformation draft.',
+      reasonCode: 'duplicate_edge',
     };
   }
 

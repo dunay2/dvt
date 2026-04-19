@@ -44,7 +44,7 @@ describe('useCanvasController core', () => {
     expect(result?.transformationValidation).toEqual(
       expect.objectContaining({
         valid: false,
-        summary: 'Plan requires exactly 3 nodes: source, sql_transform, and sink.',
+        summaryCode: 'requires_three_nodes',
       })
     );
     expect(result?.registeredPlugins).toEqual(new Set(['dbt', 'monitoring', 'cost']));

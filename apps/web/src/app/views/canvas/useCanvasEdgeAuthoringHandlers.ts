@@ -1,10 +1,18 @@
 import { type Edge, type Node, type ReactFlowProps } from '@xyflow/react';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import {
+  useCallback,
+  useMemo,
+  useRef,
+  useState,
+  type Dispatch,
+  type MutableRefObject,
+  type SetStateAction,
+} from 'react';
 import { toast } from 'sonner';
 
 import { getPluginPortMap } from '../../plugins/registry';
-import { canvasViewCopy } from './copy';
-import { confirmConnection, proposeConnection } from './canvasGraphAggregate';
+import { confirmConnection, proposeConnection } from './canvasConnectionAggregate';
+import { canvasViewCopy, formatCanvasConnectionRejection } from './copy';
 import { replaceCanvasVisibleEdges } from './canvasInteractionCommands';
 import type {
   ConfirmEdgeModalState,
@@ -22,23 +30,56 @@ type UseCanvasEdgeAuthoringHandlersResult = Pick<
   'confirmEdgeModal' | 'setConfirmEdgeModal' | 'onConnect' | 'confirmEdgeCreation'
 >;
 
-export function useCanvasEdgeAuthoringHandlers({
+type PendingConnection = Parameters<NonNullable<ReactFlowProps<Node, Edge>['onConnect']>>[0];
+type PendingConnectionRef = MutableRefObject<PendingConnection | null>;
+type ConfirmEdgeModalSetter = Dispatch<SetStateAction<ConfirmEdgeModalState>>;
+
+function clearPendingConnection(
+  pendingConnectionRef: PendingConnectionRef,
+  setConfirmEdgeModal: ConfirmEdgeModalSetter
+) {
+  pendingConnectionRef.current = null;
+  setConfirmEdgeModal({ open: false, edge: null });
+}
+
+function openPendingConnectionConfirmation(args: {
+  pendingConnectionRef: PendingConnectionRef;
+  setConfirmEdgeModal: ConfirmEdgeModalSetter;
+  connection: PendingConnection;
+  sourceLabel: string;
+  targetLabel: string;
+  edgeType: string;
+}) {
+  args.setConfirmEdgeModal({
+    open: true,
+    edge: {
+      source: args.sourceLabel,
+      target: args.targetLabel,
+      type: args.edgeType,
+    },
+  });
+  args.pendingConnectionRef.current = args.connection;
+}
+
+function notifyRejectedConnection(
+  rejection: Parameters<typeof formatCanvasConnectionRejection>[0]
+) {
+  toast.error(formatCanvasConnectionRejection(rejection));
+}
+
+function useCanvasConnectionProposalHandler({
+  canEditEdges,
   canonicalNodesById,
   edges,
-  canEditEdges,
-  setEdges,
-  setDraftSession,
-}: UseCanvasEdgeAuthoringHandlersArgs): UseCanvasEdgeAuthoringHandlersResult {
-  const pendingConnectionRef = useRef<Parameters<
-    NonNullable<ReactFlowProps<Node, Edge>['onConnect']>
-  >[0] | null>(null);
-  const [confirmEdgeModal, setConfirmEdgeModal] = useState<ConfirmEdgeModalState>({
-    open: false,
-    edge: null,
-  });
-  const pluginPortMap = useMemo(() => getPluginPortMap(), []);
-
-  const onConnect = useCallback<NonNullable<ReactFlowProps<Node, Edge>['onConnect']>>(
+  pluginPortMap,
+  pendingConnectionRef,
+  setConfirmEdgeModal,
+}: UseCanvasEdgeAuthoringHandlersArgs & {
+  pluginPortMap: ReturnType<typeof getPluginPortMap>;
+  pendingConnectionRef: PendingConnectionRef;
+  setConfirmEdgeModal: ConfirmEdgeModalSetter;
+}) {
+  return useCallback<NonNullable<ReactFlowProps<Node, Edge>['onConnect']>>(
     (connection) => {
       if (!canEditEdges) {
         toast.error(canvasViewCopy.mutationUnavailableMessage);
@@ -52,28 +93,50 @@ export function useCanvasEdgeAuthoringHandlers({
         pluginPortMap,
       });
       if (proposedConnection.outcome === 'rejected') {
-        toast.error(proposedConnection.reason);
+        notifyRejectedConnection(proposedConnection.rejection);
         return;
       }
 
-      setConfirmEdgeModal({
-        open: true,
-        edge: {
-          source: proposedConnection.sourceNode.name,
-          target: proposedConnection.targetNode.name,
-          type: proposedConnection.edgeType,
-        },
+      openPendingConnectionConfirmation({
+        pendingConnectionRef,
+        setConfirmEdgeModal,
+        connection,
+        sourceLabel: proposedConnection.sourceNode.name,
+        targetLabel: proposedConnection.targetNode.name,
+        edgeType: proposedConnection.edgeType,
       });
-      pendingConnectionRef.current = connection;
     },
-    [canEditEdges, canonicalNodesById, edges, pluginPortMap]
+    [
+      canEditEdges,
+      canonicalNodesById,
+      edges,
+      pendingConnectionRef,
+      pluginPortMap,
+      setConfirmEdgeModal,
+    ]
   );
+}
 
-  const confirmEdgeCreation = useCallback(() => {
+function useCanvasConnectionConfirmationHandler({
+  canEditEdges,
+  canonicalNodesById,
+  pluginPortMap,
+  pendingConnectionRef,
+  setConfirmEdgeModal,
+  setDraftSession,
+  setEdges,
+}: Pick<
+  UseCanvasEdgeAuthoringHandlersArgs,
+  'canEditEdges' | 'canonicalNodesById' | 'setDraftSession' | 'setEdges'
+> & {
+  pluginPortMap: ReturnType<typeof getPluginPortMap>;
+  pendingConnectionRef: PendingConnectionRef;
+  setConfirmEdgeModal: ConfirmEdgeModalSetter;
+}) {
+  return useCallback(() => {
     if (!canEditEdges) {
       toast.error(canvasViewCopy.mutationUnavailableMessage);
-      pendingConnectionRef.current = null;
-      setConfirmEdgeModal({ open: false, edge: null });
+      clearPendingConnection(pendingConnectionRef, setConfirmEdgeModal);
       return;
     }
 
@@ -87,20 +150,63 @@ export function useCanvasEdgeAuthoringHandlers({
           pluginPortMap,
         });
         if (edgeConfirmation.outcome === 'rejected') {
-          toast.error(edgeConfirmation.reason);
+          notifyRejectedConnection(edgeConfirmation.rejection);
           return existingEdges;
         }
 
         const nextEdges = edgeConfirmation.nextEdges;
         setDraftSession((currentSession) => replaceCanvasVisibleEdges(currentSession, nextEdges));
-        toast.success('Dependency added');
+        toast.success(canvasViewCopy.dependencyAddedMessage);
         return nextEdges;
       });
     }
 
-    pendingConnectionRef.current = null;
-    setConfirmEdgeModal({ open: false, edge: null });
-  }, [canEditEdges, canonicalNodesById, pluginPortMap, setDraftSession, setEdges]);
+    clearPendingConnection(pendingConnectionRef, setConfirmEdgeModal);
+  }, [
+    canEditEdges,
+    canonicalNodesById,
+    pendingConnectionRef,
+    pluginPortMap,
+    setConfirmEdgeModal,
+    setDraftSession,
+    setEdges,
+  ]);
+}
+
+export function useCanvasEdgeAuthoringHandlers({
+  canonicalNodesById,
+  edges,
+  canEditEdges,
+  setEdges,
+  setDraftSession,
+}: UseCanvasEdgeAuthoringHandlersArgs): UseCanvasEdgeAuthoringHandlersResult {
+  const pendingConnectionRef = useRef<PendingConnection | null>(null);
+  const [confirmEdgeModal, setConfirmEdgeModal] = useState<ConfirmEdgeModalState>({
+    open: false,
+    edge: null,
+  });
+  const pluginPortMap = useMemo(() => getPluginPortMap(), []);
+
+  const onConnect = useCanvasConnectionProposalHandler({
+    canEditEdges,
+    canonicalNodesById,
+    edges,
+    pluginPortMap,
+    pendingConnectionRef,
+    setConfirmEdgeModal,
+    setEdges,
+    setDraftSession,
+  });
+
+  const confirmEdgeCreation = useCanvasConnectionConfirmationHandler({
+    canEditEdges,
+    canonicalNodesById,
+    pluginPortMap,
+    pendingConnectionRef,
+    setConfirmEdgeModal,
+    setDraftSession,
+    setEdges,
+  });
 
   return {
     confirmEdgeModal,

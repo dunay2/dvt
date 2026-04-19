@@ -3,12 +3,26 @@ import { createRoot, type Root } from 'react-dom/client';
 import { toast } from 'sonner';
 import { vi } from 'vitest';
 
+import type { ConnectionRuleResult } from '../../plugins/contracts/ConnectionRules';
 import type { CanonicalNode } from '../../types/canonical';
 import type { CanvasDraftSession } from './canvasDraftSession';
+import type { TransformationConnectionGuardReasonCode } from './transformationConnectionGuard';
 import { useCanvasGraphHandlers } from './useCanvasGraphHandlers';
 
+const graphHandlersTestDoubles = vi.hoisted(() => ({
+  evaluateConnection: vi.fn<() => ConnectionRuleResult>(() => ({ allowed: true })),
+  guardTransformationConnection: vi.fn<
+    () =>
+      | { allowed: true }
+      | {
+          allowed: false;
+          reasonCode: TransformationConnectionGuardReasonCode;
+        }
+  >(() => ({ allowed: true })),
+}));
+
 vi.mock('../../plugins/contracts/ConnectionRules', () => ({
-  evaluateConnection: () => ({ allowed: true }),
+  evaluateConnection: graphHandlersTestDoubles.evaluateConnection,
 }));
 
 vi.mock('../../plugins/nodeTypeRegistry', async (importOriginal) => {
@@ -20,7 +34,7 @@ vi.mock('../../plugins/nodeTypeRegistry', async (importOriginal) => {
 });
 
 vi.mock('./transformationConnectionGuard', () => ({
-  guardTransformationConnection: () => ({ allowed: true }),
+  guardTransformationConnection: graphHandlersTestDoubles.guardTransformationConnection,
 }));
 
 vi.mock('./transformationAuthoringGuard', () => ({
@@ -192,6 +206,10 @@ export function resetGraphHandlersTestDoubles() {
   (
     globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }
   ).IS_REACT_ACT_ENVIRONMENT = true;
+  graphHandlersTestDoubles.evaluateConnection.mockReset();
+  graphHandlersTestDoubles.evaluateConnection.mockReturnValue({ allowed: true });
+  graphHandlersTestDoubles.guardTransformationConnection.mockReset();
+  graphHandlersTestDoubles.guardTransformationConnection.mockReturnValue({ allowed: true });
   toastState.error.mockReset();
   toastState.success.mockReset();
   toastState.info.mockReset();
@@ -200,4 +218,17 @@ export function resetGraphHandlersTestDoubles() {
 export function restoreGraphHandlersTestDoubles() {
   vi.clearAllMocks();
   vi.useRealTimers();
+}
+
+export function rejectGraphHandlerConnectionWith(
+  rejection: Exclude<ConnectionRuleResult, { allowed: true }>
+) {
+  graphHandlersTestDoubles.evaluateConnection.mockReturnValue(rejection);
+}
+
+export function rejectTransformationConnectionWith(reasonCode: TransformationConnectionGuardReasonCode) {
+  graphHandlersTestDoubles.guardTransformationConnection.mockReturnValue({
+    allowed: false,
+    reasonCode,
+  });
 }

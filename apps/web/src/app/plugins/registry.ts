@@ -1,7 +1,7 @@
 import React from 'react';
 import { DollarSign } from 'lucide-react';
 
-import type { PluginPortMap } from './contracts/ConnectionRules';
+import type { PluginPortDescriptor, PluginPortMap } from './contracts/ConnectionRules';
 import { COST_ROUTE_BOOTSTRAP_HANDLE } from '../views/cost/costRouteBootstrap';
 
 import type { CanonicalNode, CanonicalRun, PluginNodeKind } from '../types/canonical';
@@ -279,33 +279,17 @@ export function getInspectorPanels(
 }
 
 /**
- * Returns all badges applicable to the given node, sorted by priority desc.
- */
-/**
  * Returns a map from pluginId → { connectionRules, produces, consumes }
  * for use by the canvas connection evaluator.
  */
 export function getPluginPortMap(): PluginPortMap {
-  const map = new Map<
-    string,
-    {
-      connectionRules: import('./contracts/PluginManifest').PluginConnectionRule[];
-      produces: { portType: string; forRoles: string[] }[];
-      consumes: { portType: string; forRoles: string[] }[];
-    }
-  >();
+  const map = new Map<string, PluginPortDescriptor>();
 
   for (const plugin of PLUGIN_REGISTRY) {
     map.set(plugin.id, {
       connectionRules: plugin.connectionRules ?? [],
-      produces: (plugin.produces ?? []).map((p) => ({
-        portType: p.portType,
-        forRoles: p.forRoles as string[],
-      })),
-      consumes: (plugin.consumes ?? []).map((c) => ({
-        portType: c.portType,
-        forRoles: c.forRoles as string[],
-      })),
+      produces: plugin.produces ?? [],
+      consumes: plugin.consumes ?? [],
     });
   }
 
@@ -316,8 +300,7 @@ export function getNodeBadges(node: CanonicalNode, ctx: BadgeContext): NodeBadge
   const badges: Array<{ priority: number; badge: NodeBadge }> = [];
   for (const plugin of PLUGIN_REGISTRY) {
     for (const contrib of plugin.nodeBadges ?? []) {
-      const applies =
-        contrib.forKinds === 'all' || contrib.forKinds.includes(node.kind as PluginNodeKind);
+      const applies = contrib.forKinds === 'all' || contrib.forKinds.includes(node.kind);
       if (!applies) continue;
       const badge = contrib.getBadge(node, ctx);
       if (badge) badges.push({ priority: contrib.priority, badge });

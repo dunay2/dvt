@@ -3,6 +3,7 @@
 import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { canvasViewCopy } from './copy';
 import {
   buildCanonicalNode,
   buildDraftSession,
@@ -40,7 +41,7 @@ describe('useCanvasGraphHandlers node drop', () => {
       harness.latest()?.handleDrop(dragEvent);
     });
 
-    expect(toastState.error).toHaveBeenCalledWith('Graph edits are unavailable in this context.');
+    expect(toastState.error).toHaveBeenCalledWith(canvasViewCopy.mutationUnavailableMessage);
     expect(setNodes).not.toHaveBeenCalled();
 
     harness.cleanup();
@@ -84,6 +85,39 @@ describe('useCanvasGraphHandlers node drop', () => {
     expect(setDraftSession).toHaveBeenCalledTimes(1);
     const nextDraftSession = setDraftSession.mock.calls[0]?.[0](buildDraftSession());
     expect(nextDraftSession.workingSet.visibleNodeIds).toContain('transform-node');
+
+    harness.cleanup();
+  });
+
+  it('ignores malformed canonical drop payloads instead of coercing them into canonical nodes', async () => {
+    const setNodes = vi.fn();
+    const harness = renderGraphHandlersHook({
+      canEditEdges: true,
+      setNodes,
+    });
+    await harness.render();
+
+    const payload = JSON.stringify({
+      ...buildCanonicalNode('transform-node', 'transform'),
+      kind: 'malformed-kind',
+    });
+    const dragEvent = {
+      preventDefault: vi.fn(),
+      target: {
+        getBoundingClientRect: () => ({ left: 0, top: 0 }),
+      },
+      clientX: 120,
+      clientY: 80,
+      dataTransfer: {
+        getData: vi.fn(() => payload),
+      },
+    } as unknown as React.DragEvent<HTMLDivElement>;
+
+    act(() => {
+      harness.latest()?.handleDrop(dragEvent);
+    });
+
+    expect(setNodes).not.toHaveBeenCalled();
 
     harness.cleanup();
   });

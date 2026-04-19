@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { getRouteBootstrapRegistration } from '../../bootstrap/routeBootstrapRegistration';
+import { canvasViewCopy } from './copy';
 import {
   CANVAS_ROUTE_BOOTSTRAP_HANDLE,
   deriveCanvasDraftPresentationState,
@@ -53,13 +54,13 @@ describe('canvasDraftPresentationState', () => {
         draftSaveStatus: 'idle',
         recoveryReason: null,
       }).label
-    ).toBe('Draft synced');
+    ).toBe(canvasViewCopy.draftSyncedLabel);
     expect(
       deriveCanvasDraftToolbarState({
         draftSaveStatus: 'saving',
         recoveryReason: null,
       }).label
-    ).toBe('Saving draft');
+    ).toBe(canvasViewCopy.savingDraftLabel);
   });
 
   it('uses warning and danger toolbar states for recovery reasons', () => {
@@ -69,7 +70,7 @@ describe('canvasDraftPresentationState', () => {
         recoveryReason: 'stale_conflict',
       })
     ).toEqual({
-      label: 'Stale version',
+      label: canvasViewCopy.staleVersionLabel,
       tone: 'danger',
       showReloadAction: true,
     });
@@ -80,7 +81,7 @@ describe('canvasDraftPresentationState', () => {
         recoveryReason: 'missing_remote',
       })
     ).toEqual({
-      label: 'Draft missing',
+      label: canvasViewCopy.draftMissingLabel,
       tone: 'warning',
       showReloadAction: true,
     });
@@ -127,8 +128,7 @@ describe('canvasDraftPresentationState', () => {
     ).toMatchObject({
       routeState: 'recovery',
       bootstrapStatus: 'blocked',
-      bootstrapDetail:
-        'A newer draft was saved elsewhere. Reload the latest draft before continuing edits.',
+      bootstrapDetail: canvasViewCopy.staleDraftMessage,
       canCompleteBootstrap: false,
     });
   });
@@ -166,7 +166,7 @@ describe('canvasDraftPresentationState', () => {
     ).toMatchObject({
       routeState: 'ready',
       bootstrapStatus: 'complete',
-      bootstrapDetail: 'Canvas is ready',
+      bootstrapDetail: canvasViewCopy.canvasReadyDetail,
       canCompleteBootstrap: true,
     });
   });
@@ -191,7 +191,7 @@ describe('canvasDraftPresentationState', () => {
     expect(getCanvasDraftPresentationState()).toMatchObject({
       routeState: 'loading_graph',
       bootstrapStatus: 'pending',
-      bootstrapDetail: 'Preparing canvas route',
+      bootstrapDetail: canvasViewCopy.preparingCanvasRouteDetail,
       canCompleteBootstrap: false,
     });
   });
@@ -201,7 +201,7 @@ describe('canvasDraftPresentationState', () => {
       mode: 'published',
       initialPresentation: {
         status: 'pending',
-        detail: 'Preparing canvas route',
+        detail: canvasViewCopy.preparingCanvasRouteDetail,
         canComplete: false,
       },
     });
@@ -232,7 +232,7 @@ describe('canvasDraftPresentationState', () => {
 
     expect(toRouteBootstrapPresentation(presentationState)).toEqual({
       status: 'complete',
-      detail: 'Canvas is ready',
+      detail: canvasViewCopy.canvasReadyDetail,
       canComplete: true,
     });
   });

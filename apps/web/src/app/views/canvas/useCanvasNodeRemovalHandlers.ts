@@ -2,7 +2,8 @@ import { useCallback } from 'react';
 import { toast } from 'sonner';
 
 import { removeNodeFromCanvasWorkingSet } from './canvasInteractionCommands';
-import { canvasViewCopy } from './copy';
+import { applyCanvasInteractionStateFallout } from './canvasInteractionStateFallout';
+import { canvasViewCopy, formatCanvasNodeRemovedMessage } from './copy';
 import type { UseCanvasGraphHandlersParams, UseCanvasGraphHandlersResult } from './useCanvasGraphHandlers.types';
 
 type UseCanvasNodeRemovalHandlersArgs = Pick<
@@ -62,12 +63,19 @@ export function useCanvasNodeRemovalHandlers({
           return;
         }
 
-        setNodes(removeResult.state.nodes);
-        setEdges(removeResult.state.edges);
-        setDraftSession(removeResult.state.draftSession);
-        setSelectedNodes(removeResult.state.selectedNodeIds);
-        setInspectorNode(removeResult.state.inspectorNodeId);
-        toast.success(`Removed ${removeResult.removedNodeName}`);
+        applyCanvasInteractionStateFallout({
+          nextState: removeResult.state,
+          currentUiScope: {
+            selectedNodeIds,
+            inspectorNodeId,
+          },
+          setNodes,
+          setEdges,
+          setDraftSession,
+          setSelectedNodes,
+          setInspectorNode,
+        });
+        toast.success(formatCanvasNodeRemovedMessage(removeResult.removedNodeName));
       }, 0);
     },
     [

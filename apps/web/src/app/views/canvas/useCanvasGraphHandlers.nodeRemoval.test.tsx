@@ -3,6 +3,7 @@
 import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { canvasViewCopy } from './copy';
 import {
   buildDraftSession,
   renderGraphHandlersHook,
@@ -34,7 +35,7 @@ describe('useCanvasGraphHandlers node removal', () => {
       harness.latest()?.handleRemoveNode('source-node');
     });
 
-    expect(toastState.error).toHaveBeenCalledWith('Graph edits are unavailable in this context.');
+    expect(toastState.error).toHaveBeenCalledWith(canvasViewCopy.mutationUnavailableMessage);
     expect(setNodes).not.toHaveBeenCalled();
     expect(setEdges).not.toHaveBeenCalled();
 

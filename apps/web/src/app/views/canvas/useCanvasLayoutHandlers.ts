@@ -29,7 +29,7 @@ export function useCanvasLayoutHandlers({
     const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(nodes, edges);
     setNodes(layoutedNodes);
     setEdges(layoutedEdges);
-    toast.success('Layout applied');
+    toast.success(canvasViewCopy.layoutAppliedMessage);
     onLayoutComplete(
       Object.fromEntries(layoutedNodes.map((node) => [node.id, { x: node.position.x, y: node.position.y }]))
     );

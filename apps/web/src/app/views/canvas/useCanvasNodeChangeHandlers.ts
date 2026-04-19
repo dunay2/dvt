@@ -1,8 +1,8 @@
 import { useCallback } from 'react';
 import { applyNodeChanges, type Node, type NodeChange } from '@xyflow/react';
 
-import { areNodeIdsEqual } from './canvasDraftScope';
 import { removeNodeFromCanvasWorkingSet } from './canvasInteractionCommands';
+import { applyCanvasInteractionStateFallout } from './canvasInteractionStateFallout';
 import type {
   CanvasGraphChangeHandlers,
   UseCanvasMutationHandlersArgs,
@@ -54,15 +54,15 @@ export function useCanvasNodeChangeHandlers({
         nextInteractionState = removeResult.state;
       }
 
-      graphModel.setNodes(nextInteractionState.nodes);
-      graphModel.setEdges(nextInteractionState.edges);
-      setDraftSession(nextInteractionState.draftSession);
-      if (!areNodeIdsEqual(nextInteractionState.selectedNodeIds, uiScope.selectedNodeIds)) {
-        setSelectedNodes(nextInteractionState.selectedNodeIds);
-      }
-      if (nextInteractionState.inspectorNodeId !== uiScope.inspectorNodeId) {
-        setInspectorNode(nextInteractionState.inspectorNodeId);
-      }
+      applyCanvasInteractionStateFallout({
+        nextState: nextInteractionState,
+        currentUiScope: uiScope,
+        setNodes: graphModel.setNodes,
+        setEdges: graphModel.setEdges,
+        setDraftSession,
+        setSelectedNodes,
+        setInspectorNode,
+      });
     },
     [
       draftSession,

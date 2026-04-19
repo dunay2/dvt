@@ -1,5 +1,6 @@
 import type { PlanViewModel } from '../../types/plans';
 import type { PlanRef } from '../../types/engine';
+import { canvasViewCopy } from './copy';
 
 export function resolvePlanRefForStartRun(plan: PlanViewModel): PlanRef | null {
   return plan.planRef ?? null;
@@ -41,24 +42,24 @@ export function buildPlanStatusSummary(args: {
   hasPersistedPlanForRun: boolean;
 }): string {
   if (!args.canRun) {
-    return 'Run start is unavailable in this context.';
+    return canvasViewCopy.planStatusRunUnavailableMessage;
   }
   if (args.currentPlan == null) {
-    return 'Preview required before running.';
+    return canvasViewCopy.planStatusPreviewRequiredMessage;
   }
   if (args.isCurrentPlanStale) {
-    return 'Preview is stale. Re-run Plan before starting.';
+    return canvasViewCopy.runPreviewStaleMessage;
   }
   if (!args.currentPlan.planRef) {
-    return 'Plan reference is unavailable. Re-run Plan before starting.';
+    return canvasViewCopy.runPlanRefUnavailableMessage;
   }
   if (args.planRefHashMismatch) {
-    return 'Preview is not aligned with the active plan reference. Re-run Plan before starting.';
+    return canvasViewCopy.planStatusPreviewNotAlignedMessage;
   }
   if (!args.hasPersistedPlanForRun) {
-    return 'Preview is not persisted. Re-run Plan to create a persisted plan.';
+    return canvasViewCopy.planStatusPreviewNotPersistedMessage;
   }
-  return 'Preview is current and ready to run.';
+  return canvasViewCopy.planStatusPreviewReadyMessage;
 }
 
 function hasPersistedPreviewRecord(plan: PlanViewModel | null): boolean {

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { canvasViewCopy, formatCanvasLimitedAccessMessage } from './copy';
 import { getCanvasReadOnlyState, getCanvasWorkbenchState } from './canvasWorkbenchStateModel';
 
 describe('canvasWorkbenchStateModel', () => {
@@ -65,7 +66,7 @@ describe('canvasWorkbenchStateModel', () => {
       })
     ).toEqual(
       expect.objectContaining({
-        title: 'Read-only canvas',
+        title: canvasViewCopy.readOnlyTitle,
       })
     );
   });
@@ -79,9 +80,8 @@ describe('canvasWorkbenchStateModel', () => {
       })
     ).toEqual(
       expect.objectContaining({
-        title: 'Limited mutation access',
-        message:
-          'You can keep inspecting the graph, but run start and graph edits are unavailable in this context.',
+        title: canvasViewCopy.limitedAccessTitle,
+        message: formatCanvasLimitedAccessMessage(['run_start', 'graph_edits']),
       })
     );
   });

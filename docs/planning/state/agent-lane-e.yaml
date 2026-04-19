@@ -1803,7 +1803,7 @@ tasks:
       resolves the governed `transformation-sql-first-v1` contract, and `Start run` plus run detail
       remain wired to the real persisted-plan path. The former residual frontend gap between
       authoring freedom and selection-scoped preview execution is now closed.
-    last_verified: '2026-04-15'
+    last_verified: '2026-04-19'
   - task_id: TF-E1-A
     priority: P0
     status: done
@@ -1830,7 +1830,8 @@ tasks:
       - apps/web/src/app/views/canvas/transformationConnectionGuard.test.ts
       - apps/web/src/app/views/canvas/transformationAuthoringGuard.ts
       - apps/web/src/app/views/canvas/transformationAuthoringGuard.test.ts
-      - apps/web/src/app/views/canvas/useCanvasGraphHandlers.test.tsx
+      - apps/web/src/app/views/canvas/useCanvasGraphHandlers.selection.test.tsx
+      - apps/web/src/app/views/canvas/useCanvasGraphHandlers.edgeAuthoring.test.tsx
       - apps/web/src/app/views/canvas/useCanvasController.ts
     status_reason: >-
       Canvas authoring now exposes an explicit transformation strategy and keeps connection guards
@@ -1977,7 +1978,7 @@ tasks:
       queueing, deleted the dead alternate admission hook, and pushed `draftSession` through the
       mutation seam so node and edge adapters no longer reconstruct aggregate state through
       compatibility callbacks.
-    last_verified: '2026-04-18'
+    last_verified: '2026-04-19'
   - task_id: TF-E2-A
     parent_task: TF-E2
     priority: P0
@@ -2064,7 +2065,7 @@ tasks:
       - apps/web/src/app/views/canvas/canvasInteractionCommands.ts
       - apps/web/src/app/views/canvas/useCanvasEdgeChangeHandlers.ts
       - apps/web/src/app/views/canvas/useCanvasGraphHandlers.ts
-      - apps/web/src/app/views/canvas/useCanvasGraphHandlers.test.tsx
+      - apps/web/src/app/views/canvas/useCanvasGraphHandlers.edgeAuthoring.test.tsx
     status_reason: >-
       Execution has started. Edge replacement during connect, delete, and graph-change fallout now
       routes through the centralized command catalog, and the graph handlers no longer keep

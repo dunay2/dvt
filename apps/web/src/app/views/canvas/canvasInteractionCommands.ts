@@ -8,7 +8,6 @@ import {
   type CanvasDraftSession,
 } from './canvasDraftSession';
 import { mapCanvasEdgesToDraftEdges } from './canvasGraphChangeRuntime';
-import { removeEdgesForNode, removeNodeFromGraph } from './canvasGraphAggregate';
 
 export type CanvasInteractionState = {
   draftSession: CanvasDraftSession;
@@ -48,6 +47,33 @@ export function queueImportedCanvasSourceNodes(
   nodeIds: string[]
 ): CanvasDraftSession {
   return queueExplicitNodeIds(draftSession, nodeIds);
+}
+
+type RemoveNodeFromGraphResult =
+  | {
+      outcome: 'removed';
+      nextNodes: Node[];
+      nodeName: string;
+    }
+  | {
+      outcome: 'noop';
+    };
+
+function removeEdgesForNode(edges: Edge[], nodeId: string): Edge[] {
+  return edges.filter((edge) => edge.source !== nodeId && edge.target !== nodeId);
+}
+
+function removeNodeFromGraph(nodes: Node[], nodeId: string): RemoveNodeFromGraphResult {
+  const nodeToRemove = nodes.find((node) => node.id === nodeId);
+  if (!nodeToRemove) {
+    return { outcome: 'noop' };
+  }
+
+  return {
+    outcome: 'removed',
+    nextNodes: nodes.filter((node) => node.id !== nodeId),
+    nodeName: String(nodeToRemove.data?.name ?? nodeId),
+  };
 }
 
 export function removeNodeFromCanvasWorkingSet(

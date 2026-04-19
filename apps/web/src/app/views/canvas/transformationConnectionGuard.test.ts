@@ -54,7 +54,7 @@ describe('guardTransformationConnection', () => {
 
     expect(result).toEqual({
       allowed: false,
-      reason: 'Plan edges must follow source -> sql_transform -> sink.',
+      reasonCode: 'invalid_edge_order',
     });
   });
 
@@ -68,7 +68,7 @@ describe('guardTransformationConnection', () => {
 
     expect(result).toEqual({
       allowed: false,
-      reason: 'Dependency already exists in this transformation draft.',
+      reasonCode: 'duplicate_edge',
     });
   });
 
@@ -82,7 +82,7 @@ describe('guardTransformationConnection', () => {
 
     expect(result).toEqual({
       allowed: false,
-      reason: 'Plan requires exactly 2 edges: source -> sql_transform and sql_transform -> sink.',
+      reasonCode: 'edge_count_exceeded',
     });
   });
 

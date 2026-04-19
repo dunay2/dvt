@@ -15,8 +15,10 @@ import type { WorkspaceBootstrapConfig } from '../../services/config/workspaceCo
 import { makeMockRunRef, makeRunContext, nb } from '../../testing/contractTestUtils';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { PlanViewModel } from '../../types/plans';
+import { resolvePlanRefForStartRun } from './canvasPlanReadiness';
+import { canvasViewCopy } from './copy';
 import { buildPreviewDesignGraphArtifactContent } from './previewGraphSource';
-import { resolvePlanRefForStartRun, useCanvasExecutionActions } from './useCanvasExecutionActions';
+import { useCanvasExecutionActions } from './useCanvasExecutionActions';
 
 type PreviewProvenanceConfig = Pick<
   WorkspaceBootstrapConfig,
@@ -30,11 +32,13 @@ const DEFAULT_PREVIEW_PROVENANCE_CONFIG: PreviewProvenanceConfig = {
   graphArtifactPath: 'pipelines/sales_pipeline.yaml',
 } as const;
 
+const DEFAULT_WORKSPACE_FILE_CONTENTS: Readonly<Record<string, string>> = {
+  'pipelines/sales_pipeline.yaml': 'name: sales_pipeline\nsteps: []',
+  'models/transform.sql': 'select * from analytics.orders',
+};
+
 function createWorkspaceServiceMock(
-  fileContents: Readonly<Record<string, string>> = {
-    'pipelines/sales_pipeline.yaml': 'name: sales_pipeline\nsteps: []',
-    'models/transform.sql': 'select * from analytics.orders',
-  }
+  fileContents: Readonly<Record<string, string>> = DEFAULT_WORKSPACE_FILE_CONTENTS
 ): IWorkspacePort {
   return {
     getGraphSnapshot: vi.fn(async () => ({ nodes: [], edges: [] })),
@@ -514,7 +518,7 @@ describe('resolvePlanRefForStartRun', () => {
 
     expect(container.querySelector('[data-testid="can-start-run"]')?.textContent).toBe('false');
     expect(container.querySelector('[data-testid="plan-status-summary"]')?.textContent).toBe(
-      'Run start is unavailable in this context.'
+      canvasViewCopy.planStatusRunUnavailableMessage
     );
 
     await act(async () => {
@@ -602,7 +606,7 @@ describe('resolvePlanRefForStartRun', () => {
 
     expect(plansService.previewPlan).not.toHaveBeenCalled();
     expect(shellFeedback.error).toHaveBeenCalledWith(
-      'Plan requires exactly 3 nodes: source, sql_transform, and sink.'
+      canvasViewCopy.transformationRequiresThreeNodesMessage
     );
   });
 
@@ -720,10 +724,10 @@ describe('resolvePlanRefForStartRun', () => {
         persist: true,
       })
     );
-    expect(shellFeedback.success).toHaveBeenCalledWith('Execution plan created');
+    expect(shellFeedback.success).toHaveBeenCalledWith(canvasViewCopy.planCreatedMessage);
     expect(container.querySelector('[data-testid="can-start-run"]')?.textContent).toBe('false');
     expect(container.querySelector('[data-testid="plan-status-summary"]')?.textContent).toBe(
-      'Preview required before running.'
+      canvasViewCopy.planStatusPreviewRequiredMessage
     );
   });
 
@@ -784,7 +788,7 @@ describe('resolvePlanRefForStartRun', () => {
         }),
       })
     );
-    expect(shellFeedback.success).toHaveBeenCalledWith('Execution plan created');
+    expect(shellFeedback.success).toHaveBeenCalledWith(canvasViewCopy.planCreatedMessage);
   });
 
   it('stores a persisted preview result and enables Start Run after a valid plan', async () => {
@@ -1399,7 +1403,7 @@ describe('resolvePlanRefForStartRun', () => {
         },
       })
     );
-    expect(shellFeedback.success).toHaveBeenCalledWith('Run started');
+    expect(shellFeedback.success).toHaveBeenCalledWith(canvasViewCopy.runStartedMessage);
     expect(onRunStarted).toHaveBeenCalledWith('run-success');
   });
 });

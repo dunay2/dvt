@@ -3,6 +3,7 @@
 import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { canvasViewCopy } from './copy';
 import {
   renderGraphHandlersHook,
   resetGraphHandlersTestDoubles,
@@ -33,7 +34,7 @@ describe('useCanvasGraphHandlers layout', () => {
       harness.latest()?.handleAutoLayout();
     });
 
-    expect(toastState.error).toHaveBeenCalledWith('Graph edits are unavailable in this context.');
+    expect(toastState.error).toHaveBeenCalledWith(canvasViewCopy.mutationUnavailableMessage);
     expect(setNodes).not.toHaveBeenCalled();
     expect(setEdges).not.toHaveBeenCalled();
 
@@ -70,7 +71,7 @@ describe('useCanvasGraphHandlers layout', () => {
         }),
       })
     );
-    expect(toastState.success).toHaveBeenCalledWith('Layout applied');
+    expect(toastState.success).toHaveBeenCalledWith(canvasViewCopy.layoutAppliedMessage);
 
     harness.cleanup();
   });

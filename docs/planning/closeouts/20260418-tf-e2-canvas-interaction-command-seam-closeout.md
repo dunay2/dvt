@@ -6,7 +6,7 @@ task_id: TF-E2
 mode: Slim
 status: In progress
 author: AI (Codex)
-last_reviewed: 2026-04-18
+last_reviewed: 2026-04-19
 ---
 
 # TF-E2 canvas interaction command seam closeout
@@ -92,7 +92,8 @@ compatibility fallbacks.
   - `apps/web/src/app/views/canvas/canvasInteractionCommands.test.ts`
   - `apps/web/src/app/views/canvas/useCanvasGraphHandlers.ts`
   - `apps/web/src/app/views/canvas/useCanvasGraphHandlers.types.ts`
-  - `apps/web/src/app/views/canvas/useCanvasGraphHandlers.test.tsx`
+  - `apps/web/src/app/views/canvas/useCanvasGraphHandlers.selection.test.tsx`
+  - `apps/web/src/app/views/canvas/useCanvasGraphHandlers.nodeRemoval.test.tsx`
   - `apps/web/src/app/views/canvas/useCanvasNodeChangeHandlers.ts`
   - `apps/web/src/app/views/canvas/useCanvasNodeChangeHandlers.test.tsx`
   - `apps/web/src/app/views/canvas/useCanvasEdgeChangeHandlers.ts`
@@ -160,31 +161,66 @@ compatibility fallbacks.
   `apps/web/src/app/views/canvas/useCanvasExplicitNodeAdmission.ts`. After the
   hard cut, that path was no longer part of the runtime system and would have
   been a second authority path.
-- Added focused hook tests in
-  [useCanvasGraphHandlers.test.tsx](../../../../apps/web/src/app/views/canvas/useCanvasGraphHandlers.test.tsx)
-  and
-  [useCanvasNodeChangeHandlers.test.tsx](../../../../apps/web/src/app/views/canvas/useCanvasNodeChangeHandlers.test.tsx)
-  to prove:
+- Added focused hook tests in:
+  - [useCanvasGraphHandlers.selection.test.tsx](../../../../apps/web/src/app/views/canvas/useCanvasGraphHandlers.selection.test.tsx)
+  - [useCanvasGraphHandlers.nodeRemoval.test.tsx](../../../../apps/web/src/app/views/canvas/useCanvasGraphHandlers.nodeRemoval.test.tsx)
+  - [useCanvasNodeChangeHandlers.test.tsx](../../../../apps/web/src/app/views/canvas/useCanvasNodeChangeHandlers.test.tsx)
+    to prove:
   - stale node clicks fail closed
   - remove-node still defers to avoid click/delete races
   - graph, inspector, selection, and aggregate fallout stay aligned
+- Follow-up hardening aligned visible Canvas copy with the same ownership cut:
+  - [copy.ts](../../../../apps/web/src/app/views/canvas/copy.ts) now owns
+    locale-resolved operator copy for route posture, mutation toasts,
+    transformation validation, plan/run readiness, and provenance failures
+  - adapter hooks and pure validation helpers no longer keep duplicated
+    hardcoded English strings for those Canvas-visible outcomes
+  - [copy.test.ts](../../../../apps/web/src/app/views/canvas/copy.test.ts)
+    proves English fallback plus explicit Spanish resolution and shared
+    formatting helpers
+- Follow-up SRP hardening removed the mixed
+  `canvasGraphAggregate.ts` helper:
+  - [canvasConnectionAggregate.ts](../../../../apps/web/src/app/views/canvas/canvasConnectionAggregate.ts)
+    now owns pure edge proposal and confirmation policy
+  - [canvasNodeDropAggregate.ts](../../../../apps/web/src/app/views/canvas/canvasNodeDropAggregate.ts)
+    now owns pure canonical-node drop admission policy
+  - node-removal graph fallout is now internal to
+    [canvasInteractionCommands.ts](../../../../apps/web/src/app/views/canvas/canvasInteractionCommands.ts),
+    which is already the command owner for remove-node semantics
+  - the old mixed helper and its mixed test file were removed instead of being
+    kept as compatibility wrappers
+- Fowler hardening then finished the remaining presentation drift:
+  - [canvasConnectionAggregate.ts](../../../../apps/web/src/app/views/canvas/canvasConnectionAggregate.ts)
+    now returns typed connection rejection outcomes instead of Canvas-visible
+    English strings
+  - [transformationGraphValidation.ts](../../../../apps/web/src/app/views/canvas/transformationGraphValidation.ts)
+    now returns stable summary codes instead of locale-bound summary text
+  - [copy.ts](../../../../apps/web/src/app/views/canvas/copy.ts) formats those
+    typed outcomes at the presentation edge for toasts, toolbar state, and
+    plan-action failures
+  - [useCanvasEdgeAuthoringHandlers.ts](../../../../apps/web/src/app/views/canvas/useCanvasEdgeAuthoringHandlers.ts)
+    was split into narrower proposal and confirmation callbacks so the React
+    Flow adapter no longer concentrates both stages in one long method
 
 ## Validation
 
-Commands run:
+Original closeout validation ran before the later handler-test split. The
+current equivalent focused coverage for this slice is:
 
 ```bash
+pnpm docs:status:generate
 pnpm --filter @dvt/web typecheck
-pnpm --filter @dvt/web exec vitest run --config vitest.config.ts src/app/views/canvas/canvasInteractionCommands.test.ts src/app/views/canvas/useCanvasGraphHandlers.test.tsx src/app/views/canvas/useCanvasNodeChangeHandlers.test.tsx src/app/views/canvas/useCanvasGraphChangeHandlers.architecture.test.ts src/app/views/canvas/useCanvasMutationHandlers.architecture.test.ts src/app/views/canvas/useCanvasController.core.test.tsx
+pnpm --filter @dvt/web exec vitest run --config vitest.config.ts src/app/views/canvas/copy.test.ts src/app/views/canvas/canvasConnectionAggregate.test.ts src/app/views/canvas/canvasInteractionCommands.test.ts src/app/views/canvas/canvasNodeDropAggregate.test.ts src/app/views/canvas/canvasDraftPresentationState.test.ts src/app/views/canvas/canvasWorkbenchStateModel.test.ts src/app/views/canvas/transformationConnectionGuard.test.ts src/app/views/canvas/transformationGraphValidation.test.ts src/app/views/canvas/useCanvasGraphHandlers.edgeAuthoring.test.tsx src/app/views/canvas/useCanvasGraphHandlers.layout.test.tsx src/app/views/canvas/useCanvasGraphHandlers.nodeDrop.test.tsx src/app/views/canvas/useCanvasGraphHandlers.nodeRemoval.test.tsx
+pnpm exec eslint apps/web/src/app/views/canvas/copy.ts apps/web/src/app/views/canvas/copy.test.ts apps/web/src/app/views/canvas/canvasConnectionAggregate.ts apps/web/src/app/views/canvas/canvasConnectionAggregate.test.ts apps/web/src/app/views/canvas/canvasInteractionCommands.ts apps/web/src/app/views/canvas/canvasInteractionCommands.test.ts apps/web/src/app/views/canvas/canvasNodeDropAggregate.ts apps/web/src/app/views/canvas/canvasNodeDropAggregate.test.ts apps/web/src/app/views/canvas/canvasDraftPresentationState.ts apps/web/src/app/views/canvas/canvasDraftPresentationState.test.ts apps/web/src/app/views/canvas/canvasWorkbenchStateModel.ts apps/web/src/app/views/canvas/canvasWorkbenchStateModel.test.ts apps/web/src/app/views/canvas/transformationConnectionGuard.ts apps/web/src/app/views/canvas/transformationConnectionGuard.test.ts apps/web/src/app/views/canvas/transformationGraphValidation.ts apps/web/src/app/views/canvas/transformationGraphValidation.test.ts apps/web/src/app/views/canvas/canvasPlanAction.ts apps/web/src/app/views/canvas/canvasPlanReadiness.ts apps/web/src/app/views/canvas/canvasPreviewProvenance.ts apps/web/src/app/views/canvas/canvasRunStartAction.ts apps/web/src/app/views/canvas/useCanvasEdgeAuthoringHandlers.ts apps/web/src/app/views/canvas/useCanvasLayoutHandlers.ts apps/web/src/app/views/canvas/useCanvasNodeDropHandlers.ts apps/web/src/app/views/canvas/useCanvasNodeRemovalHandlers.ts apps/web/src/app/views/canvas/useCanvasGraphHandlers.edgeAuthoring.test.tsx apps/web/src/app/views/canvas/useCanvasGraphHandlers.layout.test.tsx apps/web/src/app/views/canvas/useCanvasGraphHandlers.nodeDrop.test.tsx apps/web/src/app/views/canvas/useCanvasGraphHandlers.nodeRemoval.test.tsx
 ```
 
 Result:
 
-- both commands passed on 2026-04-18
-- test execution required repairing the workspace install first because the
-  local `node_modules` state was missing a transitive jsdom dependency; after
-  `CI=true pnpm install --frozen-lockfile`, the governed test commands passed
-  without code changes to the slice
+- `docs:status:generate`, `@dvt/web typecheck`, the focused Vitest suites, and
+  the focused ESLint pass all completed successfully for the current slice
+- the original 2026-04-18 closeout commands passed before the later handler
+  test split; the commands above are the current successor coverage for the
+  same slice boundaries plus the locale-resolved copy surface
 
 ## Residuals
 
