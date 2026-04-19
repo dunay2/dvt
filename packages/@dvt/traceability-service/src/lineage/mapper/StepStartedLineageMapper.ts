@@ -12,6 +12,8 @@ import {
 } from '../openlineageSchema.js';
 import type { LineageJobFacets, LineageWarning } from '../types.js';
 
+import { mapCompiledCodeResolutionWarning } from './mapCompiledCodeResolutionWarning.js';
+
 export interface StepStartedLineageMapperDeps {
   compiledCodeResolver: ICompiledCodeResolver;
   sqlFacetBuilder: ISqlJobFacetBuilder;
@@ -49,15 +51,9 @@ export class StepStartedLineageMapper implements ILineageStepEventMapper {
         warnings: [],
       };
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
       return {
         jobFacets: baseFacets,
-        warnings: [
-          {
-            code: 'COMPILED_CODE_RESOLUTION_FAILED',
-            message,
-          },
-        ],
+        warnings: [mapCompiledCodeResolutionWarning({ error, ref: compiledCodeRef })],
       };
     }
   }

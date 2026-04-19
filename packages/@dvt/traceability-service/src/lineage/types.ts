@@ -26,8 +26,4 @@ export interface LineageJobFacets {
 // CompiledCodeBlob moved to @dvt/contracts (G-6: canonical types must live in shared kernel).
 // Re-export for local consumers still importing from this path.
 export type { CompiledCodeBlob } from '@dvt/contracts';
-
-export interface LineageWarning {
-  code: 'COMPILED_CODE_RESOLUTION_FAILED';
-  message: string;
-}
+export type { LineageWarning } from './warningContract.js';

@@ -7,15 +7,19 @@
  *
  * G10 — outbox_lineage worker + fail-open DLQ
  */
-import { MAX_LINEAGE_ATTEMPTS } from '@dvt/contracts';
+import { MAX_LINEAGE_ATTEMPTS } from '@dvt/traceability-service';
 import type {
   LineageFailureDisposition,
   ILineageOutboxStore,
   LineageDeadLetterRecord,
   LineageOutboxRecord,
-} from '@dvt/contracts';
+} from '@dvt/traceability-service';
 import type { PoolClient } from 'pg';
 
+import {
+  normalizeLineageQueryLimit,
+  normalizeLineageTenantScope,
+} from './lineageOutboxStorePolicy.js';
 import {
   countLineageDeadLetterSql,
   countPendingLineageOutboxSql,
@@ -83,31 +87,6 @@ interface ReplayLineageDeadLetterRow {
 // ---------------------------------------------------------------------------
 // PostgresLineageOutboxStore
 // ---------------------------------------------------------------------------
-
-const DEFAULT_LINEAGE_OUTBOX_CLAIM_TIMEOUT_MS = 5 * 60 * 1000;
-const MAX_LINEAGE_QUERY_LIMIT = 1000;
-
-export function normalizeLineageOutboxClaimTimeoutMs(value: number | undefined): number {
-  const claimTimeoutMs = value ?? DEFAULT_LINEAGE_OUTBOX_CLAIM_TIMEOUT_MS;
-  if (!Number.isInteger(claimTimeoutMs) || claimTimeoutMs <= 0) {
-    throw new Error(`INVALID_LINEAGE_OUTBOX_CLAIM_TIMEOUT_MS: ${value}`);
-  }
-  return claimTimeoutMs;
-}
-
-function normalizeTenantScope(tenantId: unknown): string {
-  if (typeof tenantId !== 'string') {
-    return '';
-  }
-  return tenantId.trim();
-}
-
-function normalizeLineageQueryLimit(limit: number, fieldName: string): number {
-  if (!Number.isInteger(limit) || !Number.isFinite(limit) || limit < 0) {
-    throw new Error(`INVALID_${fieldName}: ${limit}`);
-  }
-  return Math.min(limit, MAX_LINEAGE_QUERY_LIMIT);
-}
 
 export class PostgresLineageOutboxStore implements ILineageOutboxStore {
   constructor(
@@ -199,7 +178,7 @@ export class PostgresLineageOutboxStore implements ILineageOutboxStore {
   }
 
   async listDeadLetter(limit: number, tenantId: string): Promise<LineageDeadLetterRecord[]> {
-    const normalizedTenantId = normalizeTenantScope(tenantId);
+    const normalizedTenantId = normalizeLineageTenantScope(tenantId);
     if (!normalizedTenantId) {
       throw new Error('TENANT_SCOPE_REQUIRED');
     }
@@ -225,7 +204,7 @@ export class PostgresLineageOutboxStore implements ILineageOutboxStore {
   }
 
   async countDeadLetter(tenantId: string): Promise<number> {
-    const normalizedTenantId = normalizeTenantScope(tenantId);
+    const normalizedTenantId = normalizeLineageTenantScope(tenantId);
     if (!normalizedTenantId) {
       throw new Error('TENANT_SCOPE_REQUIRED');
     }
@@ -244,7 +223,7 @@ export class PostgresLineageOutboxStore implements ILineageOutboxStore {
     runId?: string;
     eventType?: string;
   }): Promise<number> {
-    const tenantId = normalizeTenantScope(options.tenantId);
+    const tenantId = normalizeLineageTenantScope(options.tenantId);
     if (!tenantId) {
       throw new Error('TENANT_SCOPE_REQUIRED');
     }

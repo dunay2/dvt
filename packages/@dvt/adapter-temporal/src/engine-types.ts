@@ -1,8 +1,11 @@
 /**
  * @file packages/@dvt/adapter-temporal/src/engine-types.ts
  *
- * Adapter-temporal no define contratos locales: consume el canon en @dvt/contracts.
+ * Adapter-temporal no define contratos locales: consume los contratos canonicos
+ * desde sus paquetes owner.
  */
+
+export type { IOutboxStorage } from '@dvt/delivery';
 
 export type {
   AppendResult,
@@ -13,7 +16,6 @@ export type {
   EventType,
   ExecutionPlan,
   ExecutionStep,
-  IOutboxStorage,
   ResolvedRunContext,
   RunBootstrapInput,
   RunMetadata,

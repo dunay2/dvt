@@ -11,8 +11,8 @@
  * @version 1.0.0
  * @date 2026-02-21
  */
-import type { ILineageOutboxStore } from '@dvt/contracts';
 import type { ArchivedTerminalSnapshot, TerminalSnapshotPinResult } from '@dvt/state-store';
+import type { ILineageOutboxStore } from '@dvt/traceability-service';
 
 import { PostgresAdapterClientSession } from './PostgresAdapterClientSession.js';
 import { PostgresLineageOutboxStore } from './PostgresLineageOutboxStore.js';

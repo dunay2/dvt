@@ -11,7 +11,7 @@ export class InMemoryCompiledCodeReader implements ICompiledCodeReader {
   async read(ref: CompiledCodeRef): Promise<CompiledCodeBlob> {
     const sqlText = this.storageByUri.get(ref.storageUri);
     if (sqlText === undefined) {
-      throw new CompiledCodeNotFoundError(`Compiled code not found for URI: ${ref.storageUri}`);
+      throw new CompiledCodeNotFoundError({ storageUri: ref.storageUri });
     }
 
     const sizeBytes = Buffer.byteLength(sqlText, 'utf8');

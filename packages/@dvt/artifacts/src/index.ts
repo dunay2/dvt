@@ -25,6 +25,10 @@ export {
   ArtifactBackedRunExecutionContextReader,
   type ArtifactBackedRunExecutionContextReaderOptions,
 } from './runtime/ArtifactBackedRunExecutionContextReader.js';
+export {
+  validateArtifactIntegrity,
+  type ArtifactIntegrityInput,
+} from './runtime/validateArtifactIntegrity.js';
 export { computeSha256 } from './compiledCode/sha256.js';
 export {
   attachCompiledCodeRefs,

@@ -2,7 +2,7 @@
 title: Contracts Domain Ownership Migration Plan
 status: Active
 owner: Architecture / Contracts / Engine / Planner / Delivery / Artifacts / Traceability
-last_reviewed: 2026-04-17
+last_reviewed: 2026-04-19
 planning_type: proposal
 ---
 
@@ -46,6 +46,10 @@ This document is the active canonical proposal for `RC-G1`.
     - `RC-G1-B4`: guards, ARC-2, and closeout validation
   - `RC-G1-C`: delivery / traceability / artifacts migration
   - `RC-G1-D`: planner-private migration plus final shared-kernel cleanup
+- completion note:
+  - `RC-G1-C` is delivered by
+    `docs/evidence/ED-20260419-rc-g1-c-owner-package-migration.md`
+  - remaining live `RC-G1` execution is `RC-G1-D`
 
 Do not open a second proposal for this same migration.
 
@@ -297,7 +301,71 @@ convenience wrappers.
 - consequence:
   - `RC-G1-B4` is closed
   - `RC-G1-B` is closed
-  - remaining `RC-G1` execution is `RC-G1-C` and `RC-G1-D`
+  - remaining `RC-G1` execution is `RC-G1-D`
+
+## Executable sub-slices for `RC-G1-C`
+
+### `RC-G1-C1` - delivery ownership cutover
+
+**Definition of done**
+
+- `@dvt/delivery` physically owns `IOutboxStorage`, `IEventBus`,
+  `OutboxWorkerObserver`, `OutboxTickResult`, `OutboxClaimSelection`,
+  `OutboxFailureDisposition`, and `MAX_OUTBOX_ATTEMPTS`
+- `@dvt/contracts` retains only shared delivery shapes such as `EventEnvelope`,
+  `OutboxRecord`, and `DeadLetterRecord`
+- governed delivery consumers import the moved behavioral ports from
+  `@dvt/delivery`, not `@dvt/contracts`
+- no legacy root export remains for delivery-owned behavioral ports under
+  `@dvt/contracts`
+
+**Frozen implementation rule**
+
+- do not move `EventEnvelope`, `OutboxRecord`, or `DeadLetterRecord` out of the
+  shared kernel in this slice
+- treat the move as an owner-package cutover, not as a delivery DTO rewrite
+
+### `RC-G1-C2` - lineage and traceability ownership cutover
+
+**Definition of done**
+
+- `@dvt/traceability-service` physically owns `ILineageSink`,
+  `ILineageOutboxStore`, `LineagePublishPayload`, `LineageFailureDisposition`,
+  `LineageOutboxRecord`, `LineageDeadLetterRecord`, and
+  `MAX_LINEAGE_ATTEMPTS`
+- `LineageWorkerRuntime` and `LineageOutboxObserver` live in
+  `@dvt/traceability-service`, not in `@dvt/delivery`
+- `apps/lineage-worker`, `@dvt/adapter-postgres`, and lineage tests import the
+  lineage runtime and lineage ports from `@dvt/traceability-service`
+- `@dvt/contracts` no longer exports lineage-owned behavioral ports
+
+**Frozen implementation rule**
+
+- `@dvt/delivery` remains the owner of generic outbox delivery only
+- lineage-specific runtime or policy MUST NOT remain in `@dvt/delivery` after
+  this cut completes
+
+### `RC-G1-C3` - artifacts retirement and hardening
+
+**Definition of done**
+
+- `packages/@dvt/contracts/src/ports/artifact-store.ts` is retired from the
+  active shared-kernel surface
+- `validateArtifactIntegrity` lives in `@dvt/artifacts` and all live callers
+  import it from the owner package
+- `ArtifactStoreError` remains in `@dvt/contracts` for this slice
+- the generic `IArtifactStore`, `IArtifactReader`, and `IArtifactWriter`
+  contracts are not recreated under `@dvt/artifacts`
+- lint guards prevent the generic artifact-store contract from being
+  reintroduced as an active shared behavioral surface
+
+**Frozen implementation rule**
+
+- `@dvt/artifacts` continues to prefer its current specific owner-local ports
+  such as `ICompiledCodeStorage`, `IPlanStoreReader`, `IPlanStoreWriter`,
+  `IDbtProjectBundleReader`, and `IRunExecutionContextReader`
+- this slice retires the obsolete generic abstraction; it does not broaden into
+  a larger shared error-contract migration
 
 ## Execution tracker
 
@@ -322,13 +390,15 @@ This document acts as the dedicated tracker for the work governed by ADR-0034.
   - execution order: `RC-G1-B1 -> RC-G1-B2 -> RC-G1-B3 -> RC-G1-B4`
 - `RC-G1-C`
   - owner: Delivery + Traceability + Artifacts + Contracts
-  - target date: `2026-04-10`
+  - target date: `2026-04-19`
   - touched scope: `@dvt/delivery`, `@dvt/traceability-service`,
     `@dvt/artifacts`, `@dvt/contracts`, `apps/outbox-worker`,
     `apps/lineage-worker`
   - validation baseline: ARC-2 evidence, touched-package tests, and
     `pnpm verify:prepush`
-  - rollback note: temporarily revert usage to shared aliases if necessary
+  - rollback note: revert the active owner-package cut as one bounded slice if
+    the residual-import closure does not finish cleanly
+  - execution order: `RC-G1-C1 -> RC-G1-C2 -> RC-G1-C3`
 - `RC-G1-D`
   - owner: Planner + Contracts + API + Adapter-postgres
   - target date: `2026-04-24`

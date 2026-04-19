@@ -1,4 +1,5 @@
-import type { EventEnvelope as RunEventPersisted, IEventBus } from '@dvt/contracts';
+import type { EventEnvelope as RunEventPersisted } from '@dvt/contracts';
+import type { IEventBus } from '@dvt/delivery';
 
 export interface LoggingEventBusLogger {
   info(data: Record<string, unknown>, msg?: string): void;

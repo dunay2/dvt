@@ -1,13 +1,14 @@
+import type { OutboxRecord } from '@dvt/contracts';
+
 import {
   MAX_OUTBOX_ATTEMPTS,
   type IEventBus,
   type IOutboxStorage,
   type OutboxClaimSelection,
   type OutboxFailureDisposition,
-  type OutboxRecord,
   type OutboxTickResult,
   type OutboxWorkerObserver,
-} from '@dvt/contracts';
+} from '../contracts.js';
 
 export interface OutboxWorkerConfig {
   batchSize: number;

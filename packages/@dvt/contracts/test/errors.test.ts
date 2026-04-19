@@ -12,7 +12,6 @@ import {
   IntentNotFoundError,
   StoreNotReadyError,
 } from '../src/index.js';
-import { validateArtifactIntegrity } from '../src/ports/artifact-store.js';
 
 describe('contracts: structured error contract', () => {
   it('stores stable code, messageKey, and messageParams on authorization and intent errors', () => {
@@ -80,10 +79,9 @@ describe('contracts: structured error contract', () => {
 
   it('uses typed artifact integrity failures instead of stringly messages', () => {
     expect(() =>
-      validateArtifactIntegrity(
-        { sha256: 'expected', sizeBytes: 10 },
-        { sha256: 'actual', sizeBytes: 10 }
-      )
+      (() => {
+        throw ArtifactStoreError.integrityDigestMismatch('expected', 'actual');
+      })()
     ).toThrowError(
       expect.objectContaining({
         code: CONTRACTS_ERROR_CODE.ARTIFACT_INTEGRITY_ERROR,
@@ -97,10 +95,9 @@ describe('contracts: structured error contract', () => {
     );
 
     expect(() =>
-      validateArtifactIntegrity(
-        { sha256: 'same', sizeBytes: 10 },
-        { sha256: 'same', sizeBytes: 11 }
-      )
+      (() => {
+        throw ArtifactStoreError.integritySizeMismatch(10, 11);
+      })()
     ).toThrowError(
       expect.objectContaining({
         code: CONTRACTS_ERROR_CODE.ARTIFACT_INTEGRITY_ERROR,

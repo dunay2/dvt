@@ -6,6 +6,33 @@ const tsparser = require('@typescript-eslint/parser');
 const importPlugin = require('eslint-plugin-import');
 const prettier = require('eslint-config-prettier');
 
+const deliveryOwnedContractImports = [
+  'IOutboxStorage',
+  'IEventBus',
+  'OutboxWorkerObserver',
+  'OutboxTickResult',
+  'OutboxClaimSelection',
+  'OutboxFailureDisposition',
+  'MAX_OUTBOX_ATTEMPTS',
+];
+
+const traceabilityOwnedContractImports = [
+  'ILineageSink',
+  'ILineageOutboxStore',
+  'LineagePublishPayload',
+  'LineageFailureDisposition',
+  'LineageOutboxRecord',
+  'LineageDeadLetterRecord',
+  'MAX_LINEAGE_ATTEMPTS',
+];
+
+const retiredArtifactContractImports = [
+  'validateArtifactIntegrity',
+  'IArtifactStore',
+  'IArtifactReader',
+  'IArtifactWriter',
+];
+
 module.exports = [
   // Base ESLint recommended rules
   eslint.configs.recommended,
@@ -174,6 +201,24 @@ module.exports = [
               message:
                 'Engine-owned behavioral ports MUST be imported from @dvt/engine, not @dvt/contracts (ADR-0018).',
             },
+            {
+              name: '@dvt/contracts',
+              importNames: deliveryOwnedContractImports,
+              message:
+                'Delivery-owned behavioral ports MUST be imported from @dvt/delivery, not @dvt/contracts (RC-G1-C).',
+            },
+            {
+              name: '@dvt/contracts',
+              importNames: traceabilityOwnedContractImports,
+              message:
+                'Traceability-owned lineage contracts MUST be imported from @dvt/traceability-service, not @dvt/contracts (RC-G1-C).',
+            },
+            {
+              name: '@dvt/contracts',
+              importNames: retiredArtifactContractImports,
+              message:
+                'Artifact integrity helpers and generic artifact-store ports no longer live in @dvt/contracts; use @dvt/artifacts owner-local seams (RC-G1-C).',
+            },
           ],
           patterns: [
             {
@@ -199,6 +244,41 @@ module.exports = [
     files: ['apps/lineage-worker/src/bootstrap.ts'],
     rules: {
       'import/order': 'off',
+    },
+  },
+  {
+    files: [
+      'packages/@dvt/delivery/**/*.ts',
+      'packages/@dvt/traceability-service/**/*.ts',
+      'apps/outbox-worker/**/*.{ts,tsx}',
+      'apps/lineage-worker/**/*.{ts,tsx}',
+    ],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: '@dvt/contracts',
+              importNames: deliveryOwnedContractImports,
+              message:
+                'Delivery-owned behavioral ports MUST be imported from @dvt/delivery, not @dvt/contracts (RC-G1-C).',
+            },
+            {
+              name: '@dvt/contracts',
+              importNames: traceabilityOwnedContractImports,
+              message:
+                'Traceability-owned lineage contracts MUST be imported from @dvt/traceability-service, not @dvt/contracts (RC-G1-C).',
+            },
+            {
+              name: '@dvt/contracts',
+              importNames: retiredArtifactContractImports,
+              message:
+                'Artifact integrity helpers and generic artifact-store ports no longer live in @dvt/contracts; use @dvt/artifacts owner-local seams (RC-G1-C).',
+            },
+          ],
+        },
+      ],
     },
   },
   {
@@ -278,6 +358,24 @@ module.exports = [
               ],
               message:
                 'Engine-owned behavioral ports MUST be imported from @dvt/engine, not @dvt/contracts (ADR-0018).',
+            },
+            {
+              name: '@dvt/contracts',
+              importNames: deliveryOwnedContractImports,
+              message:
+                'Delivery-owned behavioral ports MUST be imported from @dvt/delivery, not @dvt/contracts (RC-G1-C).',
+            },
+            {
+              name: '@dvt/contracts',
+              importNames: traceabilityOwnedContractImports,
+              message:
+                'Traceability-owned lineage contracts MUST be imported from @dvt/traceability-service, not @dvt/contracts (RC-G1-C).',
+            },
+            {
+              name: '@dvt/contracts',
+              importNames: retiredArtifactContractImports,
+              message:
+                'Artifact integrity helpers and generic artifact-store ports no longer live in @dvt/contracts; use @dvt/artifacts owner-local seams (RC-G1-C).',
             },
           ],
           patterns: [
@@ -508,6 +606,24 @@ module.exports = [
               ],
               message:
                 'Engine-owned behavioral ports MUST be imported from @dvt/engine, not @dvt/contracts (ADR-0018).',
+            },
+            {
+              name: '@dvt/contracts',
+              importNames: deliveryOwnedContractImports,
+              message:
+                'Delivery-owned behavioral ports MUST be imported from @dvt/delivery, not @dvt/contracts (RC-G1-C).',
+            },
+            {
+              name: '@dvt/contracts',
+              importNames: traceabilityOwnedContractImports,
+              message:
+                'Traceability-owned lineage contracts MUST be imported from @dvt/traceability-service, not @dvt/contracts (RC-G1-C).',
+            },
+            {
+              name: '@dvt/contracts',
+              importNames: retiredArtifactContractImports,
+              message:
+                'Artifact integrity helpers and generic artifact-store ports no longer live in @dvt/contracts; use @dvt/artifacts owner-local seams (RC-G1-C).',
             },
           ],
         },
