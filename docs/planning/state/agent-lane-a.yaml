@@ -484,10 +484,10 @@ tasks:
   - task_id: RC-G1-C
     parent_task: RC-G1
     priority: P1
-    status: queued
+    status: done
     complexity: L
     effort_points: 5
-    progress_pct: 0
+    progress_pct: 100
     objective: move non-shared delivery, traceability, and artifacts ports to their owner packages.
     dependency: RC-G1-B
     target: >-
@@ -495,10 +495,16 @@ tasks:
       `@dvt/contracts` retains only shared transport shapes for those areas.
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/contracts-domain-ownership-migration-plan-20260327.md
+      - docs/planning/closeouts/20260419-rc-g1-c-owner-package-migration-closeout.md
+      - docs/evidence/ED-20260419-rc-g1-c-owner-package-migration.md
       - docs/planning/reviews/architecture-and-governance/20260417-dvt-artifacts-review.md
       - docs/risk-register/quality/R-20260402-RC-G1-CONTRACT-OWNERSHIP-EXECUTION-DRIFT.yaml
-    status_reason: Delivery/traceability/artifacts ownership migration is queued behind engine.
-    last_verified: '2026-04-02'
+    status_reason: >-
+      Delivery-owned outbox ports now live in `@dvt/delivery`, lineage runtime and ports now live in
+      `@dvt/traceability-service`, the generic shared-kernel artifact-store surface is retired in
+      favor of `@dvt/artifacts`, residual imports were cut to zero, and lint guards plus ARC-2
+      evidence/risk updates close the slice.
+    last_verified: '2026-04-19'
   - task_id: RC-G1-D
     parent_task: RC-G1
     priority: P1

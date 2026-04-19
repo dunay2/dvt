@@ -1,7 +1,7 @@
 import { createServer } from 'node:http';
 import process from 'node:process';
 
-import { LineageWorkerRuntime } from '@dvt/delivery';
+import { LineageWorkerRuntime } from '@dvt/traceability-service';
 import pino from 'pino';
 
 import { buildLineageWorkerBootstrap } from './bootstrap.js';

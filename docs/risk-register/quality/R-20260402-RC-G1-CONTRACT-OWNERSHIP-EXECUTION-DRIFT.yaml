@@ -4,7 +4,9 @@ status: Open
 date: 2026-04-02
 owners:
   - packages/@dvt/contracts
-  - packages/@dvt/engine
+  - packages/@dvt/delivery
+  - packages/@dvt/traceability-service
+  - packages/@dvt/artifacts
   - packages/@dvt/planner
 severity: Medium
 probability: Low
@@ -12,12 +14,14 @@ context: >
   The reconciler runtime review identified contract ownership drift across the `engine`, `planner`,
   and `shared` taxonomy. The active proposal already existed, but the workboard tracker was missing
   and a local execution note reintroduced already-closed health work as if it were still open.
-  `RC-G1-B` has now closed the engine-owned portion of the migration, but delivery/traceability,
-  artifacts, and planner-private ownership moves remain open.
+  `RC-G1-B` closed the engine-owned portion of the migration and `RC-G1-C` has now completed the
+  delivery, traceability, and artifacts owner-package cutover. The remaining live scope is
+  planner-private `RC-G1-D`, plus regression risk that moved behavioral ports could leak back
+  through `@dvt/contracts`.
 risk: >
-  Future ownership moves can diverge between proposal, lane tracker, and real package changes. That
-  would weaken ADR-0018 / ADR-0034 boundaries, leave `@dvt/contracts` oversized in the remaining
-  domains, and make ARC-2 changes less auditable.
+  Final planner-private moves or future convenience exports can still diverge between proposal, lane
+  tracker, and real package changes. That would weaken ADR-0018 / ADR-0034 boundaries, re-oversize
+  `@dvt/contracts`, and make the remaining ARC-2 migration work less auditable.
 mitigations:
   - Lane A now tracks the work explicitly as `RC-G1` with sequenced slices `RC-G1-A..D`.
   - The ownership proposal now freezes each affected family to `stay shared` or `move to owner`.
@@ -28,3 +32,9 @@ mitigations:
     `RC-G1-B4` removed the remaining root `@dvt/contracts` exports for equivalent engine-owned
     behavioral ports, cut the last residual `RunStateCommandPort` import to `@dvt/engine`, and added
     lint guards to block reintroduction in governed engine/adapters/state-store/API code.
+  - >-
+    `RC-G1-C` removed delivery-owned and lineage-owned behavioral ports from the shared kernel,
+    retired the generic shared artifact-store contract, moved live runtime ownership to
+    `@dvt/delivery`, `@dvt/traceability-service`, and `@dvt/artifacts`, and extended lint guards so
+    governed delivery/traceability/adapters/worker code fails if those imports reappear through
+    `@dvt/contracts`.

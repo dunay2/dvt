@@ -2,10 +2,10 @@ import { setTimeout as sleep } from 'node:timers/promises';
 
 import type {
   EventEnvelope as RunEventPersisted,
-  IOutboxStorage,
   OutboxRecord,
 } from '@dvt/contracts';
 import { asIsoUtcString } from '@dvt/contracts';
+import type { IOutboxStorage } from '@dvt/delivery';
 import { InMemoryEventBus } from '@dvt/delivery/testing';
 import { it } from 'vitest';
 

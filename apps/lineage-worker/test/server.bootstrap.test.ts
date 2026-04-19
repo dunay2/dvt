@@ -105,12 +105,9 @@ vi.mock('@dvt/adapter-postgres', () => ({
   PostgresStateStoreAdapter: bootstrapMocks.stateStoreCtor,
 }));
 
-vi.mock('@dvt/delivery', () => ({
-  LineageWorkerRuntime: bootstrapMocks.runtimeCtor,
-}));
-
 vi.mock('@dvt/traceability-service', () => ({
   HttpOpenLineageSink: vi.fn(),
+  LineageWorkerRuntime: bootstrapMocks.runtimeCtor,
 }));
 
 vi.mock('pino', () => ({

@@ -13,6 +13,7 @@ import type { CompiledCodeRef, EventEnvelope } from '@dvt/contracts';
 import { describe, expect, it } from 'vitest';
 
 import { sha256HexUtf8 } from '../../src/lineage/compiledCodeRef.js';
+import { CompiledCodeNotFoundError } from '../../src/lineage/errors.js';
 import { SqlJobFacetBuilder } from '../../src/lineage/facets/SqlJobFacetBuilder.js';
 import { StepStartedLineageMapper } from '../../src/lineage/mapper/StepStartedLineageMapper.js';
 
@@ -104,7 +105,7 @@ describe('StepStartedLineageMapper golden fixtures', () => {
     const sqlText = 'select count(*) from orders';
     const compiledCodeRef = mkCompiledCodeRef(sqlText);
     const mapper = makeMapper(async () => {
-      throw new Error('storage timeout');
+      throw new CompiledCodeNotFoundError({ storageUri: compiledCodeRef.storageUri });
     });
 
     const result = await mapper.map(mkStepStartedEvent({ compiledCodeRef }));
