@@ -137,15 +137,15 @@ flowchart TB
 ```mermaid
 flowchart LR
   Route["compilePlanRoute"]
-  Parser["parseExternalPlanCompileRequest"]
+  Parser["parsePlanCompileRouteInput"]
   Auth["authorizeExecutionScope"]
   UseCase["CompileExternalPlanUseCase"]
-  Envelope["ExternalPlanCompileEnvelopeMapper"]
+  Envelope["toExternalCompilePlannerEnvelope"]
   Profile["ExternalCompileProfileSpec"]
   Resolver["resolveStepCatalog"]
   Builder["buildExternalCompilePlanner"]
   Planner["PlannerFacade"]
-  Presenter["ExternalPlanCompileResponseMapper"]
+  Presenter["buildPlanCompileResponse"]
 
   Route --> Parser
   Route --> Auth
@@ -219,7 +219,7 @@ Interpretation:
 
 | Port or contract                     | Primary caller                 | Primary callee                   | Data crossing the seam                            | Invariant                                                      |
 | ------------------------------------ | ------------------------------ | -------------------------------- | ------------------------------------------------- | -------------------------------------------------------------- |
-| `ExternalPlanCompileRequestV1`       | external caller or SDK         | compile route                    | graph source, selection, execution scope context  | compile request stays generic and non-dbt-first                |
+| `PlanCompileRequestV1`               | external caller or SDK         | compile route                    | graph source, selection, execution scope context  | compile request stays generic and non-dbt-first                |
 | auth and authorization seam          | compile route                  | authentication and RBAC services | principal plus tenant or project scope            | compile never bypasses protected runtime scope                 |
 | compile application service boundary | compile route                  | `CompileExternalPlanUseCase`     | parsed request plus authorized scope              | orchestration remains transport-agnostic                       |
 | planner ingress envelope seam        | compile application service    | planner facade                   | canonical planner envelope plus resolved catalog  | compile uses one planner model only                            |
@@ -238,7 +238,7 @@ Observability note:
 
 ```mermaid
 classDiagram
-  class ExternalPlanCompileRequestV1
+  class PlanCompileRequestV1
   class CompileExternalPlanUseCase
   class ExternalCompileProfileSpec
   class ResolvedStepCatalog
@@ -248,7 +248,7 @@ classDiagram
   class PlannerFacade
   class ExecutionPlan
 
-  ExternalPlanCompileRequestV1 --> CompileExternalPlanUseCase
+  PlanCompileRequestV1 --> CompileExternalPlanUseCase
   CompileExternalPlanUseCase --> ExternalCompileProfileSpec
   CompileExternalPlanUseCase --> ResolvedStepCatalog
   CompileExternalPlanUseCase --> PlannerFacade

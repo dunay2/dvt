@@ -2250,6 +2250,82 @@ tasks:
       planner-envelope binding, ownership checks, and response projection through dedicated helper
       seams.
     last_verified: '2026-04-14'
+  - task_id: TF-A1-C6
+    parent_task: TF-A1-C
+    priority: P1
+    status: done
+    complexity: S
+    effort_points: 2
+    progress_pct: 100
+    objective: >-
+      restore Fowler remote-facade posture on preview by moving preview orchestration behind a
+      dedicated route parser and application use case, and remove route-local text coupling from
+      preview contract failures.
+    dependency: TF-A1-C5
+    target: >-
+      `previewPlanRoute` only owns transport, authn/authz, delegation, and HTTP response mapping,
+      while preview parsing, planner envelope assembly, persistence, and executability validation
+      live behind explicit seams with stable error details.
+    evidence_refs:
+      - docs/planning/closeouts/20260419-tf-a1-c6-preview-route-facade-realignment-closeout.md
+      - apps/api/src/entrypoints/http/previewPlanRoute.ts
+      - apps/api/src/application/services/PreviewPlanUseCase.ts
+    status_reason: >-
+      Completed. Preview now parses through `previewPlanRouteParser`, delegates planner
+      build/store/validate orchestration to `PreviewPlanUseCase`, keeps the HTTP facade focused on
+      authn/authz plus response mapping, and returns stable contract-failure details without
+      route-coupled prose.
+    last_verified: '2026-04-19'
+  - task_id: TF-A1-C7
+    parent_task: TF-A1-C
+    priority: P1
+    status: done
+    complexity: S
+    effort_points: 2
+    progress_pct: 100
+    objective: >-
+      close the remaining import-route drift by moving import parsing and ownership checks behind
+      dedicated seams, and remove preview/import coupling around plan-ref mapping.
+    dependency: TF-A1-C6
+    target: >-
+      `importPlanRoute` becomes a thin HTTP facade, import no longer lives in the residual
+      multi-route `planRoutes.ts` module, and plan-ref normalization/parsing no longer depends on a
+      preview-specific response mapper.
+    evidence_refs:
+      - docs/planning/closeouts/20260419-tf-a1-c7-import-route-facade-realignment-closeout.md
+      - apps/api/src/entrypoints/http/importPlanRoute.ts
+      - apps/api/src/application/services/ImportPlanUseCase.ts
+    status_reason: >-
+      Completed. Import now parses through `importPlanRouteParser`, delegates plan fetch and scope
+      ownership checks to `ImportPlanUseCase`, responds through `planImportResponseMapper`, and the
+      generic plan-ref helpers live in the neutral `planRefHttpMapper` seam instead of a
+      preview-specific mapper. The residual `planRoutes.ts` module is removed.
+    last_verified: '2026-04-19'
+  - task_id: TF-A1-C8
+    parent_task: TF-A1-C
+    priority: P1
+    status: done
+    complexity: S
+    effort_points: 1
+    progress_pct: 100
+    objective: >-
+      close the residual preview-route helper drift so preview-route parsing and shared plan-route
+      context parsing delegate validation and mapping through smaller seams.
+    dependency: TF-A1-C7
+    target: >-
+      `parsePreviewPlanBody` stays as the single preview parser entrypoint and
+      `parsePlanRouteContextRecord` stays as the shared plan-route context seam, but neither helper
+      owns every validation stage and mapping branch itself.
+    evidence_refs:
+      - docs/planning/closeouts/20260419-tf-a1-c8-preview-route-helper-seams-closeout.md
+      - apps/api/src/entrypoints/http/previewPlanRouteParser.ts
+      - apps/api/src/entrypoints/http/planRouteScope.ts
+    status_reason: >-
+      Completed. Preview parsing now delegates route policy parsing, planner-backed source
+      validation, and command/request assembly through dedicated helpers, while shared plan-route
+      context parsing splits raw context validation from scope derivation. The exported helpers now
+      remain thin orchestration seams instead of mixed validation hotspots.
+    last_verified: '2026-04-19'
   - task_id: TF-A1-D
     priority: P1
     status: done

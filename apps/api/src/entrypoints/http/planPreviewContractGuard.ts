@@ -1,4 +1,4 @@
-import { parsePlanPreviewRequest } from '@dvt/contracts';
+import { parsePlanPreviewRequest, toValidationErrorResponse } from '@dvt/contracts';
 
 import { createHttpErrorResponse, HTTP_ERROR_TYPE } from './httpErrorContract.js';
 import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
@@ -21,7 +21,8 @@ export function validatePreviewProfileContract(
       reason: HTTP_ERROR_REASON.planRejected,
       details: {
         cause: 'missing_preview_provenance',
-        message: `${previewProfile.previewProfile} requires graphArtifact and sqlArtifact provenance.`,
+        previewProfile: previewProfile.previewProfile,
+        requiredArtifacts: ['graphArtifact', 'sqlArtifact'],
       },
     });
   }
@@ -36,16 +37,17 @@ export function validatePreviewProfileContract(
       persist: true,
     });
   } catch (error) {
-    const message =
-      error instanceof Error && error.message.trim().length > 0
-        ? error.message
-        : 'Preview request failed contract validation.';
+    const validation = toValidationErrorResponse(error);
     return createHttpErrorResponse({
       type: HTTP_ERROR_TYPE.badRequest,
       reason: HTTP_ERROR_REASON.invalidPlanSource,
       details: {
         cause: 'preview_contract_validation_failed',
-        message,
+        previewProfile: previewProfile.previewProfile,
+        issues: validation.details.map((issue) => ({
+          path: issue.path,
+          code: issue.code,
+        })),
       },
     });
   }

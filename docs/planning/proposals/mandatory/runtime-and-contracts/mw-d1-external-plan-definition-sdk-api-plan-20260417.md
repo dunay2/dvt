@@ -190,7 +190,10 @@ Existing repo examples examined:
 - `packages/@dvt/planner/examples/generic-pipeline.ts`
 - `packages/@dvt/planner/examples/dbt-workflow.ts`
 - `apps/api/src/entrypoints/http/planRoutes.ts`
-- `apps/api/test/entrypoints/http/planRoutes.test.ts`
+- `apps/api/test/entrypoints/http/compilePlanRoute.test.ts`
+- `apps/api/test/entrypoints/http/previewPlanRoute.auth.test.ts`
+- `apps/api/test/entrypoints/http/previewPlanRoute.inputPolicy.test.ts`
+- `apps/api/test/entrypoints/http/previewPlanRoute.outcomes.test.ts`
 
 External mature-system posture considered:
 
@@ -329,26 +332,26 @@ It does not own:
 
 ### Collaborator roles
 
-| Fowler-style role    | Proposed owner                                                   | Responsibility                                                          |
-| -------------------- | ---------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| Remote Facade        | `POST /plans/compile`                                            | expose compile-only behavior to external callers                        |
-| Service Layer        | `CompileExternalPlanUseCase`                                     | coordinate auth-bound compile behavior without persistence side effects |
-| Data Transfer Object | `ExternalPlanCompileRequestV1` / `ExternalPlanCompileResponseV1` | canonical network contract                                              |
-| Mapper               | `ExternalPlanCompileEnvelopeMapper`                              | translate request DTO into canonical planner envelope                   |
-| Domain Service       | `PlannerFacade`                                                  | deterministic plan compilation                                          |
-| Gateway              | thin SDK client                                                  | convenience wrapper around the remote facade                            |
-| Composition Root     | `apps/api` protected runtime module                              | own the external compile planner configuration                          |
+| Fowler-style role    | Proposed owner                                   | Responsibility                                                          |
+| -------------------- | ------------------------------------------------ | ----------------------------------------------------------------------- |
+| Remote Facade        | `POST /plans/compile`                            | expose compile-only behavior to external callers                        |
+| Service Layer        | `CompileExternalPlanUseCase`                     | coordinate auth-bound compile behavior without persistence side effects |
+| Data Transfer Object | `PlanCompileRequestV1` / `PlanCompileResponseV1` | canonical network contract                                              |
+| Mapper               | `toExternalCompilePlannerEnvelope`               | translate request DTO into canonical planner envelope                   |
+| Domain Service       | `PlannerFacade`                                  | deterministic plan compilation                                          |
+| Gateway              | thin SDK client                                  | convenience wrapper around the remote facade                            |
+| Composition Root     | `apps/api` protected runtime module              | own the external compile planner configuration                          |
 
 ### Contract, code, and configuration ownership line
 
-| Concern                                                          | Form                     | Proposed owner                                        | Must not become                                  |
-| ---------------------------------------------------------------- | ------------------------ | ----------------------------------------------------- | ------------------------------------------------ |
-| `ExternalPlanCompileRequestV1` / `ExternalPlanCompileResponseV1` | shared contract          | `@dvt/contracts`                                      | route-local DTOs or SDK-private shapes           |
-| compile SDK client                                               | thin gateway             | SDK owner over the canonical API                      | a second contract authority                      |
-| compile-only orchestration                                       | application service      | `apps/api`                                            | JSON-configured behavior or route-local logic    |
-| step family and step kind definitions                            | governed catalog entries | `@dvt/contracts` or approved plugin contribution pack | ad hoc allowlists in routes or adapters          |
-| external compile boundary selection                              | typed profile spec       | `apps/api` composition root                           | free-form JSON with embedded schemas or handlers |
-| planner instantiation                                            | builder/factory code     | `apps/api` composition root                           | inline literals spread through transport modules |
+| Concern                                          | Form                     | Proposed owner                                        | Must not become                                  |
+| ------------------------------------------------ | ------------------------ | ----------------------------------------------------- | ------------------------------------------------ |
+| `PlanCompileRequestV1` / `PlanCompileResponseV1` | shared contract          | `@dvt/contracts`                                      | route-local DTOs or SDK-private shapes           |
+| compile SDK client                               | thin gateway             | SDK owner over the canonical API                      | a second contract authority                      |
+| compile-only orchestration                       | application service      | `apps/api`                                            | JSON-configured behavior or route-local logic    |
+| step family and step kind definitions            | governed catalog entries | `@dvt/contracts` or approved plugin contribution pack | ad hoc allowlists in routes or adapters          |
+| external compile boundary selection              | typed profile spec       | `apps/api` composition root                           | free-form JSON with embedded schemas or handlers |
+| planner instantiation                            | builder/factory code     | `apps/api` composition root                           | inline literals spread through transport modules |
 
 The rule is strict:
 
@@ -434,15 +437,15 @@ Current drift to remove:
 
 Target module split:
 
-| Module                              | Proposed home                                                            | Owns                                                                            | Must not own                                                               |
-| ----------------------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| `compilePlanRoute`                  | `apps/api/src/entrypoints/http/compilePlanRoute.ts`                      | HTTP request/response, auth failure mapping, delegation to the use case         | planner-envelope mapping, profile policy, response business semantics      |
-| `parseExternalPlanCompileRequest`   | `apps/api/src/entrypoints/http/externalPlanCompileRequestParser.ts`      | canonical request parsing, scope extraction, rejection of legacy ingress fields | planner calls, auth, response shaping                                      |
-| `CompileExternalPlanUseCase`        | `apps/api/src/application/services/compileExternalPlanUseCase.ts`        | compile-only orchestration, planner call, compile metadata result               | Fastify types, HTTP status handling, persistence, executability validation |
-| `ExternalPlanCompileEnvelopeMapper` | `apps/api/src/application/services/externalPlanCompileEnvelopeMapper.ts` | request DTO to canonical planner envelope mapping                               | auth, HTTP concerns, profile policy                                        |
-| `ExternalPlanCompileResponseMapper` | `apps/api/src/entrypoints/http/externalPlanCompileResponseMapper.ts`     | network response contract shaping                                               | planner invocation, persistence policy                                     |
-| `ExternalCompileProfileSpec`        | `apps/api/src/modules/externalCompileProfileSpec.ts`                     | one canonical declaration of allowed external compile step kinds and schemas    | planner instantiation, route logic                                         |
-| `buildExternalCompilePlanner`       | `apps/api/src/modules/buildExternalCompilePlanner.ts`                    | instantiate `PlannerFacade` from the compile profile spec                       | inline profile literals spread across the composition root                 |
+| Module                             | Proposed home                                                               | Owns                                                                            | Must not own                                                               |
+| ---------------------------------- | --------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| `compilePlanRoute`                 | `apps/api/src/entrypoints/http/compilePlanRoute.ts`                         | HTTP request/response, auth failure mapping, delegation to the use case         | planner-envelope mapping, profile policy, response business semantics      |
+| `parsePlanCompileRouteInput`       | `apps/api/src/entrypoints/http/planCompileRouteInputParser.ts`              | canonical request parsing, scope extraction, rejection of legacy ingress fields | planner calls, auth, response shaping                                      |
+| `CompileExternalPlanUseCase`       | `apps/api/src/application/services/CompileExternalPlanUseCase.ts`           | compile-only orchestration, planner call, compile metadata result               | Fastify types, HTTP status handling, persistence, executability validation |
+| `toExternalCompilePlannerEnvelope` | `apps/api/src/application/services/externalCompilePlannerEnvelopeMapper.ts` | request DTO to canonical planner envelope mapping                               | auth, HTTP concerns, profile policy                                        |
+| `buildPlanCompileResponse`         | `apps/api/src/entrypoints/http/planCompileResponseMapper.ts`                | network response contract shaping                                               | planner invocation, persistence policy                                     |
+| `ExternalCompileProfileSpec`       | `apps/api/src/modules/externalCompileProfileSpec.ts`                        | one canonical declaration of allowed external compile step kinds and schemas    | planner instantiation, route logic                                         |
+| `buildExternalCompilePlanner`      | `apps/api/src/modules/externalCompilePlannerProfile.ts`                     | instantiate `PlannerFacade` from the compile profile spec                       | inline profile literals spread across the composition root                 |
 
 Implementation rule:
 
@@ -512,7 +515,7 @@ route code.
 
 ```mermaid
 classDiagram
-  class ExternalPlanCompileRequestV1
+  class PlanCompileRequestV1
   class CompileExternalPlanUseCase
   class ExternalCompileProfileSpec {
     profileId
@@ -541,7 +544,7 @@ classDiagram
   }
   class PlannerFacade
 
-  ExternalPlanCompileRequestV1 --> CompileExternalPlanUseCase
+  PlanCompileRequestV1 --> CompileExternalPlanUseCase
   CompileExternalPlanUseCase --> PlannerFacade
   ExternalCompileProfileSpec --> ResolvedStepCatalog : filters
   ResolvedStepCatalog --> StepFamilyDefinition : contains
@@ -629,7 +632,7 @@ Interpretation:
 `MW-D1` does not preserve legacy compile ingress for convenience.
 
 The canonical external compile boundary accepts only
-`ExternalPlanCompileRequestV1`.
+`PlanCompileRequestV1`.
 
 The route parser must reject these fields instead of silently adapting them:
 
@@ -647,7 +650,7 @@ payloads, or older compile aliases into the new request DTO.
 
 ## Observability mapping rule
 
-`ExternalPlanCompileRequestV1.observability` is extension-friendly and allows
+`PlanCompileRequestV1.observability` is extension-friendly and allows
 additional keys beyond `tags` and `extra`.
 
 The compile envelope mapper must preserve those custom keys when building the
@@ -695,7 +698,7 @@ sequenceDiagram
   participant Route as POST /plans/compile
   participant Auth as Auth + scope binding
   participant UseCase as CompileExternalPlanUseCase
-  participant Mapper as ExternalPlanCompileEnvelopeMapper
+  participant Mapper as toExternalCompilePlannerEnvelope
   participant Planner as PlannerFacade(external compile profile)
 
   Client->>Route: compile request(GenericGraphSource, selection, policies)
@@ -753,11 +756,11 @@ sequenceDiagram
   participant Client as External caller or SDK
   participant Route as compilePlanRoute
   participant Auth as authorizeExecutionScope
-  participant Parser as parseExternalPlanCompileRequest
+  participant Parser as parsePlanCompileRouteInput
   participant UseCase as CompileExternalPlanUseCase
-  participant Envelope as ExternalPlanCompileEnvelopeMapper
+  participant Envelope as toExternalCompilePlannerEnvelope
   participant Planner as PlannerFacade(external profile)
-  participant Presenter as ExternalPlanCompileResponseMapper
+  participant Presenter as buildPlanCompileResponse
 
   Client->>Route: POST /plans/compile
   Route->>Auth: authenticate and authorize
@@ -935,11 +938,11 @@ following are true:
   - `packages/@dvt/contracts/src/schema-packs/**`
   - `packages/@dvt/contracts/src/validation/**`
   - `apps/api/src/entrypoints/http/compilePlanRoute.ts`
-  - `apps/api/src/entrypoints/http/externalPlanCompileRequestParser.ts`
-  - `apps/api/src/entrypoints/http/externalPlanCompileResponseMapper.ts`
+  - `apps/api/src/entrypoints/http/planCompileRouteInputParser.ts`
+  - `apps/api/src/entrypoints/http/planCompileResponseMapper.ts`
   - `apps/api/src/application/services/**`
   - `apps/api/src/modules/externalCompileProfileSpec.ts`
-  - `apps/api/src/modules/buildExternalCompilePlanner.ts`
+  - `apps/api/src/modules/externalCompilePlannerProfile.ts`
   - focused tests under `packages/@dvt/contracts/test/**` and
     `apps/api/test/**`
 - Expected outcome:

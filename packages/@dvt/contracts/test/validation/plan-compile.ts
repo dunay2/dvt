@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
+import { CURRENT_EXECUTION_PLAN_SCHEMA_VERSION } from '../../src/index.js';
 import {
   ContractValidationError,
-  parseExternalPlanCompileRequest,
-  parseExternalPlanCompileResponse,
+  parsePlanCompileRequest,
+  parsePlanCompileResponse,
 } from '../../src/validation.js';
 
 const TRANSFORMATION_GRAPH_SOURCE = {
@@ -60,10 +61,28 @@ const TRANSFORMATION_GRAPH_SOURCE = {
   ],
 } as const;
 
+const SPARK_GRAPH_SOURCE = {
+  kind: 'generic-graph-v1',
+  sourceFamily: 'spark-job-graph',
+  sourceVersion: 'spark-application-v1',
+  nodes: [
+    {
+      nodeId: 'spark-job-1',
+      stepKind: 'SPARK_JOB',
+      dependsOn: [],
+      stepTypeConfig: {
+        application: 'orders-daily',
+        entrypoint: 'jobs/orders.py',
+        runtime: 'python',
+      },
+    },
+  ],
+} as const;
+
 const COMPILED_PLAN = {
   metadata: {
     planVersion: '1.0',
-    schemaVersion: 'v1.2',
+    schemaVersion: CURRENT_EXECUTION_PLAN_SCHEMA_VERSION,
     contractVersion: '1.0.0',
     inputHashSha256: 'f'.repeat(64),
     planId: '1'.repeat(64),
@@ -91,10 +110,10 @@ const COMPILED_PLAN = {
   ],
 } as const;
 
-export function registerValidationExternalPlanCompileSuite(): void {
-  describe('external compile contracts', () => {
+export function registerValidationPlanCompileSuite(): void {
+  describe('plan compile contracts', () => {
     it('parses a compile request with generic graph source and scope context', () => {
-      const request = parseExternalPlanCompileRequest({
+      const request = parsePlanCompileRequest({
         context: {
           tenantId: 'tenant-a',
           projectId: 'project-a',
@@ -112,7 +131,7 @@ export function registerValidationExternalPlanCompileSuite(): void {
 
     it('rejects compile requests with preview-only fields', () => {
       expect(() =>
-        parseExternalPlanCompileRequest({
+        parsePlanCompileRequest({
           context: {
             tenantId: 'tenant-a',
             projectId: 'project-a',
@@ -127,8 +146,25 @@ export function registerValidationExternalPlanCompileSuite(): void {
       ).toThrow(ContractValidationError);
     });
 
+    it('parses a compile request for a non-dbt spark graph source', () => {
+      const request = parsePlanCompileRequest({
+        context: {
+          tenantId: 'tenant-a',
+          projectId: 'project-a',
+          environmentId: 'env-a',
+        },
+        selection: {
+          selectedNodeIds: ['spark-job-1'],
+        },
+        graphSource: SPARK_GRAPH_SOURCE,
+      });
+
+      expect(request.graphSource.sourceFamily).toBe('spark-job-graph');
+      expect(request.graphSource.nodes[0]?.stepKind).toBe('SPARK_JOB');
+    });
+
     it('parses compile response as non-persisted and non-executability-validated', () => {
-      const response = parseExternalPlanCompileResponse({
+      const response = parsePlanCompileResponse({
         plan: COMPILED_PLAN,
         compile: {
           persisted: false,

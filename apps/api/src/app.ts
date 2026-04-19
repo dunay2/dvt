@@ -5,9 +5,12 @@ import sensible from '@fastify/sensible';
 import Fastify, { type FastifyInstance, type FastifyRequest } from 'fastify';
 
 import { CancelRunUseCase } from './application/services/cancelRunUseCase.js';
+import { CompileExternalPlanUseCase } from './application/services/CompileExternalPlanUseCase.js';
 import { GetRunEventsUseCase } from './application/services/getRunEventsUseCase.js';
 import { GetRunStatusUseCase } from './application/services/getRunStatusUseCase.js';
+import { ImportPlanUseCase } from './application/services/ImportPlanUseCase.js';
 import { ListRunsUseCase } from './application/services/listRunsUseCase.js';
+import { PreviewPlanUseCase } from './application/services/PreviewPlanUseCase.js';
 import { RecoverRunUseCase } from './application/services/recoverRunUseCase.js';
 import { SignalRunUseCase } from './application/services/signalRunUseCase.js';
 import { registerAdminRoutes } from './entrypoints/http/adminRoutes.js';
@@ -15,8 +18,9 @@ import { cancelRunRoute } from './entrypoints/http/cancelRunRoute.js';
 import { compilePlanRoute } from './entrypoints/http/compilePlanRoute.js';
 import { getRunEventsRoute } from './entrypoints/http/getRunEventsRoute.js';
 import { getRunRoute } from './entrypoints/http/getRunRoute.js';
+import { importPlanRoute } from './entrypoints/http/importPlanRoute.js';
 import { listRunsRoute } from './entrypoints/http/listRunsRoute.js';
-import { importPlanRoute, previewPlanRoute } from './entrypoints/http/planRoutes.js';
+import { previewPlanRoute } from './entrypoints/http/previewPlanRoute.js';
 import { recoverRunRoute } from './entrypoints/http/recoverRunRoute.js';
 import {
   PROTECTED_RUNTIME_ROUTE_SUMMARY,
@@ -200,6 +204,17 @@ export async function buildApp(): Promise<{ app: FastifyInstance; ctx: AppContex
     );
     const listRunsUseCase = new ListRunsUseCase(protectedModule.stateStore.read);
     const getRunEventsUseCase = new GetRunEventsUseCase(protectedModule.stateStore.read);
+    const compileExternalPlanUseCase = new CompileExternalPlanUseCase({
+      planner: protectedModule.externalCompilePlanner,
+    });
+    const previewPlanUseCase = new PreviewPlanUseCase({
+      planner: protectedModule.planner,
+      planStore: protectedModule.planStore,
+      planValidator: protectedModule.planValidator,
+    });
+    const importPlanUseCase = new ImportPlanUseCase({
+      planResolver: protectedModule.executablePlanResolver,
+    });
     const signalRunUseCase = new SignalRunUseCase(
       protectedModule.engine,
       protectedModule.stateStore.read
@@ -230,27 +245,21 @@ export async function buildApp(): Promise<{ app: FastifyInstance; ctx: AppContex
       previewPlanRoute(request as never, reply, {
         authenticator: protectedModule.authenticator,
         authorizer: protectedModule.authorizer,
-        planner: protectedModule.planner,
-        planStore: protectedModule.planStore,
-        planValidator: protectedModule.planValidator,
-        planResolver: protectedModule.executablePlanResolver,
+        useCase: previewPlanUseCase,
       })
     );
     app.post(RUNTIME_ROUTE_PATH.plansCompile, async (request, reply) =>
       compilePlanRoute(request as never, reply, {
         authenticator: protectedModule.authenticator,
         authorizer: protectedModule.authorizer,
-        planner: protectedModule.externalCompilePlanner,
+        useCase: compileExternalPlanUseCase,
       })
     );
     app.post(RUNTIME_ROUTE_PATH.plansImport, async (request, reply) =>
       importPlanRoute(request as never, reply, {
         authenticator: protectedModule.authenticator,
         authorizer: protectedModule.authorizer,
-        planner: protectedModule.planner,
-        planStore: protectedModule.planStore,
-        planValidator: protectedModule.planValidator,
-        planResolver: protectedModule.executablePlanResolver,
+        useCase: importPlanUseCase,
       })
     );
     registerWorkspaceGraphDraftRoutes(app, {

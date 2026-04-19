@@ -2,35 +2,37 @@ import type { FastifyReply, FastifyRequest } from 'fastify';
 
 import type { IAuthenticator } from '../../application/ports/auth.js';
 import { AuthorizeCommandScopeService } from '../../application/services/authorizeCommandScopeService.js';
-import type { CompileExternalPlanUseCase } from '../../application/services/CompileExternalPlanUseCase.js';
+import {
+  IMPORT_PLAN_RESULT_KIND,
+  type ImportPlanUseCase,
+} from '../../application/services/ImportPlanUseCase.js';
 
 import { authorizeExecutionScope } from './authorizeExecutionScope.js';
 import { extractBearerToken } from './extractBearerToken.js';
 import { createHttpErrorResponse, HTTP_ERROR_TYPE, sendHttpResponse } from './httpErrorContract.js';
 import { mapRouteParseIssue } from './httpErrorMapper.js';
 import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
-import { buildPlanCompileResponse } from './planCompileResponseMapper.js';
-import { parsePlanCompileRouteInput } from './planCompileRouteInputParser.js';
+import { parseImportPlanRouteInput } from './importPlanRouteParser.js';
+import { buildImportPlanResponse } from './planImportResponseMapper.js';
 
 const START_RUN_ACTION = { kind: 'command', name: 'run:start' } as const;
 
-type CompilePlanRouteDeps = {
+type ImportPlanRouteDeps = {
   readonly authenticator: IAuthenticator;
   readonly authorizer: AuthorizeCommandScopeService;
-  readonly useCase: Pick<CompileExternalPlanUseCase, 'execute'>;
+  readonly useCase: Pick<ImportPlanUseCase, 'execute'>;
 };
 
-export async function compilePlanRoute(
+export async function importPlanRoute(
   request: FastifyRequest<{ Body: unknown }>,
   reply: FastifyReply,
-  deps: CompilePlanRouteDeps
+  deps: ImportPlanRouteDeps
 ): Promise<void> {
-  const compileRouteInput = parsePlanCompileRouteInput(request.body);
-  if (!compileRouteInput.ok) {
-    sendHttpResponse(reply, mapRouteParseIssue(compileRouteInput.issue));
+  const importRouteInput = parseImportPlanRouteInput(request.body);
+  if (!importRouteInput.ok) {
+    sendHttpResponse(reply, mapRouteParseIssue(importRouteInput.issue));
     return;
   }
-  const compileInput = compileRouteInput.value;
 
   const authz = await authorizeExecutionScope({
     authenticator: deps.authenticator,
@@ -38,9 +40,9 @@ export async function compilePlanRoute(
     token: extractBearerToken(request.headers.authorization),
     requestId: request.id,
     requestedScope: {
-      tenantId: compileInput.requestedScope.tenantId,
-      projectId: compileInput.requestedScope.projectId,
-      environmentId: compileInput.requestedScope.environmentId,
+      tenantId: importRouteInput.value.routeContext.tenantId,
+      projectId: importRouteInput.value.routeContext.projectId,
+      environmentId: importRouteInput.value.routeContext.environmentId,
       action: START_RUN_ACTION,
     },
   });
@@ -50,10 +52,22 @@ export async function compilePlanRoute(
   }
 
   try {
-    const result = await deps.useCase.execute(compileInput.command, authz.context);
-    reply.code(200).send(buildPlanCompileResponse(result));
+    const result = await deps.useCase.execute(importRouteInput.value.command);
+    if (result.kind === IMPORT_PLAN_RESULT_KIND.scopeMismatch) {
+      sendHttpResponse(
+        reply,
+        createHttpErrorResponse({
+          type: HTTP_ERROR_TYPE.forbidden,
+          reason: HTTP_ERROR_REASON.tenantAccessDenied,
+          details: { cause: 'plan_scope_mismatch' },
+        })
+      );
+      return;
+    }
+
+    reply.code(200).send(buildImportPlanResponse(result.plan, result.planRef));
   } catch (error) {
-    request.log.error({ err: error }, 'plan compile failed');
+    request.log.error({ err: error }, 'plan import failed');
     sendHttpResponse(
       reply,
       createHttpErrorResponse({

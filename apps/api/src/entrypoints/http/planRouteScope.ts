@@ -1,4 +1,4 @@
-import type { ExecutionPlan, RunContextSchemaT } from '@dvt/contracts';
+import type { RunContextSchemaT } from '@dvt/contracts';
 import { parseRunContext } from '@dvt/contracts';
 
 import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
@@ -11,43 +11,50 @@ export type ParsedPlanRouteContext = ParsedStartRunScope &
 export function parsePlanRouteContextRecord(
   record: Record<string, unknown>
 ): RouteParseResult<ParsedPlanRouteContext> {
-  if (record.context === undefined || record.context === null || typeof record.context !== 'object') {
-    return badRequestResult<ParsedPlanRouteContext>(HTTP_ERROR_REASON.invalidBody);
+  const context = parsePlanRouteContext(record.context);
+  if (!context.ok) {
+    return context;
+  }
+
+  return mapPlanRouteContext(context.value);
+}
+
+function parsePlanRouteContext(raw: unknown): RouteParseResult<RunContextSchemaT> {
+  if (!isObjectRecord(raw)) {
+    return badRequestResult<RunContextSchemaT>(HTTP_ERROR_REASON.invalidBody);
   }
 
   try {
-    const context = parseRunContext(record.context);
-    const scopeResult = parseStartRunScope({
-      tenantId: context.tenantId,
-      projectId: context.projectId,
-      environmentId: context.environmentId,
-    });
-    if (!scopeResult.ok) {
-      return scopeResult;
-    }
     return {
       ok: true,
-      value: {
-        ...scopeResult.value,
-        targetAdapter: context.targetAdapter,
-      },
+      value: parseRunContext(raw),
     };
   } catch {
-    return badRequestResult<ParsedPlanRouteContext>(HTTP_ERROR_REASON.invalidBody);
+    return badRequestResult<RunContextSchemaT>(HTTP_ERROR_REASON.invalidBody);
   }
 }
 
-export function isPlanOwnedByScope(
-  plan: ExecutionPlan,
-  context: ParsedPlanRouteContext
-): boolean {
-  const tags = plan.observability?.tags;
-  if (tags === undefined) {
-    return false;
+function mapPlanRouteContext(
+  context: RunContextSchemaT
+): RouteParseResult<ParsedPlanRouteContext> {
+  const scopeResult = parseStartRunScope({
+    tenantId: context.tenantId,
+    projectId: context.projectId,
+    environmentId: context.environmentId,
+  });
+  if (!scopeResult.ok) {
+    return scopeResult;
   }
-  return (
-    tags['dvt.scope.tenantId'] === context.tenantId.value &&
-    tags['dvt.scope.projectId'] === context.projectId.value &&
-    tags['dvt.scope.environmentId'] === context.environmentId.value
-  );
+
+  return {
+    ok: true,
+    value: {
+      ...scopeResult.value,
+      targetAdapter: context.targetAdapter,
+    },
+  };
+}
+
+function isObjectRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
 }

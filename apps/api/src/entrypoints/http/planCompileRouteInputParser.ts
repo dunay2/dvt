@@ -1,23 +1,21 @@
-import type { ExternalPlanCompileRequestV1SchemaT, GenericGraphSourceV1, PlannerSelection } from '@dvt/contracts';
-import { parseExternalPlanCompileRequest } from '@dvt/contracts';
+import type { GenericGraphSourceV1, PlannerSelection, PlanCompileRequestV1SchemaT } from '@dvt/contracts';
+import { parsePlanCompileRequest } from '@dvt/contracts';
+
+import type { CompileExternalPlanCommand } from '../../application/services/CompileExternalPlanUseCase.js';
 
 import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
 import { badRequestResult, type RouteParseResult } from './routeParseIssue.js';
 import { parseStartRunBodyRecord } from './startRunRouteBodyValidation.js';
 import { parseStartRunScope, type ParsedStartRunScope } from './startRunRouteScopeParser.js';
 
-export interface ParsedExternalPlanCompileRouteInput {
-  readonly scope: ParsedStartRunScope;
-  readonly graphSource: GenericGraphSourceV1;
-  readonly selection: PlannerSelection;
-  readonly policies: ExternalPlanCompileRequestV1SchemaT['policies'];
-  readonly environment: ExternalPlanCompileRequestV1SchemaT['environment'];
-  readonly observability: ExternalPlanCompileRequestV1SchemaT['observability'];
+export interface ParsedPlanCompileRouteInput {
+  readonly requestedScope: ParsedStartRunScope;
+  readonly command: CompileExternalPlanCommand;
 }
 
-export function parseExternalPlanCompileRouteInput(
+export function parsePlanCompileRouteInput(
   body: unknown
-): RouteParseResult<ParsedExternalPlanCompileRouteInput> {
+): RouteParseResult<ParsedPlanCompileRouteInput> {
   const parsedBody = parseStartRunBodyRecord(body);
   if (!parsedBody.ok) {
     return parsedBody;
@@ -27,9 +25,9 @@ export function parseExternalPlanCompileRouteInput(
     return badRequestResult(HTTP_ERROR_REASON.invalidPlanSource);
   }
 
-  let compileRequest: ExternalPlanCompileRequestV1SchemaT;
+  let compileRequest: PlanCompileRequestV1SchemaT;
   try {
-    compileRequest = parseExternalPlanCompileRequest(parsedBody.value);
+    compileRequest = parsePlanCompileRequest(parsedBody.value);
   } catch {
     return badRequestResult(HTTP_ERROR_REASON.invalidBody);
   }
@@ -42,12 +40,14 @@ export function parseExternalPlanCompileRouteInput(
   return {
     ok: true,
     value: {
-      scope: scopeResult.value,
-      graphSource: normalizeCompileGraphSource(compileRequest.graphSource),
-      selection: normalizeCompileSelection(compileRequest.selection),
-      policies: compileRequest.policies,
-      environment: compileRequest.environment,
-      observability: compileRequest.observability,
+      requestedScope: scopeResult.value,
+      command: {
+        graphSource: normalizeCompileGraphSource(compileRequest.graphSource),
+        selection: normalizeCompileSelection(compileRequest.selection),
+        policies: compileRequest.policies,
+        environment: compileRequest.environment,
+        observability: compileRequest.observability,
+      },
     },
   };
 }
@@ -65,7 +65,7 @@ function hasForbiddenCompileIngress(record: Record<string, unknown>): boolean {
   );
 }
 
-function normalizeCompileSelection(selection: ExternalPlanCompileRequestV1SchemaT['selection']) {
+function normalizeCompileSelection(selection: PlanCompileRequestV1SchemaT['selection']): PlannerSelection {
   return {
     selectedNodeIds: selection.selectedNodeIds,
     ...(selection.includeUpstream === undefined
@@ -78,7 +78,7 @@ function normalizeCompileSelection(selection: ExternalPlanCompileRequestV1Schema
 }
 
 function normalizeCompileGraphSource(
-  graphSource: ExternalPlanCompileRequestV1SchemaT['graphSource']
+  graphSource: PlanCompileRequestV1SchemaT['graphSource']
 ): GenericGraphSourceV1 {
   return {
     kind: graphSource.kind,

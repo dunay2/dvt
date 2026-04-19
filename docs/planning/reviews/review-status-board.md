@@ -2,7 +2,7 @@
 title: Review Status Board
 status: Active
 owner: Product / Architecture / Docs
-last_reviewed: 2026-04-10
+last_reviewed: 2026-04-19
 planning_type: review
 ---
 
@@ -55,6 +55,13 @@ Sprint execution board:
 | [20260402 RC-C2 operational friction intake review](./ci-and-delivery/20260402-rc-c2-operational-friction-intake-review.md)                       | `ci-and-delivery`                 | current RC-C2 intake review                            | `RC-C2`                                    | `review`         | `67%`              |
 
 Additional active rationale:
+
+- [20260418 MW-D1 external compile boundary review](./architecture-and-governance/20260418-mw-d1-external-compile-boundary-review.md)
+  - domain: `architecture-and-governance`
+  - role: active code-grounded Fowler, DDD, hexagonal, and CQRS review for the compile-only boundary
+  - linkage: `MW-D1`
+  - status: `done`
+  - progress: `100%`
 
 - [20260417 DVT artifacts review](./architecture-and-governance/20260417-dvt-artifacts-review.md)
   - domain: `architecture-and-governance`

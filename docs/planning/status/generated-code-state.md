@@ -15,8 +15,8 @@ Generated automatically from repository code on 2026-04-19.
 | Metric                       | Value |
 | ---------------------------- | ----- |
 | Total workspaces             | 24    |
-| Total source files           | 951   |
-| Total test files             | 413   |
+| Total source files           | 962   |
+| Total test files             | 421   |
 | Workspaces with build script | 24/24 |
 | Workspaces with test script  | 23/24 |
 
@@ -24,7 +24,7 @@ Generated automatically from repository code on 2026-04-19.
 
 | Workspace                 | Path                                 | Src Files | Test Files | Build | Test | Typecheck | Exports in src/index.ts |
 | ------------------------- | ------------------------------------ | --------- | ---------- | ----- | ---- | --------- | ----------------------- |
-| dvt-api                   | `apps/api`                           | 158       | 77         | yes   | yes  | yes       | -                       |
+| dvt-api                   | `apps/api`                           | 168       | 85         | yes   | yes  | yes       | -                       |
 | dvt-lineage-worker        | `apps/lineage-worker`                | 5         | 5          | yes   | yes  | yes       | -                       |
 | dvt-outbox-worker         | `apps/outbox-worker`                 | 16        | 20         | yes   | yes  | yes       | -                       |
 | dvt-projector-worker      | `apps/projector-worker`              | 2         | 1          | yes   | yes  | yes       | -                       |
@@ -35,7 +35,7 @@ Generated automatically from repository code on 2026-04-19.
 | @dvt/artifacts            | `packages/@dvt/artifacts`            | 18        | 2          | yes   | yes  | no        | 16                      |
 | @dvt/crypto               | `packages/@dvt/canonical`            | 3         | 1          | yes   | yes  | no        | 2                       |
 | @dvt/cli                  | `packages/@dvt/cli`                  | 1         | 1          | yes   | yes  | no        | 1                       |
-| @dvt/contracts            | `packages/@dvt/contracts`            | 75        | 24         | yes   | yes  | no        | 48                      |
+| @dvt/contracts            | `packages/@dvt/contracts`            | 76        | 24         | yes   | yes  | no        | 50                      |
 | @dvt/delivery             | `packages/@dvt/delivery`             | 10        | 4          | yes   | yes  | no        | 8                       |
 | @dvt/dsl                  | `packages/@dvt/dsl`                  | 4         | 1          | yes   | yes  | no        | 3                       |
 | @dvt/engine               | `packages/@dvt/engine`               | 104       | 45         | yes   | yes  | no        | 43                      |

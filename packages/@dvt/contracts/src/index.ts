@@ -141,6 +141,16 @@ export type {
   TransformationStepKind,
 } from './contracts/planner/TransformationFlowCompiler.v1.js';
 export {
+  SparkJobDeployModeSchema,
+  SparkJobRuntimeSchema,
+  SparkJobStepTypeConfigSchema,
+} from './contracts/planner/ExternalCompileStepTypeConfigs.v1.js';
+export type {
+  SparkJobDeployMode,
+  SparkJobRuntime,
+  SparkJobStepTypeConfig,
+} from './contracts/planner/ExternalCompileStepTypeConfigs.v1.js';
+export {
   ConcurrencyPolicySchema,
   MAX_RETRY_POLICY_ATTEMPTS,
   PlannerPolicyClassSetSchema,

@@ -11,7 +11,7 @@ import {
 } from './planner-context.js';
 import { GenericGraphSourceV1Schema } from './planner-graph.js';
 
-export const ExternalPlanCompileScopeSchema = z
+export const PlanCompileScopeSchema = z
   .object({
     tenantId: NonBlankStringSchema,
     projectId: NonBlankStringSchema,
@@ -19,9 +19,9 @@ export const ExternalPlanCompileScopeSchema = z
   })
   .strict();
 
-export const ExternalPlanCompileRequestV1Schema = z
+export const PlanCompileRequestV1Schema = z
   .object({
-    context: ExternalPlanCompileScopeSchema,
+    context: PlanCompileScopeSchema,
     selection: PlannerSelectionSchema,
     graphSource: GenericGraphSourceV1Schema,
     policies: PlannerPolicyClassSetSchema.optional(),
@@ -30,7 +30,7 @@ export const ExternalPlanCompileRequestV1Schema = z
   })
   .strict();
 
-export const ExternalPlanCompileResponseV1Schema = z
+export const PlanCompileResponseV1Schema = z
   .object({
     plan: ExecutionPlanSchema,
     compile: z
@@ -42,10 +42,6 @@ export const ExternalPlanCompileResponseV1Schema = z
   })
   .strict();
 
-export type ExternalPlanCompileScopeSchemaT = z.infer<typeof ExternalPlanCompileScopeSchema>;
-export type ExternalPlanCompileRequestV1SchemaT = z.infer<
-  typeof ExternalPlanCompileRequestV1Schema
->;
-export type ExternalPlanCompileResponseV1SchemaT = z.infer<
-  typeof ExternalPlanCompileResponseV1Schema
->;
+export type PlanCompileScopeSchemaT = z.infer<typeof PlanCompileScopeSchema>;
+export type PlanCompileRequestV1SchemaT = z.infer<typeof PlanCompileRequestV1Schema>;
+export type PlanCompileResponseV1SchemaT = z.infer<typeof PlanCompileResponseV1Schema>;

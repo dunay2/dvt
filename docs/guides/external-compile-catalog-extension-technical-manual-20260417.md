@@ -101,7 +101,7 @@ Working rule:
 
 ```mermaid
 classDiagram
-  class ExternalPlanCompileRequestV1
+  class PlanCompileRequestV1
   class CompileExternalPlanUseCase
   class ExternalCompileProfileSpec {
     profileId
@@ -130,7 +130,7 @@ classDiagram
   }
   class PlannerFacade
 
-  ExternalPlanCompileRequestV1 --> CompileExternalPlanUseCase
+  PlanCompileRequestV1 --> CompileExternalPlanUseCase
   CompileExternalPlanUseCase --> PlannerFacade
   ExternalCompileProfileSpec --> ResolvedStepCatalog : filters
   ResolvedStepCatalog --> StepFamilyDefinition : contains

@@ -7,6 +7,7 @@ import { describe, expect, it } from 'vitest';
 
 import { buildProtectedRuntimeModule } from '../src/modules/buildProtectedRuntimeModule.js';
 import { buildExternalCompilePlanner } from '../src/modules/externalCompilePlannerProfile.js';
+import { EXTERNAL_COMPILE_PROFILE_SPEC } from '../src/modules/externalCompileProfileSpec.js';
 import { buildProviderAdapters } from '../src/modules/buildProviderAdapters.js';
 import { registerOperationalHooks } from '../src/modules/registerOperationalHooks.js';
 
@@ -194,5 +195,59 @@ describe('modules', () => {
         },
       })
     ).rejects.toThrow(/DBT_MODEL/);
+  });
+
+  it('external compile planner accepts a non-dbt spark graph from the resolved catalog', async () => {
+    const planner = buildExternalCompilePlanner();
+
+    const result = await planner.buildPlan({
+      requestedBy: 'principal-1',
+      requestId: 'req-compile-spark',
+      requestedAtIso: '2026-04-19T00:00:00.000Z',
+      graphSource: {
+        kind: 'generic-graph-v1',
+        sourceFamily: 'spark-job-graph',
+        sourceVersion: 'spark-application-v1',
+        nodes: [
+          {
+            nodeId: 'spark-job-1',
+            stepKind: 'SPARK_JOB',
+            dependsOn: [],
+            stepTypeConfig: {
+              application: 'orders-daily',
+              entrypoint: 'jobs/orders.py',
+              runtime: 'python',
+            },
+          },
+        ],
+      },
+      selection: {
+        selectedNodeIds: ['spark-job-1'],
+      },
+    });
+
+    expect(result.plan.steps).toMatchObject([
+      {
+        stepId: 'spark-job-1',
+        kind: 'SPARK_JOB',
+        dependsOn: [],
+        stepTypeConfig: {
+          application: 'orders-daily',
+          entrypoint: 'jobs/orders.py',
+          runtime: 'python',
+        },
+      },
+    ]);
+    expect(result.executionPolicy.requiresCapabilities).toEqual(['spark.submit']);
+  });
+
+  it('external compile planner rejects profile kinds that fall outside the allowed families', () => {
+    expect(() =>
+      buildExternalCompilePlanner({
+        ...EXTERNAL_COMPILE_PROFILE_SPEC,
+        allowedFamilies: ['spark'],
+        allowedStepKinds: ['POSTGRES_SQL_TRANSFORM'],
+      })
+    ).toThrow(/POSTGRES_SQL_TRANSFORM/);
   });
 });

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
 import { isKnownStepKind } from '../src/contracts/planner/StepKindRegistry.v1.js';
+import { SparkJobStepTypeConfigSchema } from '../src/index.js';
 import {
   collectRequiredCapabilitiesForSteps,
   createDefaultStepTypeRegistry,
@@ -61,6 +62,32 @@ describe('DbtStepTypeConfigSchema', () => {
     expect(
       DbtStepTypeConfigSchema.safeParse({
         retries: { maxAttempts: 3, backoffMs: 1000 },
+      }).success
+    ).toBe(false);
+  });
+});
+
+describe('SparkJobStepTypeConfigSchema', () => {
+  it('accepts spark-specific required fields with shared execution metadata', () => {
+    const config = {
+      application: 'orders-daily',
+      entrypoint: 'jobs/orders.py',
+      runtime: 'python' as const,
+      stepTimeoutMs: 60_000,
+      concurrency: { maxInFlight: 2 },
+    };
+
+    const result = SparkJobStepTypeConfigSchema.safeParse(config);
+    expect(result.success).toBe(true);
+    if (result.success) expect(result.data).toStrictEqual(config);
+  });
+
+  it('rejects invalid runtime values', () => {
+    expect(
+      SparkJobStepTypeConfigSchema.safeParse({
+        application: 'orders-daily',
+        entrypoint: 'jobs/orders.py',
+        runtime: 'java',
       }).success
     ).toBe(false);
   });
