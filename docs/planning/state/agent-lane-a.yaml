@@ -2437,17 +2437,22 @@ tasks:
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260419-plan-route-boundary-remediation-review.md
       - docs/planning/closeouts/20260419-tf-a1-c12-plan-route-facade-standardization-closeout.md
+      - docs/planning/closeouts/20260419-tf-a1-c12-plan-route-facade-regression-hardening-closeout.md
       - apps/api/src/entrypoints/http/previewPlanRoute.ts
       - apps/api/src/entrypoints/http/importPlanRoute.ts
       - apps/api/src/entrypoints/http/compilePlanRoute.ts
       - apps/api/src/entrypoints/http/executePlanRouteFacade.ts
       - apps/api/src/entrypoints/http/planRouteRequestResolver.ts
+      - apps/api/test/entrypoints/http/executePlanRouteFacade.test.ts
+      - apps/api/test/entrypoints/http/planRouteRequestResolver.test.ts
       - apps/api/src/entrypoints/http/runCommandRouteExecutor.ts
     status_reason: >-
       Completed. Preview, import, and compile now compose one shared plan-route remote-facade
       execution pattern through dedicated request-resolver and response-mapper seams, without
       changing caller-visible payloads or collapsing boundary ownership back into a new convenience
-      module.
+      module. Shared regression coverage now exists directly at the executor and authorization-
+      resolver owners, and the neutral plan-route seam no longer carries a start-run-flavored
+      internal constant name.
     last_verified: '2026-04-19'
   - task_id: TF-A1-C13
     parent_task: TF-A1-C

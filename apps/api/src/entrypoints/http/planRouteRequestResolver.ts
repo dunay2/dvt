@@ -13,7 +13,7 @@ import { mapRouteParseIssue } from './httpErrorMapper.js';
 import type { ParsedPlanRouteScope } from './planRouteScopeParser.js';
 import type { RouteParseResult } from './routeParseIssue.js';
 
-const START_RUN_ACTION = { kind: 'command', name: 'run:start' } as const;
+const PLAN_ROUTE_ACTION = { kind: 'command', name: 'run:start' } as const;
 
 export interface PlanRouteAuthorizationResolverDeps {
   readonly authenticator: IAuthenticator;
@@ -59,7 +59,7 @@ export async function resolveAuthorizedPlanRouteRequest<TParsedRequest>(
       tenantId: requestedScope.tenantId,
       projectId: requestedScope.projectId,
       environmentId: requestedScope.environmentId,
-      action: START_RUN_ACTION,
+      action: PLAN_ROUTE_ACTION,
     },
   });
   if (!authz.ok) {
