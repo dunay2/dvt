@@ -21,6 +21,7 @@ export type UseCanvasMutationHandlersArgs = {
   canMutateGraph: boolean;
   workspaceLayoutKey: string;
   graphModel: CanvasGraphModelLike;
+  draftSession: CanvasDraftSession;
   uiScope: CanvasUiScope;
   selectedNodeIds: string[];
   setDraftSession: Dispatch<SetStateAction<CanvasDraftSession>>;
@@ -33,7 +34,6 @@ export type UseCanvasMutationHandlersArgs = {
 export type CanvasGraphChangeHandlers = {
   handleNodesChange: (changes: NodeChange[]) => void;
   handleEdgesChange: (changes: EdgeChange<Edge>[]) => void;
-  handleNodeAddedToCanvas: (nodeId: string) => void;
 };
 
 export type CanvasSourceImportHandlers = {

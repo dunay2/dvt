@@ -8,10 +8,10 @@ const GRAPH_CHANGE_HANDLERS_SOURCE = readFileSync(
 );
 
 describe('useCanvasGraphChangeHandlers architecture', () => {
-  it('stays as a composition seam over node, edge, and explicit-node handlers', () => {
+  it('stays as a composition seam over node and edge handlers', () => {
     expect(GRAPH_CHANGE_HANDLERS_SOURCE).toContain('useCanvasNodeChangeHandlers');
     expect(GRAPH_CHANGE_HANDLERS_SOURCE).toContain('useCanvasEdgeChangeHandlers');
-    expect(GRAPH_CHANGE_HANDLERS_SOURCE).toContain('useCanvasExplicitNodeAdmission');
+    expect(GRAPH_CHANGE_HANDLERS_SOURCE).not.toContain('useCanvasExplicitNodeAdmission');
     expect(GRAPH_CHANGE_HANDLERS_SOURCE).not.toContain('useCallback(');
     expect(GRAPH_CHANGE_HANDLERS_SOURCE).not.toContain('applyNodeChanges');
     expect(GRAPH_CHANGE_HANDLERS_SOURCE).not.toContain('applyEdgeChanges');

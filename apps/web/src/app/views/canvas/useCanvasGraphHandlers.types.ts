@@ -3,6 +3,7 @@ import type { Dispatch, SetStateAction } from 'react';
 
 import type { CanvasGraphStrategy } from '../../plugins/dbt/dbtNodeAdapter';
 import type { CanonicalNode } from '../../types/canonical';
+import type { CanvasDraftSession } from './canvasDraftSession';
 
 export type ConfirmEdgeModalState = {
   open: boolean;
@@ -16,19 +17,18 @@ export type UseCanvasGraphHandlersParams = {
   nodes: Node[];
   selectedNodeIds: string[];
   inspectorNodeId: string | null;
+  draftSession: CanvasDraftSession;
   canEditEdges: boolean;
   focusMode: boolean;
   inspectorPanelVisible: boolean;
   columnLevelLineageEnabled: boolean;
   setNodes: Dispatch<SetStateAction<Node[]>>;
   setEdges: Dispatch<SetStateAction<Edge[]>>;
+  setDraftSession: Dispatch<SetStateAction<CanvasDraftSession>>;
   setSelectedNodes: (ids: string[]) => void;
   setInspectorNode: (nodeId: string | null) => void;
   toggleInspectorPanel: () => void;
   onLayoutComplete: (positions: Record<string, { x: number; y: number }>) => void;
-  onNodeAddedToCanvas?: (nodeId: string) => void;
-  onNodeRemovedFromCanvas?: (nodeId: string) => void;
-  onVisibleEdgesChanged?: (edges: Array<{ sourceId: string; targetId: string }>) => void;
 };
 
 export type UseCanvasGraphHandlersResult = {

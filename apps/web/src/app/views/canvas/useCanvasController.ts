@@ -2,7 +2,6 @@ import { type NodeTypes } from '@xyflow/react';
 
 import DbtNodeComponent from '../../components/canvas/DbtNodeComponent';
 import { getRegisteredPluginIds } from '../../plugins/registry';
-import { removeNode, replaceEdges } from './canvasDraftSession';
 import { useCanvasAuthoringRuntime } from './useCanvasAuthoringRuntime';
 import { useCanvasControllerEnvironment } from './useCanvasControllerEnvironment';
 import { useCanvasControllerReadModel } from './useCanvasControllerReadModel';
@@ -93,6 +92,7 @@ export function useCanvasController() {
     canMutateGraph,
     workspaceLayoutKey: store.workspaceLayoutKey,
     graphModel,
+    draftSession,
     uiScope,
     selectedNodeIds: store.selectedNodeIds,
     setDraftSession,
@@ -109,23 +109,18 @@ export function useCanvasController() {
     nodes: graphModel.nodes,
     selectedNodeIds: uiScope.selectedNodeIds,
     inspectorNodeId: uiScope.inspectorNodeId,
+    draftSession,
     canEditEdges: canMutateGraph,
     focusMode: store.focusMode,
     inspectorPanelVisible: store.inspectorPanelVisible,
     columnLevelLineageEnabled: store.columnLevelLineageEnabled,
     setNodes: graphModel.setNodes,
     setEdges: graphModel.setEdges,
+    setDraftSession,
     setSelectedNodes: store.setSelectedNodes,
     setInspectorNode: store.setInspectorNode,
     toggleInspectorPanel: store.toggleInspectorPanel,
     onLayoutComplete: persistence.handleNodePositionsSave,
-    onNodeAddedToCanvas: mutationHandlers.handleNodeAddedToCanvas,
-    onNodeRemovedFromCanvas: (nodeId) => {
-      setDraftSession((currentSession) => removeNode(currentSession, nodeId));
-    },
-    onVisibleEdgesChanged: (edges) => {
-      setDraftSession((currentSession) => replaceEdges(currentSession, edges));
-    },
   });
 
   const overlayModel = useCanvasOverlayModel({

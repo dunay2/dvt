@@ -2,7 +2,7 @@
 title: Graph Frontend Architecture
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-04-17
+last_reviewed: 2026-04-18
 ---
 
 # Graph Frontend Architecture
@@ -44,8 +44,9 @@ Out of scope:
 - [useCanvasController.ts](../../../../../apps/web/src/app/views/canvas/useCanvasController.ts)
 - [canvasDraftSession.ts](../../../../../apps/web/src/app/views/canvas/canvasDraftSession.ts)
 - [canvasDraftScope.ts](../../../../../apps/web/src/app/views/canvas/canvasDraftScope.ts)
+- [canvasInteractionCommands.ts](../../../../../apps/web/src/app/views/canvas/canvasInteractionCommands.ts)
 
-## Current Point (2026-04-17)
+## Current Point (2026-04-18)
 
 - route startup is now generalized by explicit route metadata and route IDs,
   not pathname branching in `Root.tsx`.
@@ -62,6 +63,10 @@ Out of scope:
     missing Data Router context
 - Canvas draft lifecycle has explicit session, scope, and presentation seams;
   the wider TF-E2 productization remains in progress.
+- Canvas working-set mutations now flow through one local command catalog
+  (`canvasInteractionCommands.ts`) for remove-node, visible-edge replacement,
+  explicit-node admission, and source-import queueing. The previous
+  compatibility-style write paths inside several adapter hooks were removed.
 
 ## Architecture Pack
 
@@ -81,12 +86,24 @@ Near-term evolution:
 
 - close full TF-E2 node/edge/Inspector lifecycle under one canonical draft
   authority.
+- converge the Canvas authoring slice on one bounded local write authority,
+  explicit command seams, and route-local query models instead of mixed
+  widget-driven mutation paths.
+- keep remaining selection and inspector UI commands from turning back into a
+  second write-authority path as TF-E2 continues.
 - complete operability and proof matrix closure (unit/integration/Cypress).
 - keep route startup contract explicit for all graph-adjacent routes.
 
 Long-term posture:
 
 - Graph remains one bounded frontend authoring context.
+- the Graph authoring context follows a DDD plus tactical CQRS plus hexagonal
+  posture:
+  - one authoritative local aggregate for in-flight authoring truth
+  - command seams for working-set mutations
+  - query seams for projections, validation, overlays, and startup posture
+  - inbound adapters for React Flow and route UI events
+  - outbound ports for workspace snapshot and draft persistence
 - shell startup consumes route contracts but does not own route domain rules.
 - route-local read models remain the only source for startup and recovery
   posture.
