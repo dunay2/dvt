@@ -1,6 +1,6 @@
-import { CURRENT_EXECUTION_PLAN_SCHEMA_VERSION } from '@dvt/contracts';
+import { CURRENT_EXECUTION_PLAN_SCHEMA_VERSION, type ExecutionPlan } from '@dvt/contracts';
 
-function buildPlanMetadata() {
+function buildPlanMetadata(): ExecutionPlan['metadata'] {
   return {
     planId: VALID_PLAN_REF.planId,
     planVersion: VALID_PLAN_REF.planVersion,
@@ -8,6 +8,7 @@ function buildPlanMetadata() {
     contractVersion: '1.0.0',
     inputHashSha256: VALID_PLAN_REF.sha256,
     createdAtIso: '2026-04-05T00:00:00.000Z',
+    ownership: buildPlanOwnership(),
   } as const;
 }
 
@@ -35,6 +36,22 @@ export const VALID_COMPILE_CONTEXT = {
   projectId: 'project-1',
   environmentId: 'env-1',
 } as const;
+
+type PlanOwnershipOverride = Partial<{
+  tenantId: string;
+  projectId: string;
+  environmentId: string;
+}>;
+
+function buildPlanOwnership(
+  overrides: PlanOwnershipOverride = {}
+): NonNullable<ExecutionPlan['metadata']['ownership']> {
+  return {
+    tenantId: overrides.tenantId ?? VALID_COMPILE_CONTEXT.tenantId,
+    projectId: overrides.projectId ?? VALID_COMPILE_CONTEXT.projectId,
+    environmentId: overrides.environmentId ?? VALID_COMPILE_CONTEXT.environmentId,
+  } as const;
+}
 
 export const VALID_DBT_GRAPH_SOURCE = {
   kind: 'generic-graph-v1',
@@ -153,14 +170,14 @@ export function buildImportBody(overrides: Record<string, unknown> = {}): Record
   };
 }
 
-export function buildStoredPlan() {
+export function buildStoredPlan(): ExecutionPlan {
   return {
     metadata: buildPlanMetadata(),
     steps: [],
   } as const;
 }
 
-export function buildTransformationStoredPlan() {
+export function buildTransformationStoredPlan(): ExecutionPlan {
   return {
     metadata: buildPlanMetadata(),
     steps: [
@@ -186,12 +203,23 @@ export function buildTransformationStoredPlan() {
   } as const;
 }
 
-export function buildImportedPlan(scopeTags: Record<string, string>) {
+export function buildImportedPlan(input: {
+  ownership?: PlanOwnershipOverride;
+  scopeTags?: Record<string, string>;
+} = {}): ExecutionPlan {
+  const scopeTags = input.scopeTags ?? {};
   return {
-    metadata: buildPlanMetadata(),
-    steps: [],
-    observability: {
-      tags: scopeTags,
+    metadata: {
+      ...buildPlanMetadata(),
+      ownership: buildPlanOwnership(input.ownership),
     },
+    steps: [],
+    ...(Object.keys(scopeTags).length === 0
+      ? {}
+      : {
+          observability: {
+            tags: scopeTags,
+          },
+        }),
   };
 }

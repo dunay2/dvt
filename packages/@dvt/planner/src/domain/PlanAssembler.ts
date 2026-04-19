@@ -111,6 +111,7 @@ export class PlanAssembler {
         contractVersion: CURRENT_EXECUTION_PLAN_CONTRACT_VERSION,
         planId,
         createdAtIso: new Date().toISOString(),
+        ...(input.ownership === undefined ? {} : { ownership: input.ownership }),
       },
     };
 

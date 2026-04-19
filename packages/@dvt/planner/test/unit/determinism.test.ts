@@ -17,7 +17,7 @@ describe('determinism', () => {
     vi.useRealTimers();
   });
 
-  it('produces stable planId for same semantic input, ignoring volatile fields and observability', async () => {
+  it('produces stable planId for same semantic input, ignoring volatile fields, ownership, and observability', async () => {
     const planner = new Planner();
 
     const base: PlannerInputEnvelopeV1 = {
@@ -29,6 +29,11 @@ describe('determinism', () => {
       },
       selection: { selectedNodeIds: ['model.b'], includeUpstream: true },
       policies: { retry: { kind: 'at-most-once' } },
+      ownership: {
+        tenantId: 'tenant-1',
+        projectId: 'project-1',
+        environmentId: 'env-1',
+      },
       observability: { tags: { t: '1' }, extra: { y: 'z' } },
       requestedBy: 'u1',
       requestId: 'r1',
@@ -43,6 +48,16 @@ describe('determinism', () => {
     // Different observability -> same planId
     const c = await planner.buildPlan({ ...base, observability: { tags: { t: 'DIFF' } } });
     expect(a.plan.metadata.planId).toEqual(c.plan.metadata.planId);
+
+    const d = await planner.buildPlan({
+      ...base,
+      ownership: {
+        tenantId: 'tenant-2',
+        projectId: 'project-2',
+        environmentId: 'env-2',
+      },
+    });
+    expect(a.plan.metadata.planId).toEqual(d.plan.metadata.planId);
   });
 
   it('planId equals sha256(canonicalPlanCoreJson) - caller-verifiable', async () => {

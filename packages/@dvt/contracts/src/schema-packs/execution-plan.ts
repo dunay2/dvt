@@ -12,6 +12,7 @@ import {
   SUPPORTED_EXECUTION_PLAN_VERSIONS,
 } from '../contracts/planner/PlanVersion.v1.js';
 
+import { NonBlankStringSchema } from './common.js';
 import { PlannerObservabilitySchema } from './planner-context.js';
 import { HexSha256Schema } from './shared.js';
 
@@ -57,6 +58,14 @@ export const ExecutionStepV1Schema = z
   })
   .strict();
 
+const PlanOwnershipSchema = z
+  .object({
+    tenantId: NonBlankStringSchema,
+    projectId: NonBlankStringSchema,
+    environmentId: NonBlankStringSchema,
+  })
+  .strict();
+
 const CurrentPlanCoreSchema = z
   .object({
     metadata: z
@@ -78,6 +87,7 @@ const CurrentExecutionPlanV1Schema = CurrentPlanCoreSchema.extend({
       inputHashSha256: HexSha256Schema,
       planId: HexSha256Schema,
       createdAtIso: z.string().min(1),
+      ownership: PlanOwnershipSchema.optional(),
       plannerVersion: z.string().min(1).optional(),
       plannerGitSha: z.string().length(40).optional(),
     })

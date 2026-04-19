@@ -53,6 +53,11 @@ export const VALID_PLANNER_INPUT_FIXTURE = {
       threads: 4,
     },
   },
+  ownership: {
+    tenantId: 'tenant-a',
+    projectId: 'analytics',
+    environmentId: 'prod',
+  },
   observability: {
     tags: {
       tenantId: 'tenant-a',
@@ -86,6 +91,11 @@ export const VALID_EXECUTION_PLAN_V2_FIXTURE = {
     inputHashSha256: HEX_64_A,
     planId: '',
     createdAtIso: '2026-02-26T22:01:00.000Z',
+    ownership: {
+      tenantId: 'tenant-a',
+      projectId: 'analytics',
+      environmentId: 'prod',
+    },
   },
   steps: [
     {

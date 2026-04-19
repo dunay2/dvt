@@ -12,6 +12,7 @@ export class PlannerEnvelopeMapper {
     };
 
     if (input.policies !== undefined) domainInput.policies = input.policies;
+    if (input.ownership !== undefined) domainInput.ownership = input.ownership;
     if (input.observability !== undefined) {
       domainInput.observability = this.toObservability(input.observability);
     }

@@ -2452,10 +2452,10 @@ tasks:
   - task_id: TF-A1-C13
     parent_task: TF-A1-C
     priority: P1
-    status: queued
+    status: done
     complexity: M
     effort_points: 2
-    progress_pct: 0
+    progress_pct: 100
     objective: >-
       replace observability-tag-based import scope ownership with a canonical ownership boundary or
       explicit ownership-policy port so import no longer treats telemetry tags as authorization
@@ -2467,12 +2467,16 @@ tasks:
       does not decode observability tags as the effective domain boundary.
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260419-plan-route-boundary-remediation-review.md
+      - docs/planning/closeouts/20260419-tf-a1-c13-import-ownership-canonicalization-closeout.md
       - apps/api/src/application/services/ImportPlanUseCase.ts
+      - apps/api/src/application/services/PreviewPlanUseCase.ts
+      - packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v1.ts
       - docs/adr/ADR-0012-plan-integrity-ownership.md
     status_reason: >-
-      Queued from the 2026-04-19 architecture remediation review; import currently recovers scope
-      ownership from `plan.observability.tags`, which is weaker than the surrounding DDD and
-      hexagonal boundary posture.
+      Completed. Import now enforces tenant/project/environment ownership from first-class
+      `ExecutionPlan.metadata.ownership`, preview and other planner-backed scoped flows emit the
+      same ownership metadata, and import tests prove `observability.tags` are no longer the
+      effective authorization boundary.
     last_verified: '2026-04-19'
   - task_id: TF-A1-C14
     parent_task: TF-A1-C

@@ -59,6 +59,23 @@ export interface PlannerSelection {
 }
 
 /**
+ * Authorization-relevant ownership carried with a persisted executable plan.
+ *
+ * This is distinct from observability tags:
+ * - observability supports diagnosis and routing
+ * - ownership defines the canonical tenant/project/environment scope that
+ *   imported plans must satisfy
+ *
+ * Ownership is intentionally post-hash metadata and MUST NOT affect
+ * `inputHashSha256` or `planId`.
+ */
+export interface PlanOwnership {
+  tenantId: string;
+  projectId: string;
+  environmentId: string;
+}
+
+/**
  * Explicit per-step activity retry profile materialized into the executable
  * plan.
  *
@@ -129,6 +146,7 @@ export type VersionedExecutionPlan<TVersion extends SupportedPlanVersion> =
       contractVersion: typeof CURRENT_EXECUTION_PLAN_CONTRACT_VERSION;
       planId: string;
       createdAtIso: string;
+      ownership?: PlanOwnership;
       plannerVersion?: string;
       plannerGitSha?: string;
     };
@@ -162,6 +180,7 @@ export interface PlannerInputEnvelopeV1 {
   selection: PlannerSelection;
   policies?: PlannerPolicyClassSet;
   environment?: PlannerEnvironmentContext;
+  ownership?: PlanOwnership;
   observability?: ExecutionPlan['observability'];
   requestedBy?: string;
   requestId?: string;

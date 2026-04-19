@@ -47,14 +47,14 @@ function isPlanOwnedByScope(
   plan: ExecutionPlan,
   command: Pick<ImportPlanCommand, 'tenantId' | 'projectId' | 'environmentId'>
 ): boolean {
-  const tags = plan.observability?.tags;
-  if (tags === undefined) {
+  const ownership = plan.metadata.ownership;
+  if (ownership === undefined) {
     return false;
   }
 
   return (
-    tags['dvt.scope.tenantId'] === command.tenantId &&
-    tags['dvt.scope.projectId'] === command.projectId &&
-    tags['dvt.scope.environmentId'] === command.environmentId
+    ownership.tenantId === command.tenantId &&
+    ownership.projectId === command.projectId &&
+    ownership.environmentId === command.environmentId
   );
 }

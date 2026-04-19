@@ -72,6 +72,11 @@ export class PreviewPlanUseCase {
       selection: command.selection,
       ...(command.policies === undefined ? {} : { policies: command.policies }),
       ...(command.environment === undefined ? {} : { environment: command.environment }),
+      ownership: {
+        tenantId: command.tenantId,
+        projectId: command.projectId,
+        environmentId: command.environmentId,
+      },
       observability: buildPreviewObservability(command),
       requestedBy: context.principal.principalId,
       requestId: context.requestId,

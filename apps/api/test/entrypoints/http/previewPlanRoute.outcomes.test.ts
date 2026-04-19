@@ -56,7 +56,15 @@ describe('previewPlanRoute outcomes', () => {
       },
       validation: { valid: true, warnings: [] },
     });
-    expect(buildPlan).toHaveBeenCalledOnce();
+    expect(buildPlan).toHaveBeenCalledWith(
+      expect.objectContaining({
+        ownership: {
+          tenantId: 'tenant-1',
+          projectId: 'project-1',
+          environmentId: 'env-1',
+        },
+      })
+    );
     expect(validatePlan).toHaveBeenCalledWith(VALID_PLAN_REF, 'mock');
     expect(deps.planStore.markValid).toHaveBeenCalledWith(VALID_PLAN_REF);
     expect(deps.planStore.markInvalid).not.toHaveBeenCalled();
@@ -149,6 +157,11 @@ describe('previewPlanRoute outcomes', () => {
     );
     expect(buildPlan).toHaveBeenCalledWith(
       expect.objectContaining({
+        ownership: {
+          tenantId: 'tenant-1',
+          projectId: 'project-1',
+          environmentId: 'env-1',
+        },
         observability: expect.objectContaining({
           extra: expect.objectContaining({
             transformationFlowRuntime: {

@@ -114,11 +114,13 @@ function toPlannerInput(
     throw new Error('Planner-backed startRun requires graphSource.');
   }
 
+  const ownership = resolvePlanOwnership(context);
   return resolveCanonicalPlannerInputEnvelope(
     {
       graphSource: toPlannerGraphSource(command.graphSource),
       ...(command.policies === undefined ? {} : { policies: command.policies }),
       ...(command.environment === undefined ? {} : { environment: command.environment }),
+      ...(ownership === undefined ? {} : { ownership }),
       ...(command.observability === undefined ? {} : { observability: command.observability }),
       selection: { selectedNodeIds: command.selection },
       requestedBy: context.principal.principalId,
@@ -126,6 +128,22 @@ function toPlannerInput(
       requestedAtIso: context.authorizedAt.toISOString(),
     }
   );
+}
+
+function resolvePlanOwnership(
+  context: AuthorizedCommandExecutionContext
+): PlannerInputEnvelopeV1['ownership'] | undefined {
+  const projectId = context.scope.projectId?.value;
+  const environmentId = context.scope.environmentId?.value;
+  if (projectId === undefined || environmentId === undefined) {
+    return undefined;
+  }
+
+  return {
+    tenantId: context.scope.tenantId.value,
+    projectId,
+    environmentId,
+  };
 }
 
 function toPlannerGraphSource(

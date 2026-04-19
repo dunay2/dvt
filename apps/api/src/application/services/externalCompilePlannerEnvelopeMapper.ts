@@ -9,6 +9,7 @@ export function toExternalCompilePlannerEnvelope(
   command: CompileExternalPlanCommand,
   context: AuthorizedCommandExecutionContext
 ): PlannerInputEnvelopeV1 {
+  const ownership = resolvePlanOwnership(context);
   return resolveCanonicalPlannerInputEnvelope({
     graphSource: normalizeCompileGraphSource(command.graphSource),
     selection: normalizeCompileSelection(command.selection),
@@ -16,6 +17,7 @@ export function toExternalCompilePlannerEnvelope(
     ...(command.environment === undefined
       ? {}
       : { environment: normalizeCompileEnvironment(command.environment) }),
+    ...(ownership === undefined ? {} : { ownership }),
     ...(command.observability === undefined
       ? {}
       : { observability: normalizeCompileObservability(command.observability) }),
@@ -82,4 +84,20 @@ function normalizeCompileObservability(
   observability: NonNullable<CompileExternalPlanCommand['observability']>
 ) {
   return observability as NonNullable<PlannerInputEnvelopeV1['observability']>;
+}
+
+function resolvePlanOwnership(
+  context: AuthorizedCommandExecutionContext
+): PlannerInputEnvelopeV1['ownership'] | undefined {
+  const projectId = context.scope.projectId?.value;
+  const environmentId = context.scope.environmentId?.value;
+  if (projectId === undefined || environmentId === undefined) {
+    return undefined;
+  }
+
+  return {
+    tenantId: context.scope.tenantId.value,
+    projectId,
+    environmentId,
+  };
 }

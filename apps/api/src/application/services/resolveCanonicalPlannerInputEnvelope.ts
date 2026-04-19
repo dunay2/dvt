@@ -12,6 +12,7 @@ export interface CanonicalPlannerInputEnvelopeInput {
   readonly selection: PlannerInputEnvelopeV1['selection'];
   readonly policies?: PlannerPolicyClassSet | undefined;
   readonly environment?: StartRunPlannerEnvironmentInput | undefined;
+  readonly ownership?: PlannerInputEnvelopeV1['ownership'] | undefined;
   readonly observability?: ExecutionPlan['observability'] | undefined;
   readonly requestedBy?: string | undefined;
   readonly requestId?: string | undefined;
@@ -35,6 +36,7 @@ export function resolveCanonicalPlannerInputEnvelope(
             ...(input.environment.vars === undefined ? {} : { vars: input.environment.vars }),
           },
         }),
+    ...(input.ownership === undefined ? {} : { ownership: input.ownership }),
     ...(input.observability === undefined ? {} : { observability: input.observability }),
     ...(input.requestedBy === undefined ? {} : { requestedBy: input.requestedBy }),
     ...(input.requestId === undefined ? {} : { requestId: input.requestId }),
