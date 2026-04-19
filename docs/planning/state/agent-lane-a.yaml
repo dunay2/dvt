@@ -2418,6 +2418,87 @@ tasks:
       directly for generic route grammar. The only retained start-run-specific adapter is
       target-adapter admission, which still owns registry-backed command policy.
     last_verified: '2026-04-19'
+  - task_id: TF-A1-C12
+    parent_task: TF-A1-C
+    priority: P1
+    status: done
+    complexity: M
+    effort_points: 2
+    progress_pct: 100
+    objective: >-
+      standardize the shared preview/import/compile remote-facade execution recipe so plan-route
+      entrypoints stop repeating transport, auth, and response choreography behind hand-written
+      seams.
+    dependency: TF-A1-C11
+    target: >-
+      Preview, import, and compile routes compose one root-owned plan-route remote-facade execution
+      pattern for parse or resolve, authn or authz, use-case delegation, and outcome mapping without
+      collapsing route-specific parser or presenter ownership back into a new convenience module.
+    evidence_refs:
+      - docs/planning/reviews/architecture-and-governance/20260419-plan-route-boundary-remediation-review.md
+      - docs/planning/closeouts/20260419-tf-a1-c12-plan-route-facade-standardization-closeout.md
+      - apps/api/src/entrypoints/http/previewPlanRoute.ts
+      - apps/api/src/entrypoints/http/importPlanRoute.ts
+      - apps/api/src/entrypoints/http/compilePlanRoute.ts
+      - apps/api/src/entrypoints/http/executePlanRouteFacade.ts
+      - apps/api/src/entrypoints/http/planRouteRequestResolver.ts
+      - apps/api/src/entrypoints/http/runCommandRouteExecutor.ts
+    status_reason: >-
+      Completed. Preview, import, and compile now compose one shared plan-route remote-facade
+      execution pattern through dedicated request-resolver and response-mapper seams, without
+      changing caller-visible payloads or collapsing boundary ownership back into a new convenience
+      module.
+    last_verified: '2026-04-19'
+  - task_id: TF-A1-C13
+    parent_task: TF-A1-C
+    priority: P1
+    status: queued
+    complexity: M
+    effort_points: 2
+    progress_pct: 0
+    objective: >-
+      replace observability-tag-based import scope ownership with a canonical ownership boundary or
+      explicit ownership-policy port so import no longer treats telemetry tags as authorization
+      truth.
+    dependency: TF-A1-C12
+    target: >-
+      `ImportPlanUseCase` enforces tenant, project, and environment ownership through first-class
+      plan metadata or a dedicated ownership-policy port, with negative coverage proving that import
+      does not decode observability tags as the effective domain boundary.
+    evidence_refs:
+      - docs/planning/reviews/architecture-and-governance/20260419-plan-route-boundary-remediation-review.md
+      - apps/api/src/application/services/ImportPlanUseCase.ts
+      - docs/adr/ADR-0012-plan-integrity-ownership.md
+    status_reason: >-
+      Queued from the 2026-04-19 architecture remediation review; import currently recovers scope
+      ownership from `plan.observability.tags`, which is weaker than the surrounding DDD and
+      hexagonal boundary posture.
+    last_verified: '2026-04-19'
+  - task_id: TF-A1-C14
+    parent_task: TF-A1-C
+    priority: P1
+    status: queued
+    complexity: S
+    effort_points: 1
+    progress_pct: 0
+    objective: >-
+      converge the compile-boundary ubiquitous language and active architecture docs so
+      `plan-compile`, `external compile`, and living API guidance describe one clear ownership
+      model.
+    dependency: TF-A1-C13
+    target: >-
+      Active docs stop referencing deleted route modules, compile-boundary names follow one declared
+      vocabulary strategy, and historical references remain historical instead of competing with
+      current architecture truth.
+    evidence_refs:
+      - docs/planning/reviews/architecture-and-governance/20260419-plan-route-boundary-remediation-review.md
+      - docs/architecture/components/api/index.md
+      - docs/guides/external-compile-target-architecture-technical-manual-20260417.md
+      - packages/@dvt/contracts/src/schema-packs/plan-compile.ts
+    status_reason: >-
+      Queued from the 2026-04-19 architecture remediation review; active docs and compile-boundary
+      naming still drift between deleted route anchors, `plan-compile`, and `external compile`.
+    last_verified: '2026-04-19'
   - task_id: TF-A1-D
     priority: P1
     status: done
@@ -2556,6 +2637,10 @@ dependency_notes:
     protected API/store path and Lane E cannot continue productizing editable graphs on browser-
     local authority.
   - >-
+    `TF-A1-C12..C14` now capture the post-`TF-A1-C` backend follow-through: standardize the shared
+    plan-route remote-facade recipe, replace observability-tag import ownership with a canonical
+    boundary, and converge compile-boundary vocabulary plus active architecture docs.
+  - >-
     `AR-A12` now captures the Fowler-style reset of the engine-runtime contract pack and the
     run-status read boundary: `AR-A12-A` resets the active line to one canonical pre-stable `v1`
     pack, `AR-A12-B` separates canonical status from provider-live diagnostics, and `AR-A12-C`
@@ -2564,13 +2649,15 @@ dependency_notes:
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
-  verified_on: '2026-04-16'
-  total_tasks: 103
-  total_effort_points: 335
-  completed_weighted_points: 253.64
-  lane_progress_pct: 76
+  verified_on: '2026-04-19'
+  total_tasks: 106
+  total_effort_points: 340
+  completed_weighted_points: 255.64
+  lane_progress_pct: 75
   notes: >-
     Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry
     coordination-only effort. `TF-A2` now adds the missing contract-first workspace graph-draft
     persistence boundary so typed web/api/store ownership is frozen before frontend productization
-    continues. Summary values were recomputed from the current lane registry on 2026-04-16.
+    continues, and `TF-A1-C12..C14` now hold the queued post-hardening route-facade, ownership, and
+    compile-vocabulary cleanup. Summary values were recomputed from the current lane registry on
+    2026-04-19.

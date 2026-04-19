@@ -1,22 +1,18 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
 
-import type { IAuthenticator } from '../../application/ports/auth.js';
-import { AuthorizeCommandScopeService } from '../../application/services/authorizeCommandScopeService.js';
 import type { CompileExternalPlanUseCase } from '../../application/services/CompileExternalPlanUseCase.js';
 
-import { authorizeExecutionScope } from './authorizeExecutionScope.js';
-import { extractBearerToken } from './extractBearerToken.js';
-import { createHttpErrorResponse, HTTP_ERROR_TYPE, sendHttpResponse } from './httpErrorContract.js';
-import { mapRouteParseIssue } from './httpErrorMapper.js';
-import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
-import { buildPlanCompileResponse } from './planCompileResponseMapper.js';
-import { parsePlanCompileRouteInput } from './planCompileRouteInputParser.js';
+import {
+  resolveCompilePlanRouteRequest,
+  type CompilePlanRouteRequestResolverDeps,
+} from './compilePlanRouteRequestResolver.js';
+import {
+  mapCompilePlanInternalError,
+  mapCompilePlanUseCaseResult,
+} from './compilePlanRouteResponseMapper.js';
+import { executePlanRouteFacade } from './executePlanRouteFacade.js';
 
-const START_RUN_ACTION = { kind: 'command', name: 'run:start' } as const;
-
-type CompilePlanRouteDeps = {
-  readonly authenticator: IAuthenticator;
-  readonly authorizer: AuthorizeCommandScopeService;
+type CompilePlanRouteDeps = CompilePlanRouteRequestResolverDeps & {
   readonly useCase: Pick<CompileExternalPlanUseCase, 'execute'>;
 };
 
@@ -25,41 +21,15 @@ export async function compilePlanRoute(
   reply: FastifyReply,
   deps: CompilePlanRouteDeps
 ): Promise<void> {
-  const compileRouteInput = parsePlanCompileRouteInput(request.body);
-  if (!compileRouteInput.ok) {
-    sendHttpResponse(reply, mapRouteParseIssue(compileRouteInput.issue));
-    return;
-  }
-  const compileInput = compileRouteInput.value;
-
-  const authz = await authorizeExecutionScope({
-    authenticator: deps.authenticator,
-    authorizer: deps.authorizer,
-    token: extractBearerToken(request.headers.authorization),
-    requestId: request.id,
-    requestedScope: {
-      tenantId: compileInput.requestedScope.tenantId,
-      projectId: compileInput.requestedScope.projectId,
-      environmentId: compileInput.requestedScope.environmentId,
-      action: START_RUN_ACTION,
-    },
+  await executePlanRouteFacade(request, reply, {
+    logMessage: 'plan compile failed',
+    resolveRequest: () => resolveCompilePlanRouteRequest(request, deps),
+    executeUseCase: (resolvedRequest) =>
+      deps.useCase.execute(
+        resolvedRequest.parsedRequest.command,
+        resolvedRequest.context
+      ),
+    mapResult: (result) => mapCompilePlanUseCaseResult(result),
+    mapInternalError: mapCompilePlanInternalError,
   });
-  if (!authz.ok) {
-    sendHttpResponse(reply, authz.response);
-    return;
-  }
-
-  try {
-    const result = await deps.useCase.execute(compileInput.command, authz.context);
-    reply.code(200).send(buildPlanCompileResponse(result));
-  } catch (error) {
-    request.log.error({ err: error }, 'plan compile failed');
-    sendHttpResponse(
-      reply,
-      createHttpErrorResponse({
-        type: HTTP_ERROR_TYPE.internalServerError,
-        reason: HTTP_ERROR_REASON.internalError,
-      })
-    );
-  }
 }

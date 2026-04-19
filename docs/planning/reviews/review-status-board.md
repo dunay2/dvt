@@ -56,6 +56,13 @@ Sprint execution board:
 
 Additional active rationale:
 
+- [20260419 Plan-route boundary remediation review](./architecture-and-governance/20260419-plan-route-boundary-remediation-review.md)
+  - domain: `architecture-and-governance`
+  - role: current code-grounded Fowler and DDD review for post-branch plan-route facade, import ownership, and compile vocabulary drift
+  - linkage: `TF-A1-C12..TF-A1-C14`
+  - status: `in_progress`
+  - progress: `33%`
+
 - [20260418 MW-D1 external compile boundary review](./architecture-and-governance/20260418-mw-d1-external-compile-boundary-review.md)
   - domain: `architecture-and-governance`
   - role: active code-grounded Fowler, DDD, hexagonal, and CQRS review for the compile-only boundary
