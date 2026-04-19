@@ -2326,6 +2326,34 @@ tasks:
       context parsing splits raw context validation from scope derivation. The exported helpers now
       remain thin orchestration seams instead of mixed validation hotspots.
     last_verified: '2026-04-19'
+  - task_id: TF-A1-C9
+    parent_task: TF-A1-C
+    priority: P1
+    status: done
+    complexity: S
+    effort_points: 1
+    progress_pct: 100
+    objective: >-
+      close the remaining route-helper residuals by removing transport-coupled return values from
+      preview contract validation and adding narrow unit coverage for shared plan-route scope
+      parsing.
+    dependency: TF-A1-C8
+    target: >-
+      Preview contract validation returns transport-neutral issues that the HTTP facade maps at the
+      edge, and `planRouteScope` has its own focused regression tests instead of only transitive
+      route coverage.
+    evidence_refs:
+      - docs/planning/closeouts/20260419-tf-a1-c9-preview-contract-guard-and-scope-qa-closeout.md
+      - apps/api/src/entrypoints/http/planPreviewContractGuard.ts
+      - apps/api/src/entrypoints/http/planPreviewContractErrorMapper.ts
+      - apps/api/src/entrypoints/http/previewPlanRoute.ts
+      - apps/api/test/entrypoints/http/planRouteScope.test.ts
+    status_reason: >-
+      Completed. Preview contract validation now returns transport-neutral issues mapped at the HTTP
+      edge, `previewPlanRoute` delegates authorization and outcome mapping through smaller helpers,
+      and `planRouteScope` now has direct focused regression coverage instead of only transitive
+      route tests.
+    last_verified: '2026-04-19'
   - task_id: TF-A1-D
     priority: P1
     status: done
