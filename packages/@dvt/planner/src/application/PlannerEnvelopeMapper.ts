@@ -5,6 +5,11 @@ type GenericGraphSourceV1 = import('@dvt/contracts').GenericGraphSourceV1SchemaT
 type PlannerInputEnvelopeV1SchemaT = import('@dvt/contracts').PlannerInputEnvelopeV1SchemaT;
 type PlannerSelection = import('@dvt/contracts').PlannerSelection;
 
+type ExecutionPlanObservability = NonNullable<ExecutionPlan['observability']>;
+type PlannerObservabilityInput = NonNullable<PlannerInputEnvelopeV1SchemaT['observability']>;
+
+const RESERVED_OBSERVABILITY_FIELDS = new Set(['tags', 'extra']);
+
 export class PlannerEnvelopeMapper {
   toDomainBaseInput(input: PlannerInputEnvelopeV1SchemaT): Omit<DomainEnvelope, 'graphSource'> {
     const domainInput: Omit<DomainEnvelope, 'graphSource'> = {
@@ -64,19 +69,35 @@ export class PlannerEnvelopeMapper {
     return normalizedSelection;
   }
 
-  private toObservability(
-    observability: NonNullable<PlannerInputEnvelopeV1SchemaT['observability']>
-  ): NonNullable<ExecutionPlan['observability']> {
-    const normalizedObservability: NonNullable<ExecutionPlan['observability']> = {};
+  private toObservability(observability: PlannerObservabilityInput): ExecutionPlanObservability {
+    const normalizedObservability: ExecutionPlanObservability = {};
 
     for (const [key, value] of Object.entries(observability)) {
-      if (key === 'tags' || key === 'extra' || value === undefined) continue;
+      if (!shouldCopyObservabilityEntry(key, value)) continue;
       normalizedObservability[key] = value;
     }
 
-    if (observability.tags !== undefined) normalizedObservability.tags = observability.tags;
-    if (observability.extra !== undefined) normalizedObservability.extra = observability.extra;
+    assignDefinedObservabilityField(normalizedObservability, 'tags', observability.tags);
+    assignDefinedObservabilityField(normalizedObservability, 'extra', observability.extra);
 
     return normalizedObservability;
+  }
+}
+
+function shouldCopyObservabilityEntry(key: string, value: unknown): boolean {
+  if (value === undefined) {
+    return false;
+  }
+
+  return !RESERVED_OBSERVABILITY_FIELDS.has(key);
+}
+
+function assignDefinedObservabilityField<TKey extends keyof ExecutionPlanObservability>(
+  target: ExecutionPlanObservability,
+  key: TKey,
+  value: ExecutionPlanObservability[TKey] | undefined
+): void {
+  if (value !== undefined) {
+    target[key] = value;
   }
 }

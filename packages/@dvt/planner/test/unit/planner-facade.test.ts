@@ -134,6 +134,27 @@ describe('PlannerFacade - canonical graph source boundary', () => {
     });
   });
 
+  it('preserves observability passthrough fields without treating reserved keys generically', async () => {
+    const facade = new PlannerFacade();
+    const result = await facade.buildPlan({
+      graphSource: BASE_GRAPH_SOURCE,
+      selection: BASE_SELECTION,
+      observability: {
+        correlationId: 'corr-123',
+        tags: { tenant: 'tenant-1' },
+        extra: { traceSampled: true },
+        ignoredUndefined: undefined,
+      },
+    });
+
+    expect(result.plan.observability).toMatchObject({
+      correlationId: 'corr-123',
+      tags: { tenant: 'tenant-1' },
+      extra: expect.objectContaining({ traceSampled: true }),
+    });
+    expect(result.plan.observability).not.toHaveProperty('ignoredUndefined');
+  });
+
   it('keeps plan identity stable when only source provenance fields change', async () => {
     const facade = new PlannerFacade();
 
