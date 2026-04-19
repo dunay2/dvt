@@ -2,7 +2,7 @@
 title: Contracts And State-Store Boundary
 owner: Product / Architecture / Delivery / Docs
 status: Active
-last_reviewed: '2026-04-16'
+last_reviewed: '2026-04-19'
 goal:
   Close the state-store boundary, retire contract ownership drift, and keep governance startup
   executable.
@@ -523,6 +523,29 @@ tasks:
       - docs/risk-register/quality/R-20260402-RC-G1-CONTRACT-OWNERSHIP-EXECUTION-DRIFT.yaml
     status_reason: Planner migration and final cleanup are tracked as the closing `RC-G1` slice.
     last_verified: '2026-04-02'
+  - task_id: RC-G1-C-TRUTH-SYNC
+    priority: P1
+    status: queued
+    objective: >-
+      reconcile post-RC-G1-C documentation and barrel truth so active architecture surfaces describe
+      the shipped ownership model exactly.
+    dependency: RC-G1-C
+    target: >-
+      `system-delivery-status`, the RC-G1-C closeout, and linked planning or architecture surfaces
+      distinguish shared DTO re-exports from owner-local behavioral ports and align quantitative
+      status claims with `generated-code-state`.
+    complexity: S
+    effort_points: 2
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/reviews/architecture-and-governance/20260419-post-rc-g1-c-architecture-review.md
+      - docs/planning/closeouts/20260419-rc-g1-c-owner-package-migration-closeout.md
+      - docs/architecture/system-delivery-status.md
+      - docs/planning/status/generated-code-state.md
+    status_reason: >-
+      RC-G1-C shipped the code cutover, but the closeout wording and quantitative status surfaces
+      still overstate or lag the published code truth.
+    last_verified: '2026-04-19'
   - task_id: GOV-S1
     priority: P2
     status: done
@@ -1300,7 +1323,7 @@ tasks:
     last_verified: '2026-04-02'
   - task_id: AR-A7
     priority: P2
-    status: queued
+    status: in_progress
     objective: >-
       split @dvt/delivery into domain rules (backpressure policy, admission guard) and runtime
       orchestration (worker runtime, polling loop) to maintain hexagonal architecture purity.
@@ -1310,13 +1333,19 @@ tasks:
       depends on domain rules, not vice versa.
     complexity: M
     effort_points: 5
-    progress_pct: 0
+    progress_pct: 35
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
+      - docs/planning/reviews/architecture-and-governance/20260419-post-rc-g1-c-architecture-review.md
+      - packages/@dvt/delivery/src/application/OutboxWorkerRuntime.ts
+      - packages/@dvt/delivery/src/application/OutboxWorkerRuntimeLoopController.ts
+      - packages/@dvt/engine/src/state/InMemoryOutboxState.ts
+      - packages/@dvt/delivery/src/testing/InMemoryOutboxStorage.ts
     status_reason: >-
-      Package currently mixes domain logic and application orchestration, violating hexagonal
-      separation.
-    last_verified: '2026-04-02'
+      RC-G1-C partially closed this concern: delivery runtime orchestration is now thinner and the
+      worker monitor delegates health and telemetry seams, but the reusable runtime-shell decision
+      and the duplicated in-memory outbox semantics across engine and delivery remain open.
+    last_verified: '2026-04-19'
   - task_id: AR-A8
     priority: P1
     status: queued
@@ -2402,13 +2431,13 @@ dependency_notes:
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
-  verified_on: '2026-04-16'
-  total_tasks: 103
-  total_effort_points: 335
-  completed_weighted_points: 253.64
+  verified_on: '2026-04-19'
+  total_tasks: 104
+  total_effort_points: 337
+  completed_weighted_points: 255.39
   lane_progress_pct: 76
   notes: >-
     Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry
-    coordination-only effort. `TF-A2` now adds the missing contract-first workspace graph-draft
-    persistence boundary so typed web/api/store ownership is frozen before frontend productization
-    continues. Summary values were recomputed from the current lane registry on 2026-04-16.
+    coordination-only effort. `AR-A7` is now partially progressed after the delivery runtime split
+    landed in `RC-G1-C`, and `RC-G1-C-TRUTH-SYNC` now tracks the post-merge architecture truth
+    alignment backlog. Summary values were recomputed from the current lane registry on 2026-04-19.
