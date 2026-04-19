@@ -20,6 +20,47 @@ export type PlanRouteFacadeResponse<TPayload> =
   | PlanRouteFacadeAccepted<TPayload>
   | PlanRouteFacadeRejected;
 
+export type ResolvedPlanRouteRequestOk<TParsedRequest> = Extract<
+  ResolvedAuthorizedPlanRouteRequest<TParsedRequest>,
+  { readonly ok: true }
+>;
+
+export function createPlanRouteHandler<TDeps, TParsedRequest, TResult, TPayload>(options: {
+  readonly logMessage: string;
+  readonly resolveRequest: (
+    request: FastifyRequest<{ Body: unknown }>,
+    deps: TDeps
+  ) => Promise<ResolvedAuthorizedPlanRouteRequest<TParsedRequest>>;
+  readonly executeUseCase: (
+    resolvedRequest: ResolvedPlanRouteRequestOk<TParsedRequest>,
+    deps: TDeps
+  ) => Promise<TResult>;
+  readonly mapResult: (
+    result: TResult,
+    resolvedRequest: ResolvedPlanRouteRequestOk<TParsedRequest>,
+    deps: TDeps
+  ) => PlanRouteFacadeResponse<TPayload>;
+  readonly mapInternalError: (deps: TDeps) => HttpResponseModel;
+}): (
+  request: FastifyRequest<{ Body: unknown }>,
+  reply: FastifyReply,
+  deps: TDeps
+) => Promise<void> {
+  return async (
+    request: FastifyRequest<{ Body: unknown }>,
+    reply: FastifyReply,
+    deps: TDeps
+  ): Promise<void> => {
+    await executePlanRouteFacade(request, reply, {
+      logMessage: options.logMessage,
+      resolveRequest: () => options.resolveRequest(request, deps),
+      executeUseCase: (resolvedRequest) => options.executeUseCase(resolvedRequest, deps),
+      mapResult: (result, resolvedRequest) => options.mapResult(result, resolvedRequest, deps),
+      mapInternalError: () => options.mapInternalError(deps),
+    });
+  };
+}
+
 export async function executePlanRouteFacade<TParsedRequest, TResult, TPayload>(
   request: FastifyRequest<{ Body: unknown }>,
   reply: FastifyReply,
@@ -27,17 +68,11 @@ export async function executePlanRouteFacade<TParsedRequest, TResult, TPayload>(
     readonly logMessage: string;
     readonly resolveRequest: () => Promise<ResolvedAuthorizedPlanRouteRequest<TParsedRequest>>;
     readonly executeUseCase: (
-      resolvedRequest: Extract<
-        ResolvedAuthorizedPlanRouteRequest<TParsedRequest>,
-        { readonly ok: true }
-      >
+      resolvedRequest: ResolvedPlanRouteRequestOk<TParsedRequest>
     ) => Promise<TResult>;
     readonly mapResult: (
       result: TResult,
-      resolvedRequest: Extract<
-        ResolvedAuthorizedPlanRouteRequest<TParsedRequest>,
-        { readonly ok: true }
-      >
+      resolvedRequest: ResolvedPlanRouteRequestOk<TParsedRequest>
     ) => PlanRouteFacadeResponse<TPayload>;
     readonly mapInternalError: () => HttpResponseModel;
   }

@@ -133,6 +133,10 @@ repeated orchestration.
   for resolved plan-route requests. The helper now owns the common orchestration
   pattern: early rejection send, use-case delegation, accepted versus rejected
   response branching, logging, and internal-error projection.
+- Added `createPlanRouteHandler` above `executePlanRouteFacade` so preview,
+  import, and compile now share the same route-construction shape as well as
+  the same executor branch. The route modules no longer hand-wire the same
+  `request`/`reply`/`deps` closure before delegating into the executor.
 - Reduced `previewPlanRoute`, `importPlanRoute`, and `compilePlanRoute` to
   small wrappers over route-specific resolvers, use-case delegation, and result
   mappers instead of keeping three hand-written copies of the same facade flow.
@@ -145,6 +149,14 @@ repeated orchestration.
 
 ## Validation Run
 
+- `pnpm exec eslint apps/api/src/entrypoints/http/executePlanRouteFacade.ts apps/api/src/entrypoints/http/previewPlanRoute.ts apps/api/src/entrypoints/http/importPlanRoute.ts apps/api/src/entrypoints/http/compilePlanRoute.ts apps/api/test/entrypoints/http/executePlanRouteFacade.test.ts`
+  - Passed.
+- `pnpm --filter dvt-api test -- test/entrypoints/http/executePlanRouteFacade.test.ts test/entrypoints/http/previewPlanRoute.auth.test.ts test/entrypoints/http/previewPlanRoute.inputPolicy.test.ts test/entrypoints/http/previewPlanRoute.outcomes.test.ts test/entrypoints/http/importPlanRoute.test.ts test/entrypoints/http/compilePlanRoute.test.ts`
+  - Passed.
+- `pnpm docs:workboard:generate`
+  - Passed.
+- `pnpm verify:prepush`
+  - Passed.
 - `pnpm exec eslint --max-warnings 0 apps/api/src/entrypoints/http/previewPlanRoute.ts apps/api/src/entrypoints/http/importPlanRoute.ts apps/api/src/entrypoints/http/compilePlanRoute.ts apps/api/src/entrypoints/http/previewPlanRouteRequestResolver.ts apps/api/src/entrypoints/http/previewPlanRouteResponseMapper.ts apps/api/src/entrypoints/http/importPlanRouteParser.ts apps/api/src/entrypoints/http/planCompileRouteInputParser.ts apps/api/src/entrypoints/http/planImportResponseMapper.ts apps/api/src/entrypoints/http/planCompileResponseMapper.ts apps/api/src/entrypoints/http/executePlanRouteFacade.ts apps/api/src/entrypoints/http/planRouteRequestResolver.ts apps/api/src/entrypoints/http/importPlanRouteRequestResolver.ts apps/api/src/entrypoints/http/importPlanRouteResponseMapper.ts apps/api/src/entrypoints/http/compilePlanRouteRequestResolver.ts apps/api/src/entrypoints/http/compilePlanRouteResponseMapper.ts apps/api/test/entrypoints/http/previewPlanRoute.auth.test.ts apps/api/test/entrypoints/http/previewPlanRoute.inputPolicy.test.ts apps/api/test/entrypoints/http/previewPlanRoute.outcomes.test.ts apps/api/test/entrypoints/http/importPlanRoute.test.ts apps/api/test/entrypoints/http/compilePlanRoute.test.ts`
   - Passed.
 - `pnpm --filter dvt-api typecheck`

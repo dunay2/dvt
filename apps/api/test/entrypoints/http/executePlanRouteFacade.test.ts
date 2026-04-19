@@ -2,7 +2,10 @@ import { describe, expect, it, vi } from 'vitest';
 
 import type { AuthorizedCommandExecutionContext } from '../../../src/application/ports/auth.js';
 import { EnvironmentId, ProjectId, TenantId } from '../../../src/domain/auth/types.js';
-import { executePlanRouteFacade } from '../../../src/entrypoints/http/executePlanRouteFacade.js';
+import {
+  createPlanRouteHandler,
+  executePlanRouteFacade,
+} from '../../../src/entrypoints/http/executePlanRouteFacade.js';
 import type { HttpResponseModel } from '../../../src/entrypoints/http/httpErrorContract.js';
 import { HTTP_STATUS_CODE } from '../../../src/routes/httpStatus.js';
 
@@ -187,5 +190,87 @@ describe('executePlanRouteFacade', () => {
       error: { type: 'internal_server_error', reason: 'preview_failed' },
     });
     expect(mapResult).not.toHaveBeenCalled();
+  });
+
+  it('builds route handlers that delegate request resolution and result mapping through one shared shape', async () => {
+    const reply = createReply();
+    const request = createPreviewRequest({ id: 'req-plan-route-handler-ok' });
+    const resolveRequest = vi.fn(async () => ({
+      ok: true as const,
+      parsedRequest: { command: { planId: 'plan-1' } },
+      context: createAuthorizedCommandContext(),
+    }));
+    const executeUseCase = vi.fn(async () => ({ persisted: true }));
+    const mapResult = vi.fn(() => ({
+      kind: 'accepted' as const,
+      payload: { persisted: true },
+    }));
+    const handler = createPlanRouteHandler({
+      logMessage: 'plan route failed',
+      resolveRequest,
+      executeUseCase,
+      mapResult,
+      mapInternalError: () =>
+        createHttpResponseModel(HTTP_STATUS_CODE.internalServerError, {
+          error: { type: 'internal_server_error', reason: 'unexpected' },
+        }),
+    });
+    const deps = { useCase: { kind: 'preview' } };
+
+    await handler(request as never, reply as never, deps);
+
+    expect(resolveRequest).toHaveBeenCalledWith(request, deps);
+    expect(executeUseCase).toHaveBeenCalledWith(
+      expect.objectContaining({
+        parsedRequest: { command: { planId: 'plan-1' } },
+      }),
+      deps
+    );
+    expect(mapResult).toHaveBeenCalledWith(
+      { persisted: true },
+      expect.objectContaining({
+        parsedRequest: { command: { planId: 'plan-1' } },
+      }),
+      deps
+    );
+    expect(reply.statusCode).toBe(200);
+    expect(reply.payload).toEqual({ persisted: true });
+  });
+
+  it('builds route handlers that reuse the shared executor internal-error branch', async () => {
+    const logError = vi.fn();
+    const request = createPreviewRequest({
+      id: 'req-plan-route-handler-error',
+      logError,
+    });
+    const reply = createReply();
+    const internalError = new Error('boom');
+    const handler = createPlanRouteHandler({
+      logMessage: 'plan route failed',
+      resolveRequest: async () => ({
+        ok: true,
+        parsedRequest: { command: { planId: 'plan-1' } },
+        context: createAuthorizedCommandContext(),
+      }),
+      executeUseCase: async () => {
+        throw internalError;
+      },
+      mapResult: () => ({
+        kind: 'accepted',
+        payload: { persisted: true },
+      }),
+      mapInternalError: () =>
+        createHttpResponseModel(HTTP_STATUS_CODE.internalServerError, {
+          error: { type: 'internal_server_error', reason: 'plan_route_failed' },
+        }),
+    });
+
+    await handler(request as never, reply as never, {});
+
+    expect(logError).toHaveBeenCalledWith({ err: internalError }, 'plan route failed');
+    expect(reply.statusCode).toBe(500);
+    expect(reply.payload).toEqual({
+      error: { type: 'internal_server_error', reason: 'plan_route_failed' },
+    });
   });
 });

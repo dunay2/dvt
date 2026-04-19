@@ -2448,11 +2448,11 @@ tasks:
       - apps/api/src/entrypoints/http/runCommandRouteExecutor.ts
     status_reason: >-
       Completed. Preview, import, and compile now compose one shared plan-route remote-facade
-      execution pattern through dedicated request-resolver and response-mapper seams, without
-      changing caller-visible payloads or collapsing boundary ownership back into a new convenience
-      module. Shared regression coverage now exists directly at the executor and authorization-
-      resolver owners, and the neutral plan-route seam no longer carries a start-run-flavored
-      internal constant name.
+      execution pattern through dedicated request-resolver and response-mapper seams plus a shared
+      route-handler factory, without changing caller-visible payloads or collapsing boundary
+      ownership back into a new convenience module. Shared regression coverage now exists directly
+      at the executor and authorization-resolver owners, and the neutral plan-route seam no longer
+      carries a start-run-flavored internal constant name.
     last_verified: '2026-04-19'
   - task_id: TF-A1-C13
     parent_task: TF-A1-C
