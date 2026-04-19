@@ -9,7 +9,10 @@ import type { WorkspaceBootstrapConfig } from '../../services/config/workspaceCo
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { PlanViewModel } from '../../types/plans';
 import { canvasViewCopy } from './copy';
-import { deriveCanvasExecutionState } from './canvasExecutionState';
+import {
+  deriveCanvasExecutionState,
+  type CanvasExecutionState,
+} from './canvasExecutionState';
 import { executeCanvasPlanAction } from './canvasPlanAction';
 import { executeCanvasRunStartAction } from './canvasRunStartAction';
 
@@ -53,6 +56,46 @@ type RevealStartedRunConsoleArgs = {
   toggleConsolePanel: () => void;
 };
 
+type UseCanvasExecutionDraftSignatureSyncArgs = {
+  currentPlan: PlanViewModel | null;
+  setLastPlannedDraftSignature: Dispatch<SetStateAction<string | null>>;
+};
+
+type UseCanvasPlanHandlerArgs = {
+  canPlan: boolean;
+  canonicalEdges: CanonicalEdge[];
+  canonicalNodes: CanonicalNode[];
+  plansService: IPlansPort;
+  previewProvenanceConfig: Pick<
+    WorkspaceBootstrapConfig,
+    'gitBranch' | 'gitSha' | 'gitRepo' | 'graphArtifactPath'
+  >;
+  selectedNodeIds: string[];
+  sessionContext: SessionContextPort;
+  shellFeedback: ShellFeedbackPort;
+  transformationValidation: CanvasExecutionState['transformationValidation'];
+  workspaceNodeIds: string[];
+  workspaceService: IWorkspacePort;
+  setCurrentPlan: (plan: PlanViewModel | null) => void;
+  setLastPlannedDraftSignature: Dispatch<SetStateAction<string | null>>;
+  setPlanModalOpen: Dispatch<SetStateAction<boolean>>;
+};
+
+type UseCanvasRunStartHandlerArgs = {
+  canRun: boolean;
+  consolePanelVisible: boolean;
+  currentPlan: PlanViewModel | null;
+  hasPersistedPlanForRun: boolean;
+  isCurrentPlanStale: boolean;
+  onRunStarted: (runId: string) => void;
+  runsService: IRunsPort;
+  sessionContext: SessionContextPort;
+  setConsolePanelHeight: (height: number) => void;
+  setPlanModalOpen: Dispatch<SetStateAction<boolean>>;
+  shellFeedback: ShellFeedbackPort;
+  toggleConsolePanel: () => void;
+};
+
 function revealStartedRunConsole({
   consolePanelVisible,
   setConsolePanelHeight,
@@ -64,6 +107,131 @@ function revealStartedRunConsole({
   }
 
   toggleConsolePanel();
+}
+
+function useCanvasExecutionDraftSignatureSync({
+  currentPlan,
+  setLastPlannedDraftSignature,
+}: UseCanvasExecutionDraftSignatureSyncArgs): void {
+  useEffect(() => {
+    if (currentPlan == null) {
+      setLastPlannedDraftSignature(null);
+    }
+  }, [currentPlan, setLastPlannedDraftSignature]);
+}
+
+function useCanvasPlanHandler({
+  canPlan,
+  canonicalEdges,
+  canonicalNodes,
+  plansService,
+  previewProvenanceConfig,
+  selectedNodeIds,
+  sessionContext,
+  shellFeedback,
+  transformationValidation,
+  workspaceNodeIds,
+  workspaceService,
+  setCurrentPlan,
+  setLastPlannedDraftSignature,
+  setPlanModalOpen,
+}: UseCanvasPlanHandlerArgs): () => Promise<void> {
+  return useCallback(async () => {
+    const result = await executeCanvasPlanAction({
+      canPlan,
+      canonicalEdges,
+      canonicalNodes,
+      plansService,
+      previewProvenanceConfig,
+      selectedNodeIds,
+      sessionContext,
+      transformationValidation,
+      workspaceNodeIds,
+      workspaceService,
+    });
+
+    if (!result.ok) {
+      shellFeedback.error(result.message);
+      return;
+    }
+
+    setCurrentPlan(result.plan);
+    setLastPlannedDraftSignature(result.draftSignature);
+    setPlanModalOpen(true);
+    shellFeedback.success(canvasViewCopy.planCreatedMessage);
+  }, [
+    canPlan,
+    canonicalEdges,
+    canonicalNodes,
+    plansService,
+    previewProvenanceConfig,
+    selectedNodeIds,
+    sessionContext,
+    transformationValidation,
+    workspaceNodeIds,
+    workspaceService,
+    shellFeedback,
+    setCurrentPlan,
+    setLastPlannedDraftSignature,
+    setPlanModalOpen,
+  ]);
+}
+
+function useCanvasRunStartHandler({
+  canRun,
+  consolePanelVisible,
+  currentPlan,
+  hasPersistedPlanForRun,
+  isCurrentPlanStale,
+  onRunStarted,
+  runsService,
+  sessionContext,
+  setConsolePanelHeight,
+  setPlanModalOpen,
+  shellFeedback,
+  toggleConsolePanel,
+}: UseCanvasRunStartHandlerArgs): () => Promise<void> {
+  return useCallback(async () => {
+    const result = await executeCanvasRunStartAction({
+      canRun,
+      currentPlan,
+      hasPersistedPlanForRun,
+      isCurrentPlanStale,
+      runsService,
+      sessionContext,
+    });
+
+    if (!result.ok) {
+      shellFeedback.error(result.message);
+      if (result.shouldOpenPlanModal) {
+        setPlanModalOpen(true);
+      }
+      return;
+    }
+
+    setPlanModalOpen(false);
+    revealStartedRunConsole({
+      consolePanelVisible,
+      setConsolePanelHeight,
+      toggleConsolePanel,
+    });
+
+    shellFeedback.success(canvasViewCopy.runStartedMessage);
+    onRunStarted(result.runId);
+  }, [
+    canRun,
+    consolePanelVisible,
+    currentPlan,
+    hasPersistedPlanForRun,
+    isCurrentPlanStale,
+    onRunStarted,
+    runsService,
+    sessionContext,
+    setConsolePanelHeight,
+    setPlanModalOpen,
+    shellFeedback,
+    toggleConsolePanel,
+  ]);
 }
 
 export function useCanvasExecutionActions({
@@ -105,36 +273,12 @@ export function useCanvasExecutionActions({
     planStatusSummary,
   } = executionState;
 
-  useEffect(() => {
-    if (currentPlan == null) {
-      setLastPlannedDraftSignature(null);
-    }
-  }, [currentPlan]);
+  useCanvasExecutionDraftSignatureSync({
+    currentPlan,
+    setLastPlannedDraftSignature,
+  });
 
-  const handlePlan = useCallback(async () => {
-    const result = await executeCanvasPlanAction({
-      canPlan,
-      canonicalEdges,
-      canonicalNodes,
-      plansService,
-      previewProvenanceConfig,
-      selectedNodeIds,
-      sessionContext,
-      transformationValidation,
-      workspaceNodeIds,
-      workspaceService,
-    });
-
-    if (!result.ok) {
-      shellFeedback.error(result.message);
-      return;
-    }
-
-    setCurrentPlan(result.plan);
-    setLastPlannedDraftSignature(result.draftSignature);
-    setPlanModalOpen(true);
-    shellFeedback.success(canvasViewCopy.planCreatedMessage);
-  }, [
+  const handlePlan = useCanvasPlanHandler({
     canPlan,
     canonicalEdges,
     canonicalNodes,
@@ -142,43 +286,16 @@ export function useCanvasExecutionActions({
     previewProvenanceConfig,
     selectedNodeIds,
     sessionContext,
-    setCurrentPlan,
     shellFeedback,
-    transformationValidation.draftSignature,
-    transformationValidation.summaryCode,
-    transformationValidation.valid,
-    workspaceService,
+    transformationValidation,
     workspaceNodeIds,
-  ]);
+    workspaceService,
+    setCurrentPlan,
+    setLastPlannedDraftSignature,
+    setPlanModalOpen,
+  });
 
-  const handleStartRun = useCallback(async () => {
-    const result = await executeCanvasRunStartAction({
-      canRun,
-      currentPlan,
-      hasPersistedPlanForRun,
-      isCurrentPlanStale,
-      runsService,
-      sessionContext,
-    });
-
-    if (!result.ok) {
-      shellFeedback.error(result.message);
-      if (result.shouldOpenPlanModal) {
-        setPlanModalOpen(true);
-      }
-      return;
-    }
-
-    setPlanModalOpen(false);
-    revealStartedRunConsole({
-      consolePanelVisible,
-      setConsolePanelHeight,
-      toggleConsolePanel,
-    });
-
-    shellFeedback.success(canvasViewCopy.runStartedMessage);
-    onRunStarted(result.runId);
-  }, [
+  const handleStartRun = useCanvasRunStartHandler({
     canRun,
     consolePanelVisible,
     currentPlan,
@@ -188,9 +305,10 @@ export function useCanvasExecutionActions({
     runsService,
     sessionContext,
     setConsolePanelHeight,
+    setPlanModalOpen,
     shellFeedback,
     toggleConsolePanel,
-  ]);
+  });
 
   return {
     planModalOpen,
