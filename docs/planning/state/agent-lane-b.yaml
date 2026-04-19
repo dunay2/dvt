@@ -2,7 +2,7 @@ lane_id: B
 title: Event Contract And Traceability
 owner: Product / Architecture / Delivery / Docs
 status: Active
-last_reviewed: '2026-04-14'
+last_reviewed: '2026-04-19'
 goal: Stabilize event payload versioning and lineage wiring.
 expected_outcome:
   - event contracts are versioned
@@ -584,6 +584,31 @@ tasks:
       policy was removed, and the public contract surface now aligns on semantic aliases for
       step-scoped evidence fields.
     last_verified: '2026-04-10'
+  - task_id: AR-B5
+    priority: P1
+    status: queued
+    objective: >-
+      decompose `LineageWorkerRuntime` into lifecycle, record-processing, dead-letter, and
+      observability seams without reintroducing shared-kernel leakage.
+    dependency: RC-G1-C
+    target: >-
+      Lineage runtime orchestration, record processing, dead-letter policy, and logging or error
+      normalization compose through dedicated collaborators; the worker keeps traceability-owned
+      contracts and reaches delivery-level decomposition quality without a convenience shared
+      helper.
+    complexity: M
+    effort_points: 2
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/reviews/architecture-and-governance/20260419-post-rc-g1-c-architecture-review.md
+      - packages/@dvt/traceability-service/src/lineage/LineageWorkerRuntime.ts
+      - packages/@dvt/traceability-service/src/lineage/runtime/lineageWorkerDeadLetterSupport.ts
+      - packages/@dvt/traceability-service/src/lineage/errorContract.ts
+    status_reason: >-
+      RC-G1-C moved lineage ownership to the correct package, but the runtime still concentrates
+      loop control, lag or dead-letter policy, and operational logging more than the equivalent
+      delivery runtime.
+    last_verified: '2026-04-19'
 dependency_notes:
   - >-
     `EVD-IA-03` completes the structural move from metadata-only classification to class-aware
@@ -621,14 +646,18 @@ dependency_notes:
     status and architecture surfaces after `S05` landed with accepted evidence. `AR-B4` is now
     closed with a governed proposal, implemented narrow Option A hardening, and ARC evidence for the
     contract-to-mapper-to-projector ownership boundary.
+  - >-
+    `AR-B5` is the post-`RC-G1-C` lineage-runtime decomposition follow-up: ownership is now correct,
+    but loop control, dead-letter policy, and observability still need a narrower service split.
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
-  verified_on: '2026-04-16'
-  total_tasks: 21
-  total_effort_points: 81
+  verified_on: '2026-04-19'
+  total_tasks: 22
+  total_effort_points: 83
   completed_weighted_points: 58.9
-  lane_progress_pct: 73
+  lane_progress_pct: 71
   notes: >-
     Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry
-    coordination-only effort.
+    coordination-only effort. `AR-B5` now tracks the post-ownership lineage-runtime decomposition
+    follow-up after `RC-G1-C`.
