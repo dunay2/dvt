@@ -36,6 +36,7 @@
     "@dvt/observability": "workspace:*",
     "@dvt/crypto": "workspace:*",
     "@dvt/contracts": "workspace:*",
+    "@dvt/delivery": "workspace:*",
     "@dvt/run-domain": "workspace:*"
   },
   "devDependencies": {

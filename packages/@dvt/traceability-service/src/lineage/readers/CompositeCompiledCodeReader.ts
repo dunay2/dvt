@@ -11,9 +11,10 @@ export class CompositeCompiledCodeReader implements ICompiledCodeReader {
     const scheme = getUriScheme(ref.storageUri);
     const reader = this.readersByScheme.get(scheme);
     if (reader === undefined) {
-      throw new CompiledCodeUnsupportedSchemeError(
-        `No compiled-code reader registered for URI scheme "${scheme}"`
-      );
+      throw new CompiledCodeUnsupportedSchemeError({
+        actualScheme: scheme,
+        storageUri: ref.storageUri,
+      });
     }
     return reader.read(ref);
   }

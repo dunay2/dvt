@@ -1,8 +1,10 @@
 import { Pool } from 'pg';
 
 import { PostgresStateStoreAdapter } from '@dvt/adapter-postgres';
-import type { ILineageOutboxStore } from '@dvt/contracts';
-import { HttpOpenLineageSink } from '@dvt/traceability-service';
+import {
+  HttpOpenLineageSink,
+  type ILineageOutboxStore,
+} from '@dvt/traceability-service';
 
 import type { Env } from './env.js';
 

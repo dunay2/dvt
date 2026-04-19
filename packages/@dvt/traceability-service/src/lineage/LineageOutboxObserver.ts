@@ -1,5 +1,9 @@
-import type { ILineageOutboxStore } from '@dvt/contracts';
-import type { OutboxRecord, OutboxWorkerObserver } from '@dvt/contracts';
+import type { OutboxRecord } from '@dvt/contracts';
+import type { OutboxWorkerObserver } from '@dvt/delivery';
+
+import type { ILineageOutboxStore } from './contracts.js';
+import { toLineageErrorLike } from './errorSupport.js';
+import { LINEAGE_LOG_MESSAGE } from './logMessages.js';
 
 export interface LineageOutboxObserverLogger {
   warn?(data: Record<string, unknown>, msg?: string): void;
@@ -24,19 +28,12 @@ export class LineageOutboxObserver implements OutboxWorkerObserver {
     await this.lineageStore.enqueue(record.payload.runId, record.payload).catch((err: unknown) => {
       this.logger.warn?.(
         {
-          err: toErrorLike(err),
+          err: toLineageErrorLike(err),
           runId: record.payload.runId,
           eventType: record.payload.eventType,
         },
-        'lineage outbox enqueue failed — lineage event skipped (fail-open)'
+        LINEAGE_LOG_MESSAGE.OUTBOX_ENQUEUE_FAILED_FAIL_OPEN
       );
     });
   }
-}
-
-function toErrorLike(error: unknown): { message: string; name: string } {
-  if (error instanceof Error) {
-    return { message: error.message, name: error.name };
-  }
-  return { message: String(error), name: 'UnknownError' };
 }

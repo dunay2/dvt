@@ -3,167 +3,26 @@
  * @baseline ADR-0004: Event Sourcing Strategy (Extended)
  * @baseline ADR-0003: Execution Model
  * @baseline ADR-0031: Storage Adapter Tenant Isolation Strategy
- * @decision Runtime owns wiring/lifecycle and the facade owns contract delegation
- * @consequence Runtime composition is separated from state-store contract behavior
+ * @decision Delivery-facing port delegation remains the stable aggregate entrypoint for PostgreSQL state storage
+ * @consequence Consumers keep one adapter type while the facade is split into smaller responsibility files
  * @version 1.0.0
- * @date 2026-03-28
+ * @date 2026-04-19
  */
-import type { ILineageOutboxStore } from '@dvt/contracts';
-import type { ArchivedTerminalSnapshot, TerminalSnapshotPinResult } from '@dvt/state-store';
+import type { ILineageOutboxStore } from '@dvt/traceability-service';
 
-import { POSTGRES_ADAPTER_ERROR_CONSTANTS as E } from './PostgresAdapterConstants.js';
-import type { PostgresSchemaRollbackPlan } from './PostgresSchemaManager.js';
-import { PostgresStateStoreRuntime } from './PostgresStateStoreRuntime.js';
-import type { PostgresStateStoreRuntimeConfig } from './PostgresStateStoreRuntimeConfig.js';
+import { PostgresSnapshotQueueAdapter } from './PostgresSnapshotQueueAdapter.js';
 import type {
-  AppendResult,
   DeadLetterRecord,
   EventEnvelope,
-  EventInput,
   IOutboxStorage,
-  IRunSnapshotStalenessQuery,
-  IRunStateStore,
-  ListEventsOptions,
-  ListRunsOptions,
   OutboxRecord,
-  RetryAttemptReservation,
-  RunBootstrapInput,
   RunId,
-  RunMetadata,
-  WorkflowSnapshot,
 } from './types.js';
 
 export class PostgresStateStoreAdapter
-  extends PostgresStateStoreRuntime
-  implements IRunStateStore, IRunSnapshotStalenessQuery, IOutboxStorage
+  extends PostgresSnapshotQueueAdapter
+  implements IOutboxStorage
 {
-  constructor(config: PostgresStateStoreRuntimeConfig = {}) {
-    super(config);
-  }
-
-  async migrate(): Promise<void> {
-    return this.schemaManager.migrate();
-  }
-
-  async planSchemaRollback(targetVersion: string | null): Promise<PostgresSchemaRollbackPlan> {
-    return this.schemaManager.planRollback(targetVersion);
-  }
-
-  async rollbackSchemaTo(targetVersion: string | null): Promise<PostgresSchemaRollbackPlan> {
-    return this.clientSession.withMaintenanceMode(async () => {
-      if (this.clientSession.hasActiveClients()) {
-        throw new Error(E.schemaRollbackActiveClientsErrorMessage);
-      }
-      return this.schemaManager.rollbackTo(targetVersion);
-    });
-  }
-
-  async appendAndEnqueueTx(runId: RunId, envelopes: EventInput[]): Promise<AppendResult> {
-    this.ready();
-    return this.appendAndEnqueueTxInternal(runId, envelopes);
-  }
-
-  async bootstrapRunTx(input: RunBootstrapInput): Promise<AppendResult> {
-    this.ready();
-    return this.bootstrapRunTxInternal(input);
-  }
-
-  async getRunMetadataByRunId(tenantId: string, runId: string): Promise<RunMetadata | null> {
-    this.ready();
-    return this.getRunMetadataByRunIdInternal(tenantId, runId);
-  }
-
-  async listRuns(options: ListRunsOptions): Promise<RunMetadata[]> {
-    this.ready();
-    return this.listRunsInternal(options);
-  }
-
-  async saveProviderRef(
-    tenantId: string,
-    runId: RunId,
-    providerRef: RunMetadata['providerRef']
-  ): Promise<RunMetadata> {
-    this.ready();
-    return this.saveProviderRefInternal(tenantId, runId, providerRef);
-  }
-
-  async reserveRetryAttempt(
-    tenantId: string,
-    sourceRunId: RunId
-  ): Promise<RetryAttemptReservation> {
-    this.ready();
-    return this.reserveRetryAttemptInternal(tenantId, sourceRunId);
-  }
-
-  async listEvents(
-    tenantId: string,
-    runId: string,
-    options?: ListEventsOptions
-  ): Promise<EventEnvelope[]> {
-    this.ready();
-    return this.listEventsInternal(tenantId, runId, options);
-  }
-
-  async getSnapshot(tenantId: string, runId: RunId): Promise<WorkflowSnapshot | null> {
-    this.ready();
-    return this.getSnapshotInternal(tenantId, runId);
-  }
-
-  async pinTerminalSnapshot(
-    snapshot: ArchivedTerminalSnapshot
-  ): Promise<TerminalSnapshotPinResult> {
-    this.ready();
-    return this.pinTerminalSnapshotInternal(snapshot);
-  }
-
-  async getPinnedTerminalSnapshot(
-    tenantId: string,
-    runId: RunId
-  ): Promise<ArchivedTerminalSnapshot | null> {
-    this.ready();
-    return this.getPinnedTerminalSnapshotInternal(tenantId, runId);
-  }
-
-  async rebuildSnapshot(tenantId: string, runId: RunId): Promise<WorkflowSnapshot> {
-    this.ready();
-    return this.rebuildSnapshotInternal(tenantId, runId);
-  }
-
-  async listStaleSnapshotRuns(
-    batchSize: number
-  ): Promise<Array<{ runId: string; tenantId: string }>> {
-    this.ready();
-    return this.listStaleSnapshotRunsInternal(batchSize);
-  }
-
-  async isSnapshotStale(tenantId: string, runId: string): Promise<boolean> {
-    this.ready();
-    return this.isSnapshotStaleInternal(tenantId, runId);
-  }
-
-  async claimSnapshotWork(
-    batchSize: number
-  ): Promise<Array<{ runId: string; tenantId: string; claimToken: string }>> {
-    this.ready();
-    return this.claimSnapshotWorkInternal(batchSize);
-  }
-
-  async completeSnapshotWork(tenantId: string, runId: string, claimToken: string): Promise<void> {
-    this.ready();
-    await this.completeSnapshotWorkInternal(tenantId, runId, claimToken);
-  }
-
-  async failSnapshotWork(
-    tenantId: string,
-    runId: string,
-    retryDelayMs: number,
-    errorMessage: string,
-    claimToken: string
-  ): Promise<void> {
-    this.ready();
-    await this.failSnapshotWorkInternal(tenantId, runId, retryDelayMs, errorMessage, claimToken);
-  }
-
   async enqueueTx(runId: RunId, events: EventEnvelope[]): Promise<void> {
     this.ready();
     await this.enqueueTxInternal(runId, events);

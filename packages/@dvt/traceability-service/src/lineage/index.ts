@@ -1,6 +1,9 @@
 export * from './types.js';
 export * from './contracts.js';
+export * from './errorContract.js';
+export * from './errorSupport.js';
 export * from './errors.js';
+export * from './warningContract.js';
 export * from './compiledCodeRef.js';
 export * from './openlineageSchema.js';
 export * from './cache/InMemoryCompiledCodeCache.js';
@@ -11,3 +14,5 @@ export * from './resolver/CachedRetryCompiledCodeResolver.js';
 export * from './facets/SqlJobFacetBuilder.js';
 export * from './mapper/StepStartedLineageMapper.js';
 export * from './HttpOpenLineageSink.js';
+export * from './LineageOutboxObserver.js';
+export * from './LineageWorkerRuntime.js';

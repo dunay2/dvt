@@ -1,13 +1,11 @@
 import type { Pool } from 'pg';
 import { Pool as PostgresPool } from 'pg';
 
+import { normalizeLineageOutboxClaimTimeoutMs } from './lineageOutboxStorePolicy.js';
 import { PostgresAdapterClientSession } from './PostgresAdapterClientSession.js';
 import { resolvePostgresConnectionString } from './PostgresAdapterConnectionString.js';
 import { POSTGRES_ADAPTER_RUNTIME_CONSTANTS as C } from './PostgresAdapterConstants.js';
-import {
-  PostgresLineageOutboxStore,
-  normalizeLineageOutboxClaimTimeoutMs,
-} from './PostgresLineageOutboxStore.js';
+import { PostgresLineageOutboxStore } from './PostgresLineageOutboxStore.js';
 import {
   PostgresOutboxStore,
   normalizeOutboxClaimTimeoutMs,

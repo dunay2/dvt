@@ -2,6 +2,7 @@ import type { CompiledCodeRef, EventEnvelope } from '@dvt/contracts';
 import { describe, expect, it } from 'vitest';
 
 import { sha256HexUtf8 } from '../../src/lineage/compiledCodeRef.js';
+import { CompiledCodeNotFoundError } from '../../src/lineage/errors.js';
 import { SqlJobFacetBuilder } from '../../src/lineage/facets/SqlJobFacetBuilder.js';
 import { StepStartedLineageMapper } from '../../src/lineage/mapper/StepStartedLineageMapper.js';
 import {
@@ -9,6 +10,10 @@ import {
   DVT_TRACEABILITY_FACET_PRODUCER,
   OPENLINEAGE_SQL_JOB_FACET_SCHEMA_URL,
 } from '../../src/lineage/openlineageSchema.js';
+import {
+  LINEAGE_WARNING_CODE,
+  LINEAGE_WARNING_MESSAGE_KEY,
+} from '../../src/lineage/warningContract.js';
 
 function mkCompiledCodeRef(sqlText: string): CompiledCodeRef {
   return {
@@ -78,7 +83,7 @@ describe('StepStartedLineageMapper', () => {
     const mapper = new StepStartedLineageMapper({
       compiledCodeResolver: {
         resolve: async () => {
-          throw new Error('storage timeout');
+          throw new CompiledCodeNotFoundError({ storageUri: compiledCodeRef.storageUri });
         },
       },
       sqlFacetBuilder: new SqlJobFacetBuilder(),
@@ -93,7 +98,16 @@ describe('StepStartedLineageMapper', () => {
       },
     });
     expect(result.warnings).toHaveLength(1);
-    expect(result.warnings[0]?.code).toBe('COMPILED_CODE_RESOLUTION_FAILED');
+    expect(result.warnings[0]).toEqual({
+      code: LINEAGE_WARNING_CODE.COMPILED_CODE_RESOLUTION_FAILED,
+      message: `Compiled code not found for URI: ${compiledCodeRef.storageUri}`,
+      messageKey: LINEAGE_WARNING_MESSAGE_KEY.COMPILED_CODE_RESOLUTION_FAILED,
+      messageParams: {
+        causeCode: 'COMPILED_CODE_NOT_FOUND',
+        causeMessageKey: 'traceability.lineage.error.compiled_code_not_found',
+        storageUri: compiledCodeRef.storageUri,
+      },
+    });
   });
 
   it('returns empty facets for events without compiledCodeRef', async () => {

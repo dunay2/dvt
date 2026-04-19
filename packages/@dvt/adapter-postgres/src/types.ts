@@ -1,4 +1,6 @@
+import type { IOutboxStorage, OutboxClaimSelection } from '@dvt/delivery';
 import type { WorkflowSnapshot as EngineWorkflowSnapshot } from '@dvt/engine';
+export { MAX_OUTBOX_ATTEMPTS } from '@dvt/delivery';
 
 export type {
   AppendResult,
@@ -6,17 +8,15 @@ export type {
   EventInput,
   EventEnvelope,
   EventType,
-  IOutboxStorage,
   ListEventsOptions,
   ListRunsOptions,
-  OutboxClaimSelection,
   OutboxRecord,
   ProviderRefUpdate,
   RunBootstrapInput,
   RunId,
   RunMetadata,
 } from '@dvt/contracts';
-export { MAX_OUTBOX_ATTEMPTS } from '@dvt/contracts';
+export type { IOutboxStorage, OutboxClaimSelection };
 
 export type {
   RetryAttemptReservation,

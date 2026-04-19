@@ -1,21 +1,23 @@
-import { PostgresDeliveryBufferPurgeStore, PostgresStateStoreAdapter } from '@dvt/adapter-postgres';
-import type { IEventBus, OutboxWorkerObserver } from '@dvt/contracts';
-import { DeliveryBufferPurger } from '@dvt/state-store';
-import type { Pool } from 'pg';
+import { PostgresStateStoreAdapter } from '@dvt/adapter-postgres';
+import type { OutboxWorkerObserver } from '@dvt/delivery';
 
-import { HttpEventBus } from '../bus/HttpEventBus.js';
-import { LoggingEventBus } from '../bus/LoggingEventBus.js';
 import { acquirePgPool } from '../db/pool.js';
 import type { ActiveEnv } from '../plugins/env.js';
 
+import { buildDeliveryBufferPurgeRuntime } from './buildDeliveryBufferPurgeRuntime.js';
 import { buildRunEventRetentionRuntime } from './buildRunEventRetentionRuntime.js';
-import { DeliveryBufferPurgeRuntime } from './DeliveryBufferPurgeRuntime.js';
+import { createOutboxEventBus } from './createOutboxEventBus.js';
+import {
+  interruptPendingTick,
+  safelyReleaseStartupResources,
+  stopOutboxRuntimeResources,
+  waitForOutboxRuntimeStartupOrAbort,
+} from './outboxRuntimeResourceLifecycle.js';
 import {
   OutboxWorkerRuntime,
   type OutboxWorkerRuntimeHooks,
   type OutboxWorkerRuntimeLogger,
 } from './OutboxWorkerRuntime.js';
-import { RunEventRetentionRuntime } from './RunEventRetentionRuntime.js';
 import type { RunEventRetentionRuntimeHooks } from './RunEventRetentionRuntime.js';
 
 export interface RuntimeHandle {
@@ -28,14 +30,6 @@ export interface CreateOutboxWorkerRuntimeOptions {
   hooks?: OutboxWorkerRuntimeHooks;
   retentionHooks?: RunEventRetentionRuntimeHooks;
   shutdownSignal?: globalThis.AbortSignal;
-}
-
-interface ClosableStateStore {
-  close(): Promise<void>;
-}
-
-interface InterruptibleEventBus extends IEventBus {
-  abortPendingPublishes?(): void;
 }
 
 export async function createOutboxWorkerRuntime(
@@ -57,10 +51,10 @@ export async function createOutboxWorkerRuntime(
     assumeSchemaReady: !runMigrations,
     outboxShardCount: env.DVT_OUTBOX_SHARD_COUNT,
   });
-  const eventBus = createEventBus(env, logger);
+  const eventBus = createOutboxEventBus(env, logger);
 
   try {
-    await waitForStartupOrAbort(
+    await waitForOutboxRuntimeStartupOrAbort(
       async () => {
         if (runMigrations) {
           await stateStore.migrate();
@@ -85,7 +79,7 @@ export async function createOutboxWorkerRuntime(
     });
 
     const purgeRuntime = env.DVT_PURGE_ENABLED
-      ? buildPurgeRuntime(env, poolLease.pool, logger)
+      ? buildDeliveryBufferPurgeRuntime(env, poolLease.pool, logger)
       : null;
     const retentionRuntime = env.DVT_RUN_EVENT_RETENTION_ENABLED
       ? buildRunEventRetentionRuntime(env, poolLease.pool, logger, options.retentionHooks)
@@ -101,180 +95,15 @@ export async function createOutboxWorkerRuntime(
         return Promise.all(starts).then(() => {});
       },
       stop: () =>
-        (stopPromise ??= stopRuntimeResources({
-          runtime,
-          purgeRuntime,
-          retentionRuntime,
-          stateStore,
-          poolLease,
-        })),
+        (stopPromise ??=
+          stopOutboxRuntimeResources({
+            runtimes: [runtime, purgeRuntime, retentionRuntime],
+            stateStore,
+            poolLease,
+          })),
     };
   } catch (error) {
     await safelyReleaseStartupResources(stateStore, poolLease);
     throw error;
-  }
-}
-
-function createEventBus(env: ActiveEnv, logger: OutboxWorkerRuntimeLogger): InterruptibleEventBus {
-  switch (env.DVT_OUTBOX_EVENT_BUS_MODE) {
-    case 'http':
-      return new HttpEventBus({
-        targetUrl: env.DVT_OUTBOX_HTTP_TARGET_URL,
-        timeoutMs: env.DVT_OUTBOX_HTTP_TIMEOUT_MS,
-        serviceName: env.SERVICE_NAME,
-        ...(env.DVT_OUTBOX_HTTP_BEARER_TOKEN
-          ? { bearerToken: env.DVT_OUTBOX_HTTP_BEARER_TOKEN }
-          : {}),
-      });
-    case 'log':
-      return new LoggingEventBus(logger);
-  }
-}
-
-async function waitForStartupOrAbort(
-  startup: () => Promise<void>,
-  deps: {
-    shutdownSignal?: globalThis.AbortSignal;
-    stateStore: { abortPendingOperations(): void | Promise<void> };
-    eventBus: InterruptibleEventBus;
-  }
-): Promise<void> {
-  const signal = deps.shutdownSignal;
-  if (!signal) {
-    await startup();
-    return;
-  }
-
-  if (signal.aborted) {
-    await interruptPendingTick(deps.stateStore, deps.eventBus);
-    throw createAbortError('outbox runtime startup aborted');
-  }
-
-  let detachAbortListener = (): void => {};
-  let startupCompleted = false;
-  const abortPromise = new Promise<never>((_resolve, reject) => {
-    const onAbort = (): void => {
-      if (startupCompleted) {
-        return;
-      }
-      detachAbortListener();
-      void interruptPendingTick(deps.stateStore, deps.eventBus);
-      reject(createAbortError('outbox runtime startup aborted'));
-    };
-
-    detachAbortListener = (): void => {
-      signal.removeEventListener('abort', onAbort);
-    };
-
-    signal.addEventListener('abort', onAbort, { once: true });
-    if (signal.aborted) {
-      onAbort();
-    }
-  });
-
-  try {
-    await Promise.race([startup(), abortPromise]);
-    startupCompleted = true;
-  } finally {
-    detachAbortListener();
-  }
-}
-
-async function interruptPendingTick(
-  stateStore: { abortPendingOperations(): void | Promise<void> },
-  eventBus: InterruptibleEventBus
-): Promise<void> {
-  eventBus.abortPendingPublishes?.();
-  await Promise.resolve(stateStore.abortPendingOperations());
-}
-
-function createAbortError(message: string): Error {
-  const error = new Error(message);
-  error.name = 'AbortError';
-  return error;
-}
-
-async function safelyReleaseStartupResources(
-  stateStore: ClosableStateStore,
-  poolLease: { release(): Promise<void> }
-): Promise<void> {
-  try {
-    await stateStore.close();
-  } catch {
-    // Cleanup must not mask the startup failure.
-  }
-
-  try {
-    await poolLease.release();
-  } catch {
-    // Cleanup must not mask the startup failure.
-  }
-}
-
-function buildPurgeRuntime(
-  env: ActiveEnv,
-  pool: Pool,
-  logger: OutboxWorkerRuntimeLogger
-): DeliveryBufferPurgeRuntime {
-  const purgeStore = new PostgresDeliveryBufferPurgeStore(env.DVT_PG_SCHEMA, pool as never);
-  const purger = new DeliveryBufferPurger({ store: purgeStore });
-  const policy = {
-    deliveredOutboxRetentionDays: env.DVT_PURGE_DELIVERED_OUTBOX_RETENTION_DAYS,
-    outboxDeadLetterRetentionDays: env.DVT_PURGE_OUTBOX_DEAD_LETTER_RETENTION_DAYS,
-    lineageDeadLetterRetentionDays: env.DVT_PURGE_LINEAGE_DEAD_LETTER_RETENTION_DAYS,
-    maxRowsPerRun: env.DVT_PURGE_MAX_ROWS_PER_RUN,
-  };
-  return new DeliveryBufferPurgeRuntime(
-    () => purger.purge(policy),
-    env.DVT_PURGE_INTERVAL_MS,
-    logger
-  );
-}
-
-async function stopRuntimeResources(deps: {
-  runtime: Pick<RuntimeHandle, 'stop'>;
-  purgeRuntime: DeliveryBufferPurgeRuntime | null;
-  retentionRuntime: RunEventRetentionRuntime | null;
-  stateStore: ClosableStateStore;
-  poolLease: { release(): Promise<void> };
-}): Promise<void> {
-  let firstError: unknown = null;
-
-  try {
-    await deps.runtime.stop();
-  } catch (error) {
-    firstError ??= error;
-  }
-
-  if (deps.purgeRuntime) {
-    try {
-      await deps.purgeRuntime.stop();
-    } catch (error) {
-      firstError ??= error;
-    }
-  }
-
-  if (deps.retentionRuntime) {
-    try {
-      await deps.retentionRuntime.stop();
-    } catch (error) {
-      firstError ??= error;
-    }
-  }
-
-  try {
-    await deps.stateStore.close();
-  } catch (error) {
-    firstError ??= error;
-  }
-
-  try {
-    await deps.poolLease.release();
-  } catch (error) {
-    firstError ??= error;
-  }
-
-  if (firstError) {
-    throw firstError;
   }
 }

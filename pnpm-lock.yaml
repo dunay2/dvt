@@ -203,9 +203,6 @@ importers:
       '@dvt/adapter-postgres':
         specifier: workspace:*
         version: link:../../packages/@dvt/adapter-postgres
-      '@dvt/delivery':
-        specifier: workspace:*
-        version: link:../../packages/@dvt/delivery
       '@dvt/traceability-service':
         specifier: workspace:*
         version: link:../../packages/@dvt/traceability-service
@@ -580,6 +577,9 @@ importers:
       '@dvt/contracts':
         specifier: workspace:*
         version: link:../contracts
+      '@dvt/delivery':
+        specifier: workspace:*
+        version: link:../delivery
       '@dvt/engine':
         specifier: workspace:*
         version: link:../engine
@@ -589,6 +589,9 @@ importers:
       '@dvt/state-store':
         specifier: workspace:*
         version: link:../state-store
+      '@dvt/traceability-service':
+        specifier: workspace:*
+        version: link:../traceability-service
       pg:
         specifier: ^8.16.3
         version: 8.18.0
@@ -614,6 +617,9 @@ importers:
       '@dvt/crypto':
         specifier: workspace:*
         version: link:../canonical
+      '@dvt/delivery':
+        specifier: workspace:*
+        version: link:../delivery
       '@dvt/dsl':
         specifier: workspace:*
         version: link:../dsl
@@ -743,6 +749,9 @@ importers:
       '@dvt/crypto':
         specifier: workspace:*
         version: link:../canonical
+      '@dvt/delivery':
+        specifier: workspace:*
+        version: link:../delivery
       '@dvt/observability':
         specifier: workspace:*
         version: link:../observability
@@ -864,9 +873,15 @@ importers:
 
   packages/@dvt/traceability-service:
     dependencies:
+      '@dvt/artifacts':
+        specifier: workspace:*
+        version: link:../artifacts
       '@dvt/contracts':
         specifier: workspace:*
         version: link:../contracts
+      '@dvt/delivery':
+        specifier: workspace:*
+        version: link:../delivery
       glob:
         specifier: ^11.0.0
         version: 11.1.0

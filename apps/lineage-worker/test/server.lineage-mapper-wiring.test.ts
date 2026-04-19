@@ -1,5 +1,9 @@
 import type { CompiledCodeRef, EventEnvelope } from '@dvt/contracts';
-import { sha256HexUtf8 } from '@dvt/traceability-service';
+import {
+  LINEAGE_WARNING_CODE,
+  LINEAGE_WARNING_MESSAGE_KEY,
+  sha256HexUtf8,
+} from '@dvt/traceability-service';
 import { describe, expect, it, vi } from 'vitest';
 
 import { createStepStartedLineageMapper } from '../src/compiledCodeResolver.js';
@@ -90,8 +94,16 @@ describe('lineage worker mapper wiring', () => {
     expect(read).toHaveBeenCalledTimes(1);
     expect(result.jobFacets.sql).toBeUndefined();
     expect(result.jobFacets.dvt_dbt_details?.compiledCodeRef).toEqual(compiledCodeRef);
-    expect(result.warnings).toHaveLength(1);
-    expect(result.warnings[0]?.code).toBe('COMPILED_CODE_RESOLUTION_FAILED');
+    expect(result.warnings).toEqual([
+      {
+        code: LINEAGE_WARNING_CODE.COMPILED_CODE_RESOLUTION_FAILED,
+        message: 'storage timeout',
+        messageKey: LINEAGE_WARNING_MESSAGE_KEY.COMPILED_CODE_RESOLUTION_FAILED,
+        messageParams: {
+          storageUri: compiledCodeRef.storageUri,
+        },
+      },
+    ]);
   });
 
   it('allows production auto mapper construction without an s3 region', async () => {

@@ -14,7 +14,13 @@
   "warnings": [
     {
       "code": "COMPILED_CODE_RESOLUTION_FAILED",
-      "message": "storage timeout"
+      "messageKey": "traceability.lineage.warning.compiled_code_resolution_failed",
+      "messageParams": {
+        "storageUri": "memory://compiled/sql-step",
+        "causeCode": "COMPILED_CODE_NOT_FOUND",
+        "causeMessageKey": "traceability.lineage.error.compiled_code_not_found"
+      },
+      "message": "Compiled code not found for URI: memory://compiled/sql-step"
     }
   ]
 }
