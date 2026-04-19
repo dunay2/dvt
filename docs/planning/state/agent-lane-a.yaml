@@ -2354,6 +2354,37 @@ tasks:
       and `planRouteScope` now has direct focused regression coverage instead of only transitive
       route tests.
     last_verified: '2026-04-19'
+  - task_id: TF-A1-C10
+    parent_task: TF-A1-C
+    priority: P1
+    status: done
+    complexity: S
+    effort_points: 1
+    progress_pct: 100
+    objective: >-
+      finish the preview remote-facade split by extracting explicit request-resolution and
+      response-mapping seams from `previewPlanRoute`, and reduce `previewPlanRouteParser` to a thin
+      orchestrator over smaller policy and command-binding helpers.
+    dependency: TF-A1-C9
+    target: >-
+      `previewPlanRoute` becomes a smaller HTTP facade over request resolution, use-case delegation,
+      and send operations, while preview parser policy and command-binding stages live in dedicated
+      helpers with no caller-visible payload changes.
+    evidence_refs:
+      - docs/planning/closeouts/20260419-tf-a1-c10-preview-route-facade-finalization-closeout.md
+      - apps/api/src/entrypoints/http/previewPlanRoute.ts
+      - apps/api/src/entrypoints/http/previewPlanRouteParser.ts
+      - apps/api/src/entrypoints/http/previewPlanRouteRequestResolver.ts
+      - apps/api/src/entrypoints/http/previewPlanRouteResponseMapper.ts
+      - apps/api/src/entrypoints/http/previewPlanRoutePolicyParser.ts
+      - apps/api/src/entrypoints/http/previewPlanRouteCommandParser.ts
+      - apps/api/src/entrypoints/http/previewPlanRouteRequestBinder.ts
+    status_reason: >-
+      Completed. Preview request resolution and response projection now live in dedicated seams,
+      while `previewPlanRouteParser` delegates route-policy parsing, command-input parsing, and
+      request binding through smaller helpers. The preview HTTP adapter is now closer to a pure
+      remote facade without changing caller-visible behavior.
+    last_verified: '2026-04-19'
   - task_id: TF-A1-D
     priority: P1
     status: done
