@@ -2,10 +2,10 @@ import type { RunContextSchemaT } from '@dvt/contracts';
 import { parseRunContext } from '@dvt/contracts';
 
 import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
+import { parsePlanRouteScope, type ParsedPlanRouteScope } from './planRouteScopeParser.js';
 import { badRequestResult, type RouteParseResult } from './routeParseIssue.js';
-import { parseStartRunScope, type ParsedStartRunScope } from './startRunRouteScopeParser.js';
 
-export type ParsedPlanRouteContext = ParsedStartRunScope &
+export type ParsedPlanRouteContext = ParsedPlanRouteScope &
   Pick<RunContextSchemaT, 'targetAdapter'>;
 
 export function parsePlanRouteContextRecord(
@@ -37,7 +37,7 @@ function parsePlanRouteContext(raw: unknown): RouteParseResult<RunContextSchemaT
 function mapPlanRouteContext(
   context: RunContextSchemaT
 ): RouteParseResult<ParsedPlanRouteContext> {
-  const scopeResult = parseStartRunScope({
+  const scopeResult = parsePlanRouteScope({
     tenantId: context.tenantId,
     projectId: context.projectId,
     environmentId: context.environmentId,

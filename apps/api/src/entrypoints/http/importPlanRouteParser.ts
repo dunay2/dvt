@@ -1,10 +1,10 @@
 import type { ImportPlanCommand } from '../../application/services/ImportPlanUseCase.js';
 
 import { toContractPlanRef } from './planRefHttpMapper.js';
+import { parsePlanRouteBodyRecord } from './planRouteBodyParser.js';
+import { parsePlanRoutePlanRef } from './planRoutePlanRefParser.js';
 import { type ParsedPlanRouteContext, parsePlanRouteContextRecord } from './planRouteScope.js';
 import { type RouteParseResult } from './routeParseIssue.js';
-import { parseStartRunBodyRecord } from './startRunRouteBodyValidation.js';
-import { parseStartRunPlanRef } from './startRunRoutePlanRefParser.js';
 
 export interface ParsedImportPlanRouteInput {
   readonly routeContext: ParsedPlanRouteContext;
@@ -14,7 +14,7 @@ export interface ParsedImportPlanRouteInput {
 export function parseImportPlanRouteInput(
   body: unknown
 ): RouteParseResult<ParsedImportPlanRouteInput> {
-  const bodyRecord = parseStartRunBodyRecord(body);
+  const bodyRecord = parsePlanRouteBodyRecord(body);
   if (!bodyRecord.ok) {
     return bodyRecord;
   }
@@ -24,7 +24,7 @@ export function parseImportPlanRouteInput(
     return routeContext;
   }
 
-  const planRef = parseStartRunPlanRef(bodyRecord.value.planRef);
+  const planRef = parsePlanRoutePlanRef(bodyRecord.value.planRef);
   if (!planRef.ok) {
     return planRef;
   }

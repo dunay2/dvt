@@ -1,12 +1,15 @@
 import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
 import { badRequestResult, type RouteParseResult } from './routeParseIssue.js';
 
-type StartRunPlanSourceDecision = { readonly kind: 'planRef' } | { readonly kind: 'plannerBacked' };
+export type PlanRoutePlanSourceDecision =
+  | { readonly kind: 'planRef' }
+  | { readonly kind: 'plannerBacked' };
+
 const FORBIDDEN_PLANNER_SOURCE_KEYS = ['manifestRef', 'nodes', 'manifest'] as const;
 
-export function evaluateStartRunPlanSource(
+export function evaluatePlanRoutePlanSource(
   record: Record<string, unknown>
-): RouteParseResult<StartRunPlanSourceDecision> {
+): RouteParseResult<PlanRoutePlanSourceDecision> {
   if (hasForbiddenPlannerSource(record)) {
     return badRequestResult(HTTP_ERROR_REASON.invalidPlanSource);
   }
@@ -29,7 +32,9 @@ export function evaluateStartRunPlanSource(
 }
 
 function hasPlannerBackedMetadata(record: Record<string, unknown>): boolean {
-  return ['policies', 'environment', 'observability'].some((key) => record[key] !== undefined);
+  return ['policies', 'environment', 'observability'].some(
+    (key) => record[key] !== undefined
+  );
 }
 
 function hasForbiddenPlannerSource(record: Record<string, unknown>): boolean {

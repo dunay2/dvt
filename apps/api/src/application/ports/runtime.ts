@@ -166,7 +166,20 @@ export interface ICancelRunUseCase {
   ): Promise<SignalRunResult>;
 }
 
-export type RecoverRunTargetAdapter = 'temporal' | 'conductor' | 'mock';
+export const SUPPORTED_RECOVER_RUN_TARGET_ADAPTERS = [
+  'temporal',
+  'conductor',
+  'mock',
+] as const;
+
+export type RecoverRunTargetAdapter =
+  (typeof SUPPORTED_RECOVER_RUN_TARGET_ADAPTERS)[number];
+
+export function isRecoverRunTargetAdapter(
+  value: string
+): value is RecoverRunTargetAdapter {
+  return (SUPPORTED_RECOVER_RUN_TARGET_ADAPTERS as readonly string[]).includes(value);
+}
 
 export interface RecoverRunPlanRef {
   readonly uri: string;

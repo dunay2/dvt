@@ -1,12 +1,13 @@
+import type { PlanRef } from '@dvt/contracts';
 import { parsePlanRef } from '@dvt/contracts';
 
-import type { StartRunPlanRef } from '../../application/ports/startRunCommandContract.js';
-
 import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
+import {
+  asCanonicalNonEmptyStringOrUndefined,
+} from './planRouteBodyParser.js';
 import { badRequestResult, type RouteParseResult } from './routeParseIssue.js';
-import { asCanonicalNonEmptyStringOrUndefined } from './startRunRouteBodyValidation.js';
 
-export function parseStartRunPlanRef(raw: unknown): RouteParseResult<StartRunPlanRef> {
+export function parsePlanRoutePlanRef(raw: unknown): RouteParseResult<PlanRef> {
   if (raw === null || typeof raw !== 'object' || Array.isArray(raw)) {
     return badRequestResult(HTTP_ERROR_REASON.invalidPlanRef, { target: 'planRef' });
   }

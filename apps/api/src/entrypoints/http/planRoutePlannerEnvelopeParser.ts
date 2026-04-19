@@ -1,7 +1,11 @@
 import type {
+  ExecutionPlan,
   GenericGraphNodeV1,
+  GenericGraphSourceV1,
   GenericGraphSourceV1SchemaT,
+  PlannerEnvironmentContext,
   PlannerObservabilitySchemaT,
+  PlannerPolicyClassSet,
 } from '@dvt/contracts';
 import {
   parseGenericGraphSourceV1,
@@ -10,18 +14,25 @@ import {
   parsePlannerPolicyClassSet,
 } from '@dvt/contracts';
 
-import type { StartRunCommand, StartRunPlannerEnvironmentInput } from '../../application/ports/startRunCommandContract.js';
-
 import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
 import { badRequestResult, type RouteParseResult } from './routeParseIssue.js';
 
+export interface ParsedPlanRoutePlannerEnvelope {
+  readonly graphSource?: GenericGraphSourceV1;
+  readonly policies?: PlannerPolicyClassSet;
+  readonly environment?: PlannerEnvironmentContext;
+  readonly observability?: ExecutionPlan['observability'];
+}
+
 type PlannerCommandFields = {
-  -readonly [K in 'graphSource' | 'policies' | 'environment' | 'observability']?: StartRunCommand[K];
+  -readonly [K in keyof ParsedPlanRoutePlannerEnvelope]?: ParsedPlanRoutePlannerEnvelope[K];
 };
 
-export function parseStartRunPlannerEnvelope(
+const FORBIDDEN_PLANNER_INGRESS_KEYS = ['manifestRef', 'manifest', 'nodes'] as const;
+
+export function parsePlanRoutePlannerEnvelope(
   record: Record<string, unknown>
-): RouteParseResult<Pick<StartRunCommand, 'graphSource' | 'policies' | 'environment' | 'observability'>> {
+): RouteParseResult<ParsedPlanRoutePlannerEnvelope> {
   try {
     assertNoForbiddenPlannerIngress(record);
     const result: PlannerCommandFields = {};
@@ -35,7 +46,7 @@ export function parseStartRunPlannerEnvelope(
     }
 
     if (record.environment !== undefined) {
-      result.environment = parseStartRunPlannerEnvironment(record.environment);
+      result.environment = parsePlanRoutePlannerEnvironment(record.environment);
     }
 
     if (record.observability !== undefined) {
@@ -56,7 +67,7 @@ export function parseStartRunPlannerEnvelope(
 
 function mapGraphSource(
   graphSource: GenericGraphSourceV1SchemaT
-): NonNullable<StartRunCommand['graphSource']> {
+): GenericGraphSourceV1 {
   const nodes: GenericGraphNodeV1[] = graphSource.nodes.map((node) => {
     const mappedNode: GenericGraphNodeV1 = {
       nodeId: node.nodeId,
@@ -97,8 +108,8 @@ function mapGraphSource(
 
 function normalizePlannerObservability(
   observability: NonNullable<PlannerObservabilitySchemaT>
-): NonNullable<StartRunCommand['observability']> {
-  const normalized: NonNullable<StartRunCommand['observability']> = {};
+): NonNullable<ExecutionPlan['observability']> {
+  const normalized: NonNullable<ExecutionPlan['observability']> = {};
 
   for (const [key, value] of Object.entries(observability)) {
     if (key !== 'tags' && key !== 'extra') {
@@ -117,23 +128,27 @@ function normalizePlannerObservability(
   return normalized;
 }
 
-function parseStartRunPlannerEnvironment(raw: unknown): StartRunPlannerEnvironmentInput {
+function parsePlanRoutePlannerEnvironment(
+  raw: unknown
+): PlannerEnvironmentContext {
   const canonicalEnvironment = parsePlannerEnvironmentContext(raw);
 
   return {
     ...(canonicalEnvironment.environmentId === undefined
       ? {}
       : { environmentId: canonicalEnvironment.environmentId }),
-    ...(canonicalEnvironment.vars === undefined ? {} : { vars: canonicalEnvironment.vars }),
+    ...(canonicalEnvironment.vars === undefined
+      ? {}
+      : { vars: canonicalEnvironment.vars }),
   };
 }
 
 function assertNoForbiddenPlannerIngress(record: Record<string, unknown>): void {
-  if (
-    record.manifestRef !== undefined ||
-    record.manifest !== undefined ||
-    record.nodes !== undefined
-  ) {
+  if (hasForbiddenPlannerIngress(record)) {
     throw new Error('Forbidden planner ingress');
   }
+}
+
+function hasForbiddenPlannerIngress(record: Record<string, unknown>): boolean {
+  return FORBIDDEN_PLANNER_INGRESS_KEYS.some((key) => record[key] !== undefined);
 }

@@ -4,19 +4,19 @@ import { parsePlanCompileRequest } from '@dvt/contracts';
 import type { CompileExternalPlanCommand } from '../../application/services/CompileExternalPlanUseCase.js';
 
 import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
+import { parsePlanRouteBodyRecord } from './planRouteBodyParser.js';
+import { parsePlanRouteScope, type ParsedPlanRouteScope } from './planRouteScopeParser.js';
 import { badRequestResult, type RouteParseResult } from './routeParseIssue.js';
-import { parseStartRunBodyRecord } from './startRunRouteBodyValidation.js';
-import { parseStartRunScope, type ParsedStartRunScope } from './startRunRouteScopeParser.js';
 
 export interface ParsedPlanCompileRouteInput {
-  readonly requestedScope: ParsedStartRunScope;
+  readonly requestedScope: ParsedPlanRouteScope;
   readonly command: CompileExternalPlanCommand;
 }
 
 export function parsePlanCompileRouteInput(
   body: unknown
 ): RouteParseResult<ParsedPlanCompileRouteInput> {
-  const parsedBody = parseStartRunBodyRecord(body);
+  const parsedBody = parsePlanRouteBodyRecord(body);
   if (!parsedBody.ok) {
     return parsedBody;
   }
@@ -32,7 +32,7 @@ export function parsePlanCompileRouteInput(
     return badRequestResult(HTTP_ERROR_REASON.invalidBody);
   }
 
-  const scopeResult = parseStartRunScope(compileRequest.context);
+  const scopeResult = parsePlanRouteScope(compileRequest.context);
   if (!scopeResult.ok) {
     return scopeResult;
   }

@@ -946,7 +946,7 @@ tasks:
       - docs/planning/proposals/mandatory/runtime-and-contracts/s08-5-post-s08-4-invariant-closure-plan-20260403.md
       - packages/@dvt/contracts/src/contracts/engine/RunExecutionContext.v1.ts
       - packages/@dvt/engine/src/services/startRun/RunExecutionContextAdmissionPolicy.ts
-      - apps/api/src/entrypoints/http/startRunRouteRunExecutionContextRefParser.ts
+      - apps/api/src/entrypoints/http/planRouteRunExecutionContextRefParser.ts
       - docs/planning/closeouts/20260406-s08-5c-plugin-compatibility-fingerprint-closeout.md
     status_reason: >-
       `runExecutionContext` is now a governed serialized boundary across contracts, API parsing, and
@@ -1071,9 +1071,9 @@ tasks:
       - packages/@dvt/contracts/test/planner.contract.test.ts
       - packages/@dvt/planner/src/domain/types.ts
       - packages/@dvt/planner/src/application/PlannerEnvelopeMapper.ts
-      - apps/api/src/entrypoints/http/startRunRoutePlanSourcePolicy.ts
+      - apps/api/src/entrypoints/http/planRoutePlanSourcePolicy.ts
       - apps/api/test/entrypoints/http/startRunRoute.test.ts
-      - apps/api/test/entrypoints/http/startRunRoutePlanSourcePolicy.test.ts
+      - apps/api/test/entrypoints/http/planRoutePlanSourcePolicy.test.ts
       - docs/planning/closeouts/20260406-mw-a2-b-contract-cleanup-closeout.md
     status_reason: >-
       Planner graph-source contract surface is now GenericGraphSourceV1-only: remaining legacy
@@ -2384,6 +2384,39 @@ tasks:
       while `previewPlanRouteParser` delegates route-policy parsing, command-input parsing, and
       request binding through smaller helpers. The preview HTTP adapter is now closer to a pure
       remote facade without changing caller-visible behavior.
+    last_verified: '2026-04-19'
+  - task_id: TF-A1-C11
+    parent_task: TF-A1-C
+    priority: P1
+    status: done
+    complexity: S
+    effort_points: 1
+    progress_pct: 100
+    objective: >-
+      remove semantic cross-boundary coupling by moving shared preview/import/compile/recover route
+      grammar out of `startRun*` helpers and into neutral `planRoute*` parser and policy seams.
+    dependency: TF-A1-C10
+    target: >-
+      Preview/import/compile/recover route parsing no longer imports `startRun*` grammar helpers,
+      while start-run composes the same behavior through start-run-specific adapters over neutral
+      `planRoute*` owners.
+    evidence_refs:
+      - docs/planning/closeouts/20260419-tf-a1-c11-plan-route-grammar-ownership-closeout.md
+      - apps/api/src/entrypoints/http/planRouteBodyParser.ts
+      - apps/api/src/entrypoints/http/planRoutePlannerEnvelopeParser.ts
+      - apps/api/src/entrypoints/http/planRouteRunExecutionContextRefParser.ts
+      - apps/api/src/entrypoints/http/planRouteScopeParser.ts
+      - apps/api/src/entrypoints/http/planRouteTargetAdapterParser.ts
+      - apps/api/src/entrypoints/http/previewPlanRouteParser.ts
+      - apps/api/src/entrypoints/http/previewPlanRouteCommandParser.ts
+      - apps/api/src/entrypoints/http/importPlanRouteParser.ts
+      - apps/api/src/entrypoints/http/planCompileRouteInputParser.ts
+      - apps/api/src/entrypoints/http/recoverRunRouteParser.ts
+    status_reason: >-
+      Completed. Shared preview/import/compile/recover grammar now lives behind neutral `planRoute*`
+      owners, including route-scope parsing, and start-run now consumes those neutral parsers
+      directly for generic route grammar. The only retained start-run-specific adapter is
+      target-adapter admission, which still owns registry-backed command policy.
     last_verified: '2026-04-19'
   - task_id: TF-A1-D
     priority: P1

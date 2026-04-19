@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { evaluateStartRunPlanSource } from '../../../src/entrypoints/http/startRunRoutePlanSourcePolicy.js';
+import { evaluatePlanRoutePlanSource } from '../../../src/entrypoints/http/planRoutePlanSourcePolicy.js';
 
 const VALID_PLAN_REF = {
   uri: 'https://plans.example.com/p.json',
@@ -10,9 +10,9 @@ const VALID_PLAN_REF = {
   planVersion: '1.0',
 };
 
-describe('evaluateStartRunPlanSource', () => {
+describe('evaluatePlanRoutePlanSource', () => {
   it('accepts planRef-only source', () => {
-    expect(evaluateStartRunPlanSource({ planRef: VALID_PLAN_REF })).toEqual({
+    expect(evaluatePlanRoutePlanSource({ planRef: VALID_PLAN_REF })).toEqual({
       ok: true,
       value: { kind: 'planRef' },
     });
@@ -20,7 +20,7 @@ describe('evaluateStartRunPlanSource', () => {
 
   it('accepts planner-backed source with a single planner source', () => {
     expect(
-      evaluateStartRunPlanSource({
+      evaluatePlanRoutePlanSource({
         graphSource: {
           kind: 'generic-graph-v1',
           sourceFamily: 'dbt',
@@ -36,7 +36,7 @@ describe('evaluateStartRunPlanSource', () => {
 
   it('rejects planRef with planner-backed sources', () => {
     expect(
-      evaluateStartRunPlanSource({
+      evaluatePlanRoutePlanSource({
         planRef: VALID_PLAN_REF,
         graphSource: {
           kind: 'generic-graph-v1',
@@ -53,7 +53,7 @@ describe('evaluateStartRunPlanSource', () => {
 
   it('rejects planRef with planner-backed metadata', () => {
     expect(
-      evaluateStartRunPlanSource({
+      evaluatePlanRoutePlanSource({
         planRef: VALID_PLAN_REF,
         environment: {
           environmentId: 'prod',
@@ -66,7 +66,7 @@ describe('evaluateStartRunPlanSource', () => {
   });
 
   it('rejects missing planner source when planRef is absent', () => {
-    expect(evaluateStartRunPlanSource({})).toEqual({
+    expect(evaluatePlanRoutePlanSource({})).toEqual({
       ok: false,
       issue: { type: 'bad_request', reason: 'invalid_plan_source' },
     });
@@ -74,7 +74,7 @@ describe('evaluateStartRunPlanSource', () => {
 
   it('rejects planner metadata without graphSource when planRef is absent', () => {
     expect(
-      evaluateStartRunPlanSource({
+      evaluatePlanRoutePlanSource({
         observability: {
           tags: {
             route: 'start-run',
@@ -89,7 +89,7 @@ describe('evaluateStartRunPlanSource', () => {
 
   it('rejects manifestRef as a forbidden planner source', () => {
     expect(
-      evaluateStartRunPlanSource({
+      evaluatePlanRoutePlanSource({
         graphSource: {
           kind: 'generic-graph-v1',
           sourceFamily: 'dbt',
@@ -106,7 +106,7 @@ describe('evaluateStartRunPlanSource', () => {
 
   it('rejects legacy nodes payloads', () => {
     expect(
-      evaluateStartRunPlanSource({
+      evaluatePlanRoutePlanSource({
         nodes: [{ nodeId: 'model_a', resourceType: 'model', dependsOn: [] }],
       })
     ).toEqual({
@@ -117,7 +117,7 @@ describe('evaluateStartRunPlanSource', () => {
 
   it('rejects legacy manifest payloads even when planRef is provided', () => {
     expect(
-      evaluateStartRunPlanSource({
+      evaluatePlanRoutePlanSource({
         planRef: VALID_PLAN_REF,
         manifest: { nodes: {} },
       })

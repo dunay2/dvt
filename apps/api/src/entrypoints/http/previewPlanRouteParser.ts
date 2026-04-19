@@ -1,3 +1,4 @@
+import { parsePlanRouteBodyRecord } from './planRouteBodyParser.js';
 import { parsePreviewCommandInput } from './previewPlanRouteCommandParser.js';
 import { parsePreviewRoutePolicy } from './previewPlanRoutePolicyParser.js';
 import {
@@ -5,12 +6,11 @@ import {
   type ParsedPreviewPlanRequest,
 } from './previewPlanRouteRequestBinder.js';
 import { type RouteParseResult } from './routeParseIssue.js';
-import { parseStartRunBodyRecord } from './startRunRouteBodyValidation.js';
 
 export type { ParsedPreviewPlanRequest, PreviewPlanContractRequest } from './previewPlanRouteRequestBinder.js';
 
 export function parsePreviewPlanBody(body: unknown): RouteParseResult<ParsedPreviewPlanRequest> {
-  const bodyRecord = parseStartRunBodyRecord(body);
+  const bodyRecord = parsePlanRouteBodyRecord(body);
   if (!bodyRecord.ok) {
     return bodyRecord;
   }

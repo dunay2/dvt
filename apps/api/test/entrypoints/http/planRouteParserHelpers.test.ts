@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { parseStartRunBodyRecord } from '../../../src/entrypoints/http/startRunRouteBodyValidation.js';
+import { parsePlanRouteBodyRecord } from '../../../src/entrypoints/http/planRouteBodyParser.js';
+import { parsePlanRoutePlannerEnvelope } from '../../../src/entrypoints/http/planRoutePlannerEnvelopeParser.js';
+import { parsePlanRoutePlanRef } from '../../../src/entrypoints/http/planRoutePlanRefParser.js';
+import { parsePlanRouteRunExecutionContextRef } from '../../../src/entrypoints/http/planRouteRunExecutionContextRefParser.js';
+import { parsePlanRouteScope as parseScopedPlanRouteScope } from '../../../src/entrypoints/http/planRouteScopeParser.js';
 import { parseStartRunBody } from '../../../src/entrypoints/http/startRunRouteParser.js';
-import { parseStartRunPlannerEnvelope } from '../../../src/entrypoints/http/startRunRoutePlannerEnvelopeMapper.js';
-import { parseStartRunPlanRef } from '../../../src/entrypoints/http/startRunRoutePlanRefParser.js';
-import { parseStartRunRunExecutionContextRef } from '../../../src/entrypoints/http/startRunRouteRunExecutionContextRefParser.js';
-import { parseStartRunScope } from '../../../src/entrypoints/http/startRunRouteScopeParser.js';
 
 const VALID_PLAN_REF = {
   uri: 'https://plans.example.com/p.json',
@@ -15,21 +15,21 @@ const VALID_PLAN_REF = {
   planVersion: '1.0',
 };
 
-describe('startRunRoute parser helpers', () => {
+describe('plan-route helper parsers', () => {
   it('validates body object shape', () => {
-    expect(parseStartRunBodyRecord(undefined)).toEqual({
+    expect(parsePlanRouteBodyRecord(undefined)).toEqual({
       ok: false,
       issue: { type: 'bad_request', reason: 'invalid_body' },
     });
-    expect(parseStartRunBodyRecord([])).toEqual({
+    expect(parsePlanRouteBodyRecord([])).toEqual({
       ok: false,
       issue: { type: 'bad_request', reason: 'invalid_body' },
     });
-    expect(parseStartRunBodyRecord({ a: 1 })).toEqual({ ok: true, value: { a: 1 } });
+    expect(parsePlanRouteBodyRecord({ a: 1 })).toEqual({ ok: true, value: { a: 1 } });
   });
 
   it('parses scope with domain IDs', () => {
-    const parsed = parseStartRunScope({
+    const parsed = parseScopedPlanRouteScope({
       tenantId: 't1',
       projectId: 'p1',
       environmentId: 'e1',
@@ -75,20 +75,20 @@ describe('startRunRoute parser helpers', () => {
       { type: 'bad_request', reason: 'invalid_environment_id', target: 'environmentId' },
     ],
   ])('returns semantic issue for %s', (_desc, input, issue) => {
-    expect(parseStartRunScope(input)).toEqual({
+    expect(parseScopedPlanRouteScope(input)).toEqual({
       ok: false,
       issue,
     });
   });
 
   it('parses canonical planRef fields and rejects surrounding whitespace', () => {
-    expect(parseStartRunPlanRef(VALID_PLAN_REF)).toEqual({
+    expect(parsePlanRoutePlanRef(VALID_PLAN_REF)).toEqual({
       ok: true,
       value: VALID_PLAN_REF,
     });
 
     expect(
-      parseStartRunPlanRef({
+      parsePlanRoutePlanRef({
         uri: ' https://plans.example.com/p.json ',
         sha256: ' abc123 ',
         schemaVersion: ' 1.0.0 ',
@@ -100,7 +100,7 @@ describe('startRunRoute parser helpers', () => {
       issue: { type: 'bad_request', reason: 'invalid_plan_ref', target: 'planRef' },
     });
 
-    expect(parseStartRunPlanRef({})).toEqual({
+    expect(parsePlanRoutePlanRef({})).toEqual({
       ok: false,
       issue: { type: 'bad_request', reason: 'invalid_plan_ref', target: 'planRef' },
     });
@@ -108,7 +108,7 @@ describe('startRunRoute parser helpers', () => {
 
   it('parses canonical runExecutionContextRef and rejects surrounding whitespace', () => {
     expect(
-      parseStartRunRunExecutionContextRef({
+      parsePlanRouteRunExecutionContextRef({
         uri: 'dvt-runctx://tenant-a/run-1/context.json',
         sha256: 'abc123',
         schemaVersion: 'v1.0',
@@ -127,7 +127,7 @@ describe('startRunRoute parser helpers', () => {
     });
 
     expect(
-      parseStartRunRunExecutionContextRef({
+      parsePlanRouteRunExecutionContextRef({
         uri: ' dvt-runctx://tenant-a/run-1/context.json ',
         sha256: ' abc123 ',
         schemaVersion: ' v1.0 ',
@@ -143,7 +143,7 @@ describe('startRunRoute parser helpers', () => {
       },
     });
 
-    expect(parseStartRunRunExecutionContextRef({ uri: 'dvt-runctx://x' })).toEqual({
+    expect(parsePlanRouteRunExecutionContextRef({ uri: 'dvt-runctx://x' })).toEqual({
       ok: false,
       issue: {
         type: 'bad_request',
@@ -155,7 +155,7 @@ describe('startRunRoute parser helpers', () => {
 
   it('parses optional runExecutionContextRef pluginCompatibilityFingerprint', () => {
     expect(
-      parseStartRunRunExecutionContextRef({
+      parsePlanRouteRunExecutionContextRef({
         uri: 'dvt-runctx://tenant-a/run-1/context.json',
         sha256: 'abc123',
         schemaVersion: 'v1.0',
@@ -180,7 +180,7 @@ describe('startRunRoute parser helpers', () => {
 
   it('rejects whitespace-padded pluginCompatibilityFingerprint instead of dropping it', () => {
     expect(
-      parseStartRunRunExecutionContextRef({
+      parsePlanRouteRunExecutionContextRef({
         uri: 'dvt-runctx://tenant-a/run-1/context.json',
         sha256: 'abc123',
         schemaVersion: 'v1.0',
@@ -200,7 +200,7 @@ describe('startRunRoute parser helpers', () => {
   });
 
   it('maps planner envelope fields and rejects invalid planner source', () => {
-    const parsed = parseStartRunPlannerEnvelope({
+    const parsed = parsePlanRoutePlannerEnvelope({
       graphSource: {
         kind: 'generic-graph-v1',
         sourceFamily: 'dbt',
@@ -221,13 +221,13 @@ describe('startRunRoute parser helpers', () => {
       },
     });
 
-    expect(parseStartRunPlannerEnvelope({ graphSource: { kind: 'bad' } })).toEqual({
+    expect(parsePlanRoutePlannerEnvelope({ graphSource: { kind: 'bad' } })).toEqual({
       ok: false,
       issue: { type: 'bad_request', reason: 'invalid_plan_source' },
     });
 
     expect(
-      parseStartRunPlannerEnvelope({
+      parsePlanRoutePlannerEnvelope({
         graphSource: {
           kind: 'generic-graph-v1',
           sourceFamily: 'dbt',
@@ -244,7 +244,7 @@ describe('startRunRoute parser helpers', () => {
     });
 
     expect(
-      parseStartRunPlannerEnvelope({
+      parsePlanRoutePlannerEnvelope({
         graphSource: {
           kind: 'generic-graph-v1',
           sourceFamily: 'dbt',
@@ -258,7 +258,7 @@ describe('startRunRoute parser helpers', () => {
     });
 
     expect(
-      parseStartRunPlannerEnvelope({
+      parsePlanRoutePlannerEnvelope({
         manifestRef: {
           uri: 'manifest.json',
           sha256: 'a'.repeat(64),
@@ -272,7 +272,7 @@ describe('startRunRoute parser helpers', () => {
 
   it('rejects environment targetProfile now that planner ingress is canonical-only', () => {
     expect(
-      parseStartRunPlannerEnvelope({
+      parsePlanRoutePlannerEnvelope({
         graphSource: {
           kind: 'generic-graph-v1',
           sourceFamily: 'dbt',

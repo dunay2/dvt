@@ -1,11 +1,11 @@
 import type { PreviewPlanCommand } from '../../application/services/PreviewPlanUseCase.js';
 
 import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
+import { parsePlanRoutePlannerEnvelope } from './planRoutePlannerEnvelopeParser.js';
+import { evaluatePlanRoutePlanSource } from './planRoutePlanSourcePolicy.js';
+import { parsePlanRouteSelection } from './planRouteSelectionParser.js';
 import { type PreviewProvenance, parsePreviewProvenance } from './previewProvenanceParser.js';
 import { badRequestResult, type RouteParseResult } from './routeParseIssue.js';
-import { parseStartRunPlannerEnvelope } from './startRunRoutePlannerEnvelopeMapper.js';
-import { evaluateStartRunPlanSource } from './startRunRoutePlanSourcePolicy.js';
-import { parseStartRunSelection } from './startRunRouteSelectionParser.js';
 
 export interface ParsedPreviewCommandInput {
   readonly selectedNodeIds: readonly string[];
@@ -20,7 +20,7 @@ export function parsePreviewCommandInput(
   record: Record<string, unknown>
 ): RouteParseResult<ParsedPreviewCommandInput> {
   const selectionInput = record.selectedNodeIds ?? record.selection;
-  const selection = parseStartRunSelection(selectionInput);
+  const selection = parsePlanRouteSelection(selectionInput);
   if (!selection.ok) {
     return selection;
   }
@@ -55,7 +55,7 @@ interface PreviewPlannerCommandFields {
 function parsePreviewPlannerCommandFields(
   record: Record<string, unknown>
 ): RouteParseResult<PreviewPlannerCommandFields> {
-  const sourceDecision = evaluateStartRunPlanSource(record);
+  const sourceDecision = evaluatePlanRoutePlanSource(record);
   if (!sourceDecision.ok) {
     return sourceDecision;
   }
@@ -64,7 +64,7 @@ function parsePreviewPlannerCommandFields(
     return badRequestResult(HTTP_ERROR_REASON.invalidPlanSource);
   }
 
-  const plannerEnvelope = parseStartRunPlannerEnvelope(record);
+  const plannerEnvelope = parsePlanRoutePlannerEnvelope(record);
   if (!plannerEnvelope.ok) {
     return plannerEnvelope;
   }

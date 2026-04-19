@@ -1,10 +1,10 @@
 import { parseRunExecutionContextRef, type RunExecutionContextRef } from '@dvt/contracts';
 
 import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
+import { asCanonicalNonEmptyStringOrUndefined } from './planRouteBodyParser.js';
 import { badRequestResult, type RouteParseResult } from './routeParseIssue.js';
-import { asCanonicalNonEmptyStringOrUndefined } from './startRunRouteBodyValidation.js';
 
-export function parseStartRunRunExecutionContextRef(
+export function parsePlanRouteRunExecutionContextRef(
   raw: unknown
 ): RouteParseResult<RunExecutionContextRef> {
   if (raw === null || typeof raw !== 'object' || Array.isArray(raw)) {

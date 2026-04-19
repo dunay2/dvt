@@ -1,7 +1,9 @@
 import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
 import { badRequestResult, type RouteParseResult } from './routeParseIssue.js';
 
-export function parseStartRunBodyRecord(body: unknown): RouteParseResult<Record<string, unknown>> {
+export function parsePlanRouteBodyRecord(
+  body: unknown
+): RouteParseResult<Record<string, unknown>> {
   if (!isPlainRecord(body)) {
     return badRequestResult(HTTP_ERROR_REASON.invalidBody);
   }
@@ -13,7 +15,9 @@ export function asStringOrUndefined(value: unknown): string | undefined {
   return typeof value === 'string' ? value : undefined;
 }
 
-export function asCanonicalNonEmptyStringOrUndefined(value: unknown): string | undefined {
+export function asCanonicalNonEmptyStringOrUndefined(
+  value: unknown
+): string | undefined {
   if (typeof value !== 'string') {
     return undefined;
   }

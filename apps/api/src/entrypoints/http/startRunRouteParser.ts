@@ -3,10 +3,10 @@ import type { StartRunCommand } from '../../application/ports/startRunCommandCon
 import { DEFAULT_START_RUN_TARGET_ADAPTER_REGISTRY } from '../../application/services/startRunTargetAdapterRegistry.js';
 import { type AuthorizationAction, type RequestedScope } from '../../domain/auth/types.js';
 
+import { parsePlanRouteBodyRecord } from './planRouteBodyParser.js';
+import { parsePlanRouteScope } from './planRouteScopeParser.js';
 import type { RouteParseResult } from './routeParseIssue.js';
-import { parseStartRunBodyRecord } from './startRunRouteBodyValidation.js';
 import { parseStartRunCommand } from './startRunRouteCommandBuilder.js';
-import { parseStartRunScope } from './startRunRouteScopeParser.js';
 
 type ParsedStartRunRequest = {
   readonly command: StartRunCommand;
@@ -21,12 +21,12 @@ export function parseStartRunBody(
   body: unknown,
   adapterRegistry: IStartRunTargetAdapterRegistry = DEFAULT_START_RUN_TARGET_ADAPTER_REGISTRY
 ): ParseStartRunRequestResult {
-  const bodyRecord = parseStartRunBodyRecord(body);
+  const bodyRecord = parsePlanRouteBodyRecord(body);
   if (!bodyRecord.ok) {
     return bodyRecord;
   }
 
-  const scope = parseStartRunScope(bodyRecord.value);
+  const scope = parsePlanRouteScope(bodyRecord.value);
   if (!scope.ok) {
     return scope;
   }

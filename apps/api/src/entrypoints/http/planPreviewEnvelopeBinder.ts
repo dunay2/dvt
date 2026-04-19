@@ -1,17 +1,20 @@
-import type { RunContextSchemaT } from '@dvt/contracts';
-
+import {
+  parsePlanRoutePlannerEnvelope,
+  type ParsedPlanRoutePlannerEnvelope,
+} from './planRoutePlannerEnvelopeParser.js';
+import type { ParsedPlanRouteContext } from './planRouteScope.js';
 import type { PreviewProfilePolicy } from './previewProfilePolicy.js';
 import type { PreviewProvenance } from './previewProvenanceParser.js';
 import { type RouteParseResult } from './routeParseIssue.js';
-import { parseStartRunPlannerEnvelope } from './startRunRoutePlannerEnvelopeMapper.js';
-import type { ParsedStartRunScope } from './startRunRouteScopeParser.js';
 
 export type ParsedPreviewPlannerEnvelope =
-  ReturnType<typeof parseStartRunPlannerEnvelope> extends RouteParseResult<infer T> ? T : never;
+  ReturnType<typeof parsePlanRoutePlannerEnvelope> extends RouteParseResult<infer T>
+    ? T
+    : ParsedPlanRoutePlannerEnvelope;
 
 export function bindScopeToPlannerEnvelope(
   envelope: ParsedPreviewPlannerEnvelope,
-  context: ParsedStartRunScope & Pick<RunContextSchemaT, 'targetAdapter'>,
+  context: ParsedPlanRouteContext,
   provenance: PreviewProvenance | undefined,
   previewProfile: PreviewProfilePolicy
 ): ParsedPreviewPlannerEnvelope {
