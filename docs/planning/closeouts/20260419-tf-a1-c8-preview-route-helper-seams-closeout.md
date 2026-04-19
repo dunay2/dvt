@@ -138,7 +138,16 @@ Residual drift intentionally left visible:
 
 ## Validation Run
 
-- Pending update after command execution.
+- `pnpm exec eslint --max-warnings 0 apps/api/src/entrypoints/http/previewPlanRouteParser.ts apps/api/src/entrypoints/http/planRouteScope.ts apps/api/src/entrypoints/http/previewPlanRoute.ts apps/api/test/entrypoints/http/importPlanRoute.test.ts apps/api/test/entrypoints/http/previewPlanRoute.auth.test.ts apps/api/test/entrypoints/http/previewPlanRoute.inputPolicy.test.ts apps/api/test/entrypoints/http/previewPlanRoute.outcomes.test.ts docs/planning/state/agent-lane-a.yaml docs/planning/closeouts/20260419-tf-a1-c8-preview-route-helper-seams-closeout.md` - FAIL (`docs/**` and YAML paths are outside the active ESLint config; reran on the code scope only)
+- `pnpm exec eslint --max-warnings 0 apps/api/src/entrypoints/http/previewPlanRouteParser.ts apps/api/src/entrypoints/http/planRouteScope.ts apps/api/src/entrypoints/http/previewPlanRoute.ts apps/api/test/entrypoints/http/importPlanRoute.test.ts apps/api/test/entrypoints/http/previewPlanRoute.auth.test.ts apps/api/test/entrypoints/http/previewPlanRoute.inputPolicy.test.ts apps/api/test/entrypoints/http/previewPlanRoute.outcomes.test.ts` - PASS
+- `pnpm --filter dvt-api typecheck` - PASS
+- `pnpm --filter dvt-api test -- test/entrypoints/http/importPlanRoute.test.ts test/entrypoints/http/previewPlanRoute.auth.test.ts test/entrypoints/http/previewPlanRoute.inputPolicy.test.ts test/entrypoints/http/previewPlanRoute.outcomes.test.ts` - PASS
+- `pnpm --filter dvt-api test:arch` - PASS
+- `pnpm docs:workboard:generate` - PASS
+- `pnpm docs:sync` - PASS
+- `pnpm docs:status:generate` - PASS
+- `pnpm verify:prepush` - PASS
+  Caveat: the repo's changed-only prepush scripts still reported `No changed files detected` even with a populated index. The explicit lint, typecheck, API tests, and architecture test above were run separately and passed.
 
 ## No-Debt / No-Stub Evidence
 
