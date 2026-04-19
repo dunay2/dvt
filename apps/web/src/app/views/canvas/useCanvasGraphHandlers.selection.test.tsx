@@ -9,47 +9,77 @@ import {
   restoreGraphHandlersTestDoubles,
 } from './useCanvasGraphHandlers.test.support';
 
+type GraphHandlersHarness = ReturnType<typeof renderGraphHandlersHook>;
+type GraphHandlersResult = NonNullable<ReturnType<GraphHandlersHarness['latest']>>;
+type NodeClickHandler = NonNullable<GraphHandlersResult['handleNodeClick']>;
+
+function renderSelectionHarness(
+  args: Partial<Parameters<typeof renderGraphHandlersHook>[0]> = {}
+): GraphHandlersHarness {
+  return renderGraphHandlersHook({
+    canEditEdges: true,
+    ...args,
+  });
+}
+
+function clickNode(harness: GraphHandlersHarness, nodeId: string): void {
+  act(() => {
+    harness.latest()?.handleNodeClick(
+      {} as Parameters<NodeClickHandler>[0],
+      {
+        id: nodeId,
+      } as Parameters<NodeClickHandler>[1]
+    );
+  });
+}
+
 describe('useCanvasGraphHandlers selection', () => {
+  let harness: GraphHandlersHarness | null = null;
+
   beforeEach(() => {
     resetGraphHandlersTestDoubles();
   });
 
   afterEach(() => {
+    harness?.cleanup();
+    harness = null;
     restoreGraphHandlersTestDoubles();
   });
 
   it('ignores stale node clicks that no longer resolve into the canonical map', async () => {
     const setInspectorNode = vi.fn();
-    const harness = renderGraphHandlersHook({
-      canEditEdges: true,
+    harness = renderSelectionHarness({
       setInspectorNode,
     });
     await harness.render();
 
-    act(() => {
-      harness.latest()?.handleNodeClick(
-        {} as Parameters<NonNullable<ReturnType<typeof harness.latest>>['handleNodeClick']>[0],
-        {
-          id: 'stale-node',
-        } as Parameters<NonNullable<ReturnType<typeof harness.latest>>['handleNodeClick']>[1]
-      );
-    });
+    clickNode(harness, 'stale-node');
 
     expect(setInspectorNode).not.toHaveBeenCalled();
+  });
 
-    harness.cleanup();
+  it('sets inspector node when an existing canonical node is clicked', async () => {
+    const setInspectorNode = vi.fn();
+    harness = renderSelectionHarness({
+      setInspectorNode,
+    });
+    await harness.render();
+
+    clickNode(harness, 'source-node');
+
+    expect(setInspectorNode).toHaveBeenCalledWith('source-node');
   });
 
   it('projects React Flow selection payloads into selected node ids', async () => {
     const setSelectedNodes = vi.fn();
-    const harness = renderGraphHandlersHook({
-      canEditEdges: true,
+    const renderedHarness = renderSelectionHarness({
       setSelectedNodes,
     });
-    await harness.render();
+    harness = renderedHarness;
+    await renderedHarness.render();
 
     act(() => {
-      harness.latest()?.onSelectionChange({
+      renderedHarness.latest()?.onSelectionChange({
         nodes: [
           { id: 'source-node', data: {}, position: { x: 0, y: 0 } },
           { id: 'sink-node', data: {}, position: { x: 1, y: 1 } },
@@ -59,48 +89,42 @@ describe('useCanvasGraphHandlers selection', () => {
     });
 
     expect(setSelectedNodes).toHaveBeenCalledWith(['source-node', 'sink-node']);
-
-    harness.cleanup();
   });
 
   it('opens the inspector panel when explicitly inspecting a node outside focus mode', async () => {
     const setInspectorNode = vi.fn();
     const toggleInspectorPanel = vi.fn();
-    const harness = renderGraphHandlersHook({
-      canEditEdges: true,
+    const renderedHarness = renderSelectionHarness({
       inspectorPanelVisible: false,
       setInspectorNode,
       toggleInspectorPanel,
     });
-    await harness.render();
+    harness = renderedHarness;
+    await renderedHarness.render();
 
     act(() => {
-      harness.latest()?.handleInspectNode('source-node');
+      renderedHarness.latest()?.handleInspectNode('source-node');
     });
 
     expect(setInspectorNode).toHaveBeenCalledWith('source-node');
     expect(toggleInspectorPanel).toHaveBeenCalledTimes(1);
-
-    harness.cleanup();
   });
 
   it('adds and removes ids through toggle node selection', async () => {
     const setSelectedNodes = vi.fn();
-    const harness = renderGraphHandlersHook({
-      canEditEdges: true,
+    const renderedHarness = renderSelectionHarness({
       selectedNodeIds: ['source-node'],
       setSelectedNodes,
     });
-    await harness.render();
+    harness = renderedHarness;
+    await renderedHarness.render();
 
     act(() => {
-      harness.latest()?.handleToggleNodeSelection('sink-node', true);
-      harness.latest()?.handleToggleNodeSelection('source-node', false);
+      renderedHarness.latest()?.handleToggleNodeSelection('sink-node', true);
+      renderedHarness.latest()?.handleToggleNodeSelection('source-node', false);
     });
 
     expect(setSelectedNodes).toHaveBeenNthCalledWith(1, ['source-node', 'sink-node']);
     expect(setSelectedNodes).toHaveBeenNthCalledWith(2, []);
-
-    harness.cleanup();
   });
 });
