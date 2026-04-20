@@ -2,8 +2,9 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import { buildDraftSaveConflictResponse } from '../../services/workspace/workspaceGraphDraft.test.fixtures';
 import {
-  buildDraftRecord,
+  buildRemoteDraftRecord,
   createTransformationAuthoringHarness,
+  setHarnessRemoteDraftRecord,
   type CanvasControllerHarness,
   waitForAutosaveDebounce,
 } from './useCanvasController.draftLifecycle.test.support';
@@ -18,7 +19,7 @@ describe('useCanvasController draft lifecycle conflict state', () => {
 
   it('surfaces stale draft state when saveGraphDraft returns a CAS conflict', async () => {
     harness = await createTransformationAuthoringHarness();
-    harness.state.graphDraftRecord = buildDraftRecord(
+    setHarnessRemoteDraftRecord(harness, buildRemoteDraftRecord(
       {
         nodeIds: ['node_1', 'node_2', 'node_3'],
         nodePositions: {
@@ -30,9 +31,9 @@ describe('useCanvasController draft lifecycle conflict state', () => {
           { sourceId: 'node_1', targetId: 'node_2' },
           { sourceId: 'node_2', targetId: 'node_3' },
         ],
-      },
-      'rev-conflict'
-    );
+        },
+        'rev-conflict'
+    ));
     harness.state.services.workspaceGraphDraftAuthoringPort.saveGraphDraft = async () =>
       buildDraftSaveConflictResponse(
         {
@@ -52,7 +53,7 @@ describe('useCanvasController draft lifecycle conflict state', () => {
 
   it('treats a CAS conflict as a blocked runtime state for editing and execution', async () => {
     harness = await createTransformationAuthoringHarness();
-    harness.state.graphDraftRecord = buildDraftRecord(
+    setHarnessRemoteDraftRecord(harness, buildRemoteDraftRecord(
       {
         nodeIds: ['node_1', 'node_2', 'node_3'],
         nodePositions: {
@@ -64,9 +65,9 @@ describe('useCanvasController draft lifecycle conflict state', () => {
           { sourceId: 'node_1', targetId: 'node_2' },
           { sourceId: 'node_2', targetId: 'node_3' },
         ],
-      },
-      'rev-conflict'
-    );
+        },
+        'rev-conflict'
+    ));
     harness.state.services.workspaceGraphDraftAuthoringPort.saveGraphDraft = async () =>
       buildDraftSaveConflictResponse(
         {

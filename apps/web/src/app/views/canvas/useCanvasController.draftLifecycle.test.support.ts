@@ -1,8 +1,9 @@
 import { act } from 'react';
 
-import type { WorkspaceGraphDraft, WorkspaceGraphDraftRecord } from '../../ports/workspace';
+import type { WorkspaceGraphDraftRecord as ProtectedWorkspaceGraphDraftRecord } from '@dvt/contracts';
 import { setupCanvasControllerHarness } from './useCanvasController.test.harness';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+import { buildCanvasHarnessRemoteDraftRecord } from './useCanvasController.test.draftAuthoring';
 
 export const WORKSPACE_LAYOUT_KEY = 'tenant-a::project-a::dev';
 export const TRANSFORMATION_AUTHORING_CANONICAL_NODES: CanonicalNode[] = [
@@ -82,16 +83,19 @@ type CanvasLayoutStoreState = {
   >;
 };
 
-export function buildDraftRecord(
-  draft: WorkspaceGraphDraft,
-  revision = 'rev-1',
-  savedAt = '2026-04-16T00:00:00Z'
-): WorkspaceGraphDraftRecord {
-  return {
-    revision,
-    savedAt,
-    draft,
-  };
+export const buildRemoteDraftRecord = buildCanvasHarnessRemoteDraftRecord;
+
+export function setHarnessRemoteDraftRecord(
+  harness: CanvasControllerHarness,
+  record: ProtectedWorkspaceGraphDraftRecord
+): void {
+  harness.state.remoteDraftRecord = record;
+  harness.state.graphDraftQueryData = undefined;
+}
+
+export function clearHarnessRemoteDraftRecord(harness: CanvasControllerHarness): void {
+  harness.state.remoteDraftRecord = null;
+  harness.state.graphDraftQueryData = undefined;
 }
 
 export async function waitForAutosaveDebounce(): Promise<void> {
@@ -111,10 +115,10 @@ export function createUnrenderedHarness(): CanvasControllerHarness {
 }
 
 export async function createHarnessWithDraft(
-  record: WorkspaceGraphDraftRecord
+  record: ProtectedWorkspaceGraphDraftRecord
 ): Promise<CanvasControllerHarness> {
   const harness = setupCanvasControllerHarness();
-  harness.state.graphDraftRecord = record;
+  setHarnessRemoteDraftRecord(harness, record);
   await harness.renderProbe();
   await harness.renderProbe();
   return harness;
@@ -130,12 +134,12 @@ export async function createTransformationAuthoringHarness(
 }
 
 export async function createTransformationAuthoringHarnessWithDraft(
-  record: WorkspaceGraphDraftRecord,
+  record: ProtectedWorkspaceGraphDraftRecord,
   visibleNodeIds: string[] = ['node_1', 'node_2', 'node_3']
 ): Promise<CanvasControllerHarness> {
   const harness = setupCanvasControllerHarness();
   applyTransformationAuthoringFixture(harness, visibleNodeIds);
-  harness.state.graphDraftRecord = record;
+  setHarnessRemoteDraftRecord(harness, record);
   await harness.renderProbe();
   await harness.renderProbe();
   return harness;

@@ -1,7 +1,7 @@
 import { useCallback, type Dispatch, type SetStateAction } from 'react';
 
 import type { WorkspaceGraphDraftRecord } from '../../ports/workspace';
-import { queryKeys } from '../../queries/queryKeys';
+import type { CanvasDraftQueryCache } from './canvasDraftQueryCache';
 import {
   markRemoteDraftMissing,
   reconcileSnapshot,
@@ -9,7 +9,7 @@ import {
   serializeWorkspaceGraphDraft,
   type CanvasDraftSession,
 } from './canvasDraftSession';
-import type { DraftSaveStatus, QueryClientLike } from './canvasDraftLifecycle.types';
+import type { DraftSaveStatus } from './canvasDraftLifecycle.types';
 import type { CanvasDraftLifecycleCanonicalSnapshot } from './canvasDraftLifecycleSnapshot';
 
 function hasPersistedNodePositions(
@@ -19,7 +19,7 @@ function hasPersistedNodePositions(
 }
 
 type UseCanvasDraftReloadHydrationArgs = {
-  queryClient: QueryClientLike;
+  draftQueryCache: CanvasDraftQueryCache;
   workspaceLayoutKey: string;
   setDraftSession: Dispatch<SetStateAction<CanvasDraftSession>>;
   setCanvasNodePositions: (
@@ -31,7 +31,7 @@ type UseCanvasDraftReloadHydrationArgs = {
 };
 
 export function useCanvasDraftReloadHydration({
-  queryClient,
+  draftQueryCache,
   workspaceLayoutKey,
   setDraftSession,
   setCanvasNodePositions,
@@ -43,10 +43,7 @@ export function useCanvasDraftReloadHydration({
       remoteDraft: WorkspaceGraphDraftRecord | null,
       reloadedCanonicalSnapshot: CanvasDraftLifecycleCanonicalSnapshot
     ) => {
-      queryClient.setQueryData(
-        queryKeys.workspace.graphDraft(workspaceLayoutKey),
-        remoteDraft
-      );
+      draftQueryCache.replaceRemoteDraft(remoteDraft);
       setDraftSaveStatus('idle');
 
       if (remoteDraft == null) {
@@ -64,8 +61,8 @@ export function useCanvasDraftReloadHydration({
       );
     },
     [
+      draftQueryCache,
       lastSavedSignatureRef,
-      queryClient,
       setCanvasNodePositions,
       setDraftSaveStatus,
       setDraftSession,

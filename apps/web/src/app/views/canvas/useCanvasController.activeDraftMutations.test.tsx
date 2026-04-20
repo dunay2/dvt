@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { buildDraftSaveSavedResponse } from '../../services/workspace/workspaceGraphDraft.test.fixtures';
 import type { CanvasDraftSession } from './canvasDraftSession';
 import {
-  buildDraftRecord,
+  buildRemoteDraftRecord,
   createHarnessWithDraft,
   createTransformationAuthoringHarnessWithDraft,
   setCanvasLayoutNodePositions,
@@ -25,13 +25,13 @@ describe('useCanvasController active draft mutations', () => {
     harness.cleanup();
   });
 
-  async function replaceHarnessWithDraft(record: ReturnType<typeof buildDraftRecord>): Promise<void> {
+  async function replaceHarnessWithDraft(record: ReturnType<typeof buildRemoteDraftRecord>): Promise<void> {
     harness.cleanup();
     harness = await createHarnessWithDraft(record);
   }
 
   async function replaceHarnessWithTransformationDraft(
-    record: ReturnType<typeof buildDraftRecord>,
+    record: ReturnType<typeof buildRemoteDraftRecord>,
     visibleNodeIds: string[] = ['node_1', 'node_2', 'node_3']
   ): Promise<void> {
     harness.cleanup();
@@ -40,7 +40,7 @@ describe('useCanvasController active draft mutations', () => {
 
   it('does not autosave pure layout edits after hydrating an existing remote draft', async () => {
     await replaceHarnessWithTransformationDraft(
-      buildDraftRecord({
+      buildRemoteDraftRecord({
         nodeIds: ['node_1', 'node_2', 'node_3'],
         nodePositions: {
           node_1: { x: 0, y: 0 },
@@ -79,7 +79,7 @@ describe('useCanvasController active draft mutations', () => {
 
   it('does not snap node positions back to the hydrated remote draft after a local move', async () => {
     await replaceHarnessWithDraft(
-      buildDraftRecord({
+      buildRemoteDraftRecord({
         nodeIds: ['node_2'],
         nodePositions: {
           node_2: { x: 220, y: 120 },
@@ -101,7 +101,7 @@ describe('useCanvasController active draft mutations', () => {
 
   it('adds imported nodes and refreshed canonical edges into an active persisted draft', async () => {
     await replaceHarnessWithDraft(
-      buildDraftRecord({
+      buildRemoteDraftRecord({
         nodeIds: ['node_1'],
         nodePositions: {
           node_1: { x: 0, y: 0 },
@@ -166,7 +166,7 @@ describe('useCanvasController active draft mutations', () => {
 
   it('keeps a dropped canonical node visible and persistible under an active draft', async () => {
     await replaceHarnessWithTransformationDraft(
-      buildDraftRecord({
+      buildRemoteDraftRecord({
         nodeIds: ['node_1', 'node_2'],
         nodePositions: {
           node_1: { x: 0, y: 0 },

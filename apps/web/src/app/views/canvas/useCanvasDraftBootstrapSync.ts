@@ -1,11 +1,11 @@
 import type { Dispatch, SetStateAction } from 'react';
 
+import type { CanvasDraftQueryCache } from './canvasDraftQueryCache';
 import type { CanvasDraftSession } from './canvasDraftSession';
 import type {
   DraftSaveStatus,
   GraphDraftQueryState,
   GraphSnapshotQueryState,
-  QueryClientLike,
 } from './canvasDraftLifecycle.types';
 import type { CanvasDraftLifecycleCanonicalSnapshot } from './canvasDraftLifecycleSnapshot';
 import { useCanvasDraftBootstrapping } from './useCanvasDraftBootstrapping';
@@ -15,7 +15,7 @@ import { useCanvasDraftReloadHydration } from './useCanvasDraftReloadHydration';
 type UseCanvasDraftBootstrapSyncArgs = {
   graphDraftQuery: GraphDraftQueryState;
   graphSnapshotQuery: GraphSnapshotQueryState;
-  queryClient: QueryClientLike;
+  draftQueryCache: CanvasDraftQueryCache;
   workspaceLayoutKey: string;
   draftSession: CanvasDraftSession;
   setDraftSession: Dispatch<SetStateAction<CanvasDraftSession>>;
@@ -32,7 +32,7 @@ type UseCanvasDraftBootstrapSyncArgs = {
 export function useCanvasDraftBootstrapSync({
   graphDraftQuery,
   graphSnapshotQuery,
-  queryClient,
+  draftQueryCache,
   workspaceLayoutKey,
   draftSession,
   setDraftSession,
@@ -43,7 +43,7 @@ export function useCanvasDraftBootstrapSync({
   lastSavedSignatureRef,
 }: UseCanvasDraftBootstrapSyncArgs) {
   const applyReloadedRemoteDraft = useCanvasDraftReloadHydration({
-    queryClient,
+    draftQueryCache,
     workspaceLayoutKey,
     setDraftSession,
     setCanvasNodePositions,

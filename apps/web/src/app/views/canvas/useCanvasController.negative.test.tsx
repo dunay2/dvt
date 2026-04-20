@@ -4,7 +4,12 @@ import React, { act } from 'react';
 import type { WorkspaceGraphDraftAuthoringSaveResult } from '../../ports/workspaceGraphDraftAuthoring';
 import { buildDraftSaveSavedResponse } from '../../services/workspace/workspaceGraphDraft.test.fixtures';
 import type { CanvasDraftSession } from './canvasDraftSession';
-import { applyTransformationAuthoringFixture, buildDraftRecord } from './useCanvasController.draftLifecycle.test.support';
+import {
+  applyTransformationAuthoringFixture,
+  buildRemoteDraftRecord,
+  clearHarnessRemoteDraftRecord,
+  setHarnessRemoteDraftRecord,
+} from './useCanvasController.draftLifecycle.test.support';
 import { setupCanvasControllerHarness } from './useCanvasController.test.harness';
 
 describe('useCanvasController negative invariants', () => {
@@ -119,15 +124,11 @@ describe('useCanvasController negative invariants', () => {
   it('renders an intentionally empty persisted draft without falling back to the snapshot graph', async () => {
     harness.cleanup();
     harness = setupCanvasControllerHarness();
-    harness.state.graphDraftRecord = {
-      revision: 'rev-empty',
-      savedAt: '2026-04-16T00:00:00Z',
-      draft: {
+    setHarnessRemoteDraftRecord(harness, buildRemoteDraftRecord({
         nodeIds: [],
         nodePositions: {},
         edges: [],
-      },
-    };
+      }, 'rev-empty', '2026-04-16T00:00:00Z'));
 
     await harness.renderProbe();
     await act(async () => {
@@ -141,17 +142,13 @@ describe('useCanvasController negative invariants', () => {
   it('does not auto-merge unrelated snapshot nodes into an active persisted draft', async () => {
     harness.cleanup();
     harness = setupCanvasControllerHarness();
-    harness.state.graphDraftRecord = {
-      revision: 'rev-1',
-      savedAt: '2026-04-16T00:00:00Z',
-      draft: {
+    setHarnessRemoteDraftRecord(harness, buildRemoteDraftRecord({
         nodeIds: ['node_1'],
         nodePositions: {
           node_1: { x: 0, y: 0 },
         },
         edges: [],
-      },
-    };
+      }, 'rev-1', '2026-04-16T00:00:00Z'));
 
     await harness.renderProbe();
 
@@ -178,14 +175,14 @@ describe('useCanvasController negative invariants', () => {
     harness.cleanup();
     harness = setupCanvasControllerHarness();
     configureDropToCompleteGovernedDraft();
-    harness.state.graphDraftRecord = buildDraftRecord({
+    setHarnessRemoteDraftRecord(harness, buildRemoteDraftRecord({
       nodeIds: ['node_1', 'node_2'],
       nodePositions: {
         node_1: { x: 0, y: 0 },
         node_2: { x: 120, y: 0 },
       },
       edges: [{ sourceId: 'node_1', targetId: 'node_2' }],
-    });
+    }));
 
     let rejectSave: ((reason?: unknown) => void) | null = null;
     harness.state.services.workspaceGraphDraftAuthoringPort.saveGraphDraft = vi.fn(
@@ -199,7 +196,7 @@ describe('useCanvasController negative invariants', () => {
 
     expect(harness.state.services.workspaceGraphDraftAuthoringPort.saveGraphDraft).toHaveBeenCalledTimes(1);
 
-    harness.state.graphDraftRecord = null;
+    clearHarnessRemoteDraftRecord(harness);
     await harness.renderProbe();
 
     await act(async () => {
@@ -217,14 +214,14 @@ describe('useCanvasController negative invariants', () => {
     harness.cleanup();
     harness = setupCanvasControllerHarness();
     configureDropToCompleteGovernedDraft();
-    harness.state.graphDraftRecord = buildDraftRecord({
+    setHarnessRemoteDraftRecord(harness, buildRemoteDraftRecord({
       nodeIds: ['node_1', 'node_2'],
       nodePositions: {
         node_1: { x: 0, y: 0 },
         node_2: { x: 120, y: 0 },
       },
       edges: [{ sourceId: 'node_1', targetId: 'node_2' }],
-    });
+    }));
 
     let resolveSave: ((value: WorkspaceGraphDraftAuthoringSaveResult) => void) | null = null;
     harness.state.services.workspaceGraphDraftAuthoringPort.saveGraphDraft = vi.fn(
@@ -238,7 +235,7 @@ describe('useCanvasController negative invariants', () => {
 
     expect(harness.state.services.workspaceGraphDraftAuthoringPort.saveGraphDraft).toHaveBeenCalledTimes(1);
 
-    harness.state.graphDraftRecord = null;
+    clearHarnessRemoteDraftRecord(harness);
     await harness.renderProbe();
     harness.state.queryClient.setQueryData.mockClear();
 
@@ -270,22 +267,18 @@ describe('useCanvasController negative invariants', () => {
   it('ignores source import completion once the canvas is blocked by missing_remote', async () => {
     harness.cleanup();
     harness = setupCanvasControllerHarness();
-    harness.state.graphDraftRecord = {
-      revision: 'rev-1',
-      savedAt: '2026-04-16T00:00:00Z',
-      draft: {
+    setHarnessRemoteDraftRecord(harness, buildRemoteDraftRecord({
         nodeIds: ['node_1'],
         nodePositions: {
           node_1: { x: 0, y: 0 },
         },
         edges: [],
-      },
-    };
+      }, 'rev-1', '2026-04-16T00:00:00Z'));
 
     await harness.renderProbe();
     await harness.renderProbe();
 
-    harness.state.graphDraftRecord = null;
+    clearHarnessRemoteDraftRecord(harness);
     await harness.renderProbe();
 
     const storeActions = harness.state.store as typeof harness.state.store & {

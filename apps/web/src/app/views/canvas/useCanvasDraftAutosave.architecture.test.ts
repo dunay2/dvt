@@ -10,7 +10,7 @@ const AUTOSAVE_SOURCE = readFileSync(
 describe('useCanvasDraftAutosave architecture', () => {
   it('stays as a scheduling seam over pure save-flow execution', () => {
     expect(AUTOSAVE_SOURCE).toContain('useEffect(');
-    expect(AUTOSAVE_SOURCE).toContain('performCanvasDraftAutosave');
+    expect(AUTOSAVE_SOURCE).toContain('runCanvasDraftAutosaveEffect');
     expect(AUTOSAVE_SOURCE).not.toContain('.saveGraphDraft(');
     expect(AUTOSAVE_SOURCE).not.toContain('resolveDraftSaveSuccess');
     expect(AUTOSAVE_SOURCE).not.toContain('resolveDraftSaveFailure');

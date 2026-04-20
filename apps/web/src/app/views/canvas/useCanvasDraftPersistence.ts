@@ -1,6 +1,7 @@
 import type { Dispatch, SetStateAction } from 'react';
 
 import type { WorkspaceGraphDraftRecord } from '../../ports/workspace';
+import type { CanvasDraftQueryCache } from './canvasDraftQueryCache';
 import type { CanvasDraftRepository } from './canvasDraftRepository';
 import type { CanvasDraftAuthoringPayload } from './canvasDraftAuthoring';
 import type { CanvasDraftSession } from './canvasDraftSession';
@@ -9,7 +10,6 @@ import type {
   DraftSaveStatus,
   GraphDraftQueryState,
   GraphSnapshotQueryState,
-  QueryClientLike,
 } from './canvasDraftLifecycle.types';
 import type {
   CanvasDraftLifecycleCanonicalSnapshot,
@@ -22,8 +22,7 @@ type UseCanvasDraftPersistenceArgs = {
   draftRepository: CanvasDraftRepository;
   graphDraftQuery: GraphDraftQueryState;
   graphSnapshotQuery: GraphSnapshotQueryState;
-  queryClient: QueryClientLike;
-  workspaceLayoutKey: string;
+  draftQueryCache: CanvasDraftQueryCache;
   draftSession: CanvasDraftSession;
   setDraftSession: Dispatch<SetStateAction<CanvasDraftSession>>;
   canonicalSnapshot: CanvasDraftLifecycleCanonicalSnapshot;
@@ -46,8 +45,7 @@ export function useCanvasDraftPersistence({
   draftRepository,
   graphDraftQuery,
   graphSnapshotQuery,
-  queryClient,
-  workspaceLayoutKey,
+  draftQueryCache,
   draftSession,
   setDraftSession,
   canonicalSnapshot,
@@ -66,8 +64,7 @@ export function useCanvasDraftPersistence({
     draftRepository,
     graphDraftQuery,
     graphSnapshotQuery,
-    queryClient,
-    workspaceLayoutKey,
+    draftQueryCache,
     draftSession,
     setDraftSession,
     currentDraftPayloadSignature,
@@ -81,9 +78,7 @@ export function useCanvasDraftPersistence({
 
   const { reloadLatestDraft, adoptCurrentWorkspaceSnapshot } =
     useCanvasDraftRecoveryActions({
-      draftRepository,
-      queryClient,
-      workspaceLayoutKey,
+      draftQueryCache,
       setDraftSession,
       canonicalSnapshot,
       graphStrategy,

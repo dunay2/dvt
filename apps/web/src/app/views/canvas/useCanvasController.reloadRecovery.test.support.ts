@@ -1,7 +1,7 @@
 import { act } from 'react';
 
 import {
-  buildDraftRecord,
+  buildRemoteDraftRecord,
   createHarnessWithDraft,
   type CanvasControllerHarness,
 } from './useCanvasController.draftLifecycle.test.support';
@@ -15,7 +15,7 @@ export async function createReloadRecoveryHarness(): Promise<CanvasControllerHar
 
 export async function replaceHarnessWithDraft(
   harness: CanvasControllerHarness,
-  record: ReturnType<typeof buildDraftRecord>
+  record: ReturnType<typeof buildRemoteDraftRecord>
 ): Promise<CanvasControllerHarness> {
   harness.cleanup();
   return await createHarnessWithDraft(record);

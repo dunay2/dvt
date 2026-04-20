@@ -145,7 +145,8 @@ export function createDefaultCanvasHarnessState(): CanvasHarnessState {
   return {
     currentPlan,
     graphData: { nodes: [{ id: 'node_1' }, { id: 'node_2' }], edges: [{ id: 'edge_1' }] },
-    graphDraftRecord: null,
+    remoteDraftRecord: null,
+    graphDraftQueryData: undefined,
     canonicalNodes: buildDefaultCanvasHarnessCanonicalNodes(),
     canonicalEdges: buildDefaultCanvasHarnessCanonicalEdges(),
     overlayDecorations: new Map([

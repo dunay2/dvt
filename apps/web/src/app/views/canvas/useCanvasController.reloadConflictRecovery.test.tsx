@@ -7,8 +7,9 @@ import {
   buildDraftSaveConflictResponse,
 } from '../../services/workspace/workspaceGraphDraft.test.fixtures';
 import {
-  buildDraftRecord,
+  buildRemoteDraftRecord,
   createTransformationAuthoringHarness,
+  setHarnessRemoteDraftRecord,
   type CanvasControllerHarness,
   WORKSPACE_LAYOUT_KEY,
   waitForAutosaveDebounce,
@@ -35,7 +36,7 @@ describe('useCanvasController reload conflict recovery', () => {
     harness = await createTransformationAuthoringHarness();
     harness.state.services.workspaceGraphDraftAuthoringPort.saveGraphDraft = async () => {
       saveAttempts += 1;
-      harness.state.graphDraftRecord = buildDraftRecord(
+      setHarnessRemoteDraftRecord(harness, buildRemoteDraftRecord(
         {
           nodeIds: ['node_1', 'node_2', 'node_3'],
           nodePositions: {
@@ -49,7 +50,7 @@ describe('useCanvasController reload conflict recovery', () => {
           ],
         },
         'rev-remote'
-      );
+      ));
       return buildDraftSaveConflictResponse(
         {
           tenantId: 'tenant-a',
@@ -65,7 +66,7 @@ describe('useCanvasController reload conflict recovery', () => {
 
     expect(harness.getLatestResult()?.hasStaleDraftVersion).toBe(true);
 
-    harness.state.graphDraftRecord = buildDraftRecord(
+    setHarnessRemoteDraftRecord(harness, buildRemoteDraftRecord(
       {
         nodeIds: ['node_2'],
         nodePositions: {
@@ -74,7 +75,7 @@ describe('useCanvasController reload conflict recovery', () => {
         edges: [],
       },
       'rev-remote'
-    );
+    ));
     await reloadLatestDraft(harness);
 
     expect(saveAttempts).toBe(1);
@@ -101,7 +102,7 @@ describe('useCanvasController reload conflict recovery', () => {
   it('reloads from the typed authoring port instead of bypassing through the injected graph-draft cache state', async () => {
     harness.cleanup();
     harness = await createTransformationAuthoringHarness();
-    harness.state.graphDraftRecord = buildDraftRecord(
+    setHarnessRemoteDraftRecord(harness, buildRemoteDraftRecord(
       {
         nodeIds: ['node_2'],
         nodePositions: {
@@ -110,7 +111,7 @@ describe('useCanvasController reload conflict recovery', () => {
         edges: [],
       },
       'rev-stale'
-    );
+    ));
     harness.state.canonicalNodes = [
       ...harness.state.canonicalNodes,
       {
@@ -217,7 +218,7 @@ describe('useCanvasController reload conflict recovery', () => {
   });
 
   it('reloads against a fresh graph snapshot so remote draft nodes are not truncated by stale local canon', async () => {
-    harness.state.graphDraftRecord = buildDraftRecord(
+    setHarnessRemoteDraftRecord(harness, buildRemoteDraftRecord(
       {
         nodeIds: ['node_1', 'node_3'],
         nodePositions: {
@@ -228,7 +229,7 @@ describe('useCanvasController reload conflict recovery', () => {
       },
       'rev-remote',
       '2026-04-17T00:00:01Z'
-    );
+    ));
     harness.state.services.workspaceService.getGraphSnapshot = vi.fn(async () => {
       harness.state.canonicalNodes = [
         ...harness.state.canonicalNodes,

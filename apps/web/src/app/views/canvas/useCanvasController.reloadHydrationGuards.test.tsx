@@ -6,7 +6,8 @@ import { buildDraftSaveSavedResponse } from '../../services/workspace/workspaceG
 import type { CanvasDraftSession } from './canvasDraftSession';
 import {
   applyTransformationAuthoringFixture,
-  buildDraftRecord,
+  buildRemoteDraftRecord,
+  setHarnessRemoteDraftRecord,
   type CanvasControllerHarness,
   WORKSPACE_LAYOUT_KEY,
   waitForAutosaveDebounce,
@@ -70,7 +71,7 @@ describe('useCanvasController reload hydration guards', () => {
     configureDropToCompleteGovernedDraft();
     harness = await replaceHarnessWithDraft(
       harness,
-      buildDraftRecord(
+      buildRemoteDraftRecord(
         {
           nodeIds: ['node_1', 'node_2'],
           nodePositions: {
@@ -101,17 +102,17 @@ describe('useCanvasController reload hydration guards', () => {
 
     expect(harness.state.services.workspaceGraphDraftAuthoringPort.saveGraphDraft).toHaveBeenCalledTimes(1);
 
-    harness.state.graphDraftRecord = buildDraftRecord(
+    setHarnessRemoteDraftRecord(harness, buildRemoteDraftRecord(
       {
         nodeIds: ['node_2'],
         nodePositions: {
           node_2: { x: 220, y: 120 },
         },
         edges: [],
-      },
-      'rev-remote',
-      '2026-04-17T00:00:01Z'
-    );
+        },
+        'rev-remote',
+        '2026-04-17T00:00:01Z'
+    ));
 
     await reloadLatestDraft(harness);
     harness.state.queryClient.setQueryData.mockClear();
@@ -145,7 +146,7 @@ describe('useCanvasController reload hydration guards', () => {
   it('clears selection and inspector state when reload hydrates a narrower remote draft', async () => {
     harness = await replaceHarnessWithDraft(
       harness,
-      buildDraftRecord(
+      buildRemoteDraftRecord(
         {
           nodeIds: ['node_1', 'node_2'],
           nodePositions: {
@@ -168,17 +169,17 @@ describe('useCanvasController reload hydration guards', () => {
     storeActions.setSelectedNodes.mockClear();
     storeActions.setInspectorNode.mockClear();
 
-    harness.state.graphDraftRecord = buildDraftRecord(
+    setHarnessRemoteDraftRecord(harness, buildRemoteDraftRecord(
       {
         nodeIds: ['node_1'],
         nodePositions: {
           node_1: { x: 32, y: 24 },
         },
         edges: [],
-      },
-      'rev-2',
-      '2026-04-17T00:00:01Z'
-    );
+        },
+        'rev-2',
+        '2026-04-17T00:00:01Z'
+    ));
 
     await reloadLatestDraft(harness);
 

@@ -14,7 +14,7 @@ import { useCanvasDraftPersistence } from './useCanvasDraftPersistence';
 export function useCanvasDraftLifecycle({
   draftRepository,
   graphDraftQuery,
-  queryClient,
+  draftQueryCache,
   workspaceLayoutKey,
   draftSession,
   setDraftSession,
@@ -44,7 +44,7 @@ export function useCanvasDraftLifecycle({
   const { applyReloadedRemoteDraft } = useCanvasDraftBootstrapSync({
     graphDraftQuery,
     graphSnapshotQuery,
-    queryClient,
+    draftQueryCache,
     workspaceLayoutKey,
     draftSession,
     setDraftSession,
@@ -58,8 +58,7 @@ export function useCanvasDraftLifecycle({
     draftRepository,
     graphDraftQuery,
     graphSnapshotQuery,
-    queryClient,
-    workspaceLayoutKey,
+    draftQueryCache,
     draftSession,
     setDraftSession,
     canonicalSnapshot,

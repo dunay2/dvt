@@ -2,6 +2,15 @@ import type {
   CanvasHarnessMocks,
   CanvasHarnessState,
 } from './useCanvasController.test.types';
+import { projectCanvasHarnessRemoteDraftRecord } from './useCanvasController.test.draftAuthoring';
+
+function resolveCurrentGraphDraftQueryData(state: CanvasHarnessState) {
+  if (state.graphDraftQueryData !== undefined) {
+    return state.graphDraftQueryData;
+  }
+
+  return projectCanvasHarnessRemoteDraftRecord(state.remoteDraftRecord);
+}
 
 export function setCanvasHarnessGraphQueryError(
   state: CanvasHarnessState,
@@ -11,7 +20,7 @@ export function setCanvasHarnessGraphQueryError(
     const queryKey = queryConfig?.queryKey ?? [];
     if (queryKey[1] === 'graph-draft') {
       return {
-        data: state.graphDraftRecord,
+        data: resolveCurrentGraphDraftQueryData(state),
         isPending: false,
         isError: false,
       };
@@ -38,7 +47,7 @@ export function refreshCanvasHarnessGraphSnapshotWithoutNodeCosts(
     const queryKey = queryConfig?.queryKey ?? [];
     if (queryKey[1] === 'graph-draft') {
       return {
-        data: state.graphDraftRecord,
+        data: resolveCurrentGraphDraftQueryData(state),
         isPending: false,
         isError: false,
       };

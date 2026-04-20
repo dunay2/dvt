@@ -1,11 +1,11 @@
-import { queryKeys } from '../../queries/queryKeys';
+import type { CanvasDraftQueryCache } from './canvasDraftQueryCache';
 import {
   applyConflict,
   applySaveSuccess,
   markSaving,
   type CanvasDraftSession,
 } from './canvasDraftSession';
-import type { DraftAttemptRefs, QueryClientLike } from './canvasDraftLifecycle.types';
+import type { DraftAttemptRefs } from './canvasDraftLifecycle.types';
 
 export const DRAFT_SAVE_DEBOUNCE_MS = 400;
 
@@ -63,23 +63,18 @@ export function markDraftSaving(
 }
 
 export function applyConflictResolution(args: {
-  queryClient: QueryClientLike;
-  workspaceLayoutKey: string;
+  draftQueryCache: CanvasDraftQueryCache;
   setDraftSession: (updater: (currentSession: CanvasDraftSession) => CanvasDraftSession) => void;
   setDraftSaveStatus: (status: 'idle') => void;
   current: Parameters<typeof applyConflict>[1];
 }) {
-  args.queryClient.setQueryData(
-    queryKeys.workspace.graphDraft(args.workspaceLayoutKey),
-    args.current
-  );
+  args.draftQueryCache.replaceRemoteDraft(args.current);
   args.setDraftSession((currentSession) => applyConflict(currentSession, args.current));
   args.setDraftSaveStatus('idle');
 }
 
 export function applySavedDraftResolution(args: {
-  queryClient: QueryClientLike;
-  workspaceLayoutKey: string;
+  draftQueryCache: CanvasDraftQueryCache;
   currentDraftPayloadSignature: string;
   refs: DraftAttemptRefs;
   setDraftSession: (updater: (currentSession: CanvasDraftSession) => CanvasDraftSession) => void;
@@ -87,10 +82,7 @@ export function applySavedDraftResolution(args: {
   record: Parameters<typeof applySaveSuccess>[1];
 }) {
   args.refs.lastSavedSignatureRef.current = args.currentDraftPayloadSignature;
-  args.queryClient.setQueryData(
-    queryKeys.workspace.graphDraft(args.workspaceLayoutKey),
-    args.record
-  );
+  args.draftQueryCache.replaceRemoteDraft(args.record);
   args.setDraftSession((currentSession) => applySaveSuccess(currentSession, args.record));
   args.setDraftSaveStatus('saved');
 }

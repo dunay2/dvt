@@ -1,14 +1,9 @@
 import { useCallback, type Dispatch, type SetStateAction } from 'react';
 
 import type { WorkspaceGraphDraftRecord, WorkspaceGraphSnapshot } from '../../ports/workspace';
-import { queryKeys } from '../../queries/queryKeys';
+import type { CanvasDraftQueryCache } from './canvasDraftQueryCache';
 import { adoptCurrentSnapshot, type CanvasDraftSession } from './canvasDraftSession';
-import type { CanvasDraftRepository } from './canvasDraftRepository';
-import type {
-  DraftAttemptRefs,
-  DraftSaveStatus,
-  QueryClientLike,
-} from './canvasDraftLifecycle.types';
+import type { DraftAttemptRefs, DraftSaveStatus } from './canvasDraftLifecycle.types';
 import {
   buildCanonicalSnapshotFromWorkspaceSnapshot,
   type CanvasDraftLifecycleCanonicalSnapshot,
@@ -17,9 +12,7 @@ import {
 import { clearSaveDebounce } from './canvasDraftPersistenceRuntime';
 
 type UseCanvasDraftRecoveryActionsArgs = {
-  draftRepository: CanvasDraftRepository;
-  queryClient: QueryClientLike;
-  workspaceLayoutKey: string;
+  draftQueryCache: CanvasDraftQueryCache;
   setDraftSession: Dispatch<SetStateAction<CanvasDraftSession>>;
   canonicalSnapshot: CanvasDraftLifecycleCanonicalSnapshot;
   graphStrategy: CanvasDraftLifecycleGraphStrategy;
@@ -32,39 +25,17 @@ type UseCanvasDraftRecoveryActionsArgs = {
   ) => void;
 };
 
-async function fetchRemoteDraftAndSnapshot(args: {
-  queryClient: QueryClientLike;
-  workspaceLayoutKey: string;
-  draftRepository: CanvasDraftRepository;
-}): Promise<[WorkspaceGraphDraftRecord | null, WorkspaceGraphSnapshot]> {
-  const graphDraftKey = queryKeys.workspace.graphDraft(args.workspaceLayoutKey);
-  const graphKey = queryKeys.workspace.graph(args.workspaceLayoutKey);
-
-  await Promise.all([
-    args.queryClient.cancelQueries({
-      queryKey: graphDraftKey,
-    }),
-    args.queryClient.cancelQueries({
-      queryKey: graphKey,
-    }),
-  ]);
-
+async function fetchRemoteDraftAndSnapshot(
+  draftQueryCache: CanvasDraftQueryCache
+): Promise<[WorkspaceGraphDraftRecord | null, WorkspaceGraphSnapshot]> {
   return await Promise.all([
-    args.queryClient.fetchQuery<WorkspaceGraphDraftRecord | null>({
-      queryKey: graphDraftKey,
-      queryFn: () => args.draftRepository.readGraphDraft(),
-    }),
-    args.queryClient.fetchQuery<WorkspaceGraphSnapshot>({
-      queryKey: graphKey,
-      queryFn: () => args.draftRepository.readGraphSnapshot(),
-    }),
+    draftQueryCache.fetchLatestRemoteDraft(),
+    draftQueryCache.fetchLatestGraphSnapshot(),
   ]);
 }
 
 export function useCanvasDraftRecoveryActions({
-  draftRepository,
-  queryClient,
-  workspaceLayoutKey,
+  draftQueryCache,
   setDraftSession,
   canonicalSnapshot,
   graphStrategy,
@@ -79,11 +50,7 @@ export function useCanvasDraftRecoveryActions({
     const reloadGeneration = refs.saveAttemptGenerationRef.current;
     setDraftSaveStatus('idle');
 
-    fetchRemoteDraftAndSnapshot({
-      queryClient,
-      workspaceLayoutKey,
-      draftRepository,
-    })
+    fetchRemoteDraftAndSnapshot(draftQueryCache)
       .then(([remoteDraft, graphSnapshot]) => {
         if (refs.saveAttemptGenerationRef.current !== reloadGeneration) {
           return;
@@ -103,13 +70,11 @@ export function useCanvasDraftRecoveryActions({
       });
   }, [
     applyReloadedRemoteDraft,
-    draftRepository,
+    draftQueryCache,
     graphStrategy,
     invalidateInFlightSaveAttempt,
-    queryClient,
     refs,
     setDraftSaveStatus,
-    workspaceLayoutKey,
   ]);
 
   const adoptCurrentWorkspaceSnapshot = useCallback(() => {

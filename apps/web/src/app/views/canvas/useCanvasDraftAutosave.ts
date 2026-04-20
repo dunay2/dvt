@@ -1,48 +1,20 @@
 import { useEffect, type Dispatch, type SetStateAction } from 'react';
 
-import type { CanvasDraftRepository } from './canvasDraftRepository';
-import type { CanvasDraftAuthoringPayload } from './canvasDraftAuthoring';
 import type { CanvasDraftSession } from './canvasDraftSession';
-import type {
-  DraftAttemptRefs,
-  DraftSaveStatus,
-  GraphDraftQueryState,
-  GraphSnapshotQueryState,
-  QueryClientLike,
-} from './canvasDraftLifecycle.types';
+import type { DraftSaveStatus } from './canvasDraftLifecycle.types';
 import {
-  clearSaveDebounce,
-  DRAFT_SAVE_DEBOUNCE_MS,
-  shouldWaitForPersistenceReadiness,
-} from './canvasDraftPersistenceRuntime';
-import { performCanvasDraftAutosave } from './canvasDraftAutosaveExecution';
+  runCanvasDraftAutosaveEffect,
+  type CanvasDraftAutosaveSchedulingArgs,
+} from './canvasDraftAutosaveScheduling';
 
 type SetDraftSession = Dispatch<SetStateAction<CanvasDraftSession>>;
 type SetDraftSaveStatus = Dispatch<SetStateAction<DraftSaveStatus>>;
-
-type UseCanvasDraftAutosaveArgs = {
-  draftRepository: CanvasDraftRepository;
-  graphDraftQuery: GraphDraftQueryState;
-  graphSnapshotQuery: GraphSnapshotQueryState;
-  queryClient: QueryClientLike;
-  workspaceLayoutKey: string;
-  draftSession: CanvasDraftSession;
-  setDraftSession: SetDraftSession;
-  currentDraftPayloadSignature: string;
-  currentDraftPayload: CanvasDraftAuthoringPayload;
-  canPersistGraphDraft: boolean;
-  canPersistCurrentDraft: boolean;
-  refs: DraftAttemptRefs;
-  setDraftSaveStatus: SetDraftSaveStatus;
-  createDraftIdempotencyKey: () => string;
-};
 
 export function useCanvasDraftAutosave({
   draftRepository,
   graphDraftQuery,
   graphSnapshotQuery,
-  queryClient,
-  workspaceLayoutKey,
+  draftQueryCache,
   draftSession,
   setDraftSession,
   currentDraftPayloadSignature,
@@ -52,47 +24,23 @@ export function useCanvasDraftAutosave({
   refs,
   setDraftSaveStatus,
   createDraftIdempotencyKey,
-}: UseCanvasDraftAutosaveArgs) {
+}: CanvasDraftAutosaveSchedulingArgs) {
   useEffect(() => {
-    if (shouldWaitForPersistenceReadiness(graphSnapshotQuery, graphDraftQuery)) {
-      return;
-    }
-    if (!canPersistGraphDraft || !canPersistCurrentDraft) {
-      clearSaveDebounce(refs);
-      setDraftSaveStatus((currentStatus) => (currentStatus === 'idle' ? currentStatus : 'idle'));
-      return;
-    }
-    if (draftSession.syncState !== 'editing') {
-      setDraftSaveStatus((currentStatus) =>
-        currentStatus === 'saving' ? 'idle' : currentStatus
-      );
-      return;
-    }
-    if (currentDraftPayloadSignature === refs.lastSavedSignatureRef.current) {
-      setDraftSaveStatus((currentStatus) => (currentStatus === 'idle' ? currentStatus : 'idle'));
-      return;
-    }
-
-    clearSaveDebounce(refs);
-
-    refs.saveDebounceTimerRef.current = globalThis.setTimeout(() => {
-      performCanvasDraftAutosave({
-        refs,
-        draftRepository,
-        currentDraftPayload,
-        draftSession,
-        createDraftIdempotencyKey,
-        setDraftSession,
-        setDraftSaveStatus,
-        queryClient,
-        workspaceLayoutKey,
-        currentDraftPayloadSignature,
-      });
-    }, DRAFT_SAVE_DEBOUNCE_MS);
-
-    return () => {
-      clearSaveDebounce(refs);
-    };
+    return runCanvasDraftAutosaveEffect({
+      refs,
+      draftRepository,
+      graphDraftQuery,
+      graphSnapshotQuery,
+      draftQueryCache,
+      canPersistGraphDraft,
+      canPersistCurrentDraft,
+      currentDraftPayload,
+      draftSession,
+      createDraftIdempotencyKey,
+      setDraftSession,
+      setDraftSaveStatus,
+      currentDraftPayloadSignature,
+    });
   }, [
     canPersistCurrentDraft,
     canPersistGraphDraft,
@@ -106,10 +54,9 @@ export function useCanvasDraftAutosave({
     graphDraftQuery.isPending,
     graphSnapshotQuery.isError,
     graphSnapshotQuery.isPending,
-    queryClient,
+    draftQueryCache,
     refs,
     setDraftSaveStatus,
     setDraftSession,
-    workspaceLayoutKey,
   ]);
 }

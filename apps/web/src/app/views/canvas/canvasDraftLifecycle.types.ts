@@ -4,6 +4,7 @@ import type { WorkspaceScope } from '../../ports/sessionContext';
 import type { WorkspaceBootstrapConfig } from '../../services/config/workspaceConfig';
 import type { WorkspaceGraphDraftRecord } from '../../ports/workspace';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+import type { CanvasDraftQueryCache } from './canvasDraftQueryCache';
 import type { CanvasDraftRepository } from './canvasDraftRepository';
 import type { CanvasDraftSession } from './canvasDraftSession';
 import type {
@@ -23,15 +24,6 @@ export type GraphDraftQueryState = {
   isError: boolean;
 };
 
-export type QueryClientLike = {
-  cancelQueries: (args: { queryKey: readonly unknown[] }) => Promise<unknown>;
-  fetchQuery: <T>(args: {
-    queryKey: readonly unknown[];
-    queryFn: () => Promise<T>;
-  }) => Promise<T>;
-  setQueryData: (queryKey: readonly unknown[], value: unknown) => void;
-};
-
 export type DraftSaveStatus = 'idle' | 'saving' | 'saved';
 
 export type DraftAttemptRefs = {
@@ -45,7 +37,7 @@ export type DraftAttemptRefs = {
 export type UseCanvasDraftLifecycleArgs = {
   draftRepository: CanvasDraftRepository;
   graphDraftQuery: GraphDraftQueryState;
-  queryClient: QueryClientLike;
+  draftQueryCache: CanvasDraftQueryCache;
   workspaceLayoutKey: string;
   draftSession: CanvasDraftSession;
   setDraftSession: Dispatch<SetStateAction<CanvasDraftSession>>;

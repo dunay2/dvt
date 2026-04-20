@@ -1,8 +1,11 @@
-import type { DesignGraphDraft } from '@dvt/contracts';
+import type {
+  DesignGraphDraft,
+} from '@dvt/contracts';
 import { vi } from 'vitest';
 
 import {
   buildCanvasHarnessDraftReadResult,
+  projectCanvasHarnessRemoteDraftRecord,
   resolveCanvasHarnessDraftSave,
 } from './useCanvasController.test.draftAuthoring';
 import type {
@@ -22,6 +25,14 @@ type MutableStoreState = CanvasHarnessState['store'] & {
   currentPlan: PlanViewModel | null;
   setCurrentPlan: MockFn;
 };
+
+function resolveCurrentGraphDraftQueryData(state: CanvasHarnessState): WorkspaceGraphDraftRecord | null {
+  if (state.graphDraftQueryData !== undefined) {
+    return state.graphDraftQueryData;
+  }
+
+  return projectCanvasHarnessRemoteDraftRecord(state.remoteDraftRecord);
+}
 
 export function configureCanvasHarnessStoreStateMocks(state: CanvasHarnessState): void {
   const storeState = state.store as MutableStoreState;
@@ -46,9 +57,9 @@ export function configureCanvasHarnessDraftTransportMocks(state: CanvasHarnessSt
 
   (state.services.workspaceGraphDraftAuthoringPort.readGraphDraft as MockFn).mockImplementation(
     async () =>
-      state.graphDraftRecord == null
+      state.remoteDraftRecord == null
         ? ({ kind: 'not_found' } as const)
-        : buildCanvasHarnessDraftReadResult(state.graphDraftRecord, state.services.sessionContext)
+        : buildCanvasHarnessDraftReadResult(state.remoteDraftRecord)
   );
 
   (state.services.workspaceGraphDraftAuthoringPort.saveGraphDraft as MockFn).mockImplementation(
@@ -60,11 +71,13 @@ export function configureCanvasHarnessDraftTransportMocks(state: CanvasHarnessSt
       expectedRevision: string | null;
     }): Promise<WorkspaceGraphDraftAuthoringSaveResult> => {
       const resolution = resolveCanvasHarnessDraftSave({
-        currentRecord: state.graphDraftRecord,
+        currentRecord: state.remoteDraftRecord,
         draft,
         expectedRevision,
+        sessionContext: state.services.sessionContext,
       });
-      state.graphDraftRecord = resolution.nextRecord;
+      state.remoteDraftRecord = resolution.nextRecord;
+      state.graphDraftQueryData = projectCanvasHarnessRemoteDraftRecord(state.remoteDraftRecord);
       return resolution.result;
     }
   );
@@ -77,7 +90,7 @@ export function configureCanvasHarnessQueryClientMocks(
   mocks.useQuery.mockImplementation((queryConfig?: { queryKey?: readonly string[] }) => {
     const queryKey = queryConfig?.queryKey ?? [];
     if (queryKey[1] === 'graph-draft') {
-      return { data: state.graphDraftRecord, isPending: false, isError: false };
+      return { data: resolveCurrentGraphDraftQueryData(state), isPending: false, isError: false };
     }
 
     return { data: state.graphData, isPending: false, isError: false };
@@ -94,7 +107,7 @@ export function configureCanvasHarnessQueryClientMocks(
         | { nodes: Array<{ id: string }>; edges: Array<{ id: string }> }
     ) => {
       if (queryKey[1] === 'graph-draft') {
-        state.graphDraftRecord = value as WorkspaceGraphDraftRecord | null;
+        state.graphDraftQueryData = value as WorkspaceGraphDraftRecord | null;
       }
 
       if (queryKey[1] === 'graph') {
@@ -114,8 +127,8 @@ export function configureCanvasHarnessQueryClientMocks(
       const resolvedValue = queryFn ? await queryFn() : undefined;
 
       if (queryKey?.[1] === 'graph-draft') {
-        state.graphDraftRecord = resolvedValue as WorkspaceGraphDraftRecord | null;
-        return state.graphDraftRecord;
+        state.graphDraftQueryData = resolvedValue as WorkspaceGraphDraftRecord | null;
+        return state.graphDraftQueryData;
       }
 
       if (queryKey?.[1] === 'graph') {

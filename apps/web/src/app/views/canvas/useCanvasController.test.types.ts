@@ -1,3 +1,4 @@
+import type { WorkspaceGraphDraftRecord as ProtectedWorkspaceGraphDraftRecord } from '@dvt/contracts';
 import { vi } from 'vitest';
 
 import type { IPlansPort } from '../../ports/plans';
@@ -15,7 +16,8 @@ export type MockFn = ReturnType<typeof vi.fn>;
 
 export type CanvasHarnessState = {
   graphData: { nodes: Array<{ id: string }>; edges: Array<{ id: string }> };
-  graphDraftRecord: WorkspaceGraphDraftRecord | null;
+  remoteDraftRecord: ProtectedWorkspaceGraphDraftRecord | null;
+  graphDraftQueryData: WorkspaceGraphDraftRecord | null | undefined;
   canonicalNodes: CanonicalNode[];
   canonicalEdges: CanonicalEdge[];
   overlayDecorations: Map<string, OverlayDecoration>;
