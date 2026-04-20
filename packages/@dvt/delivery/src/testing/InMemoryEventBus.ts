@@ -1,4 +1,6 @@
-import type { EventEnvelope, IEventBus } from '@dvt/contracts';
+import type { EventEnvelope } from '@dvt/contracts';
+
+import type { IEventBus } from '../contracts.js';
 
 export class InMemoryEventBus implements IEventBus {
   public readonly published: EventEnvelope[] = [];

@@ -1,4 +1,4 @@
-import type { ILineageSink, LineagePublishPayload } from '@dvt/contracts';
+import type { ILineageSink, LineagePublishPayload } from './contracts.js';
 
 export interface HttpOpenLineageSinkConfig {
   /**

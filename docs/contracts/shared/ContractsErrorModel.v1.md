@@ -68,7 +68,7 @@ Rules:
 - `packages/@dvt/contracts/src/errors.ts`
 - `packages/@dvt/contracts/src/validation.ts`
 - `packages/@dvt/contracts/src/contracts/planner/PlannerPolicyVocabulary.v2.ts`
-- `packages/@dvt/contracts/src/ports/artifact-store.ts`
+- `packages/@dvt/artifacts/src/runtime/validateArtifactIntegrity.ts`
 
 ## Notes
 

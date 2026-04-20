@@ -484,10 +484,10 @@ tasks:
   - task_id: RC-G1-C
     parent_task: RC-G1
     priority: P1
-    status: queued
+    status: done
     complexity: L
     effort_points: 5
-    progress_pct: 0
+    progress_pct: 100
     objective: move non-shared delivery, traceability, and artifacts ports to their owner packages.
     dependency: RC-G1-B
     target: >-
@@ -495,10 +495,16 @@ tasks:
       `@dvt/contracts` retains only shared transport shapes for those areas.
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/contracts-domain-ownership-migration-plan-20260327.md
+      - docs/planning/closeouts/20260419-rc-g1-c-owner-package-migration-closeout.md
+      - docs/evidence/ED-20260419-rc-g1-c-owner-package-migration.md
       - docs/planning/reviews/architecture-and-governance/20260417-dvt-artifacts-review.md
       - docs/risk-register/quality/R-20260402-RC-G1-CONTRACT-OWNERSHIP-EXECUTION-DRIFT.yaml
-    status_reason: Delivery/traceability/artifacts ownership migration is queued behind engine.
-    last_verified: '2026-04-02'
+    status_reason: >-
+      Delivery-owned outbox ports now live in `@dvt/delivery`, lineage runtime and ports now live in
+      `@dvt/traceability-service`, the generic shared-kernel artifact-store surface is retired in
+      favor of `@dvt/artifacts`, residual imports were cut to zero, and lint guards plus ARC-2
+      evidence/risk updates close the slice.
+    last_verified: '2026-04-19'
   - task_id: RC-G1-D
     parent_task: RC-G1
     priority: P1
@@ -517,6 +523,29 @@ tasks:
       - docs/risk-register/quality/R-20260402-RC-G1-CONTRACT-OWNERSHIP-EXECUTION-DRIFT.yaml
     status_reason: Planner migration and final cleanup are tracked as the closing `RC-G1` slice.
     last_verified: '2026-04-02'
+  - task_id: RC-G1-C-TRUTH-SYNC
+    priority: P1
+    status: queued
+    objective: >-
+      reconcile post-RC-G1-C documentation and barrel truth so active architecture surfaces describe
+      the shipped ownership model exactly.
+    dependency: RC-G1-C
+    target: >-
+      `system-delivery-status`, the RC-G1-C closeout, and linked planning or architecture surfaces
+      distinguish shared DTO re-exports from owner-local behavioral ports and align quantitative
+      status claims with `generated-code-state`.
+    complexity: S
+    effort_points: 2
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/reviews/architecture-and-governance/20260419-post-rc-g1-c-architecture-review.md
+      - docs/planning/closeouts/20260419-rc-g1-c-owner-package-migration-closeout.md
+      - docs/architecture/system-delivery-status.md
+      - docs/planning/status/generated-code-state.md
+    status_reason: >-
+      RC-G1-C shipped the code cutover, but the closeout wording and quantitative status surfaces
+      still overstate or lag the published code truth.
+    last_verified: '2026-04-19'
   - task_id: GOV-S1
     priority: P2
     status: done
@@ -1294,7 +1323,7 @@ tasks:
     last_verified: '2026-04-02'
   - task_id: AR-A7
     priority: P2
-    status: queued
+    status: in_progress
     objective: >-
       split @dvt/delivery into domain rules (backpressure policy, admission guard) and runtime
       orchestration (worker runtime, polling loop) to maintain hexagonal architecture purity.
@@ -1304,13 +1333,19 @@ tasks:
       depends on domain rules, not vice versa.
     complexity: M
     effort_points: 5
-    progress_pct: 0
+    progress_pct: 35
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
+      - docs/planning/reviews/architecture-and-governance/20260419-post-rc-g1-c-architecture-review.md
+      - packages/@dvt/delivery/src/application/OutboxWorkerRuntime.ts
+      - packages/@dvt/delivery/src/application/OutboxWorkerRuntimeLoopController.ts
+      - packages/@dvt/engine/src/state/InMemoryOutboxState.ts
+      - packages/@dvt/delivery/src/testing/InMemoryOutboxStorage.ts
     status_reason: >-
-      Package currently mixes domain logic and application orchestration, violating hexagonal
-      separation.
-    last_verified: '2026-04-02'
+      RC-G1-C partially closed this concern: delivery runtime orchestration is now thinner and the
+      worker monitor delegates health and telemetry seams, but the reusable runtime-shell decision
+      and the duplicated in-memory outbox semantics across engine and delivery remain open.
+    last_verified: '2026-04-19'
   - task_id: AR-A8
     priority: P1
     status: queued
@@ -2816,14 +2851,15 @@ verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
   verified_on: '2026-04-20'
-  total_tasks: 108
-  total_effort_points: 343
-  completed_weighted_points: 258.64
-  lane_progress_pct: 75
+  total_tasks: 118
+  total_effort_points: 356
+  completed_weighted_points: 280.89
+  lane_progress_pct: 79
   notes: >-
     Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry
     coordination-only effort. `TF-A2` now adds the missing contract-first workspace graph-draft
     persistence boundary so typed web/api/store ownership is frozen before frontend productization
     continues, `TF-A1-C12..C19` now cover the post-hardening route-facade, compile-boundary
-    ownership cleanup, and declarative route-policy plus canonical-envelope convergence, and the
+    ownership cleanup, and declarative route-policy plus canonical-envelope convergence, while the
+    merged `origin/main` intake also carries `RC-G1-C-TRUTH-SYNC` and adjacent follow-up routing;
     summary values were recomputed from the current lane registry on 2026-04-20.

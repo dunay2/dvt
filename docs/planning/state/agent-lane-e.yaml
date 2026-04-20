@@ -1224,12 +1224,13 @@ tasks:
     priority: P1
     status: in_progress
     objective: >-
-      reconcile frontend architecture and roadmap documents with current code, real routes, and
-      English-only wording.
+      reconcile frontend architecture, planning, and roadmap documents with current code, real
+      routes, canonical doc paths, and English-only wording.
     dependency: MVP-E1, F-07
     target: >-
       Frontend docs describe the current shell, graph, query, store, and runtime boundary truth
-      without stale endpoint claims, mojibake, or target-state-only wording.
+      without stale endpoint claims, legacy `docs/architecture/frontend/**` references, mojibake, or
+      target-state-only wording.
     complexity: S
     effort_points: 3
     progress_pct: 60
@@ -1241,29 +1242,37 @@ tasks:
       - docs/planning/proposals/frontend-roadmap-20260219.md
     status_reason: >-
       The frontend architecture entrypoint, route-level docs, observability slice, UX guide, and
-      screen manuals were reconciled into English and grounded in the current code, but contract
-      alignment and deeper component detail still remain open.
-    last_verified: '2026-04-03'
+      screen manuals were reconciled into English and grounded in the current code, but planning
+      closeouts and reviews still carry legacy frontend-path references and contract alignment plus
+      deeper component detail still remain open.
+    last_verified: '2026-04-19'
   - task_id: F-14
     priority: P1
     status: queued
     objective: >-
-      add a governed frontend test command and CI lane for the existing @dvt/web test files.
+      add a governed frontend test command and CI lane for the existing @dvt/web test files, and
+      make frontend test-only infrastructure visible as test support rather than production source.
     dependency: F-06
     target: >-
       The web workspace exposes a test script, the CI matrix runs it in a dedicated frontend lane,
-      and frontend docs no longer report the absence of a governed test path.
+      frontend docs no longer report the absence of a governed test path, and generated status plus
+      local conventions classify harness and test-support files truthfully as test-only
+      infrastructure.
     complexity: S
     effort_points: 3
     progress_pct: 0
     evidence_refs:
       - apps/web/package.json
+      - apps/web/vitest.config.ts
       - apps/web/src/testing/reactQueryHarness.test.tsx
       - docs/architecture/components/web/index.md
+      - docs/planning/status/generated-code-state.md
     status_reason: >-
       Local frontend test files exist, but no declared workspace test command or dedicated CI lane
-      currently proves them.
-    last_verified: '2026-04-03'
+      currently proves them, and test-support files such as harnesses still risk inflating source
+      inventory because the workspace does not yet enforce one governed placement or classification
+      convention for frontend test infrastructure.
+    last_verified: '2026-04-19'
   - task_id: F-15
     priority: P1
     status: in_progress
@@ -2078,35 +2087,51 @@ tasks:
     status: queued
     objective: >-
       turn the Inspector into the canonical property-editing surface for governed node metadata with
-      validation, dirty-state handling, save, cancel, and reload semantics.
+      validation, dirty-state handling, save, cancel, and reload semantics, and move shared
+      selection or inspect intent out of adapter-local graph handlers when it becomes route-level
+      command policy.
     dependency: TF-E2-A
     target: >-
       Governed node properties can be edited, validated, saved, canceled, and rehydrated through the
-      Inspector, and the saved values feed the same canonical authoring truth consumed by preview
-      and run handoff.
+      Inspector, the saved values feed the same canonical authoring truth consumed by preview and
+      run handoff, and selection or inspect semantics that stop being pure adapter fallout route
+      through an explicit command helper beside `canvasInteractionCommands.ts`.
     complexity: S
     effort_points: 3
     progress_pct: 0
     evidence_refs: []
-    status_reason: planned slice; execution has not started.
-    last_verified: '2026-04-16'
+    status_reason: >-
+      Planned slice; execution has not started. The active architecture still tracks
+      `toggleNodeSelection` and `inspectNode` as adapter-local drift, so this slice must absorb that
+      follow-up when the semantics become shared route behavior rather than pure React Flow
+      translation.
+    last_verified: '2026-04-19'
   - task_id: TF-E2-E
     parent_task: TF-E2
     priority: P0
     status: queued
     objective: >-
       establish the proof-oriented unit, integration, and Cypress matrix for full node authoring
-      lifecycle behavior.
+      lifecycle behavior, plus a canonical Canvas test-support kit for hook, command, and
+      application-service seams.
     dependency: TF-E2-B, TF-E2-C, TF-E2-D
     target: >-
-      Automated coverage proves create, connect, edit, delete, reload, invalid-connection, and
-      persistence-failure behavior across unit, controller integration, and end-to-end lanes.
+      Automated coverage proves create, connect, edit, delete, duplicate, move, reconnect, reload,
+      invalid-connection, conflict, missing-remote, projection-gap, and persistence-failure behavior
+      across unit, controller integration, and end-to-end lanes; Canvas harness and builder
+      utilities are centralized behind one governed test-support seam; and execution-action
+      orchestration is proven primarily through application-service and command tests instead of
+      only through hook-mounted integration cases.
     complexity: M
     effort_points: 5
     progress_pct: 0
     evidence_refs: []
-    status_reason: planned slice; execution has not started.
-    last_verified: '2026-04-16'
+    status_reason: >-
+      Planned slice; execution has not started. The latest execution-actions test split improves
+      local readability, but the remaining remediation still needs one canonical Canvas test kit,
+      application-service tests for plan and run orchestration seams, and a governed placement for
+      test-support files so proof and generated inventory stay aligned.
+    last_verified: '2026-04-19'
 dependency_notes:
   - >-
     `MVP-E1` and `F-07` now define the frontend runtime contract baseline. `F-07` executes in

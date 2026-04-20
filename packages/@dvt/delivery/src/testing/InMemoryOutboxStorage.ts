@@ -1,20 +1,14 @@
-import { createHash } from 'node:crypto';
+import { type DeadLetterRecord, type EventEnvelope, type OutboxRecord } from '@dvt/contracts';
 
 import {
   MAX_OUTBOX_ATTEMPTS,
-  type DeadLetterRecord,
-  type EventEnvelope,
   type IOutboxStorage,
   type OutboxClaimSelection,
-  type OutboxRecord,
-} from '@dvt/contracts';
+} from '../contracts.js';
 
-type ReplayDeadLetterOptions = {
-  tenantId: string;
-  limit?: number;
-  runId?: string;
-  ids?: string[];
-};
+import { resolveOutboxShardId } from './outboxSharding.js';
+
+type ReplayDeadLetterOptions = Parameters<IOutboxStorage['replayDeadLetters']>[0];
 
 interface PersistedOutboxRecord extends OutboxRecord {
   shardId: number;
@@ -96,23 +90,6 @@ export class InMemoryOutboxStorage implements IOutboxStorage {
     return a.payload.runSeq - b.payload.runSeq;
   }
 
-  private matchesReplaySelection(
-    deadLetter: PersistedDeadLetterRecord,
-    options: { tenantId?: string; runId?: string } | undefined,
-    ids: ReadonlySet<string> | null
-  ): boolean {
-    if (options?.tenantId && deadLetter.payload.tenantId !== options.tenantId) {
-      return false;
-    }
-    if (options?.runId && deadLetter.runId !== options.runId) {
-      return false;
-    }
-    if (ids && !ids.has(deadLetter.id)) {
-      return false;
-    }
-    return true;
-  }
-
   private restoreDeadLetter(deadLetter: PersistedDeadLetterRecord): void {
     this.pending.push({
       id: deadLetter.originalId,
@@ -137,7 +114,7 @@ export class InMemoryOutboxStorage implements IOutboxStorage {
       index -= 1
     ) {
       const deadLetter = this.deadLetters[index];
-      if (!deadLetter || !this.matchesReplaySelection(deadLetter, options, ids)) {
+      if (!deadLetter || !matchesReplaySelection(deadLetter, options, ids)) {
         continue;
       }
       indexes.push(index);
@@ -172,7 +149,7 @@ export class InMemoryOutboxStorage implements IOutboxStorage {
         idempotencyKey: event.idempotencyKey,
         payload: event,
         attempts: 0,
-        shardId: resolveShardId(event.runId, this.shardCount),
+        shardId: resolveOutboxShardId(event.runId, this.shardCount),
       });
     }
   }
@@ -277,20 +254,6 @@ export class InMemoryOutboxStorage implements IOutboxStorage {
   }
 }
 
-function resolveShardId(runId: string, shardCount: number): number {
-  const normalizedShardCount = Math.max(1, shardCount);
-  const hash = createHash('md5').update(runId, 'utf8').digest('hex').slice(0, 16);
-  const shardCountBigInt = BigInt(normalizedShardCount);
-  let hashValue = BigInt(`0x${hash}`);
-  if (hashValue >= SIGNED_BIGINT_HIGH_BIT) {
-    hashValue -= UINT64_MODULUS;
-  }
-  return Number(((hashValue % shardCountBigInt) + shardCountBigInt) % shardCountBigInt);
-}
-
-const SIGNED_BIGINT_HIGH_BIT = 1n << 63n;
-const UINT64_MODULUS = 1n << 64n;
-
 function stripPersistedShardId(record: PersistedOutboxRecord): OutboxRecord {
   const { shardId: _shardId, ...outboxRecord } = record;
   return outboxRecord;
@@ -301,6 +264,39 @@ function stripPersistedDeadLetterShardId(record: PersistedDeadLetterRecord): Dea
   return deadLetterRecord;
 }
 
+function matchesReplaySelection(
+  deadLetter: PersistedDeadLetterRecord,
+  options: { tenantId?: string; runId?: string } | undefined,
+  ids: ReadonlySet<string> | null
+): boolean {
+  return (
+    matchesReplayTenant(deadLetter, options?.tenantId) &&
+    matchesReplayRun(deadLetter, options?.runId) &&
+    matchesReplayIds(deadLetter, ids)
+  );
+}
+
+function matchesReplayTenant(
+  deadLetter: PersistedDeadLetterRecord,
+  tenantId: string | undefined
+): boolean {
+  return tenantId === undefined || deadLetter.payload.tenantId === tenantId;
+}
+
+function matchesReplayRun(
+  deadLetter: PersistedDeadLetterRecord,
+  runId: string | undefined
+): boolean {
+  return runId === undefined || deadLetter.runId === runId;
+}
+
+function matchesReplayIds(
+  deadLetter: PersistedDeadLetterRecord,
+  ids: ReadonlySet<string> | null
+): boolean {
+  return ids === null || ids.has(deadLetter.id);
+}
+
 function epochMsToIsoUtc(epochMs: number): string {
   return new Date(epochMs).toISOString();
 }
@@ -308,7 +304,7 @@ function epochMsToIsoUtc(epochMs: number): string {
 function parseIsoUtcToEpochMs(isoUtc: string): number {
   const epochMs = Date.parse(isoUtc);
   if (!Number.isFinite(epochMs)) {
-    throw new Error(`INVALID_ISO_UTC: ${isoUtc}`);
+    throw new TypeError(`INVALID_ISO_UTC: ${isoUtc}`);
   }
   return epochMs;
 }

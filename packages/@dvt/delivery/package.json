@@ -24,7 +24,7 @@
     "prebuild": "node ../../../scripts/skip-prebuild-if-orchestrated.cjs || pnpm --filter @dvt/contracts build",
     "pretest": "node ../../../scripts/skip-pretest-if-ci.cjs || pnpm --filter @dvt/contracts build",
     "build": "tsc -p tsconfig.json",
-    "test": "pnpm -C ../../.. exec vitest run packages/@dvt/delivery/test/OutboxWorker.test.ts packages/@dvt/delivery/test/ProjectorWorkerRuntime.test.ts packages/@dvt/delivery/test/gaps/StartRunAdmissionGuard.test.ts"
+    "test": "pnpm -C ../../.. exec vitest run packages/@dvt/delivery/test/OutboxWorker.delivery.test.ts packages/@dvt/delivery/test/OutboxWorker.retry.test.ts packages/@dvt/delivery/test/OutboxWorker.sharding.test.ts packages/@dvt/delivery/test/OutboxWorker.observer.test.ts packages/@dvt/delivery/test/OutboxWorker.deadLetter.test.ts packages/@dvt/delivery/test/ProjectorWorkerRuntime.test.ts packages/@dvt/delivery/test/gaps/StartRunAdmissionGuard.test.ts"
   },
   "dependencies": {
     "@dvt/contracts": "workspace:*"

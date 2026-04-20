@@ -1,4 +1,5 @@
-import type { EventEnvelope as RunEventPersisted, IEventBus } from '@dvt/contracts';
+import type { EventEnvelope as RunEventPersisted } from '@dvt/contracts';
+import type { IEventBus } from '@dvt/delivery';
 
 export interface HttpEventBusOptions {
   targetUrl: string;

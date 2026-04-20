@@ -2,7 +2,7 @@
 title: Roadmap By Domain
 status: Active
 owner: Product / Architecture / Docs
-last_reviewed: 2026-04-14
+last_reviewed: 2026-04-19
 planning_type: proposal
 ---
 
@@ -53,8 +53,10 @@ flowchart LR
   into `TF-C3` phase-2 plugin-backed dbt dispatch, while the broader
   contract-pack reset and
   shared-kernel ownership cleanup continue under the Planner and Contracts
-  lane, the delivery runtime harness extraction (`AR-A7`) stays sequenced
-  behind that boundary work, and Conductor cleanup stays scoped as truthfulness
+  lane, the delivery/runtime harness extraction (`AR-A7`) now continues from a
+  partially landed delivery split rather than a blank starting point, the
+  lineage-runtime decomposition follow-up (`AR-B5`) keeps worker parity moving
+  without blurring ownership, and Conductor cleanup stays scoped as truthfulness
   debt (`AR-A8`) rather than a second-provider phase.
 - `API and Admission`
   Current sources: [API and Admission domain view](../domains/api-and-admission.md),
@@ -92,7 +94,8 @@ flowchart LR
   converge compile-boundary vocabulary plus living docs, and then continue the
   remaining shared-kernel and plan-record hardening under `RC-G1` and `S08`,
   while `S05-TRUTH-SYNC` keeps payload-version closure truth aligned across
-  planning and status surfaces.
+  planning and status surfaces and `RC-G1-C-TRUTH-SYNC` now closes the post-merge
+  wording and generated-status drift left after the `RC-G1-C` ownership cutover.
 - `Event Lifecycle and Retention`
   Current sources: [Event Lifecycle and Retention domain view](../domains/event-lifecycle-and-retention.md),
   [20260330 MVP-D1 residual risk baseline review](../reviews/event-lifecycle-and-retention/20260330-mvp-d1-residual-risk-baseline-review.md),

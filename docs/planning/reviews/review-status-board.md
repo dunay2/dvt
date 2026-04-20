@@ -77,6 +77,13 @@ Additional active rationale:
   - status: `reference`
   - progress: `n/a`
 
+- [20260419 Post RC-G1-C architecture review](./architecture-and-governance/20260419-post-rc-g1-c-architecture-review.md)
+  - domain: `architecture-and-governance`
+  - role: post-merge architecture intake for RC-G1-C follow-up backlog and truth-sync routing
+  - linkage: `RC-G1-C-TRUTH-SYNC`, `AR-A7`, `AR-B5`
+  - status: `queued`
+  - progress: `0%`
+
 - [20260411 Project architecture strengths, weaknesses, and priority review](./architecture-and-governance/20260411-project-architecture-strengths-weaknesses-fowler-review.md)
   - domain: `architecture-and-governance`
   - role: current module-by-module architectural valuation and priority baseline
