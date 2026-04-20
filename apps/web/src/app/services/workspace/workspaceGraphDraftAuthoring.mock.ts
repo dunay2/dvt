@@ -1,5 +1,4 @@
 import type {
-  DesignGraphDraft,
   WorkspaceGraphDraftAuditAction,
   WorkspaceGraphDraftAuditOutcome,
   WorkspaceGraphDraftCapabilityMode,
@@ -12,36 +11,16 @@ import type {
 import type { SessionContextPort } from '../../ports/sessionContext';
 import type { IWorkspaceGraphDraftAuthoringPort } from '../../ports/workspaceGraphDraftAuthoring';
 import { WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION } from './workspaceGraphDraftProtocol';
-
-type MockWorkspaceGraphDraftRecord = {
-  readonly revision: string;
-  readonly updatedAt: string;
-  readonly draft: DesignGraphDraft;
-};
-
-type MockIdempotencyEntry =
-  | {
-      readonly requestSignature: string;
-      readonly outcome: 'saved';
-      readonly revision: string;
-    }
-  | {
-      readonly requestSignature: string;
-      readonly outcome: 'conflict';
-      readonly currentRevision: string;
-    };
-
-type MockWorkspaceGraphDraftStore = {
-  currentRecord: MockWorkspaceGraphDraftRecord | null;
-  idempotencyEntries: Map<string, MockIdempotencyEntry>;
-};
+import {
+  cloneDesignGraphDraft,
+  createDraftRequestSignature,
+  getMockWorkspaceGraphDraftStore,
+} from './workspaceGraphDraftAuthoring.mockStore';
 
 type MockWorkspaceGraphDraftPortArgs = {
   draftStoreKey: object;
   sessionContext: Pick<SessionContextPort, 'getWorkspaceScopeSnapshot'>;
 };
-
-const draftStoresByKey = new WeakMap<object, MockWorkspaceGraphDraftStore>();
 
 function readWorkspaceGraphDraftScope(
   sessionContext: Pick<SessionContextPort, 'getWorkspaceScopeSnapshot'>
@@ -91,39 +70,11 @@ function buildFormatMeta(): WorkspaceGraphDraftFormatMeta {
   };
 }
 
-function getDraftStore(draftStoreKey: object): MockWorkspaceGraphDraftStore {
-  const existingStore = draftStoresByKey.get(draftStoreKey);
-  if (existingStore) {
-    return existingStore;
-  }
-
-  const nextStore: MockWorkspaceGraphDraftStore = {
-    currentRecord: null,
-    idempotencyEntries: new Map<string, MockIdempotencyEntry>(),
-  };
-  draftStoresByKey.set(draftStoreKey, nextStore);
-  return nextStore;
-}
-
-function cloneDesignGraphDraft(draft: DesignGraphDraft): DesignGraphDraft {
-  return structuredClone(draft);
-}
-
-function createRequestSignature(input: {
-  expectedRevision: string | null;
-  draft: DesignGraphDraft;
-}): string {
-  return JSON.stringify({
-    expectedRevision: input.expectedRevision,
-    draft: input.draft,
-  });
-}
-
 export function createMockWorkspaceGraphDraftAuthoringPort({
   draftStoreKey,
   sessionContext,
 }: MockWorkspaceGraphDraftPortArgs): IWorkspaceGraphDraftAuthoringPort {
-  const store = getDraftStore(draftStoreKey);
+  const store = getMockWorkspaceGraphDraftStore(draftStoreKey);
 
   return {
     async readGraphDraft() {
@@ -150,7 +101,7 @@ export function createMockWorkspaceGraphDraftAuthoringPort({
 
     async saveGraphDraft(input) {
       const scope = readWorkspaceGraphDraftScope(sessionContext);
-      const requestSignature = createRequestSignature(input);
+      const requestSignature = createDraftRequestSignature(input);
       const existingIdempotencyEntry = store.idempotencyEntries.get(input.idempotencyKey);
 
       if (existingIdempotencyEntry) {
@@ -179,9 +130,9 @@ export function createMockWorkspaceGraphDraftAuthoringPort({
 
       const currentRevision = store.currentRecord?.revision ?? null;
       if (input.expectedRevision !== currentRevision && store.currentRecord != null) {
-        const conflictEntry: MockIdempotencyEntry = {
+        const conflictEntry = {
           requestSignature,
-          outcome: 'conflict',
+          outcome: 'conflict' as const,
           currentRevision: store.currentRecord.revision,
         };
         store.idempotencyEntries.set(input.idempotencyKey, conflictEntry);
@@ -195,7 +146,7 @@ export function createMockWorkspaceGraphDraftAuthoringPort({
         };
       }
 
-      const nextRecord: MockWorkspaceGraphDraftRecord = {
+      const nextRecord = {
         revision: crypto.randomUUID(),
         updatedAt: new Date().toISOString(),
         draft: cloneDesignGraphDraft(input.draft),
