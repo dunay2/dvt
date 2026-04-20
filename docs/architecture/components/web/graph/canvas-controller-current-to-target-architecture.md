@@ -104,6 +104,10 @@ Primary implementation anchors:
 - [canvasPreviewProvenance.ts](../../../../../apps/web/src/app/views/canvas/canvasPreviewProvenance.ts)
 - [canvasRunStartAction.ts](../../../../../apps/web/src/app/views/canvas/canvasRunStartAction.ts)
 - [transformationGraphValidation.ts](../../../../../apps/web/src/app/views/canvas/transformationGraphValidation.ts)
+- [transformationGraphValidation.types.ts](../../../../../apps/web/src/app/views/canvas/transformationGraphValidation.types.ts)
+- [transformationGraphValidationScope.ts](../../../../../apps/web/src/app/views/canvas/transformationGraphValidationScope.ts)
+- [transformationGraphValidationRules.ts](../../../../../apps/web/src/app/views/canvas/transformationGraphValidationRules.ts)
+- [transformationGraphValidationResults.ts](../../../../../apps/web/src/app/views/canvas/transformationGraphValidationResults.ts)
 - [useCanvasNavigationActions.ts](../../../../../apps/web/src/app/views/canvas/useCanvasNavigationActions.ts)
 - [CanvasToolbar.tsx](../../../../../apps/web/src/app/views/canvas/CanvasToolbar.tsx)
 - [CanvasToolbarPrimaryControls.tsx](../../../../../apps/web/src/app/views/canvas/CanvasToolbarPrimaryControls.tsx)
@@ -127,6 +131,7 @@ Primary fitness-function anchors:
 - [canvasControllerViewModel.architecture.test.ts](../../../../../apps/web/src/app/views/canvas/canvasControllerViewModel.architecture.test.ts)
 - [CanvasCenterSurface.architecture.test.ts](../../../../../apps/web/src/app/views/canvas/CanvasCenterSurface.architecture.test.ts)
 - [useCanvasExecutionActions.architecture.test.ts](../../../../../apps/web/src/app/views/canvas/useCanvasExecutionActions.architecture.test.ts)
+- [transformationGraphValidation.architecture.test.ts](../../../../../apps/web/src/app/views/canvas/transformationGraphValidation.architecture.test.ts)
 
 ## Current Architecture Snapshot
 
@@ -308,8 +313,14 @@ Implemented seams:
   owns start-run command execution over plan readiness and run service
   invocation
 - `transformationGraphValidation`
-  owns pure transformation-graph validation over scoped subgraph selection,
-  role validation, edge-order invariants, and draft-signature derivation
+  is now the validation composition seam over scoped subgraph resolution,
+  role and edge invariants, and result construction
+- `transformationGraphValidationScope`
+  owns scoped subgraph resolution for preview validation
+- `transformationGraphValidationRules`
+  owns pure role, cardinality, edge-count, and edge-order invariants
+- `transformationGraphValidationResults`
+  owns draft-signature derivation and typed valid/invalid result construction
 - `CanvasToolbar`
   is now the thin toolbar composition seam over dedicated primary-controls,
   draft-status, view-model, and portal-target helpers
@@ -329,9 +340,6 @@ Remaining concentration:
 - `useCanvasAuthoringRuntime`
   still assembles several authoring concerns and remains the heaviest runtime
   seam in the chain
-- `useCanvasExecutionActions`
-  still coordinates plan-preview and run-start orchestration plus route-local
-  modal fallout
 - `canvasDraftSession`
   is the right aggregate root, but it remains a large local model and still
   needs careful proof-oriented evolution rather than accreting helper logic
@@ -547,6 +555,9 @@ flowchart LR
   PlanHandler --> PlanAction["canvasPlanAction"]
   RunHandler --> RunAction["canvasRunStartAction"]
   PlanAction --> Validation["transformationGraphValidation"]
+  Validation --> ValidationScope["transformationGraphValidationScope"]
+  Validation --> ValidationRules["transformationGraphValidationRules"]
+  Validation --> ValidationResults["transformationGraphValidationResults"]
   PlanAction --> Provenance["canvasPreviewProvenance"]
   Provenance --> Workspace["IWorkspacePort"]
   PlanAction --> Plans["IPlansPort"]
@@ -561,25 +572,32 @@ Reading rule:
 
 - `canvasExecutionState` is query and presentation-state derivation
 - `canvasPlanAction` and `canvasRunStartAction` are command seams
+- `transformationGraphValidation` is now a thin facade; scoped graph
+  resolution, pure invariants, and result construction no longer live in one
+  file
 - `canvasPreviewProvenance` is a query-plus-artifact orchestration seam, not a
   view concern
 - `CanvasToolbar` is presentation composition only
 
 ## Responsibility Map For The Local Slice
 
-| Concern                           | Owner module                    | Responsibility boundary                                                                                             | Must not own                                                                 |
-| --------------------------------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| plugin declaration contract       | `PluginManifest.ts`             | plugin capability vocabulary, contribution DTOs, lifecycle-aware manifest shape, and cross-plugin port declarations | registry composition, graph-policy execution, or Canvas-visible copy         |
-| shell connection invariants       | `ConnectionRules.ts`            | self-connection, duplicate-edge, cycle, plugin rules, bridge compatibility                                          | toasts, edge creation, React Flow events                                     |
-| edge authoring application policy | `canvasConnectionAggregate`     | propose or confirm connection, map typed rule failures to Canvas rejections                                         | low-level graph traversal or operator copy                                   |
-| transformation preview validity   | `transformationGraphValidation` | select scoped graph, validate roles and edge order, derive stable summary codes                                     | localized strings or toolbar rendering                                       |
-| preview provenance                | `canvasPreviewProvenance`       | resolve transform SQL artifact, graph artifact persistence, provenance payload assembly                             | planner invocation or toolbar state                                          |
-| plan command                      | `canvasPlanAction`              | validation gate, provenance resolution, planner preview call                                                        | route rendering or operator messaging beyond returned command outcomes       |
-| run command                       | `canvasRunStartAction`          | start-run gate and run invocation                                                                                   | toolbar state or direct UI feedback                                          |
-| execution presentation state      | `canvasExecutionState`          | start-run availability, preview staleness, plan summary derivation                                                  | transport calls or persistence                                               |
-| drag payload normalization        | `canvasNodeDropPayload`         | JSON parse, canonical payload validation, typed node assembly                                                       | canvas-node admission policy or draft mutation                               |
-| node drop application policy      | `canvasNodeDropAggregate`       | drop admission and projected node insertion outcome                                                                 | DOM events or `DataTransfer` reads                                           |
-| toolbar composition               | `CanvasToolbar`                 | compose controls from presentation state and command callbacks                                                      | execution policy, graph validation, provenance resolution, or draft mutation |
+<!-- markdownlint-disable MD060 -->
+
+| Concern                           | Owner module                                                             | Responsibility boundary                                                                                             | Must not own                                                                 |
+| --------------------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| plugin declaration contract       | `PluginManifest.ts`                                                      | plugin capability vocabulary, contribution DTOs, lifecycle-aware manifest shape, and cross-plugin port declarations | registry composition, graph-policy execution, or Canvas-visible copy         |
+| shell connection invariants       | `ConnectionRules.ts`                                                     | self-connection, duplicate-edge, cycle, plugin rules, bridge compatibility                                          | toasts, edge creation, React Flow events                                     |
+| edge authoring application policy | `canvasConnectionAggregate`                                              | propose or confirm connection, map typed rule failures to Canvas rejections                                         | low-level graph traversal or operator copy                                   |
+| transformation preview validity   | `transformationGraphValidation` plus validation scope/rules/result seams | select scoped graph, validate roles and edge order, derive stable summary codes and signatures                      | localized strings or toolbar rendering                                       |
+| preview provenance                | `canvasPreviewProvenance`                                                | resolve transform SQL artifact, graph artifact persistence, provenance payload assembly                             | planner invocation or toolbar state                                          |
+| plan command                      | `canvasPlanAction`                                                       | validation gate, provenance resolution, planner preview call                                                        | route rendering or operator messaging beyond returned command outcomes       |
+| run command                       | `canvasRunStartAction`                                                   | start-run gate and run invocation                                                                                   | toolbar state or direct UI feedback                                          |
+| execution presentation state      | `canvasExecutionState`                                                   | start-run availability, preview staleness, plan summary derivation                                                  | transport calls or persistence                                               |
+| drag payload normalization        | `canvasNodeDropPayload`                                                  | JSON parse, canonical payload validation, typed node assembly                                                       | canvas-node admission policy or draft mutation                               |
+| node drop application policy      | `canvasNodeDropAggregate`                                                | drop admission and projected node insertion outcome                                                                 | DOM events or `DataTransfer` reads                                           |
+| toolbar composition               | `CanvasToolbar`                                                          | compose controls from presentation state and command callbacks                                                      | execution policy, graph validation, provenance resolution, or draft mutation |
+
+<!-- markdownlint-enable MD060 -->
 
 ## Fowler Comparison
 
@@ -596,7 +614,7 @@ verbatim".
 | Fowler layer             | Current Canvas slice                                                                                                                    | Fit     |
 | ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------- | ------- |
 | `Gateway`                | `IWorkspacePort`, `IPlansPort`, `IRunsPort`; plugin port map from `registry.ts`                                                         | partial |
-| `Assembler / mapper`     | `canvasNodeDropPayload`, `canvasPreviewProvenance`, `transformationGraphValidation`                                                     | partial |
+| `Assembler / mapper`     | `canvasNodeDropPayload`, `canvasPreviewProvenance`, validation facade plus scope/rules/result seams                                     | partial |
 | `Service Layer / facade` | execution composition and command seams (`useCanvasExecutionActions`, plan/run handlers, pure actions) plus `canvasConnectionAggregate` | strong  |
 | `Presentation model`     | `canvasExecutionState`, `canvasDraftPresentationModel`, `canvasDraftToolbarState`                                                       | strong  |
 | `View / controller hook` | `CanvasToolbar`, `useCanvasEdgeAuthoringHandlers`, `useCanvasNodeDropHandlers`                                                          | strong  |
@@ -628,12 +646,12 @@ verbatim".
 
 ### Remaining drift against the Fowler target
 
-- `useCanvasExecutionActions` is now a thinner composition seam, but the
-  execution command family still spans `canvasExecutionState`,
-  `canvasPlanAction`, `canvasPreviewProvenance`, and
-  `transformationGraphValidation`; if preview or run-start fallout grows
-  again, the next move should be another application-service extraction, not a
-  return to one hook-owned hotspot
+- the transformation validation hotspot is now reduced structurally, but the
+  broader preview chain still spans `canvasExecutionState`,
+  `canvasPlanAction`, `canvasPreviewProvenance`, and the validation facade; if
+  preview fallout grows again, the next move should be another narrow
+  application-service extraction, not a return to one file owning the whole
+  chain
 - `CanvasToolbar` now behaves like a thin presentational composition seam;
   the remaining risk is re-accumulating policy into it instead of the toolbar
   helper seams
@@ -651,47 +669,100 @@ That is the correct posture for this route. Forcing the whole slice into a
 generic gateway-assembler-facade-only template would hide the real local
 authoring domain instead of clarifying it.
 
+### Comparison with mature systems
+
+Compared with mature frontend bounded contexts, the branch is moving in the
+right direction:
+
+- mature systems usually keep one thin entry facade and push policy into small
+  pure modules; `transformationGraphValidation.ts` now follows that shape
+- mature systems protect architecture with fitness functions, not only with
+  code review; `transformationGraphValidation.architecture.test.ts` now locks
+  the seam shape explicitly
+- mature systems keep diagrams and responsibility maps synchronized with the
+  live code; this iteration updates the validation seam anchors, relationship
+  map, and drift register together
+
+The branch is still less mature than those systems in one important respect:
+
+- large local aggregates such as `canvasDraftSession.ts` still concentrate more
+  policy than a fully-settled authoring context should carry
+
+### Antipatterns reduced in this iteration
+
+- reduced a mini-"blob helper" antipattern in
+  `transformationGraphValidation.ts`, where scope resolution, invariant checks,
+  and result construction lived together
+- reduced shotgun-surgery risk, because validation rules now change in
+  `transformationGraphValidationRules.ts` without reopening facade wiring or
+  result-shape code
+- reduced code and documentation drift by making the relationship diagram and
+  responsibility inventory describe the same seams that the runtime now imports
+
+### Lessons for future iterations
+
+- split by policy family, not by arbitrary helper count; the useful cut here
+  was `scope`, `rules`, and `results`, not "three random utility files"
+- keep the public entrypoint stable while changing internals; the facade export
+  remained intact, which lowers route-level refactor risk
+- add architecture tests when a seam is intentionally thin; otherwise the next
+  edit tends to collapse behavior back into the facade
+- update drift registers and diagrams in the same iteration as the refactor; if
+  that lags, the branch quickly loses proof value
+
+### Repetition removed and opportunities remaining
+
+- removed repeated local ownership of draft-signature derivation and invalid
+  result construction from the public validation entrypoint
+- removed repeated reasoning burden for reviewers; the facade now reads as an
+  ordered application flow instead of a mixed utility catalog
+- the next repetition target is still route-local command fallout around
+  selection and inspector behavior, which remains adapter-owned
+- the next structural opportunity after this seam is still the large
+  `canvasDraftSession.ts` aggregate, followed by the breadth of
+  `useCanvasAuthoringRuntime`
+
 ## Current Responsibility Inventory
 
 <!-- markdownlint-disable MD060 -->
 
-| Module                           | Current responsibility                                                                                                                                | Current problem                                                        |
-| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| `useCanvasController`            | route-facing composition facade over environment, runtime, selection, mutation, overlays, handlers, layout, execution, and final contract publication | much thinner than before, but still returns a large route contract     |
-| `useCanvasControllerEnvironment` | route-local service, capability, config, strategy, and store wiring                                                                                   | acceptable environment seam                                            |
-| `useCanvasControllerReadModel`   | controller-local validation, impacted-node projection, and inspector projection                                                                       | acceptable read-model seam                                             |
-| `useCanvasAuthoringRuntime`      | authoring application seam over baseline, projection, lifecycle, and domain-policy derivation                                                         | still broad enough to be the next likely split point                   |
-| `useCanvasDraftBaseline`         | persisted draft baseline query and repository access                                                                                                  | acceptable baseline seam                                               |
-| `useCanvasAuthoringProjection`   | graph projection and canonical snapshot assembly                                                                                                      | acceptable projection seam                                             |
-| `useCanvasMutationHandlers`      | composition seam over graph-change and source-import hooks                                                                                            | acceptable composition seam                                            |
-| `useCanvasGraphChangeHandlers`   | composition seam over node and edge handlers                                                                                                          | acceptable composition seam                                            |
-| `canvasInteractionCommands`      | centralized working-set command catalog for remove, admit, import, and edge updates                                                                   | acceptable command seam; UI commands still stay local                  |
-| `useCanvasGraphHandlers`         | composition seam over graph interaction adapters                                                                                                      | acceptable composition seam                                            |
-| `canvasConnectionAggregate`      | pure connection proposal and confirmation policy over canonical graph context, with typed rejection outcomes                                          | acceptable pure edge-authoring policy seam                             |
-| `canvasNodeDropAggregate`        | pure dropped-node admission policy and canvas-node projection                                                                                         | acceptable pure node-admission policy seam                             |
-| `useCanvasNodeAuthoringHandlers` | composition seam over node-drop and node-removal handlers                                                                                             | acceptable composition seam                                            |
-| `useCanvasNodeDropHandlers`      | drag/drop adapter translation and explicit-node admission fallout via `canvasNodeDropAggregate`                                                       | acceptable node-drop adapter                                           |
-| `useCanvasNodeRemovalHandlers`   | deferred remove-node adapter translation and coordinated UI fallout                                                                                   | acceptable node-removal adapter                                        |
-| `useCanvasExecutionActions`      | execution composition seam over execution state plus dedicated plan/run callback handlers                                                             | acceptable composition seam; keep transport inside pure actions        |
-| `useCanvasPlanActionHandler`     | plan-preview shell feedback and plan-modal fallout over the pure command result                                                                       | acceptable callback adapter; keep planner policy in `canvasPlanAction` |
-| `useCanvasRunStartHandler`       | start-run shell feedback, modal fallout, and console reveal over the pure command result                                                              | acceptable callback adapter; keep run policy in `canvasRunStartAction` |
-| `copy.ts`                        | centralized locale-resolved operator copy plus shared formatting of typed rejections and validation-summary codes                                     | acceptable copy seam; keep visible Canvas strings out of handlers      |
-| `useCanvasNodeChangeHandlers`    | node-change adapter translation plus selection or inspector fallout application                                                                       | acceptable node-mutation adapter                                       |
-| `useCanvasEdgeChangeHandlers`    | edge-change adapter translation                                                                                                                       | acceptable edge-mutation adapter                                       |
-| `useCanvasSourceImportHandlers`  | source-import aftermath, focus handoff, graph refresh, and command invocation                                                                         | acceptable import-aftereffect seam                                     |
-| `useCanvasDraftLifecycle`        | lifecycle composition seam for refs, payload, bootstrap sync, and persistence                                                                         | acceptable composition seam                                            |
-| `useCanvasDraftBootstrapSync`    | composition seam over reload hydration, bootstrapping, and canonical reconcile                                                                        | acceptable composition seam                                            |
+| Module                            | Current responsibility                                                                                                                                | Current problem                                                        |
+| --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| `useCanvasController`             | route-facing composition facade over environment, runtime, selection, mutation, overlays, handlers, layout, execution, and final contract publication | much thinner than before, but still returns a large route contract     |
+| `useCanvasControllerEnvironment`  | route-local service, capability, config, strategy, and store wiring                                                                                   | acceptable environment seam                                            |
+| `useCanvasControllerReadModel`    | controller-local validation, impacted-node projection, and inspector projection                                                                       | acceptable read-model seam                                             |
+| `useCanvasAuthoringRuntime`       | authoring application seam over baseline, projection, lifecycle, and domain-policy derivation                                                         | still broad enough to be the next likely split point                   |
+| `useCanvasDraftBaseline`          | persisted draft baseline query and repository access                                                                                                  | acceptable baseline seam                                               |
+| `useCanvasAuthoringProjection`    | graph projection and canonical snapshot assembly                                                                                                      | acceptable projection seam                                             |
+| `useCanvasMutationHandlers`       | composition seam over graph-change and source-import hooks                                                                                            | acceptable composition seam                                            |
+| `useCanvasGraphChangeHandlers`    | composition seam over node and edge handlers                                                                                                          | acceptable composition seam                                            |
+| `canvasInteractionCommands`       | centralized working-set command catalog for remove, admit, import, and edge updates                                                                   | acceptable command seam; UI commands still stay local                  |
+| `useCanvasGraphHandlers`          | composition seam over graph interaction adapters                                                                                                      | acceptable composition seam                                            |
+| `canvasConnectionAggregate`       | pure connection proposal and confirmation policy over canonical graph context, with typed rejection outcomes                                          | acceptable pure edge-authoring policy seam                             |
+| `canvasNodeDropAggregate`         | pure dropped-node admission policy and canvas-node projection                                                                                         | acceptable pure node-admission policy seam                             |
+| `useCanvasNodeAuthoringHandlers`  | composition seam over node-drop and node-removal handlers                                                                                             | acceptable composition seam                                            |
+| `useCanvasNodeDropHandlers`       | drag/drop adapter translation and explicit-node admission fallout via `canvasNodeDropAggregate`                                                       | acceptable node-drop adapter                                           |
+| `useCanvasNodeRemovalHandlers`    | deferred remove-node adapter translation and coordinated UI fallout                                                                                   | acceptable node-removal adapter                                        |
+| `useCanvasExecutionActions`       | execution composition seam over execution state plus dedicated plan/run callback handlers                                                             | acceptable composition seam; keep transport inside pure actions        |
+| `useCanvasPlanActionHandler`      | plan-preview shell feedback and plan-modal fallout over the pure command result                                                                       | acceptable callback adapter; keep planner policy in `canvasPlanAction` |
+| `useCanvasRunStartHandler`        | start-run shell feedback, modal fallout, and console reveal over the pure command result                                                              | acceptable callback adapter; keep run policy in `canvasRunStartAction` |
+| `transformationGraphValidation`   | validation composition seam over scoped graph resolution, invariant rules, and result construction                                                    | acceptable facade; keep detailed rules out of the public entrypoint    |
+| `copy.ts`                         | centralized locale-resolved operator copy plus shared formatting of typed rejections and validation-summary codes                                     | acceptable copy seam; keep visible Canvas strings out of handlers      |
+| `useCanvasNodeChangeHandlers`     | node-change adapter translation plus selection or inspector fallout application                                                                       | acceptable node-mutation adapter                                       |
+| `useCanvasEdgeChangeHandlers`     | edge-change adapter translation                                                                                                                       | acceptable edge-mutation adapter                                       |
+| `useCanvasSourceImportHandlers`   | source-import aftermath, focus handoff, graph refresh, and command invocation                                                                         | acceptable import-aftereffect seam                                     |
+| `useCanvasDraftLifecycle`         | lifecycle composition seam for refs, payload, bootstrap sync, and persistence                                                                         | acceptable composition seam                                            |
+| `useCanvasDraftBootstrapSync`     | composition seam over reload hydration, bootstrapping, and canonical reconcile                                                                        | acceptable composition seam                                            |
+| `useCanvasDraftPersistence`       | composition seam over autosave and recovery actions                                                                                                   | acceptable composition seam                                            |
+| `useCanvasDraftAutosave`          | autosave scheduling over persistence readiness, debounce, and save eligibility                                                                        | acceptable scheduling seam                                             |
+| `canvasDraftAutosaveExecution`    | save-attempt execution and result resolution                                                                                                          | acceptable pure runtime seam                                           |
+| `useCanvasDraftBootstrapping`     | composition seam over narrow bootstrap policies                                                                                                       | acceptable composition seam                                            |
+| `useCanvasDraftInitialBootstrap`  | first transition from remote draft or canonical snapshot into editing state                                                                           | acceptable bootstrap transition seam                                   |
+| `useCanvasDraftMissingRemoteSync` | post-bootstrap remote-missing detection and local reset                                                                                               | acceptable lifecycle recovery seam                                     |
+| `canvasBackendPosture`            | pure backend posture derivation                                                                                                                       | acceptable as a pure policy seam                                       |
+| `canvasAuthoringState`            | pure authoring and recovery posture derivation                                                                                                        | acceptable as a pure policy seam                                       |
 
 <!-- markdownlint-enable MD060 -->
-
-| `useCanvasDraftPersistence` | composition seam over autosave and recovery actions | acceptable composition seam |
-| `useCanvasDraftAutosave` | autosave scheduling over persistence readiness, debounce, and save eligibility | acceptable scheduling seam |
-| `canvasDraftAutosaveExecution` | save-attempt execution and result resolution | acceptable pure runtime seam |
-| `useCanvasDraftBootstrapping` | composition seam over narrow bootstrap policies | acceptable composition seam |
-| `useCanvasDraftInitialBootstrap` | first transition from remote draft or canonical snapshot into editing state | acceptable bootstrap transition seam |
-| `useCanvasDraftMissingRemoteSync` | post-bootstrap remote-missing detection and local reset | acceptable lifecycle recovery seam |
-| `canvasBackendPosture` | pure backend posture derivation | acceptable as a pure policy seam |
-| `canvasAuthoringState` | pure authoring and recovery posture derivation | acceptable as a pure policy seam |
 
 ## Current Drifts
 
@@ -745,6 +816,14 @@ The remaining drift is semantic, not structural:
 
 That drift is currently accepted in `TF-E2-A` and belongs to the broader
 proof-oriented closure under `TF-E2-E`.
+
+### 4. Validation hotspot reduced, aggregate hotspot remains
+
+`transformationGraphValidation.ts` no longer carries scoped graph resolution,
+invariant rules, and result construction in one file. That drift is materially
+reduced by the validation split. The remaining large local model is now
+clearly `canvasDraftSession.ts`, which is the next hotspot if another Fowler
+iteration is needed.
 
 ## Target DDD / CQRS / Hexagonal Posture
 
