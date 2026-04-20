@@ -11,12 +11,9 @@ import type { FileContent, IWorkspacePort, WorkspaceFileEntry } from '../../port
 import type {
   ImportSourcesInput,
   ImportSourcesResult,
-  SaveWorkspaceGraphDraftInput,
-  SaveWorkspaceGraphDraftResult,
   SourceImportGrouping,
   WarehouseConnection,
   WarehouseTable,
-  WorkspaceGraphDraftRecord,
   WorkspaceGraphSnapshot
 } from './workspaceService';
 import { WorkspaceFileLoadError } from './workspaceErrors';
@@ -176,8 +173,6 @@ function ensureWorkspaceDirectoryChildren(directory: WorkspaceFileEntry): Worksp
 
 export interface MockWorkspaceState {
   graphSnapshot: WorkspaceGraphSnapshot;
-  graphDraftRecord: WorkspaceGraphDraftRecord | null;
-  graphDraftIdempotencyResults: Record<string, SaveWorkspaceGraphDraftResult>;
   fileTree: WorkspaceFileEntry[];
   fileContents: Record<string, FileContent>;
 }
@@ -185,8 +180,6 @@ export interface MockWorkspaceState {
 export function createMockWorkspaceState(): MockWorkspaceState {
   return {
     graphSnapshot: cloneGraphSnapshot(defaultGraphSnapshot),
-    graphDraftRecord: null,
-    graphDraftIdempotencyResults: {},
     fileTree: createDefaultWorkspaceFileTree(),
     fileContents: cloneFileContents(defaultFileContents),
   };
@@ -589,74 +582,11 @@ function inferLanguage(path: string): string {
   return langMap[ext] ?? 'plaintext';
 }
 
-function cloneWorkspaceGraphDraft(
-  draft: WorkspaceGraphDraftRecord['draft']
-): WorkspaceGraphDraftRecord['draft'] {
-  return {
-    nodeIds: [...draft.nodeIds],
-    nodePositions: Object.fromEntries(
-      Object.entries(draft.nodePositions).map(([nodeId, position]) => [
-        nodeId,
-        { x: position.x, y: position.y },
-      ])
-    ),
-    edges: draft.edges.map((edge) => ({
-      sourceId: edge.sourceId,
-      targetId: edge.targetId,
-    })),
-  };
-}
-
-function cloneGraphDraftRecord(record: WorkspaceGraphDraftRecord): WorkspaceGraphDraftRecord {
-  return {
-    revision: record.revision,
-    savedAt: record.savedAt,
-    draft: cloneWorkspaceGraphDraft(record.draft),
-  };
-}
-
-function createNextGraphDraftRecord(input: SaveWorkspaceGraphDraftInput): WorkspaceGraphDraftRecord {
-  return {
-    revision: crypto.randomUUID(),
-    savedAt: new Date().toISOString(),
-    draft: cloneWorkspaceGraphDraft(input.draft),
-  };
-}
-
 export function createMockWorkspaceService(
   state: MockWorkspaceState = createMockWorkspaceState()
 ): IWorkspacePort {
   return {
     getGraphSnapshot: async () => cloneGraphSnapshot(state.graphSnapshot),
-    getGraphDraft: async () =>
-      state.graphDraftRecord == null ? null : cloneGraphDraftRecord(state.graphDraftRecord),
-    saveGraphDraft: async (input) => {
-      const idempotentResult = state.graphDraftIdempotencyResults[input.idempotencyKey];
-      if (idempotentResult != null) {
-        return idempotentResult.outcome === 'saved'
-          ? { outcome: 'saved', record: cloneGraphDraftRecord(idempotentResult.record) }
-          : { outcome: 'conflict', current: cloneGraphDraftRecord(idempotentResult.current) };
-      }
-
-      const currentRevision = state.graphDraftRecord?.revision ?? null;
-      if (input.expectedRevision !== currentRevision && state.graphDraftRecord != null) {
-        const result: SaveWorkspaceGraphDraftResult = {
-          outcome: 'conflict',
-          current: cloneGraphDraftRecord(state.graphDraftRecord),
-        };
-        state.graphDraftIdempotencyResults[input.idempotencyKey] = result;
-        return { outcome: 'conflict', current: cloneGraphDraftRecord(result.current) };
-      }
-
-      const nextRecord = createNextGraphDraftRecord(input);
-      state.graphDraftRecord = nextRecord;
-      const result: SaveWorkspaceGraphDraftResult = {
-        outcome: 'saved',
-        record: cloneGraphDraftRecord(nextRecord),
-      };
-      state.graphDraftIdempotencyResults[input.idempotencyKey] = result;
-      return { outcome: 'saved', record: cloneGraphDraftRecord(nextRecord) };
-    },
     getDiffChanges: async () => mockDiffChanges,
     getPlugins: async () => mockPlugins,
     getRoles: async () => mockRoles,

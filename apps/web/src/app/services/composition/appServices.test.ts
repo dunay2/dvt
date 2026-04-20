@@ -134,6 +134,55 @@ describe('buildAppServices', () => {
     });
   });
 
+  it('hard-cuts graph-draft persistence out of workspaceService while keeping mock authoring operational', async () => {
+    const services = buildAppServices({ mode: 'mock' });
+
+    expect(services.workspaceService).not.toHaveProperty('getGraphDraft');
+    expect(services.workspaceService).not.toHaveProperty('saveGraphDraft');
+
+    const saveResult = await services.workspaceGraphDraftAuthoringPort.saveGraphDraft({
+      expectedRevision: null,
+      idempotencyKey: 'idem-hard-cut-1',
+      draft: {
+        context: {
+          tenantId: 'tenant-a',
+          projectId: 'project-a',
+          environmentId: 'dev',
+          executionTarget: 'postgres',
+        },
+        nodes: [
+          {
+            id: 'source-node',
+            type: 'source',
+            payload: {
+              kind: 'postgres_table',
+              schema: 'raw',
+              table: 'orders',
+              alias: 'orders',
+            },
+          },
+        ],
+        edges: [],
+      },
+    });
+
+    expect(saveResult.kind).toBe('saved');
+    if (saveResult.kind !== 'saved') {
+      throw new Error('expected mock authoring save to succeed');
+    }
+
+    await expect(services.workspaceGraphDraftAuthoringPort.readGraphDraft()).resolves.toMatchObject({
+      kind: 'ok',
+      record: {
+        revision: saveResult.revision,
+        draft: {
+          nodes: [expect.objectContaining({ id: 'source-node', type: 'source' })],
+          edges: [],
+        },
+      },
+    });
+  });
+
   it('uses explicit overrides instead of rebuilding runtime seams', () => {
     const apiClient = buildApiClientStub();
     const workspaceService = {} as IWorkspacePort;

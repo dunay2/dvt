@@ -4,6 +4,7 @@ import type { WorkspaceGraphSnapshot } from '../../ports/workspace';
 import {
   buildDraftReadOkResponse,
   buildProtectedDraftRecord,
+  buildDraftSaveConflictResponse,
 } from '../../services/workspace/workspaceGraphDraft.test.fixtures';
 import {
   buildDraftRecord,
@@ -32,26 +33,31 @@ describe('useCanvasController reload conflict recovery', () => {
     let saveAttempts = 0;
     harness.cleanup();
     harness = await createTransformationAuthoringHarness();
-    harness.state.services.workspaceService.saveGraphDraft = async () => {
+    harness.state.services.workspaceGraphDraftAuthoringPort.saveGraphDraft = async () => {
       saveAttempts += 1;
-      return {
-        outcome: 'conflict',
-        current: buildDraftRecord(
-          {
-            nodeIds: ['node_1', 'node_2', 'node_3'],
-            nodePositions: {
-              node_1: { x: 0, y: 0 },
-              node_2: { x: 220, y: 120 },
-              node_3: { x: 420, y: 120 },
-            },
-            edges: [
-              { sourceId: 'node_1', targetId: 'node_2' },
-              { sourceId: 'node_2', targetId: 'node_3' },
-            ],
+      harness.state.graphDraftRecord = buildDraftRecord(
+        {
+          nodeIds: ['node_1', 'node_2', 'node_3'],
+          nodePositions: {
+            node_1: { x: 0, y: 0 },
+            node_2: { x: 220, y: 120 },
+            node_3: { x: 420, y: 120 },
           },
-          'rev-remote'
-        ),
-      };
+          edges: [
+            { sourceId: 'node_1', targetId: 'node_2' },
+            { sourceId: 'node_2', targetId: 'node_3' },
+          ],
+        },
+        'rev-remote'
+      );
+      return buildDraftSaveConflictResponse(
+        {
+          tenantId: 'tenant-a',
+          projectId: 'project-a',
+          environmentId: 'dev',
+        },
+        { currentRevision: 'rev-remote' }
+      );
     };
 
     await harness.renderProbe();

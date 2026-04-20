@@ -53,7 +53,7 @@ export function buildAppServices(overrides: AppServicesOverrides = {}): AppServi
     (dataSourceMode === 'api'
       ? createApiWorkspaceGraphDraftAuthoringPort(apiClient)
       : createMockWorkspaceGraphDraftAuthoringPort({
-          workspaceService,
+          draftStoreKey: workspaceService,
           sessionContext,
         }));
 

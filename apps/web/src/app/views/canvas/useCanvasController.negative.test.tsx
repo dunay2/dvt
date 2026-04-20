@@ -1,7 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import React, { act } from 'react';
 
-import type { SaveWorkspaceGraphDraftResult } from '../../ports/workspace';
+import type { WorkspaceGraphDraftAuthoringSaveResult } from '../../ports/workspaceGraphDraftAuthoring';
+import { buildDraftSaveSavedResponse } from '../../services/workspace/workspaceGraphDraft.test.fixtures';
 import type { CanvasDraftSession } from './canvasDraftSession';
 import { applyTransformationAuthoringFixture, buildDraftRecord } from './useCanvasController.draftLifecycle.test.support';
 import { setupCanvasControllerHarness } from './useCanvasController.test.harness';
@@ -79,7 +80,7 @@ describe('useCanvasController negative invariants', () => {
     await act(async () => {
       await new Promise((resolve) => setTimeout(resolve, 450));
     });
-    expect(harness.state.services.workspaceService.saveGraphDraft).not.toHaveBeenCalled();
+    expect(harness.state.services.workspaceGraphDraftAuthoringPort.saveGraphDraft).not.toHaveBeenCalled();
   });
 
   it('falls back from cost overlay to runtime when cost data disappears', async () => {
@@ -112,7 +113,7 @@ describe('useCanvasController negative invariants', () => {
       await new Promise((resolve) => setTimeout(resolve, 450));
     });
 
-    expect(harness.state.services.workspaceService.saveGraphDraft).not.toHaveBeenCalled();
+    expect(harness.state.services.workspaceGraphDraftAuthoringPort.saveGraphDraft).not.toHaveBeenCalled();
   });
 
   it('renders an intentionally empty persisted draft without falling back to the snapshot graph', async () => {
@@ -187,7 +188,7 @@ describe('useCanvasController negative invariants', () => {
     });
 
     let rejectSave: ((reason?: unknown) => void) | null = null;
-    harness.state.services.workspaceService.saveGraphDraft = vi.fn(
+    harness.state.services.workspaceGraphDraftAuthoringPort.saveGraphDraft = vi.fn(
       async () =>
         await new Promise<never>((_, reject) => {
           rejectSave = reject;
@@ -196,7 +197,7 @@ describe('useCanvasController negative invariants', () => {
 
     await triggerGovernedAutosave();
 
-    expect(harness.state.services.workspaceService.saveGraphDraft).toHaveBeenCalledTimes(1);
+    expect(harness.state.services.workspaceGraphDraftAuthoringPort.saveGraphDraft).toHaveBeenCalledTimes(1);
 
     harness.state.graphDraftRecord = null;
     await harness.renderProbe();
@@ -209,7 +210,7 @@ describe('useCanvasController negative invariants', () => {
 
     expect(harness.getLatestResult()?.hasMissingRemoteDraft).toBe(true);
     expect(harness.getLatestResult()?.draftSaveStatus).toBe('idle');
-    expect(harness.state.services.workspaceService.saveGraphDraft).toHaveBeenCalledTimes(1);
+    expect(harness.state.services.workspaceGraphDraftAuthoringPort.saveGraphDraft).toHaveBeenCalledTimes(1);
   });
 
   it('ignores a late successful autosave after the draft disappears remotely', async () => {
@@ -225,17 +226,17 @@ describe('useCanvasController negative invariants', () => {
       edges: [{ sourceId: 'node_1', targetId: 'node_2' }],
     });
 
-    let resolveSave: ((value: SaveWorkspaceGraphDraftResult) => void) | null = null;
-    harness.state.services.workspaceService.saveGraphDraft = vi.fn(
+    let resolveSave: ((value: WorkspaceGraphDraftAuthoringSaveResult) => void) | null = null;
+    harness.state.services.workspaceGraphDraftAuthoringPort.saveGraphDraft = vi.fn(
       async () =>
-        await new Promise<SaveWorkspaceGraphDraftResult>((resolve) => {
+        await new Promise<WorkspaceGraphDraftAuthoringSaveResult>((resolve) => {
           resolveSave = resolve;
         })
     );
 
     await triggerGovernedAutosave();
 
-    expect(harness.state.services.workspaceService.saveGraphDraft).toHaveBeenCalledTimes(1);
+    expect(harness.state.services.workspaceGraphDraftAuthoringPort.saveGraphDraft).toHaveBeenCalledTimes(1);
 
     harness.state.graphDraftRecord = null;
     await harness.renderProbe();
@@ -243,18 +244,14 @@ describe('useCanvasController negative invariants', () => {
 
     await act(async () => {
       resolveSave?.({
-        outcome: 'saved',
-        record: {
-          revision: 'rev-stale',
-          savedAt: '2026-04-16T00:00:01Z',
-          draft: {
-            nodeIds: ['node_1'],
-            nodePositions: {
-              node_1: { x: 48, y: 24 },
-            },
-            edges: [],
+        ...buildDraftSaveSavedResponse(
+          {
+            tenantId: 'tenant-a',
+            projectId: 'project-a',
+            environmentId: 'dev',
           },
-        },
+          { revision: 'rev-stale' }
+        ),
       });
       await Promise.resolve();
     });

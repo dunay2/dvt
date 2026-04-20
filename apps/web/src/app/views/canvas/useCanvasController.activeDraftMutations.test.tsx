@@ -1,6 +1,7 @@
 import React, { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { buildDraftSaveSavedResponse } from '../../services/workspace/workspaceGraphDraft.test.fixtures';
 import type { CanvasDraftSession } from './canvasDraftSession';
 import {
   buildDraftRecord,
@@ -73,7 +74,7 @@ describe('useCanvasController active draft mutations', () => {
     await harness.renderProbe();
     await waitForAutosaveDebounce();
 
-    expect(harness.state.services.workspaceService.saveGraphDraft).not.toHaveBeenCalled();
+    expect(harness.state.services.workspaceGraphDraftAuthoringPort.saveGraphDraft).not.toHaveBeenCalled();
   });
 
   it('does not snap node positions back to the hydrated remote draft after a local move', async () => {
@@ -175,10 +176,16 @@ describe('useCanvasController active draft mutations', () => {
       }),
       ['node_1', 'node_2']
     );
-    harness.state.services.workspaceService.saveGraphDraft = vi.fn(async ({ draft }) => ({
-      outcome: 'saved' as const,
-      record: buildDraftRecord(draft, 'rev-2', '2026-04-16T00:00:01Z'),
-    }));
+    harness.state.services.workspaceGraphDraftAuthoringPort.saveGraphDraft = vi.fn(async () =>
+      buildDraftSaveSavedResponse(
+        {
+          tenantId: 'tenant-a',
+          projectId: 'project-a',
+          environmentId: 'dev',
+        },
+        { revision: 'rev-2' }
+      )
+    );
     harness.mocks.useCanvasGraphHandlers.mockImplementation((params) => ({
       ...harness.state.graphHandlersResult,
       handleDrop: vi.fn(() => {
@@ -227,10 +234,14 @@ describe('useCanvasController active draft mutations', () => {
       'node_2',
       'node_3',
     ]);
-    expect(harness.state.services.workspaceService.saveGraphDraft).toHaveBeenCalledWith(
+    expect(harness.state.services.workspaceGraphDraftAuthoringPort.saveGraphDraft).toHaveBeenCalledWith(
       expect.objectContaining({
         draft: expect.objectContaining({
-          nodeIds: ['node_1', 'node_2', 'node_3'],
+          nodes: expect.arrayContaining([
+            expect.objectContaining({ id: 'node_1' }),
+            expect.objectContaining({ id: 'node_2' }),
+            expect.objectContaining({ id: 'node_3' }),
+          ]),
         }),
       })
     );

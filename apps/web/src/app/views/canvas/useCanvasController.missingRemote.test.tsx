@@ -51,7 +51,7 @@ describe('useCanvasController missing remote recovery', () => {
 
     expect(harness.getLatestResult()?.hasMissingRemoteDraft).toBe(true);
     expect(harness.getLatestResult()?.nodesWithImpact.map((node) => node.id)).toEqual(['node_1']);
-    expect(harness.state.services.workspaceService.saveGraphDraft).not.toHaveBeenCalled();
+    expect(harness.state.services.workspaceGraphDraftAuthoringPort.saveGraphDraft).not.toHaveBeenCalled();
   });
 
   it('adopts the current workspace snapshot after missing_remote and exits the blocked state', async () => {

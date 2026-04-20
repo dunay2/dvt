@@ -1,7 +1,8 @@
 import React, { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { SaveWorkspaceGraphDraftResult } from '../../ports/workspace';
+import type { WorkspaceGraphDraftAuthoringSaveResult } from '../../ports/workspaceGraphDraftAuthoring';
+import { buildDraftSaveSavedResponse } from '../../services/workspace/workspaceGraphDraft.test.fixtures';
 import type { CanvasDraftSession } from './canvasDraftSession';
 import {
   applyTransformationAuthoringFixture,
@@ -84,10 +85,10 @@ describe('useCanvasController reload hydration guards', () => {
     );
     configureDropToCompleteGovernedDraft();
 
-    let resolveSave: ((value: SaveWorkspaceGraphDraftResult) => void) | null = null;
-    harness.state.services.workspaceService.saveGraphDraft = vi.fn(
+    let resolveSave: ((value: WorkspaceGraphDraftAuthoringSaveResult) => void) | null = null;
+    harness.state.services.workspaceGraphDraftAuthoringPort.saveGraphDraft = vi.fn(
       async () =>
-        await new Promise<SaveWorkspaceGraphDraftResult>((resolve) => {
+        await new Promise<WorkspaceGraphDraftAuthoringSaveResult>((resolve) => {
           resolveSave = resolve;
         })
     );
@@ -98,7 +99,7 @@ describe('useCanvasController reload hydration guards', () => {
     });
     await waitForAutosaveDebounce();
 
-    expect(harness.state.services.workspaceService.saveGraphDraft).toHaveBeenCalledTimes(1);
+    expect(harness.state.services.workspaceGraphDraftAuthoringPort.saveGraphDraft).toHaveBeenCalledTimes(1);
 
     harness.state.graphDraftRecord = buildDraftRecord(
       {
@@ -117,22 +118,13 @@ describe('useCanvasController reload hydration guards', () => {
 
     await act(async () => {
       resolveSave?.({
-        outcome: 'saved',
-        record: buildDraftRecord(
+        ...buildDraftSaveSavedResponse(
           {
-            nodeIds: ['node_1', 'node_2', 'node_3'],
-            nodePositions: {
-              node_1: { x: 0, y: 0 },
-              node_2: { x: 120, y: 0 },
-              node_3: { x: 240, y: 0 },
-            },
-            edges: [
-              { sourceId: 'node_1', targetId: 'node_2' },
-              { sourceId: 'node_2', targetId: 'node_3' },
-            ],
+            tenantId: 'tenant-a',
+            projectId: 'project-a',
+            environmentId: 'dev',
           },
-          'rev-stale',
-          '2026-04-17T00:00:02Z'
+          { revision: 'rev-stale' }
         ),
       });
       await Promise.resolve();

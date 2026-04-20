@@ -4,7 +4,7 @@ date: 2026-04-20
 lane: E
 task_id: TF-E2-A
 mode: Full
-status: Completed
+status: In progress
 author: AI (Codex)
 last_reviewed: 2026-04-20
 ---
@@ -187,6 +187,16 @@ real branch state after the hard cut:
   - snapshot and artifact reads remain on `IWorkspacePort`
   - the projected `WorkspaceGraphDraft` DTO now acts only as a local projection
     model returned from the repository, not as persistence authority
+  - `IWorkspacePort` no longer exposes `getGraphDraft` or `saveGraphDraft`, so
+    the projected graph-draft seam cannot be reintroduced through the workspace
+    service contract by accident
+- mock and composition hard cut:
+  - `createMockWorkspaceGraphDraftAuthoringPort` now owns its own typed
+    compare-and-swap and idempotency store
+  - the mock authoring port no longer delegates draft persistence through
+    `workspaceService.getGraphDraft` or `workspaceService.saveGraphDraft`
+  - `createApiWorkspaceService` and `createMockWorkspaceService` no longer
+    publish graph-draft read/write methods on the workspace service surface
 - save payload hardening:
   - added `canvasDraftAuthoring.ts` to build governed `DesignGraphDraft` write
     payloads from scoped canonical nodes and edges
@@ -227,8 +237,9 @@ real branch state after the hard cut:
   - Inspector is not yet the full write-authoring surface
   - the wider Cypress and end-to-end proof matrix is not yet closed
 - test harness follow-up remains open:
-  - the mock typed-authoring store is module-scoped and depends on distinct
-    `workspaceService` references for isolation across tests
+  - the mock typed-authoring store is module-scoped and keyed by composition
+    root identity; it no longer calls the legacy workspace-service seam, but
+    isolation still depends on distinct draft-store keys across tests
   - the harness still contains a lossy projection path from
     `WorkspaceGraphDraftRecord` through `buildProtectedDraftReadResult`; the
     direct typed-port reload regression added in this slice avoids that path on

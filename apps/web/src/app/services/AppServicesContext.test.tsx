@@ -124,15 +124,6 @@ describe('AppServicesProvider', () => {
   it('uses explicit overrides when provided', async () => {
     const workspaceService = {
       getGraphSnapshot: async () => ({ nodes: [], edges: [] }),
-      getGraphDraft: async () => null,
-      saveGraphDraft: async () => ({
-        outcome: 'saved' as const,
-        record: {
-          revision: 'rev-1',
-          savedAt: '2026-04-06T00:00:00Z',
-          draft: { nodeIds: [], nodePositions: {}, edges: [] },
-        },
-      }),
       getDiffChanges: async () => [],
       getPlugins: async () => [],
       getRoles: async () => [],

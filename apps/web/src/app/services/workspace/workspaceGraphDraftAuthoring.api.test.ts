@@ -24,7 +24,12 @@ import {
 
 installWorkspaceScopeHarness();
 
-function createAuthoringPortHarness(options: Parameters<typeof createApiClientHarness>[0] = {}) {
+function createAuthoringPortHarness(
+  options: Parameters<typeof createApiClientHarness>[0] = {}
+): {
+  requestRaw: NonNullable<Parameters<typeof createApiClientHarness>[0]>['requestRaw'];
+  port: ReturnType<typeof createApiWorkspaceGraphDraftAuthoringPort>;
+} {
   const { apiClient, requestRaw } = createApiClientHarness(options);
 
   return {
@@ -39,7 +44,11 @@ function buildAuthoringSaveInput(
     expectedRevision: string | null;
     idempotencyKey: string;
   }> = {}
-) {
+): {
+  expectedRevision: string | null;
+  idempotencyKey: string;
+  draft: ReturnType<typeof buildProtectedDraftRecord>['draft'];
+} {
   return {
     expectedRevision: 'rev-1',
     idempotencyKey: 'idem-authoring-default',
