@@ -1,6 +1,15 @@
 import { createHash } from 'node:crypto';
 
-import type { PlanRef, ResolvedRunContext } from '@dvt/contracts';
+import {
+  asNonBlankString,
+  asSha256HexString,
+  parseExecutionPlan,
+  type ExecutionPlan,
+  type PlanRef,
+  type ResolvedRunContext,
+} from '@dvt/contracts';
+
+import { createExecutionPlan } from '../contractFixtures.js';
 
 import { RunId } from './runtimeState.js';
 
@@ -11,69 +20,94 @@ export function createPlanRef(
     uri?: string;
   }
 ): PlanRef {
+  const plan = parseExecutionPlan(JSON.parse(Buffer.from(planBytes).toString('utf-8')) as unknown);
+
   return {
-    uri: options?.uri ?? `memory://plans/${planId}.json`,
-    sha256: sha256Hex(planBytes),
-    schemaVersion: 'v1.2',
-    planId,
-    planVersion: '1.0.0',
+    uri: asNonBlankString(options?.uri ?? `memory://plans/${planId}.json`),
+    sha256: asSha256HexString(sha256Hex(planBytes)),
+    schemaVersion: asNonBlankString(plan.metadata.schemaVersion),
+    planId: asNonBlankString(plan.metadata.planId),
+    planVersion: asNonBlankString(plan.metadata.planVersion),
     sizeBytes: planBytes.byteLength,
   };
 }
 
-export function createRunContext(runId: RunId): ResolvedRunContext {
+export function createRunContext(
+  runId: RunId,
+  overrides: {
+    tenantId?: string;
+    projectId?: string;
+    environmentId?: string;
+    originRunId?: string;
+    logicalAttemptId?: number;
+    targetAdapter?: ResolvedRunContext['targetAdapter'];
+  } = {}
+): ResolvedRunContext {
+  const runIdValue = runId.value;
+
   return {
-    tenantId: 't-it',
-    projectId: 'p-it',
-    environmentId: 'test',
-    runId: runId.value,
-    targetAdapter: 'temporal',
-    logicalAttemptId: 1,
-    originRunId: runId.value,
+    tenantId: asNonBlankString(overrides.tenantId ?? 't-it'),
+    projectId: asNonBlankString(overrides.projectId ?? 'p-it'),
+    environmentId: asNonBlankString(overrides.environmentId ?? 'test'),
+    runId: asNonBlankString(runIdValue),
+    targetAdapter: overrides.targetAdapter ?? 'temporal',
+    logicalAttemptId: overrides.logicalAttemptId ?? 1,
+    originRunId: asNonBlankString(overrides.originRunId ?? runIdValue),
   };
 }
 
-export function mkLinearThreeStepPlan(): unknown {
+function createDbtModelStep(
+  stepId: string,
+  dependsOn: readonly string[] = []
+): ExecutionPlan['steps'][number] {
   return {
-    metadata: {
-      planId: 'it-plan-linear-3',
-      planVersion: '1.0.0',
-      schemaVersion: 'v1.2',
-      contractVersion: '1.0.0',
-    },
-    steps: [
-      { stepId: 's-1', kind: 'DBT_MODEL' },
-      { stepId: 's-2', kind: 'DBT_MODEL', dependsOn: ['s-1'] },
-      { stepId: 's-3', kind: 'DBT_MODEL', dependsOn: ['s-2'] },
-    ],
-  } as const;
+    stepId,
+    kind: 'DBT_MODEL',
+    dependsOn: [...dependsOn],
+  };
 }
 
-export function mkPermanentFailurePlan(): unknown {
-  return {
-    metadata: {
-      planId: 'it-plan-permanent-failure',
-      planVersion: '1.0.0',
-      schemaVersion: 'v1.2',
-      contractVersion: '1.0.0',
-    },
-    steps: [{ stepId: 's-fail', kind: 'DBT_MODEL' }],
-  } as const;
+export function mkPlan(stepCount: number): ExecutionPlan {
+  return createExecutionPlan({
+    inputHashSha256: sha256Hex(Buffer.from('fixture:it-plan', 'utf-8')),
+    steps: Array.from({ length: stepCount }, (_, index) => createDbtModelStep(`s-${index + 1}`)),
+  });
 }
 
-export function mkPostgresTransformationPlan(schema: string, sinkTable: string): unknown {
+export function mkLinearPlan(stepCount: number): ExecutionPlan {
+  return createExecutionPlan({
+    inputHashSha256: sha256Hex(Buffer.from('fixture:it-plan-linear', 'utf-8')),
+    steps: Array.from({ length: stepCount }, (_, index) =>
+      createDbtModelStep(`s-${index + 1}`, index === 0 ? [] : [`s-${index}`])
+    ),
+  });
+}
+
+export function mkLinearThreeStepPlan(): ExecutionPlan {
+  return createExecutionPlan({
+    inputHashSha256: sha256Hex(Buffer.from('fixture:it-plan-linear-3', 'utf-8')),
+    steps: Array.from({ length: 3 }, (_, index) =>
+      createDbtModelStep(`s-${index + 1}`, index === 0 ? [] : [`s-${index}`])
+    ),
+  });
+}
+
+export function mkPermanentFailurePlan(): ExecutionPlan {
+  return createExecutionPlan({
+    inputHashSha256: sha256Hex(Buffer.from('fixture:it-plan-permanent-failure', 'utf-8')),
+    steps: [createDbtModelStep('s-fail')],
+  });
+}
+
+export function mkPostgresTransformationPlan(schema: string, sinkTable: string): ExecutionPlan {
   return withTransformationRuntimeBinding(
-    {
-      metadata: {
-        planId: 'it-plan-postgres-transform',
-        planVersion: '1.0.0',
-        schemaVersion: 'v1.2',
-        contractVersion: '1.0.0',
-      },
+    createExecutionPlan({
+      inputHashSha256: sha256Hex(Buffer.from('fixture:it-plan-postgres-transform', 'utf-8')),
       steps: [
         {
           stepId: 's-1',
           kind: 'PREPARE_POSTGRES_TRANSFORM',
+          dependsOn: [],
           stepTypeConfig: {
             targetSchema: schema,
           },
@@ -100,7 +134,7 @@ export function mkPostgresTransformationPlan(schema: string, sinkTable: string):
           },
         },
       ],
-    } as const,
+    }),
     'postgres'
   );
 }

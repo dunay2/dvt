@@ -100,7 +100,7 @@ export class TemporalAdapter implements IProviderAdapter {
   }
 
   async startRun(
-    plan: ExecutionPlan,
+    _plan: ExecutionPlan,
     planRef: PlanRef,
     ctx: ResolvedRunContext
   ): Promise<EngineRunRef> {
@@ -111,13 +111,16 @@ export class TemporalAdapter implements IProviderAdapter {
     const workflowId = toTemporalWorkflowId(validatedCtx.runId);
     const taskQueue = toTemporalTaskQueue(validatedCtx.tenantId, this.deps.config);
     const workflowInput = {
-      plan,
       planRef: validatedPlanRef,
       ctx: validatedCtx,
-      continueAsNewAfterLayerCount: this.deps.config.continueAsNewAfterLayerCount,
+      maxContinueAsNewPayloadBytes: this.deps.config.workflowBudget.maxContinueAsNewPayloadBytes,
+      continueAsNewAfterLayerCount: this.deps.config.workflowBudget.continueAsNewAfterLayerCount,
     };
 
-    assertWorkflowStartPayloadWithinLimit(workflowInput, this.deps.config.maxStartPayloadBytes);
+    assertWorkflowStartPayloadWithinLimit(
+      workflowInput,
+      this.deps.config.workflowBudget.maxStartPayloadBytes
+    );
 
     const started = await workflowClient.start(RUN_PLAN_WORKFLOW, {
       taskQueue,
@@ -242,7 +245,7 @@ export class TemporalAdapter implements IProviderAdapter {
     if (typeof client.withAbortSignal === 'function') {
       await withAbortSignalTimeout(
         (signal) => client.withAbortSignal!(signal, () => handle.describe()),
-        this.deps.config.requestTimeoutMs,
+        this.deps.config.timeouts.requestTimeoutMs,
         'lookupRunRef.describe'
       );
       return;
@@ -251,7 +254,7 @@ export class TemporalAdapter implements IProviderAdapter {
     // Test doubles and minimal injected clients may not implement SDK helpers.
     await withTimeoutMs(
       handle.describe(),
-      this.deps.config.requestTimeoutMs,
+      this.deps.config.timeouts.requestTimeoutMs,
       'lookupRunRef.describe'
     );
   }
@@ -275,7 +278,7 @@ function mapCanonicalSignalToTemporalDispatch(request: SignalRequest): {
     case 'CANCEL':
       return {
         signalName: WorkflowSignals.CANCEL,
-        args: [request.reason],
+        args: [request.signalId, request.reason],
       };
     default: {
       const exhaustive: never = request.type;
@@ -286,19 +289,13 @@ function mapCanonicalSignalToTemporalDispatch(request: SignalRequest): {
 
 function assertWorkflowStartPayloadWithinLimit(
   workflowInput: {
-    plan: ExecutionPlan;
     planRef: PlanRef;
     ctx: ResolvedRunContext;
+    maxContinueAsNewPayloadBytes: number;
     continueAsNewAfterLayerCount: number;
   },
   maxBytes: number
 ): void {
-  if (workflowInput.planRef.sizeBytes !== undefined && workflowInput.planRef.sizeBytes > maxBytes) {
-    throw new Error(
-      `TEMPORAL_START_PAYLOAD_TOO_LARGE: sizeBytes=${workflowInput.planRef.sizeBytes} maxBytes=${maxBytes}`
-    );
-  }
-
   const serializedSizeBytes = Buffer.byteLength(JSON.stringify([workflowInput]), 'utf8');
   if (serializedSizeBytes > maxBytes) {
     throw new Error(

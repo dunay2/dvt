@@ -2,7 +2,7 @@
 title: Domain Status Board
 status: Review
 owner: Product / Architecture / Docs
-last_reviewed: 2026-04-14
+last_reviewed: 2026-04-20
 planning_type: status
 ---
 
@@ -18,15 +18,16 @@ For full task-level tracking use the lane YAML registry linked from
 ### `Execution Runtime`
 
 - Current objective: keep the shipped PostgreSQL-backed transformation runtime
-  vertical stable while finishing `WE-HX` hardening and the remaining runtime
-  observability or operations follow-through.
-- Active task IDs: `WE-HX`, `WE-HX-0`, `AR-C2-T2`, `AR-C2-T3`, `RC-C2`
+  vertical stable while finishing `WE-HX` hardening, the remaining runtime
+  observability follow-through, and the first workflow-payload scale hardening
+  cut.
+- Active task IDs: `WE-HX`, `WE-HX-0`, `AR-C2-T2`, `AR-C2-T3`, `RC-C2`, `AR-D-PLAN-POINTER`
 - Roadmap lane affected: [Execution Runtime lane](../roadmap/roadmap-by-domain.md)
 - Primary blockers: the first PostgreSQL runtime vertical is now accepted, but
   dashboard and alert evidence for runtime SLAs still remain under
-  `AR-C2-T2/T3`, and broader boundary hardening continues under `WE-HX` while
-  Lane D now owns only post-vertical retention follow-through rather than basic
-  proof repeatability.
+  `AR-C2-T2/T3`, broader boundary hardening continues under `WE-HX`, and Lane D
+  now owns the pointer-based workflow input hardening plus the post-vertical
+  retention follow-through rather than only proof repeatability.
 
 ### `API and Admission`
 

@@ -1,18 +1,44 @@
 import { jcsCanonicalize, sha256Hex } from '@dvt/crypto';
 import { describe, expect, it } from 'vitest';
 
+import { createExecutionPlan } from './helpers/contractFixtures.js';
 import {
-  createMultiRunDbtActivityDeps,
+  createDbtActivityDeps,
   createDbtRunExecutionContext,
   createDbtRunExecutionContextRef,
+  resolveDbtPluginContext,
   withDbtRunExecutionContext,
 } from './helpers/integration/dbtRuntimeFixtures.js';
 import { TestOutbox, RunId, TestStateStore } from './helpers/integration/runtimeState.js';
 import { createPlanRef, createRunContext } from './helpers/integration/testPlans.js';
 
+const DEFAULT_PLAN_STEPS: Parameters<typeof createExecutionPlan>[0]['steps'] = [
+  {
+    stepId: 's-1',
+    kind: 'DBT_MODEL',
+    dependsOn: [],
+  },
+];
+
+function createPlanBytes(
+  planId: string,
+  steps: Parameters<typeof createExecutionPlan>[0]['steps'] = DEFAULT_PLAN_STEPS
+): Buffer {
+  return Buffer.from(
+    JSON.stringify(
+      createExecutionPlan({
+        inputHashSha256: sha256Hex(jcsCanonicalize({ planId })),
+        createdAtIso: '2026-04-20T00:00:00.000Z',
+        steps,
+      })
+    ),
+    'utf-8'
+  );
+}
+
 describe('dbtRuntimeFixtures', () => {
   it('creates run-scoped refs bound to the canonical run execution context bytes', () => {
-    const planBytes = Buffer.from(JSON.stringify({ metadata: { planId: 'it-plan' } }), 'utf-8');
+    const planBytes = createPlanBytes('it-plan');
     const planRef = createPlanRef('it-plan', planBytes);
     const firstContext = createRunContext(RunId.of('run-1'));
     const secondContext = createRunContext(RunId.of('run-2'));
@@ -30,7 +56,7 @@ describe('dbtRuntimeFixtures', () => {
   });
 
   it('keeps the runExecutionContextRef hash stable when object property order changes', () => {
-    const planBytes = Buffer.from(JSON.stringify({ metadata: { planId: 'it-plan' } }), 'utf-8');
+    const planBytes = createPlanBytes('it-plan');
     const planRef = createPlanRef('it-plan', planBytes);
     const firstContext = createRunContext(RunId.of('run-1'));
     const runExecutionContext = createDbtRunExecutionContext(firstContext, planRef);
@@ -59,15 +85,19 @@ describe('dbtRuntimeFixtures', () => {
   });
 
   it('resolves only the registered run execution context for each run ref', async () => {
-    const planBytes = Buffer.from(JSON.stringify({ metadata: { planId: 'it-plan' } }), 'utf-8');
+    const planBytes = createPlanBytes('it-plan');
     const planRef = createPlanRef('it-plan', planBytes);
     const firstContext = withDbtRunExecutionContext(createRunContext(RunId.of('run-1')), planRef);
     const secondContext = withDbtRunExecutionContext(createRunContext(RunId.of('run-2')), planRef);
 
-    const deps = createMultiRunDbtActivityDeps(new TestStateStore(), new TestOutbox(), [
-      { ctx: firstContext, planRef, planBytes },
-      { ctx: secondContext, planRef, planBytes },
-    ]);
+    const deps = createDbtActivityDeps({
+      store: new TestStateStore(),
+      outbox: new TestOutbox(),
+      bindings: [
+        { ctx: firstContext, planRef, planBytes },
+        { ctx: secondContext, planRef, planBytes },
+      ],
+    });
 
     const reader = deps.runExecutionContextReader;
     if (reader === undefined) {
@@ -81,10 +111,10 @@ describe('dbtRuntimeFixtures', () => {
       planRef
     );
 
-    expect(firstResolved.pluginContexts.dbt?.projectBundleRef.uri).toMatch(
+    expect(resolveDbtPluginContext(firstResolved).projectBundleRef.uri).toMatch(
       /^s3:\/\/bundle-bucket\/tenants\/t-it\/[a-f0-9]{64}$/
     );
-    expect(secondResolved.pluginContexts.dbt?.projectBundleRef.uri).toMatch(
+    expect(resolveDbtPluginContext(secondResolved).projectBundleRef.uri).toMatch(
       /^s3:\/\/bundle-bucket\/tenants\/t-it\/[a-f0-9]{64}$/
     );
     await expect(reader.resolve(unregisteredContext.runExecutionContextRef!)).rejects.toThrow(
@@ -93,17 +123,14 @@ describe('dbtRuntimeFixtures', () => {
   });
 
   it('fetches registered plan bytes by PlanRef instead of reusing one worker-global blob', async () => {
-    const firstPlanBytes = Buffer.from(
-      JSON.stringify({ metadata: { planId: 'it-plan-a' } }),
-      'utf-8'
-    );
-    const secondPlanBytes = Buffer.from(
-      JSON.stringify({
-        metadata: { planId: 'it-plan-b' },
-        steps: [{ stepId: 's-1', kind: 'DBT_MODEL' }],
-      }),
-      'utf-8'
-    );
+    const firstPlanBytes = createPlanBytes('it-plan-a');
+    const secondPlanBytes = createPlanBytes('it-plan-b', [
+      {
+        stepId: 's-1',
+        kind: 'DBT_MODEL',
+        dependsOn: [],
+      },
+    ]);
     const firstPlanRef = createPlanRef('it-plan-a', firstPlanBytes);
     const secondPlanRef = createPlanRef('it-plan-b', secondPlanBytes);
     const firstContext = withDbtRunExecutionContext(
@@ -115,33 +142,33 @@ describe('dbtRuntimeFixtures', () => {
       secondPlanRef
     );
 
-    const deps = createMultiRunDbtActivityDeps(new TestStateStore(), new TestOutbox(), [
-      { ctx: firstContext, planRef: firstPlanRef, planBytes: firstPlanBytes },
-      { ctx: secondContext, planRef: secondPlanRef, planBytes: secondPlanBytes },
-    ]);
+    const deps = createDbtActivityDeps({
+      store: new TestStateStore(),
+      outbox: new TestOutbox(),
+      bindings: [
+        { ctx: firstContext, planRef: firstPlanRef, planBytes: firstPlanBytes },
+        { ctx: secondContext, planRef: secondPlanRef, planBytes: secondPlanBytes },
+      ],
+    });
 
     const firstFetched = await deps.integrity.fetchAndValidate(firstPlanRef, deps.fetcher);
     const secondFetched = await deps.integrity.fetchAndValidate(secondPlanRef, deps.fetcher);
 
-    expect(Buffer.from(firstFetched).toString('utf-8')).toBe(
-      Buffer.from(firstPlanBytes).toString('utf-8')
-    );
-    expect(Buffer.from(secondFetched).toString('utf-8')).toBe(
-      Buffer.from(secondPlanBytes).toString('utf-8')
-    );
+    expect(firstFetched.plan.metadata.planId).toBe(firstPlanRef.planId);
+    expect(firstFetched.executionPolicy).toEqual({});
+    expect(secondFetched.plan.metadata.planId).toBe(secondPlanRef.planId);
+    expect(secondFetched.plan.steps).toHaveLength(1);
+    expect(secondFetched.executionPolicy).toEqual({});
     await expect(
       deps.integrity.fetchAndValidate(
-        createPlanRef(
-          'it-plan-c',
-          Buffer.from(JSON.stringify({ metadata: { planId: 'it-plan-c' } }), 'utf-8')
-        ),
+        createPlanRef('it-plan-c', createPlanBytes('it-plan-c')),
         deps.fetcher
       )
     ).rejects.toThrow('PLAN_BYTES_NOT_REGISTERED');
   });
 
   it('resolves registered plan bytes even when the requested PlanRef omits optional sizeBytes metadata', async () => {
-    const planBytes = Buffer.from(JSON.stringify({ metadata: { planId: 'it-plan-a' } }), 'utf-8');
+    const planBytes = createPlanBytes('it-plan-a');
     const registeredPlanRef = createPlanRef('it-plan-a', planBytes);
     const requestedPlanRef = {
       uri: registeredPlanRef.uri,
@@ -152,24 +179,21 @@ describe('dbtRuntimeFixtures', () => {
     };
     const ctx = withDbtRunExecutionContext(createRunContext(RunId.of('run-1')), registeredPlanRef);
 
-    const deps = createMultiRunDbtActivityDeps(new TestStateStore(), new TestOutbox(), [
-      { ctx, planRef: registeredPlanRef, planBytes },
-    ]);
+    const deps = createDbtActivityDeps({
+      store: new TestStateStore(),
+      outbox: new TestOutbox(),
+      bindings: [{ ctx, planRef: registeredPlanRef, planBytes }],
+    });
 
     const fetched = await deps.integrity.fetchAndValidate(requestedPlanRef, deps.fetcher);
 
-    expect(Buffer.from(fetched).toString('utf-8')).toBe(Buffer.from(planBytes).toString('utf-8'));
+    expect(fetched.plan.metadata.planId).toBe(registeredPlanRef.planId);
+    expect(fetched.executionPolicy).toEqual({});
   });
 
-  it('rejects multi-run bindings that omit plan bytes instead of falling back to a shared blob', () => {
-    const firstPlanBytes = Buffer.from(
-      JSON.stringify({ metadata: { planId: 'it-plan-a' } }),
-      'utf-8'
-    );
-    const secondPlanBytes = Buffer.from(
-      JSON.stringify({ metadata: { planId: 'it-plan-b' } }),
-      'utf-8'
-    );
+  it('rejects bindings that omit plan bytes instead of falling back to a shared blob', () => {
+    const firstPlanBytes = createPlanBytes('it-plan-a');
+    const secondPlanBytes = createPlanBytes('it-plan-b');
     const firstPlanRef = createPlanRef('it-plan-a', firstPlanBytes);
     const secondPlanRef = createPlanRef('it-plan-b', secondPlanBytes);
     const firstContext = withDbtRunExecutionContext(
@@ -182,22 +206,20 @@ describe('dbtRuntimeFixtures', () => {
     );
 
     expect(() =>
-      createMultiRunDbtActivityDeps(new TestStateStore(), new TestOutbox(), [
-        { ctx: firstContext, planRef: firstPlanRef, planBytes: firstPlanBytes },
-        { ctx: secondContext, planRef: secondPlanRef } as never,
-      ])
-    ).toThrow('DBT_MULTI_RUN_PLAN_BYTES_REQUIRED');
+      createDbtActivityDeps({
+        store: new TestStateStore(),
+        outbox: new TestOutbox(),
+        bindings: [
+          { ctx: firstContext, planRef: firstPlanRef, planBytes: firstPlanBytes },
+          { ctx: secondContext, planRef: secondPlanRef } as never,
+        ],
+      })
+    ).toThrow('DBT_PLAN_BYTES_REQUIRED:1');
   });
 
   it('rejects bindings whose precomputed runExecutionContextRef no longer matches the registered plan', () => {
-    const firstPlanBytes = Buffer.from(
-      JSON.stringify({ metadata: { planId: 'it-plan-a' } }),
-      'utf-8'
-    );
-    const secondPlanBytes = Buffer.from(
-      JSON.stringify({ metadata: { planId: 'it-plan-b' } }),
-      'utf-8'
-    );
+    const firstPlanBytes = createPlanBytes('it-plan-a');
+    const secondPlanBytes = createPlanBytes('it-plan-b');
     const firstPlanRef = createPlanRef('it-plan-a', firstPlanBytes);
     const secondPlanRef = createPlanRef('it-plan-b', secondPlanBytes);
     const contextBoundToFirstPlan = withDbtRunExecutionContext(
@@ -206,9 +228,13 @@ describe('dbtRuntimeFixtures', () => {
     );
 
     expect(() =>
-      createMultiRunDbtActivityDeps(new TestStateStore(), new TestOutbox(), [
-        { ctx: contextBoundToFirstPlan, planRef: secondPlanRef, planBytes: secondPlanBytes },
-      ])
+      createDbtActivityDeps({
+        store: new TestStateStore(),
+        outbox: new TestOutbox(),
+        bindings: [
+          { ctx: contextBoundToFirstPlan, planRef: secondPlanRef, planBytes: secondPlanBytes },
+        ],
+      })
     ).toThrow('RUN_EXECUTION_CONTEXT_PLAN_REF_MISMATCH');
   });
 });

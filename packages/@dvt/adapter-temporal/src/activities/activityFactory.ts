@@ -6,6 +6,8 @@ import {
 } from '@dvt/contracts';
 
 import type { EventInput } from '../engine-types.js';
+import type { ResolvedExecutionSegment } from '../workflows/executionSegmentResolver.js';
+import { resolveExecutionSegmentFromPlan } from '../workflows/executionSegmentResolver.js';
 
 import type {
   ActivityDeps,
@@ -35,6 +37,10 @@ export function createActivities(
 ): {
   executeStep(input: StepInput): Promise<StepResult>;
   emitEvent(input: EmitEventInput): Promise<void>;
+  resolveExecutionSegment(input: {
+    planRef: EmitEventInput['planRef'];
+    layerIndex: number;
+  }): Promise<ResolvedExecutionSegment>;
 } {
   const dispatcher = new StepActivityDispatcher(
     new GatewayStepActivity(),
@@ -95,6 +101,17 @@ export function createActivities(
         payload === undefined ? envelopeBase : { ...envelopeBase, payload };
 
       await deps.runStateCommandPort.appendTransitions(ctx.runId, [envelope]);
+    },
+
+    async resolveExecutionSegment(input): Promise<ResolvedExecutionSegment> {
+      const validatedPlanRef = parsePlanRef(input.planRef);
+
+      if (deps.fetcher === undefined || deps.integrity === undefined) {
+        throw new Error('PLAN_SEGMENT_RESOLVER_NOT_CONFIGURED');
+      }
+
+      const { plan } = await deps.integrity.fetchAndValidate(validatedPlanRef, deps.fetcher);
+      return resolveExecutionSegmentFromPlan(plan, input.layerIndex);
     },
   };
 }

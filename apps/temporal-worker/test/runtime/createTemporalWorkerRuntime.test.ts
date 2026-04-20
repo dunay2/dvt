@@ -1,9 +1,23 @@
 import type { TemporalWorkerHostConfig } from '@dvt/adapter-temporal';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createTemporalWorkerRuntime } from '../../src/runtime/createTemporalWorkerRuntime.js';
 
+const { mockNativeConnectionConnect } = vi.hoisted(() => ({
+  mockNativeConnectionConnect: vi.fn(),
+}));
+
+vi.mock('@temporalio/worker', () => ({
+  NativeConnection: {
+    connect: mockNativeConnectionConnect,
+  },
+}));
+
 describe('createTemporalWorkerRuntime', () => {
+  beforeEach(() => {
+    mockNativeConnectionConnect.mockReset();
+  });
+
   it('wires reader, runner, host, and connection when DBT is enabled', async () => {
     const fixture = createRuntimeFixture();
     const probe = vi.fn(async () => undefined);
@@ -71,6 +85,31 @@ describe('createTemporalWorkerRuntime', () => {
 
     expect(fixture.migrate).not.toHaveBeenCalled();
     expect(fixture.hostStart).toHaveBeenCalledWith(fixture.connection);
+  });
+
+  it('connects with the canonical nested Temporal address when no connection factory is provided', async () => {
+    const fixture = createRuntimeFixture();
+    mockNativeConnectionConnect.mockResolvedValue(fixture.connection);
+
+    const runtime = await createTemporalWorkerRuntime(
+      createEnv({
+        TEMPORAL_ADDRESS: 'canonical-temporal:7233',
+      }),
+      { info() {}, error() {} },
+      {
+        stateStoreFactory: () => fixture.stateStore,
+        hostFactory: () => fixture.host,
+      }
+    );
+
+    await runtime.start();
+    await runtime.stop();
+
+    expect(mockNativeConnectionConnect).toHaveBeenCalledWith({
+      address: 'canonical-temporal:7233',
+    });
+    expect(fixture.hostStart).toHaveBeenCalledWith(fixture.connection);
+    expect(fixture.connection.close).toHaveBeenCalledTimes(1);
   });
 
   it('does not require DBT wiring when DBT support is disabled', async () => {

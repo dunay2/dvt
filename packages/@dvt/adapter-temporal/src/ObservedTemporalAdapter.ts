@@ -80,7 +80,7 @@ export class ObservedTemporalAdapter implements IProviderAdapter {
       spanName: 'temporal.lookupRunRef',
       spanAttributes: {
         workflowId,
-        namespace: this.deps.config.namespace,
+        namespace: this.deps.config.connection.namespace,
       },
       counterName: 'dvt.temporal.lookup_run_ref_total',
       durationName: 'dvt.temporal.lookup_run_ref.duration_ms',
@@ -94,7 +94,7 @@ export class ObservedTemporalAdapter implements IProviderAdapter {
               logLevel: 'info',
               logAttributes: {
                 workflowId,
-                namespace: this.deps.config.namespace,
+                namespace: this.deps.config.connection.namespace,
               },
             }
           : {
@@ -103,7 +103,7 @@ export class ObservedTemporalAdapter implements IProviderAdapter {
               logLevel: 'info',
               logAttributes: {
                 workflowId,
-                namespace: this.deps.config.namespace,
+                namespace: this.deps.config.connection.namespace,
               },
             },
       onError: (error) => ({
@@ -112,7 +112,7 @@ export class ObservedTemporalAdapter implements IProviderAdapter {
         logLevel: 'error',
         logAttributes: {
           workflowId,
-          namespace: this.deps.config.namespace,
+          namespace: this.deps.config.connection.namespace,
           error: toErrorMessage(error),
         },
       }),
@@ -130,8 +130,8 @@ export class ObservedTemporalAdapter implements IProviderAdapter {
       context,
       spanName: 'temporal.ping',
       spanAttributes: {
-        address: this.deps.config.address,
-        namespace: this.deps.config.namespace,
+        address: this.deps.config.connection.address,
+        namespace: this.deps.config.connection.namespace,
       },
       counterName: 'dvt.temporal.ping_total',
       durationName: 'dvt.temporal.ping.duration_ms',
@@ -142,8 +142,8 @@ export class ObservedTemporalAdapter implements IProviderAdapter {
         logMessage: 'Temporal ping failed',
         logLevel: 'error',
         logAttributes: {
-          address: this.deps.config.address,
-          namespace: this.deps.config.namespace,
+          address: this.deps.config.connection.address,
+          namespace: this.deps.config.connection.namespace,
           error: toErrorMessage(error),
         },
       }),
