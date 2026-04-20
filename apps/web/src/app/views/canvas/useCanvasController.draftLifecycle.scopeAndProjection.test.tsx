@@ -111,7 +111,7 @@ describe('useCanvasController draft lifecycle scope and projection', () => {
     expect(latestExecutionCall?.canRun).toBe(false);
 
     await waitForAutosaveDebounce();
-    expect(harness.state.services.workspaceService.saveGraphDraft).not.toHaveBeenCalled();
+    expect(harness.state.services.workspaceGraphDraftAuthoringPort.saveGraphDraft).not.toHaveBeenCalled();
 
     harness.state.graphData = {
       nodes: [{ id: 'node_1' }, { id: 'node_remote_only' }],

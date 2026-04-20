@@ -22,19 +22,6 @@ const state = vi.hoisted(() => ({
     services: {
       workspaceService: {
         getGraphSnapshot: vi.fn(async () => ({ nodes: [], edges: [] })),
-        getGraphDraft: vi.fn(async () => null),
-        saveGraphDraft: vi.fn(async () => ({
-        outcome: 'saved' as const,
-        record: {
-          revision: 'rev-1',
-          savedAt: '2026-04-08T00:00:00Z',
-          draft: {
-            nodeIds: [],
-            nodePositions: {},
-            edges: [],
-          },
-        },
-      })),
       getDiffChanges: vi.fn(async () => []),
       getPlugins: vi.fn(async () => []),
       getRoles: vi.fn(async () => []),

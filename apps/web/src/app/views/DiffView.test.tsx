@@ -4,8 +4,7 @@ import React, { act } from 'react';
 import { fireEvent, waitFor } from '@testing-library/dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { FileContent } from '../ports/workspace';
-import type { IWorkspacePort } from '../ports/workspace';
+import type { FileContent, IWorkspacePort } from '../ports/workspace';
 import { AppServicesProvider } from '../services/AppServicesContext';
 import { withTestQueryClient, waitForReactQuery } from '../../testing/reactQueryHarness';
 import DiffView from './DiffView';
@@ -102,15 +101,6 @@ function buildWorkspaceService(overrides?: Partial<IWorkspacePort>): IWorkspaceP
         },
       ],
       edges: [],
-    }),
-    getGraphDraft: async () => null,
-    saveGraphDraft: async () => ({
-      outcome: 'saved',
-      record: {
-        revision: 'rev-1',
-        savedAt: '2026-04-06T00:00:00Z',
-        draft: { nodeIds: [], nodePositions: {}, edges: [] },
-      },
     }),
     getDiffChanges: async () => [
       {
