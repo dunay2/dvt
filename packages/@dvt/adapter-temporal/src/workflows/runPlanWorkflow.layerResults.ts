@@ -1,3 +1,5 @@
+import type { TransformationExecutor } from '@dvt/contracts';
+
 import { eventActivities } from './runPlanWorkflow.activities.js';
 import type {
   LayerRuntimeState,
@@ -8,6 +10,7 @@ import type {
   WorkflowPlanRef,
 } from './runPlanWorkflow.types.js';
 import { buildCompletedStepFact } from './workflowHelpers.js';
+import { buildRunFailedPayload, toOptionalPayload } from './workflowRuntimePayloadHelpers.js';
 
 export async function applyLayerResults(args: {
   layerResults: ReadonlyArray<LayerStepExecution>;
@@ -16,7 +19,7 @@ export async function applyLayerResults(args: {
   state: RuntimeWorkflowState;
   runtime: LayerRuntimeState;
   continuedAsNewCount: number;
-  runtimeExecutor?: 'postgres' | 'dbt';
+  runtimeExecutor?: TransformationExecutor;
   retainedGatewayDependencyStepIds: ReadonlyArray<string>;
 }): Promise<RunPlanWorkflowResult | null> {
   for (const layerStepResult of args.layerResults) {
@@ -40,7 +43,7 @@ async function processLayerStepResult(
     state: RuntimeWorkflowState;
     runtime: LayerRuntimeState;
     continuedAsNewCount: number;
-    runtimeExecutor?: 'postgres' | 'dbt';
+    runtimeExecutor?: TransformationExecutor;
     retainedGatewayDependencyStepIds: ReadonlyArray<string>;
   },
   layerStepResult: LayerStepExecution
@@ -115,7 +118,7 @@ async function handleFailedStepResult(args: {
   planRef: WorkflowPlanRef;
   state: RuntimeWorkflowState;
   continuedAsNewCount: number;
-  runtimeExecutor?: 'postgres' | 'dbt';
+  runtimeExecutor?: TransformationExecutor;
 }): Promise<RunPlanWorkflowResult> {
   await eventActivities.emitEvent({
     ctx: args.ctx,
@@ -165,23 +168,6 @@ function buildFailedStepPayload(
     ...(failureReason === undefined ? {} : { reason: failureReason }),
     ...(error === undefined ? {} : { message: error }),
   };
-}
-
-function buildRunFailedPayload(
-  runtimeExecutor: 'postgres' | 'dbt' | undefined,
-  error: string | undefined
-): Record<string, unknown> {
-  return {
-    reason: 'STEP_FAILURE',
-    ...(runtimeExecutor === undefined ? {} : { executor: runtimeExecutor }),
-    ...(error === undefined ? {} : { message: error }),
-  };
-}
-
-function toOptionalPayload(payload: Record<string, unknown> | undefined): {
-  payload?: Record<string, unknown>;
-} {
-  return payload === undefined ? {} : { payload };
 }
 
 function pruneGatewayDependencyFacts(

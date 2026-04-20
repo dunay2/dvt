@@ -59,7 +59,10 @@ flowchart LR
   without blurring ownership, and Conductor cleanup stays scoped as truthfulness
   debt (`AR-A8`) rather than a second-provider phase, while the first explicit
   scale hardening cut on workflow payload shape now routes through
-  `AR-D-PLAN-POINTER` instead of remaining an unowned review recommendation.
+  `AR-D-PLAN-POINTER` instead of remaining an unowned review recommendation,
+  and the remaining DBT built-in coupling inside `@dvt/adapter-temporal` stays
+  tracked as explicit runtime hardening debt rather than being mistaken for an
+  already-finished plugin extraction.
 - `API and Admission`
   Current sources: [API and Admission domain view](../domains/api-and-admission.md),
   [Transformation Flow Architecture And Contracts 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md),

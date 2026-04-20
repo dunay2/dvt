@@ -19,6 +19,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [Adapter-postgres can regress if inline import aliases reappear in runtime modules](R-20260329-ADAPTER-IMPORT-ALIAS-DRIFT.md)
 - [Adapter-postgres integration tests can drift from artifact fetch and lineage validation contracts](R-20260408-PR807-ADAPTER-POSTGRES-TEST-CONTRACT-DRIFT.yaml)
 - [Adapter-postgres integration tests can drift from deterministic manifest node ordering rules](R-20260408-PR850-ADAPTER-POSTGRES-TEST-ORDER-DRIFT.yaml)
+- [Adapter-temporal still embeds DBT-specific runtime seams as built-in behavior](R-20260420-TEMPORAL-DBT-BUILTIN-COUPLING.yaml)
 - [Admission telemetry contract drift and partial shutdown leaks](R-20260401-ADMISSION-TELEMETRY-TEARDOWN-RESILIENCE.yaml)
 - [API start-run transport could drift back into app-local shadow contracts](R-20260412-AR-A10-START-RUN-BOUNDARY-CONTRACT-DRIFT.yaml)
 - [AR-C2 can be overstated as complete without dashboard and alert evidence](R-20260404-AR-C2-OPERABILITY-EVIDENCE-GAP.yaml)
