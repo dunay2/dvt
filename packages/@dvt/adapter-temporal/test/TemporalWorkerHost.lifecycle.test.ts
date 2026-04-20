@@ -73,7 +73,11 @@ function mkActivityDeps(): {
     appendTransitions: ReturnType<typeof vi.fn>;
   };
   clock: { nowIsoUtc: ReturnType<typeof vi.fn> };
-  idempotency: { runEventKey: ReturnType<typeof vi.fn>; eventId: ReturnType<typeof vi.fn> };
+  idempotency: {
+    runEventKey: ReturnType<typeof vi.fn>;
+    startRunIntentId: ReturnType<typeof vi.fn>;
+    eventId: ReturnType<typeof vi.fn>;
+  };
   fetcher: { fetch: ReturnType<typeof vi.fn> };
   integrity: { fetchAndValidate: ReturnType<typeof vi.fn> };
 } {
@@ -85,10 +89,26 @@ function mkActivityDeps(): {
     clock: { nowIsoUtc: vi.fn(() => '2026-03-06T00:00:00.000Z') },
     idempotency: {
       runEventKey: vi.fn(() => 'idem-key'),
+      startRunIntentId: vi.fn(() => 'start-run-intent'),
       eventId: vi.fn(() => 'event-id'),
     },
-    fetcher: { fetch: vi.fn(async () => new Uint8Array()) },
-    integrity: { fetchAndValidate: vi.fn(async () => new Uint8Array()) },
+    fetcher: {
+      fetch: vi.fn(async () => ({
+        bytes: new Uint8Array(),
+        executionPolicy: {},
+      })),
+    },
+    integrity: {
+      fetchAndValidate: vi.fn(async () => ({
+        plan: {
+          schemaVersion: '1.0',
+          planId: 'plan-1',
+          version: 'v1',
+          steps: [],
+        },
+        executionPolicy: {},
+      })),
+    },
   };
 }
 
