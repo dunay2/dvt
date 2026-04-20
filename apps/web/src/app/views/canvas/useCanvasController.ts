@@ -24,6 +24,7 @@ export function useCanvasController() {
     graphStrategy,
     canvasAuthoringMode,
     workspaceService,
+    workspaceGraphDraftAuthoringPort,
     plansService,
     runsService,
     sessionContext,
@@ -60,6 +61,7 @@ export function useCanvasController() {
       error: platformHealthQuery.error,
     },
     workspaceService,
+    workspaceGraphDraftAuthoringPort,
     workspaceLayoutKey: store.workspaceLayoutKey,
     graphStrategy,
     columnLevelLineageEnabled: store.columnLevelLineageEnabled,
@@ -67,6 +69,8 @@ export function useCanvasController() {
     selectedNodeIds: store.selectedNodeIds,
     inspectorNodeId: store.inspectorNodeId,
     canEditDraftTransport: store.userPermissions.canEditEdges,
+    workspaceScope: sessionContext.getWorkspaceScopeSnapshot(),
+    previewProvenanceConfig: workspaceBootstrapConfig,
     setCanvasNodePositions: store.setCanvasNodePositions,
   });
 

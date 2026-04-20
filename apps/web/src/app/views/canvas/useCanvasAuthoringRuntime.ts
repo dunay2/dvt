@@ -1,7 +1,10 @@
 import { useMemo, useState } from 'react';
 
 import type { PlatformHealthSnapshot } from '../../../capabilities/platform-health';
+import type { WorkspaceScope } from '../../ports/sessionContext';
 import type { IWorkspacePort } from '../../ports/workspace';
+import type { IWorkspaceGraphDraftAuthoringPort } from '../../ports/workspaceGraphDraftAuthoring';
+import type { WorkspaceBootstrapConfig } from '../../services/config/workspaceConfig';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { createBootstrappingCanvasDraftSession } from './canvasDraftSession';
 import { deriveCanvasAuthoringState } from './canvasAuthoringState';
@@ -19,6 +22,7 @@ type UseCanvasAuthoringRuntimeArgs = {
     error?: unknown;
   };
   workspaceService: IWorkspacePort;
+  workspaceGraphDraftAuthoringPort: IWorkspaceGraphDraftAuthoringPort;
   workspaceLayoutKey: string;
   graphStrategy: {
     mapNodeToCanonical: (node: { id: string }) => CanonicalNode | null;
@@ -30,6 +34,8 @@ type UseCanvasAuthoringRuntimeArgs = {
   selectedNodeIds: string[];
   inspectorNodeId: string | null;
   canEditDraftTransport: boolean;
+  workspaceScope: WorkspaceScope;
+  previewProvenanceConfig: Pick<WorkspaceBootstrapConfig, 'gitBranch' | 'gitSha' | 'gitRepo'>;
   setCanvasNodePositions: (
     workspaceLayoutKey: string,
     positions: Record<string, { x: number; y: number }>
@@ -40,6 +46,7 @@ export function useCanvasAuthoringRuntime({
   dataSourceMode,
   platformHealthQuery,
   workspaceService,
+  workspaceGraphDraftAuthoringPort,
   workspaceLayoutKey,
   graphStrategy,
   columnLevelLineageEnabled,
@@ -47,6 +54,8 @@ export function useCanvasAuthoringRuntime({
   selectedNodeIds,
   inspectorNodeId,
   canEditDraftTransport,
+  workspaceScope,
+  previewProvenanceConfig,
   setCanvasNodePositions,
 }: UseCanvasAuthoringRuntimeArgs) {
   const backendPosture = useMemo(
@@ -63,6 +72,7 @@ export function useCanvasAuthoringRuntime({
 
   const { queryClient, draftRepository, graphDraftQuery } = useCanvasDraftBaseline({
     workspaceService,
+    workspaceGraphDraftAuthoringPort,
     workspaceLayoutKey,
   });
 
@@ -88,11 +98,15 @@ export function useCanvasAuthoringRuntime({
     setDraftSession,
     canonicalSnapshot,
     graphNodes: graphModel.nodes,
+    canonicalNodes: graphModel.canonicalNodes,
+    canonicalEdges: graphModel.canonicalEdges,
     graphSnapshotQuery: {
       isPending: graphModel.graphSnapshotQuery.isPending,
       isError: graphModel.graphSnapshotQuery.isError,
     },
     canPersistGraphDraft: canPersistDraftTransport,
+    workspaceScope,
+    previewProvenanceConfig,
     setCanvasNodePositions,
     graphStrategy,
   });

@@ -8,6 +8,12 @@ import {
 import type { DraftSaveStatus, GraphDraftQueryState } from './canvasDraftLifecycle.types';
 import type { CanvasDraftLifecycleCanonicalSnapshot } from './canvasDraftLifecycleSnapshot';
 
+function hasPersistedNodePositions(
+  nodePositions: Record<string, { x: number; y: number }>
+): boolean {
+  return Object.keys(nodePositions).length > 0;
+}
+
 type UseCanvasDraftInitialBootstrapArgs = {
   shouldWaitForBootstrapReadiness: boolean;
   graphDraftQuery: GraphDraftQueryState;
@@ -44,7 +50,9 @@ export function useCanvasDraftInitialBootstrap({
     if (remoteDraft == null) {
       lastSavedSignatureRef.current = null;
     } else {
-      setCanvasNodePositions(workspaceLayoutKey, remoteDraft.draft.nodePositions);
+      if (hasPersistedNodePositions(remoteDraft.draft.nodePositions)) {
+        setCanvasNodePositions(workspaceLayoutKey, remoteDraft.draft.nodePositions);
+      }
       lastSavedSignatureRef.current = serializeWorkspaceGraphDraft(remoteDraft.draft);
     }
 

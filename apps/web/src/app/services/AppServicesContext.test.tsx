@@ -8,6 +8,7 @@ import type { IRunsPort } from '../ports/runs';
 import type { CapabilitiesPort } from '../ports/capabilities';
 import type { IPlansPort } from '../ports/plans';
 import type { IWorkspacePort } from '../ports/workspace';
+import type { IWorkspaceGraphDraftAuthoringPort } from '../ports/workspaceGraphDraftAuthoring';
 import { makeMockRunRef, makeRunContext } from '../testing/contractTestUtils';
 import {
   AppServicesProvider,
@@ -17,6 +18,7 @@ import {
   useRunsService,
   useSessionContext,
   useShellFeedback,
+  useWorkspaceGraphDraftAuthoringPort,
   useWorkspaceService,
 } from './AppServicesContext';
 
@@ -39,6 +41,7 @@ describe('AppServicesProvider', () => {
   const captured: {
     mode: ReturnType<typeof useAppDataSourceMode> | null;
     workspaceService: IWorkspacePort | null;
+    workspaceGraphDraftAuthoringPort: IWorkspaceGraphDraftAuthoringPort | null;
     runsService: IRunsPort | null;
     plansService: IPlansPort | null;
     capabilitiesPort: CapabilitiesPort | null;
@@ -47,6 +50,7 @@ describe('AppServicesProvider', () => {
   } = {
     mode: null,
     workspaceService: null,
+    workspaceGraphDraftAuthoringPort: null,
     runsService: null,
     plansService: null,
     capabilitiesPort: null,
@@ -57,6 +61,7 @@ describe('AppServicesProvider', () => {
   function Probe(): null {
     captured.mode = useAppDataSourceMode();
     captured.workspaceService = useWorkspaceService();
+    captured.workspaceGraphDraftAuthoringPort = useWorkspaceGraphDraftAuthoringPort();
     captured.runsService = useRunsService();
     captured.plansService = usePlansService();
     captured.capabilitiesPort = useCapabilitiesPort();
@@ -81,6 +86,7 @@ describe('AppServicesProvider', () => {
     container.remove();
     captured.mode = null;
     captured.workspaceService = null;
+    captured.workspaceGraphDraftAuthoringPort = null;
     captured.runsService = null;
     captured.plansService = null;
     captured.capabilitiesPort = null;
@@ -109,6 +115,7 @@ describe('AppServicesProvider', () => {
 
     expect(captured.mode).toBe('mock');
     expect(captured.workspaceService).not.toBeNull();
+    expect(captured.workspaceGraphDraftAuthoringPort).not.toBeNull();
     expect(captured.runsService).not.toBeNull();
     expect(captured.plansService).not.toBeNull();
     expect(captured.capabilitiesPort).not.toBeNull();
@@ -158,6 +165,36 @@ describe('AppServicesProvider', () => {
         language: 'plaintext',
         content,
         lastModified: '2026-04-06T00:00:00Z',
+      }),
+    };
+    const workspaceGraphDraftAuthoringPort: IWorkspaceGraphDraftAuthoringPort = {
+      readGraphDraft: async () => ({ kind: 'not_found' }),
+      saveGraphDraft: async () => ({
+        kind: 'saved',
+        capability: {
+          scope: {
+            tenantId: 'tenant-a',
+            projectId: 'project-a',
+            environmentId: 'dev',
+          },
+          mode: 'writable',
+          canRead: true,
+          canWrite: true,
+          reason: 'authorized',
+        },
+        auditRef: {
+          correlationId: 'corr-1',
+          decisionId: 'dec-1',
+          action: 'draft_write',
+          outcome: 'allowed',
+          recordedAt: '2026-04-06T00:00:00Z',
+        },
+        formatMeta: {
+          schemaVersion: 'workspace-graph-draft.v1',
+          storedSchemaVersion: 'workspace-graph-draft.v1',
+          migrationState: 'native',
+        },
+        revision: 'rev-1',
       }),
     };
     const plansService = {
@@ -231,6 +268,7 @@ describe('AppServicesProvider', () => {
           overrides={{
             mode: 'api',
             workspaceService,
+            workspaceGraphDraftAuthoringPort,
             plansService,
             runsService,
             capabilitiesPort,
@@ -245,6 +283,7 @@ describe('AppServicesProvider', () => {
 
     expect(captured.mode).toBe('api');
     expect(captured.workspaceService).toBe(workspaceService);
+    expect(captured.workspaceGraphDraftAuthoringPort).toBe(workspaceGraphDraftAuthoringPort);
     expect(captured.plansService).toBe(plansService);
     expect(captured.runsService).toBe(runsService);
     expect(captured.capabilitiesPort).toBe(capabilitiesPort);

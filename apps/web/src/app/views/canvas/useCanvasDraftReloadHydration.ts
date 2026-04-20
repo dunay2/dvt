@@ -12,6 +12,12 @@ import {
 import type { DraftSaveStatus, QueryClientLike } from './canvasDraftLifecycle.types';
 import type { CanvasDraftLifecycleCanonicalSnapshot } from './canvasDraftLifecycleSnapshot';
 
+function hasPersistedNodePositions(
+  nodePositions: Record<string, { x: number; y: number }>
+): boolean {
+  return Object.keys(nodePositions).length > 0;
+}
+
 type UseCanvasDraftReloadHydrationArgs = {
   queryClient: QueryClientLike;
   workspaceLayoutKey: string;
@@ -49,7 +55,9 @@ export function useCanvasDraftReloadHydration({
         return;
       }
 
-      setCanvasNodePositions(workspaceLayoutKey, remoteDraft.draft.nodePositions);
+      if (hasPersistedNodePositions(remoteDraft.draft.nodePositions)) {
+        setCanvasNodePositions(workspaceLayoutKey, remoteDraft.draft.nodePositions);
+      }
       lastSavedSignatureRef.current = serializeWorkspaceGraphDraft(remoteDraft.draft);
       setDraftSession((currentSession) =>
         reconcileSnapshot(reloadFromRemote(currentSession, remoteDraft), reloadedCanonicalSnapshot)

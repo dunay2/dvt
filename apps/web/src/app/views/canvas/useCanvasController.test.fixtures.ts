@@ -3,7 +3,16 @@ import type { IPlansPort } from '../../ports/plans';
 import type { IRunsPort } from '../../ports/runs';
 import type { SessionContextPort } from '../../ports/sessionContext';
 import type { ShellFeedbackPort } from '../../ports/shellFeedback';
+import type {
+  IWorkspaceGraphDraftAuthoringPort,
+  WorkspaceGraphDraftAuthoringReadResult,
+  WorkspaceGraphDraftAuthoringSaveResult,
+} from '../../ports/workspaceGraphDraftAuthoring';
 import type { IWorkspacePort, WorkspaceGraphDraftRecord } from '../../ports/workspace';
+import {
+  buildDraftReadOkResponse,
+  buildProtectedDraftRecord,
+} from '../../services/workspace/workspaceGraphDraft.test.fixtures';
 import { makeMockRunRef, makeRunContext } from '../../testing/contractTestUtils';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { PlanViewModel } from '../../types/plans';
@@ -11,6 +20,80 @@ import type { PlanViewModel } from '../../types/plans';
 type OverlayDecoration = { borderColor?: string; dimmed?: boolean } | null;
 
 type MockFn = ReturnType<typeof vi.fn>;
+
+function buildProtectedDraftReadResult(
+  record: WorkspaceGraphDraftRecord,
+  sessionContext: Pick<SessionContextPort, 'getWorkspaceScopeSnapshot'>
+): WorkspaceGraphDraftAuthoringReadResult {
+  const workspaceScope = sessionContext.getWorkspaceScopeSnapshot();
+  const protectedScope = {
+    tenantId: workspaceScope.tenantId,
+    projectId: workspaceScope.projectId,
+    environmentId: workspaceScope.environmentId,
+  } as const;
+  const totalNodeCount = record.draft.nodeIds.length;
+
+  return buildDraftReadOkResponse(protectedScope, {
+    record: buildProtectedDraftRecord(protectedScope, {
+      revision: record.revision,
+      updatedAt: record.savedAt,
+      draft: {
+        context: {
+          ...protectedScope,
+          executionTarget: 'postgres',
+        },
+        nodes: record.draft.nodeIds.map((nodeId, index) => {
+          if (index === 0) {
+            return {
+              id: nodeId,
+              type: 'source' as const,
+              payload: {
+                kind: 'postgres_table' as const,
+                schema: 'raw',
+                table: nodeId,
+                alias: nodeId,
+              },
+            };
+          }
+
+          if (index === totalNodeCount - 1 && totalNodeCount > 1) {
+            return {
+              id: nodeId,
+              type: 'sink' as const,
+              payload: {
+                kind: 'postgres_table' as const,
+                schema: 'analytics',
+                table: nodeId,
+                materialization: 'table' as const,
+                writeMode: 'replace' as const,
+              },
+            };
+          }
+
+          return {
+            id: nodeId,
+            type: 'sql_transform' as const,
+            payload: {
+              dialect: 'postgres' as const,
+              sqlArtifact: {
+                repo: 'dunay2/dvt',
+                path: `models/${nodeId}.sql`,
+                ref: 'refs/heads/main',
+                commitSha: 'local',
+                contentSha256: 'a'.repeat(64),
+              },
+              entrypoint: `models/${nodeId}.sql`,
+            },
+          };
+        }),
+        edges: record.draft.edges.map((edge) => ({
+          fromNodeId: edge.sourceId,
+          toNodeId: edge.targetId,
+        })),
+      },
+    }),
+  });
+}
 
 export type CanvasHarnessState = {
   graphData: { nodes: Array<{ id: string }>; edges: Array<{ id: string }> };
@@ -21,6 +104,7 @@ export type CanvasHarnessState = {
   currentPlan: PlanViewModel | null;
   services: {
     workspaceService: IWorkspacePort;
+    workspaceGraphDraftAuthoringPort: IWorkspaceGraphDraftAuthoringPort;
     plansService: IPlansPort;
     runsService: IRunsPort;
     sessionContext: SessionContextPort;
@@ -159,7 +243,88 @@ export function createDefaultCanvasHarnessState(): CanvasHarnessState {
       language: 'sql',
       content,
       lastModified: '2026-04-08T00:00:00Z',
-    })),
+      })),
+  };
+  const workspaceGraphDraftAuthoringPort: IWorkspaceGraphDraftAuthoringPort = {
+    readGraphDraft: vi.fn(async () => ({ kind: 'not_found' as const })),
+    saveGraphDraft: vi.fn(
+      async ({
+        draft,
+        expectedRevision,
+        idempotencyKey,
+      }): Promise<WorkspaceGraphDraftAuthoringSaveResult> => {
+      const result = await workspaceService.saveGraphDraft({
+        expectedRevision,
+        idempotencyKey,
+        draft: {
+          nodeIds: draft.nodes.map((node: { id: string }) => node.id),
+          nodePositions: {},
+          edges: draft.edges.map((edge: { fromNodeId: string; toNodeId: string }) => ({
+            sourceId: edge.fromNodeId,
+            targetId: edge.toNodeId,
+          })),
+        },
+      });
+
+      if (result.outcome === 'saved') {
+        return {
+          kind: 'saved',
+          capability: {
+            scope: {
+              tenantId: 'tenant-a',
+            projectId: 'project-a',
+            environmentId: 'dev',
+          },
+            mode: 'writable' as const,
+            canRead: true,
+            canWrite: true,
+            reason: 'authorized' as const,
+          },
+          auditRef: {
+            correlationId: 'corr-1',
+            decisionId: 'dec-1',
+            action: 'draft_write' as const,
+            outcome: 'allowed' as const,
+            recordedAt: '2026-04-08T00:00:00Z',
+          },
+          formatMeta: {
+            schemaVersion: 'workspace-graph-draft.v1',
+            storedSchemaVersion: 'workspace-graph-draft.v1',
+            migrationState: 'native' as const,
+          },
+          revision: result.record.revision,
+        };
+      }
+
+      return {
+        kind: 'conflict',
+        capability: {
+          scope: {
+            tenantId: 'tenant-a',
+            projectId: 'project-a',
+            environmentId: 'dev',
+          },
+            mode: 'writable' as const,
+            canRead: true,
+            canWrite: true,
+            reason: 'authorized' as const,
+          },
+          auditRef: {
+            correlationId: 'corr-1',
+            decisionId: 'dec-1',
+            action: 'draft_write' as const,
+            outcome: 'conflict' as const,
+            recordedAt: '2026-04-08T00:00:00Z',
+          },
+          formatMeta: {
+            schemaVersion: 'workspace-graph-draft.v1',
+            storedSchemaVersion: 'workspace-graph-draft.v1',
+            migrationState: 'native' as const,
+          },
+          currentRevision: result.current.revision,
+        };
+      }
+    ),
   };
   const sessionContext: SessionContextPort = {
     getWorkspaceScope: () => ({
@@ -216,6 +381,7 @@ export function createDefaultCanvasHarnessState(): CanvasHarnessState {
     ]),
     services: {
       workspaceService,
+      workspaceGraphDraftAuthoringPort,
       plansService,
       runsService,
       sessionContext,
@@ -330,6 +496,99 @@ export function configureDefaultCanvasHarnessMocks(
   (state.services.workspaceService.getGraphDraft as MockFn).mockImplementation(
     async () => state.graphDraftRecord
   );
+  (state.services.workspaceGraphDraftAuthoringPort.readGraphDraft as MockFn).mockImplementation(
+    async () =>
+      state.graphDraftRecord == null
+        ? ({ kind: 'not_found' } as const)
+        : buildProtectedDraftReadResult(state.graphDraftRecord, state.services.sessionContext)
+  );
+  (state.services.workspaceGraphDraftAuthoringPort.saveGraphDraft as MockFn).mockImplementation(
+    async ({
+      draft,
+      expectedRevision,
+      idempotencyKey,
+    }: {
+      draft: {
+        nodes: Array<{ id: string }>;
+        edges: Array<{ fromNodeId: string; toNodeId: string }>;
+      };
+      expectedRevision: string | null;
+      idempotencyKey: string;
+    }): Promise<WorkspaceGraphDraftAuthoringSaveResult> => {
+      const result = await state.services.workspaceService.saveGraphDraft({
+        expectedRevision,
+        idempotencyKey,
+        draft: {
+          nodeIds: draft.nodes.map((node) => node.id),
+          nodePositions: {},
+          edges: draft.edges.map((edge) => ({
+            sourceId: edge.fromNodeId,
+            targetId: edge.toNodeId,
+          })),
+        },
+      });
+
+      if (result.outcome === 'saved') {
+        state.graphDraftRecord = result.record;
+        return {
+          kind: 'saved',
+          capability: {
+            scope: {
+              tenantId: 'tenant-a',
+              projectId: 'project-a',
+              environmentId: 'dev',
+            },
+            mode: 'writable' as const,
+            canRead: true,
+            canWrite: true,
+            reason: 'authorized' as const,
+          },
+          auditRef: {
+            correlationId: 'corr-1',
+            decisionId: 'dec-1',
+            action: 'draft_write' as const,
+            outcome: 'allowed' as const,
+            recordedAt: '2026-04-08T00:00:00Z',
+          },
+          formatMeta: {
+            schemaVersion: 'workspace-graph-draft.v1',
+            storedSchemaVersion: 'workspace-graph-draft.v1',
+            migrationState: 'native' as const,
+          },
+          revision: result.record.revision,
+        };
+      }
+
+      state.graphDraftRecord = result.current;
+      return {
+        kind: 'conflict',
+        capability: {
+          scope: {
+            tenantId: 'tenant-a',
+            projectId: 'project-a',
+            environmentId: 'dev',
+          },
+          mode: 'writable' as const,
+          canRead: true,
+          canWrite: true,
+          reason: 'authorized' as const,
+        },
+        auditRef: {
+          correlationId: 'corr-1',
+          decisionId: 'dec-1',
+          action: 'draft_write' as const,
+          outcome: 'conflict' as const,
+          recordedAt: '2026-04-08T00:00:00Z',
+        },
+        formatMeta: {
+          schemaVersion: 'workspace-graph-draft.v1',
+          storedSchemaVersion: 'workspace-graph-draft.v1',
+          migrationState: 'native' as const,
+        },
+        currentRevision: result.current.revision,
+      };
+    }
+  );
   mocks.useQuery.mockImplementation((queryConfig?: { queryKey?: readonly string[] }) => {
     const queryKey = queryConfig?.queryKey ?? [];
     if (queryKey[1] === 'graph-draft') {
@@ -368,6 +627,7 @@ export function configureDefaultCanvasHarnessMocks(
 
       if (queryKey?.[1] === 'graph-draft') {
         state.graphDraftRecord = resolvedValue as WorkspaceGraphDraftRecord | null;
+        return state.graphDraftRecord;
       }
 
       if (queryKey?.[1] === 'graph') {

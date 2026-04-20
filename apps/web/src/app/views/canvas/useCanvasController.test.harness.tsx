@@ -19,11 +19,11 @@ const state = vi.hoisted(() => ({
   canonicalEdges: [],
   overlayDecorations: new Map(),
   currentPlan: null,
-  services: {
-    workspaceService: {
-      getGraphSnapshot: vi.fn(async () => ({ nodes: [], edges: [] })),
-      getGraphDraft: vi.fn(async () => null),
-      saveGraphDraft: vi.fn(async () => ({
+    services: {
+      workspaceService: {
+        getGraphSnapshot: vi.fn(async () => ({ nodes: [], edges: [] })),
+        getGraphDraft: vi.fn(async () => null),
+        saveGraphDraft: vi.fn(async () => ({
         outcome: 'saved' as const,
         record: {
           revision: 'rev-1',
@@ -67,6 +67,36 @@ const state = vi.hoisted(() => ({
         language: 'sql',
         content,
         lastModified: '2026-04-08T00:00:00Z',
+      })),
+    },
+    workspaceGraphDraftAuthoringPort: {
+      readGraphDraft: vi.fn(async () => ({ kind: 'not_found' })),
+      saveGraphDraft: vi.fn(async () => ({
+        kind: 'saved' as const,
+        capability: {
+          scope: {
+            tenantId: 'tenant-a',
+            projectId: 'project-a',
+            environmentId: 'dev',
+          },
+          mode: 'writable' as const,
+          canRead: true,
+          canWrite: true,
+          reason: 'authorized' as const,
+        },
+        auditRef: {
+          correlationId: 'corr-1',
+          decisionId: 'dec-1',
+          action: 'draft_write' as const,
+          outcome: 'allowed' as const,
+          recordedAt: '2026-04-08T00:00:00Z',
+        },
+        formatMeta: {
+          schemaVersion: 'workspace-graph-draft.v1',
+          storedSchemaVersion: 'workspace-graph-draft.v1',
+          migrationState: 'native' as const,
+        },
+        revision: 'rev-1',
       })),
     },
     plansService: {
@@ -316,6 +346,7 @@ export function setupCanvasControllerHarness() {
               overrides={{
                 mode: 'mock',
                 workspaceService: state.services.workspaceService,
+                workspaceGraphDraftAuthoringPort: state.services.workspaceGraphDraftAuthoringPort,
                 plansService: state.services.plansService,
                 runsService: state.services.runsService,
                 sessionContext: state.services.sessionContext,

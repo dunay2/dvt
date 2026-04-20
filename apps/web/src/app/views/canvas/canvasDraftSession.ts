@@ -155,11 +155,6 @@ export function createBootstrappingCanvasDraftSession(): CanvasDraftSession {
 export function serializeWorkspaceGraphDraft(draft: WorkspaceGraphDraft): string {
   return JSON.stringify({
     nodeIds: [...draft.nodeIds],
-    nodePositions: Object.fromEntries(
-      Object.entries(draft.nodePositions)
-        .sort(([left], [right]) => left.localeCompare(right))
-        .map(([nodeId, position]) => [nodeId, { x: position.x, y: position.y }])
-    ),
     edges: [...draft.edges]
       .map((edge) => ({ sourceId: edge.sourceId, targetId: edge.targetId }))
       .sort(

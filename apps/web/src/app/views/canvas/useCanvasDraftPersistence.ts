@@ -2,6 +2,7 @@ import type { Dispatch, SetStateAction } from 'react';
 
 import type { WorkspaceGraphDraftRecord } from '../../ports/workspace';
 import type { CanvasDraftRepository } from './canvasDraftRepository';
+import type { CanvasDraftAuthoringPayload } from './canvasDraftAuthoring';
 import type { CanvasDraftSession } from './canvasDraftSession';
 import type {
   DraftAttemptRefs,
@@ -27,11 +28,7 @@ type UseCanvasDraftPersistenceArgs = {
   setDraftSession: Dispatch<SetStateAction<CanvasDraftSession>>;
   canonicalSnapshot: CanvasDraftLifecycleCanonicalSnapshot;
   currentDraftPayloadSignature: string;
-  currentDraftPayload: {
-    nodeIds: string[];
-    nodePositions: Record<string, { x: number; y: number }>;
-    edges: Array<{ sourceId: string; targetId: string }>;
-  };
+  currentDraftPayload: CanvasDraftAuthoringPayload;
   canPersistGraphDraft: boolean;
   canPersistCurrentDraft: boolean;
   graphStrategy: CanvasDraftLifecycleGraphStrategy;

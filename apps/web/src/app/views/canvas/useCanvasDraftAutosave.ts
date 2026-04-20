@@ -1,7 +1,7 @@
 import { useEffect, type Dispatch, type SetStateAction } from 'react';
 
-import type { WorkspaceGraphDraft } from '../../ports/workspace';
 import type { CanvasDraftRepository } from './canvasDraftRepository';
+import type { CanvasDraftAuthoringPayload } from './canvasDraftAuthoring';
 import type { CanvasDraftSession } from './canvasDraftSession';
 import type {
   DraftAttemptRefs,
@@ -29,7 +29,7 @@ type UseCanvasDraftAutosaveArgs = {
   draftSession: CanvasDraftSession;
   setDraftSession: SetDraftSession;
   currentDraftPayloadSignature: string;
-  currentDraftPayload: WorkspaceGraphDraft;
+  currentDraftPayload: CanvasDraftAuthoringPayload;
   canPersistGraphDraft: boolean;
   canPersistCurrentDraft: boolean;
   refs: DraftAttemptRefs;

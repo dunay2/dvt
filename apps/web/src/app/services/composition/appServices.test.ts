@@ -69,6 +69,71 @@ describe('buildAppServices', () => {
     expect(secondAfter.nodes).toHaveLength(secondBefore.nodes.length);
   });
 
+  it('lets a fresh mock authoring port read a draft that already exists in the shared mock workspace', async () => {
+    const firstServices = buildAppServices({ mode: 'mock' });
+
+    await firstServices.workspaceGraphDraftAuthoringPort.saveGraphDraft({
+      expectedRevision: null,
+      idempotencyKey: 'idem-1',
+      draft: {
+        context: {
+          tenantId: 'tenant-a',
+          projectId: 'project-a',
+          environmentId: 'dev',
+          executionTarget: 'postgres',
+        },
+        nodes: [
+          {
+            id: 'source-node',
+            type: 'source',
+            payload: {
+              kind: 'postgres_table',
+              schema: 'raw',
+              table: 'orders',
+              alias: 'orders',
+            },
+          },
+          {
+            id: 'transform-node',
+            type: 'sql_transform',
+            payload: {
+              dialect: 'postgres',
+              sqlArtifact: {
+                repo: 'dunay2/dvt',
+                path: 'models/transform.sql',
+                ref: 'refs/heads/main',
+                commitSha: 'local',
+                contentSha256: 'a'.repeat(64),
+              },
+              entrypoint: 'models/transform.sql',
+            },
+          },
+        ],
+        edges: [{ fromNodeId: 'source-node', toNodeId: 'transform-node' }],
+      },
+    });
+
+    const recreatedAuthoringPort = buildAppServices({
+      mode: 'mock',
+      workspaceService: firstServices.workspaceService,
+      sessionContext: firstServices.sessionContext,
+    }).workspaceGraphDraftAuthoringPort;
+
+    await expect(recreatedAuthoringPort.readGraphDraft()).resolves.toMatchObject({
+      kind: 'ok',
+      record: {
+        revision: expect.any(String),
+        draft: {
+          nodes: [
+            expect.objectContaining({ id: 'source-node', type: 'source' }),
+            expect.objectContaining({ id: 'transform-node', type: 'sql_transform' }),
+          ],
+          edges: [{ fromNodeId: 'source-node', toNodeId: 'transform-node' }],
+        },
+      },
+    });
+  });
+
   it('uses explicit overrides instead of rebuilding runtime seams', () => {
     const apiClient = buildApiClientStub();
     const workspaceService = {} as IWorkspacePort;

@@ -1,10 +1,8 @@
 import type { Dispatch, SetStateAction } from 'react';
 
-import type {
-  SaveWorkspaceGraphDraftResult,
-  WorkspaceGraphDraft,
-} from '../../ports/workspace';
+import type { SaveWorkspaceGraphDraftResult } from '../../ports/workspace';
 import type { CanvasDraftRepository } from './canvasDraftRepository';
+import type { CanvasDraftAuthoringPayload } from './canvasDraftAuthoring';
 import type { CanvasDraftSession } from './canvasDraftSession';
 import type {
   DraftAttemptRefs,
@@ -44,7 +42,7 @@ type SaveFailureContext = {
 export type PerformCanvasDraftAutosaveArgs = {
   refs: DraftAttemptRefs;
   draftRepository: CanvasDraftRepository;
-  currentDraftPayload: WorkspaceGraphDraft;
+  currentDraftPayload: CanvasDraftAuthoringPayload;
   draftSession: CanvasDraftSession;
   createDraftIdempotencyKey: () => string;
   setDraftSession: SetDraftSession;

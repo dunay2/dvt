@@ -5,9 +5,9 @@ import type { CanvasDraftSession } from './canvasDraftSession';
 import {
   buildDraftRecord,
   createHarnessWithDraft,
-  type CanvasControllerHarness,
+  createTransformationAuthoringHarnessWithDraft,
   setCanvasLayoutNodePositions,
-  WORKSPACE_LAYOUT_KEY,
+  type CanvasControllerHarness,
   waitForAutosaveDebounce,
 } from './useCanvasController.draftLifecycle.test.support';
 import { setupCanvasControllerHarness } from './useCanvasController.test.harness';
@@ -29,37 +29,51 @@ describe('useCanvasController active draft mutations', () => {
     harness = await createHarnessWithDraft(record);
   }
 
-  it('continues autosaving local edits after hydrating an existing remote draft', async () => {
-    await replaceHarnessWithDraft(
+  async function replaceHarnessWithTransformationDraft(
+    record: ReturnType<typeof buildDraftRecord>,
+    visibleNodeIds: string[] = ['node_1', 'node_2', 'node_3']
+  ): Promise<void> {
+    harness.cleanup();
+    harness = await createTransformationAuthoringHarnessWithDraft(record, visibleNodeIds);
+  }
+
+  it('does not autosave pure layout edits after hydrating an existing remote draft', async () => {
+    await replaceHarnessWithTransformationDraft(
       buildDraftRecord({
-        nodeIds: ['node_1', 'node_2'],
+        nodeIds: ['node_1', 'node_2', 'node_3'],
         nodePositions: {
           node_1: { x: 0, y: 0 },
           node_2: { x: 100, y: 0 },
+          node_3: { x: 200, y: 0 },
         },
-        edges: [{ sourceId: 'node_1', targetId: 'node_2' }],
+        edges: [
+          { sourceId: 'node_1', targetId: 'node_2' },
+          { sourceId: 'node_2', targetId: 'node_3' },
+        ],
       })
     );
-    harness.state.services.workspaceService.saveGraphDraft = vi.fn(async ({ draft }) => ({
-      outcome: 'saved' as const,
-      record: buildDraftRecord(draft, 'rev-2', '2026-04-16T00:00:01Z'),
-    }));
 
-    setCanvasLayoutNodePositions(harness, {
-      node_1: { x: 48, y: 24 },
-      node_2: { x: 148, y: 24 },
-    });
+    const storeState = harness.state.store as unknown as {
+      canvasLayouts: Record<
+        string,
+        { nodePositions?: Record<string, { x: number; y: number }>; viewport?: unknown }
+      >;
+    };
+    storeState.canvasLayouts = {
+      ...storeState.canvasLayouts,
+      'tenant-a::project-a::dev': {
+        nodePositions: {
+          node_1: { x: 48, y: 24 },
+          node_2: { x: 148, y: 24 },
+          node_3: { x: 248, y: 24 },
+        },
+      },
+    };
 
     await harness.renderProbe();
     await waitForAutosaveDebounce();
 
-    expect(harness.state.services.workspaceService.saveGraphDraft).toHaveBeenCalled();
-    expect(harness.state.queryClient.setQueryData).toHaveBeenCalledWith(
-      ['workspace', 'graph-draft', WORKSPACE_LAYOUT_KEY],
-      expect.objectContaining({
-        revision: 'rev-2',
-      })
-    );
+    expect(harness.state.services.workspaceService.saveGraphDraft).not.toHaveBeenCalled();
   });
 
   it('does not snap node positions back to the hydrated remote draft after a local move', async () => {
@@ -150,14 +164,16 @@ describe('useCanvasController active draft mutations', () => {
   });
 
   it('keeps a dropped canonical node visible and persistible under an active draft', async () => {
-    await replaceHarnessWithDraft(
+    await replaceHarnessWithTransformationDraft(
       buildDraftRecord({
-        nodeIds: ['node_1'],
+        nodeIds: ['node_1', 'node_2'],
         nodePositions: {
           node_1: { x: 0, y: 0 },
+          node_2: { x: 120, y: 0 },
         },
-        edges: [],
-      })
+        edges: [{ sourceId: 'node_1', targetId: 'node_2' }],
+      }),
+      ['node_1', 'node_2']
     );
     harness.state.services.workspaceService.saveGraphDraft = vi.fn(async ({ draft }) => ({
       outcome: 'saved' as const,
@@ -169,12 +185,12 @@ describe('useCanvasController active draft mutations', () => {
         params.setNodes((existingNodes: Array<Record<string, unknown>>) => [
           ...existingNodes,
           {
-            id: 'node_2',
+            id: 'node_3',
             type: 'dbtNode',
             position: { x: 220, y: 120 },
             data: {
-              name: 'customers',
-              pluginKind: 'dbt:model',
+              name: 'orders_sink',
+              pluginKind: 'dvt:sink',
               showColumns: false,
               overlayDecoration: null,
             },
@@ -184,9 +200,17 @@ describe('useCanvasController active draft mutations', () => {
           ...currentSession,
           workingSet: {
             ...currentSession.workingSet,
-            visibleNodeIds: [...currentSession.workingSet.visibleNodeIds, 'node_2'],
+            visibleNodeIds: [...currentSession.workingSet.visibleNodeIds, 'node_3'],
+            visibleEdges: [
+              ...currentSession.workingSet.visibleEdges,
+              { sourceId: 'node_2', targetId: 'node_3' },
+            ],
           },
         }));
+        harness.state.graphData = {
+          nodes: [{ id: 'node_1' }, { id: 'node_2' }, { id: 'node_3' }],
+          edges: [{ id: 'edge_1' }, { id: 'edge_2' }],
+        };
       }),
     }));
 
@@ -201,11 +225,12 @@ describe('useCanvasController active draft mutations', () => {
     expect(harness.getLatestResult()?.nodesWithImpact.map((node) => node.id)).toEqual([
       'node_1',
       'node_2',
+      'node_3',
     ]);
     expect(harness.state.services.workspaceService.saveGraphDraft).toHaveBeenCalledWith(
       expect.objectContaining({
         draft: expect.objectContaining({
-          nodeIds: ['node_1', 'node_2'],
+          nodeIds: ['node_1', 'node_2', 'node_3'],
         }),
       })
     );

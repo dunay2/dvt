@@ -10,6 +10,7 @@ import {
   useRunsService,
   useSessionContext,
   useShellFeedback,
+  useWorkspaceGraphDraftAuthoringPort,
   useWorkspaceService,
 } from '../../services/AppServicesContext';
 import { useCanvasNavigationActions } from './useCanvasNavigationActions';
@@ -23,6 +24,7 @@ export function useCanvasControllerEnvironment() {
   const canvasAuthoringMode: 'transformation' | 'dbt' =
     graphStrategy.id === 'transformation' ? 'transformation' : 'dbt';
   const workspaceService = useWorkspaceService();
+  const workspaceGraphDraftAuthoringPort = useWorkspaceGraphDraftAuthoringPort();
   const plansService = usePlansService();
   const runsService = useRunsService();
   const sessionContext = useSessionContext();
@@ -38,6 +40,7 @@ export function useCanvasControllerEnvironment() {
     graphStrategy,
     canvasAuthoringMode,
     workspaceService,
+    workspaceGraphDraftAuthoringPort,
     plansService,
     runsService,
     sessionContext,

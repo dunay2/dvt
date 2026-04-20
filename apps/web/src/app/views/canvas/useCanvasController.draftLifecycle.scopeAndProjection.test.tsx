@@ -1,34 +1,23 @@
-import { act } from 'react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 
-import type { WorkspaceGraphSnapshot } from '../../ports/workspace';
 import {
   buildDraftRecord,
   createHarnessWithDraft,
+  createUnrenderedHarness,
   type CanvasControllerHarness,
   waitForAutosaveDebounce,
 } from './useCanvasController.draftLifecycle.test.support';
-import { setupCanvasControllerHarness } from './useCanvasController.test.harness';
 
-describe('useCanvasController draft lifecycle', () => {
-  let harness: CanvasControllerHarness;
-
-  beforeEach(async () => {
-    harness = setupCanvasControllerHarness();
-    await harness.renderProbe();
-  });
+describe('useCanvasController draft lifecycle scope and projection', () => {
+  let harness: CanvasControllerHarness | null = null;
 
   afterEach(() => {
-    harness.cleanup();
+    harness?.cleanup();
+    harness = null;
   });
 
-  async function replaceHarnessWithDraft(record: ReturnType<typeof buildDraftRecord>): Promise<void> {
-    harness.cleanup();
-    harness = await createHarnessWithDraft(record);
-  }
-
   it('scopes execution and prunes hidden selection when bootstrapping from a persisted draft subset', async () => {
-    await replaceHarnessWithDraft(
+    harness = await createHarnessWithDraft(
       buildDraftRecord(
         {
           nodeIds: ['node_1'],
@@ -67,8 +56,7 @@ describe('useCanvasController draft lifecycle', () => {
   });
 
   it('blocks editing and persistence until the workspace snapshot can project the full persisted draft', async () => {
-    harness.cleanup();
-    harness = setupCanvasControllerHarness();
+    harness = createUnrenderedHarness();
     harness.state.canonicalNodes = [
       ...harness.state.canonicalNodes,
       {
@@ -145,62 +133,4 @@ describe('useCanvasController draft lifecycle', () => {
     expect(latestExecutionCall?.canPlan).toBe(true);
     expect(latestExecutionCall?.canRun).toBe(true);
   });
-
-  it('surfaces stale draft state when saveGraphDraft returns a CAS conflict', async () => {
-    harness.state.services.workspaceService.saveGraphDraft = async () => ({
-      outcome: 'conflict',
-      current: buildDraftRecord(
-        {
-          nodeIds: ['node_1', 'node_2'],
-          nodePositions: {
-            node_1: { x: 0, y: 0 },
-            node_2: { x: 100, y: 0 },
-          },
-          edges: [{ sourceId: 'node_1', targetId: 'node_2' }],
-        },
-        'rev-conflict'
-      ),
-    });
-
-    await harness.renderProbe();
-    await waitForAutosaveDebounce();
-
-    expect(harness.getLatestResult()?.hasStaleDraftVersion).toBe(true);
-    expect(harness.getLatestResult()?.draftConflictRevision).toBe('rev-conflict');
-  });
-
-  it('treats a CAS conflict as a blocked runtime state for editing and execution', async () => {
-    harness.state.services.workspaceService.saveGraphDraft = async () => ({
-      outcome: 'conflict',
-      current: buildDraftRecord(
-        {
-          nodeIds: ['node_1', 'node_2'],
-          nodePositions: {
-            node_1: { x: 0, y: 0 },
-            node_2: { x: 100, y: 0 },
-          },
-          edges: [{ sourceId: 'node_1', targetId: 'node_2' }],
-        },
-        'rev-conflict'
-      ),
-    });
-
-    await harness.renderProbe();
-    await waitForAutosaveDebounce();
-
-    const latestExecutionCall = harness.mocks.useCanvasExecutionActions.mock.calls.at(-1)?.[0] as
-      | { canPlan?: boolean; canRun?: boolean }
-      | undefined;
-
-    expect(harness.getLatestResult()?.hasStaleDraftVersion).toBe(true);
-    expect(harness.getLatestResult()?.canStartRun).toBe(false);
-    expect(harness.mocks.useCanvasGraphHandlers).toHaveBeenLastCalledWith(
-      expect.objectContaining({
-        canEditEdges: false,
-      })
-    );
-    expect(latestExecutionCall?.canPlan).toBe(false);
-    expect(latestExecutionCall?.canRun).toBe(false);
-  });
-
 });

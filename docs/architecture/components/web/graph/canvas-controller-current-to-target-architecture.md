@@ -2,7 +2,7 @@
 title: Canvas Controller Current To Target Architecture
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-04-19
+last_reviewed: 2026-04-20
 planning_type: architecture
 ---
 
@@ -59,6 +59,7 @@ Primary implementation anchors:
 - [canvasGraphChangeRuntime.ts](../../../../../apps/web/src/app/views/canvas/canvasGraphChangeRuntime.ts)
 - [canvasBackendPosture.ts](../../../../../apps/web/src/app/views/canvas/canvasBackendPosture.ts)
 - [canvasAuthoringState.ts](../../../../../apps/web/src/app/views/canvas/canvasAuthoringState.ts)
+- [canvasDraftAuthoring.ts](../../../../../apps/web/src/app/views/canvas/canvasDraftAuthoring.ts)
 - [canvasDraftRepository.ts](../../../../../apps/web/src/app/views/canvas/canvasDraftRepository.ts)
 - [useCanvasDraftLifecycle.ts](../../../../../apps/web/src/app/views/canvas/useCanvasDraftLifecycle.ts)
 - [useCanvasDraftBootstrapSync.ts](../../../../../apps/web/src/app/views/canvas/useCanvasDraftBootstrapSync.ts)
@@ -123,8 +124,8 @@ Current DDD reading for the active Canvas slice:
   `CanvasDraftSession`, `canvasDraftScope`, `canvasAuthoringState`,
   `canvasBackendPosture`
 - `repositories and external boundaries`
-  `canvasDraftRepository`, `IWorkspacePort`, workspace snapshot and draft
-  contracts
+  `canvasDraftRepository`, `IWorkspacePort`,
+  `IWorkspaceGraphDraftAuthoringPort`, workspace snapshot and draft contracts
 - `projections and presentation models`
   `useCanvasAuthoringProjection`, `useCanvasGraphModel`,
   `useCanvasOverlayModel`, `useCanvasControllerReadModel`,
@@ -179,7 +180,8 @@ Implemented seams:
   owns visible scope, execution scope, recovery flags, and local mutation
   gating
 - `canvasDraftRepository`
-  owns draft read/write and graph snapshot access over `IWorkspacePort`
+  owns graph snapshot access over `IWorkspacePort` and draft read/write over
+  `IWorkspaceGraphDraftAuthoringPort`
 - `useCanvasDraftLifecycle`
   is now a composition seam over draft refs, draft payload projection,
   bootstrap sync, and persistence
@@ -608,7 +610,7 @@ The Canvas slice should be read through five tactical layers.
 | `command application seam`        | `useCanvasAuthoringRuntime.ts`, `useCanvasMutationHandlers.ts`, `canvasInteractionCommands.ts`                                                                | execute authoring commands against the aggregate and coordinate write-side fallout        | render projection, shell startup posture, direct widget ownership |
 | `query / projection seam`         | `useCanvasGraphModel.ts`, `useCanvasAuthoringProjection.ts`, `useCanvasOverlayModel.ts`, `useCanvasControllerReadModel.ts`, `useCanvasCurrentDraftPayload.ts` | derive visible graph, overlays, validation, inspector view, and authoritative route scope | mutation policy, persistence write orchestration                  |
 | `inbound adapters`                | `useCanvasGraphHandlers.ts`, `useCanvasNodeChangeHandlers.ts`, `useCanvasEdgeChangeHandlers.ts`, `useCanvasSourceImportHandlers.ts`, route UI components      | translate React Flow and route gestures into commands                                     | local domain policy, duplicate aggregate mutation logic           |
-| `outbound ports and repositories` | `canvasDraftRepository.ts`, `IWorkspacePort`, plan or run service ports                                                                                       | canonical snapshot read, persisted draft baseline, preview and run handoff                | route-local state truth                                           |
+| `outbound ports and repositories` | `canvasDraftRepository.ts`, `IWorkspacePort`, `IWorkspaceGraphDraftAuthoringPort`, plan or run service ports                                                  | canonical snapshot read, typed persisted draft boundary, preview and run handoff          | route-local state truth                                           |
 
 ### Target Command Catalog
 

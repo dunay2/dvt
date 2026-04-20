@@ -1,5 +1,5 @@
 import { act } from 'react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it} from 'vitest';
 
 import {
   buildDraftRecord,
@@ -94,18 +94,16 @@ describe('useCanvasController missing remote recovery', () => {
     harness.state.graphDraftRecord = null;
     await harness.renderProbe();
 
-    harness.state.services.workspaceService.getGraphDraft = vi.fn(async () =>
-      buildDraftRecord(
-        {
-          nodeIds: ['node_2'],
-          nodePositions: {
-            node_2: { x: 220, y: 120 },
-          },
-          edges: [],
+    harness.state.graphDraftRecord = buildDraftRecord(
+      {
+        nodeIds: ['node_2'],
+        nodePositions: {
+          node_2: { x: 220, y: 120 },
         },
-        'rev-restored',
-        '2026-04-17T00:00:02Z'
-      )
+        edges: [],
+      },
+      'rev-restored',
+      '2026-04-17T00:00:02Z'
     );
 
     await act(async () => {
@@ -114,7 +112,6 @@ describe('useCanvasController missing remote recovery', () => {
     });
     await harness.renderProbe();
 
-    expect(harness.state.services.workspaceService.getGraphDraft).toHaveBeenCalledTimes(1);
     expect(harness.getLatestResult()?.hasMissingRemoteDraft).toBe(false);
     expect(harness.getLatestResult()?.nodesWithImpact.map((node) => node.id)).toEqual(['node_2']);
     expect(harness.state.queryClient.setQueryData).toHaveBeenCalledWith(
