@@ -2,7 +2,7 @@
 title: Graph Route Bootstrap Architecture
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-04-18
+last_reviewed: 2026-04-20
 ---
 
 # Graph Route Bootstrap Architecture
@@ -99,31 +99,35 @@ flowchart LR
 
 ## Route Matrix (Current)
 
-As of 2026-04-18, the active startup matrix is:
+As of 2026-04-20, the active startup matrix is:
 
-| Route id                      | Path           | Mode        | Source anchor                                                                                                                                                                          | Test evidence                                                                                                                                                                  |
-| ----------------------------- | -------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `dbt.canvas`                  | `/canvas`      | `published` | `apps/web/src/app/plugins/dbt/dbtContributions.ts` + `apps/web/src/app/views/canvas/canvasDraftPresentationModel.ts` + `apps/web/src/app/views/canvas/canvasDraftPresentationStore.ts` | `apps/web/src/app/views/canvas/canvasDraftPresentationModel.test.ts` + `apps/web/src/app/views/canvas/canvasDraftPresentationStore.test.ts` + `apps/web/src/app/Root.test.tsx` |
-| `dbt.lineage`                 | `/lineage`     | `published` | `apps/web/src/app/plugins/dbt/dbtContributions.ts` + `apps/web/src/app/views/lineage/lineageRouteBootstrap.ts`                                                                         | `apps/web/src/app/views/lineage/lineageRouteBootstrap.test.ts`                                                                                                                 |
-| `dbt.code`                    | `/code`        | `published` | `apps/web/src/app/plugins/dbt/dbtContributions.ts` + `apps/web/src/app/views/code/codeRouteBootstrap.ts`                                                                               | `apps/web/src/app/views/code/codeRouteBootstrap.test.ts`                                                                                                                       |
-| `dbt.diff`                    | `/diff`        | `published` | `apps/web/src/app/plugins/dbt/dbtContributions.ts` + `apps/web/src/app/views/diff/diffRouteBootstrap.ts`                                                                               | `apps/web/src/app/views/diff/diffRouteBootstrap.test.ts`                                                                                                                       |
-| `dbt.artifacts`               | `/artifacts`   | `published` | `apps/web/src/app/plugins/dbt/dbtContributions.ts` + `apps/web/src/app/views/artifacts/artifactsRouteBootstrap.ts`                                                                     | `apps/web/src/app/views/artifacts/artifactsRouteBootstrap.test.ts`                                                                                                             |
-| `monitoring.runs`             | `/runs`        | `published` | `apps/web/src/app/plugins/monitoring/monitoringContributions.ts` + `apps/web/src/app/views/runs/runsRouteBootstrap.ts`                                                                 | `apps/web/src/app/views/runs/runsRouteBootstrap.test.ts`                                                                                                                       |
-| `monitoring.run-detail`       | `/runs/:runId` | `published` | `apps/web/src/app/plugins/monitoring/monitoringContributions.ts` + `apps/web/src/app/views/runs/runsRouteBootstrap.ts`                                                                 | `apps/web/src/app/views/runs/runsRouteBootstrap.test.ts` + `apps/web/src/app/Root.test.tsx`                                                                                    |
-| `cost.dashboard`              | `/cost`        | `published` | `apps/web/src/app/plugins/registry.ts` + `apps/web/src/app/views/cost/costRouteBootstrap.ts`                                                                                           | `apps/web/src/app/views/cost/costRouteBootstrap.test.ts` + `apps/web/src/app/routes.test.tsx`                                                                                  |
-| `shell.default-core-redirect` | `/`            | `published` | `apps/web/src/app/routes.ts`                                                                                                                                                           | `apps/web/src/app/routes.test.tsx`                                                                                                                                             |
-| `shell.plugins`               | `/plugins`     | `static`    | `apps/web/src/app/routes.ts`                                                                                                                                                           | `apps/web/src/app/routes.test.tsx`                                                                                                                                             |
-| `shell.admin`                 | `/admin`       | `static`    | `apps/web/src/app/routes.ts`                                                                                                                                                           | `apps/web/src/app/routes.test.tsx` + `apps/web/src/app/Root.test.tsx`                                                                                                          |
+<!-- markdownlint-disable MD060 -->
+
+| Route id                      | Path           | Mode        | Source anchor                                                                                                                                                                          | Test evidence                                                                                                                                                                                |
+| ----------------------------- | -------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `dbt.canvas`                  | `/canvas`      | `published` | `apps/web/src/app/plugins/dbt/dbtContributions.ts` + `apps/web/src/app/views/canvas/canvasDraftPresentationModel.ts` + `apps/web/src/app/views/canvas/canvasDraftPresentationStore.ts` | `apps/web/src/app/views/canvas/canvasDraftPresentationModel.test.ts` + `apps/web/src/app/views/canvas/canvasDraftPresentationStore.test.ts` + `apps/web/src/app/Root.bootstrapFlow.test.tsx` |
+| `dbt.lineage`                 | `/lineage`     | `published` | `apps/web/src/app/plugins/dbt/dbtContributions.ts` + `apps/web/src/app/views/lineage/lineageRouteBootstrap.ts`                                                                         | `apps/web/src/app/views/lineage/lineageRouteBootstrap.test.ts`                                                                                                                               |
+| `dbt.code`                    | `/code`        | `published` | `apps/web/src/app/plugins/dbt/dbtContributions.ts` + `apps/web/src/app/views/code/codeRouteBootstrap.ts`                                                                               | `apps/web/src/app/views/code/codeRouteBootstrap.test.ts`                                                                                                                                     |
+| `dbt.diff`                    | `/diff`        | `published` | `apps/web/src/app/plugins/dbt/dbtContributions.ts` + `apps/web/src/app/views/diff/diffRouteBootstrap.ts`                                                                               | `apps/web/src/app/views/diff/diffRouteBootstrap.test.ts`                                                                                                                                     |
+| `dbt.artifacts`               | `/artifacts`   | `published` | `apps/web/src/app/plugins/dbt/dbtContributions.ts` + `apps/web/src/app/views/artifacts/artifactsRouteBootstrap.ts`                                                                     | `apps/web/src/app/views/artifacts/artifactsRouteBootstrap.test.ts`                                                                                                                           |
+| `monitoring.runs`             | `/runs`        | `published` | `apps/web/src/app/plugins/monitoring/monitoringContributions.ts` + `apps/web/src/app/views/runs/runsRouteBootstrap.ts`                                                                 | `apps/web/src/app/views/runs/runsRouteBootstrap.test.ts`                                                                                                                                     |
+| `monitoring.run-detail`       | `/runs/:runId` | `published` | `apps/web/src/app/plugins/monitoring/monitoringContributions.ts` + `apps/web/src/app/views/runs/runsRouteBootstrap.ts`                                                                 | `apps/web/src/app/views/runs/runsRouteBootstrap.test.ts` + `apps/web/src/app/routes.test.tsx`                                                                                                |
+| `cost.dashboard`              | `/cost`        | `published` | `apps/web/src/app/plugins/registry.ts` + `apps/web/src/app/views/cost/costRouteBootstrap.ts`                                                                                           | `apps/web/src/app/views/cost/costRouteBootstrap.test.ts` + `apps/web/src/app/routes.test.tsx`                                                                                                |
+| `shell.default-core-redirect` | `/`            | `published` | `apps/web/src/app/routes.ts`                                                                                                                                                           | `apps/web/src/app/routes.test.tsx`                                                                                                                                                           |
+| `shell.plugins`               | `/plugins`     | `static`    | `apps/web/src/app/routes.ts`                                                                                                                                                           | `apps/web/src/app/routes.test.tsx` + `apps/web/src/app/Root.bootstrapFlow.test.tsx`                                                                                                          |
+| `shell.admin`                 | `/admin`       | `static`    | `apps/web/src/app/routes.ts`                                                                                                                                                           | `apps/web/src/app/routes.test.tsx` + `apps/web/src/app/Root.bootstrapFlow.test.tsx`                                                                                                          |
+
+<!-- markdownlint-enable MD060 -->
 
 `shell.default-core-redirect` is a transient `published` route: while mounted
 it explicitly publishes pending redirect posture through
 `usePublishedRouteBootstrap`, then hands startup ownership to the navigated
 target route.
 
-`apps/web/src/app/Root.test.tsx` covers static-route runtime behavior directly
-for `shell.admin` and also exercises the generic static-route contract pattern
-through a synthetic Plugins route; the per-route shell matrix above cites
-direct route evidence where available.
+`apps/web/src/app/Root.bootstrapFlow.test.tsx` covers static-route runtime
+behavior directly for `shell.admin` and also exercises the generic static-route
+contract pattern through the real Plugins route; the per-route shell matrix
+above cites direct route evidence where available.
 
 ## Per-route Acceptance Checks
 
@@ -160,11 +164,11 @@ direct route evidence where available.
 - `Static routes settle only through explicit static boundary`
   Evidence: `apps/web/src/app/routes.ts` (`withRouteBootstrapBoundary`) +
   `apps/web/src/app/bootstrap/StaticRouteBootstrapBoundary.tsx` +
-  `apps/web/src/app/Root.test.tsx`
+  `apps/web/src/app/Root.bootstrapFlow.test.tsx`
 
 ## Current State
 
-As of 2026-04-18:
+As of 2026-04-20:
 
 - SRP split is implemented and validated.
 - Canvas and graph-adjacent routes use explicit startup handles.

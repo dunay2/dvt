@@ -2,7 +2,7 @@
 title: Canvas Component Map And Modernization Review
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-04-18
+last_reviewed: 2026-04-20
 planning_type: architecture
 ---
 
@@ -50,6 +50,8 @@ Ownership note:
 - [canvasDraftScope.ts](../../../../../apps/web/src/app/views/canvas/canvasDraftScope.ts)
 - [useCanvasGraphHandlers.ts](../../../../../apps/web/src/app/views/canvas/useCanvasGraphHandlers.ts)
 - [useCanvasExecutionActions.ts](../../../../../apps/web/src/app/views/canvas/useCanvasExecutionActions.ts)
+- [useCanvasPlanActionHandler.ts](../../../../../apps/web/src/app/views/canvas/useCanvasPlanActionHandler.ts)
+- [useCanvasRunStartHandler.ts](../../../../../apps/web/src/app/views/canvas/useCanvasRunStartHandler.ts)
 - [canvasShell.types.ts](../../../../../apps/web/src/app/views/canvas/canvasShell.types.ts)
 - [canvasNodeMapper.ts](../../../../../apps/web/src/app/views/canvas/canvasNodeMapper.ts)
 - [canvasOverlayContext.ts](../../../../../apps/web/src/app/views/canvas/canvasOverlayContext.ts)
@@ -58,7 +60,7 @@ Ownership note:
 
 ## Reading Posture
 
-- Sections labeled `Current` describe active runtime truth as of 2026-04-18.
+- Sections labeled `Current` describe active runtime truth as of 2026-04-20.
 - Sequence/refactor/review sections remain target-state design guidance for
   future Canvas extraction work.
 - Startup-contract rules in this document describe active implementation
@@ -102,29 +104,31 @@ flowchart LR
 
 ## Component And Hook Inventory
 
-| Element                     | Kind                            | Primary responsibility                                                                                 | Current boundary posture                                        |
-| --------------------------- | ------------------------------- | ------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------- |
-| `Canvas`                    | Route entry component           | Creates `ReactFlowProvider`, mounts `CanvasContent`, binds modals                                      | Good route boundary                                             |
-| `CanvasContent`             | Composition component           | Calls `useCanvasController`, adapts controller output to shell and modals                              | Good composition seam                                           |
-| `CanvasShell`               | Workbench composition component | Orchestrates 3-panel layout (explorer/viewport/inspector), toolbar, and route-local import modal state | Good route-local composition boundary                           |
-| `CanvasToolbar`             | Presentational/action bar       | Exposes graph commands and state toggles (`impact`, `columns`, `cost`, `plan`, `run`)                  | Good UI boundary; draft-status semantics are still too local    |
-| `CanvasStateViews`          | Route-state presentation        | Keeps `loading`, `empty`, and `error` inside the existing workbench center surface                     | Useful center-surface boundary, but not the whole route posture |
-| `CanvasViewport`            | React Flow adapter component    | Binds graph state to `ReactFlow`, minimap, controls, viewport sync                                     | Good render boundary                                            |
-| `DbtExplorer`               | Contextual side panel           | Graph source browsing and import entry point                                                           | Correct contextual panel, not shell chrome                      |
-| `InspectorPanel`            | Contextual side panel           | Selection-driven node detail                                                                           | Correct contextual panel, not route authority                   |
-| `SourceImportWizard`        | Route-local modal               | Source import flow launched from Canvas                                                                | Acceptable route-local support surface                          |
-| `PlanPreviewModal`          | Route-local modal               | Shows planned execution before run start                                                               | Good handoff surface between graph and execution                |
-| `ConfirmEdgeModal`          | Route-local modal               | Confirms graph dependency creation                                                                     | Good guard rail for graph mutation                              |
-| `useCanvasController`       | Orchestration hook              | Query ownership + draft-session orchestration + graph projection + action wiring + output facade       | Improved, but still the main application-service seam           |
-| `canvasDraftSession`        | Domain/session model            | Owns authoritative draft baseline, working set, sync state, and recovery transitions                   | Correct aggregate seam                                          |
-| `canvasDraftScope`          | Projection/read model           | Derives visible graph scope, execution scope, and projection completeness from the draft session       | Correct projection seam                                         |
-| `canvasWorkbenchStateModel` | Route-state classifier          | Converts graph-query and permission signals into base workbench states                                 | Necessary input, but no longer sufficient alone                 |
-| `useCanvasGraphHandlers`    | Interaction hook                | Connect, drag/drop, selection, auto-layout, edge confirmation, node removal                            | Reusable, mostly cohesive                                       |
-| `useCanvasExecutionActions` | Run-plan action hook            | Plan preview and run start flow + console side effects + navigation callback                           | Cohesive action boundary                                        |
-| `canvasNodeMapper`          | Mapper utility                  | Canonical node/edge to React Flow node/edge mappings                                                   | Pure mapping boundary                                           |
-| `canvasOverlayContext`      | Overlay utility                 | Overlay context computation + merged decorations                                                       | Pure projection boundary                                        |
-| `canvasImpactOverlay`       | Overlay utility                 | Impact upstream/downstream projection + node data handlers                                             | Pure projection boundary                                        |
-| `canvasGraphUtils`          | Graph utility                   | DAG layout (`dagre`) and cycle detection                                                               | Pure graph algorithm boundary                                   |
+| Element                      | Kind                            | Primary responsibility                                                                                 | Current boundary posture                                        |
+| ---------------------------- | ------------------------------- | ------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------- |
+| `Canvas`                     | Route entry component           | Creates `ReactFlowProvider`, mounts `CanvasContent`, binds modals                                      | Good route boundary                                             |
+| `CanvasContent`              | Composition component           | Calls `useCanvasController`, adapts controller output to shell and modals                              | Good composition seam                                           |
+| `CanvasShell`                | Workbench composition component | Orchestrates 3-panel layout (explorer/viewport/inspector), toolbar, and route-local import modal state | Good route-local composition boundary                           |
+| `CanvasToolbar`              | Presentational/action bar       | Exposes graph commands and state toggles (`impact`, `columns`, `cost`, `plan`, `run`)                  | Good UI boundary; draft-status semantics are still too local    |
+| `CanvasStateViews`           | Route-state presentation        | Keeps `loading`, `empty`, and `error` inside the existing workbench center surface                     | Useful center-surface boundary, but not the whole route posture |
+| `CanvasViewport`             | React Flow adapter component    | Binds graph state to `ReactFlow`, minimap, controls, viewport sync                                     | Good render boundary                                            |
+| `DbtExplorer`                | Contextual side panel           | Graph source browsing and import entry point                                                           | Correct contextual panel, not shell chrome                      |
+| `InspectorPanel`             | Contextual side panel           | Selection-driven node detail                                                                           | Correct contextual panel, not route authority                   |
+| `SourceImportWizard`         | Route-local modal               | Source import flow launched from Canvas                                                                | Acceptable route-local support surface                          |
+| `PlanPreviewModal`           | Route-local modal               | Shows planned execution before run start                                                               | Good handoff surface between graph and execution                |
+| `ConfirmEdgeModal`           | Route-local modal               | Confirms graph dependency creation                                                                     | Good guard rail for graph mutation                              |
+| `useCanvasController`        | Orchestration hook              | Query ownership + draft-session orchestration + graph projection + action wiring + output facade       | Improved, but still the main application-service seam           |
+| `canvasDraftSession`         | Domain/session model            | Owns authoritative draft baseline, working set, sync state, and recovery transitions                   | Correct aggregate seam                                          |
+| `canvasDraftScope`           | Projection/read model           | Derives visible graph scope, execution scope, and projection completeness from the draft session       | Correct projection seam                                         |
+| `canvasWorkbenchStateModel`  | Route-state classifier          | Converts graph-query and permission signals into base workbench states                                 | Necessary input, but no longer sufficient alone                 |
+| `useCanvasGraphHandlers`     | Interaction hook                | Connect, drag/drop, selection, auto-layout, edge confirmation, node removal                            | Reusable, mostly cohesive                                       |
+| `useCanvasExecutionActions`  | Execution composition hook      | Composes execution state plus dedicated plan-preview and run-start handlers                            | Better SRP after the handler split                              |
+| `useCanvasPlanActionHandler` | Execution callback hook         | Owns plan-preview shell feedback and plan-modal fallout over the pure plan command                     | Narrow callback adapter                                         |
+| `useCanvasRunStartHandler`   | Execution callback hook         | Owns run-start shell feedback, modal fallout, and console reveal over the pure run command             | Narrow callback adapter                                         |
+| `canvasNodeMapper`           | Mapper utility                  | Canonical node/edge to React Flow node/edge mappings                                                   | Pure mapping boundary                                           |
+| `canvasOverlayContext`       | Overlay utility                 | Overlay context computation + merged decorations                                                       | Pure projection boundary                                        |
+| `canvasImpactOverlay`        | Overlay utility                 | Impact upstream/downstream projection + node data handlers                                             | Pure projection boundary                                        |
+| `canvasGraphUtils`           | Graph utility                   | DAG layout (`dagre`) and cycle detection                                                               | Pure graph algorithm boundary                                   |
 
 ## Current Relationship Map
 
@@ -149,6 +153,8 @@ flowchart TB
 
   Controller --> GraphHandlers["useCanvasGraphHandlers"]
   Controller --> ExecActions["useCanvasExecutionActions"]
+  ExecActions --> PlanHandler["useCanvasPlanActionHandler"]
+  ExecActions --> RunHandler["useCanvasRunStartHandler"]
   Controller --> DraftSession["canvasDraftSession"]
   Controller --> DraftScope["canvasDraftScope"]
   Controller --> Presentation["Canvas draft presentation state (required seam)"]
@@ -167,8 +173,8 @@ flowchart TB
   Presentation --> Publisher
 
   GraphHandlers --> GraphUtils["canvasGraphUtils"]
-  ExecActions --> Plans["plansService"]
-  ExecActions --> Runs["runsService"]
+  PlanHandler --> Plans["plansService"]
+  RunHandler --> Runs["runsService"]
   Controller --> Store["useAppStore"]
   Controller --> Query["TanStack useQuery"]
   StaticBoundary --> Registry
@@ -205,7 +211,9 @@ flowchart LR
     DraftScope["canvasDraftScope\nResponsibility: visible scope and projection completeness"]
     WorkbenchState["canvasWorkbenchStateModel\nResponsibility: base workbench-state classifier"]
     GraphHandlers["useCanvasGraphHandlers\nResponsibility: graph mutation commands"]
-    Execution["useCanvasExecutionActions\nResponsibility: plan and run flows"]
+    Execution["useCanvasExecutionActions\nResponsibility: execution composition facade"]
+    PlanHandler["useCanvasPlanActionHandler\nResponsibility: plan-preview callback fallout"]
+    RunHandler["useCanvasRunStartHandler\nResponsibility: run-start callback fallout"]
     Mapper["canvasNodeMapper\nResponsibility: canonical graph mapping"]
     Overlay["canvasOverlayContext + canvasImpactOverlay\nResponsibility: overlay projection"]
   end
@@ -235,6 +243,8 @@ flowchart LR
   Controller --> WorkbenchState
   Controller --> GraphHandlers
   Controller --> Execution
+  Execution --> PlanHandler
+  Execution --> RunHandler
   Controller --> Mapper
   Controller --> Overlay
   Controller --> Query
