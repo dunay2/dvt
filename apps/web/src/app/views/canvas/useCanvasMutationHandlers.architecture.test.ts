@@ -1,10 +1,10 @@
-import { readFileSync } from 'node:fs';
-import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-const MUTATION_HANDLERS_SOURCE = readFileSync(
-  path.resolve(import.meta.dirname, 'useCanvasMutationHandlers.ts'),
-  'utf8'
+import { readArchitectureSiblingSource } from '../architecture.test.support';
+
+const MUTATION_HANDLERS_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'useCanvasMutationHandlers.ts'
 );
 
 describe('useCanvasMutationHandlers architecture', () => {

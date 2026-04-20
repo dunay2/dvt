@@ -5,7 +5,7 @@ import {
   CanvasLoadingStateView,
 } from './CanvasStateViews';
 import { canvasViewCopy } from './copy';
-import type { CanvasDraftPresentationState } from './canvasDraftPresentationState';
+import type { CanvasDraftPresentationState } from './canvasDraftPresentationModel';
 import type { CanvasDraftTransportErrorState } from './canvasDraftTransportErrorState';
 import type { useCanvasController } from './useCanvasController';
 

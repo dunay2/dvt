@@ -2,12 +2,11 @@ import { RunNotFoundError } from '@dvt/engine';
 import Fastify from 'fastify';
 import { describe, expect, it, vi } from 'vitest';
 
+import { registerAdminRoutes } from '../../../src/entrypoints/http/adminRoutes.js';
 import {
   type RebuildSnapshot,
-  type WorkflowSnapshotResult,
   makeWorkflowSnapshot,
 } from '../../fixtures/workflowSnapshotFixture.js';
-import { registerAdminRoutes } from '../../../src/entrypoints/http/adminRoutes.js';
 
 type RouteResponse = Awaited<ReturnType<ReturnType<typeof Fastify>['inject']>>;
 

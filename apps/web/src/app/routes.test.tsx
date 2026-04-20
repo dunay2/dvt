@@ -14,9 +14,15 @@ vi.mock('./bootstrap/usePublishedRouteBootstrap', () => ({
 }));
 
 import AppProviders from './AppProviders';
+import {
+  findChildRouteById,
+  findChildRouteByPath,
+  getRootRoute,
+  readLeftNavigationCaptions,
+} from './appRoute.test.support';
 import { createAppRoutes } from './routes';
 import { createTestQueryClient, waitForReactQuery } from '../testing/reactQueryHarness';
-import { CANVAS_ROUTE_BOOTSTRAP_HANDLE } from './views/canvas/canvasDraftPresentationState';
+import { CANVAS_ROUTE_BOOTSTRAP_HANDLE } from './views/canvas/canvasDraftPresentationStore';
 
 describe('app routes', () => {
   let container: HTMLDivElement;
@@ -107,24 +113,20 @@ describe('app routes', () => {
     expect(container.querySelector('[data-slot="app-route-error-boundary"]')).toBeNull();
     expect(container.textContent).not.toContain('Unexpected Application Error!');
     expect(container.querySelector('[data-slot="shell-active-surface"]')).toBeNull();
-    const leftNavigationCaptions = [
-      ...container.querySelectorAll<HTMLElement>('[data-slot="left-navigation-caption"]'),
-    ].map((node) => node.textContent?.trim());
+    const leftNavigationCaptions = readLeftNavigationCaptions(container);
     expect(leftNavigationCaptions).toContain('Canvas');
     expect(capabilitiesPort.loadCapabilities).toHaveBeenCalledTimes(1);
   });
 
   it('declares bootstrap contracts for the active route set in route metadata', () => {
-    const rootRoute = createAppRoutes()[0];
-    const redirectRoute = rootRoute?.children?.find(
-      (route) => route.id === 'shell.default-core-redirect'
-    );
-    const canvasRoute = rootRoute?.children?.find((route) => route.path === 'canvas');
-    const lineageRoute = rootRoute?.children?.find((route) => route.path === 'lineage');
-    const runsRoute = rootRoute?.children?.find((route) => route.path === 'runs');
-    const costRoute = rootRoute?.children?.find((route) => route.path === 'cost');
-    const pluginsRoute = rootRoute?.children?.find((route) => route.path === 'plugins');
-    const adminRoute = rootRoute?.children?.find((route) => route.path === 'admin');
+    const rootRoute = getRootRoute(createAppRoutes());
+    const redirectRoute = findChildRouteById(rootRoute, 'shell.default-core-redirect');
+    const canvasRoute = findChildRouteByPath(rootRoute, 'canvas');
+    const lineageRoute = findChildRouteByPath(rootRoute, 'lineage');
+    const runsRoute = findChildRouteByPath(rootRoute, 'runs');
+    const costRoute = findChildRouteByPath(rootRoute, 'cost');
+    const pluginsRoute = findChildRouteByPath(rootRoute, 'plugins');
+    const adminRoute = findChildRouteByPath(rootRoute, 'admin');
 
     expect(redirectRoute?.id).toBe('shell.default-core-redirect');
     expect(redirectRoute?.handle).toMatchObject({

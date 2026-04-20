@@ -1,0 +1,100 @@
+// @vitest-environment jsdom
+
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { withTestQueryClient } from '../testing/reactQueryHarness';
+import {
+  CANVAS_ROUTE_BOOTSTRAP_REGISTRATION,
+  createRootShellNode,
+} from './Root.bootstrapRoute.test.support';
+import {
+  resetRootShellStores,
+  setRootShellConsoleDrawer,
+  setRootShellFocusMode,
+  waitForShellBootstrapSurface,
+} from './Root.test.support';
+import {
+  createHealthyPlatformCapability,
+  expectActiveRootShellNavigationLink,
+  expectRootShellFrameChrome,
+  expectRootShellNavigationChrome,
+  waitForHealthyShellChrome,
+} from './Root.shellChrome.test.support';
+import { resetRouteBootstrapPresentation } from './bootstrap/routeBootstrapRegistry';
+
+describe('RootShell chrome', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    resetRootShellStores();
+    resetRouteBootstrapPresentation(CANVAS_ROUTE_BOOTSTRAP_REGISTRATION);
+  });
+
+  afterEach(() => {
+    resetRouteBootstrapPresentation(CANVAS_ROUTE_BOOTSTRAP_REGISTRATION);
+    vi.useRealTimers();
+  });
+
+  it('renders shell top bar and left navigation with governed shell chrome', async () => {
+    const mounted = await withTestQueryClient(
+      createRootShellNode(createHealthyPlatformCapability(), ['/canvas'])
+    );
+
+    try {
+      await waitForHealthyShellChrome(mounted);
+      expectRootShellFrameChrome(mounted.container, 'Canvas route');
+      expectRootShellNavigationChrome(mounted.container, '/canvas');
+    } finally {
+      await mounted.cleanup();
+    }
+  });
+
+  it('keeps the runs navigation item active for run detail routes', async () => {
+    const mounted = await withTestQueryClient(
+      createRootShellNode(createHealthyPlatformCapability(), ['/runs/run_123'])
+    );
+
+    try {
+      await waitForShellBootstrapSurface(mounted);
+      expect(mounted.container.textContent).toContain('Run detail route');
+      expectActiveRootShellNavigationLink(mounted.container, '/runs');
+    } finally {
+      await mounted.cleanup();
+    }
+  });
+
+  it('preserves focus-mode behavior by hiding the left rail while keeping the shell top bar', async () => {
+    setRootShellFocusMode(true);
+    const mounted = await withTestQueryClient(createRootShellNode(createHealthyPlatformCapability()));
+
+    try {
+      await waitForShellBootstrapSurface(mounted);
+
+      expect(mounted.container.querySelector('[data-slot="left-navigation-rail"]')).toBeNull();
+      expect(mounted.container.querySelector('[data-slot="app-shell-bottom-drawer"]')).toBeNull();
+      expect(mounted.container.querySelector('[data-slot="shell-top-bar"]')).toBeTruthy();
+    } finally {
+      await mounted.cleanup();
+    }
+  });
+
+  it('renders the bottom console drawer inside the app shell frame when enabled', async () => {
+    setRootShellConsoleDrawer({ visible: true, height: 160 });
+    const mounted = await withTestQueryClient(createRootShellNode(createHealthyPlatformCapability()));
+
+    try {
+      await waitForShellBootstrapSurface(mounted);
+
+      const bottomDrawer = mounted.container.querySelector('[data-slot="app-shell-bottom-drawer"]');
+      const appShellMain = mounted.container.querySelector('[data-slot="app-shell-main"]');
+      const consoleDrawer = mounted.container.querySelector('[data-slot="bottom-console-drawer"]');
+
+      expect(bottomDrawer).not.toBeNull();
+      expect(bottomDrawer?.closest('[data-slot="app-shell-main"]')).toBe(appShellMain);
+      expect(consoleDrawer).not.toBeNull();
+      expect(bottomDrawer?.textContent).toContain('Console');
+      expect(bottomDrawer?.textContent).toContain('Start a run to see execution output here.');
+    } finally {
+      await mounted.cleanup();
+    }
+  });
+});

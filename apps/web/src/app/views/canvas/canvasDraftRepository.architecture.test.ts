@@ -1,10 +1,10 @@
-import { readFileSync } from 'node:fs';
-import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-const REPOSITORY_SOURCE = readFileSync(
-  path.resolve(import.meta.dirname, 'canvasDraftRepository.ts'),
-  'utf8'
+import { readArchitectureSiblingSource } from '../architecture.test.support';
+
+const REPOSITORY_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'canvasDraftRepository.ts'
 );
 
 describe('canvasDraftRepository architecture', () => {

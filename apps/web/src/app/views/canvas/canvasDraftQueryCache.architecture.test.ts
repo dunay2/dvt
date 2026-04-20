@@ -1,26 +1,23 @@
-import { readFileSync } from 'node:fs';
-import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-const CACHE_SOURCE = readFileSync(
-  path.resolve(import.meta.dirname, 'canvasDraftQueryCache.ts'),
-  'utf8'
+import { readArchitectureSiblingSource } from '../architecture.test.support';
+
+const CACHE_SOURCE = readArchitectureSiblingSource(import.meta.dirname, 'canvasDraftQueryCache.ts');
+const PERSISTENCE_RUNTIME_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'canvasDraftPersistenceRuntime.ts'
 );
-const PERSISTENCE_RUNTIME_SOURCE = readFileSync(
-  path.resolve(import.meta.dirname, 'canvasDraftPersistenceRuntime.ts'),
-  'utf8'
+const RELOAD_HYDRATION_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'useCanvasDraftReloadHydration.ts'
 );
-const RELOAD_HYDRATION_SOURCE = readFileSync(
-  path.resolve(import.meta.dirname, 'useCanvasDraftReloadHydration.ts'),
-  'utf8'
+const RECOVERY_ACTIONS_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'useCanvasDraftRecoveryActions.ts'
 );
-const RECOVERY_ACTIONS_SOURCE = readFileSync(
-  path.resolve(import.meta.dirname, 'useCanvasDraftRecoveryActions.ts'),
-  'utf8'
-);
-const LIFECYCLE_TYPES_SOURCE = readFileSync(
-  path.resolve(import.meta.dirname, 'canvasDraftLifecycle.types.ts'),
-  'utf8'
+const LIFECYCLE_TYPES_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'canvasDraftLifecycle.types.ts'
 );
 
 describe('canvasDraftQueryCache architecture', () => {

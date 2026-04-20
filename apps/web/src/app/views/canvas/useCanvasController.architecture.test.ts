@@ -1,10 +1,10 @@
-import { readFileSync } from 'node:fs';
-import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-const CONTROLLER_SOURCE = readFileSync(
-  path.resolve(import.meta.dirname, 'useCanvasController.ts'),
-  'utf8'
+import { readArchitectureSiblingSource } from '../architecture.test.support';
+
+const CONTROLLER_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'useCanvasController.ts'
 );
 
 describe('useCanvasController architecture', () => {

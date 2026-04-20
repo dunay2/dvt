@@ -96,7 +96,22 @@ describe('workspaceGraphDraftAuthoring mock port', () => {
       draft: buildDraft('node-2'),
     });
 
-    expect(secondAttempt).toEqual(firstAttempt);
+    expect(firstAttempt.kind).toBe('saved');
+    expect(secondAttempt.kind).toBe('saved');
+    if (firstAttempt.kind !== 'saved' || secondAttempt.kind !== 'saved') {
+      throw new Error('expected saved results');
+    }
+
+    expect(secondAttempt.revision).toBe(firstAttempt.revision);
+    expect(secondAttempt.capability).toEqual(firstAttempt.capability);
+    expect(secondAttempt.formatMeta).toEqual(firstAttempt.formatMeta);
+    expect(secondAttempt.auditRef).toMatchObject({
+      correlationId: 'mock-correlation-id',
+      decisionId: 'mock-decision-id',
+      action: 'draft_write',
+      outcome: 'allowed',
+    });
+    expect(secondAttempt.auditRef.recordedAt).toEqual(expect.any(String));
     expect(mismatchAttempt).toEqual({ kind: 'idempotency_mismatch' });
   });
 });

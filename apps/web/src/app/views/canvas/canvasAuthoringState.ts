@@ -13,7 +13,7 @@ import {
   deriveDraftRecoveryReason,
   type CanvasDraftRecoveryReason,
   type CanvasDraftToolbarState,
-} from './canvasDraftPresentationState';
+} from './canvasDraftToolbarState';
 import type { CanvasDraftAccessMode, CanvasDraftReadModel } from './canvasDraftReadModel';
 import type { DraftSaveStatus } from './canvasDraftLifecycle.types';
 

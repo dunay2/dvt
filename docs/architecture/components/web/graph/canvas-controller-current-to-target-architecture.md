@@ -80,7 +80,9 @@ Primary implementation anchors:
 - [useCanvasCurrentDraftPayload.ts](../../../../../apps/web/src/app/views/canvas/useCanvasCurrentDraftPayload.ts)
 - [canvasDraftSession.ts](../../../../../apps/web/src/app/views/canvas/canvasDraftSession.ts)
 - [canvasDraftScope.ts](../../../../../apps/web/src/app/views/canvas/canvasDraftScope.ts)
-- [canvasDraftPresentationState.ts](../../../../../apps/web/src/app/views/canvas/canvasDraftPresentationState.ts)
+- [canvasDraftToolbarState.ts](../../../../../apps/web/src/app/views/canvas/canvasDraftToolbarState.ts)
+- [canvasDraftPresentationModel.ts](../../../../../apps/web/src/app/views/canvas/canvasDraftPresentationModel.ts)
+- [canvasDraftPresentationStore.ts](../../../../../apps/web/src/app/views/canvas/canvasDraftPresentationStore.ts)
 - [useCanvasGraphModel.ts](../../../../../apps/web/src/app/views/canvas/useCanvasGraphModel.ts)
 - [useCanvasOverlayModel.ts](../../../../../apps/web/src/app/views/canvas/useCanvasOverlayModel.ts)
 - [useCanvasLayoutPersistence.ts](../../../../../apps/web/src/app/views/canvas/useCanvasLayoutPersistence.ts)
@@ -102,14 +104,30 @@ Primary implementation anchors:
 - [transformationGraphValidation.ts](../../../../../apps/web/src/app/views/canvas/transformationGraphValidation.ts)
 - [useCanvasNavigationActions.ts](../../../../../apps/web/src/app/views/canvas/useCanvasNavigationActions.ts)
 - [CanvasToolbar.tsx](../../../../../apps/web/src/app/views/canvas/CanvasToolbar.tsx)
+- [CanvasToolbarPrimaryControls.tsx](../../../../../apps/web/src/app/views/canvas/CanvasToolbarPrimaryControls.tsx)
+- [CanvasToolbarDraftStatus.tsx](../../../../../apps/web/src/app/views/canvas/CanvasToolbarDraftStatus.tsx)
 - [CanvasCenterSurface.tsx](../../../../../apps/web/src/app/views/canvas/CanvasCenterSurface.tsx)
 - [CanvasRecoveryBanner.tsx](../../../../../apps/web/src/app/views/canvas/CanvasRecoveryBanner.tsx)
 - [canvasDraftTransportErrorState.ts](../../../../../apps/web/src/app/views/canvas/canvasDraftTransportErrorState.ts)
+- [canvasRouteInteractionState.ts](../../../../../apps/web/src/app/views/canvas/canvasRouteInteractionState.ts)
+- [canvasRouteViewState.ts](../../../../../apps/web/src/app/views/canvas/canvasRouteViewState.ts)
+- [canvasToolbarViewModel.ts](../../../../../apps/web/src/app/views/canvas/canvasToolbarViewModel.ts)
 - [copy.ts](../../../../../apps/web/src/app/views/canvas/copy.ts)
+- [useCanvasToolbarPortalTarget.ts](../../../../../apps/web/src/app/views/canvas/useCanvasToolbarPortalTarget.ts)
+
+Primary fitness-function anchors:
+
+- [architecture.test.support.ts](../../../../../apps/web/src/app/views/architecture.test.support.ts)
+- [Canvas.architecture.test.tsx](../../../../../apps/web/src/app/views/Canvas.architecture.test.tsx)
+- [CanvasToolbar.architecture.test.tsx](../../../../../apps/web/src/app/views/canvas/CanvasToolbar.architecture.test.tsx)
+- [canvasRouteViewState.architecture.test.ts](../../../../../apps/web/src/app/views/canvas/canvasRouteViewState.architecture.test.ts)
+- [canvasDraftRepository.architecture.test.ts](../../../../../apps/web/src/app/views/canvas/canvasDraftRepository.architecture.test.ts)
+- [canvasControllerViewModel.architecture.test.ts](../../../../../apps/web/src/app/views/canvas/canvasControllerViewModel.architecture.test.ts)
+- [CanvasCenterSurface.architecture.test.ts](../../../../../apps/web/src/app/views/canvas/CanvasCenterSurface.architecture.test.ts)
 
 ## Current Architecture Snapshot
 
-As of 2026-04-18, the SRP split has improved, but the controller chain is not
+As of 2026-04-20, the SRP split has improved, but the controller chain is not
 finished.
 
 ### DDD posture
@@ -136,7 +154,9 @@ Current DDD reading for the active Canvas slice:
   `canvasDraftReadModel`, `useCanvasAuthoringProjection`,
   `useCanvasGraphModel`, `useCanvasOverlayModel`,
   `useCanvasControllerReadModel`, `useCanvasCurrentDraftPayload`,
-  `canvasExecutionState`, `canvasDraftTransportErrorState`,
+  `canvasExecutionState`, `canvasDraftToolbarState`,
+  `canvasDraftPresentationModel`, `canvasDraftPresentationStore`,
+  `canvasDraftTransportErrorState`,
   `CanvasCenterSurface`, `CanvasRecoveryBanner`
 - `adapters and route-facing composition`
   `useCanvasControllerEnvironment`, `useCanvasNavigationActions`,
@@ -247,6 +267,19 @@ Implemented seams:
 - `canvasDraftTransportErrorState`
   owns typed draft transport posture projection for `forbidden` and
   `format_error` route states
+- `canvasDraftToolbarState`
+  owns recovery precedence, bootstrap recovery copy selection, and draft
+  toolbar projection
+- `canvasDraftPresentationModel`
+  owns route posture derivation and bootstrap presentation mapping
+- `canvasRouteInteractionState`
+  owns route-local interaction gating, effective permissions, read-only posture,
+  and workbench error coercion before presentation mapping runs
+- `canvasDraftPresentationStore`
+  owns published route bootstrap handle plus the external presentation store
+- `canvasRouteViewState`
+  is now the thin composition seam over transport error, interaction posture,
+  and presentation projection
 - `CanvasCenterSurface`
   owns center-surface state rendering so `Canvas.tsx` remains a route adapter
   instead of a state-switch mega-view
@@ -271,8 +304,16 @@ Implemented seams:
   owns pure transformation-graph validation over scoped subgraph selection,
   role validation, edge-order invariants, and draft-signature derivation
 - `CanvasToolbar`
-  owns visual composition of toolbar actions and draft-status presentation
-  over route-local presentation state
+  is now the thin toolbar composition seam over dedicated primary-controls,
+  draft-status, view-model, and portal-target helpers
+- `canvasToolbarViewModel`
+  owns workflow-status projection and plan gating for the toolbar
+- `useCanvasToolbarPortalTarget`
+  owns shell top-bar portal target resolution
+- `CanvasToolbarPrimaryControls`
+  owns toolbar action rendering over view-model state and callbacks
+- `CanvasToolbarDraftStatus`
+  owns draft-status badge and recovery reload affordance rendering
 - `useCanvasNavigationActions`
   owns route-only navigation side effects
 
@@ -281,6 +322,12 @@ Remaining concentration:
 - `useCanvasAuthoringRuntime`
   still assembles several authoring concerns and remains the heaviest runtime
   seam in the chain
+- `useCanvasExecutionActions`
+  still coordinates plan-preview and run-start orchestration plus route-local
+  modal fallout
+- `canvasDraftSession`
+  is the right aggregate root, but it remains a large local model and still
+  needs careful proof-oriented evolution rather than accreting helper logic
 
 ## Aggregate Roots And Read Models
 
@@ -295,7 +342,7 @@ earlier hard-cut pass.
   Prevents typed protected-draft outcomes from leaking transport details into controller or route.
 - `application facade` — `useCanvasController.ts` + `canvasControllerViewModel.ts`
   Composes seams and publishes one route-safe view model.
-- `route presentation seams` — `Canvas.tsx`, `CanvasCenterSurface.tsx`, `CanvasRecoveryBanner.tsx`, `canvasDraftTransportErrorState.ts`
+- `route presentation seams` — `Canvas.tsx`, `CanvasCenterSurface.tsx`, `CanvasRecoveryBanner.tsx`, `canvasDraftTransportErrorState.ts`, `canvasRouteInteractionState.ts`, `canvasRouteViewState.ts`
   Keep inbound route/UI adapters thin and explicit.
 
 ```mermaid
@@ -317,6 +364,35 @@ Reading rule:
 - the repository is the only persistence authority
 - the read model is allowed to be lossy for presentation, but not authoritative
 - route components consume the facade and presentation seams, not the port
+
+## Architecture Fitness Functions
+
+The branch now carries explicit source-level fitness functions for the main
+route seams instead of relying only on review memory or CodeScene warnings.
+
+```mermaid
+flowchart LR
+  Support["architecture.test.support.ts"] --> RouteTests["Route architecture tests"]
+  Support --> CanvasTests["Canvas architecture tests"]
+  RouteTests --> CanvasRoute["Canvas.tsx"]
+  CanvasTests --> RouteState["canvasRouteViewState.ts"]
+  CanvasTests --> ViewModel["canvasControllerViewModel.ts"]
+  CanvasTests --> Center["CanvasCenterSurface.tsx"]
+  CanvasTests --> Repo["canvasDraftRepository.ts"]
+  RouteState --> Interaction["canvasRouteInteractionState.ts"]
+  RouteState --> DraftModel["canvasDraftPresentationModel.ts"]
+  RouteState --> Transport["canvasDraftTransportErrorState.ts"]
+  DraftModel --> ToolbarState["canvasDraftToolbarState.ts"]
+  CanvasRoute --> DraftStore["canvasDraftPresentationStore.ts"]
+```
+
+Reading rule:
+
+- the shared support module removes repeated `readFileSync + path.resolve`
+  boilerplate from every architecture test
+- architecture tests guard composition seams, not behavior-level branching
+- a seam split is only considered durable when both the code and its
+  fitness-function guardrail move together
 
 ## Current Topology
 
@@ -464,7 +540,8 @@ flowchart LR
   PlanAction --> Plans["IPlansPort"]
   RunAction --> Runs["IRunsPort"]
   ExecState --> Toolbar["CanvasToolbar"]
-  DraftState["canvasDraftPresentationState"] --> Toolbar
+  DraftStore["canvasDraftPresentationStore"] --> Toolbar
+  DraftToolbar["canvasDraftToolbarState"] --> Toolbar
   Copy["copy.ts"] --> Toolbar
 ```
 
@@ -507,7 +584,7 @@ verbatim".
 | `Gateway`                | `IWorkspacePort`, `IPlansPort`, `IRunsPort`; plugin port map from `registry.ts`                      | partial |
 | `Assembler / mapper`     | `canvasNodeDropPayload`, `canvasPreviewProvenance`, `transformationGraphValidation`                  | partial |
 | `Service Layer / facade` | `useCanvasExecutionActions`, `canvasPlanAction`, `canvasRunStartAction`, `canvasConnectionAggregate` | strong  |
-| `Presentation model`     | `canvasExecutionState`, `canvasDraftPresentationState`                                               | strong  |
+| `Presentation model`     | `canvasExecutionState`, `canvasDraftPresentationModel`, `canvasDraftToolbarState`                    | strong  |
 | `View / controller hook` | `CanvasToolbar`, `useCanvasEdgeAuthoringHandlers`, `useCanvasNodeDropHandlers`                       | strong  |
 
 ### Where the Canvas slice already matches Fowler well
@@ -517,7 +594,8 @@ verbatim".
 - command paths are explicit:
   `canvasPlanAction`, `canvasRunStartAction`, `canvasConnectionAggregate`
 - presentation state is explicit:
-  `canvasExecutionState`, `canvasDraftPresentationState`
+  `canvasExecutionState`, `canvasDraftPresentationModel`,
+  `canvasDraftToolbarState`
 - UI copy is centralized in `copy.ts` instead of leaking into domain-policy
   helpers
 
@@ -537,8 +615,9 @@ verbatim".
 - `useCanvasExecutionActions` still coordinates several command and
   presentation concerns and remains a route-local facade that can likely split
   further once TF-E2 stabilizes
-- `CanvasToolbar` is much cleaner than before but is still a substantial
-  presentational composition seam rather than a tiny dumb widget
+- `CanvasToolbar` now behaves like a thin presentational composition seam;
+  the remaining risk is re-accumulating policy into it instead of the toolbar
+  helper seams
 - plugin port-map assembly still lives in `registry.ts`; if the plugin system
   deepens further, that map may deserve its own local query surface
 

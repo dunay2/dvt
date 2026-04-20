@@ -1,10 +1,10 @@
-import { readFileSync } from 'node:fs';
-import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-const AUTOSAVE_SOURCE = readFileSync(
-  path.resolve(import.meta.dirname, 'useCanvasDraftAutosave.ts'),
-  'utf8'
+import { readArchitectureSiblingSource } from '../architecture.test.support';
+
+const AUTOSAVE_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'useCanvasDraftAutosave.ts'
 );
 
 describe('useCanvasDraftAutosave architecture', () => {

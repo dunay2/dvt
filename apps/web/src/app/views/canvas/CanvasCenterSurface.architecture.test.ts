@@ -1,10 +1,10 @@
-import { readFileSync } from 'node:fs';
-import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-const CENTER_SURFACE_SOURCE = readFileSync(
-  path.resolve(import.meta.dirname, 'CanvasCenterSurface.tsx'),
-  'utf8'
+import { readArchitectureSiblingSource } from '../architecture.test.support';
+
+const CENTER_SURFACE_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'CanvasCenterSurface.tsx'
 );
 
 describe('CanvasCenterSurface architecture', () => {

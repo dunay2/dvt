@@ -1,10 +1,10 @@
-import { readFileSync } from 'node:fs';
-import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-const AUTHORING_RUNTIME_DRAFT_FLOW_SOURCE = readFileSync(
-  path.resolve(import.meta.dirname, 'useCanvasAuthoringRuntimeDraftFlow.ts'),
-  'utf8'
+import { readArchitectureSiblingSource } from '../architecture.test.support';
+
+const AUTHORING_RUNTIME_DRAFT_FLOW_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'useCanvasAuthoringRuntimeDraftFlow.ts'
 );
 
 describe('useCanvasAuthoringRuntimeDraftFlow architecture', () => {

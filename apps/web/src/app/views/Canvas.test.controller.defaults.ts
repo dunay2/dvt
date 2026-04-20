@@ -1,7 +1,7 @@
 import { vi } from 'vitest';
 
 import { DEFAULT_CANVAS_PALETTE_ID } from './canvas/canvasPalette';
-import type { CanvasDraftToolbarState } from './canvas/canvasDraftPresentationState';
+import type { CanvasDraftToolbarState } from './canvas/canvasDraftToolbarState';
 import type { CanvasController } from './Canvas.test.controller';
 
 type CanvasControllerStateDefaults = Pick<

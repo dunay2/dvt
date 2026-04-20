@@ -1,10 +1,10 @@
-import { readFileSync } from 'node:fs';
-import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-const LIFECYCLE_SOURCE = readFileSync(
-  path.resolve(import.meta.dirname, 'useCanvasDraftLifecycle.ts'),
-  'utf8'
+import { readArchitectureSiblingSource } from '../architecture.test.support';
+
+const LIFECYCLE_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'useCanvasDraftLifecycle.ts'
 );
 
 describe('useCanvasDraftLifecycle architecture', () => {

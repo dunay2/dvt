@@ -15,7 +15,7 @@ import {
   CANVAS_ROUTE_BOOTSTRAP_HANDLE,
   getCanvasDraftPresentationState,
   resetCanvasDraftPresentationState,
-} from './canvas/canvasDraftPresentationState';
+} from './canvas/canvasDraftPresentationStore';
 import { useCanvasController } from './canvas/useCanvasController';
 import { buildController, type CanvasController } from './Canvas.test.controller';
 export { buildController } from './Canvas.test.controller';

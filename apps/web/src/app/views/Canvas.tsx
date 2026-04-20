@@ -7,12 +7,12 @@ import { CanvasReadOnlyBannerView } from './canvas/CanvasStateViews';
 import { renderCanvasCenterSurface } from './canvas/CanvasCenterSurface';
 import { CanvasRecoveryBanner } from './canvas/CanvasRecoveryBanner';
 import CanvasShell from './canvas/CanvasShell';
+import { toRouteBootstrapPresentation } from './canvas/canvasDraftPresentationModel';
 import {
   CANVAS_ROUTE_ID,
   publishCanvasDraftPresentationState,
   resetCanvasDraftPresentationState,
-  toRouteBootstrapPresentation,
-} from './canvas/canvasDraftPresentationState';
+} from './canvas/canvasDraftPresentationStore';
 import { deriveCanvasRouteViewState } from './canvas/canvasRouteViewState';
 import { useCanvasController } from './canvas/useCanvasController';
 
