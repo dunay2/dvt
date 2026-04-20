@@ -42,6 +42,8 @@ export function createActivities(
     layerIndex: number;
   }): Promise<ResolvedExecutionSegment>;
 } {
+  assertSegmentResolverConfigured(deps);
+
   const dispatcher = new StepActivityDispatcher(
     new GatewayStepActivity(),
     resolveStepActivityRegistry(deps, stepActivitiesByKind)
@@ -105,15 +107,16 @@ export function createActivities(
 
     async resolveExecutionSegment(input): Promise<ResolvedExecutionSegment> {
       const validatedPlanRef = parsePlanRef(input.planRef);
-
-      if (deps.fetcher === undefined || deps.integrity === undefined) {
-        throw new Error('PLAN_SEGMENT_RESOLVER_NOT_CONFIGURED');
-      }
-
       const { plan } = await deps.integrity.fetchAndValidate(validatedPlanRef, deps.fetcher);
       return resolveExecutionSegmentFromPlan(plan, input.layerIndex);
     },
   };
+}
+
+function assertSegmentResolverConfigured(deps: ActivityDeps): void {
+  if (deps.fetcher === undefined || deps.integrity === undefined) {
+    throw new Error('PLAN_SEGMENT_RESOLVER_NOT_CONFIGURED');
+  }
 }
 
 function resolveStepActivityRegistry(

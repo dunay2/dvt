@@ -1,0 +1,26 @@
+---
+id: R-20260421-TEMPORAL-ACTIVITY-DEPS-WIRING-DRIFT
+title: Temporal activity dependency wiring can drift from the segment-resolution runtime contract
+status: Open
+date: 2026-04-21
+owners:
+  - packages/@dvt/adapter-temporal
+severity: Low
+probability: Medium
+context: >
+  Before this slice, `ActivityDeps` marked `fetcher` and `integrity` as optional even though
+  `resolveExecutionSegment()` always required both seams. The production Temporal worker usually
+  wired them correctly, but the public activity-construction contract still allowed incomplete
+  wiring and deferred failure until a later runtime path exercised segment resolution.
+risk: >
+  If future harnesses or composition roots bypass the canonical helpers or weaken the activity
+  dependency shape again, Temporal runtime construction could accept invalid wiring and fail only
+  after execution begins, making regressions harder to detect and localize.
+mitigations:
+  - Keep `ActivityDeps.fetcher` and `ActivityDeps.integrity` required in the public activity
+    contract.
+  - Keep eager validation in `createActivities()` so missing segment-resolution seams fail at
+    construction time.
+  - Keep typecheck coverage that rejects incomplete `ActivityDeps` objects.
+  - Keep worker lifecycle and activity tests aligned with the active engine idempotency contract.
+---

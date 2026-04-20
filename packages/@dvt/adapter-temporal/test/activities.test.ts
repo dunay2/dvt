@@ -22,6 +22,7 @@ import type {
   RunMetadata,
 } from '../src/engine-types.js';
 
+import { createExecutionPlan } from './helpers/contractFixtures.js';
 import {
   permanentErrorExecutor,
   transientErrorExecutor,
@@ -83,6 +84,10 @@ const RUN_EXECUTION_CONTEXT: RunExecutionContext = {
   },
 };
 
+const SEGMENT_RESOLVER_PLAN = createExecutionPlan({
+  steps: [{ stepId: 'segment-step', kind: 'DBT_TEST', dependsOn: [] }],
+});
+
 const DEFAULT_LOGICAL_ATTEMPT_ID = 1;
 const RUN_STARTED_EVENT_TYPE: EventType = 'RunStarted';
 
@@ -93,6 +98,7 @@ const TEST_ERRORS = {
 } as const;
 
 const EXPECTED_ERRORS = {
+  segmentResolverNotConfigured: 'PLAN_SEGMENT_RESOLVER_NOT_CONFIGURED',
   transientDbError: 'TRANSIENT_DB_ERROR',
   dependsOnMustBeArray: 'INVALID_STEP_SCHEMA: dependsOn_must_be_array',
   dependsOnValuesMustBeString: 'INVALID_STEP_SCHEMA: dependsOn_values_must_be_string',
@@ -131,9 +137,28 @@ class TestIdempotencyKeyBuilder implements IIdempotencyKeyBuilder {
     tenantId: string;
     runId: string;
     logicalAttemptId: number;
+    planId: string;
+    planVersion: string;
     stepId?: string;
   }): string {
-    return [e.eventType, e.tenantId, e.runId, String(e.logicalAttemptId), e.stepId ?? ''].join('|');
+    return [
+      e.eventType,
+      e.tenantId,
+      e.runId,
+      String(e.logicalAttemptId),
+      e.planId,
+      e.planVersion,
+      e.stepId ?? '',
+    ].join('|');
+  }
+
+  startRunIntentId(
+    tenantId: string,
+    runId: string,
+    logicalAttemptId = 1,
+    targetAdapter = 'temporal'
+  ): string {
+    return ['start-run-intent', tenantId, runId, String(logicalAttemptId), targetAdapter].join('|');
   }
 }
 
@@ -294,12 +319,30 @@ function buildDeps(
   const dbtPluginRunner = Object.hasOwn(overrides, 'dbtPluginRunner')
     ? overrides.dbtPluginRunner
     : new RecordingDbtPluginRunner();
+  const fetcher = Object.hasOwn(overrides, 'fetcher')
+    ? overrides.fetcher
+    : {
+        fetch: async () => ({
+          bytes: new Uint8Array(),
+          executionPolicy: {},
+        }),
+      };
+  const integrity = Object.hasOwn(overrides, 'integrity')
+    ? overrides.integrity
+    : {
+        fetchAndValidate: async () => ({
+          plan: SEGMENT_RESOLVER_PLAN,
+          executionPolicy: {},
+        }),
+      };
 
   return {
     runStateCommandPort,
     testStore: store,
     clock: new TestClock(),
     idempotency: new TestIdempotencyKeyBuilder(),
+    fetcher,
+    integrity,
     ...(runExecutionContextReader === undefined ? {} : { runExecutionContextReader }),
     ...(dbtPluginRunner === undefined ? {} : { dbtPluginRunner }),
     ...(overrides.getEngineAttemptId === undefined
@@ -333,7 +376,9 @@ function expectSingleRunStartedEvent(
   const event = runStarted[0];
   if (!event) throw new TypeError(TEST_ERRORS.missingRunStartedEvent);
   expect(event.logicalAttemptId).toBe(logicalAttemptId);
-  expect(event.idempotencyKey).toBe(`RunStarted|${CTX.tenantId}|${CTX.runId}|${logicalAttemptId}|`);
+  expect(event.idempotencyKey).toBe(
+    `RunStarted|${CTX.tenantId}|${CTX.runId}|${logicalAttemptId}|${PLAN_REF.planId}|${PLAN_REF.planVersion}|`
+  );
 
   if (typeof options.engineAttemptId === 'number') {
     expect(event.engineAttemptId).toBe(options.engineAttemptId);
@@ -384,6 +429,18 @@ function expectExecuteStepRejects(step: unknown, expectedError: string) {
 // ---------------------------------------------------------------------------
 
 describe('stepActivities', () => {
+  it('fails fast when segment resolver deps are missing', () => {
+    const invalidDeps = {
+      ...buildDeps(),
+      fetcher: undefined,
+      integrity: undefined,
+    } as unknown as ActivityDeps;
+
+    expect(() => createActivities(invalidDeps)).toThrow(
+      EXPECTED_ERRORS.segmentResolverNotConfigured
+    );
+  });
+
   describe('emitEvent', () => {
     it('persists event to state store', async () => {
       const { deps, acts } = setupActivities();
