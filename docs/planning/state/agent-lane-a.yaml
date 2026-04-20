@@ -2630,6 +2630,37 @@ tasks:
       is green after aligning the stale `/plans/preview` missing-token test with the current preview
       request contract.
     last_verified: '2026-04-20'
+  - task_id: TF-A1-C19
+    parent_task: TF-A1-C
+    priority: P1
+    status: done
+    complexity: M
+    effort_points: 2
+    progress_pct: 100
+    objective: >-
+      externalize plan-route authorization and planner-input enrichment policy into a declarative
+      catalog, converge preview and compile on one canonical planner-envelope seam, and add
+      policy-matrix coverage so route-family ownership cannot drift behind outcome-only tests.
+    dependency: TF-A1-C18
+    target: >-
+      Preview, import, and compile declare authorization and ownership posture through one
+      declarative policy catalog; preview and compile assemble canonical planner input through one
+      shared helper; and route-family policy-matrix tests protect the compile boundary without
+      compatibility shims.
+    evidence_refs:
+      - apps/api/src/application/services/planRoutePolicyCatalog.ts
+      - apps/api/src/application/services/resolveAuthorizedPlannerInputEnvelope.ts
+      - apps/api/test/application/services/planRoutePolicyCatalog.test.ts
+      - docs/planning/closeouts/20260420-tf-a1-c19-plan-route-policy-catalog-and-envelope-convergence-closeout.md
+      - docs/planning/reviews/architecture-and-governance/20260419-plan-route-boundary-remediation-review.md
+      - docs/architecture/components/api/index.md
+      - docs/guides/plan-compile-target-architecture-technical-manual-20260417.md
+    status_reason: >-
+      Completed. Preview, import, and compile now declare route policy through one catalog; preview
+      and compile share one authorized planner-input seam; import carries canonical ownership as one
+      value; and the new policy-matrix tests plus the full `dvt-api` validation baseline are green
+      without compatibility shims.
+    last_verified: '2026-04-20'
   - task_id: TF-A1-D
     priority: P1
     status: done
@@ -2785,14 +2816,14 @@ verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
   verified_on: '2026-04-20'
-  total_tasks: 107
-  total_effort_points: 341
-  completed_weighted_points: 256.64
+  total_tasks: 108
+  total_effort_points: 343
+  completed_weighted_points: 258.64
   lane_progress_pct: 75
   notes: >-
     Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry
     coordination-only effort. `TF-A2` now adds the missing contract-first workspace graph-draft
     persistence boundary so typed web/api/store ownership is frozen before frontend productization
-    continues, `TF-A1-C12..C18` now cover the post-hardening route-facade and compile-boundary
-    ownership cleanup, and the summary values were recomputed from the current lane registry on
-    2026-04-20.
+    continues, `TF-A1-C12..C19` now cover the post-hardening route-facade, compile-boundary
+    ownership cleanup, and declarative route-policy plus canonical-envelope convergence, and the
+    summary values were recomputed from the current lane registry on 2026-04-20.

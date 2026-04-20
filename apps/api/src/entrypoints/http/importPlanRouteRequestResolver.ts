@@ -1,5 +1,6 @@
+import { PLAN_ROUTE_POLICY_CATALOG } from '../../application/services/planRoutePolicyCatalog.js';
+
 import { parseImportPlanRouteInput, type ParsedImportPlanRouteInput } from './importPlanRouteParser.js';
-import { PLAN_ROUTE_AUTHORIZATION } from './planRouteAuthorization.constants.js';
 import {
   createAuthorizedPlanRouteRequestResolver,
   type PlanRouteAuthorizationResolverDeps,
@@ -14,7 +15,7 @@ export const resolveImportPlanRouteRequest = createAuthorizedPlanRouteRequestRes
 >({
   parseRequestBody: parseImportPlanRouteInput,
   selectRequestedScope: (parsedRequest) => parsedRequest.routeContext,
-  action: PLAN_ROUTE_AUTHORIZATION.IMPORT,
+  action: PLAN_ROUTE_POLICY_CATALOG.IMPORT.authorization,
 });
 
 export type ResolvedImportPlanRouteRequest = Awaited<

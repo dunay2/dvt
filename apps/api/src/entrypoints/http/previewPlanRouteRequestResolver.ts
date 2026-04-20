@@ -1,6 +1,7 @@
+import { PLAN_ROUTE_POLICY_CATALOG } from '../../application/services/planRoutePolicyCatalog.js';
+
 import { mapPreviewPlanContractIssue } from './planPreviewContractErrorMapper.js';
 import { validatePreviewProfileContract } from './planPreviewContractGuard.js';
-import { PLAN_ROUTE_AUTHORIZATION } from './planRouteAuthorization.constants.js';
 import {
   createAuthorizedPlanRouteRequestResolver,
   type PlanRouteAuthorizationResolverDeps,
@@ -15,7 +16,7 @@ export const resolvePreviewPlanRouteRequest = createAuthorizedPlanRouteRequestRe
 >({
   parseRequestBody: parsePreviewPlanBody,
   selectRequestedScope: (parsedRequest) => parsedRequest.routeContext,
-  action: PLAN_ROUTE_AUTHORIZATION.PREVIEW,
+  action: PLAN_ROUTE_POLICY_CATALOG.PREVIEW.authorization,
   validateAuthorizedRequest: (resolvedRequest) => {
     const previewContractViolation = validatePreviewProfileContract(
       resolvedRequest.parsedRequest.previewProfile,

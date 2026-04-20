@@ -35,10 +35,18 @@ export function parseImportPlanRouteInput(
       routeContext: routeContext.value,
       command: {
         planRef: toContractPlanRef(planRef.value),
-        tenantId: routeContext.value.tenantId.value,
-        projectId: routeContext.value.projectId.value,
-        environmentId: routeContext.value.environmentId.value,
+        ownership: toPlanOwnership(routeContext.value),
       },
     },
+  };
+}
+
+function toPlanOwnership(
+  routeContext: ParsedPlanRouteContext
+): ImportPlanCommand['ownership'] {
+  return {
+    tenantId: routeContext.tenantId.value,
+    projectId: routeContext.projectId.value,
+    environmentId: routeContext.environmentId.value,
   };
 }

@@ -1,4 +1,4 @@
-import type { ExecutionPlan, PlanRef } from '@dvt/contracts';
+import type { ExecutionPlan, PlanOwnership, PlanRef } from '@dvt/contracts';
 
 export const IMPORT_PLAN_RESULT_KIND = {
   accepted: 'accepted',
@@ -7,9 +7,7 @@ export const IMPORT_PLAN_RESULT_KIND = {
 
 export interface ImportPlanCommand {
   readonly planRef: PlanRef;
-  readonly tenantId: string;
-  readonly projectId: string;
-  readonly environmentId: string;
+  readonly ownership: PlanOwnership;
 }
 
 export type ImportPlanUseCaseResult =
@@ -31,7 +29,7 @@ export class ImportPlanUseCase {
 
   public async execute(command: ImportPlanCommand): Promise<ImportPlanUseCaseResult> {
     const plan = await this.deps.planResolver.fetch(command.planRef);
-    if (!isPlanOwnedByScope(plan, command)) {
+    if (!isPlanOwnedByScope(plan, command.ownership)) {
       return { kind: IMPORT_PLAN_RESULT_KIND.scopeMismatch };
     }
 
@@ -43,18 +41,15 @@ export class ImportPlanUseCase {
   }
 }
 
-function isPlanOwnedByScope(
-  plan: ExecutionPlan,
-  command: Pick<ImportPlanCommand, 'tenantId' | 'projectId' | 'environmentId'>
-): boolean {
-  const ownership = plan.metadata.ownership;
-  if (ownership === undefined) {
+function isPlanOwnedByScope(plan: ExecutionPlan, expectedOwnership: PlanOwnership): boolean {
+  const actualOwnership = plan.metadata.ownership;
+  if (actualOwnership === undefined) {
     return false;
   }
 
   return (
-    ownership.tenantId === command.tenantId &&
-    ownership.projectId === command.projectId &&
-    ownership.environmentId === command.environmentId
+    actualOwnership.tenantId === expectedOwnership.tenantId &&
+    actualOwnership.projectId === expectedOwnership.projectId &&
+    actualOwnership.environmentId === expectedOwnership.environmentId
   );
 }

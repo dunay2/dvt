@@ -43,6 +43,8 @@ flowchart LR
 - [buildProtectedRuntimeModule.ts](../../../../apps/api/src/modules/buildProtectedRuntimeModule.ts)
 - [buildProviderAdapters.ts](../../../../apps/api/src/modules/buildProviderAdapters.ts)
 - [planCompileBoundary.ts](../../../../apps/api/src/modules/planCompileBoundary.ts)
+- [planRoutePolicyCatalog.ts](../../../../apps/api/src/application/services/planRoutePolicyCatalog.ts)
+- [resolveAuthorizedPlannerInputEnvelope.ts](../../../../apps/api/src/application/services/resolveAuthorizedPlannerInputEnvelope.ts)
 - [executePlanRouteFacade.ts](../../../../apps/api/src/entrypoints/http/executePlanRouteFacade.ts)
 - [startRunRoute.ts](../../../../apps/api/src/entrypoints/http/startRunRoute.ts)
 - [previewPlanRoute.ts](../../../../apps/api/src/entrypoints/http/previewPlanRoute.ts)
@@ -55,10 +57,13 @@ flowchart LR
 
 This component is active product code. The protected plan-route family now
 shares one remote-facade executor, one declarative request-resolution recipe,
-and route-declared authorization metadata. Preview observability enrichment
-now binds once at the request boundary used by the preview flow. The
-`plan compile` boundary now converges catalog policy, typed profile selection,
-and planner construction in one root-owned boundary module.
+one declarative route-policy catalog, and one canonical authorized
+planner-input assembler for the preview and compile planner-backed flows.
+Preview observability enrichment now binds once at the request boundary used
+by the preview flow, while import keeps canonical ownership checks separate
+from planner ingress. The `plan compile` boundary now converges catalog
+policy, typed profile selection, and planner construction in one root-owned
+boundary module.
 
 ## Current To Target
 

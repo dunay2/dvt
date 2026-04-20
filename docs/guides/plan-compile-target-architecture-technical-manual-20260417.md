@@ -141,19 +141,20 @@ flowchart TB
 ```mermaid
 flowchart LR
   Route["compilePlanRoute"]
-  Parser["parsePlanCompileRouteInput"]
-  Auth["authorizeExecutionScope"]
+  Request["resolveCompilePlanRouteRequest"]
+  Policy["PLAN_ROUTE_POLICY_CATALOG.COMPILE"]
   UseCase["CompilePlanUseCase"]
-  Envelope["toPlanCompilePlannerEnvelope"]
+  Envelope["resolveAuthorizedPlannerInputEnvelope"]
   Profile["PlanCompileProfileSpec"]
   Resolver["resolveStepCatalog"]
   Builder["buildPlanCompilePlanner"]
   Planner["PlannerFacade"]
   Presenter["buildPlanCompileResponse"]
 
-  Route --> Parser
-  Route --> Auth
+  Route --> Request
+  Request --> Policy
   Route --> UseCase
+  UseCase --> Policy
   UseCase --> Envelope
   UseCase --> Builder
   Builder --> Profile
@@ -204,7 +205,8 @@ flowchart LR
 | plan compile request and response contract     | `packages/@dvt/contracts`            | caller-visible DTOs and validation semantics               | route policy or runtime composition     |
 | compile route and route contract parser        | `apps/api` HTTP entrypoint layer     | transport parsing, auth handoff, response status mapping   | planner orchestration or catalog policy |
 | compile application service                    | `apps/api` application layer         | compile-only orchestration over plain data                 | HTTP concerns or persistence lifecycle  |
-| compile envelope mapper                        | `apps/api` application support layer | canonical input assembly for planner                       | auth logic or route formatting          |
+| plan-route policy catalog                      | `apps/api` application support layer | route action metadata plus planner-input enrichment policy | planner behavior or HTTP response text  |
+| authorized planner-input assembler             | `apps/api` application support layer | canonical input assembly for planner-backed plan routes    | auth policy ownership or route parsing  |
 | compile profile selector                       | `apps/api` composition root          | choose one typed boundary policy                           | route-local literals                    |
 | step catalog resolver                          | `apps/api` composition root          | merge built-ins plus approved plugin contributions         | mutable runtime registry semantics      |
 | planner facade and deterministic plan assembly | `@dvt/planner`                       | graph validation and `ExecutionPlan` derivation            | HTTP or persistence concerns            |
@@ -226,7 +228,7 @@ Interpretation:
 | `PlanCompileRequestV1`               | external caller or SDK         | compile route                    | graph source, selection, execution scope context  | compile request stays generic and non-dbt-first                |
 | auth and authorization seam          | compile route                  | authentication and RBAC services | principal plus tenant or project scope            | compile never bypasses protected runtime scope                 |
 | compile application service boundary | compile route                  | `CompilePlanUseCase`             | parsed request plus authorized scope              | orchestration remains transport-agnostic                       |
-| planner ingress envelope seam        | compile application service    | planner facade                   | canonical planner envelope plus resolved catalog  | compile uses one planner model only                            |
+| planner ingress envelope seam        | compile application service    | planner facade                   | route-policy-selected canonical planner envelope  | compile uses one planner model only                            |
 | catalog resolution seam              | compile composition root       | catalog resolver                 | built-ins, approved plugin packs, compile profile | unknown families and kinds fail closed                         |
 | compile response contract            | compile presenter              | external caller or SDK           | `ExecutionPlan` plus compile metadata             | response never implies persistence or executability validation |
 | preview lifecycle seam               | client or neighboring boundary | plan lifecycle services          | optional persisted plan request                   | compile does not cross this seam implicitly                    |
@@ -235,8 +237,8 @@ Interpretation:
 Observability note:
 
 - compile request observability supports extension keys
-- compile envelope mapping must preserve extension keys instead of narrowing to
-  a fixed field subset
+- the shared authorized planner-input assembler must preserve extension keys
+  instead of narrowing to a fixed field subset
 
 ## Domain and class relationship view
 

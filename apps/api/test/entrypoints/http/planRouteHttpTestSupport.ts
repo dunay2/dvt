@@ -65,14 +65,25 @@ export function okAuthDeps(): TestAuthDeps {
     authenticator: {
       authenticateBearerToken: vi.fn(async () => ({
         ok: true,
-        principal: { principalId: 'principal-1' },
+        principal: {
+          principalId: 'principal-1',
+        },
       })),
     },
     authorizer: {
       authorize: vi.fn(async () => ({
         ok: true,
         context: {
-          principal: { principalId: 'principal-1' },
+          principal: {
+            principalId: 'principal-1',
+          },
+          scope: {
+            tenantId: { value: 'tenant-1' },
+            projectId: { value: 'project-1' },
+            environmentId: { value: 'env-1' },
+          },
+          action: { kind: 'command', name: 'run:start' },
+          requestId: 'req-test-auth',
           authorizedAt: new Date('2026-04-05T00:00:00.000Z'),
         },
       })),

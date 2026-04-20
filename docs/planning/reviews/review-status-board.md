@@ -58,8 +58,8 @@ Additional active rationale:
 
 - [20260419 Plan-route boundary remediation review](./architecture-and-governance/20260419-plan-route-boundary-remediation-review.md)
   - domain: `architecture-and-governance`
-  - role: reference review for the closed plan-route remediation and maturity slices; preview observability ownership, plan-route authorization metadata, the declarative request-resolution recipe, and compile-boundary ownership convergence are closed by `TF-A1-C15..TF-A1-C18`
-  - linkage: `TF-A1-C12..TF-A1-C18`
+  - role: reference review for the closed plan-route remediation and maturity slices; preview observability ownership, route-policy catalog hardening, the canonical planner-input seam, the declarative request-resolution recipe, and compile-boundary ownership convergence are closed by `TF-A1-C15..TF-A1-C19`
+  - linkage: `TF-A1-C12..TF-A1-C19`
   - status: `reference`
   - progress: `n/a`
 

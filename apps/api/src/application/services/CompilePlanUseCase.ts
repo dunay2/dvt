@@ -8,7 +8,8 @@ import type {
 
 import type { AuthorizedCommandExecutionContext } from '../ports/authContract.js';
 
-import { toPlanCompilePlannerEnvelope } from './planCompilePlannerEnvelopeMapper.js';
+import { PLAN_ROUTE_POLICY_CATALOG } from './planRoutePolicyCatalog.js';
+import { resolveAuthorizedPlannerInputEnvelope } from './resolveAuthorizedPlannerInputEnvelope.js';
 
 export interface CompilePlanCommand {
   readonly graphSource: GenericGraphSourceV1;
@@ -33,8 +34,22 @@ export class CompilePlanUseCase {
     command: CompilePlanCommand,
     context: AuthorizedCommandExecutionContext
   ): Promise<CompilePlanResult> {
+    const plannerInputSeed = {
+      graphSource: command.graphSource,
+      selection: command.selection,
+      ...(command.policies === undefined ? {} : { policies: command.policies }),
+      ...(command.environment === undefined ? {} : { environment: command.environment }),
+      ...(command.observability === undefined
+        ? {}
+        : { observability: command.observability }),
+    };
+
     const buildResult = await this.deps.planner.buildPlan(
-      toPlanCompilePlannerEnvelope(command, context)
+      resolveAuthorizedPlannerInputEnvelope(
+        plannerInputSeed,
+        context,
+        PLAN_ROUTE_POLICY_CATALOG.COMPILE.plannerInput
+      )
     );
 
     return {

@@ -12,14 +12,12 @@ import type {
 import type { AuthorizedCommandExecutionContext } from '../ports/authContract.js';
 import type { StartRunPlannerEnvironmentInput } from '../ports/startRunCommandContract.js';
 
-import { resolveCanonicalPlannerInputEnvelope } from './resolveCanonicalPlannerInputEnvelope.js';
+import { PLAN_ROUTE_POLICY_CATALOG } from './planRoutePolicyCatalog.js';
+import { resolveAuthorizedPlannerInputEnvelope } from './resolveAuthorizedPlannerInputEnvelope.js';
 
 type PreviewPlanValidationResult = Awaited<ReturnType<IPlanExecutabilityValidator['validatePlan']>>;
 
 export interface PreviewPlanCommand {
-  readonly tenantId: string;
-  readonly projectId: string;
-  readonly environmentId: string;
   readonly targetAdapter: string;
   readonly graphSource: GenericGraphSourceV1;
   readonly selection: PlannerSelection;
@@ -58,21 +56,21 @@ export class PreviewPlanUseCase {
     command: PreviewPlanCommand,
     context: AuthorizedCommandExecutionContext
   ): Promise<PreviewPlanUseCaseResult> {
-    const plannerInput = resolveCanonicalPlannerInputEnvelope({
+    const plannerInputSeed = {
       graphSource: command.graphSource,
       selection: command.selection,
       ...(command.policies === undefined ? {} : { policies: command.policies }),
       ...(command.environment === undefined ? {} : { environment: command.environment }),
-      ownership: {
-        tenantId: command.tenantId,
-        projectId: command.projectId,
-        environmentId: command.environmentId,
-      },
-      observability: command.observability,
-      requestedBy: context.principal.principalId,
-      requestId: context.requestId,
-      requestedAtIso: context.authorizedAt.toISOString(),
-    });
+      ...(command.observability === undefined
+        ? {}
+        : { observability: command.observability }),
+    };
+
+    const plannerInput = resolveAuthorizedPlannerInputEnvelope(
+      plannerInputSeed,
+      context,
+      PLAN_ROUTE_POLICY_CATALOG.PREVIEW.plannerInput
+    );
 
     const buildResult = await this.deps.planner.buildPlan(plannerInput);
     const planRef = await this.deps.planStore.storePlan(buildResult);

@@ -50,9 +50,6 @@ export function createParsedPreviewPlanRequest(
       provenance: commandInput.provenance,
     },
     command: {
-      tenantId: routePolicy.routeContext.tenantId.value,
-      projectId: routePolicy.routeContext.projectId.value,
-      environmentId: routePolicy.routeContext.environmentId.value,
       targetAdapter: routePolicy.routeContext.targetAdapter,
       graphSource: commandInput.graphSource,
       selection: { selectedNodeIds: commandInput.selectedNodeIds },

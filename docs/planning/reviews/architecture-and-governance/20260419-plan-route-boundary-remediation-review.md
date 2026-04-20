@@ -129,8 +129,12 @@ Interpretation:
   by preview
 - plan-route authorization metadata is now declared explicitly by each route
   wrapper instead of being hidden in the shared resolver
+- plan-route authorization and planner-input enrichment posture now live in one
+  declarative route-policy catalog
 - plan-route request resolution now uses one declarative shared recipe with
   route-local parser, action, scope, and guard declarations
+- preview and compile now assemble canonical planner input through one shared
+  authorized planner-input seam
 - compile catalog, profile, and planner-builder ownership now converge behind
   one root-owned boundary module instead of three thin composition wrappers
 - compile normalization now has one canonical owner at the contract-parse
@@ -243,6 +247,7 @@ adapter glue.
 | Observability enrichment  | one owner per boundary stage                                                 | preview observability shaping is bound once in request binding and passed through by the application service | closed in active code              |
 | Authorization metadata    | route wrappers declare action semantics and helpers accept policy as input   | preview/import/compile pass explicit action metadata into the shared authorization resolver                  | materially codified                |
 | Request-resolution recipe | wrappers declare route-local policy over one shared workflow                 | preview/import/compile now use one builder for parse plus authorize plus optional guard                      | materially codified                |
+| Planner-input assembly    | one canonical builder attaches ownership and request metadata                | preview and compile now share one authorized planner-input helper selected from a route-policy catalog       | materially codified                |
 | Boundary policy ownership | one composition owner packages policy facts and builder recipe               | one `planCompileBoundary` module now owns catalog, profile, and planner construction                         | materially converged               |
 | Ubiquitous language       | one term per concept across contracts, services, docs                        | active code and active guides now use `plan compile` for the compile boundary                                | materially aligned                 |
 | Ownership policy          | explicit domain metadata or policy port                                      | import enforces `ExecutionPlan.metadata.ownership`                                                           | closed in active code              |
@@ -459,6 +464,21 @@ Target:
   compatibility shims
 - keep the compile planner fail-closed while reducing module-level sprawl
 
+### TF-A1-C19 - Declare route policy catalog and canonical planner-input seam
+
+Status:
+
+- closed in active code, docs, and tests on 2026-04-20
+
+Target:
+
+- keep preview/import/compile route policy in one declarative catalog instead
+  of splitting action and planner-input ownership metadata
+- let preview and compile build canonical planner input through one shared
+  authorized seam instead of separate application helpers
+- add route-family policy-matrix tests so future drift is caught before it
+  escapes as route outcomes
+
 ## Review verdict
 
 This branch improved the architecture.
@@ -473,10 +493,14 @@ It did not merely move code around:
 - plan-route authorization metadata is now explicit at the route-wrapper seam
 - route-family request resolution is now expressed through one declarative
   builder instead of wrapper-specific orchestration glue
+- route-family authorization and planner-input posture now live in one
+  declarative policy catalog
+- preview and compile now share one authorized planner-input seam
 - compile-boundary policy ownership now converges in one root-owned module
   instead of three thin composition seams
 
 The seam-level residuals captured by this review are now closed. What remains
 after this point is lower-order hardening, not ambiguity about who owns preview
-enrichment, plan-route authorization metadata, the route-family
-request-resolution recipe, or compile-boundary policy assembly.
+enrichment, route-family policy metadata, the canonical planner-input seam,
+the route-family request-resolution recipe, or compile-boundary policy
+assembly.
