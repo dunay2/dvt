@@ -1,4 +1,4 @@
-import type { MaterializationEvidence } from '@dvt/contracts';
+import type { MaterializationEvidence, TransformationExecutor } from '@dvt/contracts';
 import { continueAsNew, sleep } from '@temporalio/workflow';
 
 import { eventActivities } from './runPlanWorkflow.activities.js';
@@ -11,6 +11,7 @@ import type {
   WorkflowCtx,
   WorkflowPlanRef,
 } from './runPlanWorkflow.types.js';
+import { buildRunCompletedPayload, toOptionalPayload } from './workflowRuntimePayloadHelpers.js';
 
 export async function resolveLayerLoopOutcome(args: {
   layerOutcome: LayerLoopOutcome;
@@ -18,7 +19,7 @@ export async function resolveLayerLoopOutcome(args: {
   planRef: WorkflowPlanRef;
   state: RuntimeWorkflowState;
   continuedAsNewCount: number;
-  runtimeExecutor?: 'postgres' | 'dbt';
+  runtimeExecutor?: TransformationExecutor;
   latestResultEvidence?: MaterializationEvidence;
 }): Promise<RunPlanWorkflowResult> {
   if (args.layerOutcome.kind === 'terminal') {
@@ -57,7 +58,7 @@ async function completeRunAfterLayerLoop(args: {
   planRef: WorkflowPlanRef;
   state: RuntimeWorkflowState;
   continuedAsNewCount: number;
-  runtimeExecutor?: 'postgres' | 'dbt';
+  runtimeExecutor?: TransformationExecutor;
   latestResultEvidence?: MaterializationEvidence;
 }): Promise<RunPlanWorkflowResult> {
   await eventActivities.emitEvent({
@@ -77,31 +78,11 @@ async function completeRunAfterLayerLoop(args: {
 
 type RunPlanWorkflowContinueAsNew = (input: RunPlanWorkflowInput) => Promise<RunPlanWorkflowResult>;
 
-function buildRunCompletedPayload(
-  runtimeExecutor: 'postgres' | 'dbt' | undefined,
-  latestResultEvidence: MaterializationEvidence | undefined
-): Record<string, unknown> | undefined {
-  if (runtimeExecutor === undefined && latestResultEvidence === undefined) {
-    return undefined;
-  }
-
-  return {
-    ...(runtimeExecutor === undefined ? {} : { executor: runtimeExecutor }),
-    ...(latestResultEvidence === undefined ? {} : { resultEvidence: latestResultEvidence }),
-  };
-}
-
-function toOptionalPayload(payload: Record<string, unknown> | undefined): {
-  payload?: Record<string, unknown>;
-} {
-  return payload === undefined ? {} : { payload };
-}
-
 export async function markWorkflowFailedIfNeeded(
   state: RuntimeWorkflowState,
   ctx: WorkflowCtx,
   planRef: WorkflowPlanRef,
-  runtimeExecutor?: 'postgres' | 'dbt'
+  runtimeExecutor?: TransformationExecutor
 ): Promise<void> {
   if (state.status === 'CANCELLED' || state.status === 'FAILED') {
     return;
@@ -128,7 +109,7 @@ export async function bootstrapFirstExecutionIfNeeded(
   nextLayerIndex: number,
   ctx: WorkflowCtx,
   planRef: WorkflowPlanRef,
-  runtimeExecutor?: 'postgres' | 'dbt'
+  runtimeExecutor?: TransformationExecutor
 ): Promise<void> {
   if (nextLayerIndex !== 0) {
     return;

@@ -27,7 +27,11 @@ For full task-level tracking use the lane YAML registry linked from
   dashboard and alert evidence for runtime SLAs still remain under
   `AR-C2-T2/T3`, broader boundary hardening continues under `WE-HX`, and Lane D
   now owns the pointer-based workflow input hardening plus the post-vertical
-  retention follow-through rather than only proof repeatability.
+  retention follow-through rather than only proof repeatability. The branch
+  review also made explicit that DBT remains partially embedded in the default
+  `@dvt/adapter-temporal` package surface even though it is no longer part of
+  engine-kernel semantics, so that coupling now remains visible as runtime
+  hardening debt instead of hidden cleanup.
 
 ### `API and Admission`
 

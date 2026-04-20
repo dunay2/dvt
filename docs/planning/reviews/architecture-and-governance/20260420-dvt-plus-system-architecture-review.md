@@ -79,6 +79,16 @@ baseline. These are real improvements, not optimism:
 - The old criticism that the Postgres state adapter was one fused blob is now
   stale. `PostgresStateStoreRuntime` composes metadata, snapshots, events,
   outbox, and lineage collaborators explicitly.
+- `RunPlanWorkflow` is no longer one oversized transaction script. Lifecycle,
+  layer execution, signals, cursor parsing, artifact shaping, and cancellation
+  now live in focused workflow helper modules. That is a real Fowler-style
+  extract-module improvement: orchestration stayed thin while local policy
+  moved closer to its reason to change.
+- The branch did not fully finish the adapter/plugin boundary. DBT is
+  operationally optional at the worker composition root, but still built into
+  the default step-activity registry and public surface of
+  `@dvt/adapter-temporal`. That is better than kernel leakage, but it is not
+  the same thing as a fully externalized plugin seam.
 
 Those are genuine pattern improvements. They do not remove the remaining scale,
 truth, and replaceability problems.
@@ -536,6 +546,13 @@ layer is equally mature.
 | High-level architecture docs lag the shipped seams      | `docs/architecture/reference-architecture.md` does not show the explicit `IRunEnrichmentService` split, plan validation lifecycle, or current canonical plan-route seam | Top-level diagrams are behind branch reality                                 |
 | Read-side maturity lags the system claim                | `ListRunsUseCase` and `GetRunStatusUseCase` still assemble broad reads directly over low-level stores                                                                   | "State-driven UI" is true only for narrow paths, not for fleet-scale reading |
 
+Additional branch-specific drift:
+
+- DBT still sits in the adapter default surface. `createDefaultStepActivityRegistry()`
+  auto-registers `DbtStepActivity`, `ActivityDeps` exposes `dbtPluginRunner`,
+  and the adapter barrel still re-exports DBT runtime seams. Worker-level
+  pluginization is real, but package-level decoupling is still overstated.
+
 ### Diagram 1: Current authority map
 
 ```mermaid
@@ -566,6 +583,27 @@ flowchart LR
     Temporal --- PayloadRisk
     API --- ReadRisk
     Engine --- TruthRisk
+```
+
+### Diagram 1B: Temporal adapter branch reality
+
+```mermaid
+flowchart LR
+    Host[apps/temporal-worker]
+    Adapter[@dvt/adapter-temporal]
+    Registry[createDefaultStepActivityRegistry]
+    DbtActivity[DbtStepActivity]
+    DbtRunner[DbtCliPluginRunner]
+    Future[Future non-DBT executors]
+    Risk[Risk: DBT is optional in composition,\nbut built-in in the adapter default surface]
+
+    Host --> Adapter
+    Adapter --> Registry
+    Registry --> DbtActivity
+    Adapter --> DbtRunner
+    Future -. explicit registration .-> Adapter
+    Registry --- Risk
+    DbtRunner --- Risk
 ```
 
 ### Diagram 2: Target maturity moves
@@ -792,6 +830,13 @@ Mature systems at this horizon do four things that DVT still needs:
 | Hexagonal      | Strong                     | Core logic mostly depends on ports and contracts; adapters are real adapters, not disguised domain services              |
 | OOP            | Pragmatic, not rich-domain | The system uses service objects and collaborators well; it is not a rich-entity domain model, which is fine here         |
 | CQRS           | Partially mature           | Command side is disciplined; read side is still under-specialized for list/fleet/cost use cases                          |
+
+Branch-specific refactor note:
+
+- Fowler-style refactors improved materially in this branch. The Temporal
+  workflow moved from one oversized transaction script toward a thin
+  orchestrator plus focused helper modules, but the package-default DBT seams
+  still stop short of a clean plugin boundary.
 
 ## 11. Strategic Recommendations
 

@@ -20,6 +20,8 @@
  *  - Zero `process.env`
  *  - Zero Node.js / DOM APIs
  */
+import type { TransformationExecutor } from '@dvt/contracts';
+
 import { segmentActivities } from './runPlanWorkflow.activities.js';
 import { finalizeNativeCancellationIfNeeded } from './runPlanWorkflow.cancellation.js';
 import { executePlanLayers } from './runPlanWorkflow.layers.js';
@@ -55,7 +57,7 @@ export async function runPlanWorkflow(input: RunPlanWorkflowInput): Promise<RunP
     latestResultEvidence: ctrl.latestResultEvidence,
   };
 
-  let runtimeExecutor: 'postgres' | 'dbt' | undefined;
+  let runtimeExecutor: TransformationExecutor | undefined;
 
   try {
     const firstSegment = await segmentActivities.resolveExecutionSegment({
