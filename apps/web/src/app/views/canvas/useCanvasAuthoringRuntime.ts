@@ -87,9 +87,11 @@ export function useCanvasAuthoringRuntime({
         inspectorNodeId,
         draftSaveStatus: draftFlow.draftSaveStatus,
         canPersistDraftTransport,
+        draftReadModel: draftFlow.draftReadModel,
       }),
     [
       canPersistDraftTransport,
+      draftFlow.draftReadModel,
       draftFlow.draftSaveStatus,
       draftFlow.draftSession,
       draftFlow.graphModel.canonicalEdges,

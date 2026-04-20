@@ -209,6 +209,20 @@ real branch state after the hard cut:
     the typed remote projection has no persisted positions
   - conflict and missing-remote recovery continue to fail closed on the new
     seam
+- route presentation and DDD/SRP hardening:
+  - added `canvasDraftReadModel.ts` so protected draft outcomes are projected
+    once into a route-local read model instead of leaking raw transport shape
+    into controller or route seams
+  - `Canvas.tsx` now delegates derived route state into
+    `canvasRouteViewState.ts` and renders center-surface plus recovery banners
+    through dedicated presentation seams instead of inlining all route-state
+    branching in the adapter component
+  - `useCanvasController.ts` now delegates final route view-model assembly to
+    `canvasControllerViewModel.ts`, keeping the hook as a composition facade
+    over environment, runtime, read-model, and adapter seams
+  - the active route now renders explicit `read_only`, `forbidden`, and typed
+    `format_error` postures from `IWorkspaceGraphDraftAuthoringPort` outcomes
+    rather than collapsing them into generic route failure
 - test support:
   - extended the controller harness to carry the typed authoring port
   - centralized the governed transformation-authoring fixture and used it to
@@ -219,20 +233,23 @@ real branch state after the hard cut:
   - split the lifecycle controller tests by concern so the scope/projection and
     conflict-state assertions no longer accumulate under one higher-complexity
     test seam
+  - split the Canvas route tests by responsibility and added architecture
+    assertions so controller, query-cache, runtime, and route adapters cannot
+    silently re-accumulate boundary or rendering logic
 
 ## Validation
 
 - `pnpm --filter @dvt/web typecheck` - PASS
 - `pnpm --filter @dvt/web test -- --run src/app/services/AppServicesContext.test.tsx src/app/views/canvas/canvasDraftRepository.readWrite.test.ts src/app/views/canvas/canvasDraftRepository.conflict.test.ts` - PASS
 - `pnpm --filter @dvt/web test -- --run src/app/views/canvas/useCanvasController.activeDraftMutations.test.tsx src/app/views/canvas/useCanvasController.draftLifecycle.scopeAndProjection.test.tsx src/app/views/canvas/useCanvasController.draftLifecycle.conflictState.test.tsx src/app/views/canvas/useCanvasController.negative.test.tsx src/app/views/canvas/useCanvasController.reloadConflictRecovery.test.tsx src/app/views/canvas/useCanvasController.reloadHydrationGuards.test.tsx` - PASS
+- `pnpm --filter @dvt/web exec vitest --run src/app/views/Canvas.architecture.test.tsx src/app/views/Canvas.routeStates.test.tsx src/app/views/Canvas.readOnlyStates.test.tsx src/app/views/Canvas.draftRecovery.test.tsx src/app/views/canvas/canvasAuthoringState.test.ts src/app/views/canvas/useCanvasController.architecture.test.ts src/app/views/canvas/useCanvasAuthoringRuntime.architecture.test.ts src/app/views/canvas/useCanvasAuthoringRuntimeDraftFlow.architecture.test.ts src/app/views/canvas/canvasDraftQueryCache.architecture.test.ts` - PASS
 
 ## Residuals
 
 - `TF-E2-A` remains `in_progress`, not done:
-  - route presentation still needs full typed capability closure for writable,
-    read-only, and forbidden posture
-  - typed corrupt or unsupported draft outcomes are not yet surfaced as the
-    route's explicit degraded recovery UX
+  - the route now surfaces explicit `read_only`, `forbidden`, and typed
+    `format_error` states, but the protected-draft read side is still a lossy
+    projection and wider proof-oriented closure remains open
 - `TF-E2-D` and `TF-E2-E` still remain open:
   - Inspector is not yet the full write-authoring surface
   - the wider Cypress and end-to-end proof matrix is not yet closed

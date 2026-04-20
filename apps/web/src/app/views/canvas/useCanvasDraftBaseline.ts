@@ -29,7 +29,7 @@ export function useCanvasDraftBaseline({
   );
   const graphDraftQuery = useQuery({
     queryKey: queryKeys.workspace.graphDraft(workspaceLayoutKey),
-    queryFn: () => draftRepository.readGraphDraft(),
+    queryFn: () => draftRepository.readGraphDraftState(),
   });
 
   return {

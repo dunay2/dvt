@@ -1993,10 +1993,13 @@ tasks:
       `AppServices` exposes `workspaceGraphDraftAuthoringPort`, Canvas draft reads and saves route
       through that typed seam, governed `DesignGraphDraft` payloads are built from scoped canonical
       nodes plus preview-provenance Git context, and controller regression coverage now proves
-      conflict, missing-remote, reload, and layout-only no-save behavior on the new path. The
-      remaining TF-E2 work is explicit capability and typed format-outcome presentation closure on
-      top of that seam, followed by route-owned Inspector editing, execution handoff proof, and the
-      broader operability and end-to-end matrix.
+      conflict, missing-remote, reload, and layout-only no-save behavior on the new path. The route
+      now also renders explicit `read_only`, `forbidden`, and typed `format_error` postures from
+      boundary outcomes, while the controller and route adapters are split through dedicated
+      read-model, view-model, and presentation seams with architecture tests guarding those
+      boundaries. The remaining TF-E2 work is route-owned Inspector editing, execution handoff
+      proof, closure of the still-lossy protected-draft read projection, and the broader operability
+      and end-to-end matrix.
     last_verified: '2026-04-20'
   - task_id: TF-E2-A
     parent_task: TF-E2
@@ -2016,7 +2019,7 @@ tasks:
       unsupported draft outcomes.
     complexity: S
     effort_points: 3
-    progress_pct: 80
+    progress_pct: 90
     evidence_refs:
       - docs/planning/closeouts/20260418-tf-e2-canvas-draft-repository-seam-closeout.md
       - docs/planning/closeouts/20260418-tf-e2-canvas-srp-seams-closeout.md
@@ -2039,9 +2042,13 @@ tasks:
       using scoped canonical nodes, canonical edges, and preview provenance Git metadata before
       hitting the protected boundary. The projected `WorkspaceGraphDraft` DTO now survives only as a
       local projection read model for current route state and tests, not as active-authoring
-      authority. The remaining TF-E2-A closure is explicit writable/read-only/forbidden posture from
-      boundary outcomes, typed format-outcome presentation, and any residual alignment with `TF-A2`
-      and `TF-C4`.
+      authority, and that read side is now localized in `canvasDraftReadModel.ts` instead of
+      bleeding through controller or route code. The Canvas route now renders explicit `read_only`,
+      `forbidden`, and typed `format_error` postures from boundary outcomes, while
+      `useCanvasController` and `Canvas.tsx` have been reduced to composition and presentation
+      facades with dedicated view-model helpers plus architecture tests. The remaining TF-E2-A
+      closure is the still-lossy protected-draft read projection, any wider alignment with `TF-A2`
+      and `TF-C4`, and proof-oriented follow-up under `TF-E2-E`.
     last_verified: '2026-04-20'
   - task_id: TF-E2-B
     parent_task: TF-E2

@@ -1,7 +1,4 @@
-import { type NodeTypes } from '@xyflow/react';
-
-import DbtNodeComponent from '../../components/canvas/DbtNodeComponent';
-import { getRegisteredPluginIds } from '../../plugins/registry';
+import { buildCanvasControllerViewModel } from './canvasControllerViewModel';
 import { useCanvasAuthoringRuntime } from './useCanvasAuthoringRuntime';
 import { useCanvasControllerEnvironment } from './useCanvasControllerEnvironment';
 import { useCanvasControllerReadModel } from './useCanvasControllerReadModel';
@@ -12,11 +9,8 @@ import { useCanvasMutationHandlers } from './useCanvasMutationHandlers';
 import { useCanvasOverlayModel } from './useCanvasOverlayModel';
 import { useCanvasSelectionSync } from './useCanvasSelectionSync';
 
-const nodeTypes: NodeTypes = {
-  dbtNode: DbtNodeComponent,
-};
-
 export function useCanvasController() {
+  const environment = useCanvasControllerEnvironment();
   const {
     dataSourceMode,
     capabilities,
@@ -32,27 +26,9 @@ export function useCanvasController() {
     workspaceBootstrapConfig,
     navigationActions,
     store,
-  } = useCanvasControllerEnvironment();
+  } = environment;
 
-  const {
-    backendPosture,
-    graphModel,
-    draftSession,
-    setDraftSession,
-    draftSaveStatus,
-    reloadLatestDraft,
-    adoptCurrentWorkspaceSnapshot,
-    visibleScope,
-    uiScope,
-    executionScope,
-    isMissingRemoteDraft,
-    isStaleDraftConflict,
-    hasDraftProjectionGap,
-    draftRecoveryReason,
-    draftToolbarState,
-    isDraftRecoveryBlocked,
-    canMutateGraph,
-  } = useCanvasAuthoringRuntime({
+  const authoringRuntime = useCanvasAuthoringRuntime({
     dataSourceMode,
     platformHealthQuery: {
       isPending: platformHealthQuery.isPending,
@@ -73,6 +49,29 @@ export function useCanvasController() {
     previewProvenanceConfig: workspaceBootstrapConfig,
     setCanvasNodePositions: store.setCanvasNodePositions,
   });
+  const {
+    backendPosture,
+    graphModel,
+    draftSession,
+    setDraftSession,
+    draftSaveStatus,
+    draftAccessMode,
+    draftCapabilityReason,
+    draftFormatError,
+    draftFormatMeta,
+    reloadLatestDraft,
+    adoptCurrentWorkspaceSnapshot,
+    visibleScope,
+    uiScope,
+    executionScope,
+    isMissingRemoteDraft,
+    isStaleDraftConflict,
+    hasDraftProjectionGap,
+    draftRecoveryReason,
+    draftToolbarState,
+    isDraftRecoveryBlocked,
+    canMutateGraph,
+  } = authoringRuntime;
 
   useCanvasSelectionSync({
     isBootstrapping: draftSession.syncState === 'bootstrapping',
@@ -169,75 +168,18 @@ export function useCanvasController() {
       impactOverlayEnabled: store.impactOverlayEnabled,
     });
 
-  return {
-    dataSourceMode,
-    isBackendCheckPending: backendPosture.isBackendCheckPending,
-    backendReady: backendPosture.backendReady,
-    backendBlockMessage: backendPosture.backendBlockMessage,
-    isLoadingGraph: graphModel.graphSnapshotQuery.isPending,
-    graphErrorMessage:
-      graphModel.graphSnapshotQuery.error instanceof Error
-        ? graphModel.graphSnapshotQuery.error.message
-        : null,
-    focusMode: store.focusMode,
-    explorerPanelVisible: store.explorerPanelVisible,
-    inspectorPanelVisible: store.inspectorPanelVisible,
-    explorerNodes: graphModel.canonicalNodes,
-    inspectorNode,
-    activeRunId: overlayModel.activeRunId,
-    registeredPlugins: getRegisteredPluginIds(capabilities),
-    userPermissions: store.userPermissions,
-    canvasAuthoringMode,
-    nodesWithImpact,
-    edges: graphModel.edges,
-    nodeTypes,
-    gridSize: store.gridSize,
-    canvasPalette: store.canvasPalette,
-    viewport: store.persistedViewport,
-    onNodesChange: mutationHandlers.handleNodesChange,
-    onEdgesChange: mutationHandlers.handleEdgesChange,
-    onConnect: graphHandlers.onConnect,
-    handleNodeClick: graphHandlers.handleNodeClick,
-    onSelectionChange: graphHandlers.onSelectionChange,
-    handleViewportChange: persistence.handleViewportChange,
-    handleNodeDragStop: persistence.handleNodeDragStop,
-    handleDrop: graphHandlers.handleDrop,
-    handleDragOver: graphHandlers.handleDragOver,
-    handleSourceImportComplete: mutationHandlers.handleSourceImportComplete,
-    importedNodeFocusIds: mutationHandlers.importedNodeFocusIds,
-    handleImportedNodeFocusComplete: mutationHandlers.handleImportedNodeFocusComplete,
-    hideExplorerPanel: store.hideExplorerPanel,
-    showExplorerPanel: store.showExplorerPanel,
-    hideInspectorPanel: store.hideInspectorPanel,
-    showInspectorPanel: store.showInspectorPanel,
-    handleAutoLayout: graphHandlers.handleAutoLayout,
-    handleToggleCostOverlay: overlayModel.handleToggleCostOverlay,
-    toggleImpactOverlay: store.toggleImpactOverlay,
-    toggleColumnLevelLineage: store.toggleColumnLevelLineage,
-    handlePlan: executionActions.handlePlan,
-    handleStartRun: executionActions.handleStartRun,
-    canStartRun: executionActions.canStartRun && !isDraftRecoveryBlocked,
-    planStatusSummary: executionActions.planStatusSummary,
-    exclusiveOverlayMode: overlayModel.exclusiveOverlayMode,
-    canUseCostOverlay: overlayModel.canUseCostOverlay,
-    impactOverlayEnabled: store.impactOverlayEnabled,
-    columnLevelLineageEnabled: store.columnLevelLineageEnabled,
-    transformationValidation,
-    planModalOpen: executionActions.planModalOpen,
-    setPlanModalOpen: executionActions.setPlanModalOpen,
-    draftSaveStatus,
-    draftRecoveryReason,
-    draftToolbarState,
-    draftConflictRevision:
-      draftSession.syncState === 'conflict' ? draftSession.draftRevision : null,
-    hasStaleDraftVersion: isStaleDraftConflict,
-    hasMissingRemoteDraft: isMissingRemoteDraft,
-    hasDraftProjectionGap,
-    reloadLatestDraft,
-    adoptCurrentWorkspaceSnapshot,
-    currentPlan: store.currentPlan,
-    confirmEdgeModal: graphHandlers.confirmEdgeModal,
-    setConfirmEdgeModal: graphHandlers.setConfirmEdgeModal,
-    confirmEdgeCreation: graphHandlers.confirmEdgeCreation,
-  };
+  return buildCanvasControllerViewModel({
+    environment,
+    authoringRuntime,
+    persistence,
+    mutationHandlers,
+    graphHandlers,
+    overlayModel,
+    executionActions,
+    readModel: {
+      transformationValidation,
+      nodesWithImpact,
+      inspectorNode,
+    },
+  });
 }

@@ -1,5 +1,5 @@
 import { act } from 'react';
-import { afterEach, beforeEach, describe, expect, it} from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
   buildRemoteDraftRecord,
@@ -96,17 +96,20 @@ describe('useCanvasController missing remote recovery', () => {
     clearHarnessRemoteDraftRecord(harness);
     await harness.renderProbe();
 
-    setHarnessRemoteDraftRecord(harness, buildRemoteDraftRecord(
-      {
-        nodeIds: ['node_2'],
-        nodePositions: {
-          node_2: { x: 220, y: 120 },
-        },
-        edges: [],
+    setHarnessRemoteDraftRecord(
+      harness,
+      buildRemoteDraftRecord(
+        {
+          nodeIds: ['node_2'],
+          nodePositions: {
+            node_2: { x: 220, y: 120 },
+          },
+          edges: [],
         },
         'rev-restored',
         '2026-04-17T00:00:02Z'
-    ));
+      )
+    );
 
     await act(async () => {
       harness.getLatestResult()?.reloadLatestDraft();
@@ -119,7 +122,9 @@ describe('useCanvasController missing remote recovery', () => {
     expect(harness.state.queryClient.setQueryData).toHaveBeenCalledWith(
       ['workspace', 'graph-draft', WORKSPACE_LAYOUT_KEY],
       expect.objectContaining({
-        revision: 'rev-restored',
+        record: expect.objectContaining({
+          revision: 'rev-restored',
+        }),
       })
     );
   });

@@ -72,6 +72,7 @@ export function useCanvasAuthoringRuntimeDraftFlow({
 
   return {
     graphModel,
+    draftReadModel: graphDraftQuery.data,
     draftSession,
     setDraftSession,
     ...lifecycle,

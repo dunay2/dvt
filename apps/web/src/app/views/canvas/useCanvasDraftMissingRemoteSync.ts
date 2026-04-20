@@ -26,7 +26,7 @@ export function useCanvasDraftMissingRemoteSync({
     if (
       shouldWaitForBootstrapReadiness ||
       draftSession.syncState === 'bootstrapping' ||
-      graphDraftQuery.data != null ||
+      graphDraftQuery.data?.record != null ||
       draftSession.baseline.record == null
     ) {
       return;
@@ -39,7 +39,7 @@ export function useCanvasDraftMissingRemoteSync({
   }, [
     draftSession.baseline.record,
     draftSession.syncState,
-    graphDraftQuery.data,
+    graphDraftQuery.data?.record,
     invalidateInFlightSaveAttempt,
     lastSavedSignatureRef,
     setDraftSaveStatus,

@@ -1,8 +1,8 @@
 import type { Dispatch, SetStateAction } from 'react';
 
-import type { WorkspaceGraphDraftRecord } from '../../ports/workspace';
 import type { CanvasDraftQueryCache } from './canvasDraftQueryCache';
 import type { CanvasDraftRepository } from './canvasDraftRepository';
+import type { CanvasDraftReadModel } from './canvasDraftReadModel';
 import type { CanvasDraftAuthoringPayload } from './canvasDraftAuthoring';
 import type { CanvasDraftSession } from './canvasDraftSession';
 import type {
@@ -35,7 +35,7 @@ type UseCanvasDraftPersistenceArgs = {
   setDraftSaveStatus: Dispatch<SetStateAction<DraftSaveStatus>>;
   invalidateInFlightSaveAttempt: () => void;
   applyReloadedRemoteDraft: (
-    remoteDraft: WorkspaceGraphDraftRecord | null,
+    remoteDraftState: CanvasDraftReadModel,
     reloadedCanonicalSnapshot: CanvasDraftLifecycleCanonicalSnapshot
   ) => void;
   createDraftIdempotencyKey: () => string;

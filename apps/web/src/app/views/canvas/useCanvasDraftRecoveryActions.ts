@@ -1,7 +1,8 @@
 import { useCallback, type Dispatch, type SetStateAction } from 'react';
 
-import type { WorkspaceGraphDraftRecord, WorkspaceGraphSnapshot } from '../../ports/workspace';
+import type { WorkspaceGraphSnapshot } from '../../ports/workspace';
 import type { CanvasDraftQueryCache } from './canvasDraftQueryCache';
+import type { CanvasDraftReadModel } from './canvasDraftReadModel';
 import { adoptCurrentSnapshot, type CanvasDraftSession } from './canvasDraftSession';
 import type { DraftAttemptRefs, DraftSaveStatus } from './canvasDraftLifecycle.types';
 import {
@@ -20,16 +21,16 @@ type UseCanvasDraftRecoveryActionsArgs = {
   setDraftSaveStatus: Dispatch<SetStateAction<DraftSaveStatus>>;
   invalidateInFlightSaveAttempt: () => void;
   applyReloadedRemoteDraft: (
-    remoteDraft: WorkspaceGraphDraftRecord | null,
+    remoteDraftState: CanvasDraftReadModel,
     reloadedCanonicalSnapshot: CanvasDraftLifecycleCanonicalSnapshot
   ) => void;
 };
 
 async function fetchRemoteDraftAndSnapshot(
   draftQueryCache: CanvasDraftQueryCache
-): Promise<[WorkspaceGraphDraftRecord | null, WorkspaceGraphSnapshot]> {
+): Promise<[CanvasDraftReadModel, WorkspaceGraphSnapshot]> {
   return await Promise.all([
-    draftQueryCache.fetchLatestRemoteDraft(),
+    draftQueryCache.fetchLatestRemoteDraftState(),
     draftQueryCache.fetchLatestGraphSnapshot(),
   ]);
 }
@@ -51,13 +52,13 @@ export function useCanvasDraftRecoveryActions({
     setDraftSaveStatus('idle');
 
     fetchRemoteDraftAndSnapshot(draftQueryCache)
-      .then(([remoteDraft, graphSnapshot]) => {
+      .then(([remoteDraftState, graphSnapshot]) => {
         if (refs.saveAttemptGenerationRef.current !== reloadGeneration) {
           return;
         }
 
         applyReloadedRemoteDraft(
-          remoteDraft,
+          remoteDraftState,
           buildCanonicalSnapshotFromWorkspaceSnapshot(graphSnapshot, graphStrategy)
         );
       })

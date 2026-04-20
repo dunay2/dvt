@@ -2,6 +2,7 @@ import { useCallback, type Dispatch, type SetStateAction } from 'react';
 
 import type { WorkspaceGraphDraftRecord } from '../../ports/workspace';
 import type { CanvasDraftQueryCache } from './canvasDraftQueryCache';
+import type { CanvasDraftReadModel } from './canvasDraftReadModel';
 import {
   markRemoteDraftMissing,
   reconcileSnapshot,
@@ -40,11 +41,12 @@ export function useCanvasDraftReloadHydration({
 }: UseCanvasDraftReloadHydrationArgs) {
   return useCallback(
     (
-      remoteDraft: WorkspaceGraphDraftRecord | null,
+      remoteDraftState: CanvasDraftReadModel,
       reloadedCanonicalSnapshot: CanvasDraftLifecycleCanonicalSnapshot
     ) => {
-      draftQueryCache.replaceRemoteDraft(remoteDraft);
+      draftQueryCache.replaceRemoteDraftState(remoteDraftState);
       setDraftSaveStatus('idle');
+      const remoteDraft = remoteDraftState.record;
 
       if (remoteDraft == null) {
         lastSavedSignatureRef.current = null;

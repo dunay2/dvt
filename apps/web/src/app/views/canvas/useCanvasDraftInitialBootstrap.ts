@@ -45,7 +45,7 @@ export function useCanvasDraftInitialBootstrap({
       return;
     }
 
-    const remoteDraft = graphDraftQuery.data ?? null;
+    const remoteDraft = graphDraftQuery.data?.record ?? null;
 
     if (remoteDraft == null) {
       lastSavedSignatureRef.current = null;
@@ -67,7 +67,7 @@ export function useCanvasDraftInitialBootstrap({
   }, [
     canonicalSnapshot,
     draftSession.syncState,
-    graphDraftQuery.data,
+    graphDraftQuery.data?.record,
     lastSavedSignatureRef,
     setCanvasNodePositions,
     setDraftSaveStatus,

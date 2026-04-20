@@ -2,10 +2,10 @@ import type { Dispatch, MutableRefObject, SetStateAction } from 'react';
 
 import type { WorkspaceScope } from '../../ports/sessionContext';
 import type { WorkspaceBootstrapConfig } from '../../services/config/workspaceConfig';
-import type { WorkspaceGraphDraftRecord } from '../../ports/workspace';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { CanvasDraftQueryCache } from './canvasDraftQueryCache';
 import type { CanvasDraftRepository } from './canvasDraftRepository';
+import type { CanvasDraftReadModel } from './canvasDraftReadModel';
 import type { CanvasDraftSession } from './canvasDraftSession';
 import type {
   CanvasDraftLifecycleCanonicalSnapshot,
@@ -19,7 +19,7 @@ export type GraphSnapshotQueryState = {
 };
 
 export type GraphDraftQueryState = {
-  data: WorkspaceGraphDraftRecord | null | undefined;
+  data: CanvasDraftReadModel | undefined;
   isPending: boolean;
   isError: boolean;
 };

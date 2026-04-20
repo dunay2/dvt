@@ -44,6 +44,7 @@ Reading rule:
 Primary implementation anchors:
 
 - [useCanvasController.ts](../../../../../apps/web/src/app/views/canvas/useCanvasController.ts)
+- [canvasControllerViewModel.ts](../../../../../apps/web/src/app/views/canvas/canvasControllerViewModel.ts)
 - [useCanvasControllerEnvironment.ts](../../../../../apps/web/src/app/views/canvas/useCanvasControllerEnvironment.ts)
 - [useCanvasControllerReadModel.ts](../../../../../apps/web/src/app/views/canvas/useCanvasControllerReadModel.ts)
 - [useCanvasAuthoringRuntime.ts](../../../../../apps/web/src/app/views/canvas/useCanvasAuthoringRuntime.ts)
@@ -60,6 +61,7 @@ Primary implementation anchors:
 - [canvasBackendPosture.ts](../../../../../apps/web/src/app/views/canvas/canvasBackendPosture.ts)
 - [canvasAuthoringState.ts](../../../../../apps/web/src/app/views/canvas/canvasAuthoringState.ts)
 - [canvasDraftAuthoring.ts](../../../../../apps/web/src/app/views/canvas/canvasDraftAuthoring.ts)
+- [canvasDraftReadModel.ts](../../../../../apps/web/src/app/views/canvas/canvasDraftReadModel.ts)
 - [canvasDraftRepository.ts](../../../../../apps/web/src/app/views/canvas/canvasDraftRepository.ts)
 - [useCanvasDraftLifecycle.ts](../../../../../apps/web/src/app/views/canvas/useCanvasDraftLifecycle.ts)
 - [useCanvasDraftBootstrapSync.ts](../../../../../apps/web/src/app/views/canvas/useCanvasDraftBootstrapSync.ts)
@@ -100,6 +102,9 @@ Primary implementation anchors:
 - [transformationGraphValidation.ts](../../../../../apps/web/src/app/views/canvas/transformationGraphValidation.ts)
 - [useCanvasNavigationActions.ts](../../../../../apps/web/src/app/views/canvas/useCanvasNavigationActions.ts)
 - [CanvasToolbar.tsx](../../../../../apps/web/src/app/views/canvas/CanvasToolbar.tsx)
+- [CanvasCenterSurface.tsx](../../../../../apps/web/src/app/views/canvas/CanvasCenterSurface.tsx)
+- [CanvasRecoveryBanner.tsx](../../../../../apps/web/src/app/views/canvas/CanvasRecoveryBanner.tsx)
+- [canvasDraftTransportErrorState.ts](../../../../../apps/web/src/app/views/canvas/canvasDraftTransportErrorState.ts)
 - [copy.ts](../../../../../apps/web/src/app/views/canvas/copy.ts)
 
 ## Current Architecture Snapshot
@@ -115,7 +120,8 @@ clear enough to read as DDD rather than just "many smaller hooks".
 Current DDD reading for the active Canvas slice:
 
 - `application seams`
-  `useCanvasController`, `useCanvasControllerEnvironment`,
+  `useCanvasController`, `canvasControllerViewModel`,
+  `useCanvasControllerEnvironment`,
   `useCanvasControllerReadModel`, `useCanvasAuthoringRuntime`,
   `useCanvasDraftLifecycle`, `useCanvasDraftPersistence`,
   `useCanvasDraftBootstrapSync`, `useCanvasExecutionActions`,
@@ -127,9 +133,11 @@ Current DDD reading for the active Canvas slice:
   `canvasDraftRepository`, `IWorkspacePort`,
   `IWorkspaceGraphDraftAuthoringPort`, workspace snapshot and draft contracts
 - `projections and presentation models`
-  `useCanvasAuthoringProjection`, `useCanvasGraphModel`,
-  `useCanvasOverlayModel`, `useCanvasControllerReadModel`,
-  `useCanvasCurrentDraftPayload`, `canvasExecutionState`
+  `canvasDraftReadModel`, `useCanvasAuthoringProjection`,
+  `useCanvasGraphModel`, `useCanvasOverlayModel`,
+  `useCanvasControllerReadModel`, `useCanvasCurrentDraftPayload`,
+  `canvasExecutionState`, `canvasDraftTransportErrorState`,
+  `CanvasCenterSurface`, `CanvasRecoveryBanner`
 - `adapters and route-facing composition`
   `useCanvasControllerEnvironment`, `useCanvasNavigationActions`,
   `useCanvasLayoutPersistence`, `useCanvasGraphHandlers`
@@ -147,6 +155,9 @@ Implemented seams:
 - `useCanvasControllerReadModel`
   owns controller-local read-model derivation for validation, impacted nodes,
   and inspector projection
+- `canvasControllerViewModel`
+  owns final controller view-model assembly so the hook remains a composition
+  facade instead of a route-local DTO constructor
 - `useCanvasAuthoringRuntime`
   is now the Canvas authoring application seam over draft baseline,
   authoring projection, lifecycle composition, and domain-policy derivation
@@ -182,6 +193,9 @@ Implemented seams:
 - `canvasDraftRepository`
   owns graph snapshot access over `IWorkspacePort` and draft read/write over
   `IWorkspaceGraphDraftAuthoringPort`
+- `canvasDraftReadModel`
+  owns the anti-corruption read-side projection from typed protected draft
+  outcomes into the route-local query model consumed by Canvas
 - `useCanvasDraftLifecycle`
   is now a composition seam over draft refs, draft payload projection,
   bootstrap sync, and persistence
@@ -230,6 +244,15 @@ Implemented seams:
   owns locale-resolved Canvas operator copy and shared formatting for
   route-state labels, mutation toasts, typed connection rejections,
   validation-summary codes, and limited-access messages
+- `canvasDraftTransportErrorState`
+  owns typed draft transport posture projection for `forbidden` and
+  `format_error` route states
+- `CanvasCenterSurface`
+  owns center-surface state rendering so `Canvas.tsx` remains a route adapter
+  instead of a state-switch mega-view
+- `CanvasRecoveryBanner`
+  owns recovery-banner rendering for stale, missing-remote, and
+  projection-gap postures
 - `useCanvasExecutionActions`
   owns plan and run orchestration
 - `canvasExecutionState`
@@ -258,6 +281,42 @@ Remaining concentration:
 - `useCanvasAuthoringRuntime`
   still assembles several authoring concerns and remains the heaviest runtime
   seam in the chain
+
+## Aggregate Roots And Read Models
+
+The current slice now has a clearer aggregate and read-model split than the
+earlier hard-cut pass.
+
+- `aggregate root` — `canvasDraftSession.ts`
+  Local authoring truth for scoped nodes, edges, revision, and recovery posture.
+- `repository` — `canvasDraftRepository.ts`
+  Only outbound boundary that may talk to the canonical workspace snapshot and draft persistence.
+- `anti-corruption read model` — `canvasDraftReadModel.ts`
+  Prevents typed protected-draft outcomes from leaking transport details into controller or route.
+- `application facade` — `useCanvasController.ts` + `canvasControllerViewModel.ts`
+  Composes seams and publishes one route-safe view model.
+- `route presentation seams` — `Canvas.tsx`, `CanvasCenterSurface.tsx`, `CanvasRecoveryBanner.tsx`, `canvasDraftTransportErrorState.ts`
+  Keep inbound route/UI adapters thin and explicit.
+
+```mermaid
+flowchart LR
+  Port["IWorkspaceGraphDraftAuthoringPort"] --> Repo["canvasDraftRepository"]
+  Repo --> ReadModel["canvasDraftReadModel"]
+  ReadModel --> Runtime["useCanvasAuthoringRuntime"]
+  Runtime --> Aggregate["CanvasDraftSession aggregate root"]
+  Aggregate --> Controller["useCanvasController facade"]
+  Controller --> ViewModel["canvasControllerViewModel"]
+  ViewModel --> Route["Canvas.tsx"]
+  Route --> Center["CanvasCenterSurface"]
+  Route --> Recovery["CanvasRecoveryBanner"]
+```
+
+Reading rule:
+
+- the aggregate root is route-local and authoritative for working-set edits
+- the repository is the only persistence authority
+- the read model is allowed to be lossy for presentation, but not authoritative
+- route components consume the facade and presentation seams, not the port
 
 ## Current Topology
 
@@ -564,6 +623,22 @@ potential concentration point if their semantics grow:
 The hard-cut command centralization landed first because it removed actual
 duplicated write authority. The remaining UI command split is a narrower
 follow-up concern.
+
+### 3. The read-side projection is still intentionally lossy
+
+`canvasDraftReadModel.ts` now localizes the protected-draft projection, which
+is architecturally better than scattering that mapping across hooks and tests.
+The remaining drift is semantic, not structural:
+
+- `WorkspaceGraphDraftRecord` is still a route-local projection, not the full
+  protected draft
+- projection metadata is sufficient for current route posture, but not yet the
+  full round-trip proof target
+- the authoritative aggregate remains `CanvasDraftSession`, while the
+  repository-backed read model remains presentation-oriented
+
+That drift is currently accepted in `TF-E2-A` and belongs to the broader
+proof-oriented closure under `TF-E2-E`.
 
 ## Target DDD / CQRS / Hexagonal Posture
 

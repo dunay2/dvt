@@ -2,14 +2,14 @@ import type {
   CanvasHarnessMocks,
   CanvasHarnessState,
 } from './useCanvasController.test.types';
-import { projectCanvasHarnessRemoteDraftRecord } from './useCanvasController.test.draftAuthoring';
+import { projectCanvasHarnessDraftReadModel } from './useCanvasController.test.draftAuthoring';
 
-function resolveCurrentGraphDraftQueryData(state: CanvasHarnessState) {
+export function resolveCurrentGraphDraftQueryData(state: CanvasHarnessState) {
   if (state.graphDraftQueryData !== undefined) {
     return state.graphDraftQueryData;
   }
 
-  return projectCanvasHarnessRemoteDraftRecord(state.remoteDraftRecord);
+  return projectCanvasHarnessDraftReadModel(state.remoteDraftRecord);
 }
 
 export function setCanvasHarnessGraphQueryError(
