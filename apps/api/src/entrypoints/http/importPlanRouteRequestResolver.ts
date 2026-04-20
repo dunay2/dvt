@@ -1,26 +1,22 @@
-import type { FastifyRequest } from 'fastify';
-
 import { parseImportPlanRouteInput, type ParsedImportPlanRouteInput } from './importPlanRouteParser.js';
+import { PLAN_ROUTE_AUTHORIZATION } from './planRouteAuthorization.constants.js';
 import {
-  resolveAuthorizedPlanRouteRequest,
+  createAuthorizedPlanRouteRequestResolver,
   type PlanRouteAuthorizationResolverDeps,
-  type ResolvedAuthorizedPlanRouteRequest,
 } from './planRouteRequestResolver.js';
-
-export type ResolvedImportPlanRouteRequest =
-  ResolvedAuthorizedPlanRouteRequest<ParsedImportPlanRouteInput>;
 
 export interface ImportPlanRouteRequestResolverDeps
   extends PlanRouteAuthorizationResolverDeps {}
 
-export function resolveImportPlanRouteRequest(
-  request: FastifyRequest<{ Body: unknown }>,
-  deps: ImportPlanRouteRequestResolverDeps
-): Promise<ResolvedImportPlanRouteRequest> {
-  return resolveAuthorizedPlanRouteRequest(
-    request,
-    deps,
-    parseImportPlanRouteInput(request.body),
-    (parsedRequest) => parsedRequest.routeContext
-  );
-}
+export const resolveImportPlanRouteRequest = createAuthorizedPlanRouteRequestResolver<
+  ImportPlanRouteRequestResolverDeps,
+  ParsedImportPlanRouteInput
+>({
+  parseRequestBody: parseImportPlanRouteInput,
+  selectRequestedScope: (parsedRequest) => parsedRequest.routeContext,
+  action: PLAN_ROUTE_AUTHORIZATION.IMPORT,
+});
+
+export type ResolvedImportPlanRouteRequest = Awaited<
+  ReturnType<typeof resolveImportPlanRouteRequest>
+>;

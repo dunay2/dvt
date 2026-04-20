@@ -2,7 +2,7 @@
 title: Plan-route boundary remediation review
 status: Review
 owner: Architecture / API / Planner / Docs
-last_reviewed: 2026-04-19
+last_reviewed: 2026-04-20
 planning_type: review
 ---
 
@@ -24,12 +24,16 @@ This review covers the active plan-route and compile-boundary reshaping in:
 
 - `apps/api/src/entrypoints/http/previewPlanRoute.ts`
 - `apps/api/src/entrypoints/http/previewPlanRouteRequestResolver.ts`
+- `apps/api/src/entrypoints/http/previewPlanRouteRequestBinder.ts`
 - `apps/api/src/entrypoints/http/previewPlanRouteParser.ts`
 - `apps/api/src/entrypoints/http/previewPlanRouteResponseMapper.ts`
 - `apps/api/src/entrypoints/http/importPlanRoute.ts`
 - `apps/api/src/entrypoints/http/importPlanRouteParser.ts`
 - `apps/api/src/entrypoints/http/compilePlanRoute.ts`
+- `apps/api/src/entrypoints/http/planPreviewEnvelopeBinder.ts`
 - `apps/api/src/entrypoints/http/planCompileRouteInputParser.ts`
+- `apps/api/src/entrypoints/http/planRouteAuthorization.constants.ts`
+- `apps/api/src/entrypoints/http/planRouteRequestResolver.ts`
 - `apps/api/src/entrypoints/http/recoverRunRouteParser.ts`
 - `apps/api/src/entrypoints/http/planRouteBodyParser.ts`
 - `apps/api/src/entrypoints/http/planRoutePlanRefParser.ts`
@@ -42,17 +46,22 @@ This review covers the active plan-route and compile-boundary reshaping in:
 - `apps/api/src/entrypoints/http/planRouteTargetAdapterParser.ts`
 - `apps/api/src/application/services/PreviewPlanUseCase.ts`
 - `apps/api/src/application/services/ImportPlanUseCase.ts`
-- `apps/api/src/application/services/CompileExternalPlanUseCase.ts`
-- `apps/api/src/application/services/externalCompilePlannerEnvelopeMapper.ts`
-- `apps/api/src/modules/externalCompileCatalog.ts`
+- `apps/api/src/application/services/CompilePlanUseCase.ts`
+- `apps/api/src/application/services/planCompilePlannerEnvelopeMapper.ts`
+- `apps/api/src/modules/planCompileCatalog.ts`
+- `apps/api/src/modules/planCompileProfileSpec.ts`
+- `apps/api/src/modules/planCompilePlannerProfile.ts`
 - `apps/api/test/entrypoints/http/previewPlanRoute.auth.test.ts`
 - `apps/api/test/entrypoints/http/previewPlanRoute.inputPolicy.test.ts`
 - `apps/api/test/entrypoints/http/previewPlanRoute.outcomes.test.ts`
 - `apps/api/test/entrypoints/http/importPlanRoute.test.ts`
 - `apps/api/test/entrypoints/http/compilePlanRoute.test.ts`
+- `apps/api/test/entrypoints/http/planRouteRequestResolver.test.ts`
 - `apps/api/test/entrypoints/http/planRouteParserHelpers.test.ts`
 - `apps/api/test/entrypoints/http/planRouteScope.test.ts`
 - `docs/architecture/components/api/index.md`
+- `docs/guides/plan-compile-target-architecture-technical-manual-20260417.md`
+- `docs/guides/plan-compile-catalog-extension-technical-manual-20260417.md`
 
 It does not reassess worker composition, runtime execution semantics, or the
 frontend Canvas slices except where they are directly affected by route-boundary
@@ -115,9 +124,19 @@ Interpretation:
 
 - remote-facade intent is now visible in code
 - grammar ownership improved materially
-- route orchestration is still repeated instead of standardized
-- import ownership policy is still weaker than the surrounding architecture
-- compile vocabulary is not yet fully converged
+- preview/import/compile now share one plan-route remote-facade shape in code
+  and the active API component page points to that shared executor
+- import ownership policy now uses canonical `ExecutionPlan.metadata.ownership`
+- preview observability enrichment now binds once at the request boundary used
+  by preview
+- plan-route authorization metadata is now declared explicitly by each route
+  wrapper instead of being hidden in the shared resolver
+- plan-route request resolution now uses one declarative shared recipe with
+  route-local parser, action, scope, and guard declarations
+- compile normalization now has one canonical owner at the contract-parse
+  boundary
+- compile vocabulary is materially converged across active code and living
+  guides
 
 ## What improved
 
@@ -188,157 +207,110 @@ The route stopped owning ad hoc target-adapter branching and now uses a
 parameterized shared parser. That is a good example of replacing convenience
 conditionals with a reusable boundary primitive.
 
+### 5. Request-resolution recipe is now codified as a declarative seam
+
+Evidence:
+
+- `apps/api/src/entrypoints/http/planRouteRequestResolver.ts`
+- `apps/api/src/entrypoints/http/previewPlanRouteRequestResolver.ts`
+- `apps/api/src/entrypoints/http/importPlanRouteRequestResolver.ts`
+- `apps/api/src/entrypoints/http/compilePlanRouteRequestResolver.ts`
+
+After closing the enrichment and authorization seams, the branch also moved the
+request-resolution workflow itself into one owner.
+
+The route-family wrappers now declare:
+
+- request parser
+- authorization action metadata
+- requested-scope selector
+- optional post-authorization guard
+
+That is a meaningful maturity step because the wrappers now read more like
+controller declarations over a framework recipe and less like handcrafted
+adapter glue.
+
 ## Comparison with mature systems
 
-| Concern                 | Mature-system posture                                 | Current branch posture                                         | Judgment                            |
-| ----------------------- | ----------------------------------------------------- | -------------------------------------------------------------- | ----------------------------------- |
-| HTTP remote facade      | controller or endpoint delegates after parse and auth | preview now does this well; import and compile partially do    | improved but not fully standardized |
-| Service layer           | orchestration lives in application service, not route | preview clearly yes; import and compile still lighter or mixed | materially improved                 |
-| Shared boundary grammar | neutral request DTO/parsing owner                     | now largely `planRoute*` instead of `startRun*`                | strong improvement                  |
-| Ubiquitous language     | one term per concept across contracts, services, docs | `plan-compile` and `externalCompile` still compete             | still drifting                      |
-| Ownership policy        | explicit domain metadata or policy port               | import still infers scope from observability tags              | not mature yet                      |
-| Living docs             | active docs match active code                         | active API index still references deleted `planRoutes.ts`      | drift remains                       |
+<!-- markdownlint-disable MD060 -->
+
+| Concern                   | Mature-system posture                                                        | Current branch posture                                                                                       | Judgment                           |
+| ------------------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ | ---------------------------------- |
+| HTTP remote facade        | controller or endpoint delegates after parse and auth                        | preview/import/compile now share one handler factory and executor                                            | standardized for this route family |
+| API boundary recipe       | one explicit parse -> authorize -> guard -> execute -> map response pipeline | the recipe is shared in code and now surfaced from the active API component page                             | materially codified                |
+| Service layer             | orchestration lives in application service, not route                        | preview/import/compile delegate to explicit use cases                                                        | materially improved                |
+| Shared boundary grammar   | neutral request DTO/parsing owner                                            | now largely `planRoute*` instead of `startRun*`                                                              | strong improvement                 |
+| Observability enrichment  | one owner per boundary stage                                                 | preview observability shaping is bound once in request binding and passed through by the application service | closed in active code              |
+| Authorization metadata    | route wrappers declare action semantics and helpers accept policy as input   | preview/import/compile pass explicit action metadata into the shared authorization resolver                  | materially codified                |
+| Request-resolution recipe | wrappers declare route-local policy over one shared workflow                 | preview/import/compile now use one builder for parse plus authorize plus optional guard                      | materially codified                |
+| Ubiquitous language       | one term per concept across contracts, services, docs                        | active code and active guides now use `plan compile` for the compile boundary                                | materially aligned                 |
+| Ownership policy          | explicit domain metadata or policy port                                      | import enforces `ExecutionPlan.metadata.ownership`                                                           | closed in active code              |
+| Living docs               | active docs match active code                                                | active API index and plan-compile guides now match the current route/code surface                            | closed in living docs              |
+
+<!-- markdownlint-enable MD060 -->
 
 ## Findings
 
-### High - Route-facade choreography is still repeated across entrypoints
+### Closed - Preview observability enrichment ownership was split between transport binding and application orchestration
 
 Evidence:
 
-- `apps/api/src/entrypoints/http/previewPlanRoute.ts`
+- `apps/api/src/entrypoints/http/planPreviewEnvelopeBinder.ts`
+- `apps/api/src/entrypoints/http/previewPlanRouteRequestBinder.ts`
+- `apps/api/src/application/services/PreviewPlanUseCase.ts`
+
+Problem:
+
+Preview observability enrichment is currently shaped in two places:
+
+- transport binding adds scope tags plus preview-runtime and provenance extras
+- application orchestration rebuilds the same observability shape before
+  planner execution
+
+This is not yet a functional bug, but it creates two owners for the same
+enrichment semantics. That is a likely future divergence point once preview
+behavior or telemetry policy changes.
+
+Correction status:
+
+- closed on 2026-04-20
+- `previewPlanRouteRequestBinder` now routes the real preview flow through
+  `planPreviewEnvelopeBinder`
+- `PreviewPlanUseCase` now consumes the finished observability payload instead
+  of rebuilding preview scope and provenance metadata
+
+### Closed - Plan-route authorization metadata was implicit in the shared resolver
+
+Evidence:
+
+- `apps/api/src/entrypoints/http/planRouteAuthorization.constants.ts`
+- `apps/api/src/entrypoints/http/planRouteRequestResolver.ts`
 - `apps/api/src/entrypoints/http/previewPlanRouteRequestResolver.ts`
-- `apps/api/src/entrypoints/http/importPlanRoute.ts`
-- `apps/api/src/entrypoints/http/compilePlanRoute.ts`
-- `apps/api/src/entrypoints/http/runCommandRouteExecutor.ts`
+- `apps/api/src/entrypoints/http/importPlanRouteRequestResolver.ts`
+- `apps/api/src/entrypoints/http/compilePlanRouteRequestResolver.ts`
 
 Problem:
 
-The branch removed the god-route, but it did not yet standardize the resulting
-boundary recipe.
+The shared authorization helper standardized the route-family recipe, but it
+also hardcoded `run:start`. That made one helper the silent owner of
+route-family authorization metadata.
 
-Preview/import/compile still repeat the same steps in slightly different
-shapes:
+The route wrappers were therefore reusing a shared resolver without explicitly
+declaring their own action semantics.
 
-- parse or resolve body
-- extract bearer token
-- authorize scope
-- delegate to use case or planner
-- map internal errors
-- send `200` plus route-specific payload
+Correction status:
 
-This is better than before, but mature systems usually codify this into one
-standard remote-facade execution pattern. The repo already has a related
-pattern in `runCommandRouteExecutor.ts`, which makes the repetition more
-visible.
-
-Required correction:
-
-- introduce one root-owned plan-route remote-facade recipe or executor
-- preserve route-specific parsers and mappers
-- do not collapse the result back into another convenience god-module
-
-### Medium - Import ownership still uses observability tags as domain truth
-
-Evidence:
-
-- `apps/api/src/application/services/ImportPlanUseCase.ts`
-
-Problem:
-
-`ImportPlanUseCase` determines scope ownership by reading
-`plan.observability?.tags['dvt.scope.*']`.
-
-That is architecturally weak:
-
-- observability should support diagnosis, not own authorization truth
-- the policy is not explicit as a domain port
-- the plan shape does not make ownership semantics first-class
-
-This is not a correctness failure if the tags are faithfully written, but it is
-not the design level expected from the rest of the repository.
-
-Required correction:
-
-- move scope ownership onto canonical plan metadata or an explicit ownership
-  policy port
-- keep the import use case focused on orchestration, not telemetry decoding
-
-### Medium - Compile normalization is duplicated in transport and application
-
-Evidence:
-
-- `apps/api/src/entrypoints/http/planCompileRouteInputParser.ts`
-- `apps/api/src/application/services/externalCompilePlannerEnvelopeMapper.ts`
-
-Problem:
-
-The compile path normalizes graph source and selection twice:
-
-- once while parsing HTTP input
-- again while mapping the application command to planner envelope
-
-That duplication is small today but structurally dangerous because it creates
-two owners for one canonical shape.
-
-Required correction:
-
-- choose one canonical normalization owner
-- let the other seam only validate, copy, or enrich
-
-### Medium - Compile vocabulary is not yet converged
-
-Evidence:
-
-- `packages/@dvt/contracts/src/schema-packs/plan-compile.ts`
-- `apps/api/src/application/services/externalCompilePlannerEnvelopeMapper.ts`
-- `apps/api/src/modules/externalCompileCatalog.ts`
-- `docs/guides/external-compile-target-architecture-technical-manual-20260417.md`
-
-Problem:
-
-The public contract has moved toward `plan-compile`, while application and
-module naming still say `externalCompile*`, and the living guides still use
-`external compile` as the dominant term.
-
-This may be acceptable if the intended distinction is:
-
-- `plan compile` = public route contract
-- `external compile` = internal product/bounded-context name
-
-That distinction is not documented clearly enough yet, so the code currently
-reads like competing vocabularies rather than a deliberate language split.
-
-Required correction:
-
-- pick one documented vocabulary strategy
-- align code, guides, and active architecture docs to it
-
-### High - Active documentation drift remains
-
-Evidence:
-
-- `docs/architecture/components/api/index.md`
-
-Problem:
-
-The active API component index still references deleted `planRoutes.ts`.
-
-That is not acceptable historical residue. It is a living architecture entry
-point and must describe the real current system.
-
-Required correction:
-
-- remove deleted anchors from active docs
-- distinguish active guidance from historical references
+- closed on 2026-04-20
+- plan-route authorization metadata now lives in
+  `planRouteAuthorization.constants.ts`
+- preview/import/compile wrappers now pass explicit action metadata into
+  `resolveAuthorizedPlanRouteRequest`
 
 ## Repetitions worth watching
 
-These are not all immediate blockers, but they are the next drift sources:
-
-- transport/auth/error choreography repeated across plan routes
-- compile normalization repeated across route and application layers
-- scope tagging repeated as both observability and effective ownership signal
-- compile vocabulary split between `plan-compile` and `externalCompile`
+The previously open route-family repetition in this review is now closed.
+At this layer, the next work is lower-order hardening rather than another
+duplicated preview/import/compile seam.
 
 ## Teachings for future slices
 
@@ -347,65 +319,101 @@ These are not all immediate blockers, but they are the next drift sources:
 The move from `startRun*` grammar to `planRoute*` grammar is the right lesson:
 reuse should follow ownership, not who happened to implement the helper first.
 
-### 2. Once a route pattern appears three times, it becomes framework
+### 2. Once a boundary pipeline appears three times, it becomes framework
 
-Preview/import/compile now repeat enough structure that the repository should
-promote the boundary recipe to a standard.
+The durable lesson is not only to share an executor in code. The repository
+should name and document the pipeline itself:
+
+- parse
+- authorize
+- guard
+- execute
+- map response
 
 ### 3. Do not let telemetry become policy
 
 Observability tags are valuable, but they should not silently become the source
-of truth for import authorization or plan ownership.
+of truth for authorization or plan ownership. This branch already closed one
+instance of that drift by moving import onto canonical ownership metadata.
 
-### 4. Living docs need the same closure discipline as code
+### 4. Give enrichment one owner
+
+If transport binds preview observability, provenance, or scope tags, the
+application should consume that finished shape instead of reconstructing it.
+Split enrichment ownership is how silent semantic drift starts.
+
+### 5. Shared helpers should take policy as input
+
+A reusable helper may own workflow, but it should not silently own route
+policy. If a wrapper has a distinct authorization action, that metadata should
+stay declared at the wrapper seam and be passed into the helper explicitly.
+
+### 6. Normalize one canonical shape in one place
+
+Compile graph-source and selection normalization now lives at the contract
+parse boundary. That is the right ownership line to preserve in future slices.
+
+### 7. Living docs need the same closure discipline as code
 
 Deleting `planRoutes.ts` without updating the active API index leaves a false
 architecture breadcrumb. That kind of drift compounds quickly.
 
-### 5. Vocabulary drift is an architectural bug, not just a naming nit
+### 8. Vocabulary drift is an architectural bug, not just a naming nit
 
-If `plan-compile` and `external compile` mean different things, that difference
-must be explicit. If they mean the same thing, one should win.
+If two names mean the same thing, one should win on active code and active
+guides. Historical proposal and review artifacts can keep older names as
+history, but they should not compete with living documentation.
 
 ## Recommended remediation slices
 
-### TF-A1-C12 - Standardize the plan-route remote facade
-
-Goal:
-
-- keep route-specific parser and presenter seams
-- remove repeated auth and response choreography
-- define one route-execution recipe for preview/import/compile
-
-Acceptance posture:
-
-- plan-route entrypoints share one root-owned remote-facade pattern
-- no entrypoint regresses into a multi-purpose convenience module
-
-### TF-A1-C13 - Replace observability-backed import ownership
-
-Goal:
-
-- stop deriving import ownership from observability tags
-- introduce explicit ownership metadata or a dedicated ownership-policy port
-
-Acceptance posture:
-
-- import ownership is first-class and testable
-- observability remains supporting evidence, not authorization truth
-
 ### TF-A1-C14 - Converge compile vocabulary and active docs
 
-Goal:
+Status:
 
-- remove active documentation drift
-- align `plan-compile` versus `external compile`
-- leave historical references historical, not active
+- closed in the active code and living docs tracked by this review
 
-Acceptance posture:
+### TF-A1-C15 - Unify preview observability enrichment ownership
 
-- active docs no longer reference deleted route modules
-- compile boundary naming follows one declared language strategy
+Status:
+
+- closed in active code and tests on 2026-04-20
+
+Target:
+
+- keep preview observability enrichment in one owner only
+- let the other seam pass through or validate a finished shape
+- stop rebuilding preview provenance/runtime metadata across
+  `planPreviewEnvelopeBinder` and `PreviewPlanUseCase`
+
+### TF-A1-C16 - Externalize plan-route authorization metadata
+
+Status:
+
+- closed in active code and tests on 2026-04-20
+
+Target:
+
+- make preview, import, and compile declare their authorization action
+  metadata explicitly
+- keep `resolveAuthorizedPlanRouteRequest` generic over the route-family
+  execution recipe instead of hardcoding one route action
+- remove the hidden coupling where one shared helper silently owns the
+  authorization policy for the full `plan-*` family
+
+### TF-A1-C17 - Declarativize the plan-route request-resolution recipe
+
+Status:
+
+- closed in active code and tests on 2026-04-20
+
+Target:
+
+- let plan-route wrappers declare parser, action metadata, scope selector, and
+  optional guard through one shared builder
+- keep the request-resolution workflow itself in one owner instead of
+  repeating wrapper-level orchestration
+- move the family one step closer to the mature controller pattern where
+  route files are declarations over a framework recipe, not bespoke glue code
 
 ## Review verdict
 
@@ -417,12 +425,12 @@ It did not merely move code around:
   posture
 - shared route grammar ownership is cleaner
 - parser and test seams are more honest
+- preview observability enrichment now has one real owner in the active flow
+- plan-route authorization metadata is now explicit at the route-wrapper seam
+- route-family request resolution is now expressed through one declarative
+  builder instead of wrapper-specific orchestration glue
 
-The remaining issues are now narrower and more architectural:
-
-- standardize the route-facade recipe
-- stop using observability as ownership truth
-- converge compile vocabulary and living docs
-
-That is the right kind of residual work. The branch reduced structural noise and
-exposed a smaller, more credible follow-up set.
+The seam-level residuals captured by this review are now closed. What remains
+after this point is lower-order hardening, not ambiguity about who owns preview
+enrichment, plan-route authorization metadata, or the route-family
+request-resolution recipe.

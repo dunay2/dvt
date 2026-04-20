@@ -338,7 +338,8 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   [packages/@dvt/planner/test/unit/planner-facade.test.ts](../../../packages/@dvt/planner/test/unit/planner-facade.test.ts),
   [packages/@dvt/contracts/test/validation.test.ts](../../../packages/@dvt/contracts/test/validation.test.ts),
   [apps/api/test/entrypoints/http/planRoutePlanSourcePolicy.test.ts](../../../apps/api/test/entrypoints/http/planRoutePlanSourcePolicy.test.ts),
-  [apps/api/test/entrypoints/http/planRoutes.test.ts](../../../apps/api/test/entrypoints/http/planRoutes.test.ts),
+  [apps/api/test/entrypoints/http/previewPlanRoute.inputPolicy.test.ts](../../../apps/api/test/entrypoints/http/previewPlanRoute.inputPolicy.test.ts),
+  [apps/api/test/entrypoints/http/compilePlanRoute.test.ts](../../../apps/api/test/entrypoints/http/compilePlanRoute.test.ts),
   [apps/api/test/infrastructure/planner/ManifestArtifactResolver.test.ts](../../../apps/api/test/infrastructure/planner/ManifestArtifactResolver.test.ts)
 - Evidence:
   [ED-20260410 - Hard-cut planner-backed runtime ingress to canonical graphSource](../../evidence/ED-20260410-planner-hard-cut-boundary-remediation.md)

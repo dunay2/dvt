@@ -1,7 +1,7 @@
 import type { GenericGraphSourceV1, PlannerSelection, PlanCompileRequestV1SchemaT } from '@dvt/contracts';
 import { parsePlanCompileRequest } from '@dvt/contracts';
 
-import type { CompileExternalPlanCommand } from '../../application/services/CompileExternalPlanUseCase.js';
+import type { CompilePlanCommand } from '../../application/services/CompilePlanUseCase.js';
 
 import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
 import { parsePlanRouteBodyRecord } from './planRouteBodyParser.js';
@@ -10,7 +10,7 @@ import { badRequestResult, type RouteParseResult } from './routeParseIssue.js';
 
 export interface ParsedPlanCompileRouteInput {
   readonly requestedScope: ParsedPlanRouteScope;
-  readonly command: CompileExternalPlanCommand;
+  readonly command: CompilePlanCommand;
 }
 
 export function parsePlanCompileRouteInput(
@@ -25,7 +25,7 @@ export function parsePlanCompileRouteInput(
     return badRequestResult(HTTP_ERROR_REASON.invalidPlanSource);
   }
 
-  let compileRequest: PlanCompileRequestV1SchemaT;
+  let compileRequest: ReturnType<typeof parsePlanCompileRequest>;
   try {
     compileRequest = parsePlanCompileRequest(parsedBody.value);
   } catch {
@@ -42,8 +42,8 @@ export function parsePlanCompileRouteInput(
     value: {
       requestedScope: scopeResult.value,
       command: {
-        graphSource: normalizeCompileGraphSource(compileRequest.graphSource),
-        selection: normalizeCompileSelection(compileRequest.selection),
+        graphSource: toCompileGraphSource(compileRequest.graphSource),
+        selection: toCompileSelection(compileRequest.selection),
         policies: compileRequest.policies,
         environment: compileRequest.environment,
         observability: compileRequest.observability,
@@ -65,7 +65,7 @@ function hasForbiddenCompileIngress(record: Record<string, unknown>): boolean {
   );
 }
 
-function normalizeCompileSelection(selection: PlanCompileRequestV1SchemaT['selection']): PlannerSelection {
+function toCompileSelection(selection: PlanCompileRequestV1SchemaT['selection']): PlannerSelection {
   return {
     selectedNodeIds: selection.selectedNodeIds,
     ...(selection.includeUpstream === undefined
@@ -77,7 +77,7 @@ function normalizeCompileSelection(selection: PlanCompileRequestV1SchemaT['selec
   };
 }
 
-function normalizeCompileGraphSource(
+function toCompileGraphSource(
   graphSource: PlanCompileRequestV1SchemaT['graphSource']
 ): GenericGraphSourceV1 {
   return {

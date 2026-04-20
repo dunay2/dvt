@@ -1,4 +1,4 @@
-import type { CompileExternalPlanResult } from '../../application/services/CompileExternalPlanUseCase.js';
+import type { CompilePlanResult } from '../../application/services/CompilePlanUseCase.js';
 
 import type { PlanRouteFacadeResponse } from './executePlanRouteFacade.js';
 import {
@@ -10,7 +10,7 @@ import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
 import { buildPlanCompileResponse } from './planCompileResponseMapper.js';
 
 export function mapCompilePlanUseCaseResult(
-  result: CompileExternalPlanResult
+  result: CompilePlanResult
 ): PlanRouteFacadeResponse<ReturnType<typeof buildPlanCompileResponse>> {
   return {
     kind: 'accepted',

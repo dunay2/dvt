@@ -1,7 +1,7 @@
+import { CURRENT_EXECUTION_PLAN_SCHEMA_VERSION } from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
-import { CURRENT_EXECUTION_PLAN_SCHEMA_VERSION } from '@dvt/contracts';
-import { CompileExternalPlanUseCase } from '../../../src/application/services/CompileExternalPlanUseCase.js';
+import { CompilePlanUseCase } from '../../../src/application/services/CompilePlanUseCase.js';
 import { EnvironmentId, ProjectId, TenantId } from '../../../src/domain/auth/types.js';
 
 const AUTHORIZED_CONTEXT = {
@@ -75,7 +75,7 @@ const COMPILE_COMMAND = {
   observability: undefined,
 } as const;
 
-describe('CompileExternalPlanUseCase', () => {
+describe('CompilePlanUseCase', () => {
   it('delegates compile-only planning through the canonical planner envelope', async () => {
     const planner = {
       buildPlan: vi.fn(async () => ({
@@ -85,7 +85,7 @@ describe('CompileExternalPlanUseCase', () => {
       })),
     };
 
-    const useCase = new CompileExternalPlanUseCase({
+    const useCase = new CompilePlanUseCase({
       planner: planner as never,
     });
 
@@ -114,7 +114,7 @@ describe('CompileExternalPlanUseCase', () => {
       })),
     };
 
-    const useCase = new CompileExternalPlanUseCase({
+    const useCase = new CompilePlanUseCase({
       planner: planner as never,
     });
 

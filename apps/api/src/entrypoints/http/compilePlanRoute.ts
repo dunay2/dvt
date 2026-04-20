@@ -1,6 +1,6 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
 
-import type { CompileExternalPlanUseCase } from '../../application/services/CompileExternalPlanUseCase.js';
+import type { CompilePlanUseCase } from '../../application/services/CompilePlanUseCase.js';
 
 import {
   resolveCompilePlanRouteRequest,
@@ -13,7 +13,7 @@ import {
 import { createPlanRouteHandler } from './executePlanRouteFacade.js';
 
 type CompilePlanRouteDeps = CompilePlanRouteRequestResolverDeps & {
-  readonly useCase: Pick<CompileExternalPlanUseCase, 'execute'>;
+  readonly useCase: Pick<CompilePlanUseCase, 'execute'>;
 };
 
 export const compilePlanRoute = createPlanRouteHandler({

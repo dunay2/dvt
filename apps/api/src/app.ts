@@ -5,7 +5,7 @@ import sensible from '@fastify/sensible';
 import Fastify, { type FastifyInstance, type FastifyRequest } from 'fastify';
 
 import { CancelRunUseCase } from './application/services/cancelRunUseCase.js';
-import { CompileExternalPlanUseCase } from './application/services/CompileExternalPlanUseCase.js';
+import { CompilePlanUseCase } from './application/services/CompilePlanUseCase.js';
 import { GetRunEventsUseCase } from './application/services/getRunEventsUseCase.js';
 import { GetRunStatusUseCase } from './application/services/getRunStatusUseCase.js';
 import { ImportPlanUseCase } from './application/services/ImportPlanUseCase.js';
@@ -204,8 +204,8 @@ export async function buildApp(): Promise<{ app: FastifyInstance; ctx: AppContex
     );
     const listRunsUseCase = new ListRunsUseCase(protectedModule.stateStore.read);
     const getRunEventsUseCase = new GetRunEventsUseCase(protectedModule.stateStore.read);
-    const compileExternalPlanUseCase = new CompileExternalPlanUseCase({
-      planner: protectedModule.externalCompilePlanner,
+    const compilePlanUseCase = new CompilePlanUseCase({
+      planner: protectedModule.planCompilePlanner,
     });
     const previewPlanUseCase = new PreviewPlanUseCase({
       planner: protectedModule.planner,
@@ -252,7 +252,7 @@ export async function buildApp(): Promise<{ app: FastifyInstance; ctx: AppContex
       compilePlanRoute(request as never, reply, {
         authenticator: protectedModule.authenticator,
         authorizer: protectedModule.authorizer,
-        useCase: compileExternalPlanUseCase,
+        useCase: compilePlanUseCase,
       })
     );
     app.post(RUNTIME_ROUTE_PATH.plansImport, async (request, reply) =>

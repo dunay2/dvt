@@ -2,7 +2,7 @@
 title: apps/api
 status: Active
 owner: Architecture / Docs
-last_reviewed: 2026-04-08
+last_reviewed: 2026-04-20
 ---
 
 # apps/api
@@ -42,15 +42,20 @@ flowchart LR
 - [server.ts](../../../../apps/api/src/server.ts)
 - [buildProtectedRuntimeModule.ts](../../../../apps/api/src/modules/buildProtectedRuntimeModule.ts)
 - [buildProviderAdapters.ts](../../../../apps/api/src/modules/buildProviderAdapters.ts)
+- [executePlanRouteFacade.ts](../../../../apps/api/src/entrypoints/http/executePlanRouteFacade.ts)
 - [startRunRoute.ts](../../../../apps/api/src/entrypoints/http/startRunRoute.ts)
-- [planRoutes.ts](../../../../apps/api/src/entrypoints/http/planRoutes.ts)
+- [previewPlanRoute.ts](../../../../apps/api/src/entrypoints/http/previewPlanRoute.ts)
+- [importPlanRoute.ts](../../../../apps/api/src/entrypoints/http/importPlanRoute.ts)
+- [compilePlanRoute.ts](../../../../apps/api/src/entrypoints/http/compilePlanRoute.ts)
 - [adminRoutes.ts](../../../../apps/api/src/entrypoints/http/adminRoutes.ts)
 - [getRunRoute.ts](../../../../apps/api/src/entrypoints/http/getRunRoute.ts)
 
 ## Current Posture
 
-This component is active product code. The remaining work is about contract
-clarity and incremental hardening, not about inventing the API layer.
+This component is active product code. The protected plan-route family now
+shares one remote-facade executor, one declarative request-resolution recipe,
+and route-declared authorization metadata. Preview observability enrichment
+now binds once at the request boundary used by the preview flow.
 
 ## Current To Target
 

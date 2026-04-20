@@ -2,7 +2,7 @@
 title: Contracts And State-Store Boundary
 owner: Product / Architecture / Delivery / Docs
 status: Active
-last_reviewed: '2026-04-16'
+last_reviewed: '2026-04-20'
 goal:
   Close the state-store boundary, retire contract ownership drift, and keep governance startup
   executable.
@@ -2486,28 +2486,120 @@ tasks:
   - task_id: TF-A1-C14
     parent_task: TF-A1-C
     priority: P1
-    status: queued
+    status: done
     complexity: S
     effort_points: 1
-    progress_pct: 0
+    progress_pct: 100
     objective: >-
-      converge the compile-boundary ubiquitous language and active architecture docs so
-      `plan-compile`, `external compile`, and living API guidance describe one clear ownership
-      model.
+      converge the compile-boundary ubiquitous language and active architecture docs so `plan
+      compile` is the active term, historical `external compile` wording stays historical, and
+      living API guidance describes one clear ownership model.
     dependency: TF-A1-C13
     target: >-
       Active docs stop referencing deleted route modules, compile-boundary names follow one declared
       vocabulary strategy, and historical references remain historical instead of competing with
       current architecture truth.
     evidence_refs:
+      - docs/evidence/ED-20260419-plan-compile-language-alignment-arc2.md
+      - docs/planning/closeouts/20260419-tf-a1-c14-plan-compile-language-alignment-closeout.md
       - docs/planning/reviews/architecture-and-governance/20260419-plan-route-boundary-remediation-review.md
       - docs/architecture/components/api/index.md
-      - docs/guides/external-compile-target-architecture-technical-manual-20260417.md
+      - docs/guides/plan-compile-target-architecture-technical-manual-20260417.md
+      - docs/guides/plan-compile-catalog-extension-technical-manual-20260417.md
       - packages/@dvt/contracts/src/schema-packs/plan-compile.ts
     status_reason: >-
-      Queued from the 2026-04-19 architecture remediation review; active docs and compile-boundary
-      naming still drift between deleted route anchors, `plan-compile`, and `external compile`.
+      Completed. Active code and active guides now use `plan compile` as the compile-only
+      vocabulary, the API component page references the shared plan-route facade instead of deleted
+      route anchors, and compile graph-source/selection normalization now has one owner at the route
+      parser boundary.
     last_verified: '2026-04-19'
+  - task_id: TF-A1-C15
+    parent_task: TF-A1-C
+    priority: P1
+    status: done
+    complexity: S
+    effort_points: 1
+    progress_pct: 100
+    objective: >-
+      unify preview observability enrichment ownership so transport binding and application
+      orchestration stop rebuilding the same preview telemetry and provenance shape.
+    dependency: TF-A1-C14
+    target: >-
+      `planPreviewEnvelopeBinder` or `PreviewPlanUseCase` becomes the single owner of preview
+      observability enrichment, the other seam passes through or validates a finished shape, and
+      preview provenance/runtime metadata assembly no longer drifts across two layers.
+    evidence_refs:
+      - docs/planning/reviews/architecture-and-governance/20260419-plan-route-boundary-remediation-review.md
+      - docs/planning/closeouts/20260420-tf-a1-c15-c16-plan-route-seam-hardening-closeout.md
+      - apps/api/src/entrypoints/http/planPreviewEnvelopeBinder.ts
+      - apps/api/src/entrypoints/http/previewPlanRouteRequestBinder.ts
+      - apps/api/src/application/services/PreviewPlanUseCase.ts
+      - apps/api/test/entrypoints/http/previewPlanRoute.outcomes.test.ts
+    status_reason: >-
+      Completed. Preview observability enrichment now flows through `planPreviewEnvelopeBinder` in
+      the real request path, `PreviewPlanUseCase` consumes the finished observability payload
+      without rebuilding it, and route-level tests assert the bound scope and transformation
+      provenance that reach the planner.
+    last_verified: '2026-04-20'
+  - task_id: TF-A1-C16
+    parent_task: TF-A1-C
+    priority: P1
+    status: done
+    complexity: S
+    effort_points: 1
+    progress_pct: 100
+    objective: >-
+      externalize plan-route authorization metadata so preview, import, and compile declare their
+      action semantics explicitly instead of relying on a hardcoded shared-resolver default.
+    dependency: TF-A1-C14
+    target: >-
+      each plan-route request resolver passes explicit authorization action metadata into
+      `resolveAuthorizedPlanRouteRequest`, the shared resolver stops owning route-family action
+      policy, and future authorization changes do not hide behind one implicit default.
+    evidence_refs:
+      - docs/planning/reviews/architecture-and-governance/20260419-plan-route-boundary-remediation-review.md
+      - docs/planning/closeouts/20260420-tf-a1-c15-c16-plan-route-seam-hardening-closeout.md
+      - apps/api/src/entrypoints/http/planRouteAuthorization.constants.ts
+      - apps/api/src/entrypoints/http/planRouteRequestResolver.ts
+      - apps/api/src/entrypoints/http/previewPlanRouteRequestResolver.ts
+      - apps/api/src/entrypoints/http/importPlanRouteRequestResolver.ts
+      - apps/api/src/entrypoints/http/compilePlanRouteRequestResolver.ts
+      - apps/api/test/entrypoints/http/planRouteRequestResolver.test.ts
+    status_reason: >-
+      Completed. The shared plan-route resolver now accepts explicit authorization action metadata,
+      preview/import/compile declare that metadata at the wrapper seam, and the shared resolver
+      tests prove it authorizes the action supplied by the caller rather than an implicit default.
+    last_verified: '2026-04-20'
+  - task_id: TF-A1-C17
+    parent_task: TF-A1-C
+    priority: P1
+    status: done
+    complexity: S
+    effort_points: 1
+    progress_pct: 100
+    objective: >-
+      codify the plan-route request-resolution recipe as a declarative shared seam so preview,
+      import, and compile stop expressing parse plus authorize plus optional guard as wrapper
+      boilerplate.
+    dependency: TF-A1-C16
+    target: >-
+      one shared builder accepts route parser, authorization metadata, scope selector, and optional
+      post-authorization guard, while the plan-route wrappers shrink to route-local declarations
+      instead of re-implementing the request-resolution workflow.
+    evidence_refs:
+      - docs/planning/reviews/architecture-and-governance/20260419-plan-route-boundary-remediation-review.md
+      - docs/planning/closeouts/20260420-tf-a1-c17-plan-route-request-resolution-recipe-closeout.md
+      - apps/api/src/entrypoints/http/planRouteRequestResolver.ts
+      - apps/api/src/entrypoints/http/previewPlanRouteRequestResolver.ts
+      - apps/api/src/entrypoints/http/importPlanRouteRequestResolver.ts
+      - apps/api/src/entrypoints/http/compilePlanRouteRequestResolver.ts
+      - apps/api/test/entrypoints/http/planRouteRequestResolver.test.ts
+    status_reason: >-
+      Completed. The `plan-*` family now declares request parser, authorization action, scope
+      selector, and optional post-authorization guard through one shared builder, while the
+      preview/import/compile resolver wrappers shrink to route-local declarations instead of
+      re-implementing the workflow.
+    last_verified: '2026-04-20'
   - task_id: TF-A1-D
     priority: P1
     status: done

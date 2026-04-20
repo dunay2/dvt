@@ -1,0 +1,25 @@
+---
+id: R-20260419-PLAN-COMPILE-LANGUAGE-DRIFT
+title: Historical compile-boundary language could leak back into active contracts and route seams
+status: Open
+date: 2026-04-19
+owners:
+  - apps/api
+  - packages/@dvt/contracts
+severity: Low
+probability: Medium
+context: >
+  MW-D1 started under an `external compile` label and later moved toward `plan compile` in the
+  public contract and API boundary. The branch now aligns the active code and living docs, but
+  historical proposals, reviews, and closeouts still preserve the earlier vocabulary for
+  traceability.
+risk: >
+  Future slices could copy historical `external compile` wording or reintroduce compile input
+  normalization in multiple layers, causing a split ubiquitous language and unclear ownership
+  between transport parsing and application mapping.
+mitigations:
+  - Keep `plan compile` as the active term in living code, guides, and API architecture docs.
+  - Keep graph-source and selection normalization owned by `planCompileRouteInputParser`.
+  - Keep compile route orchestration standardized through the shared plan-route remote facade.
+  - Treat older MW-D1 `external compile` proposals and reviews as historical evidence only.
+  - Require ARC evidence and risk updates for future compile-boundary contract changes.

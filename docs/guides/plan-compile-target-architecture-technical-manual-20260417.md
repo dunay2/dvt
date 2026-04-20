@@ -1,11 +1,11 @@
 ---
-title: External Compile Target Architecture Technical Manual
+title: Plan Compile Target Architecture Technical Manual
 status: Draft
 owner: Architecture / API / Planner / Runtime
-last_reviewed: 2026-04-17
+last_reviewed: 2026-04-19
 ---
 
-# External Compile Target Architecture Technical Manual
+# Plan Compile Target Architecture Technical Manual
 
 ## Purpose
 
@@ -13,10 +13,14 @@ This manual is the target-state technical reference for `MW-D1`.
 
 It defines the architecture that the implementation plan is trying to reach,
 without claiming that the current worktree already matches that architecture.
+This guide uses `plan compile` as the active ubiquitous language for the
+compile-only boundary. Older `MW-D1` proposal and review artifacts may still
+say `external compile`; treat that as historical wording, not the active
+ownership model.
 
 Use this document when the question is architectural rather than tactical:
 
-- what bounded contexts participate in external compile
+- what bounded contexts participate in plan compile
 - what the aggregate roots and service roots are
 - which ports and adapters are required
 - how compile fits into the broader system at C4 level
@@ -36,13 +40,13 @@ For roadmap sequencing and backlog execution, use
 - `docs/architecture/components/planner/planner-ddd.md`
 - `docs/architecture/components/api/api-current-to-target-architecture.md`
 - `docs/planning/proposals/mandatory/runtime-and-contracts/mw-d1-external-plan-definition-sdk-api-plan-20260417.md`
-- `docs/guides/external-compile-catalog-extension-technical-manual-20260417.md`
+- `docs/guides/plan-compile-catalog-extension-technical-manual-20260417.md`
 
 ## Scope and non-goals
 
 This manual covers:
 
-- external compile as a target authoring architecture
+- plan compile as a target authoring architecture
 - the relationship between compile, preview, and run admission
 - target ownership seams for contracts, services, catalogs, and composition
 - target diagrams and definitions needed to implement the architecture cleanly
@@ -56,7 +60,7 @@ This manual does not claim to define:
 
 ## Target-state summary
 
-The target architecture is a compile-first external authoring boundary.
+The target architecture is a compile-first plan-compile boundary.
 
 That means:
 
@@ -89,7 +93,7 @@ flowchart LR
 
 Interpretation:
 
-- external compile stops at plan derivation
+- plan compile stops at plan derivation
 - preview and persistence live in a neighboring lifecycle boundary
 - runtime admission and worker routing are later boundaries
 
@@ -132,18 +136,18 @@ flowchart TB
   Lifecycle --> RunAdmission
 ```
 
-## C4 Level 3: component view for external compile
+## C4 Level 3: component view for plan compile
 
 ```mermaid
 flowchart LR
   Route["compilePlanRoute"]
   Parser["parsePlanCompileRouteInput"]
   Auth["authorizeExecutionScope"]
-  UseCase["CompileExternalPlanUseCase"]
-  Envelope["toExternalCompilePlannerEnvelope"]
-  Profile["ExternalCompileProfileSpec"]
+  UseCase["CompilePlanUseCase"]
+  Envelope["toPlanCompilePlannerEnvelope"]
+  Profile["PlanCompileProfileSpec"]
   Resolver["resolveStepCatalog"]
-  Builder["buildExternalCompilePlanner"]
+  Builder["buildPlanCompilePlanner"]
   Planner["PlannerFacade"]
   Presenter["buildPlanCompileResponse"]
 
@@ -162,11 +166,11 @@ flowchart LR
 
 | Context or governed surface | Kind                             | Responsibility                                                             | Must not own                                   |
 | --------------------------- | -------------------------------- | -------------------------------------------------------------------------- | ---------------------------------------------- |
-| External Authoring          | entry/application boundary       | caller-facing compile request and SDK gateway                              | planner internals, persistence, worker routing |
+| Plan Compile                | entry/application boundary       | caller-facing compile request and SDK gateway                              | planner internals, persistence, worker routing |
 | API Admission               | entry/application boundary       | authn/authz, request parsing, response contract                            | planning semantics                             |
 | Planning Domain             | core domain                      | deterministic graph validation and `ExecutionPlan` assembly                | HTTP, persistence, provider lifecycle          |
 | Catalog Governance          | shared kernel governed surface   | family and kind definitions, profile-relevant metadata, contribution model | route-local allowlists                         |
-| Plan Lifecycle              | neighboring supporting context   | preview persistence, executability validation, `planRef` import            | external compile authoring                     |
+| Plan Lifecycle              | neighboring supporting context   | preview persistence, executability validation, `planRef` import            | plan compile authoring                         |
 | Runtime Admission           | neighboring application boundary | `targetAdapter` choice, run preconditions, execution start                 | compile semantics                              |
 
 ## Aggregate roots, logical roots, and service roots
@@ -175,7 +179,7 @@ flowchart LR
 | -------------------------- | ------------------------------------------------------------------ | ----------------------------------- | --------------------------------------------------------- | ------------------------------------------------------- |
 | aggregate root             | `ExecutionPlan`                                                    | Planning Domain                     | immutable plan result of compile                          | canonical planning aggregate                            |
 | logical catalog root       | `ResolvedStepCatalog`                                              | Catalog Governance plus composition | resolved family and kind inventory for one boundary       | immutable resolved view, not a mutable domain aggregate |
-| application service root   | `CompileExternalPlanUseCase`                                       | API application layer               | compile-only orchestration                                | should accept and return plain data                     |
+| application service root   | `CompilePlanUseCase`                                               | API application layer               | compile-only orchestration                                | should accept and return plain data                     |
 | composition root           | `buildProtectedRuntimeModule` and compile-specific planner builder | `apps/api`                          | bind ports, policies, planner configuration, and adapters | root of runtime composition                             |
 | neighboring aggregate root | `Run`                                                              | Runtime domain                      | execution lifecycle after compile                         | outside `MW-D1`, included for boundary clarity          |
 
@@ -187,7 +191,7 @@ flowchart LR
 | authentication port        | inbound dependency        | API admission                    | existing seam                   | current code uses `IAuthenticator`                       |
 | authorization service seam | inbound dependency        | API admission                    | existing seam                   | tenant and action scope enforcement                      |
 | planner port               | outbound                  | Planning Domain contract surface | existing seam                   | current planner boundary is `PlannerFacade` / `IPlanner` |
-| compile profile selector   | outbound composition seam | `apps/api`                       | target seam                     | chooses one `ExternalCompileProfileSpec`                 |
+| compile profile selector   | outbound composition seam | `apps/api`                       | target seam                     | chooses one `PlanCompileProfileSpec`                     |
 | step catalog resolver      | outbound composition seam | `apps/api`                       | target seam                     | resolves built-ins plus approved plugin contributions    |
 | plugin contribution loader | outbound composition seam | `apps/api`                       | target seam                     | may load approved contribution packs, not arbitrary code |
 | plan lifecycle boundary    | neighboring outbound seam | Plan Lifecycle                   | out of compile path             | preview/import use it, compile does not                  |
@@ -197,7 +201,7 @@ flowchart LR
 
 | Target module or package seam                  | Proposed home                        | Responsibility                                             | Must not own                            |
 | ---------------------------------------------- | ------------------------------------ | ---------------------------------------------------------- | --------------------------------------- |
-| external compile request and response contract | `packages/@dvt/contracts`            | caller-visible DTOs and validation semantics               | route policy or runtime composition     |
+| plan compile request and response contract     | `packages/@dvt/contracts`            | caller-visible DTOs and validation semantics               | route policy or runtime composition     |
 | compile route and route contract parser        | `apps/api` HTTP entrypoint layer     | transport parsing, auth handoff, response status mapping   | planner orchestration or catalog policy |
 | compile application service                    | `apps/api` application layer         | compile-only orchestration over plain data                 | HTTP concerns or persistence lifecycle  |
 | compile envelope mapper                        | `apps/api` application support layer | canonical input assembly for planner                       | auth logic or route formatting          |
@@ -221,7 +225,7 @@ Interpretation:
 | ------------------------------------ | ------------------------------ | -------------------------------- | ------------------------------------------------- | -------------------------------------------------------------- |
 | `PlanCompileRequestV1`               | external caller or SDK         | compile route                    | graph source, selection, execution scope context  | compile request stays generic and non-dbt-first                |
 | auth and authorization seam          | compile route                  | authentication and RBAC services | principal plus tenant or project scope            | compile never bypasses protected runtime scope                 |
-| compile application service boundary | compile route                  | `CompileExternalPlanUseCase`     | parsed request plus authorized scope              | orchestration remains transport-agnostic                       |
+| compile application service boundary | compile route                  | `CompilePlanUseCase`             | parsed request plus authorized scope              | orchestration remains transport-agnostic                       |
 | planner ingress envelope seam        | compile application service    | planner facade                   | canonical planner envelope plus resolved catalog  | compile uses one planner model only                            |
 | catalog resolution seam              | compile composition root       | catalog resolver                 | built-ins, approved plugin packs, compile profile | unknown families and kinds fail closed                         |
 | compile response contract            | compile presenter              | external caller or SDK           | `ExecutionPlan` plus compile metadata             | response never implies persistence or executability validation |
@@ -239,8 +243,8 @@ Observability note:
 ```mermaid
 classDiagram
   class PlanCompileRequestV1
-  class CompileExternalPlanUseCase
-  class ExternalCompileProfileSpec
+  class CompilePlanUseCase
+  class PlanCompileProfileSpec
   class ResolvedStepCatalog
   class StepFamilyDefinition
   class StepKindDefinition
@@ -248,10 +252,10 @@ classDiagram
   class PlannerFacade
   class ExecutionPlan
 
-  PlanCompileRequestV1 --> CompileExternalPlanUseCase
-  CompileExternalPlanUseCase --> ExternalCompileProfileSpec
-  CompileExternalPlanUseCase --> ResolvedStepCatalog
-  CompileExternalPlanUseCase --> PlannerFacade
+  PlanCompileRequestV1 --> CompilePlanUseCase
+  CompilePlanUseCase --> PlanCompileProfileSpec
+  CompilePlanUseCase --> ResolvedStepCatalog
+  CompilePlanUseCase --> PlannerFacade
   PlannerFacade --> ExecutionPlan
   ResolvedStepCatalog --> StepFamilyDefinition
   ResolvedStepCatalog --> StepKindDefinition
@@ -260,14 +264,14 @@ classDiagram
   StepKindDefinition --> StepFamilyDefinition
 ```
 
-## Sequence: external compile happy path
+## Sequence: plan compile happy path
 
 ```mermaid
 sequenceDiagram
   participant Client as External caller or SDK
   participant Route as compilePlanRoute
   participant Auth as Auth and RBAC
-  participant UseCase as CompileExternalPlanUseCase
+  participant UseCase as CompilePlanUseCase
   participant Catalog as ResolvedStepCatalog
   participant Planner as PlannerFacade
   participant Presenter as Response mapper
@@ -289,7 +293,7 @@ sequenceDiagram
   participant Designer as Contributor
   participant Catalog as Family and kind catalog
   participant Plugin as Plugin contribution pack or built-in pack
-  participant Profile as ExternalCompileProfileSpec
+  participant Profile as PlanCompileProfileSpec
   participant Tests as Validation suite
 
   Designer->>Catalog: define StepFamilyDefinition
@@ -327,20 +331,20 @@ Interpretation:
 
 ## Domain glossary
 
-| Term                         | Meaning in `MW-D1`                                                    | Notes                                                                      |
-| ---------------------------- | --------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| external compile boundary    | the caller-facing compile-only API or SDK gateway                     | the first product-facing authoring seam                                    |
-| `ExecutionPlan`              | immutable compile result                                              | canonical planning aggregate                                               |
-| `ResolvedStepCatalog`        | immutable resolved family and kind inventory for one boundary         | composition-owned view, not a mutable route registry                       |
-| `ExternalCompileProfileSpec` | typed policy selection for one compile boundary                       | selects from the resolved catalog only                                     |
-| `PluginStepContribution`     | typed plugin-owned contribution pack                                  | contributes families or kinds without becoming a second contract authority |
-| Plan Lifecycle boundary      | neighboring context for preview, persistence, and `planRef` lifecycle | outside compile-only flow                                                  |
-| Runtime Admission boundary   | neighboring context for start-run and provider choice                 | owns `targetAdapter`                                                       |
-| worker routing               | later execution-routing concern by queue, image, or worker role       | explicitly deferred to `MW-D2`                                             |
+| Term                       | Meaning in `MW-D1`                                                    | Notes                                                                      |
+| -------------------------- | --------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| plan compile boundary      | the caller-facing compile-only API or SDK gateway                     | the first product-facing authoring seam                                    |
+| `ExecutionPlan`            | immutable compile result                                              | canonical planning aggregate                                               |
+| `ResolvedStepCatalog`      | immutable resolved family and kind inventory for one boundary         | composition-owned view, not a mutable route registry                       |
+| `PlanCompileProfileSpec`   | typed policy selection for one compile boundary                       | selects from the resolved catalog only                                     |
+| `PluginStepContribution`   | typed plugin-owned contribution pack                                  | contributes families or kinds without becoming a second contract authority |
+| Plan Lifecycle boundary    | neighboring context for preview, persistence, and `planRef` lifecycle | outside compile-only flow                                                  |
+| Runtime Admission boundary | neighboring context for start-run and provider choice                 | owns `targetAdapter`                                                       |
+| worker routing             | later execution-routing concern by queue, image, or worker role       | explicitly deferred to `MW-D2`                                             |
 
 ## Architecture invariants
 
-- external compile must remain compile-only
+- plan compile must remain compile-only
 - compile policy must come from a canonical catalog or approved contribution
   pack
 - compile planner registry must be fail-closed to profile-selected
@@ -359,7 +363,7 @@ Use this manual for:
 - compile-to-runtime boundary clarity
 
 Use
-[External compile catalog extension technical manual](external-compile-catalog-extension-technical-manual-20260417.md)
+[Plan compile catalog extension technical manual](plan-compile-catalog-extension-technical-manual-20260417.md)
 for:
 
 - how to add a new family or kind

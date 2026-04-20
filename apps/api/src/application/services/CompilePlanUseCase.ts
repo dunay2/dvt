@@ -8,9 +8,9 @@ import type {
 
 import type { AuthorizedCommandExecutionContext } from '../ports/authContract.js';
 
-import { toExternalCompilePlannerEnvelope } from './externalCompilePlannerEnvelopeMapper.js';
+import { toPlanCompilePlannerEnvelope } from './planCompilePlannerEnvelopeMapper.js';
 
-export interface CompileExternalPlanCommand {
+export interface CompilePlanCommand {
   readonly graphSource: GenericGraphSourceV1;
   readonly selection: PlannerSelection;
   readonly policies: PlanCompileRequestV1SchemaT['policies'];
@@ -18,11 +18,11 @@ export interface CompileExternalPlanCommand {
   readonly observability: PlanCompileRequestV1SchemaT['observability'];
 }
 
-export interface CompileExternalPlanResult {
+export interface CompilePlanResult {
   readonly plan: ExecutionPlan;
 }
 
-export class CompileExternalPlanUseCase {
+export class CompilePlanUseCase {
   public constructor(
     private readonly deps: {
       readonly planner: IPlanner;
@@ -30,11 +30,11 @@ export class CompileExternalPlanUseCase {
   ) {}
 
   public async execute(
-    command: CompileExternalPlanCommand,
+    command: CompilePlanCommand,
     context: AuthorizedCommandExecutionContext
-  ): Promise<CompileExternalPlanResult> {
+  ): Promise<CompilePlanResult> {
     const buildResult = await this.deps.planner.buildPlan(
-      toExternalCompilePlannerEnvelope(command, context)
+      toPlanCompilePlannerEnvelope(command, context)
     );
 
     return {

@@ -1,23 +1,27 @@
 ---
-title: External Compile Catalog Extension Technical Manual
+title: Plan Compile Catalog Extension Technical Manual
 status: Draft
 owner: Architecture / API / Planner / Runtime
-last_reviewed: 2026-04-17
+last_reviewed: 2026-04-19
 ---
 
-# External Compile Catalog Extension Technical Manual
+# Plan Compile Catalog Extension Technical Manual
 
 ## Purpose
 
-This manual defines the target-state technical model for extending the external
+This manual defines the target-state technical model for extending the plan
 compile boundary with new step families, new step kinds, and plugin-backed
 catalog contributions.
+This guide uses `plan compile` as the active ubiquitous language for the
+compile-only boundary. Older `MW-D1` proposal and review artifacts may still
+say `external compile`; treat that as historical wording, not the active
+ownership model.
 
 Use this guide when the change affects any of the following:
 
 - the canonical family taxonomy
 - the canonical step-kind catalog
-- the external compile profile
+- the plan compile profile
 - plugin-owned step-family or step-kind contributions
 
 This guide complements
@@ -27,7 +31,7 @@ broader family and catalog model that the new kind must fit into.
 
 For C4, DDD, ports, roots, aggregates, and target compile-path architecture,
 use
-[External Compile Target Architecture Technical Manual](external-compile-target-architecture-technical-manual-20260417.md).
+[Plan Compile Target Architecture Technical Manual](plan-compile-target-architecture-technical-manual-20260417.md).
 
 ## Governing sources
 
@@ -51,20 +55,20 @@ already exists in production code.
 
 - fail closed for unknown families and step kinds
 - group step kinds by explicit family instead of naming convention
-- keep one contract authority for external compile
+- keep one contract authority for plan compile
 - allow plugin contribution without allowing arbitrary runtime-local strings
 - keep schemas, validators, and handlers in code, not in free-form JSON
 
 ## Canonical objects
 
-| Object                       | Responsibility                                                             | Proposed owner                                        | Must not become                                             |
-| ---------------------------- | -------------------------------------------------------------------------- | ----------------------------------------------------- | ----------------------------------------------------------- |
-| `StepFamilyDefinition`       | declare canonical family identity, owner, and extension policy             | `@dvt/contracts` or approved plugin contribution pack | an implicit naming convention                               |
-| `StepKindDefinition`         | declare canonical step kind, family, schema, and execution profile         | `@dvt/contracts` or approved plugin contribution pack | a route-local `kind -> schema` map                          |
-| `PluginStepContribution`     | contribute plugin-owned families and step kinds through one typed contract | plugin package using the shared contribution contract | a second contract authority or dynamic runtime escape hatch |
-| `ResolvedStepCatalog`        | represent the merged, validated catalog used by compile composition        | `apps/api` composition root                           | an ad hoc mutable registry                                  |
-| `ExternalCompileProfileSpec` | declare which families and kinds one compile boundary exposes              | `apps/api` composition root                           | free-form JSON with embedded schemas or handlers            |
-| `CompileExternalPlanUseCase` | orchestrate compile-only behavior once the planner is built                | `apps/api` application layer                          | a config-driven behavior script                             |
+| Object                   | Responsibility                                                             | Proposed owner                                        | Must not become                                             |
+| ------------------------ | -------------------------------------------------------------------------- | ----------------------------------------------------- | ----------------------------------------------------------- |
+| `StepFamilyDefinition`   | declare canonical family identity, owner, and extension policy             | `@dvt/contracts` or approved plugin contribution pack | an implicit naming convention                               |
+| `StepKindDefinition`     | declare canonical step kind, family, schema, and execution profile         | `@dvt/contracts` or approved plugin contribution pack | a route-local `kind -> schema` map                          |
+| `PluginStepContribution` | contribute plugin-owned families and step kinds through one typed contract | plugin package using the shared contribution contract | a second contract authority or dynamic runtime escape hatch |
+| `ResolvedStepCatalog`    | represent the merged, validated catalog used by compile composition        | `apps/api` composition root                           | an ad hoc mutable registry                                  |
+| `PlanCompileProfileSpec` | declare which families and kinds one compile boundary exposes              | `apps/api` composition root                           | free-form JSON with embedded schemas or handlers            |
+| `CompilePlanUseCase`     | orchestrate compile-only behavior once the planner is built                | `apps/api` application layer                          | a config-driven behavior script                             |
 
 ## Ownership line
 
@@ -102,8 +106,8 @@ Working rule:
 ```mermaid
 classDiagram
   class PlanCompileRequestV1
-  class CompileExternalPlanUseCase
-  class ExternalCompileProfileSpec {
+  class CompilePlanUseCase
+  class PlanCompileProfileSpec {
     profileId
     allowedFamilies[]
     allowedStepKinds[]
@@ -130,9 +134,9 @@ classDiagram
   }
   class PlannerFacade
 
-  PlanCompileRequestV1 --> CompileExternalPlanUseCase
-  CompileExternalPlanUseCase --> PlannerFacade
-  ExternalCompileProfileSpec --> ResolvedStepCatalog : filters
+  PlanCompileRequestV1 --> CompilePlanUseCase
+  CompilePlanUseCase --> PlannerFacade
+  PlanCompileProfileSpec --> ResolvedStepCatalog : filters
   ResolvedStepCatalog --> StepFamilyDefinition : contains
   ResolvedStepCatalog --> StepKindDefinition : contains
   PluginStepContribution --> StepFamilyDefinition : contributes
@@ -149,8 +153,8 @@ sequenceDiagram
   participant Builtins as Built-in catalog
   participant Plugins as Approved plugin packs
   participant Resolver as resolveStepCatalog(...)
-  participant Profile as ExternalCompileProfileSpec
-  participant Builder as buildExternalCompilePlanner(...)
+  participant Profile as PlanCompileProfileSpec
+  participant Builder as buildPlanCompilePlanner(...)
   participant Planner as PlannerFacade
 
   Root->>Builtins: load canonical families and step kinds
@@ -172,7 +176,7 @@ sequenceDiagram
   participant Caller as Integrator
   participant Contract as Compile request contract
   participant Catalog as ResolvedStepCatalog
-  participant Profile as ExternalCompileProfileSpec
+  participant Profile as PlanCompileProfileSpec
   participant Compile as POST /plans/compile
   participant Run as POST /runs/start
   participant Routing as MW-D2 worker routing
@@ -205,7 +209,7 @@ sequenceDiagram
   Designer->>Contracts: define StepFamilyDefinition
   Designer->>Contracts: define one or more StepKindDefinition entries
   Designer->>Plugin: add PluginStepContribution or built-in catalog entry
-  Designer->>API: extend ExternalCompileProfileSpec if boundary should expose family
+  Designer->>API: extend PlanCompileProfileSpec if boundary should expose family
   API->>API: resolve catalog and build compile planner
   Designer->>Tests: add contracts, planner, API, and negative-path coverage
   Tests-->>Designer: validate catalog, profile, and compile path
@@ -275,13 +279,13 @@ The application composition root must:
 - reject duplicate families, duplicate kinds, orphan kinds, or incomplete
   execution profiles
 
-The resolved catalog is the only catalog the external compile planner may use.
+The resolved catalog is the only catalog the plan compile planner may use.
 
 ### 6. Extend the compile profile
 
-If the external compile boundary should expose the new family or kind:
+If the plan compile boundary should expose the new family or kind:
 
-- update `ExternalCompileProfileSpec`
+- update `PlanCompileProfileSpec`
 - prefer family-level selection when the whole family is intended
 - use kind-level selection only when the boundary intentionally exposes a subset
 
@@ -291,7 +295,7 @@ raw policy literals.
 Implementation rule:
 
 - build the compile planner registry from `allowedStepKinds` only
-- do not compose external compile with `createDefaultStepTypeRegistry(...)`
+- do not compose plan compile with `createDefaultStepTypeRegistry(...)`
   because that re-introduces unrelated built-in kinds into the boundary
 
 ### 7. Add validation and negative paths
@@ -351,8 +355,8 @@ must not reduce payloads to only `tags` and `extra`.
 Illustrative shape:
 
 ```ts
-const externalCompileProfile: ExternalCompileProfileSpec = {
-  profileId: 'external-compile-v1',
+const planCompileProfile: PlanCompileProfileSpec = {
+  profileId: 'plan-compile-v1',
   allowedFamilies: ['sql_transform', 'spark'],
   allowedStepKinds: ['PREPARE_POSTGRES_TRANSFORM', 'POSTGRES_SQL_TRANSFORM', 'SPARK_JOB'],
   allowBridgeKinds: false,
@@ -388,7 +392,7 @@ So the semantic split is:
 3. Attach schema and execution profile for `SPARK_JOB`.
 4. Add the family and kind through either the built-in catalog or one approved
    `PluginStepContribution`.
-5. Extend `ExternalCompileProfileSpec` if `/plans/compile` should expose the
+5. Extend `PlanCompileProfileSpec` if `/plans/compile` should expose the
    new family.
 6. Add contracts, planner, and API negative-path tests.
 7. Update planning docs and the closeout for the slice that introduced `spark`.
@@ -397,7 +401,7 @@ So the semantic split is:
 
 - `pnpm docs:workboard:generate`
 - `pnpm docs:sync`
-- `pnpm exec markdownlint-cli2 "docs/guides/external-compile-catalog-extension-technical-manual-20260417.md" --ignore-path .markdownlintignore --config .markdownlint-cli2.jsonc`
+- `pnpm exec markdownlint-cli2 "docs/guides/plan-compile-catalog-extension-technical-manual-20260417.md" --ignore-path .markdownlintignore --config .markdownlint-cli2.jsonc`
 - `pnpm --filter @dvt/contracts test`
 - `pnpm --filter @dvt/planner test`
 - `pnpm --filter dvt-api test`
@@ -409,5 +413,5 @@ So the semantic split is:
 - Do not infer family from step-kind naming.
 - Do not use free-form JSON as the authority for schemas or handlers.
 - Do not let a plugin bypass the canonical catalog model.
-- Do not expose a new family on the external compile boundary without an
+- Do not expose a new family on the plan compile boundary without an
   explicit profile update.

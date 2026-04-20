@@ -1,56 +1,32 @@
-import type { FastifyRequest } from 'fastify';
-
-import { type HttpResponseModel } from './httpErrorContract.js';
 import { mapPreviewPlanContractIssue } from './planPreviewContractErrorMapper.js';
 import { validatePreviewProfileContract } from './planPreviewContractGuard.js';
+import { PLAN_ROUTE_AUTHORIZATION } from './planRouteAuthorization.constants.js';
 import {
-  resolveAuthorizedPlanRouteRequest,
+  createAuthorizedPlanRouteRequestResolver,
   type PlanRouteAuthorizationResolverDeps,
 } from './planRouteRequestResolver.js';
 import { parsePreviewPlanBody, type ParsedPreviewPlanRequest } from './previewPlanRouteParser.js';
 
 export interface PreviewPlanRouteRequestResolverDeps extends PlanRouteAuthorizationResolverDeps {}
 
-export type ResolvedPreviewPlanRouteRequest =
-  | Extract<
-      Awaited<
-        ReturnType<typeof resolveAuthorizedPlanRouteRequest<ParsedPreviewPlanRequest>>
-      >,
-      { readonly ok: true }
-    >
-  | {
-      readonly ok: false;
-      readonly response: HttpResponseModel;
-    };
+export const resolvePreviewPlanRouteRequest = createAuthorizedPlanRouteRequestResolver<
+  PreviewPlanRouteRequestResolverDeps,
+  ParsedPreviewPlanRequest
+>({
+  parseRequestBody: parsePreviewPlanBody,
+  selectRequestedScope: (parsedRequest) => parsedRequest.routeContext,
+  action: PLAN_ROUTE_AUTHORIZATION.PREVIEW,
+  validateAuthorizedRequest: (resolvedRequest) => {
+    const previewContractViolation = validatePreviewProfileContract(
+      resolvedRequest.parsedRequest.previewProfile,
+      resolvedRequest.parsedRequest.contractRequest
+    );
+    return previewContractViolation === null
+      ? null
+      : mapPreviewPlanContractIssue(previewContractViolation);
+  },
+});
 
-export async function resolvePreviewPlanRouteRequest(
-  request: FastifyRequest<{ Body: unknown }>,
-  deps: PreviewPlanRouteRequestResolverDeps
-): Promise<ResolvedPreviewPlanRouteRequest> {
-  const resolvedRequest = await resolveAuthorizedPlanRouteRequest(
-    request,
-    deps,
-    parsePreviewPlanBody(request.body),
-    (parsedRequest) => parsedRequest.routeContext
-  );
-  if (!resolvedRequest.ok) {
-    return resolvedRequest;
-  }
-
-  const previewContractViolation = validatePreviewProfileContract(
-    resolvedRequest.parsedRequest.previewProfile,
-    resolvedRequest.parsedRequest.contractRequest
-  );
-  if (previewContractViolation !== null) {
-    return {
-      ok: false,
-      response: mapPreviewPlanContractIssue(previewContractViolation),
-    };
-  }
-
-  return {
-    ok: true,
-    parsedRequest: resolvedRequest.parsedRequest,
-    context: resolvedRequest.context,
-  };
-}
+export type ResolvedPreviewPlanRouteRequest = Awaited<
+  ReturnType<typeof resolvePreviewPlanRouteRequest>
+>;

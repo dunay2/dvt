@@ -1,8 +1,8 @@
 import type { PlanCompileResponseV1SchemaT } from '@dvt/contracts';
 
-import type { CompileExternalPlanResult } from '../../application/services/CompileExternalPlanUseCase.js';
+import type { CompilePlanResult } from '../../application/services/CompilePlanUseCase.js';
 
-export function buildPlanCompileResponse(result: CompileExternalPlanResult): PlanCompileResponseV1SchemaT {
+export function buildPlanCompileResponse(result: CompilePlanResult): PlanCompileResponseV1SchemaT {
   return {
     plan: result.plan,
     compile: {

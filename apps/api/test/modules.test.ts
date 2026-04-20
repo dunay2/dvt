@@ -6,9 +6,9 @@ import type { FastifyInstance } from 'fastify';
 import { describe, expect, it } from 'vitest';
 
 import { buildProtectedRuntimeModule } from '../src/modules/buildProtectedRuntimeModule.js';
-import { buildExternalCompilePlanner } from '../src/modules/externalCompilePlannerProfile.js';
-import { EXTERNAL_COMPILE_PROFILE_SPEC } from '../src/modules/externalCompileProfileSpec.js';
 import { buildProviderAdapters } from '../src/modules/buildProviderAdapters.js';
+import { buildPlanCompilePlanner } from '../src/modules/planCompilePlannerProfile.js';
+import { PLAN_COMPILE_PROFILE_SPEC } from '../src/modules/planCompileProfileSpec.js';
 import { registerOperationalHooks } from '../src/modules/registerOperationalHooks.js';
 
 const BUILD_PROTECTED_RUNTIME_MODULE_SOURCE = readFileSync(
@@ -59,7 +59,7 @@ describe('modules', () => {
         snapshotStaleness: {} as never,
       },
       planner: {} as never,
-      externalCompilePlanner: {} as never,
+      planCompilePlanner: {} as never,
       planStore: {} as never,
       planValidator: {} as never,
       executablePlanResolver: { fetch: async () => ({}) } as never,
@@ -176,8 +176,8 @@ describe('modules', () => {
     expect(BUILD_PROTECTED_RUNTIME_MODULE_SOURCE).toContain('runExecutionContextBindingPolicy,');
   });
 
-  it('external compile planner rejects DBT step kinds not listed in the external profile', async () => {
-    const planner = buildExternalCompilePlanner();
+  it('plan compile planner rejects DBT step kinds not listed in the compile profile', async () => {
+    const planner = buildPlanCompilePlanner();
 
     await expect(
       planner.buildPlan({
@@ -197,8 +197,8 @@ describe('modules', () => {
     ).rejects.toThrow(/DBT_MODEL/);
   });
 
-  it('external compile planner accepts a non-dbt spark graph from the resolved catalog', async () => {
-    const planner = buildExternalCompilePlanner();
+  it('plan compile planner accepts a non-dbt spark graph from the resolved catalog', async () => {
+    const planner = buildPlanCompilePlanner();
 
     const result = await planner.buildPlan({
       requestedBy: 'principal-1',
@@ -241,10 +241,10 @@ describe('modules', () => {
     expect(result.executionPolicy.requiresCapabilities).toEqual(['spark.submit']);
   });
 
-  it('external compile planner rejects profile kinds that fall outside the allowed families', () => {
+  it('plan compile planner rejects profile kinds that fall outside the allowed families', () => {
     expect(() =>
-      buildExternalCompilePlanner({
-        ...EXTERNAL_COMPILE_PROFILE_SPEC,
+      buildPlanCompilePlanner({
+        ...PLAN_COMPILE_PROFILE_SPEC,
         allowedFamilies: ['spark'],
         allowedStepKinds: ['POSTGRES_SQL_TRANSFORM'],
       })

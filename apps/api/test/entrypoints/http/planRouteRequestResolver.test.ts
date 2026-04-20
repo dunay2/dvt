@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import {
   EnvironmentId,
@@ -6,6 +6,7 @@ import {
   TenantId,
 } from '../../../src/domain/auth/types.js';
 import {
+  createAuthorizedPlanRouteRequestResolver,
   resolveAuthorizedPlanRouteRequest,
 } from '../../../src/entrypoints/http/planRouteRequestResolver.js';
 import { badRequestResult } from '../../../src/entrypoints/http/routeParseIssue.js';
@@ -41,7 +42,10 @@ describe('resolveAuthorizedPlanRouteRequest', () => {
       request as never,
       deps as never,
       badRequestResult<ParsedPlanRouteRequest>('invalid_body'),
-      (parsedRequest) => parsedRequest.routeContext
+      {
+        selectRequestedScope: (parsedRequest) => parsedRequest.routeContext,
+        action: { kind: 'command', name: 'run:start' },
+      }
     );
 
     expect(result).toEqual({
@@ -57,19 +61,23 @@ describe('resolveAuthorizedPlanRouteRequest', () => {
     expect(deps.authorizer.authorize).not.toHaveBeenCalled();
   });
 
-  it('authorizes the requested scope with the canonical shared plan-route action', async () => {
+  it('authorizes the requested scope with the action supplied by the route wrapper', async () => {
     const deps = okAuthDeps();
     const request = createPreviewRequest({
       id: 'req-plan-route-authorized',
       authorization: 'Bearer shared-token',
     });
     const parsedRequest = buildParsedRequest();
+    const action = { kind: 'command', name: 'run:retry' } as const;
 
     const result = await resolveAuthorizedPlanRouteRequest(
       request as never,
       deps as never,
       { ok: true, value: parsedRequest },
-      (value) => value.routeContext
+      {
+        selectRequestedScope: (value) => value.routeContext,
+        action,
+      }
     );
 
     expect(deps.authenticator.authenticateBearerToken).toHaveBeenCalledWith('shared-token');
@@ -79,7 +87,7 @@ describe('resolveAuthorizedPlanRouteRequest', () => {
         tenantId: parsedRequest.routeContext.tenantId,
         projectId: parsedRequest.routeContext.projectId,
         environmentId: parsedRequest.routeContext.environmentId,
-        action: { kind: 'command', name: 'run:start' },
+        action,
       },
       'req-plan-route-authorized'
     );
@@ -104,7 +112,10 @@ describe('resolveAuthorizedPlanRouteRequest', () => {
       request as never,
       deps as never,
       { ok: true, value: buildParsedRequest() },
-      (value) => value.routeContext
+      {
+        selectRequestedScope: (value) => value.routeContext,
+        action: { kind: 'command', name: 'run:start' },
+      }
     );
 
     expect(result).toEqual({
@@ -113,6 +124,45 @@ describe('resolveAuthorizedPlanRouteRequest', () => {
         status: 403,
         body: {
           error: { type: 'forbidden', reason: 'action_not_granted' },
+        },
+      },
+    });
+  });
+
+  it('builds declarative resolvers that run an optional post-authorization guard', async () => {
+    const deps = okAuthDeps();
+    const request = createPreviewRequest({ id: 'req-plan-route-builder-guard' });
+    const parsedRequest = buildParsedRequest();
+    const validateAuthorizedRequest = vi.fn(async () => ({
+      status: 422 as const,
+      body: {
+        error: { type: 'unprocessable', reason: 'guard_failed' },
+      },
+    }));
+    const resolver = createAuthorizedPlanRouteRequestResolver({
+      parseRequestBody: () => ({ ok: true, value: parsedRequest }),
+      selectRequestedScope: (value) => value.routeContext,
+      action: { kind: 'command', name: 'run:start' },
+      validateAuthorizedRequest,
+    });
+
+    const result = await resolver(request as never, deps as never);
+
+    expect(validateAuthorizedRequest).toHaveBeenCalledWith(
+      expect.objectContaining({
+        parsedRequest,
+        context: expect.objectContaining({
+          principal: { principalId: 'principal-1' },
+        }),
+      }),
+      deps
+    );
+    expect(result).toEqual({
+      ok: false,
+      response: {
+        status: 422,
+        body: {
+          error: { type: 'unprocessable', reason: 'guard_failed' },
         },
       },
     });

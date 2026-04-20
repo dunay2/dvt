@@ -46,7 +46,7 @@ import { StructuredWorkspaceGraphDraftAuditLogger } from '../infrastructure/work
 import type { Env } from '../plugins/env.js';
 
 import { buildProviderAdapters } from './buildProviderAdapters.js';
-import { buildExternalCompilePlanner } from './externalCompilePlannerProfile.js';
+import { buildPlanCompilePlanner } from './planCompilePlannerProfile.js';
 import { bindStateStoreRoles } from './stateStoreRoles.js';
 import type { ProtectedRuntimeModule } from './types.js';
 
@@ -265,7 +265,7 @@ export async function buildProtectedRuntimeModule(
     () => new Date()
   );
   const planner = new PlannerFacade();
-  const externalCompilePlanner = buildExternalCompilePlanner();
+  const planCompilePlanner = buildPlanCompilePlanner();
   const planValidator = new StoredPlanExecutabilityValidator({
     fetcher: planStore,
     adapters,
@@ -302,7 +302,7 @@ export async function buildProtectedRuntimeModule(
     startRunTargetAdapterRegistry,
     stateStore: stateStoreRoles,
     planner,
-    externalCompilePlanner,
+    planCompilePlanner,
     planStore,
     planValidator,
     executablePlanResolver,

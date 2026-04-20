@@ -145,12 +145,12 @@ export {
   SparkJobDeployModeSchema,
   SparkJobRuntimeSchema,
   SparkJobStepTypeConfigSchema,
-} from './contracts/planner/ExternalCompileStepTypeConfigs.v1.js';
+} from './contracts/planner/PlanCompileStepTypeConfigs.v1.js';
 export type {
   SparkJobDeployMode,
   SparkJobRuntime,
   SparkJobStepTypeConfig,
-} from './contracts/planner/ExternalCompileStepTypeConfigs.v1.js';
+} from './contracts/planner/PlanCompileStepTypeConfigs.v1.js';
 export {
   ConcurrencyPolicySchema,
   MAX_RETRY_POLICY_ATTEMPTS,

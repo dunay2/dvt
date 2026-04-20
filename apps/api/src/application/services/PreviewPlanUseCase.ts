@@ -4,11 +4,9 @@ import type {
   IPlanExecutabilityValidator,
   IPlanValidationLifecycleStore,
   IPlanner,
-  PlanPreviewProvenance,
   PlanRef,
   PlannerPolicyClassSet,
   PlannerSelection,
-  PreviewProfile,
 } from '@dvt/contracts';
 
 import type { AuthorizedCommandExecutionContext } from '../ports/authContract.js';
@@ -18,11 +16,6 @@ import { resolveCanonicalPlannerInputEnvelope } from './resolveCanonicalPlannerI
 
 type PreviewPlanValidationResult = Awaited<ReturnType<IPlanExecutabilityValidator['validatePlan']>>;
 
-export interface PreviewPlanProfile {
-  readonly previewProfile: PreviewProfile;
-  readonly executor?: 'dbt' | 'postgres';
-}
-
 export interface PreviewPlanCommand {
   readonly tenantId: string;
   readonly projectId: string;
@@ -30,8 +23,6 @@ export interface PreviewPlanCommand {
   readonly targetAdapter: string;
   readonly graphSource: GenericGraphSourceV1;
   readonly selection: PlannerSelection;
-  readonly previewProfile: PreviewPlanProfile;
-  readonly provenance?: PlanPreviewProvenance;
   readonly policies?: PlannerPolicyClassSet;
   readonly environment?: StartRunPlannerEnvironmentInput;
   readonly observability?: ExecutionPlan['observability'];
@@ -77,7 +68,7 @@ export class PreviewPlanUseCase {
         projectId: command.projectId,
         environmentId: command.environmentId,
       },
-      observability: buildPreviewObservability(command),
+      observability: command.observability,
       requestedBy: context.principal.principalId,
       requestId: context.requestId,
       requestedAtIso: context.authorizedAt.toISOString(),
@@ -103,39 +94,4 @@ export class PreviewPlanUseCase {
       planRef,
     };
   }
-}
-
-function buildPreviewObservability(
-  command: PreviewPlanCommand
-): NonNullable<ExecutionPlan['observability']> {
-  const baseObservability = command.observability;
-  const baseExtra = baseObservability?.extra ?? {};
-  const extraWithRuntimeBinding =
-    command.previewProfile.executor === undefined
-      ? baseExtra
-      : {
-          ...baseExtra,
-          transformationFlowRuntime: {
-            previewProfile: command.previewProfile.previewProfile,
-            executor: command.previewProfile.executor,
-          },
-        };
-  const extraWithProvenance =
-    command.provenance === undefined
-      ? extraWithRuntimeBinding
-      : {
-          ...extraWithRuntimeBinding,
-          transformationFlowProvenance: command.provenance,
-        };
-
-  return {
-    ...baseObservability,
-    tags: {
-      ...baseObservability?.tags,
-      'dvt.scope.tenantId': command.tenantId,
-      'dvt.scope.projectId': command.projectId,
-      'dvt.scope.environmentId': command.environmentId,
-    },
-    ...(Object.keys(extraWithProvenance).length === 0 ? {} : { extra: extraWithProvenance }),
-  };
 }

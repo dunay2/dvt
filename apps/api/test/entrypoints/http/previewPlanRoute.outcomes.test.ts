@@ -19,31 +19,71 @@ import {
 } from './planRouteHttpTestSupport.js';
 import { createPreviewDeps } from './previewPlanRouteTestSupport.js';
 
+function createAcceptedPreviewDeps(
+  buildPlan: ReturnType<typeof vi.fn>
+): ReturnType<typeof createPreviewDeps> {
+  return createPreviewDeps({
+    planner: { buildPlan },
+    planStore: {
+      storePlan: vi.fn(async () => VALID_PLAN_REF),
+      markValid: vi.fn(async () => undefined),
+      markInvalid: vi.fn(async () => undefined),
+    },
+    planValidator: {
+      validatePlan: vi.fn(async () => ({
+        status: 'OK',
+        planId: VALID_PLAN_REF.planId,
+        adapterId: 'mock',
+      })),
+    },
+  });
+}
+
+async function executePreviewRequest(
+  reply: ReturnType<typeof createReply>,
+  deps: ReturnType<typeof createPreviewDeps>,
+  request: Parameters<typeof createPreviewRequest>[0]
+): Promise<void> {
+  await previewPlanRoute(createPreviewRequest(request) as never, reply as never, deps as never);
+}
+
+function expectTransformationPreviewPlannerObservability(
+  buildPlan: ReturnType<typeof vi.fn>
+): void {
+  expect(buildPlan).toHaveBeenCalledWith(
+    expect.objectContaining({
+      ownership: {
+        tenantId: 'tenant-1',
+        projectId: 'project-1',
+        environmentId: 'env-1',
+      },
+      observability: expect.objectContaining({
+        tags: {
+          'dvt.scope.tenantId': 'tenant-1',
+          'dvt.scope.projectId': 'project-1',
+          'dvt.scope.environmentId': 'env-1',
+        },
+        extra: expect.objectContaining({
+          transformationFlowRuntime: {
+            previewProfile: PREVIEW_PROFILE_TRANSFORMATION,
+            executor: 'postgres',
+          },
+          transformationFlowProvenance: VALID_PREVIEW_PROVENANCE,
+        }),
+      }),
+    })
+  );
+}
+
 describe('previewPlanRoute outcomes', () => {
   it('returns plan and planRef for a generic preview', async () => {
     const reply = createReply();
     const plan = buildStoredPlan();
     const buildPlan = vi.fn(async () => ({ plan, canonicalPlanJson: '{}' }));
-    const validatePlan = vi.fn(async () => ({
-      status: 'OK',
-      planId: VALID_PLAN_REF.planId,
-      adapterId: 'mock',
-    }));
-    const deps = createPreviewDeps({
-      planner: { buildPlan },
-      planStore: {
-        storePlan: vi.fn(async () => VALID_PLAN_REF),
-        markValid: vi.fn(async () => undefined),
-        markInvalid: vi.fn(async () => undefined),
-      },
-      planValidator: { validatePlan },
-    });
+    const deps = createAcceptedPreviewDeps(buildPlan);
+    const validatePlan = deps.planValidator.validatePlan;
 
-    await previewPlanRoute(
-      createPreviewRequest({ id: 'req-preview-ok' }) as never,
-      reply as never,
-      deps as never
-    );
+    await executePreviewRequest(reply, deps, { id: 'req-preview-ok' });
 
     expect(reply.statusCode).toBe(200);
     expect(reply.payload).toEqual({
@@ -109,35 +149,17 @@ describe('previewPlanRoute outcomes', () => {
     const reply = createReply();
     const plan = buildTransformationStoredPlan();
     const buildPlan = vi.fn(async () => ({ plan, canonicalPlanJson: '{}' }));
-    const deps = createPreviewDeps({
-      planner: { buildPlan },
-      planStore: {
-        storePlan: vi.fn(async () => VALID_PLAN_REF),
-        markValid: vi.fn(async () => undefined),
-        markInvalid: vi.fn(async () => undefined),
-      },
-      planValidator: {
-        validatePlan: vi.fn(async () => ({
-          status: 'OK',
-          planId: VALID_PLAN_REF.planId,
-          adapterId: 'mock',
-        })),
-      },
-    });
+    const deps = createAcceptedPreviewDeps(buildPlan);
 
-    await previewPlanRoute(
-      createPreviewRequest({
-        id: 'req-preview-provenance',
-        body: buildPreviewBody({
-          previewProfile: PREVIEW_PROFILE_TRANSFORMATION,
-          selectedNodeIds: ['source-node', 'transform-node', 'sink-node'],
-          graphSource: VALID_TRANSFORMATION_GRAPH_SOURCE,
-          provenance: VALID_PREVIEW_PROVENANCE,
-        }),
-      }) as never,
-      reply as never,
-      deps as never
-    );
+    await executePreviewRequest(reply, deps, {
+      id: 'req-preview-provenance',
+      body: buildPreviewBody({
+        previewProfile: PREVIEW_PROFILE_TRANSFORMATION,
+        selectedNodeIds: ['source-node', 'transform-node', 'sink-node'],
+        graphSource: VALID_TRANSFORMATION_GRAPH_SOURCE,
+        provenance: VALID_PREVIEW_PROVENANCE,
+      }),
+    });
 
     expect(reply.statusCode).toBe(200);
     expect(reply.payload).toEqual(
@@ -155,24 +177,7 @@ describe('previewPlanRoute outcomes', () => {
         provenance: VALID_PREVIEW_PROVENANCE,
       })
     );
-    expect(buildPlan).toHaveBeenCalledWith(
-      expect.objectContaining({
-        ownership: {
-          tenantId: 'tenant-1',
-          projectId: 'project-1',
-          environmentId: 'env-1',
-        },
-        observability: expect.objectContaining({
-          extra: expect.objectContaining({
-            transformationFlowRuntime: {
-              previewProfile: PREVIEW_PROFILE_TRANSFORMATION,
-              executor: 'postgres',
-            },
-            transformationFlowProvenance: VALID_PREVIEW_PROVENANCE,
-          }),
-        }),
-      })
-    );
+    expectTransformationPreviewPlannerObservability(buildPlan);
   });
 
   it('returns 500 when the planner throws an unexpected error', async () => {

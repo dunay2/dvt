@@ -2,7 +2,7 @@
 title: Review Status Board
 status: Active
 owner: Product / Architecture / Docs
-last_reviewed: 2026-04-19
+last_reviewed: 2026-04-20
 planning_type: review
 ---
 
@@ -58,14 +58,14 @@ Additional active rationale:
 
 - [20260419 Plan-route boundary remediation review](./architecture-and-governance/20260419-plan-route-boundary-remediation-review.md)
   - domain: `architecture-and-governance`
-  - role: current code-grounded Fowler and DDD review for post-branch plan-route facade, import ownership, and compile vocabulary drift
-  - linkage: `TF-A1-C12..TF-A1-C14`
-  - status: `in_progress`
-  - progress: `33%`
+  - role: reference review for the closed plan-route remediation and maturity slices; preview observability ownership, plan-route authorization metadata, and the declarative request-resolution recipe are closed by `TF-A1-C15..TF-A1-C17`
+  - linkage: `TF-A1-C12..TF-A1-C17`
+  - status: `reference`
+  - progress: `n/a`
 
 - [20260418 MW-D1 external compile boundary review](./architecture-and-governance/20260418-mw-d1-external-compile-boundary-review.md)
   - domain: `architecture-and-governance`
-  - role: active code-grounded Fowler, DDD, hexagonal, and CQRS review for the compile-only boundary
+  - role: historical MW-D1 review retained as evidence from before the plan-compile language alignment
   - linkage: `MW-D1`
   - status: `done`
   - progress: `100%`

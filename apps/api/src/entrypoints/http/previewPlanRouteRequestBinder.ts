@@ -1,5 +1,6 @@
 import type { PreviewPlanCommand } from '../../application/services/PreviewPlanUseCase.js';
 
+import { bindScopeToPlannerEnvelope } from './planPreviewEnvelopeBinder.js';
 import type { ParsedPreviewCommandInput } from './previewPlanRouteCommandParser.js';
 import type { ParsedPreviewRoutePolicy } from './previewPlanRoutePolicyParser.js';
 import type { PreviewProvenance } from './previewProvenanceParser.js';
@@ -23,6 +24,22 @@ export function createParsedPreviewPlanRequest(
   routePolicy: ParsedPreviewRoutePolicy,
   commandInput: ParsedPreviewCommandInput
 ): ParsedPreviewPlanRequest {
+  const plannerEnvelope = bindScopeToPlannerEnvelope(
+    {
+      graphSource: commandInput.graphSource,
+      ...(commandInput.policies === undefined ? {} : { policies: commandInput.policies }),
+      ...(commandInput.environment === undefined
+        ? {}
+        : { environment: commandInput.environment }),
+      ...(commandInput.observability === undefined
+        ? {}
+        : { observability: commandInput.observability }),
+    },
+    routePolicy.routeContext,
+    commandInput.provenance,
+    routePolicy.previewProfile
+  );
+
   return {
     routeContext: routePolicy.routeContext,
     previewProfile: routePolicy.previewProfile,
@@ -39,30 +56,13 @@ export function createParsedPreviewPlanRequest(
       targetAdapter: routePolicy.routeContext.targetAdapter,
       graphSource: commandInput.graphSource,
       selection: { selectedNodeIds: commandInput.selectedNodeIds },
-      previewProfile: buildPreviewPlanProfile(routePolicy),
-      ...(commandInput.provenance === undefined
+      ...(plannerEnvelope.policies === undefined ? {} : { policies: plannerEnvelope.policies }),
+      ...(plannerEnvelope.environment === undefined
         ? {}
-        : { provenance: commandInput.provenance }),
-      ...(commandInput.policies === undefined ? {} : { policies: commandInput.policies }),
-      ...(commandInput.environment === undefined
+        : { environment: plannerEnvelope.environment }),
+      ...(plannerEnvelope.observability === undefined
         ? {}
-        : { environment: commandInput.environment }),
-      ...(commandInput.observability === undefined
-        ? {}
-        : { observability: commandInput.observability }),
+        : { observability: plannerEnvelope.observability }),
     },
   };
-}
-
-function buildPreviewPlanProfile(
-  routePolicy: ParsedPreviewRoutePolicy
-): PreviewPlanCommand['previewProfile'] {
-  return routePolicy.previewProfile.executor === undefined
-    ? {
-        previewProfile: routePolicy.previewProfile.previewProfile,
-      }
-    : {
-        previewProfile: routePolicy.previewProfile.previewProfile,
-        executor: routePolicy.previewProfile.executor,
-      };
 }
