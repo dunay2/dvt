@@ -78,6 +78,7 @@ flowchart LR
   [Transformation Flow Product Decisions 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-product-decisions-20260405.md),
   [Transformation Flow Architecture And Contracts 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md),
   [20260417 DVT artifacts review](../reviews/architecture-and-governance/20260417-dvt-artifacts-review.md),
+  [20260419 Plan-route boundary remediation review](../reviews/architecture-and-governance/20260419-plan-route-boundary-remediation-review.md),
   [20260410 Contract pack and read boundary reset Fowler review](../reviews/architecture-and-governance/20260410-contract-pack-and-read-boundary-reset-fowler-review.md),
   [20260411 AR-A12-B status model split Fowler review](../reviews/architecture-and-governance/20260411-ar-a12-b-status-model-split-fowler-review.md),
   [Contract pack and read boundary reset plan 2026-04-10](../proposals/mandatory/runtime-and-contracts/contract-pack-and-read-boundary-reset-plan-20260410.md),
@@ -87,7 +88,10 @@ flowchart LR
   Near-term target: keep the now-frozen first SQL-first transformation contract
   pack (`DesignGraphDraft`, `GitArtifactRef`, preview-persist boundary, and
   deterministic compiler mapping) stable now that `TF-A1-C` has closed the
-  step-kind authority and direct API/UI seam hardening, and continue the
+  step-kind authority and direct API/UI seam hardening, execute the queued
+  `TF-A1-C12..C14` follow-through to standardize the shared plan-route
+  remote-facade recipe, replace observability-tag import ownership, and
+  converge compile-boundary vocabulary plus living docs, and then continue the
   remaining shared-kernel and plan-record hardening under `RC-G1` and `S08`,
   while `S05-TRUTH-SYNC` keeps payload-version closure truth aligned across
   planning and status surfaces and `RC-G1-C-TRUTH-SYNC` now closes the post-merge

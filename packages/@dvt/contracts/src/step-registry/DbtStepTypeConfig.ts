@@ -35,7 +35,7 @@ export interface DbtStepTypeConfig extends Record<string, unknown> {
   };
 }
 
-export const DbtStepTypeConfigSchema = z
+export const CommonStepTypeConfigSchema = z
   .object({
     stepTimeoutMs: z.number().positive().optional(),
     concurrency: z
@@ -48,3 +48,5 @@ export const DbtStepTypeConfigSchema = z
     compiledCodeRef: CompiledCodeRefSchema.optional(),
   })
   .strict();
+
+export const DbtStepTypeConfigSchema = CommonStepTypeConfigSchema;

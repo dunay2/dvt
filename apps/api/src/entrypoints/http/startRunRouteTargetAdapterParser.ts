@@ -2,18 +2,18 @@ import type { IStartRunTargetAdapterRegistry } from '../../application/ports/ISt
 import type { StartRunCommand } from '../../application/ports/startRunCommandContract.js';
 import { DEFAULT_START_RUN_TARGET_ADAPTER_REGISTRY } from '../../application/services/startRunTargetAdapterRegistry.js';
 
-import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
-import { badRequestResult, type RouteParseResult } from './routeParseIssue.js';
-import { asCanonicalNonEmptyStringOrUndefined } from './startRunRouteBodyValidation.js';
+import { parseRouteTargetAdapter, type RouteTargetAdapterSupport } from './planRouteTargetAdapterParser.js';
+import { type RouteParseResult } from './routeParseIssue.js';
 
 export function parseStartRunTargetAdapter(
   rawTargetAdapter: unknown,
   registry: IStartRunTargetAdapterRegistry = DEFAULT_START_RUN_TARGET_ADAPTER_REGISTRY
 ): RouteParseResult<StartRunCommand['targetAdapter']> {
-  const normalized = asCanonicalNonEmptyStringOrUndefined(rawTargetAdapter);
-  if (normalized === undefined || !registry.isSupported(normalized)) {
-    return badRequestResult(HTTP_ERROR_REASON.invalidTargetAdapter, { target: 'targetAdapter' });
-  }
+  const support: RouteTargetAdapterSupport<StartRunCommand['targetAdapter']> = {
+    isSupported(value: string): value is StartRunCommand['targetAdapter'] {
+      return registry.isSupported(value);
+    },
+  };
 
-  return { ok: true, value: normalized };
+  return parseRouteTargetAdapter(rawTargetAdapter, support);
 }

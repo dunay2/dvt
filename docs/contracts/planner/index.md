@@ -17,6 +17,7 @@ ExecutionPlan and planner-related schemas and compatibility contracts.
 - `packages/@dvt/contracts/src/contracts/planner/IExecutionPlanner.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/PlanAdmissionLink.v1.schema.json`
 - `packages/@dvt/contracts/src/contracts/planner/PlanAdmissionLink.v1.ts`
+- `packages/@dvt/contracts/src/contracts/planner/PlanCompileStepTypeConfigs.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/PlanExecutabilityRecord.v1.schema.json`
 - `packages/@dvt/contracts/src/contracts/planner/PlanExecutabilityRecord.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/PlanExecutabilityValidation.v1.ts`

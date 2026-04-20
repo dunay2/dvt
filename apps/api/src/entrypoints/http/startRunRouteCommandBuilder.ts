@@ -3,20 +3,20 @@ import type { StartRunCommand } from '../../application/ports/startRunCommandCon
 import { DEFAULT_START_RUN_TARGET_ADAPTER_REGISTRY } from '../../application/services/startRunTargetAdapterRegistry.js';
 
 import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
+import { asCanonicalNonEmptyStringOrUndefined } from './planRouteBodyParser.js';
+import { parsePlanRoutePlannerEnvelope } from './planRoutePlannerEnvelopeParser.js';
+import { parsePlanRoutePlanRef } from './planRoutePlanRefParser.js';
+import { evaluatePlanRoutePlanSource } from './planRoutePlanSourcePolicy.js';
+import { parsePlanRouteRunExecutionContextRef } from './planRouteRunExecutionContextRefParser.js';
+import { parsePlanRouteSelection } from './planRouteSelectionParser.js';
 import { badRequestResult, type RouteParseResult } from './routeParseIssue.js';
-import { asCanonicalNonEmptyStringOrUndefined } from './startRunRouteBodyValidation.js';
-import { parseStartRunPlannerEnvelope } from './startRunRoutePlannerEnvelopeMapper.js';
-import { parseStartRunPlanRef } from './startRunRoutePlanRefParser.js';
-import { evaluateStartRunPlanSource } from './startRunRoutePlanSourcePolicy.js';
-import { parseStartRunRunExecutionContextRef } from './startRunRouteRunExecutionContextRefParser.js';
-import { parseStartRunSelection } from './startRunRouteSelectionParser.js';
 import { parseStartRunTargetAdapter } from './startRunRouteTargetAdapterParser.js';
 
 export function parseStartRunCommand(
   record: Record<string, unknown>,
   adapterRegistry: IStartRunTargetAdapterRegistry = DEFAULT_START_RUN_TARGET_ADAPTER_REGISTRY
 ): RouteParseResult<StartRunCommand> {
-  const selection = parseStartRunSelection(record.selection);
+  const selection = parsePlanRouteSelection(record.selection);
   if (!selection.ok) {
     return selection;
   }
@@ -31,7 +31,7 @@ export function parseStartRunCommand(
     return targetAdapter;
   }
 
-  const sourceDecision = evaluateStartRunPlanSource(record);
+  const sourceDecision = evaluatePlanRoutePlanSource(record);
   if (!sourceDecision.ok) {
     return sourceDecision;
   }
@@ -63,7 +63,7 @@ export function buildPlanRefStartRunCommand(input: {
   readonly targetAdapter: StartRunCommand['targetAdapter'];
   readonly selection: ReadonlyArray<string>;
 }): RouteParseResult<StartRunCommand> {
-  const planRef = parseStartRunPlanRef(input.rawPlanRef);
+  const planRef = parsePlanRoutePlanRef(input.rawPlanRef);
   if (!planRef.ok) {
     return planRef;
   }
@@ -96,7 +96,7 @@ export function buildPlannerBackedStartRunCommand(input: {
   readonly targetAdapter: StartRunCommand['targetAdapter'];
   readonly selection: ReadonlyArray<string>;
 }): RouteParseResult<StartRunCommand> {
-  const plannerInput = parseStartRunPlannerEnvelope(input.record);
+  const plannerInput = parsePlanRoutePlannerEnvelope(input.record);
   if (!plannerInput.ok) {
     return plannerInput;
   }
@@ -137,5 +137,5 @@ function parseOptionalRunExecutionContextRef(
     return { ok: true, value: undefined };
   }
 
-  return parseStartRunRunExecutionContextRef(raw);
+  return parsePlanRouteRunExecutionContextRef(raw);
 }

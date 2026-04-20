@@ -34,6 +34,7 @@ export type {
   ExecutionStepV1,
   GenericGraphNodeV1,
   GenericGraphSourceV1,
+  PlanOwnership,
   PlanCore,
   PlannerBuildResultV1,
   PlannerEnvironmentContext,
@@ -140,6 +141,16 @@ export type {
   TransformationSqlFirstPlanSummary,
   TransformationStepKind,
 } from './contracts/planner/TransformationFlowCompiler.v1.js';
+export {
+  SparkJobDeployModeSchema,
+  SparkJobRuntimeSchema,
+  SparkJobStepTypeConfigSchema,
+} from './contracts/planner/PlanCompileStepTypeConfigs.v1.js';
+export type {
+  SparkJobDeployMode,
+  SparkJobRuntime,
+  SparkJobStepTypeConfig,
+} from './contracts/planner/PlanCompileStepTypeConfigs.v1.js';
 export {
   ConcurrencyPolicySchema,
   MAX_RETRY_POLICY_ATTEMPTS,

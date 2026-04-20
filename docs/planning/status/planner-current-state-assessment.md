@@ -2,7 +2,7 @@
 title: Planner Current State Assessment
 status: Active
 owner: Architecture / Planner / Docs
-last_reviewed: 2026-04-10
+last_reviewed: 2026-04-19
 planning_type: status
 ---
 
@@ -108,12 +108,12 @@ flowchart LR
    [ManifestArtifactResolver.ts](../../../apps/api/src/infrastructure/planner/ManifestArtifactResolver.ts),
    [StoredPlanExecutabilityValidator.ts](../../../apps/api/src/application/services/StoredPlanExecutabilityValidator.ts),
    [PlannerBackedStartRunUseCase.ts](../../../apps/api/src/application/services/PlannerBackedStartRunUseCase.ts),
-   [startRunRoutePlanSourcePolicy.ts](../../../apps/api/src/entrypoints/http/startRunRoutePlanSourcePolicy.ts)
+   [planRoutePlanSourcePolicy.ts](../../../apps/api/src/entrypoints/http/planRoutePlanSourcePolicy.ts)
    Primary evidence:
    [PlannerBackedStartRunUseCase.test.ts](../../../apps/api/test/application/services/PlannerBackedStartRunUseCase.test.ts),
    [StoredPlanExecutabilityValidator.test.ts](../../../apps/api/test/application/services/StoredPlanExecutabilityValidator.test.ts),
    [plannerEngineContract.test.ts](../../../apps/api/test/integration/plannerEngineContract.test.ts),
-   [startRunRoutePlanSourcePolicy.test.ts](../../../apps/api/test/entrypoints/http/startRunRoutePlanSourcePolicy.test.ts)
+   [planRoutePlanSourcePolicy.test.ts](../../../apps/api/test/entrypoints/http/planRoutePlanSourcePolicy.test.ts)
 
 ## Public Methods And Boundaries
 
@@ -182,7 +182,7 @@ sequenceDiagram
 
 ```mermaid
 flowchart LR
-    Request["start-run request without planRef"] --> Policy["startRunRoutePlanSourcePolicy"]
+    Request["start-run request without planRef"] --> Policy["planRoutePlanSourcePolicy"]
     Policy --> UseCase["PlannerBackedStartRunUseCase"]
     UseCase --> Planner["IPlanner.buildPlan()"]
     Planner --> Store["IPlanValidationLifecycleStore.storePlan()"]

@@ -49,6 +49,27 @@ export function registerValidationExecutionPlanSuite(): void {
         maximumInterval: '30s',
         backoffCoefficient: 2,
       });
+      expect(plan.metadata.ownership).toEqual({
+        tenantId: 'tenant-a',
+        projectId: 'analytics',
+        environmentId: 'prod',
+      });
+    });
+
+    it('rejects ExecutionPlan when ownership metadata contains blank fields', () => {
+      expect(() =>
+        parseExecutionPlan({
+          ...VALID_EXECUTION_PLAN_V2_FIXTURE,
+          metadata: {
+            ...VALID_EXECUTION_PLAN_V2_FIXTURE.metadata,
+            ownership: {
+              tenantId: 'tenant-a',
+              projectId: ' ',
+              environmentId: 'prod',
+            },
+          },
+        })
+      ).toThrow(ContractValidationError);
     });
 
     it('rejects ExecutionPlan when retryPolicy maximumInterval is lower than initialInterval', () => {

@@ -150,6 +150,46 @@ describe('parseRecoverRunRequest', () => {
     });
   });
 
+  it('accepts recover targetAdapter values from the configured catalog', () => {
+    const parsed = parseRecoverRunRequest({
+      sourceRunId: 'source-run-1',
+      body: {
+        tenantId: 'tenant-a',
+        recoveryRunId: 'recovery-run-1',
+        targetAdapter: 'conductor',
+        planRef: {
+          uri: 'https://plans.example/plan.json',
+          sha256: 'a'.repeat(64),
+          schemaVersion: 'v1.0',
+          planId: 'plan-a',
+          planVersion: '1.0.0',
+        },
+      },
+    });
+
+    expect(parsed).toEqual({
+      ok: true,
+      value: {
+        command: {
+          sourceRunId: 'source-run-1',
+          recoveryRunId: 'recovery-run-1',
+          targetAdapter: 'conductor',
+          planRef: {
+            uri: 'https://plans.example/plan.json',
+            sha256: 'a'.repeat(64),
+            schemaVersion: 'v1.0',
+            planId: 'plan-a',
+            planVersion: '1.0.0',
+          },
+        },
+        authorization: {
+          tenantId: { value: 'tenant-a' },
+          actionName: RUN_COMMAND_ACTION.RETRY,
+        },
+      },
+    });
+  });
+
   it('rejects when recoveryRunId equals sourceRunId', () => {
     const parsed = parseRecoverRunRequest({
       sourceRunId: 'same-run-id',

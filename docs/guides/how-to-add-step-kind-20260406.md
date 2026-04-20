@@ -2,7 +2,7 @@
 title: How To Add A New StepKind
 status: Active
 owner: Product / Architecture / Runtime
-last_reviewed: 2026-04-06
+last_reviewed: 2026-04-19
 ---
 
 # How To Add A New StepKind
@@ -12,8 +12,8 @@ This guide defines the governed protocol for adding a new `StepKind` end to end.
 Use this for examples like `PYTHON_SCRIPT`, `SPARK_JOB`, or `API_CALL`.
 
 If the work introduces a new step family, a plugin-backed catalog contribution,
-or a new external compile profile, also follow
-[External Compile Catalog Extension Technical Manual](external-compile-catalog-extension-technical-manual-20260417.md).
+or a new plan compile profile, also follow
+[Plan Compile Catalog Extension Technical Manual](plan-compile-catalog-extension-technical-manual-20260417.md).
 
 ## Prerequisites
 

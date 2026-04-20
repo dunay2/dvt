@@ -10,7 +10,12 @@
  * boundary type in @dvt/contracts — re-exported here for internal use.
  */
 
-import type { ExecutionPlan, PlannerPolicyClassSet, PlannerSelection } from '@dvt/contracts';
+import type {
+  ExecutionPlan,
+  PlanOwnership,
+  PlannerPolicyClassSet,
+  PlannerSelection,
+} from '@dvt/contracts';
 
 // Canonical types — re-exported from @dvt/contracts (single source of truth).
 export type {
@@ -55,6 +60,7 @@ export interface PlannerInputEnvelopeV1 {
   };
   selection: PlannerSelection;
   policies?: PlannerPolicyClassSet;
+  ownership?: PlanOwnership;
   observability?: ExecutionPlan['observability'];
   // Volatile orchestration metadata — excluded from inputHashSha256.
   requestedBy?: string;

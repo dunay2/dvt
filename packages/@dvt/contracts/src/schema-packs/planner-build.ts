@@ -14,12 +14,21 @@ import {
 } from './planner-context.js';
 import { GenericGraphSourceV1Schema } from './planner-graph.js';
 
+const PlanOwnershipSchema = z
+  .object({
+    tenantId: NonBlankStringSchema,
+    projectId: NonBlankStringSchema,
+    environmentId: NonBlankStringSchema,
+  })
+  .strict();
+
 export const PlannerInputEnvelopeV1Schema = z
   .object({
     graphSource: GenericGraphSourceV1Schema,
     selection: PlannerSelectionSchema,
     policies: PlannerPolicyClassSetSchema.optional(),
     environment: PlannerEnvironmentContextSchema.optional(),
+    ownership: PlanOwnershipSchema.optional(),
     observability: PlannerObservabilitySchema,
     requestedBy: z.string().min(1).optional(),
     requestId: z.string().min(1).optional(),

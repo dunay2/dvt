@@ -47,6 +47,10 @@ describe('contracts: planner normative contract (GAP-P0-02)', () => {
           ...VALID_PLANNER_BUILD_RESULT_V2_FIXTURE,
           plan: {
             ...VALID_PLANNER_BUILD_RESULT_V2_FIXTURE.plan,
+            metadata: {
+              ...VALID_PLANNER_BUILD_RESULT_V2_FIXTURE.plan.metadata,
+              ownership: input.ownership,
+            },
             observability: input.observability,
           },
         }) as PlannerBuildResultV1;
@@ -58,6 +62,7 @@ describe('contracts: planner normative contract (GAP-P0-02)', () => {
     );
 
     expect(result.plan.metadata.planVersion).toBe(CURRENT_EXECUTION_PLAN_VERSION);
+    expect(result.plan.metadata.ownership).toEqual(VALID_PLANNER_INPUT_FIXTURE.ownership);
     expect(result.executionPolicy.requiresCapabilities).toEqual(['basic-execution']);
     expect(result.plan.steps.length).toBeGreaterThan(0);
   });
@@ -128,6 +133,7 @@ describe('contracts: planner normative contract (GAP-P0-02)', () => {
     expect(plan.metadata.schemaVersion).toBe('v1.2');
     expect(plan.metadata.contractVersion).toBe('1.0.0');
     expect(plan.metadata.planId).toMatch(/^[a-f0-9]{64}$/);
+    expect(plan.metadata.ownership).toEqual(VALID_PLANNER_INPUT_FIXTURE.ownership);
     expect(plan.steps[0]?.retryPolicy).toEqual({
       maxAttempts: 3,
       initialInterval: '1s',

@@ -35,7 +35,7 @@ export interface ProtectedRuntimeModule {
   startRunTargetAdapterRegistry: IStartRunTargetAdapterRegistry;
   stateStore: StateStoreRoleBindings;
   planner: IPlanner;
-  externalCompilePlanner: IPlanner;
+  planCompilePlanner: IPlanner;
   planStore: IPlanValidationLifecycleStore;
   planValidator: IPlanExecutabilityValidator;
   executablePlanResolver: { fetch(planRef: PlanRef): Promise<ExecutionPlan> };

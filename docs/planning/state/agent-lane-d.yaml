@@ -2,7 +2,7 @@ lane_id: D
 title: Scale And Go-To-Market
 owner: Product / Architecture / Delivery / Docs
 status: Active
-last_reviewed: '2026-04-13'
+last_reviewed: '2026-04-19'
 goal: Prepare the system for scale and for the first enterprise customer.
 expected_outcome:
   - storage and read-path scale are bounded
@@ -314,7 +314,7 @@ tasks:
     last_verified: '2026-04-02'
   - task_id: MW-D1
     priority: P1
-    status: in_progress
+    status: done
     objective: >-
       create an SDK/API for external plan definition that allows systems outside the dbt ecosystem
       to submit DAGs to the planner without going through the dbt manifest format.
@@ -325,23 +325,22 @@ tasks:
       Python script DAG or a Spark job dependency graph).
     complexity: L
     effort_points: 8
-    progress_pct: 35
+    progress_pct: 100
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/mw-d1-external-plan-definition-sdk-api-plan-20260417.md
       - docs/guides/external-compile-target-architecture-technical-manual-20260417.md
       - docs/guides/external-compile-catalog-extension-technical-manual-20260417.md
+      - docs/planning/reviews/architecture-and-governance/20260418-mw-d1-external-compile-boundary-review.md
       - docs/planning/closeouts/20260417-mw-d1-planning-closeout.md
+      - docs/planning/closeouts/20260419-mw-d1-external-compile-boundary-closeout.md
     status_reason: >-
-      Think-first analysis, DDD boundary map, Fowler-style sequence diagrams, the SRP module split
-      for compile, the English user-story framing, the executable roadmap and backlog, the target
-      architecture package with C4, DDD, ports, aggregates, roots, and class relations, the
-      canonical family-and-kind catalog model, the plugin contribution and typed profile design, the
-      semantic split between step kind, family, target adapter, and worker routing, and the
-      no-legacy compile-ingress rule are now frozen; remaining work is to land the dedicated compile
-      route, use case, compile profile spec plus factory, resolved-catalog composition, and non-dbt
-      integration tests.
-    last_verified: '2026-04-17'
+      The compile-only ingress now delegates through a dedicated application use case and response
+      mapper, composition resolves a catalog-first family-and-kind registry, the `spark` family owns
+      a shared-kernel contract schema instead of app-local schema construction, legacy ingress stays
+      rejected, and both contract-level and API-level tests prove non-dbt plan compilation through
+      the external boundary.
+    last_verified: '2026-04-19'
   - task_id: MW-D2
     priority: P2
     status: queued
@@ -530,13 +529,12 @@ dependency_notes:
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
-  verified_on: '2026-04-17'
+  verified_on: '2026-04-19'
   total_tasks: 26
   total_effort_points: 135
-  completed_weighted_points: 41.8
-  lane_progress_pct: 31
+  completed_weighted_points: 47
+  lane_progress_pct: 35
   notes: >-
-    Weighted progress uses effort_points. `MW-D1` now includes the frozen compile-boundary structure
-    plus the documented family-and-plugin catalog model, while remaining Lane D near-term work is
-    retention enforcement, scale hardening, and implementation follow-through on the external
-    compile slice.
+    Weighted progress uses effort_points. `MW-D1` is now closed with the compile-only route/use-case
+    split, catalog-first composition, and non-dbt acceptance vector; remaining Lane D near-term work
+    is retention enforcement and the open scale backlog.

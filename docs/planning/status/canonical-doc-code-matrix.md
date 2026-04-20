@@ -2,7 +2,7 @@
 title: Canonical Doc Code Matrix
 status: Active
 owner: Architecture / Docs
-last_reviewed: 2026-04-09
+last_reviewed: 2026-04-19
 planning_type: status
 ---
 
@@ -328,7 +328,7 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   [packages/@dvt/contracts/src/schemas.ts](../../../packages/@dvt/contracts/src/schemas.ts),
   [packages/@dvt/planner/src/application/PlannerFacade.ts](../../../packages/@dvt/planner/src/application/PlannerFacade.ts),
   [apps/api/src/application/services/resolveCanonicalPlannerInputEnvelope.ts](../../../apps/api/src/application/services/resolveCanonicalPlannerInputEnvelope.ts),
-  [apps/api/src/entrypoints/http/startRunRoutePlanSourcePolicy.ts](../../../apps/api/src/entrypoints/http/startRunRoutePlanSourcePolicy.ts),
+  [apps/api/src/entrypoints/http/planRoutePlanSourcePolicy.ts](../../../apps/api/src/entrypoints/http/planRoutePlanSourcePolicy.ts),
   [packages/@dvt/planner/src/domain/InputEnvelopeValidator.ts](../../../packages/@dvt/planner/src/domain/InputEnvelopeValidator.ts),
   [packages/@dvt/planner/src/domain/Planner.ts](../../../packages/@dvt/planner/src/domain/Planner.ts),
   [apps/api/src/infrastructure/planner/ManifestArtifactResolver.ts](../../../apps/api/src/infrastructure/planner/ManifestArtifactResolver.ts)
@@ -337,8 +337,9 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   [packages/@dvt/contracts/test/schema-sync.test.ts](../../../packages/@dvt/contracts/test/schema-sync.test.ts),
   [packages/@dvt/planner/test/unit/planner-facade.test.ts](../../../packages/@dvt/planner/test/unit/planner-facade.test.ts),
   [packages/@dvt/contracts/test/validation.test.ts](../../../packages/@dvt/contracts/test/validation.test.ts),
-  [apps/api/test/entrypoints/http/startRunRoutePlanSourcePolicy.test.ts](../../../apps/api/test/entrypoints/http/startRunRoutePlanSourcePolicy.test.ts),
-  [apps/api/test/entrypoints/http/planRoutes.test.ts](../../../apps/api/test/entrypoints/http/planRoutes.test.ts),
+  [apps/api/test/entrypoints/http/planRoutePlanSourcePolicy.test.ts](../../../apps/api/test/entrypoints/http/planRoutePlanSourcePolicy.test.ts),
+  [apps/api/test/entrypoints/http/previewPlanRoute.inputPolicy.test.ts](../../../apps/api/test/entrypoints/http/previewPlanRoute.inputPolicy.test.ts),
+  [apps/api/test/entrypoints/http/compilePlanRoute.test.ts](../../../apps/api/test/entrypoints/http/compilePlanRoute.test.ts),
   [apps/api/test/infrastructure/planner/ManifestArtifactResolver.test.ts](../../../apps/api/test/infrastructure/planner/ManifestArtifactResolver.test.ts)
 - Evidence:
   [ED-20260410 - Hard-cut planner-backed runtime ingress to canonical graphSource](../../evidence/ED-20260410-planner-hard-cut-boundary-remediation.md)

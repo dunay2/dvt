@@ -1,9 +1,22 @@
-import { parsePlanPreviewRequest } from '@dvt/contracts';
+import { parsePlanPreviewRequest, toValidationErrorResponse } from '@dvt/contracts';
 
-import { createHttpErrorResponse, HTTP_ERROR_TYPE } from './httpErrorContract.js';
-import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
 import type { PreviewProfilePolicy } from './previewProfilePolicy.js';
 import type { PreviewProvenance } from './previewProvenanceParser.js';
+
+export type PreviewPlanContractIssue =
+  | {
+      readonly kind: 'missingPreviewProvenance';
+      readonly previewProfile: PreviewProfilePolicy['previewProfile'];
+      readonly requiredArtifacts: readonly ['graphArtifact', 'sqlArtifact'];
+    }
+  | {
+      readonly kind: 'previewContractValidationFailed';
+      readonly previewProfile: PreviewProfilePolicy['previewProfile'];
+      readonly issues: ReadonlyArray<{
+        readonly path: string;
+        readonly code: string;
+      }>;
+    };
 
 export function validatePreviewProfileContract(
   previewProfile: PreviewProfilePolicy,
@@ -12,18 +25,14 @@ export function validatePreviewProfileContract(
     selectedNodeIds: readonly string[];
     graphSource: unknown;
     provenance: PreviewProvenance | undefined;
-  },
-  provenance: PreviewProvenance | undefined
-): ReturnType<typeof createHttpErrorResponse> | null {
-  if (previewProfile.provenanceRequired && provenance === undefined) {
-    return createHttpErrorResponse({
-      type: HTTP_ERROR_TYPE.unprocessable,
-      reason: HTTP_ERROR_REASON.planRejected,
-      details: {
-        cause: 'missing_preview_provenance',
-        message: `${previewProfile.previewProfile} requires graphArtifact and sqlArtifact provenance.`,
-      },
-    });
+  }
+): PreviewPlanContractIssue | null {
+  if (previewProfile.provenanceRequired && request.provenance === undefined) {
+    return {
+      kind: 'missingPreviewProvenance',
+      previewProfile: previewProfile.previewProfile,
+      requiredArtifacts: ['graphArtifact', 'sqlArtifact'],
+    };
   }
 
   try {
@@ -36,18 +45,15 @@ export function validatePreviewProfileContract(
       persist: true,
     });
   } catch (error) {
-    const message =
-      error instanceof Error && error.message.trim().length > 0
-        ? error.message
-        : 'Preview request failed contract validation.';
-    return createHttpErrorResponse({
-      type: HTTP_ERROR_TYPE.badRequest,
-      reason: HTTP_ERROR_REASON.invalidPlanSource,
-      details: {
-        cause: 'preview_contract_validation_failed',
-        message,
-      },
-    });
+    const validation = toValidationErrorResponse(error);
+    return {
+      kind: 'previewContractValidationFailed',
+      previewProfile: previewProfile.previewProfile,
+      issues: validation.details.map((issue) => ({
+        path: issue.path,
+        code: issue.code,
+      })),
+    };
   }
 
   return null;

@@ -10,10 +10,6 @@ import {
   type ArtifactRefSchemaT,
   DesignGraphDraftSchema,
   type DesignGraphDraftSchemaT,
-  ExternalPlanCompileRequestV1Schema,
-  type ExternalPlanCompileRequestV1SchemaT,
-  ExternalPlanCompileResponseV1Schema,
-  type ExternalPlanCompileResponseV1SchemaT,
   ExecutionPlanSchema,
   type ExecutionPlanSchemaT,
   ExecutionStepV1Schema,
@@ -31,6 +27,10 @@ import {
   PlannerSelectionSchema,
   type PlannerSelectionSchemaT,
   PlanAdmissionLinkSchema,
+  PlanCompileRequestV1Schema,
+  type PlanCompileRequestV1SchemaT,
+  PlanCompileResponseV1Schema,
+  type PlanCompileResponseV1SchemaT,
   PlanCoreSchema,
   type PlanCoreSchemaT,
   PlanExecutabilityRecordSchema,
@@ -63,16 +63,12 @@ export function parseDesignGraphDraft(input: unknown): DesignGraphDraftSchemaT {
   return parseWithSchema(DesignGraphDraftSchema, input);
 }
 
-export function parseExternalPlanCompileRequest(
-  input: unknown
-): ExternalPlanCompileRequestV1SchemaT {
-  return parseWithSchema(ExternalPlanCompileRequestV1Schema, input);
+export function parsePlanCompileRequest(input: unknown): PlanCompileRequestV1SchemaT {
+  return parseWithSchema(PlanCompileRequestV1Schema, input);
 }
 
-export function parseExternalPlanCompileResponse(
-  input: unknown
-): ExternalPlanCompileResponseV1SchemaT {
-  return parseWithSchema(ExternalPlanCompileResponseV1Schema, input);
+export function parsePlanCompileResponse(input: unknown): PlanCompileResponseV1SchemaT {
+  return parseWithSchema(PlanCompileResponseV1Schema, input);
 }
 
 export function parsePlanPreviewProvenance(input: unknown): PlanPreviewProvenanceSchemaT {

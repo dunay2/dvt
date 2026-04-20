@@ -2,7 +2,7 @@
 title: Review Status Board
 status: Active
 owner: Product / Architecture / Docs
-last_reviewed: 2026-04-19
+last_reviewed: 2026-04-20
 planning_type: review
 ---
 
@@ -55,6 +55,20 @@ Sprint execution board:
 | [20260402 RC-C2 operational friction intake review](./ci-and-delivery/20260402-rc-c2-operational-friction-intake-review.md)                       | `ci-and-delivery`                 | current RC-C2 intake review                            | `RC-C2`                                    | `review`         | `67%`              |
 
 Additional active rationale:
+
+- [20260419 Plan-route boundary remediation review](./architecture-and-governance/20260419-plan-route-boundary-remediation-review.md)
+  - domain: `architecture-and-governance`
+  - role: reference review for the closed plan-route remediation and maturity slices; preview observability ownership, route-policy catalog hardening, the canonical planner-input seam, the declarative request-resolution recipe, and compile-boundary ownership convergence are closed by `TF-A1-C15..TF-A1-C19`
+  - linkage: `TF-A1-C12..TF-A1-C19`
+  - status: `reference`
+  - progress: `n/a`
+
+- [20260418 MW-D1 external compile boundary review](./architecture-and-governance/20260418-mw-d1-external-compile-boundary-review.md)
+  - domain: `architecture-and-governance`
+  - role: historical MW-D1 review retained as evidence from before the plan-compile language alignment
+  - linkage: `MW-D1`
+  - status: `done`
+  - progress: `100%`
 
 - [20260417 DVT artifacts review](./architecture-and-governance/20260417-dvt-artifacts-review.md)
   - domain: `architecture-and-governance`

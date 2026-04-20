@@ -2,7 +2,7 @@
 title: Contracts And State-Store Boundary
 owner: Product / Architecture / Delivery / Docs
 status: Active
-last_reviewed: '2026-04-19'
+last_reviewed: '2026-04-20'
 goal:
   Close the state-store boundary, retire contract ownership drift, and keep governance startup
   executable.
@@ -975,7 +975,7 @@ tasks:
       - docs/planning/proposals/mandatory/runtime-and-contracts/s08-5-post-s08-4-invariant-closure-plan-20260403.md
       - packages/@dvt/contracts/src/contracts/engine/RunExecutionContext.v1.ts
       - packages/@dvt/engine/src/services/startRun/RunExecutionContextAdmissionPolicy.ts
-      - apps/api/src/entrypoints/http/startRunRouteRunExecutionContextRefParser.ts
+      - apps/api/src/entrypoints/http/planRouteRunExecutionContextRefParser.ts
       - docs/planning/closeouts/20260406-s08-5c-plugin-compatibility-fingerprint-closeout.md
     status_reason: >-
       `runExecutionContext` is now a governed serialized boundary across contracts, API parsing, and
@@ -1100,9 +1100,9 @@ tasks:
       - packages/@dvt/contracts/test/planner.contract.test.ts
       - packages/@dvt/planner/src/domain/types.ts
       - packages/@dvt/planner/src/application/PlannerEnvelopeMapper.ts
-      - apps/api/src/entrypoints/http/startRunRoutePlanSourcePolicy.ts
+      - apps/api/src/entrypoints/http/planRoutePlanSourcePolicy.ts
       - apps/api/test/entrypoints/http/startRunRoute.test.ts
-      - apps/api/test/entrypoints/http/startRunRoutePlanSourcePolicy.test.ts
+      - apps/api/test/entrypoints/http/planRoutePlanSourcePolicy.test.ts
       - docs/planning/closeouts/20260406-mw-a2-b-contract-cleanup-closeout.md
     status_reason: >-
       Planner graph-source contract surface is now GenericGraphSourceV1-only: remaining legacy
@@ -2285,6 +2285,417 @@ tasks:
       planner-envelope binding, ownership checks, and response projection through dedicated helper
       seams.
     last_verified: '2026-04-14'
+  - task_id: TF-A1-C6
+    parent_task: TF-A1-C
+    priority: P1
+    status: done
+    complexity: S
+    effort_points: 2
+    progress_pct: 100
+    objective: >-
+      restore Fowler remote-facade posture on preview by moving preview orchestration behind a
+      dedicated route parser and application use case, and remove route-local text coupling from
+      preview contract failures.
+    dependency: TF-A1-C5
+    target: >-
+      `previewPlanRoute` only owns transport, authn/authz, delegation, and HTTP response mapping,
+      while preview parsing, planner envelope assembly, persistence, and executability validation
+      live behind explicit seams with stable error details.
+    evidence_refs:
+      - docs/planning/closeouts/20260419-tf-a1-c6-preview-route-facade-realignment-closeout.md
+      - apps/api/src/entrypoints/http/previewPlanRoute.ts
+      - apps/api/src/application/services/PreviewPlanUseCase.ts
+    status_reason: >-
+      Completed. Preview now parses through `previewPlanRouteParser`, delegates planner
+      build/store/validate orchestration to `PreviewPlanUseCase`, keeps the HTTP facade focused on
+      authn/authz plus response mapping, and returns stable contract-failure details without
+      route-coupled prose.
+    last_verified: '2026-04-19'
+  - task_id: TF-A1-C7
+    parent_task: TF-A1-C
+    priority: P1
+    status: done
+    complexity: S
+    effort_points: 2
+    progress_pct: 100
+    objective: >-
+      close the remaining import-route drift by moving import parsing and ownership checks behind
+      dedicated seams, and remove preview/import coupling around plan-ref mapping.
+    dependency: TF-A1-C6
+    target: >-
+      `importPlanRoute` becomes a thin HTTP facade, import no longer lives in the residual
+      multi-route `planRoutes.ts` module, and plan-ref normalization/parsing no longer depends on a
+      preview-specific response mapper.
+    evidence_refs:
+      - docs/planning/closeouts/20260419-tf-a1-c7-import-route-facade-realignment-closeout.md
+      - apps/api/src/entrypoints/http/importPlanRoute.ts
+      - apps/api/src/application/services/ImportPlanUseCase.ts
+    status_reason: >-
+      Completed. Import now parses through `importPlanRouteParser`, delegates plan fetch and scope
+      ownership checks to `ImportPlanUseCase`, responds through `planImportResponseMapper`, and the
+      generic plan-ref helpers live in the neutral `planRefHttpMapper` seam instead of a
+      preview-specific mapper. The residual `planRoutes.ts` module is removed.
+    last_verified: '2026-04-19'
+  - task_id: TF-A1-C8
+    parent_task: TF-A1-C
+    priority: P1
+    status: done
+    complexity: S
+    effort_points: 1
+    progress_pct: 100
+    objective: >-
+      close the residual preview-route helper drift so preview-route parsing and shared plan-route
+      context parsing delegate validation and mapping through smaller seams.
+    dependency: TF-A1-C7
+    target: >-
+      `parsePreviewPlanBody` stays as the single preview parser entrypoint and
+      `parsePlanRouteContextRecord` stays as the shared plan-route context seam, but neither helper
+      owns every validation stage and mapping branch itself.
+    evidence_refs:
+      - docs/planning/closeouts/20260419-tf-a1-c8-preview-route-helper-seams-closeout.md
+      - apps/api/src/entrypoints/http/previewPlanRouteParser.ts
+      - apps/api/src/entrypoints/http/planRouteScope.ts
+    status_reason: >-
+      Completed. Preview parsing now delegates route policy parsing, planner-backed source
+      validation, and command/request assembly through dedicated helpers, while shared plan-route
+      context parsing splits raw context validation from scope derivation. The exported helpers now
+      remain thin orchestration seams instead of mixed validation hotspots.
+    last_verified: '2026-04-19'
+  - task_id: TF-A1-C9
+    parent_task: TF-A1-C
+    priority: P1
+    status: done
+    complexity: S
+    effort_points: 1
+    progress_pct: 100
+    objective: >-
+      close the remaining route-helper residuals by removing transport-coupled return values from
+      preview contract validation and adding narrow unit coverage for shared plan-route scope
+      parsing.
+    dependency: TF-A1-C8
+    target: >-
+      Preview contract validation returns transport-neutral issues that the HTTP facade maps at the
+      edge, and `planRouteScope` has its own focused regression tests instead of only transitive
+      route coverage.
+    evidence_refs:
+      - docs/planning/closeouts/20260419-tf-a1-c9-preview-contract-guard-and-scope-qa-closeout.md
+      - apps/api/src/entrypoints/http/planPreviewContractGuard.ts
+      - apps/api/src/entrypoints/http/planPreviewContractErrorMapper.ts
+      - apps/api/src/entrypoints/http/previewPlanRoute.ts
+      - apps/api/test/entrypoints/http/planRouteScope.test.ts
+    status_reason: >-
+      Completed. Preview contract validation now returns transport-neutral issues mapped at the HTTP
+      edge, `previewPlanRoute` delegates authorization and outcome mapping through smaller helpers,
+      and `planRouteScope` now has direct focused regression coverage instead of only transitive
+      route tests.
+    last_verified: '2026-04-19'
+  - task_id: TF-A1-C10
+    parent_task: TF-A1-C
+    priority: P1
+    status: done
+    complexity: S
+    effort_points: 1
+    progress_pct: 100
+    objective: >-
+      finish the preview remote-facade split by extracting explicit request-resolution and
+      response-mapping seams from `previewPlanRoute`, and reduce `previewPlanRouteParser` to a thin
+      orchestrator over smaller policy and command-binding helpers.
+    dependency: TF-A1-C9
+    target: >-
+      `previewPlanRoute` becomes a smaller HTTP facade over request resolution, use-case delegation,
+      and send operations, while preview parser policy and command-binding stages live in dedicated
+      helpers with no caller-visible payload changes.
+    evidence_refs:
+      - docs/planning/closeouts/20260419-tf-a1-c10-preview-route-facade-finalization-closeout.md
+      - apps/api/src/entrypoints/http/previewPlanRoute.ts
+      - apps/api/src/entrypoints/http/previewPlanRouteParser.ts
+      - apps/api/src/entrypoints/http/previewPlanRouteRequestResolver.ts
+      - apps/api/src/entrypoints/http/previewPlanRouteResponseMapper.ts
+      - apps/api/src/entrypoints/http/previewPlanRoutePolicyParser.ts
+      - apps/api/src/entrypoints/http/previewPlanRouteCommandParser.ts
+      - apps/api/src/entrypoints/http/previewPlanRouteRequestBinder.ts
+    status_reason: >-
+      Completed. Preview request resolution and response projection now live in dedicated seams,
+      while `previewPlanRouteParser` delegates route-policy parsing, command-input parsing, and
+      request binding through smaller helpers. The preview HTTP adapter is now closer to a pure
+      remote facade without changing caller-visible behavior.
+    last_verified: '2026-04-19'
+  - task_id: TF-A1-C11
+    parent_task: TF-A1-C
+    priority: P1
+    status: done
+    complexity: S
+    effort_points: 1
+    progress_pct: 100
+    objective: >-
+      remove semantic cross-boundary coupling by moving shared preview/import/compile/recover route
+      grammar out of `startRun*` helpers and into neutral `planRoute*` parser and policy seams.
+    dependency: TF-A1-C10
+    target: >-
+      Preview/import/compile/recover route parsing no longer imports `startRun*` grammar helpers,
+      while start-run composes the same behavior through start-run-specific adapters over neutral
+      `planRoute*` owners.
+    evidence_refs:
+      - docs/planning/closeouts/20260419-tf-a1-c11-plan-route-grammar-ownership-closeout.md
+      - apps/api/src/entrypoints/http/planRouteBodyParser.ts
+      - apps/api/src/entrypoints/http/planRoutePlannerEnvelopeParser.ts
+      - apps/api/src/entrypoints/http/planRouteRunExecutionContextRefParser.ts
+      - apps/api/src/entrypoints/http/planRouteScopeParser.ts
+      - apps/api/src/entrypoints/http/planRouteTargetAdapterParser.ts
+      - apps/api/src/entrypoints/http/previewPlanRouteParser.ts
+      - apps/api/src/entrypoints/http/previewPlanRouteCommandParser.ts
+      - apps/api/src/entrypoints/http/importPlanRouteParser.ts
+      - apps/api/src/entrypoints/http/planCompileRouteInputParser.ts
+      - apps/api/src/entrypoints/http/recoverRunRouteParser.ts
+    status_reason: >-
+      Completed. Shared preview/import/compile/recover grammar now lives behind neutral `planRoute*`
+      owners, including route-scope parsing, and start-run now consumes those neutral parsers
+      directly for generic route grammar. The only retained start-run-specific adapter is
+      target-adapter admission, which still owns registry-backed command policy.
+    last_verified: '2026-04-19'
+  - task_id: TF-A1-C12
+    parent_task: TF-A1-C
+    priority: P1
+    status: done
+    complexity: M
+    effort_points: 2
+    progress_pct: 100
+    objective: >-
+      standardize the shared preview/import/compile remote-facade execution recipe so plan-route
+      entrypoints stop repeating transport, auth, and response choreography behind hand-written
+      seams.
+    dependency: TF-A1-C11
+    target: >-
+      Preview, import, and compile routes compose one root-owned plan-route remote-facade execution
+      pattern for parse or resolve, authn or authz, use-case delegation, and outcome mapping without
+      collapsing route-specific parser or presenter ownership back into a new convenience module.
+    evidence_refs:
+      - docs/planning/reviews/architecture-and-governance/20260419-plan-route-boundary-remediation-review.md
+      - docs/planning/closeouts/20260419-tf-a1-c12-plan-route-facade-standardization-closeout.md
+      - docs/planning/closeouts/20260419-tf-a1-c12-plan-route-facade-regression-hardening-closeout.md
+      - apps/api/src/entrypoints/http/previewPlanRoute.ts
+      - apps/api/src/entrypoints/http/importPlanRoute.ts
+      - apps/api/src/entrypoints/http/compilePlanRoute.ts
+      - apps/api/src/entrypoints/http/executePlanRouteFacade.ts
+      - apps/api/src/entrypoints/http/planRouteRequestResolver.ts
+      - apps/api/test/entrypoints/http/executePlanRouteFacade.test.ts
+      - apps/api/test/entrypoints/http/planRouteRequestResolver.test.ts
+      - apps/api/src/entrypoints/http/runCommandRouteExecutor.ts
+    status_reason: >-
+      Completed. Preview, import, and compile now compose one shared plan-route remote-facade
+      execution pattern through dedicated request-resolver and response-mapper seams plus a shared
+      route-handler factory, without changing caller-visible payloads or collapsing boundary
+      ownership back into a new convenience module. Shared regression coverage now exists directly
+      at the executor and authorization-resolver owners, and the neutral plan-route seam no longer
+      carries a start-run-flavored internal constant name.
+    last_verified: '2026-04-19'
+  - task_id: TF-A1-C13
+    parent_task: TF-A1-C
+    priority: P1
+    status: done
+    complexity: M
+    effort_points: 2
+    progress_pct: 100
+    objective: >-
+      replace observability-tag-based import scope ownership with a canonical ownership boundary or
+      explicit ownership-policy port so import no longer treats telemetry tags as authorization
+      truth.
+    dependency: TF-A1-C12
+    target: >-
+      `ImportPlanUseCase` enforces tenant, project, and environment ownership through first-class
+      plan metadata or a dedicated ownership-policy port, with negative coverage proving that import
+      does not decode observability tags as the effective domain boundary.
+    evidence_refs:
+      - docs/planning/reviews/architecture-and-governance/20260419-plan-route-boundary-remediation-review.md
+      - docs/planning/closeouts/20260419-tf-a1-c13-import-ownership-canonicalization-closeout.md
+      - apps/api/src/application/services/ImportPlanUseCase.ts
+      - apps/api/src/application/services/PreviewPlanUseCase.ts
+      - packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v1.ts
+      - docs/adr/ADR-0012-plan-integrity-ownership.md
+    status_reason: >-
+      Completed. Import now enforces tenant/project/environment ownership from first-class
+      `ExecutionPlan.metadata.ownership`, preview and other planner-backed scoped flows emit the
+      same ownership metadata, and import tests prove `observability.tags` are no longer the
+      effective authorization boundary.
+    last_verified: '2026-04-19'
+  - task_id: TF-A1-C14
+    parent_task: TF-A1-C
+    priority: P1
+    status: done
+    complexity: S
+    effort_points: 1
+    progress_pct: 100
+    objective: >-
+      converge the compile-boundary ubiquitous language and active architecture docs so `plan
+      compile` is the active term, historical `external compile` wording stays historical, and
+      living API guidance describes one clear ownership model.
+    dependency: TF-A1-C13
+    target: >-
+      Active docs stop referencing deleted route modules, compile-boundary names follow one declared
+      vocabulary strategy, and historical references remain historical instead of competing with
+      current architecture truth.
+    evidence_refs:
+      - docs/evidence/ED-20260419-plan-compile-language-alignment-arc2.md
+      - docs/planning/closeouts/20260419-tf-a1-c14-plan-compile-language-alignment-closeout.md
+      - docs/planning/reviews/architecture-and-governance/20260419-plan-route-boundary-remediation-review.md
+      - docs/architecture/components/api/index.md
+      - docs/guides/plan-compile-target-architecture-technical-manual-20260417.md
+      - docs/guides/plan-compile-catalog-extension-technical-manual-20260417.md
+      - packages/@dvt/contracts/src/schema-packs/plan-compile.ts
+    status_reason: >-
+      Completed. Active code and active guides now use `plan compile` as the compile-only
+      vocabulary, the API component page references the shared plan-route facade instead of deleted
+      route anchors, and compile graph-source/selection normalization now has one owner at the route
+      parser boundary.
+    last_verified: '2026-04-19'
+  - task_id: TF-A1-C15
+    parent_task: TF-A1-C
+    priority: P1
+    status: done
+    complexity: S
+    effort_points: 1
+    progress_pct: 100
+    objective: >-
+      unify preview observability enrichment ownership so transport binding and application
+      orchestration stop rebuilding the same preview telemetry and provenance shape.
+    dependency: TF-A1-C14
+    target: >-
+      `planPreviewEnvelopeBinder` or `PreviewPlanUseCase` becomes the single owner of preview
+      observability enrichment, the other seam passes through or validates a finished shape, and
+      preview provenance/runtime metadata assembly no longer drifts across two layers.
+    evidence_refs:
+      - docs/planning/reviews/architecture-and-governance/20260419-plan-route-boundary-remediation-review.md
+      - docs/planning/closeouts/20260420-tf-a1-c15-c16-plan-route-seam-hardening-closeout.md
+      - apps/api/src/entrypoints/http/planPreviewEnvelopeBinder.ts
+      - apps/api/src/entrypoints/http/previewPlanRouteRequestBinder.ts
+      - apps/api/src/application/services/PreviewPlanUseCase.ts
+      - apps/api/test/entrypoints/http/previewPlanRoute.outcomes.test.ts
+    status_reason: >-
+      Completed. Preview observability enrichment now flows through `planPreviewEnvelopeBinder` in
+      the real request path, `PreviewPlanUseCase` consumes the finished observability payload
+      without rebuilding it, and route-level tests assert the bound scope and transformation
+      provenance that reach the planner.
+    last_verified: '2026-04-20'
+  - task_id: TF-A1-C16
+    parent_task: TF-A1-C
+    priority: P1
+    status: done
+    complexity: S
+    effort_points: 1
+    progress_pct: 100
+    objective: >-
+      externalize plan-route authorization metadata so preview, import, and compile declare their
+      action semantics explicitly instead of relying on a hardcoded shared-resolver default.
+    dependency: TF-A1-C14
+    target: >-
+      each plan-route request resolver passes explicit authorization action metadata into
+      `resolveAuthorizedPlanRouteRequest`, the shared resolver stops owning route-family action
+      policy, and future authorization changes do not hide behind one implicit default.
+    evidence_refs:
+      - docs/planning/reviews/architecture-and-governance/20260419-plan-route-boundary-remediation-review.md
+      - docs/planning/closeouts/20260420-tf-a1-c15-c16-plan-route-seam-hardening-closeout.md
+      - apps/api/src/entrypoints/http/planRouteAuthorization.constants.ts
+      - apps/api/src/entrypoints/http/planRouteRequestResolver.ts
+      - apps/api/src/entrypoints/http/previewPlanRouteRequestResolver.ts
+      - apps/api/src/entrypoints/http/importPlanRouteRequestResolver.ts
+      - apps/api/src/entrypoints/http/compilePlanRouteRequestResolver.ts
+      - apps/api/test/entrypoints/http/planRouteRequestResolver.test.ts
+    status_reason: >-
+      Completed. The shared plan-route resolver now accepts explicit authorization action metadata,
+      preview/import/compile declare that metadata at the wrapper seam, and the shared resolver
+      tests prove it authorizes the action supplied by the caller rather than an implicit default.
+    last_verified: '2026-04-20'
+  - task_id: TF-A1-C17
+    parent_task: TF-A1-C
+    priority: P1
+    status: done
+    complexity: S
+    effort_points: 1
+    progress_pct: 100
+    objective: >-
+      codify the plan-route request-resolution recipe as a declarative shared seam so preview,
+      import, and compile stop expressing parse plus authorize plus optional guard as wrapper
+      boilerplate.
+    dependency: TF-A1-C16
+    target: >-
+      one shared builder accepts route parser, authorization metadata, scope selector, and optional
+      post-authorization guard, while the plan-route wrappers shrink to route-local declarations
+      instead of re-implementing the request-resolution workflow.
+    evidence_refs:
+      - docs/planning/reviews/architecture-and-governance/20260419-plan-route-boundary-remediation-review.md
+      - docs/planning/closeouts/20260420-tf-a1-c17-plan-route-request-resolution-recipe-closeout.md
+      - apps/api/src/entrypoints/http/planRouteRequestResolver.ts
+      - apps/api/src/entrypoints/http/previewPlanRouteRequestResolver.ts
+      - apps/api/src/entrypoints/http/importPlanRouteRequestResolver.ts
+      - apps/api/src/entrypoints/http/compilePlanRouteRequestResolver.ts
+      - apps/api/test/entrypoints/http/planRouteRequestResolver.test.ts
+    status_reason: >-
+      Completed. The `plan-*` family now declares request parser, authorization action, scope
+      selector, and optional post-authorization guard through one shared builder, while the
+      preview/import/compile resolver wrappers shrink to route-local declarations instead of
+      re-implementing the workflow.
+    last_verified: '2026-04-20'
+  - task_id: TF-A1-C18
+    parent_task: TF-A1-C
+    priority: P1
+    status: done
+    complexity: S
+    effort_points: 1
+    progress_pct: 100
+    objective: >-
+      converge plan-compile catalog, profile, and planner-builder ownership behind one root-owned
+      boundary module so compile policy stops drifting across thin wrapper files.
+    dependency: TF-A1-C17
+    target: >-
+      One `apps/api` composition-boundary owner declares the built-in compile catalog, the typed
+      profile policy, and the planner-construction recipe, while redundant alias modules disappear
+      without introducing compatibility shims.
+    evidence_refs:
+      - docs/planning/reviews/architecture-and-governance/20260419-plan-route-boundary-remediation-review.md
+      - docs/planning/closeouts/20260420-tf-a1-c18-plan-compile-boundary-ownership-convergence-closeout.md
+      - apps/api/src/modules/planCompileBoundary.ts
+      - apps/api/src/modules/buildProtectedRuntimeModule.ts
+      - apps/api/test/modules.test.ts
+      - apps/api/test/app.test.ts
+      - docs/architecture/components/api/index.md
+    status_reason: >-
+      Completed. The compile boundary now converges catalog definitions, typed profile policy,
+      catalog resolution, and planner construction behind `planCompileBoundary.ts`; the previous
+      alias-only module split was removed without compatibility shims, and the full `dvt-api` suite
+      is green after aligning the stale `/plans/preview` missing-token test with the current preview
+      request contract.
+    last_verified: '2026-04-20'
+  - task_id: TF-A1-C19
+    parent_task: TF-A1-C
+    priority: P1
+    status: done
+    complexity: M
+    effort_points: 2
+    progress_pct: 100
+    objective: >-
+      externalize plan-route authorization and planner-input enrichment policy into a declarative
+      catalog, converge preview and compile on one canonical planner-envelope seam, and add
+      policy-matrix coverage so route-family ownership cannot drift behind outcome-only tests.
+    dependency: TF-A1-C18
+    target: >-
+      Preview, import, and compile declare authorization and ownership posture through one
+      declarative policy catalog; preview and compile assemble canonical planner input through one
+      shared helper; and route-family policy-matrix tests protect the compile boundary without
+      compatibility shims.
+    evidence_refs:
+      - apps/api/src/application/services/planRoutePolicyCatalog.ts
+      - apps/api/src/application/services/resolveAuthorizedPlannerInputEnvelope.ts
+      - apps/api/test/application/services/planRoutePolicyCatalog.test.ts
+      - docs/planning/closeouts/20260420-tf-a1-c19-plan-route-policy-catalog-and-envelope-convergence-closeout.md
+      - docs/planning/reviews/architecture-and-governance/20260419-plan-route-boundary-remediation-review.md
+      - docs/architecture/components/api/index.md
+      - docs/guides/plan-compile-target-architecture-technical-manual-20260417.md
+    status_reason: >-
+      Completed. Preview, import, and compile now declare route policy through one catalog; preview
+      and compile share one authorized planner-input seam; import carries canonical ownership as one
+      value; and the new policy-matrix tests plus the full `dvt-api` validation baseline are green
+      without compatibility shims.
+    last_verified: '2026-04-20'
   - task_id: TF-A1-D
     priority: P1
     status: done
@@ -2423,6 +2834,14 @@ dependency_notes:
     protected API/store path and Lane E cannot continue productizing editable graphs on browser-
     local authority.
   - >-
+    `TF-A1-C12..C14` now capture the post-`TF-A1-C` backend follow-through: standardize the shared
+    plan-route remote-facade recipe, replace observability-tag import ownership with a canonical
+    boundary, and converge compile-boundary vocabulary plus active architecture docs.
+  - >-
+    `TF-A1-C18` is the next post-`TF-A1-C17` ownership-convergence slice: it keeps the compile
+    catalog and profile concepts separate but moves their executable ownership behind one
+    composition-boundary module instead of three thin wrappers.
+  - >-
     `AR-A12` now captures the Fowler-style reset of the engine-runtime contract pack and the
     run-status read boundary: `AR-A12-A` resets the active line to one canonical pre-stable `v1`
     pack, `AR-A12-B` separates canonical status from provider-live diagnostics, and `AR-A12-C`
@@ -2431,13 +2850,16 @@ dependency_notes:
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
-  verified_on: '2026-04-19'
-  total_tasks: 104
-  total_effort_points: 337
-  completed_weighted_points: 255.39
-  lane_progress_pct: 76
+  verified_on: '2026-04-20'
+  total_tasks: 118
+  total_effort_points: 356
+  completed_weighted_points: 280.89
+  lane_progress_pct: 79
   notes: >-
     Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry
-    coordination-only effort. `AR-A7` is now partially progressed after the delivery runtime split
-    landed in `RC-G1-C`, and `RC-G1-C-TRUTH-SYNC` now tracks the post-merge architecture truth
-    alignment backlog. Summary values were recomputed from the current lane registry on 2026-04-19.
+    coordination-only effort. `TF-A2` now adds the missing contract-first workspace graph-draft
+    persistence boundary so typed web/api/store ownership is frozen before frontend productization
+    continues, `TF-A1-C12..C19` now cover the post-hardening route-facade, compile-boundary
+    ownership cleanup, and declarative route-policy plus canonical-envelope convergence, while the
+    merged `origin/main` intake also carries `RC-G1-C-TRUTH-SYNC` and adjacent follow-up routing;
+    summary values were recomputed from the current lane registry on 2026-04-20.
