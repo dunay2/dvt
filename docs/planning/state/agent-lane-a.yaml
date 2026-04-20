@@ -2600,6 +2600,36 @@ tasks:
       preview/import/compile resolver wrappers shrink to route-local declarations instead of
       re-implementing the workflow.
     last_verified: '2026-04-20'
+  - task_id: TF-A1-C18
+    parent_task: TF-A1-C
+    priority: P1
+    status: done
+    complexity: S
+    effort_points: 1
+    progress_pct: 100
+    objective: >-
+      converge plan-compile catalog, profile, and planner-builder ownership behind one root-owned
+      boundary module so compile policy stops drifting across thin wrapper files.
+    dependency: TF-A1-C17
+    target: >-
+      One `apps/api` composition-boundary owner declares the built-in compile catalog, the typed
+      profile policy, and the planner-construction recipe, while redundant alias modules disappear
+      without introducing compatibility shims.
+    evidence_refs:
+      - docs/planning/reviews/architecture-and-governance/20260419-plan-route-boundary-remediation-review.md
+      - docs/planning/closeouts/20260420-tf-a1-c18-plan-compile-boundary-ownership-convergence-closeout.md
+      - apps/api/src/modules/planCompileBoundary.ts
+      - apps/api/src/modules/buildProtectedRuntimeModule.ts
+      - apps/api/test/modules.test.ts
+      - apps/api/test/app.test.ts
+      - docs/architecture/components/api/index.md
+    status_reason: >-
+      Completed. The compile boundary now converges catalog definitions, typed profile policy,
+      catalog resolution, and planner construction behind `planCompileBoundary.ts`; the previous
+      alias-only module split was removed without compatibility shims, and the full `dvt-api` suite
+      is green after aligning the stale `/plans/preview` missing-token test with the current preview
+      request contract.
+    last_verified: '2026-04-20'
   - task_id: TF-A1-D
     priority: P1
     status: done
@@ -2742,6 +2772,10 @@ dependency_notes:
     plan-route remote-facade recipe, replace observability-tag import ownership with a canonical
     boundary, and converge compile-boundary vocabulary plus active architecture docs.
   - >-
+    `TF-A1-C18` is the next post-`TF-A1-C17` ownership-convergence slice: it keeps the compile
+    catalog and profile concepts separate but moves their executable ownership behind one
+    composition-boundary module instead of three thin wrappers.
+  - >-
     `AR-A12` now captures the Fowler-style reset of the engine-runtime contract pack and the
     run-status read boundary: `AR-A12-A` resets the active line to one canonical pre-stable `v1`
     pack, `AR-A12-B` separates canonical status from provider-live diagnostics, and `AR-A12-C`
@@ -2750,15 +2784,15 @@ dependency_notes:
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
-  verified_on: '2026-04-19'
-  total_tasks: 106
-  total_effort_points: 340
-  completed_weighted_points: 255.64
+  verified_on: '2026-04-20'
+  total_tasks: 107
+  total_effort_points: 341
+  completed_weighted_points: 256.64
   lane_progress_pct: 75
   notes: >-
     Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry
     coordination-only effort. `TF-A2` now adds the missing contract-first workspace graph-draft
     persistence boundary so typed web/api/store ownership is frozen before frontend productization
-    continues, and `TF-A1-C12..C14` now hold the queued post-hardening route-facade, ownership, and
-    compile-vocabulary cleanup. Summary values were recomputed from the current lane registry on
-    2026-04-19.
+    continues, `TF-A1-C12..C18` now cover the post-hardening route-facade and compile-boundary
+    ownership cleanup, and the summary values were recomputed from the current lane registry on
+    2026-04-20.

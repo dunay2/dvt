@@ -46,7 +46,7 @@ import { StructuredWorkspaceGraphDraftAuditLogger } from '../infrastructure/work
 import type { Env } from '../plugins/env.js';
 
 import { buildProviderAdapters } from './buildProviderAdapters.js';
-import { buildPlanCompilePlanner } from './planCompilePlannerProfile.js';
+import { buildPlanCompilePlanner } from './planCompileBoundary.js';
 import { bindStateStoreRoles } from './stateStoreRoles.js';
 import type { ProtectedRuntimeModule } from './types.js';
 

@@ -48,9 +48,7 @@ This review covers the active plan-route and compile-boundary reshaping in:
 - `apps/api/src/application/services/ImportPlanUseCase.ts`
 - `apps/api/src/application/services/CompilePlanUseCase.ts`
 - `apps/api/src/application/services/planCompilePlannerEnvelopeMapper.ts`
-- `apps/api/src/modules/planCompileCatalog.ts`
-- `apps/api/src/modules/planCompileProfileSpec.ts`
-- `apps/api/src/modules/planCompilePlannerProfile.ts`
+- `apps/api/src/modules/planCompileBoundary.ts`
 - `apps/api/test/entrypoints/http/previewPlanRoute.auth.test.ts`
 - `apps/api/test/entrypoints/http/previewPlanRoute.inputPolicy.test.ts`
 - `apps/api/test/entrypoints/http/previewPlanRoute.outcomes.test.ts`
@@ -133,6 +131,8 @@ Interpretation:
   wrapper instead of being hidden in the shared resolver
 - plan-route request resolution now uses one declarative shared recipe with
   route-local parser, action, scope, and guard declarations
+- compile catalog, profile, and planner-builder ownership now converge behind
+  one root-owned boundary module instead of three thin composition wrappers
 - compile normalization now has one canonical owner at the contract-parse
   boundary
 - compile vocabulary is materially converged across active code and living
@@ -243,6 +243,7 @@ adapter glue.
 | Observability enrichment  | one owner per boundary stage                                                 | preview observability shaping is bound once in request binding and passed through by the application service | closed in active code              |
 | Authorization metadata    | route wrappers declare action semantics and helpers accept policy as input   | preview/import/compile pass explicit action metadata into the shared authorization resolver                  | materially codified                |
 | Request-resolution recipe | wrappers declare route-local policy over one shared workflow                 | preview/import/compile now use one builder for parse plus authorize plus optional guard                      | materially codified                |
+| Boundary policy ownership | one composition owner packages policy facts and builder recipe               | one `planCompileBoundary` module now owns catalog, profile, and planner construction                         | materially converged               |
 | Ubiquitous language       | one term per concept across contracts, services, docs                        | active code and active guides now use `plan compile` for the compile boundary                                | materially aligned                 |
 | Ownership policy          | explicit domain metadata or policy port                                      | import enforces `ExecutionPlan.metadata.ownership`                                                           | closed in active code              |
 | Living docs               | active docs match active code                                                | active API index and plan-compile guides now match the current route/code surface                            | closed in living docs              |
@@ -305,6 +306,35 @@ Correction status:
   `planRouteAuthorization.constants.ts`
 - preview/import/compile wrappers now pass explicit action metadata into
   `resolveAuthorizedPlanRouteRequest`
+
+### Closed - Compile boundary policy ownership was spread across three composition modules
+
+Evidence:
+
+- `apps/api/src/modules/planCompileBoundary.ts`
+- `apps/api/src/modules/buildProtectedRuntimeModule.ts`
+- `apps/api/test/modules.test.ts`
+
+Problem:
+
+The compile boundary kept the right concepts, but their executable ownership
+was fragmented:
+
+- catalog definitions lived in one module
+- profile aliases lived in a second
+- planner construction lived in a third
+
+That file split no longer represented three real owners. It created maintenance
+sprawl around one bounded concern and left one alias-only seam as a drift
+surface.
+
+Correction status:
+
+- closed on 2026-04-20
+- `planCompileBoundary.ts` now owns the built-in catalog, the typed compile
+  profile, catalog resolution, and planner construction
+- the old alias seams were removed instead of preserved through compatibility
+  exports
 
 ## Repetitions worth watching
 
@@ -415,6 +445,20 @@ Target:
 - move the family one step closer to the mature controller pattern where
   route files are declarations over a framework recipe, not bespoke glue code
 
+### TF-A1-C18 - Converge compile-boundary ownership
+
+Status:
+
+- closed in active code and docs on 2026-04-20
+
+Target:
+
+- keep catalog and profile as distinct concepts, but give them one executable
+  owner in the composition boundary
+- remove alias-only compile-boundary wrapper modules instead of preserving
+  compatibility shims
+- keep the compile planner fail-closed while reducing module-level sprawl
+
 ## Review verdict
 
 This branch improved the architecture.
@@ -429,8 +473,10 @@ It did not merely move code around:
 - plan-route authorization metadata is now explicit at the route-wrapper seam
 - route-family request resolution is now expressed through one declarative
   builder instead of wrapper-specific orchestration glue
+- compile-boundary policy ownership now converges in one root-owned module
+  instead of three thin composition seams
 
 The seam-level residuals captured by this review are now closed. What remains
 after this point is lower-order hardening, not ambiguity about who owns preview
-enrichment, plan-route authorization metadata, or the route-family
-request-resolution recipe.
+enrichment, plan-route authorization metadata, the route-family
+request-resolution recipe, or compile-boundary policy assembly.

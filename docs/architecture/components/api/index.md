@@ -42,6 +42,7 @@ flowchart LR
 - [server.ts](../../../../apps/api/src/server.ts)
 - [buildProtectedRuntimeModule.ts](../../../../apps/api/src/modules/buildProtectedRuntimeModule.ts)
 - [buildProviderAdapters.ts](../../../../apps/api/src/modules/buildProviderAdapters.ts)
+- [planCompileBoundary.ts](../../../../apps/api/src/modules/planCompileBoundary.ts)
 - [executePlanRouteFacade.ts](../../../../apps/api/src/entrypoints/http/executePlanRouteFacade.ts)
 - [startRunRoute.ts](../../../../apps/api/src/entrypoints/http/startRunRoute.ts)
 - [previewPlanRoute.ts](../../../../apps/api/src/entrypoints/http/previewPlanRoute.ts)
@@ -55,7 +56,9 @@ flowchart LR
 This component is active product code. The protected plan-route family now
 shares one remote-facade executor, one declarative request-resolution recipe,
 and route-declared authorization metadata. Preview observability enrichment
-now binds once at the request boundary used by the preview flow.
+now binds once at the request boundary used by the preview flow. The
+`plan compile` boundary now converges catalog policy, typed profile selection,
+and planner construction in one root-owned boundary module.
 
 ## Current To Target
 

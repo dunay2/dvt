@@ -699,6 +699,7 @@ describe('buildApp', () => {
             environmentId: 'env-a',
             targetAdapter: 'mock',
           },
+          previewProfile: 'planner-generic-v1',
           selectedNodeIds: ['model.orders'],
           graphSource: {
             kind: 'generic-graph-v1',

@@ -7,8 +7,10 @@ import { describe, expect, it } from 'vitest';
 
 import { buildProtectedRuntimeModule } from '../src/modules/buildProtectedRuntimeModule.js';
 import { buildProviderAdapters } from '../src/modules/buildProviderAdapters.js';
-import { buildPlanCompilePlanner } from '../src/modules/planCompilePlannerProfile.js';
-import { PLAN_COMPILE_PROFILE_SPEC } from '../src/modules/planCompileProfileSpec.js';
+import {
+  buildPlanCompilePlanner,
+  PLAN_COMPILE_BOUNDARY,
+} from '../src/modules/planCompileBoundary.js';
 import { registerOperationalHooks } from '../src/modules/registerOperationalHooks.js';
 
 const BUILD_PROTECTED_RUNTIME_MODULE_SOURCE = readFileSync(
@@ -244,9 +246,12 @@ describe('modules', () => {
   it('plan compile planner rejects profile kinds that fall outside the allowed families', () => {
     expect(() =>
       buildPlanCompilePlanner({
-        ...PLAN_COMPILE_PROFILE_SPEC,
-        allowedFamilies: ['spark'],
-        allowedStepKinds: ['POSTGRES_SQL_TRANSFORM'],
+        ...PLAN_COMPILE_BOUNDARY,
+        profile: {
+          ...PLAN_COMPILE_BOUNDARY.profile,
+          allowedFamilies: ['spark'],
+          allowedStepKinds: ['POSTGRES_SQL_TRANSFORM'],
+        },
       })
     ).toThrow(/POSTGRES_SQL_TRANSFORM/);
   });
