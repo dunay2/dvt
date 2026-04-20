@@ -1,3 +1,5 @@
+import { asIsoUtcString } from '@dvt/contracts';
+
 import type {
   EventEnvelope as TemporalEventEnvelope,
   EventIdempotencyInput,
@@ -75,11 +77,20 @@ export class TestIdempotency {
       args.stepId ?? '',
     ].join('|');
   }
+
+  startRunIntentId(
+    tenantId: string,
+    runId: string,
+    logicalAttemptId = 1,
+    targetAdapter = 'temporal'
+  ): string {
+    return ['start-run-intent', tenantId, runId, String(logicalAttemptId), targetAdapter].join('|');
+  }
 }
 
 export class TestClock {
-  nowIsoUtc(): string {
-    return '2026-01-01T00:00:00.000Z';
+  nowIsoUtc(): ReturnType<typeof asIsoUtcString> {
+    return asIsoUtcString('2026-01-01T00:00:00.000Z');
   }
 }
 

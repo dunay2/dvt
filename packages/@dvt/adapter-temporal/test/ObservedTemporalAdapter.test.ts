@@ -2,17 +2,14 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { ObservedTemporalAdapter, TemporalAdapter } from '../src/index.js';
 
+import { createTemporalAdapterConfig, createTemporalRunRef } from './helpers/contractFixtures.js';
 import { makeTrackingObservability } from './helpers/mockObservability.js';
 
-const BASE_CONFIG = {
-  address: '127.0.0.1:7233',
-  namespace: 'dvt-test',
-  taskQueue: 'q-main',
-  connectTimeoutMs: 5000,
-  requestTimeoutMs: 10000,
-  maxStartPayloadBytes: 2_000_000,
-  continueAsNewAfterLayerCount: 0,
-};
+const BASE_CONFIG = createTemporalAdapterConfig();
+const LOOKUP_RUN_REF_COUNTER = 'dvt.temporal.lookup_run_ref_total';
+const PING_COUNTER = 'dvt.temporal.ping_total';
+
+type WorkflowHandleMock = ReturnType<typeof makeWorkflowHandleMock>;
 
 function makeWorkflowHandleMock(describeImpl: () => Promise<unknown>): {
   cancel: ReturnType<typeof vi.fn>;
@@ -45,7 +42,7 @@ interface ObservedLookupAdapterFixture {
 }
 
 function makeObservedLookupAdapter(
-  getHandleImpl: (workflowId: string) => ReturnType<typeof makeWorkflowHandleMock>
+  getHandleImpl: (workflowId: string) => WorkflowHandleMock
 ): ObservedLookupAdapterFixture {
   const workflowClient = {
     start: vi.fn(),
@@ -77,20 +74,9 @@ describe('ObservedTemporalAdapter', () => {
 
     const result = await adapter.lookupRunRef('run-abc', 'tenant1');
 
-    expect(result).toEqual({
-      provider: 'temporal',
-      tenantId: 'tenant1',
-      namespace: 'dvt-test',
-      workflowId: 'run-abc',
-      runId: 'run-abc',
-      taskQueue: 'q-main-tenant1',
-    });
+    expect(result).toEqual(createLookupRunRef('run-abc', 'tenant1'));
     expect(workflowClient.getHandle).toHaveBeenCalledWith('run-abc');
-    expect(metrics.counter).toHaveBeenCalledWith('dvt.temporal.lookup_run_ref_total', {
-      adapter: 'temporal',
-      operation: 'lookupRunRef',
-      result: 'found',
-    });
+    expectLookupRunRefMetric(metrics, 'found');
     expect(logs.info).toHaveBeenCalled();
   });
 
@@ -103,11 +89,7 @@ describe('ObservedTemporalAdapter', () => {
     const result = await adapter.lookupRunRef('run-missing', 'tenant1');
 
     expect(result).toBeNull();
-    expect(metrics.counter).toHaveBeenCalledWith('dvt.temporal.lookup_run_ref_total', {
-      adapter: 'temporal',
-      operation: 'lookupRunRef',
-      result: 'missing',
-    });
+    expectLookupRunRefMetric(metrics, 'missing');
   });
 
   it('emits error observability for lookupRunRef failures', async () => {
@@ -117,11 +99,7 @@ describe('ObservedTemporalAdapter', () => {
     const { adapter, logs, metrics } = makeObservedLookupAdapter(() => handle);
 
     await expect(adapter.lookupRunRef('run-abc', 'tenant1')).rejects.toThrow('ECONNREFUSED');
-    expect(metrics.counter).toHaveBeenCalledWith('dvt.temporal.lookup_run_ref_total', {
-      adapter: 'temporal',
-      operation: 'lookupRunRef',
-      result: 'error',
-    });
+    expectLookupRunRefMetric(metrics, 'error');
     expect(logs.error).toHaveBeenCalled();
   });
 
@@ -140,7 +118,7 @@ describe('ObservedTemporalAdapter', () => {
     });
 
     await expect(adapter.ping()).rejects.toThrow('TEMPORAL_CLIENT_NOT_CONNECTED');
-    expect(metrics.counter).toHaveBeenCalledWith('dvt.temporal.ping_total', {
+    expect(metrics.counter).toHaveBeenCalledWith(PING_COUNTER, {
       adapter: 'temporal',
       operation: 'ping',
       result: 'error',
@@ -148,3 +126,27 @@ describe('ObservedTemporalAdapter', () => {
     expect(logs.error).toHaveBeenCalled();
   });
 });
+
+function createLookupRunRef(
+  workflowId: string,
+  tenantId: string
+): ReturnType<typeof createTemporalRunRef> {
+  return createTemporalRunRef({
+    tenantId,
+    namespace: 'dvt-test',
+    workflowId,
+    runId: workflowId,
+    taskQueue: `q-main-${tenantId}`,
+  });
+}
+
+function expectLookupRunRefMetric(
+  metrics: ObservedLookupAdapterFixture['metrics'],
+  result: 'found' | 'missing' | 'error'
+): void {
+  expect(metrics.counter).toHaveBeenCalledWith(LOOKUP_RUN_REF_COUNTER, {
+    adapter: 'temporal',
+    operation: 'lookupRunRef',
+    result,
+  });
+}

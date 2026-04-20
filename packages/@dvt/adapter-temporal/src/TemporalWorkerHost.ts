@@ -9,7 +9,7 @@
  * @date 2026-03-08
  */
 
-import type { IObservability } from '@dvt/observability';
+import type { Attributes, IObservability } from '@dvt/observability';
 import { NativeConnection, Worker } from '@temporalio/worker';
 
 import type {
@@ -51,6 +51,8 @@ interface WorkerRunState {
   exitResult: 'pending' | 'ok' | 'error';
 }
 
+type WorkerLogAttributes = Attributes;
+
 export class TemporalWorkerHost {
   private worker: Worker | null = null;
   private runningState: WorkerRunState | null = null;
@@ -70,15 +72,8 @@ export class TemporalWorkerHost {
     }
 
     const context = buildTemporalContext(this.config.temporalConfig);
-    const activities = createActivities(
-      this.config.activityDeps,
-      this.config.stepExecutors,
-      this.config.stepActivitiesByKind
-    );
-    const attributes = {
-      namespace: this.config.temporalConfig.namespace,
-      identity: this.config.temporalConfig.identity ?? '',
-    };
+    const activities = this.createConfiguredActivities();
+    const attributes = this.buildWorkerLogAttributes();
 
     await runObservedTemporalOperation({
       observability: this.observability,
@@ -88,54 +83,7 @@ export class TemporalWorkerHost {
       counterName: 'dvt.temporal.worker.started_total',
       durationName: 'dvt.temporal.worker.start.duration_ms',
       metricOperation: 'start',
-      run: async () => {
-        this.observability.logs.info({
-          msg: 'Starting Temporal worker host',
-          context,
-          attributes,
-        });
-        this.worker = await Worker.create({
-          connection,
-          namespace: this.config.temporalConfig.namespace,
-          taskQueue: this.config.temporalConfig.taskQueue,
-          workflowsPath:
-            this.config.workflowsPath ?? require.resolve('./workflows/RunPlanWorkflow'),
-          activities,
-          identity: this.config.temporalConfig.identity,
-        });
-
-        const runState: WorkerRunState = {
-          promise: Promise.resolve(),
-          exitResult: 'pending',
-        };
-        runState.promise = this.worker
-          .run()
-          .then(() => {
-            runState.exitResult = 'ok';
-          })
-          .catch((error) => {
-            runState.exitResult = 'error';
-            this.observability.metrics
-              .counter(
-                'dvt.temporal.worker.run_exit_total',
-                buildTemporalMetricTags('runExit', 'error')
-              )
-              .add(1);
-            this.observability.logs.error({
-              msg: 'Temporal worker exited with error',
-              context,
-              err: error,
-              attributes: {
-                namespace: this.config.temporalConfig.namespace,
-                error: toErrorMessage(error),
-              },
-            });
-          })
-          .finally(() => {
-            this.clearRunningState(runState);
-          });
-        this.runningState = runState;
-      },
+      run: async () => this.startWorkerRun(connection, activities, context, attributes),
       onSuccess: () => ({
         result: 'ok',
         logMessage: 'Temporal worker host started',
@@ -148,10 +96,7 @@ export class TemporalWorkerHost {
           result: 'error',
           logMessage: 'Temporal worker host failed to start',
           logLevel: 'error',
-          logAttributes: {
-            namespace: this.config.temporalConfig.namespace,
-            error: toErrorMessage(error),
-          },
+          logAttributes: this.buildWorkerErrorAttributes(error),
         };
       },
     });
@@ -164,10 +109,7 @@ export class TemporalWorkerHost {
     if (!currentWorker || !currentRun) return;
 
     const context = buildTemporalContext(this.config.temporalConfig);
-    const attributes = {
-      namespace: this.config.temporalConfig.namespace,
-      identity: this.config.temporalConfig.identity ?? '',
-    };
+    const attributes = this.buildWorkerLogAttributes();
 
     await runObservedTemporalOperation({
       observability: this.observability,
@@ -203,10 +145,7 @@ export class TemporalWorkerHost {
         result: 'error',
         logMessage: 'Temporal worker host shutdown failed',
         logLevel: 'error',
-        logAttributes: {
-          namespace: this.config.temporalConfig.namespace,
-          error: toErrorMessage(error),
-        },
+        logAttributes: this.buildWorkerErrorAttributes(error),
       }),
     });
   }
@@ -221,5 +160,96 @@ export class TemporalWorkerHost {
     }
     this.worker = null;
     this.runningState = null;
+  }
+
+  private createConfiguredActivities(): ReturnType<typeof createActivities> {
+    return createActivities(
+      this.config.activityDeps,
+      this.config.stepExecutors,
+      this.config.stepActivitiesByKind
+    );
+  }
+
+  private buildWorkerLogAttributes(): WorkerLogAttributes {
+    return {
+      namespace: this.config.temporalConfig.connection.namespace,
+      identity: this.config.temporalConfig.connection.identity ?? '',
+    };
+  }
+
+  private buildWorkerErrorAttributes(error: unknown): { namespace: string; error: string } {
+    return {
+      namespace: this.config.temporalConfig.connection.namespace,
+      error: toErrorMessage(error),
+    };
+  }
+
+  private async startWorkerRun(
+    connection: NativeConnection,
+    activities: ReturnType<typeof createActivities>,
+    context: ReturnType<typeof buildTemporalContext>,
+    attributes: WorkerLogAttributes
+  ): Promise<void> {
+    this.observability.logs.info({
+      msg: 'Starting Temporal worker host',
+      context,
+      attributes,
+    });
+    this.worker = await this.createWorker(connection, activities);
+    this.runningState = this.createWorkerRunState(this.worker, context);
+  }
+
+  private createWorker(
+    connection: NativeConnection,
+    activities: ReturnType<typeof createActivities>
+  ): Promise<Worker> {
+    return Worker.create({
+      connection,
+      namespace: this.config.temporalConfig.connection.namespace,
+      taskQueue: this.config.temporalConfig.connection.taskQueue,
+      workflowsPath: this.config.workflowsPath ?? require.resolve('./workflows/RunPlanWorkflow'),
+      activities,
+      identity: this.config.temporalConfig.connection.identity,
+    });
+  }
+
+  private createWorkerRunState(
+    worker: Worker,
+    context: ReturnType<typeof buildTemporalContext>
+  ): WorkerRunState {
+    const runState: WorkerRunState = {
+      promise: Promise.resolve(),
+      exitResult: 'pending',
+    };
+
+    runState.promise = worker
+      .run()
+      .then(() => {
+        runState.exitResult = 'ok';
+      })
+      .catch((error) => {
+        runState.exitResult = 'error';
+        this.recordWorkerRunExitError(context, error);
+      })
+      .finally(() => {
+        this.clearRunningState(runState);
+      });
+
+    return runState;
+  }
+
+  private recordWorkerRunExitError(
+    context: ReturnType<typeof buildTemporalContext>,
+    error: unknown
+  ): void {
+    this.observability.metrics
+      .counter('dvt.temporal.worker.run_exit_total', buildTemporalMetricTags('runExit', 'error'))
+      .add(1);
+    this.observability.logs.error({
+      msg: 'Temporal worker exited with error',
+      context,
+      err: error,
+      attributes: this.buildWorkerErrorAttributes(error),
+    });
   }
 }

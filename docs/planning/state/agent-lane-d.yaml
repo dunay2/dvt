@@ -2,7 +2,7 @@ lane_id: D
 title: Scale And Go-To-Market
 owner: Product / Architecture / Delivery / Docs
 status: Active
-last_reviewed: '2026-04-19'
+last_reviewed: '2026-04-20'
 goal: Prepare the system for scale and for the first enterprise customer.
 expected_outcome:
   - storage and read-path scale are bounded
@@ -253,6 +253,31 @@ tasks:
       Undocumented threshold silently degrades large DAG execution when Temporal history size limits
       are hit.
     last_verified: '2026-04-02'
+  - task_id: AR-D-PLAN-POINTER
+    priority: P0
+    status: in_progress
+    objective: >-
+      replace the full Temporal workflow plan payload with a plan-pointer execution seam and compact
+      continue-as-new handoff so large DAG runs stop scaling with durable workflow input size.
+    dependency: AR-D2
+    target: >-
+      Workflow start and rollover inputs carry `PlanRef` plus compact execution cursor state only,
+      bounded segment resolution replaces durable whole-plan carriage, and the cutover path for
+      in-flight workflows is explicit and replay-safe.
+    complexity: L
+    effort_points: 8
+    progress_pct: 75
+    evidence_refs:
+      - docs/planning/reviews/architecture-and-governance/20260414-principal-architect-review-dvtplus.md
+      - docs/planning/reviews/architecture-and-governance/20260420-dvt-plus-system-architecture-review.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/ar-d-plan-pointer-workflow-input-hardening-plan-20260420.md
+    status_reason: >-
+      The active branch now runs with `planRef` plus cursor-only workflow input, bounded segment
+      resolution, canonical `CANCEL` signal-id transport, an explicit continue-as-new payload guard,
+      and pre-layer lifecycle gating ahead of skipped-step side effects. Remaining work is the next
+      maturity cut: externalized compact-fact references and any replay strategy beyond the
+      drained-deploy line.
+    last_verified: '2026-04-20'
   - task_id: AR-D3
     priority: P2
     status: queued
@@ -514,8 +539,10 @@ dependency_notes:
     `first enterprise pilot`, billing, compliance, and acquisition collateral remain explicit GTM
     backlog rather than implementation work.
   - >-
-    `AR-D2` through `AR-D6` remain the open scale backlog from the 2026-04-02 deep architectural
-    review; `AR-D1` is closed with incremental snapshot projection and fallback replay evidence.
+    `AR-D2` through `AR-D6` remain the original open scale backlog from the 2026-04-02 deep
+    architectural review; `AR-D-PLAN-POINTER` now adds the workflow-payload hardening cut required
+    by the 2026-04-14 and 2026-04-20 architecture reviews, while `AR-D1` is already closed with
+    incremental snapshot projection and fallback replay evidence.
   - >-
     The 2026-04-02 principal deep architectural review adds `AR-D7` (tenant-aware outbox sharding)
     and `AR-D8` (default retention policy plus retention health alerting) as scale hardening tasks.
@@ -524,17 +551,17 @@ dependency_notes:
     and worker routing model by step kind (P2, depends on MW-C1).
   - >-
     `TF-D1` is now closed: the transformation proof environment has a canonical reset, cleanup, and
-    rerun lifecycle, so remaining Lane D work shifts back to default retention hardening (`AR-D8`)
-    and broader scale slices.
+    rerun lifecycle, so remaining Lane D work now splits between workflow payload hardening
+    (`AR-D-PLAN-POINTER`), default retention hardening (`AR-D8`), and the broader scale backlog.
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
-  verified_on: '2026-04-19'
-  total_tasks: 26
-  total_effort_points: 135
+  verified_on: '2026-04-20'
+  total_tasks: 27
+  total_effort_points: 143
   completed_weighted_points: 47
-  lane_progress_pct: 35
+  lane_progress_pct: 33
   notes: >-
     Weighted progress uses effort_points. `MW-D1` is now closed with the compile-only route/use-case
     split, catalog-first composition, and non-dbt acceptance vector; remaining Lane D near-term work
-    is retention enforcement and the open scale backlog.
+    is workflow payload hardening, retention enforcement, and the open scale backlog.

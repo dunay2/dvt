@@ -1,7 +1,9 @@
 import type { IRunExecutionContextReader } from '@dvt/artifacts';
 import {
+  parseDbtPluginContext,
   parseRunExecutionContext,
   parseRunExecutionContextRef,
+  type DbtPluginContext,
   type PlanRef,
   type ResolvedRunContext,
   type RunExecutionContext,
@@ -12,7 +14,7 @@ import { jcsCanonicalize, sha256Hex } from '@dvt/crypto';
 import type { DbtPluginRunner } from '../../../src/activities/stepActivities.js';
 
 import type { TestOutbox, TestStateStore } from './runtimeState.js';
-import { createActivityDeps } from './testActivities.js';
+import { createActivityDeps, type TestActivityDeps } from './testActivities.js';
 
 const DEFAULT_DBT_PLUGIN_RUNNER: DbtPluginRunner = {
   async execute(input) {
@@ -20,10 +22,22 @@ const DEFAULT_DBT_PLUGIN_RUNNER: DbtPluginRunner = {
   },
 };
 
-interface DbtRunExecutionBinding {
+export interface DbtRunExecutionBinding {
   ctx: ResolvedRunContext;
   planRef: PlanRef;
   planBytes: Uint8Array;
+}
+
+export interface CreateDbtActivityDepsArgs {
+  store: TestStateStore;
+  outbox: TestOutbox;
+  bindings: readonly DbtRunExecutionBinding[];
+  dbtPluginRunner?: DbtPluginRunner;
+}
+
+export interface TestDbtActivityDeps extends TestActivityDeps {
+  dbtPluginRunner: DbtPluginRunner;
+  runExecutionContextReader: IRunExecutionContextReader;
 }
 
 interface RegisteredDbtExecutionArtifacts {
@@ -97,39 +111,24 @@ export function withDbtRunExecutionContext(
   };
 }
 
-export function createDbtActivityDeps(
-  store: TestStateStore,
-  outbox: TestOutbox,
-  planBytes: Uint8Array,
-  ctx: ResolvedRunContext,
-  planRef: PlanRef,
-  dbtPluginRunner: DbtPluginRunner = DEFAULT_DBT_PLUGIN_RUNNER
-): ReturnType<typeof createActivityDeps> {
-  return createRegisteredDbtActivityDeps(
-    store,
-    outbox,
-    [
-      {
-        ctx,
-        planRef,
-        planBytes,
-      },
-    ],
-    dbtPluginRunner
-  );
+export function resolveDbtPluginContext(
+  runExecutionContext: RunExecutionContext
+): DbtPluginContext {
+  const dbtPluginContext = runExecutionContext.pluginContexts['dbt'];
+  if (dbtPluginContext === undefined) {
+    throw new Error('RUN_EXECUTION_CONTEXT_DBT_PLUGIN_CONTEXT_REQUIRED');
+  }
+  return parseDbtPluginContext(dbtPluginContext);
 }
 
-export function createMultiRunDbtActivityDeps(
-  store: TestStateStore,
-  outbox: TestOutbox,
-  bindings: readonly DbtRunExecutionBinding[],
-  dbtPluginRunner: DbtPluginRunner = DEFAULT_DBT_PLUGIN_RUNNER
-): ReturnType<typeof createActivityDeps> {
+export function createDbtActivityDeps(args: CreateDbtActivityDepsArgs): TestDbtActivityDeps {
+  const bindings = assertDbtBindings(args.bindings);
+
   return createRegisteredDbtActivityDeps(
-    store,
-    outbox,
-    assertMultiRunBindings(bindings),
-    dbtPluginRunner
+    args.store,
+    args.outbox,
+    bindings,
+    args.dbtPluginRunner ?? DEFAULT_DBT_PLUGIN_RUNNER
   );
 }
 
@@ -138,28 +137,39 @@ function createRegisteredDbtActivityDeps(
   outbox: TestOutbox,
   bindings: readonly DbtRunExecutionBinding[],
   dbtPluginRunner: DbtPluginRunner
-): ReturnType<typeof createActivityDeps> {
+): TestDbtActivityDeps {
   const registry = registerBindings(bindings);
+  const runExecutionContextReader = createRegisteredRunExecutionContextReader(
+    registry.runExecutionContextsByRefKey
+  );
+  const [firstBinding] = bindings;
+  if (firstBinding === undefined) {
+    throw new TypeError('DBT_BINDINGS_REQUIRED');
+  }
 
-  return createActivityDeps(store, outbox, bindings[0].planBytes, {
+  const activityDeps = createActivityDeps(store, outbox, firstBinding.planBytes, {
     fetchPlanBytes: createRegisteredPlanBytesFetcher(registry.planBytesByRefKey),
-    runExecutionContextReader: createRegisteredRunExecutionContextReader(
-      registry.runExecutionContextsByRefKey
-    ),
+    runExecutionContextReader,
     dbtPluginRunner,
   });
+
+  return {
+    ...activityDeps,
+    dbtPluginRunner,
+    runExecutionContextReader,
+  };
 }
 
-function assertMultiRunBindings(
+function assertDbtBindings(
   bindings: readonly DbtRunExecutionBinding[]
 ): readonly DbtRunExecutionBinding[] {
   if (bindings.length === 0) {
-    throw new TypeError('DBT_MULTI_RUN_BINDINGS_REQUIRED');
+    throw new TypeError('DBT_BINDINGS_REQUIRED');
   }
 
   return bindings.map((binding, index) => {
     if (!(binding.planBytes instanceof Uint8Array)) {
-      throw new TypeError(`DBT_MULTI_RUN_PLAN_BYTES_REQUIRED:${index}`);
+      throw new TypeError(`DBT_PLAN_BYTES_REQUIRED:${index}`);
     }
 
     return binding;

@@ -2,7 +2,7 @@
 title: Architecture And Governance Reviews
 status: Active
 owner: Product / Architecture / Docs
-last_reviewed: 2026-04-04
+last_reviewed: 2026-04-20
 planning_type: review
 ---
 
@@ -20,3 +20,4 @@ planning_type: review
 - [20260403 Postgres plan store SRP remediation target](./20260403-postgres-plan-store-srp-remediation-target.md)
 - [20260403 S08 Postgres plan store hard QA review](./20260403-s08-postgres-plan-store-hard-qa-review.md)
 - [20260404 AR-C2 Fowler hard QA review](./20260404-ar-c2-fowler-hard-qa-review.md)
+- [20260420 DVT+ system architecture review](./20260420-dvt-plus-system-architecture-review.md)
