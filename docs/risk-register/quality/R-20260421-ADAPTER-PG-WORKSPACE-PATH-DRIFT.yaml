@@ -1,0 +1,39 @@
+---
+id: R-20260421-ADAPTER-PG-WORKSPACE-PATH-DRIFT
+title: Adapter-postgres workspace type-path mappings can drift from real package imports
+status: Open
+date: 2026-04-21
+owners:
+  - packages/@dvt/adapter-postgres
+  - apps/api
+severity: Medium
+probability: Medium
+context: >
+  `packages/@dvt/adapter-postgres/tsconfig.json` uses an explicit `paths` map to resolve sibling
+  workspace packages from built `dist` declarations. The 2026-04-21 API HTTP entrypoint slice
+  exposed that the adapter imported `@dvt/delivery` and `@dvt/traceability-service`, but the `paths`
+  map had not been updated to match those imports. The mismatch did not surface only as an
+  adapter-local issue; it broke `pnpm --filter dvt-api build` because the API build recursively
+  prebuilds adapter dependencies.
+risk: >
+  If manual workspace path maps continue diverging from real imports, DVT can accumulate latent
+  build failures that only appear in recursive package builds, slowing PR feedback and masking the
+  true health of unrelated slices that depend on the same orchestration path.
+mitigations:
+  - >
+    Keep adapter package builds in the validation baseline for slices that depend on recursive
+    workspace prebuilds instead of assuming `apps/api` can be validated in isolation.
+  - >
+    Whenever `@dvt/adapter-postgres` imports a new internal package, update the local `paths` map in
+    the same slice and verify `pnpm --filter @dvt/adapter-postgres build`.
+  - >
+    Evaluate whether the adapter can replace the hand-maintained path list with one shared
+    workspace-resolution strategy so new sibling imports are not tracked in multiple places.
+observed_trigger:
+  - '`pnpm --filter dvt-api build` failed through recursive prebuild.'
+  - 'Root cause traced to `packages/@dvt/adapter-postgres/tsconfig.json`.'
+  - >
+    Missing mappings were `@dvt/delivery`, `@dvt/delivery/*`, `@dvt/traceability-service`, and
+    `@dvt/traceability-service/*`.
+review_after: 2026-06-15
+---

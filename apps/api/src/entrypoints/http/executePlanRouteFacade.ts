@@ -1,3 +1,8 @@
+/**
+ * Owned concern: generic protected plan-route execution seam that resolves the
+ * request, delegates use-case execution, and emits mapped HTTP responses
+ * without leaking route-local reply wiring.
+ */
 import type { FastifyReply, FastifyRequest } from 'fastify';
 
 import { HTTP_STATUS_CODE, type HttpStatusCode } from '../../routes/httpStatus.js';

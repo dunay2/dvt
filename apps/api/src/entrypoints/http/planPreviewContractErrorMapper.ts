@@ -1,3 +1,7 @@
+/**
+ * Owned concern: internal preview-plan contract-issue translation inside the
+ * plan-route response translation component.
+ */
 import { createHttpErrorResponse, HTTP_ERROR_TYPE } from './httpErrorContract.js';
 import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
 import type { PreviewPlanContractIssue } from './planPreviewContractGuard.js';

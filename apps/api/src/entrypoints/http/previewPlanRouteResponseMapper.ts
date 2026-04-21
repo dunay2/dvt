@@ -1,3 +1,7 @@
+/**
+ * Owned concern: internal preview-plan use-case response mapping inside the
+ * plan-route response translation component.
+ */
 import type { PreviewPlanUseCaseResult } from '../../application/services/PreviewPlanUseCase.js';
 
 import {

@@ -28,6 +28,8 @@ It does **not** own:
 - planner semantics
 - adapter execution semantics
 - Fastify bootstrapping
+- preview/compile/import plan-route response translation, which lives in the
+  sibling component `planRouteResponseTranslation.ts`
 
 ## Public API
 

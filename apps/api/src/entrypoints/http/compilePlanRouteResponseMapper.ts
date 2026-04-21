@@ -1,3 +1,7 @@
+/**
+ * Owned concern: internal compile-plan response mapping inside the plan-route
+ * response translation component.
+ */
 import type { CompilePlanResult } from '../../application/services/CompilePlanUseCase.js';
 
 import type { PlanRouteFacadeResponse } from './executePlanRouteFacade.js';
