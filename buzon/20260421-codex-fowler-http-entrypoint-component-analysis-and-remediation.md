@@ -203,6 +203,17 @@ La remediacion ya esta aplicada en el arbol local:
   util como baseline del slice despues de corregir el `tsconfig` de
   `@dvt/adapter-postgres` para resolver `@dvt/delivery` y
   `@dvt/traceability-service`
+- la revision posterior senala un posible shim de compatibilidad en
+  `httpErrorMapper.ts`; verificacion local: no hay una ruta legacy viva ni un
+  re-export de compatibilidad en el codigo actual. El residual real es de
+  narrativa y trazabilidad: mantener docs y closeouts alineados con ese hard
+  cut para no describir compatibilidad inexistente
+- la cobertura del happy path del facade `planRouteResponseTranslation` sigue
+  siendo parcial: `compile/import` se prueban en verde a traves de los route
+  consumers, pero faltan tests directos de
+  `planRouteResponseTranslation.compile.result(...)` y
+  `planRouteResponseTranslation.import.result(...)` como contrato focalizado de
+  facade
 
 ## Pre-implementation brief usado para el slice
 

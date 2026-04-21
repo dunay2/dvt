@@ -57,6 +57,15 @@ type-path map did not resolve those packages. That drift broke
 1. `packages/@dvt/adapter-postgres/tsconfig.json` still relies on a manually
    curated internal-package path map. The immediate break is fixed, but the
    pattern can drift again if new imports are added without updating the map.
-2. The broader API HTTP entrypoint layer still has additional flat helper
+2. Review follow-up verified that `httpErrorMapper.ts` does not currently keep
+   a live compatibility shim. The remaining work there is to keep docs and
+   closeouts aligned with the hard-cut posture so narrative drift does not
+   reintroduce a phantom legacy path.
+3. The current tests prove `compile/import` success through route consumers,
+   but they do not yet exercise
+   `planRouteResponseTranslation.compile.result(...)` and
+   `planRouteResponseTranslation.import.result(...)` directly as focused
+   happy-path facade contract tests.
+4. The broader API HTTP entrypoint layer still has additional flat helper
    modules that could be promoted into named components in later Fowler-driven
    passes.
