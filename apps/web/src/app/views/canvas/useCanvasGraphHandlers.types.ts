@@ -1,35 +1,16 @@
 import type { Edge, Node, ReactFlowProps } from '@xyflow/react';
 import type { Dispatch, SetStateAction } from 'react';
 
-import type { CanvasGraphStrategy } from '../../plugins/dbt/dbtNodeAdapter';
-import type { CanonicalNode } from '../../types/canonical';
-import type { CanvasDraftSession } from './canvasDraftSession';
+import type {
+  CanvasGraphInteractionEffects,
+  CanvasGraphInteractionPolicy,
+  CanvasGraphInteractionState,
+  ConfirmEdgeModalState,
+} from './canvasGraphHandlerContracts';
 
-export type ConfirmEdgeModalState = {
-  open: boolean;
-  edge: { source: string; target: string; type: string } | null;
-};
-
-export type UseCanvasGraphHandlersParams = {
-  graphStrategy: CanvasGraphStrategy;
-  canonicalNodesById: Map<string, CanonicalNode>;
-  edges: Edge[];
-  nodes: Node[];
-  selectedNodeIds: string[];
-  inspectorNodeId: string | null;
-  draftSession: CanvasDraftSession;
-  canEditEdges: boolean;
-  focusMode: boolean;
-  inspectorPanelVisible: boolean;
-  columnLevelLineageEnabled: boolean;
-  setNodes: Dispatch<SetStateAction<Node[]>>;
-  setEdges: Dispatch<SetStateAction<Edge[]>>;
-  setDraftSession: Dispatch<SetStateAction<CanvasDraftSession>>;
-  setSelectedNodes: (ids: string[]) => void;
-  setInspectorNode: (nodeId: string | null) => void;
-  toggleInspectorPanel: () => void;
-  onLayoutComplete: (positions: Record<string, { x: number; y: number }>) => void;
-};
+export type UseCanvasGraphHandlersParams = CanvasGraphInteractionState &
+  CanvasGraphInteractionEffects &
+  CanvasGraphInteractionPolicy;
 
 export type UseCanvasGraphHandlersResult = {
   confirmEdgeModal: ConfirmEdgeModalState;

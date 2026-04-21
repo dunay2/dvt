@@ -1983,13 +1983,13 @@ tasks:
       changing startup behavior. The graph architecture docs are now split into one short entrypoint
       plus dedicated detail docs for startup contract, runtime model, sequence/state, and decision
       rationale and patterns, with explicit current-point and evolution posture. The current hard
-      cut also introduced `canvasInteractionCommands.ts` as the single working-set command catalog
-      for remove-node, visible-edge replacement, explicit-node admission, and source-import
-      queueing, deleted the dead alternate admission hook, and pushed `draftSession` through the
-      mutation seam so node and edge adapters no longer reconstruct aggregate state through
-      compatibility callbacks. After syncing with `origin/main` on 2026-04-20, the planning baseline
-      is now sharper: the execution-actions test split and lane backlog alignment are already
-      mainline baseline, and the current branch now lands the typed authoring-port hard cut.
+      cut also introduced `canvasGraphLifecycle.ts` as the single graph-lifecycle component for
+      remove-node, edge replacement, explicit-node admission, edge-change application, and
+      source-import queueing, deleted the dead alternate admission hook, and pushed `draftSession`
+      through the mutation seam so node and edge adapters no longer reconstruct aggregate state
+      through compatibility callbacks. After syncing with `origin/main` on 2026-04-20, the planning
+      baseline is now sharper: the execution-actions test split and lane backlog alignment are
+      already mainline baseline, and the current branch now lands the typed authoring-port hard cut.
       `AppServices` exposes `workspaceGraphDraftAuthoringPort`, Canvas draft reads and saves route
       through that typed seam, governed `DesignGraphDraft` payloads are built from scoped canonical
       nodes plus preview-provenance Git context, and controller regression coverage now proves
@@ -2064,20 +2064,29 @@ tasks:
       visual-only success.
     complexity: S
     effort_points: 3
-    progress_pct: 35
+    progress_pct: 55
     evidence_refs:
       - docs/planning/closeouts/20260418-tf-e2-canvas-interaction-command-seam-closeout.md
+      - docs/planning/closeouts/20260421-tf-e2-graph-lifecycle-hard-cut-closeout.md
+      - docs/planning/closeouts/20260421-tf-e2-canvas-handler-component-semantics-closeout.md
+      - docs/planning/reviews/architecture-and-governance/20260421-canvas-handler-seams-fowler-review.md
       - docs/architecture/components/web/graph/canvas-controller-current-to-target-architecture.md
-      - apps/web/src/app/views/canvas/canvasInteractionCommands.ts
+      - docs/architecture/components/web/graph/canvas-graph-lifecycle-component.md
+      - docs/architecture/components/web/graph/canvas-handler-contracts-component.md
+      - apps/web/src/app/views/canvas/canvasGraphLifecycle.ts
+      - apps/web/src/app/views/canvas/canvasGraphHandlerContractBuilders.ts
       - apps/web/src/app/views/canvas/useCanvasNodeChangeHandlers.ts
+      - apps/web/src/app/views/canvas/canvasHandlerContracts.architecture.test.ts
       - apps/web/src/app/views/canvas/useCanvasNodeChangeHandlers.test.tsx
     status_reason: >-
-      Execution has started. Node-removal semantics are now centralized under
-      `canvasInteractionCommands.ts`, `draftSession` is passed explicitly through the mutation seam,
-      and node-change handling applies graph, selection, inspector, and aggregate fallout from one
-      command result instead of reconstructing draft state through adapter-local logic. Duplicate,
-      move, and hard-reload closure still remain open.
-    last_verified: '2026-04-18'
+      Execution has materially advanced. The flat transitional command catalog was hard-cut into the
+      `canvasGraphLifecycle` component, node-change and node-removal handlers now route through the
+      namespaced node lifecycle API, and graph fallout is applied through one lifecycle-aware helper
+      instead of adapter-local reconstruction. The handler-contract subsystem is now also documented
+      and guarded as an explicit local component with namespaced builder APIs and semantic
+      architecture tests instead of loose helper exports. Duplicate, full move/reload closure, and
+      the remaining product-lifecycle proofs still remain open.
+    last_verified: '2026-04-21'
   - task_id: TF-E2-C
     parent_task: TF-E2
     priority: P0
@@ -2091,20 +2100,29 @@ tasks:
       remain projections of canonical graph state rather than transient modal or viewport state.
     complexity: S
     effort_points: 3
-    progress_pct: 35
+    progress_pct: 55
     evidence_refs:
       - docs/planning/closeouts/20260418-tf-e2-canvas-interaction-command-seam-closeout.md
+      - docs/planning/closeouts/20260421-tf-e2-graph-lifecycle-hard-cut-closeout.md
+      - docs/planning/closeouts/20260421-tf-e2-canvas-handler-component-semantics-closeout.md
+      - docs/planning/reviews/architecture-and-governance/20260421-canvas-handler-seams-fowler-review.md
       - docs/architecture/components/web/graph/canvas-controller-current-to-target-architecture.md
-      - apps/web/src/app/views/canvas/canvasInteractionCommands.ts
+      - docs/architecture/components/web/graph/canvas-graph-lifecycle-component.md
+      - docs/architecture/components/web/graph/canvas-handler-contracts-component.md
+      - apps/web/src/app/views/canvas/canvasGraphLifecycle.ts
+      - apps/web/src/app/views/canvas/canvasGraphHandlerContractBuilders.ts
       - apps/web/src/app/views/canvas/useCanvasEdgeChangeHandlers.ts
+      - apps/web/src/app/views/canvas/canvasHandlerContracts.architecture.test.ts
       - apps/web/src/app/views/canvas/useCanvasGraphHandlers.ts
       - apps/web/src/app/views/canvas/useCanvasGraphHandlers.edgeAuthoring.test.tsx
     status_reason: >-
-      Execution has started. Edge replacement during connect, delete, and graph-change fallout now
-      routes through the centralized command catalog, and the graph handlers no longer keep
-      callback-based compatibility paths for visible-edge persistence. Reconnect semantics and full
-      reload-proof lifecycle closure still remain open.
-    last_verified: '2026-04-18'
+      Execution has materially advanced. Edge replacement and edge-change handling now route through
+      the namespaced edge lifecycle API, the flat compatibility surface has been removed, and
+      visual-only edge changes no longer need to present themselves as a separate command catalog
+      concern. The shared handler-contract subsystem is now explicit in both code and architecture
+      docs, with namespaced builder APIs and semantic fitness checks protecting the adapter seam.
+      Reconnect semantics and full reload-proof lifecycle closure still remain open.
+    last_verified: '2026-04-21'
   - task_id: TF-E2-D
     parent_task: TF-E2
     priority: P0
@@ -2119,8 +2137,8 @@ tasks:
       Governed node properties can be edited, validated, saved, canceled, and rehydrated through the
       route-owned Inspector, the saved values feed the same canonical authoring truth consumed by
       preview and run handoff, selection or inspect semantics that stop being pure adapter fallout
-      route through an explicit command helper beside `canvasInteractionCommands.ts`, and
-      plugin-owned inspector panels remain read-only in this slice.
+      route through an explicit command helper beside `canvasGraphLifecycle.ts`, and plugin-owned
+      inspector panels remain read-only in this slice.
     complexity: S
     effort_points: 3
     progress_pct: 0

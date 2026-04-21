@@ -1,33 +1,28 @@
+/** Owned concern: translate selection and inspect gestures into local adapter-side effects. */
+
 import { type Edge, type Node, type ReactFlowProps } from '@xyflow/react';
 import { useCallback } from 'react';
 
-import type { UseCanvasGraphHandlersParams, UseCanvasGraphHandlersResult } from './useCanvasGraphHandlers.types';
+import type {
+  CanvasSelectionContracts,
+} from './canvasGraphHandlerContracts';
 
-type UseCanvasSelectionHandlersArgs = Pick<
-  UseCanvasGraphHandlersParams,
-  | 'canonicalNodesById'
-  | 'selectedNodeIds'
-  | 'focusMode'
-  | 'inspectorPanelVisible'
-  | 'setSelectedNodes'
-  | 'setInspectorNode'
-  | 'toggleInspectorPanel'
->;
+type UseCanvasSelectionHandlersArgs = CanvasSelectionContracts;
 
-type UseCanvasSelectionHandlersResult = Pick<
-  UseCanvasGraphHandlersResult,
-  'handleInspectNode' | 'handleNodeClick' | 'onSelectionChange' | 'handleToggleNodeSelection'
->;
+type UseCanvasSelectionHandlersResult = {
+  handleInspectNode: (nodeId: string) => void;
+  handleNodeClick: NonNullable<ReactFlowProps<Node, Edge>['onNodeClick']>;
+  onSelectionChange: NonNullable<ReactFlowProps<Node, Edge>['onSelectionChange']>;
+  handleToggleNodeSelection: (nodeId: string, shouldSelect: boolean) => void;
+};
 
 export function useCanvasSelectionHandlers({
-  canonicalNodesById,
-  selectedNodeIds,
-  focusMode,
-  inspectorPanelVisible,
-  setSelectedNodes,
-  setInspectorNode,
-  toggleInspectorPanel,
+  state,
+  effects,
 }: UseCanvasSelectionHandlersArgs): UseCanvasSelectionHandlersResult {
+  const { canonicalNodesById, selectedNodeIds, focusMode, inspectorPanelVisible } = state;
+  const { setSelectedNodes, setInspectorNode, toggleInspectorPanel } = effects;
+
   const handleInspectNode = useCallback(
     (nodeId: string) => {
       setInspectorNode(nodeId);

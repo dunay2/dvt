@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import type { CanvasDraftSession } from './canvasDraftSession';
-import { applyCanvasInteractionStateFallout } from './canvasInteractionStateFallout';
+import { applyCanvasGraphLifecycleFallout } from './canvasGraphLifecycleFallout';
 
 function buildDraftSession(): CanvasDraftSession {
   return {
@@ -19,23 +19,34 @@ function buildDraftSession(): CanvasDraftSession {
   };
 }
 
-describe('canvasInteractionStateFallout', () => {
-  it('applies graph and draft setters while skipping unchanged ui fallouts', () => {
+describe('canvasGraphLifecycleFallout', () => {
+  it('applies changed graph and draft setters while skipping unchanged ui fallouts', () => {
     const setNodes = vi.fn();
     const setEdges = vi.fn();
     const setDraftSession = vi.fn();
     const setSelectedNodes = vi.fn();
     const setInspectorNode = vi.fn();
+    const sharedEdges: [] = [];
+    const currentState = {
+      nodes: [],
+      edges: sharedEdges,
+      draftSession: buildDraftSession(),
+      selectedNodeIds: ['sink-node'],
+      inspectorNodeId: null,
+    };
 
-    applyCanvasInteractionStateFallout({
+    applyCanvasGraphLifecycleFallout({
+      currentState,
       nextState: {
         nodes: [{ id: 'sink-node', data: { name: 'sink-node' }, position: { x: 1, y: 1 } }],
-        edges: [],
-        draftSession: buildDraftSession(),
-        selectedNodeIds: ['sink-node'],
-        inspectorNodeId: null,
-      },
-      currentUiScope: {
+        edges: sharedEdges,
+        draftSession: {
+          ...buildDraftSession(),
+          workingSet: {
+            ...buildDraftSession().workingSet,
+            visibleNodeIds: ['sink-node', 'other-node'],
+          },
+        },
         selectedNodeIds: ['sink-node'],
         inspectorNodeId: null,
       },
@@ -49,8 +60,8 @@ describe('canvasInteractionStateFallout', () => {
     expect(setNodes).toHaveBeenCalledWith([
       { id: 'sink-node', data: { name: 'sink-node' }, position: { x: 1, y: 1 } },
     ]);
-    expect(setEdges).toHaveBeenCalledWith([]);
-    expect(setDraftSession).toHaveBeenCalledWith(buildDraftSession());
+    expect(setEdges).not.toHaveBeenCalled();
+    expect(setDraftSession).toHaveBeenCalledTimes(1);
     expect(setSelectedNodes).not.toHaveBeenCalled();
     expect(setInspectorNode).not.toHaveBeenCalled();
   });
@@ -61,18 +72,20 @@ describe('canvasInteractionStateFallout', () => {
     const setDraftSession = vi.fn();
     const setSelectedNodes = vi.fn();
     const setInspectorNode = vi.fn();
+    const currentState = {
+      nodes: [{ id: 'source-node', data: {}, position: { x: 0, y: 0 } }],
+      edges: [],
+      draftSession: buildDraftSession(),
+      selectedNodeIds: ['source-node', 'sink-node'],
+      inspectorNodeId: 'source-node',
+    };
 
-    applyCanvasInteractionStateFallout({
+    applyCanvasGraphLifecycleFallout({
+      currentState,
       nextState: {
-        nodes: [{ id: 'sink-node', data: { name: 'sink-node' }, position: { x: 1, y: 1 } }],
-        edges: [],
-        draftSession: buildDraftSession(),
+        ...currentState,
         selectedNodeIds: ['sink-node'],
         inspectorNodeId: null,
-      },
-      currentUiScope: {
-        selectedNodeIds: ['source-node', 'sink-node'],
-        inspectorNodeId: 'source-node',
       },
       setNodes,
       setEdges,

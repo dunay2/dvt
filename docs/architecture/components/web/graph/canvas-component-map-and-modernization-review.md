@@ -21,6 +21,8 @@ It focuses on:
 
 For aggregate internals, use
 [Canvas Draft Session Component](./canvas-draft-session-component.md). For
+graph mutation semantics, use
+[Canvas Graph Lifecycle Component](./canvas-graph-lifecycle-component.md). For
 controller-local layering, use
 [Canvas Controller Current To Target Architecture](./canvas-controller-current-to-target-architecture.md).
 
@@ -29,6 +31,8 @@ controller-local layering, use
 - [Graph Frontend Architecture](./graph-frontend-architecture.md)
 - [Canvas Controller Current To Target Architecture](./canvas-controller-current-to-target-architecture.md)
 - [Canvas Draft Session Component](./canvas-draft-session-component.md)
+- [Canvas Handler Contracts Component](./canvas-handler-contracts-component.md)
+- [Canvas Graph Lifecycle Component](./canvas-graph-lifecycle-component.md)
 - [Graph Route Bootstrap Architecture](./graph-route-bootstrap-architecture.md)
 - [Graph Sequences And State Machines](./graph-sequences-and-state-machines.md)
 
@@ -37,6 +41,8 @@ Reading rule:
 - use this page for route composition and component ownership
 - use `canvas-controller-current-to-target-architecture.md` for seam layering
   inside the controller chain
+- use `canvas-handler-contracts-component.md` for adapter-composition
+  vocabulary and namespaced builder APIs
 - use `graph-route-bootstrap-architecture.md` for shell contract rules
 - use `canvas-draft-session-component.md` for aggregate semantics and state
   transitions
@@ -89,6 +95,8 @@ flowchart TB
   Shell --> Recovery["CanvasRecoveryBanner"]
 
   Controller --> DraftSession["canvasDraftSession"]
+  Controller --> HandlerContracts["handler contracts component"]
+  Controller --> GraphLifecycle["canvasGraphLifecycle"]
   Controller --> GraphHandlers["useCanvasGraphHandlers"]
   Controller --> Execution["useCanvasExecutionActions"]
   Controller --> RouteState["canvasRouteViewState"]
@@ -109,9 +117,12 @@ Reading rule:
 
 - route boundaries are already reasonably mature
 - the controller remains the main concentration point
-- the safe move is to keep view seams stable and extract policy behind them
+- the safe move is to keep view seams stable and extract graph policy behind a
+  dedicated component
 
 ## Key Responsibilities
+
+<!-- markdownlint-disable MD060 -->
 
 | Element                                      | Primary role                                                     | Must stay out of scope                                      |
 | -------------------------------------------- | ---------------------------------------------------------------- | ----------------------------------------------------------- |
@@ -123,10 +134,13 @@ Reading rule:
 | `CanvasViewport`                             | React Flow projection and primitive event boundary               | Authoring semantics                                         |
 | `DbtExplorer` and `InspectorPanel`           | Contextual side panels                                           | Global shell behavior                                       |
 | `useCanvasController`                        | Route application facade                                         | Mixed persistence, projection, and widget logic in one file |
+| handler-contract component                   | Local adapter-composition vocabulary and seam mapping            | Owning graph semantics or React hook state                  |
 | `canvasDraftSession`                         | Namespaced aggregate API over draft truth                        | Direct service calls                                        |
 | `useCanvasGraphHandlers`                     | Gesture-to-command adapter seam                                  | Duplicate mutation policy                                   |
 | `useCanvasExecutionActions`                  | Plan and run handoff composition seam                            | Graph mutation ownership                                    |
 | `usePublishedRouteBootstrap`                 | Publish explicit route startup posture to the shell              | Re-deriving authoring truth from shell heuristics           |
+
+<!-- markdownlint-enable MD060 -->
 
 ## Startup Contract
 
@@ -175,6 +189,8 @@ Canonical startup rule for this slice:
 - align capability loading with the governed frontend data-boundary model
 - remove duplicate overlay traversal where projection logic overlaps
 - keep selection and inspector fallout from growing back into adapter seams
+- keep the handler-contract component namespaced and semantically explicit
+  rather than drifting back into loose helper exports
 
 ### Avoid
 
@@ -188,6 +204,7 @@ Canonical startup rule for this slice:
 - route-state consistency across toolbar, center surface, and recovery banner
 - bootstrap publication lifecycle and teardown behavior
 - `useCanvasAuthoringRuntime.ts` size and dependency spread
+- handler-contract semantic ownership and namespaced builder API integrity
 - overlay traversal duplication and hot-path cost
 - selection and inspector command ownership if semantics expand
 
@@ -195,5 +212,6 @@ Canonical startup rule for this slice:
 
 - [Canvas Controller Current To Target Architecture](./canvas-controller-current-to-target-architecture.md)
 - [Canvas Draft Session Component](./canvas-draft-session-component.md)
+- [Canvas Handler Contracts Component](./canvas-handler-contracts-component.md)
 - [Graph Route Bootstrap Architecture](./graph-route-bootstrap-architecture.md)
 - [Graph Sequences And State Machines](./graph-sequences-and-state-machines.md)
