@@ -1,3 +1,15 @@
+import type {
+  CanvasGraphInteractionContracts,
+  CanvasGraphInteractionEffects,
+  CanvasGraphInteractionPolicy,
+  CanvasGraphInteractionState,
+} from './canvasGraphHandlerContracts';
+import {
+  buildCanvasEdgeAuthoringContracts,
+  buildCanvasLayoutContracts,
+  buildCanvasNodeAuthoringContracts,
+  buildCanvasSelectionContracts,
+} from './canvasGraphHandlerContractBuilders';
 import type { UseCanvasGraphHandlersParams, UseCanvasGraphHandlersResult } from './useCanvasGraphHandlers.types';
 import { useCanvasEdgeAuthoringHandlers } from './useCanvasEdgeAuthoringHandlers';
 import { useCanvasLayoutHandlers } from './useCanvasLayoutHandlers';
@@ -24,48 +36,48 @@ export function useCanvasGraphHandlers({
   toggleInspectorPanel,
   onLayoutComplete,
 }: UseCanvasGraphHandlersParams): UseCanvasGraphHandlersResult {
-  const edgeAuthoringHandlers = useCanvasEdgeAuthoringHandlers({
+  const interactionState: CanvasGraphInteractionState = {
     canonicalNodesById,
-    edges,
-    canEditEdges,
-    setEdges,
-    setDraftSession,
-  });
-
-  const selectionHandlers = useCanvasSelectionHandlers({
-    canonicalNodesById,
-    selectedNodeIds,
-    focusMode,
-    inspectorPanelVisible,
-    setSelectedNodes,
-    setInspectorNode,
-    toggleInspectorPanel,
-  });
-
-  const layoutHandlers = useCanvasLayoutHandlers({
-    canEditEdges,
-    nodes,
-    edges,
-    setNodes,
-    setEdges,
-    onLayoutComplete,
-  });
-
-  const nodeAuthoringHandlers = useCanvasNodeAuthoringHandlers({
-    graphStrategy,
     draftSession,
     nodes,
     edges,
     selectedNodeIds,
     inspectorNodeId,
-    canEditEdges,
-    columnLevelLineageEnabled,
+    focusMode,
+    inspectorPanelVisible,
+  };
+  const interactionEffects: CanvasGraphInteractionEffects = {
     setNodes,
     setEdges,
     setDraftSession,
     setSelectedNodes,
     setInspectorNode,
-  });
+    toggleInspectorPanel,
+    onLayoutComplete,
+  };
+  const interactionPolicy: CanvasGraphInteractionPolicy = {
+    graphStrategy,
+    canEditEdges,
+    columnLevelLineageEnabled,
+  };
+  const interactionContracts: CanvasGraphInteractionContracts = {
+    state: interactionState,
+    effects: interactionEffects,
+    policy: interactionPolicy,
+  };
+
+  const edgeAuthoringHandlers = useCanvasEdgeAuthoringHandlers(
+    buildCanvasEdgeAuthoringContracts(interactionContracts)
+  );
+  const selectionHandlers = useCanvasSelectionHandlers(
+    buildCanvasSelectionContracts(interactionContracts)
+  );
+  const layoutHandlers = useCanvasLayoutHandlers(
+    buildCanvasLayoutContracts(interactionContracts)
+  );
+  const nodeAuthoringHandlers = useCanvasNodeAuthoringHandlers(
+    buildCanvasNodeAuthoringContracts(interactionContracts)
+  );
 
   return {
     ...edgeAuthoringHandlers,

@@ -1,31 +1,42 @@
 import { useCallback } from 'react';
-import { applyEdgeChanges, type Edge, type EdgeChange } from '@xyflow/react';
+import { type Edge, type EdgeChange } from '@xyflow/react';
 
-import { replaceCanvasVisibleEdges } from './canvasInteractionCommands';
+import { canvasGraphLifecycle } from './canvasGraphLifecycle';
 import type {
-  CanvasGraphChangeHandlers,
-  UseCanvasMutationHandlersArgs,
-} from './canvasMutationHandlers.types';
+  CanvasEdgeChangeContracts,
+} from './canvasMutationHandlerContracts';
+type UseCanvasEdgeChangeHandlersArgs = CanvasEdgeChangeContracts;
 
-type UseCanvasEdgeChangeHandlersArgs = Pick<
-  UseCanvasMutationHandlersArgs,
-  'graphModel' | 'setDraftSession'
->;
+type UseCanvasEdgeChangeHandlersResult = {
+  handleEdgesChange: (changes: EdgeChange<Edge>[]) => void;
+};
 
 export function useCanvasEdgeChangeHandlers({
-  graphModel,
-  setDraftSession,
-}: UseCanvasEdgeChangeHandlersArgs): Pick<CanvasGraphChangeHandlers, 'handleEdgesChange'> {
+  state,
+  effects,
+}: UseCanvasEdgeChangeHandlersArgs): UseCanvasEdgeChangeHandlersResult {
+  const { graphModel, draftSession } = state;
+  const { setDraftSession } = effects;
+
   const handleEdgesChange = useCallback(
     (changes: EdgeChange<Edge>[]) => {
-      const nextEdges = applyEdgeChanges(changes, graphModel.edges);
-
-      graphModel.setEdges(nextEdges);
-      setDraftSession((currentSession) =>
-        replaceCanvasVisibleEdges(currentSession, nextEdges)
+      const nextState = canvasGraphLifecycle.edge.applyChanges(
+        {
+          draftSession,
+          nodes: graphModel.nodes,
+          edges: graphModel.edges,
+          selectedNodeIds: [],
+          inspectorNodeId: null,
+        },
+        changes
       );
+
+      graphModel.setEdges(nextState.edges);
+      if (nextState.draftSession !== draftSession) {
+        setDraftSession(nextState.draftSession);
+      }
     },
-    [graphModel, setDraftSession]
+    [draftSession, graphModel, setDraftSession]
   );
 
   return {

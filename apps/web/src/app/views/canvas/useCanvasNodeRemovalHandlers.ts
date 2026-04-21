@@ -1,44 +1,34 @@
 import { useCallback } from 'react';
 import { toast } from 'sonner';
 
-import { removeNodeFromCanvasWorkingSet } from './canvasInteractionCommands';
-import { applyCanvasInteractionStateFallout } from './canvasInteractionStateFallout';
+import { canvasGraphLifecycle } from './canvasGraphLifecycle';
+import type {
+  CanvasNodeRemovalContracts,
+} from './canvasGraphHandlerContracts';
+import { applyCanvasGraphLifecycleFallout } from './canvasGraphLifecycleFallout';
 import { canvasViewCopy, formatCanvasNodeRemovedMessage } from './copy';
-import type { UseCanvasGraphHandlersParams, UseCanvasGraphHandlersResult } from './useCanvasGraphHandlers.types';
 
-type UseCanvasNodeRemovalHandlersArgs = Pick<
-  UseCanvasGraphHandlersParams,
-  | 'draftSession'
-  | 'nodes'
-  | 'edges'
-  | 'selectedNodeIds'
-  | 'inspectorNodeId'
-  | 'canEditEdges'
-  | 'setNodes'
-  | 'setEdges'
-  | 'setDraftSession'
-  | 'setSelectedNodes'
-  | 'setInspectorNode'
->;
+type UseCanvasNodeRemovalHandlersArgs = CanvasNodeRemovalContracts;
 
-type UseCanvasNodeRemovalHandlersResult = Pick<
-  UseCanvasGraphHandlersResult,
-  'handleRemoveNode'
->;
+type UseCanvasNodeRemovalHandlersResult = {
+  handleRemoveNode: (nodeId: string) => void;
+};
 
 export function useCanvasNodeRemovalHandlers({
-  draftSession,
-  nodes,
-  edges,
-  selectedNodeIds,
-  inspectorNodeId,
-  canEditEdges,
-  setNodes,
-  setEdges,
-  setDraftSession,
-  setSelectedNodes,
-  setInspectorNode,
+  state,
+  effects,
+  policy,
 }: UseCanvasNodeRemovalHandlersArgs): UseCanvasNodeRemovalHandlersResult {
+  const { draftSession, nodes, edges, selectedNodeIds, inspectorNodeId } = state;
+  const {
+    setNodes,
+    setEdges,
+    setDraftSession,
+    setSelectedNodes,
+    setInspectorNode,
+  } = effects;
+  const { canEditEdges } = policy;
+
   const handleRemoveNode = useCallback(
     (nodeId: string) => {
       if (!canEditEdges) {
@@ -49,26 +39,21 @@ export function useCanvasNodeRemovalHandlers({
       // React Flow may still be processing the click that requested deletion.
       // Deferring disposal avoids stale click/delete races against the inspector state.
       setTimeout(() => {
-        const removeResult = removeNodeFromCanvasWorkingSet(
-          {
-            draftSession,
-            nodes,
-            edges,
-            selectedNodeIds,
-            inspectorNodeId,
-          },
-          nodeId
-        );
+        const currentState = {
+          draftSession,
+          nodes,
+          edges,
+          selectedNodeIds,
+          inspectorNodeId,
+        };
+        const removeResult = canvasGraphLifecycle.node.remove(currentState, nodeId);
         if (removeResult.outcome === 'noop') {
           return;
         }
 
-        applyCanvasInteractionStateFallout({
+        applyCanvasGraphLifecycleFallout({
+          currentState,
           nextState: removeResult.state,
-          currentUiScope: {
-            selectedNodeIds,
-            inspectorNodeId,
-          },
           setNodes,
           setEdges,
           setDraftSession,

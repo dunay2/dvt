@@ -1,44 +1,40 @@
+import type { Edge, EdgeChange, NodeChange } from '@xyflow/react';
+
 import type {
-  CanvasGraphChangeHandlers,
-  UseCanvasMutationHandlersArgs,
-} from './canvasMutationHandlers.types';
+  CanvasEdgeChangeContracts,
+  CanvasGraphChangeContracts,
+  CanvasNodeChangeContracts,
+} from './canvasMutationHandlerContracts';
 import { useCanvasEdgeChangeHandlers } from './useCanvasEdgeChangeHandlers';
 import { useCanvasNodeChangeHandlers } from './useCanvasNodeChangeHandlers';
 
-type UseCanvasGraphChangeHandlersArgs = Pick<
-  UseCanvasMutationHandlersArgs,
-  | 'graphModel'
-  | 'draftSession'
-  | 'uiScope'
-  | 'selectedNodeIds'
-  | 'setDraftSession'
-  | 'setSelectedNodes'
-  | 'setInspectorNode'
->;
+type UseCanvasGraphChangeHandlersArgs = CanvasGraphChangeContracts;
+
+type UseCanvasGraphChangeHandlersResult = {
+  handleNodesChange: (changes: NodeChange[]) => void;
+  handleEdgesChange: (changes: EdgeChange<Edge>[]) => void;
+};
 
 export function useCanvasGraphChangeHandlers({
-  graphModel,
-  draftSession,
-  uiScope,
-  selectedNodeIds,
-  setDraftSession,
-  setSelectedNodes,
-  setInspectorNode,
-}: UseCanvasGraphChangeHandlersArgs): CanvasGraphChangeHandlers {
-  const nodeChangeHandlers = useCanvasNodeChangeHandlers({
-    graphModel,
-    draftSession,
-    uiScope,
-    selectedNodeIds,
-    setDraftSession,
-    setSelectedNodes,
-    setInspectorNode,
-  });
+  state,
+  effects,
+}: UseCanvasGraphChangeHandlersArgs): UseCanvasGraphChangeHandlersResult {
+  const nodeChangeContracts: CanvasNodeChangeContracts = {
+    state,
+    effects,
+  };
+  const nodeChangeHandlers = useCanvasNodeChangeHandlers(nodeChangeContracts);
 
-  const edgeChangeHandlers = useCanvasEdgeChangeHandlers({
-    graphModel,
-    setDraftSession,
-  });
+  const edgeChangeContracts: CanvasEdgeChangeContracts = {
+    state: {
+      graphModel: state.graphModel,
+      draftSession: state.draftSession,
+    },
+    effects: {
+      setDraftSession: effects.setDraftSession,
+    },
+  };
+  const edgeChangeHandlers = useCanvasEdgeChangeHandlers(edgeChangeContracts);
 
   return {
     ...nodeChangeHandlers,

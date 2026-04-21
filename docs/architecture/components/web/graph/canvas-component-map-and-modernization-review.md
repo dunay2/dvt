@@ -21,6 +21,8 @@ It focuses on:
 
 For aggregate internals, use
 [Canvas Draft Session Component](./canvas-draft-session-component.md). For
+graph mutation semantics, use
+[Canvas Graph Lifecycle Component](./canvas-graph-lifecycle-component.md). For
 controller-local layering, use
 [Canvas Controller Current To Target Architecture](./canvas-controller-current-to-target-architecture.md).
 
@@ -29,6 +31,7 @@ controller-local layering, use
 - [Graph Frontend Architecture](./graph-frontend-architecture.md)
 - [Canvas Controller Current To Target Architecture](./canvas-controller-current-to-target-architecture.md)
 - [Canvas Draft Session Component](./canvas-draft-session-component.md)
+- [Canvas Graph Lifecycle Component](./canvas-graph-lifecycle-component.md)
 - [Graph Route Bootstrap Architecture](./graph-route-bootstrap-architecture.md)
 - [Graph Sequences And State Machines](./graph-sequences-and-state-machines.md)
 
@@ -89,6 +92,7 @@ flowchart TB
   Shell --> Recovery["CanvasRecoveryBanner"]
 
   Controller --> DraftSession["canvasDraftSession"]
+  Controller --> GraphLifecycle["canvasGraphLifecycle"]
   Controller --> GraphHandlers["useCanvasGraphHandlers"]
   Controller --> Execution["useCanvasExecutionActions"]
   Controller --> RouteState["canvasRouteViewState"]
@@ -109,7 +113,8 @@ Reading rule:
 
 - route boundaries are already reasonably mature
 - the controller remains the main concentration point
-- the safe move is to keep view seams stable and extract policy behind them
+- the safe move is to keep view seams stable and extract graph policy behind a
+  dedicated component
 
 ## Key Responsibilities
 

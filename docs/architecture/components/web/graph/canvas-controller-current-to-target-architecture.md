@@ -48,7 +48,7 @@ Reading rule:
 | ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
 | Route entry and presentation | [Canvas.tsx](../../../../../apps/web/src/app/views/Canvas.tsx), [CanvasCenterSurface.tsx](../../../../../apps/web/src/app/views/canvas/CanvasCenterSurface.tsx), [CanvasRecoveryBanner.tsx](../../../../../apps/web/src/app/views/canvas/CanvasRecoveryBanner.tsx), [canvasRouteViewState.ts](../../../../../apps/web/src/app/views/canvas/canvasRouteViewState.ts)                                                                                                                                                                                                  | Route-facing UI adapters and route-safe presentation state  |
 | Controller facade            | [useCanvasController.ts](../../../../../apps/web/src/app/views/canvas/useCanvasController.ts), [canvasControllerViewModel.ts](../../../../../apps/web/src/app/views/canvas/canvasControllerViewModel.ts), [useCanvasControllerEnvironment.ts](../../../../../apps/web/src/app/views/canvas/useCanvasControllerEnvironment.ts)                                                                                                                                                                                                                                        | Thin composition and route-safe output                      |
-| Command seams                | [useCanvasAuthoringRuntime.ts](../../../../../apps/web/src/app/views/canvas/useCanvasAuthoringRuntime.ts), [useCanvasMutationHandlers.ts](../../../../../apps/web/src/app/views/canvas/useCanvasMutationHandlers.ts), [useCanvasExecutionActions.ts](../../../../../apps/web/src/app/views/canvas/useCanvasExecutionActions.ts), [canvasInteractionCommands.ts](../../../../../apps/web/src/app/views/canvas/canvasInteractionCommands.ts)                                                                                                                           | Write-side orchestration and command ownership              |
+| Command seams                | [useCanvasAuthoringRuntime.ts](../../../../../apps/web/src/app/views/canvas/useCanvasAuthoringRuntime.ts), [useCanvasMutationHandlers.ts](../../../../../apps/web/src/app/views/canvas/useCanvasMutationHandlers.ts), [useCanvasExecutionActions.ts](../../../../../apps/web/src/app/views/canvas/useCanvasExecutionActions.ts), [canvasGraphLifecycle.ts](../../../../../apps/web/src/app/views/canvas/canvasGraphLifecycle.ts)                                                                                                                                     | Write-side orchestration and command ownership              |
 | Aggregate and domain policy  | [canvasDraftSession.ts](../../../../../apps/web/src/app/views/canvas/canvasDraftSession.ts), [canvasDraftSessionBaseline.ts](../../../../../apps/web/src/app/views/canvas/canvasDraftSessionBaseline.ts), [canvasDraftSessionMachine.ts](../../../../../apps/web/src/app/views/canvas/canvasDraftSessionMachine.ts), [canvasDraftSessionWorkingSet.ts](../../../../../apps/web/src/app/views/canvas/canvasDraftSessionWorkingSet.ts), [canvasDraftScope.ts](../../../../../apps/web/src/app/views/canvas/canvasDraftScope.ts)                                        | Authoritative local draft truth                             |
 | Query and projection seams   | [useCanvasGraphModel.ts](../../../../../apps/web/src/app/views/canvas/useCanvasGraphModel.ts), [useCanvasAuthoringProjection.ts](../../../../../apps/web/src/app/views/canvas/useCanvasAuthoringProjection.ts), [useCanvasControllerReadModel.ts](../../../../../apps/web/src/app/views/canvas/useCanvasControllerReadModel.ts), [useCanvasCurrentDraftPayload.ts](../../../../../apps/web/src/app/views/canvas/useCanvasCurrentDraftPayload.ts), [useCanvasOverlayModel.ts](../../../../../apps/web/src/app/views/canvas/useCanvasOverlayModel.ts)                  | Read-side projections and route models                      |
 | Persistence boundary         | [canvasDraftRepository.ts](../../../../../apps/web/src/app/views/canvas/canvasDraftRepository.ts), [canvasDraftReadModel.ts](../../../../../apps/web/src/app/views/canvas/canvasDraftReadModel.ts)                                                                                                                                                                                                                                                                                                                                                                   | Outbound draft persistence plus typed read-side translation |
@@ -75,6 +75,7 @@ flowchart LR
   Controller --> Execution["useCanvasExecutionActions"]
   Controller --> RouteState["canvasRouteViewState"]
   Controller --> GraphHandlers["useCanvasGraphHandlers"]
+  Controller --> GraphLifecycle["canvasGraphLifecycle"]
 
   Execution --> PlanHandler["useCanvasPlanActionHandler"]
   Execution --> RunHandler["useCanvasRunStartHandler"]
@@ -105,8 +106,9 @@ Reading rule:
 - `useCanvasController` is already a facade, but not yet a fully settled thin
   one
 - `useCanvasAuthoringRuntime` is the heaviest remaining orchestration seam
-- `canvasDraftSession` is now a proper component API instead of a mixed utility
-  file
+- `canvasDraftSession` is now a proper component API instead of a mixed utility file
+- `canvasGraphLifecycle` is now the semantic graph-mutation component instead of
+  a flat helper catalog
 - the repository is the only persistence authority in this slice
 
 ## Draft Authoring Pipeline
@@ -138,13 +140,19 @@ This is the canonical read:
 | Gateway / repository | `canvasDraftRepository.ts` plus workspace, plan, and run ports                               | strong                                                         |
 | Application service  | `useCanvasController.ts`, `useCanvasAuthoringRuntime.ts`, `useCanvasExecutionActions.ts`     | partial, because `useCanvasAuthoringRuntime.ts` is still broad |
 | Aggregate            | `canvasDraftSession.ts` plus baseline, machine, and working-set seams                        | strong                                                         |
+| Domain component     | `canvasGraphLifecycle.ts` plus node and edge seams                                           | strong                                                         |
 | Presentation model   | `canvasDraftPresentationModel.ts`, `canvasRouteViewState.ts`, `canvasControllerViewModel.ts` | strong                                                         |
 | View and adapters    | route components and `useCanvasGraphHandlers.ts`                                             | strong                                                         |
 
 Patterns improved in this branch:
 
 - thin public aggregate facade with subordinate pure policy seams
-- explicit command seams for execution and authoring fallout
+- explicit command seams for execution and graph lifecycle fallout
+- local handler contracts now group `state`, `effects`, and `policy` by seam
+  instead of inheriting shape through parent-derived `Pick<>` bags
+- contract mapping for handler composition now lives in dedicated builders, so
+  `useCanvasGraphHandlers.ts` stays a thin facade instead of a long inline
+  object assembler
 - architecture tests protecting structure instead of relying on review memory
 
 Remaining drift against the target:
@@ -185,7 +193,7 @@ Target reading:
 ## Extraction Order
 
 1. Shrink `useCanvasAuthoringRuntime.ts` if it regrows.
-2. Keep shared write semantics in `canvasInteractionCommands.ts`.
+2. Keep shared write semantics in `canvasGraphLifecycle.ts`.
 3. Keep bootstrap and persistence as separate composition seams.
 4. Add a dedicated UI command seam only if selection or inspector semantics
    stop being trivial.

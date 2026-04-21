@@ -20,6 +20,7 @@ Canonical navigation for the Graph and Canvas architecture pack.
 - [Graph Sequences And State Machines](./graph-sequences-and-state-machines.md)
 - [Graph Decision Rationale And Patterns](./graph-decision-rationale-and-patterns.md)
 - [Canvas Draft Session Component](./canvas-draft-session-component.md)
+- [Canvas Graph Lifecycle Component](./canvas-graph-lifecycle-component.md)
 
 ## Related Existing Reviews
 

@@ -3,11 +3,9 @@ import { describe, expect, it } from 'vitest';
 
 import type { CanvasDraftSession } from './canvasDraftSession';
 import {
-  admitExplicitCanvasNode,
-  queueImportedCanvasSourceNodes,
-  removeNodeFromCanvasWorkingSet,
-  replaceCanvasVisibleEdges,
-} from './canvasInteractionCommands';
+  canvasGraphLifecycle,
+  type CanvasGraphLifecycleState,
+} from './canvasGraphLifecycle';
 
 function buildDraftSession(): CanvasDraftSession {
   return {
@@ -36,11 +34,19 @@ function buildEdges(): Edge[] {
   return [{ id: 'edge-1', source: 'source-node', target: 'sink-node' }];
 }
 
-describe('canvasInteractionCommands', () => {
-  it('replaces visible edges on the draft aggregate from canvas edges', () => {
-    const draftSession = buildDraftSession();
+function buildState(): CanvasGraphLifecycleState {
+  return {
+    draftSession: buildDraftSession(),
+    nodes: buildNodes(),
+    edges: buildEdges(),
+    selectedNodeIds: ['source-node', 'sink-node'],
+    inspectorNodeId: 'source-node',
+  };
+}
 
-    const nextSession = replaceCanvasVisibleEdges(draftSession, [
+describe('canvasGraphLifecycle', () => {
+  it('replaces visible edges on the draft aggregate from canvas edges', () => {
+    const nextSession = canvasGraphLifecycle.edge.replaceVisible(buildDraftSession(), [
       { id: 'edge-2', source: 'sink-node', target: 'source-node' },
     ]);
 
@@ -50,9 +56,10 @@ describe('canvasInteractionCommands', () => {
   });
 
   it('admits an explicit node through the aggregate owner', () => {
-    const draftSession = buildDraftSession();
-
-    const nextSession = admitExplicitCanvasNode(draftSession, 'transform-node');
+    const nextSession = canvasGraphLifecycle.node.admitExplicit(
+      buildDraftSession(),
+      'transform-node'
+    );
 
     expect(nextSession.workingSet.visibleNodeIds).toEqual([
       'source-node',
@@ -62,9 +69,7 @@ describe('canvasInteractionCommands', () => {
   });
 
   it('queues imported source nodes through the aggregate owner', () => {
-    const draftSession = buildDraftSession();
-
-    const nextSession = queueImportedCanvasSourceNodes(draftSession, [
+    const nextSession = canvasGraphLifecycle.node.queueImported(buildDraftSession(), [
       'transform-node',
       'source-node',
     ]);
@@ -73,16 +78,7 @@ describe('canvasInteractionCommands', () => {
   });
 
   it('removes a node from visible graph, ui fallout, and draft session in one command', () => {
-    const result = removeNodeFromCanvasWorkingSet(
-      {
-        draftSession: buildDraftSession(),
-        nodes: buildNodes(),
-        edges: buildEdges(),
-        selectedNodeIds: ['source-node', 'sink-node'],
-        inspectorNodeId: 'source-node',
-      },
-      'source-node'
-    );
+    const result = canvasGraphLifecycle.node.remove(buildState(), 'source-node');
 
     expect(result.outcome).toBe('removed');
     if (result.outcome !== 'removed') {
@@ -99,11 +95,9 @@ describe('canvasInteractionCommands', () => {
   });
 
   it('preserves unrelated inspector state when removing a different node', () => {
-    const result = removeNodeFromCanvasWorkingSet(
+    const result = canvasGraphLifecycle.node.remove(
       {
-        draftSession: buildDraftSession(),
-        nodes: buildNodes(),
-        edges: buildEdges(),
+        ...buildState(),
         selectedNodeIds: ['source-node'],
         inspectorNodeId: 'sink-node',
       },
@@ -119,19 +113,46 @@ describe('canvasInteractionCommands', () => {
   });
 
   it('returns noop when the node is already absent', () => {
-    const state = {
-      draftSession: buildDraftSession(),
-      nodes: buildNodes(),
-      edges: buildEdges(),
-      selectedNodeIds: ['source-node'],
-      inspectorNodeId: null,
-    };
+    const state = buildState();
 
-    const result = removeNodeFromCanvasWorkingSet(state, 'missing-node');
+    const result = canvasGraphLifecycle.node.remove(state, 'missing-node');
 
     expect(result).toEqual({
       outcome: 'noop',
       state,
     });
+  });
+
+  it('applies node position changes without mutating unrelated lifecycle state', () => {
+    const state = buildState();
+
+    const nextState = canvasGraphLifecycle.node.applyChanges(state, [
+      {
+        id: 'source-node',
+        type: 'position',
+        position: { x: 42, y: 24 },
+      },
+    ]);
+
+    expect(nextState.nodes.find((node) => node.id === 'source-node')?.position).toEqual({
+      x: 42,
+      y: 24,
+    });
+    expect(nextState.edges).toBe(state.edges);
+    expect(nextState.draftSession).toBe(state.draftSession);
+    expect(nextState.selectedNodeIds).toBe(state.selectedNodeIds);
+    expect(nextState.inspectorNodeId).toBe(state.inspectorNodeId);
+  });
+
+  it('applies edge changes through the lifecycle component and updates visible edge truth', () => {
+    const nextState = canvasGraphLifecycle.edge.applyChanges(buildState(), [
+      {
+        id: 'edge-1',
+        type: 'remove',
+      },
+    ]);
+
+    expect(nextState.edges).toEqual([]);
+    expect(nextState.draftSession.workingSet.visibleEdges).toEqual([]);
   });
 });

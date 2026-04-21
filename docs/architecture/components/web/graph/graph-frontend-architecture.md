@@ -20,6 +20,7 @@ handoff without becoming the source of execution truth or shell truth.
 - [Canvas Controller Current To Target Architecture](./canvas-controller-current-to-target-architecture.md)
 - [Canvas Component Map And Modernization Review](./canvas-component-map-and-modernization-review.md)
 - [Canvas Draft Session Component](./canvas-draft-session-component.md)
+- [Canvas Graph Lifecycle Component](./canvas-graph-lifecycle-component.md)
 - [Graph Sequences And State Machines](./graph-sequences-and-state-machines.md)
 - [Frontend Fowler Implementation Pattern](../frontend-fowler-implementation-pattern.md)
 - [Frontend Data Boundary Architecture](../frontend-data-boundary-architecture.md)
@@ -47,13 +48,13 @@ Out of scope:
 
 ## Canonical Anchors
 
-| Concern                     | Primary anchors                                                                                                                                                                                                                                                                                 |
-| --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Shell handoff               | [Root.tsx](../../../../../apps/web/src/app/Root.tsx), [routes.ts](../../../../../apps/web/src/app/routes.ts), [usePublishedRouteBootstrap.ts](../../../../../apps/web/src/app/bootstrap/usePublishedRouteBootstrap.ts)                                                                          |
-| Canvas route facade         | [Canvas.tsx](../../../../../apps/web/src/app/views/Canvas.tsx), [useCanvasController.ts](../../../../../apps/web/src/app/views/canvas/useCanvasController.ts), [canvasRouteViewState.ts](../../../../../apps/web/src/app/views/canvas/canvasRouteViewState.ts)                                  |
-| Draft authoring core        | [canvasDraftSession.ts](../../../../../apps/web/src/app/views/canvas/canvasDraftSession.ts), [canvasDraftScope.ts](../../../../../apps/web/src/app/views/canvas/canvasDraftScope.ts), [canvasInteractionCommands.ts](../../../../../apps/web/src/app/views/canvas/canvasInteractionCommands.ts) |
-| Plugin boundary             | [PluginManifest.ts](../../../../../apps/web/src/app/plugins/contracts/PluginManifest.ts), [ConnectionRules.ts](../../../../../apps/web/src/app/plugins/contracts/ConnectionRules.ts), [registry.ts](../../../../../apps/web/src/app/plugins/registry.ts)                                        |
-| Route copy and presentation | [copy.ts](../../../../../apps/web/src/app/views/canvas/copy.ts), [CanvasToolbar.tsx](../../../../../apps/web/src/app/views/canvas/CanvasToolbar.tsx), [canvasExecutionState.ts](../../../../../apps/web/src/app/views/canvas/canvasExecutionState.ts)                                           |
+| Concern                     | Primary anchors                                                                                                                                                                                                                                                                       |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Shell handoff               | [Root.tsx](../../../../../apps/web/src/app/Root.tsx), [routes.ts](../../../../../apps/web/src/app/routes.ts), [usePublishedRouteBootstrap.ts](../../../../../apps/web/src/app/bootstrap/usePublishedRouteBootstrap.ts)                                                                |
+| Canvas route facade         | [Canvas.tsx](../../../../../apps/web/src/app/views/Canvas.tsx), [useCanvasController.ts](../../../../../apps/web/src/app/views/canvas/useCanvasController.ts), [canvasRouteViewState.ts](../../../../../apps/web/src/app/views/canvas/canvasRouteViewState.ts)                        |
+| Draft authoring core        | [canvasDraftSession.ts](../../../../../apps/web/src/app/views/canvas/canvasDraftSession.ts), [canvasDraftScope.ts](../../../../../apps/web/src/app/views/canvas/canvasDraftScope.ts), [canvasGraphLifecycle.ts](../../../../../apps/web/src/app/views/canvas/canvasGraphLifecycle.ts) |
+| Plugin boundary             | [PluginManifest.ts](../../../../../apps/web/src/app/plugins/contracts/PluginManifest.ts), [ConnectionRules.ts](../../../../../apps/web/src/app/plugins/contracts/ConnectionRules.ts), [registry.ts](../../../../../apps/web/src/app/plugins/registry.ts)                              |
+| Route copy and presentation | [copy.ts](../../../../../apps/web/src/app/views/canvas/copy.ts), [CanvasToolbar.tsx](../../../../../apps/web/src/app/views/canvas/CanvasToolbar.tsx), [canvasExecutionState.ts](../../../../../apps/web/src/app/views/canvas/canvasExecutionState.ts)                                 |
 
 ## Frontend Topology
 
@@ -67,6 +68,7 @@ flowchart LR
   Controller --> Commands["Command seams"]
   Controller --> Queries["Query and presentation seams"]
   Commands --> DraftAggregate["canvasDraftSession aggregate"]
+  Commands --> GraphLifecycle["canvasGraphLifecycle component"]
   Commands --> Execution["Plan and run handoff"]
   Queries --> Scope["canvasDraftScope and route state"]
 
@@ -88,7 +90,7 @@ Current posture:
 As of 2026-04-21:
 
 - route startup is generalized by `route.id` plus explicit bootstrap metadata
-- Canvas working-set mutation flows through one local command catalog
+- Canvas graph mutation now flows through one local lifecycle component
 - edge admission and node-drop policy live behind narrow pure policy seams
 - connection and transformation validation stay typed until presentation
 - route-visible operator copy is centralized instead of repeated across handlers
@@ -129,9 +131,10 @@ Recommended reading order:
 2. [Canvas Controller Current To Target Architecture](./canvas-controller-current-to-target-architecture.md)
 3. [Canvas Component Map And Modernization Review](./canvas-component-map-and-modernization-review.md)
 4. [Canvas Draft Session Component](./canvas-draft-session-component.md)
-5. [Graph Sequences And State Machines](./graph-sequences-and-state-machines.md)
-6. [Graph Canvas Runtime Model](./graph-canvas-runtime-model.md)
-7. [Graph Decision Rationale And Patterns](./graph-decision-rationale-and-patterns.md)
+5. [Canvas Graph Lifecycle Component](./canvas-graph-lifecycle-component.md)
+6. [Graph Sequences And State Machines](./graph-sequences-and-state-machines.md)
+7. [Graph Canvas Runtime Model](./graph-canvas-runtime-model.md)
+8. [Graph Decision Rationale And Patterns](./graph-decision-rationale-and-patterns.md)
 
 ## Evolution Direction
 
