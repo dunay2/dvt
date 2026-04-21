@@ -1939,6 +1939,7 @@ tasks:
     evidence_refs:
       - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-production-node-authoring-and-persistence-plan-20260416.md
       - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-canvas-target-architecture-execution-plan-20260417.md
+      - docs/planning/reviews/architecture-and-governance/20260422-canvas-runtime-truth-hardcut-review.md
       - docs/architecture/components/web/graph/canvas-component-map-and-modernization-review.md
       - docs/architecture/components/web/inspector/inspector-frontend-architecture.md
       - docs/architecture/components/web/frontend-data-boundary-architecture.md
@@ -1997,10 +1998,13 @@ tasks:
       now also renders explicit `read_only`, `forbidden`, and typed `format_error` postures from
       boundary outcomes, while the controller and route adapters are split through dedicated
       read-model, view-model, and presentation seams with architecture tests guarding those
-      boundaries. The remaining TF-E2 work is route-owned Inspector editing, execution handoff
-      proof, closure of the still-lossy protected-draft read projection, and the broader operability
-      and end-to-end matrix.
-    last_verified: '2026-04-20'
+      boundaries. The 2026-04-22 hard-cut runtime-truth review now freezes the next no-legacy
+      decision as well: Canvas authoring must consume protected draft truth directly, with blocked
+      startup instead of mock or snapshot-backed fallback and without a compatibility shim keeping
+      legacy graph hydration alive in the active product path. The remaining TF-E2 work is
+      route-owned Inspector editing, execution handoff proof, closure of the still-lossy
+      protected-draft read projection, and the broader operability and end-to-end matrix.
+    last_verified: '2026-04-22'
   - task_id: TF-E2-A
     parent_task: TF-E2
     priority: P0
@@ -2024,6 +2028,7 @@ tasks:
       - docs/planning/closeouts/20260418-tf-e2-canvas-draft-repository-seam-closeout.md
       - docs/planning/closeouts/20260418-tf-e2-canvas-srp-seams-closeout.md
       - docs/planning/closeouts/20260420-tf-e2-canvas-typed-authoring-port-hard-cut-closeout.md
+      - docs/planning/reviews/architecture-and-governance/20260422-canvas-runtime-truth-hardcut-review.md
       - docs/architecture/components/web/graph/canvas-controller-current-to-target-architecture.md
       - apps/web/src/app/services/AppServicesContext.tsx
       - apps/web/src/app/services/composition/appServices.ts
@@ -2046,10 +2051,14 @@ tasks:
       bleeding through controller or route code. The Canvas route now renders explicit `read_only`,
       `forbidden`, and typed `format_error` postures from boundary outcomes, while
       `useCanvasController` and `Canvas.tsx` have been reduced to composition and presentation
-      facades with dedicated view-model helpers plus architecture tests. The remaining TF-E2-A
-      closure is the still-lossy protected-draft read projection, any wider alignment with `TF-A2`
-      and `TF-C4`, and proof-oriented follow-up under `TF-E2-E`.
-    last_verified: '2026-04-20'
+      facades with dedicated view-model helpers plus architecture tests. The 2026-04-22 runtime
+      truth review now freezes the remaining closure shape: remove snapshot-backed graph hydration
+      and mock-backed startup from active Canvas authoring, replace the still-lossy read projection
+      with semantic protected-draft projection, and fail closed with explicit blocked posture when
+      protected runtime truth is unavailable. The remaining TF-E2-A closure is that no-legacy read
+      cut, any wider alignment with `TF-A2` and `TF-C4`, and proof-oriented follow-up under
+      `TF-E2-E`.
+    last_verified: '2026-04-22'
   - task_id: TF-E2-B
     parent_task: TF-E2
     priority: P0
