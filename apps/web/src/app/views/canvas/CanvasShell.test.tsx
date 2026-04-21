@@ -8,7 +8,15 @@ import CanvasShell from './CanvasShell';
 import { DEFAULT_CANVAS_PALETTE_ID } from './canvasPalette';
 import { canvasViewCopy } from './copy';
 import type { CanvasDraftToolbarState } from './canvasDraftToolbarState';
-import type { CanvasShellProps } from './canvasShell.types';
+import type {
+  CanvasShellChromeCommands,
+  CanvasShellGraph,
+  CanvasShellGraphCommands,
+  CanvasShellLayout,
+  CanvasShellPanels,
+  CanvasShellProps,
+  CanvasShellToolbar,
+} from './canvasShell.types';
 
 const shellState = vi.hoisted(() => ({
   dbtExplorerProps: null as null | Record<string, unknown>,
@@ -45,7 +53,16 @@ vi.mock('./CanvasViewport', () => ({
   },
 }));
 
-function buildProps(overrides?: Partial<CanvasShellProps>): CanvasShellProps {
+type CanvasShellPropsOverrides = {
+  layout?: Partial<CanvasShellLayout>;
+  panels?: Partial<CanvasShellPanels>;
+  graph?: Partial<CanvasShellGraph>;
+  toolbar?: Partial<CanvasShellToolbar>;
+  graphCommands?: Partial<CanvasShellGraphCommands>;
+  chromeCommands?: Partial<CanvasShellChromeCommands>;
+};
+
+function buildProps(overrides?: CanvasShellPropsOverrides): CanvasShellProps {
   const defaultDraftToolbarState: CanvasDraftToolbarState = {
     label: canvasViewCopy.draftSyncedLabel,
     tone: 'neutral',
@@ -53,76 +70,94 @@ function buildProps(overrides?: Partial<CanvasShellProps>): CanvasShellProps {
   };
 
   return {
-    focusMode: false,
-    explorerPanelVisible: true,
-    inspectorPanelVisible: false,
-    explorerNodes: [
-      {
-        id: 'node.orders',
-        name: 'orders',
-        pluginId: 'dbt',
-        kind: 'dbt:model',
-        role: 'transform',
-        status: 'idle',
-        tags: [],
+    layout: {
+      focusMode: false,
+      explorerPanelVisible: true,
+      inspectorPanelVisible: false,
+      centerSurface: undefined,
+      readOnlyBanner: undefined,
+      ...overrides?.layout,
+    },
+    panels: {
+      explorerNodes: [
+        {
+          id: 'node.orders',
+          name: 'orders',
+          pluginId: 'dbt',
+          kind: 'dbt:model',
+          role: 'transform',
+          status: 'idle',
+          tags: [],
+        },
+      ],
+      inspectorNode: null,
+      activeRunId: null,
+      registeredPlugins: new Set(['dbt']),
+      userPermissions: {
+        canPlan: true,
+        canRun: true,
+        canEditEdges: true,
       },
-    ],
-    inspectorNode: null,
-    activeRunId: null,
-    registeredPlugins: new Set(['dbt']),
-    userPermissions: {
-      canPlan: true,
-      canRun: true,
-      canEditEdges: true,
+      importedNodeFocusIds: [],
+      ...overrides?.panels,
     },
-    nodesWithImpact: [],
-    edges: [],
-    nodeTypes: {},
-    gridSize: 24,
-    canvasPalette: DEFAULT_CANVAS_PALETTE_ID,
-    viewport: null,
-    onNodesChange: vi.fn(),
-    onNodeDragStop: vi.fn(),
-    onEdgesChange: vi.fn(),
-    onConnect: vi.fn(),
-    onNodeClick: vi.fn(),
-    onSelectionChange: vi.fn(),
-    onViewportChange: vi.fn(),
-    onDrop: vi.fn(),
-    onDragOver: vi.fn(),
-    onSourceImportComplete: vi.fn(),
-    importedNodeFocusIds: [],
-    onImportedNodeFocusComplete: vi.fn(),
-    onHideExplorer: vi.fn(),
-    onShowExplorer: vi.fn(),
-    onHideInspector: vi.fn(),
-    onShowInspector: vi.fn(),
-    onAutoLayout: vi.fn(),
-    onToggleCostOverlay: vi.fn(),
-    onToggleImpact: vi.fn(),
-    onToggleColumns: vi.fn(),
-    onReloadLatestDraft: vi.fn(),
-    onPlan: vi.fn(),
-    onRun: vi.fn(),
-    draftToolbarState: defaultDraftToolbarState,
-    canStartRun: false,
-    planStatusSummary: canvasViewCopy.planStatusPreviewRequiredMessage,
-    exclusiveOverlayMode: 'runtime',
-    canUseCostOverlay: false,
-    impactOverlayEnabled: false,
-    columnLevelLineageEnabled: false,
-    canvasAuthoringMode: 'transformation',
-    transformationValidation: {
-      valid: false,
-      summaryCode: 'requires_three_nodes',
-      draftSignature: 'draft',
-      scopedNodeIds: [],
-      scopedEdgeIds: [],
-      nodeRolesById: {},
+    graph: {
+      nodesWithImpact: [],
+      edges: [],
+      nodeTypes: {},
+      gridSize: 24,
+      canvasPalette: DEFAULT_CANVAS_PALETTE_ID,
+      viewport: null,
+      ...overrides?.graph,
     },
-    centerSurface: undefined,
-    readOnlyBanner: undefined,
-    ...overrides,
+    toolbar: {
+      canvasAuthoringMode: 'transformation',
+      routeState: 'ready',
+      draftToolbarState: defaultDraftToolbarState,
+      canStartRun: false,
+      planStatusSummary: canvasViewCopy.planStatusPreviewRequiredMessage,
+      exclusiveOverlayMode: 'runtime',
+      canUseCostOverlay: false,
+      impactOverlayEnabled: false,
+      columnLevelLineageEnabled: false,
+      transformationValidation: {
+        valid: false,
+        summaryCode: 'requires_three_nodes',
+        draftSignature: 'draft',
+        scopedNodeIds: [],
+        scopedEdgeIds: [],
+        nodeRolesById: {},
+      },
+      ...overrides?.toolbar,
+    },
+    graphCommands: {
+      onNodesChange: vi.fn(),
+      onNodeDragStop: vi.fn(),
+      onEdgesChange: vi.fn(),
+      onConnect: vi.fn(),
+      onNodeClick: vi.fn(),
+      onSelectionChange: vi.fn(),
+      onViewportChange: vi.fn(),
+      onDrop: vi.fn(),
+      onDragOver: vi.fn(),
+      onSourceImportComplete: vi.fn(),
+      onImportedNodeFocusComplete: vi.fn(),
+      ...overrides?.graphCommands,
+    },
+    chromeCommands: {
+      onHideExplorer: vi.fn(),
+      onShowExplorer: vi.fn(),
+      onHideInspector: vi.fn(),
+      onShowInspector: vi.fn(),
+      onAutoLayout: vi.fn(),
+      onToggleCostOverlay: vi.fn(),
+      onToggleImpact: vi.fn(),
+      onToggleColumns: vi.fn(),
+      onReloadLatestDraft: vi.fn(),
+      onPlan: vi.fn(),
+      onRun: vi.fn(),
+      ...overrides?.chromeCommands,
+    },
   };
 }
 
@@ -155,10 +190,12 @@ describe('CanvasShell', () => {
       root.render(
         <CanvasShell
           {...buildProps({
-            userPermissions: {
-              canPlan: false,
-              canRun: false,
-              canEditEdges: false,
+            panels: {
+              userPermissions: {
+                canPlan: false,
+                canRun: false,
+                canEditEdges: false,
+              },
             },
           })}
         />
@@ -184,7 +221,9 @@ describe('CanvasShell', () => {
 
   it('wires source import completion and imported-node focus through the shell surfaces', async () => {
     const props = buildProps({
-      importedNodeFocusIds: ['src_erp_orders', 'src_erp_customers'],
+      panels: {
+        importedNodeFocusIds: ['src_erp_orders', 'src_erp_customers'],
+      },
     });
 
     await act(async () => {
@@ -193,10 +232,10 @@ describe('CanvasShell', () => {
 
     expect(shellState.canvasViewportProps).toMatchObject({
       importedNodeFocusIds: ['src_erp_orders', 'src_erp_customers'],
-      onImportedNodeFocusComplete: props.onImportedNodeFocusComplete,
+      onImportedNodeFocusComplete: props.graphCommands.onImportedNodeFocusComplete,
     });
     expect(shellState.sourceImportWizardProps).toMatchObject({
-      onComplete: props.onSourceImportComplete,
+      onComplete: props.graphCommands.onSourceImportComplete,
     });
   });
 
@@ -220,10 +259,12 @@ describe('CanvasShell', () => {
       root.render(
         <CanvasShell
           {...buildProps({
-            userPermissions: {
-              canPlan: false,
-              canRun: false,
-              canEditEdges: false,
+            panels: {
+              userPermissions: {
+                canPlan: false,
+                canRun: false,
+                canEditEdges: false,
+              },
             },
           })}
         />

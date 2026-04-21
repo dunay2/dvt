@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { Separator } from '../../components/ui/separator';
 import { CanvasToolbarDraftStatus } from './CanvasToolbarDraftStatus';
 import { CanvasToolbarPrimaryControls } from './CanvasToolbarPrimaryControls';
+import type { CanvasRouteState } from './canvasDraftPresentationModel';
 import { deriveCanvasToolbarViewModel } from './canvasToolbarViewModel';
 import type { CanvasDraftToolbarState } from './canvasDraftToolbarState';
 import type { TransformationGraphValidationResult } from './transformationGraphValidation';
@@ -17,6 +18,7 @@ export type CanvasToolbarProps = {
   readonly onReloadLatestDraft: () => void;
   readonly onPlan: () => void;
   readonly onRun: () => void;
+  readonly routeState: CanvasRouteState;
   readonly draftToolbarState: CanvasDraftToolbarState;
   readonly canPlan: boolean;
   readonly canRun: boolean;

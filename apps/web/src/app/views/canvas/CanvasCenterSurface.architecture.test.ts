@@ -15,4 +15,10 @@ describe('CanvasCenterSurface architecture', () => {
     expect(CENTER_SURFACE_SOURCE).toContain('renderCanvasGraphWorkbenchSurface');
     expect(CENTER_SURFACE_SOURCE).toContain('renderCanvasEmptyWorkbenchSurface');
   });
+
+  it('renders from canonical route presentation state instead of raw controller fields', () => {
+    expect(CENTER_SURFACE_SOURCE).not.toContain('backendBlockMessage');
+    expect(CENTER_SURFACE_SOURCE).not.toContain('workbenchErrorMessage');
+    expect(CENTER_SURFACE_SOURCE).not.toContain("'./useCanvasController'");
+  });
 });

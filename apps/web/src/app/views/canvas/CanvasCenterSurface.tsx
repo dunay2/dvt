@@ -1,3 +1,6 @@
+/**
+ * Owned concern: render the center workbench surface from canonical route posture.
+ */
 import {
   CanvasBlockedStateView,
   CanvasEmptyStateView,
@@ -7,24 +10,16 @@ import {
 import { canvasViewCopy } from './copy';
 import type { CanvasDraftPresentationState } from './canvasDraftPresentationModel';
 import type { CanvasDraftTransportErrorState } from './canvasDraftTransportErrorState';
-import type { useCanvasController } from './useCanvasController';
-
-type CanvasControllerSurfaceState = Pick<
-  ReturnType<typeof useCanvasController>,
-  'backendBlockMessage'
->;
 
 type RenderCanvasCenterSurfaceArgs = {
-  controller: CanvasControllerSurfaceState;
   presentationState: CanvasDraftPresentationState;
   draftTransportError: CanvasDraftTransportErrorState | null;
-  workbenchErrorMessage: string | null;
   canEditEdges: boolean;
 };
 
 type CanvasWorkbenchSurfaceArgs = Pick<
   RenderCanvasCenterSurfaceArgs,
-  'controller' | 'presentationState' | 'workbenchErrorMessage' | 'canEditEdges'
+  'presentationState' | 'canEditEdges'
 >;
 
 function renderCanvasDraftTransportSurface(
@@ -53,11 +48,10 @@ function renderCanvasDraftTransportSurface(
 
 function renderCanvasBackendWorkbenchSurface(args: Pick<
   CanvasWorkbenchSurfaceArgs,
-  'controller' | 'presentationState'
+  'presentationState'
 >) {
   const {
-    controller,
-    presentationState: { routeState },
+    presentationState: { bootstrapDetail, routeState },
   } = args;
 
   if (routeState === 'loading_backend') {
@@ -70,11 +64,7 @@ function renderCanvasBackendWorkbenchSurface(args: Pick<
   }
 
   if (routeState === 'blocked_backend') {
-    return (
-      <CanvasBlockedStateView
-        message={controller.backendBlockMessage ?? canvasViewCopy.backendBlockedFallbackMessage}
-      />
-    );
+    return <CanvasBlockedStateView message={bootstrapDetail} />;
   }
 
   return null;
@@ -82,11 +72,10 @@ function renderCanvasBackendWorkbenchSurface(args: Pick<
 
 function renderCanvasGraphWorkbenchSurface(args: Pick<
   CanvasWorkbenchSurfaceArgs,
-  'presentationState' | 'workbenchErrorMessage'
+  'presentationState'
 >) {
   const {
-    presentationState: { routeState },
-    workbenchErrorMessage,
+    presentationState: { bootstrapDetail, routeState },
   } = args;
 
   if (routeState === 'loading_graph') {
@@ -94,11 +83,7 @@ function renderCanvasGraphWorkbenchSurface(args: Pick<
   }
 
   if (routeState === 'error_graph') {
-    return (
-      <CanvasErrorStateView
-        message={workbenchErrorMessage || canvasViewCopy.routeErrorFallbackMessage}
-      />
-    );
+    return <CanvasErrorStateView message={bootstrapDetail} />;
   }
 
   return null;
@@ -129,9 +114,7 @@ function renderCanvasEmptyWorkbenchSurface(args: Pick<
 }
 
 function renderCanvasWorkbenchSurface(args: {
-  controller: CanvasControllerSurfaceState;
   presentationState: CanvasDraftPresentationState;
-  workbenchErrorMessage: string | null;
   canEditEdges: boolean;
 }) {
   const backendSurface = renderCanvasBackendWorkbenchSurface(args);
@@ -159,9 +142,7 @@ export function renderCanvasCenterSurface(args: RenderCanvasCenterSurfaceArgs) {
   }
 
   return renderCanvasWorkbenchSurface({
-    controller: args.controller,
     presentationState: args.presentationState,
-    workbenchErrorMessage: args.workbenchErrorMessage,
     canEditEdges: args.canEditEdges,
   });
 }

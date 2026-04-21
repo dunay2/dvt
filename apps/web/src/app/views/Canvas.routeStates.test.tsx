@@ -161,4 +161,25 @@ describe('Canvas route states', () => {
       canCompleteBootstrap: false,
     });
   });
+
+  it('keeps toolbar workflow posture aligned with blocked backend route even when draft reload remains available', async () => {
+    await renderCanvasRouteWithController(harness, {
+      dataSourceMode: 'api',
+      backendReady: false,
+      backendBlockMessage: 'Readiness not satisfied: database_not_configured.',
+      draftRecoveryReason: 'missing_remote',
+      draftToolbarState: {
+        label: 'Draft missing',
+        tone: 'warning',
+        showReloadAction: true,
+      },
+    });
+
+    const toolbarText =
+      document.getElementById('shell-top-bar-canvas-controls')?.textContent ?? '';
+
+    expect(toolbarText).toContain('Read only');
+    expect(toolbarText).not.toContain('Recovery');
+    expect(toolbarText).toContain('Reload latest draft');
+  });
 });
