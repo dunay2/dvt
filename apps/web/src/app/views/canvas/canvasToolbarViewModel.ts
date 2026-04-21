@@ -1,8 +1,12 @@
+/**
+ * Owned concern: derive toolbar workflow posture from canonical route state.
+ */
 import {
   canvasViewCopy,
   formatTransformationGraphValidationSummary,
 } from './copy';
 import type { CanvasDraftToolbarState } from './canvasDraftToolbarState';
+import type { CanvasRouteState } from './canvasDraftPresentationModel';
 import type { TransformationGraphValidationResult } from './transformationGraphValidation';
 
 export type CanvasToolbarViewModel = {
@@ -14,6 +18,7 @@ export type CanvasToolbarViewModel = {
 
 type DeriveCanvasToolbarViewModelArgs = {
   draftToolbarState: CanvasDraftToolbarState;
+  routeState: CanvasRouteState;
   canPlan: boolean;
   canRun: boolean;
   canStartRun: boolean;
@@ -69,6 +74,7 @@ function resolveWorkflowStatusClass(
 
 export function deriveCanvasToolbarViewModel({
   draftToolbarState,
+  routeState,
   canPlan,
   canRun,
   canStartRun,
@@ -78,7 +84,7 @@ export function deriveCanvasToolbarViewModel({
   nodeCount,
   edgeCount,
 }: DeriveCanvasToolbarViewModelArgs): CanvasToolbarViewModel {
-  const isRecoveryActive = draftToolbarState.showReloadAction;
+  const isRecoveryActive = routeState === 'recovery';
   const transformationValidationSummary = formatTransformationGraphValidationSummary(
     transformationValidation.summaryCode
   );

@@ -2181,6 +2181,166 @@ tasks:
       tests for plan and run orchestration seams, and a governed placement for test-support files so
       proof and generated inventory stay aligned.
     last_verified: '2026-04-20'
+  - task_id: TF-E2-F
+    parent_task: TF-E2
+    priority: P0
+    status: done
+    objective: >-
+      hard-cut Canvas route presentation so banner, center surface, toolbar workflow posture, and
+      shell bootstrap publication all consume one canonical route-visible state model instead of
+      parallel controller reads or affordance-derived heuristics.
+    dependency: TF-E2-A
+    target: >-
+      Canvas route posture is derived once through the canonical route-presentation component,
+      `showRecoveryBanner` and similar compatibility shortcuts are removed, recovery is not inferred
+      from `showReloadAction`, banner and center-surface adapters no longer branch on raw controller
+      recovery state, and end-to-end visible posture stays aligned with bootstrap publication.
+    complexity: S
+    effort_points: 3
+    progress_pct: 100
+    evidence_refs:
+      - docs/planning/closeouts/20260421-tf-e2-canvas-route-presentation-hard-cut-closeout.md
+      - docs/architecture/components/web/graph/canvas-route-presentation-component.md
+      - docs/architecture/components/web/graph/canvas-component-map-and-modernization-review.md
+      - docs/architecture/components/web/graph/canvas-controller-current-to-target-architecture.md
+      - docs/architecture/components/web/graph/graph-route-bootstrap-architecture.md
+      - apps/web/src/app/views/canvas/canvasRouteViewState.ts
+      - apps/web/src/app/views/canvas/canvasDraftPresentationModel.ts
+      - apps/web/src/app/views/canvas/CanvasCenterSurface.tsx
+      - apps/web/src/app/views/canvas/CanvasRecoveryBanner.tsx
+      - apps/web/src/app/views/canvas/canvasToolbarViewModel.ts
+    status_reason: >-
+      Docs-first/TDD-first hard cut is complete. `showRecoveryBanner` is removed, recovery banner
+      and center surface now consume canonical route presentation instead of raw controller reads,
+      toolbar workflow posture derives from `routeState` rather than `showReloadAction`, and route
+      posture alignment is covered by route, recovery, toolbar, shell, typecheck, and eslint
+      validation. The existing Cypress preview/run spec was reviewed and rejected as slice evidence
+      because it does not exercise route-presentation posture.
+    last_verified: '2026-04-21'
+  - task_id: TF-E2-G
+    parent_task: TF-E2
+    priority: P1
+    status: done
+    objective: >-
+      replace the flat `CanvasShellProps` bag with a semantically grouped component contract so
+      shell layout, panel state, graph projection, toolbar state, and commands each have explicit
+      ownership.
+    dependency: TF-E2-F
+    target: >-
+      `CanvasShell` consumes grouped contract objects instead of one large flat prop bag, tests can
+      override those concerns independently, and the shell API stops leaking an anemic
+      all-fields-at-the-top contract.
+    complexity: S
+    effort_points: 2
+    progress_pct: 100
+    evidence_refs:
+      - docs/planning/closeouts/20260421-tf-e2-canvas-shell-semantic-prop-contract-closeout.md
+      - docs/architecture/components/web/graph/canvas-component-map-and-modernization-review.md
+      - docs/architecture/components/web/graph/canvas-shell-component.md
+      - apps/web/src/app/views/canvas/canvasShell.types.ts
+      - apps/web/src/app/views/canvas/canvasShell.types.architecture.test.ts
+      - apps/web/src/app/views/canvas/CanvasShell.tsx
+      - apps/web/src/app/views/canvas/CanvasShell.test.tsx
+      - apps/web/src/app/views/Canvas.architecture.test.tsx
+      - apps/web/src/app/views/Canvas.tsx
+    status_reason: >-
+      Docs-first/TDD-first hard cut is complete. `CanvasShellProps` is now grouped by semantic
+      concern, `Canvas.tsx` builds one explicit shell contract instead of spraying a flat prop bag,
+      shell tests override concerns independently, and the graph architecture pack now contains a
+      dedicated `Canvas Shell Component` guide plus semantic architecture checks for both the shell
+      types and route composition seam.
+    last_verified: '2026-04-21'
+  - task_id: TF-E2-H
+    parent_task: TF-E2
+    priority: P1
+    status: done
+    objective: >-
+      slim the route and shell composition seams so `Canvas.tsx` and `CanvasShell.tsx` stop carrying
+      large all-in-one method bodies after the grouped shell contract hard cut.
+    dependency: TF-E2-G
+    target: >-
+      `Canvas.tsx` builds the shell contract through a named composition helper, `CanvasShell.tsx`
+      delegates sizing and rail composition to explicit local seams, and the shell component docs
+      name those responsibilities directly.
+    complexity: S
+    effort_points: 2
+    progress_pct: 100
+    evidence_refs:
+      - docs/planning/closeouts/20260421-tf-e2-canvas-shell-composition-slimming-closeout.md
+      - docs/architecture/components/web/graph/canvas-shell-component.md
+      - apps/web/src/app/views/Canvas.tsx
+      - apps/web/src/app/views/Canvas.architecture.test.tsx
+      - apps/web/src/app/views/canvas/canvasShellPropsBuilder.tsx
+      - apps/web/src/app/views/canvas/CanvasShell.tsx
+      - apps/web/src/app/views/canvas/CanvasShell.architecture.test.tsx
+    status_reason: >-
+      Docs-first/TDD-first slimming is complete. `Canvas.tsx` now delegates shell contract assembly
+      to `buildCanvasShellProps(...)`, `CanvasShell.tsx` delegates panel sizing and rail composition
+      to named local seams, and the shell component guide plus semantic architecture tests now
+      document and guard that decomposition.
+    last_verified: '2026-04-21'
+  - task_id: TF-E2-I
+    parent_task: TF-E2
+    priority: P1
+    status: done
+    objective: >-
+      remove residual route-composer mixing in `Canvas.tsx` and split the shell contract assembler
+      into subbuilders aligned to the grouped shell API.
+    dependency: TF-E2-H
+    target: >-
+      `Canvas.tsx` delegates route-presentation sync and modal hosting to explicit local seams, and
+      `canvasShellPropsBuilder.tsx` becomes an orchestrator over subbuilders for layout, panels,
+      graph, toolbar, and command groups.
+    complexity: S
+    effort_points: 2
+    progress_pct: 100
+    evidence_refs:
+      - docs/planning/closeouts/20260421-tf-e2-canvas-route-composer-and-shell-subbuilders-closeout.md
+      - docs/architecture/components/web/graph/canvas-shell-component.md
+      - apps/web/src/app/views/Canvas.tsx
+      - apps/web/src/app/views/Canvas.architecture.test.tsx
+      - apps/web/src/app/views/canvas/CanvasModalHost.tsx
+      - apps/web/src/app/views/canvas/useCanvasRoutePresentationSync.ts
+      - apps/web/src/app/views/canvas/canvasShellPropsBuilder.tsx
+      - apps/web/src/app/views/canvas/canvasShellPropsBuilder.architecture.test.ts
+      - apps/web/src/app/views/canvas/canvasShellBuilder.types.ts
+      - apps/web/src/app/views/canvas/canvasShellLayoutBuilder.tsx
+      - apps/web/src/app/views/canvas/canvasShellPanelsBuilder.ts
+      - apps/web/src/app/views/canvas/canvasShellGraphBuilder.ts
+      - apps/web/src/app/views/canvas/canvasShellToolbarBuilder.ts
+      - apps/web/src/app/views/canvas/canvasShellGraphCommandsBuilder.ts
+      - apps/web/src/app/views/canvas/canvasShellChromeCommandsBuilder.ts
+    status_reason: >-
+      Docs-first/TDD-first decomposition is complete. `Canvas.tsx` now delegates route-presentation
+      sync to `useCanvasRoutePresentationSync`, modal hosting to `CanvasModalHost`, and shell
+      contract assembly to `buildCanvasShellProps(...)`, which now orchestrates dedicated
+      subbuilders for layout, panels, graph, toolbar, and command groups. Architecture docs and
+      fitness checks now describe and guard those seams explicitly.
+    last_verified: '2026-04-21'
+  - task_id: TF-E2-J
+    parent_task: TF-E2
+    priority: P1
+    status: in_progress
+    objective: >-
+      hard-cut `CanvasModalHost` to a semantic modal contract so the component stops depending on
+      `ReturnType<typeof useCanvasController>` and route composition owns the adaptation seam.
+    dependency: TF-E2-I
+    target: >-
+      `CanvasModalHost.tsx` consumes an explicit modal host contract, `Canvas.tsx` builds that
+      contract through a dedicated builder, and architecture tests prevent controller-shaped props
+      from leaking back into the component.
+    complexity: S
+    effort_points: 1
+    progress_pct: 10
+    evidence_refs:
+      - docs/planning/closeouts/20260421-tf-e2-canvas-modal-host-semantic-contract-closeout.md
+      - apps/web/src/app/views/Canvas.tsx
+      - apps/web/src/app/views/canvas/CanvasModalHost.tsx
+    status_reason: >-
+      Docs-first analysis is active. `CanvasModalHost.tsx` is extracted from the route composer, but
+      it still consumes a controller-shaped `Pick<ReturnType<typeof useCanvasController>>` contract.
+      This slice hard-cuts the host to a semantic modal contract plus a route-owned builder.
+    last_verified: '2026-04-21'
 dependency_notes:
   - >-
     `MVP-E1` and `F-07` now define the frontend runtime contract baseline. `F-07` executes in

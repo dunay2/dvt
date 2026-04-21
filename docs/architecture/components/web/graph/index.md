@@ -22,6 +22,7 @@ Canonical navigation for the Graph and Canvas architecture pack.
 - [Canvas Draft Session Component](./canvas-draft-session-component.md)
 - [Canvas Graph Lifecycle Component](./canvas-graph-lifecycle-component.md)
 - [Canvas Handler Contracts Component](./canvas-handler-contracts-component.md)
+- [Canvas Shell Component](./canvas-shell-component.md)
 
 ## Related Existing Reviews
 
