@@ -110,8 +110,6 @@ export type ImportSourcesResult = {
  */
 export interface IWorkspacePort {
   getGraphSnapshot: () => Promise<WorkspaceGraphSnapshot>;
-  getGraphDraft: () => Promise<WorkspaceGraphDraftRecord | null>;
-  saveGraphDraft: (input: SaveWorkspaceGraphDraftInput) => Promise<SaveWorkspaceGraphDraftResult>;
   getDiffChanges: () => Promise<DiffChange[]>;
   getPlugins: () => Promise<Plugin[]>;
   getRoles: () => Promise<Role[]>;

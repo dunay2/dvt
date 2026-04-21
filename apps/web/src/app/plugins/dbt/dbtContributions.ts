@@ -5,13 +5,22 @@ import { ARTIFACTS_ROUTE_BOOTSTRAP_HANDLE } from '../../views/artifacts/artifact
 import { CODE_ROUTE_BOOTSTRAP_HANDLE } from '../../views/code/codeRouteBootstrap';
 import { DIFF_ROUTE_BOOTSTRAP_HANDLE } from '../../views/diff/diffRouteBootstrap';
 import { LINEAGE_ROUTE_BOOTSTRAP_HANDLE } from '../../views/lineage/lineageRouteBootstrap';
-import { CANVAS_ROUTE_BOOTSTRAP_HANDLE } from '../../views/canvas/canvasDraftPresentationState';
+import { CANVAS_ROUTE_BOOTSTRAP_HANDLE } from '../../views/canvas/canvasDraftPresentationStore';
 import type { PluginContributions } from '../registry';
 import { DBT_NODE_KINDS } from '../nodeTypeCatalog.dbt';
 import { DbtNodeRenderer, dbtInspectorPanels, mapRunToCanonical } from './DbtNodeRenderer';
 
+/**
+ * Static v1 contribution manifest for the built-in dbt plugin.
+ *
+ * Canonical extension rules live in
+ * `docs/architecture/components/web/plugin-contributions-developer-guide.md`.
+ * Keep this file declarative and route behavior to the owning modules.
+ */
 const DBT_PLUGIN_ID = 'dbt';
 
+// dbt owns the renderer registration for every dbt node kind declared in the
+// canonical node-kind catalog.
 const nodeRenderers = new Map(
   DBT_NODE_KINDS.map((kind) => [
     kind.kind,
@@ -23,6 +32,9 @@ const nodeRenderers = new Map(
   ])
 );
 
+/**
+ * Shell-facing contribution entry consumed by `PLUGIN_REGISTRY`.
+ */
 export const dbtContributions: PluginContributions = {
   id: DBT_PLUGIN_ID,
   displayName: 'dbt',
@@ -38,6 +50,7 @@ export const dbtContributions: PluginContributions = {
   nodeKinds: DBT_NODE_KINDS,
   nodeRenderers,
   inspectorPanels: dbtInspectorPanels,
+  // Route contributions define the dbt workbenches exposed in shell navigation.
   views: [
     {
       pluginId: DBT_PLUGIN_ID,
@@ -115,6 +128,8 @@ export const dbtContributions: PluginContributions = {
       },
     },
   ],
+  // Connection rules express dbt-local authoring policy; shell-level graph
+  // invariants still run before these plugin rules are evaluated.
   connectionRules: [
     { sourceKind: 'dbt:macro', targetKind: '*', allowed: true },
     { sourceKind: 'dbt:source', targetKind: 'dbt:model', allowed: true },
@@ -153,6 +168,8 @@ export const dbtContributions: PluginContributions = {
       reason: 'Connection not permitted by dbt rules',
     },
   ],
+  // Run adapter and port declarations keep the shell-facing runtime model
+  // canonical while advertising dbt's tabular data contracts to other plugins.
   runAdapter: {
     mapToCanonical: mapRunToCanonical,
   },

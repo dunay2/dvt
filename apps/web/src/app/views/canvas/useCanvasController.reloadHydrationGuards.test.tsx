@@ -1,11 +1,14 @@
-import { act } from 'react';
+import React, { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { SaveWorkspaceGraphDraftResult } from '../../ports/workspace';
+import type { WorkspaceGraphDraftAuthoringSaveResult } from '../../ports/workspaceGraphDraftAuthoring';
+import { buildDraftSaveSavedResponse } from '../../services/workspace/workspaceGraphDraft.test.fixtures';
+import type { CanvasDraftSession } from './canvasDraftSession';
 import {
-  buildDraftRecord,
+  applyTransformationAuthoringFixture,
+  buildRemoteDraftRecord,
+  setHarnessRemoteDraftRecord,
   type CanvasControllerHarness,
-  setCanvasLayoutNodePositions,
   WORKSPACE_LAYOUT_KEY,
   waitForAutosaveDebounce,
 } from './useCanvasController.draftLifecycle.test.support';
@@ -26,10 +29,49 @@ describe('useCanvasController reload hydration guards', () => {
     harness.cleanup();
   });
 
+  function configureDropToCompleteGovernedDraft(): void {
+    applyTransformationAuthoringFixture(harness, ['node_1', 'node_2']);
+    harness.mocks.useCanvasGraphHandlers.mockImplementation((params) => ({
+      ...harness.state.graphHandlersResult,
+      handleDrop: vi.fn(() => {
+        params.setNodes((existingNodes: Array<Record<string, unknown>>) => [
+          ...existingNodes,
+          {
+            id: 'node_3',
+            type: 'dbtNode',
+            position: { x: 240, y: 0 },
+            data: {
+              name: 'orders_sink',
+              pluginKind: 'dvt:sink',
+              showColumns: false,
+              overlayDecoration: null,
+            },
+          },
+        ]);
+        params.setDraftSession((currentSession: CanvasDraftSession) => ({
+          ...currentSession,
+          workingSet: {
+            ...currentSession.workingSet,
+            visibleNodeIds: [...currentSession.workingSet.visibleNodeIds, 'node_3'],
+            visibleEdges: [
+              ...currentSession.workingSet.visibleEdges,
+              { sourceId: 'node_2', targetId: 'node_3' },
+            ],
+          },
+        }));
+        harness.state.graphData = {
+          nodes: [{ id: 'node_1' }, { id: 'node_2' }, { id: 'node_3' }],
+          edges: [{ id: 'edge_1' }, { id: 'edge_2' }],
+        };
+      }),
+    }));
+  }
+
   it('ignores a late successful autosave after reload hydrates a newer remote draft', async () => {
+    configureDropToCompleteGovernedDraft();
     harness = await replaceHarnessWithDraft(
       harness,
-      buildDraftRecord(
+      buildRemoteDraftRecord(
         {
           nodeIds: ['node_1', 'node_2'],
           nodePositions: {
@@ -42,56 +84,48 @@ describe('useCanvasController reload hydration guards', () => {
         '2026-04-17T00:00:00Z'
       )
     );
+    configureDropToCompleteGovernedDraft();
 
-    let resolveSave: ((value: SaveWorkspaceGraphDraftResult) => void) | null = null;
-    harness.state.services.workspaceService.saveGraphDraft = vi.fn(
+    let resolveSave: ((value: WorkspaceGraphDraftAuthoringSaveResult) => void) | null = null;
+    harness.state.services.workspaceGraphDraftAuthoringPort.saveGraphDraft = vi.fn(
       async () =>
-        await new Promise<SaveWorkspaceGraphDraftResult>((resolve) => {
+        await new Promise<WorkspaceGraphDraftAuthoringSaveResult>((resolve) => {
           resolveSave = resolve;
         })
     );
 
-    setCanvasLayoutNodePositions(harness, {
-      node_1: { x: 48, y: 24 },
-      node_2: { x: 148, y: 24 },
-    });
-
     await harness.renderProbe();
+    await act(async () => {
+      harness.getLatestResult()?.handleDrop({} as React.DragEvent<HTMLDivElement>);
+    });
     await waitForAutosaveDebounce();
 
-    expect(harness.state.services.workspaceService.saveGraphDraft).toHaveBeenCalledTimes(1);
+    expect(harness.state.services.workspaceGraphDraftAuthoringPort.saveGraphDraft).toHaveBeenCalledTimes(1);
 
-    harness.state.services.workspaceService.getGraphDraft = vi.fn(async () =>
-      buildDraftRecord(
-        {
-          nodeIds: ['node_2'],
-          nodePositions: {
-            node_2: { x: 220, y: 120 },
-          },
-          edges: [],
+    setHarnessRemoteDraftRecord(harness, buildRemoteDraftRecord(
+      {
+        nodeIds: ['node_2'],
+        nodePositions: {
+          node_2: { x: 220, y: 120 },
+        },
+        edges: [],
         },
         'rev-remote',
         '2026-04-17T00:00:01Z'
-      )
-    );
+    ));
 
     await reloadLatestDraft(harness);
     harness.state.queryClient.setQueryData.mockClear();
 
     await act(async () => {
       resolveSave?.({
-        outcome: 'saved',
-        record: buildDraftRecord(
+        ...buildDraftSaveSavedResponse(
           {
-            nodeIds: ['node_1', 'node_2'],
-            nodePositions: {
-              node_1: { x: 48, y: 24 },
-              node_2: { x: 148, y: 24 },
-            },
-            edges: [{ sourceId: 'node_1', targetId: 'node_2' }],
+            tenantId: 'tenant-a',
+            projectId: 'project-a',
+            environmentId: 'dev',
           },
-          'rev-stale',
-          '2026-04-17T00:00:02Z'
+          { revision: 'rev-stale' }
         ),
       });
       await Promise.resolve();
@@ -104,7 +138,6 @@ describe('useCanvasController reload hydration guards', () => {
         revision: 'rev-stale',
       })
     );
-    expect(harness.state.services.workspaceService.getGraphDraft).toHaveBeenCalledTimes(1);
     expect(harness.getLatestResult()?.hasMissingRemoteDraft).toBe(false);
     expect(harness.getLatestResult()?.hasStaleDraftVersion).toBe(false);
     expect(harness.getLatestResult()?.draftSaveStatus).toBe('idle');
@@ -113,7 +146,7 @@ describe('useCanvasController reload hydration guards', () => {
   it('clears selection and inspector state when reload hydrates a narrower remote draft', async () => {
     harness = await replaceHarnessWithDraft(
       harness,
-      buildDraftRecord(
+      buildRemoteDraftRecord(
         {
           nodeIds: ['node_1', 'node_2'],
           nodePositions: {
@@ -136,19 +169,17 @@ describe('useCanvasController reload hydration guards', () => {
     storeActions.setSelectedNodes.mockClear();
     storeActions.setInspectorNode.mockClear();
 
-    harness.state.services.workspaceService.getGraphDraft = vi.fn(async () =>
-      buildDraftRecord(
-        {
-          nodeIds: ['node_1'],
-          nodePositions: {
-            node_1: { x: 32, y: 24 },
-          },
-          edges: [],
+    setHarnessRemoteDraftRecord(harness, buildRemoteDraftRecord(
+      {
+        nodeIds: ['node_1'],
+        nodePositions: {
+          node_1: { x: 32, y: 24 },
+        },
+        edges: [],
         },
         'rev-2',
         '2026-04-17T00:00:01Z'
-      )
-    );
+    ));
 
     await reloadLatestDraft(harness);
 

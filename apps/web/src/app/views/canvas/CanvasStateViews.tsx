@@ -74,22 +74,34 @@ export function CanvasEmptyStateView({
   );
 }
 
-export function CanvasErrorStateView({ message }: Readonly<{ message: string }>) {
+export function CanvasErrorStateView({
+  title = canvasViewCopy.routeErrorTitle,
+  message,
+}: Readonly<{
+  title?: string;
+  message: string;
+}>) {
   return (
     <CanvasSurfaceStateCard
       dataSlot="canvas-error-state"
-      title={canvasViewCopy.routeErrorTitle}
+      title={title}
       message={message}
       tone="danger"
     />
   );
 }
 
-export function CanvasBlockedStateView({ message }: Readonly<{ message: string }>) {
+export function CanvasBlockedStateView({
+  title = canvasViewCopy.backendBlockedTitle,
+  message,
+}: Readonly<{
+  title?: string;
+  message: string;
+}>) {
   return (
     <CanvasSurfaceStateCard
       dataSlot="canvas-blocked-state"
-      title={canvasViewCopy.backendBlockedTitle}
+      title={title}
       message={message}
       tone="danger"
     />

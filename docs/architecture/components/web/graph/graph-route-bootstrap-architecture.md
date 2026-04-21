@@ -2,7 +2,7 @@
 title: Graph Route Bootstrap Architecture
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-04-18
+last_reviewed: 2026-04-21
 ---
 
 # Graph Route Bootstrap Architecture
@@ -12,170 +12,146 @@ last_reviewed: 2026-04-18
 Define one shell-facing route startup contract that is explicit, typed, and
 route-identity based.
 
-## Module Ownership (SRP)
+## Governing Sources
 
-| Module                                   | Responsibility                                                          |
-| ---------------------------------------- | ----------------------------------------------------------------------- |
-| `routeBootstrapContract.ts`              | Startup contract types + factory helpers.                               |
-| `routeBootstrapRegistration.ts`          | Parse route handle and produce typed registration.                      |
-| `routeBootstrapRegistry.ts`              | Passive in-memory publication/read/reset lifecycle keyed by `route.id`. |
-| `routeBootstrapDataRouterContext.ts`     | Isolate React Router Data Router context presence detection.            |
-| `useActiveRouteBootstrapRegistration.ts` | Resolve active registration from router matches.                        |
-| `usePublishedRouteBootstrap.ts`          | Adapter that publishes route read-model posture.                        |
-| `routeBootstrapErrors.ts`                | Typed route-bootstrap error taxonomy and codes.                         |
-| `routeBootstrapErrorCopy.ts`             | Localizable bootstrap error copy and runtime locale detection.          |
-| `StaticRouteBootstrapBoundary.tsx`       | Settle static routes on mount.                                          |
+- [Graph Frontend Architecture](./graph-frontend-architecture.md)
+- [Canvas Component Map And Modernization Review](./canvas-component-map-and-modernization-review.md)
+- [Canvas Controller Current To Target Architecture](./canvas-controller-current-to-target-architecture.md)
 
-## Startup Taxonomy
+## Module Ownership
 
-- `published`: route publishes `pending|blocked|error|complete` from its read model.
-- `static`: route becomes useful immediately at mount and can settle once.
+| Module                                   | Responsibility                                             |
+| ---------------------------------------- | ---------------------------------------------------------- |
+| `routeBootstrapContract.ts`              | Contract types and helpers                                 |
+| `routeBootstrapRegistration.ts`          | Parse route handle into typed registration                 |
+| `routeBootstrapRegistry.ts`              | Passive publication and read lifecycle keyed by `route.id` |
+| `routeBootstrapDataRouterContext.ts`     | Isolate Data Router context presence detection             |
+| `useActiveRouteBootstrapRegistration.ts` | Resolve active registration from router matches            |
+| `usePublishedRouteBootstrap.ts`          | Publish route read-model posture                           |
+| `routeBootstrapErrors.ts`                | Typed bootstrap error taxonomy                             |
+| `routeBootstrapErrorCopy.ts`             | Locale-resolved bootstrap copy                             |
+| `StaticRouteBootstrapBoundary.tsx`       | Settle truly static routes on mount                        |
 
-Rule:
+## Startup Modes
 
-- If a route has startup loading/error/recovery semantics, it must be
-  `published`, not `static`.
+| Mode        | Meaning                                                        | Rule                                              |
+| ----------- | -------------------------------------------------------------- | ------------------------------------------------- |
+| `published` | Route has startup loading, recovery, missing, or error posture | It must publish posture from its route read model |
+| `static`    | Route is already useful at mount time                          | It may settle once through the static boundary    |
 
-## Topology
+Classification rule:
+
+- if a route owns startup loading, error, or recovery semantics, it is
+  `published`
+- `mount != settled`
+- missing classification is design drift, not an implicit default
+
+## Contract Topology
 
 ```mermaid
 flowchart LR
-  Router["React Router match (route.id + handle)"] --> Active["useActiveRouteBootstrapRegistration"]
+  Router["React Router match: route.id plus handle"] --> Active["useActiveRouteBootstrapRegistration"]
   Active --> Registration["RouteBootstrapRegistration"]
   Registration --> Publisher["usePublishedRouteBootstrap"]
   Registration --> StaticBoundary["StaticRouteBootstrapBoundary"]
-  Publisher --> Registry
+  Publisher --> Registry["routeBootstrapRegistry"]
   StaticBoundary --> Registry
-  Registry --> Root["Root.tsx consumes active route posture"]
+  Registry --> Root["Root.tsx"]
 ```
+
+## Published Route Lifecycle
+
+```mermaid
+flowchart LR
+  RouteReadModel["Route read model"] --> Pending["pending"]
+  RouteReadModel --> Blocked["blocked"]
+  RouteReadModel --> Error["error"]
+  RouteReadModel --> Complete["complete"]
+
+  Pending --> Publisher["usePublishedRouteBootstrap"]
+  Blocked --> Publisher
+  Error --> Publisher
+  Complete --> Publisher
+
+  Publisher --> Registry["routeBootstrapRegistry"]
+  Registry --> Root["shell reveal and active-route posture"]
+```
+
+Reading rule:
+
+- the registry stores posture; it does not invent it
+- `Root.tsx` consumes the active route contract; it does not infer readiness
+  from pathname or widget state
+- normal updates replace posture in place; reset only happens on teardown or
+  route identity change
 
 ## Failure Policy
 
-- Production-like runtime is fail-fast for bootstrap contract violations.
-- Missing Data Router context throws typed
-  `RouteBootstrapDataRouterContextError`.
-- Missing active route registration at shell-consumption time throws typed
-  `RouteBootstrapActiveRegistrationMissingError`.
-- Missing explicit registration for a published route throws typed
-  `RouteBootstrapRegistrationNotFoundError`.
-- Fallback to empty matches / no-op publication is allowed only in test runtime
-  (`import.meta.env.MODE === 'test'` or `import.meta.env.VITEST`) so isolated
-  view tests can mount without `RouterProvider`.
-- Test fallback is operational scaffolding for tests, not part of normal route
-  runtime semantics.
+- production-like runtime is fail-fast for bootstrap contract violations
+- missing Data Router context throws typed bootstrap failure
+- missing active registration throws typed bootstrap failure at shell
+  consumption time
+- missing explicit registration for a published route throws typed bootstrap
+  failure
+- fallback to empty matches or no-op publication is allowed only in test
+  runtime for isolated non-router tests
 
 ## Invariants
 
-- Registry is passive state storage; it does not derive route semantics and it
-  does not synthesize fallback posture when registration is absent.
-- Reset happens only on unmount or route identity change.
-- Startup for a mounted published route updates in place; no incidental fallback
-  to implicit complete.
-- `Root.tsx` consumes the active route contract; it does not infer route
-  operability from pathname heuristics.
-- Missing Data Router context is surfaced as typed bootstrap failure
-  (`ROUTE_BOOTSTRAP_DATA_ROUTER_CONTEXT_MISSING`) instead of being treated as
-  normal route state.
-- Missing explicit registration for a published route is surfaced as typed
-  bootstrap failure (`ROUTE_BOOTSTRAP_REGISTRATION_NOT_FOUND`) outside test
-  runtime.
-- Missing active route registration is surfaced as typed bootstrap failure
-  (`ROUTE_BOOTSTRAP_ACTIVE_REGISTRATION_MISSING`) instead of degrading to a
-  shell-owned pending fallback.
-- Bootstrap error messages resolve locale from runtime
-  (`navigator.language`, then `navigator.languages[0]`, then
-  `document.documentElement.lang`, fallback `en`) through
-  `routeBootstrapErrorCopy.ts`; locale is no longer hardcoded in hooks and the
-  bootstrap-local dictionary currently overrides Spanish copy while English
-  continues to resolve through fallback copy.
-- Missing Data Router context fallback is allowed only in test runtime for
-  isolated view tests; production/runtime paths fail fast.
-- React Router `UNSAFE_*DataRouter*Context` usage is contained in
-  `routeBootstrapDataRouterContext.ts` so upstream router-presence coupling does
-  not leak across the bootstrap slice.
-- Publisher ownership is strict by route: published-route adapters must resolve
-  registration by explicit `routeId` and must not publish through shared
-  active-match fallback.
+- the registry is passive state storage
+- startup for a mounted published route updates in place
+- static settlement happens only through `StaticRouteBootstrapBoundary.tsx`
+- locale resolution for bootstrap errors is centralized in
+  `routeBootstrapErrorCopy.ts`
+- Data Router context probing is isolated in
+  `routeBootstrapDataRouterContext.ts`
+- publisher ownership is strict by route identity
 
-## Route Matrix (Current)
+## Route Matrix
 
-As of 2026-04-18, the active startup matrix is:
+| Route id                      | Path           | Mode        | Owner family                    |
+| ----------------------------- | -------------- | ----------- | ------------------------------- |
+| `dbt.canvas`                  | `/canvas`      | `published` | Canvas draft presentation state |
+| `dbt.lineage`                 | `/lineage`     | `published` | Lineage route bootstrap         |
+| `dbt.code`                    | `/code`        | `published` | Code route bootstrap            |
+| `dbt.diff`                    | `/diff`        | `published` | Diff route bootstrap            |
+| `dbt.artifacts`               | `/artifacts`   | `published` | Artifacts route bootstrap       |
+| `monitoring.runs`             | `/runs`        | `published` | Runs route bootstrap            |
+| `monitoring.run-detail`       | `/runs/:runId` | `published` | Runs route bootstrap            |
+| `cost.dashboard`              | `/cost`        | `published` | Cost route bootstrap            |
+| `shell.default-core-redirect` | `/`            | `published` | Redirect posture handoff        |
+| `shell.plugins`               | `/plugins`     | `static`    | Static shell route              |
+| `shell.admin`                 | `/admin`       | `static`    | Static shell route              |
 
-| Route id                      | Path           | Mode        | Source anchor                                                                                                          | Test evidence                                                                                           |
-| ----------------------------- | -------------- | ----------- | ---------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| `dbt.canvas`                  | `/canvas`      | `published` | `apps/web/src/app/plugins/dbt/dbtContributions.ts` + `apps/web/src/app/views/canvas/canvasDraftPresentationState.ts`   | `apps/web/src/app/views/canvas/canvasDraftPresentationState.test.ts` + `apps/web/src/app/Root.test.tsx` |
-| `dbt.lineage`                 | `/lineage`     | `published` | `apps/web/src/app/plugins/dbt/dbtContributions.ts` + `apps/web/src/app/views/lineage/lineageRouteBootstrap.ts`         | `apps/web/src/app/views/lineage/lineageRouteBootstrap.test.ts`                                          |
-| `dbt.code`                    | `/code`        | `published` | `apps/web/src/app/plugins/dbt/dbtContributions.ts` + `apps/web/src/app/views/code/codeRouteBootstrap.ts`               | `apps/web/src/app/views/code/codeRouteBootstrap.test.ts`                                                |
-| `dbt.diff`                    | `/diff`        | `published` | `apps/web/src/app/plugins/dbt/dbtContributions.ts` + `apps/web/src/app/views/diff/diffRouteBootstrap.ts`               | `apps/web/src/app/views/diff/diffRouteBootstrap.test.ts`                                                |
-| `dbt.artifacts`               | `/artifacts`   | `published` | `apps/web/src/app/plugins/dbt/dbtContributions.ts` + `apps/web/src/app/views/artifacts/artifactsRouteBootstrap.ts`     | `apps/web/src/app/views/artifacts/artifactsRouteBootstrap.test.ts`                                      |
-| `monitoring.runs`             | `/runs`        | `published` | `apps/web/src/app/plugins/monitoring/monitoringContributions.ts` + `apps/web/src/app/views/runs/runsRouteBootstrap.ts` | `apps/web/src/app/views/runs/runsRouteBootstrap.test.ts`                                                |
-| `monitoring.run-detail`       | `/runs/:runId` | `published` | `apps/web/src/app/plugins/monitoring/monitoringContributions.ts` + `apps/web/src/app/views/runs/runsRouteBootstrap.ts` | `apps/web/src/app/views/runs/runsRouteBootstrap.test.ts` + `apps/web/src/app/Root.test.tsx`             |
-| `cost.dashboard`              | `/cost`        | `published` | `apps/web/src/app/plugins/registry.ts` + `apps/web/src/app/views/cost/costRouteBootstrap.ts`                           | `apps/web/src/app/views/cost/costRouteBootstrap.test.ts` + `apps/web/src/app/routes.test.tsx`           |
-| `shell.default-core-redirect` | `/`            | `published` | `apps/web/src/app/routes.ts`                                                                                           | `apps/web/src/app/routes.test.tsx`                                                                      |
-| `shell.plugins`               | `/plugins`     | `static`    | `apps/web/src/app/routes.ts`                                                                                           | `apps/web/src/app/routes.test.tsx`                                                                      |
-| `shell.admin`                 | `/admin`       | `static`    | `apps/web/src/app/routes.ts`                                                                                           | `apps/web/src/app/routes.test.tsx` + `apps/web/src/app/Root.test.tsx`                                   |
+Special case:
 
-`shell.default-core-redirect` is a transient `published` route: while mounted
-it explicitly publishes pending redirect posture through
-`usePublishedRouteBootstrap`, then hands startup ownership to the navigated
-target route.
+- `shell.default-core-redirect` is transiently `published` while it hands
+  startup ownership to the destination route
 
-`apps/web/src/app/Root.test.tsx` covers static-route runtime behavior directly
-for `shell.admin` and also exercises the generic static-route contract pattern
-through a synthetic Plugins route; the per-route shell matrix above cites
-direct route evidence where available.
+## Acceptance Evidence
 
-## Per-route Acceptance Checks
-
-- `Every route in the active set declares explicit handle.routeBootstrap`
-  Evidence: `apps/web/src/app/routes.ts` (plugin views are guarded by
-  `requireViewRouteHandle`; shell routes declare handles inline) +
-  `apps/web/src/app/routes.test.tsx`
-- `Published routes derive typed posture and publish by explicit route identity`
-  Evidence: `apps/web/src/app/bootstrap/usePublishedRouteBootstrap.ts` +
-  `apps/web/src/app/bootstrap/usePublishedRouteBootstrap.test.tsx` +
-  `apps/web/src/app/routes.test.tsx` + route bootstrap tests in
-  `apps/web/src/app/views/artifacts/artifactsRouteBootstrap.test.ts`,
-  `apps/web/src/app/views/code/codeRouteBootstrap.test.ts`,
-  `apps/web/src/app/views/cost/costRouteBootstrap.test.ts`,
-  `apps/web/src/app/views/diff/diffRouteBootstrap.test.ts`,
-  `apps/web/src/app/views/lineage/lineageRouteBootstrap.test.ts`,
-  `apps/web/src/app/views/runs/runsRouteBootstrap.test.ts`, and
-  `apps/web/src/app/views/canvas/canvasDraftPresentationState.test.ts`
-- `Publisher lifecycle is monotonic for mounted route (no reset on ordinary updates)`
-  Evidence: `apps/web/src/app/bootstrap/usePublishedRouteBootstrap.test.tsx`
-- `Missing Data Router context is typed and non-router exceptions are not masked`
-  Evidence: `apps/web/src/app/bootstrap/useActiveRouteBootstrapRegistration.ts` +
-  `apps/web/src/app/bootstrap/useActiveRouteBootstrapRegistration.test.tsx`
-- `Missing active route registration fails fast at shell-consumption time`
-  Evidence: `apps/web/src/app/Root.tsx` + `apps/web/src/app/Root.test.tsx` +
-  `apps/web/src/app/bootstrap/routeBootstrapErrors.ts` +
-  `apps/web/src/app/bootstrap/routeBootstrapErrorCopy.test.ts`
-- `Missing published registration fails closed with localized typed copy`
-  Evidence: `apps/web/src/app/bootstrap/usePublishedRouteBootstrap.ts` +
-  `apps/web/src/app/bootstrap/usePublishedRouteBootstrap.test.tsx` +
-  `apps/web/src/app/bootstrap/routeBootstrapErrors.ts` +
-  `apps/web/src/app/bootstrap/routeBootstrapErrorCopy.test.ts`
-- `Static routes settle only through explicit static boundary`
-  Evidence: `apps/web/src/app/routes.ts` (`withRouteBootstrapBoundary`) +
-  `apps/web/src/app/bootstrap/StaticRouteBootstrapBoundary.tsx` +
-  `apps/web/src/app/Root.test.tsx`
+| Rule                                                               | Evidence anchors                                                                                                                                                                                                                                                   |
+| ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Every active route declares explicit bootstrap metadata            | [routes.ts](../../../../../apps/web/src/app/routes.ts), [routes.test.tsx](../../../../../apps/web/src/app/routes.test.tsx)                                                                                                                                         |
+| Published routes publish typed posture by explicit route identity  | [usePublishedRouteBootstrap.ts](../../../../../apps/web/src/app/bootstrap/usePublishedRouteBootstrap.ts), route bootstrap tests under `apps/web/src/app/views/*/*RouteBootstrap.test.ts`                                                                           |
+| Publication is monotonic while mounted                             | [usePublishedRouteBootstrap.test.tsx](../../../../../apps/web/src/app/bootstrap/usePublishedRouteBootstrap.test.tsx)                                                                                                                                               |
+| Missing Data Router context is typed and fail-fast                 | [useActiveRouteBootstrapRegistration.ts](../../../../../apps/web/src/app/bootstrap/useActiveRouteBootstrapRegistration.ts), [useActiveRouteBootstrapRegistration.test.tsx](../../../../../apps/web/src/app/bootstrap/useActiveRouteBootstrapRegistration.test.tsx) |
+| Missing active registration fails closed at shell consumption time | [Root.tsx](../../../../../apps/web/src/app/Root.tsx), [Root.test.tsx](../../../../../apps/web/src/app/Root.test.tsx), [routeBootstrapErrors.ts](../../../../../apps/web/src/app/bootstrap/routeBootstrapErrors.ts)                                                 |
+| Static routes settle only through the static boundary              | [StaticRouteBootstrapBoundary.tsx](../../../../../apps/web/src/app/bootstrap/StaticRouteBootstrapBoundary.tsx), [Root.bootstrapFlow.test.tsx](../../../../../apps/web/src/app/Root.bootstrapFlow.test.tsx)                                                         |
 
 ## Current State
 
-As of 2026-04-18:
+As of 2026-04-21:
 
-- SRP split is implemented and validated.
-- Canvas and graph-adjacent routes use explicit startup handles.
-- static settlement exists only through the explicit static boundary seam.
-- bootstrap error handling now uses typed fail-fast errors plus runtime
-  locale-resolved copy.
-- fallback behavior is intentionally restricted to test runtime for isolated
-  non-router view tests.
+- SRP split is implemented and validated
+- Canvas and graph-adjacent routes use explicit startup handles
+- static settlement exists only through the explicit static boundary
+- bootstrap errors are typed and locale-resolved
+- fallback behavior remains restricted to test runtime
 
-## Future Evolution
+## Evolution Rules
 
-- enforce explicit startup classification for every new top-level route at PR
-  review.
-- add contract-level tests for monotonic publication and invalid handle rejection
-  across future route additions.
+- every new top-level route must declare explicit startup classification
+- new published routes must ship route-specific posture tests
+- shell logic must continue consuming the contract instead of route-local
+  heuristics

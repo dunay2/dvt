@@ -18,6 +18,14 @@ export type CanvasViewCopy = {
   readonly readOnlyMessage: string;
   readonly limitedAccessTitle: string;
   readonly readOnlyNote: string;
+  readonly draftAccessDeniedTitle: string;
+  readonly draftAccessDeniedMessage: string;
+  readonly draftUnsupportedSchemaTitle: string;
+  readonly draftUnsupportedSchemaMessage: string;
+  readonly draftCorruptPayloadTitle: string;
+  readonly draftCorruptPayloadMessage: string;
+  readonly draftMigrationFailedTitle: string;
+  readonly draftMigrationFailedMessage: string;
   readonly staleDraftTitle: string;
   readonly staleDraftMessage: string;
   readonly draftProjectionGapTitle: string;

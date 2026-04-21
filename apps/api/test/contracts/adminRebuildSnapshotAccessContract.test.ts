@@ -7,12 +7,12 @@ import { Ajv2020 } from 'ajv/dist/2020.js';
 import Fastify from 'fastify';
 import { describe, expect, it } from 'vitest';
 
+import { registerAdminRoutes } from '../../src/entrypoints/http/adminRoutes.js';
 import {
   type RebuildSnapshot,
   type WorkflowSnapshotResult,
   makeWorkflowSnapshot,
 } from '../fixtures/workflowSnapshotFixture.js';
-import { registerAdminRoutes } from '../../src/entrypoints/http/adminRoutes.js';
 
 type AdminRebuildSnapshotAccessContract = {
   readonly route: {

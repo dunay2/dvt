@@ -11,6 +11,7 @@ import type {
 } from '@dvt/contracts';
 
 import type { WorkspaceGraphDraft, WorkspaceGraphDraftRecord } from '../../ports/workspace';
+import { projectDesignGraphDraft } from './workspaceGraphDraftProjection';
 import type { WorkspaceScope } from './workspaceScope.test.harness';
 
 type DraftCapabilityOverrides = Partial<
@@ -231,17 +232,15 @@ export function buildDraftSaveDeniedResponse(
 export function buildProjectedDraftRecord(
   overrides: Partial<WorkspaceGraphDraftRecord> = {}
 ): WorkspaceGraphDraftRecord {
+  const protectedRecord = buildProtectedDraftRecord({
+    tenantId: 'tenant-a',
+    projectId: 'project-a',
+    environmentId: 'dev',
+  });
   return {
     revision: 'rev-1',
     savedAt: '2026-04-18T01:00:00.000Z',
-    draft: {
-      nodeIds: ['source_node', 'transform_node', 'sink_node'],
-      nodePositions: {},
-      edges: [
-        { sourceId: 'source_node', targetId: 'transform_node' },
-        { sourceId: 'transform_node', targetId: 'sink_node' },
-      ],
-    },
+    draft: projectDesignGraphDraft(protectedRecord.draft),
     ...overrides,
   };
 }

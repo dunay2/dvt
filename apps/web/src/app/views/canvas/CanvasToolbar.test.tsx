@@ -4,9 +4,9 @@ import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { CanvasDraftToolbarState } from './canvasDraftPresentationState';
 import CanvasToolbar from './CanvasToolbar';
 import { canvasViewCopy } from './copy';
+import type { CanvasDraftToolbarState } from './canvasDraftToolbarState';
 import type { TransformationGraphValidationResult } from './transformationGraphValidation';
 
 function buildValidationResult(

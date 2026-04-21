@@ -34,17 +34,17 @@ sequenceDiagram
   participant Port as Workspace draft port
 
   Operator->>Controller: mutate graph
-  Controller->>Session: markSaving()
+  Controller->>Session: machine.markSaving()
   Controller->>Port: save(expectedRevision, payload)
   alt success
     Port-->>Controller: persisted record
-    Controller->>Session: applySaveSuccess()
+    Controller->>Session: machine.applySaveSuccess()
   else conflict
     Port-->>Controller: conflict + current record
-    Controller->>Session: applyConflict()
+    Controller->>Session: machine.applyConflict()
   else missing remote
     Port-->>Controller: missing remote record
-    Controller->>Session: markRemoteDraftMissing()
+    Controller->>Session: machine.markRemoteDraftMissing()
   end
 ```
 

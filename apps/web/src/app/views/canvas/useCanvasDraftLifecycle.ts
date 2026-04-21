@@ -14,26 +14,37 @@ import { useCanvasDraftPersistence } from './useCanvasDraftPersistence';
 export function useCanvasDraftLifecycle({
   draftRepository,
   graphDraftQuery,
-  queryClient,
+  draftQueryCache,
   workspaceLayoutKey,
   draftSession,
   setDraftSession,
   canonicalSnapshot,
   graphNodes,
+  canonicalNodes,
+  canonicalEdges,
   graphSnapshotQuery,
   canPersistGraphDraft,
+  workspaceScope,
+  previewProvenanceConfig,
   setCanvasNodePositions,
   graphStrategy,
 }: UseCanvasDraftLifecycleArgs): CanvasDraftLifecycle {
   const [draftSaveStatus, setDraftSaveStatus] = useState<DraftSaveStatus>('idle');
   const { refs, invalidateInFlightSaveAttempt } = useCanvasDraftAttemptRefs();
   const { currentDraftPayload, currentDraftPayloadSignature, canPersistCurrentDraft } =
-    useCanvasCurrentDraftPayload(graphNodes, draftSession);
+    useCanvasCurrentDraftPayload(
+      graphNodes,
+      draftSession,
+      canonicalNodes,
+      canonicalEdges,
+      workspaceScope,
+      previewProvenanceConfig
+    );
 
   const { applyReloadedRemoteDraft } = useCanvasDraftBootstrapSync({
     graphDraftQuery,
     graphSnapshotQuery,
-    queryClient,
+    draftQueryCache,
     workspaceLayoutKey,
     draftSession,
     setDraftSession,
@@ -47,8 +58,7 @@ export function useCanvasDraftLifecycle({
     draftRepository,
     graphDraftQuery,
     graphSnapshotQuery,
-    queryClient,
-    workspaceLayoutKey,
+    draftQueryCache,
     draftSession,
     setDraftSession,
     canonicalSnapshot,

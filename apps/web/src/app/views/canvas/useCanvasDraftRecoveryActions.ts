@@ -1,14 +1,10 @@
 import { useCallback, type Dispatch, type SetStateAction } from 'react';
 
-import type { WorkspaceGraphDraftRecord, WorkspaceGraphSnapshot } from '../../ports/workspace';
-import { queryKeys } from '../../queries/queryKeys';
-import { adoptCurrentSnapshot, type CanvasDraftSession } from './canvasDraftSession';
-import type { CanvasDraftRepository } from './canvasDraftRepository';
-import type {
-  DraftAttemptRefs,
-  DraftSaveStatus,
-  QueryClientLike,
-} from './canvasDraftLifecycle.types';
+import type { WorkspaceGraphSnapshot } from '../../ports/workspace';
+import type { CanvasDraftQueryCache } from './canvasDraftQueryCache';
+import type { CanvasDraftReadModel } from './canvasDraftReadModel';
+import { canvasDraftSession, type CanvasDraftSession } from './canvasDraftSession';
+import type { DraftAttemptRefs, DraftSaveStatus } from './canvasDraftLifecycle.types';
 import {
   buildCanonicalSnapshotFromWorkspaceSnapshot,
   type CanvasDraftLifecycleCanonicalSnapshot,
@@ -17,9 +13,7 @@ import {
 import { clearSaveDebounce } from './canvasDraftPersistenceRuntime';
 
 type UseCanvasDraftRecoveryActionsArgs = {
-  draftRepository: CanvasDraftRepository;
-  queryClient: QueryClientLike;
-  workspaceLayoutKey: string;
+  draftQueryCache: CanvasDraftQueryCache;
   setDraftSession: Dispatch<SetStateAction<CanvasDraftSession>>;
   canonicalSnapshot: CanvasDraftLifecycleCanonicalSnapshot;
   graphStrategy: CanvasDraftLifecycleGraphStrategy;
@@ -27,44 +21,22 @@ type UseCanvasDraftRecoveryActionsArgs = {
   setDraftSaveStatus: Dispatch<SetStateAction<DraftSaveStatus>>;
   invalidateInFlightSaveAttempt: () => void;
   applyReloadedRemoteDraft: (
-    remoteDraft: WorkspaceGraphDraftRecord | null,
+    remoteDraftState: CanvasDraftReadModel,
     reloadedCanonicalSnapshot: CanvasDraftLifecycleCanonicalSnapshot
   ) => void;
 };
 
-async function fetchRemoteDraftAndSnapshot(args: {
-  queryClient: QueryClientLike;
-  workspaceLayoutKey: string;
-  draftRepository: CanvasDraftRepository;
-}): Promise<[WorkspaceGraphDraftRecord | null, WorkspaceGraphSnapshot]> {
-  const graphDraftKey = queryKeys.workspace.graphDraft(args.workspaceLayoutKey);
-  const graphKey = queryKeys.workspace.graph(args.workspaceLayoutKey);
-
-  await Promise.all([
-    args.queryClient.cancelQueries({
-      queryKey: graphDraftKey,
-    }),
-    args.queryClient.cancelQueries({
-      queryKey: graphKey,
-    }),
-  ]);
-
+async function fetchRemoteDraftAndSnapshot(
+  draftQueryCache: CanvasDraftQueryCache
+): Promise<[CanvasDraftReadModel, WorkspaceGraphSnapshot]> {
   return await Promise.all([
-    args.queryClient.fetchQuery<WorkspaceGraphDraftRecord | null>({
-      queryKey: graphDraftKey,
-      queryFn: () => args.draftRepository.readGraphDraft(),
-    }),
-    args.queryClient.fetchQuery<WorkspaceGraphSnapshot>({
-      queryKey: graphKey,
-      queryFn: () => args.draftRepository.readGraphSnapshot(),
-    }),
+    draftQueryCache.fetchLatestRemoteDraftState(),
+    draftQueryCache.fetchLatestGraphSnapshot(),
   ]);
 }
 
 export function useCanvasDraftRecoveryActions({
-  draftRepository,
-  queryClient,
-  workspaceLayoutKey,
+  draftQueryCache,
   setDraftSession,
   canonicalSnapshot,
   graphStrategy,
@@ -79,18 +51,14 @@ export function useCanvasDraftRecoveryActions({
     const reloadGeneration = refs.saveAttemptGenerationRef.current;
     setDraftSaveStatus('idle');
 
-    fetchRemoteDraftAndSnapshot({
-      queryClient,
-      workspaceLayoutKey,
-      draftRepository,
-    })
-      .then(([remoteDraft, graphSnapshot]) => {
+    fetchRemoteDraftAndSnapshot(draftQueryCache)
+      .then(([remoteDraftState, graphSnapshot]) => {
         if (refs.saveAttemptGenerationRef.current !== reloadGeneration) {
           return;
         }
 
         applyReloadedRemoteDraft(
-          remoteDraft,
+          remoteDraftState,
           buildCanonicalSnapshotFromWorkspaceSnapshot(graphSnapshot, graphStrategy)
         );
       })
@@ -103,13 +71,11 @@ export function useCanvasDraftRecoveryActions({
       });
   }, [
     applyReloadedRemoteDraft,
-    draftRepository,
+    draftQueryCache,
     graphStrategy,
     invalidateInFlightSaveAttempt,
-    queryClient,
     refs,
     setDraftSaveStatus,
-    workspaceLayoutKey,
   ]);
 
   const adoptCurrentWorkspaceSnapshot = useCallback(() => {
@@ -117,7 +83,9 @@ export function useCanvasDraftRecoveryActions({
     invalidateInFlightSaveAttempt();
     refs.lastSavedSignatureRef.current = null;
     setDraftSaveStatus('idle');
-    setDraftSession((currentSession) => adoptCurrentSnapshot(currentSession, canonicalSnapshot));
+    setDraftSession((currentSession) =>
+      canvasDraftSession.machine.adoptCurrentSnapshot(currentSession, canonicalSnapshot)
+    );
   }, [canonicalSnapshot, invalidateInFlightSaveAttempt, refs, setDraftSaveStatus, setDraftSession]);
 
   return {

@@ -1,7 +1,11 @@
 import type { Dispatch, MutableRefObject, SetStateAction } from 'react';
 
-import type { WorkspaceGraphDraftRecord } from '../../ports/workspace';
+import type { WorkspaceScope } from '../../ports/sessionContext';
+import type { WorkspaceBootstrapConfig } from '../../services/config/workspaceConfig';
+import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+import type { CanvasDraftQueryCache } from './canvasDraftQueryCache';
 import type { CanvasDraftRepository } from './canvasDraftRepository';
+import type { CanvasDraftReadModel } from './canvasDraftReadModel';
 import type { CanvasDraftSession } from './canvasDraftSession';
 import type {
   CanvasDraftLifecycleCanonicalSnapshot,
@@ -15,18 +19,9 @@ export type GraphSnapshotQueryState = {
 };
 
 export type GraphDraftQueryState = {
-  data: WorkspaceGraphDraftRecord | null | undefined;
+  data: CanvasDraftReadModel | undefined;
   isPending: boolean;
   isError: boolean;
-};
-
-export type QueryClientLike = {
-  cancelQueries: (args: { queryKey: readonly unknown[] }) => Promise<unknown>;
-  fetchQuery: <T>(args: {
-    queryKey: readonly unknown[];
-    queryFn: () => Promise<T>;
-  }) => Promise<T>;
-  setQueryData: (queryKey: readonly unknown[], value: unknown) => void;
 };
 
 export type DraftSaveStatus = 'idle' | 'saving' | 'saved';
@@ -42,14 +37,18 @@ export type DraftAttemptRefs = {
 export type UseCanvasDraftLifecycleArgs = {
   draftRepository: CanvasDraftRepository;
   graphDraftQuery: GraphDraftQueryState;
-  queryClient: QueryClientLike;
+  draftQueryCache: CanvasDraftQueryCache;
   workspaceLayoutKey: string;
   draftSession: CanvasDraftSession;
   setDraftSession: Dispatch<SetStateAction<CanvasDraftSession>>;
   canonicalSnapshot: CanvasDraftLifecycleCanonicalSnapshot;
   graphNodes: CanvasDraftLifecycleGraphNode[];
+  canonicalNodes: CanonicalNode[];
+  canonicalEdges: CanonicalEdge[];
   graphSnapshotQuery: GraphSnapshotQueryState;
   canPersistGraphDraft: boolean;
+  workspaceScope: WorkspaceScope;
+  previewProvenanceConfig: Pick<WorkspaceBootstrapConfig, 'gitBranch' | 'gitSha' | 'gitRepo'>;
   setCanvasNodePositions: (
     workspaceLayoutKey: string,
     positions: Record<string, { x: number; y: number }>

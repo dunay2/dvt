@@ -40,6 +40,7 @@ describe('dvtContributions connection rules', () => {
 
     expect(transformToTransform).toEqual({
       allowed: false,
+      reasonCode: 'plugin_rule_blocked',
       reason: 'Connection not permitted by DVT authoring rules',
     });
   });

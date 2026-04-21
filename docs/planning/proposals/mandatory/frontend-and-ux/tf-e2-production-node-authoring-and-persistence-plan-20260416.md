@@ -2,7 +2,7 @@
 title: TF-E2 Production Node Authoring And Persistence Plan 2026-04-16
 status: Draft
 owner: Product / Frontend / Architecture / API
-last_reviewed: 2026-04-16
+last_reviewed: 2026-04-20
 planning_type: proposal
 lane: E
 task_id: TF-E2
@@ -21,6 +21,10 @@ editable properties, deterministic reload, and a proof-oriented test matrix.
 
 The decision is to keep this work in `Lane E`. A new lane is not required. A
 new planning slice is required.
+
+The active implementation posture is also explicit after the 2026-04-20 sync:
+no retrocompatibility path will be preserved on the active Canvas authoring
+route once the typed draft-authoring port is adopted.
 
 ## Related execution companion
 
@@ -69,12 +73,22 @@ The target for this slice is not visual polish. It is operational integrity.
 - layout persistence for viewport and node positions already exists
 - selection-driven Inspector rendering already exists
 - negative-path tests already exist around graph handlers and execution actions
+- the composition root now exposes `workspaceGraphDraftAuthoringPort` beside
+  `workspaceService`
+- the active Canvas draft read and write path now routes through
+  `IWorkspaceGraphDraftAuthoringPort` via `canvasDraftRepository`
+- save attempts now build governed `DesignGraphDraft` payloads from scoped
+  canonical nodes, canonical edges, and preview provenance Git metadata before
+  hitting the protected draft-authoring boundary
 
 ### What is still not product-grade
 
-- `useCanvasGraphModel.ts` currently merges workspace graph data with
-  `localStorage`-backed draft nodes and edges; that is a fallback draft model,
-  not canonical persistence
+- the projected `WorkspaceGraphDraft` DTO still survives as an internal
+  projection and mock or test seam, so route presentation has not yet switched
+  to the full typed capability and format-outcome model
+- explicit writable, read-only, and forbidden posture from boundary outcomes
+  still needs full route-level closure across toolbar affordances, graph
+  mutation gating, and Inspector editing posture
 - node CRUD, edge CRUD, and property editing are not yet closed around one
   canonical save and reload contract
 - property editing is weaker than read-heavy inspection
@@ -90,6 +104,12 @@ This slice must not ship with fake persistence. If the current backend or
 workspace boundary cannot own canonical graph-draft persistence, the follow-up
 must be planned explicitly in the relevant backend lane instead of letting the
 frontend pretend that `localStorage` is the product source of truth.
+
+For the active Canvas authoring path, this proposal also rejects a long-lived
+compatibility phase. `TF-E2-A` must hard-cut from
+`IWorkspacePort.getGraphDraft/saveGraphDraft` to
+`IWorkspaceGraphDraftAuthoringPort` once the route and composition seams are
+ready.
 
 ## Blocking dependency chain
 
@@ -141,6 +161,8 @@ Rules:
 - Inspector edits go through the same authoring seam as graph mutations
 - reload always rehydrates from the canonical draft store first
 - preview and run consume the same canonical authoring truth
+- the active authoring route does not preserve a second compatibility seam over
+  the projected `WorkspaceGraphDraft` DTO
 
 ## Functional requirements
 
@@ -170,8 +192,9 @@ The slice is complete only when all of the following are true:
     governed backend boundary rather than inferred from frontend logs
 15. the slice emits or preserves enough telemetry and correlation data to be
     operable under live failure conditions rather than only testable in local UX
-16. hard reload remains correct across governed persisted draft schema versions,
-    not only for the current writer version
+16. hard reload either rehydrates the active governed draft schema or fails
+    closed with an explicit typed recovery outcome for non-active or
+    unsupported schema versions
 17. unsupported or corrupt persisted drafts fail closed with explicit recovery
     UX rather than silently resetting to empty or browser-local state
 
@@ -194,6 +217,9 @@ Output:
 - adoption of the shared workspace graph-draft contract defined by `TF-A2`
 - Canvas reads and writes flow through the protected API/store path landed by
   `TF-C4`
+- the active Canvas authoring route cuts over to
+  `IWorkspaceGraphDraftAuthoringPort` through the composition root instead of
+  continuing over `IWorkspacePort.getGraphDraft/saveGraphDraft`
 - Canvas save behavior uses compare-and-swap and the explicit reject-on-stale
   merge posture defined by the shared contract
 - Canvas consumes explicit capability outcomes for writable, read-only, and
@@ -202,6 +228,8 @@ Output:
   instead of assuming one timeless serialization shape
 - no route-local DTO, hook-local save envelope, or `localStorage` authority
   remains on the active product path
+- the projected `WorkspaceGraphDraft` DTO is no longer an active-authoring
+  compatibility surface in Canvas
 - explicit fail-closed behavior when canonical persistence is unavailable
 
 ### TF-E2-B. Node lifecycle persistence
@@ -212,8 +240,8 @@ canonical graph-draft boundary.
 Output:
 
 - node mutations persist through the canonical authoring seam
-- hard reload rehydrates nodes from canonical truth, including governed
-  compatible legacy draft versions
+- hard reload rehydrates nodes from canonical truth for the active governed
+  schema and fails closed for non-active or unsupported schemas
 - route state distinguishes pending save, save failure, and saved states
 - stale revision conflicts trigger explicit reload-or-reapply UX instead of
   silent overwrite
@@ -242,11 +270,14 @@ surface for governed node properties.
 
 Output:
 
-- editable property forms for governed node types
+- the route-owned Inspector is the writable property-editing surface for
+  governed node types in this slice
 - validation, dirty-state handling, save, cancel, and reload behavior
 - saved properties round-trip into graph rehydration and preview inputs
 - Inspector reflects read-only capability explicitly and does not present fake
   save affordances when write permission is absent
+- plugin-owned or auxiliary inspector panels remain read-only until a governed
+  follow-up proposal expands their write ownership
 
 ### TF-E2-E. Proof-oriented test matrix
 
@@ -258,6 +289,8 @@ Output:
 - integration tests for controller plus Inspector edit flows
 - Cypress coverage for create, connect, edit, reload, and delete behavior
 - negative-path coverage for save failure, invalid connection, and stale reload
+- execution-action test-file splitting on `main` is baseline; the remaining
+  proof work is shared test-support and application-service/command coverage
 
 ## Operability baseline
 
@@ -273,8 +306,9 @@ Minimum operability requirements:
 - Canvas preserves and surfaces enough caller-visible correlation context for
   support and operator workflows when save, conflict, or authorization paths
   occur
-- supported legacy draft versions can be diagnosed through explicit format
-  metadata and migration state rather than opaque reload behavior
+- non-active or unsupported draft schema versions can be diagnosed through
+  explicit format metadata and typed recovery state rather than opaque reload
+  behavior
 - one operator-facing recovery runbook covers draft save failures, conflict
   storms, read-only posture, authorization denials, degraded persistence
   diagnosis, and corrupt or unsupported draft recovery
@@ -302,7 +336,7 @@ operator documentation.
 - idempotent retry key handling
 - capability parsing for writable, read-only, and forbidden caller posture
 - correlation envelope parsing for audit and observability join keys
-- compatible legacy draft migration parsing and normalization
+- typed unsupported-schema and recovery outcome parsing
 - typed corrupt or unsupported draft outcome parsing
 
 ### Integration
@@ -318,8 +352,8 @@ operator documentation.
   without hidden mutation paths
 - save failure and conflict flows preserve caller-visible correlation data
   instead of collapsing into opaque generic errors
-- compatible legacy persisted drafts rehydrate through the governed migration
-  path without caller-visible data loss
+- non-active or unsupported persisted drafts surface typed recovery posture
+  without caller-visible fake success
 - corrupt or unsupported persisted drafts surface explicit degraded recovery
   state instead of blank-canvas fallback
 
@@ -340,10 +374,10 @@ operator documentation.
     or degraded route state rather than silent fallback
 11. operator follows the runbook for save failure or conflict and can correlate
     the route failure to backend telemetry and audit evidence without guessing
-12. compatible legacy draft version -> reload -> graph rehydrates through the
-    governed migration path
-13. corrupt or unsupported persisted draft -> explicit degraded recovery state,
-    no silent empty canvas, no browser-local substitution
+12. non-active or unsupported persisted draft schema -> explicit degraded or
+    recovery state, no silent empty canvas, no browser-local substitution
+13. corrupt persisted draft -> explicit degraded recovery state, no silent
+    empty canvas, no browser-local substitution
 
 ## Acceptance criteria
 
@@ -362,9 +396,9 @@ operator documentation.
    read-only and authorization paths
 8. metrics, traces, audit correlation, and one recovery runbook exist for the
    protected authoring path so the slice is operable, not only testable
-9. persisted draft schema evolution is governed through explicit `schemaVersion`
-   ownership, compatibility handling, migration/backfill posture, and typed
-   corrupt or unsupported draft behavior
+9. persisted draft schema evolution is governed through explicit
+   `schemaVersion` ownership and typed fail-closed behavior for non-active,
+   corrupt, or unsupported drafts
 10. no product behavior depends on `localStorage` alone pretending to be
     canonical persistence
 
@@ -382,8 +416,8 @@ This slice is not done if any of the following remain true:
 7. operators cannot correlate save or conflict failures to backend metrics,
    traces, and audit evidence using governed identifiers
 8. no runbook exists for degraded persistence or conflict diagnosis
-9. reload only works for the current persisted draft format and breaks across
-   future governed releases
+9. reload only works for the current persisted draft format and lacks typed
+   fail-closed behavior for non-active or unsupported schemas
 10. corrupt or unsupported persisted drafts silently reset to empty or fall back
     to browser-local state
 

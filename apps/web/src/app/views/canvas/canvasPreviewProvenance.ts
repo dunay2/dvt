@@ -6,6 +6,11 @@ import type { IWorkspacePort } from '../../ports/workspace';
 import type { WorkspaceBootstrapConfig } from '../../services/config/workspaceConfig';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 
+import {
+  hasExplicitGitRevision,
+  normalizeGitRef,
+  readPreviewSqlArtifact,
+} from './canvasGitProvenance';
 import { canvasViewCopy } from './copy';
 import { buildPreviewDesignGraphArtifactContent } from './previewGraphSource';
 
@@ -76,31 +81,6 @@ function resolveTransformNodeWithPath(
   return transformNode?.path ? { ...transformNode, path: transformNode.path } : null;
 }
 
-async function readPreviewSqlArtifact(args: {
-  workspaceService: IWorkspacePort;
-  transformNode: TransformNodeWithPath;
-  gitRepo: string;
-  gitRef: string;
-  gitSha: string;
-}): Promise<{
-  sqlArtifact: PlanPreviewProvenance['sqlArtifact'];
-  sqlText: string;
-}> {
-  const sqlArtifactFile = await args.workspaceService.getFileContent(args.transformNode.path);
-  const sqlText = sqlArtifactFile.content;
-
-  return {
-    sqlText,
-    sqlArtifact: {
-      repo: args.gitRepo,
-      path: args.transformNode.path,
-      ref: args.gitRef,
-      commitSha: args.gitSha,
-      contentSha256: sha256HexUtf8(sqlText),
-    },
-  };
-}
-
 async function savePreviewGraphArtifact(args: {
   workspaceService: IWorkspacePort;
   workspaceScope: WorkspaceScope;
@@ -167,7 +147,7 @@ export async function resolvePreviewProvenance({
   try {
     const { sqlArtifact, sqlText } = await readPreviewSqlArtifact({
       workspaceService,
-      transformNode,
+      path: transformNode.path,
       gitRepo: previewWorkspaceConfig.gitRepo,
       gitRef: previewWorkspaceConfig.gitRef,
       gitSha: previewWorkspaceConfig.gitSha,
@@ -202,26 +182,6 @@ export async function resolvePreviewProvenance({
         : canvasViewCopy.previewProvenanceWorkspaceFilesUnavailableMessage
     );
   }
-}
-
-function normalizeGitRef(branch: string): string {
-  return branch.startsWith('refs/') ? branch : `refs/heads/${branch}`;
-}
-
-function hasExplicitGitRevision({
-  gitBranch,
-  gitSha,
-}: Pick<WorkspaceBootstrapConfig, 'gitBranch' | 'gitSha'>): boolean {
-  const normalizedBranch = gitBranch.trim();
-  const normalizedSha = gitSha.trim();
-
-  return (
-    normalizedBranch.length > 0 &&
-    normalizedBranch !== 'detached' &&
-    normalizedBranch !== 'unknown' &&
-    normalizedSha.length > 0 &&
-    normalizedSha !== 'unknown'
-  );
 }
 
 function resolveScopedTransformNode(

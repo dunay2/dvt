@@ -1,5 +1,5 @@
-import type { Logger } from 'pino';
 import type { RunStateCommandCircuitSnapshot } from '@dvt/adapter-temporal';
+import type { Logger } from 'pino';
 
 export type TemporalWorkerRuntimeState = 'starting' | 'running' | 'stopping' | 'failing' | 'stopped';
 

@@ -14,12 +14,12 @@ projection-only and product truth stays explicit.
 
 ## Runtime Seams
 
-| Seam                           | Responsibility                                                                |
-| ------------------------------ | ----------------------------------------------------------------------------- |
-| `CanvasDraftSession`           | Authoritative route-local draft aggregate for lifecycle and save transitions. |
-| `CanvasDraftScope`             | Project visible working set and projection-gap posture.                       |
-| `CanvasDraftPresentationState` | Route read model for startup/recovery/workbench posture.                      |
-| `useCanvasController`          | Application composition seam; orchestrates queries, commands, and handoff.    |
+| Seam                           | Responsibility                                                             |
+| ------------------------------ | -------------------------------------------------------------------------- |
+| `CanvasDraftSession`           | Authoritative route-local draft aggregate component API.                   |
+| `CanvasDraftScope`             | Project visible working set and projection-gap posture.                    |
+| `CanvasDraftPresentationState` | Route read model for startup/recovery/workbench posture.                   |
+| `useCanvasController`          | Application composition seam; orchestrates queries, commands, and handoff. |
 
 ## Domain Model
 
@@ -30,10 +30,12 @@ classDiagram
     +baseline
     +draftRevision
     +workingSet
-    +markSaving()
-    +applySaveSuccess()
-    +applyConflict()
-    +markRemoteDraftMissing()
+    +baseline.serialize()
+    +machine.markSaving()
+    +machine.applySaveSuccess()
+    +machine.applyConflict()
+    +machine.markRemoteDraftMissing()
+    +workingSet.reconcileSnapshot()
   }
 
   class CanvasDraftScope {

@@ -2,7 +2,7 @@ lane_id: E
 title: Frontend And UI
 owner: Product / UX / Frontend
 status: Active
-last_reviewed: '2026-04-16'
+last_reviewed: '2026-04-20'
 goal: >-
   Evolve apps/web from a mixed mock prototype into an operational UI whose contracts, state
   boundaries, diagrams, and validation match the real backend surface.
@@ -1955,6 +1955,7 @@ tasks:
       - docs/planning/closeouts/20260417-tf-e2-route-bootstrap-srp-refactor-closeout.md
       - docs/planning/closeouts/20260417-graph-architecture-doc-pack-split-closeout.md
       - docs/planning/closeouts/20260418-tf-e2-canvas-interaction-command-seam-closeout.md
+      - docs/planning/closeouts/20260420-tf-e2-canvas-typed-authoring-port-hard-cut-closeout.md
       - docs/runbooks/index.md
     status_reason: >-
       The productization slice remains active, but the current worktree has materially advanced the
@@ -1986,8 +1987,20 @@ tasks:
       for remove-node, visible-edge replacement, explicit-node admission, and source-import
       queueing, deleted the dead alternate admission hook, and pushed `draftSession` through the
       mutation seam so node and edge adapters no longer reconstruct aggregate state through
-      compatibility callbacks.
-    last_verified: '2026-04-19'
+      compatibility callbacks. After syncing with `origin/main` on 2026-04-20, the planning baseline
+      is now sharper: the execution-actions test split and lane backlog alignment are already
+      mainline baseline, and the current branch now lands the typed authoring-port hard cut.
+      `AppServices` exposes `workspaceGraphDraftAuthoringPort`, Canvas draft reads and saves route
+      through that typed seam, governed `DesignGraphDraft` payloads are built from scoped canonical
+      nodes plus preview-provenance Git context, and controller regression coverage now proves
+      conflict, missing-remote, reload, and layout-only no-save behavior on the new path. The route
+      now also renders explicit `read_only`, `forbidden`, and typed `format_error` postures from
+      boundary outcomes, while the controller and route adapters are split through dedicated
+      read-model, view-model, and presentation seams with architecture tests guarding those
+      boundaries. The remaining TF-E2 work is route-owned Inspector editing, execution handoff
+      proof, closure of the still-lossy protected-draft read projection, and the broader operability
+      and end-to-end matrix.
+    last_verified: '2026-04-20'
   - task_id: TF-E2-A
     parent_task: TF-E2
     priority: P0
@@ -1997,35 +2010,46 @@ tasks:
       writes stop depending on browser-local or route-local persistence semantics.
     dependency: TF-A2, TF-C4
     target: >-
-      Canvas consumes the governed workspace graph-draft read/write boundary through the workspace
-      port, removes UI-local DTO or storage authority from the active product path, fails closed
-      when canonical persistence is unavailable, adopts the shared compare-and-swap plus
-      reject-on-stale semantics without frontend-local overwrite rules, renders explicit writable
-      versus read-only capability states from boundary outcomes, and consumes governed format
-      metadata plus typed corrupt or unsupported draft outcomes.
+      Canvas consumes the governed workspace graph-draft read/write boundary through
+      `IWorkspaceGraphDraftAuthoringPort`, wired by the composition root, removes projected DTO or
+      storage authority from the active product path, fails closed when canonical persistence is
+      unavailable, adopts the shared compare-and-swap plus reject-on-stale semantics without
+      frontend-local overwrite rules, renders explicit writable versus read-only capability states
+      from boundary outcomes, and consumes governed format metadata plus typed corrupt or
+      unsupported draft outcomes.
     complexity: S
     effort_points: 3
-    progress_pct: 60
+    progress_pct: 90
     evidence_refs:
       - docs/planning/closeouts/20260418-tf-e2-canvas-draft-repository-seam-closeout.md
       - docs/planning/closeouts/20260418-tf-e2-canvas-srp-seams-closeout.md
+      - docs/planning/closeouts/20260420-tf-e2-canvas-typed-authoring-port-hard-cut-closeout.md
       - docs/architecture/components/web/graph/canvas-controller-current-to-target-architecture.md
+      - apps/web/src/app/services/AppServicesContext.tsx
+      - apps/web/src/app/services/composition/appServices.ts
+      - apps/web/src/app/views/canvas/canvasDraftAuthoring.ts
+      - apps/web/src/app/views/canvas/canvasDraftRepository.ts
       - apps/web/src/app/views/canvas/canvasBackendPosture.ts
       - apps/web/src/app/views/canvas/canvasAuthoringState.ts
       - apps/web/src/app/views/canvas/useCanvasDraftLifecycle.ts
     status_reason: >-
-      Execution has started. The first Fowler/SRP cut is now in place: Canvas draft reads, saves,
-      and reload-time snapshot access no longer live directly in `useCanvasController` and instead
-      flow through `canvasDraftRepository` over `IWorkspacePort`. A second seam is now explicit:
-      `useCanvasDraftLifecycle` now composes dedicated bootstrap/reconcile and autosave/reload hooks
-      over controller-owned query/state inputs, so the controller no longer carries the save/reload
-      effect choreography inline. The controller itself has also narrowed: backend
-      readiness/blocking posture now lives in `canvasBackendPosture`, and visible scope, recovery
-      flags, toolbar state, and mutation gating now live in `canvasAuthoringState` instead of being
-      assembled inline. The wider `TF-E2-A` slice still remains open for the shared graph-draft
-      contract adoption posture, especially explicit capability/read-only semantics and the
-      remaining boundary alignment with `TF-A2` and `TF-C4`.
-    last_verified: '2026-04-18'
+      Execution has materially advanced. The earlier repository and lifecycle seams remain in place,
+      and the hard cut is now implemented: `AppServices` composes
+      `workspaceGraphDraftAuthoringPort`, `useCanvasController` threads it through the authoring
+      runtime, and `canvasDraftRepository` now reads and saves through
+      `IWorkspaceGraphDraftAuthoringPort` instead of `IWorkspacePort.getGraphDraft/saveGraphDraft`.
+      Save requests are built as governed `DesignGraphDraft` payloads in `canvasDraftAuthoring.ts`,
+      using scoped canonical nodes, canonical edges, and preview provenance Git metadata before
+      hitting the protected boundary. The projected `WorkspaceGraphDraft` DTO now survives only as a
+      local projection read model for current route state and tests, not as active-authoring
+      authority, and that read side is now localized in `canvasDraftReadModel.ts` instead of
+      bleeding through controller or route code. The Canvas route now renders explicit `read_only`,
+      `forbidden`, and typed `format_error` postures from boundary outcomes, while
+      `useCanvasController` and `Canvas.tsx` have been reduced to composition and presentation
+      facades with dedicated view-model helpers plus architecture tests. The remaining TF-E2-A
+      closure is the still-lossy protected-draft read projection, any wider alignment with `TF-A2`
+      and `TF-C4`, and proof-oriented follow-up under `TF-E2-E`.
+    last_verified: '2026-04-20'
   - task_id: TF-E2-B
     parent_task: TF-E2
     priority: P0
@@ -2093,19 +2117,21 @@ tasks:
     dependency: TF-E2-A
     target: >-
       Governed node properties can be edited, validated, saved, canceled, and rehydrated through the
-      Inspector, the saved values feed the same canonical authoring truth consumed by preview and
-      run handoff, and selection or inspect semantics that stop being pure adapter fallout route
-      through an explicit command helper beside `canvasInteractionCommands.ts`.
+      route-owned Inspector, the saved values feed the same canonical authoring truth consumed by
+      preview and run handoff, selection or inspect semantics that stop being pure adapter fallout
+      route through an explicit command helper beside `canvasInteractionCommands.ts`, and
+      plugin-owned inspector panels remain read-only in this slice.
     complexity: S
     effort_points: 3
     progress_pct: 0
     evidence_refs: []
     status_reason: >-
-      Planned slice; execution has not started. The active architecture still tracks
-      `toggleNodeSelection` and `inspectNode` as adapter-local drift, so this slice must absorb that
-      follow-up when the semantics become shared route behavior rather than pure React Flow
-      translation.
-    last_verified: '2026-04-19'
+      Planned slice; execution has not started. The synced plan now fixes scope more tightly:
+      `toggleNodeSelection` and `inspectNode` remain adapter-local drift to absorb once the
+      semantics become shared route behavior, but the writable surface for TF-E2 is the route-owned
+      Inspector only. Plugin-owned or auxiliary inspector panels are explicitly non-authoring in
+      this slice.
+    last_verified: '2026-04-20'
   - task_id: TF-E2-E
     parent_task: TF-E2
     priority: P0
@@ -2125,13 +2151,18 @@ tasks:
     complexity: M
     effort_points: 5
     progress_pct: 0
-    evidence_refs: []
+    evidence_refs:
+      - apps/web/src/app/views/canvas/useCanvasExecutionActions.runStart.test.tsx
+      - apps/web/src/app/views/canvas/useCanvasExecutionActions.planPreview.provenance.test.tsx
+      - apps/web/src/app/views/canvas/useCanvasExecutionActions.planPreview.freshness.test.tsx
+      - apps/web/src/app/views/canvas/useCanvasExecutionActions.test.support.tsx
     status_reason: >-
-      Planned slice; execution has not started. The latest execution-actions test split improves
-      local readability, but the remaining remediation still needs one canonical Canvas test kit,
-      application-service tests for plan and run orchestration seams, and a governed placement for
-      test-support files so proof and generated inventory stay aligned.
-    last_verified: '2026-04-19'
+      Planned slice; execution has not started. After the 2026-04-20 sync review, the
+      execution-actions test split is treated as mainline baseline rather than remaining work. The
+      remediation still needed is one canonical Canvas test kit, application-service and command
+      tests for plan and run orchestration seams, and a governed placement for test-support files so
+      proof and generated inventory stay aligned.
+    last_verified: '2026-04-20'
 dependency_notes:
   - >-
     `MVP-E1` and `F-07` now define the frontend runtime contract baseline. `F-07` executes in

@@ -6,6 +6,7 @@ import type { IRunsPort } from '../ports/runs';
 import type { SessionContextPort } from '../ports/sessionContext';
 import type { ShellFeedbackPort } from '../ports/shellFeedback';
 import type { IWorkspacePort } from '../ports/workspace';
+import type { IWorkspaceGraphDraftAuthoringPort } from '../ports/workspaceGraphDraftAuthoring';
 import type { AppServices, AppServicesOverrides } from './composition/appServices';
 import { buildAppServices } from './composition/appServices';
 
@@ -38,6 +39,7 @@ export function AppServicesProvider({
       overrides?.plansService,
       overrides?.runsService,
       overrides?.workspaceService,
+      overrides?.workspaceGraphDraftAuthoringPort,
       overrides?.capabilitiesPort,
       overrides?.sessionContext,
       overrides?.shellFeedback,
@@ -61,6 +63,10 @@ export function useAppDataSourceMode(): AppServices['dataSourceMode'] {
 
 export function useWorkspaceService(): IWorkspacePort {
   return useRequiredAppServicesContext().workspaceService;
+}
+
+export function useWorkspaceGraphDraftAuthoringPort(): IWorkspaceGraphDraftAuthoringPort {
+  return useRequiredAppServicesContext().workspaceGraphDraftAuthoringPort;
 }
 
 export function useRunsService(): IRunsPort {

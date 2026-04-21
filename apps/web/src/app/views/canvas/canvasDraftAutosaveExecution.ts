@@ -1,16 +1,11 @@
 import type { Dispatch, SetStateAction } from 'react';
 
-import type {
-  SaveWorkspaceGraphDraftResult,
-  WorkspaceGraphDraft,
-} from '../../ports/workspace';
+import type { SaveWorkspaceGraphDraftResult } from '../../ports/workspace';
+import type { CanvasDraftQueryCache } from './canvasDraftQueryCache';
 import type { CanvasDraftRepository } from './canvasDraftRepository';
+import type { CanvasDraftAuthoringPayload } from './canvasDraftAuthoring';
 import type { CanvasDraftSession } from './canvasDraftSession';
-import type {
-  DraftAttemptRefs,
-  DraftSaveStatus,
-  QueryClientLike,
-} from './canvasDraftLifecycle.types';
+import type { DraftAttemptRefs, DraftSaveStatus } from './canvasDraftLifecycle.types';
 import {
   applyConflictResolution,
   applySavedDraftResolution,
@@ -27,8 +22,7 @@ type SetDraftSaveStatus = Dispatch<SetStateAction<DraftSaveStatus>>;
 type SaveResolutionContext = {
   refs: DraftAttemptRefs;
   saveAttempt: DraftSaveAttempt;
-  queryClient: QueryClientLike;
-  workspaceLayoutKey: string;
+  draftQueryCache: CanvasDraftQueryCache;
   setDraftSession: SetDraftSession;
   setDraftSaveStatus: SetDraftSaveStatus;
   currentDraftPayloadSignature: string;
@@ -44,13 +38,12 @@ type SaveFailureContext = {
 export type PerformCanvasDraftAutosaveArgs = {
   refs: DraftAttemptRefs;
   draftRepository: CanvasDraftRepository;
-  currentDraftPayload: WorkspaceGraphDraft;
+  currentDraftPayload: CanvasDraftAuthoringPayload;
   draftSession: CanvasDraftSession;
   createDraftIdempotencyKey: () => string;
   setDraftSession: SetDraftSession;
   setDraftSaveStatus: SetDraftSaveStatus;
-  queryClient: QueryClientLike;
-  workspaceLayoutKey: string;
+  draftQueryCache: CanvasDraftQueryCache;
   currentDraftPayloadSignature: string;
 };
 
@@ -59,8 +52,7 @@ function resolveDraftSaveSuccess(
   {
     refs,
     saveAttempt,
-    queryClient,
-    workspaceLayoutKey,
+    draftQueryCache,
     setDraftSession,
     setDraftSaveStatus,
     currentDraftPayloadSignature,
@@ -73,8 +65,7 @@ function resolveDraftSaveSuccess(
   refs.activeSaveAttemptRef.current = null;
   if (result.outcome === 'conflict') {
     applyConflictResolution({
-      queryClient,
-      workspaceLayoutKey,
+      draftQueryCache,
       setDraftSession,
       setDraftSaveStatus: (status) => setDraftSaveStatus(status),
       current: result.current,
@@ -83,8 +74,7 @@ function resolveDraftSaveSuccess(
   }
 
   applySavedDraftResolution({
-    queryClient,
-    workspaceLayoutKey,
+    draftQueryCache,
     currentDraftPayloadSignature,
     refs,
     setDraftSession,
@@ -115,8 +105,7 @@ export function performCanvasDraftAutosave({
   createDraftIdempotencyKey,
   setDraftSession,
   setDraftSaveStatus,
-  queryClient,
-  workspaceLayoutKey,
+  draftQueryCache,
   currentDraftPayloadSignature,
 }: PerformCanvasDraftAutosaveArgs) {
   const saveAttempt = startNextSaveAttempt(refs);
@@ -133,8 +122,7 @@ export function performCanvasDraftAutosave({
       resolveDraftSaveSuccess(result, {
         refs,
         saveAttempt,
-        queryClient,
-        workspaceLayoutKey,
+        draftQueryCache,
         setDraftSession,
         setDraftSaveStatus,
         currentDraftPayloadSignature,

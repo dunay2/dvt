@@ -1,6 +1,6 @@
 import { useEffect, type Dispatch, type SetStateAction } from 'react';
 
-import { reconcileSnapshot, type CanvasDraftSession } from './canvasDraftSession';
+import { canvasDraftSession, type CanvasDraftSession } from './canvasDraftSession';
 import type { GraphSnapshotQueryState } from './canvasDraftLifecycle.types';
 import type { CanvasDraftLifecycleCanonicalSnapshot } from './canvasDraftLifecycleSnapshot';
 
@@ -25,7 +25,9 @@ export function useCanvasDraftCanonicalReconcile({
       return;
     }
 
-    setDraftSession((currentSession) => reconcileSnapshot(currentSession, canonicalSnapshot));
+    setDraftSession((currentSession) =>
+      canvasDraftSession.workingSet.reconcileSnapshot(currentSession, canonicalSnapshot)
+    );
   }, [
     canonicalSnapshot,
     draftSession.syncState,

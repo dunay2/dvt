@@ -1,19 +1,23 @@
 import { useCallback, type Dispatch, type SetStateAction } from 'react';
 
 import type { WorkspaceGraphDraftRecord } from '../../ports/workspace';
-import { queryKeys } from '../../queries/queryKeys';
+import type { CanvasDraftQueryCache } from './canvasDraftQueryCache';
+import type { CanvasDraftReadModel } from './canvasDraftReadModel';
 import {
-  markRemoteDraftMissing,
-  reconcileSnapshot,
-  reloadFromRemote,
-  serializeWorkspaceGraphDraft,
+  canvasDraftSession,
   type CanvasDraftSession,
 } from './canvasDraftSession';
-import type { DraftSaveStatus, QueryClientLike } from './canvasDraftLifecycle.types';
+import type { DraftSaveStatus } from './canvasDraftLifecycle.types';
 import type { CanvasDraftLifecycleCanonicalSnapshot } from './canvasDraftLifecycleSnapshot';
 
+function hasPersistedNodePositions(
+  nodePositions: Record<string, { x: number; y: number }>
+): boolean {
+  return Object.keys(nodePositions).length > 0;
+}
+
 type UseCanvasDraftReloadHydrationArgs = {
-  queryClient: QueryClientLike;
+  draftQueryCache: CanvasDraftQueryCache;
   workspaceLayoutKey: string;
   setDraftSession: Dispatch<SetStateAction<CanvasDraftSession>>;
   setCanvasNodePositions: (
@@ -25,7 +29,7 @@ type UseCanvasDraftReloadHydrationArgs = {
 };
 
 export function useCanvasDraftReloadHydration({
-  queryClient,
+  draftQueryCache,
   workspaceLayoutKey,
   setDraftSession,
   setCanvasNodePositions,
@@ -34,30 +38,35 @@ export function useCanvasDraftReloadHydration({
 }: UseCanvasDraftReloadHydrationArgs) {
   return useCallback(
     (
-      remoteDraft: WorkspaceGraphDraftRecord | null,
+      remoteDraftState: CanvasDraftReadModel,
       reloadedCanonicalSnapshot: CanvasDraftLifecycleCanonicalSnapshot
     ) => {
-      queryClient.setQueryData(
-        queryKeys.workspace.graphDraft(workspaceLayoutKey),
-        remoteDraft
-      );
+      draftQueryCache.replaceRemoteDraftState(remoteDraftState);
       setDraftSaveStatus('idle');
+      const remoteDraft = remoteDraftState.record;
 
       if (remoteDraft == null) {
         lastSavedSignatureRef.current = null;
-        setDraftSession((currentSession) => markRemoteDraftMissing(currentSession));
+        setDraftSession((currentSession) =>
+          canvasDraftSession.machine.markRemoteDraftMissing(currentSession)
+        );
         return;
       }
 
-      setCanvasNodePositions(workspaceLayoutKey, remoteDraft.draft.nodePositions);
-      lastSavedSignatureRef.current = serializeWorkspaceGraphDraft(remoteDraft.draft);
+      if (hasPersistedNodePositions(remoteDraft.draft.nodePositions)) {
+        setCanvasNodePositions(workspaceLayoutKey, remoteDraft.draft.nodePositions);
+      }
+      lastSavedSignatureRef.current = canvasDraftSession.baseline.serialize(remoteDraft.draft);
       setDraftSession((currentSession) =>
-        reconcileSnapshot(reloadFromRemote(currentSession, remoteDraft), reloadedCanonicalSnapshot)
+        canvasDraftSession.workingSet.reconcileSnapshot(
+          canvasDraftSession.machine.reloadFromRemote(currentSession, remoteDraft),
+          reloadedCanonicalSnapshot
+        )
       );
     },
     [
+      draftQueryCache,
       lastSavedSignatureRef,
-      queryClient,
       setCanvasNodePositions,
       setDraftSaveStatus,
       setDraftSession,

@@ -1,9 +1,12 @@
-import type { WorkspaceGraphDraftRecord as ProtectedWorkspaceGraphDraftRecord } from '@dvt/contracts';
+import type {
+  DesignGraphDraft,
+  WorkspaceGraphDraftRecord as ProtectedWorkspaceGraphDraftRecord,
+} from '@dvt/contracts';
 
 import type { WorkspaceGraphDraft, WorkspaceGraphDraftRecord } from '../../ports/workspace';
 
-function projectProtectedWorkspaceGraphDraft(
-  draft: ProtectedWorkspaceGraphDraftRecord['draft']
+export function projectDesignGraphDraft(
+  draft: Pick<DesignGraphDraft, 'nodes' | 'edges'>
 ): WorkspaceGraphDraft {
   return {
     nodeIds: draft.nodes.map((node) => node.id),
@@ -22,6 +25,6 @@ export function projectProtectedWorkspaceGraphDraftRecord(
   return {
     revision: record.revision,
     savedAt: record.updatedAt,
-    draft: projectProtectedWorkspaceGraphDraft(record.draft),
+    draft: projectDesignGraphDraft(record.draft),
   };
 }

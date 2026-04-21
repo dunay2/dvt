@@ -1,0 +1,27 @@
+import type { CanvasViewCopy } from './canvasCopy.types';
+
+export const canvasViewToolbarCopyEs = {
+  dependencyAddedMessage: 'Dependencia anadida',
+  layoutAppliedMessage: 'Layout aplicado',
+  toolbarWorkflowRecoveryLabel: 'Recuperacion',
+  toolbarWorkflowReadOnlyLabel: 'Solo lectura',
+  toolbarWorkflowRunReadyLabel: 'Run listo',
+  toolbarWorkflowPlanRequiredLabel: 'Plan requerido',
+  toolbarLayoutLabel: 'Layout',
+  toolbarImpactLabel: 'Impacto',
+  toolbarColumnsLabel: 'Columnas',
+  toolbarCostLabel: 'Coste',
+  toolbarPlanLabel: 'Plan',
+  toolbarRunLabel: 'Run',
+  draftSyncedLabel: 'Draft sincronizado',
+  savingDraftLabel: 'Guardando draft',
+  draftSavedLabel: 'Draft guardado',
+  staleVersionLabel: 'Version obsoleta',
+  draftMissingLabel: 'Draft ausente',
+  projectionGapLabel: 'Hueco de proyeccion',
+  preparingCanvasRouteDetail: 'Preparando la ruta de canvas',
+  checkingBackendReadinessDetail: 'Comprobando la disponibilidad del backend para canvas',
+  loadingWorkspaceGraphDetail: 'Cargando el grafo del workspace para canvas',
+  emptyCanvasReadyDetail: 'Canvas esta listo aunque todavia no haya contenido de grafo',
+  canvasReadyDetail: 'Canvas esta listo',
+} satisfies Partial<CanvasViewCopy>;

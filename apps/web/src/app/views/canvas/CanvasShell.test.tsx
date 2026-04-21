@@ -6,8 +6,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import CanvasShell from './CanvasShell';
 import { DEFAULT_CANVAS_PALETTE_ID } from './canvasPalette';
-import type { CanvasDraftToolbarState } from './canvasDraftPresentationState';
 import { canvasViewCopy } from './copy';
+import type { CanvasDraftToolbarState } from './canvasDraftToolbarState';
 import type { CanvasShellProps } from './canvasShell.types';
 
 const shellState = vi.hoisted(() => ({

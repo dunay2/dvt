@@ -1,12 +1,17 @@
 import { useEffect, type Dispatch, type SetStateAction } from 'react';
 
 import {
-  bootstrapSession,
-  serializeWorkspaceGraphDraft,
+  canvasDraftSession,
   type CanvasDraftSession,
 } from './canvasDraftSession';
 import type { DraftSaveStatus, GraphDraftQueryState } from './canvasDraftLifecycle.types';
 import type { CanvasDraftLifecycleCanonicalSnapshot } from './canvasDraftLifecycleSnapshot';
+
+function hasPersistedNodePositions(
+  nodePositions: Record<string, { x: number; y: number }>
+): boolean {
+  return Object.keys(nodePositions).length > 0;
+}
 
 type UseCanvasDraftInitialBootstrapArgs = {
   shouldWaitForBootstrapReadiness: boolean;
@@ -39,17 +44,19 @@ export function useCanvasDraftInitialBootstrap({
       return;
     }
 
-    const remoteDraft = graphDraftQuery.data ?? null;
+    const remoteDraft = graphDraftQuery.data?.record ?? null;
 
     if (remoteDraft == null) {
       lastSavedSignatureRef.current = null;
     } else {
-      setCanvasNodePositions(workspaceLayoutKey, remoteDraft.draft.nodePositions);
-      lastSavedSignatureRef.current = serializeWorkspaceGraphDraft(remoteDraft.draft);
+      if (hasPersistedNodePositions(remoteDraft.draft.nodePositions)) {
+        setCanvasNodePositions(workspaceLayoutKey, remoteDraft.draft.nodePositions);
+      }
+      lastSavedSignatureRef.current = canvasDraftSession.baseline.serialize(remoteDraft.draft);
     }
 
     setDraftSession(
-      bootstrapSession({
+      canvasDraftSession.machine.bootstrap({
         remoteDraft,
         canonicalNodeIds: canonicalSnapshot.canonicalNodeIds,
         canonicalEdges: canonicalSnapshot.canonicalEdges,
@@ -59,7 +66,7 @@ export function useCanvasDraftInitialBootstrap({
   }, [
     canonicalSnapshot,
     draftSession.syncState,
-    graphDraftQuery.data,
+    graphDraftQuery.data?.record,
     lastSavedSignatureRef,
     setCanvasNodePositions,
     setDraftSaveStatus,
