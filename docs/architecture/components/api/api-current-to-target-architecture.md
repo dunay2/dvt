@@ -212,6 +212,37 @@ consumers and generic route helpers emit `HttpResponseModel` values through
 `httpErrorTranslation.respond(...)` rather than calling `sendHttpResponse(...)`
 directly.
 
+### Plan Route Response Translation Boundary
+
+The `preview/compile/import` family now has its own sibling local component
+instead of leaning on scattered route-local mapper imports.
+
+```mermaid
+flowchart LR
+  Consumers["compile/import/preview route consumers"] --> Api["planRouteResponseTranslation.ts"]
+  PreviewContract["preview contract issue"] --> Api
+  Api --> Compile["compilePlanRouteResponseMapper.ts"]
+  Api --> Import["importPlanRouteResponseMapper.ts"]
+  Api --> Preview["previewPlanRouteResponseMapper.ts"]
+  Api --> PreviewIssue["planPreviewContractErrorMapper.ts"]
+  Compile --> Contract["httpErrorContract.ts"]
+  Import --> Contract
+  Preview --> Contract
+  PreviewIssue --> Contract
+```
+
+Use the local component guide for the public API, invariants, transitions, and
+consumers of this seam:
+
+- [Plan route response translation component](../../../../apps/api/docs/plan-route-response-translation-component.md)
+
+This keeps two adjacent but separate entrypoint components explicit:
+
+- `httpErrorTranslation.ts` for runtime protected-route parse/auth/runtime/admin
+  failures
+- `planRouteResponseTranslation.ts` for `preview/compile/import` response
+  mapping in the plan-route family
+
 ### Current Gaps
 
 | Gap                                                               | Why it matters                                                                                                                   | Governed tasks                              |

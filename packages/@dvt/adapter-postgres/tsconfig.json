@@ -16,10 +16,18 @@
       "@dvt/run-domain/*": ["../../../packages/@dvt/run-domain/dist/*"],
       "@dvt/engine": ["../../../packages/@dvt/engine/dist/index.d.ts"],
       "@dvt/engine/*": ["../../../packages/@dvt/engine/dist/*"],
+      "@dvt/delivery": ["../../../packages/@dvt/delivery/dist/index.d.ts"],
+      "@dvt/delivery/*": ["../../../packages/@dvt/delivery/dist/*"],
       "@dvt/state-store": [
         "../../../packages/@dvt/state-store/dist/index.d.ts"
       ],
-      "@dvt/state-store/*": ["../../../packages/@dvt/state-store/dist/*"]
+      "@dvt/state-store/*": ["../../../packages/@dvt/state-store/dist/*"],
+      "@dvt/traceability-service": [
+        "../../../packages/@dvt/traceability-service/dist/index.d.ts"
+      ],
+      "@dvt/traceability-service/*": [
+        "../../../packages/@dvt/traceability-service/dist/*"
+      ]
     }
   },
   "include": ["src"],
