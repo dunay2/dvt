@@ -6,8 +6,9 @@ import { AuthorizeCommandScopeService } from '../../application/services/authori
 
 import { authorizeExecutionScope } from './authorizeExecutionScope.js';
 import { extractBearerToken } from './extractBearerToken.js';
+import { mapRuntimeDomainError } from './httpDomainErrorClassifier.js';
 import { sendHttpResponse } from './httpErrorContract.js';
-import { mapRouteParseIssue, mapRuntimeDomainError } from './httpErrorMapper.js';
+import { mapRouteParseIssue } from './httpErrorMapper.js';
 import { parseListRunsRequest } from './listRunsRouteParser.js';
 
 export async function listRunsRoute(

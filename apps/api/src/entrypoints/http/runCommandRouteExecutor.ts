@@ -10,8 +10,9 @@ import { HTTP_STATUS_CODE } from '../../routes/httpStatus.js';
 
 import { authorizeExecutionScope } from './authorizeExecutionScope.js';
 import { extractBearerToken } from './extractBearerToken.js';
+import { mapRuntimeDomainError } from './httpDomainErrorClassifier.js';
 import { sendHttpResponse } from './httpErrorContract.js';
-import { mapRouteParseIssue, mapRuntimeDomainError } from './httpErrorMapper.js';
+import { mapRouteParseIssue } from './httpErrorMapper.js';
 import type { RouteParseResult } from './routeParseIssue.js';
 import type { RunCommandActionName } from './runCommandRoute.constants.js';
 

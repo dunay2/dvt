@@ -17,8 +17,9 @@ import { TenantId } from '../../domain/auth/types.js';
 
 import { authorizeAdminExecutionScope } from './authorizeAdminExecutionScope.js';
 import { extractBearerToken } from './extractBearerToken.js';
+import { mapRuntimeDomainError } from './httpDomainErrorClassifier.js';
 import { createHttpErrorResponse, HTTP_ERROR_TYPE, sendHttpResponse } from './httpErrorContract.js';
-import { mapRouteParseIssue, mapRuntimeDomainError } from './httpErrorMapper.js';
+import { mapRouteParseIssue } from './httpErrorMapper.js';
 import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
 import { badRequestIssue } from './routeParseIssue.js';
 

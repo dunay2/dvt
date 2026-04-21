@@ -1,5 +1,6 @@
 import {
   AdapterNotRegisteredError,
+  AuthorizationError,
   OutboxRateLimitExceededError,
   RecoverySourceNotTerminalError,
   RunAlreadyExistsError,
@@ -14,10 +15,10 @@ import {
   START_RUN_ENGINE_ERROR_REASON,
 } from '../../../src/application/ports/startRunContract.js';
 import {
-  mapRuntimeDomainError,
   mapStartRunEngineError,
   mapStartRunFacadeResult,
 } from '../../../src/entrypoints/http/httpErrorMapper.js';
+import { mapRuntimeDomainError } from '../../../src/entrypoints/http/httpDomainErrorClassifier.js';
 
 describe('mapStartRunFacadeResult', () => {
   it('unauthenticated -> 401', () => {
@@ -232,6 +233,19 @@ describe('mapRuntimeDomainError', () => {
           type: 'unprocessable',
           reason: 'adapter_not_configured',
           details: { adapter: 'temporal' },
+        },
+      },
+    });
+  });
+
+  it('maps authorization errors to 403 forbidden', () => {
+    const result = mapRuntimeDomainError(new AuthorizationError('TENANT_ACCESS_DENIED'));
+    expect(result).toEqual({
+      status: 403,
+      body: {
+        error: {
+          type: 'forbidden',
+          reason: 'tenant_access_denied',
         },
       },
     });
