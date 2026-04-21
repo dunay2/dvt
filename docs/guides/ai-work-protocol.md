@@ -9,7 +9,7 @@ last_reviewed: 2026-04-02
 
 This document defines the step-by-step workflow AI-assisted changes MUST follow in
 this repository. `AGENTS.md` is the behavioral mandate; this document is the
-procedure. Both must be respected â€” they are not alternatives.
+procedure. Both must be respected - they are not alternatives.
 
 ## Canonical References
 
@@ -66,10 +66,10 @@ planning surface exists.
 Declare the task mode in the Pre-Implementation Brief (Phase 2). The mode
 determines which phases are mandatory.
 
-| Mode     | When to use                                                                                              | Required phases                       |
-| -------- | -------------------------------------------------------------------------------------------------------- | ------------------------------------- |
-| **Slim** | Maintenance, refactor, or bug fix â€” no new API surface, no new artifact, no new external behavior      | 0 â†’ 1 â†’ 2 â†’ 3 â†’ 6             |
-| **Full** | New feature, new contract, new endpoint, new public behavior, or any change that produces a new artifact | 0 â†’ 1 â†’ 2 â†’ 3 â†’ 4 â†’ 5 â†’ 6 |
+| Mode     | When to use                                                                                              | Required phases                 |
+| -------- | -------------------------------------------------------------------------------------------------------- | ------------------------------- |
+| **Slim** | Maintenance, refactor, or bug fix - no new API surface, no new artifact, no new external behavior        | 0 -> 1 -> 2 -> 3 -> 6           |
+| **Full** | New feature, new contract, new endpoint, new public behavior, or any change that produces a new artifact | 0 -> 1 -> 2 -> 3 -> 4 -> 5 -> 6 |
 
 When in doubt, use Full. The cost of extra documentation is lower than a missing
 traceability chain.
@@ -78,7 +78,7 @@ traceability chain.
 
 ### Phase 0: Check Existing Material
 
-Before starting, do a mechanical check â€” the goal is to avoid duplicating work
+Before starting, do a mechanical check - the goal is to avoid duplicating work
 that already exists or reinventing what is already solved:
 
 - confirm whether the repository already contains documentation for the topic
@@ -86,10 +86,10 @@ that already exists or reinventing what is already solved:
   the decision
 - prefer extending canonical docs instead of creating parallel notes
 - check whether a maintained library already covers the need before designing a
-  custom implementation â€” search npm/GitHub for packages that fit the architectural
+  custom implementation - search npm/GitHub for packages that fit the architectural
   constraints (ESM, TypeScript, no framework lock-in)
 - look for how comparable production projects solve the same class of problem
-  (event sourcing, outbox pattern, hexagonal architecture) â€” document what was
+  (event sourcing, outbox pattern, hexagonal architecture) - document what was
   found and why it was accepted or rejected in the Think-First options
 
 Do not start implementing until this check is done. If equivalent work exists or a
@@ -102,17 +102,17 @@ it to its destination. This is the gate between understanding and acting.
 
 **Destination:**
 
-- Task belongs to an open gap â†’ write in the gap tracker's Stage Detail section.
-- No gap tracker exists â†’ write as the first section of the closeout file
+- Task belongs to an open gap -> write in the gap tracker's Stage Detail section.
+- No gap tracker exists -> write as the first section of the closeout file
   (`docs/planning/closeouts/<task-id>-closeout.md`) before any code is touched.
 
 **Required fields:**
 
 - problem summary
-- root cause â€” why the problem exists, not just what it is
-- constraints and invariants â€” cite the governing ADRs by ID here; this replaces
+- root cause - why the problem exists, not just what it is
+- constraints and invariants - cite the governing ADRs by ID here; this replaces
   Phase 3's ADR discovery step
-- options considered â€” include libraries or patterns evaluated in Phase 0
+- options considered - include libraries or patterns evaluated in Phase 0
 - selected option and rationale
 - rejected alternatives
 
@@ -126,15 +126,15 @@ After the think-first is written, document the concrete implementation plan:
 - expected outcome
 - risks and mitigations
 - out-of-scope items
-- validation plan â€” which commands will confirm the work is correct
-- test coverage plan â€” which negative paths and edge cases will be tested in
+- validation plan - which commands will confirm the work is correct
+- test coverage plan - which negative paths and edge cases will be tested in
   addition to the happy path; a brief stating only the happy path is incomplete
-- libraries evaluated â€” which libraries were assessed in Phase 0 and whether any
-  were adopted (`None evaluated â€” no custom implementation` if not applicable)
+- libraries evaluated - which libraries were assessed in Phase 0 and whether any
+  were adopted (`None evaluated - no custom implementation` if not applicable)
 
 ### Phase 3: Normative Baseline Verification
 
-Before generating or editing artifacts, verify â€” not discover â€” that the ADRs cited
+Before generating or editing artifacts, verify - not discover - that the ADRs cited
 in Phase 1 explicitly authorize the planned output. This is a confirmation step, not
 a search step. If Phase 1 was done correctly, the ADRs are already known.
 
@@ -150,7 +150,7 @@ _Slim mode: skip this phase._
 When a change produces artifacts, make both the artifacts and their relationships
 explicit.
 
-**Traceability headers** â€” generated artifacts MUST reference the approved baseline
+**Traceability headers** - generated artifacts MUST reference the approved baseline
 using:
 
 - file headers or module comments: baseline ADR id, implemented decision, affected
@@ -158,7 +158,7 @@ using:
 - commit messages when relevant
 - tests that validate ADR-backed behavior
 
-**Artifact relationship record** â€” document the artifact set explicitly:
+**Artifact relationship record** - document the artifact set explicitly:
 
 - canonical contract doc
 - generated schema or machine-readable artifact path
@@ -195,7 +195,7 @@ Before closing the work, verify all acceptance criteria:
 - [ ] run the required checks (canonical commands below)
 - [ ] links and references resolve
 - [ ] documentation reflects the shipped behavior
-- [ ] **mandatory closeout file created** â€” this is the last step and the gate that
+- [ ] **mandatory closeout file created** - this is the last step and the gate that
       makes the slice officially closed
 
 When the task is about preparing a PR or recovering from a red PR, use
@@ -213,7 +213,7 @@ pnpm --filter dvt-api build   # no test runner yet; build = type-check
 ```
 
 Run commands at the package level, not workspace-wide, unless the task crosses
-multiple packages â€” in that case run each affected package individually.
+multiple packages - in that case run each affected package individually.
 
 Sandbox execution rule for validation commands:
 
@@ -256,7 +256,7 @@ AI-assisted work MUST NOT:
 - point readers at generated `site/` output
 - leave implementation changes without matching documentation when the behavior changed
 - implement from scratch when a maintained library fits the architectural constraints
-- cover only the happy path in tests â€” negative paths are required for any new behavior
+- cover only the happy path in tests - negative paths are required for any new behavior
 - introduce `as any`, unjustified type assertions, or unexplained magic values
 
 ## Suggested Issue Skeleton
