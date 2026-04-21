@@ -4,6 +4,7 @@ import {
   collectExportedFunctionNames,
   collectNamedImports,
   collectObjectLiteralPropertyNames,
+  collectReExportedModuleSpecifiers,
   hasCallToIdentifier,
   hasCallToProperty,
   hasNamedImport,
@@ -79,6 +80,13 @@ describe('HTTP runtime error translation architecture', () => {
     expect(HTTP_ERROR_MAPPER_SOURCE.sourceText).not.toContain('mapRuntimeDomainError');
     expect(HTTP_ERROR_MAPPER_SOURCE.sourceText).not.toContain('export { HTTP_HEADER');
     expect(HTTP_ERROR_MAPPER_SOURCE.sourceText).not.toContain('type HttpResponseModel } from');
+  });
+
+  it('keeps httpErrorMapper free of compatibility-style re-export shims', () => {
+    expect(collectReExportedModuleSpecifiers(HTTP_ERROR_MAPPER_SOURCE)).toEqual([]);
+    expect(HTTP_ERROR_MAPPER_SOURCE.sourceText).not.toContain('export * from');
+    expect(HTTP_ERROR_MAPPER_SOURCE.sourceText).not.toContain('compat');
+    expect(HTTP_ERROR_MAPPER_SOURCE.sourceText).not.toContain('legacy');
   });
 
   it('exposes one public component API grouped by concern', () => {

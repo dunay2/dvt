@@ -102,6 +102,14 @@ planning_type: closeout
 - The new plan-route facade is a sibling component, not a re-expansion of the
   runtime component.
 
+## Review Follow-Up Closure
+
+- Added a semantic AST guard that asserts `httpErrorMapper.ts` stays free of
+  compatibility-style re-export shims.
+- Added direct happy-path facade tests for
+  `planRouteResponseTranslation.compile.result(...)` and
+  `planRouteResponseTranslation.import.result(...)`.
+
 ## No-Stub Evidence
 
 - The new facade delegates to real mapper modules already used by production
