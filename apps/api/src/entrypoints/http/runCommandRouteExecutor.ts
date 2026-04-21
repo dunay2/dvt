@@ -10,8 +10,7 @@ import { HTTP_STATUS_CODE } from '../../routes/httpStatus.js';
 
 import { authorizeExecutionScope } from './authorizeExecutionScope.js';
 import { extractBearerToken } from './extractBearerToken.js';
-import { sendHttpResponse } from './httpErrorContract.js';
-import { mapRouteParseIssue, mapRuntimeDomainError } from './httpErrorMapper.js';
+import { httpErrorTranslation } from './httpErrorTranslation.js';
 import type { RouteParseResult } from './routeParseIssue.js';
 import type { RunCommandActionName } from './runCommandRoute.constants.js';
 
@@ -36,7 +35,7 @@ export async function executeAuthorizedRunCommandRoute<TCommand, TResult>(
   parsed: ParsedCommandResult<TCommand>
 ): Promise<void> {
   if (!parsed.ok) {
-    sendHttpResponse(reply, mapRouteParseIssue(parsed.issue));
+    httpErrorTranslation.respond(reply, httpErrorTranslation.parse.issue(parsed.issue));
     return;
   }
 
@@ -51,7 +50,7 @@ export async function executeAuthorizedRunCommandRoute<TCommand, TResult>(
     },
   });
   if (!auth.ok) {
-    sendHttpResponse(reply, auth.response);
+    httpErrorTranslation.respond(reply, auth.response);
     return;
   }
 
@@ -59,9 +58,9 @@ export async function executeAuthorizedRunCommandRoute<TCommand, TResult>(
     const result = await deps.execute(parsed.value.command, auth.context);
     reply.code(HTTP_STATUS_CODE.accepted).send(result);
   } catch (error) {
-    const mapped = mapRuntimeDomainError(error);
+    const mapped = httpErrorTranslation.runtime.domainError(error);
     if (mapped) {
-      sendHttpResponse(reply, mapped);
+      httpErrorTranslation.respond(reply, mapped);
       return;
     }
 

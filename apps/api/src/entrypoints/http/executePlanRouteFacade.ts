@@ -2,7 +2,8 @@ import type { FastifyReply, FastifyRequest } from 'fastify';
 
 import { HTTP_STATUS_CODE, type HttpStatusCode } from '../../routes/httpStatus.js';
 
-import { sendHttpResponse, type HttpResponseModel } from './httpErrorContract.js';
+import type { HttpResponseModel } from './httpErrorContract.js';
+import { httpErrorTranslation } from './httpErrorTranslation.js';
 import type { ResolvedAuthorizedPlanRouteRequest } from './planRouteRequestResolver.js';
 
 export type PlanRouteFacadeAccepted<TPayload> = {
@@ -79,7 +80,7 @@ export async function executePlanRouteFacade<TParsedRequest, TResult, TPayload>(
 ): Promise<void> {
   const resolvedRequest = await options.resolveRequest();
   if (!resolvedRequest.ok) {
-    sendHttpResponse(reply, resolvedRequest.response);
+    httpErrorTranslation.respond(reply, resolvedRequest.response);
     return;
   }
 
@@ -87,7 +88,7 @@ export async function executePlanRouteFacade<TParsedRequest, TResult, TPayload>(
     const result = await options.executeUseCase(resolvedRequest);
     const mappedResult = options.mapResult(result, resolvedRequest);
     if (mappedResult.kind === 'rejected') {
-      sendHttpResponse(reply, mappedResult.response);
+      httpErrorTranslation.respond(reply, mappedResult.response);
       return;
     }
 
@@ -96,6 +97,6 @@ export async function executePlanRouteFacade<TParsedRequest, TResult, TPayload>(
       .send(mappedResult.payload);
   } catch (error) {
     request.log.error({ err: error }, options.logMessage);
-    sendHttpResponse(reply, options.mapInternalError());
+    httpErrorTranslation.respond(reply, options.mapInternalError());
   }
 }

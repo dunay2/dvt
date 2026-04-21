@@ -1,59 +1,79 @@
-# dvt-api (Fastify + TypeScript) — Railway
+# dvt-api
 
-## Código de autenticación
+`dvt-api` is the authenticated HTTP composition root for DVT.
 
-La implementación de la frontera de autenticación/autorización vive en [apps/api/src/domain/auth](apps/api/src/domain/auth), [apps/api/src/application](apps/api/src/application), [apps/api/src/entrypoints/http](apps/api/src/entrypoints/http) y [apps/api/src/infrastructure/auth](apps/api/src/infrastructure/auth). Las pruebas viven separadas en [apps/api/test](apps/api/test).
+It owns:
+
+- HTTP route registration
+- request parsing and canonical rejection shaping
+- auth and tenant-scope checks at the API boundary
+- composition of planner, engine, delivery, and adapter dependencies
+- operational routes such as health, readiness, version, and admin rebuild
+
+It does not own run lifecycle semantics. Those remain in `@dvt/engine` and the
+relevant adapters.
+
+## Local component guides
+
+- [HTTP runtime error translation component](./docs/http-runtime-error-translation-component.md)
+
+## Authentication boundary
+
+The authentication and authorization boundary lives across:
+
+- `apps/api/src/domain/auth`
+- `apps/api/src/application`
+- `apps/api/src/entrypoints/http`
+- `apps/api/src/infrastructure/auth`
+
+Tests for that boundary live under `apps/api/test`.
 
 ## Local run
 
 ```bash
 cp .env.example .env
-npm i
-npm run dev
+pnpm install
+pnpm --filter dvt-api dev
 ```
 
-- http://localhost:3000/healthz
-- http://localhost:3000/version
+- `http://localhost:3000/healthz`
+- `http://localhost:3000/readyz`
+- `http://localhost:3000/version`
 
-## Railway deploy (recommended: Nixpacks)
+## Deploy notes
 
-1. Push this repo to GitHub.
-2. Railway → New Project → Deploy from GitHub Repo → select this repo.
-3. In Railway service settings, set environment variables:
+### Railway
+
+1. Push the repo to GitHub.
+2. Create a new Railway project from the repository.
+3. Set environment variables:
 
 - `NODE_ENV=production`
 - `LOG_LEVEL=info`
-- `SERVICE_NAME=dbf-api`
-- `CORS_ORIGIN=*` (or your Vercel URL, comma-separated)
+- `SERVICE_NAME=dvt-api`
+- `CORS_ORIGIN=*` or the allowed origin list
 
-Railway will inject `PORT` automatically.
+Railway injects `PORT` automatically.
 
-### Health checks
+### Render
 
-Use:
+1. Push the repo to GitHub.
+2. Create a new Web service in Render from this repository.
+3. Configure environment variables using `.env.example` as the baseline:
 
-- `/healthz` as liveness
-- `/readyz` as readiness
+- `NODE_ENV=production`
+- `LOG_LEVEL=info`
+- `SERVICE_NAME=dvt-api`
+- `CORS_ORIGIN=*` or the allowed origin list
+
+Render injects `PORT` automatically and commonly uses `HOST=0.0.0.0`.
+
+## Health checks
+
+- liveness: `/healthz`
+- readiness: `/readyz`
 
 ## Notes
 
-- `nixpacks.toml` pins the build/start behavior for Railway.
-- TypeScript is strict; no `any`.
-
-## Render.com deploy
-
-1. Haz push de este repo a GitHub.
-2. En Render, crea un nuevo servicio Web y selecciona este repositorio.
-3. Render detectará automáticamente el Dockerfile y el Procfile.
-4. Configura las variables de entorno en el panel de Render (usa `.env.example` como referencia):
-   - `NODE_ENV=production`
-   - `LOG_LEVEL=info`
-   - `SERVICE_NAME=dvt-api`
-   - `CORS_ORIGIN=*` (o tu dominio permitido)
-   - Render inyecta automáticamente `PORT` y suele usar `HOST=0.0.0.0`
-5. El servicio se expondrá en el puerto que Render asigne (tu app ya lo soporta).
-
-### Health checks en Render
-
-- Liveness: `/healthz`
-- Readiness: `/readyz`
+- `nixpacks.toml` pins the Railway build and start posture.
+- TypeScript is strict and local docs for subcomponents live under `apps/api/docs/`.

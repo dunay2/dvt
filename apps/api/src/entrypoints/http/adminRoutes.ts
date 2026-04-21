@@ -1,7 +1,7 @@
 /**
  * @file apps/api/src/entrypoints/http/adminRoutes.ts
- * @baseline ADR-0004: Event Sourcing Strategy â€” snapshot is derived from event replay
- * @baseline ADR-0031: Adapter Tenant Isolation Strategy â€” tenantId required for all operations
+ * @baseline ADR-0004: Event Sourcing Strategy - snapshot is derived from event replay
+ * @baseline ADR-0031: Adapter Tenant Isolation Strategy - tenantId required for all operations
  *
  * Admin routes for operational repair tasks.
  * These routes are disabled by default (DVT_ADMIN_ROUTES_ENABLED=false).
@@ -17,9 +17,8 @@ import { TenantId } from '../../domain/auth/types.js';
 
 import { authorizeAdminExecutionScope } from './authorizeAdminExecutionScope.js';
 import { extractBearerToken } from './extractBearerToken.js';
-import { createHttpErrorResponse, HTTP_ERROR_TYPE, sendHttpResponse } from './httpErrorContract.js';
-import { mapRouteParseIssue, mapRuntimeDomainError } from './httpErrorMapper.js';
 import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
+import { httpErrorTranslation } from './httpErrorTranslation.js';
 import { badRequestIssue } from './routeParseIssue.js';
 
 const ADMIN_REBUILD_SNAPSHOT_ACTION = {
@@ -53,16 +52,16 @@ export function registerAdminRoutes(
       const { runId } = request.params;
       const tenantIdResult = parseTenantIdFromAdminBody(request.body);
       if (!tenantIdResult.ok) {
-        sendHttpResponse(reply, mapRouteParseIssue(tenantIdResult.issue));
+        httpErrorTranslation.respond(reply, httpErrorTranslation.parse.issue(tenantIdResult.issue));
         return;
       }
 
       const tenantId = tenantIdResult.value;
       const requestedTenant = TenantId.parse(tenantId);
       if (!requestedTenant.ok) {
-        sendHttpResponse(
+        httpErrorTranslation.respond(
           reply,
-          mapRouteParseIssue(
+          httpErrorTranslation.parse.issue(
             badRequestIssue(HTTP_ERROR_REASON.invalidTenantId, {
               target: 'tenantId',
             })
@@ -82,7 +81,7 @@ export function registerAdminRoutes(
         },
       });
       if (!authz.ok) {
-        sendHttpResponse(reply, authz.response);
+        httpErrorTranslation.respond(reply, authz.response);
         return;
       }
 
@@ -90,20 +89,14 @@ export function registerAdminRoutes(
         const snapshot = await stateStore.rebuildSnapshot(tenantId, runId);
         reply.code(200).send({ runId, status: snapshot.status });
       } catch (err) {
-        const mapped = mapRuntimeDomainError(err);
+        const mapped = httpErrorTranslation.runtime.domainError(err);
         if (mapped !== null) {
-          sendHttpResponse(reply, mapped);
+          httpErrorTranslation.respond(reply, mapped);
           return;
         }
 
         request.log.error({ err, runId, tenantId }, 'rebuild-snapshot failed');
-        sendHttpResponse(
-          reply,
-          createHttpErrorResponse({
-            type: HTTP_ERROR_TYPE.internalServerError,
-            reason: HTTP_ERROR_REASON.internalError,
-          })
-        );
+        httpErrorTranslation.respond(reply, httpErrorTranslation.admin.rebuildSnapshotInternalError());
       }
     }
   );

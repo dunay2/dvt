@@ -327,7 +327,7 @@ describe('adminRoutes', () => {
     );
   });
 
-  it('returns 500 for legacy stringly not-found errors', async () => {
+  it('returns 500 for untyped not-found errors outside domain classification', async () => {
     await withRebuildSnapshotRequest(
       {
         rebuildSnapshot: async (_tenantId, _runId) => {

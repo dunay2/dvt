@@ -1,3 +1,7 @@
+/**
+ * Owned concern: stable route-level semantic reason tokens used by the HTTP
+ * runtime error translation boundary.
+ */
 export const HTTP_ERROR_REASON = Object.freeze({
   adapterNotConfigured: 'adapter_not_configured',
   cancelReasonNotSupported: 'cancel_reason_not_supported',

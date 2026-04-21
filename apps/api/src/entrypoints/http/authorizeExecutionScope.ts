@@ -3,7 +3,7 @@ import { AuthorizeCommandScopeService } from '../../application/services/authori
 import type { AuthorizationAction, RequestedScope } from '../../domain/auth/types.js';
 
 import type { HttpResponseModel } from './httpErrorContract.js';
-import { mapAuthenticationFailure, mapAuthorizationFailure } from './httpErrorMapper.js';
+import { httpErrorTranslation } from './httpErrorTranslation.js';
 
 export async function authorizeExecutionScope<TAction extends AuthorizationAction>(deps: {
   readonly authenticator: IAuthenticator;
@@ -17,7 +17,10 @@ export async function authorizeExecutionScope<TAction extends AuthorizationActio
 > {
   const authentication = await deps.authenticator.authenticateBearerToken(deps.token);
   if (!authentication.ok) {
-    return { ok: false, response: mapAuthenticationFailure(authentication.code) };
+    return {
+      ok: false,
+      response: httpErrorTranslation.auth.unauthenticated(authentication.code),
+    };
   }
 
   const authorization = await deps.authorizer.authorize(
@@ -26,7 +29,10 @@ export async function authorizeExecutionScope<TAction extends AuthorizationActio
     deps.requestId
   );
   if (!authorization.ok) {
-    return { ok: false, response: mapAuthorizationFailure(authorization.reason) };
+    return {
+      ok: false,
+      response: httpErrorTranslation.auth.unauthorized(authorization.reason),
+    };
   }
 
   return { ok: true, context: authorization.context };
