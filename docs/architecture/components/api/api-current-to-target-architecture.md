@@ -169,6 +169,8 @@ Native cancel and cooperative cancel are now intentionally split:
   `routeParseIssue.ts` owns parser rejection semantics,
   `httpErrorMapper.ts` owns parse/auth/facade/engine translation, and
   `httpDomainErrorClassifier.ts` owns typed runtime-domain error translation.
+  Translated `HttpResponseModel` values are now written through
+  `sendHttpResponse(...)` rather than route-local manual serialization.
 - Architectural guardrails exist in code through dependency-cruiser rules for
   domain/application/entrypoint separation.
 - The protected runtime is feature-complete enough to support real frontend and

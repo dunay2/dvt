@@ -86,4 +86,17 @@ describe('HTTP runtime error translation architecture', () => {
       expect(consumerSource).not.toContain("from './httpErrorMapper.js'");
     }
   });
+
+  it('uses the owned serializer for translated HttpResponseModel values', () => {
+    const listRunsRouteSource = readComponentSource('listRunsRoute.ts');
+    expect(listRunsRouteSource).toContain('sendHttpResponse(reply, auth.response)');
+    expect(listRunsRouteSource).toContain('sendHttpResponse(reply, mapped)');
+    expect(listRunsRouteSource).not.toContain('reply.code(auth.response.status).send(auth.response.body)');
+    expect(listRunsRouteSource).not.toContain('reply.code(mapped.status).send(mapped.body)');
+
+    const startRunRouteSource = readComponentSource('startRunRoute.ts');
+    expect(startRunRouteSource).toContain('sendHttpResponse(reply, mapped)');
+    expect(startRunRouteSource).not.toContain('reply.code(mapped.status).send(mapped.body)');
+    expect(startRunRouteSource).not.toContain('reply.header(name, value)');
+  });
 });

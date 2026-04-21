@@ -47,7 +47,7 @@ export async function listRunsRoute(
     requestedScope: parsed.value.requestedScope,
   });
   if (!auth.ok) {
-    reply.code(auth.response.status).send(auth.response.body);
+    sendHttpResponse(reply, auth.response);
     return;
   }
 
@@ -57,7 +57,7 @@ export async function listRunsRoute(
   } catch (error) {
     const mapped = httpErrorTranslation.runtime.domainError(error);
     if (mapped) {
-      reply.code(mapped.status).send(mapped.body);
+      sendHttpResponse(reply, mapped);
       return;
     }
 

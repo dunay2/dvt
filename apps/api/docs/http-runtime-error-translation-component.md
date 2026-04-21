@@ -60,6 +60,8 @@ It does **not** own:
 - production consumers import `httpErrorTranslation.ts` instead of internal
   mapper/classifier modules
 - `httpErrorMapper.ts` does not own runtime-domain classification
+- translated `HttpResponseModel` values are emitted through `sendHttpResponse`
+  instead of handwritten route serialization
 - optional `details` are omitted when empty
 
 ## Transitions
@@ -157,6 +159,7 @@ sequenceDiagram
 - `httpErrorTranslation.ts` is the public seam for production consumers
 - the mapper serializes parse/auth/facade/engine outcomes behind that seam
 - the classifier serializes typed runtime-domain errors behind that seam
+- `sendHttpResponse` is the owned transport writer for translated responses
 - unknown runtime errors remain uncategorized and are rethrown to the outer
   error boundary
 

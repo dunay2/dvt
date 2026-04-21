@@ -31,10 +31,5 @@ export async function startRunRoute(
   const mapped = facadeResult.ok
     ? httpErrorTranslation.startRun.facadeResult(facadeResult.value)
     : httpErrorTranslation.startRun.engineError(facadeResult.error);
-  if (mapped.headers) {
-    for (const [name, value] of Object.entries(mapped.headers)) {
-      reply.header(name, value);
-    }
-  }
-  reply.code(mapped.status).send(mapped.body);
+  sendHttpResponse(reply, mapped);
 }
