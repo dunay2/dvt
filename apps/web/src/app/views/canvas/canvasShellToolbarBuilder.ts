@@ -1,23 +1,23 @@
 /**
  * Owned concern: build the toolbar concern of the route-owned Canvas shell contract.
  */
+import type { CanvasShellToolbarBuilderArgs } from './canvasShellBuilder.types';
 import type { CanvasShellToolbar } from './canvasShell.types';
-import type { CanvasShellBuilderArgs } from './canvasShellBuilder.types';
 
 export function buildCanvasShellToolbar({
-  controller,
-  routeViewState,
-}: CanvasShellBuilderArgs): CanvasShellToolbar {
+  toolbarState,
+  routePresentation,
+}: CanvasShellToolbarBuilderArgs): CanvasShellToolbar {
   return {
-    canvasAuthoringMode: controller.canvasAuthoringMode,
-    routeState: routeViewState.presentationState.routeState,
-    draftToolbarState: routeViewState.presentationState.draftToolbarState,
-    canStartRun: controller.canStartRun,
-    planStatusSummary: controller.planStatusSummary,
-    exclusiveOverlayMode: controller.exclusiveOverlayMode,
-    canUseCostOverlay: controller.canUseCostOverlay,
-    impactOverlayEnabled: controller.impactOverlayEnabled,
-    columnLevelLineageEnabled: controller.columnLevelLineageEnabled,
-    transformationValidation: controller.transformationValidation,
+    canvasAuthoringMode: toolbarState.canvasAuthoringMode,
+    routeState: routePresentation.presentationState.routeState,
+    draftToolbarState: routePresentation.presentationState.draftToolbarState,
+    canStartRun: toolbarState.canStartRun,
+    planStatusSummary: toolbarState.planStatusSummary,
+    exclusiveOverlayMode: toolbarState.exclusiveOverlayMode,
+    canUseCostOverlay: toolbarState.canUseCostOverlay,
+    impactOverlayEnabled: toolbarState.impactOverlayEnabled,
+    columnLevelLineageEnabled: toolbarState.columnLevelLineageEnabled,
+    transformationValidation: toolbarState.transformationValidation,
   };
 }

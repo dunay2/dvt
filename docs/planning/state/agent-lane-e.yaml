@@ -2,7 +2,7 @@ lane_id: E
 title: Frontend And UI
 owner: Product / UX / Frontend
 status: Active
-last_reviewed: '2026-04-20'
+last_reviewed: '2026-04-21'
 goal: >-
   Evolve apps/web from a mixed mock prototype into an operational UI whose contracts, state
   boundaries, diagrams, and validation match the real backend surface.
@@ -2320,26 +2320,37 @@ tasks:
   - task_id: TF-E2-J
     parent_task: TF-E2
     priority: P1
-    status: in_progress
+    status: done
     objective: >-
-      hard-cut `CanvasModalHost` to a semantic modal contract so the component stops depending on
-      `ReturnType<typeof useCanvasController>` and route composition owns the adaptation seam.
+      hard-cut Canvas route composition to semantic route-owned contracts so modal hosting and shell
+      concern builders stop depending on controller-shaped or route-composer-shaped inputs.
     dependency: TF-E2-I
     target: >-
-      `CanvasModalHost.tsx` consumes an explicit modal host contract, `Canvas.tsx` builds that
-      contract through a dedicated builder, and architecture tests prevent controller-shaped props
-      from leaking back into the component.
+      `CanvasModalHost.tsx` consumes an explicit modal host contract, `Canvas.tsx` builds shell and
+      modal contracts through dedicated route-owned builders, shell subbuilders consume
+      concern-scoped inputs instead of one broad route bag, and architecture docs plus tests guard
+      the route-composition component semantically.
     complexity: S
     effort_points: 1
-    progress_pct: 10
+    progress_pct: 100
     evidence_refs:
-      - docs/planning/closeouts/20260421-tf-e2-canvas-modal-host-semantic-contract-closeout.md
+      - docs/planning/reviews/architecture-and-governance/20260421-canvas-route-composition-fowler-review.md
+      - docs/planning/closeouts/20260421-tf-e2-canvas-route-composition-semantic-component-closeout.md
+      - docs/architecture/components/web/graph/canvas-route-composition-component.md
       - apps/web/src/app/views/Canvas.tsx
       - apps/web/src/app/views/canvas/CanvasModalHost.tsx
+      - apps/web/src/app/views/canvas/canvasModalHost.types.ts
+      - apps/web/src/app/views/canvas/canvasModalHostPropsBuilder.ts
+      - apps/web/src/app/views/canvas/canvasShellBuilder.types.ts
+      - apps/web/src/app/views/canvas/canvasShellPropsBuilder.tsx
+      - apps/web/src/app/views/canvas/CanvasModalHost.architecture.test.tsx
+      - apps/web/src/app/views/canvas/canvasShellBuilder.types.architecture.test.ts
     status_reason: >-
-      Docs-first analysis is active. `CanvasModalHost.tsx` is extracted from the route composer, but
-      it still consumes a controller-shaped `Pick<ReturnType<typeof useCanvasController>>` contract.
-      This slice hard-cuts the host to a semantic modal contract plus a route-owned builder.
+      Docs-first/TDD-first hard cut is complete. `CanvasModalHost.tsx` now consumes a semantic modal
+      contract built by a dedicated route-owned builder, shell subbuilders now consume
+      concern-scoped inputs instead of one broad route-composer bag, the graph architecture pack now
+      includes a dedicated Canvas route-composition component guide, and semantic architecture tests
+      protect both the modal-host passive-view boundary and the shell-builder input vocabulary.
     last_verified: '2026-04-21'
 dependency_notes:
   - >-

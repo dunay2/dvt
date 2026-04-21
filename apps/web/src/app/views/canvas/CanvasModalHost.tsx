@@ -2,48 +2,28 @@
  * Owned concern: host Canvas-owned modal overlays outside the shell layout.
  */
 import { ConfirmEdgeModal, PlanPreviewModal } from '../../components/Modals';
-import type { useCanvasController } from './useCanvasController';
-
-type CanvasController = ReturnType<typeof useCanvasController>;
-
-type CanvasModalHostController = Pick<
-  CanvasController,
-  | 'planModalOpen'
-  | 'setPlanModalOpen'
-  | 'currentPlan'
-  | 'canStartRun'
-  | 'planStatusSummary'
-  | 'handleStartRun'
-  | 'confirmEdgeModal'
-  | 'setConfirmEdgeModal'
-  | 'confirmEdgeCreation'
->;
-
-type CanvasModalHostProps = Readonly<{
-  controller: CanvasModalHostController;
-}>;
+import type { CanvasModalHostProps } from './canvasModalHost.types';
 
 export default function CanvasModalHost({
-  controller,
+  planPreview,
+  edgeConfirmation,
 }: CanvasModalHostProps) {
   return (
     <>
       <PlanPreviewModal
-        open={controller.planModalOpen}
-        onClose={() => controller.setPlanModalOpen(false)}
-        plan={controller.currentPlan}
-        startRunDisabled={!controller.canStartRun}
-        startRunMessage={controller.planStatusSummary}
-        onStartRun={() => {
-          void controller.handleStartRun();
-        }}
+        open={planPreview.open}
+        onClose={planPreview.onClose}
+        plan={planPreview.plan}
+        startRunDisabled={!planPreview.canStartRun}
+        startRunMessage={planPreview.planStatusSummary}
+        onStartRun={planPreview.onStartRun}
       />
 
       <ConfirmEdgeModal
-        open={controller.confirmEdgeModal.open}
-        onClose={() => controller.setConfirmEdgeModal({ open: false, edge: null })}
-        edge={controller.confirmEdgeModal.edge}
-        onConfirm={controller.confirmEdgeCreation}
+        open={edgeConfirmation.open}
+        onClose={edgeConfirmation.onClose}
+        edge={edgeConfirmation.edge}
+        onConfirm={edgeConfirmation.onConfirm}
       />
     </>
   );

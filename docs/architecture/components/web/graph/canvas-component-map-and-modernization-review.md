@@ -25,6 +25,8 @@ graph mutation semantics, use
 [Canvas Graph Lifecycle Component](./canvas-graph-lifecycle-component.md). For
 route-visible posture, use
 [Canvas Route Presentation Component](./canvas-route-presentation-component.md). For
+route composition and route-owned shell or modal adaptation, use
+[Canvas Route Composition Component](./canvas-route-composition-component.md). For
 the shell contract and local chrome composition, use
 [Canvas Shell Component](./canvas-shell-component.md). For
 controller-local layering, use
@@ -38,6 +40,7 @@ controller-local layering, use
 - [Canvas Handler Contracts Component](./canvas-handler-contracts-component.md)
 - [Canvas Graph Lifecycle Component](./canvas-graph-lifecycle-component.md)
 - [Canvas Route Presentation Component](./canvas-route-presentation-component.md)
+- [Canvas Route Composition Component](./canvas-route-composition-component.md)
 - [Canvas Shell Component](./canvas-shell-component.md)
 - [Graph Route Bootstrap Architecture](./graph-route-bootstrap-architecture.md)
 - [Graph Sequences And State Machines](./graph-sequences-and-state-machines.md)
@@ -51,6 +54,8 @@ Reading rule:
   vocabulary and namespaced builder APIs
 - use `canvas-route-presentation-component.md` for route-visible posture,
   toolbar, banner, center-surface, and bootstrap alignment
+- use `canvas-route-composition-component.md` for route composition,
+  route-owned shell or modal adaptation, and semantic route fitness functions
 - use `canvas-shell-component.md` for grouped `CanvasShell` API ownership,
   local chrome composition, and shell contract invariants
 - use `graph-route-bootstrap-architecture.md` for shell contract rules
@@ -94,6 +99,7 @@ flowchart TB
   Content --> Controller["useCanvasController"]
   Content --> RouteSync["useCanvasRoutePresentationSync"]
   Content --> ShellBuilder["canvasShellPropsBuilder and subbuilders"]
+  Content --> ModalBuilder["canvasModalHostPropsBuilder"]
   Content --> ModalHost["CanvasModalHost"]
 
   Controller --> Shell["CanvasShell"]
@@ -113,6 +119,7 @@ flowchart TB
   Controller --> Execution["useCanvasExecutionActions"]
   Controller --> RouteState["canvasRouteViewState"]
   Controller --> Publisher["usePublishedRouteBootstrap"]
+  ModalBuilder --> ModalHost
   ModalHost --> PlanModal["PlanPreviewModal"]
   ModalHost --> EdgeModal["ConfirmEdgeModal"]
 
@@ -138,26 +145,27 @@ Reading rule:
 
 <!-- markdownlint-disable MD060 -->
 
-| Element                                      | Primary role                                                               | Must stay out of scope                                         |
-| -------------------------------------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------- |
-| `Canvas.tsx`                                 | Route entry, provider setup, route composition                             | Draft semantics, inline publication, and inline modal mounting |
-| `useCanvasRoutePresentationSync.ts`          | Route publication and bootstrap synchronization                            | Shell layout composition                                       |
-| `CanvasModalHost.tsx`                        | Route-owned modal hosting                                                  | Shell contract assembly or route publication                   |
-| `canvasShellPropsBuilder.tsx`                | Route-owned orchestration of the grouped shell contract                    | Controller lifecycle or modal ownership                        |
-| shell subbuilders                            | Concern-owned shell contract assembly                                      | Broad route composition or controller policy                   |
-| `CanvasContent`                              | Route composition seam over the controller facade                          | Deep domain policy                                             |
-| `CanvasShell`                                | Three-panel workbench layout and local chrome                              | Persistence and aggregate truth                                |
-| `CanvasToolbar`                              | Stateless command and toggle surface                                       | Hidden policy or ad hoc route-state logic                      |
-| `CanvasCenterSurface` and `CanvasStateViews` | Center-surface rendering for loading, empty, error, and recovery           | Shell reveal ownership                                         |
-| `CanvasViewport`                             | React Flow projection and primitive event boundary                         | Authoring semantics                                            |
-| `DbtExplorer` and `InspectorPanel`           | Contextual side panels                                                     | Global shell behavior                                          |
-| `useCanvasController`                        | Route application facade                                                   | Mixed persistence, projection, and widget logic in one file    |
-| handler-contract component                   | Local adapter-composition vocabulary and seam mapping                      | Owning graph semantics or React hook state                     |
-| `canvasDraftSession`                         | Namespaced aggregate API over draft truth                                  | Direct service calls                                           |
-| route-presentation component                 | Canonical route-visible posture across banner, toolbar, and center surface | Raw controller branching or affordance-derived authority       |
-| `useCanvasGraphHandlers`                     | Gesture-to-command adapter seam                                            | Duplicate mutation policy                                      |
-| `useCanvasExecutionActions`                  | Plan and run handoff composition seam                                      | Graph mutation ownership                                       |
-| `usePublishedRouteBootstrap`                 | Publish explicit route startup posture to the shell                        | Re-deriving authoring truth from shell heuristics              |
+| Element                                      | Primary role                                                               | Must stay out of scope                                                 |
+| -------------------------------------------- | -------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| `Canvas.tsx`                                 | Route entry, provider setup, route composition                             | Draft semantics, inline publication, and inline contract assembly      |
+| `useCanvasRoutePresentationSync.ts`          | Route publication and bootstrap synchronization                            | Shell layout composition                                               |
+| `canvasModalHostPropsBuilder.ts`             | Route-owned modal-host contract adaptation                                 | Modal rendering or shell contract assembly                             |
+| `CanvasModalHost.tsx`                        | Route-owned modal hosting                                                  | Controller-shaped props, shell contract assembly, or route publication |
+| `canvasShellPropsBuilder.tsx`                | Route-owned orchestration of the grouped shell contract                    | Controller lifecycle or modal ownership                                |
+| shell subbuilders                            | Concern-owned shell contract assembly                                      | Broad route composition or route-composer-sized input bags             |
+| `CanvasContent`                              | Route composition seam over the controller facade                          | Deep domain policy                                                     |
+| `CanvasShell`                                | Three-panel workbench layout and local chrome                              | Persistence and aggregate truth                                        |
+| `CanvasToolbar`                              | Stateless command and toggle surface                                       | Hidden policy or ad hoc route-state logic                              |
+| `CanvasCenterSurface` and `CanvasStateViews` | Center-surface rendering for loading, empty, error, and recovery           | Shell reveal ownership                                                 |
+| `CanvasViewport`                             | React Flow projection and primitive event boundary                         | Authoring semantics                                                    |
+| `DbtExplorer` and `InspectorPanel`           | Contextual side panels                                                     | Global shell behavior                                                  |
+| `useCanvasController`                        | Route application facade                                                   | Mixed persistence, projection, and widget logic in one file            |
+| handler-contract component                   | Local adapter-composition vocabulary and seam mapping                      | Owning graph semantics or React hook state                             |
+| `canvasDraftSession`                         | Namespaced aggregate API over draft truth                                  | Direct service calls                                                   |
+| route-presentation component                 | Canonical route-visible posture across banner, toolbar, and center surface | Raw controller branching or affordance-derived authority               |
+| `useCanvasGraphHandlers`                     | Gesture-to-command adapter seam                                            | Duplicate mutation policy                                              |
+| `useCanvasExecutionActions`                  | Plan and run handoff composition seam                                      | Graph mutation ownership                                               |
+| `usePublishedRouteBootstrap`                 | Publish explicit route startup posture to the shell                        | Re-deriving authoring truth from shell heuristics                      |
 
 <!-- markdownlint-enable MD060 -->
 
@@ -215,7 +223,8 @@ Canonical startup rule for this slice:
 - keep route-visible posture under one presentation component instead of
   allowing banner, center surface, and toolbar to branch independently
 - keep route composition moving toward named seams such as presentation sync,
-  modal hosting, and shell subbuilders instead of one broad route method
+  modal hosting, semantic modal-host builders, and concern-scoped shell
+  subbuilders instead of one broad route method
 
 ### Avoid
 
@@ -237,5 +246,6 @@ Canonical startup rule for this slice:
 - [Canvas Controller Current To Target Architecture](./canvas-controller-current-to-target-architecture.md)
 - [Canvas Draft Session Component](./canvas-draft-session-component.md)
 - [Canvas Handler Contracts Component](./canvas-handler-contracts-component.md)
+- [Canvas Route Composition Component](./canvas-route-composition-component.md)
 - [Graph Route Bootstrap Architecture](./graph-route-bootstrap-architecture.md)
 - [Graph Sequences And State Machines](./graph-sequences-and-state-machines.md)

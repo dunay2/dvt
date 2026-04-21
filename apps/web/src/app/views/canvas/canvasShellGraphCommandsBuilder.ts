@@ -1,23 +1,23 @@
 /**
  * Owned concern: build viewport and import command bindings for the route-owned Canvas shell contract.
  */
+import type { CanvasShellGraphCommandsBuilderArgs } from './canvasShellBuilder.types';
 import type { CanvasShellGraphCommands } from './canvasShell.types';
-import type { CanvasShellBuilderArgs } from './canvasShellBuilder.types';
 
 export function buildCanvasShellGraphCommands({
-  controller,
-}: CanvasShellBuilderArgs): CanvasShellGraphCommands {
+  graphCommands,
+}: CanvasShellGraphCommandsBuilderArgs): CanvasShellGraphCommands {
   return {
-    onNodesChange: controller.onNodesChange,
-    onNodeDragStop: controller.handleNodeDragStop,
-    onEdgesChange: controller.onEdgesChange,
-    onConnect: controller.onConnect,
-    onNodeClick: controller.handleNodeClick,
-    onSelectionChange: controller.onSelectionChange,
-    onViewportChange: controller.handleViewportChange,
-    onDrop: controller.handleDrop,
-    onDragOver: controller.handleDragOver,
-    onSourceImportComplete: controller.handleSourceImportComplete,
-    onImportedNodeFocusComplete: controller.handleImportedNodeFocusComplete,
+    onNodesChange: graphCommands.onNodesChange,
+    onNodeDragStop: graphCommands.handleNodeDragStop,
+    onEdgesChange: graphCommands.onEdgesChange,
+    onConnect: graphCommands.onConnect,
+    onNodeClick: graphCommands.handleNodeClick,
+    onSelectionChange: graphCommands.onSelectionChange,
+    onViewportChange: graphCommands.handleViewportChange,
+    onDrop: graphCommands.handleDrop,
+    onDragOver: graphCommands.handleDragOver,
+    onSourceImportComplete: graphCommands.handleSourceImportComplete,
+    onImportedNodeFocusComplete: graphCommands.handleImportedNodeFocusComplete,
   };
 }

@@ -5,6 +5,7 @@ import { ReactFlowProvider } from '@xyflow/react';
 
 import CanvasShell from './canvas/CanvasShell';
 import CanvasModalHost from './canvas/CanvasModalHost';
+import { buildCanvasModalHostProps } from './canvas/canvasModalHostPropsBuilder';
 import { deriveCanvasRouteViewState } from './canvas/canvasRouteViewState';
 import { buildCanvasShellProps } from './canvas/canvasShellPropsBuilder';
 import { useCanvasRoutePresentationSync } from './canvas/useCanvasRoutePresentationSync';
@@ -21,11 +22,12 @@ function CanvasContent() {
     controller,
     routeViewState,
   });
+  const modalHostProps = buildCanvasModalHostProps(controller);
 
   return (
     <>
       <CanvasShell {...shellProps} />
-      <CanvasModalHost controller={controller} />
+      <CanvasModalHost {...modalHostProps} />
     </>
   );
 }

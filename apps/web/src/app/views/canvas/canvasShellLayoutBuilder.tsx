@@ -6,39 +6,42 @@ import type { ReactNode } from 'react';
 import { CanvasReadOnlyBannerView } from './CanvasStateViews';
 import { renderCanvasCenterSurface } from './CanvasCenterSurface';
 import { CanvasRecoveryBanner } from './CanvasRecoveryBanner';
+import type { CanvasShellLayoutBuilderArgs } from './canvasShellBuilder.types';
 import type { CanvasShellLayout } from './canvasShell.types';
-import type { CanvasController, CanvasShellBuilderArgs } from './canvasShellBuilder.types';
-import type { CanvasRouteViewState } from './canvasRouteViewState';
 
 function renderCanvasShellReadOnlyBanner(
-  controller: Pick<CanvasController, 'adoptCurrentWorkspaceSnapshot' | 'reloadLatestDraft'>,
-  routeViewState: Pick<CanvasRouteViewState, 'presentationState' | 'readOnlyState'>
+  recoveryCommands: CanvasShellLayoutBuilderArgs['recoveryCommands'],
+  routePresentation: Pick<
+    CanvasShellLayoutBuilderArgs['routePresentation'],
+    'presentationState' | 'readOnlyState'
+  >
 ): ReactNode {
   return (
     <>
       <CanvasRecoveryBanner
-        presentationState={routeViewState.presentationState}
-        onReloadLatestDraft={controller.reloadLatestDraft}
-        onAdoptCurrentWorkspaceSnapshot={controller.adoptCurrentWorkspaceSnapshot}
+        presentationState={routePresentation.presentationState}
+        onReloadLatestDraft={recoveryCommands.reloadLatestDraft}
+        onAdoptCurrentWorkspaceSnapshot={recoveryCommands.adoptCurrentWorkspaceSnapshot}
       />
-      <CanvasReadOnlyBannerView state={routeViewState.readOnlyState} />
+      <CanvasReadOnlyBannerView state={routePresentation.readOnlyState} />
     </>
   );
 }
 
 export function buildCanvasShellLayout({
-  controller,
-  routeViewState,
-}: CanvasShellBuilderArgs): CanvasShellLayout {
+  layoutState,
+  recoveryCommands,
+  routePresentation,
+}: CanvasShellLayoutBuilderArgs): CanvasShellLayout {
   return {
-    focusMode: controller.focusMode,
-    explorerPanelVisible: controller.explorerPanelVisible,
-    inspectorPanelVisible: controller.inspectorPanelVisible,
+    focusMode: layoutState.focusMode,
+    explorerPanelVisible: layoutState.explorerPanelVisible,
+    inspectorPanelVisible: layoutState.inspectorPanelVisible,
     centerSurface: renderCanvasCenterSurface({
-      presentationState: routeViewState.presentationState,
-      draftTransportError: routeViewState.draftTransportError,
-      canEditEdges: routeViewState.effectiveUserPermissions.canEditEdges,
+      presentationState: routePresentation.presentationState,
+      draftTransportError: routePresentation.draftTransportError,
+      canEditEdges: routePresentation.effectiveUserPermissions.canEditEdges,
     }),
-    readOnlyBanner: renderCanvasShellReadOnlyBanner(controller, routeViewState),
+    readOnlyBanner: renderCanvasShellReadOnlyBanner(recoveryCommands, routePresentation),
   };
 }

@@ -2,7 +2,7 @@
 title: Graph Architecture Docs
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-04-17
+last_reviewed: 2026-04-21
 ---
 
 # Graph Architecture Docs
@@ -22,6 +22,7 @@ Canonical navigation for the Graph and Canvas architecture pack.
 - [Canvas Draft Session Component](./canvas-draft-session-component.md)
 - [Canvas Graph Lifecycle Component](./canvas-graph-lifecycle-component.md)
 - [Canvas Handler Contracts Component](./canvas-handler-contracts-component.md)
+- [Canvas Route Composition Component](./canvas-route-composition-component.md)
 - [Canvas Shell Component](./canvas-shell-component.md)
 
 ## Related Existing Reviews

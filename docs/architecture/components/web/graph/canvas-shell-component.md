@@ -24,6 +24,7 @@ mutation policy.
 ## Governing sources
 
 - [Canvas Component Map And Modernization Review](./canvas-component-map-and-modernization-review.md)
+- [Canvas Route Composition Component](./canvas-route-composition-component.md)
 - [Canvas Route Presentation Component](./canvas-route-presentation-component.md)
 - [Canvas Controller Current To Target Architecture](./canvas-controller-current-to-target-architecture.md)
 - [Graph Route Bootstrap Architecture](./graph-route-bootstrap-architecture.md)
@@ -35,7 +36,7 @@ Read the component in this order:
 1. `canvasShell.types.ts`
    grouped public API and concern boundaries
 2. `canvasShellBuilder.types.ts`
-   shared builder inputs for route-owned shell assembly
+   concern-scoped builder inputs for route-owned shell assembly
 3. `canvasShellLayoutBuilder.tsx`, `canvasShellPanelsBuilder.ts`,
    `canvasShellGraphBuilder.ts`, `canvasShellToolbarBuilder.ts`,
    `canvasShellGraphCommandsBuilder.ts`, and
@@ -43,8 +44,9 @@ Read the component in this order:
    concern-owned subbuilders for the grouped shell contract
 4. `canvasShellPropsBuilder.tsx`
    orchestrator over the shell subbuilders
-5. `useCanvasRoutePresentationSync.ts` and `CanvasModalHost.tsx`
-   adjacent route-owned seams for route publication and modal hosting
+5. `canvas-route-composition-component.md`
+   route-level explanation of how the shell builder fits with publication and
+   modal hosting
 6. `Canvas.tsx`
    route composition that delegates shell contract construction
 7. `CanvasShell.tsx`
@@ -98,22 +100,22 @@ The hard cut replaces an anemic prop bag with grouped semantic ownership:
 
 <!-- markdownlint-disable MD013 MD060 -->
 
-| File                                  | Owned concern                                  | Public to other modules |
-| ------------------------------------- | ---------------------------------------------- | ----------------------- |
-| `canvasShell.types.ts`                | grouped contract vocabulary                    | yes                     |
-| `canvasShellBuilder.types.ts`         | shared inputs for shell builder seams          | local builder API       |
-| `canvasShellLayoutBuilder.tsx`        | layout concern assembly                        | local builder API       |
-| `canvasShellPanelsBuilder.ts`         | panel concern assembly                         | local builder API       |
-| `canvasShellGraphBuilder.ts`          | graph concern assembly                         | local builder API       |
-| `canvasShellToolbarBuilder.ts`        | toolbar concern assembly                       | local builder API       |
-| `canvasShellGraphCommandsBuilder.ts`  | viewport and import command assembly           | local builder API       |
-| `canvasShellChromeCommandsBuilder.ts` | shell chrome command assembly                  | local builder API       |
-| `canvasShellPropsBuilder.tsx`         | route-owned shell contract orchestration       | yes                     |
-| `useCanvasRoutePresentationSync.ts`   | route publication and bootstrap sync           | adjacent route seam     |
-| `CanvasModalHost.tsx`                 | route-owned modal hosting                      | adjacent route seam     |
-| `Canvas.tsx`                          | route composition plus shell and modal handoff | consumer only           |
-| `CanvasShell.tsx`                     | three-panel shell layout and local chrome      | yes                     |
-| `CanvasShell.test.tsx`                | runtime behavior proof for the shell contract  | test only               |
+| File                                  | Owned concern                                           | Public to other modules |
+| ------------------------------------- | ------------------------------------------------------- | ----------------------- |
+| `canvasShell.types.ts`                | grouped contract vocabulary                             | yes                     |
+| `canvasShellBuilder.types.ts`         | concern-scoped input vocabulary for shell builder seams | local builder API       |
+| `canvasShellLayoutBuilder.tsx`        | layout concern assembly                                 | local builder API       |
+| `canvasShellPanelsBuilder.ts`         | panel concern assembly                                  | local builder API       |
+| `canvasShellGraphBuilder.ts`          | graph concern assembly                                  | local builder API       |
+| `canvasShellToolbarBuilder.ts`        | toolbar concern assembly                                | local builder API       |
+| `canvasShellGraphCommandsBuilder.ts`  | viewport and import command assembly                    | local builder API       |
+| `canvasShellChromeCommandsBuilder.ts` | shell chrome command assembly                           | local builder API       |
+| `canvasShellPropsBuilder.tsx`         | route-owned shell contract orchestration                | yes                     |
+| `useCanvasRoutePresentationSync.ts`   | route publication and bootstrap sync                    | adjacent route seam     |
+| `CanvasModalHost.tsx`                 | route-owned modal hosting                               | adjacent route seam     |
+| `Canvas.tsx`                          | route composition plus shell and modal handoff          | consumer only           |
+| `CanvasShell.tsx`                     | three-panel shell layout and local chrome               | yes                     |
+| `CanvasShell.test.tsx`                | runtime behavior proof for the shell contract           | test only               |
 
 <!-- markdownlint-enable MD013 MD060 -->
 
@@ -178,6 +180,8 @@ flowchart TD
 - `Canvas.tsx` is the only route-level composition site for `CanvasShell`.
 - `Canvas.tsx` delegates shell contract assembly to `buildCanvasShellProps(...)`
   instead of building banner, center-surface, and command groups inline.
+- shell subbuilders consume concern-scoped builder args, not the full
+  route-composer bag.
 - Toolbar posture must arrive through `toolbar`, not through locally inferred
   booleans inside `CanvasShell.tsx`.
 - Viewport callbacks must arrive through `graphCommands`, not through mixed
@@ -201,6 +205,7 @@ The canonical checks for this component are:
 
 - `Canvas.architecture.test.tsx`
 - `CanvasShell.architecture.test.tsx`
+- `canvasShellBuilder.types.architecture.test.ts`
 - `canvasShellPropsBuilder.architecture.test.ts`
 - `canvasShell.types.architecture.test.ts`
 - `CanvasShell.test.tsx`
@@ -215,6 +220,8 @@ The canonical checks for this component are:
 - if `canvasShellPropsBuilder.tsx` starts assembling `layout`, `panels`,
   `graph`, `toolbar`, or command groups inline again, subbuilder ownership has
   regressed
+- if shell subbuilders start accepting the full route-composer args bag again,
+  semantic builder ownership has regressed
 - if `CanvasShell.tsx` starts deriving toolbar or route posture locally, shell
   composition has leaked into presentation policy
 - if viewport and chrome callbacks mix again inside one command bag, command
