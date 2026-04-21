@@ -2,11 +2,13 @@ import { describe, expect, it } from 'vitest';
 
 import {
   buildContinueAsNewInput,
-  parseOptionalNonNegativeInt,
-  resolveGatewayDependencyContext,
   shouldTriggerContinueAsNew,
+} from '../src/workflows/workflowCursorHelpers.js';
+import {
+  resolveGatewayDependencyContext,
   validateGatewayDependencies,
-} from '../src/workflows/workflowHelpers.js';
+} from '../src/workflows/workflowGatewayHelpers.js';
+import { parseOptionalNonNegativeInt } from '../src/workflows/workflowInputParsingHelpers.js';
 
 import { createPlanRef, createResolvedRunContext } from './helpers/contractFixtures.js';
 

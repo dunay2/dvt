@@ -15,7 +15,7 @@ Generated automatically from repository code on 2026-04-21.
 | Metric                       | Value |
 | ---------------------------- | ----- |
 | Total workspaces             | 24    |
-| Total source files           | 1093  |
+| Total source files           | 1092  |
 | Total test files             | 505   |
 | Workspaces with build script | 24/24 |
 | Workspaces with test script  | 23/24 |
@@ -31,7 +31,7 @@ Generated automatically from repository code on 2026-04-21.
 | dvt-temporal-worker       | `apps/temporal-worker`               | 6         | 4          | yes   | yes  | yes       | -                       |
 | @dvt/web                  | `apps/web`                           | 458       | 164        | yes   | yes  | yes       | -                       |
 | @dvt/adapter-postgres     | `packages/@dvt/adapter-postgres`     | 53        | 34         | yes   | yes  | yes       | 24                      |
-| @dvt/adapter-temporal     | `packages/@dvt/adapter-temporal`     | 41        | 38         | yes   | yes  | no        | 20                      |
+| @dvt/adapter-temporal     | `packages/@dvt/adapter-temporal`     | 40        | 38         | yes   | yes  | no        | 20                      |
 | @dvt/artifacts            | `packages/@dvt/artifacts`            | 19        | 3          | yes   | yes  | no        | 17                      |
 | @dvt/crypto               | `packages/@dvt/canonical`            | 3         | 1          | yes   | yes  | no        | 2                       |
 | @dvt/cli                  | `packages/@dvt/cli`                  | 1         | 1          | yes   | yes  | no        | 1                       |

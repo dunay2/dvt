@@ -14,11 +14,9 @@ import type {
   WorkflowPlanRef,
   WorkflowStep,
 } from './runPlanWorkflow.types.js';
-import {
-  buildGatewayContext,
-  buildStepStartedPayload,
-  formatUnknownError,
-} from './workflowHelpers.js';
+import { buildStepStartedPayload } from './workflowArtifactHelpers.js';
+import { formatUnknownError } from './workflowErrorHelpers.js';
+import { buildGatewayContext } from './workflowGatewayHelpers.js';
 
 export async function emitStepStartedForLayer(
   ctx: WorkflowCtx,

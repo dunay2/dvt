@@ -194,10 +194,6 @@
     },
     {
       "code": "MISSING_BASELINE",
-      "filePath": "packages/@dvt/adapter-temporal/src/workflows/workflowHelpers.ts"
-    },
-    {
-      "code": "MISSING_BASELINE",
       "filePath": "packages/@dvt/adapter-temporal/test/activities.test.ts"
     },
     {

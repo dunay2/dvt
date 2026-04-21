@@ -3,7 +3,7 @@ import type { MaterializationEvidence, PlanRef } from '@dvt/contracts';
 import type { EventType, ExecutionStep, ResolvedRunContext } from '../engine-types.js';
 
 import type { ResolvedExecutionSegment } from './executionSegmentResolver.js';
-import type { WorkflowExecutionCursor } from './workflowHelpers.js';
+import type { WorkflowExecutionCursor } from './workflowCursorHelpers.js';
 
 export type WorkflowStep = ExecutionStep;
 export type WorkflowPlanRef = PlanRef;

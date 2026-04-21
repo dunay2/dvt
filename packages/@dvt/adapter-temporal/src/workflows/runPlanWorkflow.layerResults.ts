@@ -9,7 +9,7 @@ import type {
   WorkflowCtx,
   WorkflowPlanRef,
 } from './runPlanWorkflow.types.js';
-import { buildCompletedStepFact } from './workflowHelpers.js';
+import { buildCompletedStepFact } from './workflowGatewayHelpers.js';
 import { buildRunFailedPayload, toOptionalPayload } from './workflowRuntimePayloadHelpers.js';
 
 export async function applyLayerResults(args: {
