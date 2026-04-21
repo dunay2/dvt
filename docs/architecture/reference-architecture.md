@@ -2,7 +2,7 @@
 title: Reference Architecture
 status: Active
 owner: docs
-last_reviewed: 2026-03-07
+last_reviewed: 2026-04-21
 ---
 
 # Reference Architecture
@@ -16,6 +16,8 @@ Canonical reference for DVT architectural principles, bounded contexts, and top-
 - Event-sourced run lifecycle: `Run` is reconstructed from ordered events and optional snapshots; snapshots are derived, never authoritative over events.
 - Multi-tenant isolation: tenant context must be explicit in reads, writes, signals, and status queries.
 - Replaceable infrastructure: provider/runtime concerns stay behind stable contracts such as `IProviderAdapter`.
+- One runtime truth per boundary: command admission and plan compilation must
+  reuse the same supported-adapter truth instead of keeping parallel allowlists.
 - Boundary enforcement must be mechanical where the repo can enforce it: `@dvt/engine`
   source depends on ports and shared contracts, not on `@dvt/planner` or concrete
   provider adapters.
@@ -66,19 +68,40 @@ Run
 flowchart TB
 User --> UI
 UI --> API
-API --> Planner
-API --> Engine
-Planner --> ArtifactBoundary["Artifact access boundary"]
+API --> Planner["Planner / compile seam"]
+API --> StartRun["StartRun boundary"]
+API --> Engine["IWorkflowEngine"]
+API --> Enrichment["IRunEnrichmentService"]
+Planner --> ArtifactBoundary["Artifact + validation boundary"]
 Engine --> ProviderPort["IProviderAdapter"]
 ProviderPort --> TemporalAdapter
+TemporalAdapter --> TemporalWorker["apps/temporal-worker"]
+TemporalWorker --> DbtRunner["DBT CLI runner"]
 Engine --> StatePort["IRunStateStore / outbox ports"]
 StatePort --> PostgresAdapter
 Engine --> ObservabilityPort["IObservability"]
 ```
+
+## Current Truth And Explicit Drift
+
+- `packages/@dvt/contracts/src/contracts/engine/StartRunBoundary.v1.ts`
+  is the canonical truth for currently supported start-run target adapters:
+  `temporal` and `mock`.
+- `apps/api/src/modules/planCompileBoundary.ts` now reuses that same adapter
+  truth for compile-time execution profiles.
+- The broader shared `Provider` vocabulary still includes `conductor` in some
+  contract and schema surfaces. That is transitional architecture drift, not
+  proof of implemented runtime support.
+- DBT is no longer part of engine-kernel semantics, but it remains partially
+  embedded in the default package/runtime surface of
+  `@dvt/adapter-temporal`. That coupling is explicit repository risk, not
+  hidden cleanup.
 
 ## Canonical Companions
 
 - ADRs: [`docs/adr/`](../adr/index.md)
 - Engine architecture: [`docs/architecture/components/engine/`](./components/engine/index.md)
 - Delivery status: [`docs/architecture/system-delivery-status.md`](./system-delivery-status.md)
+- Fowler follow-up review:
+  [`docs/planning/reviews/architecture-and-governance/20260421-temporal-fowler-provider-truth-follow-up-review.md`](../planning/reviews/architecture-and-governance/20260421-temporal-fowler-provider-truth-follow-up-review.md)
 - Code-aligned snapshot atlas: [`docs/architecture/atlas/`](./atlas/index.md)

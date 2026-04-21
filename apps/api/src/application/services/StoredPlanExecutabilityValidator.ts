@@ -1,3 +1,8 @@
+/**
+ * Owned concern: fail-closed executability validation for stored plans.
+ * This service checks adapter presence, stored-plan integrity, step-kind
+ * support, and capability requirements before planner-backed runtime dispatch.
+ */
 import type {
   ExecutabilityValidationResult,
   IPlanExecutabilityValidator,

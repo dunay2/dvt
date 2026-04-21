@@ -1,3 +1,8 @@
+/**
+ * Owned concern: expose the implemented adapter truth for `startRun`.
+ * This registry is the filter that turns discovered provider IDs into the
+ * canonical start-run adapter set supported by the API boundary.
+ */
 import type { IStartRunTargetAdapterRegistry } from '../ports/IStartRunTargetAdapterRegistry.js';
 import {
   SUPPORTED_START_RUN_TARGET_ADAPTERS,
