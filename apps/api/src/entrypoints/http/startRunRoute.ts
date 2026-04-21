@@ -5,7 +5,6 @@ import type { StartRunAuthorizedFacade } from '../../application/services/startR
 import { DEFAULT_START_RUN_TARGET_ADAPTER_REGISTRY } from '../../application/services/startRunTargetAdapterRegistry.js';
 
 import { extractBearerToken } from './extractBearerToken.js';
-import { sendHttpResponse } from './httpErrorContract.js';
 import { httpErrorTranslation } from './httpErrorTranslation.js';
 import { parseStartRunBody } from './startRunRouteParser.js';
 
@@ -17,7 +16,7 @@ export async function startRunRoute(
 ): Promise<void> {
   const parsed = parseStartRunBody(request.body, adapterRegistry);
   if (!parsed.ok) {
-    sendHttpResponse(reply, httpErrorTranslation.parse.issue(parsed.issue));
+    httpErrorTranslation.respond(reply, httpErrorTranslation.parse.issue(parsed.issue));
     return;
   }
 
@@ -31,5 +30,5 @@ export async function startRunRoute(
   const mapped = facadeResult.ok
     ? httpErrorTranslation.startRun.facadeResult(facadeResult.value)
     : httpErrorTranslation.startRun.engineError(facadeResult.error);
-  sendHttpResponse(reply, mapped);
+  httpErrorTranslation.respond(reply, mapped);
 }

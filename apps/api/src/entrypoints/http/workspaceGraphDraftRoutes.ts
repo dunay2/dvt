@@ -7,7 +7,6 @@ import type { IObservability, ISpan } from '@dvt/observability';
 import type { FastifyInstance } from 'fastify';
 
 import {
-  WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
   type IWorkspaceGraphDraftTelemetry,
   type WorkspaceGraphDraftRequestedScope,
 } from '../../application/ports/workspaceGraphDraft.js';
@@ -17,7 +16,6 @@ import type { SaveWorkspaceGraphDraftUseCase } from '../../application/services/
 import { EnvironmentId, ProjectId, TenantId } from '../../domain/auth/types.js';
 
 import { extractBearerToken } from './extractBearerToken.js';
-import { createHttpErrorResponse, HTTP_ERROR_TYPE, sendHttpResponse } from './httpErrorContract.js';
 import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
 import { httpErrorTranslation } from './httpErrorTranslation.js';
 import {
@@ -48,7 +46,7 @@ export function registerWorkspaceGraphDraftRoutes(
     const startedAt = Date.now();
     const parsed = parseRequestedScope(request.query);
     if (!parsed.ok) {
-      sendHttpResponse(reply, httpErrorTranslation.parse.issue(parsed.issue));
+      httpErrorTranslation.respond(reply, httpErrorTranslation.parse.issue(parsed.issue));
       return;
     }
 
@@ -75,15 +73,11 @@ export function registerWorkspaceGraphDraftRoutes(
           Date.now() - startedAt
         );
         span.setAttributes({ outcome: 'not_found' });
-        sendHttpResponse(
+        httpErrorTranslation.respond(
           reply,
-          createHttpErrorResponse({
-            type: HTTP_ERROR_TYPE.notFound,
-            reason: HTTP_ERROR_REASON.workspaceGraphDraftNotFound,
-            details: {
-              correlationId: decision.correlationId,
-              decisionId: decision.decisionId,
-            },
+          httpErrorTranslation.workspaceGraphDraft.read.notFound({
+            correlationId: decision.correlationId,
+            decisionId: decision.decisionId,
           })
         );
         return;
@@ -115,7 +109,7 @@ export function registerWorkspaceGraphDraftRoutes(
     const startedAt = Date.now();
     const parsed = parseSaveRequest(request.body);
     if (!parsed.ok) {
-      sendHttpResponse(reply, httpErrorTranslation.parse.issue(parsed.issue));
+      httpErrorTranslation.respond(reply, httpErrorTranslation.parse.issue(parsed.issue));
       return;
     }
 
@@ -146,15 +140,9 @@ export function registerWorkspaceGraphDraftRoutes(
           Date.now() - startedAt
         );
         span.setAttributes({ outcome: 'unsupported_schema_version', httpStatus: 422 });
-        sendHttpResponse(
+        httpErrorTranslation.respond(
           reply,
-          createHttpErrorResponse({
-            type: HTTP_ERROR_TYPE.unprocessable,
-            reason: HTTP_ERROR_REASON.workspaceGraphDraftUnsupportedSchemaVersion,
-            details: {
-              expectedSchemaVersion: WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
-            },
-          })
+          httpErrorTranslation.workspaceGraphDraft.write.unsupportedSchemaVersion()
         );
         return;
       }
@@ -166,15 +154,11 @@ export function registerWorkspaceGraphDraftRoutes(
           Date.now() - startedAt
         );
         span.setAttributes({ outcome: 'idempotency_mismatch', httpStatus: 409 });
-        sendHttpResponse(
+        httpErrorTranslation.respond(
           reply,
-          createHttpErrorResponse({
-            type: HTTP_ERROR_TYPE.conflict,
-            reason: HTTP_ERROR_REASON.workspaceGraphDraftIdempotencyKeyReused,
-            details: {
-              correlationId: decision.correlationId,
-              decisionId: decision.decisionId,
-            },
+          httpErrorTranslation.workspaceGraphDraft.write.idempotencyMismatch({
+            correlationId: decision.correlationId,
+            decisionId: decision.decisionId,
           })
         );
         return;

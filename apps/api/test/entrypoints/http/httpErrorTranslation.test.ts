@@ -8,13 +8,119 @@ import {
   RunNotFoundError,
   SignalNotImplementedError,
 } from '@dvt/engine';
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import {
   START_RUN_ENGINE_ERROR_CODE,
   START_RUN_ENGINE_ERROR_REASON,
 } from '../../../src/application/ports/startRunContract.js';
 import { httpErrorTranslation } from '../../../src/entrypoints/http/httpErrorTranslation.js';
+
+describe('httpErrorTranslation.respond', () => {
+  it('writes headers, status, and body through the facade writer', () => {
+    const reply = {
+      header: vi.fn(),
+      code: vi.fn().mockReturnThis(),
+      send: vi.fn(),
+    };
+
+    httpErrorTranslation.respond(
+      reply as unknown as Parameters<typeof httpErrorTranslation.respond>[0],
+      {
+        status: 429,
+        headers: { 'retry-after': '30' },
+        body: {
+          error: {
+            type: 'rate_limited',
+            reason: 'tenant_backpressure',
+          },
+        },
+      }
+    );
+
+    expect(reply.header).toHaveBeenCalledWith('retry-after', '30');
+    expect(reply.code).toHaveBeenCalledWith(429);
+    expect(reply.send).toHaveBeenCalledWith({
+      error: {
+        type: 'rate_limited',
+        reason: 'tenant_backpressure',
+      },
+    });
+  });
+});
+
+describe('httpErrorTranslation admin helpers', () => {
+  it('maps rebuild snapshot internal failures to a canonical 500 envelope', () => {
+    const result = httpErrorTranslation.admin.rebuildSnapshotInternalError();
+    expect(result).toEqual({
+      status: 500,
+      body: {
+        error: {
+          type: 'internal_server_error',
+          reason: 'internal_error',
+        },
+      },
+    });
+  });
+});
+
+describe('httpErrorTranslation workspace graph draft helpers', () => {
+  it('maps missing persisted drafts to a canonical 404 envelope', () => {
+    const result = httpErrorTranslation.workspaceGraphDraft.read.notFound({
+      correlationId: 'req-1',
+      decisionId: 'dec-1',
+    });
+    expect(result).toEqual({
+      status: 404,
+      body: {
+        error: {
+          type: 'not_found',
+          reason: 'workspace_graph_draft_not_found',
+          details: {
+            correlationId: 'req-1',
+            decisionId: 'dec-1',
+          },
+        },
+      },
+    });
+  });
+
+  it('maps unsupported schema versions on save to a canonical 422 envelope', () => {
+    const result = httpErrorTranslation.workspaceGraphDraft.write.unsupportedSchemaVersion();
+    expect(result).toEqual({
+      status: 422,
+      body: {
+        error: {
+          type: 'unprocessable',
+          reason: 'workspace_graph_draft_unsupported_schema_version',
+          details: {
+            expectedSchemaVersion: 'workspace-graph-draft.v1',
+          },
+        },
+      },
+    });
+  });
+
+  it('maps idempotency mismatches on save to a canonical 409 envelope', () => {
+    const result = httpErrorTranslation.workspaceGraphDraft.write.idempotencyMismatch({
+      correlationId: 'req-1',
+      decisionId: 'dec-1',
+    });
+    expect(result).toEqual({
+      status: 409,
+      body: {
+        error: {
+          type: 'conflict',
+          reason: 'workspace_graph_draft_idempotency_key_reused',
+          details: {
+            correlationId: 'req-1',
+            decisionId: 'dec-1',
+          },
+        },
+      },
+    });
+  });
+});
 
 describe('mapStartRunFacadeResult', () => {
   it('unauthenticated -> 401', () => {

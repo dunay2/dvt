@@ -59,10 +59,13 @@ describe('HTTP runtime error translation architecture', () => {
   it('exposes one public component API grouped by concern', () => {
     expect(existsSync(join(COMPONENT_ROOT, 'httpErrorTranslation.ts'))).toBe(true);
     expect(HTTP_ERROR_TRANSLATION_SOURCE).toContain('export const httpErrorTranslation = {');
+    expect(HTTP_ERROR_TRANSLATION_SOURCE).toContain('respond(reply: FastifyReply, response: HttpResponseModel): void {');
+    expect(HTTP_ERROR_TRANSLATION_SOURCE).toContain('sendHttpResponse(reply, response);');
     expect(HTTP_ERROR_TRANSLATION_SOURCE).toContain('parse: {');
     expect(HTTP_ERROR_TRANSLATION_SOURCE).toContain('auth: {');
     expect(HTTP_ERROR_TRANSLATION_SOURCE).toContain('startRun: {');
     expect(HTTP_ERROR_TRANSLATION_SOURCE).toContain('runtime: {');
+    expect(HTTP_ERROR_TRANSLATION_SOURCE).toContain("from './httpErrorContract.js'");
     expect(HTTP_ERROR_TRANSLATION_SOURCE).toContain("from './httpErrorMapper.js'");
     expect(HTTP_ERROR_TRANSLATION_SOURCE).toContain("from './httpDomainErrorClassifier.js'");
   });
@@ -84,19 +87,34 @@ describe('HTTP runtime error translation architecture', () => {
       expect(consumerSource).toContain("from './httpErrorTranslation.js'");
       expect(consumerSource).not.toContain("from './httpDomainErrorClassifier.js'");
       expect(consumerSource).not.toContain("from './httpErrorMapper.js'");
+      expect(consumerSource).not.toContain('sendHttpResponse');
     }
   });
 
-  it('uses the owned serializer for translated HttpResponseModel values', () => {
-    const listRunsRouteSource = readComponentSource('listRunsRoute.ts');
-    expect(listRunsRouteSource).toContain('sendHttpResponse(reply, auth.response)');
-    expect(listRunsRouteSource).toContain('sendHttpResponse(reply, mapped)');
-    expect(listRunsRouteSource).not.toContain('reply.code(auth.response.status).send(auth.response.body)');
-    expect(listRunsRouteSource).not.toContain('reply.code(mapped.status).send(mapped.body)');
+  it('keeps route-local static envelopes behind the component facade', () => {
+    for (const consumerFile of ['adminRoutes.ts', 'workspaceGraphDraftRoutes.ts']) {
+      const consumerSource = readComponentSource(consumerFile);
+      expect(consumerSource).not.toContain("from './httpErrorContract.js'");
+      expect(consumerSource).not.toContain('createHttpErrorResponse(');
+    }
 
-    const startRunRouteSource = readComponentSource('startRunRoute.ts');
-    expect(startRunRouteSource).toContain('sendHttpResponse(reply, mapped)');
-    expect(startRunRouteSource).not.toContain('reply.code(mapped.status).send(mapped.body)');
-    expect(startRunRouteSource).not.toContain('reply.header(name, value)');
+    expect(HTTP_ERROR_TRANSLATION_SOURCE).toContain('admin: {');
+    expect(HTTP_ERROR_TRANSLATION_SOURCE).toContain('workspaceGraphDraft: {');
+  });
+
+  it('uses the owned serializer for translated HttpResponseModel values', () => {
+    for (const consumerFile of [
+      'adminRoutes.ts',
+      'getRunRoute.ts',
+      'getRunEventsRoute.ts',
+      'listRunsRoute.ts',
+      'runCommandRouteExecutor.ts',
+      'startRunRoute.ts',
+      'workspaceGraphDraftRoutes.ts',
+    ]) {
+      const consumerSource = readComponentSource(consumerFile);
+      expect(consumerSource).toContain('httpErrorTranslation.respond(');
+      expect(consumerSource).not.toContain('sendHttpResponse(');
+    }
   });
 });

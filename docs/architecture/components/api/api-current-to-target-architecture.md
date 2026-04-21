@@ -165,12 +165,13 @@ Native cancel and cooperative cancel are now intentionally split:
   control before engine dispatch.
 - The HTTP error translation boundary now has a clearer local seam:
   `httpErrorContract.ts` owns the canonical envelope primitives,
-  `httpErrorTranslation.ts` is the public component API,
+  `httpErrorTranslation.ts` is the public component API and writer facade,
   `routeParseIssue.ts` owns parser rejection semantics,
   `httpErrorMapper.ts` owns parse/auth/facade/engine translation, and
   `httpDomainErrorClassifier.ts` owns typed runtime-domain error translation.
   Translated `HttpResponseModel` values are now written through
-  `sendHttpResponse(...)` rather than route-local manual serialization.
+  `httpErrorTranslation.respond(...)`, which delegates to the contract-owned
+  serializer instead of route-local manual serialization.
 - Architectural guardrails exist in code through dependency-cruiser rules for
   domain/application/entrypoint separation.
 - The protected runtime is feature-complete enough to support real frontend and
@@ -186,8 +187,10 @@ flowchart LR
   Consumers["route consumers"] --> Api["httpErrorTranslation.ts"]
   Parse["RouteParseIssue"] --> Api
   Runtime["typed runtime error"] --> Api
+  Writer["respond(reply, response)"] --> Api
   Api --> Mapper["httpErrorMapper.ts"]
   Api --> Classifier["httpDomainErrorClassifier.ts"]
+  Api --> Contract["httpErrorContract.ts"]
   Mapper --> Contract["httpErrorContract.ts"]
   Classifier --> Contract
   Reasons["HTTP_ERROR_REASON"] --> Mapper
@@ -198,6 +201,11 @@ Use the local component guide for public API, invariants, transitions, and
 consumers:
 
 - [HTTP runtime error translation component](../../../../apps/api/docs/http-runtime-error-translation-component.md)
+
+The component seam now also owns feature-level static envelopes for
+`adminRoutes.ts` and `workspaceGraphDraftRoutes.ts`, so those consumers no
+longer need direct `createHttpErrorResponse(...)` imports for component-owned
+semantic failures.
 
 ### Current Gaps
 

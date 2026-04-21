@@ -7,7 +7,6 @@ import { AuthorizeCommandScopeService } from '../../application/services/authori
 import { authorizeExecutionScope } from './authorizeExecutionScope.js';
 import { extractBearerToken } from './extractBearerToken.js';
 import { parseGetRunEventsRequest } from './getRunEventsRouteParser.js';
-import { sendHttpResponse } from './httpErrorContract.js';
 import { httpErrorTranslation } from './httpErrorTranslation.js';
 
 export async function getRunEventsRoute(
@@ -29,7 +28,7 @@ export async function getRunEventsRoute(
     limit: request.query.limit,
   });
   if (!parsed.ok) {
-    sendHttpResponse(reply, httpErrorTranslation.parse.issue(parsed.issue));
+    httpErrorTranslation.respond(reply, httpErrorTranslation.parse.issue(parsed.issue));
     return;
   }
 
@@ -41,7 +40,7 @@ export async function getRunEventsRoute(
     requestedScope: parsed.value.requestedScope,
   });
   if (!auth.ok) {
-    sendHttpResponse(reply, auth.response);
+    httpErrorTranslation.respond(reply, auth.response);
     return;
   }
 
@@ -51,7 +50,7 @@ export async function getRunEventsRoute(
   } catch (error) {
     const mapped = httpErrorTranslation.runtime.domainError(error);
     if (mapped) {
-      sendHttpResponse(reply, mapped);
+      httpErrorTranslation.respond(reply, mapped);
       return;
     }
 

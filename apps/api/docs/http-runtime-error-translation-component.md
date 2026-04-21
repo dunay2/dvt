@@ -33,14 +33,13 @@ It does **not** own:
 
 - `httpErrorTranslation.ts`
   Public production seam:
+  `httpErrorTranslation.respond`,
+  `httpErrorTranslation.admin.*`,
   `httpErrorTranslation.parse.issue`,
   `httpErrorTranslation.auth.*`,
   `httpErrorTranslation.startRun.*`,
+  `httpErrorTranslation.workspaceGraphDraft.*`,
   `httpErrorTranslation.runtime.domainError`
-- `httpErrorContract.ts`
-  Canonical HTTP error primitives:
-  `HTTP_ERROR_TYPE`, `HTTP_HEADER`, `HttpResponseModel`,
-  `createHttpErrorResponse`, `sendHttpResponse`, `normalizeHttpErrorReason`
 - `httpErrorReasonCatalog.ts`
   Stable route-level reason catalog:
   `HTTP_ERROR_REASON`
@@ -48,6 +47,14 @@ It does **not** own:
   Parser/auth semantic rejection model:
   `RouteParseIssue`, `RouteParseResult`, `badRequestIssue`,
   `forbiddenIssue`, `badRequestResult`, `forbiddenResult`
+
+## Internal collaborators
+
+- `httpErrorContract.ts`
+  Canonical HTTP error primitives and the owned transport serializer used
+  behind the facade:
+  `HTTP_ERROR_TYPE`, `HTTP_HEADER`, `HttpResponseModel`,
+  `createHttpErrorResponse`, `sendHttpResponse`, `normalizeHttpErrorReason`
 
 ## Invariants
 
@@ -59,9 +66,12 @@ It does **not** own:
   parsing
 - production consumers import `httpErrorTranslation.ts` instead of internal
   mapper/classifier modules
+- production consumers do not import `createHttpErrorResponse(...)` directly for
+  component-owned semantic envelopes
 - `httpErrorMapper.ts` does not own runtime-domain classification
-- translated `HttpResponseModel` values are emitted through `sendHttpResponse`
-  instead of handwritten route serialization
+- translated `HttpResponseModel` values are emitted through
+  `httpErrorTranslation.respond(...)`, which delegates to the owned transport
+  serializer in `httpErrorContract.ts`
 - optional `details` are omitted when empty
 
 ## Transitions
@@ -86,6 +96,7 @@ flowchart TB
   subgraph Boundary["HTTP runtime error translation boundary"]
     Contract["httpErrorContract.ts"]
     Api["httpErrorTranslation.ts"]
+    Writer["respond(reply, response)"]
     Reasons["httpErrorReasonCatalog.ts"]
     Parse["routeParseIssue.ts"]
     Mapper["httpErrorMapper.ts"]
@@ -94,9 +105,12 @@ flowchart TB
   end
 
   Routes["admin/get/list/events/run-command routes"] --> Api
+  Routes --> Writer
+  Writer --> Api
   Api --> Parse
   Api --> Mapper
   Api --> Classifier
+  Api --> Contract
   Mapper --> Contract
   Classifier --> Contract
   Mapper --> Reasons
@@ -122,11 +136,15 @@ sequenceDiagram
     Api->>Mapper: delegate by concern
     Mapper->>Contract: createHttpErrorResponse(...)
     Contract-->>Route: HttpResponseModel
+    Route->>Api: respond(reply, response)
+    Api->>Contract: sendHttpResponse(reply, response)
   else runtime error after execution
     Route->>Api: runtime.domainError(error)
     Api->>Classifier: delegate by concern
     Classifier->>Contract: createHttpErrorResponse(...)
     Contract-->>Route: HttpResponseModel | null
+    Route->>Api: respond(reply, response)
+    Api->>Contract: sendHttpResponse(reply, response)
   end
 ```
 
@@ -140,6 +158,7 @@ sequenceDiagram
 - `authorizeExecutionScope.ts`
 - `authorizeAdminExecutionScope.ts`
 - `startRunRoute.ts`
+- `workspaceGraphDraftRoutes.ts`
 
 ## Focused file map
 
@@ -156,10 +175,13 @@ sequenceDiagram
 ## Consumers and boundaries
 
 - route parsers and auth seams produce semantic failures
-- `httpErrorTranslation.ts` is the public seam for production consumers
+- `httpErrorTranslation.ts` is the public seam for production consumers,
+  including response emission through `respond(...)` and feature-level static
+  envelopes for admin and workspace graph draft flows
 - the mapper serializes parse/auth/facade/engine outcomes behind that seam
 - the classifier serializes typed runtime-domain errors behind that seam
-- `sendHttpResponse` is the owned transport writer for translated responses
+- `sendHttpResponse` is the owned transport writer used by the facade, not the
+  preferred production import
 - unknown runtime errors remain uncategorized and are rethrown to the outer
   error boundary
 
@@ -167,6 +189,11 @@ sequenceDiagram
 
 - add new production consumer imports through `httpErrorTranslation.ts`, not
   directly from mapper/classifier internals
+- emit translated error responses through `httpErrorTranslation.respond(...)`,
+  not through direct `sendHttpResponse` imports from route consumers
+- emit component-owned static envelopes through named helpers on
+  `httpErrorTranslation.ts`, not through direct `createHttpErrorResponse(...)`
+  imports from route consumers
 - add new route-level static reasons in `HTTP_ERROR_REASON`
 - add new parser rejections through `RouteParseIssue`, not ad hoc `{ status,
 body }` objects
