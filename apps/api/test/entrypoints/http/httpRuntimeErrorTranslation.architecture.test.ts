@@ -10,6 +10,7 @@ function readComponentSource(fileName: string): string {
 }
 
 const HTTP_ERROR_CONTRACT_SOURCE = readComponentSource('httpErrorContract.ts');
+const HTTP_ERROR_TRANSLATION_SOURCE = readComponentSource('httpErrorTranslation.ts');
 const HTTP_ERROR_REASON_CATALOG_SOURCE = readComponentSource('httpErrorReasonCatalog.ts');
 const ROUTE_PARSE_ISSUE_SOURCE = readComponentSource('routeParseIssue.ts');
 const HTTP_ERROR_MAPPER_SOURCE = readComponentSource('httpErrorMapper.ts');
@@ -29,6 +30,7 @@ describe('HTTP runtime error translation architecture', () => {
   it('states the owned concern at the top of each boundary module', () => {
     for (const source of [
       HTTP_ERROR_CONTRACT_SOURCE,
+      HTTP_ERROR_TRANSLATION_SOURCE,
       HTTP_ERROR_REASON_CATALOG_SOURCE,
       ROUTE_PARSE_ISSUE_SOURCE,
       HTTP_ERROR_MAPPER_SOURCE,
@@ -54,20 +56,34 @@ describe('HTTP runtime error translation architecture', () => {
     expect(HTTP_ERROR_MAPPER_SOURCE).not.toContain('type HttpResponseModel } from');
   });
 
-  it('forces runtime route consumers to import the classifier directly', () => {
+  it('exposes one public component API grouped by concern', () => {
+    expect(existsSync(join(COMPONENT_ROOT, 'httpErrorTranslation.ts'))).toBe(true);
+    expect(HTTP_ERROR_TRANSLATION_SOURCE).toContain('export const httpErrorTranslation = {');
+    expect(HTTP_ERROR_TRANSLATION_SOURCE).toContain('parse: {');
+    expect(HTTP_ERROR_TRANSLATION_SOURCE).toContain('auth: {');
+    expect(HTTP_ERROR_TRANSLATION_SOURCE).toContain('startRun: {');
+    expect(HTTP_ERROR_TRANSLATION_SOURCE).toContain('runtime: {');
+    expect(HTTP_ERROR_TRANSLATION_SOURCE).toContain("from './httpErrorMapper.js'");
+    expect(HTTP_ERROR_TRANSLATION_SOURCE).toContain("from './httpDomainErrorClassifier.js'");
+  });
+
+  it('forces production consumers to depend on the public component API instead of internals', () => {
     for (const consumerFile of [
       'adminRoutes.ts',
+      'authorizeAdminExecutionScope.ts',
+      'authorizeExecutionScope.ts',
       'getRunRoute.ts',
       'getRunEventsRoute.ts',
       'listRunsRoute.ts',
+      'planRouteRequestResolver.ts',
       'runCommandRouteExecutor.ts',
+      'startRunRoute.ts',
+      'workspaceGraphDraftRoutes.ts',
     ]) {
       const consumerSource = readComponentSource(consumerFile);
-      expect(consumerSource).toContain("from './httpDomainErrorClassifier.js'");
-      expect(consumerSource).not.toContain(
-        "mapRuntimeDomainError } from './httpErrorMapper.js'"
-      );
-      expect(consumerSource).not.toContain('RUN_NOT_FOUND:');
+      expect(consumerSource).toContain("from './httpErrorTranslation.js'");
+      expect(consumerSource).not.toContain("from './httpDomainErrorClassifier.js'");
+      expect(consumerSource).not.toContain("from './httpErrorMapper.js'");
     }
   });
 });

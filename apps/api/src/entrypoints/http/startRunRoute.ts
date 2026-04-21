@@ -6,11 +6,7 @@ import { DEFAULT_START_RUN_TARGET_ADAPTER_REGISTRY } from '../../application/ser
 
 import { extractBearerToken } from './extractBearerToken.js';
 import { sendHttpResponse } from './httpErrorContract.js';
-import {
-  mapRouteParseIssue,
-  mapStartRunEngineError,
-  mapStartRunFacadeResult,
-} from './httpErrorMapper.js';
+import { httpErrorTranslation } from './httpErrorTranslation.js';
 import { parseStartRunBody } from './startRunRouteParser.js';
 
 export async function startRunRoute(
@@ -21,7 +17,7 @@ export async function startRunRoute(
 ): Promise<void> {
   const parsed = parseStartRunBody(request.body, adapterRegistry);
   if (!parsed.ok) {
-    sendHttpResponse(reply, mapRouteParseIssue(parsed.issue));
+    sendHttpResponse(reply, httpErrorTranslation.parse.issue(parsed.issue));
     return;
   }
 
@@ -33,8 +29,8 @@ export async function startRunRoute(
   });
 
   const mapped = facadeResult.ok
-    ? mapStartRunFacadeResult(facadeResult.value)
-    : mapStartRunEngineError(facadeResult.error);
+    ? httpErrorTranslation.startRun.facadeResult(facadeResult.value)
+    : httpErrorTranslation.startRun.engineError(facadeResult.error);
   if (mapped.headers) {
     for (const [name, value] of Object.entries(mapped.headers)) {
       reply.header(name, value);

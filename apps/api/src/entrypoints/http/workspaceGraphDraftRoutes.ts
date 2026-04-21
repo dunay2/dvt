@@ -18,8 +18,8 @@ import { EnvironmentId, ProjectId, TenantId } from '../../domain/auth/types.js';
 
 import { extractBearerToken } from './extractBearerToken.js';
 import { createHttpErrorResponse, HTTP_ERROR_TYPE, sendHttpResponse } from './httpErrorContract.js';
-import { mapRouteParseIssue } from './httpErrorMapper.js';
 import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
+import { httpErrorTranslation } from './httpErrorTranslation.js';
 import {
   badRequestIssue,
   badRequestResult,
@@ -48,7 +48,7 @@ export function registerWorkspaceGraphDraftRoutes(
     const startedAt = Date.now();
     const parsed = parseRequestedScope(request.query);
     if (!parsed.ok) {
-      sendHttpResponse(reply, mapRouteParseIssue(parsed.issue));
+      sendHttpResponse(reply, httpErrorTranslation.parse.issue(parsed.issue));
       return;
     }
 
@@ -115,7 +115,7 @@ export function registerWorkspaceGraphDraftRoutes(
     const startedAt = Date.now();
     const parsed = parseSaveRequest(request.body);
     if (!parsed.ok) {
-      sendHttpResponse(reply, mapRouteParseIssue(parsed.issue));
+      sendHttpResponse(reply, httpErrorTranslation.parse.issue(parsed.issue));
       return;
     }
 

@@ -17,10 +17,9 @@ import { TenantId } from '../../domain/auth/types.js';
 
 import { authorizeAdminExecutionScope } from './authorizeAdminExecutionScope.js';
 import { extractBearerToken } from './extractBearerToken.js';
-import { mapRuntimeDomainError } from './httpDomainErrorClassifier.js';
 import { createHttpErrorResponse, HTTP_ERROR_TYPE, sendHttpResponse } from './httpErrorContract.js';
-import { mapRouteParseIssue } from './httpErrorMapper.js';
 import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
+import { httpErrorTranslation } from './httpErrorTranslation.js';
 import { badRequestIssue } from './routeParseIssue.js';
 
 const ADMIN_REBUILD_SNAPSHOT_ACTION = {
@@ -54,7 +53,7 @@ export function registerAdminRoutes(
       const { runId } = request.params;
       const tenantIdResult = parseTenantIdFromAdminBody(request.body);
       if (!tenantIdResult.ok) {
-        sendHttpResponse(reply, mapRouteParseIssue(tenantIdResult.issue));
+        sendHttpResponse(reply, httpErrorTranslation.parse.issue(tenantIdResult.issue));
         return;
       }
 
@@ -63,7 +62,7 @@ export function registerAdminRoutes(
       if (!requestedTenant.ok) {
         sendHttpResponse(
           reply,
-          mapRouteParseIssue(
+          httpErrorTranslation.parse.issue(
             badRequestIssue(HTTP_ERROR_REASON.invalidTenantId, {
               target: 'tenantId',
             })
@@ -91,7 +90,7 @@ export function registerAdminRoutes(
         const snapshot = await stateStore.rebuildSnapshot(tenantId, runId);
         reply.code(200).send({ runId, status: snapshot.status });
       } catch (err) {
-        const mapped = mapRuntimeDomainError(err);
+        const mapped = httpErrorTranslation.runtime.domainError(err);
         if (mapped !== null) {
           sendHttpResponse(reply, mapped);
           return;

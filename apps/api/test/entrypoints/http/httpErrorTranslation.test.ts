@@ -14,15 +14,14 @@ import {
   START_RUN_ENGINE_ERROR_CODE,
   START_RUN_ENGINE_ERROR_REASON,
 } from '../../../src/application/ports/startRunContract.js';
-import { mapRuntimeDomainError } from '../../../src/entrypoints/http/httpDomainErrorClassifier.js';
-import {
-  mapStartRunEngineError,
-  mapStartRunFacadeResult,
-} from '../../../src/entrypoints/http/httpErrorMapper.js';
+import { httpErrorTranslation } from '../../../src/entrypoints/http/httpErrorTranslation.js';
 
 describe('mapStartRunFacadeResult', () => {
   it('unauthenticated -> 401', () => {
-    const result = mapStartRunFacadeResult({ kind: 'unauthenticated', code: 'MISSING_TOKEN' });
+    const result = httpErrorTranslation.startRun.facadeResult({
+      kind: 'unauthenticated',
+      code: 'MISSING_TOKEN',
+    });
     expect(result.status).toBe(401);
     expect(result.body).toEqual({
       error: {
@@ -33,7 +32,10 @@ describe('mapStartRunFacadeResult', () => {
   });
 
   it('unauthorized -> 403', () => {
-    const result = mapStartRunFacadeResult({ kind: 'unauthorized', reason: 'TENANT_NOT_GRANTED' });
+    const result = httpErrorTranslation.startRun.facadeResult({
+      kind: 'unauthorized',
+      reason: 'TENANT_NOT_GRANTED',
+    });
     expect(result.status).toBe(403);
     expect(result.body).toEqual({
       error: {
@@ -44,7 +46,7 @@ describe('mapStartRunFacadeResult', () => {
   });
 
   it('accepted -> 202 with runId', () => {
-    const result = mapStartRunFacadeResult({
+    const result = httpErrorTranslation.startRun.facadeResult({
       kind: 'accepted',
       runId: 'r-abc',
       accepted: true,
@@ -54,7 +56,7 @@ describe('mapStartRunFacadeResult', () => {
   });
 
   it('duplicate -> 202 with duplicate marker', () => {
-    const result = mapStartRunFacadeResult({
+    const result = httpErrorTranslation.startRun.facadeResult({
       kind: 'duplicate',
       runId: 'r-dup',
       accepted: true,
@@ -70,7 +72,7 @@ describe('mapStartRunFacadeResult', () => {
   });
 
   it('tenant_backpressure -> 429 with Retry-After', () => {
-    const result = mapStartRunFacadeResult({
+    const result = httpErrorTranslation.startRun.facadeResult({
       kind: 'tenant_backpressure',
       accepted: false,
       code: 'TENANT_BACKPRESSURE',
@@ -87,7 +89,7 @@ describe('mapStartRunFacadeResult', () => {
   });
 
   it('system_backpressure -> 503 with Retry-After', () => {
-    const result = mapStartRunFacadeResult({
+    const result = httpErrorTranslation.startRun.facadeResult({
       kind: 'system_backpressure',
       accepted: false,
       code: 'BACKPRESSURE_SNAPSHOT_UNAVAILABLE',
@@ -117,7 +119,7 @@ describe('mapStartRunFacadeResult', () => {
       cause: 'adapter',
     },
   ])('plan_rejected preserves stable reason for $code', (input) => {
-    const result = mapStartRunFacadeResult({
+    const result = httpErrorTranslation.startRun.facadeResult({
       kind: 'plan_rejected',
       accepted: false,
       code: input.code,
@@ -140,7 +142,7 @@ describe('mapStartRunFacadeResult', () => {
 
 describe('mapStartRunEngineError', () => {
   it('adapter_not_registered -> 422', () => {
-    const result = mapStartRunEngineError({
+    const result = httpErrorTranslation.startRun.engineError({
       kind: 'adapter_not_registered',
       adapter: 'temporal',
     });
@@ -155,7 +157,7 @@ describe('mapStartRunEngineError', () => {
   });
 
   it('command_invalid -> 422 plan_rejected', () => {
-    const result = mapStartRunEngineError({
+    const result = httpErrorTranslation.startRun.engineError({
       kind: 'command_invalid',
       code: START_RUN_ENGINE_ERROR_CODE.planRefRequired,
       reason: START_RUN_ENGINE_ERROR_REASON.planRefRequired,
@@ -174,7 +176,7 @@ describe('mapStartRunEngineError', () => {
   });
 
   it('unsupported_plan_version -> 422 plan_rejected', () => {
-    const result = mapStartRunEngineError({
+    const result = httpErrorTranslation.startRun.engineError({
       kind: 'unsupported_plan_version',
       planVersion: '2.7',
       supportedVersions: ['1.0'],
@@ -198,7 +200,7 @@ describe('mapRuntimeDomainError', () => {
     ['maps run metadata not found to 404', RunMetadataNotFoundError, 'run-1'],
     ['maps typed run not found errors to 404', RunNotFoundError, 'run-2'],
   ])('%s', (_desc, ErrorClass, runId) => {
-    const result = mapRuntimeDomainError(new ErrorClass(runId));
+    const result = httpErrorTranslation.runtime.domainError(new ErrorClass(runId));
     expect(result).toEqual({
       status: 404,
       body: {
@@ -212,7 +214,9 @@ describe('mapRuntimeDomainError', () => {
   });
 
   it('maps unsupported provider-private commands to 422', () => {
-    const result = mapRuntimeDomainError(new SignalNotImplementedError('PROVIDER_PRIVATE_COMMAND'));
+    const result = httpErrorTranslation.runtime.domainError(
+      new SignalNotImplementedError('PROVIDER_PRIVATE_COMMAND')
+    );
     expect(result).toEqual({
       status: 422,
       body: {
@@ -225,7 +229,9 @@ describe('mapRuntimeDomainError', () => {
   });
 
   it('maps adapter registration errors to 422', () => {
-    const result = mapRuntimeDomainError(new AdapterNotRegisteredError('temporal'));
+    const result = httpErrorTranslation.runtime.domainError(
+      new AdapterNotRegisteredError('temporal')
+    );
     expect(result).toEqual({
       status: 422,
       body: {
@@ -239,7 +245,9 @@ describe('mapRuntimeDomainError', () => {
   });
 
   it('maps authorization errors to 403 forbidden', () => {
-    const result = mapRuntimeDomainError(new AuthorizationError('TENANT_ACCESS_DENIED'));
+    const result = httpErrorTranslation.runtime.domainError(
+      new AuthorizationError('TENANT_ACCESS_DENIED')
+    );
     expect(result).toEqual({
       status: 403,
       body: {
@@ -252,7 +260,9 @@ describe('mapRuntimeDomainError', () => {
   });
 
   it('maps duplicate engine errors to 409 conflict', () => {
-    const result = mapRuntimeDomainError(new RunAlreadyExistsError('run-dup'));
+    const result = httpErrorTranslation.runtime.domainError(
+      new RunAlreadyExistsError('run-dup')
+    );
     expect(result).toEqual({
       status: 409,
       body: {
@@ -266,7 +276,7 @@ describe('mapRuntimeDomainError', () => {
   });
 
   it('maps non-terminal recovery source errors to 422', () => {
-    const result = mapRuntimeDomainError(
+    const result = httpErrorTranslation.runtime.domainError(
       new RecoverySourceNotTerminalError('run-source', 'RUNNING')
     );
     expect(result).toEqual({
@@ -285,14 +295,16 @@ describe('mapRuntimeDomainError', () => {
   });
 
   it('does not classify arbitrary code-only errors as run conflicts', () => {
-    const result = mapRuntimeDomainError(
+    const result = httpErrorTranslation.runtime.domainError(
       Object.assign(new Error('intent conflict'), { code: 'INTENT_ACTIVE_CONFLICT' })
     );
     expect(result).toBeNull();
   });
 
   it('maps outbox rate limit errors to 429', () => {
-    const result = mapRuntimeDomainError(new OutboxRateLimitExceededError('tenant-a'));
+    const result = httpErrorTranslation.runtime.domainError(
+      new OutboxRateLimitExceededError('tenant-a')
+    );
     expect(result).toEqual({
       status: 429,
       body: {

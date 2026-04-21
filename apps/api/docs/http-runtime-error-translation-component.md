@@ -31,13 +31,23 @@ It does **not** own:
 
 ## Public API
 
-| Module                         | Public API                                                                                                                       | Purpose                                |
-| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
-| `httpErrorContract.ts`         | `HTTP_ERROR_TYPE`, `HTTP_HEADER`, `HttpResponseModel`, `createHttpErrorResponse`, `sendHttpResponse`, `normalizeHttpErrorReason` | canonical HTTP error primitives        |
-| `httpErrorReasonCatalog.ts`    | `HTTP_ERROR_REASON`                                                                                                              | stable route-level reason catalog      |
-| `routeParseIssue.ts`           | `RouteParseIssue`, `RouteParseResult`, `badRequestIssue`, `forbiddenIssue`, `badRequestResult`, `forbiddenResult`                | parser/auth semantic rejection model   |
-| `httpErrorMapper.ts`           | `mapRouteParseIssue`, `mapStartRunFacadeResult`, `mapStartRunEngineError`, `mapAuthenticationFailure`, `mapAuthorizationFailure` | parse/auth/facade/engine translation   |
-| `httpDomainErrorClassifier.ts` | `mapRuntimeDomainError`                                                                                                          | typed runtime-domain error translation |
+- `httpErrorTranslation.ts`
+  Public production seam:
+  `httpErrorTranslation.parse.issue`,
+  `httpErrorTranslation.auth.*`,
+  `httpErrorTranslation.startRun.*`,
+  `httpErrorTranslation.runtime.domainError`
+- `httpErrorContract.ts`
+  Canonical HTTP error primitives:
+  `HTTP_ERROR_TYPE`, `HTTP_HEADER`, `HttpResponseModel`,
+  `createHttpErrorResponse`, `sendHttpResponse`, `normalizeHttpErrorReason`
+- `httpErrorReasonCatalog.ts`
+  Stable route-level reason catalog:
+  `HTTP_ERROR_REASON`
+- `routeParseIssue.ts`
+  Parser/auth semantic rejection model:
+  `RouteParseIssue`, `RouteParseResult`, `badRequestIssue`,
+  `forbiddenIssue`, `badRequestResult`, `forbiddenResult`
 
 ## Invariants
 
@@ -47,8 +57,8 @@ It does **not** own:
 - parser failures become `RouteParseIssue` values before serialization
 - runtime-domain translation is typed and must not depend on `error.message`
   parsing
-- route consumers import `mapRuntimeDomainError` from
-  `httpDomainErrorClassifier.ts` directly
+- production consumers import `httpErrorTranslation.ts` instead of internal
+  mapper/classifier modules
 - `httpErrorMapper.ts` does not own runtime-domain classification
 - optional `details` are omitted when empty
 
@@ -73,6 +83,7 @@ stateDiagram-v2
 flowchart TB
   subgraph Boundary["HTTP runtime error translation boundary"]
     Contract["httpErrorContract.ts"]
+    Api["httpErrorTranslation.ts"]
     Reasons["httpErrorReasonCatalog.ts"]
     Parse["routeParseIssue.ts"]
     Mapper["httpErrorMapper.ts"]
@@ -80,9 +91,10 @@ flowchart TB
     Details["httpErrorDetails.ts"]
   end
 
-  Routes["admin/get/list/events/run-command routes"] --> Parse
-  Routes --> Mapper
-  Routes --> Classifier
+  Routes["admin/get/list/events/run-command routes"] --> Api
+  Api --> Parse
+  Api --> Mapper
+  Api --> Classifier
   Mapper --> Contract
   Classifier --> Contract
   Mapper --> Reasons
@@ -97,17 +109,20 @@ flowchart TB
 sequenceDiagram
   participant Route as Route consumer
   participant Parser as Parser/Auth seam
+  participant Api as httpErrorTranslation
   participant Mapper as httpErrorMapper
   participant Classifier as httpDomainErrorClassifier
   participant Contract as httpErrorContract
 
   Route->>Parser: parse request / authorize scope
   alt parse or auth rejection
-    Parser-->>Mapper: RouteParseIssue or auth result
+    Parser-->>Api: RouteParseIssue or auth result
+    Api->>Mapper: delegate by concern
     Mapper->>Contract: createHttpErrorResponse(...)
     Contract-->>Route: HttpResponseModel
   else runtime error after execution
-    Route->>Classifier: mapRuntimeDomainError(error)
+    Route->>Api: runtime.domainError(error)
+    Api->>Classifier: delegate by concern
     Classifier->>Contract: createHttpErrorResponse(...)
     Contract-->>Route: HttpResponseModel | null
   end
@@ -127,6 +142,7 @@ sequenceDiagram
 ## Focused file map
 
 - `apps/api/src/entrypoints/http/httpErrorContract.ts`
+- `apps/api/src/entrypoints/http/httpErrorTranslation.ts`
 - `apps/api/src/entrypoints/http/httpErrorReasonCatalog.ts`
 - `apps/api/src/entrypoints/http/routeParseIssue.ts`
 - `apps/api/src/entrypoints/http/httpErrorDetails.ts`
@@ -138,13 +154,16 @@ sequenceDiagram
 ## Consumers and boundaries
 
 - route parsers and auth seams produce semantic failures
-- the mapper serializes parse/auth/facade/engine outcomes
-- the classifier serializes typed runtime-domain errors
+- `httpErrorTranslation.ts` is the public seam for production consumers
+- the mapper serializes parse/auth/facade/engine outcomes behind that seam
+- the classifier serializes typed runtime-domain errors behind that seam
 - unknown runtime errors remain uncategorized and are rethrown to the outer
   error boundary
 
 ## Extension rules
 
+- add new production consumer imports through `httpErrorTranslation.ts`, not
+  directly from mapper/classifier internals
 - add new route-level static reasons in `HTTP_ERROR_REASON`
 - add new parser rejections through `RouteParseIssue`, not ad hoc `{ status,
 body }` objects

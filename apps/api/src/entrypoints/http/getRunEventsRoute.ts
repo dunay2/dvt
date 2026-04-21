@@ -7,9 +7,8 @@ import { AuthorizeCommandScopeService } from '../../application/services/authori
 import { authorizeExecutionScope } from './authorizeExecutionScope.js';
 import { extractBearerToken } from './extractBearerToken.js';
 import { parseGetRunEventsRequest } from './getRunEventsRouteParser.js';
-import { mapRuntimeDomainError } from './httpDomainErrorClassifier.js';
 import { sendHttpResponse } from './httpErrorContract.js';
-import { mapRouteParseIssue } from './httpErrorMapper.js';
+import { httpErrorTranslation } from './httpErrorTranslation.js';
 
 export async function getRunEventsRoute(
   request: FastifyRequest<{
@@ -30,7 +29,7 @@ export async function getRunEventsRoute(
     limit: request.query.limit,
   });
   if (!parsed.ok) {
-    sendHttpResponse(reply, mapRouteParseIssue(parsed.issue));
+    sendHttpResponse(reply, httpErrorTranslation.parse.issue(parsed.issue));
     return;
   }
 
@@ -50,7 +49,7 @@ export async function getRunEventsRoute(
     const result = await deps.useCase.execute(parsed.value.useCaseInput, auth.context);
     reply.code(200).send(result);
   } catch (error) {
-    const mapped = mapRuntimeDomainError(error);
+    const mapped = httpErrorTranslation.runtime.domainError(error);
     if (mapped) {
       sendHttpResponse(reply, mapped);
       return;

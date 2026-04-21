@@ -10,7 +10,7 @@ import type { AuthorizationAction } from '../../domain/auth/types.js';
 import { authorizeExecutionScope } from './authorizeExecutionScope.js';
 import { extractBearerToken } from './extractBearerToken.js';
 import type { HttpResponseModel } from './httpErrorContract.js';
-import { mapRouteParseIssue } from './httpErrorMapper.js';
+import { httpErrorTranslation } from './httpErrorTranslation.js';
 import type { ParsedPlanRouteScope } from './planRouteScopeParser.js';
 import type { RouteParseResult } from './routeParseIssue.js';
 
@@ -77,7 +77,7 @@ export async function resolveAuthorizedPlanRouteRequest<TParsedRequest>(
   if (!parsedRequest.ok) {
     return {
       ok: false,
-      response: mapRouteParseIssue(parsedRequest.issue),
+      response: httpErrorTranslation.parse.issue(parsedRequest.issue),
     };
   }
 

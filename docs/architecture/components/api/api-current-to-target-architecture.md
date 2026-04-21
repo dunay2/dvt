@@ -165,6 +165,7 @@ Native cancel and cooperative cancel are now intentionally split:
   control before engine dispatch.
 - The HTTP error translation boundary now has a clearer local seam:
   `httpErrorContract.ts` owns the canonical envelope primitives,
+  `httpErrorTranslation.ts` is the public component API,
   `routeParseIssue.ts` owns parser rejection semantics,
   `httpErrorMapper.ts` owns parse/auth/facade/engine translation, and
   `httpDomainErrorClassifier.ts` owns typed runtime-domain error translation.
@@ -180,8 +181,11 @@ loose utility cluster.
 
 ```mermaid
 flowchart LR
-  Parse["RouteParseIssue"] --> Mapper["httpErrorMapper.ts"]
-  Runtime["typed runtime error"] --> Classifier["httpDomainErrorClassifier.ts"]
+  Consumers["route consumers"] --> Api["httpErrorTranslation.ts"]
+  Parse["RouteParseIssue"] --> Api
+  Runtime["typed runtime error"] --> Api
+  Api --> Mapper["httpErrorMapper.ts"]
+  Api --> Classifier["httpDomainErrorClassifier.ts"]
   Mapper --> Contract["httpErrorContract.ts"]
   Classifier --> Contract
   Reasons["HTTP_ERROR_REASON"] --> Mapper
