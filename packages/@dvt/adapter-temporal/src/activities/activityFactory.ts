@@ -6,6 +6,8 @@ import {
 } from '@dvt/contracts';
 
 import type { EventInput } from '../engine-types.js';
+import type { ResolvedExecutionSegment } from '../workflows/executionSegmentResolver.js';
+import { resolveExecutionSegmentFromPlan } from '../workflows/executionSegmentResolver.js';
 
 import type {
   ActivityDeps,
@@ -35,7 +37,13 @@ export function createActivities(
 ): {
   executeStep(input: StepInput): Promise<StepResult>;
   emitEvent(input: EmitEventInput): Promise<void>;
+  resolveExecutionSegment(input: {
+    planRef: EmitEventInput['planRef'];
+    layerIndex: number;
+  }): Promise<ResolvedExecutionSegment>;
 } {
+  assertSegmentResolverConfigured(deps);
+
   const dispatcher = new StepActivityDispatcher(
     new GatewayStepActivity(),
     resolveStepActivityRegistry(deps, stepActivitiesByKind)
@@ -96,7 +104,19 @@ export function createActivities(
 
       await deps.runStateCommandPort.appendTransitions(ctx.runId, [envelope]);
     },
+
+    async resolveExecutionSegment(input): Promise<ResolvedExecutionSegment> {
+      const validatedPlanRef = parsePlanRef(input.planRef);
+      const { plan } = await deps.integrity.fetchAndValidate(validatedPlanRef, deps.fetcher);
+      return resolveExecutionSegmentFromPlan(plan, input.layerIndex);
+    },
   };
+}
+
+function assertSegmentResolverConfigured(deps: ActivityDeps): void {
+  if (deps.fetcher === undefined || deps.integrity === undefined) {
+    throw new Error('PLAN_SEGMENT_RESOLVER_NOT_CONFIGURED');
+  }
 }
 
 function resolveStepActivityRegistry(

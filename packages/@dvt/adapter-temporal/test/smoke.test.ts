@@ -11,9 +11,13 @@ import {
   toTemporalRunRef,
   toTemporalTaskQueue,
   toTemporalWorkflowId,
+  validateTemporalAdapterConfig,
 } from '../src/index.js';
+import { runObservedTemporalOperation, toErrorMessage } from '../src/temporalObservability.js';
 
 import { makeTrackingObservability } from './helpers/mockObservability.js';
+
+type WithAbortSignalLike = <R>(signal: globalThis.AbortSignal, fn: () => Promise<R>) => Promise<R>;
 
 const {
   mockEnsureConnected,
@@ -23,10 +27,8 @@ const {
 } = vi.hoisted(() => {
   const mockEnsureConnected = vi.fn(async () => undefined);
   const mockClose = vi.fn(async () => undefined);
-  const mockWithAbortSignal = vi.fn(
-    async (_signal: globalThis.AbortSignal, fn: () => Promise<unknown>) => {
-      return await fn();
-    }
+  const mockWithAbortSignal = vi.fn<WithAbortSignalLike>(
+    async <R>(_signal: globalThis.AbortSignal, fn: () => Promise<R>): Promise<R> => await fn()
   );
   const mockConnectionConnect = vi.fn(async () => ({
     ensureConnected: mockEnsureConnected,
@@ -68,7 +70,11 @@ describe('adapter-temporal foundation', () => {
         TEMPORAL_TASK_QUEUE: 'q-main',
       });
 
-      expect(cfg.namespace).toBe('explicit-namespace');
+      expect(cfg).toMatchObject({
+        connection: {
+          namespace: 'explicit-namespace',
+        },
+      });
     } finally {
       if (previous === undefined) {
         delete process.env.TEMPORAL_NAMESPACE;
@@ -85,9 +91,23 @@ describe('adapter-temporal foundation', () => {
       TEMPORAL_TASK_QUEUE: 'q-main',
     });
 
-    expect(cfg.identity).toBeUndefined();
-    expect(cfg.maxStartPayloadBytes).toBe(2_000_000);
-    expect(cfg.continueAsNewAfterLayerCount).toBe(0);
+    expect(cfg).toMatchObject({
+      connection: {
+        address: 'temporal:7233',
+        namespace: 'dvt',
+        taskQueue: 'q-main',
+      },
+      timeouts: {
+        connectTimeoutMs: 5000,
+        requestTimeoutMs: 10000,
+      },
+      workflowBudget: {
+        maxStartPayloadBytes: 2_000_000,
+        maxContinueAsNewPayloadBytes: 500_000,
+        continueAsNewAfterLayerCount: 0,
+      },
+    });
+    expect(cfg.connection.identity).toBeUndefined();
   });
 
   it('loads config with defaults and env overrides', () => {
@@ -99,17 +119,50 @@ describe('adapter-temporal foundation', () => {
       TEMPORAL_CONNECT_TIMEOUT_MS: '1500',
       TEMPORAL_REQUEST_TIMEOUT_MS: '2500',
       TEMPORAL_MAX_START_PAYLOAD_BYTES: '123456',
+      TEMPORAL_MAX_CONTINUE_AS_NEW_PAYLOAD_BYTES: '64000',
       TEMPORAL_CONTINUE_AS_NEW_AFTER_LAYERS: '12',
     });
 
-    expect(cfg.address).toBe('temporal:7233');
-    expect(cfg.namespace).toBe('dvt');
-    expect(cfg.taskQueue).toBe('q-main');
-    expect(cfg.identity).toBe('adapter-a');
-    expect(cfg.connectTimeoutMs).toBe(1500);
-    expect(cfg.requestTimeoutMs).toBe(2500);
-    expect(cfg.maxStartPayloadBytes).toBe(123456);
-    expect(cfg.continueAsNewAfterLayerCount).toBe(12);
+    expect(cfg).toMatchObject({
+      connection: {
+        address: 'temporal:7233',
+        namespace: 'dvt',
+        taskQueue: 'q-main',
+        identity: 'adapter-a',
+      },
+      timeouts: {
+        connectTimeoutMs: 1500,
+        requestTimeoutMs: 2500,
+      },
+      workflowBudget: {
+        maxStartPayloadBytes: 123456,
+        maxContinueAsNewPayloadBytes: 64000,
+        continueAsNewAfterLayerCount: 12,
+      },
+    });
+  });
+
+  it('rejects continue-as-new budgets larger than the start payload budget', () => {
+    expect(() =>
+      validateTemporalAdapterConfig({
+        connection: {
+          address: 'temporal:7233',
+          namespace: 'dvt',
+          taskQueue: 'q-main',
+        },
+        timeouts: {
+          connectTimeoutMs: 1500,
+          requestTimeoutMs: 2500,
+        },
+        workflowBudget: {
+          maxStartPayloadBytes: 1024,
+          maxContinueAsNewPayloadBytes: 2048,
+          continueAsNewAfterLayerCount: 0,
+        },
+      })
+    ).toThrow(
+      'TEMPORAL_CONFIG_INVALID: maxContinueAsNewPayloadBytes must be less than or equal to maxStartPayloadBytes'
+    );
   });
 
   it('maps workflow identifiers and status deterministically', () => {
@@ -146,6 +199,34 @@ describe('adapter-temporal foundation', () => {
     expect(mapTemporalStatusToRunStatus('PAUSED')).toBe('PAUSED');
   });
 
+  it('maps every known Temporal runtime status deterministically', () => {
+    expect(
+      Object.fromEntries(
+        (
+          [
+            ['RUNNING', mapTemporalStatusToRunStatus('RUNNING')],
+            ['PAUSED', mapTemporalStatusToRunStatus('PAUSED')],
+            ['COMPLETED', mapTemporalStatusToRunStatus('COMPLETED')],
+            ['FAILED', mapTemporalStatusToRunStatus('FAILED')],
+            ['CANCELLED', mapTemporalStatusToRunStatus('CANCELLED')],
+            ['TERMINATED', mapTemporalStatusToRunStatus('TERMINATED')],
+            ['TIMED_OUT', mapTemporalStatusToRunStatus('TIMED_OUT')],
+            ['CONTINUED_AS_NEW', mapTemporalStatusToRunStatus('CONTINUED_AS_NEW')],
+          ] as const
+        ).map(([status, mapped]) => [status, mapped])
+      )
+    ).toEqual({
+      RUNNING: 'RUNNING',
+      PAUSED: 'PAUSED',
+      COMPLETED: 'COMPLETED',
+      FAILED: 'FAILED',
+      CANCELLED: 'CANCELLED',
+      TERMINATED: 'CANCELLED',
+      TIMED_OUT: 'FAILED',
+      CONTINUED_AS_NEW: 'RUNNING',
+    });
+  });
+
   it('extracts Temporal-native runtime status from describe result', () => {
     expect(extractRuntimeStatusFromDescribe({ status: { name: 'RUNNING', code: 1 } })).toBe(
       'RUNNING'
@@ -165,6 +246,94 @@ describe('adapter-temporal foundation', () => {
     expect(extractRuntimeStatusFromDescribe({ status: { name: 'UNKNOWN' } })).toBe('UNKNOWN');
     expect(extractRuntimeStatusFromDescribe({ status: { name: 'PAUSE_REQUESTED' } })).toBe(
       'PAUSE_REQUESTED'
+    );
+  });
+
+  it('coerces primitive non-Error throwables into messages', () => {
+    expect(toErrorMessage(42)).toBe('42');
+    expect(toErrorMessage(false)).toBe('false');
+    expect(toErrorMessage(1n)).toBe('1');
+    expect(toErrorMessage(Symbol.for('temporal'))).toBe('Symbol(temporal)');
+  });
+
+  it('falls back to Unknown error for opaque non-Error values', () => {
+    expect(toErrorMessage(null)).toBe('Unknown error');
+    expect(toErrorMessage({ reason: 'opaque' })).toBe('Unknown error');
+  });
+
+  it('records success observability through the shared temporal operation helper', async () => {
+    const { observability, logs, metrics } = makeTrackingObservability();
+
+    const value = await runObservedTemporalOperation({
+      observability,
+      context: { adapter: 'temporal', taskQueue: 'q-main' },
+      spanName: 'temporal.test.success',
+      counterName: 'dvt.temporal.test_total',
+      durationName: 'dvt.temporal.test_duration_ms',
+      metricOperation: 'testSuccess',
+      run: async () => 'ok-value',
+      onSuccess: () => ({
+        result: 'custom-ok',
+        logLevel: 'debug',
+        logMessage: 'Temporal operation succeeded',
+      }),
+    });
+
+    expect(value).toBe('ok-value');
+    expect(metrics.counter).toHaveBeenCalledWith('dvt.temporal.test_total', {
+      adapter: 'temporal',
+      operation: 'testSuccess',
+      result: 'custom-ok',
+    });
+    expect(metrics.histogram).toHaveBeenCalledWith('dvt.temporal.test_duration_ms', {
+      adapter: 'temporal',
+      operation: 'testSuccess',
+    });
+    expect(logs.debug).toHaveBeenCalledWith(
+      expect.objectContaining({
+        msg: 'Temporal operation succeeded',
+      })
+    );
+  });
+
+  it('records error observability through the shared temporal operation helper without forcing duration', async () => {
+    const { observability, logs, metrics } = makeTrackingObservability();
+    const error = new Error('OPERATION_FAILED');
+
+    await expect(
+      runObservedTemporalOperation({
+        observability,
+        context: { adapter: 'temporal', taskQueue: 'q-main' },
+        spanName: 'temporal.test.error',
+        counterName: 'dvt.temporal.test_total',
+        durationName: 'dvt.temporal.test_duration_ms',
+        metricOperation: 'testError',
+        recordDurationOnError: false,
+        run: async () => {
+          throw error;
+        },
+        onError: () => ({
+          result: 'custom-error',
+          logLevel: 'warn',
+          logMessage: 'Temporal operation failed',
+        }),
+      })
+    ).rejects.toThrow('OPERATION_FAILED');
+
+    expect(metrics.counter).toHaveBeenCalledWith('dvt.temporal.test_total', {
+      adapter: 'temporal',
+      operation: 'testError',
+      result: 'custom-error',
+    });
+    expect(metrics.histogram).not.toHaveBeenCalledWith(
+      'dvt.temporal.test_duration_ms',
+      expect.anything()
+    );
+    expect(logs.warn).toHaveBeenCalledWith(
+      expect.objectContaining({
+        msg: 'Temporal operation failed',
+        err: error,
+      })
     );
   });
 
@@ -279,8 +448,8 @@ describe('adapter-temporal foundation', () => {
 
     mockEnsureConnected.mockImplementationOnce(() => new Promise<never>(() => undefined));
     mockWithAbortSignal.mockImplementationOnce(
-      async (signal: globalThis.AbortSignal, fn: () => Promise<unknown>) =>
-        await new Promise((resolve, reject) => {
+      async <R>(signal: globalThis.AbortSignal, fn: () => Promise<R>): Promise<R> =>
+        await new Promise<R>((resolve, reject) => {
           signal.addEventListener('abort', () => reject(new Error('CANCELLED')), { once: true });
           void fn().then(resolve, reject);
         })

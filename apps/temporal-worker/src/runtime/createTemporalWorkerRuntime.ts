@@ -1,4 +1,8 @@
-import { PostgresRunStateCommandPortBridge, PostgresStateStoreAdapter } from '@dvt/adapter-postgres';
+import {
+  PostgresPlanStore,
+  PostgresRunStateCommandPortBridge,
+  PostgresStateStoreAdapter,
+} from '@dvt/adapter-postgres';
 import {
   CircuitBreakingRunStateCommandPort,
   DbtCliPluginRunner,
@@ -19,7 +23,7 @@ import {
   type IRunExecutionContextReader,
 } from '@dvt/artifacts';
 import { asIsoUtcString } from '@dvt/contracts';
-import { IdempotencyKeyBuilder } from '@dvt/engine';
+import { IdempotencyKeyBuilder, PlanIntegrityValidator } from '@dvt/engine';
 import { NativeConnection } from '@temporalio/worker';
 import type { Logger } from 'pino';
 
@@ -56,6 +60,7 @@ export interface CreateTemporalWorkerRuntimeOptions {
     env: Env;
     bundleReader: IDbtProjectBundleReader;
   }) => DbtPluginRunner;
+  planFetcherFactory?: (env: Env) => { fetch: PostgresPlanStore['fetch']; close?(): Promise<void> };
   hostFactory?: (config: TemporalWorkerHostConfig) => TemporalWorkerHostLike;
   connectionFactory?: (config: TemporalAdapterConfig) => Promise<TemporalConnectionLike>;
   dbtAvailabilityProbe?: (dbtBin: string) => Promise<void>;
@@ -86,6 +91,19 @@ export async function createTemporalWorkerRuntime(
       statementTimeoutMs: env.DVT_PG_STATEMENT_TIMEOUT_MS,
       queryTimeoutMs: env.DVT_PG_QUERY_TIMEOUT_MS,
       assumeSchemaReady: !runMigrations,
+    });
+  const planStore =
+    options.planFetcherFactory?.(env) ??
+    new PostgresPlanStore({
+      connectionString: env.DATABASE_URL,
+      schema: env.DVT_PG_SCHEMA,
+      statementTimeoutMs: env.DVT_PG_STATEMENT_TIMEOUT_MS,
+      queryTimeoutMs: env.DVT_PG_QUERY_TIMEOUT_MS,
+      assumeSchemaReady: !runMigrations,
+      toExecutablePlan: (buildResult) => ({
+        schemaVersion: buildResult.plan.metadata.schemaVersion,
+        text: JSON.stringify(buildResult.plan),
+      }),
     });
 
   const runExecutionContextReader =
@@ -129,6 +147,8 @@ export async function createTemporalWorkerRuntime(
     }),
     clock: { nowIsoUtc: () => asIsoUtcString(new Date().toISOString()) },
     idempotency: new IdempotencyKeyBuilder(),
+    fetcher: planStore,
+    integrity: new PlanIntegrityValidator(),
     runExecutionContextReader,
     ...(dbtPluginRunner === undefined ? {} : { dbtPluginRunner }),
   };
@@ -188,6 +208,9 @@ export async function createTemporalWorkerRuntime(
         host,
         getConnection: () => connection,
         stateStore,
+        ...(typeof planStore.close === 'function'
+          ? { closePlanStore: () => planStore.close!() }
+          : {}),
       }).finally(() => {
         connection = null;
       });
@@ -216,40 +239,56 @@ async function stopTemporalWorkerRuntime(args: {
   host: TemporalWorkerHostLike;
   getConnection(): TemporalConnectionLike | null;
   stateStore: StateStoreLike;
+  closePlanStore?: () => Promise<void>;
 }): Promise<void> {
+  await awaitPendingStartupCompletion(args.pendingStartup);
+
   let firstError: unknown = null;
-
-  if (args.pendingStartup) {
-    try {
-      await args.pendingStartup;
-    } catch {
-      // Cleanup should continue even when startup failed or was aborted.
-    }
-  }
-
-  try {
-    await args.host.shutdown();
-  } catch (error) {
+  const captureFirstError = (error: unknown): void => {
     firstError ??= error;
-  }
+  };
+
+  await runCleanupStep(async () => args.host.shutdown(), captureFirstError);
 
   const connection = args.getConnection();
-  if (connection !== null) {
-    try {
-      await connection.close();
-    } catch (error) {
-      firstError ??= error;
-    }
-  }
-
-  try {
-    await args.stateStore.close();
-  } catch (error) {
-    firstError ??= error;
-  }
+  await runCleanupStep(
+    connection === null ? undefined : async () => connection.close(),
+    captureFirstError
+  );
+  await runCleanupStep(async () => args.stateStore.close(), captureFirstError);
+  await runCleanupStep(args.closePlanStore, captureFirstError);
 
   if (firstError !== null) {
     throw firstError;
+  }
+}
+
+async function awaitPendingStartupCompletion(
+  pendingStartup: Promise<void> | null | undefined
+): Promise<void> {
+  if (!pendingStartup) {
+    return;
+  }
+
+  try {
+    await pendingStartup;
+  } catch {
+    // Cleanup should continue even when startup failed or was aborted.
+  }
+}
+
+async function runCleanupStep(
+  step: (() => Promise<void>) | undefined,
+  onError: (error: unknown) => void
+): Promise<void> {
+  if (!step) {
+    return;
+  }
+
+  try {
+    await step();
+  } catch (error) {
+    onError(error);
   }
 }
 
@@ -278,7 +317,7 @@ async function startTemporalWorkerRuntime(args: {
   const connection =
     (await args.connectionFactory?.(args.temporalConfig)) ??
     (await NativeConnection.connect({
-      address: args.temporalConfig.address,
+      address: args.temporalConfig.connection.address,
     }));
   args.assignConnection(connection);
   await throwIfStartupAborted(args.signal, args.stateStore);

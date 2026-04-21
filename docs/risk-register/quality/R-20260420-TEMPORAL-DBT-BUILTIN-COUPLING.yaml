@@ -1,0 +1,39 @@
+---
+id: R-20260420-TEMPORAL-DBT-BUILTIN-COUPLING
+title: Adapter-temporal still embeds DBT-specific runtime seams as built-in behavior
+status: Open
+date: 2026-04-20
+owners:
+  - packages/@dvt/adapter-temporal
+  - apps/temporal-worker
+severity: Medium
+probability: Medium
+context: >
+  Repository review on 2026-04-20 confirms that DBT is not only a test concern. The shared contracts
+  and engine already recognize DBT step kinds and DBT-oriented run execution context admission, but
+  @dvt/adapter-temporal still hard-wires DBT seams into its default runtime surface. The package
+  exports DbtStepActivity and DbtCliPluginRunner, ActivityDeps includes a dbtPluginRunner seam,
+  createDefaultStepActivityRegistry() auto-registers DBT step kinds, and workflow artifact helpers
+  emit dbt.compiled-sql from inside the Temporal adapter. The standalone worker composition root
+  gates live wiring behind DVT_TEMPORAL_DBT_ENABLED, but the adapter package itself still treats DBT
+  as the built-in path and frames extensions as non-DBT execution.
+risk: >
+  If new transformation executors or artifact types are added while this shape remains in place,
+  adapter-temporal can continue accumulating executor-specific policy, exports, and artifact
+  assumptions instead of staying a Temporal translation boundary per ADR-0003, ADR-0019, and
+  ADR-0034. That would make future extraction harder, bias tests and runtime composition toward DBT,
+  and increase the chance that provider concerns and executor or plugin concerns drift back into the
+  same package.
+mitigations:
+  - 'Keep apps/temporal-worker as the only live composition root that wires DBT runtime
+    dependencies.'
+  - 'Do not add new built-in executor registrations to createDefaultStepActivityRegistry(); prefer
+    explicit composition-time registries and step-kind wiring.'
+  - 'Prefer generic executor or step-kind registries over dbt-named deps in adapter-temporal public
+    types.'
+  - 'Track follow-up extraction of DbtStepActivity, DbtCliPluginRunner, and dbt.compiled-sql
+    artifact mapping out of the adapter default path and public barrel.'
+  - 'Keep adapter-temporal tests split between Temporal-core behavior and DBT plugin or runtime
+    behavior so boundary drift remains visible.'
+review_after: 2026-06-15
+---

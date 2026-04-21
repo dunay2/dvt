@@ -10,7 +10,7 @@
 import { asNonBlankString } from '@dvt/contracts';
 import type { EngineRunRef, ProviderRunStatusView, RunStatus } from '@dvt/contracts';
 
-import type { TemporalAdapterConfig } from './config.js';
+import type { TemporalAdapterConfig, TemporalTaskQueueName } from './config.js';
 
 type TemporalRuntimeStatus =
   | 'RUNNING'
@@ -22,6 +22,17 @@ type TemporalRuntimeStatus =
   | 'TIMED_OUT'
   | 'CONTINUED_AS_NEW';
 
+const TEMPORAL_STATUS_TO_RUN_STATUS: Readonly<Record<TemporalRuntimeStatus, RunStatus>> = {
+  RUNNING: 'RUNNING',
+  PAUSED: 'PAUSED',
+  COMPLETED: 'COMPLETED',
+  FAILED: 'FAILED',
+  CANCELLED: 'CANCELLED',
+  TERMINATED: 'CANCELLED',
+  TIMED_OUT: 'FAILED',
+  CONTINUED_AS_NEW: 'RUNNING',
+};
+
 export function toTemporalWorkflowId(runId: string): string {
   if (!runId.trim()) {
     throw new Error('WORKFLOW_ID_INVALID: runId is required');
@@ -29,9 +40,12 @@ export function toTemporalWorkflowId(runId: string): string {
   return runId;
 }
 
-export function toTemporalTaskQueue(tenantId: string, cfg: TemporalAdapterConfig): string {
-  if (!tenantId.trim()) return cfg.taskQueue;
-  return `${cfg.taskQueue}-${tenantId}`;
+export function toTemporalTaskQueue(
+  tenantId: string,
+  cfg: TemporalAdapterConfig
+): TemporalTaskQueueName {
+  if (!tenantId.trim()) return cfg.connection.taskQueue;
+  return asNonBlankString(`${cfg.connection.taskQueue}-${tenantId}`) as TemporalTaskQueueName;
 }
 
 export function toTemporalRunRef(args: {
@@ -44,7 +58,7 @@ export function toTemporalRunRef(args: {
   return {
     provider: 'temporal',
     tenantId: asNonBlankString(args.tenantId),
-    namespace: asNonBlankString(args.config.namespace),
+    namespace: asNonBlankString(args.config.connection.namespace),
     workflowId: asNonBlankString(args.workflowId),
     runId: asNonBlankString(args.runId),
     ...(args.taskQueue === undefined ? {} : { taskQueue: asNonBlankString(args.taskQueue) }),
@@ -52,26 +66,7 @@ export function toTemporalRunRef(args: {
 }
 
 export function mapTemporalStatusToRunStatus(status: TemporalRuntimeStatus): RunStatus {
-  switch (status) {
-    case 'RUNNING':
-      return 'RUNNING';
-    case 'PAUSED':
-      return 'PAUSED';
-    case 'COMPLETED':
-      return 'COMPLETED';
-    case 'FAILED':
-    case 'TIMED_OUT':
-      return 'FAILED';
-    case 'CANCELLED':
-    case 'TERMINATED':
-      return 'CANCELLED';
-    case 'CONTINUED_AS_NEW':
-      return 'RUNNING';
-    default: {
-      const _never: never = status;
-      throw new Error(`TEMPORAL_STATUS_UNKNOWN: ${String(_never)}`);
-    }
-  }
+  return TEMPORAL_STATUS_TO_RUN_STATUS[status];
 }
 
 export function toProviderRunStatusView(args: {

@@ -12,6 +12,8 @@ import type {
   ExecutionPlan,
   IClock,
   IIdempotencyKeyBuilder,
+  IPlanFetcher,
+  IPlanIntegrityValidator,
   RunStateCommandPort,
 } from '../engine-types.js';
 
@@ -51,6 +53,8 @@ export interface DbtPluginRunner {
 export interface ActivityDeps extends EventEmitterDeps, RunBootstrapperDeps {
   runExecutionContextReader?: IRunExecutionContextReader;
   dbtPluginRunner?: DbtPluginRunner;
+  fetcher: IPlanFetcher;
+  integrity: IPlanIntegrityValidator;
 }
 
 export interface StepInput {

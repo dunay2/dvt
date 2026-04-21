@@ -2,7 +2,7 @@
 title: Proposal Portfolio Map 2026-04-03
 status: Active
 owner: Product / Architecture / Delivery
-last_reviewed: 2026-04-10
+last_reviewed: 2026-04-20
 planning_type: proposal
 ---
 
@@ -30,6 +30,7 @@ planning_type: proposal
 - [Temporal workflow helper artifact facts narrowing slice 2026-04-10](./mandatory/runtime-and-contracts/temporal-workflow-helper-artifact-facts-narrowing-slice-20260410.md)
 - [MW-C1 to TF-C2 runtime vertical sequence analysis](./mandatory/runtime-and-contracts/mw-c1-to-tf-c2-runtime-vertical-sequence-analysis-20260409.md)
 - [Runtime hardening, shared-kernel, and operations roadmap](./mandatory/runtime-and-contracts/runtime-hardening-shared-kernel-and-operations-roadmap-20260410.md)
+- [AR-D plan-pointer workflow input hardening plan](./mandatory/runtime-and-contracts/ar-d-plan-pointer-workflow-input-hardening-plan-20260420.md)
 - [Transformation Flow Proposal Set](./mandatory/runtime-and-contracts/plan-creation-interface-route-proposal-20260405.md)
 - [S08-4 StepKind stepTypeConfig hardening plan](./mandatory/runtime-and-contracts/s08-plan-record-plan-store-execution-plan-20260402.md)
 - [S08-5 post S08-4 invariant closure plan](./mandatory/runtime-and-contracts/s08-plan-record-plan-store-execution-plan-20260402.md)

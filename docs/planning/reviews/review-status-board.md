@@ -56,6 +56,20 @@ Sprint execution board:
 
 Additional active rationale:
 
+- [20260421 Temporal Fowler provider-truth follow-up review](./architecture-and-governance/20260421-temporal-fowler-provider-truth-follow-up-review.md)
+  - domain: `architecture-and-governance`
+  - role: current focused follow-up review for the Temporal branch plus the `apps/api` provider-truth correction, semantic component encapsulation, and residual DBT/provider drift map
+  - linkage: `TF-C2`, `TF-A1-C18`, `AR-D-PLAN-POINTER`, `R-20260420-TEMPORAL-DBT-BUILTIN-COUPLING`
+  - status: `reference`
+  - progress: `n/a`
+
+- [20260420 DVT+ system architecture review](./architecture-and-governance/20260420-dvt-plus-system-architecture-review.md)
+  - domain: `architecture-and-governance`
+  - role: current full-system principal/staff review grounded in the shipped planner, engine, state, adapter, and route-boundary reality after the April plan-route convergence work
+  - linkage: `AR-A8`, `AR-C3`, `AR-D2`, `AR-D8`, `AR-D-PLAN-POINTER`, proposed `AR-A-READSIDE-CONTRACTS`, proposed `AR-C-TENANT-ISOLATION-PROPERTY`, proposed `AR-D-RESTORE-DRILL`
+  - status: `reference`
+  - progress: `n/a`
+
 - [20260419 Plan-route boundary remediation review](./architecture-and-governance/20260419-plan-route-boundary-remediation-review.md)
   - domain: `architecture-and-governance`
   - role: reference review for the closed plan-route remediation and maturity slices; preview observability ownership, route-policy catalog hardening, the canonical planner-input seam, the declarative request-resolution recipe, and compile-boundary ownership convergence are closed by `TF-A1-C15..TF-A1-C19`

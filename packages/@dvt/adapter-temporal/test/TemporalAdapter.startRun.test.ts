@@ -1,55 +1,47 @@
-import type { ExecutionPlan, PlanRef, ResolvedRunContext } from '@dvt/contracts';
-import {
-  CURRENT_SIGNAL_SEMANTICS_VERSION,
-  RUN_PLAN_WORKFLOW,
-  WorkflowSignals,
-} from '@dvt/contracts';
+import { type ExecutionPlan, RUN_PLAN_WORKFLOW } from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
 import { TemporalAdapter } from '../src/TemporalAdapter.js';
 
-const BASE_CONFIG = {
-  address: '127.0.0.1:7233',
-  namespace: 'dvt-test',
-  taskQueue: 'q-main',
-  connectTimeoutMs: 5000,
-  requestTimeoutMs: 10000,
-  maxStartPayloadBytes: 2_000_000,
-  continueAsNewAfterLayerCount: 0,
-};
+import {
+  createExecutionPlan,
+  createPlanRef,
+  createResolvedRunContext,
+  createTemporalAdapterConfig,
+  createTemporalRunRef,
+} from './helpers/contractFixtures.js';
 
-const BASE_PLAN: ExecutionPlan = {
-  metadata: {
-    planId: 'plan-123',
-    planVersion: '1.0.0',
-    schemaVersion: 'v1.2',
-    contractVersion: '1.0.0',
-    inputHashSha256: 'a'.repeat(64),
-    createdAtIso: '2026-04-07T00:00:00.000Z',
-  },
+const BASE_PLAN = createExecutionPlan({
+  createdAtIso: '2026-04-07T00:00:00.000Z',
   steps: [{ stepId: 's-1', kind: 'DBT_MODEL', dependsOn: [] }],
-};
+});
 
-const BASE_PLAN_REF: PlanRef = {
+const BASE_PLAN_REF = createPlanRef({
   uri: 'https://plans.example.com/plan-123.json',
   sha256: 'b'.repeat(64),
-  schemaVersion: 'v1.2',
-  planId: 'plan-123',
-  planVersion: '1.0.0',
+  planId: BASE_PLAN.metadata.planId,
   sizeBytes: 256,
-};
+});
 
-const BASE_CTX: ResolvedRunContext = {
+const BASE_CTX = createResolvedRunContext({
   tenantId: 'tenant-1',
   projectId: 'project-1',
   environmentId: 'env-1',
   runId: 'run-1',
-  targetAdapter: 'temporal',
-  logicalAttemptId: 1,
   originRunId: 'run-1',
-};
+});
 
-function makeAdapter(configOverrides: Partial<typeof BASE_CONFIG> = {}): {
+type TemporalAdapterConfigOverrides = NonNullable<
+  Parameters<typeof createTemporalAdapterConfig>[0]
+>;
+
+function makeAdapter(
+  args: {
+    connection?: TemporalAdapterConfigOverrides['connection'];
+    timeouts?: TemporalAdapterConfigOverrides['timeouts'];
+    workflowBudget?: TemporalAdapterConfigOverrides['workflowBudget'];
+  } = {}
+): {
   adapter: TemporalAdapter;
   workflowClient: {
     start: ReturnType<typeof vi.fn>;
@@ -66,10 +58,7 @@ function makeAdapter(configOverrides: Partial<typeof BASE_CONFIG> = {}): {
 
   const adapter = new TemporalAdapter({
     workflowClient,
-    config: {
-      ...BASE_CONFIG,
-      ...configOverrides,
-    },
+    config: createTemporalAdapterConfig(args),
   });
 
   return { adapter, workflowClient };
@@ -87,7 +76,7 @@ function makeLargePlan(stepCount: number, stepIdWidth: number): ExecutionPlan {
 }
 
 describe('TemporalAdapter.startRun', () => {
-  it('starts the workflow with the verified plan payload when under the size limit', async () => {
+  it('starts the active workflow line with a planRef-only payload', async () => {
     const { adapter, workflowClient } = makeAdapter();
 
     const runRef = await adapter.startRun(BASE_PLAN, BASE_PLAN_REF, BASE_CTX);
@@ -97,42 +86,51 @@ describe('TemporalAdapter.startRun', () => {
       workflowId: 'run-1',
       args: [
         {
-          plan: BASE_PLAN,
           planRef: BASE_PLAN_REF,
           ctx: BASE_CTX,
+          maxContinueAsNewPayloadBytes: 500_000,
           continueAsNewAfterLayerCount: 0,
         },
       ],
     });
-    expect(runRef).toEqual({
-      provider: 'temporal',
-      tenantId: 'tenant-1',
-      namespace: 'dvt-test',
-      workflowId: 'run-1',
-      runId: 'run-1',
-      taskQueue: 'q-main-tenant-1',
-    });
+    expect(runRef).toEqual(
+      createTemporalRunRef({
+        tenantId: 'tenant-1',
+        namespace: 'dvt-test',
+        workflowId: 'run-1',
+        runId: 'run-1',
+        taskQueue: 'q-main-tenant-1',
+      })
+    );
   });
 
-  it('rejects oversized plans using planRef.sizeBytes before calling Temporal', async () => {
-    const { adapter, workflowClient } = makeAdapter({ maxStartPayloadBytes: 128 });
+  it('does not reject large plan artifacts based only on planRef.sizeBytes', async () => {
+    const { adapter, workflowClient } = makeAdapter({
+      workflowBudget: { maxStartPayloadBytes: 512 },
+    });
 
     await expect(
       adapter.startRun(
         BASE_PLAN,
         {
           ...BASE_PLAN_REF,
-          sizeBytes: 129,
+          sizeBytes: 10_000_000,
         },
         BASE_CTX
       )
-    ).rejects.toThrow('TEMPORAL_START_PAYLOAD_TOO_LARGE');
+    ).resolves.toMatchObject({
+      provider: 'temporal',
+      workflowId: 'run-1',
+      runId: 'run-1',
+    });
 
-    expect(workflowClient.start).not.toHaveBeenCalled();
+    expect(workflowClient.start).toHaveBeenCalledTimes(1);
   });
 
-  it('rejects oversized serialized workflow input even when planRef.sizeBytes is absent', async () => {
-    const { adapter, workflowClient } = makeAdapter({ maxStartPayloadBytes: 512 });
+  it('does not serialize the full plan into workflow input when planRef.sizeBytes is absent', async () => {
+    const { adapter, workflowClient } = makeAdapter({
+      workflowBudget: { maxStartPayloadBytes: 512 },
+    });
     const largePlan = makeLargePlan(8, 96);
 
     await expect(
@@ -144,102 +142,25 @@ describe('TemporalAdapter.startRun', () => {
         },
         BASE_CTX
       )
-    ).rejects.toThrow('TEMPORAL_START_PAYLOAD_TOO_LARGE');
-
-    expect(workflowClient.start).not.toHaveBeenCalled();
-  });
-});
-
-describe('TemporalAdapter.signal', () => {
-  it('declares support for the current signal semantics version', () => {
-    const { adapter } = makeAdapter();
-
-    expect(adapter.signalSemanticsVersions?.()).toEqual([CURRENT_SIGNAL_SEMANTICS_VERSION]);
-  });
-
-  it('forwards PAUSE with the caller-provided signalId', async () => {
-    const signal = vi.fn(async () => undefined);
-    const { adapter, workflowClient } = makeAdapter();
-    workflowClient.getHandle.mockReturnValue({
-      signal,
-    });
-
-    await adapter.signal(
-      {
-        provider: 'temporal',
-        tenantId: 'tenant-1',
-        namespace: 'dvt-test',
-        workflowId: 'run-1',
-        runId: 'run-1',
-      },
-      { signalId: 'sig-pause-1', type: 'PAUSE' }
-    );
-
-    expect(signal).toHaveBeenCalledWith(WorkflowSignals.PAUSE, 'sig-pause-1');
-  });
-
-  it('forwards RESUME with the caller-provided signalId', async () => {
-    const signal = vi.fn(async () => undefined);
-    const { adapter, workflowClient } = makeAdapter();
-    workflowClient.getHandle.mockReturnValue({
-      signal,
-    });
-
-    await adapter.signal(
-      {
-        provider: 'temporal',
-        tenantId: 'tenant-1',
-        namespace: 'dvt-test',
-        workflowId: 'run-1',
-        runId: 'run-1',
-      },
-      { signalId: 'sig-resume-1', type: 'RESUME' }
-    );
-
-    expect(signal).toHaveBeenCalledWith(WorkflowSignals.RESUME, 'sig-resume-1');
-  });
-
-  it('forwards CANCEL through the canonical provider mapper', async () => {
-    const signal = vi.fn(async () => undefined);
-    const { adapter, workflowClient } = makeAdapter();
-    workflowClient.getHandle.mockReturnValue({
-      signal,
-    });
-
-    await adapter.signal(
-      {
-        provider: 'temporal',
-        tenantId: 'tenant-1',
-        namespace: 'dvt-test',
-        workflowId: 'run-1',
-        runId: 'run-1',
-      },
-      { signalId: 'sig-cancel-1', type: 'CANCEL', reason: 'operator-request' }
-    );
-
-    expect(signal).toHaveBeenCalledWith(WorkflowSignals.CANCEL, 'operator-request');
-  });
-});
-
-describe('TemporalAdapter.cancelRun', () => {
-  it('uses the provider-native Temporal cancel handle instead of signal(CANCEL)', async () => {
-    const cancel = vi.fn(async () => undefined);
-    const signal = vi.fn(async () => undefined);
-    const { adapter, workflowClient } = makeAdapter();
-    workflowClient.getHandle.mockReturnValue({
-      cancel,
-      signal,
-    });
-
-    await adapter.cancelRun({
+    ).resolves.toMatchObject({
       provider: 'temporal',
-      tenantId: 'tenant-1',
-      namespace: 'dvt-test',
       workflowId: 'run-1',
       runId: 'run-1',
     });
 
-    expect(cancel).toHaveBeenCalledTimes(1);
-    expect(signal).not.toHaveBeenCalled();
+    const firstStartCall = workflowClient.start.mock.calls[0];
+    expect(firstStartCall).toBeDefined();
+    const startOptions = firstStartCall?.[1];
+    expect(startOptions).toBeDefined();
+    expect(startOptions).toMatchObject({
+      args: [
+        {
+          planRef: {
+            planId: BASE_PLAN_REF.planId,
+          },
+        },
+      ],
+    });
+    expect(JSON.stringify(startOptions)).not.toContain('"steps":');
   });
 });

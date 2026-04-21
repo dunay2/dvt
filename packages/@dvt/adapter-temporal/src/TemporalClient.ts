@@ -46,9 +46,9 @@ export class TemporalClientManager {
 
     const context = buildTemporalContext(this.config);
     const attributes = {
-      address: this.config.address,
-      namespace: this.config.namespace,
-      identity: this.config.identity ?? '',
+      address: this.config.connection.address,
+      namespace: this.config.connection.namespace,
+      identity: this.config.connection.identity ?? '',
     };
 
     this.connecting = runObservedTemporalOperation({
@@ -67,19 +67,19 @@ export class TemporalClientManager {
         });
 
         const connection = await Connection.connect({
-          address: this.config.address,
-          connectTimeout: this.config.connectTimeoutMs,
+          address: this.config.connection.address,
+          connectTimeout: this.config.timeouts.connectTimeoutMs,
         });
         const client = new Client({
           connection,
-          namespace: this.config.namespace,
-          identity: this.config.identity,
+          namespace: this.config.connection.namespace,
+          identity: this.config.connection.identity,
         });
 
         const next: TemporalClientHandle = {
-          address: this.config.address,
-          namespace: this.config.namespace,
-          identity: this.config.identity,
+          address: this.config.connection.address,
+          namespace: this.config.connection.namespace,
+          identity: this.config.connection.identity,
           connection,
           client,
         };
@@ -134,8 +134,8 @@ export class TemporalClientManager {
       context,
       spanName: 'temporal.client.ensureConnected',
       spanAttributes: {
-        address: this.config.address,
-        namespace: this.config.namespace,
+        address: this.config.connection.address,
+        namespace: this.config.connection.namespace,
       },
       counterName: 'dvt.temporal.client.ensure_connected_total',
       durationName: 'dvt.temporal.client.ensure_connected.duration_ms',
@@ -144,7 +144,7 @@ export class TemporalClientManager {
         await withAbortSignalTimeout(
           (signal) =>
             current.connection.withAbortSignal(signal, () => current.connection.ensureConnected()),
-          this.config.requestTimeoutMs,
+          this.config.timeouts.requestTimeoutMs,
           'temporal.ensureConnected'
         );
       },
@@ -153,8 +153,8 @@ export class TemporalClientManager {
         logMessage: 'Temporal client health check failed',
         logLevel: 'error',
         logAttributes: {
-          address: this.config.address,
-          namespace: this.config.namespace,
+          address: this.config.connection.address,
+          namespace: this.config.connection.namespace,
           error: toErrorMessage(error),
         },
       }),
@@ -170,8 +170,8 @@ export class TemporalClientManager {
         msg: 'Closing Temporal client',
         context: buildTemporalContext(this.config),
         attributes: {
-          address: this.config.address,
-          namespace: this.config.namespace,
+          address: this.config.connection.address,
+          namespace: this.config.connection.namespace,
         },
       });
       await current.connection.close();

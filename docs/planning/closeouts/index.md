@@ -22,6 +22,7 @@ navigation. The folder contains additional historical entries.
 
 ## Representative Recent Closeouts
 
+- [20260420 Temporal Fowler Architecture Drift Follow-Up Closeout](./20260420-temporal-fowler-architecture-drift-follow-up-closeout.md)
 - [20260417 Graph Architecture Doc Pack Split Closeout](./20260417-graph-architecture-doc-pack-split-closeout.md)
 - [20260417 TF-E2 Route Bootstrap SRP Refactor Closeout](./20260417-tf-e2-route-bootstrap-srp-refactor-closeout.md)
 - [20260417 TF-E2 Route Bootstrap Contract Generalization Closeout](./20260417-tf-e2-route-bootstrap-contract-generalization-closeout.md)

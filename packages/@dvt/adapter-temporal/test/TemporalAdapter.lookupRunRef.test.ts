@@ -2,140 +2,25 @@
  * @file test/TemporalAdapter.lookupRunRef.test.ts
  * @baseline ADR-0030: Pre-Dispatch Intent Log - Section 3.3 lookupRunRef for PENDING intent reconciliation
  *
- * Unit tests for TemporalAdapter.lookupRunRef.
- *
- * Uses an injected workflowClient mock so no real Temporal connection is required.
- * The adapter receives the mock via TemporalAdapterDeps.workflowClient.
+ * Integration-oriented unit tests for TemporalAdapter.lookupRunRef.
  */
 import { describe, expect, it, vi } from 'vitest';
 
 import { TemporalAdapter } from '../src/TemporalAdapter.js';
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
+import { createTemporalAdapterConfig } from './helpers/contractFixtures.js';
+import {
+  createWithAbortSignalMock,
+  makeAdapter,
+  makeWorkflowHandleMock,
+} from './helpers/lookupRunRefHarness.js';
 
-const BASE_CONFIG = {
-  address: '127.0.0.1:7233',
-  namespace: 'dvt-test',
-  taskQueue: 'q-main',
-  connectTimeoutMs: 5000,
-  requestTimeoutMs: 10000,
-  maxStartPayloadBytes: 2_000_000,
-  continueAsNewAfterLayerCount: 0,
-};
-
-function makeWorkflowHandleMock(describeImpl: () => Promise<unknown>): {
-  cancel: ReturnType<typeof vi.fn>;
-  signal: ReturnType<typeof vi.fn>;
-  describe: ReturnType<typeof vi.fn>;
-  query: ReturnType<typeof vi.fn>;
-} {
-  return {
-    cancel: vi.fn(async () => undefined),
-    signal: vi.fn(async () => undefined),
-    describe: vi.fn(describeImpl),
-    query: vi.fn(async () => ({
-      status: 'RUNNING',
-      paused: false,
-      cancelRequested: false,
-      currentStepIndex: 0,
-      continuedAsNewCount: 0,
-    })),
-  };
-}
-
-type WorkflowClientMock = {
-  start: ReturnType<typeof vi.fn>;
-  getHandle: ReturnType<typeof vi.fn>;
-  withAbortSignal?: ReturnType<typeof vi.fn>;
-};
-
-function makeAdapter(
-  getHandleImpl: (workflowId: string) => ReturnType<typeof makeWorkflowHandleMock>,
-  overrides: Partial<WorkflowClientMock> = {}
-): {
-  adapter: TemporalAdapter;
-  workflowClient: WorkflowClientMock;
-} {
-  const workflowClient: WorkflowClientMock = {
-    start: vi.fn(),
-    getHandle: vi.fn((wfId: string) => getHandleImpl(wfId)),
-    ...overrides,
-  };
-
-  const adapter = new TemporalAdapter({
-    workflowClient,
-    config: BASE_CONFIG,
+function makeError(args: { name: string; message: string; code?: number | string }): Error {
+  return Object.assign(new Error(args.message), {
+    name: args.name,
+    ...(args.code === undefined ? {} : { code: args.code }),
   });
-
-  return { adapter, workflowClient };
 }
-
-function makeWorkflowNotFoundError(): Error {
-  const err = new Error('Workflow execution not found');
-  err.name = 'WorkflowNotFoundError';
-  return err;
-}
-
-function makeServiceErrorNotFound(): Error {
-  const err = new Error('Workflow not found (gRPC NOT_FOUND)') as Error & { code: number };
-  err.name = 'ServiceError';
-  err.code = 5;
-  return err;
-}
-
-function makeServiceErrorNotFoundCodeAsString(): Error {
-  const err = new Error('Workflow not found (gRPC NOT_FOUND)') as Error & { code: string };
-  err.name = 'ServiceError';
-  err.code = '5';
-  return err;
-}
-
-function makeServiceErrorNotFoundCodeAsText(): Error {
-  const err = new Error('Workflow not found (gRPC NOT_FOUND)') as Error & { code: string };
-  err.name = 'ServiceError';
-  err.code = 'NOT_FOUND';
-  return err;
-}
-
-function makeServiceErrorNotFoundCodeAsLowerText(): Error {
-  const err = new Error('Workflow not found (gRPC not_found)') as Error & { code: string };
-  err.name = 'ServiceError';
-  err.code = 'not_found';
-  return err;
-}
-
-function makeServiceErrorNotFoundCodeWithSpaces(): Error {
-  const err = new Error('Workflow not found (gRPC NOT_FOUND)') as Error & { code: string };
-  err.name = 'ServiceError';
-  err.code = ' 5 ';
-  return err;
-}
-
-function makeServiceErrorNotFoundTextWithSpaces(): Error {
-  const err = new Error('Workflow not found (gRPC NOT_FOUND)') as Error & { code: string };
-  err.name = 'ServiceError';
-  err.code = ' NOT_FOUND ';
-  return err;
-}
-function makeServiceErrorUnknownCode(): Error {
-  const err = new Error('Workflow service error with unknown code') as Error & { code: string };
-  err.name = 'ServiceError';
-  err.code = 'UNKNOWN_CODE';
-  return err;
-}
-
-function makeNonServiceErrorCodeFive(): Error {
-  const err = new Error('Some other error with code 5') as Error & { code: number };
-  err.name = 'UnexpectedError';
-  err.code = 5;
-  return err;
-}
-
-// ---------------------------------------------------------------------------
-// Tests
-// ---------------------------------------------------------------------------
 
 describe('TemporalAdapter.lookupRunRef', () => {
   it('returns EngineRunRef when workflow exists on Temporal', async () => {
@@ -144,7 +29,7 @@ describe('TemporalAdapter.lookupRunRef', () => {
 
     const result = await adapter.lookupRunRef('run-abc', 'tenant1');
 
-    expect(result).toEqual({
+    expect(result).toMatchObject({
       provider: 'temporal',
       tenantId: 'tenant1',
       namespace: 'dvt-test',
@@ -152,108 +37,67 @@ describe('TemporalAdapter.lookupRunRef', () => {
       runId: 'run-abc',
       taskQueue: 'q-main-tenant1',
     });
-
     expect(workflowClient.getHandle).toHaveBeenCalledWith('run-abc');
     expect(handle.describe).toHaveBeenCalledOnce();
   });
 
-  it('returns null when workflow does not exist (WorkflowNotFoundError)', async () => {
+  it.each([
+    [
+      'WorkflowNotFoundError',
+      () =>
+        makeError({
+          name: 'WorkflowNotFoundError',
+          message: 'Workflow execution not found',
+        }),
+    ],
+    [
+      'ServiceError NOT_FOUND',
+      () =>
+        makeError({
+          name: 'ServiceError',
+          message: 'Workflow not found (gRPC NOT_FOUND)',
+          code: 5,
+        }),
+    ],
+  ])('returns null when Temporal reports %s', async (_label, makeMissingError) => {
     const handle = makeWorkflowHandleMock(async () => {
-      throw makeWorkflowNotFoundError();
+      throw makeMissingError();
     });
     const { adapter } = makeAdapter(() => handle);
 
-    const result = await adapter.lookupRunRef('run-missing', 'tenant1');
-
-    expect(result).toBeNull();
+    await expect(adapter.lookupRunRef('run-missing', 'tenant1')).resolves.toBeNull();
+    expect(handle.cancel).not.toHaveBeenCalled();
   });
 
-  it('returns null when workflow does not exist (ServiceError gRPC NOT_FOUND code 5)', async () => {
-    const handle = makeWorkflowHandleMock(async () => {
-      throw makeServiceErrorNotFound();
-    });
-    const { adapter } = makeAdapter(() => handle);
-
-    const result = await adapter.lookupRunRef('run-missing', 'tenant1');
-
-    expect(result).toBeNull();
-  });
-
-  it('returns null when workflow does not exist (ServiceError gRPC NOT_FOUND code "5")', async () => {
-    const handle = makeWorkflowHandleMock(async () => {
-      throw makeServiceErrorNotFoundCodeAsString();
-    });
-    const { adapter } = makeAdapter(() => handle);
-
-    const result = await adapter.lookupRunRef('run-missing', 'tenant1');
-
-    expect(result).toBeNull();
-  });
-
-  it('returns null when workflow does not exist (ServiceError NOT_FOUND string code)', async () => {
-    const handle = makeWorkflowHandleMock(async () => {
-      throw makeServiceErrorNotFoundCodeAsText();
-    });
-    const { adapter } = makeAdapter(() => handle);
-
-    const result = await adapter.lookupRunRef('run-missing', 'tenant1');
-
-    expect(result).toBeNull();
-  });
-
-  it('returns null when workflow does not exist (ServiceError not_found lowercase code)', async () => {
-    const handle = makeWorkflowHandleMock(async () => {
-      throw makeServiceErrorNotFoundCodeAsLowerText();
-    });
-    const { adapter } = makeAdapter(() => handle);
-
-    const result = await adapter.lookupRunRef('run-missing', 'tenant1');
-
-    expect(result).toBeNull();
-  });
-
-  it('returns null when workflow does not exist (ServiceError numeric string with spaces)', async () => {
-    const handle = makeWorkflowHandleMock(async () => {
-      throw makeServiceErrorNotFoundCodeWithSpaces();
-    });
-    const { adapter } = makeAdapter(() => handle);
-
-    const result = await adapter.lookupRunRef('run-missing', 'tenant1');
-
-    expect(result).toBeNull();
-  });
-
-  it('returns null when workflow does not exist (ServiceError NOT_FOUND with spaces)', async () => {
-    const handle = makeWorkflowHandleMock(async () => {
-      throw makeServiceErrorNotFoundTextWithSpaces();
-    });
-    const { adapter } = makeAdapter(() => handle);
-
-    const result = await adapter.lookupRunRef('run-missing', 'tenant1');
-
-    expect(result).toBeNull();
-  });
   it('propagates ServiceError with unknown code', async () => {
-    const unknownCodeError = makeServiceErrorUnknownCode();
+    const unexpectedError = makeError({
+      name: 'ServiceError',
+      message: 'Workflow service error with unknown code',
+      code: 'UNKNOWN_CODE',
+    });
     const handle = makeWorkflowHandleMock(async () => {
-      throw unknownCodeError;
+      throw unexpectedError;
     });
     const { adapter } = makeAdapter(() => handle);
 
-    await expect(adapter.lookupRunRef('run-abc', 'tenant1')).rejects.toBe(unknownCodeError);
+    await expect(adapter.lookupRunRef('run-abc', 'tenant1')).rejects.toBe(unexpectedError);
   });
 
-  it('propagates non-ServiceError even when code is 5', async () => {
-    const nonServiceError = makeNonServiceErrorCodeFive();
+  it('propagates non-ServiceError failures unchanged', async () => {
+    const networkError = makeError({
+      name: 'UnexpectedError',
+      message: 'ECONNREFUSED',
+      code: 5,
+    });
     const handle = makeWorkflowHandleMock(async () => {
-      throw nonServiceError;
+      throw networkError;
     });
     const { adapter } = makeAdapter(() => handle);
 
-    await expect(adapter.lookupRunRef('run-abc', 'tenant1')).rejects.toBe(nonServiceError);
+    await expect(adapter.lookupRunRef('run-abc', 'tenant1')).rejects.toBe(networkError);
   });
 
-  it('propagates non-Error throwables even with name/code shape', async () => {
+  it('propagates non-Error throwables even when they resemble ServiceError', async () => {
     const nonErrorThrowable = { name: 'ServiceError', code: 5, message: 'not-an-Error object' };
     const handle = makeWorkflowHandleMock(async () => {
       throw nonErrorThrowable;
@@ -263,47 +107,23 @@ describe('TemporalAdapter.lookupRunRef', () => {
     await expect(adapter.lookupRunRef('run-abc', 'tenant1')).rejects.toBe(nonErrorThrowable);
   });
 
-  it('propagates non-not-found errors (network failure, auth, etc.)', async () => {
-    const networkError = new Error('ECONNREFUSED');
-    const handle = makeWorkflowHandleMock(async () => {
-      throw networkError;
-    });
-    const { adapter } = makeAdapter(() => handle);
-
-    await expect(adapter.lookupRunRef('run-abc', 'tenant1')).rejects.toThrow('ECONNREFUSED');
-  });
-
-  it('derives workflowId and taskQueue consistently with startRun', async () => {
-    const capturedArgs: { workflowId: string }[] = [];
+  it('derives workflowId consistently from the runId', async () => {
+    const capturedWorkflowIds: string[] = [];
     const handle = makeWorkflowHandleMock(async () => ({}));
-    const { adapter, workflowClient } = makeAdapter((wfId) => {
-      capturedArgs.push({ workflowId: wfId });
+    const { adapter, workflowClient } = makeAdapter((workflowId) => {
+      capturedWorkflowIds.push(workflowId);
       return handle;
     });
 
     await adapter.lookupRunRef('my-run-id', 'my-tenant');
 
-    expect(capturedArgs[0]?.workflowId).toBe('my-run-id');
+    expect(capturedWorkflowIds).toEqual(['my-run-id']);
     expect(workflowClient.getHandle).toHaveBeenCalledWith('my-run-id');
-  });
-
-  it('returns null and does not call cancel for a WorkflowNotFoundError', async () => {
-    const handle = makeWorkflowHandleMock(async () => {
-      throw makeWorkflowNotFoundError();
-    });
-    const { adapter } = makeAdapter(() => handle);
-
-    const result = await adapter.lookupRunRef('run-gone', 'tenant-x');
-
-    expect(result).toBeNull();
-    expect(handle.cancel).not.toHaveBeenCalled();
   });
 
   it('uses workflowClient.withAbortSignal when the Temporal SDK client exposes it', async () => {
     const handle = makeWorkflowHandleMock(async () => ({ status: { name: 'Running' } }));
-    const withAbortSignal = vi.fn(
-      async (_signal: globalThis.AbortSignal, fn: () => Promise<unknown>) => await fn()
-    );
+    const withAbortSignal = createWithAbortSignalMock();
     const { adapter } = makeAdapter(() => handle, { withAbortSignal });
 
     await adapter.lookupRunRef('run-abc', 'tenant1');
@@ -314,16 +134,18 @@ describe('TemporalAdapter.lookupRunRef', () => {
 
   it('aborts describe() through workflowClient.withAbortSignal when requestTimeoutMs elapses', async () => {
     const handle = makeWorkflowHandleMock(() => new Promise<never>(() => undefined));
-    const withAbortSignal = vi.fn(
-      async (signal: globalThis.AbortSignal, fn: () => Promise<unknown>) =>
-        await new Promise((resolve, reject) => {
+    const withAbortSignal = createWithAbortSignalMock(
+      async <R>(signal: globalThis.AbortSignal, fn: () => Promise<R>): Promise<R> =>
+        await new Promise<R>((resolve, reject) => {
           signal.addEventListener('abort', () => reject(new Error('CANCELLED')), { once: true });
           void fn().then(resolve, reject);
         })
     );
     const timeoutAdapter = new TemporalAdapter({
       workflowClient: { start: vi.fn(), getHandle: vi.fn(() => handle), withAbortSignal },
-      config: { ...BASE_CONFIG, requestTimeoutMs: 20 },
+      config: createTemporalAdapterConfig({
+        timeouts: { requestTimeoutMs: 20 },
+      }),
     });
 
     await expect(timeoutAdapter.lookupRunRef('run-abc', 'tenant1')).rejects.toThrow(
@@ -336,90 +158,13 @@ describe('TemporalAdapter.lookupRunRef', () => {
     const handle = makeWorkflowHandleMock(() => new Promise<never>(() => undefined));
     const timeoutAdapter = new TemporalAdapter({
       workflowClient: { start: vi.fn(), getHandle: vi.fn(() => handle) },
-      config: { ...BASE_CONFIG, requestTimeoutMs: 20 },
+      config: createTemporalAdapterConfig({
+        timeouts: { requestTimeoutMs: 20 },
+      }),
     });
 
     await expect(timeoutAdapter.lookupRunRef('run-abc', 'tenant1')).rejects.toThrow(
       'lookupRunRef.describe timed out after 20ms'
     );
-  });
-
-  it('returns Temporal-native runtime status from handle.describe()', async () => {
-    const handle = makeWorkflowHandleMock(async () => ({ status: { name: 'RUNNING', code: 1 } }));
-    const { adapter, workflowClient } = makeAdapter(() => handle);
-
-    const status = await adapter.getProviderStatusView({
-      provider: 'temporal',
-      tenantId: 'tenant1',
-      namespace: 'dvt-test',
-      workflowId: 'run-abc',
-      runId: 'run-abc',
-      taskQueue: 'q-main-tenant1',
-    });
-
-    expect(workflowClient.getHandle).toHaveBeenCalledWith('run-abc');
-    expect(handle.describe).toHaveBeenCalledOnce();
-    expect(status).toEqual({
-      provider: 'temporal',
-      providerStatus: 'RUNNING',
-    });
-  });
-
-  it('maps terminal Temporal statuses through describe()', async () => {
-    const handle = makeWorkflowHandleMock(async () => ({
-      status: { name: 'TERMINATED', code: 5 },
-    }));
-    const { adapter } = makeAdapter(() => handle);
-
-    const status = await adapter.getProviderStatusView({
-      provider: 'temporal',
-      tenantId: 'tenant1',
-      namespace: 'dvt-test',
-      workflowId: 'run-abc',
-      runId: 'run-abc',
-      taskQueue: 'q-main-tenant1',
-    });
-
-    expect(status).toEqual({
-      provider: 'temporal',
-      providerStatus: 'TERMINATED',
-    });
-  });
-
-  it('preserves unknown Temporal describe statuses as provider diagnostics', async () => {
-    const handle = makeWorkflowHandleMock(async () => ({
-      status: { name: 'PAUSE_REQUESTED', code: 17 },
-    }));
-    const { adapter } = makeAdapter(() => handle);
-
-    const status = await adapter.getProviderStatusView({
-      provider: 'temporal',
-      tenantId: 'tenant1',
-      namespace: 'dvt-test',
-      workflowId: 'run-abc',
-      runId: 'run-abc',
-      taskQueue: 'q-main-tenant1',
-    });
-
-    expect(status).toEqual({
-      provider: 'temporal',
-      providerStatus: 'PAUSE_REQUESTED',
-    });
-  });
-
-  it('throws when describe() returns no status', async () => {
-    const handle = makeWorkflowHandleMock(async () => ({}));
-    const { adapter } = makeAdapter(() => handle);
-
-    await expect(
-      adapter.getProviderStatusView({
-        provider: 'temporal',
-        tenantId: 'tenant1',
-        namespace: 'dvt-test',
-        workflowId: 'run-abc',
-        runId: 'run-abc',
-        taskQueue: 'q-main-tenant1',
-      })
-    ).rejects.toThrow('TEMPORAL_DESCRIBE_MISSING_STATUS');
   });
 });

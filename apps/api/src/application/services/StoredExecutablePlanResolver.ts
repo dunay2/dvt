@@ -1,3 +1,8 @@
+/**
+ * Owned concern: resolve stored executable plans from immutable plan refs.
+ * This resolver validates integrity and metadata before returning a plan to
+ * planner-backed runtime consumers.
+ */
 import { createHash } from 'node:crypto';
 
 import {
