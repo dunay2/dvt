@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-import { createBootstrappingCanvasDraftSession } from './canvasDraftSession';
+import { canvasDraftSession } from './canvasDraftSession';
 import { useCanvasAuthoringProjection } from './useCanvasAuthoringProjection';
 import { useCanvasDraftBaseline } from './useCanvasDraftBaseline';
 import { useCanvasDraftLifecycle } from './useCanvasDraftLifecycle';
@@ -33,7 +33,9 @@ export function useCanvasAuthoringRuntimeDraftFlow({
   previewProvenanceConfig,
   setCanvasNodePositions,
 }: UseCanvasAuthoringRuntimeDraftFlowArgs) {
-  const [draftSession, setDraftSession] = useState(createBootstrappingCanvasDraftSession);
+  const [draftSession, setDraftSession] = useState(
+    canvasDraftSession.machine.createBootstrapping
+  );
   const { draftQueryCache, draftRepository, graphDraftQuery } = useCanvasDraftBaseline({
     workspaceService,
     workspaceGraphDraftAuthoringPort,

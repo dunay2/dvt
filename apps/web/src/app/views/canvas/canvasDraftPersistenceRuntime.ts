@@ -1,8 +1,6 @@
 import type { CanvasDraftQueryCache } from './canvasDraftQueryCache';
 import {
-  applyConflict,
-  applySaveSuccess,
-  markSaving,
+  canvasDraftSession,
   type CanvasDraftSession,
 } from './canvasDraftSession';
 import type { DraftAttemptRefs } from './canvasDraftLifecycle.types';
@@ -59,17 +57,19 @@ export function startNextSaveAttempt(refs: DraftAttemptRefs): DraftSaveAttempt {
 export function markDraftSaving(
   setDraftSession: (updater: (currentSession: CanvasDraftSession) => CanvasDraftSession) => void
 ) {
-  setDraftSession((currentSession) => markSaving(currentSession));
+  setDraftSession((currentSession) => canvasDraftSession.machine.markSaving(currentSession));
 }
 
 export function applyConflictResolution(args: {
   draftQueryCache: CanvasDraftQueryCache;
   setDraftSession: (updater: (currentSession: CanvasDraftSession) => CanvasDraftSession) => void;
   setDraftSaveStatus: (status: 'idle') => void;
-  current: Parameters<typeof applyConflict>[1];
+  current: Parameters<(typeof canvasDraftSession.machine.applyConflict)>[1];
 }) {
   args.draftQueryCache.replaceRemoteDraft(args.current);
-  args.setDraftSession((currentSession) => applyConflict(currentSession, args.current));
+  args.setDraftSession((currentSession) =>
+    canvasDraftSession.machine.applyConflict(currentSession, args.current)
+  );
   args.setDraftSaveStatus('idle');
 }
 
@@ -79,11 +79,13 @@ export function applySavedDraftResolution(args: {
   refs: DraftAttemptRefs;
   setDraftSession: (updater: (currentSession: CanvasDraftSession) => CanvasDraftSession) => void;
   setDraftSaveStatus: (status: 'saved') => void;
-  record: Parameters<typeof applySaveSuccess>[1];
+  record: Parameters<(typeof canvasDraftSession.machine.applySaveSuccess)>[1];
 }) {
   args.refs.lastSavedSignatureRef.current = args.currentDraftPayloadSignature;
   args.draftQueryCache.replaceRemoteDraft(args.record);
-  args.setDraftSession((currentSession) => applySaveSuccess(currentSession, args.record));
+  args.setDraftSession((currentSession) =>
+    canvasDraftSession.machine.applySaveSuccess(currentSession, args.record)
+  );
   args.setDraftSaveStatus('saved');
 }
 

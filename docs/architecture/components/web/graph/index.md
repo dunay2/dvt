@@ -19,6 +19,7 @@ Canonical navigation for the Graph and Canvas architecture pack.
 - [Graph Canvas Runtime Model](./graph-canvas-runtime-model.md)
 - [Graph Sequences And State Machines](./graph-sequences-and-state-machines.md)
 - [Graph Decision Rationale And Patterns](./graph-decision-rationale-and-patterns.md)
+- [Canvas Draft Session Component](./canvas-draft-session-component.md)
 
 ## Related Existing Reviews
 

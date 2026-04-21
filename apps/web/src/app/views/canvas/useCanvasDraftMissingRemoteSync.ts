@@ -1,6 +1,6 @@
 import { useEffect, type Dispatch, type SetStateAction } from 'react';
 
-import { markRemoteDraftMissing, type CanvasDraftSession } from './canvasDraftSession';
+import { canvasDraftSession, type CanvasDraftSession } from './canvasDraftSession';
 import type { DraftSaveStatus, GraphDraftQueryState } from './canvasDraftLifecycle.types';
 
 type UseCanvasDraftMissingRemoteSyncArgs = {
@@ -35,7 +35,9 @@ export function useCanvasDraftMissingRemoteSync({
     invalidateInFlightSaveAttempt();
     lastSavedSignatureRef.current = null;
     setDraftSaveStatus('idle');
-    setDraftSession((currentSession) => markRemoteDraftMissing(currentSession));
+    setDraftSession((currentSession) =>
+      canvasDraftSession.machine.markRemoteDraftMissing(currentSession)
+    );
   }, [
     draftSession.baseline.record,
     draftSession.syncState,

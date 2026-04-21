@@ -1,16 +1,14 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  bootstrapSession,
-  createBootstrappingCanvasDraftSession,
-  markRemoteDraftMissing,
+  canvasDraftSession,
 } from './canvasDraftSession';
 import { deriveCanvasAuthoringState } from './canvasAuthoringState';
 
 describe('canvasAuthoringState', () => {
   it('preserves UI selection while the draft session is bootstrapping', () => {
     const authoringState = deriveCanvasAuthoringState({
-      draftSession: createBootstrappingCanvasDraftSession(),
+      draftSession: canvasDraftSession.machine.createBootstrapping(),
       canonicalNodes: [],
       canonicalEdges: [],
       selectedNodeIds: ['node_1'],
@@ -29,8 +27,8 @@ describe('canvasAuthoringState', () => {
 
   it('blocks mutation and reports missing_remote recovery explicitly', () => {
     const authoringState = deriveCanvasAuthoringState({
-      draftSession: markRemoteDraftMissing(
-        bootstrapSession({
+      draftSession: canvasDraftSession.machine.markRemoteDraftMissing(
+        canvasDraftSession.machine.bootstrap({
           remoteDraft: null,
           canonicalNodeIds: ['node_1'],
           canonicalEdges: [],
@@ -53,7 +51,7 @@ describe('canvasAuthoringState', () => {
 
   it('keeps inspection available but disables graph mutation when the draft boundary is read_only', () => {
     const authoringState = deriveCanvasAuthoringState({
-      draftSession: bootstrapSession({
+      draftSession: canvasDraftSession.machine.bootstrap({
         remoteDraft: null,
         canonicalNodeIds: ['node_1'],
         canonicalEdges: [],
@@ -82,7 +80,7 @@ describe('canvasAuthoringState', () => {
 
   it('surfaces forbidden draft access as a blocked authoring posture', () => {
     const authoringState = deriveCanvasAuthoringState({
-      draftSession: bootstrapSession({
+      draftSession: canvasDraftSession.machine.bootstrap({
         remoteDraft: null,
         canonicalNodeIds: ['node_1'],
         canonicalEdges: [],

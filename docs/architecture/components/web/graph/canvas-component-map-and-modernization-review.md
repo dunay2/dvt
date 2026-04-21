@@ -21,6 +21,10 @@ DVT operator workbench together with the shell, Runs, Lineage, Diff,
 Artifacts, and the future Templates route so design and architecture decisions
 stay consistent across the whole product.
 
+For the local draft aggregate itself, use
+[Canvas Draft Session Component](./canvas-draft-session-component.md) as the
+file-level reading guide. This review stays focused on the broader Canvas map.
+
 ## Scope And Code Anchors
 
 Primary anchors:
@@ -47,6 +51,10 @@ Ownership note:
 - [canvasWorkbenchStateModel.ts](../../../../../apps/web/src/app/views/canvas/canvasWorkbenchStateModel.ts)
 - [useCanvasController.ts](../../../../../apps/web/src/app/views/canvas/useCanvasController.ts)
 - [canvasDraftSession.ts](../../../../../apps/web/src/app/views/canvas/canvasDraftSession.ts)
+- [canvasDraftSession.types.ts](../../../../../apps/web/src/app/views/canvas/canvasDraftSession.types.ts)
+- [canvasDraftSessionBaseline.ts](../../../../../apps/web/src/app/views/canvas/canvasDraftSessionBaseline.ts)
+- [canvasDraftSessionMachine.ts](../../../../../apps/web/src/app/views/canvas/canvasDraftSessionMachine.ts)
+- [canvasDraftSessionWorkingSet.ts](../../../../../apps/web/src/app/views/canvas/canvasDraftSessionWorkingSet.ts)
 - [canvasDraftScope.ts](../../../../../apps/web/src/app/views/canvas/canvasDraftScope.ts)
 - [useCanvasGraphHandlers.ts](../../../../../apps/web/src/app/views/canvas/useCanvasGraphHandlers.ts)
 - [useCanvasExecutionActions.ts](../../../../../apps/web/src/app/views/canvas/useCanvasExecutionActions.ts)
@@ -124,7 +132,10 @@ flowchart LR
 | `PlanPreviewModal`              | Route-local modal               | Shows planned execution before run start                                                               | Good handoff surface between graph and execution                |
 | `ConfirmEdgeModal`              | Route-local modal               | Confirms graph dependency creation                                                                     | Good guard rail for graph mutation                              |
 | `useCanvasController`           | Orchestration hook              | Query ownership + draft-session orchestration + graph projection + action wiring + output facade       | Improved, but still the main application-service seam           |
-| `canvasDraftSession`            | Domain/session model            | Owns authoritative draft baseline, working set, sync state, and recovery transitions                   | Correct aggregate seam                                          |
+| `canvasDraftSession`            | Domain/component API            | Exposes the namespaced draft aggregate API over `baseline`, `machine`, and `workingSet` seams          | Stronger semantic entrypoint than the previous re-export shape  |
+| `canvasDraftSessionBaseline`    | Aggregate-baseline seam         | Owns deterministic draft serialization and baseline creation                                           | Pure subordinate aggregate seam                                 |
+| `canvasDraftSessionMachine`     | Aggregate-transition seam       | Owns bootstrapping, save, conflict, reload, missing-remote, and adopt-current transitions              | Pure subordinate aggregate seam                                 |
+| `canvasDraftSessionWorkingSet`  | Aggregate-policy seam           | Owns visible working-set mutation, pending-node promotion, edge filtering, and canonical reconcile     | Pure subordinate aggregate seam                                 |
 | `canvasDraftScope`              | Projection/read model           | Derives visible graph scope, execution scope, and projection completeness from the draft session       | Correct projection seam                                         |
 | `canvasWorkbenchStateModel`     | Route-state classifier          | Converts graph-query and permission signals into base workbench states                                 | Necessary input, but no longer sufficient alone                 |
 | `useCanvasGraphHandlers`        | Interaction hook                | Connect, drag/drop, selection, auto-layout, edge confirmation, node removal                            | Reusable, mostly cohesive                                       |
@@ -169,6 +180,9 @@ flowchart TB
   Validation --> ValidationRules["transformationGraphValidationRules"]
   Validation --> ValidationResults["transformationGraphValidationResults"]
   Controller --> DraftSession["canvasDraftSession"]
+  DraftSession --> DraftBaseline["canvasDraftSessionBaseline"]
+  DraftSession --> DraftMachine["canvasDraftSessionMachine"]
+  DraftSession --> DraftWorkingSet["canvasDraftSessionWorkingSet"]
   Controller --> DraftScope["canvasDraftScope"]
   Controller --> Presentation["Canvas draft presentation state (required seam)"]
   Controller --> Mapper["canvasNodeMapper"]
@@ -220,7 +234,10 @@ flowchart LR
 
   subgraph Models["Controller-owned models and hooks"]
     Controller["useCanvasController\nResponsibility: application orchestration facade"]
-    DraftSession["canvasDraftSession\nResponsibility: draft baseline and recovery transitions"]
+    DraftSession["canvasDraftSession\nResponsibility: namespaced aggregate API"]
+    DraftBaseline["canvasDraftSessionBaseline\nResponsibility: deterministic baseline and signature"]
+    DraftMachine["canvasDraftSessionMachine\nResponsibility: sync-state transitions"]
+    DraftWorkingSet["canvasDraftSessionWorkingSet\nResponsibility: working-set mutation and canonical reconcile"]
     DraftScope["canvasDraftScope\nResponsibility: visible scope and projection completeness"]
     WorkbenchState["canvasWorkbenchStateModel\nResponsibility: base workbench-state classifier"]
     GraphHandlers["useCanvasGraphHandlers\nResponsibility: graph mutation commands"]
@@ -252,6 +269,9 @@ flowchart LR
   Shell --> Inspector
   Shell --> Import
   Controller --> DraftSession
+  DraftSession --> DraftBaseline
+  DraftSession --> DraftMachine
+  DraftSession --> DraftWorkingSet
   Controller --> DraftScope
   Controller --> WorkbenchState
   Controller --> GraphHandlers
@@ -283,7 +303,10 @@ Canvas route readiness is no longer allowed to be derived independently in
 
 The canonical split for this slice is now:
 
-- `canvasDraftSession.ts`: authoritative draft aggregate
+- `canvasDraftSession.ts`: authoritative draft aggregate component API
+- `canvasDraftSessionBaseline.ts`: aggregate baseline seam
+- `canvasDraftSessionMachine.ts`: aggregate state-machine seam
+- `canvasDraftSessionWorkingSet.ts`: aggregate working-set mutation seam
 - `canvasDraftScope.ts`: graph and execution projection read model
 - `canvasWorkbenchStateModel.ts`: base workbench-state classifier
 - one route-level presentation read model:
@@ -437,6 +460,11 @@ Comparison with mature systems:
 - route modules publish explicit readiness or recovery posture;
 - static routes still cross the same contract through a shared boundary instead
   of relying on implicit shell defaults;
+- mature authoring contexts split aggregate vocabulary, deterministic
+  baseline ownership, machine transitions, and working-set mutation;
+  `canvasDraftSession.ts` now follows that shape via
+  `canvasDraftSessionBaseline.ts`, `canvasDraftSessionMachine.ts`, and
+  `canvasDraftSessionWorkingSet.ts`;
 - `static` means "already useful at mount", not "has no custom publisher yet";
 - shell reveal depends on the active route contract, not on leaf-widget state
   or pathname-only heuristics.

@@ -2,14 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { WorkspaceGraphDraftRecord } from '../../ports/workspace';
 import {
-  adoptCurrentSnapshot,
-  applyConflict,
-  bootstrapSession,
-  createBootstrappingCanvasDraftSession,
-  markRemoteDraftMissing,
-  queueExplicitNodeIds,
-  reconcileSnapshot,
-  reloadFromRemote,
+  canvasDraftSession,
 } from './canvasDraftSession';
 
 function buildRemoteDraftRecord(
@@ -32,7 +25,7 @@ function buildRemoteDraftRecord(
 
 describe('canvasDraftSession', () => {
   it('bootstraps to the canonical snapshot when no remote draft exists', () => {
-    const session = bootstrapSession({
+    const session = canvasDraftSession.machine.bootstrap({
       remoteDraft: null,
       canonicalNodeIds: ['node_1', 'node_2'],
       canonicalEdges: [{ sourceId: 'node_1', targetId: 'node_2' }],
@@ -48,7 +41,7 @@ describe('canvasDraftSession', () => {
   });
 
   it('bootstraps to the persisted draft subset when a remote draft exists', () => {
-    const session = bootstrapSession({
+    const session = canvasDraftSession.machine.bootstrap({
       remoteDraft: buildRemoteDraftRecord({
         draft: {
           nodeIds: ['node_2', 'node_remote_only'],
@@ -72,8 +65,8 @@ describe('canvasDraftSession', () => {
   });
 
   it('promotes queued explicit nodes and their canonical edges when they appear in a refreshed snapshot', () => {
-    const queuedSession = queueExplicitNodeIds(
-      bootstrapSession({
+    const queuedSession = canvasDraftSession.workingSet.queueExplicitNodeIds(
+      canvasDraftSession.machine.bootstrap({
         remoteDraft: buildRemoteDraftRecord({
           draft: {
             nodeIds: ['node_1'],
@@ -89,7 +82,7 @@ describe('canvasDraftSession', () => {
       ['node_imported']
     );
 
-    const reconciledSession = reconcileSnapshot(queuedSession, {
+    const reconciledSession = canvasDraftSession.workingSet.reconcileSnapshot(queuedSession, {
       canonicalNodeIds: ['node_1', 'node_imported'],
       canonicalEdges: [{ sourceId: 'node_1', targetId: 'node_imported' }],
     });
@@ -102,7 +95,7 @@ describe('canvasDraftSession', () => {
   });
 
   it('does not auto-merge unrelated new snapshot nodes into an active draft', () => {
-    const session = bootstrapSession({
+    const session = canvasDraftSession.machine.bootstrap({
       remoteDraft: buildRemoteDraftRecord({
         draft: {
           nodeIds: ['node_1'],
@@ -116,7 +109,7 @@ describe('canvasDraftSession', () => {
       canonicalEdges: [],
     });
 
-    const reconciledSession = reconcileSnapshot(session, {
+    const reconciledSession = canvasDraftSession.workingSet.reconcileSnapshot(session, {
       canonicalNodeIds: ['node_1', 'node_new'],
       canonicalEdges: [],
     });
@@ -125,8 +118,23 @@ describe('canvasDraftSession', () => {
     expect(reconciledSession.workingSet.pendingExplicitNodeIds).toEqual([]);
   });
 
+  it('returns the same session reference when reconciliation produces no working-set change', () => {
+    const session = canvasDraftSession.machine.bootstrap({
+      remoteDraft: null,
+      canonicalNodeIds: ['node_1', 'node_2'],
+      canonicalEdges: [{ sourceId: 'node_1', targetId: 'node_2' }],
+    });
+
+    expect(
+      canvasDraftSession.workingSet.reconcileSnapshot(session, {
+        canonicalNodeIds: ['node_1', 'node_2'],
+        canonicalEdges: [{ sourceId: 'node_1', targetId: 'node_2' }],
+      })
+    ).toBe(session);
+  });
+
   it('preserves authoritative remote members when the current snapshot is behind', () => {
-    const session = bootstrapSession({
+    const session = canvasDraftSession.machine.bootstrap({
       remoteDraft: buildRemoteDraftRecord({
         draft: {
           nodeIds: ['node_1', 'node_remote_only'],
@@ -141,7 +149,7 @@ describe('canvasDraftSession', () => {
       canonicalEdges: [{ sourceId: 'node_1', targetId: 'node_remote_only' }],
     });
 
-    const reconciledSession = reconcileSnapshot(session, {
+    const reconciledSession = canvasDraftSession.workingSet.reconcileSnapshot(session, {
       canonicalNodeIds: ['node_1'],
       canonicalEdges: [],
     });
@@ -153,8 +161,8 @@ describe('canvasDraftSession', () => {
   });
 
   it('transitions to conflict while retaining the new remote baseline', () => {
-    const session = applyConflict(
-      bootstrapSession({
+    const session = canvasDraftSession.machine.applyConflict(
+      canvasDraftSession.machine.bootstrap({
         remoteDraft: null,
         canonicalNodeIds: ['node_1'],
         canonicalEdges: [],
@@ -167,9 +175,29 @@ describe('canvasDraftSession', () => {
     expect(session.baseline.record?.revision).toBe('rev-conflict');
   });
 
+  it('promotes a successful save into the new editing baseline', () => {
+    const session = canvasDraftSession.machine.applySaveSuccess(
+      canvasDraftSession.machine.markSaving(
+        canvasDraftSession.machine.bootstrap({
+          remoteDraft: null,
+          canonicalNodeIds: ['node_1'],
+          canonicalEdges: [],
+        })
+      ),
+      buildRemoteDraftRecord({ revision: 'rev-saved' })
+    );
+
+    expect(session.syncState).toBe('editing');
+    expect(session.draftRevision).toBe('rev-saved');
+    expect(session.baseline.record?.revision).toBe('rev-saved');
+  });
+
   it('transitions to missing_remote when the persisted draft disappears', () => {
-    const session = markRemoteDraftMissing(
-      reloadFromRemote(createBootstrappingCanvasDraftSession(), buildRemoteDraftRecord())
+    const session = canvasDraftSession.machine.markRemoteDraftMissing(
+      canvasDraftSession.machine.reloadFromRemote(
+        canvasDraftSession.machine.createBootstrapping(),
+        buildRemoteDraftRecord()
+      )
     );
 
     expect(session.syncState).toBe('missing_remote');
@@ -178,9 +206,12 @@ describe('canvasDraftSession', () => {
   });
 
   it('adoptCurrentSnapshot clears prior baseline state and rebuilds from canonical', () => {
-    const session = adoptCurrentSnapshot(
-      markRemoteDraftMissing(
-        reloadFromRemote(createBootstrappingCanvasDraftSession(), buildRemoteDraftRecord())
+    const session = canvasDraftSession.machine.adoptCurrentSnapshot(
+      canvasDraftSession.machine.markRemoteDraftMissing(
+        canvasDraftSession.machine.reloadFromRemote(
+          canvasDraftSession.machine.createBootstrapping(),
+          buildRemoteDraftRecord()
+        )
       ),
       {
         canonicalNodeIds: ['node_1', 'node_2', 'node_3'],

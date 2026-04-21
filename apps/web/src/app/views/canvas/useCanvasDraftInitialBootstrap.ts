@@ -1,8 +1,7 @@
 import { useEffect, type Dispatch, type SetStateAction } from 'react';
 
 import {
-  bootstrapSession,
-  serializeWorkspaceGraphDraft,
+  canvasDraftSession,
   type CanvasDraftSession,
 } from './canvasDraftSession';
 import type { DraftSaveStatus, GraphDraftQueryState } from './canvasDraftLifecycle.types';
@@ -53,11 +52,11 @@ export function useCanvasDraftInitialBootstrap({
       if (hasPersistedNodePositions(remoteDraft.draft.nodePositions)) {
         setCanvasNodePositions(workspaceLayoutKey, remoteDraft.draft.nodePositions);
       }
-      lastSavedSignatureRef.current = serializeWorkspaceGraphDraft(remoteDraft.draft);
+      lastSavedSignatureRef.current = canvasDraftSession.baseline.serialize(remoteDraft.draft);
     }
 
     setDraftSession(
-      bootstrapSession({
+      canvasDraftSession.machine.bootstrap({
         remoteDraft,
         canonicalNodeIds: canonicalSnapshot.canonicalNodeIds,
         canonicalEdges: canonicalSnapshot.canonicalEdges,

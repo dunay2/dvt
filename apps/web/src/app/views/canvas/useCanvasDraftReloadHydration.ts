@@ -4,10 +4,7 @@ import type { WorkspaceGraphDraftRecord } from '../../ports/workspace';
 import type { CanvasDraftQueryCache } from './canvasDraftQueryCache';
 import type { CanvasDraftReadModel } from './canvasDraftReadModel';
 import {
-  markRemoteDraftMissing,
-  reconcileSnapshot,
-  reloadFromRemote,
-  serializeWorkspaceGraphDraft,
+  canvasDraftSession,
   type CanvasDraftSession,
 } from './canvasDraftSession';
 import type { DraftSaveStatus } from './canvasDraftLifecycle.types';
@@ -50,16 +47,21 @@ export function useCanvasDraftReloadHydration({
 
       if (remoteDraft == null) {
         lastSavedSignatureRef.current = null;
-        setDraftSession((currentSession) => markRemoteDraftMissing(currentSession));
+        setDraftSession((currentSession) =>
+          canvasDraftSession.machine.markRemoteDraftMissing(currentSession)
+        );
         return;
       }
 
       if (hasPersistedNodePositions(remoteDraft.draft.nodePositions)) {
         setCanvasNodePositions(workspaceLayoutKey, remoteDraft.draft.nodePositions);
       }
-      lastSavedSignatureRef.current = serializeWorkspaceGraphDraft(remoteDraft.draft);
+      lastSavedSignatureRef.current = canvasDraftSession.baseline.serialize(remoteDraft.draft);
       setDraftSession((currentSession) =>
-        reconcileSnapshot(reloadFromRemote(currentSession, remoteDraft), reloadedCanonicalSnapshot)
+        canvasDraftSession.workingSet.reconcileSnapshot(
+          canvasDraftSession.machine.reloadFromRemote(currentSession, remoteDraft),
+          reloadedCanonicalSnapshot
+        )
       );
     },
     [

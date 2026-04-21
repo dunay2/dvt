@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 
-import { serializeWorkspaceGraphDraft } from './canvasDraftSession';
+import { canvasDraftSession } from './canvasDraftSession';
 import {
   canPersistCanvasDraftAuthoringPayload,
   type CanvasDraftAuthoringPayload,
@@ -44,7 +44,7 @@ export function useCanvasCurrentDraftPayload(
     ]
   );
   const currentDraftPayloadSignature = useMemo(
-    () => serializeWorkspaceGraphDraft(currentDraftPayload),
+    () => canvasDraftSession.baseline.serialize(currentDraftPayload),
     [currentDraftPayload]
   );
   const canPersistCurrentDraft = useMemo(

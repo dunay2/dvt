@@ -28,6 +28,7 @@ below.
 
 - [TF-E2 Canvas Target Architecture Execution Plan 2026-04-17](../../../../planning/proposals/mandatory/frontend-and-ux/tf-e2-canvas-target-architecture-execution-plan-20260417.md)
 - [Graph Route Bootstrap Architecture](./graph-route-bootstrap-architecture.md)
+- [Canvas Draft Session Component](./canvas-draft-session-component.md)
 - [Frontend Fowler Implementation Pattern](../frontend-fowler-implementation-pattern.md)
 - [Frontend Data Boundary Architecture](../frontend-data-boundary-architecture.md)
 
@@ -38,6 +39,8 @@ Reading rule:
   release posture
 - use `graph-route-bootstrap-architecture.md` for startup contract rules and
   route publication invariants
+- use `canvas-draft-session-component.md` for the local aggregate API, file
+  roles, and state-machine reading order
 
 ## Current Code Anchors
 
@@ -103,6 +106,11 @@ Primary implementation anchors:
 - [canvasPlanAction.ts](../../../../../apps/web/src/app/views/canvas/canvasPlanAction.ts)
 - [canvasPreviewProvenance.ts](../../../../../apps/web/src/app/views/canvas/canvasPreviewProvenance.ts)
 - [canvasRunStartAction.ts](../../../../../apps/web/src/app/views/canvas/canvasRunStartAction.ts)
+- [canvasDraftSession.ts](../../../../../apps/web/src/app/views/canvas/canvasDraftSession.ts)
+- [canvasDraftSession.types.ts](../../../../../apps/web/src/app/views/canvas/canvasDraftSession.types.ts)
+- [canvasDraftSessionBaseline.ts](../../../../../apps/web/src/app/views/canvas/canvasDraftSessionBaseline.ts)
+- [canvasDraftSessionMachine.ts](../../../../../apps/web/src/app/views/canvas/canvasDraftSessionMachine.ts)
+- [canvasDraftSessionWorkingSet.ts](../../../../../apps/web/src/app/views/canvas/canvasDraftSessionWorkingSet.ts)
 - [transformationGraphValidation.ts](../../../../../apps/web/src/app/views/canvas/transformationGraphValidation.ts)
 - [transformationGraphValidation.types.ts](../../../../../apps/web/src/app/views/canvas/transformationGraphValidation.types.ts)
 - [transformationGraphValidationScope.ts](../../../../../apps/web/src/app/views/canvas/transformationGraphValidationScope.ts)
@@ -131,6 +139,7 @@ Primary fitness-function anchors:
 - [canvasControllerViewModel.architecture.test.ts](../../../../../apps/web/src/app/views/canvas/canvasControllerViewModel.architecture.test.ts)
 - [CanvasCenterSurface.architecture.test.ts](../../../../../apps/web/src/app/views/canvas/CanvasCenterSurface.architecture.test.ts)
 - [useCanvasExecutionActions.architecture.test.ts](../../../../../apps/web/src/app/views/canvas/useCanvasExecutionActions.architecture.test.ts)
+- [canvasDraftSession.architecture.test.ts](../../../../../apps/web/src/app/views/canvas/canvasDraftSession.architecture.test.ts)
 - [transformationGraphValidation.architecture.test.ts](../../../../../apps/web/src/app/views/canvas/transformationGraphValidation.architecture.test.ts)
 
 ## Current Architecture Snapshot
@@ -334,23 +343,50 @@ Implemented seams:
   owns draft-status badge and recovery reload affordance rendering
 - `useCanvasNavigationActions`
   owns route-only navigation side effects
+- `canvasDraftSession`
+  is now the namespaced aggregate component API over typed draft-session
+  vocabulary plus explicit `baseline`, `machine`, and `workingSet` seams
+- `canvasDraftSessionBaseline`
+  owns deterministic draft serialization and baseline creation for the
+  aggregate
+- `canvasDraftSessionMachine`
+  owns bootstrapping, save, conflict, reload, missing-remote, and
+  adopt-current transitions for the aggregate
+- `canvasDraftSessionWorkingSet`
+  owns visible-node, visible-edge, pending-node, and canonical-reconcile
+  mutations for the draft aggregate
 
 Remaining concentration:
 
 - `useCanvasAuthoringRuntime`
   still assembles several authoring concerns and remains the heaviest runtime
   seam in the chain
-- `canvasDraftSession`
-  is the right aggregate root, but it remains a large local model and still
-  needs careful proof-oriented evolution rather than accreting helper logic
 
 ## Aggregate Roots And Read Models
+
+Current component reading:
+
+- `aggregate component entrypoint` â€” `canvasDraftSession.ts`
+  Namespaced public API for aggregate concerns.
+- `aggregate baseline seam` â€” `canvasDraftSessionBaseline.ts`
+  Deterministic draft serialization and baseline creation.
+- `aggregate machine seam` â€” `canvasDraftSessionMachine.ts`
+  Sync-state transitions and baseline replacement.
+
+The older shorthand bullets that follow predate the baseline/machine split and
+should be read through the component model above.
 
 The current slice now has a clearer aggregate and read-model split than the
 earlier hard-cut pass.
 
 - `aggregate root` — `canvasDraftSession.ts`
-  Local authoring truth for scoped nodes, edges, revision, and recovery posture.
+  Legacy shorthand for the aggregate component entrypoint documented above.
+- `aggregate working-set seam` — `canvasDraftSessionWorkingSet.ts`
+  Working-set mutation and canonical-reconcile policy for the aggregate.
+- `aggregate baseline seam` — `canvasDraftSessionBaseline.ts`
+  Deterministic draft serialization and baseline creation.
+- `aggregate machine seam` — `canvasDraftSessionMachine.ts`
+  Baseline, revision, and recovery transitions for the aggregate.
 - `repository` — `canvasDraftRepository.ts`
   Only outbound boundary that may talk to the canonical workspace snapshot and draft persistence.
 - `anti-corruption read model` — `canvasDraftReadModel.ts`
@@ -365,7 +401,10 @@ flowchart LR
   Port["IWorkspaceGraphDraftAuthoringPort"] --> Repo["canvasDraftRepository"]
   Repo --> ReadModel["canvasDraftReadModel"]
   ReadModel --> Runtime["useCanvasAuthoringRuntime"]
-  Runtime --> Aggregate["CanvasDraftSession aggregate root"]
+  Runtime --> Aggregate["canvasDraftSession API"]
+  Aggregate --> Baseline["canvasDraftSessionBaseline"]
+  Aggregate --> Machine["canvasDraftSessionMachine"]
+  Aggregate --> WorkingSet["canvasDraftSessionWorkingSet"]
   Aggregate --> Controller["useCanvasController facade"]
   Controller --> ViewModel["canvasControllerViewModel"]
   ViewModel --> Route["Canvas.tsx"]
@@ -376,6 +415,8 @@ flowchart LR
 Reading rule:
 
 - the aggregate root is route-local and authoritative for working-set edits
+- baseline, machine, and working-set concerns are now explicit subordinate
+  seams, not aggregate-internal helper clutter
 - the repository is the only persistence authority
 - the read model is allowed to be lossy for presentation, but not authoritative
 - route components consume the facade and presentation seams, not the port
@@ -463,6 +504,9 @@ flowchart TB
   Persistence --> Recovery["useCanvasDraftRecoveryActions"]
   Autosave --> DraftSession["canvasDraftSession"]
   DraftBootstrap --> DraftSession
+  DraftSession --> DraftBaseline["canvasDraftSessionBaseline"]
+  DraftSession --> DraftMachine["canvasDraftSessionMachine"]
+  DraftSession --> DraftWorkingSet["canvasDraftSessionWorkingSet"]
   DraftSession --> Scope["canvasDraftScope"]
   Scope --> Authoring
 ```
@@ -652,6 +696,9 @@ verbatim".
   preview fallout grows again, the next move should be another narrow
   application-service extraction, not a return to one file owning the whole
   chain
+- `canvasDraftSession` now follows the same mature-system shape as the
+  validation seam: thin public facade, subordinate pure policy modules, and an
+  architecture test that protects the split
 - `CanvasToolbar` now behaves like a thin presentational composition seam;
   the remaining risk is re-accumulating policy into it instead of the toolbar
   helper seams
@@ -676,35 +723,45 @@ right direction:
 
 - mature systems usually keep one thin entry facade and push policy into small
   pure modules; `transformationGraphValidation.ts` now follows that shape
+- mature systems also keep aggregate vocabulary, working-set mutation, and
+  lifecycle transitions separate inside local authoring contexts;
+  `canvasDraftSession.ts` now follows that shape too
 - mature systems protect architecture with fitness functions, not only with
   code review; `transformationGraphValidation.architecture.test.ts` now locks
-  the seam shape explicitly
+  the seam shape explicitly, and `canvasDraftSession.architecture.test.ts`
+  applies the same guard to the draft aggregate
 - mature systems keep diagrams and responsibility maps synchronized with the
-  live code; this iteration updates the validation seam anchors, relationship
-  map, and drift register together
+  live code; this iteration updates the validation and draft-session seam
+  anchors, relationship map, and drift register together
 
 The branch is still less mature than those systems in one important respect:
 
-- large local aggregates such as `canvasDraftSession.ts` still concentrate more
-  policy than a fully-settled authoring context should carry
+- `useCanvasAuthoringRuntime.ts` still concentrates more orchestration than a
+  fully-settled authoring context should carry
 
 ### Antipatterns reduced in this iteration
 
 - reduced a mini-"blob helper" antipattern in
   `transformationGraphValidation.ts`, where scope resolution, invariant checks,
   and result construction lived together
+- reduced a local aggregate-blob antipattern in `canvasDraftSession.ts`, where
+  working-set mutation, baseline logic, and recovery transitions lived together
 - reduced shotgun-surgery risk, because validation rules now change in
   `transformationGraphValidationRules.ts` without reopening facade wiring or
   result-shape code
+- reduced repeated draft-working-set rebuilding by making
+  `reloadFromRemote()` and bootstrapping reuse the same `buildDraftWorkingSet()`
+  seam
 - reduced code and documentation drift by making the relationship diagram and
   responsibility inventory describe the same seams that the runtime now imports
 
 ### Lessons for future iterations
 
 - split by policy family, not by arbitrary helper count; the useful cut here
-  was `scope`, `rules`, and `results`, not "three random utility files"
+  was `scope`, `rules`, and `results` for validation, and `workingSet` plus
+  `lifecycle` for the draft aggregate, not "random utility files"
 - keep the public entrypoint stable while changing internals; the facade export
-  remained intact, which lowers route-level refactor risk
+  remained intact in both seams, which lowers route-level refactor risk
 - add architecture tests when a seam is intentionally thin; otherwise the next
   edit tends to collapse behavior back into the facade
 - update drift registers and diagrams in the same iteration as the refactor; if
@@ -714,13 +771,16 @@ The branch is still less mature than those systems in one important respect:
 
 - removed repeated local ownership of draft-signature derivation and invalid
   result construction from the public validation entrypoint
+- removed repeated working-set reconstruction logic from the draft aggregate by
+  centralizing it in `canvasDraftSessionWorkingSet.ts`
 - removed repeated reasoning burden for reviewers; the facade now reads as an
-  ordered application flow instead of a mixed utility catalog
+  ordered application flow instead of a mixed utility catalog, both for
+  validation and for draft-session transitions
 - the next repetition target is still route-local command fallout around
   selection and inspector behavior, which remains adapter-owned
-- the next structural opportunity after this seam is still the large
-  `canvasDraftSession.ts` aggregate, followed by the breadth of
-  `useCanvasAuthoringRuntime`
+- the next structural opportunity after this seam is now the breadth of
+  `useCanvasAuthoringRuntime`, followed by route-local selection and inspector
+  commands
 
 ## Current Responsibility Inventory
 
@@ -756,6 +816,10 @@ The branch is still less mature than those systems in one important respect:
 | `useCanvasDraftPersistence`       | composition seam over autosave and recovery actions                                                                                                   | acceptable composition seam                                            |
 | `useCanvasDraftAutosave`          | autosave scheduling over persistence readiness, debounce, and save eligibility                                                                        | acceptable scheduling seam                                             |
 | `canvasDraftAutosaveExecution`    | save-attempt execution and result resolution                                                                                                          | acceptable pure runtime seam                                           |
+| `canvasDraftSession`              | namespaced aggregate component API over draft vocabulary, baseline, machine, working set, sync state, revision, and recovery transitions              | correct aggregate seam after the baseline/machine/working-set split    |
+| `canvasDraftSessionBaseline`      | deterministic draft serialization and baseline creation                                                                                               | correct subordinate aggregate-baseline seam                            |
+| `canvasDraftSessionMachine`       | bootstrapping, save, conflict, missing-remote, adopt-current, and reload transitions                                                                  | correct subordinate aggregate-transition seam                          |
+| `canvasDraftSessionWorkingSet`    | visible working-set mutation, pending-explicit-node promotion, edge filtering, and canonical reconcile semantics                                      | correct subordinate aggregate-policy seam                              |
 | `useCanvasDraftBootstrapping`     | composition seam over narrow bootstrap policies                                                                                                       | acceptable composition seam                                            |
 | `useCanvasDraftInitialBootstrap`  | first transition from remote draft or canonical snapshot into editing state                                                                           | acceptable bootstrap transition seam                                   |
 | `useCanvasDraftMissingRemoteSync` | post-bootstrap remote-missing detection and local reset                                                                                               | acceptable lifecycle recovery seam                                     |
@@ -817,13 +881,15 @@ The remaining drift is semantic, not structural:
 That drift is currently accepted in `TF-E2-A` and belongs to the broader
 proof-oriented closure under `TF-E2-E`.
 
-### 4. Validation hotspot reduced, aggregate hotspot remains
+### 4. Validation and draft-aggregate hotspots reduced
 
 `transformationGraphValidation.ts` no longer carries scoped graph resolution,
-invariant rules, and result construction in one file. That drift is materially
-reduced by the validation split. The remaining large local model is now
-clearly `canvasDraftSession.ts`, which is the next hotspot if another Fowler
-iteration is needed.
+invariant rules, and result construction in one file. `canvasDraftSession.ts`
+also no longer carries working-set mutation, baseline logic, and recovery
+transitions in one file. Both drifts are now structurally reduced.
+
+The remaining concentration point is `useCanvasAuthoringRuntime.ts`, which is
+now the next hotspot if another Fowler iteration is needed.
 
 ## Target DDD / CQRS / Hexagonal Posture
 
@@ -864,13 +930,17 @@ Rejected direction:
 
 The Canvas slice should be read through five tactical layers.
 
-| Layer                             | Owned modules                                                                                                                                                 | Responsibility                                                                            | Must not own                                                      |
-| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
-| `domain aggregate`                | `canvasDraftSession.ts`, `canvasDraftScope.ts`, `canvasAuthoringState.ts`, `canvasBackendPosture.ts`                                                          | route-local authoring truth, working-set semantics, policy derivation, recovery posture   | React Flow event semantics, service wiring, transport handling    |
-| `command application seam`        | `useCanvasAuthoringRuntime.ts`, `useCanvasMutationHandlers.ts`, `canvasInteractionCommands.ts`                                                                | execute authoring commands against the aggregate and coordinate write-side fallout        | render projection, shell startup posture, direct widget ownership |
-| `query / projection seam`         | `useCanvasGraphModel.ts`, `useCanvasAuthoringProjection.ts`, `useCanvasOverlayModel.ts`, `useCanvasControllerReadModel.ts`, `useCanvasCurrentDraftPayload.ts` | derive visible graph, overlays, validation, inspector view, and authoritative route scope | mutation policy, persistence write orchestration                  |
-| `inbound adapters`                | `useCanvasGraphHandlers.ts`, `useCanvasNodeChangeHandlers.ts`, `useCanvasEdgeChangeHandlers.ts`, `useCanvasSourceImportHandlers.ts`, route UI components      | translate React Flow and route gestures into commands                                     | local domain policy, duplicate aggregate mutation logic           |
-| `outbound ports and repositories` | `canvasDraftRepository.ts`, `IWorkspacePort`, `IWorkspaceGraphDraftAuthoringPort`, plan or run service ports                                                  | canonical snapshot read, typed persisted draft boundary, preview and run handoff          | route-local state truth                                           |
+<!-- markdownlint-disable MD060 -->
+
+| Layer                             | Owned modules                                                                                                                                                                                            | Responsibility                                                                                             | Must not own                                                      |
+| --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| `domain aggregate`                | `canvasDraftSession.ts`, `canvasDraftSessionBaseline.ts`, `canvasDraftSessionMachine.ts`, `canvasDraftSessionWorkingSet.ts`, `canvasDraftScope.ts`, `canvasAuthoringState.ts`, `canvasBackendPosture.ts` | route-local authoring truth, working-set semantics, transition policy, policy derivation, recovery posture | React Flow event semantics, service wiring, transport handling    |
+| `command application seam`        | `useCanvasAuthoringRuntime.ts`, `useCanvasMutationHandlers.ts`, `canvasInteractionCommands.ts`                                                                                                           | execute authoring commands against the aggregate and coordinate write-side fallout                         | render projection, shell startup posture, direct widget ownership |
+| `query / projection seam`         | `useCanvasGraphModel.ts`, `useCanvasAuthoringProjection.ts`, `useCanvasOverlayModel.ts`, `useCanvasControllerReadModel.ts`, `useCanvasCurrentDraftPayload.ts`                                            | derive visible graph, overlays, validation, inspector view, and authoritative route scope                  | mutation policy, persistence write orchestration                  |
+| `inbound adapters`                | `useCanvasGraphHandlers.ts`, `useCanvasNodeChangeHandlers.ts`, `useCanvasEdgeChangeHandlers.ts`, `useCanvasSourceImportHandlers.ts`, route UI components                                                 | translate React Flow and route gestures into commands                                                      | local domain policy, duplicate aggregate mutation logic           |
+| `outbound ports and repositories` | `canvasDraftRepository.ts`, `IWorkspacePort`, `IWorkspaceGraphDraftAuthoringPort`, plan or run service ports                                                                                             | canonical snapshot read, typed persisted draft boundary, preview and run handoff                           | route-local state truth                                           |
+
+<!-- markdownlint-enable MD060 -->
 
 ### Target Command Catalog
 

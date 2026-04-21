@@ -3,7 +3,7 @@ import { useCallback, type Dispatch, type SetStateAction } from 'react';
 import type { WorkspaceGraphSnapshot } from '../../ports/workspace';
 import type { CanvasDraftQueryCache } from './canvasDraftQueryCache';
 import type { CanvasDraftReadModel } from './canvasDraftReadModel';
-import { adoptCurrentSnapshot, type CanvasDraftSession } from './canvasDraftSession';
+import { canvasDraftSession, type CanvasDraftSession } from './canvasDraftSession';
 import type { DraftAttemptRefs, DraftSaveStatus } from './canvasDraftLifecycle.types';
 import {
   buildCanonicalSnapshotFromWorkspaceSnapshot,
@@ -83,7 +83,9 @@ export function useCanvasDraftRecoveryActions({
     invalidateInFlightSaveAttempt();
     refs.lastSavedSignatureRef.current = null;
     setDraftSaveStatus('idle');
-    setDraftSession((currentSession) => adoptCurrentSnapshot(currentSession, canonicalSnapshot));
+    setDraftSession((currentSession) =>
+      canvasDraftSession.machine.adoptCurrentSnapshot(currentSession, canonicalSnapshot)
+    );
   }, [canonicalSnapshot, invalidateInFlightSaveAttempt, refs, setDraftSaveStatus, setDraftSession]);
 
   return {

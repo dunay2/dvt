@@ -1,10 +1,7 @@
 import type { Edge, Node } from '@xyflow/react';
 
 import {
-  addExplicitNode,
-  queueExplicitNodeIds,
-  removeNode,
-  replaceEdges,
+  canvasDraftSession,
   type CanvasDraftSession,
 } from './canvasDraftSession';
 import { mapCanvasEdgesToDraftEdges } from './canvasGraphChangeRuntime';
@@ -32,21 +29,24 @@ export function replaceCanvasVisibleEdges(
   draftSession: CanvasDraftSession,
   edges: Edge[]
 ): CanvasDraftSession {
-  return replaceEdges(draftSession, mapCanvasEdgesToDraftEdges(edges));
+  return canvasDraftSession.workingSet.replaceEdges(
+    draftSession,
+    mapCanvasEdgesToDraftEdges(edges)
+  );
 }
 
 export function admitExplicitCanvasNode(
   draftSession: CanvasDraftSession,
   nodeId: string
 ): CanvasDraftSession {
-  return addExplicitNode(draftSession, nodeId);
+  return canvasDraftSession.workingSet.addExplicitNode(draftSession, nodeId);
 }
 
 export function queueImportedCanvasSourceNodes(
   draftSession: CanvasDraftSession,
   nodeIds: string[]
 ): CanvasDraftSession {
-  return queueExplicitNodeIds(draftSession, nodeIds);
+  return canvasDraftSession.workingSet.queueExplicitNodeIds(draftSession, nodeIds);
 }
 
 type RemoveNodeFromGraphResult =
@@ -98,7 +98,10 @@ export function removeNodeFromCanvasWorkingSet(
       edges: nextEdges,
       selectedNodeIds: state.selectedNodeIds.filter((selectedNodeId) => selectedNodeId !== nodeId),
       inspectorNodeId: state.inspectorNodeId === nodeId ? null : state.inspectorNodeId,
-      draftSession: replaceCanvasVisibleEdges(removeNode(state.draftSession, nodeId), nextEdges),
+      draftSession: replaceCanvasVisibleEdges(
+        canvasDraftSession.workingSet.removeNode(state.draftSession, nodeId),
+        nextEdges
+      ),
     },
   };
 }
