@@ -68,6 +68,8 @@ It does **not** own:
   mapper/classifier modules
 - production consumers do not import `createHttpErrorResponse(...)` directly for
   component-owned semantic envelopes
+- production consumers do not import `sendHttpResponse(...)` directly; the
+  transport writer is used only behind `httpErrorTranslation.respond(...)`
 - `httpErrorMapper.ts` does not own runtime-domain classification
 - translated `HttpResponseModel` values are emitted through
   `httpErrorTranslation.respond(...)`, which delegates to the owned transport
@@ -159,6 +161,7 @@ sequenceDiagram
 - `authorizeAdminExecutionScope.ts`
 - `startRunRoute.ts`
 - `workspaceGraphDraftRoutes.ts`
+- `executePlanRouteFacade.ts`
 
 ## Focused file map
 
@@ -194,6 +197,8 @@ sequenceDiagram
 - emit component-owned static envelopes through named helpers on
   `httpErrorTranslation.ts`, not through direct `createHttpErrorResponse(...)`
   imports from route consumers
+- protect seam rules with semantic AST assertions instead of string-only
+  contains checks where the rule is about imports and calls
 - add new route-level static reasons in `HTTP_ERROR_REASON`
 - add new parser rejections through `RouteParseIssue`, not ad hoc `{ status,
 body }` objects

@@ -207,6 +207,11 @@ The component seam now also owns feature-level static envelopes for
 longer need direct `createHttpErrorResponse(...)` imports for component-owned
 semantic failures.
 
+The same seam policy now applies to response writing: production entrypoint
+consumers and generic route helpers emit `HttpResponseModel` values through
+`httpErrorTranslation.respond(...)` rather than calling `sendHttpResponse(...)`
+directly.
+
 ### Current Gaps
 
 | Gap                                                               | Why it matters                                                                                                                   | Governed tasks                              |
