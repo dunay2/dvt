@@ -110,10 +110,50 @@ describe('useCanvasEdgeChangeHandlers', () => {
     });
 
     expect(harness.spies.setEdges).toHaveBeenCalledWith([]);
-    expect(harness.spies.setDraftSession).toHaveBeenCalledWith(
+    const updater = harness.spies.setDraftSession.mock.calls[0]?.[0];
+    expect(typeof updater).toBe('function');
+    expect(updater(buildDraftSession())).toEqual(
       expect.objectContaining({
         workingSet: expect.objectContaining({
           visibleEdges: [],
+        }),
+      })
+    );
+
+    harness.cleanup();
+  });
+
+  it('preserves queued draft metadata when edge changes update visible-edge truth', async () => {
+    const harness = renderHookHost({});
+    await harness.render();
+
+    act(() => {
+      harness.latest()?.handleEdgesChange([
+        {
+          id: 'edge-1',
+          type: 'remove',
+        },
+      ]);
+    });
+
+    expect(harness.spies.setDraftSession).toHaveBeenCalledTimes(1);
+    const updater = harness.spies.setDraftSession.mock.calls[0]?.[0];
+    expect(typeof updater).toBe('function');
+
+    const concurrentSession = {
+      ...buildDraftSession(),
+      workingSet: {
+        ...buildDraftSession().workingSet,
+        pendingExplicitNodeIds: ['imported-node'],
+      },
+    };
+    const nextSession = updater(concurrentSession);
+
+    expect(nextSession).toEqual(
+      expect.objectContaining({
+        workingSet: expect.objectContaining({
+          visibleEdges: [],
+          pendingExplicitNodeIds: ['imported-node'],
         }),
       })
     );

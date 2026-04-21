@@ -22,20 +22,20 @@ export function useCanvasEdgeChangeHandlers({
 
   const handleEdgesChange = useCallback(
     (changes: EdgeChange<Edge>[]) => {
-      const nextState = canvasGraphLifecycle.edge.applyChanges(
-        {
-          draftSession,
-          nodes: graphModel.nodes,
-          edges: graphModel.edges,
-          selectedNodeIds: [],
-          inspectorNodeId: null,
-        },
-        changes
-      );
+      const currentState = {
+        draftSession,
+        nodes: graphModel.nodes,
+        edges: graphModel.edges,
+        selectedNodeIds: [],
+        inspectorNodeId: null,
+      };
+      const nextState = canvasGraphLifecycle.edge.applyChanges(currentState, changes);
 
       graphModel.setEdges(nextState.edges);
-      if (nextState.draftSession !== draftSession) {
-        setDraftSession(nextState.draftSession);
+      if (nextState.draftSession !== currentState.draftSession) {
+        setDraftSession((currentSession) =>
+          canvasGraphLifecycle.edge.replaceVisible(currentSession, nextState.edges)
+        );
       }
     },
     [draftSession, graphModel, setDraftSession]
