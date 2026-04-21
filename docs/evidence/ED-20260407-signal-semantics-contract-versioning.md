@@ -19,7 +19,8 @@ code_refs:
   - packages/@dvt/engine/src/adapters/mock/MockAdapter.ts
   - packages/@dvt/adapter-temporal/src/TemporalAdapter.ts
   - packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts
-  - packages/@dvt/adapter-temporal/src/workflows/workflowHelpers.ts
+  - packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.signals.ts
+  - packages/@dvt/adapter-temporal/src/workflows/workflowCursorHelpers.ts
   - packages/@dvt/engine/src/adapters/temporal/TemporalAdapterStub.ts
   - packages/@dvt/engine/src/adapters/conductor/ConductorAdapterStub.ts
   - packages/@dvt/engine/test/core/WorkflowEngineCoreService.test.ts

@@ -5,7 +5,7 @@ import {
 } from '@temporalio/workflow';
 
 import type { WorkflowActivitiesPort, WorkflowStep } from './runPlanWorkflow.types.js';
-import { resolveStepActivityRetryPolicy } from './workflowHelpers.js';
+import { resolveStepActivityRetryPolicy } from './workflowArtifactHelpers.js';
 
 export function createStepActivities(
   step: WorkflowStep

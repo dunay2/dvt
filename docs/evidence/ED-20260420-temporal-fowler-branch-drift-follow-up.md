@@ -12,7 +12,8 @@ code_refs:
   - packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts
   - packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.layerResults.ts
   - packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.lifecycle.ts
-  - packages/@dvt/adapter-temporal/src/workflows/workflowHelpers.ts
+  - packages/@dvt/adapter-temporal/src/workflows/workflowArtifactHelpers.ts
+  - packages/@dvt/adapter-temporal/src/workflows/workflowGatewayHelpers.ts
   - packages/@dvt/adapter-temporal/src/workflows/workflowRuntimePayloadHelpers.ts
   - docs/architecture/system-delivery-status.md
   - docs/planning/reviews/architecture-and-governance/20260420-dvt-plus-system-architecture-review.md
@@ -22,7 +23,7 @@ evidence:
     - pnpm docs:workboard:generate
     - pnpm docs:status:generate
     - pnpm docs:sync
-    - pnpm exec eslint packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.layerResults.ts packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.lifecycle.ts packages/@dvt/adapter-temporal/src/workflows/workflowHelpers.ts packages/@dvt/adapter-temporal/src/workflows/workflowRuntimePayloadHelpers.ts
+    - pnpm exec eslint packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.layerResults.ts packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.lifecycle.ts packages/@dvt/adapter-temporal/src/workflows/workflowArtifactHelpers.ts packages/@dvt/adapter-temporal/src/workflows/workflowGatewayHelpers.ts packages/@dvt/adapter-temporal/src/workflows/workflowRuntimePayloadHelpers.ts
     - pnpm --filter @dvt/adapter-temporal typecheck:test
     - pnpm --filter @dvt/adapter-temporal test
     - $env:GIT_BASE='origin/main'; $env:GIT_HEAD='HEAD'; node tools/ci/arc-check.mjs

@@ -375,7 +375,7 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   and
   [packages/@dvt/planner/src/domain/Planner.ts](../../../packages/@dvt/planner/src/domain/Planner.ts)
   and
-  [packages/@dvt/adapter-temporal/src/workflows/workflowHelpers.ts](../../../packages/@dvt/adapter-temporal/src/workflows/workflowHelpers.ts)
+  [packages/@dvt/adapter-temporal/src/workflows/workflowArtifactHelpers.ts](../../../packages/@dvt/adapter-temporal/src/workflows/workflowArtifactHelpers.ts)
 - Design note:
   `stepTypeConfig` remains `Record<string, unknown>` in
   [ExecutionPlan.v1.ts](../../../packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v1.ts)

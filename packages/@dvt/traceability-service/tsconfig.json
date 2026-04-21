@@ -4,8 +4,12 @@
     "outDir": "dist",
     "rootDir": "src",
     "paths": {
+      "@dvt/artifacts": ["../../../packages/@dvt/artifacts/dist/index.d.ts"],
+      "@dvt/artifacts/*": ["../../../packages/@dvt/artifacts/dist/*"],
       "@dvt/contracts": ["../../../packages/@dvt/contracts/dist/index.d.ts"],
-      "@dvt/contracts/*": ["../../../packages/@dvt/contracts/dist/*"]
+      "@dvt/contracts/*": ["../../../packages/@dvt/contracts/dist/*"],
+      "@dvt/delivery": ["../../../packages/@dvt/delivery/dist/index.d.ts"],
+      "@dvt/delivery/*": ["../../../packages/@dvt/delivery/dist/*"]
     }
   },
   "include": ["src/**/*.ts"]

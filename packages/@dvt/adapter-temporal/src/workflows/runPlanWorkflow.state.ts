@@ -1,10 +1,10 @@
 import type { RunPlanWorkflowInput, WorkflowControlInput } from './runPlanWorkflow.types.js';
+import { resolveMaterializationEvidence } from './workflowArtifactHelpers.js';
 import {
-  parseRequiredPositiveInt,
   parseOptionalNonNegativeInt,
   parseOptionalStringArray,
-  resolveMaterializationEvidence,
-} from './workflowHelpers.js';
+  parseRequiredPositiveInt,
+} from './workflowInputParsingHelpers.js';
 
 export function parseWorkflowControlInput(input: RunPlanWorkflowInput): WorkflowControlInput {
   const cursor = input.cursor;
