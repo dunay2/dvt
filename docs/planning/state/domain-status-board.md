@@ -2,7 +2,7 @@
 title: Domain Status Board
 status: Review
 owner: Product / Architecture / Docs
-last_reviewed: 2026-04-20
+last_reviewed: 2026-04-21
 planning_type: status
 ---
 
@@ -37,7 +37,9 @@ For full task-level tracking use the lane YAML registry linked from
 
 - Current objective: keep the shipped preview-persist boundary truthful and use
   it as the fixed ingress while `TF-C3` closes the remaining rollout and
-  acceptance prerequisites for the now-landed plugin-backed dbt runtime path.
+  acceptance prerequisites for the now-landed plugin-backed dbt runtime path,
+  without allowing compile-time and admission-time adapter truth to drift apart
+  again.
 - Active task IDs: `TF-C3`, `TF-C3-E`
 - Roadmap lane affected: [API and Admission lane](../roadmap/roadmap-by-domain.md)
 - Primary blockers: the SQL-first preview-persist boundary is now closed in
@@ -45,7 +47,9 @@ For full task-level tracking use the lane YAML registry linked from
   convergence, a standalone `apps/temporal-worker` composition root, and an
   adapter-owned DBT CLI host behind `DbtPluginRunner`, so the remaining
   blockers are rollout/runbook acceptance and environment proof for that worker
-  path plus the broader runtime-boundary hardening tracked in `WE-HX`.
+  path plus the broader runtime-boundary hardening tracked in `WE-HX`. The
+  plan-compile seam now reuses the canonical `startRun` adapter set, but
+  broader shared provider vocabulary still needs repo-level cleanup.
 
 ### `Planner and Contracts`
 

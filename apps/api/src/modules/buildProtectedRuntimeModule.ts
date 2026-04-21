@@ -1,3 +1,8 @@
+/**
+ * Owned concern: assemble the protected runtime component for `apps/api`.
+ * This module is the only composition root that binds planner, validator,
+ * adapters, stores, auth, and runtime services into one `ProtectedRuntimeModule`.
+ */
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 

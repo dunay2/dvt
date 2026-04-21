@@ -1,0 +1,57 @@
+import { readFileSync } from 'node:fs';
+import { URL } from 'node:url';
+
+import { describe, expect, it } from 'vitest';
+
+const BUILD_PROTECTED_RUNTIME_MODULE_SOURCE = readFileSync(
+  new URL('../../src/modules/buildProtectedRuntimeModule.ts', import.meta.url),
+  'utf8'
+);
+const PLAN_COMPILE_BOUNDARY_SOURCE = readFileSync(
+  new URL('../../src/modules/planCompileBoundary.ts', import.meta.url),
+  'utf8'
+);
+const START_RUN_TARGET_ADAPTER_REGISTRY_SOURCE = readFileSync(
+  new URL('../../src/application/services/startRunTargetAdapterRegistry.ts', import.meta.url),
+  'utf8'
+);
+
+/**
+ * Architecture cases for the protected-runtime and plan-compile component.
+ * These assertions validate semantic ownership and truth alignment across the
+ * component, not just whether a barrel stays thin.
+ */
+export function describeProtectedRuntimeAndPlanCompileArchitectureCases(): void {
+  describe('protected runtime and plan compile architecture', () => {
+    it('keeps protected runtime assembly inside buildProtectedRuntimeModule', () => {
+      expect(BUILD_PROTECTED_RUNTIME_MODULE_SOURCE).toContain(
+        'const executablePlanResolver = new StoredExecutablePlanResolver({'
+      );
+      expect(BUILD_PROTECTED_RUNTIME_MODULE_SOURCE).toContain(
+        'const planValidator = new StoredPlanExecutabilityValidator({'
+      );
+      expect(BUILD_PROTECTED_RUNTIME_MODULE_SOURCE).toContain(
+        'const planCompilePlanner = buildPlanCompilePlanner();'
+      );
+      expect(BUILD_PROTECTED_RUNTIME_MODULE_SOURCE).toContain(
+        'const startRunTargetAdapterRegistry = createStartRunTargetAdapterRegistryFromValues('
+      );
+    });
+
+    it('derives compile adapter truth from the canonical startRun contract', () => {
+      expect(PLAN_COMPILE_BOUNDARY_SOURCE).toContain('SUPPORTED_START_RUN_TARGET_ADAPTERS');
+      expect(PLAN_COMPILE_BOUNDARY_SOURCE).not.toContain(
+        "['conductor', 'mock', 'temporal']"
+      );
+    });
+
+    it('keeps implemented-adapter filtering inside the dedicated registry module', () => {
+      expect(START_RUN_TARGET_ADAPTER_REGISTRY_SOURCE).toContain(
+        'const allowedSet = new Set(SUPPORTED_START_RUN_TARGET_ADAPTERS);'
+      );
+      expect(START_RUN_TARGET_ADAPTER_REGISTRY_SOURCE).toContain(
+        'isSupported(value: string): value is StartRunTargetAdapter'
+      );
+    });
+  });
+}

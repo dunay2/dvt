@@ -1,3 +1,7 @@
+/**
+ * Owned concern: build the live provider-adapter map for the protected runtime
+ * component without leaking provider construction into unrelated modules.
+ */
 import type {
   EngineRunRef,
   IClock,
@@ -22,13 +26,6 @@ async function closeAllClosers(closers: Array<() => Promise<void>>): Promise<voi
   }
 }
 
-/**
- * Builds the provider adapter map based on environment configuration.
- *
- * Always registers the mock adapter.
- * When TEMPORAL_ADDRESS is set, also registers a TemporalAdapter.
- * Returns a close() function that tears down any live connections (e.g. Temporal client).
- */
 export async function buildProviderAdapters(
   env: Env,
   deps: {
