@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import {
   buildStepStartedPayload,
   extractCompiledCodeRef,
-} from '../src/workflows/workflowHelpers.js';
+} from '../src/workflows/workflowArtifactHelpers.js';
 
 type WorkflowStep = Parameters<typeof buildStepStartedPayload>[0];
 

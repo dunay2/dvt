@@ -8,11 +8,8 @@ import type {
   WorkflowPlanRef,
   WorkflowStep,
 } from './runPlanWorkflow.types.js';
-import {
-  buildContinueAsNewInput,
-  normalizeDependsOn,
-  shouldTriggerContinueAsNew,
-} from './workflowHelpers.js';
+import { buildContinueAsNewInput, shouldTriggerContinueAsNew } from './workflowCursorHelpers.js';
+import { normalizeDependsOn } from './workflowGatewayHelpers.js';
 
 export function maybeBuildContinueAsNewOutcome(args: {
   input: RunPlanWorkflowInput;

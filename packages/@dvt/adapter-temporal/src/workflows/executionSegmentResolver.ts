@@ -1,11 +1,8 @@
 import type { ExecutionPlan, ExecutionStep, TransformationExecutor } from '@dvt/contracts';
 import { collectDownstreamStepIds, planExecutionLayers } from '@dvt/plan-interpreter';
 
-import {
-  normalizeDependsOn,
-  resolveTransformationExecutor,
-  validateGatewayDependencies,
-} from './workflowHelpers.js';
+import { resolveTransformationExecutor } from './workflowArtifactHelpers.js';
+import { normalizeDependsOn, validateGatewayDependencies } from './workflowGatewayHelpers.js';
 
 export interface ResolvedExecutionSegment {
   layerIndex: number;

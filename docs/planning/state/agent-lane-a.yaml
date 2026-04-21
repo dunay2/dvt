@@ -950,7 +950,7 @@ tasks:
       - docs/architecture/components/engine/contracts/engine/SchedulerReleaseAndClaimSemantics.v1.md
       - packages/@dvt/plan-interpreter/test/dagAnalyzer.test.ts
       - packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts
-      - packages/@dvt/adapter-temporal/src/workflows/workflowHelpers.ts
+      - packages/@dvt/adapter-temporal/src/workflows/executionSegmentResolver.ts
       - packages/@dvt/adapter-temporal/test/workflow-dag-scheduler.test.ts
     status_reason: >-
       Delivered with engine-facing contract, runtime execution-path guardrail emitting
@@ -1237,7 +1237,7 @@ tasks:
       - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
       - packages/@dvt/contracts/src/engine/IRunStateStore.v1.ts
       - packages/@dvt/contracts/src/schemas.ts
-      - packages/@dvt/adapter-temporal/src/workflows/workflowHelpers.ts
+      - packages/@dvt/adapter-temporal/src/workflows/workflowArtifactHelpers.ts
       - packages/@dvt/traceability-service/src/lineage/compiledCodeRef.ts
       - docs/planning/closeouts/20260406-mw-a3-step-artifact-ref-generalization-closeout.md
     status_reason: >-
@@ -2000,7 +2000,8 @@ tasks:
       - packages/@dvt/engine/src/adapters/mock/MockAdapter.ts
       - packages/@dvt/adapter-temporal/src/TemporalAdapter.ts
       - packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts
-      - packages/@dvt/adapter-temporal/src/workflows/workflowHelpers.ts
+      - packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.signals.ts
+      - packages/@dvt/adapter-temporal/src/workflows/workflowCursorHelpers.ts
       - packages/@dvt/contracts/src/contracts/engine/SignalSemantics.v1.ts
       - packages/@dvt/engine/test/core/WorkflowEngineCoreService.test.ts
       - packages/@dvt/engine/test/adapters/MockAdapter.cancel.test.ts
