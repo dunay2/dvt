@@ -1,3 +1,5 @@
+/** Owned concern: remove nodes through lifecycle semantics and apply coupled route fallout once. */
+
 import { useCallback } from 'react';
 import { toast } from 'sonner';
 

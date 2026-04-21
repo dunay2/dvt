@@ -1,3 +1,5 @@
+/** Owned concern: translate edge-authoring gestures into governed connection proposals and confirmations. */
+
 import { type Edge, type Node, type ReactFlowProps } from '@xyflow/react';
 import {
   useCallback,

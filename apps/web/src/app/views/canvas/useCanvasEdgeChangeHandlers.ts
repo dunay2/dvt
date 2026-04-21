@@ -1,3 +1,5 @@
+/** Owned concern: apply visible edge-change fallout through the graph lifecycle component. */
+
 import { useCallback } from 'react';
 import { type Edge, type EdgeChange } from '@xyflow/react';
 

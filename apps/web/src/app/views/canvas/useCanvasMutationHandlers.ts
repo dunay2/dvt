@@ -1,13 +1,12 @@
+/** Owned concern: compose mutation handlers over the local mutation-contract component. */
+
 import type {
   CanvasMutationContracts,
   CanvasMutationEffects,
   CanvasMutationPolicy,
   CanvasMutationState,
 } from './canvasMutationHandlerContracts';
-import {
-  buildCanvasGraphChangeContracts,
-  buildCanvasSourceImportContracts,
-} from './canvasMutationHandlerContractBuilders';
+import { canvasMutationHandlerContractBuilders } from './canvasMutationHandlerContractBuilders';
 import type { UseCanvasMutationHandlersArgs } from './canvasMutationHandlers.types';
 import { useCanvasGraphChangeHandlers } from './useCanvasGraphChangeHandlers';
 import { useCanvasSourceImportHandlers } from './useCanvasSourceImportHandlers';
@@ -49,10 +48,10 @@ export function useCanvasMutationHandlers({
   };
 
   const graphChangeHandlers = useCanvasGraphChangeHandlers(
-    buildCanvasGraphChangeContracts(mutationContracts)
+    canvasMutationHandlerContractBuilders.graphChange(mutationContracts)
   );
   const sourceImportHandlers = useCanvasSourceImportHandlers(
-    buildCanvasSourceImportContracts(mutationContracts)
+    canvasMutationHandlerContractBuilders.sourceImport(mutationContracts)
   );
 
   return {

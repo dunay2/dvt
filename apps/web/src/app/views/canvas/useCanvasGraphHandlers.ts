@@ -1,15 +1,12 @@
+/** Owned concern: compose graph interaction handlers over the local contract-builder component. */
+
 import type {
   CanvasGraphInteractionContracts,
   CanvasGraphInteractionEffects,
   CanvasGraphInteractionPolicy,
   CanvasGraphInteractionState,
 } from './canvasGraphHandlerContracts';
-import {
-  buildCanvasEdgeAuthoringContracts,
-  buildCanvasLayoutContracts,
-  buildCanvasNodeAuthoringContracts,
-  buildCanvasSelectionContracts,
-} from './canvasGraphHandlerContractBuilders';
+import { canvasGraphHandlerContractBuilders } from './canvasGraphHandlerContractBuilders';
 import type { UseCanvasGraphHandlersParams, UseCanvasGraphHandlersResult } from './useCanvasGraphHandlers.types';
 import { useCanvasEdgeAuthoringHandlers } from './useCanvasEdgeAuthoringHandlers';
 import { useCanvasLayoutHandlers } from './useCanvasLayoutHandlers';
@@ -67,16 +64,16 @@ export function useCanvasGraphHandlers({
   };
 
   const edgeAuthoringHandlers = useCanvasEdgeAuthoringHandlers(
-    buildCanvasEdgeAuthoringContracts(interactionContracts)
+    canvasGraphHandlerContractBuilders.edgeAuthoring(interactionContracts)
   );
   const selectionHandlers = useCanvasSelectionHandlers(
-    buildCanvasSelectionContracts(interactionContracts)
+    canvasGraphHandlerContractBuilders.selection(interactionContracts)
   );
   const layoutHandlers = useCanvasLayoutHandlers(
-    buildCanvasLayoutContracts(interactionContracts)
+    canvasGraphHandlerContractBuilders.layout(interactionContracts)
   );
   const nodeAuthoringHandlers = useCanvasNodeAuthoringHandlers(
-    buildCanvasNodeAuthoringContracts(interactionContracts)
+    canvasGraphHandlerContractBuilders.nodeAuthoring(interactionContracts)
   );
 
   return {

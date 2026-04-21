@@ -1,3 +1,5 @@
+/** Owned concern: compose node-change and edge-change handlers over graph-change contracts. */
+
 import type { Edge, EdgeChange, NodeChange } from '@xyflow/react';
 
 import type {

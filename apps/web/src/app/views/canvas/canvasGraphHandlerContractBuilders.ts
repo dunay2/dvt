@@ -8,7 +8,7 @@ import type {
   CanvasSelectionContracts,
 } from './canvasGraphHandlerContracts';
 
-export function buildCanvasEdgeAuthoringContracts(
+function edgeAuthoring(
   contracts: CanvasGraphInteractionContracts
 ): CanvasEdgeAuthoringContracts {
   return {
@@ -26,7 +26,7 @@ export function buildCanvasEdgeAuthoringContracts(
   };
 }
 
-export function buildCanvasSelectionContracts(
+function selection(
   contracts: CanvasGraphInteractionContracts
 ): CanvasSelectionContracts {
   return {
@@ -35,7 +35,7 @@ export function buildCanvasSelectionContracts(
   };
 }
 
-export function buildCanvasLayoutContracts(
+function layout(
   contracts: CanvasGraphInteractionContracts
 ): CanvasLayoutContracts {
   return {
@@ -54,7 +54,7 @@ export function buildCanvasLayoutContracts(
   };
 }
 
-export function buildCanvasNodeAuthoringContracts(
+function nodeAuthoring(
   contracts: CanvasGraphInteractionContracts
 ): CanvasNodeAuthoringContracts {
   return {
@@ -79,3 +79,10 @@ export function buildCanvasNodeAuthoringContracts(
     },
   };
 }
+
+export const canvasGraphHandlerContractBuilders = {
+  edgeAuthoring,
+  selection,
+  layout,
+  nodeAuthoring,
+};

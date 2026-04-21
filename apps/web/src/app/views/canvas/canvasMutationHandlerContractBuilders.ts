@@ -6,7 +6,7 @@ import type {
   CanvasSourceImportContracts,
 } from './canvasMutationHandlerContracts';
 
-export function buildCanvasGraphChangeContracts(
+function graphChange(
   contracts: CanvasMutationContracts
 ): CanvasGraphChangeContracts {
   return {
@@ -19,7 +19,7 @@ export function buildCanvasGraphChangeContracts(
   };
 }
 
-export function buildCanvasSourceImportContracts(
+function sourceImport(
   contracts: CanvasMutationContracts
 ): CanvasSourceImportContracts {
   return {
@@ -27,3 +27,8 @@ export function buildCanvasSourceImportContracts(
     policy: contracts.policy,
   };
 }
+
+export const canvasMutationHandlerContractBuilders = {
+  graphChange,
+  sourceImport,
+};

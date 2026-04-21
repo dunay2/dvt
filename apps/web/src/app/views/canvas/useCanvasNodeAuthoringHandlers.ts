@@ -1,3 +1,5 @@
+/** Owned concern: compose node-drop and node-removal handlers over node authoring contracts. */
+
 import type {
   CanvasNodeAuthoringContracts,
   CanvasNodeDropContracts,

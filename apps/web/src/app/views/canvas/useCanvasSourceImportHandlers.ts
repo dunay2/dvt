@@ -1,3 +1,5 @@
+/** Owned concern: fold source-import outcomes into the draft graph and refresh route projections. */
+
 import { useCallback, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 

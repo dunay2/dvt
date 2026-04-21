@@ -1,4 +1,6 @@
 import { type NodeChange } from '@xyflow/react';
+/** Owned concern: apply node-change fallout through the graph lifecycle component and route-local UI scope. */
+
 import { useCallback } from 'react';
 
 import { canvasGraphLifecycle } from './canvasGraphLifecycle';

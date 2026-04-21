@@ -1,3 +1,5 @@
+/** Owned concern: translate layout requests into projected node and edge repositioning. */
+
 import { useCallback } from 'react';
 import { toast } from 'sonner';
 

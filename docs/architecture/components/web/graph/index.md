@@ -21,6 +21,7 @@ Canonical navigation for the Graph and Canvas architecture pack.
 - [Graph Decision Rationale And Patterns](./graph-decision-rationale-and-patterns.md)
 - [Canvas Draft Session Component](./canvas-draft-session-component.md)
 - [Canvas Graph Lifecycle Component](./canvas-graph-lifecycle-component.md)
+- [Canvas Handler Contracts Component](./canvas-handler-contracts-component.md)
 
 ## Related Existing Reviews
 

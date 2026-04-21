@@ -2068,17 +2068,24 @@ tasks:
     evidence_refs:
       - docs/planning/closeouts/20260418-tf-e2-canvas-interaction-command-seam-closeout.md
       - docs/planning/closeouts/20260421-tf-e2-graph-lifecycle-hard-cut-closeout.md
+      - docs/planning/closeouts/20260421-tf-e2-canvas-handler-component-semantics-closeout.md
+      - docs/planning/reviews/architecture-and-governance/20260421-canvas-handler-seams-fowler-review.md
       - docs/architecture/components/web/graph/canvas-controller-current-to-target-architecture.md
       - docs/architecture/components/web/graph/canvas-graph-lifecycle-component.md
+      - docs/architecture/components/web/graph/canvas-handler-contracts-component.md
       - apps/web/src/app/views/canvas/canvasGraphLifecycle.ts
+      - apps/web/src/app/views/canvas/canvasGraphHandlerContractBuilders.ts
       - apps/web/src/app/views/canvas/useCanvasNodeChangeHandlers.ts
+      - apps/web/src/app/views/canvas/canvasHandlerContracts.architecture.test.ts
       - apps/web/src/app/views/canvas/useCanvasNodeChangeHandlers.test.tsx
     status_reason: >-
       Execution has materially advanced. The flat transitional command catalog was hard-cut into the
       `canvasGraphLifecycle` component, node-change and node-removal handlers now route through the
       namespaced node lifecycle API, and graph fallout is applied through one lifecycle-aware helper
-      instead of adapter-local reconstruction. Duplicate, full move/reload closure, and the
-      remaining product-lifecycle proofs still remain open.
+      instead of adapter-local reconstruction. The handler-contract subsystem is now also documented
+      and guarded as an explicit local component with namespaced builder APIs and semantic
+      architecture tests instead of loose helper exports. Duplicate, full move/reload closure, and
+      the remaining product-lifecycle proofs still remain open.
     last_verified: '2026-04-21'
   - task_id: TF-E2-C
     parent_task: TF-E2
@@ -2097,17 +2104,24 @@ tasks:
     evidence_refs:
       - docs/planning/closeouts/20260418-tf-e2-canvas-interaction-command-seam-closeout.md
       - docs/planning/closeouts/20260421-tf-e2-graph-lifecycle-hard-cut-closeout.md
+      - docs/planning/closeouts/20260421-tf-e2-canvas-handler-component-semantics-closeout.md
+      - docs/planning/reviews/architecture-and-governance/20260421-canvas-handler-seams-fowler-review.md
       - docs/architecture/components/web/graph/canvas-controller-current-to-target-architecture.md
       - docs/architecture/components/web/graph/canvas-graph-lifecycle-component.md
+      - docs/architecture/components/web/graph/canvas-handler-contracts-component.md
       - apps/web/src/app/views/canvas/canvasGraphLifecycle.ts
+      - apps/web/src/app/views/canvas/canvasGraphHandlerContractBuilders.ts
       - apps/web/src/app/views/canvas/useCanvasEdgeChangeHandlers.ts
+      - apps/web/src/app/views/canvas/canvasHandlerContracts.architecture.test.ts
       - apps/web/src/app/views/canvas/useCanvasGraphHandlers.ts
       - apps/web/src/app/views/canvas/useCanvasGraphHandlers.edgeAuthoring.test.tsx
     status_reason: >-
       Execution has materially advanced. Edge replacement and edge-change handling now route through
       the namespaced edge lifecycle API, the flat compatibility surface has been removed, and
       visual-only edge changes no longer need to present themselves as a separate command catalog
-      concern. Reconnect semantics and full reload-proof lifecycle closure still remain open.
+      concern. The shared handler-contract subsystem is now explicit in both code and architecture
+      docs, with namespaced builder APIs and semantic fitness checks protecting the adapter seam.
+      Reconnect semantics and full reload-proof lifecycle closure still remain open.
     last_verified: '2026-04-21'
   - task_id: TF-E2-D
     parent_task: TF-E2

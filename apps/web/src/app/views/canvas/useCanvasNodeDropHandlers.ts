@@ -1,3 +1,5 @@
+/** Owned concern: admit explicit dropped nodes into the draft graph through the node lifecycle API. */
+
 import { useCallback } from 'react';
 import { toast } from 'sonner';
 

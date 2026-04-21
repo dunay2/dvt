@@ -1,3 +1,5 @@
+/** Owned concern: translate selection and inspect gestures into local adapter-side effects. */
+
 import { type Edge, type Node, type ReactFlowProps } from '@xyflow/react';
 import { useCallback } from 'react';
 
