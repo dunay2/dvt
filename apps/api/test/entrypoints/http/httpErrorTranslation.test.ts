@@ -14,11 +14,11 @@ import {
   START_RUN_ENGINE_ERROR_CODE,
   START_RUN_ENGINE_ERROR_REASON,
 } from '../../../src/application/ports/startRunContract.js';
+import { mapRuntimeDomainError } from '../../../src/entrypoints/http/httpDomainErrorClassifier.js';
 import {
   mapStartRunEngineError,
   mapStartRunFacadeResult,
 } from '../../../src/entrypoints/http/httpErrorMapper.js';
-import { mapRuntimeDomainError } from '../../../src/entrypoints/http/httpDomainErrorClassifier.js';
 
 describe('mapStartRunFacadeResult', () => {
   it('unauthenticated -> 401', () => {

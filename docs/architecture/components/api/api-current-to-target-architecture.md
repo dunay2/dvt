@@ -2,7 +2,7 @@
 title: API Current To Target Architecture
 status: Active
 owner: Architecture / API / Docs
-last_reviewed: 2026-04-12
+last_reviewed: 2026-04-21
 ---
 
 # API Current To Target Architecture
@@ -163,10 +163,35 @@ Native cancel and cooperative cancel are now intentionally split:
 - Query endpoints are authorization-first and state-store/read-model backed.
 - The command path already has explicit duplicate-run probing and admission
   control before engine dispatch.
+- The HTTP error translation boundary now has a clearer local seam:
+  `httpErrorContract.ts` owns the canonical envelope primitives,
+  `routeParseIssue.ts` owns parser rejection semantics,
+  `httpErrorMapper.ts` owns parse/auth/facade/engine translation, and
+  `httpDomainErrorClassifier.ts` owns typed runtime-domain error translation.
 - Architectural guardrails exist in code through dependency-cruiser rules for
   domain/application/entrypoint separation.
 - The protected runtime is feature-complete enough to support real frontend and
   operator work, not just health checks.
+
+### HTTP Error Translation Boundary
+
+The error-envelope slice now behaves like a real local component instead of a
+loose utility cluster.
+
+```mermaid
+flowchart LR
+  Parse["RouteParseIssue"] --> Mapper["httpErrorMapper.ts"]
+  Runtime["typed runtime error"] --> Classifier["httpDomainErrorClassifier.ts"]
+  Mapper --> Contract["httpErrorContract.ts"]
+  Classifier --> Contract
+  Reasons["HTTP_ERROR_REASON"] --> Mapper
+  Reasons --> Classifier
+```
+
+Use the local component guide for public API, invariants, transitions, and
+consumers:
+
+- [HTTP runtime error translation component](../../../../apps/api/docs/http-runtime-error-translation-component.md)
 
 ### Current Gaps
 

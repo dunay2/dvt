@@ -1,3 +1,7 @@
+/**
+ * Owned concern: typed runtime-domain error classification and translation into
+ * the canonical HTTP error envelope for protected runtime route consumers.
+ */
 import {
   AdapterNotRegisteredError,
   AuthorizationError,
@@ -14,6 +18,10 @@ import {
   HTTP_ERROR_TYPE,
   type HttpResponseModel,
 } from './httpErrorContract.js';
+import {
+  compactHttpErrorDetails,
+  withOptionalHttpErrorDetails,
+} from './httpErrorDetails.js';
 import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
 
 export function mapRuntimeDomainError(error: unknown): HttpResponseModel | null {
@@ -32,7 +40,9 @@ export function mapRuntimeDomainError(error: unknown): HttpResponseModel | null 
     return createHttpErrorResponse({
       type: HTTP_ERROR_TYPE.unprocessable,
       reason: HTTP_ERROR_REASON.adapterNotConfigured,
-      ...withDetails(compactDetails(readMessageParams(error, 'provider', 'adapter'))),
+      ...withOptionalHttpErrorDetails(
+        compactHttpErrorDetails(readMessageParams(error, 'provider', 'adapter'))
+      ),
     });
   }
 
@@ -48,7 +58,9 @@ export function mapRuntimeDomainError(error: unknown): HttpResponseModel | null 
     return createHttpErrorResponse({
       type: HTTP_ERROR_TYPE.conflict,
       reason: HTTP_ERROR_REASON.runAlreadyExists,
-      ...withDetails(compactDetails({ ...(typeof runId === 'string' ? { runId } : {}) })),
+      ...withOptionalHttpErrorDetails(
+        compactHttpErrorDetails({ ...(typeof runId === 'string' ? { runId } : {}) })
+      ),
     });
   }
 
@@ -56,8 +68,8 @@ export function mapRuntimeDomainError(error: unknown): HttpResponseModel | null 
     return createHttpErrorResponse({
       type: HTTP_ERROR_TYPE.unprocessable,
       reason: HTTP_ERROR_REASON.sourceRunNotTerminal,
-      ...withDetails(
-        compactDetails({
+      ...withOptionalHttpErrorDetails(
+        compactHttpErrorDetails({
           ...readMessageParams(error, 'runId', 'runId'),
           ...readMessageParams(error, 'status', 'status'),
         })
@@ -107,7 +119,9 @@ function mapRunNotFound(runId: string | undefined): HttpResponseModel {
   return createHttpErrorResponse({
     type: HTTP_ERROR_TYPE.notFound,
     reason: HTTP_ERROR_REASON.runNotFound,
-    ...withDetails(compactDetails({ ...(typeof runId === 'string' ? { runId } : {}) })),
+    ...withOptionalHttpErrorDetails(
+      compactHttpErrorDetails({ ...(typeof runId === 'string' ? { runId } : {}) })
+    ),
   });
 }
 
@@ -136,16 +150,4 @@ function readMessageParams(
 
   const value = (messageParams as Record<string, unknown>)[sourceKey];
   return value === undefined ? {} : { [targetKey]: value };
-}
-
-function compactDetails(
-  details: Record<string, unknown>
-): Readonly<Record<string, unknown>> | undefined {
-  return Object.keys(details).length === 0 ? undefined : details;
-}
-
-function withDetails(details: Readonly<Record<string, unknown>> | undefined): {
-  readonly details?: Readonly<Record<string, unknown>>;
-} {
-  return details === undefined ? {} : { details };
 }

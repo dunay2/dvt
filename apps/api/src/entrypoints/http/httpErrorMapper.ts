@@ -1,3 +1,7 @@
+/**
+ * Owned concern: translation of parse/auth/facade/engine outcomes into the
+ * canonical HTTP error envelope, excluding runtime-domain error classification.
+ */
 import type { AuthenticationFailureCode } from '../../application/ports/auth.js';
 import {
   START_RUN_ENGINE_ERROR_KIND,
@@ -17,10 +21,12 @@ import {
   normalizeHttpErrorReason,
   type HttpResponseModel,
 } from './httpErrorContract.js';
+import {
+  compactHttpErrorDetails,
+  withOptionalHttpErrorDetails,
+} from './httpErrorDetails.js';
 import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
 import type { RouteParseIssue } from './routeParseIssue.js';
-
-export { HTTP_HEADER, type HttpResponseModel } from './httpErrorContract.js';
 
 export function mapRouteParseIssue(issue: RouteParseIssue): HttpResponseModel {
   return createHttpErrorResponse({
@@ -73,7 +79,7 @@ export function mapStartRunFacadeResult(result: StartRunFacadeResult): HttpRespo
           : { headers: { [HTTP_HEADER.retryAfter]: String(result.retryAfterSeconds) } }),
       });
     case START_RUN_FACADE_RESULT_KIND.planRejected: {
-      const planRejectedDetails = compactDetails({
+      const planRejectedDetails = compactHttpErrorDetails({
         message: result.reason,
         ...(result.cause === undefined ? {} : { cause: result.cause }),
         ...(result.supportedVersions === undefined
@@ -83,7 +89,7 @@ export function mapStartRunFacadeResult(result: StartRunFacadeResult): HttpRespo
       return createHttpErrorResponse({
         type: HTTP_ERROR_TYPE.unprocessable,
         reason: mapPlanRejectionReason(result.code),
-        ...withDetails(planRejectedDetails),
+        ...withOptionalHttpErrorDetails(planRejectedDetails),
       });
     }
   }
@@ -98,25 +104,25 @@ export function mapStartRunEngineError(error: StartRunEngineError): HttpResponse
         details: { adapter: error.adapter },
       });
     case START_RUN_ENGINE_ERROR_KIND.commandInvalid: {
-      const commandInvalidDetails = compactDetails({
+      const commandInvalidDetails = compactHttpErrorDetails({
         message: error.reason,
         cause: normalizeHttpErrorReason(error.code),
       });
       return createHttpErrorResponse({
         type: HTTP_ERROR_TYPE.unprocessable,
         reason: HTTP_ERROR_REASON.planRejected,
-        ...withDetails(commandInvalidDetails),
+        ...withOptionalHttpErrorDetails(commandInvalidDetails),
       });
     }
     case START_RUN_ENGINE_ERROR_KIND.unsupportedPlanVersion: {
-      const unsupportedPlanDetails = compactDetails({
+      const unsupportedPlanDetails = compactHttpErrorDetails({
         message: `Unsupported plan version: ${error.planVersion}`,
         supportedVersions: error.supportedVersions,
       });
       return createHttpErrorResponse({
         type: HTTP_ERROR_TYPE.unprocessable,
         reason: HTTP_ERROR_REASON.unsupportedPlanVersion,
-        ...withDetails(unsupportedPlanDetails),
+        ...withOptionalHttpErrorDetails(unsupportedPlanDetails),
       });
     }
   }
@@ -140,16 +146,4 @@ function mapPlanRejectionReason(code: string): string {
   return code === START_RUN_PLAN_REJECTION_CODE.rejected
     ? HTTP_ERROR_REASON.planRejected
     : normalizeHttpErrorReason(code);
-}
-
-function compactDetails(
-  details: Record<string, unknown>
-): Readonly<Record<string, unknown>> | undefined {
-  return Object.keys(details).length === 0 ? undefined : details;
-}
-
-function withDetails(details: Readonly<Record<string, unknown>> | undefined): {
-  readonly details?: Readonly<Record<string, unknown>>;
-} {
-  return details === undefined ? {} : { details };
 }

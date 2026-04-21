@@ -80,7 +80,7 @@ construction and no longer exposes runtime-domain classification.
   - MODIFIED: `apps/api/src/entrypoints/http/getRunEventsRoute.ts`
   - MODIFIED: `apps/api/src/entrypoints/http/listRunsRoute.ts`
   - MODIFIED: `apps/api/src/entrypoints/http/runCommandRouteExecutor.ts`
-  - MODIFIED: `apps/api/test/entrypoints/http/authErrorMapper.test.ts`
+  - MODIFIED: `apps/api/test/entrypoints/http/httpErrorTranslation.test.ts`
   - NEW: this closeout file
 - **Expected outcome**:
   - runtime-domain classification lives only in `httpDomainErrorClassifier.ts`
@@ -97,7 +97,7 @@ construction and no longer exposes runtime-domain classification.
   - contract changes
   - unrelated HTTP route refactors
 - **Validation plan**:
-  - targeted Vitest for `authErrorMapper.test.ts`
+  - targeted Vitest for `httpErrorTranslation.test.ts`
   - package TypeScript checks for app and tests
   - repo `docs:sync`, `docs:status:generate`, and `verify:prepush`
 - **Test coverage plan**:
@@ -127,7 +127,7 @@ construction and no longer exposes runtime-domain classification.
   - `getRunEventsRoute.ts`
   - `listRunsRoute.ts`
   - `runCommandRouteExecutor.ts`
-  - `authErrorMapper.test.ts`
+  - `httpErrorTranslation.test.ts`
 - Added direct test coverage for `AuthorizationError -> 403 tenant_access_denied`
 
 ## Governing sources used
@@ -139,7 +139,7 @@ construction and no longer exposes runtime-domain classification.
 
 ## Validation evidence
 
-- `pnpm exec vitest run --config vitest.config.ts test/entrypoints/http/authErrorMapper.test.ts`
+- `pnpm exec vitest run --config vitest.config.ts test/entrypoints/http/httpErrorTranslation.test.ts`
   in `apps/api`
 - `pnpm exec tsc -p tsconfig.json --noEmit` in `apps/api`
 - `pnpm exec tsc -p test/tsconfig.json --noEmit` in `apps/api`

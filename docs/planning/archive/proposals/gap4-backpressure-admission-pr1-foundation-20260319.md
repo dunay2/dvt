@@ -102,7 +102,7 @@ This keeps the PR aligned with hexagonal and DDD boundaries:
   real snapshot source
 - `apps/api/test/application/services/startRunAuthorizedFacade.test.ts`
 - `apps/api/test/entrypoints/http/startRunRoute.test.ts`
-- `apps/api/test/entrypoints/http/authErrorMapper.test.ts`
+- `apps/api/test/entrypoints/http/httpErrorTranslation.test.ts`
 
 ### New files expected in PR1
 
@@ -128,7 +128,7 @@ The PR should be built outside-in.
 
 Add failing tests in:
 
-- `apps/api/test/entrypoints/http/authErrorMapper.test.ts`
+- `apps/api/test/entrypoints/http/httpErrorTranslation.test.ts`
 
 Cover:
 
