@@ -11,10 +11,16 @@ describe('useCanvasNodeAuthoringHandlers architecture', () => {
   it('stays as a composition seam over node drop and removal handlers', () => {
     expect(NODE_AUTHORING_HANDLERS_SOURCE).toContain('useCanvasNodeDropHandlers');
     expect(NODE_AUTHORING_HANDLERS_SOURCE).toContain('useCanvasNodeRemovalHandlers');
+    expect(NODE_AUTHORING_HANDLERS_SOURCE).toContain('CanvasNodeAuthoringContracts');
+    expect(NODE_AUTHORING_HANDLERS_SOURCE).toContain('nodeDropContracts');
+    expect(NODE_AUTHORING_HANDLERS_SOURCE).toContain('nodeRemovalContracts');
     expect(NODE_AUTHORING_HANDLERS_SOURCE).not.toContain('useCallback(');
     expect(NODE_AUTHORING_HANDLERS_SOURCE).not.toContain('toast.');
     expect(NODE_AUTHORING_HANDLERS_SOURCE).not.toContain('setTimeout(');
     expect(NODE_AUTHORING_HANDLERS_SOURCE).not.toContain('dropCanonicalNode');
-    expect(NODE_AUTHORING_HANDLERS_SOURCE).not.toContain('removeNodeFromCanvasWorkingSet');
+    expect(NODE_AUTHORING_HANDLERS_SOURCE).not.toContain('canvasInteractionCommands');
+    expect(NODE_AUTHORING_HANDLERS_SOURCE).not.toContain('Pick<');
+    expect(NODE_AUTHORING_HANDLERS_SOURCE).not.toContain('UseCanvasGraphHandlersParams');
+    expect(NODE_AUTHORING_HANDLERS_SOURCE).not.toContain('UseCanvasGraphHandlersResult');
   });
 });

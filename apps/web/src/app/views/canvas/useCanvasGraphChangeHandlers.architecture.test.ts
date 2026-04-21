@@ -11,8 +11,12 @@ describe('useCanvasGraphChangeHandlers architecture', () => {
   it('stays as a composition seam over node and edge handlers', () => {
     expect(GRAPH_CHANGE_HANDLERS_SOURCE).toContain('useCanvasNodeChangeHandlers');
     expect(GRAPH_CHANGE_HANDLERS_SOURCE).toContain('useCanvasEdgeChangeHandlers');
+    expect(GRAPH_CHANGE_HANDLERS_SOURCE).toContain('nodeChangeContracts');
+    expect(GRAPH_CHANGE_HANDLERS_SOURCE).toContain('edgeChangeContracts');
+    expect(GRAPH_CHANGE_HANDLERS_SOURCE).toContain('CanvasGraphChangeContracts');
     expect(GRAPH_CHANGE_HANDLERS_SOURCE).not.toContain('useCanvasExplicitNodeAdmission');
     expect(GRAPH_CHANGE_HANDLERS_SOURCE).not.toContain('useCallback(');
+    expect(GRAPH_CHANGE_HANDLERS_SOURCE).not.toContain('Pick<');
     expect(GRAPH_CHANGE_HANDLERS_SOURCE).not.toContain('applyNodeChanges');
     expect(GRAPH_CHANGE_HANDLERS_SOURCE).not.toContain('applyEdgeChanges');
   });

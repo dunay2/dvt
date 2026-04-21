@@ -1,34 +1,31 @@
+/** Owned concern: admit explicit dropped nodes into the draft graph through the node lifecycle API. */
+
 import { useCallback } from 'react';
 import { toast } from 'sonner';
 
 import { CANONICAL_NODE_DRAG_MIME_TYPE } from '../../types/canonical';
-import { admitExplicitCanvasNode } from './canvasInteractionCommands';
+import { canvasGraphLifecycle } from './canvasGraphLifecycle';
+import type {
+  CanvasNodeDropContracts,
+} from './canvasGraphHandlerContracts';
 import { parseCanonicalNodeDragPayload } from './canvasNodeDropPayload';
 import { dropCanonicalNode } from './canvasNodeDropAggregate';
 import { canvasViewCopy, formatCanvasNodeAddedMessage } from './copy';
-import type { UseCanvasGraphHandlersParams, UseCanvasGraphHandlersResult } from './useCanvasGraphHandlers.types';
 
-type UseCanvasNodeDropHandlersArgs = Pick<
-  UseCanvasGraphHandlersParams,
-  | 'graphStrategy'
-  | 'canEditEdges'
-  | 'columnLevelLineageEnabled'
-  | 'setNodes'
-  | 'setDraftSession'
->;
+type UseCanvasNodeDropHandlersArgs = CanvasNodeDropContracts;
 
-type UseCanvasNodeDropHandlersResult = Pick<
-  UseCanvasGraphHandlersResult,
-  'handleDrop' | 'handleDragOver'
->;
+type UseCanvasNodeDropHandlersResult = {
+  handleDrop: React.DragEventHandler<HTMLDivElement>;
+  handleDragOver: React.DragEventHandler<HTMLDivElement>;
+};
 
 export function useCanvasNodeDropHandlers({
-  graphStrategy,
-  canEditEdges,
-  columnLevelLineageEnabled,
-  setNodes,
-  setDraftSession,
+  effects,
+  policy,
 }: UseCanvasNodeDropHandlersArgs): UseCanvasNodeDropHandlersResult {
+  const { setNodes, setDraftSession } = effects;
+  const { graphStrategy, canEditEdges, columnLevelLineageEnabled } = policy;
+
   const handleDrop = useCallback<React.DragEventHandler<HTMLDivElement>>(
     (event) => {
       event.preventDefault();
@@ -72,7 +69,7 @@ export function useCanvasNodeDropHandlers({
         }
 
         setDraftSession((currentSession) =>
-          admitExplicitCanvasNode(currentSession, canonicalNode.id)
+          canvasGraphLifecycle.node.admitExplicit(currentSession, canonicalNode.id)
         );
         toast.success(formatCanvasNodeAddedMessage(canonicalNode.name));
         return dropResult.nextNodes;

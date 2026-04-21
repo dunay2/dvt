@@ -81,21 +81,25 @@ function renderHookHost({
 
   function HookHost(): null {
     latest = useCanvasNodeChangeHandlers({
-      graphModel: {
-        nodes,
-        edges,
-        setNodes,
-        setEdges,
-      },
-      draftSession,
-      uiScope: {
+      state: {
+        graphModel: {
+          nodes,
+          edges,
+          setNodes,
+          setEdges,
+        },
+        draftSession,
+        uiScope: {
+          selectedNodeIds,
+          inspectorNodeId,
+        },
         selectedNodeIds,
-        inspectorNodeId,
       },
-      selectedNodeIds,
-      setDraftSession,
-      setSelectedNodes,
-      setInspectorNode,
+      effects: {
+        setDraftSession,
+        setSelectedNodes,
+        setInspectorNode,
+      },
     });
     return null;
   }

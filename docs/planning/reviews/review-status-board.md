@@ -56,6 +56,13 @@ Sprint execution board:
 
 Additional active rationale:
 
+- [20260421 Canvas handler seams Fowler review](./architecture-and-governance/20260421-canvas-handler-seams-fowler-review.md)
+  - domain: `architecture-and-governance`
+  - role: current focused review for the Canvas handler-contract component, Fowler-style seam ownership, residual adapter drift, and the semantic fitness-function follow-up on the graph route
+  - linkage: `TF-E2-B`, `TF-E2-C`, `TF-E2-D`
+  - status: `reference`
+  - progress: `n/a`
+
 - [20260421 Temporal Fowler provider-truth follow-up review](./architecture-and-governance/20260421-temporal-fowler-provider-truth-follow-up-review.md)
   - domain: `architecture-and-governance`
   - role: current focused follow-up review for the Temporal branch plus the `apps/api` provider-truth correction, semantic component encapsulation, and residual DBT/provider drift map
