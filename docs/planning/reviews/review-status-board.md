@@ -56,6 +56,13 @@ Sprint execution board:
 
 Additional active rationale:
 
+- [20260421 Temporal Fowler provider-truth follow-up review](./architecture-and-governance/20260421-temporal-fowler-provider-truth-follow-up-review.md)
+  - domain: `architecture-and-governance`
+  - role: current focused follow-up review for the Temporal branch plus the `apps/api` provider-truth correction, semantic component encapsulation, and residual DBT/provider drift map
+  - linkage: `TF-C2`, `TF-A1-C18`, `AR-D-PLAN-POINTER`, `R-20260420-TEMPORAL-DBT-BUILTIN-COUPLING`
+  - status: `reference`
+  - progress: `n/a`
+
 - [20260420 DVT+ system architecture review](./architecture-and-governance/20260420-dvt-plus-system-architecture-review.md)
   - domain: `architecture-and-governance`
   - role: current full-system principal/staff review grounded in the shipped planner, engine, state, adapter, and route-boundary reality after the April plan-route convergence work
