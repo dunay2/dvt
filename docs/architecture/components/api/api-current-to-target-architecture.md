@@ -2,7 +2,7 @@
 title: API Current To Target Architecture
 status: Active
 owner: Architecture / API / Docs
-last_reviewed: 2026-04-12
+last_reviewed: 2026-04-21
 ---
 
 # API Current To Target Architecture
@@ -163,10 +163,85 @@ Native cancel and cooperative cancel are now intentionally split:
 - Query endpoints are authorization-first and state-store/read-model backed.
 - The command path already has explicit duplicate-run probing and admission
   control before engine dispatch.
+- The HTTP error translation boundary now has a clearer local seam:
+  `httpErrorContract.ts` owns the canonical envelope primitives,
+  `httpErrorTranslation.ts` is the public component API and writer facade,
+  `routeParseIssue.ts` owns parser rejection semantics,
+  `httpErrorMapper.ts` owns parse/auth/facade/engine translation, and
+  `httpDomainErrorClassifier.ts` owns typed runtime-domain error translation.
+  Translated `HttpResponseModel` values are now written through
+  `httpErrorTranslation.respond(...)`, which delegates to the contract-owned
+  serializer instead of route-local manual serialization.
 - Architectural guardrails exist in code through dependency-cruiser rules for
   domain/application/entrypoint separation.
 - The protected runtime is feature-complete enough to support real frontend and
   operator work, not just health checks.
+
+### HTTP Error Translation Boundary
+
+The error-envelope slice now behaves like a real local component instead of a
+loose utility cluster.
+
+```mermaid
+flowchart LR
+  Consumers["route consumers"] --> Api["httpErrorTranslation.ts"]
+  Parse["RouteParseIssue"] --> Api
+  Runtime["typed runtime error"] --> Api
+  Writer["respond(reply, response)"] --> Api
+  Api --> Mapper["httpErrorMapper.ts"]
+  Api --> Classifier["httpDomainErrorClassifier.ts"]
+  Api --> Contract["httpErrorContract.ts"]
+  Mapper --> Contract["httpErrorContract.ts"]
+  Classifier --> Contract
+  Reasons["HTTP_ERROR_REASON"] --> Mapper
+  Reasons --> Classifier
+```
+
+Use the local component guide for public API, invariants, transitions, and
+consumers:
+
+- [HTTP runtime error translation component](../../../../apps/api/docs/http-runtime-error-translation-component.md)
+
+The component seam now also owns feature-level static envelopes for
+`adminRoutes.ts` and `workspaceGraphDraftRoutes.ts`, so those consumers no
+longer need direct `createHttpErrorResponse(...)` imports for component-owned
+semantic failures.
+
+The same seam policy now applies to response writing: production entrypoint
+consumers and generic route helpers emit `HttpResponseModel` values through
+`httpErrorTranslation.respond(...)` rather than calling `sendHttpResponse(...)`
+directly.
+
+### Plan Route Response Translation Boundary
+
+The `preview/compile/import` family now has its own sibling local component
+instead of leaning on scattered route-local mapper imports.
+
+```mermaid
+flowchart LR
+  Consumers["compile/import/preview route consumers"] --> Api["planRouteResponseTranslation.ts"]
+  PreviewContract["preview contract issue"] --> Api
+  Api --> Compile["compilePlanRouteResponseMapper.ts"]
+  Api --> Import["importPlanRouteResponseMapper.ts"]
+  Api --> Preview["previewPlanRouteResponseMapper.ts"]
+  Api --> PreviewIssue["planPreviewContractErrorMapper.ts"]
+  Compile --> Contract["httpErrorContract.ts"]
+  Import --> Contract
+  Preview --> Contract
+  PreviewIssue --> Contract
+```
+
+Use the local component guide for the public API, invariants, transitions, and
+consumers of this seam:
+
+- [Plan route response translation component](../../../../apps/api/docs/plan-route-response-translation-component.md)
+
+This keeps two adjacent but separate entrypoint components explicit:
+
+- `httpErrorTranslation.ts` for runtime protected-route parse/auth/runtime/admin
+  failures
+- `planRouteResponseTranslation.ts` for `preview/compile/import` response
+  mapping in the plan-route family
 
 ### Current Gaps
 

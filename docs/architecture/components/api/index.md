@@ -82,6 +82,12 @@ shape, and the governed transition route:
 - [Protected Runtime And Plan Compile Component](./protected-runtime-and-plan-compile-component.md):
   public API, invariants, transitions, consumers, focused file map, and
   semantic test anchors for the protected runtime composition seam.
+- [HTTP runtime error translation component](../../../../apps/api/docs/http-runtime-error-translation-component.md):
+  local guide for the HTTP error-envelope boundary with public API,
+  invariants, transitions, consumers, and focused diagrams.
+- [Plan route response translation component](../../../../apps/api/docs/plan-route-response-translation-component.md):
+  local guide for the preview/compile/import response-mapping boundary with
+  public API, invariants, transitions, consumers, and focused diagrams.
 - [Temporal Fowler provider-truth follow-up review](../../../planning/reviews/architecture-and-governance/20260421-temporal-fowler-provider-truth-follow-up-review.md):
   Fowler-style architecture analysis for the Temporal branch work, residual
   drift map, mature-system comparison, and recommended next moves.

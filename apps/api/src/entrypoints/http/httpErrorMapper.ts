@@ -1,14 +1,7 @@
-import {
-  AdapterNotRegisteredError,
-  AuthorizationError,
-  OutboxRateLimitExceededError,
-  RecoverySourceNotTerminalError,
-  RunAlreadyExistsError,
-  RunMetadataNotFoundError,
-  RunNotFoundError,
-  SignalNotImplementedError,
-} from '@dvt/engine';
-
+/**
+ * Owned concern: translation of parse/auth/facade/engine outcomes into the
+ * canonical HTTP error envelope, excluding runtime-domain error classification.
+ */
 import type { AuthenticationFailureCode } from '../../application/ports/auth.js';
 import {
   START_RUN_ENGINE_ERROR_KIND,
@@ -28,10 +21,12 @@ import {
   normalizeHttpErrorReason,
   type HttpResponseModel,
 } from './httpErrorContract.js';
+import {
+  compactHttpErrorDetails,
+  withOptionalHttpErrorDetails,
+} from './httpErrorDetails.js';
 import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
 import type { RouteParseIssue } from './routeParseIssue.js';
-
-export { HTTP_HEADER, type HttpResponseModel } from './httpErrorContract.js';
 
 export function mapRouteParseIssue(issue: RouteParseIssue): HttpResponseModel {
   return createHttpErrorResponse({
@@ -84,7 +79,7 @@ export function mapStartRunFacadeResult(result: StartRunFacadeResult): HttpRespo
           : { headers: { [HTTP_HEADER.retryAfter]: String(result.retryAfterSeconds) } }),
       });
     case START_RUN_FACADE_RESULT_KIND.planRejected: {
-      const planRejectedDetails = compactDetails({
+      const planRejectedDetails = compactHttpErrorDetails({
         message: result.reason,
         ...(result.cause === undefined ? {} : { cause: result.cause }),
         ...(result.supportedVersions === undefined
@@ -94,7 +89,7 @@ export function mapStartRunFacadeResult(result: StartRunFacadeResult): HttpRespo
       return createHttpErrorResponse({
         type: HTTP_ERROR_TYPE.unprocessable,
         reason: mapPlanRejectionReason(result.code),
-        ...withDetails(planRejectedDetails),
+        ...withOptionalHttpErrorDetails(planRejectedDetails),
       });
     }
   }
@@ -109,25 +104,25 @@ export function mapStartRunEngineError(error: StartRunEngineError): HttpResponse
         details: { adapter: error.adapter },
       });
     case START_RUN_ENGINE_ERROR_KIND.commandInvalid: {
-      const commandInvalidDetails = compactDetails({
+      const commandInvalidDetails = compactHttpErrorDetails({
         message: error.reason,
         cause: normalizeHttpErrorReason(error.code),
       });
       return createHttpErrorResponse({
         type: HTTP_ERROR_TYPE.unprocessable,
         reason: HTTP_ERROR_REASON.planRejected,
-        ...withDetails(commandInvalidDetails),
+        ...withOptionalHttpErrorDetails(commandInvalidDetails),
       });
     }
     case START_RUN_ENGINE_ERROR_KIND.unsupportedPlanVersion: {
-      const unsupportedPlanDetails = compactDetails({
+      const unsupportedPlanDetails = compactHttpErrorDetails({
         message: `Unsupported plan version: ${error.planVersion}`,
         supportedVersions: error.supportedVersions,
       });
       return createHttpErrorResponse({
         type: HTTP_ERROR_TYPE.unprocessable,
         reason: HTTP_ERROR_REASON.unsupportedPlanVersion,
-        ...withDetails(unsupportedPlanDetails),
+        ...withOptionalHttpErrorDetails(unsupportedPlanDetails),
       });
     }
   }
@@ -147,150 +142,8 @@ export function mapAuthorizationFailure(reason: DeniedReason): HttpResponseModel
   });
 }
 
-function isRunNotFoundError(error: unknown): error is RunMetadataNotFoundError | RunNotFoundError {
-  return error instanceof RunMetadataNotFoundError || error instanceof RunNotFoundError;
-}
-
-function isSignalNotImplementedError(error: unknown): error is SignalNotImplementedError {
-  return error instanceof SignalNotImplementedError;
-}
-
-function isAdapterNotRegisteredError(error: unknown): error is AdapterNotRegisteredError {
-  return error instanceof AdapterNotRegisteredError;
-}
-
-function isAuthorizationError(error: unknown): error is AuthorizationError {
-  return error instanceof AuthorizationError;
-}
-
-function isRunAlreadyExistsError(error: unknown): boolean {
-  return error instanceof RunAlreadyExistsError;
-}
-
-function isRecoverySourceNotTerminalError(error: unknown): error is RecoverySourceNotTerminalError {
-  return error instanceof RecoverySourceNotTerminalError;
-}
-
-function isOutboxRateLimitExceededError(error: unknown): error is OutboxRateLimitExceededError {
-  return error instanceof OutboxRateLimitExceededError;
-}
-
-export function mapRuntimeDomainError(error: unknown): HttpResponseModel | null {
-  if (isRunNotFoundError(error)) {
-    return mapRunNotFound(error.runId);
-  }
-
-  if (isSignalNotImplementedError(error)) {
-    return createHttpErrorResponse({
-      type: HTTP_ERROR_TYPE.unprocessable,
-      reason: error.code,
-    });
-  }
-
-  if (isAdapterNotRegisteredError(error)) {
-    const adapterNotRegisteredDetails = compactDetails(
-      readMessageParams(error, 'provider', 'adapter')
-    );
-    return createHttpErrorResponse({
-      type: HTTP_ERROR_TYPE.unprocessable,
-      reason: HTTP_ERROR_REASON.adapterNotConfigured,
-      ...withDetails(adapterNotRegisteredDetails),
-    });
-  }
-
-  if (isAuthorizationError(error)) {
-    return createHttpErrorResponse({
-      type: HTTP_ERROR_TYPE.forbidden,
-      reason: HTTP_ERROR_REASON.tenantAccessDenied,
-    });
-  }
-
-  if (isRunAlreadyExistsError(error)) {
-    const runAlreadyExistsDetails = compactDetails({
-      ...(typeof getRunId(error) === 'string' ? { runId: getRunId(error) } : {}),
-    });
-    return createHttpErrorResponse({
-      type: HTTP_ERROR_TYPE.conflict,
-      reason: HTTP_ERROR_REASON.runAlreadyExists,
-      ...withDetails(runAlreadyExistsDetails),
-    });
-  }
-
-  if (isRecoverySourceNotTerminalError(error)) {
-    return createHttpErrorResponse({
-      type: HTTP_ERROR_TYPE.unprocessable,
-      reason: HTTP_ERROR_REASON.sourceRunNotTerminal,
-      ...withDetails(
-        compactDetails({
-          ...readMessageParams(error, 'runId', 'runId'),
-          ...readMessageParams(error, 'status', 'status'),
-        })
-      ),
-    });
-  }
-
-  if (isOutboxRateLimitExceededError(error)) {
-    return createHttpErrorResponse({
-      type: HTTP_ERROR_TYPE.rateLimited,
-      reason: error.code,
-    });
-  }
-
-  return null;
-}
-
-function mapRunNotFound(runId: string | undefined): HttpResponseModel {
-  const runNotFoundDetails = compactDetails({
-    ...(typeof runId === 'string' ? { runId } : {}),
-  });
-  return createHttpErrorResponse({
-    type: HTTP_ERROR_TYPE.notFound,
-    reason: HTTP_ERROR_REASON.runNotFound,
-    ...withDetails(runNotFoundDetails),
-  });
-}
-
 function mapPlanRejectionReason(code: string): string {
   return code === START_RUN_PLAN_REJECTION_CODE.rejected
     ? HTTP_ERROR_REASON.planRejected
     : normalizeHttpErrorReason(code);
-}
-
-function getRunId(error: unknown): string | undefined {
-  if (!(error instanceof Error)) {
-    return undefined;
-  }
-
-  const runId = (error as Error & { runId?: unknown }).runId;
-  return typeof runId === 'string' ? runId : undefined;
-}
-
-function readMessageParams(
-  error: unknown,
-  sourceKey: string,
-  targetKey: string
-): Record<string, unknown> {
-  if (!(error instanceof Error)) {
-    return {};
-  }
-
-  const messageParams = (error as Error & { messageParams?: unknown }).messageParams;
-  if (messageParams === null || typeof messageParams !== 'object') {
-    return {};
-  }
-
-  const value = (messageParams as Record<string, unknown>)[sourceKey];
-  return value === undefined ? {} : { [targetKey]: value };
-}
-
-function compactDetails(
-  details: Record<string, unknown>
-): Readonly<Record<string, unknown>> | undefined {
-  return Object.keys(details).length === 0 ? undefined : details;
-}
-
-function withDetails(details: Readonly<Record<string, unknown>> | undefined): {
-  readonly details?: Readonly<Record<string, unknown>>;
-} {
-  return details === undefined ? {} : { details };
 }

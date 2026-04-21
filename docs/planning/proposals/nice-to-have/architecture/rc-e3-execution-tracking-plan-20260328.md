@@ -72,7 +72,7 @@ StartRunEngineError): HttpResponseModel` covering all three engine error
    cases (`adapter_not_registered`, `unsupported_plan_version`,
    `command_invalid`) to assert `{ok: false, error: ...}` passthrough instead of
    the current facade-absorbed facade result kinds.
-7. In `authErrorMapper.test.ts`: add test coverage for `mapStartRunEngineError`
+7. In `httpErrorTranslation.test.ts`: add test coverage for `mapStartRunEngineError`
    for all three engine error kinds.
 8. In `startRunRoute.test.ts`: add test cases for `{ok: false, error:
 StartRunEngineError}` facade result and verify correct HTTP outputs.
@@ -128,7 +128,7 @@ flowchart LR
 - [ ] `startRunRoute.ts` branches on `ok` before calling mapper.
 - [ ] `startRunAuthorizedFacade.test.ts` engine-error cases assert
       `{ok: false, error}` passthrough (not facade-absorbed result kinds).
-- [ ] `authErrorMapper.test.ts` has coverage for all three
+- [ ] `httpErrorTranslation.test.ts` has coverage for all three
       `mapStartRunEngineError` branches.
 - [ ] `startRunRoute.test.ts` has coverage for `ok: false` facade result shape.
 - [ ] `pnpm --filter dvt-api typecheck` passes.

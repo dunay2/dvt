@@ -4,7 +4,7 @@ import type { AuthorizationAction, RequestedScope } from '../../domain/auth/type
 
 import { authorizeExecutionScope } from './authorizeExecutionScope.js';
 import type { HttpResponseModel } from './httpErrorContract.js';
-import { mapAuthorizationFailure } from './httpErrorMapper.js';
+import { httpErrorTranslation } from './httpErrorTranslation.js';
 
 const ADMIN_ACTION_PREFIX = 'admin:';
 
@@ -30,7 +30,7 @@ export async function authorizeAdminExecutionScope<TAction extends AdminAction>(
   if (!authorization.context.action.name.startsWith(ADMIN_ACTION_PREFIX)) {
     return {
       ok: false,
-      response: mapAuthorizationFailure('ACTION_NOT_GRANTED'),
+      response: httpErrorTranslation.auth.unauthorized('ACTION_NOT_GRANTED'),
     };
   }
 
