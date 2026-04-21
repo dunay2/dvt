@@ -32,6 +32,7 @@ as the companion map for this review.
 - `docs/planning/reviews/architecture-and-governance/20260420-dvt-plus-system-architecture-review.md`
 - `docs/planning/closeouts/20260420-temporal-fowler-architecture-drift-follow-up-closeout.md`
 - `docs/risk-register/quality/R-20260420-TEMPORAL-DBT-BUILTIN-COUPLING.yaml`
+- `docs/risk-register/quality/R-20260421-UTILITY-MODULE-COMPONENTIZATION-DRIFT.yaml`
 - `apps/api/src/modules/planCompileBoundary.ts`
 - `apps/api/src/application/services/startRunTargetAdapterRegistry.ts`
 - `packages/@dvt/contracts/src/contracts/engine/StartRunBoundary.v1.ts`
@@ -197,6 +198,29 @@ flowchart LR
 - Introduce pointer-only workflow input plus governed `continueAsNew` state
   evolution.
 - Build dedicated list/head/fleet read contracts outside the engine facade.
+
+## Componentization Debt Now Explicitly Tracked
+
+The review also leaves one cross-package structural debt open: several
+high-traffic modules still publish flat helper sets without one explicit public
+API or named owned concern. That debt is now tracked in
+[R-20260421-UTILITY-MODULE-COMPONENTIZATION-DRIFT](../../../risk-register/quality/R-20260421-UTILITY-MODULE-COMPONENTIZATION-DRIFT.yaml).
+
+The highest-value candidates currently are:
+
+- `packages/@dvt/adapter-temporal/src/workflows/workflowHelpers.ts`
+- `apps/api/src/entrypoints/http/httpErrorMapper.ts`
+- `apps/api/src/entrypoints/http/routeParserPrimitives.ts`
+- `apps/api/src/entrypoints/http/runCommandFieldParsers.ts`
+- `apps/api/src/entrypoints/http/routeParseIssue.ts`
+- `packages/@dvt/adapter-temporal/src/temporalObservability.ts`
+- `packages/@dvt/engine/src/application/providerSelection.ts`
+- `packages/@dvt/adapter-temporal/src/temporalErrorPolicy.ts`
+
+The point is not to wrap every helper set in a runtime class. The point is to
+promote cohesive helper clusters into explicit modules with one public API,
+clear invariants, focused consumers, and semantic tests that prove owned
+concern.
 
 ## Final conclusion
 

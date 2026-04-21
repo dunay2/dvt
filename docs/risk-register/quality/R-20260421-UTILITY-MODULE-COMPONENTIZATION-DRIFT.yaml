@@ -1,0 +1,76 @@
+---
+id: R-20260421-UTILITY-MODULE-COMPONENTIZATION-DRIFT
+title: Flat utility modules can drift without explicit component APIs and semantic ownership
+status: Open
+date: 2026-04-21
+owners:
+  - apps/api
+  - packages/@dvt/adapter-temporal
+  - packages/@dvt/engine
+severity: Medium
+probability: Medium
+context: >
+  The 2026-04-21 Fowler follow-up review improved semantic encapsulation in one `apps/api`
+  component, but several high-traffic modules across `apps/api`, `@dvt/adapter-temporal`, and
+  `@dvt/engine` still expose clusters of loosely related exported functions without one explicit
+  public API, invariants, or named owned concern. The immediate candidates are
+  `packages/@dvt/adapter-temporal/src/workflows/workflowHelpers.ts`,
+  `apps/api/src/entrypoints/http/httpErrorMapper.ts`,
+  `apps/api/src/entrypoints/http/routeParserPrimitives.ts`,
+  `apps/api/src/entrypoints/http/runCommandFieldParsers.ts`,
+  `apps/api/src/entrypoints/http/routeParseIssue.ts`,
+  `packages/@dvt/adapter-temporal/src/temporalObservability.ts`,
+  `packages/@dvt/engine/src/application/providerSelection.ts`, and
+  `packages/@dvt/adapter-temporal/src/temporalErrorPolicy.ts`.
+risk: >
+  If these modules continue growing as flat helper surfaces, DVT can accumulate hidden public APIs,
+  mixed concerns, and semantic drift between parsing, mapping, policy, and lifecycle ownership. That
+  increases the chance of duplication, weakens test focus, makes module intent harder to read, and
+  encourages ad hoc reuse through convenience exports instead of bounded component contracts.
+mitigations:
+  - >
+    Split `packages/@dvt/adapter-temporal/src/workflows/workflowHelpers.ts` by owned concern into a
+    gateway resolver, a step-payload factory, and a workflow-input parser with explicit public
+    entrypoints.
+  - >
+    Collapse `apps/api/src/entrypoints/http/httpErrorMapper.ts` behind one explicit mapper surface,
+    for example `map(error): HttpResponseModel`, instead of multiple sibling exports.
+  - >
+    Group route parameter parsing in `routeParserPrimitives.ts` under one owned decoder module and
+    group body-field parsing in `runCommandFieldParsers.ts` under one command-field parser surface.
+  - >
+    Replace the free-form route parse issue helpers in `routeParseIssue.ts` with one explicit result
+    or factory contract that owns bad-request and forbidden outcomes.
+  - >
+    Separate `packages/@dvt/adapter-temporal/src/temporalObservability.ts` into observability
+    construction versus timeout or error handling concerns.
+  - >
+    Replace `packages/@dvt/engine/src/application/providerSelection.ts` with one explicit provider
+    registry or selection component so adapter-map lifecycle and selection policy are owned in one
+    place.
+  - >
+    Keep `packages/@dvt/adapter-temporal/src/temporalErrorPolicy.ts` small or promote it to one
+    explicit classifier component before SDK-version handling or policy branching grows.
+  - >
+    For every promoted component, add a local component guide that states public API, invariants,
+    transitions, and consumers, plus at least one semantic architecture test that validates owned
+    concern rather than barrel thinness.
+review_after: 2026-06-15
+---
+## Candidate Modules Ordered By Architectural Impact
+
+1. `packages/@dvt/adapter-temporal/src/workflows/workflowHelpers.ts` Many exported helpers currently
+mix gateway resolution, step-payload construction, and workflow input parsing. 2.
+`apps/api/src/entrypoints/http/httpErrorMapper.ts` Error-to-response mapping remains spread across
+sibling exports instead of one obvious public mapper contract. 3.
+`apps/api/src/entrypoints/http/routeParserPrimitives.ts` Query/path parameter parsing is cohesive
+but still published as flat helpers. 4. `apps/api/src/entrypoints/http/runCommandFieldParsers.ts`
+Request-body field parsing follows the same flat-helper pattern as route parsing. 5.
+`apps/api/src/entrypoints/http/routeParseIssue.ts` Route-parse error construction still exposes
+multiple builder helpers rather than one result contract. 6.
+`packages/@dvt/adapter-temporal/src/temporalObservability.ts` Observability assembly and timeout or
+error policy still share one helper module. 7.
+`packages/@dvt/engine/src/application/providerSelection.ts` Adapter selection logic still relies on
+function-level coordination instead of one explicit registry-like boundary. 8.
+`packages/@dvt/adapter-temporal/src/temporalErrorPolicy.ts` Small today, but likely to grow into a
+more meaningful classifier boundary.
