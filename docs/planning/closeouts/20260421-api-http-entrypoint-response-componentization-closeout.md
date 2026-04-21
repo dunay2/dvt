@@ -102,18 +102,13 @@ planning_type: closeout
 - The new plan-route facade is a sibling component, not a re-expansion of the
   runtime component.
 
-## Review Follow-Up Residuals
+## Review Follow-Up Closure
 
-- Verified `httpErrorMapper.ts` does not currently expose a live compatibility
-  shim or alternate public seam. The follow-up here is documentary: keep the
-  hard-cut posture explicit and avoid future closeout or review text that
-  suggests a compatibility layer still exists when the code does not.
-- Happy-path coverage for the public facade remains asymmetric. The current
-  slice proves `compile/import` success through route tests, but it does not
-  exercise `planRouteResponseTranslation.compile.result(...)` and
-  `planRouteResponseTranslation.import.result(...)` directly as focused facade
-  contract tests. This is non-blocking for merge but remains open follow-up
-  work.
+- Added a semantic AST guard that asserts `httpErrorMapper.ts` stays free of
+  compatibility-style re-export shims.
+- Added direct happy-path facade tests for
+  `planRouteResponseTranslation.compile.result(...)` and
+  `planRouteResponseTranslation.import.result(...)`.
 
 ## No-Stub Evidence
 

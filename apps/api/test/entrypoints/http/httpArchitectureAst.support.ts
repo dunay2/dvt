@@ -81,6 +81,24 @@ export function collectExportedFunctionNames(component: HttpComponentFile): stri
   });
 }
 
+export function collectReExportedModuleSpecifiers(component: HttpComponentFile): string[] {
+  const moduleSpecifiers: string[] = [];
+
+  for (const statement of component.sourceFile.statements) {
+    if (!ts.isExportDeclaration(statement) || statement.moduleSpecifier === undefined) {
+      continue;
+    }
+
+    if (!ts.isStringLiteral(statement.moduleSpecifier)) {
+      continue;
+    }
+
+    moduleSpecifiers.push(statement.moduleSpecifier.text);
+  }
+
+  return moduleSpecifiers;
+}
+
 export function collectObjectLiteralPropertyNames(
   component: HttpComponentFile,
   variableName: string
