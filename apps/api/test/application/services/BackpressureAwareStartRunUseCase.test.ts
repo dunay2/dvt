@@ -6,6 +6,11 @@ import {
 } from '@dvt/delivery';
 import { describe, expect, it, vi } from 'vitest';
 
+import {
+  START_RUN_BACKPRESSURE_CODE,
+  START_RUN_DUPLICATE_OF,
+  START_RUN_RESULT_KIND,
+} from '../../../src/application/ports/startRunResultContract.js';
 import { BackpressureAwareStartRunUseCase } from '../../../src/application/services/BackpressureAwareStartRunUseCase.js';
 import { EnvironmentId, ProjectId, TenantId } from '../../../src/domain/auth/types.js';
 
@@ -44,7 +49,168 @@ const CONTEXT = {
   authorizedAt: new Date('2026-03-14T00:00:00Z'),
 };
 
+const ADMISSIBLE_EXECUTION_CAPACITY = {
+  async evaluate() {
+    return { kind: 'admissible' as const };
+  },
+};
+
+const ACCEPTED_RESULT = {
+  kind: START_RUN_RESULT_KIND.accepted,
+  runId: 'run-1',
+  accepted: true,
+} as const;
+
+type StartRunUseCaseDeps = ConstructorParameters<typeof BackpressureAwareStartRunUseCase>[0];
+
+type DelegateSpy = {
+  readonly execute: ReturnType<typeof vi.fn>;
+};
+
+type TelemetrySpy = {
+  readonly record: ReturnType<typeof vi.fn>;
+};
+
+type TelemetryOverride = StartRunUseCaseDeps['telemetry'] & TelemetrySpy;
+type StartRunExecutionResult = Awaited<ReturnType<BackpressureAwareStartRunUseCase['execute']>>;
+
+type ExecuteWithoutDelegateOverrides = Omit<
+  Partial<StartRunUseCaseDeps>,
+  'delegate' | 'telemetry'
+> & {
+  readonly telemetry?: TelemetryOverride;
+};
+
+function buildNotFoundDuplicateProbe(): StartRunUseCaseDeps['duplicateProbe'] {
+  return {
+    async findExisting() {
+      return { kind: 'not_found' as const };
+    },
+  };
+}
+
+function buildNoopTelemetry(): StartRunUseCaseDeps['telemetry'] {
+  return {
+    async record() {
+      return undefined;
+    },
+  };
+}
+
+function buildAcceptedDelegate(): StartRunUseCaseDeps['delegate'] {
+  return {
+    async execute() {
+      return {
+        ok: true as const,
+        value: ACCEPTED_RESULT,
+      };
+    },
+  };
+}
+
+function buildDelegateSpy(): StartRunUseCaseDeps['delegate'] & DelegateSpy {
+  return {
+    execute: vi.fn(),
+  };
+}
+
+function buildTelemetrySpy(): TelemetryOverride {
+  return {
+    record: vi.fn().mockResolvedValue(undefined),
+  };
+}
+
+function expectSuccessfulResult(result: StartRunExecutionResult, value: unknown): void {
+  expect(result).toEqual({
+    ok: true,
+    value,
+  });
+}
+
+function buildUseCase(
+  overrides: Partial<StartRunUseCaseDeps> = {}
+): BackpressureAwareStartRunUseCase {
+  return new BackpressureAwareStartRunUseCase({
+    duplicateProbe: buildNotFoundDuplicateProbe(),
+    admissionGuard: {
+      async assertAdmissible() {
+        return;
+      },
+    },
+    executionCapacity: ADMISSIBLE_EXECUTION_CAPACITY,
+    telemetry: buildNoopTelemetry(),
+    mode: 'enforce',
+    retryAfterSeconds: 30,
+    delegate: buildAcceptedDelegate(),
+    ...overrides,
+  });
+}
+
+async function executeWithoutDelegate(
+  overrides: ExecuteWithoutDelegateOverrides = {}
+): Promise<{
+  readonly delegate: DelegateSpy;
+  readonly result: StartRunExecutionResult;
+  readonly telemetry: TelemetryOverride;
+}> {
+  const delegate = buildDelegateSpy();
+  const telemetry = overrides.telemetry ?? buildTelemetrySpy();
+  const useCase = buildUseCase({
+    ...overrides,
+    telemetry,
+    delegate,
+  });
+
+  const result = await useCase.execute(COMMAND, CONTEXT);
+  expect(delegate.execute).not.toHaveBeenCalled();
+
+  return {
+    delegate,
+    result,
+    telemetry,
+  };
+}
+
 describe('BackpressureAwareStartRunUseCase', () => {
+  const enforceModeBackpressureCases = [
+    {
+      description: 'returns tenant backpressure in enforce mode and does not call delegate',
+      overrides: {
+        admissionGuard: {
+          async assertAdmissible() {
+            throw new TenantBackpressureError('tenant-1', {
+              pendingEventsPerTenant: 10,
+              outboxOldestAgeMs: 0,
+            });
+          },
+        },
+      } satisfies ExecuteWithoutDelegateOverrides,
+      expected: {
+        kind: START_RUN_RESULT_KIND.tenantBackpressure,
+        accepted: false,
+        code: START_RUN_BACKPRESSURE_CODE.tenant,
+        retryAfterSeconds: 30,
+      },
+    },
+    {
+      description: 'returns system backpressure in enforce mode on snapshot failure',
+      overrides: {
+        admissionGuard: {
+          async assertAdmissible() {
+            throw new BackpressureSnapshotUnavailableError('tenant-1', new Error('db timeout'));
+          },
+        },
+        retryAfterSeconds: 45,
+      } satisfies ExecuteWithoutDelegateOverrides,
+      expected: {
+        kind: START_RUN_RESULT_KIND.systemBackpressure,
+        accepted: false,
+        code: START_RUN_BACKPRESSURE_CODE.snapshotUnavailable,
+        retryAfterSeconds: 45,
+      },
+    },
+  ] as const;
+
   it('runs duplicate probe before admission and delegate', async () => {
     const calls: string[] = [];
     const useCase = new BackpressureAwareStartRunUseCase({
@@ -59,6 +225,7 @@ describe('BackpressureAwareStartRunUseCase', () => {
           calls.push('admission');
         },
       },
+      executionCapacity: ADMISSIBLE_EXECUTION_CAPACITY,
       telemetry: {
         async record() {
           calls.push('telemetry');
@@ -78,42 +245,28 @@ describe('BackpressureAwareStartRunUseCase', () => {
     });
 
     const result = await useCase.execute(COMMAND, CONTEXT);
-    expect(result).toEqual({
-      ok: true,
-      value: { kind: 'accepted', runId: 'run-1', accepted: true },
-    });
+    expectSuccessfulResult(result, { kind: 'accepted', runId: 'run-1', accepted: true });
     expect(calls).toEqual(['duplicate', 'admission', 'delegate', 'telemetry']);
   });
 
   it('returns duplicate before admission and delegate', async () => {
     const admissionGuard = { assertAdmissible: vi.fn() };
-    const delegate = { execute: vi.fn() };
-    const telemetry = { record: vi.fn().mockResolvedValue(undefined) };
-    const useCase = new BackpressureAwareStartRunUseCase({
+    const { result, telemetry } = await executeWithoutDelegate({
       duplicateProbe: {
         async findExisting() {
           return { kind: 'found_intent' as const, runId: 'run-1' };
         },
       },
       admissionGuard,
-      telemetry,
-      mode: 'enforce',
-      retryAfterSeconds: 30,
-      delegate: delegate as never,
     });
 
-    const result = await useCase.execute(COMMAND, CONTEXT);
-    expect(result).toEqual({
-      ok: true,
-      value: {
-        kind: 'duplicate',
-        runId: 'run-1',
-        accepted: true,
-        duplicateOf: 'intent',
-      },
+    expectSuccessfulResult(result, {
+      kind: START_RUN_RESULT_KIND.duplicate,
+      runId: 'run-1',
+      accepted: true,
+      duplicateOf: START_RUN_DUPLICATE_OF.intent,
     });
     expect(admissionGuard.assertAdmissible).not.toHaveBeenCalled();
-    expect(delegate.execute).not.toHaveBeenCalled();
     expect(telemetry.record).toHaveBeenCalledWith(
       expect.objectContaining({
         decision: 'duplicate',
@@ -122,83 +275,13 @@ describe('BackpressureAwareStartRunUseCase', () => {
     );
   });
 
-  it('returns tenant backpressure in enforce mode and does not call delegate', async () => {
-    const delegate = { execute: vi.fn() };
-    const useCase = new BackpressureAwareStartRunUseCase({
-      duplicateProbe: {
-        async findExisting() {
-          return { kind: 'not_found' as const };
-        },
-      },
-      admissionGuard: {
-        async assertAdmissible() {
-          throw new TenantBackpressureError('tenant-1', {
-            pendingEventsPerTenant: 10,
-            outboxOldestAgeMs: 0,
-          });
-        },
-      },
-      telemetry: {
-        async record() {
-          return undefined;
-        },
-      },
-      mode: 'enforce',
-      retryAfterSeconds: 30,
-      delegate: delegate as never,
-    });
-
-    const result = await useCase.execute(COMMAND, CONTEXT);
-    expect(result).toEqual({
-      ok: true,
-      value: {
-        kind: 'tenant_backpressure',
-        accepted: false,
-        code: 'TENANT_BACKPRESSURE',
-        retryAfterSeconds: 30,
-      },
-    });
-    expect(delegate.execute).not.toHaveBeenCalled();
-  });
-
-  it('returns system backpressure in enforce mode on snapshot failure', async () => {
-    const delegate = { execute: vi.fn() };
-    const useCase = new BackpressureAwareStartRunUseCase({
-      duplicateProbe: {
-        async findExisting() {
-          return { kind: 'not_found' as const };
-        },
-      },
-      admissionGuard: {
-        async assertAdmissible() {
-          throw new BackpressureSnapshotUnavailableError('tenant-1', new Error('db timeout'));
-        },
-      },
-      telemetry: {
-        async record() {
-          return undefined;
-        },
-      },
-      mode: 'enforce',
-      retryAfterSeconds: 45,
-      delegate: delegate as never,
-    });
-
-    const result = await useCase.execute(COMMAND, CONTEXT);
-    expect(result).toEqual({
-      ok: true,
-      value: {
-        kind: 'system_backpressure',
-        accepted: false,
-        code: 'BACKPRESSURE_SNAPSHOT_UNAVAILABLE',
-        retryAfterSeconds: 45,
-      },
-    });
-    expect(delegate.execute).not.toHaveBeenCalled();
+  it.each(enforceModeBackpressureCases)('$description', async ({ overrides, expected }) => {
+    const { result } = await executeWithoutDelegate(overrides);
+    expectSuccessfulResult(result, expected);
   });
 
   it('observe mode records hypothetical reject and still delegates', async () => {
-    const delegate = {
+    const delegate: StartRunUseCaseDeps['delegate'] & DelegateSpy = {
       execute: vi.fn().mockResolvedValue({
         ok: true as const,
         value: {
@@ -208,13 +291,8 @@ describe('BackpressureAwareStartRunUseCase', () => {
         },
       }),
     };
-    const telemetry = { record: vi.fn().mockResolvedValue(undefined) };
-    const useCase = new BackpressureAwareStartRunUseCase({
-      duplicateProbe: {
-        async findExisting() {
-          return { kind: 'not_found' as const };
-        },
-      },
+    const telemetry: TelemetryOverride = { record: vi.fn().mockResolvedValue(undefined) };
+    const useCase = buildUseCase({
       admissionGuard: {
         async assertAdmissible() {
           throw new SystemBackpressureError({
@@ -225,20 +303,16 @@ describe('BackpressureAwareStartRunUseCase', () => {
       },
       telemetry,
       mode: 'observe',
-      retryAfterSeconds: 30,
-      delegate: delegate as never,
+      delegate,
     });
 
     const result = await useCase.execute(COMMAND, CONTEXT);
-    expect(result).toEqual({
-      ok: true,
-      value: { kind: 'accepted', runId: 'run-1', accepted: true },
-    });
+    expectSuccessfulResult(result, ACCEPTED_RESULT);
     expect(delegate.execute).toHaveBeenCalledOnce();
     expect(telemetry.record).toHaveBeenCalledWith(
       expect.objectContaining({
         decision: 'would_reject_system',
-        code: 'SYSTEM_BACKPRESSURE',
+        code: START_RUN_BACKPRESSURE_CODE.system,
       })
     );
   });
@@ -246,28 +320,9 @@ describe('BackpressureAwareStartRunUseCase', () => {
   describe('mode=off', () => {
     it('skips admission guard entirely', async () => {
       const admissionGuard = { assertAdmissible: vi.fn() };
-      const useCase = new BackpressureAwareStartRunUseCase({
-        duplicateProbe: {
-          async findExisting() {
-            return { kind: 'not_found' as const };
-          },
-        },
+      const useCase = buildUseCase({
         admissionGuard,
-        telemetry: {
-          async record() {
-            return undefined;
-          },
-        },
         mode: 'off',
-        retryAfterSeconds: 30,
-        delegate: {
-          async execute() {
-            return {
-              ok: true as const,
-              value: { kind: 'accepted' as const, runId: 'run-1', accepted: true },
-            };
-          },
-        },
       });
 
       await useCase.execute(COMMAND, CONTEXT);
@@ -280,32 +335,18 @@ describe('BackpressureAwareStartRunUseCase', () => {
       const delegate = {
         execute: vi.fn().mockResolvedValue({
           ok: true as const,
-          value: { kind: 'accepted' as const, runId: 'run-1', accepted: true },
+          value: ACCEPTED_RESULT,
         }),
       };
-      const useCase = new BackpressureAwareStartRunUseCase({
-        duplicateProbe: {
-          async findExisting() {
-            return { kind: 'not_found' as const };
-          },
-        },
-        admissionGuard: {
-          async assertAdmissible() {
-            return;
-          },
-        },
+      const useCase = buildUseCase({
         telemetry,
         mode: 'off',
-        retryAfterSeconds: 30,
         delegate,
       });
 
       const result = await useCase.execute(COMMAND, CONTEXT);
 
-      expect(result).toEqual({
-        ok: true,
-        value: { kind: 'accepted', runId: 'run-1', accepted: true },
-      });
+      expectSuccessfulResult(result, ACCEPTED_RESULT);
       expect(delegate.execute).toHaveBeenCalledOnce();
       expect(telemetry.record).toHaveBeenCalledWith(
         expect.objectContaining({ decision: 'accept', mode: 'off' })

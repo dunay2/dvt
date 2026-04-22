@@ -88,6 +88,9 @@ shape, and the governed transition route:
 - [Plan route response translation component](../../../../apps/api/docs/plan-route-response-translation-component.md):
   local guide for the preview/compile/import response-mapping boundary with
   public API, invariants, transitions, consumers, and focused diagrams.
+- [Start-run execution capacity admission component](../../../../apps/api/docs/start-run-execution-capacity-admission-component.md):
+  local guide for the abstract start-run execution-capacity admission seam,
+  its fail-closed default binding, invariants, transitions, and consumers.
 - [Temporal Fowler provider-truth follow-up review](../../../planning/reviews/architecture-and-governance/20260421-temporal-fowler-provider-truth-follow-up-review.md):
   Fowler-style architecture analysis for the Temporal branch work, residual
   drift map, mature-system comparison, and recommended next moves.

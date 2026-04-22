@@ -41,7 +41,10 @@ export type AdmissionDecisionRecord =
         | typeof ADMISSION_TELEMETRY_DECISION.wouldRejectSystem;
       readonly code:
         | typeof START_RUN_BACKPRESSURE_CODE.system
-        | typeof START_RUN_BACKPRESSURE_CODE.snapshotUnavailable;
+        | typeof START_RUN_BACKPRESSURE_CODE.snapshotUnavailable
+        | typeof START_RUN_BACKPRESSURE_CODE.executionCapacityExhausted
+        | typeof START_RUN_BACKPRESSURE_CODE.executorUnavailable
+        | typeof START_RUN_BACKPRESSURE_CODE.capacitySignalUnavailable;
       readonly retryAfterSeconds: number;
     });
 

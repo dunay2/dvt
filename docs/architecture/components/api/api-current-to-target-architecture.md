@@ -212,6 +212,39 @@ consumers and generic route helpers emit `HttpResponseModel` values through
 `httpErrorTranslation.respond(...)` rather than calling `sendHttpResponse(...)`
 directly.
 
+### Start-run execution-capacity admission boundary
+
+`AR-C3-A` introduces an abstract execution-capacity seam into the start-run
+admission path without teaching the API application layer about Temporal queue
+internals.
+
+```mermaid
+flowchart LR
+  Facade["StartRunAuthorizedFacade"] --> UseCase["BackpressureAwareStartRunUseCase"]
+  UseCase --> Duplicate["DuplicateRunProbe"]
+  UseCase --> Guard["IAdmissionGuard"]
+  UseCase --> Capacity["IStartRunExecutionCapacityPort"]
+  UseCase --> Delegate["PlannerBackedStartRunUseCase / engine delegate"]
+  Runtime["buildProtectedRuntimeModule.ts"] --> Default["DEFAULT_START_RUN_EXECUTION_CAPACITY_PORT"]
+  Default --> Capacity
+```
+
+Use the local component guide for the public API, invariants, transitions, and
+consumers of this seam:
+
+- [Start-run execution capacity admission component](../../../../apps/api/docs/start-run-execution-capacity-admission-component.md)
+
+The caller-visible result vocabulary for this seam is documented separately in
+the shared contract component guide:
+
+- [Start-run boundary component](../engine/contracts/engine/start-run-boundary-component.md)
+
+Current slice status:
+
+- `AR-C3-A` is the abstract seam and fail-closed default binding
+- `AR-C3-B` remains the concrete adapter-backed capacity binding
+- `AR-C3-C` remains telemetry/runbook/operational closure
+
 ### Plan Route Response Translation Boundary
 
 The `preview/compile/import` family now has its own sibling local component
@@ -249,7 +282,7 @@ This keeps two adjacent but separate entrypoint components explicit:
 | ----------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
 | Admin route RBAC hardening follow-through remains                 | Explicit admin-scope RBAC is now wired in admin routes; remaining work is test-shape and composition hardening (`AR-C1-T1..T4`). | `AR-C1-T1..T4`                              |
 | SLA and consistency expectations are still implicit               | The API exposes freshness and backpressure behavior, but healthy thresholds remain scattered across config and runbooks.         | `AR-C2`                                     |
-| Admission does not yet see adapter saturation                     | The system can still accept work it cannot execute when Temporal capacity is the bottleneck.                                     | `AR-C3`                                     |
+| Concrete execution-capacity binding is still pending              | The API now has an abstract admission seam, but the real adapter-backed capacity signal is not yet bound in production.          | `AR-C3-B`, `AR-C3-C`                        |
 | Temporal activity writes depend directly on the state store       | State-store failures can cascade into execution stalls without an explicit breaker boundary.                                     | `AR-C4`                                     |
 | Query purity is incomplete                                        | `enrichRunStatus()` still lives on `IWorkflowEngine`, which weakens the read/write separation story.                             | `AR-A3`                                     |
 | Snapshot rebuild concurrency is not yet a contract invariant      | Current mutual exclusion exists in the PostgreSQL implementation, but the contract does not require it.                          | `AR-A6`                                     |
@@ -323,7 +356,7 @@ flowchart LR
 | Command boundary            | start-run path is explicit but still concentrated in one large protected-runtime composition module | command orchestration stays explicit but is split across smaller, clearer ports with capacity-aware admission |
 | Query boundary              | query services already use read paths, but enrichment still shares the engine contract              | core query path is pure CQRS; enrichment is optional and isolated behind `IRunEnrichmentService`              |
 | Authorization               | tenant and action checks are real, but admin path hardening is incomplete                           | runtime and admin paths use explicit, action-specific RBAC without relying on feature flags                   |
-| Admission                   | duplicate detection and delivery-based backpressure are real                                        | admission also sees adapter saturation and publishes measurable SLA outcomes                                  |
+| Admission                   | duplicate detection, delivery backpressure, and an abstract execution-capacity seam are real        | admission uses a concrete adapter-backed capacity signal and publishes measurable SLA outcomes                |
 | Concurrency and operability | snapshot freshness and health are visible, but some guarantees are still implementation-level       | concurrency, freshness, and degradation rules are contract-backed and observable                              |
 | Extensibility               | planner and execution still lean dbt-first in key seams                                             | planner input, step validation, artifacts, and worker routing are step-kind and graph-source agnostic         |
 
@@ -341,8 +374,9 @@ creating a separate API backlog.
   Publish formal API-adjacent SLA targets for freshness, delivery latency, plan
   compilation, and run start latency.
 - `AR-C3`
-  Propagate adapter saturation into the admission decision so start-run can
-  reject work the runtime cannot currently absorb.
+  Introduce and operationalize execution-capacity admission so start-run can
+  reject work the runtime cannot currently absorb without coupling the API
+  boundary to a provider-specific queue model.
 - `AR-C4`
   Insert a circuit-breaker boundary between Temporal activity writes and the
   state store.
