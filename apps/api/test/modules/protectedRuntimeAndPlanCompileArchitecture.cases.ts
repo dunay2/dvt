@@ -11,6 +11,10 @@ const BUILD_PROTECTED_START_RUN_RUNTIME_SOURCE = readFileSync(
   new URL('../../src/modules/startRun/buildProtectedStartRunRuntime.ts', import.meta.url),
   'utf8'
 );
+const BUILD_PROTECTED_RUNTIME_STORAGE_SOURCE = readFileSync(
+  new URL('../../src/modules/protectedRuntime/buildProtectedRuntimeStorage.ts', import.meta.url),
+  'utf8'
+);
 const PLAN_COMPILE_BOUNDARY_SOURCE = readFileSync(
   new URL('../../src/modules/planCompileBoundary.ts', import.meta.url),
   'utf8'
@@ -29,7 +33,7 @@ export function describeProtectedRuntimeAndPlanCompileArchitectureCases(): void 
   describe('protected runtime and plan compile architecture', () => {
     it('keeps the protected runtime root explicit while delegating start-run assembly to its subcomponent', () => {
       expect(BUILD_PROTECTED_RUNTIME_MODULE_SOURCE).toContain(
-        'const executablePlanResolver = new StoredExecutablePlanResolver({'
+        'const storageRuntime = buildProtectedRuntimeStorage({'
       );
       expect(BUILD_PROTECTED_RUNTIME_MODULE_SOURCE).toContain(
         'const executionRuntime = await buildProtectedExecutionRuntime({'
@@ -38,10 +42,16 @@ export function describeProtectedRuntimeAndPlanCompileArchitectureCases(): void 
         'const startRunRuntime = buildProtectedStartRunRuntime({'
       );
       expect(BUILD_PROTECTED_RUNTIME_MODULE_SOURCE).not.toContain(
+        'const executablePlanResolver = new StoredExecutablePlanResolver({'
+      );
+      expect(BUILD_PROTECTED_RUNTIME_MODULE_SOURCE).not.toContain(
         'const planValidator = new StoredPlanExecutabilityValidator({'
       );
       expect(BUILD_PROTECTED_RUNTIME_MODULE_SOURCE).not.toContain(
         'const planCompilePlanner = buildPlanCompilePlanner();'
+      );
+      expect(BUILD_PROTECTED_RUNTIME_STORAGE_SOURCE).toContain(
+        'const executablePlanResolver = new StoredExecutablePlanResolver({'
       );
       expect(BUILD_PROTECTED_START_RUN_RUNTIME_SOURCE).toContain(
         'const planValidator = new StoredPlanExecutabilityValidator({'

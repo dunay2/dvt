@@ -20,6 +20,7 @@ relevant adapters.
 - [Start-run application component](./docs/start-run-application-component.md)
 - [Start-run runtime composition component](./docs/start-run-runtime-composition-component.md)
 - [Start-run execution capacity admission component](./docs/start-run-execution-capacity-admission-component.md)
+- [Workspace graph draft runtime composition component](./docs/workspace-graph-draft-runtime-composition-component.md)
 
 ## Authentication boundary
 

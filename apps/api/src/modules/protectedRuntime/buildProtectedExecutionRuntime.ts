@@ -1,0 +1,70 @@
+/**
+ * Owned concern: assemble the protected execution runtime from live provider
+ * adapters, workflow-engine wiring, and canonical adapter-registry truth.
+ */
+import type { IObservability } from '@dvt/observability';
+import type { Logger } from 'pino';
+
+
+import { createStartRunTargetAdapterRegistryFromValues } from '../../application/services/startRunTargetAdapterRegistry.js';
+import { buildWorkflowEngine } from '../../application/services/WorkflowEngineFactory.js';
+import type { Env } from '../../plugins/env.js';
+import { buildProviderAdapters } from '../buildProviderAdapters.js';
+
+import type { ProtectedRuntimeStorage } from './buildProtectedRuntimeStorage.js';
+
+export type BuildProtectedExecutionRuntimeDeps = {
+  readonly appLogger: Logger;
+  readonly env: Env;
+  readonly observability: IObservability;
+  readonly storageRuntime: ProtectedRuntimeStorage;
+};
+
+export async function buildProtectedExecutionRuntime(
+  deps: BuildProtectedExecutionRuntimeDeps
+) {
+  const { AllowAllAuthorizer } = await import('@dvt/engine');
+  const { adapters, close: closeAdapters } = await buildProviderAdapters(deps.env, {
+    stateStore: deps.storageRuntime.stateStoreRoles.read,
+    stateStoreWrite: deps.storageRuntime.stateStoreRoles.write,
+    clock: deps.storageRuntime.systemClock,
+    projector: deps.storageRuntime.projector,
+    observability: deps.observability,
+  });
+  const startRunTargetAdapterRegistry = createStartRunTargetAdapterRegistryFromValues(
+    adapters.keys()
+  );
+
+  if (deps.env.TEMPORAL_ADDRESS) {
+    deps.appLogger.info(`Temporal adapter registered (address=${deps.env.TEMPORAL_ADDRESS})`);
+  }
+
+  const { engine, runEnrichmentService, runHealthService } = buildWorkflowEngine({
+    security: {
+      authorizer: new AllowAllAuthorizer(),
+      planRefAllowedSchemes: ['https', 's3', 'gs', 'azure', 'dvt-plan'],
+    },
+    persistence: {
+      stateStoreRead: deps.storageRuntime.stateStoreRoles.read,
+      stateStoreWrite: deps.storageRuntime.stateStoreRoles.write,
+      intentStore: deps.storageRuntime.intentStore,
+      planFetcher: deps.storageRuntime.planStore,
+      runExecutionContextResolver: deps.storageRuntime.runExecutionContextResolver,
+      runExecutionContextBindingPolicy: deps.storageRuntime.runExecutionContextBindingPolicy,
+    },
+    runtime: { adapters },
+    infrastructure: {
+      clock: deps.storageRuntime.systemClock,
+      observability: deps.observability,
+    },
+  });
+
+  return {
+    adapters,
+    closeAdapters,
+    engine,
+    runEnrichmentService,
+    runHealthService,
+    startRunTargetAdapterRegistry,
+  };
+}

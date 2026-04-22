@@ -2,18 +2,28 @@ import { describe, expect, it } from 'vitest';
 
 import {
   apiDocExists,
-  hasCallToIdentifier,
-  hasNamedImport,
-  hasNewExpression,
-  hasOwnedConcernDocblock,
   moduleComponentExists,
   readApiDoc,
   readModuleSource,
 } from './modulesArchitectureAst.support.js';
+import {
+  buildDocumentedApiSnippets,
+  collectMissingTextSnippets,
+  hasMermaidDiagram,
+  REQUIRED_COMPONENT_GUIDE_SECTIONS,
+} from './modulesComponentDoc.support.js';
 
 const BUILD_PROTECTED_RUNTIME_MODULE_SOURCE = readModuleSource('buildProtectedRuntimeModule.ts');
 const START_RUN_RUNTIME_MODULE = 'startRun/buildProtectedStartRunRuntime.ts';
 const START_RUN_RUNTIME_DOC = 'start-run-runtime-composition-component.md';
+const START_RUN_RUNTIME_PUBLIC_API = {
+  fileName: 'buildProtectedStartRunRuntime.ts',
+  exportedIdentifiers: [
+    'BuildProtectedStartRunRuntimeDeps',
+    'ProtectedStartRunRuntime',
+    'buildProtectedStartRunRuntime',
+  ],
+} as const;
 
 /**
  * Architecture cases for the dedicated start-run runtime composition seam.
@@ -27,29 +37,38 @@ export function describeStartRunRuntimeCompositionCases(): void {
       expect(apiDocExists(START_RUN_RUNTIME_DOC)).toBe(true);
 
       const docText = readApiDoc(START_RUN_RUNTIME_DOC);
-      for (const section of [
-        '## Public API',
-        '## Invariants',
-        '## Transitions',
-        '## Consumers',
-      ]) {
-        expect(docText).toContain(section);
+      expect(
+        collectMissingTextSnippets(docText, REQUIRED_COMPONENT_GUIDE_SECTIONS)
+      ).toEqual([]);
+      expect(hasMermaidDiagram(docText)).toBe(true);
+
+      const startRunRuntimeSource = readModuleSource(START_RUN_RUNTIME_MODULE);
+      const exportedIdentifiers = startRunRuntimeSource.collectExportedIdentifiers();
+      for (const exportName of START_RUN_RUNTIME_PUBLIC_API.exportedIdentifiers) {
+        expect(exportedIdentifiers).toContain(exportName);
       }
-      expect(docText).toContain('```mermaid');
+      expect(
+        collectMissingTextSnippets(
+          docText,
+          buildDocumentedApiSnippets(
+            START_RUN_RUNTIME_PUBLIC_API.fileName,
+            START_RUN_RUNTIME_PUBLIC_API.exportedIdentifiers
+          )
+        )
+      ).toEqual([]);
     });
 
     it('delegates start-run assembly from the protected runtime root into a dedicated builder', () => {
       expect(moduleComponentExists(START_RUN_RUNTIME_MODULE)).toBe(true);
       expect(
-        hasNamedImport(
-          BUILD_PROTECTED_RUNTIME_MODULE_SOURCE,
-          './startRun/buildProtectedStartRunRuntime.js',
-          'buildProtectedStartRunRuntime'
-        )
+        BUILD_PROTECTED_RUNTIME_MODULE_SOURCE.hasNamedImport({
+          moduleSpecifier: './startRun/buildProtectedStartRunRuntime.js',
+          importedName: 'buildProtectedStartRunRuntime',
+        })
       ).toBe(true);
-      expect(hasCallToIdentifier(BUILD_PROTECTED_RUNTIME_MODULE_SOURCE, 'buildProtectedStartRunRuntime')).toBe(
-        true
-      );
+      expect(
+        BUILD_PROTECTED_RUNTIME_MODULE_SOURCE.hasCallToIdentifier('buildProtectedStartRunRuntime')
+      ).toBe(true);
 
       for (const constructorName of [
         'StartRunAuthorizedFacade',
@@ -58,7 +77,7 @@ export function describeStartRunRuntimeCompositionCases(): void {
         'EngineStartRunUseCase',
         'StoredPlanExecutabilityValidator',
       ]) {
-        expect(hasNewExpression(BUILD_PROTECTED_RUNTIME_MODULE_SOURCE, constructorName)).toBe(false);
+        expect(BUILD_PROTECTED_RUNTIME_MODULE_SOURCE.hasNewExpression(constructorName)).toBe(false);
       }
       expect(BUILD_PROTECTED_RUNTIME_MODULE_SOURCE.sourceText).not.toContain(
         'const planCompilePlanner = buildPlanCompilePlanner();'
@@ -69,20 +88,18 @@ export function describeStartRunRuntimeCompositionCases(): void {
       expect(moduleComponentExists(START_RUN_RUNTIME_MODULE)).toBe(true);
 
       const startRunRuntimeSource = readModuleSource(START_RUN_RUNTIME_MODULE);
-      expect(hasOwnedConcernDocblock(startRunRuntimeSource)).toBe(true);
+      expect(startRunRuntimeSource.hasOwnedConcernDocblock()).toBe(true);
       expect(
-        hasNamedImport(
-          startRunRuntimeSource,
-          '../../application/services/startRunAuthorizedFacade.js',
-          'StartRunAuthorizedFacade'
-        )
+        startRunRuntimeSource.hasNamedImport({
+          moduleSpecifier: '../../application/services/startRunAuthorizedFacade.js',
+          importedName: 'StartRunAuthorizedFacade',
+        })
       ).toBe(true);
       expect(
-        hasNamedImport(
-          startRunRuntimeSource,
-          '../planCompileBoundary.js',
-          'buildPlanCompilePlanner'
-        )
+        startRunRuntimeSource.hasNamedImport({
+          moduleSpecifier: '../planCompileBoundary.js',
+          importedName: 'buildPlanCompilePlanner',
+        })
       ).toBe(true);
 
       for (const constructorName of [
@@ -92,9 +109,9 @@ export function describeStartRunRuntimeCompositionCases(): void {
         'EngineStartRunUseCase',
         'StoredPlanExecutabilityValidator',
       ]) {
-        expect(hasNewExpression(startRunRuntimeSource, constructorName)).toBe(true);
+        expect(startRunRuntimeSource.hasNewExpression(constructorName)).toBe(true);
       }
-      expect(hasCallToIdentifier(startRunRuntimeSource, 'buildPlanCompilePlanner')).toBe(true);
+      expect(startRunRuntimeSource.hasCallToIdentifier('buildPlanCompilePlanner')).toBe(true);
     });
   });
 }

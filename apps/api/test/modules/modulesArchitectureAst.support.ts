@@ -7,110 +7,183 @@ import { join } from 'node:path';
 
 import ts from 'typescript';
 
+type NamedImportContract = {
+  readonly importedName: string;
+  readonly moduleSpecifier: string;
+};
+
+type ExportedNamedStatement =
+  | ts.ClassDeclaration
+  | ts.EnumDeclaration
+  | ts.FunctionDeclaration
+  | ts.InterfaceDeclaration
+  | ts.TypeAliasDeclaration;
+
 export const MODULES_ROOT = join(import.meta.dirname, '../../src/modules');
 export const API_DOCS_ROOT = join(import.meta.dirname, '../../docs');
 
-export type ModuleComponentFile = {
-  readonly fileName: string;
-  readonly sourceText: string;
-  readonly sourceFile: ts.SourceFile;
-};
-
-export function moduleComponentExists(fileName: string): boolean {
-  return existsSync(join(MODULES_ROOT, fileName));
+class ArchitectureTextFile {
+  public constructor(
+    public readonly fileName: string,
+    public readonly sourceText: string
+  ) {}
 }
 
-export function readModuleSource(fileName: string): ModuleComponentFile {
-  const sourceText = readFileSync(join(MODULES_ROOT, fileName), 'utf8');
-  return {
-    fileName,
-    sourceText,
-    sourceFile: ts.createSourceFile(fileName, sourceText, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS),
-  };
+class ArchitectureFileCatalog {
+  public constructor(private readonly rootPath: string) {}
+
+  public exists(fileName: string): boolean {
+    return existsSync(join(this.rootPath, fileName));
+  }
+
+  public read(fileName: string): ArchitectureTextFile {
+    return new ArchitectureTextFile(
+      fileName,
+      readFileSync(join(this.rootPath, fileName), 'utf8')
+    );
+  }
+}
+
+const MODULE_COMPONENT_FILES = new ArchitectureFileCatalog(MODULES_ROOT);
+const API_DOC_FILES = new ArchitectureFileCatalog(API_DOCS_ROOT);
+
+export class ModuleArchitectureSource {
+  public readonly sourceFile: ts.SourceFile;
+
+  public constructor(private readonly file: ArchitectureTextFile) {
+    this.sourceFile = ts.createSourceFile(
+      file.fileName,
+      file.sourceText,
+      ts.ScriptTarget.Latest,
+      true,
+      ts.ScriptKind.TS
+    );
+  }
+
+  public get sourceText(): string {
+    return this.file.sourceText;
+  }
+
+  public hasOwnedConcernDocblock(): boolean {
+    return this.sourceText.startsWith('/**\n * Owned concern:');
+  }
+
+  public collectNamedImports(moduleSpecifier: string): string[] {
+    const imports: string[] = [];
+
+    for (const statement of this.sourceFile.statements) {
+      const namedImports = collectNamedImportsForStatement(
+        this.sourceFile,
+        statement,
+        moduleSpecifier
+      );
+      imports.push(...namedImports);
+    }
+
+    return imports;
+  }
+
+  public hasNamedImport(contract: NamedImportContract): boolean {
+    return this.collectNamedImports(contract.moduleSpecifier).includes(contract.importedName);
+  }
+
+  public hasCallToIdentifier(identifierName: string): boolean {
+    return hasMatchingNode(this.sourceFile, (node) =>
+      ts.isCallExpression(node) &&
+      ts.isIdentifier(node.expression) &&
+      node.expression.text === identifierName
+    );
+  }
+
+  public hasNewExpression(constructorName: string): boolean {
+    return hasMatchingNode(this.sourceFile, (node) =>
+      ts.isNewExpression(node) &&
+      ts.isIdentifier(node.expression) &&
+      node.expression.text === constructorName
+    );
+  }
+
+  public collectExportedIdentifiers(): string[] {
+    return this.sourceFile.statements.flatMap((statement) =>
+      collectExportedIdentifiersForStatement(statement)
+    );
+  }
+}
+
+export function moduleComponentExists(fileName: string): boolean {
+  return MODULE_COMPONENT_FILES.exists(fileName);
+}
+
+export function readModuleSource(fileName: string): ModuleArchitectureSource {
+  return new ModuleArchitectureSource(MODULE_COMPONENT_FILES.read(fileName));
 }
 
 export function readApiDoc(fileName: string): string {
-  return readFileSync(join(API_DOCS_ROOT, fileName), 'utf8');
+  return API_DOC_FILES.read(fileName).sourceText;
 }
 
 export function apiDocExists(fileName: string): boolean {
-  return existsSync(join(API_DOCS_ROOT, fileName));
+  return API_DOC_FILES.exists(fileName);
 }
 
-export function hasOwnedConcernDocblock(component: ModuleComponentFile): boolean {
-  return component.sourceText.startsWith('/**\n * Owned concern:');
-}
-
-export function collectNamedImports(
-  component: ModuleComponentFile,
+function collectNamedImportsForStatement(
+  sourceFile: ts.SourceFile,
+  statement: ts.Statement,
   moduleSpecifier: string
 ): string[] {
-  const imports: string[] = [];
-
-  for (const statement of component.sourceFile.statements) {
-    if (!ts.isImportDeclaration(statement)) {
-      continue;
-    }
-
-    if (statement.moduleSpecifier.getText(component.sourceFile) !== `'${moduleSpecifier}'`) {
-      continue;
-    }
-
-    const namedBindings = statement.importClause?.namedBindings;
-    if (!namedBindings || !ts.isNamedImports(namedBindings)) {
-      continue;
-    }
-
-    for (const element of namedBindings.elements) {
-      imports.push(element.name.text);
-    }
+  if (!ts.isImportDeclaration(statement)) {
+    return [];
   }
 
-  return imports;
+  if (statement.moduleSpecifier.getText(sourceFile) !== `'${moduleSpecifier}'`) {
+    return [];
+  }
+
+  const namedBindings = statement.importClause?.namedBindings;
+  if (namedBindings === undefined || !ts.isNamedImports(namedBindings)) {
+    return [];
+  }
+
+  return namedBindings.elements.map((element) => element.name.text);
 }
 
-export function hasNamedImport(
-  component: ModuleComponentFile,
-  moduleSpecifier: string,
-  importedName: string
-): boolean {
-  return collectNamedImports(component, moduleSpecifier).includes(importedName);
+function hasMatchingNode(root: ts.Node, matches: (node: ts.Node) => boolean): boolean {
+  if (matches(root)) {
+    return true;
+  }
+
+  return root.forEachChild((child) => hasMatchingNode(child, matches) || undefined) === true;
 }
 
-export function hasCallToIdentifier(
-  component: ModuleComponentFile,
-  identifierName: string
-): boolean {
-  let found = false;
+function collectExportedIdentifiersForStatement(statement: ts.Statement): string[] {
+  if (!isExportedStatement(statement)) {
+    return [];
+  }
 
-  const visit = (node: ts.Node): void => {
-    if (ts.isCallExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === identifierName) {
-      found = true;
-      return;
-    }
+  if (isExportedNamedStatement(statement)) {
+    return statement.name === undefined ? [] : [statement.name.text];
+  }
 
-    ts.forEachChild(node, visit);
-  };
+  if (!ts.isVariableStatement(statement)) {
+    return [];
+  }
 
-  visit(component.sourceFile);
-  return found;
+  return statement.declarationList.declarations.flatMap((declaration) =>
+    ts.isIdentifier(declaration.name) ? [declaration.name.text] : []
+  );
 }
 
-export function hasNewExpression(
-  component: ModuleComponentFile,
-  constructorName: string
-): boolean {
-  let found = false;
+function isExportedStatement(statement: ts.Statement): boolean {
+  const modifiers = ts.canHaveModifiers(statement) ? ts.getModifiers(statement) : undefined;
+  return modifiers?.some((modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword) === true;
+}
 
-  const visit = (node: ts.Node): void => {
-    if (ts.isNewExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === constructorName) {
-      found = true;
-      return;
-    }
-
-    ts.forEachChild(node, visit);
-  };
-
-  visit(component.sourceFile);
-  return found;
+function isExportedNamedStatement(statement: ts.Statement): statement is ExportedNamedStatement {
+  return (
+    ts.isFunctionDeclaration(statement) ||
+    ts.isInterfaceDeclaration(statement) ||
+    ts.isTypeAliasDeclaration(statement) ||
+    ts.isClassDeclaration(statement) ||
+    ts.isEnumDeclaration(statement)
+  );
 }
