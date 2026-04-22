@@ -3,7 +3,7 @@ review_by: Codex
 review_date: 2026-04-22
 branch: main
 slice: start-run application component + HTTP entrypoint seam
-status: in_progress
+status: completed
 ---
 
 # Fowler architecture analysis - start-run application and HTTP entrypoint seam
@@ -112,8 +112,6 @@ details hidden behind ports.
 
 - `buildProtectedRuntimeModule.ts` remains the large composition root and the
   next bigger Fowler-sized decomposition candidate
-- `BackpressureAwareStartRunUseCase.test.ts` still concentrates several
-  behaviors even though the entrypoint suites are now split
 
 ## Components / code that group cleanly now
 
@@ -152,10 +150,9 @@ details hidden behind ports.
 ## Opportunities
 
 1. decompose `buildProtectedRuntimeModule.ts` into named sub-runtimes
-2. split `BackpressureAwareStartRunUseCase.test.ts` by duplicate/admission/delegate concerns
-3. extract shared AST semantic helpers if the API component architecture tests
+2. extract shared AST semantic helpers if the API component architecture tests
    continue to grow
-4. add a protected-runtime local component guide once the composition root is
+3. add a protected-runtime local component guide once the composition root is
    decomposed further
 
 ## Drift found
@@ -223,3 +220,5 @@ The slice is materially closer to a mature Fowler-style decomposition:
 - fewer hidden composition paths
 - stronger AST-semantic guardrails
 - explicit local docs for both the route seam and the application seam
+- split admission test suites backed by a shared support module instead of one
+  concentrated backpressure test file

@@ -94,6 +94,9 @@ application behavior ports. Local behavior remains in `startRunUseCasePort.ts`,
 - engine error/result translation lives in the dedicated
   `startRunEngineBridge.ts` helper instead of sharing the same module as the
   engine call orchestration
+- `BackpressureAwareStartRunUseCase` test coverage is split by concern into
+  duplicate flow, admission modes, and execution-capacity suites backed by a
+  shared test-support module
 
 ## Component map
 
@@ -146,6 +149,7 @@ sequenceDiagram
 - `apps/api/src/entrypoints/http/httpErrorTranslation.ts`
 - `apps/api/src/modules/buildProtectedRuntimeModule.ts`
 - `apps/api/test/application/services/startRun*.test.ts`
+- `apps/api/test/application/services/BackpressureAwareStartRunUseCase*.test.ts`
 - `apps/api/test/application/services/engineStartRunUseCase*.test.ts`
 - `apps/api/test/entrypoints/http/startRunRoute*.test.ts`
 
@@ -161,6 +165,10 @@ sequenceDiagram
 - `apps/api/src/application/services/PlannerBackedStartRunUseCase.ts`
 - `apps/api/src/application/services/startRunEngineBridge.ts`
 - `apps/api/src/application/services/engineStartRunUseCase.ts`
+- `apps/api/test/application/services/BackpressureAwareStartRunUseCase.test.support.ts`
+- `apps/api/test/application/services/BackpressureAwareStartRunUseCase.duplicateFlow.test.ts`
+- `apps/api/test/application/services/BackpressureAwareStartRunUseCase.admissionModes.test.ts`
+- `apps/api/test/application/services/BackpressureAwareStartRunUseCase.executionCapacity.test.ts`
 - `apps/api/src/entrypoints/http/startRunRouteCommandBuilder.ts`
 - `apps/api/src/entrypoints/http/startRunRouteParser.ts`
 - `apps/api/src/entrypoints/http/startRunRouteTargetAdapterParser.ts`

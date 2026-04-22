@@ -1,4 +1,8 @@
-import { parsePlanRef, START_RUN_BACKPRESSURE_CODE } from '@dvt/contracts';
+/**
+ * Owned concern: verify execution-capacity admission semantics for
+ * `BackpressureAwareStartRunUseCase`.
+ */
+import { START_RUN_BACKPRESSURE_CODE } from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
 import {
@@ -6,42 +10,14 @@ import {
   type StartRunExecutionCapacityResult,
 } from '../../../src/application/ports/IStartRunExecutionCapacityPort.js';
 import { BackpressureAwareStartRunUseCase } from '../../../src/application/services/BackpressureAwareStartRunUseCase.js';
-import { EnvironmentId, ProjectId, TenantId } from '../../../src/domain/auth/types.js';
 
-const COMMAND = {
-  planRef: parsePlanRef({
-    uri: 'https://plans.example.com/plan.json',
-    sha256: 'deadbeef',
-    schemaVersion: '1.0.0',
-    planId: 'plan-1',
-    planVersion: '2.0',
-  }),
-  runId: 'run-1',
-  targetAdapter: 'mock' as const,
-  selection: ['step_a'],
-};
-
-const CONTEXT = {
-  principal: {
-    principalId: 'user-1',
-    principalType: 'user' as const,
-    subjectId: 'subject-1',
-    issuer: 'https://issuer.example/',
-    audience: 'dvt-api',
-    expiresAt: new Date('2026-03-14T00:00:00Z'),
-    rawScopes: [],
-    assertedTenantIds: [],
-    assertedProjectIds: [],
-  },
-  scope: {
-    tenantId: TenantId.unsafe('tenant-1'),
-    projectId: ProjectId.unsafe('project-1'),
-    environmentId: EnvironmentId.unsafe('env-1'),
-  },
-  action: { kind: 'command' as const, name: 'run:start' as const },
-  requestId: 'req-1',
-  authorizedAt: new Date('2026-03-14T00:00:00Z'),
-};
+import {
+  ACCEPTED_RESULT,
+  COMMAND,
+  CONTEXT,
+  buildUseCase,
+  expectSuccessfulResult,
+} from './BackpressureAwareStartRunUseCase.test.support.js';
 
 const EXECUTION_CAPACITY_REJECTION_CASES = [
   {
@@ -94,18 +70,15 @@ describe('BackpressureAwareStartRunUseCase execution-capacity admission', () => 
           calls.push('delegate');
           return {
             ok: true as const,
-            value: { kind: 'accepted' as const, runId: 'run-1', accepted: true },
+            value: ACCEPTED_RESULT,
           };
         },
       },
-    } as never);
+    });
 
     const result = await useCase.execute(COMMAND, CONTEXT);
 
-    expect(result).toEqual({
-      ok: true,
-      value: { kind: 'accepted', runId: 'run-1', accepted: true },
-    });
+    expectSuccessfulResult(result, ACCEPTED_RESULT);
     expect(calls).toEqual(['duplicate', 'admission', 'capacity', 'delegate', 'telemetry']);
   });
 
@@ -114,17 +87,7 @@ describe('BackpressureAwareStartRunUseCase execution-capacity admission', () => 
     async ({ reason, expectedCode, expectedRetryAfterSeconds }) => {
       const delegate = { execute: vi.fn() };
       const telemetry = { record: vi.fn().mockResolvedValue(undefined) };
-      const useCase = new BackpressureAwareStartRunUseCase({
-        duplicateProbe: {
-          async findExisting() {
-            return { kind: 'not_found' as const };
-          },
-        },
-        admissionGuard: {
-          async assertAdmissible() {
-            return;
-          },
-        },
+      const useCase = buildUseCase({
         executionCapacity: {
           async evaluate() {
             const saturatedResult = {
@@ -148,19 +111,16 @@ describe('BackpressureAwareStartRunUseCase execution-capacity admission', () => 
         telemetry,
         mode: 'enforce',
         retryAfterSeconds: 30,
-        delegate: delegate as never,
-      } as never);
+        delegate,
+      });
 
       const result = await useCase.execute(COMMAND, CONTEXT);
 
-      expect(result).toEqual({
-        ok: true,
-        value: {
-          kind: 'system_backpressure',
-          accepted: false,
-          code: expectedCode,
-          retryAfterSeconds: expectedRetryAfterSeconds,
-        },
+      expectSuccessfulResult(result, {
+        kind: 'system_backpressure',
+        accepted: false,
+        code: expectedCode,
+        retryAfterSeconds: expectedRetryAfterSeconds,
       });
       expect(delegate.execute).not.toHaveBeenCalled();
       expect(telemetry.record).toHaveBeenCalledWith(
@@ -178,20 +138,10 @@ describe('BackpressureAwareStartRunUseCase execution-capacity admission', () => 
     const delegate = {
       execute: vi.fn().mockResolvedValue({
         ok: true as const,
-        value: { kind: 'accepted' as const, runId: 'run-1', accepted: true },
+        value: ACCEPTED_RESULT,
       }),
     };
-    const useCase = new BackpressureAwareStartRunUseCase({
-      duplicateProbe: {
-        async findExisting() {
-          return { kind: 'not_found' as const };
-        },
-      },
-      admissionGuard: {
-        async assertAdmissible() {
-          return;
-        },
-      },
+    const useCase = buildUseCase({
       executionCapacity: {
         async evaluate() {
           return {
@@ -205,14 +155,11 @@ describe('BackpressureAwareStartRunUseCase execution-capacity admission', () => 
       mode: 'observe',
       retryAfterSeconds: 30,
       delegate,
-    } as never);
+    });
 
     const result = await useCase.execute(COMMAND, CONTEXT);
 
-    expect(result).toEqual({
-      ok: true,
-      value: { kind: 'accepted', runId: 'run-1', accepted: true },
-    });
+    expectSuccessfulResult(result, ACCEPTED_RESULT);
     expect(delegate.execute).toHaveBeenCalledOnce();
     expect(telemetry.record).toHaveBeenCalledWith(
       expect.objectContaining({

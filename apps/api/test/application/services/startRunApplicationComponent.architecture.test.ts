@@ -98,10 +98,15 @@ describe('Start-run application component architecture', () => {
   });
 
   it('keeps service-level start-run suites split by responsibility', () => {
+    expect(artifacts.backpressureMonolithTest.exists()).toBe(false);
     expect(artifacts.authorizedFacadeMonolithTest.exists()).toBe(false);
     expect(artifacts.engineUseCaseMonolithTest.exists()).toBe(false);
 
     for (const artifact of [
+      artifacts.backpressureDuplicateFlowTest,
+      artifacts.backpressureAdmissionModesTest,
+      artifacts.backpressureExecutionCapacityTest,
+      artifacts.backpressureTestSupport,
       artifacts.authorizedFacadeAuthTest,
       artifacts.authorizedFacadeEnginePassThroughTest,
       artifacts.authorizedFacadeTestSupport,

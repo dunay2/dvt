@@ -48,6 +48,26 @@ export const START_RUN_EXECUTION_CAPACITY_ADMISSION_COMPONENT = {
 
 export const START_RUN_APPLICATION_COMPONENT = {
   artifacts: {
+    backpressureAdmissionModesTest: defineArtifact(
+      import.meta.dirname,
+      'BackpressureAwareStartRunUseCase.admissionModes.test.ts'
+    ),
+    backpressureDuplicateFlowTest: defineArtifact(
+      import.meta.dirname,
+      'BackpressureAwareStartRunUseCase.duplicateFlow.test.ts'
+    ),
+    backpressureExecutionCapacityTest: defineArtifact(
+      import.meta.dirname,
+      'BackpressureAwareStartRunUseCase.executionCapacity.test.ts'
+    ),
+    backpressureMonolithTest: defineArtifact(
+      import.meta.dirname,
+      'BackpressureAwareStartRunUseCase.test.ts'
+    ),
+    backpressureTestSupport: defineArtifact(
+      import.meta.dirname,
+      'BackpressureAwareStartRunUseCase.test.support.ts'
+    ),
     backpressureUseCase: defineArtifact(
       APPLICATION_ROOT,
       'services/BackpressureAwareStartRunUseCase.ts'
