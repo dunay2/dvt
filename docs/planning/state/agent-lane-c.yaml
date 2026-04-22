@@ -664,6 +664,7 @@ tasks:
       - docs/planning/closeouts/20260418-rc-c2-turbo-build-orchestrator-closeout.md
       - docs/planning/closeouts/20260422-rc-c2-wave-1-node-precommit-turbo-cache-closeout.md
       - docs/planning/closeouts/20260422-rc-c2-wave-2a-typecheck-contract-closeout.md
+      - docs/planning/closeouts/20260423-rc-c2-wave-2b-turbo-affected-task-routing-closeout.md
       - docs/evidence/ED-20260418-local-build-hook-warm-cache-p0.md
       - docs/evidence/ED-20260418-rc-c2-turbo-build-orchestrator.md
       - docs/risk-register/quality/R-20260418-LOCAL-BUILD-HOOK-WARM-CACHE-P0.yaml
@@ -681,9 +682,12 @@ tasks:
       determinism pre-commit scoping, and CI reuse support for the existing Turbo root-build cache
       path are now live. Wave 2A also hardens the package-level `typecheck` contract for the current
       TypeScript build workspaces, so affected type-check routing no longer silently skips them
-      ahead of any Turbo `typecheck` claim. Final closure still depends on three qualifying Lane C
-      PR cycles logged against the new workflow.
-    last_verified: '2026-04-22'
+      ahead of any Turbo `typecheck` claim. Wave 2B then routes the affected build/typecheck/test
+      commands and the lightweight CI code-quality matrix through governed Turbo tasks instead of
+      raw recursive package commands, while intentionally leaving the full-root `test` and
+      `type-check` contracts for later design. Final closure still depends on three qualifying Lane
+      C PR cycles logged against the new workflow.
+    last_verified: '2026-04-23'
   - task_id: RC-E1
     priority: P1
     status: done

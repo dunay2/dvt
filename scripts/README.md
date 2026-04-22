@@ -60,6 +60,8 @@ scripts that normally build dependency graphs before the main command.
 Behavior:
 
 - exits `0` when `DVT_CI=1|true`, so the `|| pnpm ... build` fallback is skipped
+- exits `0` when `TURBO_HASH` is present, so `turbo run typecheck` and
+  `turbo run test` do not recurse back into package-local dependency builds
 - exits `1` otherwise, so local builds keep the normal dependency prebuild path
 
 Use this only when CI already ran an explicit workspace-graph build step before
@@ -102,6 +104,29 @@ Behavior:
 
 Use this only for `prebuild` hooks whose dependency closure is now owned by the
 root `turbo` build graph.
+
+### `run-turbo-workspace-task.cjs`
+
+Canonical wrapper for governed Turbo workspace tasks used by affected local
+commands and lightweight CI matrix lanes.
+
+Usage:
+
+```bash
+node scripts/run-turbo-workspace-task.cjs build
+node scripts/run-turbo-workspace-task.cjs typecheck
+node scripts/run-turbo-workspace-task.cjs test
+node scripts/run-turbo-workspace-task.cjs build --filter @dvt/engine
+```
+
+Behavior:
+
+- only allows the governed task set: `build`, `typecheck`, and `test`
+- defaults to the affected-work filter `...[origin/main]`
+- accepts an explicit `--filter <value>` override for CI/package-targeted runs
+- delegates dependency ownership to the Turbo graph, which surfaces
+  `TURBO_HASH` inside package-local hooks so `prebuild`/`pretypecheck`/`pretest`
+  fallbacks do not re-run the same dependency builds
 
 ### `build-workspace-runtime-deps.cjs`
 

@@ -421,6 +421,22 @@ This slice is intentionally smaller than Turbo `typecheck` rollout. It removes
 the current script-ownership blind spot without pretending the broader root
 `type-check` contract or Turbo task graph are already settled.
 
+### Wave 2B Safe Consumer Slice
+
+Once Wave 2A is green, the next truthful follow-up is to wire the now-explicit
+package contract into the smallest safe Turbo consumers:
+
+- declare governed Turbo `typecheck` and `test` tasks in `turbo.json`
+- route affected local commands through a single wrapper that sets the
+  orchestrated environment explicitly
+- rewire the lightweight `CI - Code Quality` build/typecheck matrix to that
+  same wrapper instead of maintaining a parallel raw-package path
+- keep full-root `pnpm test`, root `pnpm type-check`, and the broader PR test
+  suite out of scope until their contracts are designed as first-class slices
+
+This keeps Wave 2 honest: package ownership is explicit first, then only the
+consumers that can safely reuse that ownership move to Turbo.
+
 ## Executable Action Plan
 
 ### Wave 1 - Scope Authority Convergence
