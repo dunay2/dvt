@@ -1,0 +1,35 @@
+---
+id: R-20260422-START-RUN-BOUNDARY-ADOPTION-DRIFT
+title: Start-run boundary and runtime composition can drift across contracts and API consumers
+status: Open
+date: 2026-04-22
+owners:
+  - apps/api
+  - packages/@dvt/contracts
+severity: Medium
+probability: Medium
+context: >
+  The 2026-04-22 ARC-2 slice hard-cuts the start-run command/result vocabulary to `@dvt/contracts`
+  and decomposes API protected runtime composition into named builders. That removes app-local shim
+  contracts and reduces constructor clustering in the root assembler, but the behavioral surface is
+  still consumed across contracts, HTTP entrypoints, application services, and runtime modules.
+risk: >
+  If future changes reintroduce app-local boundary aliases, alternate result vocabularies, or direct
+  construction in the protected runtime root, the system can accumulate semantic drift between
+  contracts, component guides, and runtime ownership. That would weaken DDD boundaries, increase
+  duplication, and make CI failures show up late instead of at the architecture seam.
+mitigations:
+  - >
+    Keep `@dvt/contracts` as the only canonical owner of the shared start-run boundary and reject
+    new app-local command/result shim modules.
+  - >
+    Preserve local component guides with public API, invariants, transitions, and consumers for
+    start-run application and runtime composition components.
+  - >
+    Keep semantic architecture tests for start-run application ports and runtime builders focused on
+    ownership, not just file thinness.
+  - >
+    Continue running contracts package tests, schema verification, golden validation, and `pnpm
+    verify:prepush` for changes that touch the boundary.
+review_after: 2026-06-30
+---

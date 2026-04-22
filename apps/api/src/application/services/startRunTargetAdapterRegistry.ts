@@ -3,11 +3,12 @@
  * This registry is the filter that turns discovered provider IDs into the
  * canonical start-run adapter set supported by the API boundary.
  */
-import type { IStartRunTargetAdapterRegistry } from '../ports/IStartRunTargetAdapterRegistry.js';
 import {
   SUPPORTED_START_RUN_TARGET_ADAPTERS,
   type StartRunTargetAdapter,
-} from '../ports/startRunCommandContract.js';
+} from '@dvt/contracts';
+
+import type { IStartRunTargetAdapterRegistry } from '../ports/IStartRunTargetAdapterRegistry.js';
 
 export function createStartRunTargetAdapterRegistryFromValues(
   values: Iterable<string>

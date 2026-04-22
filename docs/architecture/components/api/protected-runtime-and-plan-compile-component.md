@@ -11,6 +11,13 @@ This page explains one concrete `apps/api` component instead of the whole API:
 the protected runtime composition seam plus the plan-compile boundary that feeds
 it.
 
+Use the narrower local guides when you need subcomponent-level API,
+invariants, transitions, and consumers:
+
+- [Protected runtime dependency builders component](../../../../apps/api/docs/protected-runtime-dependency-builders-component.md)
+- [Start-run runtime composition component](../../../../apps/api/docs/start-run-runtime-composition-component.md)
+- [Workspace graph draft runtime composition component](../../../../apps/api/docs/workspace-graph-draft-runtime-composition-component.md)
+
 ## Why This Is A Component
 
 These files form one component because together they answer one question:
@@ -24,33 +31,103 @@ acts as a fake namespace.
 
 ## File Responsibilities
 
-| File                                                                                                                     | Responsibility                                                      | Role in the component                                                    |
-| ------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| [buildProtectedRuntimeModule.ts](../../../../apps/api/src/modules/buildProtectedRuntimeModule.ts)                        | Main composition root for protected runtime wiring                  | Binds stores, adapters, planner, validator, auth, and runtime services   |
-| [buildProviderAdapters.ts](../../../../apps/api/src/modules/buildProviderAdapters.ts)                                    | Builds the live provider-adapter map                                | Keeps provider construction separate from the rest of module composition |
-| [registerOperationalHooks.ts](../../../../apps/api/src/modules/registerOperationalHooks.ts)                              | Fastify lifecycle hook registration                                 | Connects `migrate()` and `close()` to process lifecycle                  |
-| [planCompileBoundary.ts](../../../../apps/api/src/modules/planCompileBoundary.ts)                                        | Owns compile-profile catalog and compile planner construction       | Prevents compile policy from being scattered across unrelated modules    |
-| [startRunTargetAdapterRegistry.ts](../../../../apps/api/src/application/services/startRunTargetAdapterRegistry.ts)       | Canonical supported-adapter registry for `startRun`                 | Supplies the implemented adapter truth used by admission                 |
-| [StoredPlanExecutabilityValidator.ts](../../../../apps/api/src/application/services/StoredPlanExecutabilityValidator.ts) | Validates stored plan refs against adapter support and capabilities | Fail-closed admission seam for planner-backed execution                  |
-| [StoredExecutablePlanResolver.ts](../../../../apps/api/src/application/services/StoredExecutablePlanResolver.ts)         | Reads and parses stored executable plans                            | Shared read seam for plan-backed runtime flows                           |
+- [buildProtectedRuntimeModule.ts](../../../../apps/api/src/modules/buildProtectedRuntimeModule.ts)
+  Main protected composition root. Binds stores, adapters, planner,
+  validator, auth, and runtime services.
+- [buildProtectedRuntimeStorage.ts](../../../../apps/api/src/modules/protectedRuntime/buildProtectedRuntimeStorage.ts)
+  Protected storage/runtime-store assembly. Binds state store, intent store,
+  plan store, resolver, and execution-context policy.
+- [buildProtectedAdmissionRuntime.ts](../../../../apps/api/src/modules/protectedRuntime/buildProtectedAdmissionRuntime.ts)
+  Start-run admission runtime assembly. Binds duplicate probe,
+  cached/fallback backpressure chain, and admission guard.
+- [buildProtectedSecurityRuntime.ts](../../../../apps/api/src/modules/protectedRuntime/buildProtectedSecurityRuntime.ts)
+  Protected auth/authz runtime assembly. Binds principal access repo, audit
+  logger, authorizer, and authenticator.
+- [buildProtectedExecutionRuntime.ts](../../../../apps/api/src/modules/protectedRuntime/buildProtectedExecutionRuntime.ts)
+  Protected execution runtime assembly. Binds provider adapters, workflow
+  engine, enrichment, health, and adapter registry.
+- [buildProtectedStartRunRuntime.ts](../../../../apps/api/src/modules/startRun/buildProtectedStartRunRuntime.ts)
+  Start-run runtime composition seam. Binds the authenticated start-run
+  facade/use-case chain from abstract dependencies.
+- [buildWorkspaceGraphDraftRuntime.ts](../../../../apps/api/src/modules/workspaceGraphDraft/buildWorkspaceGraphDraftRuntime.ts)
+  Workspace-graph-draft runtime composition seam. Binds graph-draft store,
+  capability service, audit, and read/write use cases.
+- [buildProviderAdapters.ts](../../../../apps/api/src/modules/buildProviderAdapters.ts)
+  Builds the live provider-adapter map and keeps provider construction out of
+  the root assembler.
+- [registerOperationalHooks.ts](../../../../apps/api/src/modules/registerOperationalHooks.ts)
+  Fastify lifecycle hook registration. Connects `migrate()` and `close()` to
+  process lifecycle.
+- [planCompileBoundary.ts](../../../../apps/api/src/modules/planCompileBoundary.ts)
+  Owns compile-profile catalog and compile planner construction.
+- [startRunTargetAdapterRegistry.ts](../../../../apps/api/src/application/services/startRunTargetAdapterRegistry.ts)
+  Canonical supported-adapter registry for `startRun`.
+- [StoredPlanExecutabilityValidator.ts](../../../../apps/api/src/application/services/StoredPlanExecutabilityValidator.ts)
+  Validates stored plan refs against adapter support and capabilities.
+- [StoredExecutablePlanResolver.ts](../../../../apps/api/src/application/services/StoredExecutablePlanResolver.ts)
+  Reads and parses stored executable plans for plan-backed runtime flows.
 
 ## Public API
 
-| API                                                                 | Kind              | Meaning                                                                                            |
-| ------------------------------------------------------------------- | ----------------- | -------------------------------------------------------------------------------------------------- |
-| `buildProtectedRuntimeModule(app, env, observability)`              | async factory     | Assembles the protected runtime component and returns the bound module contract used by `apps/api` |
-| `buildProviderAdapters(env, deps)`                                  | async factory     | Produces the implemented provider-adapter map plus its shutdown contract                           |
-| `registerOperationalHooks(app, module)`                             | lifecycle binder  | Connects Fastify startup/shutdown to `module.migrate()` and `module.close()`                       |
-| `buildPlanCompilePlanner(boundary?)`                                | planner factory   | Builds the compile-only planner for the plan-compile boundary                                      |
-| `resolvePlanCompileCatalog(boundary?)`                              | catalog query     | Returns the compile-time family/kind catalog owned by the boundary                                 |
-| `createStartRunTargetAdapterRegistryFromValues(values)`             | registry factory  | Filters discovered adapter IDs to the canonical start-run adapter truth                            |
-| `StoredPlanExecutabilityValidator.validatePlan(planRef, adapterId)` | admission service | Returns a fail-closed executability decision for a stored plan and adapter                         |
-| `StoredExecutablePlanResolver.fetch(planRef)`                       | plan resolver     | Resolves a stored executable plan after integrity and metadata validation                          |
+- `buildProtectedRuntimeModule(app, env, observability)`
+  Async factory. Assembles the protected runtime component and returns the
+  bound module contract used by `apps/api`.
+- `buildProtectedRuntimeStorage(deps)`
+  Factory. Assembles storage, resolver, and execution-context dependencies
+  from resolved Postgres constructors.
+- `buildProtectedAdmissionRuntime(deps)`
+  Factory. Assembles duplicate detection plus the fail-closed start-run
+  admission chain.
+- `buildProtectedSecurityRuntime(deps)`
+  Factory. Assembles authenticator and command authorizer from protected
+  runtime dependencies.
+- `buildProtectedExecutionRuntime(deps)`
+  Async factory. Assembles provider adapters, workflow engine, runtime
+  services, and canonical adapter registry.
+- `buildProtectedStartRunRuntime(deps)`
+  Factory. Assembles the authenticated start-run runtime subcomponent from
+  abstract runtime dependencies.
+- `buildWorkspaceGraphDraftRuntime(deps)`
+  Factory. Assembles the protected workspace-graph-draft runtime subcomponent
+  from abstract runtime dependencies.
+- `buildProviderAdapters(env, deps)`
+  Async factory. Produces the implemented provider-adapter map plus its
+  shutdown contract.
+- `registerOperationalHooks(app, module)`
+  Lifecycle binder. Connects Fastify startup/shutdown to `module.migrate()`
+  and `module.close()`.
+- `buildPlanCompilePlanner(boundary?)`
+  Planner factory. Builds the compile-only planner for the plan-compile
+  boundary.
+- `resolvePlanCompileCatalog(boundary?)`
+  Catalog query. Returns the compile-time family/kind catalog owned by the
+  boundary.
+- `createStartRunTargetAdapterRegistryFromValues(values)`
+  Registry factory. Filters discovered adapter IDs to the canonical start-run
+  adapter truth.
+- `StoredPlanExecutabilityValidator.validatePlan(planRef, adapterId)`
+  Admission service. Returns a fail-closed executability decision for a stored
+  plan and adapter.
+- `StoredExecutablePlanResolver.fetch(planRef)`
+  Plan resolver. Resolves a stored executable plan after integrity and
+  metadata validation.
 
 ## Invariants
 
-- `buildProtectedRuntimeModule.ts` is the only module allowed to assemble this
-  component end-to-end.
+- `buildProtectedRuntimeModule.ts` remains the only top-level protected
+  composition root.
+- `buildProtectedRuntimeStorage.ts` is the only module allowed to construct the
+  protected storage and execution-context dependency cluster inside that root.
+- `buildProtectedAdmissionRuntime.ts` is the only module allowed to construct
+  the protected duplicate-probe and backpressure-admission cluster.
+- `buildProtectedSecurityRuntime.ts` is the only module allowed to construct
+  the protected auth/authz runtime cluster.
+- `buildProtectedExecutionRuntime.ts` is the only module allowed to construct
+  the provider-adapter and workflow-engine runtime cluster.
+- `buildProtectedStartRunRuntime.ts` is the only module allowed to construct
+  the authenticated start-run runtime chain inside that root.
+- `buildWorkspaceGraphDraftRuntime.ts` is the only module allowed to construct
+  the protected workspace-graph-draft runtime chain inside that root.
 - `planCompileBoundary.ts` must derive compile-time adapter truth from the same
   canonical runtime contract used by `startRun`.
 - `StoredPlanExecutabilityValidator.ts` must fail closed before runtime
@@ -64,6 +141,12 @@ acts as a fake namespace.
 ```mermaid
 flowchart LR
     Root[buildProtectedRuntimeModule]
+    Storage[buildProtectedRuntimeStorage]
+    Admission[buildProtectedAdmissionRuntime]
+    Security[buildProtectedSecurityRuntime]
+    Execution[buildProtectedExecutionRuntime]
+    StartRun[buildProtectedStartRunRuntime]
+    GraphDraft[buildWorkspaceGraphDraftRuntime]
     Providers[buildProviderAdapters]
     Hooks[registerOperationalHooks]
     Compile[planCompileBoundary]
@@ -74,14 +157,26 @@ flowchart LR
     Engine[@dvt/engine]
     Stores[Postgres stores]
 
-    Root --> Providers
+    Root --> Storage
+    Root --> Admission
+    Root --> Security
+    Root --> Execution
+    Root --> StartRun
+    Root --> GraphDraft
     Root --> Compile
     Root --> Registry
-    Root --> Validator
     Root --> Resolver
     Root --> Planner
     Root --> Engine
     Root --> Stores
+    StartRun --> Validator
+    Execution --> Providers
+    Storage --> Resolver
+    Admission --> Stores
+    Security --> Stores
+    StartRun --> Compile
+    StartRun --> Planner
+    StartRun --> Engine
     Hooks --> Root
     Compile --> Registry
     Validator --> Registry
@@ -94,14 +189,26 @@ flowchart LR
 ```mermaid
 sequenceDiagram
     participant Boot as buildProtectedRuntimeModule
+    participant Storage as buildProtectedRuntimeStorage
+    participant Admission as buildProtectedAdmissionRuntime
+    participant Security as buildProtectedSecurityRuntime
+    participant Execution as buildProtectedExecutionRuntime
+    participant StartRun as buildProtectedStartRunRuntime
+    participant GraphDraft as buildWorkspaceGraphDraftRuntime
     participant Registry as startRunTargetAdapterRegistry
     participant Compile as planCompileBoundary
     participant Validator as StoredPlanExecutabilityValidator
     participant Hooks as registerOperationalHooks
 
-    Boot->>Registry: filter implemented adapters
-    Boot->>Compile: build compile planner
-    Boot->>Validator: bind plan fetcher + adapters + step registry
+    Boot->>Storage: pass env, pool, plan-store constructors
+    Boot->>Admission: pass env, pool, observability
+    Boot->>Security: pass logger, env, and pool
+    Boot->>Execution: pass storage runtime, env, and observability
+    Boot->>StartRun: pass auth, engine, adapters, plan store, and admission deps
+    Boot->>GraphDraft: pass auth, logger, env, and pool deps
+    Execution->>Registry: filter implemented adapters
+    StartRun->>Compile: build compile planner
+    StartRun->>Validator: bind plan fetcher + adapters + step registry
     Hooks->>Boot: onReady -> migrate()
     Hooks->>Boot: onClose -> close()
 ```
@@ -126,9 +233,29 @@ Admission transition:
    [StoredPlanExecutabilityValidator.ts](../../../../apps/api/src/application/services/StoredPlanExecutabilityValidator.ts).
    It turns stored-plan bytes plus adapter capabilities into a fail-closed
    executability decision.
-4. Finish with
-   [buildProtectedRuntimeModule.ts](../../../../apps/api/src/modules/buildProtectedRuntimeModule.ts).
-   That file is the assembly root that binds the component together.
+4. Read
+   [buildProtectedRuntimeStorage.ts](../../../../apps/api/src/modules/protectedRuntime/buildProtectedRuntimeStorage.ts).
+   That file owns the protected storage/runtime-store dependency cluster.
+5. Read
+   [buildProtectedAdmissionRuntime.ts](../../../../apps/api/src/modules/protectedRuntime/buildProtectedAdmissionRuntime.ts).
+   That file owns duplicate detection and the fail-closed backpressure
+   admission chain.
+6. Read
+   [buildProtectedSecurityRuntime.ts](../../../../apps/api/src/modules/protectedRuntime/buildProtectedSecurityRuntime.ts).
+   That file owns the protected authentication and authorization runtime.
+7. Read
+   [buildProtectedExecutionRuntime.ts](../../../../apps/api/src/modules/protectedRuntime/buildProtectedExecutionRuntime.ts).
+   That file owns provider-adapter and workflow-engine runtime assembly.
+8. Read
+   [buildProtectedStartRunRuntime.ts](../../../../apps/api/src/modules/startRun/buildProtectedStartRunRuntime.ts).
+   That file is the start-run subcomponent seam inside the protected runtime.
+9. Read
+   [buildWorkspaceGraphDraftRuntime.ts](../../../../apps/api/src/modules/workspaceGraphDraft/buildWorkspaceGraphDraftRuntime.ts).
+   That file is the workspace-graph-draft subcomponent seam inside the
+   protected runtime.
+10. Finish with
+    [buildProtectedRuntimeModule.ts](../../../../apps/api/src/modules/buildProtectedRuntimeModule.ts).
+    That file is the top-level assembly root that binds the component together.
 
 ## Why Not Wrap These In One Object?
 
@@ -144,13 +271,31 @@ abstraction was a clearer component map and smaller test units.
 
 ## Consumers
 
-| Consumer                                      | Uses                                                                  | Why                                                                    |
-| --------------------------------------------- | --------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| `buildApp()` and protected route registration | `buildProtectedRuntimeModule()`                                       | Need one assembled runtime component for protected API routes          |
-| Fastify lifecycle                             | `registerOperationalHooks()`                                          | Need startup migration and graceful shutdown ownership                 |
-| Planner-backed runtime flows                  | `StoredPlanExecutabilityValidator` and `StoredExecutablePlanResolver` | Need stored-plan integrity and executability checks before dispatch    |
-| Plan compile route and compile use cases      | `buildPlanCompilePlanner()` and `resolvePlanCompileCatalog()`         | Need one explicit compile boundary instead of scattered planner policy |
-| Start-run route parsing and admission         | `createStartRunTargetAdapterRegistryFromValues()`                     | Need one implemented-adapter truth at the API boundary                 |
+- `buildApp()` and protected route registration
+  Uses `buildProtectedRuntimeModule()`.
+  Need one assembled runtime component for protected API routes.
+- Fastify lifecycle
+  Uses `registerOperationalHooks()`.
+  Need startup migration and graceful shutdown ownership.
+- Protected runtime root
+  Uses `buildProtectedRuntimeStorage()`,
+  `buildProtectedAdmissionRuntime()`,
+  `buildProtectedSecurityRuntime()`,
+  and `buildProtectedExecutionRuntime()`.
+  Need one explicit builder per protected runtime concern instead of one giant
+  root file.
+- Workspace graph draft routes
+  Use `buildWorkspaceGraphDraftRuntime()` outputs.
+  Need one protected graph-draft runtime chain without rebuilding it inline.
+- Planner-backed runtime flows
+  Use `StoredPlanExecutabilityValidator` and `StoredExecutablePlanResolver`.
+  Need stored-plan integrity and executability checks before dispatch.
+- Plan compile route and compile use cases
+  Use `buildPlanCompilePlanner()` and `resolvePlanCompileCatalog()`.
+  Need one explicit compile boundary instead of scattered planner policy.
+- Start-run route parsing and admission
+  Uses `createStartRunTargetAdapterRegistryFromValues()`.
+  Need one implemented-adapter truth at the API boundary.
 
 ## Focused Test Map
 

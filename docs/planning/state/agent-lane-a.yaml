@@ -1101,7 +1101,7 @@ tasks:
       - packages/@dvt/planner/src/domain/types.ts
       - packages/@dvt/planner/src/application/PlannerEnvelopeMapper.ts
       - apps/api/src/entrypoints/http/planRoutePlanSourcePolicy.ts
-      - apps/api/test/entrypoints/http/startRunRoute.test.ts
+      - apps/api/test/entrypoints/http/startRunRoute.planSourcePolicy.test.ts
       - apps/api/test/entrypoints/http/planRoutePlanSourcePolicy.test.ts
       - docs/planning/closeouts/20260406-mw-a2-b-contract-cleanup-closeout.md
     status_reason: >-

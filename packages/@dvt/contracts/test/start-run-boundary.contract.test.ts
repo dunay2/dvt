@@ -4,6 +4,7 @@ import {
   ContractValidationError,
   parseStartRunCommand,
   parseStartRunResult,
+  START_RUN_BACKPRESSURE_CODE,
 } from '../src/index.js';
 
 import {
@@ -11,6 +12,12 @@ import {
   VALID_START_RUN_PLANNER_BACKED_COMMAND_FIXTURE,
   VALID_START_RUN_RESULTS_FIXTURES,
 } from './fixtures/start-run-boundary.fixtures.js';
+
+const EXECUTION_CAPACITY_SYSTEM_BACKPRESSURE_CODES = [
+  START_RUN_BACKPRESSURE_CODE.capacitySignalUnavailable,
+  START_RUN_BACKPRESSURE_CODE.executionCapacityExhausted,
+  START_RUN_BACKPRESSURE_CODE.executorUnavailable,
+] as const;
 
 describe('contracts: StartRun boundary', () => {
   it('parses the plan-ref startRun command shape', () => {
@@ -73,6 +80,25 @@ describe('contracts: StartRun boundary', () => {
 
     expect(result.kind).toBe(fixture.kind);
   });
+
+  it.each(EXECUTION_CAPACITY_SYSTEM_BACKPRESSURE_CODES)(
+    'parses execution-capacity system backpressure result code=%s',
+    (code) => {
+      const result = parseStartRunResult({
+        kind: 'system_backpressure',
+        accepted: false,
+        code,
+        retryAfterSeconds: 30,
+      });
+
+      expect(result).toEqual({
+        kind: 'system_backpressure',
+        accepted: false,
+        code,
+        retryAfterSeconds: 30,
+      });
+    }
+  );
 
   it('rejects plan_rejected results with non-canonical rejection codes', () => {
     expect(() =>
