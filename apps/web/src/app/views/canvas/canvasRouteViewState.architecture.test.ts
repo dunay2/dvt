@@ -14,4 +14,8 @@ describe('canvasRouteViewState architecture', () => {
     expect(ROUTE_VIEW_STATE_SOURCE).toContain("'./canvasDraftTransportErrorState'");
     expect(ROUTE_VIEW_STATE_SOURCE).not.toContain('canvasDraftPresentationState');
   });
+
+  it('does not publish compatibility booleans once route posture is canonical', () => {
+    expect(ROUTE_VIEW_STATE_SOURCE).not.toContain('showRecoveryBanner');
+  });
 });

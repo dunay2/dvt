@@ -1,3 +1,6 @@
+/**
+ * Owned concern: compose the canonical Canvas route state consumed by the shell.
+ */
 import {
   deriveCanvasDraftPresentationState,
   type CanvasDraftPresentationState,
@@ -17,11 +20,10 @@ type CanvasController = ReturnType<typeof useCanvasController>;
 export type CanvasRouteViewState = {
   draftTransportError: CanvasDraftTransportErrorState | null;
   startupBlockState: CanvasRouteInteractionState['startupBlockState'];
+  workbenchErrorMessage: CanvasRouteInteractionState['workbenchErrorMessage'];
   effectiveUserPermissions: CanvasRouteInteractionState['effectiveUserPermissions'];
   readOnlyState: CanvasRouteInteractionState['readOnlyState'];
-  workbenchErrorMessage: CanvasRouteInteractionState['workbenchErrorMessage'];
   presentationState: CanvasDraftPresentationState;
-  showRecoveryBanner: boolean;
 };
 
 export function deriveCanvasRouteViewState(
@@ -40,10 +42,9 @@ export function deriveCanvasRouteViewState(
   return {
     draftTransportError,
     startupBlockState: interactionState.startupBlockState,
+    workbenchErrorMessage: interactionState.workbenchErrorMessage,
     effectiveUserPermissions: interactionState.effectiveUserPermissions,
     readOnlyState: interactionState.readOnlyState,
-    workbenchErrorMessage: interactionState.workbenchErrorMessage,
     presentationState,
-    showRecoveryBanner: presentationState.routeState === 'recovery',
   };
 }

@@ -1,5 +1,5 @@
 /**
- * Owned concern: render governed Canvas center-surface states from route posture and draft transport posture.
+ * Owned concern: render governed Canvas center-surface states from canonical route posture and draft transport posture.
  */
 import {
   CanvasBlockedStateView,
@@ -141,27 +141,21 @@ function renderCanvasEmptyWorkbenchSurface(
     canOpenSourceImport,
   } = args;
 
-  if (routeState === 'empty') {
-    return (
-      <CanvasEmptyStateView
-        message={resolveCanvasEmptyWorkbenchMessage({
-          canEditEdges,
-          canOpenSourceImport,
-        })}
-      />
-    );
+  if (routeState !== 'empty') {
+    return null;
   }
 
-  return null;
+  return (
+    <CanvasEmptyStateView
+      message={resolveCanvasEmptyWorkbenchMessage({
+        canEditEdges,
+        canOpenSourceImport,
+      })}
+    />
+  );
 }
 
-function renderCanvasWorkbenchSurface(args: {
-  presentationState: CanvasDraftPresentationState;
-  startupBlockState: CanvasRouteStartupBlockState | null;
-  workbenchErrorMessage: string | null;
-  canEditEdges: boolean;
-  canOpenSourceImport: boolean;
-}) {
+function renderCanvasWorkbenchSurface(args: CanvasWorkbenchSurfaceArgs) {
   const startupSurface = renderCanvasStartupWorkbenchSurface(args);
   if (startupSurface != null) {
     return startupSurface;

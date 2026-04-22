@@ -69,6 +69,7 @@ describe('CanvasToolbar', () => {
           onReloadLatestDraft={vi.fn()}
           onPlan={vi.fn()}
           onRun={vi.fn()}
+          routeState="ready"
           draftToolbarState={defaultDraftToolbarState}
           canPlan={true}
           canRun={true}
@@ -110,6 +111,7 @@ describe('CanvasToolbar', () => {
           onReloadLatestDraft={vi.fn()}
           onPlan={vi.fn()}
           onRun={vi.fn()}
+          routeState="ready"
           draftToolbarState={defaultDraftToolbarState}
           canPlan={true}
           canRun={true}
@@ -150,6 +152,7 @@ describe('CanvasToolbar', () => {
           onReloadLatestDraft={vi.fn()}
           onPlan={vi.fn()}
           onRun={vi.fn()}
+          routeState="ready"
           draftToolbarState={defaultDraftToolbarState}
           canPlan={true}
           canRun={true}
@@ -183,6 +186,7 @@ describe('CanvasToolbar', () => {
           onReloadLatestDraft={vi.fn()}
           onPlan={vi.fn()}
           onRun={vi.fn()}
+          routeState="ready"
           draftToolbarState={defaultDraftToolbarState}
           canPlan={false}
           canRun={false}
@@ -232,6 +236,7 @@ describe('CanvasToolbar', () => {
           onReloadLatestDraft={onReloadLatestDraft}
           onPlan={vi.fn()}
           onRun={vi.fn()}
+          routeState="recovery"
           draftToolbarState={{
             label: canvasViewCopy.draftMissingLabel,
             tone: 'warning',
@@ -266,5 +271,45 @@ describe('CanvasToolbar', () => {
     });
 
     expect(onReloadLatestDraft).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps workflow posture out of recovery when reload remains available on a blocked route', async () => {
+    await act(async () => {
+      root.render(
+        <CanvasToolbar
+          placement="top-bar"
+          onAutoLayout={vi.fn()}
+          onToggleCostOverlay={vi.fn()}
+          onToggleImpact={vi.fn()}
+          onToggleColumns={vi.fn()}
+          onReloadLatestDraft={vi.fn()}
+          onPlan={vi.fn()}
+          onRun={vi.fn()}
+          routeState="blocked_backend"
+          draftToolbarState={{
+            label: canvasViewCopy.draftMissingLabel,
+            tone: 'warning',
+            showReloadAction: true,
+          }}
+          canPlan={false}
+          canRun={false}
+          canEditEdges={false}
+          canStartRun={false}
+          planStatusSummary={canvasViewCopy.planStatusRunUnavailableMessage}
+          canvasAuthoringMode="transformation"
+          exclusiveOverlayMode="runtime"
+          canUseCostOverlay={false}
+          impactOverlayEnabled={false}
+          columnLevelLineageEnabled={false}
+          transformationValidation={buildValidationResult()}
+          nodeCount={3}
+          edgeCount={2}
+        />
+      );
+    });
+
+    expect(portalHost.textContent).toContain(canvasViewCopy.toolbarWorkflowReadOnlyLabel);
+    expect(portalHost.textContent).not.toContain(canvasViewCopy.toolbarWorkflowRecoveryLabel);
+    expect(portalHost.textContent).toContain(canvasViewCopy.reloadLatestDraftLabel);
   });
 });

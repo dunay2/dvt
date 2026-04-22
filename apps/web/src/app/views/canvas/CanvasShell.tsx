@@ -1,7 +1,6 @@
 /**
- * Owned concern: compose the Canvas shell layout from grouped view-model slices.
+ * Owned concern: compose the Canvas shell from route-owned presentation contracts.
  */
-
 import { useEffect, useState } from 'react';
 import DbtExplorer from '../../components/DbtExplorer';
 import InspectorPanel from '../../components/InspectorPanel';
@@ -23,7 +22,12 @@ import type {
   CanvasShellToolbar,
 } from './canvasShell.types';
 
-function resolveCanvasShellMainPanelDefaultSize(layout: CanvasShellLayout): number {
+function resolveCanvasShellMainPanelDefaultSize(
+  layout: Pick<
+    CanvasShellLayout,
+    'focusMode' | 'explorerPanelVisible' | 'inspectorPanelVisible'
+  >
+): number {
   if (layout.focusMode) {
     return 100;
   }
@@ -40,19 +44,25 @@ function resolveCanvasShellMainPanelDefaultSize(layout: CanvasShellLayout): numb
 }
 
 type CanvasShellExplorerRailProps = Readonly<{
-  layout: CanvasShellLayout;
-  panels: CanvasShellPanels;
+  focusMode: boolean;
+  explorerPanelVisible: boolean;
+  explorerNodes: CanvasShellPanels['explorerNodes'];
+  canEditGraph: boolean;
+  canOpenSourceImport: boolean;
   onHideExplorer: CanvasShellChromeCommands['onHideExplorer'];
   onOpenDataRegistry?: () => void;
 }>;
 
 function CanvasShellExplorerRail({
-  layout,
-  panels,
+  focusMode,
+  explorerPanelVisible,
+  explorerNodes,
+  canEditGraph,
+  canOpenSourceImport,
   onHideExplorer,
   onOpenDataRegistry,
 }: CanvasShellExplorerRailProps): JSX.Element | null {
-  if (layout.focusMode || !layout.explorerPanelVisible) {
+  if (focusMode || !explorerPanelVisible) {
     return null;
   }
 
@@ -60,10 +70,10 @@ function CanvasShellExplorerRail({
     <>
       <ResizablePanel defaultSize={17} minSize={12} maxSize={25}>
         <DbtExplorer
-          nodes={panels.explorerNodes}
-          canEditGraph={panels.userPermissions.canEditEdges}
+          nodes={explorerNodes}
+          canEditGraph={canEditGraph}
           onHide={onHideExplorer}
-          onOpenDataRegistry={onOpenDataRegistry}
+          onOpenDataRegistry={canOpenSourceImport ? onOpenDataRegistry : undefined}
         />
       </ResizablePanel>
       <ResizableHandle />
@@ -75,42 +85,39 @@ type CanvasShellMainPanelProps = Readonly<{
   layout: CanvasShellLayout;
   panels: CanvasShellPanels;
   graph: CanvasShellGraph;
+  toolbar: CanvasShellToolbar;
   graphCommands: CanvasShellGraphCommands;
   chromeCommands: CanvasShellChromeCommands;
-  toolbar: CanvasShellToolbar;
-  centerSurface?: CanvasShellProps['centerSurface'];
-  readOnlyBanner?: CanvasShellProps['readOnlyBanner'];
 }>;
 
 function CanvasShellMainPanel({
   layout,
   panels,
   graph,
+  toolbar,
   graphCommands,
   chromeCommands,
-  toolbar,
-  centerSurface,
-  readOnlyBanner,
 }: CanvasShellMainPanelProps): JSX.Element {
   return (
     <ResizablePanel defaultSize={resolveCanvasShellMainPanelDefaultSize(layout)}>
       <div className="h-full flex flex-col bg-(--surface-panel)">
         <CanvasToolbar
           placement="top-bar"
-          onAutoLayout={toolbar.onAutoLayout}
-          onToggleCostOverlay={toolbar.onToggleCostOverlay}
-          onToggleImpact={toolbar.onToggleImpact}
-          onToggleColumns={toolbar.onToggleColumns}
-          onReloadLatestDraft={toolbar.onReloadLatestDraft}
-          onPlan={toolbar.onPlan}
-          onRun={toolbar.onRun}
+          onAutoLayout={chromeCommands.onAutoLayout}
+          onToggleCostOverlay={chromeCommands.onToggleCostOverlay}
+          onToggleImpact={chromeCommands.onToggleImpact}
+          onToggleColumns={chromeCommands.onToggleColumns}
+          onReloadLatestDraft={chromeCommands.onReloadLatestDraft}
+          onPlan={chromeCommands.onPlan}
+          onRun={chromeCommands.onRun}
+          routeState={toolbar.routeState}
           draftToolbarState={toolbar.draftToolbarState}
           canPlan={panels.userPermissions.canPlan}
           canRun={panels.userPermissions.canRun}
           canEditEdges={panels.userPermissions.canEditEdges}
           canStartRun={toolbar.canStartRun}
           planStatusSummary={toolbar.planStatusSummary}
-          canvasAuthoringMode={graph.canvasAuthoringMode}
+          canvasAuthoringMode={toolbar.canvasAuthoringMode}
           exclusiveOverlayMode={toolbar.exclusiveOverlayMode}
           canUseCostOverlay={toolbar.canUseCostOverlay}
           impactOverlayEnabled={toolbar.impactOverlayEnabled}
@@ -119,8 +126,8 @@ function CanvasShellMainPanel({
           nodeCount={graph.nodesWithImpact.length}
           edgeCount={graph.edges.length}
         />
-        {readOnlyBanner ? <div className="shrink-0">{readOnlyBanner}</div> : null}
-        {centerSurface ?? (
+        {layout.readOnlyBanner ? <div className="shrink-0">{layout.readOnlyBanner}</div> : null}
+        {layout.centerSurface ?? (
           <CanvasViewport
             focusMode={layout.focusMode}
             explorerPanelVisible={layout.explorerPanelVisible}
@@ -141,7 +148,7 @@ function CanvasShellMainPanel({
             onViewportChange={graphCommands.onViewportChange}
             onDrop={graphCommands.onDrop}
             onDragOver={graphCommands.onDragOver}
-            importedNodeFocusIds={graphCommands.importedNodeFocusIds}
+            importedNodeFocusIds={panels.importedNodeFocusIds}
             onImportedNodeFocusComplete={graphCommands.onImportedNodeFocusComplete}
             onShowExplorer={chromeCommands.onShowExplorer}
             onShowInspector={chromeCommands.onShowInspector}
@@ -153,17 +160,23 @@ function CanvasShellMainPanel({
 }
 
 type CanvasShellInspectorRailProps = Readonly<{
-  layout: CanvasShellLayout;
-  panels: CanvasShellPanels;
+  focusMode: boolean;
+  inspectorPanelVisible: boolean;
+  inspectorNode: CanvasShellPanels['inspectorNode'];
+  activeRunId: CanvasShellPanels['activeRunId'];
+  registeredPlugins: CanvasShellPanels['registeredPlugins'];
   onHideInspector: CanvasShellChromeCommands['onHideInspector'];
 }>;
 
 function CanvasShellInspectorRail({
-  layout,
-  panels,
+  focusMode,
+  inspectorPanelVisible,
+  inspectorNode,
+  activeRunId,
+  registeredPlugins,
   onHideInspector,
 }: CanvasShellInspectorRailProps): JSX.Element | null {
-  if (layout.focusMode || !layout.inspectorPanelVisible) {
+  if (focusMode || !inspectorPanelVisible) {
     return null;
   }
 
@@ -172,9 +185,9 @@ function CanvasShellInspectorRail({
       <ResizableHandle />
       <ResizablePanel defaultSize={20} minSize={15} maxSize={28}>
         <InspectorPanel
-          node={panels.inspectorNode}
-          activeRunId={panels.activeRunId}
-          registeredPlugins={panels.registeredPlugins}
+          node={inspectorNode}
+          activeRunId={activeRunId}
+          registeredPlugins={registeredPlugins}
           onHide={onHideInspector}
         />
       </ResizablePanel>
@@ -182,20 +195,20 @@ function CanvasShellInspectorRail({
   );
 }
 
-export default function CanvasShell(props: CanvasShellProps) {
-  const {
-    layout,
-    panels,
-    graph,
-    graphCommands,
-    chromeCommands,
-    toolbar,
-    centerSurface,
-    readOnlyBanner,
-  } = props;
+export default function CanvasShell({
+  layout,
+  panels,
+  graph,
+  toolbar,
+  graphCommands,
+  chromeCommands,
+}: CanvasShellProps): JSX.Element {
   const [dataRegistryOpen, setDataRegistryOpen] = useState(false);
-  const canOpenDataRegistry = panels.userPermissions.canEditEdges && layout.canOpenSourceImport;
-  const openDataRegistry = canOpenDataRegistry ? () => setDataRegistryOpen(true) : undefined;
+  const canEditGraph = panels.userPermissions.canEditEdges;
+  const canOpenDataRegistry = canEditGraph && layout.canOpenSourceImport;
+  const handleOpenDataRegistry = canOpenDataRegistry
+    ? () => setDataRegistryOpen(true)
+    : undefined;
 
   useEffect(() => {
     if (!canOpenDataRegistry && dataRegistryOpen) {
@@ -206,26 +219,30 @@ export default function CanvasShell(props: CanvasShellProps) {
   return (
     <ResizablePanelGroup direction="horizontal" className="h-full">
       <CanvasShellExplorerRail
-        layout={layout}
-        panels={panels}
+        focusMode={layout.focusMode}
+        explorerPanelVisible={layout.explorerPanelVisible}
+        explorerNodes={panels.explorerNodes}
+        canEditGraph={canEditGraph}
+        canOpenSourceImport={layout.canOpenSourceImport}
         onHideExplorer={chromeCommands.onHideExplorer}
-        onOpenDataRegistry={openDataRegistry}
+        onOpenDataRegistry={handleOpenDataRegistry}
       />
 
       <CanvasShellMainPanel
         layout={layout}
         panels={panels}
         graph={graph}
+        toolbar={toolbar}
         graphCommands={graphCommands}
         chromeCommands={chromeCommands}
-        toolbar={toolbar}
-        centerSurface={centerSurface}
-        readOnlyBanner={readOnlyBanner}
       />
 
       <CanvasShellInspectorRail
-        layout={layout}
-        panels={panels}
+        focusMode={layout.focusMode}
+        inspectorPanelVisible={layout.inspectorPanelVisible}
+        inspectorNode={panels.inspectorNode}
+        activeRunId={panels.activeRunId}
+        registeredPlugins={panels.registeredPlugins}
         onHideInspector={chromeCommands.onHideInspector}
       />
 

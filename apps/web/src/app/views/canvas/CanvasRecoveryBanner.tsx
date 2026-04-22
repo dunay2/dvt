@@ -1,27 +1,24 @@
 /**
- * Owned concern: render Canvas draft-recovery banners from controller recovery state.
+ * Owned concern: render the governed recovery banner from canonical route posture.
  */
-
 import { Button } from '../../components/ui/button';
 import { canvasViewCopy } from './copy';
-import type { useCanvasController } from './useCanvasController';
-
-type CanvasControllerRecovery = Pick<
-  ReturnType<typeof useCanvasController>,
-  'draftRecoveryReason' | 'reloadLatestDraft'
->;
+import type { CanvasDraftPresentationState } from './canvasDraftPresentationModel';
 
 type CanvasRecoveryBannerProps = Readonly<{
-  controller: CanvasControllerRecovery;
-  visible: boolean;
+  presentationState: Pick<CanvasDraftPresentationState, 'recoveryReason' | 'routeState'>;
+  onReloadLatestDraft: () => void;
 }>;
 
-export function CanvasRecoveryBanner({ controller, visible }: CanvasRecoveryBannerProps) {
-  if (!visible) {
+export function CanvasRecoveryBanner({
+  presentationState,
+  onReloadLatestDraft,
+}: CanvasRecoveryBannerProps): JSX.Element | null {
+  if (presentationState.routeState !== 'recovery') {
     return null;
   }
 
-  if (controller.draftRecoveryReason === 'stale_conflict') {
+  if (presentationState.recoveryReason === 'stale_conflict') {
     return (
       <div
         data-slot="canvas-stale-draft-state"
@@ -32,15 +29,15 @@ export function CanvasRecoveryBanner({ controller, visible }: CanvasRecoveryBann
             <p className="font-semibold">{canvasViewCopy.staleDraftTitle}</p>
             <p className="text-amber-200">{canvasViewCopy.staleDraftMessage}</p>
           </div>
-          <Button size="sm" variant="outline" onClick={controller.reloadLatestDraft}>
-            Reload latest draft
+          <Button size="sm" variant="outline" onClick={onReloadLatestDraft}>
+            {canvasViewCopy.reloadLatestDraftLabel}
           </Button>
         </div>
       </div>
     );
   }
 
-  if (controller.draftRecoveryReason === 'missing_remote') {
+  if (presentationState.recoveryReason === 'missing_remote') {
     return (
       <div
         data-slot="canvas-missing-remote-draft-state"
@@ -52,7 +49,7 @@ export function CanvasRecoveryBanner({ controller, visible }: CanvasRecoveryBann
             <p className="text-rose-200">{canvasViewCopy.missingRemoteDraftMessage}</p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <Button size="sm" variant="outline" onClick={controller.reloadLatestDraft}>
+            <Button size="sm" variant="outline" onClick={onReloadLatestDraft}>
               {canvasViewCopy.reloadLatestDraftLabel}
             </Button>
           </div>
@@ -61,7 +58,7 @@ export function CanvasRecoveryBanner({ controller, visible }: CanvasRecoveryBann
     );
   }
 
-  if (controller.draftRecoveryReason !== 'projection_gap') {
+  if (presentationState.recoveryReason !== 'projection_gap') {
     return null;
   }
 
@@ -76,7 +73,7 @@ export function CanvasRecoveryBanner({ controller, visible }: CanvasRecoveryBann
           <p className="text-sky-200">{canvasViewCopy.draftProjectionGapMessage}</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Button size="sm" variant="outline" onClick={controller.reloadLatestDraft}>
+          <Button size="sm" variant="outline" onClick={onReloadLatestDraft}>
             {canvasViewCopy.reloadLatestDraftLabel}
           </Button>
         </div>

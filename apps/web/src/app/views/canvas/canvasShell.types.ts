@@ -1,10 +1,13 @@
-/** Owned concern: define the grouped semantic prop contract for the Canvas shell component. */
+/**
+ * Owned concern: define the semantic component contract for CanvasShell.
+ */
 import type { Edge, Node, NodeTypes, ReactFlowProps } from '@xyflow/react';
 import type React from 'react';
 
 import type { ImportSourcesResult } from '../../ports/workspace';
 import type { CanonicalNode } from '../../types/canonical';
 import type { CanvasPaletteId } from './canvasPalette';
+import type { CanvasRouteState } from './canvasDraftPresentationModel';
 import type { CanvasDraftToolbarState } from './canvasDraftToolbarState';
 import type { TransformationGraphValidationResult } from './transformationGraphValidation';
 
@@ -14,11 +17,19 @@ export type UserPermissions = {
   canEditEdges: boolean;
 };
 
+type CanvasViewport = {
+  x: number;
+  y: number;
+  zoom: number;
+};
+
 export type CanvasShellLayout = {
   focusMode: boolean;
   explorerPanelVisible: boolean;
   inspectorPanelVisible: boolean;
   canOpenSourceImport: boolean;
+  centerSurface?: React.ReactNode;
+  readOnlyBanner?: React.ReactNode;
 };
 
 export type CanvasShellPanels = {
@@ -27,48 +38,21 @@ export type CanvasShellPanels = {
   activeRunId: string | null;
   registeredPlugins: ReadonlySet<string>;
   userPermissions: UserPermissions;
+  importedNodeFocusIds: string[];
 };
 
 export type CanvasShellGraph = {
-  canvasAuthoringMode: 'transformation' | 'dbt';
   nodesWithImpact: Node[];
   edges: Edge[];
   nodeTypes: NodeTypes;
   gridSize: number;
   canvasPalette: CanvasPaletteId;
-  viewport: { x: number; y: number; zoom: number } | null;
-};
-
-export type CanvasShellGraphCommands = {
-  onNodesChange: NonNullable<ReactFlowProps<Node, Edge>['onNodesChange']>;
-  onNodeDragStop: NonNullable<ReactFlowProps<Node, Edge>['onNodeDragStop']>;
-  onEdgesChange: NonNullable<ReactFlowProps<Node, Edge>['onEdgesChange']>;
-  onConnect: NonNullable<ReactFlowProps<Node, Edge>['onConnect']>;
-  onNodeClick: NonNullable<ReactFlowProps<Node, Edge>['onNodeClick']>;
-  onSelectionChange: NonNullable<ReactFlowProps<Node, Edge>['onSelectionChange']>;
-  onViewportChange: (viewport: { x: number; y: number; zoom: number }) => void;
-  onDrop: React.DragEventHandler<HTMLDivElement>;
-  onDragOver: React.DragEventHandler<HTMLDivElement>;
-  onSourceImportComplete: (result: ImportSourcesResult) => void;
-  importedNodeFocusIds: string[];
-  onImportedNodeFocusComplete: () => void;
-};
-
-export type CanvasShellChromeCommands = {
-  onHideExplorer: () => void;
-  onShowExplorer: () => void;
-  onHideInspector: () => void;
-  onShowInspector: () => void;
+  viewport: CanvasViewport | null;
 };
 
 export type CanvasShellToolbar = {
-  onAutoLayout: () => void;
-  onToggleCostOverlay: () => void;
-  onToggleImpact: () => void;
-  onToggleColumns: () => void;
-  onReloadLatestDraft: () => void;
-  onPlan: () => void;
-  onRun: () => void;
+  canvasAuthoringMode: 'transformation' | 'dbt';
+  routeState: CanvasRouteState;
   draftToolbarState: CanvasDraftToolbarState;
   canStartRun: boolean;
   planStatusSummary: string;
@@ -79,13 +63,39 @@ export type CanvasShellToolbar = {
   transformationValidation: TransformationGraphValidationResult;
 };
 
+export type CanvasShellGraphCommands = {
+  onNodesChange: NonNullable<ReactFlowProps<Node, Edge>['onNodesChange']>;
+  onNodeDragStop: NonNullable<ReactFlowProps<Node, Edge>['onNodeDragStop']>;
+  onEdgesChange: NonNullable<ReactFlowProps<Node, Edge>['onEdgesChange']>;
+  onConnect: NonNullable<ReactFlowProps<Node, Edge>['onConnect']>;
+  onNodeClick: NonNullable<ReactFlowProps<Node, Edge>['onNodeClick']>;
+  onSelectionChange: NonNullable<ReactFlowProps<Node, Edge>['onSelectionChange']>;
+  onViewportChange: (viewport: CanvasViewport) => void;
+  onDrop: React.DragEventHandler<HTMLDivElement>;
+  onDragOver: React.DragEventHandler<HTMLDivElement>;
+  onSourceImportComplete: (result: ImportSourcesResult) => void;
+  onImportedNodeFocusComplete: () => void;
+};
+
+export type CanvasShellChromeCommands = {
+  onHideExplorer: () => void;
+  onShowExplorer: () => void;
+  onHideInspector: () => void;
+  onShowInspector: () => void;
+  onAutoLayout: () => void;
+  onToggleCostOverlay: () => void;
+  onToggleImpact: () => void;
+  onToggleColumns: () => void;
+  onReloadLatestDraft: () => void;
+  onPlan: () => void;
+  onRun: () => void;
+};
+
 export type CanvasShellProps = Readonly<{
   layout: CanvasShellLayout;
   panels: CanvasShellPanels;
   graph: CanvasShellGraph;
+  toolbar: CanvasShellToolbar;
   graphCommands: CanvasShellGraphCommands;
   chromeCommands: CanvasShellChromeCommands;
-  toolbar: CanvasShellToolbar;
-  centerSurface?: React.ReactNode;
-  readOnlyBanner?: React.ReactNode;
 }>;

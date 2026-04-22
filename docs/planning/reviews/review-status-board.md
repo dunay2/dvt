@@ -2,7 +2,7 @@
 title: Review Status Board
 status: Active
 owner: Product / Architecture / Docs
-last_reviewed: 2026-04-20
+last_reviewed: 2026-04-21
 planning_type: review
 ---
 
@@ -74,6 +74,13 @@ Additional active rationale:
   - domain: `architecture-and-governance`
   - role: current focused review for the Canvas handler-contract component, Fowler-style seam ownership, residual adapter drift, and the semantic fitness-function follow-up on the graph route
   - linkage: `TF-E2-B`, `TF-E2-C`, `TF-E2-D`
+  - status: `reference`
+  - progress: `n/a`
+
+- [20260421 Canvas route composition Fowler review](./architecture-and-governance/20260421-canvas-route-composition-fowler-review.md)
+  - domain: `architecture-and-governance`
+  - role: current focused review for Canvas route composition, semantic modal-host contracts, concern-scoped shell-builder inputs, and residual supervising-controller drift
+  - linkage: `TF-E2-I`, `TF-E2-J`
   - status: `reference`
   - progress: `n/a`
 

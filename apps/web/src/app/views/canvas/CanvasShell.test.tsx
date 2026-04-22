@@ -8,7 +8,15 @@ import CanvasShell from './CanvasShell';
 import { DEFAULT_CANVAS_PALETTE_ID } from './canvasPalette';
 import { canvasViewCopy } from './copy';
 import type { CanvasDraftToolbarState } from './canvasDraftToolbarState';
-import type { CanvasShellProps } from './canvasShell.types';
+import type {
+  CanvasShellChromeCommands,
+  CanvasShellGraph,
+  CanvasShellGraphCommands,
+  CanvasShellLayout,
+  CanvasShellPanels,
+  CanvasShellProps,
+  CanvasShellToolbar,
+} from './canvasShell.types';
 
 const shellState = vi.hoisted(() => ({
   dbtExplorerProps: null as null | Record<string, unknown>,
@@ -46,14 +54,12 @@ vi.mock('./CanvasViewport', () => ({
 }));
 
 type CanvasShellPropsOverrides = {
-  layout?: Partial<CanvasShellProps['layout']>;
-  panels?: Partial<CanvasShellProps['panels']>;
-  graph?: Partial<CanvasShellProps['graph']>;
-  graphCommands?: Partial<CanvasShellProps['graphCommands']>;
-  chromeCommands?: Partial<CanvasShellProps['chromeCommands']>;
-  toolbar?: Partial<CanvasShellProps['toolbar']>;
-  centerSurface?: CanvasShellProps['centerSurface'];
-  readOnlyBanner?: CanvasShellProps['readOnlyBanner'];
+  layout?: Partial<CanvasShellLayout>;
+  panels?: Partial<CanvasShellPanels>;
+  graph?: Partial<CanvasShellGraph>;
+  toolbar?: Partial<CanvasShellToolbar>;
+  graphCommands?: Partial<CanvasShellGraphCommands>;
+  chromeCommands?: Partial<CanvasShellChromeCommands>;
 };
 
 function buildProps(overrides?: CanvasShellPropsOverrides): CanvasShellProps {
@@ -63,12 +69,15 @@ function buildProps(overrides?: CanvasShellPropsOverrides): CanvasShellProps {
     showReloadAction: false,
   };
 
-  const baseProps: CanvasShellProps = {
+  return {
     layout: {
       focusMode: false,
       explorerPanelVisible: true,
       inspectorPanelVisible: false,
       canOpenSourceImport: true,
+      centerSurface: undefined,
+      readOnlyBanner: undefined,
+      ...overrides?.layout,
     },
     panels: {
       explorerNodes: [
@@ -90,44 +99,21 @@ function buildProps(overrides?: CanvasShellPropsOverrides): CanvasShellProps {
         canRun: true,
         canEditEdges: true,
       },
+      importedNodeFocusIds: [],
+      ...overrides?.panels,
     },
     graph: {
-      canvasAuthoringMode: 'transformation',
       nodesWithImpact: [],
       edges: [],
       nodeTypes: {},
       gridSize: 24,
       canvasPalette: DEFAULT_CANVAS_PALETTE_ID,
       viewport: null,
-    },
-    graphCommands: {
-      onNodesChange: vi.fn(),
-      onNodeDragStop: vi.fn(),
-      onEdgesChange: vi.fn(),
-      onConnect: vi.fn(),
-      onNodeClick: vi.fn(),
-      onSelectionChange: vi.fn(),
-      onViewportChange: vi.fn(),
-      onDrop: vi.fn(),
-      onDragOver: vi.fn(),
-      onSourceImportComplete: vi.fn(),
-      importedNodeFocusIds: [],
-      onImportedNodeFocusComplete: vi.fn(),
-    },
-    chromeCommands: {
-      onHideExplorer: vi.fn(),
-      onShowExplorer: vi.fn(),
-      onHideInspector: vi.fn(),
-      onShowInspector: vi.fn(),
+      ...overrides?.graph,
     },
     toolbar: {
-      onAutoLayout: vi.fn(),
-      onToggleCostOverlay: vi.fn(),
-      onToggleImpact: vi.fn(),
-      onToggleColumns: vi.fn(),
-      onReloadLatestDraft: vi.fn(),
-      onPlan: vi.fn(),
-      onRun: vi.fn(),
+      canvasAuthoringMode: 'transformation',
+      routeState: 'ready',
       draftToolbarState: defaultDraftToolbarState,
       canStartRun: false,
       planStatusSummary: canvasViewCopy.planStatusPreviewRequiredMessage,
@@ -143,38 +129,36 @@ function buildProps(overrides?: CanvasShellPropsOverrides): CanvasShellProps {
         scopedEdgeIds: [],
         nodeRolesById: {},
       },
-    },
-    centerSurface: undefined,
-    readOnlyBanner: undefined,
-  };
-
-  return {
-    layout: {
-      ...baseProps.layout,
-      ...overrides?.layout,
-    },
-    panels: {
-      ...baseProps.panels,
-      ...overrides?.panels,
-    },
-    graph: {
-      ...baseProps.graph,
-      ...overrides?.graph,
+      ...overrides?.toolbar,
     },
     graphCommands: {
-      ...baseProps.graphCommands,
+      onNodesChange: vi.fn(),
+      onNodeDragStop: vi.fn(),
+      onEdgesChange: vi.fn(),
+      onConnect: vi.fn(),
+      onNodeClick: vi.fn(),
+      onSelectionChange: vi.fn(),
+      onViewportChange: vi.fn(),
+      onDrop: vi.fn(),
+      onDragOver: vi.fn(),
+      onSourceImportComplete: vi.fn(),
+      onImportedNodeFocusComplete: vi.fn(),
       ...overrides?.graphCommands,
     },
     chromeCommands: {
-      ...baseProps.chromeCommands,
+      onHideExplorer: vi.fn(),
+      onShowExplorer: vi.fn(),
+      onHideInspector: vi.fn(),
+      onShowInspector: vi.fn(),
+      onAutoLayout: vi.fn(),
+      onToggleCostOverlay: vi.fn(),
+      onToggleImpact: vi.fn(),
+      onToggleColumns: vi.fn(),
+      onReloadLatestDraft: vi.fn(),
+      onPlan: vi.fn(),
+      onRun: vi.fn(),
       ...overrides?.chromeCommands,
     },
-    toolbar: {
-      ...baseProps.toolbar,
-      ...overrides?.toolbar,
-    },
-    centerSurface: overrides?.centerSurface ?? baseProps.centerSurface,
-    readOnlyBanner: overrides?.readOnlyBanner ?? baseProps.readOnlyBanner,
   };
 }
 
@@ -255,7 +239,7 @@ describe('CanvasShell', () => {
 
   it('wires source import completion and imported-node focus through the shell surfaces', async () => {
     const props = buildProps({
-      graphCommands: {
+      panels: {
         importedNodeFocusIds: ['src_erp_orders', 'src_erp_customers'],
       },
     });
