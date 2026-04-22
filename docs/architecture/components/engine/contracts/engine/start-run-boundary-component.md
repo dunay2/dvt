@@ -74,8 +74,8 @@ flowchart LR
   Schema --> Validation
   Fixtures --> ContractTest["test/start-run-boundary.contract.test.ts"]
   Boundary --> ContractTest
-  Validation --> Api["apps/api re-export ports"]
-  Validation --> Consumers["routes / application services / tests"]
+  Validation --> Api["apps/api routes and application services"]
+  Validation --> Consumers["tests and runtime callers"]
 ```
 
 ## Command branches
@@ -122,10 +122,14 @@ CAPACITY_SIGNAL_UNAVAILABLE"]
 - `packages/@dvt/contracts/src/schema-packs/start-run.ts`
 - `packages/@dvt/contracts/src/validation/runtime.ts`
 - `packages/@dvt/contracts/test/start-run-boundary.contract.test.ts`
-- `apps/api/src/application/ports/startRunCommandContract.ts`
-- `apps/api/src/application/ports/startRunResultContract.ts`
-- `apps/api/src/entrypoints/http/startRunRouteCommandBuilder.ts`
+- `apps/api/src/application/ports/startRunUseCasePort.ts`
+- `apps/api/src/application/ports/startRunFacadePort.ts`
 - `apps/api/src/application/services/BackpressureAwareStartRunUseCase.ts`
+- `apps/api/src/application/services/PlannerBackedStartRunUseCase.ts`
+- `apps/api/src/application/services/engineStartRunUseCase.ts`
+- `apps/api/src/entrypoints/http/startRunRouteCommandBuilder.ts`
+- `apps/api/src/entrypoints/http/startRunRouteParser.ts`
+- `apps/api/src/entrypoints/http/startRunRouteTargetAdapterParser.ts`
 
 ## Focused file map
 

@@ -1,4 +1,18 @@
-import { asNonBlankString, parsePlanRef } from '@dvt/contracts';
+/**
+ * Owned concern: bridge the canonical start-run command boundary into the
+ * engine-facing `IWorkflowEngine.startRun()` call.
+ */
+import {
+  asNonBlankString,
+  parsePlanRef,
+  START_RUN_DUPLICATE_OF,
+  START_RUN_PLAN_REJECTION_CODE,
+  START_RUN_RATE_LIMIT_CODE,
+  START_RUN_RESULT_KIND,
+  type StartRunCommand,
+  type StartRunPlanRef,
+  type StartRunResult,
+} from '@dvt/contracts';
 import {
   AdapterNotRegisteredError,
   OutboxRateLimitExceededError,
@@ -11,32 +25,15 @@ import {
 } from '@dvt/engine';
 
 import type { AuthorizedCommandExecutionContext } from '../ports/authContract.js';
-import type { StartRunCommand, StartRunPlanRef } from '../ports/startRunCommandContract.js';
 import {
   START_RUN_ENGINE_ERROR_CODE,
   START_RUN_ENGINE_ERROR_KIND,
   START_RUN_ENGINE_ERROR_REASON,
   type StartRunEngineError,
-} from '../ports/startRunEngineErrorContract.js';
-import {
-  START_RUN_DUPLICATE_OF,
-  START_RUN_PLAN_REJECTION_CODE,
-  START_RUN_RATE_LIMIT_CODE,
-  START_RUN_RESULT_KIND,
-  type StartRunResult,
-} from '../ports/startRunResultContract.js';
-import type { IStartRunUseCase, StartRunUseCaseResult } from '../ports/startRunUseCaseContract.js';
-
-/**
- * Engine-backed StartRun use case.
- *
- * Bridges the application-layer command model to `IWorkflowEngine.startRun()`.
- * Authorization has already been enforced by `AuthorizeCommandScopeService`
- * before this use case is invoked; the engine's IAuthorizer is wired separately
- * as a redundant tenantId check at the engine boundary.
- */
+} from '../ports/startRunEngineError.js';
+import type { IStartRunUseCase, StartRunUseCaseResult } from '../ports/startRunUseCasePort.js';
 export class EngineStartRunUseCase implements IStartRunUseCase {
-  constructor(private readonly engine: IWorkflowEngine) {}
+  public constructor(private readonly engine: IWorkflowEngine) {}
 
   public async execute(
     command: StartRunCommand,

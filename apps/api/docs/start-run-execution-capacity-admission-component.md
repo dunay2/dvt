@@ -15,6 +15,11 @@ This is a **local component guide**, not a second shared contract. The caller-
 visible start-run result surface remains the canonical shared contract:
 `docs/architecture/components/engine/contracts/engine/StartRunBoundary.v1.md`.
 
+Read this together with:
+
+- `apps/api/docs/start-run-application-component.md`
+- `docs/architecture/components/engine/contracts/engine/start-run-boundary-component.md`
+
 ## Owned concern
 
 The component owns exactly one concern:

@@ -1,5 +1,6 @@
+import type { StartRunCommand } from '@dvt/contracts';
+
 import type { IStartRunTargetAdapterRegistry } from '../../application/ports/IStartRunTargetAdapterRegistry.js';
-import type { StartRunCommand } from '../../application/ports/startRunCommandContract.js';
 import { DEFAULT_START_RUN_TARGET_ADAPTER_REGISTRY } from '../../application/services/startRunTargetAdapterRegistry.js';
 
 import { parseRouteTargetAdapter, type RouteTargetAdapterSupport } from './planRouteTargetAdapterParser.js';

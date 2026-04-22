@@ -7,10 +7,10 @@ import type {
   PlanRef,
   PlannerPolicyClassSet,
   PlannerSelection,
+  StartRunPlannerEnvironmentInput,
 } from '@dvt/contracts';
 
 import type { AuthorizedCommandExecutionContext } from '../ports/authContract.js';
-import type { StartRunPlannerEnvironmentInput } from '../ports/startRunCommandContract.js';
 
 import { PLAN_ROUTE_POLICY_CATALOG } from './planRoutePolicyCatalog.js';
 import { resolveAuthorizedPlannerInputEnvelope } from './resolveAuthorizedPlannerInputEnvelope.js';

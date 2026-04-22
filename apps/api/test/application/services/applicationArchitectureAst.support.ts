@@ -1,148 +1,15 @@
 /**
- * Owned concern: model the start-run execution-capacity admission component for
- * semantic application-service architecture tests.
+ * Owned concern: declare the start-run application component artifact map and
+ * semantic test contracts.
  */
-import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import ts from 'typescript';
-
-type NamedImportContract = {
-  readonly importedName: string;
-  readonly moduleSpecifier: string;
-};
-
-type ConstructorObjectIdentifierBinding = {
-  readonly constructorName: string;
-  readonly identifierName: string;
-  readonly propertyName: string;
-};
-
-class ApplicationArchitectureSource {
-  public readonly sourceFile: ts.SourceFile;
-
-  public constructor(
-    public readonly absolutePath: string,
-    public readonly sourceText: string
-  ) {
-    this.sourceFile = ts.createSourceFile(
-      absolutePath,
-      sourceText,
-      ts.ScriptTarget.Latest,
-      true,
-      ts.ScriptKind.TS
-    );
-  }
-
-  public collectNamedImports(moduleSpecifier: string): string[] {
-    const imports: string[] = [];
-
-    for (const statement of this.sourceFile.statements) {
-      if (!ts.isImportDeclaration(statement)) {
-        continue;
-      }
-
-      if (statement.moduleSpecifier.getText(this.sourceFile) !== `'${moduleSpecifier}'`) {
-        continue;
-      }
-
-      const namedBindings = statement.importClause?.namedBindings;
-      if (!namedBindings || !ts.isNamedImports(namedBindings)) {
-        continue;
-      }
-
-      for (const element of namedBindings.elements) {
-        imports.push(element.name.text);
-      }
-    }
-
-    return imports;
-  }
-
-  public hasConstructorObjectIdentifierBinding(
-    binding: ConstructorObjectIdentifierBinding
-  ): boolean {
-    let found = false;
-
-    const visit = (node: ts.Node): void => {
-      const argument = this.getNamedConstructorArgument(node, binding.constructorName);
-      if (
-        argument !== null &&
-        this.hasIdentifierProperty(argument, binding.propertyName, binding.identifierName)
-      ) {
-        found = true;
-        return;
-      }
-
-      ts.forEachChild(node, visit);
-    };
-
-    visit(this.sourceFile);
-    return found;
-  }
-
-  public hasNamedImport(contract: NamedImportContract): boolean {
-    return this.collectNamedImports(contract.moduleSpecifier).includes(contract.importedName);
-  }
-
-  private getNamedConstructorArgument(
-    node: ts.Node,
-    constructorName: string
-  ): ts.ObjectLiteralExpression | null {
-    if (!ts.isNewExpression(node)) {
-      return null;
-    }
-    if (!ts.isIdentifier(node.expression) || node.expression.text !== constructorName) {
-      return null;
-    }
-
-    const argument = node.arguments?.[0];
-    return argument && ts.isObjectLiteralExpression(argument) ? argument : null;
-  }
-
-  private hasIdentifierProperty(
-    objectLiteral: ts.ObjectLiteralExpression,
-    propertyName: string,
-    identifierName: string
-  ): boolean {
-    return objectLiteral.properties.some(
-      (property) =>
-        ts.isPropertyAssignment(property) &&
-        ts.isIdentifier(property.name) &&
-        property.name.text === propertyName &&
-        ts.isIdentifier(property.initializer) &&
-        property.initializer.text === identifierName
-    );
-  }
-}
-
-class ApplicationComponentArtifact {
-  public constructor(public readonly absolutePath: string) {}
-
-  public exists(): boolean {
-    return existsSync(this.absolutePath);
-  }
-
-  public hasOwnedConcernDocblock(): boolean {
-    return this.readText().startsWith('/**\n * Owned concern:');
-  }
-
-  public readSource(): ApplicationArchitectureSource {
-    return new ApplicationArchitectureSource(this.absolutePath, this.readText());
-  }
-
-  private readText(): string {
-    return readFileSync(this.absolutePath, 'utf8');
-  }
-}
+import { defineArtifact } from './applicationArchitectureAst.artifacts.js';
 
 const APPLICATION_ROOT = join(import.meta.dirname, '../../../src/application');
 const DOCS_ROOT = join(import.meta.dirname, '../../../docs');
+const ENTRYPOINTS_HTTP_ROOT = join(import.meta.dirname, '../../../src/entrypoints/http');
 const MODULES_ROOT = join(import.meta.dirname, '../../../src/modules');
-
-function defineArtifact(...segments: string[]): ApplicationComponentArtifact {
-  return new ApplicationComponentArtifact(join(...segments));
-}
 
 export const START_RUN_EXECUTION_CAPACITY_ADMISSION_COMPONENT = {
   artifacts: {
@@ -176,5 +43,70 @@ export const START_RUN_EXECUTION_CAPACITY_ADMISSION_COMPONENT = {
       identifierName: 'DEFAULT_START_RUN_EXECUTION_CAPACITY_PORT',
       propertyName: 'executionCapacity',
     },
+  },
+} as const;
+
+export const START_RUN_APPLICATION_COMPONENT = {
+  artifacts: {
+    backpressureUseCase: defineArtifact(
+      APPLICATION_ROOT,
+      'services/BackpressureAwareStartRunUseCase.ts'
+    ),
+    componentGuide: defineArtifact(DOCS_ROOT, 'start-run-application-component.md'),
+    commandContractShim: defineArtifact(APPLICATION_ROOT, 'ports/startRunCommandContract.ts'),
+    engineUseCase: defineArtifact(APPLICATION_ROOT, 'services/engineStartRunUseCase.ts'),
+    engineErrorTypes: defineArtifact(APPLICATION_ROOT, 'ports/startRunEngineError.ts'),
+    facadePort: defineArtifact(APPLICATION_ROOT, 'ports/startRunFacadePort.ts'),
+    aggregateContractShim: defineArtifact(APPLICATION_ROOT, 'ports/startRunContract.ts'),
+    authorizedFacade: defineArtifact(APPLICATION_ROOT, 'services/startRunAuthorizedFacade.ts'),
+    authorizedFacadeAuthTest: defineArtifact(
+      import.meta.dirname,
+      'startRunAuthorizedFacade.auth.test.ts'
+    ),
+    authorizedFacadeEnginePassThroughTest: defineArtifact(
+      import.meta.dirname,
+      'startRunAuthorizedFacade.enginePassThrough.test.ts'
+    ),
+    authorizedFacadeMonolithTest: defineArtifact(import.meta.dirname, 'startRunAuthorizedFacade.test.ts'),
+    authorizedFacadeTestSupport: defineArtifact(
+      import.meta.dirname,
+      'startRunAuthorizedFacade.test.support.ts'
+    ),
+    engineUseCaseCommandPathTest: defineArtifact(
+      import.meta.dirname,
+      'engineStartRunUseCase.commandPath.test.ts'
+    ),
+    engineUseCaseErrorMappingTest: defineArtifact(
+      import.meta.dirname,
+      'engineStartRunUseCase.errorMapping.test.ts'
+    ),
+    engineUseCaseMonolithTest: defineArtifact(import.meta.dirname, 'engineStartRunUseCase.test.ts'),
+    engineUseCaseTestSupport: defineArtifact(
+      import.meta.dirname,
+      'engineStartRunUseCase.test.support.ts'
+    ),
+    plannerBackedUseCase: defineArtifact(
+      APPLICATION_ROOT,
+      'services/PlannerBackedStartRunUseCase.ts'
+    ),
+    resultContractShim: defineArtifact(APPLICATION_ROOT, 'ports/startRunResultContract.ts'),
+    routeCommandBuilder: defineArtifact(ENTRYPOINTS_HTTP_ROOT, 'startRunRouteCommandBuilder.ts'),
+    routeParser: defineArtifact(ENTRYPOINTS_HTTP_ROOT, 'startRunRouteParser.ts'),
+    routeTargetAdapterParser: defineArtifact(
+      ENTRYPOINTS_HTTP_ROOT,
+      'startRunRouteTargetAdapterParser.ts'
+    ),
+    targetAdapterRegistryPort: defineArtifact(
+      APPLICATION_ROOT,
+      'ports/IStartRunTargetAdapterRegistry.ts'
+    ),
+    targetAdapterRegistry: defineArtifact(
+      APPLICATION_ROOT,
+      'services/startRunTargetAdapterRegistry.ts'
+    ),
+    useCasePort: defineArtifact(APPLICATION_ROOT, 'ports/startRunUseCasePort.ts'),
+  },
+  contracts: {
+    canonicalBoundaryModule: '@dvt/contracts',
   },
 } as const;

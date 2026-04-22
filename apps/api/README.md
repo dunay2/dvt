@@ -16,6 +16,7 @@ relevant adapters.
 ## Local component guides
 
 - [HTTP runtime error translation component](./docs/http-runtime-error-translation-component.md)
+- [Start-run application component](./docs/start-run-application-component.md)
 - [Start-run execution capacity admission component](./docs/start-run-execution-capacity-admission-component.md)
 
 ## Authentication boundary

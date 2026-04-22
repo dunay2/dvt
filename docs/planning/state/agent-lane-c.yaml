@@ -98,7 +98,7 @@ tasks:
     evidence_refs:
       - packages/@dvt/engine/src/contracts/PlanVersionPolicy.ts
       - packages/@dvt/engine/test/gaps/PlanVersionPolicy.test.ts
-      - apps/api/test/application/services/engineStartRunUseCase.test.ts
+      - apps/api/test/application/services/engineStartRunUseCase.errorMapping.test.ts
     status_reason: >-
       The planVersion guard is present in runtime code with typed errors and tests, which provides
       equivalent verified closure for this pass.

@@ -1,4 +1,9 @@
-import { parsePlanRef } from '@dvt/contracts';
+import {
+  parsePlanRef,
+  START_RUN_BACKPRESSURE_CODE,
+  START_RUN_DUPLICATE_OF,
+  START_RUN_RESULT_KIND,
+} from '@dvt/contracts';
 import {
   BackpressureSnapshotUnavailableError,
   SystemBackpressureError,
@@ -6,11 +11,6 @@ import {
 } from '@dvt/delivery';
 import { describe, expect, it, vi } from 'vitest';
 
-import {
-  START_RUN_BACKPRESSURE_CODE,
-  START_RUN_DUPLICATE_OF,
-  START_RUN_RESULT_KIND,
-} from '../../../src/application/ports/startRunResultContract.js';
 import { BackpressureAwareStartRunUseCase } from '../../../src/application/services/BackpressureAwareStartRunUseCase.js';
 import { EnvironmentId, ProjectId, TenantId } from '../../../src/domain/auth/types.js';
 

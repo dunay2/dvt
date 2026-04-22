@@ -35,6 +35,14 @@ describe('contracts: StartRunBoundary component architecture', () => {
       expect(docText).toContain(section);
     }
     expect(docText).toContain('```mermaid');
+    expect(docText).not.toContain('re-export ports');
+    for (const removedShim of [
+      'startRunCommandContract.ts',
+      'startRunResultContract.ts',
+      'startRunContract.ts',
+    ]) {
+      expect(docText).not.toContain(removedShim);
+    }
   });
 
   it('keeps canonical grouped system-backpressure sets as one source of truth', () => {

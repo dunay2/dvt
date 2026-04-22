@@ -238,6 +238,14 @@ The caller-visible result vocabulary for this seam is documented separately in
 the shared contract component guide:
 
 - [Start-run boundary component](../engine/contracts/engine/start-run-boundary-component.md)
+- [Start-run application component](../../../../apps/api/docs/start-run-application-component.md)
+
+The wider authenticated start-run path is also documented as its own local
+component. That guide makes two rules explicit:
+
+- `apps/api` imports canonical command/result vocabulary directly from
+  `@dvt/contracts`
+- app-local command/result re-export shims are not part of the target state
 
 Current slice status:
 

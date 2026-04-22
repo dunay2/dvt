@@ -88,6 +88,10 @@ shape, and the governed transition route:
 - [Plan route response translation component](../../../../apps/api/docs/plan-route-response-translation-component.md):
   local guide for the preview/compile/import response-mapping boundary with
   public API, invariants, transitions, consumers, and focused diagrams.
+- [Start-run application component](../../../../apps/api/docs/start-run-application-component.md):
+  local guide for the authenticated start-run application component, its
+  facade/use-case boundaries, invariants, transitions, consumers, and
+  canonical shared-contract import rules.
 - [Start-run execution capacity admission component](../../../../apps/api/docs/start-run-execution-capacity-admission-component.md):
   local guide for the abstract start-run execution-capacity admission seam,
   its fail-closed default binding, invariants, transitions, and consumers.

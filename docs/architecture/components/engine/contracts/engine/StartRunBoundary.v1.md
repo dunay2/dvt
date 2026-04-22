@@ -143,11 +143,11 @@ protection against API-local drift in the shape or result vocabulary.
 
 ## Current implementation note
 
-`apps/api` may keep thin local re-export files for import stability, but the
-source of truth for the start-run command/result contract is now the shared
-contract package, not the API app. The API runtime still performs route-local
-HTTP parsing, but the route policy now enforces the same plan-source branch
-rule before handing off the canonical `StartRunCommand` shape.
+`apps/api` now imports the start-run command/result boundary directly from
+`@dvt/contracts`. The API runtime still performs route-local HTTP parsing, but
+the route policy now enforces the same plan-source branch rule before handing
+off the canonical `StartRunCommand` shape. App-local command/result re-export
+shims are not part of the governed state for this boundary.
 
 ## System backpressure codes
 

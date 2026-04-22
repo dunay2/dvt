@@ -3,6 +3,13 @@
  * execution-capacity admission, and delegate dispatch for start-run commands.
  */
 import {
+  START_RUN_DUPLICATE_OF,
+  START_RUN_RESULT_KIND,
+  type StartRunCommand,
+  type StartRunResult,
+} from '@dvt/contracts';
+
+import {
   ADMISSION_TELEMETRY_DECISION,
   type AdmissionDecisionRecord,
   type AdmissionTelemetry,
@@ -12,13 +19,7 @@ import { DUPLICATE_RUN_PROBE_KIND, type DuplicateRunProbe } from '../ports/Dupli
 import type { IAdmissionGuard } from '../ports/IAdmissionGuard.js';
 import { ADMISSION_MODE, type AdmissionMode } from '../ports/IAdmissionMode.js';
 import type { IStartRunExecutionCapacityPort } from '../ports/IStartRunExecutionCapacityPort.js';
-import type { StartRunCommand } from '../ports/startRunCommandContract.js';
-import {
-  START_RUN_DUPLICATE_OF,
-  START_RUN_RESULT_KIND,
-  type StartRunResult,
-} from '../ports/startRunResultContract.js';
-import type { IStartRunUseCase, StartRunUseCaseResult } from '../ports/startRunUseCaseContract.js';
+import type { IStartRunUseCase, StartRunUseCaseResult } from '../ports/startRunUseCasePort.js';
 
 import {
   buildAdmissionRejectionRecord,

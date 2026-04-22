@@ -3,147 +3,178 @@ review_by: Codex
 review_date: 2026-04-22
 branch: main
 slice: start-run boundary contract + execution-capacity admission seam
-status: remediation_in_progress
+status: remediated
 ---
 
-# Fowler architecture analysis — start-run boundary and admission seam
+# Fowler architecture analysis - start-run boundary and admission seam
 
 ## Scope
 
-This review covers the work now present in:
+This analysis covers the current state of:
 
 - `packages/@dvt/contracts/src/contracts/engine/StartRunBoundary.v1.ts`
 - `packages/@dvt/contracts/src/schema-packs/start-run.ts`
 - `packages/@dvt/contracts/test/**`
 - `apps/api/src/application/services/BackpressureAwareStartRunUseCase.ts`
+- `apps/api/src/application/services/PlannerBackedStartRunUseCase.ts`
+- `apps/api/src/application/services/engineStartRunUseCase.ts`
+- `apps/api/src/application/services/startRunAuthorizedFacade.ts`
 - `apps/api/src/application/ports/IStartRunExecutionCapacityPort.ts`
-- `apps/api/src/application/services/defaultStartRunExecutionCapacityPort.ts`
-- `apps/api/src/application/services/startRunAdmissionDecisions.ts`
-- related API and contract documentation
+- local API start-run component guides and semantic architecture tests
 
-## Context in the system
+## System context
 
-The system is moving in the right Fowler-style direction:
+The system is now closer to a mature Fowler-style shape than the earlier
+app-local contract posture:
 
-- `@dvt/contracts` owns the canonical shared boundary
-- `apps/api` owns orchestration and composition, not provider truth
-- the admission path now has an explicit execution-capacity port instead of
-  leaking Temporal semantics into the application layer
+- `@dvt/contracts` owns the canonical caller-visible boundary
+- `apps/api` owns orchestration, composition, auth, and admission
+- execution-capacity semantics sit behind an abstract application port
+- provider truth remains hidden behind ports and composition
 
-That is materially closer to a mature architecture than the previous state.
-The new seam is a proper port, the default binding is fail-closed, and the
-caller-visible result still routes through one canonical contract instead of a
-parallel API-local vocabulary.
-
-## Comparison with mature systems
-
-Compared with mature systems, the slice now resembles the safer half of the
-pattern used by systems such as workflow-control planes and queue-backed
+This is the same direction used by mature control planes and queue-backed
 admission front doors:
 
-- one canonical caller-visible contract
-- one application admission orchestrator
-- provider-specific saturation hidden behind a port
-- fail-closed behavior when capacity truth is unavailable
-
-Where it still lags mature systems is not in the main direction, but in
-semantic packaging:
-
-- the contract vocabulary is still spread across boundary, schema, fixtures,
-  tests, and docs
-- the normative contract doc exists, but there is no equally explicit local
-  component guide on the contracts side
-- the existing architecture guard on the API side protects seam ownership, but
-  the contracts side does not yet protect derivation of schema/fixtures from
-  canonical truth
+- one canonical external contract
+- one orchestration layer
+- provider-specific saturation behind ports
+- fail-closed behavior when capacity truth is missing
 
 ## Patterns improved
 
+- **Published language / shared kernel**
+  `StartRunCommand` and `StartRunResult` are consumed from `@dvt/contracts`
+  directly instead of through app-local shadow import paths.
+- **Hexagonal port discipline**
+  `IStartRunExecutionCapacityPort` keeps provider-native capacity semantics out
+  of the API application layer.
 - **Composition root discipline**
-  `buildProtectedRuntimeModule.ts` owns the default binding instead of routes
-  or use cases.
-- **Port and adapter separation**
-  `IStartRunExecutionCapacityPort` creates an application-facing seam instead of
-  encoding Temporal queue semantics in `apps/api`.
-- **Fail-closed admission**
-  Missing capacity signal becomes explicit system backpressure, not silent
-  permissive behavior.
-- **Canonical contract reuse**
-  `StartRunBoundary.v1` remains the one caller-visible command/result surface.
-- **Focused orchestration**
-  `startRunAdmissionDecisions.ts` reduced translation/telemetry spillover from
-  `BackpressureAwareStartRunUseCase.ts`.
+  the default capacity binding remains owned by
+  `buildProtectedRuntimeModule.ts`, not by routes or use cases.
+- **Separated orchestration**
+  `startRunAdmissionDecisions.ts` keeps rejection/telemetry mapping out of the
+  main use-case orchestration path.
+- **Semantic packaging**
+  the start-run application path is now documented as a local component with
+  explicit API, invariants, transitions, and consumers.
 
-## Antipatterns still visible
+## Antipatterns detected
 
-- **Semantic scatter**
-  The same system-backpressure vocabulary is defined once in the canonical
-  contract, then re-spelled in schema packs, fixtures, tests, and docs.
-- **Normative-without-component-guide**
-  The canonical doc explains the contract, but not the component shape
-  (public API, invariants, transitions, consumers) with the same clarity now
-  expected elsewhere in the repository.
-- **Architecture test too local**
-  The API architecture test checks seam ownership, but there is no peer test on
-  the contracts side proving that schema and fixtures derive from canonical
-  contract truth rather than ad hoc literals.
+### Resolved in this pass
 
-## Repetitions
+- **Shadow contract import paths**
+  removed:
+  `startRunCommandContract.ts`,
+  `startRunResultContract.ts`,
+  `startRunContract.ts`
+- **Normative drift**
+  `StartRunBoundary.v1.md` no longer tolerates thin local re-export files
+- **Documentation drift**
+  the previous `buzon` analysis had mojibake and stale findings
 
-- backpressure-code grouping repeated across:
-  `StartRunBoundary.v1.ts`,
-  `schema-packs/start-run.ts`,
-  fixtures,
-  tests,
-  docs
-- target-adapter enumeration repeated in boundary and schema pack
-- execution-capacity-specific codes explained in both the normative doc and API
-  docs, but without a contract-local component guide to absorb the explanatory
-  material
+### Still present
+
+- **Large composition root**
+  `apps/api/src/modules/buildProtectedRuntimeModule.ts` remains the heaviest
+  seam in the slice and still concentrates too many assembly concerns
+- **Large test files**
+  `BackpressureAwareStartRunUseCase.test.ts` and
+  `httpErrorTranslation.test.ts` remain useful but still large enough to
+  warrant additional partitioning
+- **AST helper duplication risk**
+  the API and contracts test suites now both have AST-semantic tests; the next
+  maturity move is a shared semantic-test helper package or clearer reuse
+
+## Components that now group cleanly
+
+### Shared start-run boundary component
+
+- canonical command/result vocabulary
+- grouped system-backpressure code sets
+- schema pack derivation
+- fixtures and contract tests
+
+### Start-run application component in `apps/api`
+
+- `startRunUseCasePort.ts`
+- `startRunFacadePort.ts`
+- `StartRunAuthorizedFacade.ts`
+- `BackpressureAwareStartRunUseCase.ts`
+- `PlannerBackedStartRunUseCase.ts`
+- `EngineStartRunUseCase.ts`
+- `startRunTargetAdapterRegistry.ts`
+
+### Execution-capacity admission subcomponent
+
+- `IStartRunExecutionCapacityPort.ts`
+- `defaultStartRunExecutionCapacityPort.ts`
+- `startRunAdmissionDecisions.ts`
+
+## Diagrams
+
+### Shared contract to API application flow
+
+```mermaid
+flowchart LR
+  Contract["@dvt/contracts StartRunBoundary"] --> Route["startRun route parsers"]
+  Contract --> Facade["StartRunAuthorizedFacade"]
+  Contract --> Admission["BackpressureAwareStartRunUseCase"]
+  Contract --> Planner["PlannerBackedStartRunUseCase"]
+  Contract --> Engine["EngineStartRunUseCase"]
+```
+
+### Application transition chain
+
+```mermaid
+flowchart LR
+  Route["HTTP parse"] --> Facade["auth + authorize"]
+  Facade --> Duplicate["duplicate probe"]
+  Duplicate --> Delivery["delivery admission"]
+  Delivery --> Capacity["execution-capacity admission"]
+  Capacity --> Planner["planner-backed validation"]
+  Planner --> Engine["engine dispatch"]
+```
+
+## Repetitions fixed
+
+- removed local command/result re-export shims from `apps/api`
+- switched application and route modules to direct `@dvt/contracts` imports
+- added AST rules that prohibit the reintroduction of shim modules as an
+  alternate path
+
+## Drift fixed
+
+- normative contract doc now matches the no-shim implementation
+- engine contract component guide no longer lists deleted shim files
+- API architecture index now documents the new local start-run application
+  component guide
+- `buzon` analysis is now UTF-8 clean and aligned with the codebase
+
+## Future lessons
+
+- when a contract becomes canonical, cut the old path completely; do not leave
+  convenience import shims behind
+- local component guides are useful only if they explain ownership and
+  invariants, not if they restate file lists
+- AST-semantic tests are worth the cost when the alternative is path-based
+  drift returning silently
+- composition roots should be documented as components before they are
+  physically decomposed
 
 ## Opportunities
 
-- centralize `system_backpressure` code sets in the canonical boundary module
-- derive schema packs from canonical contract arrays instead of hand-written
-  repeated enums
-- derive fixtures from canonical constants instead of raw literals
-- add a contract-local component guide with API, invariants, transitions,
-  consumers, and diagrams
-- add a semantic architecture test that enforces derivation, not just presence
+1. Split `buildProtectedRuntimeModule.ts` into smaller assembly components:
+   storage runtime, admission runtime, security runtime, execution runtime,
+   start-run runtime.
+2. Continue splitting large behavior tests into taxonomy-specific suites.
+3. Extract common AST inspection helpers if more semantic component tests land
+   across API and contracts.
+4. Add a local component guide for the protected runtime assembly once that
+   composition root is decomposed further.
 
-## Drift detected before remediation
+## Residuals
 
-- `docs/architecture/components/engine/contracts/engine/index.md` does not list
-  `StartRunBoundary.v1.md` in the active pack even though it is a real
-  first-class contract
-- the contracts side lacks a local component guide while adjacent API slices
-  already have them
-- schema and fixtures still rely on duplicated literal truth instead of
-  explicit canonical sets
-
-## Selected remediation for this pass
-
-1. Introduce canonical grouped sets for start-run system-backpressure codes in
-   `StartRunBoundary.v1.ts`.
-2. Make `schema-packs/start-run.ts` consume canonical sets for target adapters
-   and system-backpressure codes.
-3. Replace raw contract literals in fixtures with canonical exports.
-4. Add short owned-concern docblocks to the touched contract modules.
-5. Add a contract-local component guide with diagrams:
-   public API, invariants, transitions, consumers.
-6. Add a semantic architecture test that proves schema and fixtures derive from
-   canonical contract truth.
-
-## Why this is the right next move
-
-This keeps the architecture moving toward mature-system traits:
-
-- fewer parallel truths
-- stronger semantic encapsulation
-- better component discoverability
-- documentation that explains ownership as well as shape
-- tests that defend architecture decisions mechanically
-
-It also stays inside the current slice. It does not introduce a second adapter
-binding, a second public boundary, or a speculative general platform-capacity
-service.
+- no compatibility or shim path remains for the canonical start-run command and
+  result boundary
+- the next meaningful architectural slice is not more contract work; it is
+  decomposition of the protected runtime composition root

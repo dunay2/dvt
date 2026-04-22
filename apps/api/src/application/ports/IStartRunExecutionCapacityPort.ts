@@ -5,7 +5,7 @@
  * The port returns start-run admission semantics only. It does not expose
  * adapter-native queue metrics or provider-specific transport details.
  */
-import type { StartRunTargetAdapter } from './startRunCommandContract.js';
+import type { StartRunTargetAdapter } from '@dvt/contracts';
 
 export const START_RUN_EXECUTION_CAPACITY_RESULT_KIND = {
   admissible: 'admissible',

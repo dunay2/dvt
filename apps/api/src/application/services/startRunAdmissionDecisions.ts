@@ -3,6 +3,11 @@
  * rejection results and telemetry records for the admission orchestrator.
  */
 import {
+  START_RUN_BACKPRESSURE_CODE,
+  START_RUN_RESULT_KIND,
+  type StartRunResult,
+} from '@dvt/contracts';
+import {
   BackpressureSnapshotUnavailableError,
   SystemBackpressureError,
   TenantBackpressureError,
@@ -19,12 +24,7 @@ import {
   START_RUN_EXECUTION_CAPACITY_RESULT_KIND,
   type StartRunExecutionCapacityResult,
 } from '../ports/IStartRunExecutionCapacityPort.js';
-import {
-  START_RUN_BACKPRESSURE_CODE,
-  START_RUN_RESULT_KIND,
-  type StartRunResult,
-} from '../ports/startRunResultContract.js';
-import type { StartRunUseCaseResult } from '../ports/startRunUseCaseContract.js';
+import type { StartRunUseCaseResult } from '../ports/startRunUseCasePort.js';
 
 export type AdmissionRejectResult = Extract<
   StartRunResult,

@@ -48,10 +48,10 @@ Out of scope:
 
 ## Execution Plan
 
-1. In `startRunFacadeContract.ts`: remove `adapterNotConfigured` from
+1. In `startRunFacadePort.ts`: remove `adapterNotConfigured` from
    `StartRunFacadeResult` union â€” that kind is only reachable via
    `mapEngineErrorToFacade()` which is deleted in step 3.
-2. In `startRunFacadeContract.ts`: export `StartRunFacadeExecutionResult` as
+2. In `startRunFacadePort.ts`: export `StartRunFacadeExecutionResult` as
    `Result<StartRunFacadeResult, StartRunEngineError>` â€” the new return type of
    `execute()`.
 3. In `startRunAuthorizedFacade.ts`: update `execute()` return type to
@@ -68,13 +68,13 @@ StartRunEngineError): HttpResponseModel` covering all three engine error
    `StartRunFacadeExecutionResult`; branch on `ok` â€” call
    `mapStartRunFacadeResult` on `ok: true`, `mapStartRunEngineError` on
    `ok: false`.
-6. In `startRunAuthorizedFacade.test.ts`: rewrite the three engine-error test
+6. In `startRunAuthorizedFacade.enginePassThrough.test.ts`: rewrite the three engine-error test
    cases (`adapter_not_registered`, `unsupported_plan_version`,
    `command_invalid`) to assert `{ok: false, error: ...}` passthrough instead of
    the current facade-absorbed facade result kinds.
-7. In `httpErrorTranslation.test.ts`: add test coverage for `mapStartRunEngineError`
+7. In `httpErrorTranslation.startRunEngineError.test.ts`: add test coverage for `mapStartRunEngineError`
    for all three engine error kinds.
-8. In `startRunRoute.test.ts`: add test cases for `{ok: false, error:
+8. In `startRunRoute.engineErrorTranslation.test.ts`: add test cases for `{ok: false, error:
 StartRunEngineError}` facade result and verify correct HTTP outputs.
 9. Run validation baseline including `pnpm verify:prepush`.
 
@@ -116,7 +116,7 @@ flowchart LR
 
 ## DoD Checklist (Verifiable)
 
-- [ ] `StartRunFacadeExecutionResult` exported from `startRunFacadeContract.ts`
+- [ ] `StartRunFacadeExecutionResult` exported from `startRunFacadePort.ts`
       as `Result<StartRunFacadeResult, StartRunEngineError>`.
 - [ ] `adapterNotConfigured` kind removed from `StartRunFacadeResult` union.
 - [ ] `StartRunAuthorizedFacade.execute()` return type is
@@ -126,11 +126,11 @@ flowchart LR
 - [ ] `mapStartRunEngineError(error: StartRunEngineError): HttpResponseModel`
       exists in `authErrorMapper.ts` and covers all three error kinds.
 - [ ] `startRunRoute.ts` branches on `ok` before calling mapper.
-- [ ] `startRunAuthorizedFacade.test.ts` engine-error cases assert
+- [ ] `startRunAuthorizedFacade.enginePassThrough.test.ts` engine-error cases assert
       `{ok: false, error}` passthrough (not facade-absorbed result kinds).
-- [ ] `httpErrorTranslation.test.ts` has coverage for all three
+- [ ] `httpErrorTranslation.startRunEngineError.test.ts` has coverage for all three
       `mapStartRunEngineError` branches.
-- [ ] `startRunRoute.test.ts` has coverage for `ok: false` facade result shape.
+- [ ] `startRunRoute.engineErrorTranslation.test.ts` has coverage for `ok: false` facade result shape.
 - [ ] `pnpm --filter dvt-api typecheck` passes.
 - [ ] `pnpm --filter dvt-api test` passes.
 - [ ] `pnpm --filter dvt-api test:arch` passes.
