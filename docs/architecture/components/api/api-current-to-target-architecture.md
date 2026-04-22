@@ -142,9 +142,12 @@ flowchart TB
 - **Infrastructure composition**
   The protected runtime module wires Postgres state access, plan storage,
   admission telemetry, backpressure fallback, provider adapters, and engine
-  construction.
+  construction. The authenticated start-run chain is now assembled through the
+  dedicated `startRun/buildProtectedStartRunRuntime.ts` subcomponent instead
+  of being re-constructed inline in the outer root.
   Anchors:
   `apps/api/src/modules/buildProtectedRuntimeModule.ts`,
+  `apps/api/src/modules/startRun/buildProtectedStartRunRuntime.ts`,
   `apps/api/src/modules/buildProviderAdapters.ts`,
   `apps/api/src/modules/stateStoreRoles.ts`,
   `apps/api/src/application/services/WorkflowEngineFactory.ts`

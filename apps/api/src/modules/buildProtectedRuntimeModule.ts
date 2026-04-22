@@ -10,26 +10,18 @@ import { asIsoUtcString, createDefaultStepTypeRegistry } from '@dvt/contracts';
 import { StartRunAdmissionGuard } from '@dvt/delivery';
 import type { ExecutionPlan } from '@dvt/engine';
 import type { IObservability } from '@dvt/observability';
-import { PlannerFacade } from '@dvt/planner';
 import type { FastifyInstance } from 'fastify';
 import type { Logger } from 'pino';
 
 import { AuthorizeCommandScopeService } from '../application/services/authorizeCommandScopeService.js';
 import { AuthorizeWorkspaceGraphDraftCapabilityService } from '../application/services/authorizeWorkspaceGraphDraftCapabilityService.js';
-import { BackpressureAwareStartRunUseCase } from '../application/services/BackpressureAwareStartRunUseCase.js';
-import { DEFAULT_START_RUN_EXECUTION_CAPACITY_PORT } from '../application/services/defaultStartRunExecutionCapacityPort.js';
-import { EngineStartRunUseCase } from '../application/services/engineStartRunUseCase.js';
 import { GetWorkspaceGraphDraftUseCase } from '../application/services/getWorkspaceGraphDraftUseCase.js';
-import { PlannerBackedStartRunUseCase } from '../application/services/PlannerBackedStartRunUseCase.js';
 import { SaveWorkspaceGraphDraftUseCase } from '../application/services/saveWorkspaceGraphDraftUseCase.js';
-import { StartRunAuthorizedFacade } from '../application/services/startRunAuthorizedFacade.js';
 import { createStartRunTargetAdapterRegistryFromValues } from '../application/services/startRunTargetAdapterRegistry.js';
 import { StoredExecutablePlanResolver } from '../application/services/StoredExecutablePlanResolver.js';
-import { StoredPlanExecutabilityValidator } from '../application/services/StoredPlanExecutabilityValidator.js';
 import { buildWorkflowEngine } from '../application/services/WorkflowEngineFactory.js';
 import { getPgPool } from '../db/pool.js';
 import { TenantHierarchyAuthorizationPolicy } from '../domain/auth/policy.js';
-import { ObservabilityAdmissionTelemetry } from '../infrastructure/admissionTelemetry/ObservabilityAdmissionTelemetry.js';
 import { ObservabilityBackpressureCapacityTelemetry } from '../infrastructure/admissionTelemetry/ObservabilityBackpressureCapacityTelemetry.js';
 import { StructuredAuditLogger } from '../infrastructure/audit/structuredAuditLogger.js';
 import { JwksJwtVerifier } from '../infrastructure/auth/jwksJwtVerifier.js';
@@ -43,13 +35,12 @@ import { RawSqlBackpressureStore } from '../infrastructure/backpressure/RawSqlBa
 import { ArtifactBackedRunExecutionContextResolver } from '../infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.js';
 import { ArtifactStoreDbtProjectBundleBindingPolicy } from '../infrastructure/startRun/ArtifactStoreDbtProjectBundleBindingPolicy.js';
 import { PostgresDuplicateRunProbe } from '../infrastructure/startRun/PostgresDuplicateRunProbe.js';
-import { ObservabilityStartRunSlaTelemetry } from '../infrastructure/telemetry/ObservabilityStartRunSlaTelemetry.js';
 import { PostgresWorkspaceGraphDraftStore } from '../infrastructure/workspaceGraphDraft/PostgresWorkspaceGraphDraftStore.js';
 import { StructuredWorkspaceGraphDraftAuditLogger } from '../infrastructure/workspaceGraphDraft/StructuredWorkspaceGraphDraftAuditLogger.js';
 import type { Env } from '../plugins/env.js';
 
 import { buildProviderAdapters } from './buildProviderAdapters.js';
-import { buildPlanCompilePlanner } from './planCompileBoundary.js';
+import { buildProtectedStartRunRuntime } from './startRun/buildProtectedStartRunRuntime.js';
 import { bindStateStoreRoles } from './stateStoreRoles.js';
 import type { ProtectedRuntimeModule } from './types.js';
 
@@ -92,8 +83,6 @@ function resolveDbtBundleArtifactStore(env: Env) {
 
 type RuntimePool = ReturnType<typeof getPgPool>;
 type ProtectedRuntimeStorage = ReturnType<typeof buildProtectedRuntimeStorage>;
-type ProtectedAdmissionRuntime = ReturnType<typeof buildProtectedAdmissionRuntime>;
-type ProtectedSecurityRuntime = ReturnType<typeof buildProtectedSecurityRuntime>;
 
 function buildProtectedRuntimeStorage(deps: {
   readonly PostgresPlanStore: typeof import('@dvt/adapter-postgres').PostgresPlanStore;
@@ -333,55 +322,6 @@ async function buildProtectedExecutionRuntime(deps: {
   };
 }
 
-function buildProtectedStartRunRuntime(deps: {
-  readonly admissionRuntime: ProtectedAdmissionRuntime;
-  readonly env: Env;
-  readonly executionRuntime: Awaited<ReturnType<typeof buildProtectedExecutionRuntime>>;
-  readonly observability: IObservability;
-  readonly securityRuntime: ProtectedSecurityRuntime;
-  readonly storageRuntime: ProtectedRuntimeStorage;
-}) {
-  const startRunSlaTelemetry = new ObservabilityStartRunSlaTelemetry({
-    observability: deps.observability,
-  });
-  const planner = new PlannerFacade();
-  const planCompilePlanner = buildPlanCompilePlanner();
-  const planValidator = new StoredPlanExecutabilityValidator({
-    fetcher: deps.storageRuntime.planStore,
-    adapters: deps.executionRuntime.adapters,
-    stepTypeRegistry: deps.storageRuntime.stepTypeRegistry,
-  });
-  const facade = new StartRunAuthorizedFacade(
-    deps.securityRuntime.authenticator,
-    deps.securityRuntime.commandAuthorizer,
-    new BackpressureAwareStartRunUseCase({
-      duplicateProbe: deps.admissionRuntime.duplicateProbe,
-      admissionGuard: deps.admissionRuntime.admissionGuard,
-      executionCapacity: DEFAULT_START_RUN_EXECUTION_CAPACITY_PORT,
-      telemetry: new ObservabilityAdmissionTelemetry({
-        observability: deps.observability,
-      }),
-      mode: deps.env.DVT_START_RUN_BACKPRESSURE_MODE,
-      retryAfterSeconds: deps.env.DVT_START_RUN_RETRY_AFTER_SECONDS,
-      delegate: new PlannerBackedStartRunUseCase({
-        planner,
-        planStore: deps.storageRuntime.planStore,
-        validator: planValidator,
-        compileTelemetry: startRunSlaTelemetry,
-        delegate: new EngineStartRunUseCase(deps.executionRuntime.engine),
-      }),
-    }),
-    startRunSlaTelemetry
-  );
-
-  return {
-    facade,
-    planCompilePlanner,
-    planner,
-    planValidator,
-  };
-}
-
 export async function buildProtectedRuntimeModule(
   app: FastifyInstance,
   env: Env,
@@ -432,12 +372,17 @@ export async function buildProtectedRuntimeModule(
     pool,
   });
   const startRunRuntime = buildProtectedStartRunRuntime({
-    admissionRuntime,
-    env,
-    executionRuntime,
+    authenticator: securityRuntime.authenticator,
+    commandAuthorizer: securityRuntime.commandAuthorizer,
+    duplicateProbe: admissionRuntime.duplicateProbe,
+    admissionGuard: admissionRuntime.admissionGuard,
     observability,
-    securityRuntime,
-    storageRuntime,
+    backpressureMode: env.DVT_START_RUN_BACKPRESSURE_MODE,
+    retryAfterSeconds: env.DVT_START_RUN_RETRY_AFTER_SECONDS,
+    engine: executionRuntime.engine,
+    adapters: executionRuntime.adapters,
+    planStore: storageRuntime.planStore,
+    stepTypeRegistry: storageRuntime.stepTypeRegistry,
   });
 
   return {

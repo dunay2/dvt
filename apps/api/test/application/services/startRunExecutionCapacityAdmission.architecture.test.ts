@@ -24,16 +24,17 @@ describe('Start-run execution-capacity admission architecture', () => {
 
   it('keeps BackpressureAwareStartRunUseCase on the abstract port and reserves the default binding for composition', () => {
     const useCaseSource = artifacts.backpressureUseCase.readSource();
-    const moduleSource = artifacts.runtimeModule.readSource();
+    const builderSource = artifacts.runtimeBuilder.readSource();
 
     expect(useCaseSource.hasNamedImport(contracts.abstractPortImport)).toBe(true);
     expect(
       useCaseSource.collectNamedImports(contracts.useCaseForbiddenDefaultBindingModule)
     ).toEqual([]);
 
-    expect(moduleSource.hasNamedImport(contracts.defaultBindingImport)).toBe(true);
-    expect(
-      moduleSource.hasConstructorObjectIdentifierBinding(contracts.runtimeExecutionCapacityBinding)
-    ).toBe(true);
+    expect(builderSource.hasNamedImport(contracts.defaultBindingImport)).toBe(true);
+    expect(builderSource.sourceText).toContain(
+      'deps.executionCapacity ?? DEFAULT_START_RUN_EXECUTION_CAPACITY_PORT'
+    );
+    expect(builderSource.sourceText).toContain('executionCapacity,');
   });
 });

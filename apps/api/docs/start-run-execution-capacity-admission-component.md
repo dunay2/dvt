@@ -89,7 +89,7 @@ flowchart LR
   UseCase --> Capacity["IStartRunExecutionCapacityPort"]
   UseCase --> Decisions["startRunAdmissionDecisions.ts"]
   UseCase --> Delegate["PlannerBackedStartRunUseCase / delegate"]
-  Runtime["buildProtectedRuntimeModule.ts"] --> Default["DEFAULT_START_RUN_EXECUTION_CAPACITY_PORT"]
+  Runtime["buildProtectedStartRunRuntime.ts"] --> Default["DEFAULT_START_RUN_EXECUTION_CAPACITY_PORT"]
   Default --> Capacity
 ```
 
@@ -127,7 +127,7 @@ sequenceDiagram
 ## Consumers
 
 - `BackpressureAwareStartRunUseCase.ts`
-- `buildProtectedRuntimeModule.ts`
+- `buildProtectedStartRunRuntime.ts`
 - `startRunExecutionCapacityAdmission.architecture.test.ts`
 - `defaultStartRunExecutionCapacityPort.test.ts`
 
@@ -137,7 +137,7 @@ sequenceDiagram
 - `apps/api/src/application/services/defaultStartRunExecutionCapacityPort.ts`
 - `apps/api/src/application/services/startRunAdmissionDecisions.ts`
 - `apps/api/src/application/services/BackpressureAwareStartRunUseCase.ts`
-- `apps/api/src/modules/buildProtectedRuntimeModule.ts`
+- `apps/api/src/modules/startRun/buildProtectedStartRunRuntime.ts`
 - `apps/api/test/application/services/BackpressureAwareStartRunUseCase.executionCapacity.test.ts`
 - `apps/api/test/application/services/defaultStartRunExecutionCapacityPort.test.ts`
 - `apps/api/test/application/services/startRunExecutionCapacityAdmission.architecture.test.ts`

@@ -41,6 +41,7 @@ flowchart LR
 - [app.ts](../../../../apps/api/src/app.ts)
 - [server.ts](../../../../apps/api/src/server.ts)
 - [buildProtectedRuntimeModule.ts](../../../../apps/api/src/modules/buildProtectedRuntimeModule.ts)
+- [buildProtectedStartRunRuntime.ts](../../../../apps/api/src/modules/startRun/buildProtectedStartRunRuntime.ts)
 - [buildProviderAdapters.ts](../../../../apps/api/src/modules/buildProviderAdapters.ts)
 - [planCompileBoundary.ts](../../../../apps/api/src/modules/planCompileBoundary.ts)
 - [planRoutePolicyCatalog.ts](../../../../apps/api/src/application/services/planRoutePolicyCatalog.ts)
@@ -92,6 +93,9 @@ shape, and the governed transition route:
   local guide for the authenticated start-run application component, its
   facade/use-case boundaries, invariants, transitions, consumers, and
   canonical shared-contract import rules.
+- [Start-run runtime composition component](../../../../apps/api/docs/start-run-runtime-composition-component.md):
+  local guide for the protected-runtime subcomponent that assembles the
+  authenticated start-run chain from abstract runtime dependencies.
 - [Start-run execution capacity admission component](../../../../apps/api/docs/start-run-execution-capacity-admission-component.md):
   local guide for the abstract start-run execution-capacity admission seam,
   its fail-closed default binding, invariants, transitions, and consumers.

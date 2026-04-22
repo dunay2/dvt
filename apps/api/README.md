@@ -18,6 +18,7 @@ relevant adapters.
 - [Start-run HTTP entrypoint component](./docs/start-run-http-entrypoint-component.md)
 - [HTTP runtime error translation component](./docs/http-runtime-error-translation-component.md)
 - [Start-run application component](./docs/start-run-application-component.md)
+- [Start-run runtime composition component](./docs/start-run-runtime-composition-component.md)
 - [Start-run execution capacity admission component](./docs/start-run-execution-capacity-admission-component.md)
 
 ## Authentication boundary

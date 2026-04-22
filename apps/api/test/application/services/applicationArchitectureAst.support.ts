@@ -26,7 +26,10 @@ export const START_RUN_EXECUTION_CAPACITY_ADMISSION_COMPONENT = {
       'services/defaultStartRunExecutionCapacityPort.ts'
     ),
     port: defineArtifact(APPLICATION_ROOT, 'ports/IStartRunExecutionCapacityPort.ts'),
-    runtimeModule: defineArtifact(MODULES_ROOT, 'buildProtectedRuntimeModule.ts'),
+    runtimeBuilder: defineArtifact(
+      MODULES_ROOT,
+      'startRun/buildProtectedStartRunRuntime.ts'
+    ),
   },
   contracts: {
     abstractPortImport: {
@@ -35,14 +38,9 @@ export const START_RUN_EXECUTION_CAPACITY_ADMISSION_COMPONENT = {
     },
     defaultBindingImport: {
       importedName: 'DEFAULT_START_RUN_EXECUTION_CAPACITY_PORT',
-      moduleSpecifier: '../application/services/defaultStartRunExecutionCapacityPort.js',
+      moduleSpecifier: '../../application/services/defaultStartRunExecutionCapacityPort.js',
     },
     useCaseForbiddenDefaultBindingModule: './defaultStartRunExecutionCapacityPort.js',
-    runtimeExecutionCapacityBinding: {
-      constructorName: 'BackpressureAwareStartRunUseCase',
-      identifierName: 'DEFAULT_START_RUN_EXECUTION_CAPACITY_PORT',
-      propertyName: 'executionCapacity',
-    },
   },
 } as const;
 

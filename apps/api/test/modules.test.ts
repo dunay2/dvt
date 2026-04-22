@@ -3,6 +3,7 @@ import { describeBuildProviderAdaptersCases } from './modules/buildProviderAdapt
 import { describePlanCompileBoundaryCases } from './modules/planCompileBoundary.cases.js';
 import { describeProtectedRuntimeAndPlanCompileArchitectureCases } from './modules/protectedRuntimeAndPlanCompileArchitecture.cases.js';
 import { describeRegisterOperationalHooksCases } from './modules/registerOperationalHooks.cases.js';
+import { describeStartRunRuntimeCompositionCases } from './modules/startRunRuntimeComposition.cases.js';
 
 /**
  * Stable test anchor for historical docs and evidence that reference
@@ -16,3 +17,4 @@ describeRegisterOperationalHooksCases();
 describeBuildProviderAdaptersCases();
 describePlanCompileBoundaryCases();
 describeProtectedRuntimeAndPlanCompileArchitectureCases();
+describeStartRunRuntimeCompositionCases();

@@ -76,6 +76,9 @@ application behavior ports. Local behavior remains in `startRunUseCasePort.ts`,
   Bridge from canonical `StartRunCommand` to `IWorkflowEngine.startRun(...)`
 - `startRunTargetAdapterRegistry.ts`
   Runtime-supported adapter registry used by the route boundary
+- `buildProtectedStartRunRuntime.ts`
+  Dedicated runtime-composition builder that assembles the authenticated
+  start-run chain inside `apps/api/src/modules`
 
 ## Invariants
 
@@ -91,6 +94,8 @@ application behavior ports. Local behavior remains in `startRunUseCasePort.ts`,
 - planner-backed execution must validate the stored plan before engine dispatch
 - `EngineStartRunUseCase` is the only module in this component that calls
   `IWorkflowEngine.startRun(...)`
+- `buildProtectedStartRunRuntime.ts` is the only module in the protected
+  runtime component allowed to construct the authenticated start-run chain
 - engine error/result translation lives in the dedicated
   `startRunEngineBridge.ts` helper instead of sharing the same module as the
   engine call orchestration
@@ -146,6 +151,7 @@ sequenceDiagram
 ## Consumers
 
 - `apps/api/src/entrypoints/http/startRunRoute.ts`
+- `apps/api/src/modules/startRun/buildProtectedStartRunRuntime.ts`
 - `apps/api/src/entrypoints/http/httpErrorTranslation.ts`
 - `apps/api/src/modules/buildProtectedRuntimeModule.ts`
 - `apps/api/test/application/services/startRun*.test.ts`
@@ -165,6 +171,7 @@ sequenceDiagram
 - `apps/api/src/application/services/PlannerBackedStartRunUseCase.ts`
 - `apps/api/src/application/services/startRunEngineBridge.ts`
 - `apps/api/src/application/services/engineStartRunUseCase.ts`
+- `apps/api/src/modules/startRun/buildProtectedStartRunRuntime.ts`
 - `apps/api/test/application/services/BackpressureAwareStartRunUseCase.test.support.ts`
 - `apps/api/test/application/services/BackpressureAwareStartRunUseCase.duplicateFlow.test.ts`
 - `apps/api/test/application/services/BackpressureAwareStartRunUseCase.admissionModes.test.ts`
