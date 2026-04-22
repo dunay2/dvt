@@ -1,4 +1,4 @@
-import type { WorkspaceGraphDraftRecord, WorkspaceGraphSnapshot } from '../../ports/workspace';
+import type { WorkspaceGraphDraftRecord } from '../../ports/workspace';
 import { queryKeys } from '../../queries/queryKeys';
 import type { CanvasDraftRepository } from './canvasDraftRepository';
 import {
@@ -6,6 +6,7 @@ import {
   createWritableCanvasDraftReadModel,
   type CanvasDraftReadModel,
 } from './canvasDraftReadModel';
+import type { WorkspaceGraphDraftSemanticGraph } from '../../services/workspace/workspaceGraphDraftProjection';
 
 type CanvasDraftQueryClient = {
   cancelQueries: (args: { queryKey: readonly unknown[] }) => Promise<unknown>;
@@ -19,8 +20,10 @@ type CanvasDraftQueryClient = {
 export type CanvasDraftQueryCache = {
   fetchLatestRemoteDraftState: () => Promise<CanvasDraftReadModel>;
   fetchLatestRemoteDraft: () => Promise<WorkspaceGraphDraftRecord | null>;
-  fetchLatestGraphSnapshot: () => Promise<WorkspaceGraphSnapshot>;
-  replaceRemoteDraft: (record: WorkspaceGraphDraftRecord | null) => void;
+  replaceRemoteDraft: (
+    record: WorkspaceGraphDraftRecord | null,
+    semanticGraph?: WorkspaceGraphDraftSemanticGraph | null
+  ) => void;
   replaceRemoteDraftState: (state: CanvasDraftReadModel) => void;
 };
 
@@ -30,7 +33,6 @@ export function createCanvasDraftQueryCache(
   draftRepository: CanvasDraftRepository
 ): CanvasDraftQueryCache {
   const graphDraftKey = queryKeys.workspace.graphDraft(workspaceLayoutKey);
-  const graphKey = queryKeys.workspace.graph(workspaceLayoutKey);
 
   return {
     fetchLatestRemoteDraftState: async () => {
@@ -49,17 +51,12 @@ export function createCanvasDraftQueryCache(
         })
       ).record;
     },
-    fetchLatestGraphSnapshot: async () => {
-      await queryClient.cancelQueries({ queryKey: graphKey });
-      return await queryClient.fetchQuery({
-        queryKey: graphKey,
-        queryFn: () => draftRepository.readGraphSnapshot(),
-      });
-    },
-    replaceRemoteDraft: (record) => {
+    replaceRemoteDraft: (record, semanticGraph = null) => {
       queryClient.setQueryData(
         graphDraftKey,
-        record == null ? createUnknownCanvasDraftReadModel() : createWritableCanvasDraftReadModel(record)
+        record == null
+          ? createUnknownCanvasDraftReadModel()
+          : createWritableCanvasDraftReadModel(record, semanticGraph)
       );
     },
     replaceRemoteDraftState: (state) => {

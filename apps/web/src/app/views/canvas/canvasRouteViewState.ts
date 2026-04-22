@@ -16,6 +16,7 @@ type CanvasController = ReturnType<typeof useCanvasController>;
 
 export type CanvasRouteViewState = {
   draftTransportError: CanvasDraftTransportErrorState | null;
+  startupBlockState: CanvasRouteInteractionState['startupBlockState'];
   effectiveUserPermissions: CanvasRouteInteractionState['effectiveUserPermissions'];
   readOnlyState: CanvasRouteInteractionState['readOnlyState'];
   workbenchErrorMessage: CanvasRouteInteractionState['workbenchErrorMessage'];
@@ -30,8 +31,7 @@ export function deriveCanvasRouteViewState(
   const interactionState = deriveCanvasRouteInteractionState(controller, draftTransportError);
   const presentationState = deriveCanvasDraftPresentationState({
     isBackendCheckPending: controller.isBackendCheckPending,
-    shouldBlockCanvasInApiMode: interactionState.shouldBlockCanvasInApiMode,
-    backendBlockMessage: controller.backendBlockMessage,
+    startupBlockState: interactionState.startupBlockState,
     workbenchState: interactionState.effectiveWorkbenchState,
     recoveryReason: controller.draftRecoveryReason,
     draftToolbarState: controller.draftToolbarState,
@@ -39,6 +39,7 @@ export function deriveCanvasRouteViewState(
 
   return {
     draftTransportError,
+    startupBlockState: interactionState.startupBlockState,
     effectiveUserPermissions: interactionState.effectiveUserPermissions,
     readOnlyState: interactionState.readOnlyState,
     workbenchErrorMessage: interactionState.workbenchErrorMessage,

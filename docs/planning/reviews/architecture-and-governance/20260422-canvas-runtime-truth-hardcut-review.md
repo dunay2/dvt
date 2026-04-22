@@ -40,7 +40,9 @@ This review covers the route-owned authoring path for:
 
 - `Canvas.tsx`
 - `canvasRouteViewState.ts`
-- `useCanvasGraphModel.ts`
+- `canvasAuthoringGraphProjection.ts`
+- `useCanvasAuthoringProjection.ts`
+- `useCanvasViewportGraphModel.ts`
 - protected draft projection and repository seams
 - runtime startup posture for Canvas authoring
 - local development truth versus product truth for the Canvas route
@@ -102,8 +104,8 @@ The actual causes are:
 
 - `resolveDataSource()` still defaults to `mock`, so missing configuration does
   not fail closed
-- Canvas graph hydration still depends on a snapshot-style path in
-  `useCanvasGraphModel.ts`
+- Canvas graph hydration still depends on a snapshot-style authoring path that
+  mixes semantic truth with viewport concerns
 - the protected draft read projection remains lossy and therefore cannot fully
   replace the legacy snapshot path yet
 - docs still describe `mock` and `api` as parallel runtime modes for the
@@ -214,9 +216,9 @@ flowchart LR
   Runtime --> DraftPort["protected draft port"]
   Runtime --> Snapshot["legacy workspace snapshot path"]
   DraftPort --> Session["CanvasDraftSession"]
-  Snapshot --> GraphModel["useCanvasGraphModel"]
-  Session --> GraphModel
-  GraphModel --> View["CanvasShell / React Flow"]
+  Snapshot --> SemanticProjection["legacy snapshot-fed semantic projection"]
+  Session --> SemanticProjection
+  SemanticProjection --> View["CanvasShell / React Flow"]
 ```
 
 The problem is not the existence of a read model.
@@ -231,10 +233,11 @@ flowchart LR
   Route["Canvas route"] --> Bootstrap["published route bootstrap"]
   Bootstrap --> DraftRepository["canvasDraftRepository"]
   DraftRepository --> DraftPort["protected workspaceGraphDraft boundary"]
-  DraftRepository --> SemanticProjection["semantic draft projection"]
+  DraftRepository --> SemanticProjection["canvasAuthoringGraphProjection.ts"]
   SemanticProjection --> Session["CanvasDraftSession"]
-  Session --> GraphModel["draft-backed graph model"]
-  GraphModel --> View["CanvasShell / React Flow"]
+  Session --> ProjectionHook["useCanvasAuthoringProjection.ts"]
+  ProjectionHook --> ViewportModel["useCanvasViewportGraphModel.ts"]
+  ViewportModel --> View["CanvasShell / React Flow"]
 ```
 
 Target rule:
@@ -336,7 +339,9 @@ Implementation of this slice MUST update those docs in the same work item.
   - `apps/web/src/app/services/workspace/workspaceGraphDraftProjection.ts`
   - `apps/web/src/app/views/Canvas.tsx`
   - `apps/web/src/app/views/canvas/canvasRouteViewState.ts`
-  - `apps/web/src/app/views/canvas/useCanvasGraphModel.ts`
+  - `apps/web/src/app/views/canvas/canvasAuthoringGraphProjection.ts`
+  - `apps/web/src/app/views/canvas/useCanvasAuthoringProjection.ts`
+  - `apps/web/src/app/views/canvas/useCanvasViewportGraphModel.ts`
   - Canvas draft repository and read-model seams as needed
   - `scripts/run-dev-stack.cjs`
   - the affected Canvas and frontend-boundary docs
@@ -372,6 +377,43 @@ Implementation of this slice MUST update those docs in the same work item.
   - no fallback graph appears when runtime truth is absent
 - Libraries evaluated:
   - none; this is an internal boundary and authority hard-cut
+
+## Agreed test strategy for the hard-cut
+
+The test model for this hard-cut is now fixed and must not drift during
+execution:
+
+1. Producer truth stays in `apps/api` integration coverage.
+   - `apps/api/test/integration/protectedRuntime.integration.test.ts`
+   - `apps/api/test/integration/protectedRuntime.integration.workspaceDraft.scenarios.ts`
+   - Purpose: prove the protected runtime boundary and workspace-draft contract
+     that Canvas consumes.
+2. Consumer and route truth stays in `apps/web` Vitest coverage.
+   - `apps/web/src/app/views/Canvas.routeStates.test.tsx`
+   - `apps/web/src/app/views/canvas/canvasDraftRepository.readWrite.test.ts`
+   - `apps/web/src/app/views/canvas/canvasDraftRepository.conflict.test.ts`
+   - `apps/web/src/app/views/canvas/useCanvasController*.test.tsx`
+   - Purpose: prove route posture, authoring transitions, projection behavior,
+     and fail-closed actions without browser flake.
+3. Browser truth for back/front integration belongs to one live-runtime Cypress
+   lane.
+   - That lane MUST exercise the real protected runtime surface.
+   - That lane MUST NOT use `cy.intercept` for the authoring contract under
+     test.
+   - Purpose: prove the Canvas route works end-to-end against the real backend,
+     not just against frontend doubles.
+4. Intercepted Cypress specs remain consumer-contract or presentation tests
+   only.
+   - Existing intercepted specs are still useful for deterministic UI checks.
+   - They do not close the hard-cut operability claim and they do not count as
+     the canonical back/front proof for `TF-E2-E`.
+
+Execution consequence:
+
+- `TF-E2-A`, `TF-E2-B`, and `TF-E2-C` may close with API integration plus web
+  Vitest evidence for their bounded slices.
+- `TF-E2-E` is the owner of the live-runtime Cypress proof lane and the place
+  where the browser-level no-legacy claim becomes release evidence.
 
 ## Fowler reading and comparison with mature systems
 

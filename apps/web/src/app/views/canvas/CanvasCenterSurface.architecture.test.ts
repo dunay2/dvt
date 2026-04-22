@@ -11,7 +11,7 @@ describe('CanvasCenterSurface architecture', () => {
   it('delegates draft transport and workbench route-state rendering to dedicated helpers', () => {
     expect(CENTER_SURFACE_SOURCE).toContain('renderCanvasDraftTransportSurface');
     expect(CENTER_SURFACE_SOURCE).toContain('renderCanvasWorkbenchSurface');
-    expect(CENTER_SURFACE_SOURCE).toContain('renderCanvasBackendWorkbenchSurface');
+    expect(CENTER_SURFACE_SOURCE).toContain('renderCanvasStartupWorkbenchSurface');
     expect(CENTER_SURFACE_SOURCE).toContain('renderCanvasGraphWorkbenchSurface');
     expect(CENTER_SURFACE_SOURCE).toContain('renderCanvasEmptyWorkbenchSurface');
   });

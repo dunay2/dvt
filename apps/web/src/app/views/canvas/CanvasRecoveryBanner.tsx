@@ -1,19 +1,22 @@
+/**
+ * Owned concern: render Canvas draft-recovery banners from controller recovery state.
+ */
+
 import { Button } from '../../components/ui/button';
 import { canvasViewCopy } from './copy';
 import type { useCanvasController } from './useCanvasController';
 
 type CanvasControllerRecovery = Pick<
   ReturnType<typeof useCanvasController>,
-  'draftRecoveryReason' | 'reloadLatestDraft' | 'adoptCurrentWorkspaceSnapshot'
+  'draftRecoveryReason' | 'reloadLatestDraft'
 >;
 
-export function CanvasRecoveryBanner({
-  controller,
-  visible,
-}: {
+type CanvasRecoveryBannerProps = Readonly<{
   controller: CanvasControllerRecovery;
   visible: boolean;
-}) {
+}>;
+
+export function CanvasRecoveryBanner({ controller, visible }: CanvasRecoveryBannerProps) {
   if (!visible) {
     return null;
   }
@@ -52,13 +55,6 @@ export function CanvasRecoveryBanner({
             <Button size="sm" variant="outline" onClick={controller.reloadLatestDraft}>
               {canvasViewCopy.reloadLatestDraftLabel}
             </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={controller.adoptCurrentWorkspaceSnapshot}
-            >
-              {canvasViewCopy.adoptCurrentWorkspaceSnapshotLabel}
-            </Button>
           </div>
         </div>
       </div>
@@ -82,13 +78,6 @@ export function CanvasRecoveryBanner({
         <div className="flex flex-wrap items-center gap-2">
           <Button size="sm" variant="outline" onClick={controller.reloadLatestDraft}>
             {canvasViewCopy.reloadLatestDraftLabel}
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={controller.adoptCurrentWorkspaceSnapshot}
-          >
-            {canvasViewCopy.adoptCurrentWorkspaceSnapshotLabel}
           </Button>
         </div>
       </div>

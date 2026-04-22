@@ -2,7 +2,7 @@
 title: Graph Sequences And State Machines
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-04-17
+last_reviewed: 2026-04-22
 ---
 
 # Graph Sequences And State Machines
@@ -77,11 +77,11 @@ stateDiagram-v2
   saving --> editing
   saving --> conflict
   editing --> missing_remote
-  conflict --> editing
-  missing_remote --> editing
+  conflict --> editing: reloadFromRemote
+  missing_remote --> editing: reloadFromRemote
 ```
 
 Rule:
 
-- conflict and missing-remote are fail-closed mutation states until explicit
-  recovery action.
+- conflict and missing-remote are fail-closed mutation states until an
+  authoritative remote reload succeeds.

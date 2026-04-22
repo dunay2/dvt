@@ -2023,11 +2023,13 @@ tasks:
       unsupported draft outcomes.
     complexity: S
     effort_points: 3
-    progress_pct: 90
+    progress_pct: 95
     evidence_refs:
       - docs/planning/closeouts/20260418-tf-e2-canvas-draft-repository-seam-closeout.md
       - docs/planning/closeouts/20260418-tf-e2-canvas-srp-seams-closeout.md
       - docs/planning/closeouts/20260420-tf-e2-canvas-typed-authoring-port-hard-cut-closeout.md
+      - docs/planning/closeouts/20260422-tf-e2-semantic-protected-draft-projection-cut-closeout.md
+      - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-canvas-empty-authoring-entrypoint-design-20260422.md
       - docs/planning/reviews/architecture-and-governance/20260422-canvas-runtime-truth-hardcut-review.md
       - docs/architecture/components/web/graph/canvas-controller-current-to-target-architecture.md
       - apps/web/src/app/services/AppServicesContext.tsx
@@ -2055,9 +2057,15 @@ tasks:
       truth review now freezes the remaining closure shape: remove snapshot-backed graph hydration
       and mock-backed startup from active Canvas authoring, replace the still-lossy read projection
       with semantic protected-draft projection, and fail closed with explicit blocked posture when
-      protected runtime truth is unavailable. The remaining TF-E2-A closure is that no-legacy read
-      cut, any wider alignment with `TF-A2` and `TF-C4`, and proof-oriented follow-up under
-      `TF-E2-E`.
+      protected runtime truth is unavailable. That semantic projection cut is now also implemented:
+      `workspaceGraphDraftProjection.ts` emits the protected canonical graph, `canvasDraftReadModel`
+      carries it, `canvasDraftRepository` preserves it across save and conflict cache updates, and
+      `useCanvasGraphModel.ts` now prefers protected draft semantics over legacy snapshot semantics.
+      The empty-state authoring-entry design is now also frozen in a dedicated proposal so the next
+      implementation slice can add a route-owned `Add first node` command without reintroducing
+      import coupling, fake startup nodes, or another legacy fallback path. The remaining TF-E2-A
+      closure is the slice-3 deletion of snapshot-backed active-authoring fallback, any wider
+      alignment with `TF-A2` and `TF-C4`, and proof-oriented follow-up under `TF-E2-E`.
     last_verified: '2026-04-22'
   - task_id: TF-E2-B
     parent_task: TF-E2
@@ -2073,11 +2081,12 @@ tasks:
       visual-only success.
     complexity: S
     effort_points: 3
-    progress_pct: 55
+    progress_pct: 65
     evidence_refs:
       - docs/planning/closeouts/20260418-tf-e2-canvas-interaction-command-seam-closeout.md
       - docs/planning/closeouts/20260421-tf-e2-graph-lifecycle-hard-cut-closeout.md
       - docs/planning/closeouts/20260421-tf-e2-canvas-handler-component-semantics-closeout.md
+      - docs/planning/closeouts/20260422-tf-e2-semantic-protected-draft-projection-cut-closeout.md
       - docs/planning/reviews/architecture-and-governance/20260421-canvas-handler-seams-fowler-review.md
       - docs/architecture/components/web/graph/canvas-controller-current-to-target-architecture.md
       - docs/architecture/components/web/graph/canvas-graph-lifecycle-component.md
@@ -2093,9 +2102,11 @@ tasks:
       namespaced node lifecycle API, and graph fallout is applied through one lifecycle-aware helper
       instead of adapter-local reconstruction. The handler-contract subsystem is now also documented
       and guarded as an explicit local component with namespaced builder APIs and semantic
-      architecture tests instead of loose helper exports. Duplicate, full move/reload closure, and
-      the remaining product-lifecycle proofs still remain open.
-    last_verified: '2026-04-21'
+      architecture tests instead of loose helper exports. The protected-draft semantic projection
+      cut now also keeps the visible node graph aligned with protected draft truth instead of legacy
+      snapshot semantics when a remote draft exists. Duplicate, full move/reload closure, and the
+      remaining product-lifecycle proofs still remain open.
+    last_verified: '2026-04-22'
   - task_id: TF-E2-C
     parent_task: TF-E2
     priority: P0
@@ -2109,11 +2120,12 @@ tasks:
       remain projections of canonical graph state rather than transient modal or viewport state.
     complexity: S
     effort_points: 3
-    progress_pct: 55
+    progress_pct: 65
     evidence_refs:
       - docs/planning/closeouts/20260418-tf-e2-canvas-interaction-command-seam-closeout.md
       - docs/planning/closeouts/20260421-tf-e2-graph-lifecycle-hard-cut-closeout.md
       - docs/planning/closeouts/20260421-tf-e2-canvas-handler-component-semantics-closeout.md
+      - docs/planning/closeouts/20260422-tf-e2-semantic-protected-draft-projection-cut-closeout.md
       - docs/planning/reviews/architecture-and-governance/20260421-canvas-handler-seams-fowler-review.md
       - docs/architecture/components/web/graph/canvas-controller-current-to-target-architecture.md
       - docs/architecture/components/web/graph/canvas-graph-lifecycle-component.md
@@ -2130,8 +2142,10 @@ tasks:
       visual-only edge changes no longer need to present themselves as a separate command catalog
       concern. The shared handler-contract subsystem is now explicit in both code and architecture
       docs, with namespaced builder APIs and semantic fitness checks protecting the adapter seam.
+      The protected-draft semantic projection cut now also keeps rendered edges aligned with the
+      protected draft graph instead of legacy snapshot edge semantics when a remote draft exists.
       Reconnect semantics and full reload-proof lifecycle closure still remain open.
-    last_verified: '2026-04-21'
+    last_verified: '2026-04-22'
   - task_id: TF-E2-D
     parent_task: TF-E2
     priority: P0
@@ -2183,13 +2197,20 @@ tasks:
       - apps/web/src/app/views/canvas/useCanvasExecutionActions.planPreview.provenance.test.tsx
       - apps/web/src/app/views/canvas/useCanvasExecutionActions.planPreview.freshness.test.tsx
       - apps/web/src/app/views/canvas/useCanvasExecutionActions.test.support.tsx
+      - docs/planning/reviews/architecture-and-governance/20260422-canvas-runtime-truth-hardcut-review.md
+      - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-canvas-target-architecture-execution-plan-20260417.md
     status_reason: >-
       Planned slice; execution has not started. After the 2026-04-20 sync review, the
       execution-actions test split is treated as mainline baseline rather than remaining work. The
-      remediation still needed is one canonical Canvas test kit, application-service and command
-      tests for plan and run orchestration seams, and a governed placement for test-support files so
-      proof and generated inventory stay aligned.
-    last_verified: '2026-04-20'
+      2026-04-22 runtime-truth review now also freezes the proof taxonomy: API integration tests in
+      `apps/api` remain producer truth for the protected runtime contract, `apps/web` Vitest suites
+      remain the consumer and route proof lane, and `TF-E2-E` owns the only acceptable browser-level
+      back/front integration lane, which must run against the live protected runtime without
+      `cy.intercept` on the authoring contract. The remediation still needed is one canonical Canvas
+      test kit, application-service and command tests for plan and run orchestration seams, governed
+      placement for test-support files, and the live-runtime Cypress proof that closes the no-legacy
+      hard cut.
+    last_verified: '2026-04-22'
 dependency_notes:
   - >-
     `MVP-E1` and `F-07` now define the frontend runtime contract baseline. `F-07` executes in

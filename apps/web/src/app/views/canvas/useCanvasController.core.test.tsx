@@ -1,24 +1,66 @@
 import React, { act } from 'react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
+import {
+  buildRemoteDraftRecord,
+  createHarnessWithDraft,
+} from './useCanvasController.draftLifecycle.test.support';
 import { setupCanvasControllerHarness } from './useCanvasController.test.harness';
 
 describe('useCanvasController core', () => {
   let harness: ReturnType<typeof setupCanvasControllerHarness>;
 
   beforeEach(async () => {
-    harness = setupCanvasControllerHarness();
-    await harness.renderProbe();
+    harness = await createHarnessWithDraft(
+      buildRemoteDraftRecord({
+        nodeIds: ['node_1', 'node_2'],
+        nodePositions: {
+          node_1: { x: 0, y: 0 },
+          node_2: { x: 100, y: 0 },
+        },
+        edges: [{ sourceId: 'node_1', targetId: 'node_2' }],
+      })
+    );
   });
 
   afterEach(() => {
     harness.cleanup();
   });
 
-  it('maps workspace graph into canonical explorer state and injects overlay decorations', () => {
+  it('maps protected draft semantics into canonical explorer state and injects overlay decorations', () => {
     const result = harness.getLatestResult();
-    expect(result?.explorerNodes).toEqual(harness.state.canonicalNodes);
-    expect(result?.edges).toEqual([{ id: 'edge_1', source: 'node_1', target: 'node_2' }]);
+    expect(result?.explorerNodes).toEqual([
+      expect.objectContaining({
+        id: 'node_1',
+        name: 'node_1',
+        pluginId: 'dvt',
+        kind: 'dvt:source',
+        role: 'input',
+        metadata: {
+          config: {
+            schema: 'raw',
+            table: 'node_1',
+            alias: 'node_1',
+          },
+        },
+      }),
+      expect.objectContaining({
+        id: 'node_2',
+        name: 'node_2',
+        pluginId: 'dvt',
+        kind: 'dvt:sql_transform',
+        role: 'transform',
+        path: 'models/node_2.sql',
+        metadata: {
+          config: {
+            dialect: 'postgres',
+          },
+        },
+      }),
+    ]);
+    expect(result?.edges).toEqual([
+      { id: 'draft_edge_node_1_node_2', source: 'node_1', target: 'node_2' },
+    ]);
     expect(result?.nodesWithImpact).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -29,16 +71,33 @@ describe('useCanvasController core', () => {
     );
     expect(result?.impactOverlayEnabled).toBe(true);
     expect(harness.mocks.buildNodeDecorations).toHaveBeenCalledWith(
-      harness.state.canonicalNodes,
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: 'node_1',
+          kind: 'dvt:source',
+        }),
+        expect.objectContaining({
+          id: 'node_2',
+          kind: 'dvt:sql_transform',
+        }),
+      ]),
       [{ id: 'impact' }],
       null,
       { overlay: 'ctx' }
     );
   });
 
-  it('derives inspector node and forwards graph and execution hook results', () => {
+  it('derives inspector node from protected draft semantics and forwards graph and execution hook results', () => {
     const result = harness.getLatestResult();
-    expect(result?.inspectorNode).toEqual(harness.state.canonicalNodes[0]);
+    expect(result?.inspectorNode).toEqual(
+      expect.objectContaining({
+        id: 'node_1',
+        name: 'node_1',
+        pluginId: 'dvt',
+        kind: 'dvt:source',
+        role: 'input',
+      })
+    );
     expect(result?.currentPlan).toEqual(harness.state.currentPlan);
     expect(result?.canvasAuthoringMode).toBe('transformation');
     expect(result?.transformationValidation).toEqual(
@@ -111,7 +170,7 @@ describe('useCanvasController core', () => {
     );
   });
 
-  it('invalidates the graph query and prepares focus when imported sources complete', async () => {
+  it('invalidates the protected draft query and prepares focus when imported sources complete', async () => {
     const storeState = harness.state.store as Record<string, unknown>;
     storeState.inspectorPanelVisible = false;
     await harness.renderProbe();
@@ -140,7 +199,7 @@ describe('useCanvasController core', () => {
     expect(harness.state.store.setInspectorNode).toHaveBeenCalledWith('src_erp_orders');
     expect(harness.state.store.showInspectorPanel).toHaveBeenCalledTimes(1);
     expect(harness.state.queryClient.invalidateQueries).toHaveBeenCalledWith({
-      queryKey: ['workspace', 'graph', 'tenant-a::project-a::dev'],
+      queryKey: ['workspace', 'graph-draft', 'tenant-a::project-a::dev'],
     });
     expect(harness.getLatestResult()?.importedNodeFocusIds).toEqual([
       'src_erp_orders',

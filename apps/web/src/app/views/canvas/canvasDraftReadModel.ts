@@ -7,7 +7,11 @@ import type {
 
 import type { WorkspaceGraphDraftRecord } from '../../ports/workspace';
 import type { WorkspaceGraphDraftAuthoringReadResult } from '../../ports/workspaceGraphDraftAuthoring';
-import { projectProtectedWorkspaceGraphDraftRecord } from '../../services/workspace/workspaceGraphDraftProjection';
+import {
+  projectDesignGraphDraftSemanticGraph,
+  projectProtectedWorkspaceGraphDraftRecord,
+  type WorkspaceGraphDraftSemanticGraph,
+} from '../../services/workspace/workspaceGraphDraftProjection';
 
 export type CanvasDraftAccessMode = WorkspaceGraphDraftCapabilityMode | 'unknown';
 
@@ -17,6 +21,7 @@ export type CanvasDraftReadModel = {
   formatError: WorkspaceGraphDraftFormatError | null;
   formatMeta: WorkspaceGraphDraftFormatMeta | null;
   record: WorkspaceGraphDraftRecord | null;
+  semanticGraph: WorkspaceGraphDraftSemanticGraph | null;
 };
 
 export function createUnknownCanvasDraftReadModel(
@@ -28,11 +33,13 @@ export function createUnknownCanvasDraftReadModel(
     formatError: null,
     formatMeta: null,
     record,
+    semanticGraph: null,
   };
 }
 
 export function createWritableCanvasDraftReadModel(
-  record: WorkspaceGraphDraftRecord
+  record: WorkspaceGraphDraftRecord,
+  semanticGraph: WorkspaceGraphDraftSemanticGraph | null = null
 ): CanvasDraftReadModel {
   return {
     accessMode: 'writable',
@@ -40,6 +47,7 @@ export function createWritableCanvasDraftReadModel(
     formatError: null,
     formatMeta: null,
     record,
+    semanticGraph,
   };
 }
 
@@ -56,6 +64,7 @@ export function projectCanvasDraftReadModel(
         formatError: null,
         formatMeta: result.formatMeta,
         record: projectProtectedWorkspaceGraphDraftRecord(result.record),
+        semanticGraph: projectDesignGraphDraftSemanticGraph(result.record.draft),
       };
     case 'denied':
       return {
@@ -64,6 +73,7 @@ export function projectCanvasDraftReadModel(
         formatError: null,
         formatMeta: null,
         record: null,
+        semanticGraph: null,
       };
     case 'format_error':
       return {
@@ -72,6 +82,7 @@ export function projectCanvasDraftReadModel(
         formatError: result.formatError,
         formatMeta: null,
         record: null,
+        semanticGraph: null,
       };
   }
 }

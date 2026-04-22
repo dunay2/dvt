@@ -45,84 +45,136 @@ vi.mock('./CanvasViewport', () => ({
   },
 }));
 
-function buildProps(overrides?: Partial<CanvasShellProps>): CanvasShellProps {
+type CanvasShellPropsOverrides = {
+  layout?: Partial<CanvasShellProps['layout']>;
+  panels?: Partial<CanvasShellProps['panels']>;
+  graph?: Partial<CanvasShellProps['graph']>;
+  graphCommands?: Partial<CanvasShellProps['graphCommands']>;
+  chromeCommands?: Partial<CanvasShellProps['chromeCommands']>;
+  toolbar?: Partial<CanvasShellProps['toolbar']>;
+  centerSurface?: CanvasShellProps['centerSurface'];
+  readOnlyBanner?: CanvasShellProps['readOnlyBanner'];
+};
+
+function buildProps(overrides?: CanvasShellPropsOverrides): CanvasShellProps {
   const defaultDraftToolbarState: CanvasDraftToolbarState = {
     label: canvasViewCopy.draftSyncedLabel,
     tone: 'neutral',
     showReloadAction: false,
   };
 
-  return {
-    focusMode: false,
-    explorerPanelVisible: true,
-    inspectorPanelVisible: false,
-    explorerNodes: [
-      {
-        id: 'node.orders',
-        name: 'orders',
-        pluginId: 'dbt',
-        kind: 'dbt:model',
-        role: 'transform',
-        status: 'idle',
-        tags: [],
-      },
-    ],
-    inspectorNode: null,
-    activeRunId: null,
-    registeredPlugins: new Set(['dbt']),
-    userPermissions: {
-      canPlan: true,
-      canRun: true,
-      canEditEdges: true,
+  const baseProps: CanvasShellProps = {
+    layout: {
+      focusMode: false,
+      explorerPanelVisible: true,
+      inspectorPanelVisible: false,
+      canOpenSourceImport: true,
     },
-    nodesWithImpact: [],
-    edges: [],
-    nodeTypes: {},
-    gridSize: 24,
-    canvasPalette: DEFAULT_CANVAS_PALETTE_ID,
-    viewport: null,
-    onNodesChange: vi.fn(),
-    onNodeDragStop: vi.fn(),
-    onEdgesChange: vi.fn(),
-    onConnect: vi.fn(),
-    onNodeClick: vi.fn(),
-    onSelectionChange: vi.fn(),
-    onViewportChange: vi.fn(),
-    onDrop: vi.fn(),
-    onDragOver: vi.fn(),
-    onSourceImportComplete: vi.fn(),
-    importedNodeFocusIds: [],
-    onImportedNodeFocusComplete: vi.fn(),
-    onHideExplorer: vi.fn(),
-    onShowExplorer: vi.fn(),
-    onHideInspector: vi.fn(),
-    onShowInspector: vi.fn(),
-    onAutoLayout: vi.fn(),
-    onToggleCostOverlay: vi.fn(),
-    onToggleImpact: vi.fn(),
-    onToggleColumns: vi.fn(),
-    onReloadLatestDraft: vi.fn(),
-    onPlan: vi.fn(),
-    onRun: vi.fn(),
-    draftToolbarState: defaultDraftToolbarState,
-    canStartRun: false,
-    planStatusSummary: canvasViewCopy.planStatusPreviewRequiredMessage,
-    exclusiveOverlayMode: 'runtime',
-    canUseCostOverlay: false,
-    impactOverlayEnabled: false,
-    columnLevelLineageEnabled: false,
-    canvasAuthoringMode: 'transformation',
-    transformationValidation: {
-      valid: false,
-      summaryCode: 'requires_three_nodes',
-      draftSignature: 'draft',
-      scopedNodeIds: [],
-      scopedEdgeIds: [],
-      nodeRolesById: {},
+    panels: {
+      explorerNodes: [
+        {
+          id: 'node.orders',
+          name: 'orders',
+          pluginId: 'dbt',
+          kind: 'dbt:model',
+          role: 'transform',
+          status: 'idle',
+          tags: [],
+        },
+      ],
+      inspectorNode: null,
+      activeRunId: null,
+      registeredPlugins: new Set(['dbt']),
+      userPermissions: {
+        canPlan: true,
+        canRun: true,
+        canEditEdges: true,
+      },
+    },
+    graph: {
+      canvasAuthoringMode: 'transformation',
+      nodesWithImpact: [],
+      edges: [],
+      nodeTypes: {},
+      gridSize: 24,
+      canvasPalette: DEFAULT_CANVAS_PALETTE_ID,
+      viewport: null,
+    },
+    graphCommands: {
+      onNodesChange: vi.fn(),
+      onNodeDragStop: vi.fn(),
+      onEdgesChange: vi.fn(),
+      onConnect: vi.fn(),
+      onNodeClick: vi.fn(),
+      onSelectionChange: vi.fn(),
+      onViewportChange: vi.fn(),
+      onDrop: vi.fn(),
+      onDragOver: vi.fn(),
+      onSourceImportComplete: vi.fn(),
+      importedNodeFocusIds: [],
+      onImportedNodeFocusComplete: vi.fn(),
+    },
+    chromeCommands: {
+      onHideExplorer: vi.fn(),
+      onShowExplorer: vi.fn(),
+      onHideInspector: vi.fn(),
+      onShowInspector: vi.fn(),
+    },
+    toolbar: {
+      onAutoLayout: vi.fn(),
+      onToggleCostOverlay: vi.fn(),
+      onToggleImpact: vi.fn(),
+      onToggleColumns: vi.fn(),
+      onReloadLatestDraft: vi.fn(),
+      onPlan: vi.fn(),
+      onRun: vi.fn(),
+      draftToolbarState: defaultDraftToolbarState,
+      canStartRun: false,
+      planStatusSummary: canvasViewCopy.planStatusPreviewRequiredMessage,
+      exclusiveOverlayMode: 'runtime',
+      canUseCostOverlay: false,
+      impactOverlayEnabled: false,
+      columnLevelLineageEnabled: false,
+      transformationValidation: {
+        valid: false,
+        summaryCode: 'requires_three_nodes',
+        draftSignature: 'draft',
+        scopedNodeIds: [],
+        scopedEdgeIds: [],
+        nodeRolesById: {},
+      },
     },
     centerSurface: undefined,
     readOnlyBanner: undefined,
-    ...overrides,
+  };
+
+  return {
+    layout: {
+      ...baseProps.layout,
+      ...overrides?.layout,
+    },
+    panels: {
+      ...baseProps.panels,
+      ...overrides?.panels,
+    },
+    graph: {
+      ...baseProps.graph,
+      ...overrides?.graph,
+    },
+    graphCommands: {
+      ...baseProps.graphCommands,
+      ...overrides?.graphCommands,
+    },
+    chromeCommands: {
+      ...baseProps.chromeCommands,
+      ...overrides?.chromeCommands,
+    },
+    toolbar: {
+      ...baseProps.toolbar,
+      ...overrides?.toolbar,
+    },
+    centerSurface: overrides?.centerSurface ?? baseProps.centerSurface,
+    readOnlyBanner: overrides?.readOnlyBanner ?? baseProps.readOnlyBanner,
   };
 }
 
@@ -155,10 +207,12 @@ describe('CanvasShell', () => {
       root.render(
         <CanvasShell
           {...buildProps({
-            userPermissions: {
-              canPlan: false,
-              canRun: false,
-              canEditEdges: false,
+            panels: {
+              userPermissions: {
+                canPlan: false,
+                canRun: false,
+                canEditEdges: false,
+              },
             },
           })}
         />
@@ -182,9 +236,28 @@ describe('CanvasShell', () => {
     expect(shellState.dbtExplorerProps?.onOpenDataRegistry).toBeTypeOf('function');
   });
 
+  it('hides explorer import affordances when source import is unavailable', async () => {
+    const props = buildProps({
+      layout: {
+        canOpenSourceImport: false,
+      },
+    });
+
+    await act(async () => {
+      root.render(<CanvasShell {...props} />);
+    });
+
+    expect(shellState.dbtExplorerProps).toMatchObject({
+      canEditGraph: true,
+    });
+    expect(shellState.dbtExplorerProps?.onOpenDataRegistry).toBeUndefined();
+  });
+
   it('wires source import completion and imported-node focus through the shell surfaces', async () => {
     const props = buildProps({
-      importedNodeFocusIds: ['src_erp_orders', 'src_erp_customers'],
+      graphCommands: {
+        importedNodeFocusIds: ['src_erp_orders', 'src_erp_customers'],
+      },
     });
 
     await act(async () => {
@@ -193,10 +266,10 @@ describe('CanvasShell', () => {
 
     expect(shellState.canvasViewportProps).toMatchObject({
       importedNodeFocusIds: ['src_erp_orders', 'src_erp_customers'],
-      onImportedNodeFocusComplete: props.onImportedNodeFocusComplete,
+      onImportedNodeFocusComplete: props.graphCommands.onImportedNodeFocusComplete,
     });
     expect(shellState.sourceImportWizardProps).toMatchObject({
-      onComplete: props.onSourceImportComplete,
+      onComplete: props.graphCommands.onSourceImportComplete,
     });
   });
 
@@ -220,10 +293,12 @@ describe('CanvasShell', () => {
       root.render(
         <CanvasShell
           {...buildProps({
-            userPermissions: {
-              canPlan: false,
-              canRun: false,
-              canEditEdges: false,
+            panels: {
+              userPermissions: {
+                canPlan: false,
+                canRun: false,
+                canEditEdges: false,
+              },
             },
           })}
         />

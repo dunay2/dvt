@@ -23,6 +23,7 @@ export const dvtContributions: PluginContributions = {
   nodeKinds: DVT_AUTHORING_NODE_KINDS,
   nodeRenderers,
   connectionRules: [
+    { sourceKind: 'dvt:source', targetKind: 'dvt:sql_transform', allowed: true },
     { sourceKind: 'dvt:sql_transform', targetKind: 'dvt:sink', allowed: true },
     {
       sourceKind: 'dvt:sink',

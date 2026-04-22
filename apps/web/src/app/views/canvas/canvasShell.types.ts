@@ -13,15 +13,22 @@ export type UserPermissions = {
   canEditEdges: boolean;
 };
 
-export type CanvasShellProps = {
+export type CanvasShellLayout = {
   focusMode: boolean;
   explorerPanelVisible: boolean;
   inspectorPanelVisible: boolean;
+  canOpenSourceImport: boolean;
+};
+
+export type CanvasShellPanels = {
   explorerNodes: CanonicalNode[];
   inspectorNode: CanonicalNode | null;
   activeRunId: string | null;
   registeredPlugins: ReadonlySet<string>;
   userPermissions: UserPermissions;
+};
+
+export type CanvasShellGraph = {
   canvasAuthoringMode: 'transformation' | 'dbt';
   nodesWithImpact: Node[];
   edges: Edge[];
@@ -29,6 +36,9 @@ export type CanvasShellProps = {
   gridSize: number;
   canvasPalette: CanvasPaletteId;
   viewport: { x: number; y: number; zoom: number } | null;
+};
+
+export type CanvasShellGraphCommands = {
   onNodesChange: NonNullable<ReactFlowProps<Node, Edge>['onNodesChange']>;
   onNodeDragStop: NonNullable<ReactFlowProps<Node, Edge>['onNodeDragStop']>;
   onEdgesChange: NonNullable<ReactFlowProps<Node, Edge>['onEdgesChange']>;
@@ -41,10 +51,16 @@ export type CanvasShellProps = {
   onSourceImportComplete: (result: ImportSourcesResult) => void;
   importedNodeFocusIds: string[];
   onImportedNodeFocusComplete: () => void;
+};
+
+export type CanvasShellChromeCommands = {
   onHideExplorer: () => void;
   onShowExplorer: () => void;
   onHideInspector: () => void;
   onShowInspector: () => void;
+};
+
+export type CanvasShellToolbar = {
   onAutoLayout: () => void;
   onToggleCostOverlay: () => void;
   onToggleImpact: () => void;
@@ -60,6 +76,15 @@ export type CanvasShellProps = {
   impactOverlayEnabled: boolean;
   columnLevelLineageEnabled: boolean;
   transformationValidation: TransformationGraphValidationResult;
+};
+
+export type CanvasShellProps = Readonly<{
+  layout: CanvasShellLayout;
+  panels: CanvasShellPanels;
+  graph: CanvasShellGraph;
+  graphCommands: CanvasShellGraphCommands;
+  chromeCommands: CanvasShellChromeCommands;
+  toolbar: CanvasShellToolbar;
   centerSurface?: React.ReactNode;
   readOnlyBanner?: React.ReactNode;
-};
+}>;

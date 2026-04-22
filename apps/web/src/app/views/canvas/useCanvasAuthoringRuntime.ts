@@ -69,7 +69,6 @@ export function useCanvasAuthoringRuntime({
     workspaceService,
     workspaceGraphDraftAuthoringPort,
     workspaceLayoutKey,
-    graphStrategy,
     columnLevelLineageEnabled,
     persistedNodePositions,
     canPersistDraftTransport,

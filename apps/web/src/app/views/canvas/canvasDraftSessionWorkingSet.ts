@@ -1,6 +1,16 @@
 import type { WorkspaceGraphDraft } from '../../ports/workspace';
-import type { CanvasDraftEdge, CanvasDraftSession, CanvasDraftWorkingSet, CanonicalSnapshotArgs } from './canvasDraftSession.types';
-export const EMPTY_WORKING_SET: CanvasDraftWorkingSet = { visibleNodeIds: [], visibleEdges: [], pendingExplicitNodeIds: [] };
+import type { CanonicalNode } from '../../types/canonical';
+import type {
+  CanvasDraftEdge,
+  CanvasDraftSession,
+  CanvasDraftWorkingSet,
+  CanonicalSnapshotArgs,
+} from './canvasDraftSession.types';
+export const EMPTY_WORKING_SET: CanvasDraftWorkingSet = {
+  visibleNodeIds: [],
+  visibleEdges: [],
+  pendingExplicitNodeIds: [],
+};
 function arraysEqual(left: string[], right: string[]): boolean {
   return left.length === right.length && left.every((value, index) => value === right[index]);
 }
@@ -29,7 +39,10 @@ function dedupeEdges(edges: ReadonlyArray<CanvasDraftEdge>): CanvasDraftEdge[] {
   }
   return deduped;
 }
-function buildVisibleEdges(edges: ReadonlyArray<CanvasDraftEdge>, visibleNodeIds: readonly string[]): CanvasDraftEdge[] {
+function buildVisibleEdges(
+  edges: ReadonlyArray<CanvasDraftEdge>,
+  visibleNodeIds: readonly string[]
+): CanvasDraftEdge[] {
   const visibleNodeIdSet = new Set(visibleNodeIds);
   return dedupeEdges(
     edges.filter(
@@ -37,7 +50,10 @@ function buildVisibleEdges(edges: ReadonlyArray<CanvasDraftEdge>, visibleNodeIds
     )
   );
 }
-function buildWorkingSet(nodeIds: string[], edges: ReadonlyArray<CanvasDraftEdge>): CanvasDraftWorkingSet {
+function buildWorkingSet(
+  nodeIds: string[],
+  edges: ReadonlyArray<CanvasDraftEdge>
+): CanvasDraftWorkingSet {
   const visibleNodeIds = dedupeNodeIds(nodeIds);
   return {
     visibleNodeIds,
@@ -63,11 +79,50 @@ function workingSetsEqual(left: CanvasDraftWorkingSet, right: CanvasDraftWorking
   }
   return arraysEqual(left.pendingExplicitNodeIds, right.pendingExplicitNodeIds);
 }
-function withWorkingSet(session: CanvasDraftSession, workingSet: CanvasDraftWorkingSet): CanvasDraftSession {
+function withWorkingSet(
+  session: CanvasDraftSession,
+  workingSet: CanvasDraftWorkingSet
+): CanvasDraftSession {
   if (workingSetsEqual(session.workingSet, workingSet)) {
     return session;
   }
   return { ...session, workingSet };
+}
+
+function readLocalNodeCatalog(session: CanvasDraftSession): Record<string, CanonicalNode> {
+  return session.localNodeCatalog ?? {};
+}
+
+function withLocalNodeCatalog(
+  session: CanvasDraftSession,
+  localNodeCatalog: Record<string, CanonicalNode>
+): CanvasDraftSession {
+  const nextNodeIds = Object.keys(localNodeCatalog);
+  if (nextNodeIds.length === 0) {
+    if (session.localNodeCatalog === undefined) {
+      return session;
+    }
+
+    return {
+      ...session,
+      localNodeCatalog: undefined,
+    };
+  }
+
+  const currentNodeIds = Object.keys(readLocalNodeCatalog(session));
+  const catalogUnchanged =
+    arraysEqual(currentNodeIds, nextNodeIds) &&
+    currentNodeIds.every(
+      (nodeId) => readLocalNodeCatalog(session)[nodeId] === localNodeCatalog[nodeId]
+    );
+  if (catalogUnchanged) {
+    return session;
+  }
+
+  return {
+    ...session,
+    localNodeCatalog,
+  };
 }
 function reconcileSnapshot(
   session: CanvasDraftSession,
@@ -86,10 +141,7 @@ function reconcileSnapshot(
   const nextPendingExplicitNodeIds = pendingExplicitNodeIds.filter(
     (nodeId) => !knownNodeIds.has(nodeId)
   );
-  const mergedVisibleNodeIds = dedupeNodeIds([
-    ...nextVisibleNodeIds,
-    ...promotedExplicitNodeIds,
-  ]);
+  const mergedVisibleNodeIds = dedupeNodeIds([...nextVisibleNodeIds, ...promotedExplicitNodeIds]);
   const visibleNodeIdSet = new Set(mergedVisibleNodeIds);
   const promotedNodeIdSet = new Set(promotedExplicitNodeIds);
   const promotedCanonicalEdges = dedupeEdges(
@@ -107,16 +159,19 @@ function reconcileSnapshot(
     ...promotedCanonicalEdges,
   ]);
 
-  return withWorkingSet(session, {
+  const reconciledSession = withWorkingSet(session, {
     visibleNodeIds: mergedVisibleNodeIds,
     visibleEdges: nextVisibleEdges,
     pendingExplicitNodeIds: nextPendingExplicitNodeIds,
   });
+  const currentLocalNodeCatalog = readLocalNodeCatalog(reconciledSession);
+  const nextLocalNodeCatalog = Object.fromEntries(
+    Object.entries(currentLocalNodeCatalog).filter(([nodeId]) => !knownNodeIds.has(nodeId))
+  );
+
+  return withLocalNodeCatalog(reconciledSession, nextLocalNodeCatalog);
 }
-function queueExplicitNodeIds(
-  session: CanvasDraftSession,
-  nodeIds: string[]
-): CanvasDraftSession {
+function queueExplicitNodeIds(session: CanvasDraftSession, nodeIds: string[]): CanvasDraftSession {
   if (nodeIds.length === 0) {
     return session;
   }
@@ -132,11 +187,12 @@ function queueExplicitNodeIds(
     pendingExplicitNodeIds: nextPendingNodeIds,
   });
 }
-function addExplicitNode(session: CanvasDraftSession, nodeId: string): CanvasDraftSession {
-  if (
-    session.workingSet.visibleNodeIds.includes(nodeId) &&
-    !session.workingSet.pendingExplicitNodeIds.includes(nodeId)
-  ) {
+function addExplicitNode(
+  session: CanvasDraftSession,
+  canonicalNode: CanonicalNode
+): CanvasDraftSession {
+  const nodeId = canonicalNode.id;
+  if (explicitNodeAlreadyTracked(session, canonicalNode)) {
     return session;
   }
   const nextVisibleNodeIds = session.workingSet.visibleNodeIds.includes(nodeId)
@@ -145,15 +201,31 @@ function addExplicitNode(session: CanvasDraftSession, nodeId: string): CanvasDra
   const nextPendingNodeIds = session.workingSet.pendingExplicitNodeIds.filter(
     (pendingNodeId) => pendingNodeId !== nodeId
   );
-
-  return withWorkingSet(session, {
+  const nextSession = withWorkingSet(session, {
     ...session.workingSet,
     visibleNodeIds: nextVisibleNodeIds,
     pendingExplicitNodeIds: nextPendingNodeIds,
   });
+  return withLocalNodeCatalog(nextSession, {
+    ...readLocalNodeCatalog(nextSession),
+    [nodeId]: canonicalNode,
+  });
+}
+
+function explicitNodeAlreadyTracked(
+  session: CanvasDraftSession,
+  canonicalNode: CanonicalNode
+): boolean {
+  const nodeId = canonicalNode.id;
+
+  return (
+    session.workingSet.visibleNodeIds.includes(nodeId) &&
+    !session.workingSet.pendingExplicitNodeIds.includes(nodeId) &&
+    readLocalNodeCatalog(session)[nodeId] === canonicalNode
+  );
 }
 function removeNode(session: CanvasDraftSession, nodeId: string): CanvasDraftSession {
-  return withWorkingSet(session, {
+  const nextSession = withWorkingSet(session, {
     visibleNodeIds: session.workingSet.visibleNodeIds.filter(
       (visibleNodeId) => visibleNodeId !== nodeId
     ),
@@ -164,6 +236,8 @@ function removeNode(session: CanvasDraftSession, nodeId: string): CanvasDraftSes
       (pendingNodeId) => pendingNodeId !== nodeId
     ),
   });
+  const { [nodeId]: _removedNode, ...nextLocalNodeCatalog } = readLocalNodeCatalog(nextSession);
+  return withLocalNodeCatalog(nextSession, nextLocalNodeCatalog);
 }
 function replaceEdges(session: CanvasDraftSession, edges: CanvasDraftEdge[]): CanvasDraftSession {
   return withWorkingSet(session, {

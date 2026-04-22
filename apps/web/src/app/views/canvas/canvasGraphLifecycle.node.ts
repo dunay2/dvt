@@ -10,6 +10,7 @@ import type {
   CanvasGraphLifecycleNodeRemovalResult,
   CanvasGraphLifecycleState,
 } from './canvasGraphLifecycle.types';
+import type { CanonicalNode } from '../../types/canonical';
 
 function applyNodeRemovalState(
   state: CanvasGraphLifecycleState,
@@ -91,9 +92,9 @@ function applyChanges(
 
 function admitExplicit(
   draftSession: CanvasDraftSession,
-  nodeId: string
+  canonicalNode: CanonicalNode
 ): CanvasDraftSession {
-  return canvasDraftSession.workingSet.addExplicitNode(draftSession, nodeId);
+  return canvasDraftSession.workingSet.addExplicitNode(draftSession, canonicalNode);
 }
 
 function queueImported(

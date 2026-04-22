@@ -11,7 +11,6 @@ type UseCanvasAuthoringRuntimeDraftFlowArgs = Pick<
   | 'workspaceService'
   | 'workspaceGraphDraftAuthoringPort'
   | 'workspaceLayoutKey'
-  | 'graphStrategy'
   | 'columnLevelLineageEnabled'
   | 'persistedNodePositions'
   | 'workspaceScope'
@@ -25,7 +24,6 @@ export function useCanvasAuthoringRuntimeDraftFlow({
   workspaceService,
   workspaceGraphDraftAuthoringPort,
   workspaceLayoutKey,
-  graphStrategy,
   columnLevelLineageEnabled,
   persistedNodePositions,
   canPersistDraftTransport,
@@ -42,11 +40,15 @@ export function useCanvasAuthoringRuntimeDraftFlow({
     workspaceLayoutKey,
   });
   const { graphModel, canonicalSnapshot } = useCanvasAuthoringProjection({
-    workspaceLayoutKey,
+    graphAuthorityQuery: {
+      isPending: graphDraftQuery.isPending,
+      isError: graphDraftQuery.isError,
+      error: graphDraftQuery.error,
+    },
     visibleNodeIds: draftSession.workingSet.visibleNodeIds,
     visibleEdges: draftSession.workingSet.visibleEdges,
-    workspaceService,
-    graphStrategy,
+    draftSemanticGraph: graphDraftQuery.data?.semanticGraph ?? null,
+    localCanonicalNodes: Object.values(draftSession.localNodeCatalog ?? {}),
     columnLevelLineageEnabled,
     persistedNodePositions,
   });
@@ -61,15 +63,11 @@ export function useCanvasAuthoringRuntimeDraftFlow({
     graphNodes: graphModel.nodes,
     canonicalNodes: graphModel.canonicalNodes,
     canonicalEdges: graphModel.canonicalEdges,
-    graphSnapshotQuery: {
-      isPending: graphModel.graphSnapshotQuery.isPending,
-      isError: graphModel.graphSnapshotQuery.isError,
-    },
+    graphAuthorityQuery: graphModel.graphAuthorityQuery,
     canPersistGraphDraft: canPersistDraftTransport,
     workspaceScope,
     previewProvenanceConfig,
     setCanvasNodePositions,
-    graphStrategy,
   });
 
   return {

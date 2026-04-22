@@ -107,6 +107,79 @@ function buildRemoteReadResult(): WorkspaceGraphDraftAuthoringReadResult {
   };
 }
 
+type CanvasDraftRepository = ReturnType<typeof createCanvasDraftRepository>;
+type SaveGraphDraftResult = Awaited<ReturnType<CanvasDraftRepository['saveGraphDraft']>>;
+type ConflictSaveGraphDraftResult = Extract<SaveGraphDraftResult, { outcome: 'conflict' }>;
+
+function buildExpectedConflictCurrentRecord(): ConflictSaveGraphDraftResult['current'] {
+  return {
+    revision: 'rev-remote',
+    savedAt: '2026-04-18T00:00:03Z',
+    draft: {
+      nodeIds: ['source-node', 'transform-node'],
+      nodePositions: {},
+      edges: [{ sourceId: 'source-node', targetId: 'transform-node' }],
+    },
+  };
+}
+
+function buildExpectedConflictRemoteDraftState(): ConflictSaveGraphDraftResult['remoteDraftState'] {
+  return {
+    accessMode: 'writable' as const,
+    capabilityReason: 'authorized' as const,
+    formatError: null,
+    formatMeta: {
+      schemaVersion: 'workspace-graph-draft.v1',
+      storedSchemaVersion: 'workspace-graph-draft.v1',
+      migrationState: 'native',
+    },
+    record: buildExpectedConflictCurrentRecord(),
+    semanticGraph: {
+      canonicalNodes: [
+        {
+          id: 'source-node',
+          name: 'orders',
+          pluginId: 'dvt',
+          kind: 'dvt:source',
+          role: 'input',
+          status: 'idle',
+          tags: [],
+          metadata: {
+            config: {
+              schema: 'raw',
+              table: 'orders',
+              alias: 'orders',
+            },
+          },
+        },
+        {
+          id: 'transform-node',
+          name: 'transform',
+          pluginId: 'dvt',
+          kind: 'dvt:sql_transform',
+          role: 'transform',
+          status: 'idle',
+          tags: [],
+          path: 'models/transform.sql',
+          metadata: {
+            config: {
+              dialect: 'postgres',
+            },
+          },
+        },
+      ],
+      canonicalEdges: [
+        {
+          id: 'draft_edge_source-node_transform-node',
+          sourceId: 'source-node',
+          targetId: 'transform-node',
+          relation: 'lineage',
+        },
+      ],
+    },
+  };
+}
+
 describe('canvasDraftRepository conflict handling', () => {
   it('returns the actual remote projection on conflict instead of the rejected local payload', async () => {
     const authoringPort = buildAuthoringPort({
@@ -121,15 +194,8 @@ describe('canvasDraftRepository conflict handling', () => {
 
     await expect(repository.saveGraphDraft(buildSaveInput())).resolves.toEqual({
       outcome: 'conflict',
-      current: {
-        revision: 'rev-remote',
-        savedAt: '2026-04-18T00:00:03Z',
-        draft: {
-          nodeIds: ['source-node', 'transform-node'],
-          nodePositions: {},
-          edges: [{ sourceId: 'source-node', targetId: 'transform-node' }],
-        },
-      },
+      current: buildExpectedConflictCurrentRecord(),
+      remoteDraftState: buildExpectedConflictRemoteDraftState(),
     });
   });
 
@@ -144,7 +210,9 @@ describe('canvasDraftRepository conflict handling', () => {
     });
     const repository = createCanvasDraftRepository(buildWorkspacePort(), authoringPort);
 
-    await expect(repository.saveGraphDraft(buildSaveInput())).rejects.toThrow(CONFLICT_RELOAD_ERROR);
+    await expect(repository.saveGraphDraft(buildSaveInput())).rejects.toThrow(
+      CONFLICT_RELOAD_ERROR
+    );
   });
 
   it('fails closed when conflict recovery throws while reloading the remote draft', async () => {
@@ -158,6 +226,8 @@ describe('canvasDraftRepository conflict handling', () => {
     });
     const repository = createCanvasDraftRepository(buildWorkspacePort(), authoringPort);
 
-    await expect(repository.saveGraphDraft(buildSaveInput())).rejects.toThrow(CONFLICT_RELOAD_ERROR);
+    await expect(repository.saveGraphDraft(buildSaveInput())).rejects.toThrow(
+      CONFLICT_RELOAD_ERROR
+    );
   });
 });

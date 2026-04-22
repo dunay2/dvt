@@ -2,7 +2,7 @@
 title: Canvas Draft Session Component
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-04-21
+last_reviewed: 2026-04-22
 ---
 
 # Canvas Draft Session Component
@@ -122,8 +122,8 @@ stateDiagram-v2
   saving --> editing: machine.applySaveSuccess
   saving --> conflict: machine.applyConflict
   editing --> missing_remote: machine.markRemoteDraftMissing
-  missing_remote --> editing: machine.adoptCurrentSnapshot
   conflict --> editing: machine.reloadFromRemote
+  missing_remote --> editing: machine.reloadFromRemote
 ```
 
 ## Working-Set Policy Model
@@ -145,6 +145,8 @@ flowchart TD
 - Baseline serialization is deterministic for the same draft payload.
 - Working-set mutation does not own transport concerns.
 - Sync-state transitions do not own React Flow adapter semantics.
+- `missing_remote` may only leave fail-closed posture through authoritative
+  remote reload; route-local projection must not reopen editing.
 - The public API stays namespaced under `canvasDraftSession`; no parallel flat
   helper API should be reintroduced.
 

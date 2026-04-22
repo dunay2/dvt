@@ -36,13 +36,19 @@ type CanvasControllerViewModelArgs = {
 };
 
 function resolveCanvasGraphErrorMessage(authoringRuntime: CanvasAuthoringRuntime): string | null {
-  const graphError = authoringRuntime.graphModel.graphSnapshotQuery.error;
+  const graphError = authoringRuntime.graphModel.graphAuthorityQuery.error;
   return graphError instanceof Error ? graphError.message : null;
 }
 
 function buildCanvasShellViewModel(args: CanvasControllerViewModelArgs) {
   const {
-    environment: { dataSourceMode, capabilities, canvasAuthoringMode, store },
+    environment: {
+      dataSourceMode,
+      capabilities,
+      canvasAuthoringMode,
+      workspaceServiceCapabilities,
+      store,
+    },
     authoringRuntime: { backendPosture, graphModel },
     overlayModel,
     readModel: { nodesWithImpact, inspectorNode },
@@ -53,7 +59,7 @@ function buildCanvasShellViewModel(args: CanvasControllerViewModelArgs) {
     isBackendCheckPending: backendPosture.isBackendCheckPending,
     backendReady: backendPosture.backendReady,
     backendBlockMessage: backendPosture.backendBlockMessage,
-    isLoadingGraph: graphModel.graphSnapshotQuery.isPending,
+    isLoadingGraph: graphModel.graphAuthorityQuery.isPending,
     graphErrorMessage: resolveCanvasGraphErrorMessage(args.authoringRuntime),
     focusMode: store.focusMode,
     explorerPanelVisible: store.explorerPanelVisible,
@@ -64,6 +70,7 @@ function buildCanvasShellViewModel(args: CanvasControllerViewModelArgs) {
     registeredPlugins: getRegisteredPluginIds(capabilities),
     userPermissions: store.userPermissions,
     canvasAuthoringMode,
+    canOpenSourceImport: workspaceServiceCapabilities.sourceImportAvailable,
     nodesWithImpact,
     edges: graphModel.edges,
     nodeTypes: canvasControllerNodeTypes,
@@ -143,7 +150,6 @@ function buildCanvasDraftViewModel(args: CanvasControllerViewModelArgs) {
       draftFormatError,
       draftFormatMeta,
       reloadLatestDraft,
-      adoptCurrentWorkspaceSnapshot,
       isMissingRemoteDraft,
       isStaleDraftConflict,
       hasDraftProjectionGap,
@@ -166,7 +172,6 @@ function buildCanvasDraftViewModel(args: CanvasControllerViewModelArgs) {
     hasMissingRemoteDraft: isMissingRemoteDraft,
     hasDraftProjectionGap,
     reloadLatestDraft,
-    adoptCurrentWorkspaceSnapshot,
   };
 }
 

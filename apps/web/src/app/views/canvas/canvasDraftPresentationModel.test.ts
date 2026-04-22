@@ -8,6 +8,33 @@ import {
 import { deriveCanvasDraftToolbarState } from './canvasDraftToolbarState';
 
 describe('canvasDraftPresentationModel', () => {
+  it('publishes runtime-mode mismatch as a blocked startup posture', () => {
+    const draftToolbarState = deriveCanvasDraftToolbarState({
+      draftSaveStatus: 'idle',
+      recoveryReason: null,
+    });
+
+    expect(
+      deriveCanvasDraftPresentationState({
+        isBackendCheckPending: false,
+        startupBlockState: {
+          kind: 'runtime_mode',
+          title: 'Canvas runtime unavailable',
+          message: 'Canvas authoring requires API runtime mode and protected workspace draft access.',
+        },
+        workbenchState: { kind: 'ready' },
+        recoveryReason: null,
+        draftToolbarState,
+      })
+    ).toMatchObject({
+      routeState: 'blocked_runtime',
+      bootstrapStatus: 'blocked',
+      bootstrapDetail:
+        'Canvas authoring requires API runtime mode and protected workspace draft access.',
+      canCompleteBootstrap: false,
+    });
+  });
+
   it('prioritizes backend blocked posture over recovery in the route presentation', () => {
     const draftToolbarState = deriveCanvasDraftToolbarState({
       draftSaveStatus: 'saved',
@@ -17,8 +44,11 @@ describe('canvasDraftPresentationModel', () => {
     expect(
       deriveCanvasDraftPresentationState({
         isBackendCheckPending: false,
-        shouldBlockCanvasInApiMode: true,
-        backendBlockMessage: 'Readiness not satisfied: database_not_configured.',
+        startupBlockState: {
+          kind: 'backend_readiness',
+          title: 'Backend not ready',
+          message: 'Readiness not satisfied: database_not_configured.',
+        },
         workbenchState: { kind: 'ready' },
         recoveryReason: 'missing_remote',
         draftToolbarState,
@@ -40,8 +70,7 @@ describe('canvasDraftPresentationModel', () => {
     expect(
       deriveCanvasDraftPresentationState({
         isBackendCheckPending: false,
-        shouldBlockCanvasInApiMode: false,
-        backendBlockMessage: null,
+        startupBlockState: null,
         workbenchState: { kind: 'ready' },
         recoveryReason: 'stale_conflict',
         draftToolbarState,
@@ -63,8 +92,7 @@ describe('canvasDraftPresentationModel', () => {
     expect(
       deriveCanvasDraftPresentationState({
         isBackendCheckPending: false,
-        shouldBlockCanvasInApiMode: false,
-        backendBlockMessage: null,
+        startupBlockState: null,
         workbenchState: { kind: 'empty' },
         recoveryReason: null,
         draftToolbarState,
@@ -78,8 +106,7 @@ describe('canvasDraftPresentationModel', () => {
     expect(
       deriveCanvasDraftPresentationState({
         isBackendCheckPending: false,
-        shouldBlockCanvasInApiMode: false,
-        backendBlockMessage: null,
+        startupBlockState: null,
         workbenchState: { kind: 'ready' },
         recoveryReason: null,
         draftToolbarState,
@@ -99,8 +126,7 @@ describe('canvasDraftPresentationModel', () => {
     });
     const presentationState = deriveCanvasDraftPresentationState({
       isBackendCheckPending: false,
-      shouldBlockCanvasInApiMode: false,
-      backendBlockMessage: null,
+      startupBlockState: null,
       workbenchState: { kind: 'ready' },
       recoveryReason: null,
       draftToolbarState,

@@ -2,7 +2,7 @@
 title: Data Source Service Boundary
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-04-07
+last_reviewed: 2026-04-22
 ---
 
 # Data Source Service Boundary
@@ -49,6 +49,14 @@ Consumers use only typed hooks:
 This rule applies to view-facing service composition. It does not claim that
 every configuration or capability helper in the entire frontend now reads the
 mode only through the provider.
+
+Route operability and adapter capability are related but not identical:
+
+- the composition root decides which adapter family is active
+- service capability seams decide which operations that adapter family can
+  truthfully advertise
+- routes must combine those capabilities with their own startup posture before
+  exposing mutation affordances
 
 ```mermaid
 flowchart LR
@@ -99,11 +107,22 @@ Forbidden:
 
 ## Runtime Behavior
 
-Both modes remain runnable without code changes:
+Both modes remain bootable, but they are not semantically equivalent for every
+route:
 
-- `mock`: services return local mock-backed behavior.
-- `api`: services call backend endpoints; unsupported endpoints fail explicitly
-  from service layer with clear error messages.
+- `mock`: services return local mock-backed behavior and remain valid for
+  isolated UI or adapter work. Under the Canvas hard-cut, this mode is not the
+  active product-authoring runtime.
+- `api`: services call backend endpoints. Unsupported operations fail
+  explicitly from the service layer with clear error messages instead of
+  pretending the route can still mutate successfully.
+
+Current governed capability example:
+
+- `workspaceService.importSources()` is explicitly unavailable in `api` mode
+  until the backend endpoint exists
+- the Canvas route therefore must hide `Add data` in the active `api` path
+  instead of implying a missing button or failed wizard is a transient issue
 
 ```mermaid
 sequenceDiagram
@@ -124,6 +143,22 @@ sequenceDiagram
   Adapter-->>Service: Data or explicit error
   Service-->>View: Typed result
 ```
+
+## Capability Matrix
+
+The route must consume explicit capability seams rather than infer them from
+copy or transport failures.
+
+| Mode   | Workspace adapter                      | `sourceImportAvailable` | Active Canvas authoring posture                           |
+| ------ | -------------------------------------- | ----------------------- | --------------------------------------------------------- |
+| `mock` | `createMockWorkspaceService()`         | `true`                  | blocked as canonical authoring runtime under the hard-cut |
+| `api`  | `createApiWorkspaceService(apiClient)` | `false`                 | active runtime if readiness passes, but import hidden     |
+
+Interpretation rule:
+
+- adapter capability answers "can this adapter perform the operation?"
+- route posture answers "may the active route expose the operation now?"
+- the route may only expose a mutation when both answers are true
 
 ## Test Seam And Injection Strategy
 
@@ -161,6 +196,12 @@ locally, including:
 - runs and operational views;
 - source import and console surfaces;
 - plugin history panels that query run data.
+
+For Canvas specifically, the boundary now governs two separate truths:
+
+- route startup still belongs to the Canvas route contract
+- source-import affordances must be driven by explicit workspace-service
+  capabilities, not by mode folklore or outdated copy
 
 ## Explicit Non-Goals
 

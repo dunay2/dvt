@@ -30,6 +30,11 @@ export const canvasViewRouteCopyByKey = {
     fallback:
       'This workspace does not expose graph nodes yet. Use Add data to import sources or load graph content before planning.',
   },
+  routeEmptyImportUnavailableMessage: {
+    key: 'canvas.route.emptyImportUnavailableMessage',
+    fallback:
+      'This workspace does not expose graph nodes yet. Source import is unavailable in this runtime, so graph content must come from protected backend authority.',
+  },
   routeEmptyReadOnlyMessage: {
     key: 'canvas.route.emptyReadOnlyMessage',
     fallback:
@@ -47,6 +52,14 @@ export const canvasViewRouteCopyByKey = {
     key: 'canvas.route.errorMessage',
     fallback:
       'Canvas could not load the current workspace graph. Retry after the workspace service is available again.',
+  },
+  runtimeBlockedTitle: {
+    key: 'canvas.runtime.blockedTitle',
+    fallback: 'Canvas runtime unavailable',
+  },
+  runtimeBlockedFallbackMessage: {
+    key: 'canvas.runtime.blockedFallbackMessage',
+    fallback: 'Canvas authoring requires API runtime mode and protected workspace draft access.',
   },
   backendBlockedTitle: {
     key: 'canvas.backend.blockedTitle',
@@ -122,12 +135,12 @@ export const canvasViewRouteCopyByKey = {
   },
   draftProjectionGapTitle: {
     key: 'canvas.draft.projectionGapTitle',
-    fallback: 'Persisted draft is ahead of the current graph snapshot',
+    fallback: 'Persisted draft is ahead of the current protected draft authority',
   },
   draftProjectionGapMessage: {
     key: 'canvas.draft.projectionGapMessage',
     fallback:
-      'Canvas has paused editing because the current workspace graph cannot represent the full persisted draft yet. Reload the latest draft or adopt the current workspace snapshot before continuing.',
+      'Canvas has paused editing because the current protected draft authority cannot represent the full persisted draft yet. Reload the latest draft after the protected authority catches up.',
   },
   missingRemoteDraftTitle: {
     key: 'canvas.draft.missingRemoteTitle',
@@ -136,14 +149,10 @@ export const canvasViewRouteCopyByKey = {
   missingRemoteDraftMessage: {
     key: 'canvas.draft.missingRemoteMessage',
     fallback:
-      'Canvas has paused draft editing because the persisted draft disappeared. Adopt the current workspace snapshot before continuing.',
+      'Canvas has paused draft editing because the persisted draft disappeared. Reload the latest draft after protected authority is restored.',
   },
   reloadLatestDraftLabel: {
     key: 'canvas.draft.reloadLatestLabel',
     fallback: 'Reload latest draft',
-  },
-  adoptCurrentWorkspaceSnapshotLabel: {
-    key: 'canvas.draft.adoptSnapshotLabel',
-    fallback: 'Adopt current workspace snapshot',
   },
 } satisfies CanvasCopySection;

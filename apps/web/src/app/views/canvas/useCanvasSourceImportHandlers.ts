@@ -18,13 +18,13 @@ type UseCanvasSourceImportHandlersResult = {
   handleImportedNodeFocusComplete: () => void;
 };
 
-function requestWorkspaceGraphRefresh(
+function requestAuthoritativeDraftRefresh(
   queryClient: { invalidateQueries: (args: { queryKey: readonly unknown[] }) => Promise<unknown> },
   workspaceLayoutKey: string
 ) {
   queryClient
     .invalidateQueries({
-      queryKey: queryKeys.workspace.graph(workspaceLayoutKey),
+      queryKey: queryKeys.workspace.graphDraft(workspaceLayoutKey),
     })
     .catch(() => undefined);
 }
@@ -59,7 +59,7 @@ export function useCanvasSourceImportHandlers({
         setImportedNodeFocusIds(nextImportedNodeIds);
       }
 
-      requestWorkspaceGraphRefresh(queryClient, workspaceLayoutKey);
+      requestAuthoritativeDraftRefresh(queryClient, workspaceLayoutKey);
     },
     [
       canMutateGraph,

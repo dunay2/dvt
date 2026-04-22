@@ -7,24 +7,24 @@ import {
 import { canvasViewCopy } from './copy';
 import type { CanvasDraftPresentationState } from './canvasDraftPresentationModel';
 import type { CanvasDraftTransportErrorState } from './canvasDraftTransportErrorState';
-import type { useCanvasController } from './useCanvasController';
-
-type CanvasControllerSurfaceState = Pick<
-  ReturnType<typeof useCanvasController>,
-  'backendBlockMessage'
->;
+import type { CanvasRouteStartupBlockState } from './canvasRouteInteractionState';
 
 type RenderCanvasCenterSurfaceArgs = {
-  controller: CanvasControllerSurfaceState;
   presentationState: CanvasDraftPresentationState;
+  startupBlockState: CanvasRouteStartupBlockState | null;
   draftTransportError: CanvasDraftTransportErrorState | null;
   workbenchErrorMessage: string | null;
   canEditEdges: boolean;
+  canOpenSourceImport: boolean;
 };
 
 type CanvasWorkbenchSurfaceArgs = Pick<
   RenderCanvasCenterSurfaceArgs,
-  'controller' | 'presentationState' | 'workbenchErrorMessage' | 'canEditEdges'
+  | 'presentationState'
+  | 'startupBlockState'
+  | 'workbenchErrorMessage'
+  | 'canEditEdges'
+  | 'canOpenSourceImport'
 >;
 
 function renderCanvasDraftTransportSurface(
@@ -51,14 +51,11 @@ function renderCanvasDraftTransportSurface(
   return null;
 }
 
-function renderCanvasBackendWorkbenchSurface(args: Pick<
-  CanvasWorkbenchSurfaceArgs,
-  'controller' | 'presentationState'
->) {
-  const {
-    controller,
-    presentationState: { routeState },
-  } = args;
+function renderCanvasStartupWorkbenchSurface(
+  args: Pick<CanvasWorkbenchSurfaceArgs, 'presentationState' | 'startupBlockState'>
+) {
+  const { presentationState, startupBlockState } = args;
+  const { routeState } = presentationState;
 
   if (routeState === 'loading_backend') {
     return (
@@ -69,10 +66,20 @@ function renderCanvasBackendWorkbenchSurface(args: Pick<
     );
   }
 
+  if (routeState === 'blocked_runtime') {
+    return (
+      <CanvasBlockedStateView
+        title={startupBlockState?.title ?? canvasViewCopy.runtimeBlockedTitle}
+        message={startupBlockState?.message ?? canvasViewCopy.runtimeBlockedFallbackMessage}
+      />
+    );
+  }
+
   if (routeState === 'blocked_backend') {
     return (
       <CanvasBlockedStateView
-        message={controller.backendBlockMessage ?? canvasViewCopy.backendBlockedFallbackMessage}
+        title={startupBlockState?.title ?? canvasViewCopy.backendBlockedTitle}
+        message={startupBlockState?.message ?? canvasViewCopy.backendBlockedFallbackMessage}
       />
     );
   }
@@ -80,10 +87,9 @@ function renderCanvasBackendWorkbenchSurface(args: Pick<
   return null;
 }
 
-function renderCanvasGraphWorkbenchSurface(args: Pick<
-  CanvasWorkbenchSurfaceArgs,
-  'presentationState' | 'workbenchErrorMessage'
->) {
+function renderCanvasGraphWorkbenchSurface(
+  args: Pick<CanvasWorkbenchSurfaceArgs, 'presentationState' | 'workbenchErrorMessage'>
+) {
   const {
     presentationState: { routeState },
     workbenchErrorMessage,
@@ -104,39 +110,58 @@ function renderCanvasGraphWorkbenchSurface(args: Pick<
   return null;
 }
 
-function renderCanvasEmptyWorkbenchSurface(args: Pick<
-  CanvasWorkbenchSurfaceArgs,
-  'presentationState' | 'canEditEdges'
->) {
+function resolveCanvasEmptyWorkbenchMessage(
+  args: Pick<CanvasWorkbenchSurfaceArgs, 'canEditEdges' | 'canOpenSourceImport'>
+) {
+  const { canEditEdges, canOpenSourceImport } = args;
+
+  if (!canEditEdges) {
+    return canvasViewCopy.routeEmptyReadOnlyMessage;
+  }
+
+  if (!canOpenSourceImport) {
+    return canvasViewCopy.routeEmptyImportUnavailableMessage;
+  }
+
+  return canvasViewCopy.routeEmptyEditableMessage;
+}
+
+function renderCanvasEmptyWorkbenchSurface(
+  args: Pick<
+    CanvasWorkbenchSurfaceArgs,
+    'presentationState' | 'canEditEdges' | 'canOpenSourceImport'
+  >
+) {
   const {
     presentationState: { routeState },
     canEditEdges,
+    canOpenSourceImport,
   } = args;
 
-  if (routeState !== 'empty') {
-    return null;
+  if (routeState === 'empty') {
+    return (
+      <CanvasEmptyStateView
+        message={resolveCanvasEmptyWorkbenchMessage({
+          canEditEdges,
+          canOpenSourceImport,
+        })}
+      />
+    );
   }
 
-  return (
-    <CanvasEmptyStateView
-      message={
-        canEditEdges
-          ? canvasViewCopy.routeEmptyEditableMessage
-          : canvasViewCopy.routeEmptyReadOnlyMessage
-      }
-    />
-  );
+  return null;
 }
 
 function renderCanvasWorkbenchSurface(args: {
-  controller: CanvasControllerSurfaceState;
   presentationState: CanvasDraftPresentationState;
+  startupBlockState: CanvasRouteStartupBlockState | null;
   workbenchErrorMessage: string | null;
   canEditEdges: boolean;
+  canOpenSourceImport: boolean;
 }) {
-  const backendSurface = renderCanvasBackendWorkbenchSurface(args);
-  if (backendSurface != null) {
-    return backendSurface;
+  const startupSurface = renderCanvasStartupWorkbenchSurface(args);
+  if (startupSurface != null) {
+    return startupSurface;
   }
 
   const graphSurface = renderCanvasGraphWorkbenchSurface(args);
@@ -159,9 +184,10 @@ export function renderCanvasCenterSurface(args: RenderCanvasCenterSurfaceArgs) {
   }
 
   return renderCanvasWorkbenchSurface({
-    controller: args.controller,
     presentationState: args.presentationState,
+    startupBlockState: args.startupBlockState,
     workbenchErrorMessage: args.workbenchErrorMessage,
     canEditEdges: args.canEditEdges,
+    canOpenSourceImport: args.canOpenSourceImport,
   });
 }

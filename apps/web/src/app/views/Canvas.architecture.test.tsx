@@ -7,6 +7,9 @@ const CANVAS_ROUTE_SOURCE = readArchitectureSiblingSource(import.meta.dirname, '
 describe('Canvas route architecture', () => {
   it('delegates transport-state rendering and recovery banners to dedicated presentation seams', () => {
     expect(CANVAS_ROUTE_SOURCE).toContain('deriveCanvasRouteViewState');
+    expect(CANVAS_ROUTE_SOURCE).toContain('useCanvasPresentationLifecycle');
+    expect(CANVAS_ROUTE_SOURCE).toContain('buildCanvasShellProps');
+    expect(CANVAS_ROUTE_SOURCE).toContain('CanvasModalLayer');
     expect(CANVAS_ROUTE_SOURCE).toContain('renderCanvasCenterSurface');
     expect(CANVAS_ROUTE_SOURCE).toContain('CanvasRecoveryBanner');
     expect(CANVAS_ROUTE_SOURCE).toContain("'./canvas/canvasDraftPresentationModel'");

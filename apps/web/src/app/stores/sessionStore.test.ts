@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
+import { getRuntimeDataSourceMode } from '../services/config/runtimeDataSourceMode';
+import { resolveWorkspaceBootstrapConfig } from '../services/config/workspaceConfig';
 import { useSessionStore } from './sessionStore';
 
 type PersistEnvelope = {
@@ -18,7 +20,28 @@ const bootstrapState = {
   targetAdapter: useSessionStore.getState().targetAdapter,
 };
 
+const workspaceBootstrap = resolveWorkspaceBootstrapConfig(getRuntimeDataSourceMode());
+
 const alternateTargetAdapter = bootstrapState.targetAdapter === 'mock' ? 'temporal' : 'mock';
+
+function pickValidPersistedScopeValue(
+  options: Array<{ value: string }>,
+  currentValue: string
+): string {
+  return options.find((option) => option.value !== currentValue)?.value ?? currentValue;
+}
+
+const validPersistedScope = {
+  tenantId: pickValidPersistedScopeValue(workspaceBootstrap.tenantOptions, bootstrapState.tenantId),
+  projectId: pickValidPersistedScopeValue(
+    workspaceBootstrap.projectOptions,
+    bootstrapState.projectId
+  ),
+  environmentId: pickValidPersistedScopeValue(
+    workspaceBootstrap.environmentOptions,
+    bootstrapState.environmentId
+  ),
+};
 
 describe('sessionStore persistence', () => {
   beforeEach(() => {
@@ -47,20 +70,14 @@ describe('sessionStore persistence', () => {
     localStorage.setItem(
       'dvt-web-session',
       JSON.stringify({
-        state: {
-          tenantId: 'globex',
-          projectId: 'dbt-marketing',
-          environmentId: 'stage',
-        },
+        state: validPersistedScope,
       } satisfies PersistEnvelope)
     );
 
     await useSessionStore.persist.rehydrate();
 
     expect(useSessionStore.getState()).toMatchObject({
-      tenantId: 'globex',
-      projectId: 'dbt-marketing',
-      environmentId: 'stage',
+      ...validPersistedScope,
       targetAdapter: bootstrapState.targetAdapter,
     });
   });
@@ -70,9 +87,7 @@ describe('sessionStore persistence', () => {
       'dvt-web-session',
       JSON.stringify({
         state: {
-          tenantId: 'globex',
-          projectId: 'dbt-marketing',
-          environmentId: 'stage',
+          ...validPersistedScope,
           targetAdapter: alternateTargetAdapter,
         },
       } satisfies PersistEnvelope)

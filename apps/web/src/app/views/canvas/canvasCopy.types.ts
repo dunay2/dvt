@@ -7,10 +7,13 @@ export type CanvasViewCopy = {
   readonly backendLoadingMessage: string;
   readonly routeEmptyTitle: string;
   readonly routeEmptyEditableMessage: string;
+  readonly routeEmptyImportUnavailableMessage: string;
   readonly routeEmptyReadOnlyMessage: string;
   readonly routeErrorTitle: string;
   readonly routeErrorFallbackMessage: string;
   readonly routeErrorMessage: string;
+  readonly runtimeBlockedTitle: string;
+  readonly runtimeBlockedFallbackMessage: string;
   readonly backendBlockedTitle: string;
   readonly backendBlockedFallbackMessage: string;
   readonly mutationUnavailableMessage: string;
@@ -33,7 +36,6 @@ export type CanvasViewCopy = {
   readonly missingRemoteDraftTitle: string;
   readonly missingRemoteDraftMessage: string;
   readonly reloadLatestDraftLabel: string;
-  readonly adoptCurrentWorkspaceSnapshotLabel: string;
   readonly dependencyAddedMessage: string;
   readonly layoutAppliedMessage: string;
   readonly toolbarWorkflowRecoveryLabel: string;

@@ -13,6 +13,10 @@ import {
 import { WorkspaceFileLoadError, WORKSPACE_HTTP_ERROR_REASON } from './workspaceErrors';
 import { isWorkspaceHttpErrorEnvelope } from './workspaceGraphDraftHttp';
 
+export const apiWorkspaceServiceCapabilities = {
+  sourceImportAvailable: false,
+} as const;
+
 function isWorkspaceFileNotFoundApiError(error: ApiError): boolean {
   if (!isWorkspaceHttpErrorEnvelope(error.responseBody)) {
     return false;

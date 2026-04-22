@@ -1,8 +1,11 @@
 import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
-import type { ImportSourcesResult, WarehouseConnection } from '../../ports/workspace';
-import type { IWorkspacePort } from '../../ports/workspace';
+import type {
+  ImportSourcesResult,
+  IWorkspacePort,
+  WarehouseConnection,
+} from '../../ports/workspace';
 import { sourceImportWizardCopy as copy } from './copy';
 import {
   canProceedForStep,
@@ -11,7 +14,7 @@ import {
   getSelectedCount,
 } from './sourceImportWizardModel';
 import { useConnectionsLoader, useTablesLoader } from './useSourceImportWizardDataLoaders';
-import type { DataObjectSourceType, SourceImportWizardState, TableInfo, WizardStep } from './types';
+import type { DataObjectSourceType, SourceImportWizardState, WizardStep } from './types';
 
 interface UseSourceImportWizardParams {
   open: boolean;
@@ -36,6 +39,10 @@ const initialState: SourceImportWizardState = {
   loadError: null,
   importResult: null,
 };
+
+function hasImportedCanvasNodes(result: ImportSourcesResult): boolean {
+  return (result.importedNodeIds?.length ?? 0) > 0;
+}
 
 export function useSourceImportWizard({
   open,
@@ -118,7 +125,12 @@ export function useSourceImportWizard({
         importResult: result,
         currentStep: 'result',
       }));
-      toast.success(copy.importSuccess);
+      if (hasImportedCanvasNodes(result)) {
+        onComplete?.(result);
+        toast.success(copy.importSuccess);
+      } else {
+        toast.info(copy.importNoop);
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message : copy.importError;
       setState((prev) => ({ ...prev, loadError: message }));
@@ -129,9 +141,6 @@ export function useSourceImportWizard({
   };
 
   const handleComplete = () => {
-    if (state.importResult) {
-      onComplete?.(state.importResult);
-    }
     onClose();
     setState(initialState);
   };

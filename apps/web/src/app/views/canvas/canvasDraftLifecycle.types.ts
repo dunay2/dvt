@@ -10,12 +10,12 @@ import type { CanvasDraftSession } from './canvasDraftSession';
 import type {
   CanvasDraftLifecycleCanonicalSnapshot,
   CanvasDraftLifecycleGraphNode,
-  CanvasDraftLifecycleGraphStrategy,
 } from './canvasDraftLifecycleSnapshot';
 
-export type GraphSnapshotQueryState = {
+export type GraphAuthorityQueryState = {
   isPending: boolean;
   isError: boolean;
+  error?: unknown;
 };
 
 export type GraphDraftQueryState = {
@@ -45,7 +45,7 @@ export type UseCanvasDraftLifecycleArgs = {
   graphNodes: CanvasDraftLifecycleGraphNode[];
   canonicalNodes: CanonicalNode[];
   canonicalEdges: CanonicalEdge[];
-  graphSnapshotQuery: GraphSnapshotQueryState;
+  graphAuthorityQuery: GraphAuthorityQueryState;
   canPersistGraphDraft: boolean;
   workspaceScope: WorkspaceScope;
   previewProvenanceConfig: Pick<WorkspaceBootstrapConfig, 'gitBranch' | 'gitSha' | 'gitRepo'>;
@@ -53,11 +53,9 @@ export type UseCanvasDraftLifecycleArgs = {
     workspaceLayoutKey: string,
     positions: Record<string, { x: number; y: number }>
   ) => void;
-  graphStrategy: CanvasDraftLifecycleGraphStrategy;
 };
 
 export type CanvasDraftLifecycle = {
   draftSaveStatus: DraftSaveStatus;
   reloadLatestDraft: () => void;
-  adoptCurrentWorkspaceSnapshot: () => void;
 };

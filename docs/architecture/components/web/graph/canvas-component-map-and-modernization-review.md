@@ -2,7 +2,7 @@
 title: Canvas Component Map And Modernization Review
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-04-21
+last_reviewed: 2026-04-22
 planning_type: architecture
 ---
 
@@ -120,6 +120,45 @@ Reading rule:
 - the safe move is to keep view seams stable and extract graph policy behind a
   dedicated component
 
+## Protected Draft Semantic Graph Seam
+
+The Canvas route now has an explicit semantic projection boundary between the
+protected draft contract and the viewport projection.
+
+<!-- markdownlint-disable MD060 -->
+
+| Seam                                | Owns                                                                 | Must not own                                            |
+| ----------------------------------- | -------------------------------------------------------------------- | ------------------------------------------------------- |
+| `workspaceGraphDraftProjection.ts`  | route-facing projection of protected draft record and semantic graph | React Flow state, route startup, or controller commands |
+| `canvasDraftReadModel.ts`           | typed read outcomes and protected semantic graph handoff             | mutation logic or bootstrap publication                 |
+| `canvasAuthoringGraphProjection.ts` | semantic composition for active authoring truth                      | React Flow state or controller commands                 |
+| `useCanvasViewportGraphModel.ts`    | viewport-ready node and edge projection                              | inventing semantics or re-merging remote authority      |
+
+<!-- markdownlint-enable MD060 -->
+
+```mermaid
+flowchart LR
+  DraftPort["protected draft port"] --> Projection["workspaceGraphDraftProjection.ts"]
+  Projection --> ReadModel["canvasDraftReadModel.ts"]
+  ReadModel --> Session["CanvasDraftSession"]
+  ReadModel --> Semantic["canvasAuthoringGraphProjection.ts"]
+  Session --> Semantic
+  Semantic --> ViewportModel["useCanvasViewportGraphModel.ts"]
+  ViewportModel --> Viewport["CanvasViewport / React Flow"]
+```
+
+Semantic rule:
+
+- when a protected draft record exists, the semantic authoring projection
+  composes node and edge semantics from that draft-backed canonical graph
+- snapshot-backed graph hydration may supplement only pending local working-set
+  additions that are not yet persisted in the protected draft
+- the viewport hook may only project already-composed semantic truth into React
+  Flow state
+- broader snapshot-backed semantic fallback remains transitional support only
+  for paths that still need slice-3 deletion and must not override protected
+  draft semantics
+
 ## Key Responsibilities
 
 <!-- markdownlint-disable MD060 -->
@@ -141,6 +180,52 @@ Reading rule:
 | `usePublishedRouteBootstrap`                 | Publish explicit route startup posture to the shell              | Re-deriving authoring truth from shell heuristics           |
 
 <!-- markdownlint-enable MD060 -->
+
+## Source Import Handoff
+
+`SourceImportWizard` is a route-owned import workflow, but imported nodes are a
+`Canvas` concern as soon as registration succeeds.
+
+That means:
+
+- the explorer may only expose `Add data` when the active route posture and
+  runtime capability contract both allow source import;
+- `Register data objects` is the semantic commit point for the import flow;
+- when the result includes `importedNodeIds`, Canvas applies the handoff
+  immediately through `onSourceImportComplete`;
+- Canvas now invalidates the protected draft-authority query instead of the
+  legacy workspace-graph query and focuses imported ids only when that
+  authority refreshes with matching nodes;
+- when the result contains no new ids, the wizard surfaces an explicit no-op
+  result instead of implying a hidden failed mutation;
+- the result screen is confirmation and audit context, not a second required
+  mutation step;
+- the route may still show the result summary and generated YAML files before
+  the operator dismisses the modal.
+
+```mermaid
+sequenceDiagram
+  participant Explorer as Explorer
+  participant Wizard as SourceImportWizard
+  participant Canvas as Canvas controller
+  participant Authority as Protected draft authority query
+
+  Explorer->>Wizard: Open Add data when capability is exposed
+  Wizard->>Wizard: Discover tables and register sources
+  Wizard->>Canvas: onComplete(result with importedNodeIds)
+  Canvas->>Canvas: clear current plan and queue imported node focus
+  Canvas->>Authority: invalidate protected draft-authority query
+  Authority-->>Canvas: refreshed protected semantic graph
+  Wizard-->>Explorer: passive result summary until Done
+```
+
+Current truth for the hard-cut branch:
+
+- the active `api` authoring path hides `Add data` because backend source
+  import is not implemented yet
+- `mock` mode is not a substitute active-authoring path for Canvas
+- this section documents ownership and handoff semantics, not guaranteed
+  runtime availability in every mode
 
 ## Startup Contract
 
