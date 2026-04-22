@@ -651,29 +651,39 @@ tasks:
       20% round-reduction rule.
     complexity: S
     effort_points: 3
-    progress_pct: 75
+    progress_pct: 82
     evidence_refs:
       - docs/planning/reviews/ci-and-delivery/20260328-lane-c-ai-efficiency-and-cost-review.md
       - docs/planning/reviews/ci-and-delivery/20260402-rc-c2-operational-friction-intake-review.md
+      - docs/planning/reviews/ci-and-delivery/20260422-environment-configuration-audit-review.md
       - docs/guides/pr-preflight-and-ci-triage.md
       - docs/planning/proposals/rc-c2-shared-preflight-and-ci-log-first-triage-plan-20260401.md
+      - docs/planning/proposals/mandatory/governance-and-docs/ci-delivery-governance-consolidated-action-plan-20260331.md
       - docs/planning/closeouts/20260401-rc-c2-preflight-and-log-triage-rollout-closeout.md
       - docs/planning/closeouts/20260418-local-build-hook-warm-cache-p0-closeout.md
       - docs/planning/closeouts/20260418-rc-c2-turbo-build-orchestrator-closeout.md
+      - docs/planning/closeouts/20260422-rc-c2-wave-1-node-precommit-turbo-cache-closeout.md
+      - docs/planning/closeouts/20260422-rc-c2-wave-2a-typecheck-contract-closeout.md
       - docs/evidence/ED-20260418-local-build-hook-warm-cache-p0.md
       - docs/evidence/ED-20260418-rc-c2-turbo-build-orchestrator.md
       - docs/risk-register/quality/R-20260418-LOCAL-BUILD-HOOK-WARM-CACHE-P0.yaml
       - docs/risk-register/quality/R-20260418-TURBO-BUILD-ORCHESTRATION-CACHE-DRIFT.yaml
       - docs/planning/status/ai-efficiency-adoption-log.yaml
       - docs/planning/status/ai-efficiency-adoption-status.md
-    status_reason:
+    status_reason: >-
       Shared tooling, guide, structured measurement, and a canonical friction review are shipped.
       The lane now also carries a governed local warm-build optimization slice that extends `DVT_CI`
       hook short-circuiting to the remaining worker apps and removes forced rebuilds from
       `@dvt/contracts`, plus a follow-on Turbo-backed root build slice that preserves direct
-      package-build fallbacks while introducing cache-aware orchestration for `pnpm build`; final
-      closure still depends on three qualifying Lane C PR cycles logged against the new workflow.
-    last_verified: '2026-04-18'
+      package-build fallbacks while introducing cache-aware orchestration for `pnpm build`. The
+      2026-04-22 environment configuration audit is now absorbed into the canonical CI/delivery
+      action plan, and its low-risk Wave 1 slice is shipped: local Node 22 baseline alignment,
+      determinism pre-commit scoping, and CI reuse support for the existing Turbo root-build cache
+      path are now live. Wave 2A also hardens the package-level `typecheck` contract for the current
+      TypeScript build workspaces, so affected type-check routing no longer silently skips them
+      ahead of any Turbo `typecheck` claim. Final closure still depends on three qualifying Lane C
+      PR cycles logged against the new workflow.
+    last_verified: '2026-04-22'
   - task_id: RC-E1
     priority: P1
     status: done

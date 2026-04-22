@@ -15,6 +15,7 @@
   "license": "MIT",
   "scripts": {
     "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "pnpm -C ../../.. exec vitest run packages/@dvt/canonical/test/canonical.test.ts"
   },
   "devDependencies": {

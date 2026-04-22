@@ -46,6 +46,13 @@ Warm-build note:
 - Root `pnpm build` is now a Turborepo-backed build graph. In this slice only
   `build` uses `turbo`; `typecheck`, `test`, and docs commands keep their
   existing repo-local orchestration.
+- The shared GitHub Actions setup now restores `.turbo` in addition to the
+  pnpm store and `node_modules`, so the existing root Turbo `build` path can
+  reuse prior task outputs across CI runs.
+- The package-level `typecheck` contract is now explicit for every current
+  workspace that exposes `build`, so `pnpm ci:affected:typecheck` no longer
+  depends on silent `--if-present` skips for the current TypeScript package
+  inventory.
 
 ## Operational Preflight Helpers
 
@@ -235,6 +242,17 @@ Current workflow consumers:
 - `pnpm test:adapter-temporal:integration:postgres` is capability-specific
   verification for the relational Postgres path. It is not the baseline
   closeout command for every Temporal slice.
+- Local Node selection is pinned through `.node-version` and `.nvmrc` with the
+  same Node 22 baseline that the shared CI setup already uses.
+- `pnpm precommit` still runs `lint-staged` for every commit, but the
+  determinism gate now runs only when staged files touch
+  `packages/@dvt/engine/src/**`, `packages/@dvt/adapter-temporal/src/workflows/**`,
+  or the config inputs that govern that gate.
+- Several package-level `typecheck` scripts intentionally retain
+  `pretypecheck` hooks where their source TypeScript config resolves dependency
+  declarations from built workspace outputs. That keeps direct local
+  `pnpm --filter <pkg> typecheck` behavior aligned with the package’s existing
+  cold-build assumptions instead of creating a fake no-emit contract.
 - `pnpm test:adapter-temporal:integration:postgres:docker` is the canonical
   local proof wrapper for the relational Postgres capability path; it resets
   the Docker PostgreSQL environment, waits for readiness, and then runs the

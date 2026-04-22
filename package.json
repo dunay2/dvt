@@ -118,7 +118,8 @@
     "versioning-check": "node -e \"console.log('Versioning check: OK')\"",
     "release": "echo \"Releases are managed by release-please workflow\"",
     "prepare": "node scripts/setup-git-hooks.cjs",
-    "precommit": "lint-staged && pnpm lint:determinism"
+    "precommit:determinism": "node scripts/run-determinism-precommit.cjs",
+    "precommit": "lint-staged && pnpm precommit:determinism"
   },
   "lint-staged": {
     "packages/@dvt/*/src/**/*.{ts,tsx}": [
@@ -159,7 +160,7 @@
   "author": "",
   "license": "ISC",
   "engines": {
-    "node": ">=20.19.0",
+    "node": ">=22.0.0",
     "npm": ">=10.0.0",
     "pnpm": ">=10.0.0"
   },

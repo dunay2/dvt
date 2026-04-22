@@ -36,6 +36,8 @@
     "postbuild": "echo '✅ Build complete'",
     "pretest": "node ../../../scripts/skip-pretest-if-ci.cjs || pnpm run build:runtime-deps",
     "test": "vitest run ./test/ --exclude ./test/integration.time-skipping.test.ts --exclude ./test/integration.transformation.time-skipping.test.ts --exclude ./test/integration.postgres.time-skipping.test.ts",
+    "pretypecheck": "node ../../../scripts/skip-pretest-if-ci.cjs || pnpm run build:runtime-deps",
+    "typecheck": "tsc -p tsconfig.json --noEmit && pnpm run typecheck:test",
     "typecheck:test": "tsc -p tsconfig.test.json --noEmit",
     "prepare:integration": "node ../../../scripts/build-workspace-runtime-deps.cjs @dvt/adapter-temporal --build-self",
     "prepare:integration:transformation": "node ../../../scripts/build-workspace-runtime-deps.cjs @dvt/adapter-temporal --build-self",
