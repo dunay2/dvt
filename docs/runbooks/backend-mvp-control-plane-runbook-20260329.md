@@ -2,7 +2,7 @@
 title: Backend MVP Control-Plane Runbook
 status: Review
 owner: API / Runtime / Docs
-last_reviewed: 2026-04-14
+last_reviewed: 2026-04-22
 ---
 
 # Backend MVP Control-Plane Runbook
@@ -107,6 +107,10 @@ protected-runtime consumers:
   API process
 - a dev bearer token is injected into the web process through
   `VITE_API_BEARER_TOKEN`
+- that local bearer token defaults to a 24-hour TTL because the coordinated
+  stack injects it once at startup and does not refresh it during the session
+- `DVT_DEV_PROTECTED_RUNTIME_TOKEN_TTL_SECONDS` can override that TTL when a
+  longer or shorter local session is required
 - a default principal grant is seeded for the default workspace scope
   (`tenant/project/dev`) with the protected draft read/write actions required by
   Canvas authoring

@@ -8,6 +8,12 @@ const {
   startLocalProtectedRuntimeAuth,
 } = require('./run-dev-stack.auth.cjs');
 
+function decodeJwtPayload(token) {
+  const parts = token.split('.');
+  assert.equal(parts.length, 3, 'expected a signed JWT with three segments');
+  return JSON.parse(Buffer.from(parts[1], 'base64url').toString('utf8'));
+}
+
 test('resolveDevWorkspaceScope falls back to the canonical api-mode workspace defaults', () => {
   assert.deepEqual(resolveDevWorkspaceScope({}), {
     tenantId: 'tenant',
@@ -73,6 +79,37 @@ test('startLocalProtectedRuntimeAuth provides OIDC env and a bearer token for th
       projectId: 'project-dev-test',
       environmentId: 'dev-test',
     });
+  } finally {
+    await bootstrap.close();
+  }
+});
+
+test('startLocalProtectedRuntimeAuth issues a long-lived local dev bearer token by default', async () => {
+  const bootstrap = await startLocalProtectedRuntimeAuth();
+
+  try {
+    const payload = decodeJwtPayload(bootstrap.webEnv.VITE_API_BEARER_TOKEN);
+    assert.equal(typeof payload.iat, 'number');
+    assert.equal(typeof payload.exp, 'number');
+    assert.ok(
+      payload.exp - payload.iat >= 24 * 60 * 60,
+      'expected the coordinated dev-stack bearer token to live at least 24 hours by default'
+    );
+  } finally {
+    await bootstrap.close();
+  }
+});
+
+test('startLocalProtectedRuntimeAuth honors an explicit dev bearer-token TTL override', async () => {
+  const bootstrap = await startLocalProtectedRuntimeAuth({
+    env: {
+      DVT_DEV_PROTECTED_RUNTIME_TOKEN_TTL_SECONDS: '7200',
+    },
+  });
+
+  try {
+    const payload = decodeJwtPayload(bootstrap.webEnv.VITE_API_BEARER_TOKEN);
+    assert.equal(payload.exp - payload.iat, 7200);
   } finally {
     await bootstrap.close();
   }
