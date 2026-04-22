@@ -1,3 +1,4 @@
+/** Owned concern: translate protected draft-authoring outcomes into the Canvas route read model and semantic graph handoff. */
 import type {
   WorkspaceGraphDraftCapabilityMode,
   WorkspaceGraphDraftCapabilityReason,

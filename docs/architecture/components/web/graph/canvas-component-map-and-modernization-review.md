@@ -25,6 +25,10 @@ graph mutation semantics, use
 [Canvas Graph Lifecycle Component](./canvas-graph-lifecycle-component.md). For
 controller-local layering, use
 [Canvas Controller Current To Target Architecture](./canvas-controller-current-to-target-architecture.md).
+For local route-composition and semantic-projection detail, use
+[Canvas Route Composition Component](./canvas-route-composition-component.md)
+and
+[Canvas Authoring Projection Component](./canvas-authoring-projection-component.md).
 
 ## Governing Sources
 
@@ -33,6 +37,8 @@ controller-local layering, use
 - [Canvas Draft Session Component](./canvas-draft-session-component.md)
 - [Canvas Handler Contracts Component](./canvas-handler-contracts-component.md)
 - [Canvas Graph Lifecycle Component](./canvas-graph-lifecycle-component.md)
+- [Canvas Route Composition Component](./canvas-route-composition-component.md)
+- [Canvas Authoring Projection Component](./canvas-authoring-projection-component.md)
 - [Graph Route Bootstrap Architecture](./graph-route-bootstrap-architecture.md)
 - [Graph Sequences And State Machines](./graph-sequences-and-state-machines.md)
 
@@ -41,6 +47,10 @@ Reading rule:
 - use this page for route composition and component ownership
 - use `canvas-controller-current-to-target-architecture.md` for seam layering
   inside the controller chain
+- use `canvas-route-composition-component.md` for the local route UI component
+  contract
+- use `canvas-authoring-projection-component.md` for protected-draft semantic
+  projection and viewport-boundary detail
 - use `canvas-handler-contracts-component.md` for adapter-composition
   vocabulary and namespaced builder APIs
 - use `graph-route-bootstrap-architecture.md` for shell contract rules
@@ -298,5 +308,7 @@ Canonical startup rule for this slice:
 - [Canvas Controller Current To Target Architecture](./canvas-controller-current-to-target-architecture.md)
 - [Canvas Draft Session Component](./canvas-draft-session-component.md)
 - [Canvas Handler Contracts Component](./canvas-handler-contracts-component.md)
+- [Canvas Route Composition Component](./canvas-route-composition-component.md)
+- [Canvas Authoring Projection Component](./canvas-authoring-projection-component.md)
 - [Graph Route Bootstrap Architecture](./graph-route-bootstrap-architecture.md)
 - [Graph Sequences And State Machines](./graph-sequences-and-state-machines.md)

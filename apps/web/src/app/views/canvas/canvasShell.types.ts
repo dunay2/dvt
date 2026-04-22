@@ -1,3 +1,4 @@
+/** Owned concern: define the grouped semantic prop contract for the Canvas shell component. */
 import type { Edge, Node, NodeTypes, ReactFlowProps } from '@xyflow/react';
 import type React from 'react';
 

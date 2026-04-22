@@ -1,3 +1,4 @@
+/** Owned concern: compose Canvas environment, authoring runtime, adapter seams, and execution seams into one route facade. */
 import { buildCanvasControllerViewModel } from './canvasControllerViewModel';
 import { useCanvasAuthoringRuntime } from './useCanvasAuthoringRuntime';
 import { useCanvasControllerEnvironment } from './useCanvasControllerEnvironment';

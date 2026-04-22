@@ -1,3 +1,4 @@
+/** Owned concern: render the Canvas viewport over React Flow and forward governed gesture callbacks only. */
 import {
   Controls,
   MiniMap,

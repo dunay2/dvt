@@ -56,6 +56,13 @@ Sprint execution board:
 
 Additional active rationale:
 
+- [20260422 Canvas component governance follow-up review](./architecture-and-governance/20260422-canvas-component-governance-follow-up-review.md)
+  - domain: `architecture-and-governance`
+  - role: current focused review for Canvas route-composition and authoring-projection component semantics, local component-guide closure, and semantic fitness-function follow-up after the runtime-truth hard cut
+  - linkage: `TF-E2`, `TF-E2-A`, `TF-E2-E`
+  - status: `reference`
+  - progress: `n/a`
+
 - [20260422 Canvas runtime truth hard-cut review](./architecture-and-governance/20260422-canvas-runtime-truth-hardcut-review.md)
   - domain: `architecture-and-governance`
   - role: current focused review for the no-legacy Canvas authoring cut, protected draft truth as the only remote authority, and fail-closed startup posture when runtime authoring is unavailable

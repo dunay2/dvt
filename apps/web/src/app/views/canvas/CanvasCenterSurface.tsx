@@ -1,3 +1,6 @@
+/**
+ * Owned concern: render governed Canvas center-surface states from route posture and draft transport posture.
+ */
 import {
   CanvasBlockedStateView,
   CanvasEmptyStateView,

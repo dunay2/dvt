@@ -25,6 +25,8 @@ taxonomy, or the detailed draft-state-machine spec.
 ## Governing Sources
 
 - [TF-E2 Canvas Target Architecture Execution Plan 2026-04-17](../../../../planning/proposals/mandatory/frontend-and-ux/tf-e2-canvas-target-architecture-execution-plan-20260417.md)
+- [Canvas Route Composition Component](./canvas-route-composition-component.md)
+- [Canvas Authoring Projection Component](./canvas-authoring-projection-component.md)
 - [Graph Route Bootstrap Architecture](./graph-route-bootstrap-architecture.md)
 - [Canvas Draft Session Component](./canvas-draft-session-component.md)
 - [Canvas Handler Contracts Component](./canvas-handler-contracts-component.md)
@@ -37,6 +39,10 @@ Reading rule:
 - use this page for controller-local composition and target shape
 - use `canvas-draft-session-component.md` for aggregate internals and state
   reading
+- use `canvas-route-composition-component.md` for route composition, shell prop
+  contracts, and presentation boundaries
+- use `canvas-authoring-projection-component.md` for protected-draft semantic
+  projection, viewport projection, and canonical snapshot boundaries
 - use `canvas-handler-contracts-component.md` for adapter composition
   vocabulary, namespaced builder APIs, and handler-seam invariants
 - use `graph-route-bootstrap-architecture.md` for route publication and startup

@@ -1,3 +1,4 @@
+/** Owned concern: project the protected workspace-graph-draft boundary into route-facing draft and semantic graph models. */
 import type {
   DesignGraphDraft,
   WorkspaceGraphDraftRecord as ProtectedWorkspaceGraphDraftRecord,
