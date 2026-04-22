@@ -27,14 +27,16 @@ function buildCanvasShellLayoutArgs({
       focusMode: controller.focusMode,
       explorerPanelVisible: controller.explorerPanelVisible,
       inspectorPanelVisible: controller.inspectorPanelVisible,
+      canOpenSourceImport: controller.canOpenSourceImport,
     },
     recoveryCommands: {
-      adoptCurrentWorkspaceSnapshot: controller.adoptCurrentWorkspaceSnapshot,
       reloadLatestDraft: controller.reloadLatestDraft,
     },
     routePresentation: {
       presentationState: routeViewState.presentationState,
+      startupBlockState: routeViewState.startupBlockState,
       draftTransportError: routeViewState.draftTransportError,
+      workbenchErrorMessage: routeViewState.workbenchErrorMessage,
       effectiveUserPermissions: routeViewState.effectiveUserPermissions,
       readOnlyState: routeViewState.readOnlyState,
     },

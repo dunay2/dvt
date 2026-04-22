@@ -9,6 +9,10 @@ const AUTHORING_RUNTIME_SOURCE = readArchitectureSiblingSource(
 
 describe('useCanvasAuthoringRuntime architecture', () => {
   it('stays an application seam over draft-flow composition plus pure policies', () => {
+    expect(AUTHORING_RUNTIME_SOURCE).toContain(
+      'Owned concern: compose backend posture, draft-flow composition, and authoring state'
+    );
+    expect(AUTHORING_RUNTIME_SOURCE).toContain("from './canvasAuthoringRuntime.types'");
     expect(AUTHORING_RUNTIME_SOURCE).toContain('useCanvasAuthoringRuntimeDraftFlow');
     expect(AUTHORING_RUNTIME_SOURCE).toContain('deriveCanvasBackendPosture');
     expect(AUTHORING_RUNTIME_SOURCE).toContain('deriveCanvasAuthoringState');
@@ -20,5 +24,6 @@ describe('useCanvasAuthoringRuntime architecture', () => {
     expect(AUTHORING_RUNTIME_SOURCE).not.toContain('useState(');
     expect(AUTHORING_RUNTIME_SOURCE).not.toContain('createCanvasDraftRepository');
     expect(AUTHORING_RUNTIME_SOURCE).not.toContain('buildCanvasCanonicalSnapshot');
+    expect(AUTHORING_RUNTIME_SOURCE).not.toContain('graphStrategy');
   });
 });

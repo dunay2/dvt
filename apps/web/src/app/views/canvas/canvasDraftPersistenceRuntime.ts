@@ -1,4 +1,5 @@
 import type { CanvasDraftQueryCache } from './canvasDraftQueryCache';
+import type { CanvasDraftReadModel } from './canvasDraftReadModel';
 import {
   canvasDraftSession,
   type CanvasDraftSession,
@@ -19,12 +20,12 @@ export function clearSaveDebounce(refs: DraftAttemptRefs) {
 }
 
 export function shouldWaitForPersistenceReadiness(
-  graphSnapshotQuery: { isPending: boolean; isError: boolean },
+  graphAuthorityQuery: { isPending: boolean; isError: boolean },
   graphDraftQuery: { isPending: boolean; isError: boolean }
 ): boolean {
   return (
-    graphSnapshotQuery.isPending ||
-    graphSnapshotQuery.isError ||
+    graphAuthorityQuery.isPending ||
+    graphAuthorityQuery.isError ||
     graphDraftQuery.isPending ||
     graphDraftQuery.isError
   );
@@ -64,11 +65,16 @@ export function applyConflictResolution(args: {
   draftQueryCache: CanvasDraftQueryCache;
   setDraftSession: (updater: (currentSession: CanvasDraftSession) => CanvasDraftSession) => void;
   setDraftSaveStatus: (status: 'idle') => void;
-  current: Parameters<(typeof canvasDraftSession.machine.applyConflict)>[1];
+  currentState: CanvasDraftReadModel;
 }) {
-  args.draftQueryCache.replaceRemoteDraft(args.current);
+  const currentRecord = args.currentState.record;
+  if (currentRecord == null) {
+    return;
+  }
+
+  args.draftQueryCache.replaceRemoteDraftState(args.currentState);
   args.setDraftSession((currentSession) =>
-    canvasDraftSession.machine.applyConflict(currentSession, args.current)
+    canvasDraftSession.machine.applyConflict(currentSession, currentRecord)
   );
   args.setDraftSaveStatus('idle');
 }
@@ -79,12 +85,17 @@ export function applySavedDraftResolution(args: {
   refs: DraftAttemptRefs;
   setDraftSession: (updater: (currentSession: CanvasDraftSession) => CanvasDraftSession) => void;
   setDraftSaveStatus: (status: 'saved') => void;
-  record: Parameters<(typeof canvasDraftSession.machine.applySaveSuccess)>[1];
+  remoteDraftState: CanvasDraftReadModel;
 }) {
+  const record = args.remoteDraftState.record;
+  if (record == null) {
+    return;
+  }
+
   args.refs.lastSavedSignatureRef.current = args.currentDraftPayloadSignature;
-  args.draftQueryCache.replaceRemoteDraft(args.record);
+  args.draftQueryCache.replaceRemoteDraftState(args.remoteDraftState);
   args.setDraftSession((currentSession) =>
-    canvasDraftSession.machine.applySaveSuccess(currentSession, args.record)
+    canvasDraftSession.machine.applySaveSuccess(currentSession, record)
   );
   args.setDraftSaveStatus('saved');
 }

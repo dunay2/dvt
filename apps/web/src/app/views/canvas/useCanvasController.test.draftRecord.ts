@@ -22,6 +22,84 @@ const DEFAULT_PROTECTED_SCOPE = {
   environmentId: 'dev',
 } as const;
 
+type AuthoringDraftNode = DesignGraphDraft['nodes'][number];
+type AuthoringDraftNodeKind = AuthoringDraftNode['type'];
+
+const EXPLICIT_NODE_KIND_BY_ID: Readonly<Record<string, AuthoringDraftNodeKind>> = {
+  node_1: 'source',
+  node_2: 'sql_transform',
+  node_3: 'sink',
+  node_4: 'sink',
+  node_remote_only: 'sql_transform',
+};
+
+function buildAuthoringDraftNode(nodeId: string, kind: AuthoringDraftNodeKind): AuthoringDraftNode {
+  switch (kind) {
+    case 'source':
+      return {
+        id: nodeId,
+        type: 'source',
+        payload: {
+          kind: 'postgres_table',
+          schema: 'raw',
+          table: nodeId,
+          alias: nodeId,
+        },
+      };
+
+    case 'sql_transform':
+      return {
+        id: nodeId,
+        type: 'sql_transform',
+        payload: {
+          dialect: 'postgres',
+          sqlArtifact: {
+            repo: 'dunay2/dvt',
+            path: `models/${nodeId}.sql`,
+            ref: 'refs/heads/main',
+            commitSha: 'local',
+            contentSha256: 'a'.repeat(64),
+          },
+          entrypoint: `models/${nodeId}.sql`,
+        },
+      };
+
+    case 'sink':
+      return {
+        id: nodeId,
+        type: 'sink',
+        payload: {
+          kind: 'postgres_table',
+          schema: 'analytics',
+          table: nodeId,
+          materialization: 'table',
+          writeMode: 'replace',
+        },
+      };
+  }
+}
+
+function resolveAuthoringDraftNodeKind(
+  nodeId: string,
+  index: number,
+  totalNodeCount: number
+): AuthoringDraftNodeKind {
+  const explicitKind = EXPLICIT_NODE_KIND_BY_ID[nodeId];
+  if (explicitKind != null) {
+    return explicitKind;
+  }
+
+  if (index === 0) {
+    return 'source';
+  }
+
+  if (index === totalNodeCount - 1 && totalNodeCount > 1) {
+    return 'sink';
+  }
+
+  return 'sql_transform';
+}
+
 function buildAuthoringDraftFromProjectedDraft(
   draft: WorkspaceGraphDraft,
   scope: WorkspaceGraphDraftScope
@@ -33,50 +111,9 @@ function buildAuthoringDraftFromProjectedDraft(
       ...scope,
       executionTarget: 'postgres',
     },
-    nodes: draft.nodeIds.map((nodeId, index) => {
-      if (index === 0) {
-        return {
-          id: nodeId,
-          type: 'source' as const,
-          payload: {
-            kind: 'postgres_table' as const,
-            schema: 'raw',
-            table: nodeId,
-            alias: nodeId,
-          },
-        };
-      }
-
-      if (index === totalNodeCount - 1 && totalNodeCount > 1) {
-        return {
-          id: nodeId,
-          type: 'sink' as const,
-          payload: {
-            kind: 'postgres_table' as const,
-            schema: 'analytics',
-            table: nodeId,
-            materialization: 'table' as const,
-            writeMode: 'replace' as const,
-          },
-        };
-      }
-
-      return {
-        id: nodeId,
-        type: 'sql_transform' as const,
-        payload: {
-          dialect: 'postgres' as const,
-          sqlArtifact: {
-            repo: 'dunay2/dvt',
-            path: `models/${nodeId}.sql`,
-            ref: 'refs/heads/main',
-            commitSha: 'local',
-            contentSha256: 'a'.repeat(64),
-          },
-          entrypoint: `models/${nodeId}.sql`,
-        },
-      };
-    }),
+    nodes: draft.nodeIds.map((nodeId, index) =>
+      buildAuthoringDraftNode(nodeId, resolveAuthoringDraftNodeKind(nodeId, index, totalNodeCount))
+    ),
     edges: draft.edges.map((edge) => ({
       fromNodeId: edge.sourceId,
       toNodeId: edge.targetId,

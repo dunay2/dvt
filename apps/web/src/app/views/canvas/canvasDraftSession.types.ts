@@ -1,4 +1,5 @@
 import type { WorkspaceGraphDraftRecord } from '../../ports/workspace';
+import type { CanonicalNode } from '../../types/canonical';
 
 export type CanvasDraftSyncState =
   | 'bootstrapping'
@@ -25,6 +26,7 @@ export type CanvasDraftSession = {
   baseline: CanvasDraftBaseline;
   workingSet: CanvasDraftWorkingSet;
   draftRevision: string | null;
+  localNodeCatalog?: Record<string, CanonicalNode>;
 };
 
 export type BootstrapSessionArgs = {

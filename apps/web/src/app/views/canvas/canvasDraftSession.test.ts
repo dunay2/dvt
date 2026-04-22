@@ -205,33 +205,32 @@ describe('canvasDraftSession', () => {
     expect(session.baseline.record).toBeNull();
   });
 
-  it('adoptCurrentSnapshot clears prior baseline state and rebuilds from canonical', () => {
-    const session = canvasDraftSession.machine.adoptCurrentSnapshot(
-      canvasDraftSession.machine.markRemoteDraftMissing(
-        canvasDraftSession.machine.reloadFromRemote(
-          canvasDraftSession.machine.createBootstrapping(),
-          buildRemoteDraftRecord()
-        )
+  it('preserves last authoritative visible canonical nodes when the persisted draft disappears', () => {
+    const session = canvasDraftSession.machine.markRemoteDraftMissing(
+      canvasDraftSession.machine.reloadFromRemote(
+        canvasDraftSession.machine.createBootstrapping(),
+        buildRemoteDraftRecord()
       ),
       {
-        canonicalNodeIds: ['node_1', 'node_2', 'node_3'],
-        canonicalEdges: [
-          { sourceId: 'node_1', targetId: 'node_2' },
-          { sourceId: 'node_2', targetId: 'node_3' },
-        ],
+        node_1: {
+          id: 'node_1',
+          name: 'orders',
+          pluginId: 'dvt',
+          kind: 'dvt:source',
+          role: 'input',
+          status: 'idle',
+          tags: [],
+        },
       }
     );
 
-    expect(session.syncState).toBe('editing');
-    expect(session.draftRevision).toBeNull();
-    expect(session.baseline.record).toBeNull();
-    expect(session.workingSet).toEqual({
-      visibleNodeIds: ['node_1', 'node_2', 'node_3'],
-      visibleEdges: [
-        { sourceId: 'node_1', targetId: 'node_2' },
-        { sourceId: 'node_2', targetId: 'node_3' },
-      ],
-      pendingExplicitNodeIds: [],
+    expect(session.syncState).toBe('missing_remote');
+    expect(session.localNodeCatalog).toEqual({
+      node_1: expect.objectContaining({
+        id: 'node_1',
+        kind: 'dvt:source',
+      }),
     });
   });
+
 });

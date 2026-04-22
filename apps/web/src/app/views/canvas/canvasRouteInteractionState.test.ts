@@ -52,7 +52,7 @@ describe('canvasRouteInteractionState', () => {
 
     const interactionState = deriveCanvasRouteInteractionState(controller, null);
 
-    expect(interactionState.shouldBlockCanvasInApiMode).toBe(false);
+    expect(interactionState.startupBlockState).toBeNull();
     expect(interactionState.effectiveWorkbenchState).toEqual({ kind: 'ready' });
     expect(interactionState.effectiveUserPermissions).toMatchObject({
       canPlan: true,
@@ -65,6 +65,27 @@ describe('canvasRouteInteractionState', () => {
     expect(interactionState.workbenchErrorMessage).toBeNull();
   });
 
+  it('fails closed when the canvas route is mounted outside api runtime mode', () => {
+    const controller = buildController({
+      dataSourceMode: 'mock',
+    });
+
+    const interactionState = deriveCanvasRouteInteractionState(controller, null);
+
+    expect(interactionState.startupBlockState).toEqual({
+      kind: 'runtime_mode',
+      title: 'Canvas runtime unavailable',
+      message: 'Canvas authoring requires API runtime mode and protected workspace draft access.',
+    });
+    expect(interactionState.effectiveWorkbenchState).toEqual({ kind: 'ready' });
+    expect(interactionState.effectiveUserPermissions).toMatchObject({
+      canPlan: false,
+      canRun: false,
+      canEditEdges: false,
+    });
+    expect(interactionState.readOnlyState).toBeNull();
+  });
+
   it('blocks interactions in api mode before backend readiness is available', () => {
     const controller = buildController({
       dataSourceMode: 'api',
@@ -73,7 +94,11 @@ describe('canvasRouteInteractionState', () => {
 
     const interactionState = deriveCanvasRouteInteractionState(controller, null);
 
-    expect(interactionState.shouldBlockCanvasInApiMode).toBe(true);
+    expect(interactionState.startupBlockState).toEqual({
+      kind: 'backend_readiness',
+      title: 'Backend not ready',
+      message: 'Canvas stays blocked until backend readiness is restored in API mode.',
+    });
     expect(interactionState.effectiveWorkbenchState).toEqual({ kind: 'ready' });
     expect(interactionState.effectiveUserPermissions).toMatchObject({
       canPlan: false,

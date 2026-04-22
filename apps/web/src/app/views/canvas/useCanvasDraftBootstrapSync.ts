@@ -1,20 +1,21 @@
-import type { Dispatch, SetStateAction } from 'react';
+import { useRef, type Dispatch, type SetStateAction } from 'react';
 
 import type { CanvasDraftQueryCache } from './canvasDraftQueryCache';
 import type { CanvasDraftSession } from './canvasDraftSession';
 import type {
   DraftSaveStatus,
   GraphDraftQueryState,
-  GraphSnapshotQueryState,
+  GraphAuthorityQueryState,
 } from './canvasDraftLifecycle.types';
 import type { CanvasDraftLifecycleCanonicalSnapshot } from './canvasDraftLifecycleSnapshot';
+import type { WorkspaceGraphDraftSemanticGraph } from '../../services/workspace/workspaceGraphDraftProjection';
 import { useCanvasDraftBootstrapping } from './useCanvasDraftBootstrapping';
 import { useCanvasDraftCanonicalReconcile } from './useCanvasDraftCanonicalReconcile';
 import { useCanvasDraftReloadHydration } from './useCanvasDraftReloadHydration';
 
 type UseCanvasDraftBootstrapSyncArgs = {
   graphDraftQuery: GraphDraftQueryState;
-  graphSnapshotQuery: GraphSnapshotQueryState;
+  graphAuthorityQuery: GraphAuthorityQueryState;
   draftQueryCache: CanvasDraftQueryCache;
   workspaceLayoutKey: string;
   draftSession: CanvasDraftSession;
@@ -31,7 +32,7 @@ type UseCanvasDraftBootstrapSyncArgs = {
 
 export function useCanvasDraftBootstrapSync({
   graphDraftQuery,
-  graphSnapshotQuery,
+  graphAuthorityQuery,
   draftQueryCache,
   workspaceLayoutKey,
   draftSession,
@@ -42,6 +43,8 @@ export function useCanvasDraftBootstrapSync({
   invalidateInFlightSaveAttempt,
   lastSavedSignatureRef,
 }: UseCanvasDraftBootstrapSyncArgs) {
+  const lastAuthoritativeSemanticGraphRef = useRef<WorkspaceGraphDraftSemanticGraph | null>(null);
+
   const applyReloadedRemoteDraft = useCanvasDraftReloadHydration({
     draftQueryCache,
     workspaceLayoutKey,
@@ -49,11 +52,12 @@ export function useCanvasDraftBootstrapSync({
     setCanvasNodePositions,
     setDraftSaveStatus,
     lastSavedSignatureRef,
+    lastAuthoritativeSemanticGraphRef,
   });
 
   useCanvasDraftBootstrapping({
     graphDraftQuery,
-    graphSnapshotQuery,
+    graphAuthorityQuery,
     workspaceLayoutKey,
     draftSession,
     setDraftSession,
@@ -62,10 +66,11 @@ export function useCanvasDraftBootstrapSync({
     setDraftSaveStatus,
     invalidateInFlightSaveAttempt,
     lastSavedSignatureRef,
+    lastAuthoritativeSemanticGraphRef,
   });
 
   useCanvasDraftCanonicalReconcile({
-    graphSnapshotQuery,
+    graphAuthorityQuery,
     draftSession,
     setDraftSession,
     canonicalSnapshot,

@@ -69,7 +69,7 @@ export function useCanvasNodeDropHandlers({
         }
 
         setDraftSession((currentSession) =>
-          canvasGraphLifecycle.node.admitExplicit(currentSession, canonicalNode.id)
+          canvasGraphLifecycle.node.admitExplicit(currentSession, canonicalNode)
         );
         toast.success(formatCanvasNodeAddedMessage(canonicalNode.name));
         return dropResult.nextNodes;

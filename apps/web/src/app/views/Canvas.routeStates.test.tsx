@@ -9,8 +9,50 @@ import {
   getPrimaryCanvasButtons,
 } from './Canvas.test.support';
 
+type CanvasRouteHarness = ReturnType<typeof createCanvasRouteHarness>;
+
+function expectCanvasRegistryClosed(): void {
+  expect(currentCanvasRouteState().explorerProps?.onOpenDataRegistry).toBeUndefined();
+}
+
+function expectPrimaryCanvasActionsBlocked(container: ParentNode): void {
+  const { layoutButton, planButton, runButton } = getPrimaryCanvasButtons(container);
+
+  expect(layoutButton).toBeDefined();
+  expect(planButton).toBeDefined();
+  expect(runButton).toBeDefined();
+  expect(layoutButton?.getAttribute('disabled')).not.toBeNull();
+  expect(planButton?.getAttribute('disabled')).not.toBeNull();
+  expect(runButton?.getAttribute('disabled')).not.toBeNull();
+}
+
+function expectBlockedCanvasRouteState(args: {
+  harness: CanvasRouteHarness;
+  text: string;
+  detail: string;
+  routeState: 'blocked_runtime' | 'blocked_backend';
+}): void {
+  const { harness, text, detail, routeState } = args;
+
+  expectCanvasSurfaceState({
+    harness,
+    text,
+    extraText: detail,
+    slot: 'canvas-blocked-state',
+    viewportVisible: false,
+  });
+  expectPrimaryCanvasActionsBlocked(harness.container);
+  expectCanvasBootstrapState({
+    routeState,
+    bootstrapStatus: 'blocked',
+    bootstrapDetail: detail,
+    canCompleteBootstrap: false,
+  });
+  expectCanvasRegistryClosed();
+}
+
 describe('Canvas route states', () => {
-  let harness: ReturnType<typeof createCanvasRouteHarness>;
+  let harness: CanvasRouteHarness;
 
   beforeEach(() => {
     harness = createCanvasRouteHarness();
@@ -19,7 +61,6 @@ describe('Canvas route states', () => {
   afterEach(() => {
     harness.cleanup();
   });
-
   it.each([
     {
       name: 'renders a governed loading state inside the canvas workbench',
@@ -84,7 +125,19 @@ describe('Canvas route states', () => {
       'This workspace does not expose graph nodes yet. Graph edits are disabled in this context.'
     );
     expect(harness.container.textContent).not.toContain('Use Add data');
-    expect(currentCanvasRouteState().explorerProps?.onOpenDataRegistry).toBeUndefined();
+    expectCanvasRegistryClosed();
+  });
+
+  it('renders empty guidance without suggesting Add data when source import is unavailable', async () => {
+    await renderCanvasRouteWithController(harness, {
+      explorerNodes: [],
+      canOpenSourceImport: false,
+    } as never);
+
+    expect(harness.container.textContent).toContain('No graph content loaded');
+    expect(harness.container.textContent).toContain('Source import is unavailable in this runtime');
+    expect(harness.container.textContent).not.toContain('Use Add data');
+    expectCanvasRegistryClosed();
   });
 
   it('renders a governed error state when the graph snapshot fails before any nodes are available', async () => {
@@ -108,32 +161,32 @@ describe('Canvas route states', () => {
     });
   });
 
+  it('fails closed when canvas authoring is mounted outside api runtime mode', async () => {
+    await renderCanvasRouteWithController(harness, {
+      dataSourceMode: 'mock',
+      explorerNodes: [],
+    });
+
+    expectBlockedCanvasRouteState({
+      harness,
+      text: 'Canvas runtime unavailable',
+      detail: 'Canvas authoring requires API runtime mode and protected workspace draft access.',
+      routeState: 'blocked_runtime',
+    });
+  });
+
   it('blocks the canvas surface in api mode when backend readiness is not satisfied', async () => {
     await renderCanvasRouteWithController(harness, {
       dataSourceMode: 'api',
       backendReady: false,
       backendBlockMessage: 'Readiness not satisfied: database_not_configured.',
     });
-    const { layoutButton, planButton, runButton } = getPrimaryCanvasButtons(harness.container);
 
-    expectCanvasSurfaceState({
+    expectBlockedCanvasRouteState({
       harness,
       text: 'Backend not ready',
-      extraText: 'Readiness not satisfied: database_not_configured.',
-      slot: 'canvas-blocked-state',
-      viewportVisible: false,
-    });
-    expect(layoutButton).toBeDefined();
-    expect(planButton).toBeDefined();
-    expect(runButton).toBeDefined();
-    expect(layoutButton?.getAttribute('disabled')).not.toBeNull();
-    expect(planButton?.getAttribute('disabled')).not.toBeNull();
-    expect(runButton?.getAttribute('disabled')).not.toBeNull();
-    expectCanvasBootstrapState({
+      detail: 'Readiness not satisfied: database_not_configured.',
       routeState: 'blocked_backend',
-      bootstrapStatus: 'blocked',
-      bootstrapDetail: 'Readiness not satisfied: database_not_configured.',
-      canCompleteBootstrap: false,
     });
   });
 

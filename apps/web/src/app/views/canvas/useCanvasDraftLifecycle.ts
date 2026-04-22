@@ -1,3 +1,4 @@
+/** Owned concern: compose bootstrapping, persistence, and save-attempt policy into one narrow Canvas draft-lifecycle seam. */
 import { useState } from 'react';
 
 import { createCanvasDraftIdempotencyKey } from './canvasDraftIdempotencyKey';
@@ -22,12 +23,11 @@ export function useCanvasDraftLifecycle({
   graphNodes,
   canonicalNodes,
   canonicalEdges,
-  graphSnapshotQuery,
+  graphAuthorityQuery,
   canPersistGraphDraft,
   workspaceScope,
   previewProvenanceConfig,
   setCanvasNodePositions,
-  graphStrategy,
 }: UseCanvasDraftLifecycleArgs): CanvasDraftLifecycle {
   const [draftSaveStatus, setDraftSaveStatus] = useState<DraftSaveStatus>('idle');
   const { refs, invalidateInFlightSaveAttempt } = useCanvasDraftAttemptRefs();
@@ -43,7 +43,7 @@ export function useCanvasDraftLifecycle({
 
   const { applyReloadedRemoteDraft } = useCanvasDraftBootstrapSync({
     graphDraftQuery,
-    graphSnapshotQuery,
+    graphAuthorityQuery,
     draftQueryCache,
     workspaceLayoutKey,
     draftSession,
@@ -54,19 +54,17 @@ export function useCanvasDraftLifecycle({
     invalidateInFlightSaveAttempt,
     lastSavedSignatureRef: refs.lastSavedSignatureRef,
   });
-  const { reloadLatestDraft, adoptCurrentWorkspaceSnapshot } = useCanvasDraftPersistence({
+  const { reloadLatestDraft } = useCanvasDraftPersistence({
     draftRepository,
     graphDraftQuery,
-    graphSnapshotQuery,
+    graphAuthorityQuery,
     draftQueryCache,
     draftSession,
     setDraftSession,
-    canonicalSnapshot,
     currentDraftPayloadSignature,
     currentDraftPayload,
     canPersistGraphDraft,
     canPersistCurrentDraft,
-    graphStrategy,
     refs,
     setDraftSaveStatus,
     invalidateInFlightSaveAttempt,
@@ -77,6 +75,5 @@ export function useCanvasDraftLifecycle({
   return {
     draftSaveStatus,
     reloadLatestDraft,
-    adoptCurrentWorkspaceSnapshot,
   };
 }

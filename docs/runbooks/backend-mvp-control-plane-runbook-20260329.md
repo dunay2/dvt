@@ -99,6 +99,22 @@ Docker Postgres proof environment automatically when `DATABASE_URL` is not
 already set in the caller environment. It also enables `/db/ready` for the API
 process and waits for that probe before reporting the stack ready.
 
+When protected-runtime OIDC posture is otherwise absent, the coordinated dev
+stack now also bootstraps a local JWKS-backed auth posture for Canvas and other
+protected-runtime consumers:
+
+- local `OIDC_JWKS_URI`, `OIDC_ISSUER`, and `OIDC_AUDIENCE` are injected for the
+  API process
+- a dev bearer token is injected into the web process through
+  `VITE_API_BEARER_TOKEN`
+- a default principal grant is seeded for the default workspace scope
+  (`tenant/project/dev`) with the protected draft read/write actions required by
+  Canvas authoring
+
+This bootstrap exists to satisfy the real protected-runtime contract locally. It
+does not change the production auth model and must not be treated as a product
+login flow.
+
 Use `pnpm dev:app -- --skip-postgres` only when you intentionally want the old
 behavior and are providing database posture yourself.
 
@@ -171,10 +187,24 @@ Likely cause: OIDC posture is incomplete.
 Action: set `OIDC_JWKS_URI`, `OIDC_ISSUER`, `OIDC_AUDIENCE`, plus `DATABASE_URL`
 and restart.
 
+In the coordinated local stack, the same symptom usually means the dev-stack
+auth bootstrap did not run or the API was started outside `pnpm dev:app`.
+
 ### Symptom: protected endpoints return 401/403
 
 Likely cause: invalid token or missing tenant scope/permissions.  
 Action: validate token issuer/audience and tenant authorization policy.
+
+For local Canvas authoring through `pnpm dev:app`, diagnose in this order:
+
+1. `GET /workspace/graph/draft?...` returns `401`
+   - browser did not attach the injected bearer token or the web process was
+     started without the coordinated env
+2. `GET /workspace/graph/draft?...` returns `403`
+   - principal grant seeding did not match the active workspace scope
+3. `GET /workspace/graph/draft?...` returns `404`
+   - protected runtime routes are still not registered, so OIDC posture is not
+     active in the API process
 
 ### Symptom: `/readyz` returns 503
 

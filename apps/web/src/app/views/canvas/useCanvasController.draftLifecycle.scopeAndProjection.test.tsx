@@ -50,7 +50,7 @@ function expectExecutionScopeSubset(harness: CanvasControllerHarness): void {
   expect(latestExecutionCall?.workspaceNodeIds).toEqual(['node_1']);
 }
 
-function configureProjectionGapHarness(harness: CanvasControllerHarness): void {
+function configureProtectedSemanticProjectionHarness(harness: CanvasControllerHarness): void {
   harness.state.canonicalNodes = [
     ...harness.state.canonicalNodes,
     {
@@ -92,14 +92,14 @@ function configureProjectionGapHarness(harness: CanvasControllerHarness): void {
   );
 }
 
-function expectProjectionGapState(
+function expectProtectedSemanticProjectionState(
   harness: CanvasControllerHarness,
   expectedCanEditEdges: boolean,
   expectedCanPlan: boolean
 ): void {
   const latestExecutionCall = readLatestExecutionCall(harness);
 
-  expect(harness.getLatestResult()?.hasDraftProjectionGap).toBe(!expectedCanEditEdges);
+  expect(harness.getLatestResult()?.hasDraftProjectionGap).toBe(false);
   expect(harness.mocks.useCanvasGraphHandlers).toHaveBeenLastCalledWith(
     expect.objectContaining({
       canEditEdges: expectedCanEditEdges,
@@ -140,14 +140,14 @@ describe('useCanvasController draft lifecycle scope and projection', () => {
     expectExecutionScopeSubset(harness);
   });
 
-  it('blocks editing and persistence until the workspace snapshot can project the full persisted draft', async () => {
+  it('projects the full persisted draft from protected semantic truth even before snapshot hydration catches up', async () => {
     harness = createUnrenderedHarness();
-    configureProjectionGapHarness(harness);
+    configureProtectedSemanticProjectionHarness(harness);
 
     await harness.renderProbe();
     await harness.renderProbe();
 
-    expectProjectionGapState(harness, false, false);
+    expectProtectedSemanticProjectionState(harness, true, true);
 
     await waitForAutosaveDebounce();
     expect(harness.state.services.workspaceGraphDraftAuthoringPort.saveGraphDraft).not.toHaveBeenCalled();
@@ -159,6 +159,6 @@ describe('useCanvasController draft lifecycle scope and projection', () => {
 
     await harness.renderProbe();
 
-    expectProjectionGapState(harness, true, true);
+    expectProtectedSemanticProjectionState(harness, true, true);
   });
 });

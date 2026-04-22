@@ -1,6 +1,10 @@
 import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
+import {
+  buildRemoteDraftRecord,
+  createHarnessWithDraft,
+} from './useCanvasController.draftLifecycle.test.support';
 import { setupCanvasControllerHarness } from './useCanvasController.test.harness';
 
 describe('useCanvasController persistence guards', () => {
@@ -52,7 +56,17 @@ describe('useCanvasController persistence guards', () => {
     expect(harness.state.store.setCanvasViewport).not.toHaveBeenCalled();
   });
 
-  it('prefers persisted node positions deterministically when syncing nodes', async () => {
+  it('prefers persisted node positions deterministically when syncing protected draft nodes', async () => {
+    harness.cleanup();
+    harness = await createHarnessWithDraft(
+      buildRemoteDraftRecord({
+        nodeIds: ['node_1'],
+        nodePositions: {
+          node_1: { x: 0, y: 0 },
+        },
+        edges: [],
+      })
+    );
     harness.state.store.canvasLayouts = {
       'tenant-a::project-a::dev': {
         viewport: { x: 0, y: 0, zoom: 1 },

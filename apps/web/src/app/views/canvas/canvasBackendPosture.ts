@@ -1,22 +1,15 @@
+/** Owned concern: derive backend readiness and transport-mutation posture for the Canvas authoring-runtime seam. */
 import {
   getPlatformConnectionDetail,
   getPlatformHealthErrorMessageFromQuery,
   isPlatformReady,
-  type PlatformHealthSnapshot,
 } from '../../../capabilities/platform-health';
-
-type CanvasDataSourceMode = 'mock' | 'api';
-
-type PlatformHealthQueryState = {
-  isPending: boolean;
-  isError: boolean;
-  data?: PlatformHealthSnapshot;
-  error?: unknown;
-};
+import type { DataSourceMode } from '../../services/config/dataSource';
+import type { CanvasAuthoringRuntimePlatformHealthQuery } from './canvasAuthoringRuntime.types';
 
 type DeriveCanvasBackendPostureArgs = {
-  dataSourceMode: CanvasDataSourceMode;
-  platformHealthQuery: PlatformHealthQueryState;
+  dataSourceMode: DataSourceMode;
+  platformHealthQuery: CanvasAuthoringRuntimePlatformHealthQuery;
 };
 
 export type CanvasBackendPosture = {
@@ -28,7 +21,7 @@ export type CanvasBackendPosture = {
 
 function deriveBackendBlockMessage(
   shouldExposeBackendBlockMessage: boolean,
-  platformHealthQuery: PlatformHealthQueryState
+  platformHealthQuery: CanvasAuthoringRuntimePlatformHealthQuery
 ): string | null {
   if (!shouldExposeBackendBlockMessage) {
     return null;

@@ -17,10 +17,17 @@ export type UserPermissions = {
   canEditEdges: boolean;
 };
 
+type CanvasViewport = {
+  x: number;
+  y: number;
+  zoom: number;
+};
+
 export type CanvasShellLayout = {
   focusMode: boolean;
   explorerPanelVisible: boolean;
   inspectorPanelVisible: boolean;
+  canOpenSourceImport: boolean;
   centerSurface?: React.ReactNode;
   readOnlyBanner?: React.ReactNode;
 };
@@ -32,12 +39,6 @@ export type CanvasShellPanels = {
   registeredPlugins: ReadonlySet<string>;
   userPermissions: UserPermissions;
   importedNodeFocusIds: string[];
-};
-
-type CanvasViewport = {
-  x: number;
-  y: number;
-  zoom: number;
 };
 
 export type CanvasShellGraph = {
@@ -90,11 +91,11 @@ export type CanvasShellChromeCommands = {
   onRun: () => void;
 };
 
-export type CanvasShellProps = {
+export type CanvasShellProps = Readonly<{
   layout: CanvasShellLayout;
   panels: CanvasShellPanels;
   graph: CanvasShellGraph;
   toolbar: CanvasShellToolbar;
   graphCommands: CanvasShellGraphCommands;
   chromeCommands: CanvasShellChromeCommands;
-};
+}>;

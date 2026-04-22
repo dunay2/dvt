@@ -1,3 +1,4 @@
+/** Owned concern: derive route-safe Canvas authoring scopes, recovery posture, and mutation capability from draft-session truth. */
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { CanvasDraftSession } from './canvasDraftSession';
 import {

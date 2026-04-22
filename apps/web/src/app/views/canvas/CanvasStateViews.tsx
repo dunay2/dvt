@@ -1,3 +1,4 @@
+/** Owned concern: render governed Canvas state views and read-only banners from route presentation models. */
 import { Card } from '../../components/ui/card';
 import { cn } from '../../components/ui/utils';
 import {

@@ -9,16 +9,20 @@ const CENTER_SURFACE_SOURCE = readArchitectureSiblingSource(
 
 describe('CanvasCenterSurface architecture', () => {
   it('delegates draft transport and workbench route-state rendering to dedicated helpers', () => {
+    expect(CENTER_SURFACE_SOURCE).toContain(
+      'Owned concern: render governed Canvas center-surface states'
+    );
     expect(CENTER_SURFACE_SOURCE).toContain('renderCanvasDraftTransportSurface');
     expect(CENTER_SURFACE_SOURCE).toContain('renderCanvasWorkbenchSurface');
-    expect(CENTER_SURFACE_SOURCE).toContain('renderCanvasBackendWorkbenchSurface');
+    expect(CENTER_SURFACE_SOURCE).toContain('renderCanvasStartupWorkbenchSurface');
     expect(CENTER_SURFACE_SOURCE).toContain('renderCanvasGraphWorkbenchSurface');
     expect(CENTER_SURFACE_SOURCE).toContain('renderCanvasEmptyWorkbenchSurface');
   });
 
-  it('renders from canonical route presentation state instead of raw controller fields', () => {
+  it('renders from canonical route posture instead of reading controller state directly', () => {
+    expect(CENTER_SURFACE_SOURCE).toContain('startupBlockState');
+    expect(CENTER_SURFACE_SOURCE).toContain('workbenchErrorMessage');
     expect(CENTER_SURFACE_SOURCE).not.toContain('backendBlockMessage');
-    expect(CENTER_SURFACE_SOURCE).not.toContain('workbenchErrorMessage');
     expect(CENTER_SURFACE_SOURCE).not.toContain("'./useCanvasController'");
   });
 });

@@ -1,6 +1,8 @@
 import { useEffect, type Dispatch, type SetStateAction } from 'react';
 
+import type { WorkspaceGraphDraftSemanticGraph } from '../../services/workspace/workspaceGraphDraftProjection';
 import { canvasDraftSession, type CanvasDraftSession } from './canvasDraftSession';
+import { buildLocalNodeCatalogFromSemanticGraph } from './canvasDraftLocalNodeCatalog';
 import type { DraftSaveStatus, GraphDraftQueryState } from './canvasDraftLifecycle.types';
 
 type UseCanvasDraftMissingRemoteSyncArgs = {
@@ -11,7 +13,44 @@ type UseCanvasDraftMissingRemoteSyncArgs = {
   setDraftSaveStatus: Dispatch<SetStateAction<DraftSaveStatus>>;
   invalidateInFlightSaveAttempt: () => void;
   lastSavedSignatureRef: { current: string | null };
+  lastAuthoritativeSemanticGraphRef: {
+    current: WorkspaceGraphDraftSemanticGraph | null;
+  };
 };
+
+function syncLastAuthoritativeSemanticGraph(
+  args: Pick<
+    UseCanvasDraftMissingRemoteSyncArgs,
+    'draftSession' | 'graphDraftQuery' | 'lastAuthoritativeSemanticGraphRef'
+  >
+): void {
+  const { draftSession, graphDraftQuery, lastAuthoritativeSemanticGraphRef } = args;
+
+  if (graphDraftQuery.data?.record != null && graphDraftQuery.data.semanticGraph != null) {
+    lastAuthoritativeSemanticGraphRef.current = graphDraftQuery.data.semanticGraph;
+    return;
+  }
+
+  if (draftSession.syncState === 'bootstrapping' && graphDraftQuery.data?.record == null) {
+    lastAuthoritativeSemanticGraphRef.current = null;
+  }
+}
+
+function shouldMarkRemoteDraftMissing(
+  args: Pick<
+    UseCanvasDraftMissingRemoteSyncArgs,
+    'shouldWaitForBootstrapReadiness' | 'graphDraftQuery' | 'draftSession'
+  >
+): boolean {
+  const { shouldWaitForBootstrapReadiness, graphDraftQuery, draftSession } = args;
+
+  return !(
+    shouldWaitForBootstrapReadiness ||
+    draftSession.syncState === 'bootstrapping' ||
+    graphDraftQuery.data?.record != null ||
+    draftSession.baseline.record == null
+  );
+}
 
 export function useCanvasDraftMissingRemoteSync({
   shouldWaitForBootstrapReadiness,
@@ -21,13 +60,28 @@ export function useCanvasDraftMissingRemoteSync({
   setDraftSaveStatus,
   invalidateInFlightSaveAttempt,
   lastSavedSignatureRef,
+  lastAuthoritativeSemanticGraphRef,
 }: UseCanvasDraftMissingRemoteSyncArgs) {
   useEffect(() => {
+    syncLastAuthoritativeSemanticGraph({
+      draftSession,
+      graphDraftQuery,
+      lastAuthoritativeSemanticGraphRef,
+    });
+  }, [
+    draftSession.syncState,
+    graphDraftQuery.data?.record,
+    graphDraftQuery.data?.semanticGraph,
+    lastAuthoritativeSemanticGraphRef,
+  ]);
+
+  useEffect(() => {
     if (
-      shouldWaitForBootstrapReadiness ||
-      draftSession.syncState === 'bootstrapping' ||
-      graphDraftQuery.data?.record != null ||
-      draftSession.baseline.record == null
+      !shouldMarkRemoteDraftMissing({
+        shouldWaitForBootstrapReadiness,
+        graphDraftQuery,
+        draftSession,
+      })
     ) {
       return;
     }
@@ -36,13 +90,20 @@ export function useCanvasDraftMissingRemoteSync({
     lastSavedSignatureRef.current = null;
     setDraftSaveStatus('idle');
     setDraftSession((currentSession) =>
-      canvasDraftSession.machine.markRemoteDraftMissing(currentSession)
+      canvasDraftSession.machine.markRemoteDraftMissing(
+        currentSession,
+        buildLocalNodeCatalogFromSemanticGraph(
+          lastAuthoritativeSemanticGraphRef.current,
+          currentSession.workingSet.visibleNodeIds
+        )
+      )
     );
   }, [
     draftSession.baseline.record,
     draftSession.syncState,
     graphDraftQuery.data?.record,
     invalidateInFlightSaveAttempt,
+    lastAuthoritativeSemanticGraphRef,
     lastSavedSignatureRef,
     setDraftSaveStatus,
     setDraftSession,

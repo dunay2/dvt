@@ -1,26 +1,29 @@
 import type { WorkspaceGraphDraftRecord } from '../../ports/workspace';
+import type { CanonicalNode } from '../../types/canonical';
 import { canvasDraftSessionBaseline } from './canvasDraftSessionBaseline';
-import {
-  canvasDraftSessionWorkingSet,
-  EMPTY_WORKING_SET,
-} from './canvasDraftSessionWorkingSet';
+import { canvasDraftSessionWorkingSet, EMPTY_WORKING_SET } from './canvasDraftSessionWorkingSet';
 import type {
   BootstrapSessionArgs,
   CanvasDraftSession,
   CanvasDraftSyncState,
   CanvasDraftWorkingSet,
-  CanonicalSnapshotArgs,
 } from './canvasDraftSession.types';
 
 type BaselineTransitionArgs = {
   nextSyncState: Exclude<CanvasDraftSyncState, 'bootstrapping' | 'saving'>;
   record: WorkspaceGraphDraftRecord | null;
-  workingSet?: CanvasDraftWorkingSet;
+  workingSet: CanvasDraftWorkingSet | undefined;
+  localNodeCatalog: Record<string, CanonicalNode> | undefined;
 };
 
 function transition(
   session: CanvasDraftSession,
-  { nextSyncState, record, workingSet = session.workingSet }: BaselineTransitionArgs
+  {
+    nextSyncState,
+    record,
+    workingSet = session.workingSet,
+    localNodeCatalog,
+  }: BaselineTransitionArgs
 ): CanvasDraftSession {
   return {
     ...session,
@@ -28,6 +31,7 @@ function transition(
     baseline: canvasDraftSessionBaseline.create(record),
     workingSet,
     draftRevision: record?.revision ?? null,
+    localNodeCatalog,
   };
 }
 
@@ -37,6 +41,7 @@ function createBootstrapping(): CanvasDraftSession {
     baseline: canvasDraftSessionBaseline.create(null),
     workingSet: EMPTY_WORKING_SET,
     draftRevision: null,
+    localNodeCatalog: undefined,
   };
 }
 
@@ -53,6 +58,7 @@ function bootstrap({
         ? canvasDraftSessionWorkingSet.buildCanonical({ canonicalNodeIds, canonicalEdges })
         : canvasDraftSessionWorkingSet.buildFromDraft(remoteDraft.draft),
     draftRevision: remoteDraft?.revision ?? null,
+    localNodeCatalog: undefined,
   };
 }
 
@@ -67,35 +73,51 @@ function markSaving(session: CanvasDraftSession): CanvasDraftSession {
   };
 }
 
+function normalizeLocalNodeCatalog(
+  localNodeCatalog?: Record<string, CanonicalNode>
+): Record<string, CanonicalNode> | undefined {
+  return localNodeCatalog == null || Object.keys(localNodeCatalog).length === 0
+    ? undefined
+    : localNodeCatalog;
+}
+
+function transitionWithRecord(
+  session: CanvasDraftSession,
+  nextSyncState: Exclude<CanvasDraftSyncState, 'bootstrapping' | 'saving' | 'missing_remote'>,
+  record: WorkspaceGraphDraftRecord,
+  workingSet?: CanvasDraftWorkingSet
+): CanvasDraftSession {
+  return transition(session, {
+    nextSyncState,
+    record,
+    workingSet,
+    localNodeCatalog: undefined,
+  });
+}
+
 function applySaveSuccess(
   session: CanvasDraftSession,
   record: WorkspaceGraphDraftRecord
 ): CanvasDraftSession {
-  return transition(session, { nextSyncState: 'editing', record });
+  return transitionWithRecord(session, 'editing', record);
 }
 
 function applyConflict(
   session: CanvasDraftSession,
   currentRecord: WorkspaceGraphDraftRecord
 ): CanvasDraftSession {
-  return transition(session, { nextSyncState: 'conflict', record: currentRecord });
+  return transitionWithRecord(session, 'conflict', currentRecord);
 }
 
-function markRemoteDraftMissing(session: CanvasDraftSession): CanvasDraftSession {
-  return transition(session, { nextSyncState: 'missing_remote', record: null });
-}
-
-function adoptCurrentSnapshot(
+function markRemoteDraftMissing(
   session: CanvasDraftSession,
-  { canonicalNodeIds, canonicalEdges }: CanonicalSnapshotArgs
+  localNodeCatalog?: Record<string, CanonicalNode>
 ): CanvasDraftSession {
   return transition(session, {
-    nextSyncState: 'editing',
+    nextSyncState: 'missing_remote',
     record: null,
-    workingSet: canvasDraftSessionWorkingSet.buildCanonical({
-      canonicalNodeIds,
-      canonicalEdges,
-    }),
+    workingSet: undefined,
+    localNodeCatalog: normalizeLocalNodeCatalog(localNodeCatalog),
   });
 }
 
@@ -103,11 +125,12 @@ function reloadFromRemote(
   session: CanvasDraftSession,
   record: WorkspaceGraphDraftRecord
 ): CanvasDraftSession {
-  return transition(session, {
-    nextSyncState: 'editing',
+  return transitionWithRecord(
+    session,
+    'editing',
     record,
-    workingSet: canvasDraftSessionWorkingSet.buildFromDraft(record.draft),
-  });
+    canvasDraftSessionWorkingSet.buildFromDraft(record.draft)
+  );
 }
 
 // Machine owns aggregate sync-state transitions over the draft session.
@@ -118,6 +141,5 @@ export const canvasDraftSessionMachine = {
   applySaveSuccess,
   applyConflict,
   markRemoteDraftMissing,
-  adoptCurrentSnapshot,
   reloadFromRemote,
 } as const;

@@ -16,7 +16,7 @@ const xyflowState = vi.hoisted(() => ({
   miniMapNodeColor: null as null | ((node: { data?: unknown }) => string),
   miniMapMaskColor: null as null | string,
   miniMapMaskStrokeColor: null as null | string,
-  miniMapStyle: null as null | Record<string, unknown>,
+  miniMapClassName: null as null | string,
   lastReactFlowProps: null as null | Record<string, unknown>,
   setViewport: vi.fn(),
   fitView: vi.fn(),
@@ -29,20 +29,14 @@ vi.mock('../../plugins/nodeTypeRegistry', () => ({
 vi.mock('@xyflow/react', () => ({
   ReactFlow: ({
     children,
-    onDrop,
-    onDragOver,
     ...props
   }: {
     children: React.ReactNode;
-    onDrop?: React.DragEventHandler<HTMLDivElement>;
-    onDragOver?: React.DragEventHandler<HTMLDivElement>;
   }) =>
     (() => {
       xyflowState.lastReactFlowProps = props;
       return (
-        <div data-testid="react-flow" onDrop={onDrop} onDragOver={onDragOver}>
-          {children}
-        </div>
+        <div data-testid="react-flow">{children}</div>
       );
     })(),
   Background: ({ color, gap }: { color?: string; gap: number }) => (
@@ -57,19 +51,19 @@ vi.mock('@xyflow/react', () => ({
     zoomable,
     maskColor,
     maskStrokeColor,
-    style,
+    className,
   }: {
     nodeColor: (node: { data?: unknown }) => string;
     pannable?: boolean;
     zoomable?: boolean;
     maskColor?: string;
     maskStrokeColor?: string;
-    style?: Record<string, unknown>;
+    className?: string;
   }) => {
     xyflowState.miniMapNodeColor = nodeColor;
     xyflowState.miniMapMaskColor = maskColor ?? null;
     xyflowState.miniMapMaskStrokeColor = maskStrokeColor ?? null;
-    xyflowState.miniMapStyle = style ?? null;
+    xyflowState.miniMapClassName = className ?? null;
     return (
       <div
         data-testid="minimap"
@@ -115,6 +109,17 @@ function buildProps(
   };
 }
 
+function requireButton(
+  value: HTMLButtonElement | undefined,
+  errorCode: string
+): HTMLButtonElement {
+  if (value === undefined) {
+    throw new Error(errorCode);
+  }
+
+  return value;
+}
+
 describe('CanvasViewport', () => {
   let container: HTMLDivElement;
   let root: Root;
@@ -129,10 +134,12 @@ describe('CanvasViewport', () => {
     xyflowState.miniMapNodeColor = null;
     xyflowState.miniMapMaskColor = null;
     xyflowState.miniMapMaskStrokeColor = null;
-    xyflowState.miniMapStyle = null;
+    xyflowState.miniMapClassName = null;
     xyflowState.lastReactFlowProps = null;
     xyflowState.setViewport.mockReset();
     xyflowState.fitView.mockReset();
+    xyflowState.setViewport.mockResolvedValue(undefined);
+    xyflowState.fitView.mockResolvedValue(undefined);
     mockResolveNodeKindRegistration.mockImplementation((kind: string) => ({
       minimapColor: kind === 'dbt:model' ? '#22c55e' : '#6b7280',
     }));
@@ -159,18 +166,17 @@ describe('CanvasViewport', () => {
     const buttons = Array.from(container.querySelectorAll('button'));
     expect(buttons).toHaveLength(2);
 
-    const showExplorerButton = buttons.find(
-      (button) => button.getAttribute('aria-label') === 'Show explorer panel'
+    const showExplorerButton = requireButton(
+      buttons.find((button) => button.ariaLabel === 'Show explorer panel'),
+      'EXPECTED_SHOW_EXPLORER_BUTTON'
     );
-    const showInspectorButton = buttons.find(
-      (button) => button.getAttribute('aria-label') === 'Show inspector panel'
+    const showInspectorButton = requireButton(
+      buttons.find((button) => button.ariaLabel === 'Show inspector panel'),
+      'EXPECTED_SHOW_INSPECTOR_BUTTON'
     );
 
-    expect(showExplorerButton).toBeTruthy();
-    expect(showInspectorButton).toBeTruthy();
-
-    showExplorerButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-    showInspectorButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    showExplorerButton.click();
+    showInspectorButton.click();
 
     expect(props.onShowExplorer).toHaveBeenCalledTimes(1);
     expect(props.onShowInspector).toHaveBeenCalledTimes(1);
@@ -198,9 +204,10 @@ describe('CanvasViewport', () => {
 
     const viewport = container.querySelector('[data-testid="canvas-viewport"]');
     const viewportStyle = (viewport as HTMLDivElement).style;
+    const viewportDataset = (viewport as HTMLDivElement | null)?.dataset;
 
     expect(container.querySelectorAll('button')).toHaveLength(0);
-    expect(viewport?.getAttribute('data-canvas-palette')).toBe(normalizedCanvasPalette);
+    expect(viewportDataset?.canvasPalette).toBe(normalizedCanvasPalette);
     expect(viewportStyle.getPropertyValue('--canvas-surface')).toBe(expectedPaletteTokens.surface);
     expect(viewportStyle.getPropertyValue('--canvas-grid')).toBe(expectedPaletteTokens.grid);
     expect(viewportStyle.getPropertyValue('--canvas-grid-gap')).toBe('32px');
@@ -213,16 +220,17 @@ describe('CanvasViewport', () => {
       fitView: true,
       fitViewOptions: { padding: 0.2, maxZoom: 0.82 },
       minZoom: 0.35,
-      className: 'bg-[var(--canvas-surface)]',
+      className: 'bg-(--canvas-surface)',
       nodesDraggable: true,
       nodesConnectable: true,
     });
     expect(xyflowState.miniMapMaskColor).toBe('var(--canvas-minimap-mask)');
     expect(xyflowState.miniMapMaskStrokeColor).toBe('var(--canvas-minimap-mask-stroke)');
-    expect(xyflowState.miniMapStyle).toMatchObject({ borderRadius: 8 });
-    const minimap = container.querySelector('[data-testid="minimap"]');
-    expect(minimap?.getAttribute('data-pannable')).toBe('true');
-    expect(minimap?.getAttribute('data-zoomable')).toBe('true');
+    expect(xyflowState.miniMapClassName).toBe('rounded-lg');
+    const minimapDataset = (container.querySelector('[data-testid="minimap"]') as HTMLDivElement | null)
+      ?.dataset;
+    expect(minimapDataset?.pannable).toBe('true');
+    expect(minimapDataset?.zoomable).toBe('true');
   });
 
   it('restores a persisted viewport instead of forcing fitView', async () => {

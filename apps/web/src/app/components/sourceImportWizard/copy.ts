@@ -8,6 +8,7 @@ export const sourceImportWizardCopy = {
   loadConnectionsError: 'Failed to load warehouse connections.',
   loadTablesError: 'Failed to load warehouse tables.',
   importSuccess: 'Data objects registered successfully',
+  importNoop: 'Selected data objects are already present in the workspace graph',
   importError: 'Failed to register data objects.',
   sourceType: {
     title: 'Choose data source type',
@@ -44,8 +45,13 @@ export const sourceImportWizardCopy = {
   result: {
     title: 'Registry update complete',
     description: 'Your selected tables have been registered into the workspace graph',
+    noopTitle: 'No new data objects were added',
+    noopDescription:
+      'The selected tables are already registered, so Canvas did not need to materialize new source nodes.',
     filesTitle: 'Registry files created',
     warning:
-      'The workspace graph has been refreshed locally. Persisted backend registry writes require a dedicated API endpoint in `api` mode.',
+      'Canvas queued the imported source ids and will focus them when protected draft authority refreshes. Persisted backend registry writes still require a dedicated API endpoint in `api` mode.',
+    noopWarning:
+      'Canvas stayed unchanged because the selected registry entries already existed in the workspace graph.',
   },
 } as const;

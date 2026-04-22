@@ -1,31 +1,16 @@
+/** Owned concern: compose the draft baseline, semantic projection, lifecycle, and local draft-session state inside the Canvas authoring-runtime component. */
 import { useState } from 'react';
 
 import { canvasDraftSession } from './canvasDraftSession';
+import type { UseCanvasAuthoringRuntimeDraftFlowArgs } from './canvasAuthoringRuntime.types';
 import { useCanvasAuthoringProjection } from './useCanvasAuthoringProjection';
 import { useCanvasDraftBaseline } from './useCanvasDraftBaseline';
 import { useCanvasDraftLifecycle } from './useCanvasDraftLifecycle';
-import type { UseCanvasAuthoringRuntimeArgs } from './useCanvasAuthoringRuntime';
-
-type UseCanvasAuthoringRuntimeDraftFlowArgs = Pick<
-  UseCanvasAuthoringRuntimeArgs,
-  | 'workspaceService'
-  | 'workspaceGraphDraftAuthoringPort'
-  | 'workspaceLayoutKey'
-  | 'graphStrategy'
-  | 'columnLevelLineageEnabled'
-  | 'persistedNodePositions'
-  | 'workspaceScope'
-  | 'previewProvenanceConfig'
-  | 'setCanvasNodePositions'
-> & {
-  canPersistDraftTransport: boolean;
-};
 
 export function useCanvasAuthoringRuntimeDraftFlow({
   workspaceService,
   workspaceGraphDraftAuthoringPort,
   workspaceLayoutKey,
-  graphStrategy,
   columnLevelLineageEnabled,
   persistedNodePositions,
   canPersistDraftTransport,
@@ -42,11 +27,15 @@ export function useCanvasAuthoringRuntimeDraftFlow({
     workspaceLayoutKey,
   });
   const { graphModel, canonicalSnapshot } = useCanvasAuthoringProjection({
-    workspaceLayoutKey,
+    graphAuthorityQuery: {
+      isPending: graphDraftQuery.isPending,
+      isError: graphDraftQuery.isError,
+      error: graphDraftQuery.error,
+    },
     visibleNodeIds: draftSession.workingSet.visibleNodeIds,
     visibleEdges: draftSession.workingSet.visibleEdges,
-    workspaceService,
-    graphStrategy,
+    draftSemanticGraph: graphDraftQuery.data?.semanticGraph ?? null,
+    localCanonicalNodes: Object.values(draftSession.localNodeCatalog ?? {}),
     columnLevelLineageEnabled,
     persistedNodePositions,
   });
@@ -61,15 +50,11 @@ export function useCanvasAuthoringRuntimeDraftFlow({
     graphNodes: graphModel.nodes,
     canonicalNodes: graphModel.canonicalNodes,
     canonicalEdges: graphModel.canonicalEdges,
-    graphSnapshotQuery: {
-      isPending: graphModel.graphSnapshotQuery.isPending,
-      isError: graphModel.graphSnapshotQuery.isError,
-    },
+    graphAuthorityQuery: graphModel.graphAuthorityQuery,
     canPersistGraphDraft: canPersistDraftTransport,
     workspaceScope,
     previewProvenanceConfig,
     setCanvasNodePositions,
-    graphStrategy,
   });
 
   return {

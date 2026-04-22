@@ -17,6 +17,18 @@ function buildNode(kind: `${string}:${string}`, role: CanonicalNode['role']): Ca
 }
 
 describe('dvtContributions connection rules', () => {
+  it('allows source -> sql_transform inside the dvt plugin', () => {
+    const rules = dvtContributions.connectionRules ?? [];
+
+    const sourceToTransform = evaluatePluginConnectionRules(
+      buildNode('dvt:source', 'input'),
+      buildNode('dvt:sql_transform', 'transform'),
+      rules
+    );
+
+    expect(sourceToTransform).toEqual({ allowed: true });
+  });
+
   it('allows sql_transform -> sink inside the dvt plugin', () => {
     const rules = dvtContributions.connectionRules ?? [];
 

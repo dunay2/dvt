@@ -6,7 +6,7 @@ const DATA_SOURCE_SET = new Set<string>(DATA_SOURCE_VALUES);
 
 export function resolveDataSource(value = import.meta.env.VITE_DATA_SOURCE): DataSourceMode {
   if (typeof value !== 'string') {
-    return 'mock';
+    return 'api';
   }
 
   const normalized = value.trim().toLowerCase();
@@ -14,5 +14,5 @@ export function resolveDataSource(value = import.meta.env.VITE_DATA_SOURCE): Dat
     return normalized as DataSourceMode;
   }
 
-  return 'mock';
+  return 'api';
 }

@@ -1,9 +1,18 @@
 import { describe, expect, it } from 'vitest';
 
-import { createWorkspaceService } from './workspaceService';
+import { createWorkspaceService, resolveWorkspaceServiceCapabilities } from './workspaceService';
 import { createMockWorkspaceService, createMockWorkspaceState } from './workspaceService.mock';
 
 describe('workspaceService source import', () => {
+  it('advertises source import capability explicitly by adapter mode', () => {
+    expect(resolveWorkspaceServiceCapabilities('mock')).toEqual({
+      sourceImportAvailable: true,
+    });
+    expect(resolveWorkspaceServiceCapabilities('api')).toEqual({
+      sourceImportAvailable: false,
+    });
+  });
+
   it('imports selected warehouse tables into the mock workspace graph', async () => {
     const service = createWorkspaceService('mock');
     const before = await service.getGraphSnapshot();

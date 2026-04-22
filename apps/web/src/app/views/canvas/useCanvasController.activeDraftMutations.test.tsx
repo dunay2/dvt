@@ -8,9 +8,11 @@ import {
   createHarnessWithDraft,
   createTransformationAuthoringHarnessWithDraft,
   setCanvasLayoutNodePositions,
+  TRANSFORMATION_AUTHORING_CANONICAL_NODES,
   type CanvasControllerHarness,
   waitForAutosaveDebounce,
 } from './useCanvasController.draftLifecycle.test.support';
+import { projectCanvasHarnessDraftReadModel } from './useCanvasController.test.draftAuthoring';
 import { setupCanvasControllerHarness } from './useCanvasController.test.harness';
 
 describe('useCanvasController active draft mutations', () => {
@@ -25,7 +27,9 @@ describe('useCanvasController active draft mutations', () => {
     harness.cleanup();
   });
 
-  async function replaceHarnessWithDraft(record: ReturnType<typeof buildRemoteDraftRecord>): Promise<void> {
+  async function replaceHarnessWithDraft(
+    record: ReturnType<typeof buildRemoteDraftRecord>
+  ): Promise<void> {
     harness.cleanup();
     harness = await createHarnessWithDraft(record);
   }
@@ -74,7 +78,9 @@ describe('useCanvasController active draft mutations', () => {
     await harness.renderProbe();
     await waitForAutosaveDebounce();
 
-    expect(harness.state.services.workspaceGraphDraftAuthoringPort.saveGraphDraft).not.toHaveBeenCalled();
+    expect(
+      harness.state.services.workspaceGraphDraftAuthoringPort.saveGraphDraft
+    ).not.toHaveBeenCalled();
   });
 
   it('does not snap node positions back to the hydrated remote draft after a local move', async () => {
@@ -151,6 +157,20 @@ describe('useCanvasController active draft mutations', () => {
         relation: 'lineage',
       },
     ];
+    harness.state.graphDraftQueryData = projectCanvasHarnessDraftReadModel(
+      buildRemoteDraftRecord(
+        {
+          nodeIds: ['node_1', 'node_3'],
+          nodePositions: {
+            node_1: { x: 0, y: 0 },
+            node_3: { x: 220, y: 120 },
+          },
+          edges: [{ sourceId: 'node_1', targetId: 'node_3' }],
+        },
+        'rev-imported',
+        '2026-04-18T00:00:01Z'
+      )
+    );
 
     await harness.renderProbe();
 
@@ -159,7 +179,7 @@ describe('useCanvasController active draft mutations', () => {
       'node_3',
     ]);
     expect(harness.getLatestResult()?.edges).toEqual([
-      { id: 'edge_imported', source: 'node_1', target: 'node_3' },
+      { id: 'draft_edge_node_1_node_3', source: 'node_1', target: 'node_3' },
     ]);
     expect(harness.getLatestResult()?.importedNodeFocusIds).toEqual(['node_3']);
   });
@@ -186,9 +206,32 @@ describe('useCanvasController active draft mutations', () => {
         { revision: 'rev-2' }
       )
     );
+    const droppedCanonicalNode =
+      TRANSFORMATION_AUTHORING_CANONICAL_NODES.find((node) => node.id === 'node_3') ??
+      (() => {
+        throw new Error('EXPECTED_NODE_3_CANONICAL_NODE');
+      })();
     harness.mocks.useCanvasGraphHandlers.mockImplementation((params) => ({
       ...harness.state.graphHandlersResult,
       handleDrop: vi.fn(() => {
+        harness.state.graphDraftQueryData = projectCanvasHarnessDraftReadModel(
+          buildRemoteDraftRecord(
+            {
+              nodeIds: ['node_1', 'node_2', 'node_3'],
+              nodePositions: {
+                node_1: { x: 0, y: 0 },
+                node_2: { x: 120, y: 0 },
+                node_3: { x: 220, y: 120 },
+              },
+              edges: [
+                { sourceId: 'node_1', targetId: 'node_2' },
+                { sourceId: 'node_2', targetId: 'node_3' },
+              ],
+            },
+            'rev-local-semantic',
+            '2026-04-18T00:00:02Z'
+          )
+        );
         params.setNodes((existingNodes: Array<Record<string, unknown>>) => [
           ...existingNodes,
           {
@@ -213,6 +256,13 @@ describe('useCanvasController active draft mutations', () => {
               { sourceId: 'node_2', targetId: 'node_3' },
             ],
           },
+          localNodeCatalog:
+            currentSession.localNodeCatalog == null
+              ? { node_3: droppedCanonicalNode }
+              : {
+                  ...currentSession.localNodeCatalog,
+                  node_3: droppedCanonicalNode,
+                },
         }));
         harness.state.graphData = {
           nodes: [{ id: 'node_1' }, { id: 'node_2' }, { id: 'node_3' }],
@@ -228,13 +278,16 @@ describe('useCanvasController active draft mutations', () => {
     });
     await harness.renderProbe();
     await waitForAutosaveDebounce();
+    await harness.renderProbe();
 
     expect(harness.getLatestResult()?.nodesWithImpact.map((node) => node.id)).toEqual([
       'node_1',
       'node_2',
       'node_3',
     ]);
-    expect(harness.state.services.workspaceGraphDraftAuthoringPort.saveGraphDraft).toHaveBeenCalledWith(
+    expect(
+      harness.state.services.workspaceGraphDraftAuthoringPort.saveGraphDraft
+    ).toHaveBeenCalledWith(
       expect.objectContaining({
         draft: expect.objectContaining({
           nodes: expect.arrayContaining([

@@ -4,6 +4,7 @@ import { usePlatformHealthSnapshotQuery } from '../../../capabilities/platform-h
 import { resolveCanvasGraphStrategy } from '../../plugins/graphStrategyRegistry';
 import { useCapabilitiesQuery } from '../../queries/useCapabilitiesQuery';
 import { resolveWorkspaceBootstrapConfig } from '../../services/config/workspaceConfig';
+import { resolveWorkspaceServiceCapabilities } from '../../services/workspace/workspaceService';
 import {
   useAppDataSourceMode,
   usePlansService,
@@ -23,6 +24,10 @@ export function useCanvasControllerEnvironment() {
   const graphStrategy = useMemo(() => resolveCanvasGraphStrategy(), []);
   const canvasAuthoringMode: 'transformation' | 'dbt' =
     graphStrategy.id === 'transformation' ? 'transformation' : 'dbt';
+  const workspaceServiceCapabilities = useMemo(
+    () => resolveWorkspaceServiceCapabilities(dataSourceMode),
+    [dataSourceMode]
+  );
   const workspaceService = useWorkspaceService();
   const workspaceGraphDraftAuthoringPort = useWorkspaceGraphDraftAuthoringPort();
   const plansService = usePlansService();
@@ -39,6 +44,7 @@ export function useCanvasControllerEnvironment() {
     platformHealthQuery,
     graphStrategy,
     canvasAuthoringMode,
+    workspaceServiceCapabilities,
     workspaceService,
     workspaceGraphDraftAuthoringPort,
     plansService,

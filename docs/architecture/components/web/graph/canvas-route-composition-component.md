@@ -2,7 +2,7 @@
 title: Canvas Route Composition Component
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-04-21
+last_reviewed: 2026-04-22
 ---
 
 # Canvas Route Composition Component
@@ -21,15 +21,17 @@ This component owns:
 It does not own draft truth, graph mutation semantics, or route-visible
 presentation semantics themselves.
 
-## Governing sources
+## Governing Sources
 
+- [Graph Frontend Architecture](./graph-frontend-architecture.md)
 - [Canvas Component Map And Modernization Review](./canvas-component-map-and-modernization-review.md)
 - [Canvas Controller Current To Target Architecture](./canvas-controller-current-to-target-architecture.md)
 - [Canvas Route Presentation Component](./canvas-route-presentation-component.md)
 - [Canvas Shell Component](./canvas-shell-component.md)
+- [Canvas component governance follow-up review](../../../../planning/reviews/architecture-and-governance/20260422-canvas-component-governance-follow-up-review.md)
 - [Graph Route Bootstrap Architecture](./graph-route-bootstrap-architecture.md)
 
-## Reading rule
+## Reading Rule
 
 Read the component in this order:
 
@@ -68,7 +70,7 @@ The public route-composition API is:
 
 The route component itself remains `Canvas.tsx`.
 
-## File responsibilities
+## File Responsibilities
 
 <!-- markdownlint-disable MD060 -->
 
@@ -84,7 +86,7 @@ The route component itself remains `Canvas.tsx`.
 
 <!-- markdownlint-enable MD060 -->
 
-## Current topology after hard cut
+## Current Topology After Hard Cut
 
 ```mermaid
 flowchart LR
@@ -137,7 +139,7 @@ flowchart TD
 - `CanvasModalHost.architecture.test.tsx`
 - `canvasShellPropsBuilder.architecture.test.ts`
 
-## Fitness functions
+## Fitness Functions
 
 The canonical fitness checks for this component are:
 
@@ -146,9 +148,10 @@ The canonical fitness checks for this component are:
 - `canvasShellBuilder.types.architecture.test.ts`
 - `canvasShellPropsBuilder.architecture.test.ts`
 - `Canvas.routeStates.test.tsx`
+- `Canvas.readOnlyStates.test.tsx`
 - `@dvt/web` typecheck
 
-## Drift to watch
+## Drift To Watch
 
 - if `CanvasModalHost.tsx` starts importing `useCanvasController`, the passive
   view boundary has regressed

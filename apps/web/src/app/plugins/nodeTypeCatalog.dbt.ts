@@ -131,6 +131,19 @@ export const DBT_NODE_KINDS: NodeKindRegistration[] = [
 
 export const DVT_AUTHORING_NODE_KINDS: NodeKindRegistration[] = [
   {
+    kind: 'dvt:source',
+    pluginId: 'dvt',
+    label: 'Source',
+    role: 'input',
+    previewStepKind: 'CANVAS_SOURCE',
+    icon: Database,
+    borderClass: 'border-purple-500',
+    minimapColor: '#a855f7',
+    allowsIncoming: false,
+    allowsOutgoing: true,
+    supportsColumns: false,
+  },
+  {
     kind: 'dvt:sql_transform',
     pluginId: 'dvt',
     label: 'SQL transform',

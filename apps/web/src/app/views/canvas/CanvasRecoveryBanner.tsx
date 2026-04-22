@@ -5,15 +5,15 @@ import { Button } from '../../components/ui/button';
 import { canvasViewCopy } from './copy';
 import type { CanvasDraftPresentationState } from './canvasDraftPresentationModel';
 
+type CanvasRecoveryBannerProps = Readonly<{
+  presentationState: Pick<CanvasDraftPresentationState, 'recoveryReason' | 'routeState'>;
+  onReloadLatestDraft: () => void;
+}>;
+
 export function CanvasRecoveryBanner({
   presentationState,
   onReloadLatestDraft,
-  onAdoptCurrentWorkspaceSnapshot,
-}: {
-  presentationState: Pick<CanvasDraftPresentationState, 'recoveryReason' | 'routeState'>;
-  onReloadLatestDraft: () => void;
-  onAdoptCurrentWorkspaceSnapshot: () => void;
-}) {
+}: CanvasRecoveryBannerProps): JSX.Element | null {
   if (presentationState.routeState !== 'recovery') {
     return null;
   }
@@ -52,9 +52,6 @@ export function CanvasRecoveryBanner({
             <Button size="sm" variant="outline" onClick={onReloadLatestDraft}>
               {canvasViewCopy.reloadLatestDraftLabel}
             </Button>
-            <Button size="sm" variant="outline" onClick={onAdoptCurrentWorkspaceSnapshot}>
-              {canvasViewCopy.adoptCurrentWorkspaceSnapshotLabel}
-            </Button>
           </div>
         </div>
       </div>
@@ -78,9 +75,6 @@ export function CanvasRecoveryBanner({
         <div className="flex flex-wrap items-center gap-2">
           <Button size="sm" variant="outline" onClick={onReloadLatestDraft}>
             {canvasViewCopy.reloadLatestDraftLabel}
-          </Button>
-          <Button size="sm" variant="outline" onClick={onAdoptCurrentWorkspaceSnapshot}>
-            {canvasViewCopy.adoptCurrentWorkspaceSnapshotLabel}
           </Button>
         </div>
       </div>

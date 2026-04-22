@@ -26,10 +26,6 @@ export default function SourceImportWizard({ open, onClose, onComplete }: Source
     onClose,
   });
   const { state } = controller;
-  const completeButtonLabel =
-    state.importResult?.importedNodeIds && state.importResult.importedNodeIds.length > 0
-      ? 'Add imported sources to canvas'
-      : 'Done';
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -39,7 +35,7 @@ export default function SourceImportWizard({ open, onClose, onComplete }: Source
           <DialogDescription>{copy.description}</DialogDescription>
         </DialogHeader>
 
-        {state.currentStep !== 'result' ? <WizardProgress currentStep={state.currentStep} /> : null}
+        {state.currentStep === 'result' ? null : <WizardProgress currentStep={state.currentStep} />}
 
         <ScrollArea className="-mx-6 flex-1 px-6">
           <WizardStepContent controller={controller} />
@@ -48,7 +44,7 @@ export default function SourceImportWizard({ open, onClose, onComplete }: Source
         <DialogFooter className="mt-4">
           {state.currentStep === 'result' ? (
             <Button onClick={controller.handleComplete} className="w-full">
-              {completeButtonLabel}
+              Done
             </Button>
           ) : (
             <div className="flex w-full justify-between">
