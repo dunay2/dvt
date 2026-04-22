@@ -165,6 +165,11 @@ real branch truth:
   `apps/web/src/app/services/api/apiAuthConfig.ts`
 - updated `createApiClient.ts` so protected-runtime calls attach
   `Authorization: Bearer ...` when the coordinated stack provides a bearer token
+- hardened the local dev bearer-token bootstrap so the coordinated stack now
+  defaults to a 24-hour JWT TTL and exposes
+  `DVT_DEV_PROTECTED_RUNTIME_TOKEN_TTL_SECONDS` for explicit overrides, avoiding
+  one-hour expiry in long-lived local sessions that do not have a token refresh
+  path
 - updated the backend control-plane runbook with the new local dev auth posture
   and triage order
 

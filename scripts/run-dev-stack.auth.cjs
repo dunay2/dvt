@@ -14,6 +14,7 @@ const DEFAULT_PROJECT_ID = 'project';
 const DEFAULT_ENVIRONMENT_ID = 'dev';
 const DEFAULT_HOST = '127.0.0.1';
 const DEFAULT_JWK_KID = 'dev-stack-local-key';
+const DEFAULT_DEV_BEARER_TOKEN_TTL_SECONDS = 24 * 60 * 60;
 
 const LOCAL_PROTECTED_RUNTIME_TENANT_ACTIONS = Object.freeze([
   'run:start',
@@ -31,6 +32,22 @@ let joseModulePromise;
 
 function readNonEmptyEnv(value) {
   return typeof value === 'string' && value.trim().length > 0 ? value.trim() : undefined;
+}
+
+function resolveDevBearerTokenTtlSeconds(env = process.env) {
+  const configuredTtl = readNonEmptyEnv(env.DVT_DEV_PROTECTED_RUNTIME_TOKEN_TTL_SECONDS);
+  if (configuredTtl === undefined) {
+    return DEFAULT_DEV_BEARER_TOKEN_TTL_SECONDS;
+  }
+
+  const parsedTtl = Number.parseInt(configuredTtl, 10);
+  if (!Number.isInteger(parsedTtl) || parsedTtl <= 0) {
+    throw new Error(
+      'DVT_DEV_PROTECTED_RUNTIME_TOKEN_TTL_SECONDS must be a positive integer when provided'
+    );
+  }
+
+  return parsedTtl;
 }
 
 function quoteIdentifier(identifier) {
@@ -87,6 +104,7 @@ async function startLocalProtectedRuntimeAuth(options = {}) {
   const principalId = readNonEmptyEnv(env.DVT_DEV_PRINCIPAL_ID) ?? DEFAULT_DEV_PRINCIPAL_ID;
   const issuer = readNonEmptyEnv(env.DVT_DEV_PROTECTED_RUNTIME_ISSUER) ?? DEFAULT_DEV_ISSUER;
   const audience = readNonEmptyEnv(env.DVT_DEV_PROTECTED_RUNTIME_AUDIENCE) ?? DEFAULT_DEV_AUDIENCE;
+  const bearerTokenTtlSeconds = resolveDevBearerTokenTtlSeconds(env);
   const { SignJWT, exportJWK, generateKeyPair } = await loadJoseModule();
   const { publicKey, privateKey } = await generateKeyPair('RS256');
   const exportedJwk = await exportJWK(publicKey);
@@ -133,7 +151,7 @@ async function startLocalProtectedRuntimeAuth(options = {}) {
     .setIssuer(issuer)
     .setAudience(audience)
     .setIssuedAt(nowSeconds)
-    .setExpirationTime(nowSeconds + 60 * 60)
+    .setExpirationTime(nowSeconds + bearerTokenTtlSeconds)
     .sign(privateKey);
 
   return {
