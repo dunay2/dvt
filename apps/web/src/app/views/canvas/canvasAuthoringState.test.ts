@@ -68,6 +68,7 @@ describe('canvasAuthoringState', () => {
         formatError: null,
         formatMeta: null,
         record: null,
+        semanticGraph: null,
       },
     });
 
@@ -97,6 +98,7 @@ describe('canvasAuthoringState', () => {
         formatError: null,
         formatMeta: null,
         record: null,
+        semanticGraph: null,
       },
     });
 

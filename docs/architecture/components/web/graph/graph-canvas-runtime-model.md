@@ -2,7 +2,7 @@
 title: Graph Canvas Runtime Model
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-04-17
+last_reviewed: 2026-04-22
 ---
 
 # Graph Canvas Runtime Model
@@ -11,6 +11,10 @@ last_reviewed: 2026-04-17
 
 Define the route-local runtime model for Canvas authoring so rendering remains
 projection-only and product truth stays explicit.
+
+For the local authoring-runtime component contract, API, invariants, and
+consumers, use
+[Canvas Authoring Runtime Component](./canvas-authoring-runtime-component.md).
 
 ## Runtime Seams
 
@@ -67,6 +71,9 @@ classDiagram
 - React Flow state is a projection, never the semantic source of truth.
 - conflict and `missing_remote` are first-class route states, not incidental
   exceptions.
+- recovery from conflict, `missing_remote`, or projection-gap posture must come
+  from authoritative remote reload, not route-local adoption of projected
+  state.
 - plan/run actions must consume canonical route scope, not visual-only state.
 - read-only and forbidden posture must be explicit in route behavior.
 

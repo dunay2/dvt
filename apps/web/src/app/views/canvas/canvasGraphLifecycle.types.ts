@@ -6,6 +6,7 @@ import type {
 } from '@xyflow/react';
 
 import type { CanvasDraftSession } from './canvasDraftSession';
+import type { CanonicalNode } from '../../types/canonical';
 
 export type CanvasGraphLifecycleState = {
   draftSession: CanvasDraftSession;
@@ -35,7 +36,10 @@ export type CanvasGraphLifecycleNodeApi = {
     state: CanvasGraphLifecycleState,
     nodeId: string
   ) => CanvasGraphLifecycleNodeRemovalResult;
-  admitExplicit: (draftSession: CanvasDraftSession, nodeId: string) => CanvasDraftSession;
+  admitExplicit: (
+    draftSession: CanvasDraftSession,
+    canonicalNode: CanonicalNode
+  ) => CanvasDraftSession;
   queueImported: (
     draftSession: CanvasDraftSession,
     nodeIds: string[]

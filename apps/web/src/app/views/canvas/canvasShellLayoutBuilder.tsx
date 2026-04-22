@@ -21,7 +21,6 @@ function renderCanvasShellReadOnlyBanner(
       <CanvasRecoveryBanner
         presentationState={routePresentation.presentationState}
         onReloadLatestDraft={recoveryCommands.reloadLatestDraft}
-        onAdoptCurrentWorkspaceSnapshot={recoveryCommands.adoptCurrentWorkspaceSnapshot}
       />
       <CanvasReadOnlyBannerView state={routePresentation.readOnlyState} />
     </>
@@ -37,10 +36,14 @@ export function buildCanvasShellLayout({
     focusMode: layoutState.focusMode,
     explorerPanelVisible: layoutState.explorerPanelVisible,
     inspectorPanelVisible: layoutState.inspectorPanelVisible,
+    canOpenSourceImport: layoutState.canOpenSourceImport,
     centerSurface: renderCanvasCenterSurface({
       presentationState: routePresentation.presentationState,
+      startupBlockState: routePresentation.startupBlockState,
       draftTransportError: routePresentation.draftTransportError,
+      workbenchErrorMessage: routePresentation.workbenchErrorMessage,
       canEditEdges: routePresentation.effectiveUserPermissions.canEditEdges,
+      canOpenSourceImport: layoutState.canOpenSourceImport,
     }),
     readOnlyBanner: renderCanvasShellReadOnlyBanner(recoveryCommands, routePresentation),
   };

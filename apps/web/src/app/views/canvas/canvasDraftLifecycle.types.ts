@@ -1,8 +1,12 @@
+/** Owned concern: declare the lifecycle vocabulary for Canvas draft bootstrapping, persistence, and save-attempt coordination. */
 import type { Dispatch, MutableRefObject, SetStateAction } from 'react';
 
 import type { WorkspaceScope } from '../../ports/sessionContext';
-import type { WorkspaceBootstrapConfig } from '../../services/config/workspaceConfig';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+import type {
+  CanvasAuthoringRuntimePreviewProvenanceConfig,
+  CanvasNodePositions,
+} from './canvasAuthoringRuntime.types';
 import type { CanvasDraftQueryCache } from './canvasDraftQueryCache';
 import type { CanvasDraftRepository } from './canvasDraftRepository';
 import type { CanvasDraftReadModel } from './canvasDraftReadModel';
@@ -10,12 +14,12 @@ import type { CanvasDraftSession } from './canvasDraftSession';
 import type {
   CanvasDraftLifecycleCanonicalSnapshot,
   CanvasDraftLifecycleGraphNode,
-  CanvasDraftLifecycleGraphStrategy,
 } from './canvasDraftLifecycleSnapshot';
 
-export type GraphSnapshotQueryState = {
+export type GraphAuthorityQueryState = {
   isPending: boolean;
   isError: boolean;
+  error?: unknown;
 };
 
 export type GraphDraftQueryState = {
@@ -45,19 +49,17 @@ export type UseCanvasDraftLifecycleArgs = {
   graphNodes: CanvasDraftLifecycleGraphNode[];
   canonicalNodes: CanonicalNode[];
   canonicalEdges: CanonicalEdge[];
-  graphSnapshotQuery: GraphSnapshotQueryState;
+  graphAuthorityQuery: GraphAuthorityQueryState;
   canPersistGraphDraft: boolean;
   workspaceScope: WorkspaceScope;
-  previewProvenanceConfig: Pick<WorkspaceBootstrapConfig, 'gitBranch' | 'gitSha' | 'gitRepo'>;
+  previewProvenanceConfig: CanvasAuthoringRuntimePreviewProvenanceConfig;
   setCanvasNodePositions: (
     workspaceLayoutKey: string,
-    positions: Record<string, { x: number; y: number }>
+    positions: CanvasNodePositions
   ) => void;
-  graphStrategy: CanvasDraftLifecycleGraphStrategy;
 };
 
 export type CanvasDraftLifecycle = {
   draftSaveStatus: DraftSaveStatus;
   reloadLatestDraft: () => void;
-  adoptCurrentWorkspaceSnapshot: () => void;
 };

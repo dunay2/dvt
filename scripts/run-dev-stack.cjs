@@ -8,6 +8,12 @@ const https = require('node:https');
 const path = require('node:path');
 const readline = require('node:readline');
 const { defaultPgUrl } = require('./run-temporal-postgres-proof.cjs');
+const {
+  LOCAL_PROTECTED_RUNTIME_TENANT_ACTIONS,
+  seedLocalProtectedRuntimeGrant,
+  shouldBootstrapLocalProtectedRuntimeAuth,
+  startLocalProtectedRuntimeAuth,
+} = require('./run-dev-stack.auth.cjs');
 
 const DEFAULT_API_PORT = 3000;
 const DEFAULT_WEB_PORT = 5173;
@@ -229,35 +235,48 @@ async function main() {
   const options = parseArgs(process.argv.slice(2));
   const apiBaseUrl = `http://${options.host}:${options.apiPort}`;
   const webBaseUrl = `http://${options.host}:${options.webPort}`;
-  const apiEnv = buildApiEnv(options);
+  const databaseUrl = resolveDatabaseUrl(options);
+  let localProtectedRuntimeAuth;
 
   console.log(`[dev-stack] Starting API on ${apiBaseUrl}`);
   console.log(`[dev-stack] Starting Web on ${webBaseUrl}`);
 
   ensureLocalPostgresReady(options);
 
-  const api = spawnProcess('api', ['--filter', 'dvt-api', 'dev'], apiEnv);
-  const web = spawnProcess(
-    'web',
-    [
-      '--filter',
-      '@dvt/web',
-      'exec',
-      'vite',
-      '--host',
-      options.host,
-      '--port',
-      String(options.webPort),
-      '--strictPort',
-    ],
-    {
-      VITE_API_BASE_URL: apiBaseUrl,
-      VITE_PLATFORM_HEALTH_OPTIONAL_PROBES: '',
-    }
-  );
+  if (databaseUrl && shouldBootstrapLocalProtectedRuntimeAuth(process.env)) {
+    console.log('[dev-stack] OIDC not set; bootstrapping local protected-runtime auth');
+    localProtectedRuntimeAuth = await startLocalProtectedRuntimeAuth({
+      env: process.env,
+      host: options.host,
+    });
+  }
 
-  const processHandles = [api, web];
+  const apiEnv = buildApiEnv(options, {
+    ...process.env,
+    ...(localProtectedRuntimeAuth?.oidcEnv ?? {}),
+  });
+  const processHandles = [];
   let shuttingDown = false;
+  const exitWatchers = [];
+
+  function registerProcess(handle) {
+    processHandles.push(handle);
+    exitWatchers.push(
+      (async () => {
+        const [exitCode, signal] = await once(handle.child, 'exit');
+        if (shuttingDown) {
+          return;
+        }
+
+        const rendered = exitCode ?? signal ?? 'unknown';
+        console.error(
+          `[dev-stack] ${handle.name} exited before coordinated shutdown (${rendered})`
+        );
+        await shutdown(typeof exitCode === 'number' ? exitCode : 1);
+      })()
+    );
+    return handle;
+  }
 
   async function shutdown(exitCode = 0) {
     if (shuttingDown) {
@@ -267,6 +286,9 @@ async function main() {
 
     await Promise.all(processHandles.map((handle) => terminateProcess(handle)));
     await Promise.all(processHandles.map((handle) => closeReaders(handle)));
+    if (localProtectedRuntimeAuth) {
+      await localProtectedRuntimeAuth.close();
+    }
     process.exit(exitCode);
   }
 
@@ -278,17 +300,7 @@ async function main() {
     console.log('[dev-stack] Received SIGTERM, shutting down');
     void shutdown(0);
   });
-
-  const exitWatchers = processHandles.map(async (handle) => {
-    const [exitCode, signal] = await once(handle.child, 'exit');
-    if (shuttingDown) {
-      return;
-    }
-
-    const rendered = exitCode ?? signal ?? 'unknown';
-    console.error(`[dev-stack] ${handle.name} exited before coordinated shutdown (${rendered})`);
-    await shutdown(typeof exitCode === 'number' ? exitCode : 1);
-  });
+  registerProcess(spawnProcess('api', ['--filter', 'dvt-api', 'dev'], apiEnv));
 
   try {
     await waitForUrl(
@@ -307,6 +319,44 @@ async function main() {
         'API db/ready'
       );
     }
+
+    if (localProtectedRuntimeAuth && apiEnv.DATABASE_URL) {
+      const seededGrant = await seedLocalProtectedRuntimeGrant({
+        databaseUrl: apiEnv.DATABASE_URL,
+        schema: apiEnv.DVT_PG_SCHEMA,
+        principalId: localProtectedRuntimeAuth.principalId,
+        tenantActions: LOCAL_PROTECTED_RUNTIME_TENANT_ACTIONS,
+        workspaceScope: localProtectedRuntimeAuth.workspaceScope,
+      });
+
+      console.log(
+        `[dev-stack] Seeded local protected-runtime grant for ${seededGrant.principalId} ` +
+          `(${seededGrant.workspaceScope.tenantId}/${seededGrant.workspaceScope.projectId}/` +
+          `${seededGrant.workspaceScope.environmentId})`
+      );
+    }
+
+    registerProcess(
+      spawnProcess(
+        'web',
+        [
+          '--filter',
+          '@dvt/web',
+          'exec',
+          'vite',
+          '--host',
+          options.host,
+          '--port',
+          String(options.webPort),
+          '--strictPort',
+        ],
+        {
+          VITE_API_BASE_URL: apiBaseUrl,
+          VITE_PLATFORM_HEALTH_OPTIONAL_PROBES: '',
+          ...(localProtectedRuntimeAuth?.webEnv ?? {}),
+        }
+      )
+    );
     await waitForUrl(
       `${webBaseUrl}/`,
       (response) => (response.statusCode ?? 500) < 500,

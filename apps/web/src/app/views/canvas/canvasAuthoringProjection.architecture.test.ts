@@ -1,0 +1,69 @@
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
+
+import { describe, expect, it } from 'vitest';
+
+import { readArchitectureSiblingSource } from '../architecture.test.support';
+
+const AUTHORING_GRAPH_PROJECTION_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'canvasAuthoringGraphProjection.ts'
+);
+const AUTHORING_PROJECTION_HOOK_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'useCanvasAuthoringProjection.ts'
+);
+const VIEWPORT_GRAPH_MODEL_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'useCanvasViewportGraphModel.ts'
+);
+const DRAFT_READ_MODEL_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'canvasDraftReadModel.ts'
+);
+const WORKSPACE_DRAFT_PROJECTION_SOURCE = readFileSync(
+  path.resolve(import.meta.dirname, '../../services/workspace/workspaceGraphDraftProjection.ts'),
+  'utf8'
+);
+
+describe('canvas authoring projection component architecture', () => {
+  it('keeps boundary projection, semantic composition, hook composition, and viewport projection in separate seams', () => {
+    expect(WORKSPACE_DRAFT_PROJECTION_SOURCE).toContain(
+      'Owned concern: project the protected workspace-graph-draft boundary'
+    );
+    expect(WORKSPACE_DRAFT_PROJECTION_SOURCE).toContain(
+      'export function projectDesignGraphDraftSemanticGraph'
+    );
+    expect(WORKSPACE_DRAFT_PROJECTION_SOURCE).not.toContain('@xyflow/react');
+
+    expect(DRAFT_READ_MODEL_SOURCE).toContain(
+      'Owned concern: translate protected draft-authoring outcomes'
+    );
+    expect(DRAFT_READ_MODEL_SOURCE).toContain('semanticGraph: WorkspaceGraphDraftSemanticGraph');
+    expect(DRAFT_READ_MODEL_SOURCE).toContain('projectDesignGraphDraftSemanticGraph(');
+    expect(DRAFT_READ_MODEL_SOURCE).not.toContain('useNodesState(');
+
+    expect(AUTHORING_GRAPH_PROJECTION_SOURCE).toContain(
+      'Owned concern: compose semantic authoring truth'
+    );
+    expect(AUTHORING_GRAPH_PROJECTION_SOURCE).toContain('WorkspaceGraphDraftSemanticGraph');
+    expect(AUTHORING_GRAPH_PROJECTION_SOURCE).not.toContain('@xyflow/react');
+    expect(AUTHORING_GRAPH_PROJECTION_SOURCE).not.toContain('useNodesState(');
+    expect(AUTHORING_GRAPH_PROJECTION_SOURCE).not.toContain('useEdgesState(');
+
+    expect(AUTHORING_PROJECTION_HOOK_SOURCE).toContain(
+      'Owned concern: compose semantic authoring projection and viewport projection'
+    );
+    expect(AUTHORING_PROJECTION_HOOK_SOURCE).toContain('buildCanvasAuthoringGraphProjection(');
+    expect(AUTHORING_PROJECTION_HOOK_SOURCE).toContain('useCanvasViewportGraphModel(');
+    expect(AUTHORING_PROJECTION_HOOK_SOURCE).not.toContain('@xyflow/react');
+
+    expect(VIEWPORT_GRAPH_MODEL_SOURCE).toContain(
+      'Owned concern: project semantic authoring truth into React Flow viewport state only.'
+    );
+    expect(VIEWPORT_GRAPH_MODEL_SOURCE).toContain('useNodesState(');
+    expect(VIEWPORT_GRAPH_MODEL_SOURCE).toContain('useEdgesState(');
+    expect(VIEWPORT_GRAPH_MODEL_SOURCE).not.toContain('WorkspaceGraphDraftSemanticGraph');
+    expect(VIEWPORT_GRAPH_MODEL_SOURCE).not.toContain('projectDesignGraphDraftSemanticGraph(');
+  });
+});

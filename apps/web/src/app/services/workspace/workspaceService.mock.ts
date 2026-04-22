@@ -18,6 +18,10 @@ import type {
 } from './workspaceService';
 import { WorkspaceFileLoadError } from './workspaceErrors';
 
+export const mockWorkspaceServiceCapabilities = {
+  sourceImportAvailable: true,
+} as const;
+
 const mockConnections: WarehouseConnection[] = [
   { id: 'conn-1', name: 'Production Warehouse', type: 'snowflake', database: 'RAW' },
   { id: 'conn-2', name: 'Analytics DB', type: 'bigquery', database: 'analytics' },

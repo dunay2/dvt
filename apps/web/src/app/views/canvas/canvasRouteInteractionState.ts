@@ -2,14 +2,27 @@ import {
   getCanvasReadOnlyState,
   getCanvasWorkbenchState,
 } from './canvasWorkbenchStateModel';
+import { canvasViewCopy } from './copy';
 import type { CanvasDraftTransportErrorState } from './canvasDraftTransportErrorState';
 import type { useCanvasController } from './useCanvasController';
 
 type CanvasController = ReturnType<typeof useCanvasController>;
 
+export type CanvasRouteStartupBlockState =
+  | {
+      kind: 'runtime_mode';
+      title: string;
+      message: string;
+    }
+  | {
+      kind: 'backend_readiness';
+      title: string;
+      message: string;
+    };
+
 export type CanvasRouteInteractionState = {
   effectiveWorkbenchState: ReturnType<typeof getCanvasWorkbenchState>;
-  shouldBlockCanvasInApiMode: boolean;
+  startupBlockState: CanvasRouteStartupBlockState | null;
   effectiveUserPermissions: CanvasController['userPermissions'];
   readOnlyState: ReturnType<typeof getCanvasReadOnlyState>;
   workbenchErrorMessage: string | null;
@@ -55,15 +68,36 @@ function resolveEffectiveUserPermissions(args: {
   };
 }
 
+function resolveStartupBlockState(
+  controller: CanvasController
+): CanvasRouteStartupBlockState | null {
+  if (controller.dataSourceMode !== 'api') {
+    return {
+      kind: 'runtime_mode',
+      title: canvasViewCopy.runtimeBlockedTitle,
+      message: canvasViewCopy.runtimeBlockedFallbackMessage,
+    };
+  }
+
+  if (!controller.isBackendCheckPending && !controller.backendReady) {
+    return {
+      kind: 'backend_readiness',
+      title: canvasViewCopy.backendBlockedTitle,
+      message: controller.backendBlockMessage ?? canvasViewCopy.backendBlockedFallbackMessage,
+    };
+  }
+
+  return null;
+}
+
 export function deriveCanvasRouteInteractionState(
   controller: CanvasController,
   draftTransportError: CanvasDraftTransportErrorState | null
 ): CanvasRouteInteractionState {
   const effectiveWorkbenchState = resolveEffectiveWorkbenchState(controller, draftTransportError);
-  const shouldBlockCanvasInApiMode =
-    controller.dataSourceMode === 'api' && !controller.backendReady;
+  const startupBlockState = resolveStartupBlockState(controller);
   const shouldDisableCanvasInteractions =
-    shouldBlockCanvasInApiMode ||
+    startupBlockState != null ||
     controller.isBackendCheckPending ||
     controller.draftRecoveryReason != null ||
     draftTransportError != null;
@@ -77,7 +111,7 @@ export function deriveCanvasRouteInteractionState(
 
   return {
     effectiveWorkbenchState,
-    shouldBlockCanvasInApiMode,
+    startupBlockState,
     effectiveUserPermissions,
     readOnlyState,
     workbenchErrorMessage:

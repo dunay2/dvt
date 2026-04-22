@@ -19,8 +19,7 @@ describe('canvasDraftPresentationStore', () => {
   it('publishes and resets the external route presentation store', () => {
     const nextState = deriveCanvasDraftPresentationState({
       isBackendCheckPending: false,
-      shouldBlockCanvasInApiMode: false,
-      backendBlockMessage: null,
+      startupBlockState: null,
       workbenchState: { kind: 'ready' },
       recoveryReason: null,
       draftToolbarState: deriveCanvasDraftToolbarState({

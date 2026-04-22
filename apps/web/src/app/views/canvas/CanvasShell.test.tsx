@@ -74,6 +74,7 @@ function buildProps(overrides?: CanvasShellPropsOverrides): CanvasShellProps {
       focusMode: false,
       explorerPanelVisible: true,
       inspectorPanelVisible: false,
+      canOpenSourceImport: true,
       centerSurface: undefined,
       readOnlyBanner: undefined,
       ...overrides?.layout,
@@ -217,6 +218,23 @@ describe('CanvasShell', () => {
       canEditGraph: true,
     });
     expect(shellState.dbtExplorerProps?.onOpenDataRegistry).toBeTypeOf('function');
+  });
+
+  it('hides explorer import affordances when source import is unavailable', async () => {
+    const props = buildProps({
+      layout: {
+        canOpenSourceImport: false,
+      },
+    });
+
+    await act(async () => {
+      root.render(<CanvasShell {...props} />);
+    });
+
+    expect(shellState.dbtExplorerProps).toMatchObject({
+      canEditGraph: true,
+    });
+    expect(shellState.dbtExplorerProps?.onOpenDataRegistry).toBeUndefined();
   });
 
   it('wires source import completion and imported-node focus through the shell surfaces', async () => {

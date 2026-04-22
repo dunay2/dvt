@@ -1,8 +1,10 @@
 import type { Dispatch, SetStateAction } from 'react';
 
-import type { SaveWorkspaceGraphDraftResult } from '../../ports/workspace';
 import type { CanvasDraftQueryCache } from './canvasDraftQueryCache';
-import type { CanvasDraftRepository } from './canvasDraftRepository';
+import type {
+  CanvasDraftRepository,
+  CanvasDraftSaveResult,
+} from './canvasDraftRepository';
 import type { CanvasDraftAuthoringPayload } from './canvasDraftAuthoring';
 import type { CanvasDraftSession } from './canvasDraftSession';
 import type { DraftAttemptRefs, DraftSaveStatus } from './canvasDraftLifecycle.types';
@@ -48,7 +50,7 @@ export type PerformCanvasDraftAutosaveArgs = {
 };
 
 function resolveDraftSaveSuccess(
-  result: SaveWorkspaceGraphDraftResult,
+  result: CanvasDraftSaveResult,
   {
     refs,
     saveAttempt,
@@ -68,7 +70,7 @@ function resolveDraftSaveSuccess(
       draftQueryCache,
       setDraftSession,
       setDraftSaveStatus: (status) => setDraftSaveStatus(status),
-      current: result.current,
+      currentState: result.remoteDraftState,
     });
     return;
   }
@@ -79,7 +81,7 @@ function resolveDraftSaveSuccess(
     refs,
     setDraftSession,
     setDraftSaveStatus: (status) => setDraftSaveStatus(status),
-    record: result.record,
+    remoteDraftState: result.remoteDraftState,
   });
 }
 

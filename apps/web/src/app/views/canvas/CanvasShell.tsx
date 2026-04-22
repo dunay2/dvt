@@ -23,7 +23,10 @@ import type {
 } from './canvasShell.types';
 
 function resolveCanvasShellMainPanelDefaultSize(
-  layout: Pick<CanvasShellLayout, 'focusMode' | 'explorerPanelVisible' | 'inspectorPanelVisible'>
+  layout: Pick<
+    CanvasShellLayout,
+    'focusMode' | 'explorerPanelVisible' | 'inspectorPanelVisible'
+  >
 ): number {
   if (layout.focusMode) {
     return 100;
@@ -45,6 +48,7 @@ type CanvasShellExplorerRailProps = Readonly<{
   explorerPanelVisible: boolean;
   explorerNodes: CanvasShellPanels['explorerNodes'];
   canEditGraph: boolean;
+  canOpenSourceImport: boolean;
   onHideExplorer: CanvasShellChromeCommands['onHideExplorer'];
   onOpenDataRegistry?: () => void;
 }>;
@@ -54,9 +58,10 @@ function CanvasShellExplorerRail({
   explorerPanelVisible,
   explorerNodes,
   canEditGraph,
+  canOpenSourceImport,
   onHideExplorer,
   onOpenDataRegistry,
-}: CanvasShellExplorerRailProps) {
+}: CanvasShellExplorerRailProps): JSX.Element | null {
   if (focusMode || !explorerPanelVisible) {
     return null;
   }
@@ -68,7 +73,7 @@ function CanvasShellExplorerRail({
           nodes={explorerNodes}
           canEditGraph={canEditGraph}
           onHide={onHideExplorer}
-          onOpenDataRegistry={onOpenDataRegistry}
+          onOpenDataRegistry={canOpenSourceImport ? onOpenDataRegistry : undefined}
         />
       </ResizablePanel>
       <ResizableHandle />
@@ -92,7 +97,7 @@ function CanvasShellMainPanel({
   toolbar,
   graphCommands,
   chromeCommands,
-}: CanvasShellMainPanelProps) {
+}: CanvasShellMainPanelProps): JSX.Element {
   return (
     <ResizablePanel defaultSize={resolveCanvasShellMainPanelDefaultSize(layout)}>
       <div className="h-full flex flex-col bg-(--surface-panel)">
@@ -170,7 +175,7 @@ function CanvasShellInspectorRail({
   activeRunId,
   registeredPlugins,
   onHideInspector,
-}: CanvasShellInspectorRailProps) {
+}: CanvasShellInspectorRailProps): JSX.Element | null {
   if (focusMode || !inspectorPanelVisible) {
     return null;
   }
@@ -197,16 +202,19 @@ export default function CanvasShell({
   toolbar,
   graphCommands,
   chromeCommands,
-}: Readonly<CanvasShellProps>) {
+}: CanvasShellProps): JSX.Element {
   const [dataRegistryOpen, setDataRegistryOpen] = useState(false);
   const canEditGraph = panels.userPermissions.canEditEdges;
-  const handleOpenDataRegistry = canEditGraph ? () => setDataRegistryOpen(true) : undefined;
+  const canOpenDataRegistry = canEditGraph && layout.canOpenSourceImport;
+  const handleOpenDataRegistry = canOpenDataRegistry
+    ? () => setDataRegistryOpen(true)
+    : undefined;
 
   useEffect(() => {
-    if (!canEditGraph && dataRegistryOpen) {
+    if (!canOpenDataRegistry && dataRegistryOpen) {
       setDataRegistryOpen(false);
     }
-  }, [canEditGraph, dataRegistryOpen]);
+  }, [canOpenDataRegistry, dataRegistryOpen]);
 
   return (
     <ResizablePanelGroup direction="horizontal" className="h-full">
@@ -215,6 +223,7 @@ export default function CanvasShell({
         explorerPanelVisible={layout.explorerPanelVisible}
         explorerNodes={panels.explorerNodes}
         canEditGraph={canEditGraph}
+        canOpenSourceImport={layout.canOpenSourceImport}
         onHideExplorer={chromeCommands.onHideExplorer}
         onOpenDataRegistry={handleOpenDataRegistry}
       />

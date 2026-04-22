@@ -14,15 +14,20 @@ export type CanvasShellRouteComposerArgs = Readonly<{
 export type CanvasShellLayoutBuilderArgs = Readonly<{
   layoutState: Pick<
     CanvasRouteController,
-    'focusMode' | 'explorerPanelVisible' | 'inspectorPanelVisible'
+    | 'focusMode'
+    | 'explorerPanelVisible'
+    | 'inspectorPanelVisible'
+    | 'canOpenSourceImport'
   >;
-  recoveryCommands: Pick<
-    CanvasRouteController,
-    'adoptCurrentWorkspaceSnapshot' | 'reloadLatestDraft'
-  >;
+  recoveryCommands: Pick<CanvasRouteController, 'reloadLatestDraft'>;
   routePresentation: Pick<
     CanvasRouteViewState,
-    'presentationState' | 'draftTransportError' | 'effectiveUserPermissions' | 'readOnlyState'
+    | 'presentationState'
+    | 'startupBlockState'
+    | 'draftTransportError'
+    | 'workbenchErrorMessage'
+    | 'effectiveUserPermissions'
+    | 'readOnlyState'
   >;
 }>;
 

@@ -8,29 +8,24 @@ import type { CanvasDraftSession } from './canvasDraftSession';
 import type {
   DraftAttemptRefs,
   DraftSaveStatus,
+  GraphAuthorityQueryState,
   GraphDraftQueryState,
-  GraphSnapshotQueryState,
 } from './canvasDraftLifecycle.types';
-import type {
-  CanvasDraftLifecycleCanonicalSnapshot,
-  CanvasDraftLifecycleGraphStrategy,
-} from './canvasDraftLifecycleSnapshot';
+import type { CanvasDraftLifecycleCanonicalSnapshot } from './canvasDraftLifecycleSnapshot';
 import { useCanvasDraftAutosave } from './useCanvasDraftAutosave';
 import { useCanvasDraftRecoveryActions } from './useCanvasDraftRecoveryActions';
 
 type UseCanvasDraftPersistenceArgs = {
   draftRepository: CanvasDraftRepository;
   graphDraftQuery: GraphDraftQueryState;
-  graphSnapshotQuery: GraphSnapshotQueryState;
+  graphAuthorityQuery: GraphAuthorityQueryState;
   draftQueryCache: CanvasDraftQueryCache;
   draftSession: CanvasDraftSession;
   setDraftSession: Dispatch<SetStateAction<CanvasDraftSession>>;
-  canonicalSnapshot: CanvasDraftLifecycleCanonicalSnapshot;
   currentDraftPayloadSignature: string;
   currentDraftPayload: CanvasDraftAuthoringPayload;
   canPersistGraphDraft: boolean;
   canPersistCurrentDraft: boolean;
-  graphStrategy: CanvasDraftLifecycleGraphStrategy;
   refs: DraftAttemptRefs;
   setDraftSaveStatus: Dispatch<SetStateAction<DraftSaveStatus>>;
   invalidateInFlightSaveAttempt: () => void;
@@ -44,16 +39,14 @@ type UseCanvasDraftPersistenceArgs = {
 export function useCanvasDraftPersistence({
   draftRepository,
   graphDraftQuery,
-  graphSnapshotQuery,
+  graphAuthorityQuery,
   draftQueryCache,
   draftSession,
   setDraftSession,
-  canonicalSnapshot,
   currentDraftPayloadSignature,
   currentDraftPayload,
   canPersistGraphDraft,
   canPersistCurrentDraft,
-  graphStrategy,
   refs,
   setDraftSaveStatus,
   invalidateInFlightSaveAttempt,
@@ -63,7 +56,7 @@ export function useCanvasDraftPersistence({
   useCanvasDraftAutosave({
     draftRepository,
     graphDraftQuery,
-    graphSnapshotQuery,
+    graphAuthorityQuery,
     draftQueryCache,
     draftSession,
     setDraftSession,
@@ -76,20 +69,15 @@ export function useCanvasDraftPersistence({
     createDraftIdempotencyKey,
   });
 
-  const { reloadLatestDraft, adoptCurrentWorkspaceSnapshot } =
-    useCanvasDraftRecoveryActions({
-      draftQueryCache,
-      setDraftSession,
-      canonicalSnapshot,
-      graphStrategy,
-      refs,
-      setDraftSaveStatus,
-      invalidateInFlightSaveAttempt,
-      applyReloadedRemoteDraft,
-    });
+  const { reloadLatestDraft } = useCanvasDraftRecoveryActions({
+    draftQueryCache,
+    refs,
+    setDraftSaveStatus,
+    invalidateInFlightSaveAttempt,
+    applyReloadedRemoteDraft,
+  });
 
   return {
     reloadLatestDraft,
-    adoptCurrentWorkspaceSnapshot,
   };
 }

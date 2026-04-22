@@ -10,12 +10,17 @@ export const canvasViewRouteCopyEs = {
   routeEmptyTitle: 'No hay contenido de grafo cargado',
   routeEmptyEditableMessage:
     'Este workspace todavia no expone nodos de grafo. Usa Add data para importar fuentes o carga contenido de grafo antes de planificar.',
+  routeEmptyImportUnavailableMessage:
+    'Este workspace todavia no expone nodos de grafo. La importacion de fuentes no esta disponible en este runtime, asi que el contenido del grafo debe venir de la autoridad protegida del backend.',
   routeEmptyReadOnlyMessage:
     'Este workspace todavia no expone nodos de grafo. La edicion del grafo esta deshabilitada en este contexto.',
   routeErrorTitle: 'Canvas no disponible',
   routeErrorFallbackMessage: 'No se ha podido cargar el grafo del workspace para Canvas.',
   routeErrorMessage:
     'Canvas no ha podido cargar el grafo actual del workspace. Reintenta cuando el servicio del workspace vuelva a estar disponible.',
+  runtimeBlockedTitle: 'Runtime de Canvas no disponible',
+  runtimeBlockedFallbackMessage:
+    'Canvas authoring requiere modo API y acceso protegido al workspace draft.',
   backendBlockedTitle: 'Backend no preparado',
   backendBlockedFallbackMessage:
     'Canvas permanece bloqueado hasta que se recupere la disponibilidad del backend en modo API.',
@@ -41,12 +46,12 @@ export const canvasViewRouteCopyEs = {
   staleDraftTitle: 'Version de draft obsoleta',
   staleDraftMessage:
     'Se guardo un draft mas reciente en otro sitio. Recarga el draft mas reciente antes de continuar editando.',
-  draftProjectionGapTitle: 'El draft persistido va por delante del snapshot actual del grafo',
+  draftProjectionGapTitle:
+    'El draft persistido va por delante de la autoridad protegida actual del draft',
   draftProjectionGapMessage:
-    'Canvas ha pausado la edicion porque el grafo actual del workspace todavia no puede representar todo el draft persistido. Recarga el draft mas reciente o adopta el snapshot actual del workspace antes de continuar.',
+    'Canvas ha pausado la edicion porque la autoridad protegida actual del draft todavia no puede representar todo el draft persistido. Recarga el ultimo draft cuando la autoridad protegida se ponga al dia.',
   missingRemoteDraftTitle: 'El draft persistido ya no existe',
   missingRemoteDraftMessage:
-    'Canvas ha pausado la edicion del draft porque el draft persistido ha desaparecido. Adopta el snapshot actual del workspace antes de continuar.',
+    'Canvas ha pausado la edicion del draft porque el draft persistido ha desaparecido. Recarga el ultimo draft cuando la autoridad protegida vuelva a estar disponible.',
   reloadLatestDraftLabel: 'Recargar ultimo draft',
-  adoptCurrentWorkspaceSnapshotLabel: 'Adoptar snapshot actual del workspace',
 } satisfies Partial<CanvasViewCopy>;

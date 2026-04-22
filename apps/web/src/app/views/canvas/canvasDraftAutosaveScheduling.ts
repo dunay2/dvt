@@ -7,8 +7,8 @@ import type { CanvasDraftSession } from './canvasDraftSession';
 import type {
   DraftAttemptRefs,
   DraftSaveStatus,
+  GraphAuthorityQueryState,
   GraphDraftQueryState,
-  GraphSnapshotQueryState,
 } from './canvasDraftLifecycle.types';
 import {
   clearSaveDebounce,
@@ -30,7 +30,7 @@ type AutosaveOutcome =
 export type CanvasDraftAutosaveSchedulingArgs = {
   draftRepository: CanvasDraftRepository;
   graphDraftQuery: GraphDraftQueryState;
-  graphSnapshotQuery: GraphSnapshotQueryState;
+  graphAuthorityQuery: GraphAuthorityQueryState;
   draftQueryCache: CanvasDraftQueryCache;
   draftSession: CanvasDraftSession;
   setDraftSession: SetDraftSession;
@@ -52,7 +52,7 @@ function setIdleDraftSaveStatusOnlyWhenSaving(setDraftSaveStatus: SetDraftSaveSt
 }
 
 function resolveAutosaveOutcome(args: {
-  graphSnapshotQuery: GraphSnapshotQueryState;
+  graphAuthorityQuery: GraphAuthorityQueryState;
   graphDraftQuery: GraphDraftQueryState;
   canPersistGraphDraft: boolean;
   canPersistCurrentDraft: boolean;
@@ -60,7 +60,7 @@ function resolveAutosaveOutcome(args: {
   currentDraftPayloadSignature: string;
   lastSavedSignature: string | null;
 }): AutosaveOutcome {
-  if (shouldWaitForPersistenceReadiness(args.graphSnapshotQuery, args.graphDraftQuery)) {
+  if (shouldWaitForPersistenceReadiness(args.graphAuthorityQuery, args.graphDraftQuery)) {
     return { kind: 'wait' };
   }
 
@@ -140,7 +140,7 @@ export function runCanvasDraftAutosaveEffect(
   args: CanvasDraftAutosaveSchedulingArgs
 ): void | (() => void) {
   const outcome = resolveAutosaveOutcome({
-    graphSnapshotQuery: args.graphSnapshotQuery,
+    graphAuthorityQuery: args.graphAuthorityQuery,
     graphDraftQuery: args.graphDraftQuery,
     canPersistGraphDraft: args.canPersistGraphDraft,
     canPersistCurrentDraft: args.canPersistCurrentDraft,

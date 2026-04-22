@@ -1,49 +1,72 @@
+/** Owned concern: compose semantic authoring projection and viewport projection into one route-facing graph model. */
 import { useMemo } from 'react';
 
 import { buildCanvasCanonicalSnapshot } from './canvasCanonicalSnapshot';
-import { useCanvasGraphModel } from './useCanvasGraphModel';
-import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+import { buildCanvasAuthoringGraphProjection } from './canvasAuthoringGraphProjection';
+import type { GraphAuthorityQueryState } from './canvasDraftLifecycle.types';
+import { useCanvasViewportGraphModel } from './useCanvasViewportGraphModel';
+import type { CanonicalNode } from '../../types/canonical';
+import type { WorkspaceGraphDraftSemanticGraph } from '../../services/workspace/workspaceGraphDraftProjection';
 
 type UseCanvasAuthoringProjectionArgs = {
-  workspaceLayoutKey: string;
+  graphAuthorityQuery: GraphAuthorityQueryState;
   visibleNodeIds: string[];
   visibleEdges: Array<{ sourceId: string; targetId: string }>;
-  workspaceService: {
-    getGraphSnapshot: () => Promise<{ nodes: Array<{ id: string }>; edges: Array<{ id: string }> }>;
-  };
-  graphStrategy: {
-    mapNodeToCanonical: (node: { id: string }) => CanonicalNode | null;
-    mapEdgeToCanonical: (edge: { id: string }) => CanonicalEdge | null;
-  };
+  draftSemanticGraph: WorkspaceGraphDraftSemanticGraph | null;
+  localCanonicalNodes: readonly CanonicalNode[];
   columnLevelLineageEnabled: boolean;
   persistedNodePositions: Record<string, { x: number; y: number }>;
 };
 
 export function useCanvasAuthoringProjection({
-  workspaceLayoutKey,
+  graphAuthorityQuery,
   visibleNodeIds,
   visibleEdges,
-  workspaceService,
-  graphStrategy,
+  draftSemanticGraph,
+  localCanonicalNodes,
   columnLevelLineageEnabled,
   persistedNodePositions,
 }: UseCanvasAuthoringProjectionArgs) {
-  const graphModel = useCanvasGraphModel({
-    workspaceLayoutKey,
+  const authoringGraphProjection = useMemo(
+    () =>
+      buildCanvasAuthoringGraphProjection({
+        visibleNodeIds,
+        visibleEdges,
+        draftSemanticGraph,
+        localCanonicalNodes,
+      }),
+    [draftSemanticGraph, localCanonicalNodes, visibleEdges, visibleNodeIds]
+  );
+  const viewportGraphModel = useCanvasViewportGraphModel({
     visibleNodeIds,
     visibleEdges,
-    workspaceService,
-    graphStrategy,
+    canonicalNodesById: authoringGraphProjection.canonicalNodesById,
+    canonicalEdgeIdBySignature: authoringGraphProjection.canonicalEdgeIdBySignature,
     columnLevelLineageEnabled,
     persistedNodePositions,
   });
   const canonicalSnapshot = useMemo(
-    () => buildCanvasCanonicalSnapshot(graphModel.canonicalNodes, graphModel.canonicalEdges),
-    [graphModel.canonicalEdges, graphModel.canonicalNodes]
+    () =>
+      buildCanvasCanonicalSnapshot(
+        authoringGraphProjection.canonicalNodes,
+        authoringGraphProjection.canonicalEdges
+      ),
+    [authoringGraphProjection.canonicalEdges, authoringGraphProjection.canonicalNodes]
   );
 
   return {
-    graphModel,
+    graphModel: {
+      graphAuthorityQuery,
+      canonicalNodes: authoringGraphProjection.canonicalNodes,
+      canonicalEdges: authoringGraphProjection.canonicalEdges,
+      canonicalNodesById: authoringGraphProjection.canonicalNodesById,
+      nodes: viewportGraphModel.nodes,
+      edges: viewportGraphModel.edges,
+      setNodes: viewportGraphModel.setNodes,
+      setEdges: viewportGraphModel.setEdges,
+      onNodesChange: viewportGraphModel.onNodesChange,
+      onEdgesChange: viewportGraphModel.onEdgesChange,
+    },
     canonicalSnapshot,
   };
 }

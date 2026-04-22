@@ -1,14 +1,12 @@
 import { useCallback, type Dispatch, type SetStateAction } from 'react';
 
-import type { WorkspaceGraphDraftRecord } from '../../ports/workspace';
-import type { CanvasDraftQueryCache } from './canvasDraftQueryCache';
-import type { CanvasDraftReadModel } from './canvasDraftReadModel';
-import {
-  canvasDraftSession,
-  type CanvasDraftSession,
-} from './canvasDraftSession';
+import type { WorkspaceGraphDraftSemanticGraph } from '../../services/workspace/workspaceGraphDraftProjection';
 import type { DraftSaveStatus } from './canvasDraftLifecycle.types';
 import type { CanvasDraftLifecycleCanonicalSnapshot } from './canvasDraftLifecycleSnapshot';
+import { buildLocalNodeCatalogFromSemanticGraph } from './canvasDraftLocalNodeCatalog';
+import type { CanvasDraftQueryCache } from './canvasDraftQueryCache';
+import type { CanvasDraftReadModel } from './canvasDraftReadModel';
+import { canvasDraftSession, type CanvasDraftSession } from './canvasDraftSession';
 
 function hasPersistedNodePositions(
   nodePositions: Record<string, { x: number; y: number }>
@@ -26,6 +24,9 @@ type UseCanvasDraftReloadHydrationArgs = {
   ) => void;
   setDraftSaveStatus: Dispatch<SetStateAction<DraftSaveStatus>>;
   lastSavedSignatureRef: { current: string | null };
+  lastAuthoritativeSemanticGraphRef: {
+    current: WorkspaceGraphDraftSemanticGraph | null;
+  };
 };
 
 export function useCanvasDraftReloadHydration({
@@ -35,6 +36,7 @@ export function useCanvasDraftReloadHydration({
   setCanvasNodePositions,
   setDraftSaveStatus,
   lastSavedSignatureRef,
+  lastAuthoritativeSemanticGraphRef,
 }: UseCanvasDraftReloadHydrationArgs) {
   return useCallback(
     (
@@ -48,7 +50,13 @@ export function useCanvasDraftReloadHydration({
       if (remoteDraft == null) {
         lastSavedSignatureRef.current = null;
         setDraftSession((currentSession) =>
-          canvasDraftSession.machine.markRemoteDraftMissing(currentSession)
+          canvasDraftSession.machine.markRemoteDraftMissing(
+            currentSession,
+            buildLocalNodeCatalogFromSemanticGraph(
+              lastAuthoritativeSemanticGraphRef.current,
+              currentSession.workingSet.visibleNodeIds
+            )
+          )
         );
         return;
       }
@@ -66,6 +74,7 @@ export function useCanvasDraftReloadHydration({
     },
     [
       draftQueryCache,
+      lastAuthoritativeSemanticGraphRef,
       lastSavedSignatureRef,
       setCanvasNodePositions,
       setDraftSaveStatus,

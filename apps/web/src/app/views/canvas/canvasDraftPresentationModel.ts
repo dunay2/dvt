@@ -6,9 +6,11 @@ import {
   type CanvasDraftRecoveryReason,
   type CanvasDraftToolbarState,
 } from './canvasDraftToolbarState';
+import type { CanvasRouteStartupBlockState } from './canvasRouteInteractionState';
 
 export type CanvasRouteState =
   | 'loading_backend'
+  | 'blocked_runtime'
   | 'blocked_backend'
   | 'loading_graph'
   | 'error_graph'
@@ -27,8 +29,7 @@ export type CanvasDraftPresentationState = {
 
 type CanvasDraftPresentationStateArgs = {
   isBackendCheckPending: boolean;
-  shouldBlockCanvasInApiMode: boolean;
-  backendBlockMessage: string | null;
+  startupBlockState: CanvasRouteStartupBlockState | null;
   workbenchState: CanvasWorkbenchState;
   recoveryReason: CanvasDraftRecoveryReason;
   draftToolbarState: CanvasDraftToolbarState;
@@ -118,8 +119,7 @@ function deriveWorkbenchCanvasDraftPresentationState({
 
 export function deriveCanvasDraftPresentationState({
   isBackendCheckPending,
-  shouldBlockCanvasInApiMode,
-  backendBlockMessage,
+  startupBlockState,
   workbenchState,
   recoveryReason,
   draftToolbarState,
@@ -135,14 +135,24 @@ export function deriveCanvasDraftPresentationState({
     });
   }
 
-  if (shouldBlockCanvasInApiMode) {
+  if (startupBlockState?.kind === 'runtime_mode') {
+    return createCanvasDraftPresentationState({
+      routeState: 'blocked_runtime',
+      recoveryReason,
+      draftToolbarState,
+      bootstrapStatus: 'blocked',
+      bootstrapDetail: startupBlockState.message,
+      canCompleteBootstrap: false,
+    });
+  }
+
+  if (startupBlockState?.kind === 'backend_readiness') {
     return createCanvasDraftPresentationState({
       routeState: 'blocked_backend',
       recoveryReason,
       draftToolbarState,
       bootstrapStatus: 'blocked',
-      bootstrapDetail:
-        backendBlockMessage ?? canvasViewCopy.backendBlockedFallbackMessage,
+      bootstrapDetail: startupBlockState.message,
       canCompleteBootstrap: false,
     });
   }

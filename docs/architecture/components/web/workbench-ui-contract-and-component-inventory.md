@@ -289,20 +289,20 @@ Main screen composition:
 
 ### Canvas
 
-| Component              | Responsibility                        | Status                                         |
-| ---------------------- | ------------------------------------- | ---------------------------------------------- |
-| `CanvasWorkbench`      | Route composition root                | Current, state model explicit                  |
-| `CanvasToolbar`        | Graph-local commands and toggles      | Current                                        |
-| `CanvasExplorerPanel`  | Graph source browser and entry points | Current as `DbtExplorer`, should be normalized |
-| `CanvasViewport`       | React Flow graph surface              | Current                                        |
-| `CanvasInspectorPanel` | Selection detail                      | Current through `InspectorPanel`               |
-| `PlanPreviewModal`     | Plan review before run                | Current                                        |
-| `ConfirmEdgeModal`     | Graph mutation confirmation           | Current                                        |
-| `SourceImportWizard`   | Import source flow                    | Current                                        |
-| `CanvasLoadingState`   | Graph-specific loading treatment      | Current                                        |
-| `CanvasEmptyState`     | Empty graph treatment                 | Current                                        |
-| `CanvasErrorState`     | Graph route failure treatment         | Current                                        |
-| `CanvasReadOnlyBanner` | Permission or mutation gating         | Current                                        |
+| Component              | Responsibility                                  | Status                                         |
+| ---------------------- | ----------------------------------------------- | ---------------------------------------------- |
+| `CanvasWorkbench`      | Route composition root                          | Current, state model explicit                  |
+| `CanvasToolbar`        | Graph-local commands and toggles                | Current                                        |
+| `CanvasExplorerPanel`  | Graph source browser and entry points           | Current as `DbtExplorer`, should be normalized |
+| `CanvasViewport`       | React Flow graph surface                        | Current                                        |
+| `CanvasInspectorPanel` | Selection detail                                | Current through `InspectorPanel`               |
+| `PlanPreviewModal`     | Plan review before run                          | Current                                        |
+| `ConfirmEdgeModal`     | Graph mutation confirmation                     | Current                                        |
+| `SourceImportWizard`   | Import source flow and immediate canvas handoff | Current                                        |
+| `CanvasLoadingState`   | Graph-specific loading treatment                | Current                                        |
+| `CanvasEmptyState`     | Empty graph treatment                           | Current                                        |
+| `CanvasErrorState`     | Graph route failure treatment                   | Current                                        |
+| `CanvasReadOnlyBanner` | Permission or mutation gating                   | Current                                        |
 
 ### Runs
 

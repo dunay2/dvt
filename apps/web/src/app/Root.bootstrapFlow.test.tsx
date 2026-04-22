@@ -152,7 +152,7 @@ describe('RootShell bootstrap flow', () => {
         <RouteBootstrapProbe
           registration={CANVAS_ROUTE_BOOTSTRAP_REGISTRATION}
           presentationState={createBlockedRouteBootstrapPresentation(
-            'Canvas has paused draft editing because the persisted draft disappeared. Adopt the current workspace snapshot before continuing.'
+            'Canvas has paused draft editing because the persisted draft disappeared. Adopt the current protected draft authority before continuing.'
           )}
         >
           <div>Canvas route</div>
@@ -164,7 +164,7 @@ describe('RootShell bootstrap flow', () => {
       await expectRouteBootstrapStep({
         status: 'blocked',
         detail:
-          'Canvas has paused draft editing because the persisted draft disappeared. Adopt the current workspace snapshot before continuing.',
+          'Canvas has paused draft editing because the persisted draft disappeared. Adopt the current protected draft authority before continuing.',
       });
       expect(bootstrapScreenMocks.completeBootstrapScreen).not.toHaveBeenCalled();
     } finally {

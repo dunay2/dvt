@@ -2,7 +2,7 @@
 title: Graph Frontend Architecture
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-04-21
+last_reviewed: 2026-04-22
 ---
 
 # Graph Frontend Architecture
@@ -19,6 +19,9 @@ handoff without becoming the source of execution truth or shell truth.
 - [Graph Route Bootstrap Architecture](./graph-route-bootstrap-architecture.md)
 - [Canvas Controller Current To Target Architecture](./canvas-controller-current-to-target-architecture.md)
 - [Canvas Component Map And Modernization Review](./canvas-component-map-and-modernization-review.md)
+- [Canvas Route Composition Component](./canvas-route-composition-component.md)
+- [Canvas Authoring Runtime Component](./canvas-authoring-runtime-component.md)
+- [Canvas Authoring Projection Component](./canvas-authoring-projection-component.md)
 - [Canvas Draft Session Component](./canvas-draft-session-component.md)
 - [Canvas Graph Lifecycle Component](./canvas-graph-lifecycle-component.md)
 - [Graph Sequences And State Machines](./graph-sequences-and-state-machines.md)
@@ -87,13 +90,68 @@ Current posture:
 
 ## Current Architecture Point
 
-As of 2026-04-21:
+As of 2026-04-22:
 
 - route startup is generalized by `route.id` plus explicit bootstrap metadata
 - Canvas graph mutation now flows through one local lifecycle component
 - edge admission and node-drop policy live behind narrow pure policy seams
 - connection and transformation validation stay typed until presentation
 - route-visible operator copy is centralized instead of repeated across handlers
+- protected draft reads now project a semantic canonical graph,
+  `canvasAuthoringGraphProjection.ts` derives active authoring semantics from
+  that protected graph plus scoped local working-set additions only, and
+  `useCanvasViewportGraphModel.ts` projects those semantics into React Flow
+  state
+- Canvas source-import affordances are now capability-gated instead of being
+  implied by legacy mock-era empty states; the active `api` path hides
+  `Add data` until the backend import endpoint exists, and `mock` is not a
+  substitute active-authoring runtime under the hard-cut
+- the DVT authoring catalog now explicitly includes the governed
+  `dvt:source -> dvt:sql_transform -> dvt:sink` path instead of letting source
+  nodes fall through the unknown-node fallback
+
+## Protected Draft Semantic Projection
+
+The current no-legacy transition point is now explicit:
+
+- `canvasDraftReadModel.ts` is the route-facing read-model seam for protected
+  draft outcomes
+- `workspaceGraphDraftProjection.ts` projects both the lossy persisted draft
+  record and the semantic canonical graph used by Canvas authoring
+- `canvasAuthoringGraphProjection.ts` treats protected semantic graph as first
+  authority and supplements it only with route-local explicit additions that
+  are not yet persisted remotely
+- `useCanvasAuthoringProjection.ts` composes semantic authoring projection and
+  viewport projection without turning React Flow into semantic authority
+- `useCanvasViewportGraphModel.ts` owns viewport-ready node and edge state only
+
+```mermaid
+flowchart LR
+  DraftPort["protected workspaceGraphDraft boundary"] --> ReadModel["canvasDraftReadModel"]
+  ReadModel --> Semantic["semantic canonical graph"]
+  ReadModel --> Projected["projected draft record"]
+  Semantic --> AuthoringProjection["canvasAuthoringGraphProjection.ts"]
+  Projected --> DraftSession["CanvasDraftSession"]
+  DraftSession --> AuthoringProjection
+  AuthoringProjection --> ProjectionHook["useCanvasAuthoringProjection.ts"]
+  ProjectionHook --> ViewportModel["useCanvasViewportGraphModel.ts"]
+  ViewportModel --> View["Canvas shell and viewport"]
+```
+
+Interpretation rule:
+
+- semantic graph owns visible authoring semantics when a protected draft is
+  present
+- route-local canonical-node supplementation may cover only pending or
+  locally-added working-set members that are not yet persisted in the
+  protected draft
+- viewport node and edge state is a downstream projection of that semantic
+  authoring graph, never a second semantic merge point
+- projected record still owns persisted working-set membership and positions
+- the legacy workspace-snapshot path is no longer allowed to override or
+  supplement active route semantics
+- capability-gated authoring actions such as source import must be derived from
+  explicit service seams plus route posture, never from fallback copy
 
 ## Plugin Contract Boundary
 
@@ -130,11 +188,14 @@ Recommended reading order:
 1. [Graph Route Bootstrap Architecture](./graph-route-bootstrap-architecture.md)
 2. [Canvas Controller Current To Target Architecture](./canvas-controller-current-to-target-architecture.md)
 3. [Canvas Component Map And Modernization Review](./canvas-component-map-and-modernization-review.md)
-4. [Canvas Draft Session Component](./canvas-draft-session-component.md)
-5. [Canvas Graph Lifecycle Component](./canvas-graph-lifecycle-component.md)
-6. [Graph Sequences And State Machines](./graph-sequences-and-state-machines.md)
-7. [Graph Canvas Runtime Model](./graph-canvas-runtime-model.md)
-8. [Graph Decision Rationale And Patterns](./graph-decision-rationale-and-patterns.md)
+4. [Canvas Route Composition Component](./canvas-route-composition-component.md)
+5. [Canvas Authoring Runtime Component](./canvas-authoring-runtime-component.md)
+6. [Canvas Authoring Projection Component](./canvas-authoring-projection-component.md)
+7. [Canvas Draft Session Component](./canvas-draft-session-component.md)
+8. [Canvas Graph Lifecycle Component](./canvas-graph-lifecycle-component.md)
+9. [Graph Sequences And State Machines](./graph-sequences-and-state-machines.md)
+10. [Graph Canvas Runtime Model](./graph-canvas-runtime-model.md)
+11. [Graph Decision Rationale And Patterns](./graph-decision-rationale-and-patterns.md)
 
 ## Evolution Direction
 

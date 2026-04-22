@@ -2,7 +2,7 @@
 title: Canvas Component Map And Modernization Review
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-04-21
+last_reviewed: 2026-04-22
 planning_type: architecture
 ---
 
@@ -24,24 +24,30 @@ For aggregate internals, use
 graph mutation semantics, use
 [Canvas Graph Lifecycle Component](./canvas-graph-lifecycle-component.md). For
 route-visible posture, use
-[Canvas Route Presentation Component](./canvas-route-presentation-component.md). For
-route composition and route-owned shell or modal adaptation, use
-[Canvas Route Composition Component](./canvas-route-composition-component.md). For
-the shell contract and local chrome composition, use
-[Canvas Shell Component](./canvas-shell-component.md). For
-controller-local layering, use
+[Canvas Route Presentation Component](./canvas-route-presentation-component.md).
+For route composition and route-owned shell or modal adaptation, use
+[Canvas Route Composition Component](./canvas-route-composition-component.md).
+For the shell contract and local chrome composition, use
+[Canvas Shell Component](./canvas-shell-component.md). For controller-local
+layering, use
 [Canvas Controller Current To Target Architecture](./canvas-controller-current-to-target-architecture.md).
+For authoring-runtime contract and command-side runtime composition, use
+[Canvas Authoring Runtime Component](./canvas-authoring-runtime-component.md).
+For protected-draft semantic projection and viewport-boundary detail, use
+[Canvas Authoring Projection Component](./canvas-authoring-projection-component.md).
 
 ## Governing Sources
 
 - [Graph Frontend Architecture](./graph-frontend-architecture.md)
 - [Canvas Controller Current To Target Architecture](./canvas-controller-current-to-target-architecture.md)
+- [Canvas Authoring Runtime Component](./canvas-authoring-runtime-component.md)
 - [Canvas Draft Session Component](./canvas-draft-session-component.md)
 - [Canvas Handler Contracts Component](./canvas-handler-contracts-component.md)
 - [Canvas Graph Lifecycle Component](./canvas-graph-lifecycle-component.md)
 - [Canvas Route Presentation Component](./canvas-route-presentation-component.md)
 - [Canvas Route Composition Component](./canvas-route-composition-component.md)
 - [Canvas Shell Component](./canvas-shell-component.md)
+- [Canvas Authoring Projection Component](./canvas-authoring-projection-component.md)
 - [Graph Route Bootstrap Architecture](./graph-route-bootstrap-architecture.md)
 - [Graph Sequences And State Machines](./graph-sequences-and-state-machines.md)
 
@@ -50,6 +56,10 @@ Reading rule:
 - use this page for route composition and component ownership
 - use `canvas-controller-current-to-target-architecture.md` for seam layering
   inside the controller chain
+- use `canvas-route-composition-component.md` for the local route UI component
+  contract
+- use `canvas-authoring-projection-component.md` for protected-draft semantic
+  projection and viewport-boundary detail
 - use `canvas-handler-contracts-component.md` for adapter-composition
   vocabulary and namespaced builder APIs
 - use `canvas-route-presentation-component.md` for route-visible posture,
@@ -141,6 +151,45 @@ Reading rule:
 - the safe move is to keep view seams stable and extract graph policy behind a
   dedicated component
 
+## Protected Draft Semantic Graph Seam
+
+The Canvas route now has an explicit semantic projection boundary between the
+protected draft contract and the viewport projection.
+
+<!-- markdownlint-disable MD060 -->
+
+| Seam                                | Owns                                                                 | Must not own                                            |
+| ----------------------------------- | -------------------------------------------------------------------- | ------------------------------------------------------- |
+| `workspaceGraphDraftProjection.ts`  | route-facing projection of protected draft record and semantic graph | React Flow state, route startup, or controller commands |
+| `canvasDraftReadModel.ts`           | typed read outcomes and protected semantic graph handoff             | mutation logic or bootstrap publication                 |
+| `canvasAuthoringGraphProjection.ts` | semantic composition for active authoring truth                      | React Flow state or controller commands                 |
+| `useCanvasViewportGraphModel.ts`    | viewport-ready node and edge projection                              | inventing semantics or re-merging remote authority      |
+
+<!-- markdownlint-enable MD060 -->
+
+```mermaid
+flowchart LR
+  DraftPort["protected draft port"] --> Projection["workspaceGraphDraftProjection.ts"]
+  Projection --> ReadModel["canvasDraftReadModel.ts"]
+  ReadModel --> Session["CanvasDraftSession"]
+  ReadModel --> Semantic["canvasAuthoringGraphProjection.ts"]
+  Session --> Semantic
+  Semantic --> ViewportModel["useCanvasViewportGraphModel.ts"]
+  ViewportModel --> Viewport["CanvasViewport / React Flow"]
+```
+
+Semantic rule:
+
+- when a protected draft record exists, the semantic authoring projection
+  composes node and edge semantics from that draft-backed canonical graph
+- snapshot-backed graph hydration may supplement only pending local working-set
+  additions that are not yet persisted in the protected draft
+- the viewport hook may only project already-composed semantic truth into React
+  Flow state
+- broader snapshot-backed semantic fallback remains transitional support only
+  for paths that still need slice-3 deletion and must not override protected
+  draft semantics
+
 ## Key Responsibilities
 
 <!-- markdownlint-disable MD060 -->
@@ -168,6 +217,52 @@ Reading rule:
 | `usePublishedRouteBootstrap`                 | Publish explicit route startup posture to the shell                        | Re-deriving authoring truth from shell heuristics                      |
 
 <!-- markdownlint-enable MD060 -->
+
+## Source Import Handoff
+
+`SourceImportWizard` is a route-owned import workflow, but imported nodes are a
+`Canvas` concern as soon as registration succeeds.
+
+That means:
+
+- the explorer may only expose `Add data` when the active route posture and
+  runtime capability contract both allow source import;
+- `Register data objects` is the semantic commit point for the import flow;
+- when the result includes `importedNodeIds`, Canvas applies the handoff
+  immediately through `onSourceImportComplete`;
+- Canvas now invalidates the protected draft-authority query instead of the
+  legacy workspace-graph query and focuses imported ids only when that
+  authority refreshes with matching nodes;
+- when the result contains no new ids, the wizard surfaces an explicit no-op
+  result instead of implying a hidden failed mutation;
+- the result screen is confirmation and audit context, not a second required
+  mutation step;
+- the route may still show the result summary and generated YAML files before
+  the operator dismisses the modal.
+
+```mermaid
+sequenceDiagram
+  participant Explorer as Explorer
+  participant Wizard as SourceImportWizard
+  participant Canvas as Canvas controller
+  participant Authority as Protected draft authority query
+
+  Explorer->>Wizard: Open Add data when capability is exposed
+  Wizard->>Wizard: Discover tables and register sources
+  Wizard->>Canvas: onComplete(result with importedNodeIds)
+  Canvas->>Canvas: clear current plan and queue imported node focus
+  Canvas->>Authority: invalidate protected draft-authority query
+  Authority-->>Canvas: refreshed protected semantic graph
+  Wizard-->>Explorer: passive result summary until Done
+```
+
+Current truth for the hard-cut branch:
+
+- the active `api` authoring path hides `Add data` because backend source
+  import is not implemented yet
+- `mock` mode is not a substitute active-authoring path for Canvas
+- this section documents ownership and handoff semantics, not guaranteed
+  runtime availability in every mode
 
 ## Startup Contract
 
@@ -247,5 +342,8 @@ Canonical startup rule for this slice:
 - [Canvas Draft Session Component](./canvas-draft-session-component.md)
 - [Canvas Handler Contracts Component](./canvas-handler-contracts-component.md)
 - [Canvas Route Composition Component](./canvas-route-composition-component.md)
+- [Canvas Route Presentation Component](./canvas-route-presentation-component.md)
+- [Canvas Shell Component](./canvas-shell-component.md)
+- [Canvas Authoring Projection Component](./canvas-authoring-projection-component.md)
 - [Graph Route Bootstrap Architecture](./graph-route-bootstrap-architecture.md)
 - [Graph Sequences And State Machines](./graph-sequences-and-state-machines.md)

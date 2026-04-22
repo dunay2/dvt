@@ -1,3 +1,4 @@
+/** Owned concern: compose Canvas environment, authoring runtime, adapter seams, and execution seams into one route facade. */
 import { buildCanvasControllerViewModel } from './canvasControllerViewModel';
 import { useCanvasAuthoringRuntime } from './useCanvasAuthoringRuntime';
 import { useCanvasControllerEnvironment } from './useCanvasControllerEnvironment';
@@ -16,7 +17,6 @@ export function useCanvasController() {
     capabilities,
     platformHealthQuery,
     graphStrategy,
-    canvasAuthoringMode,
     workspaceService,
     workspaceGraphDraftAuthoringPort,
     plansService,
@@ -39,7 +39,6 @@ export function useCanvasController() {
     workspaceService,
     workspaceGraphDraftAuthoringPort,
     workspaceLayoutKey: store.workspaceLayoutKey,
-    graphStrategy,
     columnLevelLineageEnabled: store.columnLevelLineageEnabled,
     persistedNodePositions: store.persistedNodePositions,
     selectedNodeIds: store.selectedNodeIds,
@@ -50,25 +49,12 @@ export function useCanvasController() {
     setCanvasNodePositions: store.setCanvasNodePositions,
   });
   const {
-    backendPosture,
     graphModel,
     draftSession,
     setDraftSession,
-    draftSaveStatus,
-    draftAccessMode,
-    draftCapabilityReason,
-    draftFormatError,
-    draftFormatMeta,
-    reloadLatestDraft,
-    adoptCurrentWorkspaceSnapshot,
     visibleScope,
     uiScope,
     executionScope,
-    isMissingRemoteDraft,
-    isStaleDraftConflict,
-    hasDraftProjectionGap,
-    draftRecoveryReason,
-    draftToolbarState,
     isDraftRecoveryBlocked,
     canMutateGraph,
   } = authoringRuntime;
@@ -84,7 +70,7 @@ export function useCanvasController() {
 
   const persistence = useCanvasLayoutPersistence({
     hasHydrated: store._hasHydrated,
-    isGraphQueryPending: graphModel.graphSnapshotQuery.isPending,
+    isGraphQueryPending: graphModel.graphAuthorityQuery.isPending,
     workspaceLayoutKey: store.workspaceLayoutKey,
     persistedViewport: store.persistedViewport,
     setCanvasViewport: store.setCanvasViewport,
@@ -155,8 +141,8 @@ export function useCanvasController() {
     onRunStarted: navigationActions.handleRunStarted,
   });
 
-  const { transformationValidation, nodesWithImpact, inspectorNode } =
-    useCanvasControllerReadModel({
+  const { transformationValidation, nodesWithImpact, inspectorNode } = useCanvasControllerReadModel(
+    {
       graphModel,
       visibleScope,
       executionScope,
@@ -166,7 +152,8 @@ export function useCanvasController() {
       canMutateGraph,
       columnLevelLineageEnabled: store.columnLevelLineageEnabled,
       impactOverlayEnabled: store.impactOverlayEnabled,
-    });
+    }
+  );
 
   return buildCanvasControllerViewModel({
     environment,

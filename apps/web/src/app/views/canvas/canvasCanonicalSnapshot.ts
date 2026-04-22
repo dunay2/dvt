@@ -1,3 +1,4 @@
+/** Owned concern: derive execution-safe canonical snapshots from semantic authoring projections. */
 import type { CanvasDraftEdge } from './canvasDraftSession';
 
 export type CanvasCanonicalSnapshot = {

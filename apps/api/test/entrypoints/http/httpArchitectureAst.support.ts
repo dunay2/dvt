@@ -29,7 +29,7 @@ export function readHttpEntrypointSource(fileName: string): HttpComponentFile {
 }
 
 export function hasOwnedConcernDocblock(component: HttpComponentFile): boolean {
-  return component.sourceText.startsWith('/**\n * Owned concern:');
+  return /^\/\*\*\r?\n \* Owned concern:/.test(component.sourceText);
 }
 
 export function collectNamedImports(

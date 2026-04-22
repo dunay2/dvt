@@ -58,7 +58,16 @@ describe('canvasGraphLifecycle', () => {
   it('admits an explicit node through the aggregate owner', () => {
     const nextSession = canvasGraphLifecycle.node.admitExplicit(
       buildDraftSession(),
-      'transform-node'
+      {
+        id: 'transform-node',
+        name: 'transform-node',
+        pluginId: 'dvt',
+        kind: 'dvt:sql_transform',
+        role: 'transform',
+        status: 'idle',
+        tags: [],
+        path: 'models/transform.sql',
+      }
     );
 
     expect(nextSession.workingSet.visibleNodeIds).toEqual([
@@ -66,6 +75,11 @@ describe('canvasGraphLifecycle', () => {
       'sink-node',
       'transform-node',
     ]);
+    expect(nextSession.localNodeCatalog?.['transform-node']).toEqual(
+      expect.objectContaining({
+        id: 'transform-node',
+      })
+    );
   });
 
   it('queues imported source nodes through the aggregate owner', () => {

@@ -85,6 +85,9 @@ describe('useCanvasGraphHandlers node drop', () => {
     expect(setDraftSession).toHaveBeenCalledTimes(1);
     const nextDraftSession = setDraftSession.mock.calls[0]?.[0](buildDraftSession());
     expect(nextDraftSession.workingSet.visibleNodeIds).toContain('transform-node');
+    expect(nextDraftSession.localNodeCatalog?.['transform-node']).toEqual(
+      expect.objectContaining({ id: 'transform-node' })
+    );
 
     harness.cleanup();
   });

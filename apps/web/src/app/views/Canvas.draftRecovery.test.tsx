@@ -21,7 +21,6 @@ describe('Canvas route draft recovery', () => {
 
   it('shows the missing-remote draft banner and disables canvas actions while keeping inspection visible', async () => {
     const reloadLatestDraft = vi.fn();
-    const adoptCurrentWorkspaceSnapshot = vi.fn();
     await renderCanvasRouteWithController(harness, {
       draftRecoveryReason: 'missing_remote',
       draftToolbarState: {
@@ -30,11 +29,9 @@ describe('Canvas route draft recovery', () => {
         showReloadAction: true,
       },
       reloadLatestDraft,
-      adoptCurrentWorkspaceSnapshot,
     });
     const { layoutButton, planButton, runButton } = getPrimaryCanvasButtons(harness.container);
     const reloadButton = findCanvasButton(harness.container, 'Reload latest draft');
-    const adoptButton = findCanvasButton(harness.container, 'Adopt current workspace snapshot');
 
     expect(harness.container.querySelector('[data-slot="canvas-viewport"]')).not.toBeNull();
     expect(
@@ -45,19 +42,15 @@ describe('Canvas route draft recovery', () => {
     expect(planButton?.getAttribute('disabled')).not.toBeNull();
     expect(runButton?.getAttribute('disabled')).not.toBeNull();
     expect(reloadButton).not.toBeNull();
-    expect(adoptButton).not.toBeNull();
+    expect(
+      findCanvasButton(harness.container, 'Adopt current protected draft authority')
+    ).toBeUndefined();
 
     await act(async () => {
       reloadButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
 
     expect(reloadLatestDraft).toHaveBeenCalledTimes(1);
-
-    await act(async () => {
-      adoptButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-    });
-
-    expect(adoptCurrentWorkspaceSnapshot).toHaveBeenCalledTimes(1);
   });
 
   it('shows the stale-draft banner and disables canvas actions until reload recovers the draft', async () => {
@@ -90,7 +83,6 @@ describe('Canvas route draft recovery', () => {
 
   it('shows the projection-gap banner and pauses canvas actions until recovery resolves it', async () => {
     const reloadLatestDraft = vi.fn();
-    const adoptCurrentWorkspaceSnapshot = vi.fn();
     await renderCanvasRouteWithController(harness, {
       draftRecoveryReason: 'projection_gap',
       draftToolbarState: {
@@ -99,34 +91,29 @@ describe('Canvas route draft recovery', () => {
         showReloadAction: true,
       },
       reloadLatestDraft,
-      adoptCurrentWorkspaceSnapshot,
     });
     const { layoutButton, planButton, runButton } = getPrimaryCanvasButtons(harness.container);
     const reloadButton = findCanvasButton(harness.container, 'Reload latest draft');
-    const adoptButton = findCanvasButton(harness.container, 'Adopt current workspace snapshot');
 
     expect(harness.container.querySelector('[data-slot="canvas-viewport"]')).not.toBeNull();
     expect(
       harness.container.querySelector('[data-slot="canvas-draft-projection-gap-state"]')
     ).not.toBeNull();
     expect(harness.container.textContent).toContain(
-      'Persisted draft is ahead of the current graph snapshot'
+      'Persisted draft is ahead of the current protected draft authority'
     );
     expect(layoutButton?.getAttribute('disabled')).not.toBeNull();
     expect(planButton?.getAttribute('disabled')).not.toBeNull();
     expect(runButton?.getAttribute('disabled')).not.toBeNull();
+    expect(
+      findCanvasButton(harness.container, 'Adopt current protected draft authority')
+    ).toBeUndefined();
 
     await act(async () => {
       reloadButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
 
     expect(reloadLatestDraft).toHaveBeenCalledTimes(1);
-
-    await act(async () => {
-      adoptButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-    });
-
-    expect(adoptCurrentWorkspaceSnapshot).toHaveBeenCalledTimes(1);
   });
 
   it('yields to the graph error route state when recovery and graph failure coexist', async () => {

@@ -3,15 +3,15 @@
  */
 import { ReactFlowProvider } from '@xyflow/react';
 
-import CanvasShell from './canvas/CanvasShell';
 import CanvasModalHost from './canvas/CanvasModalHost';
+import CanvasShell from './canvas/CanvasShell';
 import { buildCanvasModalHostProps } from './canvas/canvasModalHostPropsBuilder';
 import { deriveCanvasRouteViewState } from './canvas/canvasRouteViewState';
 import { buildCanvasShellProps } from './canvas/canvasShellPropsBuilder';
 import { useCanvasRoutePresentationSync } from './canvas/useCanvasRoutePresentationSync';
 import { useCanvasController } from './canvas/useCanvasController';
 
-function CanvasContent() {
+function CanvasContent(): JSX.Element {
   const controller = useCanvasController();
   const routeViewState = deriveCanvasRouteViewState(controller);
   const { presentationState } = routeViewState;
@@ -32,7 +32,7 @@ function CanvasContent() {
   );
 }
 
-export default function Canvas() {
+export default function Canvas(): JSX.Element {
   return (
     <ReactFlowProvider>
       <CanvasContent />
