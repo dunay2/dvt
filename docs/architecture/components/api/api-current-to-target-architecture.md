@@ -247,6 +247,26 @@ component. That guide makes two rules explicit:
   `@dvt/contracts`
 - app-local command/result re-export shims are not part of the target state
 
+### Start-run HTTP entrypoint boundary
+
+The transport edge for `start-run` is now explicit as its own local
+subcomponent instead of living only as scattered parser files.
+
+```mermaid
+flowchart LR
+  Route["startRunRoute.ts"] --> Parser["startRunRouteParser.ts"]
+  Parser --> Builder["startRunRouteCommandBuilder.ts"]
+  Builder --> Policy["evaluatePlanRoutePlanSource()"]
+  Builder --> Target["parseStartRunTargetAdapter()"]
+  Route --> ErrorFacade["httpErrorTranslation.respond(...)"]
+  Route --> StartFacade["StartRunAuthorizedFacade"]
+```
+
+Use the local component guide for the public API, invariants, transitions, and
+consumers of that entrypoint seam:
+
+- [Start-run HTTP entrypoint component](../../../../apps/api/docs/start-run-http-entrypoint-component.md)
+
 Current slice status:
 
 - `AR-C3-A` is the abstract seam and fail-closed default binding

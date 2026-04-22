@@ -16,6 +16,7 @@ boundary is imported directly from `@dvt/contracts`.
 
 Use these related guides with this page:
 
+- `apps/api/docs/start-run-http-entrypoint-component.md`
 - `apps/api/docs/start-run-execution-capacity-admission-component.md`
 - `docs/architecture/components/engine/contracts/engine/start-run-boundary-component.md`
 
@@ -32,6 +33,23 @@ It does **not** own:
 - provider-specific capacity metrics
 - HTTP envelope translation
 - engine lifecycle semantics after dispatch
+
+## Ownership split
+
+The component exists between two different ownership layers:
+
+- `@dvt/contracts`
+  owns the shared caller-visible `StartRunCommand` / `StartRunResult`
+  vocabulary as published language
+- `apps/api/src/entrypoints/http`
+  owns HTTP request parsing and response emission for the route seam
+- this component
+  owns authenticated orchestration, admission ordering, optional planner
+  compilation, and engine dispatch inside `apps/api`
+
+This means `@dvt/contracts` is a shared kernel, not the owner of local
+application behavior ports. Local behavior remains in `startRunUseCasePort.ts`,
+`startRunFacadePort.ts`, and `startRunEngineError.ts`.
 
 ## Public API
 
@@ -63,6 +81,8 @@ It does **not** own:
 
 - `apps/api` imports canonical `StartRunCommand`, `StartRunResult`, adapter
   truth, and result taxonomy directly from `@dvt/contracts`
+- the HTTP edge is documented and constrained separately in
+  `start-run-http-entrypoint-component.md`
 - there are no app-local re-export shims for command/result boundary types
 - only `startRunFacadePort.ts` adds API-auth result kinds
 - admission order remains:
@@ -71,19 +91,24 @@ It does **not** own:
 - planner-backed execution must validate the stored plan before engine dispatch
 - `EngineStartRunUseCase` is the only module in this component that calls
   `IWorkflowEngine.startRun(...)`
+- engine error/result translation lives in the dedicated
+  `startRunEngineBridge.ts` helper instead of sharing the same module as the
+  engine call orchestration
 
 ## Component map
 
 ```mermaid
 flowchart LR
-  Route["startRunRoute.ts"] --> Parser["startRunRouteParser.ts"]
+  Http["start-run HTTP entrypoint component"] --> Route["startRunRoute.ts"]
+  Route --> Parser["startRunRouteParser.ts"]
   Parser --> Registry["startRunTargetAdapterRegistry.ts"]
   Route --> Facade["StartRunAuthorizedFacade.ts"]
   Facade --> Admission["BackpressureAwareStartRunUseCase.ts"]
   Admission --> Planner["PlannerBackedStartRunUseCase.ts"]
   Planner --> Engine["EngineStartRunUseCase.ts"]
+  Engine --> Bridge["startRunEngineBridge.ts"]
   Admission --> Capacity["IStartRunExecutionCapacityPort.ts"]
-  Engine --> Workflow["IWorkflowEngine.startRun(...)"]
+  Bridge --> Workflow["IWorkflowEngine.startRun(...)"]
   Admission --> Contract["@dvt/contracts StartRunCommand / StartRunResult"]
   Planner --> Contract
   Engine --> Contract
@@ -134,6 +159,7 @@ sequenceDiagram
 - `apps/api/src/application/services/startRunAuthorizedFacade.ts`
 - `apps/api/src/application/services/BackpressureAwareStartRunUseCase.ts`
 - `apps/api/src/application/services/PlannerBackedStartRunUseCase.ts`
+- `apps/api/src/application/services/startRunEngineBridge.ts`
 - `apps/api/src/application/services/engineStartRunUseCase.ts`
 - `apps/api/src/entrypoints/http/startRunRouteCommandBuilder.ts`
 - `apps/api/src/entrypoints/http/startRunRouteParser.ts`

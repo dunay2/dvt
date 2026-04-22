@@ -18,29 +18,35 @@ function registryWith(...supported: Array<'mock' | 'temporal'>): {
 
 describe('parseStartRunTargetAdapter', () => {
   it('accepts mock adapter', () => {
-    expect(parseStartRunTargetAdapter('mock')).toEqual({ ok: true, value: 'mock' });
+    expect(parseStartRunTargetAdapter('mock', registryWith('mock', 'temporal'))).toEqual({
+      ok: true,
+      value: 'mock',
+    });
   });
 
   it('accepts temporal adapter', () => {
-    expect(parseStartRunTargetAdapter('temporal')).toEqual({ ok: true, value: 'temporal' });
+    expect(parseStartRunTargetAdapter('temporal', registryWith('mock', 'temporal'))).toEqual({
+      ok: true,
+      value: 'temporal',
+    });
   });
 
   it('rejects adapter values with surrounding whitespace', () => {
-    expect(parseStartRunTargetAdapter('  mock  ')).toEqual({
+    expect(parseStartRunTargetAdapter('  mock  ', registryWith('mock', 'temporal'))).toEqual({
       ok: false,
       issue: { type: 'bad_request', reason: 'invalid_target_adapter', target: 'targetAdapter' },
     });
   });
 
   it('rejects unsupported adapter value', () => {
-    expect(parseStartRunTargetAdapter('conductor')).toEqual({
+    expect(parseStartRunTargetAdapter('conductor', registryWith('mock', 'temporal'))).toEqual({
       ok: false,
       issue: { type: 'bad_request', reason: 'invalid_target_adapter', target: 'targetAdapter' },
     });
   });
 
   it('rejects non-string adapter value', () => {
-    expect(parseStartRunTargetAdapter({ adapter: 'mock' })).toEqual({
+    expect(parseStartRunTargetAdapter({ adapter: 'mock' }, registryWith('mock', 'temporal'))).toEqual({
       ok: false,
       issue: { type: 'bad_request', reason: 'invalid_target_adapter', target: 'targetAdapter' },
     });

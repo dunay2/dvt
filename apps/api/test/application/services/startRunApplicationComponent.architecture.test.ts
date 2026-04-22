@@ -11,6 +11,7 @@ const OWNED_COMPONENT_ARTIFACTS = [
   artifacts.authorizedFacade,
   artifacts.backpressureUseCase,
   artifacts.plannerBackedUseCase,
+  artifacts.engineBridge,
   artifacts.engineUseCase,
   artifacts.targetAdapterRegistry,
 ];
@@ -45,15 +46,15 @@ const CANONICAL_START_RUN_IMPORT_CASES = [
     imports: ['START_RUN_RESULT_KIND', 'StartRunCommand', 'StartRunPlanRef'],
   },
   {
-    artifact: artifacts.engineUseCase,
+    artifact: artifacts.engineBridge,
     imports: [
       'START_RUN_DUPLICATE_OF',
       'START_RUN_PLAN_REJECTION_CODE',
       'START_RUN_RATE_LIMIT_CODE',
       'START_RUN_RESULT_KIND',
+      'StartRunAcceptedResult',
       'StartRunCommand',
       'StartRunPlanRef',
-      'StartRunResult',
     ],
   },
   {
@@ -136,5 +137,30 @@ describe('Start-run application component architecture', () => {
           moduleSpecifier: contracts.canonicalBoundaryModule,
         })
     ).toBe(true);
+  });
+
+  it('keeps engine translation inside the dedicated engine bridge helper', () => {
+    expect(artifacts.engineBridge.exists()).toBe(true);
+    expect(artifacts.engineBridge.hasOwnedConcernDocblock()).toBe(true);
+
+    expect(
+      artifacts.engineUseCase
+        .readSource()
+        .hasAllNamedImports('./startRunEngineBridge.js', [
+          'mapEngineStartRunError',
+          'toAcceptedStartRunResult',
+          'toEnginePlanRef',
+          'toEngineRunContext',
+          'validateStartRunPlanRef',
+        ])
+    ).toBe(true);
+
+    expect(artifacts.engineUseCase.readSource().collectNamedImports('@dvt/engine')).toEqual([
+      'IWorkflowEngine',
+    ]);
+    expect(artifacts.engineUseCase.readText()).not.toContain('AdapterNotRegisteredError');
+    expect(artifacts.engineUseCase.readText()).not.toContain('RunAlreadyExistsError');
+    expect(artifacts.engineUseCase.readText()).not.toContain('OutboxRateLimitExceededError');
+    expect(artifacts.engineUseCase.readText()).not.toContain('RunExecutionContextRejectedError');
   });
 });

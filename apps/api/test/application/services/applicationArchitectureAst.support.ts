@@ -54,6 +54,7 @@ export const START_RUN_APPLICATION_COMPONENT = {
     ),
     componentGuide: defineArtifact(DOCS_ROOT, 'start-run-application-component.md'),
     commandContractShim: defineArtifact(APPLICATION_ROOT, 'ports/startRunCommandContract.ts'),
+    engineBridge: defineArtifact(APPLICATION_ROOT, 'services/startRunEngineBridge.ts'),
     engineUseCase: defineArtifact(APPLICATION_ROOT, 'services/engineStartRunUseCase.ts'),
     engineErrorTypes: defineArtifact(APPLICATION_ROOT, 'ports/startRunEngineError.ts'),
     facadePort: defineArtifact(APPLICATION_ROOT, 'ports/startRunFacadePort.ts'),

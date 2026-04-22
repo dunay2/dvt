@@ -436,6 +436,11 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
 - Current posture:
   G8 is **Closed** and the protected runtime command/query surface now has a
   dedicated OIDC plus PostgreSQL integration lane.
+  The active local component guides for the `start-run` slice are:
+  `apps/api/docs/start-run-http-entrypoint-component.md`,
+  `apps/api/docs/start-run-application-component.md`,
+  and
+  `apps/api/docs/start-run-execution-capacity-admission-component.md`.
 - Primary code:
   [apps/api/src/app.ts](../../../apps/api/src/app.ts),
   [apps/api/src/application/services/WorkflowEngineFactory.ts](../../../apps/api/src/application/services/WorkflowEngineFactory.ts),
@@ -456,7 +461,9 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
 - Key tests:
   [apps/api/test/app.test.ts](../../../apps/api/test/app.test.ts),
   [apps/api/test/application/services/BackpressureAwareStartRunUseCase.test.ts](../../../apps/api/test/application/services/BackpressureAwareStartRunUseCase.test.ts),
+  [apps/api/test/application/services/startRunApplicationComponent.architecture.test.ts](../../../apps/api/test/application/services/startRunApplicationComponent.architecture.test.ts),
   [apps/api/test/application/services/WorkflowEngineFactory.test.ts](../../../apps/api/test/application/services/WorkflowEngineFactory.test.ts),
+  [apps/api/test/entrypoints/http/startRunHttpEntrypointComponent.architecture.test.ts](../../../apps/api/test/entrypoints/http/startRunHttpEntrypointComponent.architecture.test.ts),
   [apps/api/test/entrypoints/http/startRunRoute.validation.test.ts](../../../apps/api/test/entrypoints/http/startRunRoute.validation.test.ts),
   [apps/api/test/entrypoints/http/startRunRoute.planSourcePolicy.test.ts](../../../apps/api/test/entrypoints/http/startRunRoute.planSourcePolicy.test.ts),
   [apps/api/test/entrypoints/http/startRunRoute.authAndSuccess.test.ts](../../../apps/api/test/entrypoints/http/startRunRoute.authAndSuccess.test.ts),

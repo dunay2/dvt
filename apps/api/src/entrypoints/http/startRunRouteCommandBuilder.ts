@@ -1,7 +1,10 @@
+/**
+ * Owned concern: assemble validated start-run commands once the shared
+ * plan-source policy and field parsers have selected the allowed branch.
+ */
 import type { StartRunCommand } from '@dvt/contracts';
 
 import type { IStartRunTargetAdapterRegistry } from '../../application/ports/IStartRunTargetAdapterRegistry.js';
-import { DEFAULT_START_RUN_TARGET_ADAPTER_REGISTRY } from '../../application/services/startRunTargetAdapterRegistry.js';
 
 import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
 import { asCanonicalNonEmptyStringOrUndefined } from './planRouteBodyParser.js';
@@ -15,7 +18,7 @@ import { parseStartRunTargetAdapter } from './startRunRouteTargetAdapterParser.j
 
 export function parseStartRunCommand(
   record: Record<string, unknown>,
-  adapterRegistry: IStartRunTargetAdapterRegistry = DEFAULT_START_RUN_TARGET_ADAPTER_REGISTRY
+  adapterRegistry: IStartRunTargetAdapterRegistry
 ): RouteParseResult<StartRunCommand> {
   const selection = parsePlanRouteSelection(record.selection);
   if (!selection.ok) {

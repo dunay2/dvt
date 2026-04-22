@@ -1,7 +1,10 @@
+/**
+ * Owned concern: parse the start-run HTTP body into a canonical command plus
+ * requested authorization scope for the route seam.
+ */
 import type { StartRunCommand } from '@dvt/contracts';
 
 import type { IStartRunTargetAdapterRegistry } from '../../application/ports/IStartRunTargetAdapterRegistry.js';
-import { DEFAULT_START_RUN_TARGET_ADAPTER_REGISTRY } from '../../application/services/startRunTargetAdapterRegistry.js';
 import { type AuthorizationAction, type RequestedScope } from '../../domain/auth/types.js';
 
 import { parsePlanRouteBodyRecord } from './planRouteBodyParser.js';
@@ -20,7 +23,7 @@ type ParseStartRunRequestResult = RouteParseResult<ParsedStartRunRequest>;
 
 export function parseStartRunBody(
   body: unknown,
-  adapterRegistry: IStartRunTargetAdapterRegistry = DEFAULT_START_RUN_TARGET_ADAPTER_REGISTRY
+  adapterRegistry: IStartRunTargetAdapterRegistry
 ): ParseStartRunRequestResult {
   const bodyRecord = parsePlanRouteBodyRecord(body);
   if (!bodyRecord.ok) {

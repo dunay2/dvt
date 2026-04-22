@@ -1,4 +1,8 @@
-﻿import type { FastifyReply, FastifyRequest } from 'fastify';
+/**
+ * Owned concern: compose the authenticated start-run HTTP entrypoint over the
+ * dedicated parser and response-translation seams.
+ */
+import type { FastifyReply, FastifyRequest } from 'fastify';
 
 import type { IStartRunTargetAdapterRegistry } from '../../application/ports/IStartRunTargetAdapterRegistry.js';
 import type { StartRunAuthorizedFacade } from '../../application/services/startRunAuthorizedFacade.js';
