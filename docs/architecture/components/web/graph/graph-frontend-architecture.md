@@ -20,6 +20,7 @@ handoff without becoming the source of execution truth or shell truth.
 - [Canvas Controller Current To Target Architecture](./canvas-controller-current-to-target-architecture.md)
 - [Canvas Component Map And Modernization Review](./canvas-component-map-and-modernization-review.md)
 - [Canvas Route Composition Component](./canvas-route-composition-component.md)
+- [Canvas Authoring Runtime Component](./canvas-authoring-runtime-component.md)
 - [Canvas Authoring Projection Component](./canvas-authoring-projection-component.md)
 - [Canvas Draft Session Component](./canvas-draft-session-component.md)
 - [Canvas Graph Lifecycle Component](./canvas-graph-lifecycle-component.md)
@@ -188,12 +189,13 @@ Recommended reading order:
 2. [Canvas Controller Current To Target Architecture](./canvas-controller-current-to-target-architecture.md)
 3. [Canvas Component Map And Modernization Review](./canvas-component-map-and-modernization-review.md)
 4. [Canvas Route Composition Component](./canvas-route-composition-component.md)
-5. [Canvas Authoring Projection Component](./canvas-authoring-projection-component.md)
-6. [Canvas Draft Session Component](./canvas-draft-session-component.md)
-7. [Canvas Graph Lifecycle Component](./canvas-graph-lifecycle-component.md)
-8. [Graph Sequences And State Machines](./graph-sequences-and-state-machines.md)
-9. [Graph Canvas Runtime Model](./graph-canvas-runtime-model.md)
-10. [Graph Decision Rationale And Patterns](./graph-decision-rationale-and-patterns.md)
+5. [Canvas Authoring Runtime Component](./canvas-authoring-runtime-component.md)
+6. [Canvas Authoring Projection Component](./canvas-authoring-projection-component.md)
+7. [Canvas Draft Session Component](./canvas-draft-session-component.md)
+8. [Canvas Graph Lifecycle Component](./canvas-graph-lifecycle-component.md)
+9. [Graph Sequences And State Machines](./graph-sequences-and-state-machines.md)
+10. [Graph Canvas Runtime Model](./graph-canvas-runtime-model.md)
+11. [Graph Decision Rationale And Patterns](./graph-decision-rationale-and-patterns.md)
 
 ## Evolution Direction
 

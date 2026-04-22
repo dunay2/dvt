@@ -25,6 +25,8 @@ graph mutation semantics, use
 [Canvas Graph Lifecycle Component](./canvas-graph-lifecycle-component.md). For
 controller-local layering, use
 [Canvas Controller Current To Target Architecture](./canvas-controller-current-to-target-architecture.md).
+For authoring-runtime contract and command-side runtime composition, use
+[Canvas Authoring Runtime Component](./canvas-authoring-runtime-component.md).
 For local route-composition and semantic-projection detail, use
 [Canvas Route Composition Component](./canvas-route-composition-component.md)
 and
@@ -34,6 +36,7 @@ and
 
 - [Graph Frontend Architecture](./graph-frontend-architecture.md)
 - [Canvas Controller Current To Target Architecture](./canvas-controller-current-to-target-architecture.md)
+- [Canvas Authoring Runtime Component](./canvas-authoring-runtime-component.md)
 - [Canvas Draft Session Component](./canvas-draft-session-component.md)
 - [Canvas Handler Contracts Component](./canvas-handler-contracts-component.md)
 - [Canvas Graph Lifecycle Component](./canvas-graph-lifecycle-component.md)

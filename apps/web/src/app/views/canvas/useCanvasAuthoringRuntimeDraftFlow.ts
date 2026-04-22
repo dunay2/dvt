@@ -1,24 +1,11 @@
+/** Owned concern: compose the draft baseline, semantic projection, lifecycle, and local draft-session state inside the Canvas authoring-runtime component. */
 import { useState } from 'react';
 
 import { canvasDraftSession } from './canvasDraftSession';
+import type { UseCanvasAuthoringRuntimeDraftFlowArgs } from './canvasAuthoringRuntime.types';
 import { useCanvasAuthoringProjection } from './useCanvasAuthoringProjection';
 import { useCanvasDraftBaseline } from './useCanvasDraftBaseline';
 import { useCanvasDraftLifecycle } from './useCanvasDraftLifecycle';
-import type { UseCanvasAuthoringRuntimeArgs } from './useCanvasAuthoringRuntime';
-
-type UseCanvasAuthoringRuntimeDraftFlowArgs = Pick<
-  UseCanvasAuthoringRuntimeArgs,
-  | 'workspaceService'
-  | 'workspaceGraphDraftAuthoringPort'
-  | 'workspaceLayoutKey'
-  | 'columnLevelLineageEnabled'
-  | 'persistedNodePositions'
-  | 'workspaceScope'
-  | 'previewProvenanceConfig'
-  | 'setCanvasNodePositions'
-> & {
-  canPersistDraftTransport: boolean;
-};
 
 export function useCanvasAuthoringRuntimeDraftFlow({
   workspaceService,

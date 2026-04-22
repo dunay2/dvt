@@ -1,3 +1,4 @@
+/** Owned concern: compose bootstrapping, persistence, and save-attempt policy into one narrow Canvas draft-lifecycle seam. */
 import { useState } from 'react';
 
 import { createCanvasDraftIdempotencyKey } from './canvasDraftIdempotencyKey';

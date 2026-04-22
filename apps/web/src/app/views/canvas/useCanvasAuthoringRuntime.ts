@@ -1,43 +1,10 @@
+/** Owned concern: compose backend posture, draft-flow composition, and authoring state into one Canvas authoring-runtime seam. */
 import { useMemo } from 'react';
 
-import type { PlatformHealthSnapshot } from '../../../capabilities/platform-health';
-import type { WorkspaceScope } from '../../ports/sessionContext';
-import type { IWorkspacePort } from '../../ports/workspace';
-import type { IWorkspaceGraphDraftAuthoringPort } from '../../ports/workspaceGraphDraftAuthoring';
-import type { WorkspaceBootstrapConfig } from '../../services/config/workspaceConfig';
-import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { deriveCanvasAuthoringState } from './canvasAuthoringState';
+import type { UseCanvasAuthoringRuntimeArgs } from './canvasAuthoringRuntime.types';
 import { deriveCanvasBackendPosture } from './canvasBackendPosture';
 import { useCanvasAuthoringRuntimeDraftFlow } from './useCanvasAuthoringRuntimeDraftFlow';
-
-export type UseCanvasAuthoringRuntimeArgs = {
-  dataSourceMode: 'mock' | 'api';
-  platformHealthQuery: {
-    isPending: boolean;
-    isError: boolean;
-    data?: PlatformHealthSnapshot;
-    error?: unknown;
-  };
-  workspaceService: IWorkspacePort;
-  workspaceGraphDraftAuthoringPort: IWorkspaceGraphDraftAuthoringPort;
-  workspaceLayoutKey: string;
-  graphStrategy: {
-    mapNodeToCanonical: (node: { id: string }) => CanonicalNode | null;
-    mapEdgeToCanonical: (edge: { id: string }) => CanonicalEdge | null;
-    id: string;
-  };
-  columnLevelLineageEnabled: boolean;
-  persistedNodePositions: Record<string, { x: number; y: number }>;
-  selectedNodeIds: string[];
-  inspectorNodeId: string | null;
-  canEditDraftTransport: boolean;
-  workspaceScope: WorkspaceScope;
-  previewProvenanceConfig: Pick<WorkspaceBootstrapConfig, 'gitBranch' | 'gitSha' | 'gitRepo'>;
-  setCanvasNodePositions: (
-    workspaceLayoutKey: string,
-    positions: Record<string, { x: number; y: number }>
-  ) => void;
-};
 
 export function useCanvasAuthoringRuntime({
   dataSourceMode,
@@ -45,7 +12,6 @@ export function useCanvasAuthoringRuntime({
   workspaceService,
   workspaceGraphDraftAuthoringPort,
   workspaceLayoutKey,
-  graphStrategy,
   columnLevelLineageEnabled,
   persistedNodePositions,
   selectedNodeIds,

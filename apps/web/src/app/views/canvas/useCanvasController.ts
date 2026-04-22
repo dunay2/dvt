@@ -39,7 +39,6 @@ export function useCanvasController() {
     workspaceService,
     workspaceGraphDraftAuthoringPort,
     workspaceLayoutKey: store.workspaceLayoutKey,
-    graphStrategy,
     columnLevelLineageEnabled: store.columnLevelLineageEnabled,
     persistedNodePositions: store.persistedNodePositions,
     selectedNodeIds: store.selectedNodeIds,

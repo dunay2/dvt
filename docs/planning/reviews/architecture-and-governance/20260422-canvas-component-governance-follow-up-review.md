@@ -225,6 +225,9 @@ Useful repetitions now visible:
 - repeated route-composition layering:
   route entry -> presentation state -> shell props -> shell layout -> state
   surfaces
+- repeated promotion path:
+  broad seam -> local component contract -> component guide -> architecture
+  fitness function
 - repeated local component doc format:
   purpose -> public API -> invariants -> consumers -> fitness functions
 
@@ -257,6 +260,10 @@ frontend component docs:
 
 The controller facade is thinner, but the authoring runtime is still the
 largest orchestration seam. That remains the next architectural pressure point.
+
+The first low-risk move in that direction is to extract an explicit local
+runtime contract so subordinate seams stop reading their type vocabulary from
+the parent runtime hook.
 
 ### Opportunity C: promote route-command semantics only when they stop being
 

@@ -12,6 +12,10 @@ last_reviewed: 2026-04-22
 Define the route-local runtime model for Canvas authoring so rendering remains
 projection-only and product truth stays explicit.
 
+For the local authoring-runtime component contract, API, invariants, and
+consumers, use
+[Canvas Authoring Runtime Component](./canvas-authoring-runtime-component.md).
+
 ## Runtime Seams
 
 | Seam                           | Responsibility                                                             |

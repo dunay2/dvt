@@ -1,8 +1,12 @@
+/** Owned concern: declare the lifecycle vocabulary for Canvas draft bootstrapping, persistence, and save-attempt coordination. */
 import type { Dispatch, MutableRefObject, SetStateAction } from 'react';
 
 import type { WorkspaceScope } from '../../ports/sessionContext';
-import type { WorkspaceBootstrapConfig } from '../../services/config/workspaceConfig';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+import type {
+  CanvasAuthoringRuntimePreviewProvenanceConfig,
+  CanvasNodePositions,
+} from './canvasAuthoringRuntime.types';
 import type { CanvasDraftQueryCache } from './canvasDraftQueryCache';
 import type { CanvasDraftRepository } from './canvasDraftRepository';
 import type { CanvasDraftReadModel } from './canvasDraftReadModel';
@@ -48,10 +52,10 @@ export type UseCanvasDraftLifecycleArgs = {
   graphAuthorityQuery: GraphAuthorityQueryState;
   canPersistGraphDraft: boolean;
   workspaceScope: WorkspaceScope;
-  previewProvenanceConfig: Pick<WorkspaceBootstrapConfig, 'gitBranch' | 'gitSha' | 'gitRepo'>;
+  previewProvenanceConfig: CanvasAuthoringRuntimePreviewProvenanceConfig;
   setCanvasNodePositions: (
     workspaceLayoutKey: string,
-    positions: Record<string, { x: number; y: number }>
+    positions: CanvasNodePositions
   ) => void;
 };
 
