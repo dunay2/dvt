@@ -84,6 +84,7 @@ Evidence documents that justify or validate relevant changes.
 - [Summary](ED-20260419-plan-compile-language-alignment-arc2.md)
 - [Summary](ED-20260421-api-plan-route-response-and-adapter-build-baseline.md)
 - [Summary](ED-20260422-start-run-boundary-and-runtime-seams.md)
+- [Summary](ed-20260423-access-decision-vocabulary-hardening.md)
 - [Summary](ed-20260423-rc-c2-turbo-ci-governance.md)
 - [Summary](ed-20260423-runtime-boundary-hardening.md)
 - [Summary](ed-20260423-tf-a2-c1-execution-selection-contract-pack.md)
