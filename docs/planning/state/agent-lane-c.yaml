@@ -2,7 +2,7 @@ lane_id: C
 title: Runtime Safety And Admission
 owner: Product / Architecture / Delivery / Docs
 status: Active
-last_reviewed: '2026-04-18'
+last_reviewed: '2026-04-23'
 goal: Harden runtime behavior, admission checks, and caller-visible freshness.
 expected_outcome:
   - runtime failures are explicit
@@ -562,19 +562,24 @@ tasks:
       remain composition-owned; caller-visible rejection posture is explicit and observable.
     complexity: M
     effort_points: 5
-    progress_pct: 15
+    progress_pct: 40
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/ar-c3-start-run-execution-capacity-admission-plan-20260422.md
+      - docs/planning/closeouts/20260422-api-start-run-execution-capacity-admission-closeout.md
+      - apps/api/docs/start-run-execution-capacity-admission-component.md
+      - apps/api/test/application/services/startRunExecutionCapacityAdmission.architecture.test.ts
     status_reason: >-
-      Current backpressure only covers outbox lag and tenant pending events; execution-capacity
-      admission is now decomposed into an abstract API boundary first, then concrete adapter binding
-      and operational closure.
-    last_verified: '2026-04-22'
+      `AR-C3-A` is now implemented and under review: `apps/api` owns the abstract execution-
+      capacity seam, the fail-closed default binding lives in `buildProtectedStartRunRuntime.ts`,
+      and the local guide plus semantic architecture tests now guard the boundary. Remaining work is
+      the concrete adapter-backed binding (`AR-C3-B`) and the telemetry/runbook/evidence closure
+      (`AR-C3-C`).
+    last_verified: '2026-04-23'
   - task_id: AR-C3-A
     parent_task: AR-C3
     priority: P1
-    status: queued
+    status: review
     objective: >-
       hard-cut the abstract start-run execution-capacity admission boundary in apps/api without
       leaking provider vocabulary or adapter-specific metrics into the application contract.
@@ -585,14 +590,22 @@ tasks:
       seam.
     complexity: S
     effort_points: 2
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/ar-c3-start-run-execution-capacity-admission-plan-20260422.md
+      - docs/planning/closeouts/20260422-api-start-run-execution-capacity-admission-closeout.md
+      - apps/api/docs/start-run-execution-capacity-admission-component.md
+      - apps/api/src/application/ports/IStartRunExecutionCapacityPort.ts
+      - apps/api/src/application/services/defaultStartRunExecutionCapacityPort.ts
+      - apps/api/src/modules/startRun/buildProtectedStartRunRuntime.ts
+      - apps/api/test/application/services/startRunExecutionCapacityAdmission.architecture.test.ts
       - apps/api/src/application/services/BackpressureAwareStartRunUseCase.ts
     status_reason: >-
-      Planned docs-first hard cut for the abstract seam only; concrete adapter binding remains out
-      of scope for this first subtask.
-    last_verified: '2026-04-22'
+      The abstract seam is present in code, the default posture fails closed through
+      `capacity_signal_unavailable`, the binding remains composition-owned inside
+      `buildProtectedStartRunRuntime.ts`, and the local guide plus semantic architecture test now
+      freeze the component rules. `AR-C3-B` and `AR-C3-C` remain separate.
+    last_verified: '2026-04-23'
   - task_id: AR-C3-B
     parent_task: AR-C3
     priority: P1
@@ -1339,18 +1352,20 @@ verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
   verified_on: '2026-04-23'
-  total_tasks: 47
-  total_effort_points: 178
-  completed_weighted_points: 143.64
-  lane_progress_pct: 81
+  total_tasks: 50
+  total_effort_points: 183
+  completed_weighted_points: 158.15
+  lane_progress_pct: 86
   notes: >-
-    Weighted progress uses effort_points. `MW-C1`, `TF-C2-A`, and `TF-C2-B` now contribute accepted
-    dispatcher, canonical proof, and caller-visible runtime-evidence closure rather than the older
-    queued-only posture. `TF-C2` is now closed with parent-level acceptance evidence, so remaining
-    runtime follow-through is repeatability/reset discipline (`TF-D1`), phase-2 plugin-backed dbt
-    dispatch (`TF-C3`), and broader hardening work rather than the first PostgreSQL vertical itself.
-    `TF-C3` is now in progress through the protected-runtime `RunExecutionContext` resolver slice
-    plus adapter-temporal DBT seam and fixture hardening, while production plugin-host composition
-    still remains open. `TF-C4` now reserves the protected workspace graph-draft read/write boundary
-    so backend-owned persistence is a blocking dependency for `TF-E2` instead of an implicit future
-    assumption.
+    Weighted progress uses effort_points across the current 50 task entries. `AR-C3-A` now
+    contributes review-level abstract-seam closure, and `AR-C7` contributes the platform-owned
+    start-run identity decision from the 2026-04-23 architecture review. `MW-C1`, `TF-C2-A`, and
+    `TF-C2-B` contribute accepted dispatcher, canonical proof, and caller-visible runtime-evidence
+    closure rather than the older queued-only posture. `TF-C2` is now closed with parent-level
+    acceptance evidence, so remaining runtime follow-through is repeatability/reset discipline
+    (`TF-D1`), phase-2 plugin-backed dbt dispatch (`TF-C3`), and broader hardening work rather than
+    the first PostgreSQL vertical itself. `TF-C3` remains in progress through the protected- runtime
+    `RunExecutionContext` resolver slice plus adapter-temporal DBT seam and fixture hardening, while
+    production plugin-host composition still remains open. `TF-C4` reserves the protected workspace
+    graph-draft read/write boundary so backend-owned persistence is a blocking dependency for
+    `TF-E2` instead of an implicit future assumption.

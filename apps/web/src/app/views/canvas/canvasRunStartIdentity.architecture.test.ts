@@ -1,3 +1,7 @@
+/**
+ * Owned concern: verify that Canvas start-run keeps caller-owned intent and
+ * leaves canonical execution identity to the protected API boundary.
+ */
 import { describe, expect, it } from 'vitest';
 
 import type { PlanViewModel } from '../../types/plans';

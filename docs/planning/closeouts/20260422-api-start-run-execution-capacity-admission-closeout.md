@@ -46,7 +46,7 @@ planning_type: closeout
   `BackpressureAwareStartRunUseCase.ts` after duplicate probe and delivery
   admission, before delegate dispatch
 - Bound the default implementation in
-  `apps/api/src/modules/buildProtectedRuntimeModule.ts`
+  `apps/api/src/modules/startRun/buildProtectedStartRunRuntime.ts`
 - Extended the shared start-run contract and schema pack with execution-
   capacity-specific `system_backpressure` codes
 - Added semantic tests for:
@@ -98,7 +98,7 @@ planning_type: closeout
 - Passed:
   `pnpm --filter dvt-api test:arch`
 - Passed:
-  `pnpm exec eslint --max-warnings 0 apps/api/src/application/ports/AdmissionTelemetry.ts apps/api/src/application/ports/IStartRunExecutionCapacityPort.ts apps/api/src/application/services/BackpressureAwareStartRunUseCase.ts apps/api/src/application/services/defaultStartRunExecutionCapacityPort.ts apps/api/src/application/services/startRunAdmissionDecisions.ts apps/api/src/modules/buildProtectedRuntimeModule.ts apps/api/test/application/services/BackpressureAwareStartRunUseCase.test.ts apps/api/test/application/services/BackpressureAwareStartRunUseCase.executionCapacity.test.ts apps/api/test/application/services/defaultStartRunExecutionCapacityPort.test.ts apps/api/test/application/services/startRunExecutionCapacityAdmission.architecture.test.ts apps/api/test/entrypoints/http/httpErrorTranslation.test.ts packages/@dvt/contracts/src/contracts/engine/StartRunBoundary.v1.ts packages/@dvt/contracts/src/schema-packs/start-run.ts packages/@dvt/contracts/test/fixtures/start-run-boundary.fixtures.ts packages/@dvt/contracts/test/start-run-boundary.contract.test.ts`
+  `pnpm exec eslint --max-warnings 0 apps/api/src/application/ports/AdmissionTelemetry.ts apps/api/src/application/ports/IStartRunExecutionCapacityPort.ts apps/api/src/application/services/BackpressureAwareStartRunUseCase.ts apps/api/src/application/services/defaultStartRunExecutionCapacityPort.ts apps/api/src/application/services/startRunAdmissionDecisions.ts apps/api/src/modules/startRun/buildProtectedStartRunRuntime.ts apps/api/test/application/services/BackpressureAwareStartRunUseCase.test.ts apps/api/test/application/services/BackpressureAwareStartRunUseCase.executionCapacity.test.ts apps/api/test/application/services/defaultStartRunExecutionCapacityPort.test.ts apps/api/test/application/services/startRunExecutionCapacityAdmission.architecture.test.ts apps/api/test/entrypoints/http/httpErrorTranslation.test.ts packages/@dvt/contracts/src/contracts/engine/StartRunBoundary.v1.ts packages/@dvt/contracts/src/schema-packs/start-run.ts packages/@dvt/contracts/test/fixtures/start-run-boundary.fixtures.ts packages/@dvt/contracts/test/start-run-boundary.contract.test.ts`
 - Passed:
   `pnpm exec prettier --check apps/api/src/application/ports/IStartRunExecutionCapacityPort.ts apps/api/src/application/services/startRunAdmissionDecisions.ts docs/planning/proposals/mandatory/runtime-and-contracts/ar-c3-start-run-execution-capacity-admission-plan-20260422.md packages/@dvt/contracts/src/contracts/engine/StartRunBoundary.v1.ts packages/@dvt/contracts/src/schema-packs/start-run.ts`
 - Passed:

@@ -16,6 +16,7 @@ It does not own auth semantics, planner compilation, or engine dispatch.
 
 Use these related guides with this page:
 
+- `apps/api/docs/start-run-control-boundary-component.md`
 - `apps/api/docs/start-run-application-component.md`
 - `apps/api/docs/start-run-platform-identity-component.md`
 - `apps/api/docs/http-runtime-error-translation-component.md`

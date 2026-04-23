@@ -1,3 +1,7 @@
+/**
+ * Owned concern: verify that API start-run identity stays platform-owned and
+ * semantically isolated from runtime lifecycle concerns.
+ */
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
