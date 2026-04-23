@@ -175,3 +175,43 @@ test('workflow scope policy stays wired into ci and pr quality workflows', () =>
     generated_capability_relevant: workflowScopePolicy.generated_capability_relevant,
   });
 });
+
+test('security and nightly workflows stay wired to pinned actions and failure notification', () => {
+  const dependencyReview = readFileSync('.github/workflows/dependency-review.yml', 'utf8');
+  const codeql = readFileSync('.github/workflows/codeql.yml', 'utf8');
+  const docsDeploy = readFileSync('.github/workflows/docs-deploy.yml', 'utf8');
+  const nightly = readFileSync(
+    '.github/workflows/adapter-postgres-integration-nightly.yml',
+    'utf8'
+  );
+  const setupNodePnpm = readFileSync('.github/actions/setup-node-pnpm/action.yml', 'utf8');
+
+  assertWorkflowContains(
+    dependencyReview,
+    'actions/dependency-review-action@2031cfc080254a8a887f58cffee85186f0e49e48 # v4.9.0'
+  );
+  assertWorkflowContains(dependencyReview, 'fail-on-severity: high');
+
+  assertWorkflowContains(
+    codeql,
+    'github/codeql-action/init@95e58e9a2cdfd71adc6e0353d5c52f41a045d225 # v4.35.2'
+  );
+  assertWorkflowContains(
+    codeql,
+    'github/codeql-action/analyze@95e58e9a2cdfd71adc6e0353d5c52f41a045d225 # v4.35.2'
+  );
+  assertWorkflowContains(codeql, 'security-events: write');
+  assertWorkflowContains(codeql, 'javascript-typescript');
+
+  assertWorkflowContains(nightly, 'issues: write');
+  assertWorkflowContains(nightly, 'name: Notify nightly failure');
+  assertWorkflowContains(nightly, 'if: failure()');
+  assertWorkflowContains(nightly, 'gh issue create --title "${NIGHTLY_ISSUE_TITLE}"');
+  assertWorkflowContains(
+    nightly,
+    'pnpm --workspace-concurrency=4 --filter @dvt/adapter-postgres... --if-present run build'
+  );
+
+  assertWorkflowContains(docsDeploy, 'timeout-minutes: 20');
+  assertWorkflowContains(setupNodePnpm, 'tools/*/node_modules');
+});

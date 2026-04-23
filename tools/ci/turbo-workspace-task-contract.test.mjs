@@ -14,6 +14,7 @@ const {
 const turbo = JSON.parse(readFileSync('turbo.json', 'utf8'));
 const rootPackage = JSON.parse(readFileSync('package.json', 'utf8'));
 const ciWorkflow = readFileSync('.github/workflows/ci.yml', 'utf8');
+const testWorkflow = readFileSync('.github/workflows/test.yml', 'utf8');
 
 test('Turbo workspace wrapper rejects unsupported task names and defaults to the affected filter', () => {
   assert.throws(() => parseArgs([]), /Unsupported Turbo workspace task/);
@@ -41,16 +42,20 @@ test('Turbo workspace wrapper rejects unsupported task names and defaults to the
 });
 
 test('turbo.json declares governed build, typecheck, and test task contracts', () => {
+  assert.ok(turbo.globalDependencies.includes('turbo.json'));
   assert.ok(turbo.globalDependencies.includes('scripts/skip-prebuild-if-orchestrated.cjs'));
   assert.ok(turbo.globalDependencies.includes('scripts/skip-pretest-if-ci.cjs'));
   assert.deepEqual(turbo.tasks.build.dependsOn, ['^build']);
   assert.deepEqual(turbo.tasks.build.outputs, ['dist/**', '**/*.tsbuildinfo']);
+  assert.deepEqual(turbo.tasks.build.env, ['DVT_CI']);
 
   assert.deepEqual(turbo.tasks.typecheck.dependsOn, ['^build']);
   assert.deepEqual(turbo.tasks.typecheck.outputs, []);
+  assert.deepEqual(turbo.tasks.typecheck.env, ['DVT_CI']);
 
   assert.deepEqual(turbo.tasks.test.dependsOn, ['^build']);
   assert.deepEqual(turbo.tasks.test.outputs, []);
+  assert.deepEqual(turbo.tasks.test.env, ['DVT_CI']);
 });
 
 test('root affected commands and CI matrix build/typecheck steps use the Turbo workspace wrapper', () => {
@@ -77,4 +82,10 @@ test('root affected commands and CI matrix build/typecheck steps use the Turbo w
       'node scripts/run-turbo-workspace-task.cjs typecheck --filter=${{ matrix.pkg }}'
     )
   );
+  assert.ok(
+    testWorkflow.includes(
+      'node scripts/run-turbo-workspace-task.cjs build --filter=...[origin/${{ github.base_ref }}]'
+    )
+  );
+  assert.equal(testWorkflow.includes('declare -A seen'), false);
 });
