@@ -150,11 +150,20 @@ function ensureCanonicalDocsHome() {
 }
 
 function adrSortKey(fileName) {
-  const match = /^ADR-(\d{4})([A-Za-z]?)/.exec(fileName);
+  const match = /^ADR-(\d{4})([A-Za-z]?)/i.exec(fileName);
   if (!match) {
     return { num: -1, suffix: '' };
   }
   return { num: Number(match[1]), suffix: (match[2] || '').toUpperCase() };
+}
+
+function isExcludedAdrIndexFile(fileName) {
+  const normalized = fileName.toLowerCase();
+  return (
+    normalized === 'adr-index.md' ||
+    normalized === 'adr-implementation-status.md' ||
+    normalized === 'adr-status_board_extensive.md'
+  );
 }
 
 function extractAdrTitle(content, fileName) {
@@ -237,9 +246,7 @@ function generateAdrLanding() {
     .filter((entry) => entry.isFile())
     .map((entry) => entry.name)
     .filter((name) => /^ADR-.*\.md$/i.test(name))
-    .filter(
-      (name) => !/^ADR-(Index|Implementation Status|Status_Board_Extensive)\.md$/i.test(name)
-    );
+    .filter((name) => !isExcludedAdrIndexFile(name));
 
   const adrRows = entries
     .map((name) => {
@@ -260,7 +267,13 @@ function generateAdrLanding() {
       if (a.sortKey.num !== b.sortKey.num) {
         return b.sortKey.num - a.sortKey.num;
       }
-      return a.sortKey.suffix.localeCompare(b.sortKey.suffix);
+      const suffixCompare = a.sortKey.suffix.localeCompare(b.sortKey.suffix, 'en', {
+        sensitivity: 'base',
+      });
+      if (suffixCompare !== 0) {
+        return suffixCompare;
+      }
+      return a.fileName.localeCompare(b.fileName, 'en', { sensitivity: 'base' });
     });
 
   const current = readIfExists(adrLandingPath);
