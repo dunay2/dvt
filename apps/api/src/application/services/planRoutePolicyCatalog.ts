@@ -1,6 +1,11 @@
-import type { AuthorizationAction } from '../../domain/auth/types.js';
-
-type PlanRouteCommandAction = Extract<AuthorizationAction, { readonly kind: 'command' }>;
+/**
+ * Owned concern: publish the canonical plan-route authorization and planner
+ * input policy matrix for preview, import, and compile routes.
+ */
+import {
+  AUTHORIZATION_ACTION,
+  type CommandAuthorizationAction,
+} from '../ports/accessDecision.js';
 
 export interface PlanRoutePlannerInputPolicy {
   readonly ownershipSource: 'authorized-scope' | 'seed' | 'none';
@@ -8,14 +13,14 @@ export interface PlanRoutePlannerInputPolicy {
 }
 
 export interface PlanRoutePolicyDefinition {
-  readonly authorization: PlanRouteCommandAction;
+  readonly authorization: CommandAuthorizationAction;
   readonly plannerInput: PlanRoutePlannerInputPolicy | null;
   readonly importedPlanOwnershipSource: 'command' | 'none';
 }
 
 export const PLAN_ROUTE_POLICY_CATALOG = {
   PREVIEW: {
-    authorization: { kind: 'command', name: 'run:start' },
+    authorization: AUTHORIZATION_ACTION.runStart,
     plannerInput: {
       ownershipSource: 'authorized-scope',
       requestMetadataSource: 'authorized-context',
@@ -23,12 +28,12 @@ export const PLAN_ROUTE_POLICY_CATALOG = {
     importedPlanOwnershipSource: 'none',
   },
   IMPORT: {
-    authorization: { kind: 'command', name: 'run:start' },
+    authorization: AUTHORIZATION_ACTION.runStart,
     plannerInput: null,
     importedPlanOwnershipSource: 'command',
   },
   COMPILE: {
-    authorization: { kind: 'command', name: 'run:start' },
+    authorization: AUTHORIZATION_ACTION.runStart,
     plannerInput: {
       ownershipSource: 'authorized-scope',
       requestMetadataSource: 'authorized-context',

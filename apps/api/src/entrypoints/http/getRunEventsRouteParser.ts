@@ -1,4 +1,11 @@
-import type { RequestedScope } from '../../domain/auth/types.js';
+/**
+ * Owned concern: parse the protected get-run-events HTTP request into
+ * canonical timeline input and requested access scope.
+ */
+import {
+  buildTenantAccessScope,
+  type RequestedScope,
+} from '../../application/ports/accessDecision.js';
 
 import {
   GET_RUN_EVENTS_ACTION,
@@ -66,7 +73,7 @@ export function parseGetRunEventsRequest(input: {
         ...(limit === undefined ? {} : { limit }),
       },
       requestedScope: {
-        tenantId: tenant.value,
+        ...buildTenantAccessScope(tenant.value),
         action: GET_RUN_EVENTS_ACTION,
       },
     },

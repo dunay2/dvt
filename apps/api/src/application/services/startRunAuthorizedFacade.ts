@@ -4,7 +4,7 @@
  */
 import type { StartRunCommand } from '@dvt/contracts';
 
-import type { AuthorizationAction, RequestedScope } from '../../domain/auth/types.js';
+import type { CommandAuthorizationAction, RequestedScope } from '../ports/accessDecision.js';
 import type { IAuthenticator } from '../ports/auth.js';
 import {
   START_RUN_FACADE_RESULT_KIND,
@@ -34,9 +34,7 @@ export class StartRunAuthorizedFacade {
     token: string | undefined;
     requestId: string;
     command: StartRunCommand;
-    requestedScope: RequestedScope & {
-      readonly action: Extract<AuthorizationAction, { kind: 'command' }>;
-    };
+    requestedScope: RequestedScope<CommandAuthorizationAction>;
   }): Promise<StartRunFacadeExecutionResult> {
     const startedAtMs = Date.now();
     let outcome: StartRunLatencyOutcome = 'exception';

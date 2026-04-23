@@ -21,6 +21,7 @@ const AUTHORIZED_CONTEXT = {
     assertedProjectIds: [],
   },
   scope: {
+    resource: 'environment',
     tenantId: TenantId.unsafe('tenant-1'),
     projectId: ProjectId.unsafe('project-1'),
     environmentId: EnvironmentId.unsafe('env-1'),

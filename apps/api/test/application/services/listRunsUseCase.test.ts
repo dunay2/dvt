@@ -17,6 +17,7 @@ const queryContext: AuthorizedExecutionContext<{ kind: 'query'; name: 'run:list'
     assertedProjectIds: ['proj-1'],
   },
   scope: {
+    resource: 'environment',
     tenantId: TenantId.unsafe('tenant-a'),
     projectId: ProjectId.unsafe('proj-1'),
     environmentId: EnvironmentId.unsafe('env-1'),

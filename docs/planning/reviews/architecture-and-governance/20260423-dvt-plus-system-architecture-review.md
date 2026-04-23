@@ -740,7 +740,10 @@ previous `PostgresPrincipalAccessRepository` plus
 `TenantHierarchyAuthorizationPolicy` split is removed from the active protected
 runtime path, the authz boundary is now one explicit component in code, and the
 first cut stays network-local while preserving a pluggable backend boundary for
-later external PDP adapters.
+later external PDP adapters. The follow-up vocabulary hardening moved canonical
+action objects and resource discriminants into `accessDecision.ts`, added a
+local protected-security component guide, and pinned the ownership rules with a
+semantic architecture test instead of relying only on thin-builder coverage.
 
 ## Final Architectural Verdict
 

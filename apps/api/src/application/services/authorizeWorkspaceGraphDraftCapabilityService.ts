@@ -7,13 +7,10 @@
  */
 import { randomUUID } from 'node:crypto';
 
-import {
-  WORKSPACE_GRAPH_DRAFT_CAPABILITY_MODE,
-  WORKSPACE_GRAPH_DRAFT_CAPABILITY_REASON,
-  type WorkspaceGraphDraftCapabilityOutcome,
-  type WorkspaceGraphDraftScope,
-} from '@dvt/contracts';
+import type { WorkspaceGraphDraftCapabilityOutcome, WorkspaceGraphDraftScope } from '@dvt/contracts';
 
+import type { AuthenticatedPrincipal } from '../../domain/auth/types.js';
+import { buildWorkspaceGraphDraftAccessScope } from '../ports/accessDecision.js';
 import type { IAuthenticator } from '../ports/auth.js';
 import {
   WORKSPACE_GRAPH_DRAFT_ACTION,
@@ -22,8 +19,16 @@ import {
 } from '../ports/workspaceGraphDraft.js';
 
 import { AuthorizeCommandScopeService } from './authorizeCommandScopeService.js';
+import {
+  WORKSPACE_GRAPH_DRAFT_CAPABILITY_POLICY,
+  buildWorkspaceGraphDraftCapabilityFromPolicy,
+  buildWorkspaceGraphDraftDeniedCapability,
+} from './workspaceGraphDraftCapabilityPolicy.js';
 
-type AuthorizationFailureReason = 'ACTION_NOT_GRANTED' | 'TOKEN_ASSERTION_CONFLICT' | string;
+type WorkspaceGraphDraftDecisionBase = Pick<
+  WorkspaceGraphDraftDecisionContext,
+  'requestId' | 'correlationId' | 'decisionId' | 'recordedAt' | 'requestedScope' | 'scope'
+>;
 
 export class AuthorizeWorkspaceGraphDraftCapabilityService {
   public constructor(
@@ -37,88 +42,135 @@ export class AuthorizeWorkspaceGraphDraftCapabilityService {
     readonly requestId: string;
     readonly requestedScope: WorkspaceGraphDraftRequestedScope;
   }): Promise<WorkspaceGraphDraftDecisionContext> {
-    const recordedAt = this.clock().toISOString();
-    const scope = toContractScope(input.requestedScope);
-    const base = {
-      requestId: input.requestId,
-      correlationId: input.requestId,
-      decisionId: randomUUID(),
-      recordedAt,
-      requestedScope: input.requestedScope,
-      scope,
-    } as const;
+    const base = buildDecisionBase(input, this.clock);
 
     const authentication = await this.authenticator.authenticateBearerToken(input.token);
     if (!authentication.ok) {
-      return {
-        authentication: 'unauthenticated',
-        ...base,
-        capability: {
-          scope,
-          mode: WORKSPACE_GRAPH_DRAFT_CAPABILITY_MODE.forbidden,
-          canRead: false,
-          canWrite: false,
-          reason: WORKSPACE_GRAPH_DRAFT_CAPABILITY_REASON.unauthenticated,
-        },
-      };
+      return buildUnauthenticatedDecision(base);
     }
 
-    const readAuthorization = await this.authorizer.authorize(
+    return this.authorizeAuthenticatedPrincipal(
       authentication.principal,
-      {
-        ...input.requestedScope,
-        action: WORKSPACE_GRAPH_DRAFT_ACTION.view,
-      },
+      base,
+      input.requestedScope,
       input.requestId
+    );
+  }
+
+  private async authorizeWorkspaceGraphDraftAction(
+    principal: AuthenticatedPrincipal,
+    requestedScope: WorkspaceGraphDraftRequestedScope,
+    action: typeof WORKSPACE_GRAPH_DRAFT_ACTION.view | typeof WORKSPACE_GRAPH_DRAFT_ACTION.save,
+    requestId: string
+  ) {
+    return this.authorizer.authorize(
+      principal,
+      {
+        ...buildWorkspaceGraphDraftAccessScope(
+          requestedScope.tenantId,
+          requestedScope.projectId,
+          requestedScope.environmentId
+        ),
+        action,
+      },
+      requestId
+    );
+  }
+
+  private async authorizeAuthenticatedPrincipal(
+    principal: AuthenticatedPrincipal,
+    base: WorkspaceGraphDraftDecisionBase,
+    requestedScope: WorkspaceGraphDraftRequestedScope,
+    requestId: string
+  ): Promise<WorkspaceGraphDraftDecisionContext> {
+    const readAuthorization = await this.authorizeWorkspaceGraphDraftAction(
+      principal,
+      requestedScope,
+      WORKSPACE_GRAPH_DRAFT_ACTION.view,
+      requestId
     );
     if (!readAuthorization.ok) {
-      return {
-        authentication: 'authenticated',
-        ...base,
-        principal: authentication.principal,
-        capability: buildForbiddenCapability(scope, readAuthorization.reason),
-      };
+      return buildAuthenticatedDecision(
+        base,
+        principal,
+        buildWorkspaceGraphDraftDeniedCapability(
+          base.scope,
+          readAuthorization.reason,
+          WORKSPACE_GRAPH_DRAFT_CAPABILITY_POLICY.forbidden
+        )
+      );
     }
 
-    const writeAuthorization = await this.authorizer.authorize(
-      authentication.principal,
-      {
-        ...input.requestedScope,
-        action: WORKSPACE_GRAPH_DRAFT_ACTION.save,
-      },
-      input.requestId
+    const writeAuthorization = await this.authorizeWorkspaceGraphDraftAction(
+      principal,
+      requestedScope,
+      WORKSPACE_GRAPH_DRAFT_ACTION.save,
+      requestId
     );
     if (!writeAuthorization.ok) {
-      return {
-        authentication: 'authenticated',
-        ...base,
-        principal: authentication.principal,
-        capability: {
-          scope,
-          mode: WORKSPACE_GRAPH_DRAFT_CAPABILITY_MODE.readOnly,
-          canRead: true,
-          canWrite: false,
-          reason:
-            writeAuthorization.reason === 'TOKEN_ASSERTION_CONFLICT'
-              ? WORKSPACE_GRAPH_DRAFT_CAPABILITY_REASON.tenantMismatch
-              : WORKSPACE_GRAPH_DRAFT_CAPABILITY_REASON.writeDenied,
-        },
-      };
+      return buildAuthenticatedDecision(
+        base,
+        principal,
+        buildWorkspaceGraphDraftDeniedCapability(
+          base.scope,
+          writeAuthorization.reason,
+          WORKSPACE_GRAPH_DRAFT_CAPABILITY_POLICY.readOnly
+        )
+      );
     }
 
-    return {
-      authentication: 'authenticated',
-      ...base,
-      principal: authentication.principal,
-      capability: {
-        scope,
-        mode: WORKSPACE_GRAPH_DRAFT_CAPABILITY_MODE.writable,
-        canRead: true,
-        canWrite: true,
-        reason: WORKSPACE_GRAPH_DRAFT_CAPABILITY_REASON.authorized,
-      },
-    };
+    return buildAuthenticatedDecision(
+      base,
+      principal,
+      buildWorkspaceGraphDraftCapabilityFromPolicy(
+        base.scope,
+        WORKSPACE_GRAPH_DRAFT_CAPABILITY_POLICY.writable
+      )
+    );
   }
+}
+
+function buildDecisionBase(
+  input: {
+    readonly requestId: string;
+    readonly requestedScope: WorkspaceGraphDraftRequestedScope;
+  },
+  clock: () => Date
+): WorkspaceGraphDraftDecisionBase {
+  return {
+    requestId: input.requestId,
+    correlationId: input.requestId,
+    decisionId: randomUUID(),
+    recordedAt: clock().toISOString(),
+    requestedScope: input.requestedScope,
+    scope: toContractScope(input.requestedScope),
+  };
+}
+
+function buildUnauthenticatedDecision(
+  base: WorkspaceGraphDraftDecisionBase
+): WorkspaceGraphDraftDecisionContext {
+  return {
+    authentication: 'unauthenticated',
+    ...base,
+    capability: buildWorkspaceGraphDraftCapabilityFromPolicy(
+      base.scope,
+      WORKSPACE_GRAPH_DRAFT_CAPABILITY_POLICY.unauthenticated
+    ),
+  };
+}
+
+function buildAuthenticatedDecision(
+  base: WorkspaceGraphDraftDecisionBase,
+  principal: AuthenticatedPrincipal,
+  capability: WorkspaceGraphDraftCapabilityOutcome
+): WorkspaceGraphDraftDecisionContext {
+  return {
+    authentication: 'authenticated',
+    ...base,
+    principal,
+    capability,
+  };
 }
 
 function toContractScope(scope: WorkspaceGraphDraftRequestedScope): WorkspaceGraphDraftScope {
@@ -126,21 +178,5 @@ function toContractScope(scope: WorkspaceGraphDraftRequestedScope): WorkspaceGra
     tenantId: scope.tenantId.value,
     projectId: scope.projectId.value,
     environmentId: scope.environmentId.value,
-  };
-}
-
-function buildForbiddenCapability(
-  scope: WorkspaceGraphDraftScope,
-  reason: AuthorizationFailureReason
-): WorkspaceGraphDraftCapabilityOutcome {
-  return {
-    scope,
-    mode: WORKSPACE_GRAPH_DRAFT_CAPABILITY_MODE.forbidden,
-    canRead: false,
-    canWrite: false,
-    reason:
-      reason === 'TOKEN_ASSERTION_CONFLICT'
-        ? WORKSPACE_GRAPH_DRAFT_CAPABILITY_REASON.tenantMismatch
-        : WORKSPACE_GRAPH_DRAFT_CAPABILITY_REASON.workspaceScopeDenied,
   };
 }

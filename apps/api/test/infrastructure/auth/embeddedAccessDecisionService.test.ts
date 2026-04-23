@@ -68,6 +68,7 @@ describe('EmbeddedAccessDecisionService', () => {
         assertedProjectIds: ['p1'],
       },
       {
+        resource: 'project',
         tenantId: TenantId.unsafe('t1'),
         projectId: ProjectId.unsafe('p1'),
         action: { kind: 'command', name: 'run:start' },
@@ -77,6 +78,7 @@ describe('EmbeddedAccessDecisionService', () => {
     expect(outcome).toEqual({
       ok: true,
       approvedScope: {
+        resource: 'project',
         tenantId: TenantId.unsafe('t1'),
         projectId: ProjectId.unsafe('p1'),
       },
@@ -118,6 +120,7 @@ describe('EmbeddedAccessDecisionService', () => {
         assertedProjectIds: [],
       },
       {
+        resource: 'tenant',
         tenantId: TenantId.unsafe('t1'),
         action: { kind: 'command', name: 'run:start' },
       }

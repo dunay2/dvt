@@ -44,6 +44,7 @@ describe('startRunRoute auth and success outcomes', () => {
         selection: { mode: 'explicit', nodeIds: ['model_a'] },
       },
       requestedScope: {
+        resource: 'environment',
         tenantId: expect.objectContaining({ value: 't1' }),
         projectId: expect.objectContaining({ value: 'p1' }),
         environmentId: expect.objectContaining({ value: 'e1' }),

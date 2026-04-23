@@ -1,11 +1,17 @@
 import { type ExecutableSubgraph, parseExecutionSelection } from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
+import {
+  AUTHORIZATION_ACTION,
+  buildEnvironmentAccessScope,
+  buildTenantAccessScope,
+} from '../../../src/application/ports/accessDecision.js';
+import type { AuthorizedCommandExecutionContext } from '../../../src/application/ports/authContract.js';
 import { WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION } from '../../../src/application/ports/workspaceGraphDraft.js';
 import { ResolveAuthorizedExecutableSubgraphService } from '../../../src/application/services/resolveAuthorizedExecutableSubgraph.js';
 import { EnvironmentId, ProjectId, TenantId } from '../../../src/domain/auth/types.js';
 
-function buildContext() {
+function buildContext(): AuthorizedCommandExecutionContext {
   return {
     principal: {
       principalId: 'user-1',
@@ -18,12 +24,12 @@ function buildContext() {
       assertedTenantIds: ['tenant-a'],
       assertedProjectIds: ['project-a'],
     },
-    scope: {
-      tenantId: TenantId.unsafe('tenant-a'),
-      projectId: ProjectId.unsafe('project-a'),
-      environmentId: EnvironmentId.unsafe('env-a'),
-    },
-    action: { kind: 'command' as const, name: 'run:start' as const },
+    scope: buildEnvironmentAccessScope(
+      TenantId.unsafe('tenant-a'),
+      ProjectId.unsafe('project-a'),
+      EnvironmentId.unsafe('env-a')
+    ),
+    action: AUTHORIZATION_ACTION.runStart,
     requestId: 'req-1',
     authorizedAt: new Date('2026-04-23T00:00:00.000Z'),
   };
@@ -100,9 +106,7 @@ describe('ResolveAuthorizedExecutableSubgraphService', () => {
       },
       {
         ...buildContext(),
-        scope: {
-          tenantId: TenantId.unsafe('tenant-a'),
-        },
+        scope: buildTenantAccessScope(TenantId.unsafe('tenant-a')),
       }
     );
 

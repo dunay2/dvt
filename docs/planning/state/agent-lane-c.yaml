@@ -1119,6 +1119,34 @@ tasks:
       active ADR/API docs now treat later external PDP adoption as a backend swap rather than as a
       route-level redesign.
     last_verified: '2026-04-23'
+  - task_id: AR-C9
+    priority: P0
+    status: done
+    objective: >-
+      formalize the canonical DVT-owned access action/resource/scope vocabulary behind
+      `IAccessDecisionService` so future PDP adapters map one explicit contract instead of
+      reconstructing semantics from implicit route shapes.
+    dependency: AR-C8
+    target: >-
+      `IAccessDecisionService` owns explicit action/resource/scope vocabulary and route families
+      build explicit access resources; the embedded backend and workspace-draft capability flow use
+      the same contract without exposing vendor semantics to `apps/api`.
+    complexity: M
+    effort_points: 5
+    progress_pct: 100
+    evidence_refs:
+      - docs/adr/ADR-0051-access-decision-service-and-openfga-adapter.md
+      - buzon/20260423-codex-fowler-access-decision-component-analysis-and-remediation.md
+      - apps/api/docs/protected-security-access-decision-component.md
+      - docs/planning/closeouts/20260423-access-decision-contract-vocabulary-closeout.md
+      - apps/api/src/application/ports/accessDecision.ts
+      - apps/api/test/application/services/protectedSecurityAccessDecision.architecture.test.ts
+    status_reason: >-
+      The access-decision contract now owns the canonical action catalog, explicit resource
+      discriminants, and scope builders; route/application consumers reuse that language; the
+      embedded backend consumes explicit `resource` ownership; and the protected-security component
+      now has a mailbox review, local guide, and semantic architecture test.
+    last_verified: '2026-04-23'
   - task_id: TF-C3
     priority: P1
     status: in_progress

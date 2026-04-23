@@ -14,6 +14,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [>](R-20260413-AR-A12-A-CONTRACT-PACK-RESET.yaml)
 - [>](R-20260413-TF-A1-A-PREVIEW-CONTRACT-ADOPTION-DRIFT.yaml)
 - [>](R-20260414-CONTRACT-SCHEMA-PACK-LINT-COMPAT.yaml)
+- [Access-decision vocabulary and capability-policy ownership can drift across API and contracts](R-20260423-ACCESS-DECISION-VOCABULARY-HARDENING.yaml)
 - [Active docs or consumers may continue treating RETRY_STEP as a canonical signal](R-20260407-RETRY-STEP-SIGNAL-DRIFT.yaml)
 - [Adapter-declared signal semantics versions can drift from engine expectations](R-20260407-SIGNAL-SEMANTICS-VERSION-DRIFT.yaml)
 - [Adapter-postgres can regress if inline import aliases reappear in runtime modules](R-20260329-ADAPTER-IMPORT-ALIAS-DRIFT.md)

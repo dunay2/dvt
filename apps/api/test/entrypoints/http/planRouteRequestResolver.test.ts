@@ -84,6 +84,7 @@ describe('resolveAuthorizedPlanRouteRequest', () => {
     expect(deps.authorizer.authorize).toHaveBeenCalledWith(
       expect.objectContaining({ principalId: 'principal-1' }),
       {
+        resource: 'environment',
         tenantId: parsedRequest.routeContext.tenantId,
         projectId: parsedRequest.routeContext.projectId,
         environmentId: parsedRequest.routeContext.environmentId,

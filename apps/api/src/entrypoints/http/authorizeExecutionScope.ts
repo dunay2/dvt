@@ -1,6 +1,13 @@
-﻿import type { AuthorizedExecutionContext, IAuthenticator } from '../../application/ports/auth.js';
+/**
+ * Owned concern: adapt protected HTTP authentication plus requested-scope
+ * authorization into one route-facing allow/deny helper.
+ */
+import type {
+  AuthorizationAction,
+  RequestedScope,
+} from '../../application/ports/accessDecision.js';
+import type { AuthorizedExecutionContext, IAuthenticator } from '../../application/ports/auth.js';
 import { AuthorizeCommandScopeService } from '../../application/services/authorizeCommandScopeService.js';
-import type { AuthorizationAction, RequestedScope } from '../../domain/auth/types.js';
 
 import type { HttpResponseModel } from './httpErrorContract.js';
 import { httpErrorTranslation } from './httpErrorTranslation.js';
@@ -10,7 +17,7 @@ export async function authorizeExecutionScope<TAction extends AuthorizationActio
   readonly authorizer: AuthorizeCommandScopeService;
   readonly token: string | undefined;
   readonly requestId: string;
-  readonly requestedScope: RequestedScope & { readonly action: TAction };
+  readonly requestedScope: RequestedScope<TAction>;
 }): Promise<
   | { readonly ok: true; readonly context: AuthorizedExecutionContext<TAction> }
   | { readonly ok: false; readonly response: HttpResponseModel }

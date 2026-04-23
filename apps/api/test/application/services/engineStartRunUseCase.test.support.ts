@@ -36,6 +36,7 @@ export function buildAuthorizedContext(
       assertedProjectIds: [],
     },
     scope: {
+      resource: 'environment',
       tenantId: TenantId.unsafe(tenantId),
       projectId: ProjectId.unsafe('proj-1'),
       environmentId: EnvironmentId.unsafe('env-1'),

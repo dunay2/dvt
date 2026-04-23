@@ -7,13 +7,10 @@ import type {
   TransformationExecutor,
 } from '@dvt/contracts';
 
-import type { AuthorizationAction } from '../../domain/auth/types.js';
-
+import type { QueryAuthorizationAction } from './accessDecision.js';
 import type { AuthorizedCommandExecutionContext, AuthorizedExecutionContext } from './auth.js';
 
-export type AuthorizedQueryExecutionContext = AuthorizedExecutionContext<
-  Extract<AuthorizationAction, { readonly kind: 'query' }>
->;
+export type AuthorizedQueryExecutionContext = AuthorizedExecutionContext<QueryAuthorizationAction>;
 
 export type SupportedSignalType = 'PAUSE' | 'RESUME' | 'CANCEL';
 
@@ -166,18 +163,11 @@ export interface ICancelRunUseCase {
   ): Promise<SignalRunResult>;
 }
 
-export const SUPPORTED_RECOVER_RUN_TARGET_ADAPTERS = [
-  'temporal',
-  'conductor',
-  'mock',
-] as const;
+export const SUPPORTED_RECOVER_RUN_TARGET_ADAPTERS = ['temporal', 'conductor', 'mock'] as const;
 
-export type RecoverRunTargetAdapter =
-  (typeof SUPPORTED_RECOVER_RUN_TARGET_ADAPTERS)[number];
+export type RecoverRunTargetAdapter = (typeof SUPPORTED_RECOVER_RUN_TARGET_ADAPTERS)[number];
 
-export function isRecoverRunTargetAdapter(
-  value: string
-): value is RecoverRunTargetAdapter {
+export function isRecoverRunTargetAdapter(value: string): value is RecoverRunTargetAdapter {
   return (SUPPORTED_RECOVER_RUN_TARGET_ADAPTERS as readonly string[]).includes(value);
 }
 

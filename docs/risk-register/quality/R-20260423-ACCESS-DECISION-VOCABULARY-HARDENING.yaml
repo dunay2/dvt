@@ -1,0 +1,43 @@
+---
+id: R-20260423-ACCESS-DECISION-VOCABULARY-HARDENING
+title:
+  Access-decision vocabulary and capability-policy ownership can drift across API and contracts
+  surfaces
+status: Open
+date: 2026-04-23
+owners:
+  - apps/api
+  - packages/@dvt/contracts
+severity: Medium
+probability: Medium
+context: >
+  The 2026-04-23 branch consolidates the protected API access-decision language, extracts
+  workspace-graph-draft capability policy shaping into its own module, adds semantic component
+  documentation and architecture tests, and touches the `@dvt/contracts` validation suite for
+  workspace graph draft outcomes.
+risk: >
+  If future slices reintroduce raw action literals, let workspace-graph-draft capability shaping
+  drift back into orchestration services, or duplicate contracts validation fixtures without a
+  single semantic owner, the protected boundary can fragment again. That would make docs stale,
+  weaken component fitness coverage, and raise the cost of a later PDP backend swap.
+mitigations:
+  - >
+    Keep `apps/api/src/application/ports/accessDecision.ts` as the only published language owner for
+    protected actions, resources, scopes, and denial reasons.
+  - >
+    Keep `apps/api/src/application/services/workspaceGraphDraftCapabilityPolicy.ts` as the
+    policy-materialization module and prevent `AuthorizeWorkspaceGraphDraftCapabilityService` from
+    re-owning capability policy data or open-ended denial translation.
+  - >
+    Keep `apps/api/docs/protected-security-access-decision-component.md` and
+    `apps/api/test/application/services/protectedSecurityAccessDecision.architecture.test.ts`
+    aligned so semantic ownership remains mechanically checked.
+  - >
+    Keep `packages/@dvt/contracts/test/validation/workspace-graph-draft.ts` readable through shared
+    fixture builders rather than repeated near-identical contract outcome constructors.
+  - >
+    Run the API build/typecheck/test baseline, contracts build/typecheck/test, `docs:sync`,
+    `docs:status:generate`, ARC inspection, and `pnpm verify:prepush` on future changes touching
+    this seam.
+review_after: 2026-06-30
+---

@@ -15,6 +15,7 @@ Use the narrower local guides when you need subcomponent-level API,
 invariants, transitions, and consumers:
 
 - [Protected runtime dependency builders component](../../../../apps/api/docs/protected-runtime-dependency-builders-component.md)
+- [Protected security access decision component](../../../../apps/api/docs/protected-security-access-decision-component.md)
 - [Start-run runtime composition component](../../../../apps/api/docs/start-run-runtime-composition-component.md)
 - [Executable-subgraph resolution component](../../../../apps/api/docs/executable-subgraph-resolution-component.md)
 - [Workspace graph draft application component](../../../../apps/api/docs/workspace-graph-draft-application-component.md)
@@ -43,8 +44,8 @@ acts as a fake namespace.
   Start-run admission runtime assembly. Binds duplicate probe,
   cached/fallback backpressure chain, and admission guard.
 - [buildProtectedSecurityRuntime.ts](../../../../apps/api/src/modules/protectedRuntime/buildProtectedSecurityRuntime.ts)
-  Protected auth/authz runtime assembly. Binds principal access repo, audit
-  logger, authorizer, and authenticator.
+  Protected auth/authz runtime assembly. Binds embedded access decision,
+  audit logger, authorizer, and authenticator.
 - [buildProtectedExecutionRuntime.ts](../../../../apps/api/src/modules/protectedRuntime/buildProtectedExecutionRuntime.ts)
   Protected execution runtime assembly. Binds provider adapters, workflow
   engine, enrichment, health, and adapter registry.
@@ -86,7 +87,8 @@ acts as a fake namespace.
   admission chain.
 - `buildProtectedSecurityRuntime(deps)`
   Factory. Assembles authenticator and command authorizer from protected
-  runtime dependencies.
+  runtime dependencies and returns the embedded access-decision backend
+  lifecycle hook.
 - `buildProtectedExecutionRuntime(deps)`
   Async factory. Assembles provider adapters, workflow engine, runtime
   services, and canonical adapter registry.
