@@ -53,6 +53,15 @@ Warm-build note:
 - The shared GitHub Actions setup now restores `.turbo` in addition to the
   pnpm store and `node_modules`, so the existing root Turbo `build` path can
   reuse prior task outputs across CI runs.
+- Turbo task contracts explicitly declare `DVT_CI` for `build`, `typecheck`,
+  and `test`, so CI-only guard behavior is visible to Turborepo hashing and
+  task environment handling.
+- `turbo.json` is listed in Turborepo `globalDependencies` as well as the
+  shared CI `.turbo` cache key. Changes to the task graph therefore invalidate
+  both restore-level and task-hash-level cache state.
+- `test` and `typecheck` use `outputs: []` because they do not publish governed
+  filesystem artifacts. This does not disable Turborepo task caching; it only
+  declares that no output files need to be restored.
 - The package-level `typecheck` contract is now explicit for every current
   workspace that exposes `build`, so the Turbo-backed
   `pnpm ci:affected:typecheck` path no longer depends on silent `--if-present`
@@ -212,6 +221,15 @@ Planning-generated pages that are intentionally untracked:
 - `PR Quality Gate`: docs sync/workboard drift, docs gates, type-check
   fast-fail, PR metadata checks, Temporal integration.
   Source: [`.github/workflows/pr-quality-gate.yml`](../../.github/workflows/pr-quality-gate.yml)
+- `Dependency Review`: pull-request dependency review with pinned action usage
+  and high-severity failure policy.
+  Source: [`.github/workflows/dependency-review.yml`](../../.github/workflows/dependency-review.yml)
+- `CodeQL`: JavaScript/TypeScript SAST on PRs, pushes to `main`, weekly
+  schedule, and manual dispatch.
+  Source: [`.github/workflows/codeql.yml`](../../.github/workflows/codeql.yml)
+- `Adapter Postgres Integration Nightly`: scheduled adapter-postgres smoke
+  coverage with GitHub issue notification on failure.
+  Source: [`.github/workflows/adapter-postgres-integration-nightly.yml`](../../.github/workflows/adapter-postgres-integration-nightly.yml)
 
 ## Shared CI Scope Logic
 
@@ -240,10 +258,13 @@ Current workflow consumers:
   for PR test routing across the web app, workers, and library workspaces. Its
   push/manual full-suite lane and PR `root_config` fast-path both run
   `pnpm build`, so the merge gate exercises the same Turbo-backed root build
-  path that local root builds now use. The shared `root_config` scope now also
-  includes `turbo.json` and `scripts/skip-prebuild-if-orchestrated.cjs`, so PRs
-  that change the Turbo graph or its orchestration helper cannot skip `Test Suite`,
-  while `@dvt/adapter-postgres` remains on its dedicated PostgreSQL-backed lane.
+  path that local root builds now use. Non-root PR affected dependency builds
+  use `node scripts/run-turbo-workspace-task.cjs build` with the PR base filter,
+  avoiding a manually maintained package-to-build map. The shared `root_config`
+  scope now also includes `turbo.json` and
+  `scripts/skip-prebuild-if-orchestrated.cjs`, so PRs that change the Turbo
+  graph or its orchestration helper cannot skip `Test Suite`, while
+  `@dvt/adapter-postgres` remains on its dedicated PostgreSQL-backed lane.
 - [`.github/workflows/pr-quality-gate.yml`](../../.github/workflows/pr-quality-gate.yml) uses the
   same shared scope surfaces for workflow/global change routing and Temporal capability lanes.
 
@@ -309,6 +330,16 @@ Current workflow consumers:
 - `CI - Code Quality` now uses the same Turbo workspace wrapper for its
   affected build/typecheck matrix, keeping the local command and the lightweight
   CI lane on one orchestration path.
+- `Test Suite` now uses the same Turbo workspace wrapper for non-root PR
+  affected dependency builds. Root-config PRs still use `pnpm build` to exercise
+  the full root graph.
+- Dependency review and CodeQL workflows provide the current dependency/SAST
+  baseline. Remote Turbo cache is still not configured because it requires
+  repository secret ownership for `TURBO_TOKEN` and `TURBO_TEAM`.
+- Current branch-protection status checks are repository settings, not tracked
+  YAML. Verify in GitHub settings that `CI - Code Quality`, `Test Suite`,
+  `PR Quality Gate`, `Contracts & Determinism`, `Dependency Review`, and
+  `CodeQL` are required before treating these workflows as a merge guarantee.
 - For slices that change code, config, tests, CI, or docs, include
   `pnpm verify:prepush` in the end-of-task validation baseline before claiming
   the work is ready.

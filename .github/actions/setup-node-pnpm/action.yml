@@ -45,6 +45,7 @@ runs:
           apps/*/node_modules
           packages/*/node_modules
           packages/@dvt/*/node_modules
+          tools/*/node_modules
         key: nm-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
 
     - name: Cache Turbo
