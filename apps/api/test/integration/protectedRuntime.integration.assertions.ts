@@ -17,6 +17,7 @@ type JsonResponse = { statusCode: number; json(): unknown };
 
 export type CommandQueryFlowResult = {
   readonly startResponse: JsonResponse;
+  readonly actualRunId: string;
   readonly listResponse: JsonResponse;
   readonly getRunResponse: JsonResponse;
   readonly signalResponse: JsonResponse;
@@ -25,6 +26,7 @@ export type CommandQueryFlowResult = {
 
 export type PlannerBackedRunFlowResult = {
   readonly startResponse: JsonResponse;
+  readonly actualRunId: string;
   readonly storedPlan:
     | {
         plan_id: string;
@@ -44,11 +46,11 @@ export type WorkspaceGraphDraftFlowResult = {
 };
 
 export function expectCommandQueryFlowSucceeded(
-  flow: CommandQueryFlowResult,
-  runId: string
+  flow: CommandQueryFlowResult
 ): void {
+  expect(flow.actualRunId).toEqual(expect.any(String));
   expect(flow.startResponse.statusCode).toBe(202);
-  expect(flow.startResponse.json()).toEqual({ runId, accepted: true });
+  expect(flow.startResponse.json()).toEqual({ runId: flow.actualRunId, accepted: true });
 
   expect(flow.listResponse.statusCode).toBe(200);
   expect(flow.listResponse.json()).toMatchObject({
@@ -57,7 +59,7 @@ export function expectCommandQueryFlowSucceeded(
         tenantId: TENANT_ID,
         projectId: PROJECT_ID,
         environmentId: ENVIRONMENT_ID,
-        runId,
+        runId: flow.actualRunId,
         planId: expect.any(String),
         planVersion: expect.any(String),
         provider: 'mock',
@@ -69,7 +71,7 @@ export function expectCommandQueryFlowSucceeded(
 
   expect(flow.getRunResponse.statusCode).toBe(200);
   expect(flow.getRunResponse.json()).toMatchObject({
-    runId,
+    runId: flow.actualRunId,
     tenantId: TENANT_ID,
     status: 'PENDING',
     enriched: false,
@@ -77,7 +79,7 @@ export function expectCommandQueryFlowSucceeded(
 
   expect(flow.signalResponse.statusCode).toBe(202);
   expect(flow.signalResponse.json()).toEqual({
-    runId,
+    runId: flow.actualRunId,
     signalType: 'CANCEL',
     accepted: true,
   });
@@ -90,12 +92,10 @@ export function expectCommandQueryFlowSucceeded(
   ]);
 }
 
-export function expectPlannerBackedRunFlowSucceeded(
-  flow: PlannerBackedRunFlowResult,
-  runId: string
-): void {
+export function expectPlannerBackedRunFlowSucceeded(flow: PlannerBackedRunFlowResult): void {
+  expect(flow.actualRunId).toEqual(expect.any(String));
   expect(flow.startResponse.statusCode).toBe(202);
-  expect(flow.startResponse.json()).toEqual({ runId, accepted: true });
+  expect(flow.startResponse.json()).toEqual({ runId: flow.actualRunId, accepted: true });
 
   expect(flow.storedPlan).toMatchObject({
     validation_state: 'VALID',
@@ -106,7 +106,7 @@ export function expectPlannerBackedRunFlowSucceeded(
   expect(flow.listResponse.json()).toMatchObject({
     items: expect.arrayContaining([
       expect.objectContaining({
-        runId,
+        runId: flow.actualRunId,
         planId: flow.storedPlan?.plan_id,
         provider: 'mock',
         status: 'PENDING',

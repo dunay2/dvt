@@ -12,6 +12,7 @@
  * DATABASE_URL is absent.
  */
 import { expect, it } from 'vitest';
+import { parsePlanPreviewPersistResponse } from '@dvt/contracts';
 
 import {
   buildWorkspaceGraphDraft,
@@ -25,6 +26,12 @@ import {
 } from './protectedRuntime.integration.assertions.js';
 import { createProtectedRuntimeHarness } from './protectedRuntime.integration.harness.js';
 import { httpError } from './protectedRuntime.integration.http.js';
+import {
+  exerciseSelectedClosurePlannerBackedRunFlow,
+  exerciseSelectedClosurePreviewFlow,
+  expectSelectedClosureDependencyGapRejected,
+  expectSelectedClosureGraphSourceMismatchRejected,
+} from './protectedRuntime.integration.selectedClosure.scenarios.js';
 import {
   exerciseCommandQueryFlow,
   exerciseEmptyCancelReasonFlow,
@@ -105,14 +112,12 @@ describeIfPg('protected runtime integration', () => {
   ] as const;
 
   it('boots the protected routes and executes command plus query flow against real auth and PostgreSQL', async () => {
-    const runId = 'api-integration-run-1';
     const flow = await exerciseCommandQueryFlow(runtime, {
-      runId,
       selection: ['model.orders.persisted'],
       graphNodeId: 'model.orders.persisted',
     });
 
-    expectCommandQueryFlowSucceeded(flow, runId);
+    expectCommandQueryFlowSucceeded(flow);
   });
 
   it('persists workspace graph drafts with read-your-writes, idempotent retry, and CAS conflict behavior', async () => {
@@ -145,13 +150,82 @@ describeIfPg('protected runtime integration', () => {
   });
 
   it('persists and validates a planner-backed run before execution starts', async () => {
-    const runId = 'api-integration-run-graph-1';
     const flow = await exercisePlannerBackedRunFlow(runtime, {
-      runId,
       graphNodeId: 'model.orders',
     });
 
-    expectPlannerBackedRunFlowSucceeded(flow, runId);
+    expectPlannerBackedRunFlowSucceeded(flow);
+  });
+
+  it('previews only the selected closure from a protected draft and excludes unrelated loose nodes', async () => {
+    const flow = await exerciseSelectedClosurePreviewFlow(runtime);
+
+    expect(flow.saveResponse.statusCode).toBe(200);
+    expect(flow.previewResponse.statusCode).toBe(200);
+
+    const preview = parsePlanPreviewPersistResponse(flow.previewResponse.json());
+    expect(preview.plan.steps.map((step) => step.stepId)).toEqual([
+      'source_1',
+      'transform_1',
+      'sink_1',
+    ]);
+    expect(preview.plan.steps.map((step) => step.stepId)).not.toContain('loose_1');
+    expect(preview.planSummary).toEqual({
+      executor: 'postgres',
+      nodeCount: 3,
+      stepCount: 3,
+      sourceTables: ['raw.orders'],
+      sinkTables: ['analytics.orders_final'],
+    });
+  });
+
+  it('rejects preview when the selected closure has a dependency gap even if the draft contains a larger valid graph', async () => {
+    const flow = await expectSelectedClosureDependencyGapRejected(runtime);
+
+    expect(flow.saveResponse.statusCode).toBe(200);
+    expect(flow.previewResponse.statusCode).toBe(422);
+    expect(flow.previewResponse.json()).toEqual(
+      httpError('unprocessable', 'plan_rejected', {
+        details: {
+          code: 'REJECTED',
+          adapterId: 'mock',
+          cause: 'dependency_gap',
+          rejectionReason: 'Selected closure is missing required upstream dependencies.',
+        },
+      })
+    );
+  });
+
+  it('rejects preview when graphSource does not match the planner-derived selected closure exactly', async () => {
+    const flow = await expectSelectedClosureGraphSourceMismatchRejected(runtime);
+
+    expect(flow.saveResponse.statusCode).toBe(200);
+    expect(flow.previewResponse.statusCode).toBe(422);
+    expect(flow.previewResponse.json()).toEqual(
+      httpError('unprocessable', 'plan_rejected', {
+        details: {
+          code: 'REJECTED',
+          adapterId: 'mock',
+          cause: 'graph_source_selection_mismatch',
+          rejectionReason:
+            'graphSource nodes must match the planner-derived executable subgraph for the selection.',
+        },
+      })
+    );
+  });
+
+  it('accepts planner-backed start-run for the same selected closure used by preview', async () => {
+    const flow = await exerciseSelectedClosurePlannerBackedRunFlow(runtime);
+
+    expect(flow.saveResponse.statusCode).toBe(200);
+    expect(flow.startResponse.statusCode).toBe(202);
+    expect(flow.startResponse.json()).toEqual({
+      runId: flow.actualRunId,
+      accepted: true,
+    });
+    expect(flow.storedPlan).toMatchObject({
+      validation_state: 'VALID',
+    });
   });
 
   it('returns 400 invalid_plan_source when manifestRef is sent to the hard-cut runtime', async () => {
@@ -184,32 +258,28 @@ describeIfPg('protected runtime integration', () => {
   });
 
   it('ignores empty /runs/:runId/cancel reason noise on the native cancel path', async () => {
-    const runId = 'api-integration-native-cancel-empty-reason';
     const flow = await exerciseEmptyCancelReasonFlow(runtime, {
-      runId,
       graphNodeId: 'model.orders.cancel.empty_reason',
     });
 
     expect(flow.startResponse.statusCode).toBe(202);
     expect(flow.cancelResponse.statusCode).toBe(202);
     expect(flow.cancelResponse.json()).toEqual({
-      runId,
+      runId: flow.actualRunId,
       signalType: 'CANCEL',
       accepted: true,
     });
   });
 
   it('rebuilds snapshot through admin route with valid token and explicit admin action grant', async () => {
-    const runId = 'api-integration-admin-rebuild-success-1';
     const flow = await expectAdminRebuildSuccess(runtime, {
-      runId,
       graphNodeId: 'model.orders.admin',
     });
 
     expect(flow.startResponse.statusCode).toBe(202);
     expect(flow.rebuildResponse.statusCode).toBe(200);
     expect(flow.rebuildResponse.json()).toMatchObject({
-      runId,
+      runId: flow.actualRunId,
       status: 'PENDING',
     });
   });

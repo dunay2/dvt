@@ -548,8 +548,11 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   [resolveAuthorizedExecutableSubgraph.test.ts](../../../apps/api/test/application/services/resolveAuthorizedExecutableSubgraph.test.ts),
   [executableSubgraphResolutionComponent.architecture.test.ts](../../../apps/api/test/application/services/executableSubgraphResolutionComponent.architecture.test.ts),
   [workspaceGraphDraftRoutes.test.ts](../../../apps/api/test/entrypoints/http/workspaceGraphDraftRoutes.test.ts),
+  [protectedRuntime.integration.test.ts](../../../apps/api/test/integration/protectedRuntime.integration.test.ts),
   [canvasExecutionSelection.architecture.test.ts](../../../apps/web/src/app/views/canvas/canvasExecutionSelection.architecture.test.ts),
   [canvasRunStartIdentity.architecture.test.ts](../../../apps/web/src/app/views/canvas/canvasRunStartIdentity.architecture.test.ts),
+  [useCanvasExecutionActions.planPreview.core.test.tsx](../../../apps/web/src/app/views/canvas/useCanvasExecutionActions.planPreview.core.test.tsx),
+  [useCanvasExecutionActions.runStart.test.tsx](../../../apps/web/src/app/views/canvas/useCanvasExecutionActions.runStart.test.tsx),
   and
   [workspaceGraphDraftProjection.test.ts](../../../apps/web/src/app/services/workspace/workspaceGraphDraftProjection.test.ts)
 - Evidence:
@@ -558,6 +561,8 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   [ed-20260423-tf-a2-c2-executable-subgraph-derivation.md](../../evidence/ed-20260423-tf-a2-c2-executable-subgraph-derivation.md)
   and
   [ed-20260423-tf-a2-c3-c4-api-web-adoption.md](../../evidence/ed-20260423-tf-a2-c3-c4-api-web-adoption.md)
+  and
+  [20260423 TF-A2-C5 selected-closure end-to-end proof closeout](../closeouts/20260423-tf-a2-c5-selected-closure-end-to-end-proof-closeout.md)
   and
   [R-20260423-WORKSPACE-AUTHORING-DRAFT-AGGREGATE](../../risk-register/quality/R-20260423-WORKSPACE-AUTHORING-DRAFT-AGGREGATE.yaml)
 - Verification:
@@ -574,6 +579,8 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   `pnpm --filter @dvt/web test -- src/app/views/canvas/canvasExecutionSelection.architecture.test.ts src/app/views/canvas/canvasRunStartIdentity.architecture.test.ts src/app/views/canvas/useCanvasExecutionActions.planPreview.core.test.tsx src/app/views/canvas/useCanvasExecutionActions.runStart.test.tsx`
   and
   `pnpm --filter @dvt/web test -- src/app/services/workspace/workspaceGraphDraftProjection.test.ts`
+  and
+  `pnpm --filter dvt-api test:integration -- protectedRuntime.integration.test.ts`
 
 ### Web frontend shell and client routing
 

@@ -2747,6 +2747,7 @@ tasks:
       - docs/planning/proposals/mandatory/runtime-and-contracts/tf-a2-workspace-graph-draft-persistence-boundary-plan-20260416.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/tf-a2-workspace-authoring-draft-aggregate-roots-plan-20260423.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/tf-a2-c-execution-selection-and-executable-subgraph-plan-20260423.md
+      - docs/planning/closeouts/20260423-tf-a2-c5-selected-closure-end-to-end-proof-closeout.md
       - packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphDraft.v1.ts
       - docs/contracts/planner/workspace-graph-draft-persistence-v1.md
       - docs/evidence/ed-20260416-tf-a2-workspace-graph-draft-boundary.md
@@ -2763,11 +2764,12 @@ tasks:
       `WorkspaceGraphDraft.v1` now persists `WorkspaceGraphAuthoringDraft` instead of embedding
       `DesignGraphDraft`, and the active contract line already defines typed scope, capability,
       audit, compare-and-swap, idempotency, and format-evolution envelopes for protected draft reads
-      and writes. `TF-A2-C1` through `TF-A2-C4` are now closed with canonical `ExecutionSelection`
+      and writes. `TF-A2-C1` through `TF-A2-C5` are now closed with canonical `ExecutionSelection`
       and `ExecutableSubgraph` contract artifacts, a planner-local component guide, planner-owned
       selected-closure derivation, API preview/start-run adoption, Canvas preview/run adoption,
-      semantic architecture coverage, and ARC-2 evidence. The route no longer depends on whole-draft
-      compile assumptions.
+      semantic architecture coverage, explicit selected-closure proof across docs plus web/API
+      integration seams, and ARC-2 evidence. The route no longer depends on whole-draft compile
+      assumptions.
     last_verified: '2026-04-23'
   - task_id: TF-A2-C
     parent_task: TF-A2
@@ -2790,6 +2792,7 @@ tasks:
       - docs/planning/closeouts/20260423-tf-a2-c1-execution-selection-contract-pack-closeout.md
       - docs/planning/closeouts/20260423-tf-a2-c2-executable-subgraph-derivation-closeout.md
       - docs/planning/closeouts/20260423-tf-a2-c3-c4-api-web-adoption-closeout.md
+      - docs/planning/closeouts/20260423-tf-a2-c5-selected-closure-end-to-end-proof-closeout.md
       - docs/evidence/ed-20260423-tf-a2-c1-execution-selection-contract-pack.md
       - docs/evidence/ed-20260423-tf-a2-c2-executable-subgraph-derivation.md
       - docs/evidence/ed-20260423-tf-a2-c3-c4-api-web-adoption.md
@@ -2799,10 +2802,11 @@ tasks:
       - docs/architecture/components/planner/executable-subgraph-derivation-component.md
       - docs/contracts/planner/execution-selection-and-executable-subgraph-v1.md
     status_reason: >-
-      `TF-A2-C1` through `TF-A2-C4` are closed. The canonical contract pack, local component guides,
+      `TF-A2-C1` through `TF-A2-C5` are closed. The canonical contract pack, local component guides,
       planner-owned derivation seam, API executable-subgraph resolver seam, Canvas
-      execution-selection seam, semantic architecture guards, and ARC evidence now freeze the
-      execution-selection boundary plus selected-closure adoption across planner, API, and web.
+      execution-selection seam, semantic architecture guards, explicit preview-persist-run proof,
+      and ARC evidence now freeze the execution-selection boundary plus selected-closure adoption
+      across planner, API, and web.
     last_verified: '2026-04-23'
   - task_id: TF-A2-C1
     parent_task: TF-A2-C
@@ -2914,6 +2918,36 @@ tasks:
       Completed. Canvas preview and run now emit canonical execution selection through one shared
       browser-local seam used by both actions, with local component docs and semantic architecture
       coverage preventing preview/run DTO drift.
+    last_verified: '2026-04-23'
+  - task_id: TF-A2-C5
+    parent_task: TF-A2-C
+    priority: P0
+    status: done
+    complexity: M
+    effort_points: 2
+    progress_pct: 100
+    objective: >-
+      prove selected-closure preview-persist-run behavior end to end before any further planner or
+      contracts refactor, using explicit current-state diagrams plus vertical web/api validation.
+    dependency: TF-A2-C4
+    target: >-
+      Local component docs show the intended selected-node sequence and involved components, Canvas
+      proves persisted preview-to-run reuse of canonical selection within a larger workspace, and
+      protected-runtime integration covers selected-closure success plus fail-closed rejection on
+      dependency gaps and graph-source mismatch.
+    evidence_refs:
+      - docs/planning/closeouts/20260423-tf-a2-c5-selected-closure-end-to-end-proof-closeout.md
+      - docs/architecture/components/planner/workspace-authoring-draft-aggregate.md
+      - apps/api/docs/executable-subgraph-resolution-component.md
+      - docs/architecture/components/web/graph/canvas-execution-selection-component.md
+      - apps/web/src/app/views/canvas/useCanvasExecutionActions.planPreview.core.test.tsx
+      - apps/api/test/integration/protectedRuntime.integration.selectedClosure.scenarios.ts
+      - apps/api/test/integration/protectedRuntime.integration.test.ts
+    status_reason: >-
+      Completed. The route is now documented as an explicit preview-persist-run sequence with
+      component diagrams, Canvas proves selected-subgraph preview proof reuse for start-run, and
+      protected-runtime integration covers selected-closure success plus fail-closed dependency-gap
+      and graph-source mismatch behavior.
     last_verified: '2026-04-23'
 dependency_notes:
   - >-
