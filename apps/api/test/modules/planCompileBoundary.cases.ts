@@ -1,6 +1,6 @@
+import { SUPPORTED_START_RUN_TARGET_ADAPTERS } from '@dvt/contracts';
 import { describe, expect, it } from 'vitest';
 
-import { SUPPORTED_START_RUN_TARGET_ADAPTERS } from '../../src/application/ports/startRunCommandContract.js';
 import {
   buildPlanCompilePlanner,
   PLAN_COMPILE_BOUNDARY,

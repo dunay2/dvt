@@ -41,6 +41,12 @@ flowchart LR
 - [app.ts](../../../../apps/api/src/app.ts)
 - [server.ts](../../../../apps/api/src/server.ts)
 - [buildProtectedRuntimeModule.ts](../../../../apps/api/src/modules/buildProtectedRuntimeModule.ts)
+- [buildProtectedRuntimeStorage.ts](../../../../apps/api/src/modules/protectedRuntime/buildProtectedRuntimeStorage.ts)
+- [buildProtectedAdmissionRuntime.ts](../../../../apps/api/src/modules/protectedRuntime/buildProtectedAdmissionRuntime.ts)
+- [buildProtectedSecurityRuntime.ts](../../../../apps/api/src/modules/protectedRuntime/buildProtectedSecurityRuntime.ts)
+- [buildProtectedExecutionRuntime.ts](../../../../apps/api/src/modules/protectedRuntime/buildProtectedExecutionRuntime.ts)
+- [buildProtectedStartRunRuntime.ts](../../../../apps/api/src/modules/startRun/buildProtectedStartRunRuntime.ts)
+- [buildWorkspaceGraphDraftRuntime.ts](../../../../apps/api/src/modules/workspaceGraphDraft/buildWorkspaceGraphDraftRuntime.ts)
 - [buildProviderAdapters.ts](../../../../apps/api/src/modules/buildProviderAdapters.ts)
 - [planCompileBoundary.ts](../../../../apps/api/src/modules/planCompileBoundary.ts)
 - [planRoutePolicyCatalog.ts](../../../../apps/api/src/application/services/planRoutePolicyCatalog.ts)
@@ -88,6 +94,22 @@ shape, and the governed transition route:
 - [Plan route response translation component](../../../../apps/api/docs/plan-route-response-translation-component.md):
   local guide for the preview/compile/import response-mapping boundary with
   public API, invariants, transitions, consumers, and focused diagrams.
+- [Start-run application component](../../../../apps/api/docs/start-run-application-component.md):
+  local guide for the authenticated start-run application component, its
+  facade/use-case boundaries, invariants, transitions, consumers, and
+  canonical shared-contract import rules.
+- [Start-run runtime composition component](../../../../apps/api/docs/start-run-runtime-composition-component.md):
+  local guide for the protected-runtime subcomponent that assembles the
+  authenticated start-run chain from abstract runtime dependencies.
+- [Protected runtime dependency builders component](../../../../apps/api/docs/protected-runtime-dependency-builders-component.md):
+  local guide for the protected-runtime builder cluster that assembles storage,
+  admission, security, and execution dependency slices for the outer root.
+- [Start-run execution capacity admission component](../../../../apps/api/docs/start-run-execution-capacity-admission-component.md):
+  local guide for the abstract start-run execution-capacity admission seam,
+  its fail-closed default binding, invariants, transitions, and consumers.
+- [Workspace graph draft runtime composition component](../../../../apps/api/docs/workspace-graph-draft-runtime-composition-component.md):
+  local guide for the protected-runtime subcomponent that assembles the
+  workspace-graph-draft store, capability service, and use-case chain.
 - [Temporal Fowler provider-truth follow-up review](../../../planning/reviews/architecture-and-governance/20260421-temporal-fowler-provider-truth-follow-up-review.md):
   Fowler-style architecture analysis for the Temporal branch work, residual
   drift map, mature-system comparison, and recommended next moves.

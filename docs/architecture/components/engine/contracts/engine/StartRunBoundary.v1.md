@@ -28,6 +28,11 @@ engine facade is called:
 - target-adapter selection
 - admission result vocabulary
 
+Use the local component guide for public API, invariants, transitions, and
+consumers:
+
+- [Start-run boundary component](./start-run-boundary-component.md)
+
 ## Boundary rules
 
 ### MUST
@@ -81,7 +86,12 @@ type StartRunResult =
   | {
       kind: 'system_backpressure';
       accepted: false;
-      code: 'SYSTEM_BACKPRESSURE' | 'BACKPRESSURE_SNAPSHOT_UNAVAILABLE';
+      code:
+        | 'SYSTEM_BACKPRESSURE'
+        | 'BACKPRESSURE_SNAPSHOT_UNAVAILABLE'
+        | 'EXECUTION_CAPACITY_EXHAUSTED'
+        | 'EXECUTOR_UNAVAILABLE'
+        | 'CAPACITY_SIGNAL_UNAVAILABLE';
       retryAfterSeconds: number;
     }
   | {
@@ -133,8 +143,23 @@ protection against API-local drift in the shape or result vocabulary.
 
 ## Current implementation note
 
-`apps/api` may keep thin local re-export files for import stability, but the
-source of truth for the start-run command/result contract is now the shared
-contract package, not the API app. The API runtime still performs route-local
-HTTP parsing, but the route policy now enforces the same plan-source branch
-rule before handing off the canonical `StartRunCommand` shape.
+`apps/api` now imports the start-run command/result boundary directly from
+`@dvt/contracts`. The API runtime still performs route-local HTTP parsing, but
+the route policy now enforces the same plan-source branch rule before handing
+off the canonical `StartRunCommand` shape. App-local command/result re-export
+shims are not part of the governed state for this boundary.
+
+## System backpressure codes
+
+The `system_backpressure` branch now covers two classes of system-owned denial:
+
+- delivery/backpressure infrastructure pressure:
+  `SYSTEM_BACKPRESSURE`, `BACKPRESSURE_SNAPSHOT_UNAVAILABLE`
+- execution-capacity admission pressure:
+  `EXECUTION_CAPACITY_EXHAUSTED`, `EXECUTOR_UNAVAILABLE`,
+  `CAPACITY_SIGNAL_UNAVAILABLE`
+
+The caller-visible kind remains `system_backpressure`. More specific denial
+reasons are encoded in `code` so the contract can distinguish infrastructure
+pressure from execution-capacity pressure without creating a second
+parallel top-level result kind.

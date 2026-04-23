@@ -10,6 +10,10 @@ const BUILD_PROTECTED_RUNTIME_MODULE_SOURCE = readFileSync(
   new URL('../../src/modules/buildProtectedRuntimeModule.ts', import.meta.url),
   'utf8'
 );
+const BUILD_PROTECTED_RUNTIME_STORAGE_SOURCE = readFileSync(
+  new URL('../../src/modules/protectedRuntime/buildProtectedRuntimeStorage.ts', import.meta.url),
+  'utf8'
+);
 
 /**
  * Focused cases for the protected runtime composition root.
@@ -28,14 +32,19 @@ export function describeBuildProtectedRuntimeModuleCases(): void {
 
     it('wires an artifact-backed runExecutionContext resolver', () => {
       expect(BUILD_PROTECTED_RUNTIME_MODULE_SOURCE).toContain(
+        'const storageRuntime = buildProtectedRuntimeStorage({'
+      );
+      expect(BUILD_PROTECTED_RUNTIME_STORAGE_SOURCE).toContain(
         'new ArtifactBackedRunExecutionContextResolver'
       );
-      expect(BUILD_PROTECTED_RUNTIME_MODULE_SOURCE).toContain(
+      expect(BUILD_PROTECTED_RUNTIME_STORAGE_SOURCE).toContain(
         'new ArtifactStoreDbtProjectBundleBindingPolicy'
       );
-      expect(BUILD_PROTECTED_RUNTIME_MODULE_SOURCE).toContain('runExecutionContextResolver,');
       expect(BUILD_PROTECTED_RUNTIME_MODULE_SOURCE).toContain(
-        'runExecutionContextBindingPolicy,'
+        'executablePlanResolver: storageRuntime.executablePlanResolver,'
+      );
+      expect(BUILD_PROTECTED_RUNTIME_MODULE_SOURCE).toContain(
+        'stepTypeRegistry: storageRuntime.stepTypeRegistry,'
       );
     });
   });

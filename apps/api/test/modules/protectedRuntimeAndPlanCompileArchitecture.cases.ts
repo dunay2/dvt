@@ -7,6 +7,14 @@ const BUILD_PROTECTED_RUNTIME_MODULE_SOURCE = readFileSync(
   new URL('../../src/modules/buildProtectedRuntimeModule.ts', import.meta.url),
   'utf8'
 );
+const BUILD_PROTECTED_START_RUN_RUNTIME_SOURCE = readFileSync(
+  new URL('../../src/modules/startRun/buildProtectedStartRunRuntime.ts', import.meta.url),
+  'utf8'
+);
+const BUILD_PROTECTED_RUNTIME_STORAGE_SOURCE = readFileSync(
+  new URL('../../src/modules/protectedRuntime/buildProtectedRuntimeStorage.ts', import.meta.url),
+  'utf8'
+);
 const PLAN_COMPILE_BOUNDARY_SOURCE = readFileSync(
   new URL('../../src/modules/planCompileBoundary.ts', import.meta.url),
   'utf8'
@@ -23,18 +31,33 @@ const START_RUN_TARGET_ADAPTER_REGISTRY_SOURCE = readFileSync(
  */
 export function describeProtectedRuntimeAndPlanCompileArchitectureCases(): void {
   describe('protected runtime and plan compile architecture', () => {
-    it('keeps protected runtime assembly inside buildProtectedRuntimeModule', () => {
+    it('keeps the protected runtime root explicit while delegating start-run assembly to its subcomponent', () => {
       expect(BUILD_PROTECTED_RUNTIME_MODULE_SOURCE).toContain(
+        'const storageRuntime = buildProtectedRuntimeStorage({'
+      );
+      expect(BUILD_PROTECTED_RUNTIME_MODULE_SOURCE).toContain(
+        'const executionRuntime = await buildProtectedExecutionRuntime({'
+      );
+      expect(BUILD_PROTECTED_RUNTIME_MODULE_SOURCE).toContain(
+        'const startRunRuntime = buildProtectedStartRunRuntime({'
+      );
+      expect(BUILD_PROTECTED_RUNTIME_MODULE_SOURCE).not.toContain(
         'const executablePlanResolver = new StoredExecutablePlanResolver({'
       );
-      expect(BUILD_PROTECTED_RUNTIME_MODULE_SOURCE).toContain(
+      expect(BUILD_PROTECTED_RUNTIME_MODULE_SOURCE).not.toContain(
         'const planValidator = new StoredPlanExecutabilityValidator({'
       );
-      expect(BUILD_PROTECTED_RUNTIME_MODULE_SOURCE).toContain(
+      expect(BUILD_PROTECTED_RUNTIME_MODULE_SOURCE).not.toContain(
         'const planCompilePlanner = buildPlanCompilePlanner();'
       );
-      expect(BUILD_PROTECTED_RUNTIME_MODULE_SOURCE).toContain(
-        'const startRunTargetAdapterRegistry = createStartRunTargetAdapterRegistryFromValues('
+      expect(BUILD_PROTECTED_RUNTIME_STORAGE_SOURCE).toContain(
+        'const executablePlanResolver = new StoredExecutablePlanResolver({'
+      );
+      expect(BUILD_PROTECTED_START_RUN_RUNTIME_SOURCE).toContain(
+        'const planValidator = new StoredPlanExecutabilityValidator({'
+      );
+      expect(BUILD_PROTECTED_START_RUN_RUNTIME_SOURCE).toContain(
+        'const planCompilePlanner = buildPlanCompilePlanner();'
       );
     });
 

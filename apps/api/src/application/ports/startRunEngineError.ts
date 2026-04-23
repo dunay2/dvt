@@ -1,3 +1,7 @@
+/**
+ * Owned concern: define the local engine-error taxonomy returned by the
+ * start-run application port before HTTP translation.
+ */
 export const START_RUN_ENGINE_ERROR_KIND = {
   adapterNotRegistered: 'adapter_not_registered',
   unsupportedPlanVersion: 'unsupported_plan_version',

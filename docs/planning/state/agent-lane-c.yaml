@@ -98,7 +98,7 @@ tasks:
     evidence_refs:
       - packages/@dvt/engine/src/contracts/PlanVersionPolicy.ts
       - packages/@dvt/engine/test/gaps/PlanVersionPolicy.test.ts
-      - apps/api/test/application/services/engineStartRunUseCase.test.ts
+      - apps/api/test/application/services/engineStartRunUseCase.errorMapping.test.ts
     status_reason: >-
       The planVersion guard is present in runtime code with typed errors and tests, which provides
       equivalent verified closure for this pass.
@@ -550,24 +550,89 @@ tasks:
     last_verified: '2026-04-04'
   - task_id: AR-C3
     priority: P1
-    status: queued
+    status: in_progress
     objective: >-
-      add end-to-end backpressure from Temporal task queue saturation back to StartRunAdmissionGuard
-      so the system stops accepting runs it cannot execute when Temporal workers are saturated.
-    dependency: Temporal -> API backpressure
+      introduce an abstract start-run execution-capacity admission seam in the API boundary so the
+      system can stop accepting runs it cannot execute without coupling admission semantics to a
+      concrete adapter implementation.
+    dependency: none
     target: >-
-      Adapter exposes a capacity signal (queue depth or worker utilization); admission guard
-      incorporates adapter capacity into acceptance decision; runs are rejected with explicit
-      backpressure error when adapter is saturated.
+      API owns an abstract execution-capacity seam for start-run admission; the application use case
+      evaluates that seam after duplicate and current backpressure checks; concrete adapter bindings
+      remain composition-owned; caller-visible rejection posture is explicit and observable.
     complexity: M
     effort_points: 5
-    progress_pct: 0
+    progress_pct: 15
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/ar-c3-start-run-execution-capacity-admission-plan-20260422.md
     status_reason: >-
-      Current backpressure only covers outbox lag and tenant pending events — adapter saturation is
-      invisible to admission control.
-    last_verified: '2026-04-02'
+      Current backpressure only covers outbox lag and tenant pending events; execution-capacity
+      admission is now decomposed into an abstract API boundary first, then concrete adapter binding
+      and operational closure.
+    last_verified: '2026-04-22'
+  - task_id: AR-C3-A
+    parent_task: AR-C3
+    priority: P1
+    status: queued
+    objective: >-
+      hard-cut the abstract start-run execution-capacity admission boundary in apps/api without
+      leaking provider vocabulary or adapter-specific metrics into the application contract.
+    dependency: none
+    target: >-
+      Define the port and admission vocabulary, integrate it into the start-run use case, provide a
+      fail-closed default composition binding, and add local docs plus architecture tests for the
+      seam.
+    complexity: S
+    effort_points: 2
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/ar-c3-start-run-execution-capacity-admission-plan-20260422.md
+      - apps/api/src/application/services/BackpressureAwareStartRunUseCase.ts
+    status_reason: >-
+      Planned docs-first hard cut for the abstract seam only; concrete adapter binding remains out
+      of scope for this first subtask.
+    last_verified: '2026-04-22'
+  - task_id: AR-C3-B
+    parent_task: AR-C3
+    priority: P1
+    status: queued
+    objective: >-
+      bind the abstract execution-capacity admission seam to a real adapter-backed signal without
+      leaking provider detail into the API application contract.
+    dependency: AR-C3-A
+    target: >-
+      Protected runtime composition wires a concrete implementation behind the abstract port and
+      integration coverage proves caller-visible admission behavior under saturation and
+      signal-unavailable conditions.
+    complexity: M
+    effort_points: 2
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/ar-c3-start-run-execution-capacity-admission-plan-20260422.md
+    status_reason: >-
+      Planned binding slice; the concrete adapter choice is intentionally deferred until the API
+      seam is locked.
+    last_verified: '2026-04-22'
+  - task_id: AR-C3-C
+    parent_task: AR-C3
+    priority: P1
+    status: queued
+    objective: >-
+      close telemetry, runbook, and evidence posture for execution-capacity-based admission
+      rejections.
+    dependency: AR-C3-B
+    target: >-
+      Operators can distinguish execution-capacity rejection from existing outbox or pending-event
+      pressure through telemetry, documentation, and evidence-backed closure material.
+    complexity: S
+    effort_points: 1
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/ar-c3-start-run-execution-capacity-admission-plan-20260422.md
+    status_reason: >-
+      Planned operational-closure slice following the abstract seam and concrete binding work.
+    last_verified: '2026-04-22'
   - task_id: AR-C4
     priority: P1
     status: review
@@ -1202,8 +1267,10 @@ dependency_notes:
     `AR-C1` moved to review with explicit admin-scope RBAC wired in code and negative-path
     route/contract coverage; remaining subtasks track post-hardening cleanup and composition tests.
   - >-
-    `AR-C3` and `AR-C4` are P1 tasks: end-to-end adapter backpressure and activity-to-state-store
-    circuit breaker.
+    `AR-C3` and `AR-C4` are P1 tasks: execution-capacity admission hardening and
+    activity-to-state-store circuit breaker. `AR-C3` is decomposed into `AR-C3-A/B/C` so the API
+    boundary can be abstract first and adapter binding can land later without leaking provider
+    detail into the parent task.
   - >-
     The 2026-04-02 principal deep architectural review adds `AR-C5` for adapter-call circuit
     breaking and health surfacing at the engine-adapter boundary.

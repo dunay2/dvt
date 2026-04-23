@@ -15,6 +15,15 @@ const VALID_PLAN_REF = {
   planVersion: '1.0',
 };
 
+const START_RUN_ADAPTER_REGISTRY = {
+  isSupported(value: string): value is 'mock' | 'temporal' {
+    return value === 'mock' || value === 'temporal';
+  },
+  listSupported(): ReadonlyArray<'mock' | 'temporal'> {
+    return ['mock', 'temporal'];
+  },
+};
+
 describe('plan-route helper parsers', () => {
   it('validates body object shape', () => {
     expect(parsePlanRouteBodyRecord(undefined)).toEqual({
@@ -292,7 +301,8 @@ describe('plan-route helper parsers', () => {
 
   it('rejects conflicting plan inputs before planner parsing', () => {
     expect(
-      parseStartRunBody({
+      parseStartRunBody(
+        {
         tenantId: 't1',
         projectId: 'p1',
         environmentId: 'e1',
@@ -306,7 +316,9 @@ describe('plan-route helper parsers', () => {
           sourceVersion: 'manifest-v10',
           nodes: [{ nodeId: 'model_a', stepKind: 'DBT_MODEL', dependsOn: [] }],
         },
-      })
+        },
+        START_RUN_ADAPTER_REGISTRY
+      )
     ).toEqual({
       ok: false,
       issue: { type: 'bad_request', reason: 'conflicting_plan_inputs' },
@@ -315,7 +327,8 @@ describe('plan-route helper parsers', () => {
 
   it('preserves target metadata for invalid plan ref at parser boundary', () => {
     expect(
-      parseStartRunBody({
+      parseStartRunBody(
+        {
         tenantId: 't1',
         projectId: 'p1',
         environmentId: 'e1',
@@ -323,7 +336,9 @@ describe('plan-route helper parsers', () => {
         runId: 'run-1',
         targetAdapter: 'mock',
         planRef: { uri: 'https://plans.example.com/p.json' },
-      })
+        },
+        START_RUN_ADAPTER_REGISTRY
+      )
     ).toEqual({
       ok: false,
       issue: { type: 'bad_request', reason: 'invalid_plan_ref', target: 'planRef' },
@@ -332,7 +347,8 @@ describe('plan-route helper parsers', () => {
 
   it('rejects non-canonical surrounding whitespace in runId, targetAdapter, and selection', () => {
     expect(
-      parseStartRunBody({
+      parseStartRunBody(
+        {
         tenantId: 't1',
         projectId: 'p1',
         environmentId: 'e1',
@@ -340,14 +356,17 @@ describe('plan-route helper parsers', () => {
         runId: 'run-1',
         targetAdapter: 'mock',
         planRef: VALID_PLAN_REF,
-      })
+        },
+        START_RUN_ADAPTER_REGISTRY
+      )
     ).toEqual({
       ok: false,
       issue: { type: 'bad_request', reason: 'invalid_selection', target: 'selection' },
     });
 
     expect(
-      parseStartRunBody({
+      parseStartRunBody(
+        {
         tenantId: 't1',
         projectId: 'p1',
         environmentId: 'e1',
@@ -355,14 +374,17 @@ describe('plan-route helper parsers', () => {
         runId: ' run-1 ',
         targetAdapter: 'mock',
         planRef: VALID_PLAN_REF,
-      })
+        },
+        START_RUN_ADAPTER_REGISTRY
+      )
     ).toEqual({
       ok: false,
       issue: { type: 'bad_request', reason: 'invalid_run_id', target: 'runId' },
     });
 
     expect(
-      parseStartRunBody({
+      parseStartRunBody(
+        {
         tenantId: 't1',
         projectId: 'p1',
         environmentId: 'e1',
@@ -370,7 +392,9 @@ describe('plan-route helper parsers', () => {
         runId: 'run-1',
         targetAdapter: ' mock ',
         planRef: VALID_PLAN_REF,
-      })
+        },
+        START_RUN_ADAPTER_REGISTRY
+      )
     ).toEqual({
       ok: false,
       issue: { type: 'bad_request', reason: 'invalid_target_adapter', target: 'targetAdapter' },

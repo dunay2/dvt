@@ -174,7 +174,10 @@ sequenceDiagram
 - `apps/api/src/entrypoints/http/httpErrorDetails.ts`
 - `apps/api/src/entrypoints/http/httpErrorMapper.ts`
 - `apps/api/src/entrypoints/http/httpDomainErrorClassifier.ts`
-- `apps/api/test/entrypoints/http/httpErrorTranslation.test.ts`
+- `apps/api/test/entrypoints/http/httpErrorTranslation.respondAndStatic.test.ts`
+- `apps/api/test/entrypoints/http/httpErrorTranslation.startRunFacade.test.ts`
+- `apps/api/test/entrypoints/http/httpErrorTranslation.startRunEngineError.test.ts`
+- `apps/api/test/entrypoints/http/httpErrorTranslation.runtimeDomain.test.ts`
 - `apps/api/test/entrypoints/http/httpRuntimeErrorTranslation.architecture.test.ts`
 
 ## Consumers and boundaries

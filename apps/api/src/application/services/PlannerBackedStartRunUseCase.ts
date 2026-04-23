@@ -1,26 +1,28 @@
-import type {
-  IPlanExecutabilityValidator,
-  IPlanValidationLifecycleStore,
-  IPlanner,
-  PlannerInputEnvelopeV1,
-  PlanRef,
+/**
+ * Owned concern: compile planner-backed start-run inputs into stored plans and
+ * hand validated plan refs to the execution delegate.
+ */
+import {
+  START_RUN_RESULT_KIND,
+  type IPlanExecutabilityValidator,
+  type IPlanValidationLifecycleStore,
+  type IPlanner,
+  type PlannerInputEnvelopeV1,
+  type PlanRef,
+  type StartRunCommand,
+  type StartRunPlanRef,
 } from '@dvt/contracts';
 
 import type { AuthorizedCommandExecutionContext } from '../ports/authContract.js';
-import type { StartRunCommand, StartRunPlanRef } from '../ports/startRunCommandContract.js';
-import {
-  START_RUN_RESULT_KIND,
-} from '../ports/startRunResultContract.js';
 import type {
   IPlanCompileLatencyTelemetry,
   PlanCompileLatencyOutcome,
 } from '../ports/StartRunSlaTelemetry.js';
-import type { IStartRunUseCase, StartRunUseCaseResult } from '../ports/startRunUseCaseContract.js';
+import type { IStartRunUseCase, StartRunUseCaseResult } from '../ports/startRunUseCasePort.js';
 
 import { resolveCanonicalPlannerInputEnvelope } from './resolveCanonicalPlannerInputEnvelope.js';
 
 type PlanValidationResult = Awaited<ReturnType<IPlanExecutabilityValidator['validatePlan']>>;
-
 export class PlannerBackedStartRunUseCase implements IStartRunUseCase {
   private static readonly NOOP_TELEMETRY: IPlanCompileLatencyTelemetry = {
     recordPlanCompileLatency() {},
@@ -89,12 +91,7 @@ export class PlannerBackedStartRunUseCase implements IStartRunUseCase {
   }
 }
 
-function toRoutePlanRef(
-  planRef: Pick<PlanRef, 'uri' | 'sha256' | 'schemaVersion' | 'planId' | 'planVersion'> & {
-    sizeBytes?: number | undefined;
-    expiresAt?: PlanRef['expiresAt'] | undefined;
-  }
-): StartRunPlanRef {
+function toRoutePlanRef(planRef: PlanRef): StartRunPlanRef {
   return {
     uri: planRef.uri,
     sha256: planRef.sha256,

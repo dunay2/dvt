@@ -1,0 +1,166 @@
+import { describe, expect, it } from 'vitest';
+
+import {
+  httpError,
+  invokeStartRunRoute,
+  VALID_BODY,
+  VALID_PLAN_REF,
+} from './startRunRoute.test.support.js';
+
+const REJECTING_FACADE = {
+  async execute() {
+    throw new Error('should not be called');
+  },
+};
+
+describe('startRunRoute validation', () => {
+  const invalidParseCases = [
+    {
+      description: 'returns 400 when tenantId is missing',
+      request: {
+        id: 'req-missing-tenant',
+        body: {
+          projectId: 'p1',
+          environmentId: 'e1',
+          selection: ['model_a'],
+        },
+      },
+      expectedPayload: httpError('bad_request', 'missing_tenant_id', { target: 'tenantId' }),
+    },
+    {
+      description: 'returns 400 on malformed tenantId',
+      request: {
+        id: 'req-invalid-tenant',
+        body: {
+          ...VALID_BODY,
+          tenantId: '   ',
+        },
+      },
+      expectedPayload: httpError('bad_request', 'invalid_tenant_id', { target: 'tenantId' }),
+    },
+    {
+      description: 'returns 400 when body is missing',
+      request: {
+        id: 'req-invalid-body',
+        body: undefined,
+      },
+      expectedPayload: httpError('bad_request', 'invalid_body'),
+    },
+    {
+      description: 'returns 400 on non-string selection items',
+      request: {
+        id: 'req-invalid-selection-type',
+        body: {
+          ...VALID_BODY,
+          selection: [123],
+        },
+      },
+      expectedPayload: httpError('bad_request', 'invalid_selection', { target: 'selection' }),
+    },
+    {
+      description: 'returns 400 on whitespace-only selection entries',
+      request: {
+        id: 'req-invalid-selection-blank',
+        body: {
+          ...VALID_BODY,
+          selection: ['   '],
+        },
+      },
+      expectedPayload: httpError('bad_request', 'invalid_selection', { target: 'selection' }),
+    },
+    {
+      description: 'returns 400 on blank runId',
+      request: {
+        id: 'req-invalid-run-id',
+        body: {
+          ...VALID_BODY,
+          runId: '   ',
+        },
+      },
+      expectedPayload: httpError('bad_request', 'invalid_run_id', { target: 'runId' }),
+    },
+    {
+      description: 'returns 400 on blank planRef fields',
+      request: {
+        id: 'req-invalid-plan-ref-field',
+        body: {
+          ...VALID_BODY,
+          planRef: {
+            ...VALID_PLAN_REF,
+            uri: '   ',
+          },
+        },
+      },
+      expectedPayload: httpError('bad_request', 'invalid_plan_ref', { target: 'planRef' }),
+    },
+    {
+      description: 'returns 400 on invalid planRef shape',
+      request: {
+        id: 'req-invalid-plan-ref-shape',
+        body: {
+          ...VALID_BODY,
+          planRef: ['not-an-object'],
+        },
+      },
+      expectedPayload: httpError('bad_request', 'invalid_plan_ref', { target: 'planRef' }),
+    },
+    {
+      description: 'rejects non-canonical surrounding whitespace on planner boundary fields',
+      request: {
+        id: 'req-whitespace-boundary',
+        headers: { authorization: 'Bearer token' },
+        body: {
+          ...VALID_BODY,
+          planRef: {
+            uri: ' https://plans.example.com/plan-2.json ',
+            sha256: ' abc456 ',
+            schemaVersion: ' 1.0.0 ',
+            planId: ' plan-2 ',
+            planVersion: ' 3.0 ',
+          },
+          runId: ' run-with-spaces ',
+          targetAdapter: ' mock ',
+        },
+      },
+      expectedPayload: httpError('bad_request', 'invalid_run_id', { target: 'runId' }),
+    },
+    {
+      description: 'returns 400 on selection entries with surrounding whitespace',
+      request: {
+        id: 'req-selection-whitespace',
+        headers: { authorization: 'Bearer token' },
+        body: {
+          ...VALID_BODY,
+          selection: [' model_a '],
+          runId: 'run-selection-whitespace',
+        },
+      },
+      expectedPayload: httpError('bad_request', 'invalid_selection', { target: 'selection' }),
+    },
+    {
+      description: 'returns 400 on targetAdapter with surrounding whitespace',
+      request: {
+        id: 'req-target-adapter-whitespace',
+        headers: { authorization: 'Bearer token' },
+        body: {
+          ...VALID_BODY,
+          runId: 'run-target-adapter-whitespace',
+          targetAdapter: ' mock ',
+        },
+      },
+      expectedPayload: httpError('bad_request', 'invalid_target_adapter', {
+        target: 'targetAdapter',
+      }),
+    },
+  ] as const;
+
+  it.each(invalidParseCases)('$description', async ({ request, expectedPayload }) => {
+    const { reply } = await invokeStartRunRoute({
+      request,
+      facade: REJECTING_FACADE,
+    });
+
+    expect(reply.statusCode).toBe(400);
+    expect(reply.payload).toEqual(expectedPayload);
+  });
+});

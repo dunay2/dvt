@@ -1,7 +1,7 @@
-import type { DeniedReason } from '../../domain/auth/types.js';
-
-import type { AuthenticationFailureCode } from './authContract.js';
-import type { StartRunEngineError } from './startRunEngineErrorContract.js';
+/**
+ * Owned concern: define the authenticated facade port result surface that
+ * wraps the canonical start-run boundary with API auth outcomes.
+ */
 import {
   START_RUN_RESULT_KIND,
   type StartRunAcceptedResult,
@@ -10,8 +10,13 @@ import {
   type StartRunRateLimitedResult,
   type StartRunSystemBackpressureResult,
   type StartRunTenantBackpressureResult,
-} from './startRunResultContract.js';
-import type { Result } from './startRunUseCaseContract.js';
+} from '@dvt/contracts';
+
+import type { DeniedReason } from '../../domain/auth/types.js';
+
+import type { AuthenticationFailureCode } from './authContract.js';
+import type { StartRunEngineError } from './startRunEngineError.js';
+import type { Result } from './startRunUseCasePort.js';
 
 export const START_RUN_FACADE_RESULT_KIND = {
   unauthenticated: 'unauthenticated',
