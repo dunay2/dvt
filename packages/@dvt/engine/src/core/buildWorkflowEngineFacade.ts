@@ -1,4 +1,4 @@
-import type { IWorkflowEngine } from '../contracts/IWorkflowEngine.v1.js';
+import type { IWorkflowEngine } from '../ports/IWorkflowEngine.js';
 
 import { WorkflowEngine, type WorkflowEngineDeps } from './WorkflowEngine.js';
 

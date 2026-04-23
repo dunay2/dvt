@@ -35,7 +35,7 @@ accepted ADR catalog.
 
 ### 1.1 Solid
 
-- `IWorkflowEngine` ([packages/@dvt/engine/src/contracts/IWorkflowEngine.v1.ts](../../../packages/@dvt/engine/src/contracts/IWorkflowEngine.v1.ts)) is genuinely narrow: 5 ops. Enrichment and health are split into `IRunEnrichmentService` / `IRunHealthService`; AR-A12-C added regression guards so they cannot silently reappear on the engine surface. The "engine boundary creep" risk is mechanically suppressed.
+- `IWorkflowEngine` ([packages/@dvt/engine/src/ports/IWorkflowEngine.ts](../../../packages/@dvt/engine/src/ports/IWorkflowEngine.ts)) is genuinely narrow: 5 ops. Enrichment and health are split into `IRunEnrichmentService` / `IRunHealthService`; AR-A12-C added regression guards so they cannot silently reappear on the engine surface. The "engine boundary creep" risk is mechanically suppressed.
 - Read path is forced through snapshot + replay only ([RunStatusQueryService.ts](../../../packages/@dvt/engine/src/services/RunStatusQueryService.ts)). `getRunStatus` is independent of provider availability — that survives a Temporal outage. Real architectural property.
 - Persistence shape is segregated by type (write vs. envelope): `EventInput` excludes `runSeq` and `persistedAt`; `EventEnvelope = EventInput & { runSeq, persistedAt }`. Append authority is enforced at the type system, not in prose. ([runEvents.v1.ts](../../../packages/@dvt/contracts/src/contracts/engine/RunEvents.v1.ts))
 - `(runId, idempotencyKey)` is the idempotency boundary — one place, one rule. ADR-0004 is enforceable.

@@ -23,7 +23,7 @@ planning_type: review
 - `packages/@dvt/contracts/src/contracts/engine/StartRunBoundary.v1.ts`
 - `packages/@dvt/contracts/src/contracts/engine/RunExecutionContext.v1.ts`
 - `packages/@dvt/contracts/src/types/contracts.ts`
-- `packages/@dvt/engine/src/contracts/IWorkflowEngine.v1.ts`
+- `packages/@dvt/engine/src/ports/IWorkflowEngine.ts`
 - `packages/@dvt/engine/src/core/WorkflowEngine.ts`
 - `packages/@dvt/engine/src/application/StartRunApplicationService.ts`
 - `packages/@dvt/engine/src/application/StartRunAdmissionGuard.ts`

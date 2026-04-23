@@ -17,6 +17,9 @@ last_reviewed: 2026-04-13
 - [ExecutionSemantics.v1](./ExecutionSemantics.v1.md)
 - [SignalsAndAuth.v1](./SignalsAndAuth.v1.md)
 
+Canonical consumer import for `IWorkflowEngine`:
+`import type { IWorkflowEngine } from '@dvt/engine'`
+
 ## Related pages
 
 - [Contracts registry](../README.md)

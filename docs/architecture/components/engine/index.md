@@ -87,7 +87,8 @@ Target note:
 - enrichment service:
   [RunEnrichmentService.ts](../../../../packages/@dvt/engine/src/services/RunEnrichmentService.ts)
 - public contract:
-  [IWorkflowEngine.v1.ts](../../../../packages/@dvt/engine/src/contracts/IWorkflowEngine.v1.ts)
+  [IWorkflowEngine.ts](../../../../packages/@dvt/engine/src/ports/IWorkflowEngine.ts)
+  with canonical consumer import `import type { IWorkflowEngine } from '@dvt/engine'`
 
 ## Component Topology
 
