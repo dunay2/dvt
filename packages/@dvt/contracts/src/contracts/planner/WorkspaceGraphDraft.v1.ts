@@ -397,58 +397,80 @@ export const WorkspaceGraphDraftSaveResponseSchema = z
       });
     }
 
-    if (response.kind === 'saved') {
-      if (response.capability.mode !== WORKSPACE_GRAPH_DRAFT_CAPABILITY_MODE.writable) {
-        ctx.addIssue({
-          code: 'custom',
-          path: ['capability', 'mode'],
-          message: 'WorkspaceGraphDraft saved responses must use writable capability mode.',
-        });
-      }
-      if (response.auditRef.outcome !== WORKSPACE_GRAPH_DRAFT_AUDIT_OUTCOME.allowed) {
-        ctx.addIssue({
-          code: 'custom',
-          path: ['auditRef', 'outcome'],
-          message: 'WorkspaceGraphDraft saved responses must use allowed audit outcome.',
-        });
-      }
-    }
-
-    if (response.kind === 'conflict') {
-      if (response.capability.mode !== WORKSPACE_GRAPH_DRAFT_CAPABILITY_MODE.writable) {
-        ctx.addIssue({
-          code: 'custom',
-          path: ['capability', 'mode'],
-          message: 'WorkspaceGraphDraft conflict responses must use writable capability mode.',
-        });
-      }
-      if (response.auditRef.outcome !== WORKSPACE_GRAPH_DRAFT_AUDIT_OUTCOME.conflict) {
-        ctx.addIssue({
-          code: 'custom',
-          path: ['auditRef', 'outcome'],
-          message: 'WorkspaceGraphDraft conflict responses must use conflict audit outcome.',
-        });
-      }
-    }
-
-    if (response.kind === 'denied') {
-      const deniedOutcomes = new Set<WorkspaceGraphDraftAuditOutcome>([
-        WORKSPACE_GRAPH_DRAFT_AUDIT_OUTCOME.readOnly,
-        WORKSPACE_GRAPH_DRAFT_AUDIT_OUTCOME.forbidden,
-      ]);
-      if (!deniedOutcomes.has(response.auditRef.outcome)) {
-        ctx.addIssue({
-          code: 'custom',
-          path: ['auditRef', 'outcome'],
-          message: 'WorkspaceGraphDraft denied save responses must be read_only or forbidden.',
-        });
-      }
-      if (response.capability.mode === WORKSPACE_GRAPH_DRAFT_CAPABILITY_MODE.writable) {
-        ctx.addIssue({
-          code: 'custom',
-          path: ['capability', 'mode'],
-          message: 'WorkspaceGraphDraft denied save responses must not use writable mode.',
-        });
-      }
-    }
+    validateWorkspaceGraphDraftSavedResponse(response, ctx);
+    validateWorkspaceGraphDraftConflictResponse(response, ctx);
+    validateWorkspaceGraphDraftDeniedResponse(response, ctx);
   }) satisfies z.ZodType<WorkspaceGraphDraftSaveResponse>;
+
+function validateWorkspaceGraphDraftSavedResponse(
+  response: WorkspaceGraphDraftSaveResponse,
+  ctx: z.RefinementCtx
+): void {
+  if (response.kind !== 'saved') {
+    return;
+  }
+  if (response.capability.mode !== WORKSPACE_GRAPH_DRAFT_CAPABILITY_MODE.writable) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['capability', 'mode'],
+      message: 'WorkspaceGraphDraft saved responses must use writable capability mode.',
+    });
+  }
+  if (response.auditRef.outcome !== WORKSPACE_GRAPH_DRAFT_AUDIT_OUTCOME.allowed) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['auditRef', 'outcome'],
+      message: 'WorkspaceGraphDraft saved responses must use allowed audit outcome.',
+    });
+  }
+}
+
+function validateWorkspaceGraphDraftConflictResponse(
+  response: WorkspaceGraphDraftSaveResponse,
+  ctx: z.RefinementCtx
+): void {
+  if (response.kind !== 'conflict') {
+    return;
+  }
+  if (response.capability.mode !== WORKSPACE_GRAPH_DRAFT_CAPABILITY_MODE.writable) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['capability', 'mode'],
+      message: 'WorkspaceGraphDraft conflict responses must use writable capability mode.',
+    });
+  }
+  if (response.auditRef.outcome !== WORKSPACE_GRAPH_DRAFT_AUDIT_OUTCOME.conflict) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['auditRef', 'outcome'],
+      message: 'WorkspaceGraphDraft conflict responses must use conflict audit outcome.',
+    });
+  }
+}
+
+function validateWorkspaceGraphDraftDeniedResponse(
+  response: WorkspaceGraphDraftSaveResponse,
+  ctx: z.RefinementCtx
+): void {
+  if (response.kind !== 'denied') {
+    return;
+  }
+  const deniedOutcomes = new Set<WorkspaceGraphDraftAuditOutcome>([
+    WORKSPACE_GRAPH_DRAFT_AUDIT_OUTCOME.readOnly,
+    WORKSPACE_GRAPH_DRAFT_AUDIT_OUTCOME.forbidden,
+  ]);
+  if (!deniedOutcomes.has(response.auditRef.outcome)) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['auditRef', 'outcome'],
+      message: 'WorkspaceGraphDraft denied save responses must be read_only or forbidden.',
+    });
+  }
+  if (response.capability.mode === WORKSPACE_GRAPH_DRAFT_CAPABILITY_MODE.writable) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['capability', 'mode'],
+      message: 'WorkspaceGraphDraft denied save responses must not use writable mode.',
+    });
+  }
+}

@@ -1,4 +1,4 @@
-import type { DesignGraphDraft, WorkspaceGraphDraftSaveRequest } from '@dvt/contracts';
+import type { WorkspaceGraphAuthoringDraft, WorkspaceGraphDraftSaveRequest } from '@dvt/contracts';
 
 import {
   WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
@@ -14,34 +14,40 @@ export const TEST_WORKSPACE_SCOPE = {
 const SQL_SHA = '2222222222222222222222222222222222222222222222222222222222222222';
 
 export function buildWorkspaceGraphDraft(
-  overrides: Partial<DesignGraphDraft> = {}
-): DesignGraphDraft {
+  overrides: Partial<WorkspaceGraphAuthoringDraft> = {}
+): WorkspaceGraphAuthoringDraft {
   return {
-    context: {
-      tenantId: TEST_WORKSPACE_SCOPE.tenantId,
-      projectId: TEST_WORKSPACE_SCOPE.projectId,
-      environmentId: TEST_WORKSPACE_SCOPE.environmentId,
-      executionTarget: 'postgres',
-      requestedBy: 'principal-api-it',
-      ...(overrides.context ?? {}),
+    nodeIds: ['source_1', 'transform_1', 'sink_1'],
+    nodePositions: {
+      source_1: { x: 0, y: 0 },
+      transform_1: { x: 240, y: 0 },
+      sink_1: { x: 480, y: 0 },
     },
     nodes: [
       {
         id: 'source_1',
-        type: 'source',
-        payload: {
-          kind: 'postgres_table',
+        name: 'Orders source',
+        pluginId: 'dbt',
+        kind: 'postgres_table',
+        role: 'input',
+        status: 'idle',
+        tags: ['orders'],
+        metadata: {
           schema: 'raw',
           table: 'orders',
-          alias: 'orders_source',
         },
       },
       {
         id: 'transform_1',
-        type: 'sql_transform',
-        payload: {
+        name: 'Orders transform',
+        pluginId: 'dbt',
+        kind: 'sql_transform',
+        role: 'transform',
+        status: 'idle',
+        tags: ['orders'],
+        path: 'models/orders.sql',
+        metadata: {
           dialect: 'postgres',
-          entrypoint: 'models/orders.sql',
           sqlArtifact: {
             repo: 'github.com/dunay2/dvt',
             path: 'models/orders.sql',
@@ -53,19 +59,31 @@ export function buildWorkspaceGraphDraft(
       },
       {
         id: 'sink_1',
-        type: 'sink',
-        payload: {
-          kind: 'postgres_table',
+        name: 'Orders final',
+        pluginId: 'dbt',
+        kind: 'postgres_table',
+        role: 'output',
+        status: 'idle',
+        tags: ['orders'],
+        metadata: {
           schema: 'analytics',
           table: 'orders_final',
-          materialization: 'table',
-          writeMode: 'replace',
         },
       },
     ],
     edges: [
-      { fromNodeId: 'source_1', toNodeId: 'transform_1' },
-      { fromNodeId: 'transform_1', toNodeId: 'sink_1' },
+      {
+        id: 'edge_source_transform',
+        sourceId: 'source_1',
+        targetId: 'transform_1',
+        relation: 'lineage',
+      },
+      {
+        id: 'edge_transform_sink',
+        sourceId: 'transform_1',
+        targetId: 'sink_1',
+        relation: 'lineage',
+      },
     ],
     ...overrides,
   };

@@ -1,5 +1,4 @@
 import type { WorkspaceGraphAuthoringDraft } from '@dvt/contracts';
-import { vi } from 'vitest';
 
 import {
   buildCanvasHarnessDraftReadResult,

@@ -4,7 +4,7 @@ import {
   WORKSPACE_GRAPH_DRAFT_CAPABILITY_MODE,
   WORKSPACE_GRAPH_DRAFT_FORMAT_ERROR_REASON,
   WORKSPACE_GRAPH_DRAFT_MIGRATION_STATE,
-  parseDesignGraphDraft,
+  WorkspaceGraphAuthoringDraftSchema,
   parseWorkspaceGraphDraftReadResponse,
   type WorkspaceGraphDraftAuditOutcome,
   type WorkspaceGraphDraftAuditRef,
@@ -92,7 +92,7 @@ export class GetWorkspaceGraphDraftUseCase {
     }
 
     try {
-      const draft = parseDesignGraphDraft(stored.draftPayload);
+      const draft = WorkspaceGraphAuthoringDraftSchema.parse(stored.draftPayload);
       const ok = {
         kind: 'ok',
         capability: decision.capability,

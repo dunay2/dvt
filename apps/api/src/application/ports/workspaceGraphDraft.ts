@@ -1,5 +1,5 @@
 import type {
-  DesignGraphDraft,
+  WorkspaceGraphAuthoringDraft,
   WorkspaceGraphDraftCapabilityMode,
   WorkspaceGraphDraftCapabilityOutcome,
   WorkspaceGraphDraftScope,
@@ -67,7 +67,7 @@ export interface IWorkspaceGraphDraftStore {
     readonly schemaVersion: string;
     readonly expectedRevision: string;
     readonly idempotencyKey: string;
-    readonly draft: DesignGraphDraft;
+    readonly draft: WorkspaceGraphAuthoringDraft;
     readonly requestHash: string;
     readonly revision: string;
     readonly nowIso: string;

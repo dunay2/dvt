@@ -22,7 +22,7 @@ function toPluginNodeKind(node: WorkspaceGraphAuthoringNode): CanonicalNode['kin
     return node.kind as CanonicalNode['kind'];
   }
 
-  return `${node.pluginId}:${node.kind}` as CanonicalNode['kind'];
+  return `${node.pluginId}:${node.kind}`;
 }
 
 function projectAuthoringNodeToCanonical(node: WorkspaceGraphAuthoringNode): CanonicalNode {

@@ -86,8 +86,8 @@ export interface WorkspaceGraphAuthoringDraft {
 
 export const WorkspaceGraphAuthoringNodePositionSchema = z
   .object({
-    x: z.number().finite(),
-    y: z.number().finite(),
+    x: z.number(),
+    y: z.number(),
   })
   .strict() satisfies z.ZodType<WorkspaceGraphAuthoringNodePosition>;
 
@@ -122,8 +122,8 @@ export const WorkspaceGraphAuthoringNodeSchema = z
     tags: z.array(NonBlankStringSchema),
     path: NonBlankStringSchema.optional(),
     description: NonBlankStringSchema.optional(),
-    lastDuration: z.number().finite().nonnegative().optional(),
-    lastCost: z.number().finite().nonnegative().optional(),
+    lastDuration: z.number().nonnegative().optional(),
+    lastCost: z.number().nonnegative().optional(),
     metadata: RecordStringUnknownSchema.optional(),
   })
   .strict() satisfies z.ZodType<WorkspaceGraphAuthoringNode>;
