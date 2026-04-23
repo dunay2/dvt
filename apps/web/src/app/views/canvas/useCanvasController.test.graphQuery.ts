@@ -17,19 +17,11 @@ export function setCanvasHarnessGraphQueryError(
   mocks: CanvasHarnessMocks
 ): void {
   mocks.useQuery.mockImplementation((queryConfig?: { queryKey?: readonly string[] }) => {
-    const queryKey = queryConfig?.queryKey ?? [];
-    if (queryKey[1] === 'graph-draft') {
-      return {
-        data: resolveCurrentGraphDraftQueryData(state),
-        isPending: false,
-        isError: false,
-      };
-    }
-
     return {
       data: undefined,
       isPending: false,
       isError: true,
+      error: new Error('Graph query failed'),
     };
   });
 }
