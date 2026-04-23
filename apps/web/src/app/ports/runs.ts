@@ -1,4 +1,9 @@
-import type { EngineRunRef, PlanRef, RunContext, RunEvent } from '../types/engine';
+/**
+ * Owned concern: define the presentation-facing runs port and DTO vocabulary
+ * consumed by views without exposing runtime-owned execution internals.
+ */
+import type { EngineRunRef, PlanRef, RunEvent } from '../types/engine';
+import type { WorkspaceScope } from './sessionContext';
 
 // ---------------------------------------------------------------------------
 // Presentation-facing DTOs for the runs domain
@@ -6,7 +11,8 @@ import type { EngineRunRef, PlanRef, RunContext, RunEvent } from '../types/engin
 
 export type StartRunInput = {
   planRef: PlanRef;
-  context: RunContext;
+  workspaceScope: WorkspaceScope;
+  selection: readonly string[];
 };
 
 export type UiRunStatus = 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';

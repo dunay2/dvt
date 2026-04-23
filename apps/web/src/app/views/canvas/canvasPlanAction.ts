@@ -1,3 +1,7 @@
+/**
+ * Owned concern: orchestrate Canvas plan-preview persistence before run start
+ * without creating authoritative runtime execution identity.
+ */
 import type { IPlansPort } from '../../ports/plans';
 import type { SessionContextPort } from '../../ports/sessionContext';
 import type { IWorkspacePort } from '../../ports/workspace';
@@ -62,7 +66,7 @@ export async function executeCanvasPlanAction({
 
   try {
     const selectedForPlan = selectedNodeIds.length > 0 ? selectedNodeIds : workspaceNodeIds;
-    const context = sessionContext.buildRunContext(`run_ui_${Date.now()}`);
+    const context = sessionContext.buildRunContext('preview_context');
     const previewProvenance = await resolvePreviewProvenance({
       canonicalNodes,
       canonicalEdges,

@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { ApiError, type ApiClient } from '../api/createApiClient';
 import { useSessionStore } from '../../stores/sessionStore';
-import { makePlanRef, makeRunContext } from '../../testing/contractTestUtils';
+import { makePlanRef } from '../../testing/contractTestUtils';
 import { createRunsService, type StartRunInput } from './runsService';
 
 function createApiClientMock(): ApiClient {
@@ -14,7 +14,7 @@ function createApiClientMock(): ApiClient {
   };
 }
 
-function createStartRunInput(runId = 'run_123'): StartRunInput {
+function createStartRunInput(): StartRunInput {
   return {
     planRef: makePlanRef({
       uri: 's3://plans/plan.json',
@@ -23,12 +23,13 @@ function createStartRunInput(runId = 'run_123'): StartRunInput {
       planId: 'plan_123',
       planVersion: '1.0.0',
     }),
-    context: makeRunContext(runId, {
+    workspaceScope: {
       tenantId: 'tenant-1',
       projectId: 'project-1',
       environmentId: 'env-1',
       targetAdapter: 'mock',
-    }),
+    },
+    selection: ['model_a', 'model_b'],
   };
 }
 
@@ -58,9 +59,40 @@ describe('runsService runtime contract', () => {
     });
 
     const service = createRunsService('api', apiClient);
-    await service.startRun(createStartRunInput('run_123'));
+    await service.startRun(createStartRunInput());
 
-    expect(apiClient.postJson).toHaveBeenCalledWith('/runs/start', expect.any(Object));
+    expect(apiClient.postJson).toHaveBeenCalledWith('/runs/start', {
+      tenantId: 'tenant-1',
+      projectId: 'project-1',
+      environmentId: 'env-1',
+      targetAdapter: 'mock',
+      selection: ['model_a', 'model_b'],
+      planRef: {
+        uri: 's3://plans/plan.json',
+        sha256: 'abc123',
+        schemaVersion: '1.0.0',
+        planId: 'plan_123',
+        planVersion: '1.0.0',
+      },
+    });
+  });
+
+  it('does not send client-authored run identity for startRun', async () => {
+    const apiClient = createApiClientMock();
+    vi.mocked(apiClient.postJson).mockResolvedValue({
+      provider: 'mock',
+      tenantId: 'tenant-1',
+      workflowId: 'wf_run_platform',
+      runId: 'run_platform',
+    });
+
+    const service = createRunsService('api', apiClient);
+    await service.startRun(createStartRunInput());
+
+    const [, payload] = vi.mocked(apiClient.postJson).mock.calls[0] ?? [];
+
+    expect(payload).not.toHaveProperty('runId');
+    expect(payload).not.toHaveProperty('context');
   });
 
   it('uses GET /runs/:runId for getRunSnapshot', async () => {

@@ -22,7 +22,6 @@ export const VALID_BODY = {
   environmentId: 'e1',
   selection: ['model_a'],
   planRef: VALID_PLAN_REF,
-  runId: 'run-abc',
   targetAdapter: 'mock' as const,
 } as const;
 
@@ -78,7 +77,9 @@ export function createReply(): ReplyDouble {
   };
 }
 
-export function registryWith(...supported: Array<'mock' | 'temporal'>): IStartRunTargetAdapterRegistry {
+export function registryWith(
+  ...supported: Array<'mock' | 'temporal'>
+): IStartRunTargetAdapterRegistry {
   return {
     isSupported(value: string): value is 'mock' | 'temporal' {
       return supported.includes(value as 'mock' | 'temporal');
@@ -103,6 +104,7 @@ type InvokeRouteArgs = {
   readonly request?: RouteRequestOverride;
   readonly facade?: FacadeDouble;
   readonly registry?: IStartRunTargetAdapterRegistry;
+  readonly runIdGenerator?: () => string;
 };
 
 export async function invokeStartRunRoute(args: InvokeRouteArgs = {}): Promise<{
@@ -117,8 +119,12 @@ export async function invokeStartRunRoute(args: InvokeRouteArgs = {}): Promise<{
       },
     } satisfies FacadeDouble);
 
-  const hasBodyOverride =
-    args.request !== undefined && Object.hasOwn(args.request, 'body');
+  const hasBodyOverride = args.request !== undefined && Object.hasOwn(args.request, 'body');
+
+  const routeDependencies = {
+    ...(args.registry === undefined ? {} : { adapterRegistry: args.registry }),
+    runIdGenerator: args.runIdGenerator ?? (() => 'run_generated_test'),
+  };
 
   await startRunRoute(
     {
@@ -128,7 +134,7 @@ export async function invokeStartRunRoute(args: InvokeRouteArgs = {}): Promise<{
     } as never,
     reply as never,
     facade as never,
-    args.registry
+    routeDependencies
   );
 
   return { reply };

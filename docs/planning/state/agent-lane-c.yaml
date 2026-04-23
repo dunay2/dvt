@@ -1034,6 +1034,45 @@ tasks:
       contract-pack normalization is now explicitly absorbed by `AR-A12-A`, so Lane C no longer
       carries a parallel active direction.
     last_verified: '2026-04-10'
+  - task_id: AR-C7
+    priority: P0
+    status: review
+    objective: >-
+      make start-run execution identity platform-owned so clients cannot provide canonical `runId`
+      values at the protected runtime boundary.
+    dependency: none
+    target: >-
+      `POST /runs/start` rejects client-provided `runId`, API parsing generates the internal
+      `StartRunCommand.runId`, and the web canvas sends only planRef, workspace scope, and selection
+      for run start.
+    complexity: M
+    effort_points: 3
+    progress_pct: 100
+    evidence_refs:
+      - docs/adr/adr-0050-platform-owned-start-run-identity.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/tenant-run-identity-platform-owned-run-id-plan-20260423.md
+      - docs/planning/closeouts/20260423-tenant-run-identity-platform-owned-run-id-closeout.md
+      - buzon/20260423-codex-fowler-tenant-run-identity-analysis-and-remediation.md
+      - buzon/20260423-codex-fowler-run-id-uuidv7-migration-analysis-and-remediation.md
+      - apps/api/docs/start-run-http-entrypoint-component.md
+      - apps/api/docs/start-run-platform-identity-component.md
+      - docs/architecture/components/web/runs/start-run-client-identity-boundary.md
+      - apps/api/src/entrypoints/http/startRunIdentity.ts
+      - apps/api/test/entrypoints/http/startRunIdentity.architecture.test.ts
+      - apps/api/test/entrypoints/http/startRunRoute.validation.test.ts
+      - apps/web/src/app/views/canvas/canvasRunSelection.ts
+      - apps/web/src/app/views/canvas/canvasRunStartIdentity.architecture.test.ts
+      - apps/web/src/app/services/runs/runsService.test.ts
+      - apps/web/src/app/views/canvas/useCanvasExecutionActions.runStart.test.tsx
+    status_reason: >-
+      The 2026-04-23 architecture review P0 tenant/run identity decision is implemented behind
+      ADR-0050: the API owns opaque `run_<UUIDv7>` generation and rejects client-supplied `runId`,
+      while the web start-run port no longer carries runtime context identity. The API allocator is
+      explicitly not a shadow engine: retry, idempotency, lifecycle, provider workflow, persistence,
+      and engine semantics remain outside `startRunIdentity.ts`. The Fowler follow-up analysis,
+      allocator-specific local component guide, boundary guides, and semantic architecture tests now
+      guard the boundary.
+    last_verified: '2026-04-23'
   - task_id: TF-C3
     priority: P1
     status: in_progress
@@ -1285,6 +1324,10 @@ dependency_notes:
     follow-on cancel-lifecycle ownership truth-sync so runtime work does not keep expanding against
     stale ADR and contract surfaces.
   - >-
+    `AR-C7` closes the P0 tenant/run identity decision from the 2026-04-23 architecture review by
+    making start-run `runId` platform-owned at the API boundary and removing UI-authored execution
+    ids from the canvas start path.
+  - >-
     `TF-C1..TF-C3` are now decomposed into route, persistence, executor, evidence, and phase-2
     plugin-backed dbt subtasks so runtime closure can progress in smaller slices without losing the
     same outer contract.
@@ -1295,11 +1338,11 @@ dependency_notes:
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
-  verified_on: '2026-04-18'
-  total_tasks: 46
-  total_effort_points: 175
-  completed_weighted_points: 140.64
-  lane_progress_pct: 80
+  verified_on: '2026-04-23'
+  total_tasks: 47
+  total_effort_points: 178
+  completed_weighted_points: 143.64
+  lane_progress_pct: 81
   notes: >-
     Weighted progress uses effort_points. `MW-C1`, `TF-C2-A`, and `TF-C2-B` now contribute accepted
     dispatcher, canonical proof, and caller-visible runtime-evidence closure rather than the older
