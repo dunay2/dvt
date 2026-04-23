@@ -12,10 +12,43 @@ type CanvasAuthoringNodeCommand = Readonly<{
 function slugifyNodeKind(kind: string): string {
   const lastSegment = kind.slice(kind.lastIndexOf(':') + 1);
 
-  return lastSegment
-    .replaceAll(/[^a-zA-Z0-9]+/g, '-')
-    .replaceAll(/^-|-$/g, '')
-    .toLowerCase();
+  return buildSlugFromAsciiWords(lastSegment);
+}
+
+function buildSlugFromAsciiWords(value: string): string {
+  const words: string[] = [];
+  let currentWord = '';
+
+  for (const character of value) {
+    if (isAsciiAlphaNumeric(character)) {
+      currentWord += character.toLowerCase();
+      continue;
+    }
+
+    if (currentWord.length > 0) {
+      words.push(currentWord);
+      currentWord = '';
+    }
+  }
+
+  if (currentWord.length > 0) {
+    words.push(currentWord);
+  }
+
+  return words.join('-');
+}
+
+function isAsciiAlphaNumeric(character: string): boolean {
+  const codePoint = character.codePointAt(0);
+  if (codePoint == null) {
+    return false;
+  }
+
+  return (
+    (codePoint >= 48 && codePoint <= 57) ||
+    (codePoint >= 65 && codePoint <= 90) ||
+    (codePoint >= 97 && codePoint <= 122)
+  );
 }
 
 function resolveNextAuthoringNodeIndex(baseId: string, existingNodes: readonly Node[]): number {

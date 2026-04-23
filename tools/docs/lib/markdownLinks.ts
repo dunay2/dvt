@@ -32,7 +32,7 @@ export function extractLinks(content: string): MarkdownLink[] {
 }
 
 function collectLineLinks(line: string, lineNumber: number, links: MarkdownLink[]): void {
-  const stripped = line.replaceAll(/`[^`]*`/g, '``');
+  const stripped = stripInlineCode(line);
 
   forEachRegexMatch(MARKDOWN_LINK_RE, stripped, (match) => {
     const text = match[1];
@@ -41,4 +41,21 @@ function collectLineLinks(line: string, lineNumber: number, links: MarkdownLink[
       links.push({ text, href, line: lineNumber });
     }
   });
+}
+
+function stripInlineCode(line: string): string {
+  let stripped = '';
+  let inInlineCode = false;
+
+  for (const character of line) {
+    if (character === '`') {
+      inInlineCode = !inInlineCode;
+      stripped += '`';
+      continue;
+    }
+
+    stripped += inInlineCode ? ' ' : character;
+  }
+
+  return stripped;
 }

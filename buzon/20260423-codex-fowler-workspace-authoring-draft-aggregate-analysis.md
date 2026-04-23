@@ -124,6 +124,26 @@ Drift to keep watching:
 - any direct React Flow node mutation that bypasses `canvasGraphLifecycle`
 - any docs that imply project creation is required before graph authoring
 
+## Static quality closure
+
+The final pass also removed implementation smells that were unrelated to the
+domain model but could erode maintainability:
+
+- `canvasAuthoringNodeCommand.ts` no longer uses regex replacement chains for
+  node-kind slugging. The command now expresses the invariant directly:
+  collect ASCII alphanumeric words from the governed node-kind tail and join
+  them with `-`.
+- `markdownAdrFields.ts` no longer stringifies unknown frontmatter values
+  through `String(value)`. It handles primitives, arrays, symbols, nullish
+  values, and object JSON explicitly.
+- `markdownLinks.ts` no longer depends on a regex replacement to strip inline
+  code before link extraction. Inline-code stripping is a small state walk,
+  which is easier to reason about and avoids regex intent drift.
+
+This is consistent with Fowler's "intention revealing interface" reading: the
+helpers now say what semantic operation they own instead of encoding the
+operation in opaque replacement patterns.
+
 ## State model
 
 ```mermaid

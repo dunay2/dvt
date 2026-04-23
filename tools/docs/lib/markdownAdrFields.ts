@@ -93,14 +93,22 @@ function stringifyFrontmatterValue(value: unknown): string {
   }
 
   if (Array.isArray(value)) {
-    return value.map(String).join(', ');
+    return value.map(stringifyFrontmatterValue).join(', ');
   }
 
-  if (typeof value === 'object') {
-    return JSON.stringify(value);
+  if (typeof value === 'string') {
+    return value;
   }
 
-  return String(value);
+  if (typeof value === 'number' || typeof value === 'boolean' || typeof value === 'bigint') {
+    return `${value}`;
+  }
+
+  if (typeof value === 'symbol') {
+    return value.description ?? '';
+  }
+
+  return JSON.stringify(value) ?? '';
 }
 
 function normalizeAdrFieldKey(key: string): string {
