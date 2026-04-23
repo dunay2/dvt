@@ -1,3 +1,11 @@
+/**
+ * Owned concern: read protected workspace graph authoring drafts through the
+ * canonical contract envelope.
+ *
+ * The use case owns capability-gated read outcomes, format failure posture,
+ * audit correlation, and schema validation. It does not own draft mutation,
+ * compile projection, or HTTP response translation.
+ */
 import {
   WORKSPACE_GRAPH_DRAFT_AUDIT_ACTION,
   WORKSPACE_GRAPH_DRAFT_AUDIT_OUTCOME,

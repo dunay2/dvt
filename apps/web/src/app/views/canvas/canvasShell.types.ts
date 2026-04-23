@@ -5,6 +5,7 @@ import type { Edge, Node, NodeTypes, ReactFlowProps } from '@xyflow/react';
 import type React from 'react';
 
 import type { ImportSourcesResult } from '../../ports/workspace';
+import type { NodeKindRegistration } from '../../plugins/nodeTypeContracts';
 import type { CanonicalNode } from '../../types/canonical';
 import type { CanvasPaletteId } from './canvasPalette';
 import type { CanvasRouteState } from './canvasDraftPresentationModel';
@@ -28,6 +29,7 @@ export type CanvasShellLayout = {
   explorerPanelVisible: boolean;
   inspectorPanelVisible: boolean;
   canOpenSourceImport: boolean;
+  centerSurfaceMode: 'replace' | 'overlay';
   centerSurface?: React.ReactNode;
   readOnlyBanner?: React.ReactNode;
 };
@@ -73,6 +75,7 @@ export type CanvasShellGraphCommands = {
   onViewportChange: (viewport: CanvasViewport) => void;
   onDrop: React.DragEventHandler<HTMLDivElement>;
   onDragOver: React.DragEventHandler<HTMLDivElement>;
+  onCreateAuthoringNode: (registration: NodeKindRegistration) => void;
   onSourceImportComplete: (result: ImportSourcesResult) => void;
   onImportedNodeFocusComplete: () => void;
 };

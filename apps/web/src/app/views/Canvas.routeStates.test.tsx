@@ -1,5 +1,7 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { DVT_AUTHORING_NODE_KINDS } from '../plugins/nodeTypeCatalog.dbt';
+import type { NodeKindRegistration } from '../plugins/nodeTypeContracts';
 import {
   createCanvasRouteHarness,
   currentCanvasRouteState,
@@ -24,6 +26,14 @@ function expectPrimaryCanvasActionsBlocked(container: ParentNode): void {
   expect(layoutButton?.getAttribute('disabled')).not.toBeNull();
   expect(planButton?.getAttribute('disabled')).not.toBeNull();
   expect(runButton?.getAttribute('disabled')).not.toBeNull();
+}
+
+function requireAuthoringNodeKind(kind: string): NodeKindRegistration {
+  const registration = DVT_AUTHORING_NODE_KINDS.find((candidate) => candidate.kind === kind);
+  if (registration == null) {
+    throw new Error(`Missing authoring node kind fixture: ${kind}`);
+  }
+  return registration;
 }
 
 function expectBlockedCanvasRouteState(args: {
@@ -88,7 +98,7 @@ describe('Canvas route states', () => {
       surface: {
         text: 'No graph content loaded',
         slot: 'canvas-empty-state',
-        viewportVisible: false,
+        viewportVisible: true,
       },
       bootstrap: {
         routeState: 'empty',
@@ -126,6 +136,28 @@ describe('Canvas route states', () => {
     );
     expect(harness.container.textContent).not.toContain('Use Add data');
     expectCanvasRegistryClosed();
+  });
+
+  it('routes empty authoring first-node creation through the controller command', async () => {
+    const handleCreateAuthoringNode = vi.fn();
+    await renderCanvasRouteWithController(harness, {
+      explorerNodes: [],
+      handleCreateAuthoringNode,
+    });
+
+    const sourceButton = Array.from(harness.container.querySelectorAll('button')).find(
+      (button) => button.textContent?.includes('Source')
+    );
+
+    expect(harness.container.querySelector('[data-slot="canvas-viewport"]')).not.toBeNull();
+    expect(harness.container.textContent).toContain('Add first node');
+    expect(sourceButton).toBeDefined();
+
+    sourceButton?.click();
+
+    expect(handleCreateAuthoringNode).toHaveBeenCalledWith(
+      requireAuthoringNodeKind('dvt:source')
+    );
   });
 
   it('renders empty guidance without suggesting Add data when source import is unavailable', async () => {

@@ -1,3 +1,10 @@
+/**
+ * Owned concern: compose Canvas semantic graph state into the protected
+ * workspace authoring draft aggregate.
+ *
+ * This module builds editable persistence payloads. It does not compile
+ * `DesignGraphDraft`, persist directly, or own runtime execution eligibility.
+ */
 import {
   WorkspaceGraphAuthoringDraftSchema,
   type WorkspaceGraphAuthoringDraft,

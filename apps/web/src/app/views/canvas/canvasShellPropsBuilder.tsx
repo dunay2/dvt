@@ -32,6 +32,9 @@ function buildCanvasShellLayoutArgs({
     recoveryCommands: {
       reloadLatestDraft: controller.reloadLatestDraft,
     },
+    authoringCommands: {
+      handleCreateAuthoringNode: controller.handleCreateAuthoringNode,
+    },
     routePresentation: {
       presentationState: routeViewState.presentationState,
       startupBlockState: routeViewState.startupBlockState,
@@ -109,6 +112,7 @@ function buildCanvasShellGraphCommandsArgs({
       handleViewportChange: controller.handleViewportChange,
       handleDrop: controller.handleDrop,
       handleDragOver: controller.handleDragOver,
+      handleCreateAuthoringNode: controller.handleCreateAuthoringNode,
       handleSourceImportComplete: controller.handleSourceImportComplete,
       handleImportedNodeFocusComplete: controller.handleImportedNodeFocusComplete,
     },

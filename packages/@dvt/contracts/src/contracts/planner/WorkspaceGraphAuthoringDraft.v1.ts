@@ -1,3 +1,11 @@
+/**
+ * Owned concern: define the graph-first editable aggregate persisted as a
+ * workspace graph authoring draft.
+ *
+ * This contract owns visible nodes, positions, semantic nodes, and semantic
+ * edges. It does not own auth, audit, compare-and-swap, React Flow state,
+ * compile projection, or runtime execution eligibility.
+ */
 import { z } from 'zod';
 
 import { isNonBlankString, NON_BLANK_STRING_MESSAGE } from '../../utils/contractPrimitives.js';
@@ -86,8 +94,8 @@ export interface WorkspaceGraphAuthoringDraft {
 
 export const WorkspaceGraphAuthoringNodePositionSchema = z
   .object({
-    x: z.number(),
-    y: z.number(),
+    x: z.float64(),
+    y: z.float64(),
   })
   .strict() satisfies z.ZodType<WorkspaceGraphAuthoringNodePosition>;
 
@@ -122,8 +130,8 @@ export const WorkspaceGraphAuthoringNodeSchema = z
     tags: z.array(NonBlankStringSchema),
     path: NonBlankStringSchema.optional(),
     description: NonBlankStringSchema.optional(),
-    lastDuration: z.number().nonnegative().optional(),
-    lastCost: z.number().nonnegative().optional(),
+    lastDuration: z.float64().nonnegative().optional(),
+    lastCost: z.float64().nonnegative().optional(),
     metadata: RecordStringUnknownSchema.optional(),
   })
   .strict() satisfies z.ZodType<WorkspaceGraphAuthoringNode>;

@@ -28,7 +28,7 @@ test('regression fixtures keep BOM-prefixed evidence docs that previously failed
     'docs/evidence/critical/ED-20260331-mvp-a1-backend-contractual-inventory.md',
   ]) {
     const content = readFileSync(path, 'utf8');
-    assert.equal(content.charCodeAt(0), 0xfeff, `${path} should start with a UTF-8 BOM fixture`);
+    assert.equal(content.codePointAt(0), 0xfeff, `${path} should start with a UTF-8 BOM fixture`);
     assert.match(content, /^\uFEFF---\r?\n/, `${path} should still contain YAML frontmatter`);
   }
 });

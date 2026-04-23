@@ -20,8 +20,9 @@ versus the application layer.
 That gap is now the blocking architectural issue behind the current empty-graph
 authoring dead end.
 
-The active write path still behaves as if the persisted draft aggregate were a
-compile-ready `DesignGraphDraft`. That is the wrong root at the wrong layer.
+Before this branch, the active write path behaved as if the persisted draft
+aggregate were a compile-ready `DesignGraphDraft`. That was the wrong root at
+the wrong layer.
 
 This proposal resets the model in Fowler/DDD terms:
 
@@ -48,21 +49,21 @@ This is a replace-and-converge plan, not a compatibility plan.
 - `docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-canvas-empty-authoring-entrypoint-design-20260422.md`
 - `docs/architecture/components/web/graph/canvas-draft-session-component.md`
 - `docs/architecture/components/web/graph/graph-frontend-architecture.md`
-- `docs/contracts/planner/WorkspaceGraphDraftPersistence.v1.md`
+- `docs/contracts/planner/workspace-graph-draft-persistence-v1.md`
 - `docs/architecture/reference-architecture.md`
 
 ## Problem statement
 
-The current system still mixes four distinct concerns:
+The pre-slice system mixed four distinct concerns:
 
 1. editable graph authoring truth
 2. route-local interaction and sync posture
 3. compile-ready graph shape
 4. protected write orchestration
 
-That mixing appears today as one concrete failure:
+That mixing appeared as one concrete failure:
 
-- the protected draft write path still assumes `DesignGraphDraft`
+- the protected draft write path assumed `DesignGraphDraft`
 - a graph-first authoring state such as `one node, zero edges` is a valid
   editing state but not a valid compile graph
 - the UI therefore cannot persist the first meaningful authoring step through
@@ -78,9 +79,9 @@ The root cause is not the database and not React Flow.
 
 The root cause is semantic ownership drift:
 
-- `WorkspaceGraphDraft.v1` still embeds `DesignGraphDraft`
-- the API save path persists compile-shaped truth instead of authoring truth
-- the web save path still compiles before persisting
+- pre-slice `WorkspaceGraphDraft.v1` embedded `DesignGraphDraft`
+- the API save path persisted compile-shaped truth instead of authoring truth
+- the web save path compiled before persisting
 - Canvas therefore treats compile validity as a save precondition
 
 That violates the intended split already described in `TF-A2`:
@@ -103,6 +104,29 @@ That violates the intended split already described in `TF-A2`:
 - `CanvasDraftSession` must remain the authoritative route-local interaction
   aggregate for Canvas
 - `DesignGraphDraft` must remain a derived artifact used by preview/run only
+
+## Erosion path to prevent
+
+The main architectural failure mode is letting the API become a shadow engine.
+This branch must prevent the following drift sequence:
+
+1. UI starts treating itself as a generic API client instead of an authoring
+   shell over a local interaction aggregate.
+2. API starts compiling, storing, validating, and admitting graph execution from
+   the same path.
+3. API adds run policy decisions that should belong to application/runtime
+   ports or the engine boundary.
+4. API adds retry and recovery semantics that should belong to runtime
+   orchestration and state-store concerns.
+5. API becomes a shadow engine with implicit lifecycle authority.
+
+The stable split is:
+
+- UI owns interaction intent and local draft session state.
+- API owns protected application commands, auth, CAS, idempotency, and audit.
+- Planner owns compile projection and executable-subgraph validation.
+- Engine/runtime owns lifecycle, retry, recovery, admission, and execution
+  policy.
 
 ## Options considered
 
@@ -276,6 +300,112 @@ flowchart LR
 | `DesignGraphDraft`             | compile artifact                       | yes                    | derived artifact only                                                |
 | `WorkspaceGraphSnapshot`       | read model                             | yes                    | projection only                                                      |
 | `ReactFlow` node/edge state    | visual projection                      | no aggregate authority | must not become semantic truth                                       |
+
+## User stories by component
+
+### `WorkspaceGraphAuthoringDraft`
+
+As a data author, I want to save an empty, first-node, disconnected, or partial
+graph so that I can build a workspace incrementally before it is compile-ready.
+
+Acceptance:
+
+- saving one node with zero edges is valid
+- saving disconnected nodes is valid
+- saving an edge to a missing node is invalid
+- saving a compile-shaped `DesignGraphDraft` as the editable draft is invalid
+
+### `WorkspaceGraphDraft` protected envelope
+
+As a protected API caller, I want every draft read/write to carry scope,
+capability, audit, schema-version, revision, and idempotency semantics so that
+authorization, conflict handling, and recovery are deterministic.
+
+Acceptance:
+
+- save requires `scope`, `schemaVersion`, `expectedRevision`, and
+  `idempotencyKey`
+- stale saves return `conflict`, not silent overwrite
+- denied saves/read return typed capability and audit posture
+- corrupt or unsupported stored drafts fail closed through typed format errors
+
+### `CanvasDraftSession`
+
+As a Canvas operator, I want local edits, remote baseline, conflict state, and
+sync posture tracked separately from protected persistence so that the route can
+show honest state without pretending local edits are authoritative.
+
+Acceptance:
+
+- local route state never replaces protected draft truth
+- conflict and missing-remote states are explicit
+- visible working-set decisions stay route-local
+- successful save still refreshes from the protected boundary
+
+### `ExecutionSelection`
+
+As an operator, I want to run a selected node or selected subgraph rather than
+the whole editable draft so that unrelated loose work does not block useful
+execution.
+
+Acceptance:
+
+- explicit selected node ids are required for run/preview intent
+- loose nodes outside the selected closure do not block execution
+- selecting a node with missing dependencies returns diagnostics
+- selection does not mutate the editable draft
+
+### `ExecutableSubgraph`
+
+As the compiler boundary, I want a resolved selected closure so that compile
+validity is evaluated against the intended run target instead of the whole
+authoring draft.
+
+Acceptance:
+
+- selected nodes must exist in the editable draft
+- required dependencies are present or derivable by selection mode
+- diagnostics explain why a selected closure is invalid
+- valid closures can produce `DesignGraphDraft`
+
+### `DesignGraphDraft`
+
+As preview/run infrastructure, I want a compile-ready artifact derived from a
+valid selected subgraph so that runtime execution never depends on raw
+authoring state.
+
+Acceptance:
+
+- `DesignGraphDraft` is derived only after selection validation
+- compile invariants stay in projection/preview/run seams
+- the protected draft save path never accepts `DesignGraphDraft` as authoring
+  truth
+
+### `WorkspaceGraphSnapshot` and React Flow state
+
+As a read-model consumer, I want projected graph and viewport state separated
+from the persisted aggregate so that UI layout and projections cannot drift into
+semantic authority.
+
+Acceptance:
+
+- snapshots remain read models
+- React Flow nodes/edges are viewport projections
+- backend authoring payloads are not inferred from visual-only state without
+  semantic node data
+
+### Empty Canvas authoring entrypoint
+
+As a user opening an empty workspace, I want a governed `Add first node`
+entrypoint so that an empty graph is productive without creating fake startup
+nodes or local-only success paths.
+
+Acceptance:
+
+- empty authorable state exposes first-node creation
+- read-only empty state does not expose mutation CTAs
+- first-node save round-trips through protected draft authority
+- the viewport shows the node only after authoritative refresh
 
 ## Aggregate shape
 

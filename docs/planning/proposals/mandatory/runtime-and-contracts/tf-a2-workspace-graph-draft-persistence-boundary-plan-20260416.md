@@ -41,10 +41,11 @@ Today the repo has a typed read boundary for `WorkspaceGraphSnapshot` through
 `IWorkspacePort.getGraphSnapshot()`, but it does not yet have a canonical typed
 write boundary for editable graph drafts.
 
-The current executable draft contract also drifts from the intended model:
-`WorkspaceGraphDraft.v1` still embeds `DesignGraphDraft`, which means the
-shared persistence shape inherits compile-time invariants such as exactly one
-`source`, one `sql_transform`, one `sink`, and the governed two-edge chain.
+Before the authoring-aggregate correction, the executable draft contract
+drifted from the intended model: `WorkspaceGraphDraft.v1` embedded
+`DesignGraphDraft`, which meant the shared persistence shape inherited
+compile-time invariants such as exactly one `source`, one `sql_transform`, one
+`sink`, and the governed two-edge chain.
 
 That coupling means the current protected save path cannot represent:
 

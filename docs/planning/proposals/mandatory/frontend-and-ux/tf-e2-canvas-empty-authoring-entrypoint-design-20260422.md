@@ -55,7 +55,7 @@ The design decision is:
   entrypoint that sits on top of that decision.
 - This proposal now also records the contract correction discovered during the
   hard-cut follow-up: a graph-first first-node flow cannot be implemented on
-  top of a save path that still requires a compile-valid `DesignGraphDraft`.
+  top of a save path that requires a compile-valid `DesignGraphDraft`.
 
 ## Think-first analysis
 
@@ -95,7 +95,7 @@ entrypoint attached to it.
 
 There is also a boundary mismatch under the UI:
 
-- the current protected save path still accepts a compile-valid
+- the pre-correction protected save path accepted a compile-valid
   `DesignGraphDraft`
 - a first-node or partially connected authoring state is a valid editing state
   but not a valid `DesignGraphDraft`
@@ -197,9 +197,9 @@ The canonical Canvas empty-state behavior is:
      `workspaceServiceCapabilities.sourceImportAvailable === true`
 4. Creating the first node must round-trip through the protected editable draft
    authority. No local fake graph is allowed.
-5. The command is blocked on contract truth. If the protected runtime still
-   exposes only a compile-valid `DesignGraphDraft` save path, the slice is not
-   ready and must not fake success in the browser.
+5. The command is blocked on contract truth. If a protected runtime exposes
+   only a compile-valid `DesignGraphDraft` save path, the slice is not ready
+   and must not fake success in the browser.
 
 ## Target UX contract
 
@@ -399,7 +399,7 @@ This proposal does not introduce a new backend endpoint by default.
 
 Required implementation posture:
 
-- do not use the current compile-ready `DesignGraphDraft` save path as the
+- do not use a compile-ready `DesignGraphDraft` save path as the
   first-node persistence model
 - introduce or adopt the editable authoring-draft boundary from `TF-A2` and
   `TF-C4`

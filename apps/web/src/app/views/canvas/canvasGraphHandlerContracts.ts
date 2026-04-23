@@ -2,11 +2,11 @@ import type { Edge, Node } from '@xyflow/react';
 import type { Dispatch, SetStateAction } from 'react';
 
 import type { CanvasGraphStrategy } from '../../plugins/dbt/dbtNodeAdapter';
+import type { NodeKindRegistration } from '../../plugins/nodeTypeContracts';
 import type { CanonicalNode } from '../../types/canonical';
 import type { CanvasDraftSession } from './canvasDraftSession';
 
 /** Owned concern: semantic contracts for Canvas graph interaction handler seams. */
-
 type CanvasNodeSetter = Dispatch<SetStateAction<Node[]>>;
 type CanvasEdgeSetter = Dispatch<SetStateAction<Edge[]>>;
 type CanvasDraftSessionSetter = Dispatch<SetStateAction<CanvasDraftSession>>;
@@ -92,6 +92,26 @@ export type CanvasNodeDropContracts = {
   effects: CanvasNodeDropEffects;
   policy: CanvasNodeDropPolicy;
 };
+
+export type CanvasAuthoringNodeCreationEffects = {
+  setNodes: CanvasNodeSetter;
+  setDraftSession: CanvasDraftSessionSetter;
+  setSelectedNodes: (ids: string[]) => void;
+  setInspectorNode: (nodeId: string | null) => void;
+};
+
+export type CanvasAuthoringNodeCreationPolicy = {
+  graphStrategy: CanvasGraphStrategy;
+  canEditEdges: boolean;
+  columnLevelLineageEnabled: boolean;
+};
+
+export type CanvasAuthoringNodeCreationContracts = {
+  effects: CanvasAuthoringNodeCreationEffects;
+  policy: CanvasAuthoringNodeCreationPolicy;
+};
+
+export type CreateCanvasAuthoringNode = (registration: NodeKindRegistration) => void;
 
 export type CanvasNodeRemovalState = {
   draftSession: CanvasDraftSession;

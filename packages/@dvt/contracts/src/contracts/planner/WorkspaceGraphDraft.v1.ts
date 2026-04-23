@@ -1,3 +1,11 @@
+/**
+ * Owned concern: define the protected persistence envelope for workspace graph
+ * authoring drafts.
+ *
+ * This boundary wraps `WorkspaceGraphAuthoringDraft` with scope, capability,
+ * audit, format metadata, revision, conflict, and save/read outcome semantics.
+ * It does not own compile-ready `DesignGraphDraft` or execution selection.
+ */
 import { z } from 'zod';
 
 import {

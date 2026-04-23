@@ -2747,8 +2747,8 @@ tasks:
       - docs/planning/proposals/mandatory/runtime-and-contracts/tf-a2-workspace-graph-draft-persistence-boundary-plan-20260416.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/tf-a2-workspace-authoring-draft-aggregate-roots-plan-20260423.md
       - packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphDraft.v1.ts
-      - docs/contracts/planner/WorkspaceGraphDraftPersistence.v1.md
-      - docs/evidence/ED-20260416-tf-a2-workspace-graph-draft-boundary.md
+      - docs/contracts/planner/workspace-graph-draft-persistence-v1.md
+      - docs/evidence/ed-20260416-tf-a2-workspace-graph-draft-boundary.md
       - docs/risk-register/quality/R-20260416-TF-A2-WORKSPACE-GRAPH-DRAFT-ADOPTION-DRIFT.yaml
       - docs/contracts/planner/TransformationFlowPreview.v1.md
       - docs/architecture/reference-architecture.md

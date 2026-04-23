@@ -1,3 +1,11 @@
+/**
+ * Owned concern: define the web-facing authoring port for protected workspace
+ * graph draft read/write outcomes.
+ *
+ * The port preserves boundary-native read/save envelopes before Canvas projects
+ * them into route-local state. It does not own React Flow state, local cache
+ * mutation, or compile projection.
+ */
 import type {
   WorkspaceGraphAuthoringDraft,
   WorkspaceGraphDraftReadResponse,

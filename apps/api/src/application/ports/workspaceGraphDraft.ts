@@ -1,3 +1,11 @@
+/**
+ * Owned concern: define the API application port family for protected
+ * workspace graph draft read/write persistence.
+ *
+ * The port owns capability, audit, telemetry, schema-version, revision, and
+ * store-facing authoring draft semantics. It does not own HTTP transport,
+ * Canvas projection, compile projection, or runtime execution.
+ */
 import type {
   WorkspaceGraphAuthoringDraft,
   WorkspaceGraphDraftCapabilityMode,

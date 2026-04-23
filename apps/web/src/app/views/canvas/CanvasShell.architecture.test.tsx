@@ -7,6 +7,10 @@ const CANVAS_SHELL_TYPES_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'canvasShell.types.ts'
 );
+const CANVAS_SHELL_MAIN_PANEL_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'CanvasShellMainPanel.tsx'
+);
 
 describe('CanvasShell architecture', () => {
   it('uses grouped semantic prop contracts instead of reaching into controller or service seams directly', () => {
@@ -29,13 +33,16 @@ describe('CanvasShell architecture', () => {
   });
 
   it('delegates sizing and rail composition to named shell-local seams', () => {
-    expect(CANVAS_SHELL_SOURCE).toContain(
+    expect(CANVAS_SHELL_SOURCE).toContain("'./CanvasShellMainPanel'");
+    expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).toContain(
       'function resolveCanvasShellMainPanelDefaultSize('
     );
     expect(CANVAS_SHELL_SOURCE).toContain('function CanvasShellExplorerRail(');
-    expect(CANVAS_SHELL_SOURCE).toContain('function CanvasShellMainPanel(');
+    expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).toContain('function CanvasShellMainSurface(');
+    expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).toContain('function CanvasShellViewport(');
+    expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).toContain('function CanvasShellMainPanel(');
     expect(CANVAS_SHELL_SOURCE).toContain('function CanvasShellInspectorRail(');
-    expect(CANVAS_SHELL_SOURCE).toContain(
+    expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).toContain(
       'defaultSize={resolveCanvasShellMainPanelDefaultSize(layout)}'
     );
   });

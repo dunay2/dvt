@@ -12,7 +12,7 @@ code_refs:
   - packages/@dvt/contracts/src/schema-packs/workspace-graph-draft.ts
   - packages/@dvt/contracts/src/validation/planner.ts
   - packages/@dvt/contracts/test/validation/workspace-graph-draft.ts
-  - docs/contracts/planner/WorkspaceGraphDraftPersistence.v1.md
+  - docs/contracts/planner/workspace-graph-draft-persistence-v1.md
   - docs/planning/state/agent-lane-a.yaml
 evidence:
   tests:

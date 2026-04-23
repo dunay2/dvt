@@ -20,6 +20,7 @@ export type CanvasShellLayoutBuilderArgs = Readonly<{
     | 'canOpenSourceImport'
   >;
   recoveryCommands: Pick<CanvasRouteController, 'reloadLatestDraft'>;
+  authoringCommands: Pick<CanvasRouteController, 'handleCreateAuthoringNode'>;
   routePresentation: Pick<
     CanvasRouteViewState,
     | 'presentationState'
@@ -77,6 +78,7 @@ export type CanvasShellGraphCommandsBuilderArgs = Readonly<{
     | 'handleViewportChange'
     | 'handleDrop'
     | 'handleDragOver'
+    | 'handleCreateAuthoringNode'
     | 'handleSourceImportComplete'
     | 'handleImportedNodeFocusComplete'
   >;

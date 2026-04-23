@@ -2,7 +2,7 @@
   "summary": {
     "adrs": 45,
     "evidenceDocs": 117,
-    "normativeDocs": 306,
+    "normativeDocs": 309,
     "statusDocs": 58
   },
   "adrs": [
@@ -1431,15 +1431,6 @@
       "breaking": null
     },
     {
-      "path": "docs/evidence/ED-20260416-tf-a2-workspace-graph-draft-boundary.md",
-      "filename": "ED-20260416-tf-a2-workspace-graph-draft-boundary.md",
-      "title": "Freeze TF-A2 workspace graph-draft persistence boundary",
-      "status": "Accepted",
-      "date": "2026-04-16",
-      "arc_level": "ARC-2",
-      "breaking": null
-    },
-    {
       "path": "docs/evidence/ED-20260417-mw-d1-external-compile-boundary-arc2.md",
       "filename": "ED-20260417-mw-d1-external-compile-boundary-arc2.md",
       "title": "MW-D1 external compile boundary ARC-2 evidence",
@@ -1508,6 +1499,15 @@
       "title": "Harden Temporal activity dependency wiring",
       "status": "Accepted",
       "date": "2026-04-21",
+      "arc_level": "ARC-2",
+      "breaking": null
+    },
+    {
+      "path": "docs/evidence/ED-20260422-start-run-boundary-and-runtime-seams.md",
+      "filename": "ED-20260422-start-run-boundary-and-runtime-seams.md",
+      "title": "Harden start-run boundary and protected runtime composition seams",
+      "status": "Accepted",
+      "date": "2026-04-22",
       "arc_level": "ARC-2",
       "breaking": null
     },
@@ -1807,6 +1807,10 @@
       "filename": "SignalsAndAuth.v1.md"
     },
     {
+      "path": "docs/architecture/components/engine/contracts/engine/start-run-boundary-component.md",
+      "filename": "start-run-boundary-component.md"
+    },
+    {
       "path": "docs/architecture/components/engine/contracts/engine/StartRunBoundary.v1.md",
       "filename": "StartRunBoundary.v1.md"
     },
@@ -2019,6 +2023,10 @@
       "filename": "planner-sequence.md"
     },
     {
+      "path": "docs/architecture/components/planner/workspace-authoring-draft-aggregate.md",
+      "filename": "workspace-authoring-draft-aggregate.md"
+    },
+    {
       "path": "docs/architecture/components/projector-worker/index.md",
       "filename": "index.md"
     },
@@ -2089,6 +2097,10 @@
     {
       "path": "docs/architecture/components/web/graph/canvas-draft-session-component.md",
       "filename": "canvas-draft-session-component.md"
+    },
+    {
+      "path": "docs/architecture/components/web/graph/canvas-empty-authoring-entrypoint-component.md",
+      "filename": "canvas-empty-authoring-entrypoint-component.md"
     },
     {
       "path": "docs/architecture/components/web/graph/canvas-graph-lifecycle-component.md",
@@ -2711,8 +2723,8 @@
       "filename": "TransformationFlowPreview.v1.md"
     },
     {
-      "path": "docs/contracts/planner/WorkspaceGraphDraftPersistence.v1.md",
-      "filename": "WorkspaceGraphDraftPersistence.v1.md"
+      "path": "docs/contracts/planner/workspace-graph-draft-persistence-v1.md",
+      "filename": "workspace-graph-draft-persistence-v1.md"
     },
     {
       "path": "docs/contracts/shared/AdminRebuildSnapshotAccess.v1.md",
