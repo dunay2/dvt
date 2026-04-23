@@ -2187,6 +2187,7 @@ tasks:
       - apps/web/src/app/views/canvas/useCanvasExecutionActions.test.support.tsx
       - docs/planning/reviews/architecture-and-governance/20260422-canvas-runtime-truth-hardcut-review.md
       - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-canvas-target-architecture-execution-plan-20260417.md
+      - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-e-selected-closure-ux-proof-stories-20260423.md
     status_reason: >-
       Planned slice; execution has not started. After the 2026-04-20 sync review, the
       execution-actions test split is treated as mainline baseline rather than remaining work. The
@@ -2197,8 +2198,90 @@ tasks:
       `cy.intercept` on the authoring contract. The remediation still needed is one canonical Canvas
       test kit, application-service and command tests for plan and run orchestration seams, governed
       placement for test-support files, and the live-runtime Cypress proof that closes the no-legacy
-      hard cut.
-    last_verified: '2026-04-22'
+      hard cut. The selected-closure UX story capture now fixes the missing browser scope more
+      tightly: partial selection inside a larger canvas, loose-node exclusion, fail-closed browser
+      posture for `dependency_gap`, `selected_node_missing`, and `cycle_detected`, stale-proof and
+      `graph_source_selection_mismatch` re-plan posture, and one live-runtime Cypress lane for the
+      protected selected-closure route.
+    last_verified: '2026-04-23'
+  - task_id: TF-E2-E-A
+    parent_task: TF-E2-E
+    priority: P0
+    status: queued
+    complexity: S
+    effort_points: 2
+    progress_pct: 0
+    objective: >-
+      prove in Cypress that Canvas preview and run stay scoped to the selected closure inside a
+      larger workspace and exclude unrelated loose nodes.
+    dependency: TF-E2-E
+    target: >-
+      Browser proof selects a proper subset of nodes, preview emits canonical selection for that
+      subset only, preview and run summaries exclude unrelated loose nodes, and the visible UI
+      posture never widens execution to the full canvas.
+    evidence_refs:
+      - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-e-selected-closure-ux-proof-stories-20260423.md
+      - apps/web/cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts
+    status_reason: Planned selected-closure positive-path browser proof; execution has not started.
+    last_verified: '2026-04-23'
+  - task_id: TF-E2-E-B
+    parent_task: TF-E2-E
+    priority: P0
+    status: queued
+    complexity: S
+    effort_points: 2
+    progress_pct: 0
+    objective: >-
+      prove fail-closed Canvas UX for selected-closure rejection states including `dependency_gap`,
+      `selected_node_missing`, and `cycle_detected`.
+    dependency: TF-E2-E-A
+    target: >-
+      Browser-level coverage shows explicit blocked posture, visible re-plan guidance, and no run
+      dispatch when selected execution is not executable.
+    evidence_refs:
+      - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-e-selected-closure-ux-proof-stories-20260423.md
+      - docs/architecture/components/web/graph/canvas-execution-selection-component.md
+    status_reason: Planned fail-closed browser posture slice; execution has not started.
+    last_verified: '2026-04-23'
+  - task_id: TF-E2-E-C
+    parent_task: TF-E2-E
+    priority: P0
+    status: queued
+    complexity: S
+    effort_points: 2
+    progress_pct: 0
+    objective: >-
+      prove stale selected-closure proof and selected-scope drift rejection in the browser,
+      including `graph_source_selection_mismatch` and re-plan posture.
+    dependency: TF-E2-E-B
+    target: >-
+      Browser-level coverage blocks run when persisted proof is stale or selected-scope truth has
+      drifted, surfaces explicit re-plan posture, and proves that no stale run is dispatched.
+    evidence_refs:
+      - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-e-selected-closure-ux-proof-stories-20260423.md
+      - apps/api/docs/executable-subgraph-resolution-component.md
+    status_reason: Planned stale-proof and drift rejection slice; execution has not started.
+    last_verified: '2026-04-23'
+  - task_id: TF-E2-E-D
+    parent_task: TF-E2-E
+    priority: P0
+    status: queued
+    complexity: M
+    effort_points: 3
+    progress_pct: 0
+    objective: >-
+      establish the live-runtime Cypress lane and governed test-support kit for selected-closure UX
+      proof against the protected backend with no authoring-contract intercepts.
+    dependency: TF-E2-E-C
+    target: >-
+      One canonical live-runtime browser lane proves `Canvas -> preview -> persisted PlanRef ->
+      start run` for selected closure against the real protected runtime, and selected-closure UX
+      proofs share one governed Cypress and test-support seam.
+    evidence_refs:
+      - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-e-selected-closure-ux-proof-stories-20260423.md
+      - docs/planning/reviews/architecture-and-governance/20260422-canvas-runtime-truth-hardcut-review.md
+    status_reason: Planned live-runtime browser proof slice; execution has not started.
+    last_verified: '2026-04-23'
   - task_id: TF-E2-F
     parent_task: TF-E2
     priority: P0
@@ -2422,11 +2505,11 @@ dependency_notes:
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
-  verified_on: '2026-04-16'
-  total_tasks: 67
-  total_effort_points: 241
+  verified_on: '2026-04-23'
+  total_tasks: 71
+  total_effort_points: 250
   completed_weighted_points: 129.8
-  lane_progress_pct: 54
+  lane_progress_pct: 52
   notes: >-
     Weighted progress uses effort_points and records partial convergence already present in the
     frontend, even when the lane still lacks accepted closure for most slices. F-17 now tracks 7
@@ -2437,5 +2520,9 @@ verification_summary:
     drift notes, and wireframes so downstream implementation can consume a governed baseline instead
     of a proposal pack with stale language and encoding issues. `TF-E2` is now the active
     production-authoring follow-up that freezes canonical node, edge, property, and reload
-    expectations before implementation. The summary values were recomputed from the current task
-    registry on 2026-04-16 to realign the YAML with the actual lane contents.
+    expectations before implementation. The 2026-04-23 update adds `TF-E2-E-A..D` to isolate the
+    remaining selected-closure UX proof gaps: partial selection in a larger canvas, fail-closed
+    browser posture for canonical executability diagnostics, stale selected-scope proof rejection,
+    and the live-runtime Cypress lane without authoring-contract intercepts. The summary values were
+    recomputed from the current task registry on 2026-04-23 to realign the YAML with the actual lane
+    contents.
