@@ -1,6 +1,8 @@
 /**
- * @file tools/docs/lib/markdownFrontmatter.ts
- * YAML frontmatter parsing helpers for docs governance tools.
+ * Owned concern: split, parse, and read YAML frontmatter for docs governance tools.
+ *
+ * This module is the only markdown helper that talks to YAML parsing and
+ * filesystem reads.
  */
 import { readFileSync } from 'node:fs';
 import { load as yamlLoad, JSON_SCHEMA } from 'js-yaml';

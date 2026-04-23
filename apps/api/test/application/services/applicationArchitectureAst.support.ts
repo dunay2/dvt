@@ -130,3 +130,32 @@ export const START_RUN_APPLICATION_COMPONENT = {
     canonicalBoundaryModule: '@dvt/contracts',
   },
 } as const;
+
+export const WORKSPACE_GRAPH_DRAFT_APPLICATION_COMPONENT = {
+  artifacts: {
+    authorizeCapabilityService: defineArtifact(
+      APPLICATION_ROOT,
+      'services/authorizeWorkspaceGraphDraftCapabilityService.ts'
+    ),
+    authorizeCapabilityServiceTest: defineArtifact(
+      import.meta.dirname,
+      'authorizeWorkspaceGraphDraftCapabilityService.test.ts'
+    ),
+    componentGuide: defineArtifact(
+      DOCS_ROOT,
+      'workspace-graph-draft-application-component.md'
+    ),
+    getUseCase: defineArtifact(
+      APPLICATION_ROOT,
+      'services/getWorkspaceGraphDraftUseCase.ts'
+    ),
+    portFamily: defineArtifact(APPLICATION_ROOT, 'ports/workspaceGraphDraft.ts'),
+    saveUseCase: defineArtifact(
+      APPLICATION_ROOT,
+      'services/saveWorkspaceGraphDraftUseCase.ts'
+    ),
+  },
+  contracts: {
+    canonicalBoundaryModule: '@dvt/contracts',
+  },
+} as const;

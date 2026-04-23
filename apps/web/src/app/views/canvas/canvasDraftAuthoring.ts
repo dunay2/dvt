@@ -91,9 +91,13 @@ function projectDraftEdgeToAuthoringEdge(
 export function canPersistCanvasDraftAuthoringPayload(
   payload: CanvasDraftAuthoringPayload
 ): boolean {
-  return WorkspaceGraphAuthoringDraftSchema.safeParse(
-    buildCanvasDraftAuthoringGraphSync(payload)
-  ).success;
+  try {
+    return WorkspaceGraphAuthoringDraftSchema.safeParse(
+      buildCanvasDraftAuthoringGraphSync(payload)
+    ).success;
+  } catch {
+    return false;
+  }
 }
 
 function buildCanvasDraftAuthoringGraphSync(

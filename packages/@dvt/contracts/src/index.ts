@@ -105,6 +105,20 @@ export type {
   WorkspaceGraphAuthoringNodePatch,
 } from './contracts/planner/WorkspaceGraphAuthoringCommand.v1.js';
 export {
+  EXECUTABLE_SUBGRAPH_DIAGNOSTIC_CODE,
+  EXECUTION_SELECTION_MODE,
+  ExecutableSubgraphDiagnosticSchema,
+  ExecutableSubgraphSchema,
+  ExecutionSelectionSchema,
+} from './contracts/planner/index.js';
+export type {
+  ExecutableSubgraph,
+  ExecutableSubgraphDiagnostic,
+  ExecutableSubgraphDiagnosticCode,
+  ExecutionSelection,
+  ExecutionSelectionMode,
+} from './contracts/planner/index.js';
+export {
   WORKSPACE_GRAPH_DRAFT_AUDIT_ACTION,
   WORKSPACE_GRAPH_DRAFT_AUDIT_OUTCOME,
   WORKSPACE_GRAPH_DRAFT_CAPABILITY_MODE,

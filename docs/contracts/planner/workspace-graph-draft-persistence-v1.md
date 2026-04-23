@@ -21,10 +21,13 @@ invention ahead of `TF-C4` and `TF-E2`.
 - `packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphDraft.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringDraft.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringCommand.v1.ts`
+- `packages/@dvt/contracts/src/contracts/planner/ExecutionSelection.v1.ts`
+- `packages/@dvt/contracts/src/contracts/planner/ExecutableSubgraph.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/TransformationFlowDesignGraph.v1.ts`
 - `packages/@dvt/contracts/src/schemas.ts`
 - `packages/@dvt/contracts/src/validation.ts`
 - `docs/planning/proposals/mandatory/runtime-and-contracts/tf-a2-workspace-graph-draft-persistence-boundary-plan-20260416.md`
+- `docs/planning/proposals/mandatory/runtime-and-contracts/tf-a2-c-execution-selection-and-executable-subgraph-plan-20260423.md`
 
 ## Scope and capability envelope
 
@@ -104,6 +107,17 @@ flowchart LR
   Save -. must not accept .-> Legacy["DesignGraphDraft as editable payload"]
 ```
 
+## Selection-to-execution seam
+
+Preview and run must now cross two explicit contracts after draft persistence:
+
+- `ExecutionSelection` carries operator intent only
+- `ExecutableSubgraph` carries the derived selected closure and diagnostics
+
+That seam prevents unrelated loose nodes from becoming implicit whole-draft
+blockers and keeps compile/runtime concerns out of the persisted draft
+envelope.
+
 ## Consumer rule
 
 - `api` must validate protected draft read/write boundaries against the shared
@@ -136,9 +150,13 @@ flowchart LR
   node identity, typed node payloads, typed edges, and persisted authoring node
   positions. Any React Flow viewport state beyond those positions remains a
   web projection concern.
+- preview and run callers must produce canonical `ExecutionSelection` payloads
+  and consume planner-derived `ExecutableSubgraph` results instead of assuming
+  whole-draft compile.
 
 ## Related
 
 - [Planner contracts index](./index.md)
+- [Execution selection and executable subgraph v1](./execution-selection-and-executable-subgraph-v1.md)
 - [Transformation flow preview and design graph v1](./TransformationFlowPreview.v1.md)
 - [Workspace authoring draft aggregate](../../architecture/components/planner/workspace-authoring-draft-aggregate.md)

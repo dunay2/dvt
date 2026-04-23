@@ -114,6 +114,10 @@ shape, and the governed transition route:
 - [Workspace graph draft runtime composition component](../../../../apps/api/docs/workspace-graph-draft-runtime-composition-component.md):
   local guide for the protected-runtime subcomponent that assembles the
   workspace-graph-draft store, capability service, and use-case chain.
+- [Workspace graph draft application component](../../../../apps/api/docs/workspace-graph-draft-application-component.md):
+  local guide for the protected workspace-graph-draft application component,
+  its capability service, read/write use cases, invariants, and semantic
+  ownership rules.
 - [Temporal Fowler provider-truth follow-up review](../../../planning/reviews/architecture-and-governance/20260421-temporal-fowler-provider-truth-follow-up-review.md):
   Fowler-style architecture analysis for the Temporal branch work, residual
   drift map, mature-system comparison, and recommended next moves.

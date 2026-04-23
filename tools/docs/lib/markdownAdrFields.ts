@@ -1,6 +1,8 @@
 /**
- * @file tools/docs/lib/markdownAdrFields.ts
- * ADR header-field extraction helpers for docs governance tools.
+ * Owned concern: extract ADR-style metadata fields from frontmatter and ADR preambles.
+ *
+ * This module normalizes metadata used by ADR and evidence governance checks;
+ * it does not own markdown link, anchor, or filesystem behavior.
  */
 import { parseFrontmatter, splitFrontmatter } from './markdownFrontmatter.js';
 import { forEachRegexMatch } from './markdownRegex.js';

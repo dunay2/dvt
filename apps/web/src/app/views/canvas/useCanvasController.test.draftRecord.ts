@@ -61,6 +61,32 @@ function buildAuthoringDraftNode(
 
   if (kind === 'sql_transform') {
     node.path = `models/${nodeId}.sql`;
+    node.metadata = {
+      config: {
+        dialect: 'postgres',
+      },
+    };
+  }
+
+  if (kind === 'source') {
+    node.metadata = {
+      config: {
+        schema: 'raw',
+        table: nodeId,
+        alias: nodeId,
+      },
+    };
+  }
+
+  if (kind === 'sink') {
+    node.metadata = {
+      config: {
+        schema: 'analytics',
+        table: nodeId,
+        materialization: 'table',
+        writeMode: 'replace',
+      },
+    };
   }
 
   return node;

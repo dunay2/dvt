@@ -12,9 +12,12 @@ ExecutionPlan and planner-related schemas and compatibility contracts.
 ## Normative Sources (`@dvt/contracts`)
 
 - `packages/@dvt/contracts/src/contracts/planner/CustomPolicyNamespaceRegistry.v1.ts`
+- `packages/@dvt/contracts/src/contracts/planner/ExecutableSubgraph.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/ExecutionBindingVerification.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v1.ts`
+- `packages/@dvt/contracts/src/contracts/planner/ExecutionSelection.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/IExecutionPlanner.v1.ts`
+- `packages/@dvt/contracts/src/contracts/planner/index.ts`
 - `packages/@dvt/contracts/src/contracts/planner/PlanAdmissionLink.v1.schema.json`
 - `packages/@dvt/contracts/src/contracts/planner/PlanAdmissionLink.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/PlanCompileStepTypeConfigs.v1.ts`
@@ -42,6 +45,7 @@ ExecutionPlan and planner-related schemas and compatibility contracts.
 
 ## Repository-local documents
 
+- [Execution selection and executable subgraph v1](execution-selection-and-executable-subgraph-v1.md)
 - [Plan store records v1](PlanStoreRecords.v1.md)
 - [Transformation flow compiler mapping v1](TransformationFlowCompiler.v1.md)
 - [Transformation flow preview and design graph v1](TransformationFlowPreview.v1.md)

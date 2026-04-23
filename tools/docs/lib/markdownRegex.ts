@@ -1,6 +1,8 @@
 /**
- * @file tools/docs/lib/markdownRegex.ts
- * Shared regular-expression iterator for markdown parsing helpers.
+ * Owned concern: provide deterministic regex iteration for markdown parser subcomponents.
+ *
+ * This module centralizes stateful RegExp iteration so parser helpers do not
+ * each own lastIndex reset behavior.
  */
 export function forEachRegexMatch(
   pattern: RegExp,

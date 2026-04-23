@@ -1,6 +1,8 @@
 /**
- * @file tools/docs/lib/markdownAnchors.ts
- * Markdown anchor extraction helpers for docs governance tools.
+ * Owned concern: derive linkable markdown anchors from headings and explicit anchor tags.
+ *
+ * This module owns GitHub-style anchor normalization only; it does not parse
+ * frontmatter or collect outbound markdown links.
  */
 import { forEachRegexMatch } from './markdownRegex.js';
 
