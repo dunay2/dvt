@@ -17,17 +17,16 @@ export interface FrontmatterResult {
  * Split YAML frontmatter (--- ... ---) from markdown content.
  */
 export function splitFrontmatter(content: string): FrontmatterResult {
-  if (!content.startsWith('---')) {
-    return { hasFrontmatter: false, frontmatter: '', body: content };
+  const normalizedContent = content.charCodeAt(0) === 0xfeff ? content.slice(1) : content;
+  const match = normalizedContent.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?/);
+  if (!match) {
+    return { hasFrontmatter: false, frontmatter: '', body: normalizedContent };
   }
-  const end = content.indexOf('\n---', 3);
-  if (end === -1) {
-    return { hasFrontmatter: false, frontmatter: '', body: content };
-  }
+
   return {
     hasFrontmatter: true,
-    frontmatter: content.slice(4, end),
-    body: content.slice(end + 4).trimStart(),
+    frontmatter: match[1] ?? '',
+    body: normalizedContent.slice(match[0].length).trimStart(),
   };
 }
 

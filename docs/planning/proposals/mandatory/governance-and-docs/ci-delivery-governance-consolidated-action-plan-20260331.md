@@ -277,7 +277,7 @@ execution route for the verified residual items.
     pre-implementation material before config/code changes land
   - `docs/planning/state/planning-control-tower.md` requires active proposal
     changes to update the linked lane registry
-  - [20260418 RC-C2 turbo build orchestrator closeout](../../closeouts/20260418-rc-c2-turbo-build-orchestrator-closeout.md)
+  - [20260418 RC-C2 turbo build orchestrator closeout](../../../closeouts/20260418-rc-c2-turbo-build-orchestrator-closeout.md)
     explicitly kept Turbo `test`, Turbo `typecheck`, remote cache, and
     TypeScript project references out of scope of that shipped slice
   - [Determinism Tooling](../../../../architecture/components/engine/dev/determinism-tooling.md)

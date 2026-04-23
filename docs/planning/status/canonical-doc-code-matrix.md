@@ -138,7 +138,7 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
 - Key tests:
   [packages/@dvt/adapter-postgres/test/runStateCommandPortBridge.test.ts](../../../packages/@dvt/adapter-postgres/test/runStateCommandPortBridge.test.ts)
   and
-  [packages/@dvt/adapter-postgres/test/showke.test.ts](../../../packages/@dvt/adapter-postgres/test/showke.test.ts)
+  [packages/@dvt/adapter-postgres/test/smoke.test.ts](../../../packages/@dvt/adapter-postgres/test/smoke.test.ts)
 - Verification:
   `pnpm test:adapter-postgres`
   and
@@ -192,9 +192,9 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   and
   [packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts](../../../packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts)
 - Key tests:
-  [packages/@dvt/delivery/test/OutboxWorker.test.ts](../../../packages/@dvt/delivery/test/OutboxWorker.test.ts)
+  [packages/@dvt/delivery/test/OutboxWorker.delivery.test.ts](../../../packages/@dvt/delivery/test/OutboxWorker.delivery.test.ts)
   and
-  [apps/outbox-worker/test/runtime/OutboxWorkerRuntime.test.ts](../../../apps/outbox-worker/test/runtime/OutboxWorkerRuntime.test.ts)
+  [apps/outbox-worker/test/runtime/OutboxWorkerRuntime.lifecycle.test.ts](../../../apps/outbox-worker/test/runtime/OutboxWorkerRuntime.lifecycle.test.ts)
   and
   [apps/outbox-worker/test/plugins/env.test.ts](../../../apps/outbox-worker/test/plugins/env.test.ts)
   and
@@ -204,7 +204,7 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   and
   [apps/outbox-worker/test/ops/OperationalServer.test.ts](../../../apps/outbox-worker/test/ops/OperationalServer.test.ts)
   and
-  [packages/@dvt/adapter-postgres/test/showke.test.ts](../../../packages/@dvt/adapter-postgres/test/showke.test.ts)
+  [packages/@dvt/adapter-postgres/test/smoke.test.ts](../../../packages/@dvt/adapter-postgres/test/smoke.test.ts)
 - Runbook:
   [docs/runbooks/outbox-worker-g5.md](../../runbooks/outbox-worker-g5.md)
 - Verification:
@@ -251,7 +251,7 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   and
   [apps/projector-worker/test/env.test.ts](../../../apps/projector-worker/test/env.test.ts)
   and
-  [packages/@dvt/adapter-postgres/test/showke.test.ts](../../../packages/@dvt/adapter-postgres/test/showke.test.ts)
+  [packages/@dvt/adapter-postgres/test/smoke.test.ts](../../../packages/@dvt/adapter-postgres/test/smoke.test.ts)
 - Evidence:
   [ED-20260316 - G7 provider run-id reconciliation](../../evidence/critical/ED-20260316-g7-provider-ref-reconciliation.md)
   and
@@ -646,7 +646,7 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   [packages/@dvt/cli/run-golden-paths.cjs](../../../packages/@dvt/cli/run-golden-paths.cjs),
   [packages/@dvt/cli/src/index.ts](../../../packages/@dvt/cli/src/index.ts)
 - Key tests:
-  [packages/@dvt/cli/test/showke.test.ts](../../../packages/@dvt/cli/test/showke.test.ts)
+  [packages/@dvt/cli/test/smoke.test.ts](../../../packages/@dvt/cli/test/smoke.test.ts)
 - Verification:
   `pnpm test:cli`
   and

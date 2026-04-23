@@ -704,10 +704,10 @@
     {
       "path": "docs/evidence/critical/ED-20260320-planner-r2-typed-graph-source-boundary.md",
       "filename": "ED-20260320-planner-r2-typed-graph-source-boundary.md",
-      "title": null,
-      "status": null,
-      "date": null,
-      "arc_level": null,
+      "title": "ED-20260320 - Planner R2 typed graph-source boundary",
+      "status": "accepted",
+      "date": "2026-03-20",
+      "arc_level": "ARC-1",
       "breaking": null
     },
     {
@@ -821,10 +821,10 @@
     {
       "path": "docs/evidence/critical/ED-20260331-mvp-a1-backend-contractual-inventory.md",
       "filename": "ED-20260331-mvp-a1-backend-contractual-inventory.md",
-      "title": null,
-      "status": null,
-      "date": null,
-      "arc_level": null,
+      "title": "ED-20260331 MVP-A1 backend contractual inventory",
+      "status": "Accepted",
+      "date": "2026-03-31",
+      "arc_level": "ARC-1",
       "breaking": null
     },
     {
