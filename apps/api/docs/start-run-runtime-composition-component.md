@@ -2,7 +2,7 @@
 title: Start-run runtime composition component
 status: Active
 owner: apps/api
-last_reviewed: 2026-04-22
+last_reviewed: 2026-04-23
 ---
 
 # Start-run runtime composition component
@@ -18,6 +18,7 @@ Read this together with:
 
 - `apps/api/docs/start-run-application-component.md`
 - `apps/api/docs/start-run-execution-capacity-admission-component.md`
+- `apps/api/docs/executable-subgraph-resolution-component.md`
 - `docs/architecture/components/api/protected-runtime-and-plan-compile-component.md`
 
 ## Owned concern
@@ -52,6 +53,7 @@ It does **not** own:
   `StartRunAuthorizedFacade`,
   `BackpressureAwareStartRunUseCase`,
   `PlannerBackedStartRunUseCase`,
+  `ResolveAuthorizedExecutableSubgraphService`,
   `EngineStartRunUseCase`,
   and `StoredPlanExecutabilityValidator`
 - the outer composition root passes abstract runtime dependencies into this
@@ -69,6 +71,7 @@ flowchart LR
   StartRunRuntime --> Facade["StartRunAuthorizedFacade"]
   StartRunRuntime --> Admission["BackpressureAwareStartRunUseCase"]
   StartRunRuntime --> Planner["PlannerBackedStartRunUseCase"]
+  StartRunRuntime --> Resolver["ResolveAuthorizedExecutableSubgraphService"]
   StartRunRuntime --> Engine["EngineStartRunUseCase"]
   StartRunRuntime --> Validator["StoredPlanExecutabilityValidator"]
   StartRunRuntime --> Compile["buildPlanCompilePlanner()"]
@@ -84,11 +87,13 @@ sequenceDiagram
   participant Facade as StartRunAuthorizedFacade
   participant Admission as BackpressureAwareStartRunUseCase
   participant Planner as PlannerBackedStartRunUseCase
+  participant Resolver as ResolveAuthorizedExecutableSubgraphService
   participant Engine as EngineStartRunUseCase
 
   Root->>StartRun: pass authenticator, authorizer, engine, adapters, stores, telemetry deps
   StartRun->>StartRun: bind plan validator + compile planner
   StartRun->>Engine: construct execution delegate
+  StartRun->>Resolver: bind protected workspace-graph draft store + planner
   StartRun->>Planner: construct planner-backed delegate
   StartRun->>Admission: construct admission use case
   StartRun->>Facade: construct authenticated facade

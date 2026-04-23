@@ -2,6 +2,7 @@
  * Owned concern: define the presentation-facing runs port and DTO vocabulary
  * consumed by views without exposing runtime-owned execution internals.
  */
+import type { ExecutionSelection } from '@dvt/contracts';
 import type { EngineRunRef, PlanRef, RunEvent } from '../types/engine';
 import type { WorkspaceScope } from './sessionContext';
 
@@ -12,7 +13,7 @@ import type { WorkspaceScope } from './sessionContext';
 export type StartRunInput = {
   planRef: PlanRef;
   workspaceScope: WorkspaceScope;
-  selection: readonly string[];
+  selection: ExecutionSelection;
 };
 
 export type UiRunStatus = 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';

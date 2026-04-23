@@ -50,7 +50,10 @@ const VALID_START_RUN_BODY = {
   tenantId: 'tenant-a',
   projectId: 'project-a',
   environmentId: 'env-a',
-  selection: ['model.orders'],
+  selection: {
+    mode: 'explicit',
+    nodeIds: ['model.orders'],
+  },
   targetAdapter: 'mock',
   planRef: VALID_PLAN_REF,
 };
@@ -104,7 +107,7 @@ describe('start-run identity architecture', () => {
     expect(parsed.value.command).toEqual(
       expect.objectContaining({
         planRef: VALID_PLAN_REF,
-        selection: ['model.orders'],
+        selection: { mode: 'explicit', nodeIds: ['model.orders'] },
         targetAdapter: 'mock',
       })
     );

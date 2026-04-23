@@ -275,14 +275,17 @@ describe('useCanvasExecutionActions run start', () => {
         environmentId: 'env',
         targetAdapter: 'mock',
       },
-      selection: [
-        'stg_orders',
-        'stg_customers',
-        'dim_store',
-        'fct_sales',
-        'test_not_null_store_id',
-        'test_unique_order_id',
-      ],
+      selection: {
+        mode: 'explicit',
+        nodeIds: [
+          'stg_orders',
+          'stg_customers',
+          'dim_store',
+          'fct_sales',
+          'test_not_null_store_id',
+          'test_unique_order_id',
+        ],
+      },
     });
     expect(harness.shellFeedback.success).toHaveBeenCalledWith(canvasViewCopy.runStartedMessage);
     expect(harness.onRunStarted).toHaveBeenCalledWith('run-success');

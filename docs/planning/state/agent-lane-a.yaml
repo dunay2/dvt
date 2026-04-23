@@ -2723,7 +2723,7 @@ tasks:
     last_verified: '2026-04-14'
   - task_id: TF-A2
     priority: P0
-    status: in_progress
+    status: done
     objective: >-
       formalize the canonical workspace graph authoring-draft persistence contract so editable
       Canvas graphs use one typed read and write boundary across web, api, and the persistence owner
@@ -2742,7 +2742,7 @@ tasks:
       `DesignGraphDraft` for preview/run adoption without local DTO drift.
     complexity: M
     effort_points: 5
-    progress_pct: 55
+    progress_pct: 100
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/tf-a2-workspace-graph-draft-persistence-boundary-plan-20260416.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/tf-a2-workspace-authoring-draft-aggregate-roots-plan-20260423.md
@@ -2751,7 +2751,9 @@ tasks:
       - docs/contracts/planner/workspace-graph-draft-persistence-v1.md
       - docs/evidence/ed-20260416-tf-a2-workspace-graph-draft-boundary.md
       - docs/evidence/ed-20260423-workspace-authoring-draft-aggregate.md
+      - docs/evidence/ed-20260423-tf-a2-c3-c4-api-web-adoption.md
       - docs/risk-register/quality/R-20260416-TF-A2-WORKSPACE-GRAPH-DRAFT-ADOPTION-DRIFT.yaml
+      - docs/risk-register/quality/R-20260423-WORKSPACE-AUTHORING-DRAFT-AGGREGATE.yaml
       - docs/contracts/planner/TransformationFlowPreview.v1.md
       - docs/architecture/reference-architecture.md
       - docs/architecture/components/engine/contracts/engine/SignalsAndAuth.v1.md
@@ -2761,19 +2763,19 @@ tasks:
       `WorkspaceGraphDraft.v1` now persists `WorkspaceGraphAuthoringDraft` instead of embedding
       `DesignGraphDraft`, and the active contract line already defines typed scope, capability,
       audit, compare-and-swap, idempotency, and format-evolution envelopes for protected draft reads
-      and writes. `TF-A2-C1` is now closed with canonical `ExecutionSelection` and
-      `ExecutableSubgraph` contract artifacts, a planner-local component guide, semantic
-      architecture coverage, and ARC-2 evidence. The remaining open seam is downstream adoption:
-      planner derivation plus API/web execution wiring still need to stop depending on whole-draft
+      and writes. `TF-A2-C1` through `TF-A2-C4` are now closed with canonical `ExecutionSelection`
+      and `ExecutableSubgraph` contract artifacts, a planner-local component guide, planner-owned
+      selected-closure derivation, API preview/start-run adoption, Canvas preview/run adoption,
+      semantic architecture coverage, and ARC-2 evidence. The route no longer depends on whole-draft
       compile assumptions.
     last_verified: '2026-04-23'
   - task_id: TF-A2-C
     parent_task: TF-A2
     priority: P0
-    status: in_progress
+    status: done
     complexity: M
     effort_points: 3
-    progress_pct: 35
+    progress_pct: 100
     objective: >-
       define the explicit `ExecutionSelection` command boundary and the derived `ExecutableSubgraph`
       read model so preview and run operate on selected closure semantics instead of whole-draft
@@ -2786,15 +2788,21 @@ tasks:
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/tf-a2-c-execution-selection-and-executable-subgraph-plan-20260423.md
       - docs/planning/closeouts/20260423-tf-a2-c1-execution-selection-contract-pack-closeout.md
+      - docs/planning/closeouts/20260423-tf-a2-c2-executable-subgraph-derivation-closeout.md
+      - docs/planning/closeouts/20260423-tf-a2-c3-c4-api-web-adoption-closeout.md
       - docs/evidence/ed-20260423-tf-a2-c1-execution-selection-contract-pack.md
+      - docs/evidence/ed-20260423-tf-a2-c2-executable-subgraph-derivation.md
+      - docs/evidence/ed-20260423-tf-a2-c3-c4-api-web-adoption.md
       - docs/contracts/planner/workspace-graph-draft-persistence-v1.md
       - docs/architecture/components/planner/workspace-authoring-draft-aggregate.md
       - docs/architecture/components/planner/execution-selection-component.md
+      - docs/architecture/components/planner/executable-subgraph-derivation-component.md
       - docs/contracts/planner/execution-selection-and-executable-subgraph-v1.md
     status_reason: >-
-      `TF-A2-C1` is closed. The canonical contract pack, local component guide, semantic
-      architecture guard, and ARC evidence now freeze the execution-selection boundary. Planner
-      derivation plus API/web adoption remain sequenced as `TF-A2-C2..C4`.
+      `TF-A2-C1` through `TF-A2-C4` are closed. The canonical contract pack, local component guides,
+      planner-owned derivation seam, API executable-subgraph resolver seam, Canvas
+      execution-selection seam, semantic architecture guards, and ARC evidence now freeze the
+      execution-selection boundary plus selected-closure adoption across planner, API, and web.
     last_verified: '2026-04-23'
   - task_id: TF-A2-C1
     parent_task: TF-A2-C
@@ -2822,6 +2830,90 @@ tasks:
       Completed. `@dvt/contracts` now exposes the canonical execution-selection contract pack
       through a planner-local semantic barrel, contract plus architecture tests, validation helpers,
       governed planner docs, and ARC-2 evidence/risk updates.
+    last_verified: '2026-04-23'
+  - task_id: TF-A2-C2
+    parent_task: TF-A2-C
+    priority: P0
+    status: done
+    complexity: M
+    effort_points: 2
+    progress_pct: 100
+    objective: >-
+      introduce the planner-owned derivation seam that resolves selected closure from
+      `WorkspaceGraphAuthoringDraft` plus `ExecutionSelection` and returns canonical
+      `ExecutableSubgraph` diagnostics without widening to the whole draft.
+    dependency: TF-A2-C1
+    target: >-
+      `@dvt/planner` exposes selected-closure derivation behind `PlannerFacade`, visible-only
+      traversal stays explicit, dependency gaps and cycles fail closed with canonical diagnostics,
+      and semantic architecture coverage locks the seam to the planner boundary.
+    evidence_refs:
+      - docs/planning/closeouts/20260423-tf-a2-c2-executable-subgraph-derivation-closeout.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/tf-a2-c-execution-selection-and-executable-subgraph-plan-20260423.md
+      - docs/architecture/components/planner/executable-subgraph-derivation-component.md
+      - docs/contracts/planner/execution-selection-and-executable-subgraph-v1.md
+      - docs/evidence/ed-20260423-tf-a2-c2-executable-subgraph-derivation.md
+      - docs/risk-register/quality/R-20260423-WORKSPACE-AUTHORING-DRAFT-AGGREGATE.yaml
+    status_reason: >-
+      Completed. `@dvt/planner` now derives canonical `ExecutableSubgraph` read models from
+      authoring truth plus execution selection through `PlannerFacade#deriveExecutableSubgraph`,
+      with semantic coverage for upstream, downstream, connected-component, no-widen,
+      dependency-gap, and cycle-detection behavior.
+    last_verified: '2026-04-23'
+  - task_id: TF-A2-C3
+    parent_task: TF-A2-C
+    priority: P0
+    status: done
+    complexity: M
+    effort_points: 2
+    progress_pct: 100
+    objective: >-
+      adopt canonical execution selection and planner-derived selected-closure resolution in API
+      preview and planner-backed start-run so protected runtime flows stop depending on whole-draft
+      compile assumptions.
+    dependency: TF-A2-C2
+    target: >-
+      `apps/api` resolves `ExecutableSubgraph` from protected draft truth before planner build in
+      preview and planner-backed start-run, documents the seam locally, and guards it with semantic
+      architecture plus direct behavior tests.
+    evidence_refs:
+      - docs/planning/closeouts/20260423-tf-a2-c3-c4-api-web-adoption-closeout.md
+      - docs/evidence/ed-20260423-tf-a2-c3-c4-api-web-adoption.md
+      - apps/api/docs/executable-subgraph-resolution-component.md
+      - apps/api/src/application/services/resolveAuthorizedExecutableSubgraph.ts
+      - apps/api/test/application/services/resolveAuthorizedExecutableSubgraph.test.ts
+      - apps/api/test/application/services/executableSubgraphResolutionComponent.architecture.test.ts
+      - docs/risk-register/quality/R-20260423-WORKSPACE-AUTHORING-DRAFT-AGGREGATE.yaml
+    status_reason: >-
+      Completed. API preview and planner-backed start-run now resolve selected execution through one
+      protected executable-subgraph seam before planner build, with explicit rejection outcomes,
+      local component docs, direct resolver tests, and semantic architecture coverage.
+    last_verified: '2026-04-23'
+  - task_id: TF-A2-C4
+    parent_task: TF-A2-C
+    priority: P0
+    status: done
+    complexity: M
+    effort_points: 2
+    progress_pct: 100
+    objective: >-
+      adopt canonical execution selection in Canvas preview and run so web emits one governed
+      selection shape and does not invent a frontend-only execution DTO family.
+    dependency: TF-A2-C3
+    target: >-
+      `apps/web` emits canonical `ExecutionSelection` for preview and run through one named Canvas
+      seam, documents that seam locally, and locks it with semantic architecture tests.
+    evidence_refs:
+      - docs/planning/closeouts/20260423-tf-a2-c3-c4-api-web-adoption-closeout.md
+      - docs/evidence/ed-20260423-tf-a2-c3-c4-api-web-adoption.md
+      - docs/architecture/components/web/graph/canvas-execution-selection-component.md
+      - apps/web/src/app/views/canvas/canvasRunSelection.ts
+      - apps/web/src/app/views/canvas/canvasExecutionSelection.architecture.test.ts
+      - docs/risk-register/quality/R-20260423-WORKSPACE-AUTHORING-DRAFT-AGGREGATE.yaml
+    status_reason: >-
+      Completed. Canvas preview and run now emit canonical execution selection through one shared
+      browser-local seam used by both actions, with local component docs and semantic architecture
+      coverage preventing preview/run DTO drift.
     last_verified: '2026-04-23'
 dependency_notes:
   - >-

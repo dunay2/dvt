@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { parseExecutionSelection } from '@dvt/contracts';
 
 import {
   buildPlanRefStartRunCommand,
@@ -12,6 +13,10 @@ const VALID_PLAN_REF = {
   planId: 'p1',
   planVersion: '1.0',
 };
+const VALID_SELECTION = parseExecutionSelection({
+  mode: 'explicit',
+  nodeIds: ['model_a'],
+});
 
 describe('startRun command builders', () => {
   it('builds planRef command', () => {
@@ -21,7 +26,7 @@ describe('startRun command builders', () => {
         rawRunExecutionContextRef: undefined,
         runId: 'run-1',
         targetAdapter: 'mock',
-        selection: ['model_a'],
+        selection: VALID_SELECTION,
       })
     ).toEqual({
       ok: true,
@@ -29,7 +34,7 @@ describe('startRun command builders', () => {
         planRef: VALID_PLAN_REF,
         runId: 'run-1',
         targetAdapter: 'mock',
-        selection: ['model_a'],
+        selection: VALID_SELECTION,
       },
     });
   });
@@ -48,7 +53,7 @@ describe('startRun command builders', () => {
         rawRunExecutionContextRef: undefined,
         runId: 'run-1',
         targetAdapter: 'temporal',
-        selection: ['model_a'],
+        selection: VALID_SELECTION,
       })
     ).toEqual({
       ok: true,
@@ -61,7 +66,7 @@ describe('startRun command builders', () => {
         },
         runId: 'run-1',
         targetAdapter: 'temporal',
-        selection: ['model_a'],
+        selection: VALID_SELECTION,
       },
     });
   });
@@ -73,7 +78,7 @@ describe('startRun command builders', () => {
         rawRunExecutionContextRef: undefined,
         runId: 'run-1',
         targetAdapter: 'mock',
-        selection: ['model_a'],
+        selection: VALID_SELECTION,
       })
     ).toEqual({
       ok: false,
@@ -88,7 +93,7 @@ describe('startRun command builders', () => {
         rawRunExecutionContextRef: undefined,
         runId: 'run-1',
         targetAdapter: 'temporal',
-        selection: ['model_a'],
+        selection: VALID_SELECTION,
       })
     ).toEqual({
       ok: false,
@@ -103,7 +108,7 @@ describe('startRun command builders', () => {
         rawRunExecutionContextRef: { uri: 'dvt-runctx://x' },
         runId: 'run-1',
         targetAdapter: 'mock',
-        selection: ['model_a'],
+        selection: VALID_SELECTION,
       })
     ).toEqual({
       ok: false,
@@ -130,7 +135,7 @@ describe('startRun command builders', () => {
         },
         runId: 'run-1',
         targetAdapter: 'mock',
-        selection: ['model_a'],
+        selection: VALID_SELECTION,
       })
     ).toEqual({
       ok: false,

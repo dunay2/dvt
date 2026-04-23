@@ -1,3 +1,4 @@
+import type { ExecutionSelection } from '@dvt/contracts';
 import type { PreviewPlanCommand } from '../../application/services/PreviewPlanUseCase.js';
 
 import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
@@ -8,7 +9,7 @@ import { type PreviewProvenance, parsePreviewProvenance } from './previewProvena
 import { badRequestResult, type RouteParseResult } from './routeParseIssue.js';
 
 export interface ParsedPreviewCommandInput {
-  readonly selectedNodeIds: readonly string[];
+  readonly selection: ExecutionSelection;
   readonly graphSource: NonNullable<PreviewPlanCommand['graphSource']>;
   readonly provenance: PreviewProvenance | undefined;
   readonly policies?: PreviewPlanCommand['policies'];
@@ -19,8 +20,7 @@ export interface ParsedPreviewCommandInput {
 export function parsePreviewCommandInput(
   record: Record<string, unknown>
 ): RouteParseResult<ParsedPreviewCommandInput> {
-  const selectionInput = record.selectedNodeIds ?? record.selection;
-  const selection = parsePlanRouteSelection(selectionInput);
+  const selection = parsePlanRouteSelection(record.selection);
   if (!selection.ok) {
     return selection;
   }
@@ -38,7 +38,7 @@ export function parsePreviewCommandInput(
   return {
     ok: true,
     value: {
-      selectedNodeIds: selection.value,
+      selection: selection.value,
       provenance: provenance.value,
       ...plannerCommandFields.value,
     },

@@ -1,6 +1,6 @@
 /**
- * Owned concern: compile planner-backed start-run inputs into stored plans and
- * hand validated plan refs to the execution delegate.
+ * Owned concern: compile planner-backed selected-closure start-run inputs into
+ * stored plans and hand validated plan refs to the execution delegate.
  */
 import {
   START_RUN_RESULT_KIND,
@@ -21,6 +21,7 @@ import type {
 import type { IStartRunUseCase, StartRunUseCaseResult } from '../ports/startRunUseCasePort.js';
 
 import { resolveCanonicalPlannerInputEnvelope } from './resolveCanonicalPlannerInputEnvelope.js';
+import { ResolveAuthorizedExecutableSubgraphService } from './resolveAuthorizedExecutableSubgraph.js';
 
 type PlanValidationResult = Awaited<ReturnType<IPlanExecutabilityValidator['validatePlan']>>;
 export class PlannerBackedStartRunUseCase implements IStartRunUseCase {
@@ -35,6 +36,7 @@ export class PlannerBackedStartRunUseCase implements IStartRunUseCase {
       readonly validator: IPlanExecutabilityValidator;
       readonly delegate: IStartRunUseCase;
       readonly compileTelemetry?: IPlanCompileLatencyTelemetry;
+      readonly executableSubgraphResolver: ResolveAuthorizedExecutableSubgraphService;
     }
   ) {}
 
@@ -50,7 +52,29 @@ export class PlannerBackedStartRunUseCase implements IStartRunUseCase {
     const compileStartMs = Date.now();
     let compileOutcome: PlanCompileLatencyOutcome = 'error';
     try {
-      const plannerInput = toPlannerInput(command, context);
+      const executableSubgraph = await this.deps.executableSubgraphResolver.execute(
+        command.graphSource === undefined
+          ? {
+              selection: command.selection,
+            }
+          : {
+              selection: command.selection,
+              graphSource: command.graphSource,
+            },
+        context
+      );
+      if (!executableSubgraph.ok) {
+        return {
+          ok: true,
+          value: {
+            kind: START_RUN_RESULT_KIND.planRejected,
+            accepted: false,
+            ...executableSubgraph.rejection,
+          },
+        };
+      }
+
+      const plannerInput = toPlannerInput(command, context, executableSubgraph.value.nodeIds);
       buildResult = await this.deps.planner.buildPlan(plannerInput);
       compileOutcome = 'built';
     } finally {
@@ -105,7 +129,8 @@ function toRoutePlanRef(planRef: PlanRef): StartRunPlanRef {
 
 function toPlannerInput(
   command: StartRunCommand,
-  context: AuthorizedCommandExecutionContext
+  context: AuthorizedCommandExecutionContext,
+  selectedNodeIds: readonly string[]
 ): PlannerInputEnvelopeV1 {
   if (command.graphSource === undefined) {
     throw new Error('Planner-backed startRun requires graphSource.');
@@ -119,7 +144,7 @@ function toPlannerInput(
       ...(command.environment === undefined ? {} : { environment: command.environment }),
       ...(ownership === undefined ? {} : { ownership }),
       ...(command.observability === undefined ? {} : { observability: command.observability }),
-      selection: { selectedNodeIds: command.selection },
+      selection: { selectedNodeIds: [...selectedNodeIds] },
       requestedBy: context.principal.principalId,
       requestId: context.requestId,
       requestedAtIso: context.authorizedAt.toISOString(),

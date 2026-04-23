@@ -1,4 +1,4 @@
-import type { StartRunCommand } from '@dvt/contracts';
+import { parseExecutionSelection, type StartRunCommand } from '@dvt/contracts';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -21,7 +21,7 @@ describe('EngineStartRunUseCase command path', () => {
     const commandWithoutPlanRef: StartRunCommand = {
       runId: 'run-test-1',
       targetAdapter: 'mock',
-      selection: ['step_a'],
+      selection: parseExecutionSelection({ mode: 'explicit', nodeIds: ['step_a'] }),
     };
 
     const result = await useCase.execute(commandWithoutPlanRef, buildAuthorizedContext());

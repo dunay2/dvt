@@ -2,7 +2,7 @@
   "summary": {
     "adrs": 46,
     "evidenceDocs": 117,
-    "normativeDocs": 312,
+    "normativeDocs": 314,
     "statusDocs": 58
   },
   "adrs": [
@@ -2014,6 +2014,10 @@
       "filename": "outbox-worker-sequence.md"
     },
     {
+      "path": "docs/architecture/components/planner/executable-subgraph-derivation-component.md",
+      "filename": "executable-subgraph-derivation-component.md"
+    },
+    {
       "path": "docs/architecture/components/planner/execution-selection-component.md",
       "filename": "execution-selection-component.md"
     },
@@ -2116,6 +2120,10 @@
     {
       "path": "docs/architecture/components/web/graph/canvas-empty-authoring-entrypoint-component.md",
       "filename": "canvas-empty-authoring-entrypoint-component.md"
+    },
+    {
+      "path": "docs/architecture/components/web/graph/canvas-execution-selection-component.md",
+      "filename": "canvas-execution-selection-component.md"
     },
     {
       "path": "docs/architecture/components/web/graph/canvas-graph-lifecycle-component.md",

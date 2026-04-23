@@ -17,12 +17,14 @@ The component answers one question:
 > platform-owned?
 
 The answer is intentionally narrow. Web can contribute plan intent, workspace
-scope, and selected plan nodes. Web cannot author canonical execution identity.
+scope, and canonical execution selection only. Web cannot author canonical
+execution identity.
 
 Use this guide with:
 
 - [Start-run HTTP entrypoint component](../../../../../apps/api/docs/start-run-http-entrypoint-component.md)
 - [Start-run platform identity component](../../../../../apps/api/docs/start-run-platform-identity-component.md)
+- [Canvas execution selection component](../graph/canvas-execution-selection-component.md)
 - [Frontend-facing backend MVP contract](./frontend-backend-mvp-contract.md)
 - [ADR-0050 platform-owned start-run identity](../../../../adr/adr-0050-platform-owned-start-run-identity.md)
 - [Fowler analysis mailbox](../../../../../buzon/20260423-codex-fowler-tenant-run-identity-analysis-and-remediation.md)
@@ -72,7 +74,7 @@ It does **not** own:
 
 - `StartRunInput` is the complete client-authored start-run request contract.
 - Canvas run start builds `StartRunInput` from plan reference, workspace scope,
-  and selection only.
+  and canonical execution selection only.
 - The `/runs/start` HTTP payload carries caller-owned start intent only; it
   does not carry canonical execution identity.
 - `workspaceScope` is caller-owned scope context, not runtime identity.

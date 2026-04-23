@@ -37,7 +37,7 @@ describe('canvas run-start identity architecture', () => {
     expect(RUNS_PORT_SOURCE).toContain('export type StartRunInput = {');
     expect(RUNS_PORT_SOURCE).toContain('planRef: PlanRef;');
     expect(RUNS_PORT_SOURCE).toContain('workspaceScope: WorkspaceScope;');
-    expect(RUNS_PORT_SOURCE).toContain('selection: readonly string[];');
+    expect(RUNS_PORT_SOURCE).toContain('selection: ExecutionSelection;');
   });
 
   it('deduplicates plan-node selection without authoring run identity', () => {
@@ -48,7 +48,10 @@ describe('canvas run-start identity architecture', () => {
       ],
     } as PlanViewModel;
 
-    expect(collectPlanSelection(plan)).toEqual(['model.orders', 'model.customers', 'model.marts']);
+    expect(collectPlanSelection(plan)).toEqual({
+      mode: 'explicit',
+      nodeIds: ['model.orders', 'model.customers', 'model.marts'],
+    });
   });
 
   it('documents the active client boundary as a positive contract, not a retired compatibility rule', () => {
@@ -58,7 +61,7 @@ describe('canvas run-start identity architecture', () => {
     expect(CLIENT_IDENTITY_COMPONENT_GUIDE).toContain(
       'Canvas run start builds `StartRunInput` from plan reference, workspace scope,'
     );
-    expect(CLIENT_IDENTITY_COMPONENT_GUIDE).toContain('and selection only.');
+    expect(CLIENT_IDENTITY_COMPONENT_GUIDE).toContain('and canonical execution selection only.');
     expect(CLIENT_IDENTITY_COMPONENT_GUIDE).toContain(
       'StartRunInput payload with caller-owned start intent'
     );

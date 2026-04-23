@@ -1,7 +1,7 @@
 ---
 id: R-20260423-WORKSPACE-AUTHORING-DRAFT-AGGREGATE
 title: Workspace authoring draft aggregate adoption can drift across API and web
-status: Open
+status: Closed
 date: 2026-04-23
 owners:
   - packages/@dvt/contracts
@@ -12,21 +12,32 @@ probability: Medium
 context: >
   The shared-kernel contract now separates editable workspace authoring drafts from compile-ready
   execution graph artifacts. The same contract line now also freezes explicit `ExecutionSelection`
-  intent and the derived `ExecutableSubgraph` read model. API, planner, and web adoption will happen
-  in follow-up slices.
+  intent and the derived `ExecutableSubgraph` read model. Planner-owned selected-closure derivation
+  is now implemented, and API and web adoption are now closed on the same hard-cut route.
 risk: >
   Consumers may continue to treat persisted drafts as compile-ready graphs, bypass canonical
-  execution selection, or reintroduce parallel compatibility paths while planner, API, and web
-  layers migrate. That would recreate semantic drift between authoring, selected-closure derivation,
-  and execution.
+  execution selection, or reintroduce parallel compatibility paths while API and web layers migrate.
+  That would recreate semantic drift between authoring, planner-derived selected closures, and
+  execution. This risk is now closed because preview, planner-backed start-run, and Canvas selection
+  all consume the canonical selection and selected-closure seams.
 mitigations:
   - Contract tests cover empty drafts, first-node authoring, selected-subgraph execution, invalid
     loose nodes, and rejection of compile-shaped drafts.
   - TF-A2 and TF-E2 planning docs state that authoring drafts are graph-first aggregates and
     execution is scoped through `ExecutionSelection`.
-  - The canonical execution-selection contract pack now publishes one public selection vocabulary,
+  - >
+    The canonical execution-selection contract pack now publishes one public selection vocabulary,
     one selected-closure diagnostic vocabulary, and one semantic architecture guard in
     `@dvt/contracts`.
-  - Follow-up implementation slices must wire protected API/store and canvas authoring through the
-    canonical authoring aggregate instead of alternate legacy routes.
+  - >
+    `@dvt/planner` now derives `ExecutableSubgraph` through `PlannerFacade#deriveExecutableSubgraph`
+    and a planner-local derivation service with semantic regression tests for no-widen behavior,
+    dependency gaps, and selected-closure cycle detection.
+  - >
+    `apps/api` now resolves selected execution through `ResolveAuthorizedExecutableSubgraphService`
+    before preview and planner-backed start-run build plans.
+  - >
+    `apps/web` now emits canonical `ExecutionSelection` through one shared Canvas seam used by both
+    preview and run actions.
+review_after: 2026-06-30
 ---

@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import { parseExecutionSelection } from '@dvt/contracts';
 
 import { ApiError, type ApiClient } from '../api/createApiClient';
 import { useSessionStore } from '../../stores/sessionStore';
@@ -29,7 +30,10 @@ function createStartRunInput(): StartRunInput {
       environmentId: 'env-1',
       targetAdapter: 'mock',
     },
-    selection: ['model_a', 'model_b'],
+    selection: parseExecutionSelection({
+      mode: 'explicit',
+      nodeIds: ['model_a', 'model_b'],
+    }),
   };
 }
 
@@ -66,7 +70,10 @@ describe('runsService runtime contract', () => {
       projectId: 'project-1',
       environmentId: 'env-1',
       targetAdapter: 'mock',
-      selection: ['model_a', 'model_b'],
+      selection: {
+        mode: 'explicit',
+        nodeIds: ['model_a', 'model_b'],
+      },
       planRef: {
         uri: 's3://plans/plan.json',
         sha256: 'abc123',

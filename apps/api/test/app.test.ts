@@ -61,7 +61,10 @@ function buildStartRunPayload(args: {
     tenantId: 'tenant-a',
     projectId: 'project-a',
     environmentId: 'env-a',
-    selection: ['model.orders'],
+    selection: {
+      mode: 'explicit',
+      nodeIds: ['model.orders'],
+    },
     planRef: {
       uri: 'https://plans.example.com/plan.json',
       sha256: args.sha256,
@@ -82,7 +85,10 @@ function buildPreviewPayload(runId: string): Record<string, unknown> {
       environmentId: 'env-a',
       targetAdapter: 'mock',
     },
-    selectedNodeIds: ['model.orders'],
+    selection: {
+      mode: 'explicit',
+      nodeIds: ['model.orders'],
+    },
     graphSource: {
       kind: 'generic-graph-v1',
       sourceFamily: 'dbt',

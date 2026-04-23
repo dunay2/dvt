@@ -15,7 +15,7 @@ const REJECTING_FACADE = {
 };
 
 describe('startRunRoute plan-source policy', () => {
-  it('accepts empty selection when graph source contains nodes', async () => {
+  it('accepts planner-backed selection when graph source contains the selected nodes', async () => {
     let received: Record<string, unknown> | undefined;
     const facade = {
       async execute(input: Record<string, unknown>) {
@@ -35,7 +35,7 @@ describe('startRunRoute plan-source policy', () => {
         body: {
           ...VALID_BODY,
           planRef: undefined,
-          selection: [],
+          selection: { mode: 'explicit', nodeIds: ['model_a'] },
           graphSource: VALID_GRAPH_SOURCE,
           targetAdapter: 'mock',
         },
@@ -50,7 +50,7 @@ describe('startRunRoute plan-source policy', () => {
       graphSource: VALID_GRAPH_SOURCE,
       runId: 'run_generated_empty_selection',
       targetAdapter: 'mock',
-      selection: [],
+      selection: { mode: 'explicit', nodeIds: ['model_a'] },
     });
   });
 
@@ -83,7 +83,7 @@ describe('startRunRoute plan-source policy', () => {
       graphSource: VALID_GRAPH_SOURCE,
       runId: 'run_generated_graph',
       targetAdapter: 'mock',
-      selection: ['model_a'],
+      selection: { mode: 'explicit', nodeIds: ['model_a'] },
     });
   });
 

@@ -41,7 +41,7 @@ describe('startRunRoute auth and success outcomes', () => {
         planRef: VALID_PLAN_REF,
         runId: 'run_generated_success',
         targetAdapter: 'mock',
-        selection: ['model_a'],
+        selection: { mode: 'explicit', nodeIds: ['model_a'] },
       },
       requestedScope: {
         tenantId: expect.objectContaining({ value: 't1' }),

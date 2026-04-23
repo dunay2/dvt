@@ -1,6 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import type { ApiClient } from '../api/createApiClient';
+import { parseExecutionSelection } from '@dvt/contracts';
+
 import { makePlanRef, makeRunContext } from '../../testing/contractTestUtils';
 import { createPlansService } from './plansService';
 
@@ -67,6 +69,13 @@ const VALID_GENERIC_GRAPH_SOURCE = {
 
 const VALID_TRANSFORMATION_SELECTION = ['source-node', 'transform-node', 'sink-node'] as const;
 const VALID_GENERIC_SELECTION = ['node_1'] as const;
+
+function toExplicitSelection(nodeIds: readonly string[]) {
+  return parseExecutionSelection({
+    mode: 'explicit' as const,
+    nodeIds: [...nodeIds],
+  });
+}
 
 function buildValidTransformationPlan(): Readonly<Record<string, unknown>> {
   return {
@@ -265,7 +274,7 @@ describe('createPlansService', () => {
     const plan = await service.previewPlan({
       previewProfile: 'transformation-sql-first-v1',
       graphSource: VALID_TRANSFORMATION_GRAPH_SOURCE,
-      selectedNodeIds: [...VALID_TRANSFORMATION_SELECTION],
+      selection: toExplicitSelection(VALID_TRANSFORMATION_SELECTION),
       persist: true,
       context: makeRunContext('run-1', {
         tenantId: 't1',
@@ -291,7 +300,7 @@ describe('createPlansService', () => {
     const plan = await service.previewPlan({
       previewProfile: 'transformation-sql-first-v1',
       graphSource: VALID_TRANSFORMATION_GRAPH_SOURCE,
-      selectedNodeIds: [...VALID_TRANSFORMATION_SELECTION],
+      selection: toExplicitSelection(VALID_TRANSFORMATION_SELECTION),
       persist: true,
       context: makeRunContext('run-1', {
         tenantId: 't1',
@@ -331,7 +340,7 @@ describe('createPlansService', () => {
       expect.objectContaining({
         previewProfile: 'transformation-sql-first-v1',
         graphSource: VALID_TRANSFORMATION_GRAPH_SOURCE,
-        selectedNodeIds: [...VALID_TRANSFORMATION_SELECTION],
+        selection: toExplicitSelection(VALID_TRANSFORMATION_SELECTION),
         persist: true,
       })
     );
@@ -362,7 +371,7 @@ describe('createPlansService', () => {
     const plan = await service.previewPlan({
       previewProfile: 'transformation-sql-first-v1',
       graphSource: VALID_TRANSFORMATION_GRAPH_SOURCE,
-      selectedNodeIds: [...VALID_TRANSFORMATION_SELECTION],
+      selection: toExplicitSelection(VALID_TRANSFORMATION_SELECTION),
       persist: true,
       context: makeRunContext('run-1', {
         tenantId: 't1',
@@ -392,7 +401,7 @@ describe('createPlansService', () => {
       service.previewPlan({
         previewProfile: 'transformation-sql-first-v1',
         graphSource: VALID_TRANSFORMATION_GRAPH_SOURCE,
-        selectedNodeIds: [...VALID_TRANSFORMATION_SELECTION],
+        selection: toExplicitSelection(VALID_TRANSFORMATION_SELECTION),
         persist: true,
         context: makeRunContext('run-1', {
           tenantId: 't1',
@@ -449,7 +458,7 @@ describe('createPlansService', () => {
     const plan = await service.previewPlan({
       previewProfile: 'planner-generic-v1',
       graphSource: VALID_GENERIC_GRAPH_SOURCE,
-      selectedNodeIds: [...VALID_GENERIC_SELECTION],
+      selection: toExplicitSelection(VALID_GENERIC_SELECTION),
       persist: true,
       context: makeRunContext('run-1', {
         tenantId: 't1',
@@ -484,7 +493,7 @@ describe('createPlansService', () => {
     const plan = await service.previewPlan({
       previewProfile: 'planner-generic-v1',
       graphSource: VALID_GENERIC_GRAPH_SOURCE,
-      selectedNodeIds: [...VALID_GENERIC_SELECTION],
+      selection: toExplicitSelection(VALID_GENERIC_SELECTION),
       persist: true,
       context: makeRunContext('run-1', {
         tenantId: 't1',

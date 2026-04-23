@@ -2,7 +2,7 @@
 title: apps/api
 status: Active
 owner: Architecture / Docs
-last_reviewed: 2026-04-21
+last_reviewed: 2026-04-23
 ---
 
 # apps/api
@@ -65,6 +65,10 @@ This component is active product code. The protected plan-route family now
 shares one remote-facade executor, one declarative request-resolution recipe,
 one declarative route-policy catalog, and one canonical authorized
 planner-input assembler for the preview and compile planner-backed flows.
+Preview and planner-backed start-run now also resolve selected closure from the
+protected workspace graph draft through one local executable-subgraph seam
+before planner build, so `apps/api` no longer relies on whole-draft compile
+assumptions for selected execution.
 Preview observability enrichment now binds once at the request boundary used
 by the preview flow, while import keeps canonical ownership checks separate
 from planner ingress. The `plan compile` boundary now converges catalog
@@ -105,6 +109,9 @@ shape, and the governed transition route:
 - [Start-run runtime composition component](../../../../apps/api/docs/start-run-runtime-composition-component.md):
   local guide for the protected-runtime subcomponent that assembles the
   authenticated start-run chain from abstract runtime dependencies.
+- [Executable-subgraph resolution component](../../../../apps/api/docs/executable-subgraph-resolution-component.md):
+  local guide for the API seam that resolves protected selected-closure truth
+  for preview and planner-backed start-run before planner build.
 - [Protected runtime dependency builders component](../../../../apps/api/docs/protected-runtime-dependency-builders-component.md):
   local guide for the protected-runtime builder cluster that assembles storage,
   admission, security, and execution dependency slices for the outer root.

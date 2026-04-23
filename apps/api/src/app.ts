@@ -12,6 +12,7 @@ import { ImportPlanUseCase } from './application/services/ImportPlanUseCase.js';
 import { ListRunsUseCase } from './application/services/listRunsUseCase.js';
 import { PreviewPlanUseCase } from './application/services/PreviewPlanUseCase.js';
 import { RecoverRunUseCase } from './application/services/recoverRunUseCase.js';
+import { ResolveAuthorizedExecutableSubgraphService } from './application/services/resolveAuthorizedExecutableSubgraph.js';
 import { SignalRunUseCase } from './application/services/signalRunUseCase.js';
 import { registerAdminRoutes } from './entrypoints/http/adminRoutes.js';
 import { cancelRunRoute } from './entrypoints/http/cancelRunRoute.js';
@@ -211,6 +212,10 @@ export async function buildApp(): Promise<{ app: FastifyInstance; ctx: AppContex
       planner: protectedModule.planner,
       planStore: protectedModule.planStore,
       planValidator: protectedModule.planValidator,
+      executableSubgraphResolver: new ResolveAuthorizedExecutableSubgraphService({
+        planner: protectedModule.planner,
+        workspaceGraphDraftStore: protectedModule.workspaceGraphDraftStore,
+      }),
     });
     const importPlanUseCase = new ImportPlanUseCase({
       planResolver: protectedModule.executablePlanResolver,

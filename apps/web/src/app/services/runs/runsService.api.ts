@@ -2,6 +2,7 @@
  * Owned concern: adapt the presentation runs port to the protected HTTP API
  * while keeping platform-owned run identity out of client requests.
  */
+import type { ExecutionSelection } from '@dvt/contracts';
 import { parseEngineRunRef, parseRunEventRecord } from '@dvt/contracts';
 
 import type { IRunsPort, RunEventTimelinePage, RunSnapshot, StartRunInput } from '../../ports/runs';
@@ -21,7 +22,7 @@ type StartRunApiRequest = {
   readonly projectId: string;
   readonly environmentId: string;
   readonly targetAdapter: StartRunInput['workspaceScope']['targetAdapter'];
-  readonly selection: readonly string[];
+  readonly selection: ExecutionSelection;
   readonly planRef: StartRunInput['planRef'];
 };
 
@@ -58,7 +59,7 @@ export function createApiRunsService(
         projectId: input.workspaceScope.projectId,
         environmentId: input.workspaceScope.environmentId,
         targetAdapter: input.workspaceScope.targetAdapter,
-        selection: [...input.selection],
+        selection: input.selection,
         planRef: input.planRef,
       });
       return parseEngineRunRef(payload);

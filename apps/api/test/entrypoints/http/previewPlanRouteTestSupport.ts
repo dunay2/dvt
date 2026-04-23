@@ -1,11 +1,12 @@
 import { vi } from 'vitest';
+import type { IPlanner } from '@dvt/contracts';
 
 import { PreviewPlanUseCase } from '../../../src/application/services/PreviewPlanUseCase.js';
 
 import { okAuthDeps, type TestAuthDeps } from './planRouteHttpTestSupport.js';
 
 export type PreviewRouteTestDeps = TestAuthDeps & {
-  planner: { buildPlan: ReturnType<typeof vi.fn> };
+  planner: Pick<IPlanner, 'buildPlan' | 'deriveExecutableSubgraph'>;
   planStore: {
     storePlan: ReturnType<typeof vi.fn>;
     markValid: ReturnType<typeof vi.fn>;
@@ -13,6 +14,7 @@ export type PreviewRouteTestDeps = TestAuthDeps & {
     getValidationRecord: ReturnType<typeof vi.fn>;
   };
   planValidator: { validatePlan: ReturnType<typeof vi.fn> };
+  executableSubgraphResolver: { execute: ReturnType<typeof vi.fn> };
   useCase: Pick<PreviewPlanUseCase, 'execute'>;
 };
 
@@ -22,6 +24,7 @@ type PreviewRouteTestOverrides = Partial<
   planner?: Partial<PreviewRouteTestDeps['planner']>;
   planStore?: Partial<PreviewRouteTestDeps['planStore']>;
   planValidator?: Partial<PreviewRouteTestDeps['planValidator']>;
+  executableSubgraphResolver?: Partial<PreviewRouteTestDeps['executableSubgraphResolver']>;
 };
 
 export function createPreviewDeps(
@@ -29,6 +32,7 @@ export function createPreviewDeps(
 ): PreviewRouteTestDeps {
   const planner = {
     buildPlan: vi.fn(),
+    deriveExecutableSubgraph: vi.fn(),
     ...overrides.planner,
   };
   const planStore = {
@@ -42,6 +46,19 @@ export function createPreviewDeps(
     validatePlan: vi.fn(async () => ({ status: 'OK' })),
     ...overrides.planValidator,
   };
+  const executableSubgraphResolver = {
+    execute: vi.fn(async (input: { selection: { mode: string; nodeIds: readonly string[] } }) => ({
+      ok: true as const,
+      value: {
+        selection: input.selection,
+        nodeIds: [...input.selection.nodeIds],
+        edgeIds: [],
+        executable: true,
+        diagnostics: [],
+      },
+    })),
+    ...overrides.executableSubgraphResolver,
+  };
 
   return {
     ...okAuthDeps(),
@@ -49,10 +66,12 @@ export function createPreviewDeps(
     planner,
     planStore,
     planValidator,
+    executableSubgraphResolver,
     useCase: new PreviewPlanUseCase({
       planner,
       planStore,
       planValidator,
+      executableSubgraphResolver: executableSubgraphResolver as never,
     }),
   };
 }

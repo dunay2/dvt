@@ -1,0 +1,254 @@
+import { type ExecutableSubgraph, parseExecutionSelection } from '@dvt/contracts';
+import { describe, expect, it, vi } from 'vitest';
+
+import { WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION } from '../../../src/application/ports/workspaceGraphDraft.js';
+import { ResolveAuthorizedExecutableSubgraphService } from '../../../src/application/services/resolveAuthorizedExecutableSubgraph.js';
+import { EnvironmentId, ProjectId, TenantId } from '../../../src/domain/auth/types.js';
+
+function buildContext() {
+  return {
+    principal: {
+      principalId: 'user-1',
+      subjectId: 'user-1',
+      issuer: 'issuer',
+      audience: 'audience',
+      principalType: 'user' as const,
+      expiresAt: new Date('2030-01-01T00:00:00.000Z'),
+      rawScopes: [],
+      assertedTenantIds: ['tenant-a'],
+      assertedProjectIds: ['project-a'],
+    },
+    scope: {
+      tenantId: TenantId.unsafe('tenant-a'),
+      projectId: ProjectId.unsafe('project-a'),
+      environmentId: EnvironmentId.unsafe('env-a'),
+    },
+    action: { kind: 'command' as const, name: 'run:start' as const },
+    requestId: 'req-1',
+    authorizedAt: new Date('2026-04-23T00:00:00.000Z'),
+  };
+}
+
+function buildDraftPayload() {
+  return {
+    nodeIds: ['source-node', 'transform-node'],
+    nodePositions: {
+      'source-node': { x: 0, y: 0 },
+      'transform-node': { x: 1, y: 1 },
+    },
+    nodes: [
+      {
+        id: 'source-node',
+        name: 'Source',
+        pluginId: 'dvt',
+        kind: 'source',
+        role: 'input',
+        status: 'idle',
+        tags: ['input'],
+      },
+      {
+        id: 'transform-node',
+        name: 'Transform',
+        pluginId: 'dvt',
+        kind: 'transform',
+        role: 'transform',
+        status: 'idle',
+        tags: ['transform'],
+      },
+    ],
+    edges: [
+      {
+        id: 'edge-1',
+        sourceId: 'source-node',
+        targetId: 'transform-node',
+        relation: 'lineage',
+      },
+    ],
+  };
+}
+
+function buildExecutableSubgraph(
+  overrides: Partial<ExecutableSubgraph> = {}
+): ExecutableSubgraph {
+  return {
+    selection: parseExecutionSelection({
+      mode: 'explicit',
+      nodeIds: ['source-node', 'transform-node'],
+    }),
+    nodeIds: ['source-node', 'transform-node'],
+    edgeIds: ['edge-1'],
+    executable: true,
+    diagnostics: [],
+    ...overrides,
+  };
+}
+
+describe('ResolveAuthorizedExecutableSubgraphService', () => {
+  it('rejects incomplete authorized scope before reading the protected draft', async () => {
+    const read = vi.fn();
+    const service = new ResolveAuthorizedExecutableSubgraphService({
+      planner: { deriveExecutableSubgraph: vi.fn() } as never,
+      workspaceGraphDraftStore: { read } as never,
+    });
+
+    const result = await service.execute(
+      {
+        selection: parseExecutionSelection({
+          mode: 'explicit',
+          nodeIds: ['source-node'],
+        }),
+      },
+      {
+        ...buildContext(),
+        scope: {
+          tenantId: TenantId.unsafe('tenant-a'),
+        },
+      }
+    );
+
+    expect(result).toEqual({
+      ok: false,
+      rejection: {
+        code: 'REJECTED',
+        cause: 'authorized_scope_incomplete',
+        reason: 'Authorized scope is missing projectId or environmentId.',
+      },
+    });
+    expect(read).not.toHaveBeenCalled();
+  });
+
+  it('rejects non-executable planner diagnostics instead of widening to the whole draft', async () => {
+    const planner = {
+      deriveExecutableSubgraph: vi.fn(() =>
+        buildExecutableSubgraph({
+          executable: false,
+          diagnostics: [
+            {
+              code: 'dependency_gap',
+              message: 'transform-node requires source-node to be selected.',
+            },
+          ],
+        })
+      ),
+    };
+    const service = new ResolveAuthorizedExecutableSubgraphService({
+      planner: planner as never,
+      workspaceGraphDraftStore: {
+        read: vi.fn(async () => ({
+          schemaVersion: WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
+          draftPayload: buildDraftPayload(),
+        })),
+      } as never,
+    });
+
+    const result = await service.execute(
+      {
+        selection: parseExecutionSelection({
+          mode: 'explicit',
+          nodeIds: ['transform-node'],
+        }),
+      },
+      buildContext()
+    );
+
+    expect(result).toEqual({
+      ok: false,
+      rejection: {
+        code: 'REJECTED',
+        cause: 'dependency_gap',
+        reason: 'transform-node requires source-node to be selected.',
+      },
+    });
+    expect(planner.deriveExecutableSubgraph).toHaveBeenCalledTimes(1);
+  });
+
+  it('rejects graphSource mismatches against the planner-derived selected closure', async () => {
+    const service = new ResolveAuthorizedExecutableSubgraphService({
+      planner: {
+        deriveExecutableSubgraph: vi.fn(() => buildExecutableSubgraph()),
+      } as never,
+      workspaceGraphDraftStore: {
+        read: vi.fn(async () => ({
+          schemaVersion: WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
+          draftPayload: buildDraftPayload(),
+        })),
+      } as never,
+    });
+
+    const result = await service.execute(
+      {
+        selection: parseExecutionSelection({
+          mode: 'explicit',
+          nodeIds: ['source-node', 'transform-node'],
+        }),
+        graphSource: {
+          kind: 'generic-graph-v1',
+          sourceFamily: 'transformation-design-graph',
+          sourceVersion: 'transformation-sql-first-v1',
+          nodes: [
+            {
+              nodeId: 'source-node',
+              stepKind: 'PREPARE_POSTGRES_TRANSFORM',
+              dependsOn: [],
+            },
+          ],
+        },
+      },
+      buildContext()
+    );
+
+    expect(result).toEqual({
+      ok: false,
+      rejection: {
+        code: 'REJECTED',
+        cause: 'graph_source_selection_mismatch',
+        reason:
+          'graphSource nodes must match the planner-derived executable subgraph for the selection.',
+      },
+    });
+  });
+
+  it('returns the planner-derived executable subgraph when the protected draft and graphSource align', async () => {
+    const executableSubgraph = buildExecutableSubgraph();
+    const service = new ResolveAuthorizedExecutableSubgraphService({
+      planner: {
+        deriveExecutableSubgraph: vi.fn(() => executableSubgraph),
+      } as never,
+      workspaceGraphDraftStore: {
+        read: vi.fn(async () => ({
+          schemaVersion: WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
+          draftPayload: buildDraftPayload(),
+        })),
+      } as never,
+    });
+
+    const result = await service.execute(
+      {
+        selection: executableSubgraph.selection,
+        graphSource: {
+          kind: 'generic-graph-v1',
+          sourceFamily: 'transformation-design-graph',
+          sourceVersion: 'transformation-sql-first-v1',
+          nodes: [
+            {
+              nodeId: 'source-node',
+              stepKind: 'PREPARE_POSTGRES_TRANSFORM',
+              dependsOn: [],
+            },
+            {
+              nodeId: 'transform-node',
+              stepKind: 'POSTGRES_SQL_TRANSFORM',
+              dependsOn: ['source-node'],
+            },
+          ],
+        },
+      },
+      buildContext()
+    );
+
+    expect(result).toEqual({
+      ok: true,
+      value: executableSubgraph,
+    });
+  });
+});

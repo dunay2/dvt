@@ -95,6 +95,7 @@ export async function buildProtectedRuntimeModule(
     adapters: executionRuntime.adapters,
     planStore: storageRuntime.planStore,
     stepTypeRegistry: storageRuntime.stepTypeRegistry,
+    workspaceGraphDraftStore: workspaceGraphDraftRuntime.workspaceGraphDraftStore,
   });
 
   return {
