@@ -5,6 +5,9 @@ export type CanvasViewCopy = {
   readonly routeLoadingMessage: string;
   readonly backendLoadingTitle: string;
   readonly backendLoadingMessage: string;
+  readonly routeNeedsCanvasTitle: string;
+  readonly routeNeedsCanvasMessage: string;
+  readonly routeNeedsCanvasHelper: string;
   readonly routeEmptyTitle: string;
   readonly routeEmptyEditableMessage: string;
   readonly routeEmptyImportUnavailableMessage: string;
@@ -59,6 +62,7 @@ export type CanvasViewCopy = {
   readonly preparingCanvasRouteDetail: string;
   readonly checkingBackendReadinessDetail: string;
   readonly loadingWorkspaceGraphDetail: string;
+  readonly needsCanvasReadyDetail: string;
   readonly emptyCanvasReadyDetail: string;
   readonly canvasReadyDetail: string;
   readonly connectionIncompleteMessage: string;
