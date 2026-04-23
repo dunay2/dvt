@@ -471,6 +471,22 @@ The remaining Wave 2 gap is the strict pre-push type-check selector:
 
 ### Wave 3 - Docs Governance Convergence
 
+### Wave 3A Immediate Determinism Slice
+
+The first truthful Wave 3 step is not filename policy expansion. It is making
+the existing docs manifest path stable enough to become a governed artifact.
+
+That slice should:
+
+- remove timestamp and traversal-order noise from the manifest generator
+- create a tracked `docs/.manifest.json` output that stays byte-stable on an
+  unchanged worktree
+- keep local-friendly regeneration under `docs:gov`
+- add an explicit strict drift gate for the tracked manifest in `ci:docs`
+
+This converts the existing helper into a real machine-readable docs inventory
+without reopening the broader docs-governance rollout.
+
 | Task       | Files / surfaces                                                          | Action                                                                                                                                                                   | Validation                                                                          | Exit criteria                                                                     |
 | ---------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
 | `CDG-W3-1` | `tools/docs/generate-docs-manifest.ts`, `package.json`, `docs:gov` wiring | Refactor the manifest generator so the committed output is deterministic. Remove or externalize timestamp noise, then wire the manifest into `docs:gov`.                 | `pnpm docs:gov:manifest`, `pnpm docs:gov`, `pnpm docs:ci`, `pnpm verify:prepush`    | The manifest becomes a real governance artifact instead of a dormant helper.      |

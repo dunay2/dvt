@@ -142,6 +142,8 @@ Relevant code and fixtures:
 | Docs doctor                               | `pnpm docs:doctor`                              | [`package.json`](../../package.json)                                                         |
 | Changed Markdown lint                     | `pnpm lint:md:changed`                          | [`package.json`](../../package.json)                                                         |
 | Markdown location policy                  | `pnpm docs:gov:locations`                       | [`package.json`](../../package.json)                                                         |
+| Docs governance manifest generate         | `pnpm docs:gov:manifest`                        | [`package.json`](../../package.json)                                                         |
+| Docs governance manifest drift check      | `pnpm docs:gov:manifest:check`                  | [`package.json`](../../package.json)                                                         |
 | Canonical path/link check                 | `pnpm docs:canonical:check`                     | [`package.json`](../../package.json)                                                         |
 | Generated code-state drift check          | `pnpm docs:status:check`                        | [`package.json`](../../package.json)                                                         |
 | Generated capability coverage drift check | `pnpm docs:capability:check`                    | [`package.json`](../../package.json)                                                         |
@@ -151,6 +153,7 @@ Generated documentation sources:
 
 - code-state report: [`docs/planning/status/generated-code-state.md`](../planning/status/generated-code-state.md)
 - capability coverage report: [`docs/planning/status/generated-capability-coverage.md`](../planning/status/generated-capability-coverage.md)
+- docs governance manifest: [`docs/.manifest.json`](../../docs/.manifest.json)
 
 Local docs PR preflight usage:
 
@@ -166,6 +169,9 @@ Command semantics:
 - `pnpm docs:planning:generated:check` regenerates planning-only derived pages, verifies required sections, checks determinism, and fails if those files are tracked in git again.
 - `pnpm docs:workboard:check` is the planning-generated artifact gate and currently delegates to `pnpm docs:planning:generated:check`.
 - `pnpm docs:status:check` and `pnpm docs:capability:check` remain strict drift gates for their tracked generated outputs.
+- `pnpm docs:gov:manifest` regenerates the tracked machine-readable docs inventory at `docs/.manifest.json`.
+- `pnpm docs:gov:manifest:check` is the strict drift gate for that tracked docs governance manifest.
+- `pnpm docs:gov` now includes the docs manifest generation step, so the aggregate governance command keeps the tracked manifest current during local-friendly docs validation.
 - `pnpm verify:changed` is the fast local pre-push path used by `.husky/pre-push` by default; it stays on changed-file docs, markdown, formatting, and QA-artifact gates without invoking root type-check.
 - `pnpm verify:prepush` uses `node scripts/docs-workboard-check-changed.cjs`, so workboard drift is enforced when lane YAML changed, not for every module-only commit.
 - `pnpm verify:prepush` now keeps three outcomes for code diffs:
