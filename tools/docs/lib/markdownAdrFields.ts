@@ -6,7 +6,7 @@ import { parseFrontmatter, splitFrontmatter } from './markdownFrontmatter.js';
 import { forEachRegexMatch } from './markdownRegex.js';
 
 const BOLD_ADR_FIELD_RE = /^-\s+\*\*([^*]+)\*\*\s*:\s*(.*)$/gm;
-const PLAIN_LIST_ADR_FIELD_RE = /^-\s+([A-Za-z0-9_][\w\s]*?)\s*:\s*(.+)$/gm;
+const PLAIN_LIST_ADR_FIELD_RE = /^-\s+(\w[\w\s]*?)\s*:\s*(.+)$/gm;
 const BARE_ADR_FIELD_RE = /^(Status|Date|Owners?|Owner|ARC Level|Version)\s*:\s*(.+)$/gim;
 
 const FRONTMATTER_FIELD_ALIASES: Record<string, string> = {
@@ -88,15 +88,19 @@ function capitalizeFirstLetter(value: string): string {
 }
 
 function stringifyFrontmatterValue(value: unknown): string {
+  if (value == null) {
+    return '';
+  }
+
   if (Array.isArray(value)) {
     return value.map(String).join(', ');
   }
 
-  if (value !== null && typeof value === 'object') {
+  if (typeof value === 'object') {
     return JSON.stringify(value);
   }
 
-  return String(value ?? '');
+  return String(value);
 }
 
 function normalizeAdrFieldKey(key: string): string {

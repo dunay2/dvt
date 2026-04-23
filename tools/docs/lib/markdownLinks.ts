@@ -19,7 +19,7 @@ export function extractLinks(content: string): MarkdownLink[] {
 
   for (let i = 0; i < lines.length; i += 1) {
     const line = lines[i] ?? '';
-    if (/^```/.test(line)) {
+    if (line.startsWith('```')) {
       inFence = !inFence;
       continue;
     }
