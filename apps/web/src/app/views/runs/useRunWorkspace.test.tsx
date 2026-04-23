@@ -102,6 +102,20 @@ function buildRunsService(sessionContext: SessionContextPort): IRunsPort {
   };
 }
 
+async function waitForRunWorkspace(predicate: () => boolean): Promise<void> {
+  for (let attempt = 0; attempt < 30; attempt += 1) {
+    if (predicate()) {
+      return;
+    }
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+  }
+
+  throw new Error('Timed out waiting for useRunWorkspace to settle');
+}
+
 describe('useRunWorkspace', () => {
   let container: HTMLDivElement | null = null;
   let root: Root | null = null;
@@ -117,20 +131,6 @@ describe('useRunWorkspace', () => {
     root = null;
     container = null;
   });
-
-  async function waitFor(predicate: () => boolean): Promise<void> {
-    for (let attempt = 0; attempt < 30; attempt += 1) {
-      if (predicate()) {
-        return;
-      }
-
-      await act(async () => {
-        await new Promise((resolve) => setTimeout(resolve, 0));
-      });
-    }
-
-    throw new Error('Timed out waiting for useRunWorkspace to settle');
-  }
 
   it('re-subscribes queries when the workspace scope changes', async () => {
     const { sessionContext, setWorkspaceScope } = createReactiveSessionContext({
@@ -150,10 +150,14 @@ describe('useRunWorkspace', () => {
       }
     ).IS_REACT_ACT_ENVIRONMENT = true;
 
-    expect(root).not.toBeNull();
+    const mountedRoot = root;
+    expect(mountedRoot).not.toBeNull();
+    if (!mountedRoot) {
+      throw new Error('Expected the test root to be initialized');
+    }
 
     await act(async () => {
-      root!.render(
+      mountedRoot.render(
         <QueryClientProvider
           client={
             new QueryClient({
@@ -178,7 +182,7 @@ describe('useRunWorkspace', () => {
       );
     });
 
-    await waitFor(
+    await waitForRunWorkspace(
       () =>
         container?.querySelector('[data-testid="runs"]')?.textContent === 'run-env-a' &&
         container?.querySelector('[data-testid="workspace-environment"]')?.textContent === 'env-a'
@@ -195,7 +199,7 @@ describe('useRunWorkspace', () => {
       });
     });
 
-    await waitFor(
+    await waitForRunWorkspace(
       () =>
         container?.querySelector('[data-testid="runs"]')?.textContent === 'run-env-b' &&
         container?.querySelector('[data-testid="workspace-environment"]')?.textContent === 'env-b'

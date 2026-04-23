@@ -10,7 +10,6 @@ import type {
   RunEventTimelinePage,
   RunSnapshot,
   RunSummaryItem,
-  StartRunInput,
 } from '../../ports/runs';
 import type { SessionContextPort } from '../../ports/sessionContext';
 import type { Run, RunEvent as DbtRunEvent } from '../../types/dbt';

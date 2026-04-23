@@ -7,7 +7,7 @@ import type { IRunsPort } from '../../ports/runs';
 import type { SessionContextPort } from '../../ports/sessionContext';
 import type { ShellFeedbackPort } from '../../ports/shellFeedback';
 import type { IWorkspacePort } from '../../ports/workspace';
-import { makeRunContext } from '../../testing/contractTestUtils';
+import { makeMockRunRef, makeRunContext } from '../../testing/contractTestUtils';
 import type { ApiClient } from '../api/createApiClient';
 import { getRuntimeDataSourceMode } from '../config/runtimeDataSourceMode';
 import { buildAppServices } from './appServices';
@@ -70,6 +70,73 @@ function buildApiClientStub(): ApiClientStub {
     requestRaw: vi.fn(),
     getJson: vi.fn(),
     postJson: vi.fn(),
+  };
+}
+
+function buildWorkspacePortStub(): IWorkspacePort {
+  return {
+    getGraphSnapshot: vi.fn(async () => ({ nodes: [], edges: [] })),
+    getDiffChanges: vi.fn(async () => []),
+    getPlugins: vi.fn(async () => []),
+    getRoles: vi.fn(async () => []),
+    getAuditLog: vi.fn(async () => []),
+    listWarehouseConnections: vi.fn(async () => []),
+    listWarehouseTables: vi.fn(async () => []),
+    importSources: vi.fn(async () => ({
+      success: true as const,
+      sourcesCreated: 0,
+      tablesImported: 0,
+      yamlFiles: [],
+      grouping: 'schema' as const,
+      options: { includeColumns: false, addTests: false, addFreshness: false },
+    })),
+    listFiles: vi.fn(async () => []),
+    getFileContent: vi.fn(async (path) => ({
+      path,
+      name: path,
+      language: 'sql',
+      content: '',
+      lastModified: '2026-04-23T00:00:00Z',
+    })),
+    saveFileContent: vi.fn(async (path, content) => ({
+      path,
+      name: path,
+      language: 'sql',
+      content,
+      lastModified: '2026-04-23T00:00:00Z',
+    })),
+  };
+}
+
+function buildRunsPortStub(): IRunsPort {
+  return {
+    listRunSummaries: vi.fn(async () => []),
+    getRunSnapshot: vi.fn(async () => null),
+    startRun: vi.fn(async () =>
+      makeMockRunRef({
+        tenantId: 'tenant-1',
+        workflowId: 'wf_run_override',
+        runId: 'run-override',
+      })
+    ),
+    listRunEvents: vi.fn(async () => ({ events: [] })),
+  };
+}
+
+function buildPlansPortStub(): IPlansPort {
+  const planViewModel = {
+    planId: 'plan-1',
+    planVersion: '1.0.0',
+    generatedAt: '2026-04-23T00:00:00Z',
+    adapter: 'temporal',
+    target: 'warehouse',
+    steps: [],
+    capabilities: [],
+  };
+
+  return {
+    previewPlan: vi.fn(async () => planViewModel),
+    importPlan: vi.fn(async () => planViewModel),
   };
 }
 
@@ -184,9 +251,9 @@ describe('buildAppServices', () => {
 
   it('uses explicit overrides instead of rebuilding runtime seams', () => {
     const apiClient = buildApiClientStub();
-    const workspaceService = {} as IWorkspacePort;
-    const runsService = {} as IRunsPort;
-    const plansService = {} as IPlansPort;
+    const workspaceService = buildWorkspacePortStub();
+    const runsService = buildRunsPortStub();
+    const plansService = buildPlansPortStub();
     const capabilitiesPort: CapabilitiesPort = {
       loadCapabilities: vi.fn(),
     };
