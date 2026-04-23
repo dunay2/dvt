@@ -1,6 +1,7 @@
 /** Owned concern: project the protected workspace-graph-draft boundary into route-facing draft and semantic graph models. */
 import type {
-  DesignGraphDraft,
+  WorkspaceGraphAuthoringDraft,
+  WorkspaceGraphAuthoringNode,
   WorkspaceGraphDraftRecord as ProtectedWorkspaceGraphDraftRecord,
 } from '@dvt/contracts';
 
@@ -16,93 +17,68 @@ function createDraftEdgeId(fromNodeId: string, toNodeId: string): string {
   return `draft_edge_${fromNodeId}_${toNodeId}`;
 }
 
-function projectDesignGraphNodeToCanonical(
-  node: DesignGraphDraft['nodes'][number]
-): CanonicalNode {
-  switch (node.type) {
-    case 'source':
-      return {
-        id: node.id,
-        name: node.payload.alias,
-        pluginId: 'dvt',
-        kind: 'dvt:source',
-        role: 'input',
-        status: 'idle',
-        tags: [],
-        metadata: {
-          config: {
-            schema: node.payload.schema,
-            table: node.payload.table,
-            alias: node.payload.alias,
-          },
-        },
-      };
-    case 'sql_transform': {
-      const entrypointSegments = node.payload.entrypoint.split('/');
-      const entrypoint = entrypointSegments.at(-1) ?? node.payload.entrypoint;
-      const transformName = entrypoint.replace(/\.[^.]+$/, '') || node.id;
-
-      return {
-        id: node.id,
-        name: transformName,
-        pluginId: 'dvt',
-        kind: 'dvt:sql_transform',
-        role: 'transform',
-        status: 'idle',
-        tags: [],
-        path: node.payload.entrypoint,
-        metadata: {
-          config: {
-            dialect: node.payload.dialect,
-          },
-        },
-      };
-    }
-    case 'sink':
-      return {
-        id: node.id,
-        name: node.payload.table,
-        pluginId: 'dvt',
-        kind: 'dvt:sink',
-        role: 'output',
-        status: 'idle',
-        tags: [],
-        metadata: {
-          config: {
-            schema: node.payload.schema,
-            table: node.payload.table,
-            materialization: node.payload.materialization,
-            writeMode: node.payload.writeMode,
-          },
-        },
-      };
+function toPluginNodeKind(node: WorkspaceGraphAuthoringNode): CanonicalNode['kind'] {
+  if (node.kind.includes(':')) {
+    return node.kind as CanonicalNode['kind'];
   }
+
+  return `${node.pluginId}:${node.kind}` as CanonicalNode['kind'];
 }
 
-export function projectDesignGraphDraft(
-  draft: Pick<DesignGraphDraft, 'nodes' | 'edges'>
+function projectAuthoringNodeToCanonical(node: WorkspaceGraphAuthoringNode): CanonicalNode {
+  const canonicalNode: CanonicalNode = {
+    id: node.id,
+    name: node.name,
+    pluginId: node.pluginId,
+    kind: toPluginNodeKind(node),
+    role: node.role,
+    status: node.status,
+    tags: [...node.tags],
+  };
+
+  if (node.path != null) {
+    canonicalNode.path = node.path;
+  }
+  if (node.description != null) {
+    canonicalNode.description = node.description;
+  }
+  if (node.lastDuration != null) {
+    canonicalNode.lastDuration = node.lastDuration;
+  }
+  if (node.lastCost != null) {
+    canonicalNode.lastCost = node.lastCost;
+  }
+  if (node.metadata != null) {
+    canonicalNode.metadata = { ...node.metadata };
+  }
+
+  return canonicalNode;
+}
+
+export function projectWorkspaceGraphAuthoringDraft(
+  draft: WorkspaceGraphAuthoringDraft
 ): WorkspaceGraphDraft {
   return {
-    nodeIds: draft.nodes.map((node) => node.id),
-    // The protected draft boundary owns structural graph state, not visual canvas layout.
-    nodePositions: {},
+    nodeIds: [...draft.nodeIds],
+    nodePositions: { ...draft.nodePositions },
     edges: draft.edges.map((edge) => ({
-      sourceId: edge.fromNodeId,
-      targetId: edge.toNodeId,
+      sourceId: edge.sourceId,
+      targetId: edge.targetId,
     })),
   };
 }
 
-export function projectDesignGraphDraftSemanticGraph(
-  draft: Pick<DesignGraphDraft, 'nodes' | 'edges'>
+export function projectWorkspaceGraphAuthoringDraftSemanticGraph(
+  draft: WorkspaceGraphAuthoringDraft
 ): WorkspaceGraphDraftSemanticGraph {
   return {
-    canonicalNodes: draft.nodes.map((node) => projectDesignGraphNodeToCanonical(node)),
+    canonicalNodes: draft.nodes.map((node) => projectAuthoringNodeToCanonical(node)),
     canonicalEdges: draft.edges.map((edge) => ({
-      id: createDraftEdgeId(edge.fromNodeId, edge.toNodeId),
-      sourceId: edge.fromNodeId,
-      targetId: edge.toNodeId,
-      relation: 'lineage',
+      id: edge.id || createDraftEdgeId(edge.sourceId, edge.targetId),
+      sourceId: edge.sourceId,
+      targetId: edge.targetId,
+      relation: edge.relation,
+      ...(edge.metadata == null ? {} : { metadata: { ...edge.metadata } }),
     })),
   };
 }
@@ -113,6 +89,6 @@ export function projectProtectedWorkspaceGraphDraftRecord(
   return {
     revision: record.revision,
     savedAt: record.updatedAt,
-    draft: projectDesignGraphDraft(record.draft),
+    draft: projectWorkspaceGraphAuthoringDraft(record.draft),
   };
 }

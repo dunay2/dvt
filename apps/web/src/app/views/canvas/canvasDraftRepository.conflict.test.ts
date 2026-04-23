@@ -70,26 +70,41 @@ function buildRemoteReadResult(): WorkspaceGraphDraftAuthoringReadResult {
       revision: 'rev-remote',
       updatedAt: '2026-04-18T00:00:03Z',
       draft: {
-        context: {
-          ...WORKSPACE_SCOPE,
-          executionTarget: 'postgres',
+        nodeIds: ['source-node', 'transform-node'],
+        nodePositions: {
+          'source-node': { x: 0, y: 0 },
+          'transform-node': { x: 220, y: 0 },
         },
         nodes: [
           {
             id: 'source-node',
-            type: 'source',
-            payload: {
-              kind: 'postgres_table',
-              schema: 'raw',
-              table: 'orders',
-              alias: 'orders',
+            name: 'orders',
+            pluginId: 'dvt',
+            kind: 'source',
+            role: 'input',
+            status: 'idle',
+            tags: [],
+            metadata: {
+              config: {
+                schema: 'raw',
+                table: 'orders',
+                alias: 'orders',
+              },
             },
           },
           {
             id: 'transform-node',
-            type: 'sql_transform',
-            payload: {
-              dialect: 'postgres',
+            name: 'transform',
+            pluginId: 'dvt',
+            kind: 'sql_transform',
+            role: 'transform',
+            status: 'idle',
+            tags: [],
+            path: 'models/transform.sql',
+            metadata: {
+              config: {
+                dialect: 'postgres',
+              },
               sqlArtifact: {
                 repo: 'dunay2/dvt',
                 path: 'models/transform.sql',
@@ -97,11 +112,17 @@ function buildRemoteReadResult(): WorkspaceGraphDraftAuthoringReadResult {
                 commitSha: 'remote',
                 contentSha256: 'b'.repeat(64),
               },
-              entrypoint: 'models/transform.sql',
             },
           },
         ],
-        edges: [{ fromNodeId: 'source-node', toNodeId: 'transform-node' }],
+        edges: [
+          {
+            id: 'draft_edge_source-node_transform-node',
+            sourceId: 'source-node',
+            targetId: 'transform-node',
+            relation: 'lineage',
+          },
+        ],
       },
     },
   };
@@ -115,10 +136,13 @@ function buildExpectedConflictCurrentRecord(): ConflictSaveGraphDraftResult['cur
   return {
     revision: 'rev-remote',
     savedAt: '2026-04-18T00:00:03Z',
-    draft: {
-      nodeIds: ['source-node', 'transform-node'],
-      nodePositions: {},
-      edges: [{ sourceId: 'source-node', targetId: 'transform-node' }],
+      draft: {
+        nodeIds: ['source-node', 'transform-node'],
+        nodePositions: {
+          'source-node': { x: 0, y: 0 },
+          'transform-node': { x: 220, y: 0 },
+        },
+        edges: [{ sourceId: 'source-node', targetId: 'transform-node' }],
     },
   };
 }
@@ -161,11 +185,18 @@ function buildExpectedConflictRemoteDraftState(): ConflictSaveGraphDraftResult['
           status: 'idle',
           tags: [],
           path: 'models/transform.sql',
-          metadata: {
-            config: {
-              dialect: 'postgres',
+            metadata: {
+              config: {
+                dialect: 'postgres',
+              },
+              sqlArtifact: {
+                repo: 'dunay2/dvt',
+                path: 'models/transform.sql',
+                ref: 'refs/heads/main',
+                commitSha: 'remote',
+                contentSha256: 'b'.repeat(64),
+              },
             },
-          },
         },
       ],
       canonicalEdges: [

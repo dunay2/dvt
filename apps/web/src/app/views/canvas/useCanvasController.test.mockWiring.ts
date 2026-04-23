@@ -1,6 +1,4 @@
-import type {
-  DesignGraphDraft,
-} from '@dvt/contracts';
+import type { WorkspaceGraphAuthoringDraft } from '@dvt/contracts';
 import { vi } from 'vitest';
 
 import {
@@ -57,7 +55,7 @@ export function configureCanvasHarnessDraftTransportMocks(state: CanvasHarnessSt
       draft,
       expectedRevision,
     }: {
-      draft: DesignGraphDraft;
+      draft: WorkspaceGraphAuthoringDraft;
       expectedRevision: string | null;
     }): Promise<WorkspaceGraphDraftAuthoringSaveResult> => {
       const resolution = resolveCanvasHarnessDraftSave({

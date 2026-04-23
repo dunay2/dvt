@@ -1,5 +1,5 @@
 import type {
-  DesignGraphDraft,
+  WorkspaceGraphAuthoringDraft,
   WorkspaceGraphDraftReadResponse,
   WorkspaceGraphDraftSaveResponse,
 } from '@dvt/contracts';
@@ -13,7 +13,7 @@ export type WorkspaceGraphDraftAuthoringReadResult =
 export type SaveWorkspaceGraphDraftAuthoringInput = {
   readonly expectedRevision: string | null;
   readonly idempotencyKey: string;
-  readonly draft: DesignGraphDraft;
+  readonly draft: WorkspaceGraphAuthoringDraft;
 };
 
 export type WorkspaceGraphDraftAuthoringSaveResult =

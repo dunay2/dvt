@@ -1,9 +1,9 @@
-import type { DesignGraphDraft } from '@dvt/contracts';
+import type { WorkspaceGraphAuthoringDraft } from '@dvt/contracts';
 
 type MockWorkspaceGraphDraftRecord = {
   readonly revision: string;
   readonly updatedAt: string;
-  readonly draft: DesignGraphDraft;
+  readonly draft: WorkspaceGraphAuthoringDraft;
 };
 
 type MockIdempotencyEntry =
@@ -41,13 +41,15 @@ export function getMockWorkspaceGraphDraftStore(
   return nextStore;
 }
 
-export function cloneDesignGraphDraft(draft: DesignGraphDraft): DesignGraphDraft {
+export function cloneWorkspaceGraphAuthoringDraft(
+  draft: WorkspaceGraphAuthoringDraft
+): WorkspaceGraphAuthoringDraft {
   return structuredClone(draft);
 }
 
 export function createDraftRequestSignature(input: {
   expectedRevision: string | null;
-  draft: DesignGraphDraft;
+  draft: WorkspaceGraphAuthoringDraft;
 }): string {
   return JSON.stringify({
     expectedRevision: input.expectedRevision,

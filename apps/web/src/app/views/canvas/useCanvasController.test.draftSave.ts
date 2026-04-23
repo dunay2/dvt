@@ -1,5 +1,5 @@
 import type {
-  DesignGraphDraft,
+  WorkspaceGraphAuthoringDraft,
   WorkspaceGraphDraftRecord as ProtectedWorkspaceGraphDraftRecord,
   WorkspaceGraphDraftScope,
 } from '@dvt/contracts';
@@ -81,7 +81,7 @@ function buildConflictAuthoringResult(currentRevision: string): WorkspaceGraphDr
 }
 
 function buildProtectedRecordFromAuthoringDraft(
-  draft: DesignGraphDraft,
+  draft: WorkspaceGraphAuthoringDraft,
   scope: WorkspaceGraphDraftScope,
   revision = crypto.randomUUID(),
   updatedAt = '2026-04-08T00:00:00Z'
@@ -95,7 +95,7 @@ function buildProtectedRecordFromAuthoringDraft(
 
 export function resolveCanvasHarnessDraftSave(args: {
   currentRecord: ProtectedWorkspaceGraphDraftRecord | null;
-  draft: DesignGraphDraft;
+  draft: WorkspaceGraphAuthoringDraft;
   expectedRevision: string | null;
   sessionContext: Pick<SessionContextPort, 'getWorkspaceScopeSnapshot'>;
 }): {

@@ -1,4 +1,4 @@
-import type { DesignGraphDraft } from '@dvt/contracts';
+import type { WorkspaceGraphAuthoringNode } from '@dvt/contracts';
 import { act, type DragEvent } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -30,7 +30,7 @@ const AUTHORING_SCOPE = {
   environmentId: 'dev',
 } as const;
 
-type ProtectedDraftNode = DesignGraphDraft['nodes'][number];
+type ProtectedDraftNode = WorkspaceGraphAuthoringNode;
 type ProtectedDraftReadResult = ReturnType<typeof buildDraftReadOkResponse>;
 
 function requireCanonicalNode(
@@ -109,26 +109,38 @@ function buildProtectedTableNode(
   if (args.type === 'source') {
     return {
       id: args.nodeId,
-      type: 'source',
-      payload: {
-        kind: 'postgres_table',
-        schema: args.schema,
-        table: args.table,
-        alias: args.alias,
+      name: args.alias,
+      pluginId: 'dvt',
+      kind: 'source',
+      role: 'input',
+      status: 'idle',
+      tags: [],
+      metadata: {
+        config: {
+          schema: args.schema,
+          table: args.table,
+          alias: args.alias,
+        },
       },
     };
   }
 
   return {
     id: args.nodeId,
-    type: 'sink',
-    payload: {
-      kind: 'postgres_table',
-      schema: args.schema,
-      table: args.table,
-      materialization: args.materialization,
-      writeMode: args.writeMode,
-    },
+    name: args.table,
+    pluginId: 'dvt',
+    kind: 'sink',
+    role: 'output',
+      status: 'idle',
+      tags: [],
+      metadata: {
+        config: {
+          schema: args.schema,
+          table: args.table,
+          materialization: args.materialization,
+          writeMode: args.writeMode,
+        },
+      },
   };
 }
 
@@ -141,9 +153,17 @@ function buildProtectedTransformNode(args: {
 
   return {
     id: nodeId,
-    type: 'sql_transform' as const,
-    payload: {
-      dialect: 'postgres' as const,
+    name: nodeId,
+    pluginId: 'dvt',
+    kind: 'sql_transform',
+    role: 'transform',
+    status: 'idle',
+    tags: [],
+    path,
+    metadata: {
+      config: {
+        dialect: 'postgres' as const,
+      },
       sqlArtifact: {
         repo: 'dunay2/dvt',
         path,
@@ -160,21 +180,27 @@ function buildProtectedDraftReadResult(args: {
   revision: string;
   updatedAt: string;
   nodes: ProtectedDraftNode[];
-  edges: Array<{ fromNodeId: string; toNodeId: string }>;
+  edges: Array<{ sourceId: string; targetId: string }>;
 }): ProtectedDraftReadResult {
   const { revision, updatedAt, nodes, edges } = args;
+  const nodeIds = nodes.map((node) => node.id);
 
   return buildDraftReadOkResponse(AUTHORING_SCOPE, {
     record: buildProtectedDraftRecord(AUTHORING_SCOPE, {
       revision,
       updatedAt,
       draft: {
-        context: {
-          ...AUTHORING_SCOPE,
-          executionTarget: 'postgres',
-        },
+        nodeIds,
+        nodePositions: Object.fromEntries(
+          nodeIds.map((nodeId, index) => [nodeId, { x: index * 220, y: 120 }])
+        ),
         nodes,
-        edges,
+        edges: edges.map((edge) => ({
+          id: `draft_edge_${edge.sourceId}_${edge.targetId}`,
+          sourceId: edge.sourceId,
+          targetId: edge.targetId,
+          relation: 'lineage',
+        })),
       },
     }),
   });
@@ -360,7 +386,7 @@ describe('useCanvasController reload conflict recovery', () => {
             writeMode: 'replace',
           }),
         ],
-        edges: [{ fromNodeId: 'node_2', toNodeId: 'node_4' }],
+        edges: [{ sourceId: 'node_2', targetId: 'node_4' }],
       })
     );
 
@@ -415,7 +441,7 @@ describe('useCanvasController reload conflict recovery', () => {
             contentShaSeed: 'd',
           }),
         ],
-        edges: [{ fromNodeId: 'node_1', toNodeId: 'node_3' }],
+        edges: [{ sourceId: 'node_1', targetId: 'node_3' }],
       })
     );
 

@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 
 import { buildProtectedDraftRecord } from './workspaceGraphDraft.test.fixtures';
 import {
-  projectDesignGraphDraft,
-  projectDesignGraphDraftSemanticGraph,
+  projectWorkspaceGraphAuthoringDraft,
+  projectWorkspaceGraphAuthoringDraftSemanticGraph,
   projectProtectedWorkspaceGraphDraftRecord,
 } from './workspaceGraphDraftProjection';
 
@@ -14,12 +14,16 @@ const WORKSPACE_SCOPE = {
 } as const;
 
 describe('workspaceGraphDraftProjection', () => {
-  it('projects a design graph draft into the Canvas draft shape without layout', () => {
+  it('projects an authoring draft into the Canvas draft shape with layout', () => {
     const protectedDraft = buildProtectedDraftRecord(WORKSPACE_SCOPE).draft;
 
-    expect(projectDesignGraphDraft(protectedDraft)).toEqual({
+    expect(projectWorkspaceGraphAuthoringDraft(protectedDraft)).toEqual({
       nodeIds: ['source_node', 'transform_node', 'sink_node'],
-      nodePositions: {},
+      nodePositions: {
+        source_node: { x: 0, y: 0 },
+        transform_node: { x: 240, y: 0 },
+        sink_node: { x: 480, y: 0 },
+      },
       edges: [
         { sourceId: 'source_node', targetId: 'transform_node' },
         { sourceId: 'transform_node', targetId: 'sink_node' },
@@ -27,10 +31,10 @@ describe('workspaceGraphDraftProjection', () => {
     });
   });
 
-  it('projects a design graph draft into the canonical semantic graph used by the Canvas route', () => {
+  it('projects an authoring draft into the canonical semantic graph used by the Canvas route', () => {
     const protectedDraft = buildProtectedDraftRecord(WORKSPACE_SCOPE).draft;
 
-    expect(projectDesignGraphDraftSemanticGraph(protectedDraft)).toEqual({
+    expect(projectWorkspaceGraphAuthoringDraftSemanticGraph(protectedDraft)).toEqual({
       canonicalNodes: [
         {
           id: 'source_node',
@@ -61,6 +65,13 @@ describe('workspaceGraphDraftProjection', () => {
             config: {
               dialect: 'postgres',
             },
+            sqlArtifact: {
+              repo: 'repo',
+              path: 'models/transform.sql',
+              ref: 'main',
+              commitSha: 'abc123',
+              contentSha256: 'a'.repeat(64),
+            },
           },
         },
         {
@@ -83,13 +94,13 @@ describe('workspaceGraphDraftProjection', () => {
       ],
       canonicalEdges: [
         {
-          id: 'draft_edge_source_node_transform_node',
+          id: 'edge_source_transform',
           sourceId: 'source_node',
           targetId: 'transform_node',
           relation: 'lineage',
         },
         {
-          id: 'draft_edge_transform_node_sink_node',
+          id: 'edge_transform_sink',
           sourceId: 'transform_node',
           targetId: 'sink_node',
           relation: 'lineage',
@@ -109,7 +120,11 @@ describe('workspaceGraphDraftProjection', () => {
       savedAt: '2026-04-20T16:30:00.000Z',
       draft: {
         nodeIds: ['source_node', 'transform_node', 'sink_node'],
-        nodePositions: {},
+        nodePositions: {
+          source_node: { x: 0, y: 0 },
+          transform_node: { x: 240, y: 0 },
+          sink_node: { x: 480, y: 0 },
+        },
         edges: [
           { sourceId: 'source_node', targetId: 'transform_node' },
           { sourceId: 'transform_node', targetId: 'sink_node' },

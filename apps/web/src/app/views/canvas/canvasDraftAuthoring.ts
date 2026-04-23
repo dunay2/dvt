@@ -1,21 +1,14 @@
-import type { DesignGraphDraft } from '@dvt/contracts';
+import {
+  WorkspaceGraphAuthoringDraftSchema,
+  type WorkspaceGraphAuthoringDraft,
+  type WorkspaceGraphAuthoringEdge,
+  type WorkspaceGraphAuthoringNode,
+} from '@dvt/contracts';
 
 import type { WorkspaceScope } from '../../ports/sessionContext';
 import type { IWorkspacePort, WorkspaceGraphDraft } from '../../ports/workspace';
 import type { WorkspaceBootstrapConfig } from '../../services/config/workspaceConfig';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
-import {
-  hasExplicitGitRevision,
-  normalizeGitRef,
-  readPreviewSqlArtifact,
-} from './canvasGitProvenance';
-import {
-  requireSinkPayload,
-  requireSourcePayload,
-  requireTransformPayload,
-  resolveScopedTransformationNodes,
-} from './previewGraphNodePayloads';
-import { validateTransformationGraph } from './transformationGraphValidation';
 
 export type CanvasDraftAuthoringPayload = {
   projectedDraft: WorkspaceGraphDraft;
@@ -25,88 +18,103 @@ export type CanvasDraftAuthoringPayload = {
   previewProvenanceConfig: Pick<WorkspaceBootstrapConfig, 'gitBranch' | 'gitSha' | 'gitRepo'>;
 };
 
-function hasGitAuthoringContext(
-  previewProvenanceConfig: CanvasDraftAuthoringPayload['previewProvenanceConfig']
-): previewProvenanceConfig is CanvasDraftAuthoringPayload['previewProvenanceConfig'] & {
-  gitRepo: string;
-} {
-  return (
-    typeof previewProvenanceConfig.gitRepo === 'string' &&
-    previewProvenanceConfig.gitRepo.trim().length > 0 &&
-    hasExplicitGitRevision(previewProvenanceConfig)
-  );
+function cloneMetadata(
+  metadata: Record<string, unknown> | undefined
+): Record<string, unknown> | undefined {
+  return metadata == null ? undefined : { ...metadata };
+}
+
+function projectCanonicalNodeToAuthoringNode(node: CanonicalNode): WorkspaceGraphAuthoringNode {
+  const authoringNode: WorkspaceGraphAuthoringNode = {
+    id: node.id,
+    name: node.name,
+    pluginId: node.pluginId,
+    kind: node.kind,
+    role: node.role,
+    status: node.status,
+    tags: [...node.tags],
+  };
+
+  if (node.path != null) {
+    authoringNode.path = node.path;
+  }
+  if (node.description != null) {
+    authoringNode.description = node.description;
+  }
+  if (node.lastDuration != null) {
+    authoringNode.lastDuration = node.lastDuration;
+  }
+  if (node.lastCost != null) {
+    authoringNode.lastCost = node.lastCost;
+  }
+  const metadata = cloneMetadata(node.metadata);
+  if (metadata != null) {
+    authoringNode.metadata = metadata;
+  }
+
+  return authoringNode;
+}
+
+function createAuthoringEdgeId(sourceId: string, targetId: string): string {
+  return `draft_edge_${sourceId}_${targetId}`;
+}
+
+function buildCanonicalEdgeLookup(
+  canonicalEdges: readonly CanonicalEdge[]
+): Map<string, CanonicalEdge> {
+  return new Map(canonicalEdges.map((edge) => [`${edge.sourceId}::${edge.targetId}`, edge]));
+}
+
+function projectDraftEdgeToAuthoringEdge(
+  edge: WorkspaceGraphDraft['edges'][number],
+  canonicalEdgeLookup: ReadonlyMap<string, CanonicalEdge>
+): WorkspaceGraphAuthoringEdge {
+  const canonicalEdge = canonicalEdgeLookup.get(`${edge.sourceId}::${edge.targetId}`);
+  return {
+    id: canonicalEdge?.id ?? createAuthoringEdgeId(edge.sourceId, edge.targetId),
+    sourceId: edge.sourceId,
+    targetId: edge.targetId,
+    relation: canonicalEdge?.relation ?? 'lineage',
+    ...(canonicalEdge?.metadata == null
+      ? {}
+      : { metadata: cloneMetadata(canonicalEdge.metadata) }),
+  };
 }
 
 export function canPersistCanvasDraftAuthoringPayload(
   payload: CanvasDraftAuthoringPayload
 ): boolean {
-  if (!hasGitAuthoringContext(payload.previewProvenanceConfig)) {
-    return false;
-  }
+  return WorkspaceGraphAuthoringDraftSchema.safeParse(
+    buildCanvasDraftAuthoringGraphSync(payload)
+  ).success;
+}
 
-  const validation = validateTransformationGraph({
-    nodes: [...payload.canonicalNodes],
-    edges: [...payload.canonicalEdges],
-    workspaceNodeIds: payload.projectedDraft.nodeIds,
-  });
-  if (!validation.valid) {
-    return false;
-  }
+function buildCanvasDraftAuthoringGraphSync(
+  payload: CanvasDraftAuthoringPayload
+): WorkspaceGraphAuthoringDraft {
+  const canonicalNodesById = new Map(payload.canonicalNodes.map((node) => [node.id, node]));
+  const canonicalEdgeLookup = buildCanonicalEdgeLookup(payload.canonicalEdges);
 
-  try {
-    const { source, transform, sink } = resolveScopedTransformationNodes(
-      payload.canonicalNodes,
-      payload.projectedDraft.nodeIds
-    );
-    requireSourcePayload(source);
-    requireSinkPayload(sink);
-    return typeof transform.path === 'string' && transform.path.trim().length > 0;
-  } catch {
-    return false;
-  }
+  return {
+    nodeIds: [...payload.projectedDraft.nodeIds],
+    nodePositions: { ...payload.projectedDraft.nodePositions },
+    nodes: payload.projectedDraft.nodeIds.map((nodeId) => {
+      const node = canonicalNodesById.get(nodeId);
+      if (node == null) {
+        throw new Error(`Workspace graph draft references unknown node ${nodeId}.`);
+      }
+
+      return projectCanonicalNodeToAuthoringNode(node);
+    }),
+    edges: payload.projectedDraft.edges.map((edge) =>
+      projectDraftEdgeToAuthoringEdge(edge, canonicalEdgeLookup)
+    ),
+  };
 }
 
 export async function buildCanvasDraftAuthoringGraph(args: {
   workspaceService: Pick<IWorkspacePort, 'getFileContent'>;
   payload: CanvasDraftAuthoringPayload;
-}): Promise<DesignGraphDraft> {
-  const { payload, workspaceService } = args;
-  if (!hasGitAuthoringContext(payload.previewProvenanceConfig)) {
-    throw new Error(
-      'Workspace graph draft authoring requires gitRepo, gitBranch, and gitSha to be configured.'
-    );
-  }
-
-  const { source, transform, sink } = resolveScopedTransformationNodes(
-    payload.canonicalNodes,
-    payload.projectedDraft.nodeIds
-  );
-  if (!transform.path) {
-    throw new Error('Workspace graph draft authoring requires a transform workspace file path.');
-  }
-  const { sqlArtifact } = await readPreviewSqlArtifact({
-    workspaceService,
-    path: transform.path,
-    gitRepo: payload.previewProvenanceConfig.gitRepo,
-    gitRef: normalizeGitRef(payload.previewProvenanceConfig.gitBranch),
-    gitSha: payload.previewProvenanceConfig.gitSha,
-  });
-
-  return {
-    context: {
-      tenantId: payload.workspaceScope.tenantId,
-      projectId: payload.workspaceScope.projectId,
-      environmentId: payload.workspaceScope.environmentId,
-      executionTarget: 'postgres',
-    },
-    nodes: [
-      requireSourcePayload(source),
-      requireTransformPayload(transform, sqlArtifact),
-      requireSinkPayload(sink),
-    ],
-    edges: payload.projectedDraft.edges.map((edge) => ({
-      fromNodeId: edge.sourceId,
-      toNodeId: edge.targetId,
-    })),
-  };
+}): Promise<WorkspaceGraphAuthoringDraft> {
+  return buildCanvasDraftAuthoringGraphSync(args.payload);
 }

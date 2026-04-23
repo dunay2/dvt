@@ -12,7 +12,7 @@ import type { SessionContextPort } from '../../ports/sessionContext';
 import type { IWorkspaceGraphDraftAuthoringPort } from '../../ports/workspaceGraphDraftAuthoring';
 import { WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION } from './workspaceGraphDraftProtocol';
 import {
-  cloneDesignGraphDraft,
+  cloneWorkspaceGraphAuthoringDraft,
   createDraftRequestSignature,
   getMockWorkspaceGraphDraftStore,
 } from './workspaceGraphDraftAuthoring.mockStore';
@@ -93,7 +93,7 @@ export function createMockWorkspaceGraphDraftAuthoringPort({
           scope,
           schemaVersion: WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
           revision: store.currentRecord.revision,
-          draft: cloneDesignGraphDraft(store.currentRecord.draft),
+          draft: cloneWorkspaceGraphAuthoringDraft(store.currentRecord.draft),
           updatedAt: store.currentRecord.updatedAt,
         },
       };
@@ -149,7 +149,7 @@ export function createMockWorkspaceGraphDraftAuthoringPort({
       const nextRecord = {
         revision: crypto.randomUUID(),
         updatedAt: new Date().toISOString(),
-        draft: cloneDesignGraphDraft(input.draft),
+        draft: cloneWorkspaceGraphAuthoringDraft(input.draft),
       };
       store.currentRecord = nextRecord;
       store.idempotencyEntries.set(input.idempotencyKey, {
