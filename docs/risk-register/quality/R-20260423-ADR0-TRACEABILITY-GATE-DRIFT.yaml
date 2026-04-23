@@ -1,0 +1,38 @@
+---
+id: R-20260423-ADR0-TRACEABILITY-GATE-DRIFT
+title: ADR-0000 traceability gate can drift from workspace build closure
+status: Open
+date: 2026-04-23
+owners:
+  - packages/@dvt/traceability-service
+  - packages/@dvt/contracts
+  - packages/@dvt/engine
+  - packages/@dvt/adapter-temporal
+  - packages/@dvt/adapter-postgres
+severity: Medium
+probability: Low
+context: >
+  The default branch `CI - Code Quality` workflow failed in the ADR-0000 traceability gate after
+  `@dvt/traceability-service` began depending on additional internal workspaces while its `prebuild`
+  hook still compiled only `@dvt/contracts`. Once that build closure was corrected, the validator
+  exposed missing traceability headers in governed engine, contract, adapter, and lineage files that
+  were outside the regression baseline.
+risk: >
+  If future traceability-service imports or governed file additions are not paired with dependency
+  closure validation and ADR-0000 header updates, the default branch can regress to a red quality
+  badge even when the underlying runtime logic is otherwise unchanged.
+mitigations:
+  - >
+    Keep `tools/ci/workspace-typecheck-contract.test.mjs` asserting that the traceability ADR gate
+    prebuilds the full `@dvt/traceability-service` dependency closure.
+  - >
+    Treat `pnpm traceability:adr0` as the canonical local proof for changes under governed
+    contracts, engine, adapters, and traceability-service paths.
+  - >
+    Commit refreshed `traceability.manifest.json` output whenever new non-baseline traceability
+    headers are added.
+observed_trigger:
+  - '`pnpm traceability:adr0` failed on a clean runner before dependency closure correction.'
+  - 'The validator reported non-baseline ADR-0000 header issues after the build phase succeeded.'
+review_after: 2026-06-30
+---

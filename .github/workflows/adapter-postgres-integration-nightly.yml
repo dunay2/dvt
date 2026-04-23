@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: read
+  issues: write
 
 concurrency:
   group: adapter-postgres-integration-nightly-${{ github.ref }}
@@ -45,7 +46,37 @@ jobs:
         run: node --test tools/ci/adapter-postgres-import-alias-regression.test.mjs
 
       - name: Build adapter-postgres dependency graph
-        run: pnpm --filter @dvt/adapter-postgres... --if-present run build
+        run: pnpm --workspace-concurrency=4 --filter @dvt/adapter-postgres... --if-present run build
 
       - name: Run adapter-postgres integration smoke
         run: pnpm test:adapter-postgres:integration
+
+      - name: Notify nightly failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NIGHTLY_ISSUE_TITLE: Adapter Postgres Integration Nightly failed
+          RUN_URL:
+            ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+
+          body="Nightly adapter-postgres integration failed.
+
+          Run: ${RUN_URL}
+          Commit: ${GITHUB_SHA}
+          Workflow: ${GITHUB_WORKFLOW}"
+
+          issue_number="$(
+            gh issue list \
+              --state open \
+              --search "${NIGHTLY_ISSUE_TITLE} in:title" \
+              --json number \
+              --jq '.[0].number // ""'
+          )"
+
+          if [[ -n "${issue_number}" ]]; then
+            gh issue comment "${issue_number}" --body "${body}"
+          else
+            gh issue create --title "${NIGHTLY_ISSUE_TITLE}" --body "${body}"
+          fi

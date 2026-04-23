@@ -1,3 +1,11 @@
+/**
+ * @file packages/@dvt/adapter-temporal/src/workflows/workflowInputParsingHelpers.ts
+ * @baseline ADR-0001: Temporal Integration Test Policy
+ * @baseline ADR-0003: Execution Model
+ * @decision Parse workflow cursor and control values with deterministic validation before execution
+ * @consequence Invalid provider payloads fail before mutating canonical DVT lifecycle state
+ * @version 1.2.0
+ */
 export function parseOptionalNonNegativeInt(value: unknown, fieldName: string): number {
   return parseIntegerField({
     value,

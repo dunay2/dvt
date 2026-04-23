@@ -1,3 +1,11 @@
+/**
+ * @file packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.types.ts
+ * @baseline ADR-0003: Execution Model
+ * @baseline ADR-0046: Execution Plan Definition And Run Execution Policy Separation
+ * @decision Define workflow ports and cursor contracts at the DVT boundary before Temporal-specific execution
+ * @consequence Workflow helpers share typed state without leaking provider authority into engine contracts
+ * @version 1.2.0
+ */
 import type { MaterializationEvidence, PlanRef } from '@dvt/contracts';
 
 import type { EventType, ExecutionStep, ResolvedRunContext } from '../engine-types.js';

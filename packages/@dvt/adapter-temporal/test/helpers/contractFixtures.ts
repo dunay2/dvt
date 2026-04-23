@@ -1,3 +1,11 @@
+/**
+ * @file packages/@dvt/adapter-temporal/test/helpers/contractFixtures.ts
+ * @baseline ADR-0001: Temporal Integration Test Policy
+ * @baseline ADR-0003: Execution Model
+ * @decision Provide contract-backed Temporal fixtures for tests that exercise DVT-owned run and plan boundaries
+ * @consequence Adapter tests use canonical contract shapes instead of ad hoc provider-only payloads
+ * @version 1.2.0
+ */
 import {
   CURRENT_EXECUTION_PLAN_CONTRACT_VERSION,
   CURRENT_EXECUTION_PLAN_SCHEMA_VERSION,

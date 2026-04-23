@@ -1,3 +1,12 @@
+/**
+ * @file packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.stepExecution.ts
+ * @baseline ADR-0003: Execution Model
+ * @baseline ADR-0032: compiledCodeRef Ownership
+ * @baseline ADR-0040: Retry Ownership And Attempt Authority
+ * @decision Emit StepStarted artifact references before executing DVT-owned step activities with explicit retry handling
+ * @consequence Traceability receives immutable compiled-code references while activity retries remain under DVT policy
+ * @version 1.2.0
+ */
 import {
   ActivityFailure,
   ApplicationFailure,

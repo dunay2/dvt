@@ -1,3 +1,11 @@
+/**
+ * @file packages/@dvt/traceability-service/src/lineage/runtime/lineageWorkerRuntimeConfig.ts
+ * @baseline ADR-0032: compiledCodeRef Ownership
+ * @baseline ADR-0033: Outbox Worker Sharding And Fencing Model
+ * @decision Normalize lineage worker runtime options before polling, replay, or dead-letter processing starts
+ * @consequence Worker behavior is bounded and explicit across local and CI runtime configurations
+ * @version 0.1.0
+ */
 import type { ILineageOutboxStore } from '../contracts.js';
 import type { LineageWorkerRuntimeOptions } from '../LineageWorkerRuntime.js';
 

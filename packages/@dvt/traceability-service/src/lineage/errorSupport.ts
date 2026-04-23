@@ -1,3 +1,11 @@
+/**
+ * @file packages/@dvt/traceability-service/src/lineage/errorSupport.ts
+ * @baseline ADR-0032: compiledCodeRef Ownership
+ * @baseline ADR-0033: Outbox Worker Sharding And Fencing Model
+ * @decision Normalize arbitrary lineage runtime errors into structured fail-open diagnostics
+ * @consequence Worker logs and dead-letter records remain deterministic without leaking unsafe error content
+ * @version 0.1.0
+ */
 import {
   extractStructuredErrorMetadata,
   sanitizeLineageErrorForPersistence,

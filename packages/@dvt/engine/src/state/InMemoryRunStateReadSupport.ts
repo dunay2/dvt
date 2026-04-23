@@ -1,5 +1,11 @@
 /**
- * @baseline ADR-0003
+ * @file packages/@dvt/engine/src/state/InMemoryRunStateReadSupport.ts
+ * @baseline ADR-0003: Execution Model
+ * @baseline ADR-0015: getRunStatus Read-Model Separation
+ * @baseline ADR-0039: Hexagonal Port Hardening And SOLID Remediation
+ * @decision Serve in-memory run reads from DVT-owned metadata, events, and projections under tenant scope
+ * @consequence Read-model helpers stay separated from write authority and provider runtime state
+ * @version 1.0.0
  */
 import type { RunEventPersisted, RunMetadata, WorkflowSnapshot } from '../contracts/runEvents.js';
 import type { ListEventsOptions, ListRunsOptions } from '../ports/IRunStateStore.js';
