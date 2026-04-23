@@ -2,7 +2,7 @@
 title: API Current To Target Architecture
 status: Active
 owner: Architecture / API / Docs
-last_reviewed: 2026-04-21
+last_reviewed: 2026-04-23
 ---
 
 # API Current To Target Architecture
@@ -259,6 +259,7 @@ subcomponent instead of living only as scattered parser files.
 flowchart LR
   Route["startRunRoute.ts"] --> Parser["startRunRouteParser.ts"]
   Parser --> Builder["startRunRouteCommandBuilder.ts"]
+  Builder --> Identity["startRunIdentity.ts"]
   Builder --> Policy["evaluatePlanRoutePlanSource()"]
   Builder --> Target["parseStartRunTargetAdapter()"]
   Route --> ErrorFacade["httpErrorTranslation.respond(...)"]
@@ -269,6 +270,25 @@ Use the local component guide for the public API, invariants, transitions, and
 consumers of that entrypoint seam:
 
 - [Start-run HTTP entrypoint component](../../../../apps/api/docs/start-run-http-entrypoint-component.md)
+- [Start-run platform identity component](../../../../apps/api/docs/start-run-platform-identity-component.md)
+
+That entrypoint also owns the platform-owned execution identity insertion from
+`ADR-0050`. Caller-provided `runId` is rejected at parse time, and the internal
+`StartRunCommand.runId` is generated as `run_<UUIDv7>` inside the protected API
+boundary before the command crosses into the authenticated start-run
+application component.
+
+The identity seam is deliberately narrower than a runtime engine seam:
+
+- it allocates an opaque, time-local, collision-resistant resource id;
+- it does not own retry, duplicate-run, lifecycle, recovery, provider workflow,
+  engine, or state-store semantics;
+- persistence uniqueness remains the final collision guard.
+
+The paired frontend component guide documents the caller-owned side of that
+same boundary:
+
+- [Start-run client identity boundary](../web/runs/start-run-client-identity-boundary.md)
 
 Current slice status:
 

@@ -10,6 +10,7 @@ import { type AuthorizationAction, type RequestedScope } from '../../domain/auth
 import { parsePlanRouteBodyRecord } from './planRouteBodyParser.js';
 import { parsePlanRouteScope } from './planRouteScopeParser.js';
 import type { RouteParseResult } from './routeParseIssue.js';
+import type { StartRunRunIdGenerator } from './startRunIdentity.js';
 import { parseStartRunCommand } from './startRunRouteCommandBuilder.js';
 
 type ParsedStartRunRequest = {
@@ -23,7 +24,8 @@ type ParseStartRunRequestResult = RouteParseResult<ParsedStartRunRequest>;
 
 export function parseStartRunBody(
   body: unknown,
-  adapterRegistry: IStartRunTargetAdapterRegistry
+  adapterRegistry: IStartRunTargetAdapterRegistry,
+  runIdGenerator: StartRunRunIdGenerator
 ): ParseStartRunRequestResult {
   const bodyRecord = parsePlanRouteBodyRecord(body);
   if (!bodyRecord.ok) {
@@ -35,7 +37,7 @@ export function parseStartRunBody(
     return scope;
   }
 
-  const command = parseStartRunCommand(bodyRecord.value, adapterRegistry);
+  const command = parseStartRunCommand(bodyRecord.value, adapterRegistry, runIdGenerator);
   if (!command.ok) {
     return command;
   }

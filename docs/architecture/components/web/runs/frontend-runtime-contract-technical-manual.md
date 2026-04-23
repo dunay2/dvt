@@ -2,7 +2,7 @@
 title: Frontend Runtime Contract Technical Manual
 status: Review
 owner: Frontend / API / Architecture
-last_reviewed: 2026-04-13
+last_reviewed: 2026-04-23
 domain: frontend
 ---
 
@@ -236,6 +236,48 @@ This keeps the runtime boundary consistent:
 1. preview or import returns a backend-authored `PlanRef`;
 2. `useCanvasExecutionActions` fails closed if `currentPlan.planRef` is absent;
 3. `runsService.startRun()` remains `PlanRef`-driven through `POST /runs/start`.
+
+## Platform-Owned Start-Run Identity
+
+The runtime contract now separates caller-owned start intent from
+platform-owned execution identity.
+
+Caller-owned input:
+
+- `planRef`
+- `workspaceScope`
+- `selection`
+
+Platform-owned output:
+
+- `EngineRunRef.runId`
+
+`StartRunInput` is the complete client-authored request contract for
+`/runs/start`. The API route rejects any caller-authored canonical execution
+identity with `client_run_id_not_allowed` and generates the internal
+`StartRunCommand.runId` itself as `run_<UUIDv7>`.
+
+Frontend consumers must treat `EngineRunRef.runId` as opaque. UUIDv7 provides
+platform-side locality and collision resistance, but its timestamp bits are not
+a frontend ordering, retry, or lifecycle contract.
+
+```mermaid
+flowchart LR
+  Canvas["Canvas start action"] --> Input["StartRunInput: planRef + workspaceScope + selection"]
+  Input --> Service["runsService.startRun"]
+  Service --> Api["POST /runs/start"]
+  Api --> Reject["reject client runId"]
+  Api --> Generated["platform run_<UUIDv7>"]
+  Generated --> Ref["EngineRunRef"]
+
+  Input -. "no canonical execution identity" .-> Service
+  Service -. "does not send caller-authored identity" .-> Api
+  Service -. "must not parse" .-> Ref
+```
+
+Detailed local guide:
+
+- [Start-run client identity boundary](./start-run-client-identity-boundary.md)
 
 ## Current Consumer Gap
 

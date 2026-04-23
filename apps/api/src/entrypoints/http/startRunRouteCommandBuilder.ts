@@ -14,18 +14,25 @@ import { evaluatePlanRoutePlanSource } from './planRoutePlanSourcePolicy.js';
 import { parsePlanRouteRunExecutionContextRef } from './planRouteRunExecutionContextRefParser.js';
 import { parsePlanRouteSelection } from './planRouteSelectionParser.js';
 import { badRequestResult, type RouteParseResult } from './routeParseIssue.js';
+import type { StartRunRunIdGenerator } from './startRunIdentity.js';
 import { parseStartRunTargetAdapter } from './startRunRouteTargetAdapterParser.js';
 
 export function parseStartRunCommand(
   record: Record<string, unknown>,
-  adapterRegistry: IStartRunTargetAdapterRegistry
+  adapterRegistry: IStartRunTargetAdapterRegistry,
+  runIdGenerator: StartRunRunIdGenerator
 ): RouteParseResult<StartRunCommand> {
   const selection = parsePlanRouteSelection(record.selection);
   if (!selection.ok) {
     return selection;
   }
 
-  const runId = parseStartRunRunId(record.runId);
+  const clientRunId = rejectClientProvidedStartRunRunId(record);
+  if (!clientRunId.ok) {
+    return clientRunId;
+  }
+
+  const runId = parseGeneratedStartRunRunId(runIdGenerator());
   if (!runId.ok) {
     return runId;
   }
@@ -126,7 +133,17 @@ export function buildPlannerBackedStartRunCommand(input: {
   };
 }
 
-function parseStartRunRunId(rawRunId: unknown): RouteParseResult<string> {
+function rejectClientProvidedStartRunRunId(
+  record: Record<string, unknown>
+): RouteParseResult<undefined> {
+  if (Object.hasOwn(record, 'runId')) {
+    return badRequestResult(HTTP_ERROR_REASON.clientRunIdNotAllowed, { target: 'runId' });
+  }
+
+  return { ok: true, value: undefined };
+}
+
+function parseGeneratedStartRunRunId(rawRunId: unknown): RouteParseResult<string> {
   const runId = asCanonicalNonEmptyStringOrUndefined(rawRunId);
   if (runId === undefined) {
     return badRequestResult(HTTP_ERROR_REASON.invalidRunId, { target: 'runId' });

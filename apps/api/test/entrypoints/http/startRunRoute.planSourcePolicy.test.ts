@@ -37,18 +37,18 @@ describe('startRunRoute plan-source policy', () => {
           planRef: undefined,
           selection: [],
           graphSource: VALID_GRAPH_SOURCE,
-          runId: 'run-empty-selection',
           targetAdapter: 'mock',
         },
       },
       facade,
+      runIdGenerator: () => 'run_generated_empty_selection',
     });
 
     expect(reply.statusCode).toBe(202);
     expect(reply.payload).toEqual({ runId: 'r-empty-selection', accepted: true });
     expect(received?.command).toEqual({
       graphSource: VALID_GRAPH_SOURCE,
-      runId: 'run-empty-selection',
+      runId: 'run_generated_empty_selection',
       targetAdapter: 'mock',
       selection: [],
     });
@@ -71,17 +71,17 @@ describe('startRunRoute plan-source policy', () => {
           ...VALID_BODY,
           planRef: undefined,
           graphSource: VALID_GRAPH_SOURCE,
-          runId: 'run-graph',
           targetAdapter: 'mock',
         },
       },
       facade,
+      runIdGenerator: () => 'run_generated_graph',
     });
 
     expect(reply.statusCode).toBe(202);
     expect(received?.command).toEqual({
       graphSource: VALID_GRAPH_SOURCE,
-      runId: 'run-graph',
+      runId: 'run_generated_graph',
       targetAdapter: 'mock',
       selection: ['model_a'],
     });
@@ -93,7 +93,6 @@ describe('startRunRoute plan-source policy', () => {
       body: {
         ...VALID_BODY,
         graphSource: VALID_GRAPH_SOURCE,
-        runId: 'run-conflict',
       },
       expectedReason: 'conflicting_plan_inputs',
     },
@@ -105,7 +104,6 @@ describe('startRunRoute plan-source policy', () => {
           uri: 'dbt://manifest.json',
           sha256: '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
         },
-        runId: 'run-conflict-manifest-ref',
       },
       expectedReason: 'invalid_plan_source',
     },
@@ -114,7 +112,6 @@ describe('startRunRoute plan-source policy', () => {
       body: {
         ...VALID_BODY,
         nodes: [{ nodeId: 'model_a', resourceType: 'model', dependsOn: [] }],
-        runId: 'run-conflict-nodes',
       },
       expectedReason: 'invalid_plan_source',
     },
@@ -123,7 +120,6 @@ describe('startRunRoute plan-source policy', () => {
       body: {
         ...VALID_BODY,
         manifest: { nodes: [] },
-        runId: 'run-conflict-manifest',
       },
       expectedReason: 'invalid_plan_source',
     },
@@ -133,7 +129,6 @@ describe('startRunRoute plan-source policy', () => {
         ...VALID_BODY,
         planRef: undefined,
         nodes: [{ nodeId: 'model_a', resourceType: 'model', dependsOn: [] }],
-        runId: 'run-legacy-nodes-no-plan-ref',
       },
       expectedReason: 'invalid_plan_source',
     },
@@ -143,7 +138,6 @@ describe('startRunRoute plan-source policy', () => {
         ...VALID_BODY,
         planRef: undefined,
         manifest: { nodes: [] },
-        runId: 'run-legacy-manifest-no-plan-ref',
       },
       expectedReason: 'invalid_plan_source',
     },

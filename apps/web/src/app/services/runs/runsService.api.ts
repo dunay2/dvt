@@ -1,20 +1,29 @@
-import {
-  parseEngineRunRef,
-  parseRunEventRecord,
-} from '@dvt/contracts';
+/**
+ * Owned concern: adapt the presentation runs port to the protected HTTP API
+ * while keeping platform-owned run identity out of client requests.
+ */
+import { parseEngineRunRef, parseRunEventRecord } from '@dvt/contracts';
 
-import type {
-  IRunsPort,
-  RunEventTimelinePage,
-  RunSnapshot,
-  StartRunInput,
-} from '../../ports/runs';
+import type { IRunsPort, RunEventTimelinePage, RunSnapshot, StartRunInput } from '../../ports/runs';
 import type { SessionContextPort } from '../../ports/sessionContext';
 import type { RunEvent } from '../../types/engine';
 import { ApiError, type ApiClient } from '../api/createApiClient';
 import { createSessionContextPort } from '../session/sessionContextPort';
-import { extractEventsPayload, extractRunListPayload, buildTenantScopeQuery } from './runsApiPayloads';
+import {
+  extractEventsPayload,
+  extractRunListPayload,
+  buildTenantScopeQuery,
+} from './runsApiPayloads';
 import { mapSnapshotToSummary, mapUnknownRecordToSnapshot } from './runsApiSnapshotMapper';
+
+type StartRunApiRequest = {
+  readonly tenantId: string;
+  readonly projectId: string;
+  readonly environmentId: string;
+  readonly targetAdapter: StartRunInput['workspaceScope']['targetAdapter'];
+  readonly selection: readonly string[];
+  readonly planRef: StartRunInput['planRef'];
+};
 
 export function createApiRunsService(
   apiClient: ApiClient,
@@ -44,7 +53,14 @@ export function createApiRunsService(
     },
     getRunSnapshot: getRunSnapshotById,
     startRun: async (input: StartRunInput) => {
-      const payload = await apiClient.postJson<StartRunInput, unknown>('/runs/start', input);
+      const payload = await apiClient.postJson<StartRunApiRequest, unknown>('/runs/start', {
+        tenantId: input.workspaceScope.tenantId,
+        projectId: input.workspaceScope.projectId,
+        environmentId: input.workspaceScope.environmentId,
+        targetAdapter: input.workspaceScope.targetAdapter,
+        selection: [...input.selection],
+        planRef: input.planRef,
+      });
       return parseEngineRunRef(payload);
     },
     listRunEvents: async (runId, afterSeq): Promise<RunEventTimelinePage> => {

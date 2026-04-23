@@ -15,7 +15,6 @@ describe('startRunRoute facade result translation', () => {
         headers: { authorization: 'Bearer token' },
         body: {
           ...VALID_BODY,
-          runId: 'run-plan-missing-capability',
         },
       },
       facade: {
@@ -49,7 +48,6 @@ describe('startRunRoute facade result translation', () => {
         headers: { authorization: 'Bearer token' },
         body: {
           ...VALID_BODY,
-          runId: 'run-bp-tenant',
         },
       },
       facade: {
@@ -76,7 +74,6 @@ describe('startRunRoute facade result translation', () => {
         headers: { authorization: 'Bearer token' },
         body: {
           ...VALID_BODY,
-          runId: 'run-bp-system',
         },
       },
       facade: {
