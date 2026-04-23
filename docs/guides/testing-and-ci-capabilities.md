@@ -28,9 +28,11 @@ See also:
 | Full recursive test run        | `pnpm test`                      | [`package.json`](../../package.json)                                                               |
 | Web E2E test run               | `pnpm test:web:e2e`              | [`package.json`](../../package.json)                                                               |
 | Full type-check gate           | `pnpm type-check`                | [`package.json`](../../package.json)                                                               |
+| Fast pre-push changed gate     | `pnpm verify:changed`            | [`package.json`](../../package.json)                                                               |
 | Pre-push verification gate     | `pnpm verify:prepush`            | [`package.json`](../../package.json)                                                               |
 | Changed-files auto-fix         | `pnpm fix:changed`               | [`package.json`](../../package.json)                                                               |
 | Changed-files lint/format gate | `node scripts/check-changed.cjs` | [`scripts/check-changed.cjs`](../../scripts/check-changed.cjs)                                     |
+| CI tool contract suite         | `pnpm test:ci-tools`             | [`package.json`](../../package.json)                                                               |
 | Affected workspace build       | `pnpm ci:affected:build`         | [`package.json`](../../package.json)                                                               |
 | Affected workspace test        | `pnpm ci:affected:test`          | [`package.json`](../../package.json)                                                               |
 | Affected workspace type-check  | `pnpm ci:affected:typecheck`     | [`package.json`](../../package.json)                                                               |
@@ -164,7 +166,12 @@ Command semantics:
 - `pnpm docs:planning:generated:check` regenerates planning-only derived pages, verifies required sections, checks determinism, and fails if those files are tracked in git again.
 - `pnpm docs:workboard:check` is the planning-generated artifact gate and currently delegates to `pnpm docs:planning:generated:check`.
 - `pnpm docs:status:check` and `pnpm docs:capability:check` remain strict drift gates for their tracked generated outputs.
+- `pnpm verify:changed` is the fast local pre-push path used by `.husky/pre-push` by default; it stays on changed-file docs, markdown, formatting, and QA-artifact gates without invoking root type-check.
 - `pnpm verify:prepush` uses `node scripts/docs-workboard-check-changed.cjs`, so workboard drift is enforced when lane YAML changed, not for every module-only commit.
+- `pnpm verify:prepush` now keeps three outcomes for code diffs:
+  - skip when no TypeScript-affecting files changed
+  - run `pnpm ci:affected:typecheck` when the diff is workspace-scoped
+  - run full `pnpm type-check` when root or cross-workspace TypeScript graph inputs changed
 - GitHub workflows keep using explicit strict checks rather than relying on `pnpm docs:ci` as a merge gate.
 - `pnpm traceability:adr0` remains a blocking governance gate on push to `main`, but it now compares current ADR-0000 issues against the tracked baseline in [`traceability.issue-baseline.json`](../../traceability.issue-baseline.json) so CI fails on regressions rather than re-reporting the known historical backlog on every run.
 
@@ -211,7 +218,8 @@ These files are the canonical source of truth for:
 Current workflow consumers:
 
 - [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml) uses the shared policy plus
-  workspace matrix emission for affected build/type-check routing. Its shared
+  workspace matrix emission for affected build/type-check routing, and now also
+  runs `pnpm test:ci-tools` as a merge-gated CI-tool contract lane. Its shared
   `any_code` and `workspace_global` policy now include `turbo.json`, so Turbo
   graph changes trigger the affected-workspace lane instead of falling through
   to `No affected workspaces`.

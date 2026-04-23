@@ -651,7 +651,7 @@ tasks:
       20% round-reduction rule.
     complexity: S
     effort_points: 3
-    progress_pct: 82
+    progress_pct: 86
     evidence_refs:
       - docs/planning/reviews/ci-and-delivery/20260328-lane-c-ai-efficiency-and-cost-review.md
       - docs/planning/reviews/ci-and-delivery/20260402-rc-c2-operational-friction-intake-review.md
@@ -665,6 +665,8 @@ tasks:
       - docs/planning/closeouts/20260422-rc-c2-wave-1-node-precommit-turbo-cache-closeout.md
       - docs/planning/closeouts/20260422-rc-c2-wave-2a-typecheck-contract-closeout.md
       - docs/planning/closeouts/20260423-rc-c2-wave-2b-turbo-affected-task-routing-closeout.md
+      - docs/planning/closeouts/20260423-rc-c2-wave-2c-prepush-affected-typecheck-closeout.md
+      - docs/planning/closeouts/20260423-rc-c2-wave-4a-ci-tools-merge-gate-closeout.md
       - docs/evidence/ED-20260418-local-build-hook-warm-cache-p0.md
       - docs/evidence/ED-20260418-rc-c2-turbo-build-orchestrator.md
       - docs/risk-register/quality/R-20260418-LOCAL-BUILD-HOOK-WARM-CACHE-P0.yaml
@@ -685,8 +687,12 @@ tasks:
       ahead of any Turbo `typecheck` claim. Wave 2B then routes the affected build/typecheck/test
       commands and the lightweight CI code-quality matrix through governed Turbo tasks instead of
       raw recursive package commands, while intentionally leaving the full-root `test` and
-      `type-check` contracts for later design. Final closure still depends on three qualifying Lane
-      C PR cycles logged against the new workflow.
+      `type-check` contracts for later design. Wave 2C now makes the strict pre-push type-check
+      selector scope-aware by routing workspace-local diffs through `pnpm ci:affected:typecheck`
+      while keeping full-root `pnpm type-check` for global graph inputs. Wave 4A then promotes `pnpm
+      test:ci-tools` into the `CI - Code Quality` merge gate so workflow and scope-helper contract
+      tests stop being advisory-only. Final closure still depends on three qualifying Lane C PR
+      cycles logged against the new workflow.
     last_verified: '2026-04-23'
   - task_id: RC-E1
     priority: P1

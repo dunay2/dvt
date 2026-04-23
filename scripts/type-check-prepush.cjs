@@ -51,46 +51,57 @@ function listChangedFiles() {
   }
 }
 
-function shouldRunTypeCheck(filePath) {
-  return (
-    /\.(ts|tsx|mts|cts)$/.test(filePath) ||
-    /(^|\/)package\.json$/.test(filePath) ||
-    /(^|\/)pnpm-lock\.yaml$/.test(filePath) ||
-    /(^|\/)pnpm-workspace\.yaml$/.test(filePath) ||
-    /(^|\/)tsconfig[^/]*\.json$/.test(filePath) ||
-    /(^|\/)vitest\.config\.ts$/.test(filePath)
-  );
+async function loadScopeClassifier() {
+  return import('../tools/ci/prepush-typecheck-scope.mjs');
 }
 
-const changedFiles = listChangedFiles();
+async function main() {
+  const changedFiles = listChangedFiles();
 
-if (changedFiles.length === 0) {
-  console.log('[type-check-prepush] No changed files detected. Skipping type-check.');
-  process.exit(0);
+  if (changedFiles.length === 0) {
+    console.log('[type-check-prepush] No changed files detected. Skipping type-check.');
+    return 0;
+  }
+
+  const { classifyPrepushTypecheck } = await loadScopeClassifier();
+  const plan = classifyPrepushTypecheck(changedFiles);
+
+  if (plan.mode === 'skip') {
+    console.log(`[type-check-prepush] ${plan.reason}.`);
+    return 0;
+  }
+
+  console.log(`[type-check-prepush] Selected ${plan.run.label} (${plan.reason}).`);
+  console.log('[type-check-prepush] Relevant files:');
+  for (const filePath of plan.relevantFiles) {
+    console.log(filePath);
+  }
+
+  if (plan.affectedPackages.length > 0) {
+    console.log('[type-check-prepush] Affected packages:');
+    for (const packageName of plan.affectedPackages) {
+      console.log(packageName);
+    }
+  }
+
+  const result = spawnSync(plan.run.command, plan.run.args, {
+    shell: true,
+    stdio: 'inherit',
+  });
+
+  if (result.error) {
+    console.error(result.error.message);
+    return 1;
+  }
+
+  return result.status || 0;
 }
 
-const relevantFiles = changedFiles.filter(shouldRunTypeCheck);
-
-if (relevantFiles.length === 0) {
-  console.log(
-    '[type-check-prepush] No TypeScript-affecting files changed. Skipping pnpm type-check.'
-  );
-  process.exit(0);
-}
-
-console.log('[type-check-prepush] Running pnpm type-check for changed TypeScript-affecting files:');
-for (const filePath of relevantFiles) {
-  console.log(filePath);
-}
-
-const result = spawnSync('pnpm', ['type-check'], {
-  shell: true,
-  stdio: 'inherit',
-});
-
-if (result.error) {
-  console.error(result.error.message);
-  process.exit(1);
-}
-
-process.exit(result.status || 0);
+main()
+  .then((status) => {
+    process.exit(status);
+  })
+  .catch((error) => {
+    console.error(error instanceof Error ? error.message : String(error));
+    process.exit(1);
+  });

@@ -149,6 +149,8 @@ test('workflow scope policy stays wired into ci and pr quality workflows', () =>
   const ciWorkflow = readFileSync('.github/workflows/ci.yml', 'utf8');
   const prQualityGate = readFileSync('.github/workflows/pr-quality-gate.yml', 'utf8');
 
+  assertWorkflowContains(ciWorkflow, 'name: CI tool contracts');
+  assertWorkflowContains(ciWorkflow, 'run: pnpm test:ci-tools');
   assertWorkflowContains(
     ciWorkflow,
     'node tools/ci/validate-policy.js tools/ci/policy/workflow-scope.json'

@@ -216,7 +216,7 @@ Behavior:
 ### `check-changed.cjs`
 
 Runs changed-file quality checks against the Git diff baseline. It is used by
-`pnpm verify:prepush`.
+`pnpm verify:changed` and as a substep of `pnpm verify:prepush`.
 
 Checks:
 
@@ -230,8 +230,7 @@ Diff policy:
 
 ### `type-check-prepush.cjs`
 
-Runs `pnpm type-check` only when the changed diff includes files that can alter
-the TypeScript graph or workspace dependency surface.
+Chooses the strict pre-push type-check path from the changed diff.
 
 Type-check triggers:
 
@@ -242,8 +241,17 @@ Type-check triggers:
 - `tsconfig*.json`
 - `vitest.config.ts`
 
-When the diff contains only docs, scripts, Markdown, or workflow YAML changes,
-the script skips `pnpm type-check` cleanly.
+Behavior:
+
+- skips cleanly when the diff contains no TypeScript-affecting files
+- runs `pnpm ci:affected:typecheck` when the relevant diff maps to one or more
+  workspace scopes without touching root graph inputs
+- runs full `pnpm type-check` when root or cross-workspace TypeScript graph
+  inputs changed, or when a relevant file cannot be mapped to a workspace scope
+
+Classification is driven by the shared CI scope policy in `tools/ci/`, so the
+strict pre-push gate reuses the same workspace inventory already governing the
+affected CI matrix.
 
 ### `lint-markdown-changed.cjs`
 

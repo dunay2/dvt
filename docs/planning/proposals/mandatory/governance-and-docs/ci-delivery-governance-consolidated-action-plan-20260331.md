@@ -455,6 +455,20 @@ consumers that can safely reuse that ownership move to Turbo.
 | `CDG-W2-2` | `package.json`, hook scripts, CI docs                                           | Make `verify:prepush` scope-aware for code changes while preserving strictness for governance-sensitive files.                                                                        | `pnpm verify:prepush`, changed-file smoke tests, affected package type-check/test runs | Pre-push no longer pays full-repo cost for every small code change.                       |
 | `CDG-W2-3` | `package.json` lint-staged config                                               | Add `scripts/**/*.{js,cjs,mjs}` and `tools/ci/**/*.{js,cjs,mjs}` to staged-file lint and format enforcement.                                                                          | `pnpm verify:prepush`, commit smoke on changed script files                            | Repo tooling receives the same local hygiene enforcement as application code.             |
 
+### Wave 2C Remaining Scope Slice
+
+Wave 2A and 2B are now live, and the staged-file tooling coverage from
+`CDG-W2-3` has already been absorbed into the shipped pre-commit hardening.
+
+The remaining Wave 2 gap is the strict pre-push type-check selector:
+
+- workspace-local TypeScript changes should reuse
+  `pnpm ci:affected:typecheck`
+- root config and other cross-workspace TypeScript graph changes should remain
+  on full `pnpm type-check`
+- the selected path should be explicit in local output so contributors can tell
+  why the stricter full-root gate was or was not used
+
 ### Wave 3 - Docs Governance Convergence
 
 | Task       | Files / surfaces                                                          | Action                                                                                                                                                                   | Validation                                                                          | Exit criteria                                                                     |
@@ -464,6 +478,22 @@ consumers that can safely reuse that ownership move to Turbo.
 | `CDG-W3-3` | `docs/DOCS_README.md`, planning docs, generator scripts                   | Document and enforce single-writer discipline for generated docs: source file, generator command, and manual-edit policy per artifact class.                             | `pnpm docs:sync`, `pnpm docs:gov`, `pnpm docs:ci`                                   | Contributors can identify canonical source vs. generated output without guessing. |
 
 ### Wave 4 - Merge-Hotspot And Trust Hardening
+
+### Wave 4A Immediate Trust Slice
+
+Now that the shared scope modules and Turbo affected-task routing are live, the
+next smallest trust-hardening move is to make `pnpm test:ci-tools` merge-gated
+inside an already-required workflow rather than leaving it as local-only
+evidence.
+
+That slice should:
+
+- run `pnpm test:ci-tools` in `CI - Code Quality`
+- keep workflow parity tests asserting that wiring remains present
+- avoid introducing a brand-new workflow surface for the same capability
+
+This closes the gap where CI policy tests exist but are not yet exercised by a
+real PR/push gate.
 
 | Task       | Files / surfaces                                                             | Action                                                                                                                                                                 | Validation                                                                      | Exit criteria                                                            |
 | ---------- | ---------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |

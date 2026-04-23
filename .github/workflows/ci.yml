@@ -22,6 +22,22 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  ci-tool-contracts:
+    name: CI tool contracts
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          fetch-depth: 1
+
+      - name: Setup pnpm, cache and dependencies
+        uses: ./.github/actions/setup-node-pnpm
+
+      - name: Run CI tool contract tests
+        run: pnpm test:ci-tools
+
   detect-affected:
     name: Detect affected workspaces
     runs-on: ubuntu-latest
