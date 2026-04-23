@@ -67,5 +67,4 @@ const invalidDeps: ActivityDeps = {
   },
 };
 
-void validDeps;
-void invalidDeps;
+export { invalidDeps, validDeps };

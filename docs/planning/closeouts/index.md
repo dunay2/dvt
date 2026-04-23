@@ -22,6 +22,7 @@ navigation. The folder contains additional historical entries.
 
 ## Representative Recent Closeouts
 
+- [20260423 Selected-Closure UX Proof Story Capture Closeout](./20260423-selected-closure-ux-proof-story-capture-closeout.md)
 - [20260423 TF-A2-C5 Selected-Closure End-To-End Proof Closeout](./20260423-tf-a2-c5-selected-closure-end-to-end-proof-closeout.md)
 - [20260423 TF-A2-C2 Executable Subgraph Derivation Closeout](./20260423-tf-a2-c2-executable-subgraph-derivation-closeout.md)
 - [20260423 TF-A2-C1 Execution Selection Contract Pack Closeout](./20260423-tf-a2-c1-execution-selection-contract-pack-closeout.md)
