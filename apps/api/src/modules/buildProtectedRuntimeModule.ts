@@ -11,6 +11,7 @@ import { getPgPool } from '../db/pool.js';
 import type { Env } from '../plugins/env.js';
 
 import { buildProtectedAdmissionRuntime } from './protectedRuntime/buildProtectedAdmissionRuntime.js';
+import { buildProtectedExecutionCapacityPort } from './protectedRuntime/buildProtectedExecutionCapacityPort.js';
 import { buildProtectedExecutionRuntime } from './protectedRuntime/buildProtectedExecutionRuntime.js';
 import { buildProtectedRuntimeStorage } from './protectedRuntime/buildProtectedRuntimeStorage.js';
 import { buildProtectedSecurityRuntime } from './protectedRuntime/buildProtectedSecurityRuntime.js';
@@ -83,11 +84,13 @@ export async function buildProtectedRuntimeModule(
     env,
     pool,
   });
+  const executionCapacity = buildProtectedExecutionCapacityPort(env);
   const startRunRuntime = buildProtectedStartRunRuntime({
     authenticator: securityRuntime.authenticator,
     commandAuthorizer: securityRuntime.commandAuthorizer,
     duplicateProbe: admissionRuntime.duplicateProbe,
     admissionGuard: admissionRuntime.admissionGuard,
+    executionCapacity,
     observability,
     backpressureMode: env.DVT_START_RUN_BACKPRESSURE_MODE,
     retryAfterSeconds: env.DVT_START_RUN_RETRY_AFTER_SECONDS,

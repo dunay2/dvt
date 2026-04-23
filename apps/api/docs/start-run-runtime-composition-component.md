@@ -36,6 +36,10 @@ It does **not** own:
 - state-store and plan-store construction
 - workspace-graph draft composition
 
+The outer protected runtime root may still bind concrete execution-capacity
+probes before handing the abstract port into this component. That binding
+belongs to the protected-runtime dependency builders, not to `startRun`.
+
 ## Public API
 
 - `buildProtectedStartRunRuntime.ts`
@@ -58,6 +62,9 @@ It does **not** own:
   and `StoredPlanExecutabilityValidator`
 - the outer composition root passes abstract runtime dependencies into this
   builder; it does not reconstruct the start-run chain itself
+- the outer composition root may bind a concrete execution-capacity probe, but
+  it passes only the abstract `IStartRunExecutionCapacityPort` into this
+  builder
 - compile-planner construction for the authenticated start-run path lives in
   this subcomponent, not back in the outer root
 - the fail-closed default execution-capacity binding stays inside start-run
@@ -68,6 +75,8 @@ It does **not** own:
 ```mermaid
 flowchart LR
   Root["buildProtectedRuntimeModule.ts"] --> StartRunRuntime["buildProtectedStartRunRuntime.ts"]
+  Root --> Binding["buildProtectedExecutionCapacityPort.ts"]
+  Binding --> StartRunRuntime
   StartRunRuntime --> Facade["StartRunAuthorizedFacade"]
   StartRunRuntime --> Admission["BackpressureAwareStartRunUseCase"]
   StartRunRuntime --> Planner["PlannerBackedStartRunUseCase"]
@@ -83,6 +92,7 @@ flowchart LR
 ```mermaid
 sequenceDiagram
   participant Root as buildProtectedRuntimeModule
+  participant Binding as buildProtectedExecutionCapacityPort
   participant StartRun as buildProtectedStartRunRuntime
   participant Facade as StartRunAuthorizedFacade
   participant Admission as BackpressureAwareStartRunUseCase
@@ -91,6 +101,8 @@ sequenceDiagram
   participant Engine as EngineStartRunUseCase
 
   Root->>StartRun: pass authenticator, authorizer, engine, adapters, stores, telemetry deps
+  Root->>Binding: resolve concrete capacity probe from env + runtime posture
+  Binding-->>Root: abstract IStartRunExecutionCapacityPort
   StartRun->>StartRun: bind plan validator + compile planner
   StartRun->>Engine: construct execution delegate
   StartRun->>Resolver: bind protected workspace-graph draft store + planner
@@ -103,6 +115,7 @@ sequenceDiagram
 ## Consumers
 
 - `apps/api/src/modules/buildProtectedRuntimeModule.ts`
+- `apps/api/src/modules/protectedRuntime/buildProtectedExecutionCapacityPort.ts`
 - `apps/api/docs/start-run-application-component.md`
 - `apps/api/docs/start-run-execution-capacity-admission-component.md`
 - `apps/api/test/modules/startRunRuntimeComposition.cases.ts`

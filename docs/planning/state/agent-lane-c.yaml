@@ -562,19 +562,20 @@ tasks:
       remain composition-owned; caller-visible rejection posture is explicit and observable.
     complexity: M
     effort_points: 5
-    progress_pct: 40
+    progress_pct: 80
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/ar-c3-start-run-execution-capacity-admission-plan-20260422.md
       - docs/planning/closeouts/20260422-api-start-run-execution-capacity-admission-closeout.md
+      - docs/planning/closeouts/20260423-ar-c3-b-temporal-readyz-capacity-binding-closeout.md
       - apps/api/docs/start-run-execution-capacity-admission-component.md
       - apps/api/test/application/services/startRunExecutionCapacityAdmission.architecture.test.ts
     status_reason: >-
-      `AR-C3-A` is now implemented and under review: `apps/api` owns the abstract execution-
-      capacity seam, the fail-closed default binding lives in `buildProtectedStartRunRuntime.ts`,
-      and the local guide plus semantic architecture tests now guard the boundary. Remaining work is
-      the concrete adapter-backed binding (`AR-C3-B`) and the telemetry/runbook/evidence closure
-      (`AR-C3-C`).
+      `AR-C3-A` and `AR-C3-B` are now implemented: `apps/api` owns the abstract execution- capacity
+      seam, the fail-closed default binding remains in start-run composition, and the protected
+      runtime now binds the `temporal` provider to the standalone worker `readyz` probe through a
+      composition-owned adapter. Remaining work is telemetry/runbook/evidence closure under
+      `AR-C3-C`.
     last_verified: '2026-04-23'
   - task_id: AR-C3-A
     parent_task: AR-C3
@@ -609,7 +610,7 @@ tasks:
   - task_id: AR-C3-B
     parent_task: AR-C3
     priority: P1
-    status: queued
+    status: review
     objective: >-
       bind the abstract execution-capacity admission seam to a real adapter-backed signal without
       leaking provider detail into the API application contract.
@@ -620,13 +621,18 @@ tasks:
       signal-unavailable conditions.
     complexity: M
     effort_points: 2
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/ar-c3-start-run-execution-capacity-admission-plan-20260422.md
+      - docs/planning/closeouts/20260423-ar-c3-b-temporal-readyz-capacity-binding-closeout.md
+      - apps/api/src/infrastructure/executionCapacity/TemporalWorkerReadyzExecutionCapacityPort.ts
+      - apps/api/src/modules/protectedRuntime/buildProtectedExecutionCapacityPort.ts
+      - apps/api/test/application/services/BackpressureAwareStartRunUseCase.executionCapacityReadyzBinding.test.ts
     status_reason: >-
-      Planned binding slice; the concrete adapter choice is intentionally deferred until the API
-      seam is locked.
-    last_verified: '2026-04-22'
+      Protected runtime composition now binds the `temporal` target adapter through a concrete
+      Temporal-worker `readyz` probe adapter while keeping the abstract application seam intact. The
+      remaining AR-C3 follow-through is telemetry and runbook closure only.
+    last_verified: '2026-04-23'
   - task_id: AR-C3-C
     parent_task: AR-C3
     priority: P1

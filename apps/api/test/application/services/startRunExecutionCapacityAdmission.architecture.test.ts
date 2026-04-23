@@ -10,8 +10,10 @@ const { artifacts, contracts } = START_RUN_EXECUTION_CAPACITY_ADMISSION_COMPONEN
 const OWNED_COMPONENT_ARTIFACTS = [
   artifacts.port,
   artifacts.defaultBinding,
+  artifacts.concreteBinding,
   artifacts.decisions,
   artifacts.backpressureUseCase,
+  artifacts.runtimeBindingBuilder,
   artifacts.runtimeBuilder,
 ];
 
@@ -34,7 +36,10 @@ describe('Start-run execution-capacity admission architecture', () => {
     expect(guideText).toContain('the API application layer remains adapter-agnostic');
     expect(guideText).toContain('inability to obtain a concrete capacity signal fails closed');
     expect(guideText).toContain('only composition binds the default implementation');
+    expect(guideText).toContain('protected-runtime composition owns provider-specific capacity bindings');
     expect(guideText).toContain('provider queue-depth or worker-metric vocabulary in `apps/api`');
+    expect(guideText).toContain('standalone Temporal');
+    expect(guideText).toContain('`GET /readyz`');
   });
 
   it('keeps BackpressureAwareStartRunUseCase on the abstract port and preserves admission ordering', () => {
@@ -79,6 +84,8 @@ describe('Start-run execution-capacity admission architecture', () => {
 
   it('keeps the default binding fail-closed and translates denial through canonical system_backpressure codes', () => {
     const defaultBindingSource = artifacts.defaultBinding.readSource();
+    const concreteBindingSource = artifacts.concreteBinding.readSource();
+    const runtimeBindingBuilderSource = artifacts.runtimeBindingBuilder.readSource();
     const decisionsSource = artifacts.decisions.readSource();
 
     expect(defaultBindingSource.sourceText).toContain(
@@ -89,6 +96,19 @@ describe('Start-run execution-capacity admission architecture', () => {
     );
     expect(defaultBindingSource.sourceText).not.toContain(
       'kind: START_RUN_EXECUTION_CAPACITY_RESULT_KIND.admissible'
+    );
+    expect(concreteBindingSource.sourceText).toContain("request.targetAdapter !== 'temporal'");
+    expect(concreteBindingSource.sourceText).toContain(
+      'START_RUN_EXECUTION_CAPACITY_REASON.executorUnavailable'
+    );
+    expect(concreteBindingSource.sourceText).toContain(
+      'START_RUN_EXECUTION_CAPACITY_REASON.capacitySignalUnavailable'
+    );
+    expect(runtimeBindingBuilderSource.sourceText).toContain(
+      'TemporalWorkerReadyzExecutionCapacityPort'
+    );
+    expect(runtimeBindingBuilderSource.sourceText).toContain(
+      'env.DVT_TEMPORAL_WORKER_READYZ_URL'
     );
 
     expect(decisionsSource.sourceText).toContain('kind: START_RUN_RESULT_KIND.systemBackpressure');

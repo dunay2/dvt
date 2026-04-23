@@ -21,12 +21,20 @@ export const START_RUN_EXECUTION_CAPACITY_ADMISSION_COMPONENT = {
       DOCS_ROOT,
       'start-run-execution-capacity-admission-component.md'
     ),
+    concreteBinding: defineArtifact(
+      join(import.meta.dirname, '../../../src/infrastructure'),
+      'executionCapacity/TemporalWorkerReadyzExecutionCapacityPort.ts'
+    ),
     decisions: defineArtifact(APPLICATION_ROOT, 'services/startRunAdmissionDecisions.ts'),
     defaultBinding: defineArtifact(
       APPLICATION_ROOT,
       'services/defaultStartRunExecutionCapacityPort.ts'
     ),
     port: defineArtifact(APPLICATION_ROOT, 'ports/IStartRunExecutionCapacityPort.ts'),
+    runtimeBindingBuilder: defineArtifact(
+      MODULES_ROOT,
+      'protectedRuntime/buildProtectedExecutionCapacityPort.ts'
+    ),
     runtimeBuilder: defineArtifact(MODULES_ROOT, 'startRun/buildProtectedStartRunRuntime.ts'),
   },
   contracts: {
