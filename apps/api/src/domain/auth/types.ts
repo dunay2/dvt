@@ -131,29 +131,6 @@ export interface AuthenticatedPrincipal extends PrincipalRef {
   readonly assertedProjectIds: ReadonlyArray<string>;
 }
 
-export interface EnvironmentGrant {
-  readonly environmentId: string;
-  readonly allowedActions: ReadonlyArray<string>;
-}
-
-export interface ProjectGrant {
-  readonly projectId: string;
-  readonly allowedActions: ReadonlyArray<string>;
-  readonly environmentAccess: ReadonlyMap<string, EnvironmentGrant>;
-}
-
-export interface TenantGrant {
-  readonly tenantId: string;
-  readonly allowedActions: ReadonlyArray<string>;
-  readonly projectAccess: ReadonlyMap<string, ProjectGrant>;
-}
-
-export interface EffectivePrincipalAccess {
-  readonly principal: PrincipalRef;
-  readonly suspended: boolean;
-  readonly tenantAccess: ReadonlyMap<string, TenantGrant>;
-}
-
 export type DeniedReason =
   | 'PRINCIPAL_SUSPENDED'
   | 'TENANT_NOT_GRANTED'
@@ -161,24 +138,3 @@ export type DeniedReason =
   | 'ENVIRONMENT_NOT_GRANTED'
   | 'ACTION_NOT_GRANTED'
   | 'TOKEN_ASSERTION_CONFLICT';
-
-export interface AuthorizationRationale {
-  readonly evaluatedPrincipalId: string;
-  readonly source: 'effective-access';
-  readonly matchedTenantId?: string;
-  readonly matchedProjectId?: string;
-  readonly matchedEnvironmentId?: string;
-  readonly matchedAction?: string;
-}
-
-export type AuthorizationOutcome =
-  | {
-      readonly kind: 'allow';
-      readonly approvedScope: ExecutionScope;
-      readonly rationale: AuthorizationRationale;
-    }
-  | {
-      readonly kind: 'deny';
-      readonly reason: DeniedReason;
-      readonly rationale: AuthorizationRationale;
-    };

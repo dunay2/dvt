@@ -118,7 +118,7 @@ export async function buildProtectedRuntimeModule(
     getWorkspaceGraphDraftUseCase: workspaceGraphDraftRuntime.getWorkspaceGraphDraftUseCase,
     saveWorkspaceGraphDraftUseCase: workspaceGraphDraftRuntime.saveWorkspaceGraphDraftUseCase,
     migrate: async () => {
-      await securityRuntime.accessRepo.migrate();
+      await securityRuntime.migrateAccessDecisionService();
       await storageRuntime.stateStore.migrate();
       await storageRuntime.intentStore.migrate();
       await storageRuntime.planStore.migrate();

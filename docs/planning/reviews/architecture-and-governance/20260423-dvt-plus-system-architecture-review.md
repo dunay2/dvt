@@ -734,6 +734,14 @@ docs no longer describe undeclared capabilities as a skipped gate. The API-side
 stored-plan validator had already been fail-closed; the direct engine admission
 path now matches that posture.
 
+2026-04-23 authorization-boundary update: `apps/api` now authorizes through a
+DVT-owned `IAccessDecisionService` seam with an embedded first backend. The
+previous `PostgresPrincipalAccessRepository` plus
+`TenantHierarchyAuthorizationPolicy` split is removed from the active protected
+runtime path, the authz boundary is now one explicit component in code, and the
+first cut stays network-local while preserving a pluggable backend boundary for
+later external PDP adapters.
+
 ## Final Architectural Verdict
 
 DVT+ has a coherent architecture, not a fantasy architecture. The core split is

@@ -1086,6 +1086,39 @@ tasks:
       allocator-specific local component guide, boundary guides, and semantic architecture tests now
       guard the boundary.
     last_verified: '2026-04-23'
+  - task_id: AR-C8
+    priority: P0
+    status: review
+    objective: >-
+      replace the protected-runtime authorization repository-plus-policy split with one DVT-owned
+      access-decision seam that keeps `apps/api` as PEP while avoiding a forced remote PDP
+      dependency in the first cut.
+    dependency: none
+    target: >-
+      Protected runtime authorization flows through `IAccessDecisionService`; the first backend is
+      embedded; `PostgresPrincipalAccessRepository` and `TenantHierarchyAuthorizationPolicy` are no
+      longer part of the active runtime wiring; later external PDPs remain backend swaps behind the
+      same contract.
+    complexity: M
+    effort_points: 5
+    progress_pct: 100
+    evidence_refs:
+      - docs/adr/ADR-0051-access-decision-service-and-openfga-adapter.md
+      - docs/planning/closeouts/20260423-access-decision-embedded-first-closeout.md
+      - apps/api/src/application/ports/accessDecision.ts
+      - apps/api/src/infrastructure/auth/embeddedAccessDecisionService.ts
+      - apps/api/src/modules/protectedRuntime/buildProtectedSecurityRuntime.ts
+      - apps/api/test/infrastructure/auth/embeddedAccessDecisionService.test.ts
+      - apps/api/test/application/services/authorizeCommandScopeService.test.ts
+      - apps/api/test/modules/protectedRuntimeDependencyBuilders.cases.ts
+      - docs/architecture/components/api/api-current-to-target-architecture.md
+    status_reason: >-
+      `apps/api` now authorizes through a DVT-owned `IAccessDecisionService` seam with an
+      embedded-first backend. The protected-runtime security builder no longer constructs the old
+      repository-plus-policy split, startup migration coverage follows the embedded backend, and the
+      active ADR/API docs now treat later external PDP adoption as a backend swap rather than as a
+      route-level redesign.
+    last_verified: '2026-04-23'
   - task_id: TF-C3
     priority: P1
     status: in_progress
