@@ -79,7 +79,11 @@ describe('previewPlanRoute outcomes', () => {
   it('returns plan and planRef for a generic preview', async () => {
     const reply = createReply();
     const plan = buildStoredPlan();
-    const buildPlan = vi.fn(async () => ({ plan, canonicalPlanJson: '{}' }));
+    const buildPlan = vi.fn(async () => ({
+      plan,
+      executionPolicy: {},
+      canonicalPlanCoreJson: '{}',
+    }));
     const deps = createAcceptedPreviewDeps(buildPlan);
     const validatePlan = deps.planValidator.validatePlan;
 
@@ -113,7 +117,13 @@ describe('previewPlanRoute outcomes', () => {
   it('returns 422 and marks the stored plan invalid when executability fails', async () => {
     const reply = createReply();
     const deps = createPreviewDeps({
-      planner: { buildPlan: vi.fn(async () => ({ plan: buildStoredPlan(), canonicalPlanJson: '{}' })) },
+      planner: {
+        buildPlan: vi.fn(async () => ({
+          plan: buildStoredPlan(),
+          executionPolicy: {},
+          canonicalPlanCoreJson: '{}',
+        })),
+      },
       planStore: {
         storePlan: vi.fn(async () => VALID_PLAN_REF),
         markValid: vi.fn(),
@@ -148,14 +158,21 @@ describe('previewPlanRoute outcomes', () => {
   it('forwards transformation provenance into planner observability and response payload', async () => {
     const reply = createReply();
     const plan = buildTransformationStoredPlan();
-    const buildPlan = vi.fn(async () => ({ plan, canonicalPlanJson: '{}' }));
+    const buildPlan = vi.fn(async () => ({
+      plan,
+      executionPolicy: {},
+      canonicalPlanCoreJson: '{}',
+    }));
     const deps = createAcceptedPreviewDeps(buildPlan);
 
     await executePreviewRequest(reply, deps, {
       id: 'req-preview-provenance',
       body: buildPreviewBody({
         previewProfile: PREVIEW_PROFILE_TRANSFORMATION,
-        selectedNodeIds: ['source-node', 'transform-node', 'sink-node'],
+        selection: {
+          mode: 'explicit',
+          nodeIds: ['source-node', 'transform-node', 'sink-node'],
+        },
         graphSource: VALID_TRANSFORMATION_GRAPH_SOURCE,
         provenance: VALID_PREVIEW_PROVENANCE,
       }),

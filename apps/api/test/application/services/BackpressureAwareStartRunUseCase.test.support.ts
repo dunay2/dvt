@@ -2,7 +2,12 @@
  * Owned concern: provide shared start-run admission test fixtures and doubles
  * for `BackpressureAwareStartRunUseCase` suites.
  */
-import { parsePlanRef, START_RUN_RESULT_KIND, type StartRunAcceptedResult } from '@dvt/contracts';
+import {
+  parseExecutionSelection,
+  parsePlanRef,
+  START_RUN_RESULT_KIND,
+  type StartRunAcceptedResult,
+} from '@dvt/contracts';
 import { expect, vi } from 'vitest';
 
 import type {
@@ -27,7 +32,10 @@ export const COMMAND = {
   }),
   runId: 'run-1',
   targetAdapter: 'mock' as const,
-  selection: ['step_a'],
+  selection: parseExecutionSelection({
+    mode: 'explicit',
+    nodeIds: ['step_a'],
+  }),
 };
 
 export const CONTEXT = {

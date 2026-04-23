@@ -20,7 +20,10 @@ export const VALID_BODY = {
   tenantId: 't1',
   projectId: 'p1',
   environmentId: 'e1',
-  selection: ['model_a'],
+  selection: {
+    mode: 'explicit',
+    nodeIds: ['model_a'],
+  },
   planRef: VALID_PLAN_REF,
   targetAdapter: 'mock' as const,
 } as const;

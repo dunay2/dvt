@@ -22,7 +22,7 @@ describe('startRunRoute validation', () => {
         body: {
           projectId: 'p1',
           environmentId: 'e1',
-          selection: ['model_a'],
+          selection: { mode: 'explicit', nodeIds: ['model_a'] },
         },
       },
       expectedPayload: httpError('bad_request', 'missing_tenant_id', { target: 'tenantId' }),
@@ -52,7 +52,7 @@ describe('startRunRoute validation', () => {
         id: 'req-invalid-selection-type',
         body: {
           ...VALID_BODY,
-          selection: [123],
+          selection: { mode: 'explicit', nodeIds: [123] },
         },
       },
       expectedPayload: httpError('bad_request', 'invalid_selection', { target: 'selection' }),
@@ -63,7 +63,7 @@ describe('startRunRoute validation', () => {
         id: 'req-invalid-selection-blank',
         body: {
           ...VALID_BODY,
-          selection: ['   '],
+          selection: { mode: 'explicit', nodeIds: ['   '] },
         },
       },
       expectedPayload: httpError('bad_request', 'invalid_selection', { target: 'selection' }),
@@ -132,7 +132,7 @@ describe('startRunRoute validation', () => {
         headers: { authorization: 'Bearer token' },
         body: {
           ...VALID_BODY,
-          selection: [' model_a '],
+          selection: { mode: 'explicit', nodeIds: [' model_a '] },
         },
       },
       expectedPayload: httpError('bad_request', 'invalid_selection', { target: 'selection' }),

@@ -2,7 +2,7 @@
 title: Protected runtime and plan compile component
 status: Active
 owner: Architecture / API / Docs
-last_reviewed: 2026-04-21
+last_reviewed: 2026-04-23
 ---
 
 # Protected Runtime And Plan Compile Component
@@ -16,6 +16,7 @@ invariants, transitions, and consumers:
 
 - [Protected runtime dependency builders component](../../../../apps/api/docs/protected-runtime-dependency-builders-component.md)
 - [Start-run runtime composition component](../../../../apps/api/docs/start-run-runtime-composition-component.md)
+- [Executable-subgraph resolution component](../../../../apps/api/docs/executable-subgraph-resolution-component.md)
 - [Workspace graph draft application component](../../../../apps/api/docs/workspace-graph-draft-application-component.md)
 - [Workspace graph draft runtime composition component](../../../../apps/api/docs/workspace-graph-draft-runtime-composition-component.md)
 
@@ -50,6 +51,10 @@ acts as a fake namespace.
 - [buildProtectedStartRunRuntime.ts](../../../../apps/api/src/modules/startRun/buildProtectedStartRunRuntime.ts)
   Start-run runtime composition seam. Binds the authenticated start-run
   facade/use-case chain from abstract dependencies.
+- [resolveAuthorizedExecutableSubgraph.ts](../../../../apps/api/src/application/services/resolveAuthorizedExecutableSubgraph.ts)
+  Protected selected-closure resolver. Binds workspace-draft read truth to the
+  planner-owned executable-subgraph seam for preview and planner-backed
+  start-run.
 - [buildWorkspaceGraphDraftRuntime.ts](../../../../apps/api/src/modules/workspaceGraphDraft/buildWorkspaceGraphDraftRuntime.ts)
   Workspace-graph-draft runtime composition seam. Binds graph-draft store,
   capability service, audit, and read/write use cases.
@@ -127,6 +132,9 @@ acts as a fake namespace.
   the provider-adapter and workflow-engine runtime cluster.
 - `buildProtectedStartRunRuntime.ts` is the only module allowed to construct
   the authenticated start-run runtime chain inside that root.
+- `resolveAuthorizedExecutableSubgraph.ts` is the only module allowed to parse
+  protected draft payloads for selected-closure resolution in preview and
+  planner-backed start-run flows.
 - `buildWorkspaceGraphDraftRuntime.ts` is the only module allowed to construct
   the protected workspace-graph-draft runtime chain inside that root.
 - `planCompileBoundary.ts` must derive compile-time adapter truth from the same

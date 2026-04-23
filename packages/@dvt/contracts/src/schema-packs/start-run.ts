@@ -15,6 +15,7 @@ import {
   START_RUN_SYSTEM_BACKPRESSURE_CODES,
   SUPPORTED_START_RUN_TARGET_ADAPTERS,
 } from '../contracts/engine/StartRunBoundary.v1.js';
+import { ExecutionSelectionSchema } from '../contracts/planner/ExecutionSelection.v1.js';
 import { EXECUTABILITY_REJECTION_CODES } from '../contracts/planner/PlanExecutabilityValidation.v1.js';
 import { PlannerPolicyClassSetSchema } from '../contracts/planner/PlannerPolicyVocabulary.v2.js';
 
@@ -49,7 +50,7 @@ export const StartRunCommandSchema = z
     observability: PlannerObservabilitySchema,
     runId: NonBlankStringSchema,
     targetAdapter: StartRunTargetAdapterSchema,
-    selection: z.array(NonBlankStringSchema),
+    selection: ExecutionSelectionSchema,
   })
   .strict()
   .superRefine((command, ctx) => {

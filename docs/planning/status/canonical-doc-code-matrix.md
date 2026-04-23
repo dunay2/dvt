@@ -502,6 +502,8 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   and
   [Execution selection component](../../architecture/components/planner/execution-selection-component.md)
   and
+  [Executable subgraph derivation component](../../architecture/components/planner/executable-subgraph-derivation-component.md)
+  and
   [Workspace graph draft persistence v1](../../contracts/planner/workspace-graph-draft-persistence-v1.md)
   and
   [Execution selection and executable subgraph v1](../../contracts/planner/execution-selection-and-executable-subgraph-v1.md)
@@ -519,33 +521,57 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   [WorkspaceGraphDraft.v1.ts](../../../packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphDraft.v1.ts),
   [ExecutionSelection.v1.ts](../../../packages/@dvt/contracts/src/contracts/planner/ExecutionSelection.v1.ts),
   [ExecutableSubgraph.v1.ts](../../../packages/@dvt/contracts/src/contracts/planner/ExecutableSubgraph.v1.ts),
+  [PlannerFacade.ts](../../../packages/@dvt/planner/src/application/PlannerFacade.ts),
+  [ExecutableSubgraphDeriver.ts](../../../packages/@dvt/planner/src/application/ExecutableSubgraphDeriver.ts),
+  [resolveAuthorizedExecutableSubgraph.ts](../../../apps/api/src/application/services/resolveAuthorizedExecutableSubgraph.ts),
+  [PreviewPlanUseCase.ts](../../../apps/api/src/application/services/PreviewPlanUseCase.ts),
+  [PlannerBackedStartRunUseCase.ts](../../../apps/api/src/application/services/PlannerBackedStartRunUseCase.ts),
   [workspaceGraphDraft.ts](../../../apps/api/src/application/ports/workspaceGraphDraft.ts),
   [getWorkspaceGraphDraftUseCase.ts](../../../apps/api/src/application/services/getWorkspaceGraphDraftUseCase.ts),
   [saveWorkspaceGraphDraftUseCase.ts](../../../apps/api/src/application/services/saveWorkspaceGraphDraftUseCase.ts),
   [workspaceGraphDraftAuthoring.ts](../../../apps/web/src/app/ports/workspaceGraphDraftAuthoring.ts),
+  [workspaceGraphDraftProjection.ts](../../../apps/web/src/app/services/workspace/workspaceGraphDraftProjection.ts),
+  [canvasRunSelection.ts](../../../apps/web/src/app/views/canvas/canvasRunSelection.ts),
+  [canvasPlanAction.ts](../../../apps/web/src/app/views/canvas/canvasPlanAction.ts),
   and
-  [workspaceGraphDraftProjection.ts](../../../apps/web/src/app/services/workspace/workspaceGraphDraftProjection.ts)
+  [canvasRunStartAction.ts](../../../apps/web/src/app/views/canvas/canvasRunStartAction.ts)
 - Key tests:
   [execution-selection.contract.test.ts](../../../packages/@dvt/contracts/test/execution-selection.contract.test.ts),
   [execution-selection.architecture.test.ts](../../../packages/@dvt/contracts/test/execution-selection.architecture.test.ts),
+  [executable-subgraph-deriver.test.ts](../../../packages/@dvt/planner/test/unit/executable-subgraph-deriver.test.ts),
+  [executable-subgraph-deriver.architecture.test.ts](../../../packages/@dvt/planner/test/unit/executable-subgraph-deriver.architecture.test.ts),
   [workspace-graph-authoring-draft.contract.test.ts](../../../packages/@dvt/contracts/test/workspace-graph-authoring-draft.contract.test.ts),
   [workspace-graph-authoring-draft.architecture.test.ts](../../../packages/@dvt/contracts/test/workspace-graph-authoring-draft.architecture.test.ts),
   [execution-selection.ts](../../../packages/@dvt/contracts/test/validation/execution-selection.ts),
   [workspace-graph-draft.ts](../../../packages/@dvt/contracts/test/validation/workspace-graph-draft.ts),
   [workspaceGraphDraftApplicationComponent.architecture.test.ts](../../../apps/api/test/application/services/workspaceGraphDraftApplicationComponent.architecture.test.ts),
+  [resolveAuthorizedExecutableSubgraph.test.ts](../../../apps/api/test/application/services/resolveAuthorizedExecutableSubgraph.test.ts),
+  [executableSubgraphResolutionComponent.architecture.test.ts](../../../apps/api/test/application/services/executableSubgraphResolutionComponent.architecture.test.ts),
   [workspaceGraphDraftRoutes.test.ts](../../../apps/api/test/entrypoints/http/workspaceGraphDraftRoutes.test.ts),
+  [canvasExecutionSelection.architecture.test.ts](../../../apps/web/src/app/views/canvas/canvasExecutionSelection.architecture.test.ts),
+  [canvasRunStartIdentity.architecture.test.ts](../../../apps/web/src/app/views/canvas/canvasRunStartIdentity.architecture.test.ts),
   and
   [workspaceGraphDraftProjection.test.ts](../../../apps/web/src/app/services/workspace/workspaceGraphDraftProjection.test.ts)
 - Evidence:
   [ed-20260423-tf-a2-c1-execution-selection-contract-pack.md](../../evidence/ed-20260423-tf-a2-c1-execution-selection-contract-pack.md)
   and
+  [ed-20260423-tf-a2-c2-executable-subgraph-derivation.md](../../evidence/ed-20260423-tf-a2-c2-executable-subgraph-derivation.md)
+  and
+  [ed-20260423-tf-a2-c3-c4-api-web-adoption.md](../../evidence/ed-20260423-tf-a2-c3-c4-api-web-adoption.md)
+  and
   [R-20260423-WORKSPACE-AUTHORING-DRAFT-AGGREGATE](../../risk-register/quality/R-20260423-WORKSPACE-AUTHORING-DRAFT-AGGREGATE.yaml)
 - Verification:
+  `pnpm --filter @dvt/planner test -- executable-subgraph-deriver.test.ts executable-subgraph-deriver.architecture.test.ts`
+  and
+  `pnpm --filter @dvt/planner build`
+  and
   `pnpm --filter @dvt/contracts test -- execution-selection.contract.test.ts execution-selection.architecture.test.ts workspace-graph-authoring-draft.contract.test.ts workspace-graph-authoring-draft.architecture.test.ts validation.test.ts`
   and
   `pnpm --filter @dvt/contracts build`
   and
-  `pnpm --filter dvt-api test -- authorizeWorkspaceGraphDraftCapabilityService.test.ts workspaceGraphDraftApplicationComponent.architecture.test.ts workspaceGraphDraftRoutes.test.ts`
+  `pnpm --filter dvt-api test -- authorizeWorkspaceGraphDraftCapabilityService.test.ts workspaceGraphDraftApplicationComponent.architecture.test.ts workspaceGraphDraftRoutes.test.ts resolveAuthorizedExecutableSubgraph.test.ts executableSubgraphResolutionComponent.architecture.test.ts`
+  and
+  `pnpm --filter @dvt/web test -- src/app/views/canvas/canvasExecutionSelection.architecture.test.ts src/app/views/canvas/canvasRunStartIdentity.architecture.test.ts src/app/views/canvas/useCanvasExecutionActions.planPreview.core.test.tsx src/app/views/canvas/useCanvasExecutionActions.runStart.test.tsx`
   and
   `pnpm --filter @dvt/web test -- src/app/services/workspace/workspaceGraphDraftProjection.test.ts`
 

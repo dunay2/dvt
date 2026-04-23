@@ -18,11 +18,13 @@ import type { IAdmissionGuard } from '../../application/ports/IAdmissionGuard.js
 import type { AdmissionMode } from '../../application/ports/IAdmissionMode.js';
 import type { IStartRunExecutionCapacityPort } from '../../application/ports/IStartRunExecutionCapacityPort.js';
 import type { IStoredPlanValidationReader } from '../../application/ports/storedPlan.js';
+import type { IWorkspaceGraphDraftStore } from '../../application/ports/workspaceGraphDraft.js';
 import type { AuthorizeCommandScopeService } from '../../application/services/authorizeCommandScopeService.js';
 import { BackpressureAwareStartRunUseCase } from '../../application/services/BackpressureAwareStartRunUseCase.js';
 import { DEFAULT_START_RUN_EXECUTION_CAPACITY_PORT } from '../../application/services/defaultStartRunExecutionCapacityPort.js';
 import { EngineStartRunUseCase } from '../../application/services/engineStartRunUseCase.js';
 import { PlannerBackedStartRunUseCase } from '../../application/services/PlannerBackedStartRunUseCase.js';
+import { ResolveAuthorizedExecutableSubgraphService } from '../../application/services/resolveAuthorizedExecutableSubgraph.js';
 import { StartRunAuthorizedFacade } from '../../application/services/startRunAuthorizedFacade.js';
 import { StoredPlanExecutabilityValidator } from '../../application/services/StoredPlanExecutabilityValidator.js';
 import { ObservabilityAdmissionTelemetry } from '../../infrastructure/admissionTelemetry/ObservabilityAdmissionTelemetry.js';
@@ -42,6 +44,7 @@ export type BuildProtectedStartRunRuntimeDeps = {
   readonly adapters: ReadonlyMap<EngineRunRef['provider'], IProviderAdapter>;
   readonly planStore: IPlanValidationLifecycleStore & IStoredPlanValidationReader;
   readonly stepTypeRegistry: IStepTypeRegistry;
+  readonly workspaceGraphDraftStore: IWorkspaceGraphDraftStore;
 };
 
 export type ProtectedStartRunRuntime = {
@@ -66,11 +69,16 @@ export function buildProtectedStartRunRuntime(
     adapters: deps.adapters,
     stepTypeRegistry: deps.stepTypeRegistry,
   });
+  const executableSubgraphResolver = new ResolveAuthorizedExecutableSubgraphService({
+    planner,
+    workspaceGraphDraftStore: deps.workspaceGraphDraftStore,
+  });
   const plannerBackedUseCase = new PlannerBackedStartRunUseCase({
     planner,
     planStore: deps.planStore,
     validator: planValidator,
     compileTelemetry: startRunSlaTelemetry,
+    executableSubgraphResolver,
     delegate: new EngineStartRunUseCase(deps.engine),
   });
   const admissionUseCase = new BackpressureAwareStartRunUseCase({

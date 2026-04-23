@@ -24,13 +24,19 @@ export const VALID_START_RUN_PLAN_REF_COMMAND_FIXTURE: StartRunCommand = {
   }),
   runId: 'run-1',
   targetAdapter: START_RUN_TARGET_ADAPTER.temporal,
-  selection: ['model.analytics.orders'],
+  selection: {
+    mode: 'explicit',
+    nodeIds: ['model.analytics.orders'],
+  },
 };
 
 export const VALID_START_RUN_PLANNER_BACKED_COMMAND_FIXTURE: StartRunCommand = {
   runId: 'run-2',
   targetAdapter: START_RUN_TARGET_ADAPTER.mock,
-  selection: [],
+  selection: {
+    mode: 'explicit',
+    nodeIds: ['model.analytics.orders'],
+  },
   graphSource: {
     kind: 'generic-graph-v1',
     sourceFamily: 'dbt',

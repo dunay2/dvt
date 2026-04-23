@@ -139,6 +139,9 @@ closure to be executable.
 The dedicated execution-selection seam now lives in the companion local guide:
 [Execution selection component](./execution-selection-component.md).
 
+The dedicated planner-owned selected-closure derivation seam now lives in:
+[Executable subgraph derivation component](./executable-subgraph-derivation-component.md).
+
 ## Consumers
 
 - `packages/@dvt/contracts/src/validation/planner.ts`

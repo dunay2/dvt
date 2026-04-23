@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import { ExecutionSelectionSchema } from '../contracts/planner/ExecutionSelection.v1.js';
 import { TransformationSqlFirstCompilerGraphSourceSchema } from '../contracts/planner/TransformationFlowCompiler.v1.js';
 import {
   PlanPreviewProvenanceSchema,
@@ -9,7 +10,7 @@ import {
 import { PREVIEW_PROFILE } from '../contracts/planner/TransformationFlowPreview.v1.js';
 
 import { NonBlankStringSchema, RunContextSchema } from './common.js';
-import { PreviewProfileSchema, PlanPreviewSelectedNodeIdsSchema } from './plan-preview-profile.js';
+import { PreviewProfileSchema } from './plan-preview-profile.js';
 import { GenericGraphSourceV1Schema } from './planner-graph.js';
 
 function addPlanPreviewRequestIssue(
@@ -24,17 +25,6 @@ function addPlanPreviewRequestIssue(
   });
 }
 
-function haveMatchingNodeSelections(
-  actualNodeIds: readonly string[],
-  expectedNodeIds: readonly string[]
-): boolean {
-  if (actualNodeIds.length !== expectedNodeIds.length) {
-    return false;
-  }
-
-  return actualNodeIds.every((nodeId, index) => nodeId === expectedNodeIds[index]);
-}
-
 function toIssuePathSegment(pathSegment: PropertyKey): string | number {
   return typeof pathSegment === 'number' ? pathSegment : String(pathSegment);
 }
@@ -43,7 +33,7 @@ export const PlanPreviewRequestSchema = z
   .object({
     previewProfile: PreviewProfileSchema,
     context: RunContextSchema,
-    selectedNodeIds: PlanPreviewSelectedNodeIdsSchema,
+    selection: ExecutionSelectionSchema,
     graphSource: GenericGraphSourceV1Schema,
     planName: NonBlankStringSchema.optional(),
     provenance: PlanPreviewProvenanceSchema.optional(),
@@ -91,22 +81,6 @@ export const PlanPreviewRequestSchema = z
         );
       }
       return;
-    }
-
-    const expectedSelectedNodeIds = graphSourceResult.data.nodes
-      .map((node) => node.nodeId)
-      .slice()
-      .sort((left, right) => left.localeCompare(right));
-    const actualSelectedNodeIds = [...request.selectedNodeIds].sort((left, right) =>
-      left.localeCompare(right)
-    );
-
-    if (!haveMatchingNodeSelections(actualSelectedNodeIds, expectedSelectedNodeIds)) {
-      addPlanPreviewRequestIssue(
-        ctx,
-        ['selectedNodeIds'],
-        'transformation-sql-first-v1 requires selectedNodeIds to match the canonical compiler node ids.'
-      );
     }
   });
 

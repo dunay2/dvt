@@ -1,3 +1,4 @@
+import type { ExecutionSelection } from '@dvt/contracts';
 import type { PreviewPlanCommand } from '../../application/services/PreviewPlanUseCase.js';
 
 import { bindScopeToPlannerEnvelope } from './planPreviewEnvelopeBinder.js';
@@ -7,7 +8,7 @@ import type { PreviewProvenance } from './previewProvenanceParser.js';
 
 export interface PreviewPlanContractRequest {
   readonly context: unknown;
-  readonly selectedNodeIds: readonly string[];
+  readonly selection: ExecutionSelection;
   readonly graphSource: PreviewPlanCommand['graphSource'];
   readonly provenance: PreviewProvenance | undefined;
 }
@@ -45,14 +46,14 @@ export function createParsedPreviewPlanRequest(
     previewProfile: routePolicy.previewProfile,
     contractRequest: {
       context: record.context,
-      selectedNodeIds: commandInput.selectedNodeIds,
+      selection: commandInput.selection,
       graphSource: commandInput.graphSource,
       provenance: commandInput.provenance,
     },
     command: {
       targetAdapter: routePolicy.routeContext.targetAdapter,
       graphSource: commandInput.graphSource,
-      selection: { selectedNodeIds: commandInput.selectedNodeIds },
+      selection: commandInput.selection,
       ...(plannerEnvelope.policies === undefined ? {} : { policies: plannerEnvelope.policies }),
       ...(plannerEnvelope.environment === undefined
         ? {}

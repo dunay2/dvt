@@ -117,9 +117,17 @@ flowchart LR
 - `packages/@dvt/contracts/src/validation/planner.ts`
 - `packages/@dvt/contracts/test/execution-selection.contract.test.ts`
 - `packages/@dvt/contracts/test/execution-selection.architecture.test.ts`
-- planner selection-derivation slices under `TF-A2-C2`
-- API preview/run adoption slices under `TF-A2-C3`
-- web Canvas preview/run command production under `TF-A2-C4`
+- `packages/@dvt/planner/src/application/PlannerFacade.ts`
+- `packages/@dvt/planner/src/application/ExecutableSubgraphDeriver.ts`
+- `packages/@dvt/planner/test/unit/executable-subgraph-deriver.test.ts`
+- `packages/@dvt/planner/test/unit/executable-subgraph-deriver.architecture.test.ts`
+- `apps/api/src/application/services/resolveAuthorizedExecutableSubgraph.ts`
+- `apps/api/src/application/services/PreviewPlanUseCase.ts`
+- `apps/api/src/application/services/PlannerBackedStartRunUseCase.ts`
+- `apps/web/src/app/views/canvas/canvasRunSelection.ts`
+- `apps/web/src/app/views/canvas/canvasPlanAction.ts`
+- `apps/web/src/app/views/canvas/canvasRunStartAction.ts`
+- [Executable subgraph derivation component](./executable-subgraph-derivation-component.md)
 
 ## Extension rules
 

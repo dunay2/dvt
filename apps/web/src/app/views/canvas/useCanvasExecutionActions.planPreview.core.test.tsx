@@ -134,7 +134,10 @@ describe('useCanvasExecutionActions plan preview core', () => {
             }),
           ]),
         }),
-        selectedNodeIds: ['source-node', 'transform-node', 'sink-node'],
+        selection: {
+          mode: 'explicit',
+          nodeIds: ['source-node', 'transform-node', 'sink-node'],
+        },
         context: expect.objectContaining({
           tenantId: 'tenant',
           projectId: 'project',
@@ -195,7 +198,10 @@ describe('useCanvasExecutionActions plan preview core', () => {
     expect(plansService.previewPlan).toHaveBeenCalledTimes(1);
     expect(plansService.previewPlan).toHaveBeenCalledWith(
       expect.objectContaining({
-        selectedNodeIds: ['source-node', 'transform-node', 'sink-node'],
+        selection: {
+          mode: 'explicit',
+          nodeIds: ['source-node', 'transform-node', 'sink-node'],
+        },
         graphSource: expect.objectContaining({
           nodes: expect.arrayContaining([
             expect.objectContaining({ nodeId: 'source-node' }),

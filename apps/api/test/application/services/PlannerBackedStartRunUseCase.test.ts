@@ -1,4 +1,8 @@
-import { parsePlanRef, type PlannerBuildResultV1 } from '@dvt/contracts';
+import {
+  parseExecutionSelection,
+  parsePlanRef,
+  type PlannerBuildResultV1,
+} from '@dvt/contracts';
 import { PlannerFacade } from '@dvt/planner';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -36,7 +40,23 @@ const PLANNER_COMMAND = {
   },
   runId: 'run-1',
   targetAdapter: 'mock' as const,
-  selection: ['model.orders'],
+  selection: parseExecutionSelection({
+    mode: 'explicit',
+    nodeIds: ['model.orders'],
+  }),
+};
+
+const EXECUTABLE_SUBGRAPH_RESOLVER = {
+  execute: vi.fn(async () => ({
+    ok: true as const,
+    value: {
+      selection: PLANNER_COMMAND.selection,
+      nodeIds: ['model.orders'],
+      edgeIds: [],
+      executable: true,
+      diagnostics: [],
+    },
+  })),
 };
 
 const STORED_PLAN_REF = parsePlanRef({
@@ -75,6 +95,7 @@ describe('PlannerBackedStartRunUseCase', () => {
           value: { kind: 'accepted' as const, runId: 'run-1', accepted: true },
         })),
       } as never,
+      executableSubgraphResolver: EXECUTABLE_SUBGRAPH_RESOLVER as never,
     });
 
     await useCase.execute(
@@ -148,6 +169,7 @@ describe('PlannerBackedStartRunUseCase', () => {
           value: { kind: 'accepted' as const, runId: 'run-1', accepted: true },
         })),
       } as never,
+      executableSubgraphResolver: EXECUTABLE_SUBGRAPH_RESOLVER as never,
     });
 
     await useCase.execute(
@@ -220,6 +242,7 @@ describe('PlannerBackedStartRunUseCase', () => {
       validator: validator as never,
       delegate: delegate as never,
       compileTelemetry: compileTelemetry as never,
+      executableSubgraphResolver: EXECUTABLE_SUBGRAPH_RESOLVER as never,
     });
 
     const result = await useCase.execute(PLANNER_COMMAND, AUTHORIZED_CONTEXT);
@@ -288,6 +311,7 @@ describe('PlannerBackedStartRunUseCase', () => {
         validatePlan: vi.fn(async () => rejection),
       } as never,
       delegate: delegate as never,
+      executableSubgraphResolver: EXECUTABLE_SUBGRAPH_RESOLVER as never,
     });
 
     const result = await useCase.execute(PLANNER_COMMAND, AUTHORIZED_CONTEXT);
@@ -335,6 +359,7 @@ describe('PlannerBackedStartRunUseCase', () => {
       } as never,
       delegate: delegate as never,
       compileTelemetry: compileTelemetry as never,
+      executableSubgraphResolver: EXECUTABLE_SUBGRAPH_RESOLVER as never,
     });
 
     const command = {
@@ -381,6 +406,7 @@ describe('PlannerBackedStartRunUseCase', () => {
         })),
       } as never,
       compileTelemetry: compileTelemetry as never,
+      executableSubgraphResolver: EXECUTABLE_SUBGRAPH_RESOLVER as never,
     });
 
     await expect(useCase.execute(PLANNER_COMMAND, AUTHORIZED_CONTEXT)).rejects.toThrow(

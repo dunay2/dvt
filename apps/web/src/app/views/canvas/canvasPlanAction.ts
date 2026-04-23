@@ -10,6 +10,7 @@ import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { PlanViewModel } from '../../types/plans';
 
 import { resolvePreviewProvenance } from './canvasPreviewProvenance';
+import { collectPreviewSelection } from './canvasRunSelection';
 import { canvasViewCopy, formatTransformationGraphValidationSummary } from './copy';
 import { buildPreviewGraphSource } from './previewGraphSource';
 import type { TransformationGraphValidationResult } from './transformationGraphValidation';
@@ -65,7 +66,8 @@ export async function executeCanvasPlanAction({
   }
 
   try {
-    const selectedForPlan = selectedNodeIds.length > 0 ? selectedNodeIds : workspaceNodeIds;
+    const selection = collectPreviewSelection(selectedNodeIds, workspaceNodeIds);
+    const selectedForPlan = selection.nodeIds;
     const context = sessionContext.buildRunContext('preview_context');
     const previewProvenance = await resolvePreviewProvenance({
       canonicalNodes,
@@ -95,7 +97,7 @@ export async function executeCanvasPlanAction({
     const plan = await plansService.previewPlan({
       previewProfile: 'transformation-sql-first-v1',
       graphSource,
-      selectedNodeIds: selectedForPlan,
+      selection,
       context,
       ...(previewProvenance.provenance ? { provenance: previewProvenance.provenance } : {}),
       persist: true,

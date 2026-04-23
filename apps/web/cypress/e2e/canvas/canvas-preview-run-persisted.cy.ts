@@ -267,11 +267,10 @@ function stubPlanPreviewResponse({ persistedSha, planRefSha }: PlanPreviewRespon
   cy.intercept('POST', '**/plans/preview', (req) => {
     expect(req.body.persist).to.equal(true);
     expect(req.body.previewProfile).to.equal('transformation-sql-first-v1');
-    expect(req.body.selectedNodeIds).to.deep.equal([
-      'src_orders',
-      'model_orders',
-      'orders_dashboard',
-    ]);
+    expect(req.body.selection).to.deep.equal({
+      mode: 'explicit',
+      nodeIds: ['src_orders', 'model_orders', 'orders_dashboard'],
+    });
     expect(req.body.graphSource).to.include({
       kind: 'generic-graph-v1',
       sourceFamily: 'transformation-design-graph',

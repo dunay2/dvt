@@ -72,7 +72,7 @@ export function buildPlanRefStartRunCommand(input: {
   readonly rawRunExecutionContextRef: unknown;
   readonly runId: string;
   readonly targetAdapter: StartRunCommand['targetAdapter'];
-  readonly selection: ReadonlyArray<string>;
+  readonly selection: StartRunCommand['selection'];
 }): RouteParseResult<StartRunCommand> {
   const planRef = parsePlanRoutePlanRef(input.rawPlanRef);
   if (!planRef.ok) {
@@ -105,7 +105,7 @@ export function buildPlannerBackedStartRunCommand(input: {
   readonly rawRunExecutionContextRef: unknown;
   readonly runId: string;
   readonly targetAdapter: StartRunCommand['targetAdapter'];
-  readonly selection: ReadonlyArray<string>;
+  readonly selection: StartRunCommand['selection'];
 }): RouteParseResult<StartRunCommand> {
   const plannerInput = parsePlanRoutePlannerEnvelope(input.record);
   if (!plannerInput.ok) {

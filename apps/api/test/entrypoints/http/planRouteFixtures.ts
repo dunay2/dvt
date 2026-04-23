@@ -147,7 +147,10 @@ export function buildPreviewBody(overrides: Record<string, unknown> = {}): Recor
   return {
     context: { ...VALID_PREVIEW_CONTEXT },
     previewProfile: PREVIEW_PROFILE_GENERIC,
-    selectedNodeIds: ['node_1'],
+    selection: {
+      mode: 'explicit',
+      nodeIds: ['node_1'],
+    },
     graphSource: VALID_DBT_GRAPH_SOURCE,
     ...overrides,
   };

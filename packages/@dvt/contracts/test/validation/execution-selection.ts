@@ -27,6 +27,15 @@ export function registerValidationExecutionSelectionSuite(): void {
       ).toThrow(ContractValidationError);
     });
 
+    it('rejects selected node ids with surrounding whitespace', () => {
+      expect(() =>
+        parseExecutionSelection({
+          mode: 'explicit',
+          nodeIds: [' sql_1 '],
+        })
+      ).toThrow(ContractValidationError);
+    });
+
     it('rejects executable selected closures that still carry diagnostics', () => {
       expect(() =>
         parseExecutableSubgraph({

@@ -25,7 +25,10 @@ describe('contracts: StartRun boundary', () => {
 
     expect(command.planRef?.uri).toBe('s3://plans/plan-1.json');
     expect(command.targetAdapter).toBe('temporal');
-    expect(command.selection).toEqual(['model.analytics.orders']);
+    expect(command.selection).toEqual({
+      mode: 'explicit',
+      nodeIds: ['model.analytics.orders'],
+    });
   });
 
   it('parses the planner-backed startRun command shape', () => {
@@ -49,7 +52,10 @@ describe('contracts: StartRun boundary', () => {
     expect(() =>
       parseStartRunCommand({
         ...VALID_START_RUN_PLAN_REF_COMMAND_FIXTURE,
-        selection: ['model.analytics.orders', '   '],
+        selection: {
+          mode: 'explicit',
+          nodeIds: ['model.analytics.orders', '   '],
+        },
       })
     ).toThrow(ContractValidationError);
   });
@@ -69,7 +75,10 @@ describe('contracts: StartRun boundary', () => {
       parseStartRunCommand({
         runId: 'run-3',
         targetAdapter: 'temporal',
-        selection: ['model.analytics.orders'],
+        selection: {
+          mode: 'explicit',
+          nodeIds: ['model.analytics.orders'],
+        },
         policies: VALID_START_RUN_PLANNER_BACKED_COMMAND_FIXTURE.policies,
       })
     ).toThrow(ContractValidationError);

@@ -1,4 +1,4 @@
-import { parsePlanRef } from '@dvt/contracts';
+import { parseExecutionSelection, parsePlanRef } from '@dvt/contracts';
 
 import type {
   AuthorizedExecutionContext,
@@ -54,7 +54,10 @@ export const START_RUN_FACADE_INPUT = {
     }),
     runId: 'run-1',
     targetAdapter: 'temporal' as const,
-    selection: ['step_a'],
+    selection: parseExecutionSelection({
+      mode: 'explicit',
+      nodeIds: ['step_a'],
+    }),
   },
   requestedScope: {
     tenantId: TenantId.unsafe('tenant-1'),

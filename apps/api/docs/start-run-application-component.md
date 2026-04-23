@@ -2,7 +2,7 @@
 title: Start-run application component
 status: Active
 owner: apps/api
-last_reviewed: 2026-04-22
+last_reviewed: 2026-04-23
 ---
 
 # Start-run application component
@@ -19,6 +19,7 @@ Use these related guides with this page:
 - `apps/api/docs/start-run-control-boundary-component.md`
 - `apps/api/docs/start-run-http-entrypoint-component.md`
 - `apps/api/docs/start-run-execution-capacity-admission-component.md`
+- `apps/api/docs/executable-subgraph-resolution-component.md`
 - `docs/architecture/components/engine/contracts/engine/start-run-boundary-component.md`
 
 ## Owned concern

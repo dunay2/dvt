@@ -215,7 +215,10 @@ export function registerValidationPreviewSuite(): void {
           runId: 'run-1',
           targetAdapter: 'temporal',
         },
-        selectedNodeIds: ['source-1', 'transform-1', 'sink-1'],
+        selection: {
+          mode: 'explicit',
+          nodeIds: ['source-1', 'transform-1', 'sink-1'],
+        },
         graphSource: transformationGraphSource,
         provenance: {
           graphArtifact: {
@@ -251,7 +254,10 @@ export function registerValidationPreviewSuite(): void {
             runId: 'run-1',
             targetAdapter: 'temporal',
           },
-          selectedNodeIds: ['source-1', 'transform-1', 'sink-1'],
+          selection: {
+            mode: 'explicit',
+            nodeIds: ['source-1', 'transform-1', 'sink-1'],
+          },
           graphSource: transformationGraphSource,
           persist: true,
         })

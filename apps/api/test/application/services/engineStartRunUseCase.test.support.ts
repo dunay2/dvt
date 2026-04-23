@@ -1,5 +1,6 @@
 import {
   asNonBlankString,
+  parseExecutionSelection,
   parsePlanRef,
   type RunExecutionContextRef,
   type StartRunCommand,
@@ -50,7 +51,10 @@ export function buildStartRunCommand(): StartRunCommand {
     planRef: PLAN_REF,
     runId: 'run-test-1',
     targetAdapter: 'mock',
-    selection: ['step_a', 'step_b'],
+    selection: parseExecutionSelection({
+      mode: 'explicit',
+      nodeIds: ['step_a', 'step_b'],
+    }),
   };
 }
 

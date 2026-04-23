@@ -10,6 +10,7 @@
 import type { PlanRef, RunContext } from '../../types/contracts.js';
 
 import type { ExecutionPlan, GenericGraphSourceV1 } from './ExecutionPlan.v1.js';
+import type { ExecutionSelection } from './ExecutionSelection.v1.js';
 import type { TransformationSqlFirstCompilerGraphSourceV1 } from './TransformationFlowCompiler.v1.js';
 import {
   TRANSFORMATION_SQL_FIRST_SOURCE_VERSION,
@@ -26,7 +27,7 @@ export type PreviewProfile = (typeof PREVIEW_PROFILE)[keyof typeof PREVIEW_PROFI
 export interface PlanPreviewRequest {
   previewProfile: PreviewProfile;
   context: RunContext;
-  selectedNodeIds: readonly string[];
+  selection: ExecutionSelection;
   graphSource: GenericGraphSourceV1;
   planName?: string;
   provenance?: PlanPreviewProvenance;
