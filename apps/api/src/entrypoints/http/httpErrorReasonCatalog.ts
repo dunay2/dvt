@@ -5,6 +5,7 @@
 export const HTTP_ERROR_REASON = Object.freeze({
   adapterNotConfigured: 'adapter_not_configured',
   cancelReasonNotSupported: 'cancel_reason_not_supported',
+  clientRunIdNotAllowed: 'client_run_id_not_allowed',
   conflictingRunIds: 'conflicting_run_ids',
   conflictingPlanInputs: 'conflicting_plan_inputs',
   internalError: 'internal_error',
@@ -37,8 +38,7 @@ export const HTTP_ERROR_REASON = Object.freeze({
   unsupportedPlanVersion: 'unsupported_plan_version',
   workspaceGraphDraftIdempotencyKeyReused: 'workspace_graph_draft_idempotency_key_reused',
   workspaceGraphDraftNotFound: 'workspace_graph_draft_not_found',
-  workspaceGraphDraftUnsupportedSchemaVersion:
-    'workspace_graph_draft_unsupported_schema_version',
+  workspaceGraphDraftUnsupportedSchemaVersion: 'workspace_graph_draft_unsupported_schema_version',
 } as const);
 
 export type HttpErrorReason = (typeof HTTP_ERROR_REASON)[keyof typeof HTTP_ERROR_REASON];

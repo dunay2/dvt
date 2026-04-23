@@ -16,6 +16,8 @@ relevant adapters.
 ## Local component guides
 
 - [Start-run HTTP entrypoint component](./docs/start-run-http-entrypoint-component.md)
+- [Start-run control boundary component](./docs/start-run-control-boundary-component.md)
+- [Start-run platform identity component](./docs/start-run-platform-identity-component.md)
 - [HTTP runtime error translation component](./docs/http-runtime-error-translation-component.md)
 - [Start-run application component](./docs/start-run-application-component.md)
 - [Start-run runtime composition component](./docs/start-run-runtime-composition-component.md)

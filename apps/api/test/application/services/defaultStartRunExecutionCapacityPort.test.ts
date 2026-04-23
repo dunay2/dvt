@@ -1,3 +1,6 @@
+/**
+ * Owned concern: verify the fail-closed default execution-capacity binding.
+ */
 import { describe, expect, it } from 'vitest';
 
 import { DEFAULT_START_RUN_EXECUTION_CAPACITY_PORT } from '../../../src/application/services/defaultStartRunExecutionCapacityPort.js';

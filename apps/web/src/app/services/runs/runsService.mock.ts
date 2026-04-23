@@ -1,7 +1,17 @@
+/**
+ * Owned concern: provide deterministic local runs-port behavior for frontend
+ * development while preserving the API/Web start-run identity boundary.
+ */
 import { asIsoUtcString, asNonBlankString, asStepId } from '@dvt/contracts';
 
 import { mockRun } from '../../data/mockDbtData';
-import type { IRunsPort, RunEventTimelinePage, RunSnapshot, RunSummaryItem, StartRunInput } from '../../ports/runs';
+import type {
+  IRunsPort,
+  RunEventTimelinePage,
+  RunSnapshot,
+  RunSummaryItem,
+  StartRunInput,
+} from '../../ports/runs';
 import type { SessionContextPort } from '../../ports/sessionContext';
 import type { Run, RunEvent as DbtRunEvent } from '../../types/dbt';
 import type { RunEvent } from '../../types/engine';
@@ -16,6 +26,13 @@ function buildMockRunList(): Run[] {
   };
 
   return [mockRun, completedRun];
+}
+
+let mockRunSequence = 0;
+
+function createMockRunId(): ReturnType<typeof asNonBlankString> {
+  mockRunSequence += 1;
+  return asNonBlankString(`run_mock_${mockRunSequence}`);
 }
 
 function mapMockEventType(eventType: DbtRunEvent['type']): RunEvent['eventType'] {
@@ -121,13 +138,14 @@ export function createMockRunsService(
       return run ? mapDbtRunToSnapshot(run) : null;
     },
     startRun: async (input) => {
+      const runId = createMockRunId();
       const base = {
-        tenantId: input.context.tenantId,
-        workflowId: asNonBlankString(`wf_${input.context.runId}`),
-        runId: input.context.runId,
+        tenantId: asNonBlankString(input.workspaceScope.tenantId),
+        workflowId: asNonBlankString(`wf_${runId}`),
+        runId,
       };
 
-      if (input.context.targetAdapter === 'temporal') {
+      if (input.workspaceScope.targetAdapter === 'temporal') {
         return {
           provider: 'temporal',
           namespace: asNonBlankString('default'),
@@ -135,7 +153,7 @@ export function createMockRunsService(
         };
       }
 
-      if (input.context.targetAdapter === 'conductor') {
+      if (input.workspaceScope.targetAdapter === 'conductor') {
         return {
           provider: 'conductor',
           conductorUrl: asNonBlankString('http://localhost:8080'),

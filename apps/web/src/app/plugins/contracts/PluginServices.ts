@@ -1,4 +1,9 @@
+/**
+ * Owned concern: publish plugin-facing service contracts while keeping run
+ * execution identity owned by the host runtime boundary.
+ */
 import type { PlanPreviewInput as ShellPlanPreviewInput } from '../../ports/plans';
+import type { WorkspaceScope } from '../../ports/sessionContext';
 import type {
   CanonicalRunStatus,
   EngineRunRef,
@@ -17,7 +22,8 @@ import type { LocalizableString } from './PluginManifest';
 
 export interface StartRunInput {
   planRef: PlanRef;
-  runContext: RunContext;
+  workspaceScope: WorkspaceScope;
+  selection: readonly string[];
 }
 
 export interface RunObserveOptions {

@@ -303,21 +303,21 @@ describe('plan-route helper parsers', () => {
     expect(
       parseStartRunBody(
         {
-        tenantId: 't1',
-        projectId: 'p1',
-        environmentId: 'e1',
-        selection: ['model_a'],
-        runId: 'run-1',
-        targetAdapter: 'mock',
-        planRef: VALID_PLAN_REF,
-        graphSource: {
-          kind: 'generic-graph-v1',
-          sourceFamily: 'dbt',
-          sourceVersion: 'manifest-v10',
-          nodes: [{ nodeId: 'model_a', stepKind: 'DBT_MODEL', dependsOn: [] }],
+          tenantId: 't1',
+          projectId: 'p1',
+          environmentId: 'e1',
+          selection: ['model_a'],
+          targetAdapter: 'mock',
+          planRef: VALID_PLAN_REF,
+          graphSource: {
+            kind: 'generic-graph-v1',
+            sourceFamily: 'dbt',
+            sourceVersion: 'manifest-v10',
+            nodes: [{ nodeId: 'model_a', stepKind: 'DBT_MODEL', dependsOn: [] }],
+          },
         },
-        },
-        START_RUN_ADAPTER_REGISTRY
+        START_RUN_ADAPTER_REGISTRY,
+        () => 'run_generated_parser'
       )
     ).toEqual({
       ok: false,
@@ -329,15 +329,15 @@ describe('plan-route helper parsers', () => {
     expect(
       parseStartRunBody(
         {
-        tenantId: 't1',
-        projectId: 'p1',
-        environmentId: 'e1',
-        selection: ['model_a'],
-        runId: 'run-1',
-        targetAdapter: 'mock',
-        planRef: { uri: 'https://plans.example.com/p.json' },
+          tenantId: 't1',
+          projectId: 'p1',
+          environmentId: 'e1',
+          selection: ['model_a'],
+          targetAdapter: 'mock',
+          planRef: { uri: 'https://plans.example.com/p.json' },
         },
-        START_RUN_ADAPTER_REGISTRY
+        START_RUN_ADAPTER_REGISTRY,
+        () => 'run_generated_parser'
       )
     ).toEqual({
       ok: false,
@@ -345,19 +345,19 @@ describe('plan-route helper parsers', () => {
     });
   });
 
-  it('rejects non-canonical surrounding whitespace in runId, targetAdapter, and selection', () => {
+  it('rejects invalid selection, client runId, and invalid targetAdapter', () => {
     expect(
       parseStartRunBody(
         {
-        tenantId: 't1',
-        projectId: 'p1',
-        environmentId: 'e1',
-        selection: [' model_a '],
-        runId: 'run-1',
-        targetAdapter: 'mock',
-        planRef: VALID_PLAN_REF,
+          tenantId: 't1',
+          projectId: 'p1',
+          environmentId: 'e1',
+          selection: [' model_a '],
+          targetAdapter: 'mock',
+          planRef: VALID_PLAN_REF,
         },
-        START_RUN_ADAPTER_REGISTRY
+        START_RUN_ADAPTER_REGISTRY,
+        () => 'run_generated_parser'
       )
     ).toEqual({
       ok: false,
@@ -367,33 +367,34 @@ describe('plan-route helper parsers', () => {
     expect(
       parseStartRunBody(
         {
-        tenantId: 't1',
-        projectId: 'p1',
-        environmentId: 'e1',
-        selection: ['model_a'],
-        runId: ' run-1 ',
-        targetAdapter: 'mock',
-        planRef: VALID_PLAN_REF,
+          tenantId: 't1',
+          projectId: 'p1',
+          environmentId: 'e1',
+          selection: ['model_a'],
+          runId: 'client-run-1',
+          targetAdapter: 'mock',
+          planRef: VALID_PLAN_REF,
         },
-        START_RUN_ADAPTER_REGISTRY
+        START_RUN_ADAPTER_REGISTRY,
+        () => 'run_generated_parser'
       )
     ).toEqual({
       ok: false,
-      issue: { type: 'bad_request', reason: 'invalid_run_id', target: 'runId' },
+      issue: { type: 'bad_request', reason: 'client_run_id_not_allowed', target: 'runId' },
     });
 
     expect(
       parseStartRunBody(
         {
-        tenantId: 't1',
-        projectId: 'p1',
-        environmentId: 'e1',
-        selection: ['model_a'],
-        runId: 'run-1',
-        targetAdapter: ' mock ',
-        planRef: VALID_PLAN_REF,
+          tenantId: 't1',
+          projectId: 'p1',
+          environmentId: 'e1',
+          selection: ['model_a'],
+          targetAdapter: ' mock ',
+          planRef: VALID_PLAN_REF,
         },
-        START_RUN_ADAPTER_REGISTRY
+        START_RUN_ADAPTER_REGISTRY,
+        () => 'run_generated_parser'
       )
     ).toEqual({
       ok: false,

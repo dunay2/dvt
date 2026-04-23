@@ -16,6 +16,7 @@ boundary is imported directly from `@dvt/contracts`.
 
 Use these related guides with this page:
 
+- `apps/api/docs/start-run-control-boundary-component.md`
 - `apps/api/docs/start-run-http-entrypoint-component.md`
 - `apps/api/docs/start-run-execution-capacity-admission-component.md`
 - `docs/architecture/components/engine/contracts/engine/start-run-boundary-component.md`

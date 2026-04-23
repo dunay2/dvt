@@ -1,8 +1,8 @@
 {
   "summary": {
-    "adrs": 45,
+    "adrs": 46,
     "evidenceDocs": 117,
-    "normativeDocs": 311,
+    "normativeDocs": 312,
     "statusDocs": 58
   },
   "adrs": [
@@ -498,6 +498,17 @@
       "status": "Accepted",
       "date": "2026-04-08",
       "owners": "Architecture / Engine / Contracts / Adapters / API",
+      "archived": false,
+      "draft": false
+    },
+    {
+      "path": "docs/adr/adr-0050-platform-owned-start-run-identity.md",
+      "filename": "adr-0050-platform-owned-start-run-identity.md",
+      "num": 50,
+      "id": "ADR-0050",
+      "status": "Accepted",
+      "date": "2026-04-23",
+      "owners": "Architecture / API / Runtime / Frontend",
       "archived": false,
       "draft": false
     }
@@ -2201,6 +2212,10 @@
     {
       "path": "docs/architecture/components/web/runs/frontend-runtime-contract-user-manual.md",
       "filename": "frontend-runtime-contract-user-manual.md"
+    },
+    {
+      "path": "docs/architecture/components/web/runs/start-run-client-identity-boundary.md",
+      "filename": "start-run-client-identity-boundary.md"
     },
     {
       "path": "docs/architecture/components/web/screen-layout-and-cross-surface-behavior-rules.md",

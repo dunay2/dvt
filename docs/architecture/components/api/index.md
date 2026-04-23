@@ -98,6 +98,10 @@ shape, and the governed transition route:
   local guide for the authenticated start-run application component, its
   facade/use-case boundaries, invariants, transitions, consumers, and
   canonical shared-contract import rules.
+- [Start-run control boundary component](../../../../apps/api/docs/start-run-control-boundary-component.md):
+  local guide for the grouped API start-run control boundary spanning caller
+  intent parsing, platform-owned identity insertion, authenticated admission,
+  and delegate dispatch.
 - [Start-run runtime composition component](../../../../apps/api/docs/start-run-runtime-composition-component.md):
   local guide for the protected-runtime subcomponent that assembles the
   authenticated start-run chain from abstract runtime dependencies.
