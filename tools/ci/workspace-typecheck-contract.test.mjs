@@ -34,3 +34,15 @@ test('every workspace with a build script also exposes a canonical typecheck scr
 
   assert.deepEqual(missing, []);
 });
+
+test('traceability ADR gate build precompiles the full dependency closure', () => {
+  const traceabilityPackage = collectWorkspacePackages().find(
+    ({ pkg }) => pkg.name === '@dvt/traceability-service'
+  );
+
+  assert.ok(traceabilityPackage, '@dvt/traceability-service package.json must exist');
+  assert.match(
+    traceabilityPackage.pkg.scripts?.prebuild ?? '',
+    /pnpm -C \.\.\/\.\.\/\.\. --filter "?@dvt\/traceability-service\^\.\.\."? build/
+  );
+});

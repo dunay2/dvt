@@ -1,3 +1,11 @@
+/**
+ * @file packages/@dvt/traceability-service/src/lineage/errorPersistenceSupport.ts
+ * @baseline ADR-0032: compiledCodeRef Ownership
+ * @baseline ADR-0033: Outbox Worker Sharding And Fencing Model
+ * @decision Sanitize, redact, and bound lineage error metadata before persistence
+ * @consequence Dead-letter and retry diagnostics stay safe to store while preserving compiled-code resolution evidence
+ * @version 0.1.0
+ */
 export interface StructuredLineageErrorMetadata {
   code?: string;
   messageKey?: string;

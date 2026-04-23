@@ -1,3 +1,12 @@
+/**
+ * @file packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.layers.ts
+ * @baseline ADR-0001: Temporal Integration Test Policy
+ * @baseline ADR-0003: Execution Model
+ * @baseline ADR-0046: Execution Plan Definition And Run Execution Policy Separation
+ * @decision Drive Temporal layer execution from resolved DVT execution segments and canonical workflow state
+ * @consequence Layer iteration remains replay-safe and bounded by the DVT execution model
+ * @version 1.2.0
+ */
 import { segmentActivities } from './runPlanWorkflow.activities.js';
 import {
   finalizeCancellationIfRequested,

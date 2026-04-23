@@ -1,3 +1,12 @@
+/**
+ * @file packages/@dvt/adapter-temporal/src/workflows/workflowCursorHelpers.ts
+ * @baseline ADR-0001: Temporal Integration Test Policy
+ * @baseline ADR-0003: Execution Model
+ * @baseline ADR-0047: Runtime-Owned Realized Lifecycle For Signal-Driven Transitions
+ * @decision Serialize continue-as-new cursor state explicitly from DVT workflow progress
+ * @consequence Temporal history rollover preserves deterministic layer, gateway, and control-signal state
+ * @version 1.2.0
+ */
 import type { MaterializationEvidence } from '@dvt/contracts';
 
 export interface WorkflowExecutionCursor {

@@ -1,3 +1,12 @@
+/**
+ * @file packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.layerResults.ts
+ * @baseline ADR-0003: Execution Model
+ * @baseline ADR-0004: Event Sourcing Strategy
+ * @baseline ADR-0047: Runtime-Owned Realized Lifecycle For Signal-Driven Transitions
+ * @decision Translate layer activity outcomes into canonical run events and gateway facts owned by DVT
+ * @consequence Temporal layer completion updates event-sourced lifecycle state without becoming the source of truth
+ * @version 1.2.0
+ */
 import type { TransformationExecutor } from '@dvt/contracts';
 
 import { eventActivities } from './runPlanWorkflow.activities.js';

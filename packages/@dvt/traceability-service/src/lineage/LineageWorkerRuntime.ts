@@ -1,3 +1,11 @@
+/**
+ * @file packages/@dvt/traceability-service/src/lineage/LineageWorkerRuntime.ts
+ * @baseline ADR-0032: compiledCodeRef Ownership
+ * @baseline ADR-0033: Outbox Worker Sharding And Fencing Model
+ * @decision Run lineage outbox polling, delivery, dead-letter, and replay loops outside domain outbox authority
+ * @consequence OpenLineage publication can be retried and monitored without blocking DVT run lifecycle events
+ * @version 0.1.0
+ */
 import { setTimeout as sleep } from 'node:timers/promises';
 
 import type { ILineageOutboxStore, ILineageSink, ILineageStepEventMapper } from './contracts.js';

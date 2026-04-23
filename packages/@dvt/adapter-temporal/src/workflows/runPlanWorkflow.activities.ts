@@ -1,3 +1,12 @@
+/**
+ * @file packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.activities.ts
+ * @baseline ADR-0001: Temporal Integration Test Policy
+ * @baseline ADR-0003: Execution Model
+ * @baseline ADR-0040: Retry Ownership And Attempt Authority
+ * @decision Keep workflow side effects behind Temporal activities while DVT-owned retry policy drives step execution attempts
+ * @consequence Workflow replay stays deterministic and retry behavior remains explicit at the DVT activity boundary
+ * @version 1.2.0
+ */
 import {
   ActivityCancellationType,
   proxyActivities,

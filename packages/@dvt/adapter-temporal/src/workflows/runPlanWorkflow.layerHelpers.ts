@@ -1,3 +1,12 @@
+/**
+ * @file packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.layerHelpers.ts
+ * @baseline ADR-0003: Execution Model
+ * @baseline ADR-0046: Execution Plan Definition And Run Execution Policy Separation
+ * @baseline ADR-0047: Runtime-Owned Realized Lifecycle For Signal-Driven Transitions
+ * @decision Keep layer cursor, skipped-step emission, and continue-as-new handoff derived from DVT workflow state
+ * @consequence Provider continuation mechanics preserve canonical DVT layer progress and lifecycle evidence
+ * @version 1.2.0
+ */
 import type { MaterializationEvidence } from '@dvt/contracts';
 
 import { eventActivities } from './runPlanWorkflow.activities.js';

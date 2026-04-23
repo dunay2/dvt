@@ -1,5 +1,11 @@
 /**
- * @baseline ADR-0003
+ * @file packages/@dvt/engine/src/state/InMemoryRunStateCore.ts
+ * @baseline ADR-0003: Execution Model
+ * @baseline ADR-0004: Event Sourcing Strategy
+ * @baseline ADR-0039: Hexagonal Port Hardening And SOLID Remediation
+ * @decision Implement in-memory run-state writes through event-log authority and port-owned lifecycle state
+ * @consequence Local and test state stores replay canonical events instead of accepting provider state as truth
+ * @version 1.0.0
  */
 import { parseEngineRunRef } from '@dvt/contracts';
 

@@ -1,3 +1,10 @@
+/**
+ * @file packages/@dvt/traceability-service/src/lineage/warningContract.ts
+ * @baseline ADR-0032: compiledCodeRef Ownership
+ * @decision Define stable lineage warning codes, message keys, and parameters for fail-open compiled-code resolution
+ * @consequence Consumers can distinguish traceability degradation from run execution failures
+ * @version 0.1.0
+ */
 export const LINEAGE_WARNING_CODE = {
   COMPILED_CODE_RESOLUTION_FAILED: 'COMPILED_CODE_RESOLUTION_FAILED',
 } as const;

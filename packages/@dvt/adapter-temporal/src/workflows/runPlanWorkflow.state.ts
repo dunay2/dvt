@@ -1,3 +1,12 @@
+/**
+ * @file packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.state.ts
+ * @baseline ADR-0003: Execution Model
+ * @baseline ADR-0046: Execution Plan Definition And Run Execution Policy Separation
+ * @baseline ADR-0047: Runtime-Owned Realized Lifecycle For Signal-Driven Transitions
+ * @decision Parse workflow control input into DVT-owned cursor and materialization state before Temporal execution
+ * @consequence Continue-as-new state is explicit, validated, and portable across workflow executions
+ * @version 1.2.0
+ */
 import type { RunPlanWorkflowInput, WorkflowControlInput } from './runPlanWorkflow.types.js';
 import { resolveMaterializationEvidence } from './workflowArtifactHelpers.js';
 import {

@@ -1,3 +1,12 @@
+/**
+ * @file packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.cancellation.ts
+ * @baseline ADR-0001: Temporal Integration Test Policy
+ * @baseline ADR-0007: Run Cancellation
+ * @baseline ADR-0047: Runtime-Owned Realized Lifecycle For Signal-Driven Transitions
+ * @decision Finalize pause, resume, and cancellation transitions through canonical run events emitted from workflow lifecycle control
+ * @consequence Operator cancellation remains observable without making Temporal the semantic lifecycle authority
+ * @version 1.2.0
+ */
 import { CancellationScope, condition, isCancellation } from '@temporalio/workflow';
 
 import { eventActivities, terminalEventActivities } from './runPlanWorkflow.activities.js';
