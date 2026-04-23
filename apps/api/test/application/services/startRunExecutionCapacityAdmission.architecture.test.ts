@@ -40,6 +40,8 @@ describe('Start-run execution-capacity admission architecture', () => {
     expect(guideText).toContain('provider queue-depth or worker-metric vocabulary in `apps/api`');
     expect(guideText).toContain('standalone Temporal');
     expect(guideText).toContain('`GET /readyz`');
+    expect(guideText).toContain('dvt.admission.rejection_total');
+    expect(guideText).toContain('docs/runbooks/admission-control-runbook.md');
   });
 
   it('keeps BackpressureAwareStartRunUseCase on the abstract port and preserves admission ordering', () => {

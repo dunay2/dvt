@@ -80,11 +80,18 @@ right place:
 - it preserves one published caller-visible language:
   canonical `system_backpressure`
 
-The maturity gap that remains is deliberate:
+The current route is now closed for the first production slice:
 
-- `AR-C3-B` still needs the real adapter-backed capacity signal
-- `AR-C3-C` still needs operator telemetry, runbook truth, and sustained
-  evidence
+- `AR-C3-A` introduced the abstract execution-capacity seam
+- `AR-C3-B` bound that seam to the Temporal worker `GET /readyz` signal in
+  protected-runtime composition
+- `AR-C3-C` closed telemetry labels, runbook truth, and operator-facing
+  rejection diagnosis
+
+The maturity gaps that remain are now future extensions, not missing closure:
+
+- tenant-scoped execution-capacity policy
+- non-Temporal concrete bindings behind the same abstract seam
 
 ## First concrete binding route
 
@@ -101,6 +108,19 @@ worker readiness probe:
 
 This keeps the application seam adapter-agnostic while still binding it to a
 real runtime-owned signal.
+
+## Operator observability
+
+Execution-capacity denial stays inside canonical `system_backpressure`, but the
+operator-facing telemetry is now explicit:
+
+- `dvt.admission.decision_total{mode,decision}` distinguishes accepted,
+  duplicate, and reject or would-reject outcomes
+- `dvt.admission.rejection_total{mode,decision,code}` distinguishes
+  `EXECUTION_CAPACITY_EXHAUSTED`, `EXECUTOR_UNAVAILABLE`, and
+  `CAPACITY_SIGNAL_UNAVAILABLE` from older system-pressure codes
+- `docs/runbooks/admission-control-runbook.md` owns the diagnostic path for
+  those codes and for the Temporal worker `GET /readyz` probe
 
 ## Anti-patterns explicitly prevented
 

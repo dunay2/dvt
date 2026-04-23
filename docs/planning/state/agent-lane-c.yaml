@@ -550,7 +550,7 @@ tasks:
     last_verified: '2026-04-04'
   - task_id: AR-C3
     priority: P1
-    status: in_progress
+    status: review
     objective: >-
       introduce an abstract start-run execution-capacity admission seam in the API boundary so the
       system can stop accepting runs it cannot execute without coupling admission semantics to a
@@ -562,20 +562,20 @@ tasks:
       remain composition-owned; caller-visible rejection posture is explicit and observable.
     complexity: M
     effort_points: 5
-    progress_pct: 80
+    progress_pct: 100
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/ar-c3-start-run-execution-capacity-admission-plan-20260422.md
       - docs/planning/closeouts/20260422-api-start-run-execution-capacity-admission-closeout.md
       - docs/planning/closeouts/20260423-ar-c3-b-temporal-readyz-capacity-binding-closeout.md
+      - docs/planning/closeouts/20260423-ar-c3-c-execution-capacity-operational-closure-closeout.md
       - apps/api/docs/start-run-execution-capacity-admission-component.md
       - apps/api/test/application/services/startRunExecutionCapacityAdmission.architecture.test.ts
     status_reason: >-
-      `AR-C3-A` and `AR-C3-B` are now implemented: `apps/api` owns the abstract execution- capacity
-      seam, the fail-closed default binding remains in start-run composition, and the protected
-      runtime now binds the `temporal` provider to the standalone worker `readyz` probe through a
-      composition-owned adapter. Remaining work is telemetry/runbook/evidence closure under
-      `AR-C3-C`.
+      `AR-C3-A`, `AR-C3-B`, and `AR-C3-C` are now implemented: `apps/api` owns the abstract
+      execution-capacity seam, the fail-closed default binding remains in start-run composition,
+      protected-runtime composition binds the `temporal` provider to the standalone worker `readyz`
+      probe, and operator-facing denial codes are now documented in telemetry and runbook truth.
     last_verified: '2026-04-23'
   - task_id: AR-C3-A
     parent_task: AR-C3
@@ -603,9 +603,10 @@ tasks:
       - apps/api/src/application/services/BackpressureAwareStartRunUseCase.ts
     status_reason: >-
       The abstract seam is present in code, the default posture fails closed through
-      `capacity_signal_unavailable`, the binding remains composition-owned inside
+      `capacity_signal_unavailable`, the fail-closed default remains in
       `buildProtectedStartRunRuntime.ts`, and the local guide plus semantic architecture test now
-      freeze the component rules. `AR-C3-B` and `AR-C3-C` remain separate.
+      freeze the component rules while leaving concrete provider binding in protected-runtime
+      composition.
     last_verified: '2026-04-23'
   - task_id: AR-C3-B
     parent_task: AR-C3
@@ -636,7 +637,7 @@ tasks:
   - task_id: AR-C3-C
     parent_task: AR-C3
     priority: P1
-    status: queued
+    status: review
     objective: >-
       close telemetry, runbook, and evidence posture for execution-capacity-based admission
       rejections.
@@ -646,11 +647,17 @@ tasks:
       pressure through telemetry, documentation, and evidence-backed closure material.
     complexity: S
     effort_points: 1
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/ar-c3-start-run-execution-capacity-admission-plan-20260422.md
+      - docs/planning/closeouts/20260423-ar-c3-c-execution-capacity-operational-closure-closeout.md
+      - docs/runbooks/admission-control-runbook.md
+      - apps/api/test/application/services/startRunAdmissionDecisions.test.ts
+      - apps/api/test/infrastructure/admissionTelemetry/ObservabilityAdmissionTelemetry.test.ts
     status_reason: >-
-      Planned operational-closure slice following the abstract seam and concrete binding work.
+      Execution-capacity denial is now distinguishable from older system pressure through canonical
+      rejection codes, telemetry labels, and the admission-control runbook. The remaining follow-up
+      is future policy extension, not missing operator truth for the current slice.
     last_verified: '2026-04-22'
   - task_id: AR-C4
     priority: P1

@@ -256,8 +256,9 @@ The abstract seam is now materially in place and the first concrete binding is
 live in composition: `buildProtectedRuntimeModule.ts` resolves a
 Temporal-worker `GET /readyz` probe into canonical execution-capacity
 admission semantics, while the application contract stays adapter-agnostic. The
-remaining open work is the operator-facing telemetry/runbook closure
-(`AR-C3-C`).
+operator-facing telemetry and runbook closure are now in place, so the
+remaining follow-through is future policy extension rather than missing runtime
+truth.
 
 The wider authenticated start-run path is also documented as its own local
 component. That guide makes two rules explicit:
@@ -340,7 +341,7 @@ Current slice status:
 
 - `AR-C3-A` is the abstract seam and fail-closed default binding
 - `AR-C3-B` is the concrete Temporal-worker `readyz` binding in protected runtime composition
-- `AR-C3-C` remains telemetry/runbook/operational closure
+- `AR-C3-C` closes telemetry labels, runbook truth, and operator-facing denial diagnosis
 
 ### Plan Route Response Translation Boundary
 
@@ -375,17 +376,16 @@ This keeps two adjacent but separate entrypoint components explicit:
 
 ### Current Gaps
 
-| Gap                                                                   | Why it matters                                                                                                                   | Governed tasks                              |
-| --------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
-| Admin route RBAC hardening follow-through remains                     | Explicit admin-scope RBAC is now wired in admin routes; remaining work is test-shape and composition hardening (`AR-C1-T1..T4`). | `AR-C1-T1..T4`                              |
-| SLA and consistency expectations are still implicit                   | The API exposes freshness and backpressure behavior, but healthy thresholds remain scattered across config and runbooks.         | `AR-C2`                                     |
-| Operator-facing execution-capacity telemetry closure is still pending | The API now binds a real worker-backed capacity signal, but the runbook and evidence posture still need explicit operator truth. | `AR-C3-C`                                   |
-| Temporal activity writes depend directly on the state store           | State-store failures can cascade into execution stalls without an explicit breaker boundary.                                     | `AR-C4`                                     |
-| Query purity is incomplete                                            | `enrichRunStatus()` still lives on `IWorkflowEngine`, which weakens the read/write separation story.                             | `AR-A3`                                     |
-| Snapshot rebuild concurrency is not yet a contract invariant          | Current mutual exclusion exists in the PostgreSQL implementation, but the contract does not require it.                          | `AR-A6`                                     |
-| Step-specific config is still too implicit                            | `stepTypeConfig` remains opaque at admission time, so failures can surface too late in adapter execution.                        | `S08-4`, `MW-A1`                            |
-| The API still inherits dbt-first assumptions upstream                 | Planner input, artifact shape, and Temporal execution are not yet fully generalized for non-dbt workflows.                       | `MW-A2`, `MW-A3`, `MW-C1`, `MW-D1`, `MW-D2` |
-| Frontend-facing runtime contract is not yet canonically published     | The backend route surface exists, but the web consumption contract is not yet frozen in one frontend-facing artifact.            | `MVP-E1`, `F-07`, `F-08`                    |
+| Gap                                                               | Why it matters                                                                                                                   | Governed tasks                              |
+| ----------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
+| Admin route RBAC hardening follow-through remains                 | Explicit admin-scope RBAC is now wired in admin routes; remaining work is test-shape and composition hardening (`AR-C1-T1..T4`). | `AR-C1-T1..T4`                              |
+| SLA and consistency expectations are still implicit               | The API exposes freshness and backpressure behavior, but healthy thresholds remain scattered across config and runbooks.         | `AR-C2`                                     |
+| Temporal activity writes depend directly on the state store       | State-store failures can cascade into execution stalls without an explicit breaker boundary.                                     | `AR-C4`                                     |
+| Query purity is incomplete                                        | `enrichRunStatus()` still lives on `IWorkflowEngine`, which weakens the read/write separation story.                             | `AR-A3`                                     |
+| Snapshot rebuild concurrency is not yet a contract invariant      | Current mutual exclusion exists in the PostgreSQL implementation, but the contract does not require it.                          | `AR-A6`                                     |
+| Step-specific config is still too implicit                        | `stepTypeConfig` remains opaque at admission time, so failures can surface too late in adapter execution.                        | `S08-4`, `MW-A1`                            |
+| The API still inherits dbt-first assumptions upstream             | Planner input, artifact shape, and Temporal execution are not yet fully generalized for non-dbt workflows.                       | `MW-A2`, `MW-A3`, `MW-C1`, `MW-D1`, `MW-D2` |
+| Frontend-facing runtime contract is not yet canonically published | The backend route surface exists, but the web consumption contract is not yet frozen in one frontend-facing artifact.            | `MVP-E1`, `F-07`, `F-08`                    |
 
 ## Target System
 
@@ -448,14 +448,36 @@ flowchart LR
 
 ### Target Characteristics
 
-| Concern                     | Current posture                                                                                             | Target posture                                                                                                |
-| --------------------------- | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| Command boundary            | start-run path is explicit but still concentrated in one large protected-runtime composition module         | command orchestration stays explicit but is split across smaller, clearer ports with capacity-aware admission |
-| Query boundary              | query services already use read paths, but enrichment still shares the engine contract                      | core query path is pure CQRS; enrichment is optional and isolated behind `IRunEnrichmentService`              |
-| Authorization               | tenant and action checks are real, now through a single embedded access-decision backend                    | runtime and admin paths use explicit, action-specific RBAC behind one DVT-owned decision contract             |
-| Admission                   | duplicate detection, delivery backpressure, and a concrete worker-backed execution-capacity signal are real | admission publishes measurable SLA outcomes and complete operator closure for execution-capacity denials      |
-| Concurrency and operability | snapshot freshness and health are visible, but some guarantees are still implementation-level               | concurrency, freshness, and degradation rules are contract-backed and observable                              |
-| Extensibility               | planner and execution still lean dbt-first in key seams                                                     | planner input, step validation, artifacts, and worker routing are step-kind and graph-source agnostic         |
+- `Command boundary`
+  Current posture: start-run path is explicit but still concentrated in one
+  large protected-runtime composition module.
+  Target posture: command orchestration stays explicit but is split across
+  smaller, clearer ports with capacity-aware admission.
+- `Query boundary`
+  Current posture: query services already use read paths, but enrichment still
+  shares the engine contract.
+  Target posture: core query path is pure CQRS; enrichment is optional and
+  isolated behind `IRunEnrichmentService`.
+- `Authorization`
+  Current posture: tenant and action checks are real, now through a single
+  embedded access-decision backend.
+  Target posture: runtime and admin paths use explicit, action-specific RBAC
+  behind one DVT-owned decision contract.
+- `Admission`
+  Current posture: duplicate detection, delivery backpressure, and a concrete
+  worker-backed execution-capacity signal are real, with operator-facing denial
+  codes documented in telemetry and runbooks.
+  Target posture: admission publishes measurable SLA outcomes and evolves from
+  worker-backed denial closure toward richer tenant-scoped capacity policy.
+- `Concurrency and operability`
+  Current posture: snapshot freshness and health are visible, but some
+  guarantees are still implementation-level.
+  Target posture: concurrency, freshness, and degradation rules are
+  contract-backed and observable.
+- `Extensibility`
+  Current posture: planner and execution still lean dbt-first in key seams.
+  Target posture: planner input, step validation, artifacts, and worker routing
+  are step-kind and graph-source agnostic.
 
 ## Governed Transition Route
 
