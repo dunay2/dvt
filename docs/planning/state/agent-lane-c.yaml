@@ -439,7 +439,7 @@ tasks:
       configured against those targets; operational runbook references the SLA definitions.
     complexity: S
     effort_points: 3
-    progress_pct: 88
+    progress_pct: 90
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
       - docs/planning/reviews/architecture-and-governance/20260404-ar-c2-fowler-hard-qa-review.md
@@ -667,6 +667,7 @@ tasks:
       - docs/planning/closeouts/20260423-rc-c2-wave-2b-turbo-affected-task-routing-closeout.md
       - docs/planning/closeouts/20260423-rc-c2-wave-2c-prepush-affected-typecheck-closeout.md
       - docs/planning/closeouts/20260423-rc-c2-wave-3a-docs-manifest-determinism-closeout.md
+      - docs/planning/closeouts/20260423-rc-c2-wave-3b-changed-doc-governance-closeout.md
       - docs/planning/closeouts/20260423-rc-c2-wave-4a-ci-tools-merge-gate-closeout.md
       - docs/evidence/ED-20260418-local-build-hook-warm-cache-p0.md
       - docs/evidence/ED-20260418-rc-c2-turbo-build-orchestrator.md
@@ -692,10 +693,12 @@ tasks:
       selector scope-aware by routing workspace-local diffs through `pnpm ci:affected:typecheck`
       while keeping full-root `pnpm type-check` for global graph inputs. Wave 3A now makes the docs
       governance manifest deterministic, tracks `docs/.manifest.json`, and wires the local-friendly
-      and strict docs command paths around that artifact. Wave 4A then promotes `pnpm test:ci-tools`
-      into the `CI - Code Quality` merge gate so workflow and scope-helper contract tests stop being
-      advisory-only. Final closure still depends on three qualifying Lane C PR cycles logged against
-      the new workflow.
+      and strict docs command paths around that artifact. Wave 3B then makes changed docs fail
+      closed on canonical filename, ADR/evidence frontmatter, and code-tree placement policy without
+      converting inherited historical docs warnings into global blockers. Wave 4A then promotes
+      `pnpm test:ci-tools` into the `CI - Code Quality` merge gate so workflow and scope-helper
+      contract tests stop being advisory-only. Final closure still depends on three qualifying Lane
+      C PR cycles logged against the new workflow.
     last_verified: '2026-04-23'
   - task_id: RC-E1
     priority: P1

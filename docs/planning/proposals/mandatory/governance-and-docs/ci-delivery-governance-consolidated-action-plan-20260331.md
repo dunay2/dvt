@@ -487,6 +487,26 @@ That slice should:
 This converts the existing helper into a real machine-readable docs inventory
 without reopening the broader docs-governance rollout.
 
+### Wave 3B Immediate Changed-Doc Policy Slice
+
+With the deterministic manifest path live, the next truthful `CDG-W3-2` step is
+to make changed docs fail closed on the policy surfaces that are safe to enforce
+without normalizing all historical docs debt first.
+
+That slice should:
+
+- add changed-only strict filename enforcement for docs Markdown files
+- add changed-only ADR/evidence frontmatter validation
+- keep historical filename and metadata backlog warning-only in the full-repo
+  scan
+- improve changed Markdown placement failures so contributors are told to move
+  governed documentation into `docs/`
+- wire the changed-doc gates into both `docs:gov` and `verify:prepush`
+
+This keeps Wave 3 honest: new or changed docs must meet the current governance
+contract, while legacy cleanup remains a separate backlog instead of becoming
+an unrelated red gate.
+
 | Task       | Files / surfaces                                                          | Action                                                                                                                                                                   | Validation                                                                          | Exit criteria                                                                     |
 | ---------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
 | `CDG-W3-1` | `tools/docs/generate-docs-manifest.ts`, `package.json`, `docs:gov` wiring | Refactor the manifest generator so the committed output is deterministic. Remove or externalize timestamp noise, then wire the manifest into `docs:gov`.                 | `pnpm docs:gov:manifest`, `pnpm docs:gov`, `pnpm docs:ci`, `pnpm verify:prepush`    | The manifest becomes a real governance artifact instead of a dormant helper.      |

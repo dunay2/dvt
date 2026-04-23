@@ -12,7 +12,7 @@ const {
 
 test('normalizeGitPath makes Windows-style git paths comparable', () => {
   assert.equal(
-    normalizeGitPath('.\\packages\\@dvt\\engine\\src\\index.ts'),
+    normalizeGitPath(String.raw`.\packages\@dvt\engine\src\index.ts`),
     'packages/@dvt/engine/src/index.ts'
   );
 });

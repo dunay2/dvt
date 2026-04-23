@@ -13,7 +13,7 @@ const DETERMINISM_SENSITIVE_PATTERNS = [
 ];
 
 function normalizeGitPath(filePath) {
-  return filePath.replace(/\\/g, '/').replace(/^\.\//, '').trim();
+  return filePath.replaceAll('\\', '/').replace(/^\.\//, '').trim();
 }
 
 function isDeterminismSensitiveFile(filePath) {

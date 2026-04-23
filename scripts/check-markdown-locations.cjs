@@ -60,6 +60,15 @@ function hasRef(ref) {
 }
 
 function listChangedMarkdown() {
+  const override = process.env.DOCS_GOV_CHANGED_FILES;
+  if (override) {
+    return override
+      .split(/\r?\n|;/)
+      .map((entry) => entry.trim())
+      .filter((entry) => entry.toLowerCase().endsWith('.md'))
+      .map((entry) => path.resolve(repoRoot, entry));
+  }
+
   try {
     const base = hasUpstream() ? '@{u}' : hasRef('origin/main') ? 'origin/main' : 'HEAD~1';
     const out = cp
@@ -117,11 +126,11 @@ function main() {
     const relativePath = rel(filePath);
     const segments = relativePath.split('/');
     const offendingSegment = segments.find((segment, index) =>
-      isForbiddenCodeSegment(segments, segment, index),
+      isForbiddenCodeSegment(segments, segment, index)
     );
     if (offendingSegment) {
       violations.push(
-        `${relativePath} -> Markdown must not live under code directory segment "${offendingSegment}". Move it into docs/.`,
+        `${relativePath} -> Markdown must not live under code directory segment "${offendingSegment}". Move governed documentation into docs/ and link code paths from there.`
       );
     }
   }
