@@ -85,7 +85,7 @@ Evidence documents that justify or validate relevant changes.
 - [Summary](ED-20260421-api-plan-route-response-and-adapter-build-baseline.md)
 - [Summary](ED-20260422-start-run-boundary-and-runtime-seams.md)
 - [Summary](ed-20260423-rc-c2-turbo-ci-governance.md)
-- [Summary](ED-20260423-runtime-boundary-hardening.md)
+- [Summary](ed-20260423-runtime-boundary-hardening.md)
 - [Summary](ed-20260423-tf-a2-c1-execution-selection-contract-pack.md)
 - [Summary](ed-20260423-workspace-authoring-draft-aggregate.md)
 
