@@ -88,6 +88,39 @@ sequenceDiagram
   Canvas->>Runs: startRun(planRef, workspaceScope, selection)
 ```
 
+## End-to-end preview-persist-run sequence
+
+```mermaid
+sequenceDiagram
+  participant Canvas as Canvas
+  participant Selection as canvasRunSelection
+  participant Plans as IPlansPort.previewPlan
+  participant Preview as apps/api /plans/preview
+  participant Resolver as selected-closure resolution
+  participant Planner as planner.buildPlan
+  participant Runs as IRunsPort.startRun
+  participant Start as apps/api /runs/start
+
+  Canvas->>Selection: collectPreviewSelection(selectedNodeIds, workspaceNodeIds)
+  Selection-->>Canvas: ExecutionSelection
+  Canvas->>Plans: previewPlan(graphSource, selection, persist=true)
+  Plans->>Preview: POST /plans/preview
+  Preview->>Resolver: resolve selected closure from protected draft
+  Resolver->>Planner: build selected-closure plan
+  Planner-->>Canvas: persisted plan + PlanRef
+  Canvas->>Selection: collectPlanSelection(plan)
+  Selection-->>Canvas: ExecutionSelection
+  Canvas->>Runs: startRun(planRef, workspaceScope, selection)
+  Runs->>Start: POST /runs/start
+```
+
+This keeps the browser on one narrow posture:
+
+- preview emits intent plus graph source for the selected closure
+- preview persistence creates the authoritative `PlanRef`
+- run start reuses that persisted proof and never invents client-owned run
+  identity or whole-draft execution scope
+
 ## Consumers
 
 - `apps/web/src/app/views/canvas/canvasRunSelection.ts`

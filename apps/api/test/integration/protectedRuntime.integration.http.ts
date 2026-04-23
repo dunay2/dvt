@@ -34,3 +34,16 @@ export function eventTypes(payload: unknown): string[] {
     .map((item) => item.eventType)
     .filter((value): value is string => typeof value === 'string');
 }
+
+export function readAcceptedRunId(payload: unknown): string {
+  if (payload === null || typeof payload !== 'object') {
+    throw new TypeError('Accepted start-run payload is not an object');
+  }
+
+  const runId = (payload as { runId?: unknown }).runId;
+  if (typeof runId !== 'string' || runId.trim().length === 0) {
+    throw new TypeError('Accepted start-run payload did not include a non-empty runId');
+  }
+
+  return runId;
+}

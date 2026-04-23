@@ -61,6 +61,8 @@ It does **not** own:
   selected closure exactly.
 - unsupported protected draft schema versions and corrupt payloads remain
   explicit rejections, not fallback compile paths.
+- planRef-backed start-run bypasses this resolver intentionally because preview
+  has already persisted the selected closure into a validated stored plan.
 
 ## Component map
 
@@ -99,6 +101,28 @@ sequenceDiagram
     Resolver-->>Caller: rejected(reason, cause)
   end
 ```
+
+## End-to-end route role
+
+```mermaid
+flowchart TD
+  CanvasPreview["Canvas preview"] --> PreviewRoute["POST /plans/preview"]
+  CanvasRun["Canvas run with PlanRef"] --> StartRoute["POST /runs/start"]
+  PlannerRun["Planner-backed start run"] --> StartRoute
+  PreviewRoute --> PreviewUseCase["PreviewPlanUseCase"]
+  StartRoute --> StartUseCase["PlannerBackedStartRunUseCase"]
+  PreviewUseCase --> Resolver["ResolveAuthorizedExecutableSubgraphService"]
+  StartUseCase --> Resolver
+  Resolver --> Planner["IPlanner.deriveExecutableSubgraph(...)"]
+  PreviewUseCase --> PlanStore["planStore + validator"]
+  StartUseCase --> PlanStore
+  PlanStore --> Delegate["delegate / engine by PlanRef"]
+  StartRoute -. persisted PlanRef already validated .-> Delegate
+```
+
+The resolver is the protected seam for draft-backed selected execution. It is
+not a second plan-runtime and it is not on the planRef-backed run path once a
+preview has already persisted valid selected-closure proof.
 
 ## Consumers
 

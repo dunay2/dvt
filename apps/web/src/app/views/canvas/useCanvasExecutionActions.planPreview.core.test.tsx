@@ -236,4 +236,83 @@ describe('useCanvasExecutionActions plan preview core', () => {
     expect(harness.text('can-start-run')).toBe('true');
     expect(harness.text('plan-status-summary')).toBe(canvasViewCopy.planStatusPreviewReadyMessage);
   });
+
+  it('reuses the selected-subgraph preview proof when Start Run follows a partial preview', async () => {
+    const qualityNode: CanonicalNode = {
+      id: 'quality-node',
+      name: 'Quality check',
+      pluginId: 'dvt',
+      kind: 'dvt:test',
+      role: 'check' as const,
+      status: 'idle' as const,
+      tags: [],
+    };
+    const persistedSelectedPlan = {
+      ...buildPersistedPreviewPlan(),
+      steps: [
+        {
+          id: 'prepare-orders',
+          type: 'PREPARE_POSTGRES_TRANSFORM',
+          name: 'Prepare orders',
+          nodes: ['source-node'],
+          policies: {},
+        },
+        {
+          id: 'transform-orders',
+          type: 'POSTGRES_SQL_TRANSFORM',
+          name: 'Transform orders',
+          nodes: ['transform-node'],
+          policies: {},
+        },
+        {
+          id: 'capture-orders',
+          type: 'CAPTURE_MATERIALIZATION_EVIDENCE',
+          name: 'Capture evidence',
+          nodes: ['sink-node'],
+          policies: {},
+        },
+      ],
+    };
+    const plansService = createPlansServiceMock(persistedSelectedPlan);
+    const runsService = createRunsServiceMock();
+
+    harness = renderExecutionActionsHarness({
+      plansService,
+      runsService,
+      initialPlan: null,
+      stateful: true,
+      canonicalNodes: [...buildCanonicalNodes(), qualityNode],
+      canonicalEdges: [
+        ...buildCanonicalEdges(),
+        {
+          id: 'edge-3',
+          sourceId: 'sink-node',
+          targetId: 'quality-node',
+          relation: 'lineage',
+        },
+      ],
+      selectedNodeIds: ['source-node', 'transform-node', 'sink-node'],
+      workspaceNodeIds: ['source-node', 'transform-node', 'sink-node', 'quality-node'],
+    });
+    await harness.render();
+
+    await harness.clickPlan();
+    await harness.clickStartRun();
+
+    expect(plansService.previewPlan).toHaveBeenCalledTimes(1);
+    expect(runsService.startRun).toHaveBeenCalledTimes(1);
+    expect(runsService.startRun).toHaveBeenCalledWith({
+      planRef: persistedSelectedPlan.planRef,
+      workspaceScope: {
+        tenantId: 'tenant',
+        projectId: 'project',
+        environmentId: 'env',
+        targetAdapter: 'mock',
+      },
+      selection: {
+        mode: 'explicit',
+        nodeIds: ['source-node', 'transform-node', 'sink-node'],
+      },
+    });
+  });
 });

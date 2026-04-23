@@ -142,6 +142,73 @@ The dedicated execution-selection seam now lives in the companion local guide:
 The dedicated planner-owned selected-closure derivation seam now lives in:
 [Executable subgraph derivation component](./executable-subgraph-derivation-component.md).
 
+## End-to-end selected execution flow
+
+```mermaid
+sequenceDiagram
+  participant Canvas as apps/web Canvas
+  participant WebSelection as canvasRunSelection.ts
+  participant PreviewPort as IPlansPort.previewPlan
+  participant PreviewRoute as POST /plans/preview
+  participant PreviewUseCase as PreviewPlanUseCase
+  participant Resolver as ResolveAuthorizedExecutableSubgraphService
+  participant Planner as PlannerFacade
+  participant PlanStore as planStore + validator
+  participant RunPort as IRunsPort.startRun
+  participant StartRoute as POST /runs/start
+  participant StartUseCase as PlannerBackedStartRunUseCase / delegate
+
+  Canvas->>WebSelection: collectPreviewSelection(selectedNodeIds, workspaceNodeIds)
+  WebSelection-->>Canvas: ExecutionSelection
+  Canvas->>PreviewPort: previewPlan(graphSource, selection, persist=true)
+  PreviewPort->>PreviewRoute: canonical preview payload
+  PreviewRoute->>PreviewUseCase: execute(command, authorized context)
+  PreviewUseCase->>Resolver: execute(selection, graphSource, context)
+  Resolver->>Planner: deriveExecutableSubgraph(draft, selection)
+  Planner-->>Resolver: ExecutableSubgraph
+  Resolver-->>PreviewUseCase: selected closure or explicit rejection
+  PreviewUseCase->>Planner: buildPlan(selected closure)
+  PreviewUseCase->>PlanStore: storePlan + validatePlan
+  PlanStore-->>PreviewUseCase: persisted valid PlanRef
+  PreviewUseCase-->>Canvas: plan + PlanRef + persisted preview proof
+  Canvas->>WebSelection: collectPlanSelection(plan)
+  WebSelection-->>Canvas: ExecutionSelection
+  Canvas->>RunPort: startRun(planRef, workspaceScope, selection)
+  RunPort->>StartRoute: canonical start-run payload
+  alt planner-backed start without planRef
+    StartRoute->>StartUseCase: execute(graphSource, selection)
+    StartUseCase->>Resolver: execute(selection, graphSource, context)
+    Resolver->>Planner: deriveExecutableSubgraph(draft, selection)
+    StartUseCase->>Planner: buildPlan(selected closure)
+  else persisted preview run with planRef
+    StartRoute->>StartUseCase: execute(planRef, selection)
+    StartUseCase->>StartUseCase: delegate using persisted PlanRef
+  end
+```
+
+```mermaid
+flowchart LR
+  Canvas["Canvas state + node selection"] --> WebSelection["canvasRunSelection.ts"]
+  WebSelection --> PreviewPort["IPlansPort.previewPlan"]
+  WebSelection --> RunPort["IRunsPort.startRun"]
+  PreviewPort --> PreviewRoute["apps/api /plans/preview"]
+  RunPort --> StartRoute["apps/api /runs/start"]
+  PreviewRoute --> Resolver["ResolveAuthorizedExecutableSubgraphService"]
+  StartRoute --> StartUseCase["PlannerBackedStartRunUseCase / delegate"]
+  Resolver --> Planner["PlannerFacade.deriveExecutableSubgraph"]
+  Planner --> Build["planner.buildPlan(selected closure)"]
+  Build --> PlanStore["planStore + validator"]
+  PlanStore --> Engine["engine start by PlanRef"]
+```
+
+The intended path is:
+
+1. Canvas emits one canonical `ExecutionSelection`.
+2. Preview persists proof for the selected closure only.
+3. Run start reuses the persisted preview plan or, for planner-backed runtime
+   starts, resolves the same selected closure before planner build.
+4. Unrelated loose draft nodes remain editable but do not widen execution.
+
 ## Consumers
 
 - `packages/@dvt/contracts/src/validation/planner.ts`

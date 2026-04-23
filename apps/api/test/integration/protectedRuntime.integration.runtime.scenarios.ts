@@ -2,9 +2,10 @@
  * @file apps/api/test/integration/protectedRuntime.integration.runtime.scenarios.ts
  * @baseline ADR-0003: Execution Model Sovereignty
  * @baseline ADR-0004: Event Sourcing Strategy
- * @decision Keep protected runtime route and admin route integration flows separate from workspace-draft scenarios
+ * @decision Keep protected runtime route and admin route integration flows separate from workspace-draft scenarios while matching the canonical hard-cut start-run boundary
  * @date 2026-04-18
  */
+import { readAcceptedRunId } from './protectedRuntime.integration.http.js';
 import type { ProtectedRuntimeHarness } from './protectedRuntime.integration.harness.js';
 import {
   ENVIRONMENT_ID,
@@ -16,12 +17,12 @@ import {
 export async function exerciseCommandQueryFlow(
   runtime: ProtectedRuntimeHarness,
   input: {
-    runId: string;
     selection: readonly string[];
     graphNodeId: string;
   }
 ): Promise<{
   readonly startResponse: { statusCode: number; json(): unknown };
+  readonly actualRunId: string;
   readonly listResponse: { statusCode: number; json(): unknown };
   readonly getRunResponse: { statusCode: number; json(): unknown };
   readonly signalResponse: { statusCode: number; json(): unknown };
@@ -31,10 +32,10 @@ export async function exerciseCommandQueryFlow(
   const runtimeApp = runtime.requireApp();
 
   const startResponse = await startMockRun(runtimeApp, token, {
-    runId: input.runId,
     selection: input.selection,
     graphNodeId: input.graphNodeId,
   });
+  const actualRunId = readAcceptedRunId(startResponse.json());
   const listResponse = await runtimeApp.inject({
     method: 'GET',
     url: `/runs?tenantId=${TENANT_ID}&projectId=${PROJECT_ID}&environmentId=${ENVIRONMENT_ID}&limit=10`,
@@ -42,12 +43,12 @@ export async function exerciseCommandQueryFlow(
   });
   const getRunResponse = await runtimeApp.inject({
     method: 'GET',
-    url: `/runs/${input.runId}?tenantId=${TENANT_ID}`,
+    url: `/runs/${actualRunId}?tenantId=${TENANT_ID}`,
     headers: { authorization: `Bearer ${token}` },
   });
   const signalResponse = await runtimeApp.inject({
     method: 'POST',
-    url: `/runs/${input.runId}/cancel`,
+    url: `/runs/${actualRunId}/cancel`,
     headers: { authorization: `Bearer ${token}` },
     payload: {
       tenantId: TENANT_ID,
@@ -55,12 +56,13 @@ export async function exerciseCommandQueryFlow(
   });
   const eventsResponse = await runtimeApp.inject({
     method: 'GET',
-    url: `/runs/${input.runId}/events?tenantId=${TENANT_ID}&limit=10`,
+    url: `/runs/${actualRunId}/events?tenantId=${TENANT_ID}&limit=10`,
     headers: { authorization: `Bearer ${token}` },
   });
 
   return {
     startResponse,
+    actualRunId,
     listResponse,
     getRunResponse,
     signalResponse,
@@ -71,11 +73,11 @@ export async function exerciseCommandQueryFlow(
 export async function exercisePlannerBackedRunFlow(
   runtime: ProtectedRuntimeHarness,
   input: {
-    runId: string;
     graphNodeId: string;
   }
 ): Promise<{
   readonly startResponse: { statusCode: number; json(): unknown };
+  readonly actualRunId: string;
   readonly storedPlan:
     | {
         plan_id: string;
@@ -89,10 +91,10 @@ export async function exercisePlannerBackedRunFlow(
   const runtimeApp = runtime.requireApp();
 
   const startResponse = await startMockRun(runtimeApp, token, {
-    runId: input.runId,
     selection: [input.graphNodeId],
     graphNodeId: input.graphNodeId,
   });
+  const actualRunId = readAcceptedRunId(startResponse.json());
   const storedPlan = await runtime.queryLatestStoredPlan();
   const listResponse = await runtimeApp.inject({
     method: 'GET',
@@ -102,6 +104,7 @@ export async function exercisePlannerBackedRunFlow(
 
   return {
     startResponse,
+    actualRunId,
     storedPlan,
     listResponse,
   };
@@ -155,8 +158,7 @@ export async function expectTokenAssertionConflict(
 }
 
 export async function expectInvalidPlanSourceRejected(
-  runtime: ProtectedRuntimeHarness,
-  input?: { runId?: string }
+  runtime: ProtectedRuntimeHarness
 ): Promise<{ statusCode: number; json(): unknown }> {
   const runtimeApp = runtime.requireApp();
   const token = await runtime.issuePrincipalToken();
@@ -169,12 +171,14 @@ export async function expectInvalidPlanSourceRejected(
       tenantId: TENANT_ID,
       projectId: PROJECT_ID,
       environmentId: ENVIRONMENT_ID,
-      selection: ['model.analytics.order_items'],
+      selection: {
+        mode: 'explicit',
+        nodeIds: ['model.analytics.order_items'],
+      },
       manifestRef: {
         uri: 's3://bucket/basic-manifest.json',
         sha256: '0'.repeat(64),
       },
-      runId: input?.runId ?? 'api-integration-run-manifestref-bad-sha',
       targetAdapter: 'mock',
     },
   });
@@ -200,23 +204,23 @@ export async function expectNativeCancelReasonRejected(
 
 export async function exerciseEmptyCancelReasonFlow(
   runtime: ProtectedRuntimeHarness,
-  input?: { runId?: string; graphNodeId?: string }
+  input?: { graphNodeId?: string }
 ): Promise<{
   readonly startResponse: { statusCode: number; json(): unknown };
+  readonly actualRunId: string;
   readonly cancelResponse: { statusCode: number; json(): unknown };
 }> {
   const token = await runtime.issuePrincipalToken();
   const runtimeApp = runtime.requireApp();
-  const runId = input?.runId ?? 'api-integration-native-cancel-empty-reason';
 
   const startResponse = await startMockRun(runtimeApp, token, {
-    runId,
     selection: [input?.graphNodeId ?? 'model.orders.cancel.empty_reason'],
     graphNodeId: input?.graphNodeId ?? 'model.orders.cancel.empty_reason',
   });
+  const actualRunId = readAcceptedRunId(startResponse.json());
   const cancelResponse = await runtimeApp.inject({
     method: 'POST',
-    url: `/runs/${runId}/cancel`,
+    url: `/runs/${actualRunId}/cancel`,
     headers: { authorization: `Bearer ${token}` },
     payload: {
       tenantId: TENANT_ID,
@@ -226,20 +230,23 @@ export async function exerciseEmptyCancelReasonFlow(
 
   return {
     startResponse,
+    actualRunId,
     cancelResponse,
   };
 }
 
 export async function expectAdminRebuildSuccess(
   runtime: ProtectedRuntimeHarness,
-  input: { runId: string; graphNodeId: string }
+  input: { graphNodeId: string }
 ): Promise<{
   readonly startResponse: { statusCode: number; json(): unknown };
+  readonly actualRunId: string;
   readonly rebuildResponse: { statusCode: number; json(): unknown };
 }> {
   let result:
     | {
         readonly startResponse: { statusCode: number; json(): unknown };
+        readonly actualRunId: string;
         readonly rebuildResponse: { statusCode: number; json(): unknown };
       }
     | undefined;
@@ -249,18 +256,18 @@ export async function expectAdminRebuildSuccess(
     const runtimeApp = runtime.requireApp();
 
     const startResponse = await startMockRun(runtimeApp, token, {
-      runId: input.runId,
       selection: [input.graphNodeId],
       graphNodeId: input.graphNodeId,
     });
+    const actualRunId = readAcceptedRunId(startResponse.json());
     const rebuildResponse = await runtimeApp.inject({
       method: 'POST',
-      url: `/admin/runs/${input.runId}/rebuild-snapshot`,
+      url: `/admin/runs/${actualRunId}/rebuild-snapshot`,
       headers: { authorization: `Bearer ${token}` },
       payload: { tenantId: TENANT_ID },
     });
 
-    result = { startResponse, rebuildResponse };
+    result = { startResponse, actualRunId, rebuildResponse };
   });
 
   if (result === undefined) {
@@ -297,7 +304,6 @@ async function startMockRun(
   runtimeApp: ProtectedRuntimeHarness['requireApp'] extends () => infer T ? T : never,
   token: string,
   input: {
-    runId: string;
     selection: readonly string[];
     graphNodeId: string;
   }
@@ -310,14 +316,16 @@ async function startMockRun(
       tenantId: TENANT_ID,
       projectId: PROJECT_ID,
       environmentId: ENVIRONMENT_ID,
-      selection: [...input.selection],
+      selection: {
+        mode: 'explicit',
+        nodeIds: [...input.selection],
+      },
       graphSource: {
         kind: 'generic-graph-v1',
         sourceFamily: 'dbt',
         sourceVersion: 'manifest-v10',
         nodes: [{ nodeId: input.graphNodeId, stepKind: 'DBT_MODEL', dependsOn: [] }],
       },
-      runId: input.runId,
       targetAdapter: 'mock',
     },
   });
