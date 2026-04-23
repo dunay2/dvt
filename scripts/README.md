@@ -60,6 +60,8 @@ scripts that normally build dependency graphs before the main command.
 Behavior:
 
 - exits `0` when `DVT_CI=1|true`, so the `|| pnpm ... build` fallback is skipped
+- exits `0` when `TURBO_HASH` is present, so `turbo run typecheck` and
+  `turbo run test` do not recurse back into package-local dependency builds
 - exits `1` otherwise, so local builds keep the normal dependency prebuild path
 
 Use this only when CI already ran an explicit workspace-graph build step before
@@ -102,6 +104,29 @@ Behavior:
 
 Use this only for `prebuild` hooks whose dependency closure is now owned by the
 root `turbo` build graph.
+
+### `run-turbo-workspace-task.cjs`
+
+Canonical wrapper for governed Turbo workspace tasks used by affected local
+commands and lightweight CI matrix lanes.
+
+Usage:
+
+```bash
+node scripts/run-turbo-workspace-task.cjs build
+node scripts/run-turbo-workspace-task.cjs typecheck
+node scripts/run-turbo-workspace-task.cjs test
+node scripts/run-turbo-workspace-task.cjs build --filter @dvt/engine
+```
+
+Behavior:
+
+- only allows the governed task set: `build`, `typecheck`, and `test`
+- defaults to the affected-work filter `...[origin/main]`
+- accepts an explicit `--filter <value>` override for CI/package-targeted runs
+- delegates dependency ownership to the Turbo graph, which surfaces
+  `TURBO_HASH` inside package-local hooks so `prebuild`/`pretypecheck`/`pretest`
+  fallbacks do not re-run the same dependency builds
 
 ### `build-workspace-runtime-deps.cjs`
 
@@ -191,7 +216,7 @@ Behavior:
 ### `check-changed.cjs`
 
 Runs changed-file quality checks against the Git diff baseline. It is used by
-`pnpm verify:prepush`.
+`pnpm verify:changed` and as a substep of `pnpm verify:prepush`.
 
 Checks:
 
@@ -205,8 +230,7 @@ Diff policy:
 
 ### `type-check-prepush.cjs`
 
-Runs `pnpm type-check` only when the changed diff includes files that can alter
-the TypeScript graph or workspace dependency surface.
+Chooses the strict pre-push type-check path from the changed diff.
 
 Type-check triggers:
 
@@ -217,8 +241,17 @@ Type-check triggers:
 - `tsconfig*.json`
 - `vitest.config.ts`
 
-When the diff contains only docs, scripts, Markdown, or workflow YAML changes,
-the script skips `pnpm type-check` cleanly.
+Behavior:
+
+- skips cleanly when the diff contains no TypeScript-affecting files
+- runs `pnpm ci:affected:typecheck` when the relevant diff maps to one or more
+  workspace scopes without touching root graph inputs
+- runs full `pnpm type-check` when root or cross-workspace TypeScript graph
+  inputs changed, or when a relevant file cannot be mapped to a workspace scope
+
+Classification is driven by the shared CI scope policy in `tools/ci/`, so the
+strict pre-push gate reuses the same workspace inventory already governing the
+affected CI matrix.
 
 ### `lint-markdown-changed.cjs`
 

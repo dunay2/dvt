@@ -4,12 +4,21 @@
     "pnpm-workspace.yaml",
     "tsconfig.node-runtime.base.json",
     "tsconfig.package-bundler.base.json",
-    "scripts/skip-prebuild-if-orchestrated.cjs"
+    "scripts/skip-prebuild-if-orchestrated.cjs",
+    "scripts/skip-pretest-if-ci.cjs"
   ],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
       "outputs": ["dist/**", "**/*.tsbuildinfo"]
+    },
+    "typecheck": {
+      "dependsOn": ["^build"],
+      "outputs": []
+    },
+    "test": {
+      "dependsOn": ["^build"],
+      "outputs": []
     }
   }
 }

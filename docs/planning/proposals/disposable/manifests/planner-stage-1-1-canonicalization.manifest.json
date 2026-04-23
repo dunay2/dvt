@@ -5,7 +5,7 @@
   "status": "proposed",
   "lastReviewed": "2026-03-18",
   "humanProposalPath": "packages/@dvt/planner/docs/planning/Stage-1.1-Planner-Canonicalization.md",
-  "structuredArtifactPath": "docs/planning/proposals/planner-stage-1-1-canonicalization.manifest.json",
+  "structuredArtifactPath": "docs/planning/proposals/disposable/manifests/planner-stage-1-1-canonicalization.manifest.json",
   "legacyMarkdownCompanionPath": "packages/@dvt/planner/docs/planning/Stage-1.1-Planner-Canonicalization.machine-readable.md",
   "legacyMarkdownCompanionStatus": "replaced_by_manifest",
   "policyBoundary": {
@@ -22,7 +22,7 @@
   },
   "locationState": {
     "currentPrimaryHumanArtifactPath": "packages/@dvt/planner/docs/planning/Stage-1.1-Planner-Canonicalization.md",
-    "currentStructuredArtifactPath": "docs/planning/proposals/planner-stage-1-1-canonicalization.manifest.json",
+    "currentStructuredArtifactPath": "docs/planning/proposals/disposable/manifests/planner-stage-1-1-canonicalization.manifest.json",
     "targetPrimaryArtifactPaths": [
       "docs/architecture/planner/**",
       "docs/contracts/planner/**",
@@ -40,7 +40,7 @@
     "designSources": [
       "packages/@dvt/planner/docs/planning/Stage-1.1-Planner-Canonicalization.md",
       "docs/planning/archive/proposals/principal-architecture-review-execution-plan-20260317.md",
-      "docs/planning/reviews/20260316-principal-architecture-review.md",
+      "docs/planning/archive/reviews/architecture-and-governance/20260316-principal-architecture-review.md",
       "docs/architecture/components/engine/contracts/engine/IWorkflowEngine.v1.md",
       "docs/architecture/components/engine/contracts/capabilities/README.md"
     ],

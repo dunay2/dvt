@@ -5,7 +5,6 @@
  *
  * Output shape:
  *   {
- *     generatedAt: string (ISO-8601)
  *     summary: { adrs, evidenceDocs, normativeDocs, statusDocs }
  *     adrs: AdrEntry[]
  *     evidenceDocs: EvidenceEntry[]
@@ -30,7 +29,7 @@ import {
   readIfExists,
   splitFrontmatter,
 } from './lib/markdown.js';
-import { parseAdrFilename, isSpecialDir } from './lib/adr.js';
+import { parseAdrFilename } from './lib/adr.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = resolve(__dirname, '..', '..');
@@ -68,7 +67,6 @@ interface DocEntry {
 }
 
 interface Manifest {
-  generatedAt: string;
   summary: {
     adrs: number;
     evidenceDocs: number;
@@ -95,7 +93,7 @@ function str(val: string | string[] | undefined): string | null {
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 function main(): void {
-  const allFiles = walkMarkdown(DOCS_DIR);
+  const allFiles = walkMarkdown(DOCS_DIR).sort((left, right) => left.localeCompare(right));
 
   const adrs: AdrEntry[] = [];
   const evidenceDocs: EvidenceEntry[] = [];
@@ -105,6 +103,7 @@ function main(): void {
   for (const filePath of allFiles) {
     const name = basename(filePath);
     const rel = relPath(filePath);
+    const normalizedPath = filePath.replace(/\\/g, '/');
     const content = readIfExists(filePath);
     if (!content) continue;
 
@@ -120,8 +119,9 @@ function main(): void {
         status: fields['Status'] ?? null,
         date: fields['Date'] ?? null,
         owners: fields['Owners'] ?? null,
-        archived: isSpecialDir(filePath) && filePath.replace(/\\/g, '/').includes('/_archive/'),
-        draft: filePath.replace(/\\/g, '/').includes('/_drafts/'),
+        archived:
+          normalizedPath.includes('/docs/archive/') || normalizedPath.includes('/_archive/'),
+        draft: normalizedPath.includes('/_drafts/'),
       });
       continue;
     }
@@ -143,7 +143,6 @@ function main(): void {
     }
 
     // Status / gap tracker docs
-    const normalizedPath = filePath.replace(/\\/g, '/');
     if (
       normalizedPath.includes('/planning/status/') ||
       normalizedPath.includes('/planning/gaps/')
@@ -162,11 +161,17 @@ function main(): void {
     }
   }
 
-  // Sort ADRs numerically
-  adrs.sort((a, b) => (a.num ?? 9999) - (b.num ?? 9999));
+  adrs.sort((left, right) => {
+    const leftNum = left.num ?? Number.MAX_SAFE_INTEGER;
+    const rightNum = right.num ?? Number.MAX_SAFE_INTEGER;
+    if (leftNum !== rightNum) return leftNum - rightNum;
+    return left.path.localeCompare(right.path);
+  });
+  evidenceDocs.sort((left, right) => left.path.localeCompare(right.path));
+  normativeDocs.sort((left, right) => left.path.localeCompare(right.path));
+  statusDocs.sort((left, right) => left.path.localeCompare(right.path));
 
   const manifest: Manifest = {
-    generatedAt: new Date().toISOString(),
     summary: {
       adrs: adrs.length,
       evidenceDocs: evidenceDocs.length,

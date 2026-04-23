@@ -28,9 +28,11 @@ See also:
 | Full recursive test run        | `pnpm test`                      | [`package.json`](../../package.json)                                                               |
 | Web E2E test run               | `pnpm test:web:e2e`              | [`package.json`](../../package.json)                                                               |
 | Full type-check gate           | `pnpm type-check`                | [`package.json`](../../package.json)                                                               |
+| Fast pre-push changed gate     | `pnpm verify:changed`            | [`package.json`](../../package.json)                                                               |
 | Pre-push verification gate     | `pnpm verify:prepush`            | [`package.json`](../../package.json)                                                               |
 | Changed-files auto-fix         | `pnpm fix:changed`               | [`package.json`](../../package.json)                                                               |
 | Changed-files lint/format gate | `node scripts/check-changed.cjs` | [`scripts/check-changed.cjs`](../../scripts/check-changed.cjs)                                     |
+| CI tool contract suite         | `pnpm test:ci-tools`             | [`package.json`](../../package.json)                                                               |
 | Affected workspace build       | `pnpm ci:affected:build`         | [`package.json`](../../package.json)                                                               |
 | Affected workspace test        | `pnpm ci:affected:test`          | [`package.json`](../../package.json)                                                               |
 | Affected workspace type-check  | `pnpm ci:affected:typecheck`     | [`package.json`](../../package.json)                                                               |
@@ -43,9 +45,18 @@ Warm-build note:
   on POSIX or `cmd /c "set DVT_CI=1&& pnpm -r build"` from PowerShell.
   See the guardrail note in the `Notes` section below; this is not the
   fresh-worktree default path.
-- Root `pnpm build` is now a Turborepo-backed build graph. In this slice only
-  `build` uses `turbo`; `typecheck`, `test`, and docs commands keep their
-  existing repo-local orchestration.
+- Root `pnpm build` is now a Turborepo-backed build graph, and the affected
+  workspace commands (`pnpm ci:affected:build`, `pnpm ci:affected:typecheck`,
+  `pnpm ci:affected:test`) now route through governed Turbo task contracts.
+  Full-root `pnpm test`, root `pnpm type-check`, and docs commands still keep
+  their existing repo-local orchestration.
+- The shared GitHub Actions setup now restores `.turbo` in addition to the
+  pnpm store and `node_modules`, so the existing root Turbo `build` path can
+  reuse prior task outputs across CI runs.
+- The package-level `typecheck` contract is now explicit for every current
+  workspace that exposes `build`, so the Turbo-backed
+  `pnpm ci:affected:typecheck` path no longer depends on silent `--if-present`
+  skips for the current TypeScript package inventory.
 
 ## Operational Preflight Helpers
 
@@ -131,6 +142,11 @@ Relevant code and fixtures:
 | Docs doctor                               | `pnpm docs:doctor`                              | [`package.json`](../../package.json)                                                         |
 | Changed Markdown lint                     | `pnpm lint:md:changed`                          | [`package.json`](../../package.json)                                                         |
 | Markdown location policy                  | `pnpm docs:gov:locations`                       | [`package.json`](../../package.json)                                                         |
+| Docs governance manifest generate         | `pnpm docs:gov:manifest`                        | [`package.json`](../../package.json)                                                         |
+| Docs governance manifest drift check      | `pnpm docs:gov:manifest:check`                  | [`package.json`](../../package.json)                                                         |
+| Generated-doc single-writer policy        | `pnpm docs:gov:generated-policy`                | [`package.json`](../../package.json)                                                         |
+| Changed docs filename policy              | `pnpm docs:gov:filenames:changed`               | [`package.json`](../../package.json)                                                         |
+| Changed docs frontmatter policy           | `pnpm docs:gov:frontmatter:changed`             | [`package.json`](../../package.json)                                                         |
 | Canonical path/link check                 | `pnpm docs:canonical:check`                     | [`package.json`](../../package.json)                                                         |
 | Generated code-state drift check          | `pnpm docs:status:check`                        | [`package.json`](../../package.json)                                                         |
 | Generated capability coverage drift check | `pnpm docs:capability:check`                    | [`package.json`](../../package.json)                                                         |
@@ -140,6 +156,8 @@ Generated documentation sources:
 
 - code-state report: [`docs/planning/status/generated-code-state.md`](../planning/status/generated-code-state.md)
 - capability coverage report: [`docs/planning/status/generated-capability-coverage.md`](../planning/status/generated-capability-coverage.md)
+- docs governance manifest: [`docs/.manifest.json`](../../docs/.manifest.json)
+- generated-doc ownership policy: [`docs/generated-docs-policy.json`](../generated-docs-policy.json)
 
 Local docs PR preflight usage:
 
@@ -155,7 +173,18 @@ Command semantics:
 - `pnpm docs:planning:generated:check` regenerates planning-only derived pages, verifies required sections, checks determinism, and fails if those files are tracked in git again.
 - `pnpm docs:workboard:check` is the planning-generated artifact gate and currently delegates to `pnpm docs:planning:generated:check`.
 - `pnpm docs:status:check` and `pnpm docs:capability:check` remain strict drift gates for their tracked generated outputs.
+- `pnpm docs:gov:manifest` regenerates the tracked machine-readable docs inventory at `docs/.manifest.json`.
+- `pnpm docs:gov:manifest:check` is the strict drift gate for that tracked docs governance manifest.
+- `pnpm docs:gov:generated-policy` validates the generated-doc single-writer registry, including source paths, generator commands, tracked versus untracked posture, and required generated markers.
+- `pnpm docs:gov` now includes the docs manifest generation step, so the aggregate governance command keeps the tracked manifest current during local-friendly docs validation.
+- `pnpm docs:gov` also runs the changed-doc filename and ADR/evidence frontmatter gates, so new or changed docs fail locally on canonical naming and doc-class metadata violations without turning historical warning-only docs into global blockers.
+- `pnpm verify:changed` is the fast local pre-push path used by `.husky/pre-push` by default; it stays on changed-file docs, markdown, formatting, and QA-artifact gates without invoking root type-check.
 - `pnpm verify:prepush` uses `node scripts/docs-workboard-check-changed.cjs`, so workboard drift is enforced when lane YAML changed, not for every module-only commit.
+- `pnpm verify:prepush` includes `pnpm docs:gov:filenames:changed`, `pnpm docs:gov:frontmatter:changed`, and `pnpm docs:gov:generated-policy` after the changed-only Markdown location gate, keeping changed docs fail-closed for placement, naming, ADR/evidence metadata, and generated-doc ownership before the heavier code checks run.
+- `pnpm verify:prepush` now keeps three outcomes for code diffs:
+  - skip when no TypeScript-affecting files changed
+  - run `pnpm ci:affected:typecheck` when the diff is workspace-scoped
+  - run full `pnpm type-check` when root or cross-workspace TypeScript graph inputs changed
 - GitHub workflows keep using explicit strict checks rather than relying on `pnpm docs:ci` as a merge gate.
 - `pnpm traceability:adr0` remains a blocking governance gate on push to `main`, but it now compares current ADR-0000 issues against the tracked baseline in [`traceability.issue-baseline.json`](../../traceability.issue-baseline.json) so CI fails on regressions rather than re-reporting the known historical backlog on every run.
 
@@ -202,7 +231,8 @@ These files are the canonical source of truth for:
 Current workflow consumers:
 
 - [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml) uses the shared policy plus
-  workspace matrix emission for affected build/type-check routing. Its shared
+  workspace matrix emission for affected build/type-check routing, and now also
+  runs `pnpm test:ci-tools` as a merge-gated CI-tool contract lane. Its shared
   `any_code` and `workspace_global` policy now include `turbo.json`, so Turbo
   graph changes trigger the affected-workspace lane instead of falling through
   to `No affected workspaces`.
@@ -235,6 +265,17 @@ Current workflow consumers:
 - `pnpm test:adapter-temporal:integration:postgres` is capability-specific
   verification for the relational Postgres path. It is not the baseline
   closeout command for every Temporal slice.
+- Local Node selection is pinned through `.node-version` and `.nvmrc` with the
+  same Node 22 baseline that the shared CI setup already uses.
+- `pnpm precommit` still runs `lint-staged` for every commit, but the
+  determinism gate now runs only when staged files touch
+  `packages/@dvt/engine/src/**`, `packages/@dvt/adapter-temporal/src/workflows/**`,
+  or the config inputs that govern that gate.
+- Several package-level `typecheck` scripts intentionally retain
+  `pretypecheck` hooks where their source TypeScript config resolves dependency
+  declarations from built workspace outputs. That keeps direct local
+  `pnpm --filter <pkg> typecheck` behavior aligned with the package’s existing
+  cold-build assumptions instead of creating a fake no-emit contract.
 - `pnpm test:adapter-temporal:integration:postgres:docker` is the canonical
   local proof wrapper for the relational Postgres capability path; it resets
   the Docker PostgreSQL environment, waits for readiness, and then runs the
@@ -260,6 +301,14 @@ Current workflow consumers:
 - `pnpm build` routes through `turbo run build` in the current repo state.
   Direct package `build` commands still keep their package-local dependency
   fallback when they are not running under `turbo`.
+- `pnpm ci:affected:build`, `pnpm ci:affected:typecheck`, and
+  `pnpm ci:affected:test` route through `node scripts/run-turbo-workspace-task.cjs`
+  so affected local preflight and lightweight CI lanes can reuse the same
+  governed Turbo graph without changing the full-root `test` or `type-check`
+  contract yet.
+- `CI - Code Quality` now uses the same Turbo workspace wrapper for its
+  affected build/typecheck matrix, keeping the local command and the lightweight
+  CI lane on one orchestration path.
 - For slices that change code, config, tests, CI, or docs, include
   `pnpm verify:prepush` in the end-of-task validation baseline before claiming
   the work is ready.

@@ -439,7 +439,7 @@ tasks:
       configured against those targets; operational runbook references the SLA definitions.
     complexity: S
     effort_points: 3
-    progress_pct: 88
+    progress_pct: 90
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
       - docs/planning/reviews/architecture-and-governance/20260404-ar-c2-fowler-hard-qa-review.md
@@ -716,29 +716,59 @@ tasks:
       20% round-reduction rule.
     complexity: S
     effort_points: 3
-    progress_pct: 75
+    progress_pct: 90
     evidence_refs:
       - docs/planning/reviews/ci-and-delivery/20260328-lane-c-ai-efficiency-and-cost-review.md
       - docs/planning/reviews/ci-and-delivery/20260402-rc-c2-operational-friction-intake-review.md
+      - docs/planning/reviews/ci-and-delivery/20260422-environment-configuration-audit-review.md
       - docs/guides/pr-preflight-and-ci-triage.md
       - docs/planning/proposals/rc-c2-shared-preflight-and-ci-log-first-triage-plan-20260401.md
+      - docs/planning/proposals/mandatory/governance-and-docs/ci-delivery-governance-consolidated-action-plan-20260331.md
       - docs/planning/closeouts/20260401-rc-c2-preflight-and-log-triage-rollout-closeout.md
       - docs/planning/closeouts/20260418-local-build-hook-warm-cache-p0-closeout.md
       - docs/planning/closeouts/20260418-rc-c2-turbo-build-orchestrator-closeout.md
+      - docs/planning/closeouts/20260422-rc-c2-wave-1-node-precommit-turbo-cache-closeout.md
+      - docs/planning/closeouts/20260422-rc-c2-wave-2a-typecheck-contract-closeout.md
+      - docs/planning/closeouts/20260423-rc-c2-wave-2b-turbo-affected-task-routing-closeout.md
+      - docs/planning/closeouts/20260423-rc-c2-wave-2c-prepush-affected-typecheck-closeout.md
+      - docs/planning/closeouts/20260423-rc-c2-wave-3a-docs-manifest-determinism-closeout.md
+      - docs/planning/closeouts/20260423-rc-c2-wave-3b-changed-doc-governance-closeout.md
+      - docs/planning/closeouts/20260423-rc-c2-wave-3c-generated-doc-single-writer-closeout.md
+      - docs/planning/closeouts/20260423-rc-c2-wave-4a-ci-tools-merge-gate-closeout.md
+      - docs/generated-docs-policy.json
       - docs/evidence/ED-20260418-local-build-hook-warm-cache-p0.md
       - docs/evidence/ED-20260418-rc-c2-turbo-build-orchestrator.md
       - docs/risk-register/quality/R-20260418-LOCAL-BUILD-HOOK-WARM-CACHE-P0.yaml
       - docs/risk-register/quality/R-20260418-TURBO-BUILD-ORCHESTRATION-CACHE-DRIFT.yaml
       - docs/planning/status/ai-efficiency-adoption-log.yaml
       - docs/planning/status/ai-efficiency-adoption-status.md
-    status_reason:
+    status_reason: >-
       Shared tooling, guide, structured measurement, and a canonical friction review are shipped.
       The lane now also carries a governed local warm-build optimization slice that extends `DVT_CI`
       hook short-circuiting to the remaining worker apps and removes forced rebuilds from
       `@dvt/contracts`, plus a follow-on Turbo-backed root build slice that preserves direct
-      package-build fallbacks while introducing cache-aware orchestration for `pnpm build`; final
-      closure still depends on three qualifying Lane C PR cycles logged against the new workflow.
-    last_verified: '2026-04-18'
+      package-build fallbacks while introducing cache-aware orchestration for `pnpm build`. The
+      2026-04-22 environment configuration audit is now absorbed into the canonical CI/delivery
+      action plan, and its low-risk Wave 1 slice is shipped: local Node 22 baseline alignment,
+      determinism pre-commit scoping, and CI reuse support for the existing Turbo root-build cache
+      path are now live. Wave 2A also hardens the package-level `typecheck` contract for the current
+      TypeScript build workspaces, so affected type-check routing no longer silently skips them
+      ahead of any Turbo `typecheck` claim. Wave 2B then routes the affected build/typecheck/test
+      commands and the lightweight CI code-quality matrix through governed Turbo tasks instead of
+      raw recursive package commands, while intentionally leaving the full-root `test` and
+      `type-check` contracts for later design. Wave 2C now makes the strict pre-push type-check
+      selector scope-aware by routing workspace-local diffs through `pnpm ci:affected:typecheck`
+      while keeping full-root `pnpm type-check` for global graph inputs. Wave 3A now makes the docs
+      governance manifest deterministic, tracks `docs/.manifest.json`, and wires the local-friendly
+      and strict docs command paths around that artifact. Wave 3B then makes changed docs fail
+      closed on canonical filename, ADR/evidence frontmatter, and code-tree placement policy without
+      converting inherited historical docs warnings into global blockers. Wave 3C now adds an
+      enforced generated-doc single-writer policy that records artifact classes, editable sources,
+      generator commands, tracking posture, and manual-edit policy. Wave 4A then promotes `pnpm
+      test:ci-tools` into the `CI - Code Quality` merge gate so workflow and scope-helper contract
+      tests stop being advisory-only. Final closure still depends on three qualifying Lane C PR
+      cycles logged against the new workflow.
+    last_verified: '2026-04-23'
   - task_id: RC-E1
     priority: P1
     status: done

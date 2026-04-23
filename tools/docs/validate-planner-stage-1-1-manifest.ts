@@ -22,9 +22,9 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = resolve(__dirname, '..', '..');
 
 const MANIFEST_RELATIVE_PATH =
-  'docs/planning/proposals/planner-stage-1-1-canonicalization.manifest.json';
+  'docs/planning/proposals/disposable/manifests/planner-stage-1-1-canonicalization.manifest.json';
 const SCHEMA_RELATIVE_PATH =
-  'docs/planning/proposals/planner-stage-1-1-canonicalization.manifest.schema.json';
+  'docs/planning/proposals/disposable/manifests/planner-stage-1-1-canonicalization.manifest.schema.json';
 
 type StageManifest = {
   humanProposalPath: string;
