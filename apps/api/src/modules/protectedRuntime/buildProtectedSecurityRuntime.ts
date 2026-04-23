@@ -4,12 +4,12 @@
  */
 import type { Logger } from 'pino';
 
+import type { IAccessDecisionService } from '../../application/ports/accessDecision.js';
 import { AuthorizeCommandScopeService } from '../../application/services/authorizeCommandScopeService.js';
-import { TenantHierarchyAuthorizationPolicy } from '../../domain/auth/policy.js';
 import { StructuredAuditLogger } from '../../infrastructure/audit/structuredAuditLogger.js';
+import { EmbeddedAccessDecisionService } from '../../infrastructure/auth/embeddedAccessDecisionService.js';
 import { JwksJwtVerifier } from '../../infrastructure/auth/jwksJwtVerifier.js';
 import { OidcAuthenticator } from '../../infrastructure/auth/oidcAuthenticator.js';
-import { PostgresPrincipalAccessRepository } from '../../infrastructure/auth/postgresPrincipalAccessRepository.js';
 import type { Env } from '../../plugins/env.js';
 
 import type { RuntimePool } from './shared.js';
@@ -20,13 +20,23 @@ export type BuildProtectedSecurityRuntimeDeps = {
   readonly pool: RuntimePool;
 };
 
-export function buildProtectedSecurityRuntime(deps: BuildProtectedSecurityRuntimeDeps) {
-  const accessRepo = new PostgresPrincipalAccessRepository(deps.pool, deps.env.DVT_PG_SCHEMA);
+export type ProtectedSecurityRuntime = {
+  readonly accessDecisionService: IAccessDecisionService;
+  readonly migrateAccessDecisionService: () => Promise<void>;
+  readonly commandAuthorizer: AuthorizeCommandScopeService;
+  readonly authenticator: OidcAuthenticator;
+};
+
+export function buildProtectedSecurityRuntime(
+  deps: BuildProtectedSecurityRuntimeDeps
+): ProtectedSecurityRuntime {
+  const embeddedAccessDecisionService = new EmbeddedAccessDecisionService(
+    deps.pool,
+    deps.env.DVT_PG_SCHEMA
+  );
   const auditLogger = new StructuredAuditLogger(deps.appLogger);
-  const policy = new TenantHierarchyAuthorizationPolicy();
   const commandAuthorizer = new AuthorizeCommandScopeService(
-    accessRepo,
-    policy,
+    embeddedAccessDecisionService,
     auditLogger,
     () => new Date()
   );
@@ -40,7 +50,8 @@ export function buildProtectedSecurityRuntime(deps: BuildProtectedSecurityRuntim
   );
 
   return {
-    accessRepo,
+    accessDecisionService: embeddedAccessDecisionService,
+    migrateAccessDecisionService: () => embeddedAccessDecisionService.migrate(),
     commandAuthorizer,
     authenticator,
   };

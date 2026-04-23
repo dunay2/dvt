@@ -4,7 +4,7 @@ import { describe, it, expect, vi } from 'vitest';
 
 import { buildApp } from '../src/app.js';
 import * as pgPool from '../src/db/pool.js';
-import { PostgresPrincipalAccessRepository } from '../src/infrastructure/auth/postgresPrincipalAccessRepository.js';
+import { EmbeddedAccessDecisionService } from '../src/infrastructure/auth/embeddedAccessDecisionService.js';
 import { PostgresWorkspaceGraphDraftStore } from '../src/infrastructure/workspaceGraphDraft/PostgresWorkspaceGraphDraftStore.js';
 import { HTTP_STATUS } from '../src/routes/healthContract.js';
 
@@ -169,14 +169,14 @@ type ProtectedRuntimeMigrationPatch = {
 };
 
 function patchProtectedRuntimeMigrations(): ProtectedRuntimeMigrationPatch {
-  const originalAccessRepoMigrate = PostgresPrincipalAccessRepository.prototype.migrate;
+  const originalAccessDecisionMigrate = EmbeddedAccessDecisionService.prototype.migrate;
   const originalPlanStoreMigrate = PostgresPlanStore.prototype.migrate;
   const originalStateStoreMigrate = PostgresStateStoreAdapter.prototype.migrate;
   const originalIntentStoreMigrate = PostgresStartRunIntentStore.prototype.migrate;
   const originalWorkspaceGraphDraftStoreMigrate =
     PostgresWorkspaceGraphDraftStore.prototype.migrate;
 
-  PostgresPrincipalAccessRepository.prototype.migrate = async function migrate() {};
+  EmbeddedAccessDecisionService.prototype.migrate = async function migrate() {};
   PostgresPlanStore.prototype.migrate = async function migrate() {};
   PostgresStateStoreAdapter.prototype.migrate = async function migrate() {};
   PostgresStartRunIntentStore.prototype.migrate = async function migrate() {};
@@ -184,7 +184,7 @@ function patchProtectedRuntimeMigrations(): ProtectedRuntimeMigrationPatch {
 
   return {
     restore() {
-      PostgresPrincipalAccessRepository.prototype.migrate = originalAccessRepoMigrate;
+      EmbeddedAccessDecisionService.prototype.migrate = originalAccessDecisionMigrate;
       PostgresPlanStore.prototype.migrate = originalPlanStoreMigrate;
       PostgresStateStoreAdapter.prototype.migrate = originalStateStoreMigrate;
       PostgresStartRunIntentStore.prototype.migrate = originalIntentStoreMigrate;
@@ -532,21 +532,21 @@ describe('buildApp', () => {
     }
   });
 
-  it('migrates principal grants before serving protected runtime routes', async () => {
-    const originalAccessRepoMigrate = PostgresPrincipalAccessRepository.prototype.migrate;
+  it('migrates embedded access decisions before serving protected runtime routes', async () => {
+    const originalAccessDecisionMigrate = EmbeddedAccessDecisionService.prototype.migrate;
     const originalPlanStoreMigrate = PostgresPlanStore.prototype.migrate;
     const originalStateStoreMigrate = PostgresStateStoreAdapter.prototype.migrate;
     const originalIntentStoreMigrate = PostgresStartRunIntentStore.prototype.migrate;
     const originalWorkspaceGraphDraftStoreMigrate =
       PostgresWorkspaceGraphDraftStore.prototype.migrate;
-    let accessRepoMigrateCalls = 0;
+    let accessDecisionMigrateCalls = 0;
     let planStoreMigrateCalls = 0;
     let stateStoreMigrateCalls = 0;
     let intentStoreMigrateCalls = 0;
     let workspaceGraphDraftStoreMigrateCalls = 0;
 
-    PostgresPrincipalAccessRepository.prototype.migrate = async function migrate() {
-      accessRepoMigrateCalls += 1;
+    EmbeddedAccessDecisionService.prototype.migrate = async function migrate() {
+      accessDecisionMigrateCalls += 1;
     };
     PostgresPlanStore.prototype.migrate = async function migrate() {
       planStoreMigrateCalls += 1;
@@ -572,7 +572,7 @@ describe('buildApp', () => {
       const { app } = await buildApp();
       await app.ready();
 
-      expect(accessRepoMigrateCalls).toBe(1);
+      expect(accessDecisionMigrateCalls).toBe(1);
       expect(planStoreMigrateCalls).toBe(1);
       expect(stateStoreMigrateCalls).toBe(1);
       expect(intentStoreMigrateCalls).toBe(1);
@@ -580,7 +580,7 @@ describe('buildApp', () => {
 
       await app.close();
     } finally {
-      PostgresPrincipalAccessRepository.prototype.migrate = originalAccessRepoMigrate;
+      EmbeddedAccessDecisionService.prototype.migrate = originalAccessDecisionMigrate;
       PostgresPlanStore.prototype.migrate = originalPlanStoreMigrate;
       PostgresStateStoreAdapter.prototype.migrate = originalStateStoreMigrate;
       PostgresStartRunIntentStore.prototype.migrate = originalIntentStoreMigrate;

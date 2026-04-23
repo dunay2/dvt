@@ -1,8 +1,4 @@
-import type {
-  AuthenticatedPrincipal,
-  EffectivePrincipalAccess,
-  PrincipalRef,
-} from '../../domain/auth/types.js';
+import type { AuthenticatedPrincipal, PrincipalRef } from '../../domain/auth/types.js';
 
 import type { AuthAuditEventType, AuthenticationFailureCode } from './authContract.js';
 
@@ -29,10 +25,6 @@ export interface AuthAuditEvent {
 
 export interface IAuthAuditPort {
   record(event: AuthAuditEvent): Promise<void>;
-}
-
-export interface IPrincipalAccessRepository {
-  loadEffectiveAccess(principal: PrincipalRef): Promise<EffectivePrincipalAccess | null>;
 }
 
 export type {

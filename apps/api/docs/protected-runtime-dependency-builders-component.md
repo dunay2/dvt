@@ -50,7 +50,8 @@ It does **not** own:
 - `buildProtectedSecurityRuntime.ts`
   Builder:
   `buildProtectedSecurityRuntime(...)`,
-  `BuildProtectedSecurityRuntimeDeps`
+  `BuildProtectedSecurityRuntimeDeps`,
+  `ProtectedSecurityRuntime`
 - `buildProtectedExecutionRuntime.ts`
   Builder:
   `buildProtectedExecutionRuntime(...)`,
@@ -113,7 +114,7 @@ sequenceDiagram
   Root->>Admission: pass env, pool, observability, snapshot reader
   Admission-->>Root: duplicate probe, admission guard
   Root->>Security: pass logger, env, pool
-  Security-->>Root: authenticator, command authorizer, access repo
+  Security-->>Root: authenticator, command authorizer, access-decision port, migrate hook
   Root->>Execution: pass env, observability, storage runtime
   Execution-->>Root: adapters, engine, runtime services, adapter registry
 ```

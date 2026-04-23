@@ -22,10 +22,10 @@ import type { IObservability } from '@dvt/observability';
 import type { IProviderAdapter } from '../adapters/IProviderAdapter.js';
 import type { IStartRunApplicationService } from '../application/IStartRunApplicationService.js';
 import { AdapterNotRegisteredError } from '../contracts/errors.js';
-import type { IWorkflowEngine } from '../contracts/IWorkflowEngine.v1.js';
 import type { IRunControlService } from '../domain/IRunControlService.js';
 import type { IRunRecoveryService } from '../domain/IRunRecoveryService.js';
 import type { IRunStatusQueryService } from '../domain/IRunStatusQueryService.js';
+import type { IWorkflowEngine } from '../ports/IWorkflowEngine.js';
 import { toErrorMessage } from '../utils/errorUtils.js';
 
 import { buildTraceContext } from './lifecycle/coreRuntime.js';

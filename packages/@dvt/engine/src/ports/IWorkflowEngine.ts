@@ -1,10 +1,11 @@
 /**
- * @file packages/@dvt/engine/src/contracts/IWorkflowEngine.v1.ts
+ * @file packages/@dvt/engine/src/ports/IWorkflowEngine.ts
  * @baseline ADR-0003: Execution Model Sovereignty
- * @decision Decision - The engine contract defines run lifecycle operations as the domain's normative API
- * @consequence Integrations consume a stable interface without depending on underlying runtime details
+ * @baseline ADR-0018: Shared Kernel Ownership Governance
+ * @decision The workflow engine behavior port lives in the engine-owned ports surface
+ * @consequence Consumers use a domain-owned behavior contract instead of a transitional contracts path
  * @version 1.0.0
- * @date 2026-02-21
+ * @date 2026-04-23
  */
 import type {
   CanonicalRunStatus,
@@ -12,7 +13,7 @@ import type {
   PlanRef,
   RunContext,
   SignalRequest,
-} from './types.js';
+} from '../contracts/types.js';
 
 export interface IWorkflowEngine {
   startRun(planRef: PlanRef, context: RunContext): Promise<EngineRunRef>;

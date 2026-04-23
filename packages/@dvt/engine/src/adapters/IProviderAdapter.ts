@@ -50,7 +50,8 @@ export interface IProviderAdapter {
    * Used by the engine to enforce `RunExecutionPolicy.requiresCapabilities`
    * before starting a run.
    * Strings MUST be from capabilities.schema.json.
-   * Optional: adapters that omit this method skip capability validation.
+   * Optional at the type level, but adapters that omit this method fail
+   * admission whenever the execution policy requires capabilities.
    */
   capabilities?(): readonly string[];
 

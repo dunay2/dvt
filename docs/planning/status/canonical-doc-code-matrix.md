@@ -77,7 +77,7 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
 - Current status source:
   [System Delivery Status](../../architecture/system-delivery-status.md)
 - Primary code:
-  [packages/@dvt/contracts/src/contracts/engine/IWorkflowEngine.v1.ts](../../../packages/@dvt/contracts/src/contracts/engine/IWorkflowEngine.v1.ts)
+  [packages/@dvt/engine/src/ports/IWorkflowEngine.ts](../../../packages/@dvt/engine/src/ports/IWorkflowEngine.ts)
   and
   [packages/@dvt/engine/src/core/WorkflowEngine.ts](../../../packages/@dvt/engine/src/core/WorkflowEngine.ts)
   and
@@ -86,7 +86,8 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   [packages/@dvt/engine/test/core/WorkflowEngine.test.ts](../../../packages/@dvt/engine/test/core/WorkflowEngine.test.ts),
   [packages/@dvt/engine/test/core/WorkflowEngine.intentLog.test.ts](../../../packages/@dvt/engine/test/core/WorkflowEngine.intentLog.test.ts),
   [packages/@dvt/engine/test/core/SnapshotProjector.transitions.test.ts](../../../packages/@dvt/engine/test/core/SnapshotProjector.transitions.test.ts),
-  [packages/@dvt/engine/test/contracts/IWorkflowEngine.types.test.ts](../../../packages/@dvt/engine/test/contracts/IWorkflowEngine.types.test.ts)
+  [packages/@dvt/engine/test/contracts/IWorkflowEngine.types.test.ts](../../../packages/@dvt/engine/test/contracts/IWorkflowEngine.types.test.ts),
+  [packages/@dvt/engine/test/contracts/package-surface.test.ts](../../../packages/@dvt/engine/test/contracts/package-surface.test.ts)
 - Verification:
   `pnpm test:engine`
   and

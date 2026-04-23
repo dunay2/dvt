@@ -15,7 +15,7 @@ Generated automatically from repository code on 2026-04-23.
 | Metric                       | Value |
 | ---------------------------- | ----- |
 | Total workspaces             | 24    |
-| Total source files           | 1136  |
+| Total source files           | 1135  |
 | Total test files             | 569   |
 | Workspaces with build script | 24/24 |
 | Workspaces with test script  | 23/24 |
@@ -24,7 +24,7 @@ Generated automatically from repository code on 2026-04-23.
 
 | Workspace                 | Path                                 | Src Files | Test Files | Build | Test | Typecheck | Exports in src/index.ts |
 | ------------------------- | ------------------------------------ | --------- | ---------- | ----- | ---- | --------- | ----------------------- |
-| dvt-api                   | `apps/api`                           | 194       | 136        | yes   | yes  | yes       | -                       |
+| dvt-api                   | `apps/api`                           | 194       | 135        | yes   | yes  | yes       | -                       |
 | dvt-lineage-worker        | `apps/lineage-worker`                | 9         | 5          | yes   | yes  | yes       | -                       |
 | dvt-outbox-worker         | `apps/outbox-worker`                 | 25        | 29         | yes   | yes  | yes       | -                       |
 | dvt-projector-worker      | `apps/projector-worker`              | 2         | 1          | yes   | yes  | yes       | -                       |
@@ -38,7 +38,7 @@ Generated automatically from repository code on 2026-04-23.
 | @dvt/contracts            | `packages/@dvt/contracts`            | 80        | 30         | yes   | yes  | yes       | 54                      |
 | @dvt/delivery             | `packages/@dvt/delivery`             | 13        | 8          | yes   | yes  | yes       | 5                       |
 | @dvt/dsl                  | `packages/@dvt/dsl`                  | 4         | 1          | yes   | yes  | yes       | 3                       |
-| @dvt/engine               | `packages/@dvt/engine`               | 109       | 46         | yes   | yes  | yes       | 43                      |
+| @dvt/engine               | `packages/@dvt/engine`               | 108       | 47         | yes   | yes  | yes       | 43                      |
 | @dvt/observability        | `packages/@dvt/observability`        | 5         | 1          | yes   | yes  | yes       | 4                       |
 | @dvt/observability-otel   | `packages/@dvt/observability-otel`   | 2         | 1          | yes   | yes  | yes       | 1                       |
 | @dvt/plan-interpreter     | `packages/@dvt/plan-interpreter`     | 4         | 1          | yes   | yes  | yes       | 3                       |
