@@ -9,7 +9,7 @@
  *   - Engine rejects runs when adapter does not support required capabilities.
  *   - Engine accepts runs when adapter supports all required capabilities.
  *   - Engine skips validation when executionPolicy has no requiresCapabilities.
- *   - Engine skips validation when adapter omits capabilities() (graceful degradation).
+ *   - Engine rejects when required capabilities are present and the adapter omits capabilities().
  *   - Matrix drift gate: adapter.capabilities() must match adapters.capabilities.json.
  */
 import fs from 'node:fs';
@@ -157,7 +157,7 @@ describe('capability gate — engine enforces requiresCapabilities', () => {
     });
   });
 
-  it('skips validation when adapter omits capabilities() (graceful degradation)', async () => {
+  it('rejects when required capabilities are present and the adapter omits capabilities()', async () => {
     const store = new InMemoryTxStore();
     const projector = new SnapshotProjector();
     const clock = { nowIsoUtc: () => '2026-02-12T00:00:00.000Z' };
@@ -175,9 +175,8 @@ describe('capability gate — engine enforces requiresCapabilities', () => {
     const { engine } = createEngine(noCapAdapter, {
       requiresCapabilities: ['any.capability.whatsoever'],
     });
-    // Engine should skip the capability check and proceed normally.
-    await expect(engine.startRun(makePlanRef(), makeCtx('cap-skip-1'))).resolves.toMatchObject({
-      provider: 'mock',
+    await expect(engine.startRun(makePlanRef(), makeCtx('cap-skip-1'))).rejects.toMatchObject({
+      code: 'CAPABILITIES_NOT_SUPPORTED',
     });
   });
 });

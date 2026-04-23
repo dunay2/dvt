@@ -725,6 +725,15 @@ architecture tests plus local component docs now guard the boundary. The
 remaining open work is still `AR-C3-B` and `AR-C3-C`, not more abstract-seam
 design.
 
+2026-04-23 capability-validation truth-sync update: the P0 fail-closed
+capability slice is now materially in place. `StartRunValidationPolicy` rejects
+required-capability plans when the target adapter omits `capabilities()`,
+`packages/@dvt/engine/test/contracts/capabilities.contract.test.ts` locks that
+negative path in the engine package, and the active `IProviderAdapter` contract
+docs no longer describe undeclared capabilities as a skipped gate. The API-side
+stored-plan validator had already been fail-closed; the direct engine admission
+path now matches that posture.
+
 ## Final Architectural Verdict
 
 DVT+ has a coherent architecture, not a fantasy architecture. The core split is
