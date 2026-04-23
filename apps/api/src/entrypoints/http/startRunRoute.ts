@@ -10,15 +10,23 @@ import { DEFAULT_START_RUN_TARGET_ADAPTER_REGISTRY } from '../../application/ser
 
 import { extractBearerToken } from './extractBearerToken.js';
 import { httpErrorTranslation } from './httpErrorTranslation.js';
+import { generatePlatformRunId, type StartRunRunIdGenerator } from './startRunIdentity.js';
 import { parseStartRunBody } from './startRunRouteParser.js';
+
+type StartRunRouteDependencies = {
+  readonly adapterRegistry?: IStartRunTargetAdapterRegistry;
+  readonly runIdGenerator?: StartRunRunIdGenerator;
+};
 
 export async function startRunRoute(
   request: FastifyRequest<{ Body: unknown }>,
   reply: FastifyReply,
   facade: StartRunAuthorizedFacade,
-  adapterRegistry: IStartRunTargetAdapterRegistry = DEFAULT_START_RUN_TARGET_ADAPTER_REGISTRY
+  dependencies: StartRunRouteDependencies = {}
 ): Promise<void> {
-  const parsed = parseStartRunBody(request.body, adapterRegistry);
+  const adapterRegistry = dependencies.adapterRegistry ?? DEFAULT_START_RUN_TARGET_ADAPTER_REGISTRY;
+  const runIdGenerator = dependencies.runIdGenerator ?? generatePlatformRunId;
+  const parsed = parseStartRunBody(request.body, adapterRegistry, runIdGenerator);
   if (!parsed.ok) {
     httpErrorTranslation.respond(reply, httpErrorTranslation.parse.issue(parsed.issue));
     return;

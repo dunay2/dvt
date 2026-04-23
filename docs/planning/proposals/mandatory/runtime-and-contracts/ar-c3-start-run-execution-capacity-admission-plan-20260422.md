@@ -263,3 +263,89 @@ Definition of done:
 - `pnpm docs:workboard:generate`
 - `pnpm docs:sync`
 - `pnpm verify:prepush`
+
+## 2026-04-23 Fowler follow-up
+
+### Think-First Analysis
+
+- Problem summary:
+  `AR-C3-A` landed in code, local component docs, and closeout material, but
+  canonical planning still described it as queued, one API architecture diagram
+  still pointed at the wrong composition owner, and the architecture test was
+  stronger on import wiring than on semantic admission invariants.
+- Root cause:
+  The seam was introduced while the protected start-run composition was also
+  being extracted into `buildProtectedStartRunRuntime.ts`. The code moved
+  faster than the lane registry, one closeout/code-reference path, and the
+  fitness rules that should have frozen the intended ordering and fail-closed
+  posture.
+- Constraints and invariants:
+  - keep `apps/api` adapter-agnostic at the application layer
+  - keep `capacity_signal_unavailable` fail-closed in the default binding
+  - keep execution-capacity denial inside canonical
+    `StartRunBoundary.v1 system_backpressure`
+  - keep the default binding composition-owned inside
+    `buildProtectedStartRunRuntime.ts`
+  - do not pull `AR-C3-B` or `AR-C3-C` forward into this remediation pass
+- Options considered:
+  - leave the drift in place until `AR-C3-B` lands
+  - jump directly into adapter-backed binding and defer truth-sync
+  - truth-sync `AR-C3-A` now and strengthen the semantic fitness rules before
+    extending the seam
+- Selected option and rationale:
+  Truth-sync `AR-C3-A` now. Mature systems do not let a newly introduced
+  boundary live in a half-documented or semantically under-tested state. The
+  right next move is to freeze the actual seam shape first, then bind concrete
+  adapter signals later.
+- Rejected alternatives:
+  - deferring truth-sync would leave planning and architecture sources behind
+    the real system
+  - binding a concrete adapter first would hide whether the abstract seam was
+    actually stable
+
+### Pre-Implementation Brief
+
+- Mode:
+  Slim
+- Scope:
+  synchronize the canonical planning state, correct the remaining AR-C3-A
+  documentation drift, strengthen the local component guide with Fowler
+  lessons and anti-patterns, and harden the architecture test to validate
+  semantic ordering and fail-closed behavior
+- Touched files or paths:
+  - `docs/planning/state/agent-lane-c.yaml`
+  - `docs/architecture/components/api/api-current-to-target-architecture.md`
+  - `docs/planning/closeouts/20260422-api-start-run-execution-capacity-admission-closeout.md`
+  - `apps/api/docs/start-run-execution-capacity-admission-component.md`
+  - `apps/api/test/application/services/startRunExecutionCapacityAdmission.architecture.test.ts`
+  - `buzon/20260423-codex-fowler-ar-c3-execution-capacity-admission-analysis-and-remediation.md`
+- Expected outcome:
+  AR-C3-A is represented consistently as an implemented abstract seam under
+  review, the active docs point at the real composition owner, and the
+  architecture fitness rule now locks ordering plus fail-closed semantics
+  rather than import shape only.
+- Risks and mitigations:
+  - risk: over-scoping into `AR-C3-B`
+    mitigation: keep all changes limited to docs, planning state, and existing
+    semantic architecture tests
+  - risk: brittle architecture assertions
+    mitigation: assert stable phrases and stable call-order markers already
+    present in the owned component sources
+- Out-of-scope items:
+  - concrete adapter-backed execution-capacity binding
+  - telemetry dashboards or operator runbooks for execution-capacity denial
+  - tenant-scoped execution-capacity policy
+- Validation plan:
+  - targeted `vitest` suites for the AR-C3 component
+  - `pnpm --filter dvt-api typecheck`
+  - markdown and formatting checks for touched docs
+  - `pnpm docs:workboard:generate`
+  - `pnpm verify:prepush`
+- Test coverage plan:
+  add semantic architecture assertions for:
+  - component-owned docblocks across the full AR-C3-A module cluster
+  - admission ordering
+  - fail-closed default binding semantics
+  - canonical `system_backpressure` translation posture
+- Libraries evaluated:
+  None evaluated - no custom implementation

@@ -2,7 +2,7 @@
 title: Frontend-Facing Backend MVP Contract (MVP-E1)
 status: Review
 owner: Frontend / API / Architecture
-last_reviewed: 2026-04-12
+last_reviewed: 2026-04-23
 domain: frontend
 lane: E
 task_id: MVP-E1
@@ -23,6 +23,8 @@ This contract is route-truth only. It does not introduce new backend behavior.
 - `docs/planning/state/agent-lane-e.yaml`
 - `docs/planning/proposals/superseded/runtime-and-contracts/mvp-a1-backend-contractual-inventory-20260329.md`
 - `docs/architecture/components/web/runs/frontend-runtime-contract-technical-manual.md`
+- `docs/architecture/components/web/runs/start-run-client-identity-boundary.md`
+- `docs/adr/adr-0050-platform-owned-start-run-identity.md`
 - `apps/api/src/app.ts`
 - `apps/api/src/entrypoints/http/runtimeRoutes.constants.ts`
 - `apps/api/src/routes/health.ts`
@@ -41,7 +43,7 @@ This contract is route-truth only. It does not introduce new backend behavior.
 | ------ | --------------------- | ------------------------ | -------------------------------------------------------------------- | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------ | -------------------------------------------------------------------------- |
 | `POST` | `/plans/preview`      | preview and persist plan | authenticated + action `run:start`                                   | `PlanPreviewInput` via `plansService.previewPlan`                                    | `{ plan, planRef, planSummary?, persisted?, provenance? }` mapped to `ExecutionPlan` | `HttpErrorEnvelope` (`error.type`, `reason`, optional `target`, `details`) |
 | `POST` | `/plans/import`       | import persisted plan    | authenticated + action `run:start`                                   | `{ planRef, context }` via `plansService.importPlan`                                 | `{ plan, planRef }` mapped to `ExecutionPlan`                                        | `HttpErrorEnvelope`                                                        |
-| `POST` | `/runs/start`         | start run                | authenticated + action `run:start`                                   | `StartRunInput` (`planRef`, `context`) via `runsService.startRun`                    | `EngineRunRef` (`runId`)                                                             | `HttpErrorEnvelope`                                                        |
+| `POST` | `/runs/start`         | start run                | authenticated + action `run:start`                                   | `StartRunInput` via `runsService.startRun`                                           | `EngineRunRef` (`runId`)                                                             | `HttpErrorEnvelope`                                                        |
 | `GET`  | `/runs`               | list run summaries       | authenticated + action `run:list`                                    | query: `tenantId` required; `projectId`, `environmentId`, `limit`, `cursor` optional | list payload mapped to `RunSummaryItem[]`                                            | `HttpErrorEnvelope`                                                        |
 | `GET`  | `/runs/:runId`        | fetch run snapshot       | authenticated + action `run:view`                                    | query: `tenantId` required; `enriched` optional                                      | snapshot payload mapped to `RunSnapshot` \| `null`                                   | `HttpErrorEnvelope`                                                        |
 | `GET`  | `/runs/:runId/events` | fetch run timeline page  | authenticated + action `run:logs:view`                               | query: `tenantId` required; `afterSeq`, `limit` optional                             | payload mapped to `RunEventTimelinePage` (`events`, `nextAfterSeq`)                  | `HttpErrorEnvelope`                                                        |
@@ -104,6 +106,35 @@ In `api` mode, `ExecutionPlan.planRef` is backend-owned.
   if the envelope omits it.
 - `POST /runs/start` remains the only start authority and consumes that same
   immutable `PlanRef`.
+- frontend callers send scope and selection, but the API owns canonical
+  execution `run_<UUIDv7>` generation and rejects client-supplied `runId`.
+- frontend callers must treat returned `EngineRunRef.runId` as opaque. The
+  UUIDv7 timestamp bits are not a frontend ordering, retry, or lifecycle
+  contract.
+
+Use the local component guide for API/Web ownership, invariants, transitions,
+and semantic fitness tests:
+
+- [Start-run client identity boundary](./start-run-client-identity-boundary.md)
+
+### Start-run identity transition
+
+```mermaid
+sequenceDiagram
+  participant Web as apps/web
+  participant Service as runsService.startRun
+  participant Api as POST /runs/start
+  participant Runtime as runtime command
+
+  Web->>Service: StartRunInput(planRef, workspaceScope, selection)
+  Service->>Api: StartRunInput payload with caller-owned start intent
+  alt body includes runId
+    Api-->>Service: 400 client_run_id_not_allowed
+  else valid caller-owned input
+    Api->>Runtime: StartRunCommand with generated run_<UUIDv7>
+    Api-->>Service: EngineRunRef(runId)
+  end
+```
 
 ## Run provenance linkage contract
 
@@ -131,7 +162,7 @@ Success example (`POST /runs/start`):
 
 ```json
 {
-  "runId": "run_123"
+  "runId": "run_0196454a-f0c8-7d37-a8e8-8a7f9afac0f1"
 }
 ```
 

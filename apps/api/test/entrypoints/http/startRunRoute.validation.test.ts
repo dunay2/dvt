@@ -69,15 +69,17 @@ describe('startRunRoute validation', () => {
       expectedPayload: httpError('bad_request', 'invalid_selection', { target: 'selection' }),
     },
     {
-      description: 'returns 400 on blank runId',
+      description: 'returns 400 when client supplies runId',
       request: {
-        id: 'req-invalid-run-id',
+        id: 'req-client-run-id',
         body: {
           ...VALID_BODY,
-          runId: '   ',
+          runId: 'client-run-id',
         },
       },
-      expectedPayload: httpError('bad_request', 'invalid_run_id', { target: 'runId' }),
+      expectedPayload: httpError('bad_request', 'client_run_id_not_allowed', {
+        target: 'runId',
+      }),
     },
     {
       description: 'returns 400 on blank planRef fields',
@@ -105,7 +107,7 @@ describe('startRunRoute validation', () => {
       expectedPayload: httpError('bad_request', 'invalid_plan_ref', { target: 'planRef' }),
     },
     {
-      description: 'rejects non-canonical surrounding whitespace on planner boundary fields',
+      description: 'rejects non-canonical surrounding whitespace on planRef fields',
       request: {
         id: 'req-whitespace-boundary',
         headers: { authorization: 'Bearer token' },
@@ -118,11 +120,10 @@ describe('startRunRoute validation', () => {
             planId: ' plan-2 ',
             planVersion: ' 3.0 ',
           },
-          runId: ' run-with-spaces ',
-          targetAdapter: ' mock ',
+          targetAdapter: 'mock',
         },
       },
-      expectedPayload: httpError('bad_request', 'invalid_run_id', { target: 'runId' }),
+      expectedPayload: httpError('bad_request', 'invalid_plan_ref', { target: 'planRef' }),
     },
     {
       description: 'returns 400 on selection entries with surrounding whitespace',
@@ -132,7 +133,6 @@ describe('startRunRoute validation', () => {
         body: {
           ...VALID_BODY,
           selection: [' model_a '],
-          runId: 'run-selection-whitespace',
         },
       },
       expectedPayload: httpError('bad_request', 'invalid_selection', { target: 'selection' }),
@@ -144,7 +144,6 @@ describe('startRunRoute validation', () => {
         headers: { authorization: 'Bearer token' },
         body: {
           ...VALID_BODY,
-          runId: 'run-target-adapter-whitespace',
           targetAdapter: ' mock ',
         },
       },

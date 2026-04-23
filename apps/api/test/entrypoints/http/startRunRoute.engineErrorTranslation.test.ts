@@ -21,7 +21,6 @@ describe('startRunRoute engine error translation', () => {
         headers: { authorization: 'Bearer token' },
         body: {
           ...VALID_BODY,
-          runId: 'run-adapter-missing',
           targetAdapter: 'temporal',
         },
       },
@@ -45,7 +44,6 @@ describe('startRunRoute engine error translation', () => {
         headers: { authorization: 'Bearer token' },
         body: {
           ...VALID_BODY,
-          runId: 'run-adapter-unavailable',
           targetAdapter: 'temporal',
         },
       },
@@ -70,7 +68,6 @@ describe('startRunRoute engine error translation', () => {
         headers: { authorization: 'Bearer token' },
         body: {
           ...VALID_BODY,
-          runId: 'run-command-invalid',
         },
       },
       facade: {
@@ -102,7 +99,6 @@ describe('startRunRoute engine error translation', () => {
         headers: { authorization: 'Bearer token' },
         body: {
           ...VALID_BODY,
-          runId: 'run-unsupported-plan-version',
         },
       },
       facade: {

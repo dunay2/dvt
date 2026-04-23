@@ -1,3 +1,7 @@
+/**
+ * Owned concern: compose the active runs-port adapter for the configured data
+ * source mode without changing the runs port contract.
+ */
 import type { IRunsPort } from '../../ports/runs';
 import type { SessionContextPort } from '../../ports/sessionContext';
 import { type ApiClient, createApiClient } from '../api/createApiClient';

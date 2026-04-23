@@ -112,14 +112,16 @@ const startedRunConsoleScenarios: readonly StartedRunConsoleScenario[] = [
   },
 ] as const;
 
-async function renderRunStartHarness(args: {
-  runsService?: ReturnType<typeof createRunsServiceMock>;
-  currentPlan?: PlanViewModel | null;
-  canRun?: boolean;
-  consolePanelVisible?: boolean;
-  setConsolePanelHeight?: (height: number) => void;
-  toggleConsolePanel?: () => void;
-} = {}): Promise<{
+async function renderRunStartHarness(
+  args: {
+    runsService?: ReturnType<typeof createRunsServiceMock>;
+    currentPlan?: PlanViewModel | null;
+    canRun?: boolean;
+    consolePanelVisible?: boolean;
+    setConsolePanelHeight?: (height: number) => void;
+    toggleConsolePanel?: () => void;
+  } = {}
+): Promise<{
   runsService: ReturnType<typeof createRunsServiceMock>;
   harness: ExecutionActionsHarness;
 }> {
@@ -262,14 +264,26 @@ describe('useCanvasExecutionActions run start', () => {
     await harness.clickStartRun();
 
     expect(startedScenario.runsService.startRun).toHaveBeenCalledTimes(1);
-    expect(startedScenario.runsService.startRun).toHaveBeenCalledWith(
-      expect.objectContaining({
-        planRef: {
-          ...mockExecutionPlan.planRef,
-          sha256: 'c'.repeat(64),
-        },
-      })
-    );
+    expect(startedScenario.runsService.startRun).toHaveBeenCalledWith({
+      planRef: {
+        ...mockExecutionPlan.planRef,
+        sha256: 'c'.repeat(64),
+      },
+      workspaceScope: {
+        tenantId: 'tenant',
+        projectId: 'project',
+        environmentId: 'env',
+        targetAdapter: 'mock',
+      },
+      selection: [
+        'stg_orders',
+        'stg_customers',
+        'dim_store',
+        'fct_sales',
+        'test_not_null_store_id',
+        'test_unique_order_id',
+      ],
+    });
     expect(harness.shellFeedback.success).toHaveBeenCalledWith(canvasViewCopy.runStartedMessage);
     expect(harness.onRunStarted).toHaveBeenCalledWith('run-success');
   });
@@ -278,5 +292,3 @@ describe('useCanvasExecutionActions run start', () => {
     harness = await expectStartedRunConsoleScenario(scenario);
   });
 });
-
-

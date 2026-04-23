@@ -439,6 +439,8 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   dedicated OIDC plus PostgreSQL integration lane.
   The active local component guides for the `start-run` slice are:
   `apps/api/docs/start-run-http-entrypoint-component.md`,
+  `apps/api/docs/start-run-control-boundary-component.md`,
+  `apps/api/docs/start-run-platform-identity-component.md`,
   `apps/api/docs/start-run-application-component.md`,
   and
   `apps/api/docs/start-run-execution-capacity-admission-component.md`.
@@ -447,6 +449,7 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   [apps/api/src/application/services/WorkflowEngineFactory.ts](../../../apps/api/src/application/services/WorkflowEngineFactory.ts),
   [apps/api/src/application/services/BackpressureAwareStartRunUseCase.ts](../../../apps/api/src/application/services/BackpressureAwareStartRunUseCase.ts),
   [apps/api/src/modules/buildProtectedRuntimeModule.ts](../../../apps/api/src/modules/buildProtectedRuntimeModule.ts),
+  [apps/api/src/modules/startRun/buildProtectedStartRunRuntime.ts](../../../apps/api/src/modules/startRun/buildProtectedStartRunRuntime.ts),
   [apps/api/src/entrypoints/http/startRunRoute.ts](../../../apps/api/src/entrypoints/http/startRunRoute.ts),
   [apps/api/src/entrypoints/http/listRunsRoute.ts](../../../apps/api/src/entrypoints/http/listRunsRoute.ts),
   [apps/api/src/entrypoints/http/getRunRoute.ts](../../../apps/api/src/entrypoints/http/getRunRoute.ts),

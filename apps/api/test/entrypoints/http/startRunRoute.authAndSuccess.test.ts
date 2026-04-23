@@ -25,11 +25,11 @@ describe('startRunRoute auth and success outcomes', () => {
         body: {
           ...VALID_BODY,
           tenantId: ' t1 ',
-          runId: 'run-abc',
           planRef: VALID_PLAN_REF,
         },
       },
       facade,
+      runIdGenerator: () => 'run_generated_success',
     });
 
     expect(reply.statusCode).toBe(202);
@@ -39,7 +39,7 @@ describe('startRunRoute auth and success outcomes', () => {
       requestId: 'req-normalized',
       command: {
         planRef: VALID_PLAN_REF,
-        runId: 'run-abc',
+        runId: 'run_generated_success',
         targetAdapter: 'mock',
         selection: ['model_a'],
       },
@@ -65,10 +65,7 @@ describe('startRunRoute auth and success outcomes', () => {
       request: {
         id: 'req-bearer-lowercase',
         headers: { authorization: 'bearer token' },
-        body: {
-          ...VALID_BODY,
-          runId: 'run-xyz',
-        },
+        body: VALID_BODY,
       },
       facade,
     });
@@ -82,10 +79,7 @@ describe('startRunRoute auth and success outcomes', () => {
     const { reply } = await invokeStartRunRoute({
       request: {
         id: 'req-unauthenticated',
-        body: {
-          ...VALID_BODY,
-          runId: 'run-unauthenticated',
-        },
+        body: VALID_BODY,
       },
       facade: {
         async execute() {
@@ -103,10 +97,7 @@ describe('startRunRoute auth and success outcomes', () => {
       request: {
         id: 'req-unauthorized',
         headers: { authorization: 'Bearer token' },
-        body: {
-          ...VALID_BODY,
-          runId: 'run-unauthorized',
-        },
+        body: VALID_BODY,
       },
       facade: {
         async execute() {
@@ -127,10 +118,7 @@ describe('startRunRoute auth and success outcomes', () => {
       request: {
         id: 'req-duplicate',
         headers: { authorization: 'Bearer token' },
-        body: {
-          ...VALID_BODY,
-          runId: 'run-dup',
-        },
+        body: VALID_BODY,
       },
       facade: {
         async execute() {

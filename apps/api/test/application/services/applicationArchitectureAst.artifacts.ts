@@ -129,7 +129,7 @@ class ApplicationComponentArtifact {
   }
 
   public hasOwnedConcernDocblock(): boolean {
-    return this.readText().startsWith('/**\n * Owned concern:');
+    return /^\/\*\*\r?\n \* Owned concern:/.test(this.readText());
   }
 
   public readSource(): ApplicationArchitectureSource {

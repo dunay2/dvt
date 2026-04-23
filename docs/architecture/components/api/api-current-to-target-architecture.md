@@ -2,7 +2,7 @@
 title: API Current To Target Architecture
 status: Active
 owner: Architecture / API / Docs
-last_reviewed: 2026-04-21
+last_reviewed: 2026-04-23
 ---
 
 # API Current To Target Architecture
@@ -217,7 +217,7 @@ directly.
 
 ### Start-run execution-capacity admission boundary
 
-`AR-C3-A` introduces an abstract execution-capacity seam into the start-run
+`AR-C3-A` has introduced an abstract execution-capacity seam into the start-run
 admission path without teaching the API application layer about Temporal queue
 internals.
 
@@ -228,7 +228,7 @@ flowchart LR
   UseCase --> Guard["IAdmissionGuard"]
   UseCase --> Capacity["IStartRunExecutionCapacityPort"]
   UseCase --> Delegate["PlannerBackedStartRunUseCase / engine delegate"]
-  Runtime["buildProtectedRuntimeModule.ts"] --> Default["DEFAULT_START_RUN_EXECUTION_CAPACITY_PORT"]
+  Runtime["buildProtectedStartRunRuntime.ts"] --> Default["DEFAULT_START_RUN_EXECUTION_CAPACITY_PORT"]
   Default --> Capacity
 ```
 
@@ -242,6 +242,11 @@ the shared contract component guide:
 
 - [Start-run boundary component](../engine/contracts/engine/start-run-boundary-component.md)
 - [Start-run application component](../../../../apps/api/docs/start-run-application-component.md)
+
+The abstract seam is now materially in place: local docs, a fail-closed
+default binding, and semantic architecture tests guard the component. The
+remaining open work is the concrete adapter signal (`AR-C3-B`) and the
+operator-facing telemetry/runbook closure (`AR-C3-C`).
 
 The wider authenticated start-run path is also documented as its own local
 component. That guide makes two rules explicit:
@@ -259,6 +264,7 @@ subcomponent instead of living only as scattered parser files.
 flowchart LR
   Route["startRunRoute.ts"] --> Parser["startRunRouteParser.ts"]
   Parser --> Builder["startRunRouteCommandBuilder.ts"]
+  Builder --> Identity["startRunIdentity.ts"]
   Builder --> Policy["evaluatePlanRoutePlanSource()"]
   Builder --> Target["parseStartRunTargetAdapter()"]
   Route --> ErrorFacade["httpErrorTranslation.respond(...)"]
@@ -269,6 +275,55 @@ Use the local component guide for the public API, invariants, transitions, and
 consumers of that entrypoint seam:
 
 - [Start-run HTTP entrypoint component](../../../../apps/api/docs/start-run-http-entrypoint-component.md)
+- [Start-run platform identity component](../../../../apps/api/docs/start-run-platform-identity-component.md)
+
+That entrypoint also owns the platform-owned execution identity insertion from
+`ADR-0050`. Caller-provided `runId` is rejected at parse time, and the internal
+`StartRunCommand.runId` is generated as `run_<UUIDv7>` inside the protected API
+boundary before the command crosses into the authenticated start-run
+application component.
+
+The identity seam is deliberately narrower than a runtime engine seam:
+
+- it allocates an opaque, time-local, collision-resistant resource id;
+- it does not own retry, duplicate-run, lifecycle, recovery, provider workflow,
+  engine, or state-store semantics;
+- persistence uniqueness remains the final collision guard.
+
+The paired frontend component guide documents the caller-owned side of that
+same boundary:
+
+- [Start-run client identity boundary](../web/runs/start-run-client-identity-boundary.md)
+
+### Integrated start-run control boundary
+
+Taken together, `AR-C7` and `AR-C3-A` now read as one protected control
+boundary rather than as unrelated local refactors.
+
+Mature control planes usually separate three concerns cleanly:
+
+- caller-owned intent
+- platform-owned resource identity
+- admission policy before delegate dispatch
+
+The API start-run slice now follows that shape.
+
+```mermaid
+flowchart LR
+  Caller["caller-owned StartRunInput"] --> Http["start-run HTTP entrypoint"]
+  Http --> Identity["platform-owned run_<UUIDv7>"]
+  Http --> Facade["authenticated start-run facade"]
+  Facade --> Admission["duplicate -> delivery -> execution capacity"]
+  Admission --> Delegate["planner / engine delegate"]
+
+  Identity -. "not an engine" .-> Lifecycle["retry / lifecycle / recovery"]
+  Admission -. "not provider-native metrics" .-> Provider["queue depth / worker metrics"]
+```
+
+Use the grouped local component guide for the public API, invariants,
+transitions, and consumers of that end-to-end boundary:
+
+- [Start-run control boundary component](../../../../apps/api/docs/start-run-control-boundary-component.md)
 
 Current slice status:
 

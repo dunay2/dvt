@@ -91,9 +91,9 @@ function buildRunsService(sessionContext: SessionContextPort): IRunsPort {
     }),
     startRun: vi.fn(async (input) =>
       makeMockRunRef({
-        runId: input.context.runId,
-        tenantId: input.context.tenantId,
-        workflowId: `wf_${input.context.runId}`,
+        runId: 'run_workspace_generated',
+        tenantId: input.workspaceScope.tenantId,
+        workflowId: 'wf_run_workspace_generated',
       })
     ),
     listRunEvents: vi.fn(async () => ({

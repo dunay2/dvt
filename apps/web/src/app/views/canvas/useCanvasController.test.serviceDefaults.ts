@@ -127,8 +127,8 @@ export function buildDefaultCanvasHarnessServices(
     startRun: vi.fn(async () =>
       makeMockRunRef({
         tenantId: 'tenant-a',
-        workflowId: 'workflow_ui_1',
-        runId: 'run_ui_1',
+        workflowId: 'workflow_platform_1',
+        runId: 'run_platform_1',
       })
     ),
     listRunEvents: vi.fn(async () => ({ events: [] })),
