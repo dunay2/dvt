@@ -34,6 +34,15 @@ describe('ExecutionSelection contract', () => {
 
     expect(result.success).toBe(false);
   });
+
+  it('rejects selected node ids with surrounding whitespace', () => {
+    const result = ExecutionSelectionSchema.safeParse({
+      mode: EXECUTION_SELECTION_MODE.explicit,
+      nodeIds: [' sql_1 '],
+    });
+
+    expect(result.success).toBe(false);
+  });
 });
 
 describe('ExecutableSubgraph contract', () => {

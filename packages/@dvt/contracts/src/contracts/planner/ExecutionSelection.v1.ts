@@ -15,6 +15,9 @@ const NonBlankStringSchema = z
   .refine((value) => isNonBlankString(value), {
     message: NON_BLANK_STRING_MESSAGE,
   })
+  .refine((value) => value.trim() === value, {
+    message: 'String must not contain surrounding whitespace',
+  })
   .brand<'NonBlankString'>();
 
 function buildSelectedNodeIdsSchema() {

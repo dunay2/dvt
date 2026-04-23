@@ -10,6 +10,7 @@ import type {
   GenericGraphSourceV1,
   PlannerEnvironmentContext,
 } from '../planner/ExecutionPlan.v1.js';
+import type { ExecutionSelection } from '../planner/ExecutionSelection.v1.js';
 import type { ExecutabilityRejectionCode } from '../planner/PlanExecutabilityValidation.v1.js';
 import type { PlannerPolicyClassSet } from '../planner/PlannerPolicyVocabulary.v2.js';
 
@@ -46,7 +47,7 @@ export interface StartRunCommand {
   readonly observability?: ExecutionPlan['observability'];
   readonly runId: string;
   readonly targetAdapter: StartRunTargetAdapter;
-  readonly selection: readonly string[];
+  readonly selection: ExecutionSelection;
 }
 
 export const START_RUN_RESULT_KIND = {

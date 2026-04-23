@@ -55,6 +55,9 @@ describe('contracts: planner normative contract (GAP-P0-02)', () => {
           },
         }) as PlannerBuildResultV1;
       },
+      deriveExecutableSubgraph() {
+        throw new Error('not used in this contract test');
+      },
     };
 
     const result = await planner.buildPlan(

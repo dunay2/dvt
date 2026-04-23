@@ -102,6 +102,8 @@ It is not a second persisted draft family.
 - preview/run callers must send canonical `ExecutionSelection`
 - planner-facing selection results must be expressed as canonical
   `ExecutableSubgraph`
+- API preview and planner-backed start-run must resolve selected closure from
+  protected draft truth before planner build
 - callers must not silently widen from selected scope to whole-draft scope
 - invalid selections fail closed with explicit diagnostics
 
@@ -110,4 +112,5 @@ It is not a second persisted draft family.
 - [Planner contracts index](./index.md)
 - [Workspace graph draft persistence v1](./workspace-graph-draft-persistence-v1.md)
 - [Execution selection component](../../architecture/components/planner/execution-selection-component.md)
+- [Executable subgraph derivation component](../../architecture/components/planner/executable-subgraph-derivation-component.md)
 - [Workspace authoring draft aggregate](../../architecture/components/planner/workspace-authoring-draft-aggregate.md)
