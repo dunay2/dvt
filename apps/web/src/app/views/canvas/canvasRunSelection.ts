@@ -1,4 +1,7 @@
-/** Owned concern: derive caller-owned start-run selection from a persisted plan view without authoring execution identity. */
+/**
+ * Owned concern: derive caller-owned start-run selection from a persisted plan
+ * view without authoring execution identity.
+ */
 import type { PlanViewModel } from '../../types/plans';
 
 export function collectPlanSelection(plan: PlanViewModel): readonly string[] {

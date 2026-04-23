@@ -708,6 +708,23 @@ Semantic architecture tests now guard identity ownership in
 `apps/api/test/entrypoints/http/startRunIdentity.architecture.test.ts` and
 `apps/web/src/app/views/canvas/canvasRunStartIdentity.architecture.test.ts`.
 
+2026-04-23 start-run boundary grouping update: the branch now also reads
+`AR-C7` and `AR-C3-A` together as one protected start-run control boundary.
+The grouped local guide is
+`apps/api/docs/start-run-control-boundary-component.md`, and the integrated
+Fowler follow-up is stored in
+`buzon/20260423-codex-fowler-branch-start-run-control-boundary-analysis-and-remediation.md`.
+This is closer to mature control planes that keep caller-owned intent,
+platform-owned resource identity, and executor-admission semantics in separate
+owned layers.
+
+2026-04-23 admission-boundary truth-sync update: `AR-C3-A` is now materially in
+place. `apps/api` owns the abstract execution-capacity seam, the fail-closed
+default binding lives in `buildProtectedStartRunRuntime.ts`, and semantic
+architecture tests plus local component docs now guard the boundary. The
+remaining open work is still `AR-C3-B` and `AR-C3-C`, not more abstract-seam
+design.
+
 ## Final Architectural Verdict
 
 DVT+ has a coherent architecture, not a fantasy architecture. The core split is

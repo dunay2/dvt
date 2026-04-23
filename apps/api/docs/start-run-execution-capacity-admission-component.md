@@ -2,7 +2,7 @@
 title: Start-run execution capacity admission component
 status: Active
 owner: apps/api
-last_reviewed: 2026-04-22
+last_reviewed: 2026-04-23
 ---
 
 # Start-run execution capacity admission component
@@ -17,6 +17,7 @@ visible start-run result surface remains the canonical shared contract:
 
 Read this together with:
 
+- `apps/api/docs/start-run-control-boundary-component.md`
 - `apps/api/docs/start-run-application-component.md`
 - `docs/architecture/components/engine/contracts/engine/start-run-boundary-component.md`
 
@@ -62,6 +63,32 @@ It does **not** own:
 - more specific execution-capacity denials are expressed through canonical
   `code` values, not a second top-level result kind
 - only composition binds the default implementation
+
+## Fowler assessment
+
+Compared with mature control planes, `AR-C3-A` improves the boundary in the
+right place:
+
+- it adds a gateway-style application port instead of leaking scheduler
+  vocabulary into controllers or routes
+- it keeps the fail-closed default at the composition edge, not inside the
+  use case or transport layer
+- it preserves one published caller-visible language:
+  canonical `system_backpressure`
+
+The maturity gap that remains is deliberate:
+
+- `AR-C3-B` still needs the real adapter-backed capacity signal
+- `AR-C3-C` still needs operator telemetry, runbook truth, and sustained
+  evidence
+
+## Anti-patterns explicitly prevented
+
+- provider queue-depth or worker-metric vocabulary in `apps/api`
+- fail-open behavior when no concrete capacity signal is available
+- route-owned or facade-owned execution-capacity checks
+- a second top-level start-run result kind just for capacity denial
+- default-binding imports inside `BackpressureAwareStartRunUseCase.ts`
 
 ## Transitions
 
@@ -130,6 +157,17 @@ sequenceDiagram
 - `buildProtectedStartRunRuntime.ts`
 - `startRunExecutionCapacityAdmission.architecture.test.ts`
 - `defaultStartRunExecutionCapacityPort.test.ts`
+
+## Semantic fitness functions
+
+- `startRunExecutionCapacityAdmission.architecture.test.ts`
+  locks owned-concern docblocks, abstract-port usage, admission ordering,
+  fail-closed default semantics, and composition-only binding.
+- `BackpressureAwareStartRunUseCase.executionCapacity.test.ts`
+  proves the runtime ordering and caller-visible rejection behavior.
+- `defaultStartRunExecutionCapacityPort.test.ts`
+  proves the default binding saturates with
+  `capacity_signal_unavailable`.
 
 ## Focused file map
 
