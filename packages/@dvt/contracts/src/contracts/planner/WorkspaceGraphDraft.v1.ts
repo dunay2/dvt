@@ -8,9 +8,9 @@ import {
 } from '../../utils/contractPrimitives.js';
 
 import {
-  DesignGraphDraftSchema,
-  type DesignGraphDraft,
-} from './TransformationFlowDesignGraph.v1.js';
+  WorkspaceGraphAuthoringDraftSchema,
+  type WorkspaceGraphAuthoringDraft,
+} from './WorkspaceGraphAuthoringDraft.v1.js';
 
 const NonBlankStringSchema = z
   .string()
@@ -111,7 +111,7 @@ export interface WorkspaceGraphDraftRecord {
   scope: WorkspaceGraphDraftScope;
   schemaVersion: string;
   revision: string;
-  draft: DesignGraphDraft;
+  draft: WorkspaceGraphAuthoringDraft;
   updatedAt: string;
 }
 
@@ -146,7 +146,7 @@ export interface WorkspaceGraphDraftSaveRequest {
   schemaVersion: string;
   expectedRevision: string;
   idempotencyKey: string;
-  draft: DesignGraphDraft;
+  draft: WorkspaceGraphAuthoringDraft;
 }
 
 export interface WorkspaceGraphDraftSaveSuccess {
@@ -279,7 +279,7 @@ export const WorkspaceGraphDraftRecordSchema = z
     scope: WorkspaceGraphDraftScopeSchema,
     schemaVersion: NonBlankStringSchema,
     revision: NonBlankStringSchema,
-    draft: DesignGraphDraftSchema,
+    draft: WorkspaceGraphAuthoringDraftSchema,
     updatedAt: IsoUtcStringSchema,
   })
   .strict() satisfies z.ZodType<WorkspaceGraphDraftRecord>;
@@ -350,7 +350,7 @@ export const WorkspaceGraphDraftSaveRequestSchema = z
     schemaVersion: NonBlankStringSchema,
     expectedRevision: NonBlankStringSchema,
     idempotencyKey: NonBlankStringSchema,
-    draft: DesignGraphDraftSchema,
+    draft: WorkspaceGraphAuthoringDraftSchema,
   })
   .strict() satisfies z.ZodType<WorkspaceGraphDraftSaveRequest>;
 

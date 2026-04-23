@@ -2,7 +2,7 @@
 title: TF-E2 Canvas Empty Authoring Entrypoint Design 2026-04-22
 status: Draft
 owner: Product / Frontend / Architecture
-last_reviewed: 2026-04-22
+last_reviewed: 2026-04-23
 planning_type: proposal
 lane: E
 task_id: TF-E2-A
@@ -17,6 +17,10 @@ protected draft truth exists but the active graph is empty.
 
 The route already fails closed correctly after the runtime-truth hard cut. What
 it still lacks is a governed way to start authoring from that empty state.
+
+That entrypoint now has an explicit architectural dependency: the backend-owned
+draft boundary must persist an editable authoring draft, not a compile-ready
+`DesignGraphDraft`.
 
 The design decision is:
 
@@ -49,6 +53,9 @@ The design decision is:
   present but currently contains no graph nodes.
 - This proposal does not change the hard-cut decision. It defines the product
   entrypoint that sits on top of that decision.
+- This proposal now also records the contract correction discovered during the
+  hard-cut follow-up: a graph-first first-node flow cannot be implemented on
+  top of a save path that still requires a compile-valid `DesignGraphDraft`.
 
 ## Think-first analysis
 
@@ -85,6 +92,16 @@ entrypoint.
 
 In Fowler terms, the screen has a read-model state for `empty` but no command
 entrypoint attached to it.
+
+There is also a boundary mismatch under the UI:
+
+- the current protected save path still accepts a compile-valid
+  `DesignGraphDraft`
+- a first-node or partially connected authoring state is a valid editing state
+  but not a valid `DesignGraphDraft`
+
+So the current runtime cannot persist the very first graph-editing step through
+the canonical boundary without architectural correction.
 
 ### Constraints and invariants
 
@@ -154,6 +171,10 @@ The empty route becomes an authoring state with one primary command:
 capability. The operator should never be forced through import if the actual
 product need is to start composing a graph from governed node kinds.
 
+This command must target an editable authoring draft boundary. It must not try
+to smuggle an incomplete graph through the compile-ready `DesignGraphDraft`
+writer.
+
 ### Rejected alternatives
 
 - floating action buttons without empty-state semantics
@@ -174,8 +195,11 @@ The canonical Canvas empty-state behavior is:
    - primary CTA: `Add first node`
    - secondary CTA: `Import sources` only when
      `workspaceServiceCapabilities.sourceImportAvailable === true`
-4. Creating the first node must round-trip through the protected draft
+4. Creating the first node must round-trip through the protected editable draft
    authority. No local fake graph is allowed.
+5. The command is blocked on contract truth. If the protected runtime still
+   exposes only a compile-valid `DesignGraphDraft` save path, the slice is not
+   ready and must not fake success in the browser.
 
 ## Target UX contract
 
@@ -220,22 +244,34 @@ flowchart LR
   EmptyEntry --> FirstNode["Open first-node catalog"]
   EmptyEntry --> Import["Open SourceImportWizard when capability exists"]
   FirstNode --> Command["Create-first-node command"]
-  Command --> DraftPort["protected workspaceGraphDraft authority"]
+  Command --> DraftPort["protected editable authoring-draft authority"]
+  DraftPort --> Selection["ExecutionSelection for preview/run"]
+  Selection --> Projection["derive compile-ready selected subgraph when valid"]
   Import --> DraftPort
-  DraftPort --> Refresh["authoritative draft refresh"]
+  Projection --> Refresh["authoritative draft refresh"]
   Refresh --> Viewport["Canvas viewport projection"]
 ```
 
+Execution rule:
+
+- Canvas authoring may contain loose or incomplete nodes.
+- `Run` and preview actions must operate through an explicit
+  `ExecutionSelection`.
+- Unselected loose nodes do not block a selected SQL node when that selected
+  node and its dependency closure are executable.
+- Selecting an invalid loose node produces selection diagnostics, not a failed
+  save or a hidden whole-draft compile attempt.
+
 ## Component ownership
 
-| Component or seam                   | Owns                                                                        | Must not own                              |
-| ----------------------------------- | --------------------------------------------------------------------------- | ----------------------------------------- |
-| `CanvasCenterSurface.tsx`           | choose center surface for loading, blocked, error, empty, complete          | opening hidden local-only authoring paths |
-| `CanvasEmptyAuthoringStateView.tsx` | empty-state CTAs, copy, and capability-aware operator guidance              | backend transport or draft mutation logic |
-| `Canvas.tsx`                        | route composition and command wiring                                        | inline command-policy decisions           |
-| route action model seam             | typed authoring-entry command model for the empty state                     | visual layout                             |
-| first-node catalog dialog or sheet  | show governed node kinds available for first-node creation                  | persistence truth                         |
-| first-node command handler          | build and persist the first-node mutation through protected draft authority | optimistic fake success without refresh   |
+| Component or seam                   | Owns                                                                                  | Must not own                              |
+| ----------------------------------- | ------------------------------------------------------------------------------------- | ----------------------------------------- |
+| `CanvasCenterSurface.tsx`           | choose center surface for loading, blocked, error, empty, complete                    | opening hidden local-only authoring paths |
+| `CanvasEmptyAuthoringStateView.tsx` | empty-state CTAs, copy, and capability-aware operator guidance                        | backend transport or draft mutation logic |
+| `Canvas.tsx`                        | route composition and command wiring                                                  | inline command-policy decisions           |
+| route action model seam             | typed authoring-entry command model for the empty state                               | visual layout                             |
+| first-node catalog dialog or sheet  | show governed node kinds available for first-node creation                            | persistence truth                         |
+| first-node command handler          | build and persist the first-node mutation through protected authoring-draft authority | optimistic fake success without refresh   |
 
 ## Public API to introduce
 
@@ -300,6 +336,10 @@ stateDiagram-v2
   saving_first_node --> graph_ready: authoritative refresh succeeds
   import_open --> empty_authorable: cancel
   import_open --> graph_ready: authoritative refresh succeeds
+  graph_ready --> selection_pending: Run selected node
+  selection_pending --> selection_invalid: selected closure invalid
+  selection_pending --> selected_subgraph_ready: selected closure valid
+  selected_subgraph_ready --> graph_ready: compile/admission result shown
   graph_ready --> [*]
 ```
 
@@ -317,16 +357,20 @@ sequenceDiagram
   participant Empty as Empty authoring state
   participant Catalog as First-node catalog
   participant Route as Canvas controller
-  participant Draft as Protected draft authority
+  participant Draft as Protected authoring-draft authority
+  participant Selection as ExecutionSelection
+  participant Projection as Compile projection
 
   User->>Empty: Click Add first node
   Empty->>Catalog: Open governed node catalog
   User->>Catalog: Select node kind and confirm
   Catalog->>Route: createFirstNode(kind)
-  Route->>Draft: save draft with first node
+  Route->>Draft: save editable authoring draft with first node
   Draft-->>Route: persisted draft outcome
   Route->>Draft: invalidate or refresh draft query
   Draft-->>Route: refreshed canonical draft graph
+  Route->>Selection: later preview/run selected node only
+  Selection->>Projection: derive selected executable subgraph when valid
   Route-->>User: Canvas viewport shows first node
 ```
 
@@ -353,14 +397,37 @@ introducing a second ad hoc catalog.
 
 This proposal does not introduce a new backend endpoint by default.
 
-Preferred implementation:
+Required implementation posture:
 
-- use the existing protected draft-authoring save path to persist a first-node
-  draft from an empty baseline
+- do not use the current compile-ready `DesignGraphDraft` save path as the
+  first-node persistence model
+- introduce or adopt the editable authoring-draft boundary from `TF-A2` and
+  `TF-C4`
+- derive `DesignGraphDraft` only after the authoring graph satisfies compile
+  invariants for the selected executable subgraph
+- route preview/run through explicit `ExecutionSelection`; do not infer that
+  `Run` means the whole editable draft
 
-If that save path cannot represent first-node creation cleanly, the route must
-render capability-blocked authoring guidance rather than create a frontend-only
-success path.
+If the editable boundary is not available yet, the route may expose the entry
+affordance only as a blocked capability with explicit operator guidance. It may
+not create a frontend-only success path.
+
+## Delivery sequencing
+
+This UX slice is graph-first, but it is not UI-only.
+
+Required sequence:
+
+1. `TF-A2` resets the shared draft contract so the editable aggregate is not
+   `DesignGraphDraft`
+2. `TF-C4` persists that editable aggregate through the protected route and
+   store boundary
+3. `TF-A2-C` introduces selected-subgraph compile semantics for preview/run
+4. `TF-E2-A` consumes the reset boundary and then adds the route-owned empty
+   authoring command
+
+The empty-state CTA is therefore a product decision that depends on contract
+truth, not a styling-only enhancement.
 
 ## Testing and evidence expectations
 
@@ -373,9 +440,13 @@ success path.
 - controller or application-service tests
   - create-first-node command persists through protected draft authority
   - local state does not claim success without authoritative refresh
+  - selected SQL node run/preview ignores unrelated loose draft nodes
+  - selecting an invalid loose node returns diagnostics without mutating draft
 - architecture tests
   - empty-state component depends on typed action model, not loose booleans
   - `DbtExplorer` remains project-resource inventory, not first-node catalog
+  - `Run` command wiring depends on `ExecutionSelection`, not whole-draft
+    compile-by-default behavior
 
 ### Required browser proof later under `TF-E2-E`
 

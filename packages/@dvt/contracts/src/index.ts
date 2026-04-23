@@ -78,6 +78,33 @@ export type {
   TransformationSqlFirstGraphSourceV1,
 } from './contracts/planner/TransformationFlowDesignGraph.v1.js';
 export {
+  WORKSPACE_GRAPH_AUTHORING_EDGE_RELATION,
+  WORKSPACE_GRAPH_AUTHORING_NODE_ROLE,
+  WORKSPACE_GRAPH_AUTHORING_NODE_STATUS,
+  WorkspaceGraphAuthoringDraftSchema,
+  WorkspaceGraphAuthoringEdgeSchema,
+  WorkspaceGraphAuthoringNodePositionSchema,
+  WorkspaceGraphAuthoringNodeSchema,
+} from './contracts/planner/WorkspaceGraphAuthoringDraft.v1.js';
+export type {
+  WorkspaceGraphAuthoringDraft,
+  WorkspaceGraphAuthoringEdge,
+  WorkspaceGraphAuthoringEdgeRelation,
+  WorkspaceGraphAuthoringNode,
+  WorkspaceGraphAuthoringNodePosition,
+  WorkspaceGraphAuthoringNodeRole,
+  WorkspaceGraphAuthoringNodeStatus,
+} from './contracts/planner/WorkspaceGraphAuthoringDraft.v1.js';
+export {
+  WORKSPACE_GRAPH_AUTHORING_COMMAND_TYPE,
+  WorkspaceGraphAuthoringCommandSchema,
+} from './contracts/planner/WorkspaceGraphAuthoringCommand.v1.js';
+export type {
+  WorkspaceGraphAuthoringCommand,
+  WorkspaceGraphAuthoringCommandType,
+  WorkspaceGraphAuthoringNodePatch,
+} from './contracts/planner/WorkspaceGraphAuthoringCommand.v1.js';
+export {
   WORKSPACE_GRAPH_DRAFT_AUDIT_ACTION,
   WORKSPACE_GRAPH_DRAFT_AUDIT_OUTCOME,
   WORKSPACE_GRAPH_DRAFT_CAPABILITY_MODE,

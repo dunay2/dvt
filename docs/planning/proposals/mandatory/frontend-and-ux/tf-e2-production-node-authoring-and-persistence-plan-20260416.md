@@ -2,7 +2,7 @@
 title: TF-E2 Production Node Authoring And Persistence Plan 2026-04-16
 status: Draft
 owner: Product / Frontend / Architecture / API
-last_reviewed: 2026-04-20
+last_reviewed: 2026-04-23
 planning_type: proposal
 lane: E
 task_id: TF-E2
@@ -77,9 +77,16 @@ The target for this slice is not visual polish. It is operational integrity.
   `workspaceService`
 - the active Canvas draft read and write path now routes through
   `IWorkspaceGraphDraftAuthoringPort` via `canvasDraftRepository`
-- save attempts now build governed `DesignGraphDraft` payloads from scoped
+- save attempts still build governed `DesignGraphDraft` payloads from scoped
   canonical nodes, canonical edges, and preview provenance Git metadata before
   hitting the protected draft-authoring boundary
+- that shape is now the active architectural drift: it proves the typed port is
+  wired, but it still treats the editable draft as a compile artifact and
+  therefore blocks graph-first incomplete authoring states such as the first
+  node on an empty Canvas
+- preview and run still need a governed selection seam: runnable SQL nodes must
+  execute through a selected dependency closure, not by requiring the whole
+  editable draft to be compile-valid
 
 ### What is still not product-grade
 
@@ -117,9 +124,13 @@ ready.
 
 Execution order is:
 
-1. `TF-A2` freezes the typed workspace graph-draft contract and port semantics
-2. `TF-C4` implements the protected API/store boundary for that contract
-3. `TF-E2-A` adopts the shared boundary inside Canvas and Inspector flows
+1. `TF-A2` freezes the typed workspace graph authoring-draft contract and
+   separates it from compile-ready `DesignGraphDraft`
+2. `TF-C4` implements the protected API/store boundary for that corrected
+   contract
+3. `TF-A2-C` defines `ExecutionSelection` and the selected-subgraph projection
+   used by preview and run
+4. `TF-E2-A` adopts the shared boundary inside Canvas and Inspector flows
 
 That means `TF-E2-A` is adoption work, not contract invention.
 
@@ -152,7 +163,9 @@ flowchart LR
   PORT --> CANON["Canonical graph draft store"]
   CANON --> APP
   APP --> RF["React Flow projection"]
-  APP --> PREVIEW["Preview and run handoff"]
+  APP --> SEL["ExecutionSelection"]
+  SEL --> SUB["Executable selected subgraph"]
+  SUB --> PREVIEW["Preview and run handoff"]
 ```
 
 Rules:
@@ -160,7 +173,10 @@ Rules:
 - React Flow is a projection, not the source of truth
 - Inspector edits go through the same authoring seam as graph mutations
 - reload always rehydrates from the canonical draft store first
-- preview and run consume the same canonical authoring truth
+- preview and run consume a selected executable subgraph derived from the same
+  canonical authoring truth
+- loose nodes outside the selected dependency closure do not block a selected
+  runnable SQL node
 - the active authoring route does not preserve a second compatibility seam over
   the projected `WorkspaceGraphDraft` DTO
 
@@ -174,7 +190,8 @@ The slice is complete only when all of the following are true:
 3. node properties edited through the Inspector are validated and saved
 4. hard reload restores nodes, edges, and editable properties deterministically
 5. invalid graph mutations fail closed with explicit UX feedback
-6. planning and run handoff read the same persisted authoring truth
+6. planning and run handoff read the same persisted authoring truth through an
+   explicit `ExecutionSelection` and selected dependency closure
 7. editable graph reads and writes travel through the governed workspace
    graph-draft contract rather than route-local DTOs or browser-local state
 8. saves use compare-and-swap against the authoritative draft revision instead
@@ -344,7 +361,12 @@ operator documentation.
 - `useCanvasController` consumes canonical draft truth, not visual-only state
 - Inspector save updates the rendered node and persisted draft consistently
 - failed save does not leave the route in a fake-saved state
-- preview action reads the saved authoring truth after edits
+- preview action reads the saved authoring truth after edits through
+  `ExecutionSelection`
+- selected SQL node preview/run ignores unrelated loose draft nodes outside the
+  selected closure
+- invalid selected nodes return selection diagnostics without mutating or
+  replacing the editable draft
 - stale revision writes surface an explicit conflict state instead of silent
   overwrite
 - duplicate save retries do not create duplicate semantic mutations
@@ -389,7 +411,8 @@ operator documentation.
 3. compare-and-swap, reject-on-stale, and idempotent retry behavior are visible
    in the caller-facing UX and tests
 4. hard reload is deterministic for nodes, edges, and properties
-5. preview and run no longer depend on hidden visual-only graph state
+5. preview and run no longer depend on hidden visual-only graph state and enter
+   through explicit `ExecutionSelection`
 6. Canvas exposes explicit writable, read-only, forbidden, and degraded states
    using protected boundary outcomes instead of local permission heuristics
 7. the automated proof matrix covers both happy and negative paths, including

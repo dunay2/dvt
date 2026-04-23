@@ -2,7 +2,7 @@
 title: TF-A2 Workspace Graph Draft Persistence Boundary Plan 2026-04-16
 status: Draft
 owner: Architecture / API / Web
-last_reviewed: 2026-04-16
+last_reviewed: 2026-04-23
 planning_type: proposal
 lane: A
 task_id: TF-A2
@@ -19,6 +19,10 @@ The goal is not to add another frontend draft cache. The goal is to define one
 typed, blocking, cross-lane boundary for editable workspace graph drafts so
 `web`, `api`, and the persistence owner stop drifting behind local DTOs,
 browser-only state, or route-local save heuristics.
+
+The editable draft aggregate must stay distinct from the compiled
+`DesignGraphDraft` artifact consumed by preview and run. The persistence
+boundary owns authoring truth first and compiled projection second.
 
 ## Governing sources
 
@@ -37,11 +41,25 @@ Today the repo has a typed read boundary for `WorkspaceGraphSnapshot` through
 `IWorkspacePort.getGraphSnapshot()`, but it does not yet have a canonical typed
 write boundary for editable graph drafts.
 
+The current executable draft contract also drifts from the intended model:
+`WorkspaceGraphDraft.v1` still embeds `DesignGraphDraft`, which means the
+shared persistence shape inherits compile-time invariants such as exactly one
+`source`, one `sql_transform`, one `sink`, and the governed two-edge chain.
+
+That coupling means the current protected save path cannot represent:
+
+- a first node on an empty graph
+- a partially connected graph under active editing
+- graph-first authoring flows that are valid editing states but not yet valid
+  compile inputs
+
 That creates three failure modes:
 
 1. frontend-local draft state can appear more authoritative than backend truth
 2. API/store behavior can be introduced later without a shared contract freeze
 3. Canvas productization can proceed without mechanical boundary enforcement
+4. the shared draft aggregate can accidentally become the compile artifact
+   instead of the authoring source of truth
 
 That is below the repo's architectural bar:
 
@@ -60,6 +78,7 @@ It must not introduce:
 - route-local DTO contracts
 - browser-local storage as product authority
 - direct frontend ownership of persistence semantics
+- compiled-graph invariants in the editable draft aggregate
 
 The boundary chain is:
 
@@ -67,10 +86,75 @@ The boundary chain is:
 2. Lane C implements the protected API and store-facing write boundary
 3. Lane E adopts the boundary and removes UI-local persistence authority
 
+## Aggregate split
+
+The canonical model is staged, not one-shape-for-everything.
+
+### Stage 1: editable authoring draft
+
+This is the persisted workspace-owned aggregate used by Canvas authoring.
+
+It must permit:
+
+- incomplete node sets
+- incomplete edge sets
+- intermediate graph topologies during editing
+- node and edge metadata needed for authoring UX
+
+It must not require compile-time graph validity.
+
+### Stage 2: execution selection
+
+Preview and run do not operate on the whole editable draft by default. They
+operate on an explicit `ExecutionSelection`: selected node ids plus a governed
+selection mode such as explicit, upstream, downstream, or connected component.
+
+The selection is resolved into an executable subgraph. Loose nodes outside that
+selected dependency closure do not block execution.
+
+### Stage 3: compiled design-graph projection
+
+`DesignGraphDraft` remains the compile-ready shared kernel used by preview and
+run. It is a derived artifact built from the editable authoring draft plus an
+execution selection only when the selected subgraph satisfies the governed
+compile invariants.
+
+### Ownership rule
+
+- `WorkspaceGraphDraft` owns editable authoring truth
+- `ExecutionSelection` owns run/preview intent
+- `DesignGraphDraft` owns compile-ready truth
+- the system must not persist `DesignGraphDraft` as if it were the editable
+  aggregate
+
+### Current-to-target topology
+
+```mermaid
+flowchart LR
+  subgraph Current["Current drift"]
+    CanvasCurrent["Canvas authoring"] --> WorkspaceCurrent["WorkspaceGraphDraft.v1"]
+    WorkspaceCurrent --> DesignCurrent["DesignGraphDraft embedded directly"]
+    DesignCurrent --> CompileCurrent["Preview / Run"]
+  end
+
+  subgraph Target["Target model"]
+    CanvasTarget["Canvas authoring"] --> AuthoringTarget["Editable workspace authoring draft"]
+    CanvasTarget --> SelectionTarget["ExecutionSelection"]
+    AuthoringTarget --> SubgraphTarget["Executable selected subgraph"]
+    SelectionTarget --> SubgraphTarget
+    SubgraphTarget --> Projection["Deterministic compile projection"]
+    Projection --> DesignTarget["DesignGraphDraft"]
+    DesignTarget --> CompileTarget["Preview / Run"]
+  end
+```
+
 ## Boundary shape
 
 The active plan assumes the workspace family expands with one typed draft
 surface alongside `WorkspaceGraphSnapshot`.
+
+That draft surface is an editable authoring aggregate. It is not a thin wrapper
+around `DesignGraphDraft`.
 
 Minimum contract outputs:
 
@@ -94,6 +178,7 @@ IWorkspacePort
   - getGraphSnapshot()
   - getGraphDraft()
   - saveGraphDraft(...)
+  - projectDesignGraphDraft(...)
 ```
 
 Illustrative protected route family:
@@ -101,10 +186,31 @@ Illustrative protected route family:
 ```text
 GET /workspace/graph/draft
 PUT /workspace/graph/draft
+POST /workspace/graph/draft/project-design-graph (optional future seam)
 ```
 
 The exact final names may be refined during implementation, but the family and
 ownership must not drift.
+
+## Authoring draft semantic requirements
+
+The editable draft contract must preserve authoring semantics that are broader
+than compile semantics.
+
+Minimum semantic requirements:
+
+- node identifiers stay stable across reload and save
+- edge identifiers or deterministic edge identity stay stable enough for
+  reconnect and delete operations
+- the aggregate can represent zero nodes, one node, and partially connected
+  graphs
+- a runnable selected node or subgraph is evaluated separately from unrelated
+  loose draft nodes
+- authoring payloads do not require preview-only Git provenance or compile-only
+  transform fields just to persist a user edit
+
+The compile projection may require extra fields for the selected executable
+subgraph. The editable draft must not.
 
 ## Exact minimum caller-visible envelopes
 
@@ -370,6 +476,8 @@ That means:
   DTO copies
 - the write boundary must expose canonical revision and conflict data back to
   the caller; the frontend must not infer them from local timestamps or caches
+- compile projection ownership is explicit and one-way; callers do not save a
+  `DesignGraphDraft` directly as the editable authoring aggregate
 
 ### 5. Read-your-writes behavior
 
@@ -395,25 +503,31 @@ Blocking sequence:
 This boundary slice is only ready when all of the following are true:
 
 1. one shared contract pack defines editable workspace graph-draft semantics
-2. one workspace-family port exposes typed read and write operations
-3. the write contract defines explicit schema-version, revision, compare-and-
+2. that shared contract pack models an editable aggregate rather than embedding
+   `DesignGraphDraft` directly
+3. one workspace-family port exposes typed read and write operations
+4. the write contract defines explicit schema-version, revision, compare-and-
    swap, and idempotency semantics
-4. tenant, project, and environment scope plus explicit read, write, and
+5. tenant, project, and environment scope plus explicit read, write, and
    read-only authorization outcomes are part of the governed boundary
-5. capability outcomes and audit references use the exact minimum field-level
+6. capability outcomes and audit references use the exact minimum field-level
    shapes frozen above rather than lane-local aliases or stringly-typed drift
-6. protected decisions and writes are required to emit or reference auditable
+7. protected decisions and writes are required to emit or reference auditable
    outcomes instead of leaving audit behavior implicit
-7. observability correlation semantics are frozen so runtime traces, metrics,
+8. observability correlation semantics are frozen so runtime traces, metrics,
    and audit evidence can be joined without per-lane reinterpretation
-8. format metadata, migration state, and typed format-error outcomes use the
+9. format metadata, migration state, and typed format-error outcomes use the
    exact minimum field-level shapes frozen above
-9. schemaVersion ownership, compatibility window, migration strategy, and
-   backfill posture are explicit rather than left to implementation guesswork
-10. one protected API/store path owns canonical persistence
-11. conflict, auth, freshness, retry, and format-evolution behavior are
+10. schemaVersion ownership, compatibility window, migration strategy, and
+    backfill posture are explicit rather than left to implementation guesswork
+11. one protected API/store path owns canonical authoring-draft persistence
+12. `DesignGraphDraft` is produced through an explicit projection step instead
+    of being the editable persistence payload
+13. preview and run enter through explicit execution selection rather than
+    whole-draft compile-by-default behavior
+14. conflict, auth, freshness, retry, and format-evolution behavior are
     caller-visible and typed
-12. Lane E depends on this chain instead of inventing local persistence
+15. Lane E depends on this chain instead of inventing local persistence
 
 ## Validation baseline
 

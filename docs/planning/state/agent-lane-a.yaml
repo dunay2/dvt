@@ -2725,25 +2725,27 @@ tasks:
     priority: P0
     status: in_progress
     objective: >-
-      formalize the canonical workspace graph-draft persistence contract so editable Canvas graphs
-      use one typed read and write boundary across web, api, and the persistence owner instead of
-      browser-local authority.
+      formalize the canonical workspace graph authoring-draft persistence contract so editable
+      Canvas graphs use one typed read and write boundary across web, api, and the persistence owner
+      instead of browser-local authority, while compile-ready `DesignGraphDraft` remains a derived
+      artifact rather than the editable aggregate itself.
     dependency: TF-A1, F-04
     target: >-
-      A governed workspace graph-draft contract pack defines typed read/write semantics, revision or
-      concurrency tokens, explicit schema-version versus mutable-revision posture, compare-and-swap
-      semantics, reject-on-stale merge policy, idempotent write expectations, tenant and workspace
-      scope, explicit read/write/read-only capability outcomes, auditable protected-decision
-      obligations, exact caller-visible capability and audit envelope fields, shared
-      audit-observability join semantics, explicit format-evolution metadata and typed
+      A governed workspace graph authoring-draft contract pack defines typed read/write semantics,
+      revision or concurrency tokens, explicit schema-version versus mutable-revision posture,
+      compare-and-swap semantics, reject-on-stale merge policy, idempotent write expectations,
+      tenant and workspace scope, explicit read/write/read-only capability outcomes, auditable
+      protected-decision obligations, exact caller-visible capability and audit envelope fields,
+      shared audit-observability join semantics, explicit format-evolution metadata and typed
       corrupt/unsupported draft outcomes, compatibility-window and backfill posture, conflict
-      posture, and the workspace-port extension consumed by downstream API and web adoption without
-      local DTO drift.
+      posture, and a one-way projection boundary from editable authoring draft into
+      `DesignGraphDraft` for preview/run adoption without local DTO drift.
     complexity: M
     effort_points: 5
-    progress_pct: 45
+    progress_pct: 30
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/tf-a2-workspace-graph-draft-persistence-boundary-plan-20260416.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/tf-a2-workspace-authoring-draft-aggregate-roots-plan-20260423.md
       - packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphDraft.v1.ts
       - docs/contracts/planner/WorkspaceGraphDraftPersistence.v1.md
       - docs/evidence/ED-20260416-tf-a2-workspace-graph-draft-boundary.md
@@ -2753,13 +2755,18 @@ tasks:
       - docs/architecture/components/engine/contracts/engine/SignalsAndAuth.v1.md
       - docs/architecture/components/web/frontend-data-boundary-architecture.md
     status_reason: >-
-      Contract freeze is now partially delivered as executable shared-kernel artifacts plus the
-      planner contract doc: `WorkspaceGraphDraft.v1` now defines typed scope/capability envelopes,
-      auditable read/write outcomes, compare-and-swap request posture, idempotent retry key, and
-      typed format-evolution metadata/failures. ARC-2 evidence and residual adoption risk are now
-      published. Remaining work in `TF-A2` is final contract review acceptance and downstream wiring
-      handoff to `TF-C4` and `TF-E2-A`.
-    last_verified: '2026-04-16'
+      Contract freeze is only partially delivered. The current executable artifact already defines
+      typed scope/capability envelopes, auditable read/write outcomes, compare-and-swap request
+      posture, idempotent retry key, and typed format-evolution metadata/failures, but
+      `WorkspaceGraphDraft.v1` still embeds `DesignGraphDraft` directly. That means the shared draft
+      aggregate still inherits compile-only invariants and cannot represent graph-first incomplete
+      authoring states such as a first node on an empty Canvas. The new aggregate-roots plan now
+      freezes the missing Fowler split: `WorkspaceGraphAuthoringDraft` becomes the persisted
+      aggregate root, `CanvasDraftSession` remains the route-local aggregate root, and
+      `DesignGraphDraft` is demoted to derived compile artifact only. Remaining work is now
+      explicit: implement that reset in the contract pack, then hand the corrected boundary to
+      `TF-C4` and `TF-E2-A`.
+    last_verified: '2026-04-23'
 dependency_notes:
   - >-
     `MVP-A1` is now closed as the contractual MVP baseline through the reviewed proposal plus the
