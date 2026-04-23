@@ -113,6 +113,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [Turbo build cache or orchestration drift could hide missing dependency rebuilds](R-20260418-TURBO-BUILD-ORCHESTRATION-CACHE-DRIFT.yaml)
 - [Web workspace file-missing handling depends on a future backend canonical reason](R-20260411-WEB-WORKSPACE-FILE-NOT-FOUND-CONTRACT-GAP.yaml)
 - [WorkflowSnapshot schema-version drift can reappear if version bumps are skipped](R-20260405-WORKFLOW-SNAPSHOT-SCHEMA-VERSION.yaml)
+- [Workspace authoring draft aggregate adoption can drift across API and web](R-20260423-WORKSPACE-AUTHORING-DRAFT-AGGREGATE.yaml)
 - [Workspace graph-draft callers can drift from shared capability and CAS semantics](R-20260416-TF-A2-WORKSPACE-GRAPH-DRAFT-ADOPTION-DRIFT.yaml)
 - [WS5 engine fixture helpers can drift from engine constructor contract](R-20260330-WS5-ENGINE-TEST-FIXTURE-DRIFT.md)
 
