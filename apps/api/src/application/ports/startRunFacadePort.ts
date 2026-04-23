@@ -12,8 +12,7 @@ import {
   type StartRunTenantBackpressureResult,
 } from '@dvt/contracts';
 
-import type { DeniedReason } from '../../domain/auth/types.js';
-
+import type { DeniedReason } from './accessDecision.js';
 import type { AuthenticationFailureCode } from './authContract.js';
 import type { StartRunEngineError } from './startRunEngineError.js';
 import type { Result } from './startRunUseCasePort.js';

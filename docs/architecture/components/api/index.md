@@ -115,6 +115,10 @@ shape, and the governed transition route:
 - [Protected runtime dependency builders component](../../../../apps/api/docs/protected-runtime-dependency-builders-component.md):
   local guide for the protected-runtime builder cluster that assembles storage,
   admission, security, and execution dependency slices for the outer root.
+- [Protected security access decision component](../../../../apps/api/docs/protected-security-access-decision-component.md):
+  local guide for the protected auth/authz language and decision component,
+  including public API, invariants, transitions, consumers, and semantic
+  ownership rules.
 - [Start-run execution capacity admission component](../../../../apps/api/docs/start-run-execution-capacity-admission-component.md):
   local guide for the abstract start-run execution-capacity admission seam,
   its fail-closed default binding, invariants, transitions, and consumers.

@@ -20,16 +20,19 @@ import type {
   TenantId,
 } from '../../domain/auth/types.js';
 
+import {
+  AUTHORIZATION_ACTION,
+  type CommandAuthorizationAction,
+  type QueryAuthorizationAction,
+} from './accessDecision.js';
+
 export const WORKSPACE_GRAPH_DRAFT_ACTION = {
-  view: {
-    kind: 'query',
-    name: 'workspace:graph-draft:view',
-  },
-  save: {
-    kind: 'command',
-    name: 'workspace:graph-draft:save',
-  },
-} as const;
+  view: AUTHORIZATION_ACTION.workspaceGraphDraftView,
+  save: AUTHORIZATION_ACTION.workspaceGraphDraftSave,
+} as const satisfies {
+  readonly view: QueryAuthorizationAction;
+  readonly save: CommandAuthorizationAction;
+};
 
 export const WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION = 'workspace-graph-draft.v1';
 export const WORKSPACE_GRAPH_DRAFT_INITIAL_REVISION = 'initial';

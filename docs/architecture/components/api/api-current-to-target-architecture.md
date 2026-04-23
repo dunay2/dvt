@@ -137,7 +137,10 @@ flowchart TB
   `IAccessDecisionService` seam, with `EmbeddedAccessDecisionService` as the
   current backend. The protected security builder also owns the backend
   lifecycle hook, so the outer root depends on a security runtime contract
-  rather than on embedded-backend methods directly.
+  rather than on embedded-backend methods directly. The canonical access
+  language now lives in `apps/api/src/application/ports/accessDecision.ts`,
+  including explicit action objects and resource discriminants for tenant,
+  project, environment, and workspace-graph-draft scopes.
   Anchors:
   `apps/api/src/infrastructure/auth/oidcAuthenticator.ts`,
   `apps/api/src/infrastructure/auth/jwksJwtVerifier.ts`,

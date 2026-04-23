@@ -17,7 +17,7 @@ const commandContext: AuthorizedCommandExecutionContext = {
     assertedTenantIds: ['tenant-a'],
     assertedProjectIds: [],
   },
-  scope: { tenantId: TenantId.unsafe('tenant-a') },
+  scope: { resource: 'tenant', tenantId: TenantId.unsafe('tenant-a') },
   action: { kind: 'command', name: 'run:signal' },
   requestId: 'req-1',
   authorizedAt: new Date('2026-03-19T00:00:00Z'),

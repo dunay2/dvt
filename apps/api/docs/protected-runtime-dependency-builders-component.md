@@ -18,6 +18,7 @@ runtime slices.
 Read this together with:
 
 - `docs/architecture/components/api/protected-runtime-and-plan-compile-component.md`
+- `apps/api/docs/protected-security-access-decision-component.md`
 - `apps/api/docs/start-run-runtime-composition-component.md`
 - `apps/api/docs/workspace-graph-draft-runtime-composition-component.md`
 
@@ -75,7 +76,8 @@ It does **not** own:
 - `buildProtectedAdmissionRuntime.ts` is the only protected-runtime builder
   allowed to construct the duplicate-probe and backpressure-admission cluster
 - `buildProtectedSecurityRuntime.ts` is the only protected-runtime builder
-  allowed to construct the auth/authz cluster
+  allowed to construct the auth/authz cluster around the embedded
+  access-decision backend, audit logger, authorizer, and authenticator
 - `buildProtectedExecutionRuntime.ts` is the only protected-runtime builder
   allowed to construct the provider-adapter and workflow-engine cluster
 - `shared.ts` remains type vocabulary only; it must not accumulate runtime

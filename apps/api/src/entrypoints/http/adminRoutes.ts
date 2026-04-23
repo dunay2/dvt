@@ -11,6 +11,10 @@
 import type { IRunStateStoreMaintenance } from '@dvt/engine';
 import type { FastifyInstance } from 'fastify';
 
+import {
+  AUTHORIZATION_ACTION,
+  buildTenantAccessScope,
+} from '../../application/ports/accessDecision.js';
 import type { IAuthenticator } from '../../application/ports/auth.js';
 import { AuthorizeCommandScopeService } from '../../application/services/authorizeCommandScopeService.js';
 import { TenantId } from '../../domain/auth/types.js';
@@ -21,10 +25,7 @@ import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
 import { httpErrorTranslation } from './httpErrorTranslation.js';
 import { badRequestIssue } from './routeParseIssue.js';
 
-const ADMIN_REBUILD_SNAPSHOT_ACTION = {
-  kind: 'command',
-  name: 'admin:rebuild-snapshot',
-} as const;
+const ADMIN_REBUILD_SNAPSHOT_ACTION = AUTHORIZATION_ACTION.adminRebuildSnapshot;
 
 export function registerAdminRoutes(
   app: FastifyInstance,
@@ -76,7 +77,7 @@ export function registerAdminRoutes(
         token: extractBearerToken(request.headers.authorization),
         requestId: request.id,
         requestedScope: {
-          tenantId: requestedTenant.value,
+          ...buildTenantAccessScope(requestedTenant.value),
           action: ADMIN_REBUILD_SNAPSHOT_ACTION,
         },
       });
@@ -96,7 +97,10 @@ export function registerAdminRoutes(
         }
 
         request.log.error({ err, runId, tenantId }, 'rebuild-snapshot failed');
-        httpErrorTranslation.respond(reply, httpErrorTranslation.admin.rebuildSnapshotInternalError());
+        httpErrorTranslation.respond(
+          reply,
+          httpErrorTranslation.admin.rebuildSnapshotInternalError()
+        );
       }
     }
   );

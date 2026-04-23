@@ -11,6 +11,7 @@ describe('AuthorizeCommandScopeService', () => {
         return {
           ok: true as const,
           approvedScope: {
+            resource: 'tenant' as const,
             tenantId: TenantId.unsafe('t1'),
           },
         };
@@ -43,6 +44,7 @@ describe('AuthorizeCommandScopeService', () => {
         assertedProjectIds: [],
       },
       {
+        resource: 'tenant' as const,
         tenantId: TenantId.unsafe('t1'),
         action: { kind: 'command', name: 'run:start' },
       },
@@ -101,6 +103,7 @@ describe('AuthorizeCommandScopeService', () => {
         assertedProjectIds: [],
       },
       {
+        resource: 'tenant' as const,
         tenantId: TenantId.unsafe('t1'),
         action: { kind: 'command', name: 'run:start' },
       },

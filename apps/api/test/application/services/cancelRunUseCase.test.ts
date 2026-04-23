@@ -18,6 +18,7 @@ const commandContext: AuthorizedCommandExecutionContext = {
     assertedProjectIds: [],
   },
   scope: {
+    resource: 'tenant',
     tenantId: TenantId.unsafe('tenant-a'),
   },
   action: { kind: 'command', name: 'run:cancel' },

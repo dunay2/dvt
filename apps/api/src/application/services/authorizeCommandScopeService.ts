@@ -1,10 +1,14 @@
+/**
+ * Owned concern: authorize one protected API command/query scope through the
+ * DVT-owned access-decision port and emit the matching audit event.
+ */
+import type { AuthenticatedPrincipal } from '../../domain/auth/types.js';
 import type {
-  AuthenticatedPrincipal,
   AuthorizationAction,
   DeniedReason,
+  IAccessDecisionService,
   RequestedScope,
-} from '../../domain/auth/types.js';
-import type { IAccessDecisionService } from '../ports/accessDecision.js';
+} from '../ports/accessDecision.js';
 import {
   AUTH_AUDIT_EVENT_TYPE,
   type AuthorizedExecutionContext,
@@ -20,9 +24,7 @@ export class AuthorizeCommandScopeService {
 
   public async authorize<TAction extends AuthorizationAction>(
     principal: AuthenticatedPrincipal,
-    requestedScope: RequestedScope & {
-      readonly action: TAction;
-    },
+    requestedScope: RequestedScope<TAction>,
     requestId: string
   ): Promise<
     | { readonly ok: true; readonly context: AuthorizedExecutionContext<TAction> }
@@ -31,15 +33,7 @@ export class AuthorizeCommandScopeService {
     const decidedAt = this.clock();
     const outcome = await this.accessDecisionService.decide(principal, requestedScope);
     if (!outcome.ok) {
-      await this.audit.record({
-        eventType: AUTH_AUDIT_EVENT_TYPE.denied,
-        requestId,
-        principalId: principal.principalId,
-        principalType: principal.principalType,
-        action: requestedScope.action.name,
-        denialReason: outcome.reason,
-        occurredAt: decidedAt,
-      });
+      await this.recordDeniedDecision(principal, requestedScope, requestId, decidedAt, outcome.reason);
 
       return { ok: false, reason: outcome.reason };
     }
@@ -52,16 +46,44 @@ export class AuthorizeCommandScopeService {
       authorizedAt: decidedAt,
     };
 
-    await this.audit.record({
+    await this.recordGrantedDecision(principal, requestedScope, requestId, decidedAt, outcome.approvedScope);
+
+    return { ok: true, context };
+  }
+
+  private recordDeniedDecision<TAction extends AuthorizationAction>(
+    principal: AuthenticatedPrincipal,
+    requestedScope: RequestedScope<TAction>,
+    requestId: string,
+    occurredAt: Date,
+    denialReason: DeniedReason
+  ): Promise<void> {
+    return this.audit.record({
+      eventType: AUTH_AUDIT_EVENT_TYPE.denied,
+      requestId,
+      principalId: principal.principalId,
+      principalType: principal.principalType,
+      action: requestedScope.action.name,
+      denialReason,
+      occurredAt,
+    });
+  }
+
+  private recordGrantedDecision<TAction extends AuthorizationAction>(
+    principal: AuthenticatedPrincipal,
+    requestedScope: RequestedScope<TAction>,
+    requestId: string,
+    occurredAt: Date,
+    approvedScope: AuthorizedExecutionContext<TAction>['scope']
+  ): Promise<void> {
+    return this.audit.record({
       eventType: AUTH_AUDIT_EVENT_TYPE.granted,
       requestId,
       principalId: principal.principalId,
       principalType: principal.principalType,
-      tenantId: outcome.approvedScope.tenantId.value,
+      tenantId: approvedScope.tenantId.value,
       action: requestedScope.action.name,
-      occurredAt: decidedAt,
+      occurredAt,
     });
-
-    return { ok: true, context };
   }
 }

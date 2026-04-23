@@ -52,9 +52,14 @@ Protected API routes MUST authorize through one application-facing port:
 That contract is DVT-owned. It expresses:
 
 - authenticated principal;
-- requested action and scope;
+- requested action and explicit resource scope;
 - allow or deny decision;
 - approved execution scope for downstream use cases.
+
+The canonical action names and action objects live in
+`apps/api/src/application/ports/accessDecision.ts` together with the explicit
+resource discriminants `tenant`, `project`, `environment`, and
+`workspace-graph-draft`.
 
 The rest of `apps/api` MUST depend on this DVT contract, not on OpenFGA SDK
 types, tuple shapes, relation names, or HTTP APIs.
@@ -130,22 +135,22 @@ that backend cannot return a decision, the request fails closed.
 The DVT contract owns the route-facing action vocabulary and its mapping to
 resource scopes. The initial canonical mapping is:
 
-| API route family                              | DVT action                   | DVT scope resource owner |
-| --------------------------------------------- | ---------------------------- | ------------------------ |
-| `POST /runs/start`                            | `run:start`                  | environment scope        |
-| `POST /plans/preview`                         | `run:start`                  | environment scope        |
-| `POST /plans/compile`                         | `run:start`                  | environment scope        |
-| `POST /plans/import`                          | `run:start`                  | environment scope        |
-| `GET /runs`                                   | `run:list`                   | environment scope        |
-| `GET /runs/:runId`                            | `run:view`                   | tenant scope             |
-| `GET /runs/:runId/events`                     | `run:logs:view`              | tenant scope             |
-| `POST /runs/:runId/signal` for `PAUSE/RESUME` | `run:signal`                 | tenant scope             |
-| `POST /runs/:runId/signal` for `CANCEL`       | `run:cancel`                 | tenant scope             |
-| `POST /runs/:runId/cancel`                    | `run:cancel`                 | tenant scope             |
-| `POST /runs/:runId/recover`                   | `run:retry`                  | tenant scope             |
-| `GET /workspace/graph/draft`                  | `workspace:graph-draft:view` | workspace draft scope    |
-| `PUT /workspace/graph/draft`                  | `workspace:graph-draft:save` | workspace draft scope    |
-| `POST /admin/runs/:runId/rebuild-snapshot`    | `admin:rebuild-snapshot`     | tenant scope             |
+| API route family                              | DVT action                   | DVT scope resource owner              |
+| --------------------------------------------- | ---------------------------- | ------------------------------------- |
+| `POST /runs/start`                            | `run:start`                  | environment scope                     |
+| `POST /plans/preview`                         | `run:start`                  | environment scope                     |
+| `POST /plans/compile`                         | `run:start`                  | environment scope                     |
+| `POST /plans/import`                          | `run:start`                  | environment scope                     |
+| `GET /runs`                                   | `run:list`                   | tenant, project, or environment scope |
+| `GET /runs/:runId`                            | `run:view`                   | tenant scope                          |
+| `GET /runs/:runId/events`                     | `run:logs:view`              | tenant scope                          |
+| `POST /runs/:runId/signal` for `PAUSE/RESUME` | `run:signal`                 | tenant scope                          |
+| `POST /runs/:runId/signal` for `CANCEL`       | `run:cancel`                 | tenant scope                          |
+| `POST /runs/:runId/cancel`                    | `run:cancel`                 | tenant scope                          |
+| `POST /runs/:runId/recover`                   | `run:retry`                  | tenant scope                          |
+| `GET /workspace/graph/draft`                  | `workspace:graph-draft:view` | workspace draft scope                 |
+| `PUT /workspace/graph/draft`                  | `workspace:graph-draft:save` | workspace draft scope                 |
+| `POST /admin/runs/:runId/rebuild-snapshot`    | `admin:rebuild-snapshot`     | tenant scope                          |
 
 Any backend maps this DVT contract into its own internal decision model.
 

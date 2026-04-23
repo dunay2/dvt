@@ -1,4 +1,11 @@
-import type { RequestedScope } from '../../domain/auth/types.js';
+/**
+ * Owned concern: parse the protected get-run HTTP request into canonical
+ * read-model input and requested access scope.
+ */
+import {
+  buildTenantAccessScope,
+  type RequestedScope,
+} from '../../application/ports/accessDecision.js';
 
 import { GET_RUN_ACTION } from './getRunRouteParser.constants.js';
 import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
@@ -52,7 +59,7 @@ export function parseGetRunRequest(input: {
         enriched: enriched.value,
       },
       requestedScope: {
-        tenantId: tenant.value,
+        ...buildTenantAccessScope(tenant.value),
         action: GET_RUN_ACTION,
       },
     },

@@ -1,5 +1,10 @@
+/**
+ * Owned concern: execute protected run-command routes after semantic parse and
+ * tenant-scoped authorization have succeeded.
+ */
 import type { FastifyReply, FastifyRequest } from 'fastify';
 
+import { buildTenantAccessScope } from '../../application/ports/accessDecision.js';
 import type {
   AuthorizedCommandExecutionContext,
   IAuthenticator,
@@ -45,7 +50,7 @@ export async function executeAuthorizedRunCommandRoute<TCommand, TResult>(
     token: extractBearerToken(request.headers.authorization),
     requestId: request.id,
     requestedScope: {
-      tenantId: parsed.value.authorization.tenantId,
+      ...buildTenantAccessScope(parsed.value.authorization.tenantId),
       action: { kind: 'command', name: parsed.value.authorization.actionName },
     },
   });

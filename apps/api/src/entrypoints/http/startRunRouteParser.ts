@@ -4,8 +4,13 @@
  */
 import type { StartRunCommand } from '@dvt/contracts';
 
+import {
+  AUTHORIZATION_ACTION,
+  buildEnvironmentAccessScope,
+  type CommandAuthorizationAction,
+  type RequestedScope,
+} from '../../application/ports/accessDecision.js';
 import type { IStartRunTargetAdapterRegistry } from '../../application/ports/IStartRunTargetAdapterRegistry.js';
-import { type AuthorizationAction, type RequestedScope } from '../../domain/auth/types.js';
 
 import { parsePlanRouteBodyRecord } from './planRouteBodyParser.js';
 import { parsePlanRouteScope } from './planRouteScopeParser.js';
@@ -15,9 +20,7 @@ import { parseStartRunCommand } from './startRunRouteCommandBuilder.js';
 
 type ParsedStartRunRequest = {
   readonly command: StartRunCommand;
-  readonly requestedScope: RequestedScope & {
-    readonly action: Extract<AuthorizationAction, { kind: 'command' }>;
-  };
+  readonly requestedScope: RequestedScope<CommandAuthorizationAction>;
 };
 
 type ParseStartRunRequestResult = RouteParseResult<ParsedStartRunRequest>;
@@ -47,10 +50,12 @@ export function parseStartRunBody(
     value: {
       command: command.value,
       requestedScope: {
-        tenantId: scope.value.tenantId,
-        projectId: scope.value.projectId,
-        environmentId: scope.value.environmentId,
-        action: { kind: 'command', name: 'run:start' },
+        ...buildEnvironmentAccessScope(
+          scope.value.tenantId,
+          scope.value.projectId,
+          scope.value.environmentId
+        ),
+        action: AUTHORIZATION_ACTION.runStart,
       },
     },
   };

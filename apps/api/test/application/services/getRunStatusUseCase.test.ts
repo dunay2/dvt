@@ -16,7 +16,7 @@ const queryContext: AuthorizedExecutionContext<{ kind: 'query'; name: 'run:view'
     assertedTenantIds: ['tenant-a'],
     assertedProjectIds: [],
   },
-  scope: { tenantId: TenantId.unsafe('tenant-a') },
+  scope: { resource: 'tenant', tenantId: TenantId.unsafe('tenant-a') },
   action: { kind: 'query', name: 'run:view' },
   requestId: 'req-1',
   authorizedAt: new Date('2026-03-19T00:00:00Z'),

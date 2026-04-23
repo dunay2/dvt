@@ -1,11 +1,18 @@
+/**
+ * Owned concern: resolve protected plan-route requests through shared parsing,
+ * authorization, and optional post-authorization validation.
+ */
 import type { FastifyRequest } from 'fastify';
 
+import {
+  buildEnvironmentAccessScope,
+  type CommandAuthorizationAction,
+} from '../../application/ports/accessDecision.js';
 import type {
   AuthorizedCommandExecutionContext,
   IAuthenticator,
 } from '../../application/ports/auth.js';
 import { AuthorizeCommandScopeService } from '../../application/services/authorizeCommandScopeService.js';
-import type { AuthorizationAction } from '../../domain/auth/types.js';
 
 import { authorizeExecutionScope } from './authorizeExecutionScope.js';
 import { extractBearerToken } from './extractBearerToken.js';
@@ -30,18 +37,9 @@ export type ResolvedAuthorizedPlanRouteRequest<TParsedRequest> =
       readonly response: HttpResponseModel;
     };
 
-type RequestedPlanRouteScope = Pick<
-  ParsedPlanRouteScope,
-  'tenantId' | 'projectId' | 'environmentId'
->;
-
-type PlanRouteAuthorizationAction = Extract<AuthorizationAction, { readonly kind: 'command' }>;
-
 export interface PlanRouteAuthorizationRequestOptions<TParsedRequest> {
-  readonly selectRequestedScope: (
-    parsedRequest: TParsedRequest
-  ) => RequestedPlanRouteScope;
-  readonly action: PlanRouteAuthorizationAction;
+  readonly selectRequestedScope: (parsedRequest: TParsedRequest) => ParsedPlanRouteScope;
+  readonly action: CommandAuthorizationAction;
 }
 
 type ResolvedAuthorizedPlanRouteRequestOk<TParsedRequest> = Extract<
@@ -62,10 +60,7 @@ export interface AuthorizedPlanRouteRequestResolverOptions<
   TParsedRequest,
 > extends PlanRouteAuthorizationRequestOptions<TParsedRequest> {
   readonly parseRequestBody: (body: unknown) => RouteParseResult<TParsedRequest>;
-  readonly validateAuthorizedRequest?: AuthorizedPlanRouteRequestValidator<
-    TDeps,
-    TParsedRequest
-  >;
+  readonly validateAuthorizedRequest?: AuthorizedPlanRouteRequestValidator<TDeps, TParsedRequest>;
 }
 
 export async function resolveAuthorizedPlanRouteRequest<TParsedRequest>(
@@ -88,9 +83,11 @@ export async function resolveAuthorizedPlanRouteRequest<TParsedRequest>(
     token: extractBearerToken(request.headers.authorization),
     requestId: request.id,
     requestedScope: {
-      tenantId: requestedScope.tenantId,
-      projectId: requestedScope.projectId,
-      environmentId: requestedScope.environmentId,
+      ...buildEnvironmentAccessScope(
+        requestedScope.tenantId,
+        requestedScope.projectId,
+        requestedScope.environmentId
+      ),
       action: options.action,
     },
   });

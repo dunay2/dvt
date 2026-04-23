@@ -1,8 +1,16 @@
 import { parseExecutionSelection, parsePlanRef } from '@dvt/contracts';
 
 import type {
-  AuthorizedExecutionContext,
+  AuthorizationAction,
+  RequestedScope,
+} from '../../../src/application/ports/accessDecision.js';
+import {
+  buildEnvironmentAccessScope,
+  toExecutionScope,
+} from '../../../src/application/ports/accessDecision.js';
+import type {
   AuthorizedCommandExecutionContext,
+  AuthorizedExecutionContext,
   DeniedReason,
   IAuthenticator,
 } from '../../../src/application/ports/auth.js';
@@ -10,11 +18,7 @@ import type { IStartRunLatencyTelemetry } from '../../../src/application/ports/S
 import type { IStartRunUseCase } from '../../../src/application/ports/startRunUseCasePort.js';
 import { AuthorizeCommandScopeService } from '../../../src/application/services/authorizeCommandScopeService.js';
 import { StartRunAuthorizedFacade } from '../../../src/application/services/startRunAuthorizedFacade.js';
-import type {
-  AuthenticatedPrincipal,
-  AuthorizationAction,
-  RequestedScope,
-} from '../../../src/domain/auth/types.js';
+import type { AuthenticatedPrincipal } from '../../../src/domain/auth/types.js';
 import { EnvironmentId, ProjectId, TenantId } from '../../../src/domain/auth/types.js';
 
 export const AUTHENTICATED_PRINCIPAL = {
@@ -31,11 +35,11 @@ export const AUTHENTICATED_PRINCIPAL = {
 
 export const AUTHORIZED_CONTEXT = {
   principal: AUTHENTICATED_PRINCIPAL,
-  scope: {
-    tenantId: TenantId.unsafe('tenant-1'),
-    projectId: ProjectId.unsafe('project-1'),
-    environmentId: EnvironmentId.unsafe('env-1'),
-  },
+  scope: buildEnvironmentAccessScope(
+    TenantId.unsafe('tenant-1'),
+    ProjectId.unsafe('project-1'),
+    EnvironmentId.unsafe('env-1')
+  ),
   action: { kind: 'command' as const, name: 'run:start' as const },
   requestId: 'req-1',
   authorizedAt: new Date('2026-03-14T00:00:00Z'),
@@ -60,9 +64,11 @@ export const START_RUN_FACADE_INPUT = {
     }),
   },
   requestedScope: {
-    tenantId: TenantId.unsafe('tenant-1'),
-    projectId: ProjectId.unsafe('project-1'),
-    environmentId: EnvironmentId.unsafe('env-1'),
+    ...buildEnvironmentAccessScope(
+      TenantId.unsafe('tenant-1'),
+      ProjectId.unsafe('project-1'),
+      EnvironmentId.unsafe('env-1')
+    ),
     action: { kind: 'command' as const, name: 'run:start' as const },
   },
 };
@@ -97,15 +103,7 @@ export function buildStartRunAuthorizedFacade(
         ok: true as const,
         context: {
           principal,
-          scope: {
-            tenantId: requestedScope.tenantId,
-            ...(requestedScope.projectId === undefined
-              ? {}
-              : { projectId: requestedScope.projectId }),
-            ...(requestedScope.environmentId === undefined
-              ? {}
-              : { environmentId: requestedScope.environmentId }),
-          },
+          scope: toExecutionScope(requestedScope),
           action: requestedScope.action,
           requestId,
           authorizedAt: AUTHORIZED_CONTEXT.authorizedAt,

@@ -4,6 +4,7 @@
  */
 import { START_RUN_PLAN_REJECTION_CODE } from '@dvt/contracts';
 
+import type { DeniedReason } from '../../application/ports/accessDecision.js';
 import type { AuthenticationFailureCode } from '../../application/ports/auth.js';
 import {
   START_RUN_ENGINE_ERROR_KIND,
@@ -13,7 +14,6 @@ import {
   START_RUN_FACADE_RESULT_KIND,
   type StartRunFacadeResult,
 } from '../../application/ports/startRunFacadePort.js';
-import type { DeniedReason } from '../../domain/auth/types.js';
 
 import {
   createHttpErrorResponse,
@@ -22,10 +22,7 @@ import {
   normalizeHttpErrorReason,
   type HttpResponseModel,
 } from './httpErrorContract.js';
-import {
-  compactHttpErrorDetails,
-  withOptionalHttpErrorDetails,
-} from './httpErrorDetails.js';
+import { compactHttpErrorDetails, withOptionalHttpErrorDetails } from './httpErrorDetails.js';
 import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
 import type { RouteParseIssue } from './routeParseIssue.js';
 
