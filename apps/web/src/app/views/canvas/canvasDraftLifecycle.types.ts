@@ -62,4 +62,5 @@ export type UseCanvasDraftLifecycleArgs = {
 export type CanvasDraftLifecycle = {
   draftSaveStatus: DraftSaveStatus;
   reloadLatestDraft: () => void;
+  handleCreateCanvasDocument: (command: { kind: string; title: string }) => Promise<void>;
 };

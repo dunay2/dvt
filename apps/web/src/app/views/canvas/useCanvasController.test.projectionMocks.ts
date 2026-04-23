@@ -1,5 +1,6 @@
 import { vi } from 'vitest';
 
+import { DBT_NODE_KINDS, DVT_AUTHORING_NODE_KINDS } from '../../plugins/nodeTypeCatalog.dbt';
 import type {
   CanvasHarnessMocks,
   CanvasHarnessState,
@@ -50,6 +51,24 @@ export function configureCanvasHarnessHookAndProjectionMocks(
     target: edge.targetId,
   }));
   mocks.getAllOverlays.mockReturnValue([{ id: 'impact' }]);
+  mocks.getAllCanvasKinds.mockReturnValue([
+    {
+      kind: 'dbt',
+      pluginId: 'dbt',
+      label: 'dbt',
+      description: 'Model-first canvas for dbt resources and dependencies.',
+      createTitle: 'dbt canvas',
+      nodeKinds: DBT_NODE_KINDS,
+    },
+    {
+      kind: 'transformation',
+      pluginId: 'dvt',
+      label: 'Transformation',
+      description: 'Flow-based transformation canvas for the protected authoring draft.',
+      createTitle: 'Transformation canvas',
+      nodeKinds: DVT_AUTHORING_NODE_KINDS,
+    },
+  ]);
   mocks.getRegisteredPluginIds.mockReturnValue(new Set(['dbt', 'monitoring', 'cost']));
   mocks.buildNodesWithImpact.mockImplementation(({ nodes }: { nodes: unknown[] }) => nodes);
   mocks.useCanvasGraphHandlers.mockImplementation(() => state.graphHandlersResult);

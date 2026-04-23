@@ -5,9 +5,10 @@ import {
   CanvasErrorStateView,
   CanvasLoadingStateView,
 } from './CanvasStateViews';
-import { DVT_AUTHORING_NODE_KINDS } from '../../plugins/nodeTypeCatalog.dbt';
+import { CanvasPlaygroundHost } from './CanvasPlaygroundHost';
 import { canvasViewCopy } from './copy';
 import type { CanvasWorkbenchSurfaceArgs } from './canvasCenterSurface.types';
+import type { NodeKindRegistration } from '../../plugins/nodeTypeContracts';
 
 function renderCanvasStartupWorkbenchSurface(
   args: Pick<CanvasWorkbenchSurfaceArgs, 'presentationState' | 'startupBlockState'>
@@ -68,6 +69,30 @@ function renderCanvasGraphWorkbenchSurface(
   return null;
 }
 
+function renderCanvasPlaygroundWorkbenchSurface(
+  args: Pick<
+    CanvasWorkbenchSurfaceArgs,
+    'presentationState' | 'availableCanvasKinds' | 'onCreateCanvasDocument'
+  >
+) {
+  const {
+    presentationState: { routeState },
+    availableCanvasKinds,
+    onCreateCanvasDocument,
+  } = args;
+
+  if (routeState !== 'needs_canvas') {
+    return null;
+  }
+
+  return (
+    <CanvasPlaygroundHost
+      canvasKinds={availableCanvasKinds}
+      onCreateCanvasDocument={onCreateCanvasDocument}
+    />
+  );
+}
+
 function resolveCanvasEmptyWorkbenchMessage(
   args: Pick<CanvasWorkbenchSurfaceArgs, 'canEditEdges' | 'canOpenSourceImport'>
 ) {
@@ -84,14 +109,35 @@ function resolveCanvasEmptyWorkbenchMessage(
   return canvasViewCopy.routeEmptyEditableMessage;
 }
 
+function resolveCanvasEmptyWorkbenchNodeKinds(
+  args: Pick<CanvasWorkbenchSurfaceArgs, 'canvasDocument' | 'availableCanvasKinds'>
+): readonly NodeKindRegistration[] {
+  const { canvasDocument, availableCanvasKinds } = args;
+  if (canvasDocument == null) {
+    return [];
+  }
+
+  return (
+    availableCanvasKinds.find((registration) => registration.kind === canvasDocument.kind)?.nodeKinds ??
+    []
+  );
+}
+
 function renderCanvasEmptyWorkbenchSurface(
   args: Pick<
     CanvasWorkbenchSurfaceArgs,
-    'presentationState' | 'canEditEdges' | 'canOpenSourceImport' | 'onCreateAuthoringNode'
+    | 'presentationState'
+    | 'canvasDocument'
+    | 'availableCanvasKinds'
+    | 'canEditEdges'
+    | 'canOpenSourceImport'
+    | 'onCreateAuthoringNode'
   >
 ) {
   const {
     presentationState: { routeState },
+    canvasDocument,
+    availableCanvasKinds,
     canEditEdges,
     canOpenSourceImport,
     onCreateAuthoringNode,
@@ -107,7 +153,14 @@ function renderCanvasEmptyWorkbenchSurface(
         canEditEdges,
         canOpenSourceImport,
       })}
-      nodeKinds={canEditEdges ? DVT_AUTHORING_NODE_KINDS : []}
+      nodeKinds={
+        canEditEdges
+          ? resolveCanvasEmptyWorkbenchNodeKinds({
+              canvasDocument,
+              availableCanvasKinds,
+            })
+          : []
+      }
       onCreateAuthoringNode={canEditEdges ? onCreateAuthoringNode : undefined}
     />
   );
@@ -122,6 +175,11 @@ export function renderCanvasWorkbenchSurface(args: CanvasWorkbenchSurfaceArgs) {
   const graphSurface = renderCanvasGraphWorkbenchSurface(args);
   if (graphSurface != null) {
     return graphSurface;
+  }
+
+  const playgroundSurface = renderCanvasPlaygroundWorkbenchSurface(args);
+  if (playgroundSurface != null) {
+    return playgroundSurface;
   }
 
   const emptySurface = renderCanvasEmptyWorkbenchSurface(args);

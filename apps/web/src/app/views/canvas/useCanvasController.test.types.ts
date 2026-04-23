@@ -70,6 +70,7 @@ export type CanvasHarnessMocks = {
   mapCanonicalNodeToCanvasNode: MockFn;
   mapCanonicalEdgeToCanvasEdge: MockFn;
   getAllOverlays: MockFn;
+  getAllCanvasKinds: MockFn;
   getRegisteredPluginIds: MockFn;
   buildNodesWithImpact: MockFn;
   useCanvasExecutionActions: MockFn;

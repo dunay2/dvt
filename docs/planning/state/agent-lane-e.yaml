@@ -2229,7 +2229,7 @@ tasks:
   - task_id: TF-E2-K
     parent_task: TF-E2
     priority: P0
-    status: queued
+    status: in_progress
     objective: >-
       introduce the workspace playground and multi-canvas host model so Canvas becomes a typed
       document tab rather than the sole product center, and browser-proof work starts from a real
@@ -2242,18 +2242,39 @@ tasks:
       proofs resume.
     complexity: M
     effort_points: 5
-    progress_pct: 0
+    progress_pct: 20
     evidence_refs:
       - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-project-playground-and-multi-canvas-host-plan-20260423.md
       - docs/planning/proposals/workspace-first-frontend-architecture-specification.md
       - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-canvas-target-architecture-execution-plan-20260417.md
       - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-canvas-empty-authoring-entrypoint-design-20260422.md
     status_reason: >-
-      Planned prerequisite slice; implementation has not started. The 2026-04-23 think-first capture
-      freezes the missing host model above Canvas: one workspace playground, multiple canvas
-      documents as tabs, typed canvas kinds contributed by plugins, and a real create-canvas plus
-      create-first-node UX before the selected-closure Cypress lane can claim end-to-end authoring
-      proof.
+      Execution started. The first implementation hito is `TF-E2-K-A`: host-owned first-canvas
+      creation and typed empty-canvas posture persisted through the canonical workspace draft
+      boundary before any multi-canvas restoration claim.
+    last_verified: '2026-04-23'
+  - task_id: TF-E2-K-A
+    parent_task: TF-E2-K
+    priority: P0
+    status: in_progress
+    objective: >-
+      implement the host-owned create-first-canvas flow and typed empty-canvas posture for the
+      current single-draft workspace boundary.
+    dependency: TF-E2-K
+    target: >-
+      The Canvas route shows a playground host posture when no canvas identity exists, persists the
+      first canvas kind through the canonical workspace draft contract, and then renders a typed
+      empty canvas for `dbt` or `transformation` before the first node is added.
+    complexity: S
+    effort_points: 3
+    progress_pct: 10
+    evidence_refs:
+      - docs/architecture/components/web/graph/canvas-playground-host-component.md
+      - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-project-playground-and-multi-canvas-host-plan-20260423.md
+      - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-canvas-empty-authoring-entrypoint-design-20260422.md
+    status_reason: >-
+      Active implementation slice. This hito deliberately persists one typed canvas document per
+      workspace and does not yet claim multi-canvas restoration.
     last_verified: '2026-04-23'
   - task_id: TF-E2-E-B
     parent_task: TF-E2-E
@@ -2537,10 +2558,10 @@ verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
   verified_on: '2026-04-23'
-  total_tasks: 72
-  total_effort_points: 255
+  total_tasks: 73
+  total_effort_points: 258
   completed_weighted_points: 129.8
-  lane_progress_pct: 51
+  lane_progress_pct: 50
   notes: >-
     Weighted progress uses effort_points and records partial convergence already present in the
     frontend, even when the lane still lacks accepted closure for most slices. F-17 now tracks 7
@@ -2555,5 +2576,6 @@ verification_summary:
     the remaining selected-closure UX proof gaps and then added `TF-E2-K` to freeze the missing host
     prerequisite above those proofs: workspace playground, multi-canvas tabs, typed canvas kinds,
     and a real create-canvas/create-first-node route before browser end-to-end claims are treated as
-    credible. The summary values were recomputed from the current task registry on 2026-04-23 to
-    realign the YAML with the actual lane contents.
+    credible. Execution is now open on `TF-E2-K-A`, the first-canvas host slice over the current
+    single-draft boundary. The summary values were recomputed from the current task registry on
+    2026-04-23 to realign the YAML with the actual lane contents.

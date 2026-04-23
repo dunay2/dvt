@@ -31,6 +31,8 @@ For the shell contract and local chrome composition, use
 [Canvas Shell Component](./canvas-shell-component.md). For controller-local
 layering, use
 [Canvas Controller Current To Target Architecture](./canvas-controller-current-to-target-architecture.md).
+For the host layer above the route, use
+[Canvas Playground Host Component](./canvas-playground-host-component.md).
 For authoring-runtime contract and command-side runtime composition, use
 [Canvas Authoring Runtime Component](./canvas-authoring-runtime-component.md).
 For protected-draft semantic projection and viewport-boundary detail, use
@@ -47,6 +49,7 @@ For protected-draft semantic projection and viewport-boundary detail, use
 - [Canvas Route Presentation Component](./canvas-route-presentation-component.md)
 - [Canvas Route Composition Component](./canvas-route-composition-component.md)
 - [Canvas Shell Component](./canvas-shell-component.md)
+- [Canvas Playground Host Component](./canvas-playground-host-component.md)
 - [Canvas Authoring Projection Component](./canvas-authoring-projection-component.md)
 - [Graph Route Bootstrap Architecture](./graph-route-bootstrap-architecture.md)
 - [Graph Sequences And State Machines](./graph-sequences-and-state-machines.md)

@@ -13,8 +13,11 @@ export function renderCanvasCenterSurface(args: RenderCanvasCenterSurfaceArgs) {
     presentationState: args.presentationState,
     startupBlockState: args.startupBlockState,
     workbenchErrorMessage: args.workbenchErrorMessage,
+    canvasDocument: args.canvasDocument,
+    availableCanvasKinds: args.availableCanvasKinds,
     canEditEdges: args.canEditEdges,
     canOpenSourceImport: args.canOpenSourceImport,
+    onCreateCanvasDocument: args.onCreateCanvasDocument,
     onCreateAuthoringNode: args.onCreateAuthoringNode,
   });
 }

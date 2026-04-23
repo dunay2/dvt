@@ -32,13 +32,17 @@ The command is exposed through:
 - `canvasShellLayoutBuilder.tsx`
 - `CanvasCenterSurface.tsx`
 
-The visible authoring catalog is the governed `DVT_AUTHORING_NODE_KINDS`
-registry. UI surfaces must not define a second ad hoc node-kind list.
+The visible authoring catalog is the governed `CanvasKindRegistration.nodeKinds`
+catalog for the active `canvasDocument.kind`. UI surfaces must not define a
+second ad hoc node-kind list. For the `transformation` canvas kind, that
+catalog currently resolves to `DVT_AUTHORING_NODE_KINDS`.
 
 ## Invariants
 
 - Empty Canvas is a productive authoring state when mutations are allowed.
 - Empty Canvas is read-only when mutations are denied.
+- Empty authoring is only reachable after the host persists a canvas document.
+- The empty catalog must resolve from the active `canvasDocument.kind`.
 - Node creation must pass through the existing draft graph lifecycle.
 - The first-node path must not fabricate startup nodes or local-only success.
 - React Flow nodes are projection state; they are not semantic authority.
@@ -51,8 +55,9 @@ registry. UI surfaces must not define a second ad hoc node-kind list.
 
 ```mermaid
 stateDiagram-v2
-  [*] --> EmptyReadonly: empty draft + mutation denied
-  [*] --> EmptyAuthorable: empty draft + mutation allowed
+  [*] --> NeedsCanvas: no persisted canvas document
+  NeedsCanvas --> EmptyReadonly: save canvas + mutation denied
+  NeedsCanvas --> EmptyAuthorable: save canvas + mutation allowed
   EmptyReadonly --> EmptyReadonly: show read-only copy
   EmptyAuthorable --> CreatingNode: choose governed node kind
   CreatingNode --> DraftLifecycle: build canonical authoring node
@@ -66,8 +71,10 @@ stateDiagram-v2
 
 ```mermaid
 flowchart LR
-  Center["CanvasCenterSurface"] --> Workbench["canvasCenterSurfaceWorkbench"]
-  Workbench --> Catalog["DVT_AUTHORING_NODE_KINDS"]
+  Host["CanvasPlaygroundHost"] --> Draft["Persist canvas document"]
+  Draft --> Center["CanvasCenterSurface"]
+  Center --> Workbench["canvasCenterSurfaceWorkbench"]
+  Workbench --> Catalog["CanvasKindRegistration.nodeKinds"]
   Catalog --> Command["handleCreateAuthoringNode"]
   Command --> Builder["canvasAuthoringNodeCommand"]
   Builder --> Drop["dropCanonicalNode"]
@@ -96,13 +103,17 @@ drop operations.
 Mature graph systems such as NiFi, Dagster, and dbt editors do not require a
 whole project or a compile-valid graph before the first node can exist. They
 allow partial authoring state, then validate execution on the selected runnable
-unit. This component follows that split.
+unit. This component follows that split, but now does so behind a host-owned
+canvas document identity rather than a route-global transformation default.
 
 ## Drift To Prevent
 
 - Do not route first-node creation through project setup.
-- Do not create another catalog beside `DVT_AUTHORING_NODE_KINDS`.
+- Do not create another catalog beside the plugin-owned `CanvasKindRegistration`
+  node kinds.
 - Do not bypass `dropCanonicalNode` or `canvasGraphLifecycle`.
 - Do not make `CanvasCenterSurface.tsx` own transport, workbench, and empty
   authoring decisions in one large method again.
+- Do not skip the `needs_canvas` host posture by inventing a default document
+  client-side.
 - Do not make import capability the only path out of empty Canvas.

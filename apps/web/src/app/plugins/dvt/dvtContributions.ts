@@ -21,6 +21,16 @@ export const dvtContributions: PluginContributions = {
   version: '1.0.0',
   capabilities: ['canvas.render', 'canvas.edit'],
   nodeKinds: DVT_AUTHORING_NODE_KINDS,
+  canvasKinds: [
+    {
+      kind: 'transformation',
+      pluginId: DVT_PLUGIN_ID,
+      label: 'Transformation',
+      description: 'Flow-based transformation canvas for the protected authoring draft.',
+      createTitle: 'Transformation canvas',
+      nodeKinds: DVT_AUTHORING_NODE_KINDS,
+    },
+  ],
   nodeRenderers,
   connectionRules: [
     { sourceKind: 'dvt:source', targetKind: 'dvt:sql_transform', allowed: true },

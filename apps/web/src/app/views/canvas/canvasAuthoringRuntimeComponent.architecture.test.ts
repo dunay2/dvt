@@ -63,7 +63,7 @@ describe('canvas authoring runtime component architecture', () => {
     expect(LIFECYCLE_SOURCE).toContain('useCanvasDraftPersistence');
     expect(LIFECYCLE_SOURCE).toContain('useCanvasCurrentDraftPayload');
     expect(LIFECYCLE_SOURCE).toContain(
-      'Owned concern: compose bootstrapping, persistence, and save-attempt policy'
+      'Owned concern: compose bootstrapping, persistence, save-attempt policy, and first-canvas creation'
     );
     expect(LIFECYCLE_SOURCE).not.toContain('useQuery(');
 

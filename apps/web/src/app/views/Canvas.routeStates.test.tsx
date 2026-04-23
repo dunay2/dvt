@@ -91,19 +91,20 @@ describe('Canvas route states', () => {
       },
     },
     {
-      name: 'renders a governed empty state when the workspace graph has no nodes',
+      name: 'renders a playground host state when the workspace has no canvas document yet',
       overrides: {
         explorerNodes: [],
+        canvasDocument: null,
       },
       surface: {
-        text: 'No graph content loaded',
-        slot: 'canvas-empty-state',
-        viewportVisible: true,
+        text: 'Create canvas',
+        slot: 'canvas-playground-empty-state',
+        viewportVisible: false,
       },
       bootstrap: {
-        routeState: 'empty',
+        routeState: 'needs_canvas',
         bootstrapStatus: 'complete',
-        bootstrapDetail: 'Canvas is ready with no graph content yet',
+        bootstrapDetail: 'Canvas playground is ready to create the first canvas',
         canCompleteBootstrap: true,
       },
     },
@@ -118,9 +119,37 @@ describe('Canvas route states', () => {
     expectCanvasBootstrapState(bootstrap);
   });
 
+  it('creates the first transformation canvas through the controller command', async () => {
+    const handleCreateCanvasDocument = vi.fn();
+    await renderCanvasRouteWithController(harness, {
+      explorerNodes: [],
+      canvasDocument: null,
+      handleCreateCanvasDocument,
+    });
+
+    const createButton = Array.from(harness.container.querySelectorAll('button')).find((button) =>
+      button.textContent?.includes('Transformation')
+    );
+
+    expect(harness.container.textContent).toContain('Create canvas');
+    expect(harness.container.textContent).not.toContain('Add first node');
+    expect(createButton).toBeDefined();
+
+    createButton?.click();
+
+    expect(handleCreateCanvasDocument).toHaveBeenCalledWith({
+      kind: 'transformation',
+      title: 'Transformation canvas',
+    });
+  });
+
   it('renders read-only empty guidance without suggesting Add data when edits are gated', async () => {
     await renderCanvasRouteWithController(harness, {
       explorerNodes: [],
+      canvasDocument: {
+        kind: 'transformation',
+        title: 'Main canvas',
+      },
       userPermissions: {
         canPlan: false,
         canRun: false,
@@ -142,6 +171,10 @@ describe('Canvas route states', () => {
     const handleCreateAuthoringNode = vi.fn();
     await renderCanvasRouteWithController(harness, {
       explorerNodes: [],
+      canvasDocument: {
+        kind: 'transformation',
+        title: 'Main canvas',
+      },
       handleCreateAuthoringNode,
     });
 
@@ -163,13 +196,32 @@ describe('Canvas route states', () => {
   it('renders empty guidance without suggesting Add data when source import is unavailable', async () => {
     await renderCanvasRouteWithController(harness, {
       explorerNodes: [],
+      canvasDocument: {
+        kind: 'transformation',
+        title: 'Main canvas',
+      },
       canOpenSourceImport: false,
-    } as never);
+    });
 
     expect(harness.container.textContent).toContain('No graph content loaded');
     expect(harness.container.textContent).toContain('Source import is unavailable in this runtime');
     expect(harness.container.textContent).not.toContain('Use Add data');
     expectCanvasRegistryClosed();
+  });
+
+  it('shows a typed transformation empty canvas catalog instead of the dbt catalog', async () => {
+    await renderCanvasRouteWithController(harness, {
+      explorerNodes: [],
+      canvasDocument: {
+        kind: 'transformation',
+        title: 'Main canvas',
+      },
+    });
+
+    expect(harness.container.textContent).toContain('Add first node');
+    expect(harness.container.textContent).toContain('SQL transform');
+    expect(harness.container.textContent).not.toContain('Exposure');
+    expect(harness.container.textContent).not.toContain('Metric');
   });
 
   it('renders a governed error state when the graph snapshot fails before any nodes are available', async () => {

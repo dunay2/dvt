@@ -18,14 +18,16 @@ import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 export function useCanvasCurrentDraftPayload(
   graphNodes: CanvasDraftLifecycleGraphNode[],
   draftSession: CanvasDraftSession,
+  canvasDocument: CanvasDraftAuthoringPayload['projectedDraft']['canvas'] | null,
   canonicalNodes: readonly CanonicalNode[],
   canonicalEdges: readonly CanonicalEdge[],
   workspaceScope: WorkspaceScope,
   previewProvenanceConfig: Pick<WorkspaceBootstrapConfig, 'gitBranch' | 'gitSha' | 'gitRepo'>
 ) {
   const currentDraftPayload = useMemo(
-    () => buildCurrentDraftPayload(graphNodes, draftSession),
-    [draftSession, graphNodes]
+    () =>
+      buildCurrentDraftPayload(graphNodes, draftSession, canvasDocument ?? { kind: '', title: '' }),
+    [canvasDocument, draftSession, graphNodes]
   );
   const currentDraftAuthoringPayload = useMemo<CanvasDraftAuthoringPayload>(
     () => ({

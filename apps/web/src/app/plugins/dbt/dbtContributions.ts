@@ -128,6 +128,16 @@ export const dbtContributions: PluginContributions = {
       },
     },
   ],
+  canvasKinds: [
+    {
+      kind: 'dbt',
+      pluginId: DBT_PLUGIN_ID,
+      label: 'dbt',
+      description: 'Model-first canvas for dbt resources and dependencies.',
+      createTitle: 'dbt canvas',
+      nodeKinds: DBT_NODE_KINDS,
+    },
+  ],
   // Connection rules express dbt-local authoring policy; shell-level graph
   // invariants still run before these plugin rules are evaluated.
   connectionRules: [

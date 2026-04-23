@@ -1,7 +1,7 @@
 import { type NodeTypes } from '@xyflow/react';
 
 import DbtNodeComponent from '../../components/canvas/DbtNodeComponent';
-import { getRegisteredPluginIds } from '../../plugins/registry';
+import { getAllCanvasKinds, getRegisteredPluginIds } from '../../plugins/registry';
 import type { useCanvasAuthoringRuntime } from './useCanvasAuthoringRuntime';
 import type { useCanvasControllerEnvironment } from './useCanvasControllerEnvironment';
 import type { useCanvasControllerReadModel } from './useCanvasControllerReadModel';
@@ -49,7 +49,7 @@ function buildCanvasShellViewModel(args: CanvasControllerViewModelArgs) {
       workspaceServiceCapabilities,
       store,
     },
-    authoringRuntime: { backendPosture, graphModel },
+    authoringRuntime: { backendPosture, graphModel, draftReadModel },
     overlayModel,
     readModel: { nodesWithImpact, inspectorNode },
   } = args;
@@ -68,6 +68,8 @@ function buildCanvasShellViewModel(args: CanvasControllerViewModelArgs) {
     inspectorNode,
     activeRunId: overlayModel.activeRunId,
     registeredPlugins: getRegisteredPluginIds(capabilities),
+    availableCanvasKinds: getAllCanvasKinds(capabilities),
+    canvasDocument: draftReadModel?.record?.draft.canvas ?? null,
     userPermissions: store.userPermissions,
     canvasAuthoringMode,
     canOpenSourceImport: workspaceServiceCapabilities.sourceImportAvailable,
@@ -87,6 +89,7 @@ function buildCanvasInteractionViewModel(args: CanvasControllerViewModelArgs) {
     mutationHandlers,
     graphHandlers,
     overlayModel,
+    authoringRuntime: { handleCreateCanvasDocument },
   } = args;
 
   return {
@@ -100,6 +103,7 @@ function buildCanvasInteractionViewModel(args: CanvasControllerViewModelArgs) {
     handleDrop: graphHandlers.handleDrop,
     handleDragOver: graphHandlers.handleDragOver,
     handleCreateAuthoringNode: graphHandlers.handleCreateAuthoringNode,
+    handleCreateCanvasDocument,
     handleSourceImportComplete: mutationHandlers.handleSourceImportComplete,
     importedNodeFocusIds: mutationHandlers.importedNodeFocusIds,
     handleImportedNodeFocusComplete: mutationHandlers.handleImportedNodeFocusComplete,

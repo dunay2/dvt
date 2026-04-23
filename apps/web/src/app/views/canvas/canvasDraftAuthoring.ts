@@ -107,6 +107,10 @@ function buildCanvasDraftAuthoringGraphSync(
   const canonicalEdgeLookup = buildCanonicalEdgeLookup(payload.canonicalEdges);
 
   return {
+    canvas: {
+      kind: payload.projectedDraft.canvas.kind,
+      title: payload.projectedDraft.canvas.title,
+    },
     nodeIds: [...payload.projectedDraft.nodeIds],
     nodePositions: { ...payload.projectedDraft.nodePositions },
     nodes: payload.projectedDraft.nodeIds.map((nodeId) => {

@@ -42,7 +42,8 @@ describe('Canvas empty authoring entrypoint architecture', () => {
       expect(docText).toContain(section);
     }
     expect(docText).toContain('```mermaid');
-    expect(docText).toContain('DVT_AUTHORING_NODE_KINDS');
+    expect(docText).toContain('CanvasKindRegistration');
+    expect(docText).toContain('canvasDocument.kind');
   });
 
   it('states owned concern docblocks on the entrypoint modules', () => {
@@ -56,8 +57,10 @@ describe('Canvas empty authoring entrypoint architecture', () => {
     }
   });
 
-  it('creates nodes from the governed catalog through the existing draft lifecycle', () => {
-    expect(CENTER_WORKBENCH_SOURCE).toContain('DVT_AUTHORING_NODE_KINDS');
+  it('creates nodes from the typed canvas catalog through the existing draft lifecycle', () => {
+    expect(CENTER_WORKBENCH_SOURCE).toContain('resolveCanvasEmptyWorkbenchNodeKinds');
+    expect(CENTER_WORKBENCH_SOURCE).toContain('canvasDocument.kind');
+    expect(CENTER_WORKBENCH_SOURCE).toContain('availableCanvasKinds');
     expect(NODE_CREATION_HANDLER_SOURCE).toContain('buildAuthoringNodeCommand');
     expect(NODE_CREATION_HANDLER_SOURCE).toContain('dropCanonicalNode');
     expect(NODE_CREATION_HANDLER_SOURCE).toContain('canvasGraphLifecycle.node.admitExplicit');

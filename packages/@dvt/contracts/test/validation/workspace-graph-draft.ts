@@ -14,6 +14,10 @@ const baseScope = {
 } as const;
 
 const baseDraft = {
+  canvas: {
+    kind: 'transformation',
+    title: 'Main canvas',
+  },
   nodeIds: ['source-1'],
   nodePositions: {
     'source-1': { x: 120, y: 80 },
@@ -98,6 +102,23 @@ export function registerValidationWorkspaceGraphDraftSuite(): void {
           expectedRevision: 'rev-18',
           idempotencyKey: 'save-tenant-a-project-a-prod-rev-18',
           draft: compileShapedDraft,
+        })
+      ).toThrow(ContractValidationError);
+    });
+
+    it('rejects save requests when canvas document identity is missing', () => {
+      expect(() =>
+        parseWorkspaceGraphDraftSaveRequest({
+          scope: baseScope,
+          schemaVersion: 'workspace-graph-draft.v1',
+          expectedRevision: 'rev-18a',
+          idempotencyKey: 'save-tenant-a-project-a-prod-rev-18a',
+          draft: {
+            nodeIds: [],
+            nodePositions: {},
+            nodes: [],
+            edges: [],
+          },
         })
       ).toThrow(ContractValidationError);
     });

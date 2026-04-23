@@ -17,6 +17,10 @@ export function buildWorkspaceGraphDraft(
   overrides: Partial<WorkspaceGraphAuthoringDraft> = {}
 ): WorkspaceGraphAuthoringDraft {
   return {
+    canvas: {
+      kind: 'transformation',
+      title: 'Main canvas',
+    },
     nodeIds: ['source_1', 'transform_1', 'sink_1'],
     nodePositions: {
       source_1: { x: 0, y: 0 },

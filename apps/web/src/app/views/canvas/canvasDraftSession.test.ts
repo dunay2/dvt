@@ -12,6 +12,10 @@ function buildRemoteDraftRecord(
     revision: 'rev-1',
     savedAt: '2026-04-17T00:00:00Z',
     draft: {
+      canvas: {
+        kind: 'transformation',
+        title: 'Main canvas',
+      },
       nodeIds: ['node_1', 'node_2'],
       nodePositions: {
         node_1: { x: 0, y: 0 },
@@ -44,6 +48,10 @@ describe('canvasDraftSession', () => {
     const session = canvasDraftSession.machine.bootstrap({
       remoteDraft: buildRemoteDraftRecord({
         draft: {
+          canvas: {
+            kind: 'transformation',
+            title: 'Main canvas',
+          },
           nodeIds: ['node_2', 'node_remote_only'],
           nodePositions: {
             node_2: { x: 220, y: 120 },
@@ -69,6 +77,10 @@ describe('canvasDraftSession', () => {
       canvasDraftSession.machine.bootstrap({
         remoteDraft: buildRemoteDraftRecord({
           draft: {
+            canvas: {
+              kind: 'transformation',
+              title: 'Main canvas',
+            },
             nodeIds: ['node_1'],
             nodePositions: {
               node_1: { x: 0, y: 0 },
@@ -98,6 +110,10 @@ describe('canvasDraftSession', () => {
     const session = canvasDraftSession.machine.bootstrap({
       remoteDraft: buildRemoteDraftRecord({
         draft: {
+          canvas: {
+            kind: 'transformation',
+            title: 'Main canvas',
+          },
           nodeIds: ['node_1'],
           nodePositions: {
             node_1: { x: 0, y: 0 },
@@ -137,6 +153,10 @@ describe('canvasDraftSession', () => {
     const session = canvasDraftSession.machine.bootstrap({
       remoteDraft: buildRemoteDraftRecord({
         draft: {
+          canvas: {
+            kind: 'transformation',
+            title: 'Main canvas',
+          },
           nodeIds: ['node_1', 'node_remote_only'],
           nodePositions: {
             node_1: { x: 0, y: 0 },

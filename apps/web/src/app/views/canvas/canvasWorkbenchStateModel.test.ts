@@ -8,6 +8,7 @@ describe('canvasWorkbenchStateModel', () => {
     expect(
       getCanvasWorkbenchState({
         canonicalNodeCount: 0,
+        hasCanvasDocument: false,
         isLoadingGraph: true,
         graphErrorMessage: 'stale failure',
       })
@@ -18,6 +19,7 @@ describe('canvasWorkbenchStateModel', () => {
     expect(
       getCanvasWorkbenchState({
         canonicalNodeCount: 0,
+        hasCanvasDocument: false,
         isLoadingGraph: false,
         graphErrorMessage: 'workspace graph unavailable',
       })
@@ -31,6 +33,7 @@ describe('canvasWorkbenchStateModel', () => {
     expect(
       getCanvasWorkbenchState({
         canonicalNodeCount: 0,
+        hasCanvasDocument: true,
         isLoadingGraph: false,
         graphErrorMessage: null,
       })
@@ -41,10 +44,22 @@ describe('canvasWorkbenchStateModel', () => {
     expect(
       getCanvasWorkbenchState({
         canonicalNodeCount: 2,
+        hasCanvasDocument: true,
         isLoadingGraph: false,
         graphErrorMessage: 'background refresh failed',
       })
     ).toEqual({ kind: 'ready' });
+  });
+
+  it('returns needs_canvas when the workspace has no persisted canvas document yet', () => {
+    expect(
+      getCanvasWorkbenchState({
+        canonicalNodeCount: 0,
+        hasCanvasDocument: false,
+        isLoadingGraph: false,
+        graphErrorMessage: null,
+      })
+    ).toEqual({ kind: 'needs_canvas' });
   });
 
   it('returns no read-only banner when all mutation permissions are available', () => {

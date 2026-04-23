@@ -13,6 +13,10 @@ function create(record: WorkspaceGraphDraftRecord | null): CanvasDraftBaseline {
 
 function serialize(draft: WorkspaceGraphDraft): string {
   return JSON.stringify({
+    canvas: {
+      kind: draft.canvas.kind,
+      title: draft.canvas.title,
+    },
     nodeIds: [...draft.nodeIds],
     edges: [...draft.edges]
       .map((edge) => ({ sourceId: edge.sourceId, targetId: edge.targetId }))

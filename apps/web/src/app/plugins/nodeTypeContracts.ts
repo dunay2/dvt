@@ -16,6 +16,15 @@ export type NodeKindRegistration = {
   supportsColumns: boolean;
 };
 
+export type CanvasKindRegistration = {
+  kind: string;
+  pluginId: string;
+  label: string;
+  description: string;
+  createTitle: string;
+  nodeKinds: readonly NodeKindRegistration[];
+};
+
 export type CanvasEdgeType = 'ref' | 'source' | 'test' | 'exposure' | 'metric';
 
 export type EdgeTypeStrategyContext = {

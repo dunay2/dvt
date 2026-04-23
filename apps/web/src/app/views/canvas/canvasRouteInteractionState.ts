@@ -23,6 +23,8 @@ export type CanvasRouteStartupBlockState =
 export type CanvasRouteInteractionState = {
   effectiveWorkbenchState: ReturnType<typeof getCanvasWorkbenchState>;
   startupBlockState: CanvasRouteStartupBlockState | null;
+  canvasDocument: CanvasController['canvasDocument'];
+  availableCanvasKinds: CanvasController['availableCanvasKinds'];
   effectiveUserPermissions: CanvasController['userPermissions'];
   readOnlyState: ReturnType<typeof getCanvasReadOnlyState>;
   workbenchErrorMessage: string | null;
@@ -34,6 +36,7 @@ function resolveEffectiveWorkbenchState(
 ): CanvasRouteInteractionState['effectiveWorkbenchState'] {
   const workbenchState = getCanvasWorkbenchState({
     canonicalNodeCount: controller.explorerNodes.length,
+    hasCanvasDocument: controller.canvasDocument != null,
     isLoadingGraph: controller.isLoadingGraph,
     graphErrorMessage: controller.graphErrorMessage,
   });
@@ -112,6 +115,8 @@ export function deriveCanvasRouteInteractionState(
   return {
     effectiveWorkbenchState,
     startupBlockState,
+    canvasDocument: controller.canvasDocument,
+    availableCanvasKinds: controller.availableCanvasKinds,
     effectiveUserPermissions,
     readOnlyState,
     workbenchErrorMessage:

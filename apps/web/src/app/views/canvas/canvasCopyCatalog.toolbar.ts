@@ -88,6 +88,10 @@ export const canvasViewToolbarCopyByKey = {
     key: 'canvas.bootstrap.loadingGraphDetail',
     fallback: 'Loading workspace graph for canvas',
   },
+  needsCanvasReadyDetail: {
+    key: 'canvas.bootstrap.needsCanvasReadyDetail',
+    fallback: 'Canvas playground is ready to create the first canvas',
+  },
   emptyCanvasReadyDetail: {
     key: 'canvas.bootstrap.emptyReadyDetail',
     fallback: 'Canvas is ready with no graph content yet',
