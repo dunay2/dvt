@@ -9,7 +9,7 @@ import type {
 import type { WorkspaceGraphDraftRecord } from '../../ports/workspace';
 import type { WorkspaceGraphDraftAuthoringReadResult } from '../../ports/workspaceGraphDraftAuthoring';
 import {
-  projectDesignGraphDraftSemanticGraph,
+  projectWorkspaceGraphAuthoringDraftSemanticGraph,
   projectProtectedWorkspaceGraphDraftRecord,
   type WorkspaceGraphDraftSemanticGraph,
 } from '../../services/workspace/workspaceGraphDraftProjection';
@@ -65,7 +65,7 @@ export function projectCanvasDraftReadModel(
         formatError: null,
         formatMeta: result.formatMeta,
         record: projectProtectedWorkspaceGraphDraftRecord(result.record),
-        semanticGraph: projectDesignGraphDraftSemanticGraph(result.record.draft),
+        semanticGraph: projectWorkspaceGraphAuthoringDraftSemanticGraph(result.record.draft),
       };
     case 'denied':
       return {

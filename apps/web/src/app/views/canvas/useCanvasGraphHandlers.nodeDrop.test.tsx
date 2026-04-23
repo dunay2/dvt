@@ -3,6 +3,8 @@
 import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { DVT_AUTHORING_NODE_KINDS } from '../../plugins/nodeTypeCatalog.dbt';
+import type { NodeKindRegistration } from '../../plugins/nodeTypeContracts';
 import { canvasViewCopy } from './copy';
 import {
   buildCanonicalNode,
@@ -12,6 +14,14 @@ import {
   restoreGraphHandlersTestDoubles,
   toastState,
 } from './useCanvasGraphHandlers.test.support';
+
+function requireAuthoringNodeKind(kind: string): NodeKindRegistration {
+  const registration = DVT_AUTHORING_NODE_KINDS.find((candidate) => candidate.kind === kind);
+  if (registration == null) {
+    throw new Error(`Missing authoring node kind fixture: ${kind}`);
+  }
+  return registration;
+}
 
 describe('useCanvasGraphHandlers node drop', () => {
   beforeEach(() => {
@@ -120,6 +130,85 @@ describe('useCanvasGraphHandlers node drop', () => {
       harness.latest()?.handleDrop(dragEvent);
     });
 
+    expect(setNodes).not.toHaveBeenCalled();
+
+    harness.cleanup();
+  });
+
+  it('creates an authoring node from the governed node catalog through the draft lifecycle', async () => {
+    const setNodes = vi.fn();
+    const setDraftSession = vi.fn();
+    const harness = renderGraphHandlersHook({
+      canEditEdges: true,
+      nodes: [],
+      draftSession: {
+        ...buildDraftSession(),
+        workingSet: {
+          visibleNodeIds: [],
+          visibleEdges: [],
+          pendingExplicitNodeIds: [],
+        },
+      },
+      setNodes,
+      setDraftSession,
+    });
+    await harness.render();
+
+    act(() => {
+      harness.latest()?.handleCreateAuthoringNode(
+        requireAuthoringNodeKind('dvt:sql_transform')
+      );
+    });
+
+    expect(setNodes).toHaveBeenCalledTimes(1);
+    const nodeUpdater = setNodes.mock.calls[0]?.[0];
+    expect(typeof nodeUpdater).toBe('function');
+    const nextNodes = nodeUpdater([]);
+    expect(nextNodes).toEqual([
+      expect.objectContaining({
+        id: 'dvt-sql-transform-1',
+        position: { x: 0, y: 0 },
+        data: expect.objectContaining({
+          name: 'SQL transform 1',
+          pluginKind: 'dvt:sql_transform',
+          role: 'transform',
+        }),
+      }),
+    ]);
+    expect(setDraftSession).toHaveBeenCalledTimes(1);
+    const nextDraftSession = setDraftSession.mock.calls[0]?.[0]({
+      ...buildDraftSession(),
+      workingSet: {
+        visibleNodeIds: [],
+        visibleEdges: [],
+        pendingExplicitNodeIds: [],
+      },
+    });
+    expect(nextDraftSession.workingSet.visibleNodeIds).toContain('dvt-sql-transform-1');
+    expect(nextDraftSession.localNodeCatalog?.['dvt-sql-transform-1']).toEqual(
+      expect.objectContaining({
+        id: 'dvt-sql-transform-1',
+        kind: 'dvt:sql_transform',
+        role: 'transform',
+      })
+    );
+
+    harness.cleanup();
+  });
+
+  it('rejects authoring node creation when graph edits are gated', async () => {
+    const setNodes = vi.fn();
+    const harness = renderGraphHandlersHook({
+      canEditEdges: false,
+      setNodes,
+    });
+    await harness.render();
+
+    act(() => {
+      harness.latest()?.handleCreateAuthoringNode(requireAuthoringNodeKind('dvt:source'));
+    });
+
+    expect(toastState.error).toHaveBeenCalledWith(canvasViewCopy.mutationUnavailableMessage);
     expect(setNodes).not.toHaveBeenCalled();
 
     harness.cleanup();

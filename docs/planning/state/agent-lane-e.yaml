@@ -2010,20 +2010,22 @@ tasks:
     priority: P0
     status: in_progress
     objective: >-
-      adopt the shared workspace graph-draft contract inside Canvas so editable graph reads and
-      writes stop depending on browser-local or route-local persistence semantics.
+      adopt the shared workspace graph authoring-draft contract inside Canvas so editable graph
+      reads and writes stop depending on browser-local or route-local persistence semantics, while
+      compile-ready `DesignGraphDraft` stays a derived projection instead of the active edit model.
     dependency: TF-A2, TF-C4
     target: >-
-      Canvas consumes the governed workspace graph-draft read/write boundary through
+      Canvas consumes the governed workspace graph authoring-draft read/write boundary through
       `IWorkspaceGraphDraftAuthoringPort`, wired by the composition root, removes projected DTO or
       storage authority from the active product path, fails closed when canonical persistence is
       unavailable, adopts the shared compare-and-swap plus reject-on-stale semantics without
       frontend-local overwrite rules, renders explicit writable versus read-only capability states
-      from boundary outcomes, and consumes governed format metadata plus typed corrupt or
-      unsupported draft outcomes.
+      from boundary outcomes, consumes governed format metadata plus typed corrupt or unsupported
+      draft outcomes, and treats `DesignGraphDraft` as a compile projection rather than the active
+      editable payload.
     complexity: S
     effort_points: 3
-    progress_pct: 95
+    progress_pct: 60
     evidence_refs:
       - docs/planning/closeouts/20260418-tf-e2-canvas-draft-repository-seam-closeout.md
       - docs/planning/closeouts/20260418-tf-e2-canvas-srp-seams-closeout.md
@@ -2040,33 +2042,19 @@ tasks:
       - apps/web/src/app/views/canvas/canvasAuthoringState.ts
       - apps/web/src/app/views/canvas/useCanvasDraftLifecycle.ts
     status_reason: >-
-      Execution has materially advanced. The earlier repository and lifecycle seams remain in place,
-      and the hard cut is now implemented: `AppServices` composes
-      `workspaceGraphDraftAuthoringPort`, `useCanvasController` threads it through the authoring
-      runtime, and `canvasDraftRepository` now reads and saves through
-      `IWorkspaceGraphDraftAuthoringPort` instead of `IWorkspacePort.getGraphDraft/saveGraphDraft`.
-      Save requests are built as governed `DesignGraphDraft` payloads in `canvasDraftAuthoring.ts`,
-      using scoped canonical nodes, canonical edges, and preview provenance Git metadata before
-      hitting the protected boundary. The projected `WorkspaceGraphDraft` DTO now survives only as a
-      local projection read model for current route state and tests, not as active-authoring
-      authority, and that read side is now localized in `canvasDraftReadModel.ts` instead of
-      bleeding through controller or route code. The Canvas route now renders explicit `read_only`,
-      `forbidden`, and typed `format_error` postures from boundary outcomes, while
-      `useCanvasController` and `Canvas.tsx` have been reduced to composition and presentation
-      facades with dedicated view-model helpers plus architecture tests. The 2026-04-22 runtime
-      truth review now freezes the remaining closure shape: remove snapshot-backed graph hydration
-      and mock-backed startup from active Canvas authoring, replace the still-lossy read projection
-      with semantic protected-draft projection, and fail closed with explicit blocked posture when
-      protected runtime truth is unavailable. That semantic projection cut is now also implemented:
-      `workspaceGraphDraftProjection.ts` emits the protected canonical graph, `canvasDraftReadModel`
-      carries it, `canvasDraftRepository` preserves it across save and conflict cache updates, and
-      `useCanvasGraphModel.ts` now prefers protected draft semantics over legacy snapshot semantics.
-      The empty-state authoring-entry design is now also frozen in a dedicated proposal so the next
-      implementation slice can add a route-owned `Add first node` command without reintroducing
-      import coupling, fake startup nodes, or another legacy fallback path. The remaining TF-E2-A
-      closure is the slice-3 deletion of snapshot-backed active-authoring fallback, any wider
-      alignment with `TF-A2` and `TF-C4`, and proof-oriented follow-up under `TF-E2-E`.
-    last_verified: '2026-04-22'
+      Execution has materially advanced on the web side. The earlier repository and lifecycle seams
+      remain in place, `AppServices` composes `workspaceGraphDraftAuthoringPort`,
+      `useCanvasController` threads it through the authoring runtime, the route renders explicit
+      `read_only`, `forbidden`, and typed `format_error` postures from boundary outcomes, and
+      snapshot-backed active-authoring fallback has been cut back substantially. However, this slice
+      is not near closure: the current save path in `canvasDraftAuthoring.ts` still builds governed
+      `DesignGraphDraft` payloads, which means the active edit model is still compile-shaped and
+      cannot support graph-first incomplete states such as “create first node on an empty Canvas.”
+      The empty-state authoring-entry proposal is therefore now coupled to a deeper contract reset:
+      `TF-E2-A` must adopt the corrected `TF-A2`/`TF-C4` editable authoring-draft boundary and stop
+      treating `DesignGraphDraft` as the persisted edit payload before the route-owned `Add first
+      node` command can land honestly.
+    last_verified: '2026-04-23'
   - task_id: TF-E2-B
     parent_task: TF-E2
     priority: P0

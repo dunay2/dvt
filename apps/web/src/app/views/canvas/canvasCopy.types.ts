@@ -9,6 +9,8 @@ export type CanvasViewCopy = {
   readonly routeEmptyEditableMessage: string;
   readonly routeEmptyImportUnavailableMessage: string;
   readonly routeEmptyReadOnlyMessage: string;
+  readonly routeEmptyFirstNodeLabel: string;
+  readonly routeEmptyFirstNodeHelper: string;
   readonly routeErrorTitle: string;
   readonly routeErrorFallbackMessage: string;
   readonly routeErrorMessage: string;

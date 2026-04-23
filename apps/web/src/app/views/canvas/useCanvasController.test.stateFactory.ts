@@ -117,6 +117,7 @@ function buildDefaultCanvasHarnessGraphHandlersResult(): CanvasHarnessState['gra
     handleAutoLayout: vi.fn(),
     handleDrop: vi.fn(),
     handleDragOver: vi.fn(),
+    handleCreateAuthoringNode: vi.fn(),
     handleToggleNodeSelection: vi.fn(),
     handleRemoveNode: vi.fn(),
   };

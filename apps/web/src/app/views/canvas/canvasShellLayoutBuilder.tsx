@@ -28,15 +28,23 @@ function renderCanvasShellReadOnlyBanner(
 }
 
 export function buildCanvasShellLayout({
+  authoringCommands,
   layoutState,
   recoveryCommands,
   routePresentation,
 }: CanvasShellLayoutBuilderArgs): CanvasShellLayout {
+  const centerSurfaceMode =
+    routePresentation.presentationState.routeState === 'empty' &&
+    routePresentation.effectiveUserPermissions.canEditEdges
+      ? 'overlay'
+      : 'replace';
+
   return {
     focusMode: layoutState.focusMode,
     explorerPanelVisible: layoutState.explorerPanelVisible,
     inspectorPanelVisible: layoutState.inspectorPanelVisible,
     canOpenSourceImport: layoutState.canOpenSourceImport,
+    centerSurfaceMode,
     centerSurface: renderCanvasCenterSurface({
       presentationState: routePresentation.presentationState,
       startupBlockState: routePresentation.startupBlockState,
@@ -44,6 +52,7 @@ export function buildCanvasShellLayout({
       workbenchErrorMessage: routePresentation.workbenchErrorMessage,
       canEditEdges: routePresentation.effectiveUserPermissions.canEditEdges,
       canOpenSourceImport: layoutState.canOpenSourceImport,
+      onCreateAuthoringNode: authoringCommands.handleCreateAuthoringNode,
     }),
     readOnlyBanner: renderCanvasShellReadOnlyBanner(recoveryCommands, routePresentation),
   };

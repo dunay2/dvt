@@ -220,6 +220,7 @@ export function buildDefaultCanvasControllerCallbacks(): Pick<
   | 'handleNodeDragStop'
   | 'handleDrop'
   | 'handleDragOver'
+  | 'handleCreateAuthoringNode'
   | 'handleSourceImportComplete'
   | 'handleImportedNodeFocusComplete'
   | 'hideExplorerPanel'
@@ -248,6 +249,7 @@ export function buildDefaultCanvasControllerCallbacks(): Pick<
     handleNodeDragStop: vi.fn(),
     handleDrop: vi.fn(),
     handleDragOver: vi.fn(),
+    handleCreateAuthoringNode: vi.fn(),
     handleSourceImportComplete: vi.fn(),
     importedNodeFocusIds: [],
     handleImportedNodeFocusComplete: vi.fn(),

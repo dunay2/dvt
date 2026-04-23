@@ -6,6 +6,7 @@ import type {
   CanvasGraphInteractionPolicy,
   CanvasGraphInteractionState,
   ConfirmEdgeModalState,
+  CreateCanvasAuthoringNode,
 } from './canvasGraphHandlerContracts';
 
 export type UseCanvasGraphHandlersParams = CanvasGraphInteractionState &
@@ -23,6 +24,7 @@ export type UseCanvasGraphHandlersResult = {
   handleAutoLayout: () => void;
   handleDrop: React.DragEventHandler<HTMLDivElement>;
   handleDragOver: React.DragEventHandler<HTMLDivElement>;
+  handleCreateAuthoringNode: CreateCanvasAuthoringNode;
   handleToggleNodeSelection: (nodeId: string, shouldSelect: boolean) => void;
   handleRemoveNode: (nodeId: string) => void;
 };

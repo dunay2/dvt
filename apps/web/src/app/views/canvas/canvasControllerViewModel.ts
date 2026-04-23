@@ -99,6 +99,7 @@ function buildCanvasInteractionViewModel(args: CanvasControllerViewModelArgs) {
     handleNodeDragStop: persistence.handleNodeDragStop,
     handleDrop: graphHandlers.handleDrop,
     handleDragOver: graphHandlers.handleDragOver,
+    handleCreateAuthoringNode: graphHandlers.handleCreateAuthoringNode,
     handleSourceImportComplete: mutationHandlers.handleSourceImportComplete,
     importedNodeFocusIds: mutationHandlers.importedNodeFocusIds,
     handleImportedNodeFocusComplete: mutationHandlers.handleImportedNodeFocusComplete,

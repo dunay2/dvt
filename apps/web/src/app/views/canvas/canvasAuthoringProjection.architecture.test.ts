@@ -32,7 +32,7 @@ describe('canvas authoring projection component architecture', () => {
       'Owned concern: project the protected workspace-graph-draft boundary'
     );
     expect(WORKSPACE_DRAFT_PROJECTION_SOURCE).toContain(
-      'export function projectDesignGraphDraftSemanticGraph'
+      'export function projectWorkspaceGraphAuthoringDraftSemanticGraph'
     );
     expect(WORKSPACE_DRAFT_PROJECTION_SOURCE).not.toContain('@xyflow/react');
 
@@ -40,7 +40,9 @@ describe('canvas authoring projection component architecture', () => {
       'Owned concern: translate protected draft-authoring outcomes'
     );
     expect(DRAFT_READ_MODEL_SOURCE).toContain('semanticGraph: WorkspaceGraphDraftSemanticGraph');
-    expect(DRAFT_READ_MODEL_SOURCE).toContain('projectDesignGraphDraftSemanticGraph(');
+    expect(DRAFT_READ_MODEL_SOURCE).toContain(
+      'projectWorkspaceGraphAuthoringDraftSemanticGraph('
+    );
     expect(DRAFT_READ_MODEL_SOURCE).not.toContain('useNodesState(');
 
     expect(AUTHORING_GRAPH_PROJECTION_SOURCE).toContain(
@@ -64,6 +66,8 @@ describe('canvas authoring projection component architecture', () => {
     expect(VIEWPORT_GRAPH_MODEL_SOURCE).toContain('useNodesState(');
     expect(VIEWPORT_GRAPH_MODEL_SOURCE).toContain('useEdgesState(');
     expect(VIEWPORT_GRAPH_MODEL_SOURCE).not.toContain('WorkspaceGraphDraftSemanticGraph');
-    expect(VIEWPORT_GRAPH_MODEL_SOURCE).not.toContain('projectDesignGraphDraftSemanticGraph(');
+    expect(VIEWPORT_GRAPH_MODEL_SOURCE).not.toContain(
+      'projectWorkspaceGraphAuthoringDraftSemanticGraph('
+    );
   });
 });

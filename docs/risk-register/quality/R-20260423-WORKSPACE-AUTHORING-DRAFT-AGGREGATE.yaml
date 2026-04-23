@@ -1,0 +1,26 @@
+---
+id: R-20260423-WORKSPACE-AUTHORING-DRAFT-AGGREGATE
+title: Workspace authoring draft aggregate adoption can drift across API and web
+status: Open
+date: 2026-04-23
+owners:
+  - packages/@dvt/contracts
+  - apps/api
+  - apps/web
+severity: Medium
+probability: Medium
+context: >
+  The shared-kernel contract now separates editable workspace authoring drafts from compile-ready
+  execution graph artifacts. API and web adoption will happen in follow-up slices.
+risk: >
+  Consumers may continue to treat persisted drafts as compile-ready graphs or reintroduce parallel
+  compatibility paths while the API and web layers migrate, creating semantic drift between
+  authoring, persistence, and execution.
+mitigations:
+  - Contract tests cover empty drafts, first-node authoring, selected-subgraph execution, invalid
+    loose nodes, and rejection of compile-shaped drafts.
+  - TF-A2 and TF-E2 planning docs state that authoring drafts are graph-first aggregates and
+    execution is scoped through `ExecutionSelection`.
+  - Follow-up implementation slices must wire protected API/store and canvas authoring through the
+    canonical authoring aggregate instead of alternate legacy routes.
+---

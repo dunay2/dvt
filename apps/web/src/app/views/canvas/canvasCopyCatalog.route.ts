@@ -40,6 +40,14 @@ export const canvasViewRouteCopyByKey = {
     fallback:
       'This workspace does not expose graph nodes yet. Graph edits are disabled in this context.',
   },
+  routeEmptyFirstNodeLabel: {
+    key: 'canvas.route.emptyFirstNodeLabel',
+    fallback: 'Add first node',
+  },
+  routeEmptyFirstNodeHelper: {
+    key: 'canvas.route.emptyFirstNodeHelper',
+    fallback: 'Choose a governed node kind to start this editable workspace graph.',
+  },
   routeErrorTitle: {
     key: 'canvas.route.errorTitle',
     fallback: 'Canvas unavailable',

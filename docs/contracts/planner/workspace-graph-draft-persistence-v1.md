@@ -2,7 +2,7 @@
 title: Workspace graph draft persistence v1
 status: Draft
 owner: docs
-last_reviewed: 2026-04-18
+last_reviewed: 2026-04-23
 ---
 
 # Workspace graph draft persistence v1
@@ -19,6 +19,8 @@ invention ahead of `TF-C4` and `TF-E2`.
 ## Normative sources
 
 - `packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphDraft.v1.ts`
+- `packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringDraft.v1.ts`
+- `packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringCommand.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/TransformationFlowDesignGraph.v1.ts`
 - `packages/@dvt/contracts/src/schemas.ts`
 - `packages/@dvt/contracts/src/validation.ts`
@@ -83,6 +85,25 @@ Write outcomes are explicit and typed:
 The v1 merge posture is reject-on-stale. The server does not auto-merge
 concurrent edits in this contract line.
 
+## Authoring aggregate posture
+
+`WorkspaceGraphDraft.v1` persists `WorkspaceGraphAuthoringDraft` as editable
+authoring truth. The payload can represent zero nodes, one node, disconnected
+graphs, and partially connected graphs. Those states are valid authoring states
+even when they are not compile-ready.
+
+`DesignGraphDraft` remains a derived preview/run artifact. It must not be
+accepted as the protected draft save payload.
+
+```mermaid
+flowchart LR
+  Draft["WorkspaceGraphAuthoringDraft"] --> Save["WorkspaceGraphDraftSaveRequest"]
+  Draft --> Selection["ExecutionSelection"]
+  Selection --> Subgraph["Executable selected subgraph"]
+  Subgraph --> Compile["DesignGraphDraft"]
+  Save -. must not accept .-> Legacy["DesignGraphDraft as editable payload"]
+```
+
 ## Consumer rule
 
 - `api` must validate protected draft read/write boundaries against the shared
@@ -112,12 +133,12 @@ concurrent edits in this contract line.
   that need the materialized record must perform a follow-up scoped read rather
   than inventing `{ record }` or `{ current }` response shapes.
 - `WorkspaceGraphDraft.v1` is structural draft authority. It governs scoped
-  node identity, typed node payloads, and typed edges, but it does not promise
-  presentation-only canvas coordinates. Any web projection back into
-  view-specific DTOs must treat visual layout as a separate concern instead of
-  inventing backend layout fields.
+  node identity, typed node payloads, typed edges, and persisted authoring node
+  positions. Any React Flow viewport state beyond those positions remains a
+  web projection concern.
 
 ## Related
 
 - [Planner contracts index](./index.md)
 - [Transformation flow preview and design graph v1](./TransformationFlowPreview.v1.md)
+- [Workspace authoring draft aggregate](../../architecture/components/planner/workspace-authoring-draft-aggregate.md)

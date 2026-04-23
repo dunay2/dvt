@@ -36,6 +36,8 @@ ExecutionPlan and planner-related schemas and compatibility contracts.
 - `packages/@dvt/contracts/src/contracts/planner/TransformationFlowPreview.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/TransformationFlowStepKinds.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/TransformationFlowStepTypeConfigs.v1.ts`
+- `packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringCommand.v1.ts`
+- `packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringDraft.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphDraft.v1.ts`
 
 ## Repository-local documents
@@ -43,7 +45,7 @@ ExecutionPlan and planner-related schemas and compatibility contracts.
 - [Plan store records v1](PlanStoreRecords.v1.md)
 - [Transformation flow compiler mapping v1](TransformationFlowCompiler.v1.md)
 - [Transformation flow preview and design graph v1](TransformationFlowPreview.v1.md)
-- [Workspace graph draft persistence v1](WorkspaceGraphDraftPersistence.v1.md)
+- [Workspace graph draft persistence v1](workspace-graph-draft-persistence-v1.md)
 
 ## Related
 

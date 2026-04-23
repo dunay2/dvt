@@ -1,5 +1,6 @@
 import type {
-  DesignGraphDraft,
+  WorkspaceGraphAuthoringDraft,
+  WorkspaceGraphAuthoringNode,
   WorkspaceGraphDraftRecord as ProtectedWorkspaceGraphDraftRecord,
   WorkspaceGraphDraftScope,
 } from '@dvt/contracts';
@@ -22,8 +23,7 @@ const DEFAULT_PROTECTED_SCOPE = {
   environmentId: 'dev',
 } as const;
 
-type AuthoringDraftNode = DesignGraphDraft['nodes'][number];
-type AuthoringDraftNodeKind = AuthoringDraftNode['type'];
+type AuthoringDraftNodeKind = WorkspaceGraphAuthoringNode['kind'];
 
 const EXPLICIT_NODE_KIND_BY_ID: Readonly<Record<string, AuthoringDraftNodeKind>> = {
   node_1: 'source',
@@ -33,50 +33,37 @@ const EXPLICIT_NODE_KIND_BY_ID: Readonly<Record<string, AuthoringDraftNodeKind>>
   node_remote_only: 'sql_transform',
 };
 
-function buildAuthoringDraftNode(nodeId: string, kind: AuthoringDraftNodeKind): AuthoringDraftNode {
-  switch (kind) {
-    case 'source':
-      return {
-        id: nodeId,
-        type: 'source',
-        payload: {
-          kind: 'postgres_table',
-          schema: 'raw',
-          table: nodeId,
-          alias: nodeId,
-        },
-      };
-
-    case 'sql_transform':
-      return {
-        id: nodeId,
-        type: 'sql_transform',
-        payload: {
-          dialect: 'postgres',
-          sqlArtifact: {
-            repo: 'dunay2/dvt',
-            path: `models/${nodeId}.sql`,
-            ref: 'refs/heads/main',
-            commitSha: 'local',
-            contentSha256: 'a'.repeat(64),
-          },
-          entrypoint: `models/${nodeId}.sql`,
-        },
-      };
-
-    case 'sink':
-      return {
-        id: nodeId,
-        type: 'sink',
-        payload: {
-          kind: 'postgres_table',
-          schema: 'analytics',
-          table: nodeId,
-          materialization: 'table',
-          writeMode: 'replace',
-        },
-      };
+function resolveAuthoringNodeRole(kind: AuthoringDraftNodeKind): WorkspaceGraphAuthoringNode['role'] {
+  if (kind === 'source') {
+    return 'input';
   }
+
+  if (kind === 'sink') {
+    return 'output';
+  }
+
+  return 'transform';
+}
+
+function buildAuthoringDraftNode(
+  nodeId: string,
+  kind: AuthoringDraftNodeKind
+): WorkspaceGraphAuthoringNode {
+  const node: WorkspaceGraphAuthoringNode = {
+    id: nodeId,
+    name: nodeId,
+    pluginId: 'dvt',
+    kind,
+    role: resolveAuthoringNodeRole(kind),
+    status: 'idle',
+    tags: [],
+  };
+
+  if (kind === 'sql_transform') {
+    node.path = `models/${nodeId}.sql`;
+  }
+
+  return node;
 }
 
 function resolveAuthoringDraftNodeKind(
@@ -101,22 +88,21 @@ function resolveAuthoringDraftNodeKind(
 }
 
 function buildAuthoringDraftFromProjectedDraft(
-  draft: WorkspaceGraphDraft,
-  scope: WorkspaceGraphDraftScope
-): DesignGraphDraft {
+  draft: WorkspaceGraphDraft
+): WorkspaceGraphAuthoringDraft {
   const totalNodeCount = draft.nodeIds.length;
 
   return {
-    context: {
-      ...scope,
-      executionTarget: 'postgres',
-    },
+    nodeIds: [...draft.nodeIds],
+    nodePositions: { ...draft.nodePositions },
     nodes: draft.nodeIds.map((nodeId, index) =>
       buildAuthoringDraftNode(nodeId, resolveAuthoringDraftNodeKind(nodeId, index, totalNodeCount))
     ),
     edges: draft.edges.map((edge) => ({
-      fromNodeId: edge.sourceId,
-      toNodeId: edge.targetId,
+      id: `draft_edge_${edge.sourceId}_${edge.targetId}`,
+      sourceId: edge.sourceId,
+      targetId: edge.targetId,
+      relation: 'lineage',
     })),
   };
 }
@@ -130,7 +116,7 @@ export function buildCanvasHarnessRemoteDraftRecord(
   return buildProtectedDraftRecord(scope, {
     revision,
     updatedAt,
-    draft: buildAuthoringDraftFromProjectedDraft(draft, scope),
+    draft: buildAuthoringDraftFromProjectedDraft(draft),
   });
 }
 
@@ -145,11 +131,11 @@ export function projectCanvasHarnessRemoteDraftRecord(
     revision: record.revision,
     savedAt: record.updatedAt,
     draft: {
-      nodeIds: record.draft.nodes.map((node) => node.id),
-      nodePositions: {},
+      nodeIds: [...record.draft.nodeIds],
+      nodePositions: { ...record.draft.nodePositions },
       edges: record.draft.edges.map((edge) => ({
-        sourceId: edge.fromNodeId,
-        targetId: edge.toNodeId,
+        sourceId: edge.sourceId,
+        targetId: edge.targetId,
       })),
     },
   };

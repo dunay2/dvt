@@ -14,6 +14,9 @@ export const canvasViewRouteCopyEs = {
     'Este workspace todavia no expone nodos de grafo. La importacion de fuentes no esta disponible en este runtime, asi que el contenido del grafo debe venir de la autoridad protegida del backend.',
   routeEmptyReadOnlyMessage:
     'Este workspace todavia no expone nodos de grafo. La edicion del grafo esta deshabilitada en este contexto.',
+  routeEmptyFirstNodeLabel: 'Agregar primer nodo',
+  routeEmptyFirstNodeHelper:
+    'Elige un tipo de nodo gobernado para iniciar este grafo editable del workspace.',
   routeErrorTitle: 'Canvas no disponible',
   routeErrorFallbackMessage: 'No se ha podido cargar el grafo del workspace para Canvas.',
   routeErrorMessage:

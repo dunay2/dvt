@@ -11,12 +11,13 @@ last_reviewed: 2026-04-10
 
 1. [Planner current state assessment](../../../planning/status/planner-current-state-assessment.md)
 2. [Planner contracts](../../../contracts/planner/index.md)
-3. [Transformation flow compiler mapping v1](../../../contracts/planner/TransformationFlowCompiler.v1.md)
-4. [GenericGraphSource technical manual](../../../guides/generic-graph-source-technical-manual-20260404.md)
-5. [GenericGraphSource user manual](../../../guides/generic-graph-source-user-manual-20260404.md)
-6. [Planner cycle detection technical manual](../../../guides/planner-cycle-detection-technical-manual-20260404.md)
-7. [Planner cycle detection user manual](../../../guides/planner-cycle-detection-user-manual-20260404.md)
-8. [MW-A2 GenericGraphSource plan](../../../planning/proposals/mandatory/runtime-and-contracts/mw-a2-generic-graph-source-plan-20260404.md)
+3. [Workspace authoring draft aggregate](./workspace-authoring-draft-aggregate.md)
+4. [Transformation flow compiler mapping v1](../../../contracts/planner/TransformationFlowCompiler.v1.md)
+5. [GenericGraphSource technical manual](../../../guides/generic-graph-source-technical-manual-20260404.md)
+6. [GenericGraphSource user manual](../../../guides/generic-graph-source-user-manual-20260404.md)
+7. [Planner cycle detection technical manual](../../../guides/planner-cycle-detection-technical-manual-20260404.md)
+8. [Planner cycle detection user manual](../../../guides/planner-cycle-detection-user-manual-20260404.md)
+9. [MW-A2 GenericGraphSource plan](../../../planning/proposals/mandatory/runtime-and-contracts/mw-a2-generic-graph-source-plan-20260404.md)
 
 ## Scope and location
 
@@ -76,6 +77,7 @@ flowchart LR
 - [Constraints and invariants](./planner-constraints.md)
 - [Structure and module map](./planner-ddd.md)
 - [Build sequence](./planner-sequence.md)
+- [Workspace authoring draft aggregate](./workspace-authoring-draft-aggregate.md)
 
 ## Notes
 

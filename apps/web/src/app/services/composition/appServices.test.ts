@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import type { WorkspaceGraphAuthoringDraft } from '@dvt/contracts';
 
 import type { IPlansPort } from '../../ports/plans';
 import type { CapabilitiesPort } from '../../ports/capabilities';
@@ -10,6 +11,52 @@ import { makeRunContext } from '../../testing/contractTestUtils';
 import type { ApiClient } from '../api/createApiClient';
 import { getRuntimeDataSourceMode } from '../config/runtimeDataSourceMode';
 import { buildAppServices } from './appServices';
+
+const AUTHORING_DRAFT = {
+  nodeIds: ['source-node', 'transform-node'],
+  nodePositions: {
+    'source-node': { x: 0, y: 0 },
+    'transform-node': { x: 220, y: 0 },
+  },
+  nodes: [
+    {
+      id: 'source-node',
+      name: 'orders',
+      pluginId: 'dvt',
+      kind: 'source',
+      role: 'input',
+      status: 'idle',
+      tags: [],
+    },
+    {
+      id: 'transform-node',
+      name: 'transform',
+      pluginId: 'dvt',
+      kind: 'sql_transform',
+      role: 'transform',
+      status: 'idle',
+      tags: [],
+      path: 'models/transform.sql',
+    },
+  ],
+  edges: [
+    {
+      id: 'draft_edge_source-node_transform-node',
+      sourceId: 'source-node',
+      targetId: 'transform-node',
+      relation: 'lineage',
+    },
+  ],
+} satisfies WorkspaceGraphAuthoringDraft;
+
+const SINGLE_NODE_AUTHORING_DRAFT = {
+  nodeIds: ['source-node'],
+  nodePositions: {
+    'source-node': { x: 0, y: 0 },
+  },
+  nodes: [AUTHORING_DRAFT.nodes[0]!],
+  edges: [],
+} satisfies WorkspaceGraphAuthoringDraft;
 
 type ApiClientStub = ApiClient & {
   requestRaw: ReturnType<typeof vi.fn>;
@@ -75,42 +122,7 @@ describe('buildAppServices', () => {
     await firstServices.workspaceGraphDraftAuthoringPort.saveGraphDraft({
       expectedRevision: null,
       idempotencyKey: 'idem-1',
-      draft: {
-        context: {
-          tenantId: 'tenant-a',
-          projectId: 'project-a',
-          environmentId: 'dev',
-          executionTarget: 'postgres',
-        },
-        nodes: [
-          {
-            id: 'source-node',
-            type: 'source',
-            payload: {
-              kind: 'postgres_table',
-              schema: 'raw',
-              table: 'orders',
-              alias: 'orders',
-            },
-          },
-          {
-            id: 'transform-node',
-            type: 'sql_transform',
-            payload: {
-              dialect: 'postgres',
-              sqlArtifact: {
-                repo: 'dunay2/dvt',
-                path: 'models/transform.sql',
-                ref: 'refs/heads/main',
-                commitSha: 'local',
-                contentSha256: 'a'.repeat(64),
-              },
-              entrypoint: 'models/transform.sql',
-            },
-          },
-        ],
-        edges: [{ fromNodeId: 'source-node', toNodeId: 'transform-node' }],
-      },
+      draft: AUTHORING_DRAFT,
     });
 
     const recreatedAuthoringPort = buildAppServices({
@@ -125,10 +137,17 @@ describe('buildAppServices', () => {
         revision: expect.any(String),
         draft: {
           nodes: [
-            expect.objectContaining({ id: 'source-node', type: 'source' }),
-            expect.objectContaining({ id: 'transform-node', type: 'sql_transform' }),
+            expect.objectContaining({ id: 'source-node', kind: 'source' }),
+            expect.objectContaining({ id: 'transform-node', kind: 'sql_transform' }),
           ],
-          edges: [{ fromNodeId: 'source-node', toNodeId: 'transform-node' }],
+          edges: [
+            {
+              id: 'draft_edge_source-node_transform-node',
+              sourceId: 'source-node',
+              targetId: 'transform-node',
+              relation: 'lineage',
+            },
+          ],
         },
       },
     });
@@ -143,27 +162,7 @@ describe('buildAppServices', () => {
     const saveResult = await services.workspaceGraphDraftAuthoringPort.saveGraphDraft({
       expectedRevision: null,
       idempotencyKey: 'idem-hard-cut-1',
-      draft: {
-        context: {
-          tenantId: 'tenant-a',
-          projectId: 'project-a',
-          environmentId: 'dev',
-          executionTarget: 'postgres',
-        },
-        nodes: [
-          {
-            id: 'source-node',
-            type: 'source',
-            payload: {
-              kind: 'postgres_table',
-              schema: 'raw',
-              table: 'orders',
-              alias: 'orders',
-            },
-          },
-        ],
-        edges: [],
-      },
+      draft: SINGLE_NODE_AUTHORING_DRAFT,
     });
 
     expect(saveResult.kind).toBe('saved');
@@ -176,7 +175,7 @@ describe('buildAppServices', () => {
       record: {
         revision: saveResult.revision,
         draft: {
-          nodes: [expect.objectContaining({ id: 'source-node', type: 'source' })],
+          nodes: [expect.objectContaining({ id: 'source-node', kind: 'source' })],
           edges: [],
         },
       },

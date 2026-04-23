@@ -1,4 +1,4 @@
-import type { DesignGraphDraft } from '@dvt/contracts';
+import type { WorkspaceGraphAuthoringDraft } from '@dvt/contracts';
 import { describe, expect, it } from 'vitest';
 
 import type { SessionContextPort } from '../../ports/sessionContext';
@@ -15,24 +15,21 @@ function buildSessionContext(): Pick<SessionContextPort, 'getWorkspaceScopeSnaps
   };
 }
 
-function buildDraft(nodeId = 'node-1'): DesignGraphDraft {
+function buildDraft(nodeId = 'node-1'): WorkspaceGraphAuthoringDraft {
   return {
-    context: {
-      tenantId: 'tenant-a',
-      projectId: 'project-a',
-      environmentId: 'dev',
-      executionTarget: 'postgres' as const,
+    nodeIds: [nodeId],
+    nodePositions: {
+      [nodeId]: { x: 0, y: 0 },
     },
     nodes: [
       {
         id: nodeId,
-        type: 'source' as const,
-        payload: {
-          kind: 'postgres_table' as const,
-          schema: 'raw',
-          table: 'orders',
-          alias: 'orders',
-        },
+        name: 'orders',
+        pluginId: 'dvt',
+        kind: 'source',
+        role: 'input',
+        status: 'idle',
+        tags: [],
       },
     ],
     edges: [],
@@ -68,7 +65,7 @@ describe('workspaceGraphDraftAuthoring mock port', () => {
       record: {
         revision: saveResult.revision,
         draft: {
-          nodes: [expect.objectContaining({ id: 'node-1', type: 'source' })],
+          nodes: [expect.objectContaining({ id: 'node-1', kind: 'source' })],
         },
       },
     });

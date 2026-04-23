@@ -14,54 +14,33 @@ const baseScope = {
 } as const;
 
 const baseDraft = {
+  nodeIds: ['source-1'],
+  nodePositions: {
+    'source-1': { x: 120, y: 80 },
+  },
+  nodes: [
+    {
+      id: 'source-1',
+      name: 'Orders source',
+      pluginId: 'dbt',
+      kind: 'postgres_table',
+      role: 'input',
+      status: 'idle',
+      tags: ['source'],
+    },
+  ],
+  edges: [],
+} as const;
+
+const compileShapedDraft = {
   context: {
     tenantId: baseScope.tenantId,
     projectId: baseScope.projectId,
     environmentId: baseScope.environmentId,
     executionTarget: 'postgres',
   },
-  nodes: [
-    {
-      id: 'source-1',
-      type: 'source',
-      payload: {
-        kind: 'postgres_table',
-        schema: 'raw',
-        table: 'orders',
-        alias: 'orders_src',
-      },
-    },
-    {
-      id: 'transform-1',
-      type: 'sql_transform',
-      payload: {
-        dialect: 'postgres',
-        entrypoint: 'models/orders.sql',
-        sqlArtifact: {
-          repo: 'org/repo',
-          path: 'models/orders.sql',
-          ref: 'refs/heads/main',
-          commitSha: 'commit-sql-1',
-          contentSha256: 'a'.repeat(64),
-        },
-      },
-    },
-    {
-      id: 'sink-1',
-      type: 'sink',
-      payload: {
-        kind: 'postgres_table',
-        schema: 'analytics',
-        table: 'orders_daily',
-        materialization: 'table',
-        writeMode: 'replace',
-      },
-    },
-  ],
-  edges: [
-    { fromNodeId: 'source-1', toNodeId: 'transform-1' },
-    { fromNodeId: 'transform-1', toNodeId: 'sink-1' },
-  ],
+  nodes: [],
+  edges: [],
 } as const;
 
 function buildWritableCapability(): {
@@ -109,6 +88,19 @@ export function registerValidationWorkspaceGraphDraftSuite(): void {
 
       expect(request.expectedRevision).toBe('rev-17');
       expect(request.idempotencyKey).toContain('save-');
+      expect(request.draft.nodeIds).toEqual(['source-1']);
+    });
+
+    it('rejects compile-shaped drafts as the editable persistence aggregate', () => {
+      expect(() =>
+        parseWorkspaceGraphDraftSaveRequest({
+          scope: baseScope,
+          schemaVersion: 'workspace-graph-draft.v1',
+          expectedRevision: 'rev-18',
+          idempotencyKey: 'save-tenant-a-project-a-prod-rev-18',
+          draft: compileShapedDraft,
+        })
+      ).toThrow(ContractValidationError);
     });
 
     it('rejects save response when denied uses writable capability mode', () => {

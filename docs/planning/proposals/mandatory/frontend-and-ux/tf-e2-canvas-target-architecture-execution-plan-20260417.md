@@ -2,7 +2,7 @@
 title: TF-E2 Canvas Target Architecture Execution Plan 2026-04-17
 status: Draft
 owner: Product / Frontend / Architecture
-last_reviewed: 2026-04-22
+last_reviewed: 2026-04-23
 planning_type: proposal
 lane: E
 task_id: TF-E2
@@ -67,6 +67,14 @@ authoring path once the typed port is ready.
 - The active Canvas authoring read and write path now routes through
   `canvasDraftRepository` over `IWorkspaceGraphDraftAuthoringPort`, while
   `IWorkspacePort` remains the snapshot and artifact-read boundary.
+- Save attempts still build governed `DesignGraphDraft` payloads before hitting
+  the protected draft-authoring boundary, so the active edit model remains
+  compile-shaped and cannot yet represent graph-first incomplete authoring
+  states such as "first node on an empty Canvas".
+- Preview and run handoff must now route through explicit
+  `ExecutionSelection` and an `ExecutableSubgraph` projection. A loose node
+  outside the selected dependency closure must not block a selected runnable
+  SQL node.
 - The projected `WorkspaceGraphDraft` DTO still survives as a route-local
   projection and test read model, but it is no longer the active-authoring
   authority on the Canvas read/write path.
@@ -79,9 +87,9 @@ authoring path once the typed port is ready.
   proof belongs to one live-runtime Cypress lane without `cy.intercept` on the
   authoring contract.
 - Therefore the next TF-E2 closure work is not another compatibility layer
-  around the projected DTO. It is explicit capability and typed format-outcome
-  presentation over the new seam, followed by route-owned Inspector editing and
-  execution handoff proof.
+  around the projected DTO. It is the authoring-draft contract reset across
+  `TF-A2`, `TF-C4`, and `TF-E2-A`, followed by graph-first empty-state entry,
+  route-owned Inspector editing, and execution handoff proof.
 
 ## Problem Statement
 
@@ -203,6 +211,7 @@ flowchart LR
   subgraph CanvasAuthoring["Bounded context: Canvas authoring"]
     DraftSession["CanvasDraftSession"]
     DraftScope["CanvasDraftScope"]
+    ExecutionSelection["ExecutionSelection"]
     Presentation["CanvasDraftPresentationModel"]
     Commands["Canvas command handlers"]
   end
@@ -213,6 +222,7 @@ flowchart LR
   end
 
   subgraph PlanRun["External context: Plan and run handoff"]
+    ExecutableSubgraph["ExecutableSubgraph"]
     PlanPreview["Plan preview service"]
     RunStart["Run start service"]
     RunsRoute["Runs route"]
@@ -234,10 +244,14 @@ flowchart LR
   DraftScope --> Presentation
   Presentation --> Publisher
   Commands --> DraftSession
+  Commands --> ExecutionSelection
   Snapshot --> DraftSession
   DraftRecord --> DraftSession
-  DraftScope --> PlanPreview
-  DraftScope --> RunStart
+  DraftScope --> ExecutionSelection
+  DraftRecord --> ExecutableSubgraph
+  ExecutionSelection --> ExecutableSubgraph
+  ExecutableSubgraph --> PlanPreview
+  ExecutableSubgraph --> RunStart
   RunStart --> RunsRoute
   DraftSession --> Telemetry
   Presentation --> Telemetry
@@ -883,10 +897,28 @@ Exit criteria:
 
 ## 2026-04-22 slice order after the runtime-truth hard cut
 
-The hard-cut review narrows the remaining order. Future TF-E2 work should
+The hard-cut review narrowed the order, and the 2026-04-23 authoring-draft
+correction now inserts one explicit precondition. Future TF-E2 work should
 proceed in this sequence unless another governed review changes it first:
 
-1. Route startup hard cut.
+1. Shared authoring-draft boundary reset.
+   - Owners: `TF-A2`, `TF-C4`, `TF-E2-A`
+   - Goal: separate editable workspace authoring draft from compile-ready
+     `DesignGraphDraft` so Canvas can persist incomplete graph states through
+     the protected boundary.
+   - Primary files:
+     - `packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphDraft.v1.ts`
+     - `apps/api/src/entrypoints/http/workspaceGraphDraftRoutes.ts`
+     - `apps/web/src/app/views/canvas/canvasDraftAuthoring.ts`
+2. Selected-subgraph execution handoff reset.
+   - Owners: `TF-A2-C`, `TF-E2-A`
+   - Goal: make preview/run consume explicit `ExecutionSelection` plus a
+     derived `ExecutableSubgraph`, not the whole editable draft.
+   - Primary files:
+     - `packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphDraft.v1.ts`
+     - `apps/web/src/app/views/canvas/useCanvasExecutionActions.ts`
+     - `apps/web/src/app/views/canvas/canvasExecutionActions.ts`
+3. Route startup hard cut.
    - Owner: `TF-E2-A`
    - Goal: make `blocked` versus `empty` truthful and remove route startup
      dependence on mock-backed operability.
@@ -894,7 +926,7 @@ proceed in this sequence unless another governed review changes it first:
      - `apps/web/src/app/views/Canvas.tsx`
      - `apps/web/src/app/views/canvas/canvasRouteViewState.ts`
      - `apps/web/src/app/services/config/dataSource.ts`
-2. Semantic protected-draft projection cut.
+4. Semantic protected-draft projection cut.
    - Owners: `TF-E2-A`, `TF-E2-B`, `TF-E2-C`
    - Goal: replace the still-lossy draft projection so the graph model can be
      derived from protected draft truth without a legacy snapshot authoring
@@ -905,7 +937,16 @@ proceed in this sequence unless another governed review changes it first:
      - `apps/web/src/app/views/canvas/canvasAuthoringGraphProjection.ts`
      - `apps/web/src/app/views/canvas/useCanvasAuthoringProjection.ts`
      - `apps/web/src/app/views/canvas/useCanvasViewportGraphModel.ts`
-3. Legacy path deletion and dev-stack alignment.
+5. Graph-first empty authoring entrypoint.
+   - Owner: `TF-E2-A`
+   - Goal: add the route-owned `Add first node` command once the protected
+     authoring boundary can represent incomplete graph states.
+   - Primary files:
+     - `apps/web/src/app/views/canvas/CanvasCenterSurface.tsx`
+     - `apps/web/src/app/views/canvas/CanvasStateViews.tsx`
+     - `apps/web/src/app/views/Canvas.tsx`
+     - `apps/web/src/app/views/canvas/canvasRouteViewState.ts`
+6. Legacy path deletion and dev-stack alignment.
    - Owners: `TF-E2-A`, `TF-E2-B`, `TF-E2-C`
    - Goal: delete active-authoring use of snapshot-backed hydration and align
      local startup so Canvas either talks to the protected runtime or reports a
@@ -914,7 +955,7 @@ proceed in this sequence unless another governed review changes it first:
      - `apps/web/src/app/services/workspace/workspaceService.api.ts`
      - `apps/web/src/app/views/canvas/useCanvasControllerEnvironment.ts`
      - `scripts/run-dev-stack.cjs`
-4. Proof-matrix closure.
+7. Proof-matrix closure.
    - Owner: `TF-E2-E`
    - Goal: centralize Canvas test support, finish route and application-service
      negative-path evidence, and add the live-runtime Cypress lane that proves

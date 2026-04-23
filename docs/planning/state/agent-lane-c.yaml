@@ -1260,12 +1260,13 @@ tasks:
       reference auditable authorization and write outcomes, emit governed metrics and traces for the
       protected draft path, preserve audit/observability join keys, migrate governed compatible
       legacy draft versions, reject corrupt or unsupported drafts with typed outcomes, define
-      backfill or write-back behavior for stored draft evolution, persist canonical draft records in
-      the backend-owned store path, and give callers explicit read-your-writes behavior plus one
-      operator-facing recovery runbook.
+      backfill or write-back behavior for stored draft evolution, persist canonical editable
+      authoring-draft records in the backend-owned store path, derive compile-ready
+      `DesignGraphDraft` only through an explicit projection seam, and give callers explicit
+      read-your-writes behavior plus one operator-facing recovery runbook.
     complexity: M
     effort_points: 5
-    progress_pct: 100
+    progress_pct: 70
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/tf-a2-workspace-graph-draft-persistence-boundary-plan-20260416.md
       - docs/architecture/components/web/frontend-data-boundary-architecture.md
@@ -1274,16 +1275,16 @@ tasks:
       - docs/runbooks/workspace-graph-draft-protected-boundary-20260416.md
       - docs/runbooks/read-your-writes-freshness-slo-20260330.md
     status_reason: >-
-      Protected runtime now owns `GET /workspace/graph/draft` and `PUT /workspace/graph/draft`
-      through one store-backed API path with explicit `writable` versus `read_only` capability
-      outcomes, tenant/project/environment scope enforcement, compare-and-swap revision rejection,
-      scoped idempotent retry handling, auditable decision/write outcomes, and dedicated traces plus
-      metrics. The current compatibility window is intentionally active-writer-only:
-      `workspace-graph-draft.v1` reads and writes natively, unsupported or corrupt persisted drafts
-      fail closed with typed outcomes, and the operator runbook records the explicit no-legacy-
-      migration/no-backfill posture for this first backend-owned slice. Remaining follow-through is
-      frontend adoption under `TF-E2-A`, not missing protected-runtime ownership.
-    last_verified: '2026-04-16'
+      Protected runtime already owns `GET /workspace/graph/draft` and `PUT /workspace/graph/draft`
+      through one store-backed API path with explicit capability outcomes, tenant/project/
+      environment scope enforcement, compare-and-swap revision rejection, scoped idempotent retry
+      handling, auditable decision/write outcomes, and dedicated traces plus metrics. That path is
+      real, but it is not yet the final closure target because the shared contract it persists still
+      embeds `DesignGraphDraft` and therefore models a compile-valid artifact instead of an editable
+      authoring aggregate. Remaining work is no longer just frontend adoption: `TF-C4` must absorb
+      the `TF-A2` contract reset so the protected path persists editable authoring draft truth and
+      treats `DesignGraphDraft` as a derived projection for preview/run.
+    last_verified: '2026-04-23'
 dependency_notes:
   - >-
     `MVP-C1` is now closed because its accepted runbook artifact no longer carries an open

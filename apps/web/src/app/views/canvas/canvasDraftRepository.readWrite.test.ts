@@ -46,7 +46,7 @@ function buildExpectedProjectedReadRecord(): ProjectedReadRecord {
     savedAt: '2026-04-18T00:00:00Z',
     draft: {
       nodeIds: ['source-node', 'transform-node', 'sink-node'],
-      nodePositions: {},
+      nodePositions: PROJECTED_DRAFT.nodePositions,
       edges: [
         { sourceId: 'source-node', targetId: 'transform-node' },
         { sourceId: 'transform-node', targetId: 'sink-node' },
@@ -60,7 +60,7 @@ function buildExpectedProjectedSemanticGraph(): NonNullable<ProjectedReadState['
     canonicalNodes: [
       {
         id: 'source-node',
-        name: 'orders',
+        name: 'Source',
         pluginId: 'dvt',
         kind: 'dvt:source',
         role: 'input',
@@ -76,7 +76,7 @@ function buildExpectedProjectedSemanticGraph(): NonNullable<ProjectedReadState['
       },
       {
         id: 'transform-node',
-        name: 'transform',
+        name: 'Transform',
         pluginId: 'dvt',
         kind: 'dvt:sql_transform',
         role: 'transform',
@@ -91,7 +91,7 @@ function buildExpectedProjectedSemanticGraph(): NonNullable<ProjectedReadState['
       },
       {
         id: 'sink-node',
-        name: 'orders_dashboard',
+        name: 'Sink',
         pluginId: 'dvt',
         kind: 'dvt:sink',
         role: 'output',
@@ -109,13 +109,13 @@ function buildExpectedProjectedSemanticGraph(): NonNullable<ProjectedReadState['
     ],
     canonicalEdges: [
       {
-        id: 'draft_edge_source-node_transform-node',
+        id: 'edge-1',
         sourceId: 'source-node',
         targetId: 'transform-node',
         relation: 'lineage',
       },
       {
-        id: 'draft_edge_transform-node_sink-node',
+        id: 'edge-2',
         sourceId: 'transform-node',
         targetId: 'sink-node',
         relation: 'lineage',
@@ -203,20 +203,26 @@ describe('canvasDraftRepository read/write', () => {
         expectedRevision: 'rev-1',
         idempotencyKey: 'idem-1',
         draft: expect.objectContaining({
-          context: expect.objectContaining({
-            tenantId: 'tenant-a',
-            projectId: 'project-a',
-            environmentId: 'dev',
-            executionTarget: 'postgres',
-          }),
+          nodeIds: ['source-node', 'transform-node', 'sink-node'],
+          nodePositions: PROJECTED_DRAFT.nodePositions,
           nodes: expect.arrayContaining([
-            expect.objectContaining({ id: 'source-node', type: 'source' }),
-            expect.objectContaining({ id: 'transform-node', type: 'sql_transform' }),
-            expect.objectContaining({ id: 'sink-node', type: 'sink' }),
+            expect.objectContaining({ id: 'source-node', kind: 'dvt:source' }),
+            expect.objectContaining({ id: 'transform-node', kind: 'dvt:sql_transform' }),
+            expect.objectContaining({ id: 'sink-node', kind: 'dvt:sink' }),
           ]),
           edges: [
-            { fromNodeId: 'source-node', toNodeId: 'transform-node' },
-            { fromNodeId: 'transform-node', toNodeId: 'sink-node' },
+            {
+              id: 'edge-1',
+              sourceId: 'source-node',
+              targetId: 'transform-node',
+              relation: 'lineage',
+            },
+            {
+              id: 'edge-2',
+              sourceId: 'transform-node',
+              targetId: 'sink-node',
+              relation: 'lineage',
+            },
           ],
         }),
       })

@@ -43,10 +43,10 @@ test('generated-doc policy declares single-writer ownership for required artifac
     'tracked-docs-manifest',
     'tracked-ar-c2-operational-evidence',
   ];
-  const ids = policy.artifactClasses.map((entry) => entry.id);
+  const ids = new Set(policy.artifactClasses.map((entry) => entry.id));
 
   for (const id of requiredIds) {
-    assert.ok(ids.includes(id), `Missing generated-doc policy class: ${id}`);
+    assert.ok(ids.has(id), `Missing generated-doc policy class: ${id}`);
   }
 
   for (const entry of policy.artifactClasses) {

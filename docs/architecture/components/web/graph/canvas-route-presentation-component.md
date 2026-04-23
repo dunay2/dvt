@@ -39,11 +39,13 @@ Read the component in this order:
    route-facing aggregation for visible Canvas posture
 3. `CanvasCenterSurface.tsx`
    center-surface rendering over canonical posture
-4. `CanvasRecoveryBanner.tsx`
+4. `canvas-empty-authoring-entrypoint-component.md`
+   empty Canvas authoring command, governed catalog, and lifecycle invariants
+5. `CanvasRecoveryBanner.tsx`
    recovery-banner rendering over canonical posture
-5. `canvasToolbarViewModel.ts`
+6. `canvasToolbarViewModel.ts`
    toolbar workflow posture over canonical route truth
-6. `CanvasToolbarDraftStatus.tsx`
+7. `CanvasToolbarDraftStatus.tsx`
    draft-status rendering over route-approved affordances
 
 If a change does not fit one of those concerns, it probably belongs in the
@@ -83,14 +85,16 @@ Rendering adapters consume the component, but they do not own the semantic API.
 
 <!-- markdownlint-disable MD060 -->
 
-| File                              | Owned concern                                                | Public to other modules |
-| --------------------------------- | ------------------------------------------------------------ | ----------------------- |
-| `canvasDraftPresentationModel.ts` | canonical route posture and bootstrap semantics              | yes                     |
-| `canvasRouteViewState.ts`         | route-facing aggregation over presentation and interaction   | yes                     |
-| `CanvasCenterSurface.tsx`         | center-surface rendering from canonical route posture        | consumer only           |
-| `CanvasRecoveryBanner.tsx`        | recovery-banner rendering from canonical route posture       | consumer only           |
-| `canvasToolbarViewModel.ts`       | toolbar workflow-status projection from route posture        | consumer only           |
-| `CanvasToolbarDraftStatus.tsx`    | draft-status rendering from route-approved affordance policy | consumer only           |
+| File                               | Owned concern                                                | Public to other modules |
+| ---------------------------------- | ------------------------------------------------------------ | ----------------------- |
+| `canvasDraftPresentationModel.ts`  | canonical route posture and bootstrap semantics              | yes                     |
+| `canvasRouteViewState.ts`          | route-facing aggregation over presentation and interaction   | yes                     |
+| `CanvasCenterSurface.tsx`          | center-surface rendering from canonical route posture        | consumer only           |
+| `canvasCenterSurfaceWorkbench.tsx` | workbench and empty-authoring rendering from route posture   | consumer only           |
+| `canvasCenterSurfaceTransport.tsx` | draft transport failure rendering before workbench states    | consumer only           |
+| `CanvasRecoveryBanner.tsx`         | recovery-banner rendering from canonical route posture       | consumer only           |
+| `canvasToolbarViewModel.ts`        | toolbar workflow-status projection from route posture        | consumer only           |
+| `CanvasToolbarDraftStatus.tsx`     | draft-status rendering from route-approved affordance policy | consumer only           |
 
 <!-- markdownlint-enable MD060 -->
 
