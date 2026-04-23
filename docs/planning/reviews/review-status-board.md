@@ -92,9 +92,16 @@ Additional active rationale:
   - status: `reference`
   - progress: `n/a`
 
+- [20260423 DVT+ system architecture review](./architecture-and-governance/20260423-dvt-plus-system-architecture-review.md)
+  - domain: `architecture-and-governance`
+  - role: latest full-system principal/staff review grounded in the shipped planner, engine, state, adapter, API, and web boundary reality on 2026-04-23
+  - linkage: proposed `IWorkflowEngine` contract ownership cleanup, capability fail-closed hardening, tenant identity decision, read-side contracts, DBT adapter decoupling, workflow-state evolution, cost facts, retention and restore proof
+  - status: `reference`
+  - progress: `n/a`
+
 - [20260420 DVT+ system architecture review](./architecture-and-governance/20260420-dvt-plus-system-architecture-review.md)
   - domain: `architecture-and-governance`
-  - role: current full-system principal/staff review grounded in the shipped planner, engine, state, adapter, and route-boundary reality after the April plan-route convergence work
+  - role: prior full-system principal/staff review grounded in the shipped planner, engine, state, adapter, and route-boundary reality after the April plan-route convergence work
   - linkage: `AR-A8`, `AR-C3`, `AR-D2`, `AR-D8`, `AR-D-PLAN-POINTER`, proposed `AR-A-READSIDE-CONTRACTS`, proposed `AR-C-TENANT-ISOLATION-PROPERTY`, proposed `AR-D-RESTORE-DRILL`
   - status: `reference`
   - progress: `n/a`
