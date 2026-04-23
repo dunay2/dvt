@@ -15,11 +15,6 @@
       "types": "./dist/testing.d.ts",
       "import": "./dist/testing.js",
       "default": "./dist/testing.js"
-    },
-    "./contracts/engine/*": {
-      "types": "./dist/contracts/engine/*.d.ts",
-      "import": "./dist/contracts/engine/*.js",
-      "default": "./dist/contracts/engine/*.js"
     }
   },
   "files": [

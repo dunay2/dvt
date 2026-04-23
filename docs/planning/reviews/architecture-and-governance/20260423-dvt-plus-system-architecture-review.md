@@ -42,7 +42,7 @@ No alternative definitions are introduced.
 - `packages/@dvt/contracts/src/contracts/engine/StartRunBoundary.v1.ts`
 - `packages/@dvt/contracts/src/step-registry/StepTypeRegistry.ts`
 - `packages/@dvt/contracts/src/step-registry/BuiltInStepTypeEntries.ts`
-- `packages/@dvt/engine/src/contracts/IWorkflowEngine.v1.ts`
+- `packages/@dvt/engine/src/ports/IWorkflowEngine.ts`
 - `packages/@dvt/engine/src/core/WorkflowEngine.ts`
 - `packages/@dvt/engine/src/application/StartRunApplicationService.ts`
 - `packages/@dvt/engine/src/application/StartRunAdmissionGuard.ts`
@@ -151,16 +151,16 @@ flowchart LR
 
 ### What is fragile
 
-| Area                           | Why it is fragile                                                                                                                                                                                                                                                                                   |
-| ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Contract ownership             | The actual `IWorkflowEngine` interface lives under `@dvt/engine`, while `@dvt/contracts/src/contracts/engine/IWorkflowEngine.v1.ts` only re-exports types. Governance language implies a shared contract that does not physically exist there.                                                      |
-| API orchestration breadth      | `PlannerBackedStartRunUseCase`, `PreviewPlanUseCase`, `StoredPlanExecutabilityValidator`, and `BackpressureAwareStartRunUseCase` make API responsible for compile/store/validate/admit/delegate. That is acceptable as composition, but it is one step away from becoming business execution logic. |
-| ExecutionPlan portability      | `ExecutionStepRetryPolicyV1` uses Temporal-compatible duration strings. The canonical plan leaks the only production runtime.                                                                                                                                                                       |
-| Adapter capability enforcement | API executability validation fails closed when required capabilities exist and an adapter does not declare `capabilities()`. Engine-level `StartRunValidationPolicy` returns success in that same condition. Direct engine use can bypass a guarantee that API enforces.                            |
-| DBT adapter coupling           | `DbtStepActivity` and dbt runner seams remain inside `@dvt/adapter-temporal`. Worker composition gates live DBT wiring, but package defaults still treat DBT as built-in.                                                                                                                           |
-| Tenant identity                | Start-run `runId` is now API-generated as `run_<UUIDv7>` under `ADR-0050`, and web no longer authors `run_ui_*` execution ids. The remaining fragility is storage posture: `run_metadata` still uses globally unique `run_id`, and plan-record tenancy indexes are still separate follow-up work.   |
-| Plan record tenancy            | `plan_records` has no top-level `tenant_id`, `project_id`, or `environment_id`. Ownership lives inside canonical JSON. That is weak for indexed isolation, list queries, and operational controls.                                                                                                  |
-| Documentation drift            | `planner-current-state-assessment.md` says unknown step kinds fail open. Current code rejects them. This is not a small typo: it is a governance source disagreeing with tests.                                                                                                                     |
+| Area                           | Why it is fragile                                                                                                                                                                                                                                                                                                  |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Contract ownership             | The ownership mismatch is now hard-cut: `IWorkflowEngine` is published canonically from `@dvt/engine`, implemented at `packages/@dvt/engine/src/ports/IWorkflowEngine.ts`, and no longer exposed through a contract subpath. The remaining fragility is documentation drift if governed indexes are not re-synced. |
+| API orchestration breadth      | `PlannerBackedStartRunUseCase`, `PreviewPlanUseCase`, `StoredPlanExecutabilityValidator`, and `BackpressureAwareStartRunUseCase` make API responsible for compile/store/validate/admit/delegate. That is acceptable as composition, but it is one step away from becoming business execution logic.                |
+| ExecutionPlan portability      | `ExecutionStepRetryPolicyV1` uses Temporal-compatible duration strings. The canonical plan leaks the only production runtime.                                                                                                                                                                                      |
+| Adapter capability enforcement | API executability validation fails closed when required capabilities exist and an adapter does not declare `capabilities()`. Engine-level `StartRunValidationPolicy` returns success in that same condition. Direct engine use can bypass a guarantee that API enforces.                                           |
+| DBT adapter coupling           | `DbtStepActivity` and dbt runner seams remain inside `@dvt/adapter-temporal`. Worker composition gates live DBT wiring, but package defaults still treat DBT as built-in.                                                                                                                                          |
+| Tenant identity                | Start-run `runId` is now API-generated as `run_<UUIDv7>` under `ADR-0050`, and web no longer authors `run_ui_*` execution ids. The remaining fragility is storage posture: `run_metadata` still uses globally unique `run_id`, and plan-record tenancy indexes are still separate follow-up work.                  |
+| Plan record tenancy            | `plan_records` has no top-level `tenant_id`, `project_id`, or `environment_id`. Ownership lives inside canonical JSON. That is weak for indexed isolation, list queries, and operational controls.                                                                                                                 |
+| Documentation drift            | `planner-current-state-assessment.md` says unknown step kinds fail open. Current code rejects them. This is not a small typo: it is a governance source disagreeing with tests.                                                                                                                                    |
 
 ### What is missing
 
@@ -724,6 +724,23 @@ default binding lives in `buildProtectedStartRunRuntime.ts`, and semantic
 architecture tests plus local component docs now guard the boundary. The
 remaining open work is still `AR-C3-B` and `AR-C3-C`, not more abstract-seam
 design.
+
+2026-04-23 capability-validation truth-sync update: the P0 fail-closed
+capability slice is now materially in place. `StartRunValidationPolicy` rejects
+required-capability plans when the target adapter omits `capabilities()`,
+`packages/@dvt/engine/test/contracts/capabilities.contract.test.ts` locks that
+negative path in the engine package, and the active `IProviderAdapter` contract
+docs no longer describe undeclared capabilities as a skipped gate. The API-side
+stored-plan validator had already been fail-closed; the direct engine admission
+path now matches that posture.
+
+2026-04-23 authorization-boundary update: `apps/api` now authorizes through a
+DVT-owned `IAccessDecisionService` seam with an embedded first backend. The
+previous `PostgresPrincipalAccessRepository` plus
+`TenantHierarchyAuthorizationPolicy` split is removed from the active protected
+runtime path, the authz boundary is now one explicit component in code, and the
+first cut stays network-local while preserving a pluggable backend boundary for
+later external PDP adapters.
 
 ## Final Architectural Verdict
 

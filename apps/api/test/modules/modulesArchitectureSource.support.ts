@@ -36,7 +36,7 @@ export class ModuleArchitectureSource {
   }
 
   public hasOwnedConcernDocblock(): boolean {
-    return this.sourceText.startsWith('/**\n * Owned concern:');
+    return /^\/\*\*\r?\n \* Owned concern:/.test(this.sourceText);
   }
 
   public collectNamedImports(moduleSpecifier: string): string[] {

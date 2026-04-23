@@ -34,7 +34,7 @@ engine source, planner source, adapter code, and the accepted ADR catalog.
 
 ### 1.1 What is solid
 
-- `IWorkflowEngine` surface ([packages/@dvt/engine/src/contracts/IWorkflowEngine.v1.ts](../../../packages/@dvt/engine/src/contracts/IWorkflowEngine.v1.ts)) is genuinely narrow: `startRun`, `recoverRun`, `cancelRun`, `getRunStatus`, `signal`. Enrichment and health were explicitly split off (`IRunEnrichmentService`, `IRunHealthService`) — that regression guard (AR-A12-C) is real and noticed.
+- `IWorkflowEngine` surface ([packages/@dvt/engine/src/ports/IWorkflowEngine.ts](../../../packages/@dvt/engine/src/ports/IWorkflowEngine.ts)) is genuinely narrow: `startRun`, `recoverRun`, `cancelRun`, `getRunStatus`, `signal`. Enrichment and health were explicitly split off (`IRunEnrichmentService`, `IRunHealthService`) — that regression guard (AR-A12-C) is real and noticed.
 - `getRunStatus` is forced to the snapshot + event-replay path only; the contract forbids provider adapter calls on the default read path. This is correctly enforced at the service boundary ([RunStatusQueryService.ts](../../../packages/@dvt/engine/src/services/RunStatusQueryService.ts)).
 - The CQRS split on the write side is real: `EventInput` → `EventEnvelope` with store-assigned `runSeq` and `persistedAt`; callers cannot forge order. `(runId, idempotencyKey)` is the idempotency boundary. ADR-0004 is enforced by type, not by comment.
 - Pre-dispatch intent log (ADR-0030) plus `estimateRunRef()` (ADR-0014) eliminates the dual-producer bootstrap race. That is a solid distributed-systems primitive.
@@ -86,7 +86,7 @@ engine source, planner source, adapter code, and the accepted ADR catalog.
 
 ## 3. Engine Abstraction Critique
 
-The `IWorkflowEngine` contract ([IWorkflowEngine.v1.ts](../../../packages/@dvt/engine/src/contracts/IWorkflowEngine.v1.ts)) is minimal:
+The `IWorkflowEngine` contract ([IWorkflowEngine.ts](../../../packages/@dvt/engine/src/ports/IWorkflowEngine.ts)) is minimal:
 
 ```ts
 interface IWorkflowEngine {

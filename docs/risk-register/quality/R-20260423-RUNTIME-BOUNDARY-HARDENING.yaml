@@ -1,0 +1,39 @@
+---
+id: R-20260423-RUNTIME-BOUNDARY-HARDENING
+title: Runtime boundary hardening can drift across engine ownership and API authorization seams
+status: Open
+date: 2026-04-23
+owners:
+  - packages/@dvt/engine
+  - apps/api
+severity: Medium
+probability: Medium
+context: >
+  The 2026-04-23 branch combines engine ownership hardening for `IWorkflowEngine`, fail-closed
+  capability validation, and the API access-decision extraction to an embedded-first DVT-owned seam.
+  Those changes span engine package surface, runtime validation, API composition, and governed docs.
+risk: >
+  If future slices reintroduce alternate `IWorkflowEngine` import paths, loosen capability
+  validation back to fail-open behavior, or let `apps/api` depend on embedded-backend details
+  instead of the access-decision contract, runtime behavior and governance can drift apart. That
+  would weaken package ownership, create inconsistent admission outcomes, and make a later PDP swap
+  more expensive.
+mitigations:
+  - >
+    Keep `packages/@dvt/engine/test/contracts/package-surface.test.ts` as the guard for the single
+    `@dvt/engine` import surface.
+  - >
+    Keep `packages/@dvt/engine/test/contracts/capabilities.contract.test.ts` and the API
+    executability validation coverage green so undeclared adapter capabilities fail closed
+    consistently.
+  - >
+    Preserve `IAccessDecisionService` as the only application-facing authorization seam and keep
+    backend lifecycle behind the protected security runtime contract.
+  - >
+    Keep ADR-0051, the API architecture guide, and the 2026-04-23 review note aligned with the
+    shipped runtime shape.
+  - >
+    Run the package test/typecheck baselines, contracts schema sync, golden validation, ARC check,
+    and `pnpm verify:prepush` on future changes touching these seams.
+review_after: 2026-06-30
+---

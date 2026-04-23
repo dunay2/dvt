@@ -72,7 +72,7 @@ flowchart TB
       Module["buildProtectedRuntimeModule()"]
       Backpressure["raw -> breaker -> cache -> fallback backpressure chain"]
       Roles["stateStore read / write / maintenance bindings"]
-      AuthInfra["JWKS verifier + PostgresPrincipalAccessRepository"]
+      AuthInfra["JWKS verifier + EmbeddedAccessDecisionService"]
     end
   end
 
@@ -133,12 +133,17 @@ flowchart TB
 - **Auth and RBAC**
   Authentication is handled through OIDC/JWKS.
   Authorization is tenant-scoped and action-scoped through
-  `AuthorizeCommandScopeService` and domain policy.
+  `AuthorizeCommandScopeService` plus the DVT-owned
+  `IAccessDecisionService` seam, with `EmbeddedAccessDecisionService` as the
+  current backend. The protected security builder also owns the backend
+  lifecycle hook, so the outer root depends on a security runtime contract
+  rather than on embedded-backend methods directly.
   Anchors:
   `apps/api/src/infrastructure/auth/oidcAuthenticator.ts`,
   `apps/api/src/infrastructure/auth/jwksJwtVerifier.ts`,
   `apps/api/src/application/services/authorizeCommandScopeService.ts`,
-  `apps/api/src/domain/auth/policy.ts`
+  `apps/api/src/application/ports/accessDecision.ts`,
+  `apps/api/src/infrastructure/auth/embeddedAccessDecisionService.ts`
 - **Infrastructure composition**
   The protected runtime module wires Postgres state access, plan storage,
   admission telemetry, backpressure fallback, provider adapters, and engine
@@ -441,7 +446,7 @@ flowchart LR
 | --------------------------- | --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
 | Command boundary            | start-run path is explicit but still concentrated in one large protected-runtime composition module | command orchestration stays explicit but is split across smaller, clearer ports with capacity-aware admission |
 | Query boundary              | query services already use read paths, but enrichment still shares the engine contract              | core query path is pure CQRS; enrichment is optional and isolated behind `IRunEnrichmentService`              |
-| Authorization               | tenant and action checks are real, but admin path hardening is incomplete                           | runtime and admin paths use explicit, action-specific RBAC without relying on feature flags                   |
+| Authorization               | tenant and action checks are real, now through a single embedded access-decision backend            | runtime and admin paths use explicit, action-specific RBAC behind one DVT-owned decision contract             |
 | Admission                   | duplicate detection, delivery backpressure, and an abstract execution-capacity seam are real        | admission uses a concrete adapter-backed capacity signal and publishes measurable SLA outcomes                |
 | Concurrency and operability | snapshot freshness and health are visible, but some guarantees are still implementation-level       | concurrency, freshness, and degradation rules are contract-backed and observable                              |
 | Extensibility               | planner and execution still lean dbt-first in key seams                                             | planner input, step validation, artifacts, and worker routing are step-kind and graph-source agnostic         |

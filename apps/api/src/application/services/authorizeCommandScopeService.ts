@@ -1,21 +1,19 @@
-﻿import type { IAuthorizationPolicy } from '../../domain/auth/policy.js';
 import type {
   AuthenticatedPrincipal,
   AuthorizationAction,
   DeniedReason,
   RequestedScope,
 } from '../../domain/auth/types.js';
+import type { IAccessDecisionService } from '../ports/accessDecision.js';
 import {
   AUTH_AUDIT_EVENT_TYPE,
   type AuthorizedExecutionContext,
   type IAuthAuditPort,
-  type IPrincipalAccessRepository,
 } from '../ports/auth.js';
 
 export class AuthorizeCommandScopeService {
   public constructor(
-    private readonly accessRepository: IPrincipalAccessRepository,
-    private readonly policy: IAuthorizationPolicy,
+    private readonly accessDecisionService: IAccessDecisionService,
     private readonly audit: IAuthAuditPort,
     private readonly clock: () => Date
   ) {}
@@ -30,27 +28,9 @@ export class AuthorizeCommandScopeService {
     | { readonly ok: true; readonly context: AuthorizedExecutionContext<TAction> }
     | { readonly ok: false; readonly reason: DeniedReason }
   > {
-    const effectiveAccess = await this.accessRepository.loadEffectiveAccess({
-      principalId: principal.principalId,
-      principalType: principal.principalType,
-    });
-
-    if (effectiveAccess === null) {
-      await this.audit.record({
-        eventType: AUTH_AUDIT_EVENT_TYPE.denied,
-        requestId,
-        principalId: principal.principalId,
-        principalType: principal.principalType,
-        action: requestedScope.action.name,
-        denialReason: 'TENANT_NOT_GRANTED',
-        occurredAt: this.clock(),
-      });
-
-      return { ok: false, reason: 'TENANT_NOT_GRANTED' };
-    }
-
-    const outcome = this.policy.evaluate(principal, effectiveAccess, requestedScope);
-    if (outcome.kind === 'deny') {
+    const decidedAt = this.clock();
+    const outcome = await this.accessDecisionService.decide(principal, requestedScope);
+    if (!outcome.ok) {
       await this.audit.record({
         eventType: AUTH_AUDIT_EVENT_TYPE.denied,
         requestId,
@@ -58,7 +38,7 @@ export class AuthorizeCommandScopeService {
         principalType: principal.principalType,
         action: requestedScope.action.name,
         denialReason: outcome.reason,
-        occurredAt: this.clock(),
+        occurredAt: decidedAt,
       });
 
       return { ok: false, reason: outcome.reason };
@@ -69,7 +49,7 @@ export class AuthorizeCommandScopeService {
       scope: outcome.approvedScope,
       action: requestedScope.action,
       requestId,
-      authorizedAt: this.clock(),
+      authorizedAt: decidedAt,
     };
 
     await this.audit.record({
@@ -79,7 +59,7 @@ export class AuthorizeCommandScopeService {
       principalType: principal.principalType,
       tenantId: outcome.approvedScope.tenantId.value,
       action: requestedScope.action.name,
-      occurredAt: this.clock(),
+      occurredAt: decidedAt,
     });
 
     return { ok: true, context };

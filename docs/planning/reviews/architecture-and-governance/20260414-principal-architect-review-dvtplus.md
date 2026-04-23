@@ -45,7 +45,7 @@ This clause holds.
 
 ### Clause 2: "The engine decides on its domain" — **PARTIALLY TRUE**
 
-`IWorkflowEngine.v1.ts` is minimal (five methods). The contract is stable and
+`IWorkflowEngine.ts` is minimal (five methods). The engine-owned port is stable and
 correct. However, the current `WorkflowEngine` core is still an application
 service orchestrator, not a domain service. It owns:
 
@@ -756,13 +756,13 @@ T2.1  Remove full ExecutionPlan from RunPlanWorkflowInput
 
 T2.2  Separate rate-limiting from IRunAccessPolicy
       - Files: packages/@dvt/engine/src/security/RunAccessPolicy.ts
-               packages/@dvt/engine/src/contracts/IWorkflowEngine.v1.ts (deps)
+               packages/@dvt/engine/src/ports/IWorkflowEngine.ts (deps)
       - ADR reference: ADR-0039 §2.1
       - Effort: 0.5 sprint
       - Blocks: SRP compliance; testability of auth vs rate-limit
 
 T2.3  Implement retryStep dedicated use case
-      - Files: packages/@dvt/engine/src/contracts/IWorkflowEngine.v1.ts (new method)
+      - Files: packages/@dvt/engine/src/ports/IWorkflowEngine.ts (new method)
                packages/@dvt/engine/src/application/ (new use case class)
                packages/@dvt/adapter-temporal/src/ (new signal or workflow interaction)
       - ADR reference: ADR-0048

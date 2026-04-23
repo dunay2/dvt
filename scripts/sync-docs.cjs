@@ -720,9 +720,15 @@ function renderContractDocsList(absFiles, fromDirAbs) {
 
 function generateContractSubIndexes() {
   const contractsPkgSrc = path.join(repoRoot, 'packages', '@dvt', 'contracts', 'src');
+  const engineOwnedPorts = [
+    path.join(repoRoot, 'packages', '@dvt', 'engine', 'src', 'ports', 'IWorkflowEngine.ts'),
+  ];
   const engineSrc = scanFilesRecursive(
     path.join(contractsPkgSrc, 'contracts', 'engine'),
     (abs, name) => /\.(ts|json)$/i.test(name) && !/\.d\.ts\.map$|\.js\.map$/i.test(name)
+  );
+  const engineSerializableSrc = engineSrc.filter(
+    (abs) => path.basename(abs) !== 'IWorkflowEngine.v1.ts'
   );
   const plannerSrc = scanFilesRecursive(
     path.join(contractsPkgSrc, 'contracts', 'planner'),
@@ -757,9 +763,13 @@ function generateContractSubIndexes() {
     '',
     'Execution lifecycle, command, and event contracts for the workflow engine.',
     '',
-    '## Normative Sources (`@dvt/contracts`)',
+    '## Engine-owned behavior ports (`@dvt/engine`)',
     '',
-    ...renderContractSourceList(engineSrc),
+    ...renderContractSourceList(engineOwnedPorts),
+    '',
+    '## Serializable normative sources (`@dvt/contracts`)',
+    '',
+    ...renderContractSourceList(engineSerializableSrc),
     '',
     '## Reference Documentation',
     '',

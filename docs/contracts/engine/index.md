@@ -9,13 +9,16 @@ last_reviewed: 2026-02-25
 
 Execution lifecycle, command, and event contracts for the workflow engine.
 
-## Normative Sources (`@dvt/contracts`)
+## Engine-owned behavior ports (`@dvt/engine`)
+
+- `packages/@dvt/engine/src/ports/IWorkflowEngine.ts`
+
+## Serializable normative sources (`@dvt/contracts`)
 
 - `packages/@dvt/contracts/src/contracts/engine/ExecutionSemantics.v1.ts`
 - `packages/@dvt/contracts/src/contracts/engine/IOutboxStorage.v1.ts`
 - `packages/@dvt/contracts/src/contracts/engine/IProjector.v1.ts`
 - `packages/@dvt/contracts/src/contracts/engine/IStartRunIntentStore.v1.ts`
-- `packages/@dvt/contracts/src/contracts/engine/IWorkflowEngine.v1.ts`
 - `packages/@dvt/contracts/src/contracts/engine/RunEvents.v1.ts`
 - `packages/@dvt/contracts/src/contracts/engine/RunExecutionContext.v1.ts`
 - `packages/@dvt/contracts/src/contracts/engine/RunExecutionPolicy.v1.ts`

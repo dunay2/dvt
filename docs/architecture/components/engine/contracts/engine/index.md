@@ -17,6 +17,13 @@ last_reviewed: 2026-04-13
 - [ExecutionSemantics.v1](./ExecutionSemantics.v1.md)
 - [SignalsAndAuth.v1](./SignalsAndAuth.v1.md)
 
+Canonical consumer import for `IWorkflowEngine`:
+`import type { IWorkflowEngine } from '@dvt/engine'`
+
+Capability admission posture:
+if a run requires capabilities and the target adapter omits
+`capabilities()`, active engine admission rejects rather than degrades open.
+
 ## Related pages
 
 - [Contracts registry](../README.md)

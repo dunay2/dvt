@@ -36,7 +36,12 @@ export class StartRunValidationPolicy {
     if (required.length === 0) return;
 
     const adapterCaps = adapter.capabilities?.();
-    if (adapterCaps === undefined) return;
+    if (adapterCaps === undefined) {
+      throw new CapabilitiesNotSupportedError({
+        capabilities: [...required],
+        provider: adapter.provider,
+      });
+    }
 
     const supported = new Set(adapterCaps);
     const unsupported = required.filter((capability: string) => !supported.has(capability));
