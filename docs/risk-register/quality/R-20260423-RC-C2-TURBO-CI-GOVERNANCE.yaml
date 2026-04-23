@@ -1,0 +1,38 @@
+---
+id: R-20260423-RC-C2-TURBO-CI-GOVERNANCE
+title: Turbo affected-task routing could diverge from required repository gates
+status: Open
+date: 2026-04-23
+owners:
+  - '@dvt/contracts'
+  - '@dvt/engine'
+  - '@dvt/planner'
+  - '@dvt/adapter-temporal'
+  - ci
+severity: Medium
+probability: Low
+---
+context: >
+  RC-C2 routes affected build, type-check, and test commands through governed Turbo tasks and
+  changes package-level script contracts for workspaces that include contract, engine, planner, and
+  adapter paths.
+risk: >
+  If Turbo task inputs, package script contracts, or pre-push scope classification drift apart, an
+  affected route could run a narrower check than the repository governance model expects and create
+  false confidence in CI or local pre-push results.
+mitigations:
+  - >-
+    Keep `turbo.json` global dependencies aligned with root graph inputs that should invalidate all
+    affected task hashes.
+  - >-
+    Route affected build, type-check, and test commands through
+    `scripts/run-turbo-workspace-task.cjs` rather than ad hoc recursive package commands.
+  - >-
+    Keep `tools/ci/turbo-workspace-task-contract.test.mjs` and
+    `tools/ci/prepush-typecheck-scope.test.mjs` in the merge-gated `pnpm test:ci-tools` lane.
+  - >-
+    Keep `pnpm verify:prepush` fail-closed to full root `pnpm type-check` when global graph inputs
+    change.
+  - >-
+    Preserve ARC evidence and risk updates for contract, engine, planner, and adapter path touches
+    even when the file change is limited to validation scripts or package metadata.
