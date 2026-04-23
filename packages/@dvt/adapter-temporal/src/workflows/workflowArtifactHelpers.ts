@@ -1,3 +1,12 @@
+/**
+ * @file packages/@dvt/adapter-temporal/src/workflows/workflowArtifactHelpers.ts
+ * @baseline ADR-0003: Execution Model
+ * @baseline ADR-0032: compiledCodeRef Ownership
+ * @baseline ADR-0040: Retry Ownership And Attempt Authority
+ * @decision Extract artifact references and retry policy from execution-plan step configuration before event emission
+ * @consequence StepStarted payloads carry traceability references without widening the canonical execution plan schema
+ * @version 1.2.0
+ */
 import type {
   CompiledCodeRef,
   ExecutionPlan,

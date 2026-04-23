@@ -16,7 +16,7 @@
     "dvt-trace": "dist/cli.js"
   },
   "scripts": {
-    "prebuild": "node ../../../scripts/skip-prebuild-if-orchestrated.cjs || pnpm -C ../../.. --filter @dvt/contracts build",
+    "prebuild": "node ../../../scripts/skip-prebuild-if-orchestrated.cjs || pnpm -C ../../.. --filter \"@dvt/traceability-service^...\" build",
     "pretypecheck": "pnpm -C ../../.. --filter @dvt/contracts build",
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",

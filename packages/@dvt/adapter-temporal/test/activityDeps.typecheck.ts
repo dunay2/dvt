@@ -1,3 +1,11 @@
+/**
+ * @file packages/@dvt/adapter-temporal/test/activityDeps.typecheck.ts
+ * @baseline ADR-0001: Temporal Integration Test Policy
+ * @baseline ADR-0003: Execution Model
+ * @decision Type-check activity dependency fixtures against the DVT engine and plan-fetcher ports
+ * @consequence Adapter activity wiring cannot silently depend on provider-owned lifecycle state
+ * @version 1.2.0
+ */
 import { asIsoUtcString } from '@dvt/contracts';
 
 import type { ActivityDeps } from '../src/activities/stepActivities.js';

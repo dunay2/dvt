@@ -1,5 +1,10 @@
 /**
- * @baseline ADR-0003
+ * @file packages/@dvt/engine/src/state/InMemoryRunStateAdminSupport.ts
+ * @baseline ADR-0003: Execution Model
+ * @baseline ADR-0040: Retry Ownership And Attempt Authority
+ * @decision Keep provider-ref and retry-attempt administration behind DVT-owned in-memory run-state support
+ * @consequence Tests and local runtime preserve retry lineage without delegating attempt authority to providers
+ * @version 1.0.0
  */
 import { parseEngineRunRef } from '@dvt/contracts';
 

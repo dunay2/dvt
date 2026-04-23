@@ -1,3 +1,11 @@
+/**
+ * @file packages/@dvt/adapter-temporal/test/runPlanWorkflow.layers.order.test.ts
+ * @baseline ADR-0001: Temporal Integration Test Policy
+ * @baseline ADR-0003: Execution Model
+ * @decision Verify workflow layer order follows resolved DVT execution segments and lifecycle guards
+ * @consequence Temporal execution ordering remains constrained by the canonical plan layer graph
+ * @version 1.2.0
+ */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createPlanRef, createResolvedRunContext } from './helpers/contractFixtures.js';

@@ -1,3 +1,12 @@
+/**
+ * @file packages/@dvt/adapter-temporal/test/runPlanWorkflow.signals.test.ts
+ * @baseline ADR-0007: Run Cancellation
+ * @baseline ADR-0008: Signal Idempotency
+ * @baseline ADR-0047: Runtime-Owned Realized Lifecycle For Signal-Driven Transitions
+ * @decision Verify signal handlers deduplicate control signals and preserve first-writer lifecycle state
+ * @consequence Duplicate Temporal signals cannot create duplicate DVT lifecycle transitions
+ * @version 1.2.0
+ */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const { registeredHandlers } = vi.hoisted(() => ({

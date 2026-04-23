@@ -1,3 +1,11 @@
+/**
+ * @file packages/@dvt/adapter-temporal/src/workflows/workflowGatewayHelpers.ts
+ * @baseline ADR-0003: Execution Model
+ * @baseline ADR-0046: Execution Plan Definition And Run Execution Policy Separation
+ * @decision Validate and evaluate gateway dependencies from canonical execution-plan facts
+ * @consequence Temporal workflows cannot invent gateway semantics outside DVT plan interpretation
+ * @version 1.2.0
+ */
 import type { MaterializationEvidence } from '@dvt/contracts';
 
 export function normalizeDependsOn(dependsOn: unknown): string[] {

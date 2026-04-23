@@ -1,5 +1,10 @@
 /**
- * @baseline ADR-0003
+ * @file packages/@dvt/engine/src/state/InMemoryRunStateSnapshotSupport.ts
+ * @baseline ADR-0004: Event Sourcing Strategy
+ * @baseline ADR-0039: Hexagonal Port Hardening And SOLID Remediation
+ * @decision Rebuild in-memory snapshots as secondary projections from ordered run events
+ * @consequence Snapshot reads remain reconstructable and do not replace the append-only event log as authority
+ * @version 1.0.0
  */
 import { CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION } from '@dvt/contracts';
 

@@ -1,3 +1,11 @@
+/**
+ * @file packages/@dvt/adapter-temporal/test/TemporalAdapter.control.test.ts
+ * @baseline ADR-0007: Run Cancellation
+ * @baseline ADR-0008: Signal Idempotency
+ * @decision Validate adapter control operations against canonical signal and cancellation semantics
+ * @consequence Control-plane regressions are caught before provider calls can drift from DVT lifecycle rules
+ * @version 1.2.0
+ */
 import { CURRENT_SIGNAL_SEMANTICS_VERSION, WorkflowSignals } from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 

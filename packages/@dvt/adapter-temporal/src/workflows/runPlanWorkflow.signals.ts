@@ -1,3 +1,12 @@
+/**
+ * @file packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.signals.ts
+ * @baseline ADR-0007: Run Cancellation
+ * @baseline ADR-0008: Signal Idempotency
+ * @baseline ADR-0047: Runtime-Owned Realized Lifecycle For Signal-Driven Transitions
+ * @decision Apply pause, resume, and cancel signals idempotently against runtime-owned workflow state
+ * @consequence Duplicate control signals cannot create divergent lifecycle transitions
+ * @version 1.2.0
+ */
 import { defineQuery, defineSignal, setHandler } from '@temporalio/workflow';
 
 import type { RuntimeWorkflowState } from './runPlanWorkflow.types.js';

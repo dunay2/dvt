@@ -1,3 +1,11 @@
+/**
+ * @file packages/@dvt/adapter-temporal/test/runPlanWorkflow.cancellation.test.ts
+ * @baseline ADR-0007: Run Cancellation
+ * @baseline ADR-0047: Runtime-Owned Realized Lifecycle For Signal-Driven Transitions
+ * @decision Verify workflow cancellation emits canonical lifecycle events under Temporal cancellation scopes
+ * @consequence Native provider cancellation cannot bypass DVT terminal event ownership
+ * @version 1.2.0
+ */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {

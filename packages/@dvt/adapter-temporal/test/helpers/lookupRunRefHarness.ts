@@ -1,3 +1,11 @@
+/**
+ * @file packages/@dvt/adapter-temporal/test/helpers/lookupRunRefHarness.ts
+ * @baseline ADR-0007: Run Cancellation
+ * @baseline ADR-0015: getRunStatus Read-Model Separation
+ * @decision Mock Temporal workflow handles through the adapter read/control boundary
+ * @consequence Tests verify lookup and control behavior without treating provider state as canonical run state
+ * @version 1.2.0
+ */
 import { type Mock, vi } from 'vitest';
 
 import { TemporalAdapter } from '../../src/TemporalAdapter.js';

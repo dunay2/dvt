@@ -1,3 +1,11 @@
+/**
+ * @file packages/@dvt/engine/src/state/outboxSharding.ts
+ * @baseline ADR-0004: Event Sourcing Strategy
+ * @baseline ADR-0033: Outbox Worker Sharding And Fencing Model
+ * @decision Derive stable outbox shard ownership from runId using deterministic hashing
+ * @consequence Outbox claim routing preserves same-run ordering while supporting explicit worker shard ownership
+ * @version 1.0.0
+ */
 import { createHash } from 'node:crypto';
 
 export function resolveOutboxShardId(runId: string, shardCount: number): number {

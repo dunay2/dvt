@@ -1,3 +1,12 @@
+/**
+ * @file packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.lifecycle.ts
+ * @baseline ADR-0001: Temporal Integration Test Policy
+ * @baseline ADR-0003: Execution Model
+ * @baseline ADR-0047: Runtime-Owned Realized Lifecycle For Signal-Driven Transitions
+ * @decision Resolve terminal, cancellation, and continue-as-new workflow outcomes through DVT lifecycle events
+ * @consequence Temporal continuation remains an implementation detail while DVT lifecycle state stays authoritative
+ * @version 1.2.0
+ */
 import type { MaterializationEvidence, TransformationExecutor } from '@dvt/contracts';
 import { continueAsNew, sleep } from '@temporalio/workflow';
 

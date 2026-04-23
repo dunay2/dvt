@@ -1,3 +1,11 @@
+/**
+ * @file packages/@dvt/adapter-temporal/src/workflows/executionSegmentResolver.ts
+ * @baseline ADR-0003: Execution Model
+ * @baseline ADR-0046: Execution Plan Definition And Run Execution Policy Separation
+ * @decision Resolve executable workflow segments from the canonical DVT execution plan, not from Temporal provider state
+ * @consequence Temporal receives bounded layer metadata while DVT retains execution-plan authority
+ * @version 1.2.0
+ */
 import type { ExecutionPlan, ExecutionStep, TransformationExecutor } from '@dvt/contracts';
 import { collectDownstreamStepIds, planExecutionLayers } from '@dvt/plan-interpreter';
 

@@ -1,3 +1,11 @@
+/**
+ * @file packages/@dvt/adapter-temporal/test/workflow-execution-segment.test.ts
+ * @baseline ADR-0003: Execution Model
+ * @baseline ADR-0046: Execution Plan Definition And Run Execution Policy Separation
+ * @decision Verify execution segment resolution exposes only bounded layer metadata needed by the workflow
+ * @consequence Adapter workflows cannot execute outside the canonical DVT plan segment contract
+ * @version 1.2.0
+ */
 import type { ExecutionPlan } from '@dvt/contracts';
 import { describe, expect, it } from 'vitest';
 
