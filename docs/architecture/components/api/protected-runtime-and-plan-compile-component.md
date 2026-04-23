@@ -16,6 +16,7 @@ invariants, transitions, and consumers:
 
 - [Protected runtime dependency builders component](../../../../apps/api/docs/protected-runtime-dependency-builders-component.md)
 - [Start-run runtime composition component](../../../../apps/api/docs/start-run-runtime-composition-component.md)
+- [Workspace graph draft application component](../../../../apps/api/docs/workspace-graph-draft-application-component.md)
 - [Workspace graph draft runtime composition component](../../../../apps/api/docs/workspace-graph-draft-runtime-composition-component.md)
 
 ## Why This Is A Component

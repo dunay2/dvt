@@ -17,6 +17,7 @@ already-resolved protected-runtime dependencies.
 
 Read this together with:
 
+- `apps/api/docs/workspace-graph-draft-application-component.md`
 - `apps/api/docs/protected-runtime-dependency-builders-component.md`
 - `apps/api/docs/start-run-runtime-composition-component.md`
 - `docs/architecture/components/api/protected-runtime-and-plan-compile-component.md`

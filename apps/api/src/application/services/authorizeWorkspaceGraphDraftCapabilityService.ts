@@ -1,3 +1,10 @@
+/**
+ * Owned concern: authenticate the caller and derive the protected workspace
+ * graph draft capability decision for read/write application flows.
+ *
+ * This service owns capability posture only. It does not read drafts, save
+ * drafts, translate HTTP outcomes, or assemble runtime dependencies.
+ */
 import { randomUUID } from 'node:crypto';
 
 import {

@@ -1,6 +1,8 @@
 /**
- * @file tools/docs/lib/markdownLinks.ts
- * Markdown link extraction helpers for docs governance tools.
+ * Owned concern: extract markdown links while ignoring fenced and inline code examples.
+ *
+ * This module owns outbound markdown link discovery only; it treats code spans
+ * and fenced blocks as examples, not governed links.
  */
 import { forEachRegexMatch } from './markdownRegex.js';
 

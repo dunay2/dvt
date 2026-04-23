@@ -1,6 +1,8 @@
 /**
- * @file tools/docs/lib/markdown.ts
- * Public markdown parsing facade for docs governance tools.
+ * Owned concern: expose the stable markdown parsing facade for docs governance tools.
+ *
+ * Keep docs governance consumers on this facade so helper modules can change
+ * without creating another parser contract.
  */
 export {
   parseFrontmatter,

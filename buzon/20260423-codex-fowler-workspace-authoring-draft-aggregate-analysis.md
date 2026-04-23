@@ -144,6 +144,97 @@ This is consistent with Fowler's "intention revealing interface" reading: the
 helpers now say what semantic operation they own instead of encoding the
 operation in opaque replacement patterns.
 
+## Addendum - docs markdown governance parser component
+
+The branch also split `tools/docs/lib/markdown.ts` into facade plus specialized
+helpers. That decomposition is correct, but it still needed the same semantic
+encapsulation discipline applied to Canvas and Planner.
+
+Fowler reading:
+
+- `markdown.ts` is a Facade for docs governance tools.
+- `markdownFrontmatter.ts`, `markdownAdrFields.ts`, `markdownAnchors.ts`,
+  `markdownLinks.ts`, and `markdownRegex.ts` are narrow Special Case helpers
+  with intention-revealing names.
+- The prior shape was drifting toward a Transaction Script utility module:
+  convenient locally, but too easy for link checks, ADR checks, and
+  frontmatter checks to change each other's parsing behavior.
+
+Mature systems comparison:
+
+- mature CI/docs stacks keep a stable parser facade and force checks to depend
+  on a small published interface, not on helper internals;
+- they keep code examples out of link governance and keep frontmatter parsing
+  separate from body parsing;
+- they use architecture tests as fitness functions for parser ownership, not
+  only for file size or barrel thinness.
+
+Remediation now added:
+
+- local component guide:
+  `docs/guides/docs-markdown-governance-parser-component.md`
+- owned-concern docblocks at the start of every markdown parser module
+- semantic architecture test:
+  `tools/ci/docs-markdown-component-architecture.test.mjs`
+- canonical doc-code matrix traceability for `tools/docs/*`
+
+Repetitions and drift fixed:
+
+- docs governance commands are guarded to import `tools/docs/lib/markdown.ts`
+  instead of helper internals;
+- module ownership is documented once in the component guide and once in short
+  source docblocks;
+- the matrix now includes `tools/docs/*` and `pnpm test:ci-tools`, so the
+  active docs no longer describe docs governance as only `scripts/*` and
+  `tools/ci/*`.
+
+## Addendum - API workspace graph draft application component
+
+The `apps/api` side of this branch also needed one more boundary correction:
+runtime composition was documented, but the application component underneath it
+was still implicit.
+
+Fowler reading:
+
+- `AuthorizeWorkspaceGraphDraftCapabilityService` is the Application Service
+  that owns auth-derived capability posture.
+- `GetWorkspaceGraphDraftUseCase` and `SaveWorkspaceGraphDraftUseCase` are
+  transaction handlers over typed ports and canonical contracts, not route
+  scripts.
+- `workspaceGraphDraft.ts` is the local published vocabulary for actions,
+  persistence ports, audit, and telemetry.
+
+Mature systems comparison:
+
+- mature protected-write systems separate capability decision from
+  persistence/use-case execution;
+- they keep HTTP translation at the edge and keep storage/auth composition out
+  of the use cases;
+- they publish a local application seam so runtime builders do not become the
+  accidental documentation home for business behavior.
+
+Drift that existed:
+
+- `apps/api/docs/workspace-graph-draft-runtime-composition-component.md`
+  documented construction, but not the semantic ownership of the application
+  services below it;
+- `AuthorizeWorkspaceGraphDraftCapabilityService.ts` lacked an
+  `Owned concern:` header;
+- there was no semantic architecture test proving auth/authz stays isolated to
+  the capability service while read/write use cases stay on contracts + local
+  ports only.
+
+Remediation now added:
+
+- local guide:
+  `apps/api/docs/workspace-graph-draft-application-component.md`
+- owned-concern docblock on
+  `apps/api/src/application/services/authorizeWorkspaceGraphDraftCapabilityService.ts`
+- semantic architecture test:
+  `apps/api/test/application/services/workspaceGraphDraftApplicationComponent.architecture.test.ts`
+- matrix and API component index links updated so this seam is no longer
+  discoverable only through runtime-composition docs
+
 ## State model
 
 ```mermaid

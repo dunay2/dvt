@@ -2742,30 +2742,50 @@ tasks:
       `DesignGraphDraft` for preview/run adoption without local DTO drift.
     complexity: M
     effort_points: 5
-    progress_pct: 30
+    progress_pct: 45
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/tf-a2-workspace-graph-draft-persistence-boundary-plan-20260416.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/tf-a2-workspace-authoring-draft-aggregate-roots-plan-20260423.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/tf-a2-c-execution-selection-and-executable-subgraph-plan-20260423.md
       - packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphDraft.v1.ts
       - docs/contracts/planner/workspace-graph-draft-persistence-v1.md
       - docs/evidence/ed-20260416-tf-a2-workspace-graph-draft-boundary.md
+      - docs/evidence/ed-20260423-workspace-authoring-draft-aggregate.md
       - docs/risk-register/quality/R-20260416-TF-A2-WORKSPACE-GRAPH-DRAFT-ADOPTION-DRIFT.yaml
       - docs/contracts/planner/TransformationFlowPreview.v1.md
       - docs/architecture/reference-architecture.md
       - docs/architecture/components/engine/contracts/engine/SignalsAndAuth.v1.md
       - docs/architecture/components/web/frontend-data-boundary-architecture.md
     status_reason: >-
-      Contract freeze is only partially delivered. The current executable artifact already defines
-      typed scope/capability envelopes, auditable read/write outcomes, compare-and-swap request
-      posture, idempotent retry key, and typed format-evolution metadata/failures, but
-      `WorkspaceGraphDraft.v1` still embeds `DesignGraphDraft` directly. That means the shared draft
-      aggregate still inherits compile-only invariants and cannot represent graph-first incomplete
-      authoring states such as a first node on an empty Canvas. The new aggregate-roots plan now
-      freezes the missing Fowler split: `WorkspaceGraphAuthoringDraft` becomes the persisted
-      aggregate root, `CanvasDraftSession` remains the route-local aggregate root, and
-      `DesignGraphDraft` is demoted to derived compile artifact only. Remaining work is now
-      explicit: implement that reset in the contract pack, then hand the corrected boundary to
-      `TF-C4` and `TF-E2-A`.
+      Contract freeze is materially further along than the previous lane note captured.
+      `WorkspaceGraphDraft.v1` now persists `WorkspaceGraphAuthoringDraft` instead of embedding
+      `DesignGraphDraft`, and the active contract line already defines typed scope, capability,
+      audit, compare-and-swap, idempotency, and format-evolution envelopes for protected draft reads
+      and writes. The remaining open seam is the execution boundary: `ExecutionSelection` and the
+      derived `ExecutableSubgraph` still need their own dedicated implementation plan and downstream
+      adoption so preview/run stop depending on whole-draft compile assumptions.
+    last_verified: '2026-04-23'
+  - task_id: TF-A2-C
+    parent_task: TF-A2
+    priority: P0
+    status: queued
+    complexity: M
+    effort_points: 3
+    progress_pct: 0
+    objective: >-
+      define the explicit `ExecutionSelection` command boundary and the derived `ExecutableSubgraph`
+      read model so preview and run operate on selected closure semantics instead of whole-draft
+      compile assumptions.
+    dependency: TF-A2
+    target: >-
+      Canonical contracts, planner ownership, api adoption rules, and web command production are
+      frozen for selection-driven preview/run, with negative-path diagnostics and no second
+      frontend-only DTO family.
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/tf-a2-c-execution-selection-and-executable-subgraph-plan-20260423.md
+      - docs/contracts/planner/workspace-graph-draft-persistence-v1.md
+      - docs/architecture/components/planner/workspace-authoring-draft-aggregate.md
+    status_reason: Dedicated proposal is now published; implementation has not started.
     last_verified: '2026-04-23'
 dependency_notes:
   - >-
@@ -2841,6 +2861,10 @@ dependency_notes:
     read/write boundary, revision semantics, and port ownership so Lane C can implement the
     protected API/store path and Lane E cannot continue productizing editable graphs on browser-
     local authority.
+  - >-
+    `TF-A2-C` now isolates the remaining execution-selection and executable-subgraph seam after the
+    authoring-aggregate reset, so preview/run adoption can proceed without drifting back to
+    whole-draft compile semantics.
   - >-
     `TF-A1-C12..C14` now capture the post-`TF-A1-C` backend follow-through: standardize the shared
     plan-route remote-facade recipe, replace observability-tag import ownership with a canonical
