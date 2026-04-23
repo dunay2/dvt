@@ -2,7 +2,7 @@
   "summary": {
     "adrs": 45,
     "evidenceDocs": 117,
-    "normativeDocs": 309,
+    "normativeDocs": 311,
     "statusDocs": 58
   },
   "adrs": [
@@ -2003,6 +2003,10 @@
       "filename": "outbox-worker-sequence.md"
     },
     {
+      "path": "docs/architecture/components/planner/execution-selection-component.md",
+      "filename": "execution-selection-component.md"
+    },
+    {
       "path": "docs/architecture/components/planner/index.md",
       "filename": "index.md"
     },
@@ -2705,6 +2709,10 @@
     {
       "path": "docs/contracts/index.md",
       "filename": "index.md"
+    },
+    {
+      "path": "docs/contracts/planner/execution-selection-and-executable-subgraph-v1.md",
+      "filename": "execution-selection-and-executable-subgraph-v1.md"
     },
     {
       "path": "docs/contracts/planner/index.md",

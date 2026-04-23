@@ -15,6 +15,7 @@ The normative contract sources remain:
 - `packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringDraft.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringCommand.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphDraft.v1.ts`
+- [Execution selection and executable subgraph v1](../../../contracts/planner/execution-selection-and-executable-subgraph-v1.md)
 - [Workspace graph draft persistence v1](../../../contracts/planner/workspace-graph-draft-persistence-v1.md)
 
 ## Owned concern
@@ -135,6 +136,9 @@ An unrelated loose node does not block running a selected executable SQL node.
 Selecting the loose node directly requires that selected node and its dependency
 closure to be executable.
 
+The dedicated execution-selection seam now lives in the companion local guide:
+[Execution selection component](./execution-selection-component.md).
+
 ## Consumers
 
 - `packages/@dvt/contracts/src/validation/planner.ts`
@@ -145,11 +149,14 @@ closure to be executable.
 - `apps/web/src/app/services/workspace/workspaceGraphDraftProjection.ts`
 - `apps/web/src/app/views/canvas/canvasDraftAuthoring.ts`
 - `apps/web/src/app/views/canvas/canvasDraftRepository.ts`
+- `packages/@dvt/contracts/src/contracts/planner/ExecutionSelection.v1.ts`
+- `packages/@dvt/contracts/src/contracts/planner/ExecutableSubgraph.v1.ts`
 
 ## Extension rules
 
 - Add authoring fields to `WorkspaceGraphAuthoringDraft.v1.ts` first.
 - Keep persistence envelope fields in `WorkspaceGraphDraft.v1.ts`.
 - Keep compile-only fields in compile projection contracts.
+- Keep preview/run selection contracts in the execution-selection component.
 - Add semantic contract tests for every new aggregate invariant.
 - Do not add compatibility paths accepting `DesignGraphDraft` as a save payload.

@@ -22,6 +22,7 @@ navigation. The folder contains additional historical entries.
 
 ## Representative Recent Closeouts
 
+- [20260423 TF-A2-C1 Execution Selection Contract Pack Closeout](./20260423-tf-a2-c1-execution-selection-contract-pack-closeout.md)
 - [20260423 TF-A2-C Execution Selection Proposal Closeout](./20260423-tf-a2-c-execution-selection-proposal-closeout.md)
 - [20260423 Workspace Graph Draft Application Component Closeout](./20260423-workspace-graph-draft-application-component-closeout.md)
 - [20260423 Docs Markdown Parser Componentization Closeout](./20260423-docs-markdown-parser-componentization-closeout.md)

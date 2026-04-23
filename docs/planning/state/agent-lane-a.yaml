@@ -2742,7 +2742,7 @@ tasks:
       `DesignGraphDraft` for preview/run adoption without local DTO drift.
     complexity: M
     effort_points: 5
-    progress_pct: 45
+    progress_pct: 55
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/tf-a2-workspace-graph-draft-persistence-boundary-plan-20260416.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/tf-a2-workspace-authoring-draft-aggregate-roots-plan-20260423.md
@@ -2761,17 +2761,19 @@ tasks:
       `WorkspaceGraphDraft.v1` now persists `WorkspaceGraphAuthoringDraft` instead of embedding
       `DesignGraphDraft`, and the active contract line already defines typed scope, capability,
       audit, compare-and-swap, idempotency, and format-evolution envelopes for protected draft reads
-      and writes. The remaining open seam is the execution boundary: `ExecutionSelection` and the
-      derived `ExecutableSubgraph` still need their own dedicated implementation plan and downstream
-      adoption so preview/run stop depending on whole-draft compile assumptions.
+      and writes. `TF-A2-C1` is now closed with canonical `ExecutionSelection` and
+      `ExecutableSubgraph` contract artifacts, a planner-local component guide, semantic
+      architecture coverage, and ARC-2 evidence. The remaining open seam is downstream adoption:
+      planner derivation plus API/web execution wiring still need to stop depending on whole-draft
+      compile assumptions.
     last_verified: '2026-04-23'
   - task_id: TF-A2-C
     parent_task: TF-A2
     priority: P0
-    status: queued
+    status: in_progress
     complexity: M
     effort_points: 3
-    progress_pct: 0
+    progress_pct: 35
     objective: >-
       define the explicit `ExecutionSelection` command boundary and the derived `ExecutableSubgraph`
       read model so preview and run operate on selected closure semantics instead of whole-draft
@@ -2783,9 +2785,43 @@ tasks:
       frontend-only DTO family.
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/tf-a2-c-execution-selection-and-executable-subgraph-plan-20260423.md
+      - docs/planning/closeouts/20260423-tf-a2-c1-execution-selection-contract-pack-closeout.md
+      - docs/evidence/ed-20260423-tf-a2-c1-execution-selection-contract-pack.md
       - docs/contracts/planner/workspace-graph-draft-persistence-v1.md
       - docs/architecture/components/planner/workspace-authoring-draft-aggregate.md
-    status_reason: Dedicated proposal is now published; implementation has not started.
+      - docs/architecture/components/planner/execution-selection-component.md
+      - docs/contracts/planner/execution-selection-and-executable-subgraph-v1.md
+    status_reason: >-
+      `TF-A2-C1` is closed. The canonical contract pack, local component guide, semantic
+      architecture guard, and ARC evidence now freeze the execution-selection boundary. Planner
+      derivation plus API/web adoption remain sequenced as `TF-A2-C2..C4`.
+    last_verified: '2026-04-23'
+  - task_id: TF-A2-C1
+    parent_task: TF-A2-C
+    priority: P0
+    status: done
+    complexity: M
+    effort_points: 2
+    progress_pct: 100
+    objective: >-
+      publish canonical `ExecutionSelection` and `ExecutableSubgraph` contract artifacts with
+      schemas, exports, docs, and negative-path tests.
+    dependency: TF-A2-C
+    target: >-
+      `@dvt/contracts` exposes the execution-selection contract pack, planner/docs surfaces link to
+      it, and ARC-2 evidence plus risk update cover the new public boundary.
+    evidence_refs:
+      - docs/planning/closeouts/20260423-tf-a2-c1-execution-selection-contract-pack-closeout.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/tf-a2-c-execution-selection-and-executable-subgraph-plan-20260423.md
+      - docs/contracts/planner/workspace-graph-draft-persistence-v1.md
+      - docs/contracts/planner/execution-selection-and-executable-subgraph-v1.md
+      - docs/architecture/components/planner/execution-selection-component.md
+      - docs/evidence/ed-20260423-tf-a2-c1-execution-selection-contract-pack.md
+      - docs/risk-register/quality/R-20260423-WORKSPACE-AUTHORING-DRAFT-AGGREGATE.yaml
+    status_reason: >-
+      Completed. `@dvt/contracts` now exposes the canonical execution-selection contract pack
+      through a planner-local semantic barrel, contract plus architecture tests, validation helpers,
+      governed planner docs, and ARC-2 evidence/risk updates.
     last_verified: '2026-04-23'
 dependency_notes:
   - >-

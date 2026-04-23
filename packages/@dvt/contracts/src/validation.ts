@@ -23,7 +23,9 @@ export {
 export {
   parseArtifactRef,
   parseDesignGraphDraft,
+  parseExecutableSubgraph,
   parseExecutionPlan,
+  parseExecutionSelection,
   parseExecutionStepV1,
   parseGenericGraphSourceV1,
   parsePlanAdmissionLink,
