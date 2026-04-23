@@ -99,3 +99,28 @@ committed:
 - `docs/planning/state/agent-lane-*.md`
 - `docs/planning/state/execution-workboard.md`
 - `docs/planning/state/open-task-route.md`
+
+## Generated-Docs Single-Writer Policy
+
+Generated documentation ownership is declared in
+[`docs/generated-docs-policy.json`](./generated-docs-policy.json).
+
+Each artifact class in that policy declares:
+
+- `artifacts`: generated files or file patterns owned by the class
+- `sourcePaths`: the editable source files or directories that own the content
+- `generatorCommand`: the canonical command used to regenerate the artifacts
+- `tracking`: whether the generated output is intentionally `tracked` or
+  `untracked`
+- `manualEditPolicy`: whether humans edit the generated output directly or edit
+  the source and regenerate
+
+Validate the policy with:
+
+```bash
+pnpm docs:gov:generated-policy
+```
+
+`docs:gov`, `ci:docs`, and `verify:prepush` run this check so generated-doc
+ownership cannot drift silently. For generated files, edit the declared source
+paths and run the declared generator command instead of hand-editing the output.

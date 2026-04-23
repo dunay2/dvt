@@ -144,6 +144,7 @@ Relevant code and fixtures:
 | Markdown location policy                  | `pnpm docs:gov:locations`                       | [`package.json`](../../package.json)                                                         |
 | Docs governance manifest generate         | `pnpm docs:gov:manifest`                        | [`package.json`](../../package.json)                                                         |
 | Docs governance manifest drift check      | `pnpm docs:gov:manifest:check`                  | [`package.json`](../../package.json)                                                         |
+| Generated-doc single-writer policy        | `pnpm docs:gov:generated-policy`                | [`package.json`](../../package.json)                                                         |
 | Changed docs filename policy              | `pnpm docs:gov:filenames:changed`               | [`package.json`](../../package.json)                                                         |
 | Changed docs frontmatter policy           | `pnpm docs:gov:frontmatter:changed`             | [`package.json`](../../package.json)                                                         |
 | Canonical path/link check                 | `pnpm docs:canonical:check`                     | [`package.json`](../../package.json)                                                         |
@@ -156,6 +157,7 @@ Generated documentation sources:
 - code-state report: [`docs/planning/status/generated-code-state.md`](../planning/status/generated-code-state.md)
 - capability coverage report: [`docs/planning/status/generated-capability-coverage.md`](../planning/status/generated-capability-coverage.md)
 - docs governance manifest: [`docs/.manifest.json`](../../docs/.manifest.json)
+- generated-doc ownership policy: [`docs/generated-docs-policy.json`](../generated-docs-policy.json)
 
 Local docs PR preflight usage:
 
@@ -173,11 +175,12 @@ Command semantics:
 - `pnpm docs:status:check` and `pnpm docs:capability:check` remain strict drift gates for their tracked generated outputs.
 - `pnpm docs:gov:manifest` regenerates the tracked machine-readable docs inventory at `docs/.manifest.json`.
 - `pnpm docs:gov:manifest:check` is the strict drift gate for that tracked docs governance manifest.
+- `pnpm docs:gov:generated-policy` validates the generated-doc single-writer registry, including source paths, generator commands, tracked versus untracked posture, and required generated markers.
 - `pnpm docs:gov` now includes the docs manifest generation step, so the aggregate governance command keeps the tracked manifest current during local-friendly docs validation.
 - `pnpm docs:gov` also runs the changed-doc filename and ADR/evidence frontmatter gates, so new or changed docs fail locally on canonical naming and doc-class metadata violations without turning historical warning-only docs into global blockers.
 - `pnpm verify:changed` is the fast local pre-push path used by `.husky/pre-push` by default; it stays on changed-file docs, markdown, formatting, and QA-artifact gates without invoking root type-check.
 - `pnpm verify:prepush` uses `node scripts/docs-workboard-check-changed.cjs`, so workboard drift is enforced when lane YAML changed, not for every module-only commit.
-- `pnpm verify:prepush` includes `pnpm docs:gov:filenames:changed` and `pnpm docs:gov:frontmatter:changed` after the changed-only Markdown location gate, keeping changed docs fail-closed for placement, naming, and ADR/evidence metadata before the heavier code checks run.
+- `pnpm verify:prepush` includes `pnpm docs:gov:filenames:changed`, `pnpm docs:gov:frontmatter:changed`, and `pnpm docs:gov:generated-policy` after the changed-only Markdown location gate, keeping changed docs fail-closed for placement, naming, ADR/evidence metadata, and generated-doc ownership before the heavier code checks run.
 - `pnpm verify:prepush` now keeps three outcomes for code diffs:
   - skip when no TypeScript-affecting files changed
   - run `pnpm ci:affected:typecheck` when the diff is workspace-scoped

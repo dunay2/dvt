@@ -651,7 +651,7 @@ tasks:
       20% round-reduction rule.
     complexity: S
     effort_points: 3
-    progress_pct: 88
+    progress_pct: 90
     evidence_refs:
       - docs/planning/reviews/ci-and-delivery/20260328-lane-c-ai-efficiency-and-cost-review.md
       - docs/planning/reviews/ci-and-delivery/20260402-rc-c2-operational-friction-intake-review.md
@@ -668,7 +668,9 @@ tasks:
       - docs/planning/closeouts/20260423-rc-c2-wave-2c-prepush-affected-typecheck-closeout.md
       - docs/planning/closeouts/20260423-rc-c2-wave-3a-docs-manifest-determinism-closeout.md
       - docs/planning/closeouts/20260423-rc-c2-wave-3b-changed-doc-governance-closeout.md
+      - docs/planning/closeouts/20260423-rc-c2-wave-3c-generated-doc-single-writer-closeout.md
       - docs/planning/closeouts/20260423-rc-c2-wave-4a-ci-tools-merge-gate-closeout.md
+      - docs/generated-docs-policy.json
       - docs/evidence/ED-20260418-local-build-hook-warm-cache-p0.md
       - docs/evidence/ED-20260418-rc-c2-turbo-build-orchestrator.md
       - docs/risk-register/quality/R-20260418-LOCAL-BUILD-HOOK-WARM-CACHE-P0.yaml
@@ -695,10 +697,12 @@ tasks:
       governance manifest deterministic, tracks `docs/.manifest.json`, and wires the local-friendly
       and strict docs command paths around that artifact. Wave 3B then makes changed docs fail
       closed on canonical filename, ADR/evidence frontmatter, and code-tree placement policy without
-      converting inherited historical docs warnings into global blockers. Wave 4A then promotes
-      `pnpm test:ci-tools` into the `CI - Code Quality` merge gate so workflow and scope-helper
-      contract tests stop being advisory-only. Final closure still depends on three qualifying Lane
-      C PR cycles logged against the new workflow.
+      converting inherited historical docs warnings into global blockers. Wave 3C now adds an
+      enforced generated-doc single-writer policy that records artifact classes, editable sources,
+      generator commands, tracking posture, and manual-edit policy. Wave 4A then promotes `pnpm
+      test:ci-tools` into the `CI - Code Quality` merge gate so workflow and scope-helper contract
+      tests stop being advisory-only. Final closure still depends on three qualifying Lane C PR
+      cycles logged against the new workflow.
     last_verified: '2026-04-23'
   - task_id: RC-E1
     priority: P1

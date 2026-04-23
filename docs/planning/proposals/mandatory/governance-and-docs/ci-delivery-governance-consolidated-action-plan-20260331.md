@@ -507,11 +507,34 @@ This keeps Wave 3 honest: new or changed docs must meet the current governance
 contract, while legacy cleanup remains a separate backlog instead of becoming
 an unrelated red gate.
 
-| Task       | Files / surfaces                                                          | Action                                                                                                                                                                   | Validation                                                                          | Exit criteria                                                                     |
-| ---------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| `CDG-W3-1` | `tools/docs/generate-docs-manifest.ts`, `package.json`, `docs:gov` wiring | Refactor the manifest generator so the committed output is deterministic. Remove or externalize timestamp noise, then wire the manifest into `docs:gov`.                 | `pnpm docs:gov:manifest`, `pnpm docs:gov`, `pnpm docs:ci`, `pnpm verify:prepush`    | The manifest becomes a real governance artifact instead of a dormant helper.      |
-| `CDG-W3-2` | docs governance tools and docs inventory                                  | Introduce changed-files fail-closed rules for new docs: strict filenames for new/changed docs, doc-class frontmatter validation, and clearer placement failure messages. | `pnpm docs:gov`, `pnpm docs:gov:locations -- --changed-only`, `pnpm verify:prepush` | New docs cannot silently land in non-canonical paths or naming patterns.          |
-| `CDG-W3-3` | `docs/DOCS_README.md`, planning docs, generator scripts                   | Document and enforce single-writer discipline for generated docs: source file, generator command, and manual-edit policy per artifact class.                             | `pnpm docs:sync`, `pnpm docs:gov`, `pnpm docs:ci`                                   | Contributors can identify canonical source vs. generated output without guessing. |
+### Wave 3C Immediate Single-Writer Slice
+
+With deterministic docs artifacts and changed-doc policy live, the final Wave 3
+ownership step is to make generated-doc source authority explicit and
+machine-checked.
+
+That slice should:
+
+- declare generated-doc artifact classes in one policy file
+- record source paths, generator command, tracked or untracked posture, and
+  manual-edit policy per class
+- validate that tracked generated outputs are actually tracked and ignored
+  planning outputs remain untracked
+- validate generated markers for declared Markdown outputs when those outputs
+  exist locally
+- wire the policy checker into local-friendly docs governance, strict docs CI,
+  and pre-push
+
+This keeps generated docs honest without reopening broader merge-hotspot
+extraction: the policy tells contributors where to edit and what to run, while
+future slices can still decide whether additional generated outputs should be
+split, ignored, or kept tracked.
+
+| Task       | Files / surfaces                                                                           | Action                                                                                                                                                                   | Validation                                                                          | Exit criteria                                                                     |
+| ---------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| `CDG-W3-1` | `tools/docs/generate-docs-manifest.ts`, `package.json`, `docs:gov` wiring                  | Refactor the manifest generator so the committed output is deterministic. Remove or externalize timestamp noise, then wire the manifest into `docs:gov`.                 | `pnpm docs:gov:manifest`, `pnpm docs:gov`, `pnpm docs:ci`, `pnpm verify:prepush`    | The manifest becomes a real governance artifact instead of a dormant helper.      |
+| `CDG-W3-2` | docs governance tools and docs inventory                                                   | Introduce changed-files fail-closed rules for new docs: strict filenames for new/changed docs, doc-class frontmatter validation, and clearer placement failure messages. | `pnpm docs:gov`, `pnpm docs:gov:locations -- --changed-only`, `pnpm verify:prepush` | New docs cannot silently land in non-canonical paths or naming patterns.          |
+| `CDG-W3-3` | `docs/generated-docs-policy.json`, `docs/DOCS_README.md`, planning docs, generator scripts | Document and enforce single-writer discipline for generated docs: source file, generator command, tracking posture, and manual-edit policy per artifact class.           | `pnpm docs:gov:generated-policy`, `pnpm docs:sync`, `pnpm docs:gov`, `pnpm docs:ci` | Contributors can identify canonical source vs. generated output without guessing. |
 
 ### Wave 4 - Merge-Hotspot And Trust Hardening
 
