@@ -2420,7 +2420,7 @@ tasks:
   - task_id: TF-E2-K-G
     parent_task: TF-E2-K
     priority: P0
-    status: in_progress
+    status: done
     objective: >-
       prove the continuation cycle from typed canvas authoring into preview and run handoff without
       widening scope or losing typed host context.
@@ -2430,13 +2430,15 @@ tasks:
       authoring, and proof sequencing is ready for the later selected-closure browser work.
     complexity: S
     effort_points: 2
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
       - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-k-playground-complete-cycle-stories-20260424.md
       - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-e-selected-closure-ux-proof-stories-20260423.md
+      - docs/planning/closeouts/20260424-tf-e2-k-g-typed-canvas-preview-run-proof-closeout.md
     status_reason: >-
-      Active. The remaining proof now focuses on carrying the host cycle forward into preview and
-      run while keeping story-shaped route fixtures and typed host context intact.
+      Closed. Typed transformation host flow now proves continuation from first-node authoring into
+      preview and run while keeping the same active tab and typed host context, and the route proof
+      now consumes dedicated host-cycle scenario support instead of generic controller defaults.
     last_verified: '2026-04-24'
   - task_id: TF-E2-K-H
     parent_task: TF-E2-K
