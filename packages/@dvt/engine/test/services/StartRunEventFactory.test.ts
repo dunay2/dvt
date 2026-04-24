@@ -47,14 +47,14 @@ describe('StartRunEventFactory provider ref preservation', () => {
     expect(metadata.providerRef).not.toHaveProperty('taskQueue');
   });
 
-  it('persists provider-specific fields inside the discriminated providerRef', () => {
+  it('persists temporal provider-specific fields inside providerRef', () => {
     const metadata = factory.buildRunMetadata(
       {
         tenantId: 't',
         projectId: 'p',
         environmentId: 'dev',
         runId: 'run-1',
-        targetAdapter: 'conductor',
+        targetAdapter: 'temporal',
         logicalAttemptId: 1,
         originRunId: 'run-1',
       },
@@ -66,21 +66,23 @@ describe('StartRunEventFactory provider ref preservation', () => {
         planVersion: '1.0',
       },
       {
-        provider: 'conductor',
+        provider: 'temporal',
         tenantId: 't',
+        namespace: 'default',
         workflowId: 'wf-run-1',
         runId: 'provider-run-1',
-        conductorUrl: 'http://localhost:8080/api',
+        taskQueue: 'runtime-task-queue',
       },
       '2026-04-09T00:00:00.000Z'
     );
 
     expect(metadata.providerRef).toEqual({
-      provider: 'conductor',
+      provider: 'temporal',
       tenantId: 't',
+      namespace: 'default',
       workflowId: 'wf-run-1',
       runId: 'provider-run-1',
-      conductorUrl: 'http://localhost:8080/api',
+      taskQueue: 'runtime-task-queue',
     });
   });
 });

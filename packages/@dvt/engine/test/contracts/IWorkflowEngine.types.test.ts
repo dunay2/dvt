@@ -41,21 +41,15 @@ describe('IWorkflowEngine contract types', () => {
     expect(ctx).toHaveProperty('targetAdapter');
   });
 
-  it('EngineRunRef temporal and conductor comply with the contract', () => {
+  it('EngineRunRef temporal complies with the active provider contract', () => {
     const ref1: EngineRunRef = {
       provider: 'temporal',
+      tenantId: 't',
       namespace: 'ns',
       workflowId: 'w',
       runId: 'r',
     };
-    const ref2: EngineRunRef = {
-      provider: 'conductor',
-      workflowId: 'w',
-      runId: 'r',
-      conductorUrl: 'http://conductor',
-    };
     expect(ref1.provider).toBe('temporal');
-    expect(ref2.provider).toBe('conductor');
   });
 
   it('SignalRequest minimal complies with the contract', () => {

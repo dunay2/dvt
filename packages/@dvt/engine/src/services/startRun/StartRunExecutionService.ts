@@ -289,14 +289,5 @@ function engineRunRefsEqual(left: EngineRunRef, right: EngineRunRef): boolean {
     return false;
   }
 
-  switch (left.provider) {
-    case 'temporal':
-      return (
-        right.provider === 'temporal' &&
-        left.namespace === right.namespace &&
-        left.taskQueue === right.taskQueue
-      );
-    case 'conductor':
-      return right.provider === 'conductor' && left.conductorUrl === right.conductorUrl;
-  }
+  return left.namespace === right.namespace && left.taskQueue === right.taskQueue;
 }

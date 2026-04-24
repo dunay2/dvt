@@ -1,4 +1,7 @@
 /**
+ * Owned concern: persist and hydrate canonical run metadata with contract-
+ * validated provider references, without storage-local provider variants.
+ *
  * @file packages/@dvt/adapter-postgres/src/PostgresRunMetadataRepository.ts
  * @baseline ADR-0031: Storage Adapter Tenant Isolation Strategy
  * @decision Run metadata persistence extracted from PostgresStateStoreAdapter
@@ -37,7 +40,6 @@ interface RunMetadataRow {
   provider_run_id: string;
   provider_namespace: string | null;
   provider_task_queue: string | null;
-  provider_conductor_url: string | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -58,8 +60,7 @@ const RUN_METADATA_COLUMNS = `
   provider_workflow_id,
   provider_run_id,
   provider_namespace,
-  provider_task_queue,
-  provider_conductor_url
+  provider_task_queue
 `;
 
 // ---------------------------------------------------------------------------
@@ -89,32 +90,17 @@ function parsePersistedProviderRef(
 }
 
 function normalizeEngineRunRefShape(input: ReturnType<typeof parseEngineRunRef>): EngineRunRef {
-  if (input.provider === 'temporal') {
-    const runRef: EngineRunRef = {
-      provider: 'temporal',
-      tenantId: input.tenantId,
-      namespace: input.namespace,
-      workflowId: input.workflowId,
-      runId: input.runId,
-    };
-    if (input.taskQueue !== undefined) {
-      runRef.taskQueue = input.taskQueue;
-    }
-    return runRef;
+  const runRef: EngineRunRef = {
+    provider: 'temporal',
+    tenantId: input.tenantId,
+    namespace: input.namespace,
+    workflowId: input.workflowId,
+    runId: input.runId,
+  };
+  if (input.taskQueue !== undefined) {
+    runRef.taskQueue = input.taskQueue;
   }
-
-  if (input.provider === 'conductor') {
-    return {
-      provider: 'conductor',
-      tenantId: input.tenantId,
-      workflowId: input.workflowId,
-      runId: input.runId,
-      conductorUrl: input.conductorUrl,
-    };
-  }
-
-  const exhaustive: never = input;
-  throw new Error(`RUN_METADATA_PROVIDER_UNSUPPORTED: ${String(exhaustive)}`);
+  return runRef;
 }
 
 function toRunMetadata(row: RunMetadataRow): RunMetadata {
@@ -144,16 +130,6 @@ function rawProviderRefFromRow(row: RunMetadataRow): unknown {
       workflowId: row.provider_workflow_id,
       runId: row.provider_run_id,
       ...(row.provider_task_queue !== null ? { taskQueue: row.provider_task_queue } : {}),
-    };
-  }
-
-  if (row.provider === 'conductor') {
-    return {
-      provider: 'conductor',
-      tenantId: row.tenant_id,
-      workflowId: row.provider_workflow_id,
-      runId: row.provider_run_id,
-      conductorUrl: row.provider_conductor_url ?? '',
     };
   }
 
@@ -189,10 +165,9 @@ export class PostgresRunMetadataRepository {
           provider_workflow_id,
           provider_run_id,
           provider_namespace,
-          provider_task_queue,
-          provider_conductor_url
+          provider_task_queue
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
       `,
       [
         meta.runId,
@@ -208,9 +183,8 @@ export class PostgresRunMetadataRepository {
         providerRef.provider,
         providerRef.workflowId,
         providerRef.runId,
-        providerRef.provider === 'temporal' ? providerRef.namespace : null,
-        providerRef.provider === 'temporal' ? (providerRef.taskQueue ?? null) : null,
-        providerRef.provider === 'conductor' ? providerRef.conductorUrl : null,
+        providerRef.namespace,
+        providerRef.taskQueue ?? null,
       ]
     );
 
@@ -261,10 +235,9 @@ export class PostgresRunMetadataRepository {
           provider_workflow_id,
           provider_run_id,
           provider_namespace,
-          provider_task_queue,
-          provider_conductor_url
+          provider_task_queue
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
         ON CONFLICT (run_id) DO UPDATE SET
           tenant_id = EXCLUDED.tenant_id,
           project_id = EXCLUDED.project_id,
@@ -275,8 +248,7 @@ export class PostgresRunMetadataRepository {
           provider_workflow_id = EXCLUDED.provider_workflow_id,
           provider_run_id = EXCLUDED.provider_run_id,
           provider_namespace = EXCLUDED.provider_namespace,
-          provider_task_queue = EXCLUDED.provider_task_queue,
-          provider_conductor_url = EXCLUDED.provider_conductor_url
+          provider_task_queue = EXCLUDED.provider_task_queue
       `,
       [
         meta.runId,
@@ -288,9 +260,8 @@ export class PostgresRunMetadataRepository {
         providerRef.provider,
         providerRef.workflowId,
         providerRef.runId,
-        providerRef.provider === 'temporal' ? providerRef.namespace : null,
-        providerRef.provider === 'temporal' ? (providerRef.taskQueue ?? null) : null,
-        providerRef.provider === 'conductor' ? providerRef.conductorUrl : null,
+        providerRef.namespace,
+        providerRef.taskQueue ?? null,
       ]
     );
   }
@@ -337,19 +308,15 @@ export class PostgresRunMetadataRepository {
           SET provider_workflow_id = $1,
               provider_run_id = $2,
               provider_namespace = $3,
-              provider_task_queue = $4,
-              provider_conductor_url = $5
-          WHERE tenant_id = $6 AND run_id = $7
+              provider_task_queue = $4
+          WHERE tenant_id = $5 AND run_id = $6
           RETURNING ${RUN_METADATA_COLUMNS}
         `,
         [
           validatedProviderRef.workflowId,
           validatedProviderRef.runId,
-          validatedProviderRef.provider === 'temporal' ? validatedProviderRef.namespace : null,
-          validatedProviderRef.provider === 'temporal'
-            ? (validatedProviderRef.taskQueue ?? null)
-            : null,
-          validatedProviderRef.provider === 'conductor' ? validatedProviderRef.conductorUrl : null,
+          validatedProviderRef.namespace,
+          validatedProviderRef.taskQueue ?? null,
           tenantId,
           runId,
         ]
@@ -431,8 +398,7 @@ export class PostgresRunMetadataRepository {
             m.provider_workflow_id,
             m.provider_run_id,
             m.provider_namespace,
-            m.provider_task_queue,
-            m.provider_conductor_url
+            m.provider_task_queue
           FROM ${quoteIdentifier(this.schema)}.run_metadata m
           INNER JOIN ${quoteIdentifier(this.schema)}.run_snapshots s ON s.run_id = m.run_id
           WHERE m.tenant_id = $2

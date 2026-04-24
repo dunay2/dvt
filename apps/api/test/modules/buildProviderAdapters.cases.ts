@@ -156,17 +156,12 @@ export function describeBuildProviderAdaptersCases(): void {
               },
             }),
           },
-          {
-            provider: 'conductor',
-            build: async () => null,
-          },
         ]
       );
 
       expect(result.adapters.size).toBe(1);
       expect(result.adapters.get('temporal')).toBe(temporalAdapter);
       expect(result.adapters.has('temporal')).toBe(true);
-      expect(result.adapters.has('conductor')).toBe(false);
 
       await expect(result.close()).resolves.toBeUndefined();
       expect(closed).toBe(true);

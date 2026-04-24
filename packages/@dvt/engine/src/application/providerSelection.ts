@@ -1,4 +1,7 @@
 /**
+ * Owned concern: resolve configured engine provider ids against the active
+ * implemented-provider vocabulary before runtime adapters are selected.
+ *
  * @file packages/@dvt/engine/src/application/providerSelection.ts
  * @baseline ADR-0003: Execution Model Sovereignty
  * @decision Decision — Provider selection is resolved in the application layer to keep runtime independence
@@ -13,7 +16,7 @@ import { AdapterNotRegisteredError } from '../contracts/errors.js';
 
 type Provider = EngineRunRef['provider'];
 
-const VALID_PROVIDERS = new Set<Provider>(['temporal', 'conductor']);
+const VALID_PROVIDERS = new Set<Provider>(['temporal']);
 
 export function resolveEngineProvider(
   env: Record<string, string | undefined>,
@@ -67,7 +70,7 @@ function pickFirstAvailableAdapterOrThrow(
   adapters: Map<Provider, IProviderAdapter>,
   fallback: Provider
 ): IProviderAdapter {
-  const orderedProviders: readonly Provider[] = [fallback, 'temporal', 'conductor'];
+  const orderedProviders: readonly Provider[] = [fallback, 'temporal'];
 
   for (const provider of orderedProviders) {
     const adapter = adapters.get(provider);

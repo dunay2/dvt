@@ -30,7 +30,6 @@ export interface InMemoryProviderAdapterDeps {
   provider?: EngineRunRef['provider'];
   namespace?: string;
   taskQueue?: string;
-  conductorUrl?: string;
   workflowIdPrefix?: string;
   idempotency?: IdempotencyKeyBuilder;
   capabilities?: readonly string[];
@@ -100,15 +99,6 @@ export class InMemoryProviderAdapter implements IProviderAdapter {
     const workflowId = asNonBlankString(
       `${this.deps.workflowIdPrefix ?? 'in_memory'}_${ctx.runId}`
     );
-    if (this.provider === 'conductor') {
-      return {
-        provider: 'conductor',
-        tenantId: ctx.tenantId,
-        workflowId,
-        runId: ctx.runId,
-        conductorUrl: asNonBlankString(this.deps.conductorUrl ?? 'memory://conductor'),
-      };
-    }
 
     const runRef: EngineRunRef = {
       provider: 'temporal',

@@ -63,7 +63,7 @@ function toEngineRunContext(
   projectId: string,
   environmentId: string,
   tenantId: string,
-  sourceProvider: 'temporal' | 'conductor'
+  sourceProvider: RunContext['targetAdapter']
 ): RunContext {
   const targetAdapter = command.targetAdapter ?? sourceProvider;
   const runContext: RunContext = {

@@ -144,14 +144,6 @@ export function createMockRunsService(
         runId,
       };
 
-      if (input.workspaceScope.targetAdapter === 'conductor') {
-        return {
-          provider: 'conductor',
-          conductorUrl: asNonBlankString('http://localhost:8080'),
-          ...base,
-        };
-      }
-
       return {
         provider: 'temporal',
         namespace: asNonBlankString('default'),

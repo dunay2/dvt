@@ -1,4 +1,4 @@
-export type ExecutionAdapterName = 'temporal' | 'conductor' | 'local';
+export type ExecutionAdapterName = 'temporal' | 'local';
 
 export interface ObservabilityContext {
   readonly tenantId?: string;

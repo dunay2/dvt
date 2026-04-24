@@ -290,62 +290,6 @@ function makeAdapterWithFailingCancel(knownRunIds: Set<string>): IProviderAdapte
   };
 }
 
-// Module-scoped helpers to keep tests small and satisfy CodeScene rules
-function makeTemporalAdapterWithLog(cancelLog: string[]): IProviderAdapter {
-  return {
-    provider: 'temporal',
-    async startRun(_planRef, ctx) {
-      return {
-        provider: 'temporal',
-        tenantId: ctx.tenantId,
-        workflowId: `wf-${ctx.runId}`,
-        runId: ctx.runId,
-      } as EngineRunRef;
-    },
-    async cancelRun(runRef) {
-      cancelLog.push(runRef.runId);
-    },
-    async getProviderStatusView() {
-      return { provider: 'temporal', providerStatus: 'RUNNING' } as any;
-    },
-    async signal() {},
-    async lookupRunRef(runId, tenantId) {
-      return { provider: 'temporal', tenantId, workflowId: `wf-${runId}`, runId } as EngineRunRef;
-    },
-  };
-}
-
-function makeConductorAdapterWithLog(cancelLog: string[]): IProviderAdapter {
-  return {
-    provider: 'conductor',
-    async startRun(_planRef, ctx) {
-      return {
-        provider: 'conductor',
-        tenantId: ctx.tenantId,
-        workflowId: `wf-${ctx.runId}`,
-        runId: ctx.runId,
-        conductorUrl: 'http://conductor',
-      } as EngineRunRef;
-    },
-    async cancelRun(runRef) {
-      cancelLog.push(runRef.runId);
-    },
-    async getProviderStatusView() {
-      return { provider: 'temporal', providerStatus: 'RUNNING' } as any;
-    },
-    async signal() {},
-    async lookupRunRef(runId, tenantId) {
-      return {
-        provider: 'conductor',
-        tenantId,
-        workflowId: `wf-${runId}`,
-        runId,
-        conductorUrl: 'http://conductor',
-      } as EngineRunRef;
-    },
-  };
-}
-
 function createServiceWithAdapters(adapters: Map<EngineRunRef['provider'], IProviderAdapter>): {
   service: RunMaintenanceService;
   store: InMemoryTxStore;
@@ -986,50 +930,23 @@ describe('RunMaintenanceService', () => {
       expect(result.inspected).toBe(1);
     });
 
-    it('reconciles intents across multiple providers using the correct adapter per provider', async () => {
-      const cancelLogTemporal: string[] = [];
-      const cancelLogConductor: string[] = [];
-
-      const temporalAdapter = makeTemporalAdapterWithLog(cancelLogTemporal);
-      const conductorAdapter = makeConductorAdapterWithLog(cancelLogConductor);
-
-      const { service, intentStore } = createServiceWithAdapters(
-        new Map<EngineRunRef['provider'], IProviderAdapter>([
-          ['temporal', temporalAdapter],
-          ['conductor', conductorAdapter],
-        ])
-      );
-
-      await makePendingIntent(intentStore, 'run-temporal-mp', 'i-mp-temporal', 'temporal');
-      await makePendingIntent(intentStore, 'run-conductor-mp', 'i-mp-conductor', 'conductor');
-
-      const result = await service.reconcileOrphanedIntents({ thresholdMs: 0 });
-
-      expect(result.expired).toHaveLength(2);
-      expect(result.resolved).toHaveLength(0);
-      expect(result.cancelFailed).toHaveLength(0);
-      expect(result.deferred).toHaveLength(0);
-      expect(cancelLogTemporal).toContain('run-temporal-mp');
-      expect(cancelLogConductor).toContain('run-conductor-mp');
-    });
-
     it('reports cancelFailed for DISPATCHED intent when adapter is not in the adapters map', async () => {
-      // Fixture has only 'temporal' adapter; intent has provider 'conductor'
-      const { service, intentStore } = createFixtureWith(makeAdapterWithLookup(new Set()));
+      const { service, intentStore } = createServiceWithAdapters(new Map());
 
       await intentStore.createIntent({
         intentId: 'i-no-adapter',
         tenantId: 't',
         runId: 'run-no-adapter',
-        provider: 'conductor' as EngineRunRef['provider'],
+        provider: 'temporal',
         createdAt: '1970-01-01T00:00:00.000Z',
       });
       await intentStore.markDispatched('i-no-adapter', {
-        provider: 'conductor' as EngineRunRef['provider'],
+        provider: 'temporal',
         tenantId: 't',
+        namespace: 'default',
         workflowId: 'wf-run-no-adapter',
         runId: 'run-no-adapter',
-      } as EngineRunRef);
+      });
 
       const result = await service.reconcileOrphanedIntents({ thresholdMs: 0 });
 

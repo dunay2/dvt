@@ -166,7 +166,6 @@ describe('RunExecutionContextAdmissionPolicy', () => {
     ['planId', makeRunExecutionContext({ planId: 'plan-2' })],
     ['planVersion', makeRunExecutionContext({ planVersion: '2.0' })],
     ['planSha256', makeRunExecutionContext({ planSha256: 'different-sha' })],
-    ['targetAdapter', makeRunExecutionContext({ targetAdapter: 'conductor' })],
   ])('rejects %s mismatch', async (_field, runExecutionContext) => {
     const policy = new RunExecutionContextAdmissionPolicy({
       resolver: {

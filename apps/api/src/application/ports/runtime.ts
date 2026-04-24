@@ -1,6 +1,11 @@
+/**
+ * Owned concern: define API application runtime DTOs and ports without
+ * re-declaring provider ids outside the shared contract vocabulary.
+ */
 import type {
   CanonicalRunStatus,
   EventEnvelope,
+  Provider,
   MaterializationEvidence,
   ProviderRunStatusView,
   RunExecutionContextRef,
@@ -100,7 +105,7 @@ export interface RunListItemDto {
   readonly planId: string;
   readonly planVersion: string;
   readonly logicalAttemptId: number;
-  readonly provider: 'temporal' | 'conductor';
+  readonly provider: Provider;
   readonly createdAt?: string;
   readonly status?: CanonicalRunStatus['status'];
 }
@@ -163,7 +168,7 @@ export interface ICancelRunUseCase {
   ): Promise<SignalRunResult>;
 }
 
-export const SUPPORTED_RECOVER_RUN_TARGET_ADAPTERS = ['temporal', 'conductor'] as const;
+export const SUPPORTED_RECOVER_RUN_TARGET_ADAPTERS = ['temporal'] as const;
 
 export type RecoverRunTargetAdapter = (typeof SUPPORTED_RECOVER_RUN_TARGET_ADAPTERS)[number];
 

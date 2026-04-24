@@ -68,7 +68,7 @@ Do not use these as active operational posture:
 - quarter-specific error-budget examples from February 2026;
 - phase-labeled cost-per-run promises;
 - Phase 1 or Phase 2 rollout wording as if it were the current operations model;
-- fallback examples that assume a real Conductor production path exists today.
+- fallback examples that assume a second production provider path exists today.
 
 ## Next closure path
 

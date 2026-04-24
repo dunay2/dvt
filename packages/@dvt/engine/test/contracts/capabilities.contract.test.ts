@@ -24,7 +24,6 @@ import {
 import { describe, expect, it } from 'vitest';
 
 import { createNoopObservability } from '../../../observability/src/noopObservability.js';
-import { ConductorAdapterStub } from '../../src/adapters/conductor/ConductorAdapterStub.js';
 import { InMemoryProviderAdapter } from '../../src/adapters/inMemory/InMemoryProviderAdapter.js';
 import type { IProviderAdapter } from '../../src/adapters/IProviderAdapter.js';
 import { ENGINE_ERROR_MESSAGE_KEY } from '../../src/contracts/errors.js';
@@ -217,14 +216,6 @@ describe('adapter capabilities() declarations', () => {
     expect(testAdapter.provider).toBe('temporal');
     expect(testAdapter.capabilities()).toContain('workflow.fan.parallel');
   });
-
-  it('ConductorAdapterStub.capabilities() includes basic-execution', () => {
-    expect(new ConductorAdapterStub().capabilities()).toContain('basic-execution');
-  });
-
-  it('ConductorAdapterStub.capabilities() does NOT include signal.pause.native', () => {
-    expect(new ConductorAdapterStub().capabilities()).not.toContain('signal.pause.native');
-  });
 });
 
 // ─── Matrix drift gate (CI) ───────────────────────────────────────────────────
@@ -244,19 +235,7 @@ describe('adapters.capabilities.json matrix drift gate', () => {
 
   it('matrix lists only active runtime providers', () => {
     expect(Object.keys(loadMatrix().adapters).sort((a, b) => a.localeCompare(b))).toEqual([
-      'conductor',
       'temporal',
     ]);
-  });
-
-  it('conductor adapter capabilities match the matrix', () => {
-    const declared = [...new ConductorAdapterStub().capabilities()].sort((a, b) =>
-      a.localeCompare(b)
-    );
-    const matrix =
-      loadMatrix()
-        .adapters['conductor']?.capabilities.slice()
-        .sort((a, b) => a.localeCompare(b)) ?? [];
-    expect(declared).toEqual(matrix);
   });
 });

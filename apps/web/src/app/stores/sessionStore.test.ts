@@ -9,7 +9,7 @@ type PersistEnvelope = {
     tenantId: string;
     projectId: string;
     environmentId: string;
-    targetAdapter: 'temporal' | 'conductor';
+    targetAdapter: string;
   }>;
 };
 
@@ -22,7 +22,7 @@ const bootstrapState = {
 
 const workspaceBootstrap = resolveWorkspaceBootstrapConfig(getRuntimeDataSourceMode());
 
-const alternateTargetAdapter = bootstrapState.targetAdapter === 'temporal' ? 'conductor' : 'temporal';
+const stalePersistedTargetAdapter = 'legacy-provider';
 
 function pickValidPersistedScopeValue(
   options: Array<{ value: string }>,
@@ -53,7 +53,7 @@ describe('sessionStore persistence', () => {
     useSessionStore.getState().setTenantId('globex');
     useSessionStore.getState().setProjectId('dbt-marketing');
     useSessionStore.getState().setEnvironmentId('stage');
-    useSessionStore.getState().setTargetAdapter(alternateTargetAdapter);
+    useSessionStore.getState().setTargetAdapter(bootstrapState.targetAdapter);
 
     const persistedRaw = localStorage.getItem('dvt-web-session');
     expect(persistedRaw).not.toBeNull();
@@ -88,7 +88,7 @@ describe('sessionStore persistence', () => {
       JSON.stringify({
         state: {
           ...validPersistedScope,
-          targetAdapter: alternateTargetAdapter,
+          targetAdapter: stalePersistedTargetAdapter,
         },
       } satisfies PersistEnvelope)
     );

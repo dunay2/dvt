@@ -28,8 +28,7 @@ Capability matrix: declares which capabilities each adapter implements.
 - Engine validation: Query this file to check if
   `executionPolicy.requiresCapabilities` are supported by
   `RunContext.targetAdapter`.
-- Example: If `targetAdapter="conductor"` and execution policy requires
-  `["PAUSE_NATIVE"]`, validation fails (Conductor only has `PAUSE_EMULATED`).
+- Current active provider: `temporal`.
 
 ### `validation-report.schema.json`
 
@@ -49,7 +48,7 @@ interface RunExecutionPolicy {
 }
 
 interface RunContext {
-  targetAdapter: 'temporal' | 'conductor';
+  targetAdapter: 'temporal';
 }
 ```
 
@@ -157,4 +156,3 @@ When adding a new capability:
 - [ExecutionSemantics.v1.md](../engine/ExecutionSemantics.v1.md)
 - [TemporalAdapter.spec.md](../../adapters/temporal/TemporalAdapter.spec.md)
 - [Temporal Capabilities](https://docs.temporal.io/)
-- [Conductor Capabilities](https://conductor.netflix.com/)

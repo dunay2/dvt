@@ -23,7 +23,6 @@ import { jcsCanonicalize, sha256Hex } from '@dvt/crypto';
 import { describe, expect, it, vi } from 'vitest';
 
 import {
-  ProviderRefProviderMismatchError,
   RecoverySourceNotTerminalError,
   RunAlreadyExistsError,
 } from '../../src/contracts/errors.js';
@@ -747,7 +746,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
     expect(meta?.providerRef.runId).toBe('g7-same-id-1');
   });
 
-  it('rejects startRun when providerRef reconciliation crosses provider discriminators', async () => {
+  it('rejects startRun when adapter returns an unsupported provider discriminator', async () => {
     const cancelRun = vi.fn(async () => {});
 
     const adapters = makeAdapters({
@@ -768,7 +767,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
           workflowId: `wf-${ctx.runId}`,
           runId: `actual-execution-id-for-${ctx.runId}`,
           conductorUrl: 'http://localhost:8080/api',
-        } as EngineRunRef;
+        } as unknown as EngineRunRef;
       },
     });
 
@@ -776,7 +775,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
     const { engine } = createEngine({ adapters, stateStore: store });
     await expect(
       engine.startRun(makePlanRef(), makeContext('g7-provider-drift-1'))
-    ).rejects.toBeInstanceOf(ProviderRefProviderMismatchError);
+    ).rejects.toBeInstanceOf(ContractValidationError);
     expect(cancelRun).toHaveBeenCalledTimes(1);
 
     const meta = await store.getRunMetadataByRunId('t', 'g7-provider-drift-1');

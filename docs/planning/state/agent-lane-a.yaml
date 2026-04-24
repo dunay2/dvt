@@ -1348,24 +1348,29 @@ tasks:
     last_verified: '2026-04-19'
   - task_id: AR-A8
     priority: P1
-    status: queued
+    status: done
     objective: >-
-      remove the Conductor adapter illusion from runtime contracts by deleting
-      `ConductorAdapterStub`/`TemporalAdapterStub` and narrowing provider typing to implemented
-      runtime adapters.
+      remove non-implemented provider adapter illusions from runtime contracts by deleting dead
+      provider stubs and narrowing provider typing to implemented runtime adapters.
     dependency: WE-HX-2
     target: >-
       Runtime provider union and adapter registry expose only implemented providers by default, and
       dead stubs are removed so portability claims match executable behavior.
     complexity: S
     effort_points: 2
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review-principal-architect.md
+      - docs/planning/closeouts/20260424-ar-a8-provider-vocabulary-hard-cut-closeout.md
+      - docs/evidence/ed-20260424-hard-cut-runtime-provider-vocabulary.md
+      - docs/risk-register/quality/R-20260424-HARD-CUT-RUNTIME-PROVIDER-VOCABULARY.yaml
+      - packages/@dvt/contracts/test/provider-vocabulary.architecture.test.ts
     status_reason: >-
-      The review identified a type-level portability promise for Conductor with no runtime
-      implementation, which creates governance and product drift.
-    last_verified: '2026-04-04'
+      Closed by hard-cutting active runtime provider vocabulary to implemented providers only,
+      deleting dead provider stubs, narrowing validation schemas, removing active adapter docs for
+      non-implemented providers, and adding semantic architecture coverage across contracts,
+      composition, and active docs.
+    last_verified: '2026-04-24'
   - task_id: AR-A9
     priority: P1
     status: done
@@ -2993,8 +2998,8 @@ dependency_notes:
     admission-hardening work under `S08-4`.
   - >-
     The 2026-04-02 principal deep architectural review now feeds `AR-A8..AR-A11` for provider
-    truthfulness (Conductor removal), planner cycle fail-closed behavior, API-engine contract
-    formalization, and step-level retry policy governance.
+    truthfulness, planner cycle fail-closed behavior, API-engine contract formalization, and
+    step-level retry policy governance.
   - >-
     `AR-A9` is now decomposed into `AR-A9-A..E` and closed with docs-first/TDD-first evidence while
     preserving `PlannerErrorCode.GRAPH_CYCLE` as the canonical cycle contract.

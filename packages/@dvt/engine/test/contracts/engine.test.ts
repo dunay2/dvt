@@ -274,17 +274,17 @@ describe('WorkflowEngine + in-memory temporal provider adapter', () => {
 
   it('does not call adapter.startRun when PlanRef validation fails', async () => {
     const startRunMock: IProviderAdapter['startRun'] = vi.fn(
-      async (_plan, _planRef: PlanRef, ctx: ResolvedRunContext): Promise<EngineRunRef> => ({
-        provider: 'conductor',
+      async (_planRef: PlanRef, ctx: ResolvedRunContext): Promise<EngineRunRef> => ({
+        provider: 'temporal',
         tenantId: ctx.tenantId,
+        namespace: 'default',
         workflowId: 'wf',
         runId: ctx.runId,
-        conductorUrl: 'http://conductor',
       })
     );
 
     const adapter: IProviderAdapter = {
-      provider: 'conductor',
+      provider: 'temporal',
       startRun: startRunMock,
       cancelRun: async () => {},
       getProviderStatusView: async () => {
@@ -319,7 +319,7 @@ describe('WorkflowEngine + in-memory temporal provider adapter', () => {
       projectId: 'p1',
       environmentId: 'dev',
       runId: 'run-x',
-      targetAdapter: 'conductor',
+      targetAdapter: 'temporal',
     };
 
     // Case 1: URI not allowlisted

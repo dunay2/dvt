@@ -69,20 +69,3 @@ export function makeTemporalRunRef(
     ...(overrides?.taskQueue === undefined ? {} : { taskQueue: nb(overrides.taskQueue) }),
   };
 }
-
-export function makeConductorRunRef(
-  overrides?: Partial<{
-    tenantId: string;
-    workflowId: string;
-    runId: string;
-    conductorUrl: string;
-  }>
-): Extract<EngineRunRef, { provider: 'conductor' }> {
-  return {
-    provider: 'conductor',
-    tenantId: nb(overrides?.tenantId ?? 'tenant-a'),
-    workflowId: nb(overrides?.workflowId ?? 'wf-run-1'),
-    runId: nb(overrides?.runId ?? 'run-1'),
-    conductorUrl: nb(overrides?.conductorUrl ?? 'http://localhost:8080'),
-  };
-}

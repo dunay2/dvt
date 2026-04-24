@@ -182,7 +182,6 @@ class TestTxStore {
       providerRunId: string;
       providerNamespace?: string;
       providerTaskQueue?: string;
-      providerConductorUrl?: string;
     }
   ): Promise<void> {
     const current = this.metadataByRun.get(runId);
@@ -194,7 +193,6 @@ class TestTxStore {
       providerRunId: runRef.providerRunId,
       ...(runRef.providerNamespace ? { providerNamespace: runRef.providerNamespace } : {}),
       ...(runRef.providerTaskQueue ? { providerTaskQueue: runRef.providerTaskQueue } : {}),
-      ...(runRef.providerConductorUrl ? { providerConductorUrl: runRef.providerConductorUrl } : {}),
     });
   }
 

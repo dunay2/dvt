@@ -149,7 +149,6 @@ flowchart LR
 - `adapters/`
   - [index](./adapters/index.md)
   - [temporal](./adapters/temporal/index.md)
-  - [conductor](./adapters/conductor/index.md)
   - [state-store](./adapters/state-store/index.md)
 - `contracts/`
   - [index](./contracts/index.md)

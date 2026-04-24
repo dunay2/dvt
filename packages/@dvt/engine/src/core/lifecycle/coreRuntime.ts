@@ -10,7 +10,6 @@ import type {
 
 import { AdapterNotRegisteredError, RunMetadataNotFoundError } from '../../contracts/errors.js';
 import type { IClock } from '../../utils/clock.js';
-import { toErrorMessage } from '../../utils/errorUtils.js';
 import type { IdempotencyKeyBuilder } from '../idempotency.js';
 import { SnapshotProjector, snapshotToStatus } from '../SnapshotProjector.js';
 
@@ -107,11 +106,7 @@ export function buildTraceContext(
 }
 
 export function normalizeEngineRunRef(input: ReturnType<typeof parseEngineRunRef>): EngineRunRef {
-  const normalizer = ENGINE_RUN_REF_NORMALIZER_BY_PROVIDER[input.provider];
-  if (normalizer === undefined) {
-    return throwUnsupportedProvider(input.provider);
-  }
-  return normalizer(input as never);
+  return normalizeTemporalRunRef(input);
 }
 
 export function normalizeSignalRequest(
@@ -244,16 +239,7 @@ function buildRunEvent(input: {
 }
 
 type ParsedEngineRunRef = ReturnType<typeof parseEngineRunRef>;
-type ParsedProvider = ParsedEngineRunRef['provider'];
-type ParsedEngineRunRefByProvider<P extends ParsedProvider> = Extract<
-  ParsedEngineRunRef,
-  { provider: P }
->;
-type EngineRunRefNormalizer<P extends ParsedProvider> = (
-  input: ParsedEngineRunRefByProvider<P>
-) => EngineRunRef;
-
-const normalizeTemporalRunRef: EngineRunRefNormalizer<'temporal'> = (input) => {
+function normalizeTemporalRunRef(input: ParsedEngineRunRef): EngineRunRef {
   const runRef: EngineRunRef = {
     provider: 'temporal',
     tenantId: input.tenantId,
@@ -263,23 +249,4 @@ const normalizeTemporalRunRef: EngineRunRefNormalizer<'temporal'> = (input) => {
   };
   if (input.taskQueue !== undefined) runRef.taskQueue = input.taskQueue;
   return runRef;
-};
-
-const normalizeConductorRunRef: EngineRunRefNormalizer<'conductor'> = (input) => ({
-  provider: 'conductor',
-  tenantId: input.tenantId,
-  workflowId: input.workflowId,
-  runId: input.runId,
-  conductorUrl: input.conductorUrl,
-});
-
-const ENGINE_RUN_REF_NORMALIZER_BY_PROVIDER: {
-  [K in ParsedProvider]: EngineRunRefNormalizer<K>;
-} = {
-  temporal: normalizeTemporalRunRef,
-  conductor: normalizeConductorRunRef,
-};
-
-function throwUnsupportedProvider(provider: unknown): never {
-  throw new Error(`Unsupported provider: ${toErrorMessage(provider)}`);
 }

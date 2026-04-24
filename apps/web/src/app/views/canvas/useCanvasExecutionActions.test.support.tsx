@@ -386,7 +386,7 @@ function requireMockExecutionPlanRef(): NonNullable<typeof mockExecutionPlan.pla
   return planRef;
 }
 
-export function createSessionContext(targetAdapter: 'temporal' | 'conductor' = 'temporal'): SessionContextPort {
+export function createSessionContext(targetAdapter: 'temporal' = 'temporal'): SessionContextPort {
   return {
     getWorkspaceScope: () => ({
       tenantId: 'tenant',

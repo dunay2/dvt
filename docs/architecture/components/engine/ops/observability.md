@@ -21,9 +21,9 @@ canonical runtime SLA documents.
 
 ## Canonical companions
 
-- [Engine SLO Posture](./SLOs.md)
-- [Engine Severity Matrix](./runbooks/severity_matrix.md)
-- [Engine Incident Response Runbook](./runbooks/incident_response.md)
+- [Engine SLO Posture](./slo-posture.md)
+- [Engine Severity Matrix](./runbooks/severity-matrix.md)
+- [Engine Incident Response Runbook](./runbooks/incident-response.md)
 - [API Runtime SLA Canonical](../../../../runbooks/api-runtime-sla-canonical-20260404.md)
 - [AR-C2 SLA Signal Threshold Mapping](../../../../runbooks/ar-c2-sla-signal-threshold-mapping-20260404.md)
 - [AR-C2 Observability Technical Manual](../../../../guides/ar-c2-observability-technical-manual-20260404.md)
@@ -107,14 +107,15 @@ Reference:
 - Treat the outbox claimed-lag metric as observational unless the canonical
   threshold docs say otherwise.
 - Do not infer a second-provider dashboard, failover lane, or adapter health
-  panel from historical Conductor material.
+  panel from historical provider-draft material.
 
 ## What is no longer valid observability truth
 
 Do not use these older assumptions as current operator guidance:
 
 - `Phase 1` dashboard sketches and quarter-based rollout language;
-- fake multi-provider dashboards that show Conductor as a live production path;
+- fake multi-provider dashboards that show non-implemented providers as live
+  production paths;
 - threshold tables that are not traceable to the canonical SLA and mapping docs;
 - ASCII mock dashboards or alert examples presented as if they were real wired
   operational panels.

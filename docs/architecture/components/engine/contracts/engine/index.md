@@ -16,6 +16,7 @@ last_reviewed: 2026-04-13
 - [RunEvents.v1](./RunEvents.v1.md)
 - [ExecutionSemantics.v1](./ExecutionSemantics.v1.md)
 - [SignalsAndAuth.v1](./SignalsAndAuth.v1.md)
+- [Runtime provider vocabulary component](./runtime-provider-vocabulary-component.md)
 
 Canonical consumer import for `IWorkflowEngine`:
 `import type { IWorkflowEngine } from '@dvt/engine'`

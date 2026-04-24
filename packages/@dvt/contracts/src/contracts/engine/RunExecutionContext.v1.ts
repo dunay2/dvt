@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import { RUNTIME_PROVIDER_VALUES } from '../../types/contracts.js';
 import {
   isIsoUtcString,
   isNonBlankString,
@@ -23,7 +24,7 @@ const Sha256HexStringSchema = NonBlankStringSchema.refine((value) => isSha256Hex
   message: SHA256_HEX_STRING_MESSAGE,
 }).brand<'Sha256HexString'>();
 
-const ProviderSchema = z.enum(['temporal', 'conductor']);
+const ProviderSchema = z.enum(RUNTIME_PROVIDER_VALUES);
 export const DbtProjectBundleRefSchema = z
   .object({
     uri: NonBlankStringSchema,

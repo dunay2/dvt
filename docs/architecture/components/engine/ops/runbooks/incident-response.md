@@ -21,8 +21,8 @@ the repository cannot back with current operational surfaces.
 
 ## Canonical companions
 
-- [Engine Severity Matrix](./severity_matrix.md)
-- [Engine SLO Posture](../SLOs.md)
+- [Engine Severity Matrix](./severity-matrix.md)
+- [Engine SLO Posture](../slo-posture.md)
 - [Engine Observability Guide](../observability.md)
 - [Backend MVP Control-Plane Runbook](../../../../../runbooks/backend-mvp-control-plane-runbook-20260329.md)
 - [Outbox Worker Runbook](../../../../../runbooks/outbox-worker-g5.md)
@@ -62,7 +62,7 @@ flowchart TD
 
 1. Capture UTC time, impacted environment, affected tenant or project, and any
    known `runId`.
-2. Classify the event with the [Engine Severity Matrix](./severity_matrix.md).
+2. Classify the event with the [Engine Severity Matrix](./severity-matrix.md).
 3. Verify API liveness with `/healthz`.
 4. If readiness is enabled, verify `/readyz`.
 5. If auth is available, sample one protected runtime read path (`GET /runs` or
@@ -140,7 +140,7 @@ or delivery-runtime posture before assuming downstream event-bus failure.
 
 Use:
 
-- [Engine Severity Matrix](./severity_matrix.md)
+- [Engine Severity Matrix](./severity-matrix.md)
 - [System Delivery Status](../../../../system-delivery-status.md)
 
 Escalate immediately when:
@@ -154,7 +154,7 @@ Escalate immediately when:
 
 Do not use these outdated habits:
 
-- assuming `Temporal offline, Conductor available` as a fallback posture;
+- assuming `Temporal offline, another provider available` as a fallback posture;
 - treating February phase tables as current incident logic;
 - performing ad hoc direct database state rewrites because an old runbook said
   so;
