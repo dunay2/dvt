@@ -57,6 +57,9 @@ It does **not** own:
 - run selection preserves persisted plan order while deduplicating node ids.
 - protected runtime rejection causes are normalized in the plans and runs
   service adapters, not inside the selection seam.
+- the live-runtime browser lane may keep `workspace/files` on a governed
+  support seam while that backend surface does not exist, but it must not stub
+  `workspace/graph/draft`, `plans/preview`, `runs/start`, or run reads.
 
 ## Component map
 
@@ -161,6 +164,51 @@ Browser proof for this posture now lives in:
 - `apps/web/cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts`
 - `apps/web/src/app/services/plans/plansService.test.ts`
 - `apps/web/src/app/services/runs/runsService.test.ts`
+
+## Live-runtime browser truth boundary
+
+`TF-E2-E-D` closes the remaining browser-proof gap with a hybrid lane:
+
+- protected authoring/runtime routes are live:
+  - `GET /workspace/graph/draft`
+  - `PUT /workspace/graph/draft`
+  - `POST /plans/preview`
+  - `POST /runs/start`
+  - `GET /runs`
+  - `GET /runs/:runId`
+  - `GET /runs/:runId/events`
+- `workspace/files` remains on one governed test-support seam until the backend
+  actually owns that artifact surface
+
+That boundary is intentional. The browser lane must prove the real protected
+runtime without inventing a fake backend for the authoritative draft or
+execution route, and it must not overclaim live proof for seams the repo does
+not yet implement.
+
+```mermaid
+sequenceDiagram
+  participant User as Operator
+  participant Canvas as Canvas
+  participant Files as Governed workspace-files seam
+  participant Draft as Live /workspace/graph/draft
+  participant Preview as Live /plans/preview
+  participant Start as Live /runs/start
+  participant Runs as Live /runs/*
+
+  User->>Canvas: open selected-closure canvas
+  Canvas->>Draft: read authoritative draft
+  Draft-->>Canvas: graph-ready draft
+  Canvas->>Files: save graph artifact + read SQL artifact
+  Files-->>Canvas: deterministic artifact bytes
+  User->>Canvas: Plan
+  Canvas->>Preview: live selected-closure preview
+  Preview-->>Canvas: persisted PlanRef
+  User->>Canvas: Start run
+  Canvas->>Start: live protected start-run
+  Start-->>Canvas: accepted runId
+  Canvas->>Runs: read run snapshot/events
+  Runs-->>Canvas: pending/running snapshot
+```
 
 ## Consumers
 

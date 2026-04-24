@@ -2541,10 +2541,10 @@ tasks:
   - task_id: TF-E2-E-D
     parent_task: TF-E2-E
     priority: P0
-    status: queued
+    status: in_progress
     complexity: M
     effort_points: 3
-    progress_pct: 0
+    progress_pct: 10
     objective: >-
       establish the live-runtime Cypress lane and governed test-support kit for selected-closure UX
       proof against the protected backend with no authoring-contract intercepts.
@@ -2556,8 +2556,11 @@ tasks:
     evidence_refs:
       - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-e-selected-closure-ux-proof-stories-20260423.md
       - docs/planning/reviews/architecture-and-governance/20260422-canvas-runtime-truth-hardcut-review.md
-    status_reason: Planned live-runtime browser proof slice; execution has not started.
-    last_verified: '2026-04-23'
+    status_reason: >-
+      Execution started. The slice is now explicitly defined as a live protected-runtime browser
+      lane for draft/preview/run/run-read seams, with `workspace/files` isolated behind one governed
+      support seam until the backend owns that artifact surface.
+    last_verified: '2026-04-24'
   - task_id: TF-E2-F
     parent_task: TF-E2
     priority: P0
