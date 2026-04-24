@@ -1,18 +1,18 @@
 /**
  * Traceability header
- * - Purpose: Contract coverage for WorkflowEngine + MockAdapter in the Phase 1 path.
+ * - Purpose: Contract coverage for WorkflowEngine + in-memory temporal provider test double.
  * - Scope: Golden path hash determinism, replay/idempotency stability, PlanRef policy checks,
  *   and adapter invocation guards when preconditions fail.
  * - Issue impact: #14 (IWorkflowEngine + SnapshotProjector), specifically read-model/status
- *   expectations in the mocked adapter path (`PENDING` until completion events are present).
+ *   expectations in the provider adapter path (`PENDING` until completion events are present).
  */
 import { CURRENT_SIGNAL_SEMANTICS_VERSION } from '@dvt/contracts';
 import { jcsCanonicalize } from '@dvt/crypto';
 import { createNoopObservability } from '@dvt/observability';
 import { describe, it, expect, vi } from 'vitest';
 
+import { InMemoryProviderAdapter } from '../../src/adapters/inMemory/InMemoryProviderAdapter.js';
 import type { IProviderAdapter } from '../../src/adapters/IProviderAdapter.js';
-import { MockAdapter } from '../../src/adapters/mock/MockAdapter.js';
 import { ENGINE_ERROR_MESSAGE_KEY, PlanUriNotAllowedError } from '../../src/contracts/errors.js';
 import type { ExecutionPlan } from '../../src/contracts/executionPlan.js';
 import type {
@@ -105,13 +105,13 @@ function makeCtx(runId: string): RunContext {
     projectId: 'p1',
     environmentId: 'dev',
     runId,
-    targetAdapter: 'mock',
+    targetAdapter: 'temporal',
   };
 }
 
 // helpers moved to module scope
 
-function setupEngineWithMock(plan: ExecutionPlan): {
+function setupEngineWithInMemoryProvider(plan: ExecutionPlan): {
   engine: ReturnType<typeof createWorkflowEngineFixture>['engine'];
   planRef: PlanRef;
   store: InMemoryTxStore;
@@ -122,8 +122,9 @@ function setupEngineWithMock(plan: ExecutionPlan): {
   const store = new InMemoryTxStore();
   const projector = new SnapshotProjector();
   const idempotency = new IdempotencyKeyBuilder();
-  const mock = new MockAdapter({
+  const adapter = new InMemoryProviderAdapter({
     stateStore: store,
+    stateStoreWrite: store,
     clock,
     idempotency,
     projector,
@@ -134,7 +135,7 @@ function setupEngineWithMock(plan: ExecutionPlan): {
     idempotency,
     clock,
     observability: createNoopObservability(),
-    adapters: makeProviderMap(mock),
+    adapters: makeProviderMap(adapter),
     planFetcher: makePlanFetcherForPlan(plan),
   });
   return { engine, planRef, store };
@@ -149,10 +150,10 @@ async function submitPlanAndGetSnapshot(
   return await engine.getRunStatus(runRef);
 }
 
-describe('WorkflowEngine + MockAdapter (Phase 1 MVP)', () => {
+describe('WorkflowEngine + in-memory temporal provider adapter', () => {
   it('golden path: submit hello-world plan → returns pending snapshot', async () => {
     const plan = makeHelloWorldPlan();
-    const { engine, planRef } = setupEngineWithMock(plan);
+    const { engine, planRef } = setupEngineWithInMemoryProvider(plan);
     const snapshot = await submitPlanAndGetSnapshot(engine, planRef, 'run-1');
     expect(snapshot.status).toBe('PENDING');
   });
@@ -167,8 +168,9 @@ describe('WorkflowEngine + MockAdapter (Phase 1 MVP)', () => {
     const projector = new SnapshotProjector();
     const idempotency = new IdempotencyKeyBuilder();
 
-    const mock = new MockAdapter({
+    const adapter = new InMemoryProviderAdapter({
       stateStore: store,
+      stateStoreWrite: store,
       clock,
       idempotency,
       projector,
@@ -180,7 +182,7 @@ describe('WorkflowEngine + MockAdapter (Phase 1 MVP)', () => {
       idempotency,
       clock,
       observability: createNoopObservability(),
-      adapters: makeProviderMap(mock),
+      adapters: makeProviderMap(adapter),
       planFetcher: makePlanFetcherForPlan(plan),
     });
 
@@ -205,9 +207,9 @@ describe('WorkflowEngine + MockAdapter (Phase 1 MVP)', () => {
     expect(first.status).toBe('PENDING');
   });
 
-  it('accepts ExecutionPlan steps with dependsOn in mock adapter path', async () => {
+  it('accepts ExecutionPlan steps with dependsOn in provider adapter path', async () => {
     const plan = makeDagPlanWithDependsOn();
-    const { engine, planRef } = setupEngineWithMock(plan);
+    const { engine, planRef } = setupEngineWithInMemoryProvider(plan);
     const runRef = await engine.startRun(planRef, makeCtx('run-dag-1'));
     const snapshot = await engine.getRunStatus(runRef);
 

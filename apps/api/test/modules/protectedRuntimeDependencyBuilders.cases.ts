@@ -121,7 +121,7 @@ const PROTECTED_RUNTIME_BUILDER_CASES = [
     ownedSnippets: [
       'const { adapters, close: closeAdapters } = await buildProviderAdapters(',
       'createStartRunTargetAdapterRegistryFromValues(',
-      'new AllowAllAuthorizer()',
+      'new ProtectedRuntimeTenantAuthorizer()',
       'buildWorkflowEngine({',
     ],
   },
@@ -192,6 +192,17 @@ export function describeProtectedRuntimeDependencyBuildersCases(): void {
           expect(runtimeBuilderSource.sourceText).toContain(snippet);
         }
       }
+    });
+
+    it('keeps AllowAllAuthorizer out of non-test protected runtime composition', () => {
+      const executionRuntimeSource = readModuleSource(
+        'protectedRuntime/buildProtectedExecutionRuntime.ts'
+      );
+
+      expect(executionRuntimeSource.sourceText).not.toContain('AllowAllAuthorizer');
+      expect(executionRuntimeSource.sourceText).toContain(
+        'new ProtectedRuntimeTenantAuthorizer()'
+      );
     });
   });
 }

@@ -13,11 +13,12 @@ import {
   type IRunStateStoreRead,
   type IRunStateStoreWrite,
 } from '@dvt/engine';
-import { MockAdapter } from '@dvt/engine/testing';
 import type { IObservability } from '@dvt/observability';
 import type { FastifyBaseLogger } from 'fastify';
 
 import { getPgPool } from '../db/pool.js';
+import { buildProviderAdapters } from '../modules/buildProviderAdapters.js';
+import { createTemporalProviderAdapterFactory } from '../modules/providerAdapters/createTemporalProviderAdapterFactory.js';
 import { bindStateStoreRoles, type StateStoreRoleBindings } from '../modules/stateStoreRoles.js';
 import type { Env } from '../plugins/env.js';
 
@@ -85,7 +86,7 @@ function parseProviderList(value: string): readonly EngineRunRef['provider'][] {
     .map((p) => p.trim().toLowerCase())
     .filter((p) => p.length > 0)
     .map((provider) => {
-      if (provider === 'mock') return 'mock';
+      if (provider === 'temporal') return 'temporal';
       throw new Error(`UNSUPPORTED_RECONCILER_PROVIDER: ${provider}`);
     });
 }
@@ -113,25 +114,27 @@ function createRuntimeStores(config: ReconcilerRuntimeConfig): RuntimeStores {
   return { stateStore, stateStoreRoles, intentStore };
 }
 
-function resolveReconcilerAdapters(
+async function resolveReconcilerAdapters(
+  env: Env,
   providers: readonly EngineRunRef['provider'][],
   stateStoreRead: IRunStateStoreRead,
-  stateStoreWrite: IRunStateStoreWrite
-): Map<EngineRunRef['provider'], IProviderAdapter> {
-  const adapters = new Map<EngineRunRef['provider'], IProviderAdapter>();
-  for (const provider of providers) {
-    if (provider === 'mock') {
-      adapters.set(
-        'mock',
-        new MockAdapter({
-          stateStore: stateStoreRead,
-          stateStoreWrite,
-          clock: SYSTEM_CLOCK,
-          projector: new SnapshotProjector(),
-        })
-      );
-    }
-  }
+  stateStoreWrite: IRunStateStoreWrite,
+  observability: IObservability
+): Promise<Map<EngineRunRef['provider'], IProviderAdapter>> {
+  const factories = [createTemporalProviderAdapterFactory()].filter((factory) =>
+    providers.includes(factory.provider)
+  );
+  const { adapters } = await buildProviderAdapters(
+    env,
+    {
+      stateStore: stateStoreRead,
+      stateStoreWrite,
+      clock: SYSTEM_CLOCK,
+      projector: new SnapshotProjector(),
+      observability,
+    },
+    factories
+  );
   return adapters;
 }
 
@@ -223,10 +226,12 @@ export async function createIntentReconcilerRuntime(
   const stores = createRuntimeStores(config);
   const { stateStore, stateStoreRoles, intentStore } = stores;
   await Promise.all([stateStore.migrate(), intentStore.migrate()]);
-  const adapters = resolveReconcilerAdapters(
+  const adapters = await resolveReconcilerAdapters(
+    env,
     config.providers,
     stateStoreRoles.read,
-    stateStoreRoles.write
+    stateStoreRoles.write,
+    observability
   );
   if (adapters.size === 0) {
     throw new Error('INTENT_RECONCILER_NO_PROVIDER_ADAPTERS');

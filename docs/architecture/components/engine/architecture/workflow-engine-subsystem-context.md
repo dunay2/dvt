@@ -124,7 +124,7 @@ Known concrete adapter families:
 
 - `@dvt/adapter-temporal`
 - conductor stub path
-- mock adapter for tests
+- engine-local `InMemoryProviderAdapter` for unit tests, using real provider ids
 - postgres adapters for persistence/intents
 
 ## Current component map

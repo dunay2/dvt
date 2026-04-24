@@ -145,7 +145,7 @@ export async function exerciseSelectedClosurePlannerBackedRunFlow(
         nodeIds: ['sink_1'],
       },
       graphSource: buildTransformationGraphSource(['source_1', 'transform_1', 'sink_1']),
-      targetAdapter: 'mock',
+      targetAdapter: 'temporal',
     },
   });
   const actualRunId = readAcceptedRunId(startResponse.json());
@@ -186,7 +186,7 @@ function buildSelectedClosurePreviewPayload(input: {
       tenantId: TENANT_ID,
       projectId: PROJECT_ID,
       environmentId: ENVIRONMENT_ID,
-      targetAdapter: 'mock',
+      targetAdapter: 'temporal',
     },
     previewProfile: 'transformation-sql-first-v1',
     selection: {

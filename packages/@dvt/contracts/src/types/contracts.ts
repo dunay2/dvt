@@ -34,7 +34,7 @@ export type ContractPrimitiveBrandAssertions = [
   Assert<Sha256HexString extends NonBlankString ? true : false>,
 ];
 
-export type Provider = 'temporal' | 'conductor' | 'mock';
+export type Provider = 'temporal' | 'conductor';
 export type TransformationExecutor = 'postgres' | 'dbt';
 
 export type RunStatus =
@@ -164,7 +164,7 @@ export interface RunExecutionContext {
   tenantId: NonBlankString;
   projectId: NonBlankString;
   environmentId: NonBlankString;
-  targetAdapter: Exclude<Provider, 'mock'> | 'mock';
+  targetAdapter: Provider;
   createdAtIso: IsoUtcString;
   createdBy: NonBlankString;
   pluginContexts: Record<string, GenericPluginContext>;
@@ -175,7 +175,7 @@ export interface RunContext {
   projectId: NonBlankString;
   environmentId: NonBlankString;
   runId: NonBlankString;
-  targetAdapter: Exclude<Provider, 'mock'> | 'mock';
+  targetAdapter: Provider;
   runExecutionContextRef?: RunExecutionContextRef;
 }
 
@@ -228,12 +228,6 @@ export type EngineRunRef =
       workflowId: NonBlankString;
       runId: NonBlankString;
       conductorUrl: NonBlankString;
-    }
-  | {
-      provider: 'mock';
-      tenantId: NonBlankString;
-      workflowId: NonBlankString;
-      runId: NonBlankString;
     };
 
 export type SignalType = 'PAUSE' | 'RESUME' | 'CANCEL';

@@ -31,7 +31,7 @@ export async function exerciseCommandQueryFlow(
   const token = await runtime.issuePrincipalToken();
   const runtimeApp = runtime.requireApp();
 
-  const startResponse = await startMockRun(runtimeApp, token, {
+  const startResponse = await startTemporalRun(runtimeApp, token, {
     selection: input.selection,
     graphNodeId: input.graphNodeId,
   });
@@ -90,7 +90,7 @@ export async function exercisePlannerBackedRunFlow(
   const token = await runtime.issuePrincipalToken();
   const runtimeApp = runtime.requireApp();
 
-  const startResponse = await startMockRun(runtimeApp, token, {
+  const startResponse = await startTemporalRun(runtimeApp, token, {
     selection: [input.graphNodeId],
     graphNodeId: input.graphNodeId,
   });
@@ -179,7 +179,7 @@ export async function expectInvalidPlanSourceRejected(
         uri: 's3://bucket/basic-manifest.json',
         sha256: '0'.repeat(64),
       },
-      targetAdapter: 'mock',
+      targetAdapter: 'temporal',
     },
   });
 }
@@ -213,7 +213,7 @@ export async function exerciseEmptyCancelReasonFlow(
   const token = await runtime.issuePrincipalToken();
   const runtimeApp = runtime.requireApp();
 
-  const startResponse = await startMockRun(runtimeApp, token, {
+  const startResponse = await startTemporalRun(runtimeApp, token, {
     selection: [input?.graphNodeId ?? 'model.orders.cancel.empty_reason'],
     graphNodeId: input?.graphNodeId ?? 'model.orders.cancel.empty_reason',
   });
@@ -255,7 +255,7 @@ export async function expectAdminRebuildSuccess(
     const token = await runtime.issuePrincipalToken();
     const runtimeApp = runtime.requireApp();
 
-    const startResponse = await startMockRun(runtimeApp, token, {
+    const startResponse = await startTemporalRun(runtimeApp, token, {
       selection: [input.graphNodeId],
       graphNodeId: input.graphNodeId,
     });
@@ -300,7 +300,7 @@ export async function expectAdminRebuildNotFound(
   return response;
 }
 
-async function startMockRun(
+async function startTemporalRun(
   runtimeApp: ProtectedRuntimeHarness['requireApp'] extends () => infer T ? T : never,
   token: string,
   input: {
@@ -326,7 +326,7 @@ async function startMockRun(
         sourceVersion: 'manifest-v10',
         nodes: [{ nodeId: input.graphNodeId, stepKind: 'DBT_MODEL', dependsOn: [] }],
       },
-      targetAdapter: 'mock',
+      targetAdapter: 'temporal',
     },
   });
 }

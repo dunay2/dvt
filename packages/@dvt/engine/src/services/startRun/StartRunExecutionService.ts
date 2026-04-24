@@ -305,7 +305,5 @@ function engineRunRefsEqual(left: EngineRunRef, right: EngineRunRef): boolean {
       );
     case 'conductor':
       return right.provider === 'conductor' && left.conductorUrl === right.conductorUrl;
-    case 'mock':
-      return right.provider === 'mock';
   }
 }

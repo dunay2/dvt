@@ -1,5 +1,7 @@
 import {
   CURRENT_SIGNAL_SEMANTICS_VERSION,
+  type EngineRunRef,
+  type ProviderRunStatusView,
   type ResolvedRunContext,
   type RunContext,
 } from '@dvt/contracts';
@@ -34,7 +36,7 @@ class TenantScopeAuthorizer {
 }
 
 class CountingAdapter implements IProviderAdapter {
-  public provider: IProviderAdapter['provider'] = 'mock';
+  public provider: IProviderAdapter['provider'] = 'temporal';
   public startCalls = 0;
   public signalCalls = 0;
   public cancelCalls = 0;
@@ -43,32 +45,27 @@ class CountingAdapter implements IProviderAdapter {
     _plan: import('@dvt/contracts').ExecutionPlan,
     _planRef: import('@dvt/contracts').PlanRef,
     ctx: ResolvedRunContext
-  ): Promise<{ provider: 'mock'; tenantId: string; workflowId: string; runId: string }> {
+  ): Promise<EngineRunRef> {
     this.startCalls += 1;
-    // Debe devolver un EngineRunRef válido para provider 'mock'
-    return { provider: 'mock', tenantId: ctx.tenantId, workflowId: 'wf', runId: ctx.runId };
+    return {
+      provider: 'temporal',
+      tenantId: ctx.tenantId,
+      namespace: 'default',
+      workflowId: 'wf',
+      runId: ctx.runId,
+    };
   }
 
-  async cancelRun(_runRef: {
-    provider: 'mock';
-    tenantId: string;
-    workflowId: string;
-    runId: string;
-  }): Promise<void> {
+  async cancelRun(_runRef: EngineRunRef): Promise<void> {
     this.cancelCalls += 1;
   }
 
-  async getProviderStatusView(_runRef: {
-    provider: 'mock';
-    tenantId: string;
-    workflowId: string;
-    runId: string;
-  }): Promise<{ provider: 'mock'; providerStatus: 'PENDING' }> {
-    return { provider: 'mock', providerStatus: 'PENDING' };
+  async getProviderStatusView(_runRef: EngineRunRef): Promise<ProviderRunStatusView> {
+    return { provider: 'temporal', providerStatus: 'PENDING' };
   }
 
   async signal(
-    _runRef: { provider: 'mock'; tenantId: string; workflowId: string; runId: string },
+    _runRef: EngineRunRef,
     _request: import('@dvt/contracts').SignalRequest
   ): Promise<void> {
     this.signalCalls += 1;
@@ -112,7 +109,7 @@ describe('RBAC/IAuthorizer (negative paths)', () => {
       projectId: 'p1',
       environmentId: 'dev',
       runId: 'run-1',
-      targetAdapter: 'mock',
+      targetAdapter: 'temporal',
     };
 
     await expect(engine.startRun(planRef, ctx)).rejects.toBeInstanceOf(AuthorizationError);
@@ -133,16 +130,18 @@ describe('RBAC/IAuthorizer (negative paths)', () => {
       planVersion: TEST_PLAN_REF.planVersion,
       logicalAttemptId: 1,
       providerRef: {
-        provider: 'mock',
+        provider: 'temporal',
         tenantId: 't1',
+        namespace: 'default',
         workflowId: 'wf',
         runId: 'run-1',
       },
     });
 
     const runRef: import('@dvt/contracts').EngineRunRef = {
-      provider: 'mock',
+      provider: 'temporal',
       tenantId: 't1',
+      namespace: 'default',
       workflowId: 'wf',
       runId: 'run-1',
     };
@@ -166,16 +165,18 @@ describe('RBAC/IAuthorizer (negative paths)', () => {
       planVersion: TEST_PLAN_REF.planVersion,
       logicalAttemptId: 1,
       providerRef: {
-        provider: 'mock',
+        provider: 'temporal',
         tenantId: 'tenant-allowed',
+        namespace: 'default',
         workflowId: 'wf',
         runId: 'run-tenant-locked-1',
       },
     });
 
     const forgedRunRef: import('@dvt/contracts').EngineRunRef = {
-      provider: 'mock',
+      provider: 'temporal',
       tenantId: 'tenant-forbidden',
+      namespace: 'default',
       workflowId: 'wf',
       runId: 'run-tenant-locked-1',
     };
@@ -198,16 +199,18 @@ describe('RBAC/IAuthorizer (negative paths)', () => {
       planVersion: TEST_PLAN_REF.planVersion,
       logicalAttemptId: 1,
       providerRef: {
-        provider: 'mock',
+        provider: 'temporal',
         tenantId: 'tenant-allowed',
+        namespace: 'default',
         workflowId: 'wf',
         runId: 'run-tenant-locked-2',
       },
     });
 
     const forgedRunRef: import('@dvt/contracts').EngineRunRef = {
-      provider: 'mock',
+      provider: 'temporal',
       tenantId: 'tenant-forbidden',
+      namespace: 'default',
       workflowId: 'wf',
       runId: 'run-tenant-locked-2',
     };
@@ -229,16 +232,18 @@ describe('RBAC/IAuthorizer (negative paths)', () => {
       planVersion: TEST_PLAN_REF.planVersion,
       logicalAttemptId: 1,
       providerRef: {
-        provider: 'mock',
+        provider: 'temporal',
         tenantId: 'tenant-allowed',
+        namespace: 'default',
         workflowId: 'wf',
         runId: 'run-tenant-locked-3',
       },
     });
 
     const forgedRunRef: import('@dvt/contracts').EngineRunRef = {
-      provider: 'mock',
+      provider: 'temporal',
       tenantId: 'tenant-forbidden',
+      namespace: 'default',
       workflowId: 'wf',
       runId: 'run-tenant-locked-3',
     };
@@ -262,7 +267,7 @@ describe('RBAC/IAuthorizer (negative paths)', () => {
       projectId: 'p1',
       environmentId: 'dev',
       runId: 'run-2',
-      targetAdapter: 'mock',
+      targetAdapter: 'temporal',
     };
 
     await expect(engine.startRun(planRef, ctx)).rejects.toBeInstanceOf(AuthorizationError);
@@ -286,7 +291,7 @@ describe('RBAC/IAuthorizer (negative paths)', () => {
       projectId: 'p1',
       environmentId: 'dev',
       runId: 'run-deny-first-1',
-      targetAdapter: 'mock',
+      targetAdapter: 'temporal',
     };
 
     await expect(engine.startRun(planRef, ctx)).rejects.toBeInstanceOf(AuthorizationError);

@@ -18,15 +18,15 @@ export function describeStoredPlanExecutabilityValidatorFetchAndAlignmentCases()
             })
           ),
         },
-        adapters: new Map([['mock', makeAdapter(['basic-execution'])]]),
+        adapters: new Map([['temporal', makeAdapter(['basic-execution'])]]),
       });
 
-      const result = await validator.validatePlan(PLAN_REF, 'mock');
+      const result = await validator.validatePlan(PLAN_REF, 'temporal');
 
       expect(result).toEqual({
         status: 'ERROR',
         planId: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
-        adapterId: 'mock',
+        adapterId: 'temporal',
         code: 'REJECTED',
         degradable: false,
         reason: 'PLAN_REF_MISMATCH: planId',
@@ -41,15 +41,15 @@ export function describeStoredPlanExecutabilityValidatorFetchAndAlignmentCases()
             throw new Error('PLAN_NOT_FOUND: plan-1');
           }),
         },
-        adapters: new Map([['mock', makeAdapter(['basic-execution'])]]),
+        adapters: new Map([['temporal', makeAdapter(['basic-execution'])]]),
       });
 
-      const result = await validator.validatePlan(PLAN_REF, 'mock');
+      const result = await validator.validatePlan(PLAN_REF, 'temporal');
 
       expect(result).toEqual({
         status: 'ERROR',
         planId: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
-        adapterId: 'mock',
+        adapterId: 'temporal',
         code: 'REJECTED',
         degradable: false,
         reason: 'PLAN_NOT_FOUND: plan-1',

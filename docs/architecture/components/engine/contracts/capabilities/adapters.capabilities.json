@@ -30,13 +30,6 @@
         "replay.task",
         "signals.rate.limit"
       ]
-    },
-    "mock": {
-      "capabilities": [
-        "basic-execution",
-        "signal.pause.native",
-        "workflow.fan.parallel"
-      ]
     }
   }
 }

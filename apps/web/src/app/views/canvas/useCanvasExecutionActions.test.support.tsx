@@ -9,7 +9,7 @@ import type { SessionContextPort } from '../../ports/sessionContext';
 import type { ShellFeedbackPort } from '../../ports/shellFeedback';
 import type { IWorkspacePort } from '../../ports/workspace';
 import type { WorkspaceBootstrapConfig } from '../../services/config/workspaceConfig';
-import { makeMockRunRef, makeRunContext, nb } from '../../testing/contractTestUtils';
+import { makeRunContext, makeTemporalRunRef, nb } from '../../testing/contractTestUtils';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { PlanViewModel } from '../../types/plans';
 import { useCanvasExecutionActions } from './useCanvasExecutionActions';
@@ -358,7 +358,7 @@ export function createRunsServiceMock(overrides: Partial<IRunsPort> = {}): IRuns
     listRunSummaries: vi.fn(async () => []),
     getRunSnapshot: vi.fn(async () => null),
     startRun: vi.fn(async () =>
-      makeMockRunRef({
+      makeTemporalRunRef({
         tenantId: 't',
         workflowId: 'w',
         runId: 'run',
@@ -386,9 +386,7 @@ function requireMockExecutionPlanRef(): NonNullable<typeof mockExecutionPlan.pla
   return planRef;
 }
 
-export function createSessionContext(
-  targetAdapter: 'mock' | 'temporal' = 'mock'
-): SessionContextPort {
+export function createSessionContext(targetAdapter: 'temporal' | 'conductor' = 'temporal'): SessionContextPort {
   return {
     getWorkspaceScope: () => ({
       tenantId: 'tenant',

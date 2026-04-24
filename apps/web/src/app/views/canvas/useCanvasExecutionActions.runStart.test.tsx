@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { mockExecutionPlan } from '../../data/mockDbtData';
 import type { PlanViewModel } from '../../types/plans';
-import { makeMockRunRef } from '../../testing/contractTestUtils';
+import { makeTemporalRunRef } from '../../testing/contractTestUtils';
 import { canvasViewCopy } from './copy';
 import {
   buildCanonicalEdges,
@@ -198,7 +198,7 @@ async function expectStartedRunConsoleScenario(
   const startedScenario = await renderRunStartHarness({
     runsService: createRunsServiceMock({
       startRun: vi.fn(async () =>
-        makeMockRunRef({
+        makeTemporalRunRef({
           runId: scenario.runId,
           tenantId: 't',
           workflowId: 'w',
@@ -248,7 +248,7 @@ describe('useCanvasExecutionActions run start', () => {
     const startedScenario = await renderRunStartHarness({
       runsService: createRunsServiceMock({
         startRun: vi.fn(async () =>
-          makeMockRunRef({
+          makeTemporalRunRef({
             runId: 'run-success',
             tenantId: 't',
             workflowId: 'w',
@@ -273,7 +273,7 @@ describe('useCanvasExecutionActions run start', () => {
         tenantId: 'tenant',
         projectId: 'project',
         environmentId: 'env',
-        targetAdapter: 'mock',
+        targetAdapter: 'temporal',
       },
       selection: {
         mode: 'explicit',

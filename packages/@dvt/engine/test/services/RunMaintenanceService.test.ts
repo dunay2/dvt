@@ -306,7 +306,7 @@ function makeTemporalAdapterWithLog(cancelLog: string[]): IProviderAdapter {
       cancelLog.push(runRef.runId);
     },
     async getProviderStatusView() {
-      return { provider: 'mock', providerStatus: 'RUNNING' } as any;
+      return { provider: 'temporal', providerStatus: 'RUNNING' } as any;
     },
     async signal() {},
     async lookupRunRef(runId, tenantId) {
@@ -315,15 +315,16 @@ function makeTemporalAdapterWithLog(cancelLog: string[]): IProviderAdapter {
   };
 }
 
-function makeMockAdapterWithLog(cancelLog: string[]): IProviderAdapter {
+function makeConductorAdapterWithLog(cancelLog: string[]): IProviderAdapter {
   return {
-    provider: 'mock',
+    provider: 'conductor',
     async startRun(_plan, _planRef, ctx) {
       return {
-        provider: 'mock',
+        provider: 'conductor',
         tenantId: ctx.tenantId,
         workflowId: `wf-${ctx.runId}`,
         runId: ctx.runId,
+        conductorUrl: 'http://conductor',
       } as EngineRunRef;
     },
     async cancelRun(runRef) {
@@ -334,7 +335,13 @@ function makeMockAdapterWithLog(cancelLog: string[]): IProviderAdapter {
     },
     async signal() {},
     async lookupRunRef(runId, tenantId) {
-      return { provider: 'mock', tenantId, workflowId: `wf-${runId}`, runId } as EngineRunRef;
+      return {
+        provider: 'conductor',
+        tenantId,
+        workflowId: `wf-${runId}`,
+        runId,
+        conductorUrl: 'http://conductor',
+      } as EngineRunRef;
     },
   };
 }
@@ -981,20 +988,20 @@ describe('RunMaintenanceService', () => {
 
     it('reconciles intents across multiple providers using the correct adapter per provider', async () => {
       const cancelLogTemporal: string[] = [];
-      const cancelLogMock: string[] = [];
+      const cancelLogConductor: string[] = [];
 
       const temporalAdapter = makeTemporalAdapterWithLog(cancelLogTemporal);
-      const mockAdapter = makeMockAdapterWithLog(cancelLogMock);
+      const conductorAdapter = makeConductorAdapterWithLog(cancelLogConductor);
 
       const { service, intentStore } = createServiceWithAdapters(
         new Map<EngineRunRef['provider'], IProviderAdapter>([
           ['temporal', temporalAdapter],
-          ['mock', mockAdapter],
+          ['conductor', conductorAdapter],
         ])
       );
 
       await makePendingIntent(intentStore, 'run-temporal-mp', 'i-mp-temporal', 'temporal');
-      await makePendingIntent(intentStore, 'run-mock-mp', 'i-mp-mock', 'mock');
+      await makePendingIntent(intentStore, 'run-conductor-mp', 'i-mp-conductor', 'conductor');
 
       const result = await service.reconcileOrphanedIntents({ thresholdMs: 0 });
 
@@ -1003,7 +1010,7 @@ describe('RunMaintenanceService', () => {
       expect(result.cancelFailed).toHaveLength(0);
       expect(result.deferred).toHaveLength(0);
       expect(cancelLogTemporal).toContain('run-temporal-mp');
-      expect(cancelLogMock).toContain('run-mock-mp');
+      expect(cancelLogConductor).toContain('run-conductor-mp');
     });
 
     it('reports cancelFailed for DISPATCHED intent when adapter is not in the adapters map', async () => {

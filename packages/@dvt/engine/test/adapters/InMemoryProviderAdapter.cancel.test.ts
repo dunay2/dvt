@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { MockAdapter } from '../../src/adapters/mock/MockAdapter.js';
+import { InMemoryProviderAdapter } from '../../src/adapters/inMemory/InMemoryProviderAdapter.js';
 import { IdempotencyKeyBuilder } from '../../src/core/idempotency.js';
 import { SnapshotProjector } from '../../src/core/SnapshotProjector.js';
 import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
@@ -11,24 +11,24 @@ import {
   makeRunRef,
 } from '../helpers/runLifecycle.fixture.js';
 
-describe('MockAdapter cancellation lifecycle', () => {
+describe('InMemoryProviderAdapter cancellation lifecycle', () => {
   it('cancelRun emits RunCancelRequested before RunCancelled and replays deterministically', async () => {
     const store = new InMemoryTxStore();
     const projector = new SnapshotProjector();
-    const adapter = new MockAdapter({
+    const adapter = new InMemoryProviderAdapter({
       stateStore: store,
       stateStoreWrite: store,
       projector,
       clock: new SequenceClock('2026-03-31T00:00:00.000Z'),
       idempotency: new IdempotencyKeyBuilder(),
     });
-    const runId = 'mock-cancel-1';
+    const runId = 'temporal-cancel-1';
     await bootstrapQueuedRun(store, runId, {
-      provider: 'mock',
+      provider: 'temporal',
       emittedAt: '2026-03-31T00:00:00.000Z',
     });
     await appendRunStarted(store, runId, { emittedAt: '2026-03-31T00:00:00.001Z' });
-    const runRef = makeRunRef(runId, { provider: 'mock' });
+    const runRef = makeRunRef(runId, { provider: 'temporal' });
 
     await adapter.cancelRun(runRef);
 
@@ -49,23 +49,23 @@ describe('MockAdapter cancellation lifecycle', () => {
   it('signal(CANCEL) follows the same lifecycle ordering as cancelRun', async () => {
     const store = new InMemoryTxStore();
     const projector = new SnapshotProjector();
-    const adapter = new MockAdapter({
+    const adapter = new InMemoryProviderAdapter({
       stateStore: store,
       stateStoreWrite: store,
       projector,
       clock: new SequenceClock('2026-03-31T00:00:00.000Z'),
       idempotency: new IdempotencyKeyBuilder(),
     });
-    const runId = 'mock-cancel-signal-1';
+    const runId = 'temporal-cancel-signal-1';
     await bootstrapQueuedRun(store, runId, {
-      provider: 'mock',
+      provider: 'temporal',
       emittedAt: '2026-03-31T00:00:00.000Z',
     });
     await appendRunStarted(store, runId, { emittedAt: '2026-03-31T00:00:00.001Z' });
-    const runRef = makeRunRef(runId, { provider: 'mock' });
+    const runRef = makeRunRef(runId, { provider: 'temporal' });
 
     await adapter.signal(runRef, {
-      signalId: 'sig-mock-cancel-1',
+      signalId: 'sig-temporal-cancel-1',
       type: 'CANCEL',
       reason: 'operator-request',
     });
@@ -81,27 +81,27 @@ describe('MockAdapter cancellation lifecycle', () => {
   it('signal(PAUSE) and signal(RESUME) emit runtime-owned lifecycle events', async () => {
     const store = new InMemoryTxStore();
     const projector = new SnapshotProjector();
-    const adapter = new MockAdapter({
+    const adapter = new InMemoryProviderAdapter({
       stateStore: store,
       stateStoreWrite: store,
       projector,
       clock: new SequenceClock('2026-03-31T00:00:00.000Z'),
       idempotency: new IdempotencyKeyBuilder(),
     });
-    const runId = 'mock-pause-resume-signal-1';
+    const runId = 'temporal-pause-resume-signal-1';
     await bootstrapQueuedRun(store, runId, {
-      provider: 'mock',
+      provider: 'temporal',
       emittedAt: '2026-03-31T00:00:00.000Z',
     });
     await appendRunStarted(store, runId, { emittedAt: '2026-03-31T00:00:00.001Z' });
-    const runRef = makeRunRef(runId, { provider: 'mock' });
+    const runRef = makeRunRef(runId, { provider: 'temporal' });
 
     await adapter.signal(runRef, {
-      signalId: 'sig-mock-pause-1',
+      signalId: 'sig-temporal-pause-1',
       type: 'PAUSE',
     });
     await adapter.signal(runRef, {
-      signalId: 'sig-mock-resume-1',
+      signalId: 'sig-temporal-resume-1',
       type: 'RESUME',
     });
 
@@ -116,31 +116,31 @@ describe('MockAdapter cancellation lifecycle', () => {
   it('allows a second PAUSE after RESUME when the signalId is new', async () => {
     const store = new InMemoryTxStore();
     const projector = new SnapshotProjector();
-    const adapter = new MockAdapter({
+    const adapter = new InMemoryProviderAdapter({
       stateStore: store,
       stateStoreWrite: store,
       projector,
       clock: new SequenceClock('2026-03-31T00:00:00.000Z'),
       idempotency: new IdempotencyKeyBuilder(),
     });
-    const runId = 'mock-pause-resume-pause-signal-1';
+    const runId = 'temporal-pause-resume-pause-signal-1';
     await bootstrapQueuedRun(store, runId, {
-      provider: 'mock',
+      provider: 'temporal',
       emittedAt: '2026-03-31T00:00:00.000Z',
     });
     await appendRunStarted(store, runId, { emittedAt: '2026-03-31T00:00:00.001Z' });
-    const runRef = makeRunRef(runId, { provider: 'mock' });
+    const runRef = makeRunRef(runId, { provider: 'temporal' });
 
     await adapter.signal(runRef, {
-      signalId: 'sig-mock-pause-1',
+      signalId: 'sig-temporal-pause-1',
       type: 'PAUSE',
     });
     await adapter.signal(runRef, {
-      signalId: 'sig-mock-resume-1',
+      signalId: 'sig-temporal-resume-1',
       type: 'RESUME',
     });
     await adapter.signal(runRef, {
-      signalId: 'sig-mock-pause-2',
+      signalId: 'sig-temporal-pause-2',
       type: 'PAUSE',
     });
 
@@ -156,31 +156,31 @@ describe('MockAdapter cancellation lifecycle', () => {
   it('deduplicates stale PAUSE signal ids after a pause-resume cycle', async () => {
     const store = new InMemoryTxStore();
     const projector = new SnapshotProjector();
-    const adapter = new MockAdapter({
+    const adapter = new InMemoryProviderAdapter({
       stateStore: store,
       stateStoreWrite: store,
       projector,
       clock: new SequenceClock('2026-03-31T00:00:00.000Z'),
       idempotency: new IdempotencyKeyBuilder(),
     });
-    const runId = 'mock-pause-signal-id-dedupe-1';
+    const runId = 'temporal-pause-signal-id-dedupe-1';
     await bootstrapQueuedRun(store, runId, {
-      provider: 'mock',
+      provider: 'temporal',
       emittedAt: '2026-03-31T00:00:00.000Z',
     });
     await appendRunStarted(store, runId, { emittedAt: '2026-03-31T00:00:00.001Z' });
-    const runRef = makeRunRef(runId, { provider: 'mock' });
+    const runRef = makeRunRef(runId, { provider: 'temporal' });
 
     await adapter.signal(runRef, {
-      signalId: 'sig-mock-pause-1',
+      signalId: 'sig-temporal-pause-1',
       type: 'PAUSE',
     });
     await adapter.signal(runRef, {
-      signalId: 'sig-mock-resume-1',
+      signalId: 'sig-temporal-resume-1',
       type: 'RESUME',
     });
     await adapter.signal(runRef, {
-      signalId: 'sig-mock-pause-1',
+      signalId: 'sig-temporal-pause-1',
       type: 'PAUSE',
     });
 

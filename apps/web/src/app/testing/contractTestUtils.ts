@@ -24,7 +24,7 @@ export function makeRunContext(
     tenantId: nb(overrides?.tenantId ?? 'tenant-a'),
     projectId: nb(overrides?.projectId ?? 'project-a'),
     environmentId: nb(overrides?.environmentId ?? 'env-a'),
-    targetAdapter: overrides?.targetAdapter ?? 'mock',
+    targetAdapter: overrides?.targetAdapter ?? 'temporal',
     runId: nb(runId),
   };
 }
@@ -48,21 +48,6 @@ export function makePlanRef(
     planVersion: nb(overrides?.planVersion ?? '1.0'),
     ...(overrides?.sizeBytes === undefined ? {} : { sizeBytes: overrides.sizeBytes }),
     ...(overrides?.expiresAt === undefined ? {} : { expiresAt: iso(overrides.expiresAt) }),
-  };
-}
-
-export function makeMockRunRef(
-  overrides?: Partial<{
-    tenantId: string;
-    workflowId: string;
-    runId: string;
-  }>
-): Extract<EngineRunRef, { provider: 'mock' }> {
-  return {
-    provider: 'mock',
-    tenantId: nb(overrides?.tenantId ?? 'tenant-a'),
-    workflowId: nb(overrides?.workflowId ?? 'wf-run-1'),
-    runId: nb(overrides?.runId ?? 'run-1'),
   };
 }
 

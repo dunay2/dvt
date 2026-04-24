@@ -82,15 +82,6 @@ export function makeRunRef(
     };
   }
 
-  if (provider === 'mock') {
-    return {
-      provider: 'mock',
-      tenantId,
-      workflowId: `mock_${runId}`,
-      runId,
-    };
-  }
-
   return {
     provider: 'conductor',
     tenantId,

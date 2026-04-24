@@ -21,7 +21,7 @@ export {
   RunExecutionContextSchema,
 } from '../contracts/engine/RunExecutionContext.v1.js';
 
-export const ProviderSchema = z.enum(['temporal', 'conductor', 'mock']);
+export const ProviderSchema = z.enum(['temporal', 'conductor']);
 export const TransformationExecutorSchema = z.enum(['postgres', 'dbt']);
 
 export const RunStatusSchema = z.enum([
@@ -203,17 +203,9 @@ const ConductorRunRefSchema = z.object({
   conductorUrl: NonBlankStringSchema,
 });
 
-const MockRunRefSchema = z.object({
-  provider: z.literal('mock'),
-  tenantId: NonBlankStringSchema,
-  workflowId: NonBlankStringSchema,
-  runId: NonBlankStringSchema,
-});
-
 export const EngineRunRefSchema = z.discriminatedUnion('provider', [
   TemporalRunRefSchema,
   ConductorRunRefSchema,
-  MockRunRefSchema,
 ]);
 
 export const ArtifactKindSchema = z.enum([

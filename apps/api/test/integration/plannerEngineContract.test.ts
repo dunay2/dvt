@@ -36,7 +36,11 @@ import {
   type IRunExecutionContextResolver,
   type RunEventInput,
 } from '@dvt/engine';
-import { InMemoryStartRunIntentStore, InMemoryTxStore, MockAdapter } from '@dvt/engine/testing';
+import {
+  InMemoryProviderAdapter,
+  InMemoryStartRunIntentStore,
+  InMemoryTxStore,
+} from '@dvt/engine/testing';
 import { createNoopObservability } from '@dvt/observability';
 import { PlannerFacade } from '@dvt/planner';
 import { describe, it, expect } from 'vitest';
@@ -100,7 +104,7 @@ function makeRunContext(runId: string): RunContext {
     projectId: asNonBlankString('test-project'),
     environmentId: asNonBlankString('dev'),
     runId: asNonBlankString(runId),
-    targetAdapter: 'mock',
+    targetAdapter: 'temporal',
   };
 }
 
@@ -131,7 +135,7 @@ function createStack(
   const idempotency = new IdempotencyKeyBuilder();
   const clock = new SequenceClock(asIsoUtcString('2026-03-01T00:00:00.000Z'));
 
-  const mockAdapter = new MockAdapter({
+  const inMemoryAdapter = new InMemoryProviderAdapter({
     stateStore: store,
     stateStoreWrite: store,
     clock,
@@ -141,7 +145,9 @@ function createStack(
     authorizer: new AllowAllAuthorizer(),
     planRefPolicy: new PlanRefPolicy({ allowedSchemes: ['https'] }),
   });
-  const adapters = new Map<EngineRunRef['provider'], IProviderAdapter>([['mock', mockAdapter]]);
+  const adapters = new Map<EngineRunRef['provider'], IProviderAdapter>([
+    ['temporal', inMemoryAdapter],
+  ]);
   const planFetcher = {
     fetch: async () => ({
       bytes: Buffer.from(JSON.stringify(enginePlan), 'utf8'),
@@ -536,7 +542,7 @@ describe('planner -> engine contract', () => {
     const store = new InMemoryTxStore();
     const projector = new SnapshotProjector();
     const clock = new SequenceClock(asIsoUtcString('2026-03-01T00:00:00.000Z'));
-    const mock = new MockAdapter({
+    const inMemoryAdapter = new InMemoryProviderAdapter({
       stateStore: store,
       stateStoreWrite: store,
       clock,
@@ -544,8 +550,12 @@ describe('planner -> engine contract', () => {
     });
 
     const planRef = makePlanRefFromEnginePlan('https://example.com/plan.json', enginePlan);
-    const runRef = await mock.startRun(enginePlan, planRef, makeResolvedRunContext('compat-run'));
-    expect(runRef.provider).toBe('mock');
+    const runRef = await inMemoryAdapter.startRun(
+      enginePlan,
+      planRef,
+      makeResolvedRunContext('compat-run')
+    );
+    expect(runRef.provider).toBe('temporal');
   });
 
   it('canonical plan preserves planner planId and step order without a bridge', async () => {

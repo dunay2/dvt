@@ -18,7 +18,7 @@ function buildSessionContext(): SessionContextPort {
     tenantId: 'tenant-1',
     projectId: 'project-1',
     environmentId: 'env-1',
-    targetAdapter: 'mock' as const,
+    targetAdapter: 'temporal' as const,
   };
 
   return {

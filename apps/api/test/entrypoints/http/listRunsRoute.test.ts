@@ -73,7 +73,7 @@ function createDeps(): {
             planId: 'plan-1',
             planVersion: '1.0',
             logicalAttemptId: 1,
-            provider: 'mock',
+            provider: 'temporal',
             status: 'FAILED',
           },
         ],

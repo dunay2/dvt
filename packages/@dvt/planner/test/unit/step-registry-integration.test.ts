@@ -134,7 +134,7 @@ describe('Planner â†’ PlannerOptions.stepTypeRegistry injection', () => {
         [
           'SPARK_JOB',
           {
-            supportedAdapters: ['mock'],
+            supportedAdapters: ['temporal'],
             requiredCapabilities: ['spark.observe', 'spark.submit'],
           },
         ],

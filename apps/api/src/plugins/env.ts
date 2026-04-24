@@ -36,13 +36,13 @@ const EnvSchema = z.object({
   DVT_INTENT_RECONCILER_BACKOFF_BASE_MS: z.coerce.number().int().positive().default(1000),
   DVT_INTENT_RECONCILER_BACKOFF_MAX_MS: z.coerce.number().int().positive().default(60000),
   DVT_INTENT_RECONCILER_TICK_TIMEOUT_MS: z.coerce.number().int().positive().default(20000),
-  DVT_INTENT_RECONCILER_PROVIDERS: z.string().default('mock'),
+  DVT_INTENT_RECONCILER_PROVIDERS: z.string().default('temporal'),
   SERVICE_NAME: z.string().default('dbf-api'),
   OBS_ENABLED: strictTrueBoolean.default(false),
   OTEL_EXPORTER_OTLP_ENDPOINT: z.string().optional(),
   OTEL_SERVICE_NAME: z.string().optional(),
   OTEL_RESOURCE_ATTRIBUTES: z.string().optional(),
-  // Temporal -- optional; when set, the Temporal adapter is registered alongside mock
+  // Temporal -- optional; when set, the Temporal adapter is registered by provider factories.
   TEMPORAL_ADDRESS: z.string().optional(),
   TEMPORAL_NAMESPACE: z.string().optional(),
   TEMPORAL_TASK_QUEUE: z.string().optional(),

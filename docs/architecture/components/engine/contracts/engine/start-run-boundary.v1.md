@@ -133,11 +133,9 @@ result classification. The engine boundary models verified execution start.
 
 ## Supported adapters
 
-`startRun` accepts only `temporal` as the canonical target adapter. The former
-`mock` start-run adapter path is no longer part of the active contract surface.
-This is an adapter identifier, not a domain semantic. Temporal construction
-stays behind the API provider-adapter factory seam and the engine
-`IProviderAdapter` port.
+`startRun` accepts only `temporal` as the canonical target adapter. This is an
+adapter identifier, not a domain semantic. Temporal construction stays behind
+the API provider-adapter factory seam and the engine `IProviderAdapter` port.
 
 ## Validation line
 

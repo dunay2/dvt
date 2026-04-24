@@ -43,7 +43,7 @@ type StepKindRegistryEntry = {
   readonly profile: StepKindExecutionProfile;
 };
 
-const ALL_PROVIDERS: readonly Provider[] = ['temporal', 'conductor', 'mock'];
+const ALL_PROVIDERS: readonly Provider[] = ['temporal', 'conductor'];
 const DEFAULT_PROFILE: StepKindExecutionProfile = {
   supportedAdapters: ALL_PROVIDERS,
   requiredCapabilities: [],

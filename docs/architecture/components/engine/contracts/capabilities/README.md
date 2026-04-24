@@ -49,7 +49,7 @@ interface RunExecutionPolicy {
 }
 
 interface RunContext {
-  targetAdapter: 'temporal' | 'conductor' | 'mock';
+  targetAdapter: 'temporal' | 'conductor';
 }
 ```
 

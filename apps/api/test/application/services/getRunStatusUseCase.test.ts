@@ -38,8 +38,9 @@ function createStateStore(): {
         planVersion: '1.0',
         logicalAttemptId: 1,
         providerRef: {
-          provider: 'mock' as const,
+          provider: 'temporal' as const,
           tenantId: 'tenant-a',
+          namespace: 'default',
           workflowId: 'wf-1',
           runId: 'provider-run-1',
         },
@@ -59,8 +60,9 @@ describe('GetRunStatusUseCase', () => {
     const engine = {
       async getRunStatus(runRef: unknown) {
         expect(runRef).toEqual({
-          provider: 'mock',
+          provider: 'temporal',
           tenantId: 'tenant-a',
+          namespace: 'default',
           workflowId: 'wf-1',
           runId: 'provider-run-1',
         });
@@ -362,9 +364,9 @@ describe('GetRunStatusUseCase', () => {
             status: 'RUNNING' as const,
           },
           providerView: {
-            provider: 'mock' as const,
+            provider: 'temporal' as const,
             providerStatus: 'RUNNING',
-            providerSubstatus: 'mock/QUEUED',
+            providerSubstatus: 'temporal/QUEUED',
           },
         };
       },
@@ -394,9 +396,9 @@ describe('GetRunStatusUseCase', () => {
       enriched: true,
       snapshotStaleness: 'FRESH',
       providerView: {
-        provider: 'mock',
+        provider: 'temporal',
         providerStatus: 'RUNNING',
-        providerSubstatus: 'mock/QUEUED',
+        providerSubstatus: 'temporal/QUEUED',
       },
     });
     expect(telemetry.recordSnapshotStalenessResult).toHaveBeenCalledWith(

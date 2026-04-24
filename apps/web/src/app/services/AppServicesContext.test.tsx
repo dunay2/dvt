@@ -9,7 +9,7 @@ import type { CapabilitiesPort } from '../ports/capabilities';
 import type { IPlansPort } from '../ports/plans';
 import type { IWorkspacePort } from '../ports/workspace';
 import type { IWorkspaceGraphDraftAuthoringPort } from '../ports/workspaceGraphDraftAuthoring';
-import { makeMockRunRef, makeRunContext } from '../testing/contractTestUtils';
+import { makeRunContext, makeTemporalRunRef } from '../testing/contractTestUtils';
 import {
   AppServicesProvider,
   useAppDataSourceMode,
@@ -212,7 +212,7 @@ describe('AppServicesProvider', () => {
       listRunSummaries: async () => [],
       getRunSnapshot: async () => null,
       startRun: async () =>
-        makeMockRunRef({
+        makeTemporalRunRef({
           tenantId: 'tenant-a',
           workflowId: 'workflow_1',
           runId: 'run_1',
@@ -224,13 +224,13 @@ describe('AppServicesProvider', () => {
         tenantId: 'tenant-a',
         projectId: 'project-a',
         environmentId: 'dev',
-        targetAdapter: 'mock' as const,
+        targetAdapter: 'temporal' as const,
       }),
       getWorkspaceScopeSnapshot: () => ({
         tenantId: 'tenant-a',
         projectId: 'project-a',
         environmentId: 'dev',
-        targetAdapter: 'mock' as const,
+        targetAdapter: 'temporal' as const,
       }),
       subscribeWorkspaceScope: () => () => undefined,
       buildRunContext: (runId: string) =>
@@ -238,7 +238,7 @@ describe('AppServicesProvider', () => {
           tenantId: 'tenant-a',
           projectId: 'project-a',
           environmentId: 'dev',
-          targetAdapter: 'mock',
+          targetAdapter: 'temporal',
         }),
     };
     const shellFeedback = {

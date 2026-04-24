@@ -139,7 +139,7 @@ describe('isKnownStepKind', () => {
 
 describe('execution profile metadata', () => {
   const profile: StepKindExecutionProfile = {
-    supportedAdapters: ['mock'],
+    supportedAdapters: ['temporal'],
     requiredCapabilities: ['spark.submit', 'spark.observe'],
   };
 
@@ -153,8 +153,8 @@ describe('execution profile metadata', () => {
   });
 
   it('evaluates adapter support from the profile', () => {
-    expect(isStepKindSupportedByAdapter(registry, 'SPARK_JOB', 'mock')).toBe(true);
-    expect(isStepKindSupportedByAdapter(registry, 'SPARK_JOB', 'temporal')).toBe(false);
+    expect(isStepKindSupportedByAdapter(registry, 'SPARK_JOB', 'temporal')).toBe(true);
+    expect(isStepKindSupportedByAdapter(registry, 'SPARK_JOB', 'conductor')).toBe(false);
   });
 
   it('collects required capabilities across steps deterministically', () => {
@@ -175,7 +175,7 @@ describe('StepTypeRegistry constructor', () => {
         [
           'SPARK_JOB',
           {
-            supportedAdapters: ['mock'],
+            supportedAdapters: ['temporal'],
             requiredCapabilities: ['spark.submit'],
           },
         ],
@@ -185,7 +185,7 @@ describe('StepTypeRegistry constructor', () => {
     expect(registry.validate('SPARK_JOB', { sparkVersion: '3.5' }).success).toBe(true);
     expect(registry.validate('SPARK_JOB', { sparkVersion: 42 }).success).toBe(false);
     expect(registry.getExecutionProfile('SPARK_JOB')).toEqual({
-      supportedAdapters: ['mock'],
+      supportedAdapters: ['temporal'],
       requiredCapabilities: ['spark.submit'],
     });
   });

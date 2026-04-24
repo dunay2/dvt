@@ -7,7 +7,7 @@
  *
  * Scope:
  *   - Shape of ExecutionPlan: required vs optional fields compile and satisfy the TypeScript interface.
- *   - contractVersion validation: MockAdapter rejects plans with unknown versions.
+ *   - contractVersion validation: the in-memory temporal test double rejects plans with unknown versions.
  *   - Provenance fields: plannerVersion and plannerGitSha are optional and structurally inert.
  *   - Runtime policy fields are not carried inside canonical plan metadata.
  */
@@ -16,7 +16,7 @@ import { jcsCanonicalize } from '@dvt/crypto';
 import { createNoopObservability } from '@dvt/observability';
 import { describe, expect, it } from 'vitest';
 
-import { MockAdapter } from '../../src/adapters/mock/MockAdapter.js';
+import { InMemoryProviderAdapter } from '../../src/adapters/inMemory/InMemoryProviderAdapter.js';
 import { SnapshotProjector } from '../../src/core/SnapshotProjector.js';
 import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
 import { SequenceClock } from '../../src/utils/clock.js';
@@ -50,14 +50,14 @@ function makeCtx(runId: string): {
   projectId: string;
   environmentId: string;
   runId: string;
-  targetAdapter: 'mock';
+  targetAdapter: 'temporal';
 } {
   return {
     tenantId: 't1',
     projectId: 'p1',
     environmentId: 'dev',
     runId,
-    targetAdapter: 'mock' as const,
+    targetAdapter: 'temporal' as const,
   };
 }
 
@@ -71,8 +71,9 @@ function createEngine(plan: ExecutionPlan): {
   const projector = new SnapshotProjector();
   const clock = new SequenceClock('2026-02-12T00:00:00.000Z');
 
-  const mock = new MockAdapter({
+  const adapter = new InMemoryProviderAdapter({
     stateStore: store,
+    stateStoreWrite: store,
     clock,
     projector,
   });
@@ -81,7 +82,7 @@ function createEngine(plan: ExecutionPlan): {
     stateStore: store,
     projector,
     observability: createNoopObservability(),
-    adapters: makeProviderMap(mock),
+    adapters: makeProviderMap(adapter),
     planFetcher: makePlanFetcherForPlan(plan),
   });
 
@@ -171,14 +172,14 @@ describe('ExecutionPlan — interface shape', (): void => {
   });
 });
 
-// ─── contractVersion validation (via MockAdapter) ─────────────────────────────
+// ─── contractVersion validation (via in-memory temporal provider adapter) ─────
 
 describe('ExecutionPlan — contractVersion validation', (): void => {
   it('accepts a plan with contractVersion "1.0.0"', async (): Promise<void> => {
     const plan = makeMinimalPlan();
     const { engine, planRef } = createEngine(plan);
     await expect(engine.startRun(planRef, makeCtx('cv-ok-1'))).resolves.toMatchObject({
-      provider: 'mock',
+      provider: 'temporal',
       runId: 'cv-ok-1',
     });
   });
@@ -222,7 +223,7 @@ describe('ExecutionPlan — provenance metadata is inert at runtime', (): void =
     };
     const { engine, planRef } = createEngine(plan);
     await expect(engine.startRun(planRef, makeCtx('prov-1'))).resolves.toMatchObject({
-      provider: 'mock',
+      provider: 'temporal',
       runId: 'prov-1',
     });
   });

@@ -65,11 +65,11 @@ describe('ArtifactBackedRunExecutionContextResolver', () => {
     await expect(
       resolver.resolve(
         makeRef({
-        uri: fileUrl,
-        sha256: sha256Hex(content),
-        schemaVersion: 'v1.0',
-        planId: 'plan-1',
-        planVersion: '1.0',
+          uri: fileUrl,
+          sha256: sha256Hex(content),
+          schemaVersion: 'v1.0',
+          planId: 'plan-1',
+          planVersion: '1.0',
         })
       )
     ).rejects.toMatchObject({
@@ -97,11 +97,11 @@ describe('ArtifactBackedRunExecutionContextResolver', () => {
 
     const resolved = await resolver.resolve(
       makeRef({
-      uri: 's3://runctx-bucket/path/to/context.json',
-      sha256: sha256Hex(content),
-      schemaVersion: 'v1.0',
-      planId: 'plan-1',
-      planVersion: '1.0',
+        uri: 's3://runctx-bucket/path/to/context.json',
+        sha256: sha256Hex(content),
+        schemaVersion: 'v1.0',
+        planId: 'plan-1',
+        planVersion: '1.0',
       })
     );
 
@@ -123,11 +123,11 @@ describe('ArtifactBackedRunExecutionContextResolver', () => {
     await expect(
       resolver.resolve(
         makeRef({
-        uri: fileUrl,
-        sha256: '0'.repeat(64),
-        schemaVersion: 'v1.0',
-        planId: 'plan-1',
-        planVersion: '1.0',
+          uri: fileUrl,
+          sha256: '0'.repeat(64),
+          schemaVersion: 'v1.0',
+          planId: 'plan-1',
+          planVersion: '1.0',
         })
       )
     ).rejects.toMatchObject({
@@ -146,11 +146,11 @@ describe('ArtifactBackedRunExecutionContextResolver', () => {
     await expect(
       invalidPayloadResolver.resolve(
         makeRef({
-        uri: invalidJsonUrl,
-        sha256: sha256Hex('{not-json}'),
-        schemaVersion: 'v1.0',
-        planId: 'plan-1',
-        planVersion: '1.0',
+          uri: invalidJsonUrl,
+          sha256: sha256Hex('{not-json}'),
+          schemaVersion: 'v1.0',
+          planId: 'plan-1',
+          planVersion: '1.0',
         })
       )
     ).rejects.toMatchObject({
@@ -166,11 +166,11 @@ describe('ArtifactBackedRunExecutionContextResolver', () => {
     await expect(
       driftedResolver.resolve(
         makeRef({
-        uri: driftedUrl,
-        sha256: sha256Hex(driftedContent),
-        schemaVersion: 'v1.0',
-        planId: 'plan-1',
-        planVersion: '1.0',
+          uri: driftedUrl,
+          sha256: sha256Hex(driftedContent),
+          schemaVersion: 'v1.0',
+          planId: 'plan-1',
+          planVersion: '1.0',
         })
       )
     ).rejects.toMatchObject({
@@ -186,11 +186,11 @@ describe('ArtifactBackedRunExecutionContextResolver', () => {
     await expect(
       resolver.resolve(
         makeRef({
-        uri: 'ftp://runctx-bucket/context.json',
-        sha256: '0'.repeat(64),
-        schemaVersion: 'v1.0',
-        planId: 'plan-1',
-        planVersion: '1.0',
+          uri: 'ftp://runctx-bucket/context.json',
+          sha256: '0'.repeat(64),
+          schemaVersion: 'v1.0',
+          planId: 'plan-1',
+          planVersion: '1.0',
         })
       )
     ).rejects.toMatchObject({
@@ -209,11 +209,11 @@ describe('ArtifactBackedRunExecutionContextResolver', () => {
     await expect(
       s3Resolver.resolve(
         makeRef({
-        uri: 's3:///context.json',
-        sha256: '0'.repeat(64),
-        schemaVersion: 'v1.0',
-        planId: 'plan-1',
-        planVersion: '1.0',
+          uri: 's3:///context.json',
+          sha256: '0'.repeat(64),
+          schemaVersion: 'v1.0',
+          planId: 'plan-1',
+          planVersion: '1.0',
         })
       )
     ).rejects.toMatchObject({
@@ -256,7 +256,7 @@ function makeRunExecutionContextArtifact(
     tenantId: string;
     projectId: string;
     environmentId: string;
-    targetAdapter: 'temporal' | 'conductor' | 'mock';
+    targetAdapter: 'temporal' | 'conductor';
     createdAtIso: string;
     createdBy: string;
     pluginCompatibilityFingerprint: string;
@@ -275,13 +275,13 @@ function makeRunExecutionContextArtifact(
     targetAdapter: 'temporal',
     createdAtIso: '2026-04-14T10:00:00.000Z',
     createdBy: 'planner-runtime',
-        pluginContexts: {
-          dbt: {
-            projectBundleRef: {
+    pluginContexts: {
+      dbt: {
+        projectBundleRef: {
           uri: `s3://bundle-bucket/tenants/tenant-1/${'b'.repeat(64)}`,
-              kind: 'dbt-project-bundle',
-              sha256: 'b'.repeat(64),
-              tenantId: 'tenant-1',
+          kind: 'dbt-project-bundle',
+          sha256: 'b'.repeat(64),
+          tenantId: 'tenant-1',
         },
       },
     },

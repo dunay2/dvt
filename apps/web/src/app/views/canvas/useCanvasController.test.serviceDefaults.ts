@@ -9,7 +9,7 @@ import type {
   WorkspaceGraphDraftAuthoringSaveResult,
 } from '../../ports/workspaceGraphDraftAuthoring';
 import type { IWorkspacePort } from '../../ports/workspace';
-import { makeMockRunRef, makeRunContext } from '../../testing/contractTestUtils';
+import { makeRunContext, makeTemporalRunRef } from '../../testing/contractTestUtils';
 import type { CanvasHarnessState } from './useCanvasController.test.types';
 import type { PlanViewModel } from '../../types/plans';
 
@@ -51,13 +51,13 @@ export function buildDefaultCanvasHarnessServices(
       tenantId: 'tenant-a',
       projectId: 'project-a',
       environmentId: 'dev',
-      targetAdapter: 'mock',
+      targetAdapter: 'temporal',
     }),
     getWorkspaceScopeSnapshot: () => ({
       tenantId: 'tenant-a',
       projectId: 'project-a',
       environmentId: 'dev',
-      targetAdapter: 'mock',
+      targetAdapter: 'temporal',
     }),
     subscribeWorkspaceScope: () => () => undefined,
     buildRunContext: (runId: string) =>
@@ -65,7 +65,7 @@ export function buildDefaultCanvasHarnessServices(
         tenantId: 'tenant-a',
         projectId: 'project-a',
         environmentId: 'dev',
-        targetAdapter: 'mock',
+        targetAdapter: 'temporal',
       }),
   };
 
@@ -125,7 +125,7 @@ export function buildDefaultCanvasHarnessServices(
     listRunSummaries: vi.fn(async () => []),
     getRunSnapshot: vi.fn(async () => null),
     startRun: vi.fn(async () =>
-      makeMockRunRef({
+      makeTemporalRunRef({
         tenantId: 'tenant-a',
         workflowId: 'workflow_platform_1',
         runId: 'run_platform_1',

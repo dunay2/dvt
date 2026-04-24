@@ -8,8 +8,8 @@
  * @consequence Regressions in route wiring, auth verification, or schema bootstrap surface in one executable lane
  * @date 2026-03-20
  *
- * Requires a live PostgreSQL instance. Skips cleanly when DVT_PG_URL or
- * DATABASE_URL is absent.
+ * Requires live PostgreSQL and Temporal instances. Skips cleanly when
+ * DVT_PG_URL/DATABASE_URL or TEMPORAL_ADDRESS is absent.
  */
 import { parsePlanPreviewPersistResponse } from '@dvt/contracts';
 import { expect, it } from 'vitest';
@@ -188,7 +188,7 @@ describeIfPg('protected runtime integration', () => {
       httpError('unprocessable', 'plan_rejected', {
         details: {
           code: 'REJECTED',
-          adapterId: 'mock',
+          adapterId: 'temporal',
           cause: 'dependency_gap',
           rejectionReason: 'Selected closure is missing required upstream dependencies.',
         },
@@ -205,7 +205,7 @@ describeIfPg('protected runtime integration', () => {
       httpError('unprocessable', 'plan_rejected', {
         details: {
           code: 'REJECTED',
-          adapterId: 'mock',
+          adapterId: 'temporal',
           cause: 'graph_source_selection_mismatch',
           rejectionReason:
             'graphSource nodes must match the planner-derived executable subgraph for the selection.',

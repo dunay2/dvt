@@ -144,14 +144,6 @@ export function createMockRunsService(
         runId,
       };
 
-      if (input.workspaceScope.targetAdapter === 'temporal') {
-        return {
-          provider: 'temporal',
-          namespace: asNonBlankString('default'),
-          ...base,
-        };
-      }
-
       if (input.workspaceScope.targetAdapter === 'conductor') {
         return {
           provider: 'conductor',
@@ -161,7 +153,8 @@ export function createMockRunsService(
       }
 
       return {
-        provider: 'mock',
+        provider: 'temporal',
+        namespace: asNonBlankString('default'),
         ...base,
       };
     },

@@ -307,7 +307,7 @@ describe('useCanvasExecutionActions plan preview core', () => {
         tenantId: 'tenant',
         projectId: 'project',
         environmentId: 'env',
-        targetAdapter: 'mock',
+        targetAdapter: 'temporal',
       },
       selection: {
         mode: 'explicit',

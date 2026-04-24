@@ -62,7 +62,7 @@ export function expectCommandQueryFlowSucceeded(
         runId: flow.actualRunId,
         planId: expect.any(String),
         planVersion: expect.any(String),
-        provider: 'mock',
+        provider: 'temporal',
         status: 'PENDING',
       },
     ],
@@ -108,7 +108,7 @@ export function expectPlannerBackedRunFlowSucceeded(flow: PlannerBackedRunFlowRe
       expect.objectContaining({
         runId: flow.actualRunId,
         planId: flow.storedPlan?.plan_id,
-        provider: 'mock',
+        provider: 'temporal',
         status: 'PENDING',
       }),
     ]),

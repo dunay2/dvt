@@ -222,8 +222,9 @@ async function bootstrapRun(
       planVersion: '1.0.0',
       logicalAttemptId: 1,
       providerRef: {
-        provider: 'mock',
+        provider: 'temporal',
         tenantId,
+        namespace: 'default',
         workflowId: `wf-${runId}`,
         runId: `pr-${runId}`,
       },
