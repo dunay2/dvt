@@ -1,3 +1,4 @@
+/** Owned concern: derive the current Canvas draft payload and persistence posture from one semantic DTO. */
 import { useMemo } from 'react';
 
 import { canvasDraftSession } from './canvasDraftSession';
@@ -8,22 +9,18 @@ import {
 import {
   buildCurrentDraftPayload,
   isCurrentDraftProjectable,
-  type CanvasDraftLifecycleGraphNode,
 } from './canvasDraftLifecycleSnapshot';
-import type { CanvasDraftSession } from './canvasDraftSession';
-import type { WorkspaceScope } from '../../ports/sessionContext';
-import type { WorkspaceBootstrapConfig } from '../../services/config/workspaceConfig';
-import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+import type { CanvasCurrentDraftPayloadDto } from './canvasDraftLifecycle.types';
 
-export function useCanvasCurrentDraftPayload(
-  graphNodes: CanvasDraftLifecycleGraphNode[],
-  draftSession: CanvasDraftSession,
-  canvasDocument: CanvasDraftAuthoringPayload['projectedDraft']['canvas'] | null,
-  canonicalNodes: readonly CanonicalNode[],
-  canonicalEdges: readonly CanonicalEdge[],
-  workspaceScope: WorkspaceScope,
-  previewProvenanceConfig: Pick<WorkspaceBootstrapConfig, 'gitBranch' | 'gitSha' | 'gitRepo'>
-) {
+export function useCanvasCurrentDraftPayload({
+  graphNodes,
+  draftSession,
+  canvasDocument,
+  canonicalNodes,
+  canonicalEdges,
+  workspaceScope,
+  previewProvenanceConfig,
+}: CanvasCurrentDraftPayloadDto) {
   const currentDraftPayload = useMemo(
     () =>
       buildCurrentDraftPayload(graphNodes, draftSession, canvasDocument ?? { kind: '', title: '' }),

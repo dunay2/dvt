@@ -2,7 +2,7 @@
 title: Canvas Component Map And Modernization Review
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-04-22
+last_reviewed: 2026-04-24
 planning_type: architecture
 ---
 
@@ -326,6 +326,8 @@ Canonical startup rule for this slice:
   subbuilders instead of one broad route method
 - keep host-cycle tests and workbench rendering on top of a stable DTO rather
   than letting transport-shaped setup helpers spread again
+- keep draft lifecycle and current-payload seams on semantic DTOs instead of
+  flat authoring-runtime parameter bags
 
 ### Avoid
 

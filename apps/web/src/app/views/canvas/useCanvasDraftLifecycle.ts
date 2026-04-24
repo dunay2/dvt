@@ -5,8 +5,8 @@ import { canvasDraftSession } from './canvasDraftSession';
 import { createCanvasDraftIdempotencyKey } from './canvasDraftIdempotencyKey';
 import type {
   CanvasDraftLifecycle,
+  CanvasDraftLifecycleDto,
   DraftSaveStatus,
-  UseCanvasDraftLifecycleArgs,
 } from './canvasDraftLifecycle.types';
 import { useCanvasCurrentDraftPayload } from './useCanvasCurrentDraftPayload';
 import { useCanvasDraftAttemptRefs } from './useCanvasDraftAttemptRefs';
@@ -14,34 +14,44 @@ import { useCanvasDraftBootstrapSync } from './useCanvasDraftBootstrapSync';
 import { useCanvasDraftPersistence } from './useCanvasDraftPersistence';
 
 export function useCanvasDraftLifecycle({
-  draftRepository,
-  graphDraftQuery,
-  draftQueryCache,
-  workspaceLayoutKey,
-  draftSession,
-  setDraftSession,
-  canonicalSnapshot,
-  graphNodes,
-  canonicalNodes,
-  canonicalEdges,
-  graphAuthorityQuery,
-  canPersistGraphDraft,
-  workspaceScope,
-  previewProvenanceConfig,
-  setCanvasNodePositions,
-}: UseCanvasDraftLifecycleArgs): CanvasDraftLifecycle {
+  baseline,
+  session,
+  projection,
+  policy,
+}: CanvasDraftLifecycleDto): CanvasDraftLifecycle {
+  const {
+    draftRepository,
+    graphDraftQuery,
+    draftQueryCache,
+    graphAuthorityQuery,
+    workspaceLayoutKey,
+  } = baseline;
+  const {
+    draftSession,
+    setDraftSession,
+    canonicalSnapshot,
+    setCanvasNodePositions,
+  } = session;
+  const {
+    graphNodes,
+    canonicalNodes,
+    canonicalEdges,
+    workspaceScope,
+    previewProvenanceConfig,
+  } = projection;
+  const { canPersistGraphDraft } = policy;
   const [draftSaveStatus, setDraftSaveStatus] = useState<DraftSaveStatus>('idle');
   const { refs, invalidateInFlightSaveAttempt } = useCanvasDraftAttemptRefs();
   const { currentDraftPayload, currentDraftPayloadSignature, canPersistCurrentDraft } =
-    useCanvasCurrentDraftPayload(
+    useCanvasCurrentDraftPayload({
       graphNodes,
       draftSession,
-      graphDraftQuery.data?.record?.draft.canvas ?? null,
+      canvasDocument: graphDraftQuery.data?.record?.draft.canvas ?? null,
       canonicalNodes,
       canonicalEdges,
       workspaceScope,
-      previewProvenanceConfig
-    );
+      previewProvenanceConfig,
+    });
 
   const { applyReloadedRemoteDraft } = useCanvasDraftBootstrapSync({
     graphDraftQuery,

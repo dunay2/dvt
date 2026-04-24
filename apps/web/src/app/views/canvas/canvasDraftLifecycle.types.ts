@@ -38,25 +38,51 @@ export type DraftAttemptRefs = {
   activeSaveAttemptRef: MutableRefObject<{ id: number; generation: number } | null>;
 };
 
-export type UseCanvasDraftLifecycleArgs = {
+export type CanvasCurrentDraftPayloadDto = {
+  graphNodes: CanvasDraftLifecycleGraphNode[];
+  draftSession: CanvasDraftSession;
+  canvasDocument: NonNullable<CanvasDraftReadModel['record']>['draft']['canvas'] | null;
+  canonicalNodes: readonly CanonicalNode[];
+  canonicalEdges: readonly CanonicalEdge[];
+  workspaceScope: WorkspaceScope;
+  previewProvenanceConfig: CanvasAuthoringRuntimePreviewProvenanceConfig;
+};
+
+export type CanvasDraftLifecycleBaselineDto = {
   draftRepository: CanvasDraftRepository;
   graphDraftQuery: GraphDraftQueryState;
   draftQueryCache: CanvasDraftQueryCache;
+  graphAuthorityQuery: GraphAuthorityQueryState;
   workspaceLayoutKey: string;
+};
+
+export type CanvasDraftLifecycleSessionDto = {
   draftSession: CanvasDraftSession;
   setDraftSession: Dispatch<SetStateAction<CanvasDraftSession>>;
   canonicalSnapshot: CanvasDraftLifecycleCanonicalSnapshot;
-  graphNodes: CanvasDraftLifecycleGraphNode[];
-  canonicalNodes: CanonicalNode[];
-  canonicalEdges: CanonicalEdge[];
-  graphAuthorityQuery: GraphAuthorityQueryState;
-  canPersistGraphDraft: boolean;
-  workspaceScope: WorkspaceScope;
-  previewProvenanceConfig: CanvasAuthoringRuntimePreviewProvenanceConfig;
   setCanvasNodePositions: (
     workspaceLayoutKey: string,
     positions: CanvasNodePositions
   ) => void;
+};
+
+export type CanvasDraftLifecycleProjectionDto = {
+  graphNodes: CanvasDraftLifecycleGraphNode[];
+  canonicalNodes: CanonicalNode[];
+  canonicalEdges: CanonicalEdge[];
+  workspaceScope: WorkspaceScope;
+  previewProvenanceConfig: CanvasAuthoringRuntimePreviewProvenanceConfig;
+};
+
+export type CanvasDraftLifecyclePolicyDto = {
+  canPersistGraphDraft: boolean;
+};
+
+export type CanvasDraftLifecycleDto = {
+  baseline: CanvasDraftLifecycleBaselineDto;
+  session: CanvasDraftLifecycleSessionDto;
+  projection: CanvasDraftLifecycleProjectionDto;
+  policy: CanvasDraftLifecyclePolicyDto;
 };
 
 export type CanvasDraftLifecycle = {

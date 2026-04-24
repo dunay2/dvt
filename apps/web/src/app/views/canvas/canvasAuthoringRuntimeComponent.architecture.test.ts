@@ -6,6 +6,10 @@ const RUNTIME_CONTRACT_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'canvasAuthoringRuntime.types.ts'
 );
+const LIFECYCLE_TYPES_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'canvasDraftLifecycle.types.ts'
+);
 const RUNTIME_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'useCanvasAuthoringRuntime.ts'
@@ -40,6 +44,8 @@ describe('canvas authoring runtime component architecture', () => {
     expect(RUNTIME_CONTRACT_SOURCE).toContain(
       'export type UseCanvasAuthoringRuntimeDraftFlowArgs'
     );
+    expect(LIFECYCLE_TYPES_SOURCE).toContain('export type CanvasDraftLifecycleDto');
+    expect(LIFECYCLE_TYPES_SOURCE).toContain('export type CanvasCurrentDraftPayloadDto');
 
     expect(RUNTIME_SOURCE).toContain("from './canvasAuthoringRuntime.types'");
     expect(RUNTIME_SOURCE).toContain('deriveCanvasBackendPosture');
@@ -61,7 +67,7 @@ describe('canvas authoring runtime component architecture', () => {
 
     expect(LIFECYCLE_SOURCE).toContain('useCanvasDraftBootstrapSync');
     expect(LIFECYCLE_SOURCE).toContain('useCanvasDraftPersistence');
-    expect(LIFECYCLE_SOURCE).toContain('useCanvasCurrentDraftPayload');
+    expect(LIFECYCLE_SOURCE).toContain('useCanvasCurrentDraftPayload({');
     expect(LIFECYCLE_SOURCE).toContain(
       'Owned concern: compose bootstrapping, persistence, save-attempt policy, and first-canvas creation'
     );
