@@ -100,6 +100,10 @@ acts as a fake namespace.
   services, and canonical adapter registry. It fails fast before engine
   construction when the protected runtime is enabled without
   `TEMPORAL_ADDRESS`.
+- `pnpm dev:app`
+  Local bootstrap wrapper. When it bootstraps protected runtime locally, it
+  injects the canonical local Temporal posture, starts `dvt-temporal-worker`,
+  and waits for the worker `GET /readyz` probe before starting the API.
 - `buildProtectedStartRunRuntime(deps)`
   Factory. Assembles the authenticated start-run runtime subcomponent from
   abstract runtime dependencies.
@@ -146,6 +150,10 @@ acts as a fake namespace.
   the only implemented runtime provider in this slice, protected runtime startup
   requires `TEMPORAL_ADDRESS`; missing Temporal configuration is a deployment
   configuration error, not an engine fallback path.
+- The coordinated local stack must not synthesize another provider. When local
+  protected runtime is active, `scripts/run-dev-stack.cjs` injects Temporal's
+  canonical local address, starts the standalone Temporal worker, waits for
+  worker readiness, and fails bootstrap explicitly when Temporal is unavailable.
 - `buildProviderAdapters.ts` must not import concrete provider packages or
   inspect provider-specific environment variables. It only invokes
   `ProviderAdapterFactory` implementations supplied by composition.

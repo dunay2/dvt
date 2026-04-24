@@ -59,7 +59,12 @@ node scripts/run-dev-stack.cjs --api-port 3001 --web-port 5174 --host 127.0.0.1
 ```
 
 It starts the API and frontend together, waits until both are reachable, and
-cleans them up on exit.
+cleans them up on exit. When protected runtime routes are enabled locally, the
+wrapper also injects the canonical local Temporal posture
+(`127.0.0.1:7233`, namespace `default`, task queue `dvt-temporal`), starts the
+standalone Temporal worker, and waits for its `/readyz` probe before starting
+the API. Temporal itself must be reachable at the configured address; otherwise
+startup fails explicitly during bootstrap.
 
 ### Documentation And Zensical
 

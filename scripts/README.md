@@ -209,9 +209,20 @@ Behavior:
   Docker Postgres proof environment before starting the API
 - exports the canonical local proof DSN as `DATABASE_URL` to the API when local
   bootstrap is used
+- injects canonical local Temporal runtime posture when the protected runtime
+  is active locally:
+  `TEMPORAL_ADDRESS=127.0.0.1:7233`,
+  `TEMPORAL_NAMESPACE=default`, and
+  `TEMPORAL_TASK_QUEUE=dvt-temporal`
+- starts `dvt-temporal-worker` with the same Temporal/Postgres posture and
+  waits for its `GET /readyz` probe before starting the API
+- fails bootstrap explicitly if the Temporal worker exits or never becomes
+  ready, instead of allowing the API to surface a generic no-adapters error
 - enables `/db/ready` and waits for that probe before declaring the API ready
 - `--skip-postgres` leaves database bootstrap disabled and preserves the old
-  degraded-local behavior when no `DATABASE_URL` is set
+  degraded-local behavior when no `DATABASE_URL` is set; in that posture the
+  protected runtime is not locally bootstrapped and the Temporal worker is not
+  started
 
 ### `check-changed.cjs`
 
