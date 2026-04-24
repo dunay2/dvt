@@ -36,28 +36,24 @@ describe('CanvasCenterSurface architecture', () => {
     );
     expect(WORKBENCH_SURFACE_SOURCE).toContain('renderCanvasStartupWorkbenchSurface');
     expect(WORKBENCH_SURFACE_SOURCE).toContain('renderCanvasGraphWorkbenchSurface');
-    expect(WORKBENCH_SURFACE_SOURCE).toContain('renderCanvasPlaygroundWorkbenchSurface');
-    expect(WORKBENCH_SURFACE_SOURCE).toContain('renderCanvasEmptyWorkbenchSurface');
+    expect(WORKBENCH_SURFACE_SOURCE).toContain('renderCanvasHostCycleWorkbenchSurface');
   });
 
   it('keeps create-canvas host posture separate from typed empty-canvas authoring', () => {
-    expect(WORKBENCH_SURFACE_SOURCE).toContain("routeState !== 'needs_canvas'");
+    expect(WORKBENCH_SURFACE_SOURCE).toContain("cycleState.kind === 'needs_canvas'");
     expect(WORKBENCH_SURFACE_SOURCE).toContain('CanvasPlaygroundHost');
-    expect(WORKBENCH_SURFACE_SOURCE).toContain('availableCanvasKinds');
-    expect(WORKBENCH_SURFACE_SOURCE).toContain('onCreateCanvasDocument');
+    expect(WORKBENCH_SURFACE_SOURCE).toContain('cycleState.availableCanvasKinds');
+    expect(WORKBENCH_SURFACE_SOURCE).toContain('cycleState.onCreateCanvasDocument');
+    expect(WORKBENCH_SURFACE_SOURCE).toContain('deriveCanvasHostCycleState');
   });
 
   it('renders typed empty authoring from the registered canvas kind only when edits are allowed', () => {
-    expect(WORKBENCH_SURFACE_SOURCE).toContain('resolveCanvasEmptyWorkbenchNodeKinds');
-    expect(WORKBENCH_SURFACE_SOURCE).toContain('resolveCanvasEmptyWorkbenchRegistration');
-    expect(WORKBENCH_SURFACE_SOURCE).toContain('registration.kind === canvasDocument.kind');
-    expect(WORKBENCH_SURFACE_SOURCE).toContain('emptyState.title');
-    expect(WORKBENCH_SURFACE_SOURCE).toContain('emptyState.firstNodeLabel');
-    expect(WORKBENCH_SURFACE_SOURCE).toContain('emptyState.firstNodeHelper');
-    expect(WORKBENCH_SURFACE_SOURCE).toContain('canEditEdges');
-    expect(WORKBENCH_SURFACE_SOURCE).toContain(
-      'canEditEdges ? onCreateAuthoringNode : undefined'
-    );
+    expect(WORKBENCH_SURFACE_SOURCE).toContain('deriveCanvasHostCycleState');
+    expect(WORKBENCH_SURFACE_SOURCE).toContain("cycleState.kind !== 'typed_empty'");
+    expect(WORKBENCH_SURFACE_SOURCE).toContain('cycleState.title');
+    expect(WORKBENCH_SURFACE_SOURCE).toContain('cycleState.firstNodeLabel');
+    expect(WORKBENCH_SURFACE_SOURCE).toContain('cycleState.firstNodeHelper');
+    expect(WORKBENCH_SURFACE_SOURCE).toContain('cycleState.onCreateAuthoringNode');
     expect(WORKBENCH_SURFACE_SOURCE).not.toContain('DVT_AUTHORING_NODE_KINDS');
   });
 

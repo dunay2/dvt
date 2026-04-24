@@ -218,6 +218,7 @@ Semantic rule:
 | `useCanvasGraphHandlers`                     | Gesture-to-command adapter seam                                            | Duplicate mutation policy                                              |
 | `useCanvasExecutionActions`                  | Plan and run handoff composition seam                                      | Graph mutation ownership                                               |
 | `usePublishedRouteBootstrap`                 | Publish explicit route startup posture to the shell                        | Re-deriving authoring truth from shell heuristics                      |
+| `canvasHostCycleState.ts`                    | Story-shaped host-cycle DTO between canonical posture and workbench render | Becoming a new transport bag or route-authority replacement            |
 
 <!-- markdownlint-enable MD060 -->
 
@@ -323,6 +324,8 @@ Canonical startup rule for this slice:
 - keep route composition moving toward named seams such as presentation sync,
   modal hosting, semantic modal-host builders, and concern-scoped shell
   subbuilders instead of one broad route method
+- keep host-cycle tests and workbench rendering on top of a stable DTO rather
+  than letting transport-shaped setup helpers spread again
 
 ### Avoid
 

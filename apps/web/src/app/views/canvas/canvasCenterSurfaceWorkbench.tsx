@@ -6,12 +6,9 @@ import {
   CanvasLoadingStateView,
 } from './CanvasStateViews';
 import { CanvasPlaygroundHost } from './CanvasPlaygroundHost';
+import { deriveCanvasHostCycleState } from './canvasHostCycleState';
 import { canvasViewCopy } from './copy';
 import type { CanvasWorkbenchSurfaceArgs } from './canvasCenterSurface.types';
-import type {
-  CanvasKindRegistration,
-  NodeKindRegistration,
-} from '../../plugins/nodeTypeContracts';
 
 function renderCanvasStartupWorkbenchSurface(
   args: Pick<CanvasWorkbenchSurfaceArgs, 'presentationState' | 'startupBlockState'>
@@ -72,73 +69,7 @@ function renderCanvasGraphWorkbenchSurface(
   return null;
 }
 
-function renderCanvasPlaygroundWorkbenchSurface(
-  args: Pick<
-    CanvasWorkbenchSurfaceArgs,
-    'presentationState' | 'availableCanvasKinds' | 'onCreateCanvasDocument'
-  >
-) {
-  const {
-    presentationState: { routeState },
-    availableCanvasKinds,
-    onCreateCanvasDocument,
-  } = args;
-
-  if (routeState !== 'needs_canvas') {
-    return null;
-  }
-
-  return (
-    <CanvasPlaygroundHost
-      canvasKinds={availableCanvasKinds}
-      onCreateCanvasDocument={onCreateCanvasDocument}
-    />
-  );
-}
-
-function resolveCanvasEmptyWorkbenchMessage(
-  args: Pick<
-    CanvasWorkbenchSurfaceArgs,
-    'canEditEdges' | 'canOpenSourceImport' | 'canvasDocument' | 'availableCanvasKinds'
-  >
-) {
-  const { canEditEdges, canOpenSourceImport, canvasDocument, availableCanvasKinds } = args;
-  const activeCanvasKind = resolveCanvasEmptyWorkbenchRegistration({
-    canvasDocument,
-    availableCanvasKinds,
-  });
-
-  if (!canEditEdges) {
-    return canvasViewCopy.routeEmptyReadOnlyMessage;
-  }
-
-  if (!canOpenSourceImport) {
-    return canvasViewCopy.routeEmptyImportUnavailableMessage;
-  }
-
-  return activeCanvasKind?.emptyState.editableMessage ?? canvasViewCopy.routeEmptyEditableMessage;
-}
-
-function resolveCanvasEmptyWorkbenchRegistration(
-  args: Pick<CanvasWorkbenchSurfaceArgs, 'canvasDocument' | 'availableCanvasKinds'>
-): CanvasKindRegistration | null {
-  const { canvasDocument, availableCanvasKinds } = args;
-  if (canvasDocument == null) {
-    return null;
-  }
-
-  return (
-    availableCanvasKinds.find((registration) => registration.kind === canvasDocument.kind) ?? null
-  );
-}
-
-function resolveCanvasEmptyWorkbenchNodeKinds(
-  args: Pick<CanvasWorkbenchSurfaceArgs, 'canvasDocument' | 'availableCanvasKinds'>
-): readonly NodeKindRegistration[] {
-  return resolveCanvasEmptyWorkbenchRegistration(args)?.nodeKinds ?? [];
-}
-
-function renderCanvasEmptyWorkbenchSurface(
+function renderCanvasHostCycleWorkbenchSurface(
   args: Pick<
     CanvasWorkbenchSurfaceArgs,
     | 'presentationState'
@@ -146,51 +77,36 @@ function renderCanvasEmptyWorkbenchSurface(
     | 'availableCanvasKinds'
     | 'canEditEdges'
     | 'canOpenSourceImport'
+    | 'onCreateCanvasDocument'
     | 'onCreateAuthoringNode'
   >
 ) {
-  const {
-    presentationState: { routeState },
-    canvasDocument,
-    availableCanvasKinds,
-    canEditEdges,
-    canOpenSourceImport,
-    onCreateAuthoringNode,
-  } = args;
-
-  if (routeState !== 'empty') {
+  const cycleState = deriveCanvasHostCycleState(args);
+  if (cycleState == null) {
     return null;
   }
 
-  const activeCanvasKind = resolveCanvasEmptyWorkbenchRegistration({
-    canvasDocument,
-    availableCanvasKinds,
-  });
+  if (cycleState.kind === 'needs_canvas') {
+    return (
+      <CanvasPlaygroundHost
+        canvasKinds={cycleState.availableCanvasKinds}
+        onCreateCanvasDocument={cycleState.onCreateCanvasDocument}
+      />
+    );
+  }
+
+  if (cycleState.kind !== 'typed_empty') {
+    return null;
+  }
 
   return (
     <CanvasEmptyStateView
-      title={activeCanvasKind?.emptyState.title ?? canvasViewCopy.routeEmptyTitle}
-      message={resolveCanvasEmptyWorkbenchMessage({
-        canEditEdges,
-        canOpenSourceImport,
-        canvasDocument,
-        availableCanvasKinds,
-      })}
-      firstNodeLabel={
-        activeCanvasKind?.emptyState.firstNodeLabel ?? canvasViewCopy.routeEmptyFirstNodeLabel
-      }
-      firstNodeHelper={
-        activeCanvasKind?.emptyState.firstNodeHelper ?? canvasViewCopy.routeEmptyFirstNodeHelper
-      }
-      nodeKinds={
-        canEditEdges
-          ? resolveCanvasEmptyWorkbenchNodeKinds({
-              canvasDocument,
-              availableCanvasKinds,
-            })
-          : []
-      }
-      onCreateAuthoringNode={canEditEdges ? onCreateAuthoringNode : undefined}
+      title={cycleState.title}
+      message={cycleState.message}
+      firstNodeLabel={cycleState.firstNodeLabel}
+      firstNodeHelper={cycleState.firstNodeHelper}
+      nodeKinds={cycleState.nodeKinds}
+      onCreateAuthoringNode={cycleState.onCreateAuthoringNode}
     />
   );
 }
@@ -206,14 +122,9 @@ export function renderCanvasWorkbenchSurface(args: CanvasWorkbenchSurfaceArgs) {
     return graphSurface;
   }
 
-  const playgroundSurface = renderCanvasPlaygroundWorkbenchSurface(args);
-  if (playgroundSurface != null) {
-    return playgroundSurface;
-  }
-
-  const emptySurface = renderCanvasEmptyWorkbenchSurface(args);
-  if (emptySurface != null) {
-    return emptySurface;
+  const cycleSurface = renderCanvasHostCycleWorkbenchSurface(args);
+  if (cycleSurface != null) {
+    return cycleSurface;
   }
 
   return undefined;

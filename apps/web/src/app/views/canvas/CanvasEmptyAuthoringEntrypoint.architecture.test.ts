@@ -58,9 +58,10 @@ describe('Canvas empty authoring entrypoint architecture', () => {
   });
 
   it('creates nodes from the typed canvas catalog through the existing draft lifecycle', () => {
-    expect(CENTER_WORKBENCH_SOURCE).toContain('resolveCanvasEmptyWorkbenchNodeKinds');
-    expect(CENTER_WORKBENCH_SOURCE).toContain('canvasDocument.kind');
-    expect(CENTER_WORKBENCH_SOURCE).toContain('availableCanvasKinds');
+    expect(CENTER_WORKBENCH_SOURCE).toContain('deriveCanvasHostCycleState');
+    expect(CENTER_WORKBENCH_SOURCE).toContain("cycleState.kind !== 'typed_empty'");
+    expect(CENTER_WORKBENCH_SOURCE).toContain('cycleState.nodeKinds');
+    expect(CENTER_WORKBENCH_SOURCE).toContain('cycleState.onCreateAuthoringNode');
     expect(NODE_CREATION_HANDLER_SOURCE).toContain('buildAuthoringNodeCommand');
     expect(NODE_CREATION_HANDLER_SOURCE).toContain('dropCanonicalNode');
     expect(NODE_CREATION_HANDLER_SOURCE).toContain('canvasGraphLifecycle.node.admitExplicit');

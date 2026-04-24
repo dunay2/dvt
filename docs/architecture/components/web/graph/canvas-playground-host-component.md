@@ -2,7 +2,7 @@
 title: Canvas Playground Host Component
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-04-23
+last_reviewed: 2026-04-24
 planning_type: architecture
 ---
 
@@ -37,6 +37,7 @@ spec.
 | -------------- | ---------------------------------- | ----------------------------------------------------------------------------------- |
 | Facade         | playground host seam               | one route-safe host contract over create-canvas, active document, and kind registry |
 | Registry       | canvas-kind registry               | host asks for typed canvas kinds without owning plugin semantics                    |
+| DTO            | `CanvasHostCycleState`             | one story-shaped cycle contract replaces broad transport-shaped setup bags          |
 | View model     | host presentation model            | route JSX renders host posture without owning selection logic                       |
 | Gateway        | protected workspace draft boundary | canvas document identity persists through the canonical draft contract              |
 
@@ -46,7 +47,7 @@ run authority.
 
 ## Scope for the current implementation slices
 
-Current implemented target is `TF-E2-K-A` plus `TF-E2-K-B`, not the whole
+Current implemented target is `TF-E2-K-A` through `TF-E2-K-D`, not the whole
 multi-canvas route.
 
 That means:
@@ -56,6 +57,8 @@ That means:
 - the host must expose a real create-canvas flow before `Add first node`
 - the host must expose explicit tab chrome for the authoritative draft-backed
   canvas
+- the host must derive a stable host-cycle DTO before route and workbench tests
+  widen again
 - multi-canvas persistence remains a later slice
 
 This is intentional. The current protected draft contract is still one draft
@@ -69,6 +72,7 @@ before that boundary exists.
 | `CanvasKindRegistration`      | host-safe declaration of a canvas kind contributed by a plugin                        |
 | `CanvasDocumentIdentity`      | current workspace canvas title and kind                                               |
 | `CanvasPlaygroundHostState`   | host posture: create-first-canvas, typed-empty-canvas, active-canvas                  |
+| `CanvasHostCycleState`        | story-shaped host cycle DTO: needs-canvas, typed-empty, graph-ready                   |
 | `CanvasPlaygroundTabState`    | host-visible active tab state derived from the authoritative workspace draft          |
 | `CreateCanvasDocumentCommand` | host-owned command that persists the first canvas identity through the draft boundary |
 
@@ -82,6 +86,8 @@ before that boundary exists.
 - The host must not invent local-only semantic success.
 - The host may render one active canvas tab in this slice, but must not imply
   multi-canvas persistence that the backend does not yet support.
+- Host and workbench tests must consume `CanvasHostCycleState` rather than
+  reconstructing wide transport-shaped scenario bags for every cycle.
 
 ## Transitions
 
@@ -101,6 +107,7 @@ stateDiagram-v2
 flowchart LR
   Route["Canvas route"]
   Host["Playground host"]
+  Cycle["CanvasHostCycleState"]
   TabState["CanvasPlaygroundTabState"]
   Tabs["CanvasPlaygroundTabStrip"]
   Registry["Canvas kind registry"]
@@ -109,13 +116,15 @@ flowchart LR
   Draft["Protected workspace draft boundary"]
 
   Route --> Host
+  Host --> Cycle
   Host --> TabState
   TabState --> Tabs
   Host --> Registry
-  Host --> Empty
-  Host --> Shell
+  Cycle --> Empty
+  Cycle --> Shell
   Host --> Draft
   Draft --> TabState
+  Draft --> Cycle
   Empty --> Draft
   Shell --> Draft
 ```

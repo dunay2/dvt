@@ -2249,6 +2249,7 @@ tasks:
       - docs/planning/closeouts/20260423-tf-e2-k-a-first-canvas-playground-host-closeout.md
       - docs/planning/closeouts/20260423-tf-e2-k-b-host-tab-restoration-closeout.md
       - docs/planning/closeouts/20260423-tf-e2-k-c-typed-empty-canvas-posture-closeout.md
+      - docs/planning/closeouts/20260424-tf-e2-k-d-host-cycle-dto-closeout.md
       - docs/evidence/ed-20260423-tf-e2-k-a-first-canvas-playground-host.md
       - docs/architecture/components/web/graph/canvas-playground-host-component.md
       - docs/planning/proposals/workspace-first-frontend-architecture-specification.md
@@ -2260,9 +2261,10 @@ tasks:
       workspace draft boundary, restores one explicit host-owned canvas tab from that authoritative
       draft identity, and renders typed editable empty-canvas copy from plugin-owned canvas-kind
       registration instead of flattening `dbt` and `transformation` back into one authoring story.
-      The new cycle-story proposal now freezes the missing operator journeys, and the next hito is
-      `TF-E2-K-D`: prove the first transformation cycle from `needs_canvas` to first node while
-      introducing a story-owned host-cycle DTO.
+      The new cycle-story proposal now freezes the missing operator journeys. `TF-E2-K-D` has now
+      started by landing `CanvasHostCycleState` as the story-owned host-cycle DTO under the
+      workbench surface; the remaining work in this route is to prove the first transformation cycle
+      from `needs_canvas` to first node through the real host path.
     last_verified: '2026-04-24'
   - task_id: TF-E2-K-A
     parent_task: TF-E2-K
@@ -2344,7 +2346,7 @@ tasks:
   - task_id: TF-E2-K-D
     parent_task: TF-E2-K
     priority: P0
-    status: queued
+    status: in_progress
     objective: >-
       prove the first complete transformation host cycle from `needs_canvas` to first node through
       the real host path and replace transport-shaped setup with a story-owned host-cycle DTO.
@@ -2355,15 +2357,18 @@ tasks:
       cycle DTO instead of broad transport bags.
     complexity: S
     effort_points: 2
-    progress_pct: 0
+    progress_pct: 35
     evidence_refs:
       - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-project-playground-and-multi-canvas-host-plan-20260423.md
       - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-k-playground-complete-cycle-stories-20260424.md
       - docs/architecture/components/web/graph/canvas-playground-host-component.md
+      - docs/planning/closeouts/20260424-tf-e2-k-d-host-cycle-dto-closeout.md
       - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-e-selected-closure-ux-proof-stories-20260423.md
     status_reason: >-
-      Planned first complete-cycle slice. It must prove the transformation host cycle and harden the
-      route/test vocabulary around a stable cycle DTO before broader browser-proof work resumes.
+      In progress. The first sub-slice is now landed: `CanvasHostCycleState` replaces broad
+      transport-shaped setup in the workbench seam with one story-shaped DTO for `needs_canvas`,
+      `typed_empty`, and `graph_ready`. Remaining work must prove the full transformation host cycle
+      from `create canvas` to first node through the real route path.
     last_verified: '2026-04-24'
   - task_id: TF-E2-K-E
     parent_task: TF-E2-K
