@@ -3,15 +3,27 @@ import {
   buildProtectedDraftRecord,
   buildWorkspaceGraphAuthoringDraft,
 } from '../../src/app/services/workspace/workspaceGraphDraft.test.fixtures';
+import {
+  WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
+  WORKSPACE_GRAPH_DRAFT_INITIAL_REVISION,
+} from '../../src/app/services/workspace/workspaceGraphDraftProtocol';
 import { stubE2eApi } from './e2eApiStub';
 
 import { E2E_WORKSPACE_SESSION } from './workspaceSession';
 
-type StubCanvasDraftReadOptions = {
+export type CanvasDraftSessionScope = {
+  tenantId: string;
+  projectId: string;
+  environmentId: string;
+};
+
+export type StubCanvasDraftReadOptions = {
   includeLooseNode?: boolean;
 };
 
-function buildCanvasAuthoringDraft({ includeLooseNode = false }: StubCanvasDraftReadOptions = {}) {
+export function buildCanvasAuthoringDraft({
+  includeLooseNode = false,
+}: StubCanvasDraftReadOptions = {}) {
   return buildWorkspaceGraphAuthoringDraft({
     canvas: {
       kind: 'transformation',
@@ -133,19 +145,46 @@ function buildCanvasAuthoringDraft({ includeLooseNode = false }: StubCanvasDraft
   });
 }
 
-export function stubCanvasDraftRead(options: StubCanvasDraftReadOptions = {}): void {
-  const responseBody = buildDraftReadOkResponse(E2E_WORKSPACE_SESSION, {
-    record: buildProtectedDraftRecord(E2E_WORKSPACE_SESSION, {
+export function buildCanvasDraftReadResponse(
+  scope: CanvasDraftSessionScope,
+  options: StubCanvasDraftReadOptions = {}
+) {
+  return buildDraftReadOkResponse(scope, {
+    record: buildProtectedDraftRecord(scope, {
       revision: 'rev-e2e-graph-ready',
+      scope,
       draft: buildCanvasAuthoringDraft(options),
     }),
   });
+}
+
+export function buildCanvasDraftSaveRequest(
+  scope: CanvasDraftSessionScope,
+  args: StubCanvasDraftReadOptions & {
+    expectedRevision?: string;
+    idempotencyKey?: string;
+  } = {}
+) {
+  return {
+    scope,
+    schemaVersion: WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
+    expectedRevision: args.expectedRevision ?? WORKSPACE_GRAPH_DRAFT_INITIAL_REVISION,
+    idempotencyKey: args.idempotencyKey ?? 'canvas-draft-authoring-seed',
+    draft: buildCanvasAuthoringDraft(args),
+  };
+}
+
+export function stubCanvasDraftRead(
+  options: StubCanvasDraftReadOptions = {},
+  scope: CanvasDraftSessionScope = E2E_WORKSPACE_SESSION
+): void {
+  const responseBody = buildCanvasDraftReadResponse(scope, options);
 
   stubE2eApi('GET', '/workspace/graph/draft', ({ url }) => {
     expect(Object.fromEntries(url.searchParams.entries())).to.deep.include({
-      tenantId: E2E_WORKSPACE_SESSION.tenantId,
-      projectId: E2E_WORKSPACE_SESSION.projectId,
-      environmentId: E2E_WORKSPACE_SESSION.environmentId,
+      tenantId: scope.tenantId,
+      projectId: scope.projectId,
+      environmentId: scope.environmentId,
     });
 
     return {

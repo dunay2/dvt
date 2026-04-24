@@ -61,15 +61,15 @@ describe('runsService runtime contract', () => {
   it('uses POST /runs/start for startRun', async () => {
     const apiClient = createApiClientMock();
     vi.mocked(apiClient.postJson).mockResolvedValue({
-      provider: 'temporal',
-      tenantId: 'tenant-1',
-      namespace: 'default',
-      workflowId: 'wf_run_123',
       runId: 'run_123',
+      accepted: true,
     });
 
     const service = createRunsService('api', apiClient);
-    await service.startRun(createStartRunInput());
+    await expect(service.startRun(createStartRunInput())).resolves.toEqual({
+      runId: 'run_123',
+      accepted: true,
+    });
 
     expect(apiClient.postJson).toHaveBeenCalledWith('/runs/start', {
       tenantId: 'tenant-1',
@@ -93,11 +93,8 @@ describe('runsService runtime contract', () => {
   it('does not send client-authored run identity for startRun', async () => {
     const apiClient = createApiClientMock();
     vi.mocked(apiClient.postJson).mockResolvedValue({
-      provider: 'temporal',
-      tenantId: 'tenant-1',
-      namespace: 'default',
-      workflowId: 'wf_run_platform',
       runId: 'run_platform',
+      accepted: true,
     });
 
     const service = createRunsService('api', apiClient);
@@ -107,6 +104,19 @@ describe('runsService runtime contract', () => {
 
     expect(payload).not.toHaveProperty('runId');
     expect(payload).not.toHaveProperty('context');
+  });
+
+  it('rejects malformed startRun acceptance payloads', async () => {
+    const apiClient = createApiClientMock();
+    vi.mocked(apiClient.postJson).mockResolvedValue({
+      accepted: true,
+    });
+
+    const service = createRunsService('api', apiClient);
+
+    await expect(service.startRun(createStartRunInput())).rejects.toThrow(
+      'RUN_START_RESPONSE_INVALID_RUN_ID'
+    );
   });
 
   it('uses GET /runs/:runId for getRunSnapshot', async () => {

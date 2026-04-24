@@ -86,6 +86,109 @@ export function describePlanCompileBoundaryCases(): void {
       expect(result.executionPolicy.requiresCapabilities).toEqual(['spark.submit']);
     });
 
+    it('preserves transformation sql-first step configs without injecting dbt-only policy keys', async () => {
+      const planner = buildPlanCompilePlanner();
+
+      const result = await planner.buildPlan({
+        requestedBy: 'principal-1',
+        requestId: 'req-compile-transformation-sql-first',
+        requestedAtIso: '2026-04-24T00:00:00.000Z',
+        graphSource: {
+          kind: 'generic-graph-v1',
+          sourceFamily: 'transformation-design-graph',
+          sourceVersion: 'transformation-sql-first-v1',
+          nodes: [
+            {
+              nodeId: 'prepare_orders',
+              stepKind: 'PREPARE_POSTGRES_TRANSFORM',
+              dependsOn: [],
+              stepTypeConfig: {
+                targetSchema: 'analytics',
+                sourceSchema: 'raw',
+                sourceTable: 'orders',
+                sourceAlias: 'orders',
+              },
+            },
+            {
+              nodeId: 'transform_orders',
+              stepKind: 'POSTGRES_SQL_TRANSFORM',
+              dependsOn: ['prepare_orders'],
+              stepTypeConfig: {
+                dialect: 'postgres',
+                entrypoint: 'models/analytics/model_orders.sql',
+                sql: 'select * from raw.orders',
+                sqlArtifact: {
+                  repo: 'dunay2/dvt',
+                  path: 'models/analytics/model_orders.sql',
+                  ref: 'refs/heads/main',
+                  commitSha: 'local',
+                  contentSha256: 'a'.repeat(64),
+                },
+                sourceSchema: 'raw',
+                sourceTable: 'orders',
+                sourceAlias: 'orders',
+                sinkSchema: 'analytics',
+                sinkTable: 'orders_daily',
+                materialization: 'table',
+                writeMode: 'replace',
+              },
+            },
+            {
+              nodeId: 'capture_orders',
+              stepKind: 'CAPTURE_MATERIALIZATION_EVIDENCE',
+              dependsOn: ['transform_orders'],
+              stepTypeConfig: {
+                sinkSchema: 'analytics',
+                sinkTable: 'orders_daily',
+                materialization: 'table',
+                writeMode: 'replace',
+              },
+            },
+          ],
+        },
+        selection: {
+          selectedNodeIds: ['prepare_orders', 'transform_orders', 'capture_orders'],
+        },
+      });
+
+      expect(result.plan.steps).toMatchObject([
+        {
+          stepId: 'prepare_orders',
+          kind: 'PREPARE_POSTGRES_TRANSFORM',
+          stepTypeConfig: {
+            targetSchema: 'analytics',
+            sourceSchema: 'raw',
+            sourceTable: 'orders',
+            sourceAlias: 'orders',
+          },
+        },
+        {
+          stepId: 'transform_orders',
+          kind: 'POSTGRES_SQL_TRANSFORM',
+          stepTypeConfig: {
+            dialect: 'postgres',
+            entrypoint: 'models/analytics/model_orders.sql',
+            sinkSchema: 'analytics',
+            sinkTable: 'orders_daily',
+          },
+        },
+        {
+          stepId: 'capture_orders',
+          kind: 'CAPTURE_MATERIALIZATION_EVIDENCE',
+          stepTypeConfig: {
+            sinkSchema: 'analytics',
+            sinkTable: 'orders_daily',
+            materialization: 'table',
+            writeMode: 'replace',
+          },
+        },
+      ]);
+      expect(result.plan.steps[0]?.stepTypeConfig).not.toHaveProperty('stepTimeoutMs');
+      expect(result.plan.steps[0]?.stepTypeConfig).not.toHaveProperty('concurrency');
+      expect(result.plan.steps[1]?.stepTypeConfig).not.toHaveProperty('stepTimeoutMs');
+      expect(result.plan.steps[1]?.stepTypeConfig).not.toHaveProperty('concurrency');
+    });
+
     it('rejects profile kinds that fall outside the allowed families', () => {
       expect(() =>
         buildPlanCompilePlanner({

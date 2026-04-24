@@ -9,7 +9,7 @@ import type { CapabilitiesPort } from '../ports/capabilities';
 import type { IPlansPort } from '../ports/plans';
 import type { IWorkspacePort } from '../ports/workspace';
 import type { IWorkspaceGraphDraftAuthoringPort } from '../ports/workspaceGraphDraftAuthoring';
-import { makeRunContext, makeTemporalRunRef } from '../testing/contractTestUtils';
+import { makeRunContext } from '../testing/contractTestUtils';
 import {
   AppServicesProvider,
   useAppDataSourceMode,
@@ -211,12 +211,10 @@ describe('AppServicesProvider', () => {
     const runsService = {
       listRunSummaries: async () => [],
       getRunSnapshot: async () => null,
-      startRun: async () =>
-        makeTemporalRunRef({
-          tenantId: 'tenant-a',
-          workflowId: 'workflow_1',
-          runId: 'run_1',
-        }),
+      startRun: async () => ({
+        runId: 'run_1',
+        accepted: true,
+      }),
       listRunEvents: async () => ({ events: [] }),
     };
     const sessionContext = {

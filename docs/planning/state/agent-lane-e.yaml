@@ -2164,7 +2164,7 @@ tasks:
   - task_id: TF-E2-E
     parent_task: TF-E2
     priority: P0
-    status: in_progress
+    status: done
     objective: >-
       establish the proof-oriented unit, integration, and Cypress matrix for full node authoring
       lifecycle behavior, plus a canonical Canvas test-support kit for hook, command, and
@@ -2179,27 +2179,31 @@ tasks:
       only through hook-mounted integration cases.
     complexity: M
     effort_points: 5
-    progress_pct: 75
+    progress_pct: 100
     evidence_refs:
       - apps/web/src/app/views/canvas/useCanvasExecutionActions.runStart.test.tsx
       - apps/web/src/app/views/canvas/useCanvasExecutionActions.planPreview.provenance.test.tsx
       - apps/web/src/app/views/canvas/useCanvasExecutionActions.planPreview.freshness.test.tsx
       - apps/web/src/app/views/canvas/useCanvasExecutionActions.test.support.tsx
       - apps/web/cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts
+      - apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+      - apps/web/cypress/support/liveProtectedRuntime.ts
+      - scripts/run-selected-closure-live-proof.cjs
       - docs/planning/closeouts/20260424-tf-e2-e-a-b-c-selected-closure-browser-proof-closeout.md
+      - docs/planning/closeouts/20260424-tf-e2-e-d-live-selected-closure-browser-proof-closeout.md
       - docs/planning/reviews/architecture-and-governance/20260422-canvas-runtime-truth-hardcut-review.md
       - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-canvas-target-architecture-execution-plan-20260417.md
       - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-e-selected-closure-ux-proof-stories-20260423.md
     status_reason: >-
-      In progress. The 2026-04-24 browser-proof closure completed `TF-E2-E-A`, `TF-E2-E-B`, and
-      `TF-E2-E-C`: the canonical Cypress lane now proves selected closure inside a larger canvas,
-      fail-closed preview posture for `dependency_gap`, `selected_node_missing`, and
-      `cycle_detected`, and protected start-run rejection posture for
-      `graph_source_selection_mismatch` while stale persisted proof remains blocked. The service
-      adapters now own protected runtime rejection normalization, and the browser lane uses the
-      governed Cypress support kit rather than route-local ad hoc stubs. The only remaining closure
-      under `TF-E2-E` is `TF-E2-E-D`: one live protected runtime browser lane with no
-      authoring-contract intercepts.
+      Closed. `TF-E2-E-A` through `TF-E2-E-D` are now complete. The intercepted Cypress lane proves
+      selected closure inside a larger canvas, fail-closed preview posture for `dependency_gap`,
+      `selected_node_missing`, and `cycle_detected`, and protected start-run rejection posture for
+      `graph_source_selection_mismatch` while stale persisted proof remains blocked. The live
+      browser lane now proves authoritative draft read, selected-closure preview, persisted
+      `PlanRef`, live start-run, and live run reads against the protected runtime with no
+      authoring-contract intercepts. The slice also closed two real defects exposed by that lane:
+      web `startRun` now consumes a presentation receipt DTO, and preview compiles through the
+      compile-boundary planner instead of the generic start-run planner.
     last_verified: '2026-04-24'
   - task_id: TF-E2-E-A
     parent_task: TF-E2-E
@@ -2541,10 +2545,10 @@ tasks:
   - task_id: TF-E2-E-D
     parent_task: TF-E2-E
     priority: P0
-    status: in_progress
+    status: done
     complexity: M
     effort_points: 3
-    progress_pct: 10
+    progress_pct: 100
     objective: >-
       establish the live-runtime Cypress lane and governed test-support kit for selected-closure UX
       proof against the protected backend with no authoring-contract intercepts.
@@ -2556,10 +2560,21 @@ tasks:
     evidence_refs:
       - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-e-selected-closure-ux-proof-stories-20260423.md
       - docs/planning/reviews/architecture-and-governance/20260422-canvas-runtime-truth-hardcut-review.md
+      - apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+      - apps/web/cypress/support/liveProtectedRuntime.ts
+      - apps/web/cypress/support/canvasExecutionSelection.ts
+      - apps/web/cypress/support/canvasPreviewArtifacts.ts
+      - scripts/run-selected-closure-live-proof.cjs
+      - docs/planning/closeouts/20260424-tf-e2-e-d-live-selected-closure-browser-proof-closeout.md
     status_reason: >-
-      Execution started. The slice is now explicitly defined as a live protected-runtime browser
-      lane for draft/preview/run/run-read seams, with `workspace/files` isolated behind one governed
-      support seam until the backend owns that artifact surface.
+      Closed. The live protected-runtime browser lane now proves draft read, selected-closure
+      preview persistence, persisted `PlanRef` reuse, start-run acceptance, and live run
+      snapshot/event reads with no intercepts on `workspace/graph/draft`, `plans/preview`,
+      `runs/start`, or run reads. The only remaining seam is the governed `workspace/files` support
+      boundary declared in the story pack. The live lane also hardened the implementation: web
+      `startRun` now consumes `RunStartReceipt`, persisted preview readiness is identity-based
+      rather than hash-equivalence-based, and preview planning now uses the compile-boundary planner
+      recipe.
     last_verified: '2026-04-24'
   - task_id: TF-E2-F
     parent_task: TF-E2

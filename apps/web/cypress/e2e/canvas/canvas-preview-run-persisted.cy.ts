@@ -1,14 +1,23 @@
 import { stubCanvasDraftRead } from '../../support/canvasDraftAuthoring';
 import {
+  clickButtonNatively,
+  selectCanvasClosure,
+} from '../../support/canvasExecutionSelection';
+import {
   getE2eApiCalls,
   getLastE2eApiCall,
   stubE2eApi,
   stubE2eJsonApi,
   waitForE2eApiCall,
 } from '../../support/e2eApiStub';
+import {
+  stubSelectedClosurePreviewArtifacts,
+  waitForSelectedClosurePreviewArtifacts,
+} from '../../support/canvasPreviewArtifacts';
 import { stubShellBootstrapApis, visitWithE2eWorkspaceSession } from '../../support/workspaceSession';
 
 type PlanPreviewResponseOptions = {
+  planRecordId: string;
   persistedSha: string;
   planRefSha: string;
 };
@@ -66,36 +75,6 @@ const PLAN_REJECTION_MESSAGES: Record<PlanRejectedCause, string> = {
   graph_source_selection_mismatch:
     'Selected scope no longer matches the authoritative draft. Re-run Plan.',
 };
-
-function clickButtonNatively(label: string): void {
-  cy.contains('button', label)
-    .should('be.enabled')
-    .then(($button) => {
-      ($button.get(0) as HTMLButtonElement).click();
-    });
-}
-
-function selectCanvasClosure(nodeNames: string[]): void {
-  cy.get('body').trigger('keydown', {
-    key: 'Shift',
-    code: 'ShiftLeft',
-    shiftKey: true,
-    bubbles: true,
-    force: true,
-  });
-
-  for (const nodeName of nodeNames) {
-    cy.contains('.react-flow__node', nodeName).click({ force: true });
-  }
-
-  cy.get('body').trigger('keyup', {
-    key: 'Shift',
-    code: 'ShiftLeft',
-    bubbles: true,
-    force: true,
-  });
-  cy.get('.react-flow__node.selected').should('have.length', nodeNames.length);
-}
 
 function visitCanvasWithSettledBootstrap(): void {
   visitWithE2eWorkspaceSession('/canvas');
@@ -266,38 +245,6 @@ function stubCanvasRuntimeApis({ includeLooseNode = false }: CanvasRuntimeApiOpt
     },
   });
   stubCanvasDraftRead({ includeLooseNode });
-
-  stubE2eApi('POST', '/workspace/files/pipelines%2Fsales_pipeline.yaml', ({ body }) => {
-    const payload = body as { content: string };
-
-    expect(payload.content).to.contain('executionTarget: "postgres"');
-    expect(payload.content).to.contain('type: "source"');
-    expect(payload.content).to.contain('type: "sql_transform"');
-    expect(payload.content).to.contain('type: "sink"');
-    expect(payload.content).to.contain('schema: "raw"');
-    expect(payload.content).to.contain('table: "orders_daily"');
-    expect(payload.content).to.contain('entrypoint: "models/analytics/model_orders.sql"');
-    expect(payload.content).not.to.contain('orphan_metrics');
-
-    return {
-      statusCode: 200,
-      body: {
-        path: 'pipelines/sales_pipeline.yaml',
-        name: 'sales_pipeline.yaml',
-        language: 'yaml',
-        content: payload.content,
-        lastModified: '2026-04-08T00:00:00.000Z',
-      },
-    };
-  });
-
-  stubE2eJsonApi('GET', '/workspace/files/models%2Fanalytics%2Fmodel_orders.sql', {
-    path: 'models/analytics/model_orders.sql',
-    name: 'model_orders.sql',
-    language: 'sql',
-    content: ['select *', 'from raw.orders'].join('\n'),
-    lastModified: '2026-04-08T00:00:00.000Z',
-  });
 }
 
 function assertPreviewPlanRequest(): void {
@@ -354,7 +301,13 @@ function assertRunStartSelection(expectedSha: string): void {
   });
 }
 
-function stubPlanPreviewResponse({ persistedSha, planRefSha }: PlanPreviewResponseOptions): void {
+function stubPlanPreviewResponse({
+  planRecordId,
+  persistedSha,
+  planRefSha,
+}: PlanPreviewResponseOptions): void {
+  const planId = 'b'.repeat(64);
+
   stubE2eJsonApi('POST', '/plans/preview', {
     previewProfile: 'transformation-sql-first-v1',
     plan: {
@@ -363,7 +316,7 @@ function stubPlanPreviewResponse({ persistedSha, planRefSha }: PlanPreviewRespon
         schemaVersion: 'v1.2',
         contractVersion: '1.0.0',
         inputHashSha256: 'a'.repeat(64),
-        planId: 'b'.repeat(64),
+        planId,
         createdAtIso: '2026-04-08T00:00:00.000Z',
       },
       steps: [
@@ -425,7 +378,7 @@ function stubPlanPreviewResponse({ persistedSha, planRefSha }: PlanPreviewRespon
       uri: 'dvt://plans/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
       sha256: planRefSha,
       schemaVersion: 'v1.2',
-      planId: 'b'.repeat(64),
+      planId,
       planVersion: 'v1',
     },
     planSummary: {
@@ -436,7 +389,7 @@ function stubPlanPreviewResponse({ persistedSha, planRefSha }: PlanPreviewRespon
       sinkTables: ['analytics.orders_daily'],
     },
     persisted: {
-      planRecordId: 'plan-record-e2e',
+      planRecordId,
       canonicalPlanSha256: persistedSha,
     },
     validation: {
@@ -501,6 +454,7 @@ function stubPlanRejectedStartRun(cause: Extract<PlanRejectedCause, 'graph_sourc
 describe('Canvas preview-run persisted path', () => {
   beforeEach(() => {
     stubShellBootstrapApis();
+    stubSelectedClosurePreviewArtifacts();
   });
 
   for (const cause of [
@@ -517,8 +471,7 @@ describe('Canvas preview-run persisted path', () => {
       selectCanvasClosure(['src_orders', 'model_orders', 'orders_dashboard']);
 
       cy.contains('button', 'Plan').should('be.enabled').click();
-      waitForE2eApiCall('/workspace/files/pipelines%2Fsales_pipeline.yaml', 'POST');
-      waitForE2eApiCall('/workspace/files/models%2Fanalytics%2Fmodel_orders.sql', 'GET');
+      waitForSelectedClosurePreviewArtifacts();
       waitForE2eApiCall('/plans/preview', 'POST');
       assertPreviewPlanRequest();
 
@@ -535,16 +488,13 @@ describe('Canvas preview-run persisted path', () => {
     stubCanvasRuntimeApis({ includeLooseNode: true });
     stubRunWorkspaceApis('run_e2e_selected_1');
     stubPlanPreviewResponse({
+      planRecordId: 'b'.repeat(64),
       persistedSha: 'e'.repeat(64),
-      planRefSha: 'e'.repeat(64),
+      planRefSha: 'f'.repeat(64),
     });
     stubE2eJsonApi('POST', '/runs/start', {
-      provider: 'temporal',
       runId: 'run_e2e_selected_1',
-      tenantId: 'e2e-tenant',
-      namespace: 'default',
-      workflowId: 'wf_e2e_selected_1',
-      taskQueue: 'dvt-temporal',
+      accepted: true,
     });
 
     visitCanvasWithSettledBootstrap();
@@ -557,8 +507,7 @@ describe('Canvas preview-run persisted path', () => {
     selectCanvasClosure(['src_orders', 'model_orders', 'orders_dashboard']);
 
     cy.contains('button', 'Plan').should('be.enabled').click();
-    waitForE2eApiCall('/workspace/files/pipelines%2Fsales_pipeline.yaml', 'POST');
-    waitForE2eApiCall('/workspace/files/models%2Fanalytics%2Fmodel_orders.sql', 'GET');
+    waitForSelectedClosurePreviewArtifacts();
     waitForE2eApiCall('/plans/preview', 'POST');
     assertPreviewPlanRequest();
 
@@ -570,25 +519,22 @@ describe('Canvas preview-run persisted path', () => {
     clickButtonNatively('Start Run');
 
     waitForE2eApiCall('/runs/start', 'POST');
-    assertRunStartSelection('e'.repeat(64));
+    assertRunStartSelection('f'.repeat(64));
     cy.location('pathname').should('eq', '/runs/run_e2e_selected_1');
     cy.contains('Run run_e2e_selected_1').should('exist');
   });
 
-  it('starts run when persisted preview hash matches active planRef', () => {
+  it('starts run when persisted preview identity matches the active plan', () => {
     stubCanvasRuntimeApis();
     stubRunWorkspaceApis('run_e2e_1');
     stubPlanPreviewResponse({
+      planRecordId: 'b'.repeat(64),
       persistedSha: 'c'.repeat(64),
-      planRefSha: 'c'.repeat(64),
+      planRefSha: 'd'.repeat(64),
     });
     stubE2eJsonApi('POST', '/runs/start', {
-      provider: 'temporal',
       runId: 'run_e2e_1',
-      tenantId: 'e2e-tenant',
-      namespace: 'default',
-      workflowId: 'wf_e2e_1',
-      taskQueue: 'dvt-temporal',
+      accepted: true,
     });
 
     visitCanvasWithSettledBootstrap();
@@ -597,8 +543,7 @@ describe('Canvas preview-run persisted path', () => {
     cy.contains('.react-flow__node', 'orders_dashboard').should('be.visible');
 
     cy.contains('button', 'Plan').should('be.enabled').click();
-    waitForE2eApiCall('/workspace/files/pipelines%2Fsales_pipeline.yaml', 'POST');
-    waitForE2eApiCall('/workspace/files/models%2Fanalytics%2Fmodel_orders.sql', 'GET');
+    waitForSelectedClosurePreviewArtifacts();
     waitForE2eApiCall('/plans/preview', 'POST');
     assertPreviewPlanRequest();
 
@@ -607,7 +552,7 @@ describe('Canvas preview-run persisted path', () => {
     clickButtonNatively('Start Run');
 
     waitForE2eApiCall('/runs/start', 'POST');
-    assertRunStartSelection('c'.repeat(64));
+    assertRunStartSelection('d'.repeat(64));
     cy.then(() => {
       const startRunBody = getLastE2eApiCall('/runs/start', 'POST')?.body as
         | StartRunRequest
@@ -622,9 +567,10 @@ describe('Canvas preview-run persisted path', () => {
     cy.contains('STEP_FAILURE').should('exist');
   });
 
-  it('blocks run when persisted preview hash is not aligned with planRef', () => {
+  it('blocks run when persisted preview identity is not aligned with the active plan', () => {
     stubCanvasRuntimeApis();
     stubPlanPreviewResponse({
+      planRecordId: 'plan-record-mismatch',
       persistedSha: 'd'.repeat(64),
       planRefSha: 'c'.repeat(64),
     });
@@ -638,8 +584,7 @@ describe('Canvas preview-run persisted path', () => {
     cy.contains('.react-flow__node', 'orders_dashboard').should('be.visible');
 
     cy.contains('button', 'Plan').should('be.enabled').click();
-    waitForE2eApiCall('/workspace/files/pipelines%2Fsales_pipeline.yaml', 'POST');
-    waitForE2eApiCall('/workspace/files/models%2Fanalytics%2Fmodel_orders.sql', 'GET');
+    waitForSelectedClosurePreviewArtifacts();
     waitForE2eApiCall('/plans/preview', 'POST');
     assertPreviewPlanRequest();
 
@@ -657,8 +602,9 @@ describe('Canvas preview-run persisted path', () => {
   it('surfaces graph_source_selection_mismatch from protected start-run as explicit re-plan guidance', () => {
     stubCanvasRuntimeApis({ includeLooseNode: true });
     stubPlanPreviewResponse({
+      planRecordId: 'b'.repeat(64),
       persistedSha: 'f'.repeat(64),
-      planRefSha: 'f'.repeat(64),
+      planRefSha: '0'.repeat(64),
     });
     stubPlanRejectedStartRun('graph_source_selection_mismatch');
 
@@ -667,8 +613,7 @@ describe('Canvas preview-run persisted path', () => {
     selectCanvasClosure(['src_orders', 'model_orders', 'orders_dashboard']);
 
     cy.contains('button', 'Plan').should('be.enabled').click();
-    waitForE2eApiCall('/workspace/files/pipelines%2Fsales_pipeline.yaml', 'POST');
-    waitForE2eApiCall('/workspace/files/models%2Fanalytics%2Fmodel_orders.sql', 'GET');
+    waitForSelectedClosurePreviewArtifacts();
     waitForE2eApiCall('/plans/preview', 'POST');
     assertPreviewPlanRequest();
 
@@ -676,7 +621,7 @@ describe('Canvas preview-run persisted path', () => {
     clickButtonNatively('Start Run');
 
     waitForE2eApiCall('/runs/start', 'POST');
-    assertRunStartSelection('f'.repeat(64));
+    assertRunStartSelection('0'.repeat(64));
     cy.contains(PLAN_REJECTION_MESSAGES.graph_source_selection_mismatch).should('exist');
     cy.location('pathname').should('eq', '/canvas');
     cy.contains('Execution Plan Preview').should('be.visible');

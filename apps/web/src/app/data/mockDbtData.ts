@@ -225,7 +225,7 @@ export const mockExecutionPlan: ExecutionPlan = {
       sinkTables: ['analytics.fct_sales'],
     },
     persisted: {
-      planRecordId: 'plan-record-abc123',
+      planRecordId: 'plan_abc123',
       canonicalPlanSha256: 'c'.repeat(64),
     },
     provenance: {

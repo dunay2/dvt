@@ -14,6 +14,12 @@ export const E2E_WORKSPACE_SESSION: E2eWorkspaceSession = {
   environmentId: 'e2e-env',
 };
 
+export const LIVE_WORKSPACE_SESSION: E2eWorkspaceSession = {
+  tenantId: 'tenant',
+  projectId: 'project',
+  environmentId: 'dev',
+};
+
 export function seedE2eWorkspaceSession(
   window: Window,
   session: E2eWorkspaceSession = E2E_WORKSPACE_SESSION
@@ -38,6 +44,21 @@ export function visitWithE2eWorkspaceSession(
       window.localStorage.clear();
       seedE2eWorkspaceSession(window);
       installE2eApiFetchStub(window);
+      options.onBeforeLoad?.(window);
+    },
+  });
+}
+
+export function visitWithLiveWorkspaceSession(
+  path: string,
+  options: {
+    onBeforeLoad?: (window: Window) => void;
+  } = {}
+): void {
+  cy.visit(path, {
+    onBeforeLoad(window) {
+      window.localStorage.clear();
+      seedE2eWorkspaceSession(window, LIVE_WORKSPACE_SESSION);
       options.onBeforeLoad?.(window);
     },
   });

@@ -22,6 +22,7 @@ navigation. The folder contains additional historical entries.
 
 ## Representative Recent Closeouts
 
+- [20260424 TF-E2-E-D Live Selected-Closure Browser Proof Closeout](./20260424-tf-e2-e-d-live-selected-closure-browser-proof-closeout.md)
 - [20260424 TF-E2-E-A/B/C Selected-Closure Browser Proof Closeout](./20260424-tf-e2-e-a-b-c-selected-closure-browser-proof-closeout.md)
 - [20260424 TF-E2-K-I Authoritative First-Canvas Lifecycle Proof Closeout](./20260424-tf-e2-k-i-authoritative-first-canvas-lifecycle-proof-closeout.md)
 - [20260424 TF-E2-K-H Blocked And Read-Only Host-Cycle Proof Closeout](./20260424-tf-e2-k-h-blocked-readonly-host-cycle-proof-closeout.md)

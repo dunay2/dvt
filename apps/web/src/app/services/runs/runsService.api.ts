@@ -3,9 +3,15 @@
  * while keeping platform-owned run identity out of client requests.
  */
 import type { ExecutionSelection } from '@dvt/contracts';
-import { parseEngineRunRef, parseRunEventRecord } from '@dvt/contracts';
+import { parseRunEventRecord } from '@dvt/contracts';
 
-import type { IRunsPort, RunEventTimelinePage, RunSnapshot, StartRunInput } from '../../ports/runs';
+import type {
+  IRunsPort,
+  RunEventTimelinePage,
+  RunSnapshot,
+  RunStartReceipt,
+  StartRunInput,
+} from '../../ports/runs';
 import type { SessionContextPort } from '../../ports/sessionContext';
 import type { RunEvent } from '../../types/engine';
 import { ApiError, type ApiClient } from '../api/createApiClient';
@@ -26,6 +32,45 @@ type StartRunApiRequest = {
   readonly selection: ExecutionSelection;
   readonly planRef: StartRunInput['planRef'];
 };
+
+function parseRunStartReceipt(input: unknown): RunStartReceipt {
+  if (typeof input !== 'object' || input === null) {
+    throw new Error('RUN_START_RESPONSE_INVALID');
+  }
+
+  const candidate = input as {
+    runId?: unknown;
+    accepted?: unknown;
+    duplicate?: unknown;
+    duplicateOf?: unknown;
+  };
+
+  if (typeof candidate.runId !== 'string' || candidate.runId.trim().length === 0) {
+    throw new Error('RUN_START_RESPONSE_INVALID_RUN_ID');
+  }
+
+  if (typeof candidate.accepted !== 'boolean') {
+    throw new Error('RUN_START_RESPONSE_INVALID_ACCEPTED');
+  }
+
+  if (candidate.duplicate !== undefined && typeof candidate.duplicate !== 'boolean') {
+    throw new Error('RUN_START_RESPONSE_INVALID_DUPLICATE');
+  }
+
+  if (
+    candidate.duplicateOf !== undefined &&
+    (typeof candidate.duplicateOf !== 'string' || candidate.duplicateOf.trim().length === 0)
+  ) {
+    throw new Error('RUN_START_RESPONSE_INVALID_DUPLICATE_OF');
+  }
+
+  return {
+    runId: candidate.runId,
+    accepted: candidate.accepted,
+    ...(candidate.duplicate === undefined ? {} : { duplicate: candidate.duplicate }),
+    ...(candidate.duplicateOf === undefined ? {} : { duplicateOf: candidate.duplicateOf }),
+  };
+}
 
 export function createApiRunsService(
   apiClient: ApiClient,
@@ -64,7 +109,7 @@ export function createApiRunsService(
           selection: input.selection,
           planRef: input.planRef,
         });
-        return parseEngineRunRef(payload);
+        return parseRunStartReceipt(payload);
       } catch (error) {
         throw normalizeProtectedRuntimeRejection(error) ?? error;
       }

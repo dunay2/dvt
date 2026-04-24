@@ -19,6 +19,7 @@ const PLAN_COMPILE_BOUNDARY_SOURCE = readFileSync(
   new URL('../../src/modules/planCompileBoundary.ts', import.meta.url),
   'utf8'
 );
+const APP_SOURCE = readFileSync(new URL('../../src/app.ts', import.meta.url), 'utf8');
 const START_RUN_TARGET_ADAPTER_REGISTRY_SOURCE = readFileSync(
   new URL('../../src/application/services/startRunTargetAdapterRegistry.ts', import.meta.url),
   'utf8'
@@ -66,6 +67,12 @@ export function describeProtectedRuntimeAndPlanCompileArchitectureCases(): void 
       expect(PLAN_COMPILE_BOUNDARY_SOURCE).not.toContain(
         "['conductor', 'mock', 'temporal']"
       );
+    });
+
+    it('wires preview planning through the compile-boundary planner instead of the generic start-run planner', () => {
+      expect(APP_SOURCE).toContain('const previewPlanUseCase = new PreviewPlanUseCase({');
+      expect(APP_SOURCE).toContain('planner: protectedModule.planCompilePlanner,');
+      expect(APP_SOURCE).toContain('planner: protectedModule.planner,');
     });
 
     it('keeps implemented-adapter filtering inside the dedicated registry module', () => {

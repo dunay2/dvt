@@ -18,27 +18,29 @@ export function hasPersistedPreviewProof(plan: PlanViewModel | null): boolean {
     return false;
   }
 
-  return plan.preview.persisted.canonicalPlanSha256 === plan.planRef.sha256;
+  return !hasPersistedPreviewIdentityMismatch(plan);
 }
 
-export function hasPlanRefHashMismatch(plan: PlanViewModel | null): boolean {
+export function hasPersistedPreviewIdentityMismatch(plan: PlanViewModel | null): boolean {
   if (!plan?.planRef || !hasPersistedPreviewRecord(plan)) {
     return false;
   }
 
-  const persistedSha = plan.preview?.persisted?.canonicalPlanSha256;
-  if (!persistedSha) {
+  const persistedPlanRecordId = plan.preview?.persisted?.planRecordId;
+  if (!persistedPlanRecordId) {
     return false;
   }
 
-  return persistedSha !== plan.planRef.sha256;
+  return (
+    persistedPlanRecordId !== plan.planId || plan.planRef.planId !== persistedPlanRecordId
+  );
 }
 
 export function buildPlanStatusSummary(args: {
   canRun: boolean;
   currentPlan: PlanViewModel | null;
   isCurrentPlanStale: boolean;
-  planRefHashMismatch: boolean;
+  persistedPreviewIdentityMismatch: boolean;
   hasPersistedPlanForRun: boolean;
 }): string {
   if (!args.canRun) {
@@ -53,7 +55,7 @@ export function buildPlanStatusSummary(args: {
   if (!args.currentPlan.planRef) {
     return canvasViewCopy.runPlanRefUnavailableMessage;
   }
-  if (args.planRefHashMismatch) {
+  if (args.persistedPreviewIdentityMismatch) {
     return canvasViewCopy.planStatusPreviewNotAlignedMessage;
   }
   if (!args.hasPersistedPlanForRun) {

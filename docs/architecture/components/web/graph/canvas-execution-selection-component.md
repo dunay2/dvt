@@ -48,6 +48,9 @@ It does **not** own:
 
 - `canvasRunSelection.ts` is the only module in this component that builds the
   canonical selection payload.
+- `IRunsPort.startRun(...)` returns a presentation receipt
+  (`RunStartReceipt`) containing `runId` plus acceptance posture, not an
+  engine-owned provider run reference.
 - `collectPreviewSelection(...)` and `collectPlanSelection(...)` both emit
   canonical `ExecutionSelection` via `parseExecutionSelection(...)`.
 - preview and run actions import the named selection seam instead of redoing
@@ -162,12 +165,13 @@ sequenceDiagram
 Browser proof for this posture now lives in:
 
 - `apps/web/cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts`
+- `apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts`
 - `apps/web/src/app/services/plans/plansService.test.ts`
 - `apps/web/src/app/services/runs/runsService.test.ts`
 
 ## Live-runtime browser truth boundary
 
-`TF-E2-E-D` closes the remaining browser-proof gap with a hybrid lane:
+`TF-E2-E-D` is now closed with one hybrid live-runtime lane:
 
 - protected authoring/runtime routes are live:
   - `GET /workspace/graph/draft`
@@ -180,9 +184,9 @@ Browser proof for this posture now lives in:
 - `workspace/files` remains on one governed test-support seam until the backend
   actually owns that artifact surface
 
-That boundary is intentional. The browser lane must prove the real protected
+That boundary remains intentional. The browser lane proves the real protected
 runtime without inventing a fake backend for the authoritative draft or
-execution route, and it must not overclaim live proof for seams the repo does
+execution route, and it does not overclaim live proof for seams the repo does
 not yet implement.
 
 ```mermaid
@@ -205,10 +209,18 @@ sequenceDiagram
   Preview-->>Canvas: persisted PlanRef
   User->>Canvas: Start run
   Canvas->>Start: live protected start-run
-  Start-->>Canvas: accepted runId
+  Start-->>Canvas: accepted runId receipt
   Canvas->>Runs: read run snapshot/events
   Runs-->>Canvas: pending/running snapshot
 ```
+
+The governed proof surface for that lane is:
+
+- `apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts`
+- `apps/web/cypress/support/liveProtectedRuntime.ts`
+- `apps/web/cypress/support/canvasExecutionSelection.ts`
+- `apps/web/cypress/support/canvasPreviewArtifacts.ts`
+- `scripts/run-selected-closure-live-proof.cjs`
 
 ## Consumers
 
@@ -222,6 +234,9 @@ sequenceDiagram
 - `apps/web/src/app/views/canvas/canvasExecutionSelection.architecture.test.ts`
 - `apps/web/src/app/views/canvas/canvasRunStartIdentity.architecture.test.ts`
 - `apps/web/cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts`
+- `apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts`
+- `apps/web/cypress/support/liveProtectedRuntime.ts`
+- `scripts/run-selected-closure-live-proof.cjs`
 
 ## Extension rules
 

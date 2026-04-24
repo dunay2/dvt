@@ -3,7 +3,7 @@ import type { PlanViewModel } from '../../types/plans';
 import {
   buildPlanStatusSummary,
   hasPersistedPreviewProof,
-  hasPlanRefHashMismatch,
+  hasPersistedPreviewIdentityMismatch,
 } from './canvasPlanReadiness';
 import {
   validateTransformationGraph,
@@ -23,7 +23,7 @@ type DeriveCanvasExecutionStateArgs = {
 export type CanvasExecutionState = {
   transformationValidation: TransformationGraphValidationResult;
   hasPersistedPlanForRun: boolean;
-  planRefHashMismatch: boolean;
+  persistedPreviewIdentityMismatch: boolean;
   isCurrentPlanStale: boolean;
   canStartRun: boolean;
   planStatusSummary: string;
@@ -39,7 +39,7 @@ export function deriveCanvasExecutionState({
   workspaceNodeIds,
 }: DeriveCanvasExecutionStateArgs): CanvasExecutionState {
   const hasPersistedPlanForRun = hasPersistedPreviewProof(currentPlan);
-  const planRefHashMismatch = hasPlanRefHashMismatch(currentPlan);
+  const persistedPreviewIdentityMismatch = hasPersistedPreviewIdentityMismatch(currentPlan);
   const transformationValidation = validateTransformationGraph({
     nodes: canonicalNodes,
     edges: canonicalEdges,
@@ -60,14 +60,14 @@ export function deriveCanvasExecutionState({
     canRun,
     currentPlan,
     isCurrentPlanStale,
-    planRefHashMismatch,
+    persistedPreviewIdentityMismatch,
     hasPersistedPlanForRun,
   });
 
   return {
     transformationValidation,
     hasPersistedPlanForRun,
-    planRefHashMismatch,
+    persistedPreviewIdentityMismatch,
     isCurrentPlanStale,
     canStartRun,
     planStatusSummary,

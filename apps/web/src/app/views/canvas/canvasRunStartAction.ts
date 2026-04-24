@@ -80,12 +80,12 @@ export async function executeCanvasRunStartAction({
   }
 
   try {
-    const runRef = await runsService.startRun({
+    const runReceipt = await runsService.startRun({
       planRef,
       workspaceScope: sessionContext.getWorkspaceScopeSnapshot(),
       selection: collectPlanSelection(currentPlan),
     });
-    return { ok: true, runId: runRef.runId };
+    return { ok: true, runId: runReceipt.runId };
   } catch (error) {
     return {
       ok: false,
