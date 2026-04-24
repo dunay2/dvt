@@ -159,7 +159,7 @@ describe('Canvas route states', () => {
       },
     });
 
-    expect(harness.container.textContent).toContain('No graph content loaded');
+    expect(harness.container.textContent).toContain('Start transformation canvas');
     expect(harness.container.textContent).toContain(
       'This workspace does not expose graph nodes yet. Graph edits are disabled in this context.'
     );
@@ -184,7 +184,8 @@ describe('Canvas route states', () => {
 
     expect(harness.container.querySelector('[data-slot="canvas-viewport"]')).not.toBeNull();
     expect(harness.container.textContent).toContain('Main canvas');
-    expect(harness.container.textContent).toContain('Add first node');
+    expect(harness.container.textContent).toContain('Start transformation canvas');
+    expect(harness.container.textContent).toContain('Add first transformation node');
     expect(sourceButton).toBeDefined();
 
     sourceButton?.click();
@@ -204,7 +205,7 @@ describe('Canvas route states', () => {
       canOpenSourceImport: false,
     });
 
-    expect(harness.container.textContent).toContain('No graph content loaded');
+    expect(harness.container.textContent).toContain('Start transformation canvas');
     expect(harness.container.textContent).toContain('Source import is unavailable in this runtime');
     expect(harness.container.textContent).not.toContain('Use Add data');
     expectCanvasRegistryClosed();
@@ -219,11 +220,30 @@ describe('Canvas route states', () => {
       },
     });
 
-    expect(harness.container.textContent).toContain('Add first node');
+    expect(harness.container.textContent).toContain('Start transformation canvas');
+    expect(harness.container.textContent).toContain('Add first transformation node');
     expect(harness.container.textContent).toContain('Main canvas');
     expect(harness.container.textContent).toContain('SQL transform');
     expect(harness.container.textContent).not.toContain('Exposure');
     expect(harness.container.textContent).not.toContain('Metric');
+  });
+
+  it('shows a typed dbt empty canvas catalog instead of the transformation catalog', async () => {
+    await renderCanvasRouteWithController(harness, {
+      explorerNodes: [],
+      canvasDocument: {
+        kind: 'dbt',
+        title: 'dbt canvas',
+      },
+      canvasAuthoringMode: 'dbt',
+    });
+
+    expect(harness.container.textContent).toContain('Start dbt canvas');
+    expect(harness.container.textContent).toContain('Add first dbt node');
+    expect(harness.container.textContent).toContain('dbt canvas');
+    expect(harness.container.textContent).toContain('Exposure');
+    expect(harness.container.textContent).toContain('Metric');
+    expect(harness.container.textContent).not.toContain('SQL transform');
   });
 
   it('renders a governed error state when the graph snapshot fails before any nodes are available', async () => {

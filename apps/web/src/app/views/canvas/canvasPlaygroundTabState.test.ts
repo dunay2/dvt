@@ -14,6 +14,12 @@ describe('deriveCanvasPlaygroundTabState', () => {
       label: 'dbt',
       description: 'dbt canvas',
       createTitle: 'dbt canvas',
+      emptyState: {
+        title: 'Start dbt canvas',
+        editableMessage: 'dbt editable',
+        firstNodeLabel: 'Add first dbt node',
+        firstNodeHelper: 'dbt helper',
+      },
       nodeKinds: DBT_NODE_KINDS,
     },
     {
@@ -22,6 +28,12 @@ describe('deriveCanvasPlaygroundTabState', () => {
       label: 'Transformation',
       description: 'Transformation canvas',
       createTitle: 'Transformation canvas',
+      emptyState: {
+        title: 'Start transformation canvas',
+        editableMessage: 'transformation editable',
+        firstNodeLabel: 'Add first transformation node',
+        firstNodeHelper: 'transformation helper',
+      },
       nodeKinds: DVT_AUTHORING_NODE_KINDS,
     },
   ] as const;

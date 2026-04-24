@@ -37,12 +37,19 @@ catalog for the active `canvasDocument.kind`. UI surfaces must not define a
 second ad hoc node-kind list. For the `transformation` canvas kind, that
 catalog currently resolves to `DVT_AUTHORING_NODE_KINDS`.
 
+The visible editable empty-state copy is also governed by the active
+`CanvasKindRegistration.emptyState`. The host may still own blocked or
+read-only messages, but it must not flatten typed editable empty-state copy
+back into one route-global fallback once the canvas kind is known.
+
 ## Invariants
 
 - Empty Canvas is a productive authoring state when mutations are allowed.
 - Empty Canvas is read-only when mutations are denied.
 - Empty authoring is only reachable after the host persists a canvas document.
 - The empty catalog must resolve from the active `canvasDocument.kind`.
+- The typed editable empty-state title and first-node copy must resolve from
+  `CanvasKindRegistration.emptyState`.
 - Node creation must pass through the existing draft graph lifecycle.
 - The first-node path must not fabricate startup nodes or local-only success.
 - React Flow nodes are projection state; they are not semantic authority.
@@ -74,7 +81,9 @@ flowchart LR
   Host["CanvasPlaygroundHost"] --> Draft["Persist canvas document"]
   Draft --> Center["CanvasCenterSurface"]
   Center --> Workbench["canvasCenterSurfaceWorkbench"]
+  Workbench --> Copy["CanvasKindRegistration.emptyState"]
   Workbench --> Catalog["CanvasKindRegistration.nodeKinds"]
+  Copy --> Catalog
   Catalog --> Command["handleCreateAuthoringNode"]
   Command --> Builder["canvasAuthoringNodeCommand"]
   Builder --> Drop["dropCanonicalNode"]
@@ -111,6 +120,8 @@ canvas document identity rather than a route-global transformation default.
 - Do not route first-node creation through project setup.
 - Do not create another catalog beside the plugin-owned `CanvasKindRegistration`
   node kinds.
+- Do not flatten typed editable empty-state copy back into one route-global
+  fallback once `canvasDocument.kind` is known.
 - Do not bypass `dropCanonicalNode` or `canvasGraphLifecycle`.
 - Do not make `CanvasCenterSurface.tsx` own transport, workbench, and empty
   authoring decisions in one large method again.

@@ -135,6 +135,14 @@ export const dbtContributions: PluginContributions = {
       label: 'dbt',
       description: 'Model-first canvas for dbt resources and dependencies.',
       createTitle: 'dbt canvas',
+      emptyState: {
+        title: 'Start dbt canvas',
+        editableMessage:
+          'Start this dbt canvas by adding a governed source, model, snapshot, exposure, or metric.',
+        firstNodeLabel: 'Add first dbt node',
+        firstNodeHelper:
+          'Choose a governed dbt resource kind to start modeling this workspace lineage graph.',
+      },
       nodeKinds: DBT_NODE_KINDS,
     },
   ],

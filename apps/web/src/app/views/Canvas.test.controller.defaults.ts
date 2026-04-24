@@ -130,6 +130,14 @@ function buildDefaultCanvasWorkbenchState(): CanvasWorkbenchDefaultsDto {
         label: 'dbt',
         description: 'Model-first canvas for dbt resources and dependencies.',
         createTitle: 'dbt canvas',
+        emptyState: {
+          title: 'Start dbt canvas',
+          editableMessage:
+            'Start this dbt canvas by adding a governed source, model, snapshot, exposure, or metric.',
+          firstNodeLabel: 'Add first dbt node',
+          firstNodeHelper:
+            'Choose a governed dbt resource kind to start modeling this workspace lineage graph.',
+        },
         nodeKinds: DBT_NODE_KINDS,
       },
       {
@@ -138,6 +146,14 @@ function buildDefaultCanvasWorkbenchState(): CanvasWorkbenchDefaultsDto {
         label: 'Transformation',
         description: 'Flow-based transformation canvas for the protected authoring draft.',
         createTitle: 'Transformation canvas',
+        emptyState: {
+          title: 'Start transformation canvas',
+          editableMessage:
+            'Start this transformation canvas by adding a governed source, SQL transform, or sink node.',
+          firstNodeLabel: 'Add first transformation node',
+          firstNodeHelper:
+            'Choose a governed transformation node kind to start this protected authoring flow.',
+        },
         nodeKinds: DVT_AUTHORING_NODE_KINDS,
       },
     ],

@@ -2242,22 +2242,25 @@ tasks:
       proofs resume.
     complexity: M
     effort_points: 5
-    progress_pct: 40
+    progress_pct: 60
     evidence_refs:
       - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-project-playground-and-multi-canvas-host-plan-20260423.md
       - docs/planning/closeouts/20260423-tf-e2-k-a-first-canvas-playground-host-closeout.md
       - docs/planning/closeouts/20260423-tf-e2-k-b-host-tab-restoration-closeout.md
+      - docs/planning/closeouts/20260423-tf-e2-k-c-typed-empty-canvas-posture-closeout.md
       - docs/evidence/ed-20260423-tf-e2-k-a-first-canvas-playground-host.md
       - docs/architecture/components/web/graph/canvas-playground-host-component.md
       - docs/planning/proposals/workspace-first-frontend-architecture-specification.md
       - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-canvas-target-architecture-execution-plan-20260417.md
       - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-canvas-empty-authoring-entrypoint-design-20260422.md
     status_reason: >-
-      `TF-E2-K-A` and `TF-E2-K-B` are now closed: the Canvas route exposes a real `needs_canvas`
-      host posture, persists one typed canvas document through the canonical workspace draft
-      boundary, and restores one explicit host-owned canvas tab from that authoritative draft
-      identity. The next hito is `TF-E2-K-C`, which must harden typed empty canvas posture for both
-      `dbt` and `transformation` without collapsing them back into one catalog.
+      `TF-E2-K-A`, `TF-E2-K-B`, and `TF-E2-K-C` are now closed: the Canvas route exposes a real
+      `needs_canvas` host posture, persists one typed canvas document through the canonical
+      workspace draft boundary, restores one explicit host-owned canvas tab from that authoritative
+      draft identity, and renders typed editable empty-canvas copy from plugin-owned canvas-kind
+      registration instead of flattening `dbt` and `transformation` back into one authoring story.
+      The next hito is `TF-E2-K-D`, which must prove the real `create canvas -> typed empty canvas
+      -> add first node` flow through the product surface.
     last_verified: '2026-04-23'
   - task_id: TF-E2-K-A
     parent_task: TF-E2-K
@@ -2314,7 +2317,7 @@ tasks:
   - task_id: TF-E2-K-C
     parent_task: TF-E2-K
     priority: P0
-    status: queued
+    status: done
     objective: >-
       harden typed empty-canvas posture for `dbt` and `transformation` so each kind exposes a
       governed first-node catalog and host copy without collapsing back into one generic authoring
@@ -2325,15 +2328,17 @@ tasks:
       canvas whose copy and node catalog are explicitly different for `dbt` and `transformation`.
     complexity: S
     effort_points: 2
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
       - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-project-playground-and-multi-canvas-host-plan-20260423.md
       - docs/architecture/components/web/graph/canvas-playground-host-component.md
       - docs/architecture/components/web/graph/canvas-empty-authoring-entrypoint-component.md
+      - docs/planning/closeouts/20260423-tf-e2-k-c-typed-empty-canvas-posture-closeout.md
     status_reason: >-
-      Planned next slice. It must make typed empty-canvas semantics visibly distinct per canvas kind
-      before browser-proof work claims realistic first-node UX.
-    last_verified: '2026-04-23'
+      Closed. The empty-canvas route posture now resolves editable title, message, and first-node
+      copy from `CanvasKindRegistration.emptyState`, so `dbt` and `transformation` remain visibly
+      distinct while blocked and read-only posture stays host-owned.
+    last_verified: '2026-04-24'
   - task_id: TF-E2-K-D
     parent_task: TF-E2-K
     priority: P0

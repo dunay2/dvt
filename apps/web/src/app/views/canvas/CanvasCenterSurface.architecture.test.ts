@@ -49,7 +49,11 @@ describe('CanvasCenterSurface architecture', () => {
 
   it('renders typed empty authoring from the registered canvas kind only when edits are allowed', () => {
     expect(WORKBENCH_SURFACE_SOURCE).toContain('resolveCanvasEmptyWorkbenchNodeKinds');
+    expect(WORKBENCH_SURFACE_SOURCE).toContain('resolveCanvasEmptyWorkbenchRegistration');
     expect(WORKBENCH_SURFACE_SOURCE).toContain('registration.kind === canvasDocument.kind');
+    expect(WORKBENCH_SURFACE_SOURCE).toContain('emptyState.title');
+    expect(WORKBENCH_SURFACE_SOURCE).toContain('emptyState.firstNodeLabel');
+    expect(WORKBENCH_SURFACE_SOURCE).toContain('emptyState.firstNodeHelper');
     expect(WORKBENCH_SURFACE_SOURCE).toContain('canEditEdges');
     expect(WORKBENCH_SURFACE_SOURCE).toContain(
       'canEditEdges ? onCreateAuthoringNode : undefined'

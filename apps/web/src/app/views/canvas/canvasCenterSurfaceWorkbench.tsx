@@ -8,7 +8,10 @@ import {
 import { CanvasPlaygroundHost } from './CanvasPlaygroundHost';
 import { canvasViewCopy } from './copy';
 import type { CanvasWorkbenchSurfaceArgs } from './canvasCenterSurface.types';
-import type { NodeKindRegistration } from '../../plugins/nodeTypeContracts';
+import type {
+  CanvasKindRegistration,
+  NodeKindRegistration,
+} from '../../plugins/nodeTypeContracts';
 
 function renderCanvasStartupWorkbenchSurface(
   args: Pick<CanvasWorkbenchSurfaceArgs, 'presentationState' | 'startupBlockState'>
@@ -94,9 +97,16 @@ function renderCanvasPlaygroundWorkbenchSurface(
 }
 
 function resolveCanvasEmptyWorkbenchMessage(
-  args: Pick<CanvasWorkbenchSurfaceArgs, 'canEditEdges' | 'canOpenSourceImport'>
+  args: Pick<
+    CanvasWorkbenchSurfaceArgs,
+    'canEditEdges' | 'canOpenSourceImport' | 'canvasDocument' | 'availableCanvasKinds'
+  >
 ) {
-  const { canEditEdges, canOpenSourceImport } = args;
+  const { canEditEdges, canOpenSourceImport, canvasDocument, availableCanvasKinds } = args;
+  const activeCanvasKind = resolveCanvasEmptyWorkbenchRegistration({
+    canvasDocument,
+    availableCanvasKinds,
+  });
 
   if (!canEditEdges) {
     return canvasViewCopy.routeEmptyReadOnlyMessage;
@@ -106,21 +116,26 @@ function resolveCanvasEmptyWorkbenchMessage(
     return canvasViewCopy.routeEmptyImportUnavailableMessage;
   }
 
-  return canvasViewCopy.routeEmptyEditableMessage;
+  return activeCanvasKind?.emptyState.editableMessage ?? canvasViewCopy.routeEmptyEditableMessage;
+}
+
+function resolveCanvasEmptyWorkbenchRegistration(
+  args: Pick<CanvasWorkbenchSurfaceArgs, 'canvasDocument' | 'availableCanvasKinds'>
+): CanvasKindRegistration | null {
+  const { canvasDocument, availableCanvasKinds } = args;
+  if (canvasDocument == null) {
+    return null;
+  }
+
+  return (
+    availableCanvasKinds.find((registration) => registration.kind === canvasDocument.kind) ?? null
+  );
 }
 
 function resolveCanvasEmptyWorkbenchNodeKinds(
   args: Pick<CanvasWorkbenchSurfaceArgs, 'canvasDocument' | 'availableCanvasKinds'>
 ): readonly NodeKindRegistration[] {
-  const { canvasDocument, availableCanvasKinds } = args;
-  if (canvasDocument == null) {
-    return [];
-  }
-
-  return (
-    availableCanvasKinds.find((registration) => registration.kind === canvasDocument.kind)?.nodeKinds ??
-    []
-  );
+  return resolveCanvasEmptyWorkbenchRegistration(args)?.nodeKinds ?? [];
 }
 
 function renderCanvasEmptyWorkbenchSurface(
@@ -147,12 +162,26 @@ function renderCanvasEmptyWorkbenchSurface(
     return null;
   }
 
+  const activeCanvasKind = resolveCanvasEmptyWorkbenchRegistration({
+    canvasDocument,
+    availableCanvasKinds,
+  });
+
   return (
     <CanvasEmptyStateView
+      title={activeCanvasKind?.emptyState.title ?? canvasViewCopy.routeEmptyTitle}
       message={resolveCanvasEmptyWorkbenchMessage({
         canEditEdges,
         canOpenSourceImport,
+        canvasDocument,
+        availableCanvasKinds,
       })}
+      firstNodeLabel={
+        activeCanvasKind?.emptyState.firstNodeLabel ?? canvasViewCopy.routeEmptyFirstNodeLabel
+      }
+      firstNodeHelper={
+        activeCanvasKind?.emptyState.firstNodeHelper ?? canvasViewCopy.routeEmptyFirstNodeHelper
+      }
       nodeKinds={
         canEditEdges
           ? resolveCanvasEmptyWorkbenchNodeKinds({
