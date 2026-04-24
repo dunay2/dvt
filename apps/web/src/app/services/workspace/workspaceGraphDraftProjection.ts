@@ -59,6 +59,10 @@ export function projectWorkspaceGraphAuthoringDraft(
   draft: WorkspaceGraphAuthoringDraft
 ): WorkspaceGraphDraft {
   return {
+    canvas: {
+      kind: draft.canvas.kind,
+      title: draft.canvas.title,
+    },
     nodeIds: [...draft.nodeIds],
     nodePositions: { ...draft.nodePositions },
     edges: draft.edges.map((edge) => ({

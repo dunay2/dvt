@@ -148,7 +148,11 @@ function buildListRunsScope(
   environmentId: EnvironmentId | undefined
 ): ParsedListRunsScope {
   if (environmentId !== undefined) {
-    return buildEnvironmentAccessScope(tenantId, projectId!, environmentId);
+    if (projectId === undefined) {
+      throw new Error('Project ID is required when environment scope is requested.');
+    }
+
+    return buildEnvironmentAccessScope(tenantId, projectId, environmentId);
   }
   if (projectId !== undefined) {
     return buildProjectAccessScope(tenantId, projectId);

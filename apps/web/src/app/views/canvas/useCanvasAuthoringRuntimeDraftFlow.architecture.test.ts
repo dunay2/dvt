@@ -19,6 +19,10 @@ describe('useCanvasAuthoringRuntimeDraftFlow architecture', () => {
     expect(AUTHORING_RUNTIME_DRAFT_FLOW_SOURCE).toContain('useCanvasDraftBaseline');
     expect(AUTHORING_RUNTIME_DRAFT_FLOW_SOURCE).toContain('useCanvasAuthoringProjection');
     expect(AUTHORING_RUNTIME_DRAFT_FLOW_SOURCE).toContain('useCanvasDraftLifecycle');
+    expect(AUTHORING_RUNTIME_DRAFT_FLOW_SOURCE).toContain('baseline: {');
+    expect(AUTHORING_RUNTIME_DRAFT_FLOW_SOURCE).toContain('session: {');
+    expect(AUTHORING_RUNTIME_DRAFT_FLOW_SOURCE).toContain('projection: {');
+    expect(AUTHORING_RUNTIME_DRAFT_FLOW_SOURCE).toContain('policy: {');
     expect(AUTHORING_RUNTIME_DRAFT_FLOW_SOURCE).not.toContain(
       "from './useCanvasAuthoringRuntime'"
     );

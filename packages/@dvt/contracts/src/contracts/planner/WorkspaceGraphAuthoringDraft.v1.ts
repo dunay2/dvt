@@ -62,6 +62,11 @@ export interface WorkspaceGraphAuthoringVisibleEdge {
   targetId: string;
 }
 
+export interface WorkspaceGraphAuthoringCanvasDocument {
+  kind: string;
+  title: string;
+}
+
 export interface WorkspaceGraphAuthoringNode {
   id: string;
   name: string;
@@ -86,6 +91,7 @@ export interface WorkspaceGraphAuthoringEdge {
 }
 
 export interface WorkspaceGraphAuthoringDraft {
+  canvas: WorkspaceGraphAuthoringCanvasDocument;
   nodeIds: string[];
   nodePositions: Record<string, WorkspaceGraphAuthoringNodePosition>;
   nodes: WorkspaceGraphAuthoringNode[];
@@ -105,6 +111,13 @@ export const WorkspaceGraphAuthoringVisibleEdgeSchema = z
     targetId: NonBlankStringSchema,
   })
   .strict() satisfies z.ZodType<WorkspaceGraphAuthoringVisibleEdge>;
+
+export const WorkspaceGraphAuthoringCanvasDocumentSchema = z
+  .object({
+    kind: NonBlankStringSchema,
+    title: NonBlankStringSchema,
+  })
+  .strict() satisfies z.ZodType<WorkspaceGraphAuthoringCanvasDocument>;
 
 export const WorkspaceGraphAuthoringNodeSchema = z
   .object({
@@ -154,6 +167,7 @@ export const WorkspaceGraphAuthoringEdgeSchema = z
 
 export const WorkspaceGraphAuthoringDraftSchema = z
   .object({
+    canvas: WorkspaceGraphAuthoringCanvasDocumentSchema,
     nodeIds: z.array(NonBlankStringSchema),
     nodePositions: z.record(NonBlankStringSchema, WorkspaceGraphAuthoringNodePositionSchema),
     nodes: z.array(WorkspaceGraphAuthoringNodeSchema),

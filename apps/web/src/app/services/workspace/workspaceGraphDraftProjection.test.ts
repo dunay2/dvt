@@ -18,6 +18,10 @@ describe('workspaceGraphDraftProjection', () => {
     const protectedDraft = buildProtectedDraftRecord(WORKSPACE_SCOPE).draft;
 
     expect(projectWorkspaceGraphAuthoringDraft(protectedDraft)).toEqual({
+      canvas: {
+        kind: 'transformation',
+        title: 'Main canvas',
+      },
       nodeIds: ['source_node', 'transform_node', 'sink_node'],
       nodePositions: {
         source_node: { x: 0, y: 0 },
@@ -119,6 +123,10 @@ describe('workspaceGraphDraftProjection', () => {
       revision: 'rev-protected',
       savedAt: '2026-04-20T16:30:00.000Z',
       draft: {
+        canvas: {
+          kind: 'transformation',
+          title: 'Main canvas',
+        },
         nodeIds: ['source_node', 'transform_node', 'sink_node'],
         nodePositions: {
           source_node: { x: 0, y: 0 },

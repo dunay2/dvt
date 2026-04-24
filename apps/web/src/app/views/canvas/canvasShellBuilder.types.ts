@@ -20,13 +20,19 @@ export type CanvasShellLayoutBuilderArgs = Readonly<{
     | 'canOpenSourceImport'
   >;
   recoveryCommands: Pick<CanvasRouteController, 'reloadLatestDraft'>;
-  authoringCommands: Pick<CanvasRouteController, 'handleCreateAuthoringNode'>;
+  authoringCommands: Pick<
+    CanvasRouteController,
+    'handleCreateAuthoringNode' | 'handleCreateCanvasDocument'
+  >;
   routePresentation: Pick<
     CanvasRouteViewState,
     | 'presentationState'
     | 'startupBlockState'
     | 'draftTransportError'
     | 'workbenchErrorMessage'
+    | 'canvasDocument'
+    | 'availableCanvasKinds'
+    | 'canvasTabState'
     | 'effectiveUserPermissions'
     | 'readOnlyState'
   >;

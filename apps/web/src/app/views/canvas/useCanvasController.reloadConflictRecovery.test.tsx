@@ -190,6 +190,10 @@ function buildProtectedDraftReadResult(args: {
       revision,
       updatedAt,
       draft: {
+        canvas: {
+          kind: 'transformation',
+          title: 'Main canvas',
+        },
         nodeIds,
         nodePositions: Object.fromEntries(
           nodeIds.map((nodeId, index) => [nodeId, { x: index * 220, y: 120 }])

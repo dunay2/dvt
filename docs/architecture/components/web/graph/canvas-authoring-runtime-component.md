@@ -2,7 +2,7 @@
 title: Canvas Authoring Runtime Component
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-04-22
+last_reviewed: 2026-04-24
 ---
 
 # Canvas Authoring Runtime Component
@@ -88,6 +88,31 @@ The public contract vocabulary is:
 This is a hard-cut component API. Internal seams must depend on the contract
 file, not on the parent runtime hook.
 
+## Draft Lifecycle DTO Boundary
+
+The draft-flow seam must hand authoring lifecycle state to
+`useCanvasDraftLifecycle.ts` through a semantic DTO instead of a flat argument
+bag.
+
+Lifecycle-local vocabulary in `canvasDraftLifecycle.types.ts`:
+
+- `CanvasDraftLifecycleDto`
+- `CanvasCurrentDraftPayloadDto`
+
+Canonical grouping:
+
+- `baseline`: protected-draft repository, query/cache state, and authority
+  posture
+- `session`: local draft-session machine plus canonical snapshot and position
+  updates
+- `projection`: visible graph nodes, canonical graph edges/nodes, and authoring
+  provenance needed to build the current payload
+- `policy`: explicit persistence posture such as `canPersistGraphDraft`
+
+Inside the lifecycle seam, `useCanvasCurrentDraftPayload.ts` repeats the same
+rule: one DTO expresses the current projection and authoring context instead of
+another long positional call.
+
 ## File Responsibilities
 
 <!-- markdownlint-disable MD060 -->
@@ -115,10 +140,11 @@ flowchart LR
 
   DraftFlow --> Baseline["useCanvasDraftBaseline.ts"]
   DraftFlow --> Projection["useCanvasAuthoringProjection.ts"]
-  DraftFlow --> Lifecycle["useCanvasDraftLifecycle.ts"]
+  DraftFlow --> Lifecycle["useCanvasDraftLifecycle.ts<br>CanvasDraftLifecycleDto"]
   DraftFlow --> Session["canvasDraftSession"]
 
   Baseline --> Repository["canvasDraftRepository.ts"]
+  Lifecycle --> PayloadDto["useCanvasCurrentDraftPayload.ts<br>CanvasCurrentDraftPayloadDto"]
   Lifecycle --> Bootstrap["useCanvasDraftBootstrapSync.ts"]
   Lifecycle --> Persistence["useCanvasDraftPersistence.ts"]
 ```
@@ -156,6 +182,8 @@ Interpretation rule:
   wiring, not backend posture or recovery rules
 - `useCanvasAuthoringRuntimeDraftFlow.ts` owns runtime-local draft-flow
   composition, not route-shell or controller logic
+- `useCanvasDraftLifecycle.ts` receives one semantic DTO boundary; adding new
+  flat parameters to the hook or to `useCanvasCurrentDraftPayload.ts` is drift
 - `canvasAuthoringState.ts` derives route-safe scopes and recovery posture from
   draft truth; it is not a persistence seam
 - the public contract must not retain dead parameters or controller-only
@@ -187,6 +215,8 @@ Those tests must keep proving:
 
 - the runtime contract remains explicit and local
 - draft-flow no longer learns its argument contract from the parent runtime hook
+- lifecycle and current-payload seams stay on DTO boundaries instead of
+  regrowing transport-shaped parameter lists
 - baseline, lifecycle, and authoring-state seams remain separate
 - runtime stays a composition seam instead of regrowing into a monolith
 
@@ -198,5 +228,8 @@ Those tests must keep proving:
   `useCanvasAuthoringRuntime.ts` again, dependency direction has regressed
 - if `useCanvasAuthoringRuntime.ts` starts creating queries, repositories, or
   large inline policies, the component is regrowing in the wrong place
+- if `useCanvasDraftLifecycle.ts` or `useCanvasCurrentDraftPayload.ts` regrow
+  wide positional or transport-shaped parameter lists, the DTO boundary has
+  drifted
 - if route-shell or viewport concerns appear here, the runtime seam is absorbing
   presentation responsibilities

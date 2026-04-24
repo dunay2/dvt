@@ -21,6 +21,20 @@ export const canvasViewRouteCopyByKey = {
     fallback:
       'Canvas is waiting for the backend readiness checks to settle before loading the authoring surface.',
   },
+  routeNeedsCanvasTitle: {
+    key: 'canvas.route.needsCanvasTitle',
+    fallback: 'Create canvas',
+  },
+  routeNeedsCanvasMessage: {
+    key: 'canvas.route.needsCanvasMessage',
+    fallback:
+      'This workspace playground does not have a persisted canvas document yet. Choose a governed canvas kind to start authoring.',
+  },
+  routeNeedsCanvasHelper: {
+    key: 'canvas.route.needsCanvasHelper',
+    fallback:
+      'The first canvas is persisted through the protected workspace graph draft boundary before any nodes are added.',
+  },
   routeEmptyTitle: {
     key: 'canvas.route.emptyTitle',
     fallback: 'No graph content loaded',

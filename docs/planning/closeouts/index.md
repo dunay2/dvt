@@ -22,6 +22,15 @@ navigation. The folder contains additional historical entries.
 
 ## Representative Recent Closeouts
 
+- [20260424 TF-E2-K-F Authoritative Restore Proof Closeout](./20260424-tf-e2-k-f-authoritative-restore-proof-closeout.md)
+- [20260424 TF-E2-K-E Dbt Host-Cycle Proof Closeout](./20260424-tf-e2-k-e-dbt-host-cycle-proof-closeout.md)
+- [20260424 TF-E2-K-D Transformation Host-Cycle Proof Closeout](./20260424-tf-e2-k-d-transformation-host-cycle-proof-closeout.md)
+- [20260424 TF-E2-K-D Host-Cycle DTO Closeout](./20260424-tf-e2-k-d-host-cycle-dto-closeout.md)
+- [20260424 TF-E2-K Cycle Story Capture Closeout](./20260424-tf-e2-k-cycle-story-capture-closeout.md)
+- [20260423 TF-E2-K-C Typed Empty-Canvas Posture Closeout](./20260423-tf-e2-k-c-typed-empty-canvas-posture-closeout.md)
+- [20260423 TF-E2-K-B Host Tab Restoration Closeout](./20260423-tf-e2-k-b-host-tab-restoration-closeout.md)
+- [20260423 TF-E2-K-A First-Canvas Playground Host Closeout](./20260423-tf-e2-k-a-first-canvas-playground-host-closeout.md)
+- [20260423 TF-E2 Project Playground Host Proposal Capture Closeout](./20260423-tf-e2-project-playground-host-proposal-capture-closeout.md)
 - [20260423 Selected-Closure UX Proof Story Capture Closeout](./20260423-selected-closure-ux-proof-story-capture-closeout.md)
 - [20260423 TF-A2-C5 Selected-Closure End-To-End Proof Closeout](./20260423-tf-a2-c5-selected-closure-end-to-end-proof-closeout.md)
 - [20260423 TF-A2-C2 Executable Subgraph Derivation Closeout](./20260423-tf-a2-c2-executable-subgraph-derivation-closeout.md)

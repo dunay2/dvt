@@ -15,6 +15,7 @@ export type CanvasRouteState =
   | 'loading_graph'
   | 'error_graph'
   | 'recovery'
+  | 'needs_canvas'
   | 'empty'
   | 'ready';
 
@@ -93,6 +94,17 @@ function deriveWorkbenchCanvasDraftPresentationState({
       bootstrapStatus: 'blocked',
       bootstrapDetail: resolveCanvasDraftRecoveryBootstrapDetail(recoveryReason),
       canCompleteBootstrap: false,
+    });
+  }
+
+  if (workbenchState.kind === 'needs_canvas') {
+    return createCanvasDraftPresentationState({
+      routeState: 'needs_canvas',
+      recoveryReason,
+      draftToolbarState,
+      bootstrapStatus: 'complete',
+      bootstrapDetail: canvasViewCopy.needsCanvasReadyDetail,
+      canCompleteBootstrap: true,
     });
   }
 

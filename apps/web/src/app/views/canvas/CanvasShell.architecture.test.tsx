@@ -11,6 +11,10 @@ const CANVAS_SHELL_MAIN_PANEL_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'CanvasShellMainPanel.tsx'
 );
+const CANVAS_PLAYGROUND_TAB_STRIP_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'CanvasPlaygroundTabStrip.tsx'
+);
 
 describe('CanvasShell architecture', () => {
   it('uses grouped semantic prop contracts instead of reaching into controller or service seams directly', () => {
@@ -34,6 +38,9 @@ describe('CanvasShell architecture', () => {
 
   it('delegates sizing and rail composition to named shell-local seams', () => {
     expect(CANVAS_SHELL_SOURCE).toContain("'./CanvasShellMainPanel'");
+    expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).toContain('layout.hostTabStrip');
+    expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).toContain('CanvasToolbar');
+    expect(CANVAS_PLAYGROUND_TAB_STRIP_SOURCE).toContain('canvas-playground-tab-strip');
     expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).toContain(
       'function resolveCanvasShellMainPanelDefaultSize('
     );

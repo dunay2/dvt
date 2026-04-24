@@ -36,15 +36,25 @@ describe('CanvasCenterSurface architecture', () => {
     );
     expect(WORKBENCH_SURFACE_SOURCE).toContain('renderCanvasStartupWorkbenchSurface');
     expect(WORKBENCH_SURFACE_SOURCE).toContain('renderCanvasGraphWorkbenchSurface');
-    expect(WORKBENCH_SURFACE_SOURCE).toContain('renderCanvasEmptyWorkbenchSurface');
+    expect(WORKBENCH_SURFACE_SOURCE).toContain('renderCanvasHostCycleWorkbenchSurface');
   });
 
-  it('renders empty authoring from the governed authoring-node catalog only when edits are allowed', () => {
-    expect(WORKBENCH_SURFACE_SOURCE).toContain('DVT_AUTHORING_NODE_KINDS');
-    expect(WORKBENCH_SURFACE_SOURCE).toContain('canEditEdges ? DVT_AUTHORING_NODE_KINDS : []');
-    expect(WORKBENCH_SURFACE_SOURCE).toContain(
-      'canEditEdges ? onCreateAuthoringNode : undefined'
-    );
+  it('keeps create-canvas host posture separate from typed empty-canvas authoring', () => {
+    expect(WORKBENCH_SURFACE_SOURCE).toContain("cycleState.kind === 'needs_canvas'");
+    expect(WORKBENCH_SURFACE_SOURCE).toContain('CanvasPlaygroundHost');
+    expect(WORKBENCH_SURFACE_SOURCE).toContain('cycleState.availableCanvasKinds');
+    expect(WORKBENCH_SURFACE_SOURCE).toContain('cycleState.onCreateCanvasDocument');
+    expect(WORKBENCH_SURFACE_SOURCE).toContain('deriveCanvasHostCycleState');
+  });
+
+  it('renders typed empty authoring from the registered canvas kind only when edits are allowed', () => {
+    expect(WORKBENCH_SURFACE_SOURCE).toContain('deriveCanvasHostCycleState');
+    expect(WORKBENCH_SURFACE_SOURCE).toContain("cycleState.kind !== 'typed_empty'");
+    expect(WORKBENCH_SURFACE_SOURCE).toContain('cycleState.title');
+    expect(WORKBENCH_SURFACE_SOURCE).toContain('cycleState.firstNodeLabel');
+    expect(WORKBENCH_SURFACE_SOURCE).toContain('cycleState.firstNodeHelper');
+    expect(WORKBENCH_SURFACE_SOURCE).toContain('cycleState.onCreateAuthoringNode');
+    expect(WORKBENCH_SURFACE_SOURCE).not.toContain('DVT_AUTHORING_NODE_KINDS');
   });
 
   it('renders from canonical route posture instead of reading controller state directly', () => {

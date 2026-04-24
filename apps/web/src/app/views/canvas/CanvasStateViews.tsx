@@ -61,18 +61,20 @@ function CanvasSurfaceStateCard({
 function CanvasEmptyAuthoringCatalog({
   nodeKinds,
   onCreateAuthoringNode,
+  firstNodeLabel,
+  firstNodeHelper,
 }: Readonly<{
   nodeKinds: readonly NodeKindRegistration[];
   onCreateAuthoringNode: (registration: NodeKindRegistration) => void;
+  firstNodeLabel: string;
+  firstNodeHelper: string;
 }>) {
   return (
     <div data-slot="canvas-empty-authoring-catalog" className="mt-5 space-y-3">
       <div>
-        <h3 className="text-sm font-semibold text-(--text-default)">
-          {canvasViewCopy.routeEmptyFirstNodeLabel}
-        </h3>
+        <h3 className="text-sm font-semibold text-(--text-default)">{firstNodeLabel}</h3>
         <p className={cn('mt-1 text-xs', routeWorkbenchMutedTextClassName)}>
-          {canvasViewCopy.routeEmptyFirstNodeHelper}
+          {firstNodeHelper}
         </p>
       </div>
       <div className="grid gap-2 sm:grid-cols-3">
@@ -107,11 +109,17 @@ export function CanvasLoadingStateView({
 }
 
 export function CanvasEmptyStateView({
+  title = canvasViewCopy.routeEmptyTitle,
   message = canvasViewCopy.routeEmptyEditableMessage,
+  firstNodeLabel = canvasViewCopy.routeEmptyFirstNodeLabel,
+  firstNodeHelper = canvasViewCopy.routeEmptyFirstNodeHelper,
   nodeKinds = [],
   onCreateAuthoringNode,
 }: Readonly<{
+  title?: string;
   message?: string;
+  firstNodeLabel?: string;
+  firstNodeHelper?: string;
   nodeKinds?: readonly NodeKindRegistration[];
   onCreateAuthoringNode?: (registration: NodeKindRegistration) => void;
 }>) {
@@ -120,13 +128,15 @@ export function CanvasEmptyStateView({
   return (
     <CanvasSurfaceStateCard
       dataSlot="canvas-empty-state"
-      title={canvasViewCopy.routeEmptyTitle}
+      title={title}
       message={message}
     >
       {canCreateAuthoringNode ? (
         <CanvasEmptyAuthoringCatalog
           nodeKinds={nodeKinds}
           onCreateAuthoringNode={onCreateAuthoringNode}
+          firstNodeLabel={firstNodeLabel}
+          firstNodeHelper={firstNodeHelper}
         />
       ) : null}
     </CanvasSurfaceStateCard>

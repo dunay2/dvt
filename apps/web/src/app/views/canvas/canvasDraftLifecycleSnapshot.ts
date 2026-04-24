@@ -65,7 +65,8 @@ export function buildCanonicalSnapshotFromWorkspaceSnapshot(
 
 export function buildCurrentDraftPayload(
   graphNodes: CanvasDraftLifecycleGraphNode[],
-  draftSession: CanvasDraftSession
+  draftSession: CanvasDraftSession,
+  canvasDocument: WorkspaceGraphDraft['canvas']
 ): WorkspaceGraphDraft {
   const currentNodePositions = Object.fromEntries(
     graphNodes.map((node) => [node.id, { x: node.position.x, y: node.position.y }])
@@ -84,6 +85,10 @@ export function buildCurrentDraftPayload(
   }
 
   return {
+    canvas: {
+      kind: canvasDocument.kind,
+      title: canvasDocument.title,
+    },
     nodeIds: visibleNodeIds,
     nodePositions,
     edges: draftSession.workingSet.visibleEdges.filter(

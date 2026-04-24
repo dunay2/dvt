@@ -128,6 +128,24 @@ export const dbtContributions: PluginContributions = {
       },
     },
   ],
+  canvasKinds: [
+    {
+      kind: 'dbt',
+      pluginId: DBT_PLUGIN_ID,
+      label: 'dbt',
+      description: 'Model-first canvas for dbt resources and dependencies.',
+      createTitle: 'dbt canvas',
+      emptyState: {
+        title: 'Start dbt canvas',
+        editableMessage:
+          'Start this dbt canvas by adding a governed source, model, snapshot, exposure, or metric.',
+        firstNodeLabel: 'Add first dbt node',
+        firstNodeHelper:
+          'Choose a governed dbt resource kind to start modeling this workspace lineage graph.',
+      },
+      nodeKinds: DBT_NODE_KINDS,
+    },
+  ],
   // Connection rules express dbt-local authoring policy; shell-level graph
   // invariants still run before these plugin rules are evaluated.
   connectionRules: [
