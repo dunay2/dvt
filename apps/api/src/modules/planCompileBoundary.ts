@@ -28,6 +28,23 @@ const DEFAULT_EXECUTION_PROFILE = {
   requiredCapabilities: [],
 } satisfies StepKindExecutionProfile;
 
+const planCompileStepFactory: NonNullable<PlannerFacadeOptions['stepFactory']> = (
+  node,
+  resolvedPolicies
+) => {
+  return {
+    stepId: node.nodeId,
+    kind: node.stepKind,
+    dependsOn: node.dependsOn,
+    ...(resolvedPolicies.retryPolicy === undefined
+      ? {}
+      : { retryPolicy: resolvedPolicies.retryPolicy }),
+    stepTypeConfig: {
+      ...(node.stepTypeConfig ?? {}),
+    },
+  };
+};
+
 const BUILT_IN_STEP_FAMILY_DEFINITIONS = [
   {
     family: 'sql_transform',
@@ -163,6 +180,7 @@ export function buildPlanCompilePlanner(
   boundary: PlanCompileBoundaryDefinition = PLAN_COMPILE_BOUNDARY
 ): PlannerFacade {
   const plannerOptions: PlannerFacadeOptions = {
+    stepFactory: planCompileStepFactory,
     stepTypeRegistry: resolvePlanCompileStepRegistry(boundary.profile, resolvePlanCompileCatalog(boundary)),
   };
 

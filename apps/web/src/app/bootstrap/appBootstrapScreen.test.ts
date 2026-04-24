@@ -70,6 +70,22 @@ describe('appBootstrapScreen', () => {
     expect(document.getElementById('app-loading-screen')).toBeNull();
   });
 
+  it('does not reopen the startup surface after bootstrap has already completed', () => {
+    startBootstrapScreen();
+
+    setBootstrapStepStatus('hydrate', 'complete');
+    setBootstrapStepStatus('services', 'complete');
+    setBootstrapStepStatus('capabilities', 'complete');
+    setBootstrapStepStatus('health', 'complete');
+    setBootstrapStepStatus('route', 'complete');
+
+    completeBootstrapScreen();
+    setBootstrapStepStatus('route', 'complete', 'Initial route is ready');
+    vi.advanceTimersByTime(120);
+
+    expect(document.getElementById('app-loading-screen')).toBeNull();
+  });
+
   it('updates the startup surface with a controlled failure instead of dropping to a second screen', () => {
     showBootstrapFailure('Startup blew up.');
 

@@ -13,7 +13,7 @@ import {
   renderCanvasRouteWithController,
   getPrimaryCanvasButtons,
 } from './Canvas.test.support';
-import { buildCanvasHostCycleControllerState } from './Canvas.test.controller.defaults';
+import { buildCanvasHostCycleControllerState } from './Canvas.test.hostCycleScenario';
 
 type CanvasRouteHarness = ReturnType<typeof createCanvasRouteHarness>;
 
@@ -370,6 +370,130 @@ describe('Canvas route states', () => {
       bootstrapStatus: 'complete',
       bootstrapDetail: canvasViewCopy.canvasReadyDetail,
       canCompleteBootstrap: true,
+    });
+  });
+
+  it('continues the typed transformation host cycle into preview and run without losing host context', async () => {
+    let currentController = buildController(buildCanvasHostCycleControllerState({ kind: 'needs_canvas' }));
+
+    const handlePlan = vi.fn(async () => {
+      currentController = buildController({
+        ...buildCanvasHostCycleControllerState({
+          kind: 'graph_ready',
+          canvasKind: 'transformation',
+          title: 'Transformation canvas',
+          firstNodeKind: 'dvt:source',
+        }),
+        handleCreateCanvasDocument,
+        handleCreateAuthoringNode,
+        handlePlan,
+        handleStartRun,
+        canStartRun: true,
+        planStatusSummary: canvasViewCopy.planStatusPreviewReadyMessage,
+        transformationValidation: {
+          valid: true,
+          summaryCode: 'valid',
+          draftSignature: 'draft-ready',
+          scopedNodeIds: ['node.source'],
+          scopedEdgeIds: [],
+          nodeRolesById: { 'node.source': 'source' },
+        },
+      });
+    });
+    const handleStartRun = vi.fn();
+    const handleCreateCanvasDocument = vi.fn(async (command: { kind: string; title: string }) => {
+      currentController = buildController({
+        ...buildCanvasHostCycleControllerState({
+          kind: 'typed_empty',
+          canvasKind: 'transformation',
+          title: command.title,
+        }),
+        handleCreateCanvasDocument,
+        handleCreateAuthoringNode,
+        handlePlan,
+        handleStartRun,
+      });
+    });
+    const handleCreateAuthoringNode = vi.fn((registration: NodeKindRegistration) => {
+      currentController = buildController({
+        ...buildCanvasHostCycleControllerState({
+          kind: 'graph_ready',
+          canvasKind: 'transformation',
+          title: 'Transformation canvas',
+          firstNodeKind: registration.kind,
+        }),
+        handleCreateCanvasDocument,
+        handleCreateAuthoringNode,
+        handlePlan,
+        handleStartRun,
+        planStatusSummary: canvasViewCopy.planStatusPreviewRequiredMessage,
+        transformationValidation: {
+          valid: true,
+          summaryCode: 'valid',
+          draftSignature: 'draft-ready',
+          scopedNodeIds: ['node.source'],
+          scopedEdgeIds: [],
+          nodeRolesById: { 'node.source': 'source' },
+        },
+      });
+    });
+
+    currentController = buildController({
+      ...buildCanvasHostCycleControllerState({ kind: 'needs_canvas' }),
+      handleCreateCanvasDocument,
+      handleCreateAuthoringNode,
+      handlePlan,
+      handleStartRun,
+    });
+    mockedUseCanvasController.mockImplementation(() => currentController);
+
+    await harness.render();
+
+    const createTransformationButton = Array.from(harness.container.querySelectorAll('button')).find(
+      (button) => button.textContent?.includes('Transformation')
+    );
+    expect(createTransformationButton).toBeDefined();
+
+    createTransformationButton?.click();
+    await harness.render();
+
+    const sourceButton = Array.from(harness.container.querySelectorAll('button')).find(
+      (button) => button.textContent?.includes('Source')
+    );
+    expect(sourceButton).toBeDefined();
+
+    sourceButton?.click();
+    await harness.render();
+
+    expectActiveCanvasTab({
+      container: harness.container,
+      title: 'Transformation canvas',
+      kindLabel: 'Transformation',
+    });
+
+    const planButtonBeforePreview = getPrimaryCanvasButtons(harness.container).planButton;
+    expect(planButtonBeforePreview).toBeDefined();
+
+    planButtonBeforePreview?.click();
+    await harness.render();
+
+    expect(handlePlan).toHaveBeenCalledTimes(1);
+    expectActiveCanvasTab({
+      container: harness.container,
+      title: 'Transformation canvas',
+      kindLabel: 'Transformation',
+    });
+
+    const runButton = getPrimaryCanvasButtons(harness.container).runButton;
+    expect(runButton?.getAttribute('disabled')).toBeNull();
+
+    runButton?.click();
+
+    expect(handleStartRun).toHaveBeenCalledTimes(1);
+    expectActiveCanvasTab({
+      container: harness.container,
+      title: 'Transformation canvas',
+      kindLabel: 'Transformation',
     });
   });
 

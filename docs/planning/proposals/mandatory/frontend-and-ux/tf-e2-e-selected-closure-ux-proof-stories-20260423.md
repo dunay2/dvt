@@ -173,6 +173,11 @@ sequenceDiagram
   the live protected runtime without `cy.intercept` on the authoring contract.
 - Needed proof:
   - bootstrapped protected runtime with auth and draft persistence
+  - live protected seams cover `GET/PUT /workspace/graph/draft`,
+    `POST /plans/preview`, `POST /runs/start`, and run reads
+  - any remaining workspace-artifact dependency stays on one governed
+    test-support seam and is declared explicitly; the lane must not disguise
+    that seam as live backend truth
   - Canvas selects a real subset, previews it, persists the plan, and starts
     the run through the live route
   - browser lane becomes the accepted end-to-end proof instead of only an
@@ -213,6 +218,8 @@ true:
 - unit and integration truth still anchor the canonical contracts;
 - intercepted Cypress specs prove browser payload and visible posture for
   selection-scoped behavior;
-- one live-runtime Cypress lane proves the route against the protected backend;
+- one live-runtime Cypress lane proves the protected authoring/runtime route;
+- any non-live workspace-artifact seam used by that lane is named explicitly
+  and kept outside the protected authoring/runtime truth claim;
 - no browser proof widens selected execution to the full canvas;
 - no browser proof hides planner rejection behind generic failure noise.

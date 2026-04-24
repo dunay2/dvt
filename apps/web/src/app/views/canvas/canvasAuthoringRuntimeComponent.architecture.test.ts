@@ -46,6 +46,7 @@ describe('canvas authoring runtime component architecture', () => {
     );
     expect(LIFECYCLE_TYPES_SOURCE).toContain('export type CanvasDraftLifecycleDto');
     expect(LIFECYCLE_TYPES_SOURCE).toContain('export type CanvasCurrentDraftPayloadDto');
+    expect(LIFECYCLE_TYPES_SOURCE).toContain('export type CanvasCreateCanvasDocumentCommandDto');
 
     expect(RUNTIME_SOURCE).toContain("from './canvasAuthoringRuntime.types'");
     expect(RUNTIME_SOURCE).toContain('deriveCanvasBackendPosture');
@@ -68,6 +69,7 @@ describe('canvas authoring runtime component architecture', () => {
     expect(LIFECYCLE_SOURCE).toContain('useCanvasDraftBootstrapSync');
     expect(LIFECYCLE_SOURCE).toContain('useCanvasDraftPersistence');
     expect(LIFECYCLE_SOURCE).toContain('useCanvasCurrentDraftPayload({');
+    expect(LIFECYCLE_SOURCE).toContain('executeCreateCanvasDocumentCommand({');
     expect(LIFECYCLE_SOURCE).toContain(
       'Owned concern: compose bootstrapping, persistence, save-attempt policy, and first-canvas creation'
     );

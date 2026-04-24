@@ -3,7 +3,7 @@
  * consumed by views without exposing runtime-owned execution internals.
  */
 import type { ExecutionSelection } from '@dvt/contracts';
-import type { EngineRunRef, PlanRef, RunEvent } from '../types/engine';
+import type { PlanRef, RunEvent } from '../types/engine';
 import type { WorkspaceScope } from './sessionContext';
 
 // ---------------------------------------------------------------------------
@@ -14,6 +14,13 @@ export type StartRunInput = {
   planRef: PlanRef;
   workspaceScope: WorkspaceScope;
   selection: ExecutionSelection;
+};
+
+export type RunStartReceipt = {
+  runId: string;
+  accepted: boolean;
+  duplicate?: boolean;
+  duplicateOf?: string;
 };
 
 export type UiRunStatus = 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
@@ -121,6 +128,6 @@ export type RunEventTimelinePage = {
 export interface IRunsPort {
   listRunSummaries: () => Promise<RunSummaryItem[]>;
   getRunSnapshot: (runId: string) => Promise<RunSnapshot | null>;
-  startRun: (input: StartRunInput) => Promise<EngineRunRef>;
+  startRun: (input: StartRunInput) => Promise<RunStartReceipt>;
   listRunEvents: (runId: string, afterSeq?: number) => Promise<RunEventTimelinePage>;
 }

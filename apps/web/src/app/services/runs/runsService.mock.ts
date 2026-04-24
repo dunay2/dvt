@@ -9,6 +9,7 @@ import type {
   IRunsPort,
   RunEventTimelinePage,
   RunSnapshot,
+  RunStartReceipt,
   RunSummaryItem,
 } from '../../ports/runs';
 import type { SessionContextPort } from '../../ports/sessionContext';
@@ -126,6 +127,13 @@ function buildMockRunEvents(
   };
 }
 
+function buildRunStartReceipt(runId: string): RunStartReceipt {
+  return {
+    runId,
+    accepted: true,
+  };
+}
+
 export function createMockRunsService(
   sessionContext: SessionContextPort = createSessionContextPort()
 ): IRunsPort {
@@ -138,17 +146,8 @@ export function createMockRunsService(
     },
     startRun: async (input) => {
       const runId = createMockRunId();
-      const base = {
-        tenantId: asNonBlankString(input.workspaceScope.tenantId),
-        workflowId: asNonBlankString(`wf_${runId}`),
-        runId,
-      };
-
-      return {
-        provider: 'temporal',
-        namespace: asNonBlankString('default'),
-        ...base,
-      };
+      asNonBlankString(input.workspaceScope.tenantId);
+      return buildRunStartReceipt(runId);
     },
     listRunEvents: async (runId) => buildMockRunEvents(sessionContext, runId),
   };

@@ -4,7 +4,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { mockExecutionPlan } from '../../data/mockDbtData';
 import type { PlanViewModel } from '../../types/plans';
-import { makeTemporalRunRef } from '../../testing/contractTestUtils';
 import { canvasViewCopy } from './copy';
 import {
   buildCanonicalEdges,
@@ -74,14 +73,14 @@ const unavailableRunStartScenarios: readonly UnavailableRunStartScenario[] = [
     expectedModalState: 'false',
   },
   {
-    name: 'blocks startRun when persisted proof hash does not match planRef hash',
+    name: 'blocks startRun when persisted preview identity does not match the active plan',
     currentPlan: {
       ...buildRunnableExecutionPlan(),
       preview: {
         ...mockExecutionPlan.preview,
         persisted: {
           planRecordId: 'plan-record-mismatch',
-          canonicalPlanSha256: 'f'.repeat(64),
+          canonicalPlanSha256: 'c'.repeat(64),
         },
       },
     },
@@ -197,13 +196,10 @@ async function expectStartedRunConsoleScenario(
   const toggleConsolePanel = vi.fn<() => void>();
   const startedScenario = await renderRunStartHarness({
     runsService: createRunsServiceMock({
-      startRun: vi.fn(async () =>
-        makeTemporalRunRef({
-          runId: scenario.runId,
-          tenantId: 't',
-          workflowId: 'w',
-        })
-      ),
+      startRun: vi.fn(async () => ({
+        runId: scenario.runId,
+        accepted: true,
+      })),
     }),
     consolePanelVisible: scenario.consolePanelVisible,
     setConsolePanelHeight,
@@ -247,13 +243,10 @@ describe('useCanvasExecutionActions run start', () => {
   it('starts run with persisted plan and forwards run id to navigation', async () => {
     const startedScenario = await renderRunStartHarness({
       runsService: createRunsServiceMock({
-        startRun: vi.fn(async () =>
-          makeTemporalRunRef({
-            runId: 'run-success',
-            tenantId: 't',
-            workflowId: 'w',
-          })
-        ),
+        startRun: vi.fn(async () => ({
+          runId: 'run-success',
+          accepted: true,
+        })),
       }),
     });
     harness = startedScenario.harness;

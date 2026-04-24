@@ -7,7 +7,7 @@ import type { IRunsPort } from '../../ports/runs';
 import type { SessionContextPort } from '../../ports/sessionContext';
 import type { ShellFeedbackPort } from '../../ports/shellFeedback';
 import type { IWorkspacePort } from '../../ports/workspace';
-import { makeRunContext, makeTemporalRunRef } from '../../testing/contractTestUtils';
+import { makeRunContext } from '../../testing/contractTestUtils';
 import type { ApiClient } from '../api/createApiClient';
 import { getRuntimeDataSourceMode } from '../config/runtimeDataSourceMode';
 import { buildAppServices } from './appServices';
@@ -120,13 +120,7 @@ function buildRunsPortStub(): IRunsPort {
   return {
     listRunSummaries: vi.fn(async () => []),
     getRunSnapshot: vi.fn(async () => null),
-    startRun: vi.fn(async () =>
-      makeTemporalRunRef({
-        tenantId: 'tenant-1',
-        workflowId: 'wf_run_override',
-        runId: 'run-override',
-      })
-    ),
+    startRun: vi.fn(async () => ({ runId: 'run-override', accepted: true })),
     listRunEvents: vi.fn(async () => ({ events: [] })),
   };
 }

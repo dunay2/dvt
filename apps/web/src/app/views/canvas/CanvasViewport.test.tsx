@@ -278,6 +278,16 @@ describe('CanvasViewport', () => {
     });
   });
 
+  it('preserves the governed Shift multi-selection gesture for canvas node selection', async () => {
+    await act(async () => {
+      root.render(<CanvasViewport {...buildProps()} />);
+    });
+
+    expect(xyflowState.lastReactFlowProps).toMatchObject({
+      multiSelectionKeyCode: 'Shift',
+    });
+  });
+
   it('fits the viewport around explicitly imported nodes only once', async () => {
     const props = buildProps({
       nodesWithImpact: [

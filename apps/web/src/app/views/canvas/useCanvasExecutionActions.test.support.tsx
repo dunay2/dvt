@@ -9,7 +9,7 @@ import type { SessionContextPort } from '../../ports/sessionContext';
 import type { ShellFeedbackPort } from '../../ports/shellFeedback';
 import type { IWorkspacePort } from '../../ports/workspace';
 import type { WorkspaceBootstrapConfig } from '../../services/config/workspaceConfig';
-import { makeRunContext, makeTemporalRunRef, nb } from '../../testing/contractTestUtils';
+import { makeRunContext, nb } from '../../testing/contractTestUtils';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { PlanViewModel } from '../../types/plans';
 import { useCanvasExecutionActions } from './useCanvasExecutionActions';
@@ -357,13 +357,7 @@ export function createRunsServiceMock(overrides: Partial<IRunsPort> = {}): IRuns
   return {
     listRunSummaries: vi.fn(async () => []),
     getRunSnapshot: vi.fn(async () => null),
-    startRun: vi.fn(async () =>
-      makeTemporalRunRef({
-        tenantId: 't',
-        workflowId: 'w',
-        runId: 'run',
-      })
-    ),
+    startRun: vi.fn(async () => ({ runId: 'run', accepted: true })),
     listRunEvents: vi.fn(async () => ({ events: [] })),
     ...overrides,
   };
@@ -423,14 +417,15 @@ export function buildRunnableExecutionPlan(sha: string = 'c'.repeat(64)): PlanVi
 
 export function buildPersistedPreviewPlan(): PlanViewModel {
   const persistedSha = 'c'.repeat(64);
+  const runnablePlan = buildRunnableExecutionPlan(persistedSha);
 
   return {
-    ...buildRunnableExecutionPlan(persistedSha),
+    ...runnablePlan,
     preview: {
       ...mockExecutionPlan.preview,
       persisted: {
         ...mockExecutionPlan.preview?.persisted,
-        planRecordId: 'plan-record-abc123',
+        planRecordId: runnablePlan.planId,
         canonicalPlanSha256: persistedSha,
       },
     },

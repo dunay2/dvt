@@ -1,4 +1,5 @@
 import {
+  PREVIEW_PROFILE,
   parseExecutionPlan,
   parsePlanPreviewPersistResponse,
   parsePlanRef,
@@ -9,6 +10,7 @@ import type { PlanRef, RunContext } from '../../types/engine';
 import type { PlanViewModel } from '../../types/plans';
 import type { IPlansPort, PlanPreviewInput } from '../../ports/plans';
 import type { ApiClient } from '../api/createApiClient';
+import { normalizeProtectedRuntimeRejection } from '../api/protectedRuntimeRejection';
 
 type PlanPreviewView = NonNullable<PlanViewModel['preview']>;
 
@@ -140,7 +142,8 @@ function parseContractPlanPayload(payload: unknown): {
 function mapContractPlanToUi(
   contractPlan: ContractExecutionPlan,
   planRef: PlanRef,
-  preview?: PlanPreviewView
+  preview?: PlanPreviewView,
+  previewProfile?: string
 ): PlanViewModel {
   const tags = contractPlan.observability?.tags ?? {};
   const extra = contractPlan.observability?.extra ?? {};
@@ -167,9 +170,15 @@ function mapContractPlanToUi(
       const policyBag = (config.policies ?? config.policy ?? {}) as Record<string, unknown>;
       const retryPolicy = asRecord(stepRecord?.retryPolicy);
       const rawNodes = config.nodeIds;
-      const nodes = Array.isArray(rawNodes)
+      const nodesFromConfig = Array.isArray(rawNodes)
         ? rawNodes.filter((value): value is string => typeof value === 'string')
         : [];
+      const nodes =
+        nodesFromConfig.length > 0
+          ? nodesFromConfig
+          : previewProfile === PREVIEW_PROFILE.transformationSqlFirstV1
+            ? [step.stepId]
+            : [];
 
       return {
         id: step.stepId,
@@ -199,26 +208,30 @@ function mapContractPlanToUi(
 export function createApiPlansService(apiClient: ApiClient): IPlansPort {
   return {
     previewPlan: async (input: PlanPreviewInput) => {
-      const payload = await apiClient.postJson<PlanPreviewInput, unknown>('/plans/preview', input);
-      const preview = parsePlanPreviewPersistResponse(payload);
-      return mapContractPlanToUi(preview.plan, preview.planRef, {
-        ...(preview.planSummary
-          ? {
-              summary: {
-                executor: preview.planSummary.executor,
-                nodeCount: preview.planSummary.nodeCount,
-                stepCount: preview.planSummary.stepCount,
-                sourceTables: [...preview.planSummary.sourceTables],
-                sinkTables: [...preview.planSummary.sinkTables],
-              },
-            }
-          : {}),
-        persisted: {
-          planRecordId: preview.persisted.planRecordId,
-          canonicalPlanSha256: preview.persisted.canonicalPlanSha256,
-        },
-        ...(preview.provenance ? { provenance: preview.provenance } : {}),
-      });
+      try {
+        const payload = await apiClient.postJson<PlanPreviewInput, unknown>('/plans/preview', input);
+        const preview = parsePlanPreviewPersistResponse(payload);
+        return mapContractPlanToUi(preview.plan, preview.planRef, {
+          ...(preview.planSummary
+            ? {
+                summary: {
+                  executor: preview.planSummary.executor,
+                  nodeCount: preview.planSummary.nodeCount,
+                  stepCount: preview.planSummary.stepCount,
+                  sourceTables: [...preview.planSummary.sourceTables],
+                  sinkTables: [...preview.planSummary.sinkTables],
+                },
+              }
+            : {}),
+          persisted: {
+            planRecordId: preview.persisted.planRecordId,
+            canonicalPlanSha256: preview.persisted.canonicalPlanSha256,
+          },
+          ...(preview.provenance ? { provenance: preview.provenance } : {}),
+        }, preview.previewProfile);
+      } catch (error) {
+        throw normalizeProtectedRuntimeRejection(error) ?? error;
+      }
     },
     importPlan: async (planRef: PlanRef, context: RunContext) => {
       const payload = await apiClient.postJson<{ planRef: PlanRef; context: RunContext }, unknown>(

@@ -8,7 +8,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { IRunsPort, RunSummaryItem, RunSnapshot } from '../../ports/runs';
 import type { SessionContextPort, WorkspaceScope } from '../../ports/sessionContext';
 import { AppServicesProvider } from '../../services/AppServicesContext';
-import { makeRunContext, makeTemporalRunRef } from '../../testing/contractTestUtils';
+import { makeRunContext } from '../../testing/contractTestUtils';
 import { useRunWorkspace } from './useRunWorkspace';
 
 function HookHost({ runId }: Readonly<{ runId?: string }>): React.JSX.Element {
@@ -89,13 +89,10 @@ function buildRunsService(sessionContext: SessionContextPort): IRunsPort {
       const { environmentId } = sessionContext.getWorkspaceScope();
       return buildRunSnapshot(runId, environmentId);
     }),
-    startRun: vi.fn(async (input) =>
-      makeTemporalRunRef({
-        runId: 'run_workspace_generated',
-        tenantId: input.workspaceScope.tenantId,
-        workflowId: 'wf_run_workspace_generated',
-      })
-    ),
+    startRun: vi.fn(async () => ({
+      runId: 'run_workspace_generated',
+      accepted: true,
+    })),
     listRunEvents: vi.fn(async () => ({
       events: [],
     })),
