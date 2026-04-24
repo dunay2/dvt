@@ -1,5 +1,26 @@
 # Changelog
 
+## [5.17.0](https://github.com/dunay2/dvt/compare/v5.16.0...v5.17.0) (2026-04-24)
+
+
+### Features
+
+* **api:** Add start-run boundary and runtime composition seams ([#1006](https://github.com/dunay2/dvt/issues/1006)) ([7ebbfad](https://github.com/dunay2/dvt/commit/7ebbfadea4792058f9b5b3225c59cec24019c4ed))
+* **api:** Adopt selected-closure execution planning ([#1016](https://github.com/dunay2/dvt/issues/1016)) ([210f91c](https://github.com/dunay2/dvt/commit/210f91cb5986b5dd46e9479d5cab43a10bf1030b))
+* **contracts:** Add execution selection contract pack ([#1014](https://github.com/dunay2/dvt/issues/1014)) ([4c033b3](https://github.com/dunay2/dvt/commit/4c033b3437b43cfb0a55fa4be690b2ba107a3359))
+* **contracts:** Add workspace authoring draft aggregate ([#1011](https://github.com/dunay2/dvt/issues/1011)) ([becc1d3](https://github.com/dunay2/dvt/commit/becc1d36566c444ada70834630bb8a2ba4d90220))
+
+
+### Bug Fixes
+
+* **api:** Componentize plan-route response translation and restore API build ([#1002](https://github.com/dunay2/dvt/issues/1002)) ([3c645d1](https://github.com/dunay2/dvt/commit/3c645d13de9158e032a7723ba33af09b571e00d8))
+* **api:** Harden runtime authorization and engine seams ([#1015](https://github.com/dunay2/dvt/issues/1015)) ([d1d0193](https://github.com/dunay2/dvt/commit/d1d01932dc900615b4e965a53535f41bc2b3570c))
+* **api:** Prevent client-authored start-run identity ([#1012](https://github.com/dunay2/dvt/issues/1012)) ([627f915](https://github.com/dunay2/dvt/commit/627f9155cd2611ab2d05bca5ffdad9532c962c79))
+* **ci:** Restore ADR traceability gate ([#1009](https://github.com/dunay2/dvt/issues/1009)) ([fed85e9](https://github.com/dunay2/dvt/commit/fed85e9c702cf5e3a3fb57105e1f7a9913b08e08))
+* **temporal:** Harden activity dependency wiring ([8e81514](https://github.com/dunay2/dvt/commit/8e8151406d5a363f01d94fbbc0b8ccbbb48971d2))
+* **web:** Extend local dev auth token TTL ([#1007](https://github.com/dunay2/dvt/issues/1007)) ([7058596](https://github.com/dunay2/dvt/commit/7058596520e0f724e3291756f3c229411e6818ca))
+* **web:** Resolve Sonar findings and track UX proof gaps ([#1018](https://github.com/dunay2/dvt/issues/1018)) ([6e7b983](https://github.com/dunay2/dvt/commit/6e7b983a30e7a960eb955b30825a17f4c2aa3ca7))
+
 ## [5.16.0](https://github.com/dunay2/dvt/compare/v5.15.0...v5.16.0) (2026-04-18)
 
 
