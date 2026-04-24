@@ -94,6 +94,11 @@ before that boundary exists.
 - Test-support fixtures must resolve first-node kinds from the registered
   catalog for the active canvas kind; `dbt` proofs must not borrow
   transformation-only fixtures.
+- On reopen, the active host tab and typed posture must derive from the
+  authoritative draft-backed `canvasDocument`; ambient controller mode must not
+  override restore posture.
+- Restored typed-empty posture remains an overlay on the authoritative canvas
+  shell, so the viewport stays mounted while the empty guidance is shown.
 
 ## Transitions
 
@@ -160,6 +165,24 @@ sequenceDiagram
   Shell->>Draft: persist first authoring node through draft lifecycle
   Draft-->>Host: graph-backed canvas draft
   Host->>Shell: render graph-ready canvas
+```
+
+## Authoritative restore
+
+```mermaid
+sequenceDiagram
+  participant User as Operator
+  participant Host as Playground host
+  participant Draft as Protected draft boundary
+  participant Tabs as Host tab strip
+  participant Shell as Canvas shell
+
+  User->>Host: reopen workspace
+  Host->>Draft: read authoritative draft
+  Draft-->>Host: canvasDocument(kind,title) plus graph truth
+  Host->>Tabs: derive workspace-draft active tab
+  Host->>Shell: render typed empty overlay or graph-ready posture
+  Shell-->>User: restored tab and posture from draft truth
 ```
 
 ## Consumers

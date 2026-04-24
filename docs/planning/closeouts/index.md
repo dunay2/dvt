@@ -22,6 +22,7 @@ navigation. The folder contains additional historical entries.
 
 ## Representative Recent Closeouts
 
+- [20260424 TF-E2-K-F Authoritative Restore Proof Closeout](./20260424-tf-e2-k-f-authoritative-restore-proof-closeout.md)
 - [20260424 TF-E2-K-E Dbt Host-Cycle Proof Closeout](./20260424-tf-e2-k-e-dbt-host-cycle-proof-closeout.md)
 - [20260424 TF-E2-K-D Transformation Host-Cycle Proof Closeout](./20260424-tf-e2-k-d-transformation-host-cycle-proof-closeout.md)
 - [20260424 TF-E2-K-D Host-Cycle DTO Closeout](./20260424-tf-e2-k-d-host-cycle-dto-closeout.md)

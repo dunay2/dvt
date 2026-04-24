@@ -1,3 +1,4 @@
+/** Owned concern: provide canonical Canvas route test defaults and story-shaped host-cycle DTOs. */
 import { vi } from 'vitest';
 
 import { DBT_NODE_KINDS, DVT_AUTHORING_NODE_KINDS } from '../plugins/nodeTypeCatalog.dbt';
@@ -78,7 +79,20 @@ export type CanvasHostCycleControllerStateDto =
       canOpenSourceImport?: boolean;
     }
   | {
+      kind: 'restored_empty';
+      canvasKind: CanvasDocumentKind;
+      title?: string;
+      canEditEdges?: boolean;
+      canOpenSourceImport?: boolean;
+    }
+  | {
       kind: 'graph_ready';
+      canvasKind: CanvasDocumentKind;
+      title?: string;
+      firstNodeKind?: NodeKindRegistration['kind'];
+    }
+  | {
+      kind: 'restored_graph_ready';
       canvasKind: CanvasDocumentKind;
       title?: string;
       firstNodeKind?: NodeKindRegistration['kind'];
@@ -272,7 +286,7 @@ export function buildCanvasHostCycleControllerState(
     };
   }
 
-  if (dto.kind === 'typed_empty') {
+  if (dto.kind === 'typed_empty' || dto.kind === 'restored_empty') {
     return {
       canvasDocument: {
         kind: dto.canvasKind,

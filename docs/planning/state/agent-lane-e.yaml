@@ -2025,7 +2025,7 @@ tasks:
       editable payload.
     complexity: S
     effort_points: 3
-    progress_pct: 60
+    progress_pct: 90
     evidence_refs:
       - docs/planning/closeouts/20260418-tf-e2-canvas-draft-repository-seam-closeout.md
       - docs/planning/closeouts/20260418-tf-e2-canvas-srp-seams-closeout.md
@@ -2252,17 +2252,18 @@ tasks:
       - docs/planning/closeouts/20260424-tf-e2-k-d-host-cycle-dto-closeout.md
       - docs/planning/closeouts/20260424-tf-e2-k-d-transformation-host-cycle-proof-closeout.md
       - docs/planning/closeouts/20260424-tf-e2-k-e-dbt-host-cycle-proof-closeout.md
+      - docs/planning/closeouts/20260424-tf-e2-k-f-authoritative-restore-proof-closeout.md
       - docs/evidence/ed-20260423-tf-e2-k-a-first-canvas-playground-host.md
       - docs/architecture/components/web/graph/canvas-playground-host-component.md
       - docs/planning/proposals/workspace-first-frontend-architecture-specification.md
       - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-canvas-target-architecture-execution-plan-20260417.md
       - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-canvas-empty-authoring-entrypoint-design-20260422.md
     status_reason: >-
-      `TF-E2-K-A` through `TF-E2-K-E` are now closed. The route exposes a real first-canvas host,
-      restores the authoritative tab, renders typed empty posture per canvas kind, and proves the
-      first complete host cycles for both `transformation` and `dbt` through a stable host-cycle
-      DTO. The next hito is `TF-E2-K-F`: prove authoritative restore of the active typed canvas tab
-      and posture.
+      `TF-E2-K-A` through `TF-E2-K-F` are now closed. The route exposes a real first-canvas host,
+      restores the authoritative tab and posture from draft truth, renders typed empty posture per
+      canvas kind, and proves the first complete host cycles plus reopen restore semantics through a
+      stable host-cycle DTO. The next hito is `TF-E2-K-G`: prove typed-canvas continuation into
+      preview and run without losing host context.
     last_verified: '2026-04-24'
   - task_id: TF-E2-K-A
     parent_task: TF-E2-K
@@ -2396,7 +2397,7 @@ tasks:
   - task_id: TF-E2-K-F
     parent_task: TF-E2-K
     priority: P0
-    status: queued
+    status: done
     objective: >-
       prove authoritative host restore of the active canvas tab and typed posture when the workspace
       is reopened.
@@ -2406,11 +2407,15 @@ tasks:
       posture from protected draft truth only.
     complexity: S
     effort_points: 2
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
       - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-k-playground-complete-cycle-stories-20260424.md
       - docs/architecture/components/web/graph/canvas-playground-host-component.md
-    status_reason: Planned authoritative restore cycle proof; execution has not started.
+      - docs/planning/closeouts/20260424-tf-e2-k-f-authoritative-restore-proof-closeout.md
+    status_reason: >-
+      Closed. The route proof now shows that reopening the workspace restores the authoritative
+      workspace-draft tab and the correct typed empty or graph-ready posture from `canvasDocument`
+      truth, and restore behavior stays fail-closed even if ambient controller mode drifts.
     last_verified: '2026-04-24'
   - task_id: TF-E2-K-G
     parent_task: TF-E2-K
