@@ -1,7 +1,6 @@
 /** Owned concern: compose bootstrapping, persistence, save-attempt policy, and first-canvas creation into one narrow Canvas draft-lifecycle seam. */
 import { useCallback, useState } from 'react';
 
-import { canvasDraftSession } from './canvasDraftSession';
 import { createCanvasDraftIdempotencyKey } from './canvasDraftIdempotencyKey';
 import type {
   CanvasDraftLifecycle,
@@ -12,6 +11,7 @@ import { useCanvasCurrentDraftPayload } from './useCanvasCurrentDraftPayload';
 import { useCanvasDraftAttemptRefs } from './useCanvasDraftAttemptRefs';
 import { useCanvasDraftBootstrapSync } from './useCanvasDraftBootstrapSync';
 import { useCanvasDraftPersistence } from './useCanvasDraftPersistence';
+import { executeCreateCanvasDocumentCommand } from './canvasCreateCanvasDocumentCommand';
 
 export function useCanvasDraftLifecycle({
   baseline,
@@ -87,62 +87,19 @@ export function useCanvasDraftLifecycle({
   const handleCreateCanvasDocument = useCallback<
     CanvasDraftLifecycle['handleCreateCanvasDocument']
   >(
-    async (command) => {
-      if (!canPersistGraphDraft || graphDraftQuery.isPending || graphDraftQuery.isError) {
-        return;
-      }
-
-      const existingRecord = graphDraftQuery.data?.record;
-      if (existingRecord != null) {
-        return;
-      }
-
-      setDraftSaveStatus('saving');
-
-      try {
-        const result = await draftRepository.saveGraphDraft({
-          expectedRevision: null,
-          idempotencyKey: createCanvasDraftIdempotencyKey(),
-          draft: {
-            projectedDraft: {
-              canvas: {
-                kind: command.kind,
-                title: command.title,
-              },
-              nodeIds: [],
-              nodePositions: {},
-              edges: [],
-            },
-            canonicalNodes: [],
-            canonicalEdges: [],
-            workspaceScope,
-            previewProvenanceConfig,
-          },
-        });
-
-        if (result.outcome === 'saved') {
-          refs.lastSavedSignatureRef.current = canvasDraftSession.baseline.serialize(
-            result.record.draft
-          );
-          draftQueryCache.replaceRemoteDraftState(result.remoteDraftState);
-          setDraftSession((currentSession) =>
-            canvasDraftSession.machine.applySaveSuccess(currentSession, result.record)
-          );
-          setDraftSaveStatus('saved');
-          return;
-        }
-
-        draftQueryCache.replaceRemoteDraftState(result.remoteDraftState);
-        if (result.current != null) {
-          setDraftSession((currentSession) =>
-            canvasDraftSession.machine.applyConflict(currentSession, result.current)
-          );
-        }
-        setDraftSaveStatus('idle');
-      } catch {
-        setDraftSaveStatus('idle');
-      }
-    },
+    async (command) =>
+      await executeCreateCanvasDocumentCommand({
+        command,
+        draftRepository,
+        graphDraftQuery,
+        draftQueryCache,
+        canPersistGraphDraft,
+        setDraftSession,
+        setDraftSaveStatus,
+        lastSavedSignatureRef: refs.lastSavedSignatureRef,
+        workspaceScope,
+        previewProvenanceConfig,
+      }),
     [
       canPersistGraphDraft,
       draftQueryCache,

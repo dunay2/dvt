@@ -78,6 +78,24 @@ export type CanvasDraftLifecyclePolicyDto = {
   canPersistGraphDraft: boolean;
 };
 
+export type CanvasCreateCanvasDocumentCommand = {
+  kind: string;
+  title: string;
+};
+
+export type CanvasCreateCanvasDocumentCommandDto = {
+  command: CanvasCreateCanvasDocumentCommand;
+  draftRepository: CanvasDraftRepository;
+  graphDraftQuery: GraphDraftQueryState;
+  draftQueryCache: CanvasDraftQueryCache;
+  canPersistGraphDraft: boolean;
+  setDraftSession: Dispatch<SetStateAction<CanvasDraftSession>>;
+  setDraftSaveStatus: Dispatch<SetStateAction<DraftSaveStatus>>;
+  lastSavedSignatureRef: { current: string | null };
+  workspaceScope: WorkspaceScope;
+  previewProvenanceConfig: CanvasAuthoringRuntimePreviewProvenanceConfig;
+};
+
 export type CanvasDraftLifecycleDto = {
   baseline: CanvasDraftLifecycleBaselineDto;
   session: CanvasDraftLifecycleSessionDto;
@@ -88,5 +106,5 @@ export type CanvasDraftLifecycleDto = {
 export type CanvasDraftLifecycle = {
   draftSaveStatus: DraftSaveStatus;
   reloadLatestDraft: () => void;
-  handleCreateCanvasDocument: (command: { kind: string; title: string }) => Promise<void>;
+  handleCreateCanvasDocument: (command: CanvasCreateCanvasDocumentCommand) => Promise<void>;
 };

@@ -2229,7 +2229,7 @@ tasks:
   - task_id: TF-E2-K
     parent_task: TF-E2
     priority: P0
-    status: in_progress
+    status: done
     objective: >-
       introduce the workspace playground and multi-canvas host model so Canvas becomes a typed
       document tab rather than the sole product center, and browser-proof work starts from a real
@@ -2242,7 +2242,7 @@ tasks:
       proofs resume.
     complexity: M
     effort_points: 5
-    progress_pct: 60
+    progress_pct: 100
     evidence_refs:
       - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-project-playground-and-multi-canvas-host-plan-20260423.md
       - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-k-playground-complete-cycle-stories-20260424.md
@@ -2253,17 +2253,19 @@ tasks:
       - docs/planning/closeouts/20260424-tf-e2-k-d-transformation-host-cycle-proof-closeout.md
       - docs/planning/closeouts/20260424-tf-e2-k-e-dbt-host-cycle-proof-closeout.md
       - docs/planning/closeouts/20260424-tf-e2-k-f-authoritative-restore-proof-closeout.md
+      - docs/planning/closeouts/20260424-tf-e2-k-g-typed-canvas-preview-run-proof-closeout.md
+      - docs/planning/closeouts/20260424-tf-e2-k-h-blocked-readonly-host-cycle-proof-closeout.md
+      - docs/planning/closeouts/20260424-tf-e2-k-i-authoritative-first-canvas-lifecycle-proof-closeout.md
       - docs/evidence/ed-20260423-tf-e2-k-a-first-canvas-playground-host.md
       - docs/architecture/components/web/graph/canvas-playground-host-component.md
       - docs/planning/proposals/workspace-first-frontend-architecture-specification.md
       - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-canvas-target-architecture-execution-plan-20260417.md
       - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-canvas-empty-authoring-entrypoint-design-20260422.md
     status_reason: >-
-      `TF-E2-K-A` through `TF-E2-K-F` are now closed. The route exposes a real first-canvas host,
-      restores the authoritative tab and posture from draft truth, renders typed empty posture per
-      canvas kind, and proves the first complete host cycles plus reopen restore semantics through a
-      stable host-cycle DTO. The next hito is `TF-E2-K-G`: prove typed-canvas continuation into
-      preview and run without losing host context.
+      Closed. The route now covers the full typed host family: first-canvas creation, typed empty
+      posture, first-node host cycles for `transformation` and `dbt`, authoritative restore,
+      preview/run continuation, blocked/read-only posture, and authoritative first-canvas lifecycle
+      proof through a dedicated command seam.
     last_verified: '2026-04-24'
   - task_id: TF-E2-K-A
     parent_task: TF-E2-K
@@ -2443,7 +2445,7 @@ tasks:
   - task_id: TF-E2-K-H
     parent_task: TF-E2-K
     priority: P0
-    status: queued
+    status: done
     objective: >-
       prove blocked and read-only host cycles so the typed host remains understandable when runtime
       or mutation capabilities are gated.
@@ -2453,16 +2455,20 @@ tasks:
       create-canvas, first-node, or run affordances.
     complexity: S
     effort_points: 2
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
       - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-k-playground-complete-cycle-stories-20260424.md
       - docs/architecture/components/web/graph/canvas-playground-host-component.md
-    status_reason: Planned blocked/read-only host cycle proof; execution has not started.
+      - docs/planning/closeouts/20260424-tf-e2-k-h-blocked-readonly-host-cycle-proof-closeout.md
+    status_reason: >-
+      Closed. Blocked runtime/backend and read-only host posture are now explicitly closed against
+      the `TF-E2-K` story pack with route-level evidence that the host stays understandable and
+      fail-closed without fake mutation or run affordances.
     last_verified: '2026-04-24'
   - task_id: TF-E2-K-I
     parent_task: TF-E2-K
     priority: P0
-    status: in_progress
+    status: done
     objective: >-
       prove authoritative first-canvas creation through the draft lifecycle seam and keep the
       route-host test vocabulary in a dedicated scenario module instead of broad controller
@@ -2474,14 +2480,16 @@ tasks:
       story-shaped test support.
     complexity: S
     effort_points: 2
-    progress_pct: 20
+    progress_pct: 100
     evidence_refs:
       - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-k-playground-complete-cycle-stories-20260424.md
       - docs/architecture/components/web/graph/canvas-playground-host-component.md
       - docs/architecture/components/web/graph/canvas-authoring-runtime-component.md
+      - docs/planning/closeouts/20260424-tf-e2-k-i-authoritative-first-canvas-lifecycle-proof-closeout.md
     status_reason: >-
-      Active. The route still lacks a dedicated authoritative first-canvas lifecycle proof, and
-      host-cycle scenario DTOs still sit in the generic controller-defaults test file.
+      Closed. First-canvas creation now proves authoritative save, conflict, and fail-closed no-op
+      behavior through a dedicated lifecycle-local command seam, and the host-cycle route scenario
+      vocabulary no longer lives in the generic controller-defaults file.
     last_verified: '2026-04-24'
   - task_id: TF-E2-E-B
     parent_task: TF-E2-E
@@ -2764,11 +2772,11 @@ dependency_notes:
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
-  verified_on: '2026-04-23'
-  total_tasks: 73
-  total_effort_points: 258
-  completed_weighted_points: 129.8
-  lane_progress_pct: 50
+  verified_on: '2026-04-24'
+  total_tasks: 74
+  total_effort_points: 260
+  completed_weighted_points: 137.8
+  lane_progress_pct: 53
   notes: >-
     Weighted progress uses effort_points and records partial convergence already present in the
     frontend, even when the lane still lacks accepted closure for most slices. F-17 now tracks 7
@@ -2783,7 +2791,9 @@ verification_summary:
     the remaining selected-closure UX proof gaps and then added `TF-E2-K` to freeze the missing host
     prerequisite above those proofs: workspace playground, multi-canvas tabs, typed canvas kinds,
     and a real create-canvas/create-first-node route before browser end-to-end claims are treated as
-    credible. `TF-E2-K-A` is now closed over the current single-draft boundary, and `TF-E2-K-B` is
-    the next active prerequisite before browser proof work can credibly resume. The summary values
-    were recomputed from the current task registry on 2026-04-23 to realign the YAML with the actual
-    lane contents.
+    credible. The full `TF-E2-K` host family is now closed through `TF-E2-K-I`: typed host cycles,
+    preview/run continuation, blocked/read-only posture, and authoritative first-canvas lifecycle
+    proof now have accepted closeouts. The next active prerequisite before browser proof work can
+    credibly resume is the selected-closure UX/browser lane under `TF-E2-E`. The summary values were
+    recomputed from the current task registry on 2026-04-24 to realign the YAML with the actual lane
+    contents.
