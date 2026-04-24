@@ -23,7 +23,7 @@ export function CanvasPlaygroundTabStrip({
   return (
     <div
       data-slot="canvas-playground-tab-strip"
-      className="shrink-0 border-b border-(--border-default) bg-[var(--surface-panel)] px-4 py-2"
+      className="shrink-0 border-b border-[color:var(--border-default)] bg-[var(--surface-panel)] px-4 py-2"
     >
       <Tabs value={tabState.activeTabId} className="w-full">
         <TabsList className={cn(routeWorkbenchTabListClassName, 'h-auto gap-2 p-1')}>
