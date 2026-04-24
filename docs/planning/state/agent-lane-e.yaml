@@ -1523,7 +1523,7 @@ tasks:
       and implementation choice between structured log panels and xterm.js-backed streaming view.
     complexity: S
     effort_points: 3
-    progress_pct: 40
+    progress_pct: 55
     evidence_refs:
       - docs/architecture/components/web/ux-implementation-guide.md
       - docs/architecture/components/web/observability/front-observability-architecture-dvt.md
@@ -2246,16 +2246,18 @@ tasks:
     evidence_refs:
       - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-project-playground-and-multi-canvas-host-plan-20260423.md
       - docs/planning/closeouts/20260423-tf-e2-k-a-first-canvas-playground-host-closeout.md
+      - docs/planning/closeouts/20260423-tf-e2-k-b-host-tab-restoration-closeout.md
       - docs/evidence/ed-20260423-tf-e2-k-a-first-canvas-playground-host.md
       - docs/architecture/components/web/graph/canvas-playground-host-component.md
       - docs/planning/proposals/workspace-first-frontend-architecture-specification.md
       - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-canvas-target-architecture-execution-plan-20260417.md
       - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-canvas-empty-authoring-entrypoint-design-20260422.md
     status_reason: >-
-      `TF-E2-K-A` is now closed: the Canvas route exposes a real `needs_canvas` host posture,
-      persists one typed canvas document through the canonical workspace draft boundary, and routes
-      empty authoring through plugin-owned canvas kinds. The next hito is `TF-E2-K-B`, which must
-      introduce host-owned tab restoration without overclaiming backend multi-canvas truth.
+      `TF-E2-K-A` and `TF-E2-K-B` are now closed: the Canvas route exposes a real `needs_canvas`
+      host posture, persists one typed canvas document through the canonical workspace draft
+      boundary, and restores one explicit host-owned canvas tab from that authoritative draft
+      identity. The next hito is `TF-E2-K-C`, which must harden typed empty canvas posture for both
+      `dbt` and `transformation` without collapsing them back into one catalog.
     last_verified: '2026-04-23'
   - task_id: TF-E2-K-A
     parent_task: TF-E2-K
@@ -2287,7 +2289,7 @@ tasks:
   - task_id: TF-E2-K-B
     parent_task: TF-E2-K
     priority: P0
-    status: queued
+    status: done
     objective: >-
       introduce host-owned canvas tab state and restoration semantics without implying backend
       multi-canvas persistence beyond the current workspace draft boundary.
@@ -2298,14 +2300,61 @@ tasks:
       workspace draft record as authoritative until a wider backend contract exists.
     complexity: S
     effort_points: 2
+    progress_pct: 100
+    evidence_refs:
+      - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-project-playground-and-multi-canvas-host-plan-20260423.md
+      - docs/architecture/components/web/graph/canvas-playground-host-component.md
+      - docs/planning/closeouts/20260423-tf-e2-k-b-host-tab-restoration-closeout.md
+      - docs/risk-register/quality/R-20260423-CANVAS-HOST-DRAFT-BOUNDARY.yaml
+    status_reason: >-
+      Closed. The shell now derives one authoritative host tab from the persisted workspace draft
+      identity and renders it through a dedicated host tab seam, without introducing browser-only
+      multi-canvas persistence.
+    last_verified: '2026-04-23'
+  - task_id: TF-E2-K-C
+    parent_task: TF-E2-K
+    priority: P0
+    status: queued
+    objective: >-
+      harden typed empty-canvas posture for `dbt` and `transformation` so each kind exposes a
+      governed first-node catalog and host copy without collapsing back into one generic authoring
+      story.
+    dependency: TF-E2-K-B
+    target: >-
+      The workspace playground restores one authoritative host tab and then renders a typed empty
+      canvas whose copy and node catalog are explicitly different for `dbt` and `transformation`.
+    complexity: S
+    effort_points: 2
     progress_pct: 0
     evidence_refs:
       - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-project-playground-and-multi-canvas-host-plan-20260423.md
       - docs/architecture/components/web/graph/canvas-playground-host-component.md
-      - docs/risk-register/quality/R-20260423-CANVAS-HOST-DRAFT-BOUNDARY.yaml
+      - docs/architecture/components/web/graph/canvas-empty-authoring-entrypoint-component.md
     status_reason: >-
-      Planned next slice. It must add host-owned tabs and restoration posture, but it must not fake
-      multi-canvas persistence before the protected draft boundary supports that truth.
+      Planned next slice. It must make typed empty-canvas semantics visibly distinct per canvas kind
+      before browser-proof work claims realistic first-node UX.
+    last_verified: '2026-04-23'
+  - task_id: TF-E2-K-D
+    parent_task: TF-E2-K
+    priority: P0
+    status: queued
+    objective: >-
+      prove the real `create canvas -> typed empty canvas -> add first node` flow through the host
+      path so browser proof starts from the product surface users will actually see.
+    dependency: TF-E2-K-C
+    target: >-
+      Browser-level proof covers create-canvas, typed empty state, and first-node creation through
+      the host path before selected-closure Cypress stories resume.
+    complexity: S
+    effort_points: 2
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-project-playground-and-multi-canvas-host-plan-20260423.md
+      - docs/architecture/components/web/graph/canvas-playground-host-component.md
+      - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-e-selected-closure-ux-proof-stories-20260423.md
+    status_reason: >-
+      Planned browser-proof prerequisite slice. It must prove the real host flow before
+      selected-closure Cypress work resumes.
     last_verified: '2026-04-23'
   - task_id: TF-E2-E-B
     parent_task: TF-E2-E

@@ -183,6 +183,7 @@ describe('Canvas route states', () => {
     );
 
     expect(harness.container.querySelector('[data-slot="canvas-viewport"]')).not.toBeNull();
+    expect(harness.container.textContent).toContain('Main canvas');
     expect(harness.container.textContent).toContain('Add first node');
     expect(sourceButton).toBeDefined();
 
@@ -219,6 +220,7 @@ describe('Canvas route states', () => {
     });
 
     expect(harness.container.textContent).toContain('Add first node');
+    expect(harness.container.textContent).toContain('Main canvas');
     expect(harness.container.textContent).toContain('SQL transform');
     expect(harness.container.textContent).not.toContain('Exposure');
     expect(harness.container.textContent).not.toContain('Metric');

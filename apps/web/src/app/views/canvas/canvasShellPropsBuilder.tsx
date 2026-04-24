@@ -43,6 +43,7 @@ function buildCanvasShellLayoutArgs({
       workbenchErrorMessage: routeViewState.workbenchErrorMessage,
       canvasDocument: routeViewState.canvasDocument,
       availableCanvasKinds: routeViewState.availableCanvasKinds,
+      canvasTabState: routeViewState.canvasTabState,
       effectiveUserPermissions: routeViewState.effectiveUserPermissions,
       readOnlyState: routeViewState.readOnlyState,
     },

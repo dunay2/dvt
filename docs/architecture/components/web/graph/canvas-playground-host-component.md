@@ -44,16 +44,19 @@ The host must not become a god component. It owns document hosting and kind
 selection only. It does not own graph mutation semantics, preview logic, or
 run authority.
 
-## Scope for the current implementation slice
+## Scope for the current implementation slices
 
-Current target is `TF-E2-K-A`, not the whole multi-canvas route.
+Current implemented target is `TF-E2-K-A` plus `TF-E2-K-B`, not the whole
+multi-canvas route.
 
 That means:
 
 - one persisted canvas document per workspace is acceptable for this hito
 - the canvas document must carry an explicit `kind`
 - the host must expose a real create-canvas flow before `Add first node`
-- multi-canvas tab restoration remains a later slice
+- the host must expose explicit tab chrome for the authoritative draft-backed
+  canvas
+- multi-canvas persistence remains a later slice
 
 This is intentional. The current protected draft contract is still one draft
 record per workspace. The host must not fake multiple authoritative canvases
@@ -66,6 +69,7 @@ before that boundary exists.
 | `CanvasKindRegistration`      | host-safe declaration of a canvas kind contributed by a plugin                        |
 | `CanvasDocumentIdentity`      | current workspace canvas title and kind                                               |
 | `CanvasPlaygroundHostState`   | host posture: create-first-canvas, typed-empty-canvas, active-canvas                  |
+| `CanvasPlaygroundTabState`    | host-visible active tab state derived from the authoritative workspace draft          |
 | `CreateCanvasDocumentCommand` | host-owned command that persists the first canvas identity through the draft boundary |
 
 ## Invariants
@@ -74,6 +78,7 @@ before that boundary exists.
 - The host owns create-canvas posture and current document identity.
 - Plugin contributions own canvas kind semantics and node catalogs.
 - The first canvas must round-trip through canonical draft persistence.
+- The host tab strip must only reflect authoritative draft-backed canvas truth.
 - The host must not invent local-only semantic success.
 - The host may render one active canvas tab in this slice, but must not imply
   multi-canvas persistence that the backend does not yet support.
@@ -84,7 +89,8 @@ before that boundary exists.
 stateDiagram-v2
   [*] --> HostNeedsCanvas
   HostNeedsCanvas --> CreatingCanvas: choose kind
-  CreatingCanvas --> TypedEmptyCanvas: saved empty draft with canvas identity
+  CreatingCanvas --> DraftBackedTab: saved empty draft with canvas identity
+  DraftBackedTab --> TypedEmptyCanvas: restore host tab from workspace draft
   TypedEmptyCanvas --> ActiveCanvas: first node persisted
   ActiveCanvas --> ActiveCanvas: edit graph
 ```
@@ -95,16 +101,21 @@ stateDiagram-v2
 flowchart LR
   Route["Canvas route"]
   Host["Playground host"]
+  TabState["CanvasPlaygroundTabState"]
+  Tabs["CanvasPlaygroundTabStrip"]
   Registry["Canvas kind registry"]
   Empty["Typed empty canvas"]
   Shell["Existing Canvas shell"]
   Draft["Protected workspace draft boundary"]
 
   Route --> Host
+  Host --> TabState
+  TabState --> Tabs
   Host --> Registry
   Host --> Empty
   Host --> Shell
   Host --> Draft
+  Draft --> TabState
   Empty --> Draft
   Shell --> Draft
 ```
@@ -117,6 +128,7 @@ sequenceDiagram
   participant Host as Playground host
   participant Registry as Canvas kind registry
   participant Draft as Protected draft boundary
+  participant Tabs as Host tab strip
   participant Shell as Canvas shell
 
   User->>Host: open workspace canvas route
@@ -127,6 +139,7 @@ sequenceDiagram
   User->>Host: create canvas(kind)
   Host->>Draft: save empty draft with canvas identity
   Draft-->>Host: saved
+  Host->>Tabs: derive active workspace-draft tab
   Host->>Shell: render typed empty canvas
 ```
 

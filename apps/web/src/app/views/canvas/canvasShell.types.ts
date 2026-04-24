@@ -9,6 +9,7 @@ import type { NodeKindRegistration } from '../../plugins/nodeTypeContracts';
 import type { CanonicalNode } from '../../types/canonical';
 import type { CanvasPaletteId } from './canvasPalette';
 import type { CanvasRouteState } from './canvasDraftPresentationModel';
+import type { CanvasPlaygroundTabState } from './canvasPlaygroundTabState';
 import type { CanvasDraftToolbarState } from './canvasDraftToolbarState';
 import type { TransformationGraphValidationResult } from './transformationGraphValidation';
 
@@ -29,6 +30,8 @@ export type CanvasShellLayout = {
   explorerPanelVisible: boolean;
   inspectorPanelVisible: boolean;
   canOpenSourceImport: boolean;
+  hostTabState: CanvasPlaygroundTabState;
+  hostTabStrip?: React.ReactNode;
   centerSurfaceMode: 'replace' | 'overlay';
   centerSurface?: React.ReactNode;
   readOnlyBanner?: React.ReactNode;

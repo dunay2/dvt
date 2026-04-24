@@ -2,6 +2,10 @@ import {
   getCanvasReadOnlyState,
   getCanvasWorkbenchState,
 } from './canvasWorkbenchStateModel';
+import {
+  deriveCanvasPlaygroundTabState,
+  type CanvasPlaygroundTabState,
+} from './canvasPlaygroundTabState';
 import { canvasViewCopy } from './copy';
 import type { CanvasDraftTransportErrorState } from './canvasDraftTransportErrorState';
 import type { useCanvasController } from './useCanvasController';
@@ -25,6 +29,7 @@ export type CanvasRouteInteractionState = {
   startupBlockState: CanvasRouteStartupBlockState | null;
   canvasDocument: CanvasController['canvasDocument'];
   availableCanvasKinds: CanvasController['availableCanvasKinds'];
+  canvasTabState: CanvasPlaygroundTabState;
   effectiveUserPermissions: CanvasController['userPermissions'];
   readOnlyState: ReturnType<typeof getCanvasReadOnlyState>;
   workbenchErrorMessage: string | null;
@@ -117,6 +122,10 @@ export function deriveCanvasRouteInteractionState(
     startupBlockState,
     canvasDocument: controller.canvasDocument,
     availableCanvasKinds: controller.availableCanvasKinds,
+    canvasTabState: deriveCanvasPlaygroundTabState({
+      canvasDocument: controller.canvasDocument,
+      availableCanvasKinds: controller.availableCanvasKinds,
+    }),
     effectiveUserPermissions,
     readOnlyState,
     workbenchErrorMessage:

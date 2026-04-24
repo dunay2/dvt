@@ -32,6 +32,7 @@ export type CanvasShellLayoutBuilderArgs = Readonly<{
     | 'workbenchErrorMessage'
     | 'canvasDocument'
     | 'availableCanvasKinds'
+    | 'canvasTabState'
     | 'effectiveUserPermissions'
     | 'readOnlyState'
   >;

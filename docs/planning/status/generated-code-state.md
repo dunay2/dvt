@@ -2,21 +2,21 @@
 title: Generated Code State
 status: Active
 owner: docs
-last_reviewed: 2026-04-23
+last_reviewed: 2026-04-24
 planning_type: status
 ---
 
 # Generated Code State
 
-Generated automatically from repository code on 2026-04-23.
+Generated automatically from repository code on 2026-04-24.
 
 ## Summary
 
 | Metric                       | Value |
 | ---------------------------- | ----- |
 | Total workspaces             | 24    |
-| Total source files           | 1137  |
-| Total test files             | 575   |
+| Total source files           | 1139  |
+| Total test files             | 577   |
 | Workspaces with build script | 24/24 |
 | Workspaces with test script  | 23/24 |
 
@@ -29,7 +29,7 @@ Generated automatically from repository code on 2026-04-23.
 | dvt-outbox-worker         | `apps/outbox-worker`                 | 25        | 29         | yes   | yes  | yes       | -                       |
 | dvt-projector-worker      | `apps/projector-worker`              | 2         | 1          | yes   | yes  | yes       | -                       |
 | dvt-temporal-worker       | `apps/temporal-worker`               | 6         | 4          | yes   | yes  | yes       | -                       |
-| @dvt/web                  | `apps/web`                           | 482       | 182        | yes   | yes  | yes       | -                       |
+| @dvt/web                  | `apps/web`                           | 484       | 184        | yes   | yes  | yes       | -                       |
 | @dvt/adapter-postgres     | `packages/@dvt/adapter-postgres`     | 53        | 34         | yes   | yes  | yes       | 24                      |
 | @dvt/adapter-temporal     | `packages/@dvt/adapter-temporal`     | 40        | 38         | yes   | yes  | yes       | 20                      |
 | @dvt/artifacts            | `packages/@dvt/artifacts`            | 19        | 3          | yes   | yes  | yes       | 17                      |

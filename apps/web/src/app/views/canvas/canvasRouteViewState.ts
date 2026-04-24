@@ -23,6 +23,7 @@ export type CanvasRouteViewState = {
   workbenchErrorMessage: CanvasRouteInteractionState['workbenchErrorMessage'];
   canvasDocument: CanvasRouteInteractionState['canvasDocument'];
   availableCanvasKinds: CanvasRouteInteractionState['availableCanvasKinds'];
+  canvasTabState: CanvasRouteInteractionState['canvasTabState'];
   effectiveUserPermissions: CanvasRouteInteractionState['effectiveUserPermissions'];
   readOnlyState: CanvasRouteInteractionState['readOnlyState'];
   presentationState: CanvasDraftPresentationState;
@@ -47,6 +48,7 @@ export function deriveCanvasRouteViewState(
     workbenchErrorMessage: interactionState.workbenchErrorMessage,
     canvasDocument: interactionState.canvasDocument,
     availableCanvasKinds: interactionState.availableCanvasKinds,
+    canvasTabState: interactionState.canvasTabState,
     effectiveUserPermissions: interactionState.effectiveUserPermissions,
     readOnlyState: interactionState.readOnlyState,
     presentationState,
