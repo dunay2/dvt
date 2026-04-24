@@ -1165,7 +1165,7 @@ tasks:
       across reconnects. Log entries have timestamp, step, and severity.
     complexity: M
     effort_points: 5
-    progress_pct: 60
+    progress_pct: 70
     evidence_refs:
       - docs/planning/proposals/frontend-roadmap-20260219.md
       - docs/architecture/components/web/appshell/app-shell.md
@@ -2250,6 +2250,7 @@ tasks:
       - docs/planning/closeouts/20260423-tf-e2-k-b-host-tab-restoration-closeout.md
       - docs/planning/closeouts/20260423-tf-e2-k-c-typed-empty-canvas-posture-closeout.md
       - docs/planning/closeouts/20260424-tf-e2-k-d-host-cycle-dto-closeout.md
+      - docs/planning/closeouts/20260424-tf-e2-k-d-transformation-host-cycle-proof-closeout.md
       - docs/evidence/ed-20260423-tf-e2-k-a-first-canvas-playground-host.md
       - docs/architecture/components/web/graph/canvas-playground-host-component.md
       - docs/planning/proposals/workspace-first-frontend-architecture-specification.md
@@ -2261,10 +2262,11 @@ tasks:
       workspace draft boundary, restores one explicit host-owned canvas tab from that authoritative
       draft identity, and renders typed editable empty-canvas copy from plugin-owned canvas-kind
       registration instead of flattening `dbt` and `transformation` back into one authoring story.
-      The new cycle-story proposal now freezes the missing operator journeys. `TF-E2-K-D` has now
-      started by landing `CanvasHostCycleState` as the story-owned host-cycle DTO under the
-      workbench surface; the remaining work in this route is to prove the first transformation cycle
-      from `needs_canvas` to first node through the real host path.
+      `TF-E2-K-A` through `TF-E2-K-D` are now closed. The route exposes a real first-canvas host,
+      restores the authoritative tab, renders typed empty posture per canvas kind, and now proves
+      the first complete `transformation` host cycle from `needs_canvas` to `graph_ready` through a
+      stable host-cycle DTO. The next hito is `TF-E2-K-E`: prove the same cycle for `dbt` without
+      collapsing back into transformation assumptions.
     last_verified: '2026-04-24'
   - task_id: TF-E2-K-A
     parent_task: TF-E2-K
@@ -2346,7 +2348,7 @@ tasks:
   - task_id: TF-E2-K-D
     parent_task: TF-E2-K
     priority: P0
-    status: in_progress
+    status: done
     objective: >-
       prove the first complete transformation host cycle from `needs_canvas` to first node through
       the real host path and replace transport-shaped setup with a story-owned host-cycle DTO.
@@ -2357,18 +2359,19 @@ tasks:
       cycle DTO instead of broad transport bags.
     complexity: S
     effort_points: 2
-    progress_pct: 35
+    progress_pct: 100
     evidence_refs:
       - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-project-playground-and-multi-canvas-host-plan-20260423.md
       - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-k-playground-complete-cycle-stories-20260424.md
       - docs/architecture/components/web/graph/canvas-playground-host-component.md
       - docs/planning/closeouts/20260424-tf-e2-k-d-host-cycle-dto-closeout.md
+      - docs/planning/closeouts/20260424-tf-e2-k-d-transformation-host-cycle-proof-closeout.md
       - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-e-selected-closure-ux-proof-stories-20260423.md
     status_reason: >-
-      In progress. The first sub-slice is now landed: `CanvasHostCycleState` replaces broad
-      transport-shaped setup in the workbench seam with one story-shaped DTO for `needs_canvas`,
-      `typed_empty`, and `graph_ready`. Remaining work must prove the full transformation host cycle
-      from `create canvas` to first node through the real route path.
+      Closed. The workbench now derives host posture through `CanvasHostCycleState`, and the route
+      test stack proves the first complete `transformation` cycle from `create canvas` to first node
+      and `graph_ready` through the real host path using a story-owned host-cycle DTO instead of
+      broad transport-shaped controller setup.
     last_verified: '2026-04-24'
   - task_id: TF-E2-K-E
     parent_task: TF-E2-K

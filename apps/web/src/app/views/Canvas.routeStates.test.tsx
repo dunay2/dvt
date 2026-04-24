@@ -2,14 +2,18 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { DVT_AUTHORING_NODE_KINDS } from '../plugins/nodeTypeCatalog.dbt';
 import type { NodeKindRegistration } from '../plugins/nodeTypeContracts';
+import { canvasViewCopy } from './canvas/copy';
 import {
+  buildController,
   createCanvasRouteHarness,
   currentCanvasRouteState,
   expectCanvasBootstrapState,
   expectCanvasSurfaceState,
+  mockedUseCanvasController,
   renderCanvasRouteWithController,
   getPrimaryCanvasButtons,
 } from './Canvas.test.support';
+import { buildCanvasHostCycleControllerState } from './Canvas.test.controller.defaults';
 
 type CanvasRouteHarness = ReturnType<typeof createCanvasRouteHarness>;
 
@@ -193,6 +197,85 @@ describe('Canvas route states', () => {
     expect(handleCreateAuthoringNode).toHaveBeenCalledWith(
       requireAuthoringNodeKind('dvt:source')
     );
+  });
+
+  it('proves the first transformation host cycle from create canvas to graph-ready authoring', async () => {
+    let currentController = buildController(buildCanvasHostCycleControllerState({ kind: 'needs_canvas' }));
+
+    const handleCreateCanvasDocument = vi.fn(async (command: { kind: string; title: string }) => {
+      currentController = buildController({
+        ...buildCanvasHostCycleControllerState({
+          kind: 'typed_empty',
+          canvasKind: 'transformation',
+          title: command.title,
+        }),
+        handleCreateCanvasDocument,
+        handleCreateAuthoringNode,
+      });
+    });
+    const handleCreateAuthoringNode = vi.fn((registration: NodeKindRegistration) => {
+      currentController = buildController({
+        ...buildCanvasHostCycleControllerState({
+          kind: 'graph_ready',
+          canvasKind: 'transformation',
+          title: 'Transformation canvas',
+          firstNodeKind: registration.kind,
+        }),
+        handleCreateCanvasDocument,
+        handleCreateAuthoringNode,
+      });
+    });
+
+    currentController = buildController({
+      ...buildCanvasHostCycleControllerState({ kind: 'needs_canvas' }),
+      handleCreateCanvasDocument,
+      handleCreateAuthoringNode,
+    });
+    mockedUseCanvasController.mockImplementation(() => currentController);
+
+    await harness.render();
+
+    const createTransformationButton = Array.from(harness.container.querySelectorAll('button')).find(
+      (button) => button.textContent?.includes('Transformation')
+    );
+    expect(createTransformationButton).toBeDefined();
+
+    createTransformationButton?.click();
+    await harness.render();
+
+    expect(handleCreateCanvasDocument).toHaveBeenCalledWith({
+      kind: 'transformation',
+      title: 'Transformation canvas',
+    });
+    expect(harness.container.textContent).toContain('Start transformation canvas');
+    expect(harness.container.textContent).toContain('Add first transformation node');
+    expectCanvasBootstrapState({
+      routeState: 'empty',
+      bootstrapStatus: 'complete',
+      bootstrapDetail: canvasViewCopy.emptyCanvasReadyDetail,
+      canCompleteBootstrap: true,
+    });
+
+    const sourceButton = Array.from(harness.container.querySelectorAll('button')).find(
+      (button) => button.textContent?.includes('Source')
+    );
+    expect(sourceButton).toBeDefined();
+
+    sourceButton?.click();
+    await harness.render();
+
+    expect(handleCreateAuthoringNode).toHaveBeenCalledWith(
+      requireAuthoringNodeKind('dvt:source')
+    );
+    expect(harness.container.querySelector('[data-slot="canvas-empty-state"]')).toBeNull();
+    expect(harness.container.querySelector('[data-slot="canvas-playground-empty-state"]')).toBeNull();
+    expect(harness.container.querySelector('[data-slot="canvas-viewport"]')).not.toBeNull();
+    expectCanvasBootstrapState({
+      routeState: 'ready',
+      bootstrapStatus: 'complete',
+      bootstrapDetail: canvasViewCopy.canvasReadyDetail,
+      canCompleteBootstrap: true,
+    });
   });
 
   it('renders empty guidance without suggesting Add data when source import is unavailable', async () => {

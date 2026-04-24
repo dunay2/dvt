@@ -1,6 +1,7 @@
 import { vi } from 'vitest';
 
 import { DBT_NODE_KINDS, DVT_AUTHORING_NODE_KINDS } from '../plugins/nodeTypeCatalog.dbt';
+import type { NodeKindRegistration } from '../plugins/nodeTypeContracts';
 import { DEFAULT_CANVAS_PALETTE_ID } from './canvas/canvasPalette';
 import type { CanvasDraftToolbarState } from './canvas/canvasDraftToolbarState';
 import type { CanvasController } from './Canvas.test.controller';
@@ -64,6 +65,25 @@ type CanvasControllerStateDefaults =
   CanvasDraftDefaultsDto &
   CanvasExecutionDefaultsDto;
 
+type CanvasDocumentKind = Exclude<CanvasController['canvasAuthoringMode'], undefined>;
+type CanvasExplorerNode = CanvasControllerStateDefaults['explorerNodes'][number];
+
+export type CanvasHostCycleControllerStateDto =
+  | { kind: 'needs_canvas' }
+  | {
+      kind: 'typed_empty';
+      canvasKind: CanvasDocumentKind;
+      title?: string;
+      canEditEdges?: boolean;
+      canOpenSourceImport?: boolean;
+    }
+  | {
+      kind: 'graph_ready';
+      canvasKind: CanvasDocumentKind;
+      title?: string;
+      firstNodeKind?: NodeKindRegistration['kind'];
+    };
+
 export function buildDefaultCanvasToolbarState(): CanvasDraftToolbarState {
   return {
     label: 'Draft synced',
@@ -84,6 +104,37 @@ function buildDefaultCanvasExplorerNodes(): CanvasControllerStateDefaults['explo
       tags: [],
     },
   ];
+}
+
+function resolveCanvasHostCycleTitle(kind: CanvasDocumentKind): string {
+  return kind === 'dbt' ? 'dbt canvas' : 'Transformation canvas';
+}
+
+function buildCanvasHostCycleExplorerNode(
+  kind: CanvasDocumentKind,
+  firstNodeKind?: NodeKindRegistration['kind']
+): CanvasExplorerNode {
+  if (kind === 'dbt') {
+    return {
+      id: 'node.orders',
+      name: 'orders',
+      pluginId: 'dbt',
+      kind: firstNodeKind ?? 'dbt:model',
+      role: 'transform',
+      status: 'idle',
+      tags: [],
+    };
+  }
+
+  return {
+    id: 'node.source',
+    name: 'Source',
+    pluginId: 'dvt',
+    kind: firstNodeKind ?? 'dvt:source',
+    role: 'input',
+    status: 'idle',
+    tags: [],
+  };
 }
 
 function buildDefaultCanvasUserPermissions(): CanvasControllerStateDefaults['userPermissions'] {
@@ -208,6 +259,42 @@ export function buildDefaultCanvasControllerState(): CanvasControllerStateDefaul
     ...buildDefaultCanvasWorkbenchState(),
     ...buildDefaultCanvasDraftState(),
     ...buildDefaultCanvasExecutionState(),
+  };
+}
+
+export function buildCanvasHostCycleControllerState(
+  dto: CanvasHostCycleControllerStateDto
+): Partial<CanvasController> {
+  if (dto.kind === 'needs_canvas') {
+    return {
+      canvasDocument: null,
+      explorerNodes: [],
+    };
+  }
+
+  if (dto.kind === 'typed_empty') {
+    return {
+      canvasDocument: {
+        kind: dto.canvasKind,
+        title: dto.title ?? resolveCanvasHostCycleTitle(dto.canvasKind),
+      },
+      explorerNodes: [],
+      userPermissions: {
+        ...buildDefaultCanvasUserPermissions(),
+        canEditEdges: dto.canEditEdges ?? true,
+      },
+      canOpenSourceImport: dto.canOpenSourceImport ?? true,
+      canvasAuthoringMode: dto.canvasKind,
+    };
+  }
+
+  return {
+    canvasDocument: {
+      kind: dto.canvasKind,
+      title: dto.title ?? resolveCanvasHostCycleTitle(dto.canvasKind),
+    },
+    explorerNodes: [buildCanvasHostCycleExplorerNode(dto.canvasKind, dto.firstNodeKind)],
+    canvasAuthoringMode: dto.canvasKind,
   };
 }
 

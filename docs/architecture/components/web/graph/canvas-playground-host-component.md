@@ -88,6 +88,9 @@ before that boundary exists.
   multi-canvas persistence that the backend does not yet support.
 - Host and workbench tests must consume `CanvasHostCycleState` rather than
   reconstructing wide transport-shaped scenario bags for every cycle.
+- Route-level host-cycle proofs must advance from `needs_canvas` to
+  `typed_empty` and then `graph_ready` through stable cycle DTO seams rather
+  than bespoke controller transport bags.
 
 ## Transitions
 
@@ -150,6 +153,10 @@ sequenceDiagram
   Draft-->>Host: saved
   Host->>Tabs: derive active workspace-draft tab
   Host->>Shell: render typed empty canvas
+  User->>Shell: add first node from typed catalog
+  Shell->>Draft: persist first authoring node through draft lifecycle
+  Draft-->>Host: graph-backed canvas draft
+  Host->>Shell: render graph-ready canvas
 ```
 
 ## Consumers
