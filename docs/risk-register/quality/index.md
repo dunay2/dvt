@@ -29,6 +29,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [Automatic lineage DLQ replay may requeue persistent poison events repeatedly](R-20260330-LINEAGE-DLQ-AUTO-REPLAY.md)
 - [Caller-visible freshness may be misinterpreted as read-your-writes guarantee](R-20260330-snapshot-staleness-caller-view.yaml)
 - [Cancel lifecycle ownership can regress to mixed engine/runtime emission](R-20260401-CANCEL-LIFECYCLE-OWNERSHIP-DRIFT.yaml)
+- [Canvas host can overclaim multi-canvas truth before the draft boundary supports it](R-20260423-CANVAS-HOST-DRAFT-BOUNDARY.yaml)
 - [Capability matrix tests and docs governance can drift after doc relocations](R-20260409-CAPABILITY-MATRIX-DOCS-GOVERNANCE-DRIFT.yaml)
 - [CI rebuild dedupe or job consolidation could hide missing explicit build prerequisites](R-20260409-CI-REBUILD-DEDUPE-AND-ADAPTER-POSTGRES-CONSOLIDATION.yaml)
 - [Consumers may expect DVT lifecycle statuses (PAUSED, CANCELLING) in ProviderRunStatusView](R-20260409-PROVIDER-STATUS-SEMANTIC-DRIFT.yaml)

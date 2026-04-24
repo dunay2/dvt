@@ -25,6 +25,10 @@ export type WorkspaceGraphSnapshot = {
 };
 
 export type WorkspaceGraphDraft = {
+  canvas: {
+    kind: string;
+    title: string;
+  };
   nodeIds: string[];
   nodePositions: Record<string, { x: number; y: number }>;
   edges: Array<{ sourceId: string; targetId: string }>;

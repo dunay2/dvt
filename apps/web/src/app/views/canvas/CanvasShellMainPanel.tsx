@@ -131,6 +131,7 @@ export function CanvasShellMainPanel({
   return (
     <ResizablePanel defaultSize={resolveCanvasShellMainPanelDefaultSize(layout)}>
       <div className="h-full flex flex-col bg-(--surface-panel)">
+        {layout.hostTabStrip ? <div className="shrink-0">{layout.hostTabStrip}</div> : null}
         <CanvasToolbar
           placement="top-bar"
           onAutoLayout={chromeCommands.onAutoLayout}

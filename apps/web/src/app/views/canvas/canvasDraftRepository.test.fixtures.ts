@@ -11,6 +11,10 @@ import type { WorkspaceGraphAuthoringDraft } from '@dvt/contracts';
 
 export const WORKSPACE_SCOPE = { tenantId: 'tenant-a', projectId: 'project-a', environmentId: 'dev' } as const;
 export const PROJECTED_DRAFT = {
+  canvas: {
+    kind: 'transformation',
+    title: 'Main canvas',
+  },
   nodeIds: ['source-node', 'transform-node', 'sink-node'],
   nodePositions: {
     'source-node': { x: 0, y: 0 },
@@ -69,6 +73,10 @@ const CANONICAL_EDGES = [
 
 function buildAuthoringDraft(): WorkspaceGraphAuthoringDraft {
   return {
+    canvas: {
+      kind: 'transformation',
+      title: 'Main canvas',
+    },
     nodeIds: [...PROJECTED_DRAFT.nodeIds],
     nodePositions: { ...PROJECTED_DRAFT.nodePositions },
     nodes: CANONICAL_NODES.map((node) => ({

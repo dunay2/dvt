@@ -13,6 +13,10 @@ import { getRuntimeDataSourceMode } from '../config/runtimeDataSourceMode';
 import { buildAppServices } from './appServices';
 
 const AUTHORING_DRAFT = {
+  canvas: {
+    kind: 'transformation',
+    title: 'Main canvas',
+  },
   nodeIds: ['source-node', 'transform-node'],
   nodePositions: {
     'source-node': { x: 0, y: 0 },
@@ -50,6 +54,10 @@ const AUTHORING_DRAFT = {
 } satisfies WorkspaceGraphAuthoringDraft;
 
 const SINGLE_NODE_AUTHORING_DRAFT = {
+  canvas: {
+    kind: 'transformation',
+    title: 'Main canvas',
+  },
   nodeIds: ['source-node'],
   nodePositions: {
     'source-node': { x: 0, y: 0 },

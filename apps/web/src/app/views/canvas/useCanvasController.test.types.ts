@@ -6,7 +6,7 @@ import type { IRunsPort } from '../../ports/runs';
 import type { SessionContextPort } from '../../ports/sessionContext';
 import type { ShellFeedbackPort } from '../../ports/shellFeedback';
 import type { IWorkspaceGraphDraftAuthoringPort } from '../../ports/workspaceGraphDraftAuthoring';
-import type { IWorkspacePort, WorkspaceGraphDraftRecord } from '../../ports/workspace';
+import type { IWorkspacePort } from '../../ports/workspace';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { PlanViewModel } from '../../types/plans';
 import type { CanvasDraftReadModel } from './canvasDraftReadModel';
@@ -70,6 +70,7 @@ export type CanvasHarnessMocks = {
   mapCanonicalNodeToCanvasNode: MockFn;
   mapCanonicalEdgeToCanvasEdge: MockFn;
   getAllOverlays: MockFn;
+  getAllCanvasKinds: MockFn;
   getRegisteredPluginIds: MockFn;
   buildNodesWithImpact: MockFn;
   useCanvasExecutionActions: MockFn;

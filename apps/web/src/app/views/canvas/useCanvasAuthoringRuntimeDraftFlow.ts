@@ -40,21 +40,29 @@ export function useCanvasAuthoringRuntimeDraftFlow({
     persistedNodePositions,
   });
   const lifecycle = useCanvasDraftLifecycle({
-    draftRepository,
-    graphDraftQuery,
-    draftQueryCache,
-    workspaceLayoutKey,
-    draftSession,
-    setDraftSession,
-    canonicalSnapshot,
-    graphNodes: graphModel.nodes,
-    canonicalNodes: graphModel.canonicalNodes,
-    canonicalEdges: graphModel.canonicalEdges,
-    graphAuthorityQuery: graphModel.graphAuthorityQuery,
-    canPersistGraphDraft: canPersistDraftTransport,
-    workspaceScope,
-    previewProvenanceConfig,
-    setCanvasNodePositions,
+    baseline: {
+      draftRepository,
+      graphDraftQuery,
+      draftQueryCache,
+      graphAuthorityQuery: graphModel.graphAuthorityQuery,
+      workspaceLayoutKey,
+    },
+    session: {
+      draftSession,
+      setDraftSession,
+      canonicalSnapshot,
+      setCanvasNodePositions,
+    },
+    projection: {
+      graphNodes: graphModel.nodes,
+      canonicalNodes: graphModel.canonicalNodes,
+      canonicalEdges: graphModel.canonicalEdges,
+      workspaceScope,
+      previewProvenanceConfig,
+    },
+    policy: {
+      canPersistGraphDraft: canPersistDraftTransport,
+    },
   });
 
   return {

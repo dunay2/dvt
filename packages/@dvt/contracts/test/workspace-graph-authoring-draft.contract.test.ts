@@ -21,6 +21,10 @@ const sourceNode = {
 describe('WorkspaceGraphAuthoringDraft contract', () => {
   it('accepts an empty editable graph because compile readiness is downstream', () => {
     const result = WorkspaceGraphAuthoringDraftSchema.safeParse({
+      canvas: {
+        kind: 'transformation',
+        title: 'Main canvas',
+      },
       nodeIds: [],
       nodePositions: {},
       nodes: [],
@@ -32,6 +36,10 @@ describe('WorkspaceGraphAuthoringDraft contract', () => {
 
   it('accepts a first-node editable graph without requiring compile edges', () => {
     const result = WorkspaceGraphAuthoringDraftSchema.safeParse({
+      canvas: {
+        kind: 'transformation',
+        title: 'Main canvas',
+      },
       nodeIds: [sourceNode.id],
       nodePositions: {
         [sourceNode.id]: { x: 120, y: 80 },
@@ -45,6 +53,10 @@ describe('WorkspaceGraphAuthoringDraft contract', () => {
 
   it('rejects edges that reference nodes outside the aggregate', () => {
     const result = WorkspaceGraphAuthoringDraftSchema.safeParse({
+      canvas: {
+        kind: 'transformation',
+        title: 'Main canvas',
+      },
       nodeIds: [sourceNode.id],
       nodePositions: {
         [sourceNode.id]: { x: 120, y: 80 },
@@ -58,6 +70,17 @@ describe('WorkspaceGraphAuthoringDraft contract', () => {
           relation: 'lineage',
         },
       ],
+    });
+
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects drafts without canvas document identity', () => {
+    const result = WorkspaceGraphAuthoringDraftSchema.safeParse({
+      nodeIds: [],
+      nodePositions: {},
+      nodes: [],
+      edges: [],
     });
 
     expect(result.success).toBe(false);

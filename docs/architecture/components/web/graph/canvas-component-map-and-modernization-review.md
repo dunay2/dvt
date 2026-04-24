@@ -2,7 +2,7 @@
 title: Canvas Component Map And Modernization Review
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-04-22
+last_reviewed: 2026-04-24
 planning_type: architecture
 ---
 
@@ -31,6 +31,8 @@ For the shell contract and local chrome composition, use
 [Canvas Shell Component](./canvas-shell-component.md). For controller-local
 layering, use
 [Canvas Controller Current To Target Architecture](./canvas-controller-current-to-target-architecture.md).
+For the host layer above the route, use
+[Canvas Playground Host Component](./canvas-playground-host-component.md).
 For authoring-runtime contract and command-side runtime composition, use
 [Canvas Authoring Runtime Component](./canvas-authoring-runtime-component.md).
 For protected-draft semantic projection and viewport-boundary detail, use
@@ -47,6 +49,7 @@ For protected-draft semantic projection and viewport-boundary detail, use
 - [Canvas Route Presentation Component](./canvas-route-presentation-component.md)
 - [Canvas Route Composition Component](./canvas-route-composition-component.md)
 - [Canvas Shell Component](./canvas-shell-component.md)
+- [Canvas Playground Host Component](./canvas-playground-host-component.md)
 - [Canvas Authoring Projection Component](./canvas-authoring-projection-component.md)
 - [Graph Route Bootstrap Architecture](./graph-route-bootstrap-architecture.md)
 - [Graph Sequences And State Machines](./graph-sequences-and-state-machines.md)
@@ -215,6 +218,7 @@ Semantic rule:
 | `useCanvasGraphHandlers`                     | Gesture-to-command adapter seam                                            | Duplicate mutation policy                                              |
 | `useCanvasExecutionActions`                  | Plan and run handoff composition seam                                      | Graph mutation ownership                                               |
 | `usePublishedRouteBootstrap`                 | Publish explicit route startup posture to the shell                        | Re-deriving authoring truth from shell heuristics                      |
+| `canvasHostCycleState.ts`                    | Story-shaped host-cycle DTO between canonical posture and workbench render | Becoming a new transport bag or route-authority replacement            |
 
 <!-- markdownlint-enable MD060 -->
 
@@ -320,6 +324,10 @@ Canonical startup rule for this slice:
 - keep route composition moving toward named seams such as presentation sync,
   modal hosting, semantic modal-host builders, and concern-scoped shell
   subbuilders instead of one broad route method
+- keep host-cycle tests and workbench rendering on top of a stable DTO rather
+  than letting transport-shaped setup helpers spread again
+- keep draft lifecycle and current-payload seams on semantic DTOs instead of
+  flat authoring-runtime parameter bags
 
 ### Avoid
 

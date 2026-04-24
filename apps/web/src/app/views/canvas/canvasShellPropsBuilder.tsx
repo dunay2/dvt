@@ -34,12 +34,16 @@ function buildCanvasShellLayoutArgs({
     },
     authoringCommands: {
       handleCreateAuthoringNode: controller.handleCreateAuthoringNode,
+      handleCreateCanvasDocument: controller.handleCreateCanvasDocument,
     },
     routePresentation: {
       presentationState: routeViewState.presentationState,
       startupBlockState: routeViewState.startupBlockState,
       draftTransportError: routeViewState.draftTransportError,
       workbenchErrorMessage: routeViewState.workbenchErrorMessage,
+      canvasDocument: routeViewState.canvasDocument,
+      availableCanvasKinds: routeViewState.availableCanvasKinds,
+      canvasTabState: routeViewState.canvasTabState,
       effectiveUserPermissions: routeViewState.effectiveUserPermissions,
       readOnlyState: routeViewState.readOnlyState,
     },

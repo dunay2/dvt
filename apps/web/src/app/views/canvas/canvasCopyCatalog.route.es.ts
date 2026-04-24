@@ -7,6 +7,11 @@ export const canvasViewRouteCopyEs = {
   backendLoadingTitle: 'Comprobando disponibilidad del backend',
   backendLoadingMessage:
     'Canvas espera a que terminen las comprobaciones de disponibilidad del backend antes de cargar la superficie de authoring.',
+  routeNeedsCanvasTitle: 'Crear canvas',
+  routeNeedsCanvasMessage:
+    'Este playground del workspace todavia no tiene un documento de canvas persistido. Elige un tipo de canvas gobernado para empezar a trabajar.',
+  routeNeedsCanvasHelper:
+    'El primer canvas se persiste mediante la frontera protegida del workspace graph draft antes de agregar nodos.',
   routeEmptyTitle: 'No hay contenido de grafo cargado',
   routeEmptyEditableMessage:
     'Este workspace todavia no expone nodos de grafo. Usa Add data para importar fuentes o carga contenido de grafo antes de planificar.',

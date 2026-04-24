@@ -5,7 +5,8 @@ import {
   CanvasErrorStateView,
   CanvasLoadingStateView,
 } from './CanvasStateViews';
-import { DVT_AUTHORING_NODE_KINDS } from '../../plugins/nodeTypeCatalog.dbt';
+import { CanvasPlaygroundHost } from './CanvasPlaygroundHost';
+import { deriveCanvasHostCycleState } from './canvasHostCycleState';
 import { canvasViewCopy } from './copy';
 import type { CanvasWorkbenchSurfaceArgs } from './canvasCenterSurface.types';
 
@@ -68,47 +69,44 @@ function renderCanvasGraphWorkbenchSurface(
   return null;
 }
 
-function resolveCanvasEmptyWorkbenchMessage(
-  args: Pick<CanvasWorkbenchSurfaceArgs, 'canEditEdges' | 'canOpenSourceImport'>
-) {
-  const { canEditEdges, canOpenSourceImport } = args;
-
-  if (!canEditEdges) {
-    return canvasViewCopy.routeEmptyReadOnlyMessage;
-  }
-
-  if (!canOpenSourceImport) {
-    return canvasViewCopy.routeEmptyImportUnavailableMessage;
-  }
-
-  return canvasViewCopy.routeEmptyEditableMessage;
-}
-
-function renderCanvasEmptyWorkbenchSurface(
+function renderCanvasHostCycleWorkbenchSurface(
   args: Pick<
     CanvasWorkbenchSurfaceArgs,
-    'presentationState' | 'canEditEdges' | 'canOpenSourceImport' | 'onCreateAuthoringNode'
+    | 'presentationState'
+    | 'canvasDocument'
+    | 'availableCanvasKinds'
+    | 'canEditEdges'
+    | 'canOpenSourceImport'
+    | 'onCreateCanvasDocument'
+    | 'onCreateAuthoringNode'
   >
 ) {
-  const {
-    presentationState: { routeState },
-    canEditEdges,
-    canOpenSourceImport,
-    onCreateAuthoringNode,
-  } = args;
+  const cycleState = deriveCanvasHostCycleState(args);
+  if (cycleState == null) {
+    return null;
+  }
 
-  if (routeState !== 'empty') {
+  if (cycleState.kind === 'needs_canvas') {
+    return (
+      <CanvasPlaygroundHost
+        canvasKinds={cycleState.availableCanvasKinds}
+        onCreateCanvasDocument={cycleState.onCreateCanvasDocument}
+      />
+    );
+  }
+
+  if (cycleState.kind !== 'typed_empty') {
     return null;
   }
 
   return (
     <CanvasEmptyStateView
-      message={resolveCanvasEmptyWorkbenchMessage({
-        canEditEdges,
-        canOpenSourceImport,
-      })}
-      nodeKinds={canEditEdges ? DVT_AUTHORING_NODE_KINDS : []}
-      onCreateAuthoringNode={canEditEdges ? onCreateAuthoringNode : undefined}
+      title={cycleState.title}
+      message={cycleState.message}
+      firstNodeLabel={cycleState.firstNodeLabel}
+      firstNodeHelper={cycleState.firstNodeHelper}
+      nodeKinds={cycleState.nodeKinds}
+      onCreateAuthoringNode={cycleState.onCreateAuthoringNode}
     />
   );
 }
@@ -124,9 +122,9 @@ export function renderCanvasWorkbenchSurface(args: CanvasWorkbenchSurfaceArgs) {
     return graphSurface;
   }
 
-  const emptySurface = renderCanvasEmptyWorkbenchSurface(args);
-  if (emptySurface != null) {
-    return emptySurface;
+  const cycleSurface = renderCanvasHostCycleWorkbenchSurface(args);
+  if (cycleSurface != null) {
+    return cycleSurface;
   }
 
   return undefined;

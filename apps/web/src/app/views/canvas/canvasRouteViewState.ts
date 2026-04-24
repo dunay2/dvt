@@ -21,6 +21,9 @@ export type CanvasRouteViewState = {
   draftTransportError: CanvasDraftTransportErrorState | null;
   startupBlockState: CanvasRouteInteractionState['startupBlockState'];
   workbenchErrorMessage: CanvasRouteInteractionState['workbenchErrorMessage'];
+  canvasDocument: CanvasRouteInteractionState['canvasDocument'];
+  availableCanvasKinds: CanvasRouteInteractionState['availableCanvasKinds'];
+  canvasTabState: CanvasRouteInteractionState['canvasTabState'];
   effectiveUserPermissions: CanvasRouteInteractionState['effectiveUserPermissions'];
   readOnlyState: CanvasRouteInteractionState['readOnlyState'];
   presentationState: CanvasDraftPresentationState;
@@ -43,6 +46,9 @@ export function deriveCanvasRouteViewState(
     draftTransportError,
     startupBlockState: interactionState.startupBlockState,
     workbenchErrorMessage: interactionState.workbenchErrorMessage,
+    canvasDocument: interactionState.canvasDocument,
+    availableCanvasKinds: interactionState.availableCanvasKinds,
+    canvasTabState: interactionState.canvasTabState,
     effectiveUserPermissions: interactionState.effectiveUserPermissions,
     readOnlyState: interactionState.readOnlyState,
     presentationState,

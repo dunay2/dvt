@@ -4,6 +4,7 @@
 import type { ReactNode } from 'react';
 
 import { CanvasReadOnlyBannerView } from './CanvasStateViews';
+import { CanvasPlaygroundTabStrip } from './CanvasPlaygroundTabStrip';
 import { renderCanvasCenterSurface } from './CanvasCenterSurface';
 import { CanvasRecoveryBanner } from './CanvasRecoveryBanner';
 import type { CanvasShellLayoutBuilderArgs } from './canvasShellBuilder.types';
@@ -27,6 +28,16 @@ function renderCanvasShellReadOnlyBanner(
   );
 }
 
+function renderCanvasShellHostTabStrip(
+  routePresentation: Pick<CanvasShellLayoutBuilderArgs['routePresentation'], 'canvasTabState'>
+): ReactNode {
+  if (routePresentation.canvasTabState.tabs.length === 0) {
+    return null;
+  }
+
+  return <CanvasPlaygroundTabStrip tabState={routePresentation.canvasTabState} />;
+}
+
 export function buildCanvasShellLayout({
   authoringCommands,
   layoutState,
@@ -44,14 +55,19 @@ export function buildCanvasShellLayout({
     explorerPanelVisible: layoutState.explorerPanelVisible,
     inspectorPanelVisible: layoutState.inspectorPanelVisible,
     canOpenSourceImport: layoutState.canOpenSourceImport,
+    hostTabState: routePresentation.canvasTabState,
     centerSurfaceMode,
+    hostTabStrip: renderCanvasShellHostTabStrip(routePresentation),
     centerSurface: renderCanvasCenterSurface({
       presentationState: routePresentation.presentationState,
       startupBlockState: routePresentation.startupBlockState,
       draftTransportError: routePresentation.draftTransportError,
       workbenchErrorMessage: routePresentation.workbenchErrorMessage,
+      canvasDocument: routePresentation.canvasDocument,
+      availableCanvasKinds: routePresentation.availableCanvasKinds,
       canEditEdges: routePresentation.effectiveUserPermissions.canEditEdges,
       canOpenSourceImport: layoutState.canOpenSourceImport,
+      onCreateCanvasDocument: authoringCommands.handleCreateCanvasDocument,
       onCreateAuthoringNode: authoringCommands.handleCreateAuthoringNode,
     }),
     readOnlyBanner: renderCanvasShellReadOnlyBanner(recoveryCommands, routePresentation),

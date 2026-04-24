@@ -22,8 +22,15 @@ const DEFAULT_PROTECTED_SCOPE = {
   projectId: 'project-a',
   environmentId: 'dev',
 } as const;
+const DEFAULT_CANVAS_DOCUMENT = {
+  kind: 'transformation',
+  title: 'Main canvas',
+} as const;
 
 type AuthoringDraftNodeKind = WorkspaceGraphAuthoringNode['kind'];
+type CanvasHarnessDraftInput = Omit<WorkspaceGraphDraft, 'canvas'> & {
+  canvas?: WorkspaceGraphDraft['canvas'];
+};
 
 const EXPLICIT_NODE_KIND_BY_ID: Readonly<Record<string, AuthoringDraftNodeKind>> = {
   node_1: 'source',
@@ -113,18 +120,35 @@ function resolveAuthoringDraftNodeKind(
   return 'sql_transform';
 }
 
+function withCanvasDocument(draft: CanvasHarnessDraftInput): WorkspaceGraphDraft {
+  return {
+    canvas: draft.canvas ?? DEFAULT_CANVAS_DOCUMENT,
+    nodeIds: [...draft.nodeIds],
+    nodePositions: { ...draft.nodePositions },
+    edges: draft.edges.map((edge) => ({
+      sourceId: edge.sourceId,
+      targetId: edge.targetId,
+    })),
+  };
+}
+
 function buildAuthoringDraftFromProjectedDraft(
-  draft: WorkspaceGraphDraft
+  draft: CanvasHarnessDraftInput
 ): WorkspaceGraphAuthoringDraft {
+  const draftWithCanvas = withCanvasDocument(draft);
   const totalNodeCount = draft.nodeIds.length;
 
   return {
-    nodeIds: [...draft.nodeIds],
-    nodePositions: { ...draft.nodePositions },
-    nodes: draft.nodeIds.map((nodeId, index) =>
+    canvas: {
+      kind: draftWithCanvas.canvas.kind,
+      title: draftWithCanvas.canvas.title,
+    },
+    nodeIds: [...draftWithCanvas.nodeIds],
+    nodePositions: { ...draftWithCanvas.nodePositions },
+    nodes: draftWithCanvas.nodeIds.map((nodeId, index) =>
       buildAuthoringDraftNode(nodeId, resolveAuthoringDraftNodeKind(nodeId, index, totalNodeCount))
     ),
-    edges: draft.edges.map((edge) => ({
+    edges: draftWithCanvas.edges.map((edge) => ({
       id: `draft_edge_${edge.sourceId}_${edge.targetId}`,
       sourceId: edge.sourceId,
       targetId: edge.targetId,
@@ -134,7 +158,7 @@ function buildAuthoringDraftFromProjectedDraft(
 }
 
 export function buildCanvasHarnessRemoteDraftRecord(
-  draft: WorkspaceGraphDraft,
+  draft: CanvasHarnessDraftInput,
   revision = 'rev-1',
   updatedAt = '2026-04-16T00:00:00Z',
   scope: WorkspaceGraphDraftScope = DEFAULT_PROTECTED_SCOPE
@@ -157,6 +181,10 @@ export function projectCanvasHarnessRemoteDraftRecord(
     revision: record.revision,
     savedAt: record.updatedAt,
     draft: {
+      canvas: {
+        kind: record.draft.canvas.kind,
+        title: record.draft.canvas.title,
+      },
       nodeIds: [...record.draft.nodeIds],
       nodePositions: { ...record.draft.nodePositions },
       edges: record.draft.edges.map((edge) => ({

@@ -90,6 +90,7 @@ Evidence documents that justify or validate relevant changes.
 - [Summary](ed-20260423-tf-a2-c1-execution-selection-contract-pack.md)
 - [Summary](ed-20260423-tf-a2-c2-executable-subgraph-derivation.md)
 - [Summary](ed-20260423-tf-a2-c3-c4-api-web-adoption.md)
+- [Summary](ed-20260423-tf-e2-k-a-first-canvas-playground-host.md)
 - [Summary](ed-20260423-workspace-authoring-draft-aggregate.md)
 - [Summary](ed-20260424-hard-cut-runtime-provider-vocabulary.md)
 - [Summary](ed-20260424-start-run-adapter-factory-seam.md)

@@ -28,6 +28,10 @@ export function buildPresentationGraphDraft(
   overrides: Partial<WorkspaceGraphDraft> = {}
 ): WorkspaceGraphDraft {
   return {
+    canvas: {
+      kind: 'transformation',
+      title: 'Main canvas',
+    },
     nodeIds: ['node_1'],
     nodePositions: { node_1: { x: 10, y: 20 } },
     edges: [],
@@ -100,6 +104,10 @@ export function buildWorkspaceGraphAuthoringDraft(
   overrides: Partial<WorkspaceGraphAuthoringDraft> = {}
 ): WorkspaceGraphAuthoringDraft {
   return {
+    canvas: {
+      kind: 'transformation',
+      title: 'Main canvas',
+    },
     nodeIds: ['source_node', 'transform_node', 'sink_node'],
     nodePositions: {
       source_node: { x: 0, y: 0 },

@@ -23,7 +23,7 @@ import type {
   PluginDataPort,
   ViewContribution,
 } from './contracts/PluginManifest';
-import type { NodeKindRegistration } from './nodeTypeContracts';
+import type { CanvasKindRegistration, NodeKindRegistration } from './nodeTypeContracts';
 
 // ---------------------------------------------------------------------------
 // PluginContributions — v1 public contract
@@ -47,6 +47,7 @@ export type PluginContributions = {
   nodeBadges?: NodeBadgeContribution[];
   nodeRenderers?: Map<PluginNodeKind, NodeRendererRegistration>;
   nodeKinds?: NodeKindRegistration[];
+  canvasKinds?: CanvasKindRegistration[];
   connectionRules?: PluginConnectionRule[];
   produces?: PluginDataPort[];
   consumes?: PluginDataPort[];
@@ -213,6 +214,10 @@ export function getDefaultCoreViewPath(capabilities?: RuntimeCapabilities): stri
 
 export function getAllNodeKinds(capabilities?: RuntimeCapabilities): NodeKindRegistration[] {
   return getRuntimePlugins(capabilities).flatMap((p) => p.nodeKinds ?? []);
+}
+
+export function getAllCanvasKinds(capabilities?: RuntimeCapabilities): CanvasKindRegistration[] {
+  return getRuntimePlugins(capabilities).flatMap((plugin) => plugin.canvasKinds ?? []);
 }
 
 export function getAllOverlays(capabilities?: RuntimeCapabilities): CanvasOverlayContribution[] {

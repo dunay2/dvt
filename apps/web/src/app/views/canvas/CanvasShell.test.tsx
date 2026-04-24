@@ -75,6 +75,10 @@ function buildProps(overrides?: CanvasShellPropsOverrides): CanvasShellProps {
       explorerPanelVisible: true,
       inspectorPanelVisible: false,
       canOpenSourceImport: true,
+      hostTabState: {
+        activeTabId: null,
+        tabs: [],
+      },
       centerSurfaceMode: 'replace',
       centerSurface: undefined,
       readOnlyBanner: undefined,
@@ -209,6 +213,34 @@ describe('CanvasShell', () => {
       canEditGraph: false,
     });
     expect(shellState.dbtExplorerProps?.onOpenDataRegistry).toBeUndefined();
+  });
+
+  it('renders host-owned tab chrome when the layout exposes an authoritative canvas tab', async () => {
+    await act(async () => {
+      root.render(
+        <CanvasShell
+          {...buildProps({
+            layout: {
+              hostTabState: {
+                activeTabId: 'workspace-draft-canvas',
+                tabs: [
+                  {
+                    id: 'workspace-draft-canvas',
+                    title: 'Transformation canvas',
+                    kind: 'transformation',
+                    kindLabel: 'Transformation',
+                    source: 'workspace_draft',
+                  },
+                ],
+              },
+              hostTabStrip: <div data-testid="canvas-host-tab-strip" />,
+            },
+          })}
+        />
+      );
+    });
+
+    expect(container.querySelector('[data-testid="canvas-host-tab-strip"]')).not.toBeNull();
   });
 
   it('keeps explorer import affordances wired when graph edits are allowed', async () => {

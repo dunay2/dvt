@@ -45,6 +45,10 @@ function buildExpectedProjectedReadRecord(): ProjectedReadRecord {
     revision: 'rev-1',
     savedAt: '2026-04-18T00:00:00Z',
     draft: {
+      canvas: {
+        kind: 'transformation',
+        title: 'Main canvas',
+      },
       nodeIds: ['source-node', 'transform-node', 'sink-node'],
       nodePositions: PROJECTED_DRAFT.nodePositions,
       edges: [

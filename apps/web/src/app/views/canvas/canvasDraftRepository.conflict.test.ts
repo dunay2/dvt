@@ -70,6 +70,10 @@ function buildRemoteReadResult(): WorkspaceGraphDraftAuthoringReadResult {
       revision: 'rev-remote',
       updatedAt: '2026-04-18T00:00:03Z',
       draft: {
+        canvas: {
+          kind: 'transformation',
+          title: 'Main canvas',
+        },
         nodeIds: ['source-node', 'transform-node'],
         nodePositions: {
           'source-node': { x: 0, y: 0 },
@@ -136,13 +140,17 @@ function buildExpectedConflictCurrentRecord(): ConflictSaveGraphDraftResult['cur
   return {
     revision: 'rev-remote',
     savedAt: '2026-04-18T00:00:03Z',
-      draft: {
-        nodeIds: ['source-node', 'transform-node'],
-        nodePositions: {
-          'source-node': { x: 0, y: 0 },
-          'transform-node': { x: 220, y: 0 },
-        },
-        edges: [{ sourceId: 'source-node', targetId: 'transform-node' }],
+    draft: {
+      canvas: {
+        kind: 'transformation',
+        title: 'Main canvas',
+      },
+      nodeIds: ['source-node', 'transform-node'],
+      nodePositions: {
+        'source-node': { x: 0, y: 0 },
+        'transform-node': { x: 220, y: 0 },
+      },
+      edges: [{ sourceId: 'source-node', targetId: 'transform-node' }],
     },
   };
 }

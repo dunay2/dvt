@@ -22,6 +22,7 @@ export const canvasViewToolbarCopyEs = {
   preparingCanvasRouteDetail: 'Preparando la ruta de canvas',
   checkingBackendReadinessDetail: 'Comprobando la disponibilidad del backend para canvas',
   loadingWorkspaceGraphDetail: 'Cargando el grafo del workspace para canvas',
+  needsCanvasReadyDetail: 'El playground de canvas esta listo para crear el primer canvas',
   emptyCanvasReadyDetail: 'Canvas esta listo aunque todavia no haya contenido de grafo',
   canvasReadyDetail: 'Canvas esta listo',
 } satisfies Partial<CanvasViewCopy>;

@@ -17,6 +17,10 @@ function buildSessionContext(): Pick<SessionContextPort, 'getWorkspaceScopeSnaps
 
 function buildDraft(nodeId = 'node-1'): WorkspaceGraphAuthoringDraft {
   return {
+    canvas: {
+      kind: 'transformation',
+      title: 'Main canvas',
+    },
     nodeIds: [nodeId],
     nodePositions: {
       [nodeId]: { x: 0, y: 0 },
