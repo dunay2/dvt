@@ -363,9 +363,7 @@ async function main() {
 
   try {
     if (shouldStartTemporalWorker(apiEnv)) {
-      console.log(
-        `[dev-stack] Starting Temporal worker; waiting for ${apiEnv.DVT_TEMPORAL_WORKER_READYZ_URL}`
-      );
+      console.log('[dev-stack] Starting Temporal worker; waiting for worker readiness');
       const temporalWorker = trackProcess(
         spawnProcess(
           'temporal-worker',
