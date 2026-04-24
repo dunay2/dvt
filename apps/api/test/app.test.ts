@@ -16,6 +16,7 @@ const TEST_DATABASE_URL = 'postgres://user:pass@localhost:5432/dvt';
 const TEST_OIDC_JWKS_URI = 'https://issuer.example/.well-known/jwks.json';
 const TEST_OIDC_ISSUER = 'https://issuer.example/';
 const TEST_OIDC_AUDIENCE = 'dvt-api';
+const TEST_TEMPORAL_ADDRESS = 'temporal.test:7233';
 
 function httpError(
   type: string,
@@ -46,11 +47,20 @@ function setOidcEnv(): void {
   process.env.OIDC_AUDIENCE = TEST_OIDC_AUDIENCE;
 }
 
+function setTemporalAdapterEnv(): void {
+  process.env.TEMPORAL_ADDRESS = TEST_TEMPORAL_ADDRESS;
+  process.env.TEMPORAL_NAMESPACE = 'default';
+  process.env.TEMPORAL_TASK_QUEUE = 'dvt-test';
+}
+
 function clearProtectedRuntimeEnv(): void {
   delete process.env.DATABASE_URL;
   delete process.env.OIDC_JWKS_URI;
   delete process.env.OIDC_ISSUER;
   delete process.env.OIDC_AUDIENCE;
+  delete process.env.TEMPORAL_ADDRESS;
+  delete process.env.TEMPORAL_NAMESPACE;
+  delete process.env.TEMPORAL_TASK_QUEUE;
 }
 
 function buildStartRunPayload(args: {
@@ -72,7 +82,7 @@ function buildStartRunPayload(args: {
       planId: args.planId,
       planVersion: '1.0',
     },
-    targetAdapter: 'mock',
+    targetAdapter: 'temporal',
   };
 }
 
@@ -83,7 +93,7 @@ function buildPreviewPayload(runId: string): Record<string, unknown> {
       tenantId: 'tenant-a',
       projectId: 'project-a',
       environmentId: 'env-a',
-      targetAdapter: 'mock',
+      targetAdapter: 'temporal',
     },
     selection: {
       mode: 'explicit',
@@ -396,6 +406,7 @@ describe('buildApp', () => {
     process.env.DVT_READYZ_ENABLED = 'true';
     setDatabaseEnv();
     setOidcEnv();
+    setTemporalAdapterEnv();
     delete process.env.DVT_INTENT_RECONCILER_ENABLED;
 
     try {
@@ -567,6 +578,7 @@ describe('buildApp', () => {
     process.env.OIDC_JWKS_URI = 'https://issuer.example/.well-known/jwks.json';
     process.env.OIDC_ISSUER = 'https://issuer.example/';
     process.env.OIDC_AUDIENCE = 'dvt-api';
+    setTemporalAdapterEnv();
 
     try {
       const { app } = await buildApp();
@@ -661,6 +673,7 @@ describe('buildApp', () => {
     setBaseTestEnv();
     setDatabaseEnv();
     setOidcEnv();
+    setTemporalAdapterEnv();
     process.env.DVT_SIGNAL_ROUTE_ALLOW_CANCEL = 'false';
 
     try {
@@ -694,6 +707,7 @@ describe('buildApp', () => {
     setBaseTestEnv();
     setDatabaseEnv();
     setOidcEnv();
+    setTemporalAdapterEnv();
 
     try {
       const { app } = await buildApp();
@@ -724,6 +738,7 @@ describe('buildApp', () => {
     setBaseTestEnv();
     setDatabaseEnv();
     setOidcEnv();
+    setTemporalAdapterEnv();
 
     try {
       const { app } = await buildApp();

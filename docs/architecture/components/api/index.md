@@ -32,7 +32,8 @@ flowchart LR
   API --> Engine["@dvt/engine"]
   API --> Delivery["@dvt/delivery admission guard"]
   API --> Postgres["@dvt/adapter-postgres state, intent, and plan stores"]
-  API --> Providers["mock / temporal provider adapters"]
+  API --> Providers["provider adapter factories"]
+  Providers --> Temporal["Temporal provider adapter"]
   API --> Observability["@dvt/observability"]
 ```
 

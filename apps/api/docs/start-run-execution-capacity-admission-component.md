@@ -13,7 +13,7 @@ coupling the API layer to Temporal or any other concrete adapter.
 
 This is a **local component guide**, not a second shared contract. The caller-
 visible start-run result surface remains the canonical shared contract:
-`docs/architecture/components/engine/contracts/engine/StartRunBoundary.v1.md`.
+`docs/architecture/components/engine/contracts/engine/start-run-boundary.v1.md`.
 
 Read this together with:
 

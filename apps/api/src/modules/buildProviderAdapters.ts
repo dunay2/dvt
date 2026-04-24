@@ -1,22 +1,22 @@
 /**
  * Owned concern: build the live provider-adapter map for the protected runtime
- * component without leaking provider construction into unrelated modules.
+ * component from explicit provider-adapter factories.
  */
-import type {
-  EngineRunRef,
-  IClock,
-  IProviderAdapter,
-  IRunStateStoreRead,
-  IRunStateStoreWrite,
-} from '@dvt/engine';
-import type { IObservability } from '@dvt/observability';
+import type { EngineRunRef, IProviderAdapter } from '@dvt/engine';
 
 import type { Env } from '../plugins/env.js';
+
+import type {
+  ProviderAdapterFactory,
+  ProviderAdapterFactoryContext,
+} from './providerAdapters/providerAdapterFactory.js';
 
 export interface BuildProviderAdaptersResult {
   adapters: Map<EngineRunRef['provider'], IProviderAdapter>;
   close: () => Promise<void>;
 }
+
+export type BuildProviderAdaptersDeps = Omit<ProviderAdapterFactoryContext, 'env'>;
 
 async function closeAllClosers(closers: Array<() => Promise<void>>): Promise<void> {
   const results = await Promise.allSettled(closers.map((closer) => closer()));
@@ -28,45 +28,27 @@ async function closeAllClosers(closers: Array<() => Promise<void>>): Promise<voi
 
 export async function buildProviderAdapters(
   env: Env,
-  deps: {
-    stateStore: Pick<IRunStateStoreRead, 'getRunMetadataByRunId' | 'listEvents'>;
-    stateStoreWrite: Pick<IRunStateStoreWrite, 'appendAndEnqueueTx'>;
-    clock: Pick<IClock, 'nowIsoUtc'>;
-    projector: { rebuild(runId: string, events: unknown[]): unknown };
-    observability: IObservability;
-  }
+  deps: BuildProviderAdaptersDeps,
+  factories: readonly ProviderAdapterFactory[]
 ): Promise<BuildProviderAdaptersResult> {
-  const { MockAdapter } = await import('@dvt/engine/testing');
-  const mockAdapter = new MockAdapter({
-    stateStore: deps.stateStore as never,
-    stateStoreWrite: deps.stateStoreWrite as never,
-    clock: deps.clock as never,
-    projector: deps.projector as never,
-  });
-
-  const adapters = new Map<EngineRunRef['provider'], IProviderAdapter>([['mock', mockAdapter]]);
+  const adapters = new Map<EngineRunRef['provider'], IProviderAdapter>();
   const closers: Array<() => Promise<void>> = [];
+  const context = { env, ...deps } satisfies ProviderAdapterFactoryContext;
 
-  if (env.TEMPORAL_ADDRESS) {
-    const { TemporalAdapter, TemporalClientManager, loadTemporalAdapterConfig } =
-      await import('@dvt/adapter-temporal');
-    const temporalConfig = loadTemporalAdapterConfig({
-      TEMPORAL_ADDRESS: env.TEMPORAL_ADDRESS,
-      TEMPORAL_NAMESPACE: env.TEMPORAL_NAMESPACE,
-      TEMPORAL_TASK_QUEUE: env.TEMPORAL_TASK_QUEUE,
-      TEMPORAL_IDENTITY: env.TEMPORAL_IDENTITY,
-      TEMPORAL_CONNECT_TIMEOUT_MS: env.TEMPORAL_CONNECT_TIMEOUT_MS,
-      TEMPORAL_REQUEST_TIMEOUT_MS: env.TEMPORAL_REQUEST_TIMEOUT_MS,
-      TEMPORAL_MAX_START_PAYLOAD_BYTES: env.TEMPORAL_MAX_START_PAYLOAD_BYTES,
-      TEMPORAL_CONTINUE_AS_NEW_AFTER_LAYERS: env.TEMPORAL_CONTINUE_AS_NEW_AFTER_LAYERS,
-    });
-    const clientManager = new TemporalClientManager(temporalConfig, deps.observability);
-    const temporalAdapter = new TemporalAdapter({
-      clientManager,
-      config: temporalConfig,
-    });
-    adapters.set('temporal', temporalAdapter);
-    closers.push(() => clientManager.close());
+  for (const factory of factories) {
+    if (adapters.has(factory.provider)) {
+      throw new Error(`Duplicate provider adapter factory registered: ${factory.provider}`);
+    }
+
+    const registration = await factory.build(context);
+    if (registration === null) {
+      continue;
+    }
+
+    adapters.set(factory.provider, registration.adapter);
+    if (registration.close !== undefined) {
+      closers.push(registration.close);
+    }
   }
 
   return {
