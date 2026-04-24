@@ -87,6 +87,9 @@ verify:prepush`.
   runtime integration suite therefore requires `DATABASE_URL` and
   `TEMPORAL_ADDRESS`; without those variables it skips explicitly rather than
   falling back to an in-memory provider.
+- When OIDC-protected runtime routes are enabled, `apps/api` startup requires
+  `TEMPORAL_ADDRESS` and fails fast with an explicit configuration error before
+  workflow-engine construction.
 - Web `mock` mode remains UI-local demo/test data-source behavior and is not a
   runtime provider. Web run refs and start-run fixtures now use real provider
   ids even when the service implementation is a local test adapter.
@@ -103,6 +106,12 @@ verify:prepush`.
   hard cut.
 - Updated active docs and diagrams to describe provider test doubles without
   advertising `mock` as a runtime provider.
+- Added protected-runtime startup coverage for missing Temporal configuration
+  and aligned `/readyz` adapter readiness with the canonical Temporal adapter
+  instead of any non-empty adapter map.
+- Aligned the executable-subgraph resolver unit fixture with the current
+  `WorkspaceGraphAuthoringDraft` contract so semantic validation does not mask
+  planner-selection behavior.
 
 ## Validation Evidence
 
@@ -118,6 +127,12 @@ verify:prepush`.
 - `pnpm --filter dvt-api test` passed: 109 files and 555 tests; protected
   runtime integration skipped without real database and Temporal environment.
 - `pnpm --filter @dvt/web test` passed: 182 files, 641 tests.
+- `pnpm --filter dvt-api test -- app/protectedRuntimeComposition.test.ts`
+  passed: protected runtime startup rejects missing `TEMPORAL_ADDRESS`.
+- `pnpm --filter dvt-api test --
+application/services/resolveAuthorizedExecutableSubgraph.test.ts` passed.
+- `pnpm --filter dvt-api test` passed: 109 files and 556 tests; protected
+  runtime integration skipped without real database and Temporal environment.
 
 ## Residual Posture
 

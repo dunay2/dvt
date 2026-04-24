@@ -17,6 +17,7 @@ code_refs:
   - packages/@dvt/engine/src/adapters/inMemory/InMemoryProviderAdapter.ts
   - packages/@dvt/engine/src/testing.ts
   - apps/api/src/modules/protectedRuntime/buildProtectedExecutionRuntime.ts
+  - apps/api/test/app/protectedRuntimeComposition.test.ts
   - apps/api/test/integration/protectedRuntime.integration.shared.ts
   - apps/web/src/app/testing/contractTestUtils.ts
   - packages/@dvt/adapter-postgres/test/helpers/runEventFixtures.ts
@@ -54,6 +55,9 @@ required environment is absent.
    they require real database and Temporal configuration before they run.
 5. Active architecture docs now distinguish provider test doubles from real
    runtime provider adapters.
+6. Protected runtime startup now fails fast with an explicit `TEMPORAL_ADDRESS`
+   configuration error before workflow-engine construction when OIDC routes are
+   enabled without Temporal configuration.
 
 # Validation notes
 

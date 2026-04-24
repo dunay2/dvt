@@ -25,9 +25,17 @@ export type BuildProtectedExecutionRuntimeDeps = {
   readonly storageRuntime: ProtectedRuntimeStorage;
 };
 
+function requireTemporalRuntimeConfiguration(env: Env): void {
+  if (!env.TEMPORAL_ADDRESS) {
+    throw new Error('TEMPORAL_ADDRESS is required when OIDC-protected runtime routes are enabled');
+  }
+}
+
 export async function buildProtectedExecutionRuntime(
   deps: BuildProtectedExecutionRuntimeDeps
 ) {
+  requireTemporalRuntimeConfiguration(deps.env);
+
   const { adapters, close: closeAdapters } = await buildProviderAdapters(
     deps.env,
     {

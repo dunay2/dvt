@@ -97,7 +97,9 @@ acts as a fake namespace.
   lifecycle hook.
 - `buildProtectedExecutionRuntime(deps)`
   Async factory. Assembles provider adapters, workflow engine, runtime
-  services, and canonical adapter registry.
+  services, and canonical adapter registry. It fails fast before engine
+  construction when the protected runtime is enabled without
+  `TEMPORAL_ADDRESS`.
 - `buildProtectedStartRunRuntime(deps)`
   Factory. Assembles the authenticated start-run runtime subcomponent from
   abstract runtime dependencies.
@@ -140,7 +142,10 @@ acts as a fake namespace.
 - `buildProtectedSecurityRuntime.ts` is the only module allowed to construct
   the protected auth/authz runtime cluster.
 - `buildProtectedExecutionRuntime.ts` is the only module allowed to construct
-  the provider-adapter and workflow-engine runtime cluster.
+  the provider-adapter and workflow-engine runtime cluster. Because Temporal is
+  the only implemented runtime provider in this slice, protected runtime startup
+  requires `TEMPORAL_ADDRESS`; missing Temporal configuration is a deployment
+  configuration error, not an engine fallback path.
 - `buildProviderAdapters.ts` must not import concrete provider packages or
   inspect provider-specific environment variables. It only invokes
   `ProviderAdapterFactory` implementations supplied by composition.
@@ -237,6 +242,7 @@ sequenceDiagram
     Boot->>Admission: pass env, pool, observability
     Boot->>Security: pass logger, env, and pool
     Boot->>Execution: pass storage runtime, env, and observability
+    Execution->>Execution: require TEMPORAL_ADDRESS
     Execution->>Factory: create Temporal provider factory
     Execution->>Providers: build adapter map from provider factories
     Providers-->>Execution: adapters + close hook

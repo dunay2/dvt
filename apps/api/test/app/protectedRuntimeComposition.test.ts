@@ -40,4 +40,29 @@ describe('buildApp protected runtime composition', () => {
       );
     });
   });
+
+  it('fails fast when protected runtime is enabled without Temporal configuration', async () => {
+    await withEnvPatch(
+      mergeEnv(BASE_APP_ENV, DATABASE_APP_ENV, OIDC_APP_ENV, {
+        TEMPORAL_ADDRESS: undefined,
+        TEMPORAL_NAMESPACE: undefined,
+        TEMPORAL_TASK_QUEUE: undefined,
+      }),
+      async () => {
+        let built: Awaited<ReturnType<typeof buildApp>> | undefined;
+
+        try {
+          await expect(
+            (async () => {
+              built = await buildApp();
+            })()
+          ).rejects.toThrow(
+            /TEMPORAL_ADDRESS is required when OIDC-protected runtime routes are enabled/
+          );
+        } finally {
+          await built?.app.close();
+        }
+      }
+    );
+  });
 });

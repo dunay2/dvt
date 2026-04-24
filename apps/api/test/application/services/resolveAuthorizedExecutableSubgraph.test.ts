@@ -37,6 +37,10 @@ function buildContext(): AuthorizedCommandExecutionContext {
 
 function buildDraftPayload(): Record<string, unknown> {
   return {
+    canvas: {
+      kind: 'workspace-graph-authoring-v1',
+      title: 'Test workspace graph draft',
+    },
     nodeIds: ['source-node', 'transform-node'],
     nodePositions: {
       'source-node': { x: 0, y: 0 },
