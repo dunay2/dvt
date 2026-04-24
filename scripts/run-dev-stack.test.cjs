@@ -1,5 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const { EventEmitter } = require('node:events');
+const http = require('node:http');
 
 const {
   parseArgs,
@@ -8,6 +10,7 @@ const {
   buildApiEnv,
   buildTemporalWorkerEnv,
   shouldStartTemporalWorker,
+  waitForUrlOrProcessExit,
 } = require('./run-dev-stack.cjs');
 const { defaultPgUrl } = require('./run-temporal-postgres-proof.cjs');
 
@@ -138,4 +141,43 @@ test('shouldStartTemporalWorker follows protected runtime posture', () => {
     true
   );
   assert.equal(shouldStartTemporalWorker({ DATABASE_URL: defaultPgUrl }), false);
+});
+
+test('waitForUrlOrProcessExit attaches the post-ready exit watcher before releasing readiness', async () => {
+  const child = new EventEmitter();
+  const server = http.createServer((_request, response) => {
+    response.writeHead(200);
+    response.end('ok');
+  });
+
+  await new Promise((resolve, reject) => {
+    server.once('error', reject);
+    server.listen(0, '127.0.0.1', resolve);
+  });
+
+  try {
+    const address = server.address();
+    assert.equal(typeof address, 'object');
+    assert.notEqual(address, null);
+
+    let observedExit = false;
+    await waitForUrlOrProcessExit(
+      `http://127.0.0.1:${address.port}/readyz`,
+      (response) => response.statusCode === 200,
+      1_000,
+      10,
+      'Temporal worker readyz',
+      { child },
+      () => {
+        child.once('exit', () => {
+          observedExit = true;
+        });
+        child.emit('exit', 1, null);
+      }
+    );
+
+    assert.equal(observedExit, true);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
 });

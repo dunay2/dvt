@@ -219,22 +219,42 @@ async function waitForUrlOrProcessExit(
   timeoutMs,
   pollIntervalMs,
   label,
-  processHandle
+  processHandle,
+  onReady = () => {}
 ) {
   let settled = false;
-  const childExit = once(processHandle.child, 'exit').then(([exitCode, signal]) => {
-    if (settled) {
-      return;
-    }
+  let removeExitListener = () => {};
+  const childExit = new Promise((_, reject) => {
+    const onExit = (exitCode, signal) => {
+      if (settled) {
+        return;
+      }
 
-    const rendered = exitCode ?? signal ?? 'unknown';
-    throw new Error(`${label} bootstrap process exited before readiness (${rendered})`);
+      settled = true;
+      const rendered = exitCode ?? signal ?? 'unknown';
+      reject(new Error(`${label} bootstrap process exited before readiness (${rendered})`));
+    };
+
+    processHandle.child.once('exit', onExit);
+    removeExitListener = () => processHandle.child.off('exit', onExit);
   });
 
   try {
-    await Promise.race([waitForUrl(url, validator, timeoutMs, pollIntervalMs, label), childExit]);
+    await Promise.race([
+      waitForUrl(url, validator, timeoutMs, pollIntervalMs, label).then(() => {
+        if (settled) {
+          return;
+        }
+
+        settled = true;
+        onReady();
+        removeExitListener();
+      }),
+      childExit,
+    ]);
   } finally {
     settled = true;
+    removeExitListener();
   }
 }
 
@@ -359,9 +379,9 @@ async function main() {
         options.readyTimeoutMs,
         options.pollIntervalMs,
         'Temporal worker readyz',
-        temporalWorker
+        temporalWorker,
+        () => watchProcessExit(temporalWorker)
       );
-      watchProcessExit(temporalWorker);
     }
 
     registerProcess(spawnProcess('api', ['--filter', 'dvt-api', 'dev'], apiEnv));
@@ -453,6 +473,7 @@ module.exports = {
   buildApiEnv,
   buildTemporalWorkerEnv,
   shouldStartTemporalWorker,
+  waitForUrlOrProcessExit,
 };
 
 if (require.main === module) {
