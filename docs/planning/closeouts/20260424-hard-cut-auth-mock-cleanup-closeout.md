@@ -90,6 +90,9 @@ verify:prepush`.
 - When OIDC-protected runtime routes are enabled, `apps/api` startup requires
   `TEMPORAL_ADDRESS` and fails fast with an explicit configuration error before
   workflow-engine construction.
+- For coordinated local startup, `pnpm dev:app` injects the canonical local
+  Temporal posture, starts `dvt-temporal-worker`, waits for the worker
+  `/readyz` probe, and fails bootstrap explicitly if Temporal is unavailable.
 - Web `mock` mode remains UI-local demo/test data-source behavior and is not a
   runtime provider. Web run refs and start-run fixtures now use real provider
   ids even when the service implementation is a local test adapter.
@@ -109,6 +112,8 @@ verify:prepush`.
 - Added protected-runtime startup coverage for missing Temporal configuration
   and aligned `/readyz` adapter readiness with the canonical Temporal adapter
   instead of any non-empty adapter map.
+- Updated the local dev-stack to bootstrap the worker-backed Temporal readiness
+  posture before API startup when local protected runtime is active.
 - Aligned the executable-subgraph resolver unit fixture with the current
   `WorkspaceGraphAuthoringDraft` contract so semantic validation does not mask
   planner-selection behavior.
@@ -133,6 +138,8 @@ verify:prepush`.
 application/services/resolveAuthorizedExecutableSubgraph.test.ts` passed.
 - `pnpm --filter dvt-api test` passed: 109 files and 556 tests; protected
   runtime integration skipped without real database and Temporal environment.
+- `node --test scripts/run-dev-stack.test.cjs` passed: dev-stack injects
+  canonical Temporal posture and builds the local worker environment.
 
 ## Residual Posture
 

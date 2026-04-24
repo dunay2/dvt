@@ -14,6 +14,11 @@ const {
   shouldBootstrapLocalProtectedRuntimeAuth,
   startLocalProtectedRuntimeAuth,
 } = require('./run-dev-stack.auth.cjs');
+const {
+  buildTemporalApiEnv,
+  buildTemporalWorkerEnv,
+  shouldStartTemporalWorker,
+} = require('./run-dev-stack.temporal.cjs');
 
 const DEFAULT_API_PORT = 3000;
 const DEFAULT_WEB_PORT = 5173;
@@ -103,12 +108,14 @@ function shouldBootstrapLocalPostgres(options, env = process.env) {
 
 function buildApiEnv(options, env = process.env) {
   const databaseUrl = resolveDatabaseUrl(options, env);
+  const temporalEnv = databaseUrl === undefined ? {} : buildTemporalApiEnv(options, env);
 
   return {
     ...env,
     HOST: options.host,
     PORT: String(options.apiPort),
     DVT_READYZ_ENABLED: 'true',
+    ...temporalEnv,
     ...(databaseUrl === undefined
       ? {}
       : {
@@ -206,6 +213,31 @@ async function waitForUrl(url, validator, timeoutMs, pollIntervalMs, label) {
   );
 }
 
+async function waitForUrlOrProcessExit(
+  url,
+  validator,
+  timeoutMs,
+  pollIntervalMs,
+  label,
+  processHandle
+) {
+  let settled = false;
+  const childExit = once(processHandle.child, 'exit').then(([exitCode, signal]) => {
+    if (settled) {
+      return;
+    }
+
+    const rendered = exitCode ?? signal ?? 'unknown';
+    throw new Error(`${label} bootstrap process exited before readiness (${rendered})`);
+  });
+
+  try {
+    await Promise.race([waitForUrl(url, validator, timeoutMs, pollIntervalMs, label), childExit]);
+  } finally {
+    settled = true;
+  }
+}
+
 async function terminateProcess(processHandle) {
   if (processHandle.child.killed || processHandle.child.exitCode !== null) {
     return;
@@ -259,8 +291,12 @@ async function main() {
   let shuttingDown = false;
   const exitWatchers = [];
 
-  function registerProcess(handle) {
+  function trackProcess(handle) {
     processHandles.push(handle);
+    return handle;
+  }
+
+  function watchProcessExit(handle) {
     exitWatchers.push(
       (async () => {
         const [exitCode, signal] = await once(handle.child, 'exit');
@@ -276,6 +312,10 @@ async function main() {
       })()
     );
     return handle;
+  }
+
+  function registerProcess(handle) {
+    return watchProcessExit(trackProcess(handle));
   }
 
   async function shutdown(exitCode = 0) {
@@ -300,9 +340,32 @@ async function main() {
     console.log('[dev-stack] Received SIGTERM, shutting down');
     void shutdown(0);
   });
-  registerProcess(spawnProcess('api', ['--filter', 'dvt-api', 'dev'], apiEnv));
 
   try {
+    if (shouldStartTemporalWorker(apiEnv)) {
+      console.log(
+        `[dev-stack] Starting Temporal worker; waiting for ${apiEnv.DVT_TEMPORAL_WORKER_READYZ_URL}`
+      );
+      const temporalWorker = trackProcess(
+        spawnProcess(
+          'temporal-worker',
+          ['--filter', 'dvt-temporal-worker', 'dev'],
+          buildTemporalWorkerEnv(options, apiEnv, apiEnv.DATABASE_URL)
+        )
+      );
+      await waitForUrlOrProcessExit(
+        apiEnv.DVT_TEMPORAL_WORKER_READYZ_URL,
+        (response) => response.statusCode === 200,
+        options.readyTimeoutMs,
+        options.pollIntervalMs,
+        'Temporal worker readyz',
+        temporalWorker
+      );
+      watchProcessExit(temporalWorker);
+    }
+
+    registerProcess(spawnProcess('api', ['--filter', 'dvt-api', 'dev'], apiEnv));
+
     await waitForUrl(
       `${apiBaseUrl}/healthz`,
       (response) => response.statusCode === 200,
@@ -388,6 +451,8 @@ module.exports = {
   resolveDatabaseUrl,
   shouldBootstrapLocalPostgres,
   buildApiEnv,
+  buildTemporalWorkerEnv,
+  shouldStartTemporalWorker,
 };
 
 if (require.main === module) {

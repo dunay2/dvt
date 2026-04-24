@@ -6,6 +6,8 @@ const {
   resolveDatabaseUrl,
   shouldBootstrapLocalPostgres,
   buildApiEnv,
+  buildTemporalWorkerEnv,
+  shouldStartTemporalWorker,
 } = require('./run-dev-stack.cjs');
 const { defaultPgUrl } = require('./run-temporal-postgres-proof.cjs');
 
@@ -59,6 +61,10 @@ test('buildApiEnv injects readiness flags and local postgres defaults for the co
   assert.equal(apiEnv.DVT_READYZ_ENABLED, 'true');
   assert.equal(apiEnv.DVT_DB_READY_ENABLED, 'true');
   assert.equal(apiEnv.DATABASE_URL, defaultPgUrl);
+  assert.equal(apiEnv.TEMPORAL_ADDRESS, '127.0.0.1:7233');
+  assert.equal(apiEnv.TEMPORAL_NAMESPACE, 'default');
+  assert.equal(apiEnv.TEMPORAL_TASK_QUEUE, 'dvt-temporal');
+  assert.equal(apiEnv.DVT_TEMPORAL_WORKER_READYZ_URL, 'http://127.0.0.1:9468/readyz');
 });
 
 test('buildApiEnv leaves database unset when postgres bootstrap is explicitly skipped', () => {
@@ -76,4 +82,60 @@ test('buildApiEnv leaves database unset when postgres bootstrap is explicitly sk
   assert.equal(apiEnv.DVT_READYZ_ENABLED, 'true');
   assert.equal(apiEnv.DVT_DB_READY_ENABLED, undefined);
   assert.equal(apiEnv.DATABASE_URL, undefined);
+  assert.equal(apiEnv.TEMPORAL_ADDRESS, undefined);
+  assert.equal(apiEnv.DVT_TEMPORAL_WORKER_READYZ_URL, undefined);
+});
+
+test('buildApiEnv preserves explicit temporal posture when provided', () => {
+  const apiEnv = buildApiEnv(
+    {
+      host: '127.0.0.1',
+      apiPort: 3000,
+      skipPostgres: false,
+    },
+    {
+      TEMPORAL_ADDRESS: 'temporal.dev:7233',
+      TEMPORAL_NAMESPACE: 'dev',
+      TEMPORAL_TASK_QUEUE: 'dev-task-queue',
+      DVT_TEMPORAL_WORKER_READYZ_URL: 'http://temporal-worker.dev/readyz',
+    }
+  );
+
+  assert.equal(apiEnv.TEMPORAL_ADDRESS, 'temporal.dev:7233');
+  assert.equal(apiEnv.TEMPORAL_NAMESPACE, 'dev');
+  assert.equal(apiEnv.TEMPORAL_TASK_QUEUE, 'dev-task-queue');
+  assert.equal(apiEnv.DVT_TEMPORAL_WORKER_READYZ_URL, 'http://temporal-worker.dev/readyz');
+});
+
+test('buildTemporalWorkerEnv injects canonical local temporal worker posture', () => {
+  const workerEnv = buildTemporalWorkerEnv(
+    {
+      host: '127.0.0.1',
+      apiPort: 3000,
+      skipPostgres: false,
+    },
+    {},
+    defaultPgUrl
+  );
+
+  assert.equal(workerEnv.DATABASE_URL, defaultPgUrl);
+  assert.equal(workerEnv.TEMPORAL_ADDRESS, '127.0.0.1:7233');
+  assert.equal(workerEnv.TEMPORAL_NAMESPACE, 'default');
+  assert.equal(workerEnv.TEMPORAL_TASK_QUEUE, 'dvt-temporal');
+  assert.equal(workerEnv.DVT_TEMPORAL_ADMIN_HOST, '127.0.0.1');
+  assert.equal(workerEnv.DVT_TEMPORAL_ADMIN_PORT, '9468');
+  assert.equal(workerEnv.DVT_TEMPORAL_WORKER_RUN_MIGRATIONS, 'true');
+});
+
+test('shouldStartTemporalWorker follows protected runtime posture', () => {
+  assert.equal(
+    shouldStartTemporalWorker({
+      DATABASE_URL: defaultPgUrl,
+      OIDC_JWKS_URI: 'http://127.0.0.1:4000/.well-known/jwks.json',
+      OIDC_ISSUER: 'https://issuer.local.dvt/',
+      OIDC_AUDIENCE: 'dvt-api',
+    }),
+    true
+  );
+  assert.equal(shouldStartTemporalWorker({ DATABASE_URL: defaultPgUrl }), false);
 });

@@ -19,6 +19,9 @@ code_refs:
   - apps/api/src/modules/protectedRuntime/buildProtectedExecutionRuntime.ts
   - apps/api/test/app/protectedRuntimeComposition.test.ts
   - apps/api/test/integration/protectedRuntime.integration.shared.ts
+  - scripts/run-dev-stack.cjs
+  - scripts/run-dev-stack.temporal.cjs
+  - scripts/run-dev-stack.test.cjs
   - apps/web/src/app/testing/contractTestUtils.ts
   - packages/@dvt/adapter-postgres/test/helpers/runEventFixtures.ts
 evidence:
@@ -58,6 +61,9 @@ required environment is absent.
 6. Protected runtime startup now fails fast with an explicit `TEMPORAL_ADDRESS`
    configuration error before workflow-engine construction when OIDC routes are
    enabled without Temporal configuration.
+7. `pnpm dev:app` now injects the canonical local Temporal posture, starts the
+   standalone Temporal worker, waits for its `/readyz` probe, and fails local
+   bootstrap explicitly when Temporal is unavailable.
 
 # Validation notes
 
