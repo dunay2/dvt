@@ -4,7 +4,6 @@ import { vi } from 'vitest';
 import { DBT_NODE_KINDS, DVT_AUTHORING_NODE_KINDS } from '../plugins/nodeTypeCatalog.dbt';
 import type { NodeKindRegistration } from '../plugins/nodeTypeContracts';
 import { DEFAULT_CANVAS_PALETTE_ID } from './canvas/canvasPalette';
-import { canvasViewCopy } from './canvas/copy';
 import type { CanvasDraftToolbarState } from './canvas/canvasDraftToolbarState';
 import type { CanvasController } from './Canvas.test.controller';
 
@@ -97,16 +96,6 @@ export type CanvasHostCycleControllerStateDto =
       canvasKind: CanvasDocumentKind;
       title?: string;
       firstNodeKind?: NodeKindRegistration['kind'];
-    }
-  | {
-      kind: 'plan_ready';
-      canvasKind: CanvasDocumentKind;
-      title?: string;
-    }
-  | {
-      kind: 'preview_ready';
-      canvasKind: CanvasDocumentKind;
-      title?: string;
     };
 
 export function buildDefaultCanvasToolbarState(): CanvasDraftToolbarState {
@@ -160,72 +149,6 @@ function buildCanvasHostCycleExplorerNode(
     status: 'idle',
     tags: [],
   };
-}
-
-function buildCanvasHostCycleExecutionExplorerNodes(
-  kind: CanvasDocumentKind
-): CanvasControllerStateDefaults['explorerNodes'] {
-  if (kind === 'dbt') {
-    return [
-      {
-        id: 'node.source',
-        name: 'Seed',
-        pluginId: 'dbt',
-        kind: 'dbt:source',
-        role: 'input',
-        status: 'idle',
-        tags: [],
-      },
-      {
-        id: 'node.model',
-        name: 'Model',
-        pluginId: 'dbt',
-        kind: 'dbt:model',
-        role: 'transform',
-        status: 'idle',
-        tags: [],
-      },
-      {
-        id: 'node.exposure',
-        name: 'Exposure',
-        pluginId: 'dbt',
-        kind: 'dbt:exposure',
-        role: 'output',
-        status: 'idle',
-        tags: [],
-      },
-    ];
-  }
-
-  return [
-    {
-      id: 'node.source',
-      name: 'Source',
-      pluginId: 'dvt',
-      kind: 'dvt:source',
-      role: 'input',
-      status: 'idle',
-      tags: [],
-    },
-    {
-      id: 'node.transform',
-      name: 'Transform',
-      pluginId: 'dvt',
-      kind: 'dvt:sql_transform',
-      role: 'transform',
-      status: 'idle',
-      tags: [],
-    },
-    {
-      id: 'node.sink',
-      name: 'Sink',
-      pluginId: 'dvt',
-      kind: 'dvt:sink',
-      role: 'output',
-      status: 'idle',
-      tags: [],
-    },
-  ];
 }
 
 function buildDefaultCanvasUserPermissions(): CanvasControllerStateDefaults['userPermissions'] {
@@ -376,37 +299,6 @@ export function buildCanvasHostCycleControllerState(
       },
       canOpenSourceImport: dto.canOpenSourceImport ?? true,
       canvasAuthoringMode: dto.canvasKind,
-    };
-  }
-
-  if (dto.kind === 'plan_ready' || dto.kind === 'preview_ready') {
-    return {
-      canvasDocument: {
-        kind: dto.canvasKind,
-        title: dto.title ?? resolveCanvasHostCycleTitle(dto.canvasKind),
-      },
-      explorerNodes: buildCanvasHostCycleExecutionExplorerNodes(dto.canvasKind),
-      canvasAuthoringMode: dto.canvasKind,
-      transformationValidation:
-        dto.canvasKind === 'transformation'
-          ? {
-              valid: true,
-              summaryCode: 'valid',
-              draftSignature: 'draft:transformation-ready',
-              scopedNodeIds: ['node.source', 'node.transform', 'node.sink'],
-              scopedEdgeIds: ['edge.source-transform', 'edge.transform-sink'],
-              nodeRolesById: {
-                'node.source': 'source',
-                'node.transform': 'sql_transform',
-                'node.sink': 'sink',
-              },
-            }
-          : buildDefaultTransformationValidation(),
-      canStartRun: dto.kind === 'preview_ready',
-      planStatusSummary:
-        dto.kind === 'preview_ready'
-          ? canvasViewCopy.planStatusPreviewReadyMessage
-          : canvasViewCopy.planStatusPreviewRequiredMessage,
     };
   }
 
