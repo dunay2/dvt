@@ -2245,6 +2245,7 @@ tasks:
     progress_pct: 60
     evidence_refs:
       - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-project-playground-and-multi-canvas-host-plan-20260423.md
+      - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-k-playground-complete-cycle-stories-20260424.md
       - docs/planning/closeouts/20260423-tf-e2-k-a-first-canvas-playground-host-closeout.md
       - docs/planning/closeouts/20260423-tf-e2-k-b-host-tab-restoration-closeout.md
       - docs/planning/closeouts/20260423-tf-e2-k-c-typed-empty-canvas-posture-closeout.md
@@ -2259,9 +2260,10 @@ tasks:
       workspace draft boundary, restores one explicit host-owned canvas tab from that authoritative
       draft identity, and renders typed editable empty-canvas copy from plugin-owned canvas-kind
       registration instead of flattening `dbt` and `transformation` back into one authoring story.
-      The next hito is `TF-E2-K-D`, which must prove the real `create canvas -> typed empty canvas
-      -> add first node` flow through the product surface.
-    last_verified: '2026-04-23'
+      The new cycle-story proposal now freezes the missing operator journeys, and the next hito is
+      `TF-E2-K-D`: prove the first transformation cycle from `needs_canvas` to first node while
+      introducing a story-owned host-cycle DTO.
+    last_verified: '2026-04-24'
   - task_id: TF-E2-K-A
     parent_task: TF-E2-K
     priority: P0
@@ -2344,23 +2346,102 @@ tasks:
     priority: P0
     status: queued
     objective: >-
-      prove the real `create canvas -> typed empty canvas -> add first node` flow through the host
-      path so browser proof starts from the product surface users will actually see.
+      prove the first complete transformation host cycle from `needs_canvas` to first node through
+      the real host path and replace transport-shaped setup with a story-owned host-cycle DTO.
     dependency: TF-E2-K-C
     target: >-
-      Browser-level proof covers create-canvas, typed empty state, and first-node creation through
-      the host path before selected-closure Cypress stories resume.
+      Route and component proof cover `create canvas -> typed empty canvas -> add first node ->
+      graph-ready authoring` for `transformation`, and the host/workbench tests consume one stable
+      cycle DTO instead of broad transport bags.
     complexity: S
     effort_points: 2
     progress_pct: 0
     evidence_refs:
       - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-project-playground-and-multi-canvas-host-plan-20260423.md
+      - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-k-playground-complete-cycle-stories-20260424.md
       - docs/architecture/components/web/graph/canvas-playground-host-component.md
       - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-e-selected-closure-ux-proof-stories-20260423.md
     status_reason: >-
-      Planned browser-proof prerequisite slice. It must prove the real host flow before
-      selected-closure Cypress work resumes.
-    last_verified: '2026-04-23'
+      Planned first complete-cycle slice. It must prove the transformation host cycle and harden the
+      route/test vocabulary around a stable cycle DTO before broader browser-proof work resumes.
+    last_verified: '2026-04-24'
+  - task_id: TF-E2-K-E
+    parent_task: TF-E2-K
+    priority: P0
+    status: queued
+    objective: >-
+      prove the same complete host cycle for `dbt` so typed canvas behavior remains distinct end to
+      end and does not collapse into transformation assumptions.
+    dependency: TF-E2-K-D
+    target: >-
+      `dbt` create-canvas, typed empty-canvas, and first-node proof stays visibly distinct in copy,
+      catalog, and route posture.
+    complexity: S
+    effort_points: 2
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-k-playground-complete-cycle-stories-20260424.md
+      - docs/architecture/components/web/graph/canvas-playground-host-component.md
+      - docs/architecture/components/web/graph/canvas-empty-authoring-entrypoint-component.md
+    status_reason: Planned dbt-specific host cycle proof; execution has not started.
+    last_verified: '2026-04-24'
+  - task_id: TF-E2-K-F
+    parent_task: TF-E2-K
+    priority: P0
+    status: queued
+    objective: >-
+      prove authoritative host restore of the active canvas tab and typed posture when the workspace
+      is reopened.
+    dependency: TF-E2-K-E
+    target: >-
+      Restore proof rehydrates the authoritative host tab and the correct typed empty or graph-ready
+      posture from protected draft truth only.
+    complexity: S
+    effort_points: 2
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-k-playground-complete-cycle-stories-20260424.md
+      - docs/architecture/components/web/graph/canvas-playground-host-component.md
+    status_reason: Planned authoritative restore cycle proof; execution has not started.
+    last_verified: '2026-04-24'
+  - task_id: TF-E2-K-G
+    parent_task: TF-E2-K
+    priority: P0
+    status: queued
+    objective: >-
+      prove the continuation cycle from typed canvas authoring into preview and run handoff without
+      widening scope or losing typed host context.
+    dependency: TF-E2-K-F
+    target: >-
+      Preview and run handoff remain anchored to the same typed canvas flow after first-node
+      authoring, and proof sequencing is ready for the later selected-closure browser work.
+    complexity: S
+    effort_points: 2
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-k-playground-complete-cycle-stories-20260424.md
+      - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-e-selected-closure-ux-proof-stories-20260423.md
+    status_reason: Planned typed-canvas preview/run continuation proof; execution has not started.
+    last_verified: '2026-04-24'
+  - task_id: TF-E2-K-H
+    parent_task: TF-E2-K
+    priority: P0
+    status: queued
+    objective: >-
+      prove blocked and read-only host cycles so the typed host remains understandable when runtime
+      or mutation capabilities are gated.
+    dependency: TF-E2-K-G
+    target: >-
+      The host stays fail-closed and understandable for blocked and read-only operators without fake
+      create-canvas, first-node, or run affordances.
+    complexity: S
+    effort_points: 2
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-k-playground-complete-cycle-stories-20260424.md
+      - docs/architecture/components/web/graph/canvas-playground-host-component.md
+    status_reason: Planned blocked/read-only host cycle proof; execution has not started.
+    last_verified: '2026-04-24'
   - task_id: TF-E2-E-B
     parent_task: TF-E2-E
     priority: P0

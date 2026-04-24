@@ -22,6 +22,7 @@ navigation. The folder contains additional historical entries.
 
 ## Representative Recent Closeouts
 
+- [20260424 TF-E2-K Cycle Story Capture Closeout](./20260424-tf-e2-k-cycle-story-capture-closeout.md)
 - [20260423 TF-E2-K-C Typed Empty-Canvas Posture Closeout](./20260423-tf-e2-k-c-typed-empty-canvas-posture-closeout.md)
 - [20260423 TF-E2-K-B Host Tab Restoration Closeout](./20260423-tf-e2-k-b-host-tab-restoration-closeout.md)
 - [20260423 TF-E2-K-A First-Canvas Playground Host Closeout](./20260423-tf-e2-k-a-first-canvas-playground-host-closeout.md)
