@@ -2,7 +2,7 @@
 title: Start-run execution capacity admission component
 status: Active
 owner: apps/api
-last_reviewed: 2026-04-23
+last_reviewed: 2026-04-24
 ---
 
 # Start-run execution capacity admission component
@@ -19,6 +19,7 @@ Read this together with:
 
 - `apps/api/docs/start-run-control-boundary-component.md`
 - `apps/api/docs/start-run-application-component.md`
+- `apps/api/docs/start-run-admission-observability-component.md`
 - `docs/architecture/components/engine/contracts/engine/start-run-boundary-component.md`
 
 ## Owned concern
@@ -112,7 +113,8 @@ real runtime-owned signal.
 ## Operator observability
 
 Execution-capacity denial stays inside canonical `system_backpressure`, but the
-operator-facing telemetry is now explicit:
+operator-facing telemetry is now explicit and is owned by the local admission
+observability component:
 
 - `dvt.admission.decision_total{mode,decision}` distinguishes accepted,
   duplicate, and reject or would-reject outcomes
@@ -121,6 +123,11 @@ operator-facing telemetry is now explicit:
   `CAPACITY_SIGNAL_UNAVAILABLE` from older system-pressure codes
 - `docs/runbooks/admission-control-runbook.md` owns the diagnostic path for
   those codes and for the Temporal worker `GET /readyz` probe
+
+Use the companion local guide for the telemetry API, invariants, transitions,
+and consumers:
+
+- `apps/api/docs/start-run-admission-observability-component.md`
 
 ## Anti-patterns explicitly prevented
 

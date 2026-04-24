@@ -569,14 +569,19 @@ tasks:
       - docs/planning/closeouts/20260422-api-start-run-execution-capacity-admission-closeout.md
       - docs/planning/closeouts/20260423-ar-c3-b-temporal-readyz-capacity-binding-closeout.md
       - docs/planning/closeouts/20260423-ar-c3-c-execution-capacity-operational-closure-closeout.md
+      - docs/planning/closeouts/20260424-ar-c3-admission-observability-semantic-hardening-closeout.md
       - apps/api/docs/start-run-execution-capacity-admission-component.md
+      - apps/api/docs/start-run-admission-observability-component.md
       - apps/api/test/application/services/startRunExecutionCapacityAdmission.architecture.test.ts
+      - apps/api/test/application/services/startRunAdmissionTelemetry.architecture.test.ts
     status_reason: >-
       `AR-C3-A`, `AR-C3-B`, and `AR-C3-C` are now implemented: `apps/api` owns the abstract
       execution-capacity seam, the fail-closed default binding remains in start-run composition,
       protected-runtime composition binds the `temporal` provider to the standalone worker `readyz`
-      probe, and operator-facing denial codes are now documented in telemetry and runbook truth.
-    last_verified: '2026-04-23'
+      probe, operator-facing denial codes are now documented in telemetry and runbook truth, and the
+      admission observability cluster now has its own local guide plus a semantic architecture
+      fitness rule instead of remaining implicit inside the seam guide.
+    last_verified: '2026-04-24'
   - task_id: AR-C3-A
     parent_task: AR-C3
     priority: P1
@@ -651,14 +656,18 @@ tasks:
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/ar-c3-start-run-execution-capacity-admission-plan-20260422.md
       - docs/planning/closeouts/20260423-ar-c3-c-execution-capacity-operational-closure-closeout.md
+      - docs/planning/closeouts/20260424-ar-c3-admission-observability-semantic-hardening-closeout.md
       - docs/runbooks/admission-control-runbook.md
+      - apps/api/docs/start-run-admission-observability-component.md
       - apps/api/test/application/services/startRunAdmissionDecisions.test.ts
       - apps/api/test/infrastructure/admissionTelemetry/ObservabilityAdmissionTelemetry.test.ts
+      - apps/api/test/application/services/startRunAdmissionTelemetry.architecture.test.ts
     status_reason: >-
       Execution-capacity denial is now distinguishable from older system pressure through canonical
-      rejection codes, telemetry labels, and the admission-control runbook. The remaining follow-up
-      is future policy extension, not missing operator truth for the current slice.
-    last_verified: '2026-04-22'
+      rejection codes, telemetry labels, the admission-control runbook, and a local admission
+      observability component guide with a semantic fitness rule. The remaining follow-up is future
+      policy extension, not missing operator truth for the current slice.
+    last_verified: '2026-04-24'
   - task_id: AR-C4
     priority: P1
     status: review

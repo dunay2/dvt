@@ -443,8 +443,9 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   `apps/api/docs/start-run-control-boundary-component.md`,
   `apps/api/docs/start-run-platform-identity-component.md`,
   `apps/api/docs/start-run-application-component.md`,
+  `apps/api/docs/start-run-execution-capacity-admission-component.md`,
   and
-  `apps/api/docs/start-run-execution-capacity-admission-component.md`.
+  `apps/api/docs/start-run-admission-observability-component.md`.
 - Primary code:
   [apps/api/src/app.ts](../../../apps/api/src/app.ts),
   [apps/api/src/application/services/WorkflowEngineFactory.ts](../../../apps/api/src/application/services/WorkflowEngineFactory.ts),

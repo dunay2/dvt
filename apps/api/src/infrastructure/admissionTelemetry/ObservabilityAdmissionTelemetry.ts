@@ -1,3 +1,7 @@
+/**
+ * Owned concern: translate canonical admission decision records into bounded
+ * observability counters and structured logs.
+ */
 import type { IObservability } from '@dvt/observability';
 
 import {

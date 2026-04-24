@@ -2,7 +2,7 @@
 title: API Current To Target Architecture
 status: Active
 owner: Architecture / API / Docs
-last_reviewed: 2026-04-23
+last_reviewed: 2026-04-24
 ---
 
 # API Current To Target Architecture
@@ -245,6 +245,7 @@ Use the local component guide for the public API, invariants, transitions, and
 consumers of this seam:
 
 - [Start-run execution capacity admission component](../../../../apps/api/docs/start-run-execution-capacity-admission-component.md)
+- [Start-run admission observability component](../../../../apps/api/docs/start-run-admission-observability-component.md)
 
 The caller-visible result vocabulary for this seam is documented separately in
 the shared contract component guide:
@@ -256,9 +257,9 @@ The abstract seam is now materially in place and the first concrete binding is
 live in composition: `buildProtectedRuntimeModule.ts` resolves a
 Temporal-worker `GET /readyz` probe into canonical execution-capacity
 admission semantics, while the application contract stays adapter-agnostic. The
-operator-facing telemetry and runbook closure are now in place, so the
-remaining follow-through is future policy extension rather than missing runtime
-truth.
+operator-facing telemetry has also been split into its own local observability
+component so metric-label policy, structured-log ownership, and runbook truth
+do not remain implicit inside the seam guide.
 
 The wider authenticated start-run path is also documented as its own local
 component. That guide makes two rules explicit:

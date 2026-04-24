@@ -9,6 +9,7 @@ import { defineArtifact } from './applicationArchitectureAst.artifacts.js';
 const APPLICATION_ROOT = join(import.meta.dirname, '../../../src/application');
 const DOCS_ROOT = join(import.meta.dirname, '../../../docs');
 const ENTRYPOINTS_HTTP_ROOT = join(import.meta.dirname, '../../../src/entrypoints/http');
+const INFRA_ROOT = join(import.meta.dirname, '../../../src/infrastructure');
 const MODULES_ROOT = join(import.meta.dirname, '../../../src/modules');
 
 export const START_RUN_EXECUTION_CAPACITY_ADMISSION_COMPONENT = {
@@ -47,6 +48,31 @@ export const START_RUN_EXECUTION_CAPACITY_ADMISSION_COMPONENT = {
       moduleSpecifier: '../../application/services/defaultStartRunExecutionCapacityPort.js',
     },
     useCaseForbiddenDefaultBindingModule: './defaultStartRunExecutionCapacityPort.js',
+  },
+} as const;
+
+export const START_RUN_ADMISSION_OBSERVABILITY_COMPONENT = {
+  artifacts: {
+    admissionTelemetryPort: defineArtifact(APPLICATION_ROOT, 'ports/AdmissionTelemetry.ts'),
+    backpressureCapacityTelemetryPort: defineArtifact(
+      APPLICATION_ROOT,
+      'ports/IBackpressureCapacityTelemetry.ts'
+    ),
+    noopAdmissionTelemetry: defineArtifact(
+      APPLICATION_ROOT,
+      'services/NoopAdmissionTelemetry.ts'
+    ),
+    decisions: defineArtifact(APPLICATION_ROOT, 'services/startRunAdmissionDecisions.ts'),
+    decisionTelemetry: defineArtifact(
+      INFRA_ROOT,
+      'admissionTelemetry/ObservabilityAdmissionTelemetry.ts'
+    ),
+    backpressureTelemetry: defineArtifact(
+      INFRA_ROOT,
+      'admissionTelemetry/ObservabilityBackpressureCapacityTelemetry.ts'
+    ),
+    metricCatalog: defineArtifact(INFRA_ROOT, 'admissionTelemetry/admissionTelemetryMetrics.ts'),
+    componentGuide: defineArtifact(DOCS_ROOT, 'start-run-admission-observability-component.md'),
   },
 } as const;
 

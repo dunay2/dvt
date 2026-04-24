@@ -2,7 +2,7 @@
 title: Start-run runtime composition component
 status: Active
 owner: apps/api
-last_reviewed: 2026-04-23
+last_reviewed: 2026-04-24
 ---
 
 # Start-run runtime composition component
@@ -18,6 +18,7 @@ Read this together with:
 
 - `apps/api/docs/start-run-application-component.md`
 - `apps/api/docs/start-run-execution-capacity-admission-component.md`
+- `apps/api/docs/start-run-admission-observability-component.md`
 - `apps/api/docs/executable-subgraph-resolution-component.md`
 - `docs/architecture/components/api/protected-runtime-and-plan-compile-component.md`
 
