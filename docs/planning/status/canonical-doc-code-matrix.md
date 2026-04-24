@@ -466,6 +466,9 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   [apps/api/src/infrastructure/auth/postgresPrincipalAccessRepository.ts](../../../apps/api/src/infrastructure/auth/postgresPrincipalAccessRepository.ts)
 - Key tests:
   [apps/api/test/app.test.ts](../../../apps/api/test/app.test.ts),
+  [apps/api/test/app/healthReadiness.test.ts](../../../apps/api/test/app/healthReadiness.test.ts),
+  [apps/api/test/app/protectedRuntimeComposition.test.ts](../../../apps/api/test/app/protectedRuntimeComposition.test.ts),
+  [apps/api/test/app/protectedRouteMounting.test.ts](../../../apps/api/test/app/protectedRouteMounting.test.ts),
   [apps/api/test/application/services/BackpressureAwareStartRunUseCase.admissionModes.test.ts](../../../apps/api/test/application/services/BackpressureAwareStartRunUseCase.admissionModes.test.ts),
   [apps/api/test/application/services/BackpressureAwareStartRunUseCase.duplicateFlow.test.ts](../../../apps/api/test/application/services/BackpressureAwareStartRunUseCase.duplicateFlow.test.ts),
   [apps/api/test/application/services/BackpressureAwareStartRunUseCase.executionCapacity.test.ts](../../../apps/api/test/application/services/BackpressureAwareStartRunUseCase.executionCapacity.test.ts),

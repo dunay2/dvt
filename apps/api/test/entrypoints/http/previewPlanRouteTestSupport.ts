@@ -1,5 +1,5 @@
-import { vi } from 'vitest';
 import type { IPlanner } from '@dvt/contracts';
+import { vi } from 'vitest';
 
 import { PreviewPlanUseCase } from '../../../src/application/services/PreviewPlanUseCase.js';
 

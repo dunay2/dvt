@@ -10,6 +10,10 @@ function createCounterSpy(): { add: ReturnType<typeof vi.fn>; counter: ReturnTyp
   return { add, counter };
 }
 
+function sortedLabelKeys(labels: Record<string, unknown>): string[] {
+  return Object.keys(labels).sort((left, right) => left.localeCompare(right));
+}
+
 describe('ObservabilityAdmissionTelemetry', () => {
   it('records decision_total and info log for accept', async () => {
     const decisionCounter = createCounterSpy();
@@ -161,15 +165,8 @@ describe('ObservabilityAdmissionTelemetry', () => {
 
     const decisionLabels = decisionCounter.add.mock.calls[0]?.[1] as Record<string, unknown>;
     const rejectionLabels = rejectionCounter.add.mock.calls[0]?.[1] as Record<string, unknown>;
-    expect(Object.keys(decisionLabels).sort((left, right) => left.localeCompare(right))).toEqual([
-      'decision',
-      'mode',
-    ]);
-    expect(Object.keys(rejectionLabels).sort((left, right) => left.localeCompare(right))).toEqual([
-      'code',
-      'decision',
-      'mode',
-    ]);
+    expect(sortedLabelKeys(decisionLabels)).toEqual(['decision', 'mode']);
+    expect(sortedLabelKeys(rejectionLabels)).toEqual(['code', 'decision', 'mode']);
   });
 
   it('swallows observability errors and does not throw', async () => {

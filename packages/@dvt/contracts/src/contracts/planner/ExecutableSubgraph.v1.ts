@@ -20,7 +20,9 @@ const NonBlankStringSchema = z
   })
   .brand<'NonBlankString'>();
 
-function buildUniqueStringArraySchema(label: string) {
+function buildUniqueStringArraySchema(
+  label: string
+): z.ZodType<Array<z.infer<typeof NonBlankStringSchema>>> {
   return z.array(NonBlankStringSchema).superRefine((values, ctx) => {
     if (new Set(values).size !== values.length) {
       ctx.addIssue({

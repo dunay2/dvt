@@ -5,10 +5,16 @@
  */
 import { describe, expect, it, vi } from 'vitest';
 
-import { loadEnv } from '../../src/plugins/env.js';
 import { buildProtectedExecutionCapacityPort } from '../../src/modules/protectedRuntime/buildProtectedExecutionCapacityPort.js';
+import { loadEnv } from '../../src/plugins/env.js';
 
-function buildFetchResponse(status: number, body: unknown) {
+function buildFetchResponse(
+  status: number,
+  body: unknown
+): {
+  readonly status: number;
+  json(): Promise<unknown>;
+} {
   return {
     status,
     async json() {

@@ -20,8 +20,8 @@ import type {
 } from '../ports/StartRunSlaTelemetry.js';
 import type { IStartRunUseCase, StartRunUseCaseResult } from '../ports/startRunUseCasePort.js';
 
-import { resolveCanonicalPlannerInputEnvelope } from './resolveCanonicalPlannerInputEnvelope.js';
 import { ResolveAuthorizedExecutableSubgraphService } from './resolveAuthorizedExecutableSubgraph.js';
+import { resolveCanonicalPlannerInputEnvelope } from './resolveCanonicalPlannerInputEnvelope.js';
 
 type PlanValidationResult = Awaited<ReturnType<IPlanExecutabilityValidator['validatePlan']>>;
 export class PlannerBackedStartRunUseCase implements IStartRunUseCase {

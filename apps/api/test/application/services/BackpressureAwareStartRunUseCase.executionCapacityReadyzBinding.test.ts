@@ -17,7 +17,13 @@ import {
   expectSuccessfulResult,
 } from './BackpressureAwareStartRunUseCase.test.support.js';
 
-function buildFetchResponse(status: number, body: unknown) {
+function buildFetchResponse(
+  status: number,
+  body: unknown
+): {
+  readonly status: number;
+  json(): Promise<unknown>;
+} {
   return {
     status,
     async json() {

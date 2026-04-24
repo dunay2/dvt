@@ -10,12 +10,15 @@ import {
   type StartRunExecutionCapacityResult,
 } from '../../application/ports/IStartRunExecutionCapacityPort.js';
 
+type ReadyzUrl = string | InstanceType<typeof globalThis.URL>;
+type ReadyzAbortSignal = InstanceType<typeof globalThis.AbortSignal>;
+
 type FetchLike = (
-  input: URL | string,
+  input: ReadyzUrl,
   init?: {
     readonly method?: string;
     readonly headers?: Record<string, string>;
-    readonly signal?: AbortSignal;
+    readonly signal?: ReadyzAbortSignal;
   }
 ) => Promise<{
   readonly status: number;
@@ -30,7 +33,7 @@ type TemporalWorkerReadyzPayload = {
 const DEFAULT_READYZ_TIMEOUT_MS = 1000;
 
 export interface TemporalWorkerReadyzExecutionCapacityPortOptions {
-  readonly readyzUrl: URL | string;
+  readonly readyzUrl: ReadyzUrl;
   readonly fetch?: FetchLike;
   readonly timeoutMs?: number;
 }
@@ -103,7 +106,9 @@ function unavailableCapacitySignalResult(): Extract<
   };
 }
 
-function resolveTimeoutSignal(timeoutMs: number | undefined): AbortSignal | undefined {
+function resolveTimeoutSignal(timeoutMs: number | undefined): ReadyzAbortSignal | undefined {
   const timeout = timeoutMs ?? DEFAULT_READYZ_TIMEOUT_MS;
-  return typeof AbortSignal.timeout === 'function' ? AbortSignal.timeout(timeout) : undefined;
+  return typeof globalThis.AbortSignal.timeout === 'function'
+    ? globalThis.AbortSignal.timeout(timeout)
+    : undefined;
 }
