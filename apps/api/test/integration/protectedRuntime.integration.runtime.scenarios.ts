@@ -5,8 +5,8 @@
  * @decision Keep protected runtime route and admin route integration flows separate from workspace-draft scenarios while matching the canonical hard-cut start-run boundary
  * @date 2026-04-18
  */
-import { readAcceptedRunId } from './protectedRuntime.integration.http.js';
 import type { ProtectedRuntimeHarness } from './protectedRuntime.integration.harness.js';
+import { readAcceptedRunId } from './protectedRuntime.integration.http.js';
 import {
   ENVIRONMENT_ID,
   PROJECT_ID,

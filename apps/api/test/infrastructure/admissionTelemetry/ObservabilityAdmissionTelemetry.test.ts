@@ -10,6 +10,10 @@ function createCounterSpy(): { add: ReturnType<typeof vi.fn>; counter: ReturnTyp
   return { add, counter };
 }
 
+function sortedLabelKeys(labels: Record<string, unknown>): string[] {
+  return Object.keys(labels).sort((left, right) => left.localeCompare(right));
+}
+
 describe('ObservabilityAdmissionTelemetry', () => {
   it('records decision_total and info log for accept', async () => {
     const decisionCounter = createCounterSpy();
@@ -92,6 +96,43 @@ describe('ObservabilityAdmissionTelemetry', () => {
     expect(info).not.toHaveBeenCalled();
   });
 
+  it('preserves execution-capacity rejection codes in telemetry labels', async () => {
+    const decisionCounter = createCounterSpy();
+    const rejectionCounter = createCounterSpy();
+    const telemetry = new ObservabilityAdmissionTelemetry({
+      observability: {
+        metrics: {
+          counter: vi.fn((name: string) =>
+            name === ADMISSION_TELEMETRY_METRICS.decisionTotal
+              ? decisionCounter.counter()
+              : rejectionCounter.counter()
+          ),
+          histogram: vi.fn(),
+          gauge: vi.fn(),
+        },
+        logs: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
+        traces: { startSpan: vi.fn(), withSpan: vi.fn() },
+        withContext: vi.fn((_, fn) => fn()),
+      } as unknown as IObservability,
+    });
+
+    await telemetry.record({
+      requestId: 'req-1',
+      tenantId: 'tenant-1',
+      runId: 'run-1',
+      mode: 'enforce',
+      decision: 'reject_system',
+      code: 'EXECUTOR_UNAVAILABLE',
+      retryAfterSeconds: 30,
+    });
+
+    expect(rejectionCounter.add).toHaveBeenCalledWith(1, {
+      mode: 'enforce',
+      decision: 'reject_system',
+      code: 'EXECUTOR_UNAVAILABLE',
+    });
+  });
+
   it('does not include tenantId or runId in metric labels', async () => {
     const decisionCounter = createCounterSpy();
     const rejectionCounter = createCounterSpy();
@@ -124,8 +165,8 @@ describe('ObservabilityAdmissionTelemetry', () => {
 
     const decisionLabels = decisionCounter.add.mock.calls[0]?.[1] as Record<string, unknown>;
     const rejectionLabels = rejectionCounter.add.mock.calls[0]?.[1] as Record<string, unknown>;
-    expect(Object.keys(decisionLabels).sort()).toEqual(['decision', 'mode']);
-    expect(Object.keys(rejectionLabels).sort()).toEqual(['code', 'decision', 'mode']);
+    expect(sortedLabelKeys(decisionLabels)).toEqual(['decision', 'mode']);
+    expect(sortedLabelKeys(rejectionLabels)).toEqual(['code', 'decision', 'mode']);
   });
 
   it('swallows observability errors and does not throw', async () => {

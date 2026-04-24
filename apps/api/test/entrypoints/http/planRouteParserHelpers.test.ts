@@ -16,11 +16,11 @@ const VALID_PLAN_REF = {
 };
 
 const START_RUN_ADAPTER_REGISTRY = {
-  isSupported(value: string): value is 'mock' | 'temporal' {
-    return value === 'mock' || value === 'temporal';
+  isSupported(value: string): value is 'temporal' {
+    return value === 'temporal';
   },
-  listSupported(): ReadonlyArray<'mock' | 'temporal'> {
-    return ['mock', 'temporal'];
+  listSupported(): ReadonlyArray<'temporal'> {
+    return ['temporal'];
   },
 };
 
@@ -307,7 +307,7 @@ describe('plan-route helper parsers', () => {
           projectId: 'p1',
           environmentId: 'e1',
           selection: { mode: 'explicit', nodeIds: ['model_a'] },
-          targetAdapter: 'mock',
+          targetAdapter: 'temporal',
           planRef: VALID_PLAN_REF,
           graphSource: {
             kind: 'generic-graph-v1',
@@ -333,7 +333,7 @@ describe('plan-route helper parsers', () => {
           projectId: 'p1',
           environmentId: 'e1',
           selection: { mode: 'explicit', nodeIds: ['model_a'] },
-          targetAdapter: 'mock',
+          targetAdapter: 'temporal',
           planRef: { uri: 'https://plans.example.com/p.json' },
         },
         START_RUN_ADAPTER_REGISTRY,
@@ -353,7 +353,7 @@ describe('plan-route helper parsers', () => {
           projectId: 'p1',
           environmentId: 'e1',
           selection: { mode: 'explicit', nodeIds: [' model_a '] },
-          targetAdapter: 'mock',
+          targetAdapter: 'temporal',
           planRef: VALID_PLAN_REF,
         },
         START_RUN_ADAPTER_REGISTRY,
@@ -372,7 +372,7 @@ describe('plan-route helper parsers', () => {
           environmentId: 'e1',
           selection: { mode: 'explicit', nodeIds: ['model_a'] },
           runId: 'client-run-1',
-          targetAdapter: 'mock',
+          targetAdapter: 'temporal',
           planRef: VALID_PLAN_REF,
         },
         START_RUN_ADAPTER_REGISTRY,

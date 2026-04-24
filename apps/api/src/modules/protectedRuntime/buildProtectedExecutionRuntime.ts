@@ -5,11 +5,11 @@
 import type { IObservability } from '@dvt/observability';
 import type { Logger } from 'pino';
 
-
 import { createStartRunTargetAdapterRegistryFromValues } from '../../application/services/startRunTargetAdapterRegistry.js';
 import { buildWorkflowEngine } from '../../application/services/WorkflowEngineFactory.js';
 import type { Env } from '../../plugins/env.js';
 import { buildProviderAdapters } from '../buildProviderAdapters.js';
+import { createTemporalProviderAdapterFactory } from '../providerAdapters/createTemporalProviderAdapterFactory.js';
 
 import type { ProtectedRuntimeStorage } from './buildProtectedRuntimeStorage.js';
 
@@ -24,18 +24,22 @@ export async function buildProtectedExecutionRuntime(
   deps: BuildProtectedExecutionRuntimeDeps
 ) {
   const { AllowAllAuthorizer } = await import('@dvt/engine');
-  const { adapters, close: closeAdapters } = await buildProviderAdapters(deps.env, {
-    stateStore: deps.storageRuntime.stateStoreRoles.read,
-    stateStoreWrite: deps.storageRuntime.stateStoreRoles.write,
-    clock: deps.storageRuntime.systemClock,
-    projector: deps.storageRuntime.projector,
-    observability: deps.observability,
-  });
+  const { adapters, close: closeAdapters } = await buildProviderAdapters(
+    deps.env,
+    {
+      stateStore: deps.storageRuntime.stateStoreRoles.read,
+      stateStoreWrite: deps.storageRuntime.stateStoreRoles.write,
+      clock: deps.storageRuntime.systemClock,
+      projector: deps.storageRuntime.projector,
+      observability: deps.observability,
+    },
+    [createTemporalProviderAdapterFactory()]
+  );
   const startRunTargetAdapterRegistry = createStartRunTargetAdapterRegistryFromValues(
     adapters.keys()
   );
 
-  if (deps.env.TEMPORAL_ADDRESS) {
+  if (adapters.has('temporal')) {
     deps.appLogger.info(`Temporal adapter registered (address=${deps.env.TEMPORAL_ADDRESS})`);
   }
 

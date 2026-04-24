@@ -51,7 +51,7 @@ export function buildStartRunCommand(): StartRunCommand {
   return {
     planRef: PLAN_REF,
     runId: 'run-test-1',
-    targetAdapter: 'mock',
+    targetAdapter: 'temporal',
     selection: parseExecutionSelection({
       mode: 'explicit',
       nodeIds: ['step_a', 'step_b'],

@@ -28,7 +28,7 @@ export const VALID_PREVIEW_CONTEXT = {
   tenantId: 'tenant-1',
   projectId: 'project-1',
   environmentId: 'env-1',
-  targetAdapter: 'mock',
+  targetAdapter: 'temporal',
 } as const;
 
 export const VALID_COMPILE_CONTEXT = {

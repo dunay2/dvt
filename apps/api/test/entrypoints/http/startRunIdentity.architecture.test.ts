@@ -38,11 +38,11 @@ const VALID_PLAN_REF = {
 };
 
 const START_RUN_ADAPTER_REGISTRY = {
-  isSupported(value: string): value is 'mock' | 'temporal' {
-    return value === 'mock' || value === 'temporal';
+  isSupported(value: string): value is 'temporal' {
+    return value === 'temporal';
   },
-  listSupported(): ReadonlyArray<'mock' | 'temporal'> {
-    return ['mock', 'temporal'];
+  listSupported(): ReadonlyArray<'temporal'> {
+    return ['temporal'];
   },
 };
 
@@ -54,7 +54,7 @@ const VALID_START_RUN_BODY = {
     mode: 'explicit',
     nodeIds: ['model.orders'],
   },
-  targetAdapter: 'mock',
+  targetAdapter: 'temporal',
   planRef: VALID_PLAN_REF,
 };
 
@@ -108,7 +108,7 @@ describe('start-run identity architecture', () => {
       expect.objectContaining({
         planRef: VALID_PLAN_REF,
         selection: { mode: 'explicit', nodeIds: ['model.orders'] },
-        targetAdapter: 'mock',
+        targetAdapter: 'temporal',
       })
     );
   });

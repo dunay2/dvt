@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { EmbeddedAccessDecisionService } from '../../../src/infrastructure/auth/embeddedAccessDecisionService.js';
 import { ProjectId, TenantId } from '../../../src/domain/auth/types.js';
+import { EmbeddedAccessDecisionService } from '../../../src/infrastructure/auth/embeddedAccessDecisionService.js';
 
 function normalizeSql(sql: string): string {
-  return sql.replace(/\s+/g, ' ').trim();
+  return sql.replaceAll(/\s+/g, ' ').trim();
 }
 
 describe('EmbeddedAccessDecisionService', () => {

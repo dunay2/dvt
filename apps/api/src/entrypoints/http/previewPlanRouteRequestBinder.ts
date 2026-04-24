@@ -1,4 +1,5 @@
 import type { ExecutionSelection } from '@dvt/contracts';
+
 import type { PreviewPlanCommand } from '../../application/services/PreviewPlanUseCase.js';
 
 import { bindScopeToPlannerEnvelope } from './planPreviewEnvelopeBinder.js';

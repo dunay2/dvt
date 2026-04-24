@@ -39,14 +39,17 @@ describe('contracts: StartRun boundary', () => {
     expect(command.environment?.environmentId).toBe('prod');
   });
 
-  it('rejects startRun commands with unsupported target adapters', () => {
-    expect(() =>
-      parseStartRunCommand({
-        ...VALID_START_RUN_PLAN_REF_COMMAND_FIXTURE,
-        targetAdapter: 'conductor',
-      })
-    ).toThrow(ContractValidationError);
-  });
+  it.each(['conductor', 'mock'] as const)(
+    'rejects startRun commands with unsupported target adapter %s',
+    (targetAdapter) => {
+      expect(() =>
+        parseStartRunCommand({
+          ...VALID_START_RUN_PLAN_REF_COMMAND_FIXTURE,
+          targetAdapter,
+        })
+      ).toThrow(ContractValidationError);
+    }
+  );
 
   it('rejects startRun commands with blank selections', () => {
     expect(() =>

@@ -20,7 +20,7 @@ const NonBlankStringSchema = z
   })
   .brand<'NonBlankString'>();
 
-function buildSelectedNodeIdsSchema() {
+function buildSelectedNodeIdsSchema(): z.ZodType<Array<z.infer<typeof NonBlankStringSchema>>> {
   return z.array(NonBlankStringSchema).superRefine((nodeIds, ctx) => {
     if (nodeIds.length === 0) {
       ctx.addIssue({

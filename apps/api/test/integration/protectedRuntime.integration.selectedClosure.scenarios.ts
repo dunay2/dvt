@@ -5,10 +5,13 @@
  * @decision Keep selected-closure proof scenarios separate from generic runtime/admin integration helpers
  * @date 2026-04-23
  */
-import { buildWorkspaceGraphDraft, buildWorkspaceGraphDraftSaveRequest } from '../fixtures/workspaceGraphDraftFixture.js';
+import {
+  buildWorkspaceGraphDraft,
+  buildWorkspaceGraphDraftSaveRequest,
+} from '../fixtures/workspaceGraphDraftFixture.js';
 
-import { readAcceptedRunId } from './protectedRuntime.integration.http.js';
 import type { ProtectedRuntimeHarness } from './protectedRuntime.integration.harness.js';
+import { readAcceptedRunId } from './protectedRuntime.integration.http.js';
 import { ENVIRONMENT_ID, PROJECT_ID, TENANT_ID } from './protectedRuntime.integration.shared.js';
 
 const TRANSFORMATION_PREVIEW_PROVENANCE = {
@@ -195,7 +198,7 @@ function buildSelectedClosurePreviewPayload(input: {
   };
 }
 
-function buildSelectedClosureDraft() {
+function buildSelectedClosureDraft(): ReturnType<typeof buildWorkspaceGraphDraft> {
   const baseDraft = buildWorkspaceGraphDraft();
 
   return {

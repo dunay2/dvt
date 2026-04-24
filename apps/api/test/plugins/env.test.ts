@@ -32,4 +32,12 @@ describe('loadEnv', () => {
     expect(env.DVT_START_RUN_BACKPRESSURE_CACHE_TTL_MS).toBe(2000);
     expect(env.DVT_START_RUN_RETRY_AFTER_SECONDS).toBe(30);
   });
+
+  it('accepts an explicit temporal worker readyz URL for execution-capacity binding', async () => {
+    const env = loadEnv({
+      DVT_TEMPORAL_WORKER_READYZ_URL: 'http://temporal-worker.example/readyz',
+    });
+
+    expect(env.DVT_TEMPORAL_WORKER_READYZ_URL).toBe('http://temporal-worker.example/readyz');
+  });
 });

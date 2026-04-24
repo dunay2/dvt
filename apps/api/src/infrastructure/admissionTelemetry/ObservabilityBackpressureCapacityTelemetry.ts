@@ -1,3 +1,7 @@
+/**
+ * Owned concern: translate backlog-capacity snapshots into bounded gauge
+ * signals for admission observability.
+ */
 import type { IObservability } from '@dvt/observability';
 
 import type { IBackpressureCapacityTelemetry } from '../../application/ports/IBackpressureCapacityTelemetry.js';

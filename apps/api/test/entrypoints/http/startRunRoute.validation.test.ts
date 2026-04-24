@@ -120,7 +120,7 @@ describe('startRunRoute validation', () => {
             planId: ' plan-2 ',
             planVersion: ' 3.0 ',
           },
-          targetAdapter: 'mock',
+          targetAdapter: 'temporal',
         },
       },
       expectedPayload: httpError('bad_request', 'invalid_plan_ref', { target: 'planRef' }),

@@ -2,7 +2,7 @@
 title: API Current To Target Architecture
 status: Active
 owner: Architecture / API / Docs
-last_reviewed: 2026-04-23
+last_reviewed: 2026-04-24
 ---
 
 # API Current To Target Architecture
@@ -225,9 +225,9 @@ directly.
 
 ### Start-run execution-capacity admission boundary
 
-`AR-C3-A` has introduced an abstract execution-capacity seam into the start-run
-admission path without teaching the API application layer about Temporal queue
-internals.
+`AR-C3-A` and `AR-C3-B` now give the start-run admission path both an abstract
+execution-capacity seam and its first real worker-backed binding, without
+teaching the API application layer about Temporal queue internals.
 
 ```mermaid
 flowchart LR
@@ -236,14 +236,16 @@ flowchart LR
   UseCase --> Guard["IAdmissionGuard"]
   UseCase --> Capacity["IStartRunExecutionCapacityPort"]
   UseCase --> Delegate["PlannerBackedStartRunUseCase / engine delegate"]
-  Runtime["buildProtectedStartRunRuntime.ts"] --> Default["DEFAULT_START_RUN_EXECUTION_CAPACITY_PORT"]
-  Default --> Capacity
+  Root["buildProtectedRuntimeModule.ts"] --> Binding["Temporal worker readyz binding"]
+  Binding --> Capacity
+  Runtime["buildProtectedStartRunRuntime.ts"] --> Capacity
 ```
 
 Use the local component guide for the public API, invariants, transitions, and
 consumers of this seam:
 
 - [Start-run execution capacity admission component](../../../../apps/api/docs/start-run-execution-capacity-admission-component.md)
+- [Start-run admission observability component](../../../../apps/api/docs/start-run-admission-observability-component.md)
 
 The caller-visible result vocabulary for this seam is documented separately in
 the shared contract component guide:
@@ -251,10 +253,13 @@ the shared contract component guide:
 - [Start-run boundary component](../engine/contracts/engine/start-run-boundary-component.md)
 - [Start-run application component](../../../../apps/api/docs/start-run-application-component.md)
 
-The abstract seam is now materially in place: local docs, a fail-closed
-default binding, and semantic architecture tests guard the component. The
-remaining open work is the concrete adapter signal (`AR-C3-B`) and the
-operator-facing telemetry/runbook closure (`AR-C3-C`).
+The abstract seam is now materially in place and the first concrete binding is
+live in composition: `buildProtectedRuntimeModule.ts` resolves a
+Temporal-worker `GET /readyz` probe into canonical execution-capacity
+admission semantics, while the application contract stays adapter-agnostic. The
+operator-facing telemetry has also been split into its own local observability
+component so metric-label policy, structured-log ownership, and runbook truth
+do not remain implicit inside the seam guide.
 
 The wider authenticated start-run path is also documented as its own local
 component. That guide makes two rules explicit:
@@ -336,8 +341,8 @@ transitions, and consumers of that end-to-end boundary:
 Current slice status:
 
 - `AR-C3-A` is the abstract seam and fail-closed default binding
-- `AR-C3-B` remains the concrete adapter-backed capacity binding
-- `AR-C3-C` remains telemetry/runbook/operational closure
+- `AR-C3-B` is the concrete Temporal-worker `readyz` binding in protected runtime composition
+- `AR-C3-C` closes telemetry labels, runbook truth, and operator-facing denial diagnosis
 
 ### Plan Route Response Translation Boundary
 
@@ -376,7 +381,6 @@ This keeps two adjacent but separate entrypoint components explicit:
 | ----------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
 | Admin route RBAC hardening follow-through remains                 | Explicit admin-scope RBAC is now wired in admin routes; remaining work is test-shape and composition hardening (`AR-C1-T1..T4`). | `AR-C1-T1..T4`                              |
 | SLA and consistency expectations are still implicit               | The API exposes freshness and backpressure behavior, but healthy thresholds remain scattered across config and runbooks.         | `AR-C2`                                     |
-| Concrete execution-capacity binding is still pending              | The API now has an abstract admission seam, but the real adapter-backed capacity signal is not yet bound in production.          | `AR-C3-B`, `AR-C3-C`                        |
 | Temporal activity writes depend directly on the state store       | State-store failures can cascade into execution stalls without an explicit breaker boundary.                                     | `AR-C4`                                     |
 | Query purity is incomplete                                        | `enrichRunStatus()` still lives on `IWorkflowEngine`, which weakens the read/write separation story.                             | `AR-A3`                                     |
 | Snapshot rebuild concurrency is not yet a contract invariant      | Current mutual exclusion exists in the PostgreSQL implementation, but the contract does not require it.                          | `AR-A6`                                     |
@@ -445,14 +449,36 @@ flowchart LR
 
 ### Target Characteristics
 
-| Concern                     | Current posture                                                                                     | Target posture                                                                                                |
-| --------------------------- | --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| Command boundary            | start-run path is explicit but still concentrated in one large protected-runtime composition module | command orchestration stays explicit but is split across smaller, clearer ports with capacity-aware admission |
-| Query boundary              | query services already use read paths, but enrichment still shares the engine contract              | core query path is pure CQRS; enrichment is optional and isolated behind `IRunEnrichmentService`              |
-| Authorization               | tenant and action checks are real, now through a single embedded access-decision backend            | runtime and admin paths use explicit, action-specific RBAC behind one DVT-owned decision contract             |
-| Admission                   | duplicate detection, delivery backpressure, and an abstract execution-capacity seam are real        | admission uses a concrete adapter-backed capacity signal and publishes measurable SLA outcomes                |
-| Concurrency and operability | snapshot freshness and health are visible, but some guarantees are still implementation-level       | concurrency, freshness, and degradation rules are contract-backed and observable                              |
-| Extensibility               | planner and execution still lean dbt-first in key seams                                             | planner input, step validation, artifacts, and worker routing are step-kind and graph-source agnostic         |
+- `Command boundary`
+  Current posture: start-run path is explicit but still concentrated in one
+  large protected-runtime composition module.
+  Target posture: command orchestration stays explicit but is split across
+  smaller, clearer ports with capacity-aware admission.
+- `Query boundary`
+  Current posture: query services already use read paths, but enrichment still
+  shares the engine contract.
+  Target posture: core query path is pure CQRS; enrichment is optional and
+  isolated behind `IRunEnrichmentService`.
+- `Authorization`
+  Current posture: tenant and action checks are real, now through a single
+  embedded access-decision backend.
+  Target posture: runtime and admin paths use explicit, action-specific RBAC
+  behind one DVT-owned decision contract.
+- `Admission`
+  Current posture: duplicate detection, delivery backpressure, and a concrete
+  worker-backed execution-capacity signal are real, with operator-facing denial
+  codes documented in telemetry and runbooks.
+  Target posture: admission publishes measurable SLA outcomes and evolves from
+  worker-backed denial closure toward richer tenant-scoped capacity policy.
+- `Concurrency and operability`
+  Current posture: snapshot freshness and health are visible, but some
+  guarantees are still implementation-level.
+  Target posture: concurrency, freshness, and degradation rules are
+  contract-backed and observable.
+- `Extensibility`
+  Current posture: planner and execution still lean dbt-first in key seams.
+  Target posture: planner input, step validation, artifacts, and worker routing
+  are step-kind and graph-source agnostic.
 
 ## Governed Transition Route
 

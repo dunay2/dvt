@@ -18,7 +18,7 @@ describe('EngineStartRunUseCase error mapping', () => {
   it('maps AdapterNotRegisteredError to typed engine error result', async () => {
     const useCase = new EngineStartRunUseCase({
       async startRun() {
-        throw new AdapterNotRegisteredError('mock');
+        throw new AdapterNotRegisteredError('temporal');
       },
     } as never);
 
@@ -26,7 +26,7 @@ describe('EngineStartRunUseCase error mapping', () => {
       ok: false,
       error: {
         kind: 'adapter_not_registered',
-        adapter: 'mock',
+        adapter: 'temporal',
       },
     });
   });

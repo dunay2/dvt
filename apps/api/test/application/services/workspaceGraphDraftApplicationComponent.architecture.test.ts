@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { WORKSPACE_GRAPH_DRAFT_APPLICATION_COMPONENT } from './applicationArchitectureAst.support.js';
 
-const { artifacts, contracts } = WORKSPACE_GRAPH_DRAFT_APPLICATION_COMPONENT;
+const { artifacts } = WORKSPACE_GRAPH_DRAFT_APPLICATION_COMPONENT;
 
 describe('Workspace graph draft application component architecture', () => {
   it('ships a local component guide with API, invariants, transitions, and consumers', () => {
@@ -96,7 +96,6 @@ describe('Workspace graph draft application component architecture', () => {
 
   it('centralizes action names and persistence interfaces in the port family module', () => {
     const portFamilyText = artifacts.portFamily.readText();
-    const portFamilySource = artifacts.portFamily.readSource();
 
     for (const exportedIdentifier of [
       'WORKSPACE_GRAPH_DRAFT_ACTION',

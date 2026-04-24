@@ -40,7 +40,7 @@ describe('startRunRoute auth and success outcomes', () => {
       command: {
         planRef: VALID_PLAN_REF,
         runId: 'run_generated_success',
-        targetAdapter: 'mock',
+        targetAdapter: 'temporal',
         selection: { mode: 'explicit', nodeIds: ['model_a'] },
       },
       requestedScope: {

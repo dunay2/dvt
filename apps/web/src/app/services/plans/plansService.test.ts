@@ -1,7 +1,7 @@
+import { parseExecutionSelection, type ExecutionSelection } from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { ApiClient } from '../api/createApiClient';
-import { parseExecutionSelection } from '@dvt/contracts';
 
 import { makePlanRef, makeRunContext } from '../../testing/contractTestUtils';
 import { createPlansService } from './plansService';
@@ -70,7 +70,7 @@ const VALID_GENERIC_GRAPH_SOURCE = {
 const VALID_TRANSFORMATION_SELECTION = ['source-node', 'transform-node', 'sink-node'] as const;
 const VALID_GENERIC_SELECTION = ['node_1'] as const;
 
-function toExplicitSelection(nodeIds: readonly string[]) {
+function toExplicitSelection(nodeIds: readonly string[]): ExecutionSelection {
   return parseExecutionSelection({
     mode: 'explicit' as const,
     nodeIds: [...nodeIds],

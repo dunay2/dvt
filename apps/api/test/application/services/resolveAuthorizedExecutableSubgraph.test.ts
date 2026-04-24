@@ -35,7 +35,7 @@ function buildContext(): AuthorizedCommandExecutionContext {
   };
 }
 
-function buildDraftPayload() {
+function buildDraftPayload(): Record<string, unknown> {
   return {
     nodeIds: ['source-node', 'transform-node'],
     nodePositions: {

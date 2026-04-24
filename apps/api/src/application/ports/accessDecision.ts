@@ -210,7 +210,7 @@ export function toExecutionScope<TAction extends AuthorizationAction>(
   return scope;
 }
 
-export type AccessDecision<TAction extends AuthorizationAction = AuthorizationAction> =
+export type AccessDecision<_TAction extends AuthorizationAction = AuthorizationAction> =
   | {
       readonly ok: true;
       readonly approvedScope: ExecutionScope;

@@ -20,7 +20,7 @@ describe('EngineStartRunUseCase command path', () => {
     const useCase = new EngineStartRunUseCase({} as never);
     const commandWithoutPlanRef: StartRunCommand = {
       runId: 'run-test-1',
-      targetAdapter: 'mock',
+      targetAdapter: 'temporal',
       selection: parseExecutionSelection({ mode: 'explicit', nodeIds: ['step_a'] }),
     };
 
@@ -44,7 +44,7 @@ describe('EngineStartRunUseCase command path', () => {
         capturedPlanRef = planRef;
         capturedRunContext = runContext;
         return {
-          provider: 'mock' as const,
+          provider: 'temporal' as const,
           tenantId: 'tenant-1',
           workflowId: 'wf-1',
           runId: 'run-test-1',
@@ -65,7 +65,7 @@ describe('EngineStartRunUseCase command path', () => {
       projectId: 'proj-1',
       environmentId: 'env-1',
       runId: 'run-test-1',
-      targetAdapter: 'mock',
+      targetAdapter: 'temporal',
     });
   });
 
@@ -75,7 +75,7 @@ describe('EngineStartRunUseCase command path', () => {
       async startRun(planRef: unknown) {
         capturedPlanRef = planRef;
         return {
-          provider: 'mock' as const,
+          provider: 'temporal' as const,
           tenantId: 'tenant-1',
           workflowId: 'wf-1',
           runId: 'run-test-1',
@@ -102,7 +102,7 @@ describe('EngineStartRunUseCase command path', () => {
       async startRun(_planRef: unknown, runContext: unknown) {
         capturedRunContext = runContext;
         return {
-          provider: 'mock' as const,
+          provider: 'temporal' as const,
           tenantId: 'tenant-1',
           workflowId: 'wf-1',
           runId: 'run-test-1',
@@ -124,7 +124,7 @@ describe('EngineStartRunUseCase command path', () => {
       projectId: 'proj-1',
       environmentId: 'env-1',
       runId: 'run-test-1',
-      targetAdapter: 'mock',
+      targetAdapter: 'temporal',
       runExecutionContextRef: {
         uri: 'dvt-runctx://tenant-1/run-test-1/context.json',
         sha256: 'ctxsha',

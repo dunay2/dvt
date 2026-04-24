@@ -25,7 +25,7 @@ export const VALID_BODY = {
     nodeIds: ['model_a'],
   },
   planRef: VALID_PLAN_REF,
-  targetAdapter: 'mock' as const,
+  targetAdapter: 'temporal' as const,
 } as const;
 
 export function okResult<T>(value: T): { readonly ok: true; readonly value: T } {
@@ -81,11 +81,11 @@ export function createReply(): ReplyDouble {
 }
 
 export function registryWith(
-  ...supported: Array<'mock' | 'temporal'>
+  ...supported: Array<'temporal'>
 ): IStartRunTargetAdapterRegistry {
   return {
-    isSupported(value: string): value is 'mock' | 'temporal' {
-      return supported.includes(value as 'mock' | 'temporal');
+    isSupported(value: string): value is 'temporal' {
+      return supported.includes(value as 'temporal');
     },
     listSupported() {
       return [...supported];
