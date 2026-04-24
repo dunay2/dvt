@@ -204,7 +204,7 @@ export async function buildApp(): Promise<{ app: FastifyInstance; ctx: AppContex
       planner: protectedModule.planCompilePlanner,
     });
     const previewPlanUseCase = new PreviewPlanUseCase({
-      planner: protectedModule.planCompilePlanner,
+      planner: protectedModule.planner,
       planStore: protectedModule.planStore,
       planValidator: protectedModule.planValidator,
       executableSubgraphResolver: new ResolveAuthorizedExecutableSubgraphService({

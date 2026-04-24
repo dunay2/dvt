@@ -69,10 +69,16 @@ export function describeProtectedRuntimeAndPlanCompileArchitectureCases(): void 
       );
     });
 
-    it('wires preview planning through the compile-boundary planner instead of the generic start-run planner', () => {
-      expect(APP_SOURCE).toContain('const previewPlanUseCase = new PreviewPlanUseCase({');
-      expect(APP_SOURCE).toContain('planner: protectedModule.planCompilePlanner,');
-      expect(APP_SOURCE).toContain('planner: protectedModule.planner,');
+    it('keeps generic preview planning on the protected runtime planner while compile stays on the compile boundary', () => {
+      expect(APP_SOURCE).toMatch(
+        /const previewPlanUseCase = new PreviewPlanUseCase\(\{\s*planner: protectedModule\.planner,/s
+      );
+      expect(APP_SOURCE).not.toMatch(
+        /const previewPlanUseCase = new PreviewPlanUseCase\(\{\s*planner: protectedModule\.planCompilePlanner,/s
+      );
+      expect(APP_SOURCE).toMatch(
+        /const compilePlanUseCase = new CompilePlanUseCase\(\{\s*planner: protectedModule\.planCompilePlanner,/s
+      );
     });
 
     it('keeps implemented-adapter filtering inside the dedicated registry module', () => {
