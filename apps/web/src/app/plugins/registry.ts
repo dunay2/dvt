@@ -23,8 +23,7 @@ import type {
   PluginDataPort,
   ViewContribution,
 } from './contracts/PluginManifest';
-import type { NodeKindRegistration } from './nodeTypeContracts';
-import type { CanvasKindRegistration } from './nodeTypeContracts';
+import type { CanvasKindRegistration, NodeKindRegistration } from './nodeTypeContracts';
 
 // ---------------------------------------------------------------------------
 // PluginContributions — v1 public contract

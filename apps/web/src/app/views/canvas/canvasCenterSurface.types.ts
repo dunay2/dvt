@@ -1,6 +1,8 @@
 /** Owned concern: define Canvas center-surface rendering contracts. */
-import type { NodeKindRegistration } from '../../plugins/nodeTypeContracts';
-import type { CanvasKindRegistration } from '../../plugins/nodeTypeContracts';
+import type {
+  CanvasKindRegistration,
+  NodeKindRegistration,
+} from '../../plugins/nodeTypeContracts';
 import type { CanvasDraftPresentationState } from './canvasDraftPresentationModel';
 import type { CanvasDraftTransportErrorState } from './canvasDraftTransportErrorState';
 import type { CanvasRouteStartupBlockState } from './canvasRouteInteractionState';
