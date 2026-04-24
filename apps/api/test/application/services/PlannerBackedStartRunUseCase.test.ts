@@ -386,7 +386,9 @@ describe('PlannerBackedStartRunUseCase', () => {
     const compileTelemetry = { recordPlanCompileLatency: vi.fn() };
     const useCase = new PlannerBackedStartRunUseCase({
       planner: {
-        buildPlan: vi.fn(async () => Promise.reject(new Error('s3 transport down'))),
+        buildPlan: vi.fn(async () => {
+          throw new Error('s3 transport down');
+        }),
       } as never,
       planStore: {
         storePlan: vi.fn(async () => STORED_PLAN_REF),
