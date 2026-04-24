@@ -46,8 +46,9 @@ function makeMeta(overrides: Partial<RunMetadata> = {}): RunMetadata {
     planVersion: '1.0.0',
     logicalAttemptId: 1,
     providerRef: {
-      provider: 'mock',
+      provider: 'temporal',
       tenantId: 'tenant-a',
+      namespace: 'default',
       workflowId: 'wf-run-a',
       runId: 'pr-run-a',
     },

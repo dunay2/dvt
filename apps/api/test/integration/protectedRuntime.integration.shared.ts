@@ -10,7 +10,8 @@ import process from 'node:process';
 import { describe } from 'vitest';
 
 export const DATABASE_URL = process.env['DVT_PG_URL'] ?? process.env['DATABASE_URL'];
-export const describeIfPg = DATABASE_URL ? describe : describe.skip;
+export const TEMPORAL_ADDRESS = process.env['TEMPORAL_ADDRESS'];
+export const describeIfPg = DATABASE_URL && TEMPORAL_ADDRESS ? describe : describe.skip;
 export const TENANT_ID = 'tenant-api-it';
 export const PROJECT_ID = 'project-api-it';
 export const ENVIRONMENT_ID = 'env-api-it';

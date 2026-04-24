@@ -1,0 +1,33 @@
+---
+id: R-20260424-HARD-CUT-RUNTIME-PROVIDER-VOCABULARY
+title: Runtime provider vocabulary can drift back to synthetic providers
+status: Open
+date: 2026-04-24
+owners:
+  - packages/@dvt/contracts
+  - packages/@dvt/engine
+  - apps/api
+severity: Medium
+probability: Medium
+context: >
+  The 2026-04-24 cleanup removes `mock` from active runtime provider vocabulary and renames the
+  engine mock adapter to an in-memory unit-test provider double.
+risk: >
+  Future test or composition changes could reintroduce synthetic provider IDs into contracts, API
+  runtime configuration, or integration tests. That would blur the distinction between unit-test
+  doubles and real provider adapters.
+mitigations:
+  - >
+    Keep provider-vocabulary architecture tests in `@dvt/contracts` so active contracts reject
+    `mock` as a runtime provider.
+  - >
+    Keep unit-test doubles named by their role, such as `InMemoryProviderAdapter`, and configure
+    them with real provider ids.
+  - >
+    Keep integration tests fail-closed: use real Temporal/Postgres infrastructure or skip with an
+    explicit missing-environment reason.
+  - >
+    Treat web `mock` data-source mode as UI-local demo/test data only; it must not leak into
+    start-run `targetAdapter` or `providerRef.provider` fields.
+review_after: 2026-06-30
+---

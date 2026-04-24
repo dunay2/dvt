@@ -16,15 +16,15 @@ export function describeStoredPlanExecutabilityValidatorCapabilitiesCases(): voi
         fetcher: {
           fetchForValidation: vi.fn(async () => storedPlanArtifact()),
         },
-        adapters: new Map([['mock', makeAdapter(['basic-execution', 'workflow.fan.parallel'])]]),
+        adapters: new Map([['temporal', makeAdapter(['basic-execution', 'workflow.fan.parallel'])]]),
       });
 
-      const result = await validator.validatePlan(PLAN_REF, 'mock');
+      const result = await validator.validatePlan(PLAN_REF, 'temporal');
 
       expect(result).toEqual({
         status: 'OK',
         planId: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
-        adapterId: 'mock',
+        adapterId: 'temporal',
       });
     });
 
@@ -37,15 +37,15 @@ export function describeStoredPlanExecutabilityValidatorCapabilitiesCases(): voi
             })
           ),
         },
-        adapters: new Map([['mock', makeAdapter(['basic-execution'])]]),
+        adapters: new Map([['temporal', makeAdapter(['basic-execution'])]]),
       });
 
-      const result = await validator.validatePlan(PLAN_REF, 'mock');
+      const result = await validator.validatePlan(PLAN_REF, 'temporal');
 
       expect(result).toEqual({
         status: 'ERROR',
         planId: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
-        adapterId: 'mock',
+        adapterId: 'temporal',
         code: 'MISSING_CAPABILITY',
         degradable: false,
         reason: 'Missing adapter capability: workflow.pause',
@@ -64,9 +64,9 @@ export function describeStoredPlanExecutabilityValidatorCapabilitiesCases(): voi
         },
         adapters: new Map([
           [
-            'mock',
+            'temporal',
             {
-              provider: 'mock',
+              provider: 'temporal',
               async startRun() {
                 throw new Error('not used');
               },
@@ -87,12 +87,12 @@ export function describeStoredPlanExecutabilityValidatorCapabilitiesCases(): voi
         ]),
       });
 
-      const result = await validator.validatePlan(PLAN_REF, 'mock');
+      const result = await validator.validatePlan(PLAN_REF, 'temporal');
 
       expect(result).toEqual({
         status: 'ERROR',
         planId: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
-        adapterId: 'mock',
+        adapterId: 'temporal',
         code: 'REJECTED',
         degradable: false,
         reason: 'Adapter does not declare capabilities required for executability validation',
@@ -117,7 +117,7 @@ export function describeStoredPlanExecutabilityValidatorCapabilitiesCases(): voi
         },
         adapters: new Map([
           [
-            'mock',
+            'temporal',
             {
               ...makeAdapter(['basic-execution']),
               capabilities: capabilitiesSpy,
@@ -126,12 +126,12 @@ export function describeStoredPlanExecutabilityValidatorCapabilitiesCases(): voi
         ]),
       });
 
-      const result = await validator.validatePlan(PLAN_REF, 'mock');
+      const result = await validator.validatePlan(PLAN_REF, 'temporal');
 
       expect(result).toEqual({
         status: 'ERROR',
         planId: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
-        adapterId: 'mock',
+        adapterId: 'temporal',
         code: 'REJECTED',
         degradable: false,
         reason: expect.stringContaining('INVALID_STEP_TYPE_CONFIG'),

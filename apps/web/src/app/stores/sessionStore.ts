@@ -26,8 +26,7 @@ export interface SessionState {
 
 const runtimeDataSourceMode = getRuntimeDataSourceMode();
 const workspaceBootstrap = resolveWorkspaceBootstrapConfig(runtimeDataSourceMode);
-const DEFAULT_TARGET_ADAPTER: RunContext['targetAdapter'] =
-  runtimeDataSourceMode === 'api' ? 'temporal' : 'mock';
+const DEFAULT_TARGET_ADAPTER: RunContext['targetAdapter'] = 'temporal';
 
 type PersistedSessionState = Pick<SessionState, 'tenantId' | 'projectId' | 'environmentId'> & {
   targetAdapter?: RunContext['targetAdapter'];

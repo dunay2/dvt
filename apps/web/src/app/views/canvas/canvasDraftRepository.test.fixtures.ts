@@ -178,7 +178,7 @@ export function buildSaveInput() {
       canonicalEdges: CANONICAL_EDGES,
       workspaceScope: {
         ...WORKSPACE_SCOPE,
-        targetAdapter: 'mock' as const,
+        targetAdapter: 'temporal' as const,
       },
       previewProvenanceConfig: { gitBranch: 'main', gitSha: 'local', gitRepo: 'dunay2/dvt' },
     },

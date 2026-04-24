@@ -10,7 +10,7 @@
  *   - Engine accepts runs when adapter supports all required capabilities.
  *   - Engine skips validation when executionPolicy has no requiresCapabilities.
  *   - Engine rejects when required capabilities are present and the adapter omits capabilities().
- *   - Matrix drift gate: adapter.capabilities() must match adapters.capabilities.json.
+ *   - Matrix drift gate: active provider capabilities must match adapters.capabilities.json.
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -25,8 +25,8 @@ import { describe, expect, it } from 'vitest';
 
 import { createNoopObservability } from '../../../observability/src/noopObservability.js';
 import { ConductorAdapterStub } from '../../src/adapters/conductor/ConductorAdapterStub.js';
+import { InMemoryProviderAdapter } from '../../src/adapters/inMemory/InMemoryProviderAdapter.js';
 import type { IProviderAdapter } from '../../src/adapters/IProviderAdapter.js';
-import { MockAdapter } from '../../src/adapters/mock/MockAdapter.js';
 import { ENGINE_ERROR_MESSAGE_KEY } from '../../src/contracts/errors.js';
 import { SnapshotProjector } from '../../src/core/SnapshotProjector.js';
 import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
@@ -71,14 +71,14 @@ function makeCtx(runId: string): {
   projectId: string;
   environmentId: string;
   runId: string;
-  targetAdapter: 'mock';
+  targetAdapter: 'temporal';
 } {
   return {
     tenantId: 't1',
     projectId: 'p1',
     environmentId: 'dev',
     runId,
-    targetAdapter: 'mock' as const,
+    targetAdapter: 'temporal' as const,
   };
 }
 
@@ -87,14 +87,19 @@ function createEngine(
   executionPolicy: RunExecutionPolicy = {}
 ): {
   engine: ReturnType<typeof createWorkflowEngineFixture>['engine'];
-  mock: MockAdapter;
+  testAdapter: InMemoryProviderAdapter;
 } {
   const store = new InMemoryTxStore();
   const projector = new SnapshotProjector();
   const clock = { nowIsoUtc: () => '2026-02-12T00:00:00.000Z' };
 
-  const mock = new MockAdapter({ stateStore: store, projector, clock });
-  const effective = adapter ?? mock;
+  const testAdapter = new InMemoryProviderAdapter({
+    stateStore: store,
+    stateStoreWrite: store,
+    projector,
+    clock,
+  });
+  const effective = adapter ?? testAdapter;
 
   const { engine } = createWorkflowEngineFixture({
     stateStore: store,
@@ -104,7 +109,7 @@ function createEngine(
     planFetcher: makePlanFetcherForPlan(CAPABILITY_PLAN, executionPolicy),
   });
 
-  return { engine, mock };
+  return { engine, testAdapter };
 }
 
 // ─── Engine capability gate ───────────────────────────────────────────────────
@@ -113,14 +118,14 @@ describe('capability gate — engine enforces requiresCapabilities', () => {
   it('accepts a run when executionPolicy has no requiresCapabilities', async () => {
     const { engine } = createEngine();
     await expect(engine.startRun(makePlanRef(), makeCtx('cap-none-1'))).resolves.toMatchObject({
-      provider: 'mock',
+      provider: 'temporal',
     });
   });
 
   it('accepts a run when executionPolicy.requiresCapabilities is empty', async () => {
     const { engine } = createEngine(undefined, { requiresCapabilities: [] });
     await expect(engine.startRun(makePlanRef(), makeCtx('cap-empty-1'))).resolves.toMatchObject({
-      provider: 'mock',
+      provider: 'temporal',
     });
   });
 
@@ -129,7 +134,7 @@ describe('capability gate — engine enforces requiresCapabilities', () => {
       requiresCapabilities: ['basic-execution', 'workflow.fan.parallel'],
     });
     await expect(engine.startRun(makePlanRef(), makeCtx('cap-ok-1'))).resolves.toMatchObject({
-      provider: 'mock',
+      provider: 'temporal',
     });
   });
 
@@ -153,7 +158,7 @@ describe('capability gate — engine enforces requiresCapabilities', () => {
     );
     expect((err as { messageParams?: Record<string, unknown> }).messageParams).toMatchObject({
       capabilities: ['query.workflow.state'],
-      provider: 'mock',
+      provider: 'temporal',
     });
   });
 
@@ -161,10 +166,15 @@ describe('capability gate — engine enforces requiresCapabilities', () => {
     const store = new InMemoryTxStore();
     const projector = new SnapshotProjector();
     const clock = { nowIsoUtc: () => '2026-02-12T00:00:00.000Z' };
-    const base = new MockAdapter({ stateStore: store, projector, clock });
+    const base = new InMemoryProviderAdapter({
+      stateStore: store,
+      stateStoreWrite: store,
+      projector,
+      clock,
+    });
     // Build an adapter that explicitly omits the capabilities() method.
     const noCapAdapter: IProviderAdapter = {
-      provider: 'mock',
+      provider: 'temporal',
       startRun: base.startRun.bind(base),
       cancelRun: base.cancelRun.bind(base),
       getProviderStatusView: base.getProviderStatusView.bind(base),
@@ -184,24 +194,28 @@ describe('capability gate — engine enforces requiresCapabilities', () => {
 // ─── Adapter capabilities() declarations ─────────────────────────────────────
 
 describe('adapter capabilities() declarations', () => {
-  it('MockAdapter.capabilities() includes basic-execution', () => {
+  it('InMemoryProviderAdapter test double declares temporal basic-execution capability', () => {
     const store = new InMemoryTxStore();
-    const mock = new MockAdapter({
+    const testAdapter = new InMemoryProviderAdapter({
       stateStore: store,
+      stateStoreWrite: store,
       projector: new SnapshotProjector(),
       clock: { nowIsoUtc: () => '2026-02-12T00:00:00.000Z' },
     });
-    expect(mock.capabilities()).toContain('basic-execution');
+    expect(testAdapter.provider).toBe('temporal');
+    expect(testAdapter.capabilities()).toContain('basic-execution');
   });
 
-  it('MockAdapter.capabilities() includes workflow.fan.parallel', () => {
+  it('InMemoryProviderAdapter test double declares temporal fan-out capability', () => {
     const store = new InMemoryTxStore();
-    const mock = new MockAdapter({
+    const testAdapter = new InMemoryProviderAdapter({
       stateStore: store,
+      stateStoreWrite: store,
       projector: new SnapshotProjector(),
       clock: { nowIsoUtc: () => '2026-02-12T00:00:00.000Z' },
     });
-    expect(mock.capabilities()).toContain('workflow.fan.parallel');
+    expect(testAdapter.provider).toBe('temporal');
+    expect(testAdapter.capabilities()).toContain('workflow.fan.parallel');
   });
 
   it('ConductorAdapterStub.capabilities() includes basic-execution', () => {
@@ -228,19 +242,11 @@ describe('adapters.capabilities.json matrix drift gate', () => {
     expect(fs.existsSync(MATRIX_PATH)).toBe(true);
   });
 
-  it('mock adapter capabilities match the matrix', () => {
-    const store = new InMemoryTxStore();
-    const mock = new MockAdapter({
-      stateStore: store,
-      projector: new SnapshotProjector(),
-      clock: { nowIsoUtc: () => '2026-02-12T00:00:00.000Z' },
-    });
-    const declared = [...mock.capabilities()].sort((a, b) => a.localeCompare(b));
-    const matrix =
-      loadMatrix()
-        .adapters['mock']?.capabilities.slice()
-        .sort((a, b) => a.localeCompare(b)) ?? [];
-    expect(declared).toEqual(matrix);
+  it('matrix lists only active runtime providers', () => {
+    expect(Object.keys(loadMatrix().adapters).sort((a, b) => a.localeCompare(b))).toEqual([
+      'conductor',
+      'temporal',
+    ]);
   });
 
   it('conductor adapter capabilities match the matrix', () => {

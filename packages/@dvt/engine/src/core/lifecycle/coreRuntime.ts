@@ -273,19 +273,11 @@ const normalizeConductorRunRef: EngineRunRefNormalizer<'conductor'> = (input) =>
   conductorUrl: input.conductorUrl,
 });
 
-const normalizeMockRunRef: EngineRunRefNormalizer<'mock'> = (input) => ({
-  provider: 'mock',
-  tenantId: input.tenantId,
-  workflowId: input.workflowId,
-  runId: input.runId,
-});
-
 const ENGINE_RUN_REF_NORMALIZER_BY_PROVIDER: {
   [K in ParsedProvider]: EngineRunRefNormalizer<K>;
 } = {
   temporal: normalizeTemporalRunRef,
   conductor: normalizeConductorRunRef,
-  mock: normalizeMockRunRef,
 };
 
 function throwUnsupportedProvider(provider: unknown): never {

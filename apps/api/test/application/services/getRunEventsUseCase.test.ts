@@ -35,8 +35,9 @@ describe('GetRunEventsUseCase', () => {
           planVersion: '1.0',
           logicalAttemptId: 1,
           providerRef: {
-            provider: 'mock' as const,
+            provider: 'temporal' as const,
             tenantId: 'tenant-a',
+            namespace: 'default',
             workflowId: 'wf-1',
             runId: 'provider-run-1',
           },

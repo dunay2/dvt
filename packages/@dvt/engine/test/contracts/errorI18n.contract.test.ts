@@ -77,10 +77,10 @@ describe('Error i18n contract', () => {
       {
         error: new CapabilitiesNotSupportedError({
           capabilities: ['query.workflow.state'],
-          provider: 'mock',
+          provider: 'temporal',
         }),
         key: ENGINE_ERROR_MESSAGE_KEY.CAPABILITIES_NOT_SUPPORTED,
-        params: { capabilities: ['query.workflow.state'], provider: 'mock' },
+        params: { capabilities: ['query.workflow.state'], provider: 'temporal' },
       },
       {
         error: new TargetAdapterMismatchError({ planRequires: 'temporal', contextHas: 'mock' }),

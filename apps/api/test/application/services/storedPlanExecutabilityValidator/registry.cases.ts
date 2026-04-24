@@ -23,16 +23,16 @@ export function describeStoredPlanExecutabilityValidatorRegistryCases(): void {
             })
           ),
         },
-        adapters: new Map([['mock', makeAdapter(['basic-execution'])]]),
+        adapters: new Map([['temporal', makeAdapter(['basic-execution'])]]),
         stepTypeRegistry: makeRegistryForKind('SPARK_SQL'),
       });
 
-      const result = await validator.validatePlan(PLAN_REF, 'mock');
+      const result = await validator.validatePlan(PLAN_REF, 'temporal');
 
       expect(result).toEqual({
         status: 'OK',
         planId: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
-        adapterId: 'mock',
+        adapterId: 'temporal',
       });
     });
 
@@ -45,22 +45,22 @@ export function describeStoredPlanExecutabilityValidatorRegistryCases(): void {
             })
           ),
         },
-        adapters: new Map([['mock', makeAdapter(['basic-execution'])]]),
+        adapters: new Map([['conductor', makeAdapter(['basic-execution'], 'conductor')]]),
         stepTypeRegistry: makeRegistryForKind('SPARK_SQL', {
           supportedAdapters: ['temporal'],
           requiredCapabilities: [],
         }),
       });
 
-      const result = await validator.validatePlan(PLAN_REF, 'mock');
+      const result = await validator.validatePlan(PLAN_REF, 'conductor');
 
       expect(result).toEqual({
         status: 'ERROR',
         planId: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
-        adapterId: 'mock',
+        adapterId: 'conductor',
         code: 'INVALID_STEP_KIND',
         degradable: false,
-        reason: 'Step kind SPARK_SQL is not executable on adapter mock',
+        reason: 'Step kind SPARK_SQL is not executable on adapter conductor',
         cause: 'SPARK_SQL',
       });
     });
@@ -74,19 +74,19 @@ export function describeStoredPlanExecutabilityValidatorRegistryCases(): void {
             })
           ),
         },
-        adapters: new Map([['mock', makeAdapter(['basic-execution'])]]),
+        adapters: new Map([['temporal', makeAdapter(['basic-execution'])]]),
         stepTypeRegistry: makeRegistryForKind('SPARK_SQL', {
-          supportedAdapters: ['mock'],
+          supportedAdapters: ['temporal'],
           requiredCapabilities: ['spark.submit'],
         }),
       });
 
-      const result = await validator.validatePlan(PLAN_REF, 'mock');
+      const result = await validator.validatePlan(PLAN_REF, 'temporal');
 
       expect(result).toEqual({
         status: 'ERROR',
         planId: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
-        adapterId: 'mock',
+        adapterId: 'temporal',
         code: 'MISSING_CAPABILITY',
         degradable: false,
         reason: 'Missing adapter capability: spark.submit',
@@ -103,15 +103,15 @@ export function describeStoredPlanExecutabilityValidatorRegistryCases(): void {
             })
           ),
         },
-        adapters: new Map([['mock', makeAdapter(['basic-execution'])]]),
+        adapters: new Map([['temporal', makeAdapter(['basic-execution'])]]),
       });
 
-      const result = await validator.validatePlan(PLAN_REF, 'mock');
+      const result = await validator.validatePlan(PLAN_REF, 'temporal');
 
       expect(result).toEqual({
         status: 'ERROR',
         planId: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
-        adapterId: 'mock',
+        adapterId: 'temporal',
         code: 'REJECTED',
         degradable: false,
         reason: expect.stringContaining('INVALID_STEP_KIND'),

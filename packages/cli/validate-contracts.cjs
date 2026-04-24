@@ -88,7 +88,7 @@ function validatePlanFile(filePath) {
         runId: `run-${payload?.metadata?.planId || 'unknown'}`,
         targetAdapter:
           payload?.metadata?.targetAdapter === 'any' || !payload?.metadata?.targetAdapter
-            ? 'mock'
+            ? 'temporal'
             : payload.metadata.targetAdapter,
       });
     })
@@ -107,8 +107,9 @@ function validatePlanFile(filePath) {
   checks.push(
     runCheck('EngineRunRef schema', () => {
       parseEngineRunRef({
-        provider: 'mock',
+        provider: 'temporal',
         tenantId: 'tenant-demo',
+        namespace: 'default',
         workflowId: payload?.metadata?.planId || 'workflow',
         runId: 'run-1',
       });

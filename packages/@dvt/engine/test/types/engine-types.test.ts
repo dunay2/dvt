@@ -66,7 +66,7 @@ describe('engine-types', () => {
         status: 'RUNNING',
       },
       providerView: {
-        provider: 'mock',
+        provider: 'temporal',
         providerStatus: 'RUNNING',
       },
     };

@@ -10,7 +10,7 @@ function buildSessionContext(): Pick<SessionContextPort, 'getWorkspaceScopeSnaps
       tenantId: 'tenant-a',
       projectId: 'project-a',
       environmentId: 'dev',
-      targetAdapter: 'mock' as const,
+      targetAdapter: 'temporal' as const,
     }),
   };
 }

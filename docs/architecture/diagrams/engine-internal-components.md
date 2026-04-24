@@ -55,10 +55,11 @@ unconditionally runtime-wired in the current delivery path. One
 provides it. `IProjector` remains a package-exposed target seam, while
 `IMetricsCollector` currently exists only as a source-tree target seam because
 the shipped package surface still routes telemetry through `IObservability`.
-Concrete adapters (`MockAdapter`, `InMemoryRunStateStore`,
-`InMemoryStartRunIntentStore`) are engine-internal test doubles; production
-adapters live in separate packages. Blue nodes below therefore represent the
-declared engine seam, while each node label carries the current posture.
+Concrete test doubles (`InMemoryProviderAdapter`, `InMemoryRunStateStore`,
+`InMemoryStartRunIntentStore`) are engine-internal unit-test aids that model
+real provider ids. Production adapters live in separate packages. Blue nodes
+below therefore represent the declared engine seam, while each node label
+carries the current posture.
 
 ## Known Problems
 
@@ -178,7 +179,7 @@ flowchart TB
   end
 
   subgraph Adapters["Concrete Adapters"]
-    MOCK["MockAdapter"]:::impl
+    IMPA["InMemoryProviderAdapter<br/>(unit-test double)"]:::impl
     IMSS["InMemoryRunStateStore"]:::impl
     IMIS["InMemoryStartRunIntentStore"]:::impl
     TSTUB["TemporalAdapterStub"]:::impl
@@ -231,7 +232,7 @@ flowchart TB
   RAP --> HRC
   PIV --> IPF
 
-  MOCK -.-> IPA
+  IMPA -.-> IPA
   IMSS -.-> IRSS
   IMIS -.-> ISRIS
   TSTUB -.-> IPA

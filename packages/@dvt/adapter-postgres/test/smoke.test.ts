@@ -80,8 +80,9 @@ function makeBootstrap(runId: string, tenantId = 't1'): RunBootstrapInput {
       planVersion: '1.0',
       logicalAttemptId: 1,
       providerRef: {
-        provider: 'mock',
+        provider: 'temporal',
         tenantId,
+        namespace: 'default',
         workflowId: `wf-${runId}`,
         runId: `pr-${runId}`,
       },
@@ -224,7 +225,8 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
       expect(meta).toMatchObject({
         runId: 'run-bs-1',
         providerRef: {
-          provider: 'mock',
+          provider: 'temporal',
+          namespace: 'default',
           workflowId: 'wf-run-bs-1',
         },
         planId: 'plan-minimal',
@@ -1157,8 +1159,9 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
         adapter.getRunMetadataByRunId('tenant-a', 'run-provider-scope')
       ).resolves.toMatchObject({
         providerRef: {
-          provider: 'mock',
+          provider: 'temporal',
           tenantId: 'tenant-a',
+          namespace: 'default',
           workflowId: 'wf-run-provider-scope',
           runId: 'pr-run-provider-scope',
         },

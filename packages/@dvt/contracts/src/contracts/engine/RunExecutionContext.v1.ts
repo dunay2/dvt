@@ -23,7 +23,7 @@ const Sha256HexStringSchema = NonBlankStringSchema.refine((value) => isSha256Hex
   message: SHA256_HEX_STRING_MESSAGE,
 }).brand<'Sha256HexString'>();
 
-const ProviderSchema = z.enum(['temporal', 'conductor', 'mock']);
+const ProviderSchema = z.enum(['temporal', 'conductor']);
 export const DbtProjectBundleRefSchema = z
   .object({
     uri: NonBlankStringSchema,

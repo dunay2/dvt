@@ -28,7 +28,7 @@ function createStartRunInput(): StartRunInput {
       tenantId: 'tenant-1',
       projectId: 'project-1',
       environmentId: 'env-1',
-      targetAdapter: 'mock',
+      targetAdapter: 'temporal',
     },
     selection: parseExecutionSelection({
       mode: 'explicit',
@@ -56,8 +56,9 @@ describe('runsService runtime contract', () => {
   it('uses POST /runs/start for startRun', async () => {
     const apiClient = createApiClientMock();
     vi.mocked(apiClient.postJson).mockResolvedValue({
-      provider: 'mock',
+      provider: 'temporal',
       tenantId: 'tenant-1',
+      namespace: 'default',
       workflowId: 'wf_run_123',
       runId: 'run_123',
     });
@@ -69,7 +70,7 @@ describe('runsService runtime contract', () => {
       tenantId: 'tenant-1',
       projectId: 'project-1',
       environmentId: 'env-1',
-      targetAdapter: 'mock',
+      targetAdapter: 'temporal',
       selection: {
         mode: 'explicit',
         nodeIds: ['model_a', 'model_b'],
@@ -87,8 +88,9 @@ describe('runsService runtime contract', () => {
   it('does not send client-authored run identity for startRun', async () => {
     const apiClient = createApiClientMock();
     vi.mocked(apiClient.postJson).mockResolvedValue({
-      provider: 'mock',
+      provider: 'temporal',
       tenantId: 'tenant-1',
+      namespace: 'default',
       workflowId: 'wf_run_platform',
       runId: 'run_platform',
     });

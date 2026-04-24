@@ -13,7 +13,7 @@ import { AdapterNotRegisteredError } from '../contracts/errors.js';
 
 type Provider = EngineRunRef['provider'];
 
-const VALID_PROVIDERS = new Set<Provider>(['temporal', 'conductor', 'mock']);
+const VALID_PROVIDERS = new Set<Provider>(['temporal', 'conductor']);
 
 export function resolveEngineProvider(
   env: Record<string, string | undefined>,
@@ -67,7 +67,7 @@ function pickFirstAvailableAdapterOrThrow(
   adapters: Map<Provider, IProviderAdapter>,
   fallback: Provider
 ): IProviderAdapter {
-  const orderedProviders: readonly Provider[] = [fallback, 'temporal', 'conductor', 'mock'];
+  const orderedProviders: readonly Provider[] = [fallback, 'temporal', 'conductor'];
 
   for (const provider of orderedProviders) {
     const adapter = adapters.get(provider);

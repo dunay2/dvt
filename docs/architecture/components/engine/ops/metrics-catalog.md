@@ -1,3 +1,10 @@
+---
+title: DVT+ Engine Metrics Catalog
+status: Active
+owner: Engine Domain
+last_reviewed: 2026-04-24
+---
+
 # DVT+ Engine Metrics Catalog
 
 - **Version**: 1.0.0
@@ -95,11 +102,11 @@ injected into background workers such as `IntentReconcilerWorker`.
 
 ## Label Glossary
 
-| Label       | Values / Description                                                            |
-| ----------- | ------------------------------------------------------------------------------- |
-| `operation` | Method name on the service (e.g. `reconcileOrphanedIntents`, `detectStuckRuns`) |
-| `provider`  | Adapter provider ID: `temporal`, `mock`, `conductor`, etc.                      |
-| `tenantId`  | Tenant identifier present when the operation is tenant-scoped                   |
+| Label       | Values / Description                                                                |
+| ----------- | ----------------------------------------------------------------------------------- |
+| `operation` | Method name on the service (e.g. `reconcileOrphanedIntents`, `detectStuckRuns`)     |
+| `provider`  | Adapter provider ID for a real runtime provider, such as `temporal` or `conductor`. |
+| `tenantId`  | Tenant identifier present when the operation is tenant-scoped                       |
 
 ---
 

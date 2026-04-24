@@ -27,7 +27,10 @@ describe('RecoverRunUseCase', () => {
   it('maps recover command to engine.recoverRun using source run context', async () => {
     const engine = {
       recoverRun: vi.fn().mockResolvedValue({
-        provider: 'mock',
+        provider: 'temporal',
+        tenantId: 'tenant-a',
+        namespace: 'default',
+        workflowId: 'wf-recovery-1',
         runId: 'run-recovery-1',
       }),
     };

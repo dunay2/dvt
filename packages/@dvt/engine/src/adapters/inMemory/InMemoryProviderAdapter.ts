@@ -1,26 +1,21 @@
 /**
- * @file packages/@dvt/engine/src/adapters/mock/MockAdapter.ts
- * @baseline ADR-0003: Execution Model Sovereignty
- * @baseline ADR-0004: Event Sourcing Strategy (Extended)
- * @decision Decision — The mock adapter executes steps and emits canonical events to validate engine semantics without an external runtime
- * @consequence Tests and local development verify run/step lifecycle using the same domain event model
- * @version 1.0.0
- * @date 2026-02-21
+ * Owned concern: provide an in-memory IProviderAdapter test double without
+ * adding a synthetic provider to the runtime contract vocabulary.
  */
 import {
   asNonBlankString,
-  CURRENT_SIGNAL_SEMANTICS_VERSION,
   CURRENT_EXECUTION_PLAN_CONTRACT_VERSION,
   CURRENT_EXECUTION_PLAN_SCHEMA_VERSION,
   CURRENT_EXECUTION_PLAN_VERSION,
+  CURRENT_SIGNAL_SEMANTICS_VERSION,
   type CanonicalRunStatus,
-  type ProviderRunStatusView,
   type EngineRunRef,
   type ExecutionPlan,
   type PlanRef,
+  type ProviderRunStatusView,
   type ResolvedRunContext,
-  type SignalSemanticsVersion,
   type SignalRequest,
+  type SignalSemanticsVersion,
 } from '@dvt/contracts';
 
 import { RunMetadataNotFoundError } from '../../contracts/errors.js';
@@ -31,44 +26,45 @@ import type { IRunStateStoreRead, IRunStateStoreWrite } from '../../ports/IRunSt
 import type { IClock } from '../../utils/clock.js';
 import type { IProviderAdapter } from '../IProviderAdapter.js';
 
-export interface MockAdapterDeps {
+export interface InMemoryProviderAdapterDeps {
   stateStore: IRunStateStoreRead;
   stateStoreWrite: IRunStateStoreWrite;
   clock: Pick<IClock, 'nowIsoUtc'>;
-  idempotency?: IdempotencyKeyBuilder;
   projector: SnapshotProjector;
+  provider?: EngineRunRef['provider'];
+  namespace?: string;
+  taskQueue?: string;
+  conductorUrl?: string;
+  workflowIdPrefix?: string;
+  idempotency?: IdempotencyKeyBuilder;
+  capabilities?: readonly string[];
 }
 
-/** Contract versions this adapter implementation can execute. */
 const SUPPORTED_CONTRACT_VERSIONS = [CURRENT_EXECUTION_PLAN_CONTRACT_VERSION] as const;
-
-/** Capabilities declared by the mock adapter. Must stay in sync with adapters.capabilities.json. */
-const MOCK_CAPABILITIES = [
+const DEFAULT_PROVIDER_CAPABILITIES = [
   'basic-execution',
   'signal.pause.native',
   'workflow.fan.parallel',
 ] as const;
 
-export class MockAdapter implements IProviderAdapter {
-  readonly provider = 'mock' as const;
+export class InMemoryProviderAdapter implements IProviderAdapter {
+  public readonly provider: EngineRunRef['provider'];
   private readonly clock: Pick<IClock, 'nowIsoUtc'>;
   private readonly idempotency: IdempotencyKeyBuilder;
+  private readonly capabilitiesValue: readonly string[];
 
-  constructor(private readonly deps: MockAdapterDeps) {
+  public constructor(private readonly deps: InMemoryProviderAdapterDeps) {
+    this.provider = deps.provider ?? 'temporal';
     this.clock = deps.clock;
     this.idempotency = deps.idempotency ?? new IdempotencyKeyBuilder();
+    this.capabilitiesValue = deps.capabilities ?? DEFAULT_PROVIDER_CAPABILITIES;
   }
 
-  estimateRunRef(ctx: ResolvedRunContext): EngineRunRef {
-    return {
-      provider: 'mock',
-      tenantId: ctx.tenantId,
-      workflowId: asNonBlankString(`mock_${ctx.runId}`),
-      runId: ctx.runId,
-    };
+  public estimateRunRef(ctx: ResolvedRunContext): EngineRunRef {
+    return this.toRunRef(ctx);
   }
 
-  async startRun(
+  public async startRun(
     plan: ExecutionPlan,
     planRef: PlanRef,
     ctx: ResolvedRunContext
@@ -85,34 +81,26 @@ export class MockAdapter implements IProviderAdapter {
       steps: [],
     };
 
-    validateMockPlanMetadata(effectivePlan.metadata);
-
-    const runRef: EngineRunRef = {
-      provider: 'mock',
-      tenantId: ctx.tenantId,
-      workflowId: asNonBlankString(`mock_${ctx.runId}`),
-      runId: ctx.runId,
-    };
-
+    validatePlanMetadata(effectivePlan.metadata);
     for (const step of effectivePlan.steps) {
-      validateMockStep(step);
+      validateStep(step);
     }
 
-    return runRef;
+    return this.toRunRef(ctx);
   }
 
-  async cancelRun(runRef: EngineRunRef): Promise<void> {
+  public async cancelRun(runRef: EngineRunRef): Promise<void> {
     await this.appendCancelLifecycle(runRef);
   }
 
-  async getProviderStatusView(runRef: EngineRunRef): Promise<ProviderRunStatusView> {
+  public async getProviderStatusView(runRef: EngineRunRef): Promise<ProviderRunStatusView> {
     const events = await this.deps.stateStore.listEvents(runRef.tenantId, runRef.runId);
     const canonical = this.deps.projector.rebuild(runRef.runId, events);
-    return toMockProviderStatusView(canonical);
+    return toProviderStatusView(runRef.provider, canonical);
   }
 
-  async signal(runRef: EngineRunRef, request: SignalRequest): Promise<void> {
-    const dispatch = mapCanonicalSignalToMockDispatch(request);
+  public async signal(runRef: EngineRunRef, request: SignalRequest): Promise<void> {
+    const dispatch = mapCanonicalSignalToDispatch(request);
     switch (dispatch.kind) {
       case 'cancel':
         await this.appendCancelLifecycle(runRef);
@@ -126,12 +114,39 @@ export class MockAdapter implements IProviderAdapter {
     }
   }
 
-  capabilities(): readonly string[] {
-    return MOCK_CAPABILITIES;
+  public capabilities(): readonly string[] {
+    return this.capabilitiesValue;
   }
 
-  signalSemanticsVersions(): readonly SignalSemanticsVersion[] {
+  public signalSemanticsVersions(): readonly SignalSemanticsVersion[] {
     return [CURRENT_SIGNAL_SEMANTICS_VERSION];
+  }
+
+  private toRunRef(ctx: ResolvedRunContext): EngineRunRef {
+    const workflowId = asNonBlankString(
+      `${this.deps.workflowIdPrefix ?? 'in_memory'}_${ctx.runId}`
+    );
+    if (this.provider === 'conductor') {
+      return {
+        provider: 'conductor',
+        tenantId: ctx.tenantId,
+        workflowId,
+        runId: ctx.runId,
+        conductorUrl: asNonBlankString(this.deps.conductorUrl ?? 'memory://conductor'),
+      };
+    }
+
+    const runRef: EngineRunRef = {
+      provider: 'temporal',
+      tenantId: ctx.tenantId,
+      namespace: asNonBlankString(this.deps.namespace ?? 'in-memory'),
+      workflowId,
+      runId: ctx.runId,
+    };
+    if (this.deps.taskQueue !== undefined) {
+      runRef.taskQueue = asNonBlankString(this.deps.taskQueue);
+    }
+    return runRef;
   }
 
   private async appendCancelLifecycle(runRef: EngineRunRef): Promise<void> {
@@ -209,7 +224,7 @@ export class MockAdapter implements IProviderAdapter {
   }
 }
 
-function mapCanonicalSignalToMockDispatch(request: SignalRequest): {
+function mapCanonicalSignalToDispatch(request: SignalRequest): {
   kind: 'cancel' | 'pause' | 'resume';
 } {
   switch (request.type) {
@@ -219,14 +234,10 @@ function mapCanonicalSignalToMockDispatch(request: SignalRequest): {
       return { kind: 'pause' };
     case 'RESUME':
       return { kind: 'resume' };
-    default: {
-      const exhaustive: never = request.type;
-      throw new Error(`MOCK_SIGNAL_UNSUPPORTED: ${String(exhaustive)}`);
-    }
   }
 }
 
-function validateMockPlanMetadata(metadata: ExecutionPlan['metadata']): void {
+function validatePlanMetadata(metadata: ExecutionPlan['metadata']): void {
   if (!(SUPPORTED_CONTRACT_VERSIONS as readonly string[]).includes(metadata.contractVersion)) {
     throw new Error(
       `PLAN_CONTRACT_VERSION_UNKNOWN: ${metadata.contractVersion}. Supported: ${SUPPORTED_CONTRACT_VERSIONS.join(', ')}`
@@ -234,9 +245,7 @@ function validateMockPlanMetadata(metadata: ExecutionPlan['metadata']): void {
   }
 }
 
-function validateMockStep(step: ExecutionPlan['steps'][number]): void {
-  // Adapter narrowing rule: reject unrecognized fields.
-  // For mock we allow the governed canonical step fields only.
+function validateStep(step: ExecutionPlan['steps'][number]): void {
   const allowed = new Set([
     'stepId',
     'kind',
@@ -246,9 +255,9 @@ function validateMockStep(step: ExecutionPlan['steps'][number]): void {
     'type',
     'gateway',
   ]);
-  for (const k of Object.keys(step)) {
-    if (!allowed.has(k)) {
-      throw new Error(`INVALID_STEP_SCHEMA: field_not_allowed:${k}`);
+  for (const key of Object.keys(step)) {
+    if (!allowed.has(key)) {
+      throw new Error(`INVALID_STEP_SCHEMA: field_not_allowed:${key}`);
     }
   }
 
@@ -261,9 +270,12 @@ function validateMockStep(step: ExecutionPlan['steps'][number]): void {
   }
 }
 
-function toMockProviderStatusView(canonical: CanonicalRunStatus): ProviderRunStatusView {
+function toProviderStatusView(
+  provider: EngineRunRef['provider'],
+  canonical: CanonicalRunStatus
+): ProviderRunStatusView {
   return {
-    provider: 'mock',
+    provider,
     providerStatus: canonical.status,
     ...(canonical.substatus === undefined ? {} : { providerSubstatus: canonical.substatus }),
     ...(canonical.message === undefined ? {} : { message: canonical.message }),

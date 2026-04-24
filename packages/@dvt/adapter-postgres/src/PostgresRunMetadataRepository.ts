@@ -113,39 +113,12 @@ function normalizeEngineRunRefShape(input: ReturnType<typeof parseEngineRunRef>)
     };
   }
 
-  return {
-    provider: 'mock',
-    tenantId: input.tenantId,
-    workflowId: input.workflowId,
-    runId: input.runId,
-  };
+  const exhaustive: never = input;
+  throw new Error(`RUN_METADATA_PROVIDER_UNSUPPORTED: ${String(exhaustive)}`);
 }
 
 function toRunMetadata(row: RunMetadataRow): RunMetadata {
-  const rawProviderRef =
-    row.provider === 'temporal'
-      ? ({
-          provider: 'temporal',
-          tenantId: row.tenant_id,
-          namespace: row.provider_namespace ?? 'default',
-          workflowId: row.provider_workflow_id,
-          runId: row.provider_run_id,
-          ...(row.provider_task_queue !== null ? { taskQueue: row.provider_task_queue } : {}),
-        } as const)
-      : row.provider === 'conductor'
-        ? ({
-            provider: 'conductor',
-            tenantId: row.tenant_id,
-            workflowId: row.provider_workflow_id,
-            runId: row.provider_run_id,
-            conductorUrl: row.provider_conductor_url ?? '',
-          } as const)
-        : ({
-            provider: 'mock',
-            tenantId: row.tenant_id,
-            workflowId: row.provider_workflow_id,
-            runId: row.provider_run_id,
-          } as const);
+  const rawProviderRef = rawProviderRefFromRow(row);
   const providerRef = parsePersistedProviderRef(rawProviderRef, row.run_id);
 
   return {
@@ -160,6 +133,31 @@ function toRunMetadata(row: RunMetadataRow): RunMetadata {
     originRunId: row.origin_run_id ?? undefined,
     providerRef,
   } as RunMetadata;
+}
+
+function rawProviderRefFromRow(row: RunMetadataRow): unknown {
+  if (row.provider === 'temporal') {
+    return {
+      provider: 'temporal',
+      tenantId: row.tenant_id,
+      namespace: row.provider_namespace ?? 'default',
+      workflowId: row.provider_workflow_id,
+      runId: row.provider_run_id,
+      ...(row.provider_task_queue !== null ? { taskQueue: row.provider_task_queue } : {}),
+    };
+  }
+
+  if (row.provider === 'conductor') {
+    return {
+      provider: 'conductor',
+      tenantId: row.tenant_id,
+      workflowId: row.provider_workflow_id,
+      runId: row.provider_run_id,
+      conductorUrl: row.provider_conductor_url ?? '',
+    };
+  }
+
+  throw new Error(`RUN_METADATA_PROVIDER_UNSUPPORTED: ${String(row.provider)}`);
 }
 
 // ---------------------------------------------------------------------------

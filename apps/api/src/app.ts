@@ -177,12 +177,7 @@ export async function buildApp(): Promise<{ app: FastifyInstance; ctx: AppContex
   if (env.OIDC_JWKS_URI && env.OIDC_ISSUER && env.OIDC_AUDIENCE) {
     const protectedModule = await buildProtectedRuntimeModule(app, env, observability);
     runtimeAdaptersReadyProbe = () => {
-      if (env.TEMPORAL_ADDRESS) {
-        return protectedModule.adapters.has('temporal')
-          ? READINESS_PROBE_STATUS.ready
-          : READINESS_PROBE_STATUS.unavailable;
-      }
-      return protectedModule.adapters.size > 0
+      return protectedModule.adapters.has('temporal')
         ? READINESS_PROBE_STATUS.ready
         : READINESS_PROBE_STATUS.unavailable;
     };

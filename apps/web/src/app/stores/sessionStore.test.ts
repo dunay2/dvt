@@ -9,7 +9,7 @@ type PersistEnvelope = {
     tenantId: string;
     projectId: string;
     environmentId: string;
-    targetAdapter: 'mock' | 'temporal';
+    targetAdapter: 'temporal' | 'conductor';
   }>;
 };
 
@@ -22,7 +22,7 @@ const bootstrapState = {
 
 const workspaceBootstrap = resolveWorkspaceBootstrapConfig(getRuntimeDataSourceMode());
 
-const alternateTargetAdapter = bootstrapState.targetAdapter === 'mock' ? 'temporal' : 'mock';
+const alternateTargetAdapter = bootstrapState.targetAdapter === 'temporal' ? 'conductor' : 'temporal';
 
 function pickValidPersistedScopeValue(
   options: Array<{ value: string }>,

@@ -280,7 +280,7 @@ describe('createPlansService', () => {
         tenantId: 't1',
         projectId: 'p1',
         environmentId: 'e1',
-        targetAdapter: 'mock',
+        targetAdapter: 'temporal',
       }),
     });
 

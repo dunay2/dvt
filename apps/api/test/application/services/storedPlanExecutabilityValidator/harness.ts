@@ -64,9 +64,12 @@ export function storedPlanArtifact(
   };
 }
 
-export function makeAdapter(capabilities: ReadonlyArray<string>): IProviderAdapter {
+export function makeAdapter(
+  capabilities: ReadonlyArray<string>,
+  provider: IProviderAdapter['provider'] = 'temporal'
+): IProviderAdapter {
   return {
-    provider: 'mock',
+    provider,
     async startRun() {
       throw new Error('not used');
     },
