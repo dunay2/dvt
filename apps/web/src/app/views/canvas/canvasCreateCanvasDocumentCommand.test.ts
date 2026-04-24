@@ -14,7 +14,7 @@ const WORKSPACE_SCOPE = {
   tenantId: 'tenant',
   projectId: 'project',
   environmentId: 'env',
-  targetAdapter: 'mock' as const,
+  targetAdapter: 'temporal' as const,
 };
 
 const PREVIEW_PROVENANCE_CONFIG = {
