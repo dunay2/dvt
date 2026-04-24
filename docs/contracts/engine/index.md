@@ -43,7 +43,7 @@ Execution lifecycle, command, and event contracts for the workflow engine.
 - [RunExecutionPolicy.v1.md](../../architecture/components/engine/contracts/engine/RunExecutionPolicy.v1.md)
 - [SignalsAndAuth.v1.md](../../architecture/components/engine/contracts/engine/SignalsAndAuth.v1.md)
 - [start-run-boundary-component.md](../../architecture/components/engine/contracts/engine/start-run-boundary-component.md)
-- [StartRunBoundary.v1.md](../../architecture/components/engine/contracts/engine/StartRunBoundary.v1.md)
+- [start-run-boundary.v1.md](../../architecture/components/engine/contracts/engine/start-run-boundary.v1.md)
 - [StartRunProtocol.v1.md](../../architecture/components/engine/contracts/engine/StartRunProtocol.v1.md)
 - [index.md](../../architecture/components/engine/contracts/extensions/index.md)
 - [PluginSandbox.v1.md](../../architecture/components/engine/contracts/extensions/PluginSandbox.v1.md)

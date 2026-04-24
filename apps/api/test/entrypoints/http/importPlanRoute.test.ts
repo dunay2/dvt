@@ -50,7 +50,7 @@ describe('importPlanRoute', () => {
             tenantId: 'tenant-1',
             projectId: 'project-1',
             environmentId: 'env-1',
-            targetAdapter: 'mock',
+            targetAdapter: 'temporal',
           },
           planRef: { uri: 'x' },
         },

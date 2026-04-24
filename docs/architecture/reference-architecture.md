@@ -86,12 +86,15 @@ Engine --> ObservabilityPort["IObservability"]
 
 - `packages/@dvt/contracts/src/contracts/engine/StartRunBoundary.v1.ts`
   is the canonical truth for currently supported start-run target adapters:
-  `temporal` and `mock`.
+  `temporal`.
 - `apps/api/src/modules/planCompileBoundary.ts` now reuses that same adapter
   truth for compile-time execution profiles.
-- The broader shared `Provider` vocabulary still includes `conductor` in some
-  contract and schema surfaces. That is transitional architecture drift, not
-  proof of implemented runtime support.
+- The broader shared `Provider` vocabulary still includes non-start-run
+  provider IDs in some contract, schema, or test-harness surfaces. That is
+  transitional architecture drift, not proof of implemented runtime support.
+- Temporal remains a provider adapter behind `IProviderAdapter` and the API
+  provider-adapter factory seam. Naming `temporal` as the active start-run
+  adapter ID does not make Temporal part of DVT execution semantics.
 - DBT is no longer part of engine-kernel semantics, but it remains partially
   embedded in the default package/runtime surface of
   `@dvt/adapter-temporal`. That coupling is explicit repository risk, not

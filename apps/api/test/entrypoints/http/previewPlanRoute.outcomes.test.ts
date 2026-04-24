@@ -33,7 +33,7 @@ function createAcceptedPreviewDeps(
       validatePlan: vi.fn(async () => ({
         status: 'OK',
         planId: VALID_PLAN_REF.planId,
-        adapterId: 'mock',
+        adapterId: 'temporal',
       })),
     },
   });
@@ -109,7 +109,7 @@ describe('previewPlanRoute outcomes', () => {
         },
       })
     );
-    expect(validatePlan).toHaveBeenCalledWith(VALID_PLAN_REF, 'mock');
+    expect(validatePlan).toHaveBeenCalledWith(VALID_PLAN_REF, 'temporal');
     expect(deps.planStore.markValid).toHaveBeenCalledWith(VALID_PLAN_REF);
     expect(deps.planStore.markInvalid).not.toHaveBeenCalled();
   });
@@ -133,10 +133,10 @@ describe('previewPlanRoute outcomes', () => {
         validatePlan: vi.fn(async () => ({
           status: 'ERROR',
           code: 'REJECTED',
-          adapterId: 'mock',
+          adapterId: 'temporal',
           planId: VALID_PLAN_REF.planId,
           degradable: false,
-          reason: 'Adapter is not configured: mock',
+          reason: 'Adapter is not configured: temporal',
           cause: 'adapter',
         })),
       },

@@ -2,7 +2,7 @@
 title: apps/api
 status: Active
 owner: Architecture / Docs
-last_reviewed: 2026-04-23
+last_reviewed: 2026-04-24
 ---
 
 # apps/api
@@ -32,7 +32,8 @@ flowchart LR
   API --> Engine["@dvt/engine"]
   API --> Delivery["@dvt/delivery admission guard"]
   API --> Postgres["@dvt/adapter-postgres state, intent, and plan stores"]
-  API --> Providers["mock / temporal provider adapters"]
+  API --> Providers["provider adapter factories"]
+  Providers --> Temporal["Temporal provider adapter"]
   API --> Observability["@dvt/observability"]
 ```
 
@@ -122,6 +123,9 @@ shape, and the governed transition route:
 - [Start-run execution capacity admission component](../../../../apps/api/docs/start-run-execution-capacity-admission-component.md):
   local guide for the abstract start-run execution-capacity admission seam,
   its fail-closed default binding, invariants, transitions, and consumers.
+- [Start-run admission observability component](../../../../apps/api/docs/start-run-admission-observability-component.md):
+  local guide for the canonical start-run admission telemetry cluster,
+  bounded metric-label rules, invariants, transitions, and consumers.
 - [Workspace graph draft runtime composition component](../../../../apps/api/docs/workspace-graph-draft-runtime-composition-component.md):
   local guide for the protected-runtime subcomponent that assembles the
   workspace-graph-draft store, capability service, and use-case chain.

@@ -31,7 +31,7 @@ export const COMMAND = {
     planVersion: '2.0',
   }),
   runId: 'run-1',
-  targetAdapter: 'mock' as const,
+  targetAdapter: 'temporal' as const,
   selection: parseExecutionSelection({
     mode: 'explicit',
     nodeIds: ['step_a'],

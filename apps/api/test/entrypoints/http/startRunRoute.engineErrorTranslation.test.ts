@@ -52,7 +52,7 @@ describe('startRunRoute engine error translation', () => {
           throw new Error('should not be called');
         },
       },
-      registry: registryWith('mock'),
+      registry: registryWith(),
     });
 
     expect(reply.statusCode).toBe(400);

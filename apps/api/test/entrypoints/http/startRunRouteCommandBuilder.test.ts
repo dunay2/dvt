@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
 import { parseExecutionSelection } from '@dvt/contracts';
+import { describe, expect, it } from 'vitest';
 
 import {
   buildPlanRefStartRunCommand,
@@ -25,7 +25,7 @@ describe('startRun command builders', () => {
         rawPlanRef: VALID_PLAN_REF,
         rawRunExecutionContextRef: undefined,
         runId: 'run-1',
-        targetAdapter: 'mock',
+        targetAdapter: 'temporal',
         selection: VALID_SELECTION,
       })
     ).toEqual({
@@ -33,7 +33,7 @@ describe('startRun command builders', () => {
       value: {
         planRef: VALID_PLAN_REF,
         runId: 'run-1',
-        targetAdapter: 'mock',
+        targetAdapter: 'temporal',
         selection: VALID_SELECTION,
       },
     });
@@ -77,7 +77,7 @@ describe('startRun command builders', () => {
         rawPlanRef: { uri: 'https://plans.example.com/p.json' },
         rawRunExecutionContextRef: undefined,
         runId: 'run-1',
-        targetAdapter: 'mock',
+        targetAdapter: 'temporal',
         selection: VALID_SELECTION,
       })
     ).toEqual({
@@ -107,7 +107,7 @@ describe('startRun command builders', () => {
         rawPlanRef: VALID_PLAN_REF,
         rawRunExecutionContextRef: { uri: 'dvt-runctx://x' },
         runId: 'run-1',
-        targetAdapter: 'mock',
+        targetAdapter: 'temporal',
         selection: VALID_SELECTION,
       })
     ).toEqual({
@@ -134,7 +134,7 @@ describe('startRun command builders', () => {
             ' 1111111111111111111111111111111111111111111111111111111111111111 ',
         },
         runId: 'run-1',
-        targetAdapter: 'mock',
+        targetAdapter: 'temporal',
         selection: VALID_SELECTION,
       })
     ).toEqual({

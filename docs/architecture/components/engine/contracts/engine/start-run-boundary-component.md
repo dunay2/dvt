@@ -12,7 +12,7 @@ API-to-engine `start-run` command/result boundary.
 
 This is a **local component guide**, not a second normative contract. The
 canonical normative source remains:
-`docs/architecture/components/engine/contracts/engine/StartRunBoundary.v1.md`.
+`docs/architecture/components/engine/contracts/engine/start-run-boundary.v1.md`.
 
 ## Owned concern
 
@@ -63,6 +63,9 @@ It does **not** own:
   persisted `planRef` ingress or planner-backed `graphSource` ingress
 - execution-capacity denial stays inside `system_backpressure`; it does not
   create a parallel top-level result kind
+- `temporal` is the only active start-run target adapter ID, but Temporal
+  construction is not owned by this component; it remains behind the
+  provider-adapter factory seam and `IProviderAdapter`
 
 ## Component map
 

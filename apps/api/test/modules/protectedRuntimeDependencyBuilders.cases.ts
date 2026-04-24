@@ -94,6 +94,21 @@ const PROTECTED_RUNTIME_BUILDER_CASES = [
     ],
   },
   {
+    moduleFile: 'protectedRuntime/buildProtectedExecutionCapacityPort.ts',
+    documentedFile: 'buildProtectedExecutionCapacityPort.ts',
+    importName: 'buildProtectedExecutionCapacityPort',
+    importPath: './protectedRuntime/buildProtectedExecutionCapacityPort.js',
+    exportedIdentifiers: [
+      'BuildProtectedExecutionCapacityPortDeps',
+      'buildProtectedExecutionCapacityPort',
+    ],
+    rootForbiddenConstructors: ['TemporalWorkerReadyzExecutionCapacityPort'],
+    ownedSnippets: [
+      'new TemporalWorkerReadyzExecutionCapacityPort({',
+      'return DEFAULT_START_RUN_EXECUTION_CAPACITY_PORT;',
+    ],
+  },
+  {
     moduleFile: 'protectedRuntime/buildProtectedExecutionRuntime.ts',
     documentedFile: 'buildProtectedExecutionRuntime.ts',
     importName: 'buildProtectedExecutionRuntime',

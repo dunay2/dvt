@@ -37,7 +37,7 @@ describe('startRunRoute plan-source policy', () => {
           planRef: undefined,
           selection: { mode: 'explicit', nodeIds: ['model_a'] },
           graphSource: VALID_GRAPH_SOURCE,
-          targetAdapter: 'mock',
+          targetAdapter: 'temporal',
         },
       },
       facade,
@@ -49,7 +49,7 @@ describe('startRunRoute plan-source policy', () => {
     expect(received?.command).toEqual({
       graphSource: VALID_GRAPH_SOURCE,
       runId: 'run_generated_empty_selection',
-      targetAdapter: 'mock',
+      targetAdapter: 'temporal',
       selection: { mode: 'explicit', nodeIds: ['model_a'] },
     });
   });
@@ -71,7 +71,7 @@ describe('startRunRoute plan-source policy', () => {
           ...VALID_BODY,
           planRef: undefined,
           graphSource: VALID_GRAPH_SOURCE,
-          targetAdapter: 'mock',
+          targetAdapter: 'temporal',
         },
       },
       facade,
@@ -82,7 +82,7 @@ describe('startRunRoute plan-source policy', () => {
     expect(received?.command).toEqual({
       graphSource: VALID_GRAPH_SOURCE,
       runId: 'run_generated_graph',
-      targetAdapter: 'mock',
+      targetAdapter: 'temporal',
       selection: { mode: 'explicit', nodeIds: ['model_a'] },
     });
   });

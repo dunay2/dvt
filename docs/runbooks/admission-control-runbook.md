@@ -2,7 +2,7 @@
 title: Admission Control Runbook
 status: Active
 owner: SRE / API
-last_reviewed: 2026-03-26
+last_reviewed: 2026-04-23
 ---
 
 # Admission Control Runbook
@@ -13,15 +13,16 @@ Covers the `DVT_START_RUN_BACKPRESSURE_MODE` system: off â†’ observe â†�
 
 ## Configuration Reference
 
-| Env var                                       | Default | Description                                      |
-| --------------------------------------------- | ------- | ------------------------------------------------ |
-| `DVT_START_RUN_BACKPRESSURE_MODE`             | `off`   | `off` \| `observe` \| `enforce`                  |
-| `DVT_START_RUN_MAX_PENDING_EVENTS_PER_TENANT` | â€”     | Tenant-level pending event ceiling               |
-| `DVT_START_RUN_MAX_OUTBOX_LAG_MS`             | â€”     | Global outbox age ceiling (ms)                   |
-| `DVT_START_RUN_STUCK_EVENT_AGE_THRESHOLD_MS`  | â€”     | Age threshold for "stuck" classification (ms)    |
-| `DVT_START_RUN_RETRY_AFTER_SECONDS`           | `30`    | `Retry-After` returned on backpressure rejection |
-| `DVT_START_RUN_BACKPRESSURE_CACHE_TTL_MS`     | â€”     | Snapshot cache TTL (ms)                          |
-| `DVT_START_RUN_BACKPRESSURE_QUERY_TIMEOUT_MS` | â€”     | Max DB query time before circuit opens (ms)      |
+| Env var                                       | Default | Description                                                       |
+| --------------------------------------------- | ------- | ----------------------------------------------------------------- |
+| `DVT_START_RUN_BACKPRESSURE_MODE`             | `off`   | `off` \| `observe` \| `enforce`                                   |
+| `DVT_START_RUN_MAX_PENDING_EVENTS_PER_TENANT` | â€”     | Tenant-level pending event ceiling                                |
+| `DVT_START_RUN_MAX_OUTBOX_LAG_MS`             | â€”     | Global outbox age ceiling (ms)                                    |
+| `DVT_START_RUN_STUCK_EVENT_AGE_THRESHOLD_MS`  | â€”     | Age threshold for "stuck" classification (ms)                     |
+| `DVT_START_RUN_RETRY_AFTER_SECONDS`           | `30`    | `Retry-After` returned on backpressure rejection                  |
+| `DVT_TEMPORAL_WORKER_READYZ_URL`              | â€”     | Temporal worker `GET /readyz` probe for execution-capacity denial |
+| `DVT_START_RUN_BACKPRESSURE_CACHE_TTL_MS`     | â€”     | Snapshot cache TTL (ms)                                           |
+| `DVT_START_RUN_BACKPRESSURE_QUERY_TIMEOUT_MS` | â€”     | Max DB query time before circuit opens (ms)                       |
 
 ---
 
@@ -86,11 +87,44 @@ In enforce mode:
 
 **Codes in `rejection_total`:**
 
-| Code                                | Meaning                                                    |
-| ----------------------------------- | ---------------------------------------------------------- |
-| `TENANT_BACKPRESSURE`               | This tenant's pending events exceed the per-tenant ceiling |
-| `SYSTEM_BACKPRESSURE`               | Global outbox lag exceeds ceiling â€” system is overloaded |
-| `BACKPRESSURE_SNAPSHOT_UNAVAILABLE` | Could not fetch snapshot; treated as system backpressure   |
+| Code                                | Meaning                                                                      |
+| ----------------------------------- | ---------------------------------------------------------------------------- |
+| `TENANT_BACKPRESSURE`               | This tenant's pending events exceed the per-tenant ceiling                   |
+| `SYSTEM_BACKPRESSURE`               | Global outbox lag exceeds ceiling â€” system is overloaded                   |
+| `BACKPRESSURE_SNAPSHOT_UNAVAILABLE` | Could not fetch snapshot; treated as system backpressure                     |
+| `EXECUTION_CAPACITY_EXHAUSTED`      | The selected executor reported saturation through the abstract capacity port |
+| `EXECUTOR_UNAVAILABLE`              | The selected executor was reachable but not ready to accept new work         |
+| `CAPACITY_SIGNAL_UNAVAILABLE`       | The API could not obtain a valid execution-capacity signal and failed closed |
+
+---
+
+## Execution-Capacity Rejection Triage
+
+Execution-capacity denials still emit system-level admission decisions:
+
+- `decision=reject_system` in enforce mode
+- `decision=would_reject_system` in observe mode
+
+Operators must distinguish them by the `code` label on
+`dvt.admission.rejection_total`.
+
+```mermaid
+flowchart TD
+  Reject["dvt.admission.rejection_total{decision=reject_system|would_reject_system}"] --> Code{"code"}
+  Code -->|SYSTEM_BACKPRESSURE| Outbox["Check outbox lag and downstream delivery"]
+  Code -->|BACKPRESSURE_SNAPSHOT_UNAVAILABLE| Snapshot["Check DB connectivity and fallback snapshots"]
+  Code -->|EXECUTION_CAPACITY_EXHAUSTED| Capacity["Check executor capacity policy and saturation trend"]
+  Code -->|EXECUTOR_UNAVAILABLE| Readyz["Check Temporal worker GET /readyz and worker state"]
+  Code -->|CAPACITY_SIGNAL_UNAVAILABLE| Signal["Check DVT_TEMPORAL_WORKER_READYZ_URL, network path, timeout, and JSON payload"]
+```
+
+### Execution-capacity code guide
+
+| Code                           | Meaning                                                       | First checks                                                                                                                                                         |
+| ------------------------------ | ------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `EXECUTION_CAPACITY_EXHAUSTED` | The abstract execution-capacity port reported saturation.     | Check recent rejection trend, adapter-specific capacity dashboards, and whether the condition is transient or sustained.                                             |
+| `EXECUTOR_UNAVAILABLE`         | The Temporal worker probe responded, but `ready=false`.       | Query `GET /readyz`, inspect worker lifecycle state, and verify the worker is connected to the expected namespace/task queue.                                        |
+| `CAPACITY_SIGNAL_UNAVAILABLE`  | The API could not query or parse the worker readiness signal. | Check `DVT_TEMPORAL_WORKER_READYZ_URL`, API-to-worker network reachability, timeout behavior, and whether the probe still returns JSON with a boolean `ready` field. |
 
 ---
 
@@ -133,6 +167,27 @@ observe mode and rejections in enforce mode under normal load.
 3. If worker is healthy but lag is growing, check downstream Snowflake/Temporal latency.
 4. If snapshot unavailable (`BACKPRESSURE_SNAPSHOT_UNAVAILABLE`): the circuit breaker has
    opened â€” check DB connectivity.
+
+### `rejection_total{code="EXECUTOR_UNAVAILABLE"}` spike
+
+1. Query the configured worker probe directly:
+   ```bash
+   curl "$DVT_TEMPORAL_WORKER_READYZ_URL"
+   ```
+2. If the worker responds with `ready=false`, treat this as executor unavailability, not
+   outbox pressure.
+3. Inspect the worker host, namespace, task queue, and any readiness sub-state such as
+   `runStateCircuitState`.
+4. Restore worker readiness before raising or relaxing admission thresholds.
+
+### `rejection_total{code="CAPACITY_SIGNAL_UNAVAILABLE"}` spike
+
+1. Verify `DVT_TEMPORAL_WORKER_READYZ_URL` is configured and resolves from the API runtime.
+2. Check whether the worker probe timed out, returned a non-JSON body, or changed payload shape.
+3. Treat this as fail-closed signal loss: admission is intentionally protecting the executor
+   boundary.
+4. Do not reclassify it as `SYSTEM_BACKPRESSURE`; the operator action is probe-path recovery,
+   not backlog drainage.
 
 ### Fallback (circuit open)
 

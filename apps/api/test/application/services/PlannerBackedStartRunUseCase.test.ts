@@ -40,7 +40,7 @@ const PLANNER_COMMAND = {
     nodes: [{ nodeId: 'model.orders', stepKind: 'DBT_MODEL', dependsOn: [] }],
   },
   runId: 'run-1',
-  targetAdapter: 'mock' as const,
+  targetAdapter: 'temporal' as const,
   selection: parseExecutionSelection({
     mode: 'explicit',
     nodeIds: ['model.orders'],
@@ -87,7 +87,7 @@ describe('PlannerBackedStartRunUseCase', () => {
         validatePlan: vi.fn(async () => ({
           status: 'OK' as const,
           planId: 'plan-1',
-          adapterId: 'mock',
+          adapterId: 'temporal',
         })),
       } as never,
       delegate: {
@@ -161,7 +161,7 @@ describe('PlannerBackedStartRunUseCase', () => {
         validatePlan: vi.fn(async () => ({
           status: 'OK' as const,
           planId: 'plan-1',
-          adapterId: 'mock',
+          adapterId: 'temporal',
         })),
       } as never,
       delegate: {
@@ -227,7 +227,7 @@ describe('PlannerBackedStartRunUseCase', () => {
       validatePlan: vi.fn(async () => ({
         status: 'OK' as const,
         planId: 'plan-1',
-        adapterId: 'mock',
+        adapterId: 'temporal',
       })),
     };
     const delegate = {
@@ -265,7 +265,7 @@ describe('PlannerBackedStartRunUseCase', () => {
       })
     );
     expect(planStore.storePlan).toHaveBeenCalledTimes(1);
-    expect(validator.validatePlan).toHaveBeenCalledWith(STORED_PLAN_REF, 'mock');
+    expect(validator.validatePlan).toHaveBeenCalledWith(STORED_PLAN_REF, 'temporal');
     expect(planStore.markValid).toHaveBeenCalledWith(STORED_PLAN_REF);
     expect(planStore.markInvalid).not.toHaveBeenCalled();
     expect(delegate.execute).toHaveBeenCalledWith(
@@ -285,7 +285,7 @@ describe('PlannerBackedStartRunUseCase', () => {
     const rejection = {
       status: 'ERROR' as const,
       planId: 'plan-1',
-      adapterId: 'mock',
+      adapterId: 'temporal',
       code: 'MISSING_CAPABILITY' as const,
       degradable: false,
       reason: 'Missing adapter capability: workflow.pause',
@@ -355,7 +355,7 @@ describe('PlannerBackedStartRunUseCase', () => {
         validatePlan: vi.fn(async () => ({
           status: 'OK' as const,
           planId: 'plan-1',
-          adapterId: 'mock',
+          adapterId: 'temporal',
         })),
       } as never,
       delegate: delegate as never,
@@ -386,7 +386,9 @@ describe('PlannerBackedStartRunUseCase', () => {
     const compileTelemetry = { recordPlanCompileLatency: vi.fn() };
     const useCase = new PlannerBackedStartRunUseCase({
       planner: {
-        buildPlan: vi.fn(async () => Promise.reject(new Error('s3 transport down'))),
+        buildPlan: vi.fn(async () => {
+          throw new Error('s3 transport down');
+        }),
       } as never,
       planStore: {
         storePlan: vi.fn(async () => STORED_PLAN_REF),
@@ -397,7 +399,7 @@ describe('PlannerBackedStartRunUseCase', () => {
         validatePlan: vi.fn(async () => ({
           status: 'OK' as const,
           planId: 'plan-1',
-          adapterId: 'mock',
+          adapterId: 'temporal',
         })),
       } as never,
       delegate: {

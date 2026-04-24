@@ -53,10 +53,27 @@ It does **not** own:
   `buildProtectedSecurityRuntime(...)`,
   `BuildProtectedSecurityRuntimeDeps`,
   `ProtectedSecurityRuntime`
+- `buildProtectedExecutionCapacityPort.ts`
+  Builder:
+  `buildProtectedExecutionCapacityPort(...)`,
+  `BuildProtectedExecutionCapacityPortDeps`
 - `buildProtectedExecutionRuntime.ts`
   Builder:
   `buildProtectedExecutionRuntime(...)`,
   `BuildProtectedExecutionRuntimeDeps`
+- `buildProviderAdapters.ts`
+  Builder:
+  `buildProviderAdapters(...)`,
+  `BuildProviderAdaptersDeps`,
+  `BuildProviderAdaptersResult`
+- `providerAdapters/providerAdapterFactory.ts`
+  Provider factory seam:
+  `ProviderAdapterFactory`,
+  `ProviderAdapterFactoryContext`,
+  `ProviderAdapterFactoryRegistration`
+- `providerAdapters/createTemporalProviderAdapterFactory.ts`
+  Adapter factory:
+  `createTemporalProviderAdapterFactory()`
 - `shared.ts`
   Support vocabulary:
   `RuntimePool`
@@ -78,8 +95,15 @@ It does **not** own:
 - `buildProtectedSecurityRuntime.ts` is the only protected-runtime builder
   allowed to construct the auth/authz cluster around the embedded
   access-decision backend, audit logger, authorizer, and authenticator
+- `buildProtectedExecutionCapacityPort.ts` is the only protected-runtime
+  builder allowed to bind provider-specific execution-capacity probes behind
+  the abstract start-run admission seam
 - `buildProtectedExecutionRuntime.ts` is the only protected-runtime builder
   allowed to construct the provider-adapter and workflow-engine cluster
+- `buildProviderAdapters.ts` is generic adapter-map assembly only; it must not
+  import concrete provider packages or inspect provider-specific env vars
+- concrete provider packages are bound only by their provider factory modules,
+  such as `createTemporalProviderAdapterFactory.ts`
 - `shared.ts` remains type vocabulary only; it must not accumulate runtime
   policy or object construction
 
@@ -90,13 +114,19 @@ flowchart LR
   Root["buildProtectedRuntimeModule.ts"] --> Storage["buildProtectedRuntimeStorage.ts"]
   Root --> Admission["buildProtectedAdmissionRuntime.ts"]
   Root --> Security["buildProtectedSecurityRuntime.ts"]
+  Root --> Capacity["buildProtectedExecutionCapacityPort.ts"]
   Root --> Execution["buildProtectedExecutionRuntime.ts"]
+  Execution --> ProviderMap["buildProviderAdapters.ts"]
+  ProviderMap --> Factories["ProviderAdapterFactory"]
+  TemporalFactory["createTemporalProviderAdapterFactory.ts"] --> Factories
   Shared["shared.ts"] --> Storage
   Shared --> Admission
   Shared --> Security
+  Shared --> Capacity
   Storage --> StartRun["buildProtectedStartRunRuntime.ts"]
   Admission --> StartRun
   Security --> StartRun
+  Capacity --> StartRun
   Execution --> StartRun
   Security --> GraphDraft["buildWorkspaceGraphDraftRuntime.ts"]
 ```
@@ -109,7 +139,10 @@ sequenceDiagram
   participant Storage as buildProtectedRuntimeStorage
   participant Admission as buildProtectedAdmissionRuntime
   participant Security as buildProtectedSecurityRuntime
+  participant Capacity as buildProtectedExecutionCapacityPort
   participant Execution as buildProtectedExecutionRuntime
+  participant ProviderMap as buildProviderAdapters
+  participant TemporalFactory as createTemporalProviderAdapterFactory
 
   Root->>Storage: pass env, pool, Postgres constructors, projector constructor
   Storage-->>Root: state store roles, intent store, plan store, resolver, policies
@@ -117,13 +150,18 @@ sequenceDiagram
   Admission-->>Root: duplicate probe, admission guard
   Root->>Security: pass logger, env, pool
   Security-->>Root: authenticator, command authorizer, access-decision port, migrate hook
+  Root->>Capacity: pass env and root-owned runtime posture
+  Capacity-->>Root: abstract execution-capacity port
   Root->>Execution: pass env, observability, storage runtime
+  Execution->>TemporalFactory: create concrete provider factory
+  Execution->>ProviderMap: build adapter map from factories
   Execution-->>Root: adapters, engine, runtime services, adapter registry
 ```
 
 ## Consumers
 
 - `apps/api/src/modules/buildProtectedRuntimeModule.ts`
+- `apps/api/src/modules/protectedRuntime/buildProtectedExecutionCapacityPort.ts`
 - `apps/api/src/modules/startRun/buildProtectedStartRunRuntime.ts`
 - `apps/api/src/modules/workspaceGraphDraft/buildWorkspaceGraphDraftRuntime.ts`
 - `apps/api/test/modules/protectedRuntimeDependencyBuilders.cases.ts`

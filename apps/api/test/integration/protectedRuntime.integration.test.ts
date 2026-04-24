@@ -11,8 +11,8 @@
  * Requires a live PostgreSQL instance. Skips cleanly when DVT_PG_URL or
  * DATABASE_URL is absent.
  */
-import { expect, it } from 'vitest';
 import { parsePlanPreviewPersistResponse } from '@dvt/contracts';
+import { expect, it } from 'vitest';
 
 import {
   buildWorkspaceGraphDraft,
@@ -27,12 +27,6 @@ import {
 import { createProtectedRuntimeHarness } from './protectedRuntime.integration.harness.js';
 import { httpError } from './protectedRuntime.integration.http.js';
 import {
-  exerciseSelectedClosurePlannerBackedRunFlow,
-  exerciseSelectedClosurePreviewFlow,
-  expectSelectedClosureDependencyGapRejected,
-  expectSelectedClosureGraphSourceMismatchRejected,
-} from './protectedRuntime.integration.selectedClosure.scenarios.js';
-import {
   exerciseCommandQueryFlow,
   exerciseEmptyCancelReasonFlow,
   exercisePlannerBackedRunFlow,
@@ -43,6 +37,12 @@ import {
   expectNativeCancelReasonRejected,
   expectTokenAssertionConflict,
 } from './protectedRuntime.integration.runtime.scenarios.js';
+import {
+  exerciseSelectedClosurePlannerBackedRunFlow,
+  exerciseSelectedClosurePreviewFlow,
+  expectSelectedClosureDependencyGapRejected,
+  expectSelectedClosureGraphSourceMismatchRejected,
+} from './protectedRuntime.integration.selectedClosure.scenarios.js';
 import {
   describeIfPg,
   TENANT_ACTIONS_FULL,

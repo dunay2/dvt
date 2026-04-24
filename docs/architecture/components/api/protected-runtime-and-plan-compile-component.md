@@ -60,8 +60,14 @@ acts as a fake namespace.
   Workspace-graph-draft runtime composition seam. Binds graph-draft store,
   capability service, audit, and read/write use cases.
 - [buildProviderAdapters.ts](../../../../apps/api/src/modules/buildProviderAdapters.ts)
-  Builds the live provider-adapter map and keeps provider construction out of
-  the root assembler.
+  Builds the live provider-adapter map from explicit provider-adapter
+  factories and keeps concrete provider construction out of the generic map
+  assembler.
+- [providerAdapterFactory.ts](../../../../apps/api/src/modules/providerAdapters/providerAdapterFactory.ts)
+  Defines the protected-runtime provider-adapter factory seam.
+- [createTemporalProviderAdapterFactory.ts](../../../../apps/api/src/modules/providerAdapters/createTemporalProviderAdapterFactory.ts)
+  Owns Temporal adapter package configuration and lifecycle binding behind the
+  provider-adapter factory seam.
 - [registerOperationalHooks.ts](../../../../apps/api/src/modules/registerOperationalHooks.ts)
   Fastify lifecycle hook registration. Connects `migrate()` and `close()` to
   process lifecycle.
@@ -98,9 +104,12 @@ acts as a fake namespace.
 - `buildWorkspaceGraphDraftRuntime(deps)`
   Factory. Assembles the protected workspace-graph-draft runtime subcomponent
   from abstract runtime dependencies.
-- `buildProviderAdapters(env, deps)`
+- `buildProviderAdapters(env, deps, factories)`
   Async factory. Produces the implemented provider-adapter map plus its
-  shutdown contract.
+  shutdown contract from explicit provider factories.
+- `createTemporalProviderAdapterFactory()`
+  Factory. Returns the Temporal provider factory used by protected execution
+  runtime composition when Temporal is configured.
 - `registerOperationalHooks(app, module)`
   Lifecycle binder. Connects Fastify startup/shutdown to `module.migrate()`
   and `module.close()`.
@@ -132,6 +141,12 @@ acts as a fake namespace.
   the protected auth/authz runtime cluster.
 - `buildProtectedExecutionRuntime.ts` is the only module allowed to construct
   the provider-adapter and workflow-engine runtime cluster.
+- `buildProviderAdapters.ts` must not import concrete provider packages or
+  inspect provider-specific environment variables. It only invokes
+  `ProviderAdapterFactory` implementations supplied by composition.
+- `createTemporalProviderAdapterFactory.ts` is the Temporal-specific adapter
+  construction boundary. Temporal remains replaceable behind the
+  `IProviderAdapter` port.
 - `buildProtectedStartRunRuntime.ts` is the only module allowed to construct
   the authenticated start-run runtime chain inside that root.
 - `resolveAuthorizedExecutableSubgraph.ts` is the only module allowed to parse
@@ -159,6 +174,8 @@ flowchart LR
     StartRun[buildProtectedStartRunRuntime]
     GraphDraft[buildWorkspaceGraphDraftRuntime]
     Providers[buildProviderAdapters]
+    ProviderFactory[ProviderAdapterFactory seam]
+    TemporalFactory[createTemporalProviderAdapterFactory]
     Hooks[registerOperationalHooks]
     Compile[planCompileBoundary]
     Registry[startRunTargetAdapterRegistry]
@@ -182,6 +199,9 @@ flowchart LR
     Root --> Stores
     StartRun --> Validator
     Execution --> Providers
+    Execution --> TemporalFactory
+    TemporalFactory --> ProviderFactory
+    ProviderFactory --> Providers
     Storage --> Resolver
     Admission --> Stores
     Security --> Stores
@@ -204,6 +224,8 @@ sequenceDiagram
     participant Admission as buildProtectedAdmissionRuntime
     participant Security as buildProtectedSecurityRuntime
     participant Execution as buildProtectedExecutionRuntime
+    participant Factory as createTemporalProviderAdapterFactory
+    participant Providers as buildProviderAdapters
     participant StartRun as buildProtectedStartRunRuntime
     participant GraphDraft as buildWorkspaceGraphDraftRuntime
     participant Registry as startRunTargetAdapterRegistry
@@ -215,6 +237,9 @@ sequenceDiagram
     Boot->>Admission: pass env, pool, observability
     Boot->>Security: pass logger, env, and pool
     Boot->>Execution: pass storage runtime, env, and observability
+    Execution->>Factory: create Temporal provider factory
+    Execution->>Providers: build adapter map from provider factories
+    Providers-->>Execution: adapters + close hook
     Boot->>StartRun: pass auth, engine, adapters, plan store, and admission deps
     Boot->>GraphDraft: pass auth, logger, env, and pool deps
     Execution->>Registry: filter implemented adapters
@@ -258,13 +283,17 @@ Admission transition:
    [buildProtectedExecutionRuntime.ts](../../../../apps/api/src/modules/protectedRuntime/buildProtectedExecutionRuntime.ts).
    That file owns provider-adapter and workflow-engine runtime assembly.
 8. Read
+   [createTemporalProviderAdapterFactory.ts](../../../../apps/api/src/modules/providerAdapters/createTemporalProviderAdapterFactory.ts).
+   That file owns Temporal-specific adapter construction behind the generic
+   provider-factory seam.
+9. Read
    [buildProtectedStartRunRuntime.ts](../../../../apps/api/src/modules/startRun/buildProtectedStartRunRuntime.ts).
    That file is the start-run subcomponent seam inside the protected runtime.
-9. Read
-   [buildWorkspaceGraphDraftRuntime.ts](../../../../apps/api/src/modules/workspaceGraphDraft/buildWorkspaceGraphDraftRuntime.ts).
-   That file is the workspace-graph-draft subcomponent seam inside the
-   protected runtime.
-10. Finish with
+10. Read
+    [buildWorkspaceGraphDraftRuntime.ts](../../../../apps/api/src/modules/workspaceGraphDraft/buildWorkspaceGraphDraftRuntime.ts).
+    That file is the workspace-graph-draft subcomponent seam inside the
+    protected runtime.
+11. Finish with
     [buildProtectedRuntimeModule.ts](../../../../apps/api/src/modules/buildProtectedRuntimeModule.ts).
     That file is the top-level assembly root that binds the component together.
 

@@ -16,7 +16,6 @@ import type { PlannerPolicyClassSet } from '../planner/PlannerPolicyVocabulary.v
 
 export const START_RUN_TARGET_ADAPTER = {
   temporal: 'temporal',
-  mock: 'mock',
 } as const;
 
 export type StartRunTargetAdapter =
@@ -24,7 +23,6 @@ export type StartRunTargetAdapter =
 
 export const SUPPORTED_START_RUN_TARGET_ADAPTERS: readonly StartRunTargetAdapter[] = [
   START_RUN_TARGET_ADAPTER.temporal,
-  START_RUN_TARGET_ADAPTER.mock,
 ] as const;
 
 export function isStartRunTargetAdapter(value: unknown): value is StartRunTargetAdapter {

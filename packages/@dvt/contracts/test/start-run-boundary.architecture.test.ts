@@ -76,6 +76,19 @@ describe('contracts: StartRunBoundary component architecture', () => {
     expect(schemaSource.sourceText).toContain('z.enum(START_RUN_SYSTEM_BACKPRESSURE_CODES)');
   });
 
+  it('keeps only temporal as the canonical startRun target adapter', () => {
+    const boundarySource = readSource(
+      join(import.meta.dirname, '../src/contracts/engine/StartRunBoundary.v1.ts')
+    );
+    const contractDocText = readFileSync(join(DOCS_ROOT, 'start-run-boundary.v1.md'), 'utf8');
+
+    expect(boundarySource.sourceText).toContain("temporal: 'temporal'");
+    expect(boundarySource.sourceText).not.toContain("mock: 'mock'");
+    expect(boundarySource.sourceText).not.toContain('START_RUN_TARGET_ADAPTER.mock');
+    expect(contractDocText).toContain("targetAdapter: 'temporal';");
+    expect(contractDocText).not.toContain("targetAdapter: 'temporal' | 'mock'");
+  });
+
   it('keeps fixtures on canonical exports instead of raw boundary-code literals', () => {
     const fixturesSource = readSource(
       join(import.meta.dirname, './fixtures/start-run-boundary.fixtures.ts')
@@ -94,7 +107,6 @@ describe('contracts: StartRunBoundary component architecture', () => {
       "'CAPACITY_SIGNAL_UNAVAILABLE'",
       "'OUTBOX_RATE_LIMIT_EXCEEDED'",
       "targetAdapter: 'temporal'",
-      "targetAdapter: 'mock'",
     ]) {
       expect(fixturesSource.sourceText).not.toContain(rawLiteral);
     }

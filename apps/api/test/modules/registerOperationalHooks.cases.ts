@@ -30,10 +30,10 @@ export function describeRegisterOperationalHooksCases(): void {
         runHealthService: {} as never,
         adapters: new Map(),
         startRunTargetAdapterRegistry: {
-          isSupported(_value: string): _value is 'mock' | 'temporal' {
+          isSupported(_value: string): _value is 'temporal' {
             return false;
           },
-          listSupported(): ReadonlyArray<'mock' | 'temporal'> {
+          listSupported(): ReadonlyArray<'temporal'> {
             return [];
           },
         },

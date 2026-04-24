@@ -2,7 +2,7 @@
 title: Start-run execution capacity admission component
 status: Active
 owner: apps/api
-last_reviewed: 2026-04-23
+last_reviewed: 2026-04-24
 ---
 
 # Start-run execution capacity admission component
@@ -13,12 +13,13 @@ coupling the API layer to Temporal or any other concrete adapter.
 
 This is a **local component guide**, not a second shared contract. The caller-
 visible start-run result surface remains the canonical shared contract:
-`docs/architecture/components/engine/contracts/engine/StartRunBoundary.v1.md`.
+`docs/architecture/components/engine/contracts/engine/start-run-boundary.v1.md`.
 
 Read this together with:
 
 - `apps/api/docs/start-run-control-boundary-component.md`
 - `apps/api/docs/start-run-application-component.md`
+- `apps/api/docs/start-run-admission-observability-component.md`
 - `docs/architecture/components/engine/contracts/engine/start-run-boundary-component.md`
 
 ## Owned concern
@@ -35,7 +36,7 @@ It does **not** own:
 - tenant backpressure policy
 - HTTP response mapping
 - adapter-native queue metrics
-- concrete adapter capacity bindings beyond the fail-closed default
+- root-level provider-specific execution-capacity binding ownership
 
 ## Public API
 
@@ -49,6 +50,9 @@ It does **not** own:
 - `defaultStartRunExecutionCapacityPort.ts`
   Composition-time default binding:
   `DEFAULT_START_RUN_EXECUTION_CAPACITY_PORT`
+- `TemporalWorkerReadyzExecutionCapacityPort.ts`
+  First worker-backed concrete binding:
+  `TemporalWorkerReadyzExecutionCapacityPort`
 - `BackpressureAwareStartRunUseCase.ts`
   Orchestrator that consumes the seam as part of start-run admission ordering
 
@@ -59,6 +63,7 @@ It does **not** own:
 - the seam returns admission semantics, not raw queue depth or worker metrics
 - inability to obtain a concrete capacity signal fails closed through the
   default binding
+- protected-runtime composition owns provider-specific capacity bindings
 - the caller-visible start-run result kind remains `system_backpressure`
 - more specific execution-capacity denials are expressed through canonical
   `code` values, not a second top-level result kind
@@ -76,11 +81,53 @@ right place:
 - it preserves one published caller-visible language:
   canonical `system_backpressure`
 
-The maturity gap that remains is deliberate:
+The current route is now closed for the first production slice:
 
-- `AR-C3-B` still needs the real adapter-backed capacity signal
-- `AR-C3-C` still needs operator telemetry, runbook truth, and sustained
-  evidence
+- `AR-C3-A` introduced the abstract execution-capacity seam
+- `AR-C3-B` bound that seam to the Temporal worker `GET /readyz` signal in
+  protected-runtime composition
+- `AR-C3-C` closed telemetry labels, runbook truth, and operator-facing
+  rejection diagnosis
+
+The maturity gaps that remain are now future extensions, not missing closure:
+
+- tenant-scoped execution-capacity policy
+- non-Temporal concrete bindings behind the same abstract seam
+
+## First concrete binding route
+
+The first real adapter-backed signal for this seam is the standalone Temporal
+worker readiness probe:
+
+- `apps/api` may query the worker `GET /readyz` endpoint through a
+  composition-owned infrastructure adapter
+- `ready=true` maps to `admissible`
+- reachable but `ready=false` maps to canonical
+  `START_RUN_EXECUTION_CAPACITY_REASON.executorUnavailable`
+- transport, timeout, or protocol failure maps to canonical
+  `START_RUN_EXECUTION_CAPACITY_REASON.capacitySignalUnavailable`
+
+This keeps the application seam adapter-agnostic while still binding it to a
+real runtime-owned signal.
+
+## Operator observability
+
+Execution-capacity denial stays inside canonical `system_backpressure`, but the
+operator-facing telemetry is now explicit and is owned by the local admission
+observability component:
+
+- `dvt.admission.decision_total{mode,decision}` distinguishes accepted,
+  duplicate, and reject or would-reject outcomes
+- `dvt.admission.rejection_total{mode,decision,code}` distinguishes
+  `EXECUTION_CAPACITY_EXHAUSTED`, `EXECUTOR_UNAVAILABLE`, and
+  `CAPACITY_SIGNAL_UNAVAILABLE` from older system-pressure codes
+- `docs/runbooks/admission-control-runbook.md` owns the diagnostic path for
+  those codes and for the Temporal worker `GET /readyz` probe
+
+Use the companion local guide for the telemetry API, invariants, transitions,
+and consumers:
+
+- `apps/api/docs/start-run-admission-observability-component.md`
 
 ## Anti-patterns explicitly prevented
 
@@ -118,6 +165,8 @@ flowchart LR
   UseCase --> Delegate["PlannerBackedStartRunUseCase / delegate"]
   Runtime["buildProtectedStartRunRuntime.ts"] --> Default["DEFAULT_START_RUN_EXECUTION_CAPACITY_PORT"]
   Default --> Capacity
+  Root["buildProtectedRuntimeModule.ts"] --> Binding["Temporal worker readyz binding"]
+  Binding --> Capacity
 ```
 
 ## Sequence
@@ -155,6 +204,7 @@ sequenceDiagram
 
 - `BackpressureAwareStartRunUseCase.ts`
 - `buildProtectedStartRunRuntime.ts`
+- `buildProtectedExecutionCapacityPort.ts`
 - `startRunExecutionCapacityAdmission.architecture.test.ts`
 - `defaultStartRunExecutionCapacityPort.test.ts`
 
@@ -173,10 +223,13 @@ sequenceDiagram
 
 - `apps/api/src/application/ports/IStartRunExecutionCapacityPort.ts`
 - `apps/api/src/application/services/defaultStartRunExecutionCapacityPort.ts`
+- `apps/api/src/infrastructure/executionCapacity/TemporalWorkerReadyzExecutionCapacityPort.ts`
+- `apps/api/src/modules/protectedRuntime/buildProtectedExecutionCapacityPort.ts`
 - `apps/api/src/application/services/startRunAdmissionDecisions.ts`
 - `apps/api/src/application/services/BackpressureAwareStartRunUseCase.ts`
 - `apps/api/src/modules/startRun/buildProtectedStartRunRuntime.ts`
 - `apps/api/test/application/services/BackpressureAwareStartRunUseCase.executionCapacity.test.ts`
+- `apps/api/test/application/services/BackpressureAwareStartRunUseCase.executionCapacityReadyzBinding.test.ts`
 - `apps/api/test/application/services/defaultStartRunExecutionCapacityPort.test.ts`
 - `apps/api/test/application/services/startRunExecutionCapacityAdmission.architecture.test.ts`
 
