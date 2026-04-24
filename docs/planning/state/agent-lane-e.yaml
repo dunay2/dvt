@@ -1233,7 +1233,7 @@ tasks:
       target-state-only wording.
     complexity: S
     effort_points: 3
-    progress_pct: 60
+    progress_pct: 80
     evidence_refs:
       - docs/architecture/components/web/index.md
       - docs/architecture/domain-ui.md
@@ -2251,22 +2251,18 @@ tasks:
       - docs/planning/closeouts/20260423-tf-e2-k-c-typed-empty-canvas-posture-closeout.md
       - docs/planning/closeouts/20260424-tf-e2-k-d-host-cycle-dto-closeout.md
       - docs/planning/closeouts/20260424-tf-e2-k-d-transformation-host-cycle-proof-closeout.md
+      - docs/planning/closeouts/20260424-tf-e2-k-e-dbt-host-cycle-proof-closeout.md
       - docs/evidence/ed-20260423-tf-e2-k-a-first-canvas-playground-host.md
       - docs/architecture/components/web/graph/canvas-playground-host-component.md
       - docs/planning/proposals/workspace-first-frontend-architecture-specification.md
       - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-canvas-target-architecture-execution-plan-20260417.md
       - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-canvas-empty-authoring-entrypoint-design-20260422.md
     status_reason: >-
-      `TF-E2-K-A`, `TF-E2-K-B`, and `TF-E2-K-C` are now closed: the Canvas route exposes a real
-      `needs_canvas` host posture, persists one typed canvas document through the canonical
-      workspace draft boundary, restores one explicit host-owned canvas tab from that authoritative
-      draft identity, and renders typed editable empty-canvas copy from plugin-owned canvas-kind
-      registration instead of flattening `dbt` and `transformation` back into one authoring story.
-      `TF-E2-K-A` through `TF-E2-K-D` are now closed. The route exposes a real first-canvas host,
-      restores the authoritative tab, renders typed empty posture per canvas kind, and now proves
-      the first complete `transformation` host cycle from `needs_canvas` to `graph_ready` through a
-      stable host-cycle DTO. The next hito is `TF-E2-K-E`: prove the same cycle for `dbt` without
-      collapsing back into transformation assumptions.
+      `TF-E2-K-A` through `TF-E2-K-E` are now closed. The route exposes a real first-canvas host,
+      restores the authoritative tab, renders typed empty posture per canvas kind, and proves the
+      first complete host cycles for both `transformation` and `dbt` through a stable host-cycle
+      DTO. The next hito is `TF-E2-K-F`: prove authoritative restore of the active typed canvas tab
+      and posture.
     last_verified: '2026-04-24'
   - task_id: TF-E2-K-A
     parent_task: TF-E2-K
@@ -2376,7 +2372,7 @@ tasks:
   - task_id: TF-E2-K-E
     parent_task: TF-E2-K
     priority: P0
-    status: queued
+    status: done
     objective: >-
       prove the same complete host cycle for `dbt` so typed canvas behavior remains distinct end to
       end and does not collapse into transformation assumptions.
@@ -2386,12 +2382,16 @@ tasks:
       catalog, and route posture.
     complexity: S
     effort_points: 2
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
       - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-k-playground-complete-cycle-stories-20260424.md
       - docs/architecture/components/web/graph/canvas-playground-host-component.md
       - docs/architecture/components/web/graph/canvas-empty-authoring-entrypoint-component.md
-    status_reason: Planned dbt-specific host cycle proof; execution has not started.
+      - docs/planning/closeouts/20260424-tf-e2-k-e-dbt-host-cycle-proof-closeout.md
+    status_reason: >-
+      Closed. The route test stack now proves the complete `dbt` host cycle from `create canvas` to
+      first node and `graph_ready`, and the fixture vocabulary no longer depends on
+      transformation-only node catalogs.
     last_verified: '2026-04-24'
   - task_id: TF-E2-K-F
     parent_task: TF-E2-K

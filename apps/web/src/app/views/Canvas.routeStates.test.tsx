@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { DVT_AUTHORING_NODE_KINDS } from '../plugins/nodeTypeCatalog.dbt';
+import { DBT_NODE_KINDS, DVT_AUTHORING_NODE_KINDS } from '../plugins/nodeTypeCatalog.dbt';
 import type { NodeKindRegistration } from '../plugins/nodeTypeContracts';
 import { canvasViewCopy } from './canvas/copy';
 import {
@@ -33,7 +33,9 @@ function expectPrimaryCanvasActionsBlocked(container: ParentNode): void {
 }
 
 function requireAuthoringNodeKind(kind: string): NodeKindRegistration {
-  const registration = DVT_AUTHORING_NODE_KINDS.find((candidate) => candidate.kind === kind);
+  const registration = [...DVT_AUTHORING_NODE_KINDS, ...DBT_NODE_KINDS].find(
+    (candidate) => candidate.kind === kind
+  );
   if (registration == null) {
     throw new Error(`Missing authoring node kind fixture: ${kind}`);
   }
@@ -266,6 +268,86 @@ describe('Canvas route states', () => {
 
     expect(handleCreateAuthoringNode).toHaveBeenCalledWith(
       requireAuthoringNodeKind('dvt:source')
+    );
+    expect(harness.container.querySelector('[data-slot="canvas-empty-state"]')).toBeNull();
+    expect(harness.container.querySelector('[data-slot="canvas-playground-empty-state"]')).toBeNull();
+    expect(harness.container.querySelector('[data-slot="canvas-viewport"]')).not.toBeNull();
+    expectCanvasBootstrapState({
+      routeState: 'ready',
+      bootstrapStatus: 'complete',
+      bootstrapDetail: canvasViewCopy.canvasReadyDetail,
+      canCompleteBootstrap: true,
+    });
+  });
+
+  it('proves the first dbt host cycle from create canvas to graph-ready authoring', async () => {
+    let currentController = buildController(buildCanvasHostCycleControllerState({ kind: 'needs_canvas' }));
+
+    const handleCreateCanvasDocument = vi.fn(async (command: { kind: string; title: string }) => {
+      currentController = buildController({
+        ...buildCanvasHostCycleControllerState({
+          kind: 'typed_empty',
+          canvasKind: 'dbt',
+          title: command.title,
+        }),
+        handleCreateCanvasDocument,
+        handleCreateAuthoringNode,
+      });
+    });
+    const handleCreateAuthoringNode = vi.fn((registration: NodeKindRegistration) => {
+      currentController = buildController({
+        ...buildCanvasHostCycleControllerState({
+          kind: 'graph_ready',
+          canvasKind: 'dbt',
+          title: 'dbt canvas',
+          firstNodeKind: registration.kind,
+        }),
+        handleCreateCanvasDocument,
+        handleCreateAuthoringNode,
+      });
+    });
+
+    currentController = buildController({
+      ...buildCanvasHostCycleControllerState({ kind: 'needs_canvas' }),
+      handleCreateCanvasDocument,
+      handleCreateAuthoringNode,
+    });
+    mockedUseCanvasController.mockImplementation(() => currentController);
+
+    await harness.render();
+
+    const createDbtButton = Array.from(harness.container.querySelectorAll('button')).find((button) =>
+      button.textContent?.includes('dbt')
+    );
+    expect(createDbtButton).toBeDefined();
+
+    createDbtButton?.click();
+    await harness.render();
+
+    expect(handleCreateCanvasDocument).toHaveBeenCalledWith({
+      kind: 'dbt',
+      title: 'dbt canvas',
+    });
+    expect(harness.container.textContent).toContain('Start dbt canvas');
+    expect(harness.container.textContent).toContain('Add first dbt node');
+    expect(harness.container.textContent).not.toContain('Start transformation canvas');
+    expectCanvasBootstrapState({
+      routeState: 'empty',
+      bootstrapStatus: 'complete',
+      bootstrapDetail: canvasViewCopy.emptyCanvasReadyDetail,
+      canCompleteBootstrap: true,
+    });
+
+    const sourceButton = Array.from(harness.container.querySelectorAll('button')).find(
+      (button) => button.textContent?.includes('Source')
+    );
+    expect(sourceButton).toBeDefined();
+
+    sourceButton?.click();
+    await harness.render();
+
+    expect(handleCreateAuthoringNode).toHaveBeenCalledWith(
+      requireAuthoringNodeKind('dbt:source')
     );
     expect(harness.container.querySelector('[data-slot="canvas-empty-state"]')).toBeNull();
     expect(harness.container.querySelector('[data-slot="canvas-playground-empty-state"]')).toBeNull();

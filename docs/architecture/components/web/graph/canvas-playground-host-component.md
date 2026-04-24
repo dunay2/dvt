@@ -91,6 +91,9 @@ before that boundary exists.
 - Route-level host-cycle proofs must advance from `needs_canvas` to
   `typed_empty` and then `graph_ready` through stable cycle DTO seams rather
   than bespoke controller transport bags.
+- Test-support fixtures must resolve first-node kinds from the registered
+  catalog for the active canvas kind; `dbt` proofs must not borrow
+  transformation-only fixtures.
 
 ## Transitions
 
