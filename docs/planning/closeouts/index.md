@@ -22,6 +22,7 @@ navigation. The folder contains additional historical entries.
 
 ## Representative Recent Closeouts
 
+- [20260423 TF-E2-K-A First-Canvas Playground Host Closeout](./20260423-tf-e2-k-a-first-canvas-playground-host-closeout.md)
 - [20260423 TF-E2 Project Playground Host Proposal Capture Closeout](./20260423-tf-e2-project-playground-host-proposal-capture-closeout.md)
 - [20260423 Selected-Closure UX Proof Story Capture Closeout](./20260423-selected-closure-ux-proof-story-capture-closeout.md)
 - [20260423 TF-A2-C5 Selected-Closure End-To-End Proof Closeout](./20260423-tf-a2-c5-selected-closure-end-to-end-proof-closeout.md)
