@@ -256,7 +256,7 @@ function makeRunExecutionContextArtifact(
     tenantId: string;
     projectId: string;
     environmentId: string;
-    targetAdapter: 'temporal' | 'conductor';
+    targetAdapter: 'temporal';
     createdAtIso: string;
     createdBy: string;
     pluginCompatibilityFingerprint: string;

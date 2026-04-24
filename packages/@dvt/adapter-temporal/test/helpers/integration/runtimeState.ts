@@ -236,7 +236,6 @@ export class TestStateStore {
       providerRunId: string;
       providerNamespace?: string;
       providerTaskQueue?: string;
-      providerConductorUrl?: string;
     }
   ): Promise<void> {
     // No-op for integration tests.

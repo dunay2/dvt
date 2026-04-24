@@ -102,11 +102,11 @@ injected into background workers such as `IntentReconcilerWorker`.
 
 ## Label Glossary
 
-| Label       | Values / Description                                                                |
-| ----------- | ----------------------------------------------------------------------------------- |
-| `operation` | Method name on the service (e.g. `reconcileOrphanedIntents`, `detectStuckRuns`)     |
-| `provider`  | Adapter provider ID for a real runtime provider, such as `temporal` or `conductor`. |
-| `tenantId`  | Tenant identifier present when the operation is tenant-scoped                       |
+| Label       | Values / Description                                                             |
+| ----------- | -------------------------------------------------------------------------------- |
+| `operation` | Method name on the service (e.g. `reconcileOrphanedIntents`, `detectStuckRuns`)  |
+| `provider`  | Adapter provider ID for a real runtime provider. The active value is `temporal`. |
+| `tenantId`  | Tenant identifier present when the operation is tenant-scoped                    |
 
 ---
 

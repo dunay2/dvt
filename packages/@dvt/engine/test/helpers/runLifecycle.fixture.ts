@@ -70,23 +70,12 @@ export function makeRunRef(
   runId: string,
   options?: { provider?: Provider; tenantId?: string }
 ): EngineRunRef {
-  const provider = options?.provider ?? 'temporal';
   const tenantId = options?.tenantId ?? 't';
-  if (provider === 'temporal') {
-    return {
-      provider: 'temporal',
-      tenantId,
-      namespace: 'default',
-      workflowId: `wf-${runId}`,
-      runId,
-    };
-  }
-
   return {
-    provider: 'conductor',
+    provider: options?.provider ?? 'temporal',
     tenantId,
+    namespace: 'default',
     workflowId: `wf-${runId}`,
     runId,
-    conductorUrl: 'http://localhost:8080',
   };
 }

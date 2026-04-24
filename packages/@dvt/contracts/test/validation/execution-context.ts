@@ -24,6 +24,18 @@ export function registerValidationExecutionContextSuite(): void {
       expect(ctx.targetAdapter).toBe('temporal');
     });
 
+    it('rejects RunContext with non-implemented provider', () => {
+      expect(() =>
+        parseRunContext({
+          tenantId: 'tenant-a',
+          projectId: 'project-a',
+          environmentId: 'prod',
+          runId: 'run-1',
+          targetAdapter: 'conductor',
+        })
+      ).toThrow(ContractValidationError);
+    });
+
     it('parses RunContext with optional runExecutionContextRef', () => {
       const ctx = parseRunContext({
         tenantId: 'tenant-a',

@@ -12,10 +12,10 @@ operations.
 
 Canonical threshold and signal sources live in:
 
-- [Engine SLO Posture](../SLOs.md)
+- [Engine SLO Posture](../slo-posture.md)
 - [API Runtime SLA Canonical](../../../../../runbooks/api-runtime-sla-canonical-20260404.md)
 - [AR-C2 SLA signal threshold mapping](../../../../../runbooks/ar-c2-sla-signal-threshold-mapping-20260404.md)
-- [Incident response runbook](./incident_response.md)
+- [Incident response runbook](./incident-response.md)
 
 ## Current posture
 
@@ -79,7 +79,7 @@ Canonical threshold and signal sources live in:
 
 Do not use these outdated assumptions:
 
-- `Temporal offline, but Conductor available` as a Sev1 example;
+- `Temporal offline, but another provider is available` as a Sev1 example;
 - phase-based escalation text from the February MVP plan;
 - quarter-specific budget examples as if they were the live incident policy.
 

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 import { KNOWN_STEP_KINDS } from '../contracts/planner/StepKindRegistry.v1.js';
-import type { Provider } from '../types/contracts.js';
+import { RUNTIME_PROVIDER_VALUES, type Provider } from '../types/contracts.js';
 
 import { createBuiltInStepTypeEntries } from './BuiltInStepTypeEntries.js';
 
@@ -43,9 +43,8 @@ type StepKindRegistryEntry = {
   readonly profile: StepKindExecutionProfile;
 };
 
-const ALL_PROVIDERS: readonly Provider[] = ['temporal', 'conductor'];
 const DEFAULT_PROFILE: StepKindExecutionProfile = {
-  supportedAdapters: ALL_PROVIDERS,
+  supportedAdapters: RUNTIME_PROVIDER_VALUES,
   requiredCapabilities: [],
 };
 

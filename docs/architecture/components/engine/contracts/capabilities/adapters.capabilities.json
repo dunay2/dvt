@@ -19,17 +19,6 @@
         "signals.concurrent",
         "history.rotation"
       ]
-    },
-    "conductor": {
-      "capabilities": [
-        "basic-execution",
-        "signal.pause.emulated",
-        "cancel.forced",
-        "workflow.fan.parallel",
-        "query.task.state",
-        "replay.task",
-        "signals.rate.limit"
-      ]
     }
   }
 }

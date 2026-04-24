@@ -10,7 +10,7 @@ This package provides _enforcement_ primitives adapters MUST share:
 - Verify planner `planVersion` compatibility using an explicit runtime compatibility matrix.
 - Verify `ExecutionPlan.steps[].stepTypeConfig` per `StepKind` with `IStepTypeRegistry`
   and fail-closed rejection of unregistered kinds by default.
-- Provide consistent error codes across adapters (Temporal, Conductor, BullMQ, etc.).
+- Provide consistent error codes across active runtime adapters.
 
 ## Non-goals
 

@@ -7,13 +7,13 @@ readers to the canonical operational docs.
 
 ## Canonical operations docs
 
-- [Engine SLO posture](./SLOs.md)
+- [Engine SLO posture](./slo-posture.md)
 - [API runtime SLA canonical](../../../runbooks/api-runtime-sla-canonical-20260404.md)
 - [AR-C2 SLA signal threshold mapping](../../../runbooks/ar-c2-sla-signal-threshold-mapping-20260404.md)
 - [Observability](./observability.md)
 - [Metrics catalog](./metrics-catalog.md)
-- [Incident response runbook](./runbooks/incident_response.md)
-- [Severity matrix](./runbooks/severity_matrix.md)
+- [Incident response runbook](./runbooks/incident-response.md)
+- [Severity matrix](./runbooks/severity-matrix.md)
 - [Engine roadmap](../roadmap/index.md)
 
 ## Navigation

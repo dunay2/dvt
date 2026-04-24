@@ -10,7 +10,6 @@ CREATE TABLE IF NOT EXISTS __SCHEMA__.run_metadata (
   provider_run_id TEXT NOT NULL,
   provider_namespace TEXT,
   provider_task_queue TEXT,
-  provider_conductor_url TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 

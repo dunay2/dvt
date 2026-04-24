@@ -123,7 +123,6 @@ port file listed above.
 Known concrete adapter families:
 
 - `@dvt/adapter-temporal`
-- conductor stub path
 - engine-local `InMemoryProviderAdapter` for unit tests, using real provider ids
 - postgres adapters for persistence/intents
 

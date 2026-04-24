@@ -103,7 +103,7 @@ export interface IPlanExecutabilityValidator {
    * @param planRef - Immutable reference to the persisted canonical plan.
    *   The plan MUST already exist in the state store in a non-runnable state
    *   before this method is called.
-   * @param adapterId - Target adapter identifier (e.g. `'temporal'`, `'conductor'`).
+   * @param adapterId - Target adapter identifier (e.g. `'temporal'`).
    * @returns A structured validation result.
    */
   validatePlan(planRef: PlanRefSchemaT, adapterId: string): Promise<ExecutabilityValidationResult>;

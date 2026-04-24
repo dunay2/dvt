@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/dunay2/dvt/docs/architecture/engine/contracts/engine/events/RunStarted.schema.json",
   "title": "RunStarted Event",
-  "description": "Emitted by the Engine when a workflow execution begins in the target orchestrator (Temporal, Conductor, etc.)",
+  "description": "Emitted by the Engine when a workflow execution begins in the active Temporal runtime.",
   "type": "object",
   "required": [
     "eventType",
@@ -68,11 +68,11 @@
     },
     "engineRunRef": {
       "type": "string",
-      "description": "Engine-specific identifier (e.g., Temporal workflowId/runId, Conductor executionId)"
+      "description": "Engine-specific Temporal workflow identifier."
     },
     "engineType": {
       "type": "string",
-      "enum": ["temporal", "conductor"],
+      "enum": ["temporal"],
       "description": "Target execution engine type"
     },
     "planRef": {

@@ -14,7 +14,7 @@ function mkAdapter(provider: IProviderAdapter['provider']): IProviderAdapter {
       throw new Error('not-used');
     },
     cancelRun: async () => {},
-    getRunStatus: async () => ({ runId: 'r', status: 'RUNNING' }),
+    getProviderStatusView: async () => ({ provider, providerStatus: 'RUNNING' }),
     signal: async () => {},
   };
 }
@@ -24,20 +24,19 @@ describe('providerSelection', () => {
     expect(resolveEngineProvider({})).toBe('temporal');
   });
 
-  it('resolves provider from ENGINE_PROVIDER when valid', () => {
+  it('resolves temporal from ENGINE_PROVIDER when valid', () => {
     expect(resolveEngineProvider({ ENGINE_PROVIDER: 'temporal' })).toBe('temporal');
-    expect(resolveEngineProvider({ ENGINE_PROVIDER: 'conductor' })).toBe('conductor');
   });
 
   it('throws on invalid ENGINE_PROVIDER values', () => {
-    expect(() => resolveEngineProvider({ ENGINE_PROVIDER: 'k8s' })).toThrow(
+    expect(() => resolveEngineProvider({ ENGINE_PROVIDER: 'conductor' })).toThrow(
       /ENGINE_PROVIDER_INVALID/
     );
   });
 
   it('builds adapter registry without duplicates', () => {
-    const map = buildAdapterRegistry([mkAdapter('temporal'), mkAdapter('conductor')]);
-    expect(map.size).toBe(2);
+    const map = buildAdapterRegistry([mkAdapter('temporal')]);
+    expect(map.size).toBe(1);
     expect(map.get('temporal')?.provider).toBe('temporal');
   });
 
@@ -48,26 +47,14 @@ describe('providerSelection', () => {
   });
 
   it('picks default adapter using ENGINE_PROVIDER override', () => {
-    const adapters = buildAdapterRegistry([mkAdapter('temporal'), mkAdapter('conductor')]);
+    const adapters = buildAdapterRegistry([mkAdapter('temporal')]);
 
-    const selected = pickDefaultAdapter(adapters, { ENGINE_PROVIDER: 'conductor' });
-    expect(selected.provider).toBe('conductor');
-  });
-
-  it('picks fallback adapter when ENGINE_PROVIDER is unset', () => {
-    const adapters = buildAdapterRegistry([mkAdapter('conductor')]);
-    const selected = pickDefaultAdapter(adapters, {}, 'conductor');
-    expect(selected.provider).toBe('conductor');
-  });
-
-  it('falls back to first available adapter when fallback provider is not registered', () => {
-    const adapters = buildAdapterRegistry([mkAdapter('conductor')]);
-    const selected = pickDefaultAdapter(adapters, {});
-    expect(selected.provider).toBe('conductor');
+    const selected = pickDefaultAdapter(adapters, { ENGINE_PROVIDER: 'temporal' });
+    expect(selected.provider).toBe('temporal');
   });
 
   it('still throws when ENGINE_PROVIDER override targets an unregistered adapter', () => {
-    const adapters = buildAdapterRegistry([mkAdapter('conductor')]);
+    const adapters = buildAdapterRegistry([]);
     expect(() => pickDefaultAdapter(adapters, { ENGINE_PROVIDER: 'temporal' })).toThrow(
       /engine\.error\.adapter_not_registered/
     );

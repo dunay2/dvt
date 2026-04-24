@@ -45,22 +45,22 @@ export function describeStoredPlanExecutabilityValidatorRegistryCases(): void {
             })
           ),
         },
-        adapters: new Map([['conductor', makeAdapter(['basic-execution'], 'conductor')]]),
+        adapters: new Map([['temporal', makeAdapter(['basic-execution'])]]),
         stepTypeRegistry: makeRegistryForKind('SPARK_SQL', {
-          supportedAdapters: ['temporal'],
+          supportedAdapters: [],
           requiredCapabilities: [],
         }),
       });
 
-      const result = await validator.validatePlan(PLAN_REF, 'conductor');
+      const result = await validator.validatePlan(PLAN_REF, 'temporal');
 
       expect(result).toEqual({
         status: 'ERROR',
         planId: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
-        adapterId: 'conductor',
+        adapterId: 'temporal',
         code: 'INVALID_STEP_KIND',
         degradable: false,
-        reason: 'Step kind SPARK_SQL is not executable on adapter conductor',
+        reason: 'Step kind SPARK_SQL is not executable on adapter temporal',
         cause: 'SPARK_SQL',
       });
     });

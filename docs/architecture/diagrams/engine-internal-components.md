@@ -182,8 +182,6 @@ flowchart TB
     IMPA["InMemoryProviderAdapter<br/>(unit-test double)"]:::impl
     IMSS["InMemoryRunStateStore"]:::impl
     IMIS["InMemoryStartRunIntentStore"]:::impl
-    TSTUB["TemporalAdapterStub"]:::impl
-    CSTUB["ConductorAdapterStub"]:::planned
   end
 
   Builder --> WE
@@ -235,8 +233,6 @@ flowchart TB
   IMPA -.-> IPA
   IMSS -.-> IRSS
   IMIS -.-> ISRIS
-  TSTUB -.-> IPA
-  CSTUB -.-> IPA
 ```
 
 ## Runtime Capability Dispatch Inside The Shipped Temporal Path

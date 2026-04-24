@@ -2,7 +2,7 @@
   "summary": {
     "adrs": 47,
     "evidenceDocs": 117,
-    "normativeDocs": 315,
+    "normativeDocs": 313,
     "statusDocs": 58
   },
   "adrs": [
@@ -1705,14 +1705,6 @@
       "filename": "index.md"
     },
     {
-      "path": "docs/architecture/components/engine/adapters/conductor/ConductorAdapter.spec.md",
-      "filename": "ConductorAdapter.spec.md"
-    },
-    {
-      "path": "docs/architecture/components/engine/adapters/conductor/index.md",
-      "filename": "index.md"
-    },
-    {
       "path": "docs/architecture/components/engine/adapters/index.md",
       "filename": "index.md"
     },
@@ -1813,16 +1805,16 @@
       "filename": "IWorkflowEngine.v1.md"
     },
     {
-      "path": "docs/architecture/components/engine/contracts/engine/PlanIntegrityAndPause.v1.md",
-      "filename": "PlanIntegrityAndPause.v1.md"
-    },
-    {
       "path": "docs/architecture/components/engine/contracts/engine/RunEvents.v1.md",
       "filename": "RunEvents.v1.md"
     },
     {
       "path": "docs/architecture/components/engine/contracts/engine/RunExecutionPolicy.v1.md",
       "filename": "RunExecutionPolicy.v1.md"
+    },
+    {
+      "path": "docs/architecture/components/engine/contracts/engine/runtime-provider-vocabulary-component.md",
+      "filename": "runtime-provider-vocabulary-component.md"
     },
     {
       "path": "docs/architecture/components/engine/contracts/engine/SignalsAndAuth.v1.md",
@@ -1925,20 +1917,20 @@
       "filename": "observability.md"
     },
     {
-      "path": "docs/architecture/components/engine/ops/runbooks/incident_response.md",
-      "filename": "incident_response.md"
+      "path": "docs/architecture/components/engine/ops/runbooks/incident-response.md",
+      "filename": "incident-response.md"
     },
     {
       "path": "docs/architecture/components/engine/ops/runbooks/index.md",
       "filename": "index.md"
     },
     {
-      "path": "docs/architecture/components/engine/ops/runbooks/severity_matrix.md",
-      "filename": "severity_matrix.md"
+      "path": "docs/architecture/components/engine/ops/runbooks/severity-matrix.md",
+      "filename": "severity-matrix.md"
     },
     {
-      "path": "docs/architecture/components/engine/ops/SLOs.md",
-      "filename": "SLOs.md"
+      "path": "docs/architecture/components/engine/ops/slo-posture.md",
+      "filename": "slo-posture.md"
     },
     {
       "path": "docs/architecture/components/engine/reviews/audit.md",

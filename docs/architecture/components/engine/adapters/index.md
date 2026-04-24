@@ -5,6 +5,12 @@
 Summarizes adapter integration points for the engine component and links to the
 canonical adapter specifications.
 
+Active provider-runtime vocabulary is hard-cut to the implemented runtime.
+Temporal is the only provider runtime that may appear in active contracts,
+capability matrices, and composition defaults. Future providers need a new
+ADR-backed contract line, real adapter package, conformance suite, and
+production composition path before they can be documented here.
+
 ## Current adapter topology
 
 ```mermaid
@@ -22,15 +28,14 @@ flowchart LR
 
 - [Temporal adapter specification](./temporal/TemporalAdapter.spec.md)
 - [Temporal engine policies](./temporal/EnginePolicies.md)
-- [Conductor adapter draft](./conductor/ConductorAdapter.spec.md)
 - [Postgres state-store adapter](./state-store/postgres/StateStoreAdapter.md)
 - [Snowflake state-store adapter](./state-store/snowflake/StateStoreAdapter.md)
 
 Current reading rule:
 
 - treat Temporal as the only implemented provider-runtime adapter surface today;
-- treat the Conductor document as draft/reference material, not as an active
-  delivery commitment.
+- do not treat future-provider notes, old drafts, or archived material as active
+  runtime vocabulary.
 
 ## Related contracts
 

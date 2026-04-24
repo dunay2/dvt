@@ -42,8 +42,8 @@ What is true now:
 
 - Temporal is the only implemented provider runtime path.
 - Mock exists as a testing/runtime support surface.
-- Conductor still exists as residual type, contract, and stub debt in parts of
-  the repo, but it is not a near-term delivery program.
+- The active runtime-provider vocabulary is now aligned with executable code:
+  Temporal is the only implemented provider runtime.
 - The active engine architecture program is `WE-HX`, not a quarterly phase
   ladder.
 - The active value path after the recent signal-boundary cleanup is the first
@@ -58,7 +58,7 @@ What is true now:
 flowchart LR
   Landed["Landed: StartRunProtocol, signal narrowing, runtime-owned PAUSE/RESUME"] --> Hex["WE-HX derivation"]
   Hex --> Runtime["Landed MW-C1 plus active TF-C2 executor and evidence vertical"]
-  Hex --> Cleanup["AR-A8 remove Conductor illusion"]
+  Hex --> Cleanup["AR-A8 provider-vocabulary hard cut"]
   Runtime --> Later["Later: second-runtime decision only after truthful boundary cleanup"]
 ```
 
@@ -72,7 +72,7 @@ flowchart LR
 | Start-run decomposition                           | `WE-HX-3`            | Queued      | Narrows admission, dispatch, failure, and bootstrap concerns into smaller collaborators          | Makes engine orchestration easier to change safely                 |
 | Query and signal split hardening                  | `WE-HX-4`            | Completed   | Closed signal ownership, canonical signal narrowing, provider mapping, and read/enrichment split | Removed a major source of semantic drift                           |
 | Provider and telemetry seam tightening            | `WE-HX-5`, `WE-HX-6` | Queued      | Consolidates provider resolution, telemetry seams, and fitness checks                            | Reduces orchestration duplication and hidden boundary drift        |
-| Conductor illusion cleanup                        | `AR-A8`              | Queued      | Removes stub-driven portability promises from runtime typing and docs                            | Prevents roadmap and product claims from outrunning implementation |
+| Provider-vocabulary hard cut                      | `AR-A8`              | Completed   | Removes stub-driven portability promises from runtime typing and docs                            | Prevents roadmap and product claims from outrunning implementation |
 | Step-kind dispatch generalization                 | `MW-C1`              | Completed   | Moved Temporal runtime dispatch from dbt-only assumptions to step-kind routing                   | Enabled capability-specific non-dbt execution paths                |
 | First PostgreSQL execution-first runtime vertical | `TF-C2-A`, `TF-C2-B` | In progress | Adds executor path plus caller-visible materialization evidence                                  | Closes the first real transformation run loop                      |
 
@@ -83,7 +83,7 @@ flowchart LR
   HX0["WE-HX-0 docs replacement"] --> HX1["WE-HX-1 ownership mapping"]
   HX1 --> HX2["WE-HX-2 compatibility facade narrowing"]
   HX2 --> HX3["WE-HX-3 startRun decomposition"]
-  HX2 --> A8["AR-A8 remove Conductor illusion"]
+  HX2 --> A8["AR-A8 provider-vocabulary hard cut"]
   HX3 --> HX5["WE-HX-5 provider and telemetry seams"]
   HX5 --> HX6["WE-HX-6 fitness checks"]
   HX3 --> MW["MW-C1 step dispatcher (landed)"]
@@ -108,14 +108,14 @@ These are not future engine roadmap items anymore:
 
 These topics should not be treated as current engine delivery commitments:
 
-- a near-term Conductor production adapter program;
+- a near-term second-runtime production adapter program;
 - multi-language SDK delivery as an engine-core roadmap item;
 - plugin marketplace work as part of the engine roadmap;
 - staffing, budget, and quarter-based gate tables from the February snapshot.
 
-If Conductor becomes real work again, it needs an explicit ADR-backed plan and
-lane tasking first. Until then, it is residual boundary debt and historical
-planning context, not an active phase.
+If a second runtime becomes real work again, it needs an explicit ADR-backed
+plan and lane tasking first. Until then, old provider-draft material is
+historical context, not an active phase.
 
 ## Decision rules
 

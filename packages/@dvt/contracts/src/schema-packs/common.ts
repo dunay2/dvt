@@ -1,3 +1,7 @@
+/**
+ * Owned concern: publish runtime validation schemas for shared serialized
+ * contracts, including the single active runtime-provider vocabulary.
+ */
 import { z } from 'zod';
 
 import {
@@ -5,7 +9,7 @@ import {
   RunExecutionContextSchema,
 } from '../contracts/engine/RunExecutionContext.v1.js';
 import { RunExecutionPolicySchema } from '../contracts/engine/RunExecutionPolicy.v1.js';
-import type { PlanRef } from '../types/contracts.js';
+import { RUNTIME_PROVIDER_VALUES, type PlanRef } from '../types/contracts.js';
 import {
   isIsoUtcString,
   isNonBlankString,
@@ -21,7 +25,7 @@ export {
   RunExecutionContextSchema,
 } from '../contracts/engine/RunExecutionContext.v1.js';
 
-export const ProviderSchema = z.enum(['temporal', 'conductor']);
+export const ProviderSchema = z.enum(RUNTIME_PROVIDER_VALUES);
 export const TransformationExecutorSchema = z.enum(['postgres', 'dbt']);
 
 export const RunStatusSchema = z.enum([
@@ -195,18 +199,7 @@ const TemporalRunRefSchema = z.object({
   taskQueue: NonBlankStringSchema.optional(),
 });
 
-const ConductorRunRefSchema = z.object({
-  provider: z.literal('conductor'),
-  tenantId: NonBlankStringSchema,
-  workflowId: NonBlankStringSchema,
-  runId: NonBlankStringSchema,
-  conductorUrl: NonBlankStringSchema,
-});
-
-export const EngineRunRefSchema = z.discriminatedUnion('provider', [
-  TemporalRunRefSchema,
-  ConductorRunRefSchema,
-]);
+export const EngineRunRefSchema = TemporalRunRefSchema.strict();
 
 export const ArtifactKindSchema = z.enum([
   'execution-plan',

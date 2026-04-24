@@ -2,7 +2,7 @@
  * @file packages/@dvt/plan-interpreter/src/dagAnalyzer.ts
  * @baseline ADR-0003: Execution Model Sovereignty
  * @decision Decision — DAG analysis and execution layer computation are shared across all adapters
- * @consequence Temporal, Conductor, and future adapters produce identical execution order for the same plan
+ * @consequence Active runtime adapters produce identical execution order for the same plan
  * @version 1.0.0
  * @date 2026-02-23
  */
