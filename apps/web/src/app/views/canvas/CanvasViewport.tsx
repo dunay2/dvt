@@ -272,6 +272,7 @@ function CanvasViewportReactFlowSurface({
       nodesFocusable={canEditEdges}
       edgesFocusable={canEditEdges}
       elementsSelectable={canEditEdges}
+      multiSelectionKeyCode="Shift"
       deleteKeyCode={canEditEdges ? undefined : null}
       disableKeyboardA11y={!canEditEdges}
       fitView={viewport == null}

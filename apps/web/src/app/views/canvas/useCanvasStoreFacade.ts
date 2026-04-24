@@ -5,6 +5,8 @@ import { useSessionStore } from '../../stores/sessionStore';
 import { useUiLayoutStore } from '../../stores/uiLayoutStore';
 import type { CanvasPaletteId } from './canvasPalette';
 
+const EMPTY_PERSISTED_NODE_POSITIONS: Record<string, { x: number; y: number }> = {};
+
 type CanvasStoreFacade = {
   _hasHydrated: boolean;
   focusMode: boolean;
@@ -145,7 +147,8 @@ export function useCanvasStoreFacade(): CanvasStoreView {
     selectedNodeIds: selectedNodes,
     workspaceLayoutKey,
     persistedViewport: workspaceCanvasLayout?.viewport ?? null,
-    persistedNodePositions: workspaceCanvasLayout?.nodePositions ?? {},
+    persistedNodePositions:
+      workspaceCanvasLayout?.nodePositions ?? EMPTY_PERSISTED_NODE_POSITIONS,
     hideExplorerPanel,
     showExplorerPanel,
     hideInspectorPanel,

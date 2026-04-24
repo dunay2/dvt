@@ -1,340 +1,580 @@
+import { stubCanvasDraftRead } from '../../support/canvasDraftAuthoring';
+import {
+  getE2eApiCalls,
+  getLastE2eApiCall,
+  stubE2eApi,
+  stubE2eJsonApi,
+  waitForE2eApiCall,
+} from '../../support/e2eApiStub';
+import { stubShellBootstrapApis, visitWithE2eWorkspaceSession } from '../../support/workspaceSession';
+
 type PlanPreviewResponseOptions = {
   persistedSha: string;
   planRefSha: string;
 };
 
-function stubRunWorkspaceApis(runId = 'run_e2e_1'): void {
-  cy.intercept('GET', '**/runs?*', {
-    statusCode: 200,
-    body: {
-      items: [
-        {
-          runId,
-          planId: 'plan_e2e_1',
-          status: 'FAILED',
-          environmentId: 'e2e-env',
-          startedAt: '2026-04-08T00:00:00.000Z',
-          completedAt: '2026-04-08T00:00:30.000Z',
-          execution: {
-            failure: {
-              stepId: 'step-transform',
-              reason: 'STEP_FAILURE',
-              message: 'duplicate key value violates unique constraint',
-              failedAt: '2026-04-08T00:00:20.000Z',
-            },
-          },
-        },
-      ],
-      nextCursor: null,
-    },
-  }).as('listRuns');
+type CanvasRuntimeApiOptions = {
+  includeLooseNode?: boolean;
+};
 
-  cy.intercept(`GET`, `**/runs/${runId}?*`, {
-    statusCode: 200,
-    body: {
-      runId,
-      planId: 'plan_e2e_1',
-      status: 'FAILED',
-      environmentId: 'e2e-env',
-      gitSha: 'abc123def',
-      startedAt: '2026-04-08T00:00:00.000Z',
-      completedAt: '2026-04-08T00:00:30.000Z',
-      execution: {
-        failure: {
-          stepId: 'step-transform',
-          reason: 'STEP_FAILURE',
-          message: 'duplicate key value violates unique constraint',
-          failedAt: '2026-04-08T00:00:20.000Z',
-        },
-      },
-    },
-  }).as('getRun');
+type PlanRejectedCause =
+  | 'dependency_gap'
+  | 'selected_node_missing'
+  | 'cycle_detected'
+  | 'graph_source_selection_mismatch';
 
-  cy.intercept(`GET`, `**/runs/${runId}/events*`, {
-    statusCode: 200,
-    body: {
-      items: [
-        {
-          eventId: 'evt-step-started-1',
-          eventType: 'StepStarted',
-          runId,
-          emittedAt: '2026-04-08T00:00:10.000Z',
-          tenantId: 'e2e-tenant',
-          projectId: 'e2e-project',
-          environmentId: 'e2e-env',
-          planId: 'plan_e2e_1',
-          planVersion: '1.0.0',
-          engineAttemptId: 1,
-          logicalAttemptId: 1,
-          idempotencyKey: 'id-1',
-          payloadVersion: 1,
-          stepId: 'step-transform',
-          runSeq: 1,
-          persistedAt: '2026-04-08T00:00:10.000Z',
-          payload: {
-            stepArtifactRef: {
-              artifactKind: 'dbt.compiled-sql',
-              storageUri: 's3://dvt-artifacts/dev/compiled/orders_daily.sql',
-              sha256: 'a'.repeat(64),
-              sizeBytes: 2048,
-              encoding: 'utf-8',
-            },
-          },
-        },
-        {
-          eventId: 'evt-step-started-2',
-          eventType: 'StepStarted',
-          runId,
-          emittedAt: '2026-04-08T00:00:12.000Z',
-          tenantId: 'e2e-tenant',
-          projectId: 'e2e-project',
-          environmentId: 'e2e-env',
-          planId: 'plan_e2e_1',
-          planVersion: '1.0.0',
-          engineAttemptId: 1,
-          logicalAttemptId: 1,
-          idempotencyKey: 'id-2',
-          payloadVersion: 1,
-          stepId: 'step-evidence',
-          runSeq: 2,
-          persistedAt: '2026-04-08T00:00:12.000Z',
-          payload: {
-            compiledCodeRef: {
-              storageUri: 's3://dvt-artifacts/dev/compiled/evidence.sql',
-              sha256: 'b'.repeat(64),
-              sizeBytes: 128,
-              encoding: 'utf-8',
-            },
-          },
-        },
-        {
-          eventId: 'evt-step-failed',
-          eventType: 'StepFailed',
-          runId,
-          emittedAt: '2026-04-08T00:00:20.000Z',
-          tenantId: 'e2e-tenant',
-          projectId: 'e2e-project',
-          environmentId: 'e2e-env',
-          planId: 'plan_e2e_1',
-          planVersion: '1.0.0',
-          engineAttemptId: 1,
-          logicalAttemptId: 1,
-          idempotencyKey: 'id-3',
-          payloadVersion: 1,
-          stepId: 'step-transform',
-          runSeq: 3,
-          persistedAt: '2026-04-08T00:00:20.000Z',
-          payload: {},
-        },
-        {
-          eventId: 'evt-run-failed',
-          eventType: 'RunFailed',
-          runId,
-          emittedAt: '2026-04-08T00:00:21.000Z',
-          tenantId: 'e2e-tenant',
-          projectId: 'e2e-project',
-          environmentId: 'e2e-env',
-          planId: 'plan_e2e_1',
-          planVersion: '1.0.0',
-          engineAttemptId: 1,
-          logicalAttemptId: 1,
-          idempotencyKey: 'id-4',
-          payloadVersion: 1,
-          stepId: 'step-transform',
-          runSeq: 4,
-          persistedAt: '2026-04-08T00:00:21.000Z',
-          payload: {
-            reason: 'STEP_FAILURE',
-          },
-        },
-      ],
-      nextCursor: null,
-    },
-  }).as('getRunEvents');
+type PreviewPlanRequest = {
+  persist: boolean;
+  previewProfile: string;
+  selection: { mode: string; nodeIds: string[] };
+  graphSource: {
+    kind: string;
+    sourceFamily: string;
+    sourceVersion: string;
+    nodes: Array<{ nodeId: string }>;
+  };
+  provenance: {
+    graphArtifact: {
+      repo: string;
+      path: string;
+      ref: string;
+      commitSha: string;
+      contentSha256: string;
+    };
+    sqlArtifact: {
+      repo: string;
+      path: string;
+      ref: string;
+      commitSha: string;
+      contentSha256: string;
+    };
+  };
+};
+
+type StartRunRequest = {
+  planRef: { sha256: string; planVersion?: string };
+  selection: { mode: string; nodeIds: string[] };
+};
+
+const PLAN_REJECTION_MESSAGES: Record<PlanRejectedCause, string> = {
+  dependency_gap:
+    'Selected closure is missing required upstream dependencies. Adjust the selection and re-run Plan.',
+  selected_node_missing:
+    'Selected nodes are no longer available in the authoritative draft. Refresh the canvas and re-run Plan.',
+  cycle_detected:
+    'Selected closure contains a cycle and cannot be executed. Remove the cycle and re-run Plan.',
+  graph_source_selection_mismatch:
+    'Selected scope no longer matches the authoritative draft. Re-run Plan.',
+};
+
+function clickButtonNatively(label: string): void {
+  cy.contains('button', label)
+    .should('be.enabled')
+    .then(($button) => {
+      ($button.get(0) as HTMLButtonElement).click();
+    });
 }
 
-function stubCanvasRuntimeApis(): void {
-  cy.intercept('GET', '**/capabilities*', {
-    statusCode: 200,
-    body: {
-      apiVersion: '1.0.0',
-      minFrontendVersion: '0.0.1',
-      plugins: {
-        dbt: { available: true },
+function selectCanvasClosure(nodeNames: string[]): void {
+  cy.get('body').trigger('keydown', {
+    key: 'Shift',
+    code: 'ShiftLeft',
+    shiftKey: true,
+    bubbles: true,
+    force: true,
+  });
+
+  for (const nodeName of nodeNames) {
+    cy.contains('.react-flow__node', nodeName).click({ force: true });
+  }
+
+  cy.get('body').trigger('keyup', {
+    key: 'Shift',
+    code: 'ShiftLeft',
+    bubbles: true,
+    force: true,
+  });
+  cy.get('.react-flow__node.selected').should('have.length', nodeNames.length);
+}
+
+function visitCanvasWithSettledBootstrap(): void {
+  visitWithE2eWorkspaceSession('/canvas');
+  waitForE2eApiCall('/healthz', 'GET');
+  waitForE2eApiCall('/readyz', 'GET');
+  waitForE2eApiCall('/version', 'GET');
+  waitForE2eApiCall('/db/ready', 'GET');
+  waitForE2eApiCall('/capabilities', 'GET');
+  waitForE2eApiCall('/workspace/graph/draft', 'GET');
+  cy.get('body').should(($body) => {
+    const screen = $body.find('#app-loading-screen');
+    if (screen.length === 0) {
+      return;
+    }
+
+    expect(screen.attr('data-state')).to.equal('complete');
+  });
+}
+
+function stubRunWorkspaceApis(runId = 'run_e2e_1'): void {
+  stubE2eJsonApi('GET', '/runs', {
+    items: [
+      {
+        runId,
+        planId: 'plan_e2e_1',
+        status: 'FAILED',
+        environmentId: 'e2e-env',
+        startedAt: '2026-04-08T00:00:00.000Z',
+        completedAt: '2026-04-08T00:00:30.000Z',
+        execution: {
+          failure: {
+            stepId: 'step-transform',
+            reason: 'STEP_FAILURE',
+            message: 'duplicate key value violates unique constraint',
+            failedAt: '2026-04-08T00:00:20.000Z',
+          },
+        },
+      },
+    ],
+    nextCursor: null,
+  });
+
+  stubE2eJsonApi('GET', `/runs/${runId}`, {
+    runId,
+    planId: 'plan_e2e_1',
+    status: 'FAILED',
+    environmentId: 'e2e-env',
+    gitSha: 'abc123def',
+    startedAt: '2026-04-08T00:00:00.000Z',
+    completedAt: '2026-04-08T00:00:30.000Z',
+    execution: {
+      failure: {
+        stepId: 'step-transform',
+        reason: 'STEP_FAILURE',
+        message: 'duplicate key value violates unique constraint',
+        failedAt: '2026-04-08T00:00:20.000Z',
       },
     },
-  }).as('getCapabilities');
+  });
 
-  cy.intercept('GET', '**/workspace/graph*', {
-    statusCode: 200,
-    body: {
-      nodes: [
-        {
-          id: 'src_orders',
-          name: 'src_orders',
-          type: 'SOURCE',
-          package: 'raw',
-          path: 'models/sources/raw.yml',
-          tags: ['source'],
-          status: 'idle',
-          dependencies: [],
-          config: {
-            schema: 'raw',
-            table: 'orders',
-            alias: 'orders',
+  stubE2eJsonApi('GET', `/runs/${runId}/events`, {
+    items: [
+      {
+        eventId: 'evt-step-started-1',
+        eventType: 'StepStarted',
+        runId,
+        emittedAt: '2026-04-08T00:00:10.000Z',
+        tenantId: 'e2e-tenant',
+        projectId: 'e2e-project',
+        environmentId: 'e2e-env',
+        planId: 'plan_e2e_1',
+        planVersion: '1.0.0',
+        engineAttemptId: 1,
+        logicalAttemptId: 1,
+        idempotencyKey: 'id-1',
+        payloadVersion: 1,
+        stepId: 'step-transform',
+        runSeq: 1,
+        persistedAt: '2026-04-08T00:00:10.000Z',
+        payload: {
+          stepArtifactRef: {
+            artifactKind: 'dbt.compiled-sql',
+            storageUri: 's3://dvt-artifacts/dev/compiled/orders_daily.sql',
+            sha256: 'a'.repeat(64),
+            sizeBytes: 2048,
+            encoding: 'utf-8',
           },
         },
-        {
-          id: 'model_orders',
-          name: 'model_orders',
-          type: 'MODEL',
-          package: 'analytics',
-          path: 'models/analytics/model_orders.sql',
-          tags: ['transform'],
-          status: 'idle',
-          dependencies: ['src_orders'],
-          config: {
-            dialect: 'postgres',
+      },
+      {
+        eventId: 'evt-step-started-2',
+        eventType: 'StepStarted',
+        runId,
+        emittedAt: '2026-04-08T00:00:12.000Z',
+        tenantId: 'e2e-tenant',
+        projectId: 'e2e-project',
+        environmentId: 'e2e-env',
+        planId: 'plan_e2e_1',
+        planVersion: '1.0.0',
+        engineAttemptId: 1,
+        logicalAttemptId: 1,
+        idempotencyKey: 'id-2',
+        payloadVersion: 1,
+        stepId: 'step-evidence',
+        runSeq: 2,
+        persistedAt: '2026-04-08T00:00:12.000Z',
+        payload: {
+          compiledCodeRef: {
+            storageUri: 's3://dvt-artifacts/dev/compiled/evidence.sql',
+            sha256: 'b'.repeat(64),
+            sizeBytes: 128,
+            encoding: 'utf-8',
           },
         },
-        {
-          id: 'orders_dashboard',
-          name: 'orders_dashboard',
-          type: 'EXPOSURE',
-          package: 'analytics',
-          path: 'models/exposures/orders.yml',
-          tags: ['output'],
-          status: 'idle',
-          dependencies: ['model_orders'],
-          config: {
-            schema: 'analytics',
-            table: 'orders_dashboard',
-            materialization: 'table',
-            writeMode: 'replace',
-          },
+      },
+      {
+        eventId: 'evt-step-failed',
+        eventType: 'StepFailed',
+        runId,
+        emittedAt: '2026-04-08T00:00:20.000Z',
+        tenantId: 'e2e-tenant',
+        projectId: 'e2e-project',
+        environmentId: 'e2e-env',
+        planId: 'plan_e2e_1',
+        planVersion: '1.0.0',
+        engineAttemptId: 1,
+        logicalAttemptId: 1,
+        idempotencyKey: 'id-3',
+        payloadVersion: 1,
+        stepId: 'step-transform',
+        runSeq: 3,
+        persistedAt: '2026-04-08T00:00:20.000Z',
+        payload: {},
+      },
+      {
+        eventId: 'evt-run-failed',
+        eventType: 'RunFailed',
+        runId,
+        emittedAt: '2026-04-08T00:00:21.000Z',
+        tenantId: 'e2e-tenant',
+        projectId: 'e2e-project',
+        environmentId: 'e2e-env',
+        planId: 'plan_e2e_1',
+        planVersion: '1.0.0',
+        engineAttemptId: 1,
+        logicalAttemptId: 1,
+        idempotencyKey: 'id-4',
+        payloadVersion: 1,
+        stepId: 'step-transform',
+        runSeq: 4,
+        persistedAt: '2026-04-08T00:00:21.000Z',
+        payload: {
+          reason: 'STEP_FAILURE',
         },
-      ],
-      edges: [
-        {
-          id: 'edge_source_transform',
-          source: 'src_orders',
-          target: 'model_orders',
-          type: 'source',
-        },
-        {
-          id: 'edge_transform_sink',
-          source: 'model_orders',
-          target: 'orders_dashboard',
-          type: 'exposure',
-        },
-      ],
+      },
+    ],
+    nextCursor: null,
+  });
+}
+
+function stubCanvasRuntimeApis({ includeLooseNode = false }: CanvasRuntimeApiOptions = {}): void {
+  stubE2eJsonApi('GET', '/capabilities', {
+    apiVersion: '1.0.0',
+    minFrontendVersion: '0.0.1',
+    plugins: {
+      dbt: { available: true },
+      dvt: { available: true },
     },
-  }).as('getWorkspaceGraph');
+  });
+  stubCanvasDraftRead({ includeLooseNode });
 
-  cy.intercept('POST', '**/workspace/files/pipelines%2Fsales_pipeline.yaml*', (req) => {
-    expect(req.body.content).to.contain('executionTarget: "postgres"');
-    expect(req.body.content).to.contain('type: "source"');
-    expect(req.body.content).to.contain('type: "sql_transform"');
-    expect(req.body.content).to.contain('type: "sink"');
-    expect(req.body.content).to.contain('schema: "raw"');
-    expect(req.body.content).to.contain('table: "orders_dashboard"');
-    expect(req.body.content).to.contain('entrypoint: "models/analytics/model_orders.sql"');
-    req.reply({
+  stubE2eApi('POST', '/workspace/files/pipelines%2Fsales_pipeline.yaml', ({ body }) => {
+    const payload = body as { content: string };
+
+    expect(payload.content).to.contain('executionTarget: "postgres"');
+    expect(payload.content).to.contain('type: "source"');
+    expect(payload.content).to.contain('type: "sql_transform"');
+    expect(payload.content).to.contain('type: "sink"');
+    expect(payload.content).to.contain('schema: "raw"');
+    expect(payload.content).to.contain('table: "orders_daily"');
+    expect(payload.content).to.contain('entrypoint: "models/analytics/model_orders.sql"');
+    expect(payload.content).not.to.contain('orphan_metrics');
+
+    return {
       statusCode: 200,
       body: {
         path: 'pipelines/sales_pipeline.yaml',
         name: 'sales_pipeline.yaml',
         language: 'yaml',
-        content: req.body.content,
+        content: payload.content,
         lastModified: '2026-04-08T00:00:00.000Z',
       },
-    });
-  }).as('saveGraphArtifact');
+    };
+  });
 
-  cy.intercept('GET', '**/workspace/files/models%2Fanalytics%2Fmodel_orders.sql*', {
-    statusCode: 200,
-    body: {
-      path: 'models/analytics/model_orders.sql',
-      name: 'model_orders.sql',
-      language: 'sql',
-      content: ['select *', 'from raw.orders'].join('\n'),
-      lastModified: '2026-04-08T00:00:00.000Z',
-    },
-  }).as('getSqlArtifact');
+  stubE2eJsonApi('GET', '/workspace/files/models%2Fanalytics%2Fmodel_orders.sql', {
+    path: 'models/analytics/model_orders.sql',
+    name: 'model_orders.sql',
+    language: 'sql',
+    content: ['select *', 'from raw.orders'].join('\n'),
+    lastModified: '2026-04-08T00:00:00.000Z',
+  });
 }
 
-function stubPlanPreviewResponse({ persistedSha, planRefSha }: PlanPreviewResponseOptions): void {
-  cy.intercept('POST', '**/plans/preview', (req) => {
-    expect(req.body.persist).to.equal(true);
-    expect(req.body.previewProfile).to.equal('transformation-sql-first-v1');
-    expect(req.body.selection).to.deep.equal({
+function assertPreviewPlanRequest(): void {
+  cy.then(() => {
+    const previewCall = getLastE2eApiCall('/plans/preview', 'POST');
+    const previewBody = previewCall?.body as PreviewPlanRequest | null | undefined;
+
+    expect(previewBody).to.not.equal(undefined);
+    expect(previewBody?.persist).to.equal(true);
+    expect(previewBody?.previewProfile).to.equal('transformation-sql-first-v1');
+    expect(previewBody?.selection).to.deep.equal({
       mode: 'explicit',
       nodeIds: ['src_orders', 'model_orders', 'orders_dashboard'],
     });
-    expect(req.body.graphSource).to.include({
+    expect(previewBody?.graphSource.nodes).to.have.length(3);
+    expect(previewBody?.graphSource.nodes.map((node) => node.nodeId)).to.deep.equal([
+      'src_orders',
+      'model_orders',
+      'orders_dashboard',
+    ]);
+    expect(previewBody?.graphSource).to.include({
       kind: 'generic-graph-v1',
       sourceFamily: 'transformation-design-graph',
       sourceVersion: 'transformation-sql-first-v1',
     });
-    expect(req.body.provenance.graphArtifact).to.deep.include({
+    expect(previewBody?.provenance.graphArtifact).to.deep.include({
       repo: 'dunay2/dvt',
       path: 'pipelines/sales_pipeline.yaml',
       ref: 'refs/heads/main',
       commitSha: 'local',
     });
-    expect(req.body.provenance.graphArtifact.contentSha256).to.match(/^[0-9a-f]{64}$/);
-    expect(req.body.provenance.sqlArtifact).to.deep.include({
+    expect(previewBody?.provenance.graphArtifact.contentSha256).to.match(/^[0-9a-f]{64}$/);
+    expect(previewBody?.provenance.sqlArtifact).to.deep.include({
       repo: 'dunay2/dvt',
       path: 'models/analytics/model_orders.sql',
       ref: 'refs/heads/main',
       commitSha: 'local',
     });
-    expect(req.body.provenance.sqlArtifact.contentSha256).to.match(/^[0-9a-f]{64}$/);
+    expect(previewBody?.provenance.sqlArtifact.contentSha256).to.match(/^[0-9a-f]{64}$/);
+  });
+}
 
-    req.reply({
-      statusCode: 200,
-      body: {
-        plan: {
-          metadata: {
-            planVersion: '1.0',
-            schemaVersion: 'v1.2',
-            contractVersion: '1.0.0',
-            inputHashSha256: 'a'.repeat(64),
-            planId: 'b'.repeat(64),
-            createdAtIso: '2026-04-08T00:00:00.000Z',
+function assertRunStartSelection(expectedSha: string): void {
+  cy.then(() => {
+    const startRunCall = getLastE2eApiCall('/runs/start', 'POST');
+    const startRunBody = startRunCall?.body as StartRunRequest | null | undefined;
+
+    expect(startRunBody).to.not.equal(undefined);
+    expect(startRunBody?.planRef.sha256).to.equal(expectedSha);
+    expect(startRunBody?.selection).to.deep.equal({
+      mode: 'explicit',
+      nodeIds: ['src_orders', 'model_orders', 'orders_dashboard'],
+    });
+  });
+}
+
+function stubPlanPreviewResponse({ persistedSha, planRefSha }: PlanPreviewResponseOptions): void {
+  stubE2eJsonApi('POST', '/plans/preview', {
+    previewProfile: 'transformation-sql-first-v1',
+    plan: {
+      metadata: {
+        planVersion: '1.0',
+        schemaVersion: 'v1.2',
+        contractVersion: '1.0.0',
+        inputHashSha256: 'a'.repeat(64),
+        planId: 'b'.repeat(64),
+        createdAtIso: '2026-04-08T00:00:00.000Z',
+      },
+      steps: [
+        {
+          stepId: 'src_orders',
+          kind: 'PREPARE_POSTGRES_TRANSFORM',
+          dependsOn: [],
+          stepTypeConfig: {
+            targetSchema: 'analytics',
+            sourceSchema: 'raw',
+            sourceTable: 'orders',
+            sourceAlias: 'orders_src',
           },
-          steps: [],
-          observability: {
-            tags: {
-              adapter: 'temporal',
-              environmentId: 'e2e-env',
+        },
+        {
+          stepId: 'model_orders',
+          kind: 'POSTGRES_SQL_TRANSFORM',
+          dependsOn: ['src_orders'],
+          stepTypeConfig: {
+            dialect: 'postgres',
+            entrypoint: 'models/analytics/model_orders.sql',
+            sql: 'select * from raw.orders',
+            sqlArtifact: {
+              repo: 'dunay2/dvt',
+              path: 'models/analytics/model_orders.sql',
+              ref: 'refs/heads/main',
+              commitSha: 'local',
+              contentSha256: 'a'.repeat(64),
             },
+            sourceSchema: 'raw',
+            sourceTable: 'orders',
+            sourceAlias: 'orders_src',
+            sinkSchema: 'analytics',
+            sinkTable: 'orders_daily',
+            materialization: 'table',
+            writeMode: 'replace',
           },
         },
-        planRef: {
-          uri: 'dvt://plans/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
-          sha256: planRefSha,
-          schemaVersion: 'v1.2',
-          planId: 'b'.repeat(64),
-          planVersion: 'v1',
+        {
+          stepId: 'orders_dashboard',
+          kind: 'CAPTURE_MATERIALIZATION_EVIDENCE',
+          dependsOn: ['model_orders'],
+          stepTypeConfig: {
+            sinkSchema: 'analytics',
+            sinkTable: 'orders_daily',
+            materialization: 'table',
+            writeMode: 'replace',
+          },
         },
-        planSummary: {
-          executor: 'postgres',
-          nodeCount: 3,
-          stepCount: 2,
-          sourceTables: ['raw.orders'],
-          sinkTables: ['analytics.orders_daily'],
-        },
-        persisted: {
-          planRecordId: 'plan-record-e2e',
-          canonicalPlanSha256: persistedSha,
+      ],
+      observability: {
+        tags: {
+          adapter: 'temporal',
+          environmentId: 'e2e-env',
         },
       },
-    });
-  }).as('previewPlan');
+    },
+    planRef: {
+      uri: 'dvt://plans/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
+      sha256: planRefSha,
+      schemaVersion: 'v1.2',
+      planId: 'b'.repeat(64),
+      planVersion: 'v1',
+    },
+    planSummary: {
+      executor: 'postgres',
+      nodeCount: 3,
+      stepCount: 3,
+      sourceTables: ['raw.orders'],
+      sinkTables: ['analytics.orders_daily'],
+    },
+    persisted: {
+      planRecordId: 'plan-record-e2e',
+      canonicalPlanSha256: persistedSha,
+    },
+    validation: {
+      valid: true,
+      warnings: [],
+    },
+    provenance: {
+      graphArtifact: {
+        repo: 'dunay2/dvt',
+        path: 'pipelines/sales_pipeline.yaml',
+        ref: 'refs/heads/main',
+        commitSha: 'local',
+        contentSha256: 'f'.repeat(64),
+      },
+      sqlArtifact: {
+        repo: 'dunay2/dvt',
+        path: 'models/analytics/model_orders.sql',
+        ref: 'refs/heads/main',
+        commitSha: 'local',
+        contentSha256: 'a'.repeat(64),
+      },
+    },
+  });
+}
+
+function stubPlanRejectedPreview(cause: Exclude<PlanRejectedCause, 'graph_source_selection_mismatch'>): void {
+  stubE2eJsonApi(
+    'POST',
+    '/plans/preview',
+    {
+      error: {
+        type: 'runtime',
+        reason: 'plan_rejected',
+        details: {
+          cause,
+          rejectionReason: PLAN_REJECTION_MESSAGES[cause],
+        },
+      },
+    },
+    { statusCode: 409 }
+  );
+}
+
+function stubPlanRejectedStartRun(cause: Extract<PlanRejectedCause, 'graph_source_selection_mismatch'>): void {
+  stubE2eJsonApi(
+    'POST',
+    '/runs/start',
+    {
+      error: {
+        type: 'runtime',
+        reason: 'plan_rejected',
+        details: {
+          cause,
+          rejectionReason: PLAN_REJECTION_MESSAGES[cause],
+        },
+      },
+    },
+    { statusCode: 409 }
+  );
 }
 
 describe('Canvas preview-run persisted path', () => {
+  beforeEach(() => {
+    stubShellBootstrapApis();
+  });
+
+  for (const cause of [
+    'dependency_gap',
+    'selected_node_missing',
+    'cycle_detected',
+  ] as const satisfies ReadonlyArray<Exclude<PlanRejectedCause, 'graph_source_selection_mismatch'>>) {
+    it(`surfaces ${cause} as explicit re-plan guidance during preview`, () => {
+      stubCanvasRuntimeApis({ includeLooseNode: true });
+      stubPlanRejectedPreview(cause);
+
+      visitCanvasWithSettledBootstrap();
+
+      selectCanvasClosure(['src_orders', 'model_orders', 'orders_dashboard']);
+
+      cy.contains('button', 'Plan').should('be.enabled').click();
+      waitForE2eApiCall('/workspace/files/pipelines%2Fsales_pipeline.yaml', 'POST');
+      waitForE2eApiCall('/workspace/files/models%2Fanalytics%2Fmodel_orders.sql', 'GET');
+      waitForE2eApiCall('/plans/preview', 'POST');
+      assertPreviewPlanRequest();
+
+      cy.contains(PLAN_REJECTION_MESSAGES[cause]).should('be.visible');
+      cy.contains('Execution Plan Preview').should('not.exist');
+      cy.location('pathname').should('eq', '/canvas');
+      cy.then(() => {
+        expect(getE2eApiCalls('/runs/start', 'POST')).to.have.length(0);
+      });
+    });
+  }
+
+  it('keeps preview and run scoped to the selected closure inside a larger canvas', () => {
+    stubCanvasRuntimeApis({ includeLooseNode: true });
+    stubRunWorkspaceApis('run_e2e_selected_1');
+    stubPlanPreviewResponse({
+      persistedSha: 'e'.repeat(64),
+      planRefSha: 'e'.repeat(64),
+    });
+    stubE2eJsonApi('POST', '/runs/start', {
+      provider: 'temporal',
+      runId: 'run_e2e_selected_1',
+      tenantId: 'e2e-tenant',
+      namespace: 'default',
+      workflowId: 'wf_e2e_selected_1',
+      taskQueue: 'dvt-temporal',
+    });
+
+    visitCanvasWithSettledBootstrap();
+
+    cy.contains('.react-flow__node', 'src_orders').should('be.visible');
+    cy.contains('.react-flow__node', 'model_orders').should('be.visible');
+    cy.contains('.react-flow__node', 'orders_dashboard').should('be.visible');
+    cy.contains('.react-flow__node', 'orphan_metrics').should('be.visible');
+
+    selectCanvasClosure(['src_orders', 'model_orders', 'orders_dashboard']);
+
+    cy.contains('button', 'Plan').should('be.enabled').click();
+    waitForE2eApiCall('/workspace/files/pipelines%2Fsales_pipeline.yaml', 'POST');
+    waitForE2eApiCall('/workspace/files/models%2Fanalytics%2Fmodel_orders.sql', 'GET');
+    waitForE2eApiCall('/plans/preview', 'POST');
+    assertPreviewPlanRequest();
+
+    cy.contains('Execution Plan Preview').should('be.visible');
+    cy.contains('Persisted Preview Summary').should('be.visible');
+    cy.contains('Nodes:').parent().should('contain.text', '3');
+    cy.contains('Source tables:').parent().should('contain.text', 'raw.orders');
+    cy.contains('Sink tables:').parent().should('contain.text', 'analytics.orders_daily');
+    clickButtonNatively('Start Run');
+
+    waitForE2eApiCall('/runs/start', 'POST');
+    assertRunStartSelection('e'.repeat(64));
+    cy.location('pathname').should('eq', '/runs/run_e2e_selected_1');
+    cy.contains('Run run_e2e_selected_1').should('exist');
+  });
+
   it('starts run when persisted preview hash matches active planRef', () => {
     stubCanvasRuntimeApis();
     stubRunWorkspaceApis('run_e2e_1');
@@ -342,37 +582,38 @@ describe('Canvas preview-run persisted path', () => {
       persistedSha: 'c'.repeat(64),
       planRefSha: 'c'.repeat(64),
     });
+    stubE2eJsonApi('POST', '/runs/start', {
+      provider: 'temporal',
+      runId: 'run_e2e_1',
+      tenantId: 'e2e-tenant',
+      namespace: 'default',
+      workflowId: 'wf_e2e_1',
+      taskQueue: 'dvt-temporal',
+    });
 
-    cy.intercept('POST', '**/runs/start', (req) => {
-      expect(req.body.planRef.sha256).to.equal('c'.repeat(64));
-      expect(req.body.planRef.planVersion).to.equal('v1');
-      req.reply({
-        statusCode: 200,
-        body: {
-          provider: 'temporal',
-          runId: 'run_e2e_1',
-          tenantId: 'e2e-tenant',
-          namespace: 'default',
-          workflowId: 'wf_e2e_1',
-        },
-      });
-    }).as('startRun');
-
-    cy.visit('/canvas');
-    cy.wait('@getCapabilities');
-    cy.wait('@getWorkspaceGraph');
-    cy.contains('Mode: source -> sql_transform -> sink').should('be.visible');
+    visitCanvasWithSettledBootstrap();
+    cy.contains('.react-flow__node', 'src_orders').should('be.visible');
+    cy.contains('.react-flow__node', 'model_orders').should('be.visible');
+    cy.contains('.react-flow__node', 'orders_dashboard').should('be.visible');
 
     cy.contains('button', 'Plan').should('be.enabled').click();
-    cy.wait('@saveGraphArtifact');
-    cy.wait('@getSqlArtifact');
-    cy.wait('@previewPlan');
+    waitForE2eApiCall('/workspace/files/pipelines%2Fsales_pipeline.yaml', 'POST');
+    waitForE2eApiCall('/workspace/files/models%2Fanalytics%2Fmodel_orders.sql', 'GET');
+    waitForE2eApiCall('/plans/preview', 'POST');
+    assertPreviewPlanRequest();
 
     cy.contains('Execution Plan Preview').should('be.visible');
     cy.contains('Preview is current and ready to run.').should('be.visible');
-    cy.contains('button', 'Start Run').should('be.enabled').click({ force: true });
+    clickButtonNatively('Start Run');
 
-    cy.wait('@startRun');
+    waitForE2eApiCall('/runs/start', 'POST');
+    assertRunStartSelection('c'.repeat(64));
+    cy.then(() => {
+      const startRunBody = getLastE2eApiCall('/runs/start', 'POST')?.body as
+        | StartRunRequest
+        | undefined;
+      expect(startRunBody?.planRef.planVersion).to.equal('v1');
+    });
     cy.location('pathname').should('eq', '/runs/run_e2e_1');
 
     cy.contains('Run run_e2e_1').should('exist');
@@ -387,21 +628,20 @@ describe('Canvas preview-run persisted path', () => {
       persistedSha: 'd'.repeat(64),
       planRefSha: 'c'.repeat(64),
     });
+    stubE2eJsonApi('POST', '/runs/start', {
+      message: 'should not be called',
+    }, { statusCode: 500 });
 
-    cy.intercept('POST', '**/runs/start', {
-      statusCode: 500,
-      body: { message: 'should not be called' },
-    }).as('startRun');
-
-    cy.visit('/canvas');
-    cy.wait('@getCapabilities');
-    cy.wait('@getWorkspaceGraph');
-    cy.contains('Mode: source -> sql_transform -> sink').should('be.visible');
+    visitCanvasWithSettledBootstrap();
+    cy.contains('.react-flow__node', 'src_orders').should('be.visible');
+    cy.contains('.react-flow__node', 'model_orders').should('be.visible');
+    cy.contains('.react-flow__node', 'orders_dashboard').should('be.visible');
 
     cy.contains('button', 'Plan').should('be.enabled').click();
-    cy.wait('@saveGraphArtifact');
-    cy.wait('@getSqlArtifact');
-    cy.wait('@previewPlan');
+    waitForE2eApiCall('/workspace/files/pipelines%2Fsales_pipeline.yaml', 'POST');
+    waitForE2eApiCall('/workspace/files/models%2Fanalytics%2Fmodel_orders.sql', 'GET');
+    waitForE2eApiCall('/plans/preview', 'POST');
+    assertPreviewPlanRequest();
 
     cy.contains('Execution Plan Preview').should('be.visible');
     cy.contains(
@@ -409,6 +649,36 @@ describe('Canvas preview-run persisted path', () => {
     ).should('be.visible');
     cy.contains('button', 'Run').should('be.disabled');
     cy.contains('button', 'Start Run').should('be.disabled');
-    cy.get('@startRun.all').should('have.length', 0);
+    cy.then(() => {
+      expect(getE2eApiCalls('/runs/start', 'POST')).to.have.length(0);
+    });
+  });
+
+  it('surfaces graph_source_selection_mismatch from protected start-run as explicit re-plan guidance', () => {
+    stubCanvasRuntimeApis({ includeLooseNode: true });
+    stubPlanPreviewResponse({
+      persistedSha: 'f'.repeat(64),
+      planRefSha: 'f'.repeat(64),
+    });
+    stubPlanRejectedStartRun('graph_source_selection_mismatch');
+
+    visitCanvasWithSettledBootstrap();
+
+    selectCanvasClosure(['src_orders', 'model_orders', 'orders_dashboard']);
+
+    cy.contains('button', 'Plan').should('be.enabled').click();
+    waitForE2eApiCall('/workspace/files/pipelines%2Fsales_pipeline.yaml', 'POST');
+    waitForE2eApiCall('/workspace/files/models%2Fanalytics%2Fmodel_orders.sql', 'GET');
+    waitForE2eApiCall('/plans/preview', 'POST');
+    assertPreviewPlanRequest();
+
+    cy.contains('Execution Plan Preview').should('be.visible');
+    clickButtonNatively('Start Run');
+
+    waitForE2eApiCall('/runs/start', 'POST');
+    assertRunStartSelection('f'.repeat(64));
+    cy.contains(PLAN_REJECTION_MESSAGES.graph_source_selection_mismatch).should('exist');
+    cy.location('pathname').should('eq', '/canvas');
+    cy.contains('Execution Plan Preview').should('be.visible');
   });
 });

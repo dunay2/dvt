@@ -535,10 +535,17 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   [saveWorkspaceGraphDraftUseCase.ts](../../../apps/api/src/application/services/saveWorkspaceGraphDraftUseCase.ts),
   [workspaceGraphDraftAuthoring.ts](../../../apps/web/src/app/ports/workspaceGraphDraftAuthoring.ts),
   [workspaceGraphDraftProjection.ts](../../../apps/web/src/app/services/workspace/workspaceGraphDraftProjection.ts),
+  [protectedRuntimeRejection.ts](../../../apps/web/src/app/services/api/protectedRuntimeRejection.ts),
+  [plansService.api.ts](../../../apps/web/src/app/services/plans/plansService.api.ts),
+  [runsService.api.ts](../../../apps/web/src/app/services/runs/runsService.api.ts),
   [canvasRunSelection.ts](../../../apps/web/src/app/views/canvas/canvasRunSelection.ts),
   [canvasPlanAction.ts](../../../apps/web/src/app/views/canvas/canvasPlanAction.ts),
+  [canvasRunStartAction.ts](../../../apps/web/src/app/views/canvas/canvasRunStartAction.ts),
+  [canvas-preview-run-persisted.cy.ts](../../../apps/web/cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts),
+  [e2eApiStub.ts](../../../apps/web/cypress/support/e2eApiStub.ts),
+  [canvasDraftAuthoring.ts](../../../apps/web/cypress/support/canvasDraftAuthoring.ts),
   and
-  [canvasRunStartAction.ts](../../../apps/web/src/app/views/canvas/canvasRunStartAction.ts)
+  [workspaceSession.ts](../../../apps/web/cypress/support/workspaceSession.ts)
 - Key tests:
   [execution-selection.contract.test.ts](../../../packages/@dvt/contracts/test/execution-selection.contract.test.ts),
   [execution-selection.architecture.test.ts](../../../packages/@dvt/contracts/test/execution-selection.architecture.test.ts),
@@ -557,6 +564,9 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   [canvasRunStartIdentity.architecture.test.ts](../../../apps/web/src/app/views/canvas/canvasRunStartIdentity.architecture.test.ts),
   [useCanvasExecutionActions.planPreview.core.test.tsx](../../../apps/web/src/app/views/canvas/useCanvasExecutionActions.planPreview.core.test.tsx),
   [useCanvasExecutionActions.runStart.test.tsx](../../../apps/web/src/app/views/canvas/useCanvasExecutionActions.runStart.test.tsx),
+  [plansService.test.ts](../../../apps/web/src/app/services/plans/plansService.test.ts),
+  [runsService.test.ts](../../../apps/web/src/app/services/runs/runsService.test.ts),
+  [canvas-preview-run-persisted.cy.ts](../../../apps/web/cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts),
   and
   [workspaceGraphDraftProjection.test.ts](../../../apps/web/src/app/services/workspace/workspaceGraphDraftProjection.test.ts)
 - Evidence:
@@ -567,6 +577,8 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   [ed-20260423-tf-a2-c3-c4-api-web-adoption.md](../../evidence/ed-20260423-tf-a2-c3-c4-api-web-adoption.md)
   and
   [20260423 TF-A2-C5 selected-closure end-to-end proof closeout](../closeouts/20260423-tf-a2-c5-selected-closure-end-to-end-proof-closeout.md)
+  and
+  [20260424 TF-E2-E-A/B/C selected-closure browser proof closeout](../closeouts/20260424-tf-e2-e-a-b-c-selected-closure-browser-proof-closeout.md)
   and
   [R-20260423-WORKSPACE-AUTHORING-DRAFT-AGGREGATE](../../risk-register/quality/R-20260423-WORKSPACE-AUTHORING-DRAFT-AGGREGATE.yaml)
 - Verification:
@@ -581,6 +593,10 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   `pnpm --filter dvt-api test -- authorizeWorkspaceGraphDraftCapabilityService.test.ts workspaceGraphDraftApplicationComponent.architecture.test.ts workspaceGraphDraftRoutes.test.ts resolveAuthorizedExecutableSubgraph.test.ts executableSubgraphResolutionComponent.architecture.test.ts`
   and
   `pnpm --filter @dvt/web test -- src/app/views/canvas/canvasExecutionSelection.architecture.test.ts src/app/views/canvas/canvasRunStartIdentity.architecture.test.ts src/app/views/canvas/useCanvasExecutionActions.planPreview.core.test.tsx src/app/views/canvas/useCanvasExecutionActions.runStart.test.tsx`
+  and
+  `pnpm --filter @dvt/web test -- src/app/services/plans/plansService.test.ts src/app/services/runs/runsService.test.ts`
+  and
+  `docker run --rm -t -v "F:/segundodvt/dvt:/repo" -w /repo/apps/web -e CYPRESS_baseUrl=http://host.docker.internal:4173 cypress/included:13.17.0 --project /repo/apps/web --config-file /repo/apps/web/cypress.config.ts --spec /repo/apps/web/cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts`
   and
   `pnpm --filter @dvt/web test -- src/app/services/workspace/workspaceGraphDraftProjection.test.ts`
   and

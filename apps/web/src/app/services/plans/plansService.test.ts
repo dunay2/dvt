@@ -1,6 +1,7 @@
 import { parseExecutionSelection, type ExecutionSelection } from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
+import { ApiError } from '../api/createApiClient';
 import type { ApiClient } from '../api/createApiClient';
 
 import { makePlanRef, makeRunContext } from '../../testing/contractTestUtils';
@@ -267,6 +268,22 @@ function buildApiClientStub(overrides: Partial<ApiClient> = {}): ApiClient {
   };
 }
 
+function createPlanRejectedApiError(details: Record<string, unknown>): ApiError {
+  return new ApiError({
+    message: 'HTTP 422',
+    endpoint: '/plans/preview',
+    statusCode: 422,
+    category: 'client',
+    responseBody: {
+      error: {
+        type: 'unprocessable',
+        reason: 'plan_rejected',
+        details,
+      },
+    },
+  });
+}
+
 describe('createPlansService', () => {
   it('uses mock implementation in mock mode', async () => {
     const service = createPlansService('mock');
@@ -384,6 +401,39 @@ describe('createPlansService', () => {
     expect(plan.target).toBe('scoped-env');
   });
 
+  it('derives transformation preview step nodes from step ids when canonical nodeIds are absent', async () => {
+    const postJsonMock = vi.fn(async () =>
+      buildTransformationPreviewPayload({
+        plan: buildValidTransformationPlan(),
+      })
+    );
+    const service = createPlansService(
+      'api',
+      buildApiClientStub({
+        postJson: postJsonMock as ApiClient['postJson'],
+      })
+    );
+
+    const plan = await service.previewPlan({
+      previewProfile: 'transformation-sql-first-v1',
+      graphSource: VALID_TRANSFORMATION_GRAPH_SOURCE,
+      selection: toExplicitSelection(VALID_TRANSFORMATION_SELECTION),
+      persist: true,
+      context: makeRunContext('run-1', {
+        tenantId: 't1',
+        projectId: 'p1',
+        environmentId: 'e1',
+        targetAdapter: 'temporal',
+      }),
+    });
+
+    expect(plan.steps.map((step) => step.nodes)).toEqual([
+      ['source-node'],
+      ['transform-node'],
+      ['sink-node'],
+    ]);
+  });
+
   it('rejects api payloads that do not include planRef', async () => {
     const postJsonMock = vi.fn(async () => {
       const payload = { ...buildTransformationPreviewPayload() } as Record<string, unknown>;
@@ -411,6 +461,70 @@ describe('createPlansService', () => {
         }),
       })
     ).rejects.toThrow('Validation failed');
+  });
+
+  it.each([
+    {
+      description: 'dependency_gap',
+      details: {
+        cause: 'dependency_gap',
+        rejectionReason: 'Selected closure is missing required upstream dependencies.',
+      },
+      expectedMessage:
+        'Selected closure is missing required upstream dependencies. Adjust the selection and re-run Plan.',
+    },
+    {
+      description: 'selected_node_missing',
+      details: {
+        cause: 'selected_node_missing',
+        rejectionReason: 'Selected nodes are no longer available in the authoritative draft.',
+      },
+      expectedMessage:
+        'Selected nodes are no longer available in the authoritative draft. Refresh the canvas and re-run Plan.',
+    },
+    {
+      description: 'cycle_detected',
+      details: {
+        cause: 'cycle_detected',
+        rejectionReason: 'Selected closure contains a cycle and cannot be executed.',
+      },
+      expectedMessage:
+        'Selected closure contains a cycle and cannot be executed. Remove the cycle and re-run Plan.',
+    },
+    {
+      description: 'graph_source_selection_mismatch',
+      details: {
+        cause: 'graph_source_selection_mismatch',
+        rejectionReason:
+          'graphSource nodes must match the planner-derived executable subgraph for the selection.',
+      },
+      expectedMessage: 'Selected scope no longer matches the authoritative draft. Re-run Plan.',
+    },
+  ])('surfaces protected preview rejection for $description', async ({ details, expectedMessage }) => {
+    const postJsonMock = vi.fn(async () => {
+      throw createPlanRejectedApiError(details);
+    });
+    const service = createPlansService(
+      'api',
+      buildApiClientStub({
+        postJson: postJsonMock as ApiClient['postJson'],
+      })
+    );
+
+    await expect(
+      service.previewPlan({
+        previewProfile: 'transformation-sql-first-v1',
+        graphSource: VALID_TRANSFORMATION_GRAPH_SOURCE,
+        selection: toExplicitSelection(VALID_TRANSFORMATION_SELECTION),
+        persist: true,
+        context: makeRunContext('run-1', {
+          tenantId: 't1',
+          projectId: 'p1',
+          environmentId: 'e1',
+          targetAdapter: 'temporal',
+        }),
+      })
+    ).rejects.toThrow(expectedMessage);
   });
 
   it('maps importPlan responses from backend-owned planRef payloads', async () => {

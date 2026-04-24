@@ -37,12 +37,17 @@ function createStartRunInput(): StartRunInput {
   };
 }
 
-function createApiError(statusCode: number, endpoint = '/runs/start'): ApiError {
+function createApiError(
+  statusCode: number,
+  endpoint = '/runs/start',
+  responseBody?: unknown
+): ApiError {
   return new ApiError({
     message: `HTTP ${statusCode}`,
     endpoint,
     statusCode,
     category: statusCode >= 500 ? 'server' : 'client',
+    responseBody,
   });
 }
 
@@ -379,6 +384,28 @@ describe('runsService runtime contract', () => {
       await expect(service.startRun(createStartRunInput())).rejects.toBe(apiError);
     }
   );
+
+  it('surfaces graph_source_selection_mismatch from protected start-run as explicit re-plan guidance', async () => {
+    const apiClient = createApiClientMock();
+    vi.mocked(apiClient.postJson).mockRejectedValue(
+      createApiError(422, '/runs/start', {
+        error: {
+          type: 'unprocessable',
+          reason: 'plan_rejected',
+          details: {
+            cause: 'graph_source_selection_mismatch',
+            message:
+              'graphSource nodes must match the planner-derived executable subgraph for the selection.',
+          },
+        },
+      })
+    );
+    const service = createRunsService('api', apiClient);
+
+    await expect(service.startRun(createStartRunInput())).rejects.toThrow(
+      'Selected scope no longer matches the authoritative draft. Re-run Plan.'
+    );
+  });
 
   it('does not call legacy GET /runs/:runId/status route', async () => {
     const apiClient = createApiClientMock();

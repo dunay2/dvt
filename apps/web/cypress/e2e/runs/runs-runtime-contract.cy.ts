@@ -1,11 +1,13 @@
-describe('Runs runtime contract', () => {
-  it('sends tenant scope in list, detail, and events requests', () => {
-    cy.intercept('GET', '**/runs*', (req) => {
-      const acceptHeader = req.headers.accept ?? '';
-      if (acceptHeader.includes('text/html')) {
-        return;
-      }
+import { waitForE2eApiCall } from '../../support/e2eApiStub';
+import { stubShellBootstrapApis, visitWithE2eWorkspaceSession } from '../../support/workspaceSession';
 
+describe('Runs runtime contract', () => {
+  beforeEach(() => {
+    stubShellBootstrapApis();
+  });
+
+  it('sends tenant scope in list, detail, and events requests', () => {
+    cy.intercept('GET', '**/runs?tenantId=*', (req) => {
       expect(req.url).to.include('tenantId=e2e-tenant');
       expect(req.url).to.include('projectId=e2e-project');
       expect(req.url).to.include('environmentId=e2e-env');
@@ -27,7 +29,7 @@ describe('Runs runtime contract', () => {
       });
     }).as('listRuns');
 
-    cy.intercept('GET', '**/runs/run_e2e_1*', (req) => {
+    cy.intercept('GET', '**/runs/run_e2e_1?tenantId=*', (req) => {
       expect(req.url).to.include('tenantId=e2e-tenant');
 
       req.reply({
@@ -42,7 +44,7 @@ describe('Runs runtime contract', () => {
       });
     }).as('getRun');
 
-    cy.intercept('GET', '**/runs/run_e2e_1/events*', (req) => {
+    cy.intercept('GET', '**/runs/run_e2e_1/events?tenantId=*', (req) => {
       expect(req.url).to.include('tenantId=e2e-tenant');
 
       req.reply({
@@ -54,7 +56,11 @@ describe('Runs runtime contract', () => {
       });
     }).as('getRunEvents');
 
-    cy.visit('/runs');
+    visitWithE2eWorkspaceSession('/runs');
+    waitForE2eApiCall('/healthz', 'GET');
+    waitForE2eApiCall('/readyz', 'GET');
+    waitForE2eApiCall('/version', 'GET');
+    waitForE2eApiCall('/db/ready', 'GET');
     cy.wait('@listRuns');
 
     cy.contains('Run run_e2e_1').click();
@@ -63,7 +69,7 @@ describe('Runs runtime contract', () => {
   });
 
   it('renders completed result evidence from the snapshot read model', () => {
-    cy.intercept('GET', '**/runs/run_completed*', (req) => {
+    cy.intercept('GET', '**/runs/run_completed?tenantId=*', (req) => {
       expect(req.url).to.include('tenantId=e2e-tenant');
 
       req.reply({
@@ -91,7 +97,7 @@ describe('Runs runtime contract', () => {
       });
     }).as('getCompletedRun');
 
-    cy.intercept('GET', '**/runs/run_completed/events*', (req) => {
+    cy.intercept('GET', '**/runs/run_completed/events?tenantId=*', (req) => {
       expect(req.url).to.include('tenantId=e2e-tenant');
       req.reply({
         statusCode: 200,
@@ -102,7 +108,11 @@ describe('Runs runtime contract', () => {
       });
     }).as('getCompletedRunEvents');
 
-    cy.visit('/runs/run_completed');
+    visitWithE2eWorkspaceSession('/runs/run_completed');
+    waitForE2eApiCall('/healthz', 'GET');
+    waitForE2eApiCall('/readyz', 'GET');
+    waitForE2eApiCall('/version', 'GET');
+    waitForE2eApiCall('/db/ready', 'GET');
     cy.wait('@getCompletedRun');
     cy.wait('@getCompletedRunEvents');
 
@@ -115,7 +125,7 @@ describe('Runs runtime contract', () => {
   });
 
   it('renders failed result diagnostics from the snapshot read model', () => {
-    cy.intercept('GET', '**/runs/run_failed*', (req) => {
+    cy.intercept('GET', '**/runs/run_failed?tenantId=*', (req) => {
       expect(req.url).to.include('tenantId=e2e-tenant');
 
       req.reply({
@@ -141,7 +151,7 @@ describe('Runs runtime contract', () => {
       });
     }).as('getFailedRun');
 
-    cy.intercept('GET', '**/runs/run_failed/events*', (req) => {
+    cy.intercept('GET', '**/runs/run_failed/events?tenantId=*', (req) => {
       expect(req.url).to.include('tenantId=e2e-tenant');
       req.reply({
         statusCode: 200,
@@ -152,7 +162,11 @@ describe('Runs runtime contract', () => {
       });
     }).as('getFailedRunEvents');
 
-    cy.visit('/runs/run_failed');
+    visitWithE2eWorkspaceSession('/runs/run_failed');
+    waitForE2eApiCall('/healthz', 'GET');
+    waitForE2eApiCall('/readyz', 'GET');
+    waitForE2eApiCall('/version', 'GET');
+    waitForE2eApiCall('/db/ready', 'GET');
     cy.wait('@getFailedRun');
     cy.wait('@getFailedRunEvents');
 

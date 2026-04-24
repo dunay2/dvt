@@ -213,6 +213,11 @@ function syncBootstrapScreenState(): void {
     return;
   }
 
+  if (canCompleteBootstrap()) {
+    setBootstrapScreenState('complete', 'Raven is ready', 'Opening the workspace.');
+    return;
+  }
+
   setBootstrapScreenState('loading', PREPARING_TITLE, PREPARING_MESSAGE);
 }
 

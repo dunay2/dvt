@@ -9,6 +9,7 @@ import type { IRunsPort, RunEventTimelinePage, RunSnapshot, StartRunInput } from
 import type { SessionContextPort } from '../../ports/sessionContext';
 import type { RunEvent } from '../../types/engine';
 import { ApiError, type ApiClient } from '../api/createApiClient';
+import { normalizeProtectedRuntimeRejection } from '../api/protectedRuntimeRejection';
 import { createSessionContextPort } from '../session/sessionContextPort';
 import {
   extractEventsPayload,
@@ -54,15 +55,19 @@ export function createApiRunsService(
     },
     getRunSnapshot: getRunSnapshotById,
     startRun: async (input: StartRunInput) => {
-      const payload = await apiClient.postJson<StartRunApiRequest, unknown>('/runs/start', {
-        tenantId: input.workspaceScope.tenantId,
-        projectId: input.workspaceScope.projectId,
-        environmentId: input.workspaceScope.environmentId,
-        targetAdapter: input.workspaceScope.targetAdapter,
-        selection: input.selection,
-        planRef: input.planRef,
-      });
-      return parseEngineRunRef(payload);
+      try {
+        const payload = await apiClient.postJson<StartRunApiRequest, unknown>('/runs/start', {
+          tenantId: input.workspaceScope.tenantId,
+          projectId: input.workspaceScope.projectId,
+          environmentId: input.workspaceScope.environmentId,
+          targetAdapter: input.workspaceScope.targetAdapter,
+          selection: input.selection,
+          planRef: input.planRef,
+        });
+        return parseEngineRunRef(payload);
+      } catch (error) {
+        throw normalizeProtectedRuntimeRejection(error) ?? error;
+      }
     },
     listRunEvents: async (runId, afterSeq): Promise<RunEventTimelinePage> => {
       const query = new URLSearchParams(buildTenantScopeQuery(sessionContext, false));

@@ -2,7 +2,7 @@
 title: Canvas execution selection component
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-04-23
+last_reviewed: 2026-04-24
 ---
 
 # Canvas execution selection component
@@ -55,6 +55,8 @@ It does **not** own:
 - preview selection falls back from explicit selected nodes to visible
   workspace node ids only inside the same canonical seam.
 - run selection preserves persisted plan order while deduplicating node ids.
+- protected runtime rejection causes are normalized in the plans and runs
+  service adapters, not inside the selection seam.
 
 ## Component map
 
@@ -121,6 +123,45 @@ This keeps the browser on one narrow posture:
 - run start reuses that persisted proof and never invents client-owned run
   identity or whole-draft execution scope
 
+## Fail-closed runtime rejection posture
+
+Protected runtime rejection causes stay outside `canvasRunSelection.ts`.
+
+The browser contract is:
+
+1. selection seam emits canonical `ExecutionSelection`
+2. service adapters normalize protected runtime rejection envelopes into
+   user-facing error messages
+3. Canvas actions surface those messages without widening scope or retrying
+   against the full draft
+
+```mermaid
+sequenceDiagram
+  participant Canvas as Canvas action handler
+  participant Selection as canvasRunSelection.ts
+  participant Plans as plansService / runsService
+  participant Api as protected runtime
+
+  Canvas->>Selection: collectPreviewSelection(...) / collectPlanSelection(...)
+  Selection-->>Canvas: ExecutionSelection
+  Canvas->>Plans: previewPlan(...) or startRun(...)
+  Plans->>Api: canonical selection payload
+  alt protected runtime rejects selected closure
+    Api-->>Plans: plan_rejected(cause)
+    Plans-->>Canvas: normalized re-plan guidance
+    Canvas-->>Canvas: fail closed, no scope widening
+  else selected closure accepted
+    Api-->>Plans: persisted preview or started run
+    Plans-->>Canvas: success result
+  end
+```
+
+Browser proof for this posture now lives in:
+
+- `apps/web/cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts`
+- `apps/web/src/app/services/plans/plansService.test.ts`
+- `apps/web/src/app/services/runs/runsService.test.ts`
+
 ## Consumers
 
 - `apps/web/src/app/views/canvas/canvasRunSelection.ts`
@@ -129,13 +170,17 @@ This keeps the browser on one narrow posture:
 - `apps/web/src/app/ports/runs.ts`
 - `apps/web/src/app/services/runs/runsService.api.ts`
 - `apps/web/src/app/services/plans/plansService.api.ts`
+- `apps/web/src/app/services/api/protectedRuntimeRejection.ts`
 - `apps/web/src/app/views/canvas/canvasExecutionSelection.architecture.test.ts`
 - `apps/web/src/app/views/canvas/canvasRunStartIdentity.architecture.test.ts`
+- `apps/web/cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts`
 
 ## Extension rules
 
 - keep canonical selection parsing in `canvasRunSelection.ts`
 - do not add a web-local preview/run selection DTO
 - do not push planner-local diagnostics into the browser selection seam
+- keep protected runtime rejection normalization in service adapters, not in
+  `canvasRunSelection.ts`
 - keep preview and run consumers importing the named seam instead of shaping
   ad hoc payloads inline
