@@ -98,6 +98,7 @@ Lifecycle-local vocabulary in `canvasDraftLifecycle.types.ts`:
 
 - `CanvasDraftLifecycleDto`
 - `CanvasCurrentDraftPayloadDto`
+- `CanvasCreateCanvasDocumentCommandDto`
 
 Canonical grouping:
 
@@ -113,6 +114,10 @@ Inside the lifecycle seam, `useCanvasCurrentDraftPayload.ts` repeats the same
 rule: one DTO expresses the current projection and authoring context instead of
 another long positional call.
 
+The first-canvas save path follows the same rule. `useCanvasDraftLifecycle.ts`
+should compose one narrow create-canvas command seam rather than keeping the
+authoritative save and conflict choreography inline in the hook body.
+
 ## File Responsibilities
 
 <!-- markdownlint-disable MD060 -->
@@ -123,6 +128,7 @@ another long positional call.
 | `canvasBackendPosture.ts`               | backend readiness and transport-mutation posture                          | backend posture API     |
 | `useCanvasDraftBaseline.ts`             | draft repository plus query/cache baseline for the runtime component      | baseline API only       |
 | `useCanvasAuthoringRuntimeDraftFlow.ts` | composition over draft baseline, projection, lifecycle, and session state | draft-flow API only     |
+| `canvasCreateCanvasDocumentCommand.ts`  | authoritative first-canvas save and conflict/no-op choreography           | lifecycle-local only    |
 | `canvasAuthoringState.ts`               | route-safe visible, UI, execution, and recovery authoring state           | authoring-state API     |
 | `useCanvasAuthoringRuntime.ts`          | public application-service composition seam                               | yes                     |
 
@@ -145,6 +151,7 @@ flowchart LR
 
   Baseline --> Repository["canvasDraftRepository.ts"]
   Lifecycle --> PayloadDto["useCanvasCurrentDraftPayload.ts<br>CanvasCurrentDraftPayloadDto"]
+  Lifecycle --> CreateCanvas["canvasCreateCanvasDocumentCommand.ts<br>CanvasCreateCanvasDocumentCommandDto"]
   Lifecycle --> Bootstrap["useCanvasDraftBootstrapSync.ts"]
   Lifecycle --> Persistence["useCanvasDraftPersistence.ts"]
 ```
@@ -184,6 +191,9 @@ Interpretation rule:
   composition, not route-shell or controller logic
 - `useCanvasDraftLifecycle.ts` receives one semantic DTO boundary; adding new
   flat parameters to the hook or to `useCanvasCurrentDraftPayload.ts` is drift
+- first-canvas creation remains a dedicated lifecycle-local command seam; do
+  not regrow the save, conflict, and status choreography inline in
+  `useCanvasDraftLifecycle.ts`
 - `canvasAuthoringState.ts` derives route-safe scopes and recovery posture from
   draft truth; it is not a persistence seam
 - the public contract must not retain dead parameters or controller-only
@@ -231,5 +241,8 @@ Those tests must keep proving:
 - if `useCanvasDraftLifecycle.ts` or `useCanvasCurrentDraftPayload.ts` regrow
   wide positional or transport-shaped parameter lists, the DTO boundary has
   drifted
+- if first-canvas save logic migrates back into `useCanvasDraftLifecycle.ts`
+  as a large inline branch, the lifecycle seam has started absorbing too much
+  policy again
 - if route-shell or viewport concerns appear here, the runtime seam is absorbing
   presentation responsibilities

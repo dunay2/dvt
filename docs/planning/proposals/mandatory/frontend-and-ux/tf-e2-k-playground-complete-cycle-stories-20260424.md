@@ -35,6 +35,17 @@ canonical story set.
 Without that, test setup keeps drifting toward transport-shaped scenarios
 instead of story-shaped view models.
 
+There is also a second-order gap under the host route:
+
+- the first-canvas creation command is still easiest to reason about through
+  the controller stack, but it does not yet have one dedicated proof seam for
+  authoritative save, conflict, and fail-closed behavior
+- the route test stack still carries host-cycle scenario helpers in a broad
+  controller-defaults file instead of one dedicated scenario module
+
+That makes the operator cycle harder to maintain even when the user-visible
+behavior is already mostly present.
+
 ## Governing sources
 
 - `AGENTS.md`
@@ -134,6 +145,8 @@ Decision:
 | `US-E2-018` | As an operator, when I reopen the workspace, the host restores the authoritative canvas tab and the correct typed posture before I continue editing.         | Restore uses canonical draft truth only and rehydrates the correct host tab plus empty/graph posture.            |
 | `US-E2-019` | As an operator, after the first node exists, I can continue to preview and run from the same typed canvas flow without widening execution or losing context. | Preview/run handoff stays anchored to the same typed document and current authoring truth.                       |
 | `US-E2-020` | As a read-only or blocked operator, I can inspect the typed host/canvas posture while create-canvas, first-node, and run affordances stay explicitly gated.  | The route is fail-closed and still understandable; no fake affordance appears when mutation/runtime is gated.    |
+| `US-E2-021` | As an operator, when I create the first canvas, the host persists one typed empty document through the authoritative draft boundary before claiming success. | First-canvas creation only advances on authoritative draft save or conflict truth; no browser-only success path. |
+| `US-E2-022` | As an operator, if first-canvas creation is blocked, stale, or already authoritative, the host stays honest instead of fabricating a new canvas posture.     | Create-canvas failure/no-op states are explicit and fail-closed across busy, blocked, and already-saved cases.   |
 
 ## Complete-cycle diagrams
 
@@ -209,6 +222,37 @@ stateDiagram-v2
   BlockedHost --> BlockedHost: retry or wait for readiness
 ```
 
+### `US-E2-021` authoritative first-canvas creation cycle
+
+```mermaid
+sequenceDiagram
+  participant User as Operator
+  participant Host as Playground host
+  participant Lifecycle as Draft lifecycle seam
+  participant Draft as Protected draft boundary
+  participant Empty as Typed empty canvas
+
+  User->>Host: create canvas(kind,title)
+  Host->>Lifecycle: handleCreateCanvasDocument(command)
+  Lifecycle->>Draft: save empty typed canvas document
+  Draft-->>Lifecycle: saved or conflict truth
+  Lifecycle-->>Host: authoritative draft result
+  Host-->>Empty: render typed empty posture from saved draft truth
+```
+
+### `US-E2-022` fail-closed first-canvas rejection cycle
+
+```mermaid
+stateDiagram-v2
+  [*] --> NeedsCanvas
+  NeedsCanvas --> Saving: create canvas
+  Saving --> TypedEmpty: authoritative save succeeds
+  Saving --> NeedsCanvas: transport blocked or draft already exists
+  Saving --> NeedsCanvas: save fails
+  Saving --> Conflict: authoritative conflict truth
+  Conflict --> NeedsCanvas: operator reloads or retries
+```
+
 ## Opportunity: replace transport-shaped scenarios with a host-cycle DTO
 
 The stories above expose a maintainability problem that is already visible in
@@ -222,18 +266,21 @@ The first implementation opportunity is therefore:
 - let tests describe `needs_canvas`, `typed_empty_transformation`,
   `typed_empty_dbt`, `graph_ready`, and `blocked/read_only` through that DTO
 - stop making every new story pay the cost of transport-level setup
+- keep that scenario vocabulary in a dedicated host-cycle test-support module,
+  not in the broad `Canvas.test.controller.defaults.ts` defaults file
 
 The first TDD slice should use that DTO to execute `US-E2-016`.
 
 ## Task mapping
 
-| Slice       | Story       | Outcome                                                         |
-| ----------- | ----------- | --------------------------------------------------------------- |
-| `TF-E2-K-D` | `US-E2-016` | transformation host cycle proof plus story-owned host-cycle DTO |
-| `TF-E2-K-E` | `US-E2-017` | dbt host cycle proof                                            |
-| `TF-E2-K-F` | `US-E2-018` | authoritative restore cycle proof                               |
-| `TF-E2-K-G` | `US-E2-019` | typed canvas to preview/run continuation proof                  |
-| `TF-E2-K-H` | `US-E2-020` | blocked/read-only host cycle proof                              |
+| Slice       | Story                    | Outcome                                                                   |
+| ----------- | ------------------------ | ------------------------------------------------------------------------- |
+| `TF-E2-K-D` | `US-E2-016`              | transformation host cycle proof plus story-owned host-cycle DTO           |
+| `TF-E2-K-E` | `US-E2-017`              | dbt host cycle proof                                                      |
+| `TF-E2-K-F` | `US-E2-018`              | authoritative restore cycle proof                                         |
+| `TF-E2-K-G` | `US-E2-019`              | typed canvas to preview/run continuation proof                            |
+| `TF-E2-K-H` | `US-E2-020`              | blocked/read-only host cycle proof                                        |
+| `TF-E2-K-I` | `US-E2-021`, `US-E2-022` | authoritative first-canvas creation proof plus fail-closed lifecycle seam |
 
 ## Acceptance posture for the whole set
 
@@ -245,3 +292,5 @@ The host-cycle route is only closed when all of the following are true:
 - dbt remains typed and does not collapse into transformation assumptions
 - restore, preview/run, and blocked/read-only cycles are proven without fake
   host state or transport shortcuts
+- first-canvas creation is proven at the lifecycle seam and does not claim
+  success ahead of authoritative draft truth

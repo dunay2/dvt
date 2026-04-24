@@ -2420,7 +2420,7 @@ tasks:
   - task_id: TF-E2-K-G
     parent_task: TF-E2-K
     priority: P0
-    status: queued
+    status: in_progress
     objective: >-
       prove the continuation cycle from typed canvas authoring into preview and run handoff without
       widening scope or losing typed host context.
@@ -2434,7 +2434,9 @@ tasks:
     evidence_refs:
       - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-k-playground-complete-cycle-stories-20260424.md
       - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-e-selected-closure-ux-proof-stories-20260423.md
-    status_reason: Planned typed-canvas preview/run continuation proof; execution has not started.
+    status_reason: >-
+      Active. The remaining proof now focuses on carrying the host cycle forward into preview and
+      run while keeping story-shaped route fixtures and typed host context intact.
     last_verified: '2026-04-24'
   - task_id: TF-E2-K-H
     parent_task: TF-E2-K
@@ -2454,6 +2456,30 @@ tasks:
       - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-k-playground-complete-cycle-stories-20260424.md
       - docs/architecture/components/web/graph/canvas-playground-host-component.md
     status_reason: Planned blocked/read-only host cycle proof; execution has not started.
+    last_verified: '2026-04-24'
+  - task_id: TF-E2-K-I
+    parent_task: TF-E2-K
+    priority: P0
+    status: in_progress
+    objective: >-
+      prove authoritative first-canvas creation through the draft lifecycle seam and keep the
+      route-host test vocabulary in a dedicated scenario module instead of broad controller
+      defaults.
+    dependency: TF-E2-K-F
+    target: >-
+      First-canvas creation is proven as an authoritative save/fail-closed lifecycle command, and
+      host-cycle route fixtures move out of `Canvas.test.controller.defaults.ts` into dedicated
+      story-shaped test support.
+    complexity: S
+    effort_points: 2
+    progress_pct: 20
+    evidence_refs:
+      - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-k-playground-complete-cycle-stories-20260424.md
+      - docs/architecture/components/web/graph/canvas-playground-host-component.md
+      - docs/architecture/components/web/graph/canvas-authoring-runtime-component.md
+    status_reason: >-
+      Active. The route still lacks a dedicated authoritative first-canvas lifecycle proof, and
+      host-cycle scenario DTOs still sit in the generic controller-defaults test file.
     last_verified: '2026-04-24'
   - task_id: TF-E2-E-B
     parent_task: TF-E2-E

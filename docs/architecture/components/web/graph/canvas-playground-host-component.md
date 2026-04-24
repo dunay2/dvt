@@ -88,6 +88,9 @@ before that boundary exists.
   multi-canvas persistence that the backend does not yet support.
 - Host and workbench tests must consume `CanvasHostCycleState` rather than
   reconstructing wide transport-shaped scenario bags for every cycle.
+- Route test-support for host cycles must live in a dedicated scenario module;
+  `Canvas.test.controller.defaults.ts` stays for generic controller defaults,
+  not cycle-specific story DTOs.
 - Route-level host-cycle proofs must advance from `needs_canvas` to
   `typed_empty` and then `graph_ready` through stable cycle DTO seams rather
   than bespoke controller transport bags.
