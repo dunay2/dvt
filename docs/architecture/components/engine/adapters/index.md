@@ -1,4 +1,4 @@
-﻿# Engine Adapters
+# Engine Adapters
 
 ## Purpose
 

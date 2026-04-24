@@ -280,7 +280,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
     const planRef = makePlanRef();
     const { engine } = createEngine({
       adapters: makeAdapters({
-        async startRun(_plan, _planRef, ctx) {
+        async startRun(_planRef, ctx) {
           seenContexts.push(ctx);
           return {
             provider: 'temporal',
@@ -542,7 +542,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
           runId: ctx.runId,
         } as EngineRunRef;
       },
-      async startRun(_plan, _planRef, ctx) {
+      async startRun(_planRef, ctx) {
         const events = await store.listEvents(ctx.tenantId, ctx.runId);
         sawQueuedEventBeforeStart = events.some((event) => event.eventType === 'RunQueued');
         return {
@@ -676,7 +676,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
           runId: ctx.runId,
         } as EngineRunRef;
       },
-      async startRun(_plan, _planRef, ctx) {
+      async startRun(_planRef, ctx) {
         return {
           provider: 'temporal',
           tenantId: ctx.tenantId,
@@ -722,7 +722,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
           runId: ctx.runId,
         } as EngineRunRef;
       },
-      async startRun(_plan, _planRef, ctx) {
+      async startRun(_planRef, ctx) {
         return {
           provider: 'temporal',
           tenantId: ctx.tenantId,
@@ -761,7 +761,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
           runId: ctx.runId,
         } as EngineRunRef;
       },
-      async startRun(_plan, _planRef, ctx) {
+      async startRun(_planRef, ctx) {
         return {
           provider: 'conductor',
           tenantId: ctx.tenantId,
@@ -807,7 +807,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
           runId: ctx.runId,
         } as EngineRunRef;
       },
-      async startRun(_plan, _planRef, ctx) {
+      async startRun(_planRef, ctx) {
         return {
           provider: 'temporal',
           tenantId: ctx.tenantId,

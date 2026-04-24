@@ -119,7 +119,7 @@ sequenceDiagram
     SRAS->>Policy: assertStartRunAllowed(context)
     SRAS->>Intent: save(intentId, runContext)
     SRAS->>Engine: startRun(planRef, runContext, intentId)
-    Engine->>Provider: startRun(plan, runContext)
+    Engine->>Provider: startRun(planRef, runContext)
     Provider-->>Engine: EngineRunRef
     Engine-->>SRAS: RunRef
     SRAS-->>API: RunRef

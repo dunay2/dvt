@@ -159,12 +159,12 @@ sequenceDiagram
     API->>Engine: startRun(command)
     alt adapter supports estimateRunRef
         Engine->>PG: bootstrapRunTx + RunQueued
-        Engine->>Adapter: startRun(plan, planRef, context)
+        Engine->>Adapter: startRun(planRef, context)
         Adapter-->>Engine: provider runRef
         Engine->>PG: saveProviderRef if late-bound fields differ
         Engine->>Reconciler: mark intent resolved
     else adapter does not support estimateRunRef
-        Engine->>Adapter: startRun(plan, planRef, context)
+        Engine->>Adapter: startRun(planRef, context)
         Adapter-->>Engine: provider runRef
         Engine->>PG: bootstrapRunTx + RunQueued
         opt bootstrap fails

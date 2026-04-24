@@ -551,7 +551,6 @@ describe('planner -> engine contract', () => {
 
     const planRef = makePlanRefFromEnginePlan('https://example.com/plan.json', enginePlan);
     const runRef = await inMemoryAdapter.startRun(
-      enginePlan,
       planRef,
       makeResolvedRunContext('compat-run')
     );

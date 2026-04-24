@@ -15,7 +15,6 @@ import { Buffer } from 'node:buffer';
 import {
   CURRENT_SIGNAL_SEMANTICS_VERSION,
   type EngineRunRef,
-  type ExecutionPlan,
   type PlanRef,
   type ProviderRunStatusView,
   type ResolvedRunContext,
@@ -99,11 +98,7 @@ export class TemporalAdapter implements IProviderAdapter {
     });
   }
 
-  async startRun(
-    _plan: ExecutionPlan,
-    planRef: PlanRef,
-    ctx: ResolvedRunContext
-  ): Promise<EngineRunRef> {
+  async startRun(planRef: PlanRef, ctx: ResolvedRunContext): Promise<EngineRunRef> {
     const validatedPlanRef = parsePlanRef(planRef);
     const validatedCtx = parseResolvedRunContext(ctx);
     const workflowClient = await this.getClient();

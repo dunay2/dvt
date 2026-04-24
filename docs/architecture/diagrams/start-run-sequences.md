@@ -110,13 +110,13 @@ sequenceDiagram
     SRAS->>Exec: startRunWithEstimatedRef(...)
     Exec->>Adapter: estimateRunRef(context)
     Exec->>Store: bootstrapRunTx(metadata + RunQueued + RunStarted)
-    Exec->>Adapter: startRun(plan, planRef, context)
+    Exec->>Adapter: startRun(planRef, context)
     alt adapter returns different providerRunId
       Exec->>Store: saveProviderRef(tenantId, runId, update)
     end
   else no estimateRunRef
     SRAS->>Exec: startRunWithoutEstimatedRef(...)
-    Exec->>Adapter: startRun(plan, planRef, context)
+    Exec->>Adapter: startRun(planRef, context)
     Exec->>Store: bootstrapRunTx(metadata + RunQueued + RunStarted)
     alt bootstrapRunTx fails
       Exec->>Adapter: cancelRun(runRef) [compensation]

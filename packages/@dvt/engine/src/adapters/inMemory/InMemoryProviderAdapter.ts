@@ -4,13 +4,9 @@
  */
 import {
   asNonBlankString,
-  CURRENT_EXECUTION_PLAN_CONTRACT_VERSION,
-  CURRENT_EXECUTION_PLAN_SCHEMA_VERSION,
-  CURRENT_EXECUTION_PLAN_VERSION,
   CURRENT_SIGNAL_SEMANTICS_VERSION,
   type CanonicalRunStatus,
   type EngineRunRef,
-  type ExecutionPlan,
   type PlanRef,
   type ProviderRunStatusView,
   type ResolvedRunContext,
@@ -40,7 +36,6 @@ export interface InMemoryProviderAdapterDeps {
   capabilities?: readonly string[];
 }
 
-const SUPPORTED_CONTRACT_VERSIONS = [CURRENT_EXECUTION_PLAN_CONTRACT_VERSION] as const;
 const DEFAULT_PROVIDER_CAPABILITIES = [
   'basic-execution',
   'signal.pause.native',
@@ -64,28 +59,7 @@ export class InMemoryProviderAdapter implements IProviderAdapter {
     return this.toRunRef(ctx);
   }
 
-  public async startRun(
-    plan: ExecutionPlan,
-    planRef: PlanRef,
-    ctx: ResolvedRunContext
-  ): Promise<EngineRunRef> {
-    const effectivePlan: ExecutionPlan = plan ?? {
-      metadata: {
-        planId: planRef.planId,
-        planVersion: CURRENT_EXECUTION_PLAN_VERSION,
-        schemaVersion: CURRENT_EXECUTION_PLAN_SCHEMA_VERSION,
-        contractVersion: CURRENT_EXECUTION_PLAN_CONTRACT_VERSION,
-        inputHashSha256: planRef.sha256,
-        createdAtIso: this.deps.clock?.nowIsoUtc() ?? '1970-01-01T00:00:00.000Z',
-      },
-      steps: [],
-    };
-
-    validatePlanMetadata(effectivePlan.metadata);
-    for (const step of effectivePlan.steps) {
-      validateStep(step);
-    }
-
+  public async startRun(_planRef: PlanRef, ctx: ResolvedRunContext): Promise<EngineRunRef> {
     return this.toRunRef(ctx);
   }
 
@@ -234,39 +208,6 @@ function mapCanonicalSignalToDispatch(request: SignalRequest): {
       return { kind: 'pause' };
     case 'RESUME':
       return { kind: 'resume' };
-  }
-}
-
-function validatePlanMetadata(metadata: ExecutionPlan['metadata']): void {
-  if (!(SUPPORTED_CONTRACT_VERSIONS as readonly string[]).includes(metadata.contractVersion)) {
-    throw new Error(
-      `PLAN_CONTRACT_VERSION_UNKNOWN: ${metadata.contractVersion}. Supported: ${SUPPORTED_CONTRACT_VERSIONS.join(', ')}`
-    );
-  }
-}
-
-function validateStep(step: ExecutionPlan['steps'][number]): void {
-  const allowed = new Set([
-    'stepId',
-    'kind',
-    'dependsOn',
-    'retryPolicy',
-    'stepTypeConfig',
-    'type',
-    'gateway',
-  ]);
-  for (const key of Object.keys(step)) {
-    if (!allowed.has(key)) {
-      throw new Error(`INVALID_STEP_SCHEMA: field_not_allowed:${key}`);
-    }
-  }
-
-  if (!Array.isArray(step.dependsOn) && typeof step.dependsOn !== 'undefined') {
-    throw new TypeError('INVALID_STEP_SCHEMA: dependsOn_must_be_array');
-  }
-
-  if (Array.isArray(step.dependsOn) && step.dependsOn.some((dep) => typeof dep !== 'string')) {
-    throw new Error('INVALID_STEP_SCHEMA: dependsOn_values_must_be_string');
   }
 }
 

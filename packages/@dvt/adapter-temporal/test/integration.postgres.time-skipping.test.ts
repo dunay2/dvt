@@ -175,7 +175,6 @@ describe('temporal integration (postgres capability)', () => {
         capability,
         ctx,
         env,
-        plan,
         planRef,
         projector,
         schema,
@@ -185,7 +184,7 @@ describe('temporal integration (postgres capability)', () => {
       } = await createPostgresCapabilityHarness(connectionString);
 
       try {
-        await adapter.startRun(plan, planRef, ctx);
+        await adapter.startRun(planRef, ctx);
 
         await waitForCondition(
           () => store.listRunEvents(RunId.of(ctx.runId)),

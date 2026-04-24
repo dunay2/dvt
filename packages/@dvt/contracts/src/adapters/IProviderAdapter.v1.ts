@@ -8,7 +8,6 @@
  * @date 2026-02-21
  */
 import type { SignalSemanticsVersion } from '../contracts/engine/SignalSemantics.v1.js';
-import type { ExecutionPlan } from '../contracts/planner/ExecutionPlan.v1.js';
 import type {
   EngineRunRef,
   PlanRef,
@@ -20,7 +19,7 @@ import type {
 export interface IProviderAdapter {
   readonly provider: EngineRunRef['provider'];
 
-  startRun(plan: ExecutionPlan, planRef: PlanRef, ctx: ResolvedRunContext): Promise<EngineRunRef>;
+  startRun(planRef: PlanRef, ctx: ResolvedRunContext): Promise<EngineRunRef>;
   cancelRun(runRef: EngineRunRef): Promise<void>;
   getProviderStatusView(runRef: EngineRunRef): Promise<ProviderRunStatusView>;
   signal(runRef: EngineRunRef, request: SignalRequest): Promise<void>;
