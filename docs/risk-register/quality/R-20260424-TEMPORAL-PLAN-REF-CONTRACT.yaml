@@ -1,0 +1,32 @@
+---
+id: R-20260424-TEMPORAL-PLAN-REF-CONTRACT
+title: Provider runtimes can regress to unchecked PlanRef execution
+status: Open
+date: 2026-04-24
+owners:
+  - packages/@dvt/engine
+  - packages/@dvt/adapter-temporal
+severity: High
+probability: Medium
+context: >
+  The 2026-04-24 slice hard-cuts IProviderAdapter.startRun() to PlanRef plus resolved run context.
+  The engine still performs authoritative pre-dispatch verification, while Temporal resolves
+  execution segments by fetching plan material through PlanRef inside activities.
+risk: >
+  A future adapter or activity could fetch plan bytes by PlanRef without revalidating PlanRef.sha256
+  before execution. That would reintroduce the original contract drift and make runtime execution
+  depend on mutable or corrupted plan material.
+mitigations:
+  - >
+    Keep provider adapter start signatures pointer-backed and covered by
+    packages/@dvt/contracts/test/provider-adapter.architecture.test.ts.
+  - >
+    Keep Temporal segment resolution wired through PlanIntegrityValidator.fetchAndValidate() or an
+    equivalent verifier before returning executable segments.
+  - >
+    Require every new provider adapter to include a negative test where fetched plan bytes differ
+    from PlanRef.sha256 and execution fails before step dispatch.
+  - >
+    Run ARC-2 evidence checks whenever contracts, engine, or adapter runtime paths change.
+review_after: 2026-06-30
+---

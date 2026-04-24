@@ -1,4 +1,4 @@
-import { type ExecutionPlan, RUN_PLAN_WORKFLOW } from '@dvt/contracts';
+import { RUN_PLAN_WORKFLOW } from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
 import { TemporalAdapter } from '../src/TemporalAdapter.js';
@@ -64,22 +64,11 @@ function makeAdapter(
   return { adapter, workflowClient };
 }
 
-function makeLargePlan(stepCount: number, stepIdWidth: number): ExecutionPlan {
-  return {
-    ...BASE_PLAN,
-    steps: Array.from({ length: stepCount }, (_, index) => ({
-      stepId: `step-${index}-${'x'.repeat(stepIdWidth)}`,
-      kind: 'DBT_MODEL',
-      dependsOn: [],
-    })),
-  };
-}
-
 describe('TemporalAdapter.startRun', () => {
   it('starts the active workflow line with a planRef-only payload', async () => {
     const { adapter, workflowClient } = makeAdapter();
 
-    const runRef = await adapter.startRun(BASE_PLAN, BASE_PLAN_REF, BASE_CTX);
+    const runRef = await adapter.startRun(BASE_PLAN_REF, BASE_CTX);
 
     expect(workflowClient.start).toHaveBeenCalledWith(RUN_PLAN_WORKFLOW, {
       taskQueue: 'q-main-tenant-1',
@@ -111,7 +100,6 @@ describe('TemporalAdapter.startRun', () => {
 
     await expect(
       adapter.startRun(
-        BASE_PLAN,
         {
           ...BASE_PLAN_REF,
           sizeBytes: 10_000_000,
@@ -131,11 +119,9 @@ describe('TemporalAdapter.startRun', () => {
     const { adapter, workflowClient } = makeAdapter({
       workflowBudget: { maxStartPayloadBytes: 512 },
     });
-    const largePlan = makeLargePlan(8, 96);
 
     await expect(
       adapter.startRun(
-        largePlan,
         {
           ...BASE_PLAN_REF,
           sizeBytes: undefined,

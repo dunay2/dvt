@@ -67,7 +67,9 @@ export function buildCanvasShellLayout({
       availableCanvasKinds: routePresentation.availableCanvasKinds,
       canEditEdges: routePresentation.effectiveUserPermissions.canEditEdges,
       canOpenSourceImport: layoutState.canOpenSourceImport,
-      onCreateCanvasDocument: authoringCommands.handleCreateCanvasDocument,
+      onCreateCanvasDocument: (command) => {
+        void authoringCommands.handleCreateCanvasDocument(command);
+      },
       onCreateAuthoringNode: authoringCommands.handleCreateAuthoringNode,
     }),
     readOnlyBanner: renderCanvasShellReadOnlyBanner(recoveryCommands, routePresentation),

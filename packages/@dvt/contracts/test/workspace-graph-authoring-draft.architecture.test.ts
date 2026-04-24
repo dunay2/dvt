@@ -95,6 +95,10 @@ describe('WorkspaceGraphAuthoringDraft component architecture', () => {
       expectedRevision: 'initial',
       idempotencyKey: 'save-first-authoring-draft',
       draft: {
+        canvas: {
+          kind: 'workspace-graph-authoring-canvas',
+          title: 'Authoring draft',
+        },
         nodeIds: [sqlNode.id, looseNode.id],
         nodePositions: {
           [sqlNode.id]: { x: 120, y: 80 },

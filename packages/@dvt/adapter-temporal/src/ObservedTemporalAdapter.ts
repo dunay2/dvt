@@ -1,6 +1,5 @@
 import type {
   EngineRunRef,
-  ExecutionPlan,
   PlanRef,
   ProviderRunStatusView,
   ResolvedRunContext,
@@ -41,8 +40,8 @@ export class ObservedTemporalAdapter implements IProviderAdapter {
     this.observability = resolveTemporalObservability(deps.observability);
   }
 
-  startRun(plan: ExecutionPlan, planRef: PlanRef, ctx: ResolvedRunContext): Promise<EngineRunRef> {
-    return this.deps.adapter.startRun(plan, planRef, ctx);
+  startRun(planRef: PlanRef, ctx: ResolvedRunContext): Promise<EngineRunRef> {
+    return this.deps.adapter.startRun(planRef, ctx);
   }
 
   cancelRun(runRef: EngineRunRef): Promise<void> {

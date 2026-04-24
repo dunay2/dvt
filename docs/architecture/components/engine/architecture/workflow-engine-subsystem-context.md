@@ -182,7 +182,7 @@ sequenceDiagram
   StartRun->>PlanStore: fetch executable plan bytes
   StartRun->>StartRun: parse + validate metadata + recompute planId
   StartRun->>Intent: createIntent(...)
-  StartRun->>Adapter: startRun(verifiedPlan, planRef, resolvedContext)
+  StartRun->>Adapter: startRun(planRef, resolvedContext)
   StartRun->>State: persist run bootstrap/events
   StartRun->>Intent: markDispatched/markResolved
   StartRun-->>Engine: EngineRunRef

@@ -84,7 +84,7 @@ sequenceDiagram
 
     alt adapter exposes estimateRunRef()
         Exec->>State: bootstrapRunTx(run_metadata.providerRef + RunQueued)
-        Exec->>Adapter: startRun(plan, planRef, resolvedContext)
+        Exec->>Adapter: startRun(planRef, resolvedContext)
         Exec->>Intent: markDispatched(intentId, runRef)
         Exec->>Exec: reconcile estimatedRef vs runRef
         alt same provider, different late-bound fields
@@ -98,7 +98,7 @@ sequenceDiagram
             Exec->>Failure: markIntentResolvedBestEffort(...)
         end
     else no estimateRunRef()
-        Exec->>Adapter: startRun(plan, planRef, resolvedContext)
+        Exec->>Adapter: startRun(planRef, resolvedContext)
         Exec->>Intent: markDispatched(intentId, runRef)
         Exec->>State: bootstrapRunTx(run_metadata.providerRef + RunQueued)
         Exec->>Failure: markIntentResolvedBestEffort(...)
@@ -208,7 +208,7 @@ The dispatch phase currently performs:
 1. choose between:
    - `startRunWithEstimatedRef()`
    - `startRunWithoutEstimatedRef()`
-2. call `adapter.startRun(plan, planRef, resolvedContext)`
+2. call `adapter.startRun(planRef, resolvedContext)`
 3. enforce adapter-start timeout through `withTimeout(...)`
 4. persist `DISPATCHED` intent state via `markDispatched(intentId, runRef)`
 5. treat post-start intent persistence failure as a first-class error

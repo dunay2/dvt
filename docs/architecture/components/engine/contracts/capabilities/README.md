@@ -115,6 +115,7 @@ async function validatePlan(
 ```ts
 async function startRun(
   plan: ExecutionPlan,
+  planRef: PlanRef,
   executionPolicy: RunExecutionPolicy,
   ctx: RunContext
 ): Promise<EngineRunRef> {
@@ -134,7 +135,7 @@ async function startRun(
   }
 
   // Proceed
-  return await adapter.startRun(plan, ctx);
+  return await adapter.startRun(planRef, ctx);
 }
 ```
 

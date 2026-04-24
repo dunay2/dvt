@@ -41,7 +41,7 @@ import { SequenceClock } from '../../src/utils/clock.js';
 export function makeTemporalAdapter(overrides?: Partial<IProviderAdapter>): IProviderAdapter {
   const base: IProviderAdapter = {
     provider: 'temporal',
-    async startRun(_plan, _planRef, ctx) {
+    async startRun(_planRef, ctx) {
       return {
         provider: 'temporal',
         tenantId: ctx.tenantId,

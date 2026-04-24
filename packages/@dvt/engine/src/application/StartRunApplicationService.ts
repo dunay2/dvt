@@ -150,7 +150,6 @@ export class StartRunApplicationService {
 
     return this.executionService.executeStartRun({
       adapter,
-      plan: verifiedArtifact.plan,
       planRef,
       resolvedContext,
       traceContext,

@@ -215,7 +215,7 @@ describe('temporal integration (transformation runtime)', () => {
         });
 
       try {
-        await adapter.startRun(plan, planRef, ctx);
+        await adapter.startRun(planRef, ctx);
 
         await waitForCondition(
           () => store.listRunEvents(RunId.of(ctx.runId)),
@@ -264,7 +264,7 @@ describe('temporal integration (transformation runtime)', () => {
         });
 
       try {
-        await adapter.startRun(plan, planRef, ctx);
+        await adapter.startRun(planRef, ctx);
 
         await waitForCondition(
           () => store.listRunEvents(RunId.of(ctx.runId)),

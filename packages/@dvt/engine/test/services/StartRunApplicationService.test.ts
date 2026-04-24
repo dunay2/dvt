@@ -46,7 +46,7 @@ function makeTraceContext(runId: string, planId = makePlanRef().planId): StartRu
 function makeTemporalAdapter(): IProviderAdapter {
   return {
     provider: 'temporal',
-    async startRun(_plan, _planRef, ctx) {
+    async startRun(_planRef, ctx) {
       return {
         provider: 'temporal',
         tenantId: ctx.tenantId,

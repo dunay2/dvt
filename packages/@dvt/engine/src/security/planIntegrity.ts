@@ -4,7 +4,8 @@
  * @baseline ADR-0012: Plan Integrity Ownership
  * @decision Engine entry-point plan integrity verification resolves the executable plan,
  *   validates metadata alignment, and recomputes planner identity before adapter dispatch.
- * @consequence Adapters execute the exact plan instance the engine has already verified.
+ * @consequence Adapters receive an immutable PlanRef and must revalidate fetched plan bytes
+ *   before executing runtime segments.
  */
 import {
   parseExecutionPlan,

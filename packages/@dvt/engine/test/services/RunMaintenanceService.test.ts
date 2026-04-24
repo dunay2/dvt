@@ -46,7 +46,7 @@ function makeContext(runId = 'r1'): RunContext {
 function makeTemporalAdapter(): IProviderAdapter {
   return {
     provider: 'temporal',
-    async startRun(_plan: unknown, _planRef: PlanRef, ctx) {
+    async startRun(_planRef: PlanRef, ctx) {
       return {
         provider: 'temporal',
         tenantId: ctx.tenantId,
@@ -251,7 +251,7 @@ function createStatusSignalObservability(spy: {
 function makeAdapterWithLookup(knownRunIds: Set<string>, cancelLog?: string[]): IProviderAdapter {
   return {
     provider: 'temporal',
-    async startRun(_plan: unknown, _planRef: PlanRef, ctx) {
+    async startRun(_planRef: PlanRef, ctx) {
       return {
         provider: 'temporal',
         tenantId: ctx.tenantId,
@@ -294,7 +294,7 @@ function makeAdapterWithFailingCancel(knownRunIds: Set<string>): IProviderAdapte
 function makeTemporalAdapterWithLog(cancelLog: string[]): IProviderAdapter {
   return {
     provider: 'temporal',
-    async startRun(_plan, _planRef, ctx) {
+    async startRun(_planRef, ctx) {
       return {
         provider: 'temporal',
         tenantId: ctx.tenantId,
@@ -318,7 +318,7 @@ function makeTemporalAdapterWithLog(cancelLog: string[]): IProviderAdapter {
 function makeConductorAdapterWithLog(cancelLog: string[]): IProviderAdapter {
   return {
     provider: 'conductor',
-    async startRun(_plan, _planRef, ctx) {
+    async startRun(_planRef, ctx) {
       return {
         provider: 'conductor',
         tenantId: ctx.tenantId,

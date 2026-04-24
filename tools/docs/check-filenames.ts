@@ -9,6 +9,8 @@
  *              Language variants like ADR-0019-foo.en.md are allowed.
  *   3. (WARN --strict) Non-ADR, non-exception docs should be kebab-case
  *              (all lowercase, hyphens only - no underscores, no uppercase).
+ *              Versioned contract docs under docs/architecture/components/engine/contracts/
+ *              keep their contract-identity filenames, for example IWorkflowEngine.v1.md.
  *
  * Usage:
  *   tsx tools/docs/check-filenames.ts [--strict] [--changed-only]
@@ -88,7 +90,7 @@ function reportAdrPattern(filePath: string, name: string, report: Report): void 
 }
 
 function reportStrictKebabCase(filePath: string, name: string, report: Report): void {
-  if (!shouldCheckStrictKebabCase(name) || !hasKebabCaseIssue(name)) {
+  if (!shouldCheckStrictKebabCase(filePath, name) || !hasKebabCaseIssue(name)) {
     return;
   }
 
@@ -116,12 +118,25 @@ function reportPolicyFinding(
   report.warn(filePath, message, fullScanMessage);
 }
 
-function shouldCheckStrictKebabCase(name: string): boolean {
-  return STRICT && !ADR_PREFIX_RE.test(name) && !UPPERCASE_EXCEPTIONS.has(name);
+function shouldCheckStrictKebabCase(filePath: string, name: string): boolean {
+  return (
+    STRICT &&
+    !ADR_PREFIX_RE.test(name) &&
+    !UPPERCASE_EXCEPTIONS.has(name) &&
+    !isVersionedContractDoc(filePath, name)
+  );
 }
 
 function hasKebabCaseIssue(name: string): boolean {
   return /[A-Z]/.test(name) || name.includes('_');
+}
+
+function isVersionedContractDoc(filePath: string, name: string): boolean {
+  const normalizedPath = filePath.replaceAll('\\', '/');
+  return (
+    normalizedPath.includes('/docs/architecture/components/engine/contracts/') &&
+    /^[A-Za-z][A-Za-z0-9]*\.v\d+(?:\.\d+)?\.md$/.test(name)
+  );
 }
 
 function getFilename(filePath: string): string {

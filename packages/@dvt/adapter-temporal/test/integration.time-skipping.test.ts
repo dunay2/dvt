@@ -71,7 +71,6 @@ async function waitForTerminalStatus(
 interface CancelScenarioRequest {
   mode: 'signal' | 'cancel';
   adapter: TemporalAdapter;
-  plan: Parameters<TemporalAdapter['startRun']>[0];
   planRef: PlanRef;
   runContext: ResolvedRunContext;
   store: TestStateStore;
@@ -83,7 +82,7 @@ async function runCancelScenario(args: CancelScenarioRequest): Promise<{
   cancelledCount: number;
   eventTypes: string[];
 }> {
-  const runRef = await args.adapter.startRun(args.plan, args.planRef, args.runContext);
+  const runRef = await args.adapter.startRun(args.planRef, args.runContext);
   const runId = RunId.of(args.runContext.runId);
   await args.waitForCondition(
     () => args.store.listRunEvents(runId),
@@ -276,7 +275,7 @@ describe('temporal integration (time-skipping)', () => {
       const worker = await harness.startWorker();
 
       try {
-        const runRef = await adapter.startRun(plan, planRef, ctx);
+        const runRef = await adapter.startRun(planRef, ctx);
         await waitForCondition(
           () => store.listRunEvents(RunId.of(ctx.runId)),
           (events) => events.some((event) => event.eventType === 'StepStarted'),
@@ -317,7 +316,7 @@ describe('temporal integration (time-skipping)', () => {
       const worker = await harness.startWorker();
 
       try {
-        await adapter.startRun(plan, planRef, ctx);
+        await adapter.startRun(planRef, ctx);
 
         await waitForCondition(
           () => store.listRunEvents(RunId.of(ctx.runId)),
@@ -368,7 +367,6 @@ describe('temporal integration (time-skipping)', () => {
         const signalResult = await runCancelScenario({
           mode: 'signal',
           adapter,
-          plan,
           planRef,
           runContext: signalCtx,
           store,
@@ -379,7 +377,6 @@ describe('temporal integration (time-skipping)', () => {
         const cancelResult = await runCancelScenario({
           mode: 'cancel',
           adapter,
-          plan,
           planRef,
           runContext: cancelCtx,
           store,
@@ -414,7 +411,7 @@ describe('temporal integration (time-skipping)', () => {
       });
 
       try {
-        const runRef = await adapter.startRun(plan, planRef, ctx);
+        const runRef = await adapter.startRun(planRef, ctx);
 
         await blocker.waitUntilExecuting;
         await adapter.cancelRun(runRef);
@@ -455,7 +452,7 @@ describe('temporal integration (time-skipping)', () => {
       const worker = await harness.startWorker();
 
       try {
-        const runRef = await adapter.startRun(plan, planRef, ctx);
+        const runRef = await adapter.startRun(planRef, ctx);
 
         await waitForCondition(
           () => store.listRunEvents(RunId.of(ctx.runId)),
@@ -502,7 +499,7 @@ describe('temporal integration (time-skipping)', () => {
       const worker = await harness.startWorker();
 
       try {
-        await adapter.startRun(plan, planRef, ctx);
+        await adapter.startRun(planRef, ctx);
 
         await waitForCondition(
           () => store.listRunEvents(RunId.of(ctx.runId)),
@@ -555,7 +552,7 @@ describe('temporal integration (time-skipping)', () => {
       const worker1 = await harness.startWorker();
 
       try {
-        const _runRef = await adapter.startRun(plan, planRef, ctx);
+        const _runRef = await adapter.startRun(planRef, ctx);
 
         await waitForCondition(
           () => store.listRunEvents(RunId.of(ctx.runId)),
@@ -604,7 +601,7 @@ describe('temporal integration (time-skipping)', () => {
 
       try {
         const runId = RunId.of(runCtx.runId);
-        const runRef = await adapter.startRun(plan, planRef, runCtx);
+        const runRef = await adapter.startRun(planRef, runCtx);
 
         await blocker1.waitUntilExecuting;
         await adapter.signal(runRef, {

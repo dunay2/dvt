@@ -1,6 +1,11 @@
 import type { IRunExecutionContextReader } from '@dvt/artifacts';
 import type { PlanRef, ResolvedRunContext, RunExecutionContext } from '@dvt/contracts';
-import { RunExecutionContextRejectedError, type RunStateCommandPort } from '@dvt/engine';
+import { sha256Hex } from '@dvt/crypto';
+import {
+  PlanIntegrityValidator,
+  RunExecutionContextRejectedError,
+  type RunStateCommandPort,
+} from '@dvt/engine';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -22,7 +27,7 @@ import type {
   RunMetadata,
 } from '../src/engine-types.js';
 
-import { createExecutionPlan } from './helpers/contractFixtures.js';
+import { createExecutionPlan, createPlanRef } from './helpers/contractFixtures.js';
 import {
   permanentErrorExecutor,
   transientErrorExecutor,
@@ -439,6 +444,48 @@ describe('stepActivities', () => {
     expect(() => createActivities(invalidDeps)).toThrow(
       EXPECTED_ERRORS.segmentResolverNotConfigured
     );
+  });
+
+  it('rejects mutated plan bytes before resolving execution segments', async () => {
+    const planBytes = Buffer.from(JSON.stringify(SEGMENT_RESOLVER_PLAN), 'utf8');
+    const mutatedPlanBytes = Buffer.from(
+      JSON.stringify({
+        ...SEGMENT_RESOLVER_PLAN,
+        steps: [
+          {
+            stepId: 'mutated-segment-step',
+            kind: 'DBT_TEST',
+            dependsOn: [],
+          },
+        ],
+      }),
+      'utf8'
+    );
+    const planRef = createPlanRef({
+      uri: 's3://bucket/plans/segment-plan.json',
+      sha256: sha256Hex(planBytes),
+      planId: SEGMENT_RESOLVER_PLAN.metadata.planId,
+      planVersion: SEGMENT_RESOLVER_PLAN.metadata.planVersion,
+      schemaVersion: SEGMENT_RESOLVER_PLAN.metadata.schemaVersion,
+    });
+    const { acts } = setupActivities(undefined, undefined, undefined, {
+      integrity: new PlanIntegrityValidator(),
+      fetcher: {
+        async fetch() {
+          return {
+            bytes: mutatedPlanBytes,
+            executionPolicy: {},
+          };
+        },
+      },
+    });
+
+    await expect(
+      acts.resolveExecutionSegment({
+        planRef,
+        layerIndex: 0,
+      })
+    ).rejects.toThrow('PLAN_INTEGRITY_VALIDATION_FAILED');
   });
 
   describe('emitEvent', () => {

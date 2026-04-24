@@ -4,8 +4,8 @@
  */
 import { AsyncLocalStorage } from 'node:async_hooks';
 
-import type { EngineRunRef, IRunEnrichmentService, IWorkflowEngine } from '@dvt/engine';
 import type { CanonicalRunStatus, PlanRef, RunContext, SignalRequest } from '@dvt/contracts';
+import type { EngineRunRef, IRunEnrichmentService, IWorkflowEngine } from '@dvt/engine';
 
 export const PROTECTED_RUNTIME_TENANT_AUTHORIZATION_ERROR = {
   missingScope: 'PROTECTED_RUNTIME_TENANT_SCOPE_REQUIRED',

@@ -53,7 +53,7 @@ describe('buildWorkflowEngine', () => {
   it('wires StartRunApplicationService and not the deprecated alias', () => {
     const adapter: IProviderAdapter = {
       provider: 'temporal',
-      async startRun(_plan, _planRef, context: ResolvedRunContext) {
+      async startRun(_planRef, context: ResolvedRunContext) {
         return {
           provider: 'temporal',
           tenantId: context.tenantId,
