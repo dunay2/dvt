@@ -83,11 +83,13 @@ classDiagram
 - hardening for conflict, missing-remote, and projection-gap posture exists.
 - route-owned Inspector authoring now exists for governed node details, backed
   by local node overrides in the same draft aggregate used by preview and run.
-- parent TF-E2 still has pending closure for full node/edge/Inspector
-  productization and complete proof matrix.
+- duplicate-node and reconnect-edge now route through adjacent command seams
+  that preserve the draft aggregate as semantic truth instead of pushing policy
+  down into passive React Flow adapters.
+- parent TF-E2 still remains open only for the residual operability and
+  long-horizon compatibility proof around governed persisted draft versions.
 
 ## Future Evolution
 
-- finish command model closure for duplicate-node and edge-reconnect semantics.
 - complete end-to-end deterministic reload coverage across supported draft
   versions.

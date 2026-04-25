@@ -63,8 +63,11 @@ It is the local truth for:
 
 Adjacent command seams, not this component, own:
 
-- duplicate-node identity generation
-- reconnect-edge validation over an existing edge identity
+- duplicate-node identity generation through
+  `canvasDuplicateNodeCommand.ts` and `useCanvasNodeDuplicateHandlers.ts`
+- reconnect-edge validation over an existing edge identity through
+  `confirmReconnect(...)` in `canvasConnectionAggregate.ts` and
+  `useCanvasEdgeAuthoringHandlers.ts`
 
 It is not responsible for:
 
@@ -126,6 +129,17 @@ flowchart TD
   Fallout --> UI["nodes / edges / selection / inspector setters"]
 ```
 
+## Adjacent Command Topology
+
+```mermaid
+flowchart LR
+  NodeAdapter["DbtNodeComponent / node authoring seam"] --> Duplicate["canvasDuplicateNodeCommand\n+ useCanvasNodeDuplicateHandlers"]
+  EdgeAdapter["CanvasViewport / edge authoring seam"] --> Reconnect["confirmReconnect\n+ useCanvasEdgeAuthoringHandlers"]
+  Duplicate --> Lifecycle["canvasGraphLifecycle"]
+  Reconnect --> Lifecycle
+  Lifecycle --> Session["CanvasDraftSession aggregate"]
+```
+
 ## Relationship To State Machines
 
 ```mermaid
@@ -155,6 +169,7 @@ Rule:
 - `useCanvasNodeChangeHandlers.ts`
 - `useCanvasNodeRemovalHandlers.ts`
 - `useCanvasNodeDropHandlers.ts`
+- `useCanvasNodeDuplicateHandlers.ts`
 - `useCanvasEdgeChangeHandlers.ts`
 - `useCanvasEdgeAuthoringHandlers.ts`
 - `useCanvasSourceImportHandlers.ts`

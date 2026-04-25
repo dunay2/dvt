@@ -551,6 +551,10 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   [useCanvasInspectorCommands.ts](../../../apps/web/src/app/views/canvas/useCanvasInspectorCommands.ts),
   [CanvasInspectorPanel.tsx](../../../apps/web/src/app/views/canvas/CanvasInspectorPanel.tsx),
   [CanvasInspectorAuthoringSection.tsx](../../../apps/web/src/app/views/canvas/CanvasInspectorAuthoringSection.tsx),
+  [canvasDuplicateNodeCommand.ts](../../../apps/web/src/app/views/canvas/canvasDuplicateNodeCommand.ts),
+  [useCanvasNodeDuplicateHandlers.ts](../../../apps/web/src/app/views/canvas/useCanvasNodeDuplicateHandlers.ts),
+  [canvasConnectionAggregate.ts](../../../apps/web/src/app/views/canvas/canvasConnectionAggregate.ts),
+  [useCanvasEdgeAuthoringHandlers.ts](../../../apps/web/src/app/views/canvas/useCanvasEdgeAuthoringHandlers.ts),
   [canvasDraftSessionWorkingSet.ts](../../../apps/web/src/app/views/canvas/canvasDraftSessionWorkingSet.ts),
   [canvasAuthoringGraphProjection.ts](../../../apps/web/src/app/views/canvas/canvasAuthoringGraphProjection.ts),
   [useCanvasViewportGraphModel.ts](../../../apps/web/src/app/views/canvas/useCanvasViewportGraphModel.ts),
@@ -587,6 +591,10 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   [canvasInspectorAuthoringModel.test.ts](../../../apps/web/src/app/views/canvas/canvasInspectorAuthoringModel.test.ts),
   [canvasInspectorAuthoringComponent.architecture.test.ts](../../../apps/web/src/app/views/canvas/canvasInspectorAuthoringComponent.architecture.test.ts),
   [CanvasInspectorPanel.test.tsx](../../../apps/web/src/app/views/canvas/CanvasInspectorPanel.test.tsx),
+  [canvasDuplicateNodeCommand.test.ts](../../../apps/web/src/app/views/canvas/canvasDuplicateNodeCommand.test.ts),
+  [useCanvasGraphHandlers.nodeDuplicate.test.tsx](../../../apps/web/src/app/views/canvas/useCanvasGraphHandlers.nodeDuplicate.test.tsx),
+  [canvasConnectionAggregate.test.ts](../../../apps/web/src/app/views/canvas/canvasConnectionAggregate.test.ts),
+  [useCanvasGraphHandlers.edgeReconnect.test.tsx](../../../apps/web/src/app/views/canvas/useCanvasGraphHandlers.edgeReconnect.test.tsx),
   [canvasAuthoringGraphProjection.test.ts](../../../apps/web/src/app/views/canvas/canvasAuthoringGraphProjection.test.ts),
   [canvasDraftSession.test.ts](../../../apps/web/src/app/views/canvas/canvasDraftSession.test.ts),
   [useCanvasViewportGraphModel.test.tsx](../../../apps/web/src/app/views/canvas/useCanvasViewportGraphModel.test.tsx),
@@ -607,6 +615,8 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   [ed-20260423-tf-a2-c3-c4-api-web-adoption.md](../../evidence/ed-20260423-tf-a2-c3-c4-api-web-adoption.md)
   and
   [20260423 TF-A2-C5 selected-closure end-to-end proof closeout](../closeouts/20260423-tf-a2-c5-selected-closure-end-to-end-proof-closeout.md)
+  and
+  [20260425 TF-E2-B/C node and edge lifecycle closure closeout](../closeouts/20260425-tf-e2-b-c-node-edge-lifecycle-closure-closeout.md)
   and
   [20260425 TF-E2-D Inspector authoring closeout](../closeouts/20260425-tf-e2-d-inspector-authoring-closeout.md)
   and

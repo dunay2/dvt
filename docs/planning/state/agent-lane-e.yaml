@@ -1935,7 +1935,7 @@ tasks:
       across governed persisted draft schema versions.
     complexity: L
     effort_points: 8
-    progress_pct: 50
+    progress_pct: 80
     evidence_refs:
       - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-production-node-authoring-and-persistence-plan-20260416.md
       - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-canvas-target-architecture-execution-plan-20260417.md
@@ -1959,52 +1959,15 @@ tasks:
       - docs/planning/closeouts/20260420-tf-e2-canvas-typed-authoring-port-hard-cut-closeout.md
       - docs/runbooks/index.md
     status_reason: >-
-      The productization slice remains active, but the current worktree has materially advanced the
-      governed draft-persistence adoption path: Canvas now carries explicit draft session and scope
-      models, validated stale-save and `missing_remote` recovery hardening, and explicit import-edge
-      promotion instead of heuristic overwrite behavior. The latest hardening also treats CAS
-      `conflict` as a blocked recovery posture, coordinates reload through fresh draft plus graph
-      fetches under React Query ownership, and prevents stale local canon from truncating recovered
-      remote drafts. The Fowler-alignment follow-up now makes the draft aggregate authoritative over
-      remote members that the current workspace snapshot cannot project yet, exposes projection-gap
-      state explicitly, fail-closes edit, `Plan`, `Run`, and autosave until the projection is
-      complete or the operator adopts the current workspace snapshot. The canonical handoff is now
-      also in place at shell level: Canvas publishes a generic route-bootstrap contract, route
-      metadata declares which surface owns startup gating, route IDs are now the canonical startup
-      keys, non-Canvas top-level routes settle through an explicit static mount boundary, and
-      `Root.tsx` consumes that active-route contract instead of branching on `/canvas` or inheriting
-      implicit route readiness. The target architecture and its execution order are now also
-      canonicalized in the TF-E2 execution companion plan, which freezes the bounded contexts,
-      ports, aggregate roots, C4/component relationships, sequence/state-machine behavior, user
-      stories, roadmap, and executable backlog for the remaining closure work. `TF-A2` and `TF-C4`
-      still govern the shared boundary, while the remaining `TF-E2` work is now the broader node,
-      edge, Inspector, operability, and end-to-end proof matrix required before the parent task can
-      move to review. A follow-up SRP refactor now also split route-bootstrap ownership into
-      contract, registration, and registry modules plus one shared active-registration hook, without
-      changing startup behavior. The graph architecture docs are now split into one short entrypoint
-      plus dedicated detail docs for startup contract, runtime model, sequence/state, and decision
-      rationale and patterns, with explicit current-point and evolution posture. The current hard
-      cut also introduced `canvasGraphLifecycle.ts` as the single graph-lifecycle component for
-      remove-node, edge replacement, explicit-node admission, edge-change application, and
-      source-import queueing, deleted the dead alternate admission hook, and pushed `draftSession`
-      through the mutation seam so node and edge adapters no longer reconstruct aggregate state
-      through compatibility callbacks. After syncing with `origin/main` on 2026-04-20, the planning
-      baseline is now sharper: the execution-actions test split and lane backlog alignment are
-      already mainline baseline, and the current branch now lands the typed authoring-port hard cut.
-      `AppServices` exposes `workspaceGraphDraftAuthoringPort`, Canvas draft reads and saves route
-      through that typed seam, governed `DesignGraphDraft` payloads are built from scoped canonical
-      nodes plus preview-provenance Git context, and controller regression coverage now proves
-      conflict, missing-remote, reload, and layout-only no-save behavior on the new path. The route
-      now also renders explicit `read_only`, `forbidden`, and typed `format_error` postures from
-      boundary outcomes, while the controller and route adapters are split through dedicated
-      read-model, view-model, and presentation seams with architecture tests guarding those
-      boundaries. The 2026-04-22 hard-cut runtime-truth review now freezes the next no-legacy
-      decision as well: Canvas authoring must consume protected draft truth directly, with blocked
-      startup instead of mock or snapshot-backed fallback and without a compatibility shim keeping
-      legacy graph hydration alive in the active product path. The remaining TF-E2 work is
-      route-owned Inspector editing, execution handoff proof, closure of the still-lossy
-      protected-draft read projection, and the broader operability and end-to-end matrix.
-    last_verified: '2026-04-22'
+      The productization route remains active, but the core Canvas authoring path has materially
+      advanced. `TF-E2-A` is near closure on the shared protected authoring-draft boundary,
+      `TF-E2-D` closed the route-owned Inspector, `TF-E2-E` closed the selected-closure proof
+      matrix, `TF-E2-K` closed the typed host and first-canvas cycle, and `TF-E2-B/C` now close
+      duplicate-node and reconnect-edge semantics without inflating passive adapters or the draft
+      aggregate component. The remaining parent-task work is the residual operability and
+      longer-horizon compatibility proof around governed persisted draft versions before `TF-E2` can
+      move to review.
+    last_verified: '2026-04-25'
   - task_id: TF-E2-A
     parent_task: TF-E2
     priority: P0
@@ -2058,7 +2021,7 @@ tasks:
   - task_id: TF-E2-B
     parent_task: TF-E2
     priority: P0
-    status: in_progress
+    status: done
     objective: >-
       close node lifecycle persistence for create, delete, duplicate, move, and hard-reload
       rehydration under the canonical draft boundary.
@@ -2069,7 +2032,7 @@ tasks:
       visual-only success.
     complexity: S
     effort_points: 3
-    progress_pct: 65
+    progress_pct: 100
     evidence_refs:
       - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-node-and-edge-lifecycle-closure-plan-20260425.md
       - docs/planning/closeouts/20260418-tf-e2-canvas-interaction-command-seam-closeout.md
@@ -2077,25 +2040,30 @@ tasks:
       - docs/planning/closeouts/20260421-tf-e2-canvas-handler-component-semantics-closeout.md
       - docs/planning/closeouts/20260422-tf-e2-semantic-protected-draft-projection-cut-closeout.md
       - docs/planning/reviews/architecture-and-governance/20260421-canvas-handler-seams-fowler-review.md
+      - docs/planning/closeouts/20260425-tf-e2-b-c-node-edge-lifecycle-closure-closeout.md
       - docs/architecture/components/web/graph/canvas-controller-current-to-target-architecture.md
       - docs/architecture/components/web/graph/canvas-graph-lifecycle-component.md
       - docs/architecture/components/web/graph/canvas-handler-contracts-component.md
       - apps/web/src/app/views/canvas/canvasGraphLifecycle.ts
+      - apps/web/src/app/views/canvas/canvasDuplicateNodeCommand.ts
       - apps/web/src/app/views/canvas/canvasGraphHandlerContractBuilders.ts
       - apps/web/src/app/views/canvas/useCanvasNodeChangeHandlers.ts
+      - apps/web/src/app/views/canvas/useCanvasNodeDuplicateHandlers.ts
       - apps/web/src/app/views/canvas/canvasHandlerContracts.architecture.test.ts
       - apps/web/src/app/views/canvas/useCanvasNodeChangeHandlers.test.tsx
+      - apps/web/src/app/views/canvas/canvasDuplicateNodeCommand.test.ts
+      - apps/web/src/app/views/canvas/useCanvasGraphHandlers.nodeDuplicate.test.tsx
     status_reason: >-
-      Execution is active again on 2026-04-25. Audit shows move and reload proof already exist, but
-      duplicate node is still missing a governed command seam and user-triggerable surface. The
-      active design therefore keeps `canvasGraphLifecycle` scoped to aggregate mutation and adds an
-      adjacent duplicate-node command plus reload-proof coverage instead of inflating passive
-      adapters or the lifecycle component itself.
+      Closed. Duplicate-node semantics now route through a governed adjacent command seam rather
+      than inflating `canvasGraphLifecycle` or `DbtNodeComponent.tsx`. The route exposes a
+      user-triggerable duplicate affordance, the command generates identity and placement
+      deterministically without copying edges, and the existing move or reload proof lanes remain
+      green under the canonical draft boundary.
     last_verified: '2026-04-25'
   - task_id: TF-E2-C
     parent_task: TF-E2
     priority: P0
-    status: in_progress
+    status: done
     objective: >-
       close edge lifecycle persistence for create, delete, reconnect, and visibility under the same
       canonical draft model.
@@ -2105,7 +2073,7 @@ tasks:
       remain projections of canonical graph state rather than transient modal or viewport state.
     complexity: S
     effort_points: 3
-    progress_pct: 65
+    progress_pct: 100
     evidence_refs:
       - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-node-and-edge-lifecycle-closure-plan-20260425.md
       - docs/planning/closeouts/20260418-tf-e2-canvas-interaction-command-seam-closeout.md
@@ -2113,21 +2081,25 @@ tasks:
       - docs/planning/closeouts/20260421-tf-e2-canvas-handler-component-semantics-closeout.md
       - docs/planning/closeouts/20260422-tf-e2-semantic-protected-draft-projection-cut-closeout.md
       - docs/planning/reviews/architecture-and-governance/20260421-canvas-handler-seams-fowler-review.md
+      - docs/planning/closeouts/20260425-tf-e2-b-c-node-edge-lifecycle-closure-closeout.md
       - docs/architecture/components/web/graph/canvas-controller-current-to-target-architecture.md
       - docs/architecture/components/web/graph/canvas-graph-lifecycle-component.md
       - docs/architecture/components/web/graph/canvas-handler-contracts-component.md
       - apps/web/src/app/views/canvas/canvasGraphLifecycle.ts
+      - apps/web/src/app/views/canvas/canvasConnectionAggregate.ts
       - apps/web/src/app/views/canvas/canvasGraphHandlerContractBuilders.ts
       - apps/web/src/app/views/canvas/useCanvasEdgeChangeHandlers.ts
+      - apps/web/src/app/views/canvas/useCanvasEdgeAuthoringHandlers.ts
       - apps/web/src/app/views/canvas/canvasHandlerContracts.architecture.test.ts
       - apps/web/src/app/views/canvas/useCanvasGraphHandlers.ts
       - apps/web/src/app/views/canvas/useCanvasGraphHandlers.edgeAuthoring.test.tsx
+      - apps/web/src/app/views/canvas/canvasConnectionAggregate.test.ts
+      - apps/web/src/app/views/canvas/useCanvasGraphHandlers.edgeReconnect.test.tsx
     status_reason: >-
-      Execution is active again on 2026-04-25. Edge replacement and delete already route through the
-      namespaced lifecycle API, but reconnect is still absent from the React Flow surface. The
-      active design therefore introduces an adjacent reconnect command that reuses connection
-      validation over the current graph while preserving the lifecycle component as the working-set
-      mutation owner.
+      Closed. Edge reconnect now routes through an adjacent semantic command that reuses the
+      governed connection-validation aggregate while preserving existing edge identity. The React
+      Flow surface exposes reconnect only when graph edits are allowed, invalid reconnects fail
+      closed, and the working-set edge projection remains owned by `canvasGraphLifecycle`.
     last_verified: '2026-04-25'
   - task_id: TF-E2-D
     parent_task: TF-E2
