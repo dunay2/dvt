@@ -1,7 +1,5 @@
-import {
-  dbtCanvasGraphStrategy,
-  transformationCanvasGraphStrategy,
-} from './dbt/dbtNodeAdapter';
+import { dbtCanvasGraphStrategy } from './dbt/dbtNodeAdapter';
+import { transformationCanvasGraphStrategy } from './dvt/transformationGraphStrategy';
 import type { CanvasGraphStrategy } from './graphStrategyContracts';
 
 const DEFAULT_STRATEGY_ID = 'transformation';

@@ -14,7 +14,6 @@ import {
 
 import type { WorkspaceScope } from '../../ports/sessionContext';
 import type {
-  IWorkspacePort,
   WorkspaceGraphDraft,
   WorkspaceGraphDraftRecord,
 } from '../../ports/workspace';
@@ -205,7 +204,6 @@ function buildCanvasDraftAuthoringGraphSync(
 }
 
 export async function buildCanvasDraftAuthoringGraph(args: {
-  workspaceService: Pick<IWorkspacePort, 'getFileContent'>;
   payload: CanvasDraftAuthoringPayload;
 }): Promise<WorkspaceGraphAuthoringDraft> {
   return buildCanvasDraftAuthoringGraphSync(args.payload);

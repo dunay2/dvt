@@ -21,6 +21,10 @@ function buildCanonicalNode(id: string, role: CanonicalNode['role']): CanonicalN
 function buildStrategy(id: CanvasGraphStrategy['id'] = 'transformation'): CanvasGraphStrategy {
   return {
     id,
+    authoringPolicy: {
+      toolbarMode: id === 'transformation' ? 'transformation' : 'dbt',
+      enforceTransformationTopology: id === 'transformation',
+    },
     mapNodeToCanonical: () => null,
     mapEdgeToCanonical: () => null,
     parseDropPayload: () => null,

@@ -5,7 +5,6 @@ import type {
   WorkspaceGraphDraftAuthoringSaveResult,
 } from '../../ports/workspaceGraphDraftAuthoring';
 import type {
-  IWorkspacePort,
   WorkspaceGraphDraftRecord,
 } from '../../ports/workspace';
 import {
@@ -22,8 +21,6 @@ import {
   type CanvasDraftReadModel,
 } from './canvasDraftReadModel';
 import { toCanvasAuthoringMetadata } from './canvasAuthoringMetadata';
-
-type CanvasDraftWorkspacePort = Pick<IWorkspacePort, 'getFileContent'>;
 
 export type SaveCanvasDraftInput = {
   expectedRevision: string | null;
@@ -158,7 +155,6 @@ async function resolveCanvasDraftSaveResult(args: {
 }
 
 export function createCanvasDraftRepository(
-  workspacePort: CanvasDraftWorkspacePort,
   workspaceGraphDraftAuthoringPort: IWorkspaceGraphDraftAuthoringPort
 ): CanvasDraftRepository {
   async function readGraphDraftState(): Promise<CanvasDraftReadModel> {
@@ -185,7 +181,6 @@ export function createCanvasDraftRepository(
     readGraphDraft: readProjectedDraftRecord,
     saveGraphDraft: async (input) => {
       const authoringDraft = await buildCanvasDraftAuthoringGraph({
-        workspaceService: workspacePort,
         payload: input.draft,
       });
       const result = await workspaceGraphDraftAuthoringPort.saveGraphDraft({

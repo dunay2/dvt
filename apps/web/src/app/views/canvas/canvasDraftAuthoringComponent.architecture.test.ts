@@ -18,6 +18,10 @@ const NODE_DUPLICATE_COMMAND_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'canvasDuplicateNodeCommand.ts'
 );
+const DRAFT_REPOSITORY_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'canvasDraftRepository.ts'
+);
 const GRAPH_HANDLER_CONTRACTS_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'canvasGraphHandlerContracts.ts'
@@ -34,6 +38,10 @@ const DBT_NODE_ADAPTER_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   '../../plugins/dbt/dbtNodeAdapter.ts'
 );
+const DVT_TRANSFORMATION_STRATEGY_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  '../../plugins/dvt/transformationGraphStrategy.ts'
+);
 
 describe('canvas draft authoring component architecture', () => {
   it('keeps signature policy pure and duplicate view fallout outside React state updaters', () => {
@@ -46,8 +54,10 @@ describe('canvas draft authoring component architecture', () => {
       'serializeWorkspaceGraphDraftStructuralSignature'
     );
     expect(DRAFT_AUTHORING_SOURCE).not.toContain("from './canvasDraftSession'");
+    expect(DRAFT_AUTHORING_SOURCE).not.toContain('workspaceService:');
 
-    expect(DRAFT_SESSION_BASELINE_SOURCE).toContain(
+    expect(DRAFT_REPOSITORY_SOURCE).not.toContain('CanvasDraftWorkspacePort');
+    expect(DRAFT_SESSION_BASELINE_SOURCE).not.toContain(
       'serializeWorkspaceGraphDraftStructuralSignature'
     );
 
@@ -74,10 +84,24 @@ describe('canvas draft authoring component architecture', () => {
     expect(GRAPH_STRATEGY_REGISTRY_SOURCE).toContain(
       "from './graphStrategyContracts'"
     );
+    expect(GRAPH_STRATEGY_REGISTRY_SOURCE).toContain(
+      "from './dvt/transformationGraphStrategy'"
+    );
+    expect(GRAPH_STRATEGY_REGISTRY_SOURCE).not.toContain(
+      "transformationCanvasGraphStrategy,\n} from './dbt/dbtNodeAdapter'"
+    );
     expect(DBT_NODE_ADAPTER_SOURCE).toContain("from '../graphStrategyContracts'");
+    expect(DBT_NODE_ADAPTER_SOURCE).not.toContain('transformationCanvasGraphStrategy');
+    expect(DVT_TRANSFORMATION_STRATEGY_SOURCE).toContain(
+      'export const transformationCanvasGraphStrategy'
+    );
 
     expect(GRAPH_HANDLER_CONTRACTS_SOURCE).not.toContain('dbtNodeAdapter');
     expect(NODE_DUPLICATE_COMMAND_SOURCE).not.toContain('dbtNodeAdapter');
     expect(NODE_DROP_AGGREGATE_SOURCE).not.toContain('dbtNodeAdapter');
+    expect(NODE_DROP_AGGREGATE_SOURCE).not.toContain('graphStrategy.id ===');
+    expect(NODE_DROP_AGGREGATE_SOURCE).toContain(
+      'enforceTransformationTopology: graphStrategy.authoringPolicy.enforceTransformationTopology'
+    );
   });
 });

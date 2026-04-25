@@ -61,6 +61,8 @@ write surface lives one level up in the route-owned wrapper.
 | `serializeCanvasDraftAuthoringBaselineSignature` | remote-draft baseline signature policy used by bootstrap and reload    |
 | `toCanvasAuthoringMetadata`                      | JSON-compatible metadata DTO boundary for signatures and persistence   |
 | `CanvasGraphStrategy`                            | plugin-neutral graph strategy contract used by Canvas application code |
+| `CanvasGraphAuthoringPolicy`                     | explicit Canvas mode and topology policy carried by each strategy      |
+| `useLineageViewData`                             | Lineage read model over the DBT workspace snapshot                     |
 
 ## Invariants
 
@@ -83,6 +85,16 @@ write surface lives one level up in the route-owned wrapper.
   omitted before render-time signatures or persistence.
 - Canvas application code must depend on the plugin-neutral
   `CanvasGraphStrategy` contract, not on a DBT adapter module.
+- Canvas application code must read explicit `CanvasGraphAuthoringPolicy`
+  capabilities instead of branching on concrete strategy IDs.
+- The transformation graph strategy is owned by the DVT plugin contribution,
+  not by the DBT adapter.
+- Lineage currently reads the DBT workspace graph snapshot and must resolve the
+  DBT graph strategy explicitly. It must not inherit the Canvas authoring
+  default, because the default may be the DVT transformation canvas.
+- `CanvasDraftSession` keeps the remote record baseline only. Semantic saved
+  signatures live in bootstrap/reload/autosave refs, not in a stale aggregate
+  baseline field.
 - Cancel resets local form state only.
 - Reload or aggregate refresh resets the form to authoritative route truth.
 - Persisted-node overrides must work even when the node already exists in the
@@ -91,21 +103,23 @@ write surface lives one level up in the route-owned wrapper.
 
 ## File Responsibilities
 
-| File                                  | Owns                                                                | Must not own                           |
-| ------------------------------------- | ------------------------------------------------------------------- | -------------------------------------- |
-| `canvasInspectorAuthoring.types.ts`   | semantic DTO and route-owned authoring contract                     | React state or aggregate mutation      |
-| `canvasInspectorAuthoringModel.ts`    | draft projection, validation, dirty-state comparison, normalization | React hooks, services, or persistence  |
-| `canvasInspectorAuthoringCommand.ts`  | aggregate mutation from validated Inspector draft                   | UI state or passive panel composition  |
-| `useCanvasInspectorCommands.ts`       | route callback bridge into the aggregate                            | validation rules or persistence timing |
-| `CanvasInspectorAuthoringSection.tsx` | route-owned edit UI                                                 | plugin panels or transport ownership   |
-| `CanvasInspectorPanel.tsx`            | route-owned composition wrapper                                     | validation rules or aggregate policy   |
-| `components/InspectorPanel.tsx`       | passive details and plugin read-only panels                         | route mutation semantics               |
-| `canvasDraftAuthoring.ts`             | authoring payload projection and semantic signature policy          | aggregate state machine ownership      |
-| `canvasAuthoringMetadata.ts`          | deterministic JSON-compatible metadata DTO projection               | plugin-specific metadata semantics     |
-| `canvasDraftStructuralSignature.ts`   | fallback structural signature for draft baselines                   | semantic node or edge detail policy    |
-| `useCanvasDraftInitialBootstrap.ts`   | initial saved-signature assignment from shared baseline policy      | hook-local signature rules             |
-| `useCanvasDraftReloadHydration.ts`    | reload saved-signature assignment from shared baseline policy       | hook-local signature rules             |
-| `plugins/graphStrategyContracts.ts`   | plugin-neutral graph strategy contract                              | DBT mapping implementation             |
+| File                                         | Owns                                                                | Must not own                           |
+| -------------------------------------------- | ------------------------------------------------------------------- | -------------------------------------- |
+| `canvasInspectorAuthoring.types.ts`          | semantic DTO and route-owned authoring contract                     | React state or aggregate mutation      |
+| `canvasInspectorAuthoringModel.ts`           | draft projection, validation, dirty-state comparison, normalization | React hooks, services, or persistence  |
+| `canvasInspectorAuthoringCommand.ts`         | aggregate mutation from validated Inspector draft                   | UI state or passive panel composition  |
+| `useCanvasInspectorCommands.ts`              | route callback bridge into the aggregate                            | validation rules or persistence timing |
+| `CanvasInspectorAuthoringSection.tsx`        | route-owned edit UI                                                 | plugin panels or transport ownership   |
+| `CanvasInspectorPanel.tsx`                   | route-owned composition wrapper                                     | validation rules or aggregate policy   |
+| `components/InspectorPanel.tsx`              | passive details and plugin read-only panels                         | route mutation semantics               |
+| `canvasDraftAuthoring.ts`                    | authoring payload projection and semantic signature policy          | aggregate state machine ownership      |
+| `canvasAuthoringMetadata.ts`                 | deterministic JSON-compatible metadata DTO projection               | plugin-specific metadata semantics     |
+| `canvasDraftStructuralSignature.ts`          | fallback structural signature for draft baselines                   | semantic node or edge detail policy    |
+| `useCanvasDraftInitialBootstrap.ts`          | initial saved-signature assignment from shared baseline policy      | hook-local signature rules             |
+| `useCanvasDraftReloadHydration.ts`           | reload saved-signature assignment from shared baseline policy       | hook-local signature rules             |
+| `plugins/graphStrategyContracts.ts`          | plugin-neutral graph strategy contract                              | DBT mapping implementation             |
+| `plugins/dvt/transformationGraphStrategy.ts` | DVT-owned transformation graph strategy and authoring policy        | DBT adapter mapping                    |
+| `views/lineage/useLineageViewData.ts`        | DBT snapshot read model and explicit DBT strategy resolution        | Canvas authoring default ownership     |
 
 ## Topology
 
@@ -125,7 +139,10 @@ flowchart LR
   Signature --> Autosave["draft autosave scheduling"]
   Projection --> Viewport["useCanvasViewportGraphModel.ts"]
   StrategyContract["CanvasGraphStrategy contract"] --> Drop["drop / duplicate commands"]
+  StrategyPolicy["CanvasGraphAuthoringPolicy"] --> Drop
+  DvtStrategy["dvt/transformationGraphStrategy.ts"] --> StrategyContract
   DbtAdapter["dbtNodeAdapter.ts"] --> StrategyContract
+  Lineage["useLineageViewData.ts"] --> DbtAdapter
 
   Panel["CanvasInspectorPanel.tsx"] --> Section["CanvasInspectorAuthoringSection.tsx"]
   Panel --> Passive["InspectorPanel.tsx"]
@@ -183,6 +200,7 @@ sequenceDiagram
 - `useCanvasController.ts`
 - `useCanvasCurrentDraftPayload.ts`
 - `useCanvasViewportGraphModel.ts`
+- `LineageView.tsx`
 
 ## Fitness Functions
 
@@ -192,6 +210,8 @@ sequenceDiagram
 - [canvasDraftAuthoring.test.ts](../../../../../apps/web/src/app/views/canvas/canvasDraftAuthoring.test.ts)
 - [useCanvasController.activeDraftMutations.test.tsx](../../../../../apps/web/src/app/views/canvas/useCanvasController.activeDraftMutations.test.tsx)
 - [canvasDuplicateNodeCommand.test.ts](../../../../../apps/web/src/app/views/canvas/canvasDuplicateNodeCommand.test.ts)
+- [lineageGraphStrategyBoundary.architecture.test.ts](../../../../../apps/web/src/app/views/lineage/lineageGraphStrategyBoundary.architecture.test.ts)
+- [LineageView.test.tsx](../../../../../apps/web/src/app/views/LineageView.test.tsx)
 
 ## Drift To Watch
 
@@ -206,3 +226,9 @@ sequenceDiagram
 - reintroducing plugin metadata sanitization in ad hoc shallow clones
 - importing `CanvasGraphStrategy` from a concrete plugin adapter instead of the
   neutral plugin contract
+- deriving Canvas behavior from `graphStrategy.id` instead of explicit strategy
+  policy
+- letting DBT own the DVT transformation graph strategy
+- letting Lineage inherit the Canvas authoring default instead of explicitly
+  resolving the DBT snapshot strategy
+- adding a second saved-signature field back into `CanvasDraftSessionBaseline`

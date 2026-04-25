@@ -9,7 +9,6 @@ import { createCanvasDraftRepository } from './canvasDraftRepository';
 import {
   buildAuthoringPort,
   buildSaveInput,
-  buildWorkspacePort,
   WORKSPACE_SCOPE,
 } from './canvasDraftRepository.test.fixtures';
 
@@ -229,7 +228,7 @@ describe('canvasDraftRepository conflict handling', () => {
         async (): Promise<WorkspaceGraphDraftAuthoringReadResult> => buildRemoteReadResult()
       ) as IWorkspaceGraphDraftAuthoringPort['readGraphDraft'],
     });
-    const repository = createCanvasDraftRepository(buildWorkspacePort(), authoringPort);
+    const repository = createCanvasDraftRepository(authoringPort);
 
     await expect(repository.saveGraphDraft(buildSaveInput())).resolves.toEqual({
       outcome: 'conflict',
@@ -247,7 +246,7 @@ describe('canvasDraftRepository conflict handling', () => {
         async (): Promise<WorkspaceGraphDraftAuthoringReadResult> => ({ kind: 'not_found' })
       ) as IWorkspaceGraphDraftAuthoringPort['readGraphDraft'],
     });
-    const repository = createCanvasDraftRepository(buildWorkspacePort(), authoringPort);
+    const repository = createCanvasDraftRepository(authoringPort);
 
     await expect(repository.saveGraphDraft(buildSaveInput())).rejects.toThrow(
       CONFLICT_RELOAD_ERROR
@@ -263,7 +262,7 @@ describe('canvasDraftRepository conflict handling', () => {
         throw new Error('reload failed');
       }) as IWorkspaceGraphDraftAuthoringPort['readGraphDraft'],
     });
-    const repository = createCanvasDraftRepository(buildWorkspacePort(), authoringPort);
+    const repository = createCanvasDraftRepository(authoringPort);
 
     await expect(repository.saveGraphDraft(buildSaveInput())).rejects.toThrow(
       CONFLICT_RELOAD_ERROR

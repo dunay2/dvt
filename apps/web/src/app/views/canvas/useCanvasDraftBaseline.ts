@@ -8,14 +8,13 @@ import { createCanvasDraftQueryCache } from './canvasDraftQueryCache';
 import { createCanvasDraftRepository } from './canvasDraftRepository';
 
 export function useCanvasDraftBaseline({
-  workspaceService,
   workspaceGraphDraftAuthoringPort,
   workspaceLayoutKey,
 }: CanvasAuthoringRuntimeBaselineArgs) {
   const queryClient = useQueryClient();
   const draftRepository = useMemo(
-    () => createCanvasDraftRepository(workspaceService, workspaceGraphDraftAuthoringPort),
-    [workspaceGraphDraftAuthoringPort, workspaceService]
+    () => createCanvasDraftRepository(workspaceGraphDraftAuthoringPort),
+    [workspaceGraphDraftAuthoringPort]
   );
   const draftQueryCache = useMemo(
     () => createCanvasDraftQueryCache(queryClient, workspaceLayoutKey, draftRepository),
