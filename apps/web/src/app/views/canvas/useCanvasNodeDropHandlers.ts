@@ -9,7 +9,8 @@ import type {
   CanvasNodeDropContracts,
 } from './canvasGraphHandlerContracts';
 import { parseCanonicalNodeDragPayload } from './canvasNodeDropPayload';
-import { dropCanonicalNode } from './canvasNodeDropAggregate';
+import { admitCanonicalNodeToCanvas } from './canvasNodeDropAggregate';
+import { mapDroppedCanonicalNodeToCanvasNode } from './canvasNodeMapper';
 import { canvasViewCopy, formatCanvasNodeAddedMessage } from './copy';
 
 type UseCanvasNodeDropHandlersArgs = CanvasNodeDropContracts;
@@ -20,9 +21,11 @@ type UseCanvasNodeDropHandlersResult = {
 };
 
 export function useCanvasNodeDropHandlers({
+  state,
   effects,
   policy,
 }: UseCanvasNodeDropHandlersArgs): UseCanvasNodeDropHandlersResult {
+  const { draftSession } = state;
   const { setNodes, setDraftSession } = effects;
   const { graphStrategy, canEditEdges, columnLevelLineageEnabled } = policy;
 
@@ -50,28 +53,32 @@ export function useCanvasNodeDropHandlers({
       };
 
       setNodes((existingNodes) => {
-        const dropResult = dropCanonicalNode({
+        const admission = admitCanonicalNodeToCanvas({
           canonicalNode,
-          position,
-          nodes: existingNodes,
-          columnLevelLineageEnabled,
+          visibleNodeIds: draftSession.workingSet.visibleNodeIds,
         });
 
-        if (dropResult.outcome === 'noop') {
-          toast.info(dropResult.reason);
+        if (admission.outcome === 'noop') {
+          toast.info(admission.reason);
           return existingNodes;
         }
 
-        setDraftSession((currentSession) =>
-          canvasGraphLifecycle.node.admitExplicit(currentSession, canonicalNode)
+        const newNode = mapDroppedCanonicalNodeToCanvasNode(
+          admission.canonicalNode,
+          position,
+          columnLevelLineageEnabled
         );
-        toast.success(formatCanvasNodeAddedMessage(canonicalNode.name));
-        return dropResult.nextNodes;
+        setDraftSession((currentSession) =>
+          canvasGraphLifecycle.node.admitExplicit(currentSession, admission.canonicalNode)
+        );
+        toast.success(formatCanvasNodeAddedMessage(admission.canonicalNode.name));
+        return [...existingNodes, newNode];
       });
     },
     [
       canEditEdges,
       columnLevelLineageEnabled,
+      draftSession.workingSet.visibleNodeIds,
       graphStrategy,
       setDraftSession,
       setNodes,

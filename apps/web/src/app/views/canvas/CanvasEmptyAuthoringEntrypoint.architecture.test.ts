@@ -63,7 +63,8 @@ describe('Canvas empty authoring entrypoint architecture', () => {
     expect(CENTER_WORKBENCH_SOURCE).toContain('cycleState.nodeKinds');
     expect(CENTER_WORKBENCH_SOURCE).toContain('cycleState.onCreateAuthoringNode');
     expect(NODE_CREATION_HANDLER_SOURCE).toContain('buildAuthoringNodeCommand');
-    expect(NODE_CREATION_HANDLER_SOURCE).toContain('dropCanonicalNode');
+    expect(NODE_CREATION_HANDLER_SOURCE).toContain('admitCanonicalNodeToCanvas');
+    expect(NODE_CREATION_HANDLER_SOURCE).toContain('mapDroppedCanonicalNodeToCanvasNode');
     expect(NODE_CREATION_HANDLER_SOURCE).toContain('canvasGraphLifecycle.node.admitExplicit');
     expect(NODE_CREATION_HANDLER_SOURCE).not.toContain('WorkspaceGraphDraft');
     expect(NODE_CREATION_HANDLER_SOURCE).not.toContain('DesignGraphDraft');
@@ -73,7 +74,7 @@ describe('Canvas empty authoring entrypoint architecture', () => {
     expect(NODE_AUTHORING_HANDLER_SOURCE).toContain('useCanvasNodeDropHandlers');
     expect(NODE_AUTHORING_HANDLER_SOURCE).toContain('useCanvasAuthoringNodeCreationHandlers');
     expect(NODE_AUTHORING_HANDLER_SOURCE).toContain('useCanvasNodeRemovalHandlers');
-    expect(NODE_AUTHORING_HANDLER_SOURCE).not.toContain('dropCanonicalNode');
+    expect(NODE_AUTHORING_HANDLER_SOURCE).not.toContain('admitCanonicalNodeToCanvas');
     expect(NODE_AUTHORING_HANDLER_SOURCE).not.toContain('toast.');
   });
 });

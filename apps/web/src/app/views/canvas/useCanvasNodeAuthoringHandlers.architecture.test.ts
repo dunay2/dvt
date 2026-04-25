@@ -21,7 +21,7 @@ describe('useCanvasNodeAuthoringHandlers architecture', () => {
     expect(NODE_AUTHORING_HANDLERS_SOURCE).not.toContain('useCallback(');
     expect(NODE_AUTHORING_HANDLERS_SOURCE).not.toContain('toast.');
     expect(NODE_AUTHORING_HANDLERS_SOURCE).not.toContain('setTimeout(');
-    expect(NODE_AUTHORING_HANDLERS_SOURCE).not.toContain('dropCanonicalNode');
+    expect(NODE_AUTHORING_HANDLERS_SOURCE).not.toContain('admitCanonicalNodeToCanvas');
     expect(NODE_AUTHORING_HANDLERS_SOURCE).not.toContain('canvasInteractionCommands');
     expect(NODE_AUTHORING_HANDLERS_SOURCE).not.toContain('Pick<');
     expect(NODE_AUTHORING_HANDLERS_SOURCE).not.toContain('UseCanvasGraphHandlersParams');

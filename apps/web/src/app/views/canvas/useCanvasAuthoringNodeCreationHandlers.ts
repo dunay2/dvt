@@ -7,8 +7,9 @@ import type {
   CanvasAuthoringNodeCreationContracts,
   CreateCanvasAuthoringNode,
 } from './canvasGraphHandlerContracts';
-import { dropCanonicalNode } from './canvasNodeDropAggregate';
+import { admitCanonicalNodeToCanvas } from './canvasNodeDropAggregate';
 import { buildAuthoringNodeCommand } from './canvasAuthoringNodeCommand';
+import { mapDroppedCanonicalNodeToCanvasNode } from './canvasNodeMapper';
 import { canvasViewCopy, formatCanvasNodeAddedMessage } from './copy';
 
 type UseCanvasAuthoringNodeCreationHandlersArgs = CanvasAuthoringNodeCreationContracts;
@@ -18,9 +19,11 @@ type UseCanvasAuthoringNodeCreationHandlersResult = {
 };
 
 export function useCanvasAuthoringNodeCreationHandlers({
+  state,
   effects,
   policy,
 }: UseCanvasAuthoringNodeCreationHandlersArgs): UseCanvasAuthoringNodeCreationHandlersResult {
+  const { draftSession } = state;
   const { setDraftSession, setInspectorNode, setNodes, setSelectedNodes } = effects;
   const { canEditEdges, columnLevelLineageEnabled } = policy;
 
@@ -36,30 +39,34 @@ export function useCanvasAuthoringNodeCreationHandlers({
           registration,
           existingNodes
         );
-        const dropResult = dropCanonicalNode({
+        const admission = admitCanonicalNodeToCanvas({
           canonicalNode,
-          position,
-          nodes: existingNodes,
-          columnLevelLineageEnabled,
+          visibleNodeIds: draftSession.workingSet.visibleNodeIds,
         });
 
-        if (dropResult.outcome === 'noop') {
-          toast.info(dropResult.reason);
+        if (admission.outcome === 'noop') {
+          toast.info(admission.reason);
           return existingNodes;
         }
 
-        setDraftSession((currentSession) =>
-          canvasGraphLifecycle.node.admitExplicit(currentSession, canonicalNode)
+        const newNode = mapDroppedCanonicalNodeToCanvasNode(
+          admission.canonicalNode,
+          position,
+          columnLevelLineageEnabled
         );
-        setSelectedNodes([canonicalNode.id]);
-        setInspectorNode(canonicalNode.id);
-        toast.success(formatCanvasNodeAddedMessage(canonicalNode.name));
-        return dropResult.nextNodes;
+        setDraftSession((currentSession) =>
+          canvasGraphLifecycle.node.admitExplicit(currentSession, admission.canonicalNode)
+        );
+        setSelectedNodes([admission.canonicalNode.id]);
+        setInspectorNode(admission.canonicalNode.id);
+        toast.success(formatCanvasNodeAddedMessage(admission.canonicalNode.name));
+        return [...existingNodes, newNode];
       });
     },
     [
       canEditEdges,
       columnLevelLineageEnabled,
+      draftSession.workingSet.visibleNodeIds,
       setDraftSession,
       setInspectorNode,
       setNodes,

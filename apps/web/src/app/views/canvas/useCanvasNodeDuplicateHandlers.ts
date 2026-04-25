@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { canvasGraphLifecycle } from './canvasGraphLifecycle';
 import type { CanvasNodeDuplicateContracts } from './canvasGraphHandlerContracts';
 import { resolveCanvasNodeDuplicateTransaction } from './canvasDuplicateNodeCommand';
+import { mapDroppedCanonicalNodeToCanvasNode } from './canvasNodeMapper';
 import { canvasViewCopy, formatCanvasNodeAddedMessage } from './copy';
 
 type UseCanvasNodeDuplicateHandlersArgs = CanvasNodeDuplicateContracts;
@@ -19,7 +20,7 @@ export function useCanvasNodeDuplicateHandlers({
   effects,
   policy,
 }: UseCanvasNodeDuplicateHandlersArgs): UseCanvasNodeDuplicateHandlersResult {
-  const { canonicalNodesById, nodes } = state;
+  const { canonicalNodesById, draftSession, nodes } = state;
   const { setDraftSession, setInspectorNode, setNodes, setSelectedNodes } = effects;
   const { canEditEdges, columnLevelLineageEnabled } = policy;
   const latestNodesRef = useRef(nodes);
@@ -36,7 +37,7 @@ export function useCanvasNodeDuplicateHandlers({
         nodeId,
         sourceCanonicalNode: canonicalNodesById.get(nodeId) ?? null,
         existingNodes: latestNodesRef.current,
-        columnLevelLineageEnabled,
+        visibleNodeIds: draftSession.workingSet.visibleNodeIds,
       });
 
       switch (transaction.outcome) {
@@ -47,8 +48,15 @@ export function useCanvasNodeDuplicateHandlers({
           toast.info(transaction.reason);
           return;
         case 'added':
-          latestNodesRef.current = transaction.nextNodes;
-          setNodes(transaction.nextNodes);
+          latestNodesRef.current = [
+            ...latestNodesRef.current,
+            mapDroppedCanonicalNodeToCanvasNode(
+              transaction.canonicalNode,
+              transaction.position,
+              columnLevelLineageEnabled
+            ),
+          ];
+          setNodes(latestNodesRef.current);
           setDraftSession((currentSession) =>
             canvasGraphLifecycle.node.admitExplicit(currentSession, transaction.canonicalNode)
           );
@@ -61,6 +69,7 @@ export function useCanvasNodeDuplicateHandlers({
       canEditEdges,
       canonicalNodesById,
       columnLevelLineageEnabled,
+      draftSession.workingSet.visibleNodeIds,
       setDraftSession,
       setInspectorNode,
       setNodes,

@@ -80,6 +80,7 @@ export type CanvasNodeAuthoringContracts = {
 
 export type CanvasNodeDuplicateState = {
   canonicalNodesById: Map<string, CanonicalNode>;
+  draftSession: CanvasDraftSession;
   nodes: Node[];
 };
 
@@ -106,6 +107,10 @@ export type CanvasNodeDropEffects = {
   setDraftSession: CanvasDraftSessionSetter;
 };
 
+export type CanvasNodeDropState = {
+  draftSession: CanvasDraftSession;
+};
+
 export type CanvasNodeDropPolicy = {
   graphStrategy: CanvasGraphStrategy;
   canEditEdges: boolean;
@@ -113,8 +118,13 @@ export type CanvasNodeDropPolicy = {
 };
 
 export type CanvasNodeDropContracts = {
+  state: CanvasNodeDropState;
   effects: CanvasNodeDropEffects;
   policy: CanvasNodeDropPolicy;
+};
+
+export type CanvasAuthoringNodeCreationState = {
+  draftSession: CanvasDraftSession;
 };
 
 export type CanvasAuthoringNodeCreationEffects = {
@@ -130,6 +140,7 @@ export type CanvasAuthoringNodeCreationPolicy = {
 };
 
 export type CanvasAuthoringNodeCreationContracts = {
+  state: CanvasAuthoringNodeCreationState;
   effects: CanvasAuthoringNodeCreationEffects;
   policy: CanvasAuthoringNodeCreationPolicy;
 };

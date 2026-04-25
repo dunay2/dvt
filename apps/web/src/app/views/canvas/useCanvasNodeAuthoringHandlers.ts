@@ -29,11 +29,17 @@ export function useCanvasNodeAuthoringHandlers({
   policy,
 }: UseCanvasNodeAuthoringHandlersArgs): UseCanvasNodeAuthoringHandlersResult {
   const nodeDropContracts: CanvasNodeDropContracts = {
+    state: {
+      draftSession: state.draftSession,
+    },
     effects,
     policy,
   };
   const nodeDropHandlers = useCanvasNodeDropHandlers(nodeDropContracts);
   const nodeCreationContracts: CanvasAuthoringNodeCreationContracts = {
+    state: {
+      draftSession: state.draftSession,
+    },
     effects: {
       setNodes: effects.setNodes,
       setDraftSession: effects.setDraftSession,
@@ -50,6 +56,7 @@ export function useCanvasNodeAuthoringHandlers({
   const nodeDuplicateContracts: CanvasNodeDuplicateContracts = {
     state: {
       canonicalNodesById: state.canonicalNodesById,
+      draftSession: state.draftSession,
       nodes: state.nodes,
     },
     effects: {
