@@ -25,6 +25,7 @@ export type UseCanvasGraphHandlersResult = {
   handleDrop: React.DragEventHandler<HTMLDivElement>;
   handleDragOver: React.DragEventHandler<HTMLDivElement>;
   handleCreateAuthoringNode: CreateCanvasAuthoringNode;
+  handleDuplicateNode: (nodeId: string) => void;
   handleToggleNodeSelection: (nodeId: string, shouldSelect: boolean) => void;
   handleRemoveNode: (nodeId: string) => void;
 };

@@ -186,9 +186,10 @@ describe('useCanvasController core', () => {
     await harness.renderProbe();
 
     const latestBuildNodesCall = harness.mocks.buildNodesWithImpact.mock.calls.at(-1)?.[0] as
-      | { handlers?: { onRemoveNode?: unknown } }
+      | { handlers?: { onDuplicateNode?: unknown; onRemoveNode?: unknown } }
       | undefined;
 
+    expect(latestBuildNodesCall?.handlers?.onDuplicateNode).toBeUndefined();
     expect(latestBuildNodesCall?.handlers?.onRemoveNode).toBeUndefined();
     expect(harness.mocks.useCanvasGraphHandlers).toHaveBeenCalledWith(
       expect.objectContaining({
