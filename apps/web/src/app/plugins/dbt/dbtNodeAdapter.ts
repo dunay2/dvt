@@ -1,9 +1,11 @@
+/** Owned concern: project trusted DBT graph payloads into canonical Canvas graph primitives. */
 import type {
   CoreNodeRole,
   CanonicalEdge,
   CanonicalNode,
   PluginNodeKind,
 } from '../../types/canonical';
+import { isCanonicalNodeStatus, isRecord } from '../../types/canonicalGuards';
 import type { DbtEdge, DbtNode, DbtNodeType } from '../../types/dbt';
 import type { CanvasGraphStrategy } from '../graphStrategyContracts';
 
@@ -39,6 +41,25 @@ const EDGE_RELATION_BY_TYPE: Record<DbtEdge['type'], CanonicalEdge['relation']> 
   exposure: 'consumption',
   metric: 'metric',
 };
+
+const DBT_NODE_TYPES = new Set<string>(Object.keys(DBT_KIND_BY_TYPE));
+const DBT_EDGE_TYPES = new Set<string>(Object.keys(EDGE_RELATION_BY_TYPE));
+
+function hasStringArray(value: unknown): value is string[] {
+  return Array.isArray(value) && value.every((entry) => typeof entry === 'string');
+}
+
+function isDbtNodeType(value: unknown): value is DbtNodeType {
+  return typeof value === 'string' && DBT_NODE_TYPES.has(value);
+}
+
+function isDbtNodeStatus(value: unknown): value is DbtNode['status'] {
+  return isCanonicalNodeStatus(value);
+}
+
+function isDbtEdgeType(value: unknown): value is DbtEdge['type'] {
+  return typeof value === 'string' && DBT_EDGE_TYPES.has(value);
+}
 
 export function mapDbtTypeToPluginKind(type: DbtNodeType): PluginNodeKind {
   return DBT_KIND_BY_TYPE[type];
@@ -77,29 +98,32 @@ export function mapDbtEdgeToCanonical(edge: DbtEdge): CanonicalEdge {
 }
 
 function isDbtNode(value: unknown): value is DbtNode {
-  if (!value || typeof value !== 'object') {
+  if (!isRecord(value)) {
     return false;
   }
-  const candidate = value as Partial<DbtNode>;
+
   return (
-    typeof candidate.id === 'string' &&
-    typeof candidate.name === 'string' &&
-    typeof candidate.type === 'string' &&
-    Array.isArray(candidate.tags) &&
-    typeof candidate.package === 'string'
+    typeof value.id === 'string' &&
+    typeof value.name === 'string' &&
+    isDbtNodeType(value.type) &&
+    typeof value.package === 'string' &&
+    typeof value.path === 'string' &&
+    hasStringArray(value.tags) &&
+    isDbtNodeStatus(value.status) &&
+    hasStringArray(value.dependencies)
   );
 }
 
 function isDbtEdge(value: unknown): value is DbtEdge {
-  if (!value || typeof value !== 'object') {
+  if (!isRecord(value)) {
     return false;
   }
-  const candidate = value as Partial<DbtEdge>;
+
   return (
-    typeof candidate.id === 'string' &&
-    typeof candidate.source === 'string' &&
-    typeof candidate.target === 'string' &&
-    typeof candidate.type === 'string'
+    typeof value.id === 'string' &&
+    typeof value.source === 'string' &&
+    typeof value.target === 'string' &&
+    isDbtEdgeType(value.type)
   );
 }
 
