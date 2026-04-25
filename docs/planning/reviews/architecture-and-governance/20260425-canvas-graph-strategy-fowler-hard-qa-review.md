@@ -320,7 +320,7 @@ Target:
       update docs
 - [x] `TF-E2-M-A` Fail closed for unsupported persisted canvas kinds
 - [x] `TF-E2-M-B` Make node create/drop transactions pure
-- [ ] `TF-E2-M-C` Collapse canvas kind and graph strategy into one registry truth
+- [x] `TF-E2-M-C` Collapse canvas kind and graph strategy into one registry truth
 - [ ] `TF-E2-M-D` Add canvas execution strategy posture
 - [ ] `TF-E2-M-E` Extract neutral DVT graph UI vocabulary from DBT modules
 - [ ] `TF-E2-M-F` Derive canonical guards from canonical vocabularies

@@ -1,15 +1,37 @@
 import { describe, expect, it } from 'vitest';
-import { resolveCanvasGraphStrategy } from './graphStrategyRegistry';
+import {
+  findCanvasGraphStrategy,
+  getCanvasRuntimeRegistrations,
+  resolveCanvasGraphStrategy,
+} from './graphStrategyRegistry';
 
 describe('resolveCanvasGraphStrategy', () => {
+  it('lists canvas runtime registrations with matching canvas kind and graph strategy ids', () => {
+    expect(
+      getCanvasRuntimeRegistrations().map((registration) => ({
+        kind: registration.kind,
+        graphStrategyId: registration.graphStrategy.id,
+      }))
+    ).toEqual([
+      { kind: 'dbt', graphStrategyId: 'dbt' },
+      { kind: 'transformation', graphStrategyId: 'transformation' },
+    ]);
+  });
+
   it('defaults to transformation strategy when strategy id is missing', () => {
     const strategy = resolveCanvasGraphStrategy(undefined);
     expect(strategy.id).toBe('transformation');
   });
 
-  it('defaults to transformation strategy for empty or unknown values', () => {
+  it('defaults to transformation strategy for empty values only', () => {
     expect(resolveCanvasGraphStrategy('  ').id).toBe('transformation');
-    expect(resolveCanvasGraphStrategy('unknown').id).toBe('transformation');
+  });
+
+  it('fails closed for unknown explicit strategy ids', () => {
+    expect(findCanvasGraphStrategy('unknown')).toBeNull();
+    expect(() => resolveCanvasGraphStrategy('unknown')).toThrow(
+      'Unknown canvas graph strategy registration: unknown'
+    );
   });
 
   it('resolves dbt strategy when explicitly requested', () => {

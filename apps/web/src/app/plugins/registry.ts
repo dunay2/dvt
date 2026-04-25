@@ -23,7 +23,11 @@ import type {
   PluginDataPort,
   ViewContribution,
 } from './contracts/PluginManifest';
-import type { CanvasKindRegistration, NodeKindRegistration } from './nodeTypeContracts';
+import type {
+  CanvasKindRegistration,
+  CanvasRuntimeRegistration,
+  NodeKindRegistration,
+} from './nodeTypeContracts';
 
 // ---------------------------------------------------------------------------
 // PluginContributions — v1 public contract
@@ -47,7 +51,7 @@ export type PluginContributions = {
   nodeBadges?: NodeBadgeContribution[];
   nodeRenderers?: Map<PluginNodeKind, NodeRendererRegistration>;
   nodeKinds?: NodeKindRegistration[];
-  canvasKinds?: CanvasKindRegistration[];
+  canvasKinds?: CanvasRuntimeRegistration[];
   connectionRules?: PluginConnectionRule[];
   produces?: PluginDataPort[];
   consumes?: PluginDataPort[];
@@ -216,8 +220,22 @@ export function getAllNodeKinds(capabilities?: RuntimeCapabilities): NodeKindReg
   return getRuntimePlugins(capabilities).flatMap((p) => p.nodeKinds ?? []);
 }
 
-export function getAllCanvasKinds(capabilities?: RuntimeCapabilities): CanvasKindRegistration[] {
+export function getAllCanvasRuntimeRegistrations(
+  capabilities?: RuntimeCapabilities
+): CanvasRuntimeRegistration[] {
   return getRuntimePlugins(capabilities).flatMap((plugin) => plugin.canvasKinds ?? []);
+}
+
+export function getAllCanvasKinds(capabilities?: RuntimeCapabilities): CanvasKindRegistration[] {
+  return getAllCanvasRuntimeRegistrations(capabilities).map((registration) => ({
+    kind: registration.kind,
+    pluginId: registration.pluginId,
+    label: registration.label,
+    description: registration.description,
+    createTitle: registration.createTitle,
+    emptyState: registration.emptyState,
+    nodeKinds: registration.nodeKinds,
+  }));
 }
 
 export function getAllOverlays(capabilities?: RuntimeCapabilities): CanvasOverlayContribution[] {

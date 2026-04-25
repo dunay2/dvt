@@ -68,10 +68,13 @@ export function useCanvasController() {
     draftReadModel,
   } = authoringRuntime;
   const activeCanvasGraphStrategyResolution = useMemo(
-    () => resolveActiveCanvasGraphStrategy(draftReadModel),
-    [draftReadModel?.record?.draft.canvas.kind]
+    () => resolveActiveCanvasGraphStrategy(draftReadModel, capabilities),
+    [capabilities, draftReadModel?.record?.draft.canvas.kind]
   );
-  const graphStrategy = selectActiveCanvasGraphStrategy(activeCanvasGraphStrategyResolution);
+  const graphStrategy = selectActiveCanvasGraphStrategy(
+    activeCanvasGraphStrategyResolution,
+    capabilities
+  );
   const isActiveCanvasKindSupported = isActiveCanvasGraphStrategySupported(
     activeCanvasGraphStrategyResolution
   );

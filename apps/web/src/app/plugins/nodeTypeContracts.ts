@@ -1,4 +1,5 @@
 import type { CoreNodeRole, PluginNodeKind } from '../types/canonical';
+import type { CanvasGraphStrategy } from './graphStrategyContracts';
 
 import type { LucideIcon } from 'lucide-react';
 
@@ -29,6 +30,10 @@ export type CanvasKindRegistration = {
     firstNodeHelper: string;
   };
   nodeKinds: readonly NodeKindRegistration[];
+};
+
+export type CanvasRuntimeRegistration = CanvasKindRegistration & {
+  graphStrategy: CanvasGraphStrategy;
 };
 
 export type CanvasGraphAuthoringMode = CanvasKindRegistration['kind'];

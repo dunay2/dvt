@@ -21,6 +21,7 @@ const state = vi.hoisted(() => ({})) as CanvasHarnessState;
 const mocks = vi.hoisted(() => ({
   useQuery: vi.fn(),
   useQueryClient: vi.fn(),
+  findCanvasGraphStrategy: vi.fn(),
   resolveCanvasGraphStrategy: vi.fn(),
   useCanvasInteractionStore: vi.fn(),
   useExecutionStore: vi.fn(),
@@ -80,6 +81,7 @@ vi.mock('@xyflow/react', async () => {
 });
 vi.mock('../../components/canvas/DbtNodeComponent', () => ({ default: () => null }));
 vi.mock('../../plugins/graphStrategyRegistry', () => ({
+  findCanvasGraphStrategy: mocks.findCanvasGraphStrategy,
   resolveCanvasGraphStrategy: mocks.resolveCanvasGraphStrategy,
 }));
 vi.mock('../../stores/canvasInteractionStore', () => ({

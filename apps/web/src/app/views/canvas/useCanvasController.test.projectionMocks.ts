@@ -42,6 +42,15 @@ export function configureCanvasHarnessHookAndProjectionMocks(
   mocks.resolveCanvasGraphStrategy.mockImplementation((strategyId?: unknown) =>
     strategyId === 'dbt' ? dbtGraphStrategy : transformationGraphStrategy
   );
+  mocks.findCanvasGraphStrategy.mockImplementation((strategyId?: unknown) => {
+    if (strategyId === 'dbt') {
+      return dbtGraphStrategy;
+    }
+    if (strategyId === 'transformation') {
+      return transformationGraphStrategy;
+    }
+    return null;
+  });
   mocks.buildOverlayContext.mockReturnValue({ overlay: 'ctx' });
   mocks.buildNodeDecorations.mockImplementation(() => state.overlayDecorations);
   mocks.mapCanonicalNodeToCanvasNode.mockImplementation(

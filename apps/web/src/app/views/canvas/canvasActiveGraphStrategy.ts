@@ -1,7 +1,11 @@
 /** Owned concern: resolve the active Canvas graph strategy from the current draft document. */
-import { resolveCanvasGraphStrategy } from '../../plugins/graphStrategyRegistry';
+import {
+  findCanvasGraphStrategy,
+  resolveCanvasGraphStrategy,
+} from '../../plugins/graphStrategyRegistry';
 import type { CanvasGraphStrategy } from '../../plugins/graphStrategyContracts';
 import type { CanvasGraphAuthoringMode } from '../../plugins/nodeTypeContracts';
+import type { RuntimeCapabilities } from '../../plugins/registry';
 import type { CanvasDraftReadModel } from './canvasDraftReadModel';
 
 const DEFAULT_CANVAS_AUTHORING_MODE: CanvasGraphAuthoringMode = 'transformation';
@@ -38,18 +42,19 @@ function resolveDraftCanvasKind(
 }
 
 export function resolveActiveCanvasGraphStrategy(
-  draftReadModel: CanvasDraftReadModel | undefined
+  draftReadModel: CanvasDraftReadModel | undefined,
+  capabilities?: RuntimeCapabilities
 ): ActiveCanvasGraphStrategyResolution {
   const canvasKind = resolveDraftCanvasKind(draftReadModel);
   if (canvasKind == null) {
     return {
       kind: 'missing_document',
-      strategy: resolveCanvasGraphStrategy(),
+      strategy: resolveCanvasGraphStrategy(undefined, capabilities),
     };
   }
 
-  const strategy = resolveCanvasGraphStrategy(canvasKind);
-  if (strategy.id !== canvasKind) {
+  const strategy = findCanvasGraphStrategy(canvasKind, capabilities);
+  if (strategy == null) {
     return {
       kind: 'unsupported_kind',
       canvasKind,
@@ -64,10 +69,11 @@ export function resolveActiveCanvasGraphStrategy(
 }
 
 export function selectActiveCanvasGraphStrategy(
-  resolution: ActiveCanvasGraphStrategyResolution
+  resolution: ActiveCanvasGraphStrategyResolution,
+  capabilities?: RuntimeCapabilities
 ): CanvasGraphStrategy {
   return resolution.kind === 'unsupported_kind'
-    ? resolveCanvasGraphStrategy()
+    ? resolveCanvasGraphStrategy(undefined, capabilities)
     : resolution.strategy;
 }
 

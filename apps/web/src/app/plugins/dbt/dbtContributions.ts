@@ -9,6 +9,7 @@ import { CANVAS_ROUTE_BOOTSTRAP_HANDLE } from '../../views/canvas/canvasDraftPre
 import type { PluginContributions } from '../registry';
 import { DBT_NODE_KINDS } from '../nodeTypeCatalog.dbt';
 import { DbtNodeRenderer, dbtInspectorPanels, mapRunToCanonical } from './DbtNodeRenderer';
+import { dbtCanvasGraphStrategy } from './dbtNodeAdapter';
 
 /**
  * Static v1 contribution manifest for the built-in dbt plugin.
@@ -132,6 +133,7 @@ export const dbtContributions: PluginContributions = {
     {
       kind: 'dbt',
       pluginId: DBT_PLUGIN_ID,
+      graphStrategy: dbtCanvasGraphStrategy,
       label: 'dbt',
       description: 'Model-first canvas for dbt resources and dependencies.',
       createTitle: 'dbt canvas',

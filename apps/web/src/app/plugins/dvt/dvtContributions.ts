@@ -1,6 +1,7 @@
 import type { PluginContributions } from '../registry';
 import { DbtNodeRenderer } from '../dbt/DbtNodeRenderer';
 import { DVT_AUTHORING_NODE_KINDS } from '../nodeTypeCatalog.dbt';
+import { transformationCanvasGraphStrategy } from './transformationGraphStrategy';
 
 const DVT_PLUGIN_ID = 'dvt';
 
@@ -25,6 +26,7 @@ export const dvtContributions: PluginContributions = {
     {
       kind: 'transformation',
       pluginId: DVT_PLUGIN_ID,
+      graphStrategy: transformationCanvasGraphStrategy,
       label: 'Transformation',
       description: 'Flow-based transformation canvas for the protected authoring draft.',
       createTitle: 'Transformation canvas',
