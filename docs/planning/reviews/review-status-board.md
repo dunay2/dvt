@@ -71,6 +71,13 @@ Additional active rationale:
   - status: `reference`
   - progress: `n/a`
 
+- [20260425 Canvas graph strategy Fowler hard QA review](./architecture-and-governance/20260425-canvas-graph-strategy-fowler-hard-qa-review.md)
+  - domain: `architecture-and-governance`
+  - role: current hard QA intake for Canvas graph-strategy ownership, active canvas-kind strategy resolution, DBT fail-closed adapter validation, canonical admission versus viewport projection, and semantic architecture fitness functions
+  - linkage: `TF-E2`, `TF-E2-L`
+  - status: `queued`
+  - progress: `0%`
+
 - [20260421 Canvas handler seams Fowler review](./architecture-and-governance/20260421-canvas-handler-seams-fowler-review.md)
   - domain: `architecture-and-governance`
   - role: current focused review for the Canvas handler-contract component, Fowler-style seam ownership, residual adapter drift, and the semantic fitness-function follow-up on the graph route
