@@ -22,6 +22,10 @@ const NODE_CREATION_HANDLER_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'useCanvasAuthoringNodeCreationHandlers.ts'
 );
+const NODE_ADMISSION_COMMAND_RUNNER_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'useCanvasNodeAdmissionCommandRunner.ts'
+);
 const NODE_AUTHORING_HANDLER_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'useCanvasNodeAuthoringHandlers.ts'
@@ -92,6 +96,7 @@ describe('Canvas empty authoring entrypoint architecture', () => {
     for (const source of [
       NODE_COMMAND_SOURCE,
       NODE_CREATION_HANDLER_SOURCE,
+      NODE_ADMISSION_COMMAND_RUNNER_SOURCE,
       NODE_AUTHORING_HANDLER_SOURCE,
       CENTER_WORKBENCH_SOURCE,
     ]) {
@@ -199,9 +204,16 @@ describe('Canvas empty authoring entrypoint architecture', () => {
 
   it('keeps narrow source tripwires for handler ownership boundaries', () => {
     expect(CENTER_WORKBENCH_SOURCE).toContain('deriveCanvasHostCycleState');
-    expect(NODE_CREATION_HANDLER_SOURCE).toContain('resolveCanvasNodeAdmissionTransaction');
+    expect(NODE_CREATION_HANDLER_SOURCE).toContain('useCanvasNodeAdmissionCommandRunner');
+    expect(NODE_CREATION_HANDLER_SOURCE).not.toContain(
+      'resolveCanvasNodeAdmissionTransaction'
+    );
     expect(NODE_CREATION_HANDLER_SOURCE).not.toContain('WorkspaceGraphDraft');
     expect(NODE_CREATION_HANDLER_SOURCE).not.toContain('DesignGraphDraft');
+    expect(NODE_ADMISSION_COMMAND_RUNNER_SOURCE).toContain(
+      'resolveCanvasNodeAdmissionTransaction'
+    );
+    expect(NODE_ADMISSION_COMMAND_RUNNER_SOURCE).toContain('latestDraftSessionRef');
     expect(NODE_AUTHORING_HANDLER_SOURCE).toContain('useCanvasNodeDropHandlers');
     expect(NODE_AUTHORING_HANDLER_SOURCE).toContain('useCanvasAuthoringNodeCreationHandlers');
     expect(NODE_AUTHORING_HANDLER_SOURCE).toContain('useCanvasNodeRemovalHandlers');

@@ -14,6 +14,10 @@ const AUTHORING_NODE_CREATION_HANDLERS_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'useCanvasAuthoringNodeCreationHandlers.ts'
 );
+const NODE_ADMISSION_COMMAND_RUNNER_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'useCanvasNodeAdmissionCommandRunner.ts'
+);
 
 describe('useCanvasNodeAuthoringHandlers architecture', () => {
   it('stays as a composition seam over node creation, duplicate, drop, and removal handlers', () => {
@@ -41,9 +45,23 @@ describe('useCanvasNodeAuthoringHandlers architecture', () => {
       NODE_DROP_HANDLERS_SOURCE,
       AUTHORING_NODE_CREATION_HANDLERS_SOURCE,
     ]) {
-      expect(source).toContain('resolveCanvasNodeAdmissionTransaction');
+      expect(source).toContain('useCanvasNodeAdmissionCommandRunner');
+      expect(source).not.toContain('resolveCanvasNodeAdmissionTransaction');
       expect(source).not.toContain('setNodes((');
       expect(source).not.toContain('setDraftSession((');
     }
+
+    expect(NODE_ADMISSION_COMMAND_RUNNER_SOURCE).toContain(
+      'resolveCanvasNodeAdmissionTransaction'
+    );
+    expect(NODE_ADMISSION_COMMAND_RUNNER_SOURCE).toContain('latestNodesRef');
+    expect(NODE_ADMISSION_COMMAND_RUNNER_SOURCE).toContain('latestDraftSessionRef');
+    expect(NODE_ADMISSION_COMMAND_RUNNER_SOURCE).toContain(
+      'latestNodesRef.current = transaction.nodes'
+    );
+    expect(NODE_ADMISSION_COMMAND_RUNNER_SOURCE).toContain(
+      'latestDraftSessionRef.current = transaction.draftSession'
+    );
+    expect(NODE_ADMISSION_COMMAND_RUNNER_SOURCE).not.toContain('toast.');
   });
 });

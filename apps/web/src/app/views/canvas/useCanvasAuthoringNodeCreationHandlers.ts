@@ -7,8 +7,8 @@ import type {
   CreateCanvasAuthoringNode,
 } from './canvasGraphHandlerContracts';
 import { buildAuthoringNodeCommand } from './canvasAuthoringNodeCommand';
-import { resolveCanvasNodeAdmissionTransaction } from './canvasNodeAdmissionTransaction';
 import { canvasViewCopy, formatCanvasNodeAddedMessage } from './copy';
+import { useCanvasNodeAdmissionCommandRunner } from './useCanvasNodeAdmissionCommandRunner';
 
 type UseCanvasAuthoringNodeCreationHandlersArgs = CanvasAuthoringNodeCreationContracts;
 
@@ -26,6 +26,19 @@ export function useCanvasAuthoringNodeCreationHandlers({
   const { canEditEdges, columnLevelLineageEnabled } = policy;
   const latestNodesRef = useRef(nodes);
   latestNodesRef.current = nodes;
+  const runAdmissionCommand = useCanvasNodeAdmissionCommandRunner({
+    state: {
+      draftSession,
+      nodes,
+    },
+    effects: {
+      setNodes,
+      setDraftSession,
+    },
+    policy: {
+      columnLevelLineageEnabled,
+    },
+  });
 
   const handleCreateAuthoringNode = useCallback<CreateCanvasAuthoringNode>(
     (registration) => {
@@ -38,36 +51,23 @@ export function useCanvasAuthoringNodeCreationHandlers({
         registration,
         latestNodesRef.current
       );
-      const transaction = resolveCanvasNodeAdmissionTransaction({
+      const transaction = runAdmissionCommand({
         canonicalNode,
-        draftSession,
-        existingNodes: latestNodesRef.current,
         position,
-        columnLevelLineageEnabled,
+        onNoop: (reason) => {
+          toast.info(reason);
+        },
+        onAdded: (addedNode) => {
+          setSelectedNodes([addedNode.id]);
+          setInspectorNode(addedNode.id);
+          toast.success(formatCanvasNodeAddedMessage(addedNode.name));
+        },
       });
-
-      switch (transaction.outcome) {
-        case 'noop':
-          toast.info(transaction.reason);
-          return;
-        case 'added':
-          latestNodesRef.current = transaction.nodes;
-          setNodes(transaction.nodes);
-          setDraftSession(transaction.draftSession);
-          setSelectedNodes([transaction.canonicalNode.id]);
-          setInspectorNode(transaction.canonicalNode.id);
-          toast.success(formatCanvasNodeAddedMessage(transaction.canonicalNode.name));
+      if (transaction.outcome === 'added') {
+        latestNodesRef.current = transaction.nodes;
       }
     },
-    [
-      canEditEdges,
-      columnLevelLineageEnabled,
-      draftSession,
-      setDraftSession,
-      setInspectorNode,
-      setNodes,
-      setSelectedNodes,
-    ]
+    [canEditEdges, runAdmissionCommand, setInspectorNode, setSelectedNodes]
   );
 
   return { handleCreateAuthoringNode };

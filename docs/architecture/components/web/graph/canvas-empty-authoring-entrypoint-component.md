@@ -59,6 +59,8 @@ back into one route-global fallback once the canvas kind is known.
 - Read-only empty posture keeps typed copy visible but removes mutating node
   choices and commands.
 - Node creation must pass through the existing draft graph lifecycle.
+- Consecutive node creation or drop commands in the same event turn must
+  preserve every admitted node in both viewport state and the draft session.
 - The first-node path must not fabricate startup nodes or local-only success.
 - React Flow nodes are projection state; they are not semantic authority.
 - `Import sources` remains a separate capability-gated command.
@@ -96,7 +98,8 @@ flowchart LR
   Copy --> Catalog
   Catalog --> Command["handleCreateAuthoringNode"]
   Command --> Builder["canvasAuthoringNodeCommand"]
-  Builder --> Transaction["resolveCanvasNodeAdmissionTransaction"]
+  Builder --> Runner["useCanvasNodeAdmissionCommandRunner"]
+  Runner --> Transaction["resolveCanvasNodeAdmissionTransaction"]
   Transaction --> Admission["admitCanonicalNodeToCanvas"]
   Transaction --> Lifecycle["canvasGraphLifecycle.node.admitExplicit"]
   Transaction --> Projection["mapDroppedCanonicalNodeToCanvasNode"]
@@ -112,6 +115,7 @@ sequenceDiagram
   participant Runtime as CanvasRuntimeRegistration
   participant Empty as Empty entrypoint
   participant Handler as Node creation handler
+  participant Runner as Node admission command runner
   participant Tx as Node admission transaction
   participant Draft as Draft lifecycle
   participant View as Viewport projection
@@ -119,10 +123,12 @@ sequenceDiagram
   Route->>Runtime: active canvasDocument.kind
   Runtime-->>Empty: emptyState and nodeKinds
   Empty->>Handler: create NodeKindRegistration
-  Handler->>Tx: canonical node + draft snapshot + viewport position
+  Handler->>Runner: canonical node + viewport position
+  Runner->>Tx: latest nodes + latest draft session
   Tx->>Draft: compute next semantic draft session
   Tx->>View: compute next React Flow node projection
-  Handler-->>Route: apply draft, viewport, selection, and inspector effects once
+  Runner-->>Route: apply draft and viewport effects once
+  Handler-->>Route: apply selection, inspector, and notification effects once
 ```
 
 ## Consumers
@@ -139,8 +145,11 @@ sequenceDiagram
 
 This is an application-service entrypoint over an aggregate mutation. The UI
 selects a governed node kind and invokes a command. The command builds a
-canonical authoring node and delegates to the same aggregate lifecycle used by
-drop operations.
+canonical authoring node, then delegates admission to a local command runner.
+The runner calls the pure transaction over its latest local nodes and draft
+session snapshot before applying React effects once. This keeps the same
+aggregate lifecycle used by drop operations while avoiding stale-handler drift
+between rapid commands.
 
 Mature graph systems such as NiFi, Dagster, and dbt editors do not require a
 whole project or a compile-valid graph before the first node can exist. They
@@ -156,6 +165,8 @@ canvas document identity rather than a route-global transformation default.
 - Do not flatten typed editable empty-state copy back into one route-global
   fallback once `canvasDocument.kind` is known.
 - Do not bypass `admitCanonicalNodeToCanvas` or `canvasGraphLifecycle`.
+- Do not bypass `useCanvasNodeAdmissionCommandRunner` when a handler needs to
+  mutate both viewport nodes and the draft session.
 - Do not move viewport projection back into the canonical admission aggregate.
 - Do not make `CanvasCenterSurface.tsx` own transport, workbench, and empty
   authoring decisions in one large method again.

@@ -65,6 +65,9 @@ TF-E2-M implementation status:
 - architecture tests now include semantic fitness functions for runtime
   registration, unsupported-kind blocking, pure command transactions, and typed
   empty authoring.
+- node create/drop handlers now delegate semantic mutation and viewport updates
+  to `useCanvasNodeAdmissionCommandRunner`, which serializes consecutive local
+  commands over the latest nodes and draft session before React rerender.
 
 The findings below are retained as QA history and linked to their closing
 remediation tasks.
@@ -109,7 +112,7 @@ remediation tasks.
   `disabled_plugin`. Only `missing_document` may choose the initial default.
 
 - Title: node admission still performs side effects inside React state updaters.
-  Status: Closed by `TF-E2-M-B`.
+  Status: Closed by `TF-E2-M-B` and hardened by the local command-runner fix.
   Why it matters: `setNodes((existingNodes) => ...)` should be a pure state
   transition. The current drop and first-node creation handlers call
   `setDraftSession` and `toast` inside the updater. React may replay updater
@@ -125,6 +128,23 @@ remediation tasks.
   `nextNodes`, `nextDraftSession`, selection, inspector target, and notification
   from an immutable input snapshot, then apply effects once outside updater
   callbacks.
+
+- Title: rapid node create/drop commands could reuse a stale draft snapshot.
+  Status: Closed by the local command-runner fix.
+  Why it matters: removing side effects from state updaters was necessary but
+  not sufficient. A handler can still be called twice before React rerenders,
+  so both calls can close over the same original `nodes` and `draftSession`
+  inputs. Mature React command handlers keep a local command snapshot when a
+  single user gesture can emit multiple domain mutations in one event turn.
+  Evidence: consecutive create/drop tests in
+  `apps/web/src/app/views/canvas/useCanvasGraphHandlers.nodeDrop.test.tsx`
+  failed with the second node overwriting the first draft-session membership.
+  Risk: two quick admissions could leave React Flow showing both nodes while
+  the draft session and local catalog only remember the last one.
+  Recommendation: centralize node admission effects in
+  `useCanvasNodeAdmissionCommandRunner`, advance its local `nodes` and
+  `draftSession` references after every accepted command, and keep handlers as
+  interaction adapters.
 
 ### Medium
 
@@ -233,7 +253,8 @@ remediation tasks.
   registration per canvas kind, binding product kind, graph strategy, execution
   posture, and authoring catalog.
 - CQRS: improved. Active document kind drives read posture, while create/drop
-  authoring is expressed as pure command transaction output.
+  authoring is expressed as pure command transaction output applied through a
+  local command runner.
 - Complexity: reduced for new canvas kinds because runtime posture is declared
   once and architecture tests fail when the declaration drifts.
 - Modularity: improved; remaining future work is additive plugin capability
@@ -248,7 +269,8 @@ remediation tasks.
   capability case once backend plugin availability becomes part of the active
   route contract.
 - Regression status: current branch coverage closes the multi-canvas runtime and
-  React-state purity gaps identified in this QA route.
+  React-state purity gaps identified in this QA route, including rapid
+  consecutive node admission before rerender.
 - Determinism: no nondeterministic behavior observed in the QA scope.
 - Local suite vs meaningful global confidence: local suite is useful but not
   sufficient for unsupported-kind and execution-posture invariants.
@@ -284,6 +306,8 @@ remediation tasks.
 - TF-E2-M execution evidence:
   - `pnpm --filter @dvt/web test -- canvasDraftAuthoringComponent.architecture.test.ts CanvasEmptyAuthoringEntrypoint.architecture.test.ts`
     passed after semantic fitness conversion.
+  - `pnpm --filter @dvt/web test -- useCanvasGraphHandlers.nodeDrop.test.tsx useCanvasNodeAuthoringHandlers.architecture.test.ts CanvasEmptyAuthoringEntrypoint.architecture.test.ts canvasDraftAuthoringComponent.architecture.test.ts`
+    passed after the command-runner hardening.
 
 ## Unblock Roadmap
 

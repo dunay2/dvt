@@ -1,13 +1,13 @@
 /** Owned concern: admit explicit dropped nodes into the draft graph through the node lifecycle API. */
 
-import { useCallback, useRef } from 'react';
+import { useCallback } from 'react';
 import { toast } from 'sonner';
 
 import { CANONICAL_NODE_DRAG_MIME_TYPE } from '../../types/canonical';
 import type { CanvasNodeDropContracts } from './canvasGraphHandlerContracts';
-import { resolveCanvasNodeAdmissionTransaction } from './canvasNodeAdmissionTransaction';
 import { canvasViewCopy, formatCanvasNodeAddedMessage } from './copy';
 import { parseCanonicalNodeDragPayload } from './canvasNodeDropPayload';
+import { useCanvasNodeAdmissionCommandRunner } from './useCanvasNodeAdmissionCommandRunner';
 
 type UseCanvasNodeDropHandlersArgs = CanvasNodeDropContracts;
 
@@ -24,8 +24,19 @@ export function useCanvasNodeDropHandlers({
   const { draftSession, nodes } = state;
   const { setNodes, setDraftSession } = effects;
   const { graphStrategy, canEditEdges, columnLevelLineageEnabled } = policy;
-  const latestNodesRef = useRef(nodes);
-  latestNodesRef.current = nodes;
+  const runAdmissionCommand = useCanvasNodeAdmissionCommandRunner({
+    state: {
+      draftSession,
+      nodes,
+    },
+    effects: {
+      setNodes,
+      setDraftSession,
+    },
+    policy: {
+      columnLevelLineageEnabled,
+    },
+  });
 
   const handleDrop = useCallback<React.DragEventHandler<HTMLDivElement>>(
     (event) => {
@@ -50,33 +61,18 @@ export function useCanvasNodeDropHandlers({
         y: event.clientY - reactFlowBounds.top - 40,
       };
 
-      const transaction = resolveCanvasNodeAdmissionTransaction({
+      runAdmissionCommand({
         canonicalNode,
-        draftSession,
-        existingNodes: latestNodesRef.current,
         position,
-        columnLevelLineageEnabled,
+        onNoop: (reason) => {
+          toast.info(reason);
+        },
+        onAdded: (addedNode) => {
+          toast.success(formatCanvasNodeAddedMessage(addedNode.name));
+        },
       });
-
-      switch (transaction.outcome) {
-        case 'noop':
-          toast.info(transaction.reason);
-          return;
-        case 'added':
-          latestNodesRef.current = transaction.nodes;
-          setNodes(transaction.nodes);
-          setDraftSession(transaction.draftSession);
-          toast.success(formatCanvasNodeAddedMessage(transaction.canonicalNode.name));
-      }
     },
-    [
-      canEditEdges,
-      columnLevelLineageEnabled,
-      draftSession,
-      graphStrategy,
-      setDraftSession,
-      setNodes,
-    ]
+    [canEditEdges, graphStrategy, runAdmissionCommand]
   );
 
   const handleDragOver = useCallback<React.DragEventHandler<HTMLDivElement>>((event) => {

@@ -25,6 +25,22 @@ function requireAuthoringNodeKind(kind: string): NodeKindRegistration {
   return registration;
 }
 
+function buildCanonicalDropEvent(
+  canonicalNode: ReturnType<typeof buildCanonicalNode>
+): React.DragEvent<HTMLDivElement> {
+  return {
+    preventDefault: vi.fn(),
+    target: {
+      getBoundingClientRect: () => ({ left: 0, top: 0 }),
+    },
+    clientX: 120,
+    clientY: 80,
+    dataTransfer: {
+      getData: vi.fn(() => JSON.stringify(canonicalNode)),
+    },
+  } as unknown as React.DragEvent<HTMLDivElement>;
+}
+
 describe('useCanvasGraphHandlers node drop', () => {
   beforeEach(() => {
     resetGraphHandlersTestDoubles();
@@ -103,6 +119,63 @@ describe('useCanvasGraphHandlers node drop', () => {
     expect(nextDraftSession.workingSet.visibleNodeIds).toContain('transform-node');
     expect(nextDraftSession.localNodeCatalog?.['transform-node']).toEqual(
       expect.objectContaining({ id: 'transform-node' })
+    );
+
+    harness.cleanup();
+  });
+
+  it('serializes consecutive canonical drops into one draft session before rerender', async () => {
+    let currentNodes: Node[] = [];
+    const setNodes = vi.fn((nextNodes) => {
+      currentNodes = nextNodes;
+    });
+    const setDraftSession = vi.fn();
+    const draftSession = {
+      ...buildDraftSession(),
+      workingSet: {
+        visibleNodeIds: [],
+        visibleEdges: [],
+        pendingExplicitNodeIds: [],
+      },
+    };
+    const harness = renderGraphHandlersHook({
+      canEditEdges: true,
+      nodes: [],
+      draftSession,
+      setNodes,
+      setDraftSession,
+    });
+    await harness.render();
+
+    act(() => {
+      harness.latest()?.handleDrop(
+        buildCanonicalDropEvent({
+          ...buildCanonicalNode('drop-source', 'input'),
+          kind: 'dvt:source',
+        })
+      );
+      harness.latest()?.handleDrop(
+        buildCanonicalDropEvent({
+          ...buildCanonicalNode('drop-transform', 'transform'),
+          kind: 'dvt:sql_transform',
+        })
+      );
+    });
+
+    expect(setNodes).toHaveBeenCalledTimes(2);
+    expect(currentNodes.map((node) => node.id)).toEqual(['drop-source', 'drop-transform']);
+    expect(setDraftSession).toHaveBeenCalledTimes(2);
+    const latestDraftSession = setDraftSession.mock.calls.at(-1)?.[0];
+    expect(typeof latestDraftSession).not.toBe('function');
+    expect(latestDraftSession.workingSet.visibleNodeIds).toEqual([
+      'drop-source',
+      'drop-transform',
+    ]);
+    expect(latestDraftSession.localNodeCatalog?.['drop-source']).toEqual(
+      expect.objectContaining({ id: 'drop-source' })
+    );
+    expect(latestDraftSession.localNodeCatalog?.['drop-transform']).toEqual(
+      expect.objectContaining({ id: 'drop-transform' })
     );
 
     harness.cleanup();
@@ -193,6 +266,50 @@ describe('useCanvasGraphHandlers node drop', () => {
         kind: 'dvt:sql_transform',
         role: 'transform',
       })
+    );
+
+    harness.cleanup();
+  });
+
+  it('serializes consecutive catalog-created nodes into one draft session before rerender', async () => {
+    let currentNodes: Node[] = [];
+    const setNodes = vi.fn((nextNodes) => {
+      currentNodes = nextNodes;
+    });
+    const setDraftSession = vi.fn();
+    const draftSession = {
+      ...buildDraftSession(),
+      workingSet: {
+        visibleNodeIds: [],
+        visibleEdges: [],
+        pendingExplicitNodeIds: [],
+      },
+    };
+    const harness = renderGraphHandlersHook({
+      canEditEdges: true,
+      nodes: [],
+      draftSession,
+      setNodes,
+      setDraftSession,
+    });
+    await harness.render();
+
+    act(() => {
+      harness.latest()?.handleCreateAuthoringNode(requireAuthoringNodeKind('dvt:source'));
+      harness.latest()?.handleCreateAuthoringNode(requireAuthoringNodeKind('dvt:source'));
+    });
+
+    expect(setNodes).toHaveBeenCalledTimes(2);
+    expect(currentNodes.map((node) => node.id)).toEqual(['dvt-source-1', 'dvt-source-2']);
+    expect(setDraftSession).toHaveBeenCalledTimes(2);
+    const latestDraftSession = setDraftSession.mock.calls.at(-1)?.[0];
+    expect(typeof latestDraftSession).not.toBe('function');
+    expect(latestDraftSession.workingSet.visibleNodeIds).toEqual(['dvt-source-1', 'dvt-source-2']);
+    expect(latestDraftSession.localNodeCatalog?.['dvt-source-1']).toEqual(
+      expect.objectContaining({ id: 'dvt-source-1' })
+    );
+    expect(latestDraftSession.localNodeCatalog?.['dvt-source-2']).toEqual(
+      expect.objectContaining({ id: 'dvt-source-2' })
     );
 
     harness.cleanup();

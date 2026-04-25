@@ -60,6 +60,11 @@ Out of scope:
 | Canvas runtime registration | [registry.ts](../../../../../apps/web/src/app/plugins/registry.ts), [graphStrategyRegistry.ts](../../../../../apps/web/src/app/plugins/graphStrategyRegistry.ts), [canvasExecutionStrategyContracts.ts](../../../../../apps/web/src/app/plugins/canvasExecutionStrategyContracts.ts)  |
 | Route copy and presentation | [copy.ts](../../../../../apps/web/src/app/views/canvas/copy.ts), [CanvasToolbar.tsx](../../../../../apps/web/src/app/views/canvas/CanvasToolbar.tsx), [canvasExecutionState.ts](../../../../../apps/web/src/app/views/canvas/canvasExecutionState.ts)                                 |
 
+Node admission command anchors:
+
+- [canvasNodeAdmissionTransaction.ts](../../../../../apps/web/src/app/views/canvas/canvasNodeAdmissionTransaction.ts)
+- [useCanvasNodeAdmissionCommandRunner.ts](../../../../../apps/web/src/app/views/canvas/useCanvasNodeAdmissionCommandRunner.ts)
+
 ## Frontend Topology
 
 ```mermaid
@@ -99,6 +104,10 @@ As of 2026-04-25:
   and first-node creation use canonical admission before any viewport
   projection, while plugin graph strategies only parse or project
   plugin-owned payloads
+- node create/drop handlers delegate node admission to
+  `useCanvasNodeAdmissionCommandRunner`, which serializes consecutive local
+  command effects over the latest viewport nodes and draft session before a
+  React rerender can refresh hook inputs
 - connection and transformation validation stay typed until presentation
 - route-visible operator copy is centralized instead of repeated across handlers
 - protected draft reads now project a semantic canonical graph,
@@ -253,6 +262,8 @@ sequenceDiagram
   participant Canvas as Canvas document
   participant Resolver as canvasActiveGraphStrategy
   participant Strategy as CanvasGraphStrategy
+  participant Runner as CanvasNodeAdmissionCommandRunner
+  participant Tx as CanvasNodeAdmissionTransaction
   participant Admission as admitCanonicalNodeToCanvas
   participant Mapper as viewport mapper
   participant Lifecycle as canvasGraphLifecycle
@@ -260,10 +271,13 @@ sequenceDiagram
   Canvas->>Resolver: canvas.kind
   Resolver->>Strategy: select ready runtime by kind
   User->>Strategy: drop plugin payload
-  Strategy-->>Admission: CanonicalNode or null
+  Strategy-->>Runner: CanonicalNode or null
+  Runner->>Tx: latest nodes + latest draft session
+  Tx->>Admission: canonical node admission
   Admission-->>Mapper: accepted canonical node
   Mapper-->>Lifecycle: viewport node is projection only
   Admission->>Lifecycle: admit explicit canonical node
+  Runner-->>Canvas: apply nodes and draft session once
 ```
 
 Invariant:
@@ -274,6 +288,9 @@ Invariant:
 - node create/drop handlers apply a pure `CanvasNodeAdmissionTransaction`
   result once; semantic draft mutation and viewport projection are computed
   before React effects are applied.
+- the command runner must advance its local `nodes` and `draftSession`
+  snapshots after every accepted command, so two create/drop commands in the
+  same event turn cannot lose the first semantic admission.
 
 ## Architecture Fitness Tests
 
@@ -284,6 +301,8 @@ string checks. Current semantic coverage includes:
   and authoring catalog;
 - unsupported persisted canvas kinds blocking mutation and execution posture;
 - pure node-admission transaction results for add and duplicate-noop paths;
+- consecutive node create/drop commands preserving both viewport nodes and
+  draft-session membership before rerender;
 - typed empty-state catalog and copy derivation from the active runtime;
 - first-node authoring remains available even when source import capability is
   unavailable.
