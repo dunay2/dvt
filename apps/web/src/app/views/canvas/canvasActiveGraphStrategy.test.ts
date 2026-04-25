@@ -30,19 +30,32 @@ function buildDraftReadModelWithCanvasKind(kind: string): CanvasDraftReadModel {
 
 describe('resolveActiveCanvasGraphStrategy', () => {
   it('uses the current draft canvas kind as the graph strategy selector', () => {
-    expect(resolveActiveCanvasGraphStrategy(buildDraftReadModelWithCanvasKind('dbt')).id).toBe(
-      'dbt'
-    );
+    expect(resolveActiveCanvasGraphStrategy(buildDraftReadModelWithCanvasKind('dbt'))).toMatchObject({
+      kind: 'ready',
+      canvasKind: 'dbt',
+      strategy: {
+        id: 'dbt',
+      },
+    });
     expect(resolveActiveCanvasAuthoringMode(buildDraftReadModelWithCanvasKind('dbt'))).toBe(
       'dbt'
     );
   });
 
   it('falls back to the transformation strategy before a canvas document exists', () => {
-    expect(resolveActiveCanvasGraphStrategy(undefined).id).toBe('transformation');
+    expect(resolveActiveCanvasGraphStrategy(undefined)).toMatchObject({
+      kind: 'missing_document',
+      strategy: {
+        id: 'transformation',
+      },
+    });
     expect(resolveActiveCanvasAuthoringMode(undefined)).toBe('transformation');
-    expect(
-      resolveActiveCanvasGraphStrategy(buildDraftReadModelWithCanvasKind('unknown')).id
-    ).toBe('transformation');
+  });
+
+  it('fails closed for persisted canvas documents with unsupported kind', () => {
+    expect(resolveActiveCanvasGraphStrategy(buildDraftReadModelWithCanvasKind('unknown'))).toEqual({
+      kind: 'unsupported_kind',
+      canvasKind: 'unknown',
+    });
   });
 });

@@ -38,6 +38,33 @@ describe('canvasRouteInteractionState', () => {
     expect(interactionState.workbenchErrorMessage).toBe('Stored schema version is unsupported.');
   });
 
+  it('fails closed when a persisted canvas document uses an unsupported kind', () => {
+    const interactionState = deriveCanvasRouteInteractionState(
+      buildController({
+        canvasDocument: {
+          kind: 'unknown',
+          title: 'Unknown canvas',
+        },
+      }),
+      null
+    );
+
+    expect(interactionState.effectiveWorkbenchState).toEqual({
+      kind: 'error',
+      message:
+        'Canvas cannot open persisted canvas kind "unknown" because no runtime registration is available.',
+    });
+    expect(interactionState.effectiveUserPermissions).toMatchObject({
+      canPlan: false,
+      canRun: false,
+      canEditEdges: false,
+    });
+    expect(interactionState.readOnlyState).toBeNull();
+    expect(interactionState.workbenchErrorMessage).toBe(
+      'Canvas cannot open persisted canvas kind "unknown" because no runtime registration is available.'
+    );
+  });
+
   it('keeps route interactions readable but non-editable for read-only draft access', () => {
     const controller = buildController({
       draftAccessMode: 'read_only',

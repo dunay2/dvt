@@ -6,14 +6,79 @@ import type { CanvasDraftReadModel } from './canvasDraftReadModel';
 
 const DEFAULT_CANVAS_AUTHORING_MODE: CanvasGraphAuthoringMode = 'transformation';
 
+export type ActiveCanvasGraphStrategyResolution =
+  | {
+      kind: 'missing_document';
+      strategy: CanvasGraphStrategy;
+    }
+  | {
+      kind: 'ready';
+      canvasKind: CanvasGraphAuthoringMode;
+      strategy: CanvasGraphStrategy;
+    }
+  | {
+      kind: 'unsupported_kind';
+      canvasKind: string;
+    };
+
+function normalizeCanvasKind(kind: string): CanvasGraphAuthoringMode {
+  return kind.trim().toLowerCase();
+}
+
+function resolveDraftCanvasKind(
+  draftReadModel: CanvasDraftReadModel | undefined
+): CanvasGraphAuthoringMode | null {
+  const canvasKind = draftReadModel?.record?.draft.canvas.kind;
+  if (!canvasKind) {
+    return null;
+  }
+
+  const normalizedCanvasKind = normalizeCanvasKind(canvasKind);
+  return normalizedCanvasKind.length > 0 ? normalizedCanvasKind : null;
+}
+
 export function resolveActiveCanvasGraphStrategy(
   draftReadModel: CanvasDraftReadModel | undefined
+): ActiveCanvasGraphStrategyResolution {
+  const canvasKind = resolveDraftCanvasKind(draftReadModel);
+  if (canvasKind == null) {
+    return {
+      kind: 'missing_document',
+      strategy: resolveCanvasGraphStrategy(),
+    };
+  }
+
+  const strategy = resolveCanvasGraphStrategy(canvasKind);
+  if (strategy.id !== canvasKind) {
+    return {
+      kind: 'unsupported_kind',
+      canvasKind,
+    };
+  }
+
+  return {
+    kind: 'ready',
+    canvasKind,
+    strategy,
+  };
+}
+
+export function selectActiveCanvasGraphStrategy(
+  resolution: ActiveCanvasGraphStrategyResolution
 ): CanvasGraphStrategy {
-  return resolveCanvasGraphStrategy(draftReadModel?.record?.draft.canvas.kind);
+  return resolution.kind === 'unsupported_kind'
+    ? resolveCanvasGraphStrategy()
+    : resolution.strategy;
+}
+
+export function isActiveCanvasGraphStrategySupported(
+  resolution: ActiveCanvasGraphStrategyResolution
+): boolean {
+  return resolution.kind !== 'unsupported_kind';
 }
 
 export function resolveActiveCanvasAuthoringMode(
   draftReadModel: CanvasDraftReadModel | undefined
 ): CanvasGraphAuthoringMode {
-  return draftReadModel?.record?.draft.canvas.kind ?? DEFAULT_CANVAS_AUTHORING_MODE;
+  return resolveDraftCanvasKind(draftReadModel) ?? DEFAULT_CANVAS_AUTHORING_MODE;
 }

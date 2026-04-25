@@ -2,8 +2,10 @@
 import { useMemo } from 'react';
 
 import {
+  isActiveCanvasGraphStrategySupported,
   resolveActiveCanvasAuthoringMode,
   resolveActiveCanvasGraphStrategy,
+  selectActiveCanvasGraphStrategy,
 } from './canvasActiveGraphStrategy';
 import { buildCanvasControllerViewModel } from './canvasControllerViewModel';
 import { useCanvasAuthoringRuntime } from './useCanvasAuthoringRuntime';
@@ -65,14 +67,19 @@ export function useCanvasController() {
     canMutateGraph,
     draftReadModel,
   } = authoringRuntime;
-  const graphStrategy = useMemo(
+  const activeCanvasGraphStrategyResolution = useMemo(
     () => resolveActiveCanvasGraphStrategy(draftReadModel),
     [draftReadModel?.record?.draft.canvas.kind]
+  );
+  const graphStrategy = selectActiveCanvasGraphStrategy(activeCanvasGraphStrategyResolution);
+  const isActiveCanvasKindSupported = isActiveCanvasGraphStrategySupported(
+    activeCanvasGraphStrategyResolution
   );
   const canvasAuthoringMode = useMemo(
     () => resolveActiveCanvasAuthoringMode(draftReadModel),
     [draftReadModel?.record?.draft.canvas.kind]
   );
+  const canMutateActiveCanvas = canMutateGraph && isActiveCanvasKindSupported;
 
   useCanvasSelectionSync({
     isBootstrapping: draftSession.syncState === 'bootstrapping',
@@ -93,7 +100,7 @@ export function useCanvasController() {
   });
 
   const mutationHandlers = useCanvasMutationHandlers({
-    canMutateGraph,
+    canMutateGraph: canMutateActiveCanvas,
     workspaceLayoutKey: store.workspaceLayoutKey,
     graphModel,
     draftSession,
@@ -114,7 +121,7 @@ export function useCanvasController() {
     selectedNodeIds: uiScope.selectedNodeIds,
     inspectorNodeId: uiScope.inspectorNodeId,
     draftSession,
-    canEditEdges: canMutateGraph,
+    canEditEdges: canMutateActiveCanvas,
     focusMode: store.focusMode,
     inspectorPanelVisible: store.inspectorPanelVisible,
     columnLevelLineageEnabled: store.columnLevelLineageEnabled,
@@ -143,8 +150,10 @@ export function useCanvasController() {
     canonicalEdges: visibleScope.canonicalEdges,
     selectedNodeIds: executionScope.selectedNodeIds,
     workspaceNodeIds: executionScope.workspaceNodeIds,
-    canPlan: store.userPermissions.canPlan && !isDraftRecoveryBlocked,
-    canRun: store.userPermissions.canRun && !isDraftRecoveryBlocked,
+    canPlan:
+      store.userPermissions.canPlan && !isDraftRecoveryBlocked && isActiveCanvasKindSupported,
+    canRun:
+      store.userPermissions.canRun && !isDraftRecoveryBlocked && isActiveCanvasKindSupported,
     sessionContext,
     shellFeedback,
     previewProvenanceConfig: workspaceBootstrapConfig,
@@ -164,7 +173,7 @@ export function useCanvasController() {
       uiScope,
       overlayModel,
       graphHandlers,
-      canMutateGraph,
+      canMutateGraph: canMutateActiveCanvas,
       columnLevelLineageEnabled: store.columnLevelLineageEnabled,
       impactOverlayEnabled: store.impactOverlayEnabled,
     }
