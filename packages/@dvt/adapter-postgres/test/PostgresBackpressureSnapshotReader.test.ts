@@ -9,7 +9,13 @@ const NOW = '2026-03-19T12:00:00.000Z';
 const runIntegration = process.env.DVT_PG_INTEGRATION === '1';
 const describeIfPg = runIntegration ? describe : describe.skip;
 
-class RecordingPool {
+interface RecordedQuery {
+  readonly text: string;
+  readonly values: unknown[] | undefined;
+  readonly signal?: unknown;
+}
+
+class RecordingClient {
   public readonly queries: Array<{
     readonly text: string;
     readonly values: unknown[] | undefined;
@@ -22,9 +28,47 @@ class RecordingPool {
     text: string;
     values?: unknown[];
     signal?: unknown;
-  }): Promise<{ rows: T[] }> {
-    this.queries.push(input);
+  }): Promise<{ rows: T[] }>;
+  public async query<T>(text: string, values?: unknown[]): Promise<{ rows: T[] }>;
+  public async query<T>(
+    input: string | { text: string; values?: unknown[]; signal?: unknown },
+    values?: unknown[]
+  ): Promise<{ rows: T[] }> {
+    const recorded = typeof input === 'string' ? { text: input, values } : input;
+    this.queries.push(recorded);
+    if (
+      recorded.text === 'BEGIN' ||
+      recorded.text === 'COMMIT' ||
+      recorded.text === 'ROLLBACK' ||
+      recorded.text.includes("set_config('dvt.access_mode'")
+    ) {
+      return { rows: [] };
+    }
     return { rows: this.rows as T[] };
+  }
+
+  public release(): void {
+    return undefined;
+  }
+}
+
+class RecordingPool {
+  public readonly client: RecordingClient;
+
+  public constructor(rows: unknown[]) {
+    this.client = new RecordingClient(rows);
+  }
+
+  public get queries(): readonly RecordedQuery[] {
+    return this.client.queries;
+  }
+
+  public async connect(): Promise<RecordingClient> {
+    return this.client;
+  }
+
+  public async query(): Promise<never> {
+    throw new Error('DIRECT_POOL_QUERY_FORBIDDEN');
   }
 
   public async end(): Promise<void> {
@@ -102,10 +146,39 @@ describe('PostgresBackpressureSnapshotReader', () => {
       globalHealthyTenantOldestActiveAgeMs: 1200,
     });
 
-    expect(pool.queries).toHaveLength(1);
-    expect(pool.queries[0]?.text).toContain('"dvt".outbox');
-    expect(pool.queries[0]?.values).toEqual(['tenant-a', NOW, '2026-03-12T12:00:00.000Z', 20]);
-    expect(pool.queries[0]?.signal).toBeDefined();
+    const sqls = pool.queries.map((query) => query.text);
+    const snapshotQuery = pool.queries.find((query) => query.text.includes('"dvt".outbox'));
+    expect(sqls[0]).toBe('BEGIN');
+    expect(sqls.some((sql) => sql.includes("set_config('dvt.access_mode', 'service', true)"))).toBe(
+      true
+    );
+    expect(snapshotQuery?.values).toEqual(['tenant-a', NOW, '2026-03-12T12:00:00.000Z', 20]);
+    expect(snapshotQuery?.signal).toBeDefined();
+    expect(sqls.at(-1)).toBe('COMMIT');
+  });
+
+  it('uses tenant-aware joins for backpressure aggregates', async () => {
+    const pool = new RecordingPool([
+      {
+        tenant_active_pending_event_count: 0,
+        tenant_stuck_pending_event_count: 0,
+        global_active_pending_event_count: 0,
+        global_healthy_tenant_oldest_active_age_ms: 0,
+      },
+    ]);
+    const reader = new PostgresBackpressureSnapshotReader({
+      pool: pool as never,
+      schema: 'dvt',
+      now: () => NOW,
+      stuckEventAgeThresholdMs: 60_000,
+      localOverloadPendingThreshold: 2,
+    });
+
+    await reader.getTenantSnapshot('tenant-a');
+
+    const snapshotQuery = pool.queries.find((query) => query.text.includes('"dvt".outbox'));
+    expect(snapshotQuery?.text).toContain('ON m.run_id = o.run_id');
+    expect(snapshotQuery?.text).toContain('AND m.tenant_id = o.tenant_id');
   });
 
   it('returns zero-valued snapshot when aggregates are absent', async () => {
@@ -131,7 +204,8 @@ describe('PostgresBackpressureSnapshotReader', () => {
       globalActivePendingEventCount: 0,
       globalHealthyTenantOldestActiveAgeMs: 0,
     });
-    expect(pool.queries[0]?.signal).toBeUndefined();
+    const snapshotQuery = pool.queries.find((query) => query.text.includes('"dvt".outbox'));
+    expect(snapshotQuery?.signal).toBeUndefined();
   });
 });
 

@@ -318,8 +318,12 @@ describe('PostgresStateStoreAdapter migration state', () => {
       'ALTER TABLE "DvtOps".outbox_dead_letter ADD COLUMN IF NOT EXISTS tenant_id TEXT'
     );
     expect(executedSql).toContain('ALTER TABLE "DvtOps".run_metadata ENABLE ROW LEVEL SECURITY');
+    expect(executedSql).toContain('ALTER TABLE "DvtOps".run_metadata FORCE ROW LEVEL SECURITY');
     expect(executedSql).toContain(
       'ALTER TABLE "DvtOps".snapshot_work_queue ENABLE ROW LEVEL SECURITY'
+    );
+    expect(executedSql).toContain(
+      'ALTER TABLE "DvtOps".snapshot_work_queue FORCE ROW LEVEL SECURITY'
     );
     expect(executedSql).toContain('CREATE POLICY dvt_tenant_isolation');
     expect(executedSql).toContain("current_setting('dvt.access_mode', true) = 'service'");
@@ -339,6 +343,23 @@ describe('PostgresStateStoreAdapter migration state', () => {
     expect(executedSql).not.toContain('__unknown_tenant__');
     expect(executedSql).toContain('LINEAGE_OUTBOX_TENANT_BACKFILL_REQUIRED');
     expect(executedSql).toContain('LINEAGE_DEAD_LETTER_TENANT_BACKFILL_REQUIRED');
+  });
+
+  it('uses run metadata as the authoritative tenant backfill source', async () => {
+    const client = new RecordingMigrationClient();
+    const adapter = new PostgresStateStoreAdapter({
+      pool: { connect: async () => client } as never,
+      schema: 'DvtOps',
+    });
+
+    await adapter.migrate();
+
+    const executedSql = client.queries.map((q) => q.sql).join('\n');
+    expect(executedSql).not.toContain("payload->>'tenantId'");
+    expect(executedSql).toContain('LINEAGE_OUTBOX_TENANT_MISMATCH');
+    expect(executedSql).toContain('LINEAGE_DEAD_LETTER_TENANT_MISMATCH');
+    expect(executedSql).toContain('OUTBOX_TENANT_MISMATCH');
+    expect(executedSql).toContain('OUTBOX_DEAD_LETTER_TENANT_MISMATCH');
   });
 
   it('creates the archive catalog tables and indexes required for G5-PR1', async () => {

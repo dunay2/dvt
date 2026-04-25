@@ -1,11 +1,13 @@
 import { Pool } from 'pg';
 
+import { PostgresAdapterClientSession } from './PostgresAdapterClientSession.js';
 import { resolvePostgresConnectionString } from './PostgresAdapterConnectionString.js';
 import {
   POSTGRES_ADAPTER_ERROR_CONSTANTS as E,
   POSTGRES_ADAPTER_RUNTIME_CONSTANTS as C,
 } from './PostgresAdapterConstants.js';
 import { getBackpressureSnapshotSql } from './PostgresBackpressureSnapshotReaderSql.js';
+import { PostgresSchemaManager } from './PostgresSchemaManager.js';
 import { normalizeSchema } from './sqlUtils.js';
 
 export interface PostgresBackpressureSnapshot {
@@ -39,6 +41,7 @@ export class PostgresBackpressureSnapshotReader {
   private readonly ownsPool: boolean;
   private readonly schema: string;
   private readonly now: () => string;
+  private readonly clientSession: PostgresAdapterClientSession;
   private readonly queryTimeoutMs: number;
   private readonly stuckEventAgeThresholdMs: number;
   private readonly localOverloadPendingThreshold: number;
@@ -62,12 +65,11 @@ export class PostgresBackpressureSnapshotReader {
       });
       this.ownsPool = true;
     }
+    this.clientSession = new PostgresAdapterClientSession(this.pool, 0);
   }
 
   public async close(): Promise<void> {
-    if (this.ownsPool) {
-      await this.pool.end();
-    }
+    await this.clientSession.close(this.ownsPool);
   }
 
   public async getTenantSnapshot(tenantId: string): Promise<PostgresBackpressureSnapshot> {
@@ -75,12 +77,15 @@ export class PostgresBackpressureSnapshotReader {
     const nowIso = this.now();
     const stuckCutoffIso = calculateStuckCutoffIso(nowIso, this.stuckEventAgeThresholdMs);
 
-    const result = await this.pool.query<BackpressureSnapshotRow>({
-      text: getBackpressureSnapshotSql(this.schema),
-      values: [tenantId, nowIso, stuckCutoffIso, this.localOverloadPendingThreshold],
-      ...(this.queryTimeoutMs > C.defaultTimeoutMs
-        ? { signal: globalThis.AbortSignal.timeout(this.queryTimeoutMs) }
-        : {}),
+    const result = await this.clientSession.withClient(async (client) => {
+      await PostgresSchemaManager.setServiceContext(client);
+      return client.query<BackpressureSnapshotRow>({
+        text: getBackpressureSnapshotSql(this.schema),
+        values: [tenantId, nowIso, stuckCutoffIso, this.localOverloadPendingThreshold],
+        ...(this.queryTimeoutMs > C.defaultTimeoutMs
+          ? { signal: globalThis.AbortSignal.timeout(this.queryTimeoutMs) }
+          : {}),
+      });
     });
 
     const row = result.rows[0];

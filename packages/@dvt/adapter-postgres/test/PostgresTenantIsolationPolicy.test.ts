@@ -36,10 +36,10 @@ describe('PostgresTenantIsolationPolicy', () => {
     }).join('\n');
 
     expect(statements).toContain('ALTER TABLE "DvtOps".run_metadata ENABLE ROW LEVEL SECURITY');
+    expect(statements).toContain('ALTER TABLE "DvtOps".run_metadata FORCE ROW LEVEL SECURITY');
     expect(statements).toContain('DROP POLICY IF EXISTS dvt_tenant_isolation');
     expect(statements).toContain('CREATE POLICY dvt_tenant_isolation');
     expect(statements).toContain("current_setting('dvt.access_mode', true) = 'service'");
     expect(statements).toContain("tenant_id = current_setting('dvt.tenant_id', true)");
-    expect(statements).not.toContain('FORCE ROW LEVEL SECURITY');
   });
 });

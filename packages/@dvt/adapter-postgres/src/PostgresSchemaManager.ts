@@ -673,21 +673,38 @@ const MIGRATION_STEPS: readonly MigrationStep[] = [
         `ALTER TABLE ${sq(schema)}.lineage_dead_letter ADD COLUMN IF NOT EXISTS tenant_id TEXT`
       );
       await client.query(`
+        DO $$
+        BEGIN
+          IF EXISTS (
+            SELECT 1
+            FROM ${sq(schema)}.lineage_outbox o
+            INNER JOIN ${sq(schema)}.run_metadata m ON m.run_id = o.run_id
+            WHERE (o.tenant_id IS NOT NULL AND o.tenant_id <> m.tenant_id)
+               OR (o.payload ? 'tenantId' AND o.payload #>> '{tenantId}' <> m.tenant_id)
+          ) THEN
+            RAISE EXCEPTION 'LINEAGE_OUTBOX_TENANT_MISMATCH';
+          END IF;
+          IF EXISTS (
+            SELECT 1
+            FROM ${sq(schema)}.lineage_dead_letter dl
+            INNER JOIN ${sq(schema)}.run_metadata m ON m.run_id = dl.run_id
+            WHERE (dl.tenant_id IS NOT NULL AND dl.tenant_id <> m.tenant_id)
+               OR (dl.payload ? 'tenantId' AND dl.payload #>> '{tenantId}' <> m.tenant_id)
+          ) THEN
+            RAISE EXCEPTION 'LINEAGE_DEAD_LETTER_TENANT_MISMATCH';
+          END IF;
+        END $$;
+      `);
+      await client.query(`
         UPDATE ${sq(schema)}.lineage_outbox o
-        SET tenant_id = COALESCE(
-          o.payload->>'tenantId',
-          m.tenant_id
-        )
+        SET tenant_id = m.tenant_id
         FROM ${sq(schema)}.run_metadata m
         WHERE m.run_id = o.run_id
           AND o.tenant_id IS NULL
       `);
       await client.query(`
         UPDATE ${sq(schema)}.lineage_dead_letter dl
-        SET tenant_id = COALESCE(
-          dl.payload->>'tenantId',
-          m.tenant_id
-        )
+        SET tenant_id = m.tenant_id
         FROM ${sq(schema)}.run_metadata m
         WHERE m.run_id = dl.run_id
           AND dl.tenant_id IS NULL
@@ -833,6 +850,39 @@ const MIGRATION_STEPS: readonly MigrationStep[] = [
       );
 
       await client.query(`
+        DO $$
+        BEGIN
+          IF EXISTS (
+            SELECT 1
+            FROM ${sq(schema)}.run_snapshots s
+            INNER JOIN ${sq(schema)}.run_metadata m ON m.run_id = s.run_id
+            WHERE s.tenant_id IS NOT NULL
+              AND s.tenant_id <> m.tenant_id
+          ) THEN
+            RAISE EXCEPTION 'RUN_SNAPSHOTS_TENANT_MISMATCH';
+          END IF;
+          IF EXISTS (
+            SELECT 1
+            FROM ${sq(schema)}.outbox o
+            INNER JOIN ${sq(schema)}.run_metadata m ON m.run_id = o.run_id
+            WHERE (o.tenant_id IS NOT NULL AND o.tenant_id <> m.tenant_id)
+               OR (o.payload ? 'tenantId' AND o.payload #>> '{tenantId}' <> m.tenant_id)
+          ) THEN
+            RAISE EXCEPTION 'OUTBOX_TENANT_MISMATCH';
+          END IF;
+          IF EXISTS (
+            SELECT 1
+            FROM ${sq(schema)}.outbox_dead_letter dl
+            INNER JOIN ${sq(schema)}.run_metadata m ON m.run_id = dl.run_id
+            WHERE (dl.tenant_id IS NOT NULL AND dl.tenant_id <> m.tenant_id)
+               OR (dl.payload ? 'tenantId' AND dl.payload #>> '{tenantId}' <> m.tenant_id)
+          ) THEN
+            RAISE EXCEPTION 'OUTBOX_DEAD_LETTER_TENANT_MISMATCH';
+          END IF;
+        END $$;
+      `);
+
+      await client.query(`
         UPDATE ${sq(schema)}.run_snapshots s
         SET tenant_id = m.tenant_id
         FROM ${sq(schema)}.run_metadata m
@@ -841,14 +891,14 @@ const MIGRATION_STEPS: readonly MigrationStep[] = [
       `);
       await client.query(`
         UPDATE ${sq(schema)}.outbox o
-        SET tenant_id = COALESCE(o.payload->>'tenantId', m.tenant_id)
+        SET tenant_id = m.tenant_id
         FROM ${sq(schema)}.run_metadata m
         WHERE m.run_id = o.run_id
           AND o.tenant_id IS NULL
       `);
       await client.query(`
         UPDATE ${sq(schema)}.outbox_dead_letter dl
-        SET tenant_id = COALESCE(dl.payload->>'tenantId', m.tenant_id)
+        SET tenant_id = m.tenant_id
         FROM ${sq(schema)}.run_metadata m
         WHERE m.run_id = dl.run_id
           AND dl.tenant_id IS NULL

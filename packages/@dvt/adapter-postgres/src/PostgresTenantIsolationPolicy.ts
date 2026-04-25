@@ -50,6 +50,7 @@ export function buildTenantIsolationPolicySql(
 
   return [
     `ALTER TABLE ${relation} ENABLE ROW LEVEL SECURITY`,
+    `ALTER TABLE ${relation} FORCE ROW LEVEL SECURITY`,
     `DROP POLICY IF EXISTS dvt_tenant_isolation ON ${relation}`,
     `
       CREATE POLICY dvt_tenant_isolation ON ${relation}
@@ -65,6 +66,7 @@ export function buildDropTenantIsolationPolicySql(schema: string): readonly stri
     const relation = `${quoteIdentifier(schema)}.${table.name}`;
     return [
       `DROP POLICY IF EXISTS dvt_tenant_isolation ON ${relation}`,
+      `ALTER TABLE ${relation} NO FORCE ROW LEVEL SECURITY`,
       `ALTER TABLE ${relation} DISABLE ROW LEVEL SECURITY`,
     ];
   });

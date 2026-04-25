@@ -44,18 +44,23 @@ were a security boundary.
 
 ### Options Considered
 
-| Option                                                                     | Result                  | Reason                                                                                                                                       |
-| -------------------------------------------------------------------------- | ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| Keep explicit predicates only                                              | Rejected                | It leaves the same single-bug leak class called out by the architecture review.                                                              |
-| Enable RLS everywhere with owner-force policies                            | Rejected for this slice | Correct long term, but it breaks archive/projector/worker flows unless every maintenance path is first classified and given service context. |
-| Add RLS to tenant-owned online tables with explicit tenant/service context | Selected                | It closes the production baseline without hiding role assumptions or forcing plan-store contract churn into the same slice.                  |
-| Add plan-record tenant columns now                                         | Deferred                | It requires contract and repository API evolution; doing it opportunistically here would mix two bounded contexts.                           |
+- Keep explicit predicates only: rejected because it leaves the same single-bug
+  leak class called out by the architecture review.
+- Enable RLS everywhere, including archive/service-only tables: rejected for
+  this slice because archive/projector/worker flows need explicit service
+  classification first.
+- Add forced RLS to tenant-owned online tables: selected because it closes the
+  run-state baseline without owner-bypass assumptions or plan-store contract
+  churn.
+- Add plan-record tenant columns now: deferred because that requires contract
+  and repository API evolution in a separate bounded context.
 
 ### Selected Option And Rationale
 
-Postgres RLS is mandatory for production tenant-owned online tables. The runtime
-MUST use a non-owner application role; schema-owner connections are reserved for
-migrations. RLS policies authorize either:
+Postgres RLS is mandatory for production tenant-owned online tables and is
+forced with `FORCE ROW LEVEL SECURITY`. The runtime SHOULD still use a non-owner
+application role as least-privilege posture; schema-owner connections are
+reserved for migrations. RLS policies authorize either:
 
 - `tenant` mode, where `tenant_id = current_setting('dvt.tenant_id', true)`;
 - `service` mode, where maintenance/worker operations set
@@ -108,10 +113,10 @@ run state, and the code/tests/docs agree on that posture.
 
 | Risk                                          | Mitigation                                                                                           |
 | --------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| RLS silently bypassed by table owner          | Document non-owner runtime role as production requirement and keep schema owner for migrations only. |
+| RLS silently bypassed by table owner          | Apply `FORCE ROW LEVEL SECURITY`; keep non-owner runtime role as least-privilege deployment posture. |
 | Tenant context lost between pooled statements | Run `withClient` operations in an explicit transaction so `set_config(..., true)` remains visible.   |
 | Worker/global flows need cross-tenant access  | Use explicit service context, not implicit owner bypass.                                             |
-| Existing orphan rows block migration          | Fail fast; no `__unknown_tenant__` backfill in tenant-owned storage migrations.                      |
+| Existing orphan rows block migration          | Fail fast; no `__unknown_tenant__` or payload-derived tenant backfill in tenant-owned migrations.    |
 
 ## Architecture
 
@@ -190,19 +195,26 @@ stateDiagram-v2
 - Added `PostgresTenantIsolationPolicy` as the single owned concern for the RLS
   table catalog, tenant context SQL, service context SQL, and policy generation.
 - Added `core_017_tenant_rls_baseline` to enable RLS on tenant-owned online
-  state tables and to add top-level `tenant_id` to `run_snapshots`, `outbox`,
-  and `outbox_dead_letter`.
+  state tables, force RLS for table owners, and add top-level `tenant_id` to
+  `run_snapshots`, `outbox`, and `outbox_dead_letter`.
+- Hardened tenant backfills so `run_metadata` is the authoritative ownership
+  source; stale JSON `tenantId` values are mismatch evidence, not ownership
+  input.
 - Changed `withClient` to run inside an explicit transaction so
   transaction-local tenant context remains valid for pooled reads.
 - Updated run-state, outbox, lineage, snapshot, archive, purge, and staleness
   paths to use explicit tenant or service context before touching
   RLS-protected tables.
+- Updated backpressure snapshot reads to run inside service-context
+  transactions and to join `outbox` to `run_metadata` by both `run_id` and
+  `tenant_id`.
 - Added ARC evidence and risk register entries:
   `docs/evidence/ed-20260425-production-tenant-isolation-baseline.md` and
   `docs/risk-register/quality/R-20260425-PRODUCTION-TENANT-ISOLATION-BASELINE.yaml`.
 
 ## Validation Plan
 
+- `pnpm --filter @dvt/adapter-postgres test -- PostgresTenantIsolationPolicy.test.ts PostgresBackpressureSnapshotReader.test.ts PostgresStateStoreAdapter.migrate.test.ts`
 - `pnpm --filter @dvt/adapter-postgres test -- PostgresTenantIsolationPolicy.test.ts PostgresStateStoreAdapter.migrate.test.ts PostgresOutboxStore.test.ts PostgresRunSnapshotStore.test.ts`
 - `pnpm --filter @dvt/adapter-postgres build`
 - `pnpm docs:sync`

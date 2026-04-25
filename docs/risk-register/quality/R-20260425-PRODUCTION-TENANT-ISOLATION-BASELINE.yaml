@@ -1,8 +1,6 @@
 ---
 id: R-20260425-PRODUCTION-TENANT-ISOLATION-BASELINE
-title:
-  Production tenant isolation depends on non-owner runtime role and remaining plan-store tenancy
-  work
+title: Plan-store tenancy and service-context drift remain after forced RLS baseline
 status: Open
 date: 2026-04-25
 owners:
@@ -10,25 +8,25 @@ owners:
 severity: High
 probability: Medium
 context: >
-  The 2026-04-25 tenant isolation slice enables RLS for tenant-owned online Postgres state tables
-  and introduces explicit tenant/service transaction context. This closes the predicate-only storage
-  baseline for run state.
+  The 2026-04-25 tenant isolation slice enables forced RLS for tenant-owned online Postgres state
+  tables, introduces explicit tenant/service transaction context, and makes run_metadata the
+  authoritative source for tenant backfills. This closes the predicate-only storage baseline for run
+  state.
 risk: >
-  RLS is bypassed by table owners in PostgreSQL unless FORCE ROW LEVEL SECURITY or a non-owner
-  runtime role is used. The selected baseline intentionally keeps schema-owner connections reserved
-  for migrations, but production deployment must enforce that separation. Plan records also still
-  lack top-level tenant/project/environment columns, so plan-store tenancy remains a separate
-  governed task.
+  Plan records still lack top-level tenant/project/environment columns, so plan-store tenancy
+  remains a separate governed task. Service and maintenance paths also depend on explicit
+  service-context entry points; future direct SQL readers can drift if they bypass the adapter
+  client-session pattern.
 mitigations:
   - >
-    Run application traffic through a non-owner role and reserve owner access for schema migrations
-    only.
+    Keep `FORCE ROW LEVEL SECURITY` on tenant-owned online tables and keep application traffic on a
+    non-owner role for least privilege.
   - >
     Keep all tenant API paths setting tenant context and all worker/maintenance paths setting
     service context before accessing RLS-protected tables.
   - >
-    Do not use `__unknown_tenant__` fallback for tenant-owned storage migrations; migration must
-    fail if ownership cannot be derived.
+    Do not use `__unknown_tenant__`, payload-derived, or synthetic fallbacks for tenant-owned
+    storage migrations; migration must fail if ownership cannot be derived from canonical metadata.
   - >
     Schedule a separate plan-store tenancy slice to add top-level tenant/project/environment
     ownership to `plan_records` and `stored_plans`.
