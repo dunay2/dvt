@@ -61,7 +61,10 @@ export class StartRunFailurePolicy {
     traceContext: StartRunTraceContext;
   }): Promise<void> {
     try {
-      await this.deps.intentStore.markResolved(input.intentId);
+      await this.deps.intentStore.markResolved({
+        tenantId: input.tenantId,
+        intentId: input.intentId,
+      });
       return;
     } catch (error) {
       try {
@@ -125,7 +128,10 @@ export class StartRunFailurePolicy {
     const failMeta = await this.getFailureMetadata(resolvedContext.tenantId, resolvedContext.runId);
     if (failMeta === null) throw error;
 
-    const pendingIntent = await this.getPendingIntent(errorContext.intentId);
+    const pendingIntent = await this.getPendingIntent(
+      resolvedContext.tenantId,
+      errorContext.intentId
+    );
     if (pendingIntent?.status === 'PENDING') {
       this.reportSkipRunFailedPendingIntent(pendingIntent, traceContext);
       throw error;
@@ -206,10 +212,11 @@ export class StartRunFailurePolicy {
   }
 
   private async getPendingIntent(
+    tenantId: string,
     intentId: string | undefined
   ): Promise<Awaited<ReturnType<IStartRunIntentStore['getIntent']>> | null> {
     if (intentId === undefined) return null;
-    return this.deps.intentStore.getIntent(intentId).catch(() => null);
+    return this.deps.intentStore.getIntent({ tenantId, intentId }).catch(() => null);
   }
 
   private async emitRunFailedBestEffort(

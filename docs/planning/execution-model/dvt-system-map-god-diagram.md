@@ -255,9 +255,9 @@ Engine->>Engine: validate planRef / authz / capabilities
 Engine->>Intent: createIntent(...)
 Engine->>Adapter: startRun(planRef, context)
 Adapter-->>Engine: EngineRunRef
-Engine->>Intent: markDispatched(...)
+Engine->>Intent: markDispatched(ref, ...)
 Engine->>State: bootstrapRunTx(metadata, [RunQueued])
-Engine->>Intent: markResolved(...)
+Engine->>Intent: markResolved(ref)
 Engine-->>API: EngineRunRef
 
 Note over Adapter,State: Async — Temporal executes dbt

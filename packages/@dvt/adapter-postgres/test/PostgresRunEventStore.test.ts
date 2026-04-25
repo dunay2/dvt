@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { RunEventStoragePort } from '../src/PostgresRunEventStorage.js';
 import { PostgresRunEventStore } from '../src/PostgresRunEventStore.js';
+import { maxRunSeqSql, selectExistingEventSql } from '../src/PostgresRunEventStoreSql.js';
 import {
   InvalidRunSequenceValueError,
   RUN_EVENT_STORE_ERROR_CODE,
@@ -31,6 +32,12 @@ const NOOP_SQL_EXECUTOR: SqlCommandExecutor = {
 class InMemoryRunEventStorage implements RunEventStoragePort {
   private readonly byRunAndIdempotency = new Map<string, EventEnvelope>();
   private maxRunSeq = 0;
+  public readonly sequenceReads: Array<{ tenantId: string; runId: RunId }> = [];
+  public readonly dedupeReads: Array<{
+    tenantId: string;
+    runId: RunId;
+    idempotencyKey: string;
+  }> = [];
   public readonly upsertedHeads: Array<{
     runId: RunId;
     tenantId: string;
@@ -48,7 +55,12 @@ class InMemoryRunEventStorage implements RunEventStoragePort {
     // no-op for append policy tests
   }
 
-  async readMaxRunSeq(_executor: SqlCommandExecutor, _runId: RunId): Promise<number> {
+  async readMaxRunSeq(
+    _executor: SqlCommandExecutor,
+    tenantId: string,
+    runId: RunId
+  ): Promise<number> {
+    this.sequenceReads.push({ tenantId, runId });
     return this.maxRunSeq;
   }
 
@@ -88,9 +100,11 @@ class InMemoryRunEventStorage implements RunEventStoragePort {
 
   async selectExistingEvent(
     _executor: SqlCommandExecutor,
+    tenantId: string,
     runId: RunId,
     idempotencyKey: string
   ): Promise<EventEnvelope | null> {
+    this.dedupeReads.push({ tenantId, runId, idempotencyKey });
     return this.byRunAndIdempotency.get(this.key(runId, idempotencyKey)) ?? null;
   }
 
@@ -104,7 +118,11 @@ class InMemoryRunEventStorage implements RunEventStoragePort {
 }
 
 class UnsafeMaxRunSequenceStorage extends InMemoryRunEventStorage {
-  override async readMaxRunSeq(_executor: SqlCommandExecutor, runId: RunId): Promise<number> {
+  override async readMaxRunSeq(
+    _executor: SqlCommandExecutor,
+    _tenantId: string,
+    runId: RunId
+  ): Promise<number> {
     throw new InvalidRunSequenceValueError(runId, TEST_UNSAFE_MAX_RUN_SEQ);
   }
 }
@@ -417,6 +435,38 @@ describe('PostgresRunEventStore append invariants', () => {
       },
     ]);
   });
+
+  it('scopes sequence and dedupe reads to the target tenant', async () => {
+    const storage = new InMemoryRunEventStorage();
+    const { store, executor } = makeAppendStoreHarness(storage);
+
+    await store.append(executor, TEST_TENANT_ID, TEST_RUN_ID, [
+      makeEvent({
+        runId: TEST_RUN_ID,
+        idempotencyKey: `${TEST_RUN_ID}:started`,
+        eventType: 'RunStarted',
+      }),
+    ]);
+    await store.append(executor, TEST_TENANT_ID, TEST_RUN_ID, [
+      makeEvent({
+        runId: TEST_RUN_ID,
+        idempotencyKey: `${TEST_RUN_ID}:started`,
+        eventType: 'RunStarted',
+      }),
+    ]);
+
+    expect(storage.sequenceReads).toEqual([
+      { tenantId: TEST_TENANT_ID, runId: TEST_RUN_ID },
+      { tenantId: TEST_TENANT_ID, runId: TEST_RUN_ID },
+    ]);
+    expect(storage.dedupeReads).toEqual([
+      {
+        tenantId: TEST_TENANT_ID,
+        runId: TEST_RUN_ID,
+        idempotencyKey: `${TEST_RUN_ID}:started`,
+      },
+    ]);
+  });
 });
 
 describe('PostgresRunEventStore listEvents policy', () => {
@@ -442,3 +492,18 @@ describe('PostgresRunEventStore listEvents policy', () => {
     expect(calls).toHaveLength(0);
   });
 });
+
+describe('PostgresRunEventStore SQL tenant predicates', () => {
+  it('scopes max sequence and dedupe lookups by tenant before run id', () => {
+    expect(normalizeSql(maxRunSeqSql(TEST_SCHEMA))).toContain(
+      'WHERE tenant_id = $1 AND run_id = $2'
+    );
+    expect(normalizeSql(selectExistingEventSql(TEST_SCHEMA))).toContain(
+      'WHERE tenant_id = $1 AND run_id = $2 AND idempotency_key = $3'
+    );
+  });
+});
+
+function normalizeSql(sql: string): string {
+  return sql.replace(/\s+/g, ' ').trim();
+}

@@ -56,7 +56,7 @@ class RecordingPool {
 }
 
 describe('PostgresStartRunIntentStore contextual access', () => {
-  it('runs tenant-owned intent operations through service-context sessions', async () => {
+  it('runs tenant-owned operations through tenant context and maintenance scans through service context', async () => {
     const pool = new RecordingPool();
     const store = new PostgresStartRunIntentStore({
       pool: pool as never,
@@ -75,16 +75,23 @@ describe('PostgresStartRunIntentStore contextual access', () => {
       provider: 'temporal',
       createdAt: NOW,
     });
-    await store.markResolved('intent-1');
+    await store.markResolved({ tenantId: 'tenant-1', intentId: 'intent-1' });
     await store.listOrphaned(60_000, Date.parse(NOW), 10);
-    await store.getIntent('intent-1');
+    await store.getIntent({ tenantId: 'tenant-1', intentId: 'intent-1' });
 
     const sqls = pool.queries.map((query) => query.text);
     expect(sqls.filter((sql) => sql === 'BEGIN')).toHaveLength(4);
     expect(sqls.filter((sql) => sql === 'COMMIT')).toHaveLength(4);
     expect(
+      pool.queries.filter(
+        (query) =>
+          query.text.includes("set_config('dvt.access_mode', 'tenant', true)") &&
+          query.values?.[0] === 'tenant-1'
+      )
+    ).toHaveLength(3);
+    expect(
       sqls.filter((sql) => sql.includes("set_config('dvt.access_mode', 'service', true)"))
-    ).toHaveLength(4);
+    ).toHaveLength(1);
     expect(pool.client.releaseCalls).toBe(4);
   });
 });

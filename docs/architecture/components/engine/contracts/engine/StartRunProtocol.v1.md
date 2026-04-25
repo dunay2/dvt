@@ -85,7 +85,7 @@ sequenceDiagram
     alt adapter exposes estimateRunRef()
         Exec->>State: bootstrapRunTx(run_metadata.providerRef + RunQueued)
         Exec->>Adapter: startRun(planRef, resolvedContext)
-        Exec->>Intent: markDispatched(intentId, runRef)
+        Exec->>Intent: markDispatched({tenantId, intentId}, runRef)
         Exec->>Exec: reconcile estimatedRef vs runRef
         alt same provider, different late-bound fields
             Exec->>State: saveProviderRef(tenantId, runId, runRef)
@@ -99,7 +99,7 @@ sequenceDiagram
         end
     else no estimateRunRef()
         Exec->>Adapter: startRun(planRef, resolvedContext)
-        Exec->>Intent: markDispatched(intentId, runRef)
+        Exec->>Intent: markDispatched({tenantId, intentId}, runRef)
         Exec->>State: bootstrapRunTx(run_metadata.providerRef + RunQueued)
         Exec->>Failure: markIntentResolvedBestEffort(...)
     end
@@ -195,6 +195,9 @@ The intent phase currently performs:
    - `createdAt`
 
 This is the crash-consistency entry point mandated by ADR-0030.
+All post-create intent command/query operations use the tenant-scoped
+`StartRunIntentRef { tenantId, intentId }`; only maintenance scanning uses the
+unscoped `listOrphaned(...)` service-context path.
 
 ### 4.4 Dispatch
 
@@ -210,7 +213,7 @@ The dispatch phase currently performs:
    - `startRunWithoutEstimatedRef()`
 2. call `adapter.startRun(planRef, resolvedContext)`
 3. enforce adapter-start timeout through `withTimeout(...)`
-4. persist `DISPATCHED` intent state via `markDispatched(intentId, runRef)`
+4. persist `DISPATCHED` intent state via `markDispatched({ tenantId, intentId }, runRef)`
 5. treat post-start intent persistence failure as a first-class error
    (`PostStartIntentPersistenceError`)
 

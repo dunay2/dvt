@@ -112,12 +112,12 @@ sequenceDiagram
         OIRS->>DIRP: evaluate(intent)
         DIRP->>Store: getRunMetadataByRunId(tenantId, runId)
         alt metadata exists
-          DIRP->>Intent: markResolved(intentId)
+          DIRP->>Intent: markResolved({tenantId, intentId})
           DIRP-->>OIRS: {resolved: intentId}
         else no metadata (orphaned dispatch)
           alt adapter + engineRunRef available
             DIRP->>Adapter: cancelRun(engineRunRef)
-            DIRP->>Intent: markResolved(intentId)
+            DIRP->>Intent: markResolved({tenantId, intentId})
             DIRP-->>OIRS: {cancelled: intentId}
           else adapter missing or engineRunRef missing
             DIRP-->>OIRS: {cancelFailed: intentId}

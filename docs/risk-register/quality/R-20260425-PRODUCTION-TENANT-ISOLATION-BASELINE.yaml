@@ -5,29 +5,34 @@ status: Open
 date: 2026-04-25
 owners:
   - packages/@dvt/adapter-postgres
+  - packages/@dvt/engine
+  - packages/@dvt/contracts
 severity: High
 probability: Medium
 context: >
   The 2026-04-25 tenant isolation slice enables forced RLS for tenant-owned online Postgres state
   tables, introduces explicit tenant/service transaction context, and makes run_metadata the
   authoritative source for tenant backfills. The follow-up hardcut also includes start_run_intents
-  in the RLS baseline and routes its store through service-context sessions. This closes the
+  in the RLS baseline, tenant-scopes intent command/query operations through StartRunIntentRef, and
+  adds explicit tenant predicates to run-event sequence and dedupe reads. This closes the
   predicate-only storage baseline for run state and the pre-dispatch intent log.
 risk: >
   Plan records still lack top-level tenant/project/environment columns, so plan-store tenancy
-  remains a separate governed task. Service and maintenance paths, including start-run intent
-  reconciliation, also depend on explicit service-context entry points; future direct SQL readers
-  can drift if they bypass the adapter client-session pattern.
+  remains a separate governed task. Maintenance paths still depend on explicit service-context entry
+  points for global sweeps; future direct SQL readers can drift if they bypass the adapter
+  client-session pattern or omit tenant predicates on tenant-owned reads.
 mitigations:
   - >
     Keep `FORCE ROW LEVEL SECURITY` on tenant-owned online tables and keep application traffic on a
     non-owner role for least privilege.
   - >
-    Keep all tenant API paths setting tenant context and all worker/maintenance paths setting
-    service context before accessing RLS-protected tables.
+    Keep all tenant command/query paths setting tenant context with explicit tenant predicates and
+    all worker/maintenance global sweep paths setting service context before accessing RLS-protected
+    tables.
   - >
-    Keep start_run_intents under its dedicated schema manager RLS migration and forbid direct
-    pool.query access from the intent store.
+    Keep start_run_intents under its dedicated schema manager RLS migration, require
+    StartRunIntentRef on intent command/query operations, and forbid direct pool.query access from
+    the intent store.
   - >
     Do not use `__unknown_tenant__`, payload-derived, or synthetic fallbacks for tenant-owned
     storage migrations; migration must fail if ownership cannot be derived from canonical metadata.

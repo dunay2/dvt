@@ -4,6 +4,8 @@ status: Accepted
 date: 2026-04-25
 owners:
   - packages/@dvt/adapter-postgres
+  - packages/@dvt/engine
+  - packages/@dvt/contracts
 arc_level: ARC-2
 breaking: true
 code_refs:
@@ -14,17 +16,34 @@ code_refs:
   - packages/@dvt/adapter-postgres/src/PostgresBackpressureSnapshotReaderSql.ts
   - packages/@dvt/adapter-postgres/src/StartRunIntentSchemaManager.ts
   - packages/@dvt/adapter-postgres/src/PostgresStartRunIntentStore.ts
+  - packages/@dvt/adapter-postgres/src/PostgresRunEventStoreSql.ts
+  - packages/@dvt/adapter-postgres/src/PostgresRunEventStorage.ts
+  - packages/@dvt/engine/src/ports/IStartRunIntentStore.ts
+  - packages/@dvt/contracts/src/contracts/engine/IStartRunIntentStore.v1.ts
   - packages/@dvt/adapter-postgres/src/PostgresOutboxStore.ts
   - packages/@dvt/adapter-postgres/src/PostgresRunSnapshotStore.ts
   - packages/@dvt/adapter-postgres/test/PostgresTenantIsolationPolicy.test.ts
   - packages/@dvt/adapter-postgres/test/StartRunIntentSchemaManager.test.ts
   - packages/@dvt/adapter-postgres/test/PostgresStartRunIntentStore.context.test.ts
+  - packages/@dvt/adapter-postgres/test/PostgresRunEventStore.test.ts
+  - packages/@dvt/engine/test/state/InMemoryStartRunIntentStore.test.ts
+  - packages/@dvt/engine/test/core/WorkflowEngine.intentLog.test.ts
+  - packages/@dvt/engine/test/services/RunMaintenanceService.test.ts
   - packages/@dvt/adapter-postgres/test/PostgresBackpressureSnapshotReader.test.ts
   - packages/@dvt/adapter-postgres/test/PostgresStateStoreAdapter.migrate.test.ts
   - docs/risk-register/quality/R-20260425-PRODUCTION-TENANT-ISOLATION-BASELINE.yaml
 evidence:
   tests:
     - pnpm --filter @dvt/adapter-postgres test -- PostgresTenantIsolationPolicy.test.ts StartRunIntentSchemaManager.test.ts PostgresStartRunIntentStore.context.test.ts
+    - pnpm --filter @dvt/adapter-postgres test -- PostgresStartRunIntentStore.context.test.ts PostgresRunEventStore.test.ts
+    - pnpm --filter @dvt/engine test -- InMemoryStartRunIntentStore.test.ts WorkflowEngine.intentLog.test.ts RunMaintenanceService.test.ts
+    - pnpm --filter @dvt/contracts test
+    - pnpm --filter @dvt/engine test
+    - pnpm --filter @dvt/adapter-postgres test
+    - pnpm --filter @dvt/contracts typecheck
+    - pnpm --filter @dvt/engine typecheck
+    - pnpm --filter @dvt/adapter-postgres typecheck
+    - pnpm verify:prepush
     - pnpm --filter @dvt/adapter-postgres test -- PostgresTenantIsolationPolicy.test.ts PostgresBackpressureSnapshotReader.test.ts PostgresStateStoreAdapter.migrate.test.ts
     - pnpm --filter @dvt/adapter-postgres test -- PostgresTenantIsolationPolicy.test.ts PostgresAdapterClientSession.test.ts PostgresStateStoreAdapter.migrate.test.ts PostgresOutboxStore.test.ts PostgresRunSnapshotStore.test.ts PostgresRunSnapshotStore.cas-guard.test.ts
     - pnpm --filter @dvt/adapter-postgres build
@@ -55,8 +74,12 @@ forced RLS on the start-run intent log.
 5. Outbox, lineage, archive, snapshot, staleness, and snapshot-work paths set
    explicit tenant or service context before touching RLS-protected tables.
 6. `start_run_intents` is included in the tenant-isolation catalog, gets its
-   own forced RLS migration through `StartRunIntentSchemaManager`, and is read
-   or mutated only through an explicit service-context session.
+   own forced RLS migration through `StartRunIntentSchemaManager`, and uses
+   tenant-scoped command/query operations through `StartRunIntentRef`; only
+   orphan sweeping uses the explicit service-context session.
+7. Run-event sequence and idempotency lookups include explicit `tenant_id`
+   predicates before `run_id`, so correctness does not rely solely on ambient
+   RLS filtering.
 
 # What Remains Open
 
