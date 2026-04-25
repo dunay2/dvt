@@ -48,11 +48,11 @@ Constraints and invariants:
 
 Options considered:
 
-| Option                                                                                       | Outcome                                                                                                            |
-| -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| Keep `enforceTransformationTopology` and implement authoring rejection                       | Rejected. It would contradict the intended authoring workflow and block intermediate graphs.                       |
-| Rename the flag to a run-readiness flag                                                      | Rejected. The existing run validation already owns that rule; adding an unused flag would preserve the data clump. |
-| Remove topology policy from authoring and make strategy policy only identify the Canvas kind | Selected. It matches the actual ownership boundary and removes the false policy seam.                              |
+| Option                                                                 | Outcome                                                                                                            |
+| ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| Keep `enforceTransformationTopology` and implement authoring rejection | Rejected. It would contradict the intended authoring workflow and block intermediate graphs.                       |
+| Rename the flag to a run-readiness flag                                | Rejected. The existing run validation already owns that rule; adding an unused flag would preserve the data clump. |
+| Move Canvas-kind posture to the active canvas document                 | Selected. It matches the actual ownership boundary and removes the false policy seam.                              |
 
 ## Pre-Implementation Brief
 
@@ -67,9 +67,13 @@ Scope:
 
 Expected outcome:
 
-- `CanvasGraphAuthoringPolicy` exposes `canvasKind` only.
-- `dropCanonicalNode` no longer accepts a graph strategy or authoring topology
-  policy.
+- `CanvasGraphStrategy` exposes payload parsing/projection only.
+- `canvasDocument.kind` selects the active graph strategy and toolbar
+  authoring mode.
+- `admitCanonicalNodeToCanvas` performs canonical node admission without
+  importing React Flow or producing viewport nodes.
+- Viewport projection is performed by the handler layer after canonical
+  admission succeeds.
 - Transformation strategy rejects malformed canonical node roles, statuses, and
   edge relations.
 - Docs and diagrams describe where topology validation actually lives.
@@ -82,29 +86,31 @@ Out of scope:
 
 ## Fowler Architecture Fix
 
-| Concern             | Before                                                     | After                                                                       |
-| ------------------- | ---------------------------------------------------------- | --------------------------------------------------------------------------- |
-| Policy object       | Mixed toolbar mode and fake authoring topology enforcement | Identifies the active plugin-contributed Canvas kind                        |
-| Drop aggregate      | Received `CanvasGraphStrategy` and strategy policy         | Receives canonical node, position, current nodes, and viewport options only |
-| Duplicate command   | Carried graph strategy only to reuse drop                  | Reuses canonical drop without plugin policy coupling                        |
-| Runtime guards      | DVT strategy accepted any string role, status, or relation | Shared canonical guards validate domain vocabulary                          |
-| Topology validation | Implied by authoring policy name                           | Owned by transformation graph validation before plan/run                    |
+| Concern             | Before                                                     | After                                                               |
+| ------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------- |
+| Policy object       | Mixed toolbar mode and fake authoring topology enforcement | Removed from graph strategy; canvas kind comes from active document |
+| Drop aggregate      | Received strategy and viewport projection data             | Receives canonical node plus semantic visible-node IDs only         |
+| Duplicate command   | Reused drop to return React Flow nodes                     | Returns canonical duplicate command plus projection position        |
+| Runtime guards      | DVT strategy accepted any string role, status, or relation | Shared canonical guards validate domain vocabulary                  |
+| Topology validation | Implied by authoring policy name                           | Owned by transformation graph validation before plan/run            |
 
 ## Component Topology
 
 ```mermaid
 flowchart LR
-  Registry["graphStrategyRegistry"] --> Strategy["CanvasGraphStrategy"]
-  Strategy --> Kind["CanvasGraphAuthoringPolicy.canvasKind"]
+  CanvasDocument["canvasDocument.kind"] --> ActiveStrategy["canvasActiveGraphStrategy"]
+  Registry["graphStrategyRegistry"] --> ActiveStrategy
+  ActiveStrategy --> Strategy["CanvasGraphStrategy"]
   Strategy --> Parse["parseDropPayload(dataTransfer)"]
   Guards["canonicalGuards.ts"] --> Strategy
   Guards --> Parse
   Parse --> Canonical["CanonicalNode"]
   Palette["Node kind catalog"] --> Command["buildAuthoringNodeCommand"]
   Command --> Canonical
-  Canonical --> Drop["dropCanonicalNode"]
-  Drop --> Lifecycle["canvasGraphLifecycle.node.admitExplicit"]
-  Drop --> View["React Flow nodes"]
+  Canonical --> Admission["admitCanonicalNodeToCanvas"]
+  Admission --> Lifecycle["canvasGraphLifecycle.node.admitExplicit"]
+  Admission --> Mapper["mapDroppedCanonicalNodeToCanvasNode"]
+  Mapper --> View["React Flow nodes"]
   Validation["validateTransformationGraph"] --> Plan["Plan / run readiness"]
 ```
 
@@ -116,15 +122,17 @@ sequenceDiagram
   participant Handler as useCanvasNodeDropHandlers
   participant Strategy as CanvasGraphStrategy
   participant Guards as canonicalGuards
-  participant Drop as dropCanonicalNode
+  participant Admission as admitCanonicalNodeToCanvas
+  participant Mapper as Viewport mapper
   participant Lifecycle as canvasGraphLifecycle
 
   User->>Handler: drop payload on Canvas
   Handler->>Strategy: parse plugin payload if canonical payload is absent
   Strategy->>Guards: validate canonical role, status, kind, relation
   Strategy-->>Handler: CanonicalNode or null
-  Handler->>Drop: canonical node plus current viewport nodes
-  Drop-->>Handler: added or noop duplicate-id result
+  Handler->>Admission: canonical node plus visible semantic IDs
+  Admission-->>Handler: added or noop duplicate-id result
+  Handler->>Mapper: project accepted node to viewport
   Handler->>Lifecycle: admit explicit canonical node
 ```
 
@@ -153,6 +161,18 @@ sequenceDiagram
   `pnpm docs:workboard:generate` were run after source/doc/planning changes.
 - Prepush:
   `pnpm verify:prepush` passed.
+
+Additional Fowler hardening on the same route:
+
+- `CanvasGraphStrategy` no longer exposes `authoringPolicy`.
+- `canvasActiveGraphStrategy.ts` resolves strategy and authoring mode from the
+  active canvas document.
+- `admitCanonicalNodeToCanvas` is a pure canonical admission function; drop,
+  first-node creation, and duplicate handlers project to viewport nodes only
+  after canonical admission succeeds.
+- Green validation rerun:
+  `pnpm --filter @dvt/web test -- graphStrategyRegistry.test.ts canvasActiveGraphStrategy.test.ts useCanvasController.core.test.tsx canvasNodeDropAggregate.test.ts canvasDuplicateNodeCommand.test.ts useCanvasGraphHandlers.nodeDrop.test.tsx useCanvasGraphHandlers.nodeDuplicate.test.tsx CanvasEmptyAuthoringEntrypoint.architecture.test.ts useCanvasNodeAuthoringHandlers.architecture.test.ts`
+  passed.
 
 ## No-Debt Evidence
 

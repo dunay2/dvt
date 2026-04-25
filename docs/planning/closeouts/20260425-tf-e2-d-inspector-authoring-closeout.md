@@ -82,12 +82,12 @@ payload generation, preview, and run handoff.
   non-serializable values before signatures, duplicate commands, local saved
   draft cache, or persistence can observe them.
 - `plugins/graphStrategyContracts.ts` owns the plugin-neutral
-  `CanvasGraphStrategy` and `CanvasGraphAuthoringPolicy` contracts. Canvas
-  application code reads explicit policy fields instead of branching on
-  strategy IDs.
+  `CanvasGraphStrategy` payload parsing/projection contract. Canvas
+  application code reads canvas posture from the active canvas document, not
+  from strategy policy or concrete strategy IDs.
 - `plugins/dvt/transformationGraphStrategy.ts` owns the DVT transformation
   graph strategy. DBT owns DBT graph mapping only; it does not own the
-  transformation canvas policy.
+  transformation canvas mapping.
 - `views/lineage/useLineageViewData.ts` resolves the DBT graph strategy
   explicitly because Lineage consumes the DBT workspace snapshot. It does not
   inherit the Canvas authoring default, which can be the DVT transformation

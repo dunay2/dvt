@@ -61,7 +61,7 @@ write surface lives one level up in the route-owned wrapper.
 | `serializeCanvasDraftAuthoringBaselineSignature` | remote-draft baseline signature policy used by bootstrap and reload    |
 | `toCanvasAuthoringMetadata`                      | JSON-compatible metadata DTO boundary for signatures and persistence   |
 | `CanvasGraphStrategy`                            | plugin-neutral graph strategy contract used by Canvas application code |
-| `CanvasGraphAuthoringPolicy`                     | explicit plugin-contributed Canvas kind carried by each strategy       |
+| `CanvasGraphAuthoringMode`                       | route-facing authoring kind resolved from the active canvas document   |
 | `useLineageViewData`                             | Lineage read model over the DBT workspace snapshot                     |
 
 ## Invariants
@@ -85,8 +85,8 @@ write surface lives one level up in the route-owned wrapper.
   omitted before render-time signatures or persistence.
 - Canvas application code must depend on the plugin-neutral
   `CanvasGraphStrategy` contract, not on a DBT adapter module.
-- Canvas application code must read `CanvasGraphAuthoringPolicy.canvasKind`
-  instead of branching on concrete strategy IDs.
+- Canvas application code must read the active canvas kind from
+  `canvasDocument.kind`; graph strategies must not own canvas-kind posture.
 - Node authoring and duplicate commands must not consume transformation
   topology flags. Canvas authoring remains compositional; the
   `source -> sql_transform -> sink` topology is validated before planning and
@@ -123,7 +123,7 @@ write surface lives one level up in the route-owned wrapper.
 | `useCanvasDraftReloadHydration.ts`           | reload saved-signature assignment from shared baseline policy       | hook-local signature rules             |
 | `types/canonicalGuards.ts`                   | runtime guards for canonical graph primitives                       | Canvas route state or plugin mapping   |
 | `plugins/graphStrategyContracts.ts`          | plugin-neutral graph strategy contract                              | DBT mapping implementation             |
-| `plugins/dvt/transformationGraphStrategy.ts` | DVT-owned transformation graph strategy and Canvas kind policy      | DBT adapter mapping                    |
+| `plugins/dvt/transformationGraphStrategy.ts` | DVT-owned transformation graph strategy and canonical guards        | DBT adapter mapping or Canvas posture  |
 | `views/lineage/useLineageViewData.ts`        | DBT snapshot read model and explicit DBT strategy resolution        | Canvas authoring default ownership     |
 
 ## Topology
@@ -144,11 +144,14 @@ flowchart LR
   Signature --> Autosave["draft autosave scheduling"]
   Projection --> Viewport["useCanvasViewportGraphModel.ts"]
   StrategyContract["CanvasGraphStrategy contract"] --> ParseDrop["plugin drop payload parsing"]
-  StrategyPolicy["CanvasGraphAuthoringPolicy.canvasKind"] --> Toolbar["toolbar / route posture"]
+  CanvasDocument["canvasDocument.kind"] --> ActiveStrategy["canvasActiveGraphStrategy.ts"]
+  CanvasDocument --> Toolbar["toolbar / route posture"]
+  ActiveStrategy --> StrategyContract
   CanonicalGuards["canonicalGuards.ts"] --> StrategyContract
   CanonicalGuards --> ParseDrop
-  ParseDrop --> Drop["dropCanonicalNode canonical admission"]
-  Drop --> Duplicate["duplicate command reuse"]
+  ParseDrop --> Admission["admitCanonicalNodeToCanvas"]
+  Admission --> Duplicate["duplicate command reuse"]
+  Admission --> ViewportMapper["mapDroppedCanonicalNodeToCanvasNode"]
   DvtStrategy["dvt/transformationGraphStrategy.ts"] --> StrategyContract
   DbtAdapter["dbtNodeAdapter.ts"] --> StrategyContract
   Lineage["useLineageViewData.ts"] --> DbtAdapter
@@ -235,8 +238,9 @@ sequenceDiagram
 - reintroducing plugin metadata sanitization in ad hoc shallow clones
 - importing `CanvasGraphStrategy` from a concrete plugin adapter instead of the
   neutral plugin contract
-- deriving Canvas behavior from `graphStrategy.id` instead of explicit strategy
-  policy
+- deriving Canvas behavior from `graphStrategy.id` or strategy policy instead
+  of the active canvas document
+- moving viewport projection back into canonical admission commands
 - reintroducing authoring-time topology flags into node drop or duplicate
   commands; topology validation belongs to plan/run readiness
 - letting DBT own the DVT transformation graph strategy

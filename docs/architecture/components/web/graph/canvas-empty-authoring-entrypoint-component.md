@@ -86,10 +86,11 @@ flowchart LR
   Copy --> Catalog
   Catalog --> Command["handleCreateAuthoringNode"]
   Command --> Builder["canvasAuthoringNodeCommand"]
-  Builder --> Drop["dropCanonicalNode"]
-  Drop --> Lifecycle["canvasGraphLifecycle.node.admitExplicit"]
-  Lifecycle --> Projection["Canvas viewport projection"]
-  Projection --> Autosave["protected authoring draft save"]
+  Builder --> Admission["admitCanonicalNodeToCanvas"]
+  Admission --> Lifecycle["canvasGraphLifecycle.node.admitExplicit"]
+  Admission --> Projection["mapDroppedCanonicalNodeToCanvasNode"]
+  Projection --> Viewport["Canvas viewport projection"]
+  Lifecycle --> Autosave["protected authoring draft save"]
 ```
 
 ## Consumers
@@ -122,7 +123,8 @@ canvas document identity rather than a route-global transformation default.
   node kinds.
 - Do not flatten typed editable empty-state copy back into one route-global
   fallback once `canvasDocument.kind` is known.
-- Do not bypass `dropCanonicalNode` or `canvasGraphLifecycle`.
+- Do not bypass `admitCanonicalNodeToCanvas` or `canvasGraphLifecycle`.
+- Do not move viewport projection back into the canonical admission aggregate.
 - Do not make `CanvasCenterSurface.tsx` own transport, workbench, and empty
   authoring decisions in one large method again.
 - Do not skip the `needs_canvas` host posture by inventing a default document

@@ -252,12 +252,12 @@ Target:
 
 ### Task Checklist
 
-- [ ] `TF-E2-L-A` Preserve QA and remediation intake in planning
-- [ ] `TF-E2-L-B` Add DBT fail-closed boundary tests and guards
-- [ ] `TF-E2-L-C` Make active strategy resolve from active canvas document
-- [ ] `TF-E2-L-D` Move canvas-kind metadata out of graph strategy
-- [ ] `TF-E2-L-E` Split canonical admission from viewport projection
-- [ ] `TF-E2-L-F` Replace thin architecture assertions with semantic tests and
+- [x] `TF-E2-L-A` Preserve QA and remediation intake in planning
+- [x] `TF-E2-L-B` Add DBT fail-closed boundary tests and guards
+- [x] `TF-E2-L-C` Make active strategy resolve from active canvas document
+- [x] `TF-E2-L-D` Move canvas-kind metadata out of graph strategy
+- [x] `TF-E2-L-E` Split canonical admission from viewport projection
+- [x] `TF-E2-L-F` Replace thin architecture assertions with semantic tests and
       update docs
 
 ### Task Details
@@ -367,8 +367,8 @@ Target:
 - Objective: Make node admission semantic and keep React Flow projection in
   viewport code.
 - Scope:
-  - create `apps/web/src/app/views/canvas/canvasCanonicalNodeAdmission.ts`
-  - modify `apps/web/src/app/views/canvas/canvasNodeDropAggregate.ts`
+  - keep canonical admission in
+    `apps/web/src/app/views/canvas/canvasNodeDropAggregate.ts`
   - modify `apps/web/src/app/views/canvas/useCanvasNodeDropHandlers.ts`
   - modify `apps/web/src/app/views/canvas/useCanvasAuthoringNodeCreationHandlers.ts`
   - modify `apps/web/src/app/views/canvas/canvasDuplicateNodeCommand.ts`
@@ -388,8 +388,8 @@ Target:
   - duplicate and create-node flows reuse the same admission result;
   - tests prove duplicate detection and projection are separate concerns.
 - TDD commands:
-  - red: `pnpm --filter @dvt/web test -- canvasCanonicalNodeAdmission.test.ts canvasNodeDropAggregate.test.ts canvasDuplicateNodeCommand.test.ts`
-  - green: `pnpm --filter @dvt/web test -- canvasCanonicalNodeAdmission.test.ts canvasNodeDropAggregate.test.ts canvasDuplicateNodeCommand.test.ts`
+  - red: `pnpm --filter @dvt/web test -- canvasNodeDropAggregate.test.ts canvasDuplicateNodeCommand.test.ts`
+  - green: `pnpm --filter @dvt/web test -- canvasNodeDropAggregate.test.ts canvasDuplicateNodeCommand.test.ts`
 
 #### `TF-E2-L-F` Replace thin architecture assertions with semantic tests and update docs
 
@@ -423,7 +423,7 @@ Target:
 
 ## Mermaid Diagram
 
-### Current drift
+### Original drift
 
 ```mermaid
 flowchart LR
@@ -445,7 +445,8 @@ flowchart LR
   CanvasKindRegistry --> StrategyResolver["resolve graph strategy by canvas kind"]
   StrategyResolver --> Adapter["graph payload adapter only"]
   Adapter --> Guards["shared runtime guards"]
-  CanonicalVocabulary["canonical const vocabularies"] --> Guards
+  AdapterVocabulary["map-derived DBT vocabularies"] --> Guards
+  CanonicalGuards["canonicalGuards.ts"] --> Guards
   Adapter --> Canonical["CanonicalNode / CanonicalEdge"]
   Canonical --> Admission["canonical node admission"]
   Admission --> Projection["viewport projection"]

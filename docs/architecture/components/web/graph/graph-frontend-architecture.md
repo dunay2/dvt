@@ -94,9 +94,10 @@ As of 2026-04-22:
 
 - route startup is generalized by `route.id` plus explicit bootstrap metadata
 - Canvas graph mutation now flows through one local lifecycle component
-- edge admission lives behind a narrow pure policy seam; node drop and
-  duplicate admission are canonical aggregate operations, while plugin graph
-  strategies only parse or project plugin-owned payloads
+- edge admission lives behind a narrow pure policy seam; node drop, duplicate,
+  and first-node creation use canonical admission before any viewport
+  projection, while plugin graph strategies only parse or project
+  plugin-owned payloads
 - connection and transformation validation stay typed until presentation
 - route-visible operator copy is centralized instead of repeated across handlers
 - protected draft reads now project a semantic canonical graph,
@@ -175,8 +176,13 @@ flowchart LR
   Registry --> PortMap["plugin port maps"]
   PortMap --> Rules
   Rules --> CanvasPolicy["canvasConnectionAggregate edge policy"]
-  Registry --> Strategy["CanvasGraphStrategy payload projection"]
-  Strategy --> Drop["dropCanonicalNode canonical admission"]
+  Registry --> CanvasKinds["CanvasKindRegistration catalog"]
+  CanvasKinds --> ActiveDocument["canvasDocument.kind"]
+  ActiveDocument --> StrategyResolver["resolveActiveCanvasGraphStrategy"]
+  Registry --> StrategyResolver
+  StrategyResolver --> Strategy["CanvasGraphStrategy payload parsing and projection"]
+  Strategy --> Admission["admitCanonicalNodeToCanvas"]
+  Admission --> ViewportProjection["mapDroppedCanonicalNodeToCanvasNode"]
 ```
 
 Reading rule:
@@ -184,6 +190,38 @@ Reading rule:
 - ask `PluginManifest.ts` what a plugin may declare
 - ask `registry.ts` which plugins are active
 - ask `ConnectionRules.ts` how those declarations affect graph semantics
+- ask the active canvas document which graph strategy and authoring catalog are
+  in force; do not ask the graph strategy for canvas-kind posture
+
+## Active Strategy And Canonical Admission
+
+The active Canvas document owns the authoring kind. Graph strategies are now
+payload/projection adapters only.
+
+```mermaid
+sequenceDiagram
+  participant User
+  participant Canvas as Canvas document
+  participant Resolver as canvasActiveGraphStrategy
+  participant Strategy as CanvasGraphStrategy
+  participant Admission as admitCanonicalNodeToCanvas
+  participant Mapper as viewport mapper
+  participant Lifecycle as canvasGraphLifecycle
+
+  Canvas->>Resolver: canvas.kind
+  Resolver->>Strategy: select strategy by kind
+  User->>Strategy: drop plugin payload
+  Strategy-->>Admission: CanonicalNode or null
+  Admission-->>Mapper: accepted canonical node
+  Mapper-->>Lifecycle: viewport node is projection only
+  Admission->>Lifecycle: admit explicit canonical node
+```
+
+Invariant:
+
+- `admitCanonicalNodeToCanvas` must not import React Flow or produce viewport
+  nodes.
+- `CanvasGraphStrategy` must not expose canvas-kind policy.
 
 ## Architecture Pack
 
