@@ -7,7 +7,10 @@ import type { WorkspaceGraphDraftRecord } from '../../ports/workspace';
 import { buildController } from '../Canvas.test.controller';
 import { readArchitectureSiblingSource } from '../architecture.test.support';
 import { resolveActiveCanvasGraphStrategy } from './canvasActiveGraphStrategy';
-import { createUnknownCanvasDraftReadModel } from './canvasDraftReadModel';
+import {
+  createUnknownCanvasDraftReadModel,
+  type CanvasDraftReadModel,
+} from './canvasDraftReadModel';
 import type { CanvasDraftSession } from './canvasDraftSession';
 import { resolveCanvasNodeAdmissionTransaction } from './canvasNodeAdmissionTransaction';
 import { deriveCanvasRouteInteractionState } from './canvasRouteInteractionState';
@@ -38,7 +41,7 @@ const DVT_TRANSFORMATION_STRATEGY_SOURCE = readArchitectureSiblingSource(
   '../../plugins/dvt/transformationGraphStrategy.ts'
 );
 
-function buildDraftReadModelWithCanvasKind(kind: string) {
+function buildDraftReadModelWithCanvasKind(kind: string): CanvasDraftReadModel {
   const record: WorkspaceGraphDraftRecord = {
     revision: 'rev-1',
     savedAt: '2026-04-25T00:00:00Z',
