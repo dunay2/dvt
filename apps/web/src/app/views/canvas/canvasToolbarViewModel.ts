@@ -5,7 +5,7 @@ import {
   canvasViewCopy,
   formatTransformationGraphValidationSummary,
 } from './copy';
-import type { CanvasGraphAuthoringMode } from '../../plugins/graphStrategyContracts';
+import type { CanvasGraphAuthoringMode } from '../../plugins/nodeTypeContracts';
 import type { CanvasDraftToolbarState } from './canvasDraftToolbarState';
 import type { CanvasRouteState } from './canvasDraftPresentationModel';
 import type { TransformationGraphValidationResult } from './transformationGraphValidation';

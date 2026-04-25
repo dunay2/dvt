@@ -1,7 +1,10 @@
 /** Owned concern: compose Canvas environment, authoring runtime, adapter seams, and execution seams into one route facade. */
 import { useMemo } from 'react';
 
-import { resolveActiveCanvasGraphStrategy } from './canvasActiveGraphStrategy';
+import {
+  resolveActiveCanvasAuthoringMode,
+  resolveActiveCanvasGraphStrategy,
+} from './canvasActiveGraphStrategy';
 import { buildCanvasControllerViewModel } from './canvasControllerViewModel';
 import { useCanvasAuthoringRuntime } from './useCanvasAuthoringRuntime';
 import { useCanvasControllerEnvironment } from './useCanvasControllerEnvironment';
@@ -66,7 +69,10 @@ export function useCanvasController() {
     () => resolveActiveCanvasGraphStrategy(draftReadModel),
     [draftReadModel?.record?.draft.canvas.kind]
   );
-  const canvasAuthoringMode = graphStrategy.authoringPolicy.canvasKind;
+  const canvasAuthoringMode = useMemo(
+    () => resolveActiveCanvasAuthoringMode(draftReadModel),
+    [draftReadModel?.record?.draft.canvas.kind]
+  );
 
   useCanvasSelectionSync({
     isBootstrapping: draftSession.syncState === 'bootstrapping',

@@ -5,7 +5,10 @@ import {
   createUnknownCanvasDraftReadModel,
   type CanvasDraftReadModel,
 } from './canvasDraftReadModel';
-import { resolveActiveCanvasGraphStrategy } from './canvasActiveGraphStrategy';
+import {
+  resolveActiveCanvasAuthoringMode,
+  resolveActiveCanvasGraphStrategy,
+} from './canvasActiveGraphStrategy';
 
 function buildDraftReadModelWithCanvasKind(kind: string): CanvasDraftReadModel {
   const record: WorkspaceGraphDraftRecord = {
@@ -30,10 +33,14 @@ describe('resolveActiveCanvasGraphStrategy', () => {
     expect(resolveActiveCanvasGraphStrategy(buildDraftReadModelWithCanvasKind('dbt')).id).toBe(
       'dbt'
     );
+    expect(resolveActiveCanvasAuthoringMode(buildDraftReadModelWithCanvasKind('dbt'))).toBe(
+      'dbt'
+    );
   });
 
   it('falls back to the transformation strategy before a canvas document exists', () => {
     expect(resolveActiveCanvasGraphStrategy(undefined).id).toBe('transformation');
+    expect(resolveActiveCanvasAuthoringMode(undefined)).toBe('transformation');
     expect(
       resolveActiveCanvasGraphStrategy(buildDraftReadModelWithCanvasKind('unknown')).id
     ).toBe('transformation');

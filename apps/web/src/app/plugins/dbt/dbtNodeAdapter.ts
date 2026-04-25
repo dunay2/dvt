@@ -129,9 +129,6 @@ function isDbtEdge(value: unknown): value is DbtEdge {
 
 export const dbtCanvasGraphStrategy: CanvasGraphStrategy = {
   id: 'dbt',
-  authoringPolicy: {
-    canvasKind: 'dbt',
-  },
   mapNodeToCanonical: (node) => {
     if (!isDbtNode(node)) {
       return null;

@@ -1,7 +1,7 @@
 import { type NodeTypes } from '@xyflow/react';
 
 import DbtNodeComponent from '../../components/canvas/DbtNodeComponent';
-import type { CanvasGraphAuthoringMode } from '../../plugins/graphStrategyContracts';
+import type { CanvasGraphAuthoringMode } from '../../plugins/nodeTypeContracts';
 import { getAllCanvasKinds, getRegisteredPluginIds } from '../../plugins/registry';
 import type { useCanvasAuthoringRuntime } from './useCanvasAuthoringRuntime';
 import type { useCanvasControllerEnvironment } from './useCanvasControllerEnvironment';

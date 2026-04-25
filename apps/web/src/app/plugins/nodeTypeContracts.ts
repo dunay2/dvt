@@ -31,6 +31,8 @@ export type CanvasKindRegistration = {
   nodeKinds: readonly NodeKindRegistration[];
 };
 
+export type CanvasGraphAuthoringMode = CanvasKindRegistration['kind'];
+
 export type CanvasEdgeType = 'ref' | 'source' | 'test' | 'exposure' | 'metric';
 
 export type EdgeTypeStrategyContext = {

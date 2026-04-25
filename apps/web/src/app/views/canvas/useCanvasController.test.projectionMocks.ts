@@ -15,9 +15,6 @@ export function configureCanvasHarnessHookAndProjectionMocks(
     typeof selector === 'function' ? selector(state.store) : state.store;
   const transformationGraphStrategy = {
     id: 'transformation',
-    authoringPolicy: {
-      canvasKind: 'transformation',
-    },
     mapNodeToCanonical: vi.fn(
       (node: { id: string }) => state.canonicalNodes.find((n) => n.id === node.id) ?? null
     ),
@@ -28,9 +25,6 @@ export function configureCanvasHarnessHookAndProjectionMocks(
   };
   const dbtGraphStrategy = {
     id: 'dbt',
-    authoringPolicy: {
-      canvasKind: 'dbt',
-    },
     mapNodeToCanonical: vi.fn(
       (node: { id: string }) => state.canonicalNodes.find((n) => n.id === node.id) ?? null
     ),

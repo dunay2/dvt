@@ -34,6 +34,10 @@ const GRAPH_STRATEGY_REGISTRY_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   '../../plugins/graphStrategyRegistry.ts'
 );
+const GRAPH_STRATEGY_CONTRACTS_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  '../../plugins/graphStrategyContracts.ts'
+);
 const DBT_NODE_ADAPTER_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   '../../plugins/dbt/dbtNodeAdapter.ts'
@@ -95,6 +99,9 @@ describe('canvas draft authoring component architecture', () => {
     expect(DVT_TRANSFORMATION_STRATEGY_SOURCE).toContain(
       'export const transformationCanvasGraphStrategy'
     );
+    expect(GRAPH_STRATEGY_CONTRACTS_SOURCE).not.toContain('authoringPolicy');
+    expect(DBT_NODE_ADAPTER_SOURCE).not.toContain('authoringPolicy');
+    expect(DVT_TRANSFORMATION_STRATEGY_SOURCE).not.toContain('authoringPolicy');
 
     expect(GRAPH_HANDLER_CONTRACTS_SOURCE).not.toContain('dbtNodeAdapter');
     expect(NODE_DUPLICATE_COMMAND_SOURCE).not.toContain('dbtNodeAdapter');

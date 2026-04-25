@@ -149,9 +149,6 @@ export function renderGraphHandlersHook({
     latest = useCanvasGraphHandlers({
       graphStrategy: {
         id: 'transformation',
-        authoringPolicy: {
-          canvasKind: 'transformation',
-        },
         mapNodeToCanonical: () => null,
         mapEdgeToCanonical: () => null,
         parseDropPayload: graphStrategy?.parseDropPayload ?? (() => null),

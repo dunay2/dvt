@@ -15,17 +15,13 @@ describe('resolveCanvasGraphStrategy', () => {
   it('resolves dbt strategy when explicitly requested', () => {
     const strategy = resolveCanvasGraphStrategy('dbt');
     expect(strategy.id).toBe('dbt');
-    expect(strategy.authoringPolicy).toEqual({
-      canvasKind: 'dbt',
-    });
+    expect('authoringPolicy' in strategy).toBe(false);
   });
 
   it('resolves transformation strategy when explicitly requested', () => {
     const strategy = resolveCanvasGraphStrategy('transformation');
     expect(strategy.id).toBe('transformation');
-    expect(strategy.authoringPolicy).toEqual({
-      canvasKind: 'transformation',
-    });
+    expect('authoringPolicy' in strategy).toBe(false);
     expect(
       strategy.mapNodeToCanonical({
         id: 'source-node',
