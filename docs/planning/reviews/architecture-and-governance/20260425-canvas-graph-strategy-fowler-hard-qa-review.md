@@ -16,9 +16,9 @@ the findings into a remediation plan that can be executed without re-litigating
 the architectural baseline.
 
 The reviewed slice improves the active branch by removing the false
-authoring-time topology policy from node drop and duplicate flows. The remaining
-issue is that several ownership seams still do not match the typed
-multi-canvas host model now present in the route.
+authoring-time topology policy from node drop and duplicate flows. This artifact
+then tracks the TF-E2-M ownership remediation needed to make the typed
+multi-canvas host model explicit in code, tests, and documentation.
 
 ### Markdown Artifact Path Suggestion
 
@@ -51,20 +51,23 @@ Post-remediation status:
 - Canonical node admission is separated from React Flow viewport projection.
 - Semantic tests now cover the main active-canvas strategy path.
 
-The branch is still not architecturally clean as a final multi-canvas cut. The
-remaining risks are deeper Fowler/DDD issues:
+TF-E2-M implementation status:
 
-- unknown persisted canvas kinds still fall through to the transformation
-  strategy instead of becoming an explicit invalid-document posture;
-- node create/drop handlers still perform side effects inside React state
-  updaters;
-- `canvasKinds` and graph strategies are still registered through separate
-  truth sources;
-- multi-canvas authoring exists, but plan/run execution remains
-  transformation-only;
-- DVT generic graph UI still leaks through DBT-named renderers and catalogs;
-- canonical runtime guards still duplicate canonical type vocabulary instead of
-  deriving from one ubiquitous-language source.
+- unsupported persisted canvas kinds fail closed before route mutation;
+- node create/drop handlers use pure admission transactions;
+- canvas kind, graph strategy, execution posture, and node catalog are one
+  runtime registration;
+- `dbt` authoring is explicit and non-executable until a real DBT execution
+  strategy exists;
+- DVT generic graph UI vocabulary no longer imports DBT renderer/catalog
+  modules;
+- canonical runtime guards derive from exported canonical vocabularies;
+- architecture tests now include semantic fitness functions for runtime
+  registration, unsupported-kind blocking, pure command transactions, and typed
+  empty authoring.
+
+The findings below are retained as QA history and linked to their closing
+remediation tasks.
 
 ## Findings
 
@@ -81,11 +84,13 @@ remaining risks are deeper Fowler/DDD issues:
   Closed by making `admitCanonicalNodeToCanvas` return semantic admission
   results only.
 - Architecture tests were only thin textual tripwires.
-  Partially closed by semantic active-strategy and admission tests.
+  Closed by TF-E2-M-G semantic fitness tests while retaining narrow import
+  boundary tripwires.
 
 ### High
 
 - Title: persisted unknown canvas kinds silently degrade to transformation.
+  Status: Closed by `TF-E2-M-A`.
   Why it matters: `canvasDocument.kind` is now the active selector, but the
   registry still returns the default strategy for unknown values. Missing
   documents may default to transformation; persisted unknown documents must not.
@@ -104,6 +109,7 @@ remaining risks are deeper Fowler/DDD issues:
   `disabled_plugin`. Only `missing_document` may choose the initial default.
 
 - Title: node admission still performs side effects inside React state updaters.
+  Status: Closed by `TF-E2-M-B`.
   Why it matters: `setNodes((existingNodes) => ...)` should be a pure state
   transition. The current drop and first-node creation handlers call
   `setDraftSession` and `toast` inside the updater. React may replay updater
@@ -123,6 +129,7 @@ remaining risks are deeper Fowler/DDD issues:
 ### Medium
 
 - Title: canvas kind registry and graph strategy registry are parallel truths.
+  Status: Closed by `TF-E2-M-C`.
   Why it matters: `CanvasKindRegistration` declares the product-facing canvas
   kind, while `STRATEGIES` declares the technical adapter map separately. A new
   canvas kind can be visible without a strategy, or a strategy can exist without
@@ -139,6 +146,7 @@ remaining risks are deeper Fowler/DDD issues:
   binds kind, strategy, capability, and execution posture.
 
 - Title: multi-canvas authoring has no matching execution strategy boundary.
+  Status: Closed by `TF-E2-M-D`.
   Why it matters: Canvas can now create `dbt` and `transformation` documents,
   but plan/run is still governed by `validateTransformationGraph` and
   `previewProfile: transformation-sql-first-v1`. That is acceptable only if DBT
@@ -155,6 +163,7 @@ remaining risks are deeper Fowler/DDD issues:
   governed copy and tests; do not fake DBT execution.
 
 - Title: DVT generic graph UI still uses DBT-named components.
+  Status: Closed by `TF-E2-M-E`.
   Why it matters: `DbtNodeRenderer` and `nodeTypeCatalog.dbt.ts` are being used
   for generic DVT transformation nodes. That is a semantic leak and a future
   change amplifier: a DBT renderer change can affect DVT authoring.
@@ -167,6 +176,7 @@ remaining risks are deeper Fowler/DDD issues:
   then let DBT specialize only DBT-specific metadata and visuals.
 
 - Title: canonical guards duplicate canonical vocabulary.
+  Status: Closed by `TF-E2-M-F`.
   Why it matters: type unions in `canonical.ts` and runtime sets in
   `canonicalGuards.ts` are maintained separately. This is a classic Fowler
   "parallel inheritance / parallel data definition" drift path.
@@ -181,6 +191,7 @@ remaining risks are deeper Fowler/DDD issues:
 ### Low
 
 - Title: the QA artifact itself drifted after remediation.
+  Status: Closed by `TF-E2-M-G`.
   Why it matters: this document remained `status: Active` but mixed initial
   findings, completed fixes, and current risks. Active QA must distinguish
   historical findings from current blocking architecture risks.
@@ -195,12 +206,12 @@ remaining risks are deeper Fowler/DDD issues:
 
 - Doc vs code: improved. Docs now correctly state that graph strategies are
   payload adapters and that React Flow nodes are projection state.
-- Promise vs implementation: still partially aligned. Typed multi-canvas
-  authoring exists, but unsupported persisted canvas kinds and execution posture
-  are not yet explicit.
-- Tests vs claims: improved for DBT guards, active document strategy, and
-  admission/projection. Missing coverage remains for unsupported canvas kinds,
-  pure command transactions, registry parity, and execution strategy posture.
+- Promise vs implementation: aligned for the current scope. Typed multi-canvas
+  authoring now has explicit unsupported-kind and execution posture behavior.
+- Tests vs claims: aligned for the current scope. Coverage now includes DBT
+  guards, active document strategy, admission/projection, unsupported canvas
+  kinds, pure command transactions, registry parity, execution posture, and
+  semantic empty authoring.
 - Current truth vs planned truth: current truth is an improved incremental
   branch. Planned truth is a plugin-composed canvas runtime where kind,
   strategy, capability, and execution posture resolve from one contribution
@@ -213,34 +224,31 @@ remaining risks are deeper Fowler/DDD issues:
 
 ## Architecture Assessment
 
-- SRP: improved at the strategy and admission seams. Still weak in handler
-  modules where viewport update, semantic draft mutation, selection, inspector
-  focus, and notification are applied inside the same callback.
-- DDD: improved by fail-closed DBT/DVT adapters. Still weak because canonical
-  vocabulary has parallel type/runtime definitions and because `DVT` generic
-  graph concepts live under DBT-named modules.
-- Hexagonal: the plugin adapter seam exists and now validates boundary input
-  better. The remaining gap is contribution composition: plugin capability,
-  canvas kind, strategy, and execution posture are not one port-owned contract.
-- CQRS: read posture is better because active document kind drives strategy.
-  Command posture remains weak because create/drop transactions are not a pure
-  command result applied once to state/effects.
-- Complexity: local complexity is acceptable, but change amplification remains
-  high because a new canvas kind requires edits in plugin contributions,
-  strategy registry, execution validation, toolbar posture, and docs.
-- Modularity: improved, but mature modularity requires one canvas runtime
-  registration boundary and one execution strategy boundary.
+- SRP: improved. Graph strategies parse/project plugin payloads, runtime
+  registrations compose canvas posture, and node admission transactions compute
+  semantic and viewport fallouts before React effects apply.
+- DDD: improved. Canonical vocabularies are one runtime/type source, DVT graph
+  UI vocabulary is neutral, and DBT-specific behavior stays in DBT modules.
+- Hexagonal: improved. Plugin contributions now expose one Canvas runtime
+  registration per canvas kind, binding product kind, graph strategy, execution
+  posture, and authoring catalog.
+- CQRS: improved. Active document kind drives read posture, while create/drop
+  authoring is expressed as pure command transaction output.
+- Complexity: reduced for new canvas kinds because runtime posture is declared
+  once and architecture tests fail when the declaration drifts.
+- Modularity: improved; remaining future work is additive plugin capability
+  handling, not correction of the current Canvas runtime boundary.
 
 ## Test Assessment
 
 - Negative paths present: malformed DVT canonical role, status, relation,
   canonical drag payload rejection, malformed DBT node type, malformed DBT edge
   type, malformed DBT status, and active canvas kind strategy selection.
-- Negative paths missing: persisted unsupported canvas kind, disabled plugin
-  canvas kind, registry parity, pure handler transaction replay, and
-  non-executable DBT canvas plan/run posture.
-- Regression status: current branch validation is green, but the tests do not
-  close the remaining multi-canvas runtime and React-state purity gaps.
+- Negative paths missing: disabled plugin canvas kind remains a future runtime
+  capability case once backend plugin availability becomes part of the active
+  route contract.
+- Regression status: current branch coverage closes the multi-canvas runtime and
+  React-state purity gaps identified in this QA route.
 - Determinism: no nondeterministic behavior observed in the QA scope.
 - Local suite vs meaningful global confidence: local suite is useful but not
   sufficient for unsupported-kind and execution-posture invariants.
@@ -273,6 +281,9 @@ remaining risks are deeper Fowler/DDD issues:
 - Post-remediation artifact refresh:
   - `pnpm lint:md:changed` passed after the TF-E2-M plan update.
   - `pnpm verify:prepush` passed after the TF-E2-M plan update.
+- TF-E2-M execution evidence:
+  - `pnpm --filter @dvt/web test -- canvasDraftAuthoringComponent.architecture.test.ts CanvasEmptyAuthoringEntrypoint.architecture.test.ts`
+    passed after semantic fitness conversion.
 
 ## Unblock Roadmap
 
@@ -324,7 +335,7 @@ Target:
 - [x] `TF-E2-M-D` Add canvas execution strategy posture
 - [x] `TF-E2-M-E` Extract neutral DVT graph UI vocabulary from DBT modules
 - [x] `TF-E2-M-F` Derive canonical guards from canonical vocabularies
-- [ ] `TF-E2-M-G` Replace residual thin checks with semantic fitness functions
+- [x] `TF-E2-M-G` Replace residual thin checks with semantic fitness functions
 
 ### Task Details
 
@@ -491,8 +502,8 @@ Target:
 
 ### Root Cause Model
 
-The remaining architecture issue is not a single bad helper. It is a boundary
-composition problem:
+The remediated architecture issue was not a single bad helper. It was a
+boundary composition problem:
 
 1. `CanvasKindRegistration` models product posture.
 2. `CanvasGraphStrategy` models adapter parsing and projection.
@@ -932,15 +943,19 @@ Every implementation slice spawned from this review must run:
 
 ## Final Verdict
 
-Not ready as a final multi-canvas architecture cut.
+Ready as a governed TF-E2-M remediation cut once the branch closeout gate
+passes.
 
-The branch is valid as an incremental architecture improvement. `TF-E2-L` closed
-the false authoring topology policy, DBT fail-closed adapter validation,
-active-document strategy selection, graph-strategy route-posture leakage, and
-canonical admission/projection split.
+`TF-E2-L` closed the false authoring topology policy, DBT fail-closed adapter
+validation, active-document strategy selection, graph-strategy route-posture
+leakage, and canonical admission/projection split.
 
-The remaining route is `TF-E2-M`. The next remediation must fail closed for
-unsupported persisted canvas kinds, remove React side effects from state updater
-callbacks, collapse canvas kind and graph strategy into one runtime registry,
-make execution posture explicit per canvas kind, extract DVT graph UI vocabulary
-from DBT modules, and derive runtime guards from canonical vocabularies.
+`TF-E2-M` closes the remaining Fowler root causes for this route:
+unsupported-kind fail-closed posture, pure node-admission transactions, unified
+canvas runtime registration, explicit execution posture, neutral DVT graph UI
+vocabulary, canonical guard derivation, and semantic architecture fitness
+coverage.
+
+The next slice should not reopen planner or Canvas as a broad controller
+rewrite. It should build from the now-explicit runtime registration and command
+transaction seams.

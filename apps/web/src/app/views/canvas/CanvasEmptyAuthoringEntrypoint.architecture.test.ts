@@ -1,9 +1,14 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
+import { getCanvasRuntimeRegistrations } from '../../plugins/graphStrategyRegistry';
 import { readArchitectureSiblingSource } from '../architecture.test.support';
+import type { CanvasWorkbenchSurfaceArgs } from './canvasCenterSurface.types';
+import type { CanvasDraftPresentationState } from './canvasDraftPresentationModel';
+import { deriveCanvasHostCycleState } from './canvasHostCycleState';
+import { canvasViewCopy } from './copy';
 
 const DOC_PATH = join(
   import.meta.dirname,
@@ -25,6 +30,43 @@ const CENTER_WORKBENCH_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'canvasCenterSurfaceWorkbench.tsx'
 );
+
+function buildPresentationState(
+  routeState: CanvasDraftPresentationState['routeState']
+): CanvasDraftPresentationState {
+  return {
+    routeState,
+    recoveryReason: null,
+    draftToolbarState: {
+      label: 'Draft synced',
+      tone: 'neutral',
+      showReloadAction: false,
+    },
+    bootstrapStatus: 'complete',
+    bootstrapDetail: 'ready',
+    canCompleteBootstrap: true,
+  };
+}
+
+function buildWorkbenchArgs(
+  overrides: Partial<CanvasWorkbenchSurfaceArgs> = {}
+): CanvasWorkbenchSurfaceArgs {
+  return {
+    presentationState: buildPresentationState('empty'),
+    startupBlockState: null,
+    workbenchErrorMessage: null,
+    canvasDocument: {
+      kind: 'transformation',
+      title: 'Transformation canvas',
+    },
+    availableCanvasKinds: getCanvasRuntimeRegistrations(),
+    canEditEdges: true,
+    canOpenSourceImport: true,
+    onCreateCanvasDocument: vi.fn(),
+    onCreateAuthoringNode: vi.fn(),
+    ...overrides,
+  };
+}
 
 describe('Canvas empty authoring entrypoint architecture', () => {
   it('ships a component guide with public API, invariants, transitions, and consumers', () => {
@@ -57,20 +99,109 @@ describe('Canvas empty authoring entrypoint architecture', () => {
     }
   });
 
-  it('creates nodes from the typed canvas catalog through the existing draft lifecycle', () => {
-    expect(CENTER_WORKBENCH_SOURCE).toContain('deriveCanvasHostCycleState');
-    expect(CENTER_WORKBENCH_SOURCE).toContain("cycleState.kind !== 'typed_empty'");
-    expect(CENTER_WORKBENCH_SOURCE).toContain('cycleState.nodeKinds');
-    expect(CENTER_WORKBENCH_SOURCE).toContain('cycleState.onCreateAuthoringNode');
-    expect(NODE_CREATION_HANDLER_SOURCE).toContain('buildAuthoringNodeCommand');
-    expect(NODE_CREATION_HANDLER_SOURCE).toContain('admitCanonicalNodeToCanvas');
-    expect(NODE_CREATION_HANDLER_SOURCE).toContain('mapDroppedCanonicalNodeToCanvasNode');
-    expect(NODE_CREATION_HANDLER_SOURCE).toContain('canvasGraphLifecycle.node.admitExplicit');
-    expect(NODE_CREATION_HANDLER_SOURCE).not.toContain('WorkspaceGraphDraft');
-    expect(NODE_CREATION_HANDLER_SOURCE).not.toContain('DesignGraphDraft');
+  it('derives the needs-canvas creation choices from runtime registrations', () => {
+    const cycleState = deriveCanvasHostCycleState(
+      buildWorkbenchArgs({
+        presentationState: buildPresentationState('needs_canvas'),
+        canvasDocument: null,
+      })
+    );
+
+    expect(cycleState).toMatchObject({
+      kind: 'needs_canvas',
+    });
+    if (cycleState?.kind !== 'needs_canvas') {
+      return;
+    }
+
+    expect(cycleState.availableCanvasKinds.map((canvasKind) => canvasKind.kind)).toEqual([
+      'dbt',
+      'transformation',
+    ]);
+    expect(cycleState.onCreateCanvasDocument).toEqual(expect.any(Function));
   });
 
-  it('keeps the node authoring hook as a composition seam, not a second implementation path', () => {
+  it('derives first-node copy and catalog from the active canvas kind', () => {
+    const onCreateAuthoringNode = vi.fn();
+    const transformationRuntime = getCanvasRuntimeRegistrations().find(
+      (registration) => registration.kind === 'transformation'
+    );
+
+    const cycleState = deriveCanvasHostCycleState(
+      buildWorkbenchArgs({
+        onCreateAuthoringNode,
+      })
+    );
+
+    expect(cycleState).toMatchObject({
+      kind: 'typed_empty',
+      title: transformationRuntime?.emptyState.title,
+      message: transformationRuntime?.emptyState.editableMessage,
+      firstNodeLabel: transformationRuntime?.emptyState.firstNodeLabel,
+      firstNodeHelper: transformationRuntime?.emptyState.firstNodeHelper,
+    });
+    if (cycleState?.kind !== 'typed_empty') {
+      return;
+    }
+
+    expect(cycleState.nodeKinds).toBe(transformationRuntime?.nodeKinds);
+    expect(cycleState.onCreateAuthoringNode).toBe(onCreateAuthoringNode);
+  });
+
+  it('keeps first-node authoring available when source import is unavailable', () => {
+    const transformationRuntime = getCanvasRuntimeRegistrations().find(
+      (registration) => registration.kind === 'transformation'
+    );
+
+    const cycleState = deriveCanvasHostCycleState(
+      buildWorkbenchArgs({
+        canOpenSourceImport: false,
+      })
+    );
+
+    expect(cycleState).toMatchObject({
+      kind: 'typed_empty',
+      message: canvasViewCopy.routeEmptyImportUnavailableMessage,
+    });
+    if (cycleState?.kind !== 'typed_empty') {
+      return;
+    }
+
+    expect(cycleState.nodeKinds).toBe(transformationRuntime?.nodeKinds);
+    expect(cycleState.onCreateAuthoringNode).toEqual(expect.any(Function));
+  });
+
+  it('keeps read-only typed empty posture non-mutating without losing typed copy', () => {
+    const dbtRuntime = getCanvasRuntimeRegistrations().find(
+      (registration) => registration.kind === 'dbt'
+    );
+
+    const cycleState = deriveCanvasHostCycleState(
+      buildWorkbenchArgs({
+        canvasDocument: {
+          kind: 'dbt',
+          title: 'dbt canvas',
+        },
+        canEditEdges: false,
+      })
+    );
+
+    expect(cycleState).toMatchObject({
+      kind: 'typed_empty',
+      title: dbtRuntime?.emptyState.title,
+      message: canvasViewCopy.routeEmptyReadOnlyMessage,
+      firstNodeLabel: dbtRuntime?.emptyState.firstNodeLabel,
+      firstNodeHelper: dbtRuntime?.emptyState.firstNodeHelper,
+      nodeKinds: [],
+      onCreateAuthoringNode: undefined,
+    });
+  });
+
+  it('keeps narrow source tripwires for handler ownership boundaries', () => {
+    expect(CENTER_WORKBENCH_SOURCE).toContain('deriveCanvasHostCycleState');
+    expect(NODE_CREATION_HANDLER_SOURCE).toContain('resolveCanvasNodeAdmissionTransaction');
+    expect(NODE_CREATION_HANDLER_SOURCE).not.toContain('WorkspaceGraphDraft');
+    expect(NODE_CREATION_HANDLER_SOURCE).not.toContain('DesignGraphDraft');
     expect(NODE_AUTHORING_HANDLER_SOURCE).toContain('useCanvasNodeDropHandlers');
     expect(NODE_AUTHORING_HANDLER_SOURCE).toContain('useCanvasAuthoringNodeCreationHandlers');
     expect(NODE_AUTHORING_HANDLER_SOURCE).toContain('useCanvasNodeRemovalHandlers');

@@ -2,7 +2,7 @@
 title: Graph Frontend Architecture
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-04-22
+last_reviewed: 2026-04-25
 ---
 
 # Graph Frontend Architecture
@@ -57,6 +57,7 @@ Out of scope:
 | Canvas route facade         | [Canvas.tsx](../../../../../apps/web/src/app/views/Canvas.tsx), [useCanvasController.ts](../../../../../apps/web/src/app/views/canvas/useCanvasController.ts), [canvasRouteViewState.ts](../../../../../apps/web/src/app/views/canvas/canvasRouteViewState.ts)                        |
 | Draft authoring core        | [canvasDraftSession.ts](../../../../../apps/web/src/app/views/canvas/canvasDraftSession.ts), [canvasDraftScope.ts](../../../../../apps/web/src/app/views/canvas/canvasDraftScope.ts), [canvasGraphLifecycle.ts](../../../../../apps/web/src/app/views/canvas/canvasGraphLifecycle.ts) |
 | Plugin boundary             | [PluginManifest.ts](../../../../../apps/web/src/app/plugins/contracts/PluginManifest.ts), [ConnectionRules.ts](../../../../../apps/web/src/app/plugins/contracts/ConnectionRules.ts), [registry.ts](../../../../../apps/web/src/app/plugins/registry.ts)                              |
+| Canvas runtime registration | [registry.ts](../../../../../apps/web/src/app/plugins/registry.ts), [graphStrategyRegistry.ts](../../../../../apps/web/src/app/plugins/graphStrategyRegistry.ts), [canvasExecutionStrategyContracts.ts](../../../../../apps/web/src/app/plugins/canvasExecutionStrategyContracts.ts)  |
 | Route copy and presentation | [copy.ts](../../../../../apps/web/src/app/views/canvas/copy.ts), [CanvasToolbar.tsx](../../../../../apps/web/src/app/views/canvas/CanvasToolbar.tsx), [canvasExecutionState.ts](../../../../../apps/web/src/app/views/canvas/canvasExecutionState.ts)                                 |
 
 ## Frontend Topology
@@ -90,7 +91,7 @@ Current posture:
 
 ## Current Architecture Point
 
-As of 2026-04-22:
+As of 2026-04-25:
 
 - route startup is generalized by `route.id` plus explicit bootstrap metadata
 - Canvas graph mutation now flows through one local lifecycle component
@@ -112,6 +113,16 @@ As of 2026-04-22:
 - the DVT authoring catalog now explicitly includes the governed
   `dvt:source -> dvt:sql_transform -> dvt:sink` path instead of letting source
   nodes fall through the unknown-node fallback
+- active Canvas runtime composition is now registered once per canvas kind:
+  `CanvasRuntimeRegistration` binds product kind, graph strategy, execution
+  posture, and first-node catalog
+- unsupported persisted canvas kinds fail closed as invalid documents; only a
+  missing document may use the default transformation creation posture
+- `transformation` is the only executable preview posture; `dbt` authoring is
+  first-class but intentionally non-executable until a real DBT execution
+  strategy exists
+- canonical graph vocabularies are exported as runtime arrays and TypeScript
+  unions derive from those arrays, so runtime guards cannot drift from types
 
 ## Protected Draft Semantic Projection
 
@@ -176,11 +187,14 @@ flowchart LR
   Registry --> PortMap["plugin port maps"]
   PortMap --> Rules
   Rules --> CanvasPolicy["canvasConnectionAggregate edge policy"]
-  Registry --> CanvasKinds["CanvasKindRegistration catalog"]
+  Registry --> Runtime["CanvasRuntimeRegistration"]
+  Runtime --> CanvasKinds["CanvasKindRegistration catalog"]
+  Runtime --> Strategy["CanvasGraphStrategy payload parsing and projection"]
+  Runtime --> Execution["CanvasExecutionStrategy posture"]
   CanvasKinds --> ActiveDocument["canvasDocument.kind"]
   ActiveDocument --> StrategyResolver["resolveActiveCanvasGraphStrategy"]
   Registry --> StrategyResolver
-  StrategyResolver --> Strategy["CanvasGraphStrategy payload parsing and projection"]
+  StrategyResolver --> Runtime
   Strategy --> Admission["admitCanonicalNodeToCanvas"]
   Admission --> ViewportProjection["mapDroppedCanonicalNodeToCanvasNode"]
 ```
@@ -192,6 +206,41 @@ Reading rule:
 - ask `ConnectionRules.ts` how those declarations affect graph semantics
 - ask the active canvas document which graph strategy and authoring catalog are
   in force; do not ask the graph strategy for canvas-kind posture
+
+## Canvas Runtime Registration
+
+Canvas kind, graph strategy, execution posture, and first-node catalog are one
+runtime registration. This prevents the mature-system failure mode where a new
+document kind becomes visible in the UX before its parser, catalog, or
+execution posture is explicitly declared.
+
+```mermaid
+flowchart LR
+  Plugin["Plugin contribution"] --> Runtime["CanvasRuntimeRegistration"]
+  Runtime --> Kind["kind / label / empty state"]
+  Runtime --> Catalog["nodeKinds"]
+  Runtime --> Strategy["CanvasGraphStrategy"]
+  Runtime --> Execution["CanvasExecutionStrategy"]
+
+  Document["persisted canvasDocument.kind"] --> Resolver["resolveActiveCanvasGraphStrategy"]
+  Resolver --> Ready["ready runtime"]
+  Resolver --> Missing["missing document default"]
+  Resolver --> Unsupported["unsupported_kind"]
+
+  Ready --> Catalog
+  Ready --> Strategy
+  Ready --> Execution
+  Unsupported --> Blocked["route interactions disabled"]
+```
+
+Runtime invariants:
+
+- every visible canvas kind must have one graph strategy;
+- every graph strategy used by Canvas must be reachable through a runtime
+  registration;
+- every runtime must declare whether it is executable;
+- unsupported persisted kinds disable mutation, plan, and run instead of
+  falling back to transformation semantics.
 
 ## Active Strategy And Canonical Admission
 
@@ -209,7 +258,7 @@ sequenceDiagram
   participant Lifecycle as canvasGraphLifecycle
 
   Canvas->>Resolver: canvas.kind
-  Resolver->>Strategy: select strategy by kind
+  Resolver->>Strategy: select ready runtime by kind
   User->>Strategy: drop plugin payload
   Strategy-->>Admission: CanonicalNode or null
   Admission-->>Mapper: accepted canonical node
@@ -222,6 +271,25 @@ Invariant:
 - `admitCanonicalNodeToCanvas` must not import React Flow or produce viewport
   nodes.
 - `CanvasGraphStrategy` must not expose canvas-kind policy.
+- node create/drop handlers apply a pure `CanvasNodeAdmissionTransaction`
+  result once; semantic draft mutation and viewport projection are computed
+  before React effects are applied.
+
+## Architecture Fitness Tests
+
+The architecture tests now prefer behavior-level fitness functions over broad
+string checks. Current semantic coverage includes:
+
+- runtime registration parity between canvas kind, strategy, execution posture,
+  and authoring catalog;
+- unsupported persisted canvas kinds blocking mutation and execution posture;
+- pure node-admission transaction results for add and duplicate-noop paths;
+- typed empty-state catalog and copy derivation from the active runtime;
+- first-node authoring remains available even when source import capability is
+  unavailable.
+
+Source-text assertions are retained only as narrow import-boundary tripwires
+where runtime behavior cannot observe ownership directly.
 
 ## Architecture Pack
 
