@@ -180,6 +180,46 @@ describe('canvasDraftSession', () => {
     ]);
   });
 
+  it('stores local overrides for visible persisted nodes without changing the working set', () => {
+    const session = canvasDraftSession.machine.bootstrap({
+      remoteDraft: buildRemoteDraftRecord({
+        draft: {
+          canvas: {
+            kind: 'transformation',
+            title: 'Main canvas',
+          },
+          nodeIds: ['node_1'],
+          nodePositions: {
+            node_1: { x: 0, y: 0 },
+          },
+          edges: [],
+        },
+      }),
+      canonicalNodeIds: ['node_1'],
+      canonicalEdges: [],
+    });
+
+    const updatedSession = canvasDraftSession.workingSet.upsertNode(session, {
+      id: 'node_1',
+      name: 'orders_renamed',
+      description: 'Inspector-authored description',
+      pluginId: 'dvt',
+      kind: 'dvt:source',
+      role: 'input',
+      status: 'idle',
+      tags: [],
+    });
+
+    expect(updatedSession.workingSet).toEqual(session.workingSet);
+    expect(updatedSession.localNodeCatalog).toEqual({
+      node_1: expect.objectContaining({
+        id: 'node_1',
+        name: 'orders_renamed',
+        description: 'Inspector-authored description',
+      }),
+    });
+  });
+
   it('transitions to conflict while retaining the new remote baseline', () => {
     const session = canvasDraftSession.machine.applyConflict(
       canvasDraftSession.machine.bootstrap({

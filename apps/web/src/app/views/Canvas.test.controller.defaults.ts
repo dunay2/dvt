@@ -19,6 +19,7 @@ type CanvasWorkbenchDefaultsDto = {
   canOpenSourceImport: CanvasController['canOpenSourceImport'];
   explorerNodes: CanvasController['explorerNodes'];
   inspectorNode: CanvasController['inspectorNode'];
+  canEditInspectorNode: CanvasController['canEditInspectorNode'];
   activeRunId: CanvasController['activeRunId'];
   registeredPlugins: CanvasController['registeredPlugins'];
   availableCanvasKinds: CanvasController['availableCanvasKinds'];
@@ -122,6 +123,7 @@ function buildDefaultCanvasWorkbenchState(): CanvasWorkbenchDefaultsDto {
     canOpenSourceImport: true,
     explorerNodes: buildDefaultCanvasExplorerNodes(),
     inspectorNode: null,
+    canEditInspectorNode: true,
     activeRunId: null,
     registeredPlugins: new Set(['dbt']),
     availableCanvasKinds: [
@@ -225,6 +227,7 @@ export function buildDefaultCanvasControllerCallbacks(): Pick<
   | 'handleDragOver'
   | 'handleCreateAuthoringNode'
   | 'handleCreateCanvasDocument'
+  | 'applyInspectorNodeDraft'
   | 'handleSourceImportComplete'
   | 'handleImportedNodeFocusComplete'
   | 'hideExplorerPanel'
@@ -255,6 +258,7 @@ export function buildDefaultCanvasControllerCallbacks(): Pick<
     handleDragOver: vi.fn(),
     handleCreateAuthoringNode: vi.fn(),
     handleCreateCanvasDocument: vi.fn(),
+    applyInspectorNodeDraft: vi.fn(),
     handleSourceImportComplete: vi.fn(),
     importedNodeFocusIds: [],
     handleImportedNodeFocusComplete: vi.fn(),

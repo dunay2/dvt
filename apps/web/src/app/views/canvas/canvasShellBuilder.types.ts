@@ -43,6 +43,8 @@ export type CanvasShellPanelsBuilderArgs = Readonly<{
     CanvasRouteController,
     | 'explorerNodes'
     | 'inspectorNode'
+    | 'canEditInspectorNode'
+    | 'applyInspectorNodeDraft'
     | 'activeRunId'
     | 'registeredPlugins'
     | 'importedNodeFocusIds'

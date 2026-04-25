@@ -58,6 +58,8 @@ function buildCanvasShellPanelsArgs({
     panelState: {
       explorerNodes: controller.explorerNodes,
       inspectorNode: controller.inspectorNode,
+      canEditInspectorNode: controller.canEditInspectorNode,
+      applyInspectorNodeDraft: controller.applyInspectorNodeDraft,
       activeRunId: controller.activeRunId,
       registeredPlugins: controller.registeredPlugins,
       importedNodeFocusIds: controller.importedNodeFocusIds,

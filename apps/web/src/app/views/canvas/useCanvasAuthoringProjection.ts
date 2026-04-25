@@ -3,6 +3,7 @@ import { useMemo } from 'react';
 
 import { buildCanvasCanonicalSnapshot } from './canvasCanonicalSnapshot';
 import { buildCanvasAuthoringGraphProjection } from './canvasAuthoringGraphProjection';
+import type { CanvasDraftEdge } from './canvasDraftSession';
 import type { GraphAuthorityQueryState } from './canvasDraftLifecycle.types';
 import { useCanvasViewportGraphModel } from './useCanvasViewportGraphModel';
 import type { CanonicalNode } from '../../types/canonical';
@@ -17,6 +18,30 @@ type UseCanvasAuthoringProjectionArgs = {
   columnLevelLineageEnabled: boolean;
   persistedNodePositions: Record<string, { x: number; y: number }>;
 };
+
+function buildAuthoringReconcileSnapshot(args: {
+  draftSemanticGraph: WorkspaceGraphDraftSemanticGraph | null;
+  localCanonicalNodes: readonly CanonicalNode[];
+}) {
+  const { draftSemanticGraph, localCanonicalNodes } = args;
+  const canonicalNodeIds = [
+    ...new Set([
+      ...(draftSemanticGraph?.canonicalNodes.map((node) => node.id) ?? []),
+      ...localCanonicalNodes.map((node) => node.id),
+    ]),
+  ];
+  const canonicalEdges: CanvasDraftEdge[] = (draftSemanticGraph?.canonicalEdges ?? []).map(
+    (edge) => ({
+      sourceId: edge.sourceId,
+      targetId: edge.targetId,
+    })
+  );
+
+  return buildCanvasCanonicalSnapshot(
+    canonicalNodeIds.map((id) => ({ id })),
+    canonicalEdges
+  );
+}
 
 export function useCanvasAuthoringProjection({
   graphAuthorityQuery,
@@ -47,11 +72,11 @@ export function useCanvasAuthoringProjection({
   });
   const canonicalSnapshot = useMemo(
     () =>
-      buildCanvasCanonicalSnapshot(
-        authoringGraphProjection.canonicalNodes,
-        authoringGraphProjection.canonicalEdges
-      ),
-    [authoringGraphProjection.canonicalEdges, authoringGraphProjection.canonicalNodes]
+      buildAuthoringReconcileSnapshot({
+        draftSemanticGraph,
+        localCanonicalNodes,
+      }),
+    [draftSemanticGraph, localCanonicalNodes]
   );
 
   return {

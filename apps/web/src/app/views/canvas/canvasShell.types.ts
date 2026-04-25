@@ -11,6 +11,7 @@ import type { CanvasPaletteId } from './canvasPalette';
 import type { CanvasRouteState } from './canvasDraftPresentationModel';
 import type { CanvasPlaygroundTabState } from './canvasPlaygroundTabState';
 import type { CanvasDraftToolbarState } from './canvasDraftToolbarState';
+import type { CanvasInspectorAuthoringContract } from './canvasInspectorAuthoring.types';
 import type { TransformationGraphValidationResult } from './transformationGraphValidation';
 
 export type UserPermissions = {
@@ -40,6 +41,7 @@ export type CanvasShellLayout = {
 export type CanvasShellPanels = {
   explorerNodes: CanonicalNode[];
   inspectorNode: CanonicalNode | null;
+  inspectorAuthoring: CanvasInspectorAuthoringContract;
   activeRunId: string | null;
   registeredPlugins: ReadonlySet<string>;
   userPermissions: UserPermissions;

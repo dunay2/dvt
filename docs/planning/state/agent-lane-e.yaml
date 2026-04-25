@@ -2137,7 +2137,7 @@ tasks:
   - task_id: TF-E2-D
     parent_task: TF-E2
     priority: P0
-    status: queued
+    status: done
     objective: >-
       turn the Inspector into the canonical property-editing surface for governed node metadata with
       validation, dirty-state handling, save, cancel, and reload semantics, and move shared
@@ -2152,15 +2152,21 @@ tasks:
       inspector panels remain read-only in this slice.
     complexity: S
     effort_points: 3
-    progress_pct: 0
-    evidence_refs: []
+    progress_pct: 100
+    evidence_refs:
+      - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-inspector-authoring-and-lifecycle-closure-plan-20260425.md
+      - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-production-node-authoring-and-persistence-plan-20260416.md
+      - docs/architecture/components/web/graph/graph-canvas-runtime-model.md
+      - docs/architecture/components/web/graph/canvas-inspector-authoring-component.md
+      - docs/planning/closeouts/20260425-tf-e2-d-inspector-authoring-closeout.md
     status_reason: >-
-      Planned slice; execution has not started. The synced plan now fixes scope more tightly:
-      `toggleNodeSelection` and `inspectNode` remain adapter-local drift to absorb once the
-      semantics become shared route behavior, but the writable surface for TF-E2 is the route-owned
-      Inspector only. Plugin-owned or auxiliary inspector panels are explicitly non-authoring in
-      this slice.
-    last_verified: '2026-04-20'
+      Closed. Canvas now owns a route-level Inspector authoring component with a semantic DTO,
+      validation, dirty-state, and apply/cancel posture, while `InspectorPanel.tsx` remains a
+      passive read-only view. The critical semantic hard cut is also complete: local authoring
+      overrides can now replace protected-draft nodes that already exist remotely, but the route
+      still fail-closes under `missing_remote` by suppressing local override projection when the
+      authoritative draft disappears.
+    last_verified: '2026-04-25'
   - task_id: TF-E2-E
     parent_task: TF-E2
     priority: P0

@@ -110,6 +110,8 @@ describe('useCanvasController core', () => {
     expect(result?.handlePlan).toBe(harness.state.executionActionsResult.handlePlan);
     expect(result?.handleStartRun).toBe(harness.state.executionActionsResult.handleStartRun);
     expect(result?.canStartRun).toBe(false);
+    expect(result?.canEditInspectorNode).toBe(true);
+    expect(typeof result?.applyInspectorNodeDraft).toBe('function');
     expect(result?.planStatusSummary).toBe('Preview required before running.');
     expect(result?.handleDrop).toBe(harness.state.graphHandlersResult.handleDrop);
     expect(result?.confirmEdgeCreation).toBe(harness.state.graphHandlersResult.confirmEdgeCreation);
@@ -121,6 +123,31 @@ describe('useCanvasController core', () => {
         sessionContext: harness.state.services.sessionContext,
         shellFeedback: harness.state.services.shellFeedback,
         onRunStarted: harness.state.navigationActionsResult.handleRunStarted,
+      })
+    );
+  });
+
+  it('applies inspector-authored node details back into the authoritative route projection', async () => {
+    await act(async () => {
+      harness.getLatestResult()?.applyInspectorNodeDraft({
+        name: 'orders_source_renamed',
+        description: 'Edited through the route-owned inspector',
+      });
+    });
+    await harness.renderProbe();
+
+    expect(harness.getLatestResult()?.inspectorNode).toEqual(
+      expect.objectContaining({
+        id: 'node_1',
+        name: 'orders_source_renamed',
+        description: 'Edited through the route-owned inspector',
+      })
+    );
+    expect(harness.getLatestResult()?.explorerNodes[0]).toEqual(
+      expect.objectContaining({
+        id: 'node_1',
+        name: 'orders_source_renamed',
+        description: 'Edited through the route-owned inspector',
       })
     );
   });

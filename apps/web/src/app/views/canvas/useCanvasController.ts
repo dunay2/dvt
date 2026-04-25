@@ -8,6 +8,7 @@ import { useCanvasGraphHandlers } from './useCanvasGraphHandlers';
 import { useCanvasLayoutPersistence } from './useCanvasLayoutPersistence';
 import { useCanvasMutationHandlers } from './useCanvasMutationHandlers';
 import { useCanvasOverlayModel } from './useCanvasOverlayModel';
+import { useCanvasInspectorCommands } from './useCanvasInspectorCommands';
 import { useCanvasSelectionSync } from './useCanvasSelectionSync';
 
 export function useCanvasController() {
@@ -154,6 +155,10 @@ export function useCanvasController() {
       impactOverlayEnabled: store.impactOverlayEnabled,
     }
   );
+  const inspectorCommands = useCanvasInspectorCommands({
+    inspectorNode,
+    setDraftSession,
+  });
 
   return buildCanvasControllerViewModel({
     environment,
@@ -168,5 +173,6 @@ export function useCanvasController() {
       nodesWithImpact,
       inspectorNode,
     },
+    inspectorCommands,
   });
 }

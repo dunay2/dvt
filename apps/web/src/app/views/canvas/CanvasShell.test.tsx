@@ -97,6 +97,10 @@ function buildProps(overrides?: CanvasShellPropsOverrides): CanvasShellProps {
         },
       ],
       inspectorNode: null,
+      inspectorAuthoring: {
+        canEditNode: true,
+        onApplyNodeDraft: vi.fn(),
+      },
       activeRunId: null,
       registeredPlugins: new Set(['dbt']),
       userPermissions: {

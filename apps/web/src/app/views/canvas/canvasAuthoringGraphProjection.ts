@@ -36,23 +36,28 @@ function mergeDraftSemanticNodes(args: {
   scopedNodeIds: readonly string[];
 }): CanonicalNode[] {
   const { draftSemanticGraph, localCanonicalNodes, scopedNodeIds } = args;
-  const mergedNodes = new Map(
-    (draftSemanticGraph?.canonicalNodes ?? []).map((node) => [node.id, node])
-  );
-  const localNodesById = new Map(localCanonicalNodes.map((node) => [node.id, node]));
+  const scopedNodeIdSet = new Set(scopedNodeIds);
+  const mergedNodes = new Map<string, CanonicalNode>();
 
-  for (const nodeId of scopedNodeIds) {
-    if (mergedNodes.has(nodeId)) {
+  for (const node of draftSemanticGraph?.canonicalNodes ?? []) {
+    if (!scopedNodeIdSet.has(node.id)) {
       continue;
     }
 
+    mergedNodes.set(node.id, node);
+  }
+  const localNodesById = new Map(localCanonicalNodes.map((node) => [node.id, node]));
+
+  for (const nodeId of scopedNodeIds) {
     const localNode = localNodesById.get(nodeId);
     if (localNode != null) {
       mergedNodes.set(nodeId, localNode);
     }
   }
 
-  return [...mergedNodes.values()];
+  return scopedNodeIds
+    .map((nodeId) => mergedNodes.get(nodeId))
+    .filter((node): node is CanonicalNode => node != null);
 }
 
 function hasKnownCanvasAuthoringEdgeNodes(args: {

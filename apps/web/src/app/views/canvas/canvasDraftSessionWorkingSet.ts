@@ -165,8 +165,14 @@ function reconcileSnapshot(
     pendingExplicitNodeIds: nextPendingExplicitNodeIds,
   });
   const currentLocalNodeCatalog = readLocalNodeCatalog(reconciledSession);
+  const retainedLocalNodeIds = new Set([
+    ...reconciledSession.workingSet.visibleNodeIds,
+    ...reconciledSession.workingSet.pendingExplicitNodeIds,
+  ]);
   const nextLocalNodeCatalog = Object.fromEntries(
-    Object.entries(currentLocalNodeCatalog).filter(([nodeId]) => !knownNodeIds.has(nodeId))
+    Object.entries(currentLocalNodeCatalog).filter(([nodeId]) =>
+      retainedLocalNodeIds.has(nodeId)
+    )
   );
 
   return withLocalNodeCatalog(reconciledSession, nextLocalNodeCatalog);
@@ -191,10 +197,18 @@ function addExplicitNode(
   session: CanvasDraftSession,
   canonicalNode: CanonicalNode
 ): CanvasDraftSession {
-  const nodeId = canonicalNode.id;
   if (explicitNodeAlreadyTracked(session, canonicalNode)) {
     return session;
   }
+
+  return upsertNode(session, canonicalNode);
+}
+
+function upsertNode(
+  session: CanvasDraftSession,
+  canonicalNode: CanonicalNode
+): CanvasDraftSession {
+  const nodeId = canonicalNode.id;
   const nextVisibleNodeIds = session.workingSet.visibleNodeIds.includes(nodeId)
     ? session.workingSet.visibleNodeIds
     : [...session.workingSet.visibleNodeIds, nodeId];
@@ -206,6 +220,7 @@ function addExplicitNode(
     visibleNodeIds: nextVisibleNodeIds,
     pendingExplicitNodeIds: nextPendingNodeIds,
   });
+
   return withLocalNodeCatalog(nextSession, {
     ...readLocalNodeCatalog(nextSession),
     [nodeId]: canonicalNode,
@@ -252,6 +267,7 @@ export const canvasDraftSessionWorkingSet = {
   reconcileSnapshot,
   queueExplicitNodeIds,
   addExplicitNode,
+  upsertNode,
   removeNode,
   replaceEdges,
 } as const;

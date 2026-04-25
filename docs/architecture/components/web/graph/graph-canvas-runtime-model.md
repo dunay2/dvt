@@ -81,12 +81,13 @@ classDiagram
 
 - Session/scope/presentation seams are active.
 - hardening for conflict, missing-remote, and projection-gap posture exists.
+- route-owned Inspector authoring now exists for governed node details, backed
+  by local node overrides in the same draft aggregate used by preview and run.
 - parent TF-E2 still has pending closure for full node/edge/Inspector
   productization and complete proof matrix.
 
 ## Future Evolution
 
-- close Inspector property lifecycle under the same aggregate transitions.
 - finish command model closure for edge reconnect and mutation guards.
 - complete end-to-end deterministic reload coverage across supported draft
   versions.
