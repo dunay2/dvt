@@ -3,6 +3,8 @@
 import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import type { Node } from '@xyflow/react';
+
 import { DVT_AUTHORING_NODE_KINDS } from '../../plugins/nodeTypeCatalog.dbt';
 import type { NodeKindRegistration } from '../../plugins/nodeTypeContracts';
 import { canvasViewCopy } from './copy';
@@ -57,11 +59,19 @@ describe('useCanvasGraphHandlers node drop', () => {
     harness.cleanup();
   });
 
-  it('uses a functional node updater when dropping a canonical node', async () => {
-    const setNodes = vi.fn();
+  it('applies a pure node admission transaction when dropping a canonical node', async () => {
+    const initialNodes: Node[] = [
+      { id: 'source-node', data: { name: 'source-node' }, position: { x: 0, y: 0 } },
+      { id: 'sink-node', data: { name: 'sink-node' }, position: { x: 1, y: 1 } },
+    ];
+    let currentNodes: Node[] = initialNodes;
+    const setNodes = vi.fn((nextNodes) => {
+      currentNodes = nextNodes;
+    });
     const setDraftSession = vi.fn();
     const harness = renderGraphHandlersHook({
       canEditEdges: true,
+      nodes: initialNodes,
       setNodes,
       setDraftSession,
     });
@@ -85,15 +95,11 @@ describe('useCanvasGraphHandlers node drop', () => {
     });
 
     expect(setNodes).toHaveBeenCalledTimes(1);
-    const nodeUpdater = setNodes.mock.calls[0]?.[0];
-    expect(typeof nodeUpdater).toBe('function');
-    const nextNodes = nodeUpdater([
-      { id: 'source-node', data: { name: 'source-node' }, position: { x: 0, y: 0 } },
-      { id: 'sink-node', data: { name: 'sink-node' }, position: { x: 1, y: 1 } },
-    ]);
-    expect(nextNodes.map((node: { id: string }) => node.id)).toContain('transform-node');
+    expect(typeof setNodes.mock.calls[0]?.[0]).not.toBe('function');
+    expect(currentNodes.map((node: { id: string }) => node.id)).toContain('transform-node');
     expect(setDraftSession).toHaveBeenCalledTimes(1);
-    const nextDraftSession = setDraftSession.mock.calls[0]?.[0](buildDraftSession());
+    const nextDraftSession = setDraftSession.mock.calls[0]?.[0];
+    expect(typeof nextDraftSession).not.toBe('function');
     expect(nextDraftSession.workingSet.visibleNodeIds).toContain('transform-node');
     expect(nextDraftSession.localNodeCatalog?.['transform-node']).toEqual(
       expect.objectContaining({ id: 'transform-node' })
@@ -136,19 +142,23 @@ describe('useCanvasGraphHandlers node drop', () => {
   });
 
   it('creates an authoring node from the governed node catalog through the draft lifecycle', async () => {
-    const setNodes = vi.fn();
+    let currentNodes: Node[] = [];
+    const setNodes = vi.fn((nextNodes) => {
+      currentNodes = nextNodes;
+    });
     const setDraftSession = vi.fn();
+    const draftSession = {
+      ...buildDraftSession(),
+      workingSet: {
+        visibleNodeIds: [],
+        visibleEdges: [],
+        pendingExplicitNodeIds: [],
+      },
+    };
     const harness = renderGraphHandlersHook({
       canEditEdges: true,
       nodes: [],
-      draftSession: {
-        ...buildDraftSession(),
-        workingSet: {
-          visibleNodeIds: [],
-          visibleEdges: [],
-          pendingExplicitNodeIds: [],
-        },
-      },
+      draftSession,
       setNodes,
       setDraftSession,
     });
@@ -161,10 +171,8 @@ describe('useCanvasGraphHandlers node drop', () => {
     });
 
     expect(setNodes).toHaveBeenCalledTimes(1);
-    const nodeUpdater = setNodes.mock.calls[0]?.[0];
-    expect(typeof nodeUpdater).toBe('function');
-    const nextNodes = nodeUpdater([]);
-    expect(nextNodes).toEqual([
+    expect(typeof setNodes.mock.calls[0]?.[0]).not.toBe('function');
+    expect(currentNodes).toEqual([
       expect.objectContaining({
         id: 'dvt-sql-transform-1',
         position: { x: 0, y: 0 },
@@ -176,14 +184,8 @@ describe('useCanvasGraphHandlers node drop', () => {
       }),
     ]);
     expect(setDraftSession).toHaveBeenCalledTimes(1);
-    const nextDraftSession = setDraftSession.mock.calls[0]?.[0]({
-      ...buildDraftSession(),
-      workingSet: {
-        visibleNodeIds: [],
-        visibleEdges: [],
-        pendingExplicitNodeIds: [],
-      },
-    });
+    const nextDraftSession = setDraftSession.mock.calls[0]?.[0];
+    expect(typeof nextDraftSession).not.toBe('function');
     expect(nextDraftSession.workingSet.visibleNodeIds).toContain('dvt-sql-transform-1');
     expect(nextDraftSession.localNodeCatalog?.['dvt-sql-transform-1']).toEqual(
       expect.objectContaining({

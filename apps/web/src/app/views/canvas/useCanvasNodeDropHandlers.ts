@@ -1,17 +1,13 @@
 /** Owned concern: admit explicit dropped nodes into the draft graph through the node lifecycle API. */
 
-import { useCallback } from 'react';
+import { useCallback, useRef } from 'react';
 import { toast } from 'sonner';
 
 import { CANONICAL_NODE_DRAG_MIME_TYPE } from '../../types/canonical';
-import { canvasGraphLifecycle } from './canvasGraphLifecycle';
-import type {
-  CanvasNodeDropContracts,
-} from './canvasGraphHandlerContracts';
-import { parseCanonicalNodeDragPayload } from './canvasNodeDropPayload';
-import { admitCanonicalNodeToCanvas } from './canvasNodeDropAggregate';
-import { mapDroppedCanonicalNodeToCanvasNode } from './canvasNodeMapper';
+import type { CanvasNodeDropContracts } from './canvasGraphHandlerContracts';
+import { resolveCanvasNodeAdmissionTransaction } from './canvasNodeAdmissionTransaction';
 import { canvasViewCopy, formatCanvasNodeAddedMessage } from './copy';
+import { parseCanonicalNodeDragPayload } from './canvasNodeDropPayload';
 
 type UseCanvasNodeDropHandlersArgs = CanvasNodeDropContracts;
 
@@ -25,9 +21,11 @@ export function useCanvasNodeDropHandlers({
   effects,
   policy,
 }: UseCanvasNodeDropHandlersArgs): UseCanvasNodeDropHandlersResult {
-  const { draftSession } = state;
+  const { draftSession, nodes } = state;
   const { setNodes, setDraftSession } = effects;
   const { graphStrategy, canEditEdges, columnLevelLineageEnabled } = policy;
+  const latestNodesRef = useRef(nodes);
+  latestNodesRef.current = nodes;
 
   const handleDrop = useCallback<React.DragEventHandler<HTMLDivElement>>(
     (event) => {
@@ -52,33 +50,29 @@ export function useCanvasNodeDropHandlers({
         y: event.clientY - reactFlowBounds.top - 40,
       };
 
-      setNodes((existingNodes) => {
-        const admission = admitCanonicalNodeToCanvas({
-          canonicalNode,
-          visibleNodeIds: draftSession.workingSet.visibleNodeIds,
-        });
-
-        if (admission.outcome === 'noop') {
-          toast.info(admission.reason);
-          return existingNodes;
-        }
-
-        const newNode = mapDroppedCanonicalNodeToCanvasNode(
-          admission.canonicalNode,
-          position,
-          columnLevelLineageEnabled
-        );
-        setDraftSession((currentSession) =>
-          canvasGraphLifecycle.node.admitExplicit(currentSession, admission.canonicalNode)
-        );
-        toast.success(formatCanvasNodeAddedMessage(admission.canonicalNode.name));
-        return [...existingNodes, newNode];
+      const transaction = resolveCanvasNodeAdmissionTransaction({
+        canonicalNode,
+        draftSession,
+        existingNodes: latestNodesRef.current,
+        position,
+        columnLevelLineageEnabled,
       });
+
+      switch (transaction.outcome) {
+        case 'noop':
+          toast.info(transaction.reason);
+          return;
+        case 'added':
+          latestNodesRef.current = transaction.nodes;
+          setNodes(transaction.nodes);
+          setDraftSession(transaction.draftSession);
+          toast.success(formatCanvasNodeAddedMessage(transaction.canonicalNode.name));
+      }
     },
     [
       canEditEdges,
       columnLevelLineageEnabled,
-      draftSession.workingSet.visibleNodeIds,
+      draftSession,
       graphStrategy,
       setDraftSession,
       setNodes,

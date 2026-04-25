@@ -31,6 +31,7 @@ export function useCanvasNodeAuthoringHandlers({
   const nodeDropContracts: CanvasNodeDropContracts = {
     state: {
       draftSession: state.draftSession,
+      nodes: state.nodes,
     },
     effects,
     policy,
@@ -39,6 +40,7 @@ export function useCanvasNodeAuthoringHandlers({
   const nodeCreationContracts: CanvasAuthoringNodeCreationContracts = {
     state: {
       draftSession: state.draftSession,
+      nodes: state.nodes,
     },
     effects: {
       setNodes: effects.setNodes,

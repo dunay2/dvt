@@ -109,6 +109,7 @@ export type CanvasNodeDropEffects = {
 
 export type CanvasNodeDropState = {
   draftSession: CanvasDraftSession;
+  nodes: Node[];
 };
 
 export type CanvasNodeDropPolicy = {
@@ -125,6 +126,7 @@ export type CanvasNodeDropContracts = {
 
 export type CanvasAuthoringNodeCreationState = {
   draftSession: CanvasDraftSession;
+  nodes: Node[];
 };
 
 export type CanvasAuthoringNodeCreationEffects = {

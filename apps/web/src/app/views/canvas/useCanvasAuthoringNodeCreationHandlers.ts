@@ -1,15 +1,13 @@
 /** Owned concern: admit catalog-created authoring nodes through the draft graph lifecycle. */
-import { useCallback } from 'react';
+import { useCallback, useRef } from 'react';
 import { toast } from 'sonner';
 
-import { canvasGraphLifecycle } from './canvasGraphLifecycle';
 import type {
   CanvasAuthoringNodeCreationContracts,
   CreateCanvasAuthoringNode,
 } from './canvasGraphHandlerContracts';
-import { admitCanonicalNodeToCanvas } from './canvasNodeDropAggregate';
 import { buildAuthoringNodeCommand } from './canvasAuthoringNodeCommand';
-import { mapDroppedCanonicalNodeToCanvasNode } from './canvasNodeMapper';
+import { resolveCanvasNodeAdmissionTransaction } from './canvasNodeAdmissionTransaction';
 import { canvasViewCopy, formatCanvasNodeAddedMessage } from './copy';
 
 type UseCanvasAuthoringNodeCreationHandlersArgs = CanvasAuthoringNodeCreationContracts;
@@ -23,9 +21,11 @@ export function useCanvasAuthoringNodeCreationHandlers({
   effects,
   policy,
 }: UseCanvasAuthoringNodeCreationHandlersArgs): UseCanvasAuthoringNodeCreationHandlersResult {
-  const { draftSession } = state;
+  const { draftSession, nodes } = state;
   const { setDraftSession, setInspectorNode, setNodes, setSelectedNodes } = effects;
   const { canEditEdges, columnLevelLineageEnabled } = policy;
+  const latestNodesRef = useRef(nodes);
+  latestNodesRef.current = nodes;
 
   const handleCreateAuthoringNode = useCallback<CreateCanvasAuthoringNode>(
     (registration) => {
@@ -34,39 +34,35 @@ export function useCanvasAuthoringNodeCreationHandlers({
         return;
       }
 
-      setNodes((existingNodes) => {
-        const { canonicalNode, position } = buildAuthoringNodeCommand(
-          registration,
-          existingNodes
-        );
-        const admission = admitCanonicalNodeToCanvas({
-          canonicalNode,
-          visibleNodeIds: draftSession.workingSet.visibleNodeIds,
-        });
-
-        if (admission.outcome === 'noop') {
-          toast.info(admission.reason);
-          return existingNodes;
-        }
-
-        const newNode = mapDroppedCanonicalNodeToCanvasNode(
-          admission.canonicalNode,
-          position,
-          columnLevelLineageEnabled
-        );
-        setDraftSession((currentSession) =>
-          canvasGraphLifecycle.node.admitExplicit(currentSession, admission.canonicalNode)
-        );
-        setSelectedNodes([admission.canonicalNode.id]);
-        setInspectorNode(admission.canonicalNode.id);
-        toast.success(formatCanvasNodeAddedMessage(admission.canonicalNode.name));
-        return [...existingNodes, newNode];
+      const { canonicalNode, position } = buildAuthoringNodeCommand(
+        registration,
+        latestNodesRef.current
+      );
+      const transaction = resolveCanvasNodeAdmissionTransaction({
+        canonicalNode,
+        draftSession,
+        existingNodes: latestNodesRef.current,
+        position,
+        columnLevelLineageEnabled,
       });
+
+      switch (transaction.outcome) {
+        case 'noop':
+          toast.info(transaction.reason);
+          return;
+        case 'added':
+          latestNodesRef.current = transaction.nodes;
+          setNodes(transaction.nodes);
+          setDraftSession(transaction.draftSession);
+          setSelectedNodes([transaction.canonicalNode.id]);
+          setInspectorNode(transaction.canonicalNode.id);
+          toast.success(formatCanvasNodeAddedMessage(transaction.canonicalNode.name));
+      }
     },
     [
       canEditEdges,
       columnLevelLineageEnabled,
-      draftSession.workingSet.visibleNodeIds,
+      draftSession,
       setDraftSession,
       setInspectorNode,
       setNodes,
