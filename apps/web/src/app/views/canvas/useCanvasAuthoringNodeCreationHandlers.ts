@@ -22,7 +22,7 @@ export function useCanvasAuthoringNodeCreationHandlers({
   policy,
 }: UseCanvasAuthoringNodeCreationHandlersArgs): UseCanvasAuthoringNodeCreationHandlersResult {
   const { setDraftSession, setInspectorNode, setNodes, setSelectedNodes } = effects;
-  const { canEditEdges, columnLevelLineageEnabled, graphStrategy } = policy;
+  const { canEditEdges, columnLevelLineageEnabled } = policy;
 
   const handleCreateAuthoringNode = useCallback<CreateCanvasAuthoringNode>(
     (registration) => {
@@ -40,14 +40,8 @@ export function useCanvasAuthoringNodeCreationHandlers({
           canonicalNode,
           position,
           nodes: existingNodes,
-          graphStrategy,
           columnLevelLineageEnabled,
         });
-
-        if (dropResult.outcome === 'rejected') {
-          toast.error(dropResult.reason);
-          return existingNodes;
-        }
 
         if (dropResult.outcome === 'noop') {
           toast.info(dropResult.reason);
@@ -66,7 +60,6 @@ export function useCanvasAuthoringNodeCreationHandlers({
     [
       canEditEdges,
       columnLevelLineageEnabled,
-      graphStrategy,
       setDraftSession,
       setInspectorNode,
       setNodes,

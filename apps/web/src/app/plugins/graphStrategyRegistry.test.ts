@@ -16,8 +16,7 @@ describe('resolveCanvasGraphStrategy', () => {
     const strategy = resolveCanvasGraphStrategy('dbt');
     expect(strategy.id).toBe('dbt');
     expect(strategy.authoringPolicy).toEqual({
-      toolbarMode: 'dbt',
-      enforceTransformationTopology: false,
+      canvasKind: 'dbt',
     });
   });
 
@@ -25,8 +24,7 @@ describe('resolveCanvasGraphStrategy', () => {
     const strategy = resolveCanvasGraphStrategy('transformation');
     expect(strategy.id).toBe('transformation');
     expect(strategy.authoringPolicy).toEqual({
-      toolbarMode: 'transformation',
-      enforceTransformationTopology: true,
+      canvasKind: 'transformation',
     });
     expect(
       strategy.mapNodeToCanonical({
@@ -47,5 +45,40 @@ describe('resolveCanvasGraphStrategy', () => {
       status: 'idle',
       tags: [],
     });
+  });
+
+  it('rejects malformed transformation graph canonical nodes and edges', () => {
+    const strategy = resolveCanvasGraphStrategy('transformation');
+
+    expect(
+      strategy.mapNodeToCanonical({
+        id: 'source-node',
+        name: 'Source node',
+        pluginId: 'dvt',
+        kind: 'dvt:source',
+        role: 'god-mode',
+        status: 'idle',
+        tags: [],
+      })
+    ).toBeNull();
+    expect(
+      strategy.mapNodeToCanonical({
+        id: 'source-node',
+        name: 'Source node',
+        pluginId: 'dvt',
+        kind: 'dvt:source',
+        role: 'input',
+        status: 'paused',
+        tags: [],
+      })
+    ).toBeNull();
+    expect(
+      strategy.mapEdgeToCanonical({
+        id: 'edge-1',
+        sourceId: 'source-node',
+        targetId: 'transform-node',
+        relation: 'teleport',
+      })
+    ).toBeNull();
   });
 });

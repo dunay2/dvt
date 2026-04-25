@@ -1,9 +1,16 @@
 /** Owned concern: define the DVT transformation Canvas graph strategy. */
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+import {
+  isCanonicalEdgeRelation,
+  isCanonicalNodeStatus,
+  isCoreNodeRole,
+  isPluginNodeKind,
+  isRecord,
+} from '../../types/canonicalGuards';
 import type { CanvasGraphStrategy } from '../graphStrategyContracts';
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return value !== null && typeof value === 'object' && !Array.isArray(value);
+function hasStringArray(value: unknown): value is string[] {
+  return Array.isArray(value) && value.every((entry) => typeof entry === 'string');
 }
 
 function isCanonicalNode(value: unknown): value is CanonicalNode {
@@ -12,10 +19,10 @@ function isCanonicalNode(value: unknown): value is CanonicalNode {
     typeof value.id === 'string' &&
     typeof value.name === 'string' &&
     typeof value.pluginId === 'string' &&
-    typeof value.kind === 'string' &&
-    typeof value.role === 'string' &&
-    typeof value.status === 'string' &&
-    Array.isArray(value.tags)
+    isPluginNodeKind(value.kind) &&
+    isCoreNodeRole(value.role) &&
+    isCanonicalNodeStatus(value.status) &&
+    hasStringArray(value.tags)
   );
 }
 
@@ -25,15 +32,14 @@ function isCanonicalEdge(value: unknown): value is CanonicalEdge {
     typeof value.id === 'string' &&
     typeof value.sourceId === 'string' &&
     typeof value.targetId === 'string' &&
-    typeof value.relation === 'string'
+    isCanonicalEdgeRelation(value.relation)
   );
 }
 
 export const transformationCanvasGraphStrategy: CanvasGraphStrategy = {
   id: 'transformation',
   authoringPolicy: {
-    toolbarMode: 'transformation',
-    enforceTransformationTopology: true,
+    canvasKind: 'transformation',
   },
   mapNodeToCanonical: (node) => (isCanonicalNode(node) ? node : null),
   mapEdgeToCanonical: (edge) => (isCanonicalEdge(edge) ? edge : null),

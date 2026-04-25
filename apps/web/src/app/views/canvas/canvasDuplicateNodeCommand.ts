@@ -2,7 +2,6 @@
 
 import type { Node } from '@xyflow/react';
 
-import type { CanvasGraphStrategy } from '../../plugins/graphStrategyContracts';
 import type { CanonicalNode } from '../../types/canonical';
 import { toCanvasAuthoringMetadata } from './canvasAuthoringMetadata';
 import { dropCanonicalNode } from './canvasNodeDropAggregate';
@@ -22,7 +21,6 @@ type ResolveCanvasNodeDuplicateTransactionArgs = Readonly<{
   nodeId: string;
   sourceCanonicalNode: CanonicalNode | null;
   existingNodes: readonly Node[];
-  graphStrategy: CanvasGraphStrategy;
   columnLevelLineageEnabled: boolean;
 }>;
 
@@ -33,7 +31,7 @@ export type CanvasNodeDuplicateTransaction =
       nextNodes: Node[];
     }>
   | Readonly<{
-      outcome: 'noop' | 'rejected';
+      outcome: 'noop';
       reason: string;
     }>
   | Readonly<{
@@ -82,7 +80,6 @@ export function resolveCanvasNodeDuplicateTransaction({
   nodeId,
   sourceCanonicalNode,
   existingNodes,
-  graphStrategy,
   columnLevelLineageEnabled,
 }: ResolveCanvasNodeDuplicateTransactionArgs): CanvasNodeDuplicateTransaction {
   const sourceNode = existingNodes.find((candidate) => candidate.id === nodeId);
@@ -99,7 +96,6 @@ export function resolveCanvasNodeDuplicateTransaction({
     canonicalNode,
     position,
     nodes: [...existingNodes],
-    graphStrategy,
     columnLevelLineageEnabled,
   });
 
@@ -113,11 +109,6 @@ export function resolveCanvasNodeDuplicateTransaction({
     case 'noop':
       return {
         outcome: 'noop',
-        reason: dropResult.reason,
-      };
-    case 'rejected':
-      return {
-        outcome: 'rejected',
         reason: dropResult.reason,
       };
   }

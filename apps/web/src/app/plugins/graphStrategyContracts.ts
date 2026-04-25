@@ -1,11 +1,11 @@
 /** Owned concern: define plugin-neutral Canvas graph strategy contracts. */
 import type { CanonicalEdge, CanonicalNode } from '../types/canonical';
+import type { CanvasKindRegistration } from './nodeTypeContracts';
 
-export type CanvasGraphAuthoringMode = 'dbt' | 'transformation';
+export type CanvasGraphAuthoringMode = CanvasKindRegistration['kind'];
 
 export type CanvasGraphAuthoringPolicy = Readonly<{
-  toolbarMode: CanvasGraphAuthoringMode;
-  enforceTransformationTopology: boolean;
+  canvasKind: CanvasGraphAuthoringMode;
 }>;
 
 export interface CanvasGraphStrategy {

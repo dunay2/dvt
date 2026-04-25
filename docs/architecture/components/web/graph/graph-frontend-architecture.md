@@ -94,7 +94,9 @@ As of 2026-04-22:
 
 - route startup is generalized by `route.id` plus explicit bootstrap metadata
 - Canvas graph mutation now flows through one local lifecycle component
-- edge admission and node-drop policy live behind narrow pure policy seams
+- edge admission lives behind a narrow pure policy seam; node drop and
+  duplicate admission are canonical aggregate operations, while plugin graph
+  strategies only parse or project plugin-owned payloads
 - connection and transformation validation stay typed until presentation
 - route-visible operator copy is centralized instead of repeated across handlers
 - protected draft reads now project a semantic canonical graph,
@@ -172,7 +174,9 @@ flowchart LR
   Manifest --> Copy["copy.ts consumers"]
   Registry --> PortMap["plugin port maps"]
   PortMap --> Rules
-  Rules --> CanvasPolicy["canvasConnectionAggregate and drop policy"]
+  Rules --> CanvasPolicy["canvasConnectionAggregate edge policy"]
+  Registry --> Strategy["CanvasGraphStrategy payload projection"]
+  Strategy --> Drop["dropCanonicalNode canonical admission"]
 ```
 
 Reading rule:

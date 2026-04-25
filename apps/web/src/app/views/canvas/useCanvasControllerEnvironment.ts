@@ -22,7 +22,7 @@ export function useCanvasControllerEnvironment() {
   const { data: capabilities } = useCapabilitiesQuery();
   const platformHealthQuery = usePlatformHealthSnapshotQuery();
   const graphStrategy = useMemo(() => resolveCanvasGraphStrategy(), []);
-  const canvasAuthoringMode = graphStrategy.authoringPolicy.toolbarMode;
+  const canvasAuthoringMode = graphStrategy.authoringPolicy.canvasKind;
   const workspaceServiceCapabilities = useMemo(
     () => resolveWorkspaceServiceCapabilities(dataSourceMode),
     [dataSourceMode]
