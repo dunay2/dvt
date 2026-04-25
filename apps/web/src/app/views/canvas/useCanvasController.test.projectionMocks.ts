@@ -13,13 +13,7 @@ export function configureCanvasHarnessHookAndProjectionMocks(
 ): void {
   const selectFromStore = (selector?: (value: typeof state.store) => unknown) =>
     typeof selector === 'function' ? selector(state.store) : state.store;
-
-  mocks.useCanvasInteractionStore.mockImplementation(selectFromStore);
-  mocks.useExecutionStore.mockImplementation(selectFromStore);
-  mocks.useSessionStore.mockImplementation(selectFromStore);
-  mocks.useUiLayoutStore.mockImplementation(selectFromStore);
-  mocks.useCapabilitiesQuery.mockReturnValue({ data: undefined });
-  mocks.resolveCanvasGraphStrategy.mockReturnValue({
+  const transformationGraphStrategy = {
     id: 'transformation',
     authoringPolicy: {
       canvasKind: 'transformation',
@@ -31,7 +25,29 @@ export function configureCanvasHarnessHookAndProjectionMocks(
       (edge: { id: string }) => state.canonicalEdges.find((e) => e.id === edge.id) ?? null
     ),
     parseDropPayload: vi.fn(() => null),
-  });
+  };
+  const dbtGraphStrategy = {
+    id: 'dbt',
+    authoringPolicy: {
+      canvasKind: 'dbt',
+    },
+    mapNodeToCanonical: vi.fn(
+      (node: { id: string }) => state.canonicalNodes.find((n) => n.id === node.id) ?? null
+    ),
+    mapEdgeToCanonical: vi.fn(
+      (edge: { id: string }) => state.canonicalEdges.find((e) => e.id === edge.id) ?? null
+    ),
+    parseDropPayload: vi.fn(() => null),
+  };
+
+  mocks.useCanvasInteractionStore.mockImplementation(selectFromStore);
+  mocks.useExecutionStore.mockImplementation(selectFromStore);
+  mocks.useSessionStore.mockImplementation(selectFromStore);
+  mocks.useUiLayoutStore.mockImplementation(selectFromStore);
+  mocks.useCapabilitiesQuery.mockReturnValue({ data: undefined });
+  mocks.resolveCanvasGraphStrategy.mockImplementation((strategyId?: unknown) =>
+    strategyId === 'dbt' ? dbtGraphStrategy : transformationGraphStrategy
+  );
   mocks.buildOverlayContext.mockReturnValue({ overlay: 'ctx' });
   mocks.buildNodeDecorations.mockImplementation(() => state.overlayDecorations);
   mocks.mapCanonicalNodeToCanvasNode.mockImplementation(

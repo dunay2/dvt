@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
   buildRemoteDraftRecord,
   createHarnessWithDraft,
+  setHarnessRemoteDraftRecord,
 } from './useCanvasController.draftLifecycle.test.support';
 import { setupCanvasControllerHarness } from './useCanvasController.test.harness';
 
@@ -123,6 +124,37 @@ describe('useCanvasController core', () => {
         sessionContext: harness.state.services.sessionContext,
         shellFeedback: harness.state.services.shellFeedback,
         onRunStarted: harness.state.navigationActionsResult.handleRunStarted,
+      })
+    );
+  });
+
+  it('selects graph strategy from the active canvas document kind', async () => {
+    setHarnessRemoteDraftRecord(
+      harness,
+      buildRemoteDraftRecord({
+        canvas: {
+          kind: 'dbt',
+          title: 'dbt graph',
+        },
+        nodeIds: ['node_1', 'node_2'],
+        nodePositions: {
+          node_1: { x: 0, y: 0 },
+          node_2: { x: 100, y: 0 },
+        },
+        edges: [{ sourceId: 'node_1', targetId: 'node_2' }],
+      })
+    );
+
+    await harness.renderProbe();
+    await harness.renderProbe();
+
+    expect(harness.mocks.resolveCanvasGraphStrategy).toHaveBeenCalledWith('dbt');
+    expect(harness.getLatestResult()?.canvasAuthoringMode).toBe('dbt');
+    expect(harness.mocks.useCanvasGraphHandlers).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        graphStrategy: expect.objectContaining({
+          id: 'dbt',
+        }),
       })
     );
   });

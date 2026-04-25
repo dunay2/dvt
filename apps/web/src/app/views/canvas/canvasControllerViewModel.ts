@@ -1,6 +1,7 @@
 import { type NodeTypes } from '@xyflow/react';
 
 import DbtNodeComponent from '../../components/canvas/DbtNodeComponent';
+import type { CanvasGraphAuthoringMode } from '../../plugins/graphStrategyContracts';
 import { getAllCanvasKinds, getRegisteredPluginIds } from '../../plugins/registry';
 import type { useCanvasAuthoringRuntime } from './useCanvasAuthoringRuntime';
 import type { useCanvasControllerEnvironment } from './useCanvasControllerEnvironment';
@@ -25,6 +26,9 @@ type CanvasOverlayModel = ReturnType<typeof useCanvasOverlayModel>;
 type CanvasExecutionActions = ReturnType<typeof useCanvasExecutionActions>;
 type CanvasControllerReadModel = ReturnType<typeof useCanvasControllerReadModel>;
 type CanvasInspectorCommands = ReturnType<typeof useCanvasInspectorCommands>;
+type CanvasControllerGraphPolicy = {
+  canvasAuthoringMode: CanvasGraphAuthoringMode;
+};
 
 type CanvasControllerViewModelArgs = {
   environment: CanvasControllerEnvironment;
@@ -34,6 +38,7 @@ type CanvasControllerViewModelArgs = {
   graphHandlers: CanvasGraphHandlers;
   overlayModel: CanvasOverlayModel;
   executionActions: CanvasExecutionActions;
+  graphPolicy: CanvasControllerGraphPolicy;
   readModel: CanvasControllerReadModel;
   inspectorCommands: CanvasInspectorCommands;
 };
@@ -48,10 +53,10 @@ function buildCanvasShellViewModel(args: CanvasControllerViewModelArgs) {
     environment: {
       dataSourceMode,
       capabilities,
-      canvasAuthoringMode,
       workspaceServiceCapabilities,
       store,
     },
+    graphPolicy: { canvasAuthoringMode },
     authoringRuntime: { backendPosture, graphModel, draftReadModel },
     overlayModel,
     readModel: { nodesWithImpact, inspectorNode },
