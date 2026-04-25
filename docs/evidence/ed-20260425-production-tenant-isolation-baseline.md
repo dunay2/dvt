@@ -12,14 +12,19 @@ code_refs:
   - packages/@dvt/adapter-postgres/src/PostgresAdapterClientSession.ts
   - packages/@dvt/adapter-postgres/src/PostgresBackpressureSnapshotReader.ts
   - packages/@dvt/adapter-postgres/src/PostgresBackpressureSnapshotReaderSql.ts
+  - packages/@dvt/adapter-postgres/src/StartRunIntentSchemaManager.ts
+  - packages/@dvt/adapter-postgres/src/PostgresStartRunIntentStore.ts
   - packages/@dvt/adapter-postgres/src/PostgresOutboxStore.ts
   - packages/@dvt/adapter-postgres/src/PostgresRunSnapshotStore.ts
   - packages/@dvt/adapter-postgres/test/PostgresTenantIsolationPolicy.test.ts
+  - packages/@dvt/adapter-postgres/test/StartRunIntentSchemaManager.test.ts
+  - packages/@dvt/adapter-postgres/test/PostgresStartRunIntentStore.context.test.ts
   - packages/@dvt/adapter-postgres/test/PostgresBackpressureSnapshotReader.test.ts
   - packages/@dvt/adapter-postgres/test/PostgresStateStoreAdapter.migrate.test.ts
   - docs/risk-register/quality/R-20260425-PRODUCTION-TENANT-ISOLATION-BASELINE.yaml
 evidence:
   tests:
+    - pnpm --filter @dvt/adapter-postgres test -- PostgresTenantIsolationPolicy.test.ts StartRunIntentSchemaManager.test.ts PostgresStartRunIntentStore.context.test.ts
     - pnpm --filter @dvt/adapter-postgres test -- PostgresTenantIsolationPolicy.test.ts PostgresBackpressureSnapshotReader.test.ts PostgresStateStoreAdapter.migrate.test.ts
     - pnpm --filter @dvt/adapter-postgres test -- PostgresTenantIsolationPolicy.test.ts PostgresAdapterClientSession.test.ts PostgresStateStoreAdapter.migrate.test.ts PostgresOutboxStore.test.ts PostgresRunSnapshotStore.test.ts PostgresRunSnapshotStore.cas-guard.test.ts
     - pnpm --filter @dvt/adapter-postgres build
@@ -30,8 +35,9 @@ evidence:
 
 This ARC-2 evidence covers the production tenant-isolation baseline for the
 Postgres adapter. Tenant-owned online state now has a canonical RLS catalog,
-transaction-local tenant/service contexts, and top-level `tenant_id` on the
-derived tables that previously could not be protected by database policy.
+transaction-local tenant/service contexts, top-level `tenant_id` on the
+derived tables that previously could not be protected by database policy, and
+forced RLS on the start-run intent log.
 
 # What This Evidence Closes
 
@@ -48,6 +54,9 @@ derived tables that previously could not be protected by database policy.
    `tenant_id`.
 5. Outbox, lineage, archive, snapshot, staleness, and snapshot-work paths set
    explicit tenant or service context before touching RLS-protected tables.
+6. `start_run_intents` is included in the tenant-isolation catalog, gets its
+   own forced RLS migration through `StartRunIntentSchemaManager`, and is read
+   or mutated only through an explicit service-context session.
 
 # What Remains Open
 

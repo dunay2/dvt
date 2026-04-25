@@ -19,6 +19,7 @@ describe('PostgresTenantIsolationPolicy', () => {
       'lineage_dead_letter',
       'run_event_heads',
       'snapshot_work_queue',
+      'start_run_intents',
     ]);
     expect(TENANT_ISOLATION_TABLES.every((table) => table.tenantColumn === 'tenant_id')).toBe(true);
   });

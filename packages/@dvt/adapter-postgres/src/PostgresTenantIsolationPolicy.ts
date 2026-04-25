@@ -9,6 +9,11 @@ export interface TenantIsolationTable {
   readonly tenantColumn: string;
 }
 
+export const START_RUN_INTENTS_TENANT_ISOLATION_TABLE: TenantIsolationTable = {
+  name: 'start_run_intents',
+  tenantColumn: 'tenant_id',
+} as const;
+
 export const TENANT_ISOLATION_TABLES: readonly TenantIsolationTable[] = [
   { name: 'run_metadata', tenantColumn: 'tenant_id' },
   { name: 'run_events', tenantColumn: 'tenant_id' },
@@ -19,7 +24,13 @@ export const TENANT_ISOLATION_TABLES: readonly TenantIsolationTable[] = [
   { name: 'lineage_dead_letter', tenantColumn: 'tenant_id' },
   { name: 'run_event_heads', tenantColumn: 'tenant_id' },
   { name: 'snapshot_work_queue', tenantColumn: 'tenant_id' },
+  START_RUN_INTENTS_TENANT_ISOLATION_TABLE,
 ] as const;
+
+export const CORE_TENANT_ISOLATION_TABLES: readonly TenantIsolationTable[] =
+  TENANT_ISOLATION_TABLES.filter(
+    (table) => table.name !== START_RUN_INTENTS_TENANT_ISOLATION_TABLE.name
+  );
 
 export function setTenantContextSql(): string {
   return `
@@ -61,8 +72,11 @@ export function buildTenantIsolationPolicySql(
   ];
 }
 
-export function buildDropTenantIsolationPolicySql(schema: string): readonly string[] {
-  return TENANT_ISOLATION_TABLES.flatMap((table) => {
+export function buildDropTenantIsolationPolicySql(
+  schema: string,
+  tables: readonly TenantIsolationTable[] = TENANT_ISOLATION_TABLES
+): readonly string[] {
+  return tables.flatMap((table) => {
     const relation = `${quoteIdentifier(schema)}.${table.name}`;
     return [
       `DROP POLICY IF EXISTS dvt_tenant_isolation ON ${relation}`,

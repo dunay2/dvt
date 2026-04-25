@@ -41,7 +41,7 @@ import {
   stepAlreadyAppliedSql,
 } from './PostgresSchemaManagerSql.js';
 import {
-  TENANT_ISOLATION_TABLES,
+  CORE_TENANT_ISOLATION_TABLES,
   buildDropTenantIsolationPolicySql,
   buildTenantIsolationPolicySql,
 } from './PostgresTenantIsolationPolicy.js';
@@ -925,7 +925,7 @@ const MIGRATION_STEPS: readonly MigrationStep[] = [
         ON ${sq(schema)}.outbox_dead_letter (tenant_id, dead_lettered_at DESC)
       `);
 
-      for (const table of TENANT_ISOLATION_TABLES) {
+      for (const table of CORE_TENANT_ISOLATION_TABLES) {
         for (const statement of buildTenantIsolationPolicySql(schema, table)) {
           await client.query(statement);
         }
@@ -934,7 +934,10 @@ const MIGRATION_STEPS: readonly MigrationStep[] = [
     rollbackDescription:
       'Disable tenant RLS policy while preserving additive tenant columns and indexes',
     rollback: async (client, schema) => {
-      for (const statement of buildDropTenantIsolationPolicySql(schema)) {
+      for (const statement of buildDropTenantIsolationPolicySql(
+        schema,
+        CORE_TENANT_ISOLATION_TABLES
+      )) {
         await client.query(statement);
       }
       await client.query(

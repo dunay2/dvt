@@ -162,6 +162,7 @@ stateDiagram-v2
 | `lineage_dead_letter`  | Tenant-owned delivery buffer, RLS required                           |
 | `run_event_heads`      | Tenant-owned derived head, RLS required                              |
 | `snapshot_work_queue`  | Tenant-owned derived work queue, RLS required                        |
+| `start_run_intents`    | Tenant-owned pre-dispatch intent log, RLS required                   |
 | `plan_records`         | Deferred plan-record tenancy task                                    |
 | `stored_plans`         | Deferred plan-record tenancy task                                    |
 | Archive catalog tables | Service/maintenance posture, not tenant API baseline                 |
@@ -208,6 +209,10 @@ stateDiagram-v2
 - Updated backpressure snapshot reads to run inside service-context
   transactions and to join `outbox` to `run_metadata` by both `run_id` and
   `tenant_id`.
+- Included `start_run_intents` in the tenant-isolation catalog, added a
+  dedicated forced-RLS intent-log migration, and changed
+  `PostgresStartRunIntentStore` to use explicit service-context sessions
+  instead of direct pool queries.
 - Added ARC evidence and risk register entries:
   `docs/evidence/ed-20260425-production-tenant-isolation-baseline.md` and
   `docs/risk-register/quality/R-20260425-PRODUCTION-TENANT-ISOLATION-BASELINE.yaml`.
@@ -215,6 +220,7 @@ stateDiagram-v2
 ## Validation Plan
 
 - `pnpm --filter @dvt/adapter-postgres test -- PostgresTenantIsolationPolicy.test.ts PostgresBackpressureSnapshotReader.test.ts PostgresStateStoreAdapter.migrate.test.ts`
+- `pnpm --filter @dvt/adapter-postgres test -- PostgresTenantIsolationPolicy.test.ts StartRunIntentSchemaManager.test.ts PostgresStartRunIntentStore.context.test.ts`
 - `pnpm --filter @dvt/adapter-postgres test -- PostgresTenantIsolationPolicy.test.ts PostgresStateStoreAdapter.migrate.test.ts PostgresOutboxStore.test.ts PostgresRunSnapshotStore.test.ts`
 - `pnpm --filter @dvt/adapter-postgres build`
 - `pnpm docs:sync`

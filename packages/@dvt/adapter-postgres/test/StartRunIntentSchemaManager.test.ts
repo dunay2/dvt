@@ -43,4 +43,27 @@ describe('StartRunIntentSchemaManager migration locking', () => {
     expect(unlockSql).not.toContain('hashtext');
     expect(client.releaseCalls).toBe(1);
   });
+
+  it('applies forced RLS to the start-run intent log', async () => {
+    const client = new RecordingMigrationClient();
+    const manager = new StartRunIntentSchemaManager({
+      pool: {
+        connect: async () => client,
+      } as never,
+      schema: 'DvtOps',
+    });
+
+    await manager.migrate();
+
+    const migrationSql = client.queries.map((query) => query.sql).join('\n');
+    expect(migrationSql).toContain(
+      'ALTER TABLE "DvtOps".start_run_intents ENABLE ROW LEVEL SECURITY'
+    );
+    expect(migrationSql).toContain(
+      'ALTER TABLE "DvtOps".start_run_intents FORCE ROW LEVEL SECURITY'
+    );
+    expect(migrationSql).toContain('CREATE POLICY dvt_tenant_isolation');
+    expect(migrationSql).toContain("current_setting('dvt.access_mode', true) = 'service'");
+    expect(migrationSql).toContain("tenant_id = current_setting('dvt.tenant_id', true)");
+  });
 });
