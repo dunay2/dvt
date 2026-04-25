@@ -101,6 +101,7 @@ function buildCanvasInteractionViewModel(args: CanvasControllerViewModelArgs) {
     onNodesChange: mutationHandlers.handleNodesChange,
     onEdgesChange: mutationHandlers.handleEdgesChange,
     onConnect: graphHandlers.onConnect,
+    onReconnect: graphHandlers.onReconnect,
     handleNodeClick: graphHandlers.handleNodeClick,
     onSelectionChange: graphHandlers.onSelectionChange,
     handleViewportChange: persistence.handleViewportChange,

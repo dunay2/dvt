@@ -145,6 +145,7 @@ function buildProps(overrides?: CanvasShellPropsOverrides): CanvasShellProps {
       onNodeDragStop: vi.fn(),
       onEdgesChange: vi.fn(),
       onConnect: vi.fn(),
+      onReconnect: vi.fn(),
       onNodeClick: vi.fn(),
       onSelectionChange: vi.fn(),
       onViewportChange: vi.fn(),

@@ -75,6 +75,7 @@ export type CanvasShellGraphCommands = {
   onNodeDragStop: NonNullable<ReactFlowProps<Node, Edge>['onNodeDragStop']>;
   onEdgesChange: NonNullable<ReactFlowProps<Node, Edge>['onEdgesChange']>;
   onConnect: NonNullable<ReactFlowProps<Node, Edge>['onConnect']>;
+  onReconnect: NonNullable<ReactFlowProps<Node, Edge>['onReconnect']>;
   onNodeClick: NonNullable<ReactFlowProps<Node, Edge>['onNodeClick']>;
   onSelectionChange: NonNullable<ReactFlowProps<Node, Edge>['onSelectionChange']>;
   onViewportChange: (viewport: CanvasViewport) => void;

@@ -219,6 +219,7 @@ export function buildDefaultCanvasControllerCallbacks(): Pick<
   | 'onNodesChange'
   | 'onEdgesChange'
   | 'onConnect'
+  | 'onReconnect'
   | 'handleNodeClick'
   | 'onSelectionChange'
   | 'handleViewportChange'
@@ -250,6 +251,7 @@ export function buildDefaultCanvasControllerCallbacks(): Pick<
     onNodesChange: vi.fn(),
     onEdgesChange: vi.fn(),
     onConnect: vi.fn(),
+    onReconnect: vi.fn(),
     handleNodeClick: vi.fn(),
     onSelectionChange: vi.fn(),
     handleViewportChange: vi.fn(),

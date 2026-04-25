@@ -96,6 +96,7 @@ function buildProps(
     onNodeDragStop: vi.fn(),
     onEdgesChange: vi.fn(),
     onConnect: vi.fn(),
+    onReconnect: vi.fn(),
     onNodeClick: vi.fn(),
     onSelectionChange: vi.fn(),
     onViewportChange: vi.fn(),
@@ -275,6 +276,8 @@ describe('CanvasViewport', () => {
       disableKeyboardA11y: true,
       onNodesChange: undefined,
       onEdgesChange: undefined,
+      onReconnect: undefined,
+      edgesReconnectable: false,
     });
   });
 
