@@ -326,6 +326,21 @@ describe('PostgresStateStoreAdapter migration state', () => {
     expect(executedSql).toContain("tenant_id = current_setting('dvt.tenant_id', true)");
   });
 
+  it('rejects unresolved tenant backfills instead of synthesizing tenant ids', async () => {
+    const client = new RecordingMigrationClient();
+    const adapter = new PostgresStateStoreAdapter({
+      pool: { connect: async () => client } as never,
+      schema: 'DvtOps',
+    });
+
+    await adapter.migrate();
+
+    const executedSql = client.queries.map((q) => q.sql).join('\n');
+    expect(executedSql).not.toContain('__unknown_tenant__');
+    expect(executedSql).toContain('LINEAGE_OUTBOX_TENANT_BACKFILL_REQUIRED');
+    expect(executedSql).toContain('LINEAGE_DEAD_LETTER_TENANT_BACKFILL_REQUIRED');
+  });
+
   it('creates the archive catalog tables and indexes required for G5-PR1', async () => {
     const client = new RecordingMigrationClient();
     const adapter = new PostgresStateStoreAdapter({

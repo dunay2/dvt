@@ -111,7 +111,7 @@ run state, and the code/tests/docs agree on that posture.
 | RLS silently bypassed by table owner          | Document non-owner runtime role as production requirement and keep schema owner for migrations only. |
 | Tenant context lost between pooled statements | Run `withClient` operations in an explicit transaction so `set_config(..., true)` remains visible.   |
 | Worker/global flows need cross-tenant access  | Use explicit service context, not implicit owner bypass.                                             |
-| Existing orphan rows block migration          | Fail fast; no `__unknown_tenant__` backfill for new baseline tables.                                 |
+| Existing orphan rows block migration          | Fail fast; no `__unknown_tenant__` backfill in tenant-owned storage migrations.                      |
 
 ## Architecture
 
@@ -176,7 +176,7 @@ stateDiagram-v2
 - Security by convention: no longer acceptable for tenant-owned online tables.
 - JSON ownership as a database isolation mechanism: explicitly rejected for the
   production baseline.
-- Silent legacy backfill: rejected for new baseline tenant columns.
+- Silent legacy backfill: rejected for tenant-owned storage migrations.
 
 ### Residual Risks
 

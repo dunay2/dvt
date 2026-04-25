@@ -27,8 +27,8 @@ mitigations:
     Keep all tenant API paths setting tenant context and all worker/maintenance paths setting
     service context before accessing RLS-protected tables.
   - >
-    Do not use `__unknown_tenant__` fallback for the new run snapshot/outbox baseline columns;
-    migration must fail if ownership cannot be derived.
+    Do not use `__unknown_tenant__` fallback for tenant-owned storage migrations; migration must
+    fail if ownership cannot be derived.
   - >
     Schedule a separate plan-store tenancy slice to add top-level tenant/project/environment
     ownership to `plan_records` and `stored_plans`.

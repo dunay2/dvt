@@ -676,8 +676,7 @@ const MIGRATION_STEPS: readonly MigrationStep[] = [
         UPDATE ${sq(schema)}.lineage_outbox o
         SET tenant_id = COALESCE(
           o.payload->>'tenantId',
-          m.tenant_id,
-          '__unknown_tenant__'
+          m.tenant_id
         )
         FROM ${sq(schema)}.run_metadata m
         WHERE m.run_id = o.run_id
@@ -687,22 +686,22 @@ const MIGRATION_STEPS: readonly MigrationStep[] = [
         UPDATE ${sq(schema)}.lineage_dead_letter dl
         SET tenant_id = COALESCE(
           dl.payload->>'tenantId',
-          m.tenant_id,
-          '__unknown_tenant__'
+          m.tenant_id
         )
         FROM ${sq(schema)}.run_metadata m
         WHERE m.run_id = dl.run_id
           AND dl.tenant_id IS NULL
       `);
       await client.query(`
-        UPDATE ${sq(schema)}.lineage_outbox
-        SET tenant_id = '__unknown_tenant__'
-        WHERE tenant_id IS NULL
-      `);
-      await client.query(`
-        UPDATE ${sq(schema)}.lineage_dead_letter
-        SET tenant_id = '__unknown_tenant__'
-        WHERE tenant_id IS NULL
+        DO $$
+        BEGIN
+          IF EXISTS (SELECT 1 FROM ${sq(schema)}.lineage_outbox WHERE tenant_id IS NULL) THEN
+            RAISE EXCEPTION 'LINEAGE_OUTBOX_TENANT_BACKFILL_REQUIRED';
+          END IF;
+          IF EXISTS (SELECT 1 FROM ${sq(schema)}.lineage_dead_letter WHERE tenant_id IS NULL) THEN
+            RAISE EXCEPTION 'LINEAGE_DEAD_LETTER_TENANT_BACKFILL_REQUIRED';
+          END IF;
+        END $$;
       `);
       await client.query(
         `ALTER TABLE ${sq(schema)}.lineage_outbox ALTER COLUMN tenant_id SET NOT NULL`
