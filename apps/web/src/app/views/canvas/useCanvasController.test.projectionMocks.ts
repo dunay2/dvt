@@ -51,6 +51,28 @@ export function configureCanvasHarnessHookAndProjectionMocks(
     }
     return null;
   });
+  mocks.findCanvasRuntimeRegistration.mockImplementation((strategyId?: unknown) => {
+    if (strategyId === 'dbt') {
+      return {
+        kind: 'dbt',
+        graphStrategy: dbtGraphStrategy,
+        executionStrategy: {
+          kind: 'not_executable',
+        },
+      };
+    }
+    if (strategyId === 'transformation' || strategyId === undefined) {
+      return {
+        kind: 'transformation',
+        graphStrategy: transformationGraphStrategy,
+        executionStrategy: {
+          kind: 'transformation_preview',
+          previewProfile: 'transformation-sql-first-v1',
+        },
+      };
+    }
+    return null;
+  });
   mocks.buildOverlayContext.mockReturnValue({ overlay: 'ctx' });
   mocks.buildNodeDecorations.mockImplementation(() => state.overlayDecorations);
   mocks.mapCanonicalNodeToCanvasNode.mockImplementation(

@@ -5,6 +5,7 @@ import type { IRunsPort } from '../../ports/runs';
 import type { SessionContextPort } from '../../ports/sessionContext';
 import type { ShellFeedbackPort } from '../../ports/shellFeedback';
 import type { IWorkspacePort } from '../../ports/workspace';
+import type { CanvasExecutionStrategy } from '../../plugins/canvasExecutionStrategyContracts';
 import type { WorkspaceBootstrapConfig } from '../../services/config/workspaceConfig';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { PlanViewModel } from '../../types/plans';
@@ -13,6 +14,7 @@ export type UseCanvasExecutionActionsParams = {
   plansService: IPlansPort;
   runsService: IRunsPort;
   workspaceService: IWorkspacePort;
+  executionStrategy: CanvasExecutionStrategy;
   canonicalNodes: CanonicalNode[];
   canonicalEdges: CanonicalEdge[];
   selectedNodeIds: string[];

@@ -1,8 +1,9 @@
 /** Owned concern: resolve the active Canvas graph strategy from the current draft document. */
 import {
-  findCanvasGraphStrategy,
+  findCanvasRuntimeRegistration,
   resolveCanvasGraphStrategy,
 } from '../../plugins/graphStrategyRegistry';
+import type { CanvasExecutionStrategy } from '../../plugins/canvasExecutionStrategyContracts';
 import type { CanvasGraphStrategy } from '../../plugins/graphStrategyContracts';
 import type { CanvasGraphAuthoringMode } from '../../plugins/nodeTypeContracts';
 import type { RuntimeCapabilities } from '../../plugins/registry';
@@ -12,12 +13,14 @@ const DEFAULT_CANVAS_AUTHORING_MODE: CanvasGraphAuthoringMode = 'transformation'
 
 export type ActiveCanvasGraphStrategyResolution =
   | {
-      kind: 'missing_document';
+    kind: 'missing_document';
+      executionStrategy: CanvasExecutionStrategy;
       strategy: CanvasGraphStrategy;
     }
   | {
       kind: 'ready';
       canvasKind: CanvasGraphAuthoringMode;
+      executionStrategy: CanvasExecutionStrategy;
       strategy: CanvasGraphStrategy;
     }
   | {
@@ -47,14 +50,23 @@ export function resolveActiveCanvasGraphStrategy(
 ): ActiveCanvasGraphStrategyResolution {
   const canvasKind = resolveDraftCanvasKind(draftReadModel);
   if (canvasKind == null) {
+    const defaultRuntimeRegistration = findCanvasRuntimeRegistration(
+      undefined,
+      capabilities
+    );
+    if (defaultRuntimeRegistration == null) {
+      throw new Error('Missing default canvas runtime registration');
+    }
+
     return {
       kind: 'missing_document',
-      strategy: resolveCanvasGraphStrategy(undefined, capabilities),
+      executionStrategy: defaultRuntimeRegistration.executionStrategy,
+      strategy: defaultRuntimeRegistration.graphStrategy,
     };
   }
 
-  const strategy = findCanvasGraphStrategy(canvasKind, capabilities);
-  if (strategy == null) {
+  const runtimeRegistration = findCanvasRuntimeRegistration(canvasKind, capabilities);
+  if (runtimeRegistration == null) {
     return {
       kind: 'unsupported_kind',
       canvasKind,
@@ -64,7 +76,8 @@ export function resolveActiveCanvasGraphStrategy(
   return {
     kind: 'ready',
     canvasKind,
-    strategy,
+    executionStrategy: runtimeRegistration.executionStrategy,
+    strategy: runtimeRegistration.graphStrategy,
   };
 }
 
@@ -75,6 +88,24 @@ export function selectActiveCanvasGraphStrategy(
   return resolution.kind === 'unsupported_kind'
     ? resolveCanvasGraphStrategy(undefined, capabilities)
     : resolution.strategy;
+}
+
+export function selectActiveCanvasExecutionStrategy(
+  resolution: ActiveCanvasGraphStrategyResolution,
+  capabilities?: RuntimeCapabilities
+): CanvasExecutionStrategy {
+  if (resolution.kind !== 'unsupported_kind') {
+    return resolution.executionStrategy;
+  }
+
+  const defaultRuntimeRegistration = findCanvasRuntimeRegistration(undefined, capabilities);
+  if (defaultRuntimeRegistration == null) {
+    return {
+      kind: 'not_executable',
+    };
+  }
+
+  return defaultRuntimeRegistration.executionStrategy;
 }
 
 export function isActiveCanvasGraphStrategySupported(

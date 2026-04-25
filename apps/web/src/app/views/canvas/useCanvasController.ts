@@ -5,6 +5,7 @@ import {
   isActiveCanvasGraphStrategySupported,
   resolveActiveCanvasAuthoringMode,
   resolveActiveCanvasGraphStrategy,
+  selectActiveCanvasExecutionStrategy,
   selectActiveCanvasGraphStrategy,
 } from './canvasActiveGraphStrategy';
 import { buildCanvasControllerViewModel } from './canvasControllerViewModel';
@@ -72,6 +73,10 @@ export function useCanvasController() {
     [capabilities, draftReadModel?.record?.draft.canvas.kind]
   );
   const graphStrategy = selectActiveCanvasGraphStrategy(
+    activeCanvasGraphStrategyResolution,
+    capabilities
+  );
+  const executionStrategy = selectActiveCanvasExecutionStrategy(
     activeCanvasGraphStrategyResolution,
     capabilities
   );
@@ -149,6 +154,7 @@ export function useCanvasController() {
     plansService,
     runsService,
     workspaceService,
+    executionStrategy,
     canonicalNodes: visibleScope.canonicalNodes,
     canonicalEdges: visibleScope.canonicalEdges,
     selectedNodeIds: executionScope.selectedNodeIds,

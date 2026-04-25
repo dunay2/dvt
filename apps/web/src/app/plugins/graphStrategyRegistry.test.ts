@@ -10,11 +10,16 @@ describe('resolveCanvasGraphStrategy', () => {
     expect(
       getCanvasRuntimeRegistrations().map((registration) => ({
         kind: registration.kind,
+        executionKind: registration.executionStrategy.kind,
         graphStrategyId: registration.graphStrategy.id,
       }))
     ).toEqual([
-      { kind: 'dbt', graphStrategyId: 'dbt' },
-      { kind: 'transformation', graphStrategyId: 'transformation' },
+      { kind: 'dbt', executionKind: 'not_executable', graphStrategyId: 'dbt' },
+      {
+        kind: 'transformation',
+        executionKind: 'transformation_preview',
+        graphStrategyId: 'transformation',
+      },
     ]);
   });
 

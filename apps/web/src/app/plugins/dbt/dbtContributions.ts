@@ -133,6 +133,9 @@ export const dbtContributions: PluginContributions = {
     {
       kind: 'dbt',
       pluginId: DBT_PLUGIN_ID,
+      executionStrategy: {
+        kind: 'not_executable',
+      },
       graphStrategy: dbtCanvasGraphStrategy,
       label: 'dbt',
       description: 'Model-first canvas for dbt resources and dependencies.',

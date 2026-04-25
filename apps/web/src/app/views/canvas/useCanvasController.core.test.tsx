@@ -148,7 +148,10 @@ describe('useCanvasController core', () => {
     await harness.renderProbe();
     await harness.renderProbe();
 
-    expect(harness.mocks.findCanvasGraphStrategy).toHaveBeenCalledWith('dbt', undefined);
+    expect(harness.mocks.findCanvasRuntimeRegistration).toHaveBeenCalledWith(
+      'dbt',
+      undefined
+    );
     expect(harness.getLatestResult()?.canvasAuthoringMode).toBe('dbt');
     expect(harness.mocks.useCanvasGraphHandlers).toHaveBeenLastCalledWith(
       expect.objectContaining({

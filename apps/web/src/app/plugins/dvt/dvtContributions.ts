@@ -26,6 +26,10 @@ export const dvtContributions: PluginContributions = {
     {
       kind: 'transformation',
       pluginId: DVT_PLUGIN_ID,
+      executionStrategy: {
+        kind: 'transformation_preview',
+        previewProfile: 'transformation-sql-first-v1',
+      },
       graphStrategy: transformationCanvasGraphStrategy,
       label: 'Transformation',
       description: 'Flow-based transformation canvas for the protected authoring draft.',

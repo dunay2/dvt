@@ -86,6 +86,7 @@ export type CanvasViewCopy = {
   readonly runPlanRefUnavailableMessage: string;
   readonly runPersistedPreviewRequiredMessage: string;
   readonly runFailedMessage: string;
+  readonly canvasExecutionUnavailableMessage: string;
   readonly planCreatedMessage: string;
   readonly runStartedMessage: string;
   readonly planStatusRunUnavailableMessage: string;

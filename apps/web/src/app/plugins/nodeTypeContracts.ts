@@ -1,4 +1,5 @@
 import type { CoreNodeRole, PluginNodeKind } from '../types/canonical';
+import type { CanvasExecutionStrategy } from './canvasExecutionStrategyContracts';
 import type { CanvasGraphStrategy } from './graphStrategyContracts';
 
 import type { LucideIcon } from 'lucide-react';
@@ -33,6 +34,7 @@ export type CanvasKindRegistration = {
 };
 
 export type CanvasRuntimeRegistration = CanvasKindRegistration & {
+  executionStrategy: CanvasExecutionStrategy;
   graphStrategy: CanvasGraphStrategy;
 };
 
