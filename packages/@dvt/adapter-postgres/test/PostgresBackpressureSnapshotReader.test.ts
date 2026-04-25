@@ -2,6 +2,7 @@ import { Client } from 'pg';
 import { afterAll, describe, expect, it } from 'vitest';
 
 import { PostgresBackpressureSnapshotReader, PostgresStateStoreAdapter } from '../src/index.js';
+import { setTenantContextSql } from '../src/PostgresTenantIsolationPolicy.js';
 import { quoteIdentifier } from '../src/sqlUtils.js';
 import type { RunBootstrapInput } from '../src/types.js';
 
@@ -254,11 +255,41 @@ describeIfPg('PostgresBackpressureSnapshotReader integration', () => {
       await bootstrapRun(adapter, 'tenant-noisy', 'run-noisy-stuck');
       await bootstrapRun(adapter, 'tenant-healthy', 'run-healthy-1');
 
-      await setOutboxCreatedAt(client, schema, 'run-noisy-1', '2026-03-19T11:55:00.000Z');
-      await setOutboxCreatedAt(client, schema, 'run-noisy-2', '2026-03-19T11:56:00.000Z');
-      await setOutboxCreatedAt(client, schema, 'run-noisy-3', '2026-03-19T11:57:00.000Z');
-      await setOutboxCreatedAt(client, schema, 'run-noisy-stuck', '2026-03-01T12:00:00.000Z');
-      await setOutboxCreatedAt(client, schema, 'run-healthy-1', '2026-03-19T11:58:00.000Z');
+      await setOutboxCreatedAt(
+        client,
+        schema,
+        'tenant-noisy',
+        'run-noisy-1',
+        '2026-03-19T11:55:00.000Z'
+      );
+      await setOutboxCreatedAt(
+        client,
+        schema,
+        'tenant-noisy',
+        'run-noisy-2',
+        '2026-03-19T11:56:00.000Z'
+      );
+      await setOutboxCreatedAt(
+        client,
+        schema,
+        'tenant-noisy',
+        'run-noisy-3',
+        '2026-03-19T11:57:00.000Z'
+      );
+      await setOutboxCreatedAt(
+        client,
+        schema,
+        'tenant-noisy',
+        'run-noisy-stuck',
+        '2026-03-01T12:00:00.000Z'
+      );
+      await setOutboxCreatedAt(
+        client,
+        schema,
+        'tenant-healthy',
+        'run-healthy-1',
+        '2026-03-19T11:58:00.000Z'
+      );
 
       await expect(reader.getTenantSnapshot('tenant-noisy')).resolves.toEqual({
         tenantActivePendingEventCount: 3,
@@ -278,7 +309,7 @@ describeIfPg('PostgresBackpressureSnapshotReader integration', () => {
       await reader.close();
       await adapter.close();
     }
-  });
+  }, 30000);
 });
 
 async function bootstrapRun(
@@ -329,11 +360,25 @@ async function bootstrapRun(
 async function setOutboxCreatedAt(
   client: Client,
   schema: string,
+  tenantId: string,
   runId: string,
   createdAt: string
 ): Promise<void> {
-  await client.query(
-    `UPDATE ${quoteIdentifier(schema)}.outbox SET created_at = $2::timestamptz WHERE run_id = $1`,
-    [runId, createdAt]
-  );
+  await client.query('BEGIN');
+  try {
+    await client.query(setTenantContextSql(), [tenantId]);
+    await client.query(
+      `
+        UPDATE ${quoteIdentifier(schema)}.outbox
+        SET created_at = $3::timestamptz
+        WHERE run_id = $1
+          AND tenant_id = $2
+      `,
+      [runId, tenantId, createdAt]
+    );
+    await client.query('COMMIT');
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  }
 }

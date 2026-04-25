@@ -27,6 +27,8 @@ code_refs:
   - packages/@dvt/adapter-postgres/test/PostgresTenantIsolationPolicy.test.ts
   - packages/@dvt/adapter-postgres/test/PostgresServiceAccessCapability.architecture.test.ts
   - packages/@dvt/adapter-postgres/test/PostgresTenantRlsEnforcement.integration.test.ts
+  - packages/@dvt/adapter-postgres/test/S19F1SnapshotWorkQueueClosure.integration.test.ts
+  - packages/@dvt/adapter-postgres/vitest.config.ts
   - packages/@dvt/adapter-postgres/test/StartRunIntentSchemaManager.test.ts
   - packages/@dvt/adapter-postgres/test/PostgresStartRunIntentStore.context.test.ts
   - packages/@dvt/adapter-postgres/test/PostgresRunEventStore.test.ts
@@ -56,6 +58,7 @@ evidence:
     - pnpm --filter @dvt/adapter-postgres test -- PostgresServiceAccessCapability.architecture.test.ts PostgresTenantRlsEnforcement.integration.test.ts
     - pnpm --filter @dvt/contracts test -- start-run-intent-ownership.architecture.test.ts
     - pnpm --filter @dvt/adapter-postgres test -- PostgresServiceAccessCapability.architecture.test.ts PostgresTenantIsolationPolicy.test.ts PostgresStateStoreAdapter.migrate.test.ts StartRunIntentSchemaManager.test.ts PostgresTenantRlsEnforcement.integration.test.ts
+    - '$env:DVT_PG_INTEGRATION="1"; $env:DVT_PG_URL="postgresql://dvt_app:dvt@localhost:5432/dvt"; $env:DATABASE_URL="postgresql://dvt_app:dvt@localhost:5432/dvt"; pnpm --filter @dvt/adapter-postgres test'
 ---
 
 # Summary
@@ -108,6 +111,11 @@ that owner path.
     `20260425_004_start_run_intents_service_owner_rls_hardening` re-apply RLS
     policies so service mode also requires an approved
     `dvt.service_access_owner`.
+11. The follow-up Docker QA run uses a non-superuser, non-`BYPASSRLS`
+    `dvt_app` role. This exposed stale test fixtures that wrote through
+    implicit superuser authority; those fixtures now use explicit tenant
+    context, and the adapter Postgres Vitest config gives real integration
+    tests a 30s timeout only when `DVT_PG_INTEGRATION=1`.
 
 # What Remains Open
 

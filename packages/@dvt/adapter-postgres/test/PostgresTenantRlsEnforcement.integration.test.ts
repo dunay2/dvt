@@ -52,10 +52,10 @@ describeIfPg('Postgres RLS tenant isolation enforcement', () => {
         await client.query(setTenantContextSql(), ['tenant-a']);
         const tenantRows = await client.query<{ run_id: string; tenant_id: string }>(
           `
-            SELECT run_id, tenant_id
-            FROM ${quoteIdentifier(schema)}.run_metadata
-            ORDER BY run_id
-          `
+              SELECT run_id, tenant_id
+              FROM ${quoteIdentifier(schema)}.run_metadata
+              ORDER BY run_id
+            `
         );
         await client.query('COMMIT');
 
@@ -76,10 +76,10 @@ describeIfPg('Postgres RLS tenant isolation enforcement', () => {
         );
         const serviceRows = await client.query<{ run_id: string }>(
           `
-            SELECT run_id
-            FROM ${quoteIdentifier(schema)}.run_metadata
-            ORDER BY run_id
-          `
+              SELECT run_id
+              FROM ${quoteIdentifier(schema)}.run_metadata
+              ORDER BY run_id
+            `
         );
         await client.query('COMMIT');
 
@@ -88,7 +88,7 @@ describeIfPg('Postgres RLS tenant isolation enforcement', () => {
     } finally {
       await adapter.close();
     }
-  });
+  }, 30000);
 
   function allocateSchema(): string {
     schemaCounter += 1;
