@@ -76,6 +76,7 @@ type CanvasViewportProps = {
   readonly onNodesChange: NonNullable<ReactFlowProps<Node, Edge>['onNodesChange']>;
   readonly onEdgesChange: NonNullable<ReactFlowProps<Node, Edge>['onEdgesChange']>;
   readonly onConnect: NonNullable<ReactFlowProps<Node, Edge>['onConnect']>;
+  readonly onReconnect: NonNullable<ReactFlowProps<Node, Edge>['onReconnect']>;
   readonly onNodeClick: NonNullable<ReactFlowProps<Node, Edge>['onNodeClick']>;
   readonly onSelectionChange: NonNullable<ReactFlowProps<Node, Edge>['onSelectionChange']>;
   readonly onViewportChange: (viewport: { x: number; y: number; zoom: number }) => void;
@@ -231,6 +232,7 @@ type CanvasViewportReactFlowSurfaceProps = Readonly<
     | 'onNodesChange'
     | 'onEdgesChange'
     | 'onConnect'
+    | 'onReconnect'
     | 'onNodeClick'
     | 'onSelectionChange'
     | 'onViewportChange'
@@ -249,6 +251,7 @@ function CanvasViewportReactFlowSurface({
   onNodesChange,
   onEdgesChange,
   onConnect,
+  onReconnect,
   onNodeClick,
   onSelectionChange,
   onViewportChange,
@@ -263,6 +266,7 @@ function CanvasViewportReactFlowSurface({
       onNodesChange={canEditEdges ? onNodesChange : undefined}
       onEdgesChange={canEditEdges ? onEdgesChange : undefined}
       onConnect={onConnect}
+      onReconnect={canEditEdges ? onReconnect : undefined}
       onNodeClick={onNodeClick}
       onNodeDragStop={onNodeDragStop}
       onSelectionChange={onSelectionChange}
@@ -271,6 +275,7 @@ function CanvasViewportReactFlowSurface({
       nodesConnectable={canEditEdges}
       nodesFocusable={canEditEdges}
       edgesFocusable={canEditEdges}
+      edgesReconnectable={canEditEdges}
       elementsSelectable={canEditEdges}
       multiSelectionKeyCode="Shift"
       deleteKeyCode={canEditEdges ? undefined : null}
@@ -320,6 +325,7 @@ function CanvasViewportSurface({
   onNodesChange,
   onEdgesChange,
   onConnect,
+  onReconnect,
   onNodeClick,
   onSelectionChange,
   onViewportChange,
@@ -353,6 +359,7 @@ function CanvasViewportSurface({
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
+        onReconnect={onReconnect}
         onNodeClick={onNodeClick}
         onSelectionChange={onSelectionChange}
         onViewportChange={onViewportChange}
@@ -395,6 +402,7 @@ export default function CanvasViewport(props: CanvasViewportProps): JSX.Element 
       onNodesChange={props.onNodesChange}
       onEdgesChange={props.onEdgesChange}
       onConnect={props.onConnect}
+      onReconnect={props.onReconnect}
       onNodeClick={props.onNodeClick}
       onSelectionChange={props.onSelectionChange}
       onViewportChange={props.onViewportChange}

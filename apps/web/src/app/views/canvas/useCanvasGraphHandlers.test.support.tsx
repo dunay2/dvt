@@ -3,6 +3,8 @@ import { createRoot, type Root } from 'react-dom/client';
 import { toast } from 'sonner';
 import { vi } from 'vitest';
 
+import type { Edge, Node } from '@xyflow/react';
+
 import type { ConnectionRuleResult } from '../../plugins/contracts/ConnectionRules';
 import type { CanonicalNode } from '../../types/canonical';
 import type { CanvasDraftSession } from './canvasDraftSession';
@@ -35,10 +37,6 @@ vi.mock('../../plugins/nodeTypeRegistry', async (importOriginal) => {
 
 vi.mock('./transformationConnectionGuard', () => ({
   guardTransformationConnection: graphHandlersTestDoubles.guardTransformationConnection,
-}));
-
-vi.mock('./transformationAuthoringGuard', () => ({
-  guardTransformationAuthoringNode: () => ({ allowed: true }),
 }));
 
 vi.mock('sonner', () => ({
@@ -74,7 +72,6 @@ export function buildDraftSession(): CanvasDraftSession {
     syncState: 'editing',
     baseline: {
       record: null,
-      signature: null,
     },
     draftRevision: 'rev-1',
     workingSet: {
@@ -90,8 +87,9 @@ type RenderGraphHandlersHookArgs = {
   graphStrategy?: {
     parseDropPayload: (dataTransfer: DataTransfer) => CanonicalNode | null;
   };
-  nodes?: Array<{ id: string; data: { name: string }; position: { x: number; y: number } }>;
-  edges?: Array<{ id: string; source: string; target: string }>;
+  canonicalNodes?: CanonicalNode[];
+  nodes?: Node[];
+  edges?: Edge[];
   draftSession?: CanvasDraftSession;
   selectedNodeIds?: string[];
   inspectorNodeId?: string | null;
@@ -110,6 +108,7 @@ type RenderGraphHandlersHookArgs = {
 export function renderGraphHandlersHook({
   canEditEdges,
   graphStrategy,
+  canonicalNodes = [buildCanonicalNode('source-node', 'input'), buildCanonicalNode('sink-node', 'output')],
   nodes = [
     { id: 'source-node', data: { name: 'source-node' }, position: { x: 0, y: 0 } },
     { id: 'sink-node', data: { name: 'sink-node' }, position: { x: 1, y: 1 } },
@@ -140,10 +139,6 @@ export function renderGraphHandlersHook({
   toggleInspectorPanel: ReturnType<typeof vi.fn>;
   onLayoutComplete: ReturnType<typeof vi.fn>;
 } {
-  const canonicalNodes = [
-    buildCanonicalNode('source-node', 'input'),
-    buildCanonicalNode('sink-node', 'output'),
-  ];
   const canonicalNodesById = new Map(canonicalNodes.map((node) => [node.id, node]));
   let latest: LatestHook = null;
   const container = document.createElement('div');
@@ -154,6 +149,9 @@ export function renderGraphHandlersHook({
     latest = useCanvasGraphHandlers({
       graphStrategy: {
         id: 'transformation',
+        authoringPolicy: {
+          canvasKind: 'transformation',
+        },
         mapNodeToCanonical: () => null,
         mapEdgeToCanonical: () => null,
         parseDropPayload: graphStrategy?.parseDropPayload ?? (() => null),

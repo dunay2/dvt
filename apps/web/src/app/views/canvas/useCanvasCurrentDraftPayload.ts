@@ -1,9 +1,9 @@
 /** Owned concern: derive the current Canvas draft payload and persistence posture from one semantic DTO. */
 import { useMemo } from 'react';
 
-import { canvasDraftSession } from './canvasDraftSession';
 import {
   canPersistCanvasDraftAuthoringPayload,
+  serializeCanvasDraftAuthoringSignature,
   type CanvasDraftAuthoringPayload,
 } from './canvasDraftAuthoring';
 import {
@@ -43,8 +43,8 @@ export function useCanvasCurrentDraftPayload({
     ]
   );
   const currentDraftPayloadSignature = useMemo(
-    () => canvasDraftSession.baseline.serialize(currentDraftPayload),
-    [currentDraftPayload]
+    () => serializeCanvasDraftAuthoringSignature(currentDraftAuthoringPayload),
+    [currentDraftAuthoringPayload]
   );
   const canPersistCurrentDraft = useMemo(
     () =>

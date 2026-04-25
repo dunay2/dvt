@@ -11,6 +11,10 @@ export function buildCanvasShellPanels({
   return {
     explorerNodes: panelState.explorerNodes,
     inspectorNode: panelState.inspectorNode,
+    inspectorAuthoring: {
+      canEditNode: panelState.canEditInspectorNode,
+      onApplyNodeDraft: panelState.applyInspectorNodeDraft,
+    },
     activeRunId: panelState.activeRunId,
     registeredPlugins: panelState.registeredPlugins,
     userPermissions,

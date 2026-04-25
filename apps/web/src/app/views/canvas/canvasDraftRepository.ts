@@ -1,11 +1,16 @@
+import type { WorkspaceGraphAuthoringDraft } from '@dvt/contracts';
+
 import type {
   IWorkspaceGraphDraftAuthoringPort,
   WorkspaceGraphDraftAuthoringSaveResult,
 } from '../../ports/workspaceGraphDraftAuthoring';
 import type {
-  IWorkspacePort,
   WorkspaceGraphDraftRecord,
 } from '../../ports/workspace';
+import {
+  projectWorkspaceGraphAuthoringDraftSemanticGraph,
+  type WorkspaceGraphDraftSemanticGraph,
+} from '../../services/workspace/workspaceGraphDraftProjection';
 import {
   buildCanvasDraftAuthoringGraph,
   type CanvasDraftAuthoringPayload,
@@ -15,9 +20,7 @@ import {
   projectCanvasDraftReadModel,
   type CanvasDraftReadModel,
 } from './canvasDraftReadModel';
-import type { WorkspaceGraphDraftSemanticGraph } from '../../services/workspace/workspaceGraphDraftProjection';
-
-type CanvasDraftWorkspacePort = Pick<IWorkspacePort, 'getFileContent'>;
+import { toCanvasAuthoringMetadata } from './canvasAuthoringMetadata';
 
 export type SaveCanvasDraftInput = {
   expectedRevision: string | null;
@@ -58,20 +61,21 @@ function cloneSemanticGraph(
     canonicalNodes: semanticGraph.canonicalNodes.map((node) => ({
       ...node,
       tags: [...node.tags],
-      metadata: node.metadata == null ? undefined : { ...node.metadata },
+      metadata: toCanvasAuthoringMetadata(node.metadata),
     })),
     canonicalEdges: semanticGraph.canonicalEdges.map((edge) => ({
       ...edge,
-      metadata: edge.metadata == null ? undefined : { ...edge.metadata },
+      metadata: toCanvasAuthoringMetadata(edge.metadata),
     })),
   };
 }
 
 function buildSavedCanvasDraftResult(args: {
   input: SaveCanvasDraftInput;
+  authoringDraft: WorkspaceGraphAuthoringDraft;
   revision: string;
 }): CanvasDraftSaveResult {
-  const { input, revision } = args;
+  const { input, authoringDraft, revision } = args;
   const record = {
     revision,
     savedAt: new Date().toISOString(),
@@ -83,10 +87,7 @@ function buildSavedCanvasDraftResult(args: {
     record,
     remoteDraftState: createWritableCanvasDraftReadModel(
       record,
-      cloneSemanticGraph({
-        canonicalNodes: [...input.draft.canonicalNodes],
-        canonicalEdges: [...input.draft.canonicalEdges],
-      })
+      cloneSemanticGraph(projectWorkspaceGraphAuthoringDraftSemanticGraph(authoringDraft))
     ),
   };
 }
@@ -132,14 +133,16 @@ function throwCanvasDraftSaveFailure(result: NonRecoverableCanvasDraftSaveResult
 
 async function resolveCanvasDraftSaveResult(args: {
   input: SaveCanvasDraftInput;
+  authoringDraft: WorkspaceGraphAuthoringDraft;
   result: WorkspaceGraphDraftAuthoringSaveResult;
   readGraphDraftState: () => Promise<CanvasDraftReadModel>;
 }): Promise<CanvasDraftSaveResult> {
-  const { input, result, readGraphDraftState } = args;
+  const { input, authoringDraft, result, readGraphDraftState } = args;
 
   if (result.kind === 'saved') {
     return buildSavedCanvasDraftResult({
       input,
+      authoringDraft,
       revision: result.revision,
     });
   }
@@ -152,7 +155,6 @@ async function resolveCanvasDraftSaveResult(args: {
 }
 
 export function createCanvasDraftRepository(
-  workspacePort: CanvasDraftWorkspacePort,
   workspaceGraphDraftAuthoringPort: IWorkspaceGraphDraftAuthoringPort
 ): CanvasDraftRepository {
   async function readGraphDraftState(): Promise<CanvasDraftReadModel> {
@@ -179,7 +181,6 @@ export function createCanvasDraftRepository(
     readGraphDraft: readProjectedDraftRecord,
     saveGraphDraft: async (input) => {
       const authoringDraft = await buildCanvasDraftAuthoringGraph({
-        workspaceService: workspacePort,
         payload: input.draft,
       });
       const result = await workspaceGraphDraftAuthoringPort.saveGraphDraft({
@@ -189,6 +190,7 @@ export function createCanvasDraftRepository(
       });
       return resolveCanvasDraftSaveResult({
         input,
+        authoringDraft,
         result,
         readGraphDraftState,
       });

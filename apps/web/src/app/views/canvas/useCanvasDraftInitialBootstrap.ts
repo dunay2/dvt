@@ -4,6 +4,7 @@ import {
   canvasDraftSession,
   type CanvasDraftSession,
 } from './canvasDraftSession';
+import { serializeCanvasDraftAuthoringBaselineSignature } from './canvasDraftAuthoring';
 import type { DraftSaveStatus, GraphDraftQueryState } from './canvasDraftLifecycle.types';
 import type { CanvasDraftLifecycleCanonicalSnapshot } from './canvasDraftLifecycleSnapshot';
 
@@ -52,7 +53,10 @@ export function useCanvasDraftInitialBootstrap({
       if (hasPersistedNodePositions(remoteDraft.draft.nodePositions)) {
         setCanvasNodePositions(workspaceLayoutKey, remoteDraft.draft.nodePositions);
       }
-      lastSavedSignatureRef.current = canvasDraftSession.baseline.serialize(remoteDraft.draft);
+      lastSavedSignatureRef.current = serializeCanvasDraftAuthoringBaselineSignature({
+        record: remoteDraft,
+        semanticGraph: graphDraftQuery.data?.semanticGraph ?? null,
+      });
     }
 
     setDraftSession(
@@ -67,6 +71,7 @@ export function useCanvasDraftInitialBootstrap({
     canonicalSnapshot,
     draftSession.syncState,
     graphDraftQuery.data?.record,
+    graphDraftQuery.data?.semanticGraph,
     lastSavedSignatureRef,
     setCanvasNodePositions,
     setDraftSaveStatus,

@@ -59,6 +59,7 @@ function nodeAuthoring(
 ): CanvasNodeAuthoringContracts {
   return {
     state: {
+      canonicalNodesById: contracts.state.canonicalNodesById,
       draftSession: contracts.state.draftSession,
       nodes: contracts.state.nodes,
       edges: contracts.state.edges,

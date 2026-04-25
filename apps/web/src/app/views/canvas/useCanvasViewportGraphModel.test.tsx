@@ -30,12 +30,14 @@ async function renderViewportGraphModel(
   args: Parameters<typeof useCanvasViewportGraphModel>[0]
 ): Promise<{
   readState: () => ViewportGraphModelState | undefined;
+  rerender: (nextArgs: Parameters<typeof useCanvasViewportGraphModel>[0]) => Promise<void>;
   cleanup: () => Promise<void>;
 }> {
   let observedState: ViewportGraphModelState | undefined;
+  let currentArgs = args;
 
   function ViewportGraphModelProbe(): null {
-    observedState = useCanvasViewportGraphModel(args);
+    observedState = useCanvasViewportGraphModel(currentArgs);
     return null;
   }
 
@@ -43,6 +45,10 @@ async function renderViewportGraphModel(
 
   return {
     readState: () => observedState,
+    rerender: async (nextArgs) => {
+      currentArgs = nextArgs;
+      await mounted.render(createElement(ViewportGraphModelProbe));
+    },
     cleanup: mounted.cleanup,
   };
 }
@@ -161,6 +167,59 @@ describe('useCanvasViewportGraphModel', () => {
           target: 'sink-node',
         },
       ]);
+    } finally {
+      await mounted.cleanup();
+    }
+  });
+
+  it('refreshes projected node data when canonical node details change', async () => {
+    const initialProjection = buildCanvasAuthoringGraphProjection({
+      visibleNodeIds: ['source-node'],
+      visibleEdges: [],
+      draftSemanticGraph: {
+        canonicalNodes: [buildCanonicalNode('source-node', 'dvt:source', 'input')],
+        canonicalEdges: [],
+      },
+      localCanonicalNodes: [],
+    });
+    const mounted = await renderViewportGraphModel({
+      visibleNodeIds: ['source-node'],
+      visibleEdges: [],
+      canonicalNodesById: initialProjection.canonicalNodesById,
+      canonicalEdgeIdBySignature: initialProjection.canonicalEdgeIdBySignature,
+      columnLevelLineageEnabled: false,
+      persistedNodePositions: {},
+    });
+
+    try {
+      expect(mounted.readState()?.nodes[0]?.data.name).toBe('source-node');
+
+      const updatedProjection = buildCanvasAuthoringGraphProjection({
+        visibleNodeIds: ['source-node'],
+        visibleEdges: [],
+        draftSemanticGraph: {
+          canonicalNodes: [buildCanonicalNode('source-node', 'dvt:source', 'input')],
+          canonicalEdges: [],
+        },
+        localCanonicalNodes: [
+          {
+            ...buildCanonicalNode('source-node', 'dvt:source', 'input'),
+            name: 'source-node-renamed',
+            description: 'Edited in inspector',
+          },
+        ],
+      });
+      await mounted.rerender({
+        visibleNodeIds: ['source-node'],
+        visibleEdges: [],
+        canonicalNodesById: updatedProjection.canonicalNodesById,
+        canonicalEdgeIdBySignature: updatedProjection.canonicalEdgeIdBySignature,
+        columnLevelLineageEnabled: false,
+        persistedNodePositions: {},
+      });
+
+      expect(mounted.readState()?.nodes[0]?.data.name).toBe('source-node-renamed');
+      expect(mounted.readState()?.nodes[0]?.data.description).toBe('Edited in inspector');
     } finally {
       await mounted.cleanup();
     }

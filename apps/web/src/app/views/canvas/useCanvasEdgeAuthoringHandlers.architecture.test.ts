@@ -14,4 +14,10 @@ describe('useCanvasEdgeAuthoringHandlers architecture', () => {
     expect(EDGE_AUTHORING_HANDLERS_SOURCE).not.toContain('UseCanvasGraphHandlersParams');
     expect(EDGE_AUTHORING_HANDLERS_SOURCE).not.toContain('UseCanvasGraphHandlersResult');
   });
+
+  it('stays as a composition seam over proposal, confirmation, and reconnect handlers', () => {
+    expect(EDGE_AUTHORING_HANDLERS_SOURCE).toContain('useCanvasConnectionProposalHandler');
+    expect(EDGE_AUTHORING_HANDLERS_SOURCE).toContain('useCanvasConnectionConfirmationHandler');
+    expect(EDGE_AUTHORING_HANDLERS_SOURCE).toContain('useCanvasEdgeReconnectHandler');
+  });
 });

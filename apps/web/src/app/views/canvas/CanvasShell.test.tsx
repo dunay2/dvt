@@ -97,6 +97,10 @@ function buildProps(overrides?: CanvasShellPropsOverrides): CanvasShellProps {
         },
       ],
       inspectorNode: null,
+      inspectorAuthoring: {
+        canEditNode: true,
+        onApplyNodeDraft: vi.fn(),
+      },
       activeRunId: null,
       registeredPlugins: new Set(['dbt']),
       userPermissions: {
@@ -141,6 +145,7 @@ function buildProps(overrides?: CanvasShellPropsOverrides): CanvasShellProps {
       onNodeDragStop: vi.fn(),
       onEdgesChange: vi.fn(),
       onConnect: vi.fn(),
+      onReconnect: vi.fn(),
       onNodeClick: vi.fn(),
       onSelectionChange: vi.fn(),
       onViewportChange: vi.fn(),

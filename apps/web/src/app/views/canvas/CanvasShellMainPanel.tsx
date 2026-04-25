@@ -69,6 +69,7 @@ function CanvasShellViewport({
       onNodeDragStop={graphCommands.onNodeDragStop}
       onEdgesChange={graphCommands.onEdgesChange}
       onConnect={graphCommands.onConnect}
+      onReconnect={graphCommands.onReconnect}
       onNodeClick={graphCommands.onNodeClick}
       onSelectionChange={graphCommands.onSelectionChange}
       onViewportChange={graphCommands.onViewportChange}

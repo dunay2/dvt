@@ -8,13 +8,15 @@ const NODE_AUTHORING_HANDLERS_SOURCE = readArchitectureSiblingSource(
 );
 
 describe('useCanvasNodeAuthoringHandlers architecture', () => {
-  it('stays as a composition seam over node creation, drop, and removal handlers', () => {
+  it('stays as a composition seam over node creation, duplicate, drop, and removal handlers', () => {
     expect(NODE_AUTHORING_HANDLERS_SOURCE).toContain('useCanvasNodeDropHandlers');
     expect(NODE_AUTHORING_HANDLERS_SOURCE).toContain('useCanvasAuthoringNodeCreationHandlers');
+    expect(NODE_AUTHORING_HANDLERS_SOURCE).toContain('useCanvasNodeDuplicateHandlers');
     expect(NODE_AUTHORING_HANDLERS_SOURCE).toContain('useCanvasNodeRemovalHandlers');
     expect(NODE_AUTHORING_HANDLERS_SOURCE).toContain('CanvasNodeAuthoringContracts');
     expect(NODE_AUTHORING_HANDLERS_SOURCE).toContain('nodeDropContracts');
     expect(NODE_AUTHORING_HANDLERS_SOURCE).toContain('nodeCreationContracts');
+    expect(NODE_AUTHORING_HANDLERS_SOURCE).toContain('nodeDuplicateContracts');
     expect(NODE_AUTHORING_HANDLERS_SOURCE).toContain('nodeRemovalContracts');
     expect(NODE_AUTHORING_HANDLERS_SOURCE).not.toContain('useCallback(');
     expect(NODE_AUTHORING_HANDLERS_SOURCE).not.toContain('toast.');

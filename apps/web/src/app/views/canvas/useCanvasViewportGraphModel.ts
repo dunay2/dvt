@@ -95,7 +95,11 @@ function viewportNodesEqual(left: Node[], right: Node[]): boolean {
         node.id === nextNode.id &&
         node.position.x === nextNode.position.x &&
         node.position.y === nextNode.position.y &&
-        node.data.showColumns === nextNode.data.showColumns
+        node.data.showColumns === nextNode.data.showColumns &&
+        node.data.name === nextNode.data.name &&
+        node.data.description === nextNode.data.description &&
+        node.data.path === nextNode.data.path &&
+        node.data.status === nextNode.data.status
       );
     })
   );

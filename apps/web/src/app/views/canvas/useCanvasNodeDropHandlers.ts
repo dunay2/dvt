@@ -54,17 +54,11 @@ export function useCanvasNodeDropHandlers({
           canonicalNode,
           position,
           nodes: existingNodes,
-          graphStrategy,
           columnLevelLineageEnabled,
         });
 
         if (dropResult.outcome === 'noop') {
           toast.info(dropResult.reason);
-          return existingNodes;
-        }
-
-        if (dropResult.outcome === 'rejected') {
-          toast.error(dropResult.reason);
           return existingNodes;
         }
 

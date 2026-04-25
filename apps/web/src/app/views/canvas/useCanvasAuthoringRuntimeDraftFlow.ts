@@ -26,6 +26,10 @@ export function useCanvasAuthoringRuntimeDraftFlow({
     workspaceGraphDraftAuthoringPort,
     workspaceLayoutKey,
   });
+  const localCanonicalNodes =
+    draftSession.syncState === 'missing_remote'
+      ? []
+      : Object.values(draftSession.localNodeCatalog ?? {});
   const { graphModel, canonicalSnapshot } = useCanvasAuthoringProjection({
     graphAuthorityQuery: {
       isPending: graphDraftQuery.isPending,
@@ -35,7 +39,7 @@ export function useCanvasAuthoringRuntimeDraftFlow({
     visibleNodeIds: draftSession.workingSet.visibleNodeIds,
     visibleEdges: draftSession.workingSet.visibleEdges,
     draftSemanticGraph: graphDraftQuery.data?.semanticGraph ?? null,
-    localCanonicalNodes: Object.values(draftSession.localNodeCatalog ?? {}),
+    localCanonicalNodes,
     columnLevelLineageEnabled,
     persistedNodePositions,
   });

@@ -35,6 +35,8 @@ For the host layer above the route, use
 [Canvas Playground Host Component](./canvas-playground-host-component.md).
 For authoring-runtime contract and command-side runtime composition, use
 [Canvas Authoring Runtime Component](./canvas-authoring-runtime-component.md).
+For route-owned Inspector editing, use
+[Canvas Inspector Authoring Component](./canvas-inspector-authoring-component.md).
 For protected-draft semantic projection and viewport-boundary detail, use
 [Canvas Authoring Projection Component](./canvas-authoring-projection-component.md).
 
@@ -43,6 +45,7 @@ For protected-draft semantic projection and viewport-boundary detail, use
 - [Graph Frontend Architecture](./graph-frontend-architecture.md)
 - [Canvas Controller Current To Target Architecture](./canvas-controller-current-to-target-architecture.md)
 - [Canvas Authoring Runtime Component](./canvas-authoring-runtime-component.md)
+- [Canvas Inspector Authoring Component](./canvas-inspector-authoring-component.md)
 - [Canvas Draft Session Component](./canvas-draft-session-component.md)
 - [Canvas Handler Contracts Component](./canvas-handler-contracts-component.md)
 - [Canvas Graph Lifecycle Component](./canvas-graph-lifecycle-component.md)
@@ -120,7 +123,7 @@ flowchart TB
   Shell --> Center["CanvasCenterSurface and CanvasStateViews"]
   Shell --> Viewport["CanvasViewport"]
   Shell --> Explorer["DbtExplorer"]
-  Shell --> Inspector["InspectorPanel"]
+  Shell --> Inspector["CanvasInspectorPanel"]
   Shell --> Import["SourceImportWizard"]
   Shell --> Recovery["CanvasRecoveryBanner"]
 
@@ -210,7 +213,7 @@ Semantic rule:
 | `CanvasToolbar`                              | Stateless command and toggle surface                                       | Hidden policy or ad hoc route-state logic                              |
 | `CanvasCenterSurface` and `CanvasStateViews` | Center-surface rendering for loading, empty, error, and recovery           | Shell reveal ownership                                                 |
 | `CanvasViewport`                             | React Flow projection and primitive event boundary                         | Authoring semantics                                                    |
-| `DbtExplorer` and `InspectorPanel`           | Contextual side panels                                                     | Global shell behavior                                                  |
+| `DbtExplorer` and `CanvasInspectorPanel`     | Contextual side panels                                                     | Global shell behavior                                                  |
 | `useCanvasController`                        | Route application facade                                                   | Mixed persistence, projection, and widget logic in one file            |
 | handler-contract component                   | Local adapter-composition vocabulary and seam mapping                      | Owning graph semantics or React hook state                             |
 | `canvasDraftSession`                         | Namespaced aggregate API over draft truth                                  | Direct service calls                                                   |
@@ -328,6 +331,8 @@ Canonical startup rule for this slice:
   than letting transport-shaped setup helpers spread again
 - keep draft lifecycle and current-payload seams on semantic DTOs instead of
   flat authoring-runtime parameter bags
+- keep Inspector authoring route-owned so the passive `InspectorPanel` does
+  not absorb aggregate mutation or route policy
 
 ### Avoid
 

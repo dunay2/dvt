@@ -7,6 +7,7 @@ import { buildLocalNodeCatalogFromSemanticGraph } from './canvasDraftLocalNodeCa
 import type { CanvasDraftQueryCache } from './canvasDraftQueryCache';
 import type { CanvasDraftReadModel } from './canvasDraftReadModel';
 import { canvasDraftSession, type CanvasDraftSession } from './canvasDraftSession';
+import { serializeCanvasDraftAuthoringBaselineSignature } from './canvasDraftAuthoring';
 
 function hasPersistedNodePositions(
   nodePositions: Record<string, { x: number; y: number }>
@@ -64,7 +65,10 @@ export function useCanvasDraftReloadHydration({
       if (hasPersistedNodePositions(remoteDraft.draft.nodePositions)) {
         setCanvasNodePositions(workspaceLayoutKey, remoteDraft.draft.nodePositions);
       }
-      lastSavedSignatureRef.current = canvasDraftSession.baseline.serialize(remoteDraft.draft);
+      lastSavedSignatureRef.current = serializeCanvasDraftAuthoringBaselineSignature({
+        record: remoteDraft,
+        semanticGraph: remoteDraftState.semanticGraph,
+      });
       setDraftSession((currentSession) =>
         canvasDraftSession.workingSet.reconcileSnapshot(
           canvasDraftSession.machine.reloadFromRemote(currentSession, remoteDraft),

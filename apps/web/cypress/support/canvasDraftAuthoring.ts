@@ -7,8 +7,8 @@ import {
   WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
   WORKSPACE_GRAPH_DRAFT_INITIAL_REVISION,
 } from '../../src/app/services/workspace/workspaceGraphDraftProtocol';
-import { stubE2eApi } from './e2eApiStub';
 
+import { stubE2eApi } from './e2eApiStub';
 import { E2E_WORKSPACE_SESSION } from './workspaceSession';
 
 export type CanvasDraftSessionScope = {
@@ -21,9 +21,19 @@ export type StubCanvasDraftReadOptions = {
   includeLooseNode?: boolean;
 };
 
+type CanvasAuthoringDraft = ReturnType<typeof buildWorkspaceGraphAuthoringDraft>;
+type CanvasDraftReadResponse = ReturnType<typeof buildDraftReadOkResponse>;
+type CanvasDraftSaveRequest = {
+  scope: CanvasDraftSessionScope;
+  schemaVersion: typeof WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION;
+  expectedRevision: string;
+  idempotencyKey: string;
+  draft: CanvasAuthoringDraft;
+};
+
 export function buildCanvasAuthoringDraft({
   includeLooseNode = false,
-}: StubCanvasDraftReadOptions = {}) {
+}: StubCanvasDraftReadOptions = {}): CanvasAuthoringDraft {
   return buildWorkspaceGraphAuthoringDraft({
     canvas: {
       kind: 'transformation',
@@ -148,7 +158,7 @@ export function buildCanvasAuthoringDraft({
 export function buildCanvasDraftReadResponse(
   scope: CanvasDraftSessionScope,
   options: StubCanvasDraftReadOptions = {}
-) {
+): CanvasDraftReadResponse {
   return buildDraftReadOkResponse(scope, {
     record: buildProtectedDraftRecord(scope, {
       revision: 'rev-e2e-graph-ready',
@@ -164,7 +174,7 @@ export function buildCanvasDraftSaveRequest(
     expectedRevision?: string;
     idempotencyKey?: string;
   } = {}
-) {
+): CanvasDraftSaveRequest {
   return {
     scope,
     schemaVersion: WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,

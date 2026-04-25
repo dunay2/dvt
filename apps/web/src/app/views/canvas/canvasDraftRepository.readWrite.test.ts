@@ -8,7 +8,6 @@ import { createCanvasDraftRepository } from './canvasDraftRepository';
 import {
   buildAuthoringPort,
   buildSaveInput,
-  buildWorkspacePort,
   PROJECTED_DRAFT,
   WORKSPACE_SCOPE,
 } from './canvasDraftRepository.test.fixtures';
@@ -152,7 +151,7 @@ function createRepositoryWithSaveResult(
     ) as IWorkspaceGraphDraftAuthoringPort['saveGraphDraft'],
   });
 
-  return createCanvasDraftRepository(buildWorkspacePort(), authoringPort);
+  return createCanvasDraftRepository(authoringPort);
 }
 
 async function expectSaveGraphDraftToFailClosed(
@@ -166,7 +165,7 @@ async function expectSaveGraphDraftToFailClosed(
 
 describe('canvasDraftRepository read/write', () => {
   it('projects protected draft reads into the route-facing record model', async () => {
-    const repository = createCanvasDraftRepository(buildWorkspacePort(), buildAuthoringPort());
+    const repository = createCanvasDraftRepository(buildAuthoringPort());
 
     await expect(repository.readGraphDraftState()).resolves.toEqual(
       buildExpectedProjectedReadState()
@@ -176,7 +175,7 @@ describe('canvasDraftRepository read/write', () => {
 
   it('builds typed authoring saves and preserves the projected draft locally on success', async () => {
     const authoringPort = buildAuthoringPort();
-    const repository = createCanvasDraftRepository(buildWorkspacePort(), authoringPort);
+    const repository = createCanvasDraftRepository(authoringPort);
 
     await expect(repository.saveGraphDraft(buildSaveInput())).resolves.toEqual({
       outcome: 'saved',

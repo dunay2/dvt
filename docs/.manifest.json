@@ -2,7 +2,7 @@
   "summary": {
     "adrs": 47,
     "evidenceDocs": 117,
-    "normativeDocs": 313,
+    "normativeDocs": 314,
     "statusDocs": 58
   },
   "adrs": [
@@ -2135,6 +2135,10 @@
     {
       "path": "docs/architecture/components/web/graph/canvas-handler-contracts-component.md",
       "filename": "canvas-handler-contracts-component.md"
+    },
+    {
+      "path": "docs/architecture/components/web/graph/canvas-inspector-authoring-component.md",
+      "filename": "canvas-inspector-authoring-component.md"
     },
     {
       "path": "docs/architecture/components/web/graph/canvas-playground-host-component.md",

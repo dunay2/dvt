@@ -519,6 +519,10 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   [TF-A2-C execution selection and executable subgraph plan](../proposals/mandatory/runtime-and-contracts/tf-a2-c-execution-selection-and-executable-subgraph-plan-20260423.md)
   and
   [TF-E2 Canvas empty authoring entrypoint design](../proposals/mandatory/frontend-and-ux/tf-e2-canvas-empty-authoring-entrypoint-design-20260422.md)
+  and
+  [TF-E2 Inspector authoring and lifecycle closure plan](../proposals/mandatory/frontend-and-ux/tf-e2-inspector-authoring-and-lifecycle-closure-plan-20260425.md)
+  and
+  [TF-E2 node and edge lifecycle closure plan](../proposals/mandatory/frontend-and-ux/tf-e2-node-and-edge-lifecycle-closure-plan-20260425.md)
 - Primary code:
   [WorkspaceGraphAuthoringDraft.v1.ts](../../../packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringDraft.v1.ts),
   [WorkspaceGraphAuthoringCommand.v1.ts](../../../packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringCommand.v1.ts),
@@ -541,6 +545,19 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   [canvasRunSelection.ts](../../../apps/web/src/app/views/canvas/canvasRunSelection.ts),
   [canvasPlanAction.ts](../../../apps/web/src/app/views/canvas/canvasPlanAction.ts),
   [canvasRunStartAction.ts](../../../apps/web/src/app/views/canvas/canvasRunStartAction.ts),
+  [canvasInspectorAuthoring.types.ts](../../../apps/web/src/app/views/canvas/canvasInspectorAuthoring.types.ts),
+  [canvasInspectorAuthoringModel.ts](../../../apps/web/src/app/views/canvas/canvasInspectorAuthoringModel.ts),
+  [canvasInspectorAuthoringCommand.ts](../../../apps/web/src/app/views/canvas/canvasInspectorAuthoringCommand.ts),
+  [useCanvasInspectorCommands.ts](../../../apps/web/src/app/views/canvas/useCanvasInspectorCommands.ts),
+  [CanvasInspectorPanel.tsx](../../../apps/web/src/app/views/canvas/CanvasInspectorPanel.tsx),
+  [CanvasInspectorAuthoringSection.tsx](../../../apps/web/src/app/views/canvas/CanvasInspectorAuthoringSection.tsx),
+  [canvasDuplicateNodeCommand.ts](../../../apps/web/src/app/views/canvas/canvasDuplicateNodeCommand.ts),
+  [useCanvasNodeDuplicateHandlers.ts](../../../apps/web/src/app/views/canvas/useCanvasNodeDuplicateHandlers.ts),
+  [canvasConnectionAggregate.ts](../../../apps/web/src/app/views/canvas/canvasConnectionAggregate.ts),
+  [useCanvasEdgeAuthoringHandlers.ts](../../../apps/web/src/app/views/canvas/useCanvasEdgeAuthoringHandlers.ts),
+  [canvasDraftSessionWorkingSet.ts](../../../apps/web/src/app/views/canvas/canvasDraftSessionWorkingSet.ts),
+  [canvasAuthoringGraphProjection.ts](../../../apps/web/src/app/views/canvas/canvasAuthoringGraphProjection.ts),
+  [useCanvasViewportGraphModel.ts](../../../apps/web/src/app/views/canvas/useCanvasViewportGraphModel.ts),
   [app.ts](../../../apps/api/src/app.ts),
   [planCompileBoundary.ts](../../../apps/api/src/modules/planCompileBoundary.ts),
   [canvas-preview-run-persisted.cy.ts](../../../apps/web/cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts),
@@ -571,6 +588,17 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   [protectedRuntimeAndPlanCompileArchitecture.cases.ts](../../../apps/api/test/modules/protectedRuntimeAndPlanCompileArchitecture.cases.ts),
   [canvasExecutionSelection.architecture.test.ts](../../../apps/web/src/app/views/canvas/canvasExecutionSelection.architecture.test.ts),
   [canvasRunStartIdentity.architecture.test.ts](../../../apps/web/src/app/views/canvas/canvasRunStartIdentity.architecture.test.ts),
+  [canvasInspectorAuthoringModel.test.ts](../../../apps/web/src/app/views/canvas/canvasInspectorAuthoringModel.test.ts),
+  [canvasInspectorAuthoringComponent.architecture.test.ts](../../../apps/web/src/app/views/canvas/canvasInspectorAuthoringComponent.architecture.test.ts),
+  [CanvasInspectorPanel.test.tsx](../../../apps/web/src/app/views/canvas/CanvasInspectorPanel.test.tsx),
+  [canvasDuplicateNodeCommand.test.ts](../../../apps/web/src/app/views/canvas/canvasDuplicateNodeCommand.test.ts),
+  [useCanvasGraphHandlers.nodeDuplicate.test.tsx](../../../apps/web/src/app/views/canvas/useCanvasGraphHandlers.nodeDuplicate.test.tsx),
+  [canvasConnectionAggregate.test.ts](../../../apps/web/src/app/views/canvas/canvasConnectionAggregate.test.ts),
+  [useCanvasGraphHandlers.edgeReconnect.test.tsx](../../../apps/web/src/app/views/canvas/useCanvasGraphHandlers.edgeReconnect.test.tsx),
+  [canvasAuthoringGraphProjection.test.ts](../../../apps/web/src/app/views/canvas/canvasAuthoringGraphProjection.test.ts),
+  [canvasDraftSession.test.ts](../../../apps/web/src/app/views/canvas/canvasDraftSession.test.ts),
+  [useCanvasViewportGraphModel.test.tsx](../../../apps/web/src/app/views/canvas/useCanvasViewportGraphModel.test.tsx),
+  [useCanvasController.core.test.tsx](../../../apps/web/src/app/views/canvas/useCanvasController.core.test.tsx),
   [useCanvasExecutionActions.planPreview.core.test.tsx](../../../apps/web/src/app/views/canvas/useCanvasExecutionActions.planPreview.core.test.tsx),
   [useCanvasExecutionActions.runStart.test.tsx](../../../apps/web/src/app/views/canvas/useCanvasExecutionActions.runStart.test.tsx),
   [plansService.test.ts](../../../apps/web/src/app/services/plans/plansService.test.ts),
@@ -587,6 +615,10 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   [ed-20260423-tf-a2-c3-c4-api-web-adoption.md](../../evidence/ed-20260423-tf-a2-c3-c4-api-web-adoption.md)
   and
   [20260423 TF-A2-C5 selected-closure end-to-end proof closeout](../closeouts/20260423-tf-a2-c5-selected-closure-end-to-end-proof-closeout.md)
+  and
+  [20260425 TF-E2-B/C node and edge lifecycle closure closeout](../closeouts/20260425-tf-e2-b-c-node-edge-lifecycle-closure-closeout.md)
+  and
+  [20260425 TF-E2-D Inspector authoring closeout](../closeouts/20260425-tf-e2-d-inspector-authoring-closeout.md)
   and
   [20260424 TF-E2-E-A/B/C selected-closure browser proof closeout](../closeouts/20260424-tf-e2-e-a-b-c-selected-closure-browser-proof-closeout.md)
   and

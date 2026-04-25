@@ -12,7 +12,6 @@ function buildDraftSession(): CanvasDraftSession {
     syncState: 'editing',
     baseline: {
       record: null,
-      signature: null,
     },
     draftRevision: 'rev-1',
     workingSet: {

@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { Separator } from '../../components/ui/separator';
 import { CanvasToolbarDraftStatus } from './CanvasToolbarDraftStatus';
 import { CanvasToolbarPrimaryControls } from './CanvasToolbarPrimaryControls';
+import type { CanvasGraphAuthoringMode } from '../../plugins/graphStrategyContracts';
 import type { CanvasRouteState } from './canvasDraftPresentationModel';
 import { deriveCanvasToolbarViewModel } from './canvasToolbarViewModel';
 import type { CanvasDraftToolbarState } from './canvasDraftToolbarState';
@@ -25,7 +26,7 @@ export type CanvasToolbarProps = {
   readonly canEditEdges: boolean;
   readonly canStartRun: boolean;
   readonly planStatusSummary: string;
-  readonly canvasAuthoringMode: 'transformation' | 'dbt';
+  readonly canvasAuthoringMode: CanvasGraphAuthoringMode;
   readonly exclusiveOverlayMode: 'runtime' | 'cost';
   readonly canUseCostOverlay: boolean;
   readonly impactOverlayEnabled: boolean;

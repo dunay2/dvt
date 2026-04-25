@@ -5,12 +5,14 @@ import type { Edge, Node, NodeTypes, ReactFlowProps } from '@xyflow/react';
 import type React from 'react';
 
 import type { ImportSourcesResult } from '../../ports/workspace';
+import type { CanvasGraphAuthoringMode } from '../../plugins/graphStrategyContracts';
 import type { NodeKindRegistration } from '../../plugins/nodeTypeContracts';
 import type { CanonicalNode } from '../../types/canonical';
 import type { CanvasPaletteId } from './canvasPalette';
 import type { CanvasRouteState } from './canvasDraftPresentationModel';
 import type { CanvasPlaygroundTabState } from './canvasPlaygroundTabState';
 import type { CanvasDraftToolbarState } from './canvasDraftToolbarState';
+import type { CanvasInspectorAuthoringContract } from './canvasInspectorAuthoring.types';
 import type { TransformationGraphValidationResult } from './transformationGraphValidation';
 
 export type UserPermissions = {
@@ -40,6 +42,7 @@ export type CanvasShellLayout = {
 export type CanvasShellPanels = {
   explorerNodes: CanonicalNode[];
   inspectorNode: CanonicalNode | null;
+  inspectorAuthoring: CanvasInspectorAuthoringContract;
   activeRunId: string | null;
   registeredPlugins: ReadonlySet<string>;
   userPermissions: UserPermissions;
@@ -56,7 +59,7 @@ export type CanvasShellGraph = {
 };
 
 export type CanvasShellToolbar = {
-  canvasAuthoringMode: 'transformation' | 'dbt';
+  canvasAuthoringMode: CanvasGraphAuthoringMode;
   routeState: CanvasRouteState;
   draftToolbarState: CanvasDraftToolbarState;
   canStartRun: boolean;
@@ -73,6 +76,7 @@ export type CanvasShellGraphCommands = {
   onNodeDragStop: NonNullable<ReactFlowProps<Node, Edge>['onNodeDragStop']>;
   onEdgesChange: NonNullable<ReactFlowProps<Node, Edge>['onEdgesChange']>;
   onConnect: NonNullable<ReactFlowProps<Node, Edge>['onConnect']>;
+  onReconnect: NonNullable<ReactFlowProps<Node, Edge>['onReconnect']>;
   onNodeClick: NonNullable<ReactFlowProps<Node, Edge>['onNodeClick']>;
   onSelectionChange: NonNullable<ReactFlowProps<Node, Edge>['onSelectionChange']>;
   onViewportChange: (viewport: CanvasViewport) => void;
