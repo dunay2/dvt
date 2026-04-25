@@ -38,6 +38,10 @@ code_refs:
   - packages/@dvt/engine/test/services/RunMaintenanceService.test.ts
   - packages/@dvt/adapter-postgres/test/PostgresBackpressureSnapshotReader.test.ts
   - packages/@dvt/adapter-postgres/test/PostgresStateStoreAdapter.migrate.test.ts
+  - scripts/provision-postgres-app-role.cjs
+  - .github/workflows/test.yml
+  - .github/workflows/pr-quality-gate.yml
+  - .github/workflows/adapter-postgres-integration-nightly.yml
   - docs/risk-register/quality/R-20260425-PRODUCTION-TENANT-ISOLATION-BASELINE.yaml
 evidence:
   tests:
@@ -59,6 +63,7 @@ evidence:
     - pnpm --filter @dvt/contracts test -- start-run-intent-ownership.architecture.test.ts
     - pnpm --filter @dvt/adapter-postgres test -- PostgresServiceAccessCapability.architecture.test.ts PostgresTenantIsolationPolicy.test.ts PostgresStateStoreAdapter.migrate.test.ts StartRunIntentSchemaManager.test.ts PostgresTenantRlsEnforcement.integration.test.ts
     - '$env:DVT_PG_INTEGRATION="1"; $env:DVT_PG_URL="postgresql://dvt_app:dvt@localhost:5432/dvt"; $env:DATABASE_URL="postgresql://dvt_app:dvt@localhost:5432/dvt"; pnpm --filter @dvt/adapter-postgres test'
+    - '$env:DVT_PG_ADMIN_URL="postgresql://dvt:dvt@localhost:5432/dvt"; $env:DVT_PG_APP_USER="dvt_app"; $env:DVT_PG_APP_PASSWORD="dvt"; node scripts/provision-postgres-app-role.cjs'
 ---
 
 # Summary
@@ -116,6 +121,10 @@ that owner path.
     implicit superuser authority; those fixtures now use explicit tenant
     context, and the adapter Postgres Vitest config gives real integration
     tests a 30s timeout only when `DVT_PG_INTEGRATION=1`.
+12. CI jobs that run Postgres integration now provision and use the same
+    non-superuser, non-`BYPASSRLS` application role. The service-container
+    superuser remains only bootstrap/admin authority, not the role used by RLS
+    enforcement tests.
 
 # What Remains Open
 

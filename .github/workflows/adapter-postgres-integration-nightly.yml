@@ -31,8 +31,11 @@ jobs:
           - 5432:5432
     env:
       DVT_PG_INTEGRATION: '1'
-      DVT_PG_URL: postgresql://dvt_test:dvt_test@localhost:5432/dvt_test
-      DATABASE_URL: postgresql://dvt_test:dvt_test@localhost:5432/dvt_test
+      DVT_PG_ADMIN_URL: postgresql://dvt_test:dvt_test@localhost:5432/dvt_test
+      DVT_PG_APP_USER: dvt_app
+      DVT_PG_APP_PASSWORD: dvt_app
+      DVT_PG_URL: postgresql://dvt_app:dvt_app@localhost:5432/dvt_test
+      DATABASE_URL: postgresql://dvt_app:dvt_app@localhost:5432/dvt_test
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
@@ -41,6 +44,9 @@ jobs:
         uses: ./.github/actions/setup-node-pnpm
         with:
           node-version: 22.x
+
+      - name: Provision non-bypass Postgres app role
+        run: node scripts/provision-postgres-app-role.cjs
 
       - name: Enforce adapter-postgres import alias guard
         run: node --test tools/ci/adapter-postgres-import-alias-regression.test.mjs
