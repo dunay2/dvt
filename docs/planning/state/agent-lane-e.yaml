@@ -2071,6 +2071,7 @@ tasks:
     effort_points: 3
     progress_pct: 65
     evidence_refs:
+      - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-node-and-edge-lifecycle-closure-plan-20260425.md
       - docs/planning/closeouts/20260418-tf-e2-canvas-interaction-command-seam-closeout.md
       - docs/planning/closeouts/20260421-tf-e2-graph-lifecycle-hard-cut-closeout.md
       - docs/planning/closeouts/20260421-tf-e2-canvas-handler-component-semantics-closeout.md
@@ -2085,16 +2086,12 @@ tasks:
       - apps/web/src/app/views/canvas/canvasHandlerContracts.architecture.test.ts
       - apps/web/src/app/views/canvas/useCanvasNodeChangeHandlers.test.tsx
     status_reason: >-
-      Execution has materially advanced. The flat transitional command catalog was hard-cut into the
-      `canvasGraphLifecycle` component, node-change and node-removal handlers now route through the
-      namespaced node lifecycle API, and graph fallout is applied through one lifecycle-aware helper
-      instead of adapter-local reconstruction. The handler-contract subsystem is now also documented
-      and guarded as an explicit local component with namespaced builder APIs and semantic
-      architecture tests instead of loose helper exports. The protected-draft semantic projection
-      cut now also keeps the visible node graph aligned with protected draft truth instead of legacy
-      snapshot semantics when a remote draft exists. Duplicate, full move/reload closure, and the
-      remaining product-lifecycle proofs still remain open.
-    last_verified: '2026-04-22'
+      Execution is active again on 2026-04-25. Audit shows move and reload proof already exist, but
+      duplicate node is still missing a governed command seam and user-triggerable surface. The
+      active design therefore keeps `canvasGraphLifecycle` scoped to aggregate mutation and adds an
+      adjacent duplicate-node command plus reload-proof coverage instead of inflating passive
+      adapters or the lifecycle component itself.
+    last_verified: '2026-04-25'
   - task_id: TF-E2-C
     parent_task: TF-E2
     priority: P0
@@ -2110,6 +2107,7 @@ tasks:
     effort_points: 3
     progress_pct: 65
     evidence_refs:
+      - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-node-and-edge-lifecycle-closure-plan-20260425.md
       - docs/planning/closeouts/20260418-tf-e2-canvas-interaction-command-seam-closeout.md
       - docs/planning/closeouts/20260421-tf-e2-graph-lifecycle-hard-cut-closeout.md
       - docs/planning/closeouts/20260421-tf-e2-canvas-handler-component-semantics-closeout.md
@@ -2125,15 +2123,12 @@ tasks:
       - apps/web/src/app/views/canvas/useCanvasGraphHandlers.ts
       - apps/web/src/app/views/canvas/useCanvasGraphHandlers.edgeAuthoring.test.tsx
     status_reason: >-
-      Execution has materially advanced. Edge replacement and edge-change handling now route through
-      the namespaced edge lifecycle API, the flat compatibility surface has been removed, and
-      visual-only edge changes no longer need to present themselves as a separate command catalog
-      concern. The shared handler-contract subsystem is now explicit in both code and architecture
-      docs, with namespaced builder APIs and semantic fitness checks protecting the adapter seam.
-      The protected-draft semantic projection cut now also keeps rendered edges aligned with the
-      protected draft graph instead of legacy snapshot edge semantics when a remote draft exists.
-      Reconnect semantics and full reload-proof lifecycle closure still remain open.
-    last_verified: '2026-04-22'
+      Execution is active again on 2026-04-25. Edge replacement and delete already route through the
+      namespaced lifecycle API, but reconnect is still absent from the React Flow surface. The
+      active design therefore introduces an adjacent reconnect command that reuses connection
+      validation over the current graph while preserving the lifecycle component as the working-set
+      mutation owner.
+    last_verified: '2026-04-25'
   - task_id: TF-E2-D
     parent_task: TF-E2
     priority: P0

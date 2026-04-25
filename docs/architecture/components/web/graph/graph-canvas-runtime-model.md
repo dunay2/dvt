@@ -2,7 +2,7 @@
 title: Graph Canvas Runtime Model
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-04-22
+last_reviewed: 2026-04-25
 ---
 
 # Graph Canvas Runtime Model
@@ -88,6 +88,6 @@ classDiagram
 
 ## Future Evolution
 
-- finish command model closure for edge reconnect and mutation guards.
+- finish command model closure for duplicate-node and edge-reconnect semantics.
 - complete end-to-end deterministic reload coverage across supported draft
   versions.

@@ -521,6 +521,8 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   [TF-E2 Canvas empty authoring entrypoint design](../proposals/mandatory/frontend-and-ux/tf-e2-canvas-empty-authoring-entrypoint-design-20260422.md)
   and
   [TF-E2 Inspector authoring and lifecycle closure plan](../proposals/mandatory/frontend-and-ux/tf-e2-inspector-authoring-and-lifecycle-closure-plan-20260425.md)
+  and
+  [TF-E2 node and edge lifecycle closure plan](../proposals/mandatory/frontend-and-ux/tf-e2-node-and-edge-lifecycle-closure-plan-20260425.md)
 - Primary code:
   [WorkspaceGraphAuthoringDraft.v1.ts](../../../packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringDraft.v1.ts),
   [WorkspaceGraphAuthoringCommand.v1.ts](../../../packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringCommand.v1.ts),

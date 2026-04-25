@@ -2,7 +2,7 @@
 title: Canvas Graph Lifecycle Component
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-04-21
+last_reviewed: 2026-04-25
 ---
 
 # Canvas Graph Lifecycle Component
@@ -61,6 +61,11 @@ It is the local truth for:
 - edge change application into the draft working set
 - explicit-node admission and import queueing
 
+Adjacent command seams, not this component, own:
+
+- duplicate-node identity generation
+- reconnect-edge validation over an existing edge identity
+
 It is not responsible for:
 
 - draft sync-state transitions
@@ -68,6 +73,8 @@ It is not responsible for:
 - route bootstrapping
 - shell publication
 - React Flow event timing quirks
+- duplicate-node naming or placement policy
+- reconnect-edge proposal validation
 
 ## Public API
 
@@ -157,6 +164,8 @@ Rule:
 - if selection or inspect semantics become shared domain commands, promote them
   into an adjacent lifecycle or route-command component instead of inflating the
   graph adapters
+- if duplicate or reconnect policy gets pushed down into `DbtNodeComponent.tsx`
+  or `CanvasViewport.tsx`, the passive-adapter boundary has regressed
 - if sync-state transitions start appearing here, they belong back in
   `canvasDraftSession.machine`
 - if flat helper exports reappear, the hard cut has regressed
