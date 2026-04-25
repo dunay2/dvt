@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { Node } from '@xyflow/react';
 
-import { DVT_AUTHORING_NODE_KINDS } from '../../plugins/nodeTypeCatalog.dbt';
+import { DVT_AUTHORING_NODE_KINDS } from '../../plugins/dvt/dvtNodeTypeCatalog';
 import type { NodeKindRegistration } from '../../plugins/nodeTypeContracts';
 import { canvasViewCopy } from './copy';
 import {

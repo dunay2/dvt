@@ -1,6 +1,6 @@
 import type { PluginContributions } from '../registry';
-import { DbtNodeRenderer } from '../dbt/DbtNodeRenderer';
-import { DVT_AUTHORING_NODE_KINDS } from '../nodeTypeCatalog.dbt';
+import { GraphNodeRenderer } from '../graph/GraphNodeRenderer';
+import { DVT_AUTHORING_NODE_KINDS } from './dvtNodeTypeCatalog';
 import { transformationCanvasGraphStrategy } from './transformationGraphStrategy';
 
 const DVT_PLUGIN_ID = 'dvt';
@@ -11,7 +11,7 @@ const nodeRenderers = new Map(
     {
       kind: kind.kind,
       priority: 100,
-      component: DbtNodeRenderer,
+      component: GraphNodeRenderer,
     },
   ])
 );

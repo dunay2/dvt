@@ -1,5 +1,6 @@
 /** Owned concern: provide story-shaped Canvas host-cycle scenarios for route proofs. */
-import { DBT_NODE_KINDS, DVT_AUTHORING_NODE_KINDS } from '../plugins/nodeTypeCatalog.dbt';
+import { DVT_AUTHORING_NODE_KINDS } from '../plugins/dvt/dvtNodeTypeCatalog';
+import { DBT_NODE_KINDS } from '../plugins/nodeTypeCatalog.dbt';
 import type { NodeKindRegistration } from '../plugins/nodeTypeContracts';
 import type { CanvasController } from './Canvas.test.controller';
 

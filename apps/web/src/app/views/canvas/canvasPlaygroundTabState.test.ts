@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { DBT_NODE_KINDS, DVT_AUTHORING_NODE_KINDS } from '../../plugins/nodeTypeCatalog.dbt';
+import { DVT_AUTHORING_NODE_KINDS } from '../../plugins/dvt/dvtNodeTypeCatalog';
+import { DBT_NODE_KINDS } from '../../plugins/nodeTypeCatalog.dbt';
 import {
   deriveCanvasPlaygroundTabState,
   WORKSPACE_DRAFT_CANVAS_TAB_ID,

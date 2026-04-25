@@ -1,6 +1,7 @@
 import { vi } from 'vitest';
 
-import { DBT_NODE_KINDS, DVT_AUTHORING_NODE_KINDS } from '../../plugins/nodeTypeCatalog.dbt';
+import { DVT_AUTHORING_NODE_KINDS } from '../../plugins/dvt/dvtNodeTypeCatalog';
+import { DBT_NODE_KINDS } from '../../plugins/nodeTypeCatalog.dbt';
 import type {
   CanvasHarnessMocks,
   CanvasHarnessState,
