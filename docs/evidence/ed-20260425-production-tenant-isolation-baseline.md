@@ -19,13 +19,18 @@ code_refs:
   - packages/@dvt/adapter-postgres/src/PostgresRunEventStoreSql.ts
   - packages/@dvt/adapter-postgres/src/PostgresRunEventStorage.ts
   - packages/@dvt/engine/src/ports/IStartRunIntentStore.ts
-  - packages/@dvt/contracts/src/contracts/engine/IStartRunIntentStore.v1.ts
+  - packages/@dvt/engine/src/domain/startRunIntentPolicy.ts
+  - packages/@dvt/adapter-postgres/src/PostgresMaintenanceAccess.ts
+  - packages/@dvt/adapter-postgres/src/PostgresServiceAccessCapability.ts
   - packages/@dvt/adapter-postgres/src/PostgresOutboxStore.ts
   - packages/@dvt/adapter-postgres/src/PostgresRunSnapshotStore.ts
   - packages/@dvt/adapter-postgres/test/PostgresTenantIsolationPolicy.test.ts
+  - packages/@dvt/adapter-postgres/test/PostgresServiceAccessCapability.architecture.test.ts
+  - packages/@dvt/adapter-postgres/test/PostgresTenantRlsEnforcement.integration.test.ts
   - packages/@dvt/adapter-postgres/test/StartRunIntentSchemaManager.test.ts
   - packages/@dvt/adapter-postgres/test/PostgresStartRunIntentStore.context.test.ts
   - packages/@dvt/adapter-postgres/test/PostgresRunEventStore.test.ts
+  - packages/@dvt/contracts/test/start-run-intent-ownership.architecture.test.ts
   - packages/@dvt/engine/test/state/InMemoryStartRunIntentStore.test.ts
   - packages/@dvt/engine/test/core/WorkflowEngine.intentLog.test.ts
   - packages/@dvt/engine/test/services/RunMaintenanceService.test.ts
@@ -48,6 +53,9 @@ evidence:
     - pnpm --filter @dvt/adapter-postgres test -- PostgresTenantIsolationPolicy.test.ts PostgresAdapterClientSession.test.ts PostgresStateStoreAdapter.migrate.test.ts PostgresOutboxStore.test.ts PostgresRunSnapshotStore.test.ts PostgresRunSnapshotStore.cas-guard.test.ts
     - pnpm --filter @dvt/adapter-postgres build
     - pnpm --filter @dvt/adapter-postgres test
+    - pnpm --filter @dvt/adapter-postgres test -- PostgresServiceAccessCapability.architecture.test.ts PostgresTenantRlsEnforcement.integration.test.ts
+    - pnpm --filter @dvt/contracts test -- start-run-intent-ownership.architecture.test.ts
+    - pnpm --filter @dvt/adapter-postgres test -- PostgresServiceAccessCapability.architecture.test.ts PostgresTenantIsolationPolicy.test.ts PostgresStateStoreAdapter.migrate.test.ts StartRunIntentSchemaManager.test.ts PostgresTenantRlsEnforcement.integration.test.ts
 ---
 
 # Summary
@@ -57,6 +65,12 @@ Postgres adapter. Tenant-owned online state now has a canonical RLS catalog,
 transaction-local tenant/service contexts, top-level `tenant_id` on the
 derived tables that previously could not be protected by database policy, and
 forced RLS on the start-run intent log.
+
+The 2026-04-25 follow-up hardcut removes the remaining
+`IStartRunIntentStore.v1.ts` and `StartRunIntentPolicy.v1.ts` copies from
+`@dvt/contracts`. The canonical behavior port and transition policy now live
+only in `@dvt/engine`, and `docs/contracts/engine/index.md` is generated from
+that owner path.
 
 # What This Evidence Closes
 
@@ -80,14 +94,30 @@ forced RLS on the start-run intent log.
 7. Run-event sequence and idempotency lookups include explicit `tenant_id`
    predicates before `run_id`, so correctness does not rely solely on ambient
    RLS filtering.
+8. Service-context activation now goes through `PostgresMaintenanceAccess` and
+   a closed `POSTGRES_SERVICE_ACCESS` catalog. The generic factory is not
+   exported, `PostgresSchemaManager` no longer exposes service-context
+   activation, the package root does not export maintenance authority, and an
+   architecture test rejects API imports or production bypasses around the
+   maintenance entrypoint.
+9. `PostgresTenantRlsEnforcement.integration.test.ts` adds a real PostgreSQL
+   direct-access proof for `run_metadata`: tenant context sees only own rows,
+   missing context sees zero rows, and service context sees all rows. This test
+   runs under `DVT_PG_INTEGRATION=1` with a non-`BYPASSRLS` role.
+10. `core_018_service_access_owner_rls_hardening` and
+    `20260425_004_start_run_intents_service_owner_rls_hardening` re-apply RLS
+    policies so service mode also requires an approved
+    `dvt.service_access_owner`.
 
 # What Remains Open
 
 1. `plan_records` and `stored_plans` still need top-level
    tenant/project/environment ownership. That is a separate plan-store contract
    and repository task.
-2. Production deployment should still run with a non-owner application role for
-   least privilege. Table-owner connections remain migration-only; forced RLS
-   prevents owner bypass from being the primary isolation assumption.
+2. Production deployment should still split tenant application and maintenance
+   database roles. The closed TypeScript catalog and RLS owner predicate reduce
+   accidental drift, but arbitrary SQL running under the same database role can
+   still forge transaction-local settings. Superuser/`BYPASSRLS` roles are
+   invalid for direct RLS enforcement proof.
 3. Archive/restore service-role drills and timing-oracle tests are outside this
    slice and remain follow-up hardening work.

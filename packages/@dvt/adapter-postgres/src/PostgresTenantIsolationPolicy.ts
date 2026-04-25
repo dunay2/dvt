@@ -1,7 +1,17 @@
 /**
+ * @file packages/@dvt/adapter-postgres/src/PostgresTenantIsolationPolicy.ts
+ * @baseline ADR-0031: Storage Adapter Tenant Isolation Strategy
+ * @decision Tenant-owned Postgres tables use forced RLS with tenant context or approved service owners.
+ * @consequence Storage isolation no longer relies only on application predicates or table ownership.
+ * @version 1.0.0
+ *
  * Owned concern: define the production tenant-isolation table catalog, RLS
  * policy SQL, and transaction-local access context used by the Postgres adapter.
  */
+import {
+  POSTGRES_SERVICE_ACCESS,
+  type PostgresServiceAccessOwner,
+} from './PostgresServiceAccessCapability.js';
 import { quoteIdentifier } from './sqlUtils.js';
 
 export interface TenantIsolationTable {
@@ -35,6 +45,10 @@ export const TENANT_ISOLATION_TABLES: readonly TenantIsolationTable[] = [
   ...START_RUN_INTENT_TENANT_ISOLATION_TABLES,
 ] as const;
 
+export const POSTGRES_RLS_SERVICE_ACCESS_OWNERS = Object.freeze(
+  Object.values(POSTGRES_SERVICE_ACCESS).map((capability) => capability.owner)
+) satisfies readonly PostgresServiceAccessOwner[];
+
 export function setTenantContextSql(): string {
   return `
     SELECT
@@ -47,7 +61,8 @@ export function setServiceContextSql(): string {
   return `
     SELECT
       set_config('dvt.tenant_id', '', true),
-      set_config('dvt.access_mode', 'service', true)
+      set_config('dvt.access_mode', 'service', true),
+      set_config('dvt.service_access_owner', $1, true)
   `;
 }
 
@@ -57,8 +72,13 @@ export function buildTenantIsolationPolicySql(
 ): readonly string[] {
   const relation = `${quoteIdentifier(schema)}.${table.name}`;
   const tenantColumn = table.tenantColumn;
+  const serviceAccessOwnerList =
+    POSTGRES_RLS_SERVICE_ACCESS_OWNERS.map(toSqlStringLiteral).join(', ');
   const predicate = `
-    current_setting('dvt.access_mode', true) = 'service'
+    (
+      current_setting('dvt.access_mode', true) = 'service'
+      AND current_setting('dvt.service_access_owner', true) IN (${serviceAccessOwnerList})
+    )
     OR ${tenantColumn} = current_setting('dvt.tenant_id', true)
   `;
 
@@ -87,4 +107,8 @@ export function buildDropTenantIsolationPolicySql(
       `ALTER TABLE ${relation} DISABLE ROW LEVEL SECURITY`,
     ];
   });
+}
+
+function toSqlStringLiteral(value: string): string {
+  return `'${value.replaceAll("'", "''")}'`;
 }

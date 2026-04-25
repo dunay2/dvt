@@ -35,7 +35,6 @@ import {
   insertAppliedStepSql,
   loadAppliedVersionsSql,
   rollbackTransactionSql,
-  setServiceContextSql,
   setLocalStatementTimeoutSql,
   setTenantContextSql,
   stepAlreadyAppliedSql,
@@ -951,6 +950,26 @@ const MIGRATION_STEPS: readonly MigrationStep[] = [
       );
     },
   },
+  {
+    version: 'core_018_service_access_owner_rls_hardening',
+    description: 'Require approved service access owners for service-mode RLS access',
+    run: async (client, schema) => {
+      for (const table of CORE_TENANT_ISOLATION_TABLES) {
+        for (const statement of buildTenantIsolationPolicySql(schema, table)) {
+          await client.query(statement);
+        }
+      }
+    },
+    rollbackDescription:
+      'Reapply the current tenant isolation policy; service owner hardening is not downgraded',
+    rollback: async (client, schema) => {
+      for (const table of CORE_TENANT_ISOLATION_TABLES) {
+        for (const statement of buildTenantIsolationPolicySql(schema, table)) {
+          await client.query(statement);
+        }
+      }
+    },
+  },
 ];
 
 // ---------------------------------------------------------------------------
@@ -1044,11 +1063,6 @@ export class PostgresSchemaManager {
   /** Sets `dvt.tenant_id` as a transaction-local Postgres config parameter. */
   static async setTenantContext(client: PoolClient, tenantId: string): Promise<void> {
     await client.query(setTenantContextSql(), [tenantId]);
-  }
-
-  /** Sets transaction-local service access for background maintenance paths. */
-  static async setServiceContext(client: PoolClient): Promise<void> {
-    await client.query(setServiceContextSql());
   }
 
   // ---------------------------------------------------------------------------

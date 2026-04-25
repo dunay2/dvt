@@ -1,6 +1,6 @@
 ---
 id: R-20260425-PRODUCTION-TENANT-ISOLATION-BASELINE
-title: Plan-store tenancy and service-context drift remain after forced RLS baseline
+title: Plan-store tenancy and live RLS profile coverage remain after forced RLS baseline
 status: Open
 date: 2026-04-25
 owners:
@@ -12,15 +12,21 @@ probability: Medium
 context: >
   The 2026-04-25 tenant isolation slice enables forced RLS for tenant-owned online Postgres state
   tables, introduces explicit tenant/service transaction context, and makes run_metadata the
-  authoritative source for tenant backfills. The follow-up hardcut also includes start_run_intents
-  in the RLS baseline, tenant-scopes intent command/query operations through StartRunIntentRef, and
-  adds explicit tenant predicates to run-event sequence and dedupe reads. This closes the
-  predicate-only storage baseline for run state and the pre-dispatch intent log.
+  authoritative source for tenant backfills. The follow-up hardcut includes start_run_intents in the
+  RLS baseline, tenant-scopes intent command/query operations through StartRunIntentRef, adds
+  explicit tenant predicates to run-event sequence and dedupe reads, requires adapter-internal
+  POSTGRES_SERVICE_ACCESS catalog entries through PostgresMaintenanceAccess for service-context
+  activation, re-applies RLS policies with approved service_access_owner predicates, and removes the
+  duplicate IStartRunIntentStore/StartRunIntentPolicy ownership from @dvt/contracts.
 risk: >
   Plan records still lack top-level tenant/project/environment columns, so plan-store tenancy
-  remains a separate governed task. Maintenance paths still depend on explicit service-context entry
-  points for global sweeps; future direct SQL readers can drift if they bypass the adapter
-  client-session pattern or omit tenant predicates on tenant-owned reads.
+  remains a separate governed task. RLS enforcement must still be proven in the deployment profile
+  using a non-owner, non-BYPASSRLS application role; superuser or BYPASSRLS roles invalidate the
+  direct-access proof. The TypeScript maintenance catalog and RLS service_access_owner predicate
+  reduce accidental drift but do not replace database-role separation: arbitrary SQL running under
+  the same application role can still forge transaction-local settings. Future direct SQL readers
+  can still drift if they bypass the adapter client-session pattern or omit tenant predicates on
+  tenant-owned reads.
 mitigations:
   - >
     Keep `FORCE ROW LEVEL SECURITY` on tenant-owned online tables and keep application traffic on a
@@ -29,6 +35,16 @@ mitigations:
     Keep all tenant command/query paths setting tenant context with explicit tenant predicates and
     all worker/maintenance global sweep paths setting service context before accessing RLS-protected
     tables.
+  - >
+    Keep service context behind PostgresMaintenanceAccess and the closed POSTGRES_SERVICE_ACCESS
+    catalog; do not export generic capability creation or maintenance authority from the adapter
+    package root, and keep architecture tests forbidding API imports of service authority.
+  - >
+    Split tenant application and maintenance database roles before production onboarding so service
+    mode cannot be forged by arbitrary SQL under the tenant application role.
+  - >
+    Run PostgresTenantRlsEnforcement.integration.test.ts under DVT_PG_INTEGRATION=1 with a
+    non-owner, non-BYPASSRLS role before production onboarding.
   - >
     Keep start_run_intents under its dedicated schema manager RLS migration, require
     StartRunIntentRef on intent command/query operations, and forbid direct pool.query access from

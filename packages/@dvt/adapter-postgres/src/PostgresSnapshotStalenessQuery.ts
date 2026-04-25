@@ -9,7 +9,9 @@
 import type { PoolClient } from 'pg';
 
 import { POSTGRES_ADAPTER_ERROR_CONSTANTS as E } from './PostgresAdapterConstants.js';
+import { enterPostgresMaintenanceContext } from './PostgresMaintenanceAccess.js';
 import { PostgresSchemaManager } from './PostgresSchemaManager.js';
+import { POSTGRES_SERVICE_ACCESS } from './PostgresServiceAccessCapability.js';
 import {
   isSnapshotStaleSql,
   listStaleSnapshotRunsSql,
@@ -17,6 +19,7 @@ import {
 import type { IRunSnapshotStalenessQuery } from './types.js';
 
 type WithClient = <T>(fn: (client: PoolClient) => Promise<T>) => Promise<T>;
+const SNAPSHOT_STALENESS_SERVICE_ACCESS = POSTGRES_SERVICE_ACCESS.snapshotStalenessQuery;
 const MAX_STALE_SNAPSHOT_BATCH_SIZE = 1000;
 const MIN_STALE_SNAPSHOT_BATCH_SIZE = 0;
 
@@ -35,7 +38,7 @@ export class PostgresSnapshotStalenessQuery implements IRunSnapshotStalenessQuer
     }
 
     return this.withClient(async (client) => {
-      await PostgresSchemaManager.setServiceContext(client);
+      await enterPostgresMaintenanceContext(client, SNAPSHOT_STALENESS_SERVICE_ACCESS);
       const result = await client.query<{ run_id: string; tenant_id: string }>(
         listStaleSnapshotRunsSql(this.schema),
         [boundedBatchSize]

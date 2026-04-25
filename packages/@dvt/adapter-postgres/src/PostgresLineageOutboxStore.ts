@@ -32,7 +32,9 @@ import {
   replayLineageDeadLetterSql,
   updateLineageOutboxFailureSql,
 } from './PostgresLineageOutboxStoreSql.js';
+import { enterPostgresMaintenanceContext } from './PostgresMaintenanceAccess.js';
 import { PostgresSchemaManager } from './PostgresSchemaManager.js';
+import { POSTGRES_SERVICE_ACCESS } from './PostgresServiceAccessCapability.js';
 import type { EventEnvelope } from './types.js';
 
 // ---------------------------------------------------------------------------
@@ -85,6 +87,8 @@ interface ReplayLineageDeadLetterRow {
   moved_count: number;
 }
 
+const LINEAGE_OUTBOX_SERVICE_ACCESS = POSTGRES_SERVICE_ACCESS.lineageOutboxWorker;
+
 // ---------------------------------------------------------------------------
 // PostgresLineageOutboxStore
 // ---------------------------------------------------------------------------
@@ -102,7 +106,7 @@ export class PostgresLineageOutboxStore implements ILineageOutboxStore {
     const id = `lox-${payload.eventId}`;
     const now = this.now();
     await this.withClient(async (client) => {
-      await PostgresSchemaManager.setServiceContext(client);
+      await enterPostgresMaintenanceContext(client, LINEAGE_OUTBOX_SERVICE_ACCESS);
       await client.query(insertLineageOutboxSql(this.schema), [
         id,
         payload.tenantId,
@@ -119,7 +123,7 @@ export class PostgresLineageOutboxStore implements ILineageOutboxStore {
     if (boundedLimit === 0) return [];
 
     return this.withTransaction(async (client) => {
-      await PostgresSchemaManager.setServiceContext(client);
+      await enterPostgresMaintenanceContext(client, LINEAGE_OUTBOX_SERVICE_ACCESS);
       const now = this.now();
       const result = await client.query<LineageOutboxRow>(
         listPendingLineageOutboxForClaimSql(this.schema),
@@ -132,7 +136,7 @@ export class PostgresLineageOutboxStore implements ILineageOutboxStore {
   async countPending(): Promise<number> {
     const now = this.now();
     const result = await this.withClient(async (client) => {
-      await PostgresSchemaManager.setServiceContext(client);
+      await enterPostgresMaintenanceContext(client, LINEAGE_OUTBOX_SERVICE_ACCESS);
       return client.query<PendingLineageCountRow>(countPendingLineageOutboxSql(this.schema), [
         now,
         this.lineageOutboxClaimTimeoutMs,
@@ -145,7 +149,7 @@ export class PostgresLineageOutboxStore implements ILineageOutboxStore {
     if (ids.length === 0) return;
     const now = this.now();
     await this.withClient(async (client) => {
-      await PostgresSchemaManager.setServiceContext(client);
+      await enterPostgresMaintenanceContext(client, LINEAGE_OUTBOX_SERVICE_ACCESS);
       await client.query(deleteLineageOutboxByIdsSql(this.schema), [
         ids,
         now,
@@ -156,7 +160,7 @@ export class PostgresLineageOutboxStore implements ILineageOutboxStore {
 
   async markFailed(id: string, error: string): Promise<LineageFailureDisposition> {
     return this.withTransaction(async (client) => {
-      await PostgresSchemaManager.setServiceContext(client);
+      await enterPostgresMaintenanceContext(client, LINEAGE_OUTBOX_SERVICE_ACCESS);
       const now = this.now();
       const result = await client.query<LineageMarkFailedRow>(
         updateLineageOutboxFailureSql(this.schema, MAX_LINEAGE_ATTEMPTS),

@@ -7,7 +7,8 @@ import {
   POSTGRES_ADAPTER_RUNTIME_CONSTANTS as C,
 } from './PostgresAdapterConstants.js';
 import { getBackpressureSnapshotSql } from './PostgresBackpressureSnapshotReaderSql.js';
-import { PostgresSchemaManager } from './PostgresSchemaManager.js';
+import { enterPostgresMaintenanceContext } from './PostgresMaintenanceAccess.js';
+import { POSTGRES_SERVICE_ACCESS } from './PostgresServiceAccessCapability.js';
 import { normalizeSchema } from './sqlUtils.js';
 
 export interface PostgresBackpressureSnapshot {
@@ -25,6 +26,8 @@ interface BackpressureSnapshotRow {
   global_active_pending_event_count: PgSnapshotField;
   global_healthy_tenant_oldest_active_age_ms: PgSnapshotField;
 }
+
+const BACKPRESSURE_SNAPSHOT_SERVICE_ACCESS = POSTGRES_SERVICE_ACCESS.backpressureSnapshotReader;
 
 export interface PostgresBackpressureSnapshotReaderConfig {
   connectionString?: string;
@@ -78,7 +81,7 @@ export class PostgresBackpressureSnapshotReader {
     const stuckCutoffIso = calculateStuckCutoffIso(nowIso, this.stuckEventAgeThresholdMs);
 
     const result = await this.clientSession.withClient(async (client) => {
-      await PostgresSchemaManager.setServiceContext(client);
+      await enterPostgresMaintenanceContext(client, BACKPRESSURE_SNAPSHOT_SERVICE_ACCESS);
       return client.query<BackpressureSnapshotRow>({
         text: getBackpressureSnapshotSql(this.schema),
         values: [tenantId, nowIso, stuckCutoffIso, this.localOverloadPendingThreshold],

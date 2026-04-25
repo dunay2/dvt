@@ -64,7 +64,8 @@ reserved for migrations. RLS policies authorize either:
 
 - `tenant` mode, where `tenant_id = current_setting('dvt.tenant_id', true)`;
 - `service` mode, where maintenance/worker operations set
-  `current_setting('dvt.access_mode', true) = 'service'`.
+  `current_setting('dvt.access_mode', true) = 'service'` and an approved
+  `current_setting('dvt.service_access_owner', true)`.
 
 Application predicates remain mandatory. RLS is the secondary enforcement
 layer, not a replacement for explicit tenant scope in code.
@@ -129,7 +130,7 @@ flowchart LR
   Scope --> UseCase["Use case"]
   UseCase --> Store["Postgres adapter method with explicit predicate"]
   Store --> Tx["Postgres transaction context"]
-  Tx --> RLS["RLS policy: tenant or service mode"]
+  Tx --> RLS["RLS policy: tenant or approved service owner"]
   RLS --> Rows["Tenant-owned rows"]
 ```
 
@@ -139,14 +140,14 @@ flowchart LR
 stateDiagram-v2
   [*] --> NoContext
   NoContext --> TenantContext: setTenantContext(tenantId)
-  NoContext --> ServiceContext: setServiceContext()
+  NoContext --> ServiceContext: enterPostgresMaintenanceContext(capability)
   ServiceContext --> TenantContext: setTenantContext(tenantId)
   TenantContext --> [*]: COMMIT/ROLLBACK
   ServiceContext --> [*]: COMMIT/ROLLBACK
 
   NoContext: RLS denies tenant-owned rows
   TenantContext: tenant_id must match dvt.tenant_id
-  ServiceContext: service worker or maintenance access
+  ServiceContext: approved maintenance owner only
 ```
 
 ### Table Classification
@@ -213,6 +214,13 @@ stateDiagram-v2
   dedicated forced-RLS intent-log migration, and changed
   `PostgresStartRunIntentStore` to use explicit service-context sessions
   instead of direct pool queries.
+- Added `PostgresMaintenanceAccess`, removed service-context activation from
+  `PostgresSchemaManager`, replaced the generic exported capability factory
+  with the closed `POSTGRES_SERVICE_ACCESS` catalog, and added architecture
+  tests that forbid API imports of service authority.
+- Added service-owner RLS hardening migrations:
+  `core_018_service_access_owner_rls_hardening` and
+  `20260425_004_start_run_intents_service_owner_rls_hardening`.
 - Added ARC evidence and risk register entries:
   `docs/evidence/ed-20260425-production-tenant-isolation-baseline.md` and
   `docs/risk-register/quality/R-20260425-PRODUCTION-TENANT-ISOLATION-BASELINE.yaml`.
@@ -222,6 +230,7 @@ stateDiagram-v2
 - `pnpm --filter @dvt/adapter-postgres test -- PostgresTenantIsolationPolicy.test.ts PostgresBackpressureSnapshotReader.test.ts PostgresStateStoreAdapter.migrate.test.ts`
 - `pnpm --filter @dvt/adapter-postgres test -- PostgresTenantIsolationPolicy.test.ts StartRunIntentSchemaManager.test.ts PostgresStartRunIntentStore.context.test.ts`
 - `pnpm --filter @dvt/adapter-postgres test -- PostgresTenantIsolationPolicy.test.ts PostgresStateStoreAdapter.migrate.test.ts PostgresOutboxStore.test.ts PostgresRunSnapshotStore.test.ts`
+- `pnpm --filter @dvt/adapter-postgres test -- PostgresServiceAccessCapability.architecture.test.ts PostgresTenantIsolationPolicy.test.ts PostgresStateStoreAdapter.migrate.test.ts StartRunIntentSchemaManager.test.ts PostgresTenantRlsEnforcement.integration.test.ts`
 - `pnpm --filter @dvt/adapter-postgres build`
 - `pnpm docs:sync`
 - `pnpm docs:status:generate`

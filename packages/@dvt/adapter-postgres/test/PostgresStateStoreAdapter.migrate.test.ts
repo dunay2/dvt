@@ -281,8 +281,8 @@ describe('PostgresStateStoreAdapter migration state', () => {
     const insertQueries = client.queries.filter(
       (q) => q.sql.includes('INSERT INTO') && q.sql.includes('schema_migrations')
     );
-    // One INSERT per named migration step (17 steps)
-    expect(insertQueries.length).toBe(17);
+    // One INSERT per named migration step (18 steps)
+    expect(insertQueries.length).toBe(18);
 
     const versions = insertQueries.map((q) => (q.params as string[])[1]);
     expect(versions).toContain('core_001_initial_tables');
@@ -295,6 +295,7 @@ describe('PostgresStateStoreAdapter migration state', () => {
     expect(versions).toContain('core_015_run_event_heads');
     expect(versions).toContain('core_016_snapshot_work_queue');
     expect(versions).toContain('core_017_tenant_rls_baseline');
+    expect(versions).toContain('core_018_service_access_owner_rls_hardening');
   });
 
   it('creates the production tenant RLS baseline for tenant-owned online tables', async () => {
@@ -327,6 +328,8 @@ describe('PostgresStateStoreAdapter migration state', () => {
     );
     expect(executedSql).toContain('CREATE POLICY dvt_tenant_isolation');
     expect(executedSql).toContain("current_setting('dvt.access_mode', true) = 'service'");
+    expect(executedSql).toContain("current_setting('dvt.service_access_owner', true)");
+    expect(executedSql).toContain("'outbox-worker'");
     expect(executedSql).toContain("tenant_id = current_setting('dvt.tenant_id', true)");
   });
 

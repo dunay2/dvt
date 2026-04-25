@@ -17,9 +17,14 @@ import {
 } from '@dvt/engine';
 import type { PoolClient } from 'pg';
 
+import { enterPostgresMaintenanceContext } from './PostgresMaintenanceAccess.js';
 import { PostgresSchemaManager } from './PostgresSchemaManager.js';
+import { POSTGRES_SERVICE_ACCESS } from './PostgresServiceAccessCapability.js';
 import { quoteIdentifier } from './sqlUtils.js';
 import type { ListRunsOptions, RetryAttemptReservation, RunId, RunMetadata } from './types.js';
+
+const RUN_METADATA_TENANT_RESOLVER_SERVICE_ACCESS =
+  POSTGRES_SERVICE_ACCESS.runMetadataTenantResolver;
 
 // ---------------------------------------------------------------------------
 // Row shapes (internal)
@@ -327,7 +332,7 @@ export class PostgresRunMetadataRepository {
   }
 
   async resolveTenantWithClient(client: PoolClient, runId: RunId): Promise<string> {
-    await PostgresSchemaManager.setServiceContext(client);
+    await enterPostgresMaintenanceContext(client, RUN_METADATA_TENANT_RESOLVER_SERVICE_ACCESS);
     const result = await client.query<{ tenant_id: string }>(
       `
         SELECT tenant_id

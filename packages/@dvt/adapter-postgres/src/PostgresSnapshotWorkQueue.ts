@@ -1,9 +1,12 @@
 import type { PoolClient } from 'pg';
 
+import { enterPostgresMaintenanceContext } from './PostgresMaintenanceAccess.js';
 import { PostgresSchemaManager } from './PostgresSchemaManager.js';
+import { POSTGRES_SERVICE_ACCESS } from './PostgresServiceAccessCapability.js';
 import { quoteIdentifier } from './sqlUtils.js';
 
 type WithClient = <T>(fn: (client: PoolClient) => Promise<T>) => Promise<T>;
+const SNAPSHOT_WORK_QUEUE_SERVICE_ACCESS = POSTGRES_SERVICE_ACCESS.snapshotWorkQueue;
 
 const MIN_BATCH_SIZE = 0;
 const MAX_BATCH_SIZE = 1000;
@@ -29,7 +32,7 @@ export class PostgresSnapshotWorkQueue {
     }
 
     return this.withClient(async (client) => {
-      await PostgresSchemaManager.setServiceContext(client);
+      await enterPostgresMaintenanceContext(client, SNAPSHOT_WORK_QUEUE_SERVICE_ACCESS);
       const result = await client.query<{ run_id: string; tenant_id: string; claim_token: string }>(
         claimSnapshotWorkSql(this.schema),
         [boundedBatchSize, this.claimTimeoutMs]

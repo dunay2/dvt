@@ -12,7 +12,9 @@
  */
 import type { PoolClient } from 'pg';
 
+import { enterPostgresMaintenanceContext } from './PostgresMaintenanceAccess.js';
 import { PostgresSchemaManager } from './PostgresSchemaManager.js';
+import { POSTGRES_SERVICE_ACCESS } from './PostgresServiceAccessCapability.js';
 import { quoteIdentifier } from './sqlUtils.js';
 import type {
   DeadLetterRecord,
@@ -24,6 +26,7 @@ import type {
 import { MAX_OUTBOX_ATTEMPTS } from './types.js';
 
 const DEFAULT_OUTBOX_CLAIM_TIMEOUT_MS = 5 * 60 * 1000;
+const OUTBOX_SERVICE_ACCESS = POSTGRES_SERVICE_ACCESS.outboxWorker;
 
 // ---------------------------------------------------------------------------
 // Row shapes (internal)
@@ -163,7 +166,7 @@ export class PostgresOutboxStore implements IOutboxStorage {
 
   async enqueueTx(runId: RunId, events: EventEnvelope[]): Promise<void> {
     await this.withTransaction(async (client) => {
-      await PostgresSchemaManager.setServiceContext(client);
+      await enterPostgresMaintenanceContext(client, OUTBOX_SERVICE_ACCESS);
       await this.enqueueWithClient(client, runId, events);
     });
   }
@@ -184,7 +187,7 @@ export class PostgresOutboxStore implements IOutboxStorage {
     }
 
     return this.withTransaction(async (client) => {
-      await PostgresSchemaManager.setServiceContext(client);
+      await enterPostgresMaintenanceContext(client, OUTBOX_SERVICE_ACCESS);
       const now = this.now();
       const params: unknown[] = [boundedLimit, now, this.outboxClaimTimeoutMs];
       let shardFilterClause = '';
@@ -258,7 +261,7 @@ export class PostgresOutboxStore implements IOutboxStorage {
     if (ids.length === 0) return;
 
     await this.withClient(async (client) => {
-      await PostgresSchemaManager.setServiceContext(client);
+      await enterPostgresMaintenanceContext(client, OUTBOX_SERVICE_ACCESS);
       await client.query(
         `
           UPDATE ${quoteIdentifier(this.schema)}.outbox
@@ -273,7 +276,7 @@ export class PostgresOutboxStore implements IOutboxStorage {
 
   async markFailed(id: string, error: string): Promise<void> {
     await this.withTransaction(async (client) => {
-      await PostgresSchemaManager.setServiceContext(client);
+      await enterPostgresMaintenanceContext(client, OUTBOX_SERVICE_ACCESS);
       const result = await client.query<MarkFailedRow>(
         `
           UPDATE ${quoteIdentifier(this.schema)}.outbox
@@ -323,7 +326,7 @@ export class PostgresOutboxStore implements IOutboxStorage {
       return false;
     }
     return this.withClient(async (client) => {
-      await PostgresSchemaManager.setServiceContext(client);
+      await enterPostgresMaintenanceContext(client, OUTBOX_SERVICE_ACCESS);
       const params: unknown[] = [];
       let shardFilterClause = '';
       if (shardIds) {

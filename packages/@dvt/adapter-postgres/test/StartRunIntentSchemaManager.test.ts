@@ -64,6 +64,8 @@ describe('StartRunIntentSchemaManager migration locking', () => {
     );
     expect(migrationSql).toContain('CREATE POLICY dvt_tenant_isolation');
     expect(migrationSql).toContain("current_setting('dvt.access_mode', true) = 'service'");
+    expect(migrationSql).toContain("current_setting('dvt.service_access_owner', true)");
+    expect(migrationSql).toContain("'start-run-intent-reconciler'");
     expect(migrationSql).toContain("tenant_id = current_setting('dvt.tenant_id', true)");
   });
 });

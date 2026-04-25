@@ -26,7 +26,9 @@ import { getAllowedFromStatuses } from '@dvt/engine';
 import { DatabaseError, Pool, type PoolClient } from 'pg';
 
 import { PostgresAdapterClientSession } from './PostgresAdapterClientSession.js';
+import { enterPostgresMaintenanceContext } from './PostgresMaintenanceAccess.js';
 import { PostgresSchemaManager } from './PostgresSchemaManager.js';
+import { POSTGRES_SERVICE_ACCESS } from './PostgresServiceAccessCapability.js';
 import { normalizeSchema, quoteIdentifier } from './sqlUtils.js';
 import { StartRunIntentSchemaManager } from './StartRunIntentSchemaManager.js';
 
@@ -108,6 +110,7 @@ const MAX_ORPHAN_LIMIT = 1000;
 const INVALID_ORPHAN_LIMIT_MESSAGE = 'INVALID_LIMIT: listOrphaned limit must be between 1 and 1000';
 const ACTIVE_INTENT_UNIQUE_INDEX = 'start_run_intents_active_run_uniq';
 const PG_SQLSTATE_UNIQUE_VIOLATION = '23505';
+const START_RUN_INTENT_RECONCILER_SERVICE_ACCESS = POSTGRES_SERVICE_ACCESS.startRunIntentReconciler;
 
 export interface PostgresStartRunIntentStoreConfig {
   connectionString?: string;
@@ -384,7 +387,7 @@ export class PostgresStartRunIntentStore implements IStartRunIntentStore {
 
   private async withServiceContext<T>(fn: (client: PoolClient) => Promise<T>): Promise<T> {
     return this.clientSession.withClient(async (client) => {
-      await PostgresSchemaManager.setServiceContext(client);
+      await enterPostgresMaintenanceContext(client, START_RUN_INTENT_RECONCILER_SERVICE_ACCESS);
       return fn(client);
     });
   }

@@ -30,7 +30,7 @@ describe('PostgresTenantIsolationPolicy', () => {
     expect(setServiceContextSql()).toContain("set_config('dvt.access_mode', 'service', true)");
   });
 
-  it('builds RLS policies that deny missing context and allow tenant or service mode', () => {
+  it('builds RLS policies that deny missing context and require named service owners', () => {
     const statements = buildTenantIsolationPolicySql('DvtOps', {
       name: 'run_metadata',
       tenantColumn: 'tenant_id',
@@ -41,6 +41,9 @@ describe('PostgresTenantIsolationPolicy', () => {
     expect(statements).toContain('DROP POLICY IF EXISTS dvt_tenant_isolation');
     expect(statements).toContain('CREATE POLICY dvt_tenant_isolation');
     expect(statements).toContain("current_setting('dvt.access_mode', true) = 'service'");
+    expect(statements).toContain("current_setting('dvt.service_access_owner', true)");
+    expect(statements).toContain("'outbox-worker'");
+    expect(statements).toContain("'run-archive-maintenance'");
     expect(statements).toContain("tenant_id = current_setting('dvt.tenant_id', true)");
   });
 });

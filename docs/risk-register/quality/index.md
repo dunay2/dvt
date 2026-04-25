@@ -60,7 +60,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [Narrowed engine read boundary could regress through facade re-growth](R-20260412-AR-A12-C-READ-BOUNDARY-PURITY-REGRESSION.yaml)
 - [Persisted plan record contracts can drift back into dual truth and invalid state acceptance](R-20260402-S08-PLAN-STORE-CONTRACT-DRIFT.yaml)
 - [Plan-store canonical JSON shape may drift from contract schema](R-20260405-PLAN-STORE-CANONICAL-SHAPE-DRIFT.yaml)
-- [Plan-store tenancy and service-context drift remain after forced RLS baseline](R-20260425-PRODUCTION-TENANT-ISOLATION-BASELINE.yaml)
+- [Plan-store tenancy and live RLS profile coverage remain after forced RLS baseline](R-20260425-PRODUCTION-TENANT-ISOLATION-BASELINE.yaml)
 - [Planner boundary contract naming drift across V2 and V1 symbols](R-20260404-PLANNER-V1-CONTRACT-NORMALIZATION.yaml)
 - [Planner boundary exposed DBT-native ingress alongside canonical graph admission](R-20260410-PLANNER-KERNEL-DBT-INGRESS-LEAKAGE.yaml)
 - [Planner determinism hash pin silently drifts when plan serialization changes](R-20260331-PLANNER-DETERMINISM-HASH-DRIFT.yaml)
