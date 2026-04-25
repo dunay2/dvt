@@ -32,6 +32,7 @@ import {
   replayLineageDeadLetterSql,
   updateLineageOutboxFailureSql,
 } from './PostgresLineageOutboxStoreSql.js';
+import { PostgresSchemaManager } from './PostgresSchemaManager.js';
 import type { EventEnvelope } from './types.js';
 
 // ---------------------------------------------------------------------------
@@ -100,16 +101,17 @@ export class PostgresLineageOutboxStore implements ILineageOutboxStore {
   async enqueue(runId: string, payload: EventEnvelope): Promise<void> {
     const id = `lox-${payload.eventId}`;
     const now = this.now();
-    await this.withClient((client) =>
-      client.query(insertLineageOutboxSql(this.schema), [
+    await this.withClient(async (client) => {
+      await PostgresSchemaManager.setServiceContext(client);
+      await client.query(insertLineageOutboxSql(this.schema), [
         id,
         payload.tenantId,
         runId,
         payload.eventType,
         JSON.stringify(payload),
         now,
-      ])
-    );
+      ]);
+    });
   }
 
   async listPending(limit: number): Promise<LineageOutboxRecord[]> {
@@ -117,6 +119,7 @@ export class PostgresLineageOutboxStore implements ILineageOutboxStore {
     if (boundedLimit === 0) return [];
 
     return this.withTransaction(async (client) => {
+      await PostgresSchemaManager.setServiceContext(client);
       const now = this.now();
       const result = await client.query<LineageOutboxRow>(
         listPendingLineageOutboxForClaimSql(this.schema),
@@ -128,29 +131,32 @@ export class PostgresLineageOutboxStore implements ILineageOutboxStore {
 
   async countPending(): Promise<number> {
     const now = this.now();
-    const result = await this.withClient((client) =>
-      client.query<PendingLineageCountRow>(countPendingLineageOutboxSql(this.schema), [
+    const result = await this.withClient(async (client) => {
+      await PostgresSchemaManager.setServiceContext(client);
+      return client.query<PendingLineageCountRow>(countPendingLineageOutboxSql(this.schema), [
         now,
         this.lineageOutboxClaimTimeoutMs,
-      ])
-    );
+      ]);
+    });
     return Number(result.rows[0]?.pending_count ?? 0);
   }
 
   async markDelivered(ids: string[]): Promise<void> {
     if (ids.length === 0) return;
     const now = this.now();
-    await this.withClient((client) =>
-      client.query(deleteLineageOutboxByIdsSql(this.schema), [
+    await this.withClient(async (client) => {
+      await PostgresSchemaManager.setServiceContext(client);
+      await client.query(deleteLineageOutboxByIdsSql(this.schema), [
         ids,
         now,
         this.lineageOutboxClaimTimeoutMs,
-      ])
-    );
+      ]);
+    });
   }
 
   async markFailed(id: string, error: string): Promise<LineageFailureDisposition> {
     return this.withTransaction(async (client) => {
+      await PostgresSchemaManager.setServiceContext(client);
       const now = this.now();
       const result = await client.query<LineageMarkFailedRow>(
         updateLineageOutboxFailureSql(this.schema, MAX_LINEAGE_ATTEMPTS),
@@ -185,12 +191,13 @@ export class PostgresLineageOutboxStore implements ILineageOutboxStore {
     const boundedLimit = normalizeLineageQueryLimit(limit, 'LINEAGE_DEAD_LETTER_LIMIT');
     if (boundedLimit === 0) return [];
 
-    const result = await this.withClient((client) =>
-      client.query<LineageDeadLetterRow>(listLineageDeadLetterSql(this.schema), [
+    const result = await this.withClient(async (client) => {
+      await PostgresSchemaManager.setTenantContext(client, normalizedTenantId);
+      return client.query<LineageDeadLetterRow>(listLineageDeadLetterSql(this.schema), [
         boundedLimit,
         normalizedTenantId,
-      ])
-    );
+      ]);
+    });
     return result.rows.map((row) => ({
       id: row.id,
       originalId: row.original_id,
@@ -209,11 +216,12 @@ export class PostgresLineageOutboxStore implements ILineageOutboxStore {
       throw new Error('TENANT_SCOPE_REQUIRED');
     }
 
-    const result = await this.withClient((client) =>
-      client.query<LineageDeadLetterCountRow>(countLineageDeadLetterSql(this.schema), [
+    const result = await this.withClient(async (client) => {
+      await PostgresSchemaManager.setTenantContext(client, normalizedTenantId);
+      return client.query<LineageDeadLetterCountRow>(countLineageDeadLetterSql(this.schema), [
         normalizedTenantId,
-      ])
-    );
+      ]);
+    });
     return Number(result.rows[0]?.dead_letter_count ?? 0);
   }
 
@@ -255,12 +263,13 @@ export class PostgresLineageOutboxStore implements ILineageOutboxStore {
     params.push(replayedAt);
     const replayedAtParam = `$${params.length}`;
 
-    const result = await this.withTransaction((client) =>
-      client.query<ReplayLineageDeadLetterRow>(
+    const result = await this.withTransaction(async (client) => {
+      await PostgresSchemaManager.setTenantContext(client, tenantId);
+      return client.query<ReplayLineageDeadLetterRow>(
         replayLineageDeadLetterSql(this.schema, where.join('\n      '), replayedAtParam),
         params
-      )
-    );
+      );
+    });
     return Number(result.rows[0]?.moved_count ?? 0);
   }
 }

@@ -65,7 +65,7 @@ class SnapshotUpsertClient {
       return undefined;
     }
 
-    const [, snapshotJson, lastRunSeq, , archiveUnitKey, eventChecksumSha256, archivedAt] =
+    const [, , snapshotJson, lastRunSeq, , archiveUnitKey, eventChecksumSha256, archivedAt] =
       params ?? [];
     const incomingSeq = Number(lastRunSeq);
     const hasCasGuard = sql.includes('WHERE run_snapshots.last_run_seq <= EXCLUDED.last_run_seq');
@@ -267,8 +267,8 @@ describe('PostgresRunSnapshotStore', () => {
         };
       }
 
-      if (sql.includes('FROM "dvt".run_events') && sql.includes('run_seq > $2')) {
-        expect(params).toEqual(['run-1', 1]);
+      if (sql.includes('FROM "dvt".run_events') && sql.includes('run_seq > $3')) {
+        expect(params).toEqual(['tenant-1', 'run-1', 1]);
         return {
           rows: [
             {
@@ -305,7 +305,7 @@ describe('PostgresRunSnapshotStore', () => {
     });
     expect(
       client.queries.some(
-        (entry) => entry.sql.includes('FROM "dvt".run_events') && entry.sql.includes('run_seq > $2')
+        (entry) => entry.sql.includes('FROM "dvt".run_events') && entry.sql.includes('run_seq > $3')
       )
     ).toBe(true);
   });
@@ -347,8 +347,8 @@ describe('PostgresRunSnapshotStore', () => {
         };
       }
 
-      if (sql.includes('FROM "dvt".run_events') && sql.includes('run_seq > $2')) {
-        expect(params).toEqual(['run-1', 0]);
+      if (sql.includes('FROM "dvt".run_events') && sql.includes('run_seq > $3')) {
+        expect(params).toEqual(['tenant-1', 'run-1', 0]);
         return {
           rows: [
             {
@@ -421,8 +421,8 @@ describe('PostgresRunSnapshotStore', () => {
         };
       }
 
-      if (sql.includes('FROM "dvt".run_events') && sql.includes('run_seq > $2')) {
-        expect(params).toEqual(['run-1', 0]);
+      if (sql.includes('FROM "dvt".run_events') && sql.includes('run_seq > $3')) {
+        expect(params).toEqual(['tenant-1', 'run-1', 0]);
         return {
           rows: [
             {
@@ -638,6 +638,7 @@ describe('PostgresRunSnapshotStore', () => {
     expect(upsert?.sql).toContain('WHERE run_snapshots.last_run_seq <= EXCLUDED.last_run_seq');
     expect(upsert?.params).toEqual([
       'run-1',
+      'tenant-1',
       JSON.stringify(snapshot),
       2,
       '2026-03-20T00:00:01.000Z',
@@ -866,6 +867,29 @@ describe('PostgresRunSnapshotStore', () => {
       snapshot,
     });
   });
+
+  it('persists tenant_id on run snapshot rows from appended events', async () => {
+    const client = new ScriptedClient(async <T>() => ({ rows: [] as T[], rowCount: 0 }));
+    const store = new PostgresRunSnapshotStore(
+      'dvt',
+      () => '2026-03-20T00:00:01.000Z',
+      async (fn) => fn(client as never),
+      async (fn) => fn(client as never)
+    );
+    const event = makeEvent({
+      runId: 'run-1',
+      tenantId: 'tenant-a',
+      eventType: 'RunQueued',
+      idempotencyKey: 'run-1:queued',
+      runSeq: 1,
+    });
+
+    await store.updateWithClient(client as never, 'run-1', [event], 0, 1);
+
+    const upsert = client.queries.find((query) => query.sql.includes('INSERT INTO'));
+    expect(upsert?.sql).toContain('tenant_id');
+    expect(upsert?.params).toContain('tenant-a');
+  });
 });
 
 function makeEvent(overrides: Partial<EventEnvelope> = {}): EventEnvelope {
@@ -892,6 +916,8 @@ function isSnapshotReadQuery(sql: string): boolean {
   return (
     sql.includes('s.snapshot') &&
     sql.includes('FROM "dvt".run_metadata m') &&
-    sql.includes('LEFT JOIN "dvt".run_snapshots s ON s.run_id = m.run_id')
+    sql.includes('LEFT JOIN "dvt".run_snapshots s') &&
+    sql.includes('ON s.run_id = m.run_id') &&
+    sql.includes('s.tenant_id = m.tenant_id')
   );
 }

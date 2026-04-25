@@ -1,5 +1,6 @@
 import type { PoolClient } from 'pg';
 
+import { PostgresSchemaManager } from './PostgresSchemaManager.js';
 import { quoteIdentifier } from './sqlUtils.js';
 
 type WithClient = <T>(fn: (client: PoolClient) => Promise<T>) => Promise<T>;
@@ -28,6 +29,7 @@ export class PostgresSnapshotWorkQueue {
     }
 
     return this.withClient(async (client) => {
+      await PostgresSchemaManager.setServiceContext(client);
       const result = await client.query<{ run_id: string; tenant_id: string; claim_token: string }>(
         claimSnapshotWorkSql(this.schema),
         [boundedBatchSize, this.claimTimeoutMs]
@@ -42,8 +44,9 @@ export class PostgresSnapshotWorkQueue {
 
   async completeSnapshotWork(tenantId: string, runId: string, claimToken: string): Promise<void> {
     const normalizedClaimToken = normalizeClaimToken(claimToken);
-    const result = await this.withClient((client) =>
-      client.query<{ deleted: boolean; released: boolean; present: boolean }>(
+    const result = await this.withClient(async (client) => {
+      await PostgresSchemaManager.setTenantContext(client, tenantId);
+      return client.query<{ deleted: boolean; released: boolean; present: boolean }>(
         `
           WITH present AS (
             SELECT 1
@@ -57,6 +60,7 @@ export class PostgresSnapshotWorkQueue {
             WHERE q.tenant_id = $1
               AND q.run_id = $2
               AND s.run_id = q.run_id
+              AND s.tenant_id = q.tenant_id
               AND q.latest_run_seq <= COALESCE(s.last_run_seq, 0)
               AND ${claimTokenSql('q.claimed_at')} = $3
             RETURNING q.run_id, q.tenant_id
@@ -78,8 +82,8 @@ export class PostgresSnapshotWorkQueue {
             EXISTS(SELECT 1 FROM present) AS present
         `,
         [tenantId, runId, normalizedClaimToken]
-      )
-    );
+      );
+    });
     const status = result.rows[0];
     if (!status) {
       throw new Error(`${CLAIM_NOT_OWNED_ERROR_CODE}: ${tenantId}/${runId}`);
@@ -103,8 +107,9 @@ export class PostgresSnapshotWorkQueue {
     const boundedRetryDelayMs = normalizeRetryDelay(retryDelayMs);
     const boundedErrorMessage = normalizeErrorMessage(errorMessage);
     const normalizedClaimToken = normalizeClaimToken(claimToken);
-    const result = await this.withClient((client) =>
-      client.query(
+    const result = await this.withClient(async (client) => {
+      await PostgresSchemaManager.setTenantContext(client, tenantId);
+      return client.query(
         `
           UPDATE ${quoteIdentifier(this.schema)}.snapshot_work_queue
           SET claimed_at = NULL,
@@ -116,8 +121,8 @@ export class PostgresSnapshotWorkQueue {
             AND ${claimTokenSql('claimed_at')} = $5
         `,
         [tenantId, runId, boundedRetryDelayMs, boundedErrorMessage, normalizedClaimToken]
-      )
-    );
+      );
+    });
     if (result.rowCount === 0) {
       throw new Error(`${CLAIM_NOT_OWNED_ERROR_CODE}: ${tenantId}/${runId}`);
     }
@@ -129,7 +134,9 @@ function claimSnapshotWorkSql(schema: string): string {
     WITH picked AS (
       SELECT q.run_id, q.tenant_id
       FROM ${quoteIdentifier(schema)}.snapshot_work_queue q
-      LEFT JOIN ${quoteIdentifier(schema)}.run_snapshots s ON s.run_id = q.run_id
+      LEFT JOIN ${quoteIdentifier(schema)}.run_snapshots s
+        ON s.run_id = q.run_id
+        AND s.tenant_id = q.tenant_id
       WHERE q.latest_run_seq > COALESCE(s.last_run_seq, 0)
         AND (q.next_attempt_at IS NULL OR q.next_attempt_at <= NOW())
         AND (

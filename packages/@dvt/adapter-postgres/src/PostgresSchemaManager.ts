@@ -35,10 +35,16 @@ import {
   insertAppliedStepSql,
   loadAppliedVersionsSql,
   rollbackTransactionSql,
+  setServiceContextSql,
   setLocalStatementTimeoutSql,
   setTenantContextSql,
   stepAlreadyAppliedSql,
 } from './PostgresSchemaManagerSql.js';
+import {
+  TENANT_ISOLATION_TABLES,
+  buildDropTenantIsolationPolicySql,
+  buildTenantIsolationPolicySql,
+} from './PostgresTenantIsolationPolicy.js';
 import { quoteIdentifier } from './sqlUtils.js';
 
 type MigrationState = 'not_called' | 'in_progress' | 'ready';
@@ -120,6 +126,7 @@ const MIGRATION_STEPS: readonly MigrationStep[] = [
       await client.query(`
         CREATE TABLE IF NOT EXISTS ${sq(schema)}.outbox (
           id TEXT PRIMARY KEY,
+          tenant_id TEXT NOT NULL,
           run_id TEXT NOT NULL,
           shard_id INTEGER NOT NULL DEFAULT 0,
           run_seq INTEGER NOT NULL,
@@ -148,6 +155,7 @@ const MIGRATION_STEPS: readonly MigrationStep[] = [
       await client.query(`
         CREATE TABLE IF NOT EXISTS ${sq(schema)}.run_snapshots (
           run_id TEXT PRIMARY KEY,
+          tenant_id TEXT NOT NULL,
           snapshot JSONB NOT NULL,
           snapshot_status TEXT GENERATED ALWAYS AS (snapshot->>'status') STORED,
           last_run_seq INTEGER NOT NULL,
@@ -171,6 +179,7 @@ const MIGRATION_STEPS: readonly MigrationStep[] = [
         CREATE TABLE IF NOT EXISTS ${sq(schema)}.outbox_dead_letter (
           id TEXT PRIMARY KEY,
           original_id TEXT NOT NULL,
+          tenant_id TEXT NOT NULL,
           run_id TEXT NOT NULL,
           shard_id INTEGER NOT NULL DEFAULT 0,
           payload JSONB NOT NULL,
@@ -786,7 +795,9 @@ const MIGRATION_STEPS: readonly MigrationStep[] = [
         INNER JOIN ${sq(schema)}.run_event_heads h
           ON h.run_id = m.run_id
           AND h.tenant_id = m.tenant_id
-        LEFT JOIN ${sq(schema)}.run_snapshots s ON s.run_id = m.run_id
+        LEFT JOIN ${sq(schema)}.run_snapshots s
+          ON s.run_id = m.run_id
+          AND s.tenant_id = m.tenant_id
         WHERE h.latest_run_seq > COALESCE(s.last_run_seq, 0)
         ON CONFLICT (run_id, tenant_id)
         DO UPDATE
@@ -806,6 +817,86 @@ const MIGRATION_STEPS: readonly MigrationStep[] = [
         `DROP INDEX IF EXISTS ${sq(schema)}.${quoteIdentifier('snapshot_work_queue_enqueued_idx')}`
       );
       await client.query(`DROP TABLE IF EXISTS ${sq(schema)}.snapshot_work_queue`);
+    },
+  },
+  {
+    version: 'core_017_tenant_rls_baseline',
+    description: 'Enable production RLS tenant isolation for tenant-owned online state tables',
+    run: async (client, schema) => {
+      await client.query(
+        `ALTER TABLE ${sq(schema)}.run_snapshots ADD COLUMN IF NOT EXISTS tenant_id TEXT`
+      );
+      await client.query(
+        `ALTER TABLE ${sq(schema)}.outbox ADD COLUMN IF NOT EXISTS tenant_id TEXT`
+      );
+      await client.query(
+        `ALTER TABLE ${sq(schema)}.outbox_dead_letter ADD COLUMN IF NOT EXISTS tenant_id TEXT`
+      );
+
+      await client.query(`
+        UPDATE ${sq(schema)}.run_snapshots s
+        SET tenant_id = m.tenant_id
+        FROM ${sq(schema)}.run_metadata m
+        WHERE m.run_id = s.run_id
+          AND s.tenant_id IS NULL
+      `);
+      await client.query(`
+        UPDATE ${sq(schema)}.outbox o
+        SET tenant_id = COALESCE(o.payload->>'tenantId', m.tenant_id)
+        FROM ${sq(schema)}.run_metadata m
+        WHERE m.run_id = o.run_id
+          AND o.tenant_id IS NULL
+      `);
+      await client.query(`
+        UPDATE ${sq(schema)}.outbox_dead_letter dl
+        SET tenant_id = COALESCE(dl.payload->>'tenantId', m.tenant_id)
+        FROM ${sq(schema)}.run_metadata m
+        WHERE m.run_id = dl.run_id
+          AND dl.tenant_id IS NULL
+      `);
+
+      await client.query(
+        `ALTER TABLE ${sq(schema)}.run_snapshots ALTER COLUMN tenant_id SET NOT NULL`
+      );
+      await client.query(`ALTER TABLE ${sq(schema)}.outbox ALTER COLUMN tenant_id SET NOT NULL`);
+      await client.query(
+        `ALTER TABLE ${sq(schema)}.outbox_dead_letter ALTER COLUMN tenant_id SET NOT NULL`
+      );
+      await client.query(`
+        CREATE INDEX IF NOT EXISTS run_snapshots_tenant_run_id_idx
+        ON ${sq(schema)}.run_snapshots (tenant_id, run_id)
+      `);
+      await client.query(`
+        CREATE INDEX IF NOT EXISTS outbox_tenant_pending_idx
+        ON ${sq(schema)}.outbox (tenant_id, shard_id, next_attempt_at, created_at)
+        WHERE delivered_at IS NULL
+      `);
+      await client.query(`
+        CREATE INDEX IF NOT EXISTS outbox_dead_letter_tenant_dead_lettered_idx
+        ON ${sq(schema)}.outbox_dead_letter (tenant_id, dead_lettered_at DESC)
+      `);
+
+      for (const table of TENANT_ISOLATION_TABLES) {
+        for (const statement of buildTenantIsolationPolicySql(schema, table)) {
+          await client.query(statement);
+        }
+      }
+    },
+    rollbackDescription:
+      'Disable tenant RLS policy while preserving additive tenant columns and indexes',
+    rollback: async (client, schema) => {
+      for (const statement of buildDropTenantIsolationPolicySql(schema)) {
+        await client.query(statement);
+      }
+      await client.query(
+        `DROP INDEX IF EXISTS ${sq(schema)}.${quoteIdentifier('run_snapshots_tenant_run_id_idx')}`
+      );
+      await client.query(
+        `DROP INDEX IF EXISTS ${sq(schema)}.${quoteIdentifier('outbox_tenant_pending_idx')}`
+      );
+      await client.query(
+        `DROP INDEX IF EXISTS ${sq(schema)}.${quoteIdentifier('outbox_dead_letter_tenant_dead_lettered_idx')}`
+      );
     },
   },
 ];
@@ -901,6 +992,11 @@ export class PostgresSchemaManager {
   /** Sets `dvt.tenant_id` as a transaction-local Postgres config parameter. */
   static async setTenantContext(client: PoolClient, tenantId: string): Promise<void> {
     await client.query(setTenantContextSql(), [tenantId]);
+  }
+
+  /** Sets transaction-local service access for background maintenance paths. */
+  static async setServiceContext(client: PoolClient): Promise<void> {
+    await client.query(setServiceContextSql());
   }
 
   // ---------------------------------------------------------------------------

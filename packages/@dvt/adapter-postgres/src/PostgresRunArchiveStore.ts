@@ -26,6 +26,7 @@ import {
 } from '@dvt/state-store';
 import type { PoolClient } from 'pg';
 
+import { PostgresSchemaManager } from './PostgresSchemaManager.js';
 import { quoteIdentifier } from './sqlUtils.js';
 import type { EventEnvelope, RunId, WorkflowSnapshot } from './types.js';
 
@@ -102,6 +103,7 @@ export class PostgresRunArchiveStore
     const cutoffIso = computeCutoffIso(nowIso, policy.hotRetentionDays);
 
     return this.withTransaction(async (client) => {
+      await PostgresSchemaManager.setServiceContext(client);
       const runRows = await client.query<EligibleRunRow>(
         `
           SELECT
@@ -113,7 +115,9 @@ export class PostgresRunArchiveStore
             MAX(e.run_seq) AS max_run_seq,
             s.snapshot_status
           FROM ${quoteIdentifier(this.schema)}.run_events e
-          LEFT JOIN ${quoteIdentifier(this.schema)}.run_snapshots s ON s.run_id = e.run_id
+          LEFT JOIN ${quoteIdentifier(this.schema)}.run_snapshots s
+            ON s.run_id = e.run_id
+            AND s.tenant_id = e.tenant_id
           WHERE e.persisted_at < $1::timestamptz
           GROUP BY
             e.tenant_id,
@@ -250,6 +254,7 @@ export class PostgresRunArchiveStore
     startedAtIso: string
   ): Promise<ArchiveBatchRecord> {
     return this.withTransaction(async (client) => {
+      await PostgresSchemaManager.setServiceContext(client);
       await requireArchiveUnit(client, this.schema, archiveUnitKey);
       const batchId = randomUUID();
       await client.query(
@@ -276,6 +281,7 @@ export class PostgresRunArchiveStore
 
   async loadArchiveUnitEvents(archiveUnitKey: string): Promise<readonly EventEnvelope[]> {
     return this.withClient(async (client) => {
+      await PostgresSchemaManager.setServiceContext(client);
       const unit = await requireArchiveUnit(client, this.schema, archiveUnitKey);
       const tenantIds = parseTenantIds(unit.tenant_ids);
       const result = await client.query<EventPayloadRow>(
@@ -296,6 +302,7 @@ export class PostgresRunArchiveStore
     archiveUnitKey: string
   ): Promise<readonly ArchiveUnitTerminalSnapshotCandidate[]> {
     return this.withClient(async (client) => {
+      await PostgresSchemaManager.setServiceContext(client);
       const unit = await requireArchiveUnit(client, this.schema, archiveUnitKey);
       const tenantIds = parseTenantIds(unit.tenant_ids);
       const result = await client.query<TerminalSnapshotCandidateRow>(
@@ -305,7 +312,9 @@ export class PostgresRunArchiveStore
             e.run_id,
             s.snapshot
           FROM ${quoteIdentifier(this.schema)}.run_events e
-          INNER JOIN ${quoteIdentifier(this.schema)}.run_snapshots s ON s.run_id = e.run_id
+          INNER JOIN ${quoteIdentifier(this.schema)}.run_snapshots s
+            ON s.run_id = e.run_id
+            AND s.tenant_id = e.tenant_id
           WHERE to_char(timezone('UTC', e.persisted_at)::date, 'YYYY-MM-DD') = $1
             AND e.tenant_id = ANY($2::text[])
             AND s.snapshot_status IN ('COMPLETED', 'FAILED', 'CANCELLED')
@@ -337,6 +346,7 @@ export class PostgresRunArchiveStore
 
   async markArchiveBatchExported(record: ArchiveBatchExportedRecord): Promise<void> {
     return this.withTransaction(async (client) => {
+      await PostgresSchemaManager.setServiceContext(client);
       await requireArchiveBatch(client, this.schema, record.batchId, record.archiveUnitKey);
 
       await client.query(
@@ -394,6 +404,7 @@ export class PostgresRunArchiveStore
 
   async markArchiveBatchFailed(record: ArchiveBatchFailureRecord): Promise<void> {
     return this.withTransaction(async (client) => {
+      await PostgresSchemaManager.setServiceContext(client);
       await requireArchiveBatch(client, this.schema, record.batchId, record.archiveUnitKey);
 
       await client.query(
@@ -425,6 +436,7 @@ export class PostgresRunArchiveStore
     limit = 100
   ): Promise<readonly PendingArchiveVerification[]> {
     return this.withClient(async (client) => {
+      await PostgresSchemaManager.setServiceContext(client);
       const result = await client.query<PendingVerificationRow>(
         `
           SELECT DISTINCT ON (u.archive_unit_key)
@@ -472,6 +484,7 @@ export class PostgresRunArchiveStore
 
   async markArchiveBatchVerified(record: ArchiveBatchVerifiedRecord): Promise<void> {
     return this.withTransaction(async (client) => {
+      await PostgresSchemaManager.setServiceContext(client);
       await requireArchiveBatch(client, this.schema, record.batchId, record.archiveUnitKey);
 
       await client.query(
@@ -502,6 +515,7 @@ export class PostgresRunArchiveStore
 
   async markArchiveBatchVerifyFailed(record: ArchiveBatchFailureRecord): Promise<void> {
     return this.withTransaction(async (client) => {
+      await PostgresSchemaManager.setServiceContext(client);
       await requireArchiveBatch(client, this.schema, record.batchId, record.archiveUnitKey);
 
       await client.query(
@@ -538,6 +552,7 @@ export class PostgresRunArchiveStore
     nowIso: string
   ): Promise<readonly DeleteEligibleArchiveUnit[]> {
     return this.withTransaction(async (client) => {
+      await PostgresSchemaManager.setServiceContext(client);
       const result = await client.query<{
         archive_unit_key: string;
         tenant_bucket: string;
@@ -582,6 +597,7 @@ export class PostgresRunArchiveStore
     nowIso: string
   ): Promise<readonly DeleteEligibleArchiveUnit[]> {
     return this.withClient(async (client) => {
+      await PostgresSchemaManager.setServiceContext(client);
       const result = await client.query<{
         archive_unit_key: string;
         tenant_bucket: string;
@@ -621,6 +637,7 @@ export class PostgresRunArchiveStore
     droppedAtIso: string
   ): Promise<{ rowsDeleted: number }> {
     return this.withTransaction(async (client) => {
+      await PostgresSchemaManager.setServiceContext(client);
       const unit = await requireArchiveUnit(client, this.schema, archiveUnitKey);
       if (unit.state !== 'DELETE_ELIGIBLE') {
         throw new Error(
@@ -657,6 +674,7 @@ export class PostgresRunArchiveStore
 
   async markArchiveBatchDropped(record: ArchiveBatchDroppedRecord): Promise<void> {
     return this.withTransaction(async (client) => {
+      await PostgresSchemaManager.setServiceContext(client);
       const batchId = record.batchId;
       const existing = await client.query<{ batch_id: string }>(
         `
@@ -700,6 +718,7 @@ export class PostgresRunArchiveStore
 
   async startRestoreLog(input: Omit<RestoreLogRecord, 'status'>): Promise<RestoreLogRecord> {
     return this.withTransaction(async (client) => {
+      await PostgresSchemaManager.setServiceContext(client);
       await client.query(
         `
           INSERT INTO ${quoteIdentifier(this.schema)}.run_event_archive_restore_log
@@ -727,6 +746,7 @@ export class PostgresRunArchiveStore
     completedAtIso: string
   ): Promise<void> {
     return this.withTransaction(async (client) => {
+      await PostgresSchemaManager.setServiceContext(client);
       await client.query(
         `
           UPDATE ${quoteIdentifier(this.schema)}.run_event_archive_restore_log
@@ -743,6 +763,7 @@ export class PostgresRunArchiveStore
 
   async markRestoreFailed(restoreId: string, error: string, failedAtIso: string): Promise<void> {
     return this.withTransaction(async (client) => {
+      await PostgresSchemaManager.setServiceContext(client);
       await client.query(
         `
           UPDATE ${quoteIdentifier(this.schema)}.run_event_archive_restore_log
@@ -765,6 +786,7 @@ export class PostgresRunArchiveStore
       return 0;
     }
     return this.withTransaction(async (client) => {
+      await PostgresSchemaManager.setServiceContext(client);
       // Ensure the target schema's run_events table exists.
       // In production the target schema is a temporary schema pre-created by ops.
       // We use a simple row-by-row insert here; bulk copy is a future optimisation.
@@ -807,6 +829,7 @@ export class PostgresRunArchiveStore
     archiveUnitKey: string
   ): Promise<{ batchId: string; objectKey: string; tenantBucket: string } | null> {
     return this.withClient(async (client) => {
+      await PostgresSchemaManager.setServiceContext(client);
       const result = await client.query<{
         batch_id: string;
         object_key: string;

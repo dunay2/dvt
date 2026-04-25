@@ -327,6 +327,7 @@ export class PostgresRunMetadataRepository {
   }
 
   async resolveTenantWithClient(client: PoolClient, runId: RunId): Promise<string> {
+    await PostgresSchemaManager.setServiceContext(client);
     const result = await client.query<{ tenant_id: string }>(
       `
         SELECT tenant_id
@@ -344,16 +345,17 @@ export class PostgresRunMetadataRepository {
   }
 
   async getByRunId(tenantId: string, runId: string): Promise<RunMetadata | null> {
-    const result = await this.withClient((client) =>
-      client.query<RunMetadataRow>(
+    const result = await this.withClient(async (client) => {
+      await PostgresSchemaManager.setTenantContext(client, tenantId);
+      return client.query<RunMetadataRow>(
         `
           SELECT ${RUN_METADATA_COLUMNS}
           FROM ${quoteIdentifier(this.schema)}.run_metadata
           WHERE tenant_id = $1 AND run_id = $2
         `,
         [tenantId, runId]
-      )
-    );
+      );
+    });
 
     const row = result.rows[0];
     if (!row) return null;
@@ -366,6 +368,7 @@ export class PostgresRunMetadataRepository {
     const params: unknown[] = [limit, options.tenantId];
 
     return this.withClient(async (client) => {
+      await PostgresSchemaManager.setTenantContext(client, options.tenantId);
       if (options.status === undefined) {
         const result = await client.query<RunMetadataRow>(
           `
@@ -400,7 +403,9 @@ export class PostgresRunMetadataRepository {
             m.provider_namespace,
             m.provider_task_queue
           FROM ${quoteIdentifier(this.schema)}.run_metadata m
-          INNER JOIN ${quoteIdentifier(this.schema)}.run_snapshots s ON s.run_id = m.run_id
+          INNER JOIN ${quoteIdentifier(this.schema)}.run_snapshots s
+            ON s.run_id = m.run_id
+            AND s.tenant_id = m.tenant_id
           WHERE m.tenant_id = $2
             AND s.snapshot_status = ${statusParam}
           ORDER BY m.created_at DESC

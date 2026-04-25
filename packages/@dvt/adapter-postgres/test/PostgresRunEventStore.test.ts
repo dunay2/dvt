@@ -158,6 +158,9 @@ function makeListStoreHarness(rows: EventEnvelope[] = []): {
           text: string,
           params?: readonly unknown[]
         ): Promise<{ rows: T[]; rowCount?: number | null }> {
+          if (text.includes("set_config('dvt.")) {
+            return { rows: [] };
+          }
           calls.push({ text, params });
           return { rows: rows.map((payload) => ({ payload })) as T[] };
         },

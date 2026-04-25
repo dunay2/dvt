@@ -51,6 +51,7 @@ interface DeadLetterRow {
 interface MarkFailedRow {
   attempts: number;
   payload: EventEnvelope;
+  tenant_id: string;
   run_id: string;
   shard_id: number;
 }
@@ -120,6 +121,7 @@ export class PostgresOutboxStore implements IOutboxStorage {
         `
           INSERT INTO ${quoteIdentifier(this.schema)}.outbox (
             id,
+            tenant_id,
             run_id,
             shard_id,
             run_seq,
@@ -131,17 +133,19 @@ export class PostgresOutboxStore implements IOutboxStorage {
           VALUES (
             $1,
             $2,
-            ((mod((('x' || left(md5($2), 16))::bit(64)::bigint), $7::bigint) + $7::bigint) % $7::bigint)::int,
             $3,
-            $4::timestamptz,
-            $5,
-            $6::jsonb,
+            ((mod((('x' || left(md5($3), 16))::bit(64)::bigint), $8::bigint) + $8::bigint) % $8::bigint)::int,
+            $4,
+            $5::timestamptz,
+            $6,
+            $7::jsonb,
             0
           )
           ON CONFLICT (id) DO NOTHING
         `,
         [
           `${runId}:${event.runSeq}`,
+          event.tenantId,
           runId,
           event.runSeq,
           createdAt,
@@ -159,6 +163,7 @@ export class PostgresOutboxStore implements IOutboxStorage {
 
   async enqueueTx(runId: RunId, events: EventEnvelope[]): Promise<void> {
     await this.withTransaction(async (client) => {
+      await PostgresSchemaManager.setServiceContext(client);
       await this.enqueueWithClient(client, runId, events);
     });
   }
@@ -179,6 +184,7 @@ export class PostgresOutboxStore implements IOutboxStorage {
     }
 
     return this.withTransaction(async (client) => {
+      await PostgresSchemaManager.setServiceContext(client);
       const now = this.now();
       const params: unknown[] = [boundedLimit, now, this.outboxClaimTimeoutMs];
       let shardFilterClause = '';
@@ -203,6 +209,7 @@ export class PostgresOutboxStore implements IOutboxStorage {
                 SELECT 1
                 FROM ${quoteIdentifier(this.schema)}.outbox prior
                 WHERE prior.run_id = o.run_id
+                  AND prior.tenant_id = o.tenant_id
                   AND prior.delivered_at IS NULL
                   AND prior.run_seq < o.run_seq
               )
@@ -210,6 +217,7 @@ export class PostgresOutboxStore implements IOutboxStorage {
                 SELECT 1
                 FROM ${quoteIdentifier(this.schema)}.outbox_dead_letter dl
                 WHERE dl.run_id = o.run_id
+                  AND dl.tenant_id = o.tenant_id
               )
             ORDER BY o.created_at ASC, o.run_seq ASC
             LIMIT $1
@@ -250,6 +258,7 @@ export class PostgresOutboxStore implements IOutboxStorage {
     if (ids.length === 0) return;
 
     await this.withClient(async (client) => {
+      await PostgresSchemaManager.setServiceContext(client);
       await client.query(
         `
           UPDATE ${quoteIdentifier(this.schema)}.outbox
@@ -264,6 +273,7 @@ export class PostgresOutboxStore implements IOutboxStorage {
 
   async markFailed(id: string, error: string): Promise<void> {
     await this.withTransaction(async (client) => {
+      await PostgresSchemaManager.setServiceContext(client);
       const result = await client.query<MarkFailedRow>(
         `
           UPDATE ${quoteIdentifier(this.schema)}.outbox
@@ -275,7 +285,7 @@ export class PostgresOutboxStore implements IOutboxStorage {
               END,
               claimed_at = NULL
           WHERE id = $1
-          RETURNING attempts, payload, run_id, shard_id
+          RETURNING attempts, payload, tenant_id, run_id, shard_id
         `,
         [id, error, this.now()]
       );
@@ -285,11 +295,20 @@ export class PostgresOutboxStore implements IOutboxStorage {
         await client.query(
           `
             INSERT INTO ${quoteIdentifier(this.schema)}.outbox_dead_letter
-              (id, original_id, run_id, shard_id, payload, last_error, dead_lettered_at)
-            VALUES ($1, $2, $3, $4, $5::jsonb, $6, $7::timestamptz)
+              (id, original_id, tenant_id, run_id, shard_id, payload, last_error, dead_lettered_at)
+            VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7, $8::timestamptz)
             ON CONFLICT (id) DO NOTHING
           `,
-          [`dl_${id}`, id, row.run_id, row.shard_id, JSON.stringify(row.payload), error, this.now()]
+          [
+            `dl_${id}`,
+            id,
+            row.tenant_id,
+            row.run_id,
+            row.shard_id,
+            JSON.stringify(row.payload),
+            error,
+            this.now(),
+          ]
         );
         await client.query(`DELETE FROM ${quoteIdentifier(this.schema)}.outbox WHERE id = $1`, [
           id,
@@ -304,6 +323,7 @@ export class PostgresOutboxStore implements IOutboxStorage {
       return false;
     }
     return this.withClient(async (client) => {
+      await PostgresSchemaManager.setServiceContext(client);
       const params: unknown[] = [];
       let shardFilterClause = '';
       if (shardIds) {
@@ -338,19 +358,19 @@ export class PostgresOutboxStore implements IOutboxStorage {
     const boundedLimit = Math.max(0, limit);
     if (boundedLimit === 0) return [];
 
-    const result = await this.withClient((client) =>
-      client.query<DeadLetterRow>(
+    const result = await this.withClient(async (client) => {
+      await PostgresSchemaManager.setTenantContext(client, tenantId);
+      return client.query<DeadLetterRow>(
         `
           SELECT dl.id, dl.original_id, dl.run_id, dl.payload, dl.last_error, dl.dead_lettered_at
           FROM ${quoteIdentifier(this.schema)}.outbox_dead_letter dl
-          INNER JOIN ${quoteIdentifier(this.schema)}.run_metadata m ON m.run_id = dl.run_id
-          WHERE m.tenant_id = $2
+          WHERE dl.tenant_id = $2
           ORDER BY dead_lettered_at DESC
           LIMIT $1
         `,
         [boundedLimit, tenantId]
-      )
-    );
+      );
+    });
 
     return result.rows.map((row) => ({
       id: row.id,
@@ -428,10 +448,9 @@ export class PostgresOutboxStore implements IOutboxStorage {
   ): Promise<{ rows: { moved: number }[] }> {
     const query = `
       WITH picked AS (
-        SELECT dl.id, dl.original_id, dl.run_id, dl.shard_id, dl.payload
+        SELECT dl.id, dl.original_id, dl.tenant_id, dl.run_id, dl.shard_id, dl.payload
         FROM ${quoteIdentifier(this.schema)}.outbox_dead_letter dl
-        INNER JOIN ${quoteIdentifier(this.schema)}.run_metadata m ON m.run_id = dl.run_id
-        WHERE m.tenant_id = $2
+        WHERE dl.tenant_id = $2
         ${where.length > 0 ? `AND ${where.join(' AND ')}` : ''}
         ORDER BY dead_lettered_at ASC
         LIMIT $1
@@ -439,6 +458,7 @@ export class PostgresOutboxStore implements IOutboxStorage {
       ), inserted AS (
         INSERT INTO ${quoteIdentifier(this.schema)}.outbox (
           id,
+          tenant_id,
           run_id,
           shard_id,
           run_seq,
@@ -453,6 +473,7 @@ export class PostgresOutboxStore implements IOutboxStorage {
         )
         SELECT
           p.original_id,
+          p.tenant_id,
           p.run_id,
           p.shard_id,
           ((p.payload->>'runSeq')::int),
@@ -467,6 +488,7 @@ export class PostgresOutboxStore implements IOutboxStorage {
         FROM picked p
         ON CONFLICT (id) DO UPDATE
         SET attempts = 0,
+            tenant_id = EXCLUDED.tenant_id,
             last_error = NULL,
             claimed_at = NULL,
             delivered_at = NULL,

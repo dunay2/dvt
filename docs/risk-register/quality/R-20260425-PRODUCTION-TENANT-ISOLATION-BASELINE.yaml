@@ -1,0 +1,36 @@
+---
+id: R-20260425-PRODUCTION-TENANT-ISOLATION-BASELINE
+title:
+  Production tenant isolation depends on non-owner runtime role and remaining plan-store tenancy
+  work
+status: Open
+date: 2026-04-25
+owners:
+  - packages/@dvt/adapter-postgres
+severity: High
+probability: Medium
+context: >
+  The 2026-04-25 tenant isolation slice enables RLS for tenant-owned online Postgres state tables
+  and introduces explicit tenant/service transaction context. This closes the predicate-only storage
+  baseline for run state.
+risk: >
+  RLS is bypassed by table owners in PostgreSQL unless FORCE ROW LEVEL SECURITY or a non-owner
+  runtime role is used. The selected baseline intentionally keeps schema-owner connections reserved
+  for migrations, but production deployment must enforce that separation. Plan records also still
+  lack top-level tenant/project/environment columns, so plan-store tenancy remains a separate
+  governed task.
+mitigations:
+  - >
+    Run application traffic through a non-owner role and reserve owner access for schema migrations
+    only.
+  - >
+    Keep all tenant API paths setting tenant context and all worker/maintenance paths setting
+    service context before accessing RLS-protected tables.
+  - >
+    Do not use `__unknown_tenant__` fallback for the new run snapshot/outbox baseline columns;
+    migration must fail if ownership cannot be derived.
+  - >
+    Schedule a separate plan-store tenancy slice to add top-level tenant/project/environment
+    ownership to `plan_records` and `stored_plans`.
+review_after: 2026-06-30
+---

@@ -9,6 +9,7 @@ import {
   upsertSnapshotWorkItemSql,
   upsertRunEventHeadSql,
 } from './PostgresRunEventStoreSql.js';
+import { PostgresSchemaManager } from './PostgresSchemaManager.js';
 import { InvalidRunSequenceValueError } from './runEventStoreErrors.js';
 import type { SqlCommandExecutor } from './RunEventWriteRepository.js';
 import type { EventEnvelope, RunId } from './types.js';
@@ -159,9 +160,13 @@ export class PostgresRunEventStorage implements RunEventStoragePort {
       limitClause = `LIMIT $${params.length}`;
     }
 
-    const result = await this.withClient((client) =>
-      client.query<EventPayloadRow>(listEventsSql(this.schema, afterSeqClause, limitClause), params)
-    );
+    const result = await this.withClient(async (client) => {
+      await PostgresSchemaManager.setTenantContext(client, tenantId);
+      return client.query<EventPayloadRow>(
+        listEventsSql(this.schema, afterSeqClause, limitClause),
+        params
+      );
+    });
     return result.rows.map((row: EventPayloadRow) => row.payload);
   }
 }

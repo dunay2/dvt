@@ -9,6 +9,7 @@
 import type { PoolClient } from 'pg';
 
 import { POSTGRES_ADAPTER_ERROR_CONSTANTS as E } from './PostgresAdapterConstants.js';
+import { PostgresSchemaManager } from './PostgresSchemaManager.js';
 import {
   isSnapshotStaleSql,
   listStaleSnapshotRunsSql,
@@ -34,6 +35,7 @@ export class PostgresSnapshotStalenessQuery implements IRunSnapshotStalenessQuer
     }
 
     return this.withClient(async (client) => {
+      await PostgresSchemaManager.setServiceContext(client);
       const result = await client.query<{ run_id: string; tenant_id: string }>(
         listStaleSnapshotRunsSql(this.schema),
         [boundedBatchSize]
@@ -44,6 +46,7 @@ export class PostgresSnapshotStalenessQuery implements IRunSnapshotStalenessQuer
 
   async isSnapshotStale(tenantId: string, runId: string): Promise<boolean> {
     return this.withClient(async (client) => {
+      await PostgresSchemaManager.setTenantContext(client, tenantId);
       const result = await client.query<{ is_snapshot_stale: boolean }>(
         isSnapshotStaleSql(this.schema),
         [tenantId, runId]

@@ -56,6 +56,25 @@ describe('PostgresAdapterClientSession', () => {
     expect(client.release).toHaveBeenCalledWith(false);
   });
 
+  it('runs withClient work inside a transaction so local tenant context survives pooled reads', async () => {
+    const client = createClient();
+    const pool = createPool(client);
+    const session = new PostgresAdapterClientSession(pool as never, DISABLED_STATEMENT_TIMEOUT_MS);
+
+    const result = await session.withClient(async (connected) => {
+      await connected.query('SELECT set_config');
+      await connected.query('SELECT tenant_owned_row');
+      return 'ok';
+    });
+
+    expect(result).toBe('ok');
+    expect(client.query).toHaveBeenNthCalledWith(1, 'BEGIN');
+    expect(client.query).toHaveBeenNthCalledWith(2, 'SELECT set_config');
+    expect(client.query).toHaveBeenNthCalledWith(3, 'SELECT tenant_owned_row');
+    expect(client.query).toHaveBeenNthCalledWith(4, 'COMMIT');
+    expect(client.release).toHaveBeenCalledWith(false);
+  });
+
   it('rolls back and rethrows operation error when unit-of-work fails', async () => {
     const client = createClient();
     const pool = createPool(client);

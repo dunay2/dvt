@@ -20,6 +20,7 @@ import {
 } from '@dvt/state-store';
 import type { PoolClient } from 'pg';
 
+import { PostgresSchemaManager } from './PostgresSchemaManager.js';
 import { InvalidRunSequenceValueError } from './runEventStoreErrors.js';
 import { quoteIdentifier } from './sqlUtils.js';
 import type { EventEnvelope, RunId, WorkflowSnapshot } from './types.js';
@@ -74,6 +75,7 @@ export class PostgresRunSnapshotStore implements TerminalSnapshotPinStore {
 
   async getSnapshot(tenantId: string, runId: RunId): Promise<WorkflowSnapshot | null> {
     const read = await this.withClient(async (client) => {
+      await PostgresSchemaManager.setTenantContext(client, tenantId);
       const result = await client.query<SnapshotReadRow>(
         `
           SELECT
@@ -81,7 +83,9 @@ export class PostgresRunSnapshotStore implements TerminalSnapshotPinStore {
             s.last_run_seq,
             le.run_seq AS latest_run_seq
           FROM ${quoteIdentifier(this.schema)}.run_metadata m
-          LEFT JOIN ${quoteIdentifier(this.schema)}.run_snapshots s ON s.run_id = m.run_id
+          LEFT JOIN ${quoteIdentifier(this.schema)}.run_snapshots s
+            ON s.run_id = m.run_id
+            AND s.tenant_id = m.tenant_id
           LEFT JOIN LATERAL (
             SELECT e.run_seq
             FROM ${quoteIdentifier(this.schema)}.run_events e
@@ -146,11 +150,13 @@ export class PostgresRunSnapshotStore implements TerminalSnapshotPinStore {
     });
 
     return this.withTransaction(async (client) => {
+      await PostgresSchemaManager.setTenantContext(client, record.tenantId);
       await this.requireRunOwnership(client, record.tenantId, record.runId);
       const upsertResult = await client.query(
         `
           INSERT INTO ${quoteIdentifier(this.schema)}.run_snapshots AS run_snapshots (
             run_id,
+            tenant_id,
             snapshot,
             last_run_seq,
             updated_at,
@@ -158,8 +164,9 @@ export class PostgresRunSnapshotStore implements TerminalSnapshotPinStore {
             event_checksum_sha256,
             archived_at
           )
-          VALUES ($1, $2::jsonb, $3, $4::timestamptz, $5, $6, $7::timestamptz)
+          VALUES ($1, $2, $3::jsonb, $4, $5::timestamptz, $6, $7, $8::timestamptz)
           ON CONFLICT (run_id) DO UPDATE SET
+            tenant_id = EXCLUDED.tenant_id,
             snapshot = EXCLUDED.snapshot,
             last_run_seq = EXCLUDED.last_run_seq,
             updated_at = EXCLUDED.updated_at,
@@ -170,6 +177,7 @@ export class PostgresRunSnapshotStore implements TerminalSnapshotPinStore {
         `,
         [
           record.runId,
+          record.tenantId,
           JSON.stringify(record.snapshot),
           record.lastRunSeq,
           this.now(),
@@ -194,7 +202,9 @@ export class PostgresRunSnapshotStore implements TerminalSnapshotPinStore {
         `
           SELECT s.last_run_seq
           FROM ${quoteIdentifier(this.schema)}.run_snapshots s
-          INNER JOIN ${quoteIdentifier(this.schema)}.run_metadata m ON m.run_id = s.run_id
+          INNER JOIN ${quoteIdentifier(this.schema)}.run_metadata m
+            ON m.run_id = s.run_id
+            AND m.tenant_id = s.tenant_id
           WHERE m.tenant_id = $1 AND s.run_id = $2
           LIMIT 1
         `,
@@ -220,8 +230,9 @@ export class PostgresRunSnapshotStore implements TerminalSnapshotPinStore {
     tenantId: string,
     runId: RunId
   ): Promise<ArchivedTerminalSnapshot | null> {
-    const result = await this.withClient((client) =>
-      client.query<PinnedSnapshotRow>(
+    const result = await this.withClient(async (client) => {
+      await PostgresSchemaManager.setTenantContext(client, tenantId);
+      return client.query<PinnedSnapshotRow>(
         `
           SELECT
             s.snapshot,
@@ -230,14 +241,16 @@ export class PostgresRunSnapshotStore implements TerminalSnapshotPinStore {
             s.event_checksum_sha256,
             s.archived_at
           FROM ${quoteIdentifier(this.schema)}.run_snapshots s
-          INNER JOIN ${quoteIdentifier(this.schema)}.run_metadata m ON m.run_id = s.run_id
+          INNER JOIN ${quoteIdentifier(this.schema)}.run_metadata m
+            ON m.run_id = s.run_id
+            AND m.tenant_id = s.tenant_id
           WHERE m.tenant_id = $1
             AND s.run_id = $2
             AND s.archive_unit_key IS NOT NULL
         `,
         [tenantId, runId]
-      )
-    );
+      );
+    });
 
     const row = result.rows[0];
     if (
@@ -274,6 +287,7 @@ export class PostgresRunSnapshotStore implements TerminalSnapshotPinStore {
    */
   async rebuildSnapshot(tenantId: string, runId: RunId): Promise<WorkflowSnapshot> {
     return this.withTransaction(async (client) => {
+      await PostgresSchemaManager.setTenantContext(client, tenantId);
       // ADR-0031: verify tenant ownership before any read or write.
       const metaResult = await client.query<{ run_id: string }>(
         `
@@ -295,9 +309,10 @@ export class PostgresRunSnapshotStore implements TerminalSnapshotPinStore {
         `
           SELECT COALESCE(MAX(run_seq), 0) AS max_seq
           FROM ${quoteIdentifier(this.schema)}.run_events
-          WHERE run_id = $1
+          WHERE tenant_id = $1
+            AND run_id = $2
         `,
-        [runId]
+        [tenantId, runId]
       );
       const maxRunSeq = parsePersistedRunSequence(maxSeqResult.rows[0]?.max_seq ?? 0, runId);
 
@@ -305,10 +320,11 @@ export class PostgresRunSnapshotStore implements TerminalSnapshotPinStore {
         `
           SELECT snapshot, last_run_seq
           FROM ${quoteIdentifier(this.schema)}.run_snapshots
-          WHERE run_id = $1
+          WHERE tenant_id = $1
+            AND run_id = $2
           LIMIT 1
         `,
-        [runId]
+        [tenantId, runId]
       );
       const persisted = checkpoint.rows[0];
       const canUseIncrementalCheckpoint =
@@ -330,11 +346,12 @@ export class PostgresRunSnapshotStore implements TerminalSnapshotPinStore {
         `
           SELECT payload
           FROM ${quoteIdentifier(this.schema)}.run_events
-          WHERE run_id = $1
-            AND run_seq > $2
+          WHERE tenant_id = $1
+            AND run_id = $2
+            AND run_seq > $3
           ORDER BY run_seq ASC
         `,
-        [runId, replayFromRunSeq]
+        [tenantId, runId, replayFromRunSeq]
       );
       for (const row of eventsResult.rows) {
         applyRunEvent(snapshot, row.payload);
@@ -344,7 +361,7 @@ export class PostgresRunSnapshotStore implements TerminalSnapshotPinStore {
 
       // Pass lastSeq directly; 0 is valid when the run has no events (degenerate case).
       // persistWithClient only rejects null, not 0.
-      await this.persistWithClient(client, runId, snapshot, lastSeq);
+      await this.persistWithClient(client, tenantId, runId, snapshot, lastSeq);
       return snapshot;
     });
   }
@@ -360,11 +377,12 @@ export class PostgresRunSnapshotStore implements TerminalSnapshotPinStore {
       return;
     }
 
-    const snap = await this.getOrCreateSnapshotWithClient(client, runId, baseRunSeq);
+    const tenantId = deriveTenantIdFromAppendedEvents(appended);
+    const snap = await this.getOrCreateSnapshotWithClient(client, tenantId, runId, baseRunSeq);
     for (const e of appended) {
       applyRunEvent(snap, e);
     }
-    await this.persistWithClient(client, runId, snap, lastAppendedRunSeq);
+    await this.persistWithClient(client, tenantId, runId, snap, lastAppendedRunSeq);
   }
 
   /**
@@ -397,6 +415,7 @@ export class PostgresRunSnapshotStore implements TerminalSnapshotPinStore {
 
   async persistWithClient(
     client: PoolClient,
+    tenantId: string,
     runId: RunId,
     snap: WorkflowSnapshot,
     lastSeq: number | null
@@ -408,18 +427,20 @@ export class PostgresRunSnapshotStore implements TerminalSnapshotPinStore {
       `
         INSERT INTO ${quoteIdentifier(this.schema)}.run_snapshots AS run_snapshots (
           run_id,
+          tenant_id,
           snapshot,
           last_run_seq,
           updated_at
         )
-        VALUES ($1, $2::jsonb, $3, $4::timestamptz)
+        VALUES ($1, $2, $3::jsonb, $4, $5::timestamptz)
         ON CONFLICT (run_id) DO UPDATE SET
+          tenant_id = EXCLUDED.tenant_id,
           snapshot = EXCLUDED.snapshot,
           last_run_seq = EXCLUDED.last_run_seq,
           updated_at = EXCLUDED.updated_at
         WHERE run_snapshots.last_run_seq <= EXCLUDED.last_run_seq
       `,
-      [runId, JSON.stringify(snap), lastSeq, this.now()]
+      [runId, tenantId, JSON.stringify(snap), lastSeq, this.now()]
     );
   }
 
@@ -438,13 +459,18 @@ export class PostgresRunSnapshotStore implements TerminalSnapshotPinStore {
 
   private async getOrCreateSnapshotWithClient(
     client: PoolClient,
+    tenantId: string,
     runId: RunId,
     baseRunSeq: number
   ): Promise<WorkflowSnapshot> {
     if (baseRunSeq > 0) {
       const currentSnap = await client.query<SnapshotRow>(
-        `SELECT snapshot FROM ${quoteIdentifier(this.schema)}.run_snapshots WHERE run_id = $1`,
-        [runId]
+        `
+          SELECT snapshot
+          FROM ${quoteIdentifier(this.schema)}.run_snapshots
+          WHERE tenant_id = $1 AND run_id = $2
+        `,
+        [tenantId, runId]
       );
       if (currentSnap.rows[0]?.snapshot) {
         return currentSnap.rows[0].snapshot;
@@ -472,10 +498,11 @@ export class PostgresRunSnapshotStore implements TerminalSnapshotPinStore {
       `
         SELECT snapshot, last_run_seq
         FROM ${quoteIdentifier(this.schema)}.run_snapshots
-        WHERE run_id = $1
+        WHERE tenant_id = $1
+          AND run_id = $2
         LIMIT 1
       `,
-      [runId]
+      [tenantId, runId]
     );
 
     const persisted = snapshotRow.rows[0];
@@ -580,6 +607,17 @@ export class PostgresRunSnapshotStore implements TerminalSnapshotPinStore {
 
 function isTerminalRunStatus(status: string): status is TerminalRunStatus {
   return status === 'COMPLETED' || status === 'FAILED' || status === 'CANCELLED';
+}
+
+function deriveTenantIdFromAppendedEvents(appended: readonly EventEnvelope[]): string {
+  const tenantId = appended[0]?.tenantId;
+  if (!tenantId) {
+    throw new Error('SNAPSHOT_EVENT_TENANT_REQUIRED');
+  }
+  if (appended.some((event) => event.tenantId !== tenantId)) {
+    throw new Error('SNAPSHOT_EVENT_TENANT_MISMATCH');
+  }
+  return tenantId;
 }
 
 function cloneWorkflowSnapshot(snapshot: WorkflowSnapshot): WorkflowSnapshot {

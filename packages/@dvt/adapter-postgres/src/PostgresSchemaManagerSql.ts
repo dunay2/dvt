@@ -7,6 +7,7 @@
  * @date 2026-03-26
  */
 import { quoteIdentifier } from './sqlUtils.js';
+export { setServiceContextSql, setTenantContextSql } from './PostgresTenantIsolationPolicy.js';
 
 const COMPONENT = 'core';
 const ADVISORY_LOCK_KEY_SQL = "(('x' || left(md5($1), 16))::bit(64)::bigint)";
@@ -42,10 +43,6 @@ export function rollbackTransactionSql(): string {
 
 export function setLocalStatementTimeoutSql(): string {
   return 'SET LOCAL statement_timeout = $1';
-}
-
-export function setTenantContextSql(): string {
-  return `SELECT set_config('dvt.tenant_id', $1, true)`;
 }
 
 export function createSchemaSql(schema: string): string {

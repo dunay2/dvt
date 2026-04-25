@@ -1,6 +1,6 @@
 ---
 title: Production Tenant Isolation Baseline
-status: Draft
+status: Accepted
 date: 2026-04-25
 owners:
   - api
@@ -184,6 +184,22 @@ stateDiagram-v2
 - Archive and restore workflows still need their own production drill with
   explicit service-role validation.
 - Timing-oracle tests remain outside this implementation slice.
+
+## Implementation Outcome
+
+- Added `PostgresTenantIsolationPolicy` as the single owned concern for the RLS
+  table catalog, tenant context SQL, service context SQL, and policy generation.
+- Added `core_017_tenant_rls_baseline` to enable RLS on tenant-owned online
+  state tables and to add top-level `tenant_id` to `run_snapshots`, `outbox`,
+  and `outbox_dead_letter`.
+- Changed `withClient` to run inside an explicit transaction so
+  transaction-local tenant context remains valid for pooled reads.
+- Updated run-state, outbox, lineage, snapshot, archive, purge, and staleness
+  paths to use explicit tenant or service context before touching
+  RLS-protected tables.
+- Added ARC evidence and risk register entries:
+  `docs/evidence/ed-20260425-production-tenant-isolation-baseline.md` and
+  `docs/risk-register/quality/R-20260425-PRODUCTION-TENANT-ISOLATION-BASELINE.yaml`.
 
 ## Validation Plan
 

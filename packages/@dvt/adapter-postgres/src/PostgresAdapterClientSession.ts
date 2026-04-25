@@ -81,7 +81,21 @@ export class PostgresAdapterClientSession {
   async withClient<T>(fn: (client: PoolClient) => Promise<T>): Promise<T> {
     const client = await this.connect();
     try {
-      return await fn(client);
+      await client.query(beginTransactionSql());
+      if (this.statementTimeoutMs > C.statementTimeoutDisabledMs) {
+        await client.query(setLocalStatementTimeoutSql(), [this.statementTimeoutMs]);
+      }
+      const result = await fn(client);
+      await client.query(commitTransactionSql());
+      return result;
+    } catch (error: unknown) {
+      const operationError = asError(error);
+      try {
+        await client.query(rollbackTransactionSql());
+      } catch (rollbackError: unknown) {
+        throw createTransactionRollbackError(operationError, rollbackError);
+      }
+      throw operationError;
     } finally {
       this.releaseClient(client);
     }
