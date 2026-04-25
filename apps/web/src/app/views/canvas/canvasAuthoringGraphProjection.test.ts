@@ -20,7 +20,7 @@ function buildCanonicalNode(
 }
 
 describe('buildCanvasAuthoringGraphProjection', () => {
-  it('prefers protected draft semantics over route-local semantic candidates when both are present', () => {
+  it('overlays route-local node overrides onto protected draft semantics when node ids match', () => {
     const protectedSemanticGraph = {
       canonicalNodes: [
         buildCanonicalNode('source-node', 'dvt:source', 'input'),
@@ -54,7 +54,8 @@ describe('buildCanvasAuthoringGraphProjection', () => {
         {
           ...buildCanonicalNode('sink-node', 'dbt:model', 'transform'),
           pluginId: 'dbt',
-          name: 'legacy-fallback',
+          name: 'edited-sink',
+          description: 'edited description',
         },
       ],
     });
@@ -71,8 +72,10 @@ describe('buildCanvasAuthoringGraphProjection', () => {
     expect(projection.canonicalNodesById.get('sink-node')).toEqual(
       expect.objectContaining({
         id: 'sink-node',
-        pluginId: 'dvt',
-        kind: 'dvt:sink',
+        pluginId: 'dbt',
+        kind: 'dbt:model',
+        name: 'edited-sink',
+        description: 'edited description',
       })
     );
     expect(projection.canonicalEdgeIdBySignature.get('transform-node::sink-node')).toBe(

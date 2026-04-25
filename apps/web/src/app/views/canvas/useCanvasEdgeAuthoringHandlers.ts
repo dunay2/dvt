@@ -13,7 +13,7 @@ import {
 import { toast } from 'sonner';
 
 import { getPluginPortMap } from '../../plugins/registry';
-import { confirmConnection, proposeConnection } from './canvasConnectionAggregate';
+import { confirmConnection, confirmReconnect, proposeConnection } from './canvasConnectionAggregate';
 import { canvasGraphLifecycle } from './canvasGraphLifecycle';
 import type {
   CanvasEdgeAuthoringContracts,
@@ -29,6 +29,7 @@ type UseCanvasEdgeAuthoringHandlersResult = {
   confirmEdgeModal: ConfirmEdgeModalState;
   setConfirmEdgeModal: Dispatch<SetStateAction<ConfirmEdgeModalState>>;
   onConnect: NonNullable<ReactFlowProps<Node, Edge>['onConnect']>;
+  onReconnect: NonNullable<ReactFlowProps<Node, Edge>['onReconnect']>;
   confirmEdgeCreation: () => void;
 };
 
@@ -183,6 +184,49 @@ function useCanvasConnectionConfirmationHandler({
   ]);
 }
 
+function useCanvasEdgeReconnectHandler({
+  state,
+  effects,
+  policy,
+  pluginPortMap,
+}: CanvasEdgeAuthoringContracts & {
+  pluginPortMap: ReturnType<typeof getPluginPortMap>;
+}) {
+  const { canonicalNodesById } = state;
+  const { setDraftSession, setEdges } = effects;
+  const { canEditEdges } = policy;
+
+  return useCallback<NonNullable<ReactFlowProps<Node, Edge>['onReconnect']>>(
+    (edge, connection) => {
+      if (!canEditEdges) {
+        toast.error(canvasViewCopy.mutationUnavailableMessage);
+        return;
+      }
+
+      setEdges((existingEdges) => {
+        const reconnectResult = confirmReconnect({
+          edge,
+          connection,
+          canonicalNodesById,
+          edges: existingEdges,
+          pluginPortMap,
+        });
+        if (reconnectResult.outcome === 'rejected') {
+          notifyRejectedConnection(reconnectResult.rejection);
+          return existingEdges;
+        }
+
+        setDraftSession((currentSession) =>
+          canvasGraphLifecycle.edge.replaceVisible(currentSession, reconnectResult.nextEdges)
+        );
+
+        return reconnectResult.nextEdges;
+      });
+    },
+    [canEditEdges, canonicalNodesById, pluginPortMap, setDraftSession, setEdges]
+  );
+}
+
 export function useCanvasEdgeAuthoringHandlers({
   state,
   effects,
@@ -211,11 +255,18 @@ export function useCanvasEdgeAuthoringHandlers({
     pendingConnectionRef,
     setConfirmEdgeModal,
   });
+  const onReconnect = useCanvasEdgeReconnectHandler({
+    state,
+    effects,
+    policy,
+    pluginPortMap,
+  });
 
   return {
     confirmEdgeModal,
     setConfirmEdgeModal,
     onConnect,
+    onReconnect,
     confirmEdgeCreation,
   };
 }

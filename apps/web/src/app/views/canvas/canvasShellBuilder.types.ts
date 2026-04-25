@@ -43,6 +43,8 @@ export type CanvasShellPanelsBuilderArgs = Readonly<{
     CanvasRouteController,
     | 'explorerNodes'
     | 'inspectorNode'
+    | 'canEditInspectorNode'
+    | 'applyInspectorNodeDraft'
     | 'activeRunId'
     | 'registeredPlugins'
     | 'importedNodeFocusIds'
@@ -79,6 +81,7 @@ export type CanvasShellGraphCommandsBuilderArgs = Readonly<{
     | 'handleNodeDragStop'
     | 'onEdgesChange'
     | 'onConnect'
+    | 'onReconnect'
     | 'handleNodeClick'
     | 'onSelectionChange'
     | 'handleViewportChange'

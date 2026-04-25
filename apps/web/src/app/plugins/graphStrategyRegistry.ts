@@ -1,8 +1,8 @@
 import {
   dbtCanvasGraphStrategy,
   transformationCanvasGraphStrategy,
-  type CanvasGraphStrategy,
 } from './dbt/dbtNodeAdapter';
+import type { CanvasGraphStrategy } from './graphStrategyContracts';
 
 const DEFAULT_STRATEGY_ID = 'transformation';
 

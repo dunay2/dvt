@@ -1,7 +1,7 @@
 import type { Edge, Node } from '@xyflow/react';
 import type { Dispatch, SetStateAction } from 'react';
 
-import type { CanvasGraphStrategy } from '../../plugins/dbt/dbtNodeAdapter';
+import type { CanvasGraphStrategy } from '../../plugins/graphStrategyContracts';
 import type { NodeKindRegistration } from '../../plugins/nodeTypeContracts';
 import type { CanonicalNode } from '../../types/canonical';
 import type { CanvasDraftSession } from './canvasDraftSession';
@@ -50,6 +50,7 @@ export type ConfirmEdgeModalState = {
 };
 
 export type CanvasNodeAuthoringState = {
+  canonicalNodesById: Map<string, CanonicalNode>;
   draftSession: CanvasDraftSession;
   nodes: Node[];
   edges: Edge[];
@@ -75,6 +76,30 @@ export type CanvasNodeAuthoringContracts = {
   state: CanvasNodeAuthoringState;
   effects: CanvasNodeAuthoringEffects;
   policy: CanvasNodeAuthoringPolicy;
+};
+
+export type CanvasNodeDuplicateState = {
+  canonicalNodesById: Map<string, CanonicalNode>;
+  nodes: Node[];
+};
+
+export type CanvasNodeDuplicateEffects = {
+  setNodes: CanvasNodeSetter;
+  setDraftSession: CanvasDraftSessionSetter;
+  setSelectedNodes: (ids: string[]) => void;
+  setInspectorNode: (nodeId: string | null) => void;
+};
+
+export type CanvasNodeDuplicatePolicy = {
+  graphStrategy: CanvasGraphStrategy;
+  canEditEdges: boolean;
+  columnLevelLineageEnabled: boolean;
+};
+
+export type CanvasNodeDuplicateContracts = {
+  state: CanvasNodeDuplicateState;
+  effects: CanvasNodeDuplicateEffects;
+  policy: CanvasNodeDuplicatePolicy;
 };
 
 export type CanvasNodeDropEffects = {

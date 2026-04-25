@@ -3,7 +3,6 @@
  */
 import { useEffect, useState } from 'react';
 import DbtExplorer from '../../components/DbtExplorer';
-import InspectorPanel from '../../components/InspectorPanel';
 import SourceImportWizard from '../../components/SourceImportWizard';
 import {
   ResizableHandle,
@@ -11,6 +10,7 @@ import {
   ResizablePanelGroup,
 } from '../../components/ui/resizable';
 import { CanvasShellMainPanel } from './CanvasShellMainPanel';
+import { CanvasInspectorPanel } from './CanvasInspectorPanel';
 import type {
   CanvasShellChromeCommands,
   CanvasShellPanels,
@@ -60,6 +60,7 @@ type CanvasShellInspectorRailProps = Readonly<{
   focusMode: boolean;
   inspectorPanelVisible: boolean;
   inspectorNode: CanvasShellPanels['inspectorNode'];
+  inspectorAuthoring: CanvasShellPanels['inspectorAuthoring'];
   activeRunId: CanvasShellPanels['activeRunId'];
   registeredPlugins: CanvasShellPanels['registeredPlugins'];
   onHideInspector: CanvasShellChromeCommands['onHideInspector'];
@@ -69,6 +70,7 @@ function CanvasShellInspectorRail({
   focusMode,
   inspectorPanelVisible,
   inspectorNode,
+  inspectorAuthoring,
   activeRunId,
   registeredPlugins,
   onHideInspector,
@@ -81,11 +83,12 @@ function CanvasShellInspectorRail({
     <>
       <ResizableHandle />
       <ResizablePanel defaultSize={20} minSize={15} maxSize={28}>
-        <InspectorPanel
+        <CanvasInspectorPanel
           node={inspectorNode}
           activeRunId={activeRunId}
           registeredPlugins={registeredPlugins}
           onHide={onHideInspector}
+          authoring={inspectorAuthoring}
         />
       </ResizablePanel>
     </>
@@ -138,6 +141,7 @@ export default function CanvasShell({
         focusMode={layout.focusMode}
         inspectorPanelVisible={layout.inspectorPanelVisible}
         inspectorNode={panels.inspectorNode}
+        inspectorAuthoring={panels.inspectorAuthoring}
         activeRunId={panels.activeRunId}
         registeredPlugins={panels.registeredPlugins}
         onHideInspector={chromeCommands.onHideInspector}

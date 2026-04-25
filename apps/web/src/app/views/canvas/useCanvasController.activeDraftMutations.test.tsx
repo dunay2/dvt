@@ -299,4 +299,54 @@ describe('useCanvasController active draft mutations', () => {
       })
     );
   });
+
+  it('autosaves inspector-authored node details through the authoring draft boundary', async () => {
+    await replaceHarnessWithTransformationDraft(
+      buildRemoteDraftRecord({
+        nodeIds: ['node_1'],
+        nodePositions: {
+          node_1: { x: 0, y: 0 },
+        },
+        edges: [],
+      }),
+      ['node_1']
+    );
+    harness.state.services.workspaceGraphDraftAuthoringPort.saveGraphDraft = vi.fn(async () =>
+      buildDraftSaveSavedResponse(
+        {
+          tenantId: 'tenant-a',
+          projectId: 'project-a',
+          environmentId: 'dev',
+        },
+        { revision: 'rev-inspector' }
+      )
+    );
+
+    await act(async () => {
+      harness.getLatestResult()?.applyInspectorNodeDraft({
+        name: 'orders_source_renamed',
+        description: 'Edited through Inspector',
+      });
+    });
+    await harness.renderProbe();
+    await waitForAutosaveDebounce();
+    await harness.renderProbe();
+
+    expect(
+      harness.state.services.workspaceGraphDraftAuthoringPort.saveGraphDraft
+    ).toHaveBeenCalledWith(
+      expect.objectContaining({
+        expectedRevision: 'rev-1',
+        draft: expect.objectContaining({
+          nodes: expect.arrayContaining([
+            expect.objectContaining({
+              id: 'node_1',
+              name: 'orders_source_renamed',
+              description: 'Edited through Inspector',
+            }),
+          ]),
+        }),
+      })
+    );
+  });
 });

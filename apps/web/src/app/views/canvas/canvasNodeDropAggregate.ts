@@ -1,6 +1,6 @@
 import type { Node } from '@xyflow/react';
 
-import type { CanvasGraphStrategy } from '../../plugins/dbt/dbtNodeAdapter';
+import type { CanvasGraphStrategy } from '../../plugins/graphStrategyContracts';
 import type { CanonicalNode, CoreNodeRole } from '../../types/canonical';
 import { mapDroppedCanonicalNodeToCanvasNode } from './canvasNodeMapper';
 import { canvasViewCopy } from './copy';

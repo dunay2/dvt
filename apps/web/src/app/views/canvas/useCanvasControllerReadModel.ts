@@ -31,7 +31,7 @@ type UseCanvasControllerReadModelArgs = {
   };
   graphHandlers: Pick<
     UseCanvasGraphHandlersResult,
-    'handleInspectNode' | 'handleRemoveNode' | 'handleToggleNodeSelection'
+    'handleInspectNode' | 'handleDuplicateNode' | 'handleRemoveNode' | 'handleToggleNodeSelection'
   >;
   canMutateGraph: boolean;
   columnLevelLineageEnabled: boolean;
@@ -75,6 +75,7 @@ export function useCanvasControllerReadModel({
         columnLevelLineageEnabled,
         handlers: {
           onInspectNode: graphHandlers.handleInspectNode,
+          onDuplicateNode: canMutateGraph ? graphHandlers.handleDuplicateNode : undefined,
           onRemoveNode: canMutateGraph ? graphHandlers.handleRemoveNode : undefined,
           onToggleNodeSelection: graphHandlers.handleToggleNodeSelection,
         },
@@ -91,6 +92,7 @@ export function useCanvasControllerReadModel({
       canMutateGraph,
       columnLevelLineageEnabled,
       graphHandlers.handleInspectNode,
+      graphHandlers.handleDuplicateNode,
       graphHandlers.handleRemoveNode,
       graphHandlers.handleToggleNodeSelection,
       graphModel.edges,

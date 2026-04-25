@@ -2,6 +2,7 @@ import type { Edge, Node } from '@xyflow/react';
 
 type NodeActionHandlers = {
   onInspectNode: (nodeId: string) => void;
+  onDuplicateNode?: (nodeId: string) => void;
   onRemoveNode?: (nodeId: string) => void;
   onToggleNodeSelection: (nodeId: string, shouldSelect: boolean) => void;
 };
@@ -76,6 +77,7 @@ export function buildNodesWithImpact({
         ...node.data,
         showColumns: columnLevelLineageEnabled,
         onInspectNode: handlers.onInspectNode,
+        onDuplicateNode: handlers.onDuplicateNode,
         onRemoveNode: handlers.onRemoveNode,
         onToggleNodeSelection: handlers.onToggleNodeSelection,
       },
@@ -100,6 +102,7 @@ export function buildNodesWithImpact({
           : 'none',
       showColumns: columnLevelLineageEnabled,
       onInspectNode: handlers.onInspectNode,
+      onDuplicateNode: handlers.onDuplicateNode,
       onRemoveNode: handlers.onRemoveNode,
       onToggleNodeSelection: handlers.onToggleNodeSelection,
     },

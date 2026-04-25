@@ -1,6 +1,6 @@
 import styles from './DbtNodeComponent.module.css';
 import { Handle, Node, NodeProps, Position } from '@xyflow/react';
-import { Info, MousePointer, Trash2 } from 'lucide-react';
+import { Copy, Info, MousePointer, Trash2 } from 'lucide-react';
 import { memo, type CSSProperties } from 'react';
 
 import { mapDbtTypeToKind } from '../../plugins/nodeTypeCatalog.dbt';
@@ -52,6 +52,7 @@ export interface DbtNodeData extends Record<string, unknown> {
   activeRunId?: string | null;
   runStatusByNodeId?: ReadonlyMap<string, string>;
   onInspectNode?: (nodeId: string) => void;
+  onDuplicateNode?: (nodeId: string) => void;
   onRemoveNode?: (nodeId: string) => void;
   onToggleNodeSelection?: (nodeId: string, shouldSelect: boolean) => void;
 }
@@ -221,6 +222,10 @@ function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
         <ContextMenuItem onSelect={() => data.onInspectNode?.(id)}>
           <Info className="size-4" />
           Open inspector panel
+        </ContextMenuItem>
+        <ContextMenuItem onSelect={() => data.onDuplicateNode?.(id)} disabled={!data.onDuplicateNode}>
+          <Copy className="size-4" />
+          Duplicate node
         </ContextMenuItem>
         <ContextMenuItem
           onSelect={() => data.onToggleNodeSelection?.(id, !selected)}

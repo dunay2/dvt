@@ -3,11 +3,13 @@
 import type {
   CanvasAuthoringNodeCreationContracts,
   CanvasNodeAuthoringContracts,
+  CanvasNodeDuplicateContracts,
   CanvasNodeDropContracts,
   CanvasNodeRemovalContracts,
   CreateCanvasAuthoringNode,
 } from './canvasGraphHandlerContracts';
 import { useCanvasAuthoringNodeCreationHandlers } from './useCanvasAuthoringNodeCreationHandlers';
+import { useCanvasNodeDuplicateHandlers } from './useCanvasNodeDuplicateHandlers';
 import { useCanvasNodeDropHandlers } from './useCanvasNodeDropHandlers';
 import { useCanvasNodeRemovalHandlers } from './useCanvasNodeRemovalHandlers';
 
@@ -17,6 +19,7 @@ type UseCanvasNodeAuthoringHandlersResult = {
   handleDrop: React.DragEventHandler<HTMLDivElement>;
   handleDragOver: React.DragEventHandler<HTMLDivElement>;
   handleCreateAuthoringNode: CreateCanvasAuthoringNode;
+  handleDuplicateNode: (nodeId: string) => void;
   handleRemoveNode: (nodeId: string) => void;
 };
 
@@ -41,6 +44,20 @@ export function useCanvasNodeAuthoringHandlers({
   };
   const nodeCreationHandlers =
     useCanvasAuthoringNodeCreationHandlers(nodeCreationContracts);
+  const nodeDuplicateContracts: CanvasNodeDuplicateContracts = {
+    state: {
+      canonicalNodesById: state.canonicalNodesById,
+      nodes: state.nodes,
+    },
+    effects: {
+      setNodes: effects.setNodes,
+      setDraftSession: effects.setDraftSession,
+      setSelectedNodes: effects.setSelectedNodes,
+      setInspectorNode: effects.setInspectorNode,
+    },
+    policy,
+  };
+  const nodeDuplicateHandlers = useCanvasNodeDuplicateHandlers(nodeDuplicateContracts);
 
   const nodeRemovalContracts: CanvasNodeRemovalContracts = {
     state,
@@ -54,6 +71,7 @@ export function useCanvasNodeAuthoringHandlers({
   return {
     ...nodeDropHandlers,
     ...nodeCreationHandlers,
+    ...nodeDuplicateHandlers,
     ...nodeRemovalHandlers,
   };
 }

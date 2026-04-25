@@ -7,6 +7,7 @@ import type { useCanvasControllerEnvironment } from './useCanvasControllerEnviro
 import type { useCanvasControllerReadModel } from './useCanvasControllerReadModel';
 import type { useCanvasExecutionActions } from './useCanvasExecutionActions';
 import type { useCanvasGraphHandlers } from './useCanvasGraphHandlers';
+import type { useCanvasInspectorCommands } from './useCanvasInspectorCommands';
 import type { useCanvasLayoutPersistence } from './useCanvasLayoutPersistence';
 import type { useCanvasMutationHandlers } from './useCanvasMutationHandlers';
 import type { useCanvasOverlayModel } from './useCanvasOverlayModel';
@@ -23,6 +24,7 @@ type CanvasGraphHandlers = ReturnType<typeof useCanvasGraphHandlers>;
 type CanvasOverlayModel = ReturnType<typeof useCanvasOverlayModel>;
 type CanvasExecutionActions = ReturnType<typeof useCanvasExecutionActions>;
 type CanvasControllerReadModel = ReturnType<typeof useCanvasControllerReadModel>;
+type CanvasInspectorCommands = ReturnType<typeof useCanvasInspectorCommands>;
 
 type CanvasControllerViewModelArgs = {
   environment: CanvasControllerEnvironment;
@@ -33,6 +35,7 @@ type CanvasControllerViewModelArgs = {
   overlayModel: CanvasOverlayModel;
   executionActions: CanvasExecutionActions;
   readModel: CanvasControllerReadModel;
+  inspectorCommands: CanvasInspectorCommands;
 };
 
 function resolveCanvasGraphErrorMessage(authoringRuntime: CanvasAuthoringRuntime): string | null {
@@ -79,6 +82,8 @@ function buildCanvasShellViewModel(args: CanvasControllerViewModelArgs) {
     gridSize: store.gridSize,
     canvasPalette: store.canvasPalette,
     viewport: store.persistedViewport,
+    canEditInspectorNode: args.authoringRuntime.canMutateGraph,
+    applyInspectorNodeDraft: args.inspectorCommands.applyInspectorNodeDraft,
   };
 }
 
@@ -96,6 +101,7 @@ function buildCanvasInteractionViewModel(args: CanvasControllerViewModelArgs) {
     onNodesChange: mutationHandlers.handleNodesChange,
     onEdgesChange: mutationHandlers.handleEdgesChange,
     onConnect: graphHandlers.onConnect,
+    onReconnect: graphHandlers.onReconnect,
     handleNodeClick: graphHandlers.handleNodeClick,
     onSelectionChange: graphHandlers.onSelectionChange,
     handleViewportChange: persistence.handleViewportChange,

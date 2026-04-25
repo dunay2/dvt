@@ -17,6 +17,7 @@ export type UseCanvasGraphHandlersResult = {
   confirmEdgeModal: ConfirmEdgeModalState;
   setConfirmEdgeModal: Dispatch<SetStateAction<ConfirmEdgeModalState>>;
   onConnect: NonNullable<ReactFlowProps<Node, Edge>['onConnect']>;
+  onReconnect: NonNullable<ReactFlowProps<Node, Edge>['onReconnect']>;
   confirmEdgeCreation: () => void;
   handleInspectNode: (nodeId: string) => void;
   handleNodeClick: NonNullable<ReactFlowProps<Node, Edge>['onNodeClick']>;
@@ -25,6 +26,7 @@ export type UseCanvasGraphHandlersResult = {
   handleDrop: React.DragEventHandler<HTMLDivElement>;
   handleDragOver: React.DragEventHandler<HTMLDivElement>;
   handleCreateAuthoringNode: CreateCanvasAuthoringNode;
+  handleDuplicateNode: (nodeId: string) => void;
   handleToggleNodeSelection: (nodeId: string, shouldSelect: boolean) => void;
   handleRemoveNode: (nodeId: string) => void;
 };

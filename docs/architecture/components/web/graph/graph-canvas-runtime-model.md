@@ -2,7 +2,7 @@
 title: Graph Canvas Runtime Model
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-04-22
+last_reviewed: 2026-04-25
 ---
 
 # Graph Canvas Runtime Model
@@ -81,12 +81,15 @@ classDiagram
 
 - Session/scope/presentation seams are active.
 - hardening for conflict, missing-remote, and projection-gap posture exists.
-- parent TF-E2 still has pending closure for full node/edge/Inspector
-  productization and complete proof matrix.
+- route-owned Inspector authoring now exists for governed node details, backed
+  by local node overrides in the same draft aggregate used by preview and run.
+- duplicate-node and reconnect-edge now route through adjacent command seams
+  that preserve the draft aggregate as semantic truth instead of pushing policy
+  down into passive React Flow adapters.
+- parent TF-E2 still remains open only for the residual operability and
+  long-horizon compatibility proof around governed persisted draft versions.
 
 ## Future Evolution
 
-- close Inspector property lifecycle under the same aggregate transitions.
-- finish command model closure for edge reconnect and mutation guards.
 - complete end-to-end deterministic reload coverage across supported draft
   versions.

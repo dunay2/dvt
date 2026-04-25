@@ -1,4 +1,6 @@
+/** Owned concern: render the passive Inspector shell over core node details and plugin-owned read-only panels. */
 import { useState } from 'react';
+import type { ReactNode } from 'react';
 import { PanelRightClose } from 'lucide-react';
 
 import type { CanonicalNode } from '../types/canonical';
@@ -20,6 +22,7 @@ interface InspectorPanelProps {
   activeRunId: string | null;
   registeredPlugins?: ReadonlySet<string>;
   onHide: () => void;
+  beforePanels?: ReactNode;
 }
 
 const STATUS_DOT: Record<string, string> = {
@@ -35,6 +38,7 @@ export default function InspectorPanel({
   activeRunId,
   registeredPlugins = new Set(),
   onHide,
+  beforePanels,
 }: Readonly<InspectorPanelProps>) {
   const [activeTab, setActiveTab] = useState<string | undefined>(undefined);
 
@@ -61,6 +65,7 @@ export default function InspectorPanel({
       <ScrollArea className="flex-1">
         <div className="space-y-4 p-4">
           <CoreNodeDetails node={node} />
+          {beforePanels}
 
           {panels.length === 0 ? (
             <Card className="border-slate-700 bg-slate-950 p-3 text-sm text-slate-400">

@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import type { PluginPortMap } from '../../plugins/contracts/ConnectionRules';
 import type { PluginConnectionRule } from '../../plugins/contracts/PluginManifest';
 import type { CanonicalNode } from '../../types/canonical';
-import { confirmConnection, proposeConnection } from './canvasConnectionAggregate';
+import { confirmConnection, confirmReconnect, proposeConnection } from './canvasConnectionAggregate';
 
 function buildCanonicalNode(id: string, role: CanonicalNode['role']): CanonicalNode {
   return {
@@ -112,6 +112,75 @@ describe('canvasConnectionAggregate', () => {
     expect(result).toEqual({
       outcome: 'rejected',
       rejection: { code: 'self_connection' },
+    });
+  });
+
+  it('reconnects an edge without replacing its identity and excludes the edited edge from duplicate checks', () => {
+    const sourceNode = buildCanonicalNode('source-node', 'input');
+    const transformNode = buildCanonicalNode('transform-node', 'transform');
+    const targetNode = buildCanonicalNode('sink-node', 'output');
+    const canonicalNodesById = new Map([
+      [sourceNode.id, sourceNode],
+      [transformNode.id, transformNode],
+      [targetNode.id, targetNode],
+    ]);
+
+    const result = confirmReconnect({
+      edge: { id: 'edge-1', source: sourceNode.id, target: targetNode.id },
+      connection: {
+        source: sourceNode.id,
+        sourceHandle: null,
+        target: transformNode.id,
+        targetHandle: null,
+      },
+      canonicalNodesById,
+      edges: [{ id: 'edge-1', source: sourceNode.id, target: targetNode.id }],
+      pluginPortMap: new Map(),
+    });
+
+    expect(result).toEqual({
+      outcome: 'reconnected',
+      nextEdges: [
+        {
+          id: 'edge-1',
+          source: sourceNode.id,
+          sourceHandle: null,
+          target: transformNode.id,
+          targetHandle: null,
+        },
+      ],
+    });
+  });
+
+  it('rejects reconnect when another visible edge already uses the candidate connection', () => {
+    const sourceNode = buildCanonicalNode('source-node', 'input');
+    const transformNode = buildCanonicalNode('transform-node', 'transform');
+    const targetNode = buildCanonicalNode('sink-node', 'output');
+    const canonicalNodesById = new Map([
+      [sourceNode.id, sourceNode],
+      [transformNode.id, transformNode],
+      [targetNode.id, targetNode],
+    ]);
+
+    const result = confirmReconnect({
+      edge: { id: 'edge-1', source: sourceNode.id, target: targetNode.id },
+      connection: {
+        source: sourceNode.id,
+        sourceHandle: null,
+        target: transformNode.id,
+        targetHandle: null,
+      },
+      canonicalNodesById,
+      edges: [
+        { id: 'edge-1', source: sourceNode.id, target: targetNode.id },
+        { id: 'edge-2', source: sourceNode.id, target: transformNode.id },
+      ],
+      pluginPortMap: new Map(),
+    });
+
+    expect(result).toEqual({
+      outcome: 'rejected',
+      rejection: { code: 'transformation_duplicate_edge' },
     });
   });
 
