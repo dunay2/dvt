@@ -5,6 +5,7 @@ import type {
   PluginNodeKind,
 } from '../../types/canonical';
 import type { DbtEdge, DbtNode, DbtNodeType } from '../../types/dbt';
+import type { CanvasGraphStrategy } from '../graphStrategyContracts';
 
 const DBT_PLUGIN_ID = 'dbt';
 export const DBT_DRAG_MIME_TYPE = 'application/dbt-node';
@@ -73,13 +74,6 @@ export function mapDbtEdgeToCanonical(edge: DbtEdge): CanonicalEdge {
     targetId: edge.target,
     relation: EDGE_RELATION_BY_TYPE[edge.type],
   };
-}
-
-export interface CanvasGraphStrategy {
-  id: string;
-  mapNodeToCanonical: (node: unknown) => CanonicalNode | null;
-  mapEdgeToCanonical: (edge: unknown) => CanonicalEdge | null;
-  parseDropPayload: (dataTransfer: DataTransfer) => CanonicalNode | null;
 }
 
 function isDbtNode(value: unknown): value is DbtNode {

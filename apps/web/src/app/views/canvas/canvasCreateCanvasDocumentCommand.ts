@@ -1,5 +1,6 @@
 /** Owned concern: persist the first typed canvas document through authoritative draft save and fail-closed conflict/no-op handling. */
 import { canvasDraftSession } from './canvasDraftSession';
+import { serializeCanvasDraftAuthoringSignature } from './canvasDraftAuthoring';
 import { createCanvasDraftIdempotencyKey } from './canvasDraftIdempotencyKey';
 import type { CanvasCreateCanvasDocumentCommandDto } from './canvasDraftLifecycle.types';
 
@@ -47,7 +48,11 @@ export async function executeCreateCanvasDocumentCommand({
     });
 
     if (result.outcome === 'saved') {
-      lastSavedSignatureRef.current = canvasDraftSession.baseline.serialize(result.record.draft);
+      lastSavedSignatureRef.current = serializeCanvasDraftAuthoringSignature({
+        projectedDraft: result.record.draft,
+        canonicalNodes: [],
+        canonicalEdges: [],
+      });
       draftQueryCache.replaceRemoteDraftState(result.remoteDraftState);
       setDraftSession((currentSession) =>
         canvasDraftSession.machine.applySaveSuccess(currentSession, result.record)

@@ -1,7 +1,7 @@
 import type { Node } from '@xyflow/react';
 import { describe, expect, it } from 'vitest';
 
-import type { CanvasGraphStrategy } from '../../plugins/dbt/dbtNodeAdapter';
+import type { CanvasGraphStrategy } from '../../plugins/graphStrategyContracts';
 import type { CanonicalNode } from '../../types/canonical';
 import { canvasViewCopy } from './copy';
 import { dropCanonicalNode } from './canvasNodeDropAggregate';

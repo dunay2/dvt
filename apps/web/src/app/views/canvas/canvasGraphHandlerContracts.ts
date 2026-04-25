@@ -1,7 +1,7 @@
 import type { Edge, Node } from '@xyflow/react';
 import type { Dispatch, SetStateAction } from 'react';
 
-import type { CanvasGraphStrategy } from '../../plugins/dbt/dbtNodeAdapter';
+import type { CanvasGraphStrategy } from '../../plugins/graphStrategyContracts';
 import type { NodeKindRegistration } from '../../plugins/nodeTypeContracts';
 import type { CanonicalNode } from '../../types/canonical';
 import type { CanvasDraftSession } from './canvasDraftSession';

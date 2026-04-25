@@ -42,10 +42,10 @@ export function CanvasInspectorAuthoringSection({
       <div className="space-y-3">
         <div>
           <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-300">
-            Governed details
+            Node details
           </h3>
           <p className="mt-1 text-xs text-slate-400">
-            Route-owned node details that feed the canonical authoring draft.
+            Name and description saved with this canvas.
           </p>
         </div>
 
@@ -87,7 +87,7 @@ export function CanvasInspectorAuthoringSection({
 
         {!authoring.canEditNode ? (
           <p className="text-xs text-slate-400">
-            Node details are read-only in the current route posture.
+            Node details are read-only for this workspace state.
           </p>
         ) : null}
 

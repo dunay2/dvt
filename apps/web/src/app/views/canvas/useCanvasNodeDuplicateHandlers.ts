@@ -1,12 +1,11 @@
 /** Owned concern: duplicate visible nodes through a semantic command and the draft graph lifecycle. */
 
-import { useCallback } from 'react';
+import { useCallback, useRef } from 'react';
 import { toast } from 'sonner';
 
 import { canvasGraphLifecycle } from './canvasGraphLifecycle';
 import type { CanvasNodeDuplicateContracts } from './canvasGraphHandlerContracts';
-import { dropCanonicalNode } from './canvasNodeDropAggregate';
-import { buildDuplicateNodeCommand } from './canvasDuplicateNodeCommand';
+import { resolveCanvasNodeDuplicateTransaction } from './canvasDuplicateNodeCommand';
 import { canvasViewCopy, formatCanvasNodeAddedMessage } from './copy';
 
 type UseCanvasNodeDuplicateHandlersArgs = CanvasNodeDuplicateContracts;
@@ -23,6 +22,8 @@ export function useCanvasNodeDuplicateHandlers({
   const { canonicalNodesById, nodes } = state;
   const { setDraftSession, setInspectorNode, setNodes, setSelectedNodes } = effects;
   const { canEditEdges, columnLevelLineageEnabled, graphStrategy } = policy;
+  const latestNodesRef = useRef(nodes);
+  latestNodesRef.current = nodes;
 
   const handleDuplicateNode = useCallback(
     (nodeId: string) => {
@@ -31,52 +32,40 @@ export function useCanvasNodeDuplicateHandlers({
         return;
       }
 
-      const sourceCanonicalNode = canonicalNodesById.get(nodeId);
-      const sourceNode = nodes.find((candidate) => candidate.id === nodeId);
-      if (sourceCanonicalNode == null || sourceNode == null) {
-        toast.error(canvasViewCopy.nodeNotFoundInGraphMessage);
-        return;
-      }
-
-      setNodes((existingNodes) => {
-        const { canonicalNode, position } = buildDuplicateNodeCommand({
-          sourceNode,
-          sourceCanonicalNode,
-          existingNodes,
-        });
-        const dropResult = dropCanonicalNode({
-          canonicalNode,
-          position,
-          nodes: existingNodes,
-          graphStrategy,
-          columnLevelLineageEnabled,
-        });
-
-        if (dropResult.outcome === 'rejected') {
-          toast.error(dropResult.reason);
-          return existingNodes;
-        }
-
-        if (dropResult.outcome === 'noop') {
-          toast.info(dropResult.reason);
-          return existingNodes;
-        }
-
-        setDraftSession((currentSession) =>
-          canvasGraphLifecycle.node.admitExplicit(currentSession, canonicalNode)
-        );
-        setSelectedNodes([canonicalNode.id]);
-        setInspectorNode(canonicalNode.id);
-        toast.success(formatCanvasNodeAddedMessage(canonicalNode.name));
-        return dropResult.nextNodes;
+      const transaction = resolveCanvasNodeDuplicateTransaction({
+        nodeId,
+        sourceCanonicalNode: canonicalNodesById.get(nodeId) ?? null,
+        existingNodes: latestNodesRef.current,
+        graphStrategy,
+        columnLevelLineageEnabled,
       });
+
+      switch (transaction.outcome) {
+        case 'missing_source_node':
+          toast.error(canvasViewCopy.nodeNotFoundInGraphMessage);
+          return;
+        case 'rejected':
+          toast.error(transaction.reason);
+          return;
+        case 'noop':
+          toast.info(transaction.reason);
+          return;
+        case 'added':
+          latestNodesRef.current = transaction.nextNodes;
+          setNodes(transaction.nextNodes);
+          setDraftSession((currentSession) =>
+            canvasGraphLifecycle.node.admitExplicit(currentSession, transaction.canonicalNode)
+          );
+          setSelectedNodes([transaction.canonicalNode.id]);
+          setInspectorNode(transaction.canonicalNode.id);
+          toast.success(formatCanvasNodeAddedMessage(transaction.canonicalNode.name));
+      }
     },
     [
       canEditEdges,
       canonicalNodesById,
       columnLevelLineageEnabled,
       graphStrategy,
-      nodes,
       setDraftSession,
       setInspectorNode,
       setNodes,

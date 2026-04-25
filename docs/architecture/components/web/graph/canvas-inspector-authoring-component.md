@@ -47,16 +47,20 @@ write surface lives one level up in the route-owned wrapper.
 
 ## Public API
 
-| API                                      | Responsibility                                                        |
-| ---------------------------------------- | --------------------------------------------------------------------- |
-| `CanvasInspectorNodeDraft`               | semantic editing DTO for governed node details                        |
-| `CanvasInspectorAuthoringContract`       | route-owned contract: can edit and apply                              |
-| `createCanvasInspectorNodeDraft`         | project a selected canonical node into the Inspector draft            |
-| `validateCanvasInspectorNodeDraft`       | validate the current Inspector draft                                  |
-| `applyCanvasInspectorNodeDraft`          | normalize and project the edited fields back into a canonical node    |
-| `applyCanvasInspectorNodeDraftToSession` | write the edited node back into `CanvasDraftSession` via `upsertNode` |
-| `useCanvasInspectorCommands`             | route-safe callback bridge from UI to aggregate                       |
-| `CanvasInspectorPanel`                   | route-owned composition of passive Inspector plus authoring section   |
+| API                                              | Responsibility                                                         |
+| ------------------------------------------------ | ---------------------------------------------------------------------- |
+| `CanvasInspectorNodeDraft`                       | semantic editing DTO for governed node details                         |
+| `CanvasInspectorAuthoringContract`               | route-owned contract: can edit and apply                               |
+| `createCanvasInspectorNodeDraft`                 | project a selected canonical node into the Inspector draft             |
+| `validateCanvasInspectorNodeDraft`               | validate the current Inspector draft                                   |
+| `applyCanvasInspectorNodeDraft`                  | normalize and project the edited fields back into a canonical node     |
+| `applyCanvasInspectorNodeDraftToSession`         | write the edited node back into `CanvasDraftSession` via `upsertNode`  |
+| `useCanvasInspectorCommands`                     | route-safe callback bridge from UI to aggregate                        |
+| `CanvasInspectorPanel`                           | route-owned composition of passive Inspector plus authoring section    |
+| `serializeCanvasDraftAuthoringSignature`         | semantic dirty-check signature for persisted authoring payloads        |
+| `serializeCanvasDraftAuthoringBaselineSignature` | remote-draft baseline signature policy used by bootstrap and reload    |
+| `toCanvasAuthoringMetadata`                      | JSON-compatible metadata DTO boundary for signatures and persistence   |
+| `CanvasGraphStrategy`                            | plugin-neutral graph strategy contract used by Canvas application code |
 
 ## Invariants
 
@@ -66,6 +70,19 @@ write surface lives one level up in the route-owned wrapper.
   `CanvasDraftSession`.
 - Applying Inspector edits must mutate the same aggregate consumed by preview
   and run.
+- Applying Inspector edits must change the semantic authoring signature used by
+  autosave; structural signatures that ignore node details are not sufficient.
+- Bootstrap and reload must use the same baseline signature policy as autosave,
+  otherwise the route can oscillate between saved and dirty for the same
+  semantic draft.
+- Signature calculation must ignore layout-only node positions and canonicalize
+  unordered edge semantics before comparing drafts.
+- Plugin metadata that crosses authoring, duplicate, or signature boundaries
+  must be projected through the same JSON-compatible metadata DTO. JSON-like
+  values are preserved; circular references and non-serializable values are
+  omitted before render-time signatures or persistence.
+- Canvas application code must depend on the plugin-neutral
+  `CanvasGraphStrategy` contract, not on a DBT adapter module.
 - Cancel resets local form state only.
 - Reload or aggregate refresh resets the form to authoritative route truth.
 - Persisted-node overrides must work even when the node already exists in the
@@ -83,6 +100,12 @@ write surface lives one level up in the route-owned wrapper.
 | `CanvasInspectorAuthoringSection.tsx` | route-owned edit UI                                                 | plugin panels or transport ownership   |
 | `CanvasInspectorPanel.tsx`            | route-owned composition wrapper                                     | validation rules or aggregate policy   |
 | `components/InspectorPanel.tsx`       | passive details and plugin read-only panels                         | route mutation semantics               |
+| `canvasDraftAuthoring.ts`             | authoring payload projection and semantic signature policy          | aggregate state machine ownership      |
+| `canvasAuthoringMetadata.ts`          | deterministic JSON-compatible metadata DTO projection               | plugin-specific metadata semantics     |
+| `canvasDraftStructuralSignature.ts`   | fallback structural signature for draft baselines                   | semantic node or edge detail policy    |
+| `useCanvasDraftInitialBootstrap.ts`   | initial saved-signature assignment from shared baseline policy      | hook-local signature rules             |
+| `useCanvasDraftReloadHydration.ts`    | reload saved-signature assignment from shared baseline policy       | hook-local signature rules             |
+| `plugins/graphStrategyContracts.ts`   | plugin-neutral graph strategy contract                              | DBT mapping implementation             |
 
 ## Topology
 
@@ -93,7 +116,16 @@ flowchart LR
   Command --> Session["CanvasDraftSession"]
   Session --> Projection["canvasAuthoringGraphProjection.ts"]
   Projection --> Payload["useCanvasCurrentDraftPayload.ts"]
+  Payload --> Signature["serializeCanvasDraftAuthoringSignature"]
+  Projection --> Metadata["toCanvasAuthoringMetadata"]
+  Metadata --> Signature
+  Metadata --> Persist["Workspace draft persistence"]
+  Bootstrap["bootstrap / reload"] --> Baseline["serializeCanvasDraftAuthoringBaselineSignature"]
+  Baseline --> Autosave
+  Signature --> Autosave["draft autosave scheduling"]
   Projection --> Viewport["useCanvasViewportGraphModel.ts"]
+  StrategyContract["CanvasGraphStrategy contract"] --> Drop["drop / duplicate commands"]
+  DbtAdapter["dbtNodeAdapter.ts"] --> StrategyContract
 
   Panel["CanvasInspectorPanel.tsx"] --> Section["CanvasInspectorAuthoringSection.tsx"]
   Panel --> Passive["InspectorPanel.tsx"]
@@ -127,6 +159,8 @@ sequenceDiagram
   participant Command as Inspector command
   participant Session as CanvasDraftSession
   participant Projection as Semantic authoring projection
+  participant Payload as Current draft payload
+  participant Autosave as Draft autosave
 
   User->>Section: edit node details
   Section->>Model: update draft and validate
@@ -136,6 +170,9 @@ sequenceDiagram
   Hook->>Command: apply draft to selected node
   Command->>Session: upsert local node override
   Session->>Projection: updated canonical node
+  Projection->>Payload: authoring payload includes edited node
+  Projection->>Payload: metadata projected to JSON-compatible DTO
+  Payload->>Autosave: semantic signature changed
   Projection-->>Section: authoritative node refresh
 ```
 
@@ -152,10 +189,20 @@ sequenceDiagram
 - [canvasInspectorAuthoringComponent.architecture.test.ts](../../../../../apps/web/src/app/views/canvas/canvasInspectorAuthoringComponent.architecture.test.ts)
 - [CanvasInspectorPanel.test.tsx](../../../../../apps/web/src/app/views/canvas/CanvasInspectorPanel.test.tsx)
 - [canvasInspectorAuthoringModel.test.ts](../../../../../apps/web/src/app/views/canvas/canvasInspectorAuthoringModel.test.ts)
+- [canvasDraftAuthoring.test.ts](../../../../../apps/web/src/app/views/canvas/canvasDraftAuthoring.test.ts)
+- [useCanvasController.activeDraftMutations.test.tsx](../../../../../apps/web/src/app/views/canvas/useCanvasController.activeDraftMutations.test.tsx)
+- [canvasDuplicateNodeCommand.test.ts](../../../../../apps/web/src/app/views/canvas/canvasDuplicateNodeCommand.test.ts)
 
 ## Drift To Watch
 
 - pushing write semantics down into `InspectorPanel.tsx`
 - letting plugin panels mutate core route-owned node fields
 - using the Inspector form as a second persistence model
+- using a structural-only dirty signature that cannot see node name,
+  description, metadata, or edge semantics
+- duplicating bootstrap and reload baseline-signature policy across hooks
+- letting edge array transport order create semantic dirty churn
 - dropping local persisted-node overrides during semantic projection or reload
+- reintroducing plugin metadata sanitization in ad hoc shallow clones
+- importing `CanvasGraphStrategy` from a concrete plugin adapter instead of the
+  neutral plugin contract

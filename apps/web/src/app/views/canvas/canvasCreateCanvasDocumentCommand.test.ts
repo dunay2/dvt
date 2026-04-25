@@ -2,6 +2,7 @@ import type { SetStateAction } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { WorkspaceGraphDraft } from '../../ports/workspace';
+import { serializeCanvasDraftAuthoringSignature } from './canvasDraftAuthoring';
 import { canvasDraftSession } from './canvasDraftSession';
 import {
   createUnknownCanvasDraftReadModel,
@@ -175,7 +176,11 @@ describe('canvasCreateCanvasDocumentCommand', () => {
     expect(nextSession.syncState).toBe('editing');
     expect(nextSession.draftRevision).toBe('rev-saved');
     expect(args.lastSavedSignatureRef.current).toBe(
-      canvasDraftSession.baseline.serialize(buildEmptyDraft())
+      serializeCanvasDraftAuthoringSignature({
+        projectedDraft: buildEmptyDraft(),
+        canonicalNodes: [],
+        canonicalEdges: [],
+      })
     );
   });
 

@@ -44,6 +44,12 @@ payload generation, preview, and run handoff.
   - [canvasAuthoringGraphProjection.ts](../../../apps/web/src/app/views/canvas/canvasAuthoringGraphProjection.ts)
   - [canvasNodeMapper.ts](../../../apps/web/src/app/views/canvas/canvasNodeMapper.ts)
   - [useCanvasViewportGraphModel.ts](../../../apps/web/src/app/views/canvas/useCanvasViewportGraphModel.ts)
+- Hardened autosave dirty detection so Inspector-only node detail edits change
+  the same semantic authoring signature used by draft persistence:
+  - [canvasDraftAuthoring.ts](../../../apps/web/src/app/views/canvas/canvasDraftAuthoring.ts)
+  - [useCanvasCurrentDraftPayload.ts](../../../apps/web/src/app/views/canvas/useCanvasCurrentDraftPayload.ts)
+  - [useCanvasDraftInitialBootstrap.ts](../../../apps/web/src/app/views/canvas/useCanvasDraftInitialBootstrap.ts)
+  - [useCanvasDraftReloadHydration.ts](../../../apps/web/src/app/views/canvas/useCanvasDraftReloadHydration.ts)
 - Kept the generic passive view passive and moved write semantics into the
   route-owned wrapper:
   - [InspectorPanel.tsx](../../../apps/web/src/app/components/InspectorPanel.tsx)
@@ -62,10 +68,31 @@ payload generation, preview, and run handoff.
 - `CanvasInspectorPanel.tsx` is the route-owned composition seam.
 - `InspectorPanel.tsx` remains a passive view and does not own mutation
   semantics.
+- `serializeCanvasDraftAuthoringSignature(...)` is the persistence dirty-check
+  boundary; it intentionally includes canonical node and edge semantics while
+  excluding layout-only node positions.
+- `serializeCanvasDraftAuthoringBaselineSignature(...)` is the shared
+  bootstrap/reload baseline policy. It prevents initial load and reload from
+  drifting away from the semantic signature used by autosave.
+- `canvasDraftStructuralSignature.ts` owns the structural fallback signature so
+  semantic authoring code does not depend back on the `CanvasDraftSession`
+  facade.
+- `canvasAuthoringMetadata.ts` owns the JSON-compatible authoring metadata DTO.
+  It preserves JSON-like plugin metadata and removes circular or
+  non-serializable values before signatures, duplicate commands, local saved
+  draft cache, or persistence can observe them.
+- `plugins/graphStrategyContracts.ts` owns the plugin-neutral
+  `CanvasGraphStrategy` contract. Canvas application code no longer imports
+  strategy types from the concrete DBT adapter.
+- Edge transport order is canonicalized inside the authoring signature so
+  unordered graph-edge payloads do not create false dirty state.
 
 ## Validation
 
 - `pnpm --filter @dvt/web test -- src/app/views/canvas/canvasAuthoringGraphProjection.test.ts src/app/views/canvas/canvasDraftSession.test.ts src/app/views/canvas/canvasInspectorAuthoringModel.test.ts src/app/views/canvas/useCanvasViewportGraphModel.test.tsx src/app/views/canvas/useCanvasController.core.test.tsx src/app/views/canvas/CanvasInspectorPanel.test.tsx src/app/views/canvas/canvasInspectorAuthoringComponent.architecture.test.ts`
+- `pnpm --filter @dvt/web test -- src/app/views/canvas/canvasDraftAuthoring.test.ts src/app/views/canvas/canvasCreateCanvasDocumentCommand.test.ts src/app/views/canvas/useCanvasController.activeDraftMutations.test.tsx`
+- `pnpm --filter @dvt/web test -- src/app/views/canvas/canvasDraftAuthoringComponent.architecture.test.ts src/app/views/canvas/canvasDuplicateNodeCommand.test.ts`
+- `pnpm --filter @dvt/web test -- src/app/views/canvas/canvasDraftAuthoring.test.ts src/app/views/canvas/canvasDuplicateNodeCommand.test.ts src/app/views/canvas/canvasDraftAuthoringComponent.architecture.test.ts`
 - `pnpm --filter @dvt/web test -- src/app/views/canvas/CanvasShell.test.tsx src/app/views/Canvas.routeStates.test.tsx`
 - `pnpm --filter @dvt/web typecheck`
 - `pnpm --filter @dvt/web test`

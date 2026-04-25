@@ -62,7 +62,22 @@ canonical draft boundary already used by reload, preview, and run:
 - `canvasGraphLifecycle` stays narrow: it owns working-set mutation semantics,
   not duplicate naming or reconnect validation policy.
 - `canvasDuplicateNodeCommand.ts` is a real application command seam with
-  deterministic identity and placement policy.
+  deterministic identity and placement policy. It projects duplicated node
+  metadata through the authoring metadata DTO and resolves duplicate graph
+  fallout as a pure transaction before the React handler applies view fallout.
+- `useCanvasNodeDuplicateHandlers.ts` keeps React updater callbacks free of
+  draft-session, selection, Inspector, and toast side effects. Its local latest
+  nodes ref is updated during render and after local transaction commit, so
+  duplicate commands avoid passive-effect stale reads without turning the
+  updater into the semantic transaction boundary.
+- Duplicate-node metadata is projected through a resilient serializable path:
+  JSON-like plugin metadata is preserved, while non-cloneable fields are
+  omitted instead of crashing the command.
+- The serializable metadata path is now shared with draft authoring and the
+  saved-draft read model through `canvasAuthoringMetadata.ts`; duplicate-node
+  behavior no longer owns a private metadata policy.
+- Duplicate and drop command code depends on the plugin-neutral
+  `CanvasGraphStrategy` contract instead of importing the DBT adapter type.
 - `confirmReconnect(...)` in `canvasConnectionAggregate.ts` is a real
   application command seam for reconnect validation while preserving edge
   identity.
@@ -76,6 +91,9 @@ canonical draft boundary already used by reload, preview, and run:
 ## Validation
 
 - `pnpm --filter @dvt/web test -- src/app/views/canvas/canvasConnectionAggregate.test.ts src/app/views/canvas/canvasDuplicateNodeCommand.test.ts src/app/views/canvas/useCanvasGraphHandlers.nodeDuplicate.test.tsx src/app/views/canvas/useCanvasGraphHandlers.edgeReconnect.test.tsx src/app/views/canvas/useCanvasNodeAuthoringHandlers.architecture.test.ts src/app/views/canvas/useCanvasEdgeAuthoringHandlers.architecture.test.ts src/app/views/canvas/CanvasViewport.test.tsx src/app/views/canvas/CanvasShell.test.tsx`
+- `pnpm --filter @dvt/web test -- src/app/views/canvas/canvasDraftAuthoring.test.ts src/app/views/canvas/canvasDuplicateNodeCommand.test.ts src/app/views/canvas/useCanvasGraphHandlers.nodeDuplicate.test.tsx`
+- `pnpm --filter @dvt/web test -- src/app/views/canvas/canvasDraftAuthoringComponent.architecture.test.ts src/app/views/canvas/canvasDuplicateNodeCommand.test.ts`
+- `pnpm --filter @dvt/web test -- src/app/views/canvas/canvasDraftAuthoring.test.ts src/app/views/canvas/canvasDuplicateNodeCommand.test.ts src/app/views/canvas/canvasDraftAuthoringComponent.architecture.test.ts`
 - `pnpm --filter @dvt/web test -- src/app/views/canvas/useCanvasController.persistence.test.tsx src/app/views/canvas/useCanvasController.reloadHydrationGuards.test.tsx src/app/views/canvas/useCanvasController.reloadConflictRecovery.test.tsx src/app/views/canvas/useCanvasGraphHandlers.layout.test.tsx`
 - `pnpm --filter @dvt/web typecheck`
 - `pnpm docs:sync`

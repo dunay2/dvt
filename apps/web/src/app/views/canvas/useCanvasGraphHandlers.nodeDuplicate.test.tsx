@@ -3,6 +3,8 @@
 import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import type { Node } from '@xyflow/react';
+
 import { canvasViewCopy } from './copy';
 import {
   buildCanonicalNode,
@@ -23,7 +25,41 @@ describe('useCanvasGraphHandlers node duplicate', () => {
   });
 
   it('duplicates a node into the same draft aggregate without copying edges', async () => {
-    const setNodes = vi.fn();
+    const initialNodes: Node[] = [
+      {
+        id: 'source-node',
+        data: {
+          name: 'Orders source',
+          pluginKind: 'dvt:source',
+          role: 'input',
+          status: 'success',
+          description: 'Primary source node',
+          path: 'models/orders.sql',
+          tags: ['authoring', 'critical'],
+          metadata: {
+            config: {
+              schema: 'raw',
+              table: 'orders',
+            },
+          },
+        },
+        position: { x: 64, y: 96 },
+      },
+      {
+        id: 'sink-node',
+        data: {
+          name: 'Sink node',
+          pluginKind: 'dvt:sink',
+          role: 'output',
+          status: 'idle',
+        },
+        position: { x: 300, y: 80 },
+      },
+    ];
+    let currentNodes = initialNodes;
+    const setNodes = vi.fn((nextNodes: Node[] | ((existingNodes: Node[]) => Node[])) => {
+      currentNodes = typeof nextNodes === 'function' ? nextNodes(currentNodes) : nextNodes;
+    });
     const setDraftSession = vi.fn();
     const setSelectedNodes = vi.fn();
     const setInspectorNode = vi.fn();
@@ -46,37 +82,7 @@ describe('useCanvasGraphHandlers node duplicate', () => {
     const harness = renderGraphHandlersHook({
       canEditEdges: true,
       canonicalNodes: [canonicalSourceNode, buildCanonicalNode('sink-node', 'output')],
-      nodes: [
-        {
-          id: 'source-node',
-          data: {
-            name: 'Orders source',
-            pluginKind: 'dvt:source',
-            role: 'input',
-            status: 'success',
-            description: 'Primary source node',
-            path: 'models/orders.sql',
-            tags: ['authoring', 'critical'],
-            metadata: {
-              config: {
-                schema: 'raw',
-                table: 'orders',
-              },
-            },
-          },
-          position: { x: 40, y: 80 },
-        },
-        {
-          id: 'sink-node',
-          data: {
-            name: 'Sink node',
-            pluginKind: 'dvt:sink',
-            role: 'output',
-            status: 'idle',
-          },
-          position: { x: 300, y: 80 },
-        },
-      ],
+      nodes: initialNodes,
       edges: [{ id: 'edge_1', source: 'source-node', target: 'sink-node' }],
       draftSession: {
         ...buildDraftSession(),
@@ -99,44 +105,12 @@ describe('useCanvasGraphHandlers node duplicate', () => {
     });
 
     expect(setNodes).toHaveBeenCalledTimes(1);
-    const nodeUpdater = setNodes.mock.calls[0]?.[0];
-    expect(typeof nodeUpdater).toBe('function');
-    const nextNodes = nodeUpdater([
-      {
-        id: 'source-node',
-        data: {
-          name: 'Orders source',
-          pluginKind: 'dvt:source',
-          role: 'input',
-          status: 'success',
-          description: 'Primary source node',
-          path: 'models/orders.sql',
-          tags: ['authoring', 'critical'],
-          metadata: {
-            config: {
-              schema: 'raw',
-              table: 'orders',
-            },
-          },
-        },
-        position: { x: 40, y: 80 },
-      },
-      {
-        id: 'sink-node',
-        data: {
-          name: 'Sink node',
-          pluginKind: 'dvt:sink',
-          role: 'output',
-          status: 'idle',
-        },
-        position: { x: 300, y: 80 },
-      },
-    ]);
-    expect(nextNodes).toEqual(
+    expect(Array.isArray(setNodes.mock.calls[0]?.[0])).toBe(true);
+    expect(currentNodes).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           id: 'source-node-copy-1',
-          position: { x: 88, y: 128 },
+          position: { x: 112, y: 144 },
           data: expect.objectContaining({
             name: 'Orders source (copy 1)',
             pluginKind: 'dvt:source',
@@ -154,6 +128,21 @@ describe('useCanvasGraphHandlers node duplicate', () => {
           }),
         }),
       ])
+    );
+    const duplicatedGraphNode = currentNodes.find(
+      (node: { id: string }) => node.id === 'source-node-copy-1'
+    ) as
+      | {
+          data?: {
+            metadata?: {
+              config?: unknown;
+            };
+          };
+        }
+      | undefined;
+    expect(duplicatedGraphNode?.data?.metadata).not.toBe(canonicalSourceNode.metadata);
+    expect(duplicatedGraphNode?.data?.metadata?.config).not.toBe(
+      canonicalSourceNode.metadata?.config
     );
     expect(setDraftSession).toHaveBeenCalledTimes(1);
     const nextDraftSession = setDraftSession.mock.calls[0]?.[0]({
@@ -190,6 +179,16 @@ describe('useCanvasGraphHandlers node duplicate', () => {
         },
       })
     );
+    expect(nextDraftSession.localNodeCatalog?.['source-node-copy-1']?.metadata).not.toBe(
+      canonicalSourceNode.metadata
+    );
+    expect(
+      (
+        nextDraftSession.localNodeCatalog?.['source-node-copy-1']?.metadata as
+          | { config?: unknown }
+          | undefined
+      )?.config
+    ).not.toBe(canonicalSourceNode.metadata?.config);
     expect(setSelectedNodes).toHaveBeenCalledWith(['source-node-copy-1']);
     expect(setInspectorNode).toHaveBeenCalledWith('source-node-copy-1');
 

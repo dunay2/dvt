@@ -138,6 +138,10 @@ flowchart LR
 | Inspector authoring command seam   | mapping validated edits into aggregate mutation                      | route composition or autosave timing              |
 | Draft session local node overrides | local canonical node overrides for both admitted and persisted nodes | React Flow projection or plugin UI state          |
 | Semantic authoring projection      | overlay authoritative draft truth with local overrides               | view-level dirty state                            |
+| Authoring dirty signature          | persisted node and edge semantics for autosave change detection      | layout-only position churn or edge-order churn    |
+| Remote baseline signature          | bootstrap and reload saved-signature policy                          | duplicated hook-local signature rules             |
+| Authoring metadata DTO             | JSON-compatible metadata crossing authoring and duplicate boundaries | plugin-specific behavior or shallow clone policy  |
+| Canvas graph strategy contract     | plugin-neutral graph projection and drop parsing contract            | concrete DBT adapter implementation details       |
 
 ## User Stories
 
@@ -153,6 +157,10 @@ Acceptance:
 - blank or whitespace-only node name is rejected
 - applying edits updates the same canonical authoring truth consumed by preview
   and run
+- applying edits changes the semantic authoring dirty signature and triggers
+  draft persistence even when node ids, edges, and canvas title are unchanged
+- authoring metadata is sanitized through one JSON-compatible DTO boundary so
+  circular or non-serializable plugin values cannot crash render-time signatures
 - plugin panels remain visible but read-only
 
 ### US-E2-017: read-only and blocked postures stay honest in the Inspector
@@ -188,6 +196,10 @@ editing.
 Acceptance:
 
 - duplicate node flow preserves semantic node metadata and survives reload
+- duplicate node flow resolves graph mutation as a pure transaction before the
+  React handler applies selection, Inspector, draft-session, and toast fallout
+- duplicate and drop command code depends on a plugin-neutral graph strategy
+  contract, not on the DBT adapter type
 - reconnect remains fail-closed under invalid or partial edge states
 - reload proof covers node details, duplicate nodes, and reconnected edges
 
@@ -229,6 +241,8 @@ sequenceDiagram
   Session->>Projection: updated canonical node
   Projection-->>Inspector: authoritative edited node
   Projection-->>Persist: current draft payload reflects same node
+  Note over Projection,Persist: semantic signature includes node details
+  Projection-->>Persist: plugin metadata projected to authoring metadata DTO
   Persist-->>Projection: saved / conflict / missing_remote
   Projection-->>Inspector: rehydrated authoritative truth
 ```
