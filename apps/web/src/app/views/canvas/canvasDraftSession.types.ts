@@ -12,7 +12,6 @@ export type CanvasDraftEdge = { sourceId: string; targetId: string };
 
 export type CanvasDraftBaseline = {
   record: WorkspaceGraphDraftRecord | null;
-  signature: string | null;
 };
 
 export type CanvasDraftWorkingSet = {

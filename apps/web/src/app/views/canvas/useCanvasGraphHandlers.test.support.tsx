@@ -76,7 +76,6 @@ export function buildDraftSession(): CanvasDraftSession {
     syncState: 'editing',
     baseline: {
       record: null,
-      signature: null,
     },
     draftRevision: 'rev-1',
     workingSet: {
@@ -154,6 +153,10 @@ export function renderGraphHandlersHook({
     latest = useCanvasGraphHandlers({
       graphStrategy: {
         id: 'transformation',
+        authoringPolicy: {
+          toolbarMode: 'transformation',
+          enforceTransformationTopology: true,
+        },
         mapNodeToCanonical: () => null,
         mapEdgeToCanonical: () => null,
         parseDropPayload: graphStrategy?.parseDropPayload ?? (() => null),

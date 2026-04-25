@@ -78,6 +78,12 @@ canonical draft boundary already used by reload, preview, and run:
   behavior no longer owns a private metadata policy.
 - Duplicate and drop command code depends on the plugin-neutral
   `CanvasGraphStrategy` contract instead of importing the DBT adapter type.
+- Canvas graph authoring behavior is now carried by explicit strategy policy,
+  not by comparing concrete strategy IDs in Canvas application code.
+- The DVT transformation strategy lives under the DVT plugin contribution.
+  DBT owns DBT graph mapping only.
+- Lineage continues to resolve the DBT strategy explicitly because it consumes
+  the DBT workspace snapshot; it does not inherit the Canvas authoring default.
 - `confirmReconnect(...)` in `canvasConnectionAggregate.ts` is a real
   application command seam for reconnect validation while preserving edge
   identity.

@@ -172,6 +172,10 @@ describe('canvasDuplicateNodeCommand', () => {
       ],
       graphStrategy: {
         id: 'source',
+        authoringPolicy: {
+          toolbarMode: 'dbt',
+          enforceTransformationTopology: false,
+        },
         mapNodeToCanonical: () => null,
         mapEdgeToCanonical: () => null,
         parseDropPayload: () => null,

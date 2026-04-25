@@ -82,8 +82,19 @@ payload generation, preview, and run handoff.
   non-serializable values before signatures, duplicate commands, local saved
   draft cache, or persistence can observe them.
 - `plugins/graphStrategyContracts.ts` owns the plugin-neutral
-  `CanvasGraphStrategy` contract. Canvas application code no longer imports
-  strategy types from the concrete DBT adapter.
+  `CanvasGraphStrategy` and `CanvasGraphAuthoringPolicy` contracts. Canvas
+  application code reads explicit policy fields instead of branching on
+  strategy IDs.
+- `plugins/dvt/transformationGraphStrategy.ts` owns the DVT transformation
+  graph strategy. DBT owns DBT graph mapping only; it does not own the
+  transformation canvas policy.
+- `views/lineage/useLineageViewData.ts` resolves the DBT graph strategy
+  explicitly because Lineage consumes the DBT workspace snapshot. It does not
+  inherit the Canvas authoring default, which can be the DVT transformation
+  canvas.
+- `CanvasDraftSession` keeps only the remote record baseline. Saved-signature
+  state remains in bootstrap/reload/autosave refs so the aggregate does not
+  publish a stale structural-signature truth.
 - Edge transport order is canonicalized inside the authoring signature so
   unordered graph-edge payloads do not create false dirty state.
 

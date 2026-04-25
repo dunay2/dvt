@@ -8,13 +8,13 @@ type TransformationAuthoringGuardResult =
     };
 
 type GuardArgs = {
-  authoringModeEnabled: boolean;
+  enforceTransformationTopology: boolean;
   existingRoles: CoreNodeRole[];
   nextRole: CoreNodeRole;
 };
 
 export function guardTransformationAuthoringNode({
-  authoringModeEnabled: _authoringModeEnabled,
+  enforceTransformationTopology: _enforceTransformationTopology,
   existingRoles: _existingRoles,
   nextRole: _nextRole,
 }: GuardArgs): TransformationAuthoringGuardResult {

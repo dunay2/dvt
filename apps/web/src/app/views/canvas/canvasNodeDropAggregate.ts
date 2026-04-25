@@ -54,7 +54,7 @@ export function dropCanonicalNode({
   }
 
   const authoringGuard = guardTransformationAuthoringNode({
-    authoringModeEnabled: graphStrategy.id === 'transformation',
+    enforceTransformationTopology: graphStrategy.authoringPolicy.enforceTransformationTopology,
     existingRoles: resolveExistingRoles(nodes),
     nextRole: canonicalNode.role,
   });

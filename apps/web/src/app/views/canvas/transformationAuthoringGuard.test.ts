@@ -5,10 +5,10 @@ import { guardTransformationAuthoringNode } from './transformationAuthoringGuard
 function evaluate(
   existingRoles: CoreNodeRole[],
   nextRole: CoreNodeRole,
-  authoringModeEnabled: boolean
+  enforceTransformationTopology: boolean
 ): ReturnType<typeof guardTransformationAuthoringNode> {
   return guardTransformationAuthoringNode({
-    authoringModeEnabled,
+    enforceTransformationTopology,
     existingRoles,
     nextRole,
   });

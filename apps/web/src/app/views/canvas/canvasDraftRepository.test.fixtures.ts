@@ -5,7 +5,6 @@ import type {
   WorkspaceGraphDraftAuthoringReadResult,
   WorkspaceGraphDraftAuthoringSaveResult,
 } from '../../ports/workspaceGraphDraftAuthoring';
-import type { IWorkspacePort } from '../../ports/workspace';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { WorkspaceGraphAuthoringDraft } from '@dvt/contracts';
 
@@ -150,21 +149,6 @@ export function buildAuthoringPort(
   return {
     readGraphDraft: vi.fn(async () => DEFAULT_READ_RESULT),
     saveGraphDraft: vi.fn(async () => DEFAULT_SAVE_RESULT),
-    ...overrides,
-  };
-}
-export function buildWorkspacePort(
-  overrides: Partial<Pick<IWorkspacePort, 'getGraphSnapshot' | 'getFileContent'>> = {}
-): Pick<IWorkspacePort, 'getGraphSnapshot' | 'getFileContent'> {
-  return {
-    getGraphSnapshot: vi.fn(async () => ({ nodes: [], edges: [] })),
-    getFileContent: vi.fn(async (path: string) => ({
-      path,
-      name: path.split('/').at(-1) ?? path,
-      language: 'sql',
-      content: 'select * from raw.orders',
-      lastModified: '2026-04-18T00:00:00Z',
-    })),
     ...overrides,
   };
 }

@@ -21,6 +21,10 @@ export function configureCanvasHarnessHookAndProjectionMocks(
   mocks.useCapabilitiesQuery.mockReturnValue({ data: undefined });
   mocks.resolveCanvasGraphStrategy.mockReturnValue({
     id: 'transformation',
+    authoringPolicy: {
+      toolbarMode: 'transformation',
+      enforceTransformationTopology: true,
+    },
     mapNodeToCanonical: vi.fn(
       (node: { id: string }) => state.canonicalNodes.find((n) => n.id === node.id) ?? null
     ),
