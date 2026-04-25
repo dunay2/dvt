@@ -108,9 +108,9 @@ describe('Canvas route authoring bootstrap integration', () => {
         ResizeObserver?: new (callback: ResizeObserverCallback) => ResizeObserver;
       }
     ).ResizeObserver = class ResizeObserver {
-      observe() {}
-      unobserve() {}
-      disconnect() {}
+      observe(): void {}
+      unobserve(): void {}
+      disconnect(): void {}
     } as unknown as new (callback: ResizeObserverCallback) => ResizeObserver;
   });
 

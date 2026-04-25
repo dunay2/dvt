@@ -5,6 +5,7 @@ import {
   canvasViewCopy,
   formatTransformationGraphValidationSummary,
 } from './copy';
+import type { CanvasGraphAuthoringMode } from '../../plugins/graphStrategyContracts';
 import type { CanvasDraftToolbarState } from './canvasDraftToolbarState';
 import type { CanvasRouteState } from './canvasDraftPresentationModel';
 import type { TransformationGraphValidationResult } from './transformationGraphValidation';
@@ -22,7 +23,7 @@ type DeriveCanvasToolbarViewModelArgs = {
   canPlan: boolean;
   canRun: boolean;
   canStartRun: boolean;
-  canvasAuthoringMode: 'transformation' | 'dbt';
+  canvasAuthoringMode: CanvasGraphAuthoringMode;
   planStatusSummary: string;
   transformationValidation: TransformationGraphValidationResult;
   nodeCount: number;

@@ -4,16 +4,15 @@ import {
   selectCanvasClosure,
 } from '../../support/canvasExecutionSelection';
 import {
-  getE2eApiCalls,
-  getLastE2eApiCall,
-  stubE2eApi,
-  stubE2eJsonApi,
-  waitForE2eApiCall,
-} from '../../support/e2eApiStub';
-import {
   stubSelectedClosurePreviewArtifacts,
   waitForSelectedClosurePreviewArtifacts,
 } from '../../support/canvasPreviewArtifacts';
+import {
+  getE2eApiCalls,
+  getLastE2eApiCall,
+  stubE2eJsonApi,
+  waitForE2eApiCall,
+} from '../../support/e2eApiStub';
 import { stubShellBootstrapApis, visitWithE2eWorkspaceSession } from '../../support/workspaceSession';
 
 type PlanPreviewResponseOptions = {

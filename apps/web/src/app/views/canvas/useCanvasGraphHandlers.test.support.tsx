@@ -39,10 +39,6 @@ vi.mock('./transformationConnectionGuard', () => ({
   guardTransformationConnection: graphHandlersTestDoubles.guardTransformationConnection,
 }));
 
-vi.mock('./transformationAuthoringGuard', () => ({
-  guardTransformationAuthoringNode: () => ({ allowed: true }),
-}));
-
 vi.mock('sonner', () => ({
   toast: {
     error: vi.fn(),
@@ -154,8 +150,7 @@ export function renderGraphHandlersHook({
       graphStrategy: {
         id: 'transformation',
         authoringPolicy: {
-          toolbarMode: 'transformation',
-          enforceTransformationTopology: true,
+          canvasKind: 'transformation',
         },
         mapNodeToCanonical: () => null,
         mapEdgeToCanonical: () => null,

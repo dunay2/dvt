@@ -40,7 +40,10 @@ export function useCanvasNodeAuthoringHandlers({
       setSelectedNodes: effects.setSelectedNodes,
       setInspectorNode: effects.setInspectorNode,
     },
-    policy,
+    policy: {
+      canEditEdges: policy.canEditEdges,
+      columnLevelLineageEnabled: policy.columnLevelLineageEnabled,
+    },
   };
   const nodeCreationHandlers =
     useCanvasAuthoringNodeCreationHandlers(nodeCreationContracts);
@@ -55,7 +58,10 @@ export function useCanvasNodeAuthoringHandlers({
       setSelectedNodes: effects.setSelectedNodes,
       setInspectorNode: effects.setInspectorNode,
     },
-    policy,
+    policy: {
+      canEditEdges: policy.canEditEdges,
+      columnLevelLineageEnabled: policy.columnLevelLineageEnabled,
+    },
   };
   const nodeDuplicateHandlers = useCanvasNodeDuplicateHandlers(nodeDuplicateContracts);
 

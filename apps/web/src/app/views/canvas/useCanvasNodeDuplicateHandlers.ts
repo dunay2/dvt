@@ -21,7 +21,7 @@ export function useCanvasNodeDuplicateHandlers({
 }: UseCanvasNodeDuplicateHandlersArgs): UseCanvasNodeDuplicateHandlersResult {
   const { canonicalNodesById, nodes } = state;
   const { setDraftSession, setInspectorNode, setNodes, setSelectedNodes } = effects;
-  const { canEditEdges, columnLevelLineageEnabled, graphStrategy } = policy;
+  const { canEditEdges, columnLevelLineageEnabled } = policy;
   const latestNodesRef = useRef(nodes);
   latestNodesRef.current = nodes;
 
@@ -36,16 +36,12 @@ export function useCanvasNodeDuplicateHandlers({
         nodeId,
         sourceCanonicalNode: canonicalNodesById.get(nodeId) ?? null,
         existingNodes: latestNodesRef.current,
-        graphStrategy,
         columnLevelLineageEnabled,
       });
 
       switch (transaction.outcome) {
         case 'missing_source_node':
           toast.error(canvasViewCopy.nodeNotFoundInGraphMessage);
-          return;
-        case 'rejected':
-          toast.error(transaction.reason);
           return;
         case 'noop':
           toast.info(transaction.reason);
@@ -65,7 +61,6 @@ export function useCanvasNodeDuplicateHandlers({
       canEditEdges,
       canonicalNodesById,
       columnLevelLineageEnabled,
-      graphStrategy,
       setDraftSession,
       setInspectorNode,
       setNodes,

@@ -132,18 +132,18 @@ flowchart LR
 
 ### Owned seams
 
-| Seam                               | Owns                                                                 | Must not own                                         |
-| ---------------------------------- | -------------------------------------------------------------------- | ---------------------------------------------------- |
-| Inspector authoring DTO / VM       | editable fields, validation, dirty state, apply/cancel posture       | persistence transport or plugin panel composition    |
-| Inspector authoring command seam   | mapping validated edits into aggregate mutation                      | route composition or autosave timing                 |
-| Draft session local node overrides | local canonical node overrides for both admitted and persisted nodes | React Flow projection or plugin UI state             |
-| Semantic authoring projection      | overlay authoritative draft truth with local overrides               | view-level dirty state                               |
-| Authoring dirty signature          | persisted node and edge semantics for autosave change detection      | layout-only position churn or edge-order churn       |
-| Remote baseline signature          | bootstrap and reload saved-signature policy                          | duplicated hook-local signature rules                |
-| Authoring metadata DTO             | JSON-compatible metadata crossing authoring and duplicate boundaries | plugin-specific behavior or shallow clone policy     |
-| Canvas graph strategy contract     | plugin-neutral graph projection and drop parsing contract            | concrete adapter implementation details              |
-| Canvas graph authoring policy      | explicit toolbar mode and topology policy per strategy               | branching on strategy IDs in Canvas application code |
-| Lineage graph read model           | DBT workspace snapshot projection with explicit DBT graph strategy   | inheriting the Canvas authoring default              |
+| Seam                               | Owns                                                                 | Must not own                                      |
+| ---------------------------------- | -------------------------------------------------------------------- | ------------------------------------------------- |
+| Inspector authoring DTO / VM       | editable fields, validation, dirty state, apply/cancel posture       | persistence transport or plugin panel composition |
+| Inspector authoring command seam   | mapping validated edits into aggregate mutation                      | route composition or autosave timing              |
+| Draft session local node overrides | local canonical node overrides for both admitted and persisted nodes | React Flow projection or plugin UI state          |
+| Semantic authoring projection      | overlay authoritative draft truth with local overrides               | view-level dirty state                            |
+| Authoring dirty signature          | persisted node and edge semantics for autosave change detection      | layout-only position churn or edge-order churn    |
+| Remote baseline signature          | bootstrap and reload saved-signature policy                          | duplicated hook-local signature rules             |
+| Authoring metadata DTO             | JSON-compatible metadata crossing authoring and duplicate boundaries | plugin-specific behavior or shallow clone policy  |
+| Canvas graph strategy contract     | plugin-neutral graph projection and drop parsing contract            | concrete adapter implementation details           |
+| Canvas graph authoring policy      | explicit plugin-contributed Canvas kind per strategy                 | topology enforcement or strategy-ID branching     |
+| Lineage graph read model           | DBT workspace snapshot projection with explicit DBT graph strategy   | inheriting the Canvas authoring default           |
 
 ## User Stories
 
@@ -200,11 +200,11 @@ Acceptance:
 - duplicate node flow preserves semantic node metadata and survives reload
 - duplicate node flow resolves graph mutation as a pure transaction before the
   React handler applies selection, Inspector, draft-session, and toast fallout
-- duplicate and drop command code depends on a plugin-neutral graph strategy
-  contract, not on the DBT adapter type
+- duplicate and drop command code depends on canonical graph primitives, not on
+  concrete plugin adapters or graph strategy policy
 - transformation strategy ownership lives under the DVT plugin contribution;
   DBT owns only DBT graph mapping
-- Canvas route behavior reads explicit strategy authoring policy rather than
+- Canvas route posture reads the explicit strategy `canvasKind` rather than
   comparing strategy IDs
 - Lineage resolves the DBT strategy explicitly because it consumes the DBT
   workspace snapshot and must not inherit the Canvas authoring default

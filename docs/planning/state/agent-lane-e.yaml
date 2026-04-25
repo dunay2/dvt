@@ -1801,7 +1801,7 @@ tasks:
       - apps/web/src/app/components/SourceImportWizard.tsx
       - apps/web/src/app/views/canvas/CanvasShell.tsx
       - apps/web/src/app/views/canvas/CanvasViewport.tsx
-      - apps/web/src/app/views/canvas/transformationAuthoringGuard.ts
+      - apps/web/src/app/views/canvas/transformationGraphValidation.ts
       - apps/web/src/app/views/canvas/useCanvasExecutionActions.ts
       - apps/web/src/app/views/canvas/useCanvasController.ts
       - apps/web/src/app/views/runs/RunWorkspaceStateView.tsx
@@ -1837,8 +1837,8 @@ tasks:
       - apps/web/src/app/views/canvas/CanvasViewport.tsx
       - apps/web/src/app/views/canvas/transformationConnectionGuard.ts
       - apps/web/src/app/views/canvas/transformationConnectionGuard.test.ts
-      - apps/web/src/app/views/canvas/transformationAuthoringGuard.ts
-      - apps/web/src/app/views/canvas/transformationAuthoringGuard.test.ts
+      - apps/web/src/app/views/canvas/canvasNodeDropAggregate.ts
+      - apps/web/src/app/views/canvas/canvasNodeDropAggregate.test.ts
       - apps/web/src/app/views/canvas/useCanvasGraphHandlers.selection.test.tsx
       - apps/web/src/app/views/canvas/useCanvasGraphHandlers.edgeAuthoring.test.tsx
       - apps/web/src/app/views/canvas/useCanvasController.ts

@@ -75,10 +75,10 @@ describe('canvas draft authoring component architecture', () => {
     expect(GRAPH_HANDLER_CONTRACTS_SOURCE).toContain(
       "from '../../plugins/graphStrategyContracts'"
     );
-    expect(NODE_DUPLICATE_COMMAND_SOURCE).toContain(
+    expect(NODE_DUPLICATE_COMMAND_SOURCE).not.toContain(
       "from '../../plugins/graphStrategyContracts'"
     );
-    expect(NODE_DROP_AGGREGATE_SOURCE).toContain(
+    expect(NODE_DROP_AGGREGATE_SOURCE).not.toContain(
       "from '../../plugins/graphStrategyContracts'"
     );
     expect(GRAPH_STRATEGY_REGISTRY_SOURCE).toContain(
@@ -100,8 +100,9 @@ describe('canvas draft authoring component architecture', () => {
     expect(NODE_DUPLICATE_COMMAND_SOURCE).not.toContain('dbtNodeAdapter');
     expect(NODE_DROP_AGGREGATE_SOURCE).not.toContain('dbtNodeAdapter');
     expect(NODE_DROP_AGGREGATE_SOURCE).not.toContain('graphStrategy.id ===');
-    expect(NODE_DROP_AGGREGATE_SOURCE).toContain(
-      'enforceTransformationTopology: graphStrategy.authoringPolicy.enforceTransformationTopology'
-    );
+    expect(NODE_DROP_AGGREGATE_SOURCE).not.toContain('CanvasGraphStrategy');
+    expect(NODE_DROP_AGGREGATE_SOURCE).not.toContain('graphStrategy');
+    expect(NODE_DROP_AGGREGATE_SOURCE).not.toContain('authoringPolicy.enforceTransformationTopology');
+    expect(DVT_TRANSFORMATION_STRATEGY_SOURCE).not.toContain('enforceTransformationTopology');
   });
 });

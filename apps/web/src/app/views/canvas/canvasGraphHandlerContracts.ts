@@ -91,7 +91,6 @@ export type CanvasNodeDuplicateEffects = {
 };
 
 export type CanvasNodeDuplicatePolicy = {
-  graphStrategy: CanvasGraphStrategy;
   canEditEdges: boolean;
   columnLevelLineageEnabled: boolean;
 };
@@ -126,7 +125,6 @@ export type CanvasAuthoringNodeCreationEffects = {
 };
 
 export type CanvasAuthoringNodeCreationPolicy = {
-  graphStrategy: CanvasGraphStrategy;
   canEditEdges: boolean;
   columnLevelLineageEnabled: boolean;
 };

@@ -5,6 +5,7 @@ import type { Edge, Node, NodeTypes, ReactFlowProps } from '@xyflow/react';
 import type React from 'react';
 
 import type { ImportSourcesResult } from '../../ports/workspace';
+import type { CanvasGraphAuthoringMode } from '../../plugins/graphStrategyContracts';
 import type { NodeKindRegistration } from '../../plugins/nodeTypeContracts';
 import type { CanonicalNode } from '../../types/canonical';
 import type { CanvasPaletteId } from './canvasPalette';
@@ -58,7 +59,7 @@ export type CanvasShellGraph = {
 };
 
 export type CanvasShellToolbar = {
-  canvasAuthoringMode: 'transformation' | 'dbt';
+  canvasAuthoringMode: CanvasGraphAuthoringMode;
   routeState: CanvasRouteState;
   draftToolbarState: CanvasDraftToolbarState;
   canStartRun: boolean;
