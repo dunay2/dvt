@@ -40,8 +40,8 @@ describe('PostgresTenantIsolationPolicy', () => {
 
     const statements = buildTenantIsolationPolicySql('DvtOps', runMetadataTable!).join('\n');
 
-    expect(statements).toContain('ALTER TABLE "DvtOps".run_metadata ENABLE ROW LEVEL SECURITY');
-    expect(statements).toContain('ALTER TABLE "DvtOps".run_metadata FORCE ROW LEVEL SECURITY');
+    expect(statements).toContain('ALTER TABLE "DvtOps"."run_metadata" ENABLE ROW LEVEL SECURITY');
+    expect(statements).toContain('ALTER TABLE "DvtOps"."run_metadata" FORCE ROW LEVEL SECURITY');
     expect(statements).toContain('DROP POLICY IF EXISTS dvt_tenant_isolation');
     expect(statements).toContain('CREATE POLICY dvt_tenant_isolation');
     expect(statements).toContain("current_setting('dvt.access_mode', true) = 'service'");

@@ -57,10 +57,10 @@ describe('StartRunIntentSchemaManager migration locking', () => {
 
     const migrationSql = client.queries.map((query) => query.sql).join('\n');
     expect(migrationSql).toContain(
-      'ALTER TABLE "DvtOps".start_run_intents ENABLE ROW LEVEL SECURITY'
+      'ALTER TABLE "DvtOps"."start_run_intents" ENABLE ROW LEVEL SECURITY'
     );
     expect(migrationSql).toContain(
-      'ALTER TABLE "DvtOps".start_run_intents FORCE ROW LEVEL SECURITY'
+      'ALTER TABLE "DvtOps"."start_run_intents" FORCE ROW LEVEL SECURITY'
     );
     expect(migrationSql).toContain('CREATE POLICY dvt_tenant_isolation');
     expect(migrationSql).toContain("current_setting('dvt.access_mode', true) = 'service'");
@@ -69,6 +69,35 @@ describe('StartRunIntentSchemaManager migration locking', () => {
     expect(migrationSql).toContain("tenant_id = current_setting('dvt.tenant_id', true)");
     expect(client.queries.flatMap((query) => query.params ?? [])).toContain(
       '20260426_005_start_run_intents_table_scoped_service_owner_rls'
+    );
+  });
+
+  it('records hardening migration descriptions as idempotent reapplications, not historical snapshots', async () => {
+    const client = new RecordingMigrationClient();
+    const manager = new StartRunIntentSchemaManager({
+      pool: {
+        connect: async () => client,
+      } as never,
+      schema: 'DvtOps',
+    });
+
+    await manager.migrate();
+
+    const descriptions = client.queries
+      .filter(
+        (query) => query.sql.includes('INSERT INTO') && query.sql.includes('schema_migrations')
+      )
+      .map((query) => query.params?.[2])
+      .filter((value): value is string => typeof value === 'string');
+
+    expect(descriptions).toContain(
+      'Enable forced RLS for start_run_intents; hardening steps remain idempotent and do not preserve a historical policy snapshot'
+    );
+    expect(descriptions).toContain(
+      'Reapply current start_run_intents policy with service-owner hardening; idempotent and not a historical policy snapshot'
+    );
+    expect(descriptions).toContain(
+      'Reapply current start_run_intents policy with table-scoped reconciler ownership; idempotent and not a historical policy snapshot'
     );
   });
 });

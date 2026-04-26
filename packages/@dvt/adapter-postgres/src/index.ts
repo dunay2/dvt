@@ -36,6 +36,10 @@ export type { PostgresStateStoreRuntimeConfig as PostgresAdapterConfig } from '.
 export type { ExecutablePlanArtifact, PostgresPlanStoreConfig } from './PostgresPlanStore.js';
 export type { PostgresStartRunIntentStoreConfig } from './PostgresStartRunIntentStore.js';
 export type {
+  PostgresMigratableStore,
+  PostgresRuntimeStoresToMigrate,
+} from './migratePostgresRuntimeStores.js';
+export type {
   PostgresSchemaRollbackPlan,
   PostgresSchemaRollbackPlanStep,
 } from './PostgresSchemaManager.js';
@@ -76,6 +80,7 @@ export {
 export { PostgresRunSnapshotStore } from './PostgresRunSnapshotStore.js';
 export { PostgresStartRunIntentStore } from './PostgresStartRunIntentStore.js';
 export { StartRunIntentSchemaManager } from './StartRunIntentSchemaManager.js';
+export { migratePostgresRuntimeStores } from './migratePostgresRuntimeStores.js';
 export {
   IntentActiveConflictError,
   IntentDispatchConflictError,

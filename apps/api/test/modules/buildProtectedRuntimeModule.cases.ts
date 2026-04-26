@@ -34,6 +34,9 @@ export function describeBuildProtectedRuntimeModuleCases(): void {
       expect(BUILD_PROTECTED_RUNTIME_MODULE_SOURCE).toContain(
         'const storageRuntime = buildProtectedRuntimeStorage({'
       );
+      expect(BUILD_PROTECTED_RUNTIME_MODULE_SOURCE).toContain(
+        'await migratePostgresRuntimeStores({'
+      );
       expect(BUILD_PROTECTED_RUNTIME_STORAGE_SOURCE).toContain(
         'new ArtifactBackedRunExecutionContextResolver'
       );

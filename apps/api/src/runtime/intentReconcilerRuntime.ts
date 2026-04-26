@@ -1,4 +1,8 @@
-import { PostgresStartRunIntentStore, PostgresStateStoreAdapter } from '@dvt/adapter-postgres';
+import {
+  migratePostgresRuntimeStores,
+  PostgresStartRunIntentStore,
+  PostgresStateStoreAdapter,
+} from '@dvt/adapter-postgres';
 import { asIsoUtcString, type EngineRunRef } from '@dvt/contracts';
 import {
   IdempotencyKeyBuilder,
@@ -225,7 +229,10 @@ export async function createIntentReconcilerRuntime(
 
   const stores = createRuntimeStores(config);
   const { stateStore, stateStoreRoles, intentStore } = stores;
-  await Promise.all([stateStore.migrate(), intentStore.migrate()]);
+  await migratePostgresRuntimeStores({
+    stateStore,
+    startRunIntentStore: intentStore,
+  });
   const adapters = await resolveReconcilerAdapters(
     env,
     config.providers,
