@@ -1,3 +1,4 @@
+import { canvasViewCopy } from '../../../src/app/views/canvas/canvasCopyCatalog';
 import { stubCanvasDraftRead } from '../../support/canvasDraftAuthoring';
 import {
   clickButtonNatively,
@@ -23,6 +24,9 @@ type PlanPreviewResponseOptions = {
 
 type CanvasRuntimeApiOptions = {
   includeLooseNode?: boolean;
+  canvasKind?: 'transformation' | 'dbt';
+  emptyCanvas?: boolean;
+  title?: string;
 };
 
 type PlanRejectedCause =
@@ -234,7 +238,7 @@ function stubRunWorkspaceApis(runId = 'run_e2e_1'): void {
   });
 }
 
-function stubCanvasRuntimeApis({ includeLooseNode = false }: CanvasRuntimeApiOptions = {}): void {
+function stubCanvasRuntimeApis(options: CanvasRuntimeApiOptions = {}): void {
   stubE2eJsonApi('GET', '/capabilities', {
     apiVersion: '1.0.0',
     minFrontendVersion: '0.0.1',
@@ -243,7 +247,7 @@ function stubCanvasRuntimeApis({ includeLooseNode = false }: CanvasRuntimeApiOpt
       dvt: { available: true },
     },
   });
-  stubCanvasDraftRead({ includeLooseNode });
+  stubCanvasDraftRead(options);
 }
 
 function assertPreviewPlanRequest(): void {
@@ -456,6 +460,27 @@ describe('Canvas preview-run persisted path', () => {
     stubSelectedClosurePreviewArtifacts();
   });
 
+  it('keeps dbt first-node authoring visible while execution actions stay unavailable', () => {
+    stubCanvasRuntimeApis({
+      canvasKind: 'dbt',
+      emptyCanvas: true,
+      title: 'Warehouse dbt',
+    });
+
+    visitCanvasWithSettledBootstrap();
+
+    cy.contains('Warehouse dbt').should('be.visible');
+    cy.contains('Start dbt canvas').should('be.visible');
+    cy.contains('Add first dbt node').should('be.visible');
+    cy.contains('button', 'Source').should('be.enabled');
+    cy.contains('button', 'Plan').should('be.disabled');
+    cy.contains('button', 'Run').should('be.disabled');
+    cy.then(() => {
+      expect(getE2eApiCalls('/plans/preview', 'POST')).to.have.length(0);
+      expect(getE2eApiCalls('/runs/start', 'POST')).to.have.length(0);
+    });
+  });
+
   for (const cause of [
     'dependency_gap',
     'selected_node_missing',
@@ -547,7 +572,7 @@ describe('Canvas preview-run persisted path', () => {
     assertPreviewPlanRequest();
 
     cy.contains('Execution Plan Preview').should('be.visible');
-    cy.contains('Preview is current and ready to run.').should('be.visible');
+    cy.contains(canvasViewCopy.planStatusPreviewReadyMessage).should('be.visible');
     clickButtonNatively('Start Run');
 
     waitForE2eApiCall('/runs/start', 'POST');
@@ -588,9 +613,7 @@ describe('Canvas preview-run persisted path', () => {
     assertPreviewPlanRequest();
 
     cy.contains('Execution Plan Preview').should('be.visible');
-    cy.contains(
-      'Preview is not aligned with the active plan reference. Re-run Plan before starting.'
-    ).should('be.visible');
+    cy.contains(canvasViewCopy.planStatusPreviewNotAlignedMessage).should('be.visible');
     cy.contains('button', 'Run').should('be.disabled');
     cy.contains('button', 'Start Run').should('be.disabled');
     cy.then(() => {

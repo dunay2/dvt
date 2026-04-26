@@ -170,7 +170,7 @@ describe('canvasDuplicateNodeCommand', () => {
           },
         },
       ],
-      columnLevelLineageEnabled: false,
+      visibleNodeIds: ['source-node'],
     });
 
     expect(transaction).toEqual({
@@ -179,12 +179,7 @@ describe('canvasDuplicateNodeCommand', () => {
         id: 'source-node-copy-1',
         name: 'Orders source (copy 1)',
       }),
-      nextNodes: expect.arrayContaining([
-        expect.objectContaining({
-          id: 'source-node-copy-1',
-          position: { x: 88, y: 128 },
-        }),
-      ]),
+      position: { x: 88, y: 128 },
     });
   });
 });

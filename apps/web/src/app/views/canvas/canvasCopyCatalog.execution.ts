@@ -60,6 +60,10 @@ export const canvasViewExecutionCopyByKey = {
     key: 'canvas.run.failedMessage',
     fallback: 'Failed to start run',
   },
+  canvasExecutionUnavailableMessage: {
+    key: 'canvas.execution.unavailableMessage',
+    fallback: 'Plan preview and run start are not available for this canvas kind.',
+  },
   planCreatedMessage: {
     key: 'canvas.plan.createdMessage',
     fallback: 'Execution plan created',

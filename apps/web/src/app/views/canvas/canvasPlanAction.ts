@@ -3,6 +3,7 @@
  * without creating authoritative runtime execution identity.
  */
 import type { IPlansPort } from '../../ports/plans';
+import type { CanvasExecutionStrategy } from '../../plugins/canvasExecutionStrategyContracts';
 import type { SessionContextPort } from '../../ports/sessionContext';
 import type { IWorkspacePort } from '../../ports/workspace';
 import type { WorkspaceBootstrapConfig } from '../../services/config/workspaceConfig';
@@ -32,6 +33,7 @@ export async function executeCanvasPlanAction({
   canPlan,
   canonicalEdges,
   canonicalNodes,
+  executionStrategy,
   plansService,
   previewProvenanceConfig,
   selectedNodeIds,
@@ -43,6 +45,7 @@ export async function executeCanvasPlanAction({
   canPlan: boolean;
   canonicalEdges: readonly CanonicalEdge[];
   canonicalNodes: readonly CanonicalNode[];
+  executionStrategy: CanvasExecutionStrategy | null;
   plansService: IPlansPort;
   previewProvenanceConfig: Pick<
     WorkspaceBootstrapConfig,
@@ -56,6 +59,13 @@ export async function executeCanvasPlanAction({
 }): Promise<CanvasPlanActionResult> {
   if (!canPlan) {
     return { ok: false, message: canvasViewCopy.planPermissionDeniedMessage };
+  }
+
+  if (executionStrategy == null || executionStrategy.kind === 'not_executable') {
+    return {
+      ok: false,
+      message: canvasViewCopy.canvasExecutionUnavailableMessage,
+    };
   }
 
   if (!transformationValidation.valid) {
@@ -95,7 +105,7 @@ export async function executeCanvasPlanAction({
       sqlText: previewProvenance.sqlText,
     });
     const plan = await plansService.previewPlan({
-      previewProfile: 'transformation-sql-first-v1',
+      previewProfile: executionStrategy.previewProfile,
       graphSource,
       selection,
       context,

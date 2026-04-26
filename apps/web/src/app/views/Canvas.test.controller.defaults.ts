@@ -1,7 +1,8 @@
 /** Owned concern: provide canonical Canvas route test defaults and controller callback stubs. */
 import { vi } from 'vitest';
 
-import { DBT_NODE_KINDS, DVT_AUTHORING_NODE_KINDS } from '../plugins/nodeTypeCatalog.dbt';
+import { DVT_AUTHORING_NODE_KINDS } from '../plugins/dvt/dvtNodeTypeCatalog';
+import { DBT_NODE_KINDS } from '../plugins/nodeTypeCatalog.dbt';
 import { DEFAULT_CANVAS_PALETTE_ID } from './canvas/canvasPalette';
 import type { CanvasDraftToolbarState } from './canvas/canvasDraftToolbarState';
 import type { CanvasController } from './Canvas.test.controller';

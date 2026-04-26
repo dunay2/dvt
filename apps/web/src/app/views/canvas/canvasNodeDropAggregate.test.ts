@@ -1,9 +1,14 @@
-import type { Node } from '@xyflow/react';
 import { describe, expect, it } from 'vitest';
 
 import type { CanonicalNode } from '../../types/canonical';
+import { readArchitectureSiblingSource } from '../architecture.test.support';
 import { canvasViewCopy } from './copy';
-import { dropCanonicalNode } from './canvasNodeDropAggregate';
+import { admitCanonicalNodeToCanvas } from './canvasNodeDropAggregate';
+
+const NODE_DROP_AGGREGATE_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'canvasNodeDropAggregate.ts'
+);
 
 function buildCanonicalNode(id: string, role: CanonicalNode['role']): CanonicalNode {
   return {
@@ -18,22 +23,36 @@ function buildCanonicalNode(id: string, role: CanonicalNode['role']): CanonicalN
 }
 
 describe('canvasNodeDropAggregate', () => {
-  it('returns noop when dropping a node already present in the graph', () => {
-    const canonicalNode = buildCanonicalNode('transform-node', 'transform');
-    const currentNodes: Node[] = [
-      { id: 'transform-node', data: { name: 'transform-node' }, position: { x: 0, y: 0 } },
-    ];
+  it('stays independent from viewport projection concerns', () => {
+    expect(NODE_DROP_AGGREGATE_SOURCE).not.toContain('@xyflow/react');
+    expect(NODE_DROP_AGGREGATE_SOURCE).not.toContain('mapDroppedCanonicalNodeToCanvasNode');
+  });
 
-    const result = dropCanonicalNode({
+  it('returns noop when admitting a node already present in the semantic draft', () => {
+    const canonicalNode = buildCanonicalNode('transform-node', 'transform');
+
+    const result = admitCanonicalNodeToCanvas({
       canonicalNode,
-      position: { x: 10, y: 20 },
-      nodes: currentNodes,
-      columnLevelLineageEnabled: false,
+      visibleNodeIds: ['transform-node'],
     });
 
     expect(result).toEqual({
       outcome: 'noop',
       reason: canvasViewCopy.nodeAlreadyOnCanvasMessage,
+    });
+  });
+
+  it('admits a new canonical node without projecting viewport nodes', () => {
+    const canonicalNode = buildCanonicalNode('transform-node', 'transform');
+
+    expect(
+      admitCanonicalNodeToCanvas({
+        canonicalNode,
+        visibleNodeIds: ['source-node'],
+      })
+    ).toEqual({
+      outcome: 'added',
+      canonicalNode,
     });
   });
 });

@@ -4,6 +4,8 @@ export const canvasViewAuthoringCopyEs = {
   connectionIncompleteMessage: 'La conexion esta incompleta.',
   nodeNotFoundInGraphMessage: 'No se ha encontrado el nodo en el grafo.',
   nodeAlreadyOnCanvasMessage: 'El nodo ya esta en el canvas',
+  nodeKindUnavailableForCanvasMessage:
+    'Este tipo de nodo no esta disponible para el canvas activo.',
   transformationConnectionOrderMessage:
     'Las aristas del plan deben seguir source -> sql_transform -> sink.',
   transformationConnectionEdgeCountMessage:

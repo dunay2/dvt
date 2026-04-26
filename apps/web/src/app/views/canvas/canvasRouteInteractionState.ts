@@ -6,7 +6,12 @@ import {
   deriveCanvasPlaygroundTabState,
   type CanvasPlaygroundTabState,
 } from './canvasPlaygroundTabState';
+import { findCanvasRuntimeRegistration } from '../../plugins/graphStrategyRegistry';
 import { canvasViewCopy } from './copy';
+import {
+  formatDisabledCanvasPluginMessage,
+  formatUnsupportedCanvasKindMessage,
+} from './canvasCopyFormatting';
 import type { CanvasDraftTransportErrorState } from './canvasDraftTransportErrorState';
 import type { useCanvasController } from './useCanvasController';
 
@@ -37,7 +42,8 @@ export type CanvasRouteInteractionState = {
 
 function resolveEffectiveWorkbenchState(
   controller: CanvasController,
-  draftTransportError: CanvasDraftTransportErrorState | null
+  draftTransportError: CanvasDraftTransportErrorState | null,
+  canvasDocumentRuntimeErrorMessage: string | null
 ): CanvasRouteInteractionState['effectiveWorkbenchState'] {
   const workbenchState = getCanvasWorkbenchState({
     canonicalNodeCount: controller.explorerNodes.length,
@@ -47,7 +53,12 @@ function resolveEffectiveWorkbenchState(
   });
 
   return draftTransportError == null
-    ? workbenchState
+    ? canvasDocumentRuntimeErrorMessage == null
+      ? workbenchState
+      : {
+          kind: 'error',
+          message: canvasDocumentRuntimeErrorMessage,
+        }
     : {
         kind: 'error',
         message: draftTransportError.message,
@@ -98,17 +109,44 @@ function resolveStartupBlockState(
   return null;
 }
 
+function resolveCanvasDocumentRuntimeErrorMessage(controller: CanvasController): string | null {
+  const canvasKind = controller.canvasDocument?.kind;
+  if (!canvasKind) {
+    return null;
+  }
+
+  const normalizedCanvasKind = canvasKind.trim().toLowerCase();
+  const hasRuntimeRegistration = controller.availableCanvasKinds.some(
+    (registration) => registration.kind.trim().toLowerCase() === normalizedCanvasKind
+  );
+
+  if (hasRuntimeRegistration) {
+    return null;
+  }
+
+  return findCanvasRuntimeRegistration(normalizedCanvasKind) == null
+    ? formatUnsupportedCanvasKindMessage(normalizedCanvasKind)
+    : formatDisabledCanvasPluginMessage(normalizedCanvasKind);
+}
+
 export function deriveCanvasRouteInteractionState(
   controller: CanvasController,
   draftTransportError: CanvasDraftTransportErrorState | null
 ): CanvasRouteInteractionState {
-  const effectiveWorkbenchState = resolveEffectiveWorkbenchState(controller, draftTransportError);
+  const canvasDocumentRuntimeErrorMessage =
+    resolveCanvasDocumentRuntimeErrorMessage(controller);
+  const effectiveWorkbenchState = resolveEffectiveWorkbenchState(
+    controller,
+    draftTransportError,
+    canvasDocumentRuntimeErrorMessage
+  );
   const startupBlockState = resolveStartupBlockState(controller);
   const shouldDisableCanvasInteractions =
     startupBlockState != null ||
     controller.isBackendCheckPending ||
     controller.draftRecoveryReason != null ||
-    draftTransportError != null;
+    draftTransportError != null ||
+    canvasDocumentRuntimeErrorMessage != null;
   const effectiveUserPermissions = resolveEffectiveUserPermissions({
     controller,
     shouldDisableCanvasInteractions,

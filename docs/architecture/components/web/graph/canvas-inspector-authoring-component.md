@@ -2,7 +2,7 @@
 title: Canvas Inspector Authoring Component
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-04-25
+last_reviewed: 2026-04-26
 planning_type: architecture
 ---
 
@@ -39,6 +39,7 @@ inspector contract.
 | Domain policy       | `canvasInspectorAuthoringModel.ts`   | validation and normalization are explicit and pure                       |
 | Application command | `canvasInspectorAuthoringCommand.ts` | maps validated Inspector edits into aggregate mutation                   |
 | Application seam    | `useCanvasInspectorCommands.ts`      | exposes one route-safe callback instead of leaking aggregate mutation up |
+| Runtime policy      | `CanvasRuntimePolicy`                | decides whether Inspector authoring is available for the active canvas   |
 | Passive view        | `InspectorPanel.tsx`                 | still owns passive node details and plugin read-only panels              |
 | Route-owned view    | `CanvasInspectorPanel.tsx`           | composes the passive view with governed authoring UI                     |
 
@@ -61,12 +62,15 @@ write surface lives one level up in the route-owned wrapper.
 | `serializeCanvasDraftAuthoringBaselineSignature` | remote-draft baseline signature policy used by bootstrap and reload    |
 | `toCanvasAuthoringMetadata`                      | JSON-compatible metadata DTO boundary for signatures and persistence   |
 | `CanvasGraphStrategy`                            | plugin-neutral graph strategy contract used by Canvas application code |
-| `CanvasGraphAuthoringPolicy`                     | explicit plugin-contributed Canvas kind carried by each strategy       |
+| `CanvasGraphAuthoringMode`                       | route-facing authoring kind resolved from the active canvas document   |
 | `useLineageViewData`                             | Lineage read model over the DBT workspace snapshot                     |
 
 ## Invariants
 
 - The writable surface is the route-owned Inspector only.
+- Inspector editability is owned by `CanvasRuntimePolicy.commands`; it must
+  not be derived directly from draft transport mutability or raw user
+  permissions.
 - Plugin-owned inspector panels remain read-only in this slice.
 - The Inspector draft is local UI state; authoritative authoring truth remains
   `CanvasDraftSession`.
@@ -85,8 +89,8 @@ write surface lives one level up in the route-owned wrapper.
   omitted before render-time signatures or persistence.
 - Canvas application code must depend on the plugin-neutral
   `CanvasGraphStrategy` contract, not on a DBT adapter module.
-- Canvas application code must read `CanvasGraphAuthoringPolicy.canvasKind`
-  instead of branching on concrete strategy IDs.
+- Canvas application code must read the active canvas kind from
+  `canvasDocument.kind`; graph strategies must not own canvas-kind posture.
 - Node authoring and duplicate commands must not consume transformation
   topology flags. Canvas authoring remains compositional; the
   `source -> sql_transform -> sink` topology is validated before planning and
@@ -123,14 +127,16 @@ write surface lives one level up in the route-owned wrapper.
 | `useCanvasDraftReloadHydration.ts`           | reload saved-signature assignment from shared baseline policy       | hook-local signature rules             |
 | `types/canonicalGuards.ts`                   | runtime guards for canonical graph primitives                       | Canvas route state or plugin mapping   |
 | `plugins/graphStrategyContracts.ts`          | plugin-neutral graph strategy contract                              | DBT mapping implementation             |
-| `plugins/dvt/transformationGraphStrategy.ts` | DVT-owned transformation graph strategy and Canvas kind policy      | DBT adapter mapping                    |
+| `plugins/dvt/transformationGraphStrategy.ts` | DVT-owned transformation graph strategy and canonical guards        | DBT adapter mapping or Canvas posture  |
 | `views/lineage/useLineageViewData.ts`        | DBT snapshot read model and explicit DBT strategy resolution        | Canvas authoring default ownership     |
 
 ## Topology
 
 ```mermaid
 flowchart LR
-  Controller["useCanvasController"] --> Commands["useCanvasInspectorCommands"]
+  Controller["useCanvasController"] --> RuntimePolicy["CanvasRuntimePolicy"]
+  RuntimePolicy --> Panel
+  Controller --> Commands["useCanvasInspectorCommands"]
   Commands --> Command["canvasInspectorAuthoringCommand.ts"]
   Command --> Session["CanvasDraftSession"]
   Session --> Projection["canvasAuthoringGraphProjection.ts"]
@@ -144,11 +150,14 @@ flowchart LR
   Signature --> Autosave["draft autosave scheduling"]
   Projection --> Viewport["useCanvasViewportGraphModel.ts"]
   StrategyContract["CanvasGraphStrategy contract"] --> ParseDrop["plugin drop payload parsing"]
-  StrategyPolicy["CanvasGraphAuthoringPolicy.canvasKind"] --> Toolbar["toolbar / route posture"]
+  CanvasDocument["canvasDocument.kind"] --> ActiveStrategy["canvasActiveGraphStrategy.ts"]
+  CanvasDocument --> Toolbar["toolbar / route posture"]
+  ActiveStrategy --> StrategyContract
   CanonicalGuards["canonicalGuards.ts"] --> StrategyContract
   CanonicalGuards --> ParseDrop
-  ParseDrop --> Drop["dropCanonicalNode canonical admission"]
-  Drop --> Duplicate["duplicate command reuse"]
+  ParseDrop --> Admission["admitCanonicalNodeToCanvas"]
+  Admission --> Duplicate["duplicate command reuse"]
+  Admission --> ViewportMapper["mapDroppedCanonicalNodeToCanvasNode"]
   DvtStrategy["dvt/transformationGraphStrategy.ts"] --> StrategyContract
   DbtAdapter["dbtNodeAdapter.ts"] --> StrategyContract
   Lineage["useLineageViewData.ts"] --> DbtAdapter
@@ -179,6 +188,7 @@ stateDiagram-v2
 ```mermaid
 sequenceDiagram
   participant User
+  participant Policy as CanvasRuntimePolicy
   participant Section as Inspector authoring section
   participant Model as Inspector model
   participant Hook as useCanvasInspectorCommands
@@ -188,6 +198,7 @@ sequenceDiagram
   participant Payload as Current draft payload
   participant Autosave as Draft autosave
 
+  Policy-->>Section: canEditNode
   User->>Section: edit node details
   Section->>Model: update draft and validate
   Model-->>Section: dirty / invalid / clean
@@ -225,6 +236,8 @@ sequenceDiagram
 ## Drift To Watch
 
 - pushing write semantics down into `InspectorPanel.tsx`
+- recomputing `canEditNode` from raw permissions, draft transport mutability,
+  or workbench state instead of `CanvasRuntimePolicy`
 - letting plugin panels mutate core route-owned node fields
 - using the Inspector form as a second persistence model
 - using a structural-only dirty signature that cannot see node name,
@@ -235,8 +248,9 @@ sequenceDiagram
 - reintroducing plugin metadata sanitization in ad hoc shallow clones
 - importing `CanvasGraphStrategy` from a concrete plugin adapter instead of the
   neutral plugin contract
-- deriving Canvas behavior from `graphStrategy.id` instead of explicit strategy
-  policy
+- deriving Canvas behavior from `graphStrategy.id` or strategy policy instead
+  of the active canvas document
+- moving viewport projection back into canonical admission commands
 - reintroducing authoring-time topology flags into node drop or duplicate
   commands; topology validation belongs to plan/run readiness
 - letting DBT own the DVT transformation graph strategy

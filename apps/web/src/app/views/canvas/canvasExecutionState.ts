@@ -1,10 +1,12 @@
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+import type { CanvasExecutionStrategy } from '../../plugins/canvasExecutionStrategyContracts';
 import type { PlanViewModel } from '../../types/plans';
 import {
   buildPlanStatusSummary,
   hasPersistedPreviewProof,
   hasPersistedPreviewIdentityMismatch,
 } from './canvasPlanReadiness';
+import { canvasViewCopy } from './copy';
 import {
   validateTransformationGraph,
   type TransformationGraphValidationResult,
@@ -12,6 +14,7 @@ import {
 
 type DeriveCanvasExecutionStateArgs = {
   canRun: boolean;
+  executionStrategy: CanvasExecutionStrategy | null;
   currentPlan: PlanViewModel | null;
   lastPlannedDraftSignature: string | null;
   canonicalNodes: CanonicalNode[];
@@ -31,6 +34,7 @@ export type CanvasExecutionState = {
 
 export function deriveCanvasExecutionState({
   canRun,
+  executionStrategy,
   currentPlan,
   lastPlannedDraftSignature,
   canonicalNodes,
@@ -52,17 +56,21 @@ export function deriveCanvasExecutionState({
     lastPlannedDraftSignature !== transformationValidation.draftSignature;
   const canStartRun =
     canRun &&
+    executionStrategy?.kind === 'transformation_preview' &&
     currentPlan != null &&
     hasPersistedPlanForRun &&
     transformationValidation.valid &&
     !isCurrentPlanStale;
-  const planStatusSummary = buildPlanStatusSummary({
-    canRun,
-    currentPlan,
-    isCurrentPlanStale,
-    persistedPreviewIdentityMismatch,
-    hasPersistedPlanForRun,
-  });
+  const planStatusSummary =
+    executionStrategy == null || executionStrategy.kind === 'not_executable'
+      ? canvasViewCopy.canvasExecutionUnavailableMessage
+      : buildPlanStatusSummary({
+          canRun,
+          currentPlan,
+          isCurrentPlanStale,
+          persistedPreviewIdentityMismatch,
+          hasPersistedPlanForRun,
+        });
 
   return {
     transformationValidation,

@@ -120,8 +120,9 @@ of its owned contribution surfaces.
 
 Decision rule by surface:
 
-- new workbench route: update `views`, the route component, and the route
-  bootstrap handle together
+- new workbench route: update the plugin contribution, the route component,
+  and the plugin-owned route bootstrap handle together; the registry must not
+  import route bootstrap handles from `views/`
 - new node kind: update the node-kind catalog, canonical mapping, and renderer
   registration together
 - new inspector panel: keep `shouldShow` and panel rendering local to the

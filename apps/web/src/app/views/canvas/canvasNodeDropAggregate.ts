@@ -1,44 +1,31 @@
-import type { Node } from '@xyflow/react';
-
 import type { CanonicalNode } from '../../types/canonical';
-import { mapDroppedCanonicalNodeToCanvasNode } from './canvasNodeMapper';
 import { canvasViewCopy } from './copy';
 
-type DropCanonicalNodeArgs = {
+type AdmitCanonicalNodeToCanvasArgs = {
   canonicalNode: CanonicalNode;
-  position: { x: number; y: number };
-  nodes: Node[];
-  columnLevelLineageEnabled: boolean;
+  visibleNodeIds: readonly string[];
 };
 
-export type DropCanonicalNodeResult =
+export type AdmitCanonicalNodeToCanvasResult =
   | {
       outcome: 'added';
-      nextNodes: Node[];
+      canonicalNode: CanonicalNode;
     }
   | {
       outcome: 'noop';
       reason: string;
     };
 
-export function dropCanonicalNode({
+export function admitCanonicalNodeToCanvas({
   canonicalNode,
-  position,
-  nodes,
-  columnLevelLineageEnabled,
-}: DropCanonicalNodeArgs): DropCanonicalNodeResult {
-  if (nodes.some((node) => node.id === canonicalNode.id)) {
+  visibleNodeIds,
+}: AdmitCanonicalNodeToCanvasArgs): AdmitCanonicalNodeToCanvasResult {
+  if (visibleNodeIds.includes(canonicalNode.id)) {
     return { outcome: 'noop', reason: canvasViewCopy.nodeAlreadyOnCanvasMessage };
   }
 
-  const newNode = mapDroppedCanonicalNodeToCanvasNode(
-    canonicalNode,
-    position,
-    columnLevelLineageEnabled
-  );
-
   return {
     outcome: 'added',
-    nextNodes: [...nodes, newNode],
+    canonicalNode,
   };
 }

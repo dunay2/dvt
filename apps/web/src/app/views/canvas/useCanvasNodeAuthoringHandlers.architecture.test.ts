@@ -6,6 +6,18 @@ const NODE_AUTHORING_HANDLERS_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'useCanvasNodeAuthoringHandlers.ts'
 );
+const NODE_DROP_HANDLERS_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'useCanvasNodeDropHandlers.ts'
+);
+const AUTHORING_NODE_CREATION_HANDLERS_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'useCanvasAuthoringNodeCreationHandlers.ts'
+);
+const NODE_ADMISSION_COMMAND_RUNNER_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'useCanvasNodeAdmissionCommandRunner.ts'
+);
 
 describe('useCanvasNodeAuthoringHandlers architecture', () => {
   it('stays as a composition seam over node creation, duplicate, drop, and removal handlers', () => {
@@ -21,10 +33,35 @@ describe('useCanvasNodeAuthoringHandlers architecture', () => {
     expect(NODE_AUTHORING_HANDLERS_SOURCE).not.toContain('useCallback(');
     expect(NODE_AUTHORING_HANDLERS_SOURCE).not.toContain('toast.');
     expect(NODE_AUTHORING_HANDLERS_SOURCE).not.toContain('setTimeout(');
-    expect(NODE_AUTHORING_HANDLERS_SOURCE).not.toContain('dropCanonicalNode');
+    expect(NODE_AUTHORING_HANDLERS_SOURCE).not.toContain('admitCanonicalNodeToCanvas');
     expect(NODE_AUTHORING_HANDLERS_SOURCE).not.toContain('canvasInteractionCommands');
     expect(NODE_AUTHORING_HANDLERS_SOURCE).not.toContain('Pick<');
     expect(NODE_AUTHORING_HANDLERS_SOURCE).not.toContain('UseCanvasGraphHandlersParams');
     expect(NODE_AUTHORING_HANDLERS_SOURCE).not.toContain('UseCanvasGraphHandlersResult');
+  });
+
+  it('keeps node creation and drop React handlers outside state-updater side effects', () => {
+    for (const source of [
+      NODE_DROP_HANDLERS_SOURCE,
+      AUTHORING_NODE_CREATION_HANDLERS_SOURCE,
+    ]) {
+      expect(source).toContain('useCanvasNodeAdmissionCommandRunner');
+      expect(source).not.toContain('resolveCanvasNodeAdmissionTransaction');
+      expect(source).not.toContain('setNodes((');
+      expect(source).not.toContain('setDraftSession((');
+    }
+
+    expect(NODE_ADMISSION_COMMAND_RUNNER_SOURCE).toContain(
+      'resolveCanvasNodeAdmissionTransaction'
+    );
+    expect(NODE_ADMISSION_COMMAND_RUNNER_SOURCE).toContain('latestNodesRef');
+    expect(NODE_ADMISSION_COMMAND_RUNNER_SOURCE).toContain('latestDraftSessionRef');
+    expect(NODE_ADMISSION_COMMAND_RUNNER_SOURCE).toContain(
+      'latestNodesRef.current = transaction.nodes'
+    );
+    expect(NODE_ADMISSION_COMMAND_RUNNER_SOURCE).toContain(
+      'latestDraftSessionRef.current = transaction.draftSession'
+    );
+    expect(NODE_ADMISSION_COMMAND_RUNNER_SOURCE).not.toContain('toast.');
   });
 });

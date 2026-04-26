@@ -3,6 +3,7 @@ import type { Dispatch, SetStateAction } from 'react';
 
 import type { CanvasGraphStrategy } from '../../plugins/graphStrategyContracts';
 import type { NodeKindRegistration } from '../../plugins/nodeTypeContracts';
+import type { RuntimeCapabilities } from '../../plugins/registry';
 import type { CanonicalNode } from '../../types/canonical';
 import type { CanvasDraftSession } from './canvasDraftSession';
 
@@ -33,9 +34,11 @@ export type CanvasGraphInteractionEffects = {
 };
 
 export type CanvasGraphInteractionPolicy = {
-  graphStrategy: CanvasGraphStrategy;
+  graphStrategy: CanvasGraphStrategy | null;
   canEditEdges: boolean;
+  runtimeCapabilities?: RuntimeCapabilities;
   columnLevelLineageEnabled: boolean;
+  allowsCanonicalNode: (node: CanonicalNode) => boolean;
 };
 
 export type CanvasGraphInteractionContracts = {
@@ -67,9 +70,10 @@ export type CanvasNodeAuthoringEffects = {
 };
 
 export type CanvasNodeAuthoringPolicy = {
-  graphStrategy: CanvasGraphStrategy;
+  graphStrategy: CanvasGraphStrategy | null;
   canEditEdges: boolean;
   columnLevelLineageEnabled: boolean;
+  allowsCanonicalNode: (node: CanonicalNode) => boolean;
 };
 
 export type CanvasNodeAuthoringContracts = {
@@ -80,6 +84,7 @@ export type CanvasNodeAuthoringContracts = {
 
 export type CanvasNodeDuplicateState = {
   canonicalNodesById: Map<string, CanonicalNode>;
+  draftSession: CanvasDraftSession;
   nodes: Node[];
 };
 
@@ -106,15 +111,27 @@ export type CanvasNodeDropEffects = {
   setDraftSession: CanvasDraftSessionSetter;
 };
 
+export type CanvasNodeDropState = {
+  draftSession: CanvasDraftSession;
+  nodes: Node[];
+};
+
 export type CanvasNodeDropPolicy = {
-  graphStrategy: CanvasGraphStrategy;
+  graphStrategy: CanvasGraphStrategy | null;
   canEditEdges: boolean;
   columnLevelLineageEnabled: boolean;
+  allowsCanonicalNode: (node: CanonicalNode) => boolean;
 };
 
 export type CanvasNodeDropContracts = {
+  state: CanvasNodeDropState;
   effects: CanvasNodeDropEffects;
   policy: CanvasNodeDropPolicy;
+};
+
+export type CanvasAuthoringNodeCreationState = {
+  draftSession: CanvasDraftSession;
+  nodes: Node[];
 };
 
 export type CanvasAuthoringNodeCreationEffects = {
@@ -127,9 +144,11 @@ export type CanvasAuthoringNodeCreationEffects = {
 export type CanvasAuthoringNodeCreationPolicy = {
   canEditEdges: boolean;
   columnLevelLineageEnabled: boolean;
+  allowsCanonicalNode: (node: CanonicalNode) => boolean;
 };
 
 export type CanvasAuthoringNodeCreationContracts = {
+  state: CanvasAuthoringNodeCreationState;
   effects: CanvasAuthoringNodeCreationEffects;
   policy: CanvasAuthoringNodeCreationPolicy;
 };
@@ -164,6 +183,7 @@ export type CanvasNodeRemovalContracts = {
 
 export type CanvasEdgeAuthoringState = {
   canonicalNodesById: Map<string, CanonicalNode>;
+  draftSession: CanvasDraftSession;
   edges: Edge[];
 };
 
@@ -174,6 +194,7 @@ export type CanvasEdgeAuthoringEffects = {
 
 export type CanvasEdgeAuthoringPolicy = {
   canEditEdges: boolean;
+  runtimeCapabilities?: RuntimeCapabilities;
 };
 
 export type CanvasEdgeAuthoringContracts = {

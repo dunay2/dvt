@@ -1940,6 +1940,7 @@ tasks:
       - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-production-node-authoring-and-persistence-plan-20260416.md
       - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-canvas-target-architecture-execution-plan-20260417.md
       - docs/planning/reviews/architecture-and-governance/20260422-canvas-runtime-truth-hardcut-review.md
+      - docs/planning/reviews/architecture-and-governance/20260425-canvas-graph-strategy-fowler-hard-qa-review.md
       - docs/architecture/components/web/graph/canvas-component-map-and-modernization-review.md
       - docs/architecture/components/web/inspector/inspector-frontend-architecture.md
       - docs/architecture/components/web/frontend-data-boundary-architecture.md
@@ -1964,9 +1965,9 @@ tasks:
       `TF-E2-D` closed the route-owned Inspector, `TF-E2-E` closed the selected-closure proof
       matrix, `TF-E2-K` closed the typed host and first-canvas cycle, and `TF-E2-B/C` now close
       duplicate-node and reconnect-edge semantics without inflating passive adapters or the draft
-      aggregate component. The remaining parent-task work is the residual operability and
-      longer-horizon compatibility proof around governed persisted draft versions before `TF-E2` can
-      move to review.
+      aggregate component. `TF-E2-L` is now queued from the 2026-04-25 Fowler hard QA to close
+      graph-strategy ownership, active canvas-kind strategy resolution, DBT fail-closed validation,
+      and canonical admission drift before `TF-E2` can move to review.
     last_verified: '2026-04-25'
   - task_id: TF-E2-A
     parent_task: TF-E2
@@ -2467,6 +2468,43 @@ tasks:
       behavior through a dedicated lifecycle-local command seam, and the host-cycle route scenario
       vocabulary no longer lives in the generic controller-defaults file.
     last_verified: '2026-04-24'
+  - task_id: TF-E2-L
+    parent_task: TF-E2
+    priority: P0
+    status: queued
+    objective: >-
+      close the Canvas graph-strategy ownership hardening found by the 2026-04-25 Fowler QA so the
+      active canvas document owns strategy selection, DBT and DVT adapters fail closed
+      symmetrically, canonical admission is separated from viewport projection, and semantic
+      architecture tests guard behavior instead of only checking string-level thinness.
+    dependency: TF-E2-K, TF-E2-B, TF-E2-C
+    target: >-
+      Restored and newly created `dbt` and `transformation` canvases resolve graph strategy from
+      `canvasDocument.kind`, DBT malformed node and edge payloads return `null`, canonical runtime
+      vocabulary has one source of truth, node admission no longer imports React Flow or graph
+      strategy policy, and docs plus diagrams describe the corrected component ownership.
+    complexity: M
+    effort_points: 5
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/reviews/architecture-and-governance/20260425-canvas-graph-strategy-fowler-hard-qa-review.md
+      - docs/architecture/components/web/graph/graph-frontend-architecture.md
+      - docs/architecture/components/web/graph/canvas-inspector-authoring-component.md
+      - docs/architecture/components/web/graph/canvas-playground-host-component.md
+      - apps/web/src/app/plugins/graphStrategyContracts.ts
+      - apps/web/src/app/plugins/graphStrategyRegistry.ts
+      - apps/web/src/app/plugins/dbt/dbtNodeAdapter.ts
+      - apps/web/src/app/types/canonical.ts
+      - apps/web/src/app/types/canonicalGuards.ts
+      - apps/web/src/app/views/canvas/canvasNodeDropAggregate.ts
+      - apps/web/src/app/views/canvas/useCanvasControllerEnvironment.ts
+      - apps/web/src/app/views/canvas/canvasDraftAuthoringComponent.architecture.test.ts
+    status_reason: >-
+      Queued from hard QA. The preceding fix correctly removed false topology policy from authoring,
+      but the strategy boundary still has active-document drift, DBT adapter validation drift,
+      duplicated canonical vocabulary, and viewport-coupled node admission. This task is the
+      remediation route before TF-E2 review closure.
+    last_verified: '2026-04-25'
   - task_id: TF-E2-E-B
     parent_task: TF-E2-E
     priority: P0

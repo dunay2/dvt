@@ -75,6 +75,22 @@ export const canvasViewRouteCopyByKey = {
     fallback:
       'Canvas could not load the current workspace graph. Retry after the workspace service is available again.',
   },
+  unsupportedCanvasKindMessagePrefix: {
+    key: 'canvas.route.unsupportedCanvasKindMessagePrefix',
+    fallback: 'Canvas cannot open persisted canvas kind ',
+  },
+  unsupportedCanvasKindMessageSuffix: {
+    key: 'canvas.route.unsupportedCanvasKindMessageSuffix',
+    fallback: ' because no runtime registration is available.',
+  },
+  disabledCanvasPluginMessagePrefix: {
+    key: 'canvas.route.disabledCanvasPluginMessagePrefix',
+    fallback: 'Canvas cannot open persisted canvas kind ',
+  },
+  disabledCanvasPluginMessageSuffix: {
+    key: 'canvas.route.disabledCanvasPluginMessageSuffix',
+    fallback: ' because its plugin is disabled or unavailable.',
+  },
   runtimeBlockedTitle: {
     key: 'canvas.runtime.blockedTitle',
     fallback: 'Canvas runtime unavailable',

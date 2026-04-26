@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { Separator } from '../../components/ui/separator';
 import { CanvasToolbarDraftStatus } from './CanvasToolbarDraftStatus';
 import { CanvasToolbarPrimaryControls } from './CanvasToolbarPrimaryControls';
-import type { CanvasGraphAuthoringMode } from '../../plugins/graphStrategyContracts';
+import type { CanvasGraphAuthoringMode } from '../../plugins/nodeTypeContracts';
 import type { CanvasRouteState } from './canvasDraftPresentationModel';
 import { deriveCanvasToolbarViewModel } from './canvasToolbarViewModel';
 import type { CanvasDraftToolbarState } from './canvasDraftToolbarState';

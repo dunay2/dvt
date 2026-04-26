@@ -1,7 +1,6 @@
 import { useMemo } from 'react';
 
 import { usePlatformHealthSnapshotQuery } from '../../../capabilities/platform-health';
-import { resolveCanvasGraphStrategy } from '../../plugins/graphStrategyRegistry';
 import { useCapabilitiesQuery } from '../../queries/useCapabilitiesQuery';
 import { resolveWorkspaceBootstrapConfig } from '../../services/config/workspaceConfig';
 import { resolveWorkspaceServiceCapabilities } from '../../services/workspace/workspaceService';
@@ -21,8 +20,6 @@ export function useCanvasControllerEnvironment() {
   const dataSourceMode = useAppDataSourceMode();
   const { data: capabilities } = useCapabilitiesQuery();
   const platformHealthQuery = usePlatformHealthSnapshotQuery();
-  const graphStrategy = useMemo(() => resolveCanvasGraphStrategy(), []);
-  const canvasAuthoringMode = graphStrategy.authoringPolicy.canvasKind;
   const workspaceServiceCapabilities = useMemo(
     () => resolveWorkspaceServiceCapabilities(dataSourceMode),
     [dataSourceMode]
@@ -41,8 +38,6 @@ export function useCanvasControllerEnvironment() {
     dataSourceMode,
     capabilities,
     platformHealthQuery,
-    graphStrategy,
-    canvasAuthoringMode,
     workspaceServiceCapabilities,
     workspaceService,
     workspaceGraphDraftAuthoringPort,

@@ -1,6 +1,7 @@
 import type { PluginContributions } from '../registry';
-import { DbtNodeRenderer } from '../dbt/DbtNodeRenderer';
-import { DVT_AUTHORING_NODE_KINDS } from '../nodeTypeCatalog.dbt';
+import { GraphNodeRenderer } from '../graph/GraphNodeRenderer';
+import { DVT_AUTHORING_NODE_KINDS } from './dvtNodeTypeCatalog';
+import { transformationCanvasGraphStrategy } from './transformationGraphStrategy';
 
 const DVT_PLUGIN_ID = 'dvt';
 
@@ -10,7 +11,7 @@ const nodeRenderers = new Map(
     {
       kind: kind.kind,
       priority: 100,
-      component: DbtNodeRenderer,
+      component: GraphNodeRenderer,
     },
   ])
 );
@@ -25,6 +26,11 @@ export const dvtContributions: PluginContributions = {
     {
       kind: 'transformation',
       pluginId: DVT_PLUGIN_ID,
+      executionStrategy: {
+        kind: 'transformation_preview',
+        previewProfile: 'transformation-sql-first-v1',
+      },
+      graphStrategy: transformationCanvasGraphStrategy,
       label: 'Transformation',
       description: 'Flow-based transformation canvas for the protected authoring draft.',
       createTitle: 'Transformation canvas',

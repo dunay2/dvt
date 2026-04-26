@@ -115,13 +115,14 @@ flowchart LR
   [Frontend subsystem architecture](../../architecture/components/web/index.md),
   [UI / Visualization Domain](../../architecture/domain-ui.md),
   [20260417 DVT artifacts review](../reviews/architecture-and-governance/20260417-dvt-artifacts-review.md),
+  [20260425 Canvas graph strategy Fowler hard QA review](../reviews/architecture-and-governance/20260425-canvas-graph-strategy-fowler-hard-qa-review.md),
   [Documentation and UX implementation guide](../../architecture/components/web/ux-implementation-guide.md),
   [Transformation Flow Delivery Plan 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md)
   Near-term target: keep the first SQL-first operator loop stable now that
   authoring, persisted preview-to-run handoff, and snapshot-owned result
   surfaces are live, while the remaining Lane E work shifts to parent
-  acceptance consolidation plus broader workbench and plugin
-  professionalization.
+  acceptance consolidation, the `TF-E2-L` graph-strategy ownership remediation,
+  and broader workbench and plugin professionalization.
 - `Documentation Governance`
   Current sources: [Governance Inventory](../status/governance-document-rule-inventory.md),
   [Doc-driven framework and tooling plan 2026-04-04](../proposals/mandatory/governance-and-docs/doc-driven-framework-and-tooling-plan-20260404.md),

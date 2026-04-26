@@ -2,15 +2,10 @@ import {
   createCompleteRouteBootstrapPresentation,
   createErrorRouteBootstrapPresentation,
   createPendingRouteBootstrapPresentation,
-  createPublishedRouteBootstrapHandle,
   type RouteBootstrapPresentation,
 } from '../../bootstrap/routeBootstrapContract';
 
 export const COST_ROUTE_ID = 'cost.dashboard';
-
-export const COST_ROUTE_BOOTSTRAP_HANDLE = createPublishedRouteBootstrapHandle({
-  pendingDetail: 'Preparing Cost route',
-});
 
 export function deriveCostRouteBootstrapPresentation({
   isLoading,

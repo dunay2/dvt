@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
   buildRemoteDraftRecord,
   createHarnessWithDraft,
+  setHarnessRemoteDraftRecord,
 } from './useCanvasController.draftLifecycle.test.support';
 import { setupCanvasControllerHarness } from './useCanvasController.test.harness';
 
@@ -123,6 +124,97 @@ describe('useCanvasController core', () => {
         sessionContext: harness.state.services.sessionContext,
         shellFeedback: harness.state.services.shellFeedback,
         onRunStarted: harness.state.navigationActionsResult.handleRunStarted,
+      })
+    );
+  });
+
+  it('selects graph strategy from the active canvas document kind', async () => {
+    setHarnessRemoteDraftRecord(
+      harness,
+      buildRemoteDraftRecord({
+        canvas: {
+          kind: 'dbt',
+          title: 'dbt graph',
+        },
+        nodeIds: ['node_1', 'node_2'],
+        nodePositions: {
+          node_1: { x: 0, y: 0 },
+          node_2: { x: 100, y: 0 },
+        },
+        edges: [{ sourceId: 'node_1', targetId: 'node_2' }],
+      })
+    );
+
+    await harness.renderProbe();
+    await harness.renderProbe();
+
+    expect(harness.mocks.findCanvasRuntimeRegistration).toHaveBeenCalledWith(
+      'dbt',
+      undefined
+    );
+    expect(harness.getLatestResult()?.canvasAuthoringMode).toBe('dbt');
+    expect(harness.getLatestResult()?.canEditInspectorNode).toBe(true);
+    expect(harness.getLatestResult()?.userPermissions).toEqual(
+      expect.objectContaining({
+        canEditEdges: true,
+        canPlan: false,
+        canRun: false,
+      })
+    );
+    expect(harness.mocks.useCanvasGraphHandlers).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        graphStrategy: expect.objectContaining({
+          id: 'dbt',
+        }),
+      })
+    );
+    expect(harness.mocks.useCanvasExecutionActions).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        canPlan: false,
+        canRun: false,
+      })
+    );
+  });
+
+  it('routes unsupported canvas kinds through the runtime policy fail-closed posture', async () => {
+    setHarnessRemoteDraftRecord(
+      harness,
+      buildRemoteDraftRecord({
+        canvas: {
+          kind: 'legacy',
+          title: 'legacy graph',
+        },
+        nodeIds: ['node_1'],
+        nodePositions: {
+          node_1: { x: 0, y: 0 },
+        },
+        edges: [],
+      })
+    );
+
+    await harness.renderProbe();
+    await harness.renderProbe();
+
+    expect(harness.getLatestResult()?.canEditInspectorNode).toBe(false);
+    expect(harness.getLatestResult()?.canOpenSourceImport).toBe(false);
+    expect(harness.getLatestResult()?.userPermissions).toEqual(
+      expect.objectContaining({
+        canEditEdges: false,
+        canPlan: false,
+        canRun: false,
+      })
+    );
+    expect(harness.mocks.useCanvasGraphHandlers).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        graphStrategy: null,
+        canEditEdges: false,
+      })
+    );
+    expect(harness.mocks.useCanvasExecutionActions).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        executionStrategy: null,
+        canPlan: false,
+        canRun: false,
       })
     );
   });
