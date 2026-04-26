@@ -18,6 +18,12 @@ export type CanvasRuntimePolicyInput =
   | {
       kind: 'unsupported_kind';
       canvasKind: string;
+    }
+  | {
+      kind: 'disabled_plugin';
+      canvasKind: string;
+      pluginId: string;
+      reason?: string;
     };
 
 export type CanvasRuntimeDocumentPolicy =
@@ -31,6 +37,12 @@ export type CanvasRuntimeDocumentPolicy =
   | {
       kind: 'unsupported_kind';
       canvasKind: string;
+    }
+  | {
+      kind: 'disabled_plugin';
+      canvasKind: string;
+      pluginId: string;
+      reason?: string;
     };
 
 export type CanvasRuntimeExecutionPolicy =
@@ -95,13 +107,29 @@ function resolveRuntimeDocumentPolicy(
         kind: 'unsupported_kind',
         canvasKind: activeRuntime.canvasKind,
       };
+    case 'disabled_plugin':
+      return {
+        kind: 'disabled_plugin',
+        canvasKind: activeRuntime.canvasKind,
+        pluginId: activeRuntime.pluginId,
+        ...(activeRuntime.reason == null ? {} : { reason: activeRuntime.reason }),
+      };
   }
+}
+
+function isRuntimePolicyBlocked(
+  activeRuntime: CanvasRuntimePolicyInput
+): activeRuntime is Extract<
+  CanvasRuntimePolicyInput,
+  { kind: 'unsupported_kind' | 'disabled_plugin' }
+> {
+  return activeRuntime.kind === 'unsupported_kind' || activeRuntime.kind === 'disabled_plugin';
 }
 
 function resolveRuntimeExecutionPolicy(
   activeRuntime: CanvasRuntimePolicyInput
 ): CanvasRuntimeExecutionPolicy {
-  if (activeRuntime.kind === 'unsupported_kind') {
+  if (isRuntimePolicyBlocked(activeRuntime)) {
     return {
       kind: 'blocked',
     };
@@ -123,7 +151,7 @@ function resolveRuntimeExecutionPolicy(
 function resolveRuntimeNodeKinds(
   activeRuntime: CanvasRuntimePolicyInput
 ): readonly NodeKindRegistration[] {
-  return activeRuntime.kind === 'unsupported_kind' ? [] : activeRuntime.nodeKinds;
+  return isRuntimePolicyBlocked(activeRuntime) ? [] : activeRuntime.nodeKinds;
 }
 
 function readKindPluginId(kind: PluginNodeKind): string {

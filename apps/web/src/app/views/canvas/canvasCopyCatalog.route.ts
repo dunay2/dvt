@@ -83,6 +83,14 @@ export const canvasViewRouteCopyByKey = {
     key: 'canvas.route.unsupportedCanvasKindMessageSuffix',
     fallback: ' because no runtime registration is available.',
   },
+  disabledCanvasPluginMessagePrefix: {
+    key: 'canvas.route.disabledCanvasPluginMessagePrefix',
+    fallback: 'Canvas cannot open persisted canvas kind ',
+  },
+  disabledCanvasPluginMessageSuffix: {
+    key: 'canvas.route.disabledCanvasPluginMessageSuffix',
+    fallback: ' because its plugin is disabled or unavailable.',
+  },
   runtimeBlockedTitle: {
     key: 'canvas.runtime.blockedTitle',
     fallback: 'Canvas runtime unavailable',

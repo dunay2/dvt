@@ -72,6 +72,14 @@ export function formatUnsupportedCanvasKindMessage(
   return `${copy.unsupportedCanvasKindMessagePrefix}"${canvasKind}"${copy.unsupportedCanvasKindMessageSuffix}`;
 }
 
+export function formatDisabledCanvasPluginMessage(
+  canvasKind: string,
+  locale?: string
+): string {
+  const copy = resolveCanvasViewCopy(locale);
+  return `${copy.disabledCanvasPluginMessagePrefix}"${canvasKind}"${copy.disabledCanvasPluginMessageSuffix}`;
+}
+
 export function formatTransformationGraphValidationSummary(
   summaryCode: TransformationGraphValidationSummaryCode,
   locale?: string

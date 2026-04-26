@@ -58,4 +58,22 @@ describe('resolveActiveCanvasGraphStrategy', () => {
       canvasKind: 'unknown',
     });
   });
+
+  it('distinguishes disabled registered plugins from unsupported canvas kinds', () => {
+    expect(
+      resolveActiveCanvasGraphStrategy(buildDraftReadModelWithCanvasKind('dbt'), {
+        plugins: {
+          dbt: {
+            available: false,
+            reason: 'disabled_for_workspace',
+          },
+        },
+      })
+    ).toEqual({
+      kind: 'disabled_plugin',
+      canvasKind: 'dbt',
+      pluginId: 'dbt',
+      reason: 'disabled_for_workspace',
+    });
+  });
 });

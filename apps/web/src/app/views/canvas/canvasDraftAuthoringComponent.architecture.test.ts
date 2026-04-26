@@ -175,6 +175,58 @@ describe('canvas draft authoring component architecture', () => {
     expect(interactionState.readOnlyState).toBeNull();
   });
 
+  it('keeps disabled registered canvas plugins distinct from unknown canvas kinds', () => {
+    expect(
+      resolveActiveCanvasGraphStrategy(buildDraftReadModelWithCanvasKind('dbt'), {
+        plugins: {
+          dbt: {
+            available: false,
+            reason: 'disabled_for_workspace',
+          },
+        },
+      })
+    ).toEqual({
+      kind: 'disabled_plugin',
+      canvasKind: 'dbt',
+      pluginId: 'dbt',
+      reason: 'disabled_for_workspace',
+    });
+
+    const availableCanvasKinds = getCanvasRuntimeRegistrations()
+      .filter((registration) => registration.kind !== 'dbt')
+      .map((registration) => ({
+        kind: registration.kind,
+        pluginId: registration.pluginId,
+        label: registration.label,
+        description: registration.description,
+        createTitle: registration.createTitle,
+        emptyState: registration.emptyState,
+        nodeKinds: registration.nodeKinds,
+      }));
+    const interactionState = deriveCanvasRouteInteractionState(
+      buildController({
+        canvasDocument: {
+          kind: 'dbt',
+          title: 'dbt canvas',
+        },
+        availableCanvasKinds,
+      }),
+      null
+    );
+
+    expect(interactionState.effectiveWorkbenchState).toEqual({
+      kind: 'error',
+      message:
+        'Canvas cannot open persisted canvas kind "dbt" because its plugin is disabled or unavailable.',
+    });
+    expect(interactionState.effectiveUserPermissions).toMatchObject({
+      canPlan: false,
+      canRun: false,
+      canEditEdges: false,
+    });
+    expect(interactionState.readOnlyState).toBeNull();
+  });
+
   it('routes Canvas command posture through the runtime policy boundary', () => {
     const registrations = getCanvasRuntimeRegistrations();
     const dbtRuntime = registrations.find((registration) => registration.kind === 'dbt');

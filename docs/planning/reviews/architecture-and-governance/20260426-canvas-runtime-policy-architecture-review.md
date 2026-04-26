@@ -237,6 +237,10 @@ No critical findings.
     toolbar, node/edge handlers, plugin registry, and architecture docs
   - `pnpm --filter @dvt/web test -- Canvas.routeStates.test.tsx`
   - `pnpm --filter @dvt/web test -- Canvas.routeStates.test.tsx canvasDraftAuthoringComponent.architecture.test.ts`
+  - `pnpm --filter @dvt/web test -- canvasActiveGraphStrategy.test.ts canvasRuntimePolicy.test.ts canvasRouteInteractionState.test.ts Canvas.routeStates.test.tsx`
+    (red: `disabled_plugin` was still collapsed into `unsupported_kind`)
+  - `pnpm --filter @dvt/web test -- canvasActiveGraphStrategy.test.ts canvasRuntimePolicy.test.ts canvasRouteInteractionState.test.ts Canvas.routeStates.test.tsx copy.test.ts canvasDraftAuthoringComponent.architecture.test.ts`
+    (green: `disabled_plugin` branch implemented)
   - `pnpm --filter @dvt/web build:e2e`
   - `pnpm exec cypress verify`
   - `$env:ELECTRON_RUN_AS_NODE=$null; pnpm exec cypress verify`
@@ -254,6 +258,9 @@ No critical findings.
   - selected Cypress Canvas preview/run spec passed after clearing
     `ELECTRON_RUN_AS_NODE`; it includes DBT first-node authoring with Plan/Run
     unavailable.
+  - post-review correction proved that registered but capability-disabled
+    canvas kinds resolve to `disabled_plugin`, deny every mutating command, and
+    render distinct route copy from unknown persisted kinds.
   - `pnpm --filter @dvt/web typecheck`, `pnpm --filter @dvt/web test`,
     `pnpm lint`, `pnpm lint:md:changed`, and `pnpm qa:artifact:check` passed.
   - `pnpm verify:prepush` passed with changed-file checks, QA artifact check,
@@ -487,6 +494,10 @@ Progress note on 2026-04-26:
     `pnpm --filter @dvt/web test -- canvasRuntimePolicy.test.ts`
   - green:
     `pnpm --filter @dvt/web test -- canvasRuntimePolicy.test.ts canvasActiveGraphStrategy.test.ts`
+- Post-review correction, 2026-04-26: `disabled_plugin` is now represented in
+  `canvasActiveGraphStrategy.ts` and `canvasRuntimePolicy.ts` instead of being
+  collapsed into `unsupported_kind`. Route interaction state also formats
+  disabled registered plugins separately from unknown persisted canvas kinds.
 
 #### `TF-E2-POL-C` Route shell and inspector posture through policy
 

@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   canvasViewCopy,
   formatCanvasConnectionRejection,
+  formatDisabledCanvasPluginMessage,
   formatCanvasLimitedAccessMessage,
   formatCanvasNodeAddedMessage,
   formatCanvasNodeRemovedMessage,
@@ -48,6 +49,15 @@ describe('canvas copy', () => {
     expect(formatCanvasNodeRemovedMessage('orders', 'en')).toBe('Removed orders');
     expect(formatCanvasNodeAddedMessage('orders', 'es')).toBe('Se ha anadido orders al canvas');
     expect(formatCanvasNodeRemovedMessage('orders', 'es')).toBe('Se ha eliminado orders');
+  });
+
+  it('formats disabled-plugin copy separately from unsupported canvas kinds', () => {
+    expect(formatDisabledCanvasPluginMessage('dbt', 'en')).toBe(
+      'Canvas cannot open persisted canvas kind "dbt" because its plugin is disabled or unavailable.'
+    );
+    expect(formatDisabledCanvasPluginMessage('dbt', 'es')).toBe(
+      'Canvas no puede abrir el tipo de canvas persistido "dbt" porque su plugin esta deshabilitado o no disponible.'
+    );
   });
 
   it('formats transformation validation summaries from stable summary codes', () => {

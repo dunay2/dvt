@@ -139,8 +139,10 @@ As of 2026-04-25:
   active document state, command availability, execution posture, and
   node-kind admission from the same runtime snapshot before any shell,
   inspector, execution, or graph command consumes those decisions
-- unsupported persisted canvas kinds fail closed as invalid documents; only a
-  missing document may use the default transformation creation posture
+- unsupported persisted canvas kinds fail closed as invalid documents;
+  registered canvas kinds whose plugin is disabled fail closed as
+  `disabled_plugin` with separate operator copy; only a missing document may
+  use the default transformation creation posture
 - `transformation` is the only executable preview posture; `dbt` authoring is
   first-class but intentionally non-executable until a real DBT execution
   strategy exists
@@ -262,11 +264,13 @@ flowchart LR
   Resolver --> Ready["ready runtime"]
   Resolver --> Missing["missing document default"]
   Resolver --> Unsupported["unsupported_kind"]
+  Resolver --> Disabled["disabled_plugin"]
 
   Ready --> Catalog
   Ready --> Strategy
   Ready --> Execution
   Unsupported --> Blocked["route interactions disabled"]
+  Disabled --> Blocked
 ```
 
 Runtime invariants:
@@ -277,6 +281,10 @@ Runtime invariants:
 - every runtime must declare whether it is executable;
 - unsupported persisted kinds disable mutation, plan, and run instead of
   falling back to transformation semantics.
+- a persisted kind that is statically registered but filtered out by runtime
+  capabilities is `disabled_plugin`, not `unsupported_kind`; this preserves the
+  distinction between operator-disabled plugins and corrupt or unknown stored
+  canvas documents.
 
 ## Canvas Runtime Policy
 
@@ -309,6 +317,9 @@ Policy invariants:
 
 - unsupported persisted canvas kinds deny graph mutation, Inspector authoring,
   source import, plan, and run from one policy object;
+- disabled registered canvas plugins deny the same mutation and execution
+  commands as unsupported kinds, but retain their own `disabled_plugin`
+  document state and route copy;
 - DBT authoring remains mutable when permissions and draft posture allow it,
   but `not_executable` runtime posture denies plan and run before toolbar or
   command handlers advertise them;
@@ -337,7 +348,7 @@ sequenceDiagram
   participant Exec as Execution actions
 
   Route->>Runtime: draft read model + runtime capabilities
-  Runtime-->>Route: active runtime or unsupported kind
+  Runtime-->>Route: active runtime, unsupported kind, or disabled plugin
   Route->>Policy: runtime + permissions + draft posture
   Policy-->>VM: shell, Inspector, and toolbar command posture
   Policy-->>Runner: allowsCanonicalNode
@@ -448,6 +459,9 @@ string checks. Current semantic coverage includes:
 - controller, viewmodel, and node command handlers consuming the policy
   boundary instead of recomputing active route posture locally;
 - unsupported persisted canvas kinds blocking mutation and execution posture;
+- disabled registered plugin posture remaining distinct from unsupported kind
+  across active runtime resolution, route interaction state, and route-visible
+  copy;
 - pure node-admission transaction results for add and duplicate-noop paths;
 - pure edge-admission transaction results for confirmation and reconnect paths;
 - active runtime catalog rejection before node create/drop side effects;

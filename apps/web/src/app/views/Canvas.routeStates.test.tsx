@@ -684,6 +684,48 @@ describe('Canvas route states', () => {
     });
   });
 
+  it('fails closed with disabled-plugin guidance for registered but unavailable canvas kinds', async () => {
+    const controller = buildController();
+
+    await renderCanvasRouteWithController(harness, {
+      canvasDocument: {
+        kind: 'dbt',
+        title: 'dbt canvas',
+      },
+      availableCanvasKinds: controller.availableCanvasKinds.filter(
+        (registration) => registration.kind !== 'dbt'
+      ),
+      explorerNodes: [],
+      inspectorNode: buildInspectorFixtureNode(),
+      canEditInspectorNode: true,
+      userPermissions: {
+        canPlan: true,
+        canRun: true,
+        canEditEdges: true,
+        canManagePlugins: false,
+        canManageRBAC: false,
+      },
+    });
+
+    expectCanvasSurfaceState({
+      harness,
+      text: 'Canvas unavailable',
+      extraText:
+        'Canvas cannot open persisted canvas kind "dbt" because its plugin is disabled or unavailable.',
+      slot: 'canvas-error-state',
+      viewportVisible: false,
+    });
+    expectPrimaryCanvasActionsBlocked(harness.container);
+    expectCanvasRegistryClosed();
+    expectCanvasBootstrapState({
+      routeState: 'error_graph',
+      bootstrapStatus: 'error',
+      bootstrapDetail:
+        'Canvas cannot open persisted canvas kind "dbt" because its plugin is disabled or unavailable.',
+      canCompleteBootstrap: false,
+    });
+  });
+
   it('fails closed when canvas authoring is mounted outside api runtime mode', async () => {
     await renderCanvasRouteWithController(harness, {
       dataSourceMode: 'mock',

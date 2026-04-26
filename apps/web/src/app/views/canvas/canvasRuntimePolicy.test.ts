@@ -49,6 +49,40 @@ describe('resolveCanvasRuntimePolicy', () => {
     expect(policy.admission.allowsNodeKind('dvt:source')).toBe(false);
   });
 
+  it('fails closed for registered canvas kinds whose owning plugin is disabled', () => {
+    const policy = resolveCanvasRuntimePolicy({
+      activeRuntime: {
+        kind: 'disabled_plugin',
+        canvasKind: 'dbt',
+        pluginId: 'dbt',
+        reason: 'disabled_for_workspace',
+      },
+      canMutateGraph: true,
+      canOpenSourceImport: true,
+      canPlan: true,
+      canRun: true,
+      canReloadLatestDraft: true,
+    });
+
+    expect(policy.document).toEqual({
+      kind: 'disabled_plugin',
+      canvasKind: 'dbt',
+      pluginId: 'dbt',
+      reason: 'disabled_for_workspace',
+    });
+    expect(policy.commands).toEqual({
+      canMutateGraph: false,
+      canEditInspectorNode: false,
+      canOpenSourceImport: false,
+      canPlan: false,
+      canRun: false,
+      canReloadLatestDraft: true,
+    });
+    expect(policy.execution.kind).toBe('blocked');
+    expect(policy.admission.nodeKinds).toEqual([]);
+    expect(policy.admission.allowsNodeKind('dbt:model')).toBe(false);
+  });
+
   it('keeps DBT authoring available while making execution unavailable', () => {
     const policy = resolveCanvasRuntimePolicy({
       activeRuntime: {

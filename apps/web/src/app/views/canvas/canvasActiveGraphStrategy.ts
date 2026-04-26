@@ -31,6 +31,12 @@ export type ActiveCanvasGraphStrategyResolution =
   | {
       kind: 'unsupported_kind';
       canvasKind: string;
+    }
+  | {
+      kind: 'disabled_plugin';
+      canvasKind: string;
+      pluginId: string;
+      reason?: string;
     };
 
 function normalizeCanvasKind(kind: string): CanvasGraphAuthoringMode {
@@ -73,6 +79,18 @@ export function resolveActiveCanvasGraphStrategy(
 
   const runtimeRegistration = findCanvasRuntimeRegistration(canvasKind, capabilities);
   if (runtimeRegistration == null) {
+    const registeredRuntime = findCanvasRuntimeRegistration(canvasKind);
+    if (registeredRuntime != null) {
+      const reason = capabilities?.plugins[registeredRuntime.pluginId]?.reason;
+
+      return {
+        kind: 'disabled_plugin',
+        canvasKind,
+        pluginId: registeredRuntime.pluginId,
+        ...(reason == null ? {} : { reason }),
+      };
+    }
+
     return {
       kind: 'unsupported_kind',
       canvasKind,
@@ -92,16 +110,18 @@ export function selectActiveCanvasGraphStrategy(
   resolution: ActiveCanvasGraphStrategyResolution,
   capabilities?: RuntimeCapabilities
 ): CanvasGraphStrategy {
-  return resolution.kind === 'unsupported_kind'
-    ? resolveCanvasGraphStrategy(undefined, capabilities)
-    : resolution.strategy;
+  if (resolution.kind === 'ready' || resolution.kind === 'missing_document') {
+    return resolution.strategy;
+  }
+
+  return resolveCanvasGraphStrategy(undefined, capabilities);
 }
 
 export function selectActiveCanvasExecutionStrategy(
   resolution: ActiveCanvasGraphStrategyResolution,
   capabilities?: RuntimeCapabilities
 ): CanvasExecutionStrategy {
-  if (resolution.kind !== 'unsupported_kind') {
+  if (resolution.kind === 'ready' || resolution.kind === 'missing_document') {
     return resolution.executionStrategy;
   }
 
@@ -118,7 +138,7 @@ export function selectActiveCanvasExecutionStrategy(
 export function isActiveCanvasGraphStrategySupported(
   resolution: ActiveCanvasGraphStrategyResolution
 ): boolean {
-  return resolution.kind !== 'unsupported_kind';
+  return resolution.kind === 'ready' || resolution.kind === 'missing_document';
 }
 
 export function resolveActiveCanvasAuthoringMode(

@@ -65,6 +65,37 @@ describe('canvasRouteInteractionState', () => {
     );
   });
 
+  it('fails closed with disabled-plugin copy when a registered canvas kind is unavailable', () => {
+    const controller = buildController();
+    const interactionState = deriveCanvasRouteInteractionState(
+      buildController({
+        canvasDocument: {
+          kind: 'dbt',
+          title: 'dbt canvas',
+        },
+        availableCanvasKinds: controller.availableCanvasKinds.filter(
+          (registration) => registration.kind !== 'dbt'
+        ),
+      }),
+      null
+    );
+
+    expect(interactionState.effectiveWorkbenchState).toEqual({
+      kind: 'error',
+      message:
+        'Canvas cannot open persisted canvas kind "dbt" because its plugin is disabled or unavailable.',
+    });
+    expect(interactionState.effectiveUserPermissions).toMatchObject({
+      canPlan: false,
+      canRun: false,
+      canEditEdges: false,
+    });
+    expect(interactionState.readOnlyState).toBeNull();
+    expect(interactionState.workbenchErrorMessage).toBe(
+      'Canvas cannot open persisted canvas kind "dbt" because its plugin is disabled or unavailable.'
+    );
+  });
+
   it('keeps route interactions readable but non-editable for read-only draft access', () => {
     const controller = buildController({
       draftAccessMode: 'read_only',
