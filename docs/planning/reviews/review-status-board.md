@@ -213,6 +213,13 @@ Additional active rationale:
 
 Additional active QA:
 
+- [20260426 API tenant review](./architecture-and-governance/20260426-api-tenant-review.md)
+  - domain: `architecture-and-governance`
+  - role: current QA review of record for tenant RLS, migration hardening semantics, and adapter-postgres runtime bootstrap alignment
+  - linkage: `none`
+  - status: `review`
+  - progress: `90%`
+
 - [20260407 Execution plan and policy hard QA review](./architecture-and-governance/20260407-execution-plan-and-run-execution-policy-hard-qa-review.md)
   - domain: `architecture-and-governance`
   - role: hard QA gate for the plan-definition vs execution-policy slice

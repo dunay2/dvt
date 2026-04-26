@@ -45,6 +45,7 @@ export async function buildProtectedRuntimeModule(
 
   const adapterMod = await import('@dvt/adapter-postgres');
   const {
+    migratePostgresRuntimeStores,
     PostgresBackpressureSnapshotReader,
     PostgresPlanStore,
     PostgresStateStoreAdapter,
@@ -123,8 +124,10 @@ export async function buildProtectedRuntimeModule(
     saveWorkspaceGraphDraftUseCase: workspaceGraphDraftRuntime.saveWorkspaceGraphDraftUseCase,
     migrate: async () => {
       await securityRuntime.migrateAccessDecisionService();
-      await storageRuntime.stateStore.migrate();
-      await storageRuntime.intentStore.migrate();
+      await migratePostgresRuntimeStores({
+        stateStore: storageRuntime.stateStore,
+        startRunIntentStore: storageRuntime.intentStore,
+      });
       await storageRuntime.planStore.migrate();
       await workspaceGraphDraftRuntime.workspaceGraphDraftStore.migrate();
     },

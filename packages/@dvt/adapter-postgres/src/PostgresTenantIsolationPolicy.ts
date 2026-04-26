@@ -12,7 +12,7 @@ import {
   POSTGRES_SERVICE_ACCESS,
   type PostgresServiceAccessOwner,
 } from './PostgresServiceAccessCapability.js';
-import { quoteIdentifier } from './sqlUtils.js';
+import { quoteIdentifier, toSqlStringLiteral } from './sqlUtils.js';
 
 export interface TenantIsolationTable {
   readonly name: string;
@@ -129,7 +129,7 @@ export function buildTenantIsolationPolicySql(
   schema: string,
   table: TenantIsolationTable
 ): readonly string[] {
-  const relation = `${quoteIdentifier(schema)}.${table.name}`;
+  const relation = `${quoteIdentifier(schema)}.${quoteIdentifier(table.name)}`;
   const tenantColumn = table.tenantColumn;
   const serviceAccessOwnerList = table.serviceAccessOwners.map(toSqlStringLiteral).join(', ');
   const predicate = `
@@ -158,15 +158,11 @@ export function buildDropTenantIsolationPolicySql(
   tables: readonly TenantIsolationTable[] = TENANT_ISOLATION_TABLES
 ): readonly string[] {
   return tables.flatMap((table) => {
-    const relation = `${quoteIdentifier(schema)}.${table.name}`;
+    const relation = `${quoteIdentifier(schema)}.${quoteIdentifier(table.name)}`;
     return [
       `DROP POLICY IF EXISTS dvt_tenant_isolation ON ${relation}`,
       `ALTER TABLE ${relation} NO FORCE ROW LEVEL SECURITY`,
       `ALTER TABLE ${relation} DISABLE ROW LEVEL SECURITY`,
     ];
   });
-}
-
-function toSqlStringLiteral(value: string): string {
-  return `'${value.replaceAll("'", "''")}'`;
 }

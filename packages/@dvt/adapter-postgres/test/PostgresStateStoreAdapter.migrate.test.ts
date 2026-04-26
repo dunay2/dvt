@@ -282,7 +282,7 @@ describe('PostgresStateStoreAdapter migration state', () => {
       (q) => q.sql.includes('INSERT INTO') && q.sql.includes('schema_migrations')
     );
     // One INSERT per named migration step.
-    expect(insertQueries.length).toBe(19);
+    expect(insertQueries.length).toBe(20);
 
     const versions = insertQueries.map((q) => (q.params as string[])[1]);
     expect(versions).toContain('core_001_initial_tables');
@@ -297,6 +297,29 @@ describe('PostgresStateStoreAdapter migration state', () => {
     expect(versions).toContain('core_017_tenant_rls_baseline');
     expect(versions).toContain('core_018_service_access_owner_rls_hardening');
     expect(versions).toContain('core_019_table_scoped_service_owner_rls');
+    expect(versions).toContain('core_020_run_events_tenant_run_idx');
+  });
+
+  it('records hardening migration descriptions as idempotent policy reapplications', async () => {
+    const client = new RecordingMigrationClient();
+    const adapter = new PostgresStateStoreAdapter({
+      pool: { connect: async () => client } as never,
+      schema: 'DvtOps',
+    });
+
+    await adapter.migrate();
+
+    const descriptions = client.queries
+      .filter((q) => q.sql.includes('INSERT INTO') && q.sql.includes('schema_migrations'))
+      .map((q) => q.params?.[2])
+      .filter((value): value is string => typeof value === 'string');
+
+    expect(descriptions).toContain(
+      'Reapply current tenant isolation policy with approved service owners; idempotent hardening step without historical policy snapshot semantics'
+    );
+    expect(descriptions).toContain(
+      'Reapply current tenant isolation policy with table-scoped service owners; idempotent hardening step without historical policy snapshot semantics'
+    );
   });
 
   it('creates the production tenant RLS baseline for tenant-owned online tables', async () => {
@@ -319,19 +342,21 @@ describe('PostgresStateStoreAdapter migration state', () => {
     expect(executedSql).toContain(
       'ALTER TABLE "DvtOps".outbox_dead_letter ADD COLUMN IF NOT EXISTS tenant_id TEXT'
     );
-    expect(executedSql).toContain('ALTER TABLE "DvtOps".run_metadata ENABLE ROW LEVEL SECURITY');
-    expect(executedSql).toContain('ALTER TABLE "DvtOps".run_metadata FORCE ROW LEVEL SECURITY');
+    expect(executedSql).toContain('ALTER TABLE "DvtOps"."run_metadata" ENABLE ROW LEVEL SECURITY');
+    expect(executedSql).toContain('ALTER TABLE "DvtOps"."run_metadata" FORCE ROW LEVEL SECURITY');
     expect(executedSql).toContain(
-      'ALTER TABLE "DvtOps".snapshot_work_queue ENABLE ROW LEVEL SECURITY'
+      'ALTER TABLE "DvtOps"."snapshot_work_queue" ENABLE ROW LEVEL SECURITY'
     );
     expect(executedSql).toContain(
-      'ALTER TABLE "DvtOps".snapshot_work_queue FORCE ROW LEVEL SECURITY'
+      'ALTER TABLE "DvtOps"."snapshot_work_queue" FORCE ROW LEVEL SECURITY'
     );
     expect(executedSql).toContain('CREATE POLICY dvt_tenant_isolation');
     expect(executedSql).toContain("current_setting('dvt.access_mode', true) = 'service'");
     expect(executedSql).toContain("current_setting('dvt.service_access_owner', true)");
     expect(executedSql).toContain("'outbox-worker'");
     expect(executedSql).toContain("tenant_id = current_setting('dvt.tenant_id', true)");
+    expect(executedSql).toContain('CREATE INDEX IF NOT EXISTS run_events_tenant_run_id_idx');
+    expect(executedSql).toContain('ON "DvtOps".run_events (tenant_id, run_id)');
   });
 
   it('rejects unresolved tenant backfills instead of synthesizing tenant ids', async () => {

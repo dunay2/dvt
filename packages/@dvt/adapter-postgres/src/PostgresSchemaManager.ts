@@ -952,7 +952,8 @@ const MIGRATION_STEPS: readonly MigrationStep[] = [
   },
   {
     version: 'core_018_service_access_owner_rls_hardening',
-    description: 'Require approved service access owners for service-mode RLS access',
+    description:
+      'Reapply current tenant isolation policy with approved service owners; idempotent hardening step without historical policy snapshot semantics',
     run: async (client, schema) => {
       for (const table of CORE_TENANT_ISOLATION_TABLES) {
         for (const statement of buildTenantIsolationPolicySql(schema, table)) {
@@ -961,7 +962,7 @@ const MIGRATION_STEPS: readonly MigrationStep[] = [
       }
     },
     rollbackDescription:
-      'Reapply the current tenant isolation policy; service owner hardening is not downgraded',
+      'Reapply current tenant isolation policy during rollback planning; service owner hardening is intentionally not downgraded',
     rollback: async (client, schema) => {
       for (const table of CORE_TENANT_ISOLATION_TABLES) {
         for (const statement of buildTenantIsolationPolicySql(schema, table)) {
@@ -972,7 +973,8 @@ const MIGRATION_STEPS: readonly MigrationStep[] = [
   },
   {
     version: 'core_019_table_scoped_service_owner_rls',
-    description: 'Restrict service-mode RLS owners to each tenant table maintenance scope',
+    description:
+      'Reapply current tenant isolation policy with table-scoped service owners; idempotent hardening step without historical policy snapshot semantics',
     run: async (client, schema) => {
       for (const table of CORE_TENANT_ISOLATION_TABLES) {
         for (const statement of buildTenantIsolationPolicySql(schema, table)) {
@@ -981,13 +983,29 @@ const MIGRATION_STEPS: readonly MigrationStep[] = [
       }
     },
     rollbackDescription:
-      'Reapply table-scoped tenant isolation policy; service owner scope is not downgraded',
+      'Reapply current table-scoped tenant isolation policy during rollback planning; service owner scope is intentionally not downgraded',
     rollback: async (client, schema) => {
       for (const table of CORE_TENANT_ISOLATION_TABLES) {
         for (const statement of buildTenantIsolationPolicySql(schema, table)) {
           await client.query(statement);
         }
       }
+    },
+  },
+  {
+    version: 'core_020_run_events_tenant_run_idx',
+    description: 'Add tenant-leading run_events index for tenant-scoped run sequence lookups',
+    run: async (client, schema) => {
+      await client.query(`
+        CREATE INDEX IF NOT EXISTS run_events_tenant_run_id_idx
+        ON ${sq(schema)}.run_events (tenant_id, run_id)
+      `);
+    },
+    rollbackDescription: 'Drop tenant-leading run_events index',
+    rollback: async (client, schema) => {
+      await client.query(
+        `DROP INDEX IF EXISTS ${sq(schema)}.${quoteIdentifier('run_events_tenant_run_id_idx')}`
+      );
     },
   },
 ];

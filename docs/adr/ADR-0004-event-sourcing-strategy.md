@@ -159,6 +159,13 @@ Duplicate `(runId, idempotencyKey)` MUST NOT create new records.
 
 All queries MUST be tenant-scoped.
 
+### INV-STATE-5: Global Run Identifier
+
+`runId` MUST be globally unique across tenants (UUID).
+
+Because of this invariant, idempotency deduplication on `(runId, idempotencyKey)`
+is globally safe and MUST remain the canonical constraint shape.
+
 ---
 
 ## 5. Implementation in Code
