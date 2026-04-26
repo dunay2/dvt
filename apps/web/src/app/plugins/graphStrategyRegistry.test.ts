@@ -4,6 +4,7 @@ import {
   getCanvasRuntimeRegistrations,
   resolveCanvasGraphStrategy,
 } from './graphStrategyRegistry';
+import type { RuntimeCapabilities } from './registry';
 
 describe('resolveCanvasGraphStrategy', () => {
   it('lists canvas runtime registrations with matching canvas kind and graph strategy ids', () => {
@@ -23,9 +24,34 @@ describe('resolveCanvasGraphStrategy', () => {
     ]);
   });
 
+  it('filters canvas runtime registrations through runtime plugin capabilities', () => {
+    const capabilities: RuntimeCapabilities = {
+      plugins: {
+        dbt: { available: false, reason: 'disabled_for_workspace' },
+      },
+    };
+
+    expect(
+      getCanvasRuntimeRegistrations(capabilities).map((registration) => registration.kind)
+    ).toEqual(['transformation']);
+    expect(findCanvasGraphStrategy('dbt', capabilities)).toBeNull();
+  });
+
   it('defaults to transformation strategy when strategy id is missing', () => {
     const strategy = resolveCanvasGraphStrategy(undefined);
     expect(strategy.id).toBe('transformation');
+  });
+
+  it('fails closed when the default transformation plugin is capability-disabled', () => {
+    const capabilities: RuntimeCapabilities = {
+      plugins: {
+        dvt: { available: false, reason: 'disabled_for_workspace' },
+      },
+    };
+
+    expect(() => resolveCanvasGraphStrategy(undefined, capabilities)).toThrow(
+      'Missing default canvas graph strategy registration'
+    );
   });
 
   it('defaults to transformation strategy for empty values only', () => {

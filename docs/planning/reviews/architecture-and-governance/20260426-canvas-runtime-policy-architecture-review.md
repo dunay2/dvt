@@ -85,7 +85,7 @@ No critical findings.
   Why it matters: `CANONICAL_NODE_DRAG_MIME_TYPE` is accepted before the active
   graph strategy is consulted. The payload parser validates canonical shape
   but not active canvas kind, registered node-kind membership, or
-  `pluginId === kind.split(':')[0]`.
+  `pluginId === parsePluginNodeKind(kind).pluginId`.
   Evidence:
   `apps/web/src/app/views/canvas/useCanvasNodeDropHandlers.ts` accepts
   canonical payloads first, and
@@ -245,6 +245,9 @@ No critical findings.
     (red: unsupported runtime selectors still returned transformation fallback;
     green: selectors returned `null` and `missing_document` command posture was
     covered)
+  - `pnpm --filter @dvt/web test -- canvasEdgeAdmissionTransaction.test.ts canvasNodeAdmissionTransaction.test.ts graphStrategyRegistry.test.ts transformationConnectionGuard.test.ts canvasActiveGraphStrategy.test.ts`
+    (green: negative transaction, capability, and transformation-guard
+    invariants covered)
   - `pnpm --filter @dvt/web build:e2e`
   - `pnpm exec cypress verify`
   - `$env:ELECTRON_RUN_AS_NODE=$null; pnpm exec cypress verify`
@@ -510,6 +513,17 @@ Progress note on 2026-04-26:
   `missing_document` has explicit command-posture coverage proving graph
   mutations and execution commands remain blocked until a real canvas document
   exists.
+- Post-review correction, 2026-04-26: Cost route bootstrap ownership moved out
+  of `views/cost` into `plugins/cost`, and `registry.ts` now composes the Cost
+  contribution without importing the route view bootstrap module.
+- Post-review correction, 2026-04-26: plugin node-kind parsing now uses the
+  canonical `parsePluginNodeKind` helper in `types/canonicalGuards.ts`; Canvas
+  policy and node render wrappers no longer duplicate `pluginId` extraction.
+- Post-review correction, 2026-04-26: negative invariant coverage was expanded
+  for edge admission transactions, node admission column-lineage posture,
+  capability-filtered graph strategy registration, and transformation
+  connection guard constrained-mode boundaries. The known canvas kind plus
+  capability-disabled case remains `disabled_plugin`, not `unsupported_kind`.
 
 #### `TF-E2-POL-C` Route shell and inspector posture through policy
 

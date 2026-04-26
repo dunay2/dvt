@@ -95,6 +95,83 @@ describe('canvasEdgeAdmissionTransaction', () => {
     ]);
   });
 
+  it('rejects confirmation when an endpoint is missing from the canonical graph', () => {
+    const canonicalNodesById = new Map([
+      ['source-node', buildCanonicalNode('source-node', 'input', 'dvt:source')],
+    ]);
+
+    const transaction = resolveCanvasEdgeConfirmationTransaction({
+      canonicalNodesById,
+      connection: {
+        source: 'source-node',
+        sourceHandle: null,
+        target: 'missing-node',
+        targetHandle: null,
+      },
+      draftSession: buildDraftSession(),
+      edges: [],
+      pluginPortMap,
+    });
+
+    expect(transaction).toEqual({
+      outcome: 'noop',
+      rejection: { code: 'node_not_found_in_graph' },
+    });
+  });
+
+  it('rejects self-loop confirmation before graph effects are produced', () => {
+    const canonicalNodesById = new Map([
+      ['source-node', buildCanonicalNode('source-node', 'input', 'dvt:source')],
+    ]);
+
+    const transaction = resolveCanvasEdgeConfirmationTransaction({
+      canonicalNodesById,
+      connection: {
+        source: 'source-node',
+        sourceHandle: null,
+        target: 'source-node',
+        targetHandle: null,
+      },
+      draftSession: buildDraftSession(),
+      edges: [],
+      pluginPortMap,
+    });
+
+    expect(transaction).toEqual({
+      outcome: 'noop',
+      rejection: { code: 'self_connection' },
+    });
+  });
+
+  it('rejects reverse transformation direction in constrained transformation graphs', () => {
+    const canonicalNodesById = new Map([
+      ['source-node', buildCanonicalNode('source-node', 'input', 'dvt:source')],
+      [
+        'transform-node',
+        buildCanonicalNode('transform-node', 'transform', 'dvt:sql_transform'),
+      ],
+      ['sink-node', buildCanonicalNode('sink-node', 'output', 'dvt:sink')],
+    ]);
+
+    const transaction = resolveCanvasEdgeConfirmationTransaction({
+      canonicalNodesById,
+      connection: {
+        source: 'sink-node',
+        sourceHandle: null,
+        target: 'source-node',
+        targetHandle: null,
+      },
+      draftSession: buildDraftSession(),
+      edges: [],
+      pluginPortMap,
+    });
+
+    expect(transaction).toEqual({
+      outcome: 'noop',
+      rejection: { code: 'transformation_invalid_edge_order' },
+    });
+  });
+
   it('reconnects an edge with a stable edge identity and draft visible edges together', () => {
     const canonicalNodesById = new Map([
       ['source-node', buildCanonicalNode('source-node', 'input', 'dvt:source')],
@@ -139,6 +216,49 @@ describe('canvasEdgeAdmissionTransaction', () => {
     ]);
     expect(transaction.draftSession.workingSet.visibleEdges).toEqual([
       { sourceId: 'source-node', targetId: 'transform-node' },
+    ]);
+  });
+
+  it('keeps reconnecting to the same target idempotent instead of duplicating edges', () => {
+    const canonicalNodesById = new Map([
+      ['source-node', buildCanonicalNode('source-node', 'input', 'dvt:source')],
+      ['sink-node', buildCanonicalNode('sink-node', 'output', 'dvt:sink')],
+    ]);
+    const edge: Edge = {
+      id: 'edge-1',
+      source: 'source-node',
+      target: 'sink-node',
+    };
+
+    const transaction = resolveCanvasEdgeReconnectTransaction({
+      canonicalNodesById,
+      connection: {
+        source: 'source-node',
+        sourceHandle: null,
+        target: 'sink-node',
+        targetHandle: null,
+      },
+      draftSession: buildDraftSession([{ sourceId: 'source-node', targetId: 'sink-node' }]),
+      edge,
+      edges: [edge],
+      pluginPortMap,
+    });
+
+    expect(transaction.outcome).toBe('reconnected');
+    if (transaction.outcome !== 'reconnected') {
+      throw new Error('Expected a reconnected edge transaction');
+    }
+    expect(transaction.edges).toEqual([
+      {
+        id: 'edge-1',
+        source: 'source-node',
+        sourceHandle: null,
+        target: 'sink-node',
+        targetHandle: null,
+      },
+    ]);
+    expect(transaction.draftSession.workingSet.visibleEdges).toEqual([
+      { sourceId: 'source-node', targetId: 'sink-node' },
     ]);
   });
 });

@@ -66,6 +66,33 @@ describe('canvasNodeAdmissionTransaction', () => {
     );
   });
 
+  it('passes column-level lineage posture into the created viewport node', () => {
+    const transaction = resolveCanvasNodeAdmissionTransaction({
+      canonicalNode: {
+        ...buildCanonicalNode('transform-node'),
+        metadata: {
+          columns: [{ name: 'customer_id', type: 'varchar' }],
+        },
+      },
+      draftSession: buildDraftSession(),
+      existingNodes: [],
+      position: { x: 120, y: 80 },
+      columnLevelLineageEnabled: true,
+    });
+
+    expect(transaction.outcome).toBe('added');
+    if (transaction.outcome !== 'added') {
+      return;
+    }
+
+    expect(transaction.nodes[0]?.data).toEqual(
+      expect.objectContaining({
+        showColumns: true,
+        columns: [{ name: 'customer_id', type: 'varchar' }],
+      })
+    );
+  });
+
   it('returns noop without graph or draft fallouts for duplicate visible nodes', () => {
     const transaction = resolveCanvasNodeAdmissionTransaction({
       canonicalNode: buildCanonicalNode('transform-node'),

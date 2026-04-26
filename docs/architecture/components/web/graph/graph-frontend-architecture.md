@@ -213,6 +213,12 @@ Runtime projection rule:
   `RuntimeCapabilities`;
 - unavailable plugins must not contribute canvas kinds, node kinds, renderers,
   badges, overlays, run adapters, or connection port maps;
+- route bootstrap handles for plugin-contributed views are plugin-owned
+  contribution data, not route-view implementation details consumed by
+  `registry.ts`;
+- plugin node-kind parsing must use
+  `parsePluginNodeKind` from `types/canonicalGuards.ts`; inline
+  `split(':')` or `slice(0, indexOf(':'))` extraction is drift;
 - Canvas consumers may forward capability-filtered projections, but must not
   read port maps, badges, or overlays from `PLUGIN_REGISTRY` directly.
 
@@ -466,10 +472,21 @@ string checks. Current semantic coverage includes:
 - disabled registered plugin posture remaining distinct from unsupported kind
   across active runtime resolution, route interaction state, and route-visible
   copy;
+- plugin-owned route bootstrap handle ownership for Cost route composition;
+- canonical `PluginNodeKind` parsing through one helper instead of duplicated
+  string extraction;
 - active graph and execution selectors returning `null` instead of
   transformation fallback for unsupported or disabled runtime states;
 - pure node-admission transaction results for add and duplicate-noop paths;
 - pure edge-admission transaction results for confirmation and reconnect paths;
+- edge admission rejection for missing endpoints, self-loops, invalid
+  transformation direction, and idempotent same-target reconnect;
+- node admission projection of column-level lineage posture into viewport node
+  data;
+- capability-filtered graph strategy registration, including fail-closed
+  default strategy resolution when the owning plugin is disabled;
+- transformation connection guard behavior for empty, partial, and
+  non-transformation three-node graphs;
 - active runtime catalog rejection before node create/drop side effects;
 - consecutive node create/drop commands preserving both viewport nodes and
   draft-session membership before rerender;

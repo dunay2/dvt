@@ -32,6 +32,7 @@ import {
   ContextMenuTrigger,
 } from '../components/ui/context-menu';
 import { cn } from '../components/ui/utils';
+import { parsePluginNodeKind } from '../types/canonicalGuards';
 
 // ---------------------------------------------------------------------------
 // Canvas node data shape — shell-owned, plugin-agnostic
@@ -101,7 +102,7 @@ function NodeBadgeOverlay({ badge }: Readonly<{ badge: NodeBadge }>) {
 // ---------------------------------------------------------------------------
 
 function buildCanonicalNode(nodeId: string, data: PluginNodeData): CanonicalNode {
-  const pluginId = data.pluginKind.split(':')[0] ?? 'dvt';
+  const pluginId = parsePluginNodeKind(data.pluginKind).pluginId;
   return {
     id: nodeId,
     name: data.name,

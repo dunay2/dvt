@@ -6,9 +6,11 @@ import {
   CORE_NODE_ROLES,
 } from './canonical';
 import {
+  isPluginNodeKind,
   isCanonicalEdgeRelation,
   isCanonicalNodeStatus,
   isCoreNodeRole,
+  parsePluginNodeKind,
 } from './canonicalGuards';
 
 describe('canonicalGuards', () => {
@@ -25,5 +27,20 @@ describe('canonicalGuards', () => {
   it('accepts exactly the exported canonical edge relation vocabulary', () => {
     expect(CANONICAL_EDGE_RELATIONS.every(isCanonicalEdgeRelation)).toBe(true);
     expect(isCanonicalEdgeRelation('teleport')).toBe(false);
+  });
+
+  it('parses plugin node kinds through one canonical helper', () => {
+    expect(isPluginNodeKind('dbt:model')).toBe(true);
+    expect(parsePluginNodeKind('dbt:model')).toEqual({
+      pluginId: 'dbt',
+      nodeKind: 'model',
+    });
+  });
+
+  it('rejects plugin node kinds without exactly one populated separator', () => {
+    expect(isPluginNodeKind('dbt')).toBe(false);
+    expect(isPluginNodeKind('dbt:')).toBe(false);
+    expect(isPluginNodeKind(':model')).toBe(false);
+    expect(isPluginNodeKind('dbt:model:extra')).toBe(false);
   });
 });

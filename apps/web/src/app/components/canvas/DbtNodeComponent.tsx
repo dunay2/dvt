@@ -13,6 +13,7 @@ import type {
   NodeRendererProps,
 } from '../../plugins/contracts/NodeRendering';
 import type { CanonicalNode, CoreNodeRole, PluginNodeKind } from '../../types/canonical';
+import { parsePluginNodeKind } from '../../types/canonicalGuards';
 import { DbtNodeType, NodeStatus } from '../../types/dbt';
 import {
   ContextMenu,
@@ -129,7 +130,7 @@ function buildCanonicalNode(
   pluginKind: PluginNodeKind,
   role: CoreNodeRole
 ): CanonicalNode {
-  const pluginId = pluginKind.split(':')[0] ?? 'dvt';
+  const pluginId = parsePluginNodeKind(pluginKind).pluginId;
   const metadata =
     typeof data.metadata === 'object' && data.metadata !== null ? { ...data.metadata } : {};
 

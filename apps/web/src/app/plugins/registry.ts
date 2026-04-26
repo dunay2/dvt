@@ -1,11 +1,8 @@
-import React from 'react';
-import { DollarSign } from 'lucide-react';
+import type React from 'react';
 
 import type { PluginPortDescriptor, PluginPortMap } from './contracts/ConnectionRules';
-import { COST_ROUTE_BOOTSTRAP_HANDLE } from '../views/cost/costRouteBootstrap';
 
 import type { CanonicalNode, CanonicalRun, PluginNodeKind } from '../types/canonical';
-import type { NodeCostData } from './contracts/PluginServices';
 import type {
   BadgeContext,
   CanvasOverlayContribution,
@@ -75,6 +72,7 @@ export type PluginContributions = {
 // ---------------------------------------------------------------------------
 
 // Imported lazily to avoid circular deps during module init
+import { costContributions } from './cost/costContributions';
 import { dbtContributions } from './dbt/dbtContributions';
 import { dvtContributions } from './dvt/dvtContributions';
 import { monitoringContributions } from './monitoring/monitoringContributions';
@@ -125,60 +123,6 @@ function isPluginAvailableAtRuntime(
 
   return runtimeInfos.every((info) => info.available);
 }
-
-function resolveCostDecoration(costData: NodeCostData | undefined) {
-  if (!costData || costData.cost <= 0) {
-    return null;
-  }
-
-  if (costData.cost >= 0.4) {
-    return { borderColor: '#dc2626', backgroundColor: 'rgba(220, 38, 38, 0.18)' };
-  }
-
-  if (costData.cost >= 0.2) {
-    return { borderColor: '#f59e0b', backgroundColor: 'rgba(245, 158, 11, 0.18)' };
-  }
-
-  return { borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.14)' };
-}
-
-const costContributions: PluginContributions = {
-  id: 'cost',
-  displayName: 'Cost',
-  version: '1.0.0',
-  kind: 'optional',
-  envFlag: 'VITE_PLUGIN_COST',
-  backendPluginId: 'cost',
-  capabilities: ['cost.analyze', 'canvas.overlay'],
-  views: [
-    {
-      pluginId: 'cost',
-      id: 'cost.dashboard',
-      path: '/cost',
-      component: React.lazy(() => import('../views/CostView')),
-      handle: {
-        routeBootstrap: COST_ROUTE_BOOTSTRAP_HANDLE,
-      },
-      nav: {
-        label: 'Cost',
-        icon: DollarSign,
-        order: 25,
-        level: 'extended',
-      },
-    },
-  ],
-  overlays: [
-    {
-      id: 'cost',
-      label: 'Cost Heatmap',
-      icon: DollarSign,
-      mode: 'exclusive',
-      priority: 90,
-      nodeDecorator: (node, ctx) => resolveCostDecoration(ctx.costByNodeId.get(node.id)),
-    },
-  ],
-  consumes: [{ portType: 'data.tabular', forRoles: ['transform', 'output'] }],
-};
 
 const ALL_PLUGIN_CONTRIBUTIONS: PluginContributions[] = [
   dbtContributions,

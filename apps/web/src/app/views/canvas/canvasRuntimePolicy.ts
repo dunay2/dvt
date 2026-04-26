@@ -2,6 +2,7 @@
 import type { CanvasExecutionStrategy } from '../../plugins/canvasExecutionStrategyContracts';
 import type { NodeKindRegistration } from '../../plugins/nodeTypeContracts';
 import type { CanonicalNode, PluginNodeKind } from '../../types/canonical';
+import { parsePluginNodeKind } from '../../types/canonicalGuards';
 
 export type CanvasRuntimePolicyInput =
   | {
@@ -154,10 +155,6 @@ function resolveRuntimeNodeKinds(
   return isRuntimePolicyBlocked(activeRuntime) ? [] : activeRuntime.nodeKinds;
 }
 
-function readKindPluginId(kind: PluginNodeKind): string {
-  return kind.slice(0, kind.indexOf(':'));
-}
-
 function buildRuntimeAdmissionPolicy(
   nodeKinds: readonly NodeKindRegistration[]
 ): CanvasRuntimeAdmissionPolicy {
@@ -177,7 +174,7 @@ function buildRuntimeAdmissionPolicy(
 
     return (
       node.pluginId === registration.pluginId &&
-      node.pluginId === readKindPluginId(node.kind) &&
+      node.pluginId === parsePluginNodeKind(node.kind).pluginId &&
       node.role === registration.role
     );
   }
