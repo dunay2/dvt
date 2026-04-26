@@ -7,6 +7,7 @@ import type { WorkspaceGraphDraftRecord } from '../../ports/workspace';
 import { buildController } from '../Canvas.test.controller';
 import { readArchitectureSiblingSource } from '../architecture.test.support';
 import { resolveActiveCanvasGraphStrategy } from './canvasActiveGraphStrategy';
+import { resolveCanvasRuntimePolicy } from './canvasRuntimePolicy';
 import {
   createUnknownCanvasDraftReadModel,
   type CanvasDraftReadModel,
@@ -39,6 +40,14 @@ const DBT_NODE_ADAPTER_SOURCE = readArchitectureSiblingSource(
 const DVT_TRANSFORMATION_STRATEGY_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   '../../plugins/dvt/transformationGraphStrategy.ts'
+);
+const USE_CANVAS_CONTROLLER_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'useCanvasController.ts'
+);
+const CANVAS_CONTROLLER_VIEW_MODEL_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'canvasControllerViewModel.ts'
 );
 
 function buildDraftReadModelWithCanvasKind(kind: string): CanvasDraftReadModel {
@@ -160,6 +169,69 @@ describe('canvas draft authoring component architecture', () => {
       canEditEdges: false,
     });
     expect(interactionState.readOnlyState).toBeNull();
+  });
+
+  it('routes Canvas command posture through the runtime policy boundary', () => {
+    const registrations = getCanvasRuntimeRegistrations();
+    const dbtRuntime = registrations.find((registration) => registration.kind === 'dbt');
+    const transformationRuntime = registrations.find(
+      (registration) => registration.kind === 'transformation'
+    );
+    if (dbtRuntime == null || transformationRuntime == null) {
+      throw new Error('Expected dbt and transformation canvas runtimes');
+    }
+
+    const dbtPolicy = resolveCanvasRuntimePolicy({
+      activeRuntime: {
+        kind: 'ready',
+        canvasKind: dbtRuntime.kind,
+        executionStrategy: dbtRuntime.executionStrategy,
+        nodeKinds: dbtRuntime.nodeKinds,
+      },
+      canMutateGraph: true,
+      canOpenSourceImport: true,
+      canPlan: true,
+      canRun: true,
+      canReloadLatestDraft: false,
+    });
+    const transformationPolicy = resolveCanvasRuntimePolicy({
+      activeRuntime: {
+        kind: 'ready',
+        canvasKind: transformationRuntime.kind,
+        executionStrategy: transformationRuntime.executionStrategy,
+        nodeKinds: transformationRuntime.nodeKinds,
+      },
+      canMutateGraph: true,
+      canOpenSourceImport: true,
+      canPlan: true,
+      canRun: true,
+      canReloadLatestDraft: false,
+    });
+
+    expect(dbtPolicy.commands).toMatchObject({
+      canMutateGraph: true,
+      canEditInspectorNode: true,
+      canPlan: false,
+      canRun: false,
+    });
+    expect(transformationPolicy.commands).toMatchObject({
+      canMutateGraph: true,
+      canEditInspectorNode: true,
+      canPlan: true,
+      canRun: true,
+    });
+    expect(dbtPolicy.admission.allowsNodeKind('dvt:source')).toBe(false);
+    expect(transformationPolicy.admission.allowsNodeKind('dvt:source')).toBe(true);
+    expect(USE_CANVAS_CONTROLLER_SOURCE).toContain('resolveCanvasRuntimePolicy');
+    expect(USE_CANVAS_CONTROLLER_SOURCE).toContain(
+      'runtimePolicy.admission.allowsCanonicalNode'
+    );
+    expect(CANVAS_CONTROLLER_VIEW_MODEL_SOURCE).toContain(
+      'runtimePolicy.commands.canEditInspectorNode'
+    );
+    expect(CANVAS_CONTROLLER_VIEW_MODEL_SOURCE).not.toContain(
+      'canEditInspectorNode: args.authoringRuntime.canMutateGraph'
+    );
   });
 
   it('computes node admission as a pure command transaction before React effects are applied', () => {

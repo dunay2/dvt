@@ -51,6 +51,7 @@ export function useCanvasNodeAuthoringHandlers({
     policy: {
       canEditEdges: policy.canEditEdges,
       columnLevelLineageEnabled: policy.columnLevelLineageEnabled,
+      allowsCanonicalNode: policy.allowsCanonicalNode,
     },
   };
   const nodeCreationHandlers =

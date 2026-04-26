@@ -77,6 +77,7 @@ function nodeAuthoring(
       graphStrategy: contracts.policy.graphStrategy,
       canEditEdges: contracts.policy.canEditEdges,
       columnLevelLineageEnabled: contracts.policy.columnLevelLineageEnabled,
+      allowsCanonicalNode: contracts.policy.allowsCanonicalNode,
     },
   };
 }

@@ -78,6 +78,13 @@ Additional active rationale:
   - status: `queued`
   - progress: `0%`
 
+- [20260426 Canvas runtime policy architecture review](./architecture-and-governance/20260426-canvas-runtime-policy-architecture-review.md)
+  - domain: `architecture-and-governance`
+  - role: current global remediation plan for unifying Canvas mutation, admission, execution, inspector, and capability policy behind one runtime-policy boundary
+  - linkage: `TF-E2`, `TF-E2-POL`
+  - status: `queued`
+  - progress: `0%`
+
 - [20260421 Canvas handler seams Fowler review](./architecture-and-governance/20260421-canvas-handler-seams-fowler-review.md)
   - domain: `architecture-and-governance`
   - role: current focused review for the Canvas handler-contract component, Fowler-style seam ownership, residual adapter drift, and the semantic fitness-function follow-up on the graph route

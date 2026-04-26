@@ -2,7 +2,7 @@
 title: Canvas Empty Authoring Entrypoint Component
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-04-25
+last_reviewed: 2026-04-26
 ---
 
 # Canvas Empty Authoring Entrypoint Component
@@ -35,8 +35,9 @@ The command is exposed through:
 The visible authoring catalog is the governed
 `CanvasRuntimeRegistration.nodeKinds` catalog for the active
 `canvasDocument.kind`. UI surfaces must not define a second ad hoc node-kind
-list. For the `transformation` canvas kind, that catalog currently resolves to
-`DVT_AUTHORING_NODE_KINDS`.
+list. Runtime admission is enforced by `CanvasRuntimePolicy`, not by the
+visible list alone. For the `transformation` canvas kind, that catalog
+currently resolves to `DVT_AUTHORING_NODE_KINDS`.
 
 The visible editable empty-state copy is also governed by the active
 `CanvasRuntimeRegistration.emptyState`. The host may still own blocked or
@@ -51,6 +52,10 @@ back into one route-global fallback once the canvas kind is known.
 - The empty catalog must resolve from the active `canvasDocument.kind`.
 - The empty catalog, empty copy, graph strategy, and execution posture must
   resolve from the same `CanvasRuntimeRegistration`.
+- First-node admission must call `CanvasRuntimePolicy.admission` before
+  `CanvasGraphLifecycle` mutates the draft session.
+- A node whose `kind`, `pluginId`, or role is not owned by the active runtime
+  catalog must be rejected before any viewport or draft effect runs.
 - The typed editable empty-state title and first-node copy must resolve from
   `CanvasRuntimeRegistration.emptyState`.
 - First-node authoring remains available when source import is unavailable;
@@ -95,10 +100,12 @@ flowchart LR
   Runtime --> Copy["emptyState"]
   Runtime --> Catalog["nodeKinds"]
   Runtime --> Execution["executionStrategy"]
+  Runtime --> Policy["CanvasRuntimePolicy"]
   Copy --> Catalog
   Catalog --> Command["handleCreateAuthoringNode"]
   Command --> Builder["canvasAuthoringNodeCommand"]
   Builder --> Runner["useCanvasNodeAdmissionCommandRunner"]
+  Policy --> Runner
   Runner --> Transaction["resolveCanvasNodeAdmissionTransaction"]
   Transaction --> Admission["admitCanonicalNodeToCanvas"]
   Transaction --> Lifecycle["canvasGraphLifecycle.node.admitExplicit"]
@@ -113,6 +120,7 @@ flowchart LR
 sequenceDiagram
   participant Route as Canvas route
   participant Runtime as CanvasRuntimeRegistration
+  participant Policy as CanvasRuntimePolicy
   participant Empty as Empty entrypoint
   participant Handler as Node creation handler
   participant Runner as Node admission command runner
@@ -121,9 +129,11 @@ sequenceDiagram
   participant View as Viewport projection
 
   Route->>Runtime: active canvasDocument.kind
+  Runtime->>Policy: nodeKinds and execution posture
   Runtime-->>Empty: emptyState and nodeKinds
   Empty->>Handler: create NodeKindRegistration
   Handler->>Runner: canonical node + viewport position
+  Runner->>Policy: allowsCanonicalNode
   Runner->>Tx: latest nodes + latest draft session
   Tx->>Draft: compute next semantic draft session
   Tx->>View: compute next React Flow node projection
@@ -167,6 +177,9 @@ canvas document identity rather than a route-global transformation default.
 - Do not bypass `admitCanonicalNodeToCanvas` or `canvasGraphLifecycle`.
 - Do not bypass `useCanvasNodeAdmissionCommandRunner` when a handler needs to
   mutate both viewport nodes and the draft session.
+- Do not bypass `CanvasRuntimePolicy.admission` for catalog-created nodes;
+  visible catalog membership is not enough unless the command also validates
+  the active runtime policy.
 - Do not move viewport projection back into the canonical admission aggregate.
 - Do not make `CanvasCenterSurface.tsx` own transport, workbench, and empty
   authoring decisions in one large method again.

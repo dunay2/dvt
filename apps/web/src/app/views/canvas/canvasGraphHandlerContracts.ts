@@ -36,6 +36,7 @@ export type CanvasGraphInteractionPolicy = {
   graphStrategy: CanvasGraphStrategy;
   canEditEdges: boolean;
   columnLevelLineageEnabled: boolean;
+  allowsCanonicalNode: (node: CanonicalNode) => boolean;
 };
 
 export type CanvasGraphInteractionContracts = {
@@ -70,6 +71,7 @@ export type CanvasNodeAuthoringPolicy = {
   graphStrategy: CanvasGraphStrategy;
   canEditEdges: boolean;
   columnLevelLineageEnabled: boolean;
+  allowsCanonicalNode: (node: CanonicalNode) => boolean;
 };
 
 export type CanvasNodeAuthoringContracts = {
@@ -116,6 +118,7 @@ export type CanvasNodeDropPolicy = {
   graphStrategy: CanvasGraphStrategy;
   canEditEdges: boolean;
   columnLevelLineageEnabled: boolean;
+  allowsCanonicalNode: (node: CanonicalNode) => boolean;
 };
 
 export type CanvasNodeDropContracts = {
@@ -139,6 +142,7 @@ export type CanvasAuthoringNodeCreationEffects = {
 export type CanvasAuthoringNodeCreationPolicy = {
   canEditEdges: boolean;
   columnLevelLineageEnabled: boolean;
+  allowsCanonicalNode: (node: CanonicalNode) => boolean;
 };
 
 export type CanvasAuthoringNodeCreationContracts = {

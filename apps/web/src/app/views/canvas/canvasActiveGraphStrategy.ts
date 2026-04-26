@@ -5,7 +5,10 @@ import {
 } from '../../plugins/graphStrategyRegistry';
 import type { CanvasExecutionStrategy } from '../../plugins/canvasExecutionStrategyContracts';
 import type { CanvasGraphStrategy } from '../../plugins/graphStrategyContracts';
-import type { CanvasGraphAuthoringMode } from '../../plugins/nodeTypeContracts';
+import type {
+  CanvasGraphAuthoringMode,
+  NodeKindRegistration,
+} from '../../plugins/nodeTypeContracts';
 import type { RuntimeCapabilities } from '../../plugins/registry';
 import type { CanvasDraftReadModel } from './canvasDraftReadModel';
 
@@ -13,14 +16,16 @@ const DEFAULT_CANVAS_AUTHORING_MODE: CanvasGraphAuthoringMode = 'transformation'
 
 export type ActiveCanvasGraphStrategyResolution =
   | {
-    kind: 'missing_document';
+      kind: 'missing_document';
       executionStrategy: CanvasExecutionStrategy;
+      nodeKinds: readonly NodeKindRegistration[];
       strategy: CanvasGraphStrategy;
     }
   | {
       kind: 'ready';
       canvasKind: CanvasGraphAuthoringMode;
       executionStrategy: CanvasExecutionStrategy;
+      nodeKinds: readonly NodeKindRegistration[];
       strategy: CanvasGraphStrategy;
     }
   | {
@@ -61,6 +66,7 @@ export function resolveActiveCanvasGraphStrategy(
     return {
       kind: 'missing_document',
       executionStrategy: defaultRuntimeRegistration.executionStrategy,
+      nodeKinds: defaultRuntimeRegistration.nodeKinds,
       strategy: defaultRuntimeRegistration.graphStrategy,
     };
   }
@@ -77,6 +83,7 @@ export function resolveActiveCanvasGraphStrategy(
     kind: 'ready',
     canvasKind,
     executionStrategy: runtimeRegistration.executionStrategy,
+    nodeKinds: runtimeRegistration.nodeKinds,
     strategy: runtimeRegistration.graphStrategy,
   };
 }

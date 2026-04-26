@@ -214,6 +214,62 @@ describe('useCanvasGraphHandlers node drop', () => {
     harness.cleanup();
   });
 
+  it('rejects canonical drop payloads outside the active runtime catalog', async () => {
+    const setNodes = vi.fn();
+    const setDraftSession = vi.fn();
+    const harness = renderGraphHandlersHook({
+      canEditEdges: true,
+      allowsCanonicalNode: (node) => node.kind.startsWith('dbt:'),
+      setNodes,
+      setDraftSession,
+    });
+    await harness.render();
+
+    act(() => {
+      harness.latest()?.handleDrop(
+        buildCanonicalDropEvent({
+          ...buildCanonicalNode('transform-node', 'transform'),
+          pluginId: 'dvt',
+          kind: 'dvt:sql_transform',
+        })
+      );
+    });
+
+    expect(setNodes).not.toHaveBeenCalled();
+    expect(setDraftSession).not.toHaveBeenCalled();
+    expect(toastState.info).toHaveBeenCalledWith(
+      canvasViewCopy.nodeKindUnavailableForCanvasMessage
+    );
+
+    harness.cleanup();
+  });
+
+  it('rejects catalog-created nodes outside the active runtime catalog', async () => {
+    const setNodes = vi.fn();
+    const setDraftSession = vi.fn();
+    const harness = renderGraphHandlersHook({
+      canEditEdges: true,
+      allowsCanonicalNode: (node) => node.kind.startsWith('dbt:'),
+      setNodes,
+      setDraftSession,
+    });
+    await harness.render();
+
+    act(() => {
+      harness.latest()?.handleCreateAuthoringNode(
+        requireAuthoringNodeKind('dvt:sql_transform')
+      );
+    });
+
+    expect(setNodes).not.toHaveBeenCalled();
+    expect(setDraftSession).not.toHaveBeenCalled();
+    expect(toastState.info).toHaveBeenCalledWith(
+      canvasViewCopy.nodeKindUnavailableForCanvasMessage
+    );
+
+    harness.cleanup();
+  });
+
   it('creates an authoring node from the governed node catalog through the draft lifecycle', async () => {
     let currentNodes: Node[] = [];
     const setNodes = vi.fn((nextNodes) => {

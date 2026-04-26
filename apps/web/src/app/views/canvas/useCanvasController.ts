@@ -2,13 +2,13 @@
 import { useMemo } from 'react';
 
 import {
-  isActiveCanvasGraphStrategySupported,
   resolveActiveCanvasAuthoringMode,
   resolveActiveCanvasGraphStrategy,
   selectActiveCanvasExecutionStrategy,
   selectActiveCanvasGraphStrategy,
 } from './canvasActiveGraphStrategy';
 import { buildCanvasControllerViewModel } from './canvasControllerViewModel';
+import { resolveCanvasRuntimePolicy } from './canvasRuntimePolicy';
 import { useCanvasAuthoringRuntime } from './useCanvasAuthoringRuntime';
 import { useCanvasControllerEnvironment } from './useCanvasControllerEnvironment';
 import { useCanvasControllerReadModel } from './useCanvasControllerReadModel';
@@ -27,6 +27,7 @@ export function useCanvasController() {
     capabilities,
     platformHealthQuery,
     workspaceService,
+    workspaceServiceCapabilities,
     workspaceGraphDraftAuthoringPort,
     plansService,
     runsService,
@@ -80,14 +81,31 @@ export function useCanvasController() {
     activeCanvasGraphStrategyResolution,
     capabilities
   );
-  const isActiveCanvasKindSupported = isActiveCanvasGraphStrategySupported(
-    activeCanvasGraphStrategyResolution
-  );
   const canvasAuthoringMode = useMemo(
     () => resolveActiveCanvasAuthoringMode(draftReadModel),
     [draftReadModel?.record?.draft.canvas.kind]
   );
-  const canMutateActiveCanvas = canMutateGraph && isActiveCanvasKindSupported;
+  const runtimePolicy = useMemo(
+    () =>
+      resolveCanvasRuntimePolicy({
+        activeRuntime: activeCanvasGraphStrategyResolution,
+        canMutateGraph,
+        canOpenSourceImport: workspaceServiceCapabilities.sourceImportAvailable,
+        canPlan: store.userPermissions.canPlan && !isDraftRecoveryBlocked,
+        canRun: store.userPermissions.canRun && !isDraftRecoveryBlocked,
+        canReloadLatestDraft: authoringRuntime.draftToolbarState.showReloadAction,
+      }),
+    [
+      activeCanvasGraphStrategyResolution,
+      authoringRuntime.draftToolbarState.showReloadAction,
+      canMutateGraph,
+      isDraftRecoveryBlocked,
+      store.userPermissions.canPlan,
+      store.userPermissions.canRun,
+      workspaceServiceCapabilities.sourceImportAvailable,
+    ]
+  );
+  const canMutateActiveCanvas = runtimePolicy.commands.canMutateGraph;
 
   useCanvasSelectionSync({
     isBootstrapping: draftSession.syncState === 'bootstrapping',
@@ -130,6 +148,7 @@ export function useCanvasController() {
     inspectorNodeId: uiScope.inspectorNodeId,
     draftSession,
     canEditEdges: canMutateActiveCanvas,
+    allowsCanonicalNode: runtimePolicy.admission.allowsCanonicalNode,
     focusMode: store.focusMode,
     inspectorPanelVisible: store.inspectorPanelVisible,
     columnLevelLineageEnabled: store.columnLevelLineageEnabled,
@@ -159,10 +178,8 @@ export function useCanvasController() {
     canonicalEdges: visibleScope.canonicalEdges,
     selectedNodeIds: executionScope.selectedNodeIds,
     workspaceNodeIds: executionScope.workspaceNodeIds,
-    canPlan:
-      store.userPermissions.canPlan && !isDraftRecoveryBlocked && isActiveCanvasKindSupported,
-    canRun:
-      store.userPermissions.canRun && !isDraftRecoveryBlocked && isActiveCanvasKindSupported,
+    canPlan: runtimePolicy.commands.canPlan,
+    canRun: runtimePolicy.commands.canRun,
     sessionContext,
     shellFeedback,
     previewProvenanceConfig: workspaceBootstrapConfig,
@@ -202,6 +219,7 @@ export function useCanvasController() {
     executionActions,
     graphPolicy: {
       canvasAuthoringMode,
+      runtimePolicy,
     },
     readModel: {
       transformationValidation,

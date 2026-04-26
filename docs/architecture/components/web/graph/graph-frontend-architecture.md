@@ -2,7 +2,7 @@
 title: Graph Frontend Architecture
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-04-25
+last_reviewed: 2026-04-26
 ---
 
 # Graph Frontend Architecture
@@ -57,6 +57,7 @@ Out of scope:
 | Canvas route facade         | [Canvas.tsx](../../../../../apps/web/src/app/views/Canvas.tsx), [useCanvasController.ts](../../../../../apps/web/src/app/views/canvas/useCanvasController.ts), [canvasRouteViewState.ts](../../../../../apps/web/src/app/views/canvas/canvasRouteViewState.ts)                        |
 | Draft authoring core        | [canvasDraftSession.ts](../../../../../apps/web/src/app/views/canvas/canvasDraftSession.ts), [canvasDraftScope.ts](../../../../../apps/web/src/app/views/canvas/canvasDraftScope.ts), [canvasGraphLifecycle.ts](../../../../../apps/web/src/app/views/canvas/canvasGraphLifecycle.ts) |
 | Plugin boundary             | [PluginManifest.ts](../../../../../apps/web/src/app/plugins/contracts/PluginManifest.ts), [ConnectionRules.ts](../../../../../apps/web/src/app/plugins/contracts/ConnectionRules.ts), [registry.ts](../../../../../apps/web/src/app/plugins/registry.ts)                              |
+| Canvas runtime policy       | [canvasRuntimePolicy.ts](../../../../../apps/web/src/app/views/canvas/canvasRuntimePolicy.ts), [useCanvasController.ts](../../../../../apps/web/src/app/views/canvas/useCanvasController.ts)                                                                                          |
 | Canvas runtime registration | [registry.ts](../../../../../apps/web/src/app/plugins/registry.ts), [graphStrategyRegistry.ts](../../../../../apps/web/src/app/plugins/graphStrategyRegistry.ts), [canvasExecutionStrategyContracts.ts](../../../../../apps/web/src/app/plugins/canvasExecutionStrategyContracts.ts)  |
 | Route copy and presentation | [copy.ts](../../../../../apps/web/src/app/views/canvas/copy.ts), [CanvasToolbar.tsx](../../../../../apps/web/src/app/views/canvas/CanvasToolbar.tsx), [canvasExecutionState.ts](../../../../../apps/web/src/app/views/canvas/canvasExecutionState.ts)                                 |
 
@@ -125,6 +126,10 @@ As of 2026-04-25:
 - active Canvas runtime composition is now registered once per canvas kind:
   `CanvasRuntimeRegistration` binds product kind, graph strategy, execution
   posture, and first-node catalog
+- `CanvasRuntimePolicy` is the route-level application policy. It resolves the
+  active document state, command availability, execution posture, and
+  node-kind admission from the same runtime snapshot before any shell,
+  inspector, execution, or graph command consumes those decisions
 - unsupported persisted canvas kinds fail closed as invalid documents; only a
   missing document may use the default transformation creation posture
 - `transformation` is the only executable preview posture; `dbt` authoring is
@@ -251,10 +256,74 @@ Runtime invariants:
 - unsupported persisted kinds disable mutation, plan, and run instead of
   falling back to transformation semantics.
 
+## Canvas Runtime Policy
+
+`CanvasRuntimePolicy` is the route-level application boundary for active Canvas
+posture. It is intentionally separate from plugin declarations and UI panels:
+plugins declare runtime facts; the policy decides what the active route may do
+with those facts.
+
+```mermaid
+flowchart LR
+  Document["canvasDocument.kind"] --> Resolver["resolveActiveCanvasGraphStrategy"]
+  Registrations["CanvasRuntimeRegistration"] --> Resolver
+  Resolver --> Policy["CanvasRuntimePolicy"]
+  Permissions["user permissions"] --> Policy
+  Draft["draft recovery / transport mutability"] --> Policy
+  Services["workspace service capabilities"] --> Policy
+
+  Policy --> Commands["commands: graph / inspector / source import / plan / run"]
+  Policy --> Admission["admission: active node-kind catalog"]
+  Policy --> Execution["execution: executable / not executable / blocked"]
+
+  Commands --> Shell["Canvas shell and toolbar"]
+  Commands --> Inspector["Inspector authoring"]
+  Admission --> NodeRunner["Node admission command runner"]
+  Execution --> PlanRun["Plan and run actions"]
+```
+
+Policy invariants:
+
+- unsupported persisted canvas kinds deny graph mutation, Inspector authoring,
+  source import, plan, and run from one policy object;
+- DBT authoring remains mutable when permissions and draft posture allow it,
+  but `not_executable` runtime posture denies plan and run before toolbar or
+  command handlers advertise them;
+- node create/drop commands must call
+  `CanvasRuntimePolicy.admission.allowsCanonicalNode` before a viewport node or
+  draft-session mutation is produced;
+- runtime admission validates `kind`, `pluginId`, and catalog-owned `role`
+  together; matching a node-kind string alone is not semantic admission;
+- controller and viewmodel surfaces may forward policy decisions, but must not
+  recompute Inspector, source-import, plan, or run availability from lower-level
+  booleans.
+
+### Policy Sequence
+
+```mermaid
+sequenceDiagram
+  participant Route as useCanvasController
+  participant Runtime as Active runtime resolver
+  participant Policy as CanvasRuntimePolicy
+  participant VM as Canvas controller viewmodel
+  participant Runner as Node admission runner
+  participant Exec as Execution actions
+
+  Route->>Runtime: draft read model + runtime capabilities
+  Runtime-->>Route: active runtime or unsupported kind
+  Route->>Policy: runtime + permissions + draft posture
+  Policy-->>VM: shell, Inspector, and toolbar command posture
+  Policy-->>Runner: allowsCanonicalNode
+  Policy-->>Exec: canPlan / canRun
+  Runner->>Runner: reject out-of-catalog canonical nodes before effects
+  Exec->>Exec: keep programmatic command fail-closed
+```
+
 ## Active Strategy And Canonical Admission
 
 The active Canvas document owns the authoring kind. Graph strategies are now
-payload/projection adapters only.
+payload/projection adapters only. The active runtime policy owns whether the
+parsed canonical node may be admitted for the active canvas kind.
 
 ```mermaid
 sequenceDiagram
@@ -262,6 +331,7 @@ sequenceDiagram
   participant Canvas as Canvas document
   participant Resolver as canvasActiveGraphStrategy
   participant Strategy as CanvasGraphStrategy
+  participant Policy as CanvasRuntimePolicy
   participant Runner as CanvasNodeAdmissionCommandRunner
   participant Tx as CanvasNodeAdmissionTransaction
   participant Admission as admitCanonicalNodeToCanvas
@@ -272,6 +342,8 @@ sequenceDiagram
   Resolver->>Strategy: select ready runtime by kind
   User->>Strategy: drop plugin payload
   Strategy-->>Runner: CanonicalNode or null
+  Runner->>Policy: allowsCanonicalNode(canonicalNode)
+  Policy-->>Runner: allowed / rejected for active catalog
   Runner->>Tx: latest nodes + latest draft session
   Tx->>Admission: canonical node admission
   Admission-->>Mapper: accepted canonical node
@@ -288,6 +360,9 @@ Invariant:
 - node create/drop handlers apply a pure `CanvasNodeAdmissionTransaction`
   result once; semantic draft mutation and viewport projection are computed
   before React effects are applied.
+- node create/drop handlers must reject canonical nodes that are outside the
+  active runtime catalog or whose `pluginId` does not match the catalog-owned
+  node-kind prefix or role.
 - the command runner must advance its local `nodes` and `draftSession`
   snapshots after every accepted command, so two create/drop commands in the
   same event turn cannot lose the first semantic admission.
@@ -299,8 +374,13 @@ string checks. Current semantic coverage includes:
 
 - runtime registration parity between canvas kind, strategy, execution posture,
   and authoring catalog;
+- `CanvasRuntimePolicy` command posture over real DBT and transformation
+  runtime registrations;
+- controller, viewmodel, and node command handlers consuming the policy
+  boundary instead of recomputing active route posture locally;
 - unsupported persisted canvas kinds blocking mutation and execution posture;
 - pure node-admission transaction results for add and duplicate-noop paths;
+- active runtime catalog rejection before node create/drop side effects;
 - consecutive node create/drop commands preserving both viewport nodes and
   draft-session membership before rerender;
 - typed empty-state catalog and copy derivation from the active runtime;

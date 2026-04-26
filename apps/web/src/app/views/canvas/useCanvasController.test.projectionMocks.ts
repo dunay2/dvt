@@ -57,6 +57,7 @@ export function configureCanvasHarnessHookAndProjectionMocks(
       return {
         kind: 'dbt',
         graphStrategy: dbtGraphStrategy,
+        nodeKinds: DBT_NODE_KINDS,
         executionStrategy: {
           kind: 'not_executable',
         },
@@ -66,6 +67,7 @@ export function configureCanvasHarnessHookAndProjectionMocks(
       return {
         kind: 'transformation',
         graphStrategy: transformationGraphStrategy,
+        nodeKinds: DVT_AUTHORING_NODE_KINDS,
         executionStrategy: {
           kind: 'transformation_preview',
           previewProfile: 'transformation-sql-first-v1',

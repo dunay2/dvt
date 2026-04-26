@@ -84,6 +84,7 @@ export function buildDraftSession(): CanvasDraftSession {
 
 type RenderGraphHandlersHookArgs = {
   canEditEdges: boolean;
+  allowsCanonicalNode?: (node: CanonicalNode) => boolean;
   graphStrategy?: {
     parseDropPayload: (dataTransfer: DataTransfer) => CanonicalNode | null;
   };
@@ -107,6 +108,7 @@ type RenderGraphHandlersHookArgs = {
 
 export function renderGraphHandlersHook({
   canEditEdges,
+  allowsCanonicalNode = () => true,
   graphStrategy,
   canonicalNodes = [buildCanonicalNode('source-node', 'input'), buildCanonicalNode('sink-node', 'output')],
   nodes = [
@@ -160,6 +162,7 @@ export function renderGraphHandlersHook({
       inspectorNodeId,
       draftSession,
       canEditEdges,
+      allowsCanonicalNode,
       focusMode,
       inspectorPanelVisible,
       columnLevelLineageEnabled,

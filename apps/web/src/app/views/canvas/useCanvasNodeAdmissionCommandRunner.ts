@@ -5,6 +5,7 @@ import type { Dispatch, SetStateAction } from 'react';
 import type { Node } from '@xyflow/react';
 
 import type { CanonicalNode } from '../../types/canonical';
+import { canvasViewCopy } from './copy';
 import type { CanvasDraftSession } from './canvasDraftSession';
 import {
   resolveCanvasNodeAdmissionTransaction,
@@ -23,6 +24,7 @@ type CanvasNodeAdmissionCommandRunnerEffects = {
 
 type CanvasNodeAdmissionCommandRunnerPolicy = {
   columnLevelLineageEnabled: boolean;
+  allowsCanonicalNode: (node: CanonicalNode) => boolean;
 };
 
 type UseCanvasNodeAdmissionCommandRunnerArgs = {
@@ -49,7 +51,7 @@ export function useCanvasNodeAdmissionCommandRunner({
 }: UseCanvasNodeAdmissionCommandRunnerArgs): RunCanvasNodeAdmissionCommand {
   const { draftSession, nodes } = state;
   const { setDraftSession, setNodes } = effects;
-  const { columnLevelLineageEnabled } = policy;
+  const { columnLevelLineageEnabled, allowsCanonicalNode } = policy;
   const latestNodesRef = useRef(nodes);
   const latestDraftSessionRef = useRef(draftSession);
   latestNodesRef.current = nodes;
@@ -57,6 +59,15 @@ export function useCanvasNodeAdmissionCommandRunner({
 
   return useCallback<RunCanvasNodeAdmissionCommand>(
     ({ canonicalNode, position, onNoop, onAdded }) => {
+      if (!allowsCanonicalNode(canonicalNode)) {
+        const transaction: CanvasNodeAdmissionTransaction = {
+          outcome: 'noop',
+          reason: canvasViewCopy.nodeKindUnavailableForCanvasMessage,
+        };
+        onNoop?.(transaction.reason);
+        return transaction;
+      }
+
       const transaction = resolveCanvasNodeAdmissionTransaction({
         canonicalNode,
         draftSession: latestDraftSessionRef.current,
@@ -78,6 +89,6 @@ export function useCanvasNodeAdmissionCommandRunner({
           return transaction;
       }
     },
-    [columnLevelLineageEnabled, setDraftSession, setNodes]
+    [allowsCanonicalNode, columnLevelLineageEnabled, setDraftSession, setNodes]
   );
 }

@@ -2,7 +2,7 @@
 title: Canvas Inspector Authoring Component
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-04-25
+last_reviewed: 2026-04-26
 planning_type: architecture
 ---
 
@@ -39,6 +39,7 @@ inspector contract.
 | Domain policy       | `canvasInspectorAuthoringModel.ts`   | validation and normalization are explicit and pure                       |
 | Application command | `canvasInspectorAuthoringCommand.ts` | maps validated Inspector edits into aggregate mutation                   |
 | Application seam    | `useCanvasInspectorCommands.ts`      | exposes one route-safe callback instead of leaking aggregate mutation up |
+| Runtime policy      | `CanvasRuntimePolicy`                | decides whether Inspector authoring is available for the active canvas   |
 | Passive view        | `InspectorPanel.tsx`                 | still owns passive node details and plugin read-only panels              |
 | Route-owned view    | `CanvasInspectorPanel.tsx`           | composes the passive view with governed authoring UI                     |
 
@@ -67,6 +68,9 @@ write surface lives one level up in the route-owned wrapper.
 ## Invariants
 
 - The writable surface is the route-owned Inspector only.
+- Inspector editability is owned by `CanvasRuntimePolicy.commands`; it must
+  not be derived directly from draft transport mutability or raw user
+  permissions.
 - Plugin-owned inspector panels remain read-only in this slice.
 - The Inspector draft is local UI state; authoritative authoring truth remains
   `CanvasDraftSession`.
@@ -130,7 +134,9 @@ write surface lives one level up in the route-owned wrapper.
 
 ```mermaid
 flowchart LR
-  Controller["useCanvasController"] --> Commands["useCanvasInspectorCommands"]
+  Controller["useCanvasController"] --> RuntimePolicy["CanvasRuntimePolicy"]
+  RuntimePolicy --> Panel
+  Controller --> Commands["useCanvasInspectorCommands"]
   Commands --> Command["canvasInspectorAuthoringCommand.ts"]
   Command --> Session["CanvasDraftSession"]
   Session --> Projection["canvasAuthoringGraphProjection.ts"]
@@ -182,6 +188,7 @@ stateDiagram-v2
 ```mermaid
 sequenceDiagram
   participant User
+  participant Policy as CanvasRuntimePolicy
   participant Section as Inspector authoring section
   participant Model as Inspector model
   participant Hook as useCanvasInspectorCommands
@@ -191,6 +198,7 @@ sequenceDiagram
   participant Payload as Current draft payload
   participant Autosave as Draft autosave
 
+  Policy-->>Section: canEditNode
   User->>Section: edit node details
   Section->>Model: update draft and validate
   Model-->>Section: dirty / invalid / clean
@@ -228,6 +236,8 @@ sequenceDiagram
 ## Drift To Watch
 
 - pushing write semantics down into `InspectorPanel.tsx`
+- recomputing `canEditNode` from raw permissions, draft transport mutability,
+  or workbench state instead of `CanvasRuntimePolicy`
 - letting plugin panels mutate core route-owned node fields
 - using the Inspector form as a second persistence model
 - using a structural-only dirty signature that cannot see node name,

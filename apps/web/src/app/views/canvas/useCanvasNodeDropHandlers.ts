@@ -23,7 +23,12 @@ export function useCanvasNodeDropHandlers({
 }: UseCanvasNodeDropHandlersArgs): UseCanvasNodeDropHandlersResult {
   const { draftSession, nodes } = state;
   const { setNodes, setDraftSession } = effects;
-  const { graphStrategy, canEditEdges, columnLevelLineageEnabled } = policy;
+  const {
+    graphStrategy,
+    canEditEdges,
+    columnLevelLineageEnabled,
+    allowsCanonicalNode,
+  } = policy;
   const runAdmissionCommand = useCanvasNodeAdmissionCommandRunner({
     state: {
       draftSession,
@@ -35,6 +40,7 @@ export function useCanvasNodeDropHandlers({
     },
     policy: {
       columnLevelLineageEnabled,
+      allowsCanonicalNode,
     },
   });
 

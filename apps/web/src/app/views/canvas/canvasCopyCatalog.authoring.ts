@@ -16,6 +16,10 @@ export const canvasViewAuthoringCopyByKey = {
     key: 'canvas.node.alreadyOnCanvasMessage',
     fallback: 'Node already on canvas',
   },
+  nodeKindUnavailableForCanvasMessage: {
+    key: 'canvas.node.kindUnavailableForCanvasMessage',
+    fallback: 'This node kind is not available for the active canvas.',
+  },
   transformationConnectionOrderMessage: {
     key: 'canvas.transformation.connectionOrderMessage',
     fallback: 'Plan edges must follow source -> sql_transform -> sink.',

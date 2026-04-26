@@ -153,11 +153,66 @@ describe('useCanvasController core', () => {
       undefined
     );
     expect(harness.getLatestResult()?.canvasAuthoringMode).toBe('dbt');
+    expect(harness.getLatestResult()?.canEditInspectorNode).toBe(true);
+    expect(harness.getLatestResult()?.userPermissions).toEqual(
+      expect.objectContaining({
+        canEditEdges: true,
+        canPlan: false,
+        canRun: false,
+      })
+    );
     expect(harness.mocks.useCanvasGraphHandlers).toHaveBeenLastCalledWith(
       expect.objectContaining({
         graphStrategy: expect.objectContaining({
           id: 'dbt',
         }),
+      })
+    );
+    expect(harness.mocks.useCanvasExecutionActions).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        canPlan: false,
+        canRun: false,
+      })
+    );
+  });
+
+  it('routes unsupported canvas kinds through the runtime policy fail-closed posture', async () => {
+    setHarnessRemoteDraftRecord(
+      harness,
+      buildRemoteDraftRecord({
+        canvas: {
+          kind: 'legacy',
+          title: 'legacy graph',
+        },
+        nodeIds: ['node_1'],
+        nodePositions: {
+          node_1: { x: 0, y: 0 },
+        },
+        edges: [],
+      })
+    );
+
+    await harness.renderProbe();
+    await harness.renderProbe();
+
+    expect(harness.getLatestResult()?.canEditInspectorNode).toBe(false);
+    expect(harness.getLatestResult()?.canOpenSourceImport).toBe(false);
+    expect(harness.getLatestResult()?.userPermissions).toEqual(
+      expect.objectContaining({
+        canEditEdges: false,
+        canPlan: false,
+        canRun: false,
+      })
+    );
+    expect(harness.mocks.useCanvasGraphHandlers).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        canEditEdges: false,
+      })
+    );
+    expect(harness.mocks.useCanvasExecutionActions).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        canPlan: false,
+        canRun: false,
       })
     );
   });

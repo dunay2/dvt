@@ -23,7 +23,7 @@ export function useCanvasAuthoringNodeCreationHandlers({
 }: UseCanvasAuthoringNodeCreationHandlersArgs): UseCanvasAuthoringNodeCreationHandlersResult {
   const { draftSession, nodes } = state;
   const { setDraftSession, setInspectorNode, setNodes, setSelectedNodes } = effects;
-  const { canEditEdges, columnLevelLineageEnabled } = policy;
+  const { canEditEdges, columnLevelLineageEnabled, allowsCanonicalNode } = policy;
   const latestNodesRef = useRef(nodes);
   latestNodesRef.current = nodes;
   const runAdmissionCommand = useCanvasNodeAdmissionCommandRunner({
@@ -37,6 +37,7 @@ export function useCanvasAuthoringNodeCreationHandlers({
     },
     policy: {
       columnLevelLineageEnabled,
+      allowsCanonicalNode,
     },
   });
 
