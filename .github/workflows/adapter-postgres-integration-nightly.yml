@@ -34,8 +34,9 @@ jobs:
       DVT_PG_ADMIN_URL: postgresql://dvt_test:dvt_test@localhost:5432/dvt_test
       DVT_PG_APP_USER: dvt_app
       DVT_PG_APP_PASSWORD: dvt_app
-      DVT_PG_URL: postgresql://dvt_app:dvt_app@localhost:5432/dvt_test
-      DATABASE_URL: postgresql://dvt_app:dvt_app@localhost:5432/dvt_test
+      DVT_PG_RLS_URL: postgresql://dvt_app:dvt_app@localhost:5432/dvt_test
+      DVT_PG_URL: postgresql://dvt_test:dvt_test@localhost:5432/dvt_test
+      DATABASE_URL: postgresql://dvt_test:dvt_test@localhost:5432/dvt_test
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
@@ -53,6 +54,11 @@ jobs:
 
       - name: Build adapter-postgres dependency graph
         run: pnpm --workspace-concurrency=4 --filter @dvt/adapter-postgres... --if-present run build
+
+      - name: Prove adapter-postgres app-role runtime and direct RLS
+        run:
+          pnpm --filter @dvt/adapter-postgres test -- PostgresAppRoleRuntime.integration.test.ts
+          PostgresTenantRlsEnforcement.integration.test.ts
 
       - name: Run adapter-postgres integration smoke
         run: pnpm test:adapter-postgres:integration

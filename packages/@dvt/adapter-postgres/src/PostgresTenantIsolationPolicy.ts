@@ -17,23 +17,82 @@ import { quoteIdentifier } from './sqlUtils.js';
 export interface TenantIsolationTable {
   readonly name: string;
   readonly tenantColumn: string;
+  readonly serviceAccessOwners: readonly PostgresServiceAccessOwner[];
 }
 
 export const START_RUN_INTENTS_TENANT_ISOLATION_TABLE: TenantIsolationTable = {
   name: 'start_run_intents',
   tenantColumn: 'tenant_id',
+  serviceAccessOwners: [POSTGRES_SERVICE_ACCESS.startRunIntentReconciler.owner],
 } as const;
 
 export const CORE_TENANT_ISOLATION_TABLES: readonly TenantIsolationTable[] = [
-  { name: 'run_metadata', tenantColumn: 'tenant_id' },
-  { name: 'run_events', tenantColumn: 'tenant_id' },
-  { name: 'run_snapshots', tenantColumn: 'tenant_id' },
-  { name: 'outbox', tenantColumn: 'tenant_id' },
-  { name: 'outbox_dead_letter', tenantColumn: 'tenant_id' },
-  { name: 'lineage_outbox', tenantColumn: 'tenant_id' },
-  { name: 'lineage_dead_letter', tenantColumn: 'tenant_id' },
-  { name: 'run_event_heads', tenantColumn: 'tenant_id' },
-  { name: 'snapshot_work_queue', tenantColumn: 'tenant_id' },
+  {
+    name: 'run_metadata',
+    tenantColumn: 'tenant_id',
+    serviceAccessOwners: [
+      POSTGRES_SERVICE_ACCESS.backpressureSnapshotReader.owner,
+      POSTGRES_SERVICE_ACCESS.runMetadataTenantResolver.owner,
+      POSTGRES_SERVICE_ACCESS.snapshotStalenessQuery.owner,
+    ],
+  },
+  {
+    name: 'run_events',
+    tenantColumn: 'tenant_id',
+    serviceAccessOwners: [
+      POSTGRES_SERVICE_ACCESS.runArchiveMaintenance.owner,
+      POSTGRES_SERVICE_ACCESS.snapshotStalenessQuery.owner,
+    ],
+  },
+  {
+    name: 'run_snapshots',
+    tenantColumn: 'tenant_id',
+    serviceAccessOwners: [
+      POSTGRES_SERVICE_ACCESS.runArchiveMaintenance.owner,
+      POSTGRES_SERVICE_ACCESS.snapshotStalenessQuery.owner,
+      POSTGRES_SERVICE_ACCESS.snapshotWorkQueue.owner,
+    ],
+  },
+  {
+    name: 'outbox',
+    tenantColumn: 'tenant_id',
+    serviceAccessOwners: [
+      POSTGRES_SERVICE_ACCESS.backpressureSnapshotReader.owner,
+      POSTGRES_SERVICE_ACCESS.deliveryBufferPurge.owner,
+      POSTGRES_SERVICE_ACCESS.outboxWorker.owner,
+    ],
+  },
+  {
+    name: 'outbox_dead_letter',
+    tenantColumn: 'tenant_id',
+    serviceAccessOwners: [
+      POSTGRES_SERVICE_ACCESS.deliveryBufferPurge.owner,
+      POSTGRES_SERVICE_ACCESS.outboxWorker.owner,
+    ],
+  },
+  {
+    name: 'lineage_outbox',
+    tenantColumn: 'tenant_id',
+    serviceAccessOwners: [POSTGRES_SERVICE_ACCESS.lineageOutboxWorker.owner],
+  },
+  {
+    name: 'lineage_dead_letter',
+    tenantColumn: 'tenant_id',
+    serviceAccessOwners: [
+      POSTGRES_SERVICE_ACCESS.deliveryBufferPurge.owner,
+      POSTGRES_SERVICE_ACCESS.lineageOutboxWorker.owner,
+    ],
+  },
+  {
+    name: 'run_event_heads',
+    tenantColumn: 'tenant_id',
+    serviceAccessOwners: [POSTGRES_SERVICE_ACCESS.snapshotStalenessQuery.owner],
+  },
+  {
+    name: 'snapshot_work_queue',
+    tenantColumn: 'tenant_id',
+    serviceAccessOwners: [POSTGRES_SERVICE_ACCESS.snapshotWorkQueue.owner],
+  },
 ] as const;
 
 export const START_RUN_INTENT_TENANT_ISOLATION_TABLES: readonly TenantIsolationTable[] = [
@@ -72,8 +131,7 @@ export function buildTenantIsolationPolicySql(
 ): readonly string[] {
   const relation = `${quoteIdentifier(schema)}.${table.name}`;
   const tenantColumn = table.tenantColumn;
-  const serviceAccessOwnerList =
-    POSTGRES_RLS_SERVICE_ACCESS_OWNERS.map(toSqlStringLiteral).join(', ');
+  const serviceAccessOwnerList = table.serviceAccessOwners.map(toSqlStringLiteral).join(', ');
   const predicate = `
     (
       current_setting('dvt.access_mode', true) = 'service'

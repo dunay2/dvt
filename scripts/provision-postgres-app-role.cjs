@@ -25,7 +25,9 @@ const client = new Client({ connectionString: adminUrl });
 
 main()
   .then(() => {
-    console.log(`[postgres-role] Provisioned non-bypass role ${appUser} for ${databaseName}`);
+    console.log(
+      `[postgres-role] Provisioned non-bypass, non-schema-creating role ${appUser} for ${databaseName}`
+    );
   })
   .catch((error) => {
     console.error(error);
@@ -56,18 +58,35 @@ async function main() {
     END $$;
   `);
   await client.query(
-    `GRANT CONNECT, CREATE ON DATABASE ${quoteIdentifier(databaseName)} TO ${quoteIdentifier(
-      appUser
-    )}`
+    `REVOKE CREATE ON DATABASE ${quoteIdentifier(databaseName)} FROM ${quoteIdentifier(appUser)}`
   );
+  await client.query(
+    `GRANT CONNECT ON DATABASE ${quoteIdentifier(databaseName)} TO ${quoteIdentifier(appUser)}`
+  );
+  await client.query(`
+    DO $$
+    BEGIN
+      IF to_regnamespace('public') IS NOT NULL THEN
+        REVOKE CREATE ON SCHEMA public FROM PUBLIC;
+        EXECUTE format('REVOKE CREATE ON SCHEMA public FROM %I', ${quoteLiteral(appUser)});
+      END IF;
+    END $$;
+  `);
 
   const verification = await client.query(
     `
-      SELECT rolsuper, rolbypassrls
+      SELECT
+        rolsuper,
+        rolbypassrls,
+        has_database_privilege($1, $2, 'CREATE') AS has_database_create,
+        CASE
+          WHEN to_regnamespace('public') IS NULL THEN false
+          ELSE has_schema_privilege($1, 'public', 'CREATE')
+        END AS has_public_schema_create
       FROM pg_roles
       WHERE rolname = $1
     `,
-    [appUser]
+    [appUser, databaseName]
   );
   const role = verification.rows[0];
   if (role === undefined) {
@@ -75,6 +94,12 @@ async function main() {
   }
   if (role.rolsuper === true || role.rolbypassrls === true) {
     throw new Error(`POSTGRES_APP_ROLE_CAN_BYPASS_RLS:${appUser}`);
+  }
+  if (role.has_database_create === true) {
+    throw new Error(`POSTGRES_APP_ROLE_CAN_CREATE_DATABASE_SCHEMAS:${appUser}`);
+  }
+  if (role.has_public_schema_create === true) {
+    throw new Error(`POSTGRES_APP_ROLE_CAN_CREATE_PUBLIC_SCHEMA_OBJECTS:${appUser}`);
   }
 }
 

@@ -27,6 +27,8 @@ code_refs:
   - packages/@dvt/adapter-postgres/test/PostgresTenantIsolationPolicy.test.ts
   - packages/@dvt/adapter-postgres/test/PostgresServiceAccessCapability.architecture.test.ts
   - packages/@dvt/adapter-postgres/test/PostgresTenantRlsEnforcement.integration.test.ts
+  - packages/@dvt/adapter-postgres/test/PostgresAppRoleRuntime.integration.test.ts
+  - packages/@dvt/adapter-postgres/test/helpers/postgresRlsProofHarness.ts
   - packages/@dvt/adapter-postgres/test/S19F1SnapshotWorkQueueClosure.integration.test.ts
   - packages/@dvt/adapter-postgres/vitest.config.ts
   - packages/@dvt/adapter-postgres/test/StartRunIntentSchemaManager.test.ts
@@ -62,8 +64,13 @@ evidence:
     - pnpm --filter @dvt/adapter-postgres test -- PostgresServiceAccessCapability.architecture.test.ts PostgresTenantRlsEnforcement.integration.test.ts
     - pnpm --filter @dvt/contracts test -- start-run-intent-ownership.architecture.test.ts
     - pnpm --filter @dvt/adapter-postgres test -- PostgresServiceAccessCapability.architecture.test.ts PostgresTenantIsolationPolicy.test.ts PostgresStateStoreAdapter.migrate.test.ts StartRunIntentSchemaManager.test.ts PostgresTenantRlsEnforcement.integration.test.ts
-    - '$env:DVT_PG_INTEGRATION="1"; $env:DVT_PG_URL="postgresql://dvt_app:dvt@localhost:5432/dvt"; $env:DATABASE_URL="postgresql://dvt_app:dvt@localhost:5432/dvt"; pnpm --filter @dvt/adapter-postgres test'
-    - '$env:DVT_PG_ADMIN_URL="postgresql://dvt:dvt@localhost:5432/dvt"; $env:DVT_PG_APP_USER="dvt_app"; $env:DVT_PG_APP_PASSWORD="dvt"; node scripts/provision-postgres-app-role.cjs'
+    - '$env:DVT_PG_ADMIN_URL="postgresql://dvt:dvt@localhost:5432/dvt"; $env:DVT_PG_APP_USER="dvt_app"; $env:DVT_PG_APP_PASSWORD="dvt_app"; node scripts/provision-postgres-app-role.cjs'
+    - '$env:DVT_PG_ADMIN_URL="postgresql://dvt:dvt@localhost:5432/dvt"; $env:DVT_PG_RLS_URL="postgresql://dvt_app:dvt_app@localhost:5432/dvt"; $env:DVT_PG_INTEGRATION="1"; $env:DVT_PG_URL=$env:DVT_PG_ADMIN_URL; $env:DATABASE_URL=$env:DVT_PG_ADMIN_URL; pnpm --filter @dvt/adapter-postgres test -- PostgresTenantRlsEnforcement.integration.test.ts'
+    - '$env:DVT_PG_ADMIN_URL="postgresql://dvt:dvt@localhost:5432/dvt"; $env:DVT_PG_RLS_URL="postgresql://dvt_app:dvt_app@localhost:5432/dvt"; $env:DVT_PG_INTEGRATION="1"; $env:DVT_PG_URL=$env:DVT_PG_ADMIN_URL; $env:DATABASE_URL=$env:DVT_PG_ADMIN_URL; pnpm --filter @dvt/adapter-postgres test -- PostgresAdapterClientSession.test.ts PostgresTenantRlsEnforcement.integration.test.ts'
+    - '$env:DVT_PG_ADMIN_URL="postgresql://dvt:dvt@localhost:5432/dvt"; $env:DVT_PG_RLS_URL="postgresql://dvt_app:dvt_app@localhost:5432/dvt"; $env:DVT_PG_INTEGRATION="1"; $env:DVT_PG_URL=$env:DVT_PG_ADMIN_URL; $env:DATABASE_URL=$env:DVT_PG_ADMIN_URL; pnpm --filter @dvt/adapter-postgres test -- PostgresAppRoleRuntime.integration.test.ts PostgresTenantRlsEnforcement.integration.test.ts'
+    - pnpm --filter @dvt/adapter-postgres test -- PostgresStateStoreAdapter.migrate.test.ts StartRunIntentSchemaManager.test.ts
+    - '$env:DVT_PG_ADMIN_URL="postgresql://dvt:dvt@localhost:5432/dvt"; $env:DVT_PG_RLS_URL="postgresql://dvt_app:dvt_app@localhost:5432/dvt"; $env:DVT_PG_INTEGRATION="1"; $env:DVT_PG_URL=$env:DVT_PG_ADMIN_URL; $env:DATABASE_URL=$env:DVT_PG_ADMIN_URL; pnpm --filter @dvt/adapter-postgres test -- PostgresAppRoleRuntime.integration.test.ts'
+    - '$env:DVT_PG_ADMIN_URL="postgresql://dvt:dvt@localhost:5432/dvt"; $env:DVT_PG_RLS_URL="postgresql://dvt_app:dvt_app@localhost:5432/dvt"; $env:DVT_PG_INTEGRATION="1"; $env:DVT_PG_URL=$env:DVT_PG_ADMIN_URL; $env:DATABASE_URL=$env:DVT_PG_ADMIN_URL; pnpm --filter @dvt/adapter-postgres test -- PostgresTenantIsolationPolicy.test.ts PostgresTenantRlsEnforcement.integration.test.ts'
 ---
 
 # Summary
@@ -121,10 +128,37 @@ that owner path.
     implicit superuser authority; those fixtures now use explicit tenant
     context, and the adapter Postgres Vitest config gives real integration
     tests a 30s timeout only when `DVT_PG_INTEGRATION=1`.
-12. CI jobs that run Postgres integration now provision and use the same
-    non-superuser, non-`BYPASSRLS` application role. The service-container
-    superuser remains only bootstrap/admin authority, not the role used by RLS
-    enforcement tests.
+12. CI jobs that run Postgres integration now provision a non-superuser,
+    non-`BYPASSRLS`, non-schema-creating application role for direct RLS
+    enforcement. Migration/setup still uses the explicit admin URL; direct
+    RLS proof uses `DVT_PG_RLS_URL`.
+13. `PostgresTenantRlsEnforcement.integration.test.ts` now proves the full
+    tenant-isolation table catalog exists, has forced RLS, uses table-scoped
+    `dvt.service_access_owner` predicates, rejects the wrong maintenance owner,
+    and fails if a tenant-owned table with `tenant_id` is not listed in
+    `TENANT_ISOLATION_TABLES`.
+14. `PostgresAdapterClientSession.withClient` and `withTransaction` keep
+    separate public semantics while sharing one private transaction
+    unit-of-work implementation for transaction-local tenant context behavior.
+15. `PostgresAppRoleRuntime.integration.test.ts` proves that online
+    `PostgresStateStoreAdapter` writes and tenant-scoped reads work through
+    `DVT_PG_RLS_URL`, after only admin migration plus explicit runtime DML
+    grants on tenant-owned runtime tables. The app role cannot mutate
+    `schema_migrations`.
+16. `PostgresTenantRlsEnforcement.integration.test.ts` is split by owned
+    concern: role posture, catalog shape, tenant-context reads,
+    missing-context reads, and explicit maintenance-context reads. The catalog
+    proof now verifies allowed and denied service owners per tenant-owned table.
+17. `scripts/provision-postgres-app-role.cjs` now revokes and verifies `CREATE`
+    on the `public` schema as well as database-level `CREATE`, so the
+    non-schema-creating role claim is mechanically checked.
+18. `PostgresStartRunIntentStore` supports explicit `assumeSchemaReady`
+    runtime construction, so admin migration authority and app-role intent
+    runtime authority are separated.
+19. `core_019_table_scoped_service_owner_rls` and
+    `20260426_005_start_run_intents_table_scoped_service_owner_rls` re-apply
+    the table-scoped owner matrix for existing schemas instead of relying only
+    on fresh-schema migration replay.
 
 # What Remains Open
 

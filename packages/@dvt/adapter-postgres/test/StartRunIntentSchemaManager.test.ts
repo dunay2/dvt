@@ -67,5 +67,8 @@ describe('StartRunIntentSchemaManager migration locking', () => {
     expect(migrationSql).toContain("current_setting('dvt.service_access_owner', true)");
     expect(migrationSql).toContain("'start-run-intent-reconciler'");
     expect(migrationSql).toContain("tenant_id = current_setting('dvt.tenant_id', true)");
+    expect(client.queries.flatMap((query) => query.params ?? [])).toContain(
+      '20260426_005_start_run_intents_table_scoped_service_owner_rls'
+    );
   });
 });

@@ -220,6 +220,13 @@ export class StartRunIntentSchemaManager {
           buildTenantIsolationPolicySql(this.schema, START_RUN_INTENTS_TENANT_ISOLATION_TABLE)
         ),
       },
+      {
+        version: '20260426_005_start_run_intents_table_scoped_service_owner_rls',
+        description: 'Restrict start_run_intents service access to its reconciler owner',
+        sql: toSqlBatch(
+          buildTenantIsolationPolicySql(this.schema, START_RUN_INTENTS_TENANT_ISOLATION_TABLE)
+        ),
+      },
     ] as const;
   }
 }

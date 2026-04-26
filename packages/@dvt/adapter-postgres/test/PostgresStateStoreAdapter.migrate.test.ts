@@ -281,8 +281,8 @@ describe('PostgresStateStoreAdapter migration state', () => {
     const insertQueries = client.queries.filter(
       (q) => q.sql.includes('INSERT INTO') && q.sql.includes('schema_migrations')
     );
-    // One INSERT per named migration step (18 steps)
-    expect(insertQueries.length).toBe(18);
+    // One INSERT per named migration step.
+    expect(insertQueries.length).toBe(19);
 
     const versions = insertQueries.map((q) => (q.params as string[])[1]);
     expect(versions).toContain('core_001_initial_tables');
@@ -296,6 +296,7 @@ describe('PostgresStateStoreAdapter migration state', () => {
     expect(versions).toContain('core_016_snapshot_work_queue');
     expect(versions).toContain('core_017_tenant_rls_baseline');
     expect(versions).toContain('core_018_service_access_owner_rls_hardening');
+    expect(versions).toContain('core_019_table_scoped_service_owner_rls');
   });
 
   it('creates the production tenant RLS baseline for tenant-owned online tables', async () => {

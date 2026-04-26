@@ -17,34 +17,47 @@ context: >
   explicit tenant predicates to run-event sequence and dedupe reads, requires adapter-internal
   POSTGRES_SERVICE_ACCESS catalog entries through PostgresMaintenanceAccess for service-context
   activation, re-applies RLS policies with approved service_access_owner predicates, and removes the
-  duplicate IStartRunIntentStore/StartRunIntentPolicy ownership from @dvt/contracts.
+  duplicate IStartRunIntentStore/StartRunIntentPolicy ownership from @dvt/contracts. The 2026-04-25
+  follow-up also changes the CI/local RLS proof role to a non-schema-creating role: migrations run
+  through the explicit admin URL, online runtime smoke runs through DVT_PG_RLS_URL after explicit
+  runtime grants, direct RLS enforcement uses DVT_PG_RLS_URL without tenant context fallbacks, and
+  table-scoped service owners prevent one maintenance path from reading every tenant-owned table.
 risk: >
   Plan records still lack top-level tenant/project/environment columns, so plan-store tenancy
   remains a separate governed task. RLS enforcement must still be proven in the deployment profile
-  using a non-owner, non-BYPASSRLS application role; superuser or BYPASSRLS roles invalidate the
-  direct-access proof. The TypeScript maintenance catalog and RLS service_access_owner predicate
-  reduce accidental drift but do not replace database-role separation: arbitrary SQL running under
-  the same application role can still forge transaction-local settings. Future direct SQL readers
-  can still drift if they bypass the adapter client-session pattern or omit tenant predicates on
-  tenant-owned reads.
+  using a non-owner, non-BYPASSRLS, non-schema-creating application role; superuser, BYPASSRLS,
+  database CREATE, or public-schema CREATE privileges invalidate the direct-access proof. The
+  TypeScript maintenance catalog and table-scoped RLS service_access_owner predicates reduce
+  accidental drift but do not replace database-role separation: arbitrary SQL running under the same
+  application role can still forge transaction-local settings. Future direct SQL readers can still
+  drift if they bypass the adapter client-session pattern or omit tenant predicates on tenant-owned
+  reads.
 mitigations:
   - >
     Keep `FORCE ROW LEVEL SECURITY` on tenant-owned online tables and keep application traffic on a
-    non-owner role for least privilege.
+    non-owner, non-schema-creating role for least privilege.
+  - >
+    Keep the app-role runtime smoke in CI so migration/setup authority and online application
+    authority remain separately proven.
   - >
     Keep all tenant command/query paths setting tenant context with explicit tenant predicates and
     all worker/maintenance global sweep paths setting service context before accessing RLS-protected
     tables.
   - >
-    Keep service context behind PostgresMaintenanceAccess and the closed POSTGRES_SERVICE_ACCESS
-    catalog; do not export generic capability creation or maintenance authority from the adapter
-    package root, and keep architecture tests forbidding API imports of service authority.
+    Keep service context behind PostgresMaintenanceAccess, the closed POSTGRES_SERVICE_ACCESS
+    catalog, and table-scoped RLS owner lists; do not export generic capability creation or
+    maintenance authority from the adapter package root, and keep architecture tests forbidding API
+    imports of service authority.
   - >
     Split tenant application and maintenance database roles before production onboarding so service
     mode cannot be forged by arbitrary SQL under the tenant application role.
   - >
     Run PostgresTenantRlsEnforcement.integration.test.ts under DVT_PG_INTEGRATION=1 with a
-    non-owner, non-BYPASSRLS role before production onboarding.
+    non-owner, non-BYPASSRLS, non-schema-creating role before production onboarding.
+  - >
+    Run PostgresAppRoleRuntime.integration.test.ts under DVT_PG_INTEGRATION=1 with DVT_PG_URL set to
+    the admin migration role and DVT_PG_RLS_URL set to the application role. This test must prove
+    state-store and start-run-intent runtime paths work without granting schema_migrations DML.
   - >
     Keep start_run_intents under its dedicated schema manager RLS migration, require
     StartRunIntentRef on intent command/query operations, and forbid direct pool.query access from

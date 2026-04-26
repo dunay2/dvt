@@ -120,6 +120,7 @@ export interface PostgresStartRunIntentStoreConfig {
   statementTimeoutMs?: number;
   queryTimeoutMs?: number;
   schemaManager?: StartRunIntentSchemaManager;
+  assumeSchemaReady?: boolean;
 }
 
 export class PostgresStartRunIntentStore implements IStartRunIntentStore {
@@ -160,6 +161,7 @@ export class PostgresStartRunIntentStore implements IStartRunIntentStore {
         pool: this.pool,
         schema: this.schema,
       });
+    this.migrated = config.assumeSchemaReady === true;
   }
 
   async migrate(): Promise<void> {

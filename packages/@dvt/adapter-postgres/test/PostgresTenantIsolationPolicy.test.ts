@@ -30,11 +30,15 @@ describe('PostgresTenantIsolationPolicy', () => {
     expect(setServiceContextSql()).toContain("set_config('dvt.access_mode', 'service', true)");
   });
 
-  it('builds RLS policies that deny missing context and require named service owners', () => {
-    const statements = buildTenantIsolationPolicySql('DvtOps', {
-      name: 'run_metadata',
-      tenantColumn: 'tenant_id',
-    }).join('\n');
+  it('builds RLS policies that deny missing context and require table-scoped service owners', () => {
+    const runMetadataTable = TENANT_ISOLATION_TABLES.find((table) => table.name === 'run_metadata');
+    expect(runMetadataTable?.serviceAccessOwners).toEqual([
+      'backpressure-snapshot-reader',
+      'run-metadata-tenant-resolver',
+      'snapshot-staleness-query',
+    ]);
+
+    const statements = buildTenantIsolationPolicySql('DvtOps', runMetadataTable!).join('\n');
 
     expect(statements).toContain('ALTER TABLE "DvtOps".run_metadata ENABLE ROW LEVEL SECURITY');
     expect(statements).toContain('ALTER TABLE "DvtOps".run_metadata FORCE ROW LEVEL SECURITY');
@@ -42,8 +46,9 @@ describe('PostgresTenantIsolationPolicy', () => {
     expect(statements).toContain('CREATE POLICY dvt_tenant_isolation');
     expect(statements).toContain("current_setting('dvt.access_mode', true) = 'service'");
     expect(statements).toContain("current_setting('dvt.service_access_owner', true)");
-    expect(statements).toContain("'outbox-worker'");
-    expect(statements).toContain("'run-archive-maintenance'");
+    expect(statements).toContain("'run-metadata-tenant-resolver'");
+    expect(statements).not.toContain("'outbox-worker'");
+    expect(statements).not.toContain("'run-archive-maintenance'");
     expect(statements).toContain("tenant_id = current_setting('dvt.tenant_id', true)");
   });
 });

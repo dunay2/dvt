@@ -970,6 +970,26 @@ const MIGRATION_STEPS: readonly MigrationStep[] = [
       }
     },
   },
+  {
+    version: 'core_019_table_scoped_service_owner_rls',
+    description: 'Restrict service-mode RLS owners to each tenant table maintenance scope',
+    run: async (client, schema) => {
+      for (const table of CORE_TENANT_ISOLATION_TABLES) {
+        for (const statement of buildTenantIsolationPolicySql(schema, table)) {
+          await client.query(statement);
+        }
+      }
+    },
+    rollbackDescription:
+      'Reapply table-scoped tenant isolation policy; service owner scope is not downgraded',
+    rollback: async (client, schema) => {
+      for (const table of CORE_TENANT_ISOLATION_TABLES) {
+        for (const statement of buildTenantIsolationPolicySql(schema, table)) {
+          await client.query(statement);
+        }
+      }
+    },
+  },
 ];
 
 // ---------------------------------------------------------------------------
