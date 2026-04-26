@@ -19,7 +19,7 @@ import { Info, MousePointer, Trash2 } from 'lucide-react';
 import { memo } from 'react';
 
 import { FallbackNodeRenderer } from './FallbackNodeRenderer';
-import { getNodeBadges, getNodeRenderer } from './registry';
+import { getNodeBadges, getNodeRenderer, type RuntimeCapabilities } from './registry';
 import { resolveNodeKindRegistration } from './nodeTypeRegistry';
 import type { BadgeContext, MergedNodeDecoration, NodeBadge } from './contracts/NodeRendering';
 import type { CanonicalNode, CoreNodeRole, PluginNodeKind } from '../types/canonical';
@@ -53,6 +53,7 @@ export interface PluginNodeData extends Record<string, unknown> {
   metadata?: Record<string, unknown>;
   activeRunId?: string | null;
   runStatusByNodeId?: ReadonlyMap<string, string>;
+  runtimeCapabilities?: RuntimeCapabilities;
   onInspectNode?: (nodeId: string) => void;
   onRemoveNode?: (nodeId: string) => void;
   onToggleNodeSelection?: (nodeId: string, shouldSelect: boolean) => void;
@@ -134,8 +135,12 @@ function PluginNodeWrapper(props: NodeProps<PluginFlowNode>) {
       data.runStatusByNodeId instanceof Map ? data.runStatusByNodeId : new Map<string, string>(),
   };
 
-  const Renderer = getNodeRenderer(canonicalNode.kind, FallbackNodeRenderer);
-  const badges = getNodeBadges(canonicalNode, badgeCtx);
+  const Renderer = getNodeRenderer(
+    canonicalNode.kind,
+    FallbackNodeRenderer,
+    data.runtimeCapabilities
+  );
+  const badges = getNodeBadges(canonicalNode, badgeCtx, data.runtimeCapabilities);
 
   return (
     <ContextMenu>

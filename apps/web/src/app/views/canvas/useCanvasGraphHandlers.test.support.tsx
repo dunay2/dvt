@@ -5,14 +5,25 @@ import { vi } from 'vitest';
 
 import type { Edge, Node } from '@xyflow/react';
 
-import type { ConnectionRuleResult } from '../../plugins/contracts/ConnectionRules';
+import type {
+  ConnectionRuleResult,
+  PluginPortMap,
+} from '../../plugins/contracts/ConnectionRules';
+import type { RuntimeCapabilities } from '../../plugins/registry';
 import type { CanonicalNode } from '../../types/canonical';
 import type { CanvasDraftSession } from './canvasDraftSession';
 import type { TransformationConnectionGuardReasonCode } from './transformationConnectionGuard';
 import { useCanvasGraphHandlers } from './useCanvasGraphHandlers';
 
 const graphHandlersTestDoubles = vi.hoisted(() => ({
-  evaluateConnection: vi.fn<() => ConnectionRuleResult>(() => ({ allowed: true })),
+  evaluateConnection: vi.fn<
+    (
+      source: CanonicalNode,
+      target: CanonicalNode,
+      currentEdges: unknown,
+      pluginPorts: PluginPortMap
+    ) => ConnectionRuleResult
+  >(() => ({ allowed: true })),
   guardTransformationConnection: vi.fn<
     () =>
       | { allowed: true }
@@ -85,6 +96,7 @@ export function buildDraftSession(): CanvasDraftSession {
 type RenderGraphHandlersHookArgs = {
   canEditEdges: boolean;
   allowsCanonicalNode?: (node: CanonicalNode) => boolean;
+  runtimeCapabilities?: RuntimeCapabilities;
   graphStrategy?: {
     parseDropPayload: (dataTransfer: DataTransfer) => CanonicalNode | null;
   };
@@ -109,6 +121,7 @@ type RenderGraphHandlersHookArgs = {
 export function renderGraphHandlersHook({
   canEditEdges,
   allowsCanonicalNode = () => true,
+  runtimeCapabilities,
   graphStrategy,
   canonicalNodes = [buildCanonicalNode('source-node', 'input'), buildCanonicalNode('sink-node', 'output')],
   nodes = [
@@ -162,6 +175,7 @@ export function renderGraphHandlersHook({
       inspectorNodeId,
       draftSession,
       canEditEdges,
+      runtimeCapabilities,
       allowsCanonicalNode,
       focusMode,
       inspectorPanelVisible,
@@ -222,6 +236,17 @@ export function rejectGraphHandlerConnectionWith(
   rejection: Exclude<ConnectionRuleResult, { allowed: true }>
 ) {
   graphHandlersTestDoubles.evaluateConnection.mockReturnValue(rejection);
+}
+
+export function evaluateGraphHandlerConnectionWith(
+  implementation: (
+    source: CanonicalNode,
+    target: CanonicalNode,
+    currentEdges: unknown,
+    pluginPorts: PluginPortMap
+  ) => ConnectionRuleResult
+) {
+  graphHandlersTestDoubles.evaluateConnection.mockImplementation(implementation);
 }
 
 export function rejectTransformationConnectionWith(reasonCode: TransformationConnectionGuardReasonCode) {

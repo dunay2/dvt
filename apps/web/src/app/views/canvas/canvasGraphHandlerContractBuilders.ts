@@ -23,6 +23,7 @@ function edgeAuthoring(
     },
     policy: {
       canEditEdges: contracts.policy.canEditEdges,
+      runtimeCapabilities: contracts.policy.runtimeCapabilities,
     },
   };
 }

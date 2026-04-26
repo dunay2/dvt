@@ -27,6 +27,7 @@ describe('useCanvasEdgeAuthoringHandlers architecture', () => {
 
   it('routes edge confirmations and reconnects through a command runner instead of updater side effects', () => {
     expect(EDGE_AUTHORING_HANDLERS_SOURCE).toContain('useCanvasEdgeCommandRunner');
+    expect(EDGE_AUTHORING_HANDLERS_SOURCE).toContain('getPluginPortMap(policy.runtimeCapabilities)');
     expect(EDGE_AUTHORING_HANDLERS_SOURCE).not.toContain('setEdges((existingEdges)');
     expect(EDGE_AUTHORING_HANDLERS_SOURCE).not.toContain('setDraftSession((currentSession)');
     expect(EDGE_AUTHORING_HANDLERS_SOURCE).not.toContain('confirmReconnect');

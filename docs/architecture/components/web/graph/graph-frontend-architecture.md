@@ -132,6 +132,9 @@ As of 2026-04-25:
 - active Canvas runtime composition is now registered once per canvas kind:
   `CanvasRuntimeRegistration` binds product kind, graph strategy, execution
   posture, and first-node catalog
+- plugin projections are capability-aware: disabled runtime plugins no longer
+  contribute port maps, overlays, badges, renderers, or run adapters to Canvas
+  consumers
 - `CanvasRuntimePolicy` is the route-level application policy. It resolves the
   active document state, command availability, execution posture, and
   node-kind admission from the same runtime snapshot before any shell,
@@ -199,11 +202,21 @@ plugins.
 | `ConnectionRules.ts` | graph-policy evaluation over manifest declarations                   | plugin registration and route copy          |
 | `copy.ts`            | locale-resolved operator copy                                        | plugin declaration semantics                |
 
+Runtime projection rule:
+
+- every registry helper that contributes route-visible behavior must accept
+  `RuntimeCapabilities`;
+- unavailable plugins must not contribute canvas kinds, node kinds, renderers,
+  badges, overlays, run adapters, or connection port maps;
+- Canvas consumers may forward capability-filtered projections, but must not
+  read port maps, badges, or overlays from `PLUGIN_REGISTRY` directly.
+
 ```mermaid
 flowchart LR
   Manifest["PluginManifest.ts"] --> Registry["registry.ts"]
   Manifest --> Rules["ConnectionRules.ts"]
   Manifest --> Copy["copy.ts consumers"]
+  Capabilities["RuntimeCapabilities"] --> Registry
   Registry --> PortMap["plugin port maps"]
   PortMap --> Rules
   Rules --> CanvasPolicy["canvasConnectionAggregate edge policy"]
@@ -436,6 +449,8 @@ string checks. Current semantic coverage includes:
   draft-session membership before rerender;
 - edge confirmation and reconnect applying direct `edges` and `draftSession`
   values instead of updater callbacks with nested side effects;
+- plugin runtime projections filtering port maps, overlays, badges, and node
+  renderers through `RuntimeCapabilities`;
 - typed empty-state catalog and copy derivation from the active runtime;
 - first-node authoring remains available even when source import capability is
   unavailable.

@@ -359,7 +359,7 @@ Target:
 - [x] `TF-E2-POL-D` Enforce node admission through active runtime catalog
 - [x] `TF-E2-POL-E` Add edge command runner and remove updater side effects
 - [x] `TF-E2-POL-F` Make execution availability policy-owned
-- [ ] `TF-E2-POL-G` Make plugin projections capability-aware
+- [x] `TF-E2-POL-G` Make plugin projections capability-aware
 - [ ] `TF-E2-POL-H` Add global policy fitness and e2e coverage
 
 Progress note on 2026-04-26:
@@ -373,6 +373,8 @@ Progress note on 2026-04-26:
 - `useCanvasEdgeCommandRunner` now serializes edge confirmation and reconnect
   effects over a pure transaction that returns concrete next `edges` and
   `draftSession` values before React setters run.
+- Plugin runtime projections now apply `RuntimeCapabilities` to port maps,
+  overlays, badges, renderers, run adapters, and Canvas edge policy consumers.
 - Global policy fitness has unit and architecture coverage, but Cypress-level
   proof remains open under `TF-E2-POL-H`.
 

@@ -3,6 +3,7 @@ import type { Edge, Node } from '@xyflow/react';
 
 import { buildNodesWithImpact } from './canvasImpactOverlay';
 import { validateTransformationGraph } from './transformationGraphValidation';
+import type { RuntimeCapabilities } from '../../plugins/registry';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { UseCanvasGraphHandlersResult } from './useCanvasGraphHandlers.types';
 
@@ -33,6 +34,7 @@ type UseCanvasControllerReadModelArgs = {
     UseCanvasGraphHandlersResult,
     'handleInspectNode' | 'handleDuplicateNode' | 'handleRemoveNode' | 'handleToggleNodeSelection'
   >;
+  runtimeCapabilities?: RuntimeCapabilities;
   canMutateGraph: boolean;
   columnLevelLineageEnabled: boolean;
   impactOverlayEnabled: boolean;
@@ -45,6 +47,7 @@ export function useCanvasControllerReadModel({
   uiScope,
   overlayModel,
   graphHandlers,
+  runtimeCapabilities,
   canMutateGraph,
   columnLevelLineageEnabled,
   impactOverlayEnabled,
@@ -86,6 +89,7 @@ export function useCanvasControllerReadModel({
           activeRunId: overlayModel.activeRunId,
           runStatusByNodeId: overlayModel.runStatusByNodeId,
           overlayDecoration: overlayModel.overlayDecorations.get(node.id) ?? null,
+          runtimeCapabilities,
         },
       })),
     [
@@ -101,6 +105,7 @@ export function useCanvasControllerReadModel({
       overlayModel.activeRunId,
       overlayModel.overlayDecorations,
       overlayModel.runStatusByNodeId,
+      runtimeCapabilities,
       uiScope.selectedNodeIds,
     ]
   );

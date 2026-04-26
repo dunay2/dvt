@@ -108,16 +108,22 @@ function isPluginAvailableAtRuntime(
     return false;
   }
 
-  if (!plugin.backendPluginId || !capabilities) {
+  if (!capabilities) {
     return true;
   }
 
-  const info = capabilities.plugins[plugin.backendPluginId];
-  if (!info) {
+  const capabilityIds = Array.from(
+    new Set([plugin.backendPluginId, plugin.id].filter((id): id is string => id != null))
+  );
+  const runtimeInfos = capabilityIds
+    .map((pluginId) => capabilities.plugins[pluginId])
+    .filter((info): info is { available: boolean; reason?: string } => info != null);
+
+  if (runtimeInfos.length === 0) {
     return true;
   }
 
-  return info.available;
+  return runtimeInfos.every((info) => info.available);
 }
 
 function resolveCostDecoration(costData: NodeCostData | undefined) {
@@ -305,10 +311,10 @@ export function getInspectorPanels(
  * Returns a map from pluginId → { connectionRules, produces, consumes }
  * for use by the canvas connection evaluator.
  */
-export function getPluginPortMap(): PluginPortMap {
+export function getPluginPortMap(capabilities?: RuntimeCapabilities): PluginPortMap {
   const map = new Map<string, PluginPortDescriptor>();
 
-  for (const plugin of PLUGIN_REGISTRY) {
+  for (const plugin of getRuntimePlugins(capabilities)) {
     map.set(plugin.id, {
       connectionRules: plugin.connectionRules ?? [],
       produces: plugin.produces ?? [],
@@ -319,9 +325,13 @@ export function getPluginPortMap(): PluginPortMap {
   return map;
 }
 
-export function getNodeBadges(node: CanonicalNode, ctx: BadgeContext): NodeBadge[] {
+export function getNodeBadges(
+  node: CanonicalNode,
+  ctx: BadgeContext,
+  capabilities?: RuntimeCapabilities
+): NodeBadge[] {
   const badges: Array<{ priority: number; badge: NodeBadge }> = [];
-  for (const plugin of PLUGIN_REGISTRY) {
+  for (const plugin of getRuntimePlugins(capabilities)) {
     for (const contrib of plugin.nodeBadges ?? []) {
       const applies = contrib.forKinds === 'all' || contrib.forKinds.includes(node.kind);
       if (!applies) continue;

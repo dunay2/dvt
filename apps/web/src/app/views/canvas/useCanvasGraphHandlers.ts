@@ -22,6 +22,7 @@ export function useCanvasGraphHandlers({
   inspectorNodeId,
   draftSession,
   canEditEdges,
+  runtimeCapabilities,
   allowsCanonicalNode,
   focusMode,
   inspectorPanelVisible,
@@ -56,6 +57,7 @@ export function useCanvasGraphHandlers({
   const interactionPolicy: CanvasGraphInteractionPolicy = {
     graphStrategy,
     canEditEdges,
+    runtimeCapabilities,
     allowsCanonicalNode,
     columnLevelLineageEnabled,
   };

@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { canvasViewCopy } from './copy';
 import {
   buildDraftSession,
+  evaluateGraphHandlerConnectionWith,
   rejectGraphHandlerConnectionWith,
   rejectTransformationConnectionWith,
   renderGraphHandlersHook,
@@ -102,6 +103,85 @@ describe('useCanvasGraphHandlers edge authoring', () => {
 
     expect(toastState.error).toHaveBeenCalledWith(
       'No compatible data port bridge between dbt (input) and monitoring (output).'
+    );
+    expect(harness.latest()?.confirmEdgeModal).toEqual({ open: false, edge: null });
+
+    harness.cleanup();
+  });
+
+  it('rejects cross-plugin edges when a plugin is unavailable at runtime', async () => {
+    evaluateGraphHandlerConnectionWith((source, target, _currentEdges, pluginPortMap) => {
+      if (pluginPortMap.has(source.pluginId)) {
+        return { allowed: true };
+      }
+
+      return {
+        allowed: false,
+        reasonCode: 'cross_plugin_bridge_missing',
+        sourcePluginId: source.pluginId,
+        sourceRole: source.role,
+        targetPluginId: target.pluginId,
+        targetRole: target.role,
+      };
+    });
+    const harness = renderGraphHandlersHook({
+      canEditEdges: true,
+      runtimeCapabilities: {
+        plugins: {
+          dbt: { available: false, reason: 'disabled in test' },
+        },
+      },
+      canonicalNodes: [
+        {
+          id: 'dbt-source',
+          name: 'dbt-source',
+          pluginId: 'dbt',
+          kind: 'dbt:source',
+          role: 'input',
+          status: 'idle',
+          tags: [],
+        },
+        {
+          id: 'dvt-transform',
+          name: 'dvt-transform',
+          pluginId: 'dvt',
+          kind: 'dvt:sql_transform',
+          role: 'transform',
+          status: 'idle',
+          tags: [],
+        },
+      ],
+      nodes: [
+        {
+          id: 'dbt-source',
+          data: { name: 'dbt-source', pluginKind: 'dbt:source', role: 'input', status: 'idle' },
+          position: { x: 0, y: 0 },
+        },
+        {
+          id: 'dvt-transform',
+          data: {
+            name: 'dvt-transform',
+            pluginKind: 'dvt:sql_transform',
+            role: 'transform',
+            status: 'idle',
+          },
+          position: { x: 220, y: 0 },
+        },
+      ],
+    });
+    await harness.render();
+
+    act(() => {
+      harness.latest()?.onConnect({
+        source: 'dbt-source',
+        sourceHandle: null,
+        target: 'dvt-transform',
+        targetHandle: null,
+      });
+    });
+
+    expect(toastState.error).toHaveBeenCalledWith(
+      'No compatible data port bridge between dbt (input) and dvt (transform).'
     );
     expect(harness.latest()?.confirmEdgeModal).toEqual({ open: false, edge: null });
 

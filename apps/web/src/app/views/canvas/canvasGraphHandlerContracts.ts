@@ -3,6 +3,7 @@ import type { Dispatch, SetStateAction } from 'react';
 
 import type { CanvasGraphStrategy } from '../../plugins/graphStrategyContracts';
 import type { NodeKindRegistration } from '../../plugins/nodeTypeContracts';
+import type { RuntimeCapabilities } from '../../plugins/registry';
 import type { CanonicalNode } from '../../types/canonical';
 import type { CanvasDraftSession } from './canvasDraftSession';
 
@@ -35,6 +36,7 @@ export type CanvasGraphInteractionEffects = {
 export type CanvasGraphInteractionPolicy = {
   graphStrategy: CanvasGraphStrategy;
   canEditEdges: boolean;
+  runtimeCapabilities?: RuntimeCapabilities;
   columnLevelLineageEnabled: boolean;
   allowsCanonicalNode: (node: CanonicalNode) => boolean;
 };
@@ -192,6 +194,7 @@ export type CanvasEdgeAuthoringEffects = {
 
 export type CanvasEdgeAuthoringPolicy = {
   canEditEdges: boolean;
+  runtimeCapabilities?: RuntimeCapabilities;
 };
 
 export type CanvasEdgeAuthoringContracts = {

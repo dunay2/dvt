@@ -200,7 +200,10 @@ export function useCanvasEdgeAuthoringHandlers({
     open: false,
     edge: null,
   });
-  const pluginPortMap = useMemo(() => getPluginPortMap(), []);
+  const pluginPortMap = useMemo(
+    () => getPluginPortMap(policy.runtimeCapabilities),
+    [policy.runtimeCapabilities]
+  );
   const edgeCommandRunner = useCanvasEdgeCommandRunner({
     state,
     effects,
