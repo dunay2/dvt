@@ -2,7 +2,7 @@
 title: Post RC-G1-C Architecture Review
 status: Active
 date: 2026-04-19
-last_reviewed: 2026-04-19
+last_reviewed: 2026-04-26
 reviewer: Principal / Staff Architect (AI-assisted)
 scope: post-merge review of RC-G1-C ownership migration and immediate architecture backlog
 review_type: architecture-and-governance
@@ -152,6 +152,14 @@ The code truth is ahead of some documentation statements:
 
 This is truth-sync debt, not architecture collapse, but it should be closed
 explicitly.
+
+Status update 2026-04-26:
+
+- `RC-G1-C-TRUTH-SYNC` is now closed.
+- `system-delivery-status.md` now matches the published
+  `generated-code-state.md` counts.
+- the `RC-G1-C` closeout now distinguishes the DTO-only root-barrel re-export
+  from owner-local delivery contract ownership.
 
 ## Routing Notes
 

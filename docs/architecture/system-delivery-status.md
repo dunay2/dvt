@@ -2,7 +2,7 @@
 title: Current Status
 status: Active
 owner: Architecture / Delivery / Docs
-last_reviewed: 2026-04-21
+last_reviewed: 2026-04-26
 ---
 
 # Current Status
@@ -61,13 +61,13 @@ Scope-specific adapter-temporal verification commands:
 
 ## Snapshot
 
-- Review date: 2026-04-21
+- Review date: 2026-04-26
 - Workspace inventory source:
   [Generated Code State](../planning/status/generated-code-state.md)
-- Active workspaces: 23
-- Source files: 743
-- Test files: 285
-- Workspaces with test scripts: 22 of 23
+- Active workspaces: 24
+- Source files: 1170
+- Test files: 612
+- Workspaces with test scripts: 23 of 24
 
 ## Executive Summary
 

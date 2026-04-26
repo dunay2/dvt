@@ -145,8 +145,8 @@ Additional active rationale:
   - domain: `architecture-and-governance`
   - role: post-merge architecture intake for RC-G1-C follow-up backlog and truth-sync routing
   - linkage: `RC-G1-C-TRUTH-SYNC`, `AR-A7`, `AR-B5`
-  - status: `queued`
-  - progress: `0%`
+  - status: `review`
+  - progress: `33%`
 
 - [20260411 Project architecture strengths, weaknesses, and priority review](./architecture-and-governance/20260411-project-architecture-strengths-weaknesses-fowler-review.md)
   - domain: `architecture-and-governance`
