@@ -1,11 +1,8 @@
-import React from 'react';
-import { DollarSign } from 'lucide-react';
+import type React from 'react';
 
 import type { PluginPortDescriptor, PluginPortMap } from './contracts/ConnectionRules';
-import { COST_ROUTE_BOOTSTRAP_HANDLE } from '../views/cost/costRouteBootstrap';
 
 import type { CanonicalNode, CanonicalRun, PluginNodeKind } from '../types/canonical';
-import type { NodeCostData } from './contracts/PluginServices';
 import type {
   BadgeContext,
   CanvasOverlayContribution,
@@ -23,7 +20,11 @@ import type {
   PluginDataPort,
   ViewContribution,
 } from './contracts/PluginManifest';
-import type { CanvasKindRegistration, NodeKindRegistration } from './nodeTypeContracts';
+import type {
+  CanvasKindRegistration,
+  CanvasRuntimeRegistration,
+  NodeKindRegistration,
+} from './nodeTypeContracts';
 
 // ---------------------------------------------------------------------------
 // PluginContributions — v1 public contract
@@ -47,7 +48,7 @@ export type PluginContributions = {
   nodeBadges?: NodeBadgeContribution[];
   nodeRenderers?: Map<PluginNodeKind, NodeRendererRegistration>;
   nodeKinds?: NodeKindRegistration[];
-  canvasKinds?: CanvasKindRegistration[];
+  canvasKinds?: CanvasRuntimeRegistration[];
   connectionRules?: PluginConnectionRule[];
   produces?: PluginDataPort[];
   consumes?: PluginDataPort[];
@@ -71,6 +72,7 @@ export type PluginContributions = {
 // ---------------------------------------------------------------------------
 
 // Imported lazily to avoid circular deps during module init
+import { costContributions } from './cost/costContributions';
 import { dbtContributions } from './dbt/dbtContributions';
 import { dvtContributions } from './dvt/dvtContributions';
 import { monitoringContributions } from './monitoring/monitoringContributions';
@@ -104,71 +106,23 @@ function isPluginAvailableAtRuntime(
     return false;
   }
 
-  if (!plugin.backendPluginId || !capabilities) {
+  if (!capabilities) {
     return true;
   }
 
-  const info = capabilities.plugins[plugin.backendPluginId];
-  if (!info) {
+  const capabilityIds = Array.from(
+    new Set([plugin.backendPluginId, plugin.id].filter((id): id is string => id != null))
+  );
+  const runtimeInfos = capabilityIds
+    .map((pluginId) => capabilities.plugins[pluginId])
+    .filter((info): info is { available: boolean; reason?: string } => info != null);
+
+  if (runtimeInfos.length === 0) {
     return true;
   }
 
-  return info.available;
+  return runtimeInfos.every((info) => info.available);
 }
-
-function resolveCostDecoration(costData: NodeCostData | undefined) {
-  if (!costData || costData.cost <= 0) {
-    return null;
-  }
-
-  if (costData.cost >= 0.4) {
-    return { borderColor: '#dc2626', backgroundColor: 'rgba(220, 38, 38, 0.18)' };
-  }
-
-  if (costData.cost >= 0.2) {
-    return { borderColor: '#f59e0b', backgroundColor: 'rgba(245, 158, 11, 0.18)' };
-  }
-
-  return { borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.14)' };
-}
-
-const costContributions: PluginContributions = {
-  id: 'cost',
-  displayName: 'Cost',
-  version: '1.0.0',
-  kind: 'optional',
-  envFlag: 'VITE_PLUGIN_COST',
-  backendPluginId: 'cost',
-  capabilities: ['cost.analyze', 'canvas.overlay'],
-  views: [
-    {
-      pluginId: 'cost',
-      id: 'cost.dashboard',
-      path: '/cost',
-      component: React.lazy(() => import('../views/CostView')),
-      handle: {
-        routeBootstrap: COST_ROUTE_BOOTSTRAP_HANDLE,
-      },
-      nav: {
-        label: 'Cost',
-        icon: DollarSign,
-        order: 25,
-        level: 'extended',
-      },
-    },
-  ],
-  overlays: [
-    {
-      id: 'cost',
-      label: 'Cost Heatmap',
-      icon: DollarSign,
-      mode: 'exclusive',
-      priority: 90,
-      nodeDecorator: (node, ctx) => resolveCostDecoration(ctx.costByNodeId.get(node.id)),
-    },
-  ],
-  consumes: [{ portType: 'data.tabular', forRoles: ['transform', 'output'] }],
-};
 
 const ALL_PLUGIN_CONTRIBUTIONS: PluginContributions[] = [
   dbtContributions,
@@ -216,8 +170,22 @@ export function getAllNodeKinds(capabilities?: RuntimeCapabilities): NodeKindReg
   return getRuntimePlugins(capabilities).flatMap((p) => p.nodeKinds ?? []);
 }
 
-export function getAllCanvasKinds(capabilities?: RuntimeCapabilities): CanvasKindRegistration[] {
+export function getAllCanvasRuntimeRegistrations(
+  capabilities?: RuntimeCapabilities
+): CanvasRuntimeRegistration[] {
   return getRuntimePlugins(capabilities).flatMap((plugin) => plugin.canvasKinds ?? []);
+}
+
+export function getAllCanvasKinds(capabilities?: RuntimeCapabilities): CanvasKindRegistration[] {
+  return getAllCanvasRuntimeRegistrations(capabilities).map((registration) => ({
+    kind: registration.kind,
+    pluginId: registration.pluginId,
+    label: registration.label,
+    description: registration.description,
+    createTitle: registration.createTitle,
+    emptyState: registration.emptyState,
+    nodeKinds: registration.nodeKinds,
+  }));
 }
 
 export function getAllOverlays(capabilities?: RuntimeCapabilities): CanvasOverlayContribution[] {
@@ -287,10 +255,10 @@ export function getInspectorPanels(
  * Returns a map from pluginId → { connectionRules, produces, consumes }
  * for use by the canvas connection evaluator.
  */
-export function getPluginPortMap(): PluginPortMap {
+export function getPluginPortMap(capabilities?: RuntimeCapabilities): PluginPortMap {
   const map = new Map<string, PluginPortDescriptor>();
 
-  for (const plugin of PLUGIN_REGISTRY) {
+  for (const plugin of getRuntimePlugins(capabilities)) {
     map.set(plugin.id, {
       connectionRules: plugin.connectionRules ?? [],
       produces: plugin.produces ?? [],
@@ -301,9 +269,13 @@ export function getPluginPortMap(): PluginPortMap {
   return map;
 }
 
-export function getNodeBadges(node: CanonicalNode, ctx: BadgeContext): NodeBadge[] {
+export function getNodeBadges(
+  node: CanonicalNode,
+  ctx: BadgeContext,
+  capabilities?: RuntimeCapabilities
+): NodeBadge[] {
   const badges: Array<{ priority: number; badge: NodeBadge }> = [];
-  for (const plugin of PLUGIN_REGISTRY) {
+  for (const plugin of getRuntimePlugins(capabilities)) {
     for (const contrib of plugin.nodeBadges ?? []) {
       const applies = contrib.forKinds === 'all' || contrib.forKinds.includes(node.kind);
       if (!applies) continue;

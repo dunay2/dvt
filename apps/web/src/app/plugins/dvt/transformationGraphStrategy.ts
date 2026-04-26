@@ -38,9 +38,6 @@ function isCanonicalEdge(value: unknown): value is CanonicalEdge {
 
 export const transformationCanvasGraphStrategy: CanvasGraphStrategy = {
   id: 'transformation',
-  authoringPolicy: {
-    canvasKind: 'transformation',
-  },
   mapNodeToCanonical: (node) => (isCanonicalNode(node) ? node : null),
   mapEdgeToCanonical: (edge) => (isCanonicalEdge(edge) ? edge : null),
   parseDropPayload: () => null,

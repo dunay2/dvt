@@ -97,4 +97,38 @@ describe('guardTransformationConnection', () => {
 
     expect(result).toEqual({ allowed: true });
   });
+
+  it('does not enforce transformation restrictions when there are no scoped canonical nodes', () => {
+    const result = guardTransformationConnection({
+      sourceNode: source,
+      targetNode: sink,
+      canonicalNodes: [],
+      edges: [],
+    });
+
+    expect(result).toEqual({ allowed: true });
+  });
+
+  it('does not infer constrained mode from endpoints that are absent from the scoped graph', () => {
+    const result = guardTransformationConnection({
+      sourceNode: source,
+      targetNode: sink,
+      canonicalNodes: [buildNode('external-source', 'input'), transform],
+      edges: [],
+    });
+
+    expect(result).toEqual({ allowed: true });
+  });
+
+  it('does not enable transformation restrictions for a three-node graph with a control role', () => {
+    const control = buildNode('control', 'control');
+    const result = guardTransformationConnection({
+      sourceNode: source,
+      targetNode: control,
+      canonicalNodes: [source, transform, control],
+      edges: [],
+    });
+
+    expect(result).toEqual({ allowed: true });
+  });
 });

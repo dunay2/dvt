@@ -14,6 +14,7 @@ type UseCanvasPlanActionHandlerArgs = Pick<
   | 'canPlan'
   | 'canonicalEdges'
   | 'canonicalNodes'
+  | 'executionStrategy'
   | 'plansService'
   | 'previewProvenanceConfig'
   | 'selectedNodeIds'
@@ -32,6 +33,7 @@ export function useCanvasPlanActionHandler({
   canPlan,
   canonicalEdges,
   canonicalNodes,
+  executionStrategy,
   plansService,
   previewProvenanceConfig,
   selectedNodeIds,
@@ -49,6 +51,7 @@ export function useCanvasPlanActionHandler({
       canPlan,
       canonicalEdges,
       canonicalNodes,
+      executionStrategy,
       plansService,
       previewProvenanceConfig,
       selectedNodeIds,
@@ -71,6 +74,7 @@ export function useCanvasPlanActionHandler({
     canPlan,
     canonicalEdges,
     canonicalNodes,
+    executionStrategy,
     plansService,
     previewProvenanceConfig,
     selectedNodeIds,

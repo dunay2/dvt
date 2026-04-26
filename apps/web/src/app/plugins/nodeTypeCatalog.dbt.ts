@@ -1,26 +1,9 @@
-import {
-  Cpu,
-  Database,
-  FileText,
-  Package,
-  Presentation,
-  Table,
-  TestTube,
-  TrendingUp,
-} from 'lucide-react';
+import { Cpu, Database, FileText, Package, Presentation, Table, TestTube, TrendingUp } from 'lucide-react';
 
 import type { CoreNodeRole, PluginNodeKind } from '../types/canonical';
 import type { DbtNodeType } from '../types/dbt';
 
 import type { EdgeTypeStrategy, NodeKindRegistration } from './nodeTypeContracts';
-
-export const CONNECTION_RULES: Record<CoreNodeRole, readonly CoreNodeRole[]> = {
-  input: ['transform'],
-  transform: ['transform', 'check', 'output'],
-  check: [],
-  output: [],
-  control: ['input', 'transform', 'check', 'output'],
-};
 
 export const DBT_NODE_KINDS: NodeKindRegistration[] = [
   {
@@ -129,53 +112,6 @@ export const DBT_NODE_KINDS: NodeKindRegistration[] = [
   },
 ];
 
-export const DVT_AUTHORING_NODE_KINDS: NodeKindRegistration[] = [
-  {
-    kind: 'dvt:source',
-    pluginId: 'dvt',
-    label: 'Source',
-    role: 'input',
-    previewStepKind: 'CANVAS_SOURCE',
-    icon: Database,
-    borderClass: 'border-purple-500',
-    minimapColor: '#a855f7',
-    allowsIncoming: false,
-    allowsOutgoing: true,
-    supportsColumns: false,
-  },
-  {
-    kind: 'dvt:sql_transform',
-    pluginId: 'dvt',
-    label: 'SQL transform',
-    role: 'transform',
-    previewStepKind: 'CANVAS_TRANSFORM',
-    icon: Table,
-    borderClass: 'border-blue-500',
-    minimapColor: '#3b82f6',
-    allowsIncoming: true,
-    allowsOutgoing: true,
-    supportsColumns: false,
-  },
-  {
-    kind: 'dvt:sink',
-    pluginId: 'dvt',
-    label: 'Sink',
-    previewStepKind: 'CANVAS_SINK',
-    role: 'output',
-    icon: Presentation,
-    borderClass: 'border-pink-500',
-    minimapColor: '#ec4899',
-    allowsIncoming: true,
-    allowsOutgoing: false,
-    supportsColumns: false,
-  },
-];
-
-export const CANVAS_NODE_KINDS: NodeKindRegistration[] = [
-  ...DBT_NODE_KINDS,
-  ...DVT_AUTHORING_NODE_KINDS,
-];
-
 export const DBT_TYPE_TO_KIND: Record<DbtNodeType, PluginNodeKind> = {
   SOURCE: 'dbt:source',
   MODEL: 'dbt:model',
@@ -190,19 +126,6 @@ export const DBT_TYPE_TO_KIND: Record<DbtNodeType, PluginNodeKind> = {
 export function mapDbtTypeToKind(type: DbtNodeType): PluginNodeKind {
   return DBT_TYPE_TO_KIND[type];
 }
-
-export const FALLBACK_NODE_KIND: NodeKindRegistration = {
-  kind: 'dvt:unknown',
-  pluginId: 'dvt',
-  label: 'Unknown',
-  role: 'control',
-  icon: Cpu,
-  borderClass: 'border-slate-500',
-  minimapColor: '#64748b',
-  allowsIncoming: true,
-  allowsOutgoing: true,
-  supportsColumns: false,
-};
 
 export const EDGE_TYPE_STRATEGIES: readonly EdgeTypeStrategy[] = [
   {

@@ -20,6 +20,8 @@ export const canvasViewExecutionCopyEs = {
   runPersistedPreviewRequiredMessage:
     'El arranque del run requiere un plan de preview persistido y vinculado a la referencia de plan actual. Ejecuta Plan otra vez primero.',
   runFailedMessage: 'No se ha podido arrancar el run',
+  canvasExecutionUnavailableMessage:
+    'El preview de plan y el arranque de run no estan disponibles para este tipo de canvas.',
   planCreatedMessage: 'Plan de ejecucion creado',
   runStartedMessage: 'Run arrancado',
   planStatusRunUnavailableMessage: 'El arranque de runs no esta disponible en este contexto.',

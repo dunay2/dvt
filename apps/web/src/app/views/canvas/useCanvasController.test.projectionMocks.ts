@@ -1,6 +1,7 @@
 import { vi } from 'vitest';
 
-import { DBT_NODE_KINDS, DVT_AUTHORING_NODE_KINDS } from '../../plugins/nodeTypeCatalog.dbt';
+import { DVT_AUTHORING_NODE_KINDS } from '../../plugins/dvt/dvtNodeTypeCatalog';
+import { DBT_NODE_KINDS } from '../../plugins/nodeTypeCatalog.dbt';
 import type {
   CanvasHarnessMocks,
   CanvasHarnessState,
@@ -13,17 +14,8 @@ export function configureCanvasHarnessHookAndProjectionMocks(
 ): void {
   const selectFromStore = (selector?: (value: typeof state.store) => unknown) =>
     typeof selector === 'function' ? selector(state.store) : state.store;
-
-  mocks.useCanvasInteractionStore.mockImplementation(selectFromStore);
-  mocks.useExecutionStore.mockImplementation(selectFromStore);
-  mocks.useSessionStore.mockImplementation(selectFromStore);
-  mocks.useUiLayoutStore.mockImplementation(selectFromStore);
-  mocks.useCapabilitiesQuery.mockReturnValue({ data: undefined });
-  mocks.resolveCanvasGraphStrategy.mockReturnValue({
+  const transformationGraphStrategy = {
     id: 'transformation',
-    authoringPolicy: {
-      canvasKind: 'transformation',
-    },
     mapNodeToCanonical: vi.fn(
       (node: { id: string }) => state.canonicalNodes.find((n) => n.id === node.id) ?? null
     ),
@@ -31,6 +23,58 @@ export function configureCanvasHarnessHookAndProjectionMocks(
       (edge: { id: string }) => state.canonicalEdges.find((e) => e.id === edge.id) ?? null
     ),
     parseDropPayload: vi.fn(() => null),
+  };
+  const dbtGraphStrategy = {
+    id: 'dbt',
+    mapNodeToCanonical: vi.fn(
+      (node: { id: string }) => state.canonicalNodes.find((n) => n.id === node.id) ?? null
+    ),
+    mapEdgeToCanonical: vi.fn(
+      (edge: { id: string }) => state.canonicalEdges.find((e) => e.id === edge.id) ?? null
+    ),
+    parseDropPayload: vi.fn(() => null),
+  };
+
+  mocks.useCanvasInteractionStore.mockImplementation(selectFromStore);
+  mocks.useExecutionStore.mockImplementation(selectFromStore);
+  mocks.useSessionStore.mockImplementation(selectFromStore);
+  mocks.useUiLayoutStore.mockImplementation(selectFromStore);
+  mocks.useCapabilitiesQuery.mockReturnValue({ data: undefined });
+  mocks.resolveCanvasGraphStrategy.mockImplementation((strategyId?: unknown) =>
+    strategyId === 'dbt' ? dbtGraphStrategy : transformationGraphStrategy
+  );
+  mocks.findCanvasGraphStrategy.mockImplementation((strategyId?: unknown) => {
+    if (strategyId === 'dbt') {
+      return dbtGraphStrategy;
+    }
+    if (strategyId === 'transformation') {
+      return transformationGraphStrategy;
+    }
+    return null;
+  });
+  mocks.findCanvasRuntimeRegistration.mockImplementation((strategyId?: unknown) => {
+    if (strategyId === 'dbt') {
+      return {
+        kind: 'dbt',
+        graphStrategy: dbtGraphStrategy,
+        nodeKinds: DBT_NODE_KINDS,
+        executionStrategy: {
+          kind: 'not_executable',
+        },
+      };
+    }
+    if (strategyId === 'transformation' || strategyId === undefined) {
+      return {
+        kind: 'transformation',
+        graphStrategy: transformationGraphStrategy,
+        nodeKinds: DVT_AUTHORING_NODE_KINDS,
+        executionStrategy: {
+          kind: 'transformation_preview',
+          previewProfile: 'transformation-sql-first-v1',
+        },
+      };
+    }
+    return null;
   });
   mocks.buildOverlayContext.mockReturnValue({ overlay: 'ctx' });
   mocks.buildNodeDecorations.mockImplementation(() => state.overlayDecorations);

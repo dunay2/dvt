@@ -12,6 +12,7 @@ import type { WorkspaceBootstrapConfig } from '../../services/config/workspaceCo
 import { makeRunContext, nb } from '../../testing/contractTestUtils';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { PlanViewModel } from '../../types/plans';
+import type { CanvasExecutionStrategy } from '../../plugins/canvasExecutionStrategyContracts';
 import { useCanvasExecutionActions } from './useCanvasExecutionActions';
 
 export type PreviewProvenanceConfig = Pick<
@@ -34,6 +35,7 @@ type ExecutionActionsHookCommonProps = Readonly<{
   previewProvenanceConfig: PreviewProvenanceConfig;
   canonicalNodes: CanonicalNode[];
   canonicalEdges: CanonicalEdge[];
+  executionStrategy: CanvasExecutionStrategy;
   selectedNodeIds: string[];
   workspaceNodeIds: string[];
   canPlan: boolean;
@@ -64,6 +66,7 @@ export type RenderExecutionActionsHarnessArgs = {
   previewProvenanceConfig?: Partial<PreviewProvenanceConfig>;
   canonicalNodes?: CanonicalNode[];
   canonicalEdges?: CanonicalEdge[];
+  executionStrategy?: CanvasExecutionStrategy;
   selectedNodeIds?: string[];
   workspaceNodeIds?: string[];
   canPlan?: boolean;
@@ -103,6 +106,7 @@ type ResolvedExecutionActionsHarnessArgs = Omit<
   previewProvenanceConfig: Partial<PreviewProvenanceConfig>;
   canonicalNodes: CanonicalNode[];
   canonicalEdges: CanonicalEdge[];
+  executionStrategy: CanvasExecutionStrategy;
   selectedNodeIds: string[];
   workspaceNodeIds?: string[];
   canPlan: boolean;
@@ -194,6 +198,7 @@ function resolveCommonHookProps(
     previewProvenanceConfig: args.previewProvenanceConfig as PreviewProvenanceConfig,
     canonicalNodes: args.canonicalNodes,
     canonicalEdges: args.canonicalEdges,
+    executionStrategy: args.executionStrategy,
     selectedNodeIds: args.selectedNodeIds,
     workspaceNodeIds: args.workspaceNodeIds ?? args.canonicalNodes.map((node) => node.id),
     canPlan: args.canPlan,
@@ -219,6 +224,10 @@ function resolveHarnessArgs(
     previewProvenanceConfig: args.previewProvenanceConfig ?? DEFAULT_PREVIEW_PROVENANCE_CONFIG,
     canonicalNodes: args.canonicalNodes ?? buildCanonicalNodes(),
     canonicalEdges: args.canonicalEdges ?? buildCanonicalEdges(),
+    executionStrategy: args.executionStrategy ?? {
+      kind: 'transformation_preview',
+      previewProfile: 'transformation-sql-first-v1',
+    },
     selectedNodeIds: args.selectedNodeIds ?? [],
     canPlan: args.canPlan ?? true,
     canRun: args.canRun ?? true,

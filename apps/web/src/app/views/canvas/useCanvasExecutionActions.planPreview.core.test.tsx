@@ -161,6 +161,32 @@ describe('useCanvasExecutionActions plan preview core', () => {
     );
   });
 
+  it('does not call previewPlan when the active canvas execution strategy is disabled', async () => {
+    const plansService = createPlansServiceMock();
+
+    harness = renderExecutionActionsHarness({
+      plansService,
+      runsService: createRunsServiceMock(),
+      canonicalNodes: buildCanonicalNodes(),
+      canonicalEdges: buildCanonicalEdges(),
+      executionStrategy: {
+        kind: 'not_executable',
+      },
+    });
+    await harness.render();
+
+    await harness.clickPlan();
+
+    expect(plansService.previewPlan).not.toHaveBeenCalled();
+    expect(harness.shellFeedback.error).toHaveBeenCalledWith(
+      canvasViewCopy.canvasExecutionUnavailableMessage
+    );
+    expect(harness.text('can-start-run')).toBe('false');
+    expect(harness.text('plan-status-summary')).toBe(
+      canvasViewCopy.canvasExecutionUnavailableMessage
+    );
+  });
+
   it('plans against the selected transformation subgraph within a larger canvas', async () => {
     const canonicalNodes = buildCanonicalNodes();
     const canonicalEdges = buildCanonicalEdges();

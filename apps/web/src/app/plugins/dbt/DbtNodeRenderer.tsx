@@ -19,7 +19,7 @@ import type {
 } from '../../types/canonical';
 import type { InspectorPanelContribution, InspectorPanelProps } from '../contracts/PluginManifest';
 import type { NodeRendererProps } from '../contracts/NodeRendering';
-import { CANVAS_NODE_KINDS } from '../nodeTypeCatalog.dbt';
+import { CANVAS_NODE_KINDS } from '../nodeTypeCatalog';
 
 const STATUS_RING: Record<string, string> = {
   running: 'ring-2 ring-blue-400',

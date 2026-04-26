@@ -13,8 +13,7 @@ import {
 import { toast } from 'sonner';
 
 import { getPluginPortMap } from '../../plugins/registry';
-import { confirmConnection, confirmReconnect, proposeConnection } from './canvasConnectionAggregate';
-import { canvasGraphLifecycle } from './canvasGraphLifecycle';
+import { proposeConnection } from './canvasConnectionAggregate';
 import type {
   CanvasEdgeAuthoringContracts,
   CanvasEdgeAuthoringPolicy,
@@ -22,6 +21,10 @@ import type {
   ConfirmEdgeModalState,
 } from './canvasGraphHandlerContracts';
 import { canvasViewCopy, formatCanvasConnectionRejection } from './copy';
+import {
+  useCanvasEdgeCommandRunner,
+  type CanvasEdgeCommandRunner,
+} from './useCanvasEdgeCommandRunner';
 
 type UseCanvasEdgeAuthoringHandlersArgs = CanvasEdgeAuthoringContracts;
 
@@ -127,19 +130,16 @@ function useCanvasConnectionProposalHandler({
 }
 
 function useCanvasConnectionConfirmationHandler({
-  state,
-  effects,
+  edgeCommandRunner,
   policy,
-  pluginPortMap,
   pendingConnectionRef,
   setConfirmEdgeModal,
-}: CanvasEdgeAuthoringContracts & {
-  pluginPortMap: ReturnType<typeof getPluginPortMap>;
+}: {
+  edgeCommandRunner: CanvasEdgeCommandRunner;
+  policy: CanvasEdgeAuthoringPolicy;
   pendingConnectionRef: PendingConnectionRef;
   setConfirmEdgeModal: ConfirmEdgeModalSetter;
 }) {
-  const { canonicalNodesById } = state;
-  const { setDraftSession, setEdges } = effects;
   const { canEditEdges } = policy;
 
   return useCallback(() => {
@@ -151,49 +151,26 @@ function useCanvasConnectionConfirmationHandler({
 
     const connection = pendingConnectionRef.current;
     if (connection?.source && connection.target) {
-      setEdges((existingEdges) => {
-        const edgeConfirmation = confirmConnection({
-          connection,
-          canonicalNodesById,
-          edges: existingEdges,
-          pluginPortMap,
-        });
-        if (edgeConfirmation.outcome === 'rejected') {
-          notifyRejectedConnection(edgeConfirmation.rejection);
-          return existingEdges;
-        }
-
-        const nextEdges = edgeConfirmation.nextEdges;
-        setDraftSession((currentSession) =>
-          canvasGraphLifecycle.edge.replaceVisible(currentSession, nextEdges)
-        );
-        toast.success(canvasViewCopy.dependencyAddedMessage);
-        return nextEdges;
+      edgeCommandRunner.confirmConnection({
+        connection,
+        onNoop: notifyRejectedConnection,
+        onConfirmed: () => {
+          toast.success(canvasViewCopy.dependencyAddedMessage);
+        },
       });
     }
 
     clearPendingConnection(pendingConnectionRef, setConfirmEdgeModal);
-  }, [
-    canEditEdges,
-    canonicalNodesById,
-    pendingConnectionRef,
-    pluginPortMap,
-    setConfirmEdgeModal,
-    setDraftSession,
-    setEdges,
-  ]);
+  }, [canEditEdges, edgeCommandRunner, pendingConnectionRef, setConfirmEdgeModal]);
 }
 
 function useCanvasEdgeReconnectHandler({
-  state,
-  effects,
+  edgeCommandRunner,
   policy,
-  pluginPortMap,
-}: CanvasEdgeAuthoringContracts & {
-  pluginPortMap: ReturnType<typeof getPluginPortMap>;
+}: {
+  edgeCommandRunner: CanvasEdgeCommandRunner;
+  policy: CanvasEdgeAuthoringPolicy;
 }) {
-  const { canonicalNodesById } = state;
-  const { setDraftSession, setEdges } = effects;
   const { canEditEdges } = policy;
 
   return useCallback<NonNullable<ReactFlowProps<Node, Edge>['onReconnect']>>(
@@ -203,27 +180,13 @@ function useCanvasEdgeReconnectHandler({
         return;
       }
 
-      setEdges((existingEdges) => {
-        const reconnectResult = confirmReconnect({
-          edge,
-          connection,
-          canonicalNodesById,
-          edges: existingEdges,
-          pluginPortMap,
-        });
-        if (reconnectResult.outcome === 'rejected') {
-          notifyRejectedConnection(reconnectResult.rejection);
-          return existingEdges;
-        }
-
-        setDraftSession((currentSession) =>
-          canvasGraphLifecycle.edge.replaceVisible(currentSession, reconnectResult.nextEdges)
-        );
-
-        return reconnectResult.nextEdges;
+      edgeCommandRunner.reconnectEdge({
+        edge,
+        connection,
+        onNoop: notifyRejectedConnection,
       });
     },
-    [canEditEdges, canonicalNodesById, pluginPortMap, setDraftSession, setEdges]
+    [canEditEdges, edgeCommandRunner]
   );
 }
 
@@ -237,7 +200,15 @@ export function useCanvasEdgeAuthoringHandlers({
     open: false,
     edge: null,
   });
-  const pluginPortMap = useMemo(() => getPluginPortMap(), []);
+  const pluginPortMap = useMemo(
+    () => getPluginPortMap(policy.runtimeCapabilities),
+    [policy.runtimeCapabilities]
+  );
+  const edgeCommandRunner = useCanvasEdgeCommandRunner({
+    state,
+    effects,
+    pluginPortMap,
+  });
 
   const onConnect = useCanvasConnectionProposalHandler({
     state,
@@ -248,18 +219,14 @@ export function useCanvasEdgeAuthoringHandlers({
   });
 
   const confirmEdgeCreation = useCanvasConnectionConfirmationHandler({
-    state,
-    effects,
+    edgeCommandRunner,
     policy,
-    pluginPortMap,
     pendingConnectionRef,
     setConfirmEdgeModal,
   });
   const onReconnect = useCanvasEdgeReconnectHandler({
-    state,
-    effects,
+    edgeCommandRunner,
     policy,
-    pluginPortMap,
   });
 
   return {

@@ -19,6 +19,9 @@ export type CanvasDraftSessionScope = {
 
 export type StubCanvasDraftReadOptions = {
   includeLooseNode?: boolean;
+  canvasKind?: 'transformation' | 'dbt';
+  emptyCanvas?: boolean;
+  title?: string;
 };
 
 type CanvasAuthoringDraft = ReturnType<typeof buildWorkspaceGraphAuthoringDraft>;
@@ -33,12 +36,33 @@ type CanvasDraftSaveRequest = {
 
 export function buildCanvasAuthoringDraft({
   includeLooseNode = false,
+  canvasKind = 'transformation',
+  emptyCanvas = false,
+  title,
 }: StubCanvasDraftReadOptions = {}): CanvasAuthoringDraft {
+  const canvas = {
+    kind: canvasKind,
+    title: title ?? (canvasKind === 'dbt' ? 'dbt canvas' : 'Sales canvas'),
+  };
+
+  if (emptyCanvas) {
+    return buildWorkspaceGraphAuthoringDraft({
+      canvas,
+      nodeIds: [],
+      nodePositions: {},
+      nodes: [],
+      edges: [],
+    });
+  }
+
+  if (canvasKind !== 'transformation') {
+    throw new Error(
+      'Canvas e2e draft fixtures only support non-empty transformation canvases or empty typed canvases.'
+    );
+  }
+
   return buildWorkspaceGraphAuthoringDraft({
-    canvas: {
-      kind: 'transformation',
-      title: 'Sales canvas',
-    },
+    canvas,
     nodeIds: [
       'src_orders',
       'model_orders',

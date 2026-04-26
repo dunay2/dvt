@@ -4,7 +4,7 @@ import { Copy, Info, MousePointer, Trash2 } from 'lucide-react';
 import { memo, type CSSProperties } from 'react';
 
 import { mapDbtTypeToKind } from '../../plugins/nodeTypeCatalog.dbt';
-import { getNodeBadges, getNodeRenderer } from '../../plugins/registry';
+import { getNodeBadges, getNodeRenderer, type RuntimeCapabilities } from '../../plugins/registry';
 import { resolveNodeKindRegistration } from '../../plugins/nodeTypeRegistry';
 import type {
   BadgeContext,
@@ -13,6 +13,7 @@ import type {
   NodeRendererProps,
 } from '../../plugins/contracts/NodeRendering';
 import type { CanonicalNode, CoreNodeRole, PluginNodeKind } from '../../types/canonical';
+import { parsePluginNodeKind } from '../../types/canonicalGuards';
 import { DbtNodeType, NodeStatus } from '../../types/dbt';
 import {
   ContextMenu,
@@ -51,6 +52,7 @@ export interface DbtNodeData extends Record<string, unknown> {
   metadata?: Record<string, unknown>;
   activeRunId?: string | null;
   runStatusByNodeId?: ReadonlyMap<string, string>;
+  runtimeCapabilities?: RuntimeCapabilities;
   onInspectNode?: (nodeId: string) => void;
   onDuplicateNode?: (nodeId: string) => void;
   onRemoveNode?: (nodeId: string) => void;
@@ -128,7 +130,7 @@ function buildCanonicalNode(
   pluginKind: PluginNodeKind,
   role: CoreNodeRole
 ): CanonicalNode {
-  const pluginId = pluginKind.split(':')[0] ?? 'dvt';
+  const pluginId = parsePluginNodeKind(pluginKind).pluginId;
   const metadata =
     typeof data.metadata === 'object' && data.metadata !== null ? { ...data.metadata } : {};
 
@@ -169,8 +171,12 @@ function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
     runStatusByNodeId:
       data.runStatusByNodeId instanceof Map ? data.runStatusByNodeId : new Map<string, string>(),
   };
-  const Renderer = getNodeRenderer(canonicalNode.kind, FallbackNodeRenderer);
-  const badges = getNodeBadges(canonicalNode, badgeCtx);
+  const Renderer = getNodeRenderer(
+    canonicalNode.kind,
+    FallbackNodeRenderer,
+    data.runtimeCapabilities
+  );
+  const badges = getNodeBadges(canonicalNode, badgeCtx, data.runtimeCapabilities);
 
   const shouldShowSourceHandle = kindRegistration.allowsOutgoing;
   const shouldShowTargetHandle = kindRegistration.allowsIncoming;

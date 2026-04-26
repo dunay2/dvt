@@ -23,4 +23,5 @@ export {
   getNodeBadges,
   getPluginPortMap,
   type PluginContributions,
+  type RuntimeCapabilities,
 } from './registry';

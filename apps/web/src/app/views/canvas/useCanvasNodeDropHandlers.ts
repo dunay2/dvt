@@ -4,13 +4,10 @@ import { useCallback } from 'react';
 import { toast } from 'sonner';
 
 import { CANONICAL_NODE_DRAG_MIME_TYPE } from '../../types/canonical';
-import { canvasGraphLifecycle } from './canvasGraphLifecycle';
-import type {
-  CanvasNodeDropContracts,
-} from './canvasGraphHandlerContracts';
-import { parseCanonicalNodeDragPayload } from './canvasNodeDropPayload';
-import { dropCanonicalNode } from './canvasNodeDropAggregate';
+import type { CanvasNodeDropContracts } from './canvasGraphHandlerContracts';
 import { canvasViewCopy, formatCanvasNodeAddedMessage } from './copy';
+import { parseCanonicalNodeDragPayload } from './canvasNodeDropPayload';
+import { useCanvasNodeAdmissionCommandRunner } from './useCanvasNodeAdmissionCommandRunner';
 
 type UseCanvasNodeDropHandlersArgs = CanvasNodeDropContracts;
 
@@ -20,11 +17,32 @@ type UseCanvasNodeDropHandlersResult = {
 };
 
 export function useCanvasNodeDropHandlers({
+  state,
   effects,
   policy,
 }: UseCanvasNodeDropHandlersArgs): UseCanvasNodeDropHandlersResult {
+  const { draftSession, nodes } = state;
   const { setNodes, setDraftSession } = effects;
-  const { graphStrategy, canEditEdges, columnLevelLineageEnabled } = policy;
+  const {
+    graphStrategy,
+    canEditEdges,
+    columnLevelLineageEnabled,
+    allowsCanonicalNode,
+  } = policy;
+  const runAdmissionCommand = useCanvasNodeAdmissionCommandRunner({
+    state: {
+      draftSession,
+      nodes,
+    },
+    effects: {
+      setNodes,
+      setDraftSession,
+    },
+    policy: {
+      columnLevelLineageEnabled,
+      allowsCanonicalNode,
+    },
+  });
 
   const handleDrop = useCallback<React.DragEventHandler<HTMLDivElement>>(
     (event) => {
@@ -38,7 +56,8 @@ export function useCanvasNodeDropHandlers({
         parseCanonicalNodeDragPayload(
           event.dataTransfer.getData(CANONICAL_NODE_DRAG_MIME_TYPE)
         ) ??
-        graphStrategy.parseDropPayload(event.dataTransfer);
+        graphStrategy?.parseDropPayload(event.dataTransfer) ??
+        null;
       if (!canonicalNode) {
         return;
       }
@@ -49,33 +68,18 @@ export function useCanvasNodeDropHandlers({
         y: event.clientY - reactFlowBounds.top - 40,
       };
 
-      setNodes((existingNodes) => {
-        const dropResult = dropCanonicalNode({
-          canonicalNode,
-          position,
-          nodes: existingNodes,
-          columnLevelLineageEnabled,
-        });
-
-        if (dropResult.outcome === 'noop') {
-          toast.info(dropResult.reason);
-          return existingNodes;
-        }
-
-        setDraftSession((currentSession) =>
-          canvasGraphLifecycle.node.admitExplicit(currentSession, canonicalNode)
-        );
-        toast.success(formatCanvasNodeAddedMessage(canonicalNode.name));
-        return dropResult.nextNodes;
+      runAdmissionCommand({
+        canonicalNode,
+        position,
+        onNoop: (reason) => {
+          toast.info(reason);
+        },
+        onAdded: (addedNode) => {
+          toast.success(formatCanvasNodeAddedMessage(addedNode.name));
+        },
       });
     },
-    [
-      canEditEdges,
-      columnLevelLineageEnabled,
-      graphStrategy,
-      setDraftSession,
-      setNodes,
-    ]
+    [canEditEdges, graphStrategy, runAdmissionCommand]
   );
 
   const handleDragOver = useCallback<React.DragEventHandler<HTMLDivElement>>((event) => {

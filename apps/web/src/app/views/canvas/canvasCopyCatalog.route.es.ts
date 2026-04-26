@@ -26,6 +26,14 @@ export const canvasViewRouteCopyEs = {
   routeErrorFallbackMessage: 'No se ha podido cargar el grafo del workspace para Canvas.',
   routeErrorMessage:
     'Canvas no ha podido cargar el grafo actual del workspace. Reintenta cuando el servicio del workspace vuelva a estar disponible.',
+  unsupportedCanvasKindMessagePrefix:
+    'Canvas no puede abrir el tipo de canvas persistido ',
+  unsupportedCanvasKindMessageSuffix:
+    ' porque no hay un registro de runtime disponible.',
+  disabledCanvasPluginMessagePrefix:
+    'Canvas no puede abrir el tipo de canvas persistido ',
+  disabledCanvasPluginMessageSuffix:
+    ' porque su plugin esta deshabilitado o no disponible.',
   runtimeBlockedTitle: 'Runtime de Canvas no disponible',
   runtimeBlockedFallbackMessage:
     'Canvas authoring requiere modo API y acceso protegido al workspace draft.',

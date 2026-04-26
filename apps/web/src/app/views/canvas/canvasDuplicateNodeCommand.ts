@@ -1,15 +1,19 @@
 /** Owned concern: derive semantic duplicate-node commands from a source node and current graph state. */
 
-import type { Node } from '@xyflow/react';
-
 import type { CanonicalNode } from '../../types/canonical';
 import { toCanvasAuthoringMetadata } from './canvasAuthoringMetadata';
-import { dropCanonicalNode } from './canvasNodeDropAggregate';
+import { admitCanonicalNodeToCanvas } from './canvasNodeDropAggregate';
+
+type CanvasDuplicateSourceNode = Readonly<{
+  id: string;
+  position: { x: number; y: number };
+}> &
+  Readonly<Record<string, unknown>>;
 
 type BuildDuplicateNodeCommandArgs = Readonly<{
-  sourceNode: Node;
+  sourceNode: CanvasDuplicateSourceNode;
   sourceCanonicalNode: CanonicalNode;
-  existingNodes: readonly Node[];
+  existingNodes: readonly CanvasDuplicateSourceNode[];
 }>;
 
 type CanvasDuplicateNodeCommand = Readonly<{
@@ -17,18 +21,20 @@ type CanvasDuplicateNodeCommand = Readonly<{
   position: { x: number; y: number };
 }>;
 
+const DUPLICATE_NODE_POSITION_OFFSET = 48;
+
 type ResolveCanvasNodeDuplicateTransactionArgs = Readonly<{
   nodeId: string;
   sourceCanonicalNode: CanonicalNode | null;
-  existingNodes: readonly Node[];
-  columnLevelLineageEnabled: boolean;
+  existingNodes: readonly CanvasDuplicateSourceNode[];
+  visibleNodeIds: readonly string[];
 }>;
 
 export type CanvasNodeDuplicateTransaction =
   | Readonly<{
       outcome: 'added';
       canonicalNode: CanonicalNode;
-      nextNodes: Node[];
+      position: { x: number; y: number };
     }>
   | Readonly<{
       outcome: 'noop';
@@ -38,7 +44,10 @@ export type CanvasNodeDuplicateTransaction =
       outcome: 'missing_source_node';
     }>;
 
-function resolveNextDuplicateIndex(sourceNodeId: string, existingNodes: readonly Node[]): number {
+function resolveNextDuplicateIndex(
+  sourceNodeId: string,
+  existingNodes: readonly CanvasDuplicateSourceNode[]
+): number {
   const existingIds = new Set(existingNodes.map((node) => node.id));
   let nextIndex = 1;
 
@@ -70,8 +79,8 @@ export function buildDuplicateNodeCommand({
       metadata: toCanvasAuthoringMetadata(sourceCanonicalNode.metadata),
     },
     position: {
-      x: sourceNode.position.x + 48 * nextIndex,
-      y: sourceNode.position.y + 48 * nextIndex,
+      x: sourceNode.position.x + DUPLICATE_NODE_POSITION_OFFSET * nextIndex,
+      y: sourceNode.position.y + DUPLICATE_NODE_POSITION_OFFSET * nextIndex,
     },
   };
 }
@@ -80,7 +89,7 @@ export function resolveCanvasNodeDuplicateTransaction({
   nodeId,
   sourceCanonicalNode,
   existingNodes,
-  columnLevelLineageEnabled,
+  visibleNodeIds,
 }: ResolveCanvasNodeDuplicateTransactionArgs): CanvasNodeDuplicateTransaction {
   const sourceNode = existingNodes.find((candidate) => candidate.id === nodeId);
   if (sourceCanonicalNode == null || sourceNode == null) {
@@ -92,24 +101,22 @@ export function resolveCanvasNodeDuplicateTransaction({
     sourceCanonicalNode,
     existingNodes,
   });
-  const dropResult = dropCanonicalNode({
+  const admission = admitCanonicalNodeToCanvas({
     canonicalNode,
-    position,
-    nodes: [...existingNodes],
-    columnLevelLineageEnabled,
+    visibleNodeIds,
   });
 
-  switch (dropResult.outcome) {
+  switch (admission.outcome) {
     case 'added':
       return {
         outcome: 'added',
-        canonicalNode,
-        nextNodes: dropResult.nextNodes,
+        canonicalNode: admission.canonicalNode,
+        position,
       };
     case 'noop':
       return {
         outcome: 'noop',
-        reason: dropResult.reason,
+        reason: admission.reason,
       };
   }
 }

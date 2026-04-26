@@ -1,26 +1,25 @@
+import type { Node } from '@xyflow/react';
 import { describe, expect, it } from 'vitest';
 
+import { getCanvasRuntimeRegistrations } from '../../plugins/graphStrategyRegistry';
+import type { CanonicalNode } from '../../types/canonical';
+import type { WorkspaceGraphDraftRecord } from '../../ports/workspace';
+import { buildController } from '../Canvas.test.controller';
 import { readArchitectureSiblingSource } from '../architecture.test.support';
+import { resolveActiveCanvasGraphStrategy } from './canvasActiveGraphStrategy';
+import { resolveCanvasRuntimePolicy } from './canvasRuntimePolicy';
+import {
+  createUnknownCanvasDraftReadModel,
+  type CanvasDraftReadModel,
+} from './canvasDraftReadModel';
+import type { CanvasDraftSession } from './canvasDraftSession';
+import { resolveCanvasNodeAdmissionTransaction } from './canvasNodeAdmissionTransaction';
+import { deriveCanvasRouteInteractionState } from './canvasRouteInteractionState';
+import { canvasViewCopy } from './copy';
 
-const DRAFT_AUTHORING_SOURCE = readArchitectureSiblingSource(
-  import.meta.dirname,
-  'canvasDraftAuthoring.ts'
-);
-const DRAFT_SESSION_BASELINE_SOURCE = readArchitectureSiblingSource(
-  import.meta.dirname,
-  'canvasDraftSessionBaseline.ts'
-);
 const NODE_DUPLICATE_HANDLERS_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'useCanvasNodeDuplicateHandlers.ts'
-);
-const NODE_DUPLICATE_COMMAND_SOURCE = readArchitectureSiblingSource(
-  import.meta.dirname,
-  'canvasDuplicateNodeCommand.ts'
-);
-const DRAFT_REPOSITORY_SOURCE = readArchitectureSiblingSource(
-  import.meta.dirname,
-  'canvasDraftRepository.ts'
 );
 const GRAPH_HANDLER_CONTRACTS_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
@@ -30,9 +29,9 @@ const NODE_DROP_AGGREGATE_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'canvasNodeDropAggregate.ts'
 );
-const GRAPH_STRATEGY_REGISTRY_SOURCE = readArchitectureSiblingSource(
+const GRAPH_STRATEGY_CONTRACTS_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
-  '../../plugins/graphStrategyRegistry.ts'
+  '../../plugins/graphStrategyContracts.ts'
 );
 const DBT_NODE_ADAPTER_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
@@ -42,67 +41,318 @@ const DVT_TRANSFORMATION_STRATEGY_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   '../../plugins/dvt/transformationGraphStrategy.ts'
 );
+const USE_CANVAS_CONTROLLER_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'useCanvasController.ts'
+);
+const CANVAS_CONTROLLER_VIEW_MODEL_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'canvasControllerViewModel.ts'
+);
+const CANVAS_SHELL_PROPS_BUILDER_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'canvasShellPropsBuilder.tsx'
+);
+
+function buildDraftReadModelWithCanvasKind(kind: string): CanvasDraftReadModel {
+  const record: WorkspaceGraphDraftRecord = {
+    revision: 'rev-1',
+    savedAt: '2026-04-25T00:00:00Z',
+    draft: {
+      canvas: {
+        kind,
+        title: `${kind} canvas`,
+      },
+      nodeIds: [],
+      nodePositions: {},
+      edges: [],
+    },
+  };
+
+  return createUnknownCanvasDraftReadModel(record);
+}
+
+function buildDraftSession(visibleNodeIds: string[] = []): CanvasDraftSession {
+  return {
+    syncState: 'editing',
+    baseline: {
+      record: null,
+    },
+    draftRevision: 'rev-1',
+    workingSet: {
+      visibleNodeIds,
+      visibleEdges: [],
+      pendingExplicitNodeIds: [],
+    },
+  };
+}
+
+function buildCanonicalNode(id: string): CanonicalNode {
+  return {
+    id,
+    name: id,
+    pluginId: 'dvt',
+    kind: 'dvt:sql_transform',
+    role: 'transform',
+    status: 'idle',
+    tags: [],
+  };
+}
 
 describe('canvas draft authoring component architecture', () => {
-  it('keeps signature policy pure and duplicate view fallout outside React state updaters', () => {
-    expect(DRAFT_AUTHORING_SOURCE).toContain(
-      'Owned concern: compose Canvas semantic graph state'
-    );
-    expect(DRAFT_AUTHORING_SOURCE).toContain('serializeCanvasDraftAuthoringSignature');
-    expect(DRAFT_AUTHORING_SOURCE).toContain('serializeCanvasDraftAuthoringBaselineSignature');
-    expect(DRAFT_AUTHORING_SOURCE).toContain(
-      'serializeWorkspaceGraphDraftStructuralSignature'
-    );
-    expect(DRAFT_AUTHORING_SOURCE).not.toContain("from './canvasDraftSession'");
-    expect(DRAFT_AUTHORING_SOURCE).not.toContain('workspaceService:');
-
-    expect(DRAFT_REPOSITORY_SOURCE).not.toContain('CanvasDraftWorkspacePort');
-    expect(DRAFT_SESSION_BASELINE_SOURCE).not.toContain(
-      'serializeWorkspaceGraphDraftStructuralSignature'
-    );
-
-    expect(NODE_DUPLICATE_HANDLERS_SOURCE).not.toContain('useEffect');
-    expect(NODE_DUPLICATE_HANDLERS_SOURCE).toContain('latestNodesRef.current = nodes');
-    expect(NODE_DUPLICATE_HANDLERS_SOURCE).not.toContain('setNodes((existingNodes)');
+  it('binds canvas kind, graph strategy, execution posture, and catalog in one runtime registration', () => {
+    expect(
+      getCanvasRuntimeRegistrations().map((registration) => ({
+        kind: registration.kind,
+        pluginId: registration.pluginId,
+        graphStrategyId: registration.graphStrategy.id,
+        executionKind: registration.executionStrategy.kind,
+      }))
+    ).toEqual([
+      {
+        kind: 'dbt',
+        pluginId: 'dbt',
+        graphStrategyId: 'dbt',
+        executionKind: 'not_executable',
+      },
+      {
+        kind: 'transformation',
+        pluginId: 'dvt',
+        graphStrategyId: 'transformation',
+        executionKind: 'transformation_preview',
+      },
+    ]);
+    expect(
+      Object.fromEntries(
+        getCanvasRuntimeRegistrations().map((registration) => [
+          registration.kind,
+          registration.nodeKinds.map((nodeKind) => nodeKind.kind).sort(),
+        ])
+      )
+    ).toEqual({
+      dbt: [
+        'dbt:exposure',
+        'dbt:macro',
+        'dbt:metric',
+        'dbt:model',
+        'dbt:seed',
+        'dbt:snapshot',
+        'dbt:source',
+        'dbt:test',
+      ],
+      transformation: ['dvt:sink', 'dvt:source', 'dvt:sql_transform'],
+    });
   });
 
-  it('keeps plugin graph strategies and authoring metadata behind neutral contracts', () => {
-    expect(DRAFT_AUTHORING_SOURCE).toContain("from './canvasAuthoringMetadata'");
-    expect(DRAFT_AUTHORING_SOURCE).not.toContain('function cloneMetadata');
-    expect(NODE_DUPLICATE_COMMAND_SOURCE).toContain("from './canvasAuthoringMetadata'");
-    expect(NODE_DUPLICATE_COMMAND_SOURCE).not.toContain('structuredClone');
+  it('fails closed for unsupported persisted canvas kinds before route mutation is allowed', () => {
+    expect(
+      resolveActiveCanvasGraphStrategy(buildDraftReadModelWithCanvasKind('unknown'))
+    ).toEqual({
+      kind: 'unsupported_kind',
+      canvasKind: 'unknown',
+    });
 
+    const interactionState = deriveCanvasRouteInteractionState(
+      buildController({
+        canvasDocument: {
+          kind: 'unknown',
+          title: 'Unknown canvas',
+        },
+      }),
+      null
+    );
+
+    expect(interactionState.effectiveWorkbenchState).toEqual({
+      kind: 'error',
+      message:
+        'Canvas cannot open persisted canvas kind "unknown" because no runtime registration is available.',
+    });
+    expect(interactionState.effectiveUserPermissions).toMatchObject({
+      canPlan: false,
+      canRun: false,
+      canEditEdges: false,
+    });
+    expect(interactionState.readOnlyState).toBeNull();
+  });
+
+  it('keeps disabled registered canvas plugins distinct from unknown canvas kinds', () => {
+    expect(
+      resolveActiveCanvasGraphStrategy(buildDraftReadModelWithCanvasKind('dbt'), {
+        plugins: {
+          dbt: {
+            available: false,
+            reason: 'disabled_for_workspace',
+          },
+        },
+      })
+    ).toEqual({
+      kind: 'disabled_plugin',
+      canvasKind: 'dbt',
+      pluginId: 'dbt',
+      reason: 'disabled_for_workspace',
+    });
+
+    const availableCanvasKinds = getCanvasRuntimeRegistrations()
+      .filter((registration) => registration.kind !== 'dbt')
+      .map((registration) => ({
+        kind: registration.kind,
+        pluginId: registration.pluginId,
+        label: registration.label,
+        description: registration.description,
+        createTitle: registration.createTitle,
+        emptyState: registration.emptyState,
+        nodeKinds: registration.nodeKinds,
+      }));
+    const interactionState = deriveCanvasRouteInteractionState(
+      buildController({
+        canvasDocument: {
+          kind: 'dbt',
+          title: 'dbt canvas',
+        },
+        availableCanvasKinds,
+      }),
+      null
+    );
+
+    expect(interactionState.effectiveWorkbenchState).toEqual({
+      kind: 'error',
+      message:
+        'Canvas cannot open persisted canvas kind "dbt" because its plugin is disabled or unavailable.',
+    });
+    expect(interactionState.effectiveUserPermissions).toMatchObject({
+      canPlan: false,
+      canRun: false,
+      canEditEdges: false,
+    });
+    expect(interactionState.readOnlyState).toBeNull();
+  });
+
+  it('routes Canvas command posture through the runtime policy boundary', () => {
+    const registrations = getCanvasRuntimeRegistrations();
+    const dbtRuntime = registrations.find((registration) => registration.kind === 'dbt');
+    const transformationRuntime = registrations.find(
+      (registration) => registration.kind === 'transformation'
+    );
+    if (dbtRuntime == null || transformationRuntime == null) {
+      throw new Error('Expected dbt and transformation canvas runtimes');
+    }
+
+    const dbtPolicy = resolveCanvasRuntimePolicy({
+      activeRuntime: {
+        kind: 'ready',
+        canvasKind: dbtRuntime.kind,
+        executionStrategy: dbtRuntime.executionStrategy,
+        nodeKinds: dbtRuntime.nodeKinds,
+      },
+      canMutateGraph: true,
+      canOpenSourceImport: true,
+      canPlan: true,
+      canRun: true,
+      canReloadLatestDraft: false,
+    });
+    const transformationPolicy = resolveCanvasRuntimePolicy({
+      activeRuntime: {
+        kind: 'ready',
+        canvasKind: transformationRuntime.kind,
+        executionStrategy: transformationRuntime.executionStrategy,
+        nodeKinds: transformationRuntime.nodeKinds,
+      },
+      canMutateGraph: true,
+      canOpenSourceImport: true,
+      canPlan: true,
+      canRun: true,
+      canReloadLatestDraft: false,
+    });
+
+    expect(dbtPolicy.commands).toMatchObject({
+      canMutateGraph: true,
+      canEditInspectorNode: true,
+      canPlan: false,
+      canRun: false,
+    });
+    expect(transformationPolicy.commands).toMatchObject({
+      canMutateGraph: true,
+      canEditInspectorNode: true,
+      canPlan: true,
+      canRun: true,
+    });
+    expect(dbtPolicy.admission.allowsNodeKind('dvt:source')).toBe(false);
+    expect(transformationPolicy.admission.allowsNodeKind('dvt:source')).toBe(true);
+    expect(USE_CANVAS_CONTROLLER_SOURCE).toContain('resolveCanvasRuntimePolicy');
+    expect(USE_CANVAS_CONTROLLER_SOURCE).toContain(
+      'runtimePolicy.admission.allowsCanonicalNode'
+    );
+    expect(CANVAS_CONTROLLER_VIEW_MODEL_SOURCE).toContain(
+      'runtimePolicy.commands.canEditInspectorNode'
+    );
+    expect(CANVAS_CONTROLLER_VIEW_MODEL_SOURCE).not.toContain(
+      'canEditInspectorNode: args.authoringRuntime.canMutateGraph'
+    );
+    expect(CANVAS_SHELL_PROPS_BUILDER_SOURCE).toContain(
+      'controller.canEditInspectorNode && routeViewState.effectiveUserPermissions.canEditEdges'
+    );
+  });
+
+  it('computes node admission as a pure command transaction before React effects are applied', () => {
+    const sourceNode: Node = {
+      id: 'source-node',
+      data: { name: 'source-node' },
+      position: { x: 0, y: 0 },
+    };
+    const existingNodes = [sourceNode];
+    const draftSession = buildDraftSession(['source-node']);
+
+    const addedTransaction = resolveCanvasNodeAdmissionTransaction({
+      canonicalNode: buildCanonicalNode('transform-node'),
+      draftSession,
+      existingNodes,
+      position: { x: 120, y: 80 },
+      columnLevelLineageEnabled: false,
+    });
+
+    expect(addedTransaction.outcome).toBe('added');
+    if (addedTransaction.outcome !== 'added') {
+      return;
+    }
+    expect(addedTransaction.nodes.map((node) => node.id)).toEqual([
+      'source-node',
+      'transform-node',
+    ]);
+    expect(addedTransaction.nodes).not.toBe(existingNodes);
+    expect(addedTransaction.draftSession).not.toBe(draftSession);
+    expect(existingNodes).toEqual([sourceNode]);
+    expect(draftSession.workingSet.visibleNodeIds).toEqual(['source-node']);
+
+    const noopTransaction = resolveCanvasNodeAdmissionTransaction({
+      canonicalNode: buildCanonicalNode('source-node'),
+      draftSession,
+      existingNodes,
+      position: { x: 120, y: 80 },
+      columnLevelLineageEnabled: false,
+    });
+
+    expect(noopTransaction).toEqual({
+      outcome: 'noop',
+      reason: canvasViewCopy.nodeAlreadyOnCanvasMessage,
+    });
+    expect('nodes' in noopTransaction).toBe(false);
+    expect('draftSession' in noopTransaction).toBe(false);
+  });
+
+  it('keeps source-text tripwires only for import ownership that runtime tests cannot observe', () => {
     expect(GRAPH_HANDLER_CONTRACTS_SOURCE).toContain(
       "from '../../plugins/graphStrategyContracts'"
     );
-    expect(NODE_DUPLICATE_COMMAND_SOURCE).not.toContain(
-      "from '../../plugins/graphStrategyContracts'"
-    );
-    expect(NODE_DROP_AGGREGATE_SOURCE).not.toContain(
-      "from '../../plugins/graphStrategyContracts'"
-    );
-    expect(GRAPH_STRATEGY_REGISTRY_SOURCE).toContain(
-      "from './graphStrategyContracts'"
-    );
-    expect(GRAPH_STRATEGY_REGISTRY_SOURCE).toContain(
-      "from './dvt/transformationGraphStrategy'"
-    );
-    expect(GRAPH_STRATEGY_REGISTRY_SOURCE).not.toContain(
-      "transformationCanvasGraphStrategy,\n} from './dbt/dbtNodeAdapter'"
-    );
     expect(DBT_NODE_ADAPTER_SOURCE).toContain("from '../graphStrategyContracts'");
-    expect(DBT_NODE_ADAPTER_SOURCE).not.toContain('transformationCanvasGraphStrategy');
     expect(DVT_TRANSFORMATION_STRATEGY_SOURCE).toContain(
       'export const transformationCanvasGraphStrategy'
     );
 
-    expect(GRAPH_HANDLER_CONTRACTS_SOURCE).not.toContain('dbtNodeAdapter');
-    expect(NODE_DUPLICATE_COMMAND_SOURCE).not.toContain('dbtNodeAdapter');
-    expect(NODE_DROP_AGGREGATE_SOURCE).not.toContain('dbtNodeAdapter');
-    expect(NODE_DROP_AGGREGATE_SOURCE).not.toContain('graphStrategy.id ===');
+    expect(GRAPH_STRATEGY_CONTRACTS_SOURCE).not.toContain('authoringPolicy');
+    expect(DBT_NODE_ADAPTER_SOURCE).not.toContain('authoringPolicy');
+    expect(DVT_TRANSFORMATION_STRATEGY_SOURCE).not.toContain('authoringPolicy');
     expect(NODE_DROP_AGGREGATE_SOURCE).not.toContain('CanvasGraphStrategy');
     expect(NODE_DROP_AGGREGATE_SOURCE).not.toContain('graphStrategy');
-    expect(NODE_DROP_AGGREGATE_SOURCE).not.toContain('authoringPolicy.enforceTransformationTopology');
-    expect(DVT_TRANSFORMATION_STRATEGY_SOURCE).not.toContain('enforceTransformationTopology');
+    expect(NODE_DUPLICATE_HANDLERS_SOURCE).not.toContain('setNodes((existingNodes)');
   });
 });

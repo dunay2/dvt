@@ -14,6 +14,7 @@ function edgeAuthoring(
   return {
     state: {
       canonicalNodesById: contracts.state.canonicalNodesById,
+      draftSession: contracts.state.draftSession,
       edges: contracts.state.edges,
     },
     effects: {
@@ -22,6 +23,7 @@ function edgeAuthoring(
     },
     policy: {
       canEditEdges: contracts.policy.canEditEdges,
+      runtimeCapabilities: contracts.policy.runtimeCapabilities,
     },
   };
 }
@@ -77,6 +79,7 @@ function nodeAuthoring(
       graphStrategy: contracts.policy.graphStrategy,
       canEditEdges: contracts.policy.canEditEdges,
       columnLevelLineageEnabled: contracts.policy.columnLevelLineageEnabled,
+      allowsCanonicalNode: contracts.policy.allowsCanonicalNode,
     },
   };
 }

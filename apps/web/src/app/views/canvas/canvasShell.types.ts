@@ -5,8 +5,10 @@ import type { Edge, Node, NodeTypes, ReactFlowProps } from '@xyflow/react';
 import type React from 'react';
 
 import type { ImportSourcesResult } from '../../ports/workspace';
-import type { CanvasGraphAuthoringMode } from '../../plugins/graphStrategyContracts';
-import type { NodeKindRegistration } from '../../plugins/nodeTypeContracts';
+import type {
+  CanvasGraphAuthoringMode,
+  NodeKindRegistration,
+} from '../../plugins/nodeTypeContracts';
 import type { CanonicalNode } from '../../types/canonical';
 import type { CanvasPaletteId } from './canvasPalette';
 import type { CanvasRouteState } from './canvasDraftPresentationModel';

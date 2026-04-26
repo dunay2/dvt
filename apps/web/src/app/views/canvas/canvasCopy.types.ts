@@ -17,6 +17,10 @@ export type CanvasViewCopy = {
   readonly routeErrorTitle: string;
   readonly routeErrorFallbackMessage: string;
   readonly routeErrorMessage: string;
+  readonly unsupportedCanvasKindMessagePrefix: string;
+  readonly unsupportedCanvasKindMessageSuffix: string;
+  readonly disabledCanvasPluginMessagePrefix: string;
+  readonly disabledCanvasPluginMessageSuffix: string;
   readonly runtimeBlockedTitle: string;
   readonly runtimeBlockedFallbackMessage: string;
   readonly backendBlockedTitle: string;
@@ -68,6 +72,7 @@ export type CanvasViewCopy = {
   readonly connectionIncompleteMessage: string;
   readonly nodeNotFoundInGraphMessage: string;
   readonly nodeAlreadyOnCanvasMessage: string;
+  readonly nodeKindUnavailableForCanvasMessage: string;
   readonly transformationConnectionOrderMessage: string;
   readonly transformationConnectionEdgeCountMessage: string;
   readonly transformationConnectionDuplicateMessage: string;
@@ -84,6 +89,7 @@ export type CanvasViewCopy = {
   readonly runPlanRefUnavailableMessage: string;
   readonly runPersistedPreviewRequiredMessage: string;
   readonly runFailedMessage: string;
+  readonly canvasExecutionUnavailableMessage: string;
   readonly planCreatedMessage: string;
   readonly runStartedMessage: string;
   readonly planStatusRunUnavailableMessage: string;

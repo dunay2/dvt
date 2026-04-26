@@ -23,6 +23,7 @@ export function useCanvasExecutionActions({
   plansService,
   runsService,
   workspaceService,
+  executionStrategy,
   canonicalNodes,
   canonicalEdges,
   selectedNodeIds,
@@ -43,6 +44,7 @@ export function useCanvasExecutionActions({
   const [lastPlannedDraftSignature, setLastPlannedDraftSignature] = useState<string | null>(null);
   const executionState = deriveCanvasExecutionState({
     canRun,
+    executionStrategy,
     currentPlan,
     lastPlannedDraftSignature,
     canonicalNodes,
@@ -68,6 +70,7 @@ export function useCanvasExecutionActions({
     canonicalEdges,
     canonicalNodes,
     plansService,
+    executionStrategy,
     previewProvenanceConfig,
     selectedNodeIds,
     sessionContext,
@@ -81,7 +84,7 @@ export function useCanvasExecutionActions({
   });
 
   const handleStartRun = useCanvasRunStartHandler({
-    canRun,
+    canRun: canRun && executionStrategy?.kind === 'transformation_preview',
     consolePanelVisible,
     currentPlan,
     hasPersistedPlanForRun,
