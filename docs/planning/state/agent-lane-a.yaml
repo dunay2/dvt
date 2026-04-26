@@ -525,7 +525,7 @@ tasks:
     last_verified: '2026-04-02'
   - task_id: RC-G1-C-TRUTH-SYNC
     priority: P1
-    status: queued
+    status: done
     objective: >-
       reconcile post-RC-G1-C documentation and barrel truth so active architecture surfaces describe
       the shipped ownership model exactly.
@@ -536,16 +536,18 @@ tasks:
       status claims with `generated-code-state`.
     complexity: S
     effort_points: 2
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260419-post-rc-g1-c-architecture-review.md
       - docs/planning/closeouts/20260419-rc-g1-c-owner-package-migration-closeout.md
+      - docs/planning/closeouts/20260426-rc-g1-c-truth-sync-closeout.md
       - docs/architecture/system-delivery-status.md
       - docs/planning/status/generated-code-state.md
     status_reason: >-
-      RC-G1-C shipped the code cutover, but the closeout wording and quantitative status surfaces
-      still overstate or lag the published code truth.
-    last_verified: '2026-04-19'
+      Active architecture and planning surfaces now distinguish DTO-only shared re-exports from
+      owner-local behavioral ownership and the quantitative status snapshot matches the published
+      generated code inventory.
+    last_verified: '2026-04-26'
   - task_id: GOV-S1
     priority: P2
     status: done
