@@ -14,6 +14,7 @@ function edgeAuthoring(
   return {
     state: {
       canonicalNodesById: contracts.state.canonicalNodesById,
+      draftSession: contracts.state.draftSession,
       edges: contracts.state.edges,
     },
     effects: {

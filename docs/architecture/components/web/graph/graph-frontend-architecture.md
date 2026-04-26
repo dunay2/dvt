@@ -66,6 +66,11 @@ Node admission command anchors:
 - [canvasNodeAdmissionTransaction.ts](../../../../../apps/web/src/app/views/canvas/canvasNodeAdmissionTransaction.ts)
 - [useCanvasNodeAdmissionCommandRunner.ts](../../../../../apps/web/src/app/views/canvas/useCanvasNodeAdmissionCommandRunner.ts)
 
+Edge command anchors:
+
+- [canvasEdgeAdmissionTransaction.ts](../../../../../apps/web/src/app/views/canvas/canvasEdgeAdmissionTransaction.ts)
+- [useCanvasEdgeCommandRunner.ts](../../../../../apps/web/src/app/views/canvas/useCanvasEdgeCommandRunner.ts)
+
 ## Frontend Topology
 
 ```mermaid
@@ -106,8 +111,9 @@ As of 2026-04-25:
   projection, while plugin graph strategies only parse or project
   plugin-owned payloads
 - node create/drop handlers delegate node admission to
-  `useCanvasNodeAdmissionCommandRunner`, which serializes consecutive local
-  command effects over the latest viewport nodes and draft session before a
+  `useCanvasNodeAdmissionCommandRunner`, and edge confirmation/reconnect
+  delegates to `useCanvasEdgeCommandRunner`; both runners serialize local
+  command effects over the latest viewport graph and draft session before a
   React rerender can refresh hook inputs
 - connection and transformation validation stay typed until presentation
 - route-visible operator copy is centralized instead of repeated across handlers
@@ -279,6 +285,7 @@ flowchart LR
   Commands --> Shell["Canvas shell and toolbar"]
   Commands --> Inspector["Inspector authoring"]
   Admission --> NodeRunner["Node admission command runner"]
+  Commands --> EdgeRunner["Edge command runner"]
   Execution --> PlanRun["Plan and run actions"]
 ```
 
@@ -307,6 +314,7 @@ sequenceDiagram
   participant Policy as CanvasRuntimePolicy
   participant VM as Canvas controller viewmodel
   participant Runner as Node admission runner
+  participant EdgeRunner as Edge command runner
   participant Exec as Execution actions
 
   Route->>Runtime: draft read model + runtime capabilities
@@ -314,8 +322,10 @@ sequenceDiagram
   Route->>Policy: runtime + permissions + draft posture
   Policy-->>VM: shell, Inspector, and toolbar command posture
   Policy-->>Runner: allowsCanonicalNode
+  Policy-->>EdgeRunner: canEditEdges command posture
   Policy-->>Exec: canPlan / canRun
   Runner->>Runner: reject out-of-catalog canonical nodes before effects
+  EdgeRunner->>EdgeRunner: compute next edges and draft session before effects
   Exec->>Exec: keep programmatic command fail-closed
 ```
 
@@ -367,6 +377,46 @@ Invariant:
   snapshots after every accepted command, so two create/drop commands in the
   same event turn cannot lose the first semantic admission.
 
+## Edge Command Admission
+
+Edge confirmation and reconnect use the same command-runner discipline as node
+admission. The handler owns gesture and modal orchestration; the transaction
+owns graph admission semantics; the runner owns effect serialization.
+
+```mermaid
+sequenceDiagram
+  participant User
+  participant Handler as useCanvasEdgeAuthoringHandlers
+  participant Runner as useCanvasEdgeCommandRunner
+  participant Tx as canvasEdgeAdmissionTransaction
+  participant Aggregate as canvasConnectionAggregate
+  participant Lifecycle as canvasGraphLifecycle
+  participant React as React setters
+
+  User->>Handler: confirm edge or reconnect
+  Handler->>Runner: command with active connection
+  Runner->>Tx: latest edges + latest draft session
+  Tx->>Aggregate: confirm connection / reconnect
+  Aggregate-->>Tx: next viewport edges or rejection
+  Tx->>Lifecycle: replace visible draft edges
+  Tx-->>Runner: next edges + next draft session
+  Runner->>React: setEdges(nextEdges)
+  Runner->>React: setDraftSession(nextDraftSession)
+  Handler->>User: toast once outside React state updater
+```
+
+Invariants:
+
+- edge confirmation and reconnect must compute next viewport edges and next
+  draft-session visible edges before React effects are applied;
+- `setEdges` must receive concrete edge arrays, not updater callbacks that
+  also mutate draft state;
+- `setDraftSession` and user notifications must not run inside a `setEdges`
+  updater callback;
+- the runner must advance local `edges` and `draftSession` snapshots after an
+  accepted command, so consecutive edge commands cannot replay stale semantic
+  state before rerender.
+
 ## Architecture Fitness Tests
 
 The architecture tests now prefer behavior-level fitness functions over broad
@@ -380,9 +430,12 @@ string checks. Current semantic coverage includes:
   boundary instead of recomputing active route posture locally;
 - unsupported persisted canvas kinds blocking mutation and execution posture;
 - pure node-admission transaction results for add and duplicate-noop paths;
+- pure edge-admission transaction results for confirmation and reconnect paths;
 - active runtime catalog rejection before node create/drop side effects;
 - consecutive node create/drop commands preserving both viewport nodes and
   draft-session membership before rerender;
+- edge confirmation and reconnect applying direct `edges` and `draftSession`
+  values instead of updater callbacks with nested side effects;
 - typed empty-state catalog and copy derivation from the active runtime;
 - first-node authoring remains available even when source import capability is
   unavailable.

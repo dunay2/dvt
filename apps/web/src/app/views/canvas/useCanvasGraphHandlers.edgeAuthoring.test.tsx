@@ -42,11 +42,13 @@ describe('useCanvasGraphHandlers edge authoring', () => {
     harness.cleanup();
   });
 
-  it('uses a functional edge updater when confirming a connection', async () => {
+  it('applies an edge confirmation command without updater side effects', async () => {
     const setEdges = vi.fn();
     const setDraftSession = vi.fn();
+    const draftSession = buildDraftSession();
     const harness = renderGraphHandlersHook({
       canEditEdges: true,
+      draftSession,
       setEdges,
       setDraftSession,
     });
@@ -63,15 +65,16 @@ describe('useCanvasGraphHandlers edge authoring', () => {
     });
 
     expect(setEdges).toHaveBeenCalledTimes(1);
-    const edgeUpdater = setEdges.mock.calls[0]?.[0];
-    expect(typeof edgeUpdater).toBe('function');
-    const nextEdges = edgeUpdater([]);
+    const nextEdges = setEdges.mock.calls[0]?.[0];
+    expect(typeof nextEdges).not.toBe('function');
     expect(nextEdges).toHaveLength(1);
     expect(setDraftSession).toHaveBeenCalledTimes(1);
-    const nextDraftSession = setDraftSession.mock.calls[0]?.[0](buildDraftSession());
+    const nextDraftSession = setDraftSession.mock.calls[0]?.[0];
+    expect(typeof nextDraftSession).not.toBe('function');
     expect(nextDraftSession.workingSet.visibleEdges).toEqual([
       { sourceId: 'source-node', targetId: 'sink-node' },
     ]);
+    expect(toastState.success).toHaveBeenCalledWith(canvasViewCopy.dependencyAddedMessage);
 
     harness.cleanup();
   });

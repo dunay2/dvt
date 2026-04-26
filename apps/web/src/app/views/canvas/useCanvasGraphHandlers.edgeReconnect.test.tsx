@@ -88,9 +88,8 @@ describe('useCanvasGraphHandlers edge reconnect', () => {
     });
 
     expect(setEdges).toHaveBeenCalledTimes(1);
-    const edgeUpdater = setEdges.mock.calls[0]?.[0];
-    expect(typeof edgeUpdater).toBe('function');
-    const nextEdges = edgeUpdater([{ id: 'edge-1', source: 'source-node', target: 'sink-node' }]);
+    const nextEdges = setEdges.mock.calls[0]?.[0];
+    expect(typeof nextEdges).not.toBe('function');
     expect(nextEdges).toEqual([
       {
         id: 'edge-1',
@@ -101,14 +100,8 @@ describe('useCanvasGraphHandlers edge reconnect', () => {
       },
     ]);
     expect(setDraftSession).toHaveBeenCalledTimes(1);
-    const nextDraftSession = setDraftSession.mock.calls[0]?.[0]({
-      ...buildDraftSession(),
-      workingSet: {
-        visibleNodeIds: ['source-node', 'transform-node', 'sink-node'],
-        visibleEdges: [{ sourceId: 'source-node', targetId: 'sink-node' }],
-        pendingExplicitNodeIds: [],
-      },
-    });
+    const nextDraftSession = setDraftSession.mock.calls[0]?.[0];
+    expect(typeof nextDraftSession).not.toBe('function');
     expect(nextDraftSession.workingSet.visibleEdges).toEqual([
       { sourceId: 'source-node', targetId: 'transform-node' },
     ]);

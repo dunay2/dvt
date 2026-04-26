@@ -181,6 +181,7 @@ export type CanvasNodeRemovalContracts = {
 
 export type CanvasEdgeAuthoringState = {
   canonicalNodesById: Map<string, CanonicalNode>;
+  draftSession: CanvasDraftSession;
   edges: Edge[];
 };
 
