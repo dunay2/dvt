@@ -158,18 +158,21 @@ No critical findings.
 
 ## Alignment
 
-- Doc vs code: partially aligned. Docs now describe runtime registration and
-  command transactions, but code still has multiple independent command
-  availability paths.
-- Promise vs implementation: improved but incomplete. The branch promises a
-  unified runtime declaration; implementation does not yet make that runtime
-  declaration the only policy consumed by command surfaces.
-- Tests vs claims: improved but not sufficient. Tests prove important local
-  invariants but do not yet prove global policy consumption.
-- Current truth vs planned truth: current truth is better modularization with
-  residual policy drift. Planned truth is an explicit runtime policy boundary.
-- Documentation update status: this review records the remaining gap and the
-  global architecture plan.
+- Doc vs code: aligned for the web-scoped Canvas runtime policy route. Docs now
+  describe runtime registration, policy-owned command posture, node and edge
+  command runners, capability-aware plugin projections, and route-level
+  Inspector fail-closed composition.
+- Promise vs implementation: aligned for current Canvas authoring. The active
+  route resolves one `CanvasRuntimePolicy` and forwards policy decisions to
+  graph mutation, Inspector authoring, source import, Plan, Run, admission, and
+  plugin projections.
+- Tests vs claims: aligned for this remediation route. Unit, architecture,
+  route, and selected Cypress coverage now exercise the global policy boundary.
+- Current truth vs planned truth: the planned web-scoped runtime-policy
+  boundary is now implemented. Future DBT execution remains out of scope until
+  a real execution strategy exists.
+- Documentation update status: graph architecture and this QA artifact reflect
+  the shipped policy posture and final validation evidence.
 - Evidence and risk-doc status when applicable: current review is web/docs
   scoped and does not trigger ARC-2. Future contract or package-boundary work
   must re-check ARC policy before PR.
@@ -195,20 +198,24 @@ No critical findings.
 
 ## Test Assessment
 
-- Negative paths present: unsupported persisted canvas kind, malformed DBT
-  node/edge vocabulary, malformed DVT canonical role/status/relation,
-  duplicate node admission, rapid node create/drop before rerender, and
-  non-executable execution command rejection.
-- Negative paths missing: inspector mutation on unsupported canvas kind,
-  cross-canvas-kind canonical drop rejection, pluginId/kind mismatch rejection,
-  DBT Plan button disabled from execution posture, edge command replay
-  resistance, disabled plugin port map and badge exclusion.
-- Regression status: node admission regressions are now covered; global
-  runtime-policy regressions are not.
-- Determinism: no nondeterministic failure was observed in this review, but
-  edge updater side effects remain a concurrency risk.
-- Local suite vs meaningful global confidence: local tests are useful but too
-  component-scoped for the policy invariant.
+- Negative paths present: unsupported persisted canvas kind, unsupported kind
+  blocking Inspector authoring, malformed DBT node/edge vocabulary, malformed
+  DVT canonical role/status/relation, cross-canvas-kind canonical drop
+  rejection, pluginId/kind mismatch rejection, duplicate node admission, rapid
+  node create/drop before rerender, edge replay resistance, disabled plugin
+  projection exclusion, and non-executable execution command rejection.
+- Negative paths missing: none known for the current web-scoped runtime-policy
+  route. Future DBT execution must add its own strategy-level and e2e proof
+  before DBT Plan/Run can become available.
+- Regression status: global runtime-policy regressions are now covered by
+  policy unit tests, architecture fitness, route composition tests, and the
+  selected Cypress preview/run spec.
+- Determinism: edge and node command effects are now serialized outside React
+  updater side effects. The full web suite still reports historical React
+  `act(...)` warnings around React Flow/MiniMap, but exits green.
+- Local suite vs meaningful global confidence: confidence is now vertical for
+  this route: pure policy, controller/shell composition, route UX, and browser
+  preview/run behavior are all covered.
 - Global system view applied: yes. The review assessed UX affordance, command
   execution, plugin capability projection, draft mutation, and docs together.
 - Harness or shared fixture need: add a `CanvasRuntimePolicy` fixture builder
@@ -228,11 +235,34 @@ No critical findings.
   - `git diff --stat origin/main...HEAD`
   - manual review of Canvas runtime registration, controller, inspector,
     toolbar, node/edge handlers, plugin registry, and architecture docs
+  - `pnpm --filter @dvt/web test -- Canvas.routeStates.test.tsx`
+  - `pnpm --filter @dvt/web test -- Canvas.routeStates.test.tsx canvasDraftAuthoringComponent.architecture.test.ts`
+  - `pnpm --filter @dvt/web build:e2e`
+  - `pnpm exec cypress verify`
+  - `$env:ELECTRON_RUN_AS_NODE=$null; pnpm exec cypress verify`
+  - `$env:ELECTRON_RUN_AS_NODE=$null; pnpm exec start-server-and-test preview:e2e http://127.0.0.1:4173 "pnpm exec cypress run --config-file cypress.config.ts --spec cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts"`
+  - `pnpm --filter @dvt/web typecheck`
+  - `pnpm --filter @dvt/web test`
+  - `pnpm lint`
+  - `pnpm lint:md:changed`
+  - `pnpm qa:artifact:check`
+  - `pnpm verify:prepush`
 - What passed:
-  - prior branch closeout reported `pnpm verify:prepush` passing after the
-    latest node-admission command-runner fix.
+  - route red/green proved unsupported kind previously left Inspector authoring
+    editable and now closes it through route shell composition.
+  - focused route and architecture tests passed.
+  - selected Cypress Canvas preview/run spec passed after clearing
+    `ELECTRON_RUN_AS_NODE`; it includes DBT first-node authoring with Plan/Run
+    unavailable.
+  - `pnpm --filter @dvt/web typecheck`, `pnpm --filter @dvt/web test`,
+    `pnpm lint`, `pnpm lint:md:changed`, and `pnpm qa:artifact:check` passed.
+  - `pnpm verify:prepush` passed with changed-file checks, QA artifact check,
+    markdown lint, and affected web typecheck green.
 - What failed:
-  - no command was run for this review-only artifact before writing it.
+  - the first Cypress verify/run attempt failed because the local environment
+    set `ELECTRON_RUN_AS_NODE=1`, which makes the Electron-based Cypress binary
+    reject `--smoke-test`. Clearing the variable produced a real passing
+    Cypress run.
 - What could not be verified:
   - CodeRabbit was not used as evidence because the team previously classified
     the paid tool path as unavailable for this workflow.
@@ -360,7 +390,7 @@ Target:
 - [x] `TF-E2-POL-E` Add edge command runner and remove updater side effects
 - [x] `TF-E2-POL-F` Make execution availability policy-owned
 - [x] `TF-E2-POL-G` Make plugin projections capability-aware
-- [ ] `TF-E2-POL-H` Add global policy fitness and e2e coverage
+- [x] `TF-E2-POL-H` Add global policy fitness and e2e coverage
 
 Progress note on 2026-04-26:
 
@@ -375,8 +405,33 @@ Progress note on 2026-04-26:
   `draftSession` values before React setters run.
 - Plugin runtime projections now apply `RuntimeCapabilities` to port maps,
   overlays, badges, renderers, run adapters, and Canvas edge policy consumers.
-- Global policy fitness has unit and architecture coverage, but Cypress-level
-  proof remains open under `TF-E2-POL-H`.
+- Route shell composition now intersects Inspector editability with effective
+  route permissions, so unsupported or blocked canvas documents cannot keep a
+  stale side-panel mutation path open.
+- Global policy fitness covers architecture, route, and Cypress perspectives:
+  unsupported kinds close graph, Inspector, Plan, and Run; DBT first-node
+  authoring remains available while execution actions stay unavailable.
+- Cypress verification requires clearing the local `ELECTRON_RUN_AS_NODE`
+  environment variable before launching Electron; with that environment fixed,
+  the selected Canvas preview/run spec passes.
+
+### Remediation status after `TF-E2-POL-H`
+
+- High finding, Inspector bypass: remediated. Controller posture is
+  policy-owned and route shell composition applies effective fail-closed
+  permissions before rendering Inspector authoring.
+- High finding, canonical drag/drop admission: remediated. Node create/drop
+  commands enforce active runtime catalog membership, plugin/kind alignment,
+  and role compatibility before viewport or draft-session effects.
+- Medium finding, execution availability split: remediated. Toolbar and command
+  guards now consume policy-owned Plan/Run posture.
+- Medium finding, edge updater side effects: remediated. Edge confirmation and
+  reconnect now use a command runner over pure transaction results.
+- Medium finding, plugin projection drift: remediated. Port maps, overlays,
+  badges, renderers, run adapters, and edge policy consumers use
+  capability-aware runtime projections.
+- Low finding, policy-fitness gap: remediated for web scope. Architecture,
+  route, and selected Cypress coverage now exercise the global policy boundary.
 
 ### Task Details
 
@@ -658,10 +713,11 @@ Every implementation slice spawned from this review must run:
 
 ## Final Verdict
 
-Not ready as a final architecture posture.
+Ready as the final web-scoped Canvas runtime-policy architecture posture for
+this route.
 
-Ready as a governed remediation route. The next implementation work should not
-patch inspector, drag/drop, toolbar, edge handlers, or registry helpers in
-isolation. It should introduce `CanvasRuntimePolicy` first, then migrate each
-consumer to that single policy boundary with TDD and semantic architecture
-fitness tests.
+The remediation route introduced and exercised a single policy boundary instead
+of continuing with panel-local fixes. Future work should preserve that boundary:
+new canvas kinds, DBT execution, plugin projections, and source-import
+capabilities must enter through runtime registration, `CanvasRuntimePolicy`,
+and command runners rather than direct UI booleans or static registry reads.

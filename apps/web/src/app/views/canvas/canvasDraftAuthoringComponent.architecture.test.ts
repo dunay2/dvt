@@ -49,6 +49,10 @@ const CANVAS_CONTROLLER_VIEW_MODEL_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'canvasControllerViewModel.ts'
 );
+const CANVAS_SHELL_PROPS_BUILDER_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'canvasShellPropsBuilder.tsx'
+);
 
 function buildDraftReadModelWithCanvasKind(kind: string): CanvasDraftReadModel {
   const record: WorkspaceGraphDraftRecord = {
@@ -231,6 +235,9 @@ describe('canvas draft authoring component architecture', () => {
     );
     expect(CANVAS_CONTROLLER_VIEW_MODEL_SOURCE).not.toContain(
       'canEditInspectorNode: args.authoringRuntime.canMutateGraph'
+    );
+    expect(CANVAS_SHELL_PROPS_BUILDER_SOURCE).toContain(
+      'controller.canEditInspectorNode && routeViewState.effectiveUserPermissions.canEditEdges'
     );
   });
 

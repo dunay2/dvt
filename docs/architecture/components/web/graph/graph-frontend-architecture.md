@@ -144,6 +144,9 @@ As of 2026-04-25:
 - `transformation` is the only executable preview posture; `dbt` authoring is
   first-class but intentionally non-executable until a real DBT execution
   strategy exists
+- route shell composition applies the effective fail-closed route posture to
+  Inspector authoring, so an unsupported or blocked canvas cannot reopen
+  side-panel mutation even if a lower-level controller value drifts
 - canonical graph vocabularies are exported as runtime arrays and TypeScript
   unions derive from those arrays, so runtime guards cannot drift from types
 
@@ -317,6 +320,9 @@ Policy invariants:
 - controller and viewmodel surfaces may forward policy decisions, but must not
   recompute Inspector, source-import, plan, or run availability from lower-level
   booleans.
+- route shell composition must additionally intersect forwarded Inspector
+  editability with effective route permissions before rendering panels; this
+  protects the shell boundary from stale or bypassed controller posture.
 
 ### Policy Sequence
 
@@ -451,6 +457,12 @@ string checks. Current semantic coverage includes:
   values instead of updater callbacks with nested side effects;
 - plugin runtime projections filtering port maps, overlays, badges, and node
   renderers through `RuntimeCapabilities`;
+- route shell composition closing graph, Inspector authoring, Plan, and Run for
+  unsupported persisted canvas kinds;
+- route and Cypress coverage proving DBT first-node authoring stays available
+  while Plan and Run remain unavailable under the `not_executable` posture;
+- Cypress preview/run status assertions consuming resolved Canvas copy instead
+  of hardcoded fallback text, so locale does not hide policy regressions;
 - typed empty-state catalog and copy derivation from the active runtime;
 - first-node authoring remains available even when source import capability is
   unavailable.

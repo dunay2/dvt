@@ -26,6 +26,7 @@ export const CANVAS_ROUTE_BOOTSTRAP_REGISTRATION = getRouteBootstrapRegistration
 
 const canvasRouteState = vi.hoisted(() => ({
   explorerProps: null as null | Record<string, unknown>,
+  inspectorProps: null as null | Record<string, unknown>,
 }));
 
 vi.mock('@xyflow/react', () => ({
@@ -44,7 +45,15 @@ vi.mock('../components/DbtExplorer', () => ({
 }));
 
 vi.mock('../components/InspectorPanel', () => ({
-  default: () => <div data-slot="canvas-inspector-panel">Inspector</div>,
+  default: (props: Record<string, unknown>) => {
+    canvasRouteState.inspectorProps = props;
+    return (
+      <div data-slot="canvas-inspector-panel">
+        Inspector
+        {props.beforePanels as React.ReactNode}
+      </div>
+    );
+  },
 }));
 
 vi.mock('../components/SourceImportWizard', () => ({
@@ -102,6 +111,7 @@ export function createCanvasRouteHarness() {
 
   mockedUseCanvasController.mockReset();
   canvasRouteState.explorerProps = null;
+  canvasRouteState.inspectorProps = null;
   resetCanvasDraftPresentationState();
   resetRouteBootstrapPresentation(CANVAS_ROUTE_BOOTSTRAP_REGISTRATION);
 

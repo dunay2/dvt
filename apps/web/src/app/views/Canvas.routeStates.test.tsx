@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { DVT_AUTHORING_NODE_KINDS } from '../plugins/dvt/dvtNodeTypeCatalog';
 import { DBT_NODE_KINDS } from '../plugins/nodeTypeCatalog.dbt';
 import type { NodeKindRegistration } from '../plugins/nodeTypeContracts';
+import type { CanonicalNode } from '../types/canonical';
 import { canvasViewCopy } from './canvas/copy';
 import {
   buildController,
@@ -54,6 +55,18 @@ function requireAuthoringNodeKind(kind: string): NodeKindRegistration {
     throw new Error(`Missing authoring node kind fixture: ${kind}`);
   }
   return registration;
+}
+
+function buildInspectorFixtureNode(): CanonicalNode {
+  return {
+    id: 'node.source',
+    name: 'Source',
+    pluginId: 'dvt',
+    kind: 'dvt:source',
+    role: 'input',
+    status: 'idle',
+    tags: [],
+  };
 }
 
 function expectBlockedCanvasRouteState(args: {
@@ -626,6 +639,51 @@ describe('Canvas route states', () => {
     });
   });
 
+  it('fails closed for unsupported canvas kind across graph, inspector, Plan, and Run', async () => {
+    await renderCanvasRouteWithController(harness, {
+      canvasDocument: {
+        kind: 'legacy',
+        title: 'Legacy canvas',
+      },
+      explorerNodes: [],
+      inspectorNode: buildInspectorFixtureNode(),
+      canEditInspectorNode: true,
+      userPermissions: {
+        canPlan: true,
+        canRun: true,
+        canEditEdges: true,
+        canManagePlugins: false,
+        canManageRBAC: false,
+      },
+    });
+
+    expectCanvasSurfaceState({
+      harness,
+      text: 'Canvas unavailable',
+      extraText:
+        'Canvas cannot open persisted canvas kind "legacy" because no runtime registration is available.',
+      slot: 'canvas-error-state',
+      viewportVisible: false,
+    });
+    expectPrimaryCanvasActionsBlocked(harness.container);
+    expectCanvasRegistryClosed();
+    expect(harness.container.textContent).toContain(
+      'Node details are read-only for this workspace state.'
+    );
+    expect(
+      harness.container
+        .querySelector<HTMLInputElement>('input[name="node-name"]')
+        ?.getAttribute('disabled')
+    ).not.toBeNull();
+    expectCanvasBootstrapState({
+      routeState: 'error_graph',
+      bootstrapStatus: 'error',
+      bootstrapDetail:
+        'Canvas cannot open persisted canvas kind "legacy" because no runtime registration is available.',
+      canCompleteBootstrap: false,
+    });
+  });
+
   it('fails closed when canvas authoring is mounted outside api runtime mode', async () => {
     await renderCanvasRouteWithController(harness, {
       dataSourceMode: 'mock',
@@ -699,5 +757,33 @@ describe('Canvas route states', () => {
     expect(toolbarText).toContain('Read only');
     expect(toolbarText).not.toContain('Recovery');
     expect(toolbarText).toContain('Reload latest draft');
+  });
+
+  it('keeps dbt first-node authoring available while execution actions stay unavailable', async () => {
+    await renderCanvasRouteWithController(harness, {
+      ...buildCanvasHostCycleControllerState({
+        kind: 'typed_empty',
+        canvasKind: 'dbt',
+        title: 'Warehouse dbt',
+      }),
+      canStartRun: false,
+    });
+
+    expectActiveCanvasTab({
+      container: harness.container,
+      title: 'Warehouse dbt',
+      kindLabel: 'dbt',
+    });
+    expect(harness.container.textContent).toContain('Start dbt canvas');
+    expect(harness.container.textContent).toContain('Add first dbt node');
+    expect(
+      Array.from(harness.container.querySelectorAll('button')).find((button) =>
+        button.textContent?.includes('Source')
+      )?.getAttribute('disabled')
+    ).toBeNull();
+
+    const { planButton, runButton } = getPrimaryCanvasButtons(harness.container);
+    expect(planButton?.getAttribute('disabled')).not.toBeNull();
+    expect(runButton?.getAttribute('disabled')).not.toBeNull();
   });
 });
