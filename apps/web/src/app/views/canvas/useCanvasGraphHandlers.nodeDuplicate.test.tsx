@@ -14,6 +14,7 @@ import {
   restoreGraphHandlersTestDoubles,
   toastState,
 } from './useCanvasGraphHandlers.test.support';
+import type { CanonicalNode } from '../../types/canonical';
 import type { CanvasDraftSession } from './canvasDraftSession';
 
 const SOURCE_NODE_ID = 'source-node';
@@ -142,7 +143,7 @@ function buildInitialNodes(): Node[] {
   ];
 }
 
-function buildCanonicalSourceNode() {
+function buildCanonicalSourceNode(): CanonicalNode {
   return {
     ...buildCanonicalNode(SOURCE_NODE_ID, 'input'),
     name: 'Orders source',
@@ -252,7 +253,7 @@ function applyDraftSessionUpdate(setDraftSession: ReturnType<typeof vi.fn>): Can
   return updateDraftSession(buildDuplicateDraftSession());
 }
 
-function expectedDuplicateGraphNodeData() {
+function expectedDuplicateGraphNodeData(): Node['data'] {
   return {
     name: 'Orders source (copy 1)',
     pluginKind: 'dvt:source',
@@ -270,7 +271,7 @@ function expectedDuplicateGraphNodeData() {
   };
 }
 
-function expectedDuplicateCanonicalNodeData() {
+function expectedDuplicateCanonicalNodeData(): Partial<CanonicalNode> {
   return {
     name: 'Orders source (copy 1)',
     role: 'input',

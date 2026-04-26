@@ -54,6 +54,24 @@ describe('resolveActiveCanvasGraphStrategy', () => {
     expect(resolveActiveCanvasAuthoringMode(undefined)).toBe('transformation');
   });
 
+  it('fails closed without throwing when the default canvas plugin is disabled before document creation', () => {
+    expect(
+      resolveActiveCanvasGraphStrategy(undefined, {
+        plugins: {
+          dvt: {
+            available: false,
+            reason: 'disabled_for_workspace',
+          },
+        },
+      })
+    ).toEqual({
+      kind: 'disabled_plugin',
+      canvasKind: 'transformation',
+      pluginId: 'dvt',
+      reason: 'disabled_for_workspace',
+    });
+  });
+
   it('fails closed for persisted canvas documents with unsupported kind', () => {
     expect(resolveActiveCanvasGraphStrategy(buildDraftReadModelWithCanvasKind('unknown'))).toEqual({
       kind: 'unsupported_kind',

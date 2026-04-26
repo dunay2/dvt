@@ -61,11 +61,26 @@ export function resolveActiveCanvasGraphStrategy(
   const canvasKind = resolveDraftCanvasKind(draftReadModel);
   if (canvasKind == null) {
     const defaultRuntimeRegistration = findCanvasRuntimeRegistration(
-      undefined,
+      DEFAULT_CANVAS_AUTHORING_MODE,
       capabilities
     );
     if (defaultRuntimeRegistration == null) {
-      throw new Error('Missing default canvas runtime registration');
+      const registeredDefaultRuntime = findCanvasRuntimeRegistration(DEFAULT_CANVAS_AUTHORING_MODE);
+      if (registeredDefaultRuntime != null) {
+        const reason = capabilities?.plugins[registeredDefaultRuntime.pluginId]?.reason;
+
+        return {
+          kind: 'disabled_plugin',
+          canvasKind: DEFAULT_CANVAS_AUTHORING_MODE,
+          pluginId: registeredDefaultRuntime.pluginId,
+          ...(reason == null ? {} : { reason }),
+        };
+      }
+
+      return {
+        kind: 'unsupported_kind',
+        canvasKind: DEFAULT_CANVAS_AUTHORING_MODE,
+      };
     }
 
     return {
