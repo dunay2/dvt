@@ -1,47 +1,79 @@
-import { existsSync, readFileSync } from 'node:fs';
-import path from 'node:path';
-
 import { describe, expect, it } from 'vitest';
 
-function readAppSource(relativePath: string): string {
-  return readFileSync(path.resolve(import.meta.dirname, '..', relativePath), 'utf8');
+import type { BadgeContext, NodeRendererProps } from './contracts/NodeRendering';
+import { costContributions } from './cost/costContributions';
+import { COST_ROUTE_BOOTSTRAP_HANDLE } from './cost/costRouteHandle';
+import {
+  getAllCanvasRuntimeRegistrations,
+  getAllNodeKinds,
+  getAllOverlays,
+  getAllViews,
+  getNodeBadges,
+  getNodeRenderer,
+  getPluginPortMap,
+  type RuntimeCapabilities,
+} from './registry';
+import type { CanonicalNode } from '../types/canonical';
+
+function buildRuntimeCapabilities(unavailablePluginId: string): RuntimeCapabilities {
+  return {
+    plugins: {
+      [unavailablePluginId]: {
+        available: false,
+        reason: 'disabled in architecture test',
+      },
+    },
+  };
 }
 
-function appSourcePath(relativePath: string): string {
-  return path.resolve(import.meta.dirname, '..', relativePath);
+function buildCanonicalNode(overrides: Partial<CanonicalNode> = {}): CanonicalNode {
+  return {
+    id: 'node-1',
+    name: 'node-1',
+    pluginId: 'dvt',
+    kind: 'dvt:source',
+    role: 'input',
+    status: 'idle',
+    tags: [],
+    ...overrides,
+  };
 }
 
-const REGISTRY_SOURCE = readAppSource('plugins/registry.ts');
-const EDGE_AUTHORING_SOURCE = readAppSource('views/canvas/useCanvasEdgeAuthoringHandlers.ts');
-const READ_MODEL_SOURCE = readAppSource('views/canvas/useCanvasControllerReadModel.ts');
-const DBT_NODE_SOURCE = readAppSource('components/canvas/DbtNodeComponent.tsx');
-const PLUGIN_NODE_SOURCE = readAppSource('plugins/PluginNodeWrapper.tsx');
+function FallbackRenderer(_props: NodeRendererProps): null {
+  return null;
+}
 
 describe('plugin runtime projection architecture', () => {
-  it('keeps plugin projections capability-aware from registry to canvas consumers', () => {
-    expect(REGISTRY_SOURCE).toContain('getRuntimePlugins(capabilities)');
-    expect(EDGE_AUTHORING_SOURCE).toContain('getPluginPortMap(policy.runtimeCapabilities)');
-    expect(READ_MODEL_SOURCE).toContain('runtimeCapabilities,');
-    expect(DBT_NODE_SOURCE).toContain(
-      'getNodeBadges(canonicalNode, badgeCtx, data.runtimeCapabilities)'
+  it('projects unavailable dbt plugins out of graph-facing runtime surfaces', () => {
+    const capabilities = buildRuntimeCapabilities('dbt');
+
+    expect(getAllViews(capabilities).map((view) => view.pluginId)).not.toContain('dbt');
+    expect(
+      getAllCanvasRuntimeRegistrations(capabilities).map((registration) => registration.kind)
+    ).not.toContain('dbt');
+    expect(getAllNodeKinds(capabilities).map((registration) => registration.pluginId)).not.toContain(
+      'dbt'
     );
-    expect(PLUGIN_NODE_SOURCE).toContain(
-      'getNodeBadges(canonicalNode, badgeCtx, data.runtimeCapabilities)'
-    );
-    expect(DBT_NODE_SOURCE).toContain('data.runtimeCapabilities');
-    expect(PLUGIN_NODE_SOURCE).toContain('data.runtimeCapabilities');
+    expect(getPluginPortMap(capabilities).has('dbt')).toBe(false);
+    expect(getNodeRenderer('dbt:model', FallbackRenderer, capabilities)).toBe(FallbackRenderer);
   });
 
-  it('keeps Cost route bootstrap ownership inside the Cost plugin boundary', () => {
-    const costContributionsPath = appSourcePath('plugins/cost/costContributions.ts');
+  it('projects unavailable monitoring plugins out of overlays and node badges', () => {
+    const capabilities = buildRuntimeCapabilities('monitoring');
+    const badgeContext: BadgeContext = {
+      activeRunId: 'run-1',
+      runStatusByNodeId: new Map([['node-1', 'running']]),
+    };
 
-    expect(REGISTRY_SOURCE).toContain("from './cost/costContributions'");
-    expect(REGISTRY_SOURCE).not.toContain("from '../views/cost/costRouteBootstrap'");
-    expect(existsSync(costContributionsPath)).toBe(true);
+    expect(getAllOverlays(capabilities).map((overlay) => overlay.id)).not.toContain('runtime');
+    expect(getAllOverlays(capabilities).map((overlay) => overlay.id)).not.toContain('impact');
+    expect(getNodeBadges(buildCanonicalNode(), badgeContext, capabilities)).toEqual([]);
+  });
 
-    const costContributionsSource = readFileSync(costContributionsPath, 'utf8');
-    expect(costContributionsSource).toContain('COST_ROUTE_BOOTSTRAP_HANDLE');
-    expect(costContributionsSource).toContain("from './costRouteHandle'");
-    expect(costContributionsSource).not.toContain("from '../../views/cost/costRouteBootstrap'");
+  it('keeps Cost route bootstrap ownership inside the Cost contribution', () => {
+    const costDashboard = costContributions.views?.find((view) => view.id === 'cost.dashboard');
+
+    expect(costDashboard?.handle?.routeBootstrap).toBe(COST_ROUTE_BOOTSTRAP_HANDLE);
+    expect(getAllViews().find((view) => view.id === 'cost.dashboard')).toBe(costDashboard);
   });
 });
