@@ -8,6 +8,10 @@
  */
 import { type Pool, type PoolClient } from 'pg';
 
+import {
+  START_RUN_INTENTS_TENANT_ISOLATION_TABLE,
+  buildTenantIsolationPolicySql,
+} from './PostgresTenantIsolationPolicy.js';
 import { normalizeSchema, quoteIdentifier } from './sqlUtils.js';
 
 interface StartRunIntentSchemaMigration {
@@ -202,10 +206,35 @@ export class StartRunIntentSchemaManager {
           $$;
         `,
       },
+      {
+        version: '20260425_003_start_run_intents_rls_baseline',
+        description: 'Enable forced RLS for start_run_intents',
+        sql: toSqlBatch(
+          buildTenantIsolationPolicySql(this.schema, START_RUN_INTENTS_TENANT_ISOLATION_TABLE)
+        ),
+      },
+      {
+        version: '20260425_004_start_run_intents_service_owner_rls_hardening',
+        description: 'Require approved service access owners for start_run_intents service access',
+        sql: toSqlBatch(
+          buildTenantIsolationPolicySql(this.schema, START_RUN_INTENTS_TENANT_ISOLATION_TABLE)
+        ),
+      },
+      {
+        version: '20260426_005_start_run_intents_table_scoped_service_owner_rls',
+        description: 'Restrict start_run_intents service access to its reconciler owner',
+        sql: toSqlBatch(
+          buildTenantIsolationPolicySql(this.schema, START_RUN_INTENTS_TENANT_ISOLATION_TABLE)
+        ),
+      },
     ] as const;
   }
 }
 
 function toSqlStringLiteral(value: string): string {
   return `'${value.replaceAll("'", "''")}'`;
+}
+
+function toSqlBatch(statements: readonly string[]): string {
+  return `${statements.map((statement) => statement.trim()).join(';\n\n')};`;
 }

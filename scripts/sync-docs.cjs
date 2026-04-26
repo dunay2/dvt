@@ -720,8 +720,10 @@ function renderContractDocsList(absFiles, fromDirAbs) {
 
 function generateContractSubIndexes() {
   const contractsPkgSrc = path.join(repoRoot, 'packages', '@dvt', 'contracts', 'src');
-  const engineOwnedPorts = [
+  const engineOwnedSources = [
     path.join(repoRoot, 'packages', '@dvt', 'engine', 'src', 'ports', 'IWorkflowEngine.ts'),
+    path.join(repoRoot, 'packages', '@dvt', 'engine', 'src', 'ports', 'IStartRunIntentStore.ts'),
+    path.join(repoRoot, 'packages', '@dvt', 'engine', 'src', 'domain', 'startRunIntentPolicy.ts'),
   ];
   const engineSrc = scanFilesRecursive(
     path.join(contractsPkgSrc, 'contracts', 'engine'),
@@ -763,9 +765,9 @@ function generateContractSubIndexes() {
     '',
     'Execution lifecycle, command, and event contracts for the workflow engine.',
     '',
-    '## Engine-owned behavior ports (`@dvt/engine`)',
+    '## Engine-owned behavior sources (`@dvt/engine`)',
     '',
-    ...renderContractSourceList(engineOwnedPorts),
+    ...renderContractSourceList(engineOwnedSources),
     '',
     '## Serializable normative sources (`@dvt/contracts`)',
     '',

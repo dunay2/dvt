@@ -9,6 +9,7 @@ import {
   upsertSnapshotWorkItemSql,
   upsertRunEventHeadSql,
 } from './PostgresRunEventStoreSql.js';
+import { PostgresSchemaManager } from './PostgresSchemaManager.js';
 import { InvalidRunSequenceValueError } from './runEventStoreErrors.js';
 import type { SqlCommandExecutor } from './RunEventWriteRepository.js';
 import type { EventEnvelope, RunId } from './types.js';
@@ -28,7 +29,7 @@ export interface ListPersistedEventsOptions {
 
 export interface RunEventStoragePort {
   acquireRunLock(executor: SqlCommandExecutor, runId: RunId): Promise<void>;
-  readMaxRunSeq(executor: SqlCommandExecutor, runId: RunId): Promise<number>;
+  readMaxRunSeq(executor: SqlCommandExecutor, tenantId: string, runId: RunId): Promise<number>;
   insertEvent(
     executor: SqlCommandExecutor,
     runId: RunId,
@@ -50,6 +51,7 @@ export interface RunEventStoragePort {
   ): Promise<void>;
   selectExistingEvent(
     executor: SqlCommandExecutor,
+    tenantId: string,
     runId: RunId,
     idempotencyKey: string
   ): Promise<EventEnvelope | null>;
@@ -72,8 +74,12 @@ export class PostgresRunEventStorage implements RunEventStoragePort {
     await executor.query(advisoryLockSql(), [runId]);
   }
 
-  async readMaxRunSeq(executor: SqlCommandExecutor, runId: RunId): Promise<number> {
-    const seqResult = await executor.query<MaxSeqRow>(maxRunSeqSql(this.schema), [runId]);
+  async readMaxRunSeq(
+    executor: SqlCommandExecutor,
+    tenantId: string,
+    runId: RunId
+  ): Promise<number> {
+    const seqResult = await executor.query<MaxSeqRow>(maxRunSeqSql(this.schema), [tenantId, runId]);
     const rawMaxRunSeq = seqResult.rows[0]?.max_seq ?? 0;
     return parsePersistedRunSequence(rawMaxRunSeq, runId);
   }
@@ -130,10 +136,12 @@ export class PostgresRunEventStorage implements RunEventStoragePort {
 
   async selectExistingEvent(
     executor: SqlCommandExecutor,
+    tenantId: string,
     runId: RunId,
     idempotencyKey: string
   ): Promise<EventEnvelope | null> {
     const result = await executor.query<EventPayloadRow>(selectExistingEventSql(this.schema), [
+      tenantId,
       runId,
       idempotencyKey,
     ]);
@@ -159,9 +167,13 @@ export class PostgresRunEventStorage implements RunEventStoragePort {
       limitClause = `LIMIT $${params.length}`;
     }
 
-    const result = await this.withClient((client) =>
-      client.query<EventPayloadRow>(listEventsSql(this.schema, afterSeqClause, limitClause), params)
-    );
+    const result = await this.withClient(async (client) => {
+      await PostgresSchemaManager.setTenantContext(client, tenantId);
+      return client.query<EventPayloadRow>(
+        listEventsSql(this.schema, afterSeqClause, limitClause),
+        params
+      );
+    });
     return result.rows.map((row: EventPayloadRow) => row.payload);
   }
 }

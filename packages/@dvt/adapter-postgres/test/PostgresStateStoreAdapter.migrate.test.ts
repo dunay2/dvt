@@ -281,8 +281,8 @@ describe('PostgresStateStoreAdapter migration state', () => {
     const insertQueries = client.queries.filter(
       (q) => q.sql.includes('INSERT INTO') && q.sql.includes('schema_migrations')
     );
-    // One INSERT per named migration step (16 steps)
-    expect(insertQueries.length).toBe(16);
+    // One INSERT per named migration step.
+    expect(insertQueries.length).toBe(19);
 
     const versions = insertQueries.map((q) => (q.params as string[])[1]);
     expect(versions).toContain('core_001_initial_tables');
@@ -294,6 +294,76 @@ describe('PostgresStateStoreAdapter migration state', () => {
     expect(versions).toContain('core_014_lineage_tenant_scope_hardening');
     expect(versions).toContain('core_015_run_event_heads');
     expect(versions).toContain('core_016_snapshot_work_queue');
+    expect(versions).toContain('core_017_tenant_rls_baseline');
+    expect(versions).toContain('core_018_service_access_owner_rls_hardening');
+    expect(versions).toContain('core_019_table_scoped_service_owner_rls');
+  });
+
+  it('creates the production tenant RLS baseline for tenant-owned online tables', async () => {
+    const client = new RecordingMigrationClient();
+    const adapter = new PostgresStateStoreAdapter({
+      pool: { connect: async () => client } as never,
+      schema: 'DvtOps',
+    });
+
+    await adapter.migrate();
+
+    const executedSql = client.queries.map((q) => q.sql).join('\n');
+
+    expect(executedSql).toContain(
+      'ALTER TABLE "DvtOps".run_snapshots ADD COLUMN IF NOT EXISTS tenant_id TEXT'
+    );
+    expect(executedSql).toContain(
+      'ALTER TABLE "DvtOps".outbox ADD COLUMN IF NOT EXISTS tenant_id TEXT'
+    );
+    expect(executedSql).toContain(
+      'ALTER TABLE "DvtOps".outbox_dead_letter ADD COLUMN IF NOT EXISTS tenant_id TEXT'
+    );
+    expect(executedSql).toContain('ALTER TABLE "DvtOps".run_metadata ENABLE ROW LEVEL SECURITY');
+    expect(executedSql).toContain('ALTER TABLE "DvtOps".run_metadata FORCE ROW LEVEL SECURITY');
+    expect(executedSql).toContain(
+      'ALTER TABLE "DvtOps".snapshot_work_queue ENABLE ROW LEVEL SECURITY'
+    );
+    expect(executedSql).toContain(
+      'ALTER TABLE "DvtOps".snapshot_work_queue FORCE ROW LEVEL SECURITY'
+    );
+    expect(executedSql).toContain('CREATE POLICY dvt_tenant_isolation');
+    expect(executedSql).toContain("current_setting('dvt.access_mode', true) = 'service'");
+    expect(executedSql).toContain("current_setting('dvt.service_access_owner', true)");
+    expect(executedSql).toContain("'outbox-worker'");
+    expect(executedSql).toContain("tenant_id = current_setting('dvt.tenant_id', true)");
+  });
+
+  it('rejects unresolved tenant backfills instead of synthesizing tenant ids', async () => {
+    const client = new RecordingMigrationClient();
+    const adapter = new PostgresStateStoreAdapter({
+      pool: { connect: async () => client } as never,
+      schema: 'DvtOps',
+    });
+
+    await adapter.migrate();
+
+    const executedSql = client.queries.map((q) => q.sql).join('\n');
+    expect(executedSql).not.toContain('__unknown_tenant__');
+    expect(executedSql).toContain('LINEAGE_OUTBOX_TENANT_BACKFILL_REQUIRED');
+    expect(executedSql).toContain('LINEAGE_DEAD_LETTER_TENANT_BACKFILL_REQUIRED');
+  });
+
+  it('uses run metadata as the authoritative tenant backfill source', async () => {
+    const client = new RecordingMigrationClient();
+    const adapter = new PostgresStateStoreAdapter({
+      pool: { connect: async () => client } as never,
+      schema: 'DvtOps',
+    });
+
+    await adapter.migrate();
+
+    const executedSql = client.queries.map((q) => q.sql).join('\n');
+    expect(executedSql).not.toContain("payload->>'tenantId'");
+    expect(executedSql).toContain('LINEAGE_OUTBOX_TENANT_MISMATCH');
+    expect(executedSql).toContain('LINEAGE_DEAD_LETTER_TENANT_MISMATCH');
+    expect(executedSql).toContain('OUTBOX_TENANT_MISMATCH');
+    expect(executedSql).toContain('OUTBOX_DEAD_LETTER_TENANT_MISMATCH');
   });
 
   it('creates the archive catalog tables and indexes required for G5-PR1', async () => {

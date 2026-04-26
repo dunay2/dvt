@@ -189,7 +189,9 @@ describe('PostgresStateStoreAdapter shard-aware claiming', () => {
     );
     expect(staleQuery).toBeDefined();
     expect(staleQuery?.sql).toContain('FROM "DvtOps".run_metadata m');
-    expect(staleQuery?.sql).toContain('LEFT JOIN "DvtOps".run_snapshots s ON s.run_id = m.run_id');
+    expect(staleQuery?.sql).toContain('LEFT JOIN "DvtOps".run_snapshots s');
+    expect(staleQuery?.sql).toContain('ON s.run_id = m.run_id');
+    expect(staleQuery?.sql).toContain('s.tenant_id = m.tenant_id');
     expect(staleQuery?.sql).toContain('LEFT JOIN "DvtOps".run_event_heads h');
     expect(staleQuery?.sql).toContain('h.run_id = m.run_id');
     expect(staleQuery?.sql).toContain('h.tenant_id = m.tenant_id');
@@ -240,7 +242,9 @@ describe('PostgresStateStoreAdapter shard-aware claiming', () => {
     );
     expect(claimQuery).toBeDefined();
     expect(claimQuery?.sql).toContain('UPDATE "DvtOps".snapshot_work_queue q');
-    expect(claimQuery?.sql).toContain('LEFT JOIN "DvtOps".run_snapshots s ON s.run_id = q.run_id');
+    expect(claimQuery?.sql).toContain('LEFT JOIN "DvtOps".run_snapshots s');
+    expect(claimQuery?.sql).toContain('ON s.run_id = q.run_id');
+    expect(claimQuery?.sql).toContain('s.tenant_id = q.tenant_id');
     expect(claimQuery?.params).toEqual([7, 300000]);
   });
   it('can complete and fail claimed snapshot work entries', async () => {

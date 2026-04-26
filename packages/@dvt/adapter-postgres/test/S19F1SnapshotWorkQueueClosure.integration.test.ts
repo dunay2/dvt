@@ -3,6 +3,7 @@ import { expect, test } from 'vitest';
 
 import { listStaleSnapshotRunsSql } from '../src/PostgresSnapshotStalenessQuerySql.js';
 import { PostgresStateStoreAdapter } from '../src/PostgresStateStoreAdapter.js';
+import { setTenantContextSql } from '../src/PostgresTenantIsolationPolicy.js';
 import { quoteIdentifier } from '../src/sqlUtils.js';
 
 import { describeIfPg } from './helpers/postgresIntegrationHarness.js';
@@ -45,94 +46,96 @@ describeIfPg('S19-F1-C snapshot queue closure (real PostgreSQL)', () => {
     () =>
       withIsolatedSchema(async ({ schema, adapter, client }) => {
         const quotedSchema = quoteIdentifier(schema);
-        await client.query(
+        const explainResult = await withTenantContext(client, 'tenant-1', async () => {
+          await client.query(
+            `
+            INSERT INTO ${quotedSchema}.run_metadata (
+              run_id,
+              tenant_id,
+              project_id,
+              environment_id,
+              plan_id,
+              plan_version,
+              provider,
+              provider_workflow_id,
+              provider_run_id,
+              logical_attempt_id,
+              origin_run_id,
+              next_retry_attempt_id
+            )
+            SELECT
+              'run-' || gs::text,
+              'tenant-1',
+              'project-1',
+              'dev',
+              'plan-minimal',
+              '1.0',
+              'mock',
+              'wf-' || gs::text,
+              'pr-' || gs::text,
+              1,
+              'run-' || gs::text,
+              2
+            FROM generate_series(1, 5000) AS gs
           `
-          INSERT INTO ${quotedSchema}.run_metadata (
-            run_id,
-            tenant_id,
-            project_id,
-            environment_id,
-            plan_id,
-            plan_version,
-            provider,
-            provider_workflow_id,
-            provider_run_id,
-            logical_attempt_id,
-            origin_run_id,
-            next_retry_attempt_id
-          )
-          SELECT
-            'run-' || gs::text,
-            'tenant-1',
-            'project-1',
-            'dev',
-            'plan-minimal',
-            '1.0',
-            'mock',
-            'wf-' || gs::text,
-            'pr-' || gs::text,
-            1,
-            'run-' || gs::text,
-            2
-          FROM generate_series(1, 5000) AS gs
-        `
-        );
+          );
 
-        await client.query(
-          `
-          INSERT INTO ${quotedSchema}.run_events (
-            run_id,
-            run_seq,
-            event_type,
-            emitted_at,
-            tenant_id,
-            project_id,
-            environment_id,
-            engine_attempt_id,
-            logical_attempt_id,
-            plan_id,
-            plan_version,
-            persisted_at,
-            idempotency_key,
-            payload
-          )
-          SELECT
-            'run-' || gs::text,
-            1,
-            'RunQueued',
-            $1::timestamptz,
-            'tenant-1',
-            'project-1',
-            'dev',
-            1,
-            1,
-            'plan-minimal',
-            '1.0',
-            $1::timestamptz,
-            'run-' || gs::text || ':queued',
-            jsonb_build_object('status', 'queued')
-          FROM generate_series(1, 5000) AS gs
-        `,
-          [NOW]
-        );
+          await client.query(
+            `
+            INSERT INTO ${quotedSchema}.run_events (
+              run_id,
+              run_seq,
+              event_type,
+              emitted_at,
+              tenant_id,
+              project_id,
+              environment_id,
+              engine_attempt_id,
+              logical_attempt_id,
+              plan_id,
+              plan_version,
+              persisted_at,
+              idempotency_key,
+              payload
+            )
+            SELECT
+              'run-' || gs::text,
+              1,
+              'RunQueued',
+              $1::timestamptz,
+              'tenant-1',
+              'project-1',
+              'dev',
+              1,
+              1,
+              'plan-minimal',
+              '1.0',
+              $1::timestamptz,
+              'run-' || gs::text || ':queued',
+              jsonb_build_object('status', 'queued')
+            FROM generate_series(1, 5000) AS gs
+          `,
+            [NOW]
+          );
 
-        await client.query(
-          `
-          INSERT INTO ${quotedSchema}.run_event_heads (run_id, tenant_id, latest_run_seq, updated_at)
-          SELECT
-            'run-' || gs::text,
-            'tenant-1',
-            1,
-            $1::timestamptz
-          FROM generate_series(1, 5000) AS gs
-        `,
-          [NOW]
-        );
+          await client.query(
+            `
+            INSERT INTO ${quotedSchema}.run_event_heads (run_id, tenant_id, latest_run_seq, updated_at)
+            SELECT
+              'run-' || gs::text,
+              'tenant-1',
+              1,
+              $1::timestamptz
+            FROM generate_series(1, 5000) AS gs
+          `,
+            [NOW]
+          );
 
-        const explainResult = await client.query<{ 'QUERY PLAN': string }>(
-          `EXPLAIN (ANALYZE, BUFFERS, FORMAT TEXT) ${listStaleSnapshotRunsSql(schema)}`,
-          [5000]
-        );
+          return client.query<{ 'QUERY PLAN': string }>(
+            `EXPLAIN (ANALYZE, BUFFERS, FORMAT TEXT) ${listStaleSnapshotRunsSql(schema)}`,
+            [5000]
+          );
+        });
         const planText = explainResult.rows.map((row) => row['QUERY PLAN']).join('\n');
 
         expect(planText.toLowerCase()).toContain('run_event_heads');
@@ -153,22 +156,24 @@ describeIfPg('S19-F1-C snapshot queue closure (real PostgreSQL)', () => {
         await adapterB.migrate();
         try {
           const quotedSchema = quoteIdentifier(schema);
-          await client.query(
-            `
-            INSERT INTO ${quotedSchema}.snapshot_work_queue (
-              run_id,
-              tenant_id,
-              latest_run_seq,
-              enqueued_at
+          await withTenantContext(client, 'tenant-1', () =>
+            client.query(
+              `
+              INSERT INTO ${quotedSchema}.snapshot_work_queue (
+                run_id,
+                tenant_id,
+                latest_run_seq,
+                enqueued_at
+              )
+              SELECT
+                'run-claim-' || gs::text,
+                'tenant-1',
+                1,
+                $1::timestamptz
+              FROM generate_series(1, 300) AS gs
+            `,
+              [NOW]
             )
-            SELECT
-              'run-claim-' || gs::text,
-              'tenant-1',
-              1,
-              $1::timestamptz
-            FROM generate_series(1, 300) AS gs
-          `,
-            [NOW]
           );
 
           const [claimsA, claimsB] = await Promise.all([
@@ -190,3 +195,20 @@ describeIfPg('S19-F1-C snapshot queue closure (real PostgreSQL)', () => {
     30000
   );
 });
+
+async function withTenantContext<T>(
+  client: Client,
+  tenantId: string,
+  fn: () => Promise<T>
+): Promise<T> {
+  await client.query('BEGIN');
+  try {
+    await client.query(setTenantContextSql(), [tenantId]);
+    const result = await fn();
+    await client.query('COMMIT');
+    return result;
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  }
+}
