@@ -4,7 +4,6 @@ import { Client } from 'pg';
 import { afterAll, describe } from 'vitest';
 
 import {
-  CORE_TENANT_ISOLATION_TABLES,
   START_RUN_INTENT_TENANT_ISOLATION_TABLES,
   TENANT_ISOLATION_TABLES,
   type TenantIsolationTable,
@@ -20,6 +19,38 @@ export const describeIfPg = runIntegration ? describe : describe.skip;
 export const POSTGRES_RLS_PROOF_NOW = '2026-04-25T00:00:00.000Z';
 
 const DEFAULT_ADMIN_CONNECTION_STRING = 'postgresql://dvt:dvt@localhost:5432/dvt';
+const SELECT_PRIVILEGES = ['SELECT'] as const;
+const START_RUN_INTENT_RUNTIME_PRIVILEGES = ['SELECT', 'INSERT', 'UPDATE'] as const;
+
+const RUN_STATE_RUNTIME_GRANTS = [
+  {
+    tables: tenantIsolationTablesNamed(['run_metadata']),
+    privileges: ['SELECT', 'INSERT', 'UPDATE'],
+  },
+  {
+    tables: tenantIsolationTablesNamed(['run_events']),
+    privileges: ['SELECT', 'INSERT'],
+  },
+  {
+    tables: tenantIsolationTablesNamed(['run_snapshots']),
+    privileges: ['SELECT', 'INSERT', 'UPDATE'],
+  },
+  {
+    tables: tenantIsolationTablesNamed(['run_event_heads', 'snapshot_work_queue']),
+    privileges: ['SELECT', 'INSERT', 'UPDATE'],
+  },
+  {
+    tables: tenantIsolationTablesNamed(['outbox']),
+    privileges: ['SELECT', 'INSERT'],
+  },
+] as const satisfies readonly ApplicationRoleGrant[];
+
+type TablePrivilege = 'SELECT' | 'INSERT' | 'UPDATE' | 'DELETE';
+
+interface ApplicationRoleGrant {
+  readonly tables: readonly TenantIsolationTable[];
+  readonly privileges: readonly TablePrivilege[];
+}
 
 export interface PostgresRlsProofConnections {
   readonly adminConnectionString: string;
@@ -63,41 +94,39 @@ export class PostgresRlsProofHarness {
   }
 
   async grantRlsProbePrivileges(schema: string): Promise<void> {
-    await this.withAdminClient(async (client) => {
-      await grantSchemaUsage(client, schema, this.connections.appRole);
-      await grantTablePrivileges(
-        client,
-        schema,
-        this.connections.appRole,
-        TENANT_ISOLATION_TABLES,
-        ['SELECT']
-      );
-    });
+    await this.grantApplicationRolePrivileges(schema, [
+      { tables: TENANT_ISOLATION_TABLES, privileges: SELECT_PRIVILEGES },
+    ]);
   }
 
   async grantStateStoreRuntimePrivileges(schema: string): Promise<void> {
-    await this.withAdminClient(async (client) => {
-      await grantSchemaUsage(client, schema, this.connections.appRole);
-      await grantTablePrivileges(
-        client,
-        schema,
-        this.connections.appRole,
-        CORE_TENANT_ISOLATION_TABLES,
-        ['SELECT', 'INSERT', 'UPDATE', 'DELETE']
-      );
-    });
+    await this.grantApplicationRolePrivileges(schema, RUN_STATE_RUNTIME_GRANTS);
   }
 
   async grantStartRunIntentRuntimePrivileges(schema: string): Promise<void> {
+    await this.grantApplicationRolePrivileges(schema, [
+      {
+        tables: START_RUN_INTENT_TENANT_ISOLATION_TABLES,
+        privileges: START_RUN_INTENT_RUNTIME_PRIVILEGES,
+      },
+    ]);
+  }
+
+  private async grantApplicationRolePrivileges(
+    schema: string,
+    grants: readonly ApplicationRoleGrant[]
+  ): Promise<void> {
     await this.withAdminClient(async (client) => {
       await grantSchemaUsage(client, schema, this.connections.appRole);
-      await grantTablePrivileges(
-        client,
-        schema,
-        this.connections.appRole,
-        START_RUN_INTENT_TENANT_ISOLATION_TABLES,
-        ['SELECT', 'INSERT', 'UPDATE', 'DELETE']
-      );
+      for (const grant of grants) {
+        await grantTablePrivileges(
+          client,
+          schema,
+          this.connections.appRole,
+          grant.tables,
+          grant.privileges
+        );
+      }
     });
   }
 }
@@ -148,15 +177,41 @@ export async function assertLeastPrivilegeApplicationRole(
   );
 
   const role = result.rows[0];
+  assertApplicationRoleExists(role);
+  assertExpectedApplicationRole(role, expectedRole);
+  assertNonBypassApplicationRole(role);
+  assertNonSchemaCreatingApplicationRole(role);
+}
+
+type ApplicationRolePosture = {
+  current_user: string;
+  rolsuper: boolean;
+  rolbypassrls: boolean;
+  has_database_create: boolean;
+  has_public_schema_create: boolean;
+};
+
+function assertApplicationRoleExists(
+  role: ApplicationRolePosture | undefined
+): asserts role is ApplicationRolePosture {
   if (role === undefined) {
     throw new Error('RLS_DIRECT_TEST_REQUIRES_DATABASE_ROLE');
   }
+}
+
+function assertExpectedApplicationRole(role: ApplicationRolePosture, expectedRole: string): void {
   if (role.current_user !== expectedRole) {
     throw new Error(`RLS_DIRECT_TEST_ROLE_MISMATCH:${expectedRole}:${role.current_user}`);
   }
+}
+
+function assertNonBypassApplicationRole(role: ApplicationRolePosture): void {
   if (role.rolsuper === true || role.rolbypassrls === true) {
     throw new Error('RLS_DIRECT_TEST_REQUIRES_NON_BYPASS_ROLE');
   }
+}
+
+function assertNonSchemaCreatingApplicationRole(role: ApplicationRolePosture): void {
   if (role.has_database_create === true || role.has_public_schema_create === true) {
     throw new Error('RLS_DIRECT_TEST_REQUIRES_NON_SCHEMA_CREATING_ROLE');
   }
@@ -208,7 +263,7 @@ async function grantTablePrivileges(
   schema: string,
   role: string,
   tables: readonly TenantIsolationTable[],
-  privileges: readonly string[]
+  privileges: readonly TablePrivilege[]
 ): Promise<void> {
   const privilegeList = privileges.join(', ');
   for (const table of tables) {
@@ -218,4 +273,14 @@ async function grantTablePrivileges(
       )} TO ${quoteIdentifier(role)}`
     );
   }
+}
+
+function tenantIsolationTablesNamed(names: readonly string[]): readonly TenantIsolationTable[] {
+  return names.map((name) => {
+    const table = TENANT_ISOLATION_TABLES.find((candidate) => candidate.name === name);
+    if (table === undefined) {
+      throw new Error(`POSTGRES_RLS_PROOF_UNKNOWN_TENANT_TABLE:${name}`);
+    }
+    return table;
+  });
 }

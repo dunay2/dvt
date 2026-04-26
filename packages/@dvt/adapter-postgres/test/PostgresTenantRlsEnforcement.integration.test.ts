@@ -93,6 +93,32 @@ describeIfPg('Postgres RLS tenant isolation enforcement', () => {
     });
   }, 30000);
 
+  it('rejects direct tenant-owned writes when tenant context is missing or mismatched', async () => {
+    const schema = await prepareTenantIsolationSchema(harness);
+    await harness.grantStateStoreRuntimePrivileges(schema);
+
+    await harness.withAppClient(async (client) => {
+      await expect(
+        withTransaction(client, () =>
+          insertRunMetadataProbeRow(client, schema, {
+            runId: 'run-rls-write-missing-context',
+            tenantId: 'tenant-a',
+          })
+        )
+      ).rejects.toThrow(/row-level security|permission denied/i);
+
+      await expect(
+        withTransaction(client, async () => {
+          await client.query(setTenantContextSql(), ['tenant-a']);
+          await insertRunMetadataProbeRow(client, schema, {
+            runId: 'run-rls-write-wrong-tenant',
+            tenantId: 'tenant-b',
+          });
+        })
+      ).rejects.toThrow(/row-level security|permission denied/i);
+    });
+  }, 30000);
+
   it('allows approved service access only through the explicit maintenance context', async () => {
     const schema = await prepareTenantIsolationSchema(harness, { seedRunMetadata: true });
     await harness.grantRlsProbePrivileges(schema);
@@ -275,4 +301,32 @@ async function withTransaction<T>(client: Client, fn: () => Promise<T>): Promise
     await client.query('ROLLBACK');
     throw error;
   }
+}
+
+async function insertRunMetadataProbeRow(
+  client: Client,
+  schema: string,
+  row: { runId: string; tenantId: string }
+): Promise<void> {
+  await client.query(
+    `
+      INSERT INTO ${quoteIdentifier(schema)}.run_metadata (
+        run_id,
+        tenant_id,
+        project_id,
+        environment_id,
+        plan_id,
+        plan_version,
+        logical_attempt_id,
+        origin_run_id,
+        next_retry_attempt_id,
+        provider,
+        provider_workflow_id,
+        provider_run_id,
+        provider_namespace
+      )
+      VALUES ($1, $2, 'project-rls', 'env-rls', 'plan-rls', 'v1', 1, $1, 2, 'temporal', $1, $1, 'default')
+    `,
+    [row.runId, row.tenantId]
+  );
 }

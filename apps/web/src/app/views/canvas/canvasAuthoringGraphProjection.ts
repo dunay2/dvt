@@ -37,15 +37,42 @@ function mergeDraftSemanticNodes(args: {
 }): CanonicalNode[] {
   const { draftSemanticGraph, localCanonicalNodes, scopedNodeIds } = args;
   const scopedNodeIdSet = new Set(scopedNodeIds);
-  const mergedNodes = new Map<string, CanonicalNode>();
+  const mergedNodes = indexScopedDraftSemanticNodes({
+    draftSemanticGraph,
+    scopedNodeIdSet,
+  });
+
+  overlayRouteLocalNodes({
+    mergedNodes,
+    localCanonicalNodes,
+    scopedNodeIds,
+  });
+
+  return selectScopedMergedNodes({ mergedNodes, scopedNodeIds });
+}
+
+function indexScopedDraftSemanticNodes(args: {
+  draftSemanticGraph: WorkspaceGraphDraftSemanticGraph | null;
+  scopedNodeIdSet: ReadonlySet<string>;
+}): Map<string, CanonicalNode> {
+  const { draftSemanticGraph, scopedNodeIdSet } = args;
+  const nodesById = new Map<string, CanonicalNode>();
 
   for (const node of draftSemanticGraph?.canonicalNodes ?? []) {
-    if (!scopedNodeIdSet.has(node.id)) {
-      continue;
+    if (scopedNodeIdSet.has(node.id)) {
+      nodesById.set(node.id, node);
     }
-
-    mergedNodes.set(node.id, node);
   }
+
+  return nodesById;
+}
+
+function overlayRouteLocalNodes(args: {
+  mergedNodes: Map<string, CanonicalNode>;
+  localCanonicalNodes: readonly CanonicalNode[];
+  scopedNodeIds: readonly string[];
+}): void {
+  const { mergedNodes, localCanonicalNodes, scopedNodeIds } = args;
   const localNodesById = new Map(localCanonicalNodes.map((node) => [node.id, node]));
 
   for (const nodeId of scopedNodeIds) {
@@ -54,6 +81,13 @@ function mergeDraftSemanticNodes(args: {
       mergedNodes.set(nodeId, localNode);
     }
   }
+}
+
+function selectScopedMergedNodes(args: {
+  mergedNodes: ReadonlyMap<string, CanonicalNode>;
+  scopedNodeIds: readonly string[];
+}): CanonicalNode[] {
+  const { mergedNodes, scopedNodeIds } = args;
 
   return scopedNodeIds
     .map((nodeId) => mergedNodes.get(nodeId))

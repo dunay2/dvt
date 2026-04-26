@@ -22,6 +22,9 @@ context: >
   through the explicit admin URL, online runtime smoke runs through DVT_PG_RLS_URL after explicit
   runtime grants, direct RLS enforcement uses DVT_PG_RLS_URL without tenant context fallbacks, and
   table-scoped service owners prevent one maintenance path from reading every tenant-owned table.
+  The 2026-04-26 QA follow-up narrows the app-role runtime grant helper from broad tenant-catalog
+  DML to explicit run-state and start-run-intent privilege profiles, and adds direct negative write
+  probes for missing and mismatched tenant context.
 risk: >
   Plan records still lack top-level tenant/project/environment columns, so plan-store tenancy
   remains a separate governed task. RLS enforcement must still be proven in the deployment profile
@@ -38,7 +41,8 @@ mitigations:
     non-owner, non-schema-creating role for least privilege.
   - >
     Keep the app-role runtime smoke in CI so migration/setup authority and online application
-    authority remain separately proven.
+    authority remain separately proven, including negative checks that the app role lacks write
+    privileges on lineage/dead-letter tables outside the run-state runtime grant profile.
   - >
     Keep all tenant command/query paths setting tenant context with explicit tenant predicates and
     all worker/maintenance global sweep paths setting service context before accessing RLS-protected
@@ -53,7 +57,8 @@ mitigations:
     mode cannot be forged by arbitrary SQL under the tenant application role.
   - >
     Run PostgresTenantRlsEnforcement.integration.test.ts under DVT_PG_INTEGRATION=1 with a
-    non-owner, non-BYPASSRLS, non-schema-creating role before production onboarding.
+    non-owner, non-BYPASSRLS, non-schema-creating role before production onboarding. This test must
+    keep real DML-negative probes, not only catalog-string checks.
   - >
     Run PostgresAppRoleRuntime.integration.test.ts under DVT_PG_INTEGRATION=1 with DVT_PG_URL set to
     the admin migration role and DVT_PG_RLS_URL set to the application role. This test must prove

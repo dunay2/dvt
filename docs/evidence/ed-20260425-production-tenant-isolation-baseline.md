@@ -71,6 +71,9 @@ evidence:
     - pnpm --filter @dvt/adapter-postgres test -- PostgresStateStoreAdapter.migrate.test.ts StartRunIntentSchemaManager.test.ts
     - '$env:DVT_PG_ADMIN_URL="postgresql://dvt:dvt@localhost:5432/dvt"; $env:DVT_PG_RLS_URL="postgresql://dvt_app:dvt_app@localhost:5432/dvt"; $env:DVT_PG_INTEGRATION="1"; $env:DVT_PG_URL=$env:DVT_PG_ADMIN_URL; $env:DATABASE_URL=$env:DVT_PG_ADMIN_URL; pnpm --filter @dvt/adapter-postgres test -- PostgresAppRoleRuntime.integration.test.ts'
     - '$env:DVT_PG_ADMIN_URL="postgresql://dvt:dvt@localhost:5432/dvt"; $env:DVT_PG_RLS_URL="postgresql://dvt_app:dvt_app@localhost:5432/dvt"; $env:DVT_PG_INTEGRATION="1"; $env:DVT_PG_URL=$env:DVT_PG_ADMIN_URL; $env:DATABASE_URL=$env:DVT_PG_ADMIN_URL; pnpm --filter @dvt/adapter-postgres test -- PostgresTenantIsolationPolicy.test.ts PostgresTenantRlsEnforcement.integration.test.ts'
+    - '$env:DVT_PG_ADMIN_URL="postgresql://dvt:dvt@localhost:5432/dvt"; $env:DVT_PG_RLS_URL="postgresql://dvt_app:dvt_app@localhost:5432/dvt"; $env:DVT_PG_INTEGRATION="1"; $env:DVT_PG_URL=$env:DVT_PG_ADMIN_URL; $env:DATABASE_URL=$env:DVT_PG_ADMIN_URL; pnpm --filter @dvt/adapter-postgres test'
+    - pnpm --filter @dvt/web test
+    - pnpm --filter @dvt/web typecheck
 ---
 
 # Summary
@@ -159,6 +162,16 @@ that owner path.
     `20260426_005_start_run_intents_table_scoped_service_owner_rls` re-apply
     the table-scoped owner matrix for existing schemas instead of relying only
     on fresh-schema migration replay.
+20. `postgresRlsProofHarness` grants application-role table privileges through
+    declarative runtime profiles instead of granting DML across the full
+    tenant-isolation catalog. The state-store runtime proof denies `INSERT` on
+    lineage and dead-letter tables that are outside the run-state write path,
+    and the start-run intent runtime proof denies `DELETE` on
+    `start_run_intents`.
+21. `PostgresTenantRlsEnforcement.integration.test.ts` now includes direct
+    negative write probes against `run_metadata`, proving missing tenant context
+    and mismatched tenant context reject `INSERT` through real PostgreSQL RLS
+    `WITH CHECK` behavior rather than only catalog-string inspection.
 
 # What Remains Open
 

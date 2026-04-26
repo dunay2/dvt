@@ -39,6 +39,9 @@ describeIfPg('Postgres app-role adapter runtime', () => {
         assertLeastPrivilegeApplicationRole(client, harness.connections.appRole)
       );
       await harness.grantStateStoreRuntimePrivileges(schema);
+      await expectAppRoleTablePrivilege(harness, schema, 'lineage_outbox', 'INSERT', false);
+      await expectAppRoleTablePrivilege(harness, schema, 'lineage_dead_letter', 'INSERT', false);
+      await expectAppRoleTablePrivilege(harness, schema, 'outbox_dead_letter', 'INSERT', false);
       await expectSchemaMigrationsInsertDenied(harness, schema);
 
       await appAdapter.bootstrapRunTx(makeBootstrap('run-app-role-a', 'tenant-a'));
@@ -73,6 +76,7 @@ describeIfPg('Postgres app-role adapter runtime', () => {
     try {
       await adminIntentStore.migrate();
       await harness.grantStartRunIntentRuntimePrivileges(schema);
+      await expectAppRoleTablePrivilege(harness, schema, 'start_run_intents', 'DELETE', false);
       await expectSchemaMigrationsInsertDenied(harness, schema);
 
       const created = await appIntentStore.createIntent({
@@ -126,5 +130,21 @@ async function expectSchemaMigrationsInsertDenied(
         `
       )
     ).rejects.toThrow(/permission denied/i);
+  });
+}
+
+async function expectAppRoleTablePrivilege(
+  harness: ReturnType<typeof usePostgresRlsProofHarness>,
+  schema: string,
+  table: string,
+  privilege: string,
+  expected: boolean
+): Promise<void> {
+  await harness.withAppClient(async (client) => {
+    const result = await client.query<{ has_privilege: boolean }>(
+      `SELECT has_table_privilege(current_user, $1::regclass, $2) AS has_privilege`,
+      [`${quoteIdentifier(schema)}.${quoteIdentifier(table)}`, privilege]
+    );
+    expect(result.rows[0]?.has_privilege).toBe(expected);
   });
 }
