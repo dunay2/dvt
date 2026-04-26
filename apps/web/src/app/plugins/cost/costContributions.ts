@@ -7,17 +7,19 @@ import type { NodeCostData } from '../contracts/PluginServices';
 import { COST_ROUTE_BOOTSTRAP_HANDLE } from './costRouteHandle';
 
 const COST_PLUGIN_ID = 'cost';
+const COST_HIGH_DECORATION_THRESHOLD = 0.4;
+const COST_MEDIUM_DECORATION_THRESHOLD = 0.2;
 
 function resolveCostDecoration(costData: NodeCostData | undefined) {
   if (!costData || costData.cost <= 0) {
     return null;
   }
 
-  if (costData.cost >= 0.4) {
+  if (costData.cost >= COST_HIGH_DECORATION_THRESHOLD) {
     return { borderColor: '#dc2626', backgroundColor: 'rgba(220, 38, 38, 0.18)' };
   }
 
-  if (costData.cost >= 0.2) {
+  if (costData.cost >= COST_MEDIUM_DECORATION_THRESHOLD) {
     return { borderColor: '#f59e0b', backgroundColor: 'rgba(245, 158, 11, 0.18)' };
   }
 

@@ -21,6 +21,8 @@ type CanvasDuplicateNodeCommand = Readonly<{
   position: { x: number; y: number };
 }>;
 
+const DUPLICATE_NODE_POSITION_OFFSET = 48;
+
 type ResolveCanvasNodeDuplicateTransactionArgs = Readonly<{
   nodeId: string;
   sourceCanonicalNode: CanonicalNode | null;
@@ -77,8 +79,8 @@ export function buildDuplicateNodeCommand({
       metadata: toCanvasAuthoringMetadata(sourceCanonicalNode.metadata),
     },
     position: {
-      x: sourceNode.position.x + 48 * nextIndex,
-      y: sourceNode.position.y + 48 * nextIndex,
+      x: sourceNode.position.x + DUPLICATE_NODE_POSITION_OFFSET * nextIndex,
+      y: sourceNode.position.y + DUPLICATE_NODE_POSITION_OFFSET * nextIndex,
     },
   };
 }
