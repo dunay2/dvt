@@ -106,15 +106,24 @@ interface StartRunIntent {
   updatedAt: string;
 }
 
+interface StartRunIntentRef {
+  tenantId: string;
+  intentId: string;
+}
+
 interface IStartRunIntentStore {
   createIntent(input: CreateIntentInput): Promise<StartRunIntent>;
-  markDispatched(intentId: string, engineRunRef: EngineRunRef): Promise<void>;
-  markResolved(intentId: string): Promise<void>;
-  markExpired(intentId: string): Promise<void>;
+  markDispatched(ref: StartRunIntentRef, engineRunRef: EngineRunRef): Promise<void>;
+  markResolved(ref: StartRunIntentRef): Promise<void>;
+  markExpired(ref: StartRunIntentRef): Promise<void>;
   listOrphaned(thresholdMs: number, nowMs: number, limit?: number): Promise<StartRunIntent[]>;
-  getIntent(intentId: string): Promise<StartRunIntent | null>;
+  getIntent(ref: StartRunIntentRef): Promise<StartRunIntent | null>;
 }
 ```
+
+Tenant-scoped command/query operations MUST receive `StartRunIntentRef`.
+`listOrphaned()` is the only unscoped operation because it is a maintenance
+sweep and runs under an explicit service context in production adapters.
 
 Intent lifecycle state machine:
 
@@ -144,28 +153,30 @@ The `WorkflowEngine.startRun()` method now includes three intent store calls:
 3.  getAdapterOrThrow() + validateCapabilities (existing)
 4.  intentStore.createIntent()                 [NEW] status=PENDING
 5.  adapter.startRun() → runRef               (existing)
-6.  intentStore.markDispatched(intentId, runRef)[NEW] status=DISPATCHED
+6.  intentStore.markDispatched({ tenantId, intentId }, runRef)[NEW] status=DISPATCHED
 7.  bootstrapRunTx()                           (existing)
-8.  intentStore.markResolved(intentId)         [NEW] status=RESOLVED
+8.  intentStore.markResolved({ tenantId, intentId })[NEW] status=RESOLVED
     On bootstrap failure:
       adapter.cancelRun()                      (existing compensation)
-      intentStore.markResolved() best-effort   [NEW]
+      intentStore.markResolved(ref) best-effort[NEW]
 ```
 
 Key implementation details:
 
 - `createIntent` is called **before** any adapter interaction (step 4).
 - `markResolved` after success and after compensation both use `.catch(() => {})` — best-effort. If the intent store call fails, the reconciliation job will clean it up on the next sweep.
-- The `intentId` is generated from `idempotency.eventId()` — a fresh UUID per call. The intent store's `createIntent` is idempotent on `intentId`.
+- The `intentId` is derived deterministically from `(tenantId, runId)` using the
+  start-run idempotency policy. A fresh UUID per call violates INV-INTENT-011.
 
 ### 3.3 Crash scenario coverage
 
-| Crash Point           | Intent Status | Reconciliation Action                                                                              |
-| --------------------- | ------------- | -------------------------------------------------------------------------------------------------- |
-| Between steps 4 and 5 | PENDING       | Expire (no workflow exists)                                                                        |
-| Between steps 5 and 6 | PENDING       | Expire (orphaned workflow relies on workflowId⟵runId dedup on retry, per StartRunIdempotency §3.3) |
-| Between steps 6 and 7 | DISPATCHED    | Cancel workflow via stored `engineRunRef`                                                          |
-| Between steps 7 and 8 | DISPATCHED    | Reconciler checks `stateStore.getRunMetadataByRunId()` — run exists → `markResolved()` (no cancel) |
+- Between steps 4 and 5: `PENDING`; expire because no workflow exists.
+- Between steps 5 and 6: `PENDING`; expire because retry relies on
+  workflowId-from-runId dedup.
+- Between steps 6 and 7: `DISPATCHED`; cancel workflow via stored
+  `engineRunRef`.
+- Between steps 7 and 8: `DISPATCHED`; metadata exists, so call
+  `markResolved(ref)` without cancelling.
 
 ### 3.4 Reconciliation via `RunMaintenanceService`
 
@@ -199,10 +210,10 @@ Compatibility note:
 Reconciliation logic:
 
 1. `intentStore.listOrphaned(thresholdMs, nowMs, limit)` — find PENDING + DISPATCHED intents older than threshold, ordered by `createdAt` ASC.
-2. For each PENDING intent: `markExpired()` — no provider workflow to cancel.
+2. For each PENDING intent: `markExpired(ref)` — no provider workflow to cancel.
 3. For each DISPATCHED intent:
-   - Check `stateStore.getRunMetadataByRunId()` — if run exists, `markResolved()`. This handles the crash-between-bootstrap-and-markResolved scenario without issuing a spurious cancel.
-   - If run does not exist: `adapter.cancelRun(intent.engineRunRef)`, then `markResolved()`.
+   - Check `stateStore.getRunMetadataByRunId()` — if run exists, `markResolved(ref)`. This handles the crash-between-bootstrap-and-markResolved scenario without issuing a spurious cancel.
+   - If run does not exist: `adapter.cancelRun(intent.engineRunRef)`, then `markResolved(ref)`.
    - If cancel fails (adapter unavailable, network error): report in `cancelFailed[]` for retry on next sweep.
 
 ### 3.5 Error types
@@ -250,12 +261,12 @@ Two new error classes extending `DvtError`:
 ## 5. Verification Invariants
 
 - **INV-INTENT-001**: `createIntent()` MUST be called **before** `adapter.startRun()` in the `startRun()` flow.
-- **INV-INTENT-002**: `markDispatched()` MUST be called immediately after `adapter.startRun()` returns, attaching the `engineRunRef`.
-- **INV-INTENT-003**: `markResolved()` MUST be called after `bootstrapRunTx()` succeeds.
-- **INV-INTENT-004**: `markResolved()` on the compensation path is best-effort (`.catch(() => {})`).
+- **INV-INTENT-002**: `markDispatched(ref)` MUST be called immediately after `adapter.startRun()` returns, attaching the `engineRunRef`.
+- **INV-INTENT-003**: `markResolved(ref)` MUST be called after `bootstrapRunTx()` succeeds.
+- **INV-INTENT-004**: `markResolved(ref)` on the compensation path is best-effort (`.catch(() => {})`).
 - **INV-INTENT-005**: `intentStore` is a required dependency - `WorkflowEngine` MUST reject construction without it.
 - **INV-INTENT-006**: The happy path transitions are `PENDING -> DISPATCHED -> RESOLVED`.
-- **INV-INTENT-007**: Reconciliation expires PENDING intents beyond the threshold via `markExpired()`.
+- **INV-INTENT-007**: Reconciliation expires PENDING intents beyond the threshold via `markExpired(ref)`.
 - **INV-INTENT-008**: Reconciliation checks `stateStore.getRunMetadataByRunId()` before cancelling a DISPATCHED intent - if the run exists, it marks the intent resolved without cancelling.
 - **INV-INTENT-009**: `listOrphaned()` returns only PENDING and DISPATCHED intents older than the threshold, ordered by `createdAt` ASC.
 - **INV-INTENT-010**: Failed cancellations are reported in `cancelFailed[]` for retry on the next sweep.

@@ -13,6 +13,12 @@ export type CanvasAuthoringMetadataValue =
 
 export type CanvasAuthoringMetadata = Record<string, CanvasAuthoringMetadataValue>;
 
+type PrimitiveMetadataResult =
+  | { readonly supported: true; readonly value: string | number | boolean }
+  | { readonly supported: false };
+
+const UNSUPPORTED_METADATA_TYPES = new Set(['bigint', 'function', 'symbol', 'undefined']);
+
 function toCanvasAuthoringMetadataValue(
   value: unknown,
   seenObjects: WeakSet<object>
@@ -21,51 +27,87 @@ function toCanvasAuthoringMetadataValue(
     return null;
   }
 
-  if (typeof value === 'string' || typeof value === 'boolean') {
-    return value;
+  const primitive = toPrimitiveMetadataValue(value);
+  if (primitive.supported) {
+    return primitive.value;
   }
 
-  if (typeof value === 'number') {
-    return Number.isFinite(value) ? value : undefined;
-  }
-
-  if (
-    typeof value === 'bigint' ||
-    typeof value === 'function' ||
-    typeof value === 'symbol' ||
-    typeof value === 'undefined'
-  ) {
+  if (isUnsupportedMetadataValue(value)) {
     return undefined;
   }
 
   if (Array.isArray(value)) {
-    if (seenObjects.has(value)) {
-      return undefined;
-    }
-
-    seenObjects.add(value);
-    const normalized = value
-      .map((entry) => toCanvasAuthoringMetadataValue(entry, seenObjects))
-      .filter((entry): entry is CanvasAuthoringMetadataValue => entry !== undefined);
-    seenObjects.delete(value);
-    return normalized;
+    return toCanvasAuthoringArray(value, seenObjects);
   }
 
+  return toCanvasAuthoringObject(value as Record<string, unknown>, seenObjects);
+}
+
+function toPrimitiveMetadataValue(value: unknown): PrimitiveMetadataResult {
+  if (typeof value === 'string' || typeof value === 'boolean') {
+    return { supported: true, value };
+  }
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return { supported: true, value };
+  }
+  return { supported: false };
+}
+
+function isUnsupportedMetadataValue(value: unknown): boolean {
+  return UNSUPPORTED_METADATA_TYPES.has(typeof value);
+}
+
+function toCanvasAuthoringArray(
+  value: readonly unknown[],
+  seenObjects: WeakSet<object>
+): CanvasAuthoringMetadataValue[] | undefined {
+  return withSeenObject(value, seenObjects, () =>
+    value
+      .map((entry) => toCanvasAuthoringMetadataValue(entry, seenObjects))
+      .filter((entry): entry is CanvasAuthoringMetadataValue => entry !== undefined)
+  );
+}
+
+function toCanvasAuthoringObject(
+  value: Record<string, unknown>,
+  seenObjects: WeakSet<object>
+): { [key: string]: CanvasAuthoringMetadataValue } | undefined {
+  return withSeenObject(value, seenObjects, () => {
+    const entries = Object.entries(value)
+      .sort(([leftKey], [rightKey]) => leftKey.localeCompare(rightKey))
+      .map(([key, entry]) => [key, toCanvasAuthoringMetadataValue(entry, seenObjects)] as const)
+      .filter(isDefinedAuthoringEntry);
+
+    return Object.fromEntries(entries);
+  });
+}
+
+function isDefinedAuthoringEntry(
+  entry: readonly [string, CanvasAuthoringMetadataValue | undefined]
+): entry is readonly [string, CanvasAuthoringMetadataValue] {
+  return entry[1] !== undefined;
+}
+
+function withSeenObject<T>(
+  value: object,
+  seenObjects: WeakSet<object>,
+  normalize: () => T
+): T | undefined {
   if (seenObjects.has(value)) {
     return undefined;
   }
-
   seenObjects.add(value);
-  const entries = Object.entries(value as Record<string, unknown>)
-    .sort(([leftKey], [rightKey]) => leftKey.localeCompare(rightKey))
-    .map(([key, entry]) => [key, toCanvasAuthoringMetadataValue(entry, seenObjects)] as const)
-    .filter(
-      (entry): entry is readonly [string, CanvasAuthoringMetadataValue] =>
-        entry[1] !== undefined
-    );
-  seenObjects.delete(value);
+  try {
+    return normalize();
+  } finally {
+    seenObjects.delete(value);
+  }
+}
 
-  return Object.fromEntries(entries);
+function isCanvasAuthoringMetadataObject(
+  value: CanvasAuthoringMetadataValue | undefined
+): value is { [key: string]: CanvasAuthoringMetadataValue } {
+  return value !== undefined && value !== null && !Array.isArray(value) && typeof value === 'object';
 }
 
 export function toCanvasAuthoringMetadata(
@@ -76,7 +118,7 @@ export function toCanvasAuthoringMetadata(
   }
 
   const normalized = toCanvasAuthoringMetadataValue(metadata, new WeakSet<object>());
-  if (normalized == null || Array.isArray(normalized) || typeof normalized !== 'object') {
+  if (!isCanvasAuthoringMetadataObject(normalized)) {
     return undefined;
   }
 

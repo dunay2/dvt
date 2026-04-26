@@ -52,7 +52,10 @@ describe('WorkflowEngine intent log (startRun crash consistency)', () => {
     expect(createSpy).toHaveBeenCalledOnce();
     const intentId = createSpy.mock.results[0]?.value;
     const resolvedIntent = await intentId;
-    const intent = await intentStore.getIntent(resolvedIntent.intentId);
+    const intent = await intentStore.getIntent({
+      tenantId: resolvedIntent.tenantId,
+      intentId: resolvedIntent.intentId,
+    });
     expect(intent?.status).toBe('RESOLVED');
     expect(intent?.runId).toBe('il-resolved-1');
     expect(intent?.provider).toBe('temporal');
@@ -87,7 +90,10 @@ describe('WorkflowEngine intent log (startRun crash consistency)', () => {
 
     expect(createSpy).toHaveBeenCalledOnce();
     const created = await createSpy.mock.results[0]?.value;
-    const intent = await intentStore.getIntent(created.intentId);
+    const intent = await intentStore.getIntent({
+      tenantId: created.tenantId,
+      intentId: created.intentId,
+    });
     expect(intent?.status).toBe('PENDING');
   });
 
@@ -123,7 +129,10 @@ describe('WorkflowEngine intent log (startRun crash consistency)', () => {
     ).rejects.toThrow(/Intent persistence failed after adapter.startRun succeeded/);
 
     const created = await createSpy.mock.results[0]?.value;
-    const intent = await intentStore.getIntent(created.intentId);
+    const intent = await intentStore.getIntent({
+      tenantId: created.tenantId,
+      intentId: created.intentId,
+    });
     expect(intent?.status).toBe('PENDING');
     expect(intent?.engineRunRef).toBeUndefined();
 
@@ -169,7 +178,10 @@ describe('WorkflowEngine intent log (startRun crash consistency)', () => {
     expect(cancelCalled).toBe(true);
 
     const created = await createSpy.mock.results[0]?.value;
-    const intent = await intentStore.getIntent(created.intentId);
+    const intent = await intentStore.getIntent({
+      tenantId: created.tenantId,
+      intentId: created.intentId,
+    });
     // Intent is resolved because compensation succeeded
     expect(intent?.status).toBe('RESOLVED');
     // engineRunRef was set during DISPATCHED phase
@@ -212,7 +224,10 @@ describe('WorkflowEngine intent log (startRun crash consistency)', () => {
 
     // Should be resolved despite cancelRun failure
     const created = await createSpy.mock.results[0]?.value;
-    const intent = await intentStore.getIntent(created.intentId);
+    const intent = await intentStore.getIntent({
+      tenantId: created.tenantId,
+      intentId: created.intentId,
+    });
     expect(intent?.status).toBe('RESOLVED');
   });
 

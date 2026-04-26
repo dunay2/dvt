@@ -387,10 +387,10 @@ sequenceDiagram
     Engine->>Intent: createIntent(...)
     Engine->>Adapter: startRun(...)
     Adapter-->>Engine: EngineRunRef
-    Engine->>Intent: markDispatched(...)
+    Engine->>Intent: markDispatched(ref, ...)
     Engine->>State: bootstrapRunTx(metadata, firstEvents)
     State->>Outbox: enqueue initial events
-    Engine->>Intent: markResolved(...)
+    Engine->>Intent: markResolved(ref)
     Engine-->>API: EngineRunRef
 ````
 

@@ -42,6 +42,10 @@ function buildDraft(args: {
   const nodes = args.nodes ?? args.visibleNodeIds.map((nodeId) => buildNode(nodeId));
 
   return {
+    canvas: {
+      kind: 'dvt:canvas',
+      title: 'Executable subgraph fixture',
+    },
     nodeIds: [...args.visibleNodeIds],
     nodePositions: Object.fromEntries(
       args.visibleNodeIds.map((nodeId, index) => [nodeId, { x: index * 100, y: index * 50 }])

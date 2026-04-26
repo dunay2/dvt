@@ -17,7 +17,9 @@ export function listStaleSnapshotRunsSql(schema: string): string {
   return `
     SELECT m.run_id, m.tenant_id
     FROM ${quoteIdentifier(schema)}.run_metadata m
-    LEFT JOIN ${quoteIdentifier(schema)}.run_snapshots s ON s.run_id = m.run_id
+    LEFT JOIN ${quoteIdentifier(schema)}.run_snapshots s
+      ON s.run_id = m.run_id
+      AND s.tenant_id = m.tenant_id
     LEFT JOIN ${quoteIdentifier(schema)}.run_event_heads h
       ON h.run_id = m.run_id
       AND h.tenant_id = m.tenant_id
@@ -76,7 +78,9 @@ export function isSnapshotStaleSql(schema: string): string {
     SELECT EXISTS (
       SELECT 1
       FROM ${quoteIdentifier(schema)}.run_metadata m
-      LEFT JOIN ${quoteIdentifier(schema)}.run_snapshots s ON s.run_id = m.run_id
+      LEFT JOIN ${quoteIdentifier(schema)}.run_snapshots s
+        ON s.run_id = m.run_id
+        AND s.tenant_id = m.tenant_id
       LEFT JOIN LATERAL (
         SELECT e.run_seq
         FROM ${quoteIdentifier(schema)}.run_events e

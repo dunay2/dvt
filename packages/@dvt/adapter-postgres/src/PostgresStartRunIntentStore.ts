@@ -19,11 +19,16 @@ import type {
   IStartRunIntentStore,
   StartRunIntentTransitionTarget,
   StartRunIntent,
+  StartRunIntentRef,
   StartRunIntentStatus,
 } from '@dvt/engine';
 import { getAllowedFromStatuses } from '@dvt/engine';
-import { DatabaseError, Pool } from 'pg';
+import { DatabaseError, Pool, type PoolClient } from 'pg';
 
+import { PostgresAdapterClientSession } from './PostgresAdapterClientSession.js';
+import { enterPostgresMaintenanceContext } from './PostgresMaintenanceAccess.js';
+import { PostgresSchemaManager } from './PostgresSchemaManager.js';
+import { POSTGRES_SERVICE_ACCESS } from './PostgresServiceAccessCapability.js';
 import { normalizeSchema, quoteIdentifier } from './sqlUtils.js';
 import { StartRunIntentSchemaManager } from './StartRunIntentSchemaManager.js';
 
@@ -72,14 +77,14 @@ interface TransitionOutcomeRow {
 
 interface DispatchTransitionCommand {
   kind: 'dispatch';
-  intentId: IntentId;
+  ref: StartRunIntentRef;
   engineRunRef: EngineRunRef;
   updatedAt: IntentTimestamp;
 }
 
 interface StatusTransitionCommand {
   kind: 'status';
-  intentId: IntentId;
+  ref: StartRunIntentRef;
   targetStatus: NonDispatchTransitionTarget;
   allowedFromStatuses: readonly StartRunIntentStatus[];
   updatedAt: IntentTimestamp;
@@ -105,6 +110,7 @@ const MAX_ORPHAN_LIMIT = 1000;
 const INVALID_ORPHAN_LIMIT_MESSAGE = 'INVALID_LIMIT: listOrphaned limit must be between 1 and 1000';
 const ACTIVE_INTENT_UNIQUE_INDEX = 'start_run_intents_active_run_uniq';
 const PG_SQLSTATE_UNIQUE_VIOLATION = '23505';
+const START_RUN_INTENT_RECONCILER_SERVICE_ACCESS = POSTGRES_SERVICE_ACCESS.startRunIntentReconciler;
 
 export interface PostgresStartRunIntentStoreConfig {
   connectionString?: string;
@@ -114,6 +120,7 @@ export interface PostgresStartRunIntentStoreConfig {
   statementTimeoutMs?: number;
   queryTimeoutMs?: number;
   schemaManager?: StartRunIntentSchemaManager;
+  assumeSchemaReady?: boolean;
 }
 
 export class PostgresStartRunIntentStore implements IStartRunIntentStore {
@@ -122,12 +129,15 @@ export class PostgresStartRunIntentStore implements IStartRunIntentStore {
   private readonly schema: string;
   private readonly now: () => string;
   private readonly schemaManager: StartRunIntentSchemaManager;
+  private readonly clientSession: PostgresAdapterClientSession;
   private migratePromise: Promise<void> | null = null;
   private migrated = false;
 
   constructor(config: PostgresStartRunIntentStoreConfig = {}) {
     this.schema = normalizeSchema(config.schema ?? 'dvt');
     this.now = config.now ?? (() => new Date().toISOString());
+    const statementTimeoutMs =
+      config.statementTimeoutMs ?? Number(process.env['DVT_PG_STATEMENT_TIMEOUT_MS'] ?? 0);
 
     if (config.pool) {
       this.pool = config.pool;
@@ -139,18 +149,19 @@ export class PostgresStartRunIntentStore implements IStartRunIntentStore {
           process.env['DVT_PG_URL'] ??
           process.env['DATABASE_URL'] ??
           'postgresql://dvt:dvt@localhost:5432/dvt',
-        statement_timeout:
-          config.statementTimeoutMs ?? Number(process.env['DVT_PG_STATEMENT_TIMEOUT_MS'] ?? 0),
+        statement_timeout: statementTimeoutMs,
         query_timeout: config.queryTimeoutMs ?? Number(process.env['DVT_PG_QUERY_TIMEOUT_MS'] ?? 0),
       });
       this.ownsPool = true;
     }
+    this.clientSession = new PostgresAdapterClientSession(this.pool, statementTimeoutMs);
     this.schemaManager =
       config.schemaManager ??
       new StartRunIntentSchemaManager({
         pool: this.pool,
         schema: this.schema,
       });
+    this.migrated = config.assumeSchemaReady === true;
   }
 
   async migrate(): Promise<void> {
@@ -168,9 +179,7 @@ export class PostgresStartRunIntentStore implements IStartRunIntentStore {
   }
 
   async close(): Promise<void> {
-    if (this.ownsPool) {
-      await this.pool.end();
-    }
+    await this.clientSession.close(this.ownsPool);
   }
 
   async createIntent(input: CreateIntentInput): Promise<StartRunIntent> {
@@ -178,33 +187,36 @@ export class PostgresStartRunIntentStore implements IStartRunIntentStore {
     const now = this.now();
     let result;
     try {
-      result = await this.pool.query<IntentRow>(
-        `
-          WITH inserted AS (
-            INSERT INTO ${quoteIdentifier(this.schema)}.start_run_intents (
-              intent_id,
-              tenant_id,
-              run_id,
-              provider,
-              status,
-              engine_run_ref,
-              created_at,
-              updated_at
+      result = await this.withTenantContext(input.tenantId, (client) =>
+        client.query<IntentRow>(
+          `
+            WITH inserted AS (
+              INSERT INTO ${quoteIdentifier(this.schema)}.start_run_intents (
+                intent_id,
+                tenant_id,
+                run_id,
+                provider,
+                status,
+                engine_run_ref,
+                created_at,
+                updated_at
+              )
+              VALUES ($1, $2, $3, $4, 'PENDING', NULL, $5::timestamptz, $6::timestamptz)
+              ON CONFLICT (intent_id) DO NOTHING
+              RETURNING ${INTENT_SELECT_COLUMNS}
             )
-            VALUES ($1, $2, $3, $4, 'PENDING', NULL, $5::timestamptz, $6::timestamptz)
-            ON CONFLICT (intent_id) DO NOTHING
-            RETURNING ${INTENT_SELECT_COLUMNS}
-          )
-          SELECT ${INTENT_SELECT_COLUMNS}
-          FROM inserted
-          UNION ALL
-          SELECT ${INTENT_SELECT_COLUMNS}
-          FROM ${quoteIdentifier(this.schema)}.start_run_intents
-          WHERE intent_id = $1
-            AND NOT EXISTS (SELECT 1 FROM inserted)
-          LIMIT 1
-        `,
-        [input.intentId, input.tenantId, input.runId, input.provider, input.createdAt, now]
+            SELECT ${INTENT_SELECT_COLUMNS}
+            FROM inserted
+            UNION ALL
+            SELECT ${INTENT_SELECT_COLUMNS}
+            FROM ${quoteIdentifier(this.schema)}.start_run_intents
+            WHERE intent_id = $1
+              AND tenant_id = $2
+              AND NOT EXISTS (SELECT 1 FROM inserted)
+            LIMIT 1
+          `,
+          [input.intentId, input.tenantId, input.runId, input.provider, input.createdAt, now]
+        )
       );
     } catch (error: unknown) {
       if (isActiveIntentConflict(error)) {
@@ -219,40 +231,40 @@ export class PostgresStartRunIntentStore implements IStartRunIntentStore {
     return toIntent(toPersistedIntentState(row));
   }
 
-  async markDispatched(intentId: IntentId, engineRunRef: EngineRunRef): Promise<void> {
+  async markDispatched(ref: StartRunIntentRef, engineRunRef: EngineRunRef): Promise<void> {
     this.ready();
     const command: DispatchTransitionCommand = {
       kind: 'dispatch',
-      intentId,
+      ref,
       engineRunRef,
       updatedAt: this.now(),
     };
     const outcome = await this.resolveTransitionOutcome(command);
-    this.assertTransitionOutcome(intentId, outcome, 'DISPATCHED');
+    this.assertTransitionOutcome(ref.intentId, outcome, 'DISPATCHED');
   }
 
-  async markResolved(intentId: IntentId): Promise<void> {
-    await this.applyTransition(intentId, 'RESOLVED');
+  async markResolved(ref: StartRunIntentRef): Promise<void> {
+    await this.applyTransition(ref, 'RESOLVED');
   }
 
-  async markExpired(intentId: IntentId): Promise<void> {
-    await this.applyTransition(intentId, 'EXPIRED');
+  async markExpired(ref: StartRunIntentRef): Promise<void> {
+    await this.applyTransition(ref, 'EXPIRED');
   }
 
   private async applyTransition(
-    intentId: IntentId,
+    ref: StartRunIntentRef,
     toStatus: NonDispatchTransitionTarget
   ): Promise<void> {
     this.ready();
     const command: StatusTransitionCommand = {
       kind: 'status',
-      intentId,
+      ref,
       targetStatus: toStatus,
       allowedFromStatuses: getAllowedFromStatuses(toStatus),
       updatedAt: this.now(),
     };
     const outcome = await this.resolveTransitionOutcome(command);
-    this.assertTransitionOutcome(intentId, outcome, toStatus);
+    this.assertTransitionOutcome(ref.intentId, outcome, toStatus);
   }
 
   async listOrphaned(
@@ -262,16 +274,18 @@ export class PostgresStartRunIntentStore implements IStartRunIntentStore {
   ): Promise<StartRunIntent[]> {
     this.ready();
     const criteria = this.buildOrphanedIntentCriteria(thresholdMs, nowMs, limit);
-    const result = await this.pool.query<IntentRow>(
-      `
-        SELECT ${INTENT_SELECT_COLUMNS}
-        FROM ${quoteIdentifier(this.schema)}.start_run_intents
-        WHERE (status = 'PENDING' AND created_at < $1::timestamptz)
-           OR (status = 'DISPATCHED' AND updated_at < $1::timestamptz)
-        ORDER BY created_at ASC
-        LIMIT $2
-      `,
-      [criteria.cutoffIso, criteria.limit]
+    const result = await this.withServiceContext((client) =>
+      client.query<IntentRow>(
+        `
+          SELECT ${INTENT_SELECT_COLUMNS}
+          FROM ${quoteIdentifier(this.schema)}.start_run_intents
+          WHERE (status = 'PENDING' AND created_at < $1::timestamptz)
+             OR (status = 'DISPATCHED' AND updated_at < $1::timestamptz)
+          ORDER BY created_at ASC
+          LIMIT $2
+        `,
+        [criteria.cutoffIso, criteria.limit]
+      )
     );
     return result.rows.map((row) => toIntent(toPersistedIntentState(row)));
   }
@@ -281,32 +295,35 @@ export class PostgresStartRunIntentStore implements IStartRunIntentStore {
   ): Promise<TransitionOutcomeRow> {
     const mutation = this.buildTransitionMutation(command);
     const isDispatch = command.kind === 'dispatch';
-    const result = await this.pool.query<TransitionOutcomeRow>(
-      `
-        WITH updated AS (
-          ${mutation.sql}
-        ),
-        existing AS (
-          SELECT status, engine_run_ref
-          FROM ${quoteIdentifier(this.schema)}.start_run_intents
-          WHERE intent_id = $1
-        )
-        SELECT
-          CASE
-            WHEN EXISTS (SELECT 1 FROM updated) THEN 'UPDATED'
-            WHEN NOT EXISTS (SELECT 1 FROM existing) THEN 'NOT_FOUND'
-            ${
-              isDispatch
-                ? `WHEN (SELECT status FROM existing) = 'DISPATCHED'
-                     AND (SELECT engine_run_ref FROM existing) = $2::jsonb THEN 'NO_OP'
-                   WHEN (SELECT status FROM existing) = 'DISPATCHED' THEN 'CONFLICT'`
-                : ''
-            }
-            ELSE 'INVALID'
-          END::text AS outcome,
-          (SELECT status::text FROM existing LIMIT 1) AS current_status
-      `,
-      mutation.params
+    const result = await this.withTenantContext(command.ref.tenantId, (client) =>
+      client.query<TransitionOutcomeRow>(
+        `
+          WITH updated AS (
+            ${mutation.sql}
+          ),
+          existing AS (
+            SELECT status, engine_run_ref
+            FROM ${quoteIdentifier(this.schema)}.start_run_intents
+            WHERE tenant_id = $1
+              AND intent_id = $2
+          )
+          SELECT
+            CASE
+              WHEN EXISTS (SELECT 1 FROM updated) THEN 'UPDATED'
+              WHEN NOT EXISTS (SELECT 1 FROM existing) THEN 'NOT_FOUND'
+              ${
+                isDispatch
+                  ? `WHEN (SELECT status FROM existing) = 'DISPATCHED'
+                       AND (SELECT engine_run_ref FROM existing) = $3::jsonb THEN 'NO_OP'
+                     WHEN (SELECT status FROM existing) = 'DISPATCHED' THEN 'CONFLICT'`
+                  : ''
+              }
+              ELSE 'INVALID'
+            END::text AS outcome,
+            (SELECT status::text FROM existing LIMIT 1) AS current_status
+        `,
+        mutation.params
+      )
     );
     return this.normalizeTransitionOutcome(result.rows[0]);
   }
@@ -317,27 +334,35 @@ export class PostgresStartRunIntentStore implements IStartRunIntentStore {
         sql: `
           UPDATE ${quoteIdentifier(this.schema)}.start_run_intents
           SET status = 'DISPATCHED',
-              engine_run_ref = $2::jsonb,
-              updated_at = $3::timestamptz
-          WHERE intent_id = $1
+              engine_run_ref = $3::jsonb,
+              updated_at = $4::timestamptz
+          WHERE tenant_id = $1
+            AND intent_id = $2
             AND status = 'PENDING'
           RETURNING status
         `,
-        params: [command.intentId, JSON.stringify(command.engineRunRef), command.updatedAt],
+        params: [
+          command.ref.tenantId,
+          command.ref.intentId,
+          JSON.stringify(command.engineRunRef),
+          command.updatedAt,
+        ],
       };
     }
 
     return {
       sql: `
         UPDATE ${quoteIdentifier(this.schema)}.start_run_intents
-        SET status = $2,
-            updated_at = $3::timestamptz
-        WHERE intent_id = $1
-          AND status::text = ANY($4::text[])
+        SET status = $3,
+            updated_at = $4::timestamptz
+        WHERE tenant_id = $1
+          AND intent_id = $2
+          AND status::text = ANY($5::text[])
         RETURNING status
       `,
       params: [
-        command.intentId,
+        command.ref.tenantId,
+        command.ref.intentId,
         command.targetStatus,
         command.updatedAt,
         command.allowedFromStatuses,
@@ -345,18 +370,38 @@ export class PostgresStartRunIntentStore implements IStartRunIntentStore {
     };
   }
 
-  async getIntent(intentId: IntentId): Promise<StartRunIntent | null> {
+  async getIntent(ref: StartRunIntentRef): Promise<StartRunIntent | null> {
     this.ready();
-    const result = await this.pool.query<IntentRow>(
-      `
-        SELECT ${INTENT_SELECT_COLUMNS}
-        FROM ${quoteIdentifier(this.schema)}.start_run_intents
-        WHERE intent_id = $1
-      `,
-      [intentId]
+    const result = await this.withTenantContext(ref.tenantId, (client) =>
+      client.query<IntentRow>(
+        `
+          SELECT ${INTENT_SELECT_COLUMNS}
+          FROM ${quoteIdentifier(this.schema)}.start_run_intents
+          WHERE tenant_id = $1
+            AND intent_id = $2
+        `,
+        [ref.tenantId, ref.intentId]
+      )
     );
     const row = result.rows[0];
     return row ? toIntent(toPersistedIntentState(row)) : null;
+  }
+
+  private async withServiceContext<T>(fn: (client: PoolClient) => Promise<T>): Promise<T> {
+    return this.clientSession.withClient(async (client) => {
+      await enterPostgresMaintenanceContext(client, START_RUN_INTENT_RECONCILER_SERVICE_ACCESS);
+      return fn(client);
+    });
+  }
+
+  private async withTenantContext<T>(
+    tenantId: TenantId,
+    fn: (client: PoolClient) => Promise<T>
+  ): Promise<T> {
+    return this.clientSession.withClient(async (client) => {
+      await PostgresSchemaManager.setTenantContext(client, tenantId);
+      return fn(client);
+    });
   }
 
   private normalizeTransitionOutcome(row: TransitionOutcomeRow | undefined): TransitionOutcomeRow {

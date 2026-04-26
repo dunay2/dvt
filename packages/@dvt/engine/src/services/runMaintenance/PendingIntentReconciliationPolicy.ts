@@ -112,7 +112,10 @@ export class PendingIntentReconciliationPolicy {
   ): Promise<ReconcileOrphanedIntentOutcome> {
     try {
       await adapter.cancelRun(runRef);
-      await this.deps.intentStore.markExpired(intent.intentId);
+      await this.deps.intentStore.markExpired({
+        tenantId: intent.tenantId,
+        intentId: intent.intentId,
+      });
       this.deps.observability.incrementCounter(
         RUN_MAINTENANCE_METRIC.intentExpiredAfterCancelTotal,
         {
@@ -166,7 +169,10 @@ export class PendingIntentReconciliationPolicy {
       return { deferred: intent.intentId };
     }
 
-    await this.deps.intentStore.markExpired(intent.intentId);
+    await this.deps.intentStore.markExpired({
+      tenantId: intent.tenantId,
+      intentId: intent.intentId,
+    });
     this.deps.observability.info({
       msg: RUN_MAINTENANCE_MESSAGE.pendingIntentExpiredNoWorkflow,
       context: traceContext,

@@ -42,7 +42,7 @@ export class PostgresRunEventStore implements RunEventWriteRepository, RunEventR
     envelopes: EventInput[]
   ): Promise<RunEventAppendResult> {
     await this.storage.acquireRunLock(executor, runId);
-    const baseRunSeq = await this.storage.readMaxRunSeq(executor, runId);
+    const baseRunSeq = await this.storage.readMaxRunSeq(executor, tenantId, runId);
     const { appended, deduped, lastAppendedRunSeq } = await this.insertAndDedupEvents(
       executor,
       tenantId,
@@ -142,6 +142,7 @@ export class PostgresRunEventStore implements RunEventWriteRepository, RunEventR
 
     const existing = await this.storage.selectExistingEvent(
       executor,
+      withSeq.tenantId,
       runId,
       withSeq.idempotencyKey
     );

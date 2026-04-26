@@ -140,7 +140,10 @@ export class StartRunExecutionService {
       'adapter.startRun'
     );
     try {
-      await this.deps.intentStore.markDispatched(intentId, runRef);
+      await this.deps.intentStore.markDispatched(
+        { tenantId: resolvedContext.tenantId, intentId },
+        runRef
+      );
     } catch (markDispatchedError) {
       throw new PostStartIntentPersistenceError(intentId, runRef, markDispatchedError);
     }

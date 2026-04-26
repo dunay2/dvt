@@ -30,6 +30,11 @@ export interface CreateIntentInput {
   createdAt: string;
 }
 
+export interface StartRunIntentRef {
+  tenantId: string;
+  intentId: string;
+}
+
 /**
  * Commands mutate intent state.
  */
@@ -57,9 +62,9 @@ export interface IStartRunIntentCommandStore {
    * throw `IntentActiveConflictError` - this indicates a caller bug.
    */
   createIntent(input: CreateIntentInput): Promise<StartRunIntent>;
-  markDispatched(intentId: string, engineRunRef: EngineRunRef): Promise<void>;
-  markResolved(intentId: string): Promise<void>;
-  markExpired(intentId: string): Promise<void>;
+  markDispatched(ref: StartRunIntentRef, engineRunRef: EngineRunRef): Promise<void>;
+  markResolved(ref: StartRunIntentRef): Promise<void>;
+  markExpired(ref: StartRunIntentRef): Promise<void>;
 }
 
 /**
@@ -67,7 +72,7 @@ export interface IStartRunIntentCommandStore {
  */
 export interface IStartRunIntentQueryStore {
   listOrphaned(thresholdMs: number, nowMs: number, limit?: number): Promise<StartRunIntent[]>;
-  getIntent(intentId: string): Promise<StartRunIntent | null>;
+  getIntent(ref: StartRunIntentRef): Promise<StartRunIntent | null>;
 }
 
 export interface IStartRunIntentStore

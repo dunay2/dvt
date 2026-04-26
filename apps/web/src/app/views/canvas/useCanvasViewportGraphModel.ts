@@ -73,35 +73,48 @@ function projectViewportEdges(args: {
 }
 
 function viewportEdgesEqual(left: Edge[], right: Edge[]): boolean {
-  return (
-    left.length === right.length &&
-    left.every(
-      (edge, index) =>
-        edge.id === right[index]?.id &&
-        edge.source === right[index]?.source &&
-        edge.target === right[index]?.target
-    )
-  );
+  return orderedArraysEqual(left, right, viewportEdgeEqual);
 }
 
 function viewportNodesEqual(left: Node[], right: Node[]): boolean {
-  return (
-    left.length === right.length &&
-    left.every((node, index) => {
-      const nextNode = right[index];
+  return orderedArraysEqual(left, right, viewportNodeEqual);
+}
 
-      return (
-        nextNode != null &&
-        node.id === nextNode.id &&
-        node.position.x === nextNode.position.x &&
-        node.position.y === nextNode.position.y &&
-        node.data.showColumns === nextNode.data.showColumns &&
-        node.data.name === nextNode.data.name &&
-        node.data.description === nextNode.data.description &&
-        node.data.path === nextNode.data.path &&
-        node.data.status === nextNode.data.status
-      );
-    })
+function orderedArraysEqual<T>(
+  left: readonly T[],
+  right: readonly T[],
+  areEqual: (leftItem: T, rightItem: T) => boolean
+): boolean {
+  if (left.length !== right.length) {
+    return false;
+  }
+
+  return left.every((item, index) => areEqual(item, right[index] as T));
+}
+
+function viewportEdgeEqual(left: Edge, right: Edge): boolean {
+  return left.id === right.id && left.source === right.source && left.target === right.target;
+}
+
+function viewportNodeEqual(left: Node, right: Node): boolean {
+  return (
+    left.id === right.id &&
+    viewportNodePositionEqual(left, right) &&
+    viewportNodeDataEqual(left.data, right.data)
+  );
+}
+
+function viewportNodePositionEqual(left: Node, right: Node): boolean {
+  return left.position.x === right.position.x && left.position.y === right.position.y;
+}
+
+function viewportNodeDataEqual(left: Node['data'], right: Node['data']): boolean {
+  return (
+    left.showColumns === right.showColumns &&
+    left.name === right.name &&
+    left.description === right.description &&
+    left.path === right.path &&
+    left.status === right.status
   );
 }
 
