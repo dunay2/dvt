@@ -200,17 +200,17 @@ Pendiente residual:
 - consultas tenant-scoped mantienen plan alineado con schema: si.
 - nombres de tabla en SQL generado van citados: si.
 
-2. Contrato multi-tenant:
+1. Contrato multi-tenant:
 
 - ADR-0004 declara explicitamente `runId` global: si.
 - deduplicacion y lectura quedan consistentes con el contrato: si.
 
-3. Gobernanza de migraciones:
+1. Gobernanza de migraciones:
 
 - hardening declarado como idempotente y no historico por step: si.
 - rollback no induce falsa reversibilidad: si.
 
-4. Calidad de mantenimiento:
+1. Calidad de mantenimiento:
 
 - sin duplicacion innecesaria de `toSqlStringLiteral`: si.
 - helper para migracion conjunta disponible, adoptado y cubierto por tests: si.
