@@ -1963,12 +1963,12 @@ tasks:
       The productization route remains active, but the core Canvas authoring path has materially
       advanced. `TF-E2-A` is near closure on the shared protected authoring-draft boundary,
       `TF-E2-D` closed the route-owned Inspector, `TF-E2-E` closed the selected-closure proof
-      matrix, `TF-E2-K` closed the typed host and first-canvas cycle, and `TF-E2-B/C` now close
+      matrix, `TF-E2-K` closed the typed host and first-canvas cycle, `TF-E2-B/C` now close
       duplicate-node and reconnect-edge semantics without inflating passive adapters or the draft
-      aggregate component. `TF-E2-L` is now queued from the 2026-04-25 Fowler hard QA to close
-      graph-strategy ownership, active canvas-kind strategy resolution, DBT fail-closed validation,
-      and canonical admission drift before `TF-E2` can move to review.
-    last_verified: '2026-04-25'
+      aggregate component, and `TF-E2-L` now closes the 2026-04-25 Fowler hard QA graph-strategy
+      ownership drift. Remaining TF-E2 movement should focus on parent-level acceptance and any
+      explicitly open protected-draft boundary work, not on reopening graph-strategy ownership.
+    last_verified: '2026-04-26'
   - task_id: TF-E2-A
     parent_task: TF-E2
     priority: P0
@@ -2471,7 +2471,7 @@ tasks:
   - task_id: TF-E2-L
     parent_task: TF-E2
     priority: P0
-    status: queued
+    status: done
     objective: >-
       close the Canvas graph-strategy ownership hardening found by the 2026-04-25 Fowler QA so the
       active canvas document owns strategy selection, DBT and DVT adapters fail closed
@@ -2485,12 +2485,13 @@ tasks:
       strategy policy, and docs plus diagrams describe the corrected component ownership.
     complexity: M
     effort_points: 5
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260425-canvas-graph-strategy-fowler-hard-qa-review.md
       - docs/architecture/components/web/graph/graph-frontend-architecture.md
       - docs/architecture/components/web/graph/canvas-inspector-authoring-component.md
       - docs/architecture/components/web/graph/canvas-playground-host-component.md
+      - docs/planning/closeouts/20260426-tf-e2-l-canvas-strategy-boundary-truth-sync-closeout.md
       - apps/web/src/app/plugins/graphStrategyContracts.ts
       - apps/web/src/app/plugins/graphStrategyRegistry.ts
       - apps/web/src/app/plugins/dbt/dbtNodeAdapter.ts
@@ -2499,12 +2500,15 @@ tasks:
       - apps/web/src/app/views/canvas/canvasNodeDropAggregate.ts
       - apps/web/src/app/views/canvas/useCanvasControllerEnvironment.ts
       - apps/web/src/app/views/canvas/canvasDraftAuthoringComponent.architecture.test.ts
+      - tools/ci/planning-truth-sync.test.mjs
     status_reason: >-
-      Queued from hard QA. The preceding fix correctly removed false topology policy from authoring,
-      but the strategy boundary still has active-document drift, DBT adapter validation drift,
-      duplicated canonical vocabulary, and viewport-coupled node admission. This task is the
-      remediation route before TF-E2 review closure.
-    last_verified: '2026-04-25'
+      Closed. The governed Fowler QA now records `TF-E2-L` as historical closure, the active code
+      resolves graph strategy from `canvasDocument.kind`, DBT and DVT graph adapters fail closed at
+      plugin boundaries, canonical guard vocabularies have a single source, canonical node admission
+      is separate from viewport projection, and semantic architecture tests cover the ownership
+      model. The 2026-04-26 truth-sync adds a CI-level planning guard so Lane E cannot drift back to
+      `queued` while the governed QA verdict declares the task closed.
+    last_verified: '2026-04-26'
   - task_id: TF-E2-E-B
     parent_task: TF-E2-E
     priority: P0

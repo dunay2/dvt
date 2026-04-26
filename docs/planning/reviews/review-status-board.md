@@ -73,10 +73,10 @@ Additional active rationale:
 
 - [20260425 Canvas graph strategy Fowler hard QA review](./architecture-and-governance/20260425-canvas-graph-strategy-fowler-hard-qa-review.md)
   - domain: `architecture-and-governance`
-  - role: current hard QA intake for Canvas graph-strategy ownership, active canvas-kind strategy resolution, DBT fail-closed adapter validation, canonical admission versus viewport projection, and semantic architecture fitness functions
+  - role: accepted hard QA closure for Canvas graph-strategy ownership, active canvas-kind strategy resolution, DBT fail-closed adapter validation, canonical admission versus viewport projection, and semantic architecture fitness functions
   - linkage: `TF-E2`, `TF-E2-L`
-  - status: `queued`
-  - progress: `0%`
+  - status: `accepted`
+  - progress: `100%`
 
 - [20260426 Canvas runtime policy architecture review](./architecture-and-governance/20260426-canvas-runtime-policy-architecture-review.md)
   - domain: `architecture-and-governance`

@@ -1,8 +1,8 @@
 ---
 title: Canvas graph strategy Fowler hard QA review
-status: Active
+status: Accepted
 owner: Frontend / Architecture
-last_reviewed: 2026-04-25
+last_reviewed: 2026-04-26
 planning_type: review
 qa_artifact: true
 ---
