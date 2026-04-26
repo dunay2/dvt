@@ -14,7 +14,7 @@ export type UseCanvasExecutionActionsParams = {
   plansService: IPlansPort;
   runsService: IRunsPort;
   workspaceService: IWorkspacePort;
-  executionStrategy: CanvasExecutionStrategy;
+  executionStrategy: CanvasExecutionStrategy | null;
   canonicalNodes: CanonicalNode[];
   canonicalEdges: CanonicalEdge[];
   selectedNodeIds: string[];

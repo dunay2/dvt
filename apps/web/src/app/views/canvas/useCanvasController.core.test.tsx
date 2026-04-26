@@ -206,11 +206,13 @@ describe('useCanvasController core', () => {
     );
     expect(harness.mocks.useCanvasGraphHandlers).toHaveBeenLastCalledWith(
       expect.objectContaining({
+        graphStrategy: null,
         canEditEdges: false,
       })
     );
     expect(harness.mocks.useCanvasExecutionActions).toHaveBeenLastCalledWith(
       expect.objectContaining({
+        executionStrategy: null,
         canPlan: false,
         canRun: false,
       })

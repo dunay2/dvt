@@ -14,7 +14,7 @@ import {
 
 type DeriveCanvasExecutionStateArgs = {
   canRun: boolean;
-  executionStrategy: CanvasExecutionStrategy;
+  executionStrategy: CanvasExecutionStrategy | null;
   currentPlan: PlanViewModel | null;
   lastPlannedDraftSignature: string | null;
   canonicalNodes: CanonicalNode[];
@@ -56,13 +56,13 @@ export function deriveCanvasExecutionState({
     lastPlannedDraftSignature !== transformationValidation.draftSignature;
   const canStartRun =
     canRun &&
-    executionStrategy.kind === 'transformation_preview' &&
+    executionStrategy?.kind === 'transformation_preview' &&
     currentPlan != null &&
     hasPersistedPlanForRun &&
     transformationValidation.valid &&
     !isCurrentPlanStale;
   const planStatusSummary =
-    executionStrategy.kind === 'not_executable'
+    executionStrategy == null || executionStrategy.kind === 'not_executable'
       ? canvasViewCopy.canvasExecutionUnavailableMessage
       : buildPlanStatusSummary({
           canRun,

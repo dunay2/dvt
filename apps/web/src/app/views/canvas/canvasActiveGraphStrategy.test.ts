@@ -8,6 +8,8 @@ import {
 import {
   resolveActiveCanvasAuthoringMode,
   resolveActiveCanvasGraphStrategy,
+  selectActiveCanvasExecutionStrategy,
+  selectActiveCanvasGraphStrategy,
 } from './canvasActiveGraphStrategy';
 
 function buildDraftReadModelWithCanvasKind(kind: string): CanvasDraftReadModel {
@@ -75,5 +77,26 @@ describe('resolveActiveCanvasGraphStrategy', () => {
       pluginId: 'dbt',
       reason: 'disabled_for_workspace',
     });
+  });
+
+  it('does not invent fallback strategies for unsupported or disabled active runtimes', () => {
+    const unsupported = resolveActiveCanvasGraphStrategy(
+      buildDraftReadModelWithCanvasKind('unknown')
+    );
+    const disabled = resolveActiveCanvasGraphStrategy(
+      buildDraftReadModelWithCanvasKind('dbt'),
+      {
+        plugins: {
+          dbt: {
+            available: false,
+          },
+        },
+      }
+    );
+
+    expect(selectActiveCanvasGraphStrategy(unsupported)).toBeNull();
+    expect(selectActiveCanvasExecutionStrategy(unsupported)).toBeNull();
+    expect(selectActiveCanvasGraphStrategy(disabled)).toBeNull();
+    expect(selectActiveCanvasExecutionStrategy(disabled)).toBeNull();
   });
 });

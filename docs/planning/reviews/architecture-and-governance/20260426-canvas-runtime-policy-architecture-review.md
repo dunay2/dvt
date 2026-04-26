@@ -241,6 +241,10 @@ No critical findings.
     (red: `disabled_plugin` was still collapsed into `unsupported_kind`)
   - `pnpm --filter @dvt/web test -- canvasActiveGraphStrategy.test.ts canvasRuntimePolicy.test.ts canvasRouteInteractionState.test.ts Canvas.routeStates.test.tsx copy.test.ts canvasDraftAuthoringComponent.architecture.test.ts`
     (green: `disabled_plugin` branch implemented)
+  - `pnpm --filter @dvt/web test -- canvasActiveGraphStrategy.test.ts canvasRuntimePolicy.test.ts useCanvasController.core.test.tsx`
+    (red: unsupported runtime selectors still returned transformation fallback;
+    green: selectors returned `null` and `missing_document` command posture was
+    covered)
   - `pnpm --filter @dvt/web build:e2e`
   - `pnpm exec cypress verify`
   - `$env:ELECTRON_RUN_AS_NODE=$null; pnpm exec cypress verify`
@@ -261,6 +265,9 @@ No critical findings.
   - post-review correction proved that registered but capability-disabled
     canvas kinds resolve to `disabled_plugin`, deny every mutating command, and
     render distinct route copy from unknown persisted kinds.
+  - post-review correction proved that unsupported or disabled active runtimes
+    do not expose a fallback graph or execution strategy to controller
+    consumers.
   - `pnpm --filter @dvt/web typecheck`, `pnpm --filter @dvt/web test`,
     `pnpm lint`, `pnpm lint:md:changed`, and `pnpm qa:artifact:check` passed.
   - `pnpm verify:prepush` passed with changed-file checks, QA artifact check,
@@ -498,6 +505,11 @@ Progress note on 2026-04-26:
   `canvasActiveGraphStrategy.ts` and `canvasRuntimePolicy.ts` instead of being
   collapsed into `unsupported_kind`. Route interaction state also formats
   disabled registered plugins separately from unknown persisted canvas kinds.
+- Post-review correction, 2026-04-26: active graph and execution selectors now
+  return `null` for `unsupported_kind` and `disabled_plugin`, while
+  `missing_document` has explicit command-posture coverage proving graph
+  mutations and execution commands remain blocked until a real canvas document
+  exists.
 
 #### `TF-E2-POL-C` Route shell and inspector posture through policy
 

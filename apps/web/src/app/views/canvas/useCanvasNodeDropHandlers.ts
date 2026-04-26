@@ -56,7 +56,8 @@ export function useCanvasNodeDropHandlers({
         parseCanonicalNodeDragPayload(
           event.dataTransfer.getData(CANONICAL_NODE_DRAG_MIME_TYPE)
         ) ??
-        graphStrategy.parseDropPayload(event.dataTransfer);
+        graphStrategy?.parseDropPayload(event.dataTransfer) ??
+        null;
       if (!canonicalNode) {
         return;
       }

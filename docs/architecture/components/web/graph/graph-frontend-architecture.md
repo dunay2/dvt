@@ -285,6 +285,9 @@ Runtime invariants:
   capabilities is `disabled_plugin`, not `unsupported_kind`; this preserves the
   distinction between operator-disabled plugins and corrupt or unknown stored
   canvas documents.
+- `unsupported_kind` and `disabled_plugin` do not have an active
+  `CanvasGraphStrategy` or `CanvasExecutionStrategy`; selectors must return
+  absence instead of defaulting to `transformation`.
 
 ## Canvas Runtime Policy
 
@@ -349,6 +352,7 @@ sequenceDiagram
 
   Route->>Runtime: draft read model + runtime capabilities
   Runtime-->>Route: active runtime, unsupported kind, or disabled plugin
+  Route->>Route: select strategy/execution or null for blocked runtime
   Route->>Policy: runtime + permissions + draft posture
   Policy-->>VM: shell, Inspector, and toolbar command posture
   Policy-->>Runner: allowsCanonicalNode
@@ -462,6 +466,8 @@ string checks. Current semantic coverage includes:
 - disabled registered plugin posture remaining distinct from unsupported kind
   across active runtime resolution, route interaction state, and route-visible
   copy;
+- active graph and execution selectors returning `null` instead of
+  transformation fallback for unsupported or disabled runtime states;
 - pure node-admission transaction results for add and duplicate-noop paths;
 - pure edge-admission transaction results for confirmation and reconnect paths;
 - active runtime catalog rejection before node create/drop side effects;

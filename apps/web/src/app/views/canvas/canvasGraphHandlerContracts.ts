@@ -34,7 +34,7 @@ export type CanvasGraphInteractionEffects = {
 };
 
 export type CanvasGraphInteractionPolicy = {
-  graphStrategy: CanvasGraphStrategy;
+  graphStrategy: CanvasGraphStrategy | null;
   canEditEdges: boolean;
   runtimeCapabilities?: RuntimeCapabilities;
   columnLevelLineageEnabled: boolean;
@@ -70,7 +70,7 @@ export type CanvasNodeAuthoringEffects = {
 };
 
 export type CanvasNodeAuthoringPolicy = {
-  graphStrategy: CanvasGraphStrategy;
+  graphStrategy: CanvasGraphStrategy | null;
   canEditEdges: boolean;
   columnLevelLineageEnabled: boolean;
   allowsCanonicalNode: (node: CanonicalNode) => boolean;
@@ -117,7 +117,7 @@ export type CanvasNodeDropState = {
 };
 
 export type CanvasNodeDropPolicy = {
-  graphStrategy: CanvasGraphStrategy;
+  graphStrategy: CanvasGraphStrategy | null;
   canEditEdges: boolean;
   columnLevelLineageEnabled: boolean;
   allowsCanonicalNode: (node: CanonicalNode) => boolean;

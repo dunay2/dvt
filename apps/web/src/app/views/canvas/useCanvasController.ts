@@ -74,12 +74,10 @@ export function useCanvasController() {
     [capabilities, draftReadModel?.record?.draft.canvas.kind]
   );
   const graphStrategy = selectActiveCanvasGraphStrategy(
-    activeCanvasGraphStrategyResolution,
-    capabilities
+    activeCanvasGraphStrategyResolution
   );
   const executionStrategy = selectActiveCanvasExecutionStrategy(
-    activeCanvasGraphStrategyResolution,
-    capabilities
+    activeCanvasGraphStrategyResolution
   );
   const canvasAuthoringMode = useMemo(
     () => resolveActiveCanvasAuthoringMode(draftReadModel),

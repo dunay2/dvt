@@ -84,7 +84,7 @@ export function useCanvasExecutionActions({
   });
 
   const handleStartRun = useCanvasRunStartHandler({
-    canRun: canRun && executionStrategy.kind === 'transformation_preview',
+    canRun: canRun && executionStrategy?.kind === 'transformation_preview',
     consolePanelVisible,
     currentPlan,
     hasPersistedPlanForRun,

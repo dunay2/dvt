@@ -45,7 +45,7 @@ export async function executeCanvasPlanAction({
   canPlan: boolean;
   canonicalEdges: readonly CanonicalEdge[];
   canonicalNodes: readonly CanonicalNode[];
-  executionStrategy: CanvasExecutionStrategy;
+  executionStrategy: CanvasExecutionStrategy | null;
   plansService: IPlansPort;
   previewProvenanceConfig: Pick<
     WorkspaceBootstrapConfig,
@@ -61,7 +61,7 @@ export async function executeCanvasPlanAction({
     return { ok: false, message: canvasViewCopy.planPermissionDeniedMessage };
   }
 
-  if (executionStrategy.kind === 'not_executable') {
+  if (executionStrategy == null || executionStrategy.kind === 'not_executable') {
     return {
       ok: false,
       message: canvasViewCopy.canvasExecutionUnavailableMessage,

@@ -19,6 +19,36 @@ function buildCanonicalNode(overrides: Partial<CanonicalNode>): CanonicalNode {
 }
 
 describe('resolveCanvasRuntimePolicy', () => {
+  it('blocks mutating and execution commands before a canvas document exists', () => {
+    const policy = resolveCanvasRuntimePolicy({
+      activeRuntime: {
+        kind: 'missing_document',
+        executionStrategy: {
+          kind: 'transformation_preview',
+          previewProfile: 'transformation-sql-first-v1',
+        },
+        nodeKinds: DVT_AUTHORING_NODE_KINDS,
+      },
+      canMutateGraph: true,
+      canOpenSourceImport: true,
+      canPlan: true,
+      canRun: true,
+      canReloadLatestDraft: true,
+    });
+
+    expect(policy.document).toEqual({
+      kind: 'missing_document',
+    });
+    expect(policy.commands).toEqual({
+      canMutateGraph: false,
+      canEditInspectorNode: false,
+      canOpenSourceImport: false,
+      canPlan: false,
+      canRun: false,
+      canReloadLatestDraft: true,
+    });
+  });
+
   it('fails closed for unsupported persisted canvas kinds', () => {
     const policy = resolveCanvasRuntimePolicy({
       activeRuntime: {

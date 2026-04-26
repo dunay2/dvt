@@ -1,7 +1,6 @@
 /** Owned concern: resolve the active Canvas graph strategy from the current draft document. */
 import {
   findCanvasRuntimeRegistration,
-  resolveCanvasGraphStrategy,
 } from '../../plugins/graphStrategyRegistry';
 import type { CanvasExecutionStrategy } from '../../plugins/canvasExecutionStrategyContracts';
 import type { CanvasGraphStrategy } from '../../plugins/graphStrategyContracts';
@@ -107,32 +106,23 @@ export function resolveActiveCanvasGraphStrategy(
 }
 
 export function selectActiveCanvasGraphStrategy(
-  resolution: ActiveCanvasGraphStrategyResolution,
-  capabilities?: RuntimeCapabilities
-): CanvasGraphStrategy {
+  resolution: ActiveCanvasGraphStrategyResolution
+): CanvasGraphStrategy | null {
   if (resolution.kind === 'ready' || resolution.kind === 'missing_document') {
     return resolution.strategy;
   }
 
-  return resolveCanvasGraphStrategy(undefined, capabilities);
+  return null;
 }
 
 export function selectActiveCanvasExecutionStrategy(
-  resolution: ActiveCanvasGraphStrategyResolution,
-  capabilities?: RuntimeCapabilities
-): CanvasExecutionStrategy {
+  resolution: ActiveCanvasGraphStrategyResolution
+): CanvasExecutionStrategy | null {
   if (resolution.kind === 'ready' || resolution.kind === 'missing_document') {
     return resolution.executionStrategy;
   }
 
-  const defaultRuntimeRegistration = findCanvasRuntimeRegistration(undefined, capabilities);
-  if (defaultRuntimeRegistration == null) {
-    return {
-      kind: 'not_executable',
-    };
-  }
-
-  return defaultRuntimeRegistration.executionStrategy;
+  return null;
 }
 
 export function isActiveCanvasGraphStrategySupported(
