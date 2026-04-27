@@ -24,8 +24,9 @@ export function createTemporalProviderAdapterFactory(): ProviderAdapterFactory {
         TEMPORAL_CONNECT_TIMEOUT_MS: context.env.TEMPORAL_CONNECT_TIMEOUT_MS,
         TEMPORAL_REQUEST_TIMEOUT_MS: context.env.TEMPORAL_REQUEST_TIMEOUT_MS,
         TEMPORAL_MAX_START_PAYLOAD_BYTES: context.env.TEMPORAL_MAX_START_PAYLOAD_BYTES,
-        TEMPORAL_CONTINUE_AS_NEW_AFTER_LAYERS:
-          context.env.TEMPORAL_CONTINUE_AS_NEW_AFTER_LAYERS,
+        TEMPORAL_MAX_CONTINUE_AS_NEW_PAYLOAD_BYTES:
+          context.env.TEMPORAL_MAX_CONTINUE_AS_NEW_PAYLOAD_BYTES,
+        TEMPORAL_CONTINUE_AS_NEW_AFTER_LAYERS: context.env.TEMPORAL_CONTINUE_AS_NEW_AFTER_LAYERS,
       });
       const clientManager = new TemporalClientManager(temporalConfig, context.observability);
 

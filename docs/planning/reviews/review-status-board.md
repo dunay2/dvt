@@ -2,7 +2,7 @@
 title: Review Status Board
 status: Active
 owner: Product / Architecture / Docs
-last_reviewed: 2026-04-21
+last_reviewed: 2026-04-27
 planning_type: review
 ---
 
@@ -99,9 +99,16 @@ Additional active rationale:
   - status: `reference`
   - progress: `n/a`
 
+- [20260427 AR-D plan pointer Fowler hard QA review](./architecture-and-governance/20260427-ar-d-plan-pointer-fowler-hard-qa-review.md)
+  - domain: `architecture-and-governance`
+  - role: current hard QA baseline for the Temporal PlanRef-plus-cursor implementation, aligned Temporal adapter spec, composition-root config propagation, negative tests, and replay/cutover posture
+  - linkage: `AR-D-PLAN-POINTER`, `AR-D2`, `R-20260420-TEMPORAL-DBT-BUILTIN-COUPLING`
+  - status: `review`
+  - progress: `85%`
+
 - [20260421 Temporal Fowler provider-truth follow-up review](./architecture-and-governance/20260421-temporal-fowler-provider-truth-follow-up-review.md)
   - domain: `architecture-and-governance`
-  - role: current focused follow-up review for the Temporal branch plus the `apps/api` provider-truth correction, semantic component encapsulation, and residual DBT/provider drift map
+  - role: historical follow-up review for the Temporal branch plus the `apps/api` provider-truth correction; superseded for PlanRef workflow-payload truth by the 2026-04-27 AR-D plan pointer QA
   - linkage: `TF-C2`, `TF-A1-C18`, `AR-D-PLAN-POINTER`, `R-20260420-TEMPORAL-DBT-BUILTIN-COUPLING`
   - status: `reference`
   - progress: `n/a`
@@ -115,7 +122,7 @@ Additional active rationale:
 
 - [20260420 DVT+ system architecture review](./architecture-and-governance/20260420-dvt-plus-system-architecture-review.md)
   - domain: `architecture-and-governance`
-  - role: prior full-system principal/staff review grounded in the shipped planner, engine, state, adapter, and route-boundary reality after the April plan-route convergence work
+  - role: prior full-system principal/staff review grounded in the shipped planner, engine, state, adapter, and route-boundary reality after the April plan-route convergence work; superseded for Temporal PlanRef workflow-payload truth by the 2026-04-27 AR-D plan pointer QA
   - linkage: `AR-A8`, `AR-C3`, `AR-D2`, `AR-D8`, `AR-D-PLAN-POINTER`, proposed `AR-A-READSIDE-CONTRACTS`, proposed `AR-C-TENANT-ISOLATION-PROPERTY`, proposed `AR-D-RESTORE-DRILL`
   - status: `reference`
   - progress: `n/a`

@@ -40,4 +40,14 @@ describe('loadEnv', () => {
 
     expect(env.DVT_TEMPORAL_WORKER_READYZ_URL).toBe('http://temporal-worker.example/readyz');
   });
+
+  it('accepts the Temporal continue-as-new payload budget env', async () => {
+    const env = loadEnv({
+      TEMPORAL_MAX_CONTINUE_AS_NEW_PAYLOAD_BYTES: '64000',
+    });
+
+    expect((env as Record<string, unknown>).TEMPORAL_MAX_CONTINUE_AS_NEW_PAYLOAD_BYTES).toBe(
+      '64000'
+    );
+  });
 });

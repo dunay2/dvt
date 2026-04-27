@@ -266,21 +266,32 @@ tasks:
       in-flight workflows is explicit and replay-safe.
     complexity: L
     effort_points: 8
-    progress_pct: 75
+    progress_pct: 85
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260414-principal-architect-review-dvtplus.md
       - docs/planning/reviews/architecture-and-governance/20260420-dvt-plus-system-architecture-review.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/ar-d-plan-pointer-workflow-input-hardening-plan-20260420.md
       - docs/planning/closeouts/20260420-temporal-fowler-architecture-drift-follow-up-closeout.md
+      - docs/planning/closeouts/20260424-temporal-plan-ref-contract-closeout.md
+      - docs/planning/reviews/architecture-and-governance/20260427-ar-d-plan-pointer-fowler-hard-qa-review.md
+      - docs/planning/closeouts/20260427-temporal-continue-payload-env-propagation-closeout.md
+      - docs/planning/closeouts/20260427-temporal-planref-spec-config-hardening-closeout.md
+      - docs/evidence/ed-20260427-temporal-planref-config-hardening.md
+      - docs/risk-register/quality/R-20260427-TEMPORAL-PLANREF-CONFIG-HARDENING.yaml
     status_reason: >-
-      The active branch now runs with `planRef` plus cursor-only workflow input, bounded segment
-      resolution, canonical `CANCEL` signal-id transport, an explicit continue-as-new payload guard,
-      pre-layer lifecycle gating ahead of skipped-step side effects, and centralized runtime payload
-      helper shaping inside the workflow modules. Remaining work is the next maturity cut:
-      externalized compact-fact references and any replay strategy beyond the drained-deploy line,
-      while the residual DBT built-in coupling in `@dvt/adapter-temporal` stays explicit as open
-      risk instead of being treated as already-closed plugin extraction.
-    last_verified: '2026-04-20'
+      Current QA confirms the active Temporal code path now starts workflows with `planRef` plus
+      cursor-only runtime control input, bounded segment resolution, canonical `CANCEL` signal-id
+      transport, an explicit continue-as-new payload guard, pre-layer lifecycle gating ahead of
+      skipped-step side effects, centralized runtime payload helper shaping inside the workflow
+      modules, API/worker propagation for `TEMPORAL_MAX_CONTINUE_AS_NEW_PAYLOAD_BYTES`, strict
+      fail-fast parsing for governed Temporal numeric env overrides, and an updated Temporal adapter
+      spec aligned to the PlanRef-plus-cursor contract. Follow-up QA1 now adds real Temporal
+      time-skipping continue-as-new coverage and fail-closed gateway dependency fact handling. The
+      task remains open because replay/cutover posture remains tied to the drained-deploy line,
+      governed threshold/SLA readiness is not closed, and segment-scale maturity is still first-cut.
+      The residual DBT built-in coupling in `@dvt/adapter-temporal` stays explicit as open risk
+      instead of being treated as already-closed plugin extraction.
+    last_verified: '2026-04-27'
   - task_id: AR-D3
     priority: P2
     status: queued

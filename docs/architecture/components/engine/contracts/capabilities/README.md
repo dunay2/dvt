@@ -154,5 +154,5 @@ When adding a new capability:
 
 - [IWorkflowEngine.v1.md](../engine/IWorkflowEngine.v1.md)
 - [ExecutionSemantics.v1.md](../engine/ExecutionSemantics.v1.md)
-- [TemporalAdapter.spec.md](../../adapters/temporal/TemporalAdapter.spec.md)
+- [temporal-adapter-spec.md](../../adapters/temporal/temporal-adapter-spec.md)
 - [Temporal Capabilities](https://docs.temporal.io/)
