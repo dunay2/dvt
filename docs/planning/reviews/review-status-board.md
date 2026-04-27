@@ -113,6 +113,13 @@ Additional active rationale:
   - status: `reference`
   - progress: `n/a`
 
+- [20260427 DVT+ deep architectural review](./architecture-and-governance/20260427-dvt-deep-architectural-review.md)
+  - domain: `architecture-and-governance`
+  - role: current full-system principal/staff review intake for structural execution maturity, operational contracts, risk-register load, and provider/adaptor replaceability evidence
+  - linkage: `S02`, `S03`, `S08`, `ADR-0009`, `R-20260425-PRODUCTION-TENANT-ISOLATION-BASELINE`, `R-20260420-TEMPORAL-DBT-BUILTIN-COUPLING`
+  - status: `reference`
+  - progress: `n/a`
+
 - [20260420 DVT+ system architecture review](./architecture-and-governance/20260420-dvt-plus-system-architecture-review.md)
   - domain: `architecture-and-governance`
   - role: prior full-system principal/staff review grounded in the shipped planner, engine, state, adapter, and route-boundary reality after the April plan-route convergence work

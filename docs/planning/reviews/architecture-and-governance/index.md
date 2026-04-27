@@ -22,6 +22,7 @@ planning_type: review
 - [20260404 AR-C2 Fowler hard QA review](./20260404-ar-c2-fowler-hard-qa-review.md)
 - [20260420 DVT+ system architecture review](./20260420-dvt-plus-system-architecture-review.md)
 - [20260423 DVT+ system architecture review](./20260423-dvt-plus-system-architecture-review.md)
+- [20260427 DVT+ deep architectural review](./20260427-dvt-deep-architectural-review.md)
 - [20260427 RC-G1-D Fowler architecture review](./20260427-rc-g1-d-fowler-architecture-review.md)
 - [20260421 Canvas handler seams Fowler review](./20260421-canvas-handler-seams-fowler-review.md)
 - [20260421 Canvas route composition Fowler review](./20260421-canvas-route-composition-fowler-review.md)
