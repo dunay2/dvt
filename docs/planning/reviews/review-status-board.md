@@ -80,10 +80,10 @@ Additional active rationale:
 
 - [20260426 Canvas runtime policy architecture review](./architecture-and-governance/20260426-canvas-runtime-policy-architecture-review.md)
   - domain: `architecture-and-governance`
-  - role: current global remediation plan for unifying Canvas mutation, admission, execution, inspector, and capability policy behind one runtime-policy boundary
+  - role: accepted hard QA closure for the Canvas runtime-policy boundary that unifies mutation, admission, execution, inspector, and capability posture
   - linkage: `TF-E2`, `TF-E2-POL`
-  - status: `queued`
-  - progress: `0%`
+  - status: `accepted`
+  - progress: `100%`
 
 - [20260421 Canvas handler seams Fowler review](./architecture-and-governance/20260421-canvas-handler-seams-fowler-review.md)
   - domain: `architecture-and-governance`

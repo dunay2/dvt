@@ -1,6 +1,6 @@
 ---
 title: Canvas runtime policy architecture review
-status: Active
+status: Accepted
 owner: Frontend / Architecture
 last_reviewed: 2026-04-26
 planning_type: review

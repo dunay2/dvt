@@ -24,6 +24,7 @@ out of the active tree.
 
 - shell and bootstrap:
   [Main workspace views and UX](./main-workspace-views-and-ux.md),
+  [App bootstrap screen component](./app-bootstrap-screen-component.md),
   [App shell](./appshell/app-shell.md),
   [Data source service boundary](./appshell/data-source-service-boundary.md)
 - graph and authoring surfaces:

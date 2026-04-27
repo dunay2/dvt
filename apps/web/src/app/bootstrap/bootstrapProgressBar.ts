@@ -1,3 +1,4 @@
+/** Owned concern: render the pre-React startup progress meter from a bootstrap snapshot. */
 type BootstrapProgressTone = 'loading' | 'blocked' | 'error' | 'complete';
 
 export type BootstrapProgressSnapshot = {

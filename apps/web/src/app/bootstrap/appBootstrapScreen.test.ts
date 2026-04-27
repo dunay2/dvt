@@ -70,6 +70,27 @@ describe('appBootstrapScreen', () => {
     expect(document.getElementById('app-loading-screen')).toBeNull();
   });
 
+  it('publishes the startup gate as an accessible busy status until bootstrap completes', () => {
+    startBootstrapScreen();
+
+    const screen = document.getElementById('app-loading-screen');
+    expect(screen?.getAttribute('role')).toBe('status');
+    expect(screen?.getAttribute('aria-label')).toBe('Raven startup status');
+    expect(screen?.getAttribute('aria-live')).toBe('polite');
+    expect(screen?.getAttribute('aria-atomic')).toBe('true');
+    expect(screen?.getAttribute('aria-busy')).toBe('true');
+
+    setBootstrapStepStatus('hydrate', 'complete');
+    setBootstrapStepStatus('services', 'complete');
+    setBootstrapStepStatus('capabilities', 'complete');
+    setBootstrapStepStatus('health', 'complete');
+    setBootstrapStepStatus('route', 'complete');
+    completeBootstrapScreen();
+
+    expect(screen?.dataset.state).toBe('complete');
+    expect(screen?.getAttribute('aria-busy')).toBe('false');
+  });
+
   it('does not reopen the startup surface after bootstrap has already completed', () => {
     startBootstrapScreen();
 

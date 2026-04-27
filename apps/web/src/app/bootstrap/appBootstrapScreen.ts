@@ -1,3 +1,4 @@
+/** Owned concern: drive the pre-React Raven startup screen state and DOM semantics. */
 import { renderBootstrapProgress } from './bootstrapProgressBar';
 
 type BootstrapStep = 'hydrate' | 'services' | 'capabilities' | 'health' | 'route';
@@ -9,6 +10,8 @@ const TITLE_ID = 'app-loading-title';
 const MESSAGE_ID = 'app-loading-message';
 const VERSION_ID = 'app-loading-version';
 const BUILD_DATE_ID = 'app-loading-build-date';
+const PROGRESS_ID = 'app-loading-progress';
+const STARTUP_STATUS_LABEL = 'Raven startup status';
 
 type BootstrapStepConfig = {
   label: string;
@@ -193,6 +196,12 @@ function setBootstrapScreenState(
   }
 
   screen.dataset.state = state;
+  screen.setAttribute('role', 'status');
+  screen.setAttribute('aria-label', STARTUP_STATUS_LABEL);
+  screen.setAttribute('aria-live', 'polite');
+  screen.setAttribute('aria-atomic', 'true');
+  screen.setAttribute('aria-busy', state === 'complete' ? 'false' : 'true');
+  screen.setAttribute('aria-describedby', `${MESSAGE_ID} ${PROGRESS_ID}`);
   updateBootstrapText(TITLE_ID, title);
   updateBootstrapText(MESSAGE_ID, message);
   renderBootstrapProgressState(state);
