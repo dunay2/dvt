@@ -1,5 +1,6 @@
 /**
  * @file packages/@dvt/adapter-temporal/src/workflows/workflowArtifactHelpers.ts
+ * @ownedConcern Execution artifact payload interpretation
  * @baseline ADR-0003: Execution Model
  * @baseline ADR-0032: compiledCodeRef Ownership
  * @baseline ADR-0040: Retry Ownership And Attempt Authority

@@ -2,7 +2,7 @@
 title: AR-D plan pointer Fowler hard QA review
 status: Final
 owner: Architecture
-last_reviewed: 2026-04-27
+last_reviewed: 2026-04-28
 planning_type: review
 ---
 
@@ -58,6 +58,7 @@ closed.
 - `packages/@dvt/adapter-temporal/src/workflows/workflowCursorHelpers.ts`
 - `packages/@dvt/adapter-temporal/src/workflows/workflowGatewayHelpers.ts`
 - `packages/@dvt/adapter-temporal/src/workflows/executionSegmentResolver.ts`
+- `packages/@dvt/adapter-temporal/test/workflow-component-semantics.architecture.test.ts`
 - `packages/@dvt/adapter-temporal/test/TemporalAdapter.startRun.test.ts`
 - `packages/@dvt/adapter-temporal/test/workflow-continue-as-new.test.ts`
 - `packages/@dvt/adapter-temporal/test/smoke.test.ts`
@@ -67,8 +68,10 @@ closed.
 - `apps/temporal-worker/src/plugins/env.ts`
 - `apps/temporal-worker/src/runtime/createTemporalWorkerRuntime.ts`
 - `docs/architecture/components/engine/adapters/temporal/temporal-adapter-spec.md`
+- `docs/architecture/components/engine/adapters/temporal/temporal-planref-workflow-boundary.md`
 - `docs/architecture/components/engine/contracts/engine/IProviderAdapter.v1.md`
 - `docs/architecture/components/engine/contracts/engine/StartRunProtocol.v1.md`
+- `buzon/20260428-codex-fowler-temporal-planref-workflow-boundary-analysis-and-remediation.md`
 
 ## Executive Verdict
 
@@ -88,8 +91,18 @@ cutover runbook, and a deep-plan bounded segment regression.
 The follow-up QA2 pass also makes missing workflow rollover threshold input fail
 closed instead of silently defaulting to disabled rollover, and records the
 time-skipping rollover proof in the ARC evidence and closeout.
+A QA3 semantic-encapsulation pass closes the remaining component-documentation
+drift: workflow modules now declare exact owned concerns, a PlanRef workflow
+boundary guide documents API/invariants/transitions/consumers/diagrams, and an
+architecture test validates those semantics.
 
 ## Findings
+
+Closed - Semantic encapsulation: the Temporal PlanRef workflow modules now have
+exact top-level `@ownedConcern` docblocks, and
+`workflow-component-semantics.architecture.test.ts` verifies those concerns plus
+the local component guide. This closes the previous reliance on broad ADR prose
+to imply file ownership.
 
 Closed - Runtime readiness: QA1 sets a governed non-zero default. QA2 rejects
 missing `continueAsNewAfterLayerCount`, so malformed workflow input cannot
@@ -146,6 +159,10 @@ continueAsNewAfterLayerCount }`.
 - The workflow modules are materially more SRP-aligned than the older
   monolithic interpreter shape: orchestration, lifecycle, cursor construction,
   gateway helpers, payload helpers, and segment resolution are split.
+- The workflow component now has a local architecture guide with public API,
+  invariants, transitions, consumers, module map, and diagrams.
+- The architecture fitness test validates semantic ownership and component
+  documentation substance, not only file shape.
 
 ## Fowler, DDD, And Hexagonal Reading
 
@@ -179,6 +196,7 @@ Already covered:
 - Governed default continue-as-new threshold plus explicit zero override.
 - Missing workflow continue-as-new threshold fails closed instead of silently
   disabling rollover.
+- Semantic workflow component guide and exact module owned-concern docblocks.
 - Drained-deploy cutover runbook for the no-retrocompatibility workflow input
   shape.
 - Deep-plan segment boundedness regression for requested-layer metadata.
@@ -238,6 +256,9 @@ Implement the remaining AR-D2 production SLA follow-up:
   coverage.
 - QA2 rejects missing workflow rollover threshold input and records the
   time-skipping `continueAsNew` proof in closeout/evidence.
+- QA3 adds the Temporal PlanRef workflow boundary guide, mailbox Fowler
+  analysis, module owned-concern docblocks, and semantic architecture fitness
+  test.
 - The remaining recommended follow-up scope is full AR-D2 SLA readiness,
   segment-scale maturity beyond bounded return shape, and DBT adapter
   decoupling.

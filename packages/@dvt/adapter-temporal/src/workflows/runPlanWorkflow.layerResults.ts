@@ -1,5 +1,6 @@
 /**
  * @file packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.layerResults.ts
+ * @ownedConcern Layer result application and gateway fact retention
  * @baseline ADR-0003: Execution Model
  * @baseline ADR-0004: Event Sourcing Strategy
  * @baseline ADR-0047: Runtime-Owned Realized Lifecycle For Signal-Driven Transitions

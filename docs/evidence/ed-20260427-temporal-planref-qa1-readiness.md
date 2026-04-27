@@ -10,18 +10,37 @@ arc_level: ARC-2
 breaking: false
 code_refs:
   - packages/@dvt/adapter-temporal/src/config.ts
+  - packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts
+  - packages/@dvt/adapter-temporal/src/workflows/executionSegmentResolver.ts
+  - packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.activities.ts
+  - packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.cancellation.ts
+  - packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.layerHelpers.ts
+  - packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.layerResults.ts
+  - packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.layers.ts
+  - packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.lifecycle.ts
+  - packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.signals.ts
   - packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.state.ts
+  - packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.stepExecution.ts
   - packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.types.ts
+  - packages/@dvt/adapter-temporal/src/workflows/workflowArtifactHelpers.ts
+  - packages/@dvt/adapter-temporal/src/workflows/workflowCursorHelpers.ts
+  - packages/@dvt/adapter-temporal/src/workflows/workflowErrorHelpers.ts
+  - packages/@dvt/adapter-temporal/src/workflows/workflowGatewayHelpers.ts
   - packages/@dvt/adapter-temporal/src/workflows/workflowInputParsingHelpers.ts
+  - packages/@dvt/adapter-temporal/src/workflows/workflowRuntimePayloadHelpers.ts
   - packages/@dvt/adapter-temporal/test/smoke.test.ts
   - packages/@dvt/adapter-temporal/test/TemporalAdapter.startRun.test.ts
   - packages/@dvt/adapter-temporal/test/helpers/contractFixtures.ts
+  - packages/@dvt/adapter-temporal/test/workflow-component-semantics.architecture.test.ts
   - packages/@dvt/adapter-temporal/test/workflow-continue-as-new.test.ts
   - packages/@dvt/adapter-temporal/test/workflow-execution-segment.test.ts
   - docs/architecture/components/engine/adapters/temporal/temporal-adapter-spec.md
+  - docs/architecture/components/engine/adapters/temporal/temporal-planref-workflow-boundary.md
+  - buzon/20260428-codex-fowler-temporal-planref-workflow-boundary-analysis-and-remediation.md
   - docs/runbooks/temporal-planref-drained-cutover-20260427.md
 evidence:
   tests:
+    - pnpm --filter @dvt/adapter-temporal exec vitest run ./test/workflow-component-semantics.architecture.test.ts
     - pnpm --filter @dvt/adapter-temporal exec vitest run ./test/smoke.test.ts -t "loads config with defaults|keeps explicit zero"
     - pnpm --filter @dvt/adapter-temporal exec vitest run ./test/TemporalAdapter.startRun.test.ts
     - pnpm --filter @dvt/adapter-temporal exec vitest run ./test/workflow-continue-as-new.test.ts
@@ -50,6 +69,9 @@ maturity is complete:
   no-retrocompatibility procedure.
 - Deep-plan segment resolution has regression coverage proving the returned
   segment carries only the requested layer plus compact metadata.
+- The Temporal PlanRef workflow boundary now has semantic module ownership
+  docblocks, a local component guide, diagrams, and an architecture fitness test
+  that validates public API, invariants, transitions, and consumers.
 
 ## Residual Risk
 

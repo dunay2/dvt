@@ -1,5 +1,6 @@
 /**
  * @file packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.layers.ts
+ * @ownedConcern Deterministic workflow layer-loop orchestration
  * @baseline ADR-0001: Temporal Integration Test Policy
  * @baseline ADR-0003: Execution Model
  * @baseline ADR-0046: Execution Plan Definition And Run Execution Policy Separation

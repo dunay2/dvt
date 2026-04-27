@@ -1,5 +1,6 @@
 /**
  * @file packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.cancellation.ts
+ * @ownedConcern Runtime-owned cancellation lifecycle settlement
  * @baseline ADR-0001: Temporal Integration Test Policy
  * @baseline ADR-0007: Run Cancellation
  * @baseline ADR-0047: Runtime-Owned Realized Lifecycle For Signal-Driven Transitions

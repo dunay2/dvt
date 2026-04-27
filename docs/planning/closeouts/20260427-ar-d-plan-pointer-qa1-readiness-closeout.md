@@ -2,7 +2,7 @@
 title: AR-D plan pointer QA1 readiness closeout
 status: Accepted
 owner: Runtime / Temporal / Delivery
-last_reviewed: 2026-04-27
+last_reviewed: 2026-04-28
 planning_type: closeout
 ---
 
@@ -123,6 +123,10 @@ is explicit.
   the drained-deploy/no-retrocompatibility posture executable.
 - Updated the Temporal adapter spec, worker runbook, Fowler QA review, Lane D,
   ARC evidence, and risk register to match the shipped behavior.
+- Added a QA3 semantic-encapsulation pass for the Temporal PlanRef workflow
+  boundary: exact module `@ownedConcern` docblocks, a local component guide with
+  public API/invariants/transitions/consumers/diagrams, a mailbox Fowler
+  analysis, and a semantic architecture fitness test.
 
 ## TDD Evidence
 
@@ -135,9 +139,15 @@ Red result observed before implementation:
 - `pnpm --filter @dvt/adapter-temporal exec vitest run ./test/workflow-continue-as-new.test.ts -t "rejects missing continue-as-new threshold"`
   - Failed as expected because workflow control parsing accepted missing
     `continueAsNewAfterLayerCount` and silently defaulted to `0`.
+- `pnpm --filter @dvt/adapter-temporal exec vitest run ./test/workflow-component-semantics.architecture.test.ts`
+  - Failed as expected because workflow modules did not yet declare exact
+    `@ownedConcern` values and the PlanRef workflow boundary guide did not yet
+    exist.
 
 Green results after implementation:
 
+- `pnpm --filter @dvt/adapter-temporal exec vitest run ./test/workflow-component-semantics.architecture.test.ts`
+  - Passed: 1 file, 4 tests.
 - `pnpm --filter @dvt/adapter-temporal exec vitest run ./test/smoke.test.ts -t "loads config with defaults|keeps explicit zero"`
   - Passed: 3 tests, 21 skipped by filter.
 - `pnpm --filter @dvt/adapter-temporal exec vitest run ./test/TemporalAdapter.startRun.test.ts`
@@ -167,20 +177,29 @@ Intermediate test corrections:
   - Passed: 2 files, 6 tests.
 - `pnpm --filter dvt-temporal-worker test -- test/plugins/env.test.ts test/runtime/createTemporalWorkerRuntime.test.ts`
   - Passed: 2 files, 13 tests.
+- `pnpm --filter @dvt/adapter-temporal exec vitest run ./test/workflow-component-semantics.architecture.test.ts`
+  - Passed: 1 file, 4 tests.
 - `pnpm --filter @dvt/adapter-temporal test`
-  - Passed: 22 files, 183 tests.
+  - Passed: 23 files, 187 tests.
 - `pnpm --filter @dvt/adapter-temporal typecheck`
   - Passed.
+- `pnpm docs:status:generate`
+  - Passed; updated generated code state after adding the adapter Temporal
+    architecture test.
 - `pnpm docs:workboard:generate`
   - Passed; regenerated planning workboard views after Lane D changed.
 - `pnpm docs:sync`
   - Passed; regenerated evidence and runbook indexes plus Lane D rendered view.
 - `pnpm docs:workboard:check`
   - Passed.
+- `pnpm docs:sync:check`
+  - Passed.
 - `pnpm docs:arc:evidence:check`
   - Passed.
 - `pnpm docs:gov:links`
   - Passed with 0 errors and 0 warnings.
+- `pnpm lint:md:changed`
+  - Passed with 0 errors.
 - `pnpm lint`
   - Failed once because the new test referenced `TextEncoder` directly.
   - Passed after switching the test to `globalThis.TextEncoder`.
@@ -190,17 +209,12 @@ Intermediate test corrections:
 - `pnpm verify:prepush`
   - Passed.
 
-Known validation note:
-
-- `pnpm docs:sync:check` was run before commit and failed because the newly
-  generated evidence/runbook index diffs were intentionally still uncommitted.
-  `pnpm docs:sync` had already generated those indexes, and the prepush gate
-  passed.
-
 ## Files Changed
 
 - `apps/api/test/modules/providerAdapters/createTemporalProviderAdapterFactory.test.ts`
 - `docs/architecture/components/engine/adapters/temporal/temporal-adapter-spec.md`
+- `docs/architecture/components/engine/adapters/temporal/temporal-planref-workflow-boundary.md`
+- `buzon/20260428-codex-fowler-temporal-planref-workflow-boundary-analysis-and-remediation.md`
 - `docs/evidence/ed-20260427-temporal-planref-qa1-readiness.md`
 - `docs/evidence/index.md`
 - `docs/planning/closeouts/20260427-ar-d-plan-pointer-qa1-readiness-closeout.md`
@@ -211,12 +225,28 @@ Known validation note:
 - `docs/runbooks/temporal-planref-drained-cutover-20260427.md`
 - `docs/runbooks/temporal-worker-dbt-plugin-runtime-20260414.md`
 - `packages/@dvt/adapter-temporal/src/config.ts`
+- `packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts`
+- `packages/@dvt/adapter-temporal/src/workflows/executionSegmentResolver.ts`
+- `packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.activities.ts`
+- `packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.cancellation.ts`
+- `packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.layerHelpers.ts`
+- `packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.layerResults.ts`
+- `packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.layers.ts`
+- `packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.lifecycle.ts`
+- `packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.signals.ts`
 - `packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.state.ts`
+- `packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.stepExecution.ts`
 - `packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.types.ts`
+- `packages/@dvt/adapter-temporal/src/workflows/workflowArtifactHelpers.ts`
+- `packages/@dvt/adapter-temporal/src/workflows/workflowCursorHelpers.ts`
+- `packages/@dvt/adapter-temporal/src/workflows/workflowErrorHelpers.ts`
+- `packages/@dvt/adapter-temporal/src/workflows/workflowGatewayHelpers.ts`
 - `packages/@dvt/adapter-temporal/src/workflows/workflowInputParsingHelpers.ts`
+- `packages/@dvt/adapter-temporal/src/workflows/workflowRuntimePayloadHelpers.ts`
 - `packages/@dvt/adapter-temporal/test/TemporalAdapter.startRun.test.ts`
 - `packages/@dvt/adapter-temporal/test/helpers/contractFixtures.ts`
 - `packages/@dvt/adapter-temporal/test/smoke.test.ts`
+- `packages/@dvt/adapter-temporal/test/workflow-component-semantics.architecture.test.ts`
 - `packages/@dvt/adapter-temporal/test/workflow-continue-as-new.test.ts`
 - `packages/@dvt/adapter-temporal/test/workflow-execution-segment.test.ts`
 

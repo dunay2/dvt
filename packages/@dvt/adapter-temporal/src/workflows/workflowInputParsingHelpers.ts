@@ -1,5 +1,6 @@
 /**
  * @file packages/@dvt/adapter-temporal/src/workflows/workflowInputParsingHelpers.ts
+ * @ownedConcern Deterministic workflow input primitive parsing
  * @baseline ADR-0001: Temporal Integration Test Policy
  * @baseline ADR-0003: Execution Model
  * @decision Parse workflow cursor and control values with deterministic validation before execution

@@ -7,6 +7,7 @@
 - **References**:
   [IProviderAdapter Contract](../../contracts/engine/IProviderAdapter.v1.md),
   [StartRunProtocol Contract](../../contracts/engine/StartRunProtocol.v1.md),
+  [Temporal PlanRef workflow boundary component](./temporal-planref-workflow-boundary.md),
   [Temporal SDK](https://docs.temporal.io/develop/typescript),
   [Temporal Platform Limits](https://docs.temporal.io/encyclopedia/temporal-platform-limits)
 
@@ -74,6 +75,11 @@ workflow that:
 
 Business run recovery is a separate engine or application use case and MUST NOT
 be reintroduced through the generic signal boundary.
+
+The local component guide for this runtime boundary is
+`docs/architecture/components/engine/adapters/temporal/temporal-planref-workflow-boundary.md`.
+It owns the public API, invariants, transitions, consumers, module map, and
+architecture fitness checks for the PlanRef workflow boundary.
 
 **Workflow input shape**:
 

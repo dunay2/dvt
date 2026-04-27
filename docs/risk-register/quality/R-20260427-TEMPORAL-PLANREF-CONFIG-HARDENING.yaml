@@ -17,7 +17,9 @@ context: >
   when a retained dependency fact is missing. QA1 adds a governed non-zero continue-as-new default,
   an explicit drained-deploy cutover runbook, and deep-plan segment boundedness regression coverage.
   QA2 rejects workflow input that omits the continue-as-new threshold, preventing malformed input
-  from silently disabling rollover.
+  from silently disabling rollover. QA3 adds semantic module ownership docblocks, a PlanRef workflow
+  boundary component guide, and an architecture fitness test that guards API, invariants,
+  transitions, consumers, and diagrams.
 risk: >
   AR-D-PLAN-POINTER still depends on runtime proofs that are not fully closed by this branch: the
   full AR-D2 SLA for maximum workflow history size and segment count policy, deeper segment-scale
@@ -33,5 +35,7 @@ mitigations:
     large-DAG readiness.
   - Keep deep/wide DAG boundedness tests in the adapter-temporal package before closing scale
     readiness.
+  - Keep packages/@dvt/adapter-temporal/test/workflow-component-semantics.architecture.test.ts as
+    the drift guard for PlanRef workflow boundary ownership and component documentation.
 review_after: 2026-05-15
 ---

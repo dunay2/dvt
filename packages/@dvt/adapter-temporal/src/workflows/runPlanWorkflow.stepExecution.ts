@@ -1,5 +1,6 @@
 /**
  * @file packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.stepExecution.ts
+ * @ownedConcern Per-layer step activity execution orchestration
  * @baseline ADR-0003: Execution Model
  * @baseline ADR-0032: compiledCodeRef Ownership
  * @baseline ADR-0040: Retry Ownership And Attempt Authority

@@ -273,7 +273,7 @@ tasks:
       in-flight workflows is explicit and replay-safe.
     complexity: L
     effort_points: 8
-    progress_pct: 90
+    progress_pct: 92
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260414-principal-architect-review-dvtplus.md
       - docs/planning/reviews/architecture-and-governance/20260420-dvt-plus-system-architecture-review.md
@@ -284,7 +284,9 @@ tasks:
       - docs/planning/closeouts/20260427-temporal-continue-payload-env-propagation-closeout.md
       - docs/planning/closeouts/20260427-temporal-planref-spec-config-hardening-closeout.md
       - docs/planning/closeouts/20260427-ar-d-plan-pointer-qa1-readiness-closeout.md
+      - docs/architecture/components/engine/adapters/temporal/temporal-planref-workflow-boundary.md
       - docs/runbooks/temporal-planref-drained-cutover-20260427.md
+      - buzon/20260428-codex-fowler-temporal-planref-workflow-boundary-analysis-and-remediation.md
       - docs/evidence/ed-20260427-temporal-planref-config-hardening.md
       - docs/risk-register/quality/R-20260427-TEMPORAL-PLANREF-CONFIG-HARDENING.yaml
     status_reason: >-
@@ -297,11 +299,13 @@ tasks:
       spec aligned to the PlanRef-plus-cursor contract. Follow-up QA1 now adds real Temporal
       time-skipping continue-as-new coverage, fail-closed gateway dependency fact handling, a
       governed non-zero continue-as-new default, an explicit drained-deploy cutover runbook, and
-      deep-plan segment boundedness regression coverage. The task remains open because full SLA
-      threshold posture under AR-D2 is not finished, segment-scale maturity is still first-cut, and
-      the residual DBT built-in coupling in `@dvt/adapter-temporal` stays explicit as open risk
+      deep-plan segment boundedness regression coverage. QA3 adds semantic module ownership
+      docblocks, a local PlanRef workflow boundary guide, diagrams, and an architecture fitness test
+      that validates API, invariants, transitions, and consumers. The task remains open because full
+      SLA threshold posture under AR-D2 is not finished, segment-scale maturity is still first-cut,
+      and the residual DBT built-in coupling in `@dvt/adapter-temporal` stays explicit as open risk
       instead of being treated as already-closed plugin extraction.
-    last_verified: '2026-04-27'
+    last_verified: '2026-04-28'
   - task_id: AR-D3
     priority: P2
     status: queued

@@ -1,5 +1,6 @@
 /**
  * @file packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts
+ * @ownedConcern Temporal PlanRef workflow orchestration entrypoint
  * @baseline ADR-0001: Temporal Integration Test Policy (Build Preconditions + Lifecycle Discipline)
  * @baseline ADR-0003: Execution Model
  * @decision Section 5 - Workflow remains deterministic and delegates side effects to activities

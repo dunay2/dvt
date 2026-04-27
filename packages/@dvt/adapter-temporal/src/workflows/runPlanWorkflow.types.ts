@@ -1,5 +1,6 @@
 /**
  * @file packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.types.ts
+ * @ownedConcern Workflow public API contracts and runtime state model
  * @baseline ADR-0003: Execution Model
  * @baseline ADR-0046: Execution Plan Definition And Run Execution Policy Separation
  * @decision Define workflow ports and cursor contracts at the DVT boundary before Temporal-specific execution
