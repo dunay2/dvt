@@ -1,0 +1,30 @@
+---
+id: R-20260427-TEMPORAL-PLANREF-CONFIG-HARDENING
+title: Temporal PlanRef runtime still lacks full continue-as-new operational proof
+status: Open
+date: 2026-04-27
+owners:
+  - packages/@dvt/adapter-temporal
+  - apps/api
+  - apps/temporal-worker
+severity: Medium
+probability: Medium
+context: >
+  The current branch aligns the active Temporal adapter spec to the PlanRef-plus-cursor contract,
+  exposes the continue-as-new payload budget through API and worker composition roots, and rejects
+  invalid governed Temporal numeric env overrides. That closes the immediate documentation and
+  configuration drift found by the 2026-04-27 Fowler hard QA.
+risk: >
+  AR-D-PLAN-POINTER still depends on runtime proofs that are not closed by this branch: actual
+  Temporal continue-as-new integration coverage, replay or drained-deploy cutover evidence,
+  gateway-fact negative tests, and deep/wide DAG segment-resolution cost bounds. If those remain
+  untested, large-DAG readiness could be claimed from helper-level evidence instead of from the
+  provider runtime path.
+mitigations:
+  - Keep AR-D-PLAN-POINTER in progress until actual Temporal continue-as-new integration proof is
+    added.
+  - Keep AR-D2 as the explicit owner for the continue-as-new threshold and SLA contract.
+  - Require replay/cutover evidence before treating workflow input-shape migration as runtime-ready.
+  - Add gateway-fact and deep/wide DAG negative tests before closing scale readiness.
+review_after: 2026-05-15
+---

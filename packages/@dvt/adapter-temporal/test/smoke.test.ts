@@ -142,6 +142,30 @@ describe('adapter-temporal foundation', () => {
     });
   });
 
+  it('rejects invalid numeric env overrides instead of silently using defaults', () => {
+    expect(() =>
+      loadTemporalAdapterConfig({
+        TEMPORAL_ADDRESS: 'temporal:7233',
+        TEMPORAL_NAMESPACE: 'dvt',
+        TEMPORAL_TASK_QUEUE: 'q-main',
+        TEMPORAL_MAX_CONTINUE_AS_NEW_PAYLOAD_BYTES: 'typo',
+      })
+    ).toThrow(
+      'TEMPORAL_CONFIG_INVALID: TEMPORAL_MAX_CONTINUE_AS_NEW_PAYLOAD_BYTES must be a positive integer'
+    );
+
+    expect(() =>
+      loadTemporalAdapterConfig({
+        TEMPORAL_ADDRESS: 'temporal:7233',
+        TEMPORAL_NAMESPACE: 'dvt',
+        TEMPORAL_TASK_QUEUE: 'q-main',
+        TEMPORAL_CONTINUE_AS_NEW_AFTER_LAYERS: '-1',
+      })
+    ).toThrow(
+      'TEMPORAL_CONFIG_INVALID: TEMPORAL_CONTINUE_AS_NEW_AFTER_LAYERS must be a non-negative integer'
+    );
+  });
+
   it('rejects continue-as-new budgets larger than the start payload budget', () => {
     expect(() =>
       validateTemporalAdapterConfig({

@@ -9,7 +9,7 @@ last_reviewed: 2026-04-09
 
 ## Pages
 
-- [Temporal adapter specification](./TemporalAdapter.spec.md)
+- [Temporal adapter specification](./temporal-adapter-spec.md)
 - [Engine policies](./EnginePolicies.md)
 
 ## Related pages

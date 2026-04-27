@@ -87,7 +87,8 @@ export function loadTemporalAdapterConfig(
 ): TemporalAdapterConfig {
   const maxStartPayloadBytes = parsePositiveInt(
     env.TEMPORAL_MAX_START_PAYLOAD_BYTES,
-    DEFAULT_WORKFLOW_BUDGET_CONFIG.maxStartPayloadBytes
+    DEFAULT_WORKFLOW_BUDGET_CONFIG.maxStartPayloadBytes,
+    'TEMPORAL_MAX_START_PAYLOAD_BYTES'
   );
 
   return {
@@ -100,22 +101,26 @@ export function loadTemporalAdapterConfig(
     timeouts: createTemporalTimeoutConfig({
       connectTimeoutMs: parsePositiveInt(
         env.TEMPORAL_CONNECT_TIMEOUT_MS,
-        DEFAULTS.timeouts.connectTimeoutMs
+        DEFAULTS.timeouts.connectTimeoutMs,
+        'TEMPORAL_CONNECT_TIMEOUT_MS'
       ),
       requestTimeoutMs: parsePositiveInt(
         env.TEMPORAL_REQUEST_TIMEOUT_MS,
-        DEFAULTS.timeouts.requestTimeoutMs
+        DEFAULTS.timeouts.requestTimeoutMs,
+        'TEMPORAL_REQUEST_TIMEOUT_MS'
       ),
     }),
     workflowBudget: createTemporalWorkflowBudgetConfig({
       maxStartPayloadBytes,
       maxContinueAsNewPayloadBytes: parsePositiveInt(
         env.TEMPORAL_MAX_CONTINUE_AS_NEW_PAYLOAD_BYTES,
-        deriveContinueAsNewPayloadBudget(maxStartPayloadBytes)
+        deriveContinueAsNewPayloadBudget(maxStartPayloadBytes),
+        'TEMPORAL_MAX_CONTINUE_AS_NEW_PAYLOAD_BYTES'
       ),
       continueAsNewAfterLayerCount: parseNonNegativeInt(
         env.TEMPORAL_CONTINUE_AS_NEW_AFTER_LAYERS,
-        DEFAULT_WORKFLOW_BUDGET_CONFIG.continueAsNewAfterLayerCount
+        DEFAULT_WORKFLOW_BUDGET_CONFIG.continueAsNewAfterLayerCount,
+        'TEMPORAL_CONTINUE_AS_NEW_AFTER_LAYERS'
       ),
     }),
   };
@@ -258,16 +263,24 @@ function assertLessThanOrEqual(
   }
 }
 
-function parsePositiveInt(raw: string | undefined, fallback: number): number {
-  if (!raw) return fallback;
-  const n = Number(raw);
-  return Number.isInteger(n) && n > 0 ? n : fallback;
+function parsePositiveInt(raw: string | undefined, fallback: number, fieldName: string): number {
+  if (raw === undefined) return fallback;
+  const normalized = raw.trim();
+  const n = Number(normalized);
+  if (normalized.length > 0 && Number.isInteger(n) && n > 0) {
+    return n;
+  }
+  throw new Error(`TEMPORAL_CONFIG_INVALID: ${fieldName} must be a positive integer`);
 }
 
-function parseNonNegativeInt(raw: string | undefined, fallback: number): number {
-  if (!raw) return fallback;
-  const n = Number(raw);
-  return Number.isInteger(n) && n >= 0 ? n : fallback;
+function parseNonNegativeInt(raw: string | undefined, fallback: number, fieldName: string): number {
+  if (raw === undefined) return fallback;
+  const normalized = raw.trim();
+  const n = Number(normalized);
+  if (normalized.length > 0 && Number.isInteger(n) && n >= 0) {
+    return n;
+  }
+  throw new Error(`TEMPORAL_CONFIG_INVALID: ${fieldName} must be a non-negative integer`);
 }
 
 function toOptionalTrimmed(raw: string | undefined): string | undefined {
