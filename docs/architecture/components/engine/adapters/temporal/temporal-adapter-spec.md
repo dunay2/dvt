@@ -82,7 +82,7 @@ interface RunPlanWorkflowInput {
   planRef: PlanRef;
   ctx: ResolvedRunContext;
   maxContinueAsNewPayloadBytes: number;
-  continueAsNewAfterLayerCount?: number;
+  continueAsNewAfterLayerCount: number;
   cursor?: WorkflowExecutionCursor;
 }
 ```

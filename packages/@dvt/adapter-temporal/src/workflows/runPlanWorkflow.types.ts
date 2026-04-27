@@ -51,7 +51,7 @@ export interface RunPlanWorkflowInput {
   planRef: WorkflowPlanRef;
   ctx: WorkflowCtx;
   maxContinueAsNewPayloadBytes: number;
-  continueAsNewAfterLayerCount?: number;
+  continueAsNewAfterLayerCount: number;
   cursor?: WorkflowExecutionCursor;
 }
 

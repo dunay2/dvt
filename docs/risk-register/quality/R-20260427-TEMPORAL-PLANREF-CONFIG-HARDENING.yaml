@@ -16,6 +16,8 @@ context: >
   continue-as-new integration proof and changes gateway dependency context resolution to fail closed
   when a retained dependency fact is missing. QA1 adds a governed non-zero continue-as-new default,
   an explicit drained-deploy cutover runbook, and deep-plan segment boundedness regression coverage.
+  QA2 rejects workflow input that omits the continue-as-new threshold, preventing malformed input
+  from silently disabling rollover.
 risk: >
   AR-D-PLAN-POINTER still depends on runtime proofs that are not fully closed by this branch: the
   full AR-D2 SLA for maximum workflow history size and segment count policy, deeper segment-scale

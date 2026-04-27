@@ -16,6 +16,15 @@ export function parseOptionalNonNegativeInt(value: unknown, fieldName: string): 
   });
 }
 
+export function parseRequiredNonNegativeInt(value: unknown, fieldName: string): number {
+  return parseIntegerField({
+    value,
+    fieldName,
+    isAccepted: (numberValue) => numberValue >= 0,
+    errorSuffix: 'must_be_non_negative_integer',
+  });
+}
+
 export function parseRequiredPositiveInt(value: unknown, fieldName: string): number {
   return parseIntegerField({
     value,

@@ -115,6 +115,8 @@ is explicit.
   local diagnostic or incident rollback override.
 - Updated Temporal adapter start-run fixtures and API factory test stubs so
   composition tests reflect the governed default.
+- Changed workflow control parsing so missing `continueAsNewAfterLayerCount`
+  fails closed instead of silently disabling rollover.
 - Added a deep-plan regression proving `resolveExecutionSegmentFromPlan` returns
   only the requested layer plus compact metadata, not the full plan.
 - Added `docs/runbooks/temporal-planref-drained-cutover-20260427.md` to make
@@ -130,6 +132,9 @@ Red result observed before implementation:
   - Failed as expected because the runtime still returned
     `continueAsNewAfterLayerCount: 0` while the test required the governed
     default `100`.
+- `pnpm --filter @dvt/adapter-temporal exec vitest run ./test/workflow-continue-as-new.test.ts -t "rejects missing continue-as-new threshold"`
+  - Failed as expected because workflow control parsing accepted missing
+    `continueAsNewAfterLayerCount` and silently defaulted to `0`.
 
 Green results after implementation:
 
@@ -139,6 +144,8 @@ Green results after implementation:
   - Passed: 3 tests.
 - `pnpm --filter @dvt/adapter-temporal exec vitest run ./test/workflow-execution-segment.test.ts`
   - Passed: 5 tests.
+- `pnpm --filter @dvt/adapter-temporal exec vitest run ./test/workflow-continue-as-new.test.ts`
+  - Passed: 17 tests.
 
 Intermediate test corrections:
 
@@ -152,14 +159,16 @@ Intermediate test corrections:
 
 ## Validation Evidence
 
-- `pnpm --filter @dvt/adapter-temporal exec vitest run ./test/smoke.test.ts ./test/TemporalAdapter.startRun.test.ts ./test/workflow-execution-segment.test.ts`
-  - Passed: 3 files, 32 tests.
+- `pnpm --filter @dvt/adapter-temporal exec vitest run ./test/workflow-continue-as-new.test.ts ./test/TemporalAdapter.startRun.test.ts ./test/workflow-execution-segment.test.ts ./test/smoke.test.ts`
+  - Passed: 4 files, 49 tests.
+- `pnpm --filter @dvt/adapter-temporal exec vitest run ./test/integration.time-skipping.test.ts -t "continues as new"`
+  - Passed: 1 test, 8 skipped by filter.
 - `pnpm --filter dvt-api test -- test/modules/providerAdapters/createTemporalProviderAdapterFactory.test.ts test/plugins/env.test.ts`
   - Passed: 2 files, 6 tests.
 - `pnpm --filter dvt-temporal-worker test -- test/plugins/env.test.ts test/runtime/createTemporalWorkerRuntime.test.ts`
   - Passed: 2 files, 13 tests.
 - `pnpm --filter @dvt/adapter-temporal test`
-  - Passed: 22 files, 182 tests.
+  - Passed: 22 files, 183 tests.
 - `pnpm --filter @dvt/adapter-temporal typecheck`
   - Passed.
 - `pnpm docs:workboard:generate`
@@ -175,6 +184,9 @@ Intermediate test corrections:
 - `pnpm lint`
   - Failed once because the new test referenced `TextEncoder` directly.
   - Passed after switching the test to `globalThis.TextEncoder`.
+  - Failed once in QA2 because the new workflow parser test import order was
+    wrong.
+  - Passed after sorting the import.
 - `pnpm verify:prepush`
   - Passed.
 
@@ -199,9 +211,13 @@ Known validation note:
 - `docs/runbooks/temporal-planref-drained-cutover-20260427.md`
 - `docs/runbooks/temporal-worker-dbt-plugin-runtime-20260414.md`
 - `packages/@dvt/adapter-temporal/src/config.ts`
+- `packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.state.ts`
+- `packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.types.ts`
+- `packages/@dvt/adapter-temporal/src/workflows/workflowInputParsingHelpers.ts`
 - `packages/@dvt/adapter-temporal/test/TemporalAdapter.startRun.test.ts`
 - `packages/@dvt/adapter-temporal/test/helpers/contractFixtures.ts`
 - `packages/@dvt/adapter-temporal/test/smoke.test.ts`
+- `packages/@dvt/adapter-temporal/test/workflow-continue-as-new.test.ts`
 - `packages/@dvt/adapter-temporal/test/workflow-execution-segment.test.ts`
 
 ## Residual Scope

@@ -12,6 +12,7 @@ import { resolveMaterializationEvidence } from './workflowArtifactHelpers.js';
 import {
   parseOptionalNonNegativeInt,
   parseOptionalStringArray,
+  parseRequiredNonNegativeInt,
   parseRequiredPositiveInt,
 } from './workflowInputParsingHelpers.js';
 
@@ -34,7 +35,7 @@ function parseMaxContinueAsNewPayloadBytes(value: unknown): number {
 }
 
 function parseContinueAsNewAfterLayerCount(value: unknown): number {
-  return parseOptionalNonNegativeInt(value, 'continueAsNewAfterLayerCount');
+  return parseRequiredNonNegativeInt(value, 'continueAsNewAfterLayerCount');
 }
 
 function parseWorkflowCursor(
