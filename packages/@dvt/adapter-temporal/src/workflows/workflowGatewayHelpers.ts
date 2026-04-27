@@ -61,7 +61,11 @@ export function resolveGatewayDependencyContext(
   completedStepResults: Record<string, Record<string, unknown>>
 ): Record<string, unknown> {
   const fromDependency = completedStepResults[dependencyStepId];
-  return fromDependency ?? buildCompletedStepFact(dependencyStepId);
+  if (fromDependency === undefined) {
+    throw new Error(`INVALID_WORKFLOW_STATE: gateway_dependency_fact_missing:${dependencyStepId}`);
+  }
+
+  return fromDependency;
 }
 
 export function buildCompletedStepFact(

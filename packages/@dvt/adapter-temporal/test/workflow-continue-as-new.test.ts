@@ -264,10 +264,9 @@ describe('gateway dependency context', () => {
     ).toEqual({ stepId: 's-1', status: 'COMPLETED', gatewayDecision: true });
   });
 
-  it('builds deterministic completed context when dependency fact is missing', () => {
-    expect(resolveGatewayDependencyContext('s-missing', {})).toEqual({
-      stepId: 's-missing',
-      status: 'COMPLETED',
-    });
+  it('fails closed when dependency fact is missing', () => {
+    expect(() => resolveGatewayDependencyContext('s-missing', {})).toThrow(
+      'INVALID_WORKFLOW_STATE: gateway_dependency_fact_missing:s-missing'
+    );
   });
 });

@@ -139,6 +139,31 @@ describe('createTemporalWorkerRuntime', () => {
     expect(capturedConfig?.stepActivitiesByKind?.get('DBT_MODEL')).toBeDefined();
   });
 
+  it('wires the configured continue-as-new payload budget into Temporal host config', async () => {
+    const fixture = createRuntimeFixture();
+    let capturedConfig: TemporalWorkerHostConfig | undefined;
+
+    const runtime = await createTemporalWorkerRuntime(
+      createEnv({
+        TEMPORAL_MAX_CONTINUE_AS_NEW_PAYLOAD_BYTES: '64000',
+      }),
+      { info() {}, error() {} },
+      {
+        stateStoreFactory: () => fixture.stateStore,
+        connectionFactory: async () => fixture.connection,
+        hostFactory: (config) => {
+          capturedConfig = config;
+          return fixture.host;
+        },
+      }
+    );
+
+    await runtime.start();
+    await runtime.stop();
+
+    expect(capturedConfig?.temporalConfig.workflowBudget.maxContinueAsNewPayloadBytes).toBe(64000);
+  });
+
   it('fails fast when startup is already aborted', async () => {
     const fixture = createRuntimeFixture();
     const shutdown = new globalThis.AbortController();
@@ -194,6 +219,7 @@ function buildBaseEnv(): {
   TEMPORAL_CONNECT_TIMEOUT_MS: undefined;
   TEMPORAL_REQUEST_TIMEOUT_MS: undefined;
   TEMPORAL_MAX_START_PAYLOAD_BYTES: undefined;
+  TEMPORAL_MAX_CONTINUE_AS_NEW_PAYLOAD_BYTES: string | undefined;
   TEMPORAL_CONTINUE_AS_NEW_AFTER_LAYERS: undefined;
   DVT_TEMPORAL_ADMIN_HOST: string;
   DVT_TEMPORAL_ADMIN_PORT: number;
@@ -223,6 +249,7 @@ function buildBaseEnv(): {
     TEMPORAL_CONNECT_TIMEOUT_MS: undefined,
     TEMPORAL_REQUEST_TIMEOUT_MS: undefined,
     TEMPORAL_MAX_START_PAYLOAD_BYTES: undefined,
+    TEMPORAL_MAX_CONTINUE_AS_NEW_PAYLOAD_BYTES: undefined,
     TEMPORAL_CONTINUE_AS_NEW_AFTER_LAYERS: undefined,
     DVT_TEMPORAL_ADMIN_HOST: '127.0.0.1',
     DVT_TEMPORAL_ADMIN_PORT: 9468,

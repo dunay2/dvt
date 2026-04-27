@@ -26,7 +26,7 @@ flowchart LR
 
 ## Canonical adapter specs
 
-- [Temporal adapter specification](./temporal/TemporalAdapter.spec.md)
+- [Temporal adapter specification](./temporal/temporal-adapter-spec.md)
 - [Temporal engine policies](./temporal/EnginePolicies.md)
 - [Postgres state-store adapter](./state-store/postgres/StateStoreAdapter.md)
 - [Snowflake state-store adapter](./state-store/snowflake/StateStoreAdapter.md)

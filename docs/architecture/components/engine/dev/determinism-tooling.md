@@ -3,7 +3,7 @@
 **Audience**: Plan authors, SDK implementers, QA engineers  
 **Purpose**: Enforce deterministic execution in plans (Pre-commit gating)  
 **Status**: Phase 1 (gating enabled)  
-**References**: [ExecutionSemantics](../contracts/engine/ExecutionSemantics.v1.md), [TemporalAdapter](../adapters/temporal/TemporalAdapter.spec.md)
+**References**: [ExecutionSemantics](../contracts/engine/ExecutionSemantics.v1.md), [TemporalAdapter](../adapters/temporal/temporal-adapter-spec.md)
 
 ---
 

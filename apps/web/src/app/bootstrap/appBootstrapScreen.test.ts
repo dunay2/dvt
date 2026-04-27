@@ -64,6 +64,16 @@ function mountProductionBootstrapDom(): HTMLElement {
   return mountedScreen;
 }
 
+function getProgressLabel(): string | undefined {
+  return document.querySelector('[data-app-loading-progress-label]')?.textContent ?? undefined;
+}
+
+function getProgressSegmentStatuses(): string[] {
+  return Array.from(document.querySelectorAll('[data-app-loading-progress-segment]')).map(
+    (segment) => segment.getAttribute('data-status') ?? ''
+  );
+}
+
 describe('appBootstrapScreen', () => {
   beforeEach(() => {
     vi.useFakeTimers();
@@ -142,6 +152,13 @@ describe('appBootstrapScreen', () => {
       document.querySelector<HTMLElement>('[data-app-loading-progress-segment="route"]')?.dataset
         .status
     ).toBe('blocked');
+    expect(getProgressSegmentStatuses()).toEqual([
+      'complete',
+      'complete',
+      'degraded',
+      'complete',
+      'blocked',
+    ]);
 
     setBootstrapStepStatus('route', 'complete');
     completeBootstrapScreen();
@@ -168,6 +185,27 @@ describe('appBootstrapScreen', () => {
     expect(document.getElementById('app-loading-progress')?.textContent).toContain(
       '5/5 startup checks settled'
     );
+  });
+
+  it('keeps error step colors aligned with the semantic readiness label', () => {
+    startBootstrapScreen();
+
+    setBootstrapStepStatus('hydrate', 'complete');
+    setBootstrapStepStatus('services', 'complete');
+    setBootstrapStepStatus('capabilities', 'complete');
+    setBootstrapStepStatus('health', 'error', 'Unable to reach /healthz.');
+    setBootstrapStepStatus('route', 'error', 'Request to /workspace/graph failed (NETWORK)');
+
+    expect(document.getElementById('app-loading-screen')?.getAttribute('data-state')).toBe('error');
+    expect(document.querySelector('[data-app-loading-progress-value]')).toBeNull();
+    expect(getProgressLabel()).toBe('3/5 startup checks settled. Startup error needs attention.');
+    expect(getProgressSegmentStatuses()).toEqual([
+      'complete',
+      'complete',
+      'complete',
+      'error',
+      'error',
+    ]);
   });
 
   it('keeps pending neutral and failed red in the production bootstrap CSS', () => {
