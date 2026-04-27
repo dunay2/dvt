@@ -122,14 +122,16 @@ It owns visible route-presentation transitions only:
 
 ```mermaid
 flowchart TD
-  BackendPending["loading_backend"] --> Visible["published route posture"]
-  BackendBlocked["blocked_backend"] --> Visible
+  BackendPending["loading_backend"] --> ShellPending["bootstrap pending"]
+  BackendBlocked["blocked_backend"] --> ShellComplete["bootstrap complete"]
   GraphLoading["loading_graph"] --> Visible
   GraphError["error_graph"] --> Visible
   Recovery["recovery"] --> Visible
   Empty["empty"] --> Visible
   Ready["ready"] --> Visible
 
+  ShellPending --> Bootstrap["shell bootstrap publication"]
+  ShellComplete --> Bootstrap["shell bootstrap publication"]
   Visible --> Banner["recovery banner"]
   Visible --> Center["center surface"]
   Visible --> Toolbar["toolbar workflow state"]
@@ -141,6 +143,10 @@ flowchart TD
 - Route-visible posture is decided once per render cycle.
 - Banner, center surface, toolbar, and bootstrap publication must consume the
   same canonical route posture.
+- `blocked_backend` disables unsafe Canvas interactions and publishes a
+  completable shell bootstrap posture. Revealing the route is allowed because
+  the first useful Canvas surface is the governed backend-blocked state, not an
+  editable workbench.
 - Affordances such as reload buttons are consequences of route posture, not
   authorities that define it.
 - `CanvasRecoveryBanner.tsx` must not read raw controller recovery reason once

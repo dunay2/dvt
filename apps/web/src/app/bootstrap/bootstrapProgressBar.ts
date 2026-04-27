@@ -1,40 +1,63 @@
+/** Owned concern: render the pre-React startup progress meter from a bootstrap snapshot. */
 type BootstrapProgressTone = 'loading' | 'blocked' | 'error' | 'complete';
-type BootstrapProgressSegmentStatus = 'pending' | 'complete' | 'degraded' | 'blocked' | 'error';
+type BootstrapProgressSegmentStatus =
+  | 'pending'
+  | 'complete'
+  | 'degraded'
+  | 'failed'
+  | 'blocked'
+  | 'error';
+
+export type BootstrapProgressSegment = {
+  id: string;
+  label: string;
+  status: BootstrapProgressSegmentStatus;
+};
 
 export type BootstrapProgressSnapshot = {
-  value: number;
-  max: number;
   tone: BootstrapProgressTone;
   label: string;
-  valueLabel?: string;
-  segments?: readonly BootstrapProgressSegmentStatus[];
+  settledCount: number;
+  totalCount: number;
+  segments: readonly BootstrapProgressSegment[];
 };
 
 const PROGRESS_ROOT_ID = 'app-loading-progress';
 
-function ensureProgressTemplate(root: HTMLElement): void {
-  if (root.childElementCount > 0) {
-    return;
-  }
+function renderProgressTemplate(root: HTMLElement, snapshot: BootstrapProgressSnapshot): void {
+  const header = document.createElement('div');
+  header.className = 'app-loading-progress-head';
 
-  root.innerHTML = `
-    <div class="app-loading-progress-head">
-      <span class="app-loading-progress-kicker">Startup progress</span>
-      <span class="app-loading-progress-value" data-app-loading-progress-value>0%</span>
-    </div>
-    <div class="app-loading-progress-track" data-app-loading-progress-track></div>
-    <p class="app-loading-progress-label" data-app-loading-progress-label></p>
-  `;
-}
+  const kicker = document.createElement('span');
+  kicker.className = 'app-loading-progress-kicker';
+  kicker.textContent = 'Startup readiness';
 
-function createFallbackSegments(
-  value: number,
-  max: number
-): readonly BootstrapProgressSegmentStatus[] {
-  const completedSegments = Math.round(value);
-  return Array.from({ length: max }, (_, index) =>
-    index < completedSegments ? 'complete' : 'pending'
-  );
+  const count = document.createElement('span');
+  count.className = 'app-loading-progress-count';
+  count.dataset.appLoadingProgressCount = '';
+
+  header.append(kicker, count);
+
+  const segments = document.createElement('div');
+  segments.className = 'app-loading-progress-segments';
+  segments.setAttribute('role', 'list');
+  segments.setAttribute('aria-label', 'Startup readiness checks');
+
+  snapshot.segments.forEach((segment) => {
+    const segmentNode = document.createElement('span');
+    segmentNode.className = 'app-loading-progress-segment';
+    segmentNode.dataset.appLoadingProgressSegment = segment.id;
+    segmentNode.dataset.status = segment.status;
+    segmentNode.setAttribute('role', 'listitem');
+    segmentNode.setAttribute('aria-label', `${segment.label}: ${segment.status}`);
+    segments.append(segmentNode);
+  });
+
+  const label = document.createElement('p');
+  label.className = 'app-loading-progress-label';
+  label.dataset.appLoadingProgressLabel = '';
+
+  root.replaceChildren(header, segments, label);
 }
 
 export function renderBootstrapProgress(snapshot: BootstrapProgressSnapshot): void {
@@ -43,39 +66,13 @@ export function renderBootstrapProgress(snapshot: BootstrapProgressSnapshot): vo
     return;
   }
 
-  ensureProgressTemplate(root);
-
-  const clampedMax = Math.max(snapshot.max, 1);
-  const clampedValue = Math.min(Math.max(snapshot.value, 0), clampedMax);
-  const progressRatio = clampedValue / clampedMax;
-  const progressPercent = Math.round(progressRatio * 100);
+  renderProgressTemplate(root, snapshot);
 
   root.dataset.tone = snapshot.tone;
 
-  const trackNode = root.querySelector<HTMLElement>('[data-app-loading-progress-track]');
-  if (trackNode) {
-    const segmentStatuses =
-      snapshot.segments && snapshot.segments.length > 0
-        ? snapshot.segments
-        : createFallbackSegments(clampedValue, Math.round(clampedMax));
-    trackNode.setAttribute('role', 'progressbar');
-    trackNode.setAttribute('aria-valuemin', '0');
-    trackNode.setAttribute('aria-valuemax', String(clampedMax));
-    trackNode.setAttribute('aria-valuenow', String(clampedValue));
-    trackNode.replaceChildren(
-      ...segmentStatuses.map((status) => {
-        const segment = document.createElement('span');
-        segment.className = 'app-loading-progress-segment';
-        segment.dataset.appLoadingProgressSegment = '';
-        segment.dataset.status = status;
-        return segment;
-      })
-    );
-  }
-
-  const valueNode = root.querySelector<HTMLElement>('[data-app-loading-progress-value]');
-  if (valueNode) {
-    valueNode.textContent = snapshot.valueLabel ?? `${progressPercent}%`;
+  const countNode = root.querySelector<HTMLElement>('[data-app-loading-progress-count]');
+  if (countNode) {
+    countNode.textContent = `${snapshot.settledCount}/${snapshot.totalCount} checks`;
   }
 
   const labelNode = root.querySelector<HTMLElement>('[data-app-loading-progress-label]');

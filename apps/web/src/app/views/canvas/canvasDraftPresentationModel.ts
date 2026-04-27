@@ -1,3 +1,4 @@
+/** Owned concern: derive the canonical Canvas route posture and shell bootstrap projection. */
 import type { RouteBootstrapPresentation } from '../../bootstrap/routeBootstrapContract';
 import type { CanvasWorkbenchState } from './canvasWorkbenchStateModel';
 import { canvasViewCopy } from './copy';
@@ -163,9 +164,9 @@ export function deriveCanvasDraftPresentationState({
       routeState: 'blocked_backend',
       recoveryReason,
       draftToolbarState,
-      bootstrapStatus: 'blocked',
+      bootstrapStatus: 'complete',
       bootstrapDetail: startupBlockState.message,
-      canCompleteBootstrap: false,
+      canCompleteBootstrap: true,
     });
   }
 

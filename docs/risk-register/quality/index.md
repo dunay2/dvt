@@ -56,6 +56,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [Intent reconciliation outcomes can overreport cancelled workflows](R-20260408-INTENT-RECONCILE-OUTCOME-CLASSIFICATION.yaml)
 - [Legacy ExecutionPlanV2 imports can break after canonical naming retirement](R-20260401-EXECUTIONPLANV2-CANONICAL-NAMING-BREAK.yaml)
 - [Lineage stale-claimer concurrency remains timestamp-fenced without lease tokens](R-20260328-RCB5F2-LINEAGE-CLAIM-RACE.md)
+- [Local dev-stack Temporal bootstrap can drift from production runtime assumptions](R-20260427-DEV-STACK-TEMPORAL-BOOTSTRAP.yaml)
 - [manifestRef runtime composition could regress back to documented-but-unwired behavior](R-20260331-MANIFESTREF-PRODUCTION-PATH.yaml)
 - [Narrowed engine read boundary could regress through facade re-growth](R-20260412-AR-A12-C-READ-BOUNDARY-PURITY-REGRESSION.yaml)
 - [Persisted plan record contracts can drift back into dual truth and invalid state acceptance](R-20260402-S08-PLAN-STORE-CONTRACT-DRIFT.yaml)

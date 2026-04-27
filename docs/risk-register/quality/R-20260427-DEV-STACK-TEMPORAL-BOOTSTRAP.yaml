@@ -1,0 +1,20 @@
+id: R-20260427-DEV-STACK-TEMPORAL-BOOTSTRAP
+title: Local dev-stack Temporal bootstrap can drift from production runtime assumptions
+status: Open
+date: 2026-04-27
+owners:
+  - '@dvt/adapter-temporal'
+severity: Low
+probability: Low
+context:
+  - pnpm dev:app now starts a local Temporal dev service when it bootstraps the local protected
+    runtime and no external TEMPORAL_ADDRESS is configured.
+  - Local Canvas authoring starts reliably through the dev service, while production and explicitly
+    configured local runtimes continue to use the provided Temporal address.
+mitigations:
+  - Preserve explicit TEMPORAL_ADDRESS without replacing it.
+  - Keep the standalone dvt-temporal-worker in the local path.
+  - Keep worker-host lifecycle tests around ESM workflow resolution and SDK worker option shape.
+  - Keep run-dev-stack tests asserting the local helper uses the full local Temporal dev server path
+    rather than the time-skipping test-server path.
+  - Keep run-dev-stack --test-only as the local end-to-end proof for this posture.

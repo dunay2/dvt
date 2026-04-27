@@ -134,6 +134,13 @@
       "eslint --fix",
       "prettier --write"
     ],
+    "apps/**/*.{ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "apps/**/*.{html,css}": [
+      "prettier --write"
+    ],
     "specs/contracts/**/*.{md,json}": [
       "pnpm contracts:index:generate",
       "node -e \"const fs=require('fs');const cp=require('child_process');const p='specs/contracts/README.md';if(fs.existsSync(p)){cp.execSync('git add -- '+p,{stdio:'inherit'})}\""

@@ -80,10 +80,10 @@ Additional active rationale:
 
 - [20260426 Canvas runtime policy architecture review](./architecture-and-governance/20260426-canvas-runtime-policy-architecture-review.md)
   - domain: `architecture-and-governance`
-  - role: current global remediation plan for unifying Canvas mutation, admission, execution, inspector, and capability policy behind one runtime-policy boundary
+  - role: accepted hard QA closure for the Canvas runtime-policy boundary that unifies mutation, admission, execution, inspector, and capability posture
   - linkage: `TF-E2`, `TF-E2-POL`
-  - status: `queued`
-  - progress: `0%`
+  - status: `accepted`
+  - progress: `100%`
 
 - [20260421 Canvas handler seams Fowler review](./architecture-and-governance/20260421-canvas-handler-seams-fowler-review.md)
   - domain: `architecture-and-governance`
@@ -117,6 +117,13 @@ Additional active rationale:
   - domain: `architecture-and-governance`
   - role: latest full-system principal/staff review grounded in the shipped planner, engine, state, adapter, API, and web boundary reality on 2026-04-23
   - linkage: proposed `IWorkflowEngine` contract ownership cleanup, capability fail-closed hardening, tenant identity decision, read-side contracts, DBT adapter decoupling, workflow-state evolution, cost facts, retention and restore proof
+  - status: `reference`
+  - progress: `n/a`
+
+- [20260427 DVT+ deep architectural review](./architecture-and-governance/20260427-dvt-deep-architectural-review.md)
+  - domain: `architecture-and-governance`
+  - role: current full-system principal/staff review intake for structural execution maturity, operational contracts, risk-register load, and provider/adaptor replaceability evidence
+  - linkage: `S02`, `S03`, `S08`, `ADR-0009`, `R-20260425-PRODUCTION-TENANT-ISOLATION-BASELINE`, `R-20260420-TEMPORAL-DBT-BUILTIN-COUPLING`
   - status: `reference`
   - progress: `n/a`
 

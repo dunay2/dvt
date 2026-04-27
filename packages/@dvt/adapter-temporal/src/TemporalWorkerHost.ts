@@ -9,6 +9,10 @@
  * @date 2026-03-08
  */
 
+import { existsSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
 import type { Attributes, IObservability } from '@dvt/observability';
 import { NativeConnection, Worker } from '@temporalio/worker';
 
@@ -52,6 +56,14 @@ interface WorkerRunState {
 }
 
 type WorkerLogAttributes = Attributes;
+
+const MODULE_DIR = dirname(fileURLToPath(import.meta.url));
+const DEFAULT_WORKFLOW_TS_PATH = resolve(MODULE_DIR, 'workflows/RunPlanWorkflow.ts');
+const DEFAULT_WORKFLOW_JS_PATH = resolve(MODULE_DIR, 'workflows/RunPlanWorkflow.js');
+
+function resolveDefaultWorkflowsPath(): string {
+  return existsSync(DEFAULT_WORKFLOW_TS_PATH) ? DEFAULT_WORKFLOW_TS_PATH : DEFAULT_WORKFLOW_JS_PATH;
+}
 
 export class TemporalWorkerHost {
   private worker: Worker | null = null;
@@ -203,13 +215,15 @@ export class TemporalWorkerHost {
     connection: NativeConnection,
     activities: ReturnType<typeof createActivities>
   ): Promise<Worker> {
+    const identity = this.config.temporalConfig.connection.identity;
+
     return Worker.create({
       connection,
       namespace: this.config.temporalConfig.connection.namespace,
       taskQueue: this.config.temporalConfig.connection.taskQueue,
-      workflowsPath: this.config.workflowsPath ?? require.resolve('./workflows/RunPlanWorkflow'),
+      workflowsPath: this.config.workflowsPath ?? resolveDefaultWorkflowsPath(),
       activities,
-      identity: this.config.temporalConfig.connection.identity,
+      ...(identity === undefined ? {} : { identity }),
     });
   }
 

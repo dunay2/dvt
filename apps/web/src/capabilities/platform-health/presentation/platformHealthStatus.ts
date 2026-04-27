@@ -1,3 +1,4 @@
+/** Owned concern: project platform-health probes into shell connection and retry posture. */
 import type {
   PlatformConnectionState,
   PlatformHealthSnapshot,
@@ -101,7 +102,9 @@ type ShellHealthPresentationInput = {
 };
 
 export function buildShellHealthPresentationModel(input: ShellHealthPresentationInput) {
-  const isInitialHealthCheckPending = input.isPending && !input.data && !input.isError;
+  const hasSettledHealthProbe =
+    input.data !== undefined || input.isError || input.failureCount > 0 || input.errorUpdatedAt > 0;
+  const isInitialHealthCheckPending = input.isPending && !hasSettledHealthProbe;
   const connectionState = isInitialHealthCheckPending
     ? null
     : selectPlatformConnectionState(input.data, input.isError);

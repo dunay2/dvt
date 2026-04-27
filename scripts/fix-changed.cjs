@@ -118,7 +118,7 @@ const ESLINT_CLI =
   resolveCliPath(['eslint/bin/eslint.js', 'eslint/bin/eslint.mjs', 'eslint/bin/eslint.cjs']) ??
   resolvePackageBin('eslint', ['bin/eslint.js', 'bin/eslint.mjs', 'bin/eslint.cjs']);
 
-let changedFiles = [];
+let changedFiles;
 try {
   changedFiles = parseChangedFiles(gitExec(resolveDiffCommand()));
 } catch {
@@ -131,7 +131,7 @@ if (changedFiles.length === 0) {
 }
 
 const prettierFiles = changedFiles
-  .filter((filePath) => /\.(ts|tsx|js|jsx|json|md|yml|yaml)$/.test(filePath))
+  .filter((filePath) => /\.(ts|tsx|js|jsx|json|md|yml|yaml|html|css)$/.test(filePath))
   .filter((filePath) => fs.existsSync(filePath));
 
 const eslintFiles = changedFiles

@@ -169,6 +169,47 @@ describe('TemporalWorkerHost lifecycle', () => {
     expect(host.isRunning()).toBe(false);
   });
 
+  it('resolves the default workflow bundle path in ESM runtime', async () => {
+    const cfg = loadTemporalAdapterConfig({
+      TEMPORAL_ADDRESS: 'temporal:7233',
+      TEMPORAL_NAMESPACE: 'ns-a',
+      TEMPORAL_TASK_QUEUE: 'q-main',
+    });
+
+    const host = new TemporalWorkerHost({
+      temporalConfig: cfg,
+      activityDeps: mkActivityDeps(),
+    });
+
+    await host.start({} as never);
+
+    expect(getLastCreateArgs()).toMatchObject({
+      workflowsPath: expect.stringContaining('RunPlanWorkflow'),
+    });
+
+    await host.shutdown();
+  });
+
+  it('omits worker identity when the Temporal config does not define one', async () => {
+    const cfg = loadTemporalAdapterConfig({
+      TEMPORAL_ADDRESS: 'temporal:7233',
+      TEMPORAL_NAMESPACE: 'ns-a',
+      TEMPORAL_TASK_QUEUE: 'q-main',
+    });
+
+    const host = new TemporalWorkerHost({
+      temporalConfig: cfg,
+      activityDeps: mkActivityDeps(),
+      workflowsPath: '/tmp/workflows.js',
+    });
+
+    await host.start({} as never);
+
+    expect(getLastCreateArgs()).not.toHaveProperty('identity');
+
+    await host.shutdown();
+  });
+
   it('wires registered step activities by kind into Worker.create activities', async () => {
     const cfg = loadTemporalAdapterConfig({
       TEMPORAL_ADDRESS: 'temporal:7233',
