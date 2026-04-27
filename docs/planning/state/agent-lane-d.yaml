@@ -285,12 +285,12 @@ tasks:
       skipped-step side effects, centralized runtime payload helper shaping inside the workflow
       modules, API/worker propagation for `TEMPORAL_MAX_CONTINUE_AS_NEW_PAYLOAD_BYTES`, strict
       fail-fast parsing for governed Temporal numeric env overrides, and an updated Temporal adapter
-      spec aligned to the PlanRef-plus-cursor contract. The task remains open because actual
-      Temporal continue-as-new integration coverage is still missing, replay/cutover posture remains
-      tied to the drained-deploy line, gateway-fact negative coverage is incomplete, and
-      segment-scale maturity is still first-cut. The residual DBT built-in coupling in
-      `@dvt/adapter-temporal` stays explicit as open risk instead of being treated as already-closed
-      plugin extraction.
+      spec aligned to the PlanRef-plus-cursor contract. Follow-up QA1 now adds real Temporal
+      time-skipping continue-as-new coverage and fail-closed gateway dependency fact handling. The
+      task remains open because replay/cutover posture remains tied to the drained-deploy line,
+      governed threshold/SLA readiness is not closed, and segment-scale maturity is still first-cut.
+      The residual DBT built-in coupling in `@dvt/adapter-temporal` stays explicit as open risk
+      instead of being treated as already-closed plugin extraction.
     last_verified: '2026-04-27'
   - task_id: AR-D3
     priority: P2

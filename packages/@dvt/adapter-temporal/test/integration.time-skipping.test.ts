@@ -336,6 +336,53 @@ describe('temporal integration (time-skipping)', () => {
     INTEGRATION_TEST_TIMEOUT
   );
 
+  it(
+    'continues as new when the configured layer budget is exhausted',
+    async () => {
+      const plan = mkLinearPlan(4);
+      const harness = await createSingleRunDbtTimeSkippingHarness({
+        plan,
+        planRefId: 'it-plan-continue-as-new',
+        runId: 'run-it-continue-as-new',
+        taskQueue: 'dvt-it-time-skipping-continue-as-new',
+        temporalEnv: {
+          TEMPORAL_CONTINUE_AS_NEW_AFTER_LAYERS: '2',
+        },
+      });
+      const { adapter, ctx, env, planRef, store } = harness;
+      const worker = await harness.startWorker();
+
+      try {
+        const runRef = await adapter.startRun(planRef, ctx);
+        const result = await env.client.workflow.getHandle(runRef.workflowId).result();
+
+        expect(result).toMatchObject({
+          runId: ctx.runId,
+          status: 'COMPLETED',
+          continuedAsNewCount: 1,
+        });
+
+        const events = await store.listRunEvents(RunId.of(ctx.runId));
+        expect(events.map((event) => event.eventType)).toEqual([
+          'RunStarted',
+          'StepStarted',
+          'StepCompleted',
+          'StepStarted',
+          'StepCompleted',
+          'StepStarted',
+          'StepCompleted',
+          'StepStarted',
+          'StepCompleted',
+          'RunCompleted',
+        ]);
+      } finally {
+        await worker.shutdown();
+        await env.teardown();
+      }
+    },
+    INTEGRATION_TEST_TIMEOUT
+  );
+
   /**
    * @verifies ADR-0001 Section 3 — Single teardown owner
    * @verifies ADR-0011 — RunCancelled event semantics

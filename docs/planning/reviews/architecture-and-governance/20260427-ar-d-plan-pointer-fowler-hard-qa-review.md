@@ -80,19 +80,20 @@ plan through integrity validation before returning bounded layer work.
 
 The slice is not cleanly closed. The strongest remaining risks are not in the
 happy path of `TemporalAdapter.startRun`; they are in runtime threshold
-governance, actual continue-as-new integration proof, replay/cutover posture,
-and negative test coverage. Treating the task as done now would hide real work.
+governance, replay/cutover posture, segment-scale proof, and DBT adapter
+separation. A follow-up fix pass added real Temporal `continueAsNew`
+time-skipping proof and made missing gateway dependency facts fail closed.
 
 ## Findings
 
-| Severity | Area               | Finding                                                                                                                                                                                                                                                                                                                                                       | Evidence                                                                                                                                                                                                                                                           | Required action                                                                                                                                                                                 |
-| -------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| High     | Runtime readiness  | The runtime threshold for `continueAsNew` defaults to `0`, which disables rollover. That is acceptable only if `AR-D2` remains an explicit dependency and deployments are required to configure the threshold before large-DAG readiness is claimed.                                                                                                          | `packages/@dvt/adapter-temporal/src/config.ts`; `docs/planning/state/agent-lane-d.yaml`; `docs/planning/proposals/mandatory/runtime-and-contracts/ar-d-plan-pointer-workflow-input-hardening-plan-20260420.md`                                                     | Do not close `AR-D-PLAN-POINTER` until the `AR-D2` threshold/SLA contract is either implemented or the task explicitly scopes runtime rollover readiness out.                                   |
-| Medium   | Replay and cutover | The plan allows the current branch as a drained-deploy/no-retrocompatibility cut, but the active workflow code does not use Temporal workflow versioning markers for the input-shape change. The docs mention drained deployment, but there is no closeout evidence that an operator-facing drain runbook or CI guard prevents mixed old/new workflow replay. | `docs/planning/proposals/mandatory/runtime-and-contracts/ar-d-plan-pointer-workflow-input-hardening-plan-20260420.md`; `packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts`; `packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.layers.ts` | Add a replay/cutover runbook or a versioned workflow path. The acceptable posture must be explicit before the slice is marked complete.                                                         |
-| Medium   | Negative tests     | Unit tests cover cursor compaction and payload guards, but no integration time-skipping test was found that actually triggers Temporal `continueAsNew` through the workflow runtime. This leaves the highest-risk behavior verified mostly through helper tests.                                                                                              | `packages/@dvt/adapter-temporal/test/workflow-continue-as-new.test.ts`; `packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts`; `docs/adr/ADR-0001-temporal-integration-test-policy.md`                                                           | Add an integration test that sets `continueAsNewAfterLayerCount`, runs a multi-layer plan, proves the new run continues from `PlanRef` plus cursor, and verifies no full-plan state is carried. |
-| Medium   | Gateway facts      | `resolveGatewayDependencyContext` synthesizes `{ status: 'COMPLETED' }` when a compact dependency fact is missing. That is deterministic, but it can hide lost cursor facts when a gateway expects decision or result evidence.                                                                                                                               | `packages/@dvt/adapter-temporal/src/workflows/workflowGatewayHelpers.ts`; `packages/@dvt/adapter-temporal/test/workflow-continue-as-new.test.ts`                                                                                                                   | Add negative tests that distinguish status-only gateways from gateways requiring retained decision/evidence facts. Fail closed where missing compact facts would change branch semantics.       |
-| Medium   | Hexagonal boundary | DBT remains part of the default Temporal adapter registry, and overrides are not allowed to replace DBT-supported step kinds. This is an explicit open risk, not a regression, but it still violates full provider/plugin separation.                                                                                                                         | `packages/@dvt/adapter-temporal/src/activities/activityFactory.ts`; `docs/risk-register/quality/R-20260420-TEMPORAL-DBT-BUILTIN-COUPLING.yaml`                                                                                                                     | Keep the risk open. Move DBT kind ownership into worker composition or an explicit adapter profile before claiming full hexagonal adapter maturity.                                             |
-| Medium   | Scale mechanics    | Segment resolution avoids durable whole-plan carriage, but each layer resolution fetches and validates the whole plan and recomputes execution layers. This is a correct first cut for bounded workflow input, not yet a mature scale design for very deep DAGs.                                                                                              | `packages/@dvt/adapter-temporal/src/activities/activityFactory.ts`; `packages/@dvt/adapter-temporal/src/workflows/executionSegmentResolver.ts`                                                                                                                     | Consider an immutable segment manifest or indexed plan graph artifact for large plans, with tests for deep/wide DAGs and bounded per-layer CPU/fetch cost.                                      |
+| Severity | Area               | Finding                                                                                                                                                                                                                                                                                                                                                       | Evidence                                                                                                                                                                                                                                                           | Required action                                                                                                                                               |
+| -------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| High     | Runtime readiness  | The runtime threshold for `continueAsNew` defaults to `0`, which disables rollover. That is acceptable only if `AR-D2` remains an explicit dependency and deployments are required to configure the threshold before large-DAG readiness is claimed.                                                                                                          | `packages/@dvt/adapter-temporal/src/config.ts`; `docs/planning/state/agent-lane-d.yaml`; `docs/planning/proposals/mandatory/runtime-and-contracts/ar-d-plan-pointer-workflow-input-hardening-plan-20260420.md`                                                     | Do not close `AR-D-PLAN-POINTER` until the `AR-D2` threshold/SLA contract is either implemented or the task explicitly scopes runtime rollover readiness out. |
+| Medium   | Replay and cutover | The plan allows the current branch as a drained-deploy/no-retrocompatibility cut, but the active workflow code does not use Temporal workflow versioning markers for the input-shape change. The docs mention drained deployment, but there is no closeout evidence that an operator-facing drain runbook or CI guard prevents mixed old/new workflow replay. | `docs/planning/proposals/mandatory/runtime-and-contracts/ar-d-plan-pointer-workflow-input-hardening-plan-20260420.md`; `packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts`; `packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.layers.ts` | Add a replay/cutover runbook or a versioned workflow path. The acceptable posture must be explicit before the slice is marked complete.                       |
+| Closed   | Negative tests     | Follow-up fix pass added a time-skipping integration test that configures `TEMPORAL_CONTINUE_AS_NEW_AFTER_LAYERS=2` and verifies the completed workflow result reports `continuedAsNewCount: 1`.                                                                                                                                                              | `packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts`; `packages/@dvt/adapter-temporal/test/integration.time-skipping.shared.ts`; `docs/adr/ADR-0001-temporal-integration-test-policy.md`                                                        | Covered by `pnpm --filter @dvt/adapter-temporal exec vitest run ./test/integration.time-skipping.test.ts -t "continues as new"`.                              |
+| Closed   | Gateway facts      | Follow-up fix pass changed missing dependency facts from synthesized `{ status: 'COMPLETED' }` to fail-closed `INVALID_WORKFLOW_STATE`, with a negative unit test.                                                                                                                                                                                            | `packages/@dvt/adapter-temporal/src/workflows/workflowGatewayHelpers.ts`; `packages/@dvt/adapter-temporal/test/workflow-continue-as-new.test.ts`                                                                                                                   | Covered by `pnpm --filter @dvt/adapter-temporal exec vitest run ./test/workflow-continue-as-new.test.ts`.                                                     |
+| Medium   | Hexagonal boundary | DBT remains part of the default Temporal adapter registry, and overrides are not allowed to replace DBT-supported step kinds. This is an explicit open risk, not a regression, but it still violates full provider/plugin separation.                                                                                                                         | `packages/@dvt/adapter-temporal/src/activities/activityFactory.ts`; `docs/risk-register/quality/R-20260420-TEMPORAL-DBT-BUILTIN-COUPLING.yaml`                                                                                                                     | Keep the risk open. Move DBT kind ownership into worker composition or an explicit adapter profile before claiming full hexagonal adapter maturity.           |
+| Medium   | Scale mechanics    | Segment resolution avoids durable whole-plan carriage, but each layer resolution fetches and validates the whole plan and recomputes execution layers. This is a correct first cut for bounded workflow input, not yet a mature scale design for very deep DAGs.                                                                                              | `packages/@dvt/adapter-temporal/src/activities/activityFactory.ts`; `packages/@dvt/adapter-temporal/src/workflows/executionSegmentResolver.ts`                                                                                                                     | Consider an immutable segment manifest or indexed plan graph artifact for large plans, with tests for deep/wide DAGs and bounded per-layer CPU/fetch cost.    |
 
 ## What Is Working
 
@@ -126,11 +127,14 @@ Already covered:
 
 - PlanRef-only workflow start payload.
 - Large plan artifact does not inflate workflow start args.
+- Actual Temporal time-skipping `continueAsNew` execution with configured layer
+  threshold and final `continuedAsNewCount` proof.
 - Continue-as-new trigger threshold helper behavior.
 - Compact cursor transport for gateway decisions, dependency facts, and
   processed control signal ids.
 - Oversized continue-as-new cursor failure.
 - Gateway dependency cardinality validation.
+- Missing gateway dependency facts fail closed with `INVALID_WORKFLOW_STATE`.
 - Adapter config rejects continue-as-new payload budget larger than start
   payload budget when structured config validation runs.
 - API and temporal-worker env propagation for
@@ -139,9 +143,7 @@ Already covered:
 
 Still needed:
 
-- Full Temporal integration path that actually executes `continueAsNew`.
 - Replay/cutover posture proof for the input-shape change.
-- Missing retained gateway fact when branch semantics depend on the fact.
 - Deep/wide DAG segment resolution cost and payload boundedness tests.
 
 ## Comparison With Mature Runtime Systems
@@ -160,12 +162,10 @@ need tests that exercise the actual runtime, not only helper functions.
 
 Implement a focused `AR-D-PLAN-POINTER-QA1` follow-up:
 
-1. Add one Temporal time-skipping integration test that proves actual
-   `continueAsNew` with PlanRef plus compact cursor.
-2. Add negative gateway-fact tests for missing branch-critical compact facts.
-3. Define the drained-deploy versus versioned-workflow replay posture in a
+1. Define the drained-deploy versus versioned-workflow replay posture in a
    runbook or implementation guard.
-4. Add deep/wide DAG segment-resolution cost and payload boundedness tests.
+2. Add deep/wide DAG segment-resolution cost and payload boundedness tests.
+3. Define the governed `continueAsNew` threshold/SLA readiness contract.
 
 ## Follow-Up Status
 
@@ -177,9 +177,9 @@ Implement a focused `AR-D-PLAN-POINTER-QA1` follow-up:
   input as active normative truth.
 - Invalid numeric Temporal env overrides now fail closed instead of falling
   back to defaults.
-- The remaining recommended follow-up scope is actual Temporal `continueAsNew`
-  integration proof, replay/cutover posture, gateway-fact negative tests,
-  segment-scale maturity, and DBT adapter decoupling.
+- The remaining recommended follow-up scope is replay/cutover posture,
+  segment-scale maturity, governed threshold/SLA readiness, and DBT adapter
+  decoupling.
 
 ## Closeout Posture
 

@@ -74,6 +74,7 @@ export interface CreateSingleRunDbtTimeSkippingHarnessArgs {
   runId: string;
   taskQueue: string;
   contextOverrides?: Parameters<typeof createRunContext>[1];
+  temporalEnv?: Record<string, string | undefined>;
 }
 
 export interface SingleRunDbtTimeSkippingHarness {
@@ -130,6 +131,7 @@ export async function createSingleRunDbtTimeSkippingHarness(
     TEMPORAL_NAMESPACE: 'default',
     TEMPORAL_TASK_QUEUE: args.taskQueue,
     TEMPORAL_IDENTITY: 'adapter-temporal-it',
+    ...args.temporalEnv,
   });
 
   const createWorker = (options?: SingleRunDbtTimeSkippingWorkerOptions): TemporalWorkerHost =>

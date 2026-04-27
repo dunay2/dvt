@@ -70,15 +70,13 @@ planning/ARC evidence so the branch can be reviewed without hidden drift.
   closed instead of silently falling back to defaults.
 - risks and mitigations:
   - risk: spec rewrite could overclaim runtime readiness; mitigation: keep
-    actual Temporal `continueAsNew` proof, replay/cutover, gateway-fact, scale,
-    and DBT separation items open under Lane D.
+    replay/cutover, scale, governed threshold/SLA, and DBT separation items
+    open under Lane D.
   - risk: config hardening could change absent-env behavior; mitigation:
     preserve defaults when env values are absent and reject only present invalid
     values.
 - out of scope:
-  - actual Temporal time-skipping `continueAsNew` integration proof.
   - replay/cutover runbook implementation.
-  - gateway-fact negative test implementation.
   - DBT adapter ownership extraction.
 - validation plan:
   - adapter Temporal package tests.
@@ -110,6 +108,19 @@ planning/ARC evidence so the branch can be reviewed without hidden drift.
 - The AR-D review, review status board, and Lane D registry now distinguish
   remediated items from the remaining open runtime proof work.
 
+## Follow-Up Fix Pass
+
+- Added a Temporal time-skipping integration test that configures
+  `TEMPORAL_CONTINUE_AS_NEW_AFTER_LAYERS=2`, runs a four-layer plan, and verifies
+  the completed workflow result reports `continuedAsNewCount: 1`.
+- Extended the integration harness to accept scoped Temporal env overrides so
+  budget behavior can be tested without changing global defaults.
+- Changed `resolveGatewayDependencyContext` to fail closed with
+  `INVALID_WORKFLOW_STATE: gateway_dependency_fact_missing:<stepId>` when a
+  retained dependency fact is absent.
+- Replaced the old missing-fact unit expectation with a negative test that
+  proves the fail-closed behavior.
+
 ## TDD Evidence
 
 Red failure observed before implementation:
@@ -124,6 +135,16 @@ Green result after implementation:
   - Passed: 22 files, 180 tests.
 - `pnpm --filter dvt-api test -- test/modules/providerAdapters/createTemporalProviderAdapterFactory.test.ts`
   - Passed: 1 file, 1 test.
+
+Follow-up fix pass red/green evidence:
+
+- `pnpm --filter @dvt/adapter-temporal exec vitest run ./test/workflow-continue-as-new.test.ts`
+  - Red: 1 failed test because missing gateway dependency facts did not throw.
+  - Green: 16 tests passed after `workflowGatewayHelpers.ts` was changed to
+    fail closed.
+- `pnpm --filter @dvt/adapter-temporal exec vitest run ./test/integration.time-skipping.test.ts -t "continues as new"`
+  - Passed: 1 test, 8 skipped by name filter. The workflow result contained
+    `continuedAsNewCount: 1`.
 
 ## Validation Evidence
 
@@ -168,6 +189,10 @@ Green result after implementation:
 
 - `docs/architecture/components/engine/adapters/temporal/temporal-adapter-spec.md`
 - `packages/@dvt/adapter-temporal/src/config.ts`
+- `packages/@dvt/adapter-temporal/src/workflows/workflowGatewayHelpers.ts`
+- `packages/@dvt/adapter-temporal/test/integration.time-skipping.shared.ts`
+- `packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts`
+- `packages/@dvt/adapter-temporal/test/workflow-continue-as-new.test.ts`
 - `packages/@dvt/adapter-temporal/test/smoke.test.ts`
 - `apps/api/test/modules/providerAdapters/createTemporalProviderAdapterFactory.test.ts`
 - `docs/planning/reviews/architecture-and-governance/20260427-ar-d-plan-pointer-fowler-hard-qa-review.md`
@@ -180,10 +205,9 @@ Green result after implementation:
 
 `AR-D-PLAN-POINTER` remains open for:
 
-- actual Temporal time-skipping `continueAsNew` integration proof;
 - replay/cutover runbook or versioned workflow posture;
-- missing branch-critical gateway-fact negative tests;
 - deep/wide DAG segment-resolution cost and payload boundedness tests;
+- governed `continueAsNew` threshold/SLA readiness;
 - DBT built-in adapter coupling extraction.
 
 ## No-Debt And No-Stub Evidence
