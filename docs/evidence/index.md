@@ -67,6 +67,7 @@ Evidence documents that justify or validate relevant changes.
 - [ED 20260420 Temporal Fowler Branch Drift Follow Up](ED-20260420-temporal-fowler-branch-drift-follow-up.md)
 - [ED 20260421 Temporal Activity Dependency Wiring](ED-20260421-temporal-activity-dependency-wiring.md)
 - [Ed 20260427 Temporal Planref Config Hardening](ed-20260427-temporal-planref-config-hardening.md)
+- [Ed 20260427 Temporal Planref Qa1 Readiness](ed-20260427-temporal-planref-qa1-readiness.md)
 - [Ed 20260429 Engine Static Analysis Cleanup](ed-20260429-engine-static-analysis-cleanup.md)
 - [ED-20260402 RC-G1 governance startup and health reconciliation](ED-20260402-rc-g1-governance-startup-reconciliation.md)
 - [ED-20260402 S05 envelope boundary hardening](ED-20260402-s05-envelope-boundary-hardening.md)

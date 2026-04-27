@@ -44,7 +44,8 @@ type PlanRef = {
   from `PlanRef.sha256`.
 - Workflow input-shape changes MUST be handled by an explicit replay/cutover
   posture: drained deployment or Temporal workflow versioning. The active
-  `AR-D-PLAN-POINTER` task still tracks that proof.
+  drained-deploy procedure is
+  `docs/runbooks/temporal-planref-drained-cutover-20260427.md`.
 
 **Integrity validation (normative)**:
 
@@ -213,11 +214,13 @@ Workflow code MUST remain deterministic:
 - no Node.js or DOM APIs
 - no side effects outside Temporal activities
 
-Use Temporal workflow versioning or a documented drained-deploy posture for any
-change that affects in-flight workflow replay. Changes to control flow,
+Use Temporal workflow versioning or the documented drained-deploy posture for
+any change that affects in-flight workflow replay. Changes to control flow,
 activity scheduling order, retries, branching, error handling, or workflow input
 shape require explicit replay/cutover evidence before the slice is treated as
-runtime-ready.
+runtime-ready. The current no-retrocompatibility path is operationalized by
+`docs/runbooks/temporal-planref-drained-cutover-20260427.md`; it is not mixed
+old/new replay compatibility.
 
 ---
 
@@ -273,8 +276,10 @@ enabled and reached before all layers are processed:
 - `processedLayersInCurrentExecution >= continueAsNewAfterLayerCount`
 - `nextLayerIndex < totalLayerCount`
 
-`continueAsNewAfterLayerCount = 0` disables rollover. The threshold and SLA
-remain governed by `AR-D2`.
+The governed default enables rollover after 100 execution layers. Explicit
+`continueAsNewAfterLayerCount = 0` disables rollover only for local diagnostics
+or incident rollback and is not large-DAG ready. The threshold and SLA remain
+governed by `AR-D2`.
 
 ```ts
 if (shouldTriggerContinueAsNew(state)) {

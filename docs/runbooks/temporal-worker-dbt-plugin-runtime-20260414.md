@@ -83,7 +83,10 @@ availability before the worker enters the ready state.
 - `TEMPORAL_CONNECT_TIMEOUT_MS` optional
 - `TEMPORAL_REQUEST_TIMEOUT_MS` optional
 - `TEMPORAL_MAX_START_PAYLOAD_BYTES` optional
-- `TEMPORAL_CONTINUE_AS_NEW_AFTER_LAYERS` optional
+- `TEMPORAL_MAX_CONTINUE_AS_NEW_PAYLOAD_BYTES` optional
+- `TEMPORAL_CONTINUE_AS_NEW_AFTER_LAYERS` optional; unset uses the governed
+  default rollover threshold, while explicit `0` disables rollover only for
+  local diagnostics or incident rollback
 - `DVT_TEMPORAL_ADMIN_HOST` default `0.0.0.0`
 - `DVT_TEMPORAL_ADMIN_PORT` default `9468`
 - `DVT_TEMPORAL_DBT_ENABLED` default `false`
@@ -146,6 +149,12 @@ Recommended rollout order:
 4. enable `DVT_TEMPORAL_DBT_ENABLED=true` only after the DBT binary and workdir
    posture are available in that environment
 5. verify DBT-enabled startup stays ready and does not enter `failing`
+
+Workflow input-shape changes must follow
+`temporal-planref-drained-cutover-20260427.md` unless a versioned workflow path
+has been implemented. Do not poll the same task queue with old full-plan
+workflow code and the current PlanRef-plus-cursor workflow code at the same
+time.
 
 Canary checks when DBT mode is enabled:
 

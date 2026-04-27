@@ -104,10 +104,21 @@ describe('adapter-temporal foundation', () => {
       workflowBudget: {
         maxStartPayloadBytes: 2_000_000,
         maxContinueAsNewPayloadBytes: 500_000,
-        continueAsNewAfterLayerCount: 0,
+        continueAsNewAfterLayerCount: 100,
       },
     });
     expect(cfg.connection.identity).toBeUndefined();
+  });
+
+  it('keeps explicit zero as an operator-controlled continue-as-new disablement override', () => {
+    const cfg = loadTemporalAdapterConfig({
+      TEMPORAL_ADDRESS: 'temporal:7233',
+      TEMPORAL_NAMESPACE: 'dvt',
+      TEMPORAL_TASK_QUEUE: 'q-main',
+      TEMPORAL_CONTINUE_AS_NEW_AFTER_LAYERS: '0',
+    });
+
+    expect(cfg.workflowBudget.continueAsNewAfterLayerCount).toBe(0);
   });
 
   it('loads config with defaults and env overrides', () => {
