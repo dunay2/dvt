@@ -508,10 +508,10 @@ tasks:
   - task_id: RC-G1-D
     parent_task: RC-G1
     priority: P1
-    status: in_progress
+    status: done
     complexity: L
     effort_points: 5
-    progress_pct: 10
+    progress_pct: 100
     objective:
       move planner-private ports to `@dvt/planner` and close the final shared-kernel cleanup.
     dependency: RC-G1-C
@@ -521,11 +521,14 @@ tasks:
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/contracts-domain-ownership-migration-plan-20260327.md
       - docs/planning/closeouts/20260427-rc-g1-d-planner-ownership-migration-closeout.md
+      - docs/evidence/ed-20260427-rc-g1-d-planner-ownership-migration.md
+      - docs/risk-register/quality/R-20260427-RC-G1-D-PLANNER-OWNERSHIP.yaml
       - docs/risk-register/quality/R-20260402-RC-G1-CONTRACT-OWNERSHIP-EXECUTION-DRIFT.yaml
     status_reason: >-
-      Planner migration has started with docs-first rationale. The implementation cut will split
-      serializable planner vocabulary that stays in `@dvt/contracts` from planner-owned behavior
-      ports that move to `@dvt/planner`.
+      Planner-private behavior ports now live in `@dvt/planner`, shared serializable planner
+      vocabulary remains in `@dvt/contracts`, API and Postgres adapter consumers import the owner
+      package, and ARC-2 evidence plus lint and architecture guards close the final RC-G1 migration
+      slice.
     last_verified: '2026-04-27'
   - task_id: RC-G1-C-TRUTH-SYNC
     priority: P1
@@ -3055,16 +3058,17 @@ dependency_notes:
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
-  verified_on: '2026-04-20'
+  verified_on: '2026-04-27'
   total_tasks: 118
   total_effort_points: 356
-  completed_weighted_points: 280.89
-  lane_progress_pct: 79
+  completed_weighted_points: 285.39
+  lane_progress_pct: 80
   notes: >-
     Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry
     coordination-only effort. `TF-A2` now adds the missing contract-first workspace graph-draft
     persistence boundary so typed web/api/store ownership is frozen before frontend productization
     continues, `TF-A1-C12..C19` now cover the post-hardening route-facade, compile-boundary
     ownership cleanup, and declarative route-policy plus canonical-envelope convergence, while the
-    merged `origin/main` intake also carries `RC-G1-C-TRUTH-SYNC` and adjacent follow-up routing;
-    summary values were recomputed from the current lane registry on 2026-04-20.
+    merged `origin/main` intake also carries `RC-G1-C-TRUTH-SYNC` and adjacent follow-up routing.
+    `RC-G1-D` is now closed with planner-private behavior ports moved to `@dvt/planner`, bringing
+    the weighted lane summary to 2026-04-27.

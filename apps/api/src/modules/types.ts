@@ -1,7 +1,5 @@
 import type {
   ExecutionPlan,
-  IPlanExecutabilityValidator,
-  IPlanValidationLifecycleStore,
   IPlanner,
   PlanRef,
 } from '@dvt/contracts';
@@ -12,6 +10,10 @@ import type {
   IRunHealthService,
   IWorkflowEngine,
 } from '@dvt/engine';
+import type {
+  IPlanExecutabilityValidator,
+  IPlanValidationLifecycleStore,
+} from '@dvt/planner';
 
 import type { IAuthenticator } from '../application/ports/auth.js';
 import type { IStartRunTargetAdapterRegistry } from '../application/ports/IStartRunTargetAdapterRegistry.js';

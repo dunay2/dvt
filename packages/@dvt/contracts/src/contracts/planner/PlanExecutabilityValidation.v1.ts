@@ -29,8 +29,6 @@
  * @see packages/@dvt/planner/docs/planning/Stage-1.1-Planner-Canonicalization.md §17
  */
 
-import type { PlanRefSchemaT } from '../../schemas.js';
-
 // ── Error codes ────────────────────────────────────────────────────────────────
 
 /**
@@ -54,7 +52,7 @@ export type ExecutabilityRejectionCode = (typeof EXECUTABILITY_REJECTION_CODES)[
 // ── Result type ────────────────────────────────────────────────────────────────
 
 /**
- * Structured result returned by `IPlanExecutabilityValidator.validatePlan`.
+ * Structured result returned by the planner-owned executability validator.
  *
  * The discriminant is `status`:
  * - `'OK'` — the plan can be executed on the target adapter.
@@ -86,25 +84,3 @@ export type ExecutabilityValidationResult =
        */
       cause?: string;
     };
-
-// ── Port interface ─────────────────────────────────────────────────────────────
-
-/**
- * Port for validating a persisted plan against the capabilities of a target
- * adapter/runtime before execution is allowed to start.
- *
- * Implementations live in adapter packages (e.g. `@dvt/adapter-temporal`).
- * The canonical owner of this contract is `@dvt/contracts`.
- */
-export interface IPlanExecutabilityValidator {
-  /**
-   * Validates a persisted plan against the target adapter's runtime capabilities.
-   *
-   * @param planRef - Immutable reference to the persisted canonical plan.
-   *   The plan MUST already exist in the state store in a non-runnable state
-   *   before this method is called.
-   * @param adapterId - Target adapter identifier (e.g. `'temporal'`).
-   * @returns A structured validation result.
-   */
-  validatePlan(planRef: PlanRefSchemaT, adapterId: string): Promise<ExecutabilityValidationResult>;
-}

@@ -4,14 +4,16 @@
  */
 import {
   START_RUN_RESULT_KIND,
-  type IPlanExecutabilityValidator,
-  type IPlanValidationLifecycleStore,
   type IPlanner,
   type PlannerInputEnvelopeV1,
   type PlanRef,
   type StartRunCommand,
   type StartRunPlanRef,
 } from '@dvt/contracts';
+import type {
+  IPlanExecutabilityValidator,
+  IPlanValidationLifecycleStore,
+} from '@dvt/planner';
 
 import type { AuthorizedCommandExecutionContext } from '../ports/authContract.js';
 import type {

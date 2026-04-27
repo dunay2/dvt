@@ -3,14 +3,16 @@
  * `apps/api` from already-bound abstract dependencies.
  */
 import type {
-  IPlanExecutabilityValidator,
-  IPlanValidationLifecycleStore,
   IPlanner,
   IStepTypeRegistry,
 } from '@dvt/contracts';
 import type { EngineRunRef, IProviderAdapter, IWorkflowEngine } from '@dvt/engine';
 import type { IObservability } from '@dvt/observability';
-import { PlannerFacade } from '@dvt/planner';
+import {
+  PlannerFacade,
+  type IPlanExecutabilityValidator,
+  type IPlanValidationLifecycleStore,
+} from '@dvt/planner';
 
 import type { IAuthenticator } from '../../application/ports/auth.js';
 import type { DuplicateRunProbe } from '../../application/ports/DuplicateRunProbe.js';

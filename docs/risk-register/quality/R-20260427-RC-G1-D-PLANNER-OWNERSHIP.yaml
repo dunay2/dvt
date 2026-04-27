@@ -1,0 +1,37 @@
+---
+id: R-20260427-RC-G1-D-PLANNER-OWNERSHIP
+title: Planner-private behavior ports can drift back into the shared kernel
+status: Open
+date: 2026-04-27
+owners:
+  - packages/@dvt/contracts
+  - packages/@dvt/planner
+  - packages/@dvt/adapter-postgres
+  - apps/api
+severity: Medium
+probability: Low
+context: >
+  RC-G1-D splits mixed planner contract files so serializable vocabulary remains in @dvt/contracts
+  while planner-private behavior ports move to @dvt/planner. The cutover also makes
+  @dvt/adapter-postgres declare an explicit planner dependency for the lifecycle store interface it
+  implements.
+risk: >
+  A future convenience export or broad adapter import could reintroduce planner-private behavior
+  through @dvt/contracts, or make the Postgres adapter depend on planner services instead of only
+  the owner-local behavior port it implements.
+mitigations:
+  - >
+    packages/@dvt/contracts/test/planner-private-ownership.architecture.test.ts proves the moved
+    behavior ports are absent from @dvt/contracts source files and its root barrel.
+  - >
+    packages/@dvt/planner/test/unit/planner-private-ownership.architecture.test.ts proves the moved
+    behavior ports are published from @dvt/planner.
+  - >
+    eslint.config.cjs blocks governed runtime code from importing the moved ports from
+    @dvt/contracts.
+  - >
+    The RC-G1-D proposal and closeout document record the explicit exception that
+    @dvt/adapter-postgres imports the planner-owned lifecycle port as an implementation dependency,
+    not as a planner service dependency.
+review_after: 2026-06-30
+---

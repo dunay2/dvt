@@ -1,7 +1,6 @@
 import type { IPlanStoreReader, IPlanStoreWriter } from '@dvt/artifacts';
 import {
   type ExecutabilityValidationResult,
-  type IPlanValidationLifecycleStore,
   type PlanAdmissionLink,
   type PlanExecutabilityRecord,
   type PlanRefSchemaT,
@@ -15,6 +14,7 @@ import {
   type RunExecutionPolicy,
 } from '@dvt/contracts';
 import type { IPlanFetcher, StoredPlanArtifact } from '@dvt/engine';
+import type { IPlanValidationLifecycleStore } from '@dvt/planner';
 import { Pool, type PoolClient } from 'pg';
 
 import { PostgresPlanAdmissionRepository } from './PostgresPlanStore.admission-repository.js';

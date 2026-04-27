@@ -224,12 +224,10 @@ export { EXECUTABILITY_REJECTION_CODES } from './contracts/planner/PlanExecutabi
 export type {
   ExecutabilityRejectionCode,
   ExecutabilityValidationResult,
-  IPlanExecutabilityValidator,
 } from './contracts/planner/PlanExecutabilityValidation.v1.js';
 export type {
   BindingRejectionCode,
   ExecutionBindingVerificationResult,
-  IExecutionBindingVerifier,
   PlanBindingRecord,
   StepBindingEntry,
 } from './contracts/planner/ExecutionBindingVerification.v1.js';
@@ -241,7 +239,6 @@ export type {
 } from './contracts/planner/PlanExecutabilityRecord.v1.js';
 export type { PlanAdmissionLink } from './contracts/planner/PlanAdmissionLink.v1.js';
 export type {
-  IPlanValidationLifecycleStore,
   PlanValidationRecord,
   PlanValidationState,
 } from './contracts/planner/PlanValidationLifecycle.v1.js';
@@ -251,7 +248,6 @@ export type {
   CustomPolicyRejectionCode,
   CustomPolicySchemaValidator,
   CustomPolicyValidationError,
-  ICustomPolicyNamespaceRegistry,
 } from './contracts/planner/CustomPolicyNamespaceRegistry.v1.js';
 export {
   KNOWN_STEP_KINDS,

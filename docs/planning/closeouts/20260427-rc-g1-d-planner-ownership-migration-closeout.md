@@ -1,6 +1,6 @@
 ---
 title: RC-G1-D planner ownership migration closeout
-status: Draft
+status: Accepted
 date: 2026-04-27
 last_reviewed: 2026-04-27
 owner: Architecture / Planner / Contracts / API / Adapter-postgres
@@ -236,12 +236,65 @@ Verified before code changes:
 
 ## Implementation Results
 
-Pending implementation.
+Implemented the selected split-ownership cut.
+
+- Added planner-owned behavior-port modules under `@dvt/planner/src/contracts`.
+- Removed `IPlanExecutabilityValidator`, `IExecutionBindingVerifier`,
+  `IPlanValidationLifecycleStore`, and `ICustomPolicyNamespaceRegistry` from
+  `@dvt/contracts` source files and the root barrel.
+- Kept shared serializable planner vocabulary in `@dvt/contracts`, including
+  executability, binding, validation lifecycle, and custom policy DTO/result
+  shapes.
+- Redirected `apps/api` and `@dvt/adapter-postgres` consumers to import moved
+  ports from `@dvt/planner`.
+- Declared the explicit `@dvt/planner` dependency and TypeScript path mapping
+  for `@dvt/adapter-postgres`.
+- Added architecture tests proving the moved behavior ports are absent from
+  `@dvt/contracts` and present in `@dvt/planner`.
+- Added lint guards blocking governed runtime code from importing the moved
+  ports through `@dvt/contracts`.
+- Published ARC-2 evidence and risk updates for the contract, planner, adapter,
+  and API boundary change.
 
 ## Validation Results
 
-Pending implementation.
+Passed:
+
+- `pnpm --filter @dvt/contracts test -- planner-private-ownership.architecture.test.ts`
+- `pnpm --filter @dvt/planner test -- planner-private-ownership.architecture.test.ts`
+- `pnpm --filter @dvt/contracts build`
+- `pnpm --filter @dvt/planner build`
+- `pnpm --filter @dvt/adapter-postgres build`
+- `pnpm --filter dvt-api build`
+- `pnpm --filter @dvt/contracts typecheck`
+- `pnpm --filter @dvt/planner typecheck`
+- `pnpm --filter @dvt/adapter-postgres typecheck`
+- `pnpm --filter dvt-api typecheck`
+- `pnpm --filter @dvt/contracts test`
+- `pnpm --filter @dvt/planner test`
+- `pnpm --filter @dvt/adapter-postgres test`
+- `pnpm --filter dvt-api test`
+- `pnpm docs:status:generate`
+- `pnpm docs:sync`
+- `pnpm docs:workboard:generate`
+- `pnpm lint`
+- `pnpm docs:arc:evidence:check`
+- `pnpm verify:prepush`
+
+Final repository gate:
+
+- `GIT_BASE=origin/main GIT_HEAD=HEAD node tools/ci/arc-check.mjs` will be run
+  after the implementation commit so the command evaluates the real committed
+  diff.
 
 ## No-Debt / No-Stub Evidence
 
-Pending implementation.
+- No behavior stubs, placeholders, fake adapters, or TODO/FIXME markers were
+  added.
+- No lint, type, test, ARC, documentation, or hook rule was relaxed.
+- No `--no-verify` or hook bypass was used.
+- The only lint policy adjustment permits the explicit `@dvt/adapter-postgres`
+  planner dependency required by the `RC-G1-D2` definition of done; the old
+  `@dvt/contracts` import path is now mechanically blocked for the moved ports.
+- `.vscode/settings.json` was already dirty before this slice and was not
+  touched by this work.
