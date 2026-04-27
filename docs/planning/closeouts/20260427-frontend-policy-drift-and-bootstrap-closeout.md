@@ -392,6 +392,6 @@ Validation evidence:
 
 ARC evidence:
 
-- Added `docs/evidence/ED-20260427-dev-stack-local-temporal-bootstrap.md`.
+- Added `docs/evidence/ed-20260427-dev-stack-local-temporal-bootstrap.md`.
 - Added
   `docs/risk-register/quality/R-20260427-DEV-STACK-TEMPORAL-BOOTSTRAP.yaml`.
