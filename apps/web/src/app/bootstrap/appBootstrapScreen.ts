@@ -142,43 +142,37 @@ function findLatestStepDetail(status: BootstrapStepStatus): string | null {
   return null;
 }
 
-function getStepProgressUnits(status: BootstrapStepStatus): number {
-  switch (status) {
-    case 'complete':
-    case 'degraded':
-      return 1;
-    case 'blocked':
-    case 'error':
-      return 0.85;
-    case 'pending':
-    default:
-      return 0;
-  }
+function isReadyStep(status: BootstrapStepStatus): boolean {
+  return status === 'complete' || status === 'degraded';
+}
+
+function formatCheckCount(count: number): string {
+  return `${count} ${count === 1 ? 'check' : 'checks'}`;
 }
 
 function renderBootstrapProgressState(state: BootstrapScreenState): void {
-  const settledSteps = STEP_ORDER.filter((step) => {
-    const stepStatus = bootstrapStepState[step].status;
-    return stepStatus === 'complete' || stepStatus === 'degraded';
+  const readySteps = STEP_ORDER.filter((step) => isReadyStep(bootstrapStepState[step].status)).length;
+  const blockedSteps = STEP_ORDER.filter((step) => bootstrapStepState[step].status === 'blocked').length;
+  const attentionSteps = STEP_ORDER.filter((step) => {
+    const status = bootstrapStepState[step].status;
+    return status === 'blocked' || status === 'error';
   }).length;
 
-  const progressValue = STEP_ORDER.reduce((total, step) => {
-    return total + getStepProgressUnits(bootstrapStepState[step].status);
-  }, 0);
-
-  let label = `${settledSteps}/${STEP_ORDER.length} startup steps settled`;
+  let label = `${readySteps}/${STEP_ORDER.length} startup checks ready`;
   if (state === 'blocked') {
-    label = `${label}. Waiting on a required prerequisite.`;
+    label = `${label}. ${formatCheckCount(blockedSteps)} waiting on a required prerequisite.`;
   }
   if (state === 'error') {
-    label = `${label}. A startup error needs attention.`;
+    label = `${label}. ${formatCheckCount(attentionSteps)} need attention.`;
   }
 
   renderBootstrapProgress({
-    value: state === 'complete' ? STEP_ORDER.length : progressValue,
+    value: readySteps,
     max: STEP_ORDER.length,
     tone: state,
     label,
+    valueLabel: `${readySteps}/${STEP_ORDER.length} ready`,
+    segments: STEP_ORDER.map((step) => bootstrapStepState[step].status),
   });
 }
 

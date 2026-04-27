@@ -30,6 +30,20 @@ function mountBootstrapDom(): void {
   `;
 }
 
+function getProgressValue(): string | undefined {
+  return document.querySelector('[data-app-loading-progress-value]')?.textContent ?? undefined;
+}
+
+function getProgressLabel(): string | undefined {
+  return document.querySelector('[data-app-loading-progress-label]')?.textContent ?? undefined;
+}
+
+function getProgressSegmentStatuses(): string[] {
+  return Array.from(document.querySelectorAll('[data-app-loading-progress-segment]')).map(
+    (segment) => segment.getAttribute('data-status') ?? ''
+  );
+}
+
 describe('appBootstrapScreen', () => {
   beforeEach(() => {
     vi.useFakeTimers();
@@ -60,14 +74,43 @@ describe('appBootstrapScreen', () => {
       'Raven is waiting for startup prerequisites'
     );
     expect(document.getElementById('app-loading-progress')?.textContent).toContain(
-      '4/5 startup steps settled. Waiting on a required prerequisite.'
+      '4/5 startup checks ready. 1 check waiting on a required prerequisite.'
     );
+    expect(getProgressValue()).toBe('4/5 ready');
+    expect(getProgressSegmentStatuses()).toEqual([
+      'complete',
+      'complete',
+      'degraded',
+      'complete',
+      'blocked',
+    ]);
 
     setBootstrapStepStatus('route', 'complete');
     completeBootstrapScreen();
     vi.advanceTimersByTime(120);
 
     expect(document.getElementById('app-loading-screen')).toBeNull();
+  });
+
+  it('keeps readiness count aligned with failed step colors', () => {
+    startBootstrapScreen();
+
+    setBootstrapStepStatus('hydrate', 'complete');
+    setBootstrapStepStatus('services', 'complete');
+    setBootstrapStepStatus('capabilities', 'complete');
+    setBootstrapStepStatus('health', 'error', 'Unable to reach /healthz.');
+    setBootstrapStepStatus('route', 'error', 'Request to /workspace/graph failed (NETWORK)');
+
+    expect(document.getElementById('app-loading-screen')?.getAttribute('data-state')).toBe('error');
+    expect(getProgressValue()).toBe('3/5 ready');
+    expect(getProgressLabel()).toBe('3/5 startup checks ready. 2 checks need attention.');
+    expect(getProgressSegmentStatuses()).toEqual([
+      'complete',
+      'complete',
+      'complete',
+      'error',
+      'error',
+    ]);
   });
 
   it('does not reopen the startup surface after bootstrap has already completed', () => {

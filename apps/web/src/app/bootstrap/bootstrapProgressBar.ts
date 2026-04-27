@@ -1,10 +1,13 @@
 type BootstrapProgressTone = 'loading' | 'blocked' | 'error' | 'complete';
+type BootstrapProgressSegmentStatus = 'pending' | 'complete' | 'degraded' | 'blocked' | 'error';
 
 export type BootstrapProgressSnapshot = {
   value: number;
   max: number;
   tone: BootstrapProgressTone;
   label: string;
+  valueLabel?: string;
+  segments?: readonly BootstrapProgressSegmentStatus[];
 };
 
 const PROGRESS_ROOT_ID = 'app-loading-progress';
@@ -19,11 +22,19 @@ function ensureProgressTemplate(root: HTMLElement): void {
       <span class="app-loading-progress-kicker">Startup progress</span>
       <span class="app-loading-progress-value" data-app-loading-progress-value>0%</span>
     </div>
-    <div class="app-loading-progress-track" data-app-loading-progress-track>
-      <span class="app-loading-progress-fill" data-app-loading-progress-fill></span>
-    </div>
+    <div class="app-loading-progress-track" data-app-loading-progress-track></div>
     <p class="app-loading-progress-label" data-app-loading-progress-label></p>
   `;
+}
+
+function createFallbackSegments(
+  value: number,
+  max: number
+): readonly BootstrapProgressSegmentStatus[] {
+  const completedSegments = Math.round(value);
+  return Array.from({ length: max }, (_, index) =>
+    index < completedSegments ? 'complete' : 'pending'
+  );
 }
 
 export function renderBootstrapProgress(snapshot: BootstrapProgressSnapshot): void {
@@ -41,14 +52,30 @@ export function renderBootstrapProgress(snapshot: BootstrapProgressSnapshot): vo
 
   root.dataset.tone = snapshot.tone;
 
-  const fillNode = root.querySelector<HTMLElement>('[data-app-loading-progress-fill]');
-  if (fillNode) {
-    fillNode.style.width = `${progressPercent}%`;
+  const trackNode = root.querySelector<HTMLElement>('[data-app-loading-progress-track]');
+  if (trackNode) {
+    const segmentStatuses =
+      snapshot.segments && snapshot.segments.length > 0
+        ? snapshot.segments
+        : createFallbackSegments(clampedValue, Math.round(clampedMax));
+    trackNode.setAttribute('role', 'progressbar');
+    trackNode.setAttribute('aria-valuemin', '0');
+    trackNode.setAttribute('aria-valuemax', String(clampedMax));
+    trackNode.setAttribute('aria-valuenow', String(clampedValue));
+    trackNode.replaceChildren(
+      ...segmentStatuses.map((status) => {
+        const segment = document.createElement('span');
+        segment.className = 'app-loading-progress-segment';
+        segment.dataset.appLoadingProgressSegment = '';
+        segment.dataset.status = status;
+        return segment;
+      })
+    );
   }
 
   const valueNode = root.querySelector<HTMLElement>('[data-app-loading-progress-value]');
   if (valueNode) {
-    valueNode.textContent = `${progressPercent}%`;
+    valueNode.textContent = snapshot.valueLabel ?? `${progressPercent}%`;
   }
 
   const labelNode = root.querySelector<HTMLElement>('[data-app-loading-progress-label]');
