@@ -1,3 +1,4 @@
+/** Owned concern: compose the Raven shell frame and publish root bootstrap posture. */
 import { useEffect, useSyncExternalStore } from 'react';
 import { Outlet } from 'react-router';
 import {
@@ -11,10 +12,7 @@ import LeftNavigation from './components/LeftNavigation';
 import ShellHealthBanner from './components/ShellHealthBanner';
 import TopAppBar from './components/TopAppBar';
 import AppShellFrame from './components/shell/AppShellFrame';
-import {
-  completeBootstrapScreen,
-  setBootstrapStepStatus,
-} from './bootstrap/appBootstrapScreen';
+import { completeBootstrapScreen, setBootstrapStepStatus } from './bootstrap/appBootstrapScreen';
 import {
   getPublishedRouteBootstrapPresentation,
   subscribeRouteBootstrapPresentations,
@@ -66,6 +64,7 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
     getRouteBootstrapSnapshot,
     getRouteBootstrapSnapshot
   );
+  const shellHealthRestState = shellHealth.connectionState?.rest;
   const isInitialCapabilitiesBootstrapPending =
     capabilitiesQuery.isPending && !capabilitiesQuery.data && !capabilitiesQuery.isError;
 
@@ -113,7 +112,16 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
       return;
     }
 
-    if (platformHealth.isError || shellHealth.connectionState?.rest !== 'ok') {
+    if (platformHealth.isError || shellHealthRestState === 'offline') {
+      setBootstrapStepStatus(
+        'health',
+        'failed',
+        shellHealth.connectionDetail ?? 'Platform health probes failed during startup.'
+      );
+      return;
+    }
+
+    if (shellHealthRestState !== 'ok') {
       setBootstrapStepStatus(
         'health',
         'degraded',
@@ -130,6 +138,7 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
   }, [
     platformHealth.isError,
     shellHealth.connectionDetail,
+    shellHealthRestState,
     shellHealth.isInitialHealthCheckPending,
   ]);
 
@@ -139,10 +148,7 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
       routeBootstrapPresentation.status,
       routeBootstrapPresentation.detail
     );
-  }, [
-    routeBootstrapPresentation.detail,
-    routeBootstrapPresentation.status,
-  ]);
+  }, [routeBootstrapPresentation.detail, routeBootstrapPresentation.status]);
 
   useEffect(() => {
     if (!routeBootstrapPresentation.canComplete) {

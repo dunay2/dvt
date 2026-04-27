@@ -82,6 +82,10 @@ Reading rule:
 - the registry stores posture; it does not invent it
 - `Root.tsx` consumes the active route contract; it does not infer readiness
   from pathname or widget state
+- a published route may complete shell bootstrap only when the route is safe and
+  useful as the first visible workbench surface
+- `blocked` is reserved for startup blockers that must keep the pre-React gate
+  visible because revealing the workbench would be misleading
 - normal updates replace posture in place; reset only happens on teardown or
   route identity change
 
@@ -93,6 +97,9 @@ Reading rule:
   consumption time
 - missing explicit registration for a published route throws typed bootstrap
   failure
+- API backend readiness failures for Canvas are route-visible blockers, not
+  pre-React startup blockers. The shell may reveal Canvas once the route can
+  render a governed backend-blocked surface with unsafe interactions disabled.
 - fallback to empty matches or no-op publication is allowed only in test
   runtime for isolated non-router tests
 

@@ -99,20 +99,20 @@ Docker Postgres proof environment automatically when `DATABASE_URL` is not
 already set in the caller environment. It also enables `/db/ready` for the API
 process and waits for that probe before reporting the stack ready.
 
-When the coordinated dev stack enables protected runtime locally, it also
-injects the canonical local Temporal posture:
+When the coordinated dev stack enables protected runtime locally and
+`TEMPORAL_ADDRESS` is not already configured, it also starts a local Temporal
+dev service and injects that runtime posture:
 
-- `TEMPORAL_ADDRESS=127.0.0.1:7233`
-- `TEMPORAL_NAMESPACE=default`
+- `TEMPORAL_ADDRESS=<local Temporal dev service address>`
+- `TEMPORAL_NAMESPACE=<local Temporal dev service namespace>`
 - `TEMPORAL_TASK_QUEUE=dvt-temporal`
 - `DVT_TEMPORAL_WORKER_READYZ_URL=http://127.0.0.1:9468/readyz`
 
 The wrapper starts `dvt-temporal-worker` with the same Temporal/Postgres
 posture and waits for the worker `GET /readyz` probe before starting the API.
-The Temporal service itself must already be reachable at the configured
-address. If it is not reachable, bootstrap fails with an explicit Temporal
-readiness error rather than letting the API report a generic no-adapters
-runtime failure.
+If `TEMPORAL_ADDRESS` is explicitly set by the caller, the wrapper preserves
+that external Temporal posture and fails bootstrap if the configured Temporal
+runtime cannot be reached.
 
 When protected-runtime OIDC posture is otherwise absent, the coordinated dev
 stack now also bootstraps a local JWKS-backed auth posture for Canvas and other
@@ -143,9 +143,12 @@ started.
 
 - If startup fails with OIDC/runtime wiring errors: re-check the required env
   posture section and restart.
-- If startup fails while waiting for `Temporal worker readyz`: start or repair
-  the local Temporal service at `TEMPORAL_ADDRESS`, then restart
+- If startup fails while waiting for `Temporal worker readyz` with an explicit
+  `TEMPORAL_ADDRESS`: start or repair that Temporal service, then restart
   `pnpm dev:app`.
+- If startup fails while waiting for `Temporal worker readyz` without an
+  explicit `TEMPORAL_ADDRESS`: inspect the local Temporal dev-service
+  bootstrap and the `dvt-temporal-worker` logs first.
 - If protected routes do not register: verify OIDC variables are all present
   and non-empty.
 - If `/healthz` is not reachable: treat as process/container issue first

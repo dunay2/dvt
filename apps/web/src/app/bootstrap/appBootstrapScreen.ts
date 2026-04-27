@@ -1,8 +1,8 @@
 /** Owned concern: drive the pre-React Raven startup screen state and DOM semantics. */
-import { renderBootstrapProgress } from './bootstrapProgressBar';
+import { renderBootstrapProgress, type BootstrapProgressSegment } from './bootstrapProgressBar';
 
 type BootstrapStep = 'hydrate' | 'services' | 'capabilities' | 'health' | 'route';
-type BootstrapStepStatus = 'pending' | 'complete' | 'degraded' | 'blocked' | 'error';
+type BootstrapStepStatus = 'pending' | 'complete' | 'degraded' | 'failed' | 'blocked' | 'error';
 type BootstrapScreenState = 'loading' | 'blocked' | 'error' | 'complete';
 
 const LOADING_SCREEN_ID = 'app-loading-screen';
@@ -65,13 +65,16 @@ const STEP_CONFIG: Record<BootstrapStep, BootstrapStepConfig> = {
 let bootstrapStepState = createInitialStepState();
 
 function createInitialStepState(): Record<BootstrapStep, BootstrapStepState> {
-  return STEP_ORDER.reduce<Record<BootstrapStep, BootstrapStepState>>((state, step) => {
-    state[step] = {
-      status: 'pending',
-      detail: STEP_CONFIG[step].pendingDetail,
-    };
-    return state;
-  }, {} as Record<BootstrapStep, BootstrapStepState>);
+  return STEP_ORDER.reduce<Record<BootstrapStep, BootstrapStepState>>(
+    (state, step) => {
+      state[step] = {
+        status: 'pending',
+        detail: STEP_CONFIG[step].pendingDetail,
+      };
+      return state;
+    },
+    {} as Record<BootstrapStep, BootstrapStepState>
+  );
 }
 
 function getLoadingScreen(): HTMLElement | null {
@@ -105,6 +108,8 @@ function getDefaultDetail(step: BootstrapStep, status: BootstrapStepStatus): str
       return STEP_CONFIG[step].completeDetail;
     case 'degraded':
       return `${STEP_CONFIG[step].label} settled with degraded startup conditions.`;
+    case 'failed':
+      return `${STEP_CONFIG[step].label} failed but does not block shell startup.`;
     case 'blocked':
       return `${STEP_CONFIG[step].label} is blocked by a required startup prerequisite.`;
     case 'error':
@@ -145,43 +150,45 @@ function findLatestStepDetail(status: BootstrapStepStatus): string | null {
   return null;
 }
 
+function isBootstrapStepStartupAllowed(status: BootstrapStepStatus): boolean {
+  return status === 'complete' || status === 'degraded' || status === 'failed';
+}
+
 function getStepProgressUnits(status: BootstrapStepStatus): number {
-  switch (status) {
-    case 'complete':
-    case 'degraded':
-      return 1;
-    case 'blocked':
-    case 'error':
-      return 0.85;
-    case 'pending':
-    default:
-      return 0;
-  }
+  return isBootstrapStepStartupAllowed(status) ? 1 : 0;
 }
 
 function renderBootstrapProgressState(state: BootstrapScreenState): void {
   const settledSteps = STEP_ORDER.filter((step) => {
     const stepStatus = bootstrapStepState[step].status;
-    return stepStatus === 'complete' || stepStatus === 'degraded';
+    return isBootstrapStepStartupAllowed(stepStatus);
   }).length;
 
-  const progressValue = STEP_ORDER.reduce((total, step) => {
-    return total + getStepProgressUnits(bootstrapStepState[step].status);
-  }, 0);
+  const progressValue = STEP_ORDER.reduce(
+    (total, step) => total + getStepProgressUnits(bootstrapStepState[step].status),
+    0
+  );
 
-  let label = `${settledSteps}/${STEP_ORDER.length} startup steps settled`;
+  let label = `${settledSteps}/${STEP_ORDER.length} startup checks settled`;
   if (state === 'blocked') {
-    label = `${label}. Waiting on a required prerequisite.`;
+    label = `${label}. Required startup blockers remain.`;
   }
   if (state === 'error') {
-    label = `${label}. A startup error needs attention.`;
+    label = `${label}. Startup error needs attention.`;
   }
 
+  const segments: BootstrapProgressSegment[] = STEP_ORDER.map((step) => ({
+    id: step,
+    label: STEP_CONFIG[step].label,
+    status: bootstrapStepState[step].status,
+  }));
+
   renderBootstrapProgress({
-    value: state === 'complete' ? STEP_ORDER.length : progressValue,
-    max: STEP_ORDER.length,
     tone: state,
     label,
+    settledCount: state === 'complete' ? STEP_ORDER.length : progressValue,
+    totalCount: STEP_ORDER.length,
+    segments,
   });
 }
 
@@ -209,7 +216,11 @@ function setBootstrapScreenState(
 
 function syncBootstrapScreenState(): void {
   if (STEP_ORDER.some((step) => bootstrapStepState[step].status === 'error')) {
-    setBootstrapScreenState('error', ERROR_TITLE, findLatestStepDetail('error') ?? ERROR_MESSAGE_FALLBACK);
+    setBootstrapScreenState(
+      'error',
+      ERROR_TITLE,
+      findLatestStepDetail('error') ?? ERROR_MESSAGE_FALLBACK
+    );
     return;
   }
 
@@ -233,7 +244,7 @@ function syncBootstrapScreenState(): void {
 function canCompleteBootstrap(): boolean {
   return STEP_ORDER.every((step) => {
     const status = bootstrapStepState[step].status;
-    return status === 'complete' || status === 'degraded';
+    return isBootstrapStepStartupAllowed(status);
   });
 }
 

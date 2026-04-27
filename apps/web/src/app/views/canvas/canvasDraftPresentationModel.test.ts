@@ -20,7 +20,8 @@ describe('canvasDraftPresentationModel', () => {
         startupBlockState: {
           kind: 'runtime_mode',
           title: 'Canvas runtime unavailable',
-          message: 'Canvas authoring requires API runtime mode and protected workspace draft access.',
+          message:
+            'Canvas authoring requires API runtime mode and protected workspace draft access.',
         },
         workbenchState: { kind: 'ready' },
         recoveryReason: null,
@@ -35,7 +36,7 @@ describe('canvasDraftPresentationModel', () => {
     });
   });
 
-  it('prioritizes backend blocked posture over recovery in the route presentation', () => {
+  it('publishes backend readiness failure as a routable blocked canvas posture after shell startup', () => {
     const draftToolbarState = deriveCanvasDraftToolbarState({
       draftSaveStatus: 'saved',
       recoveryReason: 'missing_remote',
@@ -55,9 +56,9 @@ describe('canvasDraftPresentationModel', () => {
       })
     ).toMatchObject({
       routeState: 'blocked_backend',
-      bootstrapStatus: 'blocked',
+      bootstrapStatus: 'complete',
       bootstrapDetail: 'Readiness not satisfied: database_not_configured.',
-      canCompleteBootstrap: false,
+      canCompleteBootstrap: true,
     });
   });
 

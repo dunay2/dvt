@@ -17,7 +17,9 @@ const {
 const {
   buildTemporalApiEnv,
   buildTemporalWorkerEnv,
+  shouldBootstrapLocalTemporal,
   shouldStartTemporalWorker,
+  startLocalTemporalService,
 } = require('./run-dev-stack.temporal.cjs');
 
 const DEFAULT_API_PORT = 3000;
@@ -289,6 +291,7 @@ async function main() {
   const webBaseUrl = `http://${options.host}:${options.webPort}`;
   const databaseUrl = resolveDatabaseUrl(options);
   let localProtectedRuntimeAuth;
+  let localTemporalService;
 
   console.log(`[dev-stack] Starting API on ${apiBaseUrl}`);
   console.log(`[dev-stack] Starting Web on ${webBaseUrl}`);
@@ -303,9 +306,26 @@ async function main() {
     });
   }
 
+  const bootstrapEnv = {
+    ...process.env,
+    ...(localProtectedRuntimeAuth?.oidcEnv ?? {}),
+    ...(databaseUrl === undefined ? {} : { DATABASE_URL: databaseUrl }),
+  };
+
+  if (shouldBootstrapLocalTemporal(bootstrapEnv)) {
+    console.log('[dev-stack] TEMPORAL_ADDRESS not set; bootstrapping local Temporal dev service');
+    localTemporalService = await startLocalTemporalService();
+  }
+
   const apiEnv = buildApiEnv(options, {
     ...process.env,
     ...(localProtectedRuntimeAuth?.oidcEnv ?? {}),
+    ...(localTemporalService
+      ? {
+          TEMPORAL_ADDRESS: localTemporalService.address,
+          TEMPORAL_NAMESPACE: localTemporalService.namespace,
+        }
+      : {}),
   });
   const processHandles = [];
   let shuttingDown = false;
@@ -348,6 +368,9 @@ async function main() {
     await Promise.all(processHandles.map((handle) => closeReaders(handle)));
     if (localProtectedRuntimeAuth) {
       await localProtectedRuntimeAuth.close();
+    }
+    if (localTemporalService) {
+      await localTemporalService.close();
     }
     process.exit(exitCode);
   }
@@ -470,6 +493,7 @@ module.exports = {
   shouldBootstrapLocalPostgres,
   buildApiEnv,
   buildTemporalWorkerEnv,
+  shouldBootstrapLocalTemporal,
   shouldStartTemporalWorker,
   waitForUrlOrProcessExit,
 };

@@ -1,5 +1,9 @@
 // @vitest-environment jsdom
 
+import { readFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
@@ -8,6 +12,17 @@ import {
   showBootstrapFailure,
   startBootstrapScreen,
 } from './appBootstrapScreen';
+import { renderBootstrapProgress } from './bootstrapProgressBar';
+
+const WEB_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../../..');
+const INDEX_HTML_PATH = resolve(WEB_ROOT, 'index.html');
+const BOOTSTRAP_STEP_ORDER = ['hydrate', 'services', 'capabilities', 'health', 'route'];
+
+function extractCssRule(source: string, selector: string): string {
+  const escapedSelector = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const match = source.match(new RegExp(`${escapedSelector}\\s*\\{(?<body>[^}]*)\\}`));
+  return match?.groups?.body ?? '';
+}
 
 function mountBootstrapDom(): void {
   document.body.innerHTML = `
@@ -30,6 +45,25 @@ function mountBootstrapDom(): void {
   `;
 }
 
+function mountProductionBootstrapDom(): HTMLElement {
+  const indexHtml = readFileSync(INDEX_HTML_PATH, 'utf8');
+  const parsedDocument = new DOMParser().parseFromString(indexHtml, 'text/html');
+  const productionScreen = parsedDocument.getElementById('app-loading-screen');
+
+  if (!productionScreen) {
+    throw new Error('Production bootstrap shell is missing #app-loading-screen');
+  }
+
+  document.body.innerHTML = productionScreen.outerHTML;
+
+  const mountedScreen = document.getElementById('app-loading-screen');
+  if (!mountedScreen) {
+    throw new Error('Production bootstrap shell could not be mounted in the test DOM');
+  }
+
+  return mountedScreen;
+}
+
 describe('appBootstrapScreen', () => {
   beforeEach(() => {
     vi.useFakeTimers();
@@ -40,6 +74,47 @@ describe('appBootstrapScreen', () => {
     vi.useRealTimers();
     vi.unstubAllEnvs();
     document.body.innerHTML = '';
+  });
+
+  it('keeps the production HTML shell aligned with the bootstrap DOM contract before React executes', () => {
+    const screen = mountProductionBootstrapDom();
+
+    expect(screen.dataset.state).toBe('loading');
+    expect(screen.getAttribute('role')).toBe('status');
+    expect(screen.getAttribute('aria-label')).toBe('Raven startup status');
+    expect(screen.getAttribute('aria-live')).toBe('polite');
+    expect(screen.getAttribute('aria-atomic')).toBe('true');
+    expect(screen.getAttribute('aria-busy')).toBe('true');
+    expect(screen.getAttribute('aria-describedby')).toBe(
+      'app-loading-message app-loading-progress'
+    );
+
+    expect(document.getElementById('app-loading-title')?.textContent?.trim()).toBe(
+      'Preparing Raven'
+    );
+    expect(document.getElementById('app-loading-message')?.textContent).toContain(
+      'Loading startup modules in order.'
+    );
+    expect(document.getElementById('app-loading-progress')).not.toBeNull();
+    expect(document.getElementById('app-loading-version')?.textContent?.trim()).toBe('Version --');
+    expect(document.getElementById('app-loading-build-date')?.textContent?.trim()).toBe('Build --');
+
+    const stepNodes = Array.from(document.querySelectorAll<HTMLElement>('[data-bootstrap-step]'));
+    expect(stepNodes.map((node) => node.dataset.bootstrapStep)).toEqual(BOOTSTRAP_STEP_ORDER);
+    stepNodes.forEach((stepNode) => {
+      expect(stepNode.dataset.status).toBe('pending');
+      expect(stepNode.querySelector('[data-bootstrap-detail]')).not.toBeNull();
+    });
+
+    startBootstrapScreen();
+
+    expect(document.getElementById('app-loading-progress')?.textContent).toContain(
+      '0/5 startup checks settled'
+    );
+    expect(document.querySelectorAll('[data-app-loading-progress-segment]').length).toBe(
+      BOOTSTRAP_STEP_ORDER.length
+    );
+    expect(document.querySelector('[data-app-loading-progress-value]')).toBeNull();
   });
 
   it('keeps the Raven startup surface visible until every critical step reaches an allowed terminal state', () => {
@@ -60,14 +135,85 @@ describe('appBootstrapScreen', () => {
       'Raven is waiting for startup prerequisites'
     );
     expect(document.getElementById('app-loading-progress')?.textContent).toContain(
-      '4/5 startup steps settled. Waiting on a required prerequisite.'
+      '4/5 startup checks settled. Required startup blockers remain.'
     );
+    expect(document.querySelector('[data-app-loading-progress-value]')).toBeNull();
+    expect(
+      document.querySelector<HTMLElement>('[data-app-loading-progress-segment="route"]')?.dataset
+        .status
+    ).toBe('blocked');
 
     setBootstrapStepStatus('route', 'complete');
     completeBootstrapScreen();
     vi.advanceTimersByTime(120);
 
     expect(document.getElementById('app-loading-screen')).toBeNull();
+  });
+
+  it('allows a failed non-critical health check to settle startup without looking pending or degraded', () => {
+    startBootstrapScreen();
+
+    setBootstrapStepStatus('hydrate', 'complete');
+    setBootstrapStepStatus('services', 'complete');
+    setBootstrapStepStatus('capabilities', 'complete');
+    setBootstrapStepStatus('health', 'failed', 'Request to /healthz failed (NETWORK)');
+    setBootstrapStepStatus('route', 'complete', 'Canvas backend block is routable');
+
+    completeBootstrapScreen();
+
+    expect(
+      document.querySelector<HTMLElement>('[data-bootstrap-step="health"]')?.dataset.status
+    ).toBe('failed');
+    expect(document.getElementById('app-loading-screen')?.dataset.state).toBe('complete');
+    expect(document.getElementById('app-loading-progress')?.textContent).toContain(
+      '5/5 startup checks settled'
+    );
+  });
+
+  it('keeps pending neutral and failed red in the production bootstrap CSS', () => {
+    const indexHtml = readFileSync(INDEX_HTML_PATH, 'utf8');
+    const pendingRule = extractCssRule(
+      indexHtml,
+      "#app-loading-steps li[data-status='pending']::before"
+    );
+    const failedRule = extractCssRule(
+      indexHtml,
+      "#app-loading-steps li[data-status='failed']::before"
+    );
+    const failedSegmentRule = extractCssRule(
+      indexHtml,
+      ".app-loading-progress-segment[data-status='failed']"
+    );
+
+    expect(pendingRule).not.toContain('#f59e0b');
+    expect(failedRule).toContain('#ef4444');
+    expect(failedSegmentRule).toContain('#ef4444');
+  });
+
+  it('renders progress segment data as DOM attributes instead of parsing markup', () => {
+    renderBootstrapProgress({
+      tone: 'loading',
+      label: 'Startup checks pending',
+      settledCount: 0,
+      totalCount: 1,
+      segments: [
+        {
+          id: 'route" data-injected="true',
+          label: 'Route <strong>startup</strong>',
+          status: 'pending',
+        },
+      ],
+    });
+
+    expect(document.querySelector('[data-injected="true"]')).toBeNull();
+    expect(
+      document
+        .querySelector('[data-app-loading-progress-segment]')
+        ?.getAttribute('data-app-loading-progress-segment')
+    ).toBe('route" data-injected="true');
+    expect(
+      document.querySelector('[data-app-loading-progress-segment]')?.getAttribute('aria-label')
+    ).toBe('Route <strong>startup</strong>: pending');
   });
 
   it('publishes the startup gate as an accessible busy status until bootstrap completes', () => {

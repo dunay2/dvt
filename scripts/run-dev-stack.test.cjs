@@ -9,9 +9,11 @@ const {
   shouldBootstrapLocalPostgres,
   buildApiEnv,
   buildTemporalWorkerEnv,
+  shouldBootstrapLocalTemporal,
   shouldStartTemporalWorker,
   waitForUrlOrProcessExit,
 } = require('./run-dev-stack.cjs');
+const { startLocalTemporalService } = require('./run-dev-stack.temporal.cjs');
 const { defaultPgUrl } = require('./run-temporal-postgres-proof.cjs');
 
 test('parseArgs enables skip-postgres explicitly', () => {
@@ -141,6 +143,59 @@ test('shouldStartTemporalWorker follows protected runtime posture', () => {
     true
   );
   assert.equal(shouldStartTemporalWorker({ DATABASE_URL: defaultPgUrl }), false);
+});
+
+test('shouldBootstrapLocalTemporal only fills the local protected-runtime Temporal gap', () => {
+  const protectedRuntimeEnv = {
+    DATABASE_URL: defaultPgUrl,
+    OIDC_JWKS_URI: 'http://127.0.0.1:4000/.well-known/jwks.json',
+    OIDC_ISSUER: 'https://issuer.local.dvt/',
+    OIDC_AUDIENCE: 'dvt-api',
+  };
+
+  assert.equal(shouldBootstrapLocalTemporal(protectedRuntimeEnv), true);
+  assert.equal(
+    shouldBootstrapLocalTemporal({
+      ...protectedRuntimeEnv,
+      TEMPORAL_ADDRESS: 'temporal.dev:7233',
+    }),
+    false
+  );
+  assert.equal(shouldBootstrapLocalTemporal({ DATABASE_URL: defaultPgUrl }), false);
+});
+
+test('startLocalTemporalService uses a full local Temporal dev server instead of time skipping', async () => {
+  let createLocalCalled = false;
+  let createTimeSkippingCalled = false;
+  let teardownCalled = false;
+
+  const service = await startLocalTemporalService({
+    TestWorkflowEnvironment: {
+      createLocal: async () => {
+        createLocalCalled = true;
+        return {
+          address: '127.0.0.1:12345',
+          namespace: 'dev-namespace',
+          teardown: async () => {
+            teardownCalled = true;
+          },
+        };
+      },
+      createTimeSkipping: async () => {
+        createTimeSkippingCalled = true;
+        throw new Error('createTimeSkipping must not be used for dev stack');
+      },
+    },
+  });
+
+  assert.equal(createLocalCalled, true);
+  assert.equal(createTimeSkippingCalled, false);
+  assert.equal(service.address, '127.0.0.1:12345');
+  assert.equal(service.namespace, 'dev-namespace');
+
+  await service.close();
+
+  assert.equal(teardownCalled, true);
 });
 
 test('waitForUrlOrProcessExit attaches the post-ready exit watcher before releasing readiness', async () => {

@@ -8,7 +8,7 @@ import type { SessionContextPort } from '../../ports/sessionContext';
 import type { ShellFeedbackPort } from '../../ports/shellFeedback';
 import type { IWorkspacePort } from '../../ports/workspace';
 import { makeRunContext } from '../../testing/contractTestUtils';
-import type { ApiClient } from '../api/createApiClient';
+import { ApiError, type ApiClient } from '../api/createApiClient';
 import { getRuntimeDataSourceMode } from '../config/runtimeDataSourceMode';
 import { buildAppServices } from './appServices';
 
@@ -239,16 +239,18 @@ describe('buildAppServices', () => {
       throw new Error('expected mock authoring save to succeed');
     }
 
-    await expect(services.workspaceGraphDraftAuthoringPort.readGraphDraft()).resolves.toMatchObject({
-      kind: 'ok',
-      record: {
-        revision: saveResult.revision,
-        draft: {
-          nodes: [expect.objectContaining({ id: 'source-node', kind: 'source' })],
-          edges: [],
+    await expect(services.workspaceGraphDraftAuthoringPort.readGraphDraft()).resolves.toMatchObject(
+      {
+        kind: 'ok',
+        record: {
+          revision: saveResult.revision,
+          draft: {
+            nodes: [expect.objectContaining({ id: 'source-node', kind: 'source' })],
+            edges: [],
+          },
         },
-      },
-    });
+      }
+    );
   });
 
   it('uses explicit overrides instead of rebuilding runtime seams', () => {
@@ -325,5 +327,49 @@ describe('buildAppServices', () => {
     expect(apiClient.getJson).toHaveBeenCalledWith('/capabilities', {
       includeSessionHeaders: false,
     });
+  });
+
+  it('loads local shell capabilities when the backend capabilities request cannot reach the API', async () => {
+    const apiClient = buildApiClientStub();
+    apiClient.getJson.mockRejectedValue(
+      new ApiError({
+        message: 'Request to /capabilities failed (NETWORK)',
+        endpoint: '/capabilities',
+        statusCode: null,
+        category: 'network',
+      })
+    );
+
+    const appServices = buildAppServices({
+      mode: 'api',
+      apiClient,
+    });
+
+    await expect(appServices.capabilitiesPort.loadCapabilities()).resolves.toEqual({
+      apiVersion: 'frontend-local',
+      minFrontendVersion: '0.0.0',
+      plugins: {},
+    });
+    expect(apiClient.getJson).toHaveBeenCalledWith('/capabilities', {
+      includeSessionHeaders: false,
+    });
+  });
+
+  it('does not hide a backend capabilities response failure behind local shell capabilities', async () => {
+    const apiClient = buildApiClientStub();
+    const failure = new ApiError({
+      message: 'Request to /capabilities failed (500)',
+      endpoint: '/capabilities',
+      statusCode: 500,
+      category: 'server',
+    });
+    apiClient.getJson.mockRejectedValue(failure);
+
+    const appServices = buildAppServices({
+      mode: 'api',
+      apiClient,
+    });
+
+    await expect(appServices.capabilitiesPort.loadCapabilities()).rejects.toBe(failure);
   });
 });

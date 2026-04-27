@@ -1,11 +1,14 @@
 /**
  * Owned concern: canonical local Temporal posture for the coordinated dev stack.
  */
+const path = require('node:path');
+const { pathToFileURL } = require('node:url');
 
 const DEFAULT_TEMPORAL_ADDRESS = '127.0.0.1:7233';
 const DEFAULT_TEMPORAL_NAMESPACE = 'default';
 const DEFAULT_TEMPORAL_TASK_QUEUE = 'dvt-temporal';
 const DEFAULT_TEMPORAL_WORKER_ADMIN_PORT = 9468;
+const TEMPORAL_PACKAGE_ROOT = path.resolve(__dirname, '../packages/@dvt/adapter-temporal');
 
 function readNonEmptyEnv(value) {
   return typeof value === 'string' && value.trim().length > 0 ? value.trim() : undefined;
@@ -93,6 +96,31 @@ function shouldStartTemporalWorker(env = process.env) {
   );
 }
 
+function shouldBootstrapLocalTemporal(env = process.env) {
+  return shouldStartTemporalWorker(env) && readNonEmptyEnv(env.TEMPORAL_ADDRESS) === undefined;
+}
+
+async function loadTemporalTesting() {
+  const temporalTestingEntry = require.resolve('@temporalio/testing', {
+    paths: [TEMPORAL_PACKAGE_ROOT],
+  });
+
+  return import(pathToFileURL(temporalTestingEntry).href);
+}
+
+async function startLocalTemporalService(testingModule) {
+  const { TestWorkflowEnvironment } = testingModule ?? (await loadTemporalTesting());
+  const temporalEnv = await TestWorkflowEnvironment.createLocal();
+
+  return {
+    address: temporalEnv.address ?? temporalEnv.connection.options.address,
+    namespace: temporalEnv.namespace ?? DEFAULT_TEMPORAL_NAMESPACE,
+    async close() {
+      await temporalEnv.teardown();
+    },
+  };
+}
+
 module.exports = {
   DEFAULT_TEMPORAL_ADDRESS,
   DEFAULT_TEMPORAL_NAMESPACE,
@@ -101,5 +129,7 @@ module.exports = {
   buildTemporalApiEnv,
   buildTemporalWorkerEnv,
   resolveTemporalRuntimePosture,
+  shouldBootstrapLocalTemporal,
   shouldStartTemporalWorker,
+  startLocalTemporalService,
 };

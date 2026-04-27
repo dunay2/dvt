@@ -29,12 +29,9 @@ function deriveBackendBlockMessage(
 
   return (
     getPlatformConnectionDetail(
-      platformHealthQuery.isError ? 'offline' : 'degraded',
+      platformHealthQuery.isError || !platformHealthQuery.data ? 'offline' : 'degraded',
       platformHealthQuery.data,
-      getPlatformHealthErrorMessageFromQuery(
-        platformHealthQuery.isError,
-        platformHealthQuery.error
-      )
+      getPlatformHealthErrorMessageFromQuery(platformHealthQuery.isError, platformHealthQuery.error)
     ) ?? null
   );
 }
@@ -43,13 +40,14 @@ export function deriveCanvasBackendPosture({
   dataSourceMode,
   platformHealthQuery,
 }: DeriveCanvasBackendPostureArgs): CanvasBackendPosture {
+  const hasSettledBackendProbe =
+    platformHealthQuery.data !== undefined ||
+    platformHealthQuery.isError ||
+    (platformHealthQuery.failureCount ?? 0) > 0 ||
+    (platformHealthQuery.errorUpdatedAt ?? 0) > 0;
   const isBackendCheckPending =
-    dataSourceMode === 'api' &&
-    platformHealthQuery.isPending &&
-    !platformHealthQuery.data &&
-    !platformHealthQuery.isError;
-  const backendReady =
-    dataSourceMode !== 'api' || isPlatformReady(platformHealthQuery.data);
+    dataSourceMode === 'api' && platformHealthQuery.isPending && !hasSettledBackendProbe;
+  const backendReady = dataSourceMode !== 'api' || isPlatformReady(platformHealthQuery.data);
   const shouldExposeBackendBlockMessage =
     dataSourceMode === 'api' && !isBackendCheckPending && !backendReady;
 
@@ -60,7 +58,6 @@ export function deriveCanvasBackendPosture({
       shouldExposeBackendBlockMessage,
       platformHealthQuery
     ),
-    backendAllowsMutations:
-      dataSourceMode !== 'api' || (!isBackendCheckPending && backendReady),
+    backendAllowsMutations: dataSourceMode !== 'api' || (!isBackendCheckPending && backendReady),
   };
 }

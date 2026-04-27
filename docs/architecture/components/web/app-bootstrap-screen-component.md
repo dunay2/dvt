@@ -24,7 +24,7 @@ health/bootstrap adapters.
 | ---------------------------- | --------------------------------------------------------------------------- |
 | `startBootstrapScreen()`     | Resets step state, writes initial detail copy, metadata, progress, and ARIA |
 | `setBootstrapStepStatus()`   | Updates one startup step and re-derives the aggregate screen state          |
-| `completeBootstrapScreen()`  | Removes the screen only after every critical step is complete or degraded   |
+| `completeBootstrapScreen()`  | Removes the screen only after every step reaches an allowed terminal state  |
 | `showBootstrapFailure()`     | Converts startup exceptions into the single controlled error screen         |
 | `isBootstrapScreenVisible()` | Allows route error boundaries to avoid stacking a second error surface      |
 | `renderBootstrapProgress()`  | Renders progress from an already resolved bootstrap snapshot                |
@@ -35,14 +35,24 @@ health/bootstrap adapters.
   `blocked`, or `error`.
 - `blocked` and `error` states do not reveal the workbench behind the startup
   gate.
+- A transport-level health failure is a visible failed startup check, not a
+  degraded check. It is non-blocking for shell reveal when the active route can
+  render a governed failure state.
+- Backend/offline readiness in API runtime blocks unsafe Canvas interactions
+  inside the Canvas route, but it does not keep the pre-React startup gate
+  visible once the route can render that blocker as its first useful surface.
+- Once a platform-health probe has failed, automatic retries must not demote
+  the visible startup posture back to cold-start `pending`; retries update
+  detail copy in place while the gate stays settled.
 - `completeBootstrapScreen()` is a guard, not a command override; it cannot
   remove the screen until all steps are terminally allowed.
 - ARIA state is owned by the bootstrap state machine: `aria-busy="true"` before
   completion and `aria-busy="false"` after completion.
 - The HTML shell provides critical markup and CSS before React loads; React
   components do not need to mount before users see deterministic startup status.
-- Visual posture stays operational: compact brand, ordered status flow, progress
-  evidence, and build metadata instead of a decorative hero image.
+- Visual posture stays operational: compact brand, ordered status flow,
+  readiness segments, and build metadata instead of a decorative hero image or
+  a misleading percentage bar.
 
 ## Transitions
 
@@ -51,13 +61,14 @@ stateDiagram-v2
   [*] --> Loading
   Loading --> Loading: step pending
   Loading --> Loading: step degraded
+  Loading --> Loading: non-critical step failed
   Loading --> Blocked: any step blocked
   Loading --> Error: any step error
   Blocked --> Loading: blocked step returns pending
   Blocked --> Error: any step error
-  Blocked --> Complete: all steps complete or degraded
+  Blocked --> Complete: all steps complete, degraded, or non-critical failed
   Error --> Error: controlled startup failure
-  Loading --> Complete: all steps complete or degraded
+  Loading --> Complete: all steps complete, degraded, or non-critical failed
   Complete --> [*]: delayed DOM removal
 ```
 
@@ -90,8 +101,12 @@ flowchart LR
 ## Test Coverage
 
 - `apps/web/src/app/bootstrap/appBootstrapScreen.test.ts` covers blocked,
-  failure, metadata, completion, and ARIA busy-state semantics.
+  failure, production HTML shell contract, metadata, completion, and ARIA
+  busy-state semantics.
 - `apps/web/src/app/Root.bootstrapFlow.test.tsx` covers root-to-bootstrap
   integration for health, capabilities, route blocks, and route completion.
+
+## Governance Drift Guard
+
 - `tools/ci/planning-truth-sync.test.mjs` protects the planning truth for the
   related Canvas runtime-policy closure that feeds route startup posture.

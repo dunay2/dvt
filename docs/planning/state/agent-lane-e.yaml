@@ -230,7 +230,9 @@ tasks:
       TopAppBar shows ok/degraded/offline from real API. A persistent banner appears in degraded and
       offline states with retry and backoff. Startup keeps one Raven surface visible until
       capabilities, platform health, and the first route settle, and blocked readiness states do not
-      reveal misleading workbench content. No mock connectivity state anywhere in the shell.
+      reveal misleading workbench content; backend-offline Canvas posture remains a startup blocker
+      in API runtime until the protected backend contract is reachable. No mock connectivity state
+      anywhere in the shell.
     complexity: M
     effort_points: 5
     progress_pct: 98
@@ -260,9 +262,9 @@ tasks:
       retry/backoff policy, and one presenter seam driving both top bar and banner from the same
       health model. The remaining active closure slice is startup ownership: replace stacked
       loading/error surfaces with one Raven bootstrap screen that reports ordered startup progress,
-      keeps blocked routes hidden until they are truly operable, and hands off into the shell only
-      once the first route reaches an allowed terminal state.
-    last_verified: '2026-04-14'
+      keeps backend readiness blockers hidden behind the startup gate in API runtime, and only
+      reveals the first route when it reaches an allowed terminal state.
+    last_verified: '2026-04-27'
   - task_id: F-04
     priority: P0
     status: in_progress

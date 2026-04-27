@@ -13,6 +13,8 @@ export type CanvasAuthoringRuntimePlatformHealthQuery = {
   isError: boolean;
   data?: PlatformHealthSnapshot;
   error?: unknown;
+  failureCount?: number;
+  errorUpdatedAt?: number;
 };
 
 export type CanvasAuthoringRuntimePreviewProvenanceConfig = Pick<
@@ -33,10 +35,7 @@ export type UseCanvasAuthoringRuntimeArgs = {
   canEditDraftTransport: boolean;
   workspaceScope: WorkspaceScope;
   previewProvenanceConfig: CanvasAuthoringRuntimePreviewProvenanceConfig;
-  setCanvasNodePositions: (
-    workspaceLayoutKey: string,
-    positions: CanvasNodePositions
-  ) => void;
+  setCanvasNodePositions: (workspaceLayoutKey: string, positions: CanvasNodePositions) => void;
 };
 
 export type UseCanvasAuthoringRuntimeDraftFlowArgs = Pick<

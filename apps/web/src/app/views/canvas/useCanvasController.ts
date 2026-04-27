@@ -45,6 +45,8 @@ export function useCanvasController() {
       isError: platformHealthQuery.isError,
       data: platformHealthQuery.data,
       error: platformHealthQuery.error,
+      failureCount: platformHealthQuery.failureCount,
+      errorUpdatedAt: platformHealthQuery.errorUpdatedAt,
     },
     workspaceService,
     workspaceGraphDraftAuthoringPort,
@@ -73,9 +75,7 @@ export function useCanvasController() {
     () => resolveActiveCanvasGraphStrategy(draftReadModel, capabilities),
     [capabilities, draftReadModel?.record?.draft.canvas.kind]
   );
-  const graphStrategy = selectActiveCanvasGraphStrategy(
-    activeCanvasGraphStrategyResolution
-  );
+  const graphStrategy = selectActiveCanvasGraphStrategy(activeCanvasGraphStrategyResolution);
   const executionStrategy = selectActiveCanvasExecutionStrategy(
     activeCanvasGraphStrategyResolution
   );

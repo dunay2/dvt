@@ -6,9 +6,17 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { PlatformHealthCapabilityApi } from '../capabilities/platform-health';
 import { createPlatformHealthSnapshot } from '../capabilities/platform-health/testing/platformHealthFixtures';
 import { withTestQueryClient } from '../testing/reactQueryHarness';
-import { createBlockedRouteBootstrapPresentation, createCompleteRouteBootstrapPresentation } from './bootstrap/routeBootstrapContract';
+import { ApiError } from './services/api/createApiClient';
+import {
+  createBlockedRouteBootstrapPresentation,
+  createCompleteRouteBootstrapPresentation,
+} from './bootstrap/routeBootstrapContract';
 import { resetRouteBootstrapPresentation } from './bootstrap/routeBootstrapRegistry';
-import { CANVAS_ROUTE_BOOTSTRAP_REGISTRATION, RouteBootstrapProbe, createRootShellNode } from './Root.bootstrapRoute.test.support';
+import {
+  CANVAS_ROUTE_BOOTSTRAP_REGISTRATION,
+  RouteBootstrapProbe,
+  createRootShellNode,
+} from './Root.bootstrapRoute.test.support';
 import { resetRootShellStores } from './Root.test.support';
 
 const bootstrapScreenMocks = vi.hoisted(() => ({
@@ -54,6 +62,19 @@ function createResolvedCapability(): PlatformHealthCapabilityApi {
   };
 }
 
+function createNetworkFailedCapability(): PlatformHealthCapabilityApi {
+  return {
+    loadSnapshot: vi.fn().mockRejectedValue(
+      new ApiError({
+        message: 'Request to /healthz failed (NETWORK)',
+        endpoint: '/healthz',
+        statusCode: null,
+        category: 'network',
+      })
+    ),
+  };
+}
+
 describe('RootShell bootstrap flow', () => {
   beforeEach(() => {
     localStorage.clear();
@@ -90,6 +111,37 @@ describe('RootShell bootstrap flow', () => {
       });
       expect(view.getByText('Checking')).toBeTruthy();
       expect(mounted.container.querySelector('[data-slot="app-shell-frame"]')).not.toBeNull();
+    } finally {
+      await mounted.cleanup();
+    }
+  });
+
+  it('marks an offline health request as a visible failed check without blocking route startup completion', async () => {
+    const mounted = await withTestQueryClient(
+      createRootShellNode(
+        createNetworkFailedCapability(),
+        ['/canvas'],
+        undefined,
+        <RouteBootstrapProbe
+          registration={CANVAS_ROUTE_BOOTSTRAP_REGISTRATION}
+          presentationState={createCompleteRouteBootstrapPresentation(
+            'Canvas backend block is routable'
+          )}
+        >
+          <div>Canvas route</div>
+        </RouteBootstrapProbe>
+      )
+    );
+
+    try {
+      await waitFor(() => {
+        expect(bootstrapScreenMocks.setBootstrapStepStatus).toHaveBeenCalledWith(
+          'health',
+          'failed',
+          expect.stringContaining('/healthz')
+        );
+      });
+      await expectRouteBootstrapCompletion('Canvas backend block is routable');
     } finally {
       await mounted.cleanup();
     }
