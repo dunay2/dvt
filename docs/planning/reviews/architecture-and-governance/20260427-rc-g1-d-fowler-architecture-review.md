@@ -58,20 +58,20 @@ This follow-up closes that gap with:
 - module-level `Owned concern` docblocks
 - a planner-local component guide with API, invariants, transitions, consumers,
   and diagrams
-- a semantic architecture test that checks dependency shape and shared
-  vocabulary usage, not only barrel presence
+- a semantic architecture test that checks type-only barrel publication,
+  dependency shape, and shared vocabulary usage, not only name presence
 - synchronized closeout, evidence, and risk documentation
 
 ## Mature-System Comparison
 
-| Fowler/DDD concern            | Mature-system posture                                                                | RC-G1-D posture before hardening                                       | Hardening applied                                                                         |
-| ----------------------------- | ------------------------------------------------------------------------------------ | ---------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| Shared Kernel                 | Shared package contains published language, DTOs, schemas, and refs only.            | `@dvt/contracts` kept shared vocabulary and removed the private ports. | Evidence and tests now distinguish shared vocabulary from behavior ownership explicitly.  |
-| Bounded Context               | Behavior ports live with the context that owns the decision.                         | Ports moved to `@dvt/planner`.                                         | Each port module now states its owned concern at the module boundary.                     |
-| Published Language            | Cross-context vocabulary is stable and serializable.                                 | Result and record DTOs remained in `@dvt/contracts`.                   | Semantic tests require planner ports to depend on those DTOs through `import type`.       |
-| Ports and Adapters            | Domains define replaceable dependencies; adapters implement only the port they need. | `@dvt/adapter-postgres` imports the planner lifecycle store interface. | Risk register documents this as implementation dependency, not planner-service coupling.  |
-| Composition Root              | Application layer wires planner, execution, and state without peer-domain imports.   | `apps/api` performs the cross-context composition.                     | Component sequence documents the admission flow and its transition gate.                  |
-| Architecture Fitness Function | Tests protect rules that humans usually forget.                                      | Tests proved absence/presence at barrels.                              | New tests also guard docblocks, type-only vocabulary imports, and forbidden peer imports. |
+| Fowler/DDD concern            | Mature-system posture                                                                | RC-G1-D posture before hardening                                       | Hardening applied                                                                          |
+| ----------------------------- | ------------------------------------------------------------------------------------ | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| Shared Kernel                 | Shared package contains published language, DTOs, schemas, and refs only.            | `@dvt/contracts` kept shared vocabulary and removed the private ports. | Evidence and tests now distinguish shared vocabulary from behavior ownership explicitly.   |
+| Bounded Context               | Behavior ports live with the context that owns the decision.                         | Ports moved to `@dvt/planner`.                                         | Each port module now states its owned concern at the module boundary.                      |
+| Published Language            | Cross-context vocabulary is stable and serializable.                                 | Result and record DTOs remained in `@dvt/contracts`.                   | Semantic tests require planner ports to depend on those DTOs through `import type`.        |
+| Ports and Adapters            | Domains define replaceable dependencies; adapters implement only the port they need. | `@dvt/adapter-postgres` imports the planner lifecycle store interface. | Risk register documents this as implementation dependency, not planner-service coupling.   |
+| Composition Root              | Application layer wires planner, execution, and state without peer-domain imports.   | `apps/api` performs the cross-context composition.                     | Component sequence documents the admission flow and its transition gate.                   |
+| Architecture Fitness Function | Tests protect rules that humans usually forget.                                      | Tests proved absence/presence at barrels.                              | Guards now cover type-only barrel export, docblocks, vocabulary imports, and peer imports. |
 
 ## Improved Patterns
 
@@ -97,13 +97,13 @@ This follow-up closes that gap with:
 
 ## Anti-Patterns Detected
 
-| Anti-pattern                   | Evidence                                                                       | Risk                                                                                             | Fix                                                                                                         |
-| ------------------------------ | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------- |
-| Shared-kernel convenience dump | Historical mixed files placed DTOs and behavior ports together.                | `@dvt/contracts` becomes a behavior owner by accident.                                           | Behavior ports now live in `@dvt/planner`; DTO vocabulary stays in `@dvt/contracts`.                        |
-| Thin-barrel theater            | Previous tests checked names absent/present but not semantic dependency shape. | A future edit could satisfy the barrel test while reintroducing runtime coupling.                | Planner test now checks owned concern, type-only contract imports, DTO absence, and forbidden peer imports. |
-| Comment-after-import ownership | Existing modules described ownership only after imports.                       | Ownership was not the first thing a maintainer saw or a test could enforce.                      | Each module now starts with a short `Owned concern` docblock.                                               |
-| Adapter-as-domain shortcut     | `@dvt/adapter-postgres` now depends on `@dvt/planner`.                         | This is valid only while the adapter implements a port, not if it starts using planner services. | Risk register and component guide constrain the dependency as implementation-only.                          |
-| Documentation truth lag        | Closeout/evidence described structural migration, not semantic hardening.      | Reviewers could think the work was complete while the semantic boundary remained implicit.       | Closeout, evidence, risk, and component docs now describe the semantic guard.                               |
+| Anti-pattern                   | Evidence                                                                       | Risk                                                                                             | Fix                                                                                                 |
+| ------------------------------ | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------- |
+| Shared-kernel convenience dump | Historical mixed files placed DTOs and behavior ports together.                | `@dvt/contracts` becomes a behavior owner by accident.                                           | Behavior ports now live in `@dvt/planner`; DTO vocabulary stays in `@dvt/contracts`.                |
+| Thin-barrel theater            | Previous tests checked names absent/present but not semantic dependency shape. | A future edit could satisfy the barrel test while reintroducing runtime coupling.                | Planner test now checks type-only barrel export, owned concern, DTO absence, and forbidden imports. |
+| Comment-after-import ownership | Existing modules described ownership only after imports.                       | Ownership was not the first thing a maintainer saw or a test could enforce.                      | Each module now starts with a short `Owned concern` docblock.                                       |
+| Adapter-as-domain shortcut     | `@dvt/adapter-postgres` now depends on `@dvt/planner`.                         | This is valid only while the adapter implements a port, not if it starts using planner services. | Risk register and component guide constrain the dependency as implementation-only.                  |
+| Documentation truth lag        | Closeout/evidence described structural migration, not semantic hardening.      | Reviewers could think the work was complete while the semantic boundary remained implicit.       | Closeout, evidence, risk, and component docs now describe the semantic guard.                       |
 
 ## Component Grouping Opportunities
 
@@ -141,16 +141,16 @@ collapsed into a stronger structure:
 - the component guide centralizes API, invariants, transitions, consumers, and
   extension rules
 - semantic architecture tests mechanically enforce the component guide's most
-  important constraints
+  important constraints, including type-only publication from the root barrel
 
 ## Drift Fixed
 
-| Drift                                                                           | Fix                                                                                                      |
-| ------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| Code moved ports to planner, but modules did not start with semantic ownership. | Added first-line `Owned concern` docblocks in all four port modules.                                     |
-| Architecture tests validated location, not behavior/DTO separation.             | Added semantic assertions for type-only imports, expected shared vocabulary, and forbidden dependencies. |
-| Planner docs did not include a local guide for the new component.               | Added `planner-private-behavior-ports-component.md` and linked it from the planner component index.      |
-| Evidence and risk docs did not mention semantic hardening.                      | Updated ARC evidence and risk mitigations to include component docs and semantic tests.                  |
+| Drift                                                                           | Fix                                                                                                 |
+| ------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| Code moved ports to planner, but modules did not start with semantic ownership. | Added first-line `Owned concern` docblocks in all four port modules.                                |
+| Architecture tests validated location, not behavior/DTO separation.             | Added semantic assertions for type-only exports, shared vocabulary, and forbidden dependencies.     |
+| Planner docs did not include a local guide for the new component.               | Added `planner-private-behavior-ports-component.md` and linked it from the planner component index. |
+| Evidence and risk docs did not mention semantic hardening.                      | Updated ARC evidence and risk mitigations to include component docs and semantic tests.             |
 
 ## System Diagrams
 

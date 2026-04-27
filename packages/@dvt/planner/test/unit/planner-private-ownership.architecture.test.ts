@@ -8,18 +8,21 @@ const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../../../../.
 
 const plannerOwnedPorts = [
   {
+    barrelExport: './contracts/PlanExecutabilityValidation.js',
     contractVocabulary: ['ExecutabilityValidationResult', 'PlanRefSchemaT'],
     ownedConcern: 'validate persisted plan executability before execution admission',
     sourcePath: 'packages/@dvt/planner/src/contracts/PlanExecutabilityValidation.ts',
     symbol: 'IPlanExecutabilityValidator',
   },
   {
+    barrelExport: './contracts/ExecutionBindingVerification.js',
     contractVocabulary: ['ExecutionBindingVerificationResult'],
     ownedConcern: 'verify compiled artifact bindings for planner-authored steps',
     sourcePath: 'packages/@dvt/planner/src/contracts/ExecutionBindingVerification.ts',
     symbol: 'IExecutionBindingVerifier',
   },
   {
+    barrelExport: './contracts/PlanValidationLifecycle.js',
     contractVocabulary: [
       'ExecutabilityValidationResult',
       'PlanRefSchemaT',
@@ -31,6 +34,7 @@ const plannerOwnedPorts = [
     symbol: 'IPlanValidationLifecycleStore',
   },
   {
+    barrelExport: './contracts/CustomPolicyNamespaceRegistry.js',
     contractVocabulary: ['CustomPolicyNamespaceEntry'],
     ownedConcern: 'resolve custom policy namespace registration for planner policy checks',
     sourcePath: 'packages/@dvt/planner/src/contracts/CustomPolicyNamespaceRegistry.ts',
@@ -47,11 +51,14 @@ describe('planner-private behavior ownership', () => {
     }
   });
 
-  it('exports planner-owned behavior ports from the @dvt/planner root barrel', () => {
+  it('exports planner-owned behavior ports from the @dvt/planner root barrel as type-only ports', () => {
     const rootBarrel = readFile('packages/@dvt/planner/src/index.ts');
 
     for (const port of plannerOwnedPorts) {
-      expect(rootBarrel).toContain(port.symbol);
+      expect(rootBarrel).toContain(`export type { ${port.symbol} } from '${port.barrelExport}';`);
+      expect(rootBarrel).not.toMatch(
+        new RegExp(`export\\s+{[^}]*\\b${port.symbol}\\b[^}]*}\\s+from`)
+      );
     }
   });
 

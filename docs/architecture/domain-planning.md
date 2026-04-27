@@ -58,17 +58,21 @@ flowchart LR
 
 ## Current Posture
 
-The planning domain is already on the runtime path. The main open problem is
-not whether planning exists, but how to formalize plan records, plan storage,
-and ownership seams without dragging planner-private behavior into the shared
-kernel.
+The planning domain is already on the runtime path. `RC-G1-D` has closed the
+planner-private behavior-port ownership drift by moving those ports to
+`@dvt/planner` while keeping shared serializable vocabulary in `@dvt/contracts`.
+
+The remaining open problem is not whether planning exists, but how to continue
+formalizing plan records, plan storage, and artifact ownership seams without
+collapsing domain behavior back into shared-kernel convenience exports.
 
 ## Queued Delta
 
 - `S08`: formalize the plan-record and plan-store model and sequence the
   artifacts or storage ownership correctly.
-- `RC-G1-D`: keep planner-private ports private while preserving the shared
-  planner contracts that are intentionally public.
+- `RC-G1-D`: delivered. Planner-private behavior ports are now owner-local in
+  `@dvt/planner`, with semantic architecture coverage guarding the split from
+  shared serializable planner vocabulary.
 - `MW-A2`: make `GenericGraphSource` the canonical planner input and demote dbt
   manifest ingestion to a compatibility adapter path.
 

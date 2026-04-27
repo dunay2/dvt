@@ -153,7 +153,7 @@ sequenceDiagram
 | Shared vocabulary stays shared                        | `packages/@dvt/contracts/src/contracts/planner/*.v1.ts`                          | Serializable result, state, record, and namespace DTOs remain available to cross-context consumers.                        |
 | Planner modules import contracts type-only            | `packages/@dvt/planner/test/unit/planner-private-ownership.architecture.test.ts` | Behavior-port modules may reference shared vocabulary but must not create runtime dependency edges into the shared kernel. |
 | No peer-domain dependency                             | `packages/@dvt/planner/test/unit/planner-private-ownership.architecture.test.ts` | Behavior-port modules must not import engine, adapter, app, or contracts source internals.                                 |
-| Root barrel exports type-only ports                   | `packages/@dvt/planner/src/index.ts`                                             | The public planner package surface publishes interface types without runtime adapter wiring.                               |
+| Root barrel exports type-only ports                   | planner root barrel plus architecture test                                       | The public planner package surface publishes interface types without runtime adapter wiring.                               |
 | Adapter dependency is implementation-only             | `packages/@dvt/adapter-postgres/src/PostgresPlanStore.ts`                        | Postgres may implement the lifecycle port; it must not import planner services or aggregates.                              |
 | Start-run requires validated persisted plan semantics | `IPlanValidationLifecycleStore` plus API admission flow                          | A plan moves through persisted validation state before execution eligibility is claimed.                                   |
 
@@ -174,6 +174,7 @@ sequenceDiagram
 validates more than barrel thinness:
 
 - every behavior-port module starts with an `Owned concern` docblock
+- the root `@dvt/planner` barrel exports each behavior port with `export type`
 - every module references the expected shared vocabulary symbols
 - shared vocabulary is imported from `@dvt/contracts` with `import type`
 - modules do not export DTO vocabulary such as `const`, `enum`, or `type`

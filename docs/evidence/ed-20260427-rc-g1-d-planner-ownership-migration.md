@@ -68,8 +68,9 @@ in the shared-kernel package.
 5. Architecture tests prove the shared vocabulary/behavior port split at the
    package boundary.
 6. Planner-side semantic architecture tests now prove the moved modules declare
-   their owned concern, depend on shared DTO vocabulary by type-only imports,
-   and avoid peer-domain or adapter imports.
+   their owned concern, publish through the planner root barrel as type-only
+   exports, depend on shared DTO vocabulary by type-only imports, and avoid
+   peer-domain or adapter imports.
 7. The new local component guide records public API, invariants, transitions,
    consumers, and diagrams for the planner-private behavior-port component.
 

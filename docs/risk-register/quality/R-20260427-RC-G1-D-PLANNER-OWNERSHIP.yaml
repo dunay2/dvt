@@ -26,8 +26,8 @@ mitigations:
   - >
     packages/@dvt/planner/test/unit/planner-private-ownership.architecture.test.ts proves the moved
     behavior ports are published from @dvt/planner and now validates semantic encapsulation:
-    owned-concern docblocks, type-only shared-vocabulary imports, no DTO vocabulary exports, and no
-    peer-domain or adapter imports.
+    type-only root-barrel exports, owned-concern docblocks, type-only shared-vocabulary imports, no
+    DTO vocabulary exports, and no peer-domain or adapter imports.
   - >
     docs/architecture/components/planner/planner-private-behavior-ports-component.md records the
     component public API, invariants, lifecycle transitions, consumers, and extension rules so the

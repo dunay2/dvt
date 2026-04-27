@@ -31,6 +31,11 @@ invariants, and the current architectural-gap status.
 - `IPlanStoreWriter`
 - `IPlanStoreReader`
 
+Ownership note: `IPlanValidationLifecycleStore` is now imported from
+`@dvt/planner` as a planner-owned behavior port. Shared serializable plan
+records, refs, validation records, and executability DTOs remain in
+`@dvt/contracts`.
+
 ```mermaid
 flowchart LR
   subgraph Callers
