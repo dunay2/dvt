@@ -1,3 +1,4 @@
+import { asIsoUtcString } from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
 import { createTemporalProviderAdapterFactory } from '../../../src/modules/providerAdapters/createTemporalProviderAdapterFactory.js';
@@ -80,7 +81,7 @@ function createContext(envOverrides: Record<string, string>): ProviderAdapterFac
       appendAndEnqueueTx: vi.fn(),
     },
     clock: {
-      nowIsoUtc: () => '2026-04-27T00:00:00.000Z',
+      nowIsoUtc: () => asIsoUtcString('2026-04-27T00:00:00.000Z'),
     },
     projector: {
       rebuild: vi.fn(),
