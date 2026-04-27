@@ -91,21 +91,21 @@ convenience wrappers.
 
 ### Non-shared contracts to relocate
 
-| Current contract                                            | Current physical home | Target owner                | Why it moves                                               |
-| ----------------------------------------------------------- | --------------------- | --------------------------- | ---------------------------------------------------------- |
-| `src/adapters/IProviderAdapter.v1.ts`                       | `@dvt/contracts`      | `@dvt/engine`               | behavioral execution port, not a shared DTO                |
-| `src/engine/IRunStateStore.v1.ts`                           | `@dvt/contracts`      | `@dvt/engine`               | run aggregate write/read/maintenance port                  |
-| `src/engine/IRunSnapshotStalenessQuery.v1.ts`               | `@dvt/contracts`      | `@dvt/engine`               | engine operational read port, not a cross-context contract |
-| `src/contracts/engine/IStartRunIntentStore.v1.ts`           | `@dvt/contracts`      | `@dvt/engine`               | crash-consistency and start-run intent lifecycle port      |
-| `src/contracts/engine/StartRunIntentPolicy.v1.ts`           | `@dvt/contracts`      | `@dvt/engine`               | domain policy for intent transitions                       |
-| `src/contracts/engine/IProjector.v1.ts`                     | `@dvt/contracts`      | `@dvt/engine`               | projection port coupled to the execution model             |
-| `src/contracts/engine/IOutboxStorage.v1.ts`                 | `@dvt/contracts`      | `@dvt/delivery`             | delivery/outbox worker operational port                    |
-| `src/contracts/lineage/ILineageSink.v1.ts`                  | `@dvt/contracts`      | `@dvt/traceability-service` | traceability publication port                              |
-| `src/ports/artifact-store.ts`                               | `@dvt/contracts`      | `@dvt/artifacts`            | artifact storage port family                               |
-| `src/contracts/planner/PlanExecutabilityValidation.v1.ts`   | `@dvt/contracts`      | `@dvt/planner`              | planner-owned executability validation behavior            |
-| `src/contracts/planner/ExecutionBindingVerification.v1.ts`  | `@dvt/contracts`      | `@dvt/planner`              | planner-owned binding verification behavior                |
-| `src/contracts/planner/PlanValidationLifecycle.v1.ts`       | `@dvt/contracts`      | `@dvt/planner`              | planner validation lifecycle store                         |
-| `src/contracts/planner/CustomPolicyNamespaceRegistry.v1.ts` | `@dvt/contracts`      | `@dvt/planner`              | planner-owned policy namespace registry                    |
+| Current contract                                  | Current physical home | Target owner                | Why it moves                                               |
+| ------------------------------------------------- | --------------------- | --------------------------- | ---------------------------------------------------------- |
+| `src/adapters/IProviderAdapter.v1.ts`             | `@dvt/contracts`      | `@dvt/engine`               | behavioral execution port, not a shared DTO                |
+| `src/engine/IRunStateStore.v1.ts`                 | `@dvt/contracts`      | `@dvt/engine`               | run aggregate write/read/maintenance port                  |
+| `src/engine/IRunSnapshotStalenessQuery.v1.ts`     | `@dvt/contracts`      | `@dvt/engine`               | engine operational read port, not a cross-context contract |
+| `src/contracts/engine/IStartRunIntentStore.v1.ts` | `@dvt/contracts`      | `@dvt/engine`               | crash-consistency and start-run intent lifecycle port      |
+| `src/contracts/engine/StartRunIntentPolicy.v1.ts` | `@dvt/contracts`      | `@dvt/engine`               | domain policy for intent transitions                       |
+| `src/contracts/engine/IProjector.v1.ts`           | `@dvt/contracts`      | `@dvt/engine`               | projection port coupled to the execution model             |
+| `src/contracts/engine/IOutboxStorage.v1.ts`       | `@dvt/contracts`      | `@dvt/delivery`             | delivery/outbox worker operational port                    |
+| `src/contracts/lineage/ILineageSink.v1.ts`        | `@dvt/contracts`      | `@dvt/traceability-service` | traceability publication port                              |
+| `src/ports/artifact-store.ts`                     | `@dvt/contracts`      | `@dvt/artifacts`            | artifact storage port family                               |
+| `IPlanExecutabilityValidator`                     | `@dvt/contracts`      | `@dvt/planner`              | planner-owned executability validation behavior            |
+| `IExecutionBindingVerifier`                       | `@dvt/contracts`      | `@dvt/planner`              | planner-owned binding verification behavior                |
+| `IPlanValidationLifecycleStore`                   | `@dvt/contracts`      | `@dvt/planner`              | planner validation lifecycle store                         |
+| `ICustomPolicyNamespaceRegistry`                  | `@dvt/contracts`      | `@dvt/planner`              | planner-owned policy namespace registry                    |
 
 ### Contracts that do not move
 
@@ -119,13 +119,13 @@ convenience wrappers.
 
 ### Source and target paths
 
-| Domain             | Source paths                                                                                                                                                           | Target paths                                         |
-| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
-| Engine             | `packages/@dvt/contracts/src/{adapters,engine,contracts/engine}/*`                                                                                                     | `packages/@dvt/engine/src/{adapters,ports,domain}/*` |
-| Planner non-public | `packages/@dvt/contracts/src/contracts/planner/{PlanExecutabilityValidation,ExecutionBindingVerification,PlanValidationLifecycle,CustomPolicyNamespaceRegistry}.v1.ts` | `packages/@dvt/planner/src/contracts/*`              |
-| Delivery           | `packages/@dvt/contracts/src/contracts/engine/IOutboxStorage.v1.ts`                                                                                                    | `packages/@dvt/delivery/src/contracts/*`             |
-| Traceability       | `packages/@dvt/contracts/src/contracts/lineage/ILineageSink.v1.ts`                                                                                                     | `packages/@dvt/traceability-service/src/contracts/*` |
-| Artifacts          | `packages/@dvt/contracts/src/ports/artifact-store.ts`                                                                                                                  | `packages/@dvt/artifacts/src/ports/*`                |
+| Domain             | Source paths                                                        | Target paths                                         |
+| ------------------ | ------------------------------------------------------------------- | ---------------------------------------------------- |
+| Engine             | `packages/@dvt/contracts/src/{adapters,engine,contracts/engine}/*`  | `packages/@dvt/engine/src/{adapters,ports,domain}/*` |
+| Planner non-public | planner behavior-port interfaces named above                        | `packages/@dvt/planner/src/contracts/*`              |
+| Delivery           | `packages/@dvt/contracts/src/contracts/engine/IOutboxStorage.v1.ts` | `packages/@dvt/delivery/src/contracts/*`             |
+| Traceability       | `packages/@dvt/contracts/src/contracts/lineage/ILineageSink.v1.ts`  | `packages/@dvt/traceability-service/src/contracts/*` |
+| Artifacts          | `packages/@dvt/contracts/src/ports/artifact-store.ts`               | `packages/@dvt/artifacts/src/ports/*`                |
 
 ## Impact
 
@@ -366,6 +366,59 @@ convenience wrappers.
   `IDbtProjectBundleReader`, and `IRunExecutionContextReader`
 - this slice retires the obsolete generic abstraction; it does not broaden into
   a larger shared error-contract migration
+
+## Executable sub-slices for `RC-G1-D`
+
+### `RC-G1-D1` - planner behavior-port ownership split
+
+**Definition of done**
+
+- `@dvt/planner` physically owns `IPlanExecutabilityValidator`,
+  `IExecutionBindingVerifier`, `IPlanValidationLifecycleStore`, and
+  `ICustomPolicyNamespaceRegistry`
+- `@dvt/contracts` no longer exports those behavior-port names from its root
+  barrel
+- shared serializable planner vocabulary remains in `@dvt/contracts`, including
+  executability rejection codes, validation result shapes, binding result
+  shapes, validation state/record shapes, and custom policy serializable
+  namespace vocabulary
+- `@dvt/contracts` does not import `@dvt/planner`
+
+**Frozen implementation rule**
+
+- Do not move `ExecutionPlan`, `PlannerInputEnvelope`, or `IExecutionPlanner`;
+  ADR-0035 keeps those public planner contracts in `@dvt/contracts`
+- Do not move serializable rejection/result/state DTOs if they are consumed by
+  shared contracts, schema packs, records, or boundary responses
+
+### `RC-G1-D2` - consumer cutover and dependency declaration
+
+**Definition of done**
+
+- `apps/api` imports the moved planner behavior ports from `@dvt/planner`
+- `@dvt/adapter-postgres` imports `IPlanValidationLifecycleStore` from
+  `@dvt/planner` and declares the planner dependency explicitly
+- no production TypeScript file imports the moved planner behavior ports from
+  `@dvt/contracts`
+- API and adapter package builds remain green
+
+### `RC-G1-D3` - guards, ARC-2, and closure
+
+**Definition of done**
+
+- architecture tests prove the moved behavior ports are absent from
+  `@dvt/contracts` and present in `@dvt/planner`
+- planner-side architecture tests validate semantic encapsulation for moved
+  behavior-port modules: owned-concern docblocks, type-only shared-vocabulary
+  imports, no local DTO vocabulary exports, and no peer-domain or concrete
+  adapter imports
+- the planner component guide documents public API, invariants, transitions,
+  consumers, and extension rules for the moved behavior-port component
+- lint guards prevent governed consumers from reintroducing planner-private
+  behavior-port imports through `@dvt/contracts`
+- ARC-2 evidence and risk register updates are published
+- docs, generated planning views, and status surfaces are synchronized
+- `pnpm verify:prepush` closes green
 
 ## Execution tracker
 

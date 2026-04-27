@@ -583,6 +583,9 @@ importers:
       '@dvt/engine':
         specifier: workspace:*
         version: link:../engine
+      '@dvt/planner':
+        specifier: workspace:*
+        version: link:../planner
       '@dvt/run-domain':
         specifier: workspace:*
         version: link:../run-domain

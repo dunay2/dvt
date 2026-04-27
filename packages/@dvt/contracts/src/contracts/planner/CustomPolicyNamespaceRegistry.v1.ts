@@ -23,7 +23,7 @@
  * ## Validation split (planner and runtime responsibility)
  *
  * **Planner (plan-build time)**:
- * - Calls `ICustomPolicyNamespaceRegistry.lookup(namespace)` for each key in
+ * - Calls the planner-owned custom policy namespace registry for each key in
  *   the `custom` map.
  * - Rejects any unregistered namespace with `UNREGISTERED_NAMESPACE`.
  * - Enforces `maxPayloadBytes`, `deniedFieldNames`, and the registered schema.
@@ -40,9 +40,9 @@
  *
  * ## Authority boundary
  *
- * The registration authority lives in `@dvt/contracts`, not in `@dvt/planner`.
- * Planner-local ad hoc namespace registries are not acceptable as repository
- * canon. Unknown namespaces are not silently promoted to canonical behavior.
+ * Serializable namespace vocabulary lives in `@dvt/contracts`. The behavior
+ * port for registry lookup is planner-owned. Unknown namespaces are not
+ * silently promoted to canonical behavior.
  *
  * @see docs/planning/proposals/planner-stage-1-1-canonicalization.manifest.json G-01.3
  * @see packages/@dvt/planner/docs/planning/Stage-1.1-Planner-Canonicalization.md §20
@@ -99,8 +99,8 @@ export interface CustomPolicySchemaValidator {
 /**
  * Registration entry for one `custom` policy namespace.
  *
- * Created by the namespace owner and registered with an
- * `ICustomPolicyNamespaceRegistry` implementation.
+ * Created by the namespace owner and registered with a planner-owned registry
+ * implementation.
  */
 export interface CustomPolicyNamespaceEntry {
   /**
@@ -143,43 +143,6 @@ export interface CustomPolicyNamespaceEntry {
    * `SCHEMA_VIOLATION` rejection.
    */
   schema: CustomPolicySchemaValidator;
-}
-
-// ── Registry port ─────────────────────────────────────────────────────────────
-
-/**
- * Port for looking up registered `custom` policy namespaces.
- *
- * ### Ownership
- *
- * The canonical registry implementation lives in `@dvt/contracts` (or in a
- * package it governs). `@dvt/planner` MUST depend on this interface — it MUST
- * NOT own or host a local registry.
- *
- * ### Planner usage
- *
- * Before accepting any key in `PlannerPolicyClassSet.custom`, the planner MUST:
- * 1. Call `lookup(namespace)`.
- * 2. If `undefined` — hard-reject with `UNREGISTERED_NAMESPACE`.
- * 3. Otherwise — run size, denied-field, and schema checks using the entry.
- */
-export interface ICustomPolicyNamespaceRegistry {
-  /**
-   * Returns the registration entry for a namespace, or `undefined` if the
-   * namespace is not registered.
-   *
-   * An unregistered namespace MUST be hard-rejected by the planner — it MUST
-   * NOT be silently dropped or accepted without validation.
-   */
-  lookup(namespace: string): CustomPolicyNamespaceEntry | undefined;
-
-  /**
-   * Returns all registered namespace identifiers, sorted lexicographically.
-   *
-   * Intended for diagnostic and introspection use only. MUST NOT be used as
-   * an authorization check.
-   */
-  listNamespaces(): readonly string[];
 }
 
 // ── Custom policy map ─────────────────────────────────────────────────────────

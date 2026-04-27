@@ -12,6 +12,12 @@ export type { StepFactory } from './domain/stepFactory/StepFactory.js';
 export type { PlannerLimits } from './domain/limits.js';
 export { PlannerError, PlannerErrorCode } from './domain/errors.js';
 
+// -- Planner-owned behavior ports ------------------------------------------------
+export type { ICustomPolicyNamespaceRegistry } from './contracts/CustomPolicyNamespaceRegistry.js';
+export type { IExecutionBindingVerifier } from './contracts/ExecutionBindingVerification.js';
+export type { IPlanExecutabilityValidator } from './contracts/PlanExecutabilityValidation.js';
+export type { IPlanValidationLifecycleStore } from './contracts/PlanValidationLifecycle.js';
+
 // ── Transitional contract re-exports ─────────────────────────────────────────
 //
 // These types are planner boundary contracts. Their canonical import home is

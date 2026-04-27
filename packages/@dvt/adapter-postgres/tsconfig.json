@@ -18,6 +18,8 @@
       "@dvt/engine/*": ["../../../packages/@dvt/engine/dist/*"],
       "@dvt/delivery": ["../../../packages/@dvt/delivery/dist/index.d.ts"],
       "@dvt/delivery/*": ["../../../packages/@dvt/delivery/dist/*"],
+      "@dvt/planner": ["../../../packages/@dvt/planner/dist/index.d.ts"],
+      "@dvt/planner/*": ["../../../packages/@dvt/planner/dist/*"],
       "@dvt/state-store": [
         "../../../packages/@dvt/state-store/dist/index.d.ts"
       ],

@@ -14,14 +14,14 @@ context: >
   The reconciler runtime review identified contract ownership drift across the `engine`, `planner`,
   and `shared` taxonomy. The active proposal already existed, but the workboard tracker was missing
   and a local execution note reintroduced already-closed health work as if it were still open.
-  `RC-G1-B` closed the engine-owned portion of the migration and `RC-G1-C` has now completed the
-  delivery, traceability, and artifacts owner-package cutover. The remaining live scope is
-  planner-private `RC-G1-D`, plus regression risk that moved behavioral ports could leak back
-  through `@dvt/contracts`.
+  `RC-G1-B` closed the engine-owned portion of the migration, `RC-G1-C` completed the delivery,
+  traceability, and artifacts owner-package cutover, and `RC-G1-D` now closes the planner-private
+  behavior-port migration. The remaining risk is regression risk that moved behavioral ports could
+  leak back through `@dvt/contracts`.
 risk: >
-  Final planner-private moves or future convenience exports can still diverge between proposal, lane
-  tracker, and real package changes. That would weaken ADR-0018 / ADR-0034 boundaries, re-oversize
-  `@dvt/contracts`, and make the remaining ARC-2 migration work less auditable.
+  Future convenience exports can still diverge between proposal, lane tracker, and real package
+  changes. That would weaken ADR-0018 / ADR-0034 boundaries, re-oversize `@dvt/contracts`, and make
+  future ARC-2 migrations less auditable.
 mitigations:
   - Lane A now tracks the work explicitly as `RC-G1` with sequenced slices `RC-G1-A..D`.
   - The ownership proposal now freezes each affected family to `stay shared` or `move to owner`.
@@ -38,3 +38,8 @@ mitigations:
     `@dvt/delivery`, `@dvt/traceability-service`, and `@dvt/artifacts`, and extended lint guards so
     governed delivery/traceability/adapters/worker code fails if those imports reappear through
     `@dvt/contracts`.
+  - >-
+    `RC-G1-D` removes planner-private behavior ports from the shared kernel, republishes those ports
+    from `@dvt/planner`, redirects API and Postgres adapter consumers, and adds architecture tests
+    plus lint guards that keep shared serializable planner vocabulary distinct from planner-owned
+    behavior.

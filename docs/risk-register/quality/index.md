@@ -66,6 +66,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [Planner determinism hash pin silently drifts when plan serialization changes](R-20260331-PLANNER-DETERMINISM-HASH-DRIFT.yaml)
 - [Planner manifestRef cache serves stale graph if sha256 contract is violated upstream](R-20260330-PLANNER-MANIFEST-CACHE-STALENESS.md)
 - [Planner plan identity can drift if manifest node-key iteration order is not normalized](R-20260408-PLANNER-MANIFEST-KEY-ORDER-DRIFT.yaml)
+- [Planner-private behavior ports can drift back into the shared kernel](R-20260427-RC-G1-D-PLANNER-OWNERSHIP.yaml)
 - [PlanStore integration tests can drift from current artifact and contract shapes](R-20260408-ADAPTER-POSTGRES-PLANSTORE-TEST-DRIFT.yaml)
 - [Policy-first precedence drift for unbounded timeout and concurrency](R-20260405-MWA2-POLICY-UNBOUNDED-PRECEDENCE.yaml)
 - [Postgres three-part model migration and compatibility drift](R-20260403-S08-4-POSTGRES-THREE-PART-MODEL.yaml)

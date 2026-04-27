@@ -7,14 +7,16 @@ import type {
   ExecutionPlan,
   ExecutionSelection,
   GenericGraphSourceV1,
-  IPlanExecutabilityValidator,
-  IPlanValidationLifecycleStore,
   IPlanner,
   PlanRef,
   PlannerPolicyClassSet,
   PlannerSelection,
   StartRunPlannerEnvironmentInput,
 } from '@dvt/contracts';
+import type {
+  IPlanExecutabilityValidator,
+  IPlanValidationLifecycleStore,
+} from '@dvt/planner';
 
 import type { AuthorizedCommandExecutionContext } from '../ports/authContract.js';
 

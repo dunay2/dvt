@@ -64,31 +64,6 @@ export type ExecutionBindingVerificationResult =
       reason: string;
     };
 
-/**
- * Port for verifying compiled artifact bindings at execution time.
- *
- * Implementations live in engine or adapter packages.
- * The canonical owner of this contract is `@dvt/contracts`.
- */
-export interface IExecutionBindingVerifier {
-  /**
-   * Verifies that a step's `compiledCodeRef` still resolves to the intended
-   * immutable artifact binding.
-   *
-   * @param planId - Canonical plan identifier.
-   * @param stepId - The step whose binding is being verified.
-   * @param storageUri - The artifact storage URI from the `compiledCodeRef`.
-   * @param expectedSha256 - The expected SHA-256 digest from the `compiledCodeRef`.
-   * @returns A per-step verification result.
-   */
-  verifyStepBinding(
-    planId: string,
-    stepId: string,
-    storageUri: string,
-    expectedSha256: string
-  ): Promise<ExecutionBindingVerificationResult>;
-}
-
 // ── G-01.8 — Plan binding storage record ─────────────────────────────────────
 
 /**

@@ -33,6 +33,13 @@ const retiredArtifactContractImports = [
   'IArtifactWriter',
 ];
 
+const plannerOwnedContractImports = [
+  'IPlanExecutabilityValidator',
+  'IExecutionBindingVerifier',
+  'IPlanValidationLifecycleStore',
+  'ICustomPolicyNamespaceRegistry',
+];
+
 module.exports = [
   // Base ESLint recommended rules
   eslint.configs.recommended,
@@ -219,7 +226,23 @@ module.exports = [
               message:
                 'Artifact integrity helpers and generic artifact-store ports no longer live in @dvt/contracts; use @dvt/artifacts owner-local seams (RC-G1-C).',
             },
+            {
+              name: '@dvt/contracts',
+              importNames: plannerOwnedContractImports,
+              message:
+                'Planner-owned behavior ports MUST be imported from @dvt/planner, not @dvt/contracts (RC-G1-D).',
+            },
           ],
+        },
+      ],
+    },
+  },
+  {
+    files: ['packages/@dvt/adapter-temporal/**/*.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
           patterns: [
             {
               group: ['@dvt/planner', '@dvt/planner/*'],
@@ -275,6 +298,12 @@ module.exports = [
               importNames: retiredArtifactContractImports,
               message:
                 'Artifact integrity helpers and generic artifact-store ports no longer live in @dvt/contracts; use @dvt/artifacts owner-local seams (RC-G1-C).',
+            },
+            {
+              name: '@dvt/contracts',
+              importNames: plannerOwnedContractImports,
+              message:
+                'Planner-owned behavior ports MUST be imported from @dvt/planner, not @dvt/contracts (RC-G1-D).',
             },
           ],
         },
@@ -376,6 +405,12 @@ module.exports = [
               importNames: retiredArtifactContractImports,
               message:
                 'Artifact integrity helpers and generic artifact-store ports no longer live in @dvt/contracts; use @dvt/artifacts owner-local seams (RC-G1-C).',
+            },
+            {
+              name: '@dvt/contracts',
+              importNames: plannerOwnedContractImports,
+              message:
+                'Planner-owned behavior ports MUST be imported from @dvt/planner, not @dvt/contracts (RC-G1-D).',
             },
           ],
           patterns: [
@@ -624,6 +659,12 @@ module.exports = [
               importNames: retiredArtifactContractImports,
               message:
                 'Artifact integrity helpers and generic artifact-store ports no longer live in @dvt/contracts; use @dvt/artifacts owner-local seams (RC-G1-C).',
+            },
+            {
+              name: '@dvt/contracts',
+              importNames: plannerOwnedContractImports,
+              message:
+                'Planner-owned behavior ports MUST be imported from @dvt/planner, not @dvt/contracts (RC-G1-D).',
             },
           ],
         },
