@@ -251,6 +251,17 @@ Implemented the selected split-ownership cut.
   for `@dvt/adapter-postgres`.
 - Added architecture tests proving the moved behavior ports are absent from
   `@dvt/contracts` and present in `@dvt/planner`.
+- Hardened the planner-side architecture test so it also validates semantic
+  encapsulation: each moved port module starts with an `Owned concern`
+  docblock, imports shared vocabulary from `@dvt/contracts` with `import type`,
+  does not export DTO vocabulary, and does not import peer domains or concrete
+  adapters.
+- Added the local component guide
+  `docs/architecture/components/planner/planner-private-behavior-ports-component.md`
+  with public API, invariants, transition diagrams, consumers, and extension
+  rules.
+- Saved the Fowler-style architecture review and mature-system comparison in
+  `docs/planning/reviews/architecture-and-governance/20260427-rc-g1-d-fowler-architecture-review.md`.
 - Added lint guards blocking governed runtime code from importing the moved
   ports through `@dvt/contracts`.
 - Published ARC-2 evidence and risk updates for the contract, planner, adapter,
@@ -262,6 +273,7 @@ Passed:
 
 - `pnpm --filter @dvt/contracts test -- planner-private-ownership.architecture.test.ts`
 - `pnpm --filter @dvt/planner test -- planner-private-ownership.architecture.test.ts`
+  (semantic encapsulation guard)
 - `pnpm --filter @dvt/contracts build`
 - `pnpm --filter @dvt/planner build`
 - `pnpm --filter @dvt/adapter-postgres build`

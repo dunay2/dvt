@@ -17,15 +17,25 @@ context: >
   implements.
 risk: >
   A future convenience export or broad adapter import could reintroduce planner-private behavior
-  through @dvt/contracts, or make the Postgres adapter depend on planner services instead of only
-  the owner-local behavior port it implements.
+  through @dvt/contracts, remove the module-level owned-concern declaration, or make the Postgres
+  adapter depend on planner services instead of only the owner-local behavior port it implements.
 mitigations:
   - >
     packages/@dvt/contracts/test/planner-private-ownership.architecture.test.ts proves the moved
     behavior ports are absent from @dvt/contracts source files and its root barrel.
   - >
     packages/@dvt/planner/test/unit/planner-private-ownership.architecture.test.ts proves the moved
-    behavior ports are published from @dvt/planner.
+    behavior ports are published from @dvt/planner and now validates semantic encapsulation:
+    owned-concern docblocks, type-only shared-vocabulary imports, no DTO vocabulary exports, and no
+    peer-domain or adapter imports.
+  - >
+    docs/architecture/components/planner/planner-private-behavior-ports-component.md records the
+    component public API, invariants, lifecycle transitions, consumers, and extension rules so the
+    semantic boundary is not only encoded in source layout.
+  - >
+    docs/planning/reviews/architecture-and-governance/20260427-rc-g1-d-fowler-architecture-review.md
+    records the Fowler-style review, mature-system comparison, detected anti-patterns, drift fixes,
+    and future lessons for similar owner-package migrations.
   - >
     eslint.config.cjs blocks governed runtime code from importing the moved ports from
     @dvt/contracts.

@@ -20,12 +20,15 @@ code_refs:
   - packages/@dvt/planner/src/contracts/PlanValidationLifecycle.ts
   - packages/@dvt/planner/src/contracts/CustomPolicyNamespaceRegistry.ts
   - packages/@dvt/planner/src/index.ts
+  - packages/@dvt/planner/test/unit/planner-private-ownership.architecture.test.ts
   - packages/@dvt/adapter-postgres/src/PostgresPlanStore.ts
   - apps/api/src/application/services/StoredPlanExecutabilityValidator.ts
   - apps/api/src/application/services/PreviewPlanUseCase.ts
   - apps/api/src/application/services/PlannerBackedStartRunUseCase.ts
   - apps/api/src/modules/startRun/buildProtectedStartRunRuntime.ts
   - eslint.config.cjs
+  - docs/architecture/components/planner/planner-private-behavior-ports-component.md
+  - docs/planning/reviews/architecture-and-governance/20260427-rc-g1-d-fowler-architecture-review.md
   - docs/risk-register/quality/R-20260427-RC-G1-D-PLANNER-OWNERSHIP.yaml
 evidence:
   tests:
@@ -64,10 +67,16 @@ in the shared-kernel package.
    `@dvt/contracts` in governed runtime paths.
 5. Architecture tests prove the shared vocabulary/behavior port split at the
    package boundary.
+6. Planner-side semantic architecture tests now prove the moved modules declare
+   their owned concern, depend on shared DTO vocabulary by type-only imports,
+   and avoid peer-domain or adapter imports.
+7. The new local component guide records public API, invariants, transitions,
+   consumers, and diagrams for the planner-private behavior-port component.
 
 # Residual Risk
 
 The residual risk is mechanical drift: future edits could try to re-export the
-moved ports through `@dvt/contracts` or widen `@dvt/adapter-postgres` planner
-imports beyond the lifecycle port implementation need. That risk is tracked in
+moved ports through `@dvt/contracts`, remove module-level owned-concern
+documentation, or widen `@dvt/adapter-postgres` planner imports beyond the
+lifecycle port implementation need. That risk is tracked in
 `docs/risk-register/quality/R-20260427-RC-G1-D-PLANNER-OWNERSHIP.yaml`.

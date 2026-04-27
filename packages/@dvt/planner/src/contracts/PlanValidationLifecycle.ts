@@ -1,3 +1,7 @@
+/**
+ * Owned concern: persist planner validation lifecycle transitions.
+ * Shared lifecycle state and record shapes remain in `@dvt/contracts`.
+ */
 import type {
   ExecutabilityValidationResult,
   PlanRefSchemaT,
@@ -5,10 +9,6 @@ import type {
   PlannerBuildResultV1,
 } from '@dvt/contracts';
 
-/**
- * Planner-owned behavior port for the persisted plan validation lifecycle.
- * Shared lifecycle state and record shapes remain in `@dvt/contracts`.
- */
 export interface IPlanValidationLifecycleStore {
   storePlan(buildResult: PlannerBuildResultV1): Promise<PlanRefSchemaT>;
 

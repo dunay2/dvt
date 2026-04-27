@@ -408,6 +408,12 @@ convenience wrappers.
 
 - architecture tests prove the moved behavior ports are absent from
   `@dvt/contracts` and present in `@dvt/planner`
+- planner-side architecture tests validate semantic encapsulation for moved
+  behavior-port modules: owned-concern docblocks, type-only shared-vocabulary
+  imports, no local DTO vocabulary exports, and no peer-domain or concrete
+  adapter imports
+- the planner component guide documents public API, invariants, transitions,
+  consumers, and extension rules for the moved behavior-port component
 - lint guards prevent governed consumers from reintroducing planner-private
   behavior-port imports through `@dvt/contracts`
 - ARC-2 evidence and risk register updates are published
