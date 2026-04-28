@@ -1,6 +1,4 @@
-/**
- * Owned concern: build the layout concern of the route-owned Canvas shell contract.
- */
+/** Owned concern: build the layout concern of the route-owned Canvas shell contract. */
 import type { ReactNode } from 'react';
 
 import { CanvasReadOnlyBannerView } from './CanvasStateViews';
@@ -29,13 +27,26 @@ function renderCanvasShellReadOnlyBanner(
 }
 
 function renderCanvasShellHostTabStrip(
-  routePresentation: Pick<CanvasShellLayoutBuilderArgs['routePresentation'], 'canvasTabState'>
+  authoringCommands: CanvasShellLayoutBuilderArgs['authoringCommands'],
+  routePresentation: Pick<
+    CanvasShellLayoutBuilderArgs['routePresentation'],
+    'availableCanvasKinds' | 'canvasTabState' | 'effectiveUserPermissions'
+  >
 ): ReactNode {
   if (routePresentation.canvasTabState.tabs.length === 0) {
     return null;
   }
 
-  return <CanvasPlaygroundTabStrip tabState={routePresentation.canvasTabState} />;
+  return (
+    <CanvasPlaygroundTabStrip
+      tabState={routePresentation.canvasTabState}
+      availableCanvasKinds={routePresentation.availableCanvasKinds}
+      canEditEdges={routePresentation.effectiveUserPermissions.canEditEdges}
+      onCreateCanvasDocument={(command) => {
+        void authoringCommands.handleCreateCanvasDocument(command);
+      }}
+    />
+  );
 }
 
 export function buildCanvasShellLayout({
@@ -57,7 +68,7 @@ export function buildCanvasShellLayout({
     canOpenSourceImport: layoutState.canOpenSourceImport,
     hostTabState: routePresentation.canvasTabState,
     centerSurfaceMode,
-    hostTabStrip: renderCanvasShellHostTabStrip(routePresentation),
+    hostTabStrip: renderCanvasShellHostTabStrip(authoringCommands, routePresentation),
     centerSurface: renderCanvasCenterSurface({
       presentationState: routePresentation.presentationState,
       startupBlockState: routePresentation.startupBlockState,

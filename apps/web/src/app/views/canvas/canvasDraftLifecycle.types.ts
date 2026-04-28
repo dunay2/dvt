@@ -60,10 +60,7 @@ export type CanvasDraftLifecycleSessionDto = {
   draftSession: CanvasDraftSession;
   setDraftSession: Dispatch<SetStateAction<CanvasDraftSession>>;
   canonicalSnapshot: CanvasDraftLifecycleCanonicalSnapshot;
-  setCanvasNodePositions: (
-    workspaceLayoutKey: string,
-    positions: CanvasNodePositions
-  ) => void;
+  setCanvasNodePositions: (workspaceLayoutKey: string, positions: CanvasNodePositions) => void;
 };
 
 export type CanvasDraftLifecycleProjectionDto = {
@@ -81,6 +78,7 @@ export type CanvasDraftLifecyclePolicyDto = {
 export type CanvasCreateCanvasDocumentCommand = {
   kind: string;
   title: string;
+  mode?: 'create_first' | 'replace_current';
 };
 
 export type CanvasCreateCanvasDocumentCommandDto = {

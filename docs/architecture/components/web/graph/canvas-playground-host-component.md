@@ -67,14 +67,14 @@ before that boundary exists.
 
 ## Public API
 
-| API                           | Responsibility                                                                        |
-| ----------------------------- | ------------------------------------------------------------------------------------- |
-| `CanvasKindRegistration`      | host-safe declaration of a canvas kind contributed by a plugin                        |
-| `CanvasDocumentIdentity`      | current workspace canvas title and kind                                               |
-| `CanvasPlaygroundHostState`   | host posture: create-first-canvas, typed-empty-canvas, active-canvas                  |
-| `CanvasHostCycleState`        | story-shaped host cycle DTO: needs-canvas, typed-empty, graph-ready                   |
-| `CanvasPlaygroundTabState`    | host-visible active tab state derived from the authoritative workspace draft          |
-| `CreateCanvasDocumentCommand` | host-owned command that persists the first canvas identity through the draft boundary |
+| API                           | Responsibility                                                                                           |
+| ----------------------------- | -------------------------------------------------------------------------------------------------------- |
+| `CanvasKindRegistration`      | host-safe declaration of a canvas kind contributed by a plugin                                           |
+| `CanvasDocumentIdentity`      | current workspace canvas title and kind                                                                  |
+| `CanvasPlaygroundHostState`   | host posture: create-first-canvas, typed-empty-canvas, active-canvas                                     |
+| `CanvasHostCycleState`        | story-shaped host cycle DTO: needs-canvas, typed-empty, graph-ready                                      |
+| `CanvasPlaygroundTabState`    | host-visible active tab state derived from the authoritative workspace draft                             |
+| `CreateCanvasDocumentCommand` | host-owned command that persists first or explicitly replaced canvas identity through the draft boundary |
 
 ## Invariants
 
@@ -82,6 +82,8 @@ before that boundary exists.
 - The host owns create-canvas posture and current document identity.
 - Plugin contributions own canvas kind semantics and node catalogs.
 - The first canvas must round-trip through canonical draft persistence.
+- Replacement of an existing draft-backed canvas must use `replace_current`,
+  operator confirmation, and the current draft revision as CAS guard.
 - The host tab strip must only reflect authoritative draft-backed canvas truth.
 - The host must not invent local-only semantic success.
 - The host may render one active canvas tab in this slice, but must not imply
@@ -113,6 +115,8 @@ stateDiagram-v2
   DraftBackedTab --> TypedEmptyCanvas: restore host tab from workspace draft
   TypedEmptyCanvas --> ActiveCanvas: first node persisted
   ActiveCanvas --> ActiveCanvas: edit graph
+  ActiveCanvas --> ConfirmingReplacement: New canvas
+  ConfirmingReplacement --> DraftBackedTab: replace_current saved through CAS
 ```
 
 ## Component ownership
@@ -168,6 +172,11 @@ sequenceDiagram
   Shell->>Draft: persist first authoring node through draft lifecycle
   Draft-->>Host: graph-backed canvas draft
   Host->>Shell: render graph-ready canvas
+  User->>Tabs: New canvas
+  Tabs->>User: confirm replacement
+  User->>Tabs: confirm
+  Tabs->>Draft: save blank draft with expectedRevision=current
+  Draft-->>Host: replacement saved or conflict posture
 ```
 
 ## Authoritative restore

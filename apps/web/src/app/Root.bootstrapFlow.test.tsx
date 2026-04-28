@@ -10,6 +10,7 @@ import { ApiError } from './services/api/createApiClient';
 import {
   createBlockedRouteBootstrapPresentation,
   createCompleteRouteBootstrapPresentation,
+  createFailedRouteBootstrapPresentation,
 } from './bootstrap/routeBootstrapContract';
 import { resetRouteBootstrapPresentation } from './bootstrap/routeBootstrapRegistry';
 import {
@@ -34,7 +35,7 @@ vi.mock('./bootstrap/appBootstrapScreen', () => ({
 }));
 
 async function expectRouteBootstrapStep(args: {
-  status: 'pending' | 'complete' | 'blocked' | 'error';
+  status: 'pending' | 'complete' | 'failed' | 'blocked' | 'error';
   detail: string;
 }): Promise<void> {
   await waitFor(() => {
@@ -219,6 +220,37 @@ describe('RootShell bootstrap flow', () => {
           'Canvas has paused draft editing because the persisted draft disappeared. Adopt the current protected draft authority before continuing.',
       });
       expect(bootstrapScreenMocks.completeBootstrapScreen).not.toHaveBeenCalled();
+    } finally {
+      await mounted.cleanup();
+    }
+  });
+
+  it('completes Raven startup when the route publishes a controlled failed posture', async () => {
+    const capability = createResolvedCapability();
+    const mounted = await withTestQueryClient(
+      createRootShellNode(
+        capability,
+        ['/canvas'],
+        undefined,
+        <RouteBootstrapProbe
+          registration={CANVAS_ROUTE_BOOTSTRAP_REGISTRATION}
+          presentationState={createFailedRouteBootstrapPresentation(
+            'Route rendered a governed error surface'
+          )}
+        >
+          <div>Canvas route error surface</div>
+        </RouteBootstrapProbe>
+      )
+    );
+
+    try {
+      await expectRouteBootstrapStep({
+        status: 'failed',
+        detail: 'Route rendered a governed error surface',
+      });
+      await waitFor(() => {
+        expect(bootstrapScreenMocks.completeBootstrapScreen).toHaveBeenCalled();
+      });
     } finally {
       await mounted.cleanup();
     }

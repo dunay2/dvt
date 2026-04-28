@@ -27,17 +27,10 @@ vi.mock('../../plugins/nodeTypeRegistry', () => ({
 }));
 
 vi.mock('@xyflow/react', () => ({
-  ReactFlow: ({
-    children,
-    ...props
-  }: {
-    children: React.ReactNode;
-  }) =>
+  ReactFlow: ({ children, ...props }: { children: React.ReactNode }) =>
     (() => {
       xyflowState.lastReactFlowProps = props;
-      return (
-        <div data-testid="react-flow">{children}</div>
-      );
+      return <div data-testid="react-flow">{children}</div>;
     })(),
   Background: ({ color, gap }: { color?: string; gap: number }) => (
     <div data-testid="background">
@@ -110,10 +103,7 @@ function buildProps(
   };
 }
 
-function requireButton(
-  value: HTMLButtonElement | undefined,
-  errorCode: string
-): HTMLButtonElement {
+function requireButton(value: HTMLButtonElement | undefined, errorCode: string): HTMLButtonElement {
   if (value === undefined) {
     throw new Error(errorCode);
   }
@@ -196,8 +186,9 @@ describe('CanvasViewport', () => {
             explorerPanelVisible: false,
             inspectorPanelVisible: false,
             gridSize: 32,
-            canvasPalette:
-              legacyCanvasPalette as React.ComponentProps<typeof CanvasViewport>['canvasPalette'],
+            canvasPalette: legacyCanvasPalette as React.ComponentProps<
+              typeof CanvasViewport
+            >['canvasPalette'],
           })}
         />
       );
@@ -228,8 +219,9 @@ describe('CanvasViewport', () => {
     expect(xyflowState.miniMapMaskColor).toBe('var(--canvas-minimap-mask)');
     expect(xyflowState.miniMapMaskStrokeColor).toBe('var(--canvas-minimap-mask-stroke)');
     expect(xyflowState.miniMapClassName).toBe('rounded-lg');
-    const minimapDataset = (container.querySelector('[data-testid="minimap"]') as HTMLDivElement | null)
-      ?.dataset;
+    const minimapDataset = (
+      container.querySelector('[data-testid="minimap"]') as HTMLDivElement | null
+    )?.dataset;
     expect(minimapDataset?.pannable).toBe('true');
     expect(minimapDataset?.zoomable).toBe('true');
   });

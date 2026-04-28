@@ -43,13 +43,12 @@ function projectViewportNodes(args: {
   } = args;
 
   return resolveVisibleCanonicalNodes(visibleNodeIds, canonicalNodesById).map((node, index) =>
-    mapCanonicalNodeToCanvasNode(
-      node,
+    mapCanonicalNodeToCanvasNode({
+      canonicalNode: node,
       index,
-      columnLevelLineageEnabled,
-      undefined,
-      persistedNodePositions[node.id] ?? fallbackPositionsById?.get(node.id)
-    )
+      showColumns: columnLevelLineageEnabled,
+      persistedPosition: persistedNodePositions[node.id] ?? fallbackPositionsById?.get(node.id),
+    })
   );
 }
 

@@ -1,3 +1,4 @@
+/** Owned concern: declare Canvas route and toolbar copy DTOs consumed by locale catalogs. */
 export type CanvasDisabledCapability = 'plan_preview' | 'run_start' | 'graph_edits';
 
 export type CanvasViewCopy = {
@@ -57,6 +58,11 @@ export type CanvasViewCopy = {
   readonly toolbarCostLabel: string;
   readonly toolbarPlanLabel: string;
   readonly toolbarRunLabel: string;
+  readonly newCanvasLabel: string;
+  readonly replaceCanvasTitle: string;
+  readonly replaceCanvasMessage: string;
+  readonly replaceCanvasCancelLabel: string;
+  readonly replaceCanvasConfirmLabel: string;
   readonly draftSyncedLabel: string;
   readonly savingDraftLabel: string;
   readonly draftSavedLabel: string;

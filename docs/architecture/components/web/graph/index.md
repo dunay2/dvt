@@ -26,6 +26,7 @@ Canonical navigation for the Graph and Canvas architecture pack.
 - [Canvas Execution Selection Component](./canvas-execution-selection-component.md)
 - [Canvas Empty Authoring Entrypoint Component](./canvas-empty-authoring-entrypoint-component.md)
 - [Canvas Playground Host Component](./canvas-playground-host-component.md)
+- [Canvas Startup And Draft Recovery Component](./canvas-startup-and-draft-recovery-component.md)
 - [Canvas Graph Lifecycle Component](./canvas-graph-lifecycle-component.md)
 - [Canvas Handler Contracts Component](./canvas-handler-contracts-component.md)
 - [Canvas Route Composition Component](./canvas-route-composition-component.md)

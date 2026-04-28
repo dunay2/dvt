@@ -31,7 +31,7 @@ describe('codeRouteBootstrap', () => {
     });
   });
 
-  it('maps file-tree or preview failures to error posture', () => {
+  it('maps file-tree or preview failures to non-blocking failed posture', () => {
     expect(
       deriveCodeRouteBootstrapPresentation({
         isLoadingFileTree: false,
@@ -41,9 +41,9 @@ describe('codeRouteBootstrap', () => {
         filePreviewErrorMessage: null,
       })
     ).toEqual({
-      status: 'error',
+      status: 'failed',
       detail: 'Tree unavailable',
-      canComplete: false,
+      canComplete: true,
     });
 
     expect(
@@ -55,9 +55,9 @@ describe('codeRouteBootstrap', () => {
         filePreviewErrorMessage: 'Preview unavailable',
       })
     ).toEqual({
-      status: 'error',
+      status: 'failed',
       detail: 'Preview unavailable',
-      canComplete: false,
+      canComplete: true,
     });
   });
 });

@@ -1,6 +1,7 @@
+/** Owned concern: publish Cost workbench loading and failure posture into the route bootstrap contract. */
 import {
   createCompleteRouteBootstrapPresentation,
-  createErrorRouteBootstrapPresentation,
+  createFailedRouteBootstrapPresentation,
   createPendingRouteBootstrapPresentation,
   type RouteBootstrapPresentation,
 } from '../../bootstrap/routeBootstrapContract';
@@ -15,13 +16,11 @@ export function deriveCostRouteBootstrapPresentation({
   errorMessage: string | null;
 }): RouteBootstrapPresentation {
   if (isLoading) {
-    return createPendingRouteBootstrapPresentation(
-      'Loading cost coverage for the route'
-    );
+    return createPendingRouteBootstrapPresentation('Loading cost coverage for the route');
   }
 
   if (errorMessage) {
-    return createErrorRouteBootstrapPresentation(errorMessage);
+    return createFailedRouteBootstrapPresentation(errorMessage);
   }
 
   return createCompleteRouteBootstrapPresentation('Cost route is ready');

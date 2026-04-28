@@ -1,3 +1,4 @@
+/** Owned concern: declare Spanish Canvas toolbar copy overrides for governed actions. */
 import type { CanvasViewCopy } from './canvasCopy.types';
 
 export const canvasViewToolbarCopyEs = {
@@ -13,6 +14,12 @@ export const canvasViewToolbarCopyEs = {
   toolbarCostLabel: 'Coste',
   toolbarPlanLabel: 'Plan',
   toolbarRunLabel: 'Run',
+  newCanvasLabel: 'Nuevo canvas',
+  replaceCanvasTitle: 'Reemplazar el canvas actual?',
+  replaceCanvasMessage:
+    'Esto crea un canvas en blanco en el draft actual del workspace. Los nodos y dependencias existentes se eliminan al confirmar.',
+  replaceCanvasCancelLabel: 'Cancelar',
+  replaceCanvasConfirmLabel: 'Crear canvas en blanco',
   draftSyncedLabel: 'Draft sincronizado',
   savingDraftLabel: 'Guardando draft',
   draftSavedLabel: 'Draft guardado',

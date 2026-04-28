@@ -1,3 +1,4 @@
+/** Owned concern: adapt the workspace graph draft authoring port to the protected HTTP API. */
 import {
   parseWorkspaceGraphDraftReadResponse,
   parseWorkspaceGraphDraftSaveResponse,
@@ -13,7 +14,8 @@ import type { ApiClient } from '../api/createApiClient';
 import {
   buildWorkspaceGraphDraftEndpoint,
   createRequestFailedApiError,
-  isWorkspaceHttpErrorEnvelope,
+  isWorkspaceGraphDraftNotFoundResponse,
+  matchWorkspaceGraphDraftHttpError,
   parseJsonResponse,
   readWorkspaceGraphDraftScope,
   WORKSPACE_GRAPH_DRAFT_ENDPOINT,
@@ -30,36 +32,6 @@ function isProtectedDraftReadResponseStatus(statusCode: number): boolean {
 
 function isProtectedDraftSaveResponseStatus(statusCode: number): boolean {
   return statusCode === 200 || statusCode === 401 || statusCode === 403 || statusCode === 409;
-}
-
-function matchWorkspaceGraphDraftHttpError(args: {
-  statusCode: number;
-  responseBody: unknown;
-  expectedStatusCode: number;
-  expectedReason: string;
-}): { error: { type: string; reason: string; details?: Record<string, unknown> } } | null {
-  if (
-    args.statusCode === args.expectedStatusCode &&
-    isWorkspaceHttpErrorEnvelope(args.responseBody) &&
-    args.responseBody.error.reason === args.expectedReason
-  ) {
-    return args.responseBody;
-  }
-
-  return null;
-}
-
-function isWorkspaceGraphDraftNotFoundResponse(args: {
-  statusCode: number;
-  responseBody: unknown;
-}): boolean {
-  return (
-    matchWorkspaceGraphDraftHttpError({
-      ...args,
-      expectedStatusCode: 404,
-      expectedReason: WORKSPACE_GRAPH_DRAFT_HTTP_ERROR_REASON.notFound,
-    }) !== null
-  );
 }
 
 function readWorkspaceGraphDraftExpectedSchemaVersion(responseBody: {

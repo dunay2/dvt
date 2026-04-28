@@ -1,3 +1,4 @@
+/** Owned concern: centralize workspace graph draft HTTP endpoint, scope, and error-envelope semantics. */
 import { ApiError } from '../api/createApiClient';
 import { useSessionStore } from '../../stores/sessionStore';
 
@@ -27,6 +28,36 @@ export function isWorkspaceHttpErrorEnvelope(
     details?: unknown;
   };
   return typeof errorRecord.type === 'string' && typeof errorRecord.reason === 'string';
+}
+
+export function matchWorkspaceGraphDraftHttpError(args: {
+  statusCode: number;
+  responseBody: unknown;
+  expectedStatusCode: number;
+  expectedReason: string;
+}): { error: { type: string; reason: string; details?: Record<string, unknown> } } | null {
+  if (
+    args.statusCode === args.expectedStatusCode &&
+    isWorkspaceHttpErrorEnvelope(args.responseBody) &&
+    args.responseBody.error.reason === args.expectedReason
+  ) {
+    return args.responseBody;
+  }
+
+  return null;
+}
+
+export function isWorkspaceGraphDraftNotFoundResponse(args: {
+  statusCode: number;
+  responseBody: unknown;
+}): boolean {
+  return (
+    matchWorkspaceGraphDraftHttpError({
+      ...args,
+      expectedStatusCode: 404,
+      expectedReason: WORKSPACE_GRAPH_DRAFT_HTTP_ERROR_REASON.notFound,
+    }) !== null
+  );
 }
 
 export function readWorkspaceGraphDraftScope(): {

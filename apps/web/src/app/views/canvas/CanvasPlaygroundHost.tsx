@@ -1,15 +1,16 @@
 /** Owned concern: render the host-owned first-canvas creation state for the Canvas playground. */
 import { Button } from '../../components/ui/button';
 import { Card } from '../../components/ui/card';
-import { routeWorkbenchMutedTextClassName, routeWorkbenchPanelClassName } from '../../components/workbench/RouteWorkbenchFrame';
+import {
+  routeWorkbenchMutedTextClassName,
+  routeWorkbenchPanelClassName,
+} from '../../components/workbench/RouteWorkbenchFrame';
 import type { CanvasKindRegistration } from '../../plugins/nodeTypeContracts';
 import { cn } from '../../components/ui/utils';
 import { canvasViewCopy } from './copy';
+import type { CanvasCreateCanvasDocumentCommand } from './canvasDraftLifecycle.types';
 
-export type CreateCanvasDocumentCommand = (command: {
-  kind: string;
-  title: string;
-}) => void;
+export type CreateCanvasDocumentCommand = (command: CanvasCreateCanvasDocumentCommand) => void;
 
 export function CanvasPlaygroundHost({
   canvasKinds,
