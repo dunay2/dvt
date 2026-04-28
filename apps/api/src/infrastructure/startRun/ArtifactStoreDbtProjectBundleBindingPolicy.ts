@@ -1,12 +1,17 @@
+/**
+ * @ownedConcern Register DBT artifact-store admission as an API infrastructure plugin requirement.
+ */
+import { DBT_PLUGIN_ID, TEMPORAL_DBT_PLUGIN_STEP_KINDS } from '@dvt/adapter-temporal';
 import {
   ArtifactReadError,
   assertDbtProjectBundleBinding,
   type DbtProjectBundleArtifactStore,
 } from '@dvt/artifacts';
-import type { DbtProjectBundleRef } from '@dvt/contracts';
+import { parseDbtPluginContext, type DbtProjectBundleRef } from '@dvt/contracts';
 import {
   RunExecutionContextRejectedError,
   type IRunExecutionContextBindingPolicy,
+  type RunExecutionContextPluginRequirement,
 } from '@dvt/engine';
 
 export interface ArtifactStoreDbtProjectBundleBindingPolicyOptions {
@@ -16,11 +21,31 @@ export interface ArtifactStoreDbtProjectBundleBindingPolicyOptions {
 export class ArtifactStoreDbtProjectBundleBindingPolicy
   implements IRunExecutionContextBindingPolicy
 {
+  public readonly pluginRequirements: readonly RunExecutionContextPluginRequirement[];
+
   public constructor(
     private readonly options: ArtifactStoreDbtProjectBundleBindingPolicyOptions
-  ) {}
+  ) {
+    this.pluginRequirements = [
+      {
+        pluginId: DBT_PLUGIN_ID,
+        stepKinds: TEMPORAL_DBT_PLUGIN_STEP_KINDS,
+        assertPluginContextAllowed: ({ pluginContext, context }) => {
+          const parsed = parseDbtPluginContext(pluginContext);
+          const bundleTenantId = parsed.projectBundleRef.tenantId;
+          if (bundleTenantId !== context.tenantId) {
+            throw new RunExecutionContextRejectedError(
+              `runExecutionContext.pluginContexts.dbt.projectBundleRef.tenantId mismatch: expected=${context.tenantId} actual=${bundleTenantId}`
+            );
+          }
 
-  public assertDbtProjectBundleRefAllowed(
+          this.assertDbtProjectBundleBindingAllowed(parsed.projectBundleRef, context.tenantId);
+        },
+      },
+    ];
+  }
+
+  private assertDbtProjectBundleBindingAllowed(
     projectBundleRef: DbtProjectBundleRef,
     expectedTenantId: string
   ): void {

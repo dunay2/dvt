@@ -18,12 +18,11 @@ import { x as extractTarball } from 'tar';
 
 import type { StepResult } from '../../activities/stepActivities.js';
 
+import { resolveDbtCliSubcommand } from './dbtPluginManifest.js';
 import type { DbtPluginExecutionInput, DbtPluginRunner } from './dbtPluginTypes.js';
 
 const execFileAsync = promisify(execFile);
 const DBT_PROJECT_FILENAMES = new Set(['dbt_project.yml', 'dbt_project.yaml']);
-
-type DbtSubcommand = 'run' | 'test' | 'snapshot';
 
 interface MaterializedDbtProject {
   projectDir: string;
@@ -131,7 +130,7 @@ function buildDbtCliArgs(
   stepId: string,
   targetProfile: string | undefined
 ): readonly string[] {
-  const subcommand = toDbtSubcommand(stepKind);
+  const subcommand = resolveDbtCliSubcommand(stepKind);
   return [
     subcommand,
     '--select',
@@ -140,19 +139,6 @@ function buildDbtCliArgs(
       ? ['--target', targetProfile]
       : []),
   ];
-}
-
-function toDbtSubcommand(stepKind: string): DbtSubcommand {
-  switch (stepKind) {
-    case 'DBT_MODEL':
-      return 'run';
-    case 'DBT_TEST':
-      return 'test';
-    case 'DBT_SNAPSHOT':
-      return 'snapshot';
-    default:
-      throw new Error(`DBT_CLI_STEP_KIND_UNSUPPORTED:${stepKind}`);
-  }
 }
 
 async function materializeDbtProject(

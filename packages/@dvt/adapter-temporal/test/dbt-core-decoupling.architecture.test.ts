@@ -2,15 +2,17 @@
  * Owned concern: verify DBT runtime ownership stays outside the Temporal core
  * activity dispatcher/factory boundary.
  */
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 
 import ts from 'typescript';
 import { describe, expect, it } from 'vitest';
 
 const ACTIVITY_ROOT = join(import.meta.dirname, '../src/activities');
+const PLUGIN_ROOT = join(import.meta.dirname, '../src/plugins');
 const DBT_PLUGIN_ROOT = join(import.meta.dirname, '../src/plugins/dbt');
 const REPO_ROOT = join(import.meta.dirname, '../../../..');
+const ENGINE_SRC_ROOT = join(REPO_ROOT, 'packages/@dvt/engine/src');
 const DBT_PROFILE_GUIDE = join(
   REPO_ROOT,
   'docs/architecture/components/engine/adapters/temporal/temporal-dbt-worker-plugin-profile.md'
@@ -69,6 +71,37 @@ describe('Temporal DBT core decoupling architecture', () => {
       expect(source).not.toContain('DbtPluginExecutionInput');
       expect(source).not.toContain('dbtPluginRunner');
     }
+  });
+
+  it('keeps engine source free of DBT-specific plugin ownership', () => {
+    for (const source of readTypeScriptSources(ENGINE_SRC_ROOT)) {
+      expect(source).not.toMatch(/\bDBT\b|Dbt|dbt/);
+    }
+  });
+
+  it('keeps generic plugin composition free of DBT-specific semantics', () => {
+    const source = readPluginSource('TemporalStepPluginProfile.ts');
+
+    expect(source).toContain('@ownedConcern Compose Temporal step plugin profiles');
+    expect(source).toContain('TemporalStepPluginProfile');
+    expect(source).toContain('composeTemporalStepPluginRegistries');
+    expect(source).toContain('TEMPORAL_STEP_PLUGIN_KIND_CONFLICT');
+    expect(source).not.toContain('DBT_');
+    expect(source).not.toContain('Dbt');
+    expect(source).not.toContain('dbt');
+  });
+
+  it('keeps DBT step-kind ownership inside the DBT plugin manifest', () => {
+    const source = readDbtPluginSource('dbtPluginManifest.ts');
+    const activitySource = readDbtPluginSource('DbtStepActivity.ts');
+    const runnerSource = readDbtPluginSource('DbtCliPluginRunner.ts');
+
+    expect(source).toContain('TEMPORAL_DBT_PLUGIN_STEP_KINDS');
+    expect(source).toContain('resolveDbtCliSubcommand');
+    expect(activitySource).toContain('TEMPORAL_DBT_PLUGIN_STEP_KINDS');
+    expect(activitySource).not.toContain('DBT_STEP_KINDS');
+    expect(runnerSource).toContain('resolveDbtCliSubcommand');
+    expect(runnerSource).not.toContain("case 'DBT_MODEL'");
   });
 
   it('documents core registry ownership as plugin-free by default', () => {
@@ -148,6 +181,25 @@ function readCoreActivitySource(fileName: string): string {
 
 function readDbtPluginSource(fileName: string): string {
   return readFileSync(join(DBT_PLUGIN_ROOT, fileName), 'utf8');
+}
+
+function readPluginSource(fileName: string): string {
+  return readFileSync(join(PLUGIN_ROOT, fileName), 'utf8');
+}
+
+function readTypeScriptSources(rootDirectory: string): string[] {
+  const sources: string[] = [];
+
+  for (const entry of readdirSync(rootDirectory, { withFileTypes: true })) {
+    const path = join(rootDirectory, entry.name);
+    if (entry.isDirectory()) {
+      sources.push(...readTypeScriptSources(path));
+    } else if (entry.isFile() && entry.name.endsWith('.ts')) {
+      sources.push(readFileSync(path, 'utf8'));
+    }
+  }
+
+  return sources;
 }
 
 function extractMethodBody(source: string, methodPrefix: string): string {

@@ -40,8 +40,10 @@ It does **not** own:
 ## Public API
 
 - `createDbtStepActivityRegistry({ runExecutionContextReader, dbtPluginRunner })`
-  returns a step-activity registry for `DBT_MODEL`, `DBT_TEST`, and
-  `DBT_SNAPSHOT`.
+  returns the DBT plugin-owned step-activity registry.
+- `TEMPORAL_DBT_PLUGIN_STEP_KINDS` is the DBT plugin manifest for currently
+  executable Temporal DBT plan steps. It is not a claim that these are all DBT
+  commands or all future DBT product concepts.
 - `DbtStepActivity.execute(step, context)` resolves the run execution context,
   validates `pluginContexts.dbt`, delegates to the configured
   `DbtPluginRunner`, and rejects mismatched `stepId` results.
@@ -49,8 +51,11 @@ It does **not** own:
   profile.
 - `DbtCliPluginRunner` is the current local CLI runner implementation behind
   the plugin port.
+- `composeTemporalStepPluginRegistries([...profiles])` is the generic Temporal
+  plugin composition API. DBT, SQL, and future executor profiles enter through
+  this seam rather than through core dispatch edits.
 - `apps/temporal-worker/src/runtime/temporalWorkerDbtProfile.ts` creates the
-  DBT registry only when `DVT_TEMPORAL_DBT_ENABLED=true`.
+  DBT plugin profile only when `DVT_TEMPORAL_DBT_ENABLED=true`.
 - `apps/temporal-worker/src/runtime/createTemporalWorkerRuntime.ts` remains the
   public runtime entrypoint and delegates concrete resource, host, and lifecycle
   construction to focused runtime modules.
@@ -63,12 +68,14 @@ It does **not** own:
   `dbtPluginRunner`; those dependencies belong to the DBT profile.
 - DBT support is omitted entirely when `DVT_TEMPORAL_DBT_ENABLED=false`.
 - When DBT support is enabled, the worker composes the DBT registry explicitly
-  through `TemporalWorkerHostConfig.stepActivitiesByKind`.
+  through the generic step-plugin profile composition seam and then passes the
+  merged registry to `TemporalWorkerHostConfig.stepActivitiesByKind`.
 - DBT steps fail closed when `runExecutionContextRef` is missing, the resolved
   context is rejected, the `dbt` plugin context is absent, or the plugin runner
   returns a result for a different `stepId`.
-- Runtime composition may replace DBT step-kind activity implementations by
-  passing an explicit registry; core dispatch does not reserve DBT kinds.
+- Runtime composition may install alternate DBT step-kind implementations by
+  choosing which plugin profile registry to pass; duplicate plugin claims fail
+  closed and core dispatch does not reserve DBT kinds.
 
 ## Transitions
 
@@ -79,9 +86,10 @@ It does **not** own:
 3. If `DVT_TEMPORAL_DBT_ENABLED=true`, `temporalWorkerDbtProfile.ts` creates the
    artifact-backed run execution context reader, DBT bundle reader, availability
    probe, and `DbtCliPluginRunner`.
-4. The DBT profile calls `createDbtStepActivityRegistry(...)`.
-5. `temporalWorkerRuntimeResources.ts` returns the optional registry as a
-   runtime resource.
+4. The DBT profile returns `{ pluginId: "dbt", stepActivitiesByKind }`.
+5. `temporalWorkerRuntimeResources.ts` merges enabled plugin profiles through
+   `composeTemporalStepPluginRegistries(...)` and returns the optional merged
+   registry as a runtime resource.
 6. `temporalWorkerHost.ts` passes the registry through
    `TemporalWorkerHostConfig.stepActivitiesByKind`.
 7. `temporalWorkerRuntimeHandle.ts` delegates startup to
@@ -107,6 +115,8 @@ It does **not** own:
 
 | Module                                                               | Owned concern                                              |
 | -------------------------------------------------------------------- | ---------------------------------------------------------- |
+| `src/plugins/TemporalStepPluginProfile.ts`                           | Generic Temporal step plugin profile composition           |
+| `src/plugins/dbt/dbtPluginManifest.ts`                               | DBT plugin id, executable step kinds, and CLI command map  |
 | `src/plugins/dbt/DbtStepActivity.ts`                                 | DBT step activity profile and explicit registry            |
 | `src/plugins/dbt/dbtPluginTypes.ts`                                  | DBT plugin activity contracts                              |
 | `src/plugins/dbt/DbtCliPluginRunner.ts`                              | Local DBT CLI runner behind the plugin port                |
@@ -129,14 +139,17 @@ flowchart LR
   Env --> Decision{"enabled?"}
   Decision -->|false| HostNoDbt["TemporalWorkerHost without plugin registry"]
   Decision -->|true| Profile["temporalWorkerDbtProfile"]
+  Profile --> Manifest["DBT plugin manifest"]
   Profile --> Reader["RunExecutionContext reader"]
   Profile --> Runner["DbtCliPluginRunner"]
-  Reader --> Registry["createDbtStepActivityRegistry"]
+  Manifest --> Registry["createDbtStepActivityRegistry"]
+  Reader --> Registry
   Runner --> Registry
+  Registry --> Compose["composeTemporalStepPluginRegistries"]
   Stores --> HostBuilder["temporalWorkerHost"]
-  Registry --> HostBuilder
+  Compose --> HostBuilder
   HostNoDbt --> HostBuilder
-  Registry --> Host["TemporalWorkerHost.stepActivitiesByKind"]
+  Compose --> Host["TemporalWorkerHost.stepActivitiesByKind"]
   HostBuilder --> Host
   Host --> Dispatcher["StepActivityDispatcher"]
   Dispatcher --> Activity["DbtStepActivity"]
@@ -157,8 +170,8 @@ sequenceDiagram
   alt DBT disabled
     Resources->>Host: config without stepActivitiesByKind
   else DBT enabled
-    Resources->>Profile: create reader, runner, registry
-    Resources->>Host: config with DBT registry
+    Resources->>Profile: create reader, runner, plugin profile
+    Resources->>Host: config with composed plugin registry
   end
   Entry->>Lifecycle: start runtime handle
   Lifecycle->>Host: start(connection)
@@ -175,7 +188,9 @@ sequenceDiagram
   transitions, consumers, component map, and diagrams.
 - `packages/@dvt/adapter-temporal/test/activities.test.ts` proves the default
   core registry rejects DBT kinds and accepts them only when the worker composes
-  the DBT registry explicitly.
+  the DBT registry explicitly. It also proves a SQL-shaped plugin can be
+  composed through the same registry seam and that duplicate plugin claims fail
+  closed.
 - `apps/temporal-worker/test/runtime/createTemporalWorkerRuntime.test.ts`
   proves the standalone worker omits DBT registry wiring when DBT mode is
   disabled and composes it when enabled.

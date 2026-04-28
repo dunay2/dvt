@@ -1,5 +1,5 @@
 import type { IRunExecutionContextReader } from '@dvt/artifacts';
-import type { PlanRef, ResolvedRunContext, RunExecutionContext } from '@dvt/contracts';
+import { type PlanRef, type ResolvedRunContext, type RunExecutionContext } from '@dvt/contracts';
 import { sha256Hex } from '@dvt/crypto';
 import {
   PlanIntegrityValidator,
@@ -25,7 +25,9 @@ import type {
   RunMetadata,
 } from '../src/engine-types.js';
 import {
+  composeTemporalStepPluginRegistries,
   createDbtStepActivityRegistry,
+  TEMPORAL_DBT_PLUGIN_STEP_KINDS,
   type DbtPluginExecutionInput,
   type DbtPluginRunner,
 } from '../src/index.js';
@@ -679,6 +681,56 @@ describe('stepActivities', () => {
         ctx: CTX,
       });
       expect(result).toEqual({ stepId: 's1', status: 'COMPLETED' });
+    });
+
+    it('registers the Temporal DBT plugin runtime subset from the DBT plugin manifest', () => {
+      const registry = createDbtRegistry();
+
+      expect(TEMPORAL_DBT_PLUGIN_STEP_KINDS).toEqual(['DBT_MODEL', 'DBT_TEST', 'DBT_SNAPSHOT']);
+      expect([...registry.keys()]).toEqual([...TEMPORAL_DBT_PLUGIN_STEP_KINDS]);
+      expect(registry.has('DBT_RUN')).toBe(false);
+      expect(registry.has('DBT_COMPILE')).toBe(false);
+    });
+
+    it('composes DBT and SQL plugin activities without changing core dispatch', async () => {
+      const sqlActivity: StepActivity = {
+        async execute(step) {
+          return { stepId: step.stepId, status: 'COMPLETED' };
+        },
+      };
+      const pluginRegistry = composeTemporalStepPluginRegistries([
+        { pluginId: 'dbt', stepActivitiesByKind: createDbtRegistry() },
+        {
+          pluginId: 'sql',
+          stepActivitiesByKind: new Map([['SQL_TRANSFORM', sqlActivity]]),
+        },
+      ]);
+      const { acts } = setupActivities(undefined, undefined, pluginRegistry);
+
+      await expect(
+        acts.executeStep({ step: { stepId: 's-dbt', kind: 'DBT_TEST' }, ctx: CTX })
+      ).resolves.toEqual({ stepId: 's-dbt', status: 'COMPLETED' });
+      await expect(
+        acts.executeStep({
+          step: { stepId: 's-sql', kind: 'SQL_TRANSFORM', dependsOn: [] },
+          ctx: CTX,
+        })
+      ).resolves.toEqual({ stepId: 's-sql', status: 'COMPLETED' });
+    });
+
+    it('fails plugin composition when two plugins claim the same step kind', () => {
+      const activity: StepActivity = {
+        async execute(step) {
+          return { stepId: step.stepId, status: 'COMPLETED' };
+        },
+      };
+
+      expect(() =>
+        composeTemporalStepPluginRegistries([
+          { pluginId: 'sql-a', stepActivitiesByKind: new Map([['SQL_TRANSFORM', activity]]) },
+          { pluginId: 'sql-b', stepActivitiesByKind: new Map([['SQL_TRANSFORM', activity]]) },
+        ])
+      ).toThrow('TEMPORAL_STEP_PLUGIN_KIND_CONFLICT:sql-b:SQL_TRANSFORM');
     });
 
     it(

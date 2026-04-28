@@ -1,7 +1,10 @@
 /**
  * @ownedConcern Compose validated worker runtime resources from environment and options.
  */
-import { loadTemporalAdapterConfig } from '@dvt/adapter-temporal';
+import {
+  composeTemporalStepPluginRegistries,
+  loadTemporalAdapterConfig,
+} from '@dvt/adapter-temporal';
 
 import type { Env } from '../plugins/env.js';
 
@@ -38,6 +41,9 @@ export function createTemporalWorkerRuntimeResources(
     planStore
   );
   const dbtProfile = createTemporalWorkerDbtProfile(env, options);
+  const pluginProfiles = dbtProfile.pluginProfile === undefined ? [] : [dbtProfile.pluginProfile];
+  const stepActivitiesByKind =
+    pluginProfiles.length === 0 ? undefined : composeTemporalStepPluginRegistries(pluginProfiles);
 
   return {
     runMigrations,
@@ -49,8 +55,6 @@ export function createTemporalWorkerRuntimeResources(
     ...(dbtProfile.dbtAvailabilityProbe === undefined
       ? {}
       : { dbtAvailabilityProbe: dbtProfile.dbtAvailabilityProbe }),
-    ...(dbtProfile.stepActivitiesByKind === undefined
-      ? {}
-      : { stepActivitiesByKind: dbtProfile.stepActivitiesByKind }),
+    ...(stepActivitiesByKind === undefined ? {} : { stepActivitiesByKind }),
   };
 }

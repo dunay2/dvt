@@ -7,11 +7,11 @@ import type {
 } from '@dvt/contracts';
 import { describe, expect, it } from 'vitest';
 
+import type { IRunExecutionContextBindingPolicy } from '../../src/ports/IRunExecutionContextBindingPolicy.js';
 import { RunExecutionContextAdmissionPolicy } from '../../src/services/startRun/RunExecutionContextAdmissionPolicy.js';
 
-const allowBindingPolicy = {
-  assertDbtProjectBundleRefAllowed() {},
-};
+const EXAMPLE_PLUGIN_STEP_KINDS = ['EXAMPLE_MODEL', 'EXAMPLE_TEST', 'EXAMPLE_SNAPSHOT'] as const;
+const allowBindingPolicy = createExampleBindingPolicy();
 
 function makePlanRef(): PlanRef {
   return {
@@ -31,7 +31,7 @@ function makeExecutionPolicy(overrides?: Partial<RunExecutionPolicy>): RunExecut
   };
 }
 
-function makePlan(stepKinds: readonly string[] = ['DBT_MODEL']): ExecutionPlan {
+function makePlan(stepKinds: readonly string[] = ['EXAMPLE_MODEL']): ExecutionPlan {
   return {
     metadata: {
       planId: 'plan-1',
@@ -85,10 +85,10 @@ function makeRunExecutionContext(overrides?: Partial<RunExecutionContext>): RunE
     createdAtIso: '2026-04-03T00:00:00.000Z',
     createdBy: 'tests',
     pluginContexts: {
-      dbt: {
-        projectBundleRef: {
+      example: {
+        artifactRef: {
           uri: `s3://bundle-bucket/tenants/tenant-a/${'b'.repeat(64)}`,
-          kind: 'dbt-project-bundle',
+          kind: 'example-plugin-artifact',
           sha256: 'b'.repeat(64),
           tenantId: 'tenant-a',
         },
@@ -96,6 +96,59 @@ function makeRunExecutionContext(overrides?: Partial<RunExecutionContext>): RunE
     },
     ...overrides,
   };
+}
+
+function createExampleBindingPolicy(
+  assertAllowed: (pluginContext: unknown) => void = () => undefined
+): IRunExecutionContextBindingPolicy {
+  return {
+    pluginRequirements: [
+      {
+        pluginId: 'example',
+        stepKinds: EXAMPLE_PLUGIN_STEP_KINDS,
+        assertPluginContextAllowed({ pluginContext, context }) {
+          const tenantId = readExampleArtifactTenantId(pluginContext);
+          if (tenantId !== context.tenantId) {
+            throw new Error(
+              `runExecutionContext.pluginContexts.example.artifactRef.tenantId mismatch: expected=${context.tenantId} actual=${tenantId}`
+            );
+          }
+
+          assertAllowed(pluginContext);
+        },
+      },
+    ],
+  };
+}
+
+function createSqlBindingPolicy(): IRunExecutionContextBindingPolicy {
+  return {
+    pluginRequirements: [
+      {
+        pluginId: 'sql',
+        stepKinds: ['SQL_TRANSFORM'],
+        assertPluginContextAllowed() {},
+      },
+    ],
+  };
+}
+
+function readExampleArtifactTenantId(pluginContext: unknown): string {
+  if (pluginContext === null || typeof pluginContext !== 'object') {
+    throw new Error('runExecutionContext.pluginContexts.example invalid for plugin-bearing plan');
+  }
+
+  const artifactRef = (pluginContext as { artifactRef?: unknown }).artifactRef;
+  if (artifactRef === null || typeof artifactRef !== 'object') {
+    throw new Error('runExecutionContext.pluginContexts.example invalid for plugin-bearing plan');
+  }
+
+  const tenantId = (artifactRef as { tenantId?: unknown }).tenantId;
+  if (typeof tenantId !== 'string') {
+    throw new Error('runExecutionContext.pluginContexts.example invalid for plugin-bearing plan');
+  }
+
+  return tenantId;
 }
 
 describe('RunExecutionContextAdmissionPolicy', () => {
@@ -114,7 +167,7 @@ describe('RunExecutionContextAdmissionPolicy', () => {
     ).resolves.toBeUndefined();
   });
 
-  it('accepts non-DBT plans without a runExecutionContextRef', async () => {
+  it('accepts non-plugin plans without a runExecutionContextRef', async () => {
     const policy = new RunExecutionContextAdmissionPolicy();
 
     await expect(
@@ -127,8 +180,39 @@ describe('RunExecutionContextAdmissionPolicy', () => {
     ).resolves.toBeUndefined();
   });
 
-  it('rejects DBT-bearing plans when runExecutionContextRef is missing', async () => {
-    const policy = new RunExecutionContextAdmissionPolicy();
+  it.each(EXAMPLE_PLUGIN_STEP_KINDS)(
+    'rejects %s plans when runExecutionContextRef is missing',
+    async (stepKind) => {
+      const policy = new RunExecutionContextAdmissionPolicy({
+        bindingPolicy: allowBindingPolicy,
+      });
+
+      await expect(
+        policy.assertAllowed(makePlan([stepKind]), makePlanRef(), makeExecutionPolicy(), {
+          ...makeContext(),
+          runExecutionContextRef: undefined,
+        })
+      ).rejects.toMatchObject({ code: 'RUN_EXECUTION_CONTEXT_REJECTED' });
+    }
+  );
+
+  it('rejects future SQL plugin plans through the same plugin requirement seam', async () => {
+    const policy = new RunExecutionContextAdmissionPolicy({
+      bindingPolicy: createSqlBindingPolicy(),
+    });
+
+    await expect(
+      policy.assertAllowed(makePlan(['SQL_TRANSFORM']), makePlanRef(), makeExecutionPolicy(), {
+        ...makeContext(),
+        runExecutionContextRef: undefined,
+      })
+    ).rejects.toMatchObject({ code: 'RUN_EXECUTION_CONTEXT_REJECTED' });
+  });
+
+  it('rejects plugin-bearing plans when runExecutionContextRef is missing', async () => {
+    const policy = new RunExecutionContextAdmissionPolicy({
+      bindingPolicy: allowBindingPolicy,
+    });
 
     await expect(
       policy.assertAllowed(makePlan(), makePlanRef(), makeExecutionPolicy(), {
@@ -145,7 +229,7 @@ describe('RunExecutionContextAdmissionPolicy', () => {
     ).rejects.toMatchObject({ code: 'RUN_EXECUTION_CONTEXT_REJECTED' });
   });
 
-  it('rejects DBT-bearing plans when bundle binding policy is not configured', async () => {
+  it('allows plugin-shaped plans when no matching plugin requirement is configured in this engine', async () => {
     const policy = new RunExecutionContextAdmissionPolicy({
       resolver: {
         async resolve() {
@@ -156,7 +240,7 @@ describe('RunExecutionContextAdmissionPolicy', () => {
 
     await expect(
       policy.assertAllowed(makePlan(), makePlanRef(), makeExecutionPolicy(), makeContext())
-    ).rejects.toMatchObject({ code: 'RUN_EXECUTION_CONTEXT_REJECTED' });
+    ).resolves.toBeUndefined();
   });
 
   it.each([
@@ -181,7 +265,7 @@ describe('RunExecutionContextAdmissionPolicy', () => {
     ).rejects.toMatchObject({ code: 'RUN_EXECUTION_CONTEXT_REJECTED' });
   });
 
-  it('rejects DBT-bearing plans when the resolved context omits pluginContexts.dbt', async () => {
+  it('rejects plugin-bearing plans when the resolved context omits the required plugin context', async () => {
     const policy = new RunExecutionContextAdmissionPolicy({
       resolver: {
         async resolve() {
@@ -198,16 +282,16 @@ describe('RunExecutionContextAdmissionPolicy', () => {
     ).rejects.toMatchObject({ code: 'RUN_EXECUTION_CONTEXT_REJECTED' });
   });
 
-  it('rejects DBT-bearing plans when bundle tenantId mismatches the run context', async () => {
+  it('rejects plugin-bearing plans when artifact tenantId mismatches the run context', async () => {
     const policy = new RunExecutionContextAdmissionPolicy({
       resolver: {
         async resolve() {
           return makeRunExecutionContext({
             pluginContexts: {
-              dbt: {
-                projectBundleRef: {
+              example: {
+                artifactRef: {
                   uri: `s3://bundle-bucket/tenants/tenant-b/${'b'.repeat(64)}`,
-                  kind: 'dbt-project-bundle',
+                  kind: 'example-plugin-artifact',
                   sha256: 'b'.repeat(64),
                   tenantId: 'tenant-b',
                 },
@@ -282,20 +366,16 @@ describe('RunExecutionContextAdmissionPolicy', () => {
     ).resolves.toBeUndefined();
   });
 
-  it('rejects DBT-bearing plans when the bundle binding policy rejects the locator', async () => {
+  it('rejects plugin-bearing plans when the binding policy rejects the artifact locator', async () => {
     const policy = new RunExecutionContextAdmissionPolicy({
       resolver: {
         async resolve() {
           return makeRunExecutionContext();
         },
       },
-      bindingPolicy: {
-        assertDbtProjectBundleRefAllowed() {
-          throw new Error(
-            'dbt project bundle artifact bucket mismatch: expected=canonical actual=foreign'
-          );
-        },
-      },
+      bindingPolicy: createExampleBindingPolicy(() => {
+        throw new Error('plugin artifact bucket mismatch: expected=canonical actual=foreign');
+      }),
     });
 
     await expect(
@@ -303,7 +383,7 @@ describe('RunExecutionContextAdmissionPolicy', () => {
     ).rejects.toMatchObject({
       code: 'RUN_EXECUTION_CONTEXT_REJECTED',
       messageParams: {
-        reason: 'dbt project bundle artifact bucket mismatch: expected=canonical actual=foreign',
+        reason: 'plugin artifact bucket mismatch: expected=canonical actual=foreign',
       },
     });
   });

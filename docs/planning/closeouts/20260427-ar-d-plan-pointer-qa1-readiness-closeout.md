@@ -153,6 +153,26 @@ addendum records the follow-up pass requested from the same branch.
 - added a semantic architecture test that validates core ownership, the empty
   default registry posture, and the DBT worker profile guide.
 
+## DBT Plugin Isolation Addendum
+
+The follow-up review clarified the remaining semantic issue: DBT must behave
+like a plugin profile, the same way a future SQL plugin would, instead of being
+treated as a special core allowlist.
+
+- introduced `TemporalStepPluginProfile` and
+  `composeTemporalStepPluginRegistries(...)` as plugin-generic worker
+  composition primitives;
+- moved the Temporal-supported DBT subset into
+  `src/plugins/dbt/dbtPluginManifest.ts`;
+- changed DBT CLI command selection to resolve through the DBT plugin manifest;
+- changed engine admission from DBT-specific binding to generic
+  `pluginRequirements`;
+- kept DBT artifact-store validation in the API infrastructure binding policy;
+- changed engine tests to use an example plugin and added a SQL-shaped plugin
+  proof;
+- added a semantic architecture test that keeps `packages/@dvt/engine` source
+  free of DBT vocabulary and keeps generic plugin composition DBT-free.
+
 ## TDD Evidence
 
 Red result observed before implementation:
@@ -175,6 +195,9 @@ Red result observed before implementation:
 - `pnpm --filter dvt-temporal-worker test -- test/runtime/createTemporalWorkerRuntime.test.ts`
   - Failed as expected before implementation because DBT-disabled runtime still
     exposed DBT registry wiring through the default activity registry.
+- `pnpm --filter @dvt/engine exec vitest run test/services/RunExecutionContextAdmissionPolicy.test.ts`
+  - Failed as expected during the first attempted fix because the engine test
+    still encoded DBT plugin step kinds as core vocabulary.
 
 Green results after implementation:
 
@@ -192,6 +215,12 @@ Green results after implementation:
   - Passed: 2 files, 11 tests, with unrelated tests skipped by filter.
 - `pnpm --filter dvt-temporal-worker test -- test/runtime/createTemporalWorkerRuntime.test.ts`
   - Passed: 1 file, 6 tests.
+- `pnpm --filter @dvt/engine exec vitest run test/services/RunExecutionContextAdmissionPolicy.test.ts test/core/WorkflowEngine.test.ts`
+  - Passed: 2 files, 53 tests.
+- `pnpm --filter @dvt/adapter-temporal exec vitest run test/activities.test.ts test/DbtCliPluginRunner.test.ts test/dbt-core-decoupling.architecture.test.ts`
+  - Passed: 3 files, 57 tests.
+- `pnpm --filter dvt-api test -- test/integration/plannerEngineContract.test.ts`
+  - Passed: 1 file, 7 tests.
 
 Intermediate test corrections:
 
@@ -213,6 +242,14 @@ Intermediate test corrections:
   - Passed: 2 files, 6 tests.
 - `pnpm --filter dvt-temporal-worker test -- test/plugins/env.test.ts test/runtime/createTemporalWorkerRuntime.test.ts`
   - Passed: 2 files, 13 tests.
+- `pnpm --filter @dvt/engine exec vitest run test/services/RunExecutionContextAdmissionPolicy.test.ts test/core/WorkflowEngine.test.ts`
+  - Passed: 2 files, 53 tests.
+- `pnpm --filter @dvt/adapter-temporal exec vitest run test/activities.test.ts test/DbtCliPluginRunner.test.ts test/dbt-core-decoupling.architecture.test.ts`
+  - Passed: 3 files, 57 tests.
+- `pnpm --filter dvt-temporal-worker test -- test/runtime/createTemporalWorkerRuntime.test.ts`
+  - Passed: 1 file, 8 tests.
+- `pnpm --filter dvt-api test -- test/integration/plannerEngineContract.test.ts`
+  - Passed: 1 file, 7 tests.
 - `pnpm --filter @dvt/adapter-temporal exec vitest run ./test/workflow-component-semantics.architecture.test.ts`
   - Passed: 1 file, 4 tests.
 - `pnpm --filter @dvt/adapter-temporal test`
@@ -250,6 +287,10 @@ Intermediate test corrections:
 ## Files Changed
 
 - `apps/api/test/modules/providerAdapters/createTemporalProviderAdapterFactory.test.ts`
+- `apps/api/src/infrastructure/startRun/ArtifactStoreDbtProjectBundleBindingPolicy.ts`
+- `apps/api/test/integration/plannerEngineContract.test.ts`
+- `apps/temporal-worker/src/runtime/temporalWorkerDbtProfile.ts`
+- `apps/temporal-worker/src/runtime/temporalWorkerRuntimeResources.ts`
 - `docs/architecture/components/engine/adapters/temporal/temporal-adapter-spec.md`
 - `docs/architecture/components/engine/adapters/temporal/temporal-dbt-worker-plugin-profile.md`
 - `docs/architecture/components/engine/adapters/temporal/temporal-planref-workflow-boundary.md`
@@ -272,8 +313,10 @@ Intermediate test corrections:
 - `packages/@dvt/adapter-temporal/src/activities/stepActivities.ts`
 - `packages/@dvt/adapter-temporal/src/activities/stepActivityDispatcher.ts`
 - `packages/@dvt/adapter-temporal/src/index.ts`
+- `packages/@dvt/adapter-temporal/src/plugins/TemporalStepPluginProfile.ts`
 - `packages/@dvt/adapter-temporal/src/plugins/dbt/DbtCliPluginRunner.ts`
 - `packages/@dvt/adapter-temporal/src/plugins/dbt/DbtStepActivity.ts`
+- `packages/@dvt/adapter-temporal/src/plugins/dbt/dbtPluginManifest.ts`
 - `packages/@dvt/adapter-temporal/src/plugins/dbt/dbtPluginTypes.ts`
 - `packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts`
 - `packages/@dvt/adapter-temporal/src/workflows/executionSegmentResolver.ts`
@@ -300,6 +343,7 @@ Intermediate test corrections:
 - `packages/@dvt/adapter-temporal/test/workflow-continue-as-new.test.ts`
 - `packages/@dvt/adapter-temporal/test/workflow-execution-segment.test.ts`
 - `packages/@dvt/adapter-temporal/test/activities.test.ts`
+- `packages/@dvt/adapter-temporal/test/DbtCliPluginRunner.test.ts`
 - `packages/@dvt/adapter-temporal/test/dbt-core-decoupling.architecture.test.ts`
 - `packages/@dvt/adapter-temporal/test/helpers/integration/dbtRuntimeFixtures.ts`
 - `packages/@dvt/adapter-temporal/test/helpers/integration/testActivities.ts`
@@ -307,6 +351,11 @@ Intermediate test corrections:
 - `packages/@dvt/adapter-temporal/test/integration.transformation.time-skipping.test.ts`
 - `apps/temporal-worker/src/runtime/createTemporalWorkerRuntime.ts`
 - `apps/temporal-worker/test/runtime/createTemporalWorkerRuntime.test.ts`
+- `packages/@dvt/engine/src/ports/IRunExecutionContextBindingPolicy.ts`
+- `packages/@dvt/engine/src/ports/IRunStateStore.ts`
+- `packages/@dvt/engine/src/services/startRun/RunExecutionContextAdmissionPolicy.ts`
+- `packages/@dvt/engine/test/core/WorkflowEngine.test.ts`
+- `packages/@dvt/engine/test/services/RunExecutionContextAdmissionPolicy.test.ts`
 
 ## Residual Scope
 

@@ -3,9 +3,10 @@
  */
 import {
   DbtCliPluginRunner,
+  DBT_PLUGIN_ID,
   assertDbtCliAvailable,
   createDbtStepActivityRegistry,
-  type TemporalWorkerHostConfig,
+  type TemporalStepPluginProfile,
 } from '@dvt/adapter-temporal';
 import {
   ArtifactBackedDbtProjectBundleReader,
@@ -19,7 +20,7 @@ import type { CreateTemporalWorkerRuntimeOptions } from './runtimeTypes.js';
 
 export interface TemporalWorkerDbtProfile {
   dbtAvailabilityProbe?: () => Promise<void>;
-  stepActivitiesByKind?: TemporalWorkerHostConfig['stepActivitiesByKind'];
+  pluginProfile?: TemporalStepPluginProfile;
 }
 
 export function createTemporalWorkerDbtProfile(
@@ -56,10 +57,13 @@ export function createTemporalWorkerDbtProfile(
 
   return {
     dbtAvailabilityProbe: () => availabilityProbe(env.DVT_DBT_BIN),
-    stepActivitiesByKind: createDbtStepActivityRegistry({
-      runExecutionContextReader,
-      dbtPluginRunner,
-    }),
+    pluginProfile: {
+      pluginId: DBT_PLUGIN_ID,
+      stepActivitiesByKind: createDbtStepActivityRegistry({
+        runExecutionContextReader,
+        dbtPluginRunner,
+      }),
+    },
   };
 }
 

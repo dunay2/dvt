@@ -27,12 +27,11 @@ import type {
   StepResult,
 } from '../../activities/activityTypes.js';
 
+import { TEMPORAL_DBT_PLUGIN_STEP_KINDS } from './dbtPluginManifest.js';
 import type { DbtStepActivityDeps } from './dbtPluginTypes.js';
 
-export const DBT_STEP_KINDS = ['DBT_MODEL', 'DBT_TEST', 'DBT_SNAPSHOT'] as const;
-
 export class DbtStepActivity implements StepActivity {
-  static readonly SUPPORTED_STEP_KINDS = new Set<string>(DBT_STEP_KINDS);
+  static readonly SUPPORTED_STEP_KINDS = new Set<string>(TEMPORAL_DBT_PLUGIN_STEP_KINDS);
 
   constructor(private readonly deps: DbtStepActivityDeps) {}
 
@@ -120,5 +119,5 @@ export class DbtStepActivity implements StepActivity {
 
 export function createDbtStepActivityRegistry(deps: DbtStepActivityDeps): StepActivityRegistry {
   const activity = new DbtStepActivity(deps);
-  return new Map(DBT_STEP_KINDS.map((stepKind) => [stepKind, activity] as const));
+  return new Map(TEMPORAL_DBT_PLUGIN_STEP_KINDS.map((stepKind) => [stepKind, activity] as const));
 }

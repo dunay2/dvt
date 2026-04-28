@@ -70,11 +70,20 @@ registry only when the DBT profile is enabled.
 
 - Plugin registry composition: `createDbtStepActivityRegistry(...)` returns the
   DBT step-kind registry explicitly.
+- Plugin profile composition: `TemporalStepPluginProfile` and
+  `composeTemporalStepPluginRegistries(...)` compose executor profiles without
+  naming DBT in generic dispatch.
+- Plugin manifest ownership: `dbtPluginManifest.ts` owns the
+  Temporal-supported DBT subset and the DBT step-kind to CLI-command map. This
+  is not the complete DBT CLI capability set.
 - Composition root ownership: `apps/temporal-worker` wires DBT only when
   `DVT_TEMPORAL_DBT_ENABLED=true`.
 - Plugin-free core: `createDefaultStepActivityRegistry()` starts empty.
+- Engine plugin neutrality: engine admission now consumes generic
+  `pluginRequirements`; DBT artifact validation lives in API infrastructure.
 - Semantic fitness test: `dbt-core-decoupling.architecture.test.ts` checks core
-  imports, owned concerns, registry posture, and the local DBT profile guide.
+  imports, owned concerns, registry posture, engine DBT absence, and the local
+  DBT profile guide.
 - Component guide: `temporal-dbt-worker-plugin-profile.md` records public API,
   invariants, transitions, consumers, diagrams, and drift guards.
 
@@ -86,6 +95,10 @@ registry only when the DBT profile is enabled.
   return explicit `stepActivitiesByKind`.
 - Worker runtime no longer constructs DBT reader/runner objects when DBT mode
   is disabled.
+- DBT step-kind and CLI mapping literals are no longer repeated across runner,
+  activity, and tests; the DBT plugin manifest owns them.
+- Engine tests no longer use DBT fixtures to prove generic plugin admission;
+  they use an example plugin and a SQL-shaped negative path.
 
 ## Drift Fixed
 
@@ -95,6 +108,24 @@ registry only when the DBT profile is enabled.
 - The Temporal worker runbook now documents the worker-profile boundary.
 - System status and reference architecture now distinguish core registry
   decoupling from remaining package-level plugin ownership.
+- Evidence/risk material now distinguishes `TEMPORAL_DBT_PLUGIN_STEP_KINDS` as
+  the supported Temporal DBT plugin subset, not the universe of DBT operations.
+
+## Follow-Up Review Correction
+
+The later review corrected an important modeling mistake: moving
+`DBT_STEP_KINDS` into a shared contract-style catalog would still make DBT a
+core concept. The corrected design treats DBT like a future SQL plugin:
+
+- generic engine and Temporal composition primitives know only plugin IDs,
+  step-kind claims, and plugin contexts;
+- DBT owns its manifest inside the DBT plugin surface;
+- API infrastructure registers the DBT artifact binding policy for production
+  ingress;
+- adapter-temporal tests prove a SQL-shaped plugin can compose through the same
+  registry seam;
+- architecture tests fail if DBT vocabulary re-enters engine source or generic
+  plugin composition.
 
 ## Residual Opportunities
 

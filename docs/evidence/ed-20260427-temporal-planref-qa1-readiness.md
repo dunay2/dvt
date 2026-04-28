@@ -20,6 +20,12 @@ code_refs:
   - packages/@dvt/adapter-temporal/src/plugins/dbt/DbtStepActivity.ts
   - packages/@dvt/adapter-temporal/src/plugins/dbt/dbtPluginTypes.ts
   - apps/temporal-worker/src/runtime/createTemporalWorkerRuntime.ts
+  - apps/temporal-worker/src/runtime/temporalWorkerDbtProfile.ts
+  - apps/temporal-worker/src/runtime/temporalWorkerRuntimeResources.ts
+  - apps/api/src/infrastructure/startRun/ArtifactStoreDbtProjectBundleBindingPolicy.ts
+  - packages/@dvt/engine/src/ports/IRunExecutionContextBindingPolicy.ts
+  - packages/@dvt/engine/src/services/startRun/RunExecutionContextAdmissionPolicy.ts
+  - packages/@dvt/engine/src/ports/IRunStateStore.ts
   - packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts
   - packages/@dvt/adapter-temporal/src/workflows/executionSegmentResolver.ts
   - packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.activities.ts
@@ -38,12 +44,18 @@ code_refs:
   - packages/@dvt/adapter-temporal/src/workflows/workflowGatewayHelpers.ts
   - packages/@dvt/adapter-temporal/src/workflows/workflowInputParsingHelpers.ts
   - packages/@dvt/adapter-temporal/src/workflows/workflowRuntimePayloadHelpers.ts
+  - packages/@dvt/adapter-temporal/src/plugins/TemporalStepPluginProfile.ts
+  - packages/@dvt/adapter-temporal/src/plugins/dbt/dbtPluginManifest.ts
   - packages/@dvt/adapter-temporal/test/smoke.test.ts
   - packages/@dvt/adapter-temporal/test/TemporalAdapter.startRun.test.ts
   - packages/@dvt/adapter-temporal/test/helpers/contractFixtures.ts
   - packages/@dvt/adapter-temporal/test/workflow-component-semantics.architecture.test.ts
   - packages/@dvt/adapter-temporal/test/dbt-core-decoupling.architecture.test.ts
   - packages/@dvt/adapter-temporal/test/activities.test.ts
+  - packages/@dvt/adapter-temporal/test/DbtCliPluginRunner.test.ts
+  - packages/@dvt/engine/test/services/RunExecutionContextAdmissionPolicy.test.ts
+  - packages/@dvt/engine/test/core/WorkflowEngine.test.ts
+  - apps/api/test/integration/plannerEngineContract.test.ts
   - apps/temporal-worker/test/runtime/createTemporalWorkerRuntime.test.ts
   - packages/@dvt/adapter-temporal/test/workflow-continue-as-new.test.ts
   - packages/@dvt/adapter-temporal/test/workflow-execution-segment.test.ts
@@ -57,6 +69,9 @@ evidence:
   tests:
     - pnpm --filter @dvt/adapter-temporal exec vitest run ./test/workflow-component-semantics.architecture.test.ts
     - pnpm --filter @dvt/adapter-temporal exec vitest run ./test/dbt-core-decoupling.architecture.test.ts ./test/activities.test.ts -t "DBT|dbt|core activity"
+    - pnpm --filter @dvt/engine exec vitest run test/services/RunExecutionContextAdmissionPolicy.test.ts test/core/WorkflowEngine.test.ts
+    - pnpm --filter @dvt/adapter-temporal exec vitest run test/activities.test.ts test/DbtCliPluginRunner.test.ts test/dbt-core-decoupling.architecture.test.ts
+    - pnpm --filter dvt-api test -- test/integration/plannerEngineContract.test.ts
     - pnpm --filter dvt-temporal-worker test -- test/runtime/createTemporalWorkerRuntime.test.ts
     - pnpm --filter @dvt/adapter-temporal exec vitest run ./test/smoke.test.ts -t "loads config with defaults|keeps explicit zero"
     - pnpm --filter @dvt/adapter-temporal exec vitest run ./test/TemporalAdapter.startRun.test.ts
@@ -92,9 +107,35 @@ maturity is complete:
   that validates public API, invariants, transitions, and consumers.
 - DBT step-kind ownership moved out of the Temporal core activity registry and
   into explicit worker DBT profile composition.
+- DBT runtime support is now described and wired as a plugin profile, not as a
+  core engine concept: engine admission receives generic plugin requirements,
+  DBT-specific admission lives in API infrastructure, and the DBT Temporal
+  manifest declares only the step-kind subset this plugin profile currently
+  supports.
+- A SQL-shaped plugin proof demonstrates that the same composition/admission
+  seam accepts another executor plugin without DBT-specific branches.
 - Generic `ActivityDeps` no longer carries DBT runtime dependencies.
 - The worker omits DBT activity registry wiring when DBT mode is disabled and
   composes it only when DBT mode is enabled.
+
+## Plugin Isolation Addendum
+
+The follow-up review clarified that DBT is one executor plugin profile, not a
+special core vocabulary and not the complete set of DBT CLI capabilities.
+
+- Introduced `TemporalStepPluginProfile` and
+  `composeTemporalStepPluginRegistries(...)` as generic worker composition
+  primitives.
+- Moved DBT-supported Temporal step-kind ownership into
+  `dbtPluginManifest.ts` and named the public list
+  `TEMPORAL_DBT_PLUGIN_STEP_KINDS` to make the supported subset explicit.
+- Changed DBT CLI command resolution to use the DBT plugin manifest instead of
+  a scattered switch/allowlist.
+- Changed engine admission from DBT-specific binding to generic
+  `pluginRequirements`.
+- Kept DBT bundle validation in the API infrastructure binding policy.
+- Changed engine tests to use an example plugin plus a SQL-shaped plugin proof,
+  keeping `packages/@dvt/engine` free of DBT vocabulary.
 
 ## Residual Risk
 
