@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import {
   DbtCliPluginRunner,
-  TEMPORAL_DBT_PLUGIN_STEP_KINDS,
+  TEMPORAL_DBT_PLUGIN_EXECUTABLE_STEP_KINDS,
   assertDbtCliAvailable,
 } from '../src/index.js';
 
@@ -151,7 +151,7 @@ describe('DbtCliPluginRunner', () => {
       step: { stepId: `${kind.toLowerCase()}.analytics.orders`, kind, dependsOn: [] },
     });
 
-    expect(TEMPORAL_DBT_PLUGIN_STEP_KINDS).toContain(kind);
+    expect(TEMPORAL_DBT_PLUGIN_EXECUTABLE_STEP_KINDS).toContain(kind);
     expect(runCommand).toHaveBeenCalledWith(
       'dbt',
       [command, '--select', `${kind.toLowerCase()}.analytics.orders`, '--target', 'analytics'],

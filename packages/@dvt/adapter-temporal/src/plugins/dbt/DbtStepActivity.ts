@@ -27,11 +27,16 @@ import type {
   StepResult,
 } from '../../activities/activityTypes.js';
 
-import { TEMPORAL_DBT_PLUGIN_STEP_KINDS } from './dbtPluginManifest.js';
+import { TEMPORAL_DBT_PLUGIN_EXECUTABLE_STEP_KINDS } from './dbtPluginManifest.js';
 import type { DbtStepActivityDeps } from './dbtPluginTypes.js';
 
+const DbtActivityErrorCode = {
+  DBT_PLUGIN_CONTEXT_REQUIRED: 'DBT_PLUGIN_CONTEXT_REQUIRED',
+  DBT_PLUGIN_RESULT_INVALID: 'DBT_PLUGIN_RESULT_INVALID',
+} as const;
+
 export class DbtStepActivity implements StepActivity {
-  static readonly SUPPORTED_STEP_KINDS = new Set<string>(TEMPORAL_DBT_PLUGIN_STEP_KINDS);
+  static readonly SUPPORTED_STEP_KINDS = new Set<string>(TEMPORAL_DBT_PLUGIN_EXECUTABLE_STEP_KINDS);
 
   constructor(private readonly deps: DbtStepActivityDeps) {}
 
@@ -93,12 +98,12 @@ export class DbtStepActivity implements StepActivity {
   ): DbtPluginContext {
     const pluginContextInput = runExecutionContext.pluginContexts['dbt'];
     if (pluginContextInput === undefined) {
-      throw this.reject(`${ActivityErrorCode.DBT_PLUGIN_CONTEXT_REQUIRED}:${step.stepId}`);
+      throw this.reject(`${DbtActivityErrorCode.DBT_PLUGIN_CONTEXT_REQUIRED}:${step.stepId}`);
     }
 
     const pluginContext = parseDbtPluginContext(pluginContextInput);
     if (pluginContext === undefined || Object.keys(pluginContext).length === 0) {
-      throw this.reject(`${ActivityErrorCode.DBT_PLUGIN_CONTEXT_REQUIRED}:${step.stepId}`);
+      throw this.reject(`${DbtActivityErrorCode.DBT_PLUGIN_CONTEXT_REQUIRED}:${step.stepId}`);
     }
 
     return pluginContext;
@@ -107,7 +112,7 @@ export class DbtStepActivity implements StepActivity {
   private assertResultMatchesStep(step: StepDefinition, result: StepResult): void {
     if (result.stepId !== step.stepId) {
       throw this.reject(
-        `${ActivityErrorCode.DBT_PLUGIN_RESULT_INVALID}: stepId_mismatch:${step.stepId}:${result.stepId}`
+        `${DbtActivityErrorCode.DBT_PLUGIN_RESULT_INVALID}: stepId_mismatch:${step.stepId}:${result.stepId}`
       );
     }
   }
@@ -119,5 +124,7 @@ export class DbtStepActivity implements StepActivity {
 
 export function createDbtStepActivityRegistry(deps: DbtStepActivityDeps): StepActivityRegistry {
   const activity = new DbtStepActivity(deps);
-  return new Map(TEMPORAL_DBT_PLUGIN_STEP_KINDS.map((stepKind) => [stepKind, activity] as const));
+  return new Map(
+    TEMPORAL_DBT_PLUGIN_EXECUTABLE_STEP_KINDS.map((stepKind) => [stepKind, activity] as const)
+  );
 }

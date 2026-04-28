@@ -1,6 +1,11 @@
+/**
+ * @ownedConcern Extract canonical compiled-code references from run-event payloads for lineage ingestion.
+ */
 import { createHash } from 'node:crypto';
 
 import type { CompiledCodeRef } from '@dvt/contracts';
+
+const COMPILED_SQL_ARTIFACT_KIND = 'compiled-sql';
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
@@ -36,10 +41,7 @@ export function extractCompiledCodeRefFromPayload(payload: unknown): CompiledCod
   const stepArtifactRef = payload['stepArtifactRef'];
   if (isRecord(stepArtifactRef)) {
     const artifactKind = stepArtifactRef['artifactKind'];
-    if (
-      (artifactKind === 'dbt.compiled-sql' || artifactKind === 'compiled-sql') &&
-      isCompiledCodeRef(stepArtifactRef)
-    ) {
+    if (artifactKind === COMPILED_SQL_ARTIFACT_KIND && isCompiledCodeRef(stepArtifactRef)) {
       return stepArtifactRef;
     }
   }

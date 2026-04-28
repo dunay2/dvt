@@ -81,6 +81,12 @@ The local component guide for this runtime boundary is
 It owns the public API, invariants, transitions, consumers, module map, and
 architecture fitness checks for the PlanRef workflow boundary.
 
+Executor-specific step activity support is composed through
+`docs/architecture/components/engine/adapters/temporal/temporal-step-plugin-profile.md`.
+The workflow core must not know DBT, SQL, or future plugin step-kind manifests.
+Step artifact references are emitted from generic `compiledCodeRef` payloads,
+not from DBT allowlists.
+
 **Workflow input shape**:
 
 ```ts

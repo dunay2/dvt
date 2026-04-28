@@ -7,9 +7,14 @@
  */
 export const DBT_PLUGIN_ID = 'dbt' as const;
 
-export const TEMPORAL_DBT_PLUGIN_STEP_KINDS = ['DBT_MODEL', 'DBT_TEST', 'DBT_SNAPSHOT'] as const;
+export const TEMPORAL_DBT_PLUGIN_EXECUTABLE_STEP_KINDS = [
+  'DBT_MODEL',
+  'DBT_TEST',
+  'DBT_SNAPSHOT',
+] as const;
 
-export type TemporalDbtPluginStepKind = (typeof TEMPORAL_DBT_PLUGIN_STEP_KINDS)[number];
+export type TemporalDbtPluginExecutableStepKind =
+  (typeof TEMPORAL_DBT_PLUGIN_EXECUTABLE_STEP_KINDS)[number];
 
 export type DbtCliSubcommand = 'run' | 'test' | 'snapshot';
 
@@ -17,10 +22,11 @@ const DBT_CLI_SUBCOMMAND_BY_STEP_KIND = {
   DBT_MODEL: 'run',
   DBT_TEST: 'test',
   DBT_SNAPSHOT: 'snapshot',
-} as const satisfies Record<TemporalDbtPluginStepKind, DbtCliSubcommand>;
+} as const satisfies Record<TemporalDbtPluginExecutableStepKind, DbtCliSubcommand>;
 
 export function resolveDbtCliSubcommand(stepKind: string): DbtCliSubcommand {
-  const subcommand = DBT_CLI_SUBCOMMAND_BY_STEP_KIND[stepKind as TemporalDbtPluginStepKind];
+  const subcommand =
+    DBT_CLI_SUBCOMMAND_BY_STEP_KIND[stepKind as TemporalDbtPluginExecutableStepKind];
   if (subcommand === undefined) {
     throw new Error(`DBT_CLI_STEP_KIND_UNSUPPORTED:${stepKind}`);
   }

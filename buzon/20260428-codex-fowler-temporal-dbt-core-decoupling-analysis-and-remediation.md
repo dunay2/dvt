@@ -108,7 +108,7 @@ registry only when the DBT profile is enabled.
 - The Temporal worker runbook now documents the worker-profile boundary.
 - System status and reference architecture now distinguish core registry
   decoupling from remaining package-level plugin ownership.
-- Evidence/risk material now distinguishes `TEMPORAL_DBT_PLUGIN_STEP_KINDS` as
+- Evidence/risk material now distinguishes `TEMPORAL_DBT_PLUGIN_EXECUTABLE_STEP_KINDS` as
   the supported Temporal DBT plugin subset, not the universe of DBT operations.
 
 ## Follow-Up Review Correction
@@ -131,8 +131,9 @@ core concept. The corrected design treats DBT like a future SQL plugin:
 
 - Move DBT plugin implementation and CLI hosting into a dedicated plugin
   package or worker-profile package once multiple executor profiles exist.
-- Make workflow artifact interpretation generic enough that
-  `dbt.compiled-sql` is not a Temporal adapter package concern.
+- Keep workflow artifact interpretation generic. This was closed on
+  2026-04-29 by emitting artifact references from `compiledCodeRef` with
+  `artifactKind: compiled-sql`, independent of DBT step kinds.
 - Add a broader plugin conformance suite when a second real executor plugin is
   introduced.
 

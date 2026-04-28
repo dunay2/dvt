@@ -19,10 +19,11 @@ context: >
   receives generic pluginRequirements rather than DBT-specific policy. The follow-up plugin
   isolation pass added a generic TemporalStepPluginProfile composer, a DBT plugin manifest for the
   Temporal-supported DBT subset, an SQL-shaped plugin composition proof, and an architecture test
-  that keeps packages/@dvt/engine source free of DBT vocabulary. The remaining risk is narrower:
-  @dvt/adapter-temporal still exports the DBT step activity, DBT CLI runner, and plugin contracts as
-  package-owned plugin surface, and workflow artifact helpers still contain DBT-oriented artifact
-  interpretation.
+  that keeps packages/@dvt/engine source free of DBT vocabulary. The 2026-04-29 Fowler hardening
+  pass also removed DBT-oriented compiled SQL artifact interpretation from workflow emission and
+  active lineage/UI fixtures: StepStarted artifact references now use the generic compiled-sql
+  discriminator. The remaining risk is narrower: @dvt/adapter-temporal still exports the DBT step
+  activity, DBT CLI runner, and plugin contracts as package-owned plugin surface.
 risk: >
   If new transformation executors or artifact types are added before package-level plugin extraction
   exists, @dvt/adapter-temporal can still accumulate executor-specific plugin exports, CLI hosting,
@@ -40,8 +41,8 @@ mitigations:
     through test fixtures.'
   - 'Require each executor profile to own its manifest and supported runtime subset; do not name a
     profile subset as the full external tool capability set.'
-  - 'Track follow-up extraction of DbtStepActivity, DbtCliPluginRunner, and dbt.compiled-sql
-    artifact mapping out of the adapter package-owned plugin surface.'
+  - 'Track follow-up extraction of DbtStepActivity and DbtCliPluginRunner out of the adapter
+    package-owned plugin surface.'
   - 'Keep adapter-temporal tests split between Temporal-core behavior and DBT plugin or runtime
     behavior so boundary drift remains visible.'
 review_after: 2026-06-15

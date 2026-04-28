@@ -97,9 +97,11 @@ Engine --> ObservabilityPort["IObservability"]
   adapter ID does not make Temporal part of DVT execution semantics.
 - DBT is no longer part of engine-kernel semantics or the Temporal core
   activity registry. DBT step kinds are composed by the standalone worker DBT
-  profile when enabled. The remaining coupling is narrower package-level
-  plugin/CLI surface area tracked as explicit repository risk, not hidden
-  cleanup.
+  profile when enabled. Temporal step plugin composition is now a generic
+  profile seam, and workflow artifact emission is driven by plugin-agnostic
+  `compiledCodeRef` payloads instead of DBT step-kind gates. The remaining
+  coupling is narrower package-level plugin/CLI surface area tracked as
+  explicit repository risk, not hidden cleanup.
 
 ## Canonical Companions
 

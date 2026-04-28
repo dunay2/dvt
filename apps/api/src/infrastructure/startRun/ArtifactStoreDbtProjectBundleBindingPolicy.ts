@@ -1,7 +1,7 @@
 /**
  * @ownedConcern Register DBT artifact-store admission as an API infrastructure plugin requirement.
  */
-import { DBT_PLUGIN_ID, TEMPORAL_DBT_PLUGIN_STEP_KINDS } from '@dvt/adapter-temporal';
+import { DBT_PLUGIN_ID, TEMPORAL_DBT_PLUGIN_EXECUTABLE_STEP_KINDS } from '@dvt/adapter-temporal';
 import {
   ArtifactReadError,
   assertDbtProjectBundleBinding,
@@ -29,7 +29,7 @@ export class ArtifactStoreDbtProjectBundleBindingPolicy
     this.pluginRequirements = [
       {
         pluginId: DBT_PLUGIN_ID,
-        stepKinds: TEMPORAL_DBT_PLUGIN_STEP_KINDS,
+        stepKinds: TEMPORAL_DBT_PLUGIN_EXECUTABLE_STEP_KINDS,
         assertPluginContextAllowed: ({ pluginContext, context }) => {
           const parsed = parseDbtPluginContext(pluginContext);
           const bundleTenantId = parsed.projectBundleRef.tenantId;

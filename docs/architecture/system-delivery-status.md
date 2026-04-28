@@ -131,10 +131,13 @@ direction.
   `COMPLETED` after workflow-local cleanup. The engine-kernel boundary is
   cleaner than before, and the Temporal core activity registry is now
   plugin-free by default. DBT step kinds are composed only by the worker DBT
-  plugin profile when enabled. The adapter package still keeps DBT-specific
-  plugin/CLI exports (`DbtStepActivity`, `createDbtStepActivityRegistry`,
-  `DbtCliPluginRunner`), so package-level plugin extraction is not yet complete;
-  that residual truth is tracked in
+  plugin profile when enabled; the generic step-plugin profile seam also proves
+  SQL-shaped plugins can compose without core dispatch edits. Workflow artifact
+  emission is now `compiledCodeRef`-driven and plugin-agnostic instead of
+  DBT-kind gated. The adapter package still keeps DBT-specific plugin/CLI
+  exports (`DbtStepActivity`, `createDbtStepActivityRegistry`,
+  `DbtCliPluginRunner`), so package-level plugin extraction is not yet
+  complete; that residual truth is tracked in
   [R-20260420-TEMPORAL-DBT-BUILTIN-COUPLING](../risk-register/quality/R-20260420-TEMPORAL-DBT-BUILTIN-COUPLING.yaml).
 
 - `Postgres adapter` — packages: `@dvt/adapter-postgres` — status:

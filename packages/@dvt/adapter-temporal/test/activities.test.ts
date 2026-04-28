@@ -27,7 +27,7 @@ import type {
 import {
   composeTemporalStepPluginRegistries,
   createDbtStepActivityRegistry,
-  TEMPORAL_DBT_PLUGIN_STEP_KINDS,
+  TEMPORAL_DBT_PLUGIN_EXECUTABLE_STEP_KINDS,
   type DbtPluginExecutionInput,
   type DbtPluginRunner,
 } from '../src/index.js';
@@ -686,8 +686,12 @@ describe('stepActivities', () => {
     it('registers the Temporal DBT plugin runtime subset from the DBT plugin manifest', () => {
       const registry = createDbtRegistry();
 
-      expect(TEMPORAL_DBT_PLUGIN_STEP_KINDS).toEqual(['DBT_MODEL', 'DBT_TEST', 'DBT_SNAPSHOT']);
-      expect([...registry.keys()]).toEqual([...TEMPORAL_DBT_PLUGIN_STEP_KINDS]);
+      expect(TEMPORAL_DBT_PLUGIN_EXECUTABLE_STEP_KINDS).toEqual([
+        'DBT_MODEL',
+        'DBT_TEST',
+        'DBT_SNAPSHOT',
+      ]);
+      expect([...registry.keys()]).toEqual([...TEMPORAL_DBT_PLUGIN_EXECUTABLE_STEP_KINDS]);
       expect(registry.has('DBT_RUN')).toBe(false);
       expect(registry.has('DBT_COMPILE')).toBe(false);
     });

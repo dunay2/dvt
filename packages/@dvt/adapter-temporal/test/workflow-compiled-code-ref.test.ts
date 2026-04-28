@@ -40,7 +40,24 @@ describe('buildStepStartedPayload', () => {
     );
     expect(payload).toEqual({
       stepArtifactRef: {
-        artifactKind: 'dbt.compiled-sql',
+        artifactKind: 'compiled-sql',
+        ...VALID_REF,
+      },
+    });
+  });
+
+  it('includes compiledCodeRef in payload for any plugin step kind', () => {
+    const payload = buildStepStartedPayload({
+      stepId: 'step-sql',
+      kind: 'SQL_TRANSFORM',
+      stepTypeConfig: {
+        compiledCodeRef: VALID_REF,
+      },
+    });
+
+    expect(payload).toEqual({
+      stepArtifactRef: {
+        artifactKind: 'compiled-sql',
         ...VALID_REF,
       },
     });
@@ -72,7 +89,7 @@ describe('buildStepStartedPayload', () => {
     ).toBeUndefined();
   });
 
-  it('returns undefined for non-DBT step kinds with arbitrary stepTypeConfig', () => {
+  it('returns undefined for step kinds without compiledCodeRef', () => {
     expect(
       buildStepStartedPayload({
         stepId: 'step-relational',

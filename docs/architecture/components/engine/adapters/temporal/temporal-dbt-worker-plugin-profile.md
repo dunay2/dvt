@@ -14,6 +14,7 @@ by `apps/temporal-worker` when `DVT_TEMPORAL_DBT_ENABLED=true`.
 Use this guide with:
 
 - [Temporal adapter specification](./temporal-adapter-spec.md)
+- [Temporal step plugin profile component](./temporal-step-plugin-profile.md)
 - [Temporal PlanRef workflow boundary component](./temporal-planref-workflow-boundary.md)
 - [Temporal Worker DBT Runtime Runbook](../../../../../runbooks/temporal-worker-dbt-plugin-runtime-20260414.md)
 - [Fowler DBT core decoupling analysis](../../../../../../buzon/20260428-codex-fowler-temporal-dbt-core-decoupling-analysis-and-remediation.md)
@@ -41,9 +42,9 @@ It does **not** own:
 
 - `createDbtStepActivityRegistry({ runExecutionContextReader, dbtPluginRunner })`
   returns the DBT plugin-owned step-activity registry.
-- `TEMPORAL_DBT_PLUGIN_STEP_KINDS` is the DBT plugin manifest for currently
-  executable Temporal DBT plan steps. It is not a claim that these are all DBT
-  commands or all future DBT product concepts.
+- `TEMPORAL_DBT_PLUGIN_EXECUTABLE_STEP_KINDS` is the DBT plugin manifest for
+  currently executable Temporal DBT plan steps. It is not a claim that these
+  are all DBT commands or all future DBT product concepts.
 - `DbtStepActivity.execute(step, context)` resolves the run execution context,
   validates `pluginContexts.dbt`, delegates to the configured
   `DbtPluginRunner`, and rejects mismatched `stepId` results.
@@ -70,6 +71,9 @@ It does **not** own:
 - When DBT support is enabled, the worker composes the DBT registry explicitly
   through the generic step-plugin profile composition seam and then passes the
   merged registry to `TemporalWorkerHostConfig.stepActivitiesByKind`.
+- Workflow artifact emission does not gate on DBT step kinds. Any plugin step
+  with a valid `compiledCodeRef` emits a generic `compiled-sql` artifact
+  reference.
 - DBT steps fail closed when `runExecutionContextRef` is missing, the resolved
   context is rejected, the `dbt` plugin context is absent, or the plugin runner
   returns a result for a different `stepId`.
@@ -184,6 +188,8 @@ sequenceDiagram
 
 - `packages/@dvt/adapter-temporal/test/dbt-core-decoupling.architecture.test.ts`
   verifies core activity modules do not import DBT implementation symbols.
+- The same test verifies workflow artifact emission stays plugin-agnostic and
+  does not reintroduce DBT step-kind gates.
 - The same test verifies this guide contains public API, invariants,
   transitions, consumers, component map, and diagrams.
 - `packages/@dvt/adapter-temporal/test/activities.test.ts` proves the default
@@ -191,6 +197,9 @@ sequenceDiagram
   the DBT registry explicitly. It also proves a SQL-shaped plugin can be
   composed through the same registry seam and that duplicate plugin claims fail
   closed.
+- `packages/@dvt/adapter-temporal/test/workflow-compiled-code-ref.test.ts`
+  proves generic `compiledCodeRef` artifact emission for DBT and non-DBT
+  plugin step kinds.
 - `apps/temporal-worker/test/runtime/createTemporalWorkerRuntime.test.ts`
   proves the standalone worker omits DBT registry wiring when DBT mode is
   disabled and composes it when enabled.

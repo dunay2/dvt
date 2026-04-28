@@ -11,6 +11,7 @@ import { describe, expect, it } from 'vitest';
 const ACTIVITY_ROOT = join(import.meta.dirname, '../src/activities');
 const PLUGIN_ROOT = join(import.meta.dirname, '../src/plugins');
 const DBT_PLUGIN_ROOT = join(import.meta.dirname, '../src/plugins/dbt');
+const WORKFLOW_ROOT = join(import.meta.dirname, '../src/workflows');
 const REPO_ROOT = join(import.meta.dirname, '../../../..');
 const ENGINE_SRC_ROOT = join(REPO_ROOT, 'packages/@dvt/engine/src');
 const DBT_PROFILE_GUIDE = join(
@@ -28,10 +29,13 @@ const RETIRED_DBT_ACTIVITY_PATH =
   'packages/@dvt/adapter-temporal/src/activities/dbtStepActivity.ts';
 
 const CORE_ACTIVITY_MODULES = [
+  'activityFailures.ts',
   'activityFactory.ts',
   'activityTypes.ts',
+  'gatewayStepActivity.ts',
   'stepActivities.ts',
   'stepActivityDispatcher.ts',
+  'stepActivityValidation.ts',
 ] as const;
 
 describe('Temporal DBT core decoupling architecture', () => {
@@ -60,7 +64,28 @@ describe('Temporal DBT core decoupling architecture', () => {
     }
   });
 
-  it('keeps DBT imports out of core activity modules', () => {
+  it('declares semantic ownership for supporting activity modules', () => {
+    const expectedOwnedConcerns = new Map<string, string>([
+      [
+        'activityFailures.ts',
+        '@ownedConcern Define stable Temporal activity failure codes and non-retryable failure construction.',
+      ],
+      [
+        'gatewayStepActivity.ts',
+        '@ownedConcern Execute gateway DSL steps inside the activity boundary.',
+      ],
+      [
+        'stepActivityValidation.ts',
+        '@ownedConcern Validate runtime step shape and derive activity execution identity.',
+      ],
+    ]);
+
+    for (const [fileName, expectedOwnedConcern] of expectedOwnedConcerns.entries()) {
+      expect(readCoreActivitySource(fileName)).toContain(expectedOwnedConcern);
+    }
+  });
+
+  it('keeps DBT ownership out of core activity modules', () => {
     for (const fileName of CORE_ACTIVITY_MODULES) {
       const source = readCoreActivitySource(fileName);
 
@@ -70,6 +95,7 @@ describe('Temporal DBT core decoupling architecture', () => {
       expect(source).not.toContain('DbtPluginRunner');
       expect(source).not.toContain('DbtPluginExecutionInput');
       expect(source).not.toContain('dbtPluginRunner');
+      expect(source).not.toMatch(/\bDBT_PLUGIN_/);
     }
   });
 
@@ -96,12 +122,23 @@ describe('Temporal DBT core decoupling architecture', () => {
     const activitySource = readDbtPluginSource('DbtStepActivity.ts');
     const runnerSource = readDbtPluginSource('DbtCliPluginRunner.ts');
 
-    expect(source).toContain('TEMPORAL_DBT_PLUGIN_STEP_KINDS');
+    expect(source).toContain('TEMPORAL_DBT_PLUGIN_EXECUTABLE_STEP_KINDS');
     expect(source).toContain('resolveDbtCliSubcommand');
-    expect(activitySource).toContain('TEMPORAL_DBT_PLUGIN_STEP_KINDS');
+    expect(activitySource).toContain('TEMPORAL_DBT_PLUGIN_EXECUTABLE_STEP_KINDS');
     expect(activitySource).not.toContain('DBT_STEP_KINDS');
     expect(runnerSource).toContain('resolveDbtCliSubcommand');
     expect(runnerSource).not.toContain("case 'DBT_MODEL'");
+  });
+
+  it('keeps workflow artifact emission plugin-agnostic instead of DBT step-kind gated', () => {
+    const source = readWorkflowSource('workflowArtifactHelpers.ts');
+
+    expect(source).toContain('compiledCodeRef');
+    expect(source).toContain("COMPILED_SQL_ARTIFACT_KIND = 'compiled-sql'");
+    expect(source).toContain('artifactKind: COMPILED_SQL_ARTIFACT_KIND');
+    expect(source).not.toContain('KNOWN_STEP_KINDS.DBT_');
+    expect(source).not.toContain('TEMPORAL_DBT_PLUGIN');
+    expect(source).not.toContain("artifactKind: 'dbt.compiled-sql'");
   });
 
   it('documents core registry ownership as plugin-free by default', () => {
@@ -185,6 +222,10 @@ function readDbtPluginSource(fileName: string): string {
 
 function readPluginSource(fileName: string): string {
   return readFileSync(join(PLUGIN_ROOT, fileName), 'utf8');
+}
+
+function readWorkflowSource(fileName: string): string {
+  return readFileSync(join(WORKFLOW_ROOT, fileName), 'utf8');
 }
 
 function readTypeScriptSources(rootDirectory: string): string[] {

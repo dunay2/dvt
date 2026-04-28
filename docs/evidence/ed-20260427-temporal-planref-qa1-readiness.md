@@ -128,7 +128,7 @@ special core vocabulary and not the complete set of DBT CLI capabilities.
   primitives.
 - Moved DBT-supported Temporal step-kind ownership into
   `dbtPluginManifest.ts` and named the public list
-  `TEMPORAL_DBT_PLUGIN_STEP_KINDS` to make the supported subset explicit.
+  `TEMPORAL_DBT_PLUGIN_EXECUTABLE_STEP_KINDS` to make the supported subset explicit.
 - Changed DBT CLI command resolution to use the DBT plugin manifest instead of
   a scattered switch/allowlist.
 - Changed engine admission from DBT-specific binding to generic

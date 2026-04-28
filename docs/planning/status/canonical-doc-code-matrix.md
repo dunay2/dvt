@@ -98,6 +98,10 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
 - Canonical spec:
   [TemporalAdapter Specification](../../architecture/components/engine/adapters/temporal/temporal-adapter-spec.md)
   and
+  [Temporal step plugin profile component](../../architecture/components/engine/adapters/temporal/temporal-step-plugin-profile.md)
+  and
+  [Temporal DBT worker plugin profile](../../architecture/components/engine/adapters/temporal/temporal-dbt-worker-plugin-profile.md)
+  and
   [Temporal Engine Policies](../../architecture/components/engine/adapters/temporal/EnginePolicies.md)
 - Current status source:
   [System Delivery Status](../../architecture/system-delivery-status.md)
@@ -105,9 +109,15 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   [packages/@dvt/adapter-temporal/src/TemporalAdapter.ts](../../../packages/@dvt/adapter-temporal/src/TemporalAdapter.ts)
   and
   [packages/@dvt/adapter-temporal/src/TemporalWorkerHost.ts](../../../packages/@dvt/adapter-temporal/src/TemporalWorkerHost.ts)
+  and
+  [packages/@dvt/adapter-temporal/src/plugins/TemporalStepPluginProfile.ts](../../../packages/@dvt/adapter-temporal/src/plugins/TemporalStepPluginProfile.ts)
+  and
+  [packages/@dvt/adapter-temporal/src/plugins/dbt/DbtStepActivity.ts](../../../packages/@dvt/adapter-temporal/src/plugins/dbt/DbtStepActivity.ts)
 - Key tests:
   [packages/@dvt/adapter-temporal/test/TemporalAdapter.lookupRunRef.test.ts](../../../packages/@dvt/adapter-temporal/test/TemporalAdapter.lookupRunRef.test.ts),
   [packages/@dvt/adapter-temporal/test/TemporalWorkerHost.lifecycle.test.ts](../../../packages/@dvt/adapter-temporal/test/TemporalWorkerHost.lifecycle.test.ts),
+  [packages/@dvt/adapter-temporal/test/dbt-core-decoupling.architecture.test.ts](../../../packages/@dvt/adapter-temporal/test/dbt-core-decoupling.architecture.test.ts),
+  [packages/@dvt/adapter-temporal/test/workflow-compiled-code-ref.test.ts](../../../packages/@dvt/adapter-temporal/test/workflow-compiled-code-ref.test.ts),
   [packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts](../../../packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts)
 - Evidence:
   [ED-20260304 - TemporalAdapter.lookupRunRef implementation](../../evidence/critical/ED-20260304-temporal-lookup-run-ref.md)

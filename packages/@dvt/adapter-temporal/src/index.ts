@@ -67,10 +67,10 @@ export type {
 export { DbtStepActivity, createDbtStepActivityRegistry } from './plugins/dbt/DbtStepActivity.js';
 export {
   DBT_PLUGIN_ID,
-  TEMPORAL_DBT_PLUGIN_STEP_KINDS,
+  TEMPORAL_DBT_PLUGIN_EXECUTABLE_STEP_KINDS,
   resolveDbtCliSubcommand,
   type DbtCliSubcommand,
-  type TemporalDbtPluginStepKind,
+  type TemporalDbtPluginExecutableStepKind,
 } from './plugins/dbt/dbtPluginManifest.js';
 export { DbtCliPluginRunner, assertDbtCliAvailable } from './plugins/dbt/DbtCliPluginRunner.js';
 export type { RunStateCommandCircuitSnapshot } from './RunStateCommandPortCircuitBreaker.js';
