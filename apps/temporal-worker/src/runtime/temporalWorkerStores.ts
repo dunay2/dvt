@@ -68,7 +68,7 @@ export function createTemporalWorkerActivityDeps(
   planStore: PlanFetcherLike
 ): TemporalWorkerActivityDeps {
   const runStateCircuit = new CircuitBreakingRunStateCommandPort({
-    delegate: new PostgresRunStateCommandPortBridge(stateStore as never),
+    delegate: new PostgresRunStateCommandPortBridge(stateStore),
     failureThreshold: env.DVT_RUNSTATE_CIRCUIT_BREAKER_FAILURE_THRESHOLD,
     openDurationMs: env.DVT_RUNSTATE_CIRCUIT_BREAKER_OPEN_DURATION_MS,
     operationTimeoutMs: env.DVT_RUNSTATE_CIRCUIT_BREAKER_OPERATION_TIMEOUT_MS,

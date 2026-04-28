@@ -67,12 +67,32 @@ function resolveDbtBundleArtifactStore(env: Env): DbtProjectBundleArtifactStore 
   if (env.DVT_DBT_BUNDLE_STORE_BACKEND === 's3') {
     return {
       kind: 's3',
-      bucket: env.DVT_DBT_BUNDLE_S3_BUCKET as string,
+      bucket: resolveRequiredDbtStoreValue(
+        env.DVT_DBT_BUNDLE_S3_BUCKET,
+        'DVT_DBT_BUNDLE_S3_BUCKET',
+        'DVT_DBT_BUNDLE_STORE_BACKEND=s3'
+      ),
     };
   }
 
   return {
     kind: 'file',
-    rootPath: env.DVT_DBT_BUNDLE_FILE_ROOT as string,
+    rootPath: resolveRequiredDbtStoreValue(
+      env.DVT_DBT_BUNDLE_FILE_ROOT,
+      'DVT_DBT_BUNDLE_FILE_ROOT',
+      'DVT_DBT_BUNDLE_STORE_BACKEND=file'
+    ),
   };
+}
+
+function resolveRequiredDbtStoreValue(
+  value: string | undefined,
+  variableName: string,
+  condition: string
+): string {
+  if (value !== undefined && value.trim().length > 0) {
+    return value;
+  }
+
+  throw new Error(`${variableName} is required when ${condition}`);
 }

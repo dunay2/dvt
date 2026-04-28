@@ -71,6 +71,25 @@ describe('createTemporalWorkerRuntime SRP boundary', () => {
       expect(readRuntimeSource(fileName)).toContain(expectedOwnedConcern);
     }
   });
+
+  it('keeps extracted runtime modules free of type escape hatches', () => {
+    for (const fileName of [
+      'runtimeTypes.ts',
+      'temporalWorkerRuntimeResources.ts',
+      'temporalWorkerStores.ts',
+      'temporalWorkerDbtProfile.ts',
+      'temporalWorkerHost.ts',
+      'temporalWorkerRuntimeHandle.ts',
+      'temporalWorkerLifecycle.ts',
+    ]) {
+      const source = readRuntimeSource(fileName);
+
+      expect(source).not.toContain('as never');
+      expect(source).not.toContain('as any');
+      expect(source).not.toContain(' as string');
+      expect(source).not.toMatch(/[A-Za-z0-9_$\])}]!\./);
+    }
+  });
 });
 
 function readRuntimeSource(fileName: string): string {

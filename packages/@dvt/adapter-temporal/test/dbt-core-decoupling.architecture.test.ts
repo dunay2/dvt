@@ -13,6 +13,15 @@ const DBT_PROFILE_GUIDE = join(
   REPO_ROOT,
   'docs/architecture/components/engine/adapters/temporal/temporal-dbt-worker-plugin-profile.md'
 );
+const ACTIVE_DBT_DOCS = [
+  'docs/evidence/ED-20260414-tf-c3-dbt-plugin-runtime-projection.md',
+  'docs/evidence/ED-20260414-tf-c3-production-temporal-worker-dbt-host.md',
+  'docs/planning/reviews/architecture-and-governance/20260421-temporal-fowler-provider-truth-follow-up-review.md',
+  'docs/planning/reviews/architecture-and-governance/20260423-dvt-plus-system-architecture-review.md',
+  'docs/planning/reviews/architecture-and-governance/20260424-dvt-plus-hard-architecture-review.md',
+] as const;
+const RETIRED_DBT_ACTIVITY_PATH =
+  'packages/@dvt/adapter-temporal/src/activities/dbtStepActivity.ts';
 
 const CORE_ACTIVITY_MODULES = [
   'activityFactory.ts',
@@ -89,6 +98,14 @@ describe('Temporal DBT core decoupling architecture', () => {
     expect(guide).toContain('TemporalWorkerHostConfig.stepActivitiesByKind');
     expect(guide).toContain('DVT_TEMPORAL_DBT_ENABLED=false');
     expect(guide).toContain('```mermaid');
+  });
+
+  it('keeps active DBT architecture docs free of the retired core activity path', () => {
+    for (const docPath of ACTIVE_DBT_DOCS) {
+      const source = readFileSync(join(REPO_ROOT, docPath), 'utf8');
+
+      expect(source).not.toContain(RETIRED_DBT_ACTIVITY_PATH);
+    }
   });
 });
 

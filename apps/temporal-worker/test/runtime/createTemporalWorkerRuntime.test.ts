@@ -139,6 +139,48 @@ describe('createTemporalWorkerRuntime', () => {
     expect(capturedConfig?.stepActivitiesByKind?.get('DBT_MODEL')).toBeUndefined();
   });
 
+  it.each([
+    {
+      backend: 's3' as const,
+      overrides: {
+        DVT_DBT_BUNDLE_STORE_BACKEND: 's3' as const,
+        DVT_DBT_BUNDLE_S3_BUCKET: undefined,
+      },
+      expectedMessage: 'DVT_DBT_BUNDLE_S3_BUCKET is required when DVT_DBT_BUNDLE_STORE_BACKEND=s3',
+    },
+    {
+      backend: 'file' as const,
+      overrides: {
+        DVT_DBT_BUNDLE_STORE_BACKEND: 'file' as const,
+        DVT_DBT_BUNDLE_FILE_ROOT: undefined,
+      },
+      expectedMessage:
+        'DVT_DBT_BUNDLE_FILE_ROOT is required when DVT_DBT_BUNDLE_STORE_BACKEND=file',
+    },
+  ])(
+    'fails fast when DBT $backend bundle store configuration is incomplete',
+    async ({ overrides, expectedMessage }) => {
+      const fixture = createRuntimeFixture();
+
+      await expect(
+        createTemporalWorkerRuntime(
+          createEnv({
+            DVT_TEMPORAL_DBT_ENABLED: true,
+            ...overrides,
+          }),
+          { info() {}, error() {} },
+          {
+            stateStoreFactory: () => fixture.stateStore,
+            connectionFactory: async () => fixture.connection,
+            hostFactory: () => fixture.host,
+          }
+        )
+      ).rejects.toThrow(expectedMessage);
+
+      expect(fixture.hostStart).not.toHaveBeenCalled();
+    }
+  );
+
   it('wires the configured continue-as-new payload budget into Temporal host config', async () => {
     const fixture = createRuntimeFixture();
     let capturedConfig: TemporalWorkerHostConfig | undefined;

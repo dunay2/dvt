@@ -9,6 +9,7 @@ import type {
   TemporalWorkerHostConfig,
 } from '@dvt/adapter-temporal';
 import type { IDbtProjectBundleReader, IRunExecutionContextReader } from '@dvt/artifacts';
+import type { AppendResult, EventInput, RunBootstrapInput } from '@dvt/engine';
 
 import type { Env } from '../plugins/env.js';
 
@@ -21,8 +22,8 @@ export interface RuntimeHandle {
 export interface StateStoreLike {
   migrate(): Promise<void>;
   close(): Promise<void>;
-  bootstrapRunTx(input: unknown): Promise<unknown>;
-  appendAndEnqueueTx(runId: string, events: unknown[]): Promise<unknown>;
+  bootstrapRunTx(input: RunBootstrapInput): Promise<AppendResult>;
+  appendAndEnqueueTx(runId: string, events: EventInput[]): Promise<AppendResult>;
   abortPendingOperations?(): void | Promise<void>;
 }
 
