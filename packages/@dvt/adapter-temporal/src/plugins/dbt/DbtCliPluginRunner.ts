@@ -170,12 +170,10 @@ async function materializeDbtProject(
     const projectDir = await findDbtProjectDirectory(workingDirectory);
     return {
       projectDir,
-      cleanup: async () => {
-        await rm(workingDirectory, { recursive: true, force: true });
-      },
+      cleanup: () => removeWorkingDirectory(workingDirectory),
     };
   } catch (error) {
-    await rm(workingDirectory, { recursive: true, force: true }).catch(() => undefined);
+    await removeWorkingDirectoryIfPresent(workingDirectory);
     throw error;
   }
 }
@@ -291,13 +289,13 @@ function isMissingBinaryError(error: unknown): boolean {
 
 function isNonZeroExitError(
   error: unknown
-): error is Error & { code?: number | string | undefined; stdout: string; stderr: string } {
+): error is Error & { code?: number | string; stdout: string; stderr: string } {
   return isExecFileErrorWithStderr(error) && error.code !== 'ENOENT';
 }
 
 function isExecFileErrorWithStderr(
   error: unknown
-): error is Error & { code?: number | string | undefined; stdout: string; stderr: string } {
+): error is Error & { code?: number | string; stdout: string; stderr: string } {
   return (
     error instanceof Error &&
     'stdout' in error &&
@@ -324,7 +322,7 @@ function toErrorMessage(error: unknown): string {
 }
 
 function sanitizePathComponent(value: string): string {
-  return value.replace(/[^a-zA-Z0-9_-]+/g, '-');
+  return value.replaceAll(/[^a-zA-Z0-9_-]+/g, '-');
 }
 
 async function safelyCleanupProject(project: MaterializedDbtProject | null): Promise<void> {
@@ -336,5 +334,17 @@ async function safelyCleanupProject(project: MaterializedDbtProject | null): Pro
     await project.cleanup();
   } catch {
     // Cleanup must not mask the step execution outcome.
+  }
+}
+
+function removeWorkingDirectory(workingDirectory: string): Promise<void> {
+  return rm(workingDirectory, { recursive: true, force: true });
+}
+
+async function removeWorkingDirectoryIfPresent(workingDirectory: string): Promise<void> {
+  try {
+    await removeWorkingDirectory(workingDirectory);
+  } catch {
+    // Cleanup after materialization failure must not mask the original failure.
   }
 }
