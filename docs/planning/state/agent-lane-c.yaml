@@ -1242,7 +1242,7 @@ tasks:
     effort_points: 3
     progress_pct: 100
     evidence_refs:
-      - docs/evidence/ED-20260414-tf-c3-production-temporal-worker-dbt-host.md
+      - docs/evidence/ed-20260414-tf-c3-production-temporal-worker-dbt-host.md
       - docs/planning/closeouts/20260414-tf-c3-production-plugin-host-composition-closeout.md
       - packages/@dvt/artifacts/src/runtime/ArtifactBackedRunExecutionContextReader.ts
       - packages/@dvt/artifacts/src/runtime/ArtifactBackedDbtProjectBundleReader.ts
@@ -1267,7 +1267,7 @@ tasks:
     effort_points: 5
     progress_pct: 100
     evidence_refs:
-      - docs/evidence/ED-20260414-tf-c3-production-temporal-worker-dbt-host.md
+      - docs/evidence/ed-20260414-tf-c3-production-temporal-worker-dbt-host.md
       - docs/planning/closeouts/20260414-tf-c3-production-plugin-host-composition-closeout.md
       - apps/temporal-worker/src/server.ts
       - apps/temporal-worker/src/host/runTemporalWorkerHost.ts
@@ -1294,7 +1294,7 @@ tasks:
     effort_points: 8
     progress_pct: 100
     evidence_refs:
-      - docs/evidence/ED-20260414-tf-c3-production-temporal-worker-dbt-host.md
+      - docs/evidence/ed-20260414-tf-c3-production-temporal-worker-dbt-host.md
       - docs/planning/closeouts/20260414-tf-c3-production-plugin-host-composition-closeout.md
       - packages/@dvt/adapter-temporal/src/plugins/dbt/DbtCliPluginRunner.ts
       - packages/@dvt/adapter-temporal/src/activities/activityFactory.ts
@@ -1320,7 +1320,7 @@ tasks:
     progress_pct: 60
     evidence_refs:
       - docs/runbooks/temporal-worker-dbt-plugin-runtime-20260414.md
-      - docs/evidence/ED-20260414-tf-c3-production-temporal-worker-dbt-host.md
+      - docs/evidence/ed-20260414-tf-c3-production-temporal-worker-dbt-host.md
       - docs/planning/closeouts/20260414-tf-c3-production-plugin-host-composition-closeout.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/tf-c3-production-plugin-host-composition-plan-20260414.md
     status_reason: >-

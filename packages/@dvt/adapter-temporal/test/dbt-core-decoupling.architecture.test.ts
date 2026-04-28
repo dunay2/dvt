@@ -14,8 +14,8 @@ const DBT_PROFILE_GUIDE = join(
   'docs/architecture/components/engine/adapters/temporal/temporal-dbt-worker-plugin-profile.md'
 );
 const ACTIVE_DBT_DOCS = [
-  'docs/evidence/ED-20260414-tf-c3-dbt-plugin-runtime-projection.md',
-  'docs/evidence/ED-20260414-tf-c3-production-temporal-worker-dbt-host.md',
+  'docs/evidence/ed-20260414-tf-c3-dbt-plugin-runtime-projection.md',
+  'docs/evidence/ed-20260414-tf-c3-production-temporal-worker-dbt-host.md',
   'docs/planning/reviews/architecture-and-governance/20260421-temporal-fowler-provider-truth-follow-up-review.md',
   'docs/planning/reviews/architecture-and-governance/20260423-dvt-plus-system-architecture-review.md',
   'docs/planning/reviews/architecture-and-governance/20260424-dvt-plus-hard-architecture-review.md',
