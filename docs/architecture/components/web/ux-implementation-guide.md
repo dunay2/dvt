@@ -170,7 +170,7 @@ Primary tasks:
 
 ### Phase 2. Fix state and query ownership
 
-- decompose `appStore`;
+- keep state in named slices;
 - standardize TanStack Query boundaries and invalidation;
 - isolate mock-versus-API behavior behind services and capabilities.
 

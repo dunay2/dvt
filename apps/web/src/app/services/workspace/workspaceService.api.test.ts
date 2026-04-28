@@ -16,12 +16,12 @@ import { httpErrorResponse, jsonResponse } from './workspaceApiClient.test.harne
 describe('workspaceService api graph snapshot', () => {
   installWorkspaceScopeHarness();
 
-  it('projects the protected workspace graph draft into the legacy graph snapshot read model', async () => {
+  it('projects the protected workspace graph draft into the canonical graph snapshot read model', async () => {
     const scope = buildWorkspaceScope();
     setWorkspaceScope(scope);
     const { getJson, requestRaw, service } = createApiWorkspaceServiceHarness({
       getJson: async (endpoint) => {
-        throw new Error(`Legacy graph endpoint reached: ${endpoint}`);
+        throw new Error(`Retired graph endpoint reached: ${endpoint}`);
       },
       requestRaw: async (endpoint, init) => {
         expect(endpoint).toBe(buildWorkspaceGraphDraftEndpoint(scope));
@@ -58,7 +58,7 @@ describe('workspaceService api graph snapshot', () => {
     setWorkspaceScope(scope);
     const { getJson, service } = createApiWorkspaceServiceHarness({
       getJson: async (endpoint) => {
-        throw new Error(`Legacy graph endpoint reached: ${endpoint}`);
+        throw new Error(`Retired graph endpoint reached: ${endpoint}`);
       },
       requestRaw: async () =>
         httpErrorResponse({

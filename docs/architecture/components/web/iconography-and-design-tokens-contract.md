@@ -263,7 +263,7 @@ Rules:
 
 - new product UI must use `lucide-react`;
 - do not introduce new icon packs for first-party product UI;
-- `@mui/icons-material` is legacy inventory only and should not expand;
+- `@mui/icons-material` is retired inventory only and should not expand;
 - if a touched surface still uses a non-standard icon pack later, migrate it
   instead of mixing styles in the same feature.
 

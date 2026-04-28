@@ -49,12 +49,12 @@ DVT should keep the same split:
 failure that already has a governed error surface can complete shell startup.
 That avoids treating product data failures as process boot failures.
 
-### Gateway and Anti-corruption Layer
+### Gateway and Projection Layer
 
-`workspaceService.api.ts` now derives legacy `WorkspaceGraphSnapshot` consumers
-from `GET /workspace/graph/draft` and
-`workspaceGraphDraftProjection.ts`. The legacy snapshot is explicitly a
-read-model projection, not a second authority.
+`workspaceService.api.ts` now derives canonical `WorkspaceGraphSnapshot`
+consumers from `GET /workspace/graph/draft` and
+`workspaceGraphDraftProjection.ts`. The snapshot is explicitly a read-model
+projection, not a second authority.
 
 ### Explicit Command
 
@@ -107,19 +107,28 @@ contract instead of depending on incidental event propagation.
 
 ## Antipatterns detected
 
-| Antipattern                                 | Status              | Resolution                                                                            |
-| ------------------------------------------- | ------------------- | ------------------------------------------------------------------------------------- |
-| Bootstrap as global error jail              | Fixed               | Controlled route failures publish `failed` and can reveal the governed route surface. |
-| Legacy snapshot endpoint as graph authority | Fixed               | API-mode snapshots project from the protected workspace draft endpoint.               |
-| Hidden local reset for stale drafts         | Avoided             | Replacement is explicit, confirmed, and CAS-guarded.                                  |
-| UI event coincidence as drag contract       | Fixed               | React Flow drag handle is a named selector owned by mapper and node shell.            |
-| Semantic promise without component boundary | Fixed in this slice | Added a local component guide and semantic architecture test.                         |
-| Copy drift around destructive action        | Reduced             | Replacement copy is centralized in the Canvas toolbar copy catalog.                   |
-| Complex conditional as policy               | Fixed               | Command eligibility and DBT projection policy moved behind named helpers and rules.   |
-| Positional argument train                   | Fixed               | Canonical-node viewport projection now uses a named parameter object.                 |
-| God render method                           | Fixed               | Tab rendering and destructive replacement action are split into presenter seams.      |
-| Template owns application policy            | Fixed               | Tab-strip templates render resolved state only; model code owns command and copy DTO. |
-| Command state leaked into template props    | Fixed               | Templates now consume render-only view state, not active canvas kind.                 |
+- Bootstrap as global error jail: Fixed. Controlled route failures publish
+  `failed` and can reveal the governed route surface.
+- Retired snapshot endpoint as graph authority: Fixed. API-mode snapshots
+  project from the protected workspace draft endpoint.
+- Hidden local reset for stale drafts: Avoided. Replacement is explicit,
+  confirmed, and CAS-guarded.
+- UI event coincidence as drag contract: Fixed. React Flow drag handle is a
+  named selector owned by mapper and node shell.
+- Semantic promise without component boundary: Fixed in this slice. Added a
+  local component guide and semantic architecture test.
+- Copy drift around destructive action: Reduced. Replacement copy is
+  centralized in the Canvas toolbar copy catalog.
+- Complex conditional as policy: Fixed. Command eligibility and DBT projection
+  policy moved behind named helpers and rules.
+- Positional argument train: Fixed. Canonical-node viewport projection now uses
+  a named parameter object.
+- God render method: Fixed. Tab rendering and destructive replacement action
+  are split into presenter seams.
+- Template owns application policy: Fixed. Tab-strip templates render resolved
+  state only; model code owns command and copy DTO.
+- Command state leaked into template props: Fixed. Templates now consume
+  render-only view state, not active canvas kind.
 
 ## Components to group
 
@@ -193,8 +202,8 @@ Semantic architecture test:
 - The current data model still has one workspace draft canvas document. Any UI
   that suggests multiple persisted canvases before the backend model exists
   would be drift.
-- `WorkspaceGraphSnapshot` remains a compatibility read model. If new code
-  treats it as authoritative graph truth, the anti-corruption layer regresses.
+- `WorkspaceGraphSnapshot` remains a projection-only route read model. If new
+  code treats it as authoritative graph truth, the projection layer regresses.
 - `failed` route posture is for controlled route-local failures only. Startup
   contract violations must continue using `error`.
 - Node drag must remain permission-gated by the viewport. The drag selector is
@@ -211,8 +220,8 @@ Semantic architecture test:
   while graph mutation stays disabled.
 - Move the single-canvas replacement vocabulary into a future multi-canvas
   aggregate only when the backend model supports multiple draft documents.
-- Keep `WorkspaceGraphSnapshot` compatibility consumers on a deprecation path
-  toward protected draft or selected execution read models.
+- Keep new graph consumers on protected draft or selected execution read models
+  instead of adding another snapshot authority.
 
 ## Lessons for future slices
 
@@ -220,8 +229,8 @@ Semantic architecture test:
   safe failure state.
 - Any destructive recovery action needs command vocabulary, confirmation, and a
   persistence-side guard.
-- Read-model compatibility can be useful, but it must be named as projection,
-  not treated as a second source of truth.
+- Read-model projection must be named as projection, not treated as a second
+  source of truth.
 - UI gesture fixes should end in a named contract, not a CSS coincidence.
 - Architecture tests should validate behavior words such as `failed`,
   `replace_current`, protected draft endpoint, and drag handle ownership.

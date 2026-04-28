@@ -238,7 +238,7 @@ That means:
 - when the result includes `importedNodeIds`, Canvas applies the handoff
   immediately through `onSourceImportComplete`;
 - Canvas now invalidates the protected draft-authority query instead of the
-  legacy workspace-graph query and focuses imported ids only when that
+  retired workspace-graph query and focuses imported ids only when that
   authority refreshes with matching nodes;
 - when the result contains no new ids, the wizard surfaces an explicit no-op
   result instead of implying a hidden failed mutation;
@@ -337,7 +337,7 @@ Canonical startup rule for this slice:
 ### Avoid
 
 - hiding route contracts behind anonymous view-model bags
-- reintroducing legacy parallel mutation paths
+- reintroducing parallel retired mutation paths
 - moving Monaco-, review-, or artifact-heavy concerns back into Canvas
 - letting the shell infer readiness from local widget heuristics
 

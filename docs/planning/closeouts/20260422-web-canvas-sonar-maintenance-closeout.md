@@ -20,7 +20,7 @@ structural drift in the route-facing authoring seam.
 
 ### Root cause
 
-The `TF-E2` hard cut clarified authority and removed legacy routes, but some
+The `TF-E2` hard cut clarified authority and removed retired routes, but some
 route-local helpers remained broad:
 
 - tests still carry repeated local selectors or explicit default-parameter calls

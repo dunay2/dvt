@@ -148,10 +148,7 @@ describe('useCanvasController core', () => {
     await harness.renderProbe();
     await harness.renderProbe();
 
-    expect(harness.mocks.findCanvasRuntimeRegistration).toHaveBeenCalledWith(
-      'dbt',
-      undefined
-    );
+    expect(harness.mocks.findCanvasRuntimeRegistration).toHaveBeenCalledWith('dbt', undefined);
     expect(harness.getLatestResult()?.canvasAuthoringMode).toBe('dbt');
     expect(harness.getLatestResult()?.canEditInspectorNode).toBe(true);
     expect(harness.getLatestResult()?.userPermissions).toEqual(
@@ -181,8 +178,8 @@ describe('useCanvasController core', () => {
       harness,
       buildRemoteDraftRecord({
         canvas: {
-          kind: 'legacy',
-          title: 'legacy graph',
+          kind: 'retired-canvas-kind',
+          title: 'retired graph',
         },
         nodeIds: ['node_1'],
         nodePositions: {

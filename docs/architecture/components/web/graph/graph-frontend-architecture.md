@@ -124,11 +124,11 @@ As of 2026-04-25:
   `useCanvasViewportGraphModel.ts` projects those semantics into React Flow
   state
 - API-mode `WorkspaceGraphSnapshot` consumers now receive a read-model
-  projection from `GET /workspace/graph/draft` instead of calling a legacy
+  projection from `GET /workspace/graph/draft` instead of calling a retired
   `/workspace/graph` endpoint; the snapshot remains projection-only and does
   not regain aggregate authority
 - Canvas source-import affordances are now capability-gated instead of being
-  implied by legacy mock-era empty states; the active `api` path hides
+  implied by mock-era empty states; the active `api` path hides
   `Add data` until the backend import endpoint exists, and `mock` is not a
   substitute active-authoring runtime under the hard-cut
 - the DVT authoring catalog now explicitly includes the governed
@@ -166,7 +166,7 @@ As of 2026-04-25:
 
 ## Protected Draft Semantic Projection
 
-The current no-legacy transition point is now explicit:
+The current single-authority projection point is explicit:
 
 - `canvasDraftReadModel.ts` is the route-facing read-model seam for protected
   draft outcomes
@@ -202,7 +202,7 @@ Interpretation rule:
 - viewport node and edge state is a downstream projection of that semantic
   authoring graph, never a second semantic merge point
 - projected record still owns persisted working-set membership and positions
-- the legacy workspace-snapshot path is no longer allowed to override or
+- the retired workspace-snapshot path is no longer allowed to override or
   supplement active route semantics
 - capability-gated authoring actions such as source import must be derived from
   explicit service seams plus route posture, never from fallback copy
@@ -611,7 +611,7 @@ Long-term:
 
 - Graph remains one bounded frontend authoring context
 - the authoring core follows DDD plus tactical CQRS plus hexagonal layering
-- the route edge remains Fowler-compatible through explicit facades and
+- the route edge remains Fowler-aligned through explicit facades and
   presentation models
 - the shell consumes graph route contracts but does not own graph domain rules
 

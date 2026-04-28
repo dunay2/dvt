@@ -153,7 +153,7 @@ function buildContractPlanWithRetryPolicy(): Readonly<Record<string, unknown>> {
   } as const;
 }
 
-function buildContractPlanWithLegacyRetryConfig(): Readonly<Record<string, unknown>> {
+function buildContractPlanWithRetiredRetryConfig(): Readonly<Record<string, unknown>> {
   return {
     metadata: {
       planVersion: '1.0',
@@ -371,7 +371,7 @@ describe('createPlansService', () => {
           observability: {
             tags: {
               adapter: 'temporal',
-              environmentId: 'legacy-env',
+              environmentId: 'retired-env',
               'dvt.scope.environmentId': 'scoped-env',
             },
           },
@@ -500,32 +500,35 @@ describe('createPlansService', () => {
       },
       expectedMessage: 'Selected scope no longer matches the authoritative draft. Re-run Plan.',
     },
-  ])('surfaces protected preview rejection for $description', async ({ details, expectedMessage }) => {
-    const postJsonMock = vi.fn(async () => {
-      throw createPlanRejectedApiError(details);
-    });
-    const service = createPlansService(
-      'api',
-      buildApiClientStub({
-        postJson: postJsonMock as ApiClient['postJson'],
-      })
-    );
+  ])(
+    'surfaces protected preview rejection for $description',
+    async ({ details, expectedMessage }) => {
+      const postJsonMock = vi.fn(async () => {
+        throw createPlanRejectedApiError(details);
+      });
+      const service = createPlansService(
+        'api',
+        buildApiClientStub({
+          postJson: postJsonMock as ApiClient['postJson'],
+        })
+      );
 
-    await expect(
-      service.previewPlan({
-        previewProfile: 'transformation-sql-first-v1',
-        graphSource: VALID_TRANSFORMATION_GRAPH_SOURCE,
-        selection: toExplicitSelection(VALID_TRANSFORMATION_SELECTION),
-        persist: true,
-        context: makeRunContext('run-1', {
-          tenantId: 't1',
-          projectId: 'p1',
-          environmentId: 'e1',
-          targetAdapter: 'temporal',
-        }),
-      })
-    ).rejects.toThrow(expectedMessage);
-  });
+      await expect(
+        service.previewPlan({
+          previewProfile: 'transformation-sql-first-v1',
+          graphSource: VALID_TRANSFORMATION_GRAPH_SOURCE,
+          selection: toExplicitSelection(VALID_TRANSFORMATION_SELECTION),
+          persist: true,
+          context: makeRunContext('run-1', {
+            tenantId: 't1',
+            projectId: 'p1',
+            environmentId: 'e1',
+            targetAdapter: 'temporal',
+          }),
+        })
+      ).rejects.toThrow(expectedMessage);
+    }
+  );
 
   it('maps importPlan responses from backend-owned planRef payloads', async () => {
     const postJsonMock = vi.fn(async () => ({
@@ -593,9 +596,9 @@ describe('createPlansService', () => {
     });
   });
 
-  it('does not read legacy retry counts from stepTypeConfig', async () => {
+  it('does not read retired retry counts from stepTypeConfig', async () => {
     const postJsonMock = vi.fn(async () =>
-      buildGenericPreviewPayload(buildContractPlanWithLegacyRetryConfig())
+      buildGenericPreviewPayload(buildContractPlanWithRetiredRetryConfig())
     );
     const service = createPlansService(
       'api',

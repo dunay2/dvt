@@ -199,8 +199,8 @@ describe('CanvasViewport', () => {
   });
 
   it('hides restore buttons in focus mode and resolves minimap color from node registry', async () => {
-    const legacyCanvasPalette = 'blueprint';
-    const normalizedCanvasPalette = normalizeCanvasPaletteId(legacyCanvasPalette);
+    const requestedCanvasPalette = '#152033';
+    const normalizedCanvasPalette = normalizeCanvasPaletteId(requestedCanvasPalette);
     const expectedPaletteTokens = deriveCanvasPaletteTokens(normalizedCanvasPalette);
 
     await act(async () => {
@@ -211,9 +211,7 @@ describe('CanvasViewport', () => {
             explorerPanelVisible: false,
             inspectorPanelVisible: false,
             gridSize: 32,
-            canvasPalette: legacyCanvasPalette as React.ComponentProps<
-              typeof CanvasViewport
-            >['canvasPalette'],
+            canvasPalette: requestedCanvasPalette,
           })}
         />
       );

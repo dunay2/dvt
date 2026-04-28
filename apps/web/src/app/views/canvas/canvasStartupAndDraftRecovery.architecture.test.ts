@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
@@ -19,6 +19,10 @@ const REPO_ROOT = path.resolve(import.meta.dirname, '../../../../../..');
 
 function readRepoFile(relativePath: string): string {
   return readFileSync(path.join(REPO_ROOT, relativePath), 'utf8');
+}
+
+function repoFileExists(relativePath: string): boolean {
+  return existsSync(path.join(REPO_ROOT, relativePath));
 }
 
 function readAppSource(relativePathFromCanvas: string): string {
@@ -239,5 +243,41 @@ describe('canvas startup and draft recovery architecture', () => {
     expect(viewportTestSource).toContain('type MockMiniMapProps = Readonly<{');
     expect(viewportTestSource).toContain('function MockMiniMap(');
     expect(viewportTestSource).not.toContain('MiniMap: ({');
+  });
+
+  it('keeps the active web graph slice free of retired-route shims', () => {
+    const activeSources = [
+      readRepoFile('apps/web/src/app/services/plans/plansService.ts'),
+      readRepoFile('apps/web/src/app/services/runs/runsService.ts'),
+      readRepoFile('apps/web/src/app/services/workspace/workspaceService.api.test.ts'),
+      readRepoFile('apps/web/src/app/stores/uiLayoutStore.test.ts'),
+      readRepoFile('apps/web/src/app/views/Canvas.routeStates.test.tsx'),
+      readRepoFile('apps/web/src/app/views/canvas/CanvasViewport.test.tsx'),
+      readRepoFile('apps/web/src/app/views/canvas/canvasPalette.ts'),
+      readRepoFile('apps/web/src/app/views/canvas/canvasPalette.test.ts'),
+      readRepoFile('buzon/20260428-codex-fowler-web-graph-startup-and-draft-recovery-analysis.md'),
+      readRepoFile(
+        'docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-component.md'
+      ),
+    ];
+    const bannedTerms = [
+      new RegExp(`\\b${'leg'}${'acy'}\\b`, 'i'),
+      new RegExp(`${'back'}ward ${'compati'}${'bility'}`, 'i'),
+      new RegExp(`\\b${'compati'}${'bility'}\\b`, 'i'),
+      new RegExp(`@${'depre'}${'cated'}`, 'i'),
+    ];
+
+    for (const source of activeSources) {
+      for (const bannedTerm of bannedTerms) {
+        expect(source).not.toMatch(bannedTerm);
+      }
+    }
+
+    expect(repoFileExists('apps/web/src/app/components/GraphCanvas.tsx')).toBe(false);
+    expect(repoFileExists('apps/web/src/app/plugins/PluginNodeWrapper.tsx')).toBe(false);
+    expect(repoFileExists('apps/web/src/app/stores/appStore.ts')).toBe(false);
+    expect(repoFileExists('apps/web/src/app/stores/index.ts')).toBe(false);
+    expect(repoFileExists('apps/web/src/app/data/mockData.ts')).toBe(false);
+    expect(repoFileExists('apps/web/src/app/types/index.ts')).toBe(false);
   });
 });

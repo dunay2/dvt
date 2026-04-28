@@ -53,7 +53,7 @@ describe('resolveCanvasRuntimePolicy', () => {
     const policy = resolveCanvasRuntimePolicy({
       activeRuntime: {
         kind: 'unsupported_kind',
-        canvasKind: 'legacy',
+        canvasKind: 'retired-canvas-kind',
       },
       canMutateGraph: true,
       canOpenSourceImport: true,
@@ -64,7 +64,7 @@ describe('resolveCanvasRuntimePolicy', () => {
 
     expect(policy.document).toEqual({
       kind: 'unsupported_kind',
-      canvasKind: 'legacy',
+      canvasKind: 'retired-canvas-kind',
     });
     expect(policy.commands).toEqual({
       canMutateGraph: false,
@@ -139,11 +139,15 @@ describe('resolveCanvasRuntimePolicy', () => {
     expect(policy.commands.canPlan).toBe(false);
     expect(policy.commands.canRun).toBe(false);
     expect(policy.execution.kind).toBe('not_executable');
-    expect(policy.admission.allowsCanonicalNode(buildCanonicalNode({
-      pluginId: 'dbt',
-      kind: 'dbt:model',
-      role: 'transform',
-    }))).toBe(true);
+    expect(
+      policy.admission.allowsCanonicalNode(
+        buildCanonicalNode({
+          pluginId: 'dbt',
+          kind: 'dbt:model',
+          role: 'transform',
+        })
+      )
+    ).toBe(true);
   });
 
   it('admits only canonical nodes owned by the active runtime catalog', () => {
@@ -167,24 +171,40 @@ describe('resolveCanvasRuntimePolicy', () => {
     expect(policy.execution.kind).toBe('executable');
     expect(policy.commands.canPlan).toBe(true);
     expect(policy.commands.canRun).toBe(true);
-    expect(policy.admission.allowsCanonicalNode(buildCanonicalNode({
-      pluginId: 'dvt',
-      kind: 'dvt:source',
-    }))).toBe(true);
-    expect(policy.admission.allowsCanonicalNode(buildCanonicalNode({
-      pluginId: 'dvt',
-      kind: 'dvt:source',
-      role: 'output',
-    }))).toBe(false);
-    expect(policy.admission.allowsCanonicalNode(buildCanonicalNode({
-      pluginId: 'dbt',
-      kind: 'dbt:model',
-      role: 'transform',
-    }))).toBe(false);
-    expect(policy.admission.allowsCanonicalNode(buildCanonicalNode({
-      pluginId: 'dvt',
-      kind: 'dbt:model',
-      role: 'transform',
-    }))).toBe(false);
+    expect(
+      policy.admission.allowsCanonicalNode(
+        buildCanonicalNode({
+          pluginId: 'dvt',
+          kind: 'dvt:source',
+        })
+      )
+    ).toBe(true);
+    expect(
+      policy.admission.allowsCanonicalNode(
+        buildCanonicalNode({
+          pluginId: 'dvt',
+          kind: 'dvt:source',
+          role: 'output',
+        })
+      )
+    ).toBe(false);
+    expect(
+      policy.admission.allowsCanonicalNode(
+        buildCanonicalNode({
+          pluginId: 'dbt',
+          kind: 'dbt:model',
+          role: 'transform',
+        })
+      )
+    ).toBe(false);
+    expect(
+      policy.admission.allowsCanonicalNode(
+        buildCanonicalNode({
+          pluginId: 'dvt',
+          kind: 'dbt:model',
+          role: 'transform',
+        })
+      )
+    ).toBe(false);
   });
 });

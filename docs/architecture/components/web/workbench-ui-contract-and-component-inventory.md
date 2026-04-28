@@ -217,10 +217,12 @@ To keep the implementation honest, current code falls into three buckets.
 - [`CanvasToolbar.tsx`](../../../../apps/web/src/app/views/canvas/CanvasToolbar.tsx) -> base `RouteToolbar`
 - panel header patterns inside [`DbtExplorer.tsx`](../../../../apps/web/src/app/components/DbtExplorer.tsx) and [`InspectorPanel.tsx`](../../../../apps/web/src/app/components/InspectorPanel.tsx) -> base `ContextPanel`
 
-### Retire or quarantine as legacy
+### Retire or quarantine
 
-- [`GraphCanvas.tsx`](../../../../apps/web/src/app/components/GraphCanvas.tsx): legacy graph path; do not design new shared primitives around it
-- [`stores/index.ts`](../../../../apps/web/src/app/stores/index.ts): duplicate store surface from an older architecture pass
+- `GraphCanvas.tsx`: retired graph path removed from active source; do not
+  recreate shared primitives around it
+- root store barrels and mirror-writing aggregate stores: removed from active
+  source; keep new state in named concern slices
 - hard-coded route chrome in views that should become tokenized shared frames
 
 ## Recommended Organization

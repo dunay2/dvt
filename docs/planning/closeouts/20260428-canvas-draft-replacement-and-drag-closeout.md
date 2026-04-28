@@ -97,6 +97,62 @@ Test coverage plan:
 - Drag test: the node mapper assigns the explicit drag-handle selector and the
   DVT node shell owns the matching class.
 
+## 2026-04-29 Transitional Shim Removal
+
+### Problem summary
+
+The branch hardening still left real transition surfaces in the active web
+graph and shell slice. The highest-risk items were not wording: they were
+unused aggregate stores, duplicate fixture/type surfaces, palette aliases, and
+service reexports that kept older shapes reachable.
+
+### Root cause
+
+The previous work focused on startup, protected draft reads, replacement, and
+drag behavior. It preserved some transition paths to reduce blast radius. That
+is below the current target: the active web slice should publish one canonical
+path, keep state in named slices, and fail closed for unsupported persisted
+values.
+
+### Constraints and invariants
+
+- `AGENTS.md`: no hidden debt, no stubs, no hook bypass, and validation
+  evidence.
+- `docs/guides/ai-work-protocol.md`: `Slim` maintenance/refactor because this
+  removes transitional affordances without adding a new external feature.
+- `docs/architecture/reference-architecture.md`: one runtime truth per
+  boundary and replaceable infrastructure behind stable ports.
+- `docs/architecture/components/web/frontend-fowler-implementation-pattern.md`:
+  active Fowler routes must not publish transitional read models or route-level
+  fallback behavior.
+- `docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-component.md`:
+  protected draft reads remain authoritative; unsupported route state fails
+  closed.
+
+### Options considered
+
+- Keep the terms as explanatory documentation only.
+- Rename only the terms in docs/tests while keeping transitional code.
+- Remove transitional affordances in the active web slice and rename tests to
+  unsupported or retired semantics.
+
+### Selected option and rationale
+
+Remove active transitional affordances where they are under this slice's
+ownership, delete unused aggregate or duplicate modules, and update docs/tests
+to describe canonical projection, unsupported data, or retired endpoints
+directly. This keeps Fowler boundaries mature: Gateway and projection seams
+remain explicit, while route code does not carry silent migration behavior.
+
+### Rejected alternatives
+
+- Keeping palette aliases, because they silently accept unsupported
+  persisted values.
+- Keeping unimported aggregate stores or duplicate mock/type surfaces, because
+  they invite parallel ownership and make future SRP review ambiguous.
+- Bulk editing historical archives or contract-versioning governance, because
+  those are not active runtime surfaces for this web slice.
+
 ## Current Evidence
 
 - `pnpm --filter @dvt/web test -- canvasCreateCanvasDocumentCommand.test.ts CanvasPlaygroundTabStrip.test.tsx`

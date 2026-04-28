@@ -34,7 +34,7 @@ whose first visible surface is already governed and safe to reveal.
 | `createFailedRouteBootstrapPresentation(detail)`      | `routeBootstrapContract.ts`              | Publish controlled route-local failures that may reveal a governed route surface. |
 | `WORKSPACE_GRAPH_DRAFT_ENDPOINT`                      | `workspaceGraphDraftHttp.ts`             | Single protected draft HTTP endpoint for draft reads and saves.                   |
 | `buildWorkspaceGraphDraftEndpoint(scope)`             | `workspaceGraphDraftHttp.ts`             | Attach tenant, project, and environment scope to protected draft reads.           |
-| `projectWorkspaceGraphDraftReadResponseSnapshot(...)` | `workspaceGraphDraftProjection.ts`       | Project protected authoring truth into the legacy graph snapshot read model.      |
+| `projectWorkspaceGraphDraftReadResponseSnapshot(...)` | `workspaceGraphDraftProjection.ts`       | Project protected authoring truth into the canonical graph snapshot read model.   |
 | `CanvasCreateCanvasDocumentCommand`                   | `canvasDraftLifecycle.types.ts`          | Carry `create_first` or `replace_current` canvas-document intent.                 |
 | `executeCreateCanvasDocumentCommand(...)`             | `canvasCreateCanvasDocumentCommand.ts`   | Persist first or explicitly replaced canvas documents through CAS draft saves.    |
 | `CanvasPlaygroundTabStrip`                            | `CanvasPlaygroundTabStrip.tsx`           | Coordinate authoritative host tabs and confirmed replacement action state.        |
@@ -125,7 +125,7 @@ flowchart LR
   Endpoint --> Contract["WorkspaceGraphDraftReadResponse"]
   Contract --> Projection["workspaceGraphDraftProjection.ts"]
   Projection --> Snapshot["WorkspaceGraphSnapshot read model"]
-  Snapshot --> LegacyConsumers["legacy graph snapshot consumers"]
+  Snapshot --> RouteConsumers["graph snapshot route consumers"]
 ```
 
 ### Drag handle ownership
@@ -156,7 +156,7 @@ Direct consumers:
 Indirect consumers:
 
 - Canvas route state tests and bootstrap flow tests
-- legacy `WorkspaceGraphSnapshot` readers
+- `WorkspaceGraphSnapshot` route readers
 - route shell composition
 - plugin-rendered Canvas nodes through the DVT node shell
 
@@ -166,7 +166,7 @@ Indirect consumers:
 | ----------------------------- | -------------------------------------- | ------------------------------------------------- |
 | Application Controller        | route bootstrap presentation factories | separate route operability from process startup   |
 | Gateway                       | `workspaceGraphDraftHttp.ts`           | one protected endpoint and scope vocabulary       |
-| Anti-corruption Layer         | `workspaceGraphDraftProjection.ts`     | compatibility read models do not regain authority |
+| Projection Layer              | `workspaceGraphDraftProjection.ts`     | read models do not regain authority               |
 | Command                       | `CanvasCreateCanvasDocumentCommand`    | destructive recovery is explicit and guarded      |
 | Decision Table                | `DBT_NODE_TYPE_RULES`                  | projection policy is data-driven and extensible   |
 | Passive View                  | `CanvasPlaygroundTabStrip`             | render host state without owning draft DTOs       |

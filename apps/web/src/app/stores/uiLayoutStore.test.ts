@@ -27,18 +27,18 @@ describe('useUiLayoutStore', () => {
     });
   });
 
-  it('normalizes legacy palette ids when the setter is called', () => {
+  it('falls back to the canonical palette when the setter receives a named alias', () => {
     useUiLayoutStore.getState().setCanvasPalette('blueprint' as never);
 
-    expect(useUiLayoutStore.getState().canvasPalette).toBe('#152033');
+    expect(useUiLayoutStore.getState().canvasPalette).toBe(DEFAULT_CANVAS_PALETTE_ID);
   });
 
-  it('normalizes legacy persisted palette ids during rehydrate', async () => {
+  it('falls back to the canonical palette when persisted state contains a named alias', async () => {
     localStorage.setItem(
       UI_LAYOUT_STORAGE_KEY,
       JSON.stringify({
         state: {
-          canvasPalette: 'workbench',
+          canvasPalette: 'blueprint',
           gridSize: 30,
           focusMode: true,
         },
