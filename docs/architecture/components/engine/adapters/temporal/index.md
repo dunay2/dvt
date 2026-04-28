@@ -10,6 +10,8 @@ last_reviewed: 2026-04-09
 ## Pages
 
 - [Temporal adapter specification](./temporal-adapter-spec.md)
+- [Temporal PlanRef workflow boundary component](./temporal-planref-workflow-boundary.md)
+- [Temporal DBT worker plugin profile](./temporal-dbt-worker-plugin-profile.md)
 - [Engine policies](./EnginePolicies.md)
 
 ## Related pages

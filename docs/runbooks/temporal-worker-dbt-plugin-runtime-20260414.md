@@ -23,6 +23,16 @@ This worker owns:
 - DBT CLI host wiring when `DVT_TEMPORAL_DBT_ENABLED=true`
 - `/healthz`, `/readyz`, and `/metrics`
 
+Worker profile boundary:
+
+- the Temporal core activity registry is plugin-free by default
+- DBT step kinds are registered only through the worker DBT profile when
+  `DVT_TEMPORAL_DBT_ENABLED=true`
+- DBT runtime dependencies (`runExecutionContextReader` and `dbtPluginRunner`)
+  are not part of the generic `ActivityDeps` contract
+- `DVT_TEMPORAL_DBT_ENABLED=false` omits the DBT registry entirely instead of
+  registering DBT activities that fail later at execution time
+
 DBT bundle rule:
 
 - `pluginContexts.dbt.projectBundleRef` must be an immutable bundle ref with

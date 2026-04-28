@@ -127,6 +127,31 @@ is explicit.
   boundary: exact module `@ownedConcern` docblocks, a local component guide with
   public API/invariants/transitions/consumers/diagrams, a mailbox Fowler
   analysis, and a semantic architecture fitness test.
+- Added a DBT-core decoupling pass for the remaining Fowler hexagonal-boundary
+  finding: Temporal core activity modules now declare plugin-free owned
+  concerns, `ActivityDeps` no longer owns DBT runtime dependencies,
+  `createDefaultStepActivityRegistry()` starts empty, and DBT step kinds are
+  composed only through an explicit worker DBT profile registry.
+
+## DBT Core Decoupling Addendum
+
+The original QA1 closeout left DBT adapter decoupling out of scope. This
+addendum records the follow-up pass requested from the same branch.
+
+- moved `DbtStepActivity` and DBT plugin contracts from core activity modules
+  into `src/plugins/dbt/`;
+- exported `createDbtStepActivityRegistry(...)` as the explicit worker-profile
+  composition API;
+- removed `runExecutionContextReader` and `dbtPluginRunner` from generic
+  `ActivityDeps`;
+- changed the standalone worker so DBT registry wiring is present only when
+  `DVT_TEMPORAL_DBT_ENABLED=true`;
+- updated integration helpers so DBT tests pass `stepActivitiesByKind`
+  explicitly instead of smuggling DBT through base activity deps;
+- added a DBT worker plugin profile component guide with public API,
+  invariants, transitions, consumers, diagrams, and drift guards;
+- added a semantic architecture test that validates core ownership, the empty
+  default registry posture, and the DBT worker profile guide.
 
 ## TDD Evidence
 
@@ -143,6 +168,13 @@ Red result observed before implementation:
   - Failed as expected because workflow modules did not yet declare exact
     `@ownedConcern` values and the PlanRef workflow boundary guide did not yet
     exist.
+- `pnpm --filter @dvt/adapter-temporal exec vitest run ./test/dbt-core-decoupling.architecture.test.ts ./test/activities.test.ts -t "DBT|dbt|core activity"`
+  - Failed as expected before implementation because core activity modules still
+    imported DBT symbols, the default registry still contained DBT step kinds,
+    and DBT kind overrides were blocked.
+- `pnpm --filter dvt-temporal-worker test -- test/runtime/createTemporalWorkerRuntime.test.ts`
+  - Failed as expected before implementation because DBT-disabled runtime still
+    exposed DBT registry wiring through the default activity registry.
 
 Green results after implementation:
 
@@ -156,6 +188,10 @@ Green results after implementation:
   - Passed: 5 tests.
 - `pnpm --filter @dvt/adapter-temporal exec vitest run ./test/workflow-continue-as-new.test.ts`
   - Passed: 17 tests.
+- `pnpm --filter @dvt/adapter-temporal exec vitest run ./test/dbt-core-decoupling.architecture.test.ts ./test/activities.test.ts -t "DBT|dbt|core activity"`
+  - Passed: 2 files, 11 tests, with unrelated tests skipped by filter.
+- `pnpm --filter dvt-temporal-worker test -- test/runtime/createTemporalWorkerRuntime.test.ts`
+  - Passed: 1 file, 6 tests.
 
 Intermediate test corrections:
 
@@ -180,8 +216,10 @@ Intermediate test corrections:
 - `pnpm --filter @dvt/adapter-temporal exec vitest run ./test/workflow-component-semantics.architecture.test.ts`
   - Passed: 1 file, 4 tests.
 - `pnpm --filter @dvt/adapter-temporal test`
-  - Passed: 23 files, 187 tests.
+  - Passed: 24 files, 191 tests.
 - `pnpm --filter @dvt/adapter-temporal typecheck`
+  - Passed.
+- `pnpm --filter dvt-temporal-worker typecheck`
   - Passed.
 - `pnpm docs:status:generate`
   - Passed; updated generated code state after adding the adapter Temporal
@@ -213,18 +251,30 @@ Intermediate test corrections:
 
 - `apps/api/test/modules/providerAdapters/createTemporalProviderAdapterFactory.test.ts`
 - `docs/architecture/components/engine/adapters/temporal/temporal-adapter-spec.md`
+- `docs/architecture/components/engine/adapters/temporal/temporal-dbt-worker-plugin-profile.md`
 - `docs/architecture/components/engine/adapters/temporal/temporal-planref-workflow-boundary.md`
 - `buzon/20260428-codex-fowler-temporal-planref-workflow-boundary-analysis-and-remediation.md`
+- `buzon/20260428-codex-fowler-temporal-dbt-core-decoupling-analysis-and-remediation.md`
 - `docs/evidence/ed-20260427-temporal-planref-qa1-readiness.md`
 - `docs/evidence/index.md`
 - `docs/planning/closeouts/20260427-ar-d-plan-pointer-qa1-readiness-closeout.md`
 - `docs/planning/reviews/architecture-and-governance/20260427-ar-d-plan-pointer-fowler-hard-qa-review.md`
 - `docs/planning/state/agent-lane-d.yaml`
 - `docs/risk-register/quality/R-20260427-TEMPORAL-PLANREF-CONFIG-HARDENING.yaml`
+- `docs/risk-register/quality/R-20260420-TEMPORAL-DBT-BUILTIN-COUPLING.yaml`
 - `docs/runbooks/index.md`
 - `docs/runbooks/temporal-planref-drained-cutover-20260427.md`
 - `docs/runbooks/temporal-worker-dbt-plugin-runtime-20260414.md`
 - `packages/@dvt/adapter-temporal/src/config.ts`
+- `packages/@dvt/adapter-temporal/src/TemporalWorkerHost.ts`
+- `packages/@dvt/adapter-temporal/src/activities/activityFactory.ts`
+- `packages/@dvt/adapter-temporal/src/activities/activityTypes.ts`
+- `packages/@dvt/adapter-temporal/src/activities/stepActivities.ts`
+- `packages/@dvt/adapter-temporal/src/activities/stepActivityDispatcher.ts`
+- `packages/@dvt/adapter-temporal/src/index.ts`
+- `packages/@dvt/adapter-temporal/src/plugins/dbt/DbtCliPluginRunner.ts`
+- `packages/@dvt/adapter-temporal/src/plugins/dbt/DbtStepActivity.ts`
+- `packages/@dvt/adapter-temporal/src/plugins/dbt/dbtPluginTypes.ts`
 - `packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts`
 - `packages/@dvt/adapter-temporal/src/workflows/executionSegmentResolver.ts`
 - `packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.activities.ts`
@@ -249,6 +299,14 @@ Intermediate test corrections:
 - `packages/@dvt/adapter-temporal/test/workflow-component-semantics.architecture.test.ts`
 - `packages/@dvt/adapter-temporal/test/workflow-continue-as-new.test.ts`
 - `packages/@dvt/adapter-temporal/test/workflow-execution-segment.test.ts`
+- `packages/@dvt/adapter-temporal/test/activities.test.ts`
+- `packages/@dvt/adapter-temporal/test/dbt-core-decoupling.architecture.test.ts`
+- `packages/@dvt/adapter-temporal/test/helpers/integration/dbtRuntimeFixtures.ts`
+- `packages/@dvt/adapter-temporal/test/helpers/integration/testActivities.ts`
+- `packages/@dvt/adapter-temporal/test/integration.time-skipping.shared.ts`
+- `packages/@dvt/adapter-temporal/test/integration.transformation.time-skipping.test.ts`
+- `apps/temporal-worker/src/runtime/createTemporalWorkerRuntime.ts`
+- `apps/temporal-worker/test/runtime/createTemporalWorkerRuntime.test.ts`
 
 ## Residual Scope
 
@@ -258,7 +316,8 @@ Intermediate test corrections:
   segment count policy;
 - segment-scale maturity beyond bounded returned shape, likely through an
   indexed segment manifest or equivalent artifact;
-- DBT built-in adapter coupling extraction, which remains tracked separately.
+- package-level DBT plugin extraction, which remains tracked separately after
+  the core activity registry and worker-composition coupling were corrected.
 
 ## No-Debt And No-Stub Evidence
 

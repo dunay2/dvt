@@ -50,6 +50,10 @@ closed.
 - `packages/@dvt/adapter-temporal/src/TemporalAdapter.ts`
 - `packages/@dvt/adapter-temporal/src/config.ts`
 - `packages/@dvt/adapter-temporal/src/activities/activityFactory.ts`
+- `packages/@dvt/adapter-temporal/src/activities/activityTypes.ts`
+- `packages/@dvt/adapter-temporal/src/activities/stepActivityDispatcher.ts`
+- `packages/@dvt/adapter-temporal/src/plugins/dbt/DbtStepActivity.ts`
+- `packages/@dvt/adapter-temporal/src/plugins/dbt/dbtPluginTypes.ts`
 - `packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts`
 - `packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.types.ts`
 - `packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.layers.ts`
@@ -69,6 +73,7 @@ closed.
 - `apps/temporal-worker/src/runtime/createTemporalWorkerRuntime.ts`
 - `docs/architecture/components/engine/adapters/temporal/temporal-adapter-spec.md`
 - `docs/architecture/components/engine/adapters/temporal/temporal-planref-workflow-boundary.md`
+- `docs/architecture/components/engine/adapters/temporal/temporal-dbt-worker-plugin-profile.md`
 - `docs/architecture/components/engine/contracts/engine/IProviderAdapter.v1.md`
 - `docs/architecture/components/engine/contracts/engine/StartRunProtocol.v1.md`
 - `buzon/20260428-codex-fowler-temporal-planref-workflow-boundary-analysis-and-remediation.md`
@@ -95,6 +100,10 @@ A QA3 semantic-encapsulation pass closes the remaining component-documentation
 drift: workflow modules now declare exact owned concerns, a PlanRef workflow
 boundary guide documents API/invariants/transitions/consumers/diagrams, and an
 architecture test validates those semantics.
+A DBT-core decoupling pass then closes the medium hexagonal-boundary finding:
+the Temporal core registry now starts empty, `ActivityDeps` no longer owns DBT
+runtime dependencies, and DBT step kinds are composed only through the
+standalone worker DBT plugin profile when enabled.
 
 ## Findings
 
@@ -130,12 +139,12 @@ from synthesized `{ status: 'COMPLETED' }` to fail-closed
 `pnpm --filter @dvt/adapter-temporal exec vitest run
 ./test/workflow-continue-as-new.test.ts`.
 
-Medium - Hexagonal boundary: DBT remains part of the default Temporal adapter
-registry, and overrides are not allowed to replace DBT-supported step kinds.
-This is an explicit open risk, not a regression, but it still violates full
-provider/plugin separation. Keep the risk open and move DBT kind ownership into
-worker composition or an explicit adapter profile before claiming full hexagonal
-adapter maturity.
+Closed - Hexagonal DBT core boundary: DBT is no longer part of the default
+Temporal core activity registry, `ActivityDeps` no longer carries
+`runExecutionContextReader` or `dbtPluginRunner`, and composition can replace
+DBT step-kind activities through an explicit registry. The remaining risk is
+narrower package-level plugin/CLI extraction, not DBT ownership inside the core
+dispatcher.
 
 Partial - Scale mechanics: QA1 adds a deep-plan regression proving the returned
 segment is bounded to the requested layer plus compact metadata. The runtime
@@ -161,8 +170,9 @@ continueAsNewAfterLayerCount }`.
   gateway helpers, payload helpers, and segment resolution are split.
 - The workflow component now has a local architecture guide with public API,
   invariants, transitions, consumers, module map, and diagrams.
-- The architecture fitness test validates semantic ownership and component
-  documentation substance, not only file shape.
+- The architecture fitness tests validate semantic ownership and component
+  documentation substance, not only file shape. This now covers both the
+  PlanRef workflow boundary and the DBT worker plugin profile.
 
 ## Fowler, DDD, And Hexagonal Reading
 
@@ -175,7 +185,9 @@ cursor facts. Missing threshold and missing gateway facts now fail closed.
 
 Hexagonal: engine and adapter contracts now use a narrower published interface.
 Plan fetch and integrity are behind activity ports. The PlanRef boundary is
-good; incomplete provider/plugin separation remains for DBT.
+good; DBT step-kind ownership is now in worker composition instead of the core
+activity dispatcher. Remaining DBT work is package/plugin extraction, not core
+registry behavior.
 
 Tell, Don't Ask: engine tells the provider which immutable `PlanRef` was
 approved; Temporal does not need the full plan at start. Corrected, and the
@@ -211,6 +223,12 @@ Already covered:
 - API and temporal-worker env propagation for
   `TEMPORAL_MAX_CONTINUE_AS_NEW_PAYLOAD_BYTES`.
 - Invalid numeric env strings for governed Temporal budget values.
+- DBT worker profile guide and exact module owned-concern docblocks for the
+  Temporal core activity dispatch boundary.
+- Core registry rejects DBT step kinds unless the worker composes the DBT
+  registry explicitly.
+- Worker runtime composes the DBT registry only when DBT mode is enabled and
+  omits it when disabled.
 
 Still needed:
 
@@ -238,8 +256,8 @@ Implement the remaining AR-D2 production SLA follow-up:
 1. Define maximum workflow history size and layer segment targets by deployment
    profile.
 2. Decide when an indexed segment manifest becomes mandatory for large plans.
-3. Keep DBT built-in adapter coupling routed as separate runtime hardening
-   rather than mixing it into PlanRef payload closure.
+3. Keep package-level DBT plugin extraction routed as separate runtime
+   hardening rather than mixing it into PlanRef payload closure.
 
 ## Follow-Up Status
 
@@ -259,15 +277,19 @@ Implement the remaining AR-D2 production SLA follow-up:
 - QA3 adds the Temporal PlanRef workflow boundary guide, mailbox Fowler
   analysis, module owned-concern docblocks, and semantic architecture fitness
   test.
+- The DBT-core decoupling pass moves DBT step-kind ownership out of the
+  Temporal core activity registry and into explicit worker profile composition.
 - The remaining recommended follow-up scope is full AR-D2 SLA readiness,
-  segment-scale maturity beyond bounded return shape, and DBT adapter
-  decoupling.
+  segment-scale maturity beyond bounded return shape, and package-level DBT
+  plugin extraction.
 
 ## Closeout Posture
 
 `AR-D-PLAN-POINTER` should remain `in_progress`. The implementation corrected
 the dangerous full-plan workflow payload, the active spec now matches that
-contract, and QA1 closes the immediate cutover/default-threshold/segment-shape
-proof gaps. The system still needs full AR-D2 SLA posture, segment-scale
-maturity beyond bounded return shape, and DBT adapter decoupling. No new debt is
-accepted by this review; the residual work remains visible and routed.
+contract, QA1 closes the immediate cutover/default-threshold/segment-shape proof
+gaps, QA3 closes semantic workflow encapsulation, and the DBT-core pass closes
+the previously open core registry coupling. The system still needs full AR-D2
+SLA posture, segment-scale maturity beyond bounded return shape, and
+package-level DBT plugin extraction. No new debt is accepted by this review; the
+residual work remains visible and routed.

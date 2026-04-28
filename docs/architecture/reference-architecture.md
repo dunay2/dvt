@@ -95,10 +95,11 @@ Engine --> ObservabilityPort["IObservability"]
 - Temporal remains a provider adapter behind `IProviderAdapter` and the API
   provider-adapter factory seam. Naming `temporal` as the active start-run
   adapter ID does not make Temporal part of DVT execution semantics.
-- DBT is no longer part of engine-kernel semantics, but it remains partially
-  embedded in the default package/runtime surface of
-  `@dvt/adapter-temporal`. That coupling is explicit repository risk, not
-  hidden cleanup.
+- DBT is no longer part of engine-kernel semantics or the Temporal core
+  activity registry. DBT step kinds are composed by the standalone worker DBT
+  profile when enabled. The remaining coupling is narrower package-level
+  plugin/CLI surface area tracked as explicit repository risk, not hidden
+  cleanup.
 
 ## Canonical Companions
 

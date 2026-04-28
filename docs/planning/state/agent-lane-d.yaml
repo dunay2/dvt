@@ -273,7 +273,7 @@ tasks:
       in-flight workflows is explicit and replay-safe.
     complexity: L
     effort_points: 8
-    progress_pct: 92
+    progress_pct: 96
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260414-principal-architect-review-dvtplus.md
       - docs/planning/reviews/architecture-and-governance/20260420-dvt-plus-system-architecture-review.md
@@ -285,10 +285,14 @@ tasks:
       - docs/planning/closeouts/20260427-temporal-planref-spec-config-hardening-closeout.md
       - docs/planning/closeouts/20260427-ar-d-plan-pointer-qa1-readiness-closeout.md
       - docs/architecture/components/engine/adapters/temporal/temporal-planref-workflow-boundary.md
+      - docs/architecture/components/engine/adapters/temporal/temporal-dbt-worker-plugin-profile.md
       - docs/runbooks/temporal-planref-drained-cutover-20260427.md
       - buzon/20260428-codex-fowler-temporal-planref-workflow-boundary-analysis-and-remediation.md
+      - buzon/20260428-codex-fowler-temporal-dbt-core-decoupling-analysis-and-remediation.md
       - docs/evidence/ed-20260427-temporal-planref-config-hardening.md
+      - docs/evidence/ed-20260427-temporal-planref-qa1-readiness.md
       - docs/risk-register/quality/R-20260427-TEMPORAL-PLANREF-CONFIG-HARDENING.yaml
+      - docs/risk-register/quality/R-20260420-TEMPORAL-DBT-BUILTIN-COUPLING.yaml
     status_reason: >-
       Current QA confirms the active Temporal code path now starts workflows with `planRef` plus
       cursor-only runtime control input, bounded segment resolution, canonical `CANCEL` signal-id
@@ -301,10 +305,11 @@ tasks:
       governed non-zero continue-as-new default, an explicit drained-deploy cutover runbook, and
       deep-plan segment boundedness regression coverage. QA3 adds semantic module ownership
       docblocks, a local PlanRef workflow boundary guide, diagrams, and an architecture fitness test
-      that validates API, invariants, transitions, and consumers. The task remains open because full
-      SLA threshold posture under AR-D2 is not finished, segment-scale maturity is still first-cut,
-      and the residual DBT built-in coupling in `@dvt/adapter-temporal` stays explicit as open risk
-      instead of being treated as already-closed plugin extraction.
+      that validates API, invariants, transitions, and consumers. The DBT-core decoupling pass moves
+      DBT step-kind ownership out of the Temporal core activity registry and into explicit worker
+      profile composition. The task remains open because full SLA threshold posture under AR-D2 is
+      not finished, segment-scale maturity is still first-cut, and package-level DBT plugin
+      extraction remains explicit as open risk instead of being treated as already closed.
     last_verified: '2026-04-28'
   - task_id: AR-D3
     priority: P2

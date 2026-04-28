@@ -1,3 +1,12 @@
+/**
+ * @file packages/@dvt/adapter-temporal/src/plugins/dbt/DbtCliPluginRunner.ts
+ * @ownedConcern DBT CLI process runner behind the explicit Temporal worker DBT profile
+ * @baseline ADR-0003: Execution Model
+ * @baseline ADR-0040: Retry Ownership And Attempt Authority
+ * @decision Keep DBT CLI invocation behind a plugin runner instead of core activity dispatch
+ * @consequence Worker composition can enable DBT without making DBT a Temporal core default
+ * @version 1.0.0
+ */
 import { execFile } from 'node:child_process';
 import { mkdtemp, mkdir, readdir, rm, stat, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -7,11 +16,9 @@ import { promisify } from 'node:util';
 import type { IDbtProjectBundleReader } from '@dvt/artifacts';
 import { x as extractTarball } from 'tar';
 
-import type {
-  DbtPluginExecutionInput,
-  DbtPluginRunner,
-  StepResult,
-} from '../../activities/stepActivities.js';
+import type { StepResult } from '../../activities/stepActivities.js';
+
+import type { DbtPluginExecutionInput, DbtPluginRunner } from './dbtPluginTypes.js';
 
 const execFileAsync = promisify(execFile);
 const DBT_PROJECT_FILENAMES = new Set(['dbt_project.yml', 'dbt_project.yaml']);

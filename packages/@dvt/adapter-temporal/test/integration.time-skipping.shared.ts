@@ -6,9 +6,10 @@
 import type { ExecutionPlan, PlanRef, ResolvedRunContext } from '@dvt/contracts';
 import { TestWorkflowEnvironment } from '@temporalio/testing';
 
-import type { DbtPluginRunner, StepExecutor } from '../src/activities/stepActivities.js';
+import type { StepExecutor } from '../src/activities/stepActivities.js';
 import type { TemporalAdapterConfig } from '../src/config.js';
 import {
+  type DbtPluginRunner,
   loadTemporalAdapterConfig,
   TemporalAdapter,
   TemporalWorkerHost,
@@ -134,21 +135,25 @@ export async function createSingleRunDbtTimeSkippingHarness(
     ...args.temporalEnv,
   });
 
-  const createWorker = (options?: SingleRunDbtTimeSkippingWorkerOptions): TemporalWorkerHost =>
-    createTenantWorkerHost({
+  const createWorker = (options?: SingleRunDbtTimeSkippingWorkerOptions): TemporalWorkerHost => {
+    const activityDeps = createDbtActivityDeps({
+      store,
+      outbox,
+      bindings: [{ ctx, planRef, planBytes }],
+      ...(options?.dbtPluginRunner === undefined
+        ? {}
+        : { dbtPluginRunner: options.dbtPluginRunner }),
+    });
+
+    return createTenantWorkerHost({
       temporalConfig,
       tenantId: ctx.tenantId,
       workflowsPath: WORKFLOW_PATH,
-      activityDeps: createDbtActivityDeps({
-        store,
-        outbox,
-        bindings: [{ ctx, planRef, planBytes }],
-        ...(options?.dbtPluginRunner === undefined
-          ? {}
-          : { dbtPluginRunner: options.dbtPluginRunner }),
-      }),
+      activityDeps,
+      stepActivitiesByKind: activityDeps.stepActivitiesByKind,
       ...(options?.stepExecutors === undefined ? {} : { stepExecutors: options.stepExecutors }),
     });
+  };
 
   return {
     adapter: new TemporalAdapter({

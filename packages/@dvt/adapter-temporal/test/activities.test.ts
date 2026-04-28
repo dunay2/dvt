@@ -13,8 +13,6 @@ import {
   DEFAULT_STEP_ACTIVITY_REGISTRY,
   type Activities,
   type ActivityDeps,
-  type DbtPluginExecutionInput,
-  type DbtPluginRunner,
   type StepActivity,
   type StepExecutor,
   type StepInput,
@@ -26,6 +24,11 @@ import type {
   IIdempotencyKeyBuilder,
   RunMetadata,
 } from '../src/engine-types.js';
+import {
+  createDbtStepActivityRegistry,
+  type DbtPluginExecutionInput,
+  type DbtPluginRunner,
+} from '../src/index.js';
 
 import { createExecutionPlan, createPlanRef } from './helpers/contractFixtures.js';
 import {
@@ -316,12 +319,6 @@ function buildDeps(
     appendTransitions: (runId, events) => store.appendAndEnqueueTx(runId, events),
   };
 
-  const runExecutionContextReader = Object.hasOwn(overrides, 'runExecutionContextReader')
-    ? overrides.runExecutionContextReader
-    : new FakeRunExecutionContextReader();
-  const dbtPluginRunner = Object.hasOwn(overrides, 'dbtPluginRunner')
-    ? overrides.dbtPluginRunner
-    : new RecordingDbtPluginRunner();
   const fetcher = Object.hasOwn(overrides, 'fetcher')
     ? overrides.fetcher
     : {
@@ -346,8 +343,6 @@ function buildDeps(
     idempotency: new TestIdempotencyKeyBuilder(),
     fetcher,
     integrity,
-    ...(runExecutionContextReader === undefined ? {} : { runExecutionContextReader }),
-    ...(dbtPluginRunner === undefined ? {} : { dbtPluginRunner }),
     ...(overrides.getEngineAttemptId === undefined
       ? {}
       : { getEngineAttemptId: overrides.getEngineAttemptId }),
@@ -386,6 +381,19 @@ function expectSingleRunStartedEvent(
   if (typeof options.engineAttemptId === 'number') {
     expect(event.engineAttemptId).toBe(options.engineAttemptId);
   }
+}
+
+function createDbtRegistry(
+  overrides: {
+    runExecutionContextReader?: IRunExecutionContextReader;
+    dbtPluginRunner?: DbtPluginRunner;
+  } = {}
+): ReadonlyMap<string, StepActivity> {
+  return createDbtStepActivityRegistry({
+    runExecutionContextReader:
+      overrides.runExecutionContextReader ?? new FakeRunExecutionContextReader(),
+    dbtPluginRunner: overrides.dbtPluginRunner ?? new RecordingDbtPluginRunner(),
+  });
 }
 
 function requireFirstEvent(events: EventEnvelope[]): EventEnvelope {
@@ -649,14 +657,27 @@ describe('stepActivities', () => {
   });
 
   describe('executeStep', () => {
-    it('returns COMPLETED for valid step', async () => {
+    it('does not register DBT step kinds in the core activity registry by default', async () => {
       const { acts } = setupActivities();
+
+      expect(DEFAULT_STEP_ACTIVITY_REGISTRY.has('DBT_MODEL')).toBe(false);
+      expect(DEFAULT_STEP_ACTIVITY_REGISTRY.has('DBT_TEST')).toBe(false);
+      expect(DEFAULT_STEP_ACTIVITY_REGISTRY.has('DBT_SNAPSHOT')).toBe(false);
+      await expect(
+        acts.executeStep({
+          step: { stepId: 's1', kind: 'DBT_TEST' },
+          ctx: CTX,
+        })
+      ).rejects.toThrow('UNSUPPORTED_STEP_KIND:DBT_TEST:s1');
+    });
+
+    it('returns COMPLETED for DBT only when the worker composes the DBT registry explicitly', async () => {
+      const { acts } = setupActivities(undefined, undefined, createDbtRegistry());
 
       const result = await acts.executeStep({
         step: { stepId: 's1', kind: 'DBT_TEST' },
         ctx: CTX,
       });
-
       expect(result).toEqual({ stepId: 's1', status: 'COMPLETED' });
     });
 
@@ -666,7 +687,7 @@ describe('stepActivities', () => {
     );
 
     it('accepts step with dependsOn array', async () => {
-      const { acts } = setupActivities();
+      const { acts } = setupActivities(undefined, undefined, createDbtRegistry());
 
       const result = await acts.executeStep({
         step: { stepId: 's2', kind: 'DBT_TEST', dependsOn: ['s1'] },
@@ -677,7 +698,7 @@ describe('stepActivities', () => {
     });
 
     it('accepts step with stepTypeConfig', async () => {
-      const { acts } = setupActivities();
+      const { acts } = setupActivities(undefined, undefined, createDbtRegistry());
 
       const result = await acts.executeStep({
         step: { stepId: 's3', kind: 'DBT_MODEL', stepTypeConfig: { stepTimeoutMs: 5000 } },
@@ -703,9 +724,11 @@ describe('stepActivities', () => {
           },
         };
       });
-      const { acts } = setupActivities(undefined, undefined, undefined, {
-        dbtPluginRunner: runner,
-      });
+      const { acts } = setupActivities(
+        undefined,
+        undefined,
+        createDbtRegistry({ dbtPluginRunner: runner })
+      );
 
       const result = await acts.executeStep({
         step: { stepId: 's1', kind: 'DBT_MODEL' },
@@ -748,7 +771,7 @@ describe('stepActivities', () => {
     });
 
     it('fails closed when dbt step executes without runExecutionContextRef', async () => {
-      const { acts } = setupActivities();
+      const { acts } = setupActivities(undefined, undefined, createDbtRegistry());
 
       await expect(
         acts.executeStep({
@@ -761,41 +784,41 @@ describe('stepActivities', () => {
       ).rejects.toThrow(EXPECTED_ERRORS.runExecutionContextRequired);
     });
 
-    it('fails closed when dbt plugin runtime wiring is missing', async () => {
-      const { acts } = setupActivities(undefined, undefined, undefined, {
-        runExecutionContextReader: undefined,
-        dbtPluginRunner: undefined,
-      });
+    it('allows composition to override DBT step kinds through the explicit activity registry', async () => {
+      const replacementActivity: StepActivity = {
+        async execute(step) {
+          return { stepId: step.stepId, status: 'FAILED', failureReason: 'replacement' };
+        },
+      };
+      const { acts } = setupActivities(
+        undefined,
+        undefined,
+        new Map([['DBT_TEST', replacementActivity]])
+      );
 
-      await expect(
-        acts.executeStep({
-          step: { stepId: 's1', kind: 'DBT_TEST' },
-          ctx: CTX,
-        })
-      ).rejects.toThrow(EXPECTED_ERRORS.pluginRuntimeNotConfigured);
-    });
-
-    it('rebuilds DBT activity wiring from runtime deps even when the default registry is passed explicitly', async () => {
-      const runner = new RecordingDbtPluginRunner();
-      const { acts } = setupActivities(undefined, undefined, DEFAULT_STEP_ACTIVITY_REGISTRY, {
-        dbtPluginRunner: runner,
-      });
-
-      await acts.executeStep({
+      const result = await acts.executeStep({
         step: { stepId: 's1', kind: 'DBT_TEST' },
         ctx: CTX,
       });
 
-      expect(runner.invocations).toHaveLength(1);
+      expect(result).toEqual({
+        stepId: 's1',
+        status: 'FAILED',
+        failureReason: 'replacement',
+      });
     });
 
     it('fails closed when resolved context omits the dbt plugin payload', async () => {
-      const { acts } = setupActivities(undefined, undefined, undefined, {
-        runExecutionContextReader: new FakeRunExecutionContextReader({
-          ...RUN_EXECUTION_CONTEXT,
-          pluginContexts: {},
-        }),
-      });
+      const { acts } = setupActivities(
+        undefined,
+        undefined,
+        createDbtRegistry({
+          runExecutionContextReader: new FakeRunExecutionContextReader({
+            ...RUN_EXECUTION_CONTEXT,
+            pluginContexts: {},
+          }),
+        })
+      );
 
       await expect(
         acts.executeStep({
@@ -806,13 +829,19 @@ describe('stepActivities', () => {
     });
 
     it('maps rejected runExecutionContext reads into a permanent step failure', async () => {
-      const { acts } = setupActivities(undefined, undefined, undefined, {
-        runExecutionContextReader: {
-          async resolve() {
-            throw new RunExecutionContextRejectedError('RUN_EXECUTION_CONTEXT_REJECTED_BY_FIXTURE');
+      const { acts } = setupActivities(
+        undefined,
+        undefined,
+        createDbtRegistry({
+          runExecutionContextReader: {
+            async resolve() {
+              throw new RunExecutionContextRejectedError(
+                'RUN_EXECUTION_CONTEXT_REJECTED_BY_FIXTURE'
+              );
+            },
           },
-        },
-      });
+        })
+      );
 
       await expect(
         acts.executeStep({
@@ -827,9 +856,11 @@ describe('stepActivities', () => {
         stepId: 'other-step',
         status: 'COMPLETED',
       }));
-      const { acts } = setupActivities(undefined, undefined, undefined, {
-        dbtPluginRunner: runner,
-      });
+      const { acts } = setupActivities(
+        undefined,
+        undefined,
+        createDbtRegistry({ dbtPluginRunner: runner })
+      );
 
       await expect(
         acts.executeStep({

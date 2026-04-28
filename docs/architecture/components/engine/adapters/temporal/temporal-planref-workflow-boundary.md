@@ -15,6 +15,7 @@ through Temporal durable input.
 Use this guide with:
 
 - [Temporal adapter spec](./temporal-adapter-spec.md)
+- [Temporal DBT worker plugin profile](./temporal-dbt-worker-plugin-profile.md)
 - [Temporal PlanRef drained cutover runbook](../../../../../runbooks/temporal-planref-drained-cutover-20260427.md)
 - [Temporal worker DBT plugin runtime runbook](../../../../../runbooks/temporal-worker-dbt-plugin-runtime-20260414.md)
 - [Fowler PlanRef architecture analysis](../../../../../../buzon/20260428-codex-fowler-temporal-planref-workflow-boundary-analysis-and-remediation.md)
@@ -91,8 +92,9 @@ It does **not** own:
   before Temporal history becomes the hidden storage layer.
 - `continueAsNewAfterLayerCount = 0` disables rollover only when an operator has
   made that risk explicit outside large-DAG readiness.
-- The DBT plugin runtime coupling remains outside this component. It is a worker
-  packaging and executor concern, not workflow ownership.
+- The DBT plugin runtime remains outside this component. Its step-kind registry
+  is composed by the Temporal worker DBT profile, not by the PlanRef workflow or
+  the core activity registry.
 
 ## Transitions
 

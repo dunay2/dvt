@@ -61,8 +61,8 @@ describe('createTemporalWorkerRuntime', () => {
     expect(fixture.hostShutdown).toHaveBeenCalledTimes(1);
     expect(fixture.connection.close).toHaveBeenCalledTimes(1);
     expect(fixture.closeStateStore).toHaveBeenCalledTimes(1);
-    expect(capturedConfig?.activityDeps.runExecutionContextReader).toBeDefined();
-    expect(capturedConfig?.activityDeps.dbtPluginRunner).toBe(runner);
+    expect(capturedConfig?.activityDeps).not.toHaveProperty('runExecutionContextReader');
+    expect(capturedConfig?.activityDeps).not.toHaveProperty('dbtPluginRunner');
     expect(capturedConfig?.stepActivitiesByKind?.get('DBT_MODEL')).toBeDefined();
     expect(runtime.getRunStateCircuitSnapshot().state).toBe('closed');
   });
@@ -135,8 +135,8 @@ describe('createTemporalWorkerRuntime', () => {
     await runtime.stop();
 
     expect(probe).not.toHaveBeenCalled();
-    expect(capturedConfig?.activityDeps.dbtPluginRunner).toBeUndefined();
-    expect(capturedConfig?.stepActivitiesByKind?.get('DBT_MODEL')).toBeDefined();
+    expect(capturedConfig?.activityDeps).not.toHaveProperty('dbtPluginRunner');
+    expect(capturedConfig?.stepActivitiesByKind?.get('DBT_MODEL')).toBeUndefined();
   });
 
   it('wires the configured continue-as-new payload budget into Temporal host config', async () => {

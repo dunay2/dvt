@@ -42,8 +42,6 @@ export { TemporalPolicyMapper } from './TemporalPolicyMapper.js';
 export type {
   ActivityDeps,
   Activities,
-  DbtPluginExecutionInput,
-  DbtPluginRunner,
   EmitEventInput,
   StepActivity,
   StepActivityRegistry,
@@ -54,11 +52,20 @@ export type {
 export {
   createActivities,
   createDefaultStepActivityRegistry,
-  DbtStepActivity,
   DEFAULT_STEP_ACTIVITY_REGISTRY,
   StepActivityDispatcher,
   UnsupportedStepKindError,
 } from './activities/stepActivities.js';
+export type {
+  DbtPluginExecutionInput,
+  DbtPluginRunner,
+  DbtStepActivityDeps,
+} from './plugins/dbt/dbtPluginTypes.js';
+export {
+  DBT_STEP_KINDS,
+  DbtStepActivity,
+  createDbtStepActivityRegistry,
+} from './plugins/dbt/DbtStepActivity.js';
 export { DbtCliPluginRunner, assertDbtCliAvailable } from './plugins/dbt/DbtCliPluginRunner.js';
 export type { RunStateCommandCircuitSnapshot } from './RunStateCommandPortCircuitBreaker.js';
 export { CircuitBreakingRunStateCommandPort } from './RunStateCommandPortCircuitBreaker.js';

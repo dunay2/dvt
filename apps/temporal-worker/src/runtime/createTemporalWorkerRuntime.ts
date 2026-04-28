@@ -1,3 +1,6 @@
+/**
+ * @ownedConcern Standalone Temporal worker composition root for state, host, and optional plugin profiles.
+ */
 import {
   PostgresPlanStore,
   PostgresRunStateCommandPortBridge,
@@ -7,7 +10,7 @@ import {
   CircuitBreakingRunStateCommandPort,
   DbtCliPluginRunner,
   assertDbtCliAvailable,
-  createDefaultStepActivityRegistry,
+  createDbtStepActivityRegistry,
   loadTemporalAdapterConfig,
   TemporalWorkerHost,
   type DbtPluginRunner,
@@ -107,15 +110,14 @@ export async function createTemporalWorkerRuntime(
       }),
     });
 
-  const runExecutionContextReader =
-    options.runExecutionContextReaderFactory?.(env) ??
-    new ArtifactBackedRunExecutionContextReader({
-      nodeEnv: env.NODE_ENV,
-    });
-
-  let dbtPluginRunner: DbtPluginRunner | undefined;
   let dbtAvailabilityProbe: (() => Promise<void>) | undefined;
+  let stepActivitiesByKind: TemporalWorkerHostConfig['stepActivitiesByKind'];
   if (env.DVT_TEMPORAL_DBT_ENABLED) {
+    const runExecutionContextReader =
+      options.runExecutionContextReaderFactory?.(env) ??
+      new ArtifactBackedRunExecutionContextReader({
+        nodeEnv: env.NODE_ENV,
+      });
     const bundleReader =
       options.bundleReaderFactory?.(env) ??
       new ArtifactBackedDbtProjectBundleReader({
@@ -127,7 +129,7 @@ export async function createTemporalWorkerRuntime(
       options.dbtAvailabilityProbe ?? ((dbtBin: string) => assertDbtCliAvailable(dbtBin));
     dbtAvailabilityProbe = () => availabilityProbe(env.DVT_DBT_BIN);
 
-    dbtPluginRunner =
+    const dbtPluginRunner =
       options.dbtPluginRunnerFactory?.({
         env,
         bundleReader,
@@ -137,6 +139,11 @@ export async function createTemporalWorkerRuntime(
         dbtBin: env.DVT_DBT_BIN,
         workdirRoot: env.DVT_DBT_WORKDIR_ROOT,
       });
+
+    stepActivitiesByKind = createDbtStepActivityRegistry({
+      runExecutionContextReader,
+      dbtPluginRunner,
+    });
   }
 
   const activityDeps = {
@@ -150,25 +157,14 @@ export async function createTemporalWorkerRuntime(
     idempotency: new IdempotencyKeyBuilder(),
     fetcher: planStore,
     integrity: new PlanIntegrityValidator(),
-    runExecutionContextReader,
-    ...(dbtPluginRunner === undefined ? {} : { dbtPluginRunner }),
   };
-  const stepActivitiesByKind = createDefaultStepActivityRegistry({
-    runExecutionContextReader,
-    ...(dbtPluginRunner === undefined ? {} : { dbtPluginRunner }),
-  });
 
-  const host =
-    options.hostFactory?.({
-      temporalConfig,
-      activityDeps,
-      stepActivitiesByKind,
-    }) ??
-    new TemporalWorkerHost({
-      temporalConfig,
-      activityDeps,
-      stepActivitiesByKind,
-    });
+  const hostConfig: TemporalWorkerHostConfig = {
+    temporalConfig,
+    activityDeps,
+    ...(stepActivitiesByKind === undefined ? {} : { stepActivitiesByKind }),
+  };
+  const host = options.hostFactory?.(hostConfig) ?? new TemporalWorkerHost(hostConfig);
 
   let started = false;
   let connection: TemporalConnectionLike | null = null;
