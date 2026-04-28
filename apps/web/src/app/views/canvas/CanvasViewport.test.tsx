@@ -22,37 +22,55 @@ const xyflowState = vi.hoisted(() => ({
   fitView: vi.fn(),
 }));
 
+type MockReactFlowProps = Readonly<{
+  children: React.ReactNode;
+}> &
+  Record<string, unknown>;
+
+type MockBackgroundProps = Readonly<{
+  color?: string;
+  gap: number;
+}>;
+
+type MockMiniMapProps = Readonly<{
+  nodeColor: (node: { data?: unknown }) => string;
+  pannable?: boolean;
+  zoomable?: boolean;
+  maskColor?: string;
+  maskStrokeColor?: string;
+  className?: string;
+}>;
+
 vi.mock('../../plugins/nodeTypeRegistry', () => ({
   resolveNodeKindRegistration: mockResolveNodeKindRegistration,
 }));
 
-vi.mock('@xyflow/react', () => ({
-  ReactFlow: ({ children, ...props }: { children: React.ReactNode }) =>
-    (() => {
-      xyflowState.lastReactFlowProps = props;
-      return <div data-testid="react-flow">{children}</div>;
-    })(),
-  Background: ({ color, gap }: { color?: string; gap: number }) => (
-    <div data-testid="background">
-      color:{color ?? 'none'}|gap:{gap}
-    </div>
-  ),
-  Controls: () => <div data-testid="controls" />,
-  MiniMap: ({
+vi.mock('@xyflow/react', () => {
+  function MockReactFlow({ children, ...props }: MockReactFlowProps): JSX.Element {
+    xyflowState.lastReactFlowProps = props;
+    return <div data-testid="react-flow">{children}</div>;
+  }
+
+  function MockBackground({ color, gap }: MockBackgroundProps): JSX.Element {
+    return (
+      <div data-testid="background">
+        color:{color ?? 'none'}|gap:{gap}
+      </div>
+    );
+  }
+
+  function MockControls(): JSX.Element {
+    return <div data-testid="controls" />;
+  }
+
+  function MockMiniMap({
     nodeColor,
-    pannable,
-    zoomable,
+    pannable = false,
+    zoomable = false,
     maskColor,
     maskStrokeColor,
     className,
-  }: {
-    nodeColor: (node: { data?: unknown }) => string;
-    pannable?: boolean;
-    zoomable?: boolean;
-    maskColor?: string;
-    maskStrokeColor?: string;
-    className?: string;
-  }) => {
+  }: MockMiniMapProps): JSX.Element {
     xyflowState.miniMapNodeColor = nodeColor;
     xyflowState.miniMapMaskColor = maskColor ?? null;
     xyflowState.miniMapMaskStrokeColor = maskStrokeColor ?? null;
@@ -60,16 +78,23 @@ vi.mock('@xyflow/react', () => ({
     return (
       <div
         data-testid="minimap"
-        data-pannable={String(Boolean(pannable))}
-        data-zoomable={String(Boolean(zoomable))}
+        data-pannable={String(pannable)}
+        data-zoomable={String(zoomable)}
       />
     );
-  },
-  useReactFlow: () => ({
-    setViewport: xyflowState.setViewport,
-    fitView: xyflowState.fitView,
-  }),
-}));
+  }
+
+  return {
+    ReactFlow: MockReactFlow,
+    Background: MockBackground,
+    Controls: MockControls,
+    MiniMap: MockMiniMap,
+    useReactFlow: () => ({
+      setViewport: xyflowState.setViewport,
+      fitView: xyflowState.fitView,
+    }),
+  };
+});
 
 function buildProps(
   overrides?: Partial<React.ComponentProps<typeof CanvasViewport>>

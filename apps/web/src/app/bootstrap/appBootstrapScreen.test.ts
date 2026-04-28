@@ -27,6 +27,14 @@ function extractCssRule(source: string, selector: string): string {
 function mountBootstrapDom(): void {
   document.body.innerHTML = `
     <div id="app-loading-screen" data-state="loading">
+      <output
+        id="app-loading-announcement"
+        aria-label="Raven startup status"
+        aria-live="polite"
+        aria-atomic="true"
+        aria-busy="true"
+        aria-describedby="app-loading-message app-loading-progress"
+      ></output>
       <h1 id="app-loading-title"></h1>
       <p id="app-loading-message"></p>
       <ul id="app-loading-steps">
@@ -88,14 +96,16 @@ describe('appBootstrapScreen', () => {
 
   it('keeps the production HTML shell aligned with the bootstrap DOM contract before React executes', () => {
     const screen = mountProductionBootstrapDom();
+    const announcement = document.getElementById('app-loading-announcement');
 
     expect(screen.dataset.state).toBe('loading');
-    expect(screen.getAttribute('role')).toBe('status');
-    expect(screen.getAttribute('aria-label')).toBe('Raven startup status');
-    expect(screen.getAttribute('aria-live')).toBe('polite');
-    expect(screen.getAttribute('aria-atomic')).toBe('true');
-    expect(screen.getAttribute('aria-busy')).toBe('true');
-    expect(screen.getAttribute('aria-describedby')).toBe(
+    expect(screen.getAttribute('role')).toBeNull();
+    expect(announcement?.tagName).toBe('OUTPUT');
+    expect(announcement?.getAttribute('aria-label')).toBe('Raven startup status');
+    expect(announcement?.getAttribute('aria-live')).toBe('polite');
+    expect(announcement?.getAttribute('aria-atomic')).toBe('true');
+    expect(announcement?.getAttribute('aria-busy')).toBe('true');
+    expect(announcement?.getAttribute('aria-describedby')).toBe(
       'app-loading-message app-loading-progress'
     );
 
@@ -254,15 +264,18 @@ describe('appBootstrapScreen', () => {
     ).toBe('Route <strong>startup</strong>: pending');
   });
 
-  it('publishes the startup gate as an accessible busy status until bootstrap completes', () => {
+  it('publishes the startup gate through a semantic output until bootstrap completes', () => {
     startBootstrapScreen();
 
     const screen = document.getElementById('app-loading-screen');
-    expect(screen?.getAttribute('role')).toBe('status');
-    expect(screen?.getAttribute('aria-label')).toBe('Raven startup status');
-    expect(screen?.getAttribute('aria-live')).toBe('polite');
-    expect(screen?.getAttribute('aria-atomic')).toBe('true');
-    expect(screen?.getAttribute('aria-busy')).toBe('true');
+    const announcement = document.getElementById('app-loading-announcement');
+    expect(screen?.getAttribute('role')).toBeNull();
+    expect(announcement?.tagName).toBe('OUTPUT');
+    expect(announcement?.getAttribute('aria-label')).toBe('Raven startup status');
+    expect(announcement?.getAttribute('aria-live')).toBe('polite');
+    expect(announcement?.getAttribute('aria-atomic')).toBe('true');
+    expect(announcement?.getAttribute('aria-busy')).toBe('true');
+    expect(announcement?.textContent).toContain('Preparing Raven');
 
     setBootstrapStepStatus('hydrate', 'complete');
     setBootstrapStepStatus('services', 'complete');
@@ -272,7 +285,7 @@ describe('appBootstrapScreen', () => {
     completeBootstrapScreen();
 
     expect(screen?.dataset.state).toBe('complete');
-    expect(screen?.getAttribute('aria-busy')).toBe('false');
+    expect(announcement?.getAttribute('aria-busy')).toBe('false');
   });
 
   it('does not reopen the startup surface after bootstrap has already completed', () => {

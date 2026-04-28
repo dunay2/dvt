@@ -221,9 +221,23 @@ describe('canvas startup and draft recovery architecture', () => {
     expect(tabStripTemplateSource).toContain('function CanvasPlaygroundTabsTemplate(');
     expect(tabStripTemplateSource).toContain('function CanvasReplacementActionTemplate(');
     expect(tabStripTemplateSource).toContain('CanvasReplacementActionViewState');
+    expect(tabStripTemplateSource).toContain('border-(--border-default)');
+    expect(tabStripTemplateSource).toContain('bg-(--surface-panel)');
+    expect(tabStripTemplateSource).toContain('text-(--text-subtle)');
+    expect(tabStripTemplateSource).not.toContain('border-[color:var(');
+    expect(tabStripTemplateSource).not.toContain('bg-[var(');
+    expect(tabStripTemplateSource).not.toContain('text-[var(');
     expect(tabStripTemplateSource).not.toContain('CanvasReplacementActionState');
     expect(tabStripTemplateSource).not.toContain("from './copy'");
     expect(tabStripTemplateSource).not.toContain("mode: 'replace_current'");
     expect(tabStripSource).not.toContain('canEditEdges && activeReplacementCanvasKind');
+  });
+
+  it('keeps Canvas viewport mocks in named test-local components for static analysis', () => {
+    const viewportTestSource = readAppSource('CanvasViewport.test.tsx');
+
+    expect(viewportTestSource).toContain('type MockMiniMapProps = Readonly<{');
+    expect(viewportTestSource).toContain('function MockMiniMap(');
+    expect(viewportTestSource).not.toContain('MiniMap: ({');
   });
 });

@@ -6,6 +6,7 @@ type BootstrapStepStatus = 'pending' | 'complete' | 'degraded' | 'failed' | 'blo
 type BootstrapScreenState = 'loading' | 'blocked' | 'error' | 'complete';
 
 const LOADING_SCREEN_ID = 'app-loading-screen';
+const ANNOUNCEMENT_ID = 'app-loading-announcement';
 const TITLE_ID = 'app-loading-title';
 const MESSAGE_ID = 'app-loading-message';
 const VERSION_ID = 'app-loading-version';
@@ -79,6 +80,10 @@ function createInitialStepState(): Record<BootstrapStep, BootstrapStepState> {
 
 function getLoadingScreen(): HTMLElement | null {
   return document.getElementById(LOADING_SCREEN_ID);
+}
+
+function getLoadingAnnouncement(): HTMLOutputElement | null {
+  return document.querySelector<HTMLOutputElement>(`#${ANNOUNCEMENT_ID}`);
 }
 
 function getStepNode(step: BootstrapStep): HTMLElement | null {
@@ -192,6 +197,24 @@ function renderBootstrapProgressState(state: BootstrapScreenState): void {
   });
 }
 
+function updateBootstrapAnnouncement(
+  state: BootstrapScreenState,
+  title: string,
+  message: string
+): void {
+  const announcement = getLoadingAnnouncement();
+  if (!announcement) {
+    return;
+  }
+
+  announcement.setAttribute('aria-label', STARTUP_STATUS_LABEL);
+  announcement.setAttribute('aria-live', 'polite');
+  announcement.setAttribute('aria-atomic', 'true');
+  announcement.setAttribute('aria-busy', state === 'complete' ? 'false' : 'true');
+  announcement.setAttribute('aria-describedby', `${MESSAGE_ID} ${PROGRESS_ID}`);
+  announcement.textContent = `${title}. ${message}`;
+}
+
 function setBootstrapScreenState(
   state: BootstrapScreenState,
   title: string,
@@ -203,14 +226,15 @@ function setBootstrapScreenState(
   }
 
   screen.dataset.state = state;
-  screen.setAttribute('role', 'status');
-  screen.setAttribute('aria-label', STARTUP_STATUS_LABEL);
-  screen.setAttribute('aria-live', 'polite');
-  screen.setAttribute('aria-atomic', 'true');
-  screen.setAttribute('aria-busy', state === 'complete' ? 'false' : 'true');
-  screen.setAttribute('aria-describedby', `${MESSAGE_ID} ${PROGRESS_ID}`);
+  screen.removeAttribute('role');
+  screen.removeAttribute('aria-label');
+  screen.removeAttribute('aria-live');
+  screen.removeAttribute('aria-atomic');
+  screen.removeAttribute('aria-busy');
+  screen.removeAttribute('aria-describedby');
   updateBootstrapText(TITLE_ID, title);
   updateBootstrapText(MESSAGE_ID, message);
+  updateBootstrapAnnouncement(state, title, message);
   renderBootstrapProgressState(state);
 }
 
