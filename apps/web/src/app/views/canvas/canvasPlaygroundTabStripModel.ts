@@ -14,8 +14,7 @@ export type CanvasReplacementActionCopy = Pick<
   | 'replaceCanvasConfirmLabel'
 >;
 
-export type CanvasReplacementActionState = Readonly<{
-  activeCanvasKind: CanvasKindRegistration | null;
+export type CanvasReplacementActionViewState = Readonly<{
   canReplaceCanvas: boolean;
   buttonTitle: string;
   buttonLabel: string;
@@ -23,6 +22,11 @@ export type CanvasReplacementActionState = Readonly<{
   dialogDescription: string;
   cancelLabel: string;
   confirmLabel: string;
+}>;
+
+export type CanvasReplacementActionState = Readonly<{
+  activeCanvasKind: CanvasKindRegistration | null;
+  viewState: CanvasReplacementActionViewState;
 }>;
 
 export function hasRenderableCanvasTabs(tabState: CanvasPlaygroundTabState): boolean {
@@ -56,13 +60,17 @@ export function resolveCanvasReplacementActionState(args: {
 
   return {
     activeCanvasKind,
-    canReplaceCanvas,
-    buttonTitle: canReplaceCanvas ? args.copy.newCanvasLabel : args.copy.mutationUnavailableMessage,
-    buttonLabel: args.copy.newCanvasLabel,
-    dialogTitle: args.copy.replaceCanvasTitle,
-    dialogDescription: args.copy.replaceCanvasMessage,
-    cancelLabel: args.copy.replaceCanvasCancelLabel,
-    confirmLabel: args.copy.replaceCanvasConfirmLabel,
+    viewState: {
+      canReplaceCanvas,
+      buttonTitle: canReplaceCanvas
+        ? args.copy.newCanvasLabel
+        : args.copy.mutationUnavailableMessage,
+      buttonLabel: args.copy.newCanvasLabel,
+      dialogTitle: args.copy.replaceCanvasTitle,
+      dialogDescription: args.copy.replaceCanvasMessage,
+      cancelLabel: args.copy.replaceCanvasCancelLabel,
+      confirmLabel: args.copy.replaceCanvasConfirmLabel,
+    },
   };
 }
 

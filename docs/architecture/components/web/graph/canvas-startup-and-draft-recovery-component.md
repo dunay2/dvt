@@ -39,6 +39,7 @@ whose first visible surface is already governed and safe to reveal.
 | `executeCreateCanvasDocumentCommand(...)`             | `canvasCreateCanvasDocumentCommand.ts`   | Persist first or explicitly replaced canvas documents through CAS draft saves.    |
 | `CanvasPlaygroundTabStrip`                            | `CanvasPlaygroundTabStrip.tsx`           | Coordinate authoritative host tabs and confirmed replacement action state.        |
 | `resolveCanvasReplacementActionState(...)`            | `canvasPlaygroundTabStripModel.ts`       | Resolve locale-backed replacement labels, permission state, and active kind.      |
+| `CanvasReplacementActionViewState`                    | `canvasPlaygroundTabStripModel.ts`       | Carry only replacement labels and enablement that templates may render.           |
 | `CanvasPlaygroundTabStripTemplate`                    | `CanvasPlaygroundTabStrip.templates.tsx` | Render tab-strip HTML from resolved view state without command policy.            |
 | `CANVAS_NODE_DRAG_HANDLE_SELECTOR`                    | `canvasNodeMapper.ts`                    | Name the React Flow drag handle shared by mapped nodes and rendered node shell.   |
 
@@ -70,6 +71,8 @@ whose first visible surface is already governed and safe to reveal.
   permission/copy/command decisions belong in `canvasPlaygroundTabStripModel.ts`.
 - Tab-strip templates must receive already-resolved copy and state. They must
   not import locale catalogs or construct `replace_current` command DTOs.
+- Tab-strip templates must depend on `CanvasReplacementActionViewState`, not on
+  command-selection state such as `activeCanvasKind`.
 - The tab-strip replacement action must stay disabled when effective route
   permissions deny graph editing.
 - Node drag remains permission-gated by `CanvasViewport`; the drag handle only
@@ -168,6 +171,7 @@ Indirect consumers:
 | Decision Table                | `DBT_NODE_TYPE_RULES`                  | projection policy is data-driven and extensible   |
 | Passive View                  | `CanvasPlaygroundTabStrip`             | render host state without owning draft DTOs       |
 | Presentation Template         | `CanvasPlaygroundTabStripTemplate`     | keep JSX separate from replacement policy         |
+| Presentation Model            | `CanvasReplacementActionViewState`     | expose only renderable action state to templates  |
 | Separated Domain Model        | `canvasPlaygroundTabStripModel.ts`     | test command and i18n state without React         |
 | Intention Revealing Interface | `CANVAS_NODE_DRAG_HANDLE_SELECTOR`     | gesture ownership is named and testable           |
 | Parameter Object              | `MapCanonicalNodeToCanvasNodeArgs`     | viewport projection options are named at callsite |
@@ -193,6 +197,8 @@ It validates semantics, not only barrel thinness:
 - host tab rendering and replacement action rendering stay behind template
   functions, while replacement copy and command state stay in
   `canvasPlaygroundTabStripModel.ts`;
+- replacement templates consume `CanvasReplacementActionViewState`, not
+  command-selection state;
 - `CanvasPlaygroundTabStrip.tsx` does not re-own `AlertDialog`, `TabsTrigger`,
   or `replace_current` command construction;
 - `CanvasPlaygroundTabStrip.templates.tsx` does not import Canvas copy catalogs

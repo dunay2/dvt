@@ -51,13 +51,15 @@ describe('canvas playground tab strip model', () => {
       })
     ).toEqual({
       activeCanvasKind: transformationCanvasKind,
-      canReplaceCanvas: true,
-      buttonTitle: copy.newCanvasLabel,
-      buttonLabel: copy.newCanvasLabel,
-      dialogTitle: copy.replaceCanvasTitle,
-      dialogDescription: copy.replaceCanvasMessage,
-      cancelLabel: copy.replaceCanvasCancelLabel,
-      confirmLabel: copy.replaceCanvasConfirmLabel,
+      viewState: {
+        canReplaceCanvas: true,
+        buttonTitle: copy.newCanvasLabel,
+        buttonLabel: copy.newCanvasLabel,
+        dialogTitle: copy.replaceCanvasTitle,
+        dialogDescription: copy.replaceCanvasMessage,
+        cancelLabel: copy.replaceCanvasCancelLabel,
+        confirmLabel: copy.replaceCanvasConfirmLabel,
+      },
     });
   });
 

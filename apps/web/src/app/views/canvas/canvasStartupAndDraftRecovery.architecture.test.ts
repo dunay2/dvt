@@ -212,11 +212,16 @@ describe('canvas startup and draft recovery architecture', () => {
     expect(tabStripModelSource).toContain('function resolveCanvasReplacementActionState(');
     expect(tabStripModelSource).toContain('function createReplaceCurrentCanvasDocumentCommand(');
     expect(tabStripModelSource).toContain('copy: CanvasReplacementActionCopy');
+    expect(tabStripModelSource).toContain('export type CanvasReplacementActionViewState');
+    expect(tabStripModelSource).toContain('viewState: CanvasReplacementActionViewState');
     expect(tabStripModelSource).not.toContain('JSX.Element');
 
+    expect(tabStripSource).toContain('replacementActionState.viewState');
     expect(tabStripTemplateSource).toContain('function CanvasPlaygroundTabStripTemplate(');
     expect(tabStripTemplateSource).toContain('function CanvasPlaygroundTabsTemplate(');
     expect(tabStripTemplateSource).toContain('function CanvasReplacementActionTemplate(');
+    expect(tabStripTemplateSource).toContain('CanvasReplacementActionViewState');
+    expect(tabStripTemplateSource).not.toContain('CanvasReplacementActionState');
     expect(tabStripTemplateSource).not.toContain("from './copy'");
     expect(tabStripTemplateSource).not.toContain("mode: 'replace_current'");
     expect(tabStripSource).not.toContain('canEditEdges && activeReplacementCanvasKind');

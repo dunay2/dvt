@@ -19,11 +19,11 @@ import {
   routeWorkbenchTabTriggerClassName,
 } from '../../components/workbench/RouteWorkbenchFrame';
 import type { CanvasPlaygroundTabState } from './canvasPlaygroundTabState';
-import type { CanvasReplacementActionState } from './canvasPlaygroundTabStripModel';
+import type { CanvasReplacementActionViewState } from './canvasPlaygroundTabStripModel';
 
 type CanvasPlaygroundTabStripTemplateProps = Readonly<{
   tabState: CanvasPlaygroundTabState;
-  replacementAction: CanvasReplacementActionState;
+  replacementAction: CanvasReplacementActionViewState;
   isReplacementDialogOpen: boolean;
   onRequestReplacement: () => void;
   onReplacementDialogOpenChange: (open: boolean) => void;
@@ -36,7 +36,7 @@ type CanvasPlaygroundTabsTemplateProps = Readonly<{
 }>;
 
 type CanvasReplacementActionTemplateProps = Readonly<{
-  action: CanvasReplacementActionState;
+  action: CanvasReplacementActionViewState;
   isDialogOpen: boolean;
   onRequestReplacement: () => void;
   onDialogOpenChange: (open: boolean) => void;

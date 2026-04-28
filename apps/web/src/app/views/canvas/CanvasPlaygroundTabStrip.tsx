@@ -62,7 +62,7 @@ export function CanvasPlaygroundTabStrip({
   return (
     <CanvasPlaygroundTabStripTemplate
       tabState={tabState}
-      replacementAction={replacementActionState}
+      replacementAction={replacementActionState.viewState}
       isReplacementDialogOpen={replacementCanvasKind != null}
       onRequestReplacement={requestReplacement}
       onReplacementDialogOpenChange={(open) => {

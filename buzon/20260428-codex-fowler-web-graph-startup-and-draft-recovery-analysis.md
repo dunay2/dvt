@@ -94,6 +94,11 @@ state, and command DTO creation, and `CanvasPlaygroundTabStrip.templates.tsx`
 owns the JSX templates. The template layer receives resolved labels and state;
 it does not import locale catalogs or construct destructive commands.
 
+The post-commit Fowler review tightened the boundary further with
+`CanvasReplacementActionViewState`: templates now receive only renderable
+enablement and labels, while `activeCanvasKind` stays in the model/coordinator
+side of the command boundary.
+
 ### Intention Revealing Interface
 
 React Flow dragging now has a named selector:
@@ -114,6 +119,7 @@ contract instead of depending on incidental event propagation.
 | Positional argument train                   | Fixed               | Canonical-node viewport projection now uses a named parameter object.                 |
 | God render method                           | Fixed               | Tab rendering and destructive replacement action are split into presenter seams.      |
 | Template owns application policy            | Fixed               | Tab-strip templates render resolved state only; model code owns command and copy DTO. |
+| Command state leaked into template props    | Fixed               | Templates now consume render-only view state, not active canvas kind.                 |
 
 ## Components to group
 
@@ -168,6 +174,8 @@ Semantic architecture test:
 - Replacement action copy no longer flows directly through JSX. The model
   resolves locale-backed labels once and the template renders the resulting
   state.
+- Replacement templates no longer receive command-selection state. The model
+  separates `activeCanvasKind` from `CanvasReplacementActionViewState`.
 
 ## Drift fixed
 

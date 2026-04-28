@@ -142,6 +142,13 @@ Test coverage plan:
 - `pnpm --filter @dvt/web test` passed after the guard alignment. The run still
   emits existing React `act(...)` warnings around React Flow/CanvasContent, but
   no tests fail.
+- Post-commit Fowler review found one remaining template-boundary leak:
+  `CanvasReplacementActionState` mixed `activeCanvasKind` with renderable
+  labels and enablement.
+- `pnpm --filter @dvt/web test -- canvasPlaygroundTabStripModel.test.ts canvasStartupAndDraftRecovery.architecture.test.ts`
+  failed red after requiring `CanvasReplacementActionViewState`.
+- `pnpm --filter @dvt/web test -- canvasPlaygroundTabStripModel.test.ts canvasStartupAndDraftRecovery.architecture.test.ts CanvasPlaygroundTabStrip.test.tsx`
+  passed after templates consumed only `CanvasReplacementActionViewState`.
 - `pnpm --filter @dvt/web test -- canvasStartupAndDraftRecovery.architecture.test.ts`
   passed after adding the semantic architecture guard.
 - `pnpm --filter @dvt/web typecheck` passed.
