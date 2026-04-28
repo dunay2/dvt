@@ -8,6 +8,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 const ACTIVITY_ROOT = join(import.meta.dirname, '../src/activities');
+const DBT_PLUGIN_ROOT = join(import.meta.dirname, '../src/plugins/dbt');
 const REPO_ROOT = join(import.meta.dirname, '../../../..');
 const DBT_PROFILE_GUIDE = join(
   REPO_ROOT,
@@ -107,8 +108,57 @@ describe('Temporal DBT core decoupling architecture', () => {
       expect(source).not.toContain(RETIRED_DBT_ACTIVITY_PATH);
     }
   });
+
+  it('keeps DbtStepActivity.execute as a thin orchestration method', () => {
+    const source = readDbtPluginSource('DbtStepActivity.ts');
+    const executeBody = extractMethodBody(source, 'async execute');
+
+    expect(executeBody).not.toMatch(/\bif\s*\(/);
+    expect(executeBody).not.toMatch(/\bcatch\s*\(/);
+    expect(source).toContain('private async resolveRunExecutionContext');
+    expect(source).toContain('private resolveDbtPluginContext');
+    expect(source).toContain('private assertResultMatchesStep');
+  });
+
+  it('keeps DbtStepActivity run-context resolution split by semantic decisions', () => {
+    const source = readDbtPluginSource('DbtStepActivity.ts');
+    const resolveBody = extractMethodBody(source, 'private async resolveRunExecutionContext');
+
+    expect(resolveBody).not.toMatch(/\bif\s*\(/);
+    expect(resolveBody).not.toMatch(/\bcatch\s*\(/);
+    expect(source).toContain('private requireRunExecutionContextRef');
+    expect(source).toContain('private async readRunExecutionContext');
+    expect(source).toContain('private mapRunExecutionContextReadError');
+  });
 });
 
 function readCoreActivitySource(fileName: string): string {
   return readFileSync(join(ACTIVITY_ROOT, fileName), 'utf8');
+}
+
+function readDbtPluginSource(fileName: string): string {
+  return readFileSync(join(DBT_PLUGIN_ROOT, fileName), 'utf8');
+}
+
+function extractMethodBody(source: string, methodPrefix: string): string {
+  const methodIndex = source.indexOf(methodPrefix);
+  expect(methodIndex).toBeGreaterThanOrEqual(0);
+
+  const bodyStart = source.indexOf('{', methodIndex);
+  expect(bodyStart).toBeGreaterThanOrEqual(0);
+
+  let depth = 0;
+  for (let index = bodyStart; index < source.length; index += 1) {
+    const char = source[index];
+    if (char === '{') {
+      depth += 1;
+    } else if (char === '}') {
+      depth -= 1;
+      if (depth === 0) {
+        return source.slice(bodyStart + 1, index);
+      }
+    }
+  }
+
+  throw new Error(`METHOD_BODY_NOT_CLOSED:${methodPrefix}`);
 }
