@@ -5,6 +5,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
+import ts from 'typescript';
 import { describe, expect, it } from 'vitest';
 
 const ACTIVITY_ROOT = join(import.meta.dirname, '../src/activities');
@@ -111,7 +112,7 @@ describe('Temporal DBT core decoupling architecture', () => {
 
   it('keeps DbtStepActivity.execute as a thin orchestration method', () => {
     const source = readDbtPluginSource('DbtStepActivity.ts');
-    const executeBody = extractMethodBody(source, 'async execute');
+    const executeBody = extractMethodBody(source, 'execute');
 
     expect(executeBody).not.toMatch(/\bif\s*\(/);
     expect(executeBody).not.toMatch(/\bcatch\s*\(/);
@@ -122,13 +123,22 @@ describe('Temporal DBT core decoupling architecture', () => {
 
   it('keeps DbtStepActivity run-context resolution split by semantic decisions', () => {
     const source = readDbtPluginSource('DbtStepActivity.ts');
-    const resolveBody = extractMethodBody(source, 'private async resolveRunExecutionContext');
+    const resolveBody = extractMethodBody(source, 'resolveRunExecutionContext');
 
     expect(resolveBody).not.toMatch(/\bif\s*\(/);
     expect(resolveBody).not.toMatch(/\bcatch\s*\(/);
     expect(source).toContain('private requireRunExecutionContextRef');
     expect(source).toContain('private async readRunExecutionContext');
     expect(source).toContain('private mapRunExecutionContextReadError');
+  });
+
+  it('uses the TypeScript AST instead of a manual brace scanner for method extraction', () => {
+    const source = readFileSync(import.meta.filename, 'utf8');
+    const helperBody = extractMethodBody(source, 'extractMethodBody');
+
+    expect(helperBody).toContain('ts.createSourceFile');
+    expect(helperBody).not.toContain('let depth = 0');
+    expect(helperBody).not.toContain("source.indexOf('{'");
   });
 });
 
@@ -141,24 +151,39 @@ function readDbtPluginSource(fileName: string): string {
 }
 
 function extractMethodBody(source: string, methodPrefix: string): string {
-  const methodIndex = source.indexOf(methodPrefix);
-  expect(methodIndex).toBeGreaterThanOrEqual(0);
+  const sourceFile = ts.createSourceFile(
+    'inline-source.ts',
+    source,
+    ts.ScriptTarget.Latest,
+    true,
+    ts.ScriptKind.TS
+  );
+  const body = findNamedBody(sourceFile, sourceFile, methodPrefix);
+  expect(body).toBeDefined();
 
-  const bodyStart = source.indexOf('{', methodIndex);
-  expect(bodyStart).toBeGreaterThanOrEqual(0);
+  return body?.statements.map((statement) => statement.getText(sourceFile)).join('\n') ?? '';
+}
 
-  let depth = 0;
-  for (let index = bodyStart; index < source.length; index += 1) {
-    const char = source[index];
-    if (char === '{') {
-      depth += 1;
-    } else if (char === '}') {
-      depth -= 1;
-      if (depth === 0) {
-        return source.slice(bodyStart + 1, index);
-      }
-    }
+function findNamedBody(
+  sourceFile: ts.SourceFile,
+  node: ts.Node,
+  declarationName: string
+): ts.Block | undefined {
+  if (isNamedBodyDeclaration(sourceFile, node, declarationName)) {
+    return node.body;
   }
 
-  throw new Error(`METHOD_BODY_NOT_CLOSED:${methodPrefix}`);
+  return ts.forEachChild(node, (child) => findNamedBody(sourceFile, child, declarationName));
+}
+
+function isNamedBodyDeclaration(
+  sourceFile: ts.SourceFile,
+  node: ts.Node,
+  declarationName: string
+): node is (ts.FunctionDeclaration | ts.MethodDeclaration) & { body: ts.Block } {
+  return (
+    (ts.isFunctionDeclaration(node) || ts.isMethodDeclaration(node)) &&
+    node.body !== undefined &&
+    node.name?.getText(sourceFile) === declarationName
+  );
 }
