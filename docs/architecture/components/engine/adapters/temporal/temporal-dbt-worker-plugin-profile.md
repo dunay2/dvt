@@ -17,9 +17,9 @@ Use this guide with:
 - [Temporal PlanRef workflow boundary component](./temporal-planref-workflow-boundary.md)
 - [Temporal Worker DBT Runtime Runbook](../../../../../runbooks/temporal-worker-dbt-plugin-runtime-20260414.md)
 - [Fowler DBT core decoupling analysis](../../../../../../buzon/20260428-codex-fowler-temporal-dbt-core-decoupling-analysis-and-remediation.md)
-- [ADR-0003 execution model](../../../../../adr/adr-0003-execution-model.md)
-- [ADR-0014 run-driven adapter model](../../../../../adr/adr-0014-run-driven-adapter-model.md)
-- [ADR-0046 execution plan definition and run execution policy separation](../../../../../adr/adr-0046-execution-plan-definition-and-run-execution-policy-separation.md)
+- [ADR-0003 execution model](../../../../../adr/ADR-0003-execution-model.md)
+- [ADR-0014 run-driven adapter model](../../../../../adr/ADR-0014-run-driven-adapter-model.md)
+- [ADR-0046 execution plan definition and run execution policy separation](../../../../../adr/ADR-0046-execution-plan-definition-and-run-execution-policy-separation.md)
 
 ## Owned Concern
 
@@ -49,9 +49,11 @@ It does **not** own:
   profile.
 - `DbtCliPluginRunner` is the current local CLI runner implementation behind
   the plugin port.
-- `apps/temporal-worker/src/runtime/createTemporalWorkerRuntime.ts` is the
-  composition root that creates the DBT registry only when
-  `DVT_TEMPORAL_DBT_ENABLED=true`.
+- `apps/temporal-worker/src/runtime/temporalWorkerDbtProfile.ts` creates the
+  DBT registry only when `DVT_TEMPORAL_DBT_ENABLED=true`.
+- `apps/temporal-worker/src/runtime/createTemporalWorkerRuntime.ts` remains the
+  public runtime entrypoint and delegates concrete resource, host, and lifecycle
+  construction to focused runtime modules.
 
 ## Invariants
 
@@ -70,15 +72,21 @@ It does **not** own:
 
 ## Transitions
 
-1. Worker runtime loads environment and base state/Temporal dependencies.
+1. Worker runtime entrypoint delegates environment and option resolution to
+   `temporalWorkerRuntimeResources.ts`.
 2. If `DVT_TEMPORAL_DBT_ENABLED=false`, no DBT runner, reader, or registry is
    constructed.
-3. If `DVT_TEMPORAL_DBT_ENABLED=true`, the worker validates DBT CLI
-   availability.
-4. The worker creates an artifact-backed run execution context reader.
-5. The worker creates a DBT bundle reader and `DbtCliPluginRunner`.
-6. The worker calls `createDbtStepActivityRegistry(...)`.
-7. `TemporalWorkerHost` receives the registry through `stepActivitiesByKind`.
+3. If `DVT_TEMPORAL_DBT_ENABLED=true`, `temporalWorkerDbtProfile.ts` creates the
+   artifact-backed run execution context reader, DBT bundle reader, availability
+   probe, and `DbtCliPluginRunner`.
+4. The DBT profile calls `createDbtStepActivityRegistry(...)`.
+5. `temporalWorkerRuntimeResources.ts` returns the optional registry as a
+   runtime resource.
+6. `temporalWorkerHost.ts` passes the registry through
+   `TemporalWorkerHostConfig.stepActivitiesByKind`.
+7. `temporalWorkerRuntimeHandle.ts` delegates startup to
+   `temporalWorkerLifecycle.ts`, which runs the DBT availability probe before
+   migrations and Temporal host startup.
 8. Core `StepActivityDispatcher` resolves DBT kinds only from that composed
    registry.
 
@@ -97,44 +105,63 @@ It does **not** own:
 
 ## Component Map
 
-| Module                                                            | Owned concern                                      |
-| ----------------------------------------------------------------- | -------------------------------------------------- |
-| `src/plugins/dbt/DbtStepActivity.ts`                              | DBT step activity profile and explicit registry    |
-| `src/plugins/dbt/dbtPluginTypes.ts`                               | DBT plugin activity contracts                      |
-| `src/plugins/dbt/DbtCliPluginRunner.ts`                           | Local DBT CLI runner behind the plugin port        |
-| `apps/temporal-worker/src/runtime/createTemporalWorkerRuntime.ts` | Worker composition root for optional DBT profile   |
-| `src/activities/stepActivityDispatcher.ts`                        | Plugin-free core dispatch through generic registry |
+| Module                                                               | Owned concern                                              |
+| -------------------------------------------------------------------- | ---------------------------------------------------------- |
+| `src/plugins/dbt/DbtStepActivity.ts`                                 | DBT step activity profile and explicit registry            |
+| `src/plugins/dbt/dbtPluginTypes.ts`                                  | DBT plugin activity contracts                              |
+| `src/plugins/dbt/DbtCliPluginRunner.ts`                              | Local DBT CLI runner behind the plugin port                |
+| `apps/temporal-worker/src/runtime/createTemporalWorkerRuntime.ts`    | Public runtime assembly entrypoint                         |
+| `apps/temporal-worker/src/runtime/temporalWorkerRuntimeResources.ts` | Environment and option resolution into runtime resources   |
+| `apps/temporal-worker/src/runtime/temporalWorkerStores.ts`           | State, plan, and activity dependency construction          |
+| `apps/temporal-worker/src/runtime/temporalWorkerDbtProfile.ts`       | Optional DBT profile construction and registry composition |
+| `apps/temporal-worker/src/runtime/temporalWorkerHost.ts`             | Temporal worker host config and instance construction      |
+| `apps/temporal-worker/src/runtime/temporalWorkerRuntimeHandle.ts`    | Runtime handle idempotency and lifecycle delegation        |
+| `apps/temporal-worker/src/runtime/temporalWorkerLifecycle.ts`        | Startup, shutdown, connection, cleanup, and abort behavior |
+| `src/activities/stepActivityDispatcher.ts`                           | Plugin-free core dispatch through generic registry         |
 
 ## Diagrams
 
 ```mermaid
 flowchart LR
-  Env["DVT_TEMPORAL_DBT_ENABLED"] --> Decision{"enabled?"}
+  Entry["createTemporalWorkerRuntime"] --> Resources["temporalWorkerRuntimeResources"]
+  Resources --> Env["DVT_TEMPORAL_DBT_ENABLED"]
+  Resources --> Stores["temporalWorkerStores"]
+  Env --> Decision{"enabled?"}
   Decision -->|false| HostNoDbt["TemporalWorkerHost without plugin registry"]
-  Decision -->|true| Reader["RunExecutionContext reader"]
-  Decision -->|true| Runner["DbtCliPluginRunner"]
+  Decision -->|true| Profile["temporalWorkerDbtProfile"]
+  Profile --> Reader["RunExecutionContext reader"]
+  Profile --> Runner["DbtCliPluginRunner"]
   Reader --> Registry["createDbtStepActivityRegistry"]
   Runner --> Registry
+  Stores --> HostBuilder["temporalWorkerHost"]
+  Registry --> HostBuilder
+  HostNoDbt --> HostBuilder
   Registry --> Host["TemporalWorkerHost.stepActivitiesByKind"]
+  HostBuilder --> Host
   Host --> Dispatcher["StepActivityDispatcher"]
   Dispatcher --> Activity["DbtStepActivity"]
 ```
 
 ```mermaid
 sequenceDiagram
-  participant Worker as apps/temporal-worker
+  participant Entry as createTemporalWorkerRuntime
+  participant Resources as temporalWorkerRuntimeResources
+  participant Profile as temporalWorkerDbtProfile
   participant Host as TemporalWorkerHost
+  participant Lifecycle as temporalWorkerLifecycle
   participant Dispatcher as StepActivityDispatcher
   participant Dbt as DbtStepActivity
   participant Runner as DbtPluginRunner
 
-  Worker->>Worker: load env
+  Entry->>Resources: create runtime resources
   alt DBT disabled
-    Worker->>Host: config without stepActivitiesByKind
+    Resources->>Host: config without stepActivitiesByKind
   else DBT enabled
-    Worker->>Worker: create reader and runner
-    Worker->>Host: config with DBT registry
+    Resources->>Profile: create reader, runner, registry
+    Resources->>Host: config with DBT registry
   end
+  Entry->>Lifecycle: start runtime handle
+  Lifecycle->>Host: start(connection)
   Host->>Dispatcher: createActivities(..., stepActivitiesByKind)
   Dispatcher->>Dbt: execute DBT step kind from composed registry
   Dbt->>Runner: execute validated DBT plugin input
@@ -152,3 +179,6 @@ sequenceDiagram
 - `apps/temporal-worker/test/runtime/createTemporalWorkerRuntime.test.ts`
   proves the standalone worker omits DBT registry wiring when DBT mode is
   disabled and composes it when enabled.
+- `apps/temporal-worker/test/runtime/createTemporalWorkerRuntime.srp.architecture.test.ts`
+  verifies the public runtime entrypoint stays thin and that extracted runtime
+  modules declare their semantic owned concern.
