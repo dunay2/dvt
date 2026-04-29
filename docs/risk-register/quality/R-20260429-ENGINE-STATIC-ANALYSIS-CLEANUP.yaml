@@ -1,0 +1,10 @@
+---
+id: R-20260429-ENGINE-STATIC-ANALYSIS-CLEANUP
+title: Engine static-analysis cleanup can drift from admission and error message semantics
+status: Open
+date: 2026-04-29
+owners:
+  - dvt/engine
+severity: Low
+probability: Low
+---

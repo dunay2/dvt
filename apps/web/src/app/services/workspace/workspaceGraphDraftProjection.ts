@@ -157,9 +157,7 @@ function readMetadataObject(
   key: string
 ): Record<string, unknown> | undefined {
   const value = metadata?.[key];
-  return value && typeof value === 'object' && !Array.isArray(value)
-    ? { ...(value as Record<string, unknown>) }
-    : undefined;
+  return isRecordValue(value) ? { ...value } : undefined;
 }
 
 function readMetadataString(metadata: CanonicalNode['metadata'], key: string): string | undefined {
@@ -168,8 +166,18 @@ function readMetadataString(metadata: CanonicalNode['metadata'], key: string): s
   return typeof value === 'string' ? value : undefined;
 }
 
+function isRecordValue(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function hasOptionalDbtColumnDescription(
+  column: Partial<Record<keyof DbtColumn, unknown>>
+): boolean {
+  return column.description == null || typeof column.description === 'string';
+}
+
 function isDbtColumn(value: unknown): value is DbtColumn {
-  if (value == null || typeof value !== 'object' || Array.isArray(value)) {
+  if (!isRecordValue(value)) {
     return false;
   }
   const column = value as Partial<Record<keyof DbtColumn, unknown>>;
@@ -178,7 +186,7 @@ function isDbtColumn(value: unknown): value is DbtColumn {
     typeof column.name === 'string' &&
     typeof column.type === 'string' &&
     typeof column.nullable === 'boolean' &&
-    (column.description == null || typeof column.description === 'string')
+    hasOptionalDbtColumnDescription(column)
   );
 }
 

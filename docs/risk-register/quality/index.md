@@ -39,6 +39,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [DVT authoring nodes can drift behind dbt-owned renderer and inspector behavior](R-20260416-WEB-DVT-RENDERER-OWNERSHIP-DRIFT.yaml)
 - [DVT_CI warm-build shortcut could hide missing dependency builds on stale local worktrees](R-20260418-LOCAL-BUILD-HOOK-WARM-CACHE-P0.yaml)
 - [Empty temporal taskQueue values can re-enter provider-ref runtime state](R-20260409-PROVIDER-REF-EMPTY-STRING-PERSISTENCE.yaml)
+- [Engine static-analysis cleanup can drift from admission and error message semantics](R-20260429-ENGINE-STATIC-ANALYSIS-CLEANUP.yaml)
 - [Engine-owned plan verification increases adapter payload size and replay pressure](R-20260407-ENGINE-ENTRYPOINT-PLAN-PAYLOAD.yaml)
 - [Envelope boundary gating can drift if payloadVersion checks stay implicit](R-20260402-S05-ENVELOPE-BOUNDARY-GATING.yaml)
 - [Execution policy sidecar can drift from canonical stored plan identity](R-20260407-PLAN-POLICY-BOUNDARY-DRIFT.yaml)
