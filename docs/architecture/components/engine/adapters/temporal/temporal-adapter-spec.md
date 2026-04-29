@@ -7,6 +7,7 @@
 - **References**:
   [IProviderAdapter Contract](../../contracts/engine/IProviderAdapter.v1.md),
   [StartRunProtocol Contract](../../contracts/engine/StartRunProtocol.v1.md),
+  [Temporal PlanRef workflow boundary component](./temporal-planref-workflow-boundary.md),
   [Temporal SDK](https://docs.temporal.io/develop/typescript),
   [Temporal Platform Limits](https://docs.temporal.io/encyclopedia/temporal-platform-limits)
 
@@ -44,7 +45,8 @@ type PlanRef = {
   from `PlanRef.sha256`.
 - Workflow input-shape changes MUST be handled by an explicit replay/cutover
   posture: drained deployment or Temporal workflow versioning. The active
-  `AR-D-PLAN-POINTER` task still tracks that proof.
+  drained-deploy procedure is
+  `docs/runbooks/temporal-planref-drained-cutover-20260427.md`.
 
 **Integrity validation (normative)**:
 
@@ -74,6 +76,17 @@ workflow that:
 Business run recovery is a separate engine or application use case and MUST NOT
 be reintroduced through the generic signal boundary.
 
+The local component guide for this runtime boundary is
+`docs/architecture/components/engine/adapters/temporal/temporal-planref-workflow-boundary.md`.
+It owns the public API, invariants, transitions, consumers, module map, and
+architecture fitness checks for the PlanRef workflow boundary.
+
+Executor-specific step activity support is composed through
+`docs/architecture/components/engine/adapters/temporal/temporal-step-plugin-profile.md`.
+The workflow core must not know DBT, SQL, or future plugin step-kind manifests.
+Step artifact references are emitted from generic `compiledCodeRef` payloads,
+not from DBT allowlists.
+
 **Workflow input shape**:
 
 ```ts
@@ -81,7 +94,7 @@ interface RunPlanWorkflowInput {
   planRef: PlanRef;
   ctx: ResolvedRunContext;
   maxContinueAsNewPayloadBytes: number;
-  continueAsNewAfterLayerCount?: number;
+  continueAsNewAfterLayerCount: number;
   cursor?: WorkflowExecutionCursor;
 }
 ```
@@ -213,11 +226,13 @@ Workflow code MUST remain deterministic:
 - no Node.js or DOM APIs
 - no side effects outside Temporal activities
 
-Use Temporal workflow versioning or a documented drained-deploy posture for any
-change that affects in-flight workflow replay. Changes to control flow,
+Use Temporal workflow versioning or the documented drained-deploy posture for
+any change that affects in-flight workflow replay. Changes to control flow,
 activity scheduling order, retries, branching, error handling, or workflow input
 shape require explicit replay/cutover evidence before the slice is treated as
-runtime-ready.
+runtime-ready. The current no-retrocompatibility path is operationalized by
+`docs/runbooks/temporal-planref-drained-cutover-20260427.md`; it is not mixed
+old/new replay compatibility.
 
 ---
 
@@ -273,8 +288,10 @@ enabled and reached before all layers are processed:
 - `processedLayersInCurrentExecution >= continueAsNewAfterLayerCount`
 - `nextLayerIndex < totalLayerCount`
 
-`continueAsNewAfterLayerCount = 0` disables rollover. The threshold and SLA
-remain governed by `AR-D2`.
+The governed default enables rollover after 100 execution layers. Explicit
+`continueAsNewAfterLayerCount = 0` disables rollover only for local diagnostics
+or incident rollback and is not large-DAG ready. The threshold and SLA remain
+governed by `AR-D2`.
 
 ```ts
 if (shouldTriggerContinueAsNew(state)) {

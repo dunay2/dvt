@@ -1,5 +1,6 @@
 /**
  * @file packages/@dvt/adapter-temporal/src/workflows/executionSegmentResolver.ts
+ * @ownedConcern PlanRef execution-segment projection from canonical plans
  * @baseline ADR-0003: Execution Model
  * @baseline ADR-0046: Execution Plan Definition And Run Execution Policy Separation
  * @decision Resolve executable workflow segments from the canonical DVT execution plan, not from Temporal provider state

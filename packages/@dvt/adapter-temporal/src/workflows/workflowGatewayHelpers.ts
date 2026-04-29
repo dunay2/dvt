@@ -1,5 +1,6 @@
 /**
  * @file packages/@dvt/adapter-temporal/src/workflows/workflowGatewayHelpers.ts
+ * @ownedConcern Gateway dependency validation and fact lookup
  * @baseline ADR-0003: Execution Model
  * @baseline ADR-0046: Execution Plan Definition And Run Execution Policy Separation
  * @decision Validate and evaluate gateway dependencies from canonical execution-plan facts

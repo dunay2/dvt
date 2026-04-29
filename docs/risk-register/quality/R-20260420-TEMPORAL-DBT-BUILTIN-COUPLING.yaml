@@ -1,6 +1,6 @@
 ---
 id: R-20260420-TEMPORAL-DBT-BUILTIN-COUPLING
-title: Adapter-temporal still embeds DBT-specific runtime seams as built-in behavior
+title: Adapter-temporal still owns DBT plugin and CLI surfaces inside the package
 status: Open
 date: 2026-04-20
 owners:
@@ -9,30 +9,45 @@ owners:
 severity: Medium
 probability: Medium
 context: >
-  Repository review on 2026-04-20 confirms that DBT is not only a test concern. The shared contracts
-  and engine already recognize DBT step kinds and DBT-oriented run execution context admission, but
-  @dvt/adapter-temporal still hard-wires DBT seams into its default runtime surface. The package
-  exports DbtStepActivity and DbtCliPluginRunner, ActivityDeps includes a dbtPluginRunner seam,
-  createDefaultStepActivityRegistry() auto-registers DBT step kinds, and workflow artifact helpers
-  emit dbt.compiled-sql from inside the Temporal adapter. The standalone worker composition root
-  gates live wiring behind DVT_TEMPORAL_DBT_ENABLED, but the adapter package itself still treats DBT
-  as the built-in path and frames extensions as non-DBT execution.
+  Repository review on 2026-04-20 confirmed that DBT is not only a test concern. Earlier
+  implementation treated DBT as a built-in runtime path: @dvt/adapter-temporal carried DBT in the
+  default activity registry and generic ActivityDeps surface, and engine admission had DBT-oriented
+  binding semantics. The 2026-04-28 DBT-core decoupling pass removed that default-core coupling:
+  ActivityDeps no longer includes dbtPluginRunner or runExecutionContextReader,
+  createDefaultStepActivityRegistry() starts empty, apps/temporal-worker composes
+  createDbtStepActivityRegistry() only when DVT_TEMPORAL_DBT_ENABLED=true, and engine admission now
+  receives generic pluginRequirements rather than DBT-specific policy. The follow-up plugin
+  isolation pass added a generic TemporalStepPluginProfile composer, a DBT plugin manifest for the
+  Temporal-supported DBT subset, an SQL-shaped plugin composition proof, and an architecture test
+  that keeps packages/@dvt/engine source free of DBT vocabulary. The 2026-04-29 Fowler hardening
+  pass also removed DBT-oriented compiled SQL artifact interpretation from workflow emission and
+  active lineage/UI fixtures: StepStarted artifact references now use the generic compiled-sql
+  discriminator. The 2026-04-29 DBT CLI runner SRP pass added a generic TemporalStepPluginRunner
+  execution port and split DbtCliPluginRunner into focused DBT-local helper modules for argument
+  derivation, process execution, project materialization, failure mapping, and helper contracts. The
+  remaining risk is narrower: @dvt/adapter-temporal still exports the DBT step activity, DBT CLI
+  runner, and plugin contracts as package-owned plugin surface.
 risk: >
-  If new transformation executors or artifact types are added while this shape remains in place,
-  adapter-temporal can continue accumulating executor-specific policy, exports, and artifact
-  assumptions instead of staying a Temporal translation boundary per ADR-0003, ADR-0019, and
-  ADR-0034. That would make future extraction harder, bias tests and runtime composition toward DBT,
-  and increase the chance that provider concerns and executor or plugin concerns drift back into the
-  same package.
+  If new transformation executors or artifact types are added before package-level plugin extraction
+  exists, @dvt/adapter-temporal can still accumulate executor-specific plugin exports, CLI hosting,
+  and artifact assumptions instead of staying a Temporal translation boundary per ADR-0003,
+  ADR-0019, and ADR-0034. The immediate engine/core dispatcher/default-registry drift is mitigated,
+  but package-level ownership can still bias future plugin work toward DBT unless the next
+  extraction moves executor plugins behind a dedicated runtime plugin package or profile boundary.
 mitigations:
   - 'Keep apps/temporal-worker as the only live composition root that wires DBT runtime
     dependencies.'
-  - 'Do not add new built-in executor registrations to createDefaultStepActivityRegistry(); prefer
-    explicit composition-time registries and step-kind wiring.'
-  - 'Prefer generic executor or step-kind registries over dbt-named deps in adapter-temporal public
-    types.'
-  - 'Track follow-up extraction of DbtStepActivity, DbtCliPluginRunner, and dbt.compiled-sql
-    artifact mapping out of the adapter default path and public barrel.'
+  - 'Keep createDefaultStepActivityRegistry() plugin-free and fail CI if DBT symbols re-enter core
+    activity modules.'
+  - 'Prefer explicit composition-time registries and step-kind wiring for every executor profile.'
+  - 'Keep engine admission tests on generic/example plugins so DBT cannot re-enter engine semantics
+    through test fixtures.'
+  - 'Require each executor profile to own its manifest and supported runtime subset; do not name a
+    profile subset as the full external tool capability set.'
+  - 'Keep DbtCliPluginRunner as orchestration only; DBT CLI subprocess, bundle materialization,
+    argument mapping, failure mapping, and helper contracts must remain split under src/plugins/dbt.'
+  - 'Track follow-up extraction of DbtStepActivity and DbtCliPluginRunner out of the adapter
+    package-owned plugin surface.'
   - 'Keep adapter-temporal tests split between Temporal-core behavior and DBT plugin or runtime
     behavior so boundary drift remains visible.'
 review_after: 2026-06-15

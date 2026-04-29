@@ -10,7 +10,7 @@ code_refs:
   - packages/@dvt/adapter-temporal/src/activities/activityFactory.ts
   - packages/@dvt/adapter-temporal/src/activities/activityFailures.ts
   - packages/@dvt/adapter-temporal/src/activities/activityTypes.ts
-  - packages/@dvt/adapter-temporal/src/activities/dbtStepActivity.ts
+  - packages/@dvt/adapter-temporal/src/plugins/dbt/DbtStepActivity.ts
   - packages/@dvt/adapter-temporal/src/activities/gatewayStepActivity.ts
   - packages/@dvt/adapter-temporal/src/activities/stepActivityDispatcher.ts
   - packages/@dvt/adapter-temporal/src/activities/stepActivities.ts

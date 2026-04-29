@@ -1,3 +1,6 @@
+/**
+ * @ownedConcern Validate runtime step shape and derive activity execution identity.
+ */
 import type { ResolvedRunContext } from '@dvt/contracts';
 import { Context } from '@temporalio/activity';
 

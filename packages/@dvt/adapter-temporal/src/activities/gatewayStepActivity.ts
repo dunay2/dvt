@@ -1,3 +1,6 @@
+/**
+ * @ownedConcern Execute gateway DSL steps inside the activity boundary.
+ */
 import { evaluateDslV1, parseDslV1 } from '@dvt/dsl';
 
 import { ActivityErrorCode, createPermanentStepFailure } from './activityFailures.js';

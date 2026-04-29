@@ -1,5 +1,6 @@
 /**
  * @file packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.state.ts
+ * @ownedConcern Workflow control input parsing and cursor hydration
  * @baseline ADR-0003: Execution Model
  * @baseline ADR-0046: Execution Plan Definition And Run Execution Policy Separation
  * @baseline ADR-0047: Runtime-Owned Realized Lifecycle For Signal-Driven Transitions
@@ -12,6 +13,7 @@ import { resolveMaterializationEvidence } from './workflowArtifactHelpers.js';
 import {
   parseOptionalNonNegativeInt,
   parseOptionalStringArray,
+  parseRequiredNonNegativeInt,
   parseRequiredPositiveInt,
 } from './workflowInputParsingHelpers.js';
 
@@ -34,7 +36,7 @@ function parseMaxContinueAsNewPayloadBytes(value: unknown): number {
 }
 
 function parseContinueAsNewAfterLayerCount(value: unknown): number {
-  return parseOptionalNonNegativeInt(value, 'continueAsNewAfterLayerCount');
+  return parseRequiredNonNegativeInt(value, 'continueAsNewAfterLayerCount');
 }
 
 function parseWorkflowCursor(

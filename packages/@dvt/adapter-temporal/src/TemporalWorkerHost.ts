@@ -1,5 +1,6 @@
 /**
  * @file packages/@dvt/adapter-temporal/src/TemporalWorkerHost.ts
+ * @ownedConcern Temporal worker lifecycle and activity binding host
  * @baseline ADR-0001: Temporal Integration Test Policy (Build Preconditions + Lifecycle Discipline)
  * @baseline ADR-0003: Execution Model
  * @decision Section 2 — Worker lifecycle ownership is centralized in a single host
@@ -45,7 +46,7 @@ export interface TemporalWorkerHostConfig {
   stepExecutors?: readonly StepExecutor[];
   /**
    * Register runtime step activities by StepKind without changing workflow code.
-   * Clone DEFAULT_STEP_ACTIVITY_REGISTRY and append custom kinds for non-DBT execution.
+   * Worker profiles compose plugin registries here while the core registry stays empty.
    */
   stepActivitiesByKind?: StepActivityRegistry;
 }

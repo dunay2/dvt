@@ -1,11 +1,11 @@
 /**
  * Compatibility barrel for Temporal step-activity seams.
+ * @ownedConcern Publish the Temporal activity public surface without owning plugin step kinds.
  * Concrete responsibilities live in focused modules under this folder.
  */
 
 export type { Activities } from './activityFactory.js';
 export { createActivities } from './activityFactory.js';
-export { DbtStepActivity } from './dbtStepActivity.js';
 export {
   createDefaultStepActivityRegistry,
   DEFAULT_STEP_ACTIVITY_REGISTRY,
@@ -14,8 +14,6 @@ export {
 } from './stepActivityDispatcher.js';
 export type {
   ActivityDeps,
-  DbtPluginExecutionInput,
-  DbtPluginRunner,
   EmitEventInput,
   EventEmitterDeps,
   RunBootstrapperDeps,

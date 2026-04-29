@@ -1,6 +1,5 @@
 import { createHash } from 'node:crypto';
 
-import type { IRunExecutionContextReader } from '@dvt/artifacts';
 import {
   parseExecutionPlan,
   type ExecutionPlan,
@@ -9,7 +8,7 @@ import {
 } from '@dvt/contracts';
 import type { RunStateCommandPort } from '@dvt/engine';
 
-import type { ActivityDeps, DbtPluginRunner } from '../../../src/activities/stepActivities.js';
+import type { ActivityDeps } from '../../../src/activities/stepActivities.js';
 
 import { TestClock, TestIdempotency, TestOutbox, TestStateStore } from './runtimeState.js';
 
@@ -39,8 +38,6 @@ export interface TestActivityDeps extends ActivityDeps {
 interface CreateActivityDepsOptions {
   onFetch?: (planRef: PlanRef) => void;
   fetchPlanBytes?: (planRef: PlanRef) => Promise<Uint8Array> | Uint8Array;
-  runExecutionContextReader?: IRunExecutionContextReader;
-  dbtPluginRunner?: DbtPluginRunner;
 }
 
 class TestIntegrity implements TestPlanIntegrity {
@@ -100,10 +97,6 @@ export function createActivityDeps(
     runStateCommandPort,
     clock: new TestClock(),
     idempotency: new TestIdempotency(),
-    ...(options?.runExecutionContextReader === undefined
-      ? {}
-      : { runExecutionContextReader: options.runExecutionContextReader }),
-    ...(options?.dbtPluginRunner === undefined ? {} : { dbtPluginRunner: options.dbtPluginRunner }),
     fetcher: createPlanFetcher(planBytes, options),
     integrity: new TestIntegrity(),
   };

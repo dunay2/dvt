@@ -1242,7 +1242,7 @@ tasks:
     effort_points: 3
     progress_pct: 100
     evidence_refs:
-      - docs/evidence/ED-20260414-tf-c3-production-temporal-worker-dbt-host.md
+      - docs/evidence/ed-20260414-tf-c3-production-temporal-worker-dbt-host.md
       - docs/planning/closeouts/20260414-tf-c3-production-plugin-host-composition-closeout.md
       - packages/@dvt/artifacts/src/runtime/ArtifactBackedRunExecutionContextReader.ts
       - packages/@dvt/artifacts/src/runtime/ArtifactBackedDbtProjectBundleReader.ts
@@ -1267,7 +1267,7 @@ tasks:
     effort_points: 5
     progress_pct: 100
     evidence_refs:
-      - docs/evidence/ED-20260414-tf-c3-production-temporal-worker-dbt-host.md
+      - docs/evidence/ed-20260414-tf-c3-production-temporal-worker-dbt-host.md
       - docs/planning/closeouts/20260414-tf-c3-production-plugin-host-composition-closeout.md
       - apps/temporal-worker/src/server.ts
       - apps/temporal-worker/src/host/runTemporalWorkerHost.ts
@@ -1287,23 +1287,25 @@ tasks:
       of engine semantics while using real artifact-backed project bundles.
     dependency: TF-C3-C
     target: >-
-      `DbtCliPluginRunner` materializes the DBT bundle, maps DBT step kinds to CLI subcommands, runs
-      `dbt` under worker policy, and returns governed `StepResult` values without changing the
-      engine contract.
+      `DbtCliPluginRunner` coordinates DBT-local materialization, argument mapping, subprocess
+      execution, and failure classification helpers behind `DbtPluginRunner`, returning governed
+      `StepResult` values without changing the engine contract.
     complexity: M
     effort_points: 8
     progress_pct: 100
     evidence_refs:
-      - docs/evidence/ED-20260414-tf-c3-production-temporal-worker-dbt-host.md
+      - docs/evidence/ed-20260414-tf-c3-production-temporal-worker-dbt-host.md
+      - docs/evidence/ed-20260429-dbt-cli-plugin-runner-srp.md
       - docs/planning/closeouts/20260414-tf-c3-production-plugin-host-composition-closeout.md
+      - packages/@dvt/adapter-temporal/src/plugins/TemporalStepPluginRunner.ts
       - packages/@dvt/adapter-temporal/src/plugins/dbt/DbtCliPluginRunner.ts
       - packages/@dvt/adapter-temporal/src/activities/activityFactory.ts
       - packages/@dvt/adapter-temporal/test/DbtCliPluginRunner.test.ts
     status_reason: >-
-      The adapter now owns a concrete DBT CLI host, the worker injects it through the real
-      composition path, and the activity registry can no longer accidentally retain dep-less DBT
-      handlers from the default registry path.
-    last_verified: '2026-04-14'
+      The adapter owns a concrete DBT CLI host behind a generic Temporal step plugin runner port,
+      the worker injects it through the real composition path, and the CLI runner is split by
+      DBT-local responsibilities so activity registry defaults cannot retain dep-less DBT handlers.
+    last_verified: '2026-04-29'
   - task_id: TF-C3-E
     parent_task: TF-C3
     priority: P1
@@ -1320,7 +1322,7 @@ tasks:
     progress_pct: 60
     evidence_refs:
       - docs/runbooks/temporal-worker-dbt-plugin-runtime-20260414.md
-      - docs/evidence/ED-20260414-tf-c3-production-temporal-worker-dbt-host.md
+      - docs/evidence/ed-20260414-tf-c3-production-temporal-worker-dbt-host.md
       - docs/planning/closeouts/20260414-tf-c3-production-plugin-host-composition-closeout.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/tf-c3-production-plugin-host-composition-plan-20260414.md
     status_reason: >-

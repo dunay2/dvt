@@ -54,7 +54,7 @@ No alternate system definition is introduced.
 - `packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts`
 - `packages/@dvt/adapter-temporal/src/workflows/executionSegmentResolver.ts`
 - `packages/@dvt/adapter-temporal/src/activities/activityFactory.ts`
-- `packages/@dvt/adapter-temporal/src/activities/dbtStepActivity.ts`
+- `packages/@dvt/adapter-temporal/src/plugins/dbt/DbtStepActivity.ts`
 - `packages/@dvt/adapter-postgres/src/PostgresRunStateCoordinator.ts`
 - `packages/@dvt/adapter-postgres/src/PostgresRunEventStoreSql.ts`
 - `packages/@dvt/adapter-postgres/src/PostgresRunSnapshotStore.ts`

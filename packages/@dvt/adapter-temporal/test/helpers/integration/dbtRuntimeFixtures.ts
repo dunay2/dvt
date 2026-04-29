@@ -11,7 +11,11 @@ import {
 } from '@dvt/contracts';
 import { jcsCanonicalize, sha256Hex } from '@dvt/crypto';
 
-import type { DbtPluginRunner } from '../../../src/activities/stepActivities.js';
+import {
+  createDbtStepActivityRegistry,
+  type DbtPluginRunner,
+  type StepActivityRegistry,
+} from '../../../src/index.js';
 
 import type { TestOutbox, TestStateStore } from './runtimeState.js';
 import { createActivityDeps, type TestActivityDeps } from './testActivities.js';
@@ -38,6 +42,7 @@ export interface CreateDbtActivityDepsArgs {
 export interface TestDbtActivityDeps extends TestActivityDeps {
   dbtPluginRunner: DbtPluginRunner;
   runExecutionContextReader: IRunExecutionContextReader;
+  stepActivitiesByKind: StepActivityRegistry;
 }
 
 interface RegisteredDbtExecutionArtifacts {
@@ -149,6 +154,8 @@ function createRegisteredDbtActivityDeps(
 
   const activityDeps = createActivityDeps(store, outbox, firstBinding.planBytes, {
     fetchPlanBytes: createRegisteredPlanBytesFetcher(registry.planBytesByRefKey),
+  });
+  const stepActivitiesByKind = createDbtStepActivityRegistry({
     runExecutionContextReader,
     dbtPluginRunner,
   });
@@ -157,6 +164,7 @@ function createRegisteredDbtActivityDeps(
     ...activityDeps,
     dbtPluginRunner,
     runExecutionContextReader,
+    stepActivitiesByKind,
   };
 }
 
