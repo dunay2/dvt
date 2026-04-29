@@ -35,7 +35,7 @@ function expandShortHex(value: string): CanvasPaletteId {
     .map((channel) => `${channel}${channel}`)
     .join('');
 
-  return `#${expanded}` as CanvasPaletteId;
+  return `#${expanded}`;
 }
 
 function resolveHexPaletteId(value: string): CanvasPaletteId | null {
@@ -47,7 +47,7 @@ function resolveHexPaletteId(value: string): CanvasPaletteId | null {
   }
 
   if (/^[0-9a-f]{6}$/i.test(withoutHash)) {
-    return `#${withoutHash}` as CanvasPaletteId;
+    return `#${withoutHash}`;
   }
 
   return null;
@@ -85,7 +85,7 @@ function mixColor(base: Rgb, target: Rgb, ratio: number): Rgb {
 
 function toHex(color: Rgb): CanvasPaletteId {
   const channel = (value: number) => clampChannel(value).toString(16).padStart(2, '0');
-  return `#${channel(color.r)}${channel(color.g)}${channel(color.b)}` as CanvasPaletteId;
+  return `#${channel(color.r)}${channel(color.g)}${channel(color.b)}`;
 }
 
 function toRgba(color: Rgb, alpha: number): string {

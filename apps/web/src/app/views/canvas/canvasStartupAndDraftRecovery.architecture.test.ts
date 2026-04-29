@@ -16,6 +16,12 @@ import {
 } from './canvasNodeMapper';
 
 const REPO_ROOT = path.resolve(import.meta.dirname, '../../../../../..');
+const RETIRED_ROUTE_SHIM_TERM_PATTERNS = [
+  String.raw`\b${'leg'}${'acy'}\b`,
+  `${'back'}ward ${'compati'}${'bility'}`,
+  String.raw`\b${'compati'}${'bility'}\b`,
+  `@${'depre'}${'cated'}`,
+];
 
 function readRepoFile(relativePath: string): string {
   return readFileSync(path.join(REPO_ROOT, relativePath), 'utf8');
@@ -303,12 +309,7 @@ describe('canvas startup and draft recovery architecture', () => {
         'docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-component.md'
       ),
     ];
-    const bannedTerms = [
-      new RegExp(`\\b${'leg'}${'acy'}\\b`, 'i'),
-      new RegExp(`${'back'}ward ${'compati'}${'bility'}`, 'i'),
-      new RegExp(`\\b${'compati'}${'bility'}\\b`, 'i'),
-      new RegExp(`@${'depre'}${'cated'}`, 'i'),
-    ];
+    const bannedTerms = RETIRED_ROUTE_SHIM_TERM_PATTERNS.map((pattern) => new RegExp(pattern, 'i'));
 
     for (const source of activeSources) {
       for (const bannedTerm of bannedTerms) {
