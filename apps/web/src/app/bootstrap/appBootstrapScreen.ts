@@ -1,7 +1,6 @@
 /** Owned concern: apply resolved pre-React bootstrap presentation snapshots to the startup DOM. */
 import {
   BOOTSTRAP_ERROR_MESSAGE_FALLBACK,
-  BOOTSTRAP_STEP_ORDER,
   canCompleteBootstrapSteps,
   createBootstrapStepState,
   createInitialBootstrapStepState,
@@ -13,45 +12,52 @@ import {
   type BootstrapStepStateById,
   type BootstrapStepStatus,
 } from './appBootstrapPresentation';
+import {
+  BOOTSTRAP_DOM,
+  getBootstrapAnnouncementDescription,
+  getBootstrapStepSelector,
+  type BootstrapMetaTarget,
+  type BootstrapTextTarget,
+} from './appBootstrapDomContract';
 import { renderBootstrapProgress } from './bootstrapProgressBar';
 
-const LOADING_SCREEN_ID = 'app-loading-screen';
-const ANNOUNCEMENT_ID = 'app-loading-announcement';
-const TITLE_ID = 'app-loading-title';
-const MESSAGE_ID = 'app-loading-message';
-const VERSION_ID = 'app-loading-version';
-const BUILD_DATE_ID = 'app-loading-build-date';
-const PROGRESS_ID = 'app-loading-progress';
+type BootstrapMetaPresentation = Readonly<{
+  text: string;
+  visible: boolean;
+}>;
 
 let bootstrapStepState: BootstrapStepStateById = createInitialBootstrapStepState();
 
 function getLoadingScreen(): HTMLElement | null {
-  return document.getElementById(LOADING_SCREEN_ID);
+  return document.getElementById(BOOTSTRAP_DOM.screenId);
 }
 
 function getLoadingAnnouncement(): HTMLOutputElement | null {
-  return document.querySelector<HTMLOutputElement>(`#${ANNOUNCEMENT_ID}`);
+  return document.querySelector<HTMLOutputElement>(`#${BOOTSTRAP_DOM.announcementId}`);
 }
 
 function getStepNode(step: BootstrapStep): HTMLElement | null {
-  return document.querySelector<HTMLElement>(`[data-bootstrap-step="${step}"]`);
+  return document.querySelector<HTMLElement>(getBootstrapStepSelector(step));
 }
 
-function updateBootstrapText(id: string, text: string): void {
-  const node = document.getElementById(id);
+function updateBootstrapText(target: BootstrapTextTarget, text: string): void {
+  const node = document.getElementById(BOOTSTRAP_DOM.textTargetIds[target]);
   if (node) {
     node.textContent = text;
   }
 }
 
-function setBootstrapMetaItem(id: string, text: string, visible: boolean): void {
-  const node = document.getElementById(id);
+function setBootstrapMetaItem(
+  target: BootstrapMetaTarget,
+  presentation: BootstrapMetaPresentation
+): void {
+  const node = document.getElementById(BOOTSTRAP_DOM.metaTargetIds[target]);
   if (!node) {
     return;
   }
 
-  node.textContent = text;
-  node.hidden = !visible;
+  node.textContent = presentation.text;
+  node.hidden = !presentation.visible;
 }
 
 function writeStepPresentationToDom(stepPresentation: BootstrapStepPresentation): void {
@@ -61,7 +67,7 @@ function writeStepPresentationToDom(stepPresentation: BootstrapStepPresentation)
   }
 
   node.dataset.status = stepPresentation.status;
-  const detailNode = node.querySelector<HTMLElement>('[data-bootstrap-detail]');
+  const detailNode = node.querySelector<HTMLElement>(BOOTSTRAP_DOM.detailSelector);
   if (detailNode) {
     detailNode.textContent = stepPresentation.detail;
   }
@@ -74,20 +80,17 @@ function updateBootstrapAnnouncement(presentation: BootstrapScreenPresentation):
   }
 
   announcement.setAttribute('aria-label', presentation.announcement.label);
-  announcement.setAttribute('aria-live', 'polite');
-  announcement.setAttribute('aria-atomic', 'true');
+  announcement.setAttribute('aria-live', BOOTSTRAP_DOM.announcementAriaAttributes.live);
+  announcement.setAttribute('aria-atomic', BOOTSTRAP_DOM.announcementAriaAttributes.atomic);
   announcement.setAttribute('aria-busy', presentation.announcement.busy ? 'true' : 'false');
-  announcement.setAttribute('aria-describedby', `${MESSAGE_ID} ${PROGRESS_ID}`);
+  announcement.setAttribute('aria-describedby', getBootstrapAnnouncementDescription());
   announcement.textContent = presentation.announcement.text;
 }
 
 function clearScreenAriaFallbackAttributes(screen: HTMLElement): void {
-  screen.removeAttribute('role');
-  screen.removeAttribute('aria-label');
-  screen.removeAttribute('aria-live');
-  screen.removeAttribute('aria-atomic');
-  screen.removeAttribute('aria-busy');
-  screen.removeAttribute('aria-describedby');
+  BOOTSTRAP_DOM.screenFallbackAriaAttributes.forEach((attribute) => {
+    screen.removeAttribute(attribute);
+  });
 }
 
 function renderBootstrapScreenPresentation(presentation: BootstrapScreenPresentation): void {
@@ -98,8 +101,8 @@ function renderBootstrapScreenPresentation(presentation: BootstrapScreenPresenta
 
   screen.dataset.state = presentation.state;
   clearScreenAriaFallbackAttributes(screen);
-  updateBootstrapText(TITLE_ID, presentation.title);
-  updateBootstrapText(MESSAGE_ID, presentation.message);
+  updateBootstrapText('title', presentation.title);
+  updateBootstrapText('message', presentation.message);
   updateBootstrapAnnouncement(presentation);
   presentation.steps.forEach(writeStepPresentationToDom);
   renderBootstrapProgress(presentation.progress);
@@ -113,12 +116,11 @@ function updateBootstrapBuildMeta(): void {
   const appVersion = import.meta.env.VITE_APP_VERSION?.trim() || '0.0.0';
   const rawBuildDate = import.meta.env.VITE_APP_BUILD_DATE?.trim() || '';
 
-  updateBootstrapText(VERSION_ID, `Version ${appVersion}`);
-  setBootstrapMetaItem(
-    BUILD_DATE_ID,
-    rawBuildDate.length > 0 ? `Build ${formatBootstrapBuildDate(rawBuildDate)}` : '',
-    rawBuildDate.length > 0
-  );
+  updateBootstrapText('version', `Version ${appVersion}`);
+  setBootstrapMetaItem('buildDate', {
+    text: rawBuildDate.length > 0 ? `Build ${formatBootstrapBuildDate(rawBuildDate)}` : '',
+    visible: rawBuildDate.length > 0,
+  });
 }
 
 export function startBootstrapScreen(): void {

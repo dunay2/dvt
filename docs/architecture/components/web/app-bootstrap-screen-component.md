@@ -19,6 +19,8 @@ The component is split into a pure Presentation Model and a DOM adapter:
 - `appBootstrapPresentation.ts` owns startup copy, step ordering, aggregate
   state transitions, completion rules, progress snapshots, and build-date
   formatting.
+- `appBootstrapDomContract.ts` owns the critical HTML IDs, selectors, and
+  static ARIA contract shared by the adapter and tests.
 - `appBootstrapScreen.ts` owns DOM lookup, ARIA writes, metadata writes, and
   the exported control API used by the rest of the app.
 
@@ -96,6 +98,7 @@ stateDiagram-v2
 ```mermaid
 flowchart LR
   Publishers["main / providers / root / route errors"] --> Screen["appBootstrapScreen.ts\nDOM adapter"]
+  Screen --> DomContract["appBootstrapDomContract.ts\nDOM contract"]
   Screen --> Presentation["appBootstrapPresentation.ts\nPresentation Model"]
   Presentation --> Snapshot["screen + steps + progress snapshot"]
   Screen --> Dom["index.html startup DOM"]
@@ -112,6 +115,7 @@ flowchart LR
   Providers["AppProviders.tsx"] --> Bootstrap
   Root["Root.tsx"] --> Bootstrap
   RouteErrors["AppRouteErrorBoundary.tsx"] --> Bootstrap
+  Bootstrap --> DomContract["appBootstrapDomContract.ts"]
   Bootstrap --> Presentation["appBootstrapPresentation.ts"]
   Root --> RouteBootstrap["routeBootstrapRegistry.ts"]
   Root --> Health["platform-health query"]
@@ -136,8 +140,8 @@ flowchart LR
   presentation-model defaults, completion rules, blocked/error precedence,
   non-critical health failure, and build metadata formatting.
 - `apps/web/src/app/bootstrap/appBootstrapScreen.test.ts` covers blocked,
-  failure, production HTML shell contract, metadata, completion, and ARIA
-  busy-state semantics.
+  failure, production HTML shell contract, centralized DOM contract ownership,
+  metadata, completion, and ARIA busy-state semantics.
 - `apps/web/src/app/Root.bootstrapFlow.test.tsx` covers root-to-bootstrap
   integration for health, capabilities, route blocks, and route completion.
 

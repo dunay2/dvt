@@ -64,6 +64,7 @@ Touched paths:
 
 - `apps/web/src/app/bootstrap/appBootstrapPresentation.ts`
 - `apps/web/src/app/bootstrap/appBootstrapPresentation.test.ts`
+- `apps/web/src/app/bootstrap/appBootstrapDomContract.ts`
 - `apps/web/src/app/bootstrap/appBootstrapScreen.ts`
 - `apps/web/src/app/bootstrap/appBootstrapScreen.test.ts`
 - `docs/architecture/components/web/app-bootstrap-screen-component.md`
@@ -113,13 +114,19 @@ The bootstrap component now follows a local Presentation Model split:
 - `appBootstrapPresentation.ts` derives startup step state, aggregate screen
   state, user-facing copy, announcement state, progress labels, progress
   segments, and build-date formatting without touching browser globals.
+- `appBootstrapDomContract.ts` centralizes the critical HTML IDs, selectors,
+  and static ARIA contract so the screen adapter does not own raw shell
+  primitives.
 - `appBootstrapScreen.ts` applies the resolved presentation snapshot to the
   startup DOM and keeps the existing app-facing control API stable.
 - `bootstrapProgressBar.ts` remains a focused renderer for a supplied progress
   snapshot.
 
 This removes the previous mixed responsibility where one module decided domain
-posture and mutated the DOM in the same flow.
+posture and mutated the DOM in the same flow. The follow-up static-analysis
+pass also removed raw bootstrap DOM identifiers from `appBootstrapScreen.ts` and
+added a guard that prevents those identifiers from drifting back into the
+adapter.
 
 ## Validation Evidence
 
@@ -128,9 +135,13 @@ posture and mutated the DOM in the same flow.
   - passed after replacing unchecked tuple indexing with an iterator over a
     reversed step-order copy.
 - `pnpm --filter @dvt/web test -- appBootstrapScreen.test.ts appBootstrapPresentation.test.ts`
-  - passed with 17 tests.
+  - passed with 17 tests before the DOM-contract follow-up;
+  - passed with 18 tests after adding the guard that keeps raw bootstrap DOM
+    identifiers out of `appBootstrapScreen.ts`.
 - `pnpm docs:status:generate`
-  - passed and updated `docs/planning/status/generated-code-state.md`.
+  - passed and updated `docs/planning/status/generated-code-state.md` after
+    adding `appBootstrapPresentation.ts`;
+  - passed again after adding `appBootstrapDomContract.ts`.
 - `pnpm docs:sync`
   - passed with documentation indexes already in sync.
 - `pnpm lint`
