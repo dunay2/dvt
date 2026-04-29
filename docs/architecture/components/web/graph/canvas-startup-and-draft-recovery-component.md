@@ -2,7 +2,7 @@
 title: Canvas Startup And Draft Recovery Component
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-04-28
+last_reviewed: 2026-04-29
 planning_type: architecture
 ---
 
@@ -20,12 +20,16 @@ Use this page when changing:
 - workspace graph draft read-model projection
 - host-owned create or replace canvas commands
 - React Flow node drag handle wiring
+- scenario coverage for Canvas startup and draft recovery
 
 Do not use it as the multi-canvas architecture. The current model still has one
 authoritative workspace draft canvas document per workspace scope.
 
 The phrase "failed route posture" in this guide means a route-local failure
 whose first visible surface is already governed and safe to reveal.
+
+User-story coverage lives in
+[Canvas Startup And Draft Recovery User Stories](./canvas-startup-and-draft-recovery-user-stories.md).
 
 ## Public API
 
@@ -197,6 +201,29 @@ Indirect consumers:
 - `WorkspaceGraphSnapshot` route readers
 - route shell composition
 - plugin-rendered Canvas nodes through the DVT node shell
+
+## User-Story Traceability
+
+The component owns the Canvas scenarios below. Branch-adjacent engine,
+traceability, and adapter scenarios are recorded in the Fowler mailbox review
+because they belong to separate component owners.
+
+| Story group        | Local stories                                                     | Governing invariant                                                            |
+| ------------------ | ----------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| Startup gate       | `US-CANVAS-BOOTSTRAP-001` through `US-CANVAS-BOOTSTRAP-004`       | Route posture decides whether the shell may reveal a governed surface.         |
+| Protected draft    | `US-CANVAS-DRAFT-001` through `US-CANVAS-DRAFT-006`               | Canvas reads and writes the protected draft authority with explicit CAS rules. |
+| Presentation       | `US-CANVAS-PRESENTATION-001` through `US-CANVAS-PRESENTATION-003` | JSX templates render resolved view state and do not own command policy.        |
+| Architecture guard | `US-CANVAS-ARCH-001`                                              | Tests validate semantic promises and documentation traceability.               |
+
+```mermaid
+flowchart LR
+  Stories["Canvas user stories"] --> Guide["Component guide"]
+  Stories --> Guard["Semantic architecture guard"]
+  Guard --> API["Public API and invariants"]
+  Guard --> Templates["Passive templates"]
+  Guard --> Projection["Protected draft projection"]
+  Guard --> Commands["Create/replace command policy"]
+```
 
 ## Fowler reading
 

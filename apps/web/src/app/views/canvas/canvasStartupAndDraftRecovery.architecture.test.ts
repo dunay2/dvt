@@ -126,29 +126,46 @@ function buildCanonicalNode(id: string): CanonicalNode {
 }
 
 describe('canvas startup and draft recovery architecture', () => {
-  it('documents the Fowler analysis and local component guide for the branch semantics', () => {
+  it('documents the Fowler analysis, user stories, and local component guide for the branch semantics', () => {
     const mailbox = readRepoFile(
-      'buzon/20260428-codex-fowler-web-graph-startup-and-draft-recovery-analysis.md'
+      'buzon/20260429-codex-static-analysis-followup-fowler-architecture-review.md'
     );
     const componentGuide = readRepoFile(
       'docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-component.md'
     );
+    const userStories = readRepoFile(
+      'docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-user-stories.md'
+    );
 
     expect(mailbox).toContain('## Fowler verdict');
+    expect(mailbox).toContain('## Comparison with mature systems');
     expect(mailbox).toContain('## Antipatterns detected');
     expect(mailbox).toContain('## Drift fixed');
     expect(mailbox).toContain('## Opportunities');
     expect(mailbox).toContain('## Lessons for future slices');
+    expect(mailbox).toContain('## User-story coverage');
+    expect(mailbox).toContain('## ADR decision');
 
     expect(componentGuide).toContain('## Public API');
     expect(componentGuide).toContain('## Invariants');
     expect(componentGuide).toContain('## Transitions');
     expect(componentGuide).toContain('## Consumers');
+    expect(componentGuide).toContain('## User-Story Traceability');
     expect(componentGuide).toContain('```mermaid');
     expect(componentGuide).toContain('failed route posture');
     expect(componentGuide).toContain('replace_current');
     expect(componentGuide).toContain('workspace graph draft read-model');
     expect(componentGuide).toContain('drag handle');
+
+    expect(userStories).toContain('## User Stories');
+    expect(userStories).toContain('US-CANVAS-BOOTSTRAP-001');
+    expect(userStories).toContain('US-CANVAS-BOOTSTRAP-004');
+    expect(userStories).toContain('US-CANVAS-DRAFT-003');
+    expect(userStories).toContain('US-CANVAS-DRAFT-006');
+    expect(userStories).toContain('US-CANVAS-PRESENTATION-002');
+    expect(userStories).toContain('US-CANVAS-ARCH-001');
+    expect(userStories).toContain('## Scenario Coverage Matrix');
+    expect(userStories).toContain('## TDD Traceability');
   });
 
   it('keeps owned-concern docblocks on the modules that own the branch behavior', () => {
@@ -351,9 +368,12 @@ describe('canvas startup and draft recovery architecture', () => {
       readRepoFile('apps/web/src/app/views/canvas/CanvasViewport.test.tsx'),
       readRepoFile('apps/web/src/app/views/canvas/canvasPalette.ts'),
       readRepoFile('apps/web/src/app/views/canvas/canvasPalette.test.ts'),
-      readRepoFile('buzon/20260428-codex-fowler-web-graph-startup-and-draft-recovery-analysis.md'),
+      readRepoFile('buzon/20260429-codex-static-analysis-followup-fowler-architecture-review.md'),
       readRepoFile(
         'docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-component.md'
+      ),
+      readRepoFile(
+        'docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-user-stories.md'
       ),
     ];
     const bannedTerms = RETIRED_ROUTE_SHIM_TERM_PATTERNS.map((pattern) => new RegExp(pattern, 'i'));

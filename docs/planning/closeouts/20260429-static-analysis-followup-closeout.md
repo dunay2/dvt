@@ -556,3 +556,130 @@ Validation plan:
 
 No stubs, placeholders, TODO/FIXME markers, fake implementations, hook
 bypasses, rule relaxations, or compatibility barrels were introduced.
+
+## 2026-04-29 Branch Fowler Review And User-Story TDD Follow-Up
+
+### Think-First Analysis
+
+Problem summary: the branch has materially improved startup and Canvas
+authoring boundaries, but the review evidence is still split between closeout
+notes, an older mailbox review, and component docs. That creates a documentation
+drift risk: the branch promises SRP, i18n, passive templates, protected draft
+projection, and semantic architecture tests, but one governed artifact does not
+yet trace the full branch scope, user scenarios, and TDD expectations.
+
+Root cause: the implementation work advanced through multiple small review
+corrections. Each pass improved a local smell, but the aggregate branch story
+was not consolidated after the final presentation-boundary extraction.
+
+Constraints and invariants:
+
+- `AGENTS.md` requires governance-first execution, no hidden debt, and real
+  validation evidence.
+- `docs/guides/ai-work-protocol.md` requires think-first material and
+  solution rationale before implementation when architecture or behavior
+  posture changes.
+- `docs/architecture/reference-architecture.md` requires explicit boundaries,
+  replaceable adapters behind ports, and one source of runtime truth per
+  concern.
+- The Canvas component guide requires public API, invariants, transitions,
+  consumers, diagrams, owned-concern docblocks, and architecture tests that
+  validate semantics rather than only barrel thinness.
+
+Options considered:
+
+- Create a new ADR for the branch. Rejected for this pass because the branch
+  applies existing hexagonal, DDD, presentation-model, and protected-read-model
+  decisions; it does not create a new cross-system contract or public policy.
+- Leave the existing closeout and component guide as sufficient. Rejected
+  because user-story coverage and branch-level Fowler comparison are not
+  mechanically required by the current architecture guard.
+- Add a branch-level mailbox analysis, add a user-story coverage doc, link both
+  from the component guide, and extend the semantic architecture test to enforce
+  those artifacts. Selected because it fixes drift without changing runtime
+  behavior or adding a speculative ADR.
+
+Selected option and rationale: document the branch as a mature-system
+comparison and scenario catalog, then use TDD to make documentation coverage a
+semantic architecture requirement for the Canvas startup and draft-recovery
+component.
+
+### Pre-Implementation Brief
+
+Mode: Full documentation and architecture-test follow-up.
+
+Scope:
+
+- Branch-level Fowler architecture review in `buzon/`.
+- Component guide update for current branch API, invariants, transitions,
+  consumers, diagrams, and user-story traceability.
+- Dedicated local user-story coverage document for Canvas startup and draft
+  recovery scenarios.
+- A red/green architecture test that validates the semantic documentation
+  artifacts, not only code shape.
+
+Out of scope:
+
+- Product behavior changes.
+- New public contracts, endpoints, or multi-canvas aggregate semantics.
+- Engine, adapter, planner, or contract ARC-triggered changes.
+- Compatibility barrels or transitional duplicate APIs.
+
+Validation plan:
+
+- First run the targeted Canvas architecture test red after adding the missing
+  documentation expectation.
+- Add/update docs and rerun the targeted test green.
+- Run `pnpm docs:sync` because a documentation file is added.
+- Run web typecheck, changed markdown lint, root lint, and
+  `pnpm verify:prepush`.
+
+### Implementation Outcome
+
+- Added the branch-level Fowler review in
+  `buzon/20260429-codex-static-analysis-followup-fowler-architecture-review.md`.
+- Added
+  `docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-user-stories.md`
+  with Canvas startup, draft, presentation, architecture, and TDD scenarios.
+- Updated the Canvas startup and draft-recovery component guide with
+  user-story traceability and an additional semantic guard diagram.
+- Updated the Graph docs index so the local user-story guide is discoverable
+  from the component architecture pack.
+- Strengthened `canvasStartupAndDraftRecovery.architecture.test.ts` so it
+  fails when the branch Fowler review, user stories, or component-guide
+  traceability drift out of the branch.
+- Confirmed no ADR is required for this branch because the work applies
+  existing reference architecture and component guidance without introducing a
+  new public contract, endpoint, event, or persistence model.
+
+### TDD Evidence
+
+- Red: `pnpm --filter @dvt/web test -- canvasStartupAndDraftRecovery.architecture.test.ts`
+  failed because
+  `buzon/20260429-codex-static-analysis-followup-fowler-architecture-review.md`
+  and the user-story guide did not exist.
+- Green: the same command passed after adding the review, user stories, guide
+  link, and documentation traceability assertions.
+
+### Validation Evidence
+
+- `pnpm --filter @dvt/web test -- canvasStartupAndDraftRecovery.architecture.test.ts`:
+  passed with 9 tests after the green implementation.
+- `pnpm docs:sync`: passed after adding the documentation file and again after
+  updating the Graph docs index.
+- `pnpm --filter @dvt/web typecheck`: passed.
+- `pnpm lint:md:changed`: passed before staging tracked Markdown updates.
+- `pnpm --filter @dvt/web test`: passed. Existing React `act(...)` warnings
+  still appear around React Flow/MiniMap and CanvasContent, but no test failed.
+- `pnpm lint`: passed with `--max-warnings 0`.
+- `pnpm exec markdownlint-cli2 --ignore-path .markdownlintignore "docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-user-stories.md" "buzon/20260429-codex-static-analysis-followup-fowler-architecture-review.md"`:
+  passed with 0 Markdown errors for the new untracked files before staging.
+- `pnpm verify:prepush`: passed. The gate validated docs policy, changed
+  Markdown, changed files, forbidden tracked files, and the selected root
+  `pnpm type-check` path.
+
+### No-Debt Statement
+
+No stubs, placeholders, TODO/FIXME markers, fake implementations, hook
+bypasses, rule relaxations, transition shims, or duplicate APIs
+were introduced.
