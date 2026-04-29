@@ -21,7 +21,7 @@ import {
 import type { CanvasPlaygroundTabState } from './canvasPlaygroundTabState';
 import type { CanvasReplacementActionViewState } from './canvasPlaygroundTabStripModel';
 
-type CanvasPlaygroundTabStripTemplateProps = Readonly<{
+export type CanvasPlaygroundTabStripTemplateProps = Readonly<{
   tabState: CanvasPlaygroundTabState;
   replacementAction: CanvasReplacementActionViewState;
   isReplacementDialogOpen: boolean;

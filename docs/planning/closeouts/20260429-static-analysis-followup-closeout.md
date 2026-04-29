@@ -437,3 +437,122 @@ Validation plan:
   `docs/planning/status/generated-code-state.md`.
 - `pnpm lint:md:changed`: passed with 0 markdown errors.
 - `pnpm lint`: passed with `--max-warnings 0`.
+
+## 2026-04-29 Presentation Boundary Follow-Up
+
+### Think-First Analysis
+
+Problem summary: the current Code Health review still identifies mixed
+responsibilities in the latest web graph slice. The most visible issue is that
+the tab-strip React component still coordinates replacement dialog state and
+command dispatch while sitting next to JSX presentation, and the workspace
+draft projection still owns both the canonical semantic graph and DBT snapshot
+read-model projection.
+
+Root cause: the previous pass extracted passive templates and locale-backed
+copy, but stopped at the first presentation boundary. That left controller
+logic in the React component and left a route-facing semantic projector with
+DBT-specific read-model rules. Both choices are small locally, but they weaken
+SRP and make the next feature likely to place more policy beside rendering.
+
+Constraints and invariants:
+
+- `AGENTS.md` requires governance-first execution, no hidden debt, no stubs,
+  and real validation evidence.
+- `docs/guides/ai-work-protocol.md` classifies this as Slim maintenance:
+  public behavior stays the same while component ownership is corrected.
+- `docs/architecture/reference-architecture.md` requires explicit boundaries
+  and replaceable layers behind stable ports.
+- The Canvas component guide requires passive templates, locale-backed view
+  state, explicit command policy, and semantic architecture tests.
+
+Options considered:
+
+- Leave the current split because templates are already extracted. Rejected
+  because the component still owns controller decisions and the projection file
+  still mixes canonical graph semantics with DBT read-model presentation.
+- Move all tab-strip code into the template. Rejected because that would put
+  command policy in the presentation layer.
+- Add a presenter hook for tab-strip coordination and a DBT snapshot projection
+  module for read-model rules. Selected because it keeps JSX passive, keeps
+  command policy testable without HTML, and keeps semantic graph projection
+  separate from DBT-specific read-model rendering.
+
+Selected option and rationale: extract the remaining presentation-controller
+coordination into a named presenter seam, move DBT snapshot projection into its
+own service module, and update architecture tests and docs so SRP, DDD naming,
+and hexagonal read-model boundaries are mechanically checked.
+
+### Pre-Implementation Brief
+
+Mode: Slim.
+
+Scope:
+
+- `apps/web/src/app/views/canvas/CanvasPlaygroundTabStrip.tsx`
+- `apps/web/src/app/views/canvas/useCanvasPlaygroundTabStripPresenter.ts`
+- `apps/web/src/app/views/canvas/canvasPlaygroundTabStripModel.ts`
+- `apps/web/src/app/services/workspace/workspaceGraphDraftProjection.ts`
+- `apps/web/src/app/services/workspace/workspaceGraphDraftSnapshotProjection.ts`
+- web graph architecture tests and component documentation
+
+Out of scope:
+
+- Product behavior changes.
+- New endpoints or contract changes.
+- Engine, adapter, planner, or contract ARC-triggered paths.
+- Compatibility barrels or duplicate exports for the old internal shape.
+
+Validation plan:
+
+- Targeted web projection, tab-strip, and architecture tests.
+- `pnpm --filter @dvt/web typecheck`
+- `pnpm docs:status:generate` if source inventory changes.
+- `pnpm lint`
+- `pnpm verify:prepush`
+
+### Implementation Outcome
+
+- Split DBT-shaped snapshot projection out of
+  `workspaceGraphDraftProjection.ts` into
+  `workspaceGraphDraftSnapshotProjection.ts`. The original projection module
+  now owns only protected draft to route-facing draft and canonical semantic
+  graph projection.
+- Updated `workspaceService.api.ts` to consume the snapshot-specific projector
+  instead of importing DBT read-model rules from the semantic projection module.
+- Converted `CanvasPlaygroundTabStrip.tsx` into a thin presentation-boundary
+  mount. Replacement state, callback wiring, command dispatch, and locale
+  resolution now live in `useCanvasPlaygroundTabStripPresenter.ts`.
+- Kept JSX in `CanvasPlaygroundTabStrip.templates.tsx`; the template receives
+  already-resolved view state and does not import copy catalogs or command
+  policy.
+- Split create/replace canvas command responsibilities:
+  `canvasCreateCanvasDocumentCommandPolicy.ts` owns CAS eligibility and blank
+  draft input construction, while `canvasCreateCanvasDocumentSaveResult.ts`
+  owns cache/session/save-status effects.
+- Added a negative snapshot-projection test for denied protected draft reads.
+- Updated the local Canvas component guide and semantic architecture tests to
+  enforce presenter/template/model/projection boundaries.
+- Regenerated `docs/planning/status/generated-code-state.md` after adding web
+  source and test modules.
+
+### Validation Evidence
+
+- `pnpm --filter @dvt/web typecheck`: passed.
+- `pnpm --filter @dvt/web test -- workspaceGraphDraftSnapshotProjection.test.ts CanvasPlaygroundTabStrip.test.tsx canvasStartupAndDraftRecovery.architecture.test.ts canvasPlaygroundTabState.architecture.test.ts canvasCreateCanvasDocumentCommand.test.ts`:
+  passed with 5 files and 23 tests.
+- `pnpm --filter @dvt/web test`: passed. The suite still emits existing React
+  `act(...)` warnings around React Flow/MiniMap and CanvasContent, but no test
+  failed.
+- `pnpm docs:status:generate`: passed and updated
+  `docs/planning/status/generated-code-state.md`.
+- `pnpm lint:md:changed`: passed with 0 markdown errors.
+- `pnpm lint`: passed with `--max-warnings 0`.
+- `pnpm verify:prepush`: passed. The gate validated changed Markdown,
+  generated-doc policy, changed-file checks, forbidden tracked files, and the
+  selected root `pnpm type-check` path.
+
+### No-Debt Statement
+
+No stubs, placeholders, TODO/FIXME markers, fake implementations, hook
+bypasses, rule relaxations, or compatibility barrels were introduced.
