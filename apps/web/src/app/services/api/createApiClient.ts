@@ -1,10 +1,7 @@
-/**
- * Owned concern: create typed frontend API clients with normalized auth, session headers,
- * and transport error classification.
- */
+/** Owned concern: create typed frontend API clients with normalized auth, session headers, and transport errors. */
 
 import { useSessionStore } from '../../stores/sessionStore';
-import { resolveApiBearerToken } from './apiAuthConfig';
+import { canRefreshApiBearerToken, resolveApiBearerTokenForRequest } from './apiAuthConfig';
 
 export type ApiErrorCategory = 'network' | 'unauthorized' | 'forbidden' | 'client' | 'server';
 
@@ -152,14 +149,17 @@ function toApiError(params: {
   });
 }
 
-function buildHeaders(
+async function buildHeaders(
   customHeaders: HeadersInit | undefined,
-  includeSessionHeaders: boolean
-): Record<string, string> {
+  includeSessionHeaders: boolean,
+  options: { forceRefreshBearerToken?: boolean } = {}
+): Promise<Record<string, string>> {
   const headers: Record<string, string> = {
     Accept: 'application/json',
   };
-  const bearerToken = resolveApiBearerToken();
+  const bearerToken = await resolveApiBearerTokenForRequest(import.meta.env, {
+    forceRefresh: options.forceRefreshBearerToken,
+  });
 
   if (bearerToken) {
     headers.Authorization = `Bearer ${bearerToken}`;
@@ -195,25 +195,44 @@ function buildHeaders(
   };
 }
 
+function canRetryRequestBody(body: BodyInit | null | undefined): boolean {
+  return body == null || typeof body === 'string';
+}
+
 export function createApiClient(baseUrl = resolveApiBaseUrl()): ApiClient {
   const normalizedBaseUrl = apiBaseUrlRuntime.normalize(baseUrl);
 
   async function requestRaw(endpoint: string, init: ApiRequestInit = {}): Promise<Response> {
     const { includeSessionHeaders = true, jsonBody, headers: customHeaders, ...requestInit } = init;
-    const headers = buildHeaders(customHeaders, includeSessionHeaders);
 
     let body: BodyInit | null | undefined = requestInit.body;
     if (jsonBody !== undefined) {
-      headers['Content-Type'] = 'application/json';
       body = JSON.stringify(jsonBody);
     }
 
-    try {
+    async function dispatchRequest(forceRefreshBearerToken = false): Promise<Response> {
+      const headers = await buildHeaders(customHeaders, includeSessionHeaders, {
+        forceRefreshBearerToken,
+      });
+
+      if (jsonBody !== undefined) {
+        headers['Content-Type'] = 'application/json';
+      }
+
       return await fetch(apiBaseUrlRuntime.buildRequestUrl(endpoint, normalizedBaseUrl), {
         ...requestInit,
         headers,
         body,
       });
+    }
+
+    try {
+      const response = await dispatchRequest();
+      if (response.status !== 401 || !canRefreshApiBearerToken() || !canRetryRequestBody(body)) {
+        return response;
+      }
+
+      return await dispatchRequest(true);
     } catch (error) {
       throw toApiError({
         endpoint,

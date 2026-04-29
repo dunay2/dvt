@@ -15,6 +15,7 @@ const DEFAULT_ENVIRONMENT_ID = 'dev';
 const DEFAULT_HOST = '127.0.0.1';
 const DEFAULT_JWK_KID = 'dev-stack-local-key';
 const DEFAULT_DEV_BEARER_TOKEN_TTL_SECONDS = 24 * 60 * 60;
+const LOCAL_TOKEN_REFRESH_PATH = '/__dvt/local-protected-runtime/token';
 
 const LOCAL_PROTECTED_RUNTIME_TENANT_ACTIONS = Object.freeze([
   'run:start',
@@ -97,6 +98,54 @@ async function closeServer(server) {
   });
 }
 
+function applyLocalAuthCorsHeaders(response) {
+  response.setHeader('access-control-allow-origin', '*');
+  response.setHeader('access-control-allow-methods', 'POST, OPTIONS');
+  response.setHeader('access-control-allow-headers', 'Accept, Content-Type');
+}
+
+function resolveRequestPath(request) {
+  return new URL(request.url ?? '/', 'http://local.dvt').pathname;
+}
+
+async function handleLocalProtectedRuntimeAuthRequest(args) {
+  const { request, response, jwksPayload, issueBearerToken } = args;
+  const requestPath = resolveRequestPath(request);
+
+  if (requestPath === '/.well-known/jwks.json' && request.method === 'GET') {
+    response.statusCode = 200;
+    response.setHeader('content-type', 'application/json');
+    response.end(jwksPayload);
+    return;
+  }
+
+  if (requestPath === LOCAL_TOKEN_REFRESH_PATH && request.method === 'OPTIONS') {
+    applyLocalAuthCorsHeaders(response);
+    response.statusCode = 204;
+    response.end();
+    return;
+  }
+
+  if (requestPath === LOCAL_TOKEN_REFRESH_PATH && request.method === 'POST') {
+    const issuedToken = await issueBearerToken();
+    applyLocalAuthCorsHeaders(response);
+    response.statusCode = 200;
+    response.setHeader('cache-control', 'no-store');
+    response.setHeader('content-type', 'application/json');
+    response.end(
+      JSON.stringify({
+        bearerToken: issuedToken.bearerToken,
+        tokenType: 'Bearer',
+        expiresAt: new Date(issuedToken.expiresAtSeconds * 1000).toISOString(),
+      })
+    );
+    return;
+  }
+
+  response.statusCode = 404;
+  response.end('not found');
+}
+
 async function startLocalProtectedRuntimeAuth(options = {}) {
   const env = options.env ?? process.env;
   const host = readNonEmptyEnv(options.host) ?? DEFAULT_HOST;
@@ -118,16 +167,39 @@ async function startLocalProtectedRuntimeAuth(options = {}) {
       },
     ],
   });
-  const server = createServer((request, response) => {
-    if (request.url !== '/.well-known/jwks.json') {
-      response.statusCode = 404;
-      response.end('not found');
-      return;
-    }
 
-    response.statusCode = 200;
-    response.setHeader('content-type', 'application/json');
-    response.end(jwksPayload);
+  async function issueBearerToken() {
+    const nowSeconds = Math.floor(Date.now() / 1000);
+    const expiresAtSeconds = nowSeconds + bearerTokenTtlSeconds;
+    const bearerToken = await new SignJWT({
+      scope: 'dvt:runtime',
+      tenant_ids: [scope.tenantId],
+      project_ids: [scope.projectId],
+    })
+      .setProtectedHeader({ alg: 'RS256', kid: DEFAULT_JWK_KID })
+      .setSubject(principalId)
+      .setIssuer(issuer)
+      .setAudience(audience)
+      .setIssuedAt(nowSeconds)
+      .setExpirationTime(expiresAtSeconds)
+      .sign(privateKey);
+
+    return {
+      bearerToken,
+      expiresAtSeconds,
+    };
+  }
+
+  const server = createServer((request, response) => {
+    void handleLocalProtectedRuntimeAuthRequest({
+      request,
+      response,
+      jwksPayload,
+      issueBearerToken,
+    }).catch((error) => {
+      response.statusCode = 500;
+      response.end(error instanceof Error ? error.message : 'local auth failure');
+    });
   });
 
   await new Promise((resolve, reject) => {
@@ -140,19 +212,8 @@ async function startLocalProtectedRuntimeAuth(options = {}) {
     throw new Error('Unable to resolve local protected-runtime JWKS address');
   }
 
-  const nowSeconds = Math.floor(Date.now() / 1000);
-  const bearerToken = await new SignJWT({
-    scope: 'dvt:runtime',
-    tenant_ids: [scope.tenantId],
-    project_ids: [scope.projectId],
-  })
-    .setProtectedHeader({ alg: 'RS256', kid: DEFAULT_JWK_KID })
-    .setSubject(principalId)
-    .setIssuer(issuer)
-    .setAudience(audience)
-    .setIssuedAt(nowSeconds)
-    .setExpirationTime(nowSeconds + bearerTokenTtlSeconds)
-    .sign(privateKey);
+  const issuedToken = await issueBearerToken();
+  const tokenRefreshUrl = `http://${host}:${address.port}${LOCAL_TOKEN_REFRESH_PATH}`;
 
   return {
     principalId,
@@ -164,7 +225,8 @@ async function startLocalProtectedRuntimeAuth(options = {}) {
       OIDC_ALGORITHMS: 'RS256',
     },
     webEnv: {
-      VITE_API_BEARER_TOKEN: bearerToken,
+      VITE_API_BEARER_TOKEN: issuedToken.bearerToken,
+      VITE_API_BEARER_TOKEN_REFRESH_URL: tokenRefreshUrl,
     },
     close: async () => {
       await closeServer(server);

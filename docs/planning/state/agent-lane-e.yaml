@@ -2549,6 +2549,156 @@ tasks:
       guard prevents Lane E and the review board from drifting back to `queued` while the accepted
       QA verdict declares the policy route closed.
     last_verified: '2026-04-27'
+  - task_id: TF-E2-M
+    parent_task: TF-E2
+    priority: P0
+    status: in_progress
+    objective: >-
+      convert the accepted Canvas startup, draft-recovery, and playground stories into an
+      operator-visible browser-operability backlog so the live interface proves the same behavior
+      the story pack already promises.
+    dependency: TF-E2-K, TF-E2-POL, F-03
+    target: >-
+      Canvas starts with fresh protected-runtime auth, loads runtime capabilities, reaches the fifth
+      route bootstrap check deterministically, and lets an operator create, restore, edit, drag,
+      preview, and run from the governed UI without relying on stale local sessions or hidden test
+      setup.
+    complexity: M
+    effort_points: 5
+    progress_pct: 35
+    evidence_refs:
+      - docs/architecture/components/web/screen-manuals-and-user-stories.md
+      - docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-user-stories.md
+      - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-k-playground-complete-cycle-stories-20260424.md
+      - docs/architecture/components/web/app-bootstrap-screen-component.md
+      - docs/architecture/components/web/api-client-auth-component.md
+      - docs/architecture/components/web/graph/canvas-layout-persistence-component.md
+      - buzon/20260429-codex-canvas-operability-auth-and-drag-fowler-review.md
+      - docs/runbooks/backend-mvp-control-plane-runbook-20260329.md
+    status_reason: >-
+      Active backlog. Browser review on 2026-04-29 showed that the accepted host and recovery
+      stories were not enough as operator evidence when the local protected-runtime token expired:
+      `/workspace/graph/draft` returned `401 unauthenticated`, Canvas revealed a denied draft
+      surface, and the toolbar still looked synchronized but inert. The protected-runtime token
+      freshness blocker is now fixed and the restarted local app can read draft state, load
+      capabilities, show the create-canvas entrypoint, and keep dragged cards stable. The current
+      follow-up adds local component guides and user stories for protected-token refresh and layout
+      persistence. Remaining backlog work covers truthful denied-draft recovery copy, complete
+      first-canvas/first-node live proof, and stronger fifth-step startup diagnostics.
+    last_verified: '2026-04-29'
+  - task_id: TF-E2-M-A
+    parent_task: TF-E2-M
+    priority: P0
+    status: done
+    objective: >-
+      keep the coordinated local protected-runtime auth posture valid for long-lived frontend
+      sessions so Canvas does not degrade into `Acceso al draft denegado` because a dev-stack JWT
+      expired overnight.
+    dependency: TF-E2-M
+    target: >-
+      `pnpm dev:app` issues a bounded local bearer token plus a dev-only refresh endpoint, documents
+      the override, and Canvas requests a freshly signed token instead of sending an expired JWT
+      when protected draft access is needed.
+    complexity: S
+    effort_points: 2
+    progress_pct: 100
+    evidence_refs:
+      - scripts/run-dev-stack.auth.cjs
+      - scripts/run-dev-stack.auth.test.cjs
+      - docs/architecture/components/web/api-client-auth-component.md
+      - docs/runbooks/backend-mvp-control-plane-runbook-20260329.md
+      - docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-user-stories.md
+    status_reason: >-
+      Closed from 2026-04-29 browser review. The reproduced failure was not missing headers:
+      Playwright observed an Authorization bearer on `/workspace/graph/draft`, but the embedded
+      token expired on 2026-04-28T23:11:10Z, so the API correctly returned unauthenticated. The
+      coordinated dev stack now keeps the default local token bounded, exposes a dev-only refresh
+      endpoint, and the frontend omits or refreshes expired bearer tokens instead of presenting them
+      to protected draft routes. The follow-up component guide now records the auth-refresh
+      invariants that must remain inside the API client boundary.
+    last_verified: '2026-04-29'
+  - task_id: TF-E2-M-B
+    parent_task: TF-E2-M
+    priority: P0
+    status: queued
+    objective: >-
+      make Canvas draft-denial posture action-oriented and truthful when protected draft access is
+      unauthenticated, forbidden, or read-only.
+    dependency: TF-E2-M-A
+    target: >-
+      The route distinguishes expired/unauthenticated local sessions from real forbidden scope, does
+      not show `Draft sincronizado` while draft read is denied, and presents a clear recovery action
+      or restart guidance without enabling unsafe mutation controls.
+    complexity: S
+    effort_points: 3
+    progress_pct: 0
+    evidence_refs:
+      - docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-user-stories.md
+      - docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-component.md
+      - apps/web/src/app/views/canvas/canvasRecoveryBannerModel.ts
+      - apps/web/src/app/views/canvas/canvasToolbarViewModel.ts
+    status_reason: >-
+      Intake from 2026-04-29 browser review. The current surface is fail-closed, but the toolbar
+      copy and disabled actions can look like a synchronized read-only document instead of an auth
+      recovery state.
+    last_verified: '2026-04-29'
+  - task_id: TF-E2-M-C
+    parent_task: TF-E2-M
+    priority: P0
+    status: in_progress
+    objective: >-
+      prove the first-canvas and first-node flow through the live UI after bootstrap completes with
+      protected runtime enabled.
+    dependency: TF-E2-M-A
+    target: >-
+      From a clean local dev stack, the operator can open `/canvas`, see the typed create-canvas
+      entrypoint, create a `transformation` or `dbt` canvas, add the first node, drag the card from
+      the intended handle, and observe authoritative draft persistence without intercepted draft
+      requests.
+    complexity: S
+    effort_points: 3
+    progress_pct: 35
+    evidence_refs:
+      - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-k-playground-complete-cycle-stories-20260424.md
+      - apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+      - scripts/run-selected-closure-live-proof.cjs
+      - docs/architecture/components/web/graph/canvas-layout-persistence-component.md
+      - apps/web/src/app/views/canvas/useCanvasNodeChangeHandlers.test.tsx
+      - apps/web/src/app/views/canvas/useCanvasViewportGraphModel.test.tsx
+      - apps/web/src/app/views/canvas/useCanvasController.persistence.test.tsx
+      - apps/web/src/app/views/canvas/CanvasViewport.test.tsx
+    status_reason: >-
+      Active from the same interface review. The restarted browser session now exposes the
+      create-canvas entrypoint and existing canvas nodes after a real protected draft read, and the
+      drag stack is covered against stale React Flow node snapshots, viewport reprojection resets,
+      selection suppression, and stale drag-stop payload persistence. Remaining proof still needs a
+      clean first-canvas and first-node browser lane against authoritative draft persistence.
+    last_verified: '2026-04-29'
+  - task_id: TF-E2-M-D
+    parent_task: TF-E2-M
+    priority: P1
+    status: queued
+    objective: >-
+      harden startup observability for the fifth bootstrap step so route readiness cannot look like
+      a bouncing or half-loaded startup module.
+    dependency: TF-E2-M-A
+    target: >-
+      The startup gate presents route readiness as a stable terminal or actionable blocker state,
+      capabilities are visibly loaded before unsafe actions are enabled, and tests cover the route
+      step staying pending, failing as governed recovery, and recovering without regressing the
+      progress display.
+    complexity: S
+    effort_points: 2
+    progress_pct: 0
+    evidence_refs:
+      - docs/architecture/components/web/app-bootstrap-screen-component.md
+      - apps/web/src/app/bootstrap/appBootstrapPresentation.ts
+      - apps/web/src/app/Root.bootstrapFlow.test.tsx
+    status_reason: >-
+      Intake from user report that the fifth startup element did not load. The current architecture
+      allows governed route failures to reveal Canvas, but the visible route check still needs
+      stronger operator diagnostics.
+    last_verified: '2026-04-29'
   - task_id: TF-E2-E-B
     parent_task: TF-E2-E
     priority: P0
@@ -2855,10 +3005,10 @@ verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
   verified_on: '2026-04-27'
-  total_tasks: 75
-  total_effort_points: 265
+  total_tasks: 80
+  total_effort_points: 280
   completed_weighted_points: 142.8
-  lane_progress_pct: 54
+  lane_progress_pct: 51
   notes: >-
     Weighted progress uses effort_points and records partial convergence already present in the
     frontend, even when the lane still lacks accepted closure for most slices. F-17 now tracks 7
@@ -2877,7 +3027,10 @@ verification_summary:
     preview/run continuation, blocked/read-only posture, and authoritative first-canvas lifecycle
     proof now have accepted closeouts. `TF-E2-POL` is also closed as the accepted runtime-policy
     boundary route: command posture, admission, execution availability, Inspector editability, and
-    plugin projections now consume one policy boundary. The next active prerequisite before browser
-    proof work can credibly resume is the selected-closure UX/browser lane under `TF-E2-E`. The
-    summary values were recomputed from the current task registry on 2026-04-27 to realign the YAML
-    with the actual lane contents.
+    plugin projections now consume one policy boundary. The 2026-04-29 browser review added
+    `TF-E2-M` as the live Canvas operability backlog that converts accepted front stories into
+    visible UI proof, starting with the protected-runtime dev-auth freshness blocker and the fifth
+    bootstrap-step diagnostics. The next active prerequisite before browser proof work can credibly
+    resume is the selected-closure UX/browser lane under `TF-E2-E`, after `TF-E2-M-A` restores
+    authenticated local Canvas operation. The summary values were recomputed from the current task
+    registry on 2026-04-29 to realign the YAML with the actual lane contents.

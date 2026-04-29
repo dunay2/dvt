@@ -118,7 +118,9 @@ export function useCanvasController() {
     hasHydrated: store._hasHydrated,
     isGraphQueryPending: graphModel.graphAuthorityQuery.isPending,
     workspaceLayoutKey: store.workspaceLayoutKey,
+    nodes: graphModel.nodes,
     persistedViewport: store.persistedViewport,
+    persistedNodePositions: store.persistedNodePositions,
     setCanvasViewport: store.setCanvasViewport,
     setCanvasNodePositions: store.setCanvasNodePositions,
   });

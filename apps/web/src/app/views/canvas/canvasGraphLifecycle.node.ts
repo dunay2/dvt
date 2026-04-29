@@ -1,9 +1,8 @@
+/** Owned concern: own Canvas node lifecycle transitions and local React Flow node-change application. */
+
 import { applyNodeChanges, type Node, type NodeChange } from '@xyflow/react';
 
-import {
-  canvasDraftSession,
-  type CanvasDraftSession,
-} from './canvasDraftSession';
+import { canvasDraftSession, type CanvasDraftSession } from './canvasDraftSession';
 import { canvasGraphLifecycleEdge } from './canvasGraphLifecycle.edge';
 import type {
   CanvasGraphLifecycleNodeApi,
@@ -19,8 +18,7 @@ function applyNodeRemovalState(
 ): CanvasGraphLifecycleState {
   const removedNodeIdSet = new Set(removedNodeIds);
   const nextEdges = state.edges.filter(
-    (edge) =>
-      !removedNodeIdSet.has(edge.source) && !removedNodeIdSet.has(edge.target)
+    (edge) => !removedNodeIdSet.has(edge.source) && !removedNodeIdSet.has(edge.target)
   );
 
   let nextDraftSession = state.draftSession;
@@ -70,7 +68,7 @@ function applyChanges(
   state: CanvasGraphLifecycleState,
   changes: NodeChange[]
 ): CanvasGraphLifecycleState {
-  const nextNodes = applyNodeChanges<Node>(changes, state.nodes);
+  const nextNodes = applyLocalChanges(state.nodes, changes);
   const nextNodeIds = new Set(nextNodes.map((node) => node.id));
   const removedNodeIds = state.nodes
     .map((node) => node.id)
@@ -90,6 +88,10 @@ function applyChanges(
   return applyNodeRemovalState(state, removedNodeIds, nextNodes);
 }
 
+function applyLocalChanges(nodes: Node[], changes: NodeChange[]): Node[] {
+  return applyNodeChanges<Node>(changes, nodes);
+}
+
 function admitExplicit(
   draftSession: CanvasDraftSession,
   canonicalNode: CanonicalNode
@@ -97,14 +99,12 @@ function admitExplicit(
   return canvasDraftSession.workingSet.addExplicitNode(draftSession, canonicalNode);
 }
 
-function queueImported(
-  draftSession: CanvasDraftSession,
-  nodeIds: string[]
-): CanvasDraftSession {
+function queueImported(draftSession: CanvasDraftSession, nodeIds: string[]): CanvasDraftSession {
   return canvasDraftSession.workingSet.queueExplicitNodeIds(draftSession, nodeIds);
 }
 
 export const canvasGraphLifecycleNode: CanvasGraphLifecycleNodeApi = {
+  applyLocalChanges,
   applyChanges,
   remove,
   admitExplicit,

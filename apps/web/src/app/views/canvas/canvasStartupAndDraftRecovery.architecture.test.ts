@@ -52,6 +52,16 @@ const ownedConcernModules = [
     phrase: 'Owned concern: adapt the workspace graph draft authoring port',
   },
   {
+    label: 'frontend API auth config',
+    path: '../../services/api/apiAuthConfig.ts',
+    phrase: 'Owned concern: resolve explicit API bearer-token posture',
+  },
+  {
+    label: 'frontend API client',
+    path: '../../services/api/createApiClient.ts',
+    phrase: 'Owned concern: create typed frontend API clients',
+  },
+  {
     label: 'workspace service API snapshot projection',
     path: '../../services/workspace/workspaceService.api.ts',
     phrase: 'Owned concern: adapt the workspace service port',
@@ -65,6 +75,26 @@ const ownedConcernModules = [
     label: 'canvas node mapper',
     path: 'canvasNodeMapper.ts',
     phrase: 'Owned concern: project canonical graph primitives into React Flow nodes',
+  },
+  {
+    label: 'canvas graph lifecycle node component',
+    path: 'canvasGraphLifecycle.node.ts',
+    phrase: 'Owned concern: own Canvas node lifecycle transitions',
+  },
+  {
+    label: 'canvas graph lifecycle contracts',
+    path: 'canvasGraphLifecycle.types.ts',
+    phrase: 'Owned concern: define Canvas graph lifecycle contracts',
+  },
+  {
+    label: 'canvas layout persistence component',
+    path: 'useCanvasLayoutPersistence.ts',
+    phrase: 'Owned concern: persist Canvas viewport and node-layout observations',
+  },
+  {
+    label: 'canvas viewport graph model',
+    path: 'useCanvasViewportGraphModel.ts',
+    phrase: 'Owned concern: project semantic authoring truth into React Flow viewport state',
   },
   {
     label: 'canvas tab-strip presenter',
@@ -166,6 +196,61 @@ describe('canvas startup and draft recovery architecture', () => {
     expect(userStories).toContain('US-CANVAS-ARCH-001');
     expect(userStories).toContain('## Scenario Coverage Matrix');
     expect(userStories).toContain('## TDD Traceability');
+  });
+
+  it('documents and guards protected-runtime token refresh and layout persistence semantics', () => {
+    const mailbox = readRepoFile(
+      'buzon/20260429-codex-canvas-operability-auth-and-drag-fowler-review.md'
+    );
+    const authGuide = readRepoFile('docs/architecture/components/web/api-client-auth-component.md');
+    const layoutGuide = readRepoFile(
+      'docs/architecture/components/web/graph/canvas-layout-persistence-component.md'
+    );
+    const userStories = readRepoFile(
+      'docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-user-stories.md'
+    );
+
+    expect(mailbox).toContain('## Fowler verdict');
+    expect(mailbox).toContain('## Pattern improvements');
+    expect(mailbox).toContain('## Antipatterns removed or reduced');
+    expect(mailbox).toContain('## Drift fixed');
+    expect(mailbox).toContain('## ADR decision');
+
+    for (const guide of [authGuide, layoutGuide]) {
+      expect(guide).toContain('## Public API');
+      expect(guide).toContain('## Invariants');
+      expect(guide).toContain('## Transitions');
+      expect(guide).toContain('## Consumers');
+      expect(guide).toContain('```mermaid');
+    }
+    expect(authGuide).toContain('VITE_API_BEARER_TOKEN_REFRESH_URL');
+    expect(authGuide).toContain('401');
+    expect(layoutGuide).toContain('drag-stop event payload');
+    expect(layoutGuide).toContain('persistedNodePositions');
+
+    expect(userStories).toContain('US-CANVAS-AUTH-001');
+    expect(userStories).toContain('US-CANVAS-AUTH-002');
+    expect(userStories).toContain('US-CANVAS-LAYOUT-001');
+    expect(userStories).toContain('US-CANVAS-LAYOUT-003');
+
+    const apiAuthSource = readAppSource('../../services/api/apiAuthConfig.ts');
+    const apiClientSource = readAppSource('../../services/api/createApiClient.ts');
+    const layoutPersistenceSource = readAppSource('useCanvasLayoutPersistence.ts');
+    const controllerSource = readAppSource('useCanvasController.ts');
+
+    expect(apiAuthSource).toContain('resolveApiBearerTokenForRequest');
+    expect(apiAuthSource).toContain('VITE_API_BEARER_TOKEN_REFRESH_URL');
+    expect(apiAuthSource).toContain('isExpiredOrExpiring');
+    expect(apiClientSource).toContain('dispatchRequest(true)');
+    expect(apiClientSource).toContain('canRetryRequestBody');
+
+    expect(layoutPersistenceSource).toContain('function useCanvasNodePositionPersistence(');
+    expect(layoutPersistenceSource).toContain('function useCanvasViewportPersistenceHandler(');
+    expect(layoutPersistenceSource).toContain('mergeDraggedNodePosition(allNodes, draggedNode)');
+    expect(layoutPersistenceSource).not.toContain('workspaceGraphDraftAuthoringPort');
+    expect(layoutPersistenceSource).not.toContain('saveGraphDraft');
+    expect(controllerSource).toContain('nodes: graphModel.nodes');
+    expect(controllerSource).toContain('persistedNodePositions: store.persistedNodePositions');
   });
 
   it('keeps owned-concern docblocks on the modules that own the branch behavior', () => {
