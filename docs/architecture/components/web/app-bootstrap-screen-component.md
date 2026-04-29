@@ -14,6 +14,14 @@ single visible startup surface alive while the browser shell mounts, services
 compose, runtime capabilities settle, platform health resolves, and the active
 route publishes operability.
 
+The component is split into a pure Presentation Model and a DOM adapter:
+
+- `appBootstrapPresentation.ts` owns startup copy, step ordering, aggregate
+  state transitions, completion rules, progress snapshots, and build-date
+  formatting.
+- `appBootstrapScreen.ts` owns DOM lookup, ARIA writes, metadata writes, and
+  the exported control API used by the rest of the app.
+
 It does not own route-specific readiness, backend contract semantics, or Canvas
 draft truth. Those concerns publish into this component through typed route and
 health/bootstrap adapters.
@@ -28,6 +36,17 @@ health/bootstrap adapters.
 | `showBootstrapFailure()`     | Converts startup exceptions into the single controlled error screen         |
 | `isBootstrapScreenVisible()` | Allows route error boundaries to avoid stacking a second error surface      |
 | `renderBootstrapProgress()`  | Renders progress from an already resolved bootstrap snapshot                |
+
+## Presentation Model API
+
+| API                                    | Owned behavior                                                                |
+| -------------------------------------- | ----------------------------------------------------------------------------- |
+| `BOOTSTRAP_STEP_ORDER`                 | Canonical order for startup step rendering and aggregate readiness            |
+| `createInitialBootstrapStepState()`    | Produces the initial pending state with default details                       |
+| `createBootstrapStepState()`           | Resolves one typed step state with caller detail or default presentation copy |
+| `resolveBootstrapScreenPresentation()` | Derives screen copy, announcement state, step presentations, and progress     |
+| `canCompleteBootstrapSteps()`          | Validates the terminal-state invariant before DOM removal                     |
+| `formatBootstrapBuildDate()`           | Normalizes build metadata for the critical startup shell                      |
 
 ## Invariants
 
@@ -72,6 +91,18 @@ stateDiagram-v2
   Complete --> [*]: delayed DOM removal
 ```
 
+## Component Boundary
+
+```mermaid
+flowchart LR
+  Publishers["main / providers / root / route errors"] --> Screen["appBootstrapScreen.ts\nDOM adapter"]
+  Screen --> Presentation["appBootstrapPresentation.ts\nPresentation Model"]
+  Presentation --> Snapshot["screen + steps + progress snapshot"]
+  Screen --> Dom["index.html startup DOM"]
+  Screen --> Progress["bootstrapProgressBar.ts"]
+  Progress --> Dom
+```
+
 ## Consumer Topology
 
 ```mermaid
@@ -81,6 +112,7 @@ flowchart LR
   Providers["AppProviders.tsx"] --> Bootstrap
   Root["Root.tsx"] --> Bootstrap
   RouteErrors["AppRouteErrorBoundary.tsx"] --> Bootstrap
+  Bootstrap --> Presentation["appBootstrapPresentation.ts"]
   Root --> RouteBootstrap["routeBootstrapRegistry.ts"]
   Root --> Health["platform-health query"]
   RouteBootstrap --> Bootstrap
@@ -100,6 +132,9 @@ flowchart LR
 
 ## Test Coverage
 
+- `apps/web/src/app/bootstrap/appBootstrapPresentation.test.ts` covers
+  presentation-model defaults, completion rules, blocked/error precedence,
+  non-critical health failure, and build metadata formatting.
 - `apps/web/src/app/bootstrap/appBootstrapScreen.test.ts` covers blocked,
   failure, production HTML shell contract, metadata, completion, and ARIA
   busy-state semantics.

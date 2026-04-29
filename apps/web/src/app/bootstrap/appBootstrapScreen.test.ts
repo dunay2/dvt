@@ -12,11 +12,11 @@ import {
   showBootstrapFailure,
   startBootstrapScreen,
 } from './appBootstrapScreen';
+import { BOOTSTRAP_STEP_ORDER } from './appBootstrapPresentation';
 import { renderBootstrapProgress } from './bootstrapProgressBar';
 
 const WEB_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../../..');
 const INDEX_HTML_PATH = resolve(WEB_ROOT, 'index.html');
-const BOOTSTRAP_STEP_ORDER = ['hydrate', 'services', 'capabilities', 'health', 'route'];
 const REGEXP_SYNTAX_PATTERN = /[.*+?^${}()|[\]\\]/g;
 
 function escapeRegExpSyntax(value: string): string {
