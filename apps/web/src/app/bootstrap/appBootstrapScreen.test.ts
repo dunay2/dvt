@@ -17,10 +17,16 @@ import { renderBootstrapProgress } from './bootstrapProgressBar';
 const WEB_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../../..');
 const INDEX_HTML_PATH = resolve(WEB_ROOT, 'index.html');
 const BOOTSTRAP_STEP_ORDER = ['hydrate', 'services', 'capabilities', 'health', 'route'];
+const REGEXP_SYNTAX_PATTERN = /[.*+?^${}()|[\]\\]/g;
+
+function escapeRegExpSyntax(value: string): string {
+  return value.replaceAll(REGEXP_SYNTAX_PATTERN, String.raw`\$&`);
+}
 
 function extractCssRule(source: string, selector: string): string {
-  const escapedSelector = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const match = source.match(new RegExp(`${escapedSelector}\\s*\\{(?<body>[^}]*)\\}`));
+  const escapedSelector = escapeRegExpSyntax(selector);
+  const rulePattern = new RegExp(String.raw`${escapedSelector}\s*\{(?<body>[^}]*)\}`);
+  const match = rulePattern.exec(source);
   return match?.groups?.body ?? '';
 }
 
@@ -77,9 +83,9 @@ function getProgressLabel(): string | undefined {
 }
 
 function getProgressSegmentStatuses(): string[] {
-  return Array.from(document.querySelectorAll('[data-app-loading-progress-segment]')).map(
-    (segment) => segment.getAttribute('data-status') ?? ''
-  );
+  return Array.from(
+    document.querySelectorAll<HTMLElement>('[data-app-loading-progress-segment]')
+  ).map((segment) => segment.dataset.status ?? '');
 }
 
 describe('appBootstrapScreen', () => {
@@ -148,9 +154,7 @@ describe('appBootstrapScreen', () => {
 
     completeBootstrapScreen();
     expect(document.getElementById('app-loading-screen')).not.toBeNull();
-    expect(document.getElementById('app-loading-screen')?.getAttribute('data-state')).toBe(
-      'blocked'
-    );
+    expect(document.getElementById('app-loading-screen')?.dataset.state).toBe('blocked');
     expect(document.getElementById('app-loading-title')?.textContent).toBe(
       'Raven is waiting for startup prerequisites'
     );
@@ -206,7 +210,7 @@ describe('appBootstrapScreen', () => {
     setBootstrapStepStatus('health', 'error', 'Unable to reach /healthz.');
     setBootstrapStepStatus('route', 'error', 'Request to /workspace/graph failed (NETWORK)');
 
-    expect(document.getElementById('app-loading-screen')?.getAttribute('data-state')).toBe('error');
+    expect(document.getElementById('app-loading-screen')?.dataset.state).toBe('error');
     expect(document.querySelector('[data-app-loading-progress-value]')).toBeNull();
     expect(getProgressLabel()).toBe('3/5 startup checks settled. Startup error needs attention.');
     expect(getProgressSegmentStatuses()).toEqual([
@@ -255,9 +259,8 @@ describe('appBootstrapScreen', () => {
 
     expect(document.querySelector('[data-injected="true"]')).toBeNull();
     expect(
-      document
-        .querySelector('[data-app-loading-progress-segment]')
-        ?.getAttribute('data-app-loading-progress-segment')
+      document.querySelector<HTMLElement>('[data-app-loading-progress-segment]')?.dataset
+        .appLoadingProgressSegment
     ).toBe('route" data-injected="true');
     expect(
       document.querySelector('[data-app-loading-progress-segment]')?.getAttribute('aria-label')
@@ -311,8 +314,8 @@ describe('appBootstrapScreen', () => {
       'Raven could not finish startup'
     );
     expect(document.getElementById('app-loading-message')?.textContent).toBe('Startup blew up.');
-    const routeStep = document.querySelector('[data-bootstrap-step="route"]');
-    expect(routeStep?.getAttribute('data-status')).toBe('error');
+    const routeStep = document.querySelector<HTMLElement>('[data-bootstrap-step="route"]');
+    expect(routeStep?.dataset.status).toBe('error');
 
     completeBootstrapScreen();
     vi.advanceTimersByTime(120);

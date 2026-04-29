@@ -5,6 +5,10 @@ import { describe, expect, it } from 'vitest';
 const ROOT_DIR = path.resolve(import.meta.dirname, '..');
 const SOURCE_EXTENSIONS = new Set(['.ts', '.tsx']);
 const EXCLUDED_FILE_SUFFIXES = ['.test.ts', '.test.tsx'];
+const REMOVED_AGGREGATE_STORE_IMPORT_PATTERNS = [
+  /from\s+['"][^'"]*stores\/(?:appStore|index)(?:\.ts)?['"]/,
+  /import\s+['"][^'"]*stores\/(?:appStore|index)(?:\.ts)?['"]/,
+];
 
 function toRelativePath(filePath: string): string {
   return path.relative(ROOT_DIR, filePath).replaceAll('\\', '/');
@@ -52,8 +56,8 @@ describe('Query key policy (architecture)', () => {
 
     const offenders = sourceFiles
       .filter((filePath) =>
-        /from\s+['"][^'"]*stores\/(?:appStore|index)(?:\.ts)?['"]|import\s+['"][^'"]*stores\/(?:appStore|index)(?:\.ts)?['"]/.test(
-          readFileSync(filePath, 'utf8')
+        REMOVED_AGGREGATE_STORE_IMPORT_PATTERNS.some((pattern) =>
+          pattern.test(readFileSync(filePath, 'utf8'))
         )
       )
       .map(toRelativePath);
