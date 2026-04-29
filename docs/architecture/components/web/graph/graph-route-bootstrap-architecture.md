@@ -86,6 +86,9 @@ Reading rule:
   useful as the first visible workbench surface
 - `blocked` is reserved for startup blockers that must keep the pre-React gate
   visible because revealing the workbench would be misleading
+- `failed` is reserved for controlled route-local failures that can render a
+  governed error or recovery surface; it records startup evidence but must not
+  keep the shell hidden behind the pre-React gate
 - normal updates replace posture in place; reset only happens on teardown or
   route identity change
 
@@ -100,6 +103,9 @@ Reading rule:
 - API backend readiness failures for Canvas are route-visible blockers, not
   pre-React startup blockers. The shell may reveal Canvas once the route can
   render a governed backend-blocked surface with unsafe interactions disabled.
+- Missing or failing route-local data that already has a governed route error
+  state must publish `failed` rather than `error`; `error` remains for bootstrap
+  contract failures where the route cannot safely render.
 - fallback to empty matches or no-op publication is allowed only in test
   runtime for isolated non-router tests
 

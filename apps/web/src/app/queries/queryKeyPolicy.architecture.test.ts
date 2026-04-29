@@ -46,14 +46,13 @@ describe('Query key policy (architecture)', () => {
     expect(offenders).toEqual([]);
   });
 
-  it('forbids runtime consumers from importing legacy appStore directly', () => {
+  it('forbids runtime consumers from importing removed aggregate store surfaces', () => {
     const sourceFiles: string[] = [];
     collectSourceFiles(ROOT_DIR, sourceFiles);
 
     const offenders = sourceFiles
-      .filter((filePath) => !toRelativePath(filePath).endsWith('stores/appStore.ts'))
       .filter((filePath) =>
-        /from\s+['"][^'"]*stores\/appStore(?:\.ts)?['"]|import\s+['"][^'"]*stores\/appStore(?:\.ts)?['"]/.test(
+        /from\s+['"][^'"]*stores\/(?:appStore|index)(?:\.ts)?['"]|import\s+['"][^'"]*stores\/(?:appStore|index)(?:\.ts)?['"]/.test(
           readFileSync(filePath, 'utf8')
         )
       )

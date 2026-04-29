@@ -46,10 +46,7 @@ function resolveCanvasViewportStyle(
   } as CSSProperties;
 }
 
-function applyCanvasViewportStyle(
-  element: HTMLDivElement,
-  canvasStyle: CSSProperties
-): void {
+function applyCanvasViewportStyle(element: HTMLDivElement, canvasStyle: CSSProperties): void {
   for (const [property, value] of Object.entries(canvasStyle)) {
     if (typeof value !== 'string') {
       continue;
@@ -177,7 +174,11 @@ function CanvasViewportPanelToggleButton({
 type CanvasViewportRestoreControlsProps = Readonly<
   Pick<
     CanvasViewportProps,
-    'focusMode' | 'explorerPanelVisible' | 'inspectorPanelVisible' | 'onShowExplorer' | 'onShowInspector'
+    | 'focusMode'
+    | 'explorerPanelVisible'
+    | 'inspectorPanelVisible'
+    | 'onShowExplorer'
+    | 'onShowInspector'
   >
 >;
 
@@ -305,7 +306,10 @@ function CanvasViewportReactFlowSurface({
 }
 
 type CanvasViewportSurfaceProps = Readonly<
-  Omit<CanvasViewportProps, 'gridSize' | 'canvasPalette' | 'importedNodeFocusIds' | 'onImportedNodeFocusComplete'> & {
+  Omit<
+    CanvasViewportProps,
+    'gridSize' | 'canvasPalette' | 'importedNodeFocusIds' | 'onImportedNodeFocusComplete'
+  > & {
     viewportRef: RefObject<HTMLDivElement>;
     resolvedCanvasPalette: CanvasPaletteId;
   }

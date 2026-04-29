@@ -15,6 +15,10 @@ const CANVAS_PLAYGROUND_TAB_STRIP_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'CanvasPlaygroundTabStrip.tsx'
 );
+const CANVAS_PLAYGROUND_TAB_STRIP_TEMPLATE_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'CanvasPlaygroundTabStrip.templates.tsx'
+);
 
 describe('CanvasShell architecture', () => {
   it('uses grouped semantic prop contracts instead of reaching into controller or service seams directly', () => {
@@ -40,7 +44,8 @@ describe('CanvasShell architecture', () => {
     expect(CANVAS_SHELL_SOURCE).toContain("'./CanvasShellMainPanel'");
     expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).toContain('layout.hostTabStrip');
     expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).toContain('CanvasToolbar');
-    expect(CANVAS_PLAYGROUND_TAB_STRIP_SOURCE).toContain('canvas-playground-tab-strip');
+    expect(CANVAS_PLAYGROUND_TAB_STRIP_SOURCE).toContain('CanvasPlaygroundTabStripTemplate');
+    expect(CANVAS_PLAYGROUND_TAB_STRIP_TEMPLATE_SOURCE).toContain('canvas-playground-tab-strip');
     expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).toContain(
       'function resolveCanvasShellMainPanelDefaultSize('
     );

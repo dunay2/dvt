@@ -185,7 +185,6 @@ Rules for this seam:
 
 ## Current Constraints
 
-- the shell store still carries too much non-shell state through `appStore.ts`;
 - some shell quick actions are placeholders and not yet connected to governed
   behavior;
 - the console drawer now has an explicit shell-owned content model, but richer
@@ -231,10 +230,8 @@ standalone feature files instead of as an intentional shell package boundary.
 
 ## Store Boundary Rule
 
-The current [`appStore.ts`](../../../../../apps/web/src/app/stores/appStore.ts)
-mixes shell state, route state, execution state, and graph state.
-
-Target direction:
+The shell no longer has an aggregate store surface. Runtime state is split by
+owned concern:
 
 - shell store: focus mode, shell drawer visibility, nav state, health display
   preferences;
@@ -243,11 +240,15 @@ Target direction:
 - execution state: current run and run detail should not stay coupled to shell
   layout concerns.
 
-Legacy warning:
+Implementation anchors:
 
-- [`stores/index.ts`](../../../../../apps/web/src/app/stores/index.ts) is a
-  duplicate store surface from an older architecture path and should not be the
-  basis for new shell work.
+- [`sessionStore.ts`](../../../../../apps/web/src/app/stores/sessionStore.ts)
+- [`uiLayoutStore.ts`](../../../../../apps/web/src/app/stores/uiLayoutStore.ts)
+- [`executionStore.ts`](../../../../../apps/web/src/app/stores/executionStore.ts)
+- [`canvasInteractionStore.ts`](../../../../../apps/web/src/app/stores/canvasInteractionStore.ts)
+
+Do not recreate a root store barrel or a mirror-writing aggregate store. New
+state must be placed in the smallest named slice that owns the concern.
 
 ## Related Pages
 

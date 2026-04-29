@@ -131,16 +131,16 @@ function buildProtectedTableNode(
     pluginId: 'dvt',
     kind: 'sink',
     role: 'output',
-      status: 'idle',
-      tags: [],
-      metadata: {
-        config: {
-          schema: args.schema,
-          table: args.table,
-          materialization: args.materialization,
-          writeMode: args.writeMode,
-        },
+    status: 'idle',
+    tags: [],
+    metadata: {
+      config: {
+        schema: args.schema,
+        table: args.table,
+        materialization: args.materialization,
+        writeMode: args.writeMode,
       },
+    },
   };
 }
 
@@ -425,7 +425,7 @@ describe('useCanvasController reload conflict recovery', () => {
       )
     );
     harness.state.services.workspaceService.getGraphSnapshot = vi.fn(async () => {
-      throw new Error('LEGACY_GRAPH_SNAPSHOT_SHOULD_NOT_BE_USED');
+      throw new Error('RETIRED_GRAPH_SNAPSHOT_SHOULD_NOT_BE_USED');
     });
     harness.state.services.workspaceGraphDraftAuthoringPort.readGraphDraft = vi.fn(async () =>
       buildProtectedDraftReadResult({

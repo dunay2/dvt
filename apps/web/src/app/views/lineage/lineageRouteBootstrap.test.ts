@@ -3,10 +3,8 @@ import { describe, expect, it } from 'vitest';
 import { deriveLineageRouteBootstrapPresentation } from './lineageRouteBootstrap';
 
 describe('lineageRouteBootstrap', () => {
-  it('maps loading, error, and ready states to published route posture', () => {
-    expect(
-      deriveLineageRouteBootstrapPresentation({ kind: 'loading' })
-    ).toMatchObject({
+  it('maps loading, controlled failure, and ready states to published route posture', () => {
+    expect(deriveLineageRouteBootstrapPresentation({ kind: 'loading' })).toMatchObject({
       status: 'pending',
       canComplete: false,
     });
@@ -16,13 +14,11 @@ describe('lineageRouteBootstrap', () => {
         message: 'Snapshot unavailable',
       })
     ).toEqual({
-      status: 'error',
+      status: 'failed',
       detail: 'Snapshot unavailable',
-      canComplete: false,
+      canComplete: true,
     });
-    expect(
-      deriveLineageRouteBootstrapPresentation({ kind: 'ready' })
-    ).toEqual({
+    expect(deriveLineageRouteBootstrapPresentation({ kind: 'ready' })).toEqual({
       status: 'complete',
       detail: 'Lineage route is ready',
       canComplete: true,

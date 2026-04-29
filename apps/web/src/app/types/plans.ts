@@ -13,7 +13,7 @@ export interface PlanStepViewModel {
    * Canonical step kind preserved from the contracts boundary.
    *
    * The web shell may choose its own display treatment, but the plan port
-   * should not coerce planning semantics into legacy DBT-specific enums.
+   * should not coerce planning semantics into retired DBT-specific enums.
    */
   type: string;
   name: string;

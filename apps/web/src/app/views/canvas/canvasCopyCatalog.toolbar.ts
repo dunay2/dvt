@@ -1,3 +1,4 @@
+/** Owned concern: declare default Canvas toolbar copy entries for governed actions. */
 import type { LocalizableString } from '../../plugins/contracts/PluginManifest';
 import type { CanvasViewCopy } from './canvasCopy.types';
 
@@ -51,6 +52,27 @@ export const canvasViewToolbarCopyByKey = {
   toolbarRunLabel: {
     key: 'canvas.toolbar.runLabel',
     fallback: 'Run',
+  },
+  newCanvasLabel: {
+    key: 'canvas.toolbar.newCanvasLabel',
+    fallback: 'New canvas',
+  },
+  replaceCanvasTitle: {
+    key: 'canvas.toolbar.replaceCanvasTitle',
+    fallback: 'Replace current canvas?',
+  },
+  replaceCanvasMessage: {
+    key: 'canvas.toolbar.replaceCanvasMessage',
+    fallback:
+      'This creates a blank canvas in the current workspace draft. Existing nodes and edges are removed after confirmation.',
+  },
+  replaceCanvasCancelLabel: {
+    key: 'canvas.toolbar.replaceCanvasCancelLabel',
+    fallback: 'Cancel',
+  },
+  replaceCanvasConfirmLabel: {
+    key: 'canvas.toolbar.replaceCanvasConfirmLabel',
+    fallback: 'Create blank canvas',
   },
   draftSyncedLabel: {
     key: 'canvas.draft.toolbar.syncedLabel',

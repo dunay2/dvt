@@ -1,3 +1,4 @@
+/** Owned concern: render canonical Canvas nodes with plugin decorations and governed node-shell gestures. */
 import styles from './DbtNodeComponent.module.css';
 import { Handle, Node, NodeProps, Position } from '@xyflow/react';
 import { Copy, Info, MousePointer, Trash2 } from 'lucide-react';
@@ -184,7 +185,7 @@ function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
   return (
     <ContextMenu>
       <ContextMenuTrigger asChild>
-        <div className={cn(styles.root, 'relative')}>
+        <div className={cn(styles.root, 'canvas-node-drag-surface relative')}>
           {/* Target Handle (input) */}
           {shouldShowTargetHandle && (
             <Handle
@@ -229,7 +230,10 @@ function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
           <Info className="size-4" />
           Open inspector panel
         </ContextMenuItem>
-        <ContextMenuItem onSelect={() => data.onDuplicateNode?.(id)} disabled={!data.onDuplicateNode}>
+        <ContextMenuItem
+          onSelect={() => data.onDuplicateNode?.(id)}
+          disabled={!data.onDuplicateNode}
+        >
           <Copy className="size-4" />
           Duplicate node
         </ContextMenuItem>

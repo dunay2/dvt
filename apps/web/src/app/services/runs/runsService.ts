@@ -9,29 +9,6 @@ import type { DataSourceMode } from '../config/dataSource';
 import { createApiRunsService } from './runsService.api';
 import { createMockRunsService } from './runsService.mock';
 
-// Re-export port types for backward compatibility — consumers should migrate
-// to importing from '../../ports/runs' or '../../ports' directly.
-export type {
-  MaterializationEvidence,
-  RunExecutor,
-  RunAuthoringProvenance,
-  RunExecutionEvidence,
-  RunFailureEvidence,
-  RunGitArtifactRef,
-  RunPersistedPlanProvenance,
-  RunProvenanceChain,
-  StartRunInput,
-  UiRunStatus,
-  RunSummaryItem,
-  RunSnapshot,
-  RunEventTimelinePage,
-} from '../../ports/runs';
-
-/**
- * @deprecated Use {@link IRunsPort} from `../../ports/runs` instead.
- */
-export type RunsService = IRunsPort;
-
 export interface RunsServiceDependencies {
   sessionContext?: SessionContextPort;
 }

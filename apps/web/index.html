@@ -32,6 +32,17 @@
         opacity: 0;
         pointer-events: none;
       }
+      .app-loading-visually-hidden {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
       #app-loading-shell {
         width: min(92vw, 720px);
       }
@@ -256,18 +267,20 @@
   </head>
 
   <body>
-    <div
-      id="app-loading-screen"
-      data-state="loading"
-      role="status"
-      aria-label="Raven startup status"
-      aria-live="polite"
-      aria-atomic="true"
-      aria-busy="true"
-      aria-describedby="app-loading-message app-loading-progress"
-    >
+    <div id="app-loading-screen" data-state="loading">
       <div id="app-loading-shell">
         <section id="app-loading-status">
+          <output
+            id="app-loading-announcement"
+            class="app-loading-visually-hidden"
+            aria-label="Raven startup status"
+            aria-live="polite"
+            aria-atomic="true"
+            aria-busy="true"
+            aria-describedby="app-loading-message app-loading-progress"
+          >
+            Preparing Raven
+          </output>
           <header id="app-loading-header">
             <div id="app-loading-brand">
               <img id="app-loading-logo" src="/favicon/favicon.svg" alt="" aria-hidden="true" />

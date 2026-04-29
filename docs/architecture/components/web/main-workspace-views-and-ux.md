@@ -259,8 +259,8 @@ flowchart TB
 
 ## Current Constraints
 
-- The shell already behaves like a workbench, but state ownership is still too
-  centralized in `appStore.ts`.
+- The shell already behaves like a workbench, and state ownership now starts
+  from named slices. Route-level data contracts still need the same discipline.
 - Canvas is the most mature workbench route. Code, Lineage, Diff, and Artifacts
   still need stronger data contracts and more consistent UX hardening.
 - `Code` currently supports read-only browsing, but it still lacks governed

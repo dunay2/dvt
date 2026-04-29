@@ -32,7 +32,7 @@ remains the typed source for shared contribution shapes such as
 - plugin authors implement `PluginContributions`
 - plugin authors reuse shared types from the `contracts/` files
 - plugin authors do not instantiate `PluginManifest` directly
-- plugin authors do not create alternate registries or legacy parallel manifests
+- plugin authors do not create alternate registries or parallel retired manifests
 
 ## Authoring Flow
 
@@ -144,7 +144,7 @@ Use this path only when the behavior belongs to a distinct plugin identity.
 6. If the plugin adds a route, wire the route bootstrap handle and route tests
    in the same slice.
 
-Do not add alternate registration flows, lazy discovery outside `PLUGIN_REGISTRY`, legacy parallel contribution objects, or backward-compatible duplicate routes for the same workbench intent.
+Do not add alternate registration flows, lazy discovery outside `PLUGIN_REGISTRY`, parallel retired contribution objects, or duplicate routes for the same workbench intent.
 
 ## Common Change Matrix
 
@@ -171,7 +171,7 @@ Do not add alternate registration flows, lazy discovery outside `PLUGIN_REGISTRY
 - Prefer `node.metadata` and canonical view models over ad-hoc local state.
 - Use route views for real workbenches; use inspector panels for contextual detail.
 - Treat `PluginManifest` lifecycle fields as non-authoritative for current v1 authoring.
-- Remove replaced paths instead of keeping legacy parallel routes or fallback
+- Remove replaced paths instead of keeping parallel retired routes or fallback
   contribution wiring.
 - If two plugins start copying the same renderer, mapper, or panel logic,
   extract a shared module deliberately instead of duplicating the pattern.

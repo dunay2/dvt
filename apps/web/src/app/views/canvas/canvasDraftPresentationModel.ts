@@ -24,7 +24,7 @@ export type CanvasDraftPresentationState = {
   routeState: CanvasRouteState;
   recoveryReason: CanvasDraftRecoveryReason;
   draftToolbarState: CanvasDraftToolbarState;
-  bootstrapStatus: 'pending' | 'complete' | 'blocked' | 'error';
+  bootstrapStatus: 'pending' | 'complete' | 'failed' | 'blocked' | 'error';
   bootstrapDetail: string;
   canCompleteBootstrap: boolean;
 };
@@ -81,9 +81,9 @@ function deriveWorkbenchCanvasDraftPresentationState({
       routeState: 'error_graph',
       recoveryReason,
       draftToolbarState,
-      bootstrapStatus: 'error',
+      bootstrapStatus: 'failed',
       bootstrapDetail: workbenchState.message || canvasViewCopy.routeErrorFallbackMessage,
-      canCompleteBootstrap: false,
+      canCompleteBootstrap: true,
     });
   }
 

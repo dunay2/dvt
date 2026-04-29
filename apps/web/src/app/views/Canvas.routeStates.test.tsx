@@ -648,17 +648,17 @@ describe('Canvas route states', () => {
     });
     expectCanvasBootstrapState({
       routeState: 'error_graph',
-      bootstrapStatus: 'error',
+      bootstrapStatus: 'failed',
       bootstrapDetail: 'workspace graph unavailable',
-      canCompleteBootstrap: false,
+      canCompleteBootstrap: true,
     });
   });
 
   it('fails closed for unsupported canvas kind across graph, inspector, Plan, and Run', async () => {
     await renderCanvasRouteWithController(harness, {
       canvasDocument: {
-        kind: 'legacy',
-        title: 'Legacy canvas',
+        kind: 'retired-canvas-kind',
+        title: 'Retired canvas',
       },
       explorerNodes: [],
       inspectorNode: buildInspectorFixtureNode(),
@@ -676,7 +676,7 @@ describe('Canvas route states', () => {
       harness,
       text: 'Canvas unavailable',
       extraText:
-        'Canvas cannot open persisted canvas kind "legacy" because no runtime registration is available.',
+        'Canvas cannot open persisted canvas kind "retired-canvas-kind" because no runtime registration is available.',
       slot: 'canvas-error-state',
       viewportVisible: false,
     });
@@ -692,10 +692,10 @@ describe('Canvas route states', () => {
     ).not.toBeNull();
     expectCanvasBootstrapState({
       routeState: 'error_graph',
-      bootstrapStatus: 'error',
+      bootstrapStatus: 'failed',
       bootstrapDetail:
-        'Canvas cannot open persisted canvas kind "legacy" because no runtime registration is available.',
-      canCompleteBootstrap: false,
+        'Canvas cannot open persisted canvas kind "retired-canvas-kind" because no runtime registration is available.',
+      canCompleteBootstrap: true,
     });
   });
 
@@ -734,10 +734,10 @@ describe('Canvas route states', () => {
     expectCanvasRegistryClosed();
     expectCanvasBootstrapState({
       routeState: 'error_graph',
-      bootstrapStatus: 'error',
+      bootstrapStatus: 'failed',
       bootstrapDetail:
         'Canvas cannot open persisted canvas kind "dbt" because its plugin is disabled or unavailable.',
-      canCompleteBootstrap: false,
+      canCompleteBootstrap: true,
     });
   });
 

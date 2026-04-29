@@ -23,6 +23,7 @@ handoff without becoming the source of execution truth or shell truth.
 - [Canvas Authoring Runtime Component](./canvas-authoring-runtime-component.md)
 - [Canvas Authoring Projection Component](./canvas-authoring-projection-component.md)
 - [Canvas Draft Session Component](./canvas-draft-session-component.md)
+- [Canvas Startup And Draft Recovery Component](./canvas-startup-and-draft-recovery-component.md)
 - [Canvas Graph Lifecycle Component](./canvas-graph-lifecycle-component.md)
 - [Graph Sequences And State Machines](./graph-sequences-and-state-machines.md)
 - [Frontend Fowler Implementation Pattern](../frontend-fowler-implementation-pattern.md)
@@ -122,8 +123,12 @@ As of 2026-04-25:
   that protected graph plus scoped local working-set additions only, and
   `useCanvasViewportGraphModel.ts` projects those semantics into React Flow
   state
+- API-mode `WorkspaceGraphSnapshot` consumers now receive a read-model
+  projection from `GET /workspace/graph/draft` instead of calling a retired
+  `/workspace/graph` endpoint; the snapshot remains projection-only and does
+  not regain aggregate authority
 - Canvas source-import affordances are now capability-gated instead of being
-  implied by legacy mock-era empty states; the active `api` path hides
+  implied by mock-era empty states; the active `api` path hides
   `Add data` until the backend import endpoint exists, and `mock` is not a
   substitute active-authoring runtime under the hard-cut
 - the DVT authoring catalog now explicitly includes the governed
@@ -151,10 +156,17 @@ As of 2026-04-25:
   side-panel mutation even if a lower-level controller value drifts
 - canonical graph vocabularies are exported as runtime arrays and TypeScript
   unions derive from those arrays, so runtime guards cannot drift from types
+- persisted draft recovery now has an explicit replacement command from the
+  host tab strip: the action creates a blank canvas through the protected draft
+  save boundary with the current revision as the compare-and-swap guard, so
+  stale local demo data does not require manual database cleanup
+- React Flow node drag uses an explicit node drag surface on the visible node
+  shell, keeping drag affordance tied to effective mutation permission instead
+  of depending on incidental child event propagation
 
 ## Protected Draft Semantic Projection
 
-The current no-legacy transition point is now explicit:
+The current single-authority projection point is explicit:
 
 - `canvasDraftReadModel.ts` is the route-facing read-model seam for protected
   draft outcomes
@@ -190,7 +202,7 @@ Interpretation rule:
 - viewport node and edge state is a downstream projection of that semantic
   authoring graph, never a second semantic merge point
 - projected record still owns persisted working-set membership and positions
-- the legacy workspace-snapshot path is no longer allowed to override or
+- the retired workspace-snapshot path is no longer allowed to override or
   supplement active route semantics
 - capability-gated authoring actions such as source import must be derived from
   explicit service seams plus route posture, never from fallback copy
@@ -294,6 +306,64 @@ Runtime invariants:
 - `unsupported_kind` and `disabled_plugin` do not have an active
   `CanvasGraphStrategy` or `CanvasExecutionStrategy`; selectors must return
   absence instead of defaulting to `transformation`.
+
+## Persisted Draft Replacement Recovery
+
+Canvas has a singular workspace draft canvas document. It does not model
+multiple canvases in one workspace draft yet. When a persisted local or remote
+draft already exists, the first-canvas empty state is therefore intentionally
+hidden.
+
+The mature recovery path is an explicit replacement transition from the
+host-owned tab strip. This is not a local reset and not a frontend mock escape
+hatch: it writes a new blank draft through the same protected draft repository
+used by normal authoring saves.
+
+```mermaid
+flowchart LR
+  Tab["Host tab strip"] --> Confirm["Confirm replacement"]
+  Confirm --> Command["replace_current create-canvas command"]
+  Command --> CAS["saveGraphDraft expectedRevision=current"]
+  CAS --> Saved["Saved blank draft"]
+  Saved --> Cache["Replace draft query state"]
+  Cache --> Projection["Authoring projection"]
+  Projection --> Viewport["Empty editable canvas"]
+
+  CAS --> Conflict["Conflict"]
+  Conflict --> Session["Draft session conflict posture"]
+```
+
+Invariants:
+
+- first-canvas creation remains fail-closed when a draft record already exists;
+- replacement is allowed only when the command carries `replace_current`;
+- replacement uses the existing draft revision as the CAS guard;
+- the replacement payload clears node ids, positions, and edges in one
+  authoritative save;
+- read-only, backend-blocked, runtime-blocked, or recovery-blocked postures keep
+  the replacement action disabled through effective route permissions.
+
+## Node Drag Surface
+
+Graph mutation remains governed by `CanvasRuntimePolicy` and the effective route
+permissions. When mutation is allowed, the viewport passes
+`nodesDraggable=true`; each projected React Flow node declares
+`.canvas-node-drag-surface` as its drag handle, and the rendered DVT node shell
+owns that class.
+
+```mermaid
+flowchart LR
+  Policy["CanvasRuntimePolicy"] --> Effective["effectiveUserPermissions.canEditEdges"]
+  Effective --> Viewport["ReactFlow nodesDraggable"]
+  Effective --> Toolbar["Layout / New canvas enabled state"]
+  Mapper["canvasNodeMapper dragHandle"] --> Viewport
+  Viewport --> DragHandle["dragHandle=.canvas-node-drag-surface"]
+  Node["DbtNodeComponent shell"] --> DragHandle
+```
+
+This keeps drag behavior explicit while preserving the fail-closed rule: if the
+route is read-only or blocked, React Flow receives no node-change handler and
+nodes are not draggable.
 
 ## Canvas Runtime Policy
 
@@ -503,6 +573,11 @@ string checks. Current semantic coverage includes:
 - typed empty-state catalog and copy derivation from the active runtime;
 - first-node authoring remains available even when source import capability is
   unavailable.
+- explicit persisted-draft replacement through CAS saves, including the
+  negative path that existing drafts are not overwritten without
+  `replace_current`;
+- explicit node drag handle wiring between React Flow and the rendered node
+  shell.
 
 Source-text assertions are retained only as narrow import-boundary tripwires
 where runtime behavior cannot observe ownership directly.
@@ -536,7 +611,7 @@ Long-term:
 
 - Graph remains one bounded frontend authoring context
 - the authoring core follows DDD plus tactical CQRS plus hexagonal layering
-- the route edge remains Fowler-compatible through explicit facades and
+- the route edge remains Fowler-aligned through explicit facades and
   presentation models
 - the shell consumes graph route contracts but does not own graph domain rules
 

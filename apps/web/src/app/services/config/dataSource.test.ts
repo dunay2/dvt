@@ -8,7 +8,7 @@ describe('resolveDataSource', () => {
   });
 
   it('defaults to api when VITE_DATA_SOURCE is invalid', () => {
-    expect(resolveDataSource('legacy-mode')).toBe('api');
+    expect(resolveDataSource('unsupported-mode')).toBe('api');
   });
 
   it('keeps explicit supported values', () => {

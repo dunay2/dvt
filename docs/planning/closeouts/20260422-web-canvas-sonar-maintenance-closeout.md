@@ -20,7 +20,7 @@ structural drift in the route-facing authoring seam.
 
 ### Root cause
 
-The `TF-E2` hard cut clarified authority and removed legacy routes, but some
+The `TF-E2` hard cut clarified authority and removed retired routes, but some
 route-local helpers remained broad:
 
 - tests still carry repeated local selectors or explicit default-parameter calls
@@ -99,3 +99,54 @@ named presentation helpers, and smaller projection/default builders.
   - re-run negative or guarded route-state tests touched by helper extraction
 - Libraries evaluated:
   - None evaluated - no custom implementation
+
+## 2026-04-29 Follow-Up. Bootstrap And Canvas Static Analysis
+
+### Problem summary
+
+The current editor scan reports three quality issues in the web slice:
+
+- `apps/web/index.html` publishes the startup gate status role on a structural
+  container instead of a semantic status output.
+- `CanvasPlaygroundTabStrip.templates.tsx` keeps arbitrary Tailwind variable
+  syntax where canonical custom-property shorthand is available.
+- `CanvasViewport.test.tsx` defines the React Flow `MiniMap` mock with inline
+  destructured typed parameters that Sonar reports as malformed JSX properties.
+
+### Root cause
+
+The previous bootstrap and Canvas hardening fixed behavior and architecture,
+but it left a few presentation seams optimized for immediacy rather than static
+analysis readability. The underlying pattern is not a domain defect; it is
+semantic drift at the accessibility and test-template boundary.
+
+### Constraints and invariants
+
+- `AGENTS.md`: no hidden debt, no hook bypass, and close with validation
+  evidence.
+- `docs/guides/ai-work-protocol.md`: this remains `Slim` maintenance because
+  no public API or user workflow changes.
+- `docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-component.md`:
+  startup and canvas templates must preserve the governed route surface,
+  template/model split, and static architecture guards.
+
+### Options considered
+
+- Ignore the IDE warnings because repo gates already pass.
+- Suppress Sonar locally.
+- Make small semantic fixes and add regression coverage where the warnings map
+  to a durable rule.
+
+### Selected option and rationale
+
+Apply narrow semantic fixes: use an `<output>` live-region for startup status,
+canonicalize Tailwind variable classes, and move the React Flow mock props into
+named test-local types/components. This removes the warnings without changing
+runtime behavior or weakening the component boundaries.
+
+### Rejected alternatives
+
+- Suppression, because it hides real signal at the accessibility/test
+  readability boundary.
+- Broader bootstrap redesign, because the current issue is bounded to static
+  analysis hygiene.
