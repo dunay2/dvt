@@ -812,8 +812,11 @@ Executed validation:
   - passed for the newly added component guides.
 - `pnpm lint` - passed.
 
-Final pre-push validation is intentionally run after staging so changed-file
-governance includes the newly added docs and CI-tool test file.
+- `pnpm verify:prepush` before commit - passed; included changed-file
+  governance, ARC evidence check, markdown lint, changed-file checks,
+  forbidden tracked-file check, and root TypeScript pre-push typecheck.
+- `pnpm verify:prepush` after commit - passed; the markdown changed gate
+  included the newly added Engine and Lineage component guides.
 
 ### No-Debt And No-Stub Evidence
 
