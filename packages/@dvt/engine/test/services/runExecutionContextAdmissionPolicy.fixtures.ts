@@ -171,12 +171,12 @@ export function assertDefaultAdmission(
     context?: ResolvedRunContext;
   }
 ): Promise<void> {
-  return policy.assertAllowed(
-    overrides?.plan ?? makePlan(),
-    overrides?.planRef ?? makePlanRef(),
-    overrides?.executionPolicy ?? makeExecutionPolicy(),
-    overrides?.context ?? makeContext()
-  );
+  return policy.assertAllowed({
+    plan: overrides?.plan ?? makePlan(),
+    planRef: overrides?.planRef ?? makePlanRef(),
+    executionPolicy: overrides?.executionPolicy ?? makeExecutionPolicy(),
+    context: overrides?.context ?? makeContext(),
+  });
 }
 
 function readExampleArtifactTenantId(pluginContext: unknown): string {

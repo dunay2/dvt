@@ -1,5 +1,5 @@
 import type { WorkspaceGraphDraftRecord as ProtectedWorkspaceGraphDraftRecord } from '@dvt/contracts';
-import { vi } from 'vitest';
+import type { Mock } from 'vitest';
 
 import type { IPlansPort } from '../../ports/plans';
 import type { IRunsPort } from '../../ports/runs';
@@ -13,7 +13,7 @@ import type { CanvasDraftReadModel } from './canvasDraftReadModel';
 
 export type OverlayDecoration = { borderColor?: string; dimmed?: boolean } | null;
 
-export type MockFn = ReturnType<typeof vi.fn>;
+export type MockFn = Mock;
 
 export type CanvasHarnessState = {
   graphData: { nodes: Array<{ id: string }>; edges: Array<{ id: string }> };
@@ -34,6 +34,8 @@ export type CanvasHarnessState = {
   store: {
     setCanvasViewport: MockFn;
     setCanvasNodePositions: MockFn;
+    setInspectorNode: MockFn;
+    setSelectedNodes: MockFn;
   } & Record<string, unknown>;
   queryClient: {
     cancelQueries: MockFn;

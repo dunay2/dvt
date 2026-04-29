@@ -1,9 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  buildDraftReadOkResponse,
-  buildWorkspaceGraphDraftEndpoint,
-} from './workspaceGraphDraft.test.fixtures';
+import { buildDraftReadOkResponse } from './workspaceGraphDraftProtocol.test.fixtures';
+import { buildWorkspaceGraphDraftEndpoint } from './workspaceGraphDraftHttp';
 import { WORKSPACE_GRAPH_DRAFT_HTTP_ERROR_REASON } from './workspaceGraphDraftHttp';
 import { createApiWorkspaceServiceHarness } from './workspaceServiceApi.test.harness';
 import {

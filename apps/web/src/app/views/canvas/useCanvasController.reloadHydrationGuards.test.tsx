@@ -2,7 +2,7 @@ import React, { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { WorkspaceGraphDraftAuthoringSaveResult } from '../../ports/workspaceGraphDraftAuthoring';
-import { buildDraftSaveSavedResponse } from '../../services/workspace/workspaceGraphDraft.test.fixtures';
+import { buildDraftSaveSavedResponse } from '../../services/workspace/workspaceGraphDraftProtocol.test.fixtures';
 import type { CanvasDraftSession } from './canvasDraftSession';
 import {
   applyTransformationAuthoringFixture,
@@ -200,10 +200,7 @@ describe('useCanvasController reload hydration guards', () => {
 
     harness.state.store.selectedNodes = ['node_2'];
     harness.state.store.inspectorNodeId = 'node_2';
-    const storeActions = harness.state.store as typeof harness.state.store & {
-      setSelectedNodes: ReturnType<typeof vi.fn>;
-      setInspectorNode: ReturnType<typeof vi.fn>;
-    };
+    const storeActions = harness.state.store;
     storeActions.setSelectedNodes.mockClear();
     storeActions.setInspectorNode.mockClear();
 

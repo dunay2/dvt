@@ -2,7 +2,7 @@
 title: Canvas Startup And Draft Recovery Component
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-04-28
+last_reviewed: 2026-04-29
 planning_type: architecture
 ---
 
@@ -20,6 +20,7 @@ Use this page when changing:
 - workspace graph draft read-model projection
 - host-owned create or replace canvas commands
 - React Flow node drag handle wiring
+- scenario coverage for Canvas startup and draft recovery
 
 Do not use it as the multi-canvas architecture. The current model still has one
 authoritative workspace draft canvas document per workspace scope.
@@ -27,24 +28,32 @@ authoritative workspace draft canvas document per workspace scope.
 The phrase "failed route posture" in this guide means a route-local failure
 whose first visible surface is already governed and safe to reveal.
 
+User-story coverage lives in
+[Canvas Startup And Draft Recovery User Stories](./canvas-startup-and-draft-recovery-user-stories.md).
+
 ## Public API
 
-| API                                                   | Owner                                    | Responsibility                                                                    |
-| ----------------------------------------------------- | ---------------------------------------- | --------------------------------------------------------------------------------- |
-| `createFailedRouteBootstrapPresentation(detail)`      | `routeBootstrapContract.ts`              | Publish controlled route-local failures that may reveal a governed route surface. |
-| `WORKSPACE_GRAPH_DRAFT_ENDPOINT`                      | `workspaceGraphDraftHttp.ts`             | Single protected draft HTTP endpoint for draft reads and saves.                   |
-| `buildWorkspaceGraphDraftEndpoint(scope)`             | `workspaceGraphDraftHttp.ts`             | Attach tenant, project, and environment scope to protected draft reads.           |
-| `projectWorkspaceGraphDraftReadResponseSnapshot(...)` | `workspaceGraphDraftProjection.ts`       | Project protected authoring truth into the canonical graph snapshot read model.   |
-| `CanvasCreateCanvasDocumentCommand`                   | `canvasDraftLifecycle.types.ts`          | Carry `create_first` or `replace_current` canvas-document intent.                 |
-| `executeCreateCanvasDocumentCommand(...)`             | `canvasCreateCanvasDocumentCommand.ts`   | Persist first or explicitly replaced canvas documents through CAS draft saves.    |
-| `CanvasPlaygroundTabStrip`                            | `CanvasPlaygroundTabStrip.tsx`           | Coordinate authoritative host tabs and confirmed replacement action state.        |
-| `resolveCanvasReplacementActionState(...)`            | `canvasPlaygroundTabStripModel.ts`       | Resolve locale-backed replacement labels, permission state, and active kind.      |
-| `CanvasReplacementActionViewState`                    | `canvasPlaygroundTabStripModel.ts`       | Carry only replacement labels and enablement that templates may render.           |
-| `CanvasPlaygroundTabStripTemplate`                    | `CanvasPlaygroundTabStrip.templates.tsx` | Render tab-strip HTML from resolved view state without command policy.            |
-| `CanvasPlaygroundHostTemplate`                        | `CanvasPlaygroundHost.templates.tsx`     | Render first-canvas host HTML without constructing draft command DTOs.            |
-| `resolveCanvasRecoveryBannerViewState(...)`           | `canvasRecoveryBannerModel.ts`           | Resolve route recovery reason into renderable banner state and copy.              |
-| `CanvasRecoveryBannerTemplate`                        | `CanvasRecoveryBanner.templates.tsx`     | Render recovery banner HTML from resolved view state only.                        |
-| `CANVAS_NODE_DRAG_HANDLE_SELECTOR`                    | `canvasNodeMapper.ts`                    | Name the React Flow drag handle shared by mapped nodes and rendered node shell.   |
+| API                                                   | Owner                                        | Responsibility                                                                    |
+| ----------------------------------------------------- | -------------------------------------------- | --------------------------------------------------------------------------------- |
+| `createFailedRouteBootstrapPresentation(detail)`      | `routeBootstrapContract.ts`                  | Publish controlled route-local failures that may reveal a governed route surface. |
+| `WORKSPACE_GRAPH_DRAFT_ENDPOINT`                      | `workspaceGraphDraftHttp.ts`                 | Single protected draft HTTP endpoint for draft reads and saves.                   |
+| `buildWorkspaceGraphDraftEndpoint(scope)`             | `workspaceGraphDraftHttp.ts`                 | Attach tenant, project, and environment scope to protected draft reads.           |
+| `projectWorkspaceGraphDraftReadResponseSnapshot(...)` | `workspaceGraphDraftSnapshotProjection.ts`   | Project protected authoring truth into the DBT-shaped graph snapshot read model.  |
+| `CanvasCreateCanvasDocumentCommand`                   | `canvasDraftLifecycle.types.ts`              | Carry `create_first` or `replace_current` canvas-document intent.                 |
+| `executeCreateCanvasDocumentCommand(...)`             | `canvasCreateCanvasDocumentCommand.ts`       | Persist first or explicitly replaced canvas documents through CAS draft saves.    |
+| `resolveCreateCanvasDocumentCommandEligibility(...)`  | `canvasCreateCanvasDocumentCommandPolicy.ts` | Decide CAS eligibility for first-create and replace-current commands.             |
+| `buildBlankCanvasDocumentDraftInput(...)`             | `canvasCreateCanvasDocumentCommandPolicy.ts` | Build the authoritative empty draft save request.                                 |
+| `applyCanvasDocumentSaveSuccess(...)`                 | `canvasCreateCanvasDocumentSaveResult.ts`    | Apply saved draft truth to cache, session, and save status.                       |
+| `applyCanvasDocumentSaveConflict(...)`                | `canvasCreateCanvasDocumentSaveResult.ts`    | Apply conflict draft truth to cache, session, and save status.                    |
+| `CanvasPlaygroundTabStrip`                            | `CanvasPlaygroundTabStrip.tsx`               | Mount the host tab-strip presentation boundary.                                   |
+| `useCanvasPlaygroundTabStripPresenter(...)`           | `useCanvasPlaygroundTabStripPresenter.ts`    | Coordinate authoritative host tabs and confirmed replacement callbacks.           |
+| `resolveCanvasReplacementActionState(...)`            | `canvasPlaygroundTabStripModel.ts`           | Resolve locale-backed replacement labels, permission state, and active kind.      |
+| `CanvasReplacementActionViewState`                    | `canvasPlaygroundTabStripModel.ts`           | Carry only replacement labels and enablement that templates may render.           |
+| `CanvasPlaygroundTabStripTemplate`                    | `CanvasPlaygroundTabStrip.templates.tsx`     | Render tab-strip HTML from resolved view state without command policy.            |
+| `CanvasPlaygroundHostTemplate`                        | `CanvasPlaygroundHost.templates.tsx`         | Render first-canvas host HTML without constructing draft command DTOs.            |
+| `resolveCanvasRecoveryBannerViewState(...)`           | `canvasRecoveryBannerModel.ts`               | Resolve route recovery reason into renderable banner state and copy.              |
+| `CanvasRecoveryBannerTemplate`                        | `CanvasRecoveryBanner.templates.tsx`         | Render recovery banner HTML from resolved view state only.                        |
+| `CANVAS_NODE_DRAG_HANDLE_SELECTOR`                    | `canvasNodeMapper.ts`                        | Name the React Flow drag handle shared by mapped nodes and rendered node shell.   |
 
 ## Invariants
 
@@ -64,16 +73,28 @@ whose first visible surface is already governed and safe to reveal.
 - Create and replacement eligibility must remain behind named semantic helpers;
   route code must not reintroduce anonymous compound conditionals for CAS
   policy.
+- `executeCreateCanvasDocumentCommand(...)` must remain an application
+  orchestrator. CAS eligibility belongs in
+  `canvasCreateCanvasDocumentCommandPolicy.ts`; cache/session effects belong in
+  `canvasCreateCanvasDocumentSaveResult.ts`.
 - DBT node-type projection must remain a declarative rule table plus a matcher,
   not a growing sequence of branch-local `if` checks.
 - Canonical-to-viewport node projection must accept named argument objects for
   projection options; positional argument lists must not hide layout,
   column-lineage, overlay, or persisted-position semantics.
-- `CanvasPlaygroundTabStrip.tsx` must coordinate host tab state only. Detailed
-  HTML belongs in `CanvasPlaygroundTabStrip.templates.tsx`, and replacement
-  permission/copy/command decisions belong in `canvasPlaygroundTabStripModel.ts`.
+- `workspaceGraphDraftProjection.ts` must project protected authoring truth
+  into route-facing draft and canonical semantic graph models only. DBT-shaped
+  snapshot rules belong in `workspaceGraphDraftSnapshotProjection.ts`.
+- `CanvasPlaygroundTabStrip.tsx` must remain a thin React mount for the
+  tab-strip presentation boundary. Detailed HTML belongs in
+  `CanvasPlaygroundTabStrip.templates.tsx`; presenter callbacks belong in
+  `useCanvasPlaygroundTabStripPresenter.ts`; replacement permission, copy, and
+  command decisions belong in `canvasPlaygroundTabStripModel.ts`.
 - Tab-strip templates must receive already-resolved copy and state. They must
   not import locale catalogs or construct `replace_current` command DTOs.
+- The tab-strip presenter must resolve copy through `resolveCanvasViewCopy(...)`
+  so rendered labels stay locale-backed instead of using hardcoded or static
+  English strings.
 - Tab-strip templates must depend on `CanvasReplacementActionViewState`, not on
   command-selection state such as `activeCanvasKind`.
 - `CanvasPlaygroundHost.tsx` must own first-canvas command construction; its
@@ -119,10 +140,11 @@ sequenceDiagram
   Tabs->>Operator: confirm replacement
   Operator->>Tabs: confirm
   Tabs->>Command: replace_current(kind,title)
+  Command->>Command: resolve eligibility and blank draft input
   Command->>Draft: saveGraphDraft(expectedRevision=current)
   Draft-->>Command: saved or conflict
-  Command->>Cache: replace remote draft state
-  Command->>Session: apply save success or conflict
+  Command->>Cache: apply authoritative remote draft state
+  Command->>Session: apply save success or conflict transition
 ```
 
 ### Protected snapshot projection
@@ -131,7 +153,7 @@ sequenceDiagram
 flowchart LR
   ApiService["workspaceService.api.ts"] --> Endpoint["/workspace/graph/draft"]
   Endpoint --> Contract["WorkspaceGraphDraftReadResponse"]
-  Contract --> Projection["workspaceGraphDraftProjection.ts"]
+  Contract --> Projection["workspaceGraphDraftSnapshotProjection.ts"]
   Projection --> Snapshot["WorkspaceGraphSnapshot read model"]
   Snapshot --> RouteConsumers["graph snapshot route consumers"]
 ```
@@ -180,41 +202,73 @@ Indirect consumers:
 - route shell composition
 - plugin-rendered Canvas nodes through the DVT node shell
 
+## User-Story Traceability
+
+The component owns the Canvas scenarios below. Branch-adjacent engine,
+traceability, and adapter scenarios are recorded in the Fowler mailbox review
+because they belong to separate component owners.
+
+| Story group        | Local stories                                                     | Governing invariant                                                            |
+| ------------------ | ----------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| Startup gate       | `US-CANVAS-BOOTSTRAP-001` through `US-CANVAS-BOOTSTRAP-004`       | Route posture decides whether the shell may reveal a governed surface.         |
+| Protected draft    | `US-CANVAS-DRAFT-001` through `US-CANVAS-DRAFT-006`               | Canvas reads and writes the protected draft authority with explicit CAS rules. |
+| Presentation       | `US-CANVAS-PRESENTATION-001` through `US-CANVAS-PRESENTATION-003` | JSX templates render resolved view state and do not own command policy.        |
+| Architecture guard | `US-CANVAS-ARCH-001`                                              | Tests validate semantic promises and documentation traceability.               |
+
+```mermaid
+flowchart LR
+  Stories["Canvas user stories"] --> Guide["Component guide"]
+  Stories --> Guard["Semantic architecture guard"]
+  Guard --> API["Public API and invariants"]
+  Guard --> Templates["Passive templates"]
+  Guard --> Projection["Protected draft projection"]
+  Guard --> Commands["Create/replace command policy"]
+```
+
 ## Fowler reading
 
-| Pattern                       | Local expression                       | Maturity rule                                     |
-| ----------------------------- | -------------------------------------- | ------------------------------------------------- |
-| Application Controller        | route bootstrap presentation factories | separate route operability from process startup   |
-| Gateway                       | `workspaceGraphDraftHttp.ts`           | one protected endpoint and scope vocabulary       |
-| Projection Layer              | `workspaceGraphDraftProjection.ts`     | read models do not regain authority               |
-| Command                       | `CanvasCreateCanvasDocumentCommand`    | destructive recovery is explicit and guarded      |
-| Decision Table                | `DBT_NODE_TYPE_RULES`                  | projection policy is data-driven and extensible   |
-| Passive View                  | `CanvasPlaygroundTabStrip`             | render host state without owning draft DTOs       |
-| Presentation Template         | `CanvasPlaygroundTabStripTemplate`     | keep JSX separate from replacement policy         |
-| Presentation Model            | `CanvasReplacementActionViewState`     | expose only renderable action state to templates  |
-| Presentation Template         | `CanvasPlaygroundHostTemplate`         | render host selection HTML without command DTOs   |
-| Presentation Model            | `CanvasRecoveryBannerViewState`        | reduce recovery reasons to renderable state       |
-| Presentation Template         | `CanvasRecoveryBannerTemplate`         | render recovery HTML without route state imports  |
-| Separated Domain Model        | `canvasPlaygroundTabStripModel.ts`     | test command and i18n state without React         |
-| Intention Revealing Interface | `CANVAS_NODE_DRAG_HANDLE_SELECTOR`     | gesture ownership is named and testable           |
-| Parameter Object              | `MapCanonicalNodeToCanvasNodeArgs`     | viewport projection options are named at callsite |
-| Extract Component             | `CanvasReplacementAction`              | destructive action UI is isolated and testable    |
+| Pattern                       | Local expression                             | Maturity rule                                      |
+| ----------------------------- | -------------------------------------------- | -------------------------------------------------- |
+| Application Controller        | route bootstrap presentation factories       | separate route operability from process startup    |
+| Gateway                       | `workspaceGraphDraftHttp.ts`                 | one protected endpoint and scope vocabulary        |
+| Projection Layer              | `workspaceGraphDraftProjection.ts`           | canonical route semantics stay separate            |
+| Projection Layer              | `workspaceGraphDraftSnapshotProjection.ts`   | DBT-shaped snapshots stay adapter/read-model local |
+| Command                       | `CanvasCreateCanvasDocumentCommand`          | destructive recovery is explicit and guarded       |
+| Policy Object                 | `canvasCreateCanvasDocumentCommandPolicy.ts` | create/replace CAS rules are testable without UI   |
+| Domain Event Handler          | `canvasCreateCanvasDocumentSaveResult.ts`    | save outcomes update session state in one place    |
+| Decision Table                | `DBT_NODE_TYPE_RULES`                        | projection policy is data-driven and extensible    |
+| Passive View                  | `CanvasPlaygroundTabStrip`                   | mount host state without owning presenter policy   |
+| Presentation Model            | `useCanvasPlaygroundTabStripPresenter`       | coordinate callbacks without rendering HTML        |
+| Presentation Template         | `CanvasPlaygroundTabStripTemplate`           | keep JSX separate from replacement policy          |
+| Presentation Model            | `CanvasReplacementActionViewState`           | expose only renderable action state to templates   |
+| Presentation Template         | `CanvasPlaygroundHostTemplate`               | render host selection HTML without command DTOs    |
+| Presentation Model            | `CanvasRecoveryBannerViewState`              | reduce recovery reasons to renderable state        |
+| Presentation Template         | `CanvasRecoveryBannerTemplate`               | render recovery HTML without route state imports   |
+| Separated Domain Model        | `canvasPlaygroundTabStripModel.ts`           | test command and i18n state without React          |
+| Intention Revealing Interface | `CANVAS_NODE_DRAG_HANDLE_SELECTOR`           | gesture ownership is named and testable            |
+| Parameter Object              | `MapCanonicalNodeToCanvasNodeArgs`           | viewport projection options are named at callsite  |
+| Extract Component             | `CanvasReplacementAction`                    | destructive action UI is isolated and testable     |
 
 ## Negative coverage
 
 The local architecture guard is:
 
 - `apps/web/src/app/views/canvas/canvasStartupAndDraftRecovery.architecture.test.ts`
+- `apps/web/src/app/services/workspace/workspaceGraphDraftFixtureBoundaries.architecture.test.ts`
 
 It validates semantics, not only barrel thinness:
 
 - `failed` posture can complete bootstrap;
 - protected draft endpoint and scoped URL are canonical;
+- workspace graph draft test fixtures are split by authoring, protected
+  protocol, and expected projection concerns;
 - replacement requires `replace_current` and uses current revision CAS;
 - replacement eligibility, draft input construction, save success, and save
-  conflict are held behind named semantic helpers;
-- DBT node-type projection uses `DBT_NODE_TYPE_RULES` plus a matcher instead of
-  hidden branch chains;
+  conflict are held behind named semantic helpers outside the command
+  orchestrator;
+- DBT node-type projection lives in `workspaceGraphDraftSnapshotProjection.ts`
+  and uses `DBT_NODE_TYPE_RULES` plus a matcher instead of hidden branch
+  chains;
 - canonical-node viewport projection uses `MapCanonicalNodeToCanvasNodeArgs`
   instead of a positional argument train;
 - host tab rendering and replacement action rendering stay behind template
@@ -223,7 +277,9 @@ It validates semantics, not only barrel thinness:
 - replacement templates consume `CanvasReplacementActionViewState`, not
   command-selection state;
 - `CanvasPlaygroundTabStrip.tsx` does not re-own `AlertDialog`, `TabsTrigger`,
-  or `replace_current` command construction;
+  React state hooks, or `replace_current` command construction;
+- `useCanvasPlaygroundTabStripPresenter.ts` coordinates tab-strip callbacks
+  without rendering JSX;
 - `CanvasPlaygroundTabStrip.templates.tsx` does not import Canvas copy catalogs
   or command DTO literals;
 - `CanvasPlaygroundHost.tsx` builds create-canvas commands while

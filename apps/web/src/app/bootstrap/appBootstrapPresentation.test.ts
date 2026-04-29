@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { resolveAppBootstrapCopy } from './appBootstrapCopy';
 import {
   BOOTSTRAP_STEP_ORDER,
   canCompleteBootstrapSteps,
@@ -146,5 +147,21 @@ describe('appBootstrapPresentation', () => {
     );
     expect(formatBootstrapBuildDate('2026-04-18T10:20:00.000Z')).toBe('2026-04-18 10:20 UTC');
     expect(formatBootstrapBuildDate('not-a-date')).toBe('not-a-date');
+  });
+
+  it('derives startup copy from the active locale catalog', () => {
+    const spanishCopy = resolveAppBootstrapCopy('es-ES');
+    const state = createInitialBootstrapStepState(spanishCopy);
+    const presentation = resolveBootstrapScreenPresentation(state, spanishCopy);
+
+    expect(presentation.title).toBe('Preparando Raven');
+    expect(presentation.announcement.label).toBe('Estado de arranque de Raven');
+    expect(presentation.steps[0]?.label).toBe('Hidratando la aplicacion');
+    expect(presentation.progress.kicker).toBe('Preparacion de arranque');
+    expect(presentation.progress.listLabel).toBe('Comprobaciones de preparacion de arranque');
+    expect(presentation.progress.label).toBe('0/5 comprobaciones de arranque resueltas');
+    expect(resolveBootstrapStepDetail('route', 'error', spanishCopy)).toBe(
+      'Preparando ruta inicial fallo durante el arranque.'
+    );
   });
 });

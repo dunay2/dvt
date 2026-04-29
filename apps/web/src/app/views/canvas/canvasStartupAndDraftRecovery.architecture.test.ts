@@ -57,14 +57,34 @@ const ownedConcernModules = [
     phrase: 'Owned concern: adapt the workspace service port',
   },
   {
+    label: 'workspace draft DBT snapshot projection',
+    path: '../../services/workspace/workspaceGraphDraftSnapshotProjection.ts',
+    phrase: 'Owned concern: project workspace graph semantic truth into DBT-shaped graph snapshots',
+  },
+  {
     label: 'canvas node mapper',
     path: 'canvasNodeMapper.ts',
     phrase: 'Owned concern: project canonical graph primitives into React Flow nodes',
   },
   {
+    label: 'canvas tab-strip presenter',
+    path: 'useCanvasPlaygroundTabStripPresenter.ts',
+    phrase: 'Owned concern: adapt Canvas tab-strip replacement policy',
+  },
+  {
     label: 'canvas tab-strip replacement model',
     path: 'canvasPlaygroundTabStripModel.ts',
     phrase: 'Owned concern: resolve Canvas playground tab-strip replacement policy',
+  },
+  {
+    label: 'create canvas command policy',
+    path: 'canvasCreateCanvasDocumentCommandPolicy.ts',
+    phrase: 'Owned concern: decide create-canvas document CAS eligibility',
+  },
+  {
+    label: 'create canvas command save result',
+    path: 'canvasCreateCanvasDocumentSaveResult.ts',
+    phrase: 'Owned concern: apply authoritative create-canvas save outcomes',
   },
   {
     label: 'canvas tab-strip presentation templates',
@@ -106,29 +126,46 @@ function buildCanonicalNode(id: string): CanonicalNode {
 }
 
 describe('canvas startup and draft recovery architecture', () => {
-  it('documents the Fowler analysis and local component guide for the branch semantics', () => {
+  it('documents the Fowler analysis, user stories, and local component guide for the branch semantics', () => {
     const mailbox = readRepoFile(
-      'buzon/20260428-codex-fowler-web-graph-startup-and-draft-recovery-analysis.md'
+      'buzon/20260429-codex-static-analysis-followup-fowler-architecture-review.md'
     );
     const componentGuide = readRepoFile(
       'docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-component.md'
     );
+    const userStories = readRepoFile(
+      'docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-user-stories.md'
+    );
 
     expect(mailbox).toContain('## Fowler verdict');
+    expect(mailbox).toContain('## Comparison with mature systems');
     expect(mailbox).toContain('## Antipatterns detected');
     expect(mailbox).toContain('## Drift fixed');
     expect(mailbox).toContain('## Opportunities');
     expect(mailbox).toContain('## Lessons for future slices');
+    expect(mailbox).toContain('## User-story coverage');
+    expect(mailbox).toContain('## ADR decision');
 
     expect(componentGuide).toContain('## Public API');
     expect(componentGuide).toContain('## Invariants');
     expect(componentGuide).toContain('## Transitions');
     expect(componentGuide).toContain('## Consumers');
+    expect(componentGuide).toContain('## User-Story Traceability');
     expect(componentGuide).toContain('```mermaid');
     expect(componentGuide).toContain('failed route posture');
     expect(componentGuide).toContain('replace_current');
     expect(componentGuide).toContain('workspace graph draft read-model');
     expect(componentGuide).toContain('drag handle');
+
+    expect(userStories).toContain('## User Stories');
+    expect(userStories).toContain('US-CANVAS-BOOTSTRAP-001');
+    expect(userStories).toContain('US-CANVAS-BOOTSTRAP-004');
+    expect(userStories).toContain('US-CANVAS-DRAFT-003');
+    expect(userStories).toContain('US-CANVAS-DRAFT-006');
+    expect(userStories).toContain('US-CANVAS-PRESENTATION-002');
+    expect(userStories).toContain('US-CANVAS-ARCH-001');
+    expect(userStories).toContain('## Scenario Coverage Matrix');
+    expect(userStories).toContain('## TDD Traceability');
   });
 
   it('keeps owned-concern docblocks on the modules that own the branch behavior', () => {
@@ -173,6 +210,7 @@ describe('canvas startup and draft recovery architecture', () => {
     const tabStripModelSource = readAppSource('canvasPlaygroundTabStripModel.ts');
     const tabStripTemplateSource = readAppSource('CanvasPlaygroundTabStrip.templates.tsx');
     const createCommandSource = readAppSource('canvasCreateCanvasDocumentCommand.ts');
+    const createCommandPolicySource = readAppSource('canvasCreateCanvasDocumentCommandPolicy.ts');
     const workspaceServiceSource = readAppSource(
       '../../services/workspace/workspaceService.api.ts'
     );
@@ -182,15 +220,17 @@ describe('canvas startup and draft recovery architecture', () => {
     expect(tabStripModelSource).toContain('resolveCanvasReplacementActionState');
     expect(tabStripTemplateSource).toContain('AlertDialog');
 
-    expect(createCommandSource).toContain("command.mode ?? 'create_first'");
-    expect(createCommandSource).toContain("case 'create_first'");
-    expect(createCommandSource).toContain("case 'replace_current'");
-    expect(createCommandSource).toContain('resolveCreateFirstCanvasDocumentEligibility');
-    expect(createCommandSource).toContain('resolveReplaceCurrentCanvasDocumentEligibility');
-    expect(createCommandSource).toContain('expectedRevision: existingRecord.revision');
+    expect(createCommandSource).toContain('resolveCreateCanvasDocumentCommandEligibility');
+    expect(createCommandPolicySource).toContain("command.mode ?? 'create_first'");
+    expect(createCommandPolicySource).toContain("case 'create_first'");
+    expect(createCommandPolicySource).toContain("case 'replace_current'");
+    expect(createCommandPolicySource).toContain('resolveCreateFirstCanvasDocumentEligibility');
+    expect(createCommandPolicySource).toContain('resolveReplaceCurrentCanvasDocumentEligibility');
+    expect(createCommandPolicySource).toContain('expectedRevision: existingRecord.revision');
 
     expect(workspaceServiceSource).toContain('requestRaw(endpoint');
     expect(workspaceServiceSource).toContain('projectWorkspaceGraphDraftReadResponseSnapshot');
+    expect(workspaceServiceSource).toContain("from './workspaceGraphDraftSnapshotProjection'");
     expect(workspaceServiceSource).not.toContain(
       "getJson<WorkspaceGraphSnapshot>('/workspace/graph'"
     );
@@ -200,18 +240,30 @@ describe('canvas startup and draft recovery architecture', () => {
     const projectionSource = readAppSource(
       '../../services/workspace/workspaceGraphDraftProjection.ts'
     );
+    const snapshotProjectionSource = readAppSource(
+      '../../services/workspace/workspaceGraphDraftSnapshotProjection.ts'
+    );
     const createCommandSource = readAppSource('canvasCreateCanvasDocumentCommand.ts');
+    const createCommandPolicySource = readAppSource('canvasCreateCanvasDocumentCommandPolicy.ts');
+    const createCommandSaveResultSource = readAppSource('canvasCreateCanvasDocumentSaveResult.ts');
 
-    expect(projectionSource).toContain('const DBT_NODE_TYPE_RULES');
-    expect(projectionSource).toContain('function matchesDbtNodeTypeRule(');
     expect(projectionSource).toContain('function buildCanonicalEdgeProjection(');
+    expect(projectionSource).not.toContain('DBT_NODE_TYPE_RULES');
+    expect(projectionSource).not.toContain('DbtNodeType');
 
-    expect(createCommandSource).toContain(
+    expect(snapshotProjectionSource).toContain('const DBT_NODE_TYPE_RULES');
+    expect(snapshotProjectionSource).toContain('function matchesDbtNodeTypeRule(');
+    expect(snapshotProjectionSource).toContain('function projectCanonicalNodeToDbtNode(');
+
+    expect(createCommandPolicySource).toContain(
       'function resolveCreateCanvasDocumentCommandEligibility('
     );
-    expect(createCommandSource).toContain('function buildBlankCanvasDocumentDraftInput(');
-    expect(createCommandSource).toContain('function applyCanvasDocumentSaveSuccess(');
-    expect(createCommandSource).toContain('function applyCanvasDocumentSaveConflict(');
+    expect(createCommandPolicySource).toContain('function buildBlankCanvasDocumentDraftInput(');
+    expect(createCommandSaveResultSource).toContain('function applyCanvasDocumentSaveSuccess(');
+    expect(createCommandSaveResultSource).toContain('function applyCanvasDocumentSaveConflict(');
+    expect(createCommandSource).not.toContain(
+      'function resolveCreateCanvasDocumentCommandEligibility('
+    );
   });
 
   it('keeps canvas node viewport projection options behind a named argument object', () => {
@@ -225,14 +277,26 @@ describe('canvas startup and draft recovery architecture', () => {
 
   it('keeps host tab rendering and replacement action behind named presenter seams', () => {
     const tabStripSource = readAppSource('CanvasPlaygroundTabStrip.tsx');
+    const tabStripPresenterSource = readAppSource('useCanvasPlaygroundTabStripPresenter.ts');
     const tabStripModelSource = readAppSource('canvasPlaygroundTabStripModel.ts');
     const tabStripTemplateSource = readAppSource('CanvasPlaygroundTabStrip.templates.tsx');
 
     expect(tabStripSource).toContain("from './CanvasPlaygroundTabStrip.templates'");
-    expect(tabStripSource).toContain("from './canvasPlaygroundTabStripModel'");
+    expect(tabStripSource).toContain("from './useCanvasPlaygroundTabStripPresenter'");
     expect(tabStripSource).not.toContain('AlertDialog');
     expect(tabStripSource).not.toContain('TabsTrigger');
     expect(tabStripSource).not.toContain("mode: 'replace_current'");
+    expect(tabStripSource).not.toContain('useState(');
+    expect(tabStripSource).not.toContain('useMemo(');
+
+    expect(tabStripPresenterSource).toContain('function useCanvasPlaygroundTabStripPresenter(');
+    expect(tabStripPresenterSource).toContain('resolveCanvasReplacementActionState');
+    expect(tabStripPresenterSource).toContain('createReplaceCurrentCanvasDocumentCommand');
+    expect(tabStripPresenterSource).toContain('resolveCanvasViewCopy');
+    expect(tabStripPresenterSource).toContain('CanvasPlaygroundTabStripTemplateProps');
+    expect(tabStripPresenterSource).not.toContain('JSX.Element');
+    expect(tabStripPresenterSource).not.toContain('<AlertDialog');
+    expect(tabStripPresenterSource).not.toContain('canvasViewCopy');
 
     expect(tabStripModelSource).toContain('function resolveCanvasReplacementActionState(');
     expect(tabStripModelSource).toContain('function createReplaceCurrentCanvasDocumentCommand(');
@@ -241,7 +305,7 @@ describe('canvas startup and draft recovery architecture', () => {
     expect(tabStripModelSource).toContain('viewState: CanvasReplacementActionViewState');
     expect(tabStripModelSource).not.toContain('JSX.Element');
 
-    expect(tabStripSource).toContain('replacementActionState.viewState');
+    expect(tabStripPresenterSource).toContain('replacementActionState.viewState');
     expect(tabStripTemplateSource).toContain('function CanvasPlaygroundTabStripTemplate(');
     expect(tabStripTemplateSource).toContain('function CanvasPlaygroundTabsTemplate(');
     expect(tabStripTemplateSource).toContain('function CanvasReplacementActionTemplate(');
@@ -304,9 +368,12 @@ describe('canvas startup and draft recovery architecture', () => {
       readRepoFile('apps/web/src/app/views/canvas/CanvasViewport.test.tsx'),
       readRepoFile('apps/web/src/app/views/canvas/canvasPalette.ts'),
       readRepoFile('apps/web/src/app/views/canvas/canvasPalette.test.ts'),
-      readRepoFile('buzon/20260428-codex-fowler-web-graph-startup-and-draft-recovery-analysis.md'),
+      readRepoFile('buzon/20260429-codex-static-analysis-followup-fowler-architecture-review.md'),
       readRepoFile(
         'docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-component.md'
+      ),
+      readRepoFile(
+        'docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-user-stories.md'
       ),
     ];
     const bannedTerms = RETIRED_ROUTE_SHIM_TERM_PATTERNS.map((pattern) => new RegExp(pattern, 'i'));
