@@ -153,6 +153,15 @@ checking only barrel thinness.
   - Passed.
 - `pnpm docs:sync`
   - Passed.
+- `$env:GIT_BASE='origin/main'; $env:GIT_HEAD='HEAD'; node tools/ci/arc-check.mjs`
+  - Passed.
+  - Result: `effectiveArcLevel = ARC-2`, `evidenceDoc = true`,
+    `riskUpdate = true`.
+- `pnpm verify:prepush`
+  - Passed after commit.
+  - Included docs generated-artifact checks, changed markdown lint, ARC evidence
+    validation, changed-file checks, forbidden tracked-file check, and affected
+    workspace typecheck for `@dvt/engine` plus downstream affected packages.
 
 ## No-Debt And No-Stub Evidence
 

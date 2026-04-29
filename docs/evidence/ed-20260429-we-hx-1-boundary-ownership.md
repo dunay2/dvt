@@ -60,5 +60,9 @@ external seams.
   - Passed.
 - `pnpm docs:sync`
   - Passed.
-
-Final `pnpm verify:prepush` result is recorded in the closeout.
+- `$env:GIT_BASE='origin/main'; $env:GIT_HEAD='HEAD'; node tools/ci/arc-check.mjs`
+  - Passed.
+  - Result: `effectiveArcLevel = ARC-2`, `evidenceDoc = true`,
+    `riskUpdate = true`.
+- `pnpm verify:prepush`
+  - Passed after commit.
