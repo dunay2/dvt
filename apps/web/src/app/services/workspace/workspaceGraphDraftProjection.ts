@@ -12,7 +12,7 @@ import type {
   WorkspaceGraphSnapshot,
 } from '../../ports/workspace';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
-import type { DbtEdge, DbtNode, DbtNodeType } from '../../types/dbt';
+import type { DbtColumn, DbtEdge, DbtNode, DbtNodeType } from '../../types/dbt';
 
 export type WorkspaceGraphDraftSemanticGraph = {
   canonicalNodes: CanonicalNode[];
@@ -162,22 +162,67 @@ function readMetadataObject(
     : undefined;
 }
 
+function readMetadataString(metadata: CanonicalNode['metadata'], key: string): string | undefined {
+  const value = metadata?.[key];
+
+  return typeof value === 'string' ? value : undefined;
+}
+
+function isDbtColumn(value: unknown): value is DbtColumn {
+  if (value == null || typeof value !== 'object' || Array.isArray(value)) {
+    return false;
+  }
+  const column = value as Partial<Record<keyof DbtColumn, unknown>>;
+
+  return (
+    typeof column.name === 'string' &&
+    typeof column.type === 'string' &&
+    typeof column.nullable === 'boolean' &&
+    (column.description == null || typeof column.description === 'string')
+  );
+}
+
+function cloneDbtColumn(column: DbtColumn): DbtColumn {
+  const clonedColumn: DbtColumn = {
+    name: column.name,
+    type: column.type,
+    nullable: column.nullable,
+  };
+
+  if (column.description != null) {
+    clonedColumn.description = column.description;
+  }
+
+  return clonedColumn;
+}
+
+function readMetadataColumns(metadata: CanonicalNode['metadata']): DbtColumn[] | undefined {
+  const value = metadata?.columns;
+
+  return Array.isArray(value) && value.every(isDbtColumn)
+    ? value.map((column) => cloneDbtColumn(column))
+    : undefined;
+}
+
 function projectCanonicalNodeToDbtNode(args: {
   node: CanonicalNode;
   dependencies: readonly string[];
 }): DbtNode {
   const { node, dependencies } = args;
+  const metadataPackage = readMetadataString(node.metadata, 'package');
   const dbtNode: DbtNode = {
     id: node.id,
     name: node.name,
     type: resolveDbtNodeType(node),
-    package: node.pluginId,
+    package: metadataPackage ?? node.pluginId,
     path: node.path ?? '',
     tags: [...node.tags],
     status: node.status,
     dependencies: [...dependencies],
   };
   const config = readMetadataObject(node.metadata, 'config');
+  const compiledSql = readMetadataString(node.metadata, 'compiledSql');
+  const columns = readMetadataColumns(node.metadata);
 
   if (node.lastDuration != null) {
     dbtNode.lastDuration = node.lastDuration;
@@ -190,6 +235,12 @@ function projectCanonicalNodeToDbtNode(args: {
   }
   if (config != null) {
     dbtNode.config = config;
+  }
+  if (compiledSql != null) {
+    dbtNode.compiledSql = compiledSql;
+  }
+  if (columns != null) {
+    dbtNode.columns = columns;
   }
 
   return dbtNode;

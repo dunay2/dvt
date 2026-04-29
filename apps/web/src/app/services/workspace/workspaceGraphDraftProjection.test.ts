@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { buildProtectedDraftRecord } from './workspaceGraphDraft.test.fixtures';
 import {
   projectWorkspaceGraphAuthoringDraft,
+  projectWorkspaceGraphAuthoringDraftSnapshot,
   projectWorkspaceGraphAuthoringDraftSemanticGraph,
   projectProtectedWorkspaceGraphDraftRecord,
 } from './workspaceGraphDraftProjection';
@@ -139,5 +140,37 @@ describe('workspaceGraphDraftProjection', () => {
         ],
       },
     });
+  });
+
+  it('preserves DBT metadata-backed fields when projecting draft snapshots', () => {
+    const protectedDraft = buildProtectedDraftRecord(WORKSPACE_SCOPE).draft;
+    const transformNode = protectedDraft.nodes.find((node) => node.id === 'transform_node');
+    if (transformNode == null) {
+      throw new Error('Expected transform_node fixture.');
+    }
+    const metadataColumns = [
+      {
+        name: 'order_id',
+        type: 'INTEGER',
+        nullable: false,
+        description: 'Order identifier',
+      },
+    ];
+    transformNode.metadata = {
+      ...transformNode.metadata,
+      package: 'analytics_core',
+      compiledSql: 'select order_id from raw.orders',
+      columns: metadataColumns,
+    };
+
+    const snapshot = projectWorkspaceGraphAuthoringDraftSnapshot(protectedDraft);
+
+    const transformSnapshotNode = snapshot.nodes.find((node) => node.id === 'transform_node');
+    expect(transformSnapshotNode).toMatchObject({
+      package: 'analytics_core',
+      compiledSql: 'select order_id from raw.orders',
+      columns: metadataColumns,
+    });
+    expect(transformSnapshotNode?.columns).not.toBe(metadataColumns);
   });
 });
