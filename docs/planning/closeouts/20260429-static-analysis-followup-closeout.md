@@ -117,3 +117,93 @@ context)` facade.
 
 No stubs, placeholders, TODO/FIXME markers, fake implementations, hook bypasses,
 or rule relaxations were introduced.
+
+## 2026-04-29 Editor Panel Follow-Up
+
+### Think-First Analysis
+
+Problem summary: after PR #1048 landed, the editor static-analysis panel still
+shows 14 warnings. Several point to line numbers that no longer exist on
+`main`, while a smaller subset still maps to real code in web and
+temporal-worker files.
+
+Root cause: the panel mixes stale diagnostics from the pre-merge branch state
+with current findings. Treating the screenshot literally would rework already
+integrated engine code and create churn; treating it as a verification queue
+allows the active warnings to be fixed without touching unrelated boundaries.
+
+Constraints and invariants:
+
+- `AGENTS.md` requires governance-first execution, no hidden debt, and real
+  validation evidence.
+- `docs/guides/ai-work-protocol.md` classifies this as Slim maintenance because
+  the selected fixes do not alter public behavior.
+- `.arc-policy.yaml` only triggers ARC-2 for package engine, contracts,
+  planner, state, or adapter paths. This follow-up avoids those stale package
+  diagnostics unless code reality shows they are still active.
+
+Options considered:
+
+- Reopen engine and adapter package files for every screenshot warning.
+  Rejected because the current files no longer match those line numbers or
+  shapes after PR #1048 and the Temporal refactor already in `main`.
+- Clear only editor cache. Rejected because some warnings are still code-backed.
+- Fix only active code-backed warnings in web and temporal-worker. Selected
+  because it reduces real static-analysis noise without introducing behavioral
+  drift.
+
+Selected option and rationale: refactor current web test assertions into named
+semantic helpers, replace a promise truthiness check with explicit nullish
+handling, and remove an unnecessary generic assertion from viewport comparison.
+
+### Pre-Implementation Brief
+
+Mode: Slim.
+
+Scope:
+
+- `apps/temporal-worker/src/runtime/temporalWorkerLifecycle.ts`
+- `apps/web/src/app/views/canvas/useCanvasViewportGraphModel.ts`
+- `apps/web/src/app/bootstrap/appBootstrapScreen.test.ts`
+
+Out of scope:
+
+- Reworking package engine files whose warnings are stale on current `main`.
+- Changing runtime behavior or public APIs.
+- Relaxing lint, type, test, or static-analysis rules.
+
+Validation plan:
+
+- Targeted web bootstrap and viewport tests.
+- Temporal-worker typecheck.
+- Web typecheck.
+- `pnpm lint`
+- `pnpm verify:prepush`
+
+### Implementation Outcome
+
+- Verified `createTemporalWorkerRuntime.ts`, `StartRunAdmissionGuard.ts`,
+  `RecoverRunApplicationService.ts`, and `errorMessages.ts` against current
+  `main`; the screenshot line numbers no longer match those files after the
+  integrated PRs, so those diagnostics are stale editor state.
+- Replaced promise truthiness in `temporalWorkerLifecycle.ts` with an explicit
+  nullish check before awaiting pending startup.
+- Replaced the generic array assertion in `useCanvasViewportGraphModel.ts` with
+  a checked ordered-array lookup helper.
+- Split the two long bootstrap DOM contract tests into named helper assertions
+  so the tests express semantic contracts rather than large inline DOM scripts.
+
+### Validation Evidence
+
+- `pnpm --filter @dvt/web test -- appBootstrapScreen.test.ts useCanvasViewportGraphModel.test.ts useCanvasViewportGraphModel.architecture.test.ts`:
+  passed with 3 files and 16 tests.
+- `pnpm --filter dvt-temporal-worker test -- createTemporalWorkerRuntime.test.ts createTemporalWorkerRuntime.srp.architecture.test.ts`:
+  passed with 2 files and 12 tests.
+- `pnpm --filter @dvt/web typecheck`: passed after adding the checked
+  ordered-array lookup helper.
+- `pnpm --filter dvt-temporal-worker typecheck`: passed.
+- `pnpm --filter @dvt/web test`: passed. The existing React `act(...)`
+  warnings around React Flow/MiniMap and CanvasContent still appear, but no test
+  failed.
+- `pnpm --filter dvt-temporal-worker test`: passed with 5 files and 22 tests.
+- `pnpm lint`: passed with `--max-warnings 0`.

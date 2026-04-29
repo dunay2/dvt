@@ -88,7 +88,15 @@ function orderedArraysEqual<T>(
     return false;
   }
 
-  return left.every((item, index) => areEqual(item, right[index] as T));
+  return left.every((item, index) => areEqual(item, getOrderedArrayItem(right, index)));
+}
+
+function getOrderedArrayItem<T>(items: readonly T[], index: number): T {
+  const item = items[index];
+  if (item === undefined) {
+    throw new Error(`Expected ordered array item at index ${index}`);
+  }
+  return item;
 }
 
 function viewportEdgeEqual(left: Edge, right: Edge): boolean {

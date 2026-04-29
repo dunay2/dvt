@@ -97,6 +97,65 @@ function getProgressSegmentStatuses(): string[] {
   ).map((segment) => segment.dataset.status ?? '');
 }
 
+function getRequiredElement(id: string): HTMLElement {
+  const element = document.getElementById(id);
+  if (element === null) {
+    throw new Error(`Expected #${id} to exist in the bootstrap test DOM`);
+  }
+  return element;
+}
+
+function expectAnnouncementDomContract(announcement: HTMLElement): void {
+  expect(announcement.tagName).toBe('OUTPUT');
+  expect(announcement.getAttribute('aria-label')).toBe('Raven startup status');
+  expect(announcement.getAttribute('aria-live')).toBe('polite');
+  expect(announcement.getAttribute('aria-atomic')).toBe('true');
+  expect(announcement.getAttribute('aria-busy')).toBe('true');
+  expect(announcement.getAttribute('aria-describedby')).toBe(
+    'app-loading-message app-loading-progress'
+  );
+}
+
+function expectProductionBootstrapCopy(): void {
+  expect(getRequiredElement('app-loading-title').textContent?.trim()).toBe('Preparing Raven');
+  expect(getRequiredElement('app-loading-message').textContent).toContain(
+    'Loading startup modules in order.'
+  );
+}
+
+function expectProductionBootstrapMeta(): void {
+  expect(getRequiredElement('app-loading-version').textContent?.trim()).toBe('Version --');
+  expect(getRequiredElement('app-loading-build-date').textContent?.trim()).toBe('Build --');
+}
+
+function expectProductionBootstrapSteps(): void {
+  const stepNodes = Array.from(document.querySelectorAll<HTMLElement>('[data-bootstrap-step]'));
+
+  expect(stepNodes.map((node) => node.dataset.bootstrapStep)).toEqual(BOOTSTRAP_STEP_ORDER);
+  stepNodes.forEach((stepNode) => {
+    expect(stepNode.dataset.status).toBe('pending');
+    expect(stepNode.querySelector('[data-bootstrap-detail]')).not.toBeNull();
+  });
+}
+
+function expectInitialProgressSurface(): void {
+  expect(getRequiredElement('app-loading-progress').textContent).toContain(
+    '0/5 startup checks settled'
+  );
+  expect(document.querySelectorAll('[data-app-loading-progress-segment]').length).toBe(
+    BOOTSTRAP_STEP_ORDER.length
+  );
+  expect(document.querySelector('[data-app-loading-progress-value]')).toBeNull();
+}
+
+function completeAllStartupSteps(): void {
+  setBootstrapStepStatus('hydrate', 'complete');
+  setBootstrapStepStatus('services', 'complete');
+  setBootstrapStepStatus('capabilities', 'complete');
+  setBootstrapStepStatus('health', 'complete');
+  setBootstrapStepStatus('route', 'complete');
+}
+
 describe('appBootstrapScreen', () => {
   beforeEach(() => {
     vi.useFakeTimers();
@@ -111,45 +170,17 @@ describe('appBootstrapScreen', () => {
 
   it('keeps the production HTML shell aligned with the bootstrap DOM contract before React executes', () => {
     const screen = mountProductionBootstrapDom();
-    const announcement = document.getElementById('app-loading-announcement');
 
     expect(screen.dataset.state).toBe('loading');
     expect(screen.getAttribute('role')).toBeNull();
-    expect(announcement?.tagName).toBe('OUTPUT');
-    expect(announcement?.getAttribute('aria-label')).toBe('Raven startup status');
-    expect(announcement?.getAttribute('aria-live')).toBe('polite');
-    expect(announcement?.getAttribute('aria-atomic')).toBe('true');
-    expect(announcement?.getAttribute('aria-busy')).toBe('true');
-    expect(announcement?.getAttribute('aria-describedby')).toBe(
-      'app-loading-message app-loading-progress'
-    );
-
-    expect(document.getElementById('app-loading-title')?.textContent?.trim()).toBe(
-      'Preparing Raven'
-    );
-    expect(document.getElementById('app-loading-message')?.textContent).toContain(
-      'Loading startup modules in order.'
-    );
+    expectAnnouncementDomContract(getRequiredElement('app-loading-announcement'));
+    expectProductionBootstrapCopy();
     expect(document.getElementById('app-loading-progress')).not.toBeNull();
-    expect(document.getElementById('app-loading-version')?.textContent?.trim()).toBe('Version --');
-    expect(document.getElementById('app-loading-build-date')?.textContent?.trim()).toBe('Build --');
-
-    const stepNodes = Array.from(document.querySelectorAll<HTMLElement>('[data-bootstrap-step]'));
-    expect(stepNodes.map((node) => node.dataset.bootstrapStep)).toEqual(BOOTSTRAP_STEP_ORDER);
-    stepNodes.forEach((stepNode) => {
-      expect(stepNode.dataset.status).toBe('pending');
-      expect(stepNode.querySelector('[data-bootstrap-detail]')).not.toBeNull();
-    });
+    expectProductionBootstrapMeta();
+    expectProductionBootstrapSteps();
 
     startBootstrapScreen();
-
-    expect(document.getElementById('app-loading-progress')?.textContent).toContain(
-      '0/5 startup checks settled'
-    );
-    expect(document.querySelectorAll('[data-app-loading-progress-segment]').length).toBe(
-      BOOTSTRAP_STEP_ORDER.length
-    );
-    expect(document.querySelector('[data-app-loading-progress-value]')).toBeNull();
+    expectInitialProgressSurface();
   });
 
   it('keeps raw bootstrap DOM identifiers out of the screen adapter', () => {
@@ -289,25 +320,17 @@ describe('appBootstrapScreen', () => {
   it('publishes the startup gate through a semantic output until bootstrap completes', () => {
     startBootstrapScreen();
 
-    const screen = document.getElementById('app-loading-screen');
-    const announcement = document.getElementById('app-loading-announcement');
-    expect(screen?.getAttribute('role')).toBeNull();
-    expect(announcement?.tagName).toBe('OUTPUT');
-    expect(announcement?.getAttribute('aria-label')).toBe('Raven startup status');
-    expect(announcement?.getAttribute('aria-live')).toBe('polite');
-    expect(announcement?.getAttribute('aria-atomic')).toBe('true');
-    expect(announcement?.getAttribute('aria-busy')).toBe('true');
-    expect(announcement?.textContent).toContain('Preparing Raven');
+    const screen = getRequiredElement('app-loading-screen');
+    const announcement = getRequiredElement('app-loading-announcement');
+    expect(screen.getAttribute('role')).toBeNull();
+    expectAnnouncementDomContract(announcement);
+    expect(announcement.textContent).toContain('Preparing Raven');
 
-    setBootstrapStepStatus('hydrate', 'complete');
-    setBootstrapStepStatus('services', 'complete');
-    setBootstrapStepStatus('capabilities', 'complete');
-    setBootstrapStepStatus('health', 'complete');
-    setBootstrapStepStatus('route', 'complete');
+    completeAllStartupSteps();
     completeBootstrapScreen();
 
-    expect(screen?.dataset.state).toBe('complete');
-    expect(announcement?.getAttribute('aria-busy')).toBe('false');
+    expect(screen.dataset.state).toBe('complete');
+    expect(announcement.getAttribute('aria-busy')).toBe('false');
   });
 
   it('does not reopen the startup surface after bootstrap has already completed', () => {

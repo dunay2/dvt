@@ -85,7 +85,7 @@ export async function stopTemporalWorkerRuntime(
 async function awaitPendingStartupCompletion(
   pendingStartup: Promise<void> | null | undefined
 ): Promise<void> {
-  if (!pendingStartup) {
+  if (pendingStartup == null) {
     return;
   }
 
