@@ -18,6 +18,9 @@ run-execution-context admission.
 It does not own HTTP parsing, plan compilation, provider execution, lifecycle
 event persistence, or plugin runtime execution.
 
+Scenario coverage is tracked in
+[Start-Run Admission User Stories](./start-run-admission-user-stories.md).
+
 ## Public API
 
 - `StartRunAdmissionGuard`

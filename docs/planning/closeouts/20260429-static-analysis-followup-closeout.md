@@ -823,3 +823,34 @@ Executed validation:
 No stubs, placeholders, TODO/FIXME markers, fake implementations,
 compatibility shims, hook bypasses, lint/type/test relaxations, or undeclared
 process changes were introduced.
+
+### User Story Follow-Up
+
+Additional gap found before final closeout: the branch-level component guides
+covered public API, invariants, transitions, consumers, and diagrams, but the
+non-Canvas Engine and Lineage stories were not explicit artifacts like the
+Canvas story pack.
+
+Applied changes:
+
+- Added
+  `docs/architecture/components/engine/architecture/start-run-admission-user-stories.md`.
+- Added
+  `docs/architecture/components/lineage-worker/compiled-code-ref-lineage-extraction-user-stories.md`.
+- Linked both story packs from their local component guides, indexes, and the
+  mailbox Fowler review.
+- Extended `tools/ci/static-analysis-followup-branch-architecture.test.mjs`
+  so user-story coverage is validated with success, degraded/fallback, and
+  negative scenario terms.
+
+Red case:
+
+- `node --test tools/ci/static-analysis-followup-branch-architecture.test.mjs`
+  failed on missing start-run admission user stories.
+
+Green case:
+
+- `node --test tools/ci/static-analysis-followup-branch-architecture.test.mjs`
+  passed, 5 subtests.
+- `pnpm docs:sync` passed; generated documentation indexes were already up to
+  date.

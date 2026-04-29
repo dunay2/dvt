@@ -57,6 +57,7 @@ mapper fidelity, sink delivery, and DLQ visibility all matter here.
 ## Related Pages
 
 - [Compiled-code-ref lineage extraction component](./compiled-code-ref-lineage-extraction-component.md)
+- [Compiled-code-ref lineage extraction user stories](./compiled-code-ref-lineage-extraction-user-stories.md)
 - [@dvt/delivery](../delivery/index.md)
 - [Delivery Domain](../../domain-delivery.md)
 - [Shared Boundary Domain](../../domain-shared.md)

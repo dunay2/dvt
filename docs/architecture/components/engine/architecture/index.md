@@ -25,6 +25,7 @@ Use it when the question is:
 - [Workflow engine subsystem context](./workflow-engine-subsystem-context.md)
 - [Workflow engine target architecture](./workflow-engine-target-architecture.v1.md)
 - [Start-run admission component](./start-run-admission-component.md)
+- [Start-run admission user stories](./start-run-admission-user-stories.md)
 
 ## Related pages
 

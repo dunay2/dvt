@@ -16,6 +16,9 @@ run-event payloads before lineage mapping builds OpenLineage facets.
 It does not own artifact storage, run lifecycle truth, planner upload policy,
 Temporal workflow execution, or OpenLineage sink delivery.
 
+Scenario coverage is tracked in
+[Compiled-Code-Ref Lineage Extraction User Stories](./compiled-code-ref-lineage-extraction-user-stories.md).
+
 ## Public API
 
 - `extractCompiledCodeRefFromPayload(payload)`

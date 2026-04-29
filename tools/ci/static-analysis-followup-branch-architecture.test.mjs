@@ -35,6 +35,36 @@ const requiredGuideSections = [
   '## Diagrams',
 ];
 
+const userStoryDocs = [
+  {
+    label: 'start-run admission',
+    path: 'docs/architecture/components/engine/architecture/start-run-admission-user-stories.md',
+    requiredTerms: [
+      'As an operator',
+      'RunExecutionContextAdmissionRequest',
+      'Given',
+      'When',
+      'Then',
+      'Negative scenarios',
+      'Traceability',
+    ],
+  },
+  {
+    label: 'compiled-code-ref lineage extraction',
+    path: 'docs/architecture/components/lineage-worker/compiled-code-ref-lineage-extraction-user-stories.md',
+    requiredTerms: [
+      'As a lineage consumer',
+      'stepArtifactRef',
+      'compiledCodeRef',
+      'Given',
+      'When',
+      'Then',
+      'Negative scenarios',
+      'ADR-0032',
+    ],
+  },
+];
+
 function read(path) {
   return readFileSync(path, 'utf8');
 }
@@ -119,4 +149,15 @@ test('branch review links every non-Canvas local component guide added for the b
   assert.match(review, /start-run-admission-component\.md/);
   assert.match(review, /compiled-code-ref-lineage-extraction-component\.md/);
   assert.match(review, /temporal-step-plugin-profile\.md/);
+});
+
+test('branch-adjacent user stories cover success, degraded, and negative scenarios', () => {
+  for (const storyDoc of userStoryDocs) {
+    assert.equal(existsSync(storyDoc.path), true, `${storyDoc.label} user stories are missing`);
+    const source = read(storyDoc.path);
+
+    for (const term of storyDoc.requiredTerms) {
+      assert.match(source, new RegExp(term, 'i'), `${storyDoc.label} user stories lack ${term}`);
+    }
+  }
 });
