@@ -10,6 +10,7 @@ import { createDbtProjectMaterializer } from '../src/plugins/dbt/dbtCliProjectMa
 import type { DbtPluginExecutionInput } from '../src/plugins/dbt/dbtPluginTypes.js';
 
 const tempRoots: string[] = [];
+const DBT_PROJECT_MATERIALIZER_TEST_TIMEOUT_MS = 15_000;
 
 describe('dbtCliProjectMaterializer', () => {
   afterEach(async () => {
@@ -18,34 +19,38 @@ describe('dbtCliProjectMaterializer', () => {
     );
   });
 
-  it('extracts every bundle entry before discovering the DBT project directory', async () => {
-    const fixtureRoot = await createTempRoot('dvt-dbt-bundle-src-');
-    const workdirRoot = await createTempRoot('dvt-dbt-work-');
-    const bundleBytes = await createBundleArchive(fixtureRoot, {
-      'bundle/dbt_project.yml': 'name: analytics\nversion: "1.0"\n',
-      'bundle/models/orders.sql': 'select 1 as id\n',
-    });
-    const bundleReader = {
-      read: vi.fn(async () => bundleBytes),
-    };
-    const materializeProject = createDbtProjectMaterializer(bundleReader, workdirRoot);
-
-    const project = await materializeProject(createInput());
-
-    try {
-      expect((await stat(join(project.projectDir, 'dbt_project.yml'))).isFile()).toBe(true);
-      await expect(readFile(join(project.projectDir, 'models/orders.sql'), 'utf8')).resolves.toBe(
-        'select 1 as id\n'
-      );
-      expect(bundleReader.read).toHaveBeenCalledWith(createProjectBundleRef(), {
-        expectedTenantId: 'tenant-1',
+  it(
+    'extracts every bundle entry before discovering the DBT project directory',
+    async () => {
+      const fixtureRoot = await createTempRoot('dvt-dbt-bundle-src-');
+      const workdirRoot = await createTempRoot('dvt-dbt-work-');
+      const bundleBytes = await createBundleArchive(fixtureRoot, {
+        'bundle/dbt_project.yml': 'name: analytics\nversion: "1.0"\n',
+        'bundle/models/orders.sql': 'select 1 as id\n',
       });
-    } finally {
-      await project.cleanup();
-    }
+      const bundleReader = {
+        read: vi.fn(async () => bundleBytes),
+      };
+      const materializeProject = createDbtProjectMaterializer({ bundleReader, workdirRoot });
 
-    await expect(readdir(workdirRoot)).resolves.toEqual([]);
-  });
+      const project = await materializeProject(createInput());
+
+      try {
+        expect((await stat(join(project.projectDir, 'dbt_project.yml'))).isFile()).toBe(true);
+        await expect(readFile(join(project.projectDir, 'models/orders.sql'), 'utf8')).resolves.toBe(
+          'select 1 as id\n'
+        );
+        expect(bundleReader.read).toHaveBeenCalledWith(createProjectBundleRef(), {
+          expectedTenantId: 'tenant-1',
+        });
+      } finally {
+        await project.cleanup();
+      }
+
+      await expect(readdir(workdirRoot)).resolves.toEqual([]);
+    },
+    DBT_PROJECT_MATERIALIZER_TEST_TIMEOUT_MS
+  );
 
   it('removes the worker-local materialization directory when the bundle has no DBT project', async () => {
     const fixtureRoot = await createTempRoot('dvt-dbt-invalid-bundle-src-');
@@ -53,12 +58,12 @@ describe('dbtCliProjectMaterializer', () => {
     const bundleBytes = await createBundleArchive(fixtureRoot, {
       'bundle/models/orders.sql': 'select 1 as id\n',
     });
-    const materializeProject = createDbtProjectMaterializer(
-      {
+    const materializeProject = createDbtProjectMaterializer({
+      bundleReader: {
         read: vi.fn(async () => bundleBytes),
       },
-      workdirRoot
-    );
+      workdirRoot,
+    });
 
     await expect(materializeProject(createInput())).rejects.toThrow(
       'DBT_PROJECT_DIRECTORY_NOT_FOUND'
@@ -84,17 +89,13 @@ async function createBundleArchive(
     await writeFile(path, contents);
   }
 
-  const archivePath = join(fixtureRoot, 'bundle.tgz');
-  await createTarball.asyncFile(
+  return createTarball(
     {
       cwd: fixtureRoot,
-      file: archivePath,
       gzip: true,
     },
     ['bundle']
-  );
-
-  return readFile(archivePath);
+  ).concat();
 }
 
 function createInput(): DbtPluginExecutionInput {

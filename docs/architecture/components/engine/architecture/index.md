@@ -19,6 +19,7 @@ Use it when the question is:
 ## Primary pages
 
 - [Core responsibilities](./core.md)
+- [Run execution context admission policy component](./run-execution-context-admission-policy-component.md)
 - [Distributed consistency model](../../../system/distributed-consistency-model.md)
 - [Workflow references](./workflows.md)
 - [C4 engine](./c4-engine.md)

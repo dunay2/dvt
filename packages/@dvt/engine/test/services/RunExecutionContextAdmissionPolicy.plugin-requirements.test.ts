@@ -1,3 +1,6 @@
+/**
+ * Owned concern: verify generic plugin requirement admission without DBT-specific semantics.
+ */
 import { describe, expect, it } from 'vitest';
 
 import {

@@ -49,7 +49,11 @@ export class DbtCliPluginRunner implements DbtPluginRunner {
 
     this.dbtBin = options.dbtBin ?? 'dbt';
     this.materializeProject =
-      options.materializeProject ?? createDbtProjectMaterializer(options.bundleReader, workdirRoot);
+      options.materializeProject ??
+      createDbtProjectMaterializer({
+        bundleReader: options.bundleReader,
+        workdirRoot,
+      });
     this.runCommand = options.runCommand ?? runDbtCommand;
   }
 
