@@ -25,6 +25,7 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   RecoverySourceNotTerminalError,
   RunAlreadyExistsError,
+  InvalidSchemaVersionError,
 } from '../../src/contracts/errors.js';
 import { UnsupportedPlanVersionError } from '../../src/contracts/PlanVersionPolicy.js';
 import { WorkflowEngine } from '../../src/core/WorkflowEngine.js';
@@ -517,9 +518,35 @@ describe('WorkflowEngine (basic failure modes)', () => {
         ).rejects.toThrow(UnsupportedPlanVersionError);
       },
     },
+    {
+      name: 'future schemaVersion on a supported planVersion',
+      run: async (engine: WorkflowEngine): Promise<void> => {
+        const unsupported = { ...makePlanRef(), schemaVersion: 'v1.future' };
+        await expect(
+          engine.startRun(unsupported, makeContext('unsupported-schema-1'))
+        ).rejects.toThrow(InvalidSchemaVersionError);
+      },
+    },
   ])('startRun rejects $name', async ({ run }) => {
     const { engine } = createEngine({ adapters: makeAdapters() });
     await run(engine);
+  });
+
+  it('rejects unsupported schemaVersion before adapter dispatch', async () => {
+    const startRun = vi.fn(async () => {
+      throw new Error('adapter should not be called');
+    });
+    const { engine, store } = createEngine({
+      adapters: makeAdapters({ startRun }),
+    });
+    const unsupported = { ...makePlanRef(), schemaVersion: 'v1.future' };
+
+    await expect(
+      engine.startRun(unsupported, makeContext('unsupported-schema-no-dispatch-1'))
+    ).rejects.toThrow(InvalidSchemaVersionError);
+
+    expect(startRun).not.toHaveBeenCalled();
+    await expect(store.listEvents('t', 'unsupported-schema-no-dispatch-1')).resolves.toEqual([]);
   });
 
   it('startRun rejects and stores no events when adapter throws before bootstrap', async () => {

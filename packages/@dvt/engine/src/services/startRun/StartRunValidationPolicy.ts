@@ -4,9 +4,9 @@ import type { IProviderAdapter } from '../../adapters/IProviderAdapter.js';
 import {
   CapabilitiesNotSupportedError,
   InvalidRunIdError,
-  InvalidSchemaVersionError,
   RunAlreadyExistsError,
 } from '../../contracts/errors.js';
+import { assertSupportedPlanCompatibility } from '../../contracts/PlanCompatibilityPolicy.js';
 import { assertSupportedPlanVersion } from '../../contracts/PlanVersionPolicy.js';
 import type { IRunStateStoreRead } from '../../ports/IRunStateStore.js';
 import type { IRunAccessPolicy } from '../../security/RunAccessPolicy.js';
@@ -22,8 +22,11 @@ export class StartRunValidationPolicy {
   async validateStartRunPreconditions(planRef: PlanRef, context: RunContext): Promise<void> {
     await this.deps.policy.assertTenantAccess(context.tenantId);
     this.deps.policy.validatePlanRef(planRef);
-    validateSchemaVersionOrThrow(planRef.schemaVersion);
     assertSupportedPlanVersion(planRef.planVersion);
+    assertSupportedPlanCompatibility({
+      planVersion: planRef.planVersion,
+      schemaVersion: planRef.schemaVersion,
+    });
     validateRunIdOrThrow(context.runId);
     await this.ensureRunDoesNotExist(context.tenantId, context.runId);
   }
@@ -57,10 +60,6 @@ export class StartRunValidationPolicy {
     const existing = await this.deps.stateStoreRead.getRunMetadataByRunId(tenantId, runId);
     if (existing) throw new RunAlreadyExistsError(runId);
   }
-}
-
-function validateSchemaVersionOrThrow(schemaVersion: string): void {
-  if (!schemaVersion.startsWith('v1.')) throw new InvalidSchemaVersionError(schemaVersion);
 }
 
 function validateRunIdOrThrow(runId: string): void {

@@ -48,6 +48,7 @@ Execution lifecycle, command, and event contracts for the workflow engine.
 - [index.md](../../architecture/components/engine/contracts/extensions/index.md)
 - [PluginSandbox.v1.md](../../architecture/components/engine/contracts/extensions/PluginSandbox.v1.md)
 - [index.md](../../architecture/components/engine/contracts/index.md)
+- [plan-compatibility-matrix.md](../../architecture/components/engine/contracts/plan-compatibility-matrix.md)
 - [README.md](../../architecture/components/engine/contracts/README.md)
 - [index.md](../../architecture/components/engine/contracts/schemas/index.md)
 - [AuditLog.v1.md](../../architecture/components/engine/contracts/security/AuditLog.v1.md)

@@ -710,9 +710,17 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   [ADR-0012](../../adr/ADR-0012-plan-integrity-ownership.md)
   and
   [ADR-0017](../../adr/ADR-0017_ExecutionPlan_Schema_Versioning.md)
+  and
+  [Plan compatibility matrix](../../architecture/components/engine/contracts/plan-compatibility-matrix.md)
 - Current status source:
   [System Delivery Status](../../architecture/system-delivery-status.md) (`Plan Verifier`)
 - Primary code:
+  [packages/@dvt/contracts/src/contracts/planner/PlanCompatibility.v1.ts](../../../packages/@dvt/contracts/src/contracts/planner/PlanCompatibility.v1.ts)
+  and
+  [packages/@dvt/engine/src/contracts/PlanCompatibilityPolicy.ts](../../../packages/@dvt/engine/src/contracts/PlanCompatibilityPolicy.ts)
+  and
+  [packages/@dvt/engine/src/services/startRun/StartRunValidationPolicy.ts](../../../packages/@dvt/engine/src/services/startRun/StartRunValidationPolicy.ts)
+  and
   [packages/@dvt/engine/src/application/StartRunApplicationService.ts](../../../packages/@dvt/engine/src/application/StartRunApplicationService.ts)
   and
   [packages/@dvt/engine/src/security/planIntegrity.ts](../../../packages/@dvt/engine/src/security/planIntegrity.ts)
@@ -725,6 +733,10 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   and
   [packages/@dvt/plan-verifier/src/planVersion.ts](../../../packages/@dvt/plan-verifier/src/planVersion.ts)
 - Key tests:
+  [packages/@dvt/contracts/test/plan-compatibility-matrix.contract.test.ts](../../../packages/@dvt/contracts/test/plan-compatibility-matrix.contract.test.ts)
+  and
+  [packages/@dvt/engine/test/core/WorkflowEngine.test.ts](../../../packages/@dvt/engine/test/core/WorkflowEngine.test.ts)
+  and
   [packages/@dvt/engine/test/contracts/engine.test.ts](../../../packages/@dvt/engine/test/contracts/engine.test.ts)
   and
   [packages/@dvt/engine/test/services/StartRunApplicationService.test.ts](../../../packages/@dvt/engine/test/services/StartRunApplicationService.test.ts)
@@ -735,6 +747,10 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   and
   [packages/@dvt/plan-verifier/test/verify.test.ts](../../../packages/@dvt/plan-verifier/test/verify.test.ts)
 - Verification:
+  `pnpm --filter @dvt/contracts test -- plan-compatibility-matrix.contract.test.ts`
+  and
+  `pnpm --filter @dvt/engine test -- WorkflowEngine.test.ts`
+  and
   `pnpm --filter @dvt/engine test`
   and
   `pnpm --filter @dvt/adapter-temporal test`
