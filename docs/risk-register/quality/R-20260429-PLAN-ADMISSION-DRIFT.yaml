@@ -21,6 +21,8 @@ mitigations:
   - 'Keep `PlanAdmission.v1.ts` as the single executable matrix for admitted pairs.'
   - 'Require a positive and negative test for every new planVersion/schemaVersion pair.'
   - 'Keep engine start-run tests proving unsupported pairs fail before adapter dispatch.'
+  - 'Keep plan-admission-matrix.architecture.test.ts guarding docs, stories, mailbox analysis, and
+    naming drift.'
   - 'Update ADR-0017 or ADR-0036 if admission semantics change beyond replacing the current pair.'
 review_after: 2026-06-30
 ---

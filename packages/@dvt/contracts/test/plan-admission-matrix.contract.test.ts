@@ -1,3 +1,6 @@
+/**
+ * Owned concern: verify executable plan admission pairs and negative cases.
+ */
 import { describe, expect, it } from 'vitest';
 
 import {

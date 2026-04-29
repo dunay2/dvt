@@ -43,6 +43,30 @@ Current admitted pair:
 | ------------- | --------------- | --------- |
 | `1.0`         | `v1.2`          | `current` |
 
+## Component Map
+
+```mermaid
+flowchart LR
+  PlanRef["PlanRef\nplanVersion + schemaVersion"]
+  Contract["PlanAdmission.v1.ts\nexecutable admission truth"]
+  Policy["PlanAdmissionPolicy.ts\nengine ingress assertion"]
+  StartRun["StartRunValidationPolicy\npre-bootstrap gate"]
+  Provider["Provider adapter\nreceives only admitted refs"]
+
+  PlanRef --> Policy
+  Policy --> Contract
+  Policy --> StartRun
+  StartRun --> Provider
+```
+
+| Component                  | Owned concern                                      |
+| -------------------------- | -------------------------------------------------- |
+| `PlanAdmission.v1.ts`      | Publish the executable admitted pair registry.     |
+| `PlanAdmissionPolicy.ts`   | Convert undeclared pairs into engine ingress fail. |
+| `StartRunValidationPolicy` | Invoke admission before run creation or dispatch.  |
+| Contract tests             | Prove positive and negative pair behavior.         |
+| Architecture fitness tests | Guard semantic documentation and naming drift.     |
+
 ## Invariants
 
 - Start-run admission MUST reject any undeclared
@@ -86,11 +110,37 @@ sequenceDiagram
   end
 ```
 
+## Diagrams
+
+The component map shows ownership boundaries. The transition and sequence
+diagrams show the runtime order: parse the `PlanRef`, assert the pair, then
+fetch plan bytes and dispatch only after admission succeeds.
+
 ## Consumers
 
 - `StartRunValidationPolicy` uses the engine policy before run creation.
 - `@dvt/contracts` tests guard the canonical matrix surface.
 - Engine start-run tests guard negative admission and no-dispatch behavior.
+
+## User Stories
+
+The executable story set lives in
+[Plan admission user stories](./plan-admission-user-stories.md). The stories
+cover the current admitted pair, unsupported future schema, older schema,
+unknown plan version, blank inputs, no-dispatch behavior, and documentation
+drift.
+
+## Drift Guards
+
+- `plan-admission-matrix.contract.test.ts` validates admitted and rejected
+  pair behavior.
+- `plan-admission-matrix.architecture.test.ts` validates local component
+  documentation, owned-concern docblocks, user stories, mailbox analysis, and
+  retired naming.
+- `WorkflowEngine.test.ts` validates unsupported schema rejection before
+  provider dispatch.
+- ARC-2 evidence and risk records must change with any contract or engine
+  admission change.
 
 ## Hard-Cut Change Rule
 

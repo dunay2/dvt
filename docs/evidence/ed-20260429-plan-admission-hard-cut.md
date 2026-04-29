@@ -9,11 +9,13 @@ arc_level: ARC-2
 breaking: false
 code_refs:
   - packages/@dvt/contracts/src/contracts/planner/PlanAdmission.v1.ts
+  - packages/@dvt/contracts/test/plan-admission-matrix.architecture.test.ts
   - packages/@dvt/engine/src/contracts/PlanAdmissionPolicy.ts
   - packages/@dvt/engine/src/services/startRun/StartRunValidationPolicy.ts
 evidence:
   tests:
     - pnpm --filter @dvt/contracts test -- plan-admission-matrix.contract.test.ts
+    - pnpm --filter @dvt/contracts test -- plan-admission-matrix.architecture.test.ts
     - pnpm --filter @dvt/engine test -- WorkflowEngine.test.ts
 ---
 
@@ -31,6 +33,9 @@ This evidence records the ARC-2 proof for strict start-run admission over the
   admission.
 - Added negative tests for `v1.future` on a supported `planVersion` and for
   no-dispatch behavior before provider execution.
+- Added a semantic architecture fitness test that guards the component guide,
+  user stories, mailbox Fowler analysis, owned-concern docblocks, and retired
+  naming drift.
 
 # Validation
 
