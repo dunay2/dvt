@@ -208,6 +208,124 @@ Validation plan:
 - `pnpm --filter dvt-temporal-worker test`: passed with 5 files and 22 tests.
 - `pnpm lint`: passed with `--max-warnings 0`.
 
+## 2026-04-29 Code Health Follow-Up
+
+### Think-First Analysis
+
+Problem summary: the latest editor and Code Health panels mix three categories
+of feedback: active web static-analysis warnings, stale engine warnings whose
+line shapes no longer match the branch, and code-health signals where the
+current implementation can still be made more semantically explicit.
+
+Root cause: the prior cleanup removed the largest bootstrap and engine smells,
+but some public helper APIs still expose optional/positional primitive shapes,
+some tests still keep fixture construction close to assertions, and one engine
+admission policy still accepts a multi-argument command instead of a named
+admission request.
+
+Constraints and invariants:
+
+- `AGENTS.md` requires governance-first execution, real validation evidence,
+  no hidden debt, and no hook bypasses.
+- `docs/guides/ai-work-protocol.md` classifies this as Slim maintenance unless
+  ARC-triggered package paths are touched.
+- `docs/architecture/reference-architecture.md` requires explicit boundaries
+  and typed runtime truth at the boundary.
+- `.arc-policy.yaml` requires ARC-2 evidence and a risk update when touching
+  `packages/@dvt/engine/**` or `packages/@dvt/adapter-*/**`.
+
+Options considered:
+
+- Treat every screenshot line as current truth. Rejected because several
+  diagnostics point to code shapes that no longer exist on the branch.
+- Limit the slice to frontend warnings. Rejected because Code Health identifies
+  a real engine admission API smell that can be fixed without changing
+  behavior.
+- Fix verified active items and explicitly document stale diagnostics. Selected
+  because it reduces real drift while keeping ARC-triggered changes governed.
+
+Selected option and rationale: normalize active web warnings, move bootstrap
+command optionality to concrete factory output, split test fixture setup behind
+named request objects, extract compiled-code-ref payload candidates, and convert
+run-execution-context admission to a named request object.
+
+### Pre-Implementation Brief
+
+Mode: Slim with ARC-2 evidence/risk update for engine and adapter paths.
+
+Scope:
+
+- `apps/web/src/app/AppRouteErrorBoundary.tsx`
+- `apps/web/src/app/bootstrap/appBootstrapCommands.ts`
+- `apps/web/src/app/services/workspace/workspaceGraphDraft.test.fixtures.ts`
+- `apps/web/src/app/services/workspace/workspaceGraphDraftProjection.test.ts`
+- `packages/@dvt/adapter-temporal/test/activities.test.ts`
+- `packages/@dvt/engine/src/application/StartRunAdmissionGuard.ts`
+- `packages/@dvt/engine/src/services/startRun/RunExecutionContextAdmissionPolicy.ts`
+- `packages/@dvt/engine/test/services/runExecutionContextAdmissionPolicy.fixtures.ts`
+- `packages/@dvt/traceability-service/src/lineage/compiledCodeRef.ts`
+
+Out of scope:
+
+- Runtime behavior changes.
+- Clearing stale editor cache entries by moving unrelated code.
+- Introducing compatibility shims for the previous internal helper shapes.
+
+Validation plan:
+
+- Targeted web, engine, adapter-temporal, and traceability tests.
+- Package typecheck for touched workspaces.
+- ARC policy check after engine/adapter changes.
+- `pnpm docs:sync` and `pnpm docs:status:generate` if generated indexes or
+  source inventory change.
+- `pnpm lint`
+- `pnpm verify:prepush`
+
+### Implementation Outcome
+
+- Replaced the route-error-boundary `break-words` utility with the canonical
+  `wrap-break-word` class.
+- Removed redundant `? | undefined` command typing from app-bootstrap command
+  DTOs while keeping factory output and startup behavior unchanged.
+- Moved the large expected workspace semantic graph out of the projection test
+  body and into the workspace draft test fixture builder.
+- Split `compiledCodeRef` extraction into named payload candidates:
+  `stepArtifactRef` compiled-SQL artifacts first, direct `compiledCodeRef`
+  second.
+- Converted `RunExecutionContextAdmissionPolicy.assertAllowed` to accept a
+  named `RunExecutionContextAdmissionRequest` object and updated the guard and
+  fixtures.
+- Replaced positional `setupActivities(undefined, undefined, ...)` test calls
+  in the Temporal adapter with named setup options.
+- Updated ARC-2 evidence and risk entries to cover both engine and Temporal
+  adapter paths touched by this follow-up.
+
+### Validation Evidence
+
+- `pnpm --filter @dvt/web typecheck`: passed.
+- `pnpm --filter @dvt/engine typecheck`: passed.
+- `pnpm --filter @dvt/adapter-temporal typecheck`: passed.
+- `pnpm --filter @dvt/traceability-service typecheck`: passed.
+- `pnpm --filter @dvt/web test -- appBootstrapCommands.test.ts workspaceGraphDraftProjection.test.ts canvasStartupAndDraftRecovery.architecture.test.ts`:
+  passed with 15 tests.
+- `pnpm --filter @dvt/traceability-service test -- compiledCodeRef.test.ts`:
+  passed with 4 tests.
+- `pnpm --filter @dvt/engine test -- RunExecutionContextAdmissionPolicy.acceptance.test.ts RunExecutionContextAdmissionPolicy.plugin-requirements.test.ts RunExecutionContextAdmissionPolicy.provenance.test.ts RunExecutionContextAdmissionPolicy.compatibility.test.ts`:
+  passed with 20 tests.
+- `pnpm --filter @dvt/adapter-temporal test -- activities.test.ts`: passed.
+  The package script executed the non-integration Temporal adapter suite with
+  25 files and 214 tests.
+- `pnpm --filter @dvt/web test`: passed. The suite still emits existing React
+  `act(...)` warnings around React Flow/MiniMap and CanvasContent, but no test
+  failed.
+- `pnpm --filter @dvt/engine test`: passed with 46 files and 370 tests.
+- `pnpm --filter @dvt/traceability-service test`: passed with 11 files and 49
+  tests.
+- `pnpm docs:sync`: passed and regenerated
+  `docs/risk-register/quality/index.md`.
+- `pnpm docs:status:generate`: passed; generated code state was already up to
+  date.
+
 ## 2026-04-29 Command API And Editor Panel Follow-Up
 
 ### Think-First Analysis

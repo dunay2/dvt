@@ -6,7 +6,7 @@ import type { BootstrapStep, BootstrapStepStatus } from './appBootstrapPresentat
 export type BootstrapStepStatusCommand = Readonly<{
   step: BootstrapStep;
   status: BootstrapStepStatus;
-  detail?: string | undefined;
+  detail?: string;
 }>;
 
 export type BootstrapFailureCommand = Readonly<{
@@ -14,12 +14,12 @@ export type BootstrapFailureCommand = Readonly<{
 }>;
 
 type CopyResolverArgs = Readonly<{
-  copy?: AppBootstrapCopy | undefined;
+  copy?: AppBootstrapCopy;
 }>;
 
 type HealthCommandArgs = CopyResolverArgs &
   Readonly<{
-    detail?: string | null | undefined;
+    detail?: string | null;
   }>;
 
 function getCopy(copy?: AppBootstrapCopy): AppBootstrapCopy {

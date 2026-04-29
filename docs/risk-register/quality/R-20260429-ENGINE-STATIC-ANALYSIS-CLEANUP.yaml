@@ -1,22 +1,28 @@
 ---
 id: R-20260429-ENGINE-STATIC-ANALYSIS-CLEANUP
-title: Engine static-analysis cleanup can drift from admission and error message semantics
+title: Engine and Temporal static-analysis cleanup can drift from admission and activity semantics
 status: Open
 date: 2026-04-29
 owners:
   - dvt/engine
+  - dvt/adapter-temporal
 severity: Low
 probability: Low
 context: >
-  This branch continues the engine static-analysis cleanup by moving recovery-service delegation to
-  a typed request object and splitting default engine error-message rendering into small named
-  renderer functions.
+  This branch continues the static-analysis cleanup by moving recovery-service delegation and
+  run-execution-context admission to typed request objects, splitting default engine error-message
+  rendering into small named renderer functions, and replacing Temporal activity test setup tuples
+  with named setup options.
 risk: >
-  Behavior-preserving refactors around recovery delegation and error text can still drift from
-  runtime semantics if call sites or contract tests are not kept in the same slice.
+  Behavior-preserving refactors around admission, recovery delegation, error text, and activity test
+  harness setup can still drift from runtime semantics if call sites or contract tests are not kept
+  in the same slice.
 mitigations:
   - Keep WorkflowEngine recovery delegation covered by the existing WorkflowEngine tests.
   - Keep default engine error text covered by errorI18n.contract.test.ts.
-  - Require ARC-2 evidence for any follow-up change under packages/@dvt/engine.
+  - Keep run-execution-context admission covered by the split admission policy suite.
+  - Keep Temporal activity behavior covered by activities.test.ts.
+  - Require ARC-2 evidence for any follow-up change under packages/@dvt/engine or
+    packages/@dvt/adapter-temporal.
 review_after: 2026-05-15
 ---

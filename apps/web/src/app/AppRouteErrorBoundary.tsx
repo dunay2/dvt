@@ -50,7 +50,7 @@ export default function AppRouteErrorBoundary() {
           <p className="text-xs font-medium uppercase tracking-[0.16em] text-(--text-subtle)">
             {copy.errorLabel}
           </p>
-          <p className="mt-2 break-words text-sm text-(--text-strong)">{message}</p>
+          <p className="mt-2 wrap-break-word text-sm text-(--text-strong)">{message}</p>
         </div>
 
         <div className="mt-6 flex flex-wrap gap-3">

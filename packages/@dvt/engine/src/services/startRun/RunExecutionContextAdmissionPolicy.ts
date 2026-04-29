@@ -18,6 +18,13 @@ import type {
 import type { IRunExecutionContextResolver } from '../../ports/IRunExecutionContextResolver.js';
 import { toErrorMessage } from '../../utils/errorUtils.js';
 
+export type RunExecutionContextAdmissionRequest = Readonly<{
+  plan: ExecutionPlan;
+  planRef: PlanRef;
+  executionPolicy: RunExecutionPolicy;
+  context: ResolvedRunContext;
+}>;
+
 export class RunExecutionContextAdmissionPolicy {
   constructor(
     private readonly deps: {
@@ -26,12 +33,12 @@ export class RunExecutionContextAdmissionPolicy {
     } = {}
   ) {}
 
-  async assertAllowed(
-    plan: ExecutionPlan,
-    planRef: PlanRef,
-    executionPolicy: RunExecutionPolicy,
-    context: ResolvedRunContext
-  ): Promise<void> {
+  async assertAllowed({
+    plan,
+    planRef,
+    executionPolicy,
+    context,
+  }: RunExecutionContextAdmissionRequest): Promise<void> {
     const pluginRequirements = this.resolvePluginRequirements(plan);
     const ref = context.runExecutionContextRef;
     if (ref === undefined) {

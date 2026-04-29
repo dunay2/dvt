@@ -6,6 +6,8 @@ import { createHash } from 'node:crypto';
 import type { CompiledCodeRef } from '@dvt/contracts';
 
 const COMPILED_SQL_ARTIFACT_KIND = 'compiled-sql';
+const STEP_ARTIFACT_REF_PAYLOAD_KEY = 'stepArtifactRef';
+const COMPILED_CODE_REF_PAYLOAD_KEY = 'compiledCodeRef';
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
@@ -36,18 +38,31 @@ export function isCompiledCodeRef(value: unknown): value is CompiledCodeRef {
   return true;
 }
 
-export function extractCompiledCodeRefFromPayload(payload: unknown): CompiledCodeRef | null {
-  if (!isRecord(payload)) return null;
-  const stepArtifactRef = payload['stepArtifactRef'];
-  if (isRecord(stepArtifactRef)) {
-    const artifactKind = stepArtifactRef['artifactKind'];
-    if (artifactKind === COMPILED_SQL_ARTIFACT_KIND && isCompiledCodeRef(stepArtifactRef)) {
-      return stepArtifactRef;
-    }
+function extractCompiledSqlArtifactRef(payload: Record<string, unknown>): CompiledCodeRef | null {
+  const stepArtifactRef = payload[STEP_ARTIFACT_REF_PAYLOAD_KEY];
+  if (!isRecord(stepArtifactRef)) {
+    return null;
   }
 
-  const compiledCodeRef = payload['compiledCodeRef'];
+  if (
+    stepArtifactRef['artifactKind'] === COMPILED_SQL_ARTIFACT_KIND &&
+    isCompiledCodeRef(stepArtifactRef)
+  ) {
+    return stepArtifactRef;
+  }
+
+  return null;
+}
+
+function extractDirectCompiledCodeRef(payload: Record<string, unknown>): CompiledCodeRef | null {
+  const compiledCodeRef = payload[COMPILED_CODE_REF_PAYLOAD_KEY];
   return isCompiledCodeRef(compiledCodeRef) ? compiledCodeRef : null;
+}
+
+export function extractCompiledCodeRefFromPayload(payload: unknown): CompiledCodeRef | null {
+  if (!isRecord(payload)) return null;
+
+  return extractCompiledSqlArtifactRef(payload) ?? extractDirectCompiledCodeRef(payload);
 }
 
 export function sha256HexUtf8(input: string): string {
