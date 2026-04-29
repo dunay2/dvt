@@ -5,7 +5,7 @@ owner: Architecture / Contracts / Engine
 last_reviewed: 2026-04-29
 ---
 
-# Plan Compatibility Matrix
+# Plan Admission Matrix
 
 This component note defines how start-run admission binds `planVersion` and
 `schemaVersion` before the engine fetches plan bytes or dispatches to a
@@ -13,14 +13,14 @@ provider.
 
 ## Owned Concern
 
-The compatibility matrix owns the executable answer to this question:
+The admission matrix owns the executable answer to this question:
 
 > Can this runtime admit the `PlanRef` pair
 > `(planVersion, schemaVersion)`?
 
-It does not own plan hashing, plan storage, adapter execution, or planner
-emission policy. Those remain governed by ADR-0012, ADR-0017, ADR-0036, and
-the planner contract pack.
+It is a current-admission surface. It does not own plan hashing, plan storage,
+adapter execution, or planner emission policy. Those remain governed by
+ADR-0012, ADR-0017, ADR-0036, and the planner contract pack.
 
 ## Public API
 
@@ -37,7 +37,7 @@ Exports:
 - `isSupportedExecutionPlanCompatibility(planVersion, schemaVersion)`
 - `assertSupportedPlanCompatibility({ planVersion, schemaVersion })`
 
-Current supported pair:
+Current admitted pair:
 
 | `planVersion` | `schemaVersion` | Status    |
 | ------------- | --------------- | --------- |
@@ -45,14 +45,14 @@ Current supported pair:
 
 ## Invariants
 
-- Start-run admission MUST reject any unsupported
+- Start-run admission MUST reject any undeclared
   `(planVersion, schemaVersion)` pair before adapter dispatch.
 - A valid `planVersion` does not make an unknown `schemaVersion` executable.
 - A valid `schemaVersion` does not make an unknown `planVersion` executable.
-- `schemaVersion = v1.future` is unsupported unless the matrix explicitly adds
-  that value.
+- `schemaVersion = v1.future` is unsupported.
 - The engine MUST NOT use a broad `v1.*` prefix rule as runtime compatibility
   truth.
+- Older plan/schema pairs remain undeclared unless they are the active pair.
 
 ## Transitions
 
@@ -92,12 +92,13 @@ sequenceDiagram
 - `@dvt/contracts` tests guard the canonical matrix surface.
 - Engine start-run tests guard negative admission and no-dispatch behavior.
 
-## Future Change Rule
+## Hard-Cut Change Rule
 
-Adding a new pair requires a deliberate bounded change:
+Replacing the active pair requires a deliberate bounded change:
 
 1. Extend the plan-version registry if `planVersion` changes.
 2. Extend the schema/contract definition if `schemaVersion` changes.
-3. Add the pair to `EXECUTION_PLAN_COMPATIBILITY_MATRIX`.
-4. Add negative and positive tests proving staged rollout behavior.
+3. Replace the admitted pair in `EXECUTION_PLAN_COMPATIBILITY_MATRIX`.
+4. Add negative and positive tests proving old, future, and malformed pairs
+   reject.
 5. Update ARC-2 evidence and risk entries for contract or engine changes.

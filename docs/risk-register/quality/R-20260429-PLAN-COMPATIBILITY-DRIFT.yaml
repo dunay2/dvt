@@ -1,6 +1,6 @@
 ---
 id: R-20260429-PLAN-COMPATIBILITY-DRIFT
-title: Plan compatibility matrix can drift during future schema or plan-version rollout
+title: Plan admission matrix can drift during future schema or plan-version changes
 status: Open
 date: 2026-04-29
 owners:
@@ -11,16 +11,17 @@ probability: Low
 context: >
   Start-run admission now uses an explicit `ExecutionPlan` compatibility matrix to bind
   `planVersion` and `schemaVersion`. The current executable pair is `(1.0, v1.2)`. The previous
-  broad `v1.*` rule is removed from engine admission, so future schema lines such as `v1.future`
+  broad `v1.*` rule is removed from engine admission, so older, future, or malformed schema lines
   fail before plan fetch or adapter dispatch.
 risk: >
   Future planner or contract changes could add a new `planVersion` or `schemaVersion` without
   updating the compatibility matrix, docs, and negative tests together. That would either reject a
-  valid rollout or reintroduce late runtime failures if a consumer bypasses the matrix.
+  valid hard-cut contract change or reintroduce late runtime failures if a consumer bypasses the
+  matrix.
 mitigations:
   - 'Keep `PlanCompatibility.v1.ts` as the single executable matrix for admitted pairs.'
   - 'Require a positive and negative test for every new planVersion/schemaVersion pair.'
   - 'Keep engine start-run tests proving unsupported pairs fail before adapter dispatch.'
-  - 'Update ADR-0017 or ADR-0036 if rollout semantics change beyond adding a pair.'
+  - 'Update ADR-0017 or ADR-0036 if admission semantics change beyond replacing the current pair.'
 review_after: 2026-06-30
 ---

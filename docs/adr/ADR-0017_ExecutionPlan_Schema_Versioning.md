@@ -19,7 +19,7 @@
 The codebase already distinguishes:
 
 - `planVersion`: **revision** of a concrete plan instance (e.g. "1", "2", "3") and participates in idempotency
-- `schemaVersion`: **format/schema** version of the `ExecutionPlan` JSON structure (e.g. "v1.0") and does **not** participate in idempotency
+- `schemaVersion`: **format/schema** version of the `ExecutionPlan` JSON structure (for example `v1.2`) and does **not** participate in idempotency
 
 As DVT+ evolves, the `ExecutionPlan` schema will change. Without explicit versioning rules:
 
@@ -39,37 +39,34 @@ A **normative** schema compatibility contract is required.
 
 Every `ExecutionPlan.metadata` MUST include `schemaVersion`.
 
-**Authoritative format (aligned with current implementation):**
+**Authoritative format:**
 
-- `schemaVersion` MUST match: `v<major>.<minor>`
-- Example: `v1.0`, `v1.1`
-- `major` and `minor` are non-negative integers.
+- the only currently executable `schemaVersion` is `v1.2`
+- future schema versions MUST be admitted by an explicit matrix update
+- `schemaVersion` values such as `v1.future` or any other undeclared string
+  MUST be rejected before plan fetch or adapter dispatch
 
-This ADR explicitly standardizes the existing `v1.x` prefix convention.
+This ADR explicitly rejects the former `v1.x` prefix convention as runtime
+admission truth.
 
 ---
 
 ### 2) Compatibility Rules (Schema vs Plan Revision)
 
-These rules apply to **schemaVersion only**.
+These rules apply to the pair `(planVersion, schemaVersion)`.
 
-- `planVersion` (plan revision) MUST NOT be used for schema compatibility checks.
-- Schema compatibility checks MUST use `schemaVersion`.
+- `planVersion` and `schemaVersion` MUST be evaluated together.
+- A valid `planVersion` MUST NOT make an unknown `schemaVersion` executable.
+- A valid `schemaVersion` MUST NOT make an unknown `planVersion` executable.
+- The active runtime admits only the declared current plan/schema pair.
 
-#### Major version
+#### Current-only policy
 
-- A change in `major` indicates a breaking schema change.
-- Adapters MUST reject any plan whose schema major is unsupported.
-- Phase 1 policy: adapters MUST accept **only the same major** they support.
-  - If `planMajor != adapterMajor` â†’ reject (including older majors).
-
-#### Minor version (Phase 1 strict mode with operational prerequisites)
-
-- Phase 1 comparison is strict but bounded:
-  - If `planMinor > adapterSupportedMinor` â†’ reject.
-  - If `planMinor <= adapterSupportedMinor` â†’ accept.
-
-Strict mode is only allowed in production if the operational prerequisites in Â§6 are met.
+- The only admitted pair is the current pair published by the contracts
+  package.
+- Older pairs, future pairs, and syntactically plausible but undeclared pairs
+  MUST reject.
+- Adding a new pair is a hard-cut contract change.
 
 ---
 
@@ -87,8 +84,8 @@ If validation fails, the Engine MUST fail fast and MUST NOT create a run record 
 ```ts
 class PlanRejectedError extends Error {
   code: 'UNSUPPORTED_PLAN_VERSION';
-  schemaVersion: string; // e.g. "v1.1"
-  supportedVersion: string; // e.g. "v1.0" or "v1.1"
+  schemaVersion: string; // e.g. "v2.0"
+  supportedVersion: string; // e.g. "v1.2"
   adapterName: string; // e.g. "TemporalAdapter"
 }
 ```
@@ -102,44 +99,36 @@ But the normative design is to reject **pre-bootstrap**.
 
 ---
 
-### 4) Shared Compatibility Utility (`@dvt/plan-verifier`) â€” Safe Parsing
+### 4) Shared Admission Matrix - Exact Pair Matching
 
-A canonical compatibility helper MUST exist in `@dvt/plan-verifier`.
+A canonical compatibility helper MUST exist in the shared contract/runtime
+surface.
 
 It MUST:
 
-- parse `v<major>.<minor>`
-- throw a descriptive error on invalid format (no silent false)
-- enforce Phase 1 compatibility rules
+- publish the current executable `(planVersion, schemaVersion)` pair
+- reject every undeclared pair
+- avoid prefix, semver, or lower-minor acceptance
 
 ```ts
-type AdapterSupportedSchema = { major: number; minor: number };
-
 class InvalidSchemaVersionError extends Error {
   constructor(public readonly schemaVersion: string) {
     super(`Invalid schemaVersion: ${schemaVersion}`);
   }
 }
 
-export function parseSchemaVersionOrThrow(schemaVersion: string): { major: number; minor: number } {
-  const m = /^v(\d+)\.(\d+)$/.exec(schemaVersion);
-  if (!m) throw new InvalidSchemaVersionError(schemaVersion);
-  return { major: Number(m[1]), minor: Number(m[2]) };
-}
-
-export function isSchemaCompatibleOrThrow(
-  schemaVersion: string,
-  adapterSupported: AdapterSupportedSchema
-): void {
-  const { major, minor } = parseSchemaVersionOrThrow(schemaVersion);
-
-  // Phase 1 policy: same major only; minor must be <= supported minor
-  if (major !== adapterSupported.major) throw new PlanRejectedError(/* ... */);
-  if (minor > adapterSupported.minor) throw new PlanRejectedError(/* ... */);
+export function assertSupportedPlanCompatibility(input: {
+  planVersion: string;
+  schemaVersion: string;
+}): void {
+  if (!isSupportedExecutionPlanCompatibility(input.planVersion, input.schemaVersion)) {
+    throw new InvalidSchemaVersionError(input.schemaVersion);
+  }
 }
 ```
 
-Note: `isSchemaCompatibleOrThrow` is preferred over boolean return to avoid silent rejection paths.
+Note: assertion-style use is preferred at runtime to avoid silent rejection
+paths.
 
 ---
 
@@ -153,44 +142,27 @@ It MUST be validated by a JSON Schema:
 
 - `contracts/compat/plan-compat.schema.json`
 
-Additionally, CI MUST validate that adapter-declared support matches the matrix (see Â§7).
+Additionally, CI MUST validate that code and documentation stay aligned.
 
 ---
 
-### 6) Operational Prerequisites for Strict Minor Mode (Production)
-
-Strict minor rejection creates outages if planner and adapters are not coordinated.
-
-Before enabling strict minor mode in production, the platform MUST have at least one of:
-
-1. **Planner feature flag / dual-emit capability**
-   - Planner can generate `v1.0` or `v1.1` based on config/tenant/environment.
-2. **Dual-support window**
-   - Adapters are deployed supporting both schema minors before planner fully flips.
-3. **Blue/green deployments**
-   - Coordinated rollouts ensure no incompatible combinations exist.
-
-If none of the above is available, strict minor mode MUST NOT be enabled in production environments.
-
----
-
-### 7) CI Mechanism for Matrix Alignment (Design Requirement)
+### 6) CI Mechanism for Matrix Alignment (Design Requirement)
 
 CI MUST fail if code and matrix drift.
 
 The simplest required mechanism:
 
-- `test/compat/matrix-alignment.test.ts`
-  - imports adapter constants (e.g. `ADAPTER_SUPPORTED_SCHEMA = { major, minor }`)
-  - reads `contracts/compat/plan-compat.json`
-  - asserts that the JSON declares support for all versions up to `v{major}.{minor}` for that adapter (Phase 1)
-  - asserts `plan-compat.json` conforms to `plan-compat.schema.json`
+- contract tests assert the current pair and representative negative pairs
+- engine tests assert unsupported pairs fail before plan fetch or adapter
+  dispatch
+- documentation links the matrix as the active admission surface
 
-This test is not a JSON Schema validation alone; it is a contract test that binds code â†” governance artifact.
+This test is not a JSON Schema validation alone; it is a contract test that
+binds code and governance artifact.
 
 ---
 
-### 8) Plan URI Immutability Requirement (Runs in Flight)
+### 7) Plan URI Immutability Requirement (Runs in Flight)
 
 To avoid runs-in-flight reading a different schema/bytes mid-execution:
 
@@ -223,21 +195,13 @@ Forbidden patterns:
 
 ### Negative / Trade-offs
 
-- Requires coordinated rollout for minor bumps (or strict mode becomes an outage risk).
 - Adds governance artifacts (`plan-compat.json`, schema, contract tests) to maintain.
-- Phase 1 rejects older majors (simplifies correctness at the cost of explicit back-compat).
+- Rejects every undeclared pair, including older and future pairs.
 
-### Deployment / Rollback Note
+### Deployment Note
 
-Rollback risk exists:
-
-- If planner generates `v1.1` and adapters are rolled back to support only `v1.0`, runs will fail with `UNSUPPORTED_PLAN_VERSION`.
-
-Mitigations (required to operate strict mode safely):
-
-- feature flags / dual emit
-- dual-support windows
-- blue/green deployments
+Planner and runtime must move as one governed contract line. A planner that
+emits an undeclared pair will be rejected at start-run admission.
 
 ---
 
@@ -265,7 +229,8 @@ This ADR requires updates to:
 - **INV-PLAN-001**: Every ExecutionPlan includes `metadata.schemaVersion`
 - **INV-PLAN-001A**: `schemaVersion` format is `v<major>.<minor>`
 - **INV-PLAN-002**: Engine validates schemaVersion pre-bootstrap (no run created on mismatch)
-- **INV-PLAN-003**: Schema compatibility uses schemaVersion (never planVersion)
+- **INV-PLAN-003**: Runtime admission uses the declared
+  `(planVersion, schemaVersion)` pair
 - **INV-PLAN-004**: Invalid schemaVersion format throws (no silent false/NaN paths)
 - **INV-PLAN-005**: plan-compat.json validates against plan-compat.schema.json
 - **INV-PLAN-006**: Matrix alignment test fails on drift (code â†” JSON mismatch)
@@ -276,7 +241,7 @@ This ADR requires updates to:
 - `test/plan/schemaVersion-required.test.ts`
 - `test/plan/schemaVersion-format-v-prefix.test.ts`
 - `test/engine/reject-unsupported-schema-pre-bootstrap.test.ts`
-- `test/plan/compat/uses-schemaVersion-not-planVersion.test.ts`
+- `test/plan/compat/uses-planVersion-schemaVersion-pair.test.ts`
 - `test/plan/compat/invalid-schemaVersion-throws.test.ts`
 - `test/compat/plan-compat-schema-validation.test.ts`
 - `test/compat/matrix-alignment.test.ts`
