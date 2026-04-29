@@ -67,14 +67,19 @@ before that boundary exists.
 
 ## Public API
 
-| API                           | Responsibility                                                                                           |
-| ----------------------------- | -------------------------------------------------------------------------------------------------------- |
-| `CanvasKindRegistration`      | host-safe declaration of a canvas kind contributed by a plugin                                           |
-| `CanvasDocumentIdentity`      | current workspace canvas title and kind                                                                  |
-| `CanvasPlaygroundHostState`   | host posture: create-first-canvas, typed-empty-canvas, active-canvas                                     |
-| `CanvasHostCycleState`        | story-shaped host cycle DTO: needs-canvas, typed-empty, graph-ready                                      |
-| `CanvasPlaygroundTabState`    | host-visible active tab state derived from the authoritative workspace draft                             |
-| `CreateCanvasDocumentCommand` | host-owned command that persists first or explicitly replaced canvas identity through the draft boundary |
+- `CanvasKindRegistration`: host-safe declaration of a canvas kind contributed
+  by a plugin.
+- `CanvasDocumentIdentity`: current workspace canvas title and kind.
+- `CanvasPlaygroundHostState`: host posture: create-first-canvas,
+  typed-empty-canvas, active-canvas.
+- `CanvasHostCycleState`: story-shaped host cycle DTO: needs-canvas,
+  typed-empty, graph-ready.
+- `CanvasPlaygroundTabState`: host-visible active tab state derived from the
+  authoritative workspace draft.
+- `CreateCanvasDocumentCommand`: host-owned command that persists first or
+  explicitly replaced canvas identity through the draft boundary.
+- `CanvasPlaygroundHostTemplate`: first-canvas host template that renders
+  resolved copy and canvas-kind options without building commands.
 
 ## Invariants
 
@@ -104,6 +109,10 @@ before that boundary exists.
   override restore posture.
 - Restored typed-empty posture remains an overlay on the authoritative canvas
   shell, so the viewport stays mounted while the empty guidance is shown.
+- First-canvas host HTML belongs in `CanvasPlaygroundHost.templates.tsx`.
+  `CanvasPlaygroundHost.tsx` owns copy selection and create-canvas command
+  construction.
+- Host templates must not construct `CanvasCreateCanvasDocumentCommand` DTOs.
 
 ## Transitions
 
@@ -125,6 +134,7 @@ stateDiagram-v2
 flowchart LR
   Route["Canvas route"]
   Host["Playground host"]
+  HostTemplate["Playground host template"]
   Cycle["CanvasHostCycleState"]
   TabState["CanvasPlaygroundTabState"]
   Tabs["CanvasPlaygroundTabStrip"]
@@ -134,6 +144,7 @@ flowchart LR
   Draft["Protected workspace draft boundary"]
 
   Route --> Host
+  Host --> HostTemplate
   Host --> Cycle
   Host --> TabState
   TabState --> Tabs

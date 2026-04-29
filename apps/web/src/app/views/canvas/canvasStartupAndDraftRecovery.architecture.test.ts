@@ -66,6 +66,21 @@ const ownedConcernModules = [
     phrase: 'Owned concern: render Canvas playground tab-strip presentation templates',
   },
   {
+    label: 'canvas playground host templates',
+    path: 'CanvasPlaygroundHost.templates.tsx',
+    phrase: 'Owned concern: render Canvas playground first-document host templates',
+  },
+  {
+    label: 'canvas recovery banner model',
+    path: 'canvasRecoveryBannerModel.ts',
+    phrase: 'Owned concern: resolve Canvas recovery-banner state',
+  },
+  {
+    label: 'canvas recovery banner templates',
+    path: 'CanvasRecoveryBanner.templates.tsx',
+    phrase: 'Owned concern: render Canvas recovery-banner templates',
+  },
+  {
     label: 'DVT node renderer',
     path: '../../components/canvas/DbtNodeComponent.tsx',
     phrase: 'Owned concern: render canonical Canvas nodes',
@@ -235,6 +250,34 @@ describe('canvas startup and draft recovery architecture', () => {
     expect(tabStripTemplateSource).not.toContain("from './copy'");
     expect(tabStripTemplateSource).not.toContain("mode: 'replace_current'");
     expect(tabStripSource).not.toContain('canEditEdges && activeReplacementCanvasKind');
+  });
+
+  it('keeps first-canvas and recovery banner HTML behind passive templates', () => {
+    const hostSource = readAppSource('CanvasPlaygroundHost.tsx');
+    const hostTemplateSource = readAppSource('CanvasPlaygroundHost.templates.tsx');
+    const recoveryBannerSource = readAppSource('CanvasRecoveryBanner.tsx');
+    const recoveryModelSource = readAppSource('canvasRecoveryBannerModel.ts');
+    const recoveryTemplateSource = readAppSource('CanvasRecoveryBanner.templates.tsx');
+
+    expect(hostSource).toContain("from './CanvasPlaygroundHost.templates'");
+    expect(hostSource).toContain('onCreateCanvasKind');
+    expect(hostSource).not.toContain('<div');
+    expect(hostSource).not.toContain('Button');
+    expect(hostSource).not.toContain('Card');
+    expect(hostTemplateSource).toContain('function CanvasPlaygroundHostTemplate(');
+    expect(hostTemplateSource).not.toContain('CanvasCreateCanvasDocumentCommand');
+    expect(hostTemplateSource).not.toContain('canvasViewCopy');
+
+    expect(recoveryBannerSource).toContain("from './canvasRecoveryBannerModel'");
+    expect(recoveryBannerSource).toContain("from './CanvasRecoveryBanner.templates'");
+    expect(recoveryBannerSource).not.toContain('<div');
+    expect(recoveryBannerSource).not.toContain('Button');
+    expect(recoveryBannerSource).not.toContain('canvasViewCopy');
+    expect(recoveryModelSource).toContain('function resolveCanvasRecoveryBannerViewState(');
+    expect(recoveryModelSource).not.toContain('JSX.Element');
+    expect(recoveryTemplateSource).toContain('function CanvasRecoveryBannerTemplate(');
+    expect(recoveryTemplateSource).not.toContain('CanvasDraftPresentationState');
+    expect(recoveryTemplateSource).not.toContain('canvasViewCopy');
   });
 
   it('keeps Canvas viewport mocks in named test-local components for static analysis', () => {

@@ -153,6 +153,33 @@ remain explicit, while route code does not carry silent migration behavior.
 - Bulk editing historical archives or contract-versioning governance, because
   those are not active runtime surfaces for this web slice.
 
+## 2026-04-29 Presentation Template Extraction
+
+### Problem summary
+
+The Canvas host/recovery slice still had two places where markup lived next to
+state resolution or command construction:
+
+- `CanvasPlaygroundHost.tsx` rendered first-canvas HTML and constructed
+  `CanvasCreateCanvasDocumentCommand` objects from button clicks.
+- `CanvasRecoveryBanner.tsx` branched over recovery reasons while rendering
+  repeated banner HTML and reading Canvas copy directly.
+
+### Selected option and rationale
+
+Extract the HTML into passive templates while keeping the application decisions
+in coordinator/model files:
+
+- `CanvasPlaygroundHost.tsx` now selects copy and builds create-canvas command
+  DTOs; `CanvasPlaygroundHost.templates.tsx` renders the host card and buttons.
+- `canvasRecoveryBannerModel.ts` resolves `CanvasDraftPresentationState` into a
+  renderable `CanvasRecoveryBannerViewState`.
+- `CanvasRecoveryBanner.tsx` coordinates model plus template; `CanvasRecoveryBanner.templates.tsx`
+  renders the banner from resolved state only.
+
+This is positive because it reduces SRP drift without changing user behavior:
+templates render, models decide, and command DTO construction stays outside JSX.
+
 ## Current Evidence
 
 - `pnpm --filter @dvt/web test -- canvasCreateCanvasDocumentCommand.test.ts CanvasPlaygroundTabStrip.test.tsx`

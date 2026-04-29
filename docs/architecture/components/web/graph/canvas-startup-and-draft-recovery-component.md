@@ -41,6 +41,9 @@ whose first visible surface is already governed and safe to reveal.
 | `resolveCanvasReplacementActionState(...)`            | `canvasPlaygroundTabStripModel.ts`       | Resolve locale-backed replacement labels, permission state, and active kind.      |
 | `CanvasReplacementActionViewState`                    | `canvasPlaygroundTabStripModel.ts`       | Carry only replacement labels and enablement that templates may render.           |
 | `CanvasPlaygroundTabStripTemplate`                    | `CanvasPlaygroundTabStrip.templates.tsx` | Render tab-strip HTML from resolved view state without command policy.            |
+| `CanvasPlaygroundHostTemplate`                        | `CanvasPlaygroundHost.templates.tsx`     | Render first-canvas host HTML without constructing draft command DTOs.            |
+| `resolveCanvasRecoveryBannerViewState(...)`           | `canvasRecoveryBannerModel.ts`           | Resolve route recovery reason into renderable banner state and copy.              |
+| `CanvasRecoveryBannerTemplate`                        | `CanvasRecoveryBanner.templates.tsx`     | Render recovery banner HTML from resolved view state only.                        |
 | `CANVAS_NODE_DRAG_HANDLE_SELECTOR`                    | `canvasNodeMapper.ts`                    | Name the React Flow drag handle shared by mapped nodes and rendered node shell.   |
 
 ## Invariants
@@ -73,6 +76,11 @@ whose first visible surface is already governed and safe to reveal.
   not import locale catalogs or construct `replace_current` command DTOs.
 - Tab-strip templates must depend on `CanvasReplacementActionViewState`, not on
   command-selection state such as `activeCanvasKind`.
+- `CanvasPlaygroundHost.tsx` must own first-canvas command construction; its
+  template renders host HTML from copy and kind registrations only.
+- Recovery-banner state must be resolved by `canvasRecoveryBannerModel.ts`.
+  `CanvasRecoveryBanner.templates.tsx` must not import route presentation state
+  or Canvas copy catalogs.
 - The tab-strip replacement action must stay disabled when effective route
   permissions deny graph editing.
 - Node drag remains permission-gated by `CanvasViewport`; the drag handle only
@@ -139,6 +147,16 @@ flowchart LR
   NodeShell --> Gesture
 ```
 
+### Recovery banner presentation
+
+```mermaid
+flowchart LR
+  RouteState["CanvasDraftPresentationState"] --> Model["canvasRecoveryBannerModel.ts"]
+  Model --> ViewState["CanvasRecoveryBannerViewState"]
+  ViewState --> Template["CanvasRecoveryBanner.templates.tsx"]
+  Template --> Banner["governed recovery banner"]
+```
+
 ## Consumers
 
 Direct consumers:
@@ -149,7 +167,9 @@ Direct consumers:
 - `workspaceGraphDraftAuthoring.api.ts`
 - `canvasDraftRepository.ts`
 - `canvasCreateCanvasDocumentCommand.ts`
+- `CanvasPlaygroundHost.tsx`
 - `CanvasPlaygroundTabStrip.tsx`
+- `CanvasRecoveryBanner.tsx`
 - `CanvasViewport.tsx`
 - `DbtNodeComponent.tsx`
 
@@ -172,6 +192,9 @@ Indirect consumers:
 | Passive View                  | `CanvasPlaygroundTabStrip`             | render host state without owning draft DTOs       |
 | Presentation Template         | `CanvasPlaygroundTabStripTemplate`     | keep JSX separate from replacement policy         |
 | Presentation Model            | `CanvasReplacementActionViewState`     | expose only renderable action state to templates  |
+| Presentation Template         | `CanvasPlaygroundHostTemplate`         | render host selection HTML without command DTOs   |
+| Presentation Model            | `CanvasRecoveryBannerViewState`        | reduce recovery reasons to renderable state       |
+| Presentation Template         | `CanvasRecoveryBannerTemplate`         | render recovery HTML without route state imports  |
 | Separated Domain Model        | `canvasPlaygroundTabStripModel.ts`     | test command and i18n state without React         |
 | Intention Revealing Interface | `CANVAS_NODE_DRAG_HANDLE_SELECTOR`     | gesture ownership is named and testable           |
 | Parameter Object              | `MapCanonicalNodeToCanvasNodeArgs`     | viewport projection options are named at callsite |
@@ -203,6 +226,10 @@ It validates semantics, not only barrel thinness:
   or `replace_current` command construction;
 - `CanvasPlaygroundTabStrip.templates.tsx` does not import Canvas copy catalogs
   or command DTO literals;
+- `CanvasPlaygroundHost.tsx` builds create-canvas commands while
+  `CanvasPlaygroundHost.templates.tsx` owns host HTML;
+- `CanvasRecoveryBanner.tsx` delegates recovery state resolution and renders
+  through `CanvasRecoveryBanner.templates.tsx`;
 - tab strip confirmation stays tied to edit permission;
 - mapped and dropped nodes carry the explicit drag handle;
 - branch-owned modules keep owned-concern docblocks;
