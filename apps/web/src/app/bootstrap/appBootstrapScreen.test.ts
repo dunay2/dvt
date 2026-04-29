@@ -7,6 +7,10 @@ import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
+  createBootstrapFailureCommand,
+  type BootstrapStepStatusCommand,
+} from './appBootstrapCommands';
+import {
   completeBootstrapScreen,
   setBootstrapStepStatus,
   showBootstrapFailure,
@@ -26,10 +30,27 @@ const BOOTSTRAP_SCREEN_SOURCE_PATH = resolve(
   dirname(fileURLToPath(import.meta.url)),
   'appBootstrapScreen.ts'
 );
-const REGEXP_SYNTAX_PATTERN = /[.*+?^${}()|[\]\\]/g;
+const REGEXP_SYNTAX_CHARACTERS = new Set([
+  '.',
+  '*',
+  '+',
+  '?',
+  '^',
+  '$',
+  '{',
+  '}',
+  '(',
+  ')',
+  '|',
+  '[',
+  ']',
+  '\\',
+]);
 
 function escapeRegExpSyntax(value: string): string {
-  return value.replaceAll(REGEXP_SYNTAX_PATTERN, String.raw`\$&`);
+  return Array.from(value, (character) =>
+    REGEXP_SYNTAX_CHARACTERS.has(character) ? `\\${character}` : character
+  ).join('');
 }
 
 function extractCssRule(source: string, selector: string): string {
@@ -148,12 +169,18 @@ function expectInitialProgressSurface(): void {
   expect(document.querySelector('[data-app-loading-progress-value]')).toBeNull();
 }
 
+function publishBootstrapStepStatuses(commands: readonly BootstrapStepStatusCommand[]): void {
+  commands.forEach(setBootstrapStepStatus);
+}
+
 function completeAllStartupSteps(): void {
-  setBootstrapStepStatus('hydrate', 'complete');
-  setBootstrapStepStatus('services', 'complete');
-  setBootstrapStepStatus('capabilities', 'complete');
-  setBootstrapStepStatus('health', 'complete');
-  setBootstrapStepStatus('route', 'complete');
+  publishBootstrapStepStatuses([
+    { step: 'hydrate', status: 'complete' },
+    { step: 'services', status: 'complete' },
+    { step: 'capabilities', status: 'complete' },
+    { step: 'health', status: 'complete' },
+    { step: 'route', status: 'complete' },
+  ]);
 }
 
 describe('appBootstrapScreen', () => {
@@ -196,11 +223,17 @@ describe('appBootstrapScreen', () => {
   it('keeps the Raven startup surface visible until every critical step reaches an allowed terminal state', () => {
     startBootstrapScreen();
 
-    setBootstrapStepStatus('hydrate', 'complete');
-    setBootstrapStepStatus('services', 'complete');
-    setBootstrapStepStatus('capabilities', 'degraded', 'Capabilities settled in fallback mode.');
-    setBootstrapStepStatus('health', 'complete');
-    setBootstrapStepStatus('route', 'blocked', 'Backend readiness is still blocked.');
+    publishBootstrapStepStatuses([
+      { step: 'hydrate', status: 'complete' },
+      { step: 'services', status: 'complete' },
+      {
+        step: 'capabilities',
+        status: 'degraded',
+        detail: 'Capabilities settled in fallback mode.',
+      },
+      { step: 'health', status: 'complete' },
+      { step: 'route', status: 'blocked', detail: 'Backend readiness is still blocked.' },
+    ]);
 
     completeBootstrapScreen();
     expect(document.getElementById('app-loading-screen')).not.toBeNull();
@@ -224,7 +257,7 @@ describe('appBootstrapScreen', () => {
       'blocked',
     ]);
 
-    setBootstrapStepStatus('route', 'complete');
+    setBootstrapStepStatus({ step: 'route', status: 'complete' });
     completeBootstrapScreen();
     vi.advanceTimersByTime(120);
 
@@ -234,11 +267,13 @@ describe('appBootstrapScreen', () => {
   it('allows a failed non-critical health check to settle startup without looking pending or degraded', () => {
     startBootstrapScreen();
 
-    setBootstrapStepStatus('hydrate', 'complete');
-    setBootstrapStepStatus('services', 'complete');
-    setBootstrapStepStatus('capabilities', 'complete');
-    setBootstrapStepStatus('health', 'failed', 'Request to /healthz failed (NETWORK)');
-    setBootstrapStepStatus('route', 'complete', 'Canvas backend block is routable');
+    publishBootstrapStepStatuses([
+      { step: 'hydrate', status: 'complete' },
+      { step: 'services', status: 'complete' },
+      { step: 'capabilities', status: 'complete' },
+      { step: 'health', status: 'failed', detail: 'Request to /healthz failed (NETWORK)' },
+      { step: 'route', status: 'complete', detail: 'Canvas backend block is routable' },
+    ]);
 
     completeBootstrapScreen();
 
@@ -254,11 +289,13 @@ describe('appBootstrapScreen', () => {
   it('keeps error step colors aligned with the semantic readiness label', () => {
     startBootstrapScreen();
 
-    setBootstrapStepStatus('hydrate', 'complete');
-    setBootstrapStepStatus('services', 'complete');
-    setBootstrapStepStatus('capabilities', 'complete');
-    setBootstrapStepStatus('health', 'error', 'Unable to reach /healthz.');
-    setBootstrapStepStatus('route', 'error', 'Request to /workspace/graph failed (NETWORK)');
+    publishBootstrapStepStatuses([
+      { step: 'hydrate', status: 'complete' },
+      { step: 'services', status: 'complete' },
+      { step: 'capabilities', status: 'complete' },
+      { step: 'health', status: 'error', detail: 'Unable to reach /healthz.' },
+      { step: 'route', status: 'error', detail: 'Request to /workspace/graph failed (NETWORK)' },
+    ]);
 
     expect(document.getElementById('app-loading-screen')?.dataset.state).toBe('error');
     expect(document.querySelector('[data-app-loading-progress-value]')).toBeNull();
@@ -296,6 +333,9 @@ describe('appBootstrapScreen', () => {
     renderBootstrapProgress({
       tone: 'loading',
       label: 'Startup checks pending',
+      kicker: 'Startup readiness',
+      listLabel: 'Startup readiness checks',
+      countLabel: '0/1 checks',
       settledCount: 0,
       totalCount: 1,
       segments: [
@@ -336,21 +376,21 @@ describe('appBootstrapScreen', () => {
   it('does not reopen the startup surface after bootstrap has already completed', () => {
     startBootstrapScreen();
 
-    setBootstrapStepStatus('hydrate', 'complete');
-    setBootstrapStepStatus('services', 'complete');
-    setBootstrapStepStatus('capabilities', 'complete');
-    setBootstrapStepStatus('health', 'complete');
-    setBootstrapStepStatus('route', 'complete');
+    completeAllStartupSteps();
 
     completeBootstrapScreen();
-    setBootstrapStepStatus('route', 'complete', 'Initial route is ready');
+    setBootstrapStepStatus({
+      step: 'route',
+      status: 'complete',
+      detail: 'Initial route is ready',
+    });
     vi.advanceTimersByTime(120);
 
     expect(document.getElementById('app-loading-screen')).toBeNull();
   });
 
   it('updates the startup surface with a controlled failure instead of dropping to a second screen', () => {
-    showBootstrapFailure('Startup blew up.');
+    showBootstrapFailure(createBootstrapFailureCommand('Startup blew up.'));
 
     expect(document.getElementById('app-loading-title')?.textContent).toBe(
       'Raven could not finish startup'

@@ -16,6 +16,10 @@ const SERVICE_FACTORY_CALL_PATTERNS = [
   /createRunsService\s*\(/,
   /createPlansService\s*\(/,
 ];
+const RAW_CAPABILITIES_FETCH_PATTERNS = [
+  "fetch('/api/capabilities'",
+  'fetch("/api/capabilities"',
+] as const;
 
 function toRelativePath(filePath: string): string {
   return path.relative(ROOT_DIR, filePath).replaceAll('\\', '/');
@@ -52,6 +56,21 @@ function fileContainsPattern(filePath: string, pattern: RegExp): boolean {
 function fileContainsAnyPattern(filePath: string, patterns: readonly RegExp[]): boolean {
   const source = readFileSync(filePath, 'utf8');
   return patterns.some((pattern) => pattern.test(source));
+}
+
+function isAsciiWhitespace(character: string): boolean {
+  return character === ' ' || character === '\n' || character === '\r' || character === '\t';
+}
+
+function stripAsciiWhitespace(source: string): string {
+  return Array.from(source)
+    .filter((character) => !isAsciiWhitespace(character))
+    .join('');
+}
+
+function fileContainsRawCapabilitiesFetch(filePath: string): boolean {
+  const source = stripAsciiWhitespace(readFileSync(filePath, 'utf8'));
+  return RAW_CAPABILITIES_FETCH_PATTERNS.some((pattern) => source.includes(pattern));
 }
 
 describe('Query key policy (architecture)', () => {
@@ -120,11 +139,7 @@ describe('Query key policy (architecture)', () => {
     const sourceFiles: string[] = [];
     collectSourceFiles(ROOT_DIR, sourceFiles);
 
-    const offenders = sourceFiles
-      .filter((filePath) =>
-        fileContainsPattern(filePath, /fetch\s*\(\s*['"]\/api\/capabilities['"]/)
-      )
-      .map(toRelativePath);
+    const offenders = sourceFiles.filter(fileContainsRawCapabilitiesFetch).map(toRelativePath);
 
     expect(offenders).toEqual([]);
   });

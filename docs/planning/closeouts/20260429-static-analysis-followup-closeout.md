@@ -207,3 +207,109 @@ Validation plan:
   failed.
 - `pnpm --filter dvt-temporal-worker test`: passed with 5 files and 22 tests.
 - `pnpm lint`: passed with `--max-warnings 0`.
+
+## 2026-04-29 Command API And Editor Panel Follow-Up
+
+### Think-First Analysis
+
+Problem summary: the editor still shows 21 warnings after the first local
+follow-up. A direct source check shows the panel still includes stale
+diagnostics, but it also identifies one real design smell in the bootstrap DOM
+adapter API: startup state was published through positional string arguments.
+
+Root cause: the bootstrap adapter was already split from the presentation model,
+but its public command surface still exposed primitive string tuples. That kept
+the call sites coupled to argument order and made tests repeat procedural DOM
+scripts instead of named bootstrap commands.
+
+Constraints and invariants:
+
+- Keep the pre-React startup state machine behavior unchanged.
+- Keep Canvas/workspace projection semantics unchanged.
+- Do not touch ARC-triggered engine paths unless the current source proves the
+  warning is active and worth the ARC-2 overhead.
+- Keep documentation aligned with the new public component API.
+
+Options considered:
+
+- Clear all warnings by moving code around mechanically. Rejected because that
+  would hide the root cause and risk moving smells into new files.
+- Touch engine files from the screenshot. Rejected for this pass because the
+  current engine files no longer match the screenshot line shapes; those
+  diagnostics are stale relative to this branch.
+- Convert bootstrap writes to typed command objects and simplify active web test
+  helpers. Selected because it improves API semantics without behavior change.
+
+### Pre-Implementation Brief
+
+Mode: Slim.
+
+Scope:
+
+- `apps/web/src/app/bootstrap/appBootstrapScreen.ts`
+- Bootstrap publishers in `main.tsx`, `AppProviders.tsx`, `Root.tsx`, and
+  `AppRouteErrorBoundary.tsx`
+- Active web static-analysis helpers in bootstrap/query/projection tests
+- `docs/architecture/components/web/app-bootstrap-screen-component.md`
+
+Out of scope:
+
+- Engine ARC-2 refactors from stale editor diagnostics.
+- Product behavior changes.
+- Compatibility shims for the previous positional bootstrap API.
+
+Validation plan:
+
+- Targeted web typecheck.
+- Targeted bootstrap/query/projection/canvas architecture tests.
+- Root lint.
+- Final `pnpm verify:prepush` after commit.
+
+### Implementation Outcome
+
+- Replaced positional `setBootstrapStepStatus(step, status, detail)` with a
+  typed `BootstrapStepStatusCommand`.
+- Replaced positional `showBootstrapFailure(message)` with a typed
+  `BootstrapFailureCommand`.
+- Added `appBootstrapCommands.ts` as the bootstrap domain-command owner. Shell
+  publishers now emit named commands instead of assembling localized details or
+  relying on tuple order.
+- Added `appBootstrapCopy.ts` as the locale catalog for bootstrap titles,
+  details, progress labels, and publisher fallback messages.
+- Updated `appBootstrapPresentation.ts` so state transitions and progress
+  snapshots consume copy instead of owning user-facing strings.
+- Updated `bootstrapProgressBar.ts` so progress kicker, list label, and count
+  copy come from the presentation snapshot instead of hardcoded English.
+- Added `appRouteErrorBoundaryCopy.ts` so the route error boundary modified by
+  the command API does not keep English UI copy in the component.
+- Updated all bootstrap publishers and tests to use the typed command API.
+- Removed the regex-heavy CSS selector escape helper from
+  `appBootstrapScreen.test.ts`.
+- Replaced the complex raw-capabilities fetch regex with whitespace-normalized
+  string matching in `queryKeyPolicy.architecture.test.ts`.
+- Removed unnecessary workspace projection casts by adding a `PluginNodeKind`
+  guard and record-based DBT column validation.
+- Updated the local bootstrap component guide to document copy, command, model,
+  and DOM-adapter ownership.
+- Regenerated `docs/planning/status/generated-code-state.md` after adding web
+  source/test modules.
+
+### Review Correction Evidence
+
+- SRP: copy, commands, presentation rules, DOM mutation, and React publishers
+  now live in separate modules with explicit owned-concern docblocks.
+- DDD: shell publishers use named domain commands
+  (`createHealthFailedBootstrapCommand`, `createRouteBootstrapStepCommand`,
+  and related factories) rather than primitive string tuples.
+- I18n: bootstrap copy and the touched route-error-boundary copy resolve through
+  locale catalogs, with Spanish coverage in tests.
+
+### Validation Evidence
+
+- `pnpm --filter @dvt/web typecheck`: passed.
+- `pnpm --filter @dvt/web test -- appBootstrapCommands.test.ts appBootstrapPresentation.test.ts appBootstrapScreen.test.ts AppProviders.test.tsx Root.bootstrapFlow.test.tsx appRouteErrorBoundaryCopy.test.ts queryKeyPolicy.architecture.test.ts workspaceGraphDraftProjection.test.ts canvasStartupAndDraftRecovery.architecture.test.ts`:
+  passed with 9 files and 53 tests.
+- `pnpm docs:status:generate`: passed and updated
+  `docs/planning/status/generated-code-state.md`.
+- `pnpm lint:md:changed`: passed with 0 markdown errors.
+- `pnpm lint`: passed with `--max-warnings 0`.

@@ -11,7 +11,7 @@ import type {
   WorkspaceGraphDraftRecord,
   WorkspaceGraphSnapshot,
 } from '../../ports/workspace';
-import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+import type { CanonicalEdge, CanonicalNode, PluginNodeKind } from '../../types/canonical';
 import type { DbtColumn, DbtEdge, DbtNode, DbtNodeType } from '../../types/dbt';
 
 export type WorkspaceGraphDraftSemanticGraph = {
@@ -39,9 +39,13 @@ function createDraftEdgeId(fromNodeId: string, toNodeId: string): string {
   return `draft_edge_${fromNodeId}_${toNodeId}`;
 }
 
+function isPluginNodeKind(value: string): value is PluginNodeKind {
+  return value.includes(':');
+}
+
 function toPluginNodeKind(node: WorkspaceGraphAuthoringNode): CanonicalNode['kind'] {
-  if (node.kind.includes(':')) {
-    return node.kind as CanonicalNode['kind'];
+  if (isPluginNodeKind(node.kind)) {
+    return node.kind;
   }
 
   return `${node.pluginId}:${node.kind}`;
@@ -170,9 +174,7 @@ function isRecordValue(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
 
-function hasOptionalDbtColumnDescription(
-  column: Partial<Record<keyof DbtColumn, unknown>>
-): boolean {
+function hasOptionalDbtColumnDescription(column: Record<string, unknown>): boolean {
   return column.description == null || typeof column.description === 'string';
 }
 
@@ -180,13 +182,12 @@ function isDbtColumn(value: unknown): value is DbtColumn {
   if (!isRecordValue(value)) {
     return false;
   }
-  const column = value as Partial<Record<keyof DbtColumn, unknown>>;
 
   return (
-    typeof column.name === 'string' &&
-    typeof column.type === 'string' &&
-    typeof column.nullable === 'boolean' &&
-    hasOptionalDbtColumnDescription(column)
+    typeof value.name === 'string' &&
+    typeof value.type === 'string' &&
+    typeof value.nullable === 'boolean' &&
+    hasOptionalDbtColumnDescription(value)
   );
 }
 

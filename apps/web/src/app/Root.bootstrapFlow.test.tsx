@@ -39,11 +39,11 @@ async function expectRouteBootstrapStep(args: {
   detail: string;
 }): Promise<void> {
   await waitFor(() => {
-    expect(bootstrapScreenMocks.setBootstrapStepStatus).toHaveBeenCalledWith(
-      'route',
-      args.status,
-      args.detail
-    );
+    expect(bootstrapScreenMocks.setBootstrapStepStatus).toHaveBeenCalledWith({
+      step: 'route',
+      status: args.status,
+      detail: args.detail,
+    });
   });
 }
 
@@ -105,10 +105,10 @@ describe('RootShell bootstrap flow', () => {
       const view = within(mounted.container);
 
       await waitFor(() => {
-        expect(bootstrapScreenMocks.setBootstrapStepStatus).toHaveBeenCalledWith(
-          'health',
-          'pending'
-        );
+        expect(bootstrapScreenMocks.setBootstrapStepStatus).toHaveBeenCalledWith({
+          step: 'health',
+          status: 'pending',
+        });
       });
       expect(view.getByText('Checking')).toBeTruthy();
       expect(mounted.container.querySelector('[data-slot="app-shell-frame"]')).not.toBeNull();
@@ -136,11 +136,11 @@ describe('RootShell bootstrap flow', () => {
 
     try {
       await waitFor(() => {
-        expect(bootstrapScreenMocks.setBootstrapStepStatus).toHaveBeenCalledWith(
-          'health',
-          'failed',
-          expect.stringContaining('/healthz')
-        );
+        expect(bootstrapScreenMocks.setBootstrapStepStatus).toHaveBeenCalledWith({
+          step: 'health',
+          status: 'failed',
+          detail: expect.stringContaining('/healthz'),
+        });
       });
       await expectRouteBootstrapCompletion('Canvas backend block is routable');
     } finally {
@@ -164,10 +164,10 @@ describe('RootShell bootstrap flow', () => {
 
     try {
       await waitFor(() => {
-        expect(bootstrapScreenMocks.setBootstrapStepStatus).toHaveBeenCalledWith(
-          'capabilities',
-          'pending'
-        );
+        expect(bootstrapScreenMocks.setBootstrapStepStatus).toHaveBeenCalledWith({
+          step: 'capabilities',
+          status: 'pending',
+        });
       });
       expect(mounted.container.querySelector('[data-slot="app-shell-frame"]')).not.toBeNull();
     } finally {
@@ -184,11 +184,11 @@ describe('RootShell bootstrap flow', () => {
         status: 'pending',
         detail: 'Preparing canvas route',
       });
-      expect(bootstrapScreenMocks.setBootstrapStepStatus).not.toHaveBeenCalledWith(
-        'route',
-        'complete',
-        'Canvas workbench route is ready'
-      );
+      expect(bootstrapScreenMocks.setBootstrapStepStatus).not.toHaveBeenCalledWith({
+        step: 'route',
+        status: 'complete',
+        detail: 'Canvas workbench route is ready',
+      });
       expect(bootstrapScreenMocks.completeBootstrapScreen).not.toHaveBeenCalled();
     } finally {
       await mounted.cleanup();
