@@ -18,14 +18,10 @@ import type {
   IRunRecoveryService,
   RecoverRunServiceRequest,
 } from '../domain/IRunRecoveryService.js';
+import type { IPlanFetcher, IPlanIntegrityValidator } from '../ports/IPlanArtifactReader.js';
 import type { IRunExecutionContextBindingPolicy } from '../ports/IRunExecutionContextBindingPolicy.js';
 import type { IRunExecutionContextResolver } from '../ports/IRunExecutionContextResolver.js';
-import type {
-  IPlanFetcher,
-  IPlanIntegrityValidator,
-  IRunStateStoreRead,
-  IRunStateStoreWrite,
-} from '../ports/IRunStateStore.js';
+import type { IRunStateStoreRead, IRunStateStoreWrite } from '../ports/IRunStateStore.js';
 import { PlanIntegrityValidator } from '../security/planIntegrity.js';
 import type { IRunAccessPolicy } from '../security/RunAccessPolicy.js';
 import { toErrorMessage } from '../utils/errorUtils.js';
