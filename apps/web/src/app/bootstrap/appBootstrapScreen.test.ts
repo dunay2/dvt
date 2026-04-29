@@ -12,11 +12,20 @@ import {
   showBootstrapFailure,
   startBootstrapScreen,
 } from './appBootstrapScreen';
+import {
+  BOOTSTRAP_DOM,
+  getBootstrapAnnouncementDescription,
+  getBootstrapStepSelector,
+} from './appBootstrapDomContract';
+import { BOOTSTRAP_STEP_ORDER } from './appBootstrapPresentation';
 import { renderBootstrapProgress } from './bootstrapProgressBar';
 
 const WEB_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../../..');
 const INDEX_HTML_PATH = resolve(WEB_ROOT, 'index.html');
-const BOOTSTRAP_STEP_ORDER = ['hydrate', 'services', 'capabilities', 'health', 'route'];
+const BOOTSTRAP_SCREEN_SOURCE_PATH = resolve(
+  dirname(fileURLToPath(import.meta.url)),
+  'appBootstrapScreen.ts'
+);
 const REGEXP_SYNTAX_PATTERN = /[.*+?^${}()|[\]\\]/g;
 
 function escapeRegExpSyntax(value: string): string {
@@ -141,6 +150,16 @@ describe('appBootstrapScreen', () => {
       BOOTSTRAP_STEP_ORDER.length
     );
     expect(document.querySelector('[data-app-loading-progress-value]')).toBeNull();
+  });
+
+  it('keeps raw bootstrap DOM identifiers out of the screen adapter', () => {
+    const screenAdapterSource = readFileSync(BOOTSTRAP_SCREEN_SOURCE_PATH, 'utf8');
+
+    expect(screenAdapterSource.includes('app-loading-screen')).toBe(false);
+    expect(screenAdapterSource.includes('data-bootstrap-step')).toBe(false);
+    expect(BOOTSTRAP_DOM.screenId).toBe('app-loading-screen');
+    expect(getBootstrapStepSelector('route')).toBe('[data-bootstrap-step="route"]');
+    expect(getBootstrapAnnouncementDescription()).toBe('app-loading-message app-loading-progress');
   });
 
   it('keeps the Raven startup surface visible until every critical step reaches an allowed terminal state', () => {

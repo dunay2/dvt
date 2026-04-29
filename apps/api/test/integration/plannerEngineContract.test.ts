@@ -244,10 +244,7 @@ function makeRunExecutionContextRef(
   });
 }
 
-function makeDbtRunExecutionContext(
-  planRef: PlanRef,
-  context: RunContext
-): RunExecutionContext {
+function makeDbtRunExecutionContext(planRef: PlanRef, context: RunContext): RunExecutionContext {
   return parseRunExecutionContext({
     schemaVersion: 'v1.0',
     planId: planRef.planId,
@@ -560,10 +557,7 @@ describe('planner -> engine contract', () => {
     });
 
     const planRef = makePlanRefFromEnginePlan('https://example.com/plan.json', enginePlan);
-    const runRef = await inMemoryAdapter.startRun(
-      planRef,
-      makeResolvedRunContext('compat-run')
-    );
+    const runRef = await inMemoryAdapter.startRun(planRef, makeResolvedRunContext('compat-run'));
     expect(runRef.provider).toBe('temporal');
   });
 

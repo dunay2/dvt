@@ -18,9 +18,9 @@ import {
 const REPO_ROOT = path.resolve(import.meta.dirname, '../../../../../..');
 const RETIRED_ROUTE_SHIM_TERM_PATTERNS = [
   String.raw`\b${'leg'}${'acy'}\b`,
-  `${'back'}ward ${'compati'}${'bility'}`,
+  String.raw`${'back'}ward ${'compati'}${'bility'}`,
   String.raw`\b${'compati'}${'bility'}\b`,
-  `@${'depre'}${'cated'}`,
+  String.raw`@${'depre'}${'cated'}`,
 ];
 
 function readRepoFile(relativePath: string): string {

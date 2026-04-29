@@ -14,7 +14,10 @@ import type { IStartRunApplicationService } from '../application/IStartRunApplic
 import { RecoverySourceNotTerminalError, RunMetadataNotFoundError } from '../contracts/errors.js';
 import { buildTraceContext } from '../core/lifecycle/coreRuntime.js';
 import { SnapshotProjector, snapshotToStatus } from '../core/SnapshotProjector.js';
-import type { IRunRecoveryService } from '../domain/IRunRecoveryService.js';
+import type {
+  IRunRecoveryService,
+  RecoverRunServiceRequest,
+} from '../domain/IRunRecoveryService.js';
 import type { IRunExecutionContextBindingPolicy } from '../ports/IRunExecutionContextBindingPolicy.js';
 import type { IRunExecutionContextResolver } from '../ports/IRunExecutionContextResolver.js';
 import type {
@@ -61,11 +64,11 @@ export class RecoverRunApplicationService implements IRunRecoveryService {
     this.planIntegrityValidator = deps.planIntegrityValidator ?? new PlanIntegrityValidator();
   }
 
-  async recoverRun(
-    sourceRunId: string,
-    planRef: PlanRef,
-    context: RunContext
-  ): Promise<EngineRunRef> {
+  async recoverRun({
+    sourceRunId,
+    planRef,
+    context,
+  }: RecoverRunServiceRequest): Promise<EngineRunRef> {
     const sourceRef = { tenantId: context.tenantId, sourceRunId };
     const sourceMetadata = await this.resolveRecoverySourceMetadata(sourceRef);
     await this.assertRecoverySourceTerminal(sourceRef);

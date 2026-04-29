@@ -18,14 +18,10 @@ export interface ArtifactStoreDbtProjectBundleBindingPolicyOptions {
   readonly bundleStore: DbtProjectBundleArtifactStore | undefined;
 }
 
-export class ArtifactStoreDbtProjectBundleBindingPolicy
-  implements IRunExecutionContextBindingPolicy
-{
+export class ArtifactStoreDbtProjectBundleBindingPolicy implements IRunExecutionContextBindingPolicy {
   public readonly pluginRequirements: readonly RunExecutionContextPluginRequirement[];
 
-  public constructor(
-    private readonly options: ArtifactStoreDbtProjectBundleBindingPolicyOptions
-  ) {
+  public constructor(private readonly options: ArtifactStoreDbtProjectBundleBindingPolicyOptions) {
     this.pluginRequirements = [
       {
         pluginId: DBT_PLUGIN_ID,

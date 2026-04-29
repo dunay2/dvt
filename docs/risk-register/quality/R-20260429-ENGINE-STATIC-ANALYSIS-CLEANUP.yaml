@@ -7,4 +7,16 @@ owners:
   - dvt/engine
 severity: Low
 probability: Low
+context: >
+  This branch continues the engine static-analysis cleanup by moving recovery-service delegation to
+  a typed request object and splitting default engine error-message rendering into small named
+  renderer functions.
+risk: >
+  Behavior-preserving refactors around recovery delegation and error text can still drift from
+  runtime semantics if call sites or contract tests are not kept in the same slice.
+mitigations:
+  - Keep WorkflowEngine recovery delegation covered by the existing WorkflowEngine tests.
+  - Keep default engine error text covered by errorI18n.contract.test.ts.
+  - Require ARC-2 evidence for any follow-up change under packages/@dvt/engine.
+review_after: 2026-05-15
 ---

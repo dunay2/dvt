@@ -1,9 +1,6 @@
 import { canvasViewCopy } from '../../../src/app/views/canvas/canvasCopyCatalog';
 import { stubCanvasDraftRead } from '../../support/canvasDraftAuthoring';
-import {
-  clickButtonNatively,
-  selectCanvasClosure,
-} from '../../support/canvasExecutionSelection';
+import { clickButtonNatively, selectCanvasClosure } from '../../support/canvasExecutionSelection';
 import {
   stubSelectedClosurePreviewArtifacts,
   waitForSelectedClosurePreviewArtifacts,
@@ -14,7 +11,10 @@ import {
   stubE2eJsonApi,
   waitForE2eApiCall,
 } from '../../support/e2eApiStub';
-import { stubShellBootstrapApis, visitWithE2eWorkspaceSession } from '../../support/workspaceSession';
+import {
+  stubShellBootstrapApis,
+  visitWithE2eWorkspaceSession,
+} from '../../support/workspaceSession';
 
 type PlanPreviewResponseOptions = {
   planRecordId: string;
@@ -418,7 +418,9 @@ function stubPlanPreviewResponse({
   });
 }
 
-function stubPlanRejectedPreview(cause: Exclude<PlanRejectedCause, 'graph_source_selection_mismatch'>): void {
+function stubPlanRejectedPreview(
+  cause: Exclude<PlanRejectedCause, 'graph_source_selection_mismatch'>
+): void {
   stubE2eJsonApi(
     'POST',
     '/plans/preview',
@@ -436,7 +438,9 @@ function stubPlanRejectedPreview(cause: Exclude<PlanRejectedCause, 'graph_source
   );
 }
 
-function stubPlanRejectedStartRun(cause: Extract<PlanRejectedCause, 'graph_source_selection_mismatch'>): void {
+function stubPlanRejectedStartRun(
+  cause: Extract<PlanRejectedCause, 'graph_source_selection_mismatch'>
+): void {
   stubE2eJsonApi(
     'POST',
     '/runs/start',
@@ -485,7 +489,9 @@ describe('Canvas preview-run persisted path', () => {
     'dependency_gap',
     'selected_node_missing',
     'cycle_detected',
-  ] as const satisfies ReadonlyArray<Exclude<PlanRejectedCause, 'graph_source_selection_mismatch'>>) {
+  ] as const satisfies ReadonlyArray<
+    Exclude<PlanRejectedCause, 'graph_source_selection_mismatch'>
+  >) {
     it(`surfaces ${cause} as explicit re-plan guidance during preview`, () => {
       stubCanvasRuntimeApis({ includeLooseNode: true });
       stubPlanRejectedPreview(cause);
@@ -598,9 +604,14 @@ describe('Canvas preview-run persisted path', () => {
       persistedSha: 'd'.repeat(64),
       planRefSha: 'c'.repeat(64),
     });
-    stubE2eJsonApi('POST', '/runs/start', {
-      message: 'should not be called',
-    }, { statusCode: 500 });
+    stubE2eJsonApi(
+      'POST',
+      '/runs/start',
+      {
+        message: 'should not be called',
+      },
+      { statusCode: 500 }
+    );
 
     visitCanvasWithSettledBootstrap();
     cy.contains('.react-flow__node', 'src_orders').should('be.visible');
