@@ -1,3 +1,6 @@
+/**
+ * Owned concern: provide canonical admission-policy fixtures and semantic plugin-binding test helpers.
+ */
 import type {
   ExecutionPlan,
   PlanRef,
@@ -14,6 +17,9 @@ export const EXAMPLE_PLUGIN_STEP_KINDS = [
   'EXAMPLE_TEST',
   'EXAMPLE_SNAPSHOT',
 ] as const;
+
+const INVALID_EXAMPLE_PLUGIN_CONTEXT_MESSAGE =
+  'runExecutionContext.pluginContexts.example invalid for plugin-bearing plan';
 
 export const allowBindingPolicy = createExampleBindingPolicy();
 
@@ -174,25 +180,32 @@ export function assertDefaultAdmission(
 }
 
 function readExampleArtifactTenantId(pluginContext: unknown): string {
-  if (pluginContext === null || typeof pluginContext !== 'object') {
-    throw new TypeError(
-      'runExecutionContext.pluginContexts.example invalid for plugin-bearing plan'
-    );
+  const pluginContextRecord = requireExamplePluginContextRecord(pluginContext);
+  const artifactRef = requireExamplePluginContextRecord(pluginContextRecord.artifactRef);
+
+  return requireExamplePluginContextString(artifactRef.tenantId);
+}
+
+function requireExamplePluginContextRecord(value: unknown): Record<string, unknown> {
+  if (!isObjectValue(value)) {
+    throw new TypeError(INVALID_EXAMPLE_PLUGIN_CONTEXT_MESSAGE);
   }
 
-  const artifactRef = (pluginContext as { artifactRef?: unknown }).artifactRef;
-  if (artifactRef === null || typeof artifactRef !== 'object') {
-    throw new TypeError(
-      'runExecutionContext.pluginContexts.example invalid for plugin-bearing plan'
-    );
+  if (Array.isArray(value)) {
+    throw new TypeError(INVALID_EXAMPLE_PLUGIN_CONTEXT_MESSAGE);
   }
 
-  const tenantId = (artifactRef as { tenantId?: unknown }).tenantId;
-  if (typeof tenantId !== 'string') {
-    throw new TypeError(
-      'runExecutionContext.pluginContexts.example invalid for plugin-bearing plan'
-    );
+  return value as Record<string, unknown>;
+}
+
+function requireExamplePluginContextString(value: unknown): string {
+  if (typeof value !== 'string') {
+    throw new TypeError(INVALID_EXAMPLE_PLUGIN_CONTEXT_MESSAGE);
   }
 
-  return tenantId;
+  return value;
+}
+
+function isObjectValue(value: unknown): value is object {
+  return typeof value === 'object' && value !== null;
 }

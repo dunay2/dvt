@@ -1,3 +1,6 @@
+/**
+ * Owned concern: verify admission-policy happy paths and non-plugin fallback behavior.
+ */
 import { describe, expect, it } from 'vitest';
 
 import {

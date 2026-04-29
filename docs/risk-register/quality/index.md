@@ -70,6 +70,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [Planner plan identity can drift if manifest node-key iteration order is not normalized](R-20260408-PLANNER-MANIFEST-KEY-ORDER-DRIFT.yaml)
 - [Planner-private behavior ports can drift back into the shared kernel](R-20260427-RC-G1-D-PLANNER-OWNERSHIP.yaml)
 - [PlanStore integration tests can drift from current artifact and contract shapes](R-20260408-ADAPTER-POSTGRES-PLANSTORE-TEST-DRIFT.yaml)
+- [Plugin admission architecture can drift back into executor-specific coupling](R-20260429-PLUGIN-ADMISSION-ARCHITECTURE.yaml)
 - [Policy-first precedence drift for unbounded timeout and concurrency](R-20260405-MWA2-POLICY-UNBOUNDED-PRECEDENCE.yaml)
 - [Postgres three-part model migration and compatibility drift](R-20260403-S08-4-POSTGRES-THREE-PART-MODEL.yaml)
 - [Provider runtimes can regress to unchecked PlanRef execution](R-20260424-TEMPORAL-PLAN-REF-CONTRACT.yaml)

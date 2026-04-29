@@ -1,0 +1,24 @@
+---
+id: R-20260429-PLUGIN-ADMISSION-ARCHITECTURE
+title: Plugin admission architecture can drift back into executor-specific coupling
+status: Open
+date: 2026-04-29
+owners:
+  - dvt/engine
+  - dvt/adapter-temporal
+severity: Low
+probability: Low
+context: >
+  The branch hardens run-execution-context admission and DBT plugin isolation. The intended
+  architecture is that engine admission remains generic while DBT and future executors such as SQL
+  own plugin-specific requirements.
+risk: >
+  Future plugin work could reintroduce DBT-specific wording or behavior into engine admission if
+  semantic architecture tests and local component documentation are not kept current.
+mitigations:
+  - Keep RunExecutionContextAdmissionPolicy.srp.architecture.test.ts as the semantic fitness
+    function for admission ownership.
+  - Keep StartRunProtocol.v1.md generic for plugin-bearing plans.
+  - Require ARC-2 evidence for follow-up changes under engine or adapter-temporal plugin boundaries.
+review_after: 2026-05-15
+---

@@ -102,36 +102,43 @@ describe('appBootstrapPresentation', () => {
     ).toBe(false);
   });
 
-  it('uses the latest blocked detail as the aggregate blocked message', () => {
-    const state = {
+  it.each([
+    {
+      name: 'uses the latest blocked detail as the aggregate blocked message',
+      overrides: {
+        capabilities: createBootstrapStepState('capabilities', 'blocked', 'Capabilities blocked.'),
+        route: createBootstrapStepState('route', 'blocked', 'Route backend is not ready.'),
+      },
+      expected: {
+        state: 'blocked',
+        title: 'Raven is waiting for startup prerequisites',
+        message: 'Route backend is not ready.',
+        progressLabel: '3/5 startup checks settled. Required startup blockers remain.',
+      },
+    },
+    {
+      name: 'lets startup errors take precedence over blockers',
+      overrides: {
+        health: createBootstrapStepState('health', 'blocked', 'Health probe still pending.'),
+        route: createBootstrapStepState('route', 'error', 'Route failed while loading.'),
+      },
+      expected: {
+        state: 'error',
+        title: 'Raven could not finish startup',
+        message: 'Route failed while loading.',
+        progressLabel: '3/5 startup checks settled. Startup error needs attention.',
+      },
+    },
+  ])('$name', ({ overrides, expected }) => {
+    const presentation = resolveBootstrapScreenPresentation({
       ...createCompleteBootstrapStepState(),
-      capabilities: createBootstrapStepState('capabilities', 'blocked', 'Capabilities blocked.'),
-      route: createBootstrapStepState('route', 'blocked', 'Route backend is not ready.'),
-    };
-    const presentation = resolveBootstrapScreenPresentation(state);
+      ...overrides,
+    });
 
-    expect(presentation.state).toBe('blocked');
-    expect(presentation.title).toBe('Raven is waiting for startup prerequisites');
-    expect(presentation.message).toBe('Route backend is not ready.');
-    expect(presentation.progress.label).toBe(
-      '3/5 startup checks settled. Required startup blockers remain.'
-    );
-  });
-
-  it('lets startup errors take precedence over blockers', () => {
-    const state = {
-      ...createCompleteBootstrapStepState(),
-      health: createBootstrapStepState('health', 'blocked', 'Health probe still pending.'),
-      route: createBootstrapStepState('route', 'error', 'Route failed while loading.'),
-    };
-    const presentation = resolveBootstrapScreenPresentation(state);
-
-    expect(presentation.state).toBe('error');
-    expect(presentation.title).toBe('Raven could not finish startup');
-    expect(presentation.message).toBe('Route failed while loading.');
-    expect(presentation.progress.label).toBe(
-      '3/5 startup checks settled. Startup error needs attention.'
-    );
+    expect(presentation.state).toBe(expected.state);
+    expect(presentation.title).toBe(expected.title);
+    expect(presentation.message).toBe(expected.message);
+    expect(presentation.progress.label).toBe(expected.progressLabel);
   });
 
   it('keeps default details and build metadata formatting in the presentation model', () => {

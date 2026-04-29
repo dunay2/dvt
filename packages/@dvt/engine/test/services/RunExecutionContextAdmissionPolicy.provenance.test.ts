@@ -1,3 +1,6 @@
+/**
+ * Owned concern: verify resolved run-execution-context provenance alignment.
+ */
 import { describe, expect, it } from 'vitest';
 
 import {

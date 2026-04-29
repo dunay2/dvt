@@ -76,6 +76,7 @@ Evidence documents that justify or validate relevant changes.
 - [ED-20260403 Structured contracts error model rollout](ED-20260403-structured-contracts-error-model.md)
 - [ED-20260411 RC-G1-B4 engine shared-kernel hardening](ED-20260411-rc-g1-b4-engine-shared-kernel-hardening.md)
 - [ED-20260419 RC-G1-C owner-package migration](ED-20260419-rc-g1-c-owner-package-migration.md)
+- [Plugin Admission Architecture Hardening](ed-20260429-plugin-admission-architecture.md)
 - [Restore ADR-0000 Traceability Gate On Main](ed-20260423-adr0-traceability-gate.md)
 - [Run Execution Context Admission Test SRP Hardening](ed-20260429-run-execution-context-admission-test-srp.md)
 - [StartRunApplicationService QA Closeout](ED-20260405-start-run-application-service-qa.md)

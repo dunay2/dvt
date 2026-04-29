@@ -2,7 +2,7 @@
 title: Review Status Board
 status: Active
 owner: Product / Architecture / Docs
-last_reviewed: 2026-04-27
+last_reviewed: 2026-04-29
 planning_type: review
 ---
 
@@ -99,12 +99,26 @@ Additional active rationale:
   - status: `reference`
   - progress: `n/a`
 
+- [20260429 DVT+ principal architect deep review — April 2026](./architecture-and-governance/20260429-dvt-plus-principal-deep-review-april-2026.md)
+  - domain: `architecture-and-governance`
+  - role: current post-G1–G10 full-system principal review covering conceptual soundness, risk map, engine abstraction, planner, state layer, SOLID/Hexagonal/CQRS compliance, overbuilt/underbuilt areas, 3-year scalability outlook, and a 17-task hardening action plan
+  - linkage: `AR-D2`, `AR-D-PLAN-POINTER`, `R-20260420-TEMPORAL-DBT-BUILTIN-COUPLING`
+  - status: `active`
+  - progress: `100%`
+
+- [20260429 DVT engine package audit review](./architecture-and-governance/20260429-dvt-engine-package-audit-review.md)
+  - domain: `architecture-and-governance`
+  - role: current engine-package audit intake grounded on `main@2522f130`; separates resolved plugin-admission drift from live schema-version, attempt-semantics, provider-truth, public API, architecture-test, and start-run bootstrap follow-ups
+  - linkage: `S16`, `S09`, `AR-A8`, `AR-A12`, `AR-D6`, `EA-20260429-01..08`
+  - status: `active`
+  - progress: `0%`
+
 - [20260427 AR-D plan pointer Fowler hard QA review](./architecture-and-governance/20260427-ar-d-plan-pointer-fowler-hard-qa-review.md)
   - domain: `architecture-and-governance`
-  - role: current hard QA baseline for the Temporal PlanRef-plus-cursor implementation, aligned Temporal adapter spec, composition-root config propagation, negative tests, and replay/cutover posture
+  - role: hard QA baseline for the Temporal PlanRef-plus-cursor implementation, aligned Temporal adapter spec, composition-root config propagation, negative tests, and replay/cutover posture; superseded for full-system posture by the 2026-04-29 principal deep review
   - linkage: `AR-D-PLAN-POINTER`, `AR-D2`, `R-20260420-TEMPORAL-DBT-BUILTIN-COUPLING`
-  - status: `review`
-  - progress: `85%`
+  - status: `reference`
+  - progress: `n/a`
 
 - [20260421 Temporal Fowler provider-truth follow-up review](./architecture-and-governance/20260421-temporal-fowler-provider-truth-follow-up-review.md)
   - domain: `architecture-and-governance`
