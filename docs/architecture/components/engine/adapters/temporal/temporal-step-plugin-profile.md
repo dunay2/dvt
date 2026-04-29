@@ -180,6 +180,11 @@ stateDiagram-v2
 - `packages/@dvt/adapter-temporal/test/activities.test.ts` proves DBT and a
   SQL-shaped plugin can compose through the same registry seam, and that
   duplicate step-kind claims fail closed.
+- `packages/@dvt/adapter-temporal/test/activities.test.ts` keeps
+  `SetupActivitiesOptions` as the named setup options boundary for activity
+  tests. This prevents positional `undefined` trains from hiding whether a test
+  is changing store state, plugin activities, executors, or dependency
+  overrides.
 - `packages/@dvt/adapter-temporal/test/workflow-compiled-code-ref.test.ts`
   proves artifact emission works for any plugin step kind carrying a valid
   `compiledCodeRef`.

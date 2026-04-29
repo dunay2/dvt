@@ -189,6 +189,12 @@ The branch scenarios are documented in the local user-story guide:
 
 - `docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-user-stories.md`
 
+Branch-adjacent local component guides:
+
+- `docs/architecture/components/engine/architecture/start-run-admission-component.md`
+- `docs/architecture/components/lineage-worker/compiled-code-ref-lineage-extraction-component.md`
+- `docs/architecture/components/engine/adapters/temporal/temporal-step-plugin-profile.md`
+
 Coverage groups:
 
 - bootstrap shell startup and route failure posture;

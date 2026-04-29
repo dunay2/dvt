@@ -1,3 +1,7 @@
+/**
+ * @ownedConcern Coordinate start-run admission orchestration across access,
+ * adapter, capability, and run-execution-context policies.
+ */
 import type {
   EngineRunRef,
   ExecutionPlan,

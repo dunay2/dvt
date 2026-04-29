@@ -683,3 +683,140 @@ Validation plan:
 No stubs, placeholders, TODO/FIXME markers, fake implementations, hook
 bypasses, rule relaxations, transition shims, or duplicate APIs
 were introduced.
+
+## 2026-04-29 Branch-Wide Component Guide Follow-Up
+
+### Think-First Analysis
+
+Problem summary: the previous Fowler consolidation fixed Canvas startup and
+draft-recovery traceability, but the full branch also changed engine admission,
+traceability compiled-code-ref extraction, and Temporal adapter activity test
+setup. Those branch-adjacent components were mentioned in the mailbox review,
+but they still lacked a shared branch-level semantic guard and local component
+guides with public API, invariants, transitions, consumers, and diagrams.
+
+Root cause: the branch evolved from static-analysis corrections. The frontend
+slice had active component guides and architecture tests ready to extend; the
+engine, traceability, and adapter follow-ups were smaller code-health fixes and
+therefore only received evidence/risk updates plus mailbox summary.
+
+Constraints and invariants:
+
+- `AGENTS.md` requires governance-first execution, no hidden debt, no stubs,
+  and real validation evidence.
+- `docs/guides/ai-work-protocol.md` requires doc-driven work before changing
+  architecture or behavior posture.
+- `docs/architecture/reference-architecture.md` requires explicit boundaries,
+  replaceable ports, and one runtime truth per boundary.
+- `ADR-0032` governs `compiledCodeRef` ownership and keeps event payload
+  references lightweight while traceability resolves compiled SQL downstream.
+- The branch must not create new public contracts or endpoints without ADR.
+
+Options considered:
+
+- Leave branch-adjacent components covered only by the mailbox review. Rejected
+  because the user explicitly asked for local component guides and semantic
+  architecture tests, not only review prose.
+- Add separate package-local tests in engine, traceability, and adapter
+  packages. Rejected for this pass because the drift is branch-level
+  traceability across components, and package-local behavioral tests already
+  cover the runtime behavior.
+- Add one repo-level semantic architecture guard plus targeted local guides for
+  the branch-adjacent components. Selected because it enforces the branch
+  promises without changing runtime behavior.
+
+Selected option and rationale: add a branch-level architecture test under
+`tools/ci`, create local component guides for start-run admission and
+compiled-code-ref lineage extraction, enrich Temporal step plugin docs with the
+named test setup boundary, add the missing owned-concern docblock on
+`StartRunAdmissionGuard.ts`, and keep ADR status unchanged.
+
+### Pre-Implementation Brief
+
+Mode: Full documentation and architecture-test follow-up.
+
+Scope:
+
+- `tools/ci/static-analysis-followup-branch-architecture.test.mjs`
+- `docs/architecture/components/engine/architecture/start-run-admission-component.md`
+- `docs/architecture/components/lineage-worker/compiled-code-ref-lineage-extraction-component.md`
+- `docs/architecture/components/engine/adapters/temporal/temporal-step-plugin-profile.md`
+- component index pages for discoverability
+- `packages/@dvt/engine/src/application/StartRunAdmissionGuard.ts`
+
+Out of scope:
+
+- Runtime behavior changes.
+- Contract changes, endpoint changes, or new ADRs.
+- Reworking existing package-local behavioral tests.
+- Introducing compatibility or transition shims.
+
+Validation plan:
+
+- Red: run the new repo-level architecture test before docs/docblock exist.
+- Green: rerun the same test after adding docs and the owned-concern docblock.
+- Run focused engine, traceability, adapter, and CI-tool tests.
+- Run `pnpm docs:sync`, `pnpm docs:status:generate`, lint/type gates, and
+  `pnpm verify:prepush`.
+
+### Implementation Outcome
+
+Applied changes:
+
+- Added `tools/ci/static-analysis-followup-branch-architecture.test.mjs` as a
+  branch-level semantic guard for non-Canvas branch-adjacent components.
+- Added the local component guide
+  `docs/architecture/components/engine/architecture/start-run-admission-component.md`
+  with public API, invariants, transitions, consumers, and diagrams.
+- Added the local component guide
+  `docs/architecture/components/lineage-worker/compiled-code-ref-lineage-extraction-component.md`
+  with public API, invariants, transitions, consumers, and diagrams.
+- Linked the new guides from their component indexes and from the mailbox
+  Fowler review.
+- Documented the Temporal named activity setup boundary in the Temporal step
+  plugin profile.
+- Added an owned-concern docblock to
+  `packages/@dvt/engine/src/application/StartRunAdmissionGuard.ts`.
+
+No ADR was created in this follow-up because the work clarifies existing
+architecture and guards existing branch decisions. It does not introduce a new
+contract, architectural decision, endpoint, persistence model, or compatibility
+transition.
+
+### Validation Evidence
+
+Executed validation:
+
+- `node --test tools/ci/static-analysis-followup-branch-architecture.test.mjs`
+  - Red before implementation: failed on missing component guides, missing
+    `StartRunAdmissionGuard.ts` owned-concern docblock, and missing mailbox
+    guide links.
+  - Green after implementation: passed, 4 subtests.
+- `pnpm docs:sync` - passed.
+- `pnpm docs:status:generate` - passed; generated code state already up to
+  date.
+- `pnpm test:ci-tools` - passed, 77 subtests.
+- `pnpm --filter @dvt/engine test -- test/services/RunExecutionContextAdmissionPolicy.srp.architecture.test.ts test/services/RunExecutionContextAdmissionPolicy.acceptance.test.ts test/services/RunExecutionContextAdmissionPolicy.plugin-requirements.test.ts test/services/RunExecutionContextAdmissionPolicy.provenance.test.ts test/services/RunExecutionContextAdmissionPolicy.compatibility.test.ts`
+  - passed, 5 files and 24 tests.
+- `pnpm --filter @dvt/traceability-service test -- test/lineage/compiledCodeRef.test.ts`
+  - passed, 1 file and 4 tests.
+- `pnpm --filter @dvt/adapter-temporal test -- test/activities.test.ts`
+  - passed, 25 files and 214 tests through the adapter test script.
+- `pnpm --filter @dvt/engine typecheck` - passed.
+- `pnpm --filter @dvt/traceability-service typecheck` - passed.
+- `pnpm --filter @dvt/adapter-temporal typecheck` - passed.
+- `GIT_BASE=origin/main GIT_HEAD=HEAD node tools/ci/arc-check.mjs` - passed;
+  branch remains ARC-2 with existing evidence and risk coverage.
+- `pnpm lint:md:changed` - passed for tracked changed markdown.
+- `pnpm exec markdownlint-cli2 "docs/architecture/components/engine/architecture/start-run-admission-component.md" "docs/architecture/components/lineage-worker/compiled-code-ref-lineage-extraction-component.md"`
+  - passed for the newly added component guides.
+- `pnpm lint` - passed.
+
+Final pre-push validation is intentionally run after staging so changed-file
+governance includes the newly added docs and CI-tool test file.
+
+### No-Debt And No-Stub Evidence
+
+No stubs, placeholders, TODO/FIXME markers, fake implementations,
+compatibility shims, hook bypasses, lint/type/test relaxations, or undeclared
+process changes were introduced.
