@@ -53,20 +53,20 @@ describe('@dvt/plan-verifier', () => {
     ).rejects.toThrow();
   });
 
-  it('fails on unsupported major planVersion', async () => {
+  it('fails on unsupported admitted planVersion', async () => {
     const canonical = '{"a":1}';
     const planId = await sha256Hex(utf8Encode(canonical));
     await expect(
       verifyPlanOrThrow({
         canonicalPlanCoreJson: canonical,
         planId,
-        planVersion: '3.0',
-        supportedMajor: 1,
+        planVersion: '1.0-unsupported',
+        runtime: 'planner',
       })
     ).rejects.toThrow(/Unsupported planVersion/);
   });
 
-  it('passes on supported major planVersion', async () => {
+  it('passes on admitted planVersion', async () => {
     const canonical = '{"a":1}';
     const planId = await sha256Hex(utf8Encode(canonical));
     await expect(
@@ -74,51 +74,7 @@ describe('@dvt/plan-verifier', () => {
         canonicalPlanCoreJson: canonical,
         planId,
         planVersion: '1.0',
-        supportedMajor: 1,
-      })
-    ).resolves.toBeUndefined();
-  });
-
-  it('fails when strictSameMinor=true but supportedMinor missing', async () => {
-    const canonical = '{"a":1}';
-    const planId = await sha256Hex(utf8Encode(canonical));
-    await expect(
-      verifyPlanOrThrow({
-        canonicalPlanCoreJson: canonical,
-        planId,
-        planVersion: '1.0',
-        supportedMajor: 1,
-        strictSameMinor: true,
-      })
-    ).rejects.toThrow(/requires supportedMinor/);
-  });
-
-  it('fails when strictSameMinor=true and minor mismatches', async () => {
-    const canonical = '{"a":1}';
-    const planId = await sha256Hex(utf8Encode(canonical));
-    await expect(
-      verifyPlanOrThrow({
-        canonicalPlanCoreJson: canonical,
-        planId,
-        planVersion: '1.0',
-        supportedMajor: 1,
-        strictSameMinor: true,
-        supportedMinor: 1,
-      })
-    ).rejects.toThrow(/Supported 1\.1\.x only/);
-  });
-
-  it('passes when strictSameMinor=true and minor matches', async () => {
-    const canonical = '{"a":1}';
-    const planId = await sha256Hex(utf8Encode(canonical));
-    await expect(
-      verifyPlanOrThrow({
-        canonicalPlanCoreJson: canonical,
-        planId,
-        planVersion: '1.0',
-        supportedMajor: 1,
-        strictSameMinor: true,
-        supportedMinor: 0,
+        runtime: 'planner',
       })
     ).resolves.toBeUndefined();
   });

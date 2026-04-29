@@ -20,9 +20,26 @@ const ENGINE_POLICY_SOURCE = join(
   REPO_ROOT,
   'packages/@dvt/engine/src/contracts/PlanAdmissionPolicy.ts'
 );
+const ENGINE_PLAN_VERSION_POLICY_SOURCE = join(
+  REPO_ROOT,
+  'packages/@dvt/engine/src/contracts/PlanVersionPolicy.ts'
+);
+const ENGINE_START_RUN_VALIDATION_POLICY_SOURCE = join(
+  REPO_ROOT,
+  'packages/@dvt/engine/src/services/startRun/StartRunValidationPolicy.ts'
+);
+const ENGINE_PUBLIC_INDEX = join(REPO_ROOT, 'packages/@dvt/engine/src/index.ts');
+const ENGINE_WORKFLOW_TEST = join(
+  REPO_ROOT,
+  'packages/@dvt/engine/test/core/WorkflowEngine.test.ts'
+);
 const COMPONENT_GUIDE = join(
   REPO_ROOT,
   'docs/architecture/components/engine/contracts/plan-admission-matrix.md'
+);
+const ADR_0036 = join(
+  REPO_ROOT,
+  'docs/adr/ADR-0036-execution-plan-planversion-registry-and-runtime-matrix.md'
 );
 const USER_STORIES_DOC = join(
   REPO_ROOT,
@@ -39,8 +56,10 @@ const ACTIVE_SURFACES = [
   PLAN_ADMISSION_CONTRACT_TEST,
   PLAN_VERSION_CONTRACT_TEST,
   ENGINE_POLICY_SOURCE,
+  ENGINE_WORKFLOW_TEST,
   COMPONENT_GUIDE,
   USER_STORIES_DOC,
+  ADR_0036,
   MAILBOX_REVIEW,
 ] as const;
 const RETIRED_NAME_FRAGMENTS = [
@@ -109,12 +128,16 @@ describe('ExecutionPlan admission matrix architecture', () => {
       'US-PA-5',
       'US-PA-6',
       'US-PA-7',
+      'US-PA-8',
+      'US-PA-9',
       'Given the current pair',
       'Given an unsupported future schema',
       'Given an older schema',
       'Given an unknown plan version',
       'Given blank admission inputs',
       'Given a renamed admission surface',
+      'Given a plan verifier call',
+      'Given a verifier call',
     ]) {
       expect(stories).toContain(scenario);
     }
@@ -156,8 +179,34 @@ describe('ExecutionPlan admission matrix architecture', () => {
 
       const source = readFileSync(path, 'utf8');
       for (const retiredVersion of NON_CURRENT_PLAN_VERSION_LITERALS) {
-        expect(source, path).not.toContain(retiredVersion);
+        expect(source, path).not.toMatch(planVersionLinePattern(retiredVersion));
       }
     }
   });
+
+  it('keeps start-run plan admission behind one semantic policy boundary', () => {
+    expect(existsSync(ENGINE_PLAN_VERSION_POLICY_SOURCE)).toBe(false);
+
+    for (const path of [
+      ENGINE_START_RUN_VALIDATION_POLICY_SOURCE,
+      ENGINE_PUBLIC_INDEX,
+      ENGINE_WORKFLOW_TEST,
+    ]) {
+      const source = readFileSync(path, 'utf8');
+      expect(source, path).not.toContain('PlanVersionPolicy');
+      expect(source, path).not.toContain('assertSupportedPlanVersion');
+    }
+
+    expect(readFileSync(ADR_0036, 'utf8')).toContain(
+      'ExecutionPlan planVersion registry and runtime admission matrix'
+    );
+  });
 });
+
+function planVersionLinePattern(version: string): RegExp {
+  return new RegExp(`planVersion[^\\r\\n]*${escapeRegExp(version)}`, 'u');
+}
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&');
+}

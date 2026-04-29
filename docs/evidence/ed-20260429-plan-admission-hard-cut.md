@@ -5,6 +5,7 @@ date: 2026-04-29
 owners:
   - '@dvt/contracts'
   - '@dvt/engine'
+  - '@dvt/plan-verifier'
 arc_level: ARC-2
 breaking: false
 code_refs:
@@ -12,11 +13,14 @@ code_refs:
   - packages/@dvt/contracts/test/plan-admission-matrix.architecture.test.ts
   - packages/@dvt/engine/src/contracts/PlanAdmissionPolicy.ts
   - packages/@dvt/engine/src/services/startRun/StartRunValidationPolicy.ts
+  - packages/@dvt/plan-verifier/src/planVersion.ts
+  - packages/@dvt/plan-verifier/src/verify.ts
 evidence:
   tests:
     - pnpm --filter @dvt/contracts test -- plan-admission-matrix.contract.test.ts
     - pnpm --filter @dvt/contracts test -- plan-admission-matrix.architecture.test.ts
     - pnpm --filter @dvt/engine test -- WorkflowEngine.test.ts
+    - pnpm --filter @dvt/plan-verifier test -- planVersionAdmission.architecture.test.ts planVersionAdmission.test.ts verify.test.ts
 ---
 
 # Summary
@@ -36,9 +40,14 @@ This evidence records the ARC-2 proof for strict start-run admission over the
 - Added a semantic architecture fitness test that guards the component guide,
   user stories, mailbox Fowler analysis, owned-concern docblocks, and retired
   naming drift.
+- Removed the plan-verifier semver compatibility fallback and replaced it with
+  explicit runtime admission.
+- Removed the separate engine `PlanVersionPolicy` boundary and consolidated
+  plan-version rejection in `PlanAdmissionPolicy`.
 
 # Validation
 
 Targeted contracts and engine tests prove that only the current pair
 `(1.0, v1.2)` is accepted and that unsupported schema versions are rejected
-before adapter dispatch.
+before adapter dispatch. Plan-verifier tests prove adapter-side verification
+uses admission instead of major/minor compatibility.

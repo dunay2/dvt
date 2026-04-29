@@ -176,17 +176,17 @@ Only viable if the tenant has been fully offboarded and all of their partitions 
 
 ### T1-5: `planVersion` as string literal type blocks version evolution
 
-**Problem:** `PlanCore.metadata.planVersion` is typed as `'2.3'` ï¿½ a string literal type. Any plan with a different version fails TypeScript compilation in the planner. When `planVersion: '3.0'` is needed, the contracts package must be bumped (breaking change for all consumers) and all planners must be updated simultaneously.
+**Problem:** `PlanCore.metadata.planVersion` was historically treated as an inline string literal. During active development the only admitted value is `1.0`; any future line needs an explicit governance change rather than an ad hoc literal.
 
 **Impact:** Plan version rollouts require big-bang cutover. No rolling deployment is possible. A multi-version system (old planner + new engine, or vice versa) cannot be represented in the type system.
 
 **Resolution approach:**
 
-1. Change to a discriminated union: `planVersion: '2.3' | '3.0'`.
+1. Keep `planVersion: '1.0'` as the single active development line.
 2. Or use a branded string type with runtime validation.
-3. The engine validates `planVersion` at runtime via a `SUPPORTED_PLAN_VERSIONS: Set<string>` constant, not via TypeScript types.
-4. Introduce `PlanVersionCompatibilityMatrix` ï¿½ a registry of which engine versions support which plan versions.
-5. Write an ADR for the plan version compatibility policy before any `planVersion: '3.0'` work begins.
+3. The engine validates `planVersion` at runtime through the plan admission boundary, not via scattered TypeScript literals.
+4. Introduce and maintain an admission matrix that declares which plan/schema pairs are executable.
+5. Write an ADR update before any new plan-version line is introduced.
 
 **Who decides:** Architecture + Planner team + Engine team.
 **Output:** ADR, updated `PlanCore` type, engine version compatibility check, migration guide.
@@ -363,7 +363,7 @@ Only viable if the tenant has been fully offboarded and all of their partitions 
 | T1-2: `enrichRunStatus` circuit breaker    | T1   | Blocks API reliability at degradation   | Engine + API              | Contract update + fallback implementation (1 day) |
 | T1-3: Planner hardened exit criteria       | T1   | Blocks Phase 2 planning confidence      | Planner                   | Fixture set + CI suite (3 days)                   |
 | T1-4: Signal type extensibility            | T1   | Blocks Phase 2 signal vocabulary growth | Engine                    | Type change + adapter update (1 day)              |
-| T1-5: `planVersion` string literal         | T1   | Blocks rolling plan version deployments | Architecture              | Type change + ADR + compatibility matrix (1 day)  |
+| T1-5: `planVersion` string literal         | T1   | Blocks governed plan-version admission  | Architecture              | Type change + ADR + admission matrix (1 day)      |
 | T2-1: Postgres partitioning schema         | T2   | Blocks Phase 3 state store              | Infrastructure            | Migration + cron + archival job (1 week)          |
 | T2-2: Postgres read replica                | T2   | Blocks Phase 3 read performance         | Infrastructure            | Deployment + adapter update (3 days)              |
 | T2-3: Temporal worker scaling              | T2   | Blocks Phase 3 throughput               | Infrastructure + Temporal | Configuration + autoscaling + metrics (3 days)    |

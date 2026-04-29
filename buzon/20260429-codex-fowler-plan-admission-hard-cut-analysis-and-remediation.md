@@ -20,6 +20,8 @@ The current component has a clean bounded responsibility:
 - `PlanAdmission.v1.ts` publishes the admitted pair registry.
 - `PlanAdmissionPolicy.ts` turns the registry into an engine ingress assertion.
 - `StartRunValidationPolicy` invokes the assertion before run creation.
+- `@dvt/plan-verifier` now verifies runtime plan-version admission without a
+  semver compatibility fallback.
 - Contract and architecture tests make the behavior and documentation
   executable.
 
@@ -31,6 +33,8 @@ flowchart LR
   Matrix --> Decision{"Pair admitted?"}
   Decision -->|yes| Dispatch["Continue to fetch and dispatch"]
   Decision -->|no| Reject["Reject before side effects"]
+  Dispatch --> Verifier["@dvt/plan-verifier"]
+  Verifier --> RuntimeMatrix["PLAN_RUNTIME_ADMISSION_MATRIX"]
 ```
 
 ## Mature-System Comparison
@@ -60,6 +64,8 @@ reading the full engine.
   stories, mailbox analysis, docblocks, and retired naming.
 - **Traceable Documentation**: the guide links API, invariants, transitions,
   consumers, user stories, diagrams, and drift guards.
+- **Single Admission Vocabulary**: engine and plan verifier now use admission
+  language instead of maintaining a compatibility vocabulary in parallel.
 
 ## Antipatterns Removed Or Prevented
 
@@ -69,19 +75,29 @@ reading the full engine.
   part of the build signal.
 - **Alias Drift**: old names are not kept as migration aliases.
 - **Late Failure**: unsupported pairs are rejected before side effects.
+- **Semver Compatibility Fallback**: `supportedMajor` and `strictSameMinor`
+  were removed from active plan verification.
 
 ## Component Grouping
 
 The component should stay grouped around admission, not generic versioning:
 
-| Concern                  | Component                                                           |
-| ------------------------ | ------------------------------------------------------------------- |
-| Executable admitted pair | `packages/@dvt/contracts/src/contracts/planner/PlanAdmission.v1.ts` |
-| Engine ingress assertion | `packages/@dvt/engine/src/contracts/PlanAdmissionPolicy.ts`         |
-| Invocation point         | `StartRunValidationPolicy.validateStartRunPreconditions`            |
-| Behavior tests           | `plan-admission-matrix.contract.test.ts`, `WorkflowEngine.test.ts`  |
-| Semantic tests           | `plan-admission-matrix.architecture.test.ts`                        |
-| Local docs               | `plan-admission-matrix.md`, `plan-admission-user-stories.md`        |
+- Executable admitted pair:
+  `packages/@dvt/contracts/src/contracts/planner/PlanAdmission.v1.ts`.
+- Engine ingress assertion:
+  `packages/@dvt/engine/src/contracts/PlanAdmissionPolicy.ts`.
+- Invocation point:
+  `StartRunValidationPolicy.validateStartRunPreconditions`.
+- Adapter verification:
+  `packages/@dvt/plan-verifier/src/planVersion.ts`.
+- Behavior tests:
+  `plan-admission-matrix.contract.test.ts`, `WorkflowEngine.test.ts`.
+- Semantic tests:
+  `plan-admission-matrix.architecture.test.ts`,
+  `planVersionAdmission.architecture.test.ts`.
+- Local docs:
+  `plan-admission-matrix.md`, `plan-admission-user-stories.md`,
+  `plan-verifier-admission.md`.
 
 ## Repetitions And Drift Fixed
 
@@ -92,6 +108,12 @@ The component should stay grouped around admission, not generic versioning:
 - The evidence and risk entries now point at `PlanAdmission.v1.ts` and
   `PlanAdmissionPolicy.ts`.
 - The contract behavior test now starts with an owned-concern docblock.
+- `PlanVersionPolicy.ts` was removed; `UnsupportedPlanVersionError` now lives
+  in the engine admission policy.
+- `PLAN_RUNTIME_COMPATIBILITY_MATRIX` was replaced by
+  `PLAN_RUNTIME_ADMISSION_MATRIX`.
+- API and adapter tests no longer use future version literals as examples; they
+  derive unsupported values from the active `1.0` line.
 
 ## Future Lessons
 

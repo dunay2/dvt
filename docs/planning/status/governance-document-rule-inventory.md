@@ -136,7 +136,7 @@ Usage rules already declared in the ADR index:
 | `ADR-0033`  | Accepted   | Outbox worker sharding and fencing model                                                                        | [ADR-0033](../../adr/ADR-0033-outbox-worker-sharding-and-fencing-model.md)                    |
 | `ADR-0034`  | Accepted   | Bounded context boundaries and communication rules                                                              | [ADR-0034](../../adr/ADR-0034-bounded-context-boundaries-and-communication-rules.md)          |
 | `ADR-0035`  | Accepted   | Planner public contract evolution protocol and bounded review scope                                             | [ADR-0035](../../adr/ADR-0035-planner-public-contract-evolution-protocol.md)                  |
-| `ADR-0036`  | Accepted   | ExecutionPlan planVersion registry and runtime compatibility matrix                                             | [ADR-0036](../../adr/ADR-0036-execution-plan-planversion-registry-and-runtime-matrix.md)      |
+| `ADR-0036`  | Accepted   | ExecutionPlan planVersion registry and runtime admission matrix                                                 | [ADR-0036](../../adr/ADR-0036-execution-plan-planversion-registry-and-runtime-matrix.md)      |
 | `ADR-0037`  | Accepted   | Run-event lifecycle archival, verification, and restore model                                                   | [ADR-0037](../../adr/ADR-0037-run-event-lifecycle-archival-verification-and-restore-model.md) |
 | `ADR-0038`  | Accepted   | Delivery-buffer retention and purge policy                                                                      | [ADR-0038](../../adr/ADR-0038-delivery-buffer-retention-and-purge-policy.md)                  |
 

@@ -27,7 +27,7 @@ import {
   RunAlreadyExistsError,
   InvalidSchemaVersionError,
 } from '../../src/contracts/errors.js';
-import { UnsupportedPlanVersionError } from '../../src/contracts/PlanVersionPolicy.js';
+import { UnsupportedPlanVersionError } from '../../src/contracts/PlanAdmissionPolicy.js';
 import { WorkflowEngine } from '../../src/core/WorkflowEngine.js';
 import type { IRunExecutionContextBindingPolicy } from '../../src/ports/IRunExecutionContextBindingPolicy.js';
 import { RunHealthService } from '../../src/services/RunHealthService.js';
@@ -512,7 +512,10 @@ describe('WorkflowEngine (basic failure modes)', () => {
     {
       name: 'unsupported planVersion',
       run: async (engine: WorkflowEngine): Promise<void> => {
-        const unsupported = { ...makePlanRef(), planVersion: '9.0' };
+        const unsupported = {
+          ...makePlanRef(),
+          planVersion: `${makePlanRef().planVersion}-unsupported`,
+        };
         await expect(
           engine.startRun(unsupported, makeContext('unsupported-ver-1'))
         ).rejects.toThrow(UnsupportedPlanVersionError);

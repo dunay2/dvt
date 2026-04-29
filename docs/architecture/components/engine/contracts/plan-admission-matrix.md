@@ -36,6 +36,7 @@ Exports:
 - `EXECUTION_PLAN_ADMISSION_REGISTRY`
 - `isAdmittedExecutionPlanPair(planVersion, schemaVersion)`
 - `assertAdmittedPlanPair({ planVersion, schemaVersion })`
+- `UnsupportedPlanVersionError`
 
 Current admitted pair:
 
@@ -59,13 +60,14 @@ flowchart LR
   StartRun --> Provider
 ```
 
-| Component                  | Owned concern                                      |
-| -------------------------- | -------------------------------------------------- |
-| `PlanAdmission.v1.ts`      | Publish the executable admitted pair registry.     |
-| `PlanAdmissionPolicy.ts`   | Convert undeclared pairs into engine ingress fail. |
-| `StartRunValidationPolicy` | Invoke admission before run creation or dispatch.  |
-| Contract tests             | Prove positive and negative pair behavior.         |
-| Architecture fitness tests | Guard semantic documentation and naming drift.     |
+- `PlanAdmission.v1.ts`: publish the executable admitted pair registry.
+- `PlanAdmissionPolicy.ts`: convert undeclared pairs into engine ingress fail
+  and plan-version rejection.
+- `StartRunValidationPolicy`: invoke admission before run creation or dispatch.
+- `@dvt/plan-verifier`: verify runtime admission for adapter-side plan
+  integrity.
+- Contract tests: prove positive and negative pair behavior.
+- Architecture fitness tests: guard semantic documentation and naming drift.
 
 ## Invariants
 
@@ -139,6 +141,8 @@ drift.
 - `plan-admission-matrix.architecture.test.ts` validates local component
   documentation, owned-concern docblocks, user stories, mailbox analysis, and
   retired naming.
+- `planVersionAdmission.architecture.test.ts` validates that shared verifier
+  helpers use admission rather than semver compatibility.
 - `WorkflowEngine.test.ts` validates unsupported schema rejection before
   provider dispatch.
 - ARC-2 evidence and risk records must change with any contract or engine

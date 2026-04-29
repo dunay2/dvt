@@ -49,6 +49,15 @@ emission, or provider execution.
   old naming drift.
   Acceptance scenario: Given a renamed admission surface, when architecture
   tests run, then retired names and missing docs fail the build.
+- `US-PA-8` - As an adapter maintainer, I want shared plan verification to use
+  the admission matrix.
+  Acceptance scenario: Given a plan verifier call for the current runtime, when
+  `planVersion = 1.0`, then verification proceeds to plan-id hashing.
+- `US-PA-9` - As a reviewer, I want semver fallback removed from plan
+  verification.
+  Acceptance scenario: Given a verifier call with a non-`1.0` plan version,
+  when admission runs, then it rejects through the admission matrix rather than
+  `supportedMajor` or `strictSameMinor`.
 
 ## Negative Scenarios
 
@@ -58,6 +67,8 @@ emission, or provider execution.
   `schemaVersion = v1.2`.
 - Blank plan version: `planVersion = ""`, `schemaVersion = v1.2`.
 - Blank schema version: `planVersion = 1.0`, `schemaVersion = ""`.
+- Verifier unsupported version: `planVersion` is derived from `1.0` but is not
+  equal to `1.0`.
 - Documentation drift: component guide, mailbox analysis, or owned-concern
   docblocks missing after a semantic change.
 
@@ -80,5 +91,6 @@ flowchart TD
 | Current admitted pair   | `packages/@dvt/contracts/test/plan-admission-matrix.contract.test.ts`     |
 | Negative pair cases     | `packages/@dvt/contracts/test/plan-admission-matrix.contract.test.ts`     |
 | No-dispatch behavior    | `packages/@dvt/engine/test/core/WorkflowEngine.test.ts`                   |
+| Verifier admission      | `packages/@dvt/plan-verifier/test/planVersionAdmission.test.ts`           |
 | Semantic documentation  | `packages/@dvt/contracts/test/plan-admission-matrix.architecture.test.ts` |
 | Naming drift prevention | `packages/@dvt/contracts/test/plan-admission-matrix.architecture.test.ts` |

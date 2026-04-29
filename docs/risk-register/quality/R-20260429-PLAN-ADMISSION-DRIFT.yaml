@@ -6,6 +6,7 @@ date: 2026-04-29
 owners:
   - packages/@dvt/contracts
   - packages/@dvt/engine
+  - packages/@dvt/plan-verifier
 severity: Medium
 probability: Low
 context: >
@@ -16,14 +17,17 @@ context: >
 risk: >
   Future planner or contract changes could drift away from the development-only `planVersion = 1.0`
   rule, or change `schemaVersion` without updating the admission matrix, docs, and negative tests
-  together. That would either reject a valid hard-cut contract change or reintroduce late runtime
-  failures if a consumer bypasses the matrix.
+  together. A shared verifier could also reintroduce semver compatibility parameters and bypass
+  explicit admission. That would either reject a valid hard-cut contract change or reintroduce late
+  runtime failures if a consumer bypasses the matrix.
 mitigations:
   - 'Keep `PlanAdmission.v1.ts` as the single executable matrix for admitted pairs.'
   - 'Keep `planVersion = 1.0` as the only active development plan-version line.'
   - 'Require positive and negative tests for every admitted schemaVersion under the single 1.0
     planVersion line.'
   - 'Keep engine start-run tests proving unsupported pairs fail before adapter dispatch.'
+  - 'Keep @dvt/plan-verifier on PLAN_RUNTIME_ADMISSION_MATRIX with no supportedMajor or
+    strictSameMinor parameters.'
   - 'Keep plan-admission-matrix.architecture.test.ts guarding docs, stories, mailbox analysis, and
     naming drift.'
   - 'Update ADR-0017 or ADR-0036 if admission semantics change beyond replacing the current pair.'
