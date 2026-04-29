@@ -80,7 +80,7 @@ describe('RunExecutionContextAdmissionPolicy plugin requirements', () => {
   it('rejects plugin-bearing plans when the binding policy rejects the artifact locator', async () => {
     const policy = createAdmissionPolicy({
       bindingPolicy: createExampleBindingPolicy(() => {
-        throw new Error('plugin artifact bucket mismatch: expected=canonical actual=foreign');
+        throw new TypeError('plugin artifact bucket mismatch: expected=canonical actual=foreign');
       }),
       runExecutionContext: makeRunExecutionContext(),
     });

@@ -15,6 +15,7 @@ const EXPECTED_SUITES = [
 
 const SHARED_FIXTURE_FILE = 'runExecutionContextAdmissionPolicy.fixtures.ts';
 const LEGACY_MONOLITH = 'RunExecutionContextAdmissionPolicy.test.ts';
+const GENERIC_ERROR_CONSTRUCTOR = 'new ' + 'Error(';
 
 describe('RunExecutionContextAdmissionPolicy test suite architecture', () => {
   it('keeps admission behavior covered by responsibility-specific suites', () => {
@@ -46,6 +47,12 @@ describe('RunExecutionContextAdmissionPolicy test suite architecture', () => {
     for (const fileName of EXPECTED_SUITES) {
       const lineCount = readTestFile(fileName).split(/\r?\n/u).length;
       expect(lineCount, fileName).toBeLessThanOrEqual(180);
+    }
+  });
+
+  it('uses specific error types for local fixture type-check failures', () => {
+    for (const fileName of [SHARED_FIXTURE_FILE, ...EXPECTED_SUITES]) {
+      expect(readTestFile(fileName), fileName).not.toContain(GENERIC_ERROR_CONSTRUCTOR);
     }
   });
 });

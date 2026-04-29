@@ -115,7 +115,7 @@ export function createExampleBindingPolicy(
         assertPluginContextAllowed({ pluginContext, context }) {
           const tenantId = readExampleArtifactTenantId(pluginContext);
           if (tenantId !== context.tenantId) {
-            throw new Error(
+            throw new TypeError(
               `runExecutionContext.pluginContexts.example.artifactRef.tenantId mismatch: expected=${context.tenantId} actual=${tenantId}`
             );
           }
@@ -175,17 +175,23 @@ export function assertDefaultAdmission(
 
 function readExampleArtifactTenantId(pluginContext: unknown): string {
   if (pluginContext === null || typeof pluginContext !== 'object') {
-    throw new Error('runExecutionContext.pluginContexts.example invalid for plugin-bearing plan');
+    throw new TypeError(
+      'runExecutionContext.pluginContexts.example invalid for plugin-bearing plan'
+    );
   }
 
   const artifactRef = (pluginContext as { artifactRef?: unknown }).artifactRef;
   if (artifactRef === null || typeof artifactRef !== 'object') {
-    throw new Error('runExecutionContext.pluginContexts.example invalid for plugin-bearing plan');
+    throw new TypeError(
+      'runExecutionContext.pluginContexts.example invalid for plugin-bearing plan'
+    );
   }
 
   const tenantId = (artifactRef as { tenantId?: unknown }).tenantId;
   if (typeof tenantId !== 'string') {
-    throw new Error('runExecutionContext.pluginContexts.example invalid for plugin-bearing plan');
+    throw new TypeError(
+      'runExecutionContext.pluginContexts.example invalid for plugin-bearing plan'
+    );
   }
 
   return tenantId;
