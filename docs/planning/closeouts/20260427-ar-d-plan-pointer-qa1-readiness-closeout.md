@@ -195,7 +195,7 @@ Red result observed before implementation:
 - `pnpm --filter dvt-temporal-worker test -- test/runtime/createTemporalWorkerRuntime.test.ts`
   - Failed as expected before implementation because DBT-disabled runtime still
     exposed DBT registry wiring through the default activity registry.
-- `pnpm --filter @dvt/engine exec vitest run test/services/RunExecutionContextAdmissionPolicy.test.ts`
+- `pnpm --filter @dvt/engine exec vitest run test/services/RunExecutionContextAdmissionPolicy.*.test.ts`
   - Failed as expected during the first attempted fix because the engine test
     still encoded DBT plugin step kinds as core vocabulary.
 
@@ -215,7 +215,7 @@ Green results after implementation:
   - Passed: 2 files, 11 tests, with unrelated tests skipped by filter.
 - `pnpm --filter dvt-temporal-worker test -- test/runtime/createTemporalWorkerRuntime.test.ts`
   - Passed: 1 file, 6 tests.
-- `pnpm --filter @dvt/engine exec vitest run test/services/RunExecutionContextAdmissionPolicy.test.ts test/core/WorkflowEngine.test.ts`
+- `pnpm --filter @dvt/engine exec vitest run test/services/RunExecutionContextAdmissionPolicy.*.test.ts test/core/WorkflowEngine.test.ts`
   - Passed: 2 files, 53 tests.
 - `pnpm --filter @dvt/adapter-temporal exec vitest run test/activities.test.ts test/DbtCliPluginRunner.test.ts test/dbt-core-decoupling.architecture.test.ts`
   - Passed: 3 files, 57 tests.
@@ -242,7 +242,7 @@ Intermediate test corrections:
   - Passed: 2 files, 6 tests.
 - `pnpm --filter dvt-temporal-worker test -- test/plugins/env.test.ts test/runtime/createTemporalWorkerRuntime.test.ts`
   - Passed: 2 files, 13 tests.
-- `pnpm --filter @dvt/engine exec vitest run test/services/RunExecutionContextAdmissionPolicy.test.ts test/core/WorkflowEngine.test.ts`
+- `pnpm --filter @dvt/engine exec vitest run test/services/RunExecutionContextAdmissionPolicy.*.test.ts test/core/WorkflowEngine.test.ts`
   - Passed: 2 files, 53 tests.
 - `pnpm --filter @dvt/adapter-temporal exec vitest run test/activities.test.ts test/DbtCliPluginRunner.test.ts test/dbt-core-decoupling.architecture.test.ts`
   - Passed: 3 files, 57 tests.
@@ -355,7 +355,7 @@ Intermediate test corrections:
 - `packages/@dvt/engine/src/ports/IRunStateStore.ts`
 - `packages/@dvt/engine/src/services/startRun/RunExecutionContextAdmissionPolicy.ts`
 - `packages/@dvt/engine/test/core/WorkflowEngine.test.ts`
-- `packages/@dvt/engine/test/services/RunExecutionContextAdmissionPolicy.test.ts`
+- `packages/@dvt/engine/test/services/RunExecutionContextAdmissionPolicy.*.test.ts`
 
 ## Residual Scope
 

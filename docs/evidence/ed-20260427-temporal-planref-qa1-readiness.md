@@ -53,7 +53,10 @@ code_refs:
   - packages/@dvt/adapter-temporal/test/dbt-core-decoupling.architecture.test.ts
   - packages/@dvt/adapter-temporal/test/activities.test.ts
   - packages/@dvt/adapter-temporal/test/DbtCliPluginRunner.test.ts
-  - packages/@dvt/engine/test/services/RunExecutionContextAdmissionPolicy.test.ts
+  - packages/@dvt/engine/test/services/RunExecutionContextAdmissionPolicy.acceptance.test.ts
+  - packages/@dvt/engine/test/services/RunExecutionContextAdmissionPolicy.plugin-requirements.test.ts
+  - packages/@dvt/engine/test/services/RunExecutionContextAdmissionPolicy.provenance.test.ts
+  - packages/@dvt/engine/test/services/RunExecutionContextAdmissionPolicy.compatibility.test.ts
   - packages/@dvt/engine/test/core/WorkflowEngine.test.ts
   - apps/api/test/integration/plannerEngineContract.test.ts
   - apps/temporal-worker/test/runtime/createTemporalWorkerRuntime.test.ts
@@ -69,7 +72,7 @@ evidence:
   tests:
     - pnpm --filter @dvt/adapter-temporal exec vitest run ./test/workflow-component-semantics.architecture.test.ts
     - pnpm --filter @dvt/adapter-temporal exec vitest run ./test/dbt-core-decoupling.architecture.test.ts ./test/activities.test.ts -t "DBT|dbt|core activity"
-    - pnpm --filter @dvt/engine exec vitest run test/services/RunExecutionContextAdmissionPolicy.test.ts test/core/WorkflowEngine.test.ts
+    - pnpm --filter @dvt/engine exec vitest run test/services/RunExecutionContextAdmissionPolicy.*.test.ts test/core/WorkflowEngine.test.ts
     - pnpm --filter @dvt/adapter-temporal exec vitest run test/activities.test.ts test/DbtCliPluginRunner.test.ts test/dbt-core-decoupling.architecture.test.ts
     - pnpm --filter dvt-api test -- test/integration/plannerEngineContract.test.ts
     - pnpm --filter dvt-temporal-worker test -- test/runtime/createTemporalWorkerRuntime.test.ts
