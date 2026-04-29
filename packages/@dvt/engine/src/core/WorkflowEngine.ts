@@ -103,11 +103,11 @@ export class WorkflowEngine implements IWorkflowEngine {
     });
     const validatedPlanRef = normalizePlanRef(validated.planRef);
     const validatedContext = normalizeRunContext(validated.context);
-    return this.runRecoveryService.recoverRun(
-      validated.sourceRunId,
-      validatedPlanRef,
-      validatedContext
-    );
+    return this.runRecoveryService.recoverRun({
+      sourceRunId: validated.sourceRunId,
+      planRef: validatedPlanRef,
+      context: validatedContext,
+    });
   }
 
   async cancelRun(engineRunRef: EngineRunRef): Promise<void> {
