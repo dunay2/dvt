@@ -57,6 +57,7 @@ export {
   StepActivityDispatcher,
   UnsupportedStepKindError,
 } from './activities/stepActivities.js';
+export type { TemporalStepPluginRunner } from './plugins/TemporalStepPluginRunner.js';
 export type { TemporalStepPluginProfile } from './plugins/TemporalStepPluginProfile.js';
 export { composeTemporalStepPluginRegistries } from './plugins/TemporalStepPluginProfile.js';
 export type {

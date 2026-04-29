@@ -41,6 +41,10 @@ It does **not** own:
 - `TemporalStepPluginProfile`
   Describes one plugin contribution: `pluginId` plus
   `stepActivitiesByKind`.
+- `TemporalStepPluginRunner<TExecutionInput>`
+  Generic executable plugin runner port implemented by concrete executor
+  profiles such as DBT. The profile composes activities; the runner executes
+  plugin-specific work behind those activities.
 - `composeTemporalStepPluginRegistries(profiles)`
   Merges plugin-owned registries into one `StepActivityRegistry`.
 - `StepActivityRegistry`
@@ -58,6 +62,9 @@ It does **not** own:
 
 - Core Temporal dispatch is plugin-free by default.
 - Plugin profiles own their executable step-kind claims.
+- Plugin runners own executable plugin work behind a generic runner port; core
+  dispatch must not depend on DBT, SQL, Python, or other runner-specific
+  implementation types.
 - Duplicate step-kind claims fail closed with
   `TEMPORAL_STEP_PLUGIN_KIND_CONFLICT:<pluginId>:<stepKind>`.
 - DBT-specific code may appear under `src/plugins/dbt` and worker/API
@@ -96,6 +103,7 @@ It does **not** own:
 | Module                                                               | Owned concern                                            |
 | -------------------------------------------------------------------- | -------------------------------------------------------- |
 | `src/plugins/TemporalStepPluginProfile.ts`                           | Generic profile composition and duplicate-kind rejection |
+| `src/plugins/TemporalStepPluginRunner.ts`                            | Generic executable plugin runner port                    |
 | `src/activities/activityTypes.ts`                                    | Plugin-free activity contracts and registry types        |
 | `src/activities/stepActivityDispatcher.ts`                           | Gateway plus plugin registry dispatch                    |
 | `src/activities/activityFactory.ts`                                  | Activity assembly with optional runtime registry         |
@@ -164,6 +172,9 @@ stateDiagram-v2
 
 - `packages/@dvt/adapter-temporal/test/dbt-core-decoupling.architecture.test.ts`
   verifies generic plugin composition remains free of DBT semantics.
+- The same test verifies DBT implements the generic
+  `TemporalStepPluginRunner` port instead of defining runner execution as a
+  DBT-only architectural concept.
 - The same test verifies workflow artifact emission is driven by
   `compiledCodeRef`, not DBT step-kind gates.
 - `packages/@dvt/adapter-temporal/test/activities.test.ts` proves DBT and a

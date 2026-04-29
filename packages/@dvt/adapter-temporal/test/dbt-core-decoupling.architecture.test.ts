@@ -121,13 +121,71 @@ describe('Temporal DBT core decoupling architecture', () => {
     const source = readDbtPluginSource('dbtPluginManifest.ts');
     const activitySource = readDbtPluginSource('DbtStepActivity.ts');
     const runnerSource = readDbtPluginSource('DbtCliPluginRunner.ts');
+    const argsSource = readDbtPluginSource('dbtCliArguments.ts');
 
     expect(source).toContain('TEMPORAL_DBT_PLUGIN_EXECUTABLE_STEP_KINDS');
     expect(source).toContain('resolveDbtCliSubcommand');
     expect(activitySource).toContain('TEMPORAL_DBT_PLUGIN_EXECUTABLE_STEP_KINDS');
     expect(activitySource).not.toContain('DBT_STEP_KINDS');
-    expect(runnerSource).toContain('resolveDbtCliSubcommand');
+    expect(argsSource).toContain('resolveDbtCliSubcommand');
     expect(runnerSource).not.toContain("case 'DBT_MODEL'");
+    expect(argsSource).not.toContain("case 'DBT_MODEL'");
+  });
+
+  it('keeps DbtCliPluginRunner as a thin DBT plugin runner orchestrator', () => {
+    const source = readDbtPluginSource('DbtCliPluginRunner.ts');
+
+    expect(source).toContain(
+      '@ownedConcern Orchestrate DBT CLI plugin execution through focused DBT helpers'
+    );
+    expect(source).toContain('implements DbtPluginRunner');
+    expect(source).toContain('createDbtProjectMaterializer');
+    expect(source).toContain('runDbtCommand');
+    expect(source).not.toContain("from 'node:child_process'");
+    expect(source).not.toContain("from 'node:fs/promises'");
+    expect(source).not.toContain("from 'tar'");
+    expect(source).not.toContain('function findDbtProjectDirectory');
+    expect(source).not.toContain('function classifyDbtCliFailure');
+  });
+
+  it('declares a generic Temporal step plugin runner port implemented by DBT', () => {
+    const genericRunnerSource = readPluginSource('TemporalStepPluginRunner.ts');
+    const dbtTypesSource = readDbtPluginSource('dbtPluginTypes.ts');
+
+    expect(genericRunnerSource).toContain(
+      '@ownedConcern Define the generic execution port for Temporal step plugin runners'
+    );
+    expect(genericRunnerSource).toContain('export interface TemporalStepPluginRunner');
+    expect(dbtTypesSource).toContain('TemporalStepPluginRunner<DbtPluginExecutionInput>');
+  });
+
+  it('splits DBT CLI runtime responsibilities into focused plugin-local modules', () => {
+    const expectedOwnedConcerns = new Map<string, string>([
+      [
+        'dbtCliProcess.ts',
+        '@ownedConcern Execute DBT CLI subprocess commands and availability probes',
+      ],
+      [
+        'dbtCliProjectMaterializer.ts',
+        '@ownedConcern Materialize DBT project bundles into worker-local temporary directories',
+      ],
+      [
+        'dbtCliFailures.ts',
+        '@ownedConcern Classify DBT CLI and bundle failures into stable step results',
+      ],
+      [
+        'dbtCliArguments.ts',
+        '@ownedConcern Translate DBT plugin step metadata into DBT CLI arguments',
+      ],
+      [
+        'dbtCliTypes.ts',
+        '@ownedConcern Share DBT CLI runner helper contracts inside the DBT plugin boundary',
+      ],
+    ]);
+
+    for (const [fileName, expectedOwnedConcern] of expectedOwnedConcerns.entries()) {
+      expect(readDbtPluginSource(fileName)).toContain(expectedOwnedConcern);
+    }
   });
 
   it('keeps workflow artifact emission plugin-agnostic instead of DBT step-kind gated', () => {

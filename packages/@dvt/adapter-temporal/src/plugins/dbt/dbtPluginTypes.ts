@@ -10,11 +10,8 @@
 import type { IRunExecutionContextReader } from '@dvt/artifacts';
 import type { DbtPluginContext, ResolvedRunContext, RunExecutionContext } from '@dvt/contracts';
 
-import type {
-  StepDefinition,
-  StepExecutionIdentity,
-  StepResult,
-} from '../../activities/activityTypes.js';
+import type { StepDefinition, StepExecutionIdentity } from '../../activities/activityTypes.js';
+import type { TemporalStepPluginRunner } from '../TemporalStepPluginRunner.js';
 
 export interface DbtPluginExecutionInput {
   step: StepDefinition;
@@ -24,9 +21,7 @@ export interface DbtPluginExecutionInput {
   pluginContext: DbtPluginContext;
 }
 
-export interface DbtPluginRunner {
-  execute(input: DbtPluginExecutionInput): Promise<StepResult>;
-}
+export type DbtPluginRunner = TemporalStepPluginRunner<DbtPluginExecutionInput>;
 
 export interface DbtStepActivityDeps {
   runExecutionContextReader: IRunExecutionContextReader;

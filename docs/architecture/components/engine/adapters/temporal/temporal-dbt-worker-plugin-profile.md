@@ -48,10 +48,14 @@ It does **not** own:
 - `DbtStepActivity.execute(step, context)` resolves the run execution context,
   validates `pluginContexts.dbt`, delegates to the configured
   `DbtPluginRunner`, and rejects mismatched `stepId` results.
-- `DbtPluginRunner.execute(input)` is the plugin execution port used by the DBT
-  profile.
+- `TemporalStepPluginRunner<TExecutionInput>` is the generic executable plugin
+  runner port; DBT specializes it as `DbtPluginRunner`.
+- `DbtPluginRunner.execute(input)` is the DBT-specialized plugin execution port
+  used by the DBT profile.
 - `DbtCliPluginRunner` is the current local CLI runner implementation behind
-  the plugin port.
+  the DBT plugin port. It orchestrates focused DBT-local helpers rather than
+  owning filesystem materialization, process execution, argument derivation,
+  and failure classification directly.
 - `composeTemporalStepPluginRegistries([...profiles])` is the generic Temporal
   plugin composition API. DBT, SQL, and future executor profiles enter through
   this seam rather than through core dispatch edits.
@@ -80,6 +84,9 @@ It does **not** own:
 - Runtime composition may install alternate DBT step-kind implementations by
   choosing which plugin profile registry to pass; duplicate plugin claims fail
   closed and core dispatch does not reserve DBT kinds.
+- DBT CLI runtime responsibilities remain grouped inside `src/plugins/dbt`:
+  runner orchestration, command arguments, subprocess execution, project
+  materialization, failure mapping, and helper contracts are separate modules.
 
 ## Transitions
 
@@ -120,10 +127,16 @@ It does **not** own:
 | Module                                                               | Owned concern                                              |
 | -------------------------------------------------------------------- | ---------------------------------------------------------- |
 | `src/plugins/TemporalStepPluginProfile.ts`                           | Generic Temporal step plugin profile composition           |
+| `src/plugins/TemporalStepPluginRunner.ts`                            | Generic Temporal step plugin runner execution port         |
 | `src/plugins/dbt/dbtPluginManifest.ts`                               | DBT plugin id, executable step kinds, and CLI command map  |
 | `src/plugins/dbt/DbtStepActivity.ts`                                 | DBT step activity profile and explicit registry            |
 | `src/plugins/dbt/dbtPluginTypes.ts`                                  | DBT plugin activity contracts                              |
-| `src/plugins/dbt/DbtCliPluginRunner.ts`                              | Local DBT CLI runner behind the plugin port                |
+| `src/plugins/dbt/DbtCliPluginRunner.ts`                              | Local DBT CLI runner orchestration behind the plugin port  |
+| `src/plugins/dbt/dbtCliArguments.ts`                                 | DBT step metadata to CLI argument translation              |
+| `src/plugins/dbt/dbtCliProcess.ts`                                   | DBT subprocess command runner and availability probe       |
+| `src/plugins/dbt/dbtCliProjectMaterializer.ts`                       | DBT bundle extraction and worker-local project discovery   |
+| `src/plugins/dbt/dbtCliFailures.ts`                                  | DBT CLI and bundle failure classification                  |
+| `src/plugins/dbt/dbtCliTypes.ts`                                     | DBT CLI helper contracts internal to the plugin boundary   |
 | `apps/temporal-worker/src/runtime/createTemporalWorkerRuntime.ts`    | Public runtime assembly entrypoint                         |
 | `apps/temporal-worker/src/runtime/temporalWorkerRuntimeResources.ts` | Environment and option resolution into runtime resources   |
 | `apps/temporal-worker/src/runtime/temporalWorkerStores.ts`           | State, plan, and activity dependency construction          |
@@ -146,6 +159,10 @@ flowchart LR
   Profile --> Manifest["DBT plugin manifest"]
   Profile --> Reader["RunExecutionContext reader"]
   Profile --> Runner["DbtCliPluginRunner"]
+  Runner --> Args["dbtCliArguments"]
+  Runner --> Process["dbtCliProcess"]
+  Runner --> Materializer["dbtCliProjectMaterializer"]
+  Runner --> Failures["dbtCliFailures"]
   Manifest --> Registry["createDbtStepActivityRegistry"]
   Reader --> Registry
   Runner --> Registry
@@ -188,6 +205,9 @@ sequenceDiagram
 
 - `packages/@dvt/adapter-temporal/test/dbt-core-decoupling.architecture.test.ts`
   verifies core activity modules do not import DBT implementation symbols.
+- The same test verifies `DbtCliPluginRunner` remains a thin orchestrator over
+  focused DBT-local helper modules and that DBT implements the generic
+  `TemporalStepPluginRunner` port.
 - The same test verifies workflow artifact emission stays plugin-agnostic and
   does not reintroduce DBT step-kind gates.
 - The same test verifies this guide contains public API, invariants,

@@ -17,6 +17,7 @@ Evidence documents that justify or validate relevant changes.
 - [Supporting](supporting/index.md)
 - [Context](ED-20260404-mw-a2-graph-source-cardinality-and-boundary-hardening.md)
 - [Context](ED-20260405-mwa2-policy-unbounded-precedence.md)
+- [DBT CLI Plugin Runner SRP Hardening](ed-20260429-dbt-cli-plugin-runner-srp.md)
 - [Dev Stack Local Temporal Bootstrap](ed-20260427-dev-stack-local-temporal-bootstrap.md)
 - [ED 20260401 Temporal Live Status Query](ED-20260401-temporal-live-status-query.md)
 - [ED 20260404 Guards Alignment Adapter Postgres](ED-20260404-guards-alignment-adapter-postgres.md)

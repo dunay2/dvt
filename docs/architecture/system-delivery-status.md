@@ -134,8 +134,11 @@ direction.
   plugin profile when enabled; the generic step-plugin profile seam also proves
   SQL-shaped plugins can compose without core dispatch edits. Workflow artifact
   emission is now `compiledCodeRef`-driven and plugin-agnostic instead of
-  DBT-kind gated. The adapter package still keeps DBT-specific plugin/CLI
-  exports (`DbtStepActivity`, `createDbtStepActivityRegistry`,
+  DBT-kind gated. The adapter package now exposes a generic
+  `TemporalStepPluginRunner` execution port and keeps the concrete DBT CLI
+  runner split into plugin-local argument, process, materialization, failure,
+  and helper-contract modules. The adapter package still keeps DBT-specific
+  plugin/CLI exports (`DbtStepActivity`, `createDbtStepActivityRegistry`,
   `DbtCliPluginRunner`), so package-level plugin extraction is not yet
   complete; that residual truth is tracked in
   [R-20260420-TEMPORAL-DBT-BUILTIN-COUPLING](../risk-register/quality/R-20260420-TEMPORAL-DBT-BUILTIN-COUPLING.yaml).
