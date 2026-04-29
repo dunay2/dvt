@@ -18,11 +18,23 @@ import type { DbtPluginExecutionInput } from './dbtPluginTypes.js';
 
 const DBT_PROJECT_FILENAMES = new Set(['dbt_project.yml', 'dbt_project.yaml']);
 
+export interface DbtProjectMaterializerOptions {
+  readonly bundleReader: IDbtProjectBundleReader;
+  readonly workdirRoot: string;
+}
+
+interface DbtProjectMaterializationRequest extends DbtProjectMaterializerOptions {
+  readonly input: DbtPluginExecutionInput;
+}
+
 export function createDbtProjectMaterializer(
-  bundleReader: IDbtProjectBundleReader,
-  workdirRoot: string
+  options: DbtProjectMaterializerOptions
 ): DbtProjectMaterializer {
-  return (input) => materializeDbtProject(input, bundleReader, workdirRoot);
+  return (input) =>
+    materializeDbtProject({
+      ...options,
+      input,
+    });
 }
 
 export async function cleanupMaterializedDbtProject(
@@ -36,10 +48,9 @@ export async function cleanupMaterializedDbtProject(
 }
 
 async function materializeDbtProject(
-  input: DbtPluginExecutionInput,
-  bundleReader: IDbtProjectBundleReader,
-  workdirRoot: string
+  request: DbtProjectMaterializationRequest
 ): Promise<MaterializedDbtProject> {
+  const { input, bundleReader, workdirRoot } = request;
   const projectBundleRef = input.pluginContext.projectBundleRef;
   const bundleBytes = await bundleReader.read(projectBundleRef, {
     expectedTenantId: input.runExecutionContext.tenantId,

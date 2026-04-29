@@ -170,10 +170,26 @@ function isRecordValue(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
 
+function isStringValue(value: unknown): value is string {
+  return typeof value === 'string';
+}
+
+function isBooleanValue(value: unknown): value is boolean {
+  return typeof value === 'boolean';
+}
+
 function hasOptionalDbtColumnDescription(
   column: Partial<Record<keyof DbtColumn, unknown>>
 ): boolean {
-  return column.description == null || typeof column.description === 'string';
+  return column.description == null || isStringValue(column.description);
+}
+
+function hasRequiredDbtColumnFields(
+  column: Partial<Record<keyof DbtColumn, unknown>>
+): column is Pick<DbtColumn, 'name' | 'type' | 'nullable'> {
+  return (
+    isStringValue(column.name) && isStringValue(column.type) && isBooleanValue(column.nullable)
+  );
 }
 
 function isDbtColumn(value: unknown): value is DbtColumn {
@@ -182,12 +198,7 @@ function isDbtColumn(value: unknown): value is DbtColumn {
   }
   const column = value as Partial<Record<keyof DbtColumn, unknown>>;
 
-  return (
-    typeof column.name === 'string' &&
-    typeof column.type === 'string' &&
-    typeof column.nullable === 'boolean' &&
-    hasOptionalDbtColumnDescription(column)
-  );
+  return hasRequiredDbtColumnFields(column) && hasOptionalDbtColumnDescription(column);
 }
 
 function cloneDbtColumn(column: DbtColumn): DbtColumn {

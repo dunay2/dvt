@@ -149,13 +149,17 @@ The admission phase currently performs:
 11. adapter lookup
 12. execution-policy capability checks
 13. `runExecutionContextRef` alignment and compatibility checks when present
-14. DBT-bearing plans reject before queueing when:
+14. plugin-bearing plans reject before queueing when:
 
 - `runExecutionContextRef` is missing
-- resolved `pluginContexts.dbt` is missing
-- `pluginContexts.dbt.projectBundleRef.tenantId` mismatches the run tenant
-- `pluginContexts.dbt.projectBundleRef.uri` is not a canonical
-  tenant-scoped locator for the declared tenant and bundle hash
+- the engine resolver is not configured for a supplied
+  `runExecutionContextRef`
+- the resolved context omits `pluginContexts`
+- resolved plugin context is missing for a required plugin
+- the resolved context metadata mismatches the admitted `PlanRef`,
+  `RunExecutionPolicy`, or run tenant
+- the plugin binding policy rejects a plugin-specific invariant such as
+  artifact tenant ownership or canonical locator shape
 
 This phase rejects before any provider side effect.
 

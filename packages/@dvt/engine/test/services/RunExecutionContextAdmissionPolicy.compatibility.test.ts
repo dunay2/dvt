@@ -1,3 +1,6 @@
+/**
+ * Owned concern: verify plugin compatibility fingerprint admission semantics.
+ */
 import { describe, expect, it } from 'vitest';
 
 import {
