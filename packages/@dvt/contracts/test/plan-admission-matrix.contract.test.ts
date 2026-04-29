@@ -53,6 +53,21 @@ describe('ExecutionPlan admission matrix', () => {
       expected: false,
     },
     {
+      planVersion: 'toString',
+      schemaVersion: CURRENT_EXECUTION_PLAN_SCHEMA_VERSION,
+      expected: false,
+    },
+    {
+      planVersion: '__proto__',
+      schemaVersion: CURRENT_EXECUTION_PLAN_SCHEMA_VERSION,
+      expected: false,
+    },
+    {
+      planVersion: 'constructor',
+      schemaVersion: CURRENT_EXECUTION_PLAN_SCHEMA_VERSION,
+      expected: false,
+    },
+    {
       planVersion: CURRENT_EXECUTION_PLAN_VERSION,
       schemaVersion: '',
       expected: false,

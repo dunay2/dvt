@@ -46,8 +46,15 @@ export function isAdmittedExecutionPlanPair(
   planVersion: string,
   schemaVersion: string
 ): planVersion is SupportedPlanVersion {
-  const admittedSchemas =
-    EXECUTION_PLAN_ADMISSION_MATRIX[planVersion as SupportedPlanVersion] ?? [];
+  if (!isSupportedPlanVersionKey(planVersion)) {
+    return false;
+  }
+
+  const admittedSchemas = EXECUTION_PLAN_ADMISSION_MATRIX[planVersion];
 
   return admittedSchemas.includes(schemaVersion as SupportedPlanSchemaVersion);
+}
+
+function isSupportedPlanVersionKey(planVersion: string): planVersion is SupportedPlanVersion {
+  return Object.prototype.hasOwnProperty.call(EXECUTION_PLAN_ADMISSION_MATRIX, planVersion);
 }
