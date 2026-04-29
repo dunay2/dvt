@@ -106,6 +106,13 @@ Additional active rationale:
   - status: `active`
   - progress: `100%`
 
+- [20260429 DVT engine package audit review](./architecture-and-governance/20260429-dvt-engine-package-audit-review.md)
+  - domain: `architecture-and-governance`
+  - role: current engine-package audit intake grounded on `main@2522f130`; separates resolved plugin-admission drift from live schema-version, attempt-semantics, provider-truth, public API, architecture-test, and start-run bootstrap follow-ups
+  - linkage: `S16`, `S09`, `AR-A8`, `AR-A12`, `AR-D6`, `EA-20260429-01..08`
+  - status: `active`
+  - progress: `0%`
+
 - [20260427 AR-D plan pointer Fowler hard QA review](./architecture-and-governance/20260427-ar-d-plan-pointer-fowler-hard-qa-review.md)
   - domain: `architecture-and-governance`
   - role: hard QA baseline for the Temporal PlanRef-plus-cursor implementation, aligned Temporal adapter spec, composition-root config propagation, negative tests, and replay/cutover posture; superseded for full-system posture by the 2026-04-29 principal deep review
