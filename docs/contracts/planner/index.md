@@ -7,7 +7,7 @@ last_reviewed: 2026-02-25
 
 # Planner Contracts
 
-ExecutionPlan and planner-related schemas and compatibility contracts.
+ExecutionPlan and planner-related schemas and admission contracts.
 
 ## Normative Sources (`@dvt/contracts`)
 
@@ -18,6 +18,7 @@ ExecutionPlan and planner-related schemas and compatibility contracts.
 - `packages/@dvt/contracts/src/contracts/planner/ExecutionSelection.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/IExecutionPlanner.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/index.ts`
+- `packages/@dvt/contracts/src/contracts/planner/PlanAdmission.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/PlanAdmissionLink.v1.schema.json`
 - `packages/@dvt/contracts/src/contracts/planner/PlanAdmissionLink.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/PlanCompileStepTypeConfigs.v1.ts`

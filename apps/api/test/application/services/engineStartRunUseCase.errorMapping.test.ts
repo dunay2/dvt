@@ -15,6 +15,8 @@ import {
 } from './engineStartRunUseCase.test.support.js';
 
 describe('EngineStartRunUseCase error mapping', () => {
+  const unsupportedPlanVersion = '1.0-unsupported';
+
   it('maps AdapterNotRegisteredError to typed engine error result', async () => {
     const useCase = new EngineStartRunUseCase({
       async startRun() {
@@ -22,7 +24,9 @@ describe('EngineStartRunUseCase error mapping', () => {
       },
     } as never);
 
-    await expect(useCase.execute(buildStartRunCommand(), buildAuthorizedContext())).resolves.toEqual({
+    await expect(
+      useCase.execute(buildStartRunCommand(), buildAuthorizedContext())
+    ).resolves.toEqual({
       ok: false,
       error: {
         kind: 'adapter_not_registered',
@@ -35,17 +39,19 @@ describe('EngineStartRunUseCase error mapping', () => {
     const useCase = new EngineStartRunUseCase({
       async startRun() {
         throw new UnsupportedPlanVersionError({
-          planVersion: '9.0',
+          planVersion: unsupportedPlanVersion,
           supportedVersions: ['1.0'],
         });
       },
     } as never);
 
-    await expect(useCase.execute(buildStartRunCommand(), buildAuthorizedContext())).resolves.toEqual({
+    await expect(
+      useCase.execute(buildStartRunCommand(), buildAuthorizedContext())
+    ).resolves.toEqual({
       ok: false,
       error: {
         kind: 'unsupported_plan_version',
-        planVersion: '9.0',
+        planVersion: unsupportedPlanVersion,
         supportedVersions: ['1.0'],
       },
     });
@@ -86,9 +92,9 @@ describe('EngineStartRunUseCase error mapping', () => {
       },
     } as never);
 
-    await expect(useCase.execute(buildStartRunCommand(), buildAuthorizedContext())).resolves.toEqual(
-      expected
-    );
+    await expect(
+      useCase.execute(buildStartRunCommand(), buildAuthorizedContext())
+    ).resolves.toEqual(expected);
   });
 
   it('maps OutboxRateLimitExceededError to rate-limited result', async () => {
@@ -98,7 +104,9 @@ describe('EngineStartRunUseCase error mapping', () => {
       },
     } as never);
 
-    await expect(useCase.execute(buildStartRunCommand(), buildAuthorizedContext())).resolves.toEqual({
+    await expect(
+      useCase.execute(buildStartRunCommand(), buildAuthorizedContext())
+    ).resolves.toEqual({
       ok: true,
       value: {
         kind: 'rate_limited',
@@ -115,7 +123,9 @@ describe('EngineStartRunUseCase error mapping', () => {
       },
     } as never);
 
-    await expect(useCase.execute(buildStartRunCommand(), buildAuthorizedContext())).resolves.toEqual({
+    await expect(
+      useCase.execute(buildStartRunCommand(), buildAuthorizedContext())
+    ).resolves.toEqual({
       ok: true,
       value: {
         kind: 'plan_rejected',

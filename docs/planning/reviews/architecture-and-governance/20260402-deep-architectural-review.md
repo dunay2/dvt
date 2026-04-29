@@ -266,7 +266,7 @@ Triple versioning is in place:
 2. **`schemaVersion`** (`v1.2`) — structural format, contract evolution
 3. **`contractVersion`** (`1.0.0`) — `@dvt/contracts` package version
 
-`EXECUTION_PLAN_VERSION_REGISTRY` + `PLAN_RUNTIME_COMPATIBILITY_MATRIX`
+`EXECUTION_PLAN_VERSION_REGISTRY` + `PLAN_RUNTIME_ADMISSION_MATRIX`
 govern which adapters accept which plan versions.
 
 Currently only one plan version exists (`1.0`). The governance overhead is

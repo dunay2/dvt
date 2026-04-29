@@ -24,7 +24,7 @@ export async function verifyPlanIdOrThrow(params: {
 }
 
 /**
- * Convenience wrapper: checks version gate first, then planId integrity.
+ * Convenience wrapper: checks plan-version admission first, then planId integrity.
  */
 type VerifyPlanBaseParams = {
   canonicalPlanCoreJson: string;
@@ -32,42 +32,15 @@ type VerifyPlanBaseParams = {
   planVersion: string;
 };
 
-type VerifyPlanLegacyParams = VerifyPlanBaseParams & {
-  supportedMajor: number;
-  strictSameMinor?: boolean;
-  supportedMinor?: number;
-};
-
 type VerifyPlanRuntimeParams = VerifyPlanBaseParams & {
   runtime: PlanRuntime;
 };
 
-export async function verifyPlanOrThrow(
-  params: VerifyPlanLegacyParams | VerifyPlanRuntimeParams
-): Promise<void> {
-  if ('runtime' in params) {
-    verifyPlanVersionOrThrow({
-      planVersion: params.planVersion,
-      runtime: params.runtime,
-    });
-  } else {
-    const versionParams: {
-      planVersion: string;
-      supportedMajor: number;
-      strictSameMinor?: boolean;
-      supportedMinor?: number;
-    } = {
-      planVersion: params.planVersion,
-      supportedMajor: params.supportedMajor,
-    };
-    if (params.strictSameMinor !== undefined) {
-      versionParams.strictSameMinor = params.strictSameMinor;
-    }
-    if (params.supportedMinor !== undefined) {
-      versionParams.supportedMinor = params.supportedMinor;
-    }
-    verifyPlanVersionOrThrow(versionParams);
-  }
+export async function verifyPlanOrThrow(params: VerifyPlanRuntimeParams): Promise<void> {
+  verifyPlanVersionOrThrow({
+    planVersion: params.planVersion,
+    runtime: params.runtime,
+  });
 
   await verifyPlanIdOrThrow({
     canonicalPlanCoreJson: params.canonicalPlanCoreJson,

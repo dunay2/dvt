@@ -118,7 +118,7 @@ describe('startRunRoute validation', () => {
             sha256: ' abc456 ',
             schemaVersion: ' 1.0.0 ',
             planId: ' plan-2 ',
-            planVersion: ' 3.0 ',
+            planVersion: ' 1.0 ',
           },
           targetAdapter: 'temporal',
         },

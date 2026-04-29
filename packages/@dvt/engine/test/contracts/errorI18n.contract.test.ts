@@ -20,7 +20,7 @@ import {
   TenantAccessDeniedError,
   defaultEngineErrorMessage,
 } from '../../src/contracts/errors.js';
-import { UnsupportedPlanVersionError } from '../../src/contracts/PlanVersionPolicy.js';
+import { UnsupportedPlanVersionError } from '../../src/contracts/PlanAdmissionPolicy.js';
 
 describe('Error i18n contract', () => {
   it('stores message key and params as stable metadata', () => {
@@ -121,11 +121,11 @@ describe('Error i18n contract', () => {
       },
       {
         error: new UnsupportedPlanVersionError({
-          planVersion: '9.0',
+          planVersion: '1.0-unsupported',
           supportedVersions: ['1.0'],
         }),
         key: ENGINE_ERROR_MESSAGE_KEY.UNSUPPORTED_PLAN_VERSION,
-        params: { planVersion: '9.0', supportedVersions: ['1.0'] },
+        params: { planVersion: '1.0-unsupported', supportedVersions: ['1.0'] },
       },
     ] as const;
 

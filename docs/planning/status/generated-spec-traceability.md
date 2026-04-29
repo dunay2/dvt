@@ -94,7 +94,7 @@ Generated automatically from repository documentation and source-code signals on
 | adr     | [ADR-0033 - Outbox Worker Sharding And Fencing Model](../../adr/ADR-0033-outbox-worker-sharding-and-fencing-model.md)                                             | Accepted   |
 | adr     | [ADR-0034 - Bounded Context Boundaries And Communication Rules](../../adr/ADR-0034-bounded-context-boundaries-and-communication-rules.md)                         | Accepted   |
 | adr     | [ADR-0035 - Planner Public Contract Evolution Protocol](../../adr/ADR-0035-planner-public-contract-evolution-protocol.md)                                         | Accepted   |
-| adr     | [ADR-0036 - ExecutionPlan planVersion registry and runtime compatibility matrix](../../adr/ADR-0036-execution-plan-planversion-registry-and-runtime-matrix.md)    | Accepted   |
+| adr     | [ADR-0036 - ExecutionPlan planVersion registry and runtime admission matrix](../../adr/ADR-0036-execution-plan-planversion-registry-and-runtime-matrix.md)        | Accepted   |
 | adr     | [ADR-0037 - Run Event Lifecycle Archival, Verification, and Restore Model](../../adr/ADR-0037-run-event-lifecycle-archival-verification-and-restore-model.md)     | Accepted   |
 | adr     | [ADR-0038 - Delivery Buffer Retention and Purge Policy](../../adr/ADR-0038-delivery-buffer-retention-and-purge-policy.md)                                         | Accepted   |
 | adr     | [ADR-0039 — Hexagonal Port Hardening and SOLID Remediation](../../adr/ADR-0039-hexagonal-port-hardening-and-solid-remediation.md)                                 | Accepted   |

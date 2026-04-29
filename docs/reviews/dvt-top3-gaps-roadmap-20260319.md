@@ -171,41 +171,24 @@ gantt
 
 ---
 
-## GAP-2 - `planVersion` is an untyped string with no compatibility matrix
+## GAP-2 - `planVersion` needs explicit admission
 
 ### What the code shows
 
-`packages/@dvt/contracts/src/types/contracts.ts:61`:
+Current implementation route:
 
 ```typescript
-planVersion: string;
+CURRENT_EXECUTION_PLAN_VERSION = '1.0';
+EXECUTION_PLAN_ADMISSION_MATRIX = { '1.0': ['v1.2'] };
 ```
 
-`contractVersion` is validated. `planVersion` is not:
-
-```typescript
-// stepActivities.ts:269
-const SUPPORTED_PLAN_CONTRACT_VERSIONS = new Set(['1.0.0']);
-// validates contractVersion - NOT planVersion
-
-// stepActivities.ts:321-322
-if (plan.metadata.planVersion !== ref.planVersion)
-  throw new TypeError(`PLAN_REF_MISMATCH: planVersion`);
-// equality check only - no compatibility range, no migration
-```
-
-Test fixtures use inconsistent values: `'1.0'`, `'1.0.0'`, `'v1'`, `'2.3'`.
-There is no normative document defining valid `planVersion` values.
+`contractVersion` and `planVersion` are separate concerns. Active development admits
+only `planVersion = 1.0` paired with the current schema version.
 
 ### Why it is a critical gap
 
-The engine performs strict equality on `planVersion`. A planner bump from `'2.3'` to
-`'2.4'` requires simultaneous deployment of planner and all engine workers. Any
-in-flight run created with `'2.3'` that is picked up by a worker expecting `'2.4'`
-fails immediately with `PLAN_REF_MISMATCH`.
-
-This is a forced big-bang cutover model in production. It creates a deployment risk
-for every plan schema evolution.
+If future plan-version lines appear as local literals instead of an ADR-backed
+admission change, runtime behavior drifts from the governed development line.
 
 ### State machine: version negotiation
 
@@ -216,35 +199,29 @@ stateDiagram-v2
     ContractVersionCheck --> Rejected_Contract : not in SUPPORTED_PLAN_CONTRACT_VERSIONS
     ContractVersionCheck --> PlanVersionCheck : pass
 
-    PlanVersionCheck --> Rejected_PlanVersion : TODAY - strict equality fails
-    PlanVersionCheck --> Accepted_Exact : exact match
-    PlanVersionCheck --> Accepted_Compatible : TARGET - within compatibility range
-    PlanVersionCheck --> Deprecated_Warning : TARGET - supported but deprecated
-    PlanVersionCheck --> Rejected_PlanVersion : TARGET - outside range
+    PlanVersionCheck --> Rejected_PlanVersion : not admitted
+    PlanVersionCheck --> Accepted_Exact : admitted pair
 
     Rejected_Contract --> [*]
     Rejected_PlanVersion --> [*]
     Accepted_Exact --> Execute
-    Accepted_Compatible --> Execute
     Deprecated_Warning --> Execute
     Execute --> [*]
 ```
 
-### Required change: discriminated union + compatibility set
+### Required change: discriminated union + admission set
 
 ```mermaid
 classDiagram
     class SupportedPlanVersion {
         <<type>>
-        '2.3' | '2.4'
+        '1.0'
     }
 
-    class PlanVersionPolicy {
+    class PlanAdmissionPolicy {
         +CURRENT_VERSION: SupportedPlanVersion$
-        +SUPPORTED_VERSIONS: Set~string~$
-        +DEPRECATED_VERSIONS: Set~string~$
-        +assertCompatible(v: string) void$
-        +isDeprecated(v: string) boolean$
+        +ADMITTED_PAIRS: Set~string~$
+        +assertAdmitted(pair) void$
     }
 
     class PlanCore {
@@ -254,29 +231,28 @@ classDiagram
     }
 
     PlanCore --> SupportedPlanVersion
-    PlanVersionPolicy --> SupportedPlanVersion
+    PlanAdmissionPolicy --> SupportedPlanVersion
 ```
 
 ### Implementation
 
 ```typescript
-// packages/@dvt/contracts/src/contracts/planner/PlanVersionPolicy.ts
+// packages/@dvt/contracts/src/contracts/planner/PlanAdmission.v1.ts
 
-export type SupportedPlanVersion = '2.3'; // extended with each release
-export const CURRENT_PLAN_VERSION: SupportedPlanVersion = '2.3';
+export type SupportedPlanVersion = '1.0';
+export const CURRENT_PLAN_VERSION: SupportedPlanVersion = '1.0';
 
-export const SUPPORTED_PLAN_VERSIONS = new Set<string>(['2.3']);
-export const DEPRECATED_PLAN_VERSIONS = new Set<string>(); // populated at deprecation
+export const ADMITTED_PLAN_PAIRS = new Set<string>(['1.0:v1.2']);
 
-export function assertCompatiblePlanVersion(planVersion: string): void {
-  if (SUPPORTED_PLAN_VERSIONS.has(planVersion)) return;
-  throw new UnsupportedPlanVersionError(planVersion, [...SUPPORTED_PLAN_VERSIONS]);
+export function assertAdmittedPlanPair(planVersion: string, schemaVersion: string): void {
+  if (ADMITTED_PLAN_PAIRS.has(`${planVersion}:${schemaVersion}`)) return;
+  throw new UnsupportedPlanVersionError(planVersion, [CURRENT_PLAN_VERSION]);
 }
 ```
 
-This replaces the current strict equality in `stepActivities.ts`. Adding `'2.4'` support
-requires only adding `'2.4'` to `SUPPORTED_PLAN_VERSIONS` - no contracts package major
-version bump, no coordinated deployment.
+This replaces scattered strict equality checks with explicit admission. Adding a future
+plan-version line is out of current development scope and requires an ADR-backed bounded
+change.
 
 ### ADR requirement
 
@@ -285,7 +261,7 @@ An ADR must define before any new `planVersion` is introduced:
 - Valid version format (semver vs calendar vs integer)
 - Minimum support window for deprecated versions (e.g., 30 days)
 - In-flight run behavior when worker is upgraded mid-run
-- Contract test requirements for planner <-> engine compatibility
+- Contract test requirements for planner <-> engine admission
 
 ### Delivery tasks
 
@@ -296,8 +272,8 @@ gantt
     axisFormat %d-%b
 
     section Contracts
-    SupportedPlanVersion type + PlanVersionPolicy    :t1, 2026-03-25, 2d
-    ADR: planVersion compatibility policy            :t2, 2026-03-25, 2d
+    SupportedPlanVersion type + PlanAdmissionPolicy  :t1, 2026-03-25, 2d
+    ADR: planVersion admission policy                :t2, 2026-03-25, 2d
 
     section Engine adapter
     Replace strict equality with assertCompatible    :t3, after t1, 1d
@@ -473,8 +449,8 @@ gantt
     axisFormat %d-%b
 
     section GAP-2 (lowest risk, highest leverage - do first)
-    SupportedPlanVersion type + PlanVersionPolicy   :g2a, 2026-03-25, 2d
-    ADR: planVersion compatibility policy           :g2b, 2026-03-25, 2d
+    SupportedPlanVersion type + PlanAdmissionPolicy :g2a, 2026-03-25, 2d
+    ADR: planVersion admission policy               :g2b, 2026-03-25, 2d
     Replace strict equality + normalize fixtures    :g2c, after g2a, 1d
     Contract tests                                  :g2d, after g2c, 2d
     Rolling deployment simulation test              :g2e, after g2d, 2d

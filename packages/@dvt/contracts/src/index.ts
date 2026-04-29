@@ -27,6 +27,17 @@ export {
   SUPPORTED_EXECUTION_PLAN_VERSIONS,
 } from './contracts/planner/PlanVersion.v1.js';
 export type { SupportedPlanVersion } from './contracts/planner/PlanVersion.v1.js';
+export {
+  EXECUTION_PLAN_ADMISSION_MATRIX,
+  EXECUTION_PLAN_ADMISSION_REGISTRY,
+  isAdmittedExecutionPlanPair,
+  SUPPORTED_EXECUTION_PLAN_ADMISSION_PAIRS,
+} from './contracts/planner/PlanAdmission.v1.js';
+export type {
+  ExecutionPlanAdmissionDescriptor,
+  ExecutionPlanAdmissionPair,
+  SupportedPlanSchemaVersion,
+} from './contracts/planner/PlanAdmission.v1.js';
 export type {
   ExecutionPlan,
   ExecutionStep,

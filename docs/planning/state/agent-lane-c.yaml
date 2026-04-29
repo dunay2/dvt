@@ -90,18 +90,18 @@ tasks:
       plan references.
     dependency: none
     target: >-
-      Start-run preconditions use typed UnsupportedPlanVersionError with registry-backed supported
-      versions and explicit contract coverage.
+      Start-run preconditions use the plan admission boundary for registry-backed
+      UnsupportedPlanVersionError handling and explicit contract coverage.
     complexity: M
     effort_points: 5
     progress_pct: 100
     evidence_refs:
-      - packages/@dvt/engine/src/contracts/PlanVersionPolicy.ts
-      - packages/@dvt/engine/test/gaps/PlanVersionPolicy.test.ts
+      - packages/@dvt/engine/src/contracts/PlanAdmissionPolicy.ts
+      - packages/@dvt/engine/test/gaps/PlanAdmissionPolicy.test.ts
       - apps/api/test/application/services/engineStartRunUseCase.errorMapping.test.ts
     status_reason: >-
-      The planVersion guard is present in runtime code with typed errors and tests, which provides
-      equivalent verified closure for this pass.
+      Plan-version and schema-pair admission are consolidated in one runtime policy with typed
+      errors and tests, which provides equivalent verified closure for this pass.
     last_verified: '2026-03-31'
   - task_id: RC-D2
     priority: P0

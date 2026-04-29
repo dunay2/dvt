@@ -61,6 +61,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [manifestRef runtime composition could regress back to documented-but-unwired behavior](R-20260331-MANIFESTREF-PRODUCTION-PATH.yaml)
 - [Narrowed engine read boundary could regress through facade re-growth](R-20260412-AR-A12-C-READ-BOUNDARY-PURITY-REGRESSION.yaml)
 - [Persisted plan record contracts can drift back into dual truth and invalid state acceptance](R-20260402-S08-PLAN-STORE-CONTRACT-DRIFT.yaml)
+- [Plan admission matrix can drift during future schema or plan-version changes](R-20260429-PLAN-ADMISSION-DRIFT.yaml)
 - [Plan-store canonical JSON shape may drift from contract schema](R-20260405-PLAN-STORE-CANONICAL-SHAPE-DRIFT.yaml)
 - [Plan-store tenancy and live RLS profile coverage remain after forced RLS baseline](R-20260425-PRODUCTION-TENANT-ISOLATION-BASELINE.yaml)
 - [Planner boundary contract naming drift across V2 and V1 symbols](R-20260404-PLANNER-V1-CONTRACT-NORMALIZATION.yaml)

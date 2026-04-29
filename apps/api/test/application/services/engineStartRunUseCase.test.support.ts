@@ -15,14 +15,12 @@ export const PLAN_REF = parsePlanRef({
   sha256: 'deadbeef',
   schemaVersion: '1.0.0',
   planId: 'plan-123',
-  planVersion: '3.0',
+  planVersion: '1.0',
   sizeBytes: 512,
   expiresAt: '2026-04-13T10:00:00.000Z',
 });
 
-export function buildAuthorizedContext(
-  tenantId = 'tenant-1'
-): AuthorizedCommandExecutionContext {
+export function buildAuthorizedContext(tenantId = 'tenant-1'): AuthorizedCommandExecutionContext {
   return {
     principal: {
       principalId: 'user-1',

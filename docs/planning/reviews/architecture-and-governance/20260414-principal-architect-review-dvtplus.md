@@ -342,7 +342,7 @@ is not a plan to build one — this is the absence of one.
 ### Plan versioning strategy
 
 ADR-0036 uses a registry (`SupportedPlanVersion`) and a versioned union type.
-The `PLAN_RUNTIME_COMPATIBILITY_MATRIX` in `@dvt/plan-verifier` is the
+The `PLAN_RUNTIME_ADMISSION_MATRIX` in `@dvt/plan-verifier` is the
 definitive source for which runtime accepts which plan version. This is correct
 forward-looking design.
 

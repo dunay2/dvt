@@ -1,7 +1,15 @@
-import { isSupportedExecutionPlanVersion, SUPPORTED_EXECUTION_PLAN_VERSIONS } from '@dvt/contracts';
+/**
+ * Owned concern: fail closed at engine ingress when a PlanRef names a
+ * planVersion/schemaVersion pair that the runtime admission matrix does not admit.
+ */
+import {
+  SUPPORTED_EXECUTION_PLAN_VERSIONS,
+  isAdmittedExecutionPlanPair,
+  isSupportedExecutionPlanVersion,
+} from '@dvt/contracts';
 
 import { ENGINE_ERROR_MESSAGE_KEY } from './errors/errorMessages.js';
-import { DvtError, ENGINE_ERROR_CODE } from './errors.js';
+import { DvtError, ENGINE_ERROR_CODE, InvalidSchemaVersionError } from './errors.js';
 
 export class UnsupportedPlanVersionError extends DvtError {
   readonly planVersion: string;
@@ -22,12 +30,23 @@ export class UnsupportedPlanVersionError extends DvtError {
   }
 }
 
-export function assertSupportedPlanVersion(planVersion: string): void {
-  const normalized = planVersion.trim();
-  if (!normalized || !isSupportedExecutionPlanVersion(normalized)) {
+export function assertAdmittedPlanPair(input: {
+  planVersion: string;
+  schemaVersion: string;
+}): void {
+  const planVersion = input.planVersion.trim();
+  const schemaVersion = input.schemaVersion.trim();
+
+  if (!planVersion || !schemaVersion) throw new InvalidSchemaVersionError(input.schemaVersion);
+
+  if (!isSupportedExecutionPlanVersion(planVersion)) {
     throw new UnsupportedPlanVersionError({
-      planVersion,
+      planVersion: input.planVersion,
       supportedVersions: [...SUPPORTED_EXECUTION_PLAN_VERSIONS],
     });
+  }
+
+  if (!isAdmittedExecutionPlanPair(planVersion, schemaVersion)) {
+    throw new InvalidSchemaVersionError(input.schemaVersion);
   }
 }
