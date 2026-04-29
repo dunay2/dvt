@@ -134,13 +134,13 @@ export class StartRunApplicationService {
       planRef,
       this.deps.planFetcher
     );
-    await this.deps.guard.assertExecutionPolicyAllowed(
-      verifiedArtifact.plan,
+    await this.deps.guard.assertExecutionPolicyAllowed({
+      plan: verifiedArtifact.plan,
       planRef,
-      verifiedArtifact.executionPolicy,
-      resolvedContext,
-      adapter
-    );
+      executionPolicy: verifiedArtifact.executionPolicy,
+      context: resolvedContext,
+      adapter,
+    });
 
     const intentId = await this.createStartRunIntent(
       resolvedContext,

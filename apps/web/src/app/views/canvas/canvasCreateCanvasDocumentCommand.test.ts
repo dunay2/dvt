@@ -74,9 +74,20 @@ type BuildCommandArgsResult = {
   setDraftSaveStatus: ReturnType<typeof vi.fn>;
 };
 
-function buildCommandArgs(
-  overrides: Partial<CanvasCreateCanvasDocumentCommandDto> = {}
-): BuildCommandArgsResult {
+type BuildCommandOverrides = Partial<
+  Omit<
+    CanvasCreateCanvasDocumentCommandDto,
+    'draftRepository' | 'draftQueryCache' | 'setDraftSession' | 'setDraftSaveStatus'
+  >
+> &
+  Partial<
+    Pick<
+      BuildCommandArgsResult,
+      'draftRepository' | 'draftQueryCache' | 'setDraftSession' | 'setDraftSaveStatus'
+    >
+  >;
+
+function buildCommandArgs(overrides: BuildCommandOverrides = {}): BuildCommandArgsResult {
   const draftRepository = {
     readGraphDraftState: vi.fn(),
     readGraphDraft: vi.fn(),
@@ -97,14 +108,10 @@ function buildCommandArgs(
   };
   const setDraftSession = vi.fn();
   const setDraftSaveStatus = vi.fn();
-  const effectiveDraftRepository = (overrides.draftRepository ??
-    draftRepository) as BuildCommandArgsResult['draftRepository'];
-  const effectiveDraftQueryCache = (overrides.draftQueryCache ??
-    draftQueryCache) as BuildCommandArgsResult['draftQueryCache'];
-  const effectiveSetDraftSession = (overrides.setDraftSession ??
-    setDraftSession) as BuildCommandArgsResult['setDraftSession'];
-  const effectiveSetDraftSaveStatus = (overrides.setDraftSaveStatus ??
-    setDraftSaveStatus) as BuildCommandArgsResult['setDraftSaveStatus'];
+  const effectiveDraftRepository = overrides.draftRepository ?? draftRepository;
+  const effectiveDraftQueryCache = overrides.draftQueryCache ?? draftQueryCache;
+  const effectiveSetDraftSession = overrides.setDraftSession ?? setDraftSession;
+  const effectiveSetDraftSaveStatus = overrides.setDraftSaveStatus ?? setDraftSaveStatus;
 
   return {
     args: {

@@ -23,6 +23,14 @@ export interface StartRunAdmissionGuardDeps {
   runExecutionContextBindingPolicy?: IRunExecutionContextBindingPolicy;
 }
 
+export interface StartRunExecutionPolicyAdmission {
+  plan: ExecutionPlan;
+  planRef: PlanRef;
+  executionPolicy: RunExecutionPolicy;
+  context: ResolvedRunContext;
+  adapter: IProviderAdapter;
+}
+
 export class StartRunAdmissionGuard {
   private readonly validationPolicy: StartRunValidationPolicy;
   private readonly runExecutionContextPolicy: RunExecutionContextAdmissionPolicy;
@@ -47,13 +55,9 @@ export class StartRunAdmissionGuard {
     this.deps.policy.checkRateLimit(context.tenantId);
   }
 
-  async assertExecutionPolicyAllowed(
-    plan: ExecutionPlan,
-    planRef: PlanRef,
-    executionPolicy: RunExecutionPolicy,
-    context: ResolvedRunContext,
-    adapter: IProviderAdapter
-  ): Promise<void> {
+  async assertExecutionPolicyAllowed(admission: StartRunExecutionPolicyAdmission): Promise<void> {
+    const { plan, planRef, executionPolicy, context, adapter } = admission;
+
     this.validationPolicy.validateCapabilitiesOrThrow(executionPolicy, adapter);
     await this.runExecutionContextPolicy.assertAllowed(plan, planRef, executionPolicy, context);
   }

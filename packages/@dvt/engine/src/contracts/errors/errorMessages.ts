@@ -62,96 +62,58 @@ export type EngineErrorMessageParams<C extends EngineErrorCode = EngineErrorCode
   EngineErrorMessageParamMap[C]
 >;
 
+type EngineErrorMessageRenderer<C extends EngineErrorCode> = (
+  params: EngineErrorMessageParams<C>
+) => string;
+
+const ENGINE_ERROR_MESSAGE_RENDERERS = {
+  RUN_NOT_FOUND: ({ runId }) => `Run not found: ${runId}`,
+  RUN_ALREADY_EXISTS: ({ runId }) => `Run already exists: ${runId}`,
+  ADAPTER_NOT_REGISTERED: ({ provider }) => `No adapter registered for provider: ${provider}`,
+  TENANT_ACCESS_DENIED: ({ tenantId }) => `Tenant access denied: ${tenantId}`,
+  CAPABILITIES_NOT_SUPPORTED: ({ capabilities, provider }) => {
+    const who = provider ? ` by adapter '${provider}'` : '';
+    return `Required capabilities not supported${who}: [${capabilities.join(', ')}]`;
+  },
+  TARGET_ADAPTER_MISMATCH: ({ planRequires, contextHas }) =>
+    `Plan requires adapter '${planRequires}', context specifies '${contextHas}'`,
+  INVALID_RUN_ID: ({ runId }) => `Invalid runId format: ${runId}`,
+  PLAN_SCHEMA_VERSION_UNKNOWN: ({ schemaVersion }) =>
+    `Unsupported plan schema version: ${schemaVersion}`,
+  RUN_METADATA_NOT_FOUND: ({ runId }) => `Run metadata not found for runId: ${runId}`,
+  RECOVERY_SOURCE_NOT_TERMINAL: ({ runId, status }) =>
+    `Recover source run is not terminal: runId=${runId} status=${status}`,
+  SIGNAL_NOT_IMPLEMENTED: ({ signalType }) => `NotImplemented: ${signalType} signals are Phase 2`,
+  OUTBOX_RATE_LIMIT_EXCEEDED: ({ tenantId }) =>
+    `Outbox rate limit exceeded for tenant: ${tenantId}`,
+  PLAN_URI_NOT_ALLOWED: ({ uri, reason, subject }) => {
+    const reasonDetail = subject === undefined ? reason : `${reason}:${subject}`;
+    return `Plan URI not allowed - ${reasonDetail}: ${uri}`;
+  },
+  INVALID_STATE_TRANSITION: ({ runId, fromStatus, eventType, stepId }) => {
+    const subject = stepId ? `step ${stepId}` : 'run';
+    return `Cannot apply ${eventType} to ${subject} already in terminal status ${fromStatus}: runId=${runId}`;
+  },
+  UNSUPPORTED_PLAN_VERSION: ({ planVersion, supportedVersions }) =>
+    `Unsupported plan version "${planVersion}". Supported versions: ${supportedVersions.join(', ')}`,
+  INVALID_RUN_EVENT_INPUT: ({ reason, index, runId }) => {
+    const location = index === undefined ? '' : ` at index ${index}`;
+    const run = runId === undefined ? '' : ` (runId=${runId})`;
+    return `Invalid run event input: ${reason}${location}${run}`;
+  },
+  RUN_SEQUENCE_OVERFLOW: ({ runId, attemptedRunSeq }) =>
+    `Run sequence overflow for runId=${runId}: attempted runSeq=${attemptedRunSeq}`,
+  RUN_EXECUTION_CONTEXT_REJECTED: ({ reason }) => `Run execution context rejected: ${reason}`,
+  PROVIDER_REF_PROVIDER_MISMATCH: ({ runId, persistedProvider, updateProvider }) =>
+    `ProviderRef update rejected for runId=${runId}: persisted provider=${persistedProvider}, update provider=${updateProvider}`,
+} satisfies {
+  [C in EngineErrorCode]: EngineErrorMessageRenderer<C>;
+};
+
 export function defaultEngineErrorMessage<C extends EngineErrorCode>(
   code: C,
   params: EngineErrorMessageParams<C>
 ): string {
-  switch (code) {
-    case 'RUN_NOT_FOUND': {
-      const p = params as EngineErrorMessageParams<'RUN_NOT_FOUND'>;
-      return `Run not found: ${p.runId}`;
-    }
-    case 'RUN_ALREADY_EXISTS': {
-      const p = params as EngineErrorMessageParams<'RUN_ALREADY_EXISTS'>;
-      return `Run already exists: ${p.runId}`;
-    }
-    case 'ADAPTER_NOT_REGISTERED': {
-      const p = params as EngineErrorMessageParams<'ADAPTER_NOT_REGISTERED'>;
-      return `No adapter registered for provider: ${p.provider}`;
-    }
-    case 'TENANT_ACCESS_DENIED': {
-      const p = params as EngineErrorMessageParams<'TENANT_ACCESS_DENIED'>;
-      return `Tenant access denied: ${p.tenantId}`;
-    }
-    case 'CAPABILITIES_NOT_SUPPORTED': {
-      const p = params as EngineErrorMessageParams<'CAPABILITIES_NOT_SUPPORTED'>;
-      const who = p.provider ? ` by adapter '${p.provider}'` : '';
-      return `Required capabilities not supported${who}: [${p.capabilities.join(', ')}]`;
-    }
-    case 'TARGET_ADAPTER_MISMATCH': {
-      const p = params as EngineErrorMessageParams<'TARGET_ADAPTER_MISMATCH'>;
-      return `Plan requires adapter '${p.planRequires}', context specifies '${p.contextHas}'`;
-    }
-    case 'INVALID_RUN_ID': {
-      const p = params as EngineErrorMessageParams<'INVALID_RUN_ID'>;
-      return `Invalid runId format: ${p.runId}`;
-    }
-    case 'PLAN_SCHEMA_VERSION_UNKNOWN': {
-      const p = params as EngineErrorMessageParams<'PLAN_SCHEMA_VERSION_UNKNOWN'>;
-      return `Unsupported plan schema version: ${p.schemaVersion}`;
-    }
-    case 'RUN_METADATA_NOT_FOUND': {
-      const p = params as EngineErrorMessageParams<'RUN_METADATA_NOT_FOUND'>;
-      return `Run metadata not found for runId: ${p.runId}`;
-    }
-    case 'RECOVERY_SOURCE_NOT_TERMINAL': {
-      const p = params as EngineErrorMessageParams<'RECOVERY_SOURCE_NOT_TERMINAL'>;
-      return `Recover source run is not terminal: runId=${p.runId} status=${p.status}`;
-    }
-    case 'SIGNAL_NOT_IMPLEMENTED': {
-      const p = params as EngineErrorMessageParams<'SIGNAL_NOT_IMPLEMENTED'>;
-      return `NotImplemented: ${p.signalType} signals are Phase 2`;
-    }
-    case 'OUTBOX_RATE_LIMIT_EXCEEDED': {
-      const p = params as EngineErrorMessageParams<'OUTBOX_RATE_LIMIT_EXCEEDED'>;
-      return `Outbox rate limit exceeded for tenant: ${p.tenantId}`;
-    }
-    case 'PLAN_URI_NOT_ALLOWED': {
-      const p = params as EngineErrorMessageParams<'PLAN_URI_NOT_ALLOWED'>;
-      const reasonDetail = p.subject === undefined ? p.reason : `${p.reason}:${p.subject}`;
-      return `Plan URI not allowed - ${reasonDetail}: ${p.uri}`;
-    }
-    case 'INVALID_STATE_TRANSITION': {
-      const p = params as EngineErrorMessageParams<'INVALID_STATE_TRANSITION'>;
-      const subject = p.stepId ? `step ${p.stepId}` : 'run';
-      return `Cannot apply ${p.eventType} to ${subject} already in terminal status ${p.fromStatus}: runId=${p.runId}`;
-    }
-    case 'UNSUPPORTED_PLAN_VERSION': {
-      const p = params as EngineErrorMessageParams<'UNSUPPORTED_PLAN_VERSION'>;
-      return `Unsupported plan version "${p.planVersion}". Supported versions: ${p.supportedVersions.join(', ')}`;
-    }
-    case 'INVALID_RUN_EVENT_INPUT': {
-      const p = params as EngineErrorMessageParams<'INVALID_RUN_EVENT_INPUT'>;
-      const location = p.index === undefined ? '' : ` at index ${p.index}`;
-      const run = p.runId === undefined ? '' : ` (runId=${p.runId})`;
-      return `Invalid run event input: ${p.reason}${location}${run}`;
-    }
-    case 'RUN_SEQUENCE_OVERFLOW': {
-      const p = params as EngineErrorMessageParams<'RUN_SEQUENCE_OVERFLOW'>;
-      return `Run sequence overflow for runId=${p.runId}: attempted runSeq=${p.attemptedRunSeq}`;
-    }
-    case 'RUN_EXECUTION_CONTEXT_REJECTED': {
-      const p = params as EngineErrorMessageParams<'RUN_EXECUTION_CONTEXT_REJECTED'>;
-      return `Run execution context rejected: ${p.reason}`;
-    }
-    case 'PROVIDER_REF_PROVIDER_MISMATCH': {
-      const p = params as EngineErrorMessageParams<'PROVIDER_REF_PROVIDER_MISMATCH'>;
-      return `ProviderRef update rejected for runId=${p.runId}: persisted provider=${p.persistedProvider}, update provider=${p.updateProvider}`;
-    }
-  }
-  return assertNever(code);
-}
-
-function assertNever(value: never): never {
-  throw new Error(`Unhandled engine error code: ${String(value)}`);
+  const render = ENGINE_ERROR_MESSAGE_RENDERERS[code] as EngineErrorMessageRenderer<C>;
+  return render(params);
 }
