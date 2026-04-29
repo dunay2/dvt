@@ -310,12 +310,12 @@ describe('canvas startup and draft recovery architecture', () => {
     expect(tabStripTemplateSource).toContain('function CanvasPlaygroundTabsTemplate(');
     expect(tabStripTemplateSource).toContain('function CanvasReplacementActionTemplate(');
     expect(tabStripTemplateSource).toContain('CanvasReplacementActionViewState');
-    expect(tabStripTemplateSource).toContain('border-(--border-default)');
-    expect(tabStripTemplateSource).toContain('bg-(--surface-panel)');
-    expect(tabStripTemplateSource).toContain('text-(--text-subtle)');
-    expect(tabStripTemplateSource).not.toContain('border-[color:var(');
-    expect(tabStripTemplateSource).not.toContain('bg-[var(');
-    expect(tabStripTemplateSource).not.toContain('text-[var(');
+    expect(tabStripTemplateSource).toContain('border-[color:var(--border-default)]');
+    expect(tabStripTemplateSource).toContain('bg-[var(--surface-panel)]');
+    expect(tabStripTemplateSource).toContain('text-[var(--text-subtle)]');
+    expect(tabStripTemplateSource).not.toContain('border-(--border-default)');
+    expect(tabStripTemplateSource).not.toContain('bg-(--surface-panel)');
+    expect(tabStripTemplateSource).not.toContain('text-(--text-subtle)');
     expect(tabStripTemplateSource).not.toContain('CanvasReplacementActionState');
     expect(tabStripTemplateSource).not.toContain("from './copy'");
     expect(tabStripTemplateSource).not.toContain("mode: 'replace_current'");
