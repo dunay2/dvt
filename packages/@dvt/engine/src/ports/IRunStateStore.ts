@@ -1,13 +1,17 @@
-import type { ExecutionPlan as CanonicalExecutionPlan } from '@dvt/contracts';
+/**
+ * @ownedConcern Define engine run-state persistence ports and plugin-neutral lifecycle event payloads.
+ */
+
 import type {
+  ExecutionPlan as CanonicalExecutionPlan,
   EngineRunRef,
   IsoUtcString,
-  StepId,
   PlanRef,
   Provider,
   RunExecutionEvidence,
   RunExecutionPolicy,
   RunStatus,
+  StepId,
 } from '@dvt/contracts';
 
 export type EventType =
@@ -56,8 +60,7 @@ export type EventEnvelope = EventInput & {
  */
 export interface StepArtifactRef {
   /**
-   * Canonical artifact discriminator, e.g. `dbt.compiled-sql`, `python.script`,
-   * `spark.job-spec`.
+   * Canonical artifact discriminator, e.g. `compiled-sql`, `python.script`, `spark.job-spec`.
    */
   artifactKind: string;
   /** SHA-256 hex digest of the compiled SQL bytes (content-addressable key). */
@@ -71,7 +74,7 @@ export interface StepArtifactRef {
 }
 
 /**
- * DBT-specialized alias retained for compatibility with existing callers.
+ * Compiled-code reference view for callers that do not need the artifact discriminator.
  */
 export interface CompiledCodeRef extends Omit<StepArtifactRef, 'artifactKind'> {}
 

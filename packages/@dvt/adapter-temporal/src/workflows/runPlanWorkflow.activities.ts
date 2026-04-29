@@ -1,5 +1,6 @@
 /**
  * @file packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.activities.ts
+ * @ownedConcern Temporal activity proxy binding for workflow ports
  * @baseline ADR-0001: Temporal Integration Test Policy
  * @baseline ADR-0003: Execution Model
  * @baseline ADR-0040: Retry Ownership And Attempt Authority

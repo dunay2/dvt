@@ -87,4 +87,32 @@ describe('resolveExecutionSegmentFromPlan', () => {
       completedStepCountBeforeLayer: 0,
     });
   });
+
+  it('keeps a deep linear plan segment bounded to the requested layer metadata', () => {
+    const deepPlan = createExecutionPlan({
+      inputHashSha256: 'c'.repeat(64),
+      steps: Array.from({ length: 1_000 }, (_, index) => ({
+        stepId: `s-${index}`,
+        kind: 'DBT_MODEL',
+        dependsOn: index === 0 ? [] : [`s-${index - 1}`],
+      })),
+    });
+
+    const fullPlanSizeBytes = new globalThis.TextEncoder().encode(JSON.stringify(deepPlan)).length;
+    const segment = resolveExecutionSegmentFromPlan(deepPlan, 900);
+    const segmentSizeBytes = new globalThis.TextEncoder().encode(JSON.stringify(segment)).length;
+
+    expect(segment).toMatchObject({
+      layerIndex: 900,
+      totalLayerCount: 1_000,
+      completedStepCountBeforeLayer: 900,
+      downstreamStepIdsByGatewayStepId: {},
+      retainedGatewayDependencyStepIds: [],
+    });
+    expect(segment.steps.map((step) => step.stepId)).toEqual(['s-900']);
+    expect(segment.steps[0]?.dependsOn).toEqual(['s-899']);
+    expect(segmentSizeBytes).toBeLessThan(fullPlanSizeBytes / 100);
+    expect(JSON.stringify(segment)).not.toContain('"stepId":"s-899"');
+    expect(JSON.stringify(segment)).not.toContain('"stepId":"s-901"');
+  });
 });

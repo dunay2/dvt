@@ -219,6 +219,18 @@ function createStack(
   return { engine, store, clock, idempotency };
 }
 
+function makeDbtBindingPolicy(): IRunExecutionContextBindingPolicy {
+  return {
+    pluginRequirements: [
+      {
+        pluginId: 'dbt',
+        stepKinds: ['DBT_MODEL', 'DBT_TEST', 'DBT_SNAPSHOT'],
+        assertPluginContextAllowed() {},
+      },
+    ],
+  };
+}
+
 function makeRunExecutionContextRef(
   planRef: PlanRef,
   runId: string
@@ -401,9 +413,7 @@ describe('planner -> engine contract', () => {
           return runExecutionContext;
         },
       },
-      runExecutionContextBindingPolicy: {
-        assertDbtProjectBundleRefAllowed() {},
-      },
+      runExecutionContextBindingPolicy: makeDbtBindingPolicy(),
     });
     const runRef = await engine.startRun(planRef, runContext);
 

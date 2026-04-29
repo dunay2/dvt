@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { parseWorkflowControlInput } from '../src/workflows/runPlanWorkflow.state.js';
 import {
   buildContinueAsNewInput,
   shouldTriggerContinueAsNew,
@@ -186,6 +187,16 @@ describe('continue-as-new policy', () => {
 });
 
 describe('workflow input parsing', () => {
+  it('rejects missing continue-as-new threshold instead of silently disabling rollover', () => {
+    expect(() =>
+      parseWorkflowControlInput({
+        planRef: BASE_INPUT.planRef,
+        ctx: BASE_INPUT.ctx,
+        maxContinueAsNewPayloadBytes: BASE_INPUT.maxContinueAsNewPayloadBytes,
+      })
+    ).toThrow('INVALID_WORKFLOW_INPUT: continueAsNewAfterLayerCount_must_be_non_negative_integer');
+  });
+
   it('defaults undefined to zero', () => {
     expect(parseOptionalNonNegativeInt(undefined, 'nextLayerIndex')).toBe(0);
   });

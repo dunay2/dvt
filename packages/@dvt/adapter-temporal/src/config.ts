@@ -45,7 +45,8 @@ export interface TemporalWorkflowBudgetConfig {
   maxContinueAsNewPayloadBytes: PositivePayloadBytes;
   /**
    * Number of execution layers processed in a single workflow run before
-   * triggering continue-as-new. `0` disables rollover.
+   * triggering continue-as-new. The default keeps large-DAG rollover enabled;
+   * explicit `0` is reserved for local diagnostics or incident rollback.
    */
   continueAsNewAfterLayerCount: ContinueAsNewLayerCount;
 }
@@ -57,6 +58,7 @@ export interface TemporalAdapterConfig {
 }
 
 const DEFAULT_MAX_START_PAYLOAD_BYTES = 2_000_000;
+const DEFAULT_CONTINUE_AS_NEW_AFTER_LAYER_COUNT = 100;
 
 const DEFAULT_CONNECTION_CONFIG: TemporalConnectionConfig = createTemporalConnectionConfig({
   address: '127.0.0.1:7233',
@@ -73,7 +75,7 @@ const DEFAULT_WORKFLOW_BUDGET_CONFIG: TemporalWorkflowBudgetConfig =
   createTemporalWorkflowBudgetConfig({
     maxStartPayloadBytes: DEFAULT_MAX_START_PAYLOAD_BYTES,
     maxContinueAsNewPayloadBytes: deriveContinueAsNewPayloadBudget(DEFAULT_MAX_START_PAYLOAD_BYTES),
-    continueAsNewAfterLayerCount: 0,
+    continueAsNewAfterLayerCount: DEFAULT_CONTINUE_AS_NEW_AFTER_LAYER_COUNT,
   });
 
 const DEFAULTS: TemporalAdapterConfig = {

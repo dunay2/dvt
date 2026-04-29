@@ -28,6 +28,7 @@ import {
 } from '../../src/contracts/errors.js';
 import { UnsupportedPlanVersionError } from '../../src/contracts/PlanVersionPolicy.js';
 import { WorkflowEngine } from '../../src/core/WorkflowEngine.js';
+import type { IRunExecutionContextBindingPolicy } from '../../src/ports/IRunExecutionContextBindingPolicy.js';
 import { RunHealthService } from '../../src/services/RunHealthService.js';
 import { InMemoryStartRunIntentStore } from '../../src/state/InMemoryStartRunIntentStore.js';
 import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
@@ -129,12 +130,12 @@ async function appendRunCompleted(store: InMemoryTxStore, runId: string): Promis
   await store.appendAndEnqueueTx(runId, [event]);
 }
 
-function makeDbtBearingPlan(): ExecutionPlan {
+function makePluginBearingPlan(): ExecutionPlan {
   const basePlan = makeDefaultExecutionPlan();
   const steps: ExecutionPlan['steps'] = [
     {
-      stepId: 'dbt-model-1',
-      kind: 'DBT_MODEL',
+      stepId: 'example-model-1',
+      kind: 'EXAMPLE_MODEL',
       dependsOn: [],
     },
   ];
@@ -155,6 +156,22 @@ function makeDbtBearingPlan(): ExecutionPlan {
       planId,
     },
     steps,
+  };
+}
+
+function makeExamplePluginBindingPolicy(
+  assertAllowed: (pluginContext: unknown) => void = () => undefined
+): IRunExecutionContextBindingPolicy {
+  return {
+    pluginRequirements: [
+      {
+        pluginId: 'example',
+        stepKinds: ['EXAMPLE_MODEL', 'EXAMPLE_TEST', 'EXAMPLE_SNAPSHOT'],
+        assertPluginContextAllowed({ pluginContext }) {
+          assertAllowed(pluginContext);
+        },
+      },
+    ],
   };
 }
 
@@ -304,10 +321,10 @@ describe('WorkflowEngine (basic failure modes)', () => {
             createdAtIso: '2026-04-03T00:00:00.000Z',
             createdBy: 'test',
             pluginContexts: {
-              dbt: {
-                projectBundleRef: {
+              example: {
+                artifactRef: {
                   uri: `s3://bundle-bucket/tenants/t/${'b'.repeat(64)}`,
-                  kind: 'dbt-project-bundle',
+                  kind: 'example-plugin-artifact',
                   sha256: 'b'.repeat(64),
                   tenantId: 't',
                 },
@@ -316,9 +333,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
           };
         },
       },
-      runExecutionContextBindingPolicy: {
-        assertDbtProjectBundleRefAllowed() {},
-      },
+      runExecutionContextBindingPolicy: makeExamplePluginBindingPolicy(),
     });
 
     const contextWithRunExecutionContextRef = {
@@ -341,33 +356,34 @@ describe('WorkflowEngine (basic failure modes)', () => {
     });
   });
 
-  it('rejects DBT-bearing runs without runExecutionContextRef before adapter dispatch', async () => {
+  it('rejects plugin-bearing runs without runExecutionContextRef before adapter dispatch', async () => {
     const startRun = vi.fn(async () => {
       throw new Error('adapter should not be called');
     });
-    const plan = makeDbtBearingPlan();
+    const plan = makePluginBearingPlan();
     const planRef = makePlanRefForPlan(plan);
     const { engine } = createWorkflowEngineFixture({
       adapter: makeTemporalAdapter({ startRun }),
       planFetcher: makePlanFetcherForPlan(plan),
+      runExecutionContextBindingPolicy: makeExamplePluginBindingPolicy(),
     });
 
     await expect(
-      engine.startRun(planRef, makeContext('dbt-missing-runctx-1'))
+      engine.startRun(planRef, makeContext('plugin-missing-runctx-1'))
     ).rejects.toMatchObject({
       code: 'RUN_EXECUTION_CONTEXT_REJECTED',
     });
     expect(startRun).not.toHaveBeenCalled();
   });
 
-  it('rejects DBT-bearing runs when the bundle locator is not allowed by admission binding policy', async () => {
+  it('rejects plugin-bearing runs when artifact locator is not allowed by admission binding policy', async () => {
     const startRun = vi.fn(async () => {
       throw new Error('adapter should not be called');
     });
-    const plan = makeDbtBearingPlan();
+    const plan = makePluginBearingPlan();
     const planRef = makePlanRefForPlan(plan);
     const runExecutionContextRef = {
-      uri: 'dvt-runctx://t/dbt-store-mismatch-1',
+      uri: 'dvt-runctx://t/plugin-store-mismatch-1',
       sha256: 'ctxsha',
       schemaVersion: 'v1.0',
       planId: planRef.planId,
@@ -390,10 +406,10 @@ describe('WorkflowEngine (basic failure modes)', () => {
             createdAtIso: '2026-04-03T00:00:00.000Z',
             createdBy: 'test',
             pluginContexts: {
-              dbt: {
-                projectBundleRef: {
+              example: {
+                artifactRef: {
                   uri: `s3://foreign-bucket/tenants/t/${'b'.repeat(64)}`,
-                  kind: 'dbt-project-bundle',
+                  kind: 'example-plugin-artifact',
                   sha256: 'b'.repeat(64),
                   tenantId: 't',
                 },
@@ -402,25 +418,22 @@ describe('WorkflowEngine (basic failure modes)', () => {
           };
         },
       },
-      runExecutionContextBindingPolicy: {
-        assertDbtProjectBundleRefAllowed() {
-          throw new Error(
-            'dbt project bundle artifact bucket mismatch: expected=canonical-bucket actual=foreign-bucket'
-          );
-        },
-      },
+      runExecutionContextBindingPolicy: makeExamplePluginBindingPolicy(() => {
+        throw new Error(
+          'plugin artifact bucket mismatch: expected=canonical-bucket actual=foreign-bucket'
+        );
+      }),
     });
 
     await expect(
       engine.startRun(planRef, {
-        ...makeContext('dbt-store-mismatch-1'),
+        ...makeContext('plugin-store-mismatch-1'),
         runExecutionContextRef,
       })
     ).rejects.toMatchObject({
       code: 'RUN_EXECUTION_CONTEXT_REJECTED',
       messageParams: {
-        reason:
-          'dbt project bundle artifact bucket mismatch: expected=canonical-bucket actual=foreign-bucket',
+        reason: 'plugin artifact bucket mismatch: expected=canonical-bucket actual=foreign-bucket',
       },
     });
     expect(startRun).not.toHaveBeenCalled();

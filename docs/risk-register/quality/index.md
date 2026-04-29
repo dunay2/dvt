@@ -21,7 +21,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [Adapter-postgres integration tests can drift from artifact fetch and lineage validation contracts](R-20260408-PR807-ADAPTER-POSTGRES-TEST-CONTRACT-DRIFT.yaml)
 - [Adapter-postgres integration tests can drift from deterministic manifest node ordering rules](R-20260408-PR850-ADAPTER-POSTGRES-TEST-ORDER-DRIFT.yaml)
 - [Adapter-postgres workspace type-path mappings can drift from real package imports](R-20260421-ADAPTER-PG-WORKSPACE-PATH-DRIFT.yaml)
-- [Adapter-temporal still embeds DBT-specific runtime seams as built-in behavior](R-20260420-TEMPORAL-DBT-BUILTIN-COUPLING.yaml)
+- [Adapter-temporal still owns DBT plugin and CLI surfaces inside the package](R-20260420-TEMPORAL-DBT-BUILTIN-COUPLING.yaml)
 - [Admission telemetry contract drift and partial shutdown leaks](R-20260401-ADMISSION-TELEMETRY-TEARDOWN-RESILIENCE.yaml)
 - [ADR-0000 traceability gate can drift from workspace build closure](R-20260423-ADR0-TRACEABILITY-GATE-DRIFT.yaml)
 - [API start-run transport could drift back into app-local shadow contracts](R-20260412-AR-A10-START-RUN-BOUNDARY-CONTRACT-DRIFT.yaml)

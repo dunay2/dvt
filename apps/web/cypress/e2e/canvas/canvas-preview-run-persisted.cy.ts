@@ -159,7 +159,7 @@ function stubRunWorkspaceApis(runId = 'run_e2e_1'): void {
         persistedAt: '2026-04-08T00:00:10.000Z',
         payload: {
           stepArtifactRef: {
-            artifactKind: 'dbt.compiled-sql',
+            artifactKind: 'compiled-sql',
             storageUri: 's3://dvt-artifacts/dev/compiled/orders_daily.sql',
             sha256: 'a'.repeat(64),
             sizeBytes: 2048,

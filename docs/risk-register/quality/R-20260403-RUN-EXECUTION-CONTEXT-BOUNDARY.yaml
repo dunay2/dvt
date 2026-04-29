@@ -23,6 +23,9 @@ mitigations:
   - Protected runtime now wires an artifact-backed resolver for `file://` non-production and `s3://`
     production run execution context artifacts, with `sha256` verification and contract parsing
     before adapter dispatch.
+  - Engine admission-policy coverage is split by owned concern (`acceptance`, `plugin-requirements`,
+    `provenance`, `compatibility`) with a semantic architecture test preventing the monolithic test
+    suite from returning.
 
 monitoring:
   - Track `RUN_EXECUTION_CONTEXT_REJECTED` occurrences.

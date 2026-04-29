@@ -1,5 +1,6 @@
 /**
  * @file packages/@dvt/adapter-temporal/src/workflows/workflowErrorHelpers.ts
+ * @ownedConcern Workflow-safe error-message normalization
  * @baseline ADR-0001: Temporal Integration Test Policy
  * @baseline ADR-0003: Execution Model
  * @decision Normalize workflow-side unknown errors before they become canonical failure event payloads

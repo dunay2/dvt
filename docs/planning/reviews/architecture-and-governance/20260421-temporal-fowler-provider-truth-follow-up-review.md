@@ -38,7 +38,7 @@ as the companion map for this review.
 - `packages/@dvt/contracts/src/contracts/engine/StartRunBoundary.v1.ts`
 - `packages/@dvt/contracts/src/types/contracts.ts`
 - `packages/@dvt/adapter-temporal/src/TemporalWorkerHost.ts`
-- `packages/@dvt/adapter-temporal/src/activities/dbtStepActivity.ts`
+- `packages/@dvt/adapter-temporal/src/plugins/dbt/DbtStepActivity.ts`
 - `apps/temporal-worker/src/runtime/createTemporalWorkerRuntime.ts`
 
 ## Primary external comparison references

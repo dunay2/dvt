@@ -1,5 +1,6 @@
 /**
  * @file packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.signals.ts
+ * @ownedConcern Runtime control-signal registration and dedupe state
  * @baseline ADR-0007: Run Cancellation
  * @baseline ADR-0008: Signal Idempotency
  * @baseline ADR-0047: Runtime-Owned Realized Lifecycle For Signal-Driven Transitions

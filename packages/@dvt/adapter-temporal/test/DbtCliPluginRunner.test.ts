@@ -1,6 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { DbtCliPluginRunner, assertDbtCliAvailable } from '../src/index.js';
+import {
+  DbtCliPluginRunner,
+  TEMPORAL_DBT_PLUGIN_EXECUTABLE_STEP_KINDS,
+  assertDbtCliAvailable,
+} from '../src/index.js';
 
 const INPUT = {
   step: { stepId: 'model.analytics.orders', kind: 'DBT_MODEL', dependsOn: [] },
@@ -119,6 +123,40 @@ describe('DbtCliPluginRunner', () => {
     expect(runCommand).toHaveBeenCalledWith('dbt', ['test', '--select', 'test.analytics.orders'], {
       cwd: '/tmp/dbt-project',
     });
+  });
+
+  it.each([
+    ['DBT_MODEL', 'run'],
+    ['DBT_TEST', 'test'],
+    ['DBT_SNAPSHOT', 'snapshot'],
+  ] as const)('maps %s through the Temporal DBT plugin command table', async (kind, command) => {
+    const runCommand = vi.fn(async () => ({
+      stdout: 'ok',
+      stderr: '',
+    }));
+    const runner = new DbtCliPluginRunner({
+      bundleReader: {
+        read: vi.fn(async (_ref, _options) => new Uint8Array()),
+      },
+      materializeProject: async () => ({
+        projectDir: '/tmp/dbt-project',
+        cleanup: async () => undefined,
+      }),
+      runCommand,
+      dbtBin: 'dbt',
+    });
+
+    await runner.execute({
+      ...INPUT,
+      step: { stepId: `${kind.toLowerCase()}.analytics.orders`, kind, dependsOn: [] },
+    });
+
+    expect(TEMPORAL_DBT_PLUGIN_EXECUTABLE_STEP_KINDS).toContain(kind);
+    expect(runCommand).toHaveBeenCalledWith(
+      'dbt',
+      [command, '--select', `${kind.toLowerCase()}.analytics.orders`, '--target', 'analytics'],
+      { cwd: '/tmp/dbt-project' }
+    );
   });
 
   it('returns FAILED when the dbt process exits non-zero', async () => {

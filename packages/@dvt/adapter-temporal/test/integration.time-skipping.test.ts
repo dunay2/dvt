@@ -209,24 +209,27 @@ async function createCancellationHarness(args: {
     TEMPORAL_IDENTITY: 'adapter-temporal-it',
   });
 
+  const activityDeps = createDbtActivityDeps({
+    store,
+    outbox,
+    bindings: [
+      { ctx: args.signalCtx, planRef: args.planRef, planBytes: args.planBytes },
+      { ctx: args.cancelCtx, planRef: args.planRef, planBytes: args.planBytes },
+    ],
+    dbtPluginRunner: {
+      async execute(input) {
+        observedProjectBundles.push(input.pluginContext.projectBundleRef.uri);
+        return { stepId: input.step.stepId, status: 'COMPLETED' };
+      },
+    },
+  });
+
   const worker = createTenantWorkerHost({
     temporalConfig,
     tenantId: args.signalCtx.tenantId,
     workflowsPath: WORKFLOW_PATH,
-    activityDeps: createDbtActivityDeps({
-      store,
-      outbox,
-      bindings: [
-        { ctx: args.signalCtx, planRef: args.planRef, planBytes: args.planBytes },
-        { ctx: args.cancelCtx, planRef: args.planRef, planBytes: args.planBytes },
-      ],
-      dbtPluginRunner: {
-        async execute(input) {
-          observedProjectBundles.push(input.pluginContext.projectBundleRef.uri);
-          return { stepId: input.step.stepId, status: 'COMPLETED' };
-        },
-      },
-    }),
+    activityDeps,
+    stepActivitiesByKind: activityDeps.stepActivitiesByKind,
   });
 
   await worker.start(env.nativeConnection);

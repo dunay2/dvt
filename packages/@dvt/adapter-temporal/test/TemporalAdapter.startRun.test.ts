@@ -78,7 +78,7 @@ describe('TemporalAdapter.startRun', () => {
           planRef: BASE_PLAN_REF,
           ctx: BASE_CTX,
           maxContinueAsNewPayloadBytes: 500_000,
-          continueAsNewAfterLayerCount: 0,
+          continueAsNewAfterLayerCount: 100,
         },
       ],
     });
@@ -95,7 +95,7 @@ describe('TemporalAdapter.startRun', () => {
 
   it('does not reject large plan artifacts based only on planRef.sizeBytes', async () => {
     const { adapter, workflowClient } = makeAdapter({
-      workflowBudget: { maxStartPayloadBytes: 512 },
+      workflowBudget: { maxStartPayloadBytes: 640 },
     });
 
     await expect(
@@ -117,7 +117,7 @@ describe('TemporalAdapter.startRun', () => {
 
   it('does not serialize the full plan into workflow input when planRef.sizeBytes is absent', async () => {
     const { adapter, workflowClient } = makeAdapter({
-      workflowBudget: { maxStartPayloadBytes: 512 },
+      workflowBudget: { maxStartPayloadBytes: 640 },
     });
 
     await expect(

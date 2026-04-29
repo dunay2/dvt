@@ -60,7 +60,7 @@ No alternative definitions are introduced.
 - `packages/@dvt/adapter-temporal/src/workflows/executionSegmentResolver.ts`
 - `packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.activities.ts`
 - `packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.stepExecution.ts`
-- `packages/@dvt/adapter-temporal/src/activities/dbtStepActivity.ts`
+- `packages/@dvt/adapter-temporal/src/plugins/dbt/DbtStepActivity.ts`
 - `packages/@dvt/adapter-postgres/src/PostgresSchemaManager.ts`
 - `packages/@dvt/adapter-postgres/src/PostgresRunStateCoordinator.ts`
 - `packages/@dvt/adapter-postgres/src/PostgresRunEventStorage.ts`

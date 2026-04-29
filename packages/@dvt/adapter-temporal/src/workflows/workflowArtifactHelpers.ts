@@ -1,11 +1,12 @@
 /**
  * @file packages/@dvt/adapter-temporal/src/workflows/workflowArtifactHelpers.ts
+ * @ownedConcern Execution artifact payload interpretation
  * @baseline ADR-0003: Execution Model
  * @baseline ADR-0032: compiledCodeRef Ownership
  * @baseline ADR-0040: Retry Ownership And Attempt Authority
- * @decision Extract artifact references and retry policy from execution-plan step configuration before event emission
- * @consequence StepStarted payloads carry traceability references without widening the canonical execution plan schema
- * @version 1.2.0
+ * @decision Extract plugin-agnostic artifact references and retry policy before event emission
+ * @consequence StepStarted payloads carry traceability references without making workflow core know plugin step kinds
+ * @version 1.3.0
  */
 import type {
   CompiledCodeRef,
@@ -17,7 +18,6 @@ import type {
 } from '@dvt/contracts';
 import {
   CompiledCodeRefSchema,
-  KNOWN_STEP_KINDS,
   MaterializationEvidenceSchema,
   TransformationFlowRuntimeBindingSchema,
 } from '@dvt/contracts';
@@ -26,17 +26,9 @@ type StepStartedPayload = {
   stepArtifactRef: StepArtifactRef;
 };
 
-const COMPILED_CODE_REF_STEP_KINDS = new Set<string>([
-  KNOWN_STEP_KINDS.DBT_MODEL,
-  KNOWN_STEP_KINDS.DBT_TEST,
-  KNOWN_STEP_KINDS.DBT_SNAPSHOT,
-]);
+const COMPILED_SQL_ARTIFACT_KIND = 'compiled-sql';
 
 export function buildStepStartedPayload(step: ExecutionStep): StepStartedPayload | undefined {
-  if (!COMPILED_CODE_REF_STEP_KINDS.has(step.kind)) {
-    return undefined;
-  }
-
   const compiledCodeRef = extractCompiledCodeRef(step.stepTypeConfig);
   if (!compiledCodeRef) {
     return undefined;
@@ -44,7 +36,7 @@ export function buildStepStartedPayload(step: ExecutionStep): StepStartedPayload
 
   return {
     stepArtifactRef: {
-      artifactKind: 'dbt.compiled-sql',
+      artifactKind: COMPILED_SQL_ARTIFACT_KIND,
       ...compiledCodeRef,
     },
   };
