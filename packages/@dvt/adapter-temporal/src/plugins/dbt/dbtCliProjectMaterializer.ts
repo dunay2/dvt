@@ -55,14 +55,11 @@ async function materializeDbtProject(
 
   try {
     await writeFile(archivePath, bundleBytes);
-    await extractTarball.asyncFile(
-      {
-        cwd: workingDirectory,
-        file: archivePath,
-        gzip: true,
-      },
-      []
-    );
+    await extractTarball({
+      cwd: workingDirectory,
+      file: archivePath,
+      gzip: true,
+    });
     const projectDir = await findDbtProjectDirectory(workingDirectory);
     return {
       projectDir,
