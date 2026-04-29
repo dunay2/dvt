@@ -1,5 +1,28 @@
 # Changelog
 
+## [5.18.0](https://github.com/dunay2/dvt/compare/v5.17.0...v5.18.0) (2026-04-29)
+
+
+### Features
+
+* **web:** Harden Canvas authoring lifecycle ([#1028](https://github.com/dunay2/dvt/issues/1028)) ([1122a86](https://github.com/dunay2/dvt/commit/1122a86446715cb7c0b2ff2351f7c8ed157bc0ed))
+
+
+### Bug Fixes
+
+* **adapters:** Close API tenant QA hardening gaps ([#1033](https://github.com/dunay2/dvt/issues/1033)) ([c0047ca](https://github.com/dunay2/dvt/commit/c0047ca470696ce8d7f38d809fd7214a4bbb7c80))
+* **adapters:** Harden Postgres service access isolation ([#1031](https://github.com/dunay2/dvt/issues/1031)) ([c7a293c](https://github.com/dunay2/dvt/commit/c7a293c41f6cd97e032613ba1889979c1317c11d))
+* **api:** Bootstrap local Temporal posture for dev app ([#1023](https://github.com/dunay2/dvt/issues/1023)) ([fe3129f](https://github.com/dunay2/dvt/commit/fe3129f832f720fd061525a036f194a2fefe230a))
+* **contracts:** Hard-cut provider startRun to PlanRef ([#1025](https://github.com/dunay2/dvt/issues/1025)) ([b55e7a7](https://github.com/dunay2/dvt/commit/b55e7a7e40e9e778263ba24b5a12cab674fb3fb2))
+* **contracts:** Hard-cut runtime provider vocabulary to Temporal ([#1026](https://github.com/dunay2/dvt/issues/1026)) ([49d5a98](https://github.com/dunay2/dvt/commit/49d5a98b8ca388453b9e116a893398ce384a4e17))
+* **temporal:** Harden PlanRef config and startup readiness ([#1041](https://github.com/dunay2/dvt/issues/1041)) ([3eaef36](https://github.com/dunay2/dvt/commit/3eaef3638acded2e0f5d1d76f8ea6c5aa9604f3a))
+* **web:** Allow shell startup through backend degradation ([#1042](https://github.com/dunay2/dvt/issues/1042)) ([f92341c](https://github.com/dunay2/dvt/commit/f92341c364b84b7737e06a50d8264345d84b8bdf))
+* **web:** Close live selected-closure browser proof lane ([#1027](https://github.com/dunay2/dvt/issues/1027)) ([8eebdb0](https://github.com/dunay2/dvt/commit/8eebdb0858cdcb14399342db3b591d9b3f272782))
+* **web:** Complete Canvas Fowler runtime policy hardening ([#1032](https://github.com/dunay2/dvt/issues/1032)) ([f7755b8](https://github.com/dunay2/dvt/commit/f7755b8472604b870f52e908d4317d3feae1e006))
+* **web:** Preserve draft snapshot metadata ([e1c6ba2](https://github.com/dunay2/dvt/commit/e1c6ba2ef26760538680c8799323526ccb738c9b))
+* **web:** Remove Canvas authoring topology drift ([#1030](https://github.com/dunay2/dvt/issues/1030)) ([98e9e62](https://github.com/dunay2/dvt/commit/98e9e62a379f860f8159ac2e652e7aaf7fb959ae))
+* **web:** Resolve Canvas graph strategy drift ([#1029](https://github.com/dunay2/dvt/issues/1029)) ([e4c6702](https://github.com/dunay2/dvt/commit/e4c6702e03719142689b041c1b1f2bceaa1bfb6a))
+
 ## [5.17.0](https://github.com/dunay2/dvt/compare/v5.16.0...v5.17.0) (2026-04-24)
 
 
