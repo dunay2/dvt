@@ -1,7 +1,7 @@
 import React, { act } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { buildDraftSaveConflictResponse } from '../../services/workspace/workspaceGraphDraft.test.fixtures';
+import { buildDraftSaveConflictResponse } from '../../services/workspace/workspaceGraphDraftProtocol.test.fixtures';
 import type { CanvasDraftSession } from './canvasDraftSession';
 import {
   buildRemoteDraftRecord,

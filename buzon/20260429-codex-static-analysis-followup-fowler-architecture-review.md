@@ -42,6 +42,9 @@ from canonical route posture.
   testable outside UI code.
 - **Semantic architecture tests**: the Canvas startup and draft-recovery guard
   checks behavior vocabulary and module roles.
+- **Bounded test fixtures**: workspace graph draft fixtures now model
+  authoring shape, protected protocol envelopes, and expected projection output
+  as separate test-support components.
 - **Scenario-to-test traceability**: this follow-up maps stories to tests and
   invariants.
 - **ADR discipline**: existing ADR and reference-architecture rules apply; no
@@ -84,6 +87,9 @@ model owns command state, and the template renders labels and affordances.
   surfaces: moved copy into locale-aware catalogs.
 - **Test body as fixture factory** in projection and bootstrap tests: moved
   large fixtures and assertions behind helpers.
+- **Fixture grab bag** in `workspaceGraphDraft.test.fixtures.ts`: split into
+  authoring, protocol, and expected projection fixtures, with endpoint truth
+  imported from the production HTTP boundary.
 - **Source-shape-only architecture testing** in prior architecture guard
   posture: added required user-story and review artifacts.
 
@@ -105,6 +111,7 @@ flowchart LR
   Canvas --> Policy["CAS policy objects"]
   Canvas --> DraftPort["Protected draft port"]
   Canvas --> Projection["Semantic and snapshot projections"]
+  Canvas --> Fixtures["Bounded test fixtures"]
 
   Engine["Engine start-run admission"] --> Request["Named admission request"]
   Trace["Traceability lineage"] --> Candidates["Compiled-code-ref candidates"]
@@ -135,6 +142,9 @@ Recommended component grouping:
   separate `/workspace/graph` authority.
 - i18n is documented as a boundary rule: templates receive resolved copy;
   controllers and command policies do not hardcode operator text.
+- Workspace graph draft fixture drift is now documented and guarded; tests no
+  longer import a monolithic fixture that mixes endpoint, protocol, authoring,
+  and projection concerns.
 
 ## Repetitions fixed
 
@@ -144,6 +154,8 @@ Recommended component grouping:
 - Canvas tab-strip replacement labels no longer repeat inside JSX.
 - Test setup no longer repeats positional `undefined` arguments for Temporal
   adapter activity setup.
+- Workspace graph draft endpoint construction no longer repeats inside a test
+  fixture; tests import the production HTTP boundary.
 
 ## Remaining repetitions to watch
 
@@ -167,6 +179,8 @@ Recommended component grouping:
   expressive as the suite grows.
 - **P1: publish a component checklist template**. This makes future local
   guides consistent and cheaper to write.
+- **P1: keep fixture modules named by the production seam they model**. This
+  avoids large test-support modules becoming a second architecture.
 - **P2: add visual regression coverage for startup gate**. This protects the
   mature startup UX after further styling.
 
@@ -182,12 +196,16 @@ Recommended component grouping:
 - A good architecture test validates a semantic promise: protected endpoint,
   route posture, command mode, CAS invariant, i18n source, or presentation
   boundary.
+- Fixture architecture is part of production architecture when fixtures encode
+  API, projection, or protocol expectations; split it before it becomes a
+  hidden integration model.
 
 ## User-story coverage
 
 The branch scenarios are documented in the local user-story guide:
 
 - `docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-user-stories.md`
+- `docs/architecture/components/web/graph/workspace-graph-draft-test-fixture-boundary-user-stories.md`
 
 Branch-adjacent local component guides:
 
@@ -196,6 +214,7 @@ Branch-adjacent local component guides:
 - `docs/architecture/components/lineage-worker/compiled-code-ref-lineage-extraction-component.md`
 - `docs/architecture/components/lineage-worker/compiled-code-ref-lineage-extraction-user-stories.md`
 - `docs/architecture/components/engine/adapters/temporal/temporal-step-plugin-profile.md`
+- `docs/architecture/components/web/graph/workspace-graph-draft-test-fixture-boundary-component.md`
 
 Coverage groups:
 
@@ -203,6 +222,7 @@ Coverage groups:
 - Canvas draft read, empty state, replacement, and conflict recovery;
 - passive presentation and locale-backed copy;
 - protected workspace graph snapshot projection;
+- workspace graph draft fixture boundary;
 - engine run-admission request objects;
 - traceability compiled-code-ref extraction;
 - Temporal adapter named setup options.

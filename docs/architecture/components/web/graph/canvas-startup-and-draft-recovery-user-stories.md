@@ -192,6 +192,20 @@ Acceptance criteria:
   `replace_current`, and `.canvas-node-drag-surface`.
 - Tests reject retired-route shims and duplicated authority paths.
 
+### US-CANVAS-ARCH-002: keep workspace draft test fixtures bounded
+
+As a frontend maintainer, I want workspace graph draft fixtures split by
+authoring shape, protected protocol envelope, and expected projection output,
+so tests do not depend on a broad helper module that mixes unrelated concerns.
+
+Acceptance criteria:
+
+- Authoring draft tests import authoring fixtures.
+- Protected read/save tests import protocol envelope fixtures.
+- Projection tests import expected projection fixtures.
+- Endpoint assertions import the production workspace graph draft HTTP
+  boundary.
+
 ## Scenario Coverage Matrix
 
 | Story                      | Scenario                                        | Primary implementation                                                         | Primary tests                                                                             |
@@ -210,6 +224,7 @@ Acceptance criteria:
 | US-CANVAS-PRESENTATION-002 | Passive tab-strip template                      | `CanvasPlaygroundTabStrip.templates.tsx`                                       | `CanvasPlaygroundTabStrip.test.tsx`, `canvasStartupAndDraftRecovery.architecture.test.ts` |
 | US-CANVAS-PRESENTATION-003 | Drag handle is explicit                         | `canvasNodeMapper.ts`, `DbtNodeComponent.tsx`                                  | `canvasStartupAndDraftRecovery.architecture.test.ts`                                      |
 | US-CANVAS-ARCH-001         | Semantic architecture guard                     | `canvasStartupAndDraftRecovery.architecture.test.ts`                           | `canvasStartupAndDraftRecovery.architecture.test.ts`                                      |
+| US-CANVAS-ARCH-002         | Fixture boundaries                              | `workspaceGraphDraftFixtureBoundaries.architecture.test.ts`                    | `workspaceGraphDraftFixtureBoundaries.architecture.test.ts`                               |
 
 ## TDD Traceability
 

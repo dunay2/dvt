@@ -1,9 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  buildDraftReadDeniedResponse,
-  buildProtectedDraftRecord,
-} from './workspaceGraphDraft.test.fixtures';
+import { buildProtectedDraftRecord } from './workspaceGraphDraftAuthoring.test.fixtures';
+import { buildDraftReadDeniedResponse } from './workspaceGraphDraftProtocol.test.fixtures';
 import {
   projectWorkspaceGraphAuthoringDraftSnapshot,
   projectWorkspaceGraphDraftReadResponseSnapshot,

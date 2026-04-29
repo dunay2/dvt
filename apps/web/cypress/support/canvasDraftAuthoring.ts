@@ -1,12 +1,12 @@
 import {
-  buildDraftReadOkResponse,
   buildProtectedDraftRecord,
   buildWorkspaceGraphAuthoringDraft,
-} from '../../src/app/services/workspace/workspaceGraphDraft.test.fixtures';
+} from '../../src/app/services/workspace/workspaceGraphDraftAuthoring.test.fixtures';
 import {
   WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
   WORKSPACE_GRAPH_DRAFT_INITIAL_REVISION,
 } from '../../src/app/services/workspace/workspaceGraphDraftProtocol';
+import { buildDraftReadOkResponse } from '../../src/app/services/workspace/workspaceGraphDraftProtocol.test.fixtures';
 
 import { stubE2eApi } from './e2eApiStub';
 import { E2E_WORKSPACE_SESSION } from './workspaceSession';

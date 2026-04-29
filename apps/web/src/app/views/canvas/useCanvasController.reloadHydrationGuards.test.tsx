@@ -2,7 +2,7 @@ import React, { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { WorkspaceGraphDraftAuthoringSaveResult } from '../../ports/workspaceGraphDraftAuthoring';
-import { buildDraftSaveSavedResponse } from '../../services/workspace/workspaceGraphDraft.test.fixtures';
+import { buildDraftSaveSavedResponse } from '../../services/workspace/workspaceGraphDraftProtocol.test.fixtures';
 import type { CanvasDraftSession } from './canvasDraftSession';
 import {
   applyTransformationAuthoringFixture,

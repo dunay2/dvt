@@ -1,15 +1,15 @@
 import { describe, expect, it } from 'vitest';
 
 import { createApiWorkspaceGraphDraftAuthoringPort } from './workspaceGraphDraftAuthoring.api';
+import { buildProtectedDraftRecord } from './workspaceGraphDraftAuthoring.test.fixtures';
 import {
   buildDraftReadDeniedResponse,
   buildDraftReadOkResponse,
   buildDraftSaveConflictResponse,
   buildDraftSaveDeniedResponse,
   buildDraftSaveSavedResponse,
-  buildProtectedDraftRecord,
-  buildWorkspaceGraphDraftEndpoint,
-} from './workspaceGraphDraft.test.fixtures';
+} from './workspaceGraphDraftProtocol.test.fixtures';
+import { buildWorkspaceGraphDraftEndpoint } from './workspaceGraphDraftHttp';
 import {
   createApiClientHarness,
   httpErrorResponse,
@@ -24,9 +24,7 @@ import {
 
 installWorkspaceScopeHarness();
 
-function createAuthoringPortHarness(
-  options: Parameters<typeof createApiClientHarness>[0] = {}
-): {
+function createAuthoringPortHarness(options: Parameters<typeof createApiClientHarness>[0] = {}): {
   requestRaw: NonNullable<Parameters<typeof createApiClientHarness>[0]>['requestRaw'];
   port: ReturnType<typeof createApiWorkspaceGraphDraftAuthoringPort>;
 } {

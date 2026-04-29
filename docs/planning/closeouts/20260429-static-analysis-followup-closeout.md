@@ -854,3 +854,131 @@ Green case:
   passed, 5 subtests.
 - `pnpm docs:sync` passed; generated documentation indexes were already up to
   date.
+
+## 2026-04-29 Workspace Graph Draft Fixture Boundary Follow-Up
+
+### Think-First Analysis
+
+Problem summary: `workspaceGraphDraft.test.fixtures.ts` is a test-support
+module, but it currently mixes HTTP endpoint expectations, authoring draft
+fixtures, protected read/write envelope fixtures, projection expected objects,
+and projected presentation-record helpers. That makes the test surface harder
+to read and lets future changes hide unrelated fixture drift behind one large
+method warning.
+
+Root cause: the workspace graph draft test surface grew from protected draft
+read adoption into projection and Canvas recovery work. The first shared
+fixture file kept accepting new helper responsibilities instead of forcing
+local fixture modules to match the production boundaries.
+
+Constraints and invariants:
+
+- `AGENTS.md` requires governance-first execution, no hidden debt, no stubs,
+  and real validation evidence.
+- `docs/guides/ai-work-protocol.md` requires a think-first note before code
+  changes and a validation closeout.
+- `docs/architecture/reference-architecture.md` keeps one runtime truth per
+  boundary and favors explicit seams.
+- Workspace graph draft docs and contracts remain unchanged; this is a test
+  fixture modularization only.
+- The previous no-legacy posture applies: do not leave a compatibility barrel
+  named `workspaceGraphDraft.test.fixtures.ts`.
+
+Options considered:
+
+- Keep the file and suppress or ignore the static-analysis warning. Rejected
+  because the concern mix is real and would keep a broad fixture dependency.
+- Split helpers into folders. Rejected for this pass because the workspace
+  service test folder already uses file-level test harnesses and a folder adds
+  navigation overhead without a new component boundary.
+- Split the monolithic fixture into concern-named sibling modules and update
+  imports directly. Selected because it matches SRP, removes the compatibility
+  barrel, and keeps tests close to their production seams.
+
+Selected option and rationale: add a workspace fixture-boundary architecture
+test, then split the monolith into authoring draft fixtures, protected protocol
+envelope fixtures, and projection expected fixtures. Endpoint expectations
+should import the production HTTP endpoint builder directly instead of routing
+through a test fixture.
+
+### Pre-Implementation Brief
+
+Mode: Slim.
+
+Scope:
+
+- Add a workspace fixture-boundary architecture test.
+- Split `apps/web/src/app/services/workspace/workspaceGraphDraft.test.fixtures.ts`
+  into concern-specific test fixtures.
+- Update workspace and Canvas tests to import the concern they use directly.
+- Delete the monolithic fixture file.
+
+Out of scope:
+
+- Runtime behavior changes.
+- Contract changes, API endpoint changes, or ADR updates.
+- New compatibility shims or barrels.
+
+Validation plan:
+
+- Red: run the new fixture-boundary architecture test before the split.
+- Green: rerun the same test after the split.
+- Run focused workspace graph draft tests and Canvas tests that consume the
+  fixtures.
+- Run `pnpm --filter @dvt/web typecheck`, `pnpm lint`, and
+  `pnpm verify:prepush`.
+
+### Implementation Outcome
+
+Applied changes:
+
+- Deleted the monolithic
+  `apps/web/src/app/services/workspace/workspaceGraphDraft.test.fixtures.ts`.
+- Added `workspaceGraphDraftAuthoring.test.fixtures.ts` for authoring draft
+  and protected record fixtures.
+- Added `workspaceGraphDraftProtocol.test.fixtures.ts` for protected read and
+  save envelope fixtures.
+- Added `workspaceGraphDraftProjectionExpected.test.fixtures.ts` for expected
+  semantic graph projection fixtures.
+- Added `workspaceGraphDraftFixtureBoundaries.architecture.test.ts` to guard
+  the fixture split, owned-concern docblocks, and local documentation.
+- Updated workspace, Canvas, and Cypress tests to import the exact fixture
+  concern they consume.
+- Added the local component guide
+  `docs/architecture/components/web/graph/workspace-graph-draft-test-fixture-boundary-component.md`.
+- Added the local user-story guide
+  `docs/architecture/components/web/graph/workspace-graph-draft-test-fixture-boundary-user-stories.md`.
+- Updated the Fowler mailbox review and Canvas component guide/story matrix.
+
+No ADR was created because the work does not introduce a new runtime contract,
+endpoint, persistence model, public behavior, or cross-system decision. It
+applies existing reference-architecture rules to test-support boundaries.
+
+### Validation Evidence
+
+Executed validation:
+
+- Red: `pnpm --filter @dvt/web test -- src/app/services/workspace/workspaceGraphDraftFixtureBoundaries.architecture.test.ts`
+  failed because `workspaceGraphDraft.test.fixtures.ts` still existed.
+- Green: the same command passed with 2 tests after the split and docs update.
+- `pnpm --filter @dvt/web test -- src/app/services/workspace/workspaceGraphDraftFixtureBoundaries.architecture.test.ts src/app/services/workspace/workspaceGraphDraftProjection.test.ts src/app/services/workspace/workspaceGraphDraftSnapshotProjection.test.ts src/app/services/workspace/workspaceGraphDraftAuthoring.api.test.ts src/app/services/workspace/workspaceService.api.test.ts src/app/views/canvas/useCanvasController.activeDraftMutations.test.tsx src/app/views/canvas/useCanvasController.draftLifecycle.conflictState.test.tsx src/app/views/canvas/useCanvasController.negative.test.tsx src/app/views/canvas/useCanvasController.reloadHydrationGuards.test.tsx src/app/views/canvas/useCanvasController.reloadConflictRecovery.test.tsx`
+  - passed, 10 files and 37 tests.
+- `pnpm --filter @dvt/web test -- src/app/views/canvas/canvasStartupAndDraftRecovery.architecture.test.ts src/app/services/workspace/workspaceGraphDraftFixtureBoundaries.architecture.test.ts`
+  - passed, 2 files and 11 tests.
+- `pnpm docs:sync` - passed.
+- `pnpm docs:status:generate` - passed and updated generated code state.
+- `pnpm --filter @dvt/web typecheck` - passed.
+- `pnpm lint` - passed after updating the Cypress support import that still
+  referenced the deleted fixture.
+- `pnpm lint:md:changed` - passed.
+- `pnpm exec markdownlint-cli2 "docs/architecture/components/web/graph/workspace-graph-draft-test-fixture-boundary-component.md" "docs/architecture/components/web/graph/workspace-graph-draft-test-fixture-boundary-user-stories.md"`
+  - passed for the newly added fixture-boundary docs.
+- `pnpm verify:prepush` - passed; included docs governance, changed-file
+  checks, forbidden tracked-file check, and root TypeScript pre-push
+  typecheck.
+
+### No-Debt And No-Stub Evidence
+
+No compatibility barrel, stub, placeholder, TODO/FIXME marker, fake
+implementation, hook bypass, rule relaxation, or hidden debt entry was
+introduced.

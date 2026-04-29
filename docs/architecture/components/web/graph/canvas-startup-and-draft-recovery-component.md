@@ -254,11 +254,14 @@ flowchart LR
 The local architecture guard is:
 
 - `apps/web/src/app/views/canvas/canvasStartupAndDraftRecovery.architecture.test.ts`
+- `apps/web/src/app/services/workspace/workspaceGraphDraftFixtureBoundaries.architecture.test.ts`
 
 It validates semantics, not only barrel thinness:
 
 - `failed` posture can complete bootstrap;
 - protected draft endpoint and scoped URL are canonical;
+- workspace graph draft test fixtures are split by authoring, protected
+  protocol, and expected projection concerns;
 - replacement requires `replace_current` and uses current revision CAS;
 - replacement eligibility, draft input construction, save success, and save
   conflict are held behind named semantic helpers outside the command

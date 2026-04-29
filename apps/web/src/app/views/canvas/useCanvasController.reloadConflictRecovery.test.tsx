@@ -4,9 +4,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
   buildDraftReadOkResponse,
-  buildProtectedDraftRecord,
   buildDraftSaveConflictResponse,
-} from '../../services/workspace/workspaceGraphDraft.test.fixtures';
+} from '../../services/workspace/workspaceGraphDraftProtocol.test.fixtures';
+import { buildProtectedDraftRecord } from '../../services/workspace/workspaceGraphDraftAuthoring.test.fixtures';
 import type { CanvasDraftSession } from './canvasDraftSession';
 import {
   buildRemoteDraftRecord,

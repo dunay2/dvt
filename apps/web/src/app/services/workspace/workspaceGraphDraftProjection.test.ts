@@ -1,9 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  buildExpectedWorkspaceGraphDraftSemanticGraph,
-  buildProtectedDraftRecord,
-} from './workspaceGraphDraft.test.fixtures';
+import { buildProtectedDraftRecord } from './workspaceGraphDraftAuthoring.test.fixtures';
+import { buildExpectedWorkspaceGraphDraftSemanticGraph } from './workspaceGraphDraftProjectionExpected.test.fixtures';
 import {
   projectWorkspaceGraphAuthoringDraft,
   projectWorkspaceGraphAuthoringDraftSemanticGraph,
