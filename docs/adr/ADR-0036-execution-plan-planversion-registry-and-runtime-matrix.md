@@ -13,8 +13,8 @@ Accepted.
 
 ## Context
 
-`ExecutionPlanV1.metadata.planVersion` was modeled as the string literal `'2.3'`
-inside `@dvt/contracts`.
+`ExecutionPlanV1.metadata.planVersion` was previously modeled as a non-canonical
+inline string literal inside `@dvt/contracts`.
 
 That shape created two problems:
 
@@ -23,9 +23,10 @@ That shape created two problems:
 - runtime compatibility was implicit and inferred ad hoc instead of being
   governed by an executable compatibility source.
 
-The result was effectively an implicit cutover model. A future plan version
-could not be represented as a deliberate contract-line change plus an explicit
-runtime admission policy.
+The result was effectively an implicit cutover model. During active
+development, this repository uses only `planVersion = 1.0`; any future
+plan-version line is outside the current development contract and requires a
+fresh governance decision before it becomes active.
 
 ADR-0035 already defines who owns public planner contract evolution. This ADR
 defines the concrete mechanism for `planVersion` evolution itself.
@@ -43,9 +44,9 @@ defines the concrete mechanism for `planVersion` evolution itself.
 `PlanCore` and `ExecutionPlanV1` are expressed as versioned unions derived from
 that registry instead of a single inline literal type.
 
-This means adding a new supported plan version is done by extending the
-registry and adding the corresponding versioned schema entry, not by replacing a
-hardcoded literal across the package.
+During active development, the registry contains exactly the single active
+`1.0` plan-version line. The registry exists to avoid scattered literals, not
+to imply that multiple plan-version lines are currently active.
 
 ### 2. Runtime support is governed by an explicit admission matrix
 
@@ -69,9 +70,11 @@ The planner MUST emit `CURRENT_EXECUTION_PLAN_VERSION`.
 The planner MUST NOT reintroduce an inline string literal for
 `metadata.planVersion`.
 
-### 4. Adding a new plan version requires a bounded change set
+### 4. New plan-version lines are out of current development scope
 
-Adding a new supported plan version now requires:
+Adding any supported plan version beyond `1.0` is not part of the current
+development contract. If that changes, the work requires a bounded governance
+change set:
 
 1. Extend the registry in `@dvt/contracts`.
 2. Add the versioned schema entry for the new plan shape.
@@ -81,8 +84,9 @@ Adding a new supported plan version now requires:
    admission is ready.
 5. Add or update tests that prove acceptance/rejection paths.
 
-The contracts package major version does not need to change solely because a new
-plan version is added to the union.
+The contracts package major version does not need to change solely because a
+future plan-version line is introduced, but that future line still requires
+explicit ADR, matrix, tests, evidence, and risk updates before becoming active.
 
 ## Consequences
 
@@ -98,8 +102,8 @@ plan version is added to the union.
 
 - Adds two governance surfaces that must stay aligned: contract registry and
   runtime matrix.
-- Adding a new plan version now requires touching schemas and runtime policy on
-  purpose, which is extra ceremony but intentional.
+- Any future plan-version line requires touching governance, schemas, tests, and
+  runtime policy on purpose, which is extra ceremony but intentional.
 - Older plan/schema pairs remain undeclared unless they are the active pair.
 
 ## Verification

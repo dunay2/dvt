@@ -9,9 +9,12 @@ import {
 
 import { VALID_EXECUTION_PLAN_V2_FIXTURE } from './fixtures/planner-contract.fixtures';
 
+const UNSUPPORTED_PLAN_VERSION = `${CURRENT_EXECUTION_PLAN_VERSION}-unsupported`;
+
 describe('contracts: planVersion governance surface', () => {
   it('expone un registro versionado para los planes soportados', () => {
-    expect(SUPPORTED_EXECUTION_PLAN_VERSIONS).toContain(CURRENT_EXECUTION_PLAN_VERSION);
+    expect(CURRENT_EXECUTION_PLAN_VERSION).toBe('1.0');
+    expect(SUPPORTED_EXECUTION_PLAN_VERSIONS).toEqual([CURRENT_EXECUTION_PLAN_VERSION]);
     expect(Object.keys(EXECUTION_PLAN_VERSIONED_SCHEMAS)).toEqual(
       SUPPORTED_EXECUTION_PLAN_VERSIONS
     );
@@ -29,7 +32,7 @@ describe('contracts: planVersion governance surface', () => {
       ...VALID_EXECUTION_PLAN_V2_FIXTURE,
       metadata: {
         ...VALID_EXECUTION_PLAN_V2_FIXTURE.metadata,
-        planVersion: '9.9',
+        planVersion: UNSUPPORTED_PLAN_VERSION,
       },
     });
 

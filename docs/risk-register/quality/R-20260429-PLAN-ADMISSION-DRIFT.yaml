@@ -14,12 +14,15 @@ context: >
   is removed from engine admission, so older, future, or malformed schema lines fail before plan
   fetch or adapter dispatch.
 risk: >
-  Future planner or contract changes could add a new `planVersion` or `schemaVersion` without
-  updating the admission matrix, docs, and negative tests together. That would either reject a valid
-  hard-cut contract change or reintroduce late runtime failures if a consumer bypasses the matrix.
+  Future planner or contract changes could drift away from the development-only `planVersion = 1.0`
+  rule, or change `schemaVersion` without updating the admission matrix, docs, and negative tests
+  together. That would either reject a valid hard-cut contract change or reintroduce late runtime
+  failures if a consumer bypasses the matrix.
 mitigations:
   - 'Keep `PlanAdmission.v1.ts` as the single executable matrix for admitted pairs.'
-  - 'Require a positive and negative test for every new planVersion/schemaVersion pair.'
+  - 'Keep `planVersion = 1.0` as the only active development plan-version line.'
+  - 'Require positive and negative tests for every admitted schemaVersion under the single 1.0
+    planVersion line.'
   - 'Keep engine start-run tests proving unsupported pairs fail before adapter dispatch.'
   - 'Keep plan-admission-matrix.architecture.test.ts guarding docs, stories, mailbox analysis, and
     naming drift.'

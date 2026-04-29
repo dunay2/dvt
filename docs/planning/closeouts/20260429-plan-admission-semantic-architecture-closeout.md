@@ -45,13 +45,14 @@ planning_type: closeout
   and architecture tests, not prose alone.
 - Risks and mitigations: docs can drift from code; the new architecture test
   validates sections, stories, mailbox analysis, docblocks, and retired naming.
-- Out of scope: admitting a new plan/schema pair, changing engine error types,
+- Out of scope: admitting a new plan-version line, changing engine error types,
   or introducing a new ADR.
 - Validation plan: run contracts targeted tests, contracts full tests,
   engine targeted tests, docs generators, ARC check, and `pnpm verify:prepush`.
-- Test coverage plan: negative schema, older schema, unknown plan version,
-  blank values, no-dispatch behavior, missing semantic docs, and retired naming
-  drift.
+- Test coverage plan: negative schema, older schema, non-`1.0` plan version,
+  blank values, no-dispatch behavior, missing semantic docs, retired naming
+  drift, and active-surface drift away from the development-only `1.0`
+  plan-version line.
 - Libraries evaluated: none evaluated; this is repository-governed docs and
   architecture-test hardening, not a new runtime implementation.
 

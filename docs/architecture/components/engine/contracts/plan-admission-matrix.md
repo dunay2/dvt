@@ -71,6 +71,8 @@ flowchart LR
 
 - Start-run admission MUST reject any undeclared
   `(planVersion, schemaVersion)` pair before adapter dispatch.
+- During development, `planVersion` is fixed to `1.0`; no other plan-version
+  literal is an active example or admitted value.
 - A valid `planVersion` does not make an unknown `schemaVersion` executable.
 - A valid `schemaVersion` does not make an unknown `planVersion` executable.
 - `schemaVersion = v1.future` is unsupported.
@@ -146,7 +148,7 @@ drift.
 
 Replacing the active pair requires a deliberate bounded change:
 
-1. Extend the plan-version registry if `planVersion` changes.
+1. Keep `planVersion = 1.0` as the single development plan-version line.
 2. Extend the schema/contract definition if `schemaVersion` changes.
 3. Replace the admitted pair in `EXECUTION_PLAN_ADMISSION_MATRIX`.
 4. Add negative and positive tests proving old, future, and malformed pairs

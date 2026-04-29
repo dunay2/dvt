@@ -10,10 +10,12 @@ import { describe, expect, it } from 'vitest';
 const REPO_ROOT = join(import.meta.dirname, '../../../..');
 const CONTRACTS_SRC_ROOT = join(import.meta.dirname, '../src');
 const PLAN_ADMISSION_SOURCE = join(CONTRACTS_SRC_ROOT, 'contracts/planner/PlanAdmission.v1.ts');
+const PLAN_VERSION_SOURCE = join(CONTRACTS_SRC_ROOT, 'contracts/planner/PlanVersion.v1.ts');
 const PLAN_ADMISSION_CONTRACT_TEST = join(
   import.meta.dirname,
   'plan-admission-matrix.contract.test.ts'
 );
+const PLAN_VERSION_CONTRACT_TEST = join(import.meta.dirname, 'plan-version.contract.test.ts');
 const ENGINE_POLICY_SOURCE = join(
   REPO_ROOT,
   'packages/@dvt/engine/src/contracts/PlanAdmissionPolicy.ts'
@@ -33,7 +35,9 @@ const MAILBOX_REVIEW = join(
 
 const ACTIVE_SURFACES = [
   PLAN_ADMISSION_SOURCE,
+  PLAN_VERSION_SOURCE,
   PLAN_ADMISSION_CONTRACT_TEST,
+  PLAN_VERSION_CONTRACT_TEST,
   ENGINE_POLICY_SOURCE,
   COMPONENT_GUIDE,
   USER_STORIES_DOC,
@@ -46,6 +50,14 @@ const RETIRED_NAME_FRAGMENTS = [
   'SUPPORTED_EXECUTION_PLAN_' + 'COMPATIBILITY',
   'assertSupportedPlan' + 'Compatibility',
   'isSupportedExecutionPlan' + 'Compatibility',
+] as const;
+const NON_CURRENT_PLAN_VERSION_LITERALS = [
+  '2' + '.3',
+  '9' + '.0',
+  '9' + '.9',
+  '3' + '.0',
+  '2' + '.30',
+  '1' + '.0.0',
 ] as const;
 
 describe('ExecutionPlan admission matrix architecture', () => {
@@ -134,6 +146,17 @@ describe('ExecutionPlan admission matrix architecture', () => {
       const source = readFileSync(path, 'utf8');
       for (const retiredName of RETIRED_NAME_FRAGMENTS) {
         expect(source, path).not.toContain(retiredName);
+      }
+    }
+  });
+
+  it('keeps active planVersion examples on the development-only 1.0 line', () => {
+    for (const path of ACTIVE_SURFACES) {
+      if (!existsSync(path)) continue;
+
+      const source = readFileSync(path, 'utf8');
+      for (const retiredVersion of NON_CURRENT_PLAN_VERSION_LITERALS) {
+        expect(source, path).not.toContain(retiredVersion);
       }
     }
   });

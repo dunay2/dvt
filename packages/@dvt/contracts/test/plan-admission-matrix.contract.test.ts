@@ -11,6 +11,8 @@ import {
   SUPPORTED_EXECUTION_PLAN_ADMISSION_PAIRS,
 } from '../src/index.js';
 
+const UNSUPPORTED_PLAN_VERSION = `${CURRENT_EXECUTION_PLAN_VERSION}-unsupported`;
+
 describe('ExecutionPlan admission matrix', () => {
   it('declares the current planVersion/schemaVersion pair as the canonical supported pair', () => {
     expect(SUPPORTED_EXECUTION_PLAN_ADMISSION_PAIRS).toEqual([
@@ -41,7 +43,7 @@ describe('ExecutionPlan admission matrix', () => {
       expected: false,
     },
     {
-      planVersion: '9.0',
+      planVersion: UNSUPPORTED_PLAN_VERSION,
       schemaVersion: CURRENT_EXECUTION_PLAN_SCHEMA_VERSION,
       expected: false,
     },
