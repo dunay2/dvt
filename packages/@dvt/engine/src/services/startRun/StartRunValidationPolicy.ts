@@ -6,7 +6,7 @@ import {
   InvalidRunIdError,
   RunAlreadyExistsError,
 } from '../../contracts/errors.js';
-import { assertSupportedPlanCompatibility } from '../../contracts/PlanCompatibilityPolicy.js';
+import { assertAdmittedPlanPair } from '../../contracts/PlanAdmissionPolicy.js';
 import { assertSupportedPlanVersion } from '../../contracts/PlanVersionPolicy.js';
 import type { IRunStateStoreRead } from '../../ports/IRunStateStore.js';
 import type { IRunAccessPolicy } from '../../security/RunAccessPolicy.js';
@@ -23,7 +23,7 @@ export class StartRunValidationPolicy {
     await this.deps.policy.assertTenantAccess(context.tenantId);
     this.deps.policy.validatePlanRef(planRef);
     assertSupportedPlanVersion(planRef.planVersion);
-    assertSupportedPlanCompatibility({
+    assertAdmittedPlanPair({
       planVersion: planRef.planVersion,
       schemaVersion: planRef.schemaVersion,
     });

@@ -1,5 +1,5 @@
 ---
-title: Plan Compatibility Matrix
+title: Plan Admission Matrix
 status: Active
 owner: Architecture / Contracts / Engine
 last_reviewed: 2026-04-29
@@ -26,16 +26,16 @@ ADR-0012, ADR-0017, ADR-0036, and the planner contract pack.
 
 Code surface:
 
-- `packages/@dvt/contracts/src/contracts/planner/PlanCompatibility.v1.ts`
-- `packages/@dvt/engine/src/contracts/PlanCompatibilityPolicy.ts`
+- `packages/@dvt/contracts/src/contracts/planner/PlanAdmission.v1.ts`
+- `packages/@dvt/engine/src/contracts/PlanAdmissionPolicy.ts`
 
 Exports:
 
-- `SUPPORTED_EXECUTION_PLAN_COMPATIBILITY_PAIRS`
-- `EXECUTION_PLAN_COMPATIBILITY_MATRIX`
-- `EXECUTION_PLAN_COMPATIBILITY_REGISTRY`
-- `isSupportedExecutionPlanCompatibility(planVersion, schemaVersion)`
-- `assertSupportedPlanCompatibility({ planVersion, schemaVersion })`
+- `SUPPORTED_EXECUTION_PLAN_ADMISSION_PAIRS`
+- `EXECUTION_PLAN_ADMISSION_MATRIX`
+- `EXECUTION_PLAN_ADMISSION_REGISTRY`
+- `isAdmittedExecutionPlanPair(planVersion, schemaVersion)`
+- `assertAdmittedPlanPair({ planVersion, schemaVersion })`
 
 Current admitted pair:
 
@@ -50,7 +50,7 @@ Current admitted pair:
 - A valid `planVersion` does not make an unknown `schemaVersion` executable.
 - A valid `schemaVersion` does not make an unknown `planVersion` executable.
 - `schemaVersion = v1.future` is unsupported.
-- The engine MUST NOT use a broad `v1.*` prefix rule as runtime compatibility
+- The engine MUST NOT use a broad `v1.*` prefix rule as runtime admission
   truth.
 - Older plan/schema pairs remain undeclared unless they are the active pair.
 
@@ -59,8 +59,8 @@ Current admitted pair:
 ```mermaid
 stateDiagram-v2
   [*] --> PlanRefParsed
-  PlanRefParsed --> Rejected: pair not in compatibility matrix
-  PlanRefParsed --> Admitted: pair in compatibility matrix
+  PlanRefParsed --> Rejected: pair not in admission matrix
+  PlanRefParsed --> Admitted: pair in admission matrix
   Rejected --> [*]: typed InvalidSchemaVersionError or unsupported planVersion
   Admitted --> FetchPlanBytes
   FetchPlanBytes --> ProviderDispatch
@@ -72,12 +72,12 @@ stateDiagram-v2
 sequenceDiagram
   participant Caller
   participant Engine as StartRun admission
-  participant Matrix as Plan compatibility matrix
+  participant Matrix as Plan admission matrix
   participant Fetcher as Plan fetcher
   participant Adapter as Provider adapter
 
   Caller->>Engine: startRun(PlanRef)
-  Engine->>Matrix: assertSupportedPlanCompatibility(pair)
+  Engine->>Matrix: assertAdmittedPlanPair(pair)
   alt unsupported pair
     Matrix-->>Caller: reject before fetch/dispatch
   else supported pair
@@ -98,7 +98,7 @@ Replacing the active pair requires a deliberate bounded change:
 
 1. Extend the plan-version registry if `planVersion` changes.
 2. Extend the schema/contract definition if `schemaVersion` changes.
-3. Replace the admitted pair in `EXECUTION_PLAN_COMPATIBILITY_MATRIX`.
+3. Replace the admitted pair in `EXECUTION_PLAN_ADMISSION_MATRIX`.
 4. Add negative and positive tests proving old, future, and malformed pairs
    reject.
 5. Update ARC-2 evidence and risk entries for contract or engine changes.

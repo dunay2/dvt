@@ -28,16 +28,16 @@ export {
 } from './contracts/planner/PlanVersion.v1.js';
 export type { SupportedPlanVersion } from './contracts/planner/PlanVersion.v1.js';
 export {
-  EXECUTION_PLAN_COMPATIBILITY_MATRIX,
-  EXECUTION_PLAN_COMPATIBILITY_REGISTRY,
-  isSupportedExecutionPlanCompatibility,
-  SUPPORTED_EXECUTION_PLAN_COMPATIBILITY_PAIRS,
-} from './contracts/planner/PlanCompatibility.v1.js';
+  EXECUTION_PLAN_ADMISSION_MATRIX,
+  EXECUTION_PLAN_ADMISSION_REGISTRY,
+  isAdmittedExecutionPlanPair,
+  SUPPORTED_EXECUTION_PLAN_ADMISSION_PAIRS,
+} from './contracts/planner/PlanAdmission.v1.js';
 export type {
-  ExecutionPlanCompatibilityDescriptor,
-  ExecutionPlanCompatibilityPair,
+  ExecutionPlanAdmissionDescriptor,
+  ExecutionPlanAdmissionPair,
   SupportedPlanSchemaVersion,
-} from './contracts/planner/PlanCompatibility.v1.js';
+} from './contracts/planner/PlanAdmission.v1.js';
 export type {
   ExecutionPlan,
   ExecutionStep,

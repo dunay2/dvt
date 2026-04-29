@@ -101,8 +101,7 @@ But the normative design is to reject **pre-bootstrap**.
 
 ### 4) Shared Admission Matrix - Exact Pair Matching
 
-A canonical compatibility helper MUST exist in the shared contract/runtime
-surface.
+A canonical admission helper MUST exist in the shared contract/runtime surface.
 
 It MUST:
 
@@ -117,11 +116,11 @@ class InvalidSchemaVersionError extends Error {
   }
 }
 
-export function assertSupportedPlanCompatibility(input: {
+export function assertAdmittedPlanPair(input: {
   planVersion: string;
   schemaVersion: string;
 }): void {
-  if (!isSupportedExecutionPlanCompatibility(input.planVersion, input.schemaVersion)) {
+  if (!isAdmittedExecutionPlanPair(input.planVersion, input.schemaVersion)) {
     throw new InvalidSchemaVersionError(input.schemaVersion);
   }
 }
@@ -132,7 +131,7 @@ paths.
 
 ---
 
-### 5) Machine-Readable Compatibility Matrix + JSON Schema
+### 5) Machine-Readable Admission Matrix + JSON Schema
 
 A machine-readable compatibility file MUST exist:
 

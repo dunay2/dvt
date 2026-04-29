@@ -1,5 +1,5 @@
 /**
- * Owned concern: publish the executable compatibility truth that binds
+ * Owned concern: publish the executable admission truth that binds
  * `ExecutionPlan.metadata.planVersion` to `ExecutionPlan.metadata.schemaVersion`.
  */
 import {
@@ -10,29 +10,29 @@ import { CURRENT_EXECUTION_PLAN_VERSION, type SupportedPlanVersion } from './Pla
 
 export type SupportedPlanSchemaVersion = typeof CURRENT_EXECUTION_PLAN_SCHEMA_VERSION;
 
-export interface ExecutionPlanCompatibilityPair {
+export interface ExecutionPlanAdmissionPair {
   readonly planVersion: SupportedPlanVersion;
   readonly schemaVersion: SupportedPlanSchemaVersion;
 }
 
-export interface ExecutionPlanCompatibilityDescriptor extends ExecutionPlanCompatibilityPair {
+export interface ExecutionPlanAdmissionDescriptor extends ExecutionPlanAdmissionPair {
   readonly contractVersion: typeof CURRENT_EXECUTION_PLAN_CONTRACT_VERSION;
   readonly status: 'current';
   readonly notes: string;
 }
 
-export const SUPPORTED_EXECUTION_PLAN_COMPATIBILITY_PAIRS = [
+export const SUPPORTED_EXECUTION_PLAN_ADMISSION_PAIRS = [
   {
     planVersion: CURRENT_EXECUTION_PLAN_VERSION,
     schemaVersion: CURRENT_EXECUTION_PLAN_SCHEMA_VERSION,
   },
-] as const satisfies readonly ExecutionPlanCompatibilityPair[];
+] as const satisfies readonly ExecutionPlanAdmissionPair[];
 
-export const EXECUTION_PLAN_COMPATIBILITY_MATRIX = {
+export const EXECUTION_PLAN_ADMISSION_MATRIX = {
   [CURRENT_EXECUTION_PLAN_VERSION]: [CURRENT_EXECUTION_PLAN_SCHEMA_VERSION],
 } as const satisfies Record<SupportedPlanVersion, readonly SupportedPlanSchemaVersion[]>;
 
-export const EXECUTION_PLAN_COMPATIBILITY_REGISTRY = {
+export const EXECUTION_PLAN_ADMISSION_REGISTRY = {
   [`${CURRENT_EXECUTION_PLAN_VERSION}:${CURRENT_EXECUTION_PLAN_SCHEMA_VERSION}`]: {
     planVersion: CURRENT_EXECUTION_PLAN_VERSION,
     schemaVersion: CURRENT_EXECUTION_PLAN_SCHEMA_VERSION,
@@ -40,14 +40,14 @@ export const EXECUTION_PLAN_COMPATIBILITY_REGISTRY = {
     status: 'current',
     notes: 'Current executable pair for planner-emitted ExecutionPlan records.',
   },
-} as const satisfies Record<string, ExecutionPlanCompatibilityDescriptor>;
+} as const satisfies Record<string, ExecutionPlanAdmissionDescriptor>;
 
-export function isSupportedExecutionPlanCompatibility(
+export function isAdmittedExecutionPlanPair(
   planVersion: string,
   schemaVersion: string
 ): planVersion is SupportedPlanVersion {
-  const supportedSchemas =
-    EXECUTION_PLAN_COMPATIBILITY_MATRIX[planVersion as SupportedPlanVersion] ?? [];
+  const admittedSchemas =
+    EXECUTION_PLAN_ADMISSION_MATRIX[planVersion as SupportedPlanVersion] ?? [];
 
-  return supportedSchemas.includes(schemaVersion as SupportedPlanSchemaVersion);
+  return admittedSchemas.includes(schemaVersion as SupportedPlanSchemaVersion);
 }

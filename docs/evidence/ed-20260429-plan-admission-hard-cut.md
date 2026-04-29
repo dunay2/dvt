@@ -1,5 +1,5 @@
 ---
-title: Plan compatibility admission hardening
+title: Plan admission hard-cut
 status: Accepted
 date: 2026-04-29
 owners:
@@ -8,23 +8,23 @@ owners:
 arc_level: ARC-2
 breaking: false
 code_refs:
-  - packages/@dvt/contracts/src/contracts/planner/PlanCompatibility.v1.ts
-  - packages/@dvt/engine/src/contracts/PlanCompatibilityPolicy.ts
+  - packages/@dvt/contracts/src/contracts/planner/PlanAdmission.v1.ts
+  - packages/@dvt/engine/src/contracts/PlanAdmissionPolicy.ts
   - packages/@dvt/engine/src/services/startRun/StartRunValidationPolicy.ts
 evidence:
   tests:
-    - pnpm --filter @dvt/contracts test -- plan-compatibility-matrix.contract.test.ts
+    - pnpm --filter @dvt/contracts test -- plan-admission-matrix.contract.test.ts
     - pnpm --filter @dvt/engine test -- WorkflowEngine.test.ts
 ---
 
 # Summary
 
 This evidence records the ARC-2 proof for strict start-run admission over the
-`ExecutionPlan` compatibility pair `(planVersion, schemaVersion)`.
+`ExecutionPlan` admission pair `(planVersion, schemaVersion)`.
 
 # What changed
 
-- Added an executable compatibility matrix in `@dvt/contracts`.
+- Added an executable admission matrix in `@dvt/contracts`.
 - Added an engine policy that fails closed when a `PlanRef` names an
   unsupported pair.
 - Replaced the previous broad `v1.*` schema-prefix admission with matrix-backed

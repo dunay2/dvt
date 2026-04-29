@@ -3,20 +3,20 @@ import { describe, expect, it } from 'vitest';
 import {
   CURRENT_EXECUTION_PLAN_SCHEMA_VERSION,
   CURRENT_EXECUTION_PLAN_VERSION,
-  EXECUTION_PLAN_COMPATIBILITY_MATRIX,
-  isSupportedExecutionPlanCompatibility,
-  SUPPORTED_EXECUTION_PLAN_COMPATIBILITY_PAIRS,
+  EXECUTION_PLAN_ADMISSION_MATRIX,
+  isAdmittedExecutionPlanPair,
+  SUPPORTED_EXECUTION_PLAN_ADMISSION_PAIRS,
 } from '../src/index.js';
 
-describe('ExecutionPlan compatibility matrix', () => {
+describe('ExecutionPlan admission matrix', () => {
   it('declares the current planVersion/schemaVersion pair as the canonical supported pair', () => {
-    expect(SUPPORTED_EXECUTION_PLAN_COMPATIBILITY_PAIRS).toEqual([
+    expect(SUPPORTED_EXECUTION_PLAN_ADMISSION_PAIRS).toEqual([
       {
         planVersion: CURRENT_EXECUTION_PLAN_VERSION,
         schemaVersion: CURRENT_EXECUTION_PLAN_SCHEMA_VERSION,
       },
     ]);
-    expect(EXECUTION_PLAN_COMPATIBILITY_MATRIX).toMatchObject({
+    expect(EXECUTION_PLAN_ADMISSION_MATRIX).toMatchObject({
       [CURRENT_EXECUTION_PLAN_VERSION]: [CURRENT_EXECUTION_PLAN_SCHEMA_VERSION],
     });
   });
@@ -26,6 +26,11 @@ describe('ExecutionPlan compatibility matrix', () => {
       planVersion: CURRENT_EXECUTION_PLAN_VERSION,
       schemaVersion: CURRENT_EXECUTION_PLAN_SCHEMA_VERSION,
       expected: true,
+    },
+    {
+      planVersion: CURRENT_EXECUTION_PLAN_VERSION,
+      schemaVersion: 'v1.0',
+      expected: false,
     },
     {
       planVersion: CURRENT_EXECUTION_PLAN_VERSION,
@@ -50,7 +55,7 @@ describe('ExecutionPlan compatibility matrix', () => {
   ])(
     'returns $expected for planVersion=$planVersion schemaVersion=$schemaVersion',
     ({ planVersion, schemaVersion, expected }) => {
-      expect(isSupportedExecutionPlanCompatibility(planVersion, schemaVersion)).toBe(expected);
+      expect(isAdmittedExecutionPlanPair(planVersion, schemaVersion)).toBe(expected);
     }
   );
 });

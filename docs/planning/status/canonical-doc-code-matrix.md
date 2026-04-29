@@ -50,7 +50,7 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
 | API auth and runtime boundary                  | `apps/api`                                                                             | [G8 Real Auth Final Spec](../archive/gaps/G8-REAL-AUTH-FINAL-SPEC.md)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | [System Delivery Status](../../architecture/system-delivery-status.md)                                                                                                        |
 | Workspace graph authoring draft persistence    | `@dvt/contracts`, `apps/api`, `apps/web`                                               | [Workspace authoring draft aggregate](../../architecture/components/planner/workspace-authoring-draft-aggregate.md), [Execution selection component](../../architecture/components/planner/execution-selection-component.md), [Workspace graph draft persistence v1](../../contracts/planner/workspace-graph-draft-persistence-v1.md), [Execution selection and executable subgraph v1](../../contracts/planner/execution-selection-and-executable-subgraph-v1.md), [Workspace graph draft application component](../../../apps/api/docs/workspace-graph-draft-application-component.md) | [TF-A2-C execution selection and executable subgraph plan](../proposals/mandatory/runtime-and-contracts/tf-a2-c-execution-selection-and-executable-subgraph-plan-20260423.md) |
 | Web frontend shell and client routing          | `apps/web`                                                                             | [web component](../../architecture/components/web/index.md), [Read subsystem](../../architecture/system/subsystems/read/index.md), [Frontend runtime contract technical manual](../../architecture/components/web/runs/frontend-runtime-contract-technical-manual.md)                                                                                                                                                                                                                                                                                                                    | [System Delivery Status](../../architecture/system-delivery-status.md)                                                                                                        |
-| Plan integrity and compatibility verification  | `@dvt/engine`, `@dvt/adapter-temporal`, `apps/api`, `@dvt/plan-verifier`               | [ADR-0012](../../adr/ADR-0012-plan-integrity-ownership.md), [ADR-0017](../../adr/ADR-0017_ExecutionPlan_Schema_Versioning.md)                                                                                                                                                                                                                                                                                                                                                                                                                                                            | [System Delivery Status](../../architecture/system-delivery-status.md)                                                                                                        |
+| Plan integrity and admission verification      | `@dvt/engine`, `@dvt/adapter-temporal`, `apps/api`, `@dvt/plan-verifier`               | [ADR-0012](../../adr/ADR-0012-plan-integrity-ownership.md), [ADR-0017](../../adr/ADR-0017_ExecutionPlan_Schema_Versioning.md)                                                                                                                                                                                                                                                                                                                                                                                                                                                            | [System Delivery Status](../../architecture/system-delivery-status.md)                                                                                                        |
 | Planner typed graph-source boundary            | `@dvt/contracts`, `@dvt/planner`, `apps/api`                                           | [Planner Contracts](../../contracts/planner/index.md), [ADR-0035](../../adr/ADR-0035-planner-public-contract-evolution-protocol.md)                                                                                                                                                                                                                                                                                                                                                                                                                                                      | [Planner Current State Assessment](./planner-current-state-assessment.md)                                                                                                     |
 | Deterministic DAG interpretation               | `@dvt/plan-interpreter`                                                                | [Plan Interpreter Package](../../architecture/shared/plan-interpreter.md)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | [Shared Package Architecture](../../architecture/shared/index.md)                                                                                                             |
 | Gateway DSL evaluator                          | `@dvt/dsl`                                                                             | [Gateway DSL Package](../../architecture/shared/dsl.md)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | [Shared Package Architecture](../../architecture/shared/index.md)                                                                                                             |
@@ -704,20 +704,20 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   and
   [apps/web/src/app/data/mockDbtData.ts](../../../apps/web/src/app/data/mockDbtData.ts)
 
-### Plan integrity and compatibility verification
+### Plan integrity and admission verification
 
 - Canonical spec:
   [ADR-0012](../../adr/ADR-0012-plan-integrity-ownership.md)
   and
   [ADR-0017](../../adr/ADR-0017_ExecutionPlan_Schema_Versioning.md)
   and
-  [Plan compatibility matrix](../../architecture/components/engine/contracts/plan-compatibility-matrix.md)
+  [Plan admission matrix](../../architecture/components/engine/contracts/plan-admission-matrix.md)
 - Current status source:
   [System Delivery Status](../../architecture/system-delivery-status.md) (`Plan Verifier`)
 - Primary code:
-  [packages/@dvt/contracts/src/contracts/planner/PlanCompatibility.v1.ts](../../../packages/@dvt/contracts/src/contracts/planner/PlanCompatibility.v1.ts)
+  [packages/@dvt/contracts/src/contracts/planner/PlanAdmission.v1.ts](../../../packages/@dvt/contracts/src/contracts/planner/PlanAdmission.v1.ts)
   and
-  [packages/@dvt/engine/src/contracts/PlanCompatibilityPolicy.ts](../../../packages/@dvt/engine/src/contracts/PlanCompatibilityPolicy.ts)
+  [packages/@dvt/engine/src/contracts/PlanAdmissionPolicy.ts](../../../packages/@dvt/engine/src/contracts/PlanAdmissionPolicy.ts)
   and
   [packages/@dvt/engine/src/services/startRun/StartRunValidationPolicy.ts](../../../packages/@dvt/engine/src/services/startRun/StartRunValidationPolicy.ts)
   and
@@ -733,7 +733,7 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   and
   [packages/@dvt/plan-verifier/src/planVersion.ts](../../../packages/@dvt/plan-verifier/src/planVersion.ts)
 - Key tests:
-  [packages/@dvt/contracts/test/plan-compatibility-matrix.contract.test.ts](../../../packages/@dvt/contracts/test/plan-compatibility-matrix.contract.test.ts)
+  [packages/@dvt/contracts/test/plan-admission-matrix.contract.test.ts](../../../packages/@dvt/contracts/test/plan-admission-matrix.contract.test.ts)
   and
   [packages/@dvt/engine/test/core/WorkflowEngine.test.ts](../../../packages/@dvt/engine/test/core/WorkflowEngine.test.ts)
   and
@@ -747,7 +747,7 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   and
   [packages/@dvt/plan-verifier/test/verify.test.ts](../../../packages/@dvt/plan-verifier/test/verify.test.ts)
 - Verification:
-  `pnpm --filter @dvt/contracts test -- plan-compatibility-matrix.contract.test.ts`
+  `pnpm --filter @dvt/contracts test -- plan-admission-matrix.contract.test.ts`
   and
   `pnpm --filter @dvt/engine test -- WorkflowEngine.test.ts`
   and

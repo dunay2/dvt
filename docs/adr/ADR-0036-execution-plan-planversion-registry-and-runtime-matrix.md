@@ -1,11 +1,11 @@
 ---
-title: ADR-0036 - ExecutionPlan planVersion registry and runtime compatibility matrix
+title: ADR-0036 - ExecutionPlan planVersion registry and runtime admission matrix
 status: Accepted
 owner: Architecture / Planner / Contracts / Engine
 last_reviewed: 2026-03-19
 ---
 
-# ADR-0036 - ExecutionPlan planVersion registry and runtime compatibility matrix
+# ADR-0036 - ExecutionPlan planVersion registry and runtime admission matrix
 
 ## Status
 
@@ -51,7 +51,7 @@ hardcoded literal across the package.
 
 The contract/runtime surface owns the executable admission matrix:
 
-- `EXECUTION_PLAN_COMPATIBILITY_MATRIX`
+- `EXECUTION_PLAN_ADMISSION_MATRIX`
 
 Admission is validated against the exact `(planVersion, schemaVersion)` pair,
 not inferred from semver major/minor math.
@@ -77,7 +77,7 @@ Adding a new supported plan version now requires:
 2. Add the versioned schema entry for the new plan shape.
 3. Update planner emission only when the planner is ready to produce that
    version.
-4. Replace the active `EXECUTION_PLAN_COMPATIBILITY_MATRIX` pair when runtime
+4. Replace the active `EXECUTION_PLAN_ADMISSION_MATRIX` pair when runtime
    admission is ready.
 5. Add or update tests that prove acceptance/rejection paths.
 
@@ -106,7 +106,7 @@ plan version is added to the union.
 
 - `@dvt/contracts` exposes a version registry and versioned plan schemas.
 - `@dvt/contracts` rejects undeclared `planVersion` values at runtime.
-- `@dvt/contracts` exposes `EXECUTION_PLAN_COMPATIBILITY_MATRIX`.
+- `@dvt/contracts` exposes `EXECUTION_PLAN_ADMISSION_MATRIX`.
 - `@dvt/engine` accepts or rejects start-run admission using that matrix before
   adapter dispatch.
 
