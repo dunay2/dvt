@@ -279,6 +279,13 @@ interface TestActivityDeps extends ActivityDeps {
   testStore: TestTxStore;
 }
 
+type SetupActivitiesOptions = Readonly<{
+  store?: TestTxStore;
+  stepExecutors?: readonly StepExecutor[];
+  stepActivitiesByKind?: ReadonlyMap<string, StepActivity>;
+  depOverrides?: Partial<ActivityDeps>;
+}>;
+
 class FakeRunExecutionContextReader implements IRunExecutionContextReader {
   constructor(private readonly runExecutionContext: RunExecutionContext = RUN_EXECUTION_CONTEXT) {}
 
@@ -351,12 +358,12 @@ function buildDeps(
   };
 }
 
-function setupActivities(
-  store: TestTxStore = new TestTxStore(),
-  stepExecutors?: readonly StepExecutor[],
-  stepActivitiesByKind?: ReadonlyMap<string, StepActivity>,
-  depOverrides: Partial<ActivityDeps> = {}
-): {
+function setupActivities({
+  store = new TestTxStore(),
+  stepExecutors,
+  stepActivitiesByKind,
+  depOverrides = {},
+}: SetupActivitiesOptions = {}): {
   deps: TestActivityDeps;
   acts: Activities;
 } {
@@ -476,14 +483,16 @@ describe('stepActivities', () => {
       planVersion: SEGMENT_RESOLVER_PLAN.metadata.planVersion,
       schemaVersion: SEGMENT_RESOLVER_PLAN.metadata.schemaVersion,
     });
-    const { acts } = setupActivities(undefined, undefined, undefined, {
-      integrity: new PlanIntegrityValidator(),
-      fetcher: {
-        async fetch() {
-          return {
-            bytes: mutatedPlanBytes,
-            executionPolicy: {},
-          };
+    const { acts } = setupActivities({
+      depOverrides: {
+        integrity: new PlanIntegrityValidator(),
+        fetcher: {
+          async fetch() {
+            return {
+              bytes: mutatedPlanBytes,
+              executionPolicy: {},
+            };
+          },
         },
       },
     });
@@ -611,7 +620,7 @@ describe('stepActivities', () => {
     });
 
     it('retry-safe: transient failure then retry persists one logical event', async () => {
-      const { deps, acts } = setupActivities(new FailingFirstAppendStateStore());
+      const { deps, acts } = setupActivities({ store: new FailingFirstAppendStateStore() });
 
       await expect(emitRunStarted(acts)).rejects.toThrow(EXPECTED_ERRORS.transientDbError);
 
@@ -635,7 +644,7 @@ describe('stepActivities', () => {
 
     it('dedupes retries across different engineAttemptId when logicalAttemptId is unchanged', async () => {
       let attempt = 1;
-      const { deps, acts } = setupActivities(new TestTxStore());
+      const { deps, acts } = setupActivities({ store: new TestTxStore() });
       deps.getEngineAttemptId = () => attempt;
 
       await emitRunStarted(acts);
@@ -674,7 +683,7 @@ describe('stepActivities', () => {
     });
 
     it('returns COMPLETED for DBT only when the worker composes the DBT registry explicitly', async () => {
-      const { acts } = setupActivities(undefined, undefined, createDbtRegistry());
+      const { acts } = setupActivities({ stepActivitiesByKind: createDbtRegistry() });
 
       const result = await acts.executeStep({
         step: { stepId: 's1', kind: 'DBT_TEST' },
@@ -709,7 +718,7 @@ describe('stepActivities', () => {
           stepActivitiesByKind: new Map([['SQL_TRANSFORM', sqlActivity]]),
         },
       ]);
-      const { acts } = setupActivities(undefined, undefined, pluginRegistry);
+      const { acts } = setupActivities({ stepActivitiesByKind: pluginRegistry });
 
       await expect(
         acts.executeStep({ step: { stepId: 's-dbt', kind: 'DBT_TEST' }, ctx: CTX })
@@ -743,7 +752,7 @@ describe('stepActivities', () => {
     );
 
     it('accepts step with dependsOn array', async () => {
-      const { acts } = setupActivities(undefined, undefined, createDbtRegistry());
+      const { acts } = setupActivities({ stepActivitiesByKind: createDbtRegistry() });
 
       const result = await acts.executeStep({
         step: { stepId: 's2', kind: 'DBT_TEST', dependsOn: ['s1'] },
@@ -754,7 +763,7 @@ describe('stepActivities', () => {
     });
 
     it('accepts step with stepTypeConfig', async () => {
-      const { acts } = setupActivities(undefined, undefined, createDbtRegistry());
+      const { acts } = setupActivities({ stepActivitiesByKind: createDbtRegistry() });
 
       const result = await acts.executeStep({
         step: { stepId: 's3', kind: 'DBT_MODEL', stepTypeConfig: { stepTimeoutMs: 5000 } },
@@ -780,11 +789,9 @@ describe('stepActivities', () => {
           },
         };
       });
-      const { acts } = setupActivities(
-        undefined,
-        undefined,
-        createDbtRegistry({ dbtPluginRunner: runner })
-      );
+      const { acts } = setupActivities({
+        stepActivitiesByKind: createDbtRegistry({ dbtPluginRunner: runner }),
+      });
 
       const result = await acts.executeStep({
         step: { stepId: 's1', kind: 'DBT_MODEL' },
@@ -827,7 +834,7 @@ describe('stepActivities', () => {
     });
 
     it('fails closed when dbt step executes without runExecutionContextRef', async () => {
-      const { acts } = setupActivities(undefined, undefined, createDbtRegistry());
+      const { acts } = setupActivities({ stepActivitiesByKind: createDbtRegistry() });
 
       await expect(
         acts.executeStep({
@@ -846,11 +853,9 @@ describe('stepActivities', () => {
           return { stepId: step.stepId, status: 'FAILED', failureReason: 'replacement' };
         },
       };
-      const { acts } = setupActivities(
-        undefined,
-        undefined,
-        new Map([['DBT_TEST', replacementActivity]])
-      );
+      const { acts } = setupActivities({
+        stepActivitiesByKind: new Map([['DBT_TEST', replacementActivity]]),
+      });
 
       const result = await acts.executeStep({
         step: { stepId: 's1', kind: 'DBT_TEST' },
@@ -865,16 +870,14 @@ describe('stepActivities', () => {
     });
 
     it('fails closed when resolved context omits the dbt plugin payload', async () => {
-      const { acts } = setupActivities(
-        undefined,
-        undefined,
-        createDbtRegistry({
+      const { acts } = setupActivities({
+        stepActivitiesByKind: createDbtRegistry({
           runExecutionContextReader: new FakeRunExecutionContextReader({
             ...RUN_EXECUTION_CONTEXT,
             pluginContexts: {},
           }),
-        })
-      );
+        }),
+      });
 
       await expect(
         acts.executeStep({
@@ -885,10 +888,8 @@ describe('stepActivities', () => {
     });
 
     it('maps rejected runExecutionContext reads into a permanent step failure', async () => {
-      const { acts } = setupActivities(
-        undefined,
-        undefined,
-        createDbtRegistry({
+      const { acts } = setupActivities({
+        stepActivitiesByKind: createDbtRegistry({
           runExecutionContextReader: {
             async resolve() {
               throw new RunExecutionContextRejectedError(
@@ -896,8 +897,8 @@ describe('stepActivities', () => {
               );
             },
           },
-        })
-      );
+        }),
+      });
 
       await expect(
         acts.executeStep({
@@ -912,11 +913,9 @@ describe('stepActivities', () => {
         stepId: 'other-step',
         status: 'COMPLETED',
       }));
-      const { acts } = setupActivities(
-        undefined,
-        undefined,
-        createDbtRegistry({ dbtPluginRunner: runner })
-      );
+      const { acts } = setupActivities({
+        stepActivitiesByKind: createDbtRegistry({ dbtPluginRunner: runner }),
+      });
 
       await expect(
         acts.executeStep({
@@ -1015,11 +1014,9 @@ describe('stepActivities', () => {
           return { stepId: step.stepId, status: 'COMPLETED' };
         },
       };
-      const { acts } = setupActivities(
-        undefined,
-        undefined,
-        new Map([['PYTHON_SCRIPT', pythonActivity]])
-      );
+      const { acts } = setupActivities({
+        stepActivitiesByKind: new Map([['PYTHON_SCRIPT', pythonActivity]]),
+      });
 
       const result = await acts.executeStep({
         step: { stepId: 's-python', kind: 'PYTHON_SCRIPT', dependsOn: [] },
@@ -1030,14 +1027,18 @@ describe('stepActivities', () => {
     });
 
     it('throws transient error when executor raises retryable failure', async () => {
-      const { acts } = setupActivities(undefined, withErrorExecutors(transientErrorExecutor('s1')));
+      const { acts } = setupActivities({
+        stepExecutors: withErrorExecutors(transientErrorExecutor('s1')),
+      });
       await expect(
         acts.executeStep({ step: { stepId: 's1', kind: 'DBT_TEST' }, ctx: CTX })
       ).rejects.toThrow(EXPECTED_ERRORS.transientStepErrorS1);
     });
 
     it('throws permanent error when executor raises non-retryable failure', async () => {
-      const { acts } = setupActivities(undefined, withErrorExecutors(permanentErrorExecutor('s1')));
+      const { acts } = setupActivities({
+        stepExecutors: withErrorExecutors(permanentErrorExecutor('s1')),
+      });
       await expect(
         acts.executeStep({ step: { stepId: 's1', kind: 'DBT_TEST' }, ctx: CTX })
       ).rejects.toThrow(EXPECTED_ERRORS.permanentStepErrorS1);

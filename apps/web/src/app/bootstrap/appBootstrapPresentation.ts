@@ -1,4 +1,5 @@
 /** Owned concern: derive bootstrap startup presentation copy, transitions, and progress snapshots without touching the DOM. */
+import { resolveAppBootstrapCopy, type AppBootstrapCopy } from './appBootstrapCopy';
 import type { BootstrapProgressSegment, BootstrapProgressSnapshot } from './bootstrapProgressBar';
 
 export const BOOTSTRAP_STEP_ORDER = [
@@ -52,84 +53,80 @@ type BootstrapStepConfig = Readonly<{
   completeDetail: string;
 }>;
 
-const STARTUP_STATUS_LABEL = 'Raven startup status';
-const PREPARING_TITLE = 'Preparing Raven';
-const PREPARING_MESSAGE =
-  'Loading startup modules in order. The workspace opens once bootstrap settles.';
-const BLOCKED_TITLE = 'Raven is waiting for startup prerequisites';
-const BLOCKED_MESSAGE_FALLBACK =
-  'Startup is blocked until the required platform prerequisites are available.';
-const ERROR_TITLE = 'Raven could not finish startup';
-export const BOOTSTRAP_ERROR_MESSAGE_FALLBACK = 'An unexpected startup error occurred.';
-const COMPLETE_TITLE = 'Raven is ready';
-const COMPLETE_MESSAGE = 'Opening the workspace.';
-
-const BOOTSTRAP_STEP_CONFIG: Record<BootstrapStep, BootstrapStepConfig> = {
-  hydrate: {
-    label: 'Hydrating application',
-    pendingDetail: 'Mounting the Raven shell',
-    completeDetail: 'Application shell mounted',
-  },
-  services: {
-    label: 'Preparing app services',
-    pendingDetail: 'Building app services and query client',
-    completeDetail: 'App services and query client ready',
-  },
-  capabilities: {
-    label: 'Loading runtime capabilities',
-    pendingDetail: 'Resolving enabled plugins and workspace surfaces',
-    completeDetail: 'Runtime capabilities loaded',
-  },
-  health: {
-    label: 'Checking platform health',
-    pendingDetail: 'Polling health and readiness endpoints',
-    completeDetail: 'Platform health settled',
-  },
-  route: {
-    label: 'Preparing initial route',
-    pendingDetail: 'Preparing the active workspace surface',
-    completeDetail: 'Initial route is ready',
-  },
-};
-
-export function createInitialBootstrapStepState(): BootstrapStepStateById {
+function resolveBootstrapStepConfig(
+  copy: AppBootstrapCopy
+): Record<BootstrapStep, BootstrapStepConfig> {
   return {
-    hydrate: createBootstrapStepState('hydrate', 'pending'),
-    services: createBootstrapStepState('services', 'pending'),
-    capabilities: createBootstrapStepState('capabilities', 'pending'),
-    health: createBootstrapStepState('health', 'pending'),
-    route: createBootstrapStepState('route', 'pending'),
+    hydrate: {
+      label: copy.hydrateLabel,
+      pendingDetail: copy.hydratePendingDetail,
+      completeDetail: copy.hydrateCompleteDetail,
+    },
+    services: {
+      label: copy.servicesLabel,
+      pendingDetail: copy.servicesPendingDetail,
+      completeDetail: copy.servicesCompleteDetail,
+    },
+    capabilities: {
+      label: copy.capabilitiesLabel,
+      pendingDetail: copy.capabilitiesPendingDetail,
+      completeDetail: copy.capabilitiesCompleteDetail,
+    },
+    health: {
+      label: copy.healthLabel,
+      pendingDetail: copy.healthPendingDetail,
+      completeDetail: copy.healthCompleteDetail,
+    },
+    route: {
+      label: copy.routeLabel,
+      pendingDetail: copy.routePendingDetail,
+      completeDetail: copy.routeCompleteDetail,
+    },
+  };
+}
+
+export function createInitialBootstrapStepState(
+  copy: AppBootstrapCopy = resolveAppBootstrapCopy()
+): BootstrapStepStateById {
+  return {
+    hydrate: createBootstrapStepState('hydrate', 'pending', undefined, copy),
+    services: createBootstrapStepState('services', 'pending', undefined, copy),
+    capabilities: createBootstrapStepState('capabilities', 'pending', undefined, copy),
+    health: createBootstrapStepState('health', 'pending', undefined, copy),
+    route: createBootstrapStepState('route', 'pending', undefined, copy),
   };
 }
 
 export function createBootstrapStepState(
   step: BootstrapStep,
   status: BootstrapStepStatus,
-  detail = resolveBootstrapStepDetail(step, status)
+  detail: string | undefined = undefined,
+  copy: AppBootstrapCopy = resolveAppBootstrapCopy()
 ): BootstrapStepState {
   return {
     status,
-    detail,
+    detail: detail ?? resolveBootstrapStepDetail(step, status, copy),
   };
 }
 
 export function resolveBootstrapStepDetail(
   step: BootstrapStep,
-  status: BootstrapStepStatus
+  status: BootstrapStepStatus,
+  copy: AppBootstrapCopy = resolveAppBootstrapCopy()
 ): string {
-  const stepConfig = BOOTSTRAP_STEP_CONFIG[step];
+  const stepConfig = resolveBootstrapStepConfig(copy)[step];
 
   switch (status) {
     case 'complete':
       return stepConfig.completeDetail;
     case 'degraded':
-      return `${stepConfig.label} settled with degraded startup conditions.`;
+      return `${stepConfig.label} ${copy.degradedStepDetailSuffix}`;
     case 'failed':
-      return `${stepConfig.label} failed but does not block shell startup.`;
+      return `${stepConfig.label} ${copy.failedStepDetailSuffix}`;
     case 'blocked':
-      return `${stepConfig.label} is blocked by a required startup prerequisite.`;
+      return `${stepConfig.label} ${copy.blockedStepDetailSuffix}`;
     case 'error':
-      return `${stepConfig.label} failed during startup.`;
+      return `${stepConfig.label} ${copy.errorStepDetailSuffix}`;
     case 'pending':
     default:
       return stepConfig.pendingDetail;
@@ -137,22 +134,23 @@ export function resolveBootstrapStepDetail(
 }
 
 export function resolveBootstrapScreenPresentation(
-  stepState: BootstrapStepStateById
+  stepState: BootstrapStepStateById,
+  copy: AppBootstrapCopy = resolveAppBootstrapCopy()
 ): BootstrapScreenPresentation {
   const state = resolveBootstrapScreenState(stepState);
-  const { title, message } = resolveBootstrapScreenCopy(state, stepState);
+  const { title, message } = resolveBootstrapScreenCopy(state, stepState, copy);
 
   return {
     state,
     title,
     message,
     announcement: {
-      label: STARTUP_STATUS_LABEL,
+      label: copy.startupStatusLabel,
       text: `${title}. ${message}`,
       busy: state !== 'complete',
     },
-    steps: resolveBootstrapStepPresentations(stepState),
-    progress: resolveBootstrapProgressSnapshot(state, stepState),
+    steps: resolveBootstrapStepPresentations(stepState, copy),
+    progress: resolveBootstrapProgressSnapshot(state, stepState, copy),
   };
 }
 
@@ -186,39 +184,42 @@ function resolveBootstrapScreenState(stepState: BootstrapStepStateById): Bootstr
 
 function resolveBootstrapScreenCopy(
   state: BootstrapScreenState,
-  stepState: BootstrapStepStateById
+  stepState: BootstrapStepStateById,
+  copy: AppBootstrapCopy
 ): Readonly<{ title: string; message: string }> {
   switch (state) {
     case 'error':
       return {
-        title: ERROR_TITLE,
-        message: findLatestStepDetail(stepState, 'error') ?? BOOTSTRAP_ERROR_MESSAGE_FALLBACK,
+        title: copy.errorTitle,
+        message: findLatestStepDetail(stepState, 'error') ?? copy.errorMessageFallback,
       };
     case 'blocked':
       return {
-        title: BLOCKED_TITLE,
-        message: findLatestStepDetail(stepState, 'blocked') ?? BLOCKED_MESSAGE_FALLBACK,
+        title: copy.blockedTitle,
+        message: findLatestStepDetail(stepState, 'blocked') ?? copy.blockedMessageFallback,
       };
     case 'complete':
       return {
-        title: COMPLETE_TITLE,
-        message: COMPLETE_MESSAGE,
+        title: copy.completeTitle,
+        message: copy.completeMessage,
       };
     case 'loading':
     default:
       return {
-        title: PREPARING_TITLE,
-        message: PREPARING_MESSAGE,
+        title: copy.preparingTitle,
+        message: copy.preparingMessage,
       };
   }
 }
 
 function resolveBootstrapStepPresentations(
-  stepState: BootstrapStepStateById
+  stepState: BootstrapStepStateById,
+  copy: AppBootstrapCopy
 ): readonly BootstrapStepPresentation[] {
+  const stepConfig = resolveBootstrapStepConfig(copy);
   return BOOTSTRAP_STEP_ORDER.map((step) => ({
     id: step,
-    label: BOOTSTRAP_STEP_CONFIG[step].label,
+    label: stepConfig[step].label,
     status: stepState[step].status,
     detail: stepState[step].detail,
   }));
@@ -226,44 +227,54 @@ function resolveBootstrapStepPresentations(
 
 function resolveBootstrapProgressSnapshot(
   state: BootstrapScreenState,
-  stepState: BootstrapStepStateById
+  stepState: BootstrapStepStateById,
+  copy: AppBootstrapCopy
 ): BootstrapProgressSnapshot {
   const progressValue = BOOTSTRAP_STEP_ORDER.filter((step) =>
     isBootstrapStepStartupAllowed(stepState[step].status)
   ).length;
   const settledCount = state === 'complete' ? BOOTSTRAP_STEP_ORDER.length : progressValue;
-  const label = resolveBootstrapProgressLabel(state, progressValue);
-  const segments = resolveBootstrapProgressSegments(stepState);
+  const label = resolveBootstrapProgressLabel(state, progressValue, copy);
+  const segments = resolveBootstrapProgressSegments(stepState, copy);
 
   return {
     tone: state,
     label,
+    kicker: copy.progressKicker,
+    listLabel: copy.progressListLabel,
+    countLabel: `${settledCount}/${BOOTSTRAP_STEP_ORDER.length} ${copy.progressCountSuffix}`,
     settledCount,
     totalCount: BOOTSTRAP_STEP_ORDER.length,
     segments,
   };
 }
 
-function resolveBootstrapProgressLabel(state: BootstrapScreenState, settledSteps: number): string {
-  const label = `${settledSteps}/${BOOTSTRAP_STEP_ORDER.length} startup checks settled`;
+function resolveBootstrapProgressLabel(
+  state: BootstrapScreenState,
+  settledSteps: number,
+  copy: AppBootstrapCopy
+): string {
+  const label = `${settledSteps}/${BOOTSTRAP_STEP_ORDER.length} ${copy.progressSettledLabel}`;
 
   if (state === 'blocked') {
-    return `${label}. Required startup blockers remain.`;
+    return `${label}. ${copy.progressBlockedSuffix}`;
   }
 
   if (state === 'error') {
-    return `${label}. Startup error needs attention.`;
+    return `${label}. ${copy.progressErrorSuffix}`;
   }
 
   return label;
 }
 
 function resolveBootstrapProgressSegments(
-  stepState: BootstrapStepStateById
+  stepState: BootstrapStepStateById,
+  copy: AppBootstrapCopy
 ): readonly BootstrapProgressSegment[] {
+  const stepConfig = resolveBootstrapStepConfig(copy);
   return BOOTSTRAP_STEP_ORDER.map((step) => ({
     id: step,
-    label: BOOTSTRAP_STEP_CONFIG[step].label,
+    label: stepConfig[step].label,
     status: stepState[step].status,
   }));
 }

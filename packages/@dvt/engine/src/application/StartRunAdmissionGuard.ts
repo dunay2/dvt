@@ -1,3 +1,7 @@
+/**
+ * @ownedConcern Coordinate start-run admission orchestration across access,
+ * adapter, capability, and run-execution-context policies.
+ */
 import type {
   EngineRunRef,
   ExecutionPlan,
@@ -59,7 +63,12 @@ export class StartRunAdmissionGuard {
     const { plan, planRef, executionPolicy, context, adapter } = admission;
 
     this.validationPolicy.validateCapabilitiesOrThrow(executionPolicy, adapter);
-    await this.runExecutionContextPolicy.assertAllowed(plan, planRef, executionPolicy, context);
+    await this.runExecutionContextPolicy.assertAllowed({
+      plan,
+      planRef,
+      executionPolicy,
+      context,
+    });
   }
 
   resolveAdapter(context: ResolvedRunContext): IProviderAdapter {

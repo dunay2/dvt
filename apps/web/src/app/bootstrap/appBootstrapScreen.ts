@@ -1,6 +1,5 @@
 /** Owned concern: apply resolved pre-React bootstrap presentation snapshots to the startup DOM. */
 import {
-  BOOTSTRAP_ERROR_MESSAGE_FALLBACK,
   canCompleteBootstrapSteps,
   createBootstrapStepState,
   createInitialBootstrapStepState,
@@ -10,8 +9,9 @@ import {
   type BootstrapStep,
   type BootstrapStepPresentation,
   type BootstrapStepStateById,
-  type BootstrapStepStatus,
 } from './appBootstrapPresentation';
+import { resolveAppBootstrapCopy } from './appBootstrapCopy';
+import type { BootstrapFailureCommand, BootstrapStepStatusCommand } from './appBootstrapCommands';
 import {
   BOOTSTRAP_DOM,
   getBootstrapAnnouncementDescription,
@@ -24,6 +24,18 @@ import { renderBootstrapProgress } from './bootstrapProgressBar';
 type BootstrapMetaPresentation = Readonly<{
   text: string;
   visible: boolean;
+}>;
+
+export type { BootstrapFailureCommand, BootstrapStepStatusCommand } from './appBootstrapCommands';
+
+type BootstrapTextUpdate = Readonly<{
+  target: BootstrapTextTarget;
+  text: string;
+}>;
+
+type BootstrapMetaUpdate = Readonly<{
+  target: BootstrapMetaTarget;
+  presentation: BootstrapMetaPresentation;
 }>;
 
 let bootstrapStepState: BootstrapStepStateById = createInitialBootstrapStepState();
@@ -40,17 +52,14 @@ function getStepNode(step: BootstrapStep): HTMLElement | null {
   return document.querySelector<HTMLElement>(getBootstrapStepSelector(step));
 }
 
-function updateBootstrapText(target: BootstrapTextTarget, text: string): void {
+function updateBootstrapText({ target, text }: BootstrapTextUpdate): void {
   const node = document.getElementById(BOOTSTRAP_DOM.textTargetIds[target]);
   if (node) {
     node.textContent = text;
   }
 }
 
-function setBootstrapMetaItem(
-  target: BootstrapMetaTarget,
-  presentation: BootstrapMetaPresentation
-): void {
+function setBootstrapMetaItem({ target, presentation }: BootstrapMetaUpdate): void {
   const node = document.getElementById(BOOTSTRAP_DOM.metaTargetIds[target]);
   if (!node) {
     return;
@@ -101,25 +110,34 @@ function renderBootstrapScreenPresentation(presentation: BootstrapScreenPresenta
 
   screen.dataset.state = presentation.state;
   clearScreenAriaFallbackAttributes(screen);
-  updateBootstrapText('title', presentation.title);
-  updateBootstrapText('message', presentation.message);
+  updateBootstrapText({ target: 'title', text: presentation.title });
+  updateBootstrapText({ target: 'message', text: presentation.message });
   updateBootstrapAnnouncement(presentation);
   presentation.steps.forEach(writeStepPresentationToDom);
   renderBootstrapProgress(presentation.progress);
 }
 
 function syncBootstrapScreenState(): void {
-  renderBootstrapScreenPresentation(resolveBootstrapScreenPresentation(bootstrapStepState));
+  renderBootstrapScreenPresentation(
+    resolveBootstrapScreenPresentation(bootstrapStepState, resolveAppBootstrapCopy())
+  );
 }
 
 function updateBootstrapBuildMeta(): void {
+  const copy = resolveAppBootstrapCopy();
   const appVersion = import.meta.env.VITE_APP_VERSION?.trim() || '0.0.0';
   const rawBuildDate = import.meta.env.VITE_APP_BUILD_DATE?.trim() || '';
 
-  updateBootstrapText('version', `Version ${appVersion}`);
-  setBootstrapMetaItem('buildDate', {
-    text: rawBuildDate.length > 0 ? `Build ${formatBootstrapBuildDate(rawBuildDate)}` : '',
-    visible: rawBuildDate.length > 0,
+  updateBootstrapText({ target: 'version', text: `${copy.versionPrefix} ${appVersion}` });
+  setBootstrapMetaItem({
+    target: 'buildDate',
+    presentation: {
+      text:
+        rawBuildDate.length > 0
+          ? `${copy.buildPrefix} ${formatBootstrapBuildDate(rawBuildDate)}`
+          : '',
+      visible: rawBuildDate.length > 0,
+    },
   });
 }
 
@@ -128,7 +146,7 @@ export function startBootstrapScreen(): void {
     return;
   }
 
-  bootstrapStepState = createInitialBootstrapStepState();
+  bootstrapStepState = createInitialBootstrapStepState(resolveAppBootstrapCopy());
   syncBootstrapScreenState();
   updateBootstrapBuildMeta();
 }
@@ -138,12 +156,8 @@ export function isBootstrapScreenVisible(): boolean {
   return screen !== null && screen.dataset.state !== 'complete';
 }
 
-export function setBootstrapStepStatus(
-  step: BootstrapStep,
-  status: BootstrapStepStatus,
-  detail?: string
-): void {
-  const nextStepState = createBootstrapStepState(step, status, detail);
+export function setBootstrapStepStatus({ step, status, detail }: BootstrapStepStatusCommand): void {
+  const nextStepState = createBootstrapStepState(step, status, detail, resolveAppBootstrapCopy());
   const previousState = bootstrapStepState[step];
 
   if (
@@ -162,12 +176,17 @@ export function setBootstrapStepStatus(
   syncBootstrapScreenState();
 }
 
-export function showBootstrapFailure(message: string): void {
+export function showBootstrapFailure({ message }: BootstrapFailureCommand): void {
+  const copy = resolveAppBootstrapCopy();
   if (!getLoadingScreen()) {
     return;
   }
 
-  setBootstrapStepStatus('route', 'error', message || BOOTSTRAP_ERROR_MESSAGE_FALLBACK);
+  setBootstrapStepStatus({
+    step: 'route',
+    status: 'error',
+    detail: message || copy.errorMessageFallback,
+  });
 }
 
 export function completeBootstrapScreen(): void {

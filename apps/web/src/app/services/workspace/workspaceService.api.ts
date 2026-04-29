@@ -19,7 +19,7 @@ import {
   parseJsonResponse,
   readWorkspaceGraphDraftScope,
 } from './workspaceGraphDraftHttp';
-import { projectWorkspaceGraphDraftReadResponseSnapshot } from './workspaceGraphDraftProjection';
+import { projectWorkspaceGraphDraftReadResponseSnapshot } from './workspaceGraphDraftSnapshotProjection';
 
 export const apiWorkspaceServiceCapabilities = {
   sourceImportAvailable: false,

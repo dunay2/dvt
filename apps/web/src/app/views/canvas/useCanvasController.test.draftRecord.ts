@@ -7,10 +7,8 @@ import type {
 
 import type { WorkspaceGraphDraftAuthoringReadResult } from '../../ports/workspaceGraphDraftAuthoring';
 import type { WorkspaceGraphDraft, WorkspaceGraphDraftRecord } from '../../ports/workspace';
-import {
-  buildDraftReadOkResponse,
-  buildProtectedDraftRecord,
-} from '../../services/workspace/workspaceGraphDraft.test.fixtures';
+import { buildProtectedDraftRecord } from '../../services/workspace/workspaceGraphDraftAuthoring.test.fixtures';
+import { buildDraftReadOkResponse } from '../../services/workspace/workspaceGraphDraftProtocol.test.fixtures';
 import {
   createUnknownCanvasDraftReadModel,
   projectCanvasDraftReadModel,
@@ -40,7 +38,9 @@ const EXPLICIT_NODE_KIND_BY_ID: Readonly<Record<string, AuthoringDraftNodeKind>>
   node_remote_only: 'sql_transform',
 };
 
-function resolveAuthoringNodeRole(kind: AuthoringDraftNodeKind): WorkspaceGraphAuthoringNode['role'] {
+function resolveAuthoringNodeRole(
+  kind: AuthoringDraftNodeKind
+): WorkspaceGraphAuthoringNode['role'] {
   if (kind === 'source') {
     return 'input';
   }

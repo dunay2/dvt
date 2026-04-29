@@ -21,7 +21,7 @@ import {
 import type { CanvasPlaygroundTabState } from './canvasPlaygroundTabState';
 import type { CanvasReplacementActionViewState } from './canvasPlaygroundTabStripModel';
 
-type CanvasPlaygroundTabStripTemplateProps = Readonly<{
+export type CanvasPlaygroundTabStripTemplateProps = Readonly<{
   tabState: CanvasPlaygroundTabState;
   replacementAction: CanvasReplacementActionViewState;
   isReplacementDialogOpen: boolean;
@@ -56,7 +56,7 @@ export function CanvasPlaygroundTabStripTemplate({
   return (
     <div
       data-slot="canvas-playground-tab-strip"
-      className="flex shrink-0 items-center justify-between gap-3 border-b border-(--border-default) bg-(--surface-panel) px-4 py-2"
+      className="flex shrink-0 items-center justify-between gap-3 border-b border-[color:var(--border-default)] bg-[var(--surface-panel)] px-4 py-2"
     >
       <CanvasPlaygroundTabsTemplate tabState={tabState} />
       <CanvasReplacementActionTemplate
@@ -89,7 +89,7 @@ function CanvasPlaygroundTabsTemplate({
           >
             <Layers2 className="size-4 shrink-0" />
             <span className="min-w-0 truncate text-sm font-medium">{tab.title}</span>
-            <span className="rounded-sm border border-(--border-default) px-1.5 py-0.5 text-[10px] leading-none text-(--text-subtle)">
+            <span className="rounded-sm border border-[color:var(--border-default)] px-1.5 py-0.5 text-[10px] leading-none text-[var(--text-subtle)]">
               {tab.kindLabel}
             </span>
           </TabsTrigger>

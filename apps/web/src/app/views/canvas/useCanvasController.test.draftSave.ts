@@ -6,7 +6,7 @@ import type {
 
 import type { SessionContextPort } from '../../ports/sessionContext';
 import type { WorkspaceGraphDraftAuthoringSaveResult } from '../../ports/workspaceGraphDraftAuthoring';
-import { buildProtectedDraftRecord } from '../../services/workspace/workspaceGraphDraft.test.fixtures';
+import { buildProtectedDraftRecord } from '../../services/workspace/workspaceGraphDraftAuthoring.test.fixtures';
 
 function buildProtectedScope(
   sessionContext: Pick<SessionContextPort, 'getWorkspaceScopeSnapshot'>
@@ -50,7 +50,9 @@ function buildSavedAuthoringResult(revision: string): WorkspaceGraphDraftAuthori
   };
 }
 
-function buildConflictAuthoringResult(currentRevision: string): WorkspaceGraphDraftAuthoringSaveResult {
+function buildConflictAuthoringResult(
+  currentRevision: string
+): WorkspaceGraphDraftAuthoringSaveResult {
   return {
     kind: 'conflict',
     capability: {
@@ -98,13 +100,15 @@ export function resolveCanvasHarnessDraftSave(args: {
   draft: WorkspaceGraphAuthoringDraft;
   expectedRevision: string | null;
   sessionContext: Pick<SessionContextPort, 'getWorkspaceScopeSnapshot'>;
-}): {
-  nextRecord: ProtectedWorkspaceGraphDraftRecord;
-  result: WorkspaceGraphDraftAuthoringSaveResult;
-} | {
-  nextRecord: ProtectedWorkspaceGraphDraftRecord | null;
-  result: WorkspaceGraphDraftAuthoringSaveResult;
-} {
+}):
+  | {
+      nextRecord: ProtectedWorkspaceGraphDraftRecord;
+      result: WorkspaceGraphDraftAuthoringSaveResult;
+    }
+  | {
+      nextRecord: ProtectedWorkspaceGraphDraftRecord | null;
+      result: WorkspaceGraphDraftAuthoringSaveResult;
+    } {
   const { currentRecord, draft, expectedRevision, sessionContext } = args;
   const activeRevision = currentRecord?.revision ?? null;
 
