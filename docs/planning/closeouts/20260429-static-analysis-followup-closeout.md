@@ -325,6 +325,12 @@ Validation plan:
   `docs/risk-register/quality/index.md`.
 - `pnpm docs:status:generate`: passed; generated code state was already up to
   date.
+- `pnpm lint`: passed with `--max-warnings 0`.
+- `GIT_BASE=origin/main GIT_HEAD=HEAD node tools/ci/arc-check.mjs`: passed with
+  effective `ARC-2`; evidence and risk updates were required and present.
+- `pnpm verify:prepush`: passed. The gate validated changed ARC evidence,
+  changed Markdown, changed files, forbidden tracked files, and selected the
+  root `pnpm type-check` path for the branch diff.
 
 ## 2026-04-29 Command API And Editor Panel Follow-Up
 
