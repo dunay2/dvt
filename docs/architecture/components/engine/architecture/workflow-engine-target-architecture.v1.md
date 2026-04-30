@@ -2,7 +2,7 @@
 title: WorkflowEngine target architecture v1
 status: Draft
 owner: Architecture / Engine / API
-last_reviewed: 2026-04-10
+last_reviewed: 2026-04-29
 ---
 
 # WorkflowEngine target architecture v1
@@ -75,8 +75,8 @@ Boundary rule to lock:
 
 - `@dvt/artifacts` owns artifact-reading behavior and reader contracts.
 - `@dvt/engine` owns execution use-case needs and may define an engine-facing
-  resolver port.
-- composition root adapts artifacts-owned reader to engine-owned resolver.
+  resolver or plan artifact reader port.
+- composition root adapts artifacts-owned readers to engine-owned ports.
 - peer-domain runtime logic must not leak into engine internals.
 
 Additional target rule for the first transformation runtime vertical:
@@ -218,9 +218,12 @@ under already accepted principles from `ADR-0003` and `ADR-0014`.
   Target: decorator/policy boundary.
   Gap signal: cross-cutting noise.
 - artifacts/engine seam
-  Current: partially explicit.
+  Current: explicit for plan artifact reading and run execution context
+  resolution through
+  [WorkflowEngine boundary ownership component](./workflow-engine-boundary-ownership-component.md).
   Target: documented adapter seam in composition root.
-  Gap signal: ownership ambiguity.
+  Gap signal: future work should preserve this map while narrowing
+  start-run/control services.
 
 ## Retain vs improve
 

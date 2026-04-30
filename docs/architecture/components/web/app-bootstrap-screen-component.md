@@ -14,20 +14,66 @@ single visible startup surface alive while the browser shell mounts, services
 compose, runtime capabilities settle, platform health resolves, and the active
 route publishes operability.
 
+The component is split into a pure Presentation Model and a DOM adapter:
+
+- `appBootstrapPresentation.ts` owns startup copy, step ordering, aggregate
+  state transitions, completion rules, progress snapshots, and build-date
+  formatting.
+- `appBootstrapCopy.ts` owns the locale catalog used by bootstrap presentation
+  and shell-publisher command factories.
+- `appBootstrapCommands.ts` owns the domain command objects emitted by shell,
+  provider, health, capability, and route publishers.
+- `appBootstrapDomContract.ts` owns the critical HTML IDs, selectors, and
+  static ARIA contract shared by the adapter and tests.
+- `appBootstrapScreen.ts` owns DOM lookup, ARIA writes, metadata writes, and
+  the exported control API used by the rest of the app.
+
 It does not own route-specific readiness, backend contract semantics, or Canvas
 draft truth. Those concerns publish into this component through typed route and
 health/bootstrap adapters.
 
 ## Public API
 
-| API                          | Owned behavior                                                              |
-| ---------------------------- | --------------------------------------------------------------------------- |
-| `startBootstrapScreen()`     | Resets step state, writes initial detail copy, metadata, progress, and ARIA |
-| `setBootstrapStepStatus()`   | Updates one startup step and re-derives the aggregate screen state          |
-| `completeBootstrapScreen()`  | Removes the screen only after every step reaches an allowed terminal state  |
-| `showBootstrapFailure()`     | Converts startup exceptions into the single controlled error screen         |
-| `isBootstrapScreenVisible()` | Allows route error boundaries to avoid stacking a second error surface      |
-| `renderBootstrapProgress()`  | Renders progress from an already resolved bootstrap snapshot                |
+| API                               | Owned behavior                                                              |
+| --------------------------------- | --------------------------------------------------------------------------- |
+| `startBootstrapScreen()`          | Resets step state, writes initial detail copy, metadata, progress, and ARIA |
+| `setBootstrapStepStatus(command)` | Applies one typed startup-step command and re-derives aggregate state       |
+| `completeBootstrapScreen()`       | Removes the screen only after every step reaches an allowed terminal state  |
+| `showBootstrapFailure(command)`   | Converts startup exceptions into the single controlled error screen         |
+| `isBootstrapScreenVisible()`      | Allows route error boundaries to avoid stacking a second error surface      |
+| `renderBootstrapProgress()`       | Renders progress from an already resolved bootstrap snapshot                |
+| `BootstrapStepStatusCommand`      | Public command object for step, status, and optional detail copy            |
+| `BootstrapFailureCommand`         | Public command object for controlled startup failure copy                   |
+
+## Domain Command API
+
+| Factory                                        | Domain event represented                                 |
+| ---------------------------------------------- | -------------------------------------------------------- |
+| `createHydrationCompleteBootstrapCommand()`    | React shell hydration settled                            |
+| `createServicesReadyBootstrapCommand()`        | App services and query client are available              |
+| `createCapabilitiesPendingBootstrapCommand()`  | Runtime-capability bootstrap is still loading            |
+| `createCapabilitiesFallbackBootstrapCommand()` | Runtime capabilities failed and shell fallback is active |
+| `createCapabilitiesReadyBootstrapCommand()`    | Runtime capabilities are available                       |
+| `createHealthPendingBootstrapCommand()`        | Platform health bootstrap is still loading               |
+| `createHealthFailedBootstrapCommand()`         | Platform health failed without blocking route render     |
+| `createHealthDegradedBootstrapCommand()`       | Platform health settled in degraded posture              |
+| `createHealthReadyBootstrapCommand()`          | Platform health is settled                               |
+| `createRouteBootstrapStepCommand()`            | Active route published its bootstrap posture             |
+| `createBootstrapFailureCommand()`              | React route startup raised a controlled failure          |
+
+Publishers call these factories instead of assembling localized strings or
+positional tuples directly.
+
+## Presentation Model API
+
+| API                                    | Owned behavior                                                                |
+| -------------------------------------- | ----------------------------------------------------------------------------- |
+| `BOOTSTRAP_STEP_ORDER`                 | Canonical order for startup step rendering and aggregate readiness            |
+| `createInitialBootstrapStepState()`    | Produces the initial pending state with default details                       |
+| `createBootstrapStepState()`           | Resolves one typed step state with caller detail or default presentation copy |
+| `resolveBootstrapScreenPresentation()` | Derives screen copy, announcement state, step presentations, and progress     |
+| `canCompleteBootstrapSteps()`          | Validates the terminal-state invariant before DOM removal                     |
+| `formatBootstrapBuildDate()`           | Normalizes build metadata for the critical startup shell                      |
 
 ## Invariants
 
@@ -72,6 +118,23 @@ stateDiagram-v2
   Complete --> [*]: delayed DOM removal
 ```
 
+## Component Boundary
+
+```mermaid
+flowchart LR
+  Publishers["main / providers / root / route errors"] --> Screen["appBootstrapScreen.ts\nDOM adapter"]
+  Publishers --> Commands["appBootstrapCommands.ts\nDomain commands"]
+  Commands --> Screen
+  Commands --> Copy["appBootstrapCopy.ts\nLocale catalog"]
+  Screen --> DomContract["appBootstrapDomContract.ts\nDOM contract"]
+  Screen --> Presentation["appBootstrapPresentation.ts\nPresentation Model"]
+  Presentation --> Copy
+  Presentation --> Snapshot["screen + steps + progress snapshot"]
+  Screen --> Dom["index.html startup DOM"]
+  Screen --> Progress["bootstrapProgressBar.ts"]
+  Progress --> Dom
+```
+
 ## Consumer Topology
 
 ```mermaid
@@ -81,6 +144,8 @@ flowchart LR
   Providers["AppProviders.tsx"] --> Bootstrap
   Root["Root.tsx"] --> Bootstrap
   RouteErrors["AppRouteErrorBoundary.tsx"] --> Bootstrap
+  Bootstrap --> DomContract["appBootstrapDomContract.ts"]
+  Bootstrap --> Presentation["appBootstrapPresentation.ts"]
   Root --> RouteBootstrap["routeBootstrapRegistry.ts"]
   Root --> Health["platform-health query"]
   RouteBootstrap --> Bootstrap
@@ -100,9 +165,12 @@ flowchart LR
 
 ## Test Coverage
 
+- `apps/web/src/app/bootstrap/appBootstrapPresentation.test.ts` covers
+  presentation-model defaults, completion rules, blocked/error precedence,
+  non-critical health failure, and build metadata formatting.
 - `apps/web/src/app/bootstrap/appBootstrapScreen.test.ts` covers blocked,
-  failure, production HTML shell contract, metadata, completion, and ARIA
-  busy-state semantics.
+  failure, production HTML shell contract, centralized DOM contract ownership,
+  metadata, completion, and ARIA busy-state semantics.
 - `apps/web/src/app/Root.bootstrapFlow.test.tsx` covers root-to-bootstrap
   integration for health, capabilities, route blocks, and route completion.
 

@@ -2,7 +2,7 @@
 title: WorkflowEngine subsystem context
 status: Review
 owner: Architecture / Engine / API
-last_reviewed: 2026-04-10
+last_reviewed: 2026-04-29
 ---
 
 # WorkflowEngine subsystem context
@@ -33,8 +33,8 @@ Key governing boundaries:
   `RunExecutionContextRef`, `CanonicalRunStatus`,
   `RunStatusEnrichment`, `ProviderRunStatusView`, etc.).
 - `@dvt/engine` owns lifecycle use-case orchestration and execution invariants.
-- `@dvt/artifacts` owns artifact retrieval behavior; engine consumes an
-  engine-owned resolver port where needed.
+- `@dvt/artifacts` owns artifact retrieval behavior; engine consumes
+  engine-owned resolver or reader ports where execution use cases need them.
 - `apps/api` and other composition roots wire concrete adapters and pass them to
   engine-owned ports.
 - `@dvt/engine/src/**` must not import `@dvt/planner` or concrete provider
@@ -64,7 +64,7 @@ Declared southbound port surface:
 - `IRunStateStore` (`runtime-wired`)
 - `IStartRunIntentStore` (`runtime-wired`)
 - `IProviderAdapter` (`runtime-wired`)
-- `IPlanFetcher` (`runtime-wired`)
+- `IPlanFetcher` (`runtime-wired plan artifact reader port`)
 - `IRunExecutionContextResolver` (`optional runtime wiring`)
 - `IProjector` (`package-exposed target seam`)
 - `IMetricsCollector` (`source-tree target seam`)
@@ -102,23 +102,23 @@ flowchart LR
 
 Declared southbound ports:
 
-| Port                           | Code anchor                                                      | Current posture               |
-| ------------------------------ | ---------------------------------------------------------------- | ----------------------------- |
-| `IRunStateStore`               | `packages/@dvt/engine/src/ports/IRunStateStore.ts`               | `runtime-wired`               |
-| `IStartRunIntentStore`         | `packages/@dvt/engine/src/ports/IStartRunIntentStore.ts`         | `runtime-wired`               |
-| `IProviderAdapter`             | `packages/@dvt/engine/src/adapters/IProviderAdapter.ts`          | `runtime-wired`               |
-| `IPlanFetcher`                 | `packages/@dvt/engine/src/adapters/IPlanFetcher.ts`              | `runtime-wired`               |
-| `IRunExecutionContextResolver` | `packages/@dvt/engine/src/ports/IRunExecutionContextResolver.ts` | `optional runtime wiring`     |
-| `IProjector`                   | `packages/@dvt/engine/src/ports/IProjector.ts`                   | `package-exposed target seam` |
-| `IMetricsCollector`            | `packages/@dvt/engine/src/metrics/IMetricsCollector.ts`          | `source-tree target seam`     |
+| Port                           | Code anchor                                                      | Current posture                           |
+| ------------------------------ | ---------------------------------------------------------------- | ----------------------------------------- |
+| `IRunStateStore`               | `packages/@dvt/engine/src/ports/IRunStateStore.ts`               | `runtime-wired`                           |
+| `IStartRunIntentStore`         | `packages/@dvt/engine/src/ports/IStartRunIntentStore.ts`         | `runtime-wired`                           |
+| `IProviderAdapter`             | `packages/@dvt/engine/src/adapters/IProviderAdapter.ts`          | `runtime-wired`                           |
+| `IPlanFetcher`                 | `packages/@dvt/engine/src/ports/IPlanArtifactReader.ts`          | `runtime-wired plan artifact reader port` |
+| `IRunExecutionContextResolver` | `packages/@dvt/engine/src/ports/IRunExecutionContextResolver.ts` | `optional runtime wiring`                 |
+| `IProjector`                   | `packages/@dvt/engine/src/ports/IProjector.ts`                   | `package-exposed target seam`             |
+| `IMetricsCollector`            | `packages/@dvt/engine/src/metrics/IMetricsCollector.ts`          | `source-tree target seam`                 |
 
 Other engine-owned interfaces such as `IRunSnapshotStalenessQuery` and
 `IRunMaintenanceService` remain important local seams, but they are not part of
 the exposed seven-port southbound inventory.
 
-`packages/@dvt/engine/src/ports/IRunStateStore.ts` still carries a legacy
-`IPlanFetcher` alias today, but the canonical anchor is the dedicated adapter
-port file listed above.
+`IPlanFetcher` is deliberately separate from `IRunStateStore`: run-state
+persistence owns ordered run facts, while plan artifact reading exists only to
+serve the engine's authoritative plan-integrity gate before adapter dispatch.
 
 Known concrete adapter families:
 
@@ -242,8 +242,9 @@ sequenceDiagram
 - start-run application path and guard still construct and mix collaborator concerns
 - control/runtime behavior is still concentrated in one control service
 - provider-resolution and telemetry policy logic remains repeated
-- ownership seams between engine resolver and artifacts reader need one explicit
-  canonical mapping in docs/planning
+- ownership seams between engine resolver and artifacts reader now have one
+  canonical mapping in
+  [WorkflowEngine boundary ownership component](./workflow-engine-boundary-ownership-component.md)
 
 ```mermaid
 flowchart LR
@@ -273,7 +274,7 @@ flowchart LR
 - `packages/@dvt/engine/src/services/RunEnrichmentService.ts`
 - `packages/@dvt/engine/src/core/SnapshotProjector.ts`
 - `packages/@dvt/engine/src/adapters/IProviderAdapter.ts`
-- `packages/@dvt/engine/src/adapters/IPlanFetcher.ts`
+- `packages/@dvt/engine/src/ports/IPlanArtifactReader.ts`
 - `packages/@dvt/engine/src/ports/IRunExecutionContextResolver.ts`
 - `packages/@dvt/engine/src/ports/IProjector.ts`
 - `packages/@dvt/engine/src/metrics/IMetricsCollector.ts`

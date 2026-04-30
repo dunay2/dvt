@@ -18,9 +18,7 @@ export function useCanvasAuthoringRuntimeDraftFlow({
   previewProvenanceConfig,
   setCanvasNodePositions,
 }: UseCanvasAuthoringRuntimeDraftFlowArgs) {
-  const [draftSession, setDraftSession] = useState(
-    canvasDraftSession.machine.createBootstrapping
-  );
+  const [draftSession, setDraftSession] = useState(canvasDraftSession.machine.createBootstrapping);
   const { draftQueryCache, draftRepository, graphDraftQuery } = useCanvasDraftBaseline({
     workspaceService,
     workspaceGraphDraftAuthoringPort,
@@ -55,6 +53,7 @@ export function useCanvasAuthoringRuntimeDraftFlow({
       draftSession,
       setDraftSession,
       canonicalSnapshot,
+      persistedNodePositions,
       setCanvasNodePositions,
     },
     projection: {

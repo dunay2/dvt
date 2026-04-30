@@ -6,7 +6,7 @@ import type {
 } from '@dvt/contracts';
 
 import type { WorkspaceGraphDraft, WorkspaceGraphDraftRecord } from '../../ports/workspace';
-import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+import type { CanonicalEdge, CanonicalNode, PluginNodeKind } from '../../types/canonical';
 
 export type WorkspaceGraphDraftSemanticGraph = {
   canonicalNodes: CanonicalNode[];
@@ -17,9 +17,13 @@ function createDraftEdgeId(fromNodeId: string, toNodeId: string): string {
   return `draft_edge_${fromNodeId}_${toNodeId}`;
 }
 
+function isPluginNodeKind(value: string): value is PluginNodeKind {
+  return value.includes(':');
+}
+
 function toPluginNodeKind(node: WorkspaceGraphAuthoringNode): CanonicalNode['kind'] {
-  if (node.kind.includes(':')) {
-    return node.kind as CanonicalNode['kind'];
+  if (isPluginNodeKind(node.kind)) {
+    return node.kind;
   }
 
   return `${node.pluginId}:${node.kind}`;
@@ -55,6 +59,23 @@ function projectAuthoringNodeToCanonical(node: WorkspaceGraphAuthoringNode): Can
   return canonicalNode;
 }
 
+function buildCanonicalEdgeProjection(
+  edge: WorkspaceGraphAuthoringDraft['edges'][number]
+): CanonicalEdge {
+  const canonicalEdge: CanonicalEdge = {
+    id: edge.id || createDraftEdgeId(edge.sourceId, edge.targetId),
+    sourceId: edge.sourceId,
+    targetId: edge.targetId,
+    relation: edge.relation,
+  };
+
+  if (edge.metadata != null) {
+    canonicalEdge.metadata = { ...edge.metadata };
+  }
+
+  return canonicalEdge;
+}
+
 export function projectWorkspaceGraphAuthoringDraft(
   draft: WorkspaceGraphAuthoringDraft
 ): WorkspaceGraphDraft {
@@ -77,13 +98,7 @@ export function projectWorkspaceGraphAuthoringDraftSemanticGraph(
 ): WorkspaceGraphDraftSemanticGraph {
   return {
     canonicalNodes: draft.nodes.map((node) => projectAuthoringNodeToCanonical(node)),
-    canonicalEdges: draft.edges.map((edge) => ({
-      id: edge.id || createDraftEdgeId(edge.sourceId, edge.targetId),
-      sourceId: edge.sourceId,
-      targetId: edge.targetId,
-      relation: edge.relation,
-      ...(edge.metadata == null ? {} : { metadata: { ...edge.metadata } }),
-    })),
+    canonicalEdges: draft.edges.map((edge) => buildCanonicalEdgeProjection(edge)),
   };
 }
 

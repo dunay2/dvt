@@ -73,7 +73,7 @@ dispatch. This is the correct boundary.
 
 **Plan versioning registry (ADR-0036) closes a real trap.**
 Moving from an inline literal `'2.3'` to a versioned union over a declared registry is
-correct. The `PLAN_RUNTIME_COMPATIBILITY_MATRIX` in `@dvt/plan-verifier` gives an
+correct. The `PLAN_RUNTIME_ADMISSION_MATRIX` in `@dvt/plan-verifier` gives an
 executable rollout policy instead of implicit big-bang cutovers.
 
 **Bounded context communication rules (ADR-0034) are correctly stated.**
@@ -355,7 +355,7 @@ confidence for stakeholders.
 
 ### Plan versioning strategy
 
-The `planVersion` registry (ADR-0036) with `PLAN_RUNTIME_COMPATIBILITY_MATRIX` is
+The `planVersion` registry (ADR-0036) with `PLAN_RUNTIME_ADMISSION_MATRIX` is
 correct. The bounded change set (registry → versioned schema → planner emission →
 matrix → tests) is the right process.
 
@@ -470,7 +470,7 @@ stage. The team is spending engineering time writing risk entries instead of clo
 them.
 
 **Multi-engine abstraction for a single-engine reality.**
-`IProviderAdapter`, `StartRunBoundary.v1.ts`, `PLAN_RUNTIME_COMPATIBILITY_MATRIX` — all
+`IProviderAdapter`, `StartRunBoundary.v1.ts`, `PLAN_RUNTIME_ADMISSION_MATRIX` — all
 of these are designed to support multiple provider runtimes. The only production runtime
 is Temporal. The Conductor adapter does not exist. The conformance test suite for
 adapters does not exist. The multi-engine abstraction is sound but over-invested relative

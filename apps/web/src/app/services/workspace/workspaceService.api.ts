@@ -1,3 +1,6 @@
+/** Owned concern: adapt the workspace service port to protected API read-model projections. */
+import { parseWorkspaceGraphDraftReadResponse } from '@dvt/contracts';
+
 import type { AuditLogEntry, DiffChange, Plugin, Role } from '../../types/dbt';
 import type {
   FileContent,
@@ -6,12 +9,17 @@ import type {
   WorkspaceGraphSnapshot,
 } from '../../ports/workspace';
 import { ApiError, type ApiClient } from '../api/createApiClient';
-import {
-  detectWorkspaceServiceLocale,
-  resolveWorkspaceServiceCopy,
-} from './workspaceServiceCopy';
+import { detectWorkspaceServiceLocale, resolveWorkspaceServiceCopy } from './workspaceServiceCopy';
 import { WorkspaceFileLoadError, WORKSPACE_HTTP_ERROR_REASON } from './workspaceErrors';
-import { isWorkspaceHttpErrorEnvelope } from './workspaceGraphDraftHttp';
+import {
+  buildWorkspaceGraphDraftEndpoint,
+  createRequestFailedApiError,
+  isWorkspaceGraphDraftNotFoundResponse,
+  isWorkspaceHttpErrorEnvelope,
+  parseJsonResponse,
+  readWorkspaceGraphDraftScope,
+} from './workspaceGraphDraftHttp';
+import { projectWorkspaceGraphDraftReadResponseSnapshot } from './workspaceGraphDraftSnapshotProjection';
 
 export const apiWorkspaceServiceCapabilities = {
   sourceImportAvailable: false,
@@ -28,26 +36,49 @@ function isWorkspaceFileNotFoundApiError(error: ApiError): boolean {
   );
 }
 
+async function getWorkspaceGraphSnapshot(apiClient: ApiClient): Promise<WorkspaceGraphSnapshot> {
+  const endpoint = buildWorkspaceGraphDraftEndpoint(readWorkspaceGraphDraftScope());
+  const response = await apiClient.requestRaw(endpoint, {
+    method: 'GET',
+  });
+  const responseBody = await parseJsonResponse(response);
+
+  if (isWorkspaceGraphDraftNotFoundResponse({ statusCode: response.status, responseBody })) {
+    return { nodes: [], edges: [] };
+  }
+
+  if (response.status !== 200) {
+    throw createRequestFailedApiError(endpoint, response.status, responseBody);
+  }
+
+  return projectWorkspaceGraphDraftReadResponseSnapshot(
+    parseWorkspaceGraphDraftReadResponse(responseBody)
+  );
+}
+
 export function createApiWorkspaceService(apiClient: ApiClient): IWorkspacePort {
   return {
-    getGraphSnapshot: () => apiClient.getJson<WorkspaceGraphSnapshot>('/workspace/graph'),
+    getGraphSnapshot: () => getWorkspaceGraphSnapshot(apiClient),
     getDiffChanges: () => apiClient.getJson<DiffChange[]>('/diff/changes'),
     getPlugins: () => apiClient.getJson<Plugin[]>('/plugins'),
     getRoles: () => apiClient.getJson<Role[]>('/admin/roles'),
     getAuditLog: () => apiClient.getJson<AuditLogEntry[]>('/admin/audit'),
     listWarehouseConnections: async () => {
       throw new Error(
-        resolveWorkspaceServiceCopy(detectWorkspaceServiceLocale()).warehouseImportApiModeUnavailable
+        resolveWorkspaceServiceCopy(detectWorkspaceServiceLocale())
+          .warehouseImportApiModeUnavailable
       );
     },
     listWarehouseTables: async () => {
       throw new Error(
-        resolveWorkspaceServiceCopy(detectWorkspaceServiceLocale()).warehouseImportApiModeUnavailable
+        resolveWorkspaceServiceCopy(detectWorkspaceServiceLocale())
+          .warehouseImportApiModeUnavailable
       );
     },
     importSources: async () => {
       throw new Error(
-        resolveWorkspaceServiceCopy(detectWorkspaceServiceLocale()).warehouseImportApiModeUnavailable
+        resolveWorkspaceServiceCopy(detectWorkspaceServiceLocale())
+          .warehouseImportApiModeUnavailable
       );
     },
     listFiles: () => apiClient.getJson<WorkspaceFileEntry[]>('/workspace/files'),

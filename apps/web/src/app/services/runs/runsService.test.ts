@@ -2,9 +2,10 @@ import { describe, expect, it, vi } from 'vitest';
 import { parseExecutionSelection } from '@dvt/contracts';
 
 import { ApiError, type ApiClient } from '../api/createApiClient';
+import type { StartRunInput } from '../../ports/runs';
 import { useSessionStore } from '../../stores/sessionStore';
 import { makePlanRef } from '../../testing/contractTestUtils';
-import { createRunsService, type StartRunInput } from './runsService';
+import { createRunsService } from './runsService';
 
 function createApiClientMock(): ApiClient {
   return {
@@ -417,7 +418,7 @@ describe('runsService runtime contract', () => {
     );
   });
 
-  it('does not call legacy GET /runs/:runId/status route', async () => {
+  it('does not call retired GET /runs/:runId/status route', async () => {
     const apiClient = createApiClientMock();
     vi.mocked(apiClient.getJson).mockResolvedValue({
       runId: 'run_abc',

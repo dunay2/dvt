@@ -22,7 +22,9 @@ const { closeMock, loadTemporalAdapterConfigMock, temporalAdapterDepsMock } = vi
       maxContinueAsNewPayloadBytes: Number(
         envInput['TEMPORAL_MAX_CONTINUE_AS_NEW_PAYLOAD_BYTES'] ?? 500_000
       ),
-      continueAsNewAfterLayerCount: Number(envInput['TEMPORAL_CONTINUE_AS_NEW_AFTER_LAYERS'] ?? 0),
+      continueAsNewAfterLayerCount: Number(
+        envInput['TEMPORAL_CONTINUE_AS_NEW_AFTER_LAYERS'] ?? 100
+      ),
     },
   })),
   temporalAdapterDepsMock: vi.fn(),

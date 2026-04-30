@@ -1,5 +1,5 @@
 /** Owned concern: compose the Raven shell frame and publish root bootstrap posture. */
-import { useEffect, useSyncExternalStore } from 'react';
+import { useEffect, useMemo, useSyncExternalStore } from 'react';
 import { Outlet } from 'react-router';
 import {
   buildShellHealthPresentationModel,
@@ -12,6 +12,17 @@ import LeftNavigation from './components/LeftNavigation';
 import ShellHealthBanner from './components/ShellHealthBanner';
 import TopAppBar from './components/TopAppBar';
 import AppShellFrame from './components/shell/AppShellFrame';
+import {
+  createCapabilitiesFallbackBootstrapCommand,
+  createCapabilitiesPendingBootstrapCommand,
+  createCapabilitiesReadyBootstrapCommand,
+  createHealthDegradedBootstrapCommand,
+  createHealthFailedBootstrapCommand,
+  createHealthPendingBootstrapCommand,
+  createHealthReadyBootstrapCommand,
+  createRouteBootstrapStepCommand,
+} from './bootstrap/appBootstrapCommands';
+import { resolveAppBootstrapCopy } from './bootstrap/appBootstrapCopy';
 import { completeBootstrapScreen, setBootstrapStepStatus } from './bootstrap/appBootstrapScreen';
 import {
   getPublishedRouteBootstrapPresentation,
@@ -47,6 +58,10 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
     errorUpdatedAt: platformHealth.errorUpdatedAt,
   });
   const bootstrapLocale = detectRouteBootstrapLocale();
+  const appBootstrapCopy = useMemo(
+    () => resolveAppBootstrapCopy(bootstrapLocale),
+    [bootstrapLocale]
+  );
   const activeRouteBootstrapRegistration = useActiveRouteBootstrapRegistration(undefined, {
     locale: bootstrapLocale,
   });
@@ -85,21 +100,20 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
 
   useEffect(() => {
     if (isInitialCapabilitiesBootstrapPending) {
-      setBootstrapStepStatus('capabilities', 'pending');
+      setBootstrapStepStatus(createCapabilitiesPendingBootstrapCommand());
       return;
     }
 
     if (capabilitiesQuery.isError) {
       setBootstrapStepStatus(
-        'capabilities',
-        'degraded',
-        'Capabilities could not be loaded. Using the fallback shell configuration.'
+        createCapabilitiesFallbackBootstrapCommand({ copy: appBootstrapCopy })
       );
       return;
     }
 
-    setBootstrapStepStatus('capabilities', 'complete');
+    setBootstrapStepStatus(createCapabilitiesReadyBootstrapCommand());
   }, [
+    appBootstrapCopy,
     capabilitiesQuery.isError,
     capabilitiesQuery.isPending,
     capabilitiesQuery.data,
@@ -108,34 +122,38 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
 
   useEffect(() => {
     if (shellHealth.isInitialHealthCheckPending) {
-      setBootstrapStepStatus('health', 'pending');
+      setBootstrapStepStatus(createHealthPendingBootstrapCommand());
       return;
     }
 
     if (platformHealth.isError || shellHealthRestState === 'offline') {
       setBootstrapStepStatus(
-        'health',
-        'failed',
-        shellHealth.connectionDetail ?? 'Platform health probes failed during startup.'
+        createHealthFailedBootstrapCommand({
+          copy: appBootstrapCopy,
+          detail: shellHealth.connectionDetail,
+        })
       );
       return;
     }
 
     if (shellHealthRestState !== 'ok') {
       setBootstrapStepStatus(
-        'health',
-        'degraded',
-        shellHealth.connectionDetail ?? 'Platform health probes failed during startup.'
+        createHealthDegradedBootstrapCommand({
+          copy: appBootstrapCopy,
+          detail: shellHealth.connectionDetail,
+        })
       );
       return;
     }
 
     setBootstrapStepStatus(
-      'health',
-      'complete',
-      shellHealth.connectionDetail ?? 'Platform health settled.'
+      createHealthReadyBootstrapCommand({
+        copy: appBootstrapCopy,
+        detail: shellHealth.connectionDetail,
+      })
     );
   }, [
+    appBootstrapCopy,
     platformHealth.isError,
     shellHealth.connectionDetail,
     shellHealthRestState,
@@ -143,11 +161,7 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
   ]);
 
   useEffect(() => {
-    setBootstrapStepStatus(
-      'route',
-      routeBootstrapPresentation.status,
-      routeBootstrapPresentation.detail
-    );
+    setBootstrapStepStatus(createRouteBootstrapStepCommand(routeBootstrapPresentation));
   }, [routeBootstrapPresentation.detail, routeBootstrapPresentation.status]);
 
   useEffect(() => {

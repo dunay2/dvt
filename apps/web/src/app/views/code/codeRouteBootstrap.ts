@@ -1,6 +1,7 @@
+/** Owned concern: publish Code workbench file-loading posture into the route bootstrap contract. */
 import {
   createCompleteRouteBootstrapPresentation,
-  createErrorRouteBootstrapPresentation,
+  createFailedRouteBootstrapPresentation,
   createPendingRouteBootstrapPresentation,
   createPublishedRouteBootstrapHandle,
   type RouteBootstrapPresentation,
@@ -28,19 +29,15 @@ export function deriveCodeRouteBootstrapPresentation({
   filePreviewErrorMessage,
 }: CodeRouteBootstrapArgs): RouteBootstrapPresentation {
   if (isLoadingFileTree) {
-    return createPendingRouteBootstrapPresentation(
-      'Loading workspace files for the code route'
-    );
+    return createPendingRouteBootstrapPresentation('Loading workspace files for the code route');
   }
 
   if (fileTreeErrorMessage) {
-    return createErrorRouteBootstrapPresentation(fileTreeErrorMessage);
+    return createFailedRouteBootstrapPresentation(fileTreeErrorMessage);
   }
 
   if (!hasWorkspaceFiles) {
-    return createCompleteRouteBootstrapPresentation(
-      'Code route is ready with no workspace files'
-    );
+    return createCompleteRouteBootstrapPresentation('Code route is ready with no workspace files');
   }
 
   if (isLoadingFilePreview) {
@@ -50,7 +47,7 @@ export function deriveCodeRouteBootstrapPresentation({
   }
 
   if (filePreviewErrorMessage) {
-    return createErrorRouteBootstrapPresentation(filePreviewErrorMessage);
+    return createFailedRouteBootstrapPresentation(filePreviewErrorMessage);
   }
 
   return createCompleteRouteBootstrapPresentation('Code route is ready');

@@ -91,9 +91,9 @@ describeIfPg('PostgresPlanStore records core integration', () => {
       await expect(
         store.getPlanRecordByRef({ ...planRef, uri: `dvt-plan://postgres/${PLAN_ID.r4_10}` })
       ).rejects.toThrow('PLAN_REF_MISMATCH');
-      await expect(store.getPlanRecordByRef({ ...planRef, planVersion: '9.9' })).rejects.toThrow(
-        'PLAN_REF_MISMATCH'
-      );
+      await expect(
+        store.getPlanRecordByRef({ ...planRef, planVersion: `${planRef.planVersion}-unsupported` })
+      ).rejects.toThrow('PLAN_REF_MISMATCH');
     }));
 
   test('createPlanRecord rejects duplicate and missing lineage refs', () =>

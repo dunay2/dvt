@@ -529,7 +529,7 @@ describe('RunStates', () => {
           stepId: stepId('step-transform'),
           payload: {
             stepArtifactRef: {
-              artifactKind: 'dbt.compiled-sql',
+              artifactKind: 'compiled-sql',
               storageUri: 's3://dvt-artifacts/dev/compiled/orders_daily.sql',
               sha256: 'a'.repeat(64),
               sizeBytes: 2048,
@@ -562,7 +562,7 @@ describe('RunStates', () => {
 
     expect(container.textContent).toContain('Execution provenance');
     expect(container.textContent).toContain('step-transform');
-    expect(container.textContent).toContain('dbt.compiled-sql');
+    expect(container.textContent).toContain('compiled-sql');
     expect(container.textContent).toContain('s3://dvt-artifacts/dev/compiled/orders_daily.sql');
     expect(container.textContent).toContain(
       'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'

@@ -40,4 +40,12 @@ describe('useCanvasInteractionStore', () => {
     });
     expect(localStorage.getItem(CANVAS_INTERACTION_STORAGE_KEY)).toBe(firstPersistedValue);
   });
+
+  it('marks the store hydrated through the persist lifecycle', async () => {
+    expect(useCanvasInteractionStore.getState()._hasHydrated).toBe(false);
+
+    await useCanvasInteractionStore.persist.rehydrate();
+
+    expect(useCanvasInteractionStore.getState()._hasHydrated).toBe(true);
+  });
 });

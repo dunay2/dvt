@@ -64,7 +64,7 @@ const BASE_TEMPORAL_ADAPTER_CONFIG = {
   workflowBudget: {
     maxStartPayloadBytes: 2_000_000,
     maxContinueAsNewPayloadBytes: 500_000,
-    continueAsNewAfterLayerCount: 0,
+    continueAsNewAfterLayerCount: 100,
   },
 } as const;
 

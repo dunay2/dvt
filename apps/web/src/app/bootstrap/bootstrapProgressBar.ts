@@ -17,6 +17,9 @@ export type BootstrapProgressSegment = {
 export type BootstrapProgressSnapshot = {
   tone: BootstrapProgressTone;
   label: string;
+  kicker: string;
+  listLabel: string;
+  countLabel: string;
   settledCount: number;
   totalCount: number;
   segments: readonly BootstrapProgressSegment[];
@@ -30,7 +33,7 @@ function renderProgressTemplate(root: HTMLElement, snapshot: BootstrapProgressSn
 
   const kicker = document.createElement('span');
   kicker.className = 'app-loading-progress-kicker';
-  kicker.textContent = 'Startup readiness';
+  kicker.textContent = snapshot.kicker;
 
   const count = document.createElement('span');
   count.className = 'app-loading-progress-count';
@@ -41,7 +44,7 @@ function renderProgressTemplate(root: HTMLElement, snapshot: BootstrapProgressSn
   const segments = document.createElement('div');
   segments.className = 'app-loading-progress-segments';
   segments.setAttribute('role', 'list');
-  segments.setAttribute('aria-label', 'Startup readiness checks');
+  segments.setAttribute('aria-label', snapshot.listLabel);
 
   snapshot.segments.forEach((segment) => {
     const segmentNode = document.createElement('span');
@@ -72,7 +75,7 @@ export function renderBootstrapProgress(snapshot: BootstrapProgressSnapshot): vo
 
   const countNode = root.querySelector<HTMLElement>('[data-app-loading-progress-count]');
   if (countNode) {
-    countNode.textContent = `${snapshot.settledCount}/${snapshot.totalCount} checks`;
+    countNode.textContent = snapshot.countLabel;
   }
 
   const labelNode = root.querySelector<HTMLElement>('[data-app-loading-progress-label]');

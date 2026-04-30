@@ -1,9 +1,7 @@
 /** Owned concern: define Canvas center-surface rendering contracts. */
-import type {
-  CanvasKindRegistration,
-  NodeKindRegistration,
-} from '../../plugins/nodeTypeContracts';
+import type { CanvasKindRegistration, NodeKindRegistration } from '../../plugins/nodeTypeContracts';
 import type { CanvasDraftPresentationState } from './canvasDraftPresentationModel';
+import type { CanvasCreateCanvasDocumentCommand } from './canvasDraftLifecycle.types';
 import type { CanvasDraftTransportErrorState } from './canvasDraftTransportErrorState';
 import type { CanvasRouteStartupBlockState } from './canvasRouteInteractionState';
 import type { WorkspaceGraphDraft } from '../../ports/workspace';
@@ -17,7 +15,7 @@ export type RenderCanvasCenterSurfaceArgs = {
   availableCanvasKinds: readonly CanvasKindRegistration[];
   canEditEdges: boolean;
   canOpenSourceImport: boolean;
-  onCreateCanvasDocument: (command: { kind: string; title: string }) => void;
+  onCreateCanvasDocument: (command: CanvasCreateCanvasDocumentCommand) => void;
   onCreateAuthoringNode: (registration: NodeKindRegistration) => void;
 };
 

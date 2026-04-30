@@ -2,11 +2,12 @@ import React, { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { WorkspaceGraphDraftAuthoringSaveResult } from '../../ports/workspaceGraphDraftAuthoring';
-import { buildDraftSaveSavedResponse } from '../../services/workspace/workspaceGraphDraft.test.fixtures';
+import { buildDraftSaveSavedResponse } from '../../services/workspace/workspaceGraphDraftProtocol.test.fixtures';
 import type { CanvasDraftSession } from './canvasDraftSession';
 import {
   applyTransformationAuthoringFixture,
   buildRemoteDraftRecord,
+  setCanvasLayoutNodePositions,
   setHarnessRemoteDraftRecord,
   TRANSFORMATION_AUTHORING_CANONICAL_NODES,
   type CanvasControllerHarness,
@@ -200,10 +201,7 @@ describe('useCanvasController reload hydration guards', () => {
 
     harness.state.store.selectedNodes = ['node_2'];
     harness.state.store.inspectorNodeId = 'node_2';
-    const storeActions = harness.state.store as typeof harness.state.store & {
-      setSelectedNodes: ReturnType<typeof vi.fn>;
-      setInspectorNode: ReturnType<typeof vi.fn>;
-    };
+    const storeActions = harness.state.store;
     storeActions.setSelectedNodes.mockClear();
     storeActions.setInspectorNode.mockClear();
 
@@ -228,5 +226,54 @@ describe('useCanvasController reload hydration guards', () => {
     expect(storeActions.setInspectorNode).toHaveBeenCalledWith(null);
     expect(harness.getLatestResult()?.inspectorNode).toBeNull();
     expect(harness.getLatestResult()?.nodesWithImpact.map((node) => node.id)).toEqual(['node_1']);
+  });
+
+  it('keeps locally persisted node positions when reload hydrates a remote draft', async () => {
+    harness = await replaceHarnessWithDraft(
+      harness,
+      buildRemoteDraftRecord(
+        {
+          nodeIds: ['node_1'],
+          nodePositions: {
+            node_1: { x: 0, y: 0 },
+          },
+          edges: [],
+        },
+        'rev-1',
+        '2026-04-17T00:00:00Z'
+      )
+    );
+    setCanvasLayoutNodePositions(harness, {
+      node_1: { x: 320, y: 240 },
+    });
+    harness.state.store.setCanvasNodePositions.mockClear();
+    setHarnessRemoteDraftRecord(
+      harness,
+      buildRemoteDraftRecord(
+        {
+          nodeIds: ['node_1'],
+          nodePositions: {
+            node_1: { x: 40, y: 60 },
+          },
+          edges: [],
+        },
+        'rev-2',
+        '2026-04-17T00:00:01Z'
+      )
+    );
+
+    await reloadLatestDraft(harness);
+
+    const node = harness
+      .getLatestResult()
+      ?.nodesWithImpact.find((candidate) => candidate.id === 'node_1');
+
+    expect(harness.state.store.setCanvasNodePositions).not.toHaveBeenCalledWith(
+      WORKSPACE_LAYOUT_KEY,
+      {
+        node_1: { x: 40, y: 60 },
+      }
+    );
+    expect(node?.position).toEqual({ x: 320, y: 240 });
   });
 });

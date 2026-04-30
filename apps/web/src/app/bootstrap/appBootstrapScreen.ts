@@ -1,273 +1,144 @@
-/** Owned concern: drive the pre-React Raven startup screen state and DOM semantics. */
-import { renderBootstrapProgress, type BootstrapProgressSegment } from './bootstrapProgressBar';
+/** Owned concern: apply resolved pre-React bootstrap presentation snapshots to the startup DOM. */
+import {
+  canCompleteBootstrapSteps,
+  createBootstrapStepState,
+  createInitialBootstrapStepState,
+  formatBootstrapBuildDate,
+  resolveBootstrapScreenPresentation,
+  type BootstrapScreenPresentation,
+  type BootstrapStep,
+  type BootstrapStepPresentation,
+  type BootstrapStepStateById,
+} from './appBootstrapPresentation';
+import { resolveAppBootstrapCopy } from './appBootstrapCopy';
+import type { BootstrapFailureCommand, BootstrapStepStatusCommand } from './appBootstrapCommands';
+import {
+  BOOTSTRAP_DOM,
+  getBootstrapAnnouncementDescription,
+  getBootstrapStepSelector,
+  type BootstrapMetaTarget,
+  type BootstrapTextTarget,
+} from './appBootstrapDomContract';
+import { renderBootstrapProgress } from './bootstrapProgressBar';
 
-type BootstrapStep = 'hydrate' | 'services' | 'capabilities' | 'health' | 'route';
-type BootstrapStepStatus = 'pending' | 'complete' | 'degraded' | 'failed' | 'blocked' | 'error';
-type BootstrapScreenState = 'loading' | 'blocked' | 'error' | 'complete';
+type BootstrapMetaPresentation = Readonly<{
+  text: string;
+  visible: boolean;
+}>;
 
-const LOADING_SCREEN_ID = 'app-loading-screen';
-const TITLE_ID = 'app-loading-title';
-const MESSAGE_ID = 'app-loading-message';
-const VERSION_ID = 'app-loading-version';
-const BUILD_DATE_ID = 'app-loading-build-date';
-const PROGRESS_ID = 'app-loading-progress';
-const STARTUP_STATUS_LABEL = 'Raven startup status';
+export type { BootstrapFailureCommand, BootstrapStepStatusCommand } from './appBootstrapCommands';
 
-type BootstrapStepConfig = {
-  label: string;
-  pendingDetail: string;
-  completeDetail: string;
-};
+type BootstrapTextUpdate = Readonly<{
+  target: BootstrapTextTarget;
+  text: string;
+}>;
 
-type BootstrapStepState = {
-  status: BootstrapStepStatus;
-  detail: string;
-};
+type BootstrapMetaUpdate = Readonly<{
+  target: BootstrapMetaTarget;
+  presentation: BootstrapMetaPresentation;
+}>;
 
-const STEP_ORDER: BootstrapStep[] = ['hydrate', 'services', 'capabilities', 'health', 'route'];
-const PREPARING_TITLE = 'Preparing Raven';
-const PREPARING_MESSAGE =
-  'Loading startup modules in order. The workspace opens once bootstrap settles.';
-const BLOCKED_TITLE = 'Raven is waiting for startup prerequisites';
-const BLOCKED_MESSAGE_FALLBACK =
-  'Startup is blocked until the required platform prerequisites are available.';
-const ERROR_TITLE = 'Raven could not finish startup';
-const ERROR_MESSAGE_FALLBACK = 'An unexpected startup error occurred.';
-
-const STEP_CONFIG: Record<BootstrapStep, BootstrapStepConfig> = {
-  hydrate: {
-    label: 'Hydrating application',
-    pendingDetail: 'Mounting the Raven shell',
-    completeDetail: 'Application shell mounted',
-  },
-  services: {
-    label: 'Preparing app services',
-    pendingDetail: 'Building app services and query client',
-    completeDetail: 'App services and query client ready',
-  },
-  capabilities: {
-    label: 'Loading runtime capabilities',
-    pendingDetail: 'Resolving enabled plugins and workspace surfaces',
-    completeDetail: 'Runtime capabilities loaded',
-  },
-  health: {
-    label: 'Checking platform health',
-    pendingDetail: 'Polling health and readiness endpoints',
-    completeDetail: 'Platform health settled',
-  },
-  route: {
-    label: 'Preparing initial route',
-    pendingDetail: 'Preparing the active workspace surface',
-    completeDetail: 'Initial route is ready',
-  },
-};
-
-let bootstrapStepState = createInitialStepState();
-
-function createInitialStepState(): Record<BootstrapStep, BootstrapStepState> {
-  return STEP_ORDER.reduce<Record<BootstrapStep, BootstrapStepState>>(
-    (state, step) => {
-      state[step] = {
-        status: 'pending',
-        detail: STEP_CONFIG[step].pendingDetail,
-      };
-      return state;
-    },
-    {} as Record<BootstrapStep, BootstrapStepState>
-  );
-}
+let bootstrapStepState: BootstrapStepStateById = createInitialBootstrapStepState();
 
 function getLoadingScreen(): HTMLElement | null {
-  return document.getElementById(LOADING_SCREEN_ID);
+  return document.getElementById(BOOTSTRAP_DOM.screenId);
+}
+
+function getLoadingAnnouncement(): HTMLOutputElement | null {
+  return document.querySelector<HTMLOutputElement>(`#${BOOTSTRAP_DOM.announcementId}`);
 }
 
 function getStepNode(step: BootstrapStep): HTMLElement | null {
-  return document.querySelector<HTMLElement>(`[data-bootstrap-step="${step}"]`);
+  return document.querySelector<HTMLElement>(getBootstrapStepSelector(step));
 }
 
-function updateBootstrapText(id: string, text: string): void {
-  const node = document.getElementById(id);
+function updateBootstrapText({ target, text }: BootstrapTextUpdate): void {
+  const node = document.getElementById(BOOTSTRAP_DOM.textTargetIds[target]);
   if (node) {
     node.textContent = text;
   }
 }
 
-function setBootstrapMetaItem(id: string, text: string, visible: boolean): void {
-  const node = document.getElementById(id);
+function setBootstrapMetaItem({ target, presentation }: BootstrapMetaUpdate): void {
+  const node = document.getElementById(BOOTSTRAP_DOM.metaTargetIds[target]);
   if (!node) {
     return;
   }
 
-  node.textContent = text;
-  node.hidden = !visible;
+  node.textContent = presentation.text;
+  node.hidden = !presentation.visible;
 }
 
-function getDefaultDetail(step: BootstrapStep, status: BootstrapStepStatus): string {
-  switch (status) {
-    case 'complete':
-      return STEP_CONFIG[step].completeDetail;
-    case 'degraded':
-      return `${STEP_CONFIG[step].label} settled with degraded startup conditions.`;
-    case 'failed':
-      return `${STEP_CONFIG[step].label} failed but does not block shell startup.`;
-    case 'blocked':
-      return `${STEP_CONFIG[step].label} is blocked by a required startup prerequisite.`;
-    case 'error':
-      return `${STEP_CONFIG[step].label} failed during startup.`;
-    case 'pending':
-    default:
-      return STEP_CONFIG[step].pendingDetail;
-  }
-}
-
-function writeStepStateToDom(step: BootstrapStep): void {
-  const node = getStepNode(step);
+function writeStepPresentationToDom(stepPresentation: BootstrapStepPresentation): void {
+  const node = getStepNode(stepPresentation.id);
   if (!node) {
     return;
   }
 
-  const state = bootstrapStepState[step];
-  node.dataset.status = state.status;
-  const detailNode = node.querySelector<HTMLElement>('[data-bootstrap-detail]');
+  node.dataset.status = stepPresentation.status;
+  const detailNode = node.querySelector<HTMLElement>(BOOTSTRAP_DOM.detailSelector);
   if (detailNode) {
-    detailNode.textContent = state.detail;
+    detailNode.textContent = stepPresentation.detail;
   }
 }
 
-function findLatestStepDetail(status: BootstrapStepStatus): string | null {
-  for (let index = STEP_ORDER.length - 1; index >= 0; index -= 1) {
-    const step = STEP_ORDER[index];
-    if (!step) {
-      continue;
-    }
-
-    const stepState = bootstrapStepState[step];
-    if (stepState.status === status) {
-      return stepState.detail;
-    }
+function updateBootstrapAnnouncement(presentation: BootstrapScreenPresentation): void {
+  const announcement = getLoadingAnnouncement();
+  if (!announcement) {
+    return;
   }
 
-  return null;
+  announcement.setAttribute('aria-label', presentation.announcement.label);
+  announcement.setAttribute('aria-live', BOOTSTRAP_DOM.announcementAriaAttributes.live);
+  announcement.setAttribute('aria-atomic', BOOTSTRAP_DOM.announcementAriaAttributes.atomic);
+  announcement.setAttribute('aria-busy', presentation.announcement.busy ? 'true' : 'false');
+  announcement.setAttribute('aria-describedby', getBootstrapAnnouncementDescription());
+  announcement.textContent = presentation.announcement.text;
 }
 
-function isBootstrapStepStartupAllowed(status: BootstrapStepStatus): boolean {
-  return status === 'complete' || status === 'degraded' || status === 'failed';
-}
-
-function getStepProgressUnits(status: BootstrapStepStatus): number {
-  return isBootstrapStepStartupAllowed(status) ? 1 : 0;
-}
-
-function renderBootstrapProgressState(state: BootstrapScreenState): void {
-  const settledSteps = STEP_ORDER.filter((step) => {
-    const stepStatus = bootstrapStepState[step].status;
-    return isBootstrapStepStartupAllowed(stepStatus);
-  }).length;
-
-  const progressValue = STEP_ORDER.reduce(
-    (total, step) => total + getStepProgressUnits(bootstrapStepState[step].status),
-    0
-  );
-
-  let label = `${settledSteps}/${STEP_ORDER.length} startup checks settled`;
-  if (state === 'blocked') {
-    label = `${label}. Required startup blockers remain.`;
-  }
-  if (state === 'error') {
-    label = `${label}. Startup error needs attention.`;
-  }
-
-  const segments: BootstrapProgressSegment[] = STEP_ORDER.map((step) => ({
-    id: step,
-    label: STEP_CONFIG[step].label,
-    status: bootstrapStepState[step].status,
-  }));
-
-  renderBootstrapProgress({
-    tone: state,
-    label,
-    settledCount: state === 'complete' ? STEP_ORDER.length : progressValue,
-    totalCount: STEP_ORDER.length,
-    segments,
+function clearScreenAriaFallbackAttributes(screen: HTMLElement): void {
+  BOOTSTRAP_DOM.screenFallbackAriaAttributes.forEach((attribute) => {
+    screen.removeAttribute(attribute);
   });
 }
 
-function setBootstrapScreenState(
-  state: BootstrapScreenState,
-  title: string,
-  message: string
-): void {
+function renderBootstrapScreenPresentation(presentation: BootstrapScreenPresentation): void {
   const screen = getLoadingScreen();
   if (!screen) {
     return;
   }
 
-  screen.dataset.state = state;
-  screen.setAttribute('role', 'status');
-  screen.setAttribute('aria-label', STARTUP_STATUS_LABEL);
-  screen.setAttribute('aria-live', 'polite');
-  screen.setAttribute('aria-atomic', 'true');
-  screen.setAttribute('aria-busy', state === 'complete' ? 'false' : 'true');
-  screen.setAttribute('aria-describedby', `${MESSAGE_ID} ${PROGRESS_ID}`);
-  updateBootstrapText(TITLE_ID, title);
-  updateBootstrapText(MESSAGE_ID, message);
-  renderBootstrapProgressState(state);
+  screen.dataset.state = presentation.state;
+  clearScreenAriaFallbackAttributes(screen);
+  updateBootstrapText({ target: 'title', text: presentation.title });
+  updateBootstrapText({ target: 'message', text: presentation.message });
+  updateBootstrapAnnouncement(presentation);
+  presentation.steps.forEach(writeStepPresentationToDom);
+  renderBootstrapProgress(presentation.progress);
 }
 
 function syncBootstrapScreenState(): void {
-  if (STEP_ORDER.some((step) => bootstrapStepState[step].status === 'error')) {
-    setBootstrapScreenState(
-      'error',
-      ERROR_TITLE,
-      findLatestStepDetail('error') ?? ERROR_MESSAGE_FALLBACK
-    );
-    return;
-  }
-
-  if (STEP_ORDER.some((step) => bootstrapStepState[step].status === 'blocked')) {
-    setBootstrapScreenState(
-      'blocked',
-      BLOCKED_TITLE,
-      findLatestStepDetail('blocked') ?? BLOCKED_MESSAGE_FALLBACK
-    );
-    return;
-  }
-
-  if (canCompleteBootstrap()) {
-    setBootstrapScreenState('complete', 'Raven is ready', 'Opening the workspace.');
-    return;
-  }
-
-  setBootstrapScreenState('loading', PREPARING_TITLE, PREPARING_MESSAGE);
-}
-
-function canCompleteBootstrap(): boolean {
-  return STEP_ORDER.every((step) => {
-    const status = bootstrapStepState[step].status;
-    return isBootstrapStepStartupAllowed(status);
-  });
-}
-
-function formatBuildDate(isoString: string): string {
-  const parsedDate = new Date(isoString);
-  if (Number.isNaN(parsedDate.getTime())) {
-    return isoString;
-  }
-
-  const canonicalIso = parsedDate.toISOString();
-  return `${canonicalIso.slice(0, 10)} ${canonicalIso.slice(11, 16)} UTC`;
+  renderBootstrapScreenPresentation(
+    resolveBootstrapScreenPresentation(bootstrapStepState, resolveAppBootstrapCopy())
+  );
 }
 
 function updateBootstrapBuildMeta(): void {
+  const copy = resolveAppBootstrapCopy();
   const appVersion = import.meta.env.VITE_APP_VERSION?.trim() || '0.0.0';
   const rawBuildDate = import.meta.env.VITE_APP_BUILD_DATE?.trim() || '';
 
-  updateBootstrapText(VERSION_ID, `Version ${appVersion}`);
-  setBootstrapMetaItem(
-    BUILD_DATE_ID,
-    rawBuildDate.length > 0 ? `Build ${formatBuildDate(rawBuildDate)}` : '',
-    rawBuildDate.length > 0
-  );
+  updateBootstrapText({ target: 'version', text: `${copy.versionPrefix} ${appVersion}` });
+  setBootstrapMetaItem({
+    target: 'buildDate',
+    presentation: {
+      text:
+        rawBuildDate.length > 0
+          ? `${copy.buildPrefix} ${formatBootstrapBuildDate(rawBuildDate)}`
+          : '',
+      visible: rawBuildDate.length > 0,
+    },
+  });
 }
 
 export function startBootstrapScreen(): void {
@@ -275,14 +146,8 @@ export function startBootstrapScreen(): void {
     return;
   }
 
-  bootstrapStepState = createInitialStepState();
-
-  setBootstrapScreenState('loading', PREPARING_TITLE, PREPARING_MESSAGE);
-
-  STEP_ORDER.forEach((step) => {
-    writeStepStateToDom(step);
-  });
-
+  bootstrapStepState = createInitialBootstrapStepState(resolveAppBootstrapCopy());
+  syncBootstrapScreenState();
   updateBootstrapBuildMeta();
 }
 
@@ -291,47 +156,47 @@ export function isBootstrapScreenVisible(): boolean {
   return screen !== null && screen.dataset.state !== 'complete';
 }
 
-export function setBootstrapStepStatus(
-  step: BootstrapStep,
-  status: BootstrapStepStatus,
-  detail?: string
-): void {
-  const resolvedDetail = detail ?? getDefaultDetail(step, status);
+export function setBootstrapStepStatus({ step, status, detail }: BootstrapStepStatusCommand): void {
+  const nextStepState = createBootstrapStepState(step, status, detail, resolveAppBootstrapCopy());
   const previousState = bootstrapStepState[step];
 
-  if (previousState.status === status && previousState.detail === resolvedDetail) {
+  if (
+    previousState.status === nextStepState.status &&
+    previousState.detail === nextStepState.detail
+  ) {
     syncBootstrapScreenState();
     return;
   }
 
   bootstrapStepState = {
     ...bootstrapStepState,
-    [step]: {
-      status,
-      detail: resolvedDetail,
-    },
+    [step]: nextStepState,
   };
 
-  writeStepStateToDom(step);
   syncBootstrapScreenState();
 }
 
-export function showBootstrapFailure(message: string): void {
+export function showBootstrapFailure({ message }: BootstrapFailureCommand): void {
+  const copy = resolveAppBootstrapCopy();
   if (!getLoadingScreen()) {
     return;
   }
 
-  setBootstrapStepStatus('route', 'error', message || ERROR_MESSAGE_FALLBACK);
+  setBootstrapStepStatus({
+    step: 'route',
+    status: 'error',
+    detail: message || copy.errorMessageFallback,
+  });
 }
 
 export function completeBootstrapScreen(): void {
   const screen = getLoadingScreen();
-  if (!screen || !canCompleteBootstrap()) {
+  if (!screen || !canCompleteBootstrapSteps(bootstrapStepState)) {
     return;
   }
 
-  setBootstrapScreenState('complete', 'Raven is ready', 'Opening the workspace.');
-  window.setTimeout(() => {
+  syncBootstrapScreenState();
+  globalThis.setTimeout(() => {
     if (screen.dataset.state === 'complete') {
       screen.remove();
     }

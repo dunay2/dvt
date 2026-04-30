@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { createElement } from 'react';
+import { act, createElement } from 'react';
 import { describe, expect, it } from 'vitest';
 
 import { withTestQueryClient } from '../../../testing/reactQueryHarness';
@@ -220,6 +220,55 @@ describe('useCanvasViewportGraphModel', () => {
 
       expect(mounted.readState()?.nodes[0]?.data.name).toBe('source-node-renamed');
       expect(mounted.readState()?.nodes[0]?.data.description).toBe('Edited in inspector');
+    } finally {
+      await mounted.cleanup();
+    }
+  });
+
+  it('keeps live node positions ahead of persisted layout during viewport rerenders', async () => {
+    const authoringProjection = buildCanvasAuthoringGraphProjection({
+      visibleNodeIds: ['source-node'],
+      visibleEdges: [],
+      draftSemanticGraph: {
+        canonicalNodes: [buildCanonicalNode('source-node', 'dvt:source', 'input')],
+        canonicalEdges: [],
+      },
+      localCanonicalNodes: [],
+    });
+    const persistedNodePositions = {
+      'source-node': { x: 40, y: 140 },
+    };
+    const args = {
+      visibleNodeIds: ['source-node'],
+      visibleEdges: [],
+      canonicalNodesById: authoringProjection.canonicalNodesById,
+      canonicalEdgeIdBySignature: authoringProjection.canonicalEdgeIdBySignature,
+      columnLevelLineageEnabled: false,
+      persistedNodePositions,
+    };
+    const mounted = await renderViewportGraphModel(args);
+
+    try {
+      expect(mounted.readState()?.nodes[0]?.position).toEqual({ x: 40, y: 140 });
+
+      await act(async () => {
+        mounted
+          .readState()
+          ?.setNodes((nodes) =>
+            nodes.map((node) =>
+              node.id === 'source-node'
+                ? { ...node, dragging: false, position: { x: 225, y: 210 } }
+                : node
+            )
+          );
+        await Promise.resolve();
+      });
+      await mounted.rerender({
+        ...args,
+        persistedNodePositions: { ...persistedNodePositions },
+      });
+
+      expect(mounted.readState()?.nodes[0]?.position).toEqual({ x: 225, y: 210 });
     } finally {
       await mounted.cleanup();
     }

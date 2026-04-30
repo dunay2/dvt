@@ -1,4 +1,5 @@
 /**
+ * @ownedConcern Verify executable plan bytes and metadata before provider dispatch.
  * @file packages/@dvt/engine/src/security/planIntegrity.ts
  * @baseline ADR-0003: Execution Model Sovereignty
  * @baseline ADR-0012: Plan Integrity Ownership
@@ -15,18 +16,13 @@ import {
 } from '@dvt/contracts';
 import { jcsCanonicalize } from '@dvt/crypto';
 
-import type { StoredPlanArtifact } from '../ports/IRunStateStore.js';
+import type { IPlanFetcher } from '../ports/IPlanArtifactReader.js';
 import { sha256Hex } from '../utils/sha256.js';
-
-/** Fetches raw executable plan bytes for engine-side integrity validation. */
-export interface IRawPlanFetcher {
-  fetch(planRef: PlanRef): Promise<StoredPlanArtifact>;
-}
 
 export class PlanIntegrityValidator {
   async fetchAndValidate(
     planRef: PlanRef,
-    fetcher: IRawPlanFetcher
+    fetcher: IPlanFetcher
   ): Promise<{ plan: ExecutionPlan; executionPolicy: RunExecutionPolicy }> {
     const artifact = await fetcher.fetch(planRef);
     const bytes = artifact.bytes;

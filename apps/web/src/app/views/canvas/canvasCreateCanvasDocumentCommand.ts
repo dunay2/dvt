@@ -1,8 +1,13 @@
-/** Owned concern: persist the first typed canvas document through authoritative draft save and fail-closed conflict/no-op handling. */
-import { canvasDraftSession } from './canvasDraftSession';
-import { serializeCanvasDraftAuthoringSignature } from './canvasDraftAuthoring';
-import { createCanvasDraftIdempotencyKey } from './canvasDraftIdempotencyKey';
+/** Owned concern: persist first or explicitly replaced typed canvas documents through authoritative draft CAS save semantics. */
 import type { CanvasCreateCanvasDocumentCommandDto } from './canvasDraftLifecycle.types';
+import {
+  buildBlankCanvasDocumentDraftInput,
+  resolveCreateCanvasDocumentCommandEligibility,
+} from './canvasCreateCanvasDocumentCommandPolicy';
+import {
+  applyCanvasDocumentSaveConflict,
+  applyCanvasDocumentSaveSuccess,
+} from './canvasCreateCanvasDocumentSaveResult';
 
 export async function executeCreateCanvasDocumentCommand({
   command,
@@ -16,58 +21,44 @@ export async function executeCreateCanvasDocumentCommand({
   workspaceScope,
   previewProvenanceConfig,
 }: CanvasCreateCanvasDocumentCommandDto): Promise<void> {
-  if (!canPersistGraphDraft || graphDraftQuery.isPending || graphDraftQuery.isError) {
-    return;
-  }
-
-  if (graphDraftQuery.data?.record != null) {
+  const eligibility = resolveCreateCanvasDocumentCommandEligibility({
+    command,
+    graphDraftQuery,
+    canPersistGraphDraft,
+  });
+  if (eligibility.kind === 'blocked') {
     return;
   }
 
   setDraftSaveStatus('saving');
 
   try {
-    const result = await draftRepository.saveGraphDraft({
-      expectedRevision: null,
-      idempotencyKey: createCanvasDraftIdempotencyKey(),
-      draft: {
-        projectedDraft: {
-          canvas: {
-            kind: command.kind,
-            title: command.title,
-          },
-          nodeIds: [],
-          nodePositions: {},
-          edges: [],
-        },
-        canonicalNodes: [],
-        canonicalEdges: [],
+    const result = await draftRepository.saveGraphDraft(
+      buildBlankCanvasDocumentDraftInput({
+        command,
+        expectedRevision: eligibility.expectedRevision,
         workspaceScope,
         previewProvenanceConfig,
-      },
-    });
+      })
+    );
 
     if (result.outcome === 'saved') {
-      lastSavedSignatureRef.current = serializeCanvasDraftAuthoringSignature({
-        projectedDraft: result.record.draft,
-        canonicalNodes: [],
-        canonicalEdges: [],
+      applyCanvasDocumentSaveSuccess({
+        result,
+        draftQueryCache,
+        setDraftSession,
+        setDraftSaveStatus,
+        lastSavedSignatureRef,
       });
-      draftQueryCache.replaceRemoteDraftState(result.remoteDraftState);
-      setDraftSession((currentSession) =>
-        canvasDraftSession.machine.applySaveSuccess(currentSession, result.record)
-      );
-      setDraftSaveStatus('saved');
       return;
     }
 
-    draftQueryCache.replaceRemoteDraftState(result.remoteDraftState);
-    if (result.current != null) {
-      setDraftSession((currentSession) =>
-        canvasDraftSession.machine.applyConflict(currentSession, result.current)
-      );
-    }
-    setDraftSaveStatus('idle');
+    applyCanvasDocumentSaveConflict({
+      result,
+      draftQueryCache,
+      setDraftSession,
+      setDraftSaveStatus,
+    });
   } catch {
     setDraftSaveStatus('idle');
   }

@@ -20,6 +20,8 @@ component tree, while end-to-end lifecycle flow lives under
 - [Canonical engine index](../index.md)
 - [WorkflowEngine subsystem context](./workflow-engine-subsystem-context.md)
 - [WorkflowEngine target architecture v1](./workflow-engine-target-architecture.v1.md)
+- [WorkflowEngine boundary ownership component](./workflow-engine-boundary-ownership-component.md)
+- [WorkflowEngine boundary ownership user stories](./workflow-engine-boundary-ownership-user-stories.md)
 - [Canonical C4 architecture](./c4-engine.md)
 - [Distributed consistency model](../../../system/distributed-consistency-model.md)
 - [Execution semantics](../contracts/engine/ExecutionSemantics.v1.md)
@@ -30,6 +32,7 @@ component tree, while end-to-end lifecycle flow lives under
 - `packages/@dvt/engine/src/core/WorkflowEngine.ts`
 - `packages/@dvt/engine/src/core/WorkflowEngineCoreService.ts`
 - `packages/@dvt/engine/src/application/StartRunApplicationService.ts`
+- `packages/@dvt/engine/src/ports/IPlanArtifactReader.ts`
 - `packages/@dvt/engine/src/security/RunAccessPolicy.ts`
 
 ## Navigation

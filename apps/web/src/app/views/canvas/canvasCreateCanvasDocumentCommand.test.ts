@@ -54,9 +54,7 @@ function buildRecord(
 }
 
 function applyStateUpdater<T>(updater: SetStateAction<T>, current: T): T {
-  return typeof updater === 'function'
-    ? (updater as (value: T) => T)(current)
-    : updater;
+  return typeof updater === 'function' ? (updater as (value: T) => T)(current) : updater;
 }
 
 type BuildCommandArgsResult = {
@@ -76,9 +74,20 @@ type BuildCommandArgsResult = {
   setDraftSaveStatus: ReturnType<typeof vi.fn>;
 };
 
-function buildCommandArgs(
-  overrides: Partial<CanvasCreateCanvasDocumentCommandDto> = {}
-): BuildCommandArgsResult {
+type BuildCommandOverrides = Partial<
+  Omit<
+    CanvasCreateCanvasDocumentCommandDto,
+    'draftRepository' | 'draftQueryCache' | 'setDraftSession' | 'setDraftSaveStatus'
+  >
+> &
+  Partial<
+    Pick<
+      BuildCommandArgsResult,
+      'draftRepository' | 'draftQueryCache' | 'setDraftSession' | 'setDraftSaveStatus'
+    >
+  >;
+
+function buildCommandArgs(overrides: BuildCommandOverrides = {}): BuildCommandArgsResult {
   const draftRepository = {
     readGraphDraftState: vi.fn(),
     readGraphDraft: vi.fn(),
@@ -99,14 +108,10 @@ function buildCommandArgs(
   };
   const setDraftSession = vi.fn();
   const setDraftSaveStatus = vi.fn();
-  const effectiveDraftRepository = (overrides.draftRepository ??
-    draftRepository) as BuildCommandArgsResult['draftRepository'];
-  const effectiveDraftQueryCache = (overrides.draftQueryCache ??
-    draftQueryCache) as BuildCommandArgsResult['draftQueryCache'];
-  const effectiveSetDraftSession = (overrides.setDraftSession ??
-    setDraftSession) as BuildCommandArgsResult['setDraftSession'];
-  const effectiveSetDraftSaveStatus = (overrides.setDraftSaveStatus ??
-    setDraftSaveStatus) as BuildCommandArgsResult['setDraftSaveStatus'];
+  const effectiveDraftRepository = overrides.draftRepository ?? draftRepository;
+  const effectiveDraftQueryCache = overrides.draftQueryCache ?? draftQueryCache;
+  const effectiveSetDraftSession = overrides.setDraftSession ?? setDraftSession;
+  const effectiveSetDraftSaveStatus = overrides.setDraftSaveStatus ?? setDraftSaveStatus;
 
   return {
     args: {
@@ -188,16 +193,16 @@ describe('canvasCreateCanvasDocumentCommand', () => {
     const currentRecord = buildRecord({ revision: 'rev-current' });
     const { args, draftRepository, draftQueryCache, setDraftSession, setDraftSaveStatus } =
       buildCommandArgs({
-      draftRepository: {
-        readGraphDraftState: vi.fn(),
-        readGraphDraft: vi.fn(),
-        saveGraphDraft: vi.fn(async () => ({
-          outcome: 'conflict' as const,
-          current: currentRecord,
-          remoteDraftState: createWritableCanvasDraftReadModel(currentRecord),
-        })),
-      },
-    });
+        draftRepository: {
+          readGraphDraftState: vi.fn(),
+          readGraphDraft: vi.fn(),
+          saveGraphDraft: vi.fn(async () => ({
+            outcome: 'conflict' as const,
+            current: currentRecord,
+            remoteDraftState: createWritableCanvasDraftReadModel(currentRecord),
+          })),
+        },
+      });
 
     await executeCreateCanvasDocumentCommand(args);
 
@@ -214,6 +219,61 @@ describe('canvasCreateCanvasDocumentCommand', () => {
     );
     expect(nextSession.syncState).toBe('conflict');
     expect(nextSession.draftRevision).toBe('rev-current');
+  });
+
+  it('replaces an existing authoritative draft only when the command explicitly requests replacement', async () => {
+    const existingRecord = buildRecord({
+      revision: 'rev-existing',
+      draft: buildEmptyDraft({
+        nodeIds: ['src_orders'],
+        nodePositions: {
+          src_orders: { x: 120, y: 80 },
+        },
+        edges: [
+          {
+            sourceId: 'src_orders',
+            targetId: 'model_orders',
+          },
+        ],
+      }),
+    });
+    const { args, draftRepository, draftQueryCache, setDraftSaveStatus } = buildCommandArgs({
+      command: {
+        kind: 'dbt',
+        title: 'DBT canvas',
+        mode: 'replace_current',
+      },
+      graphDraftQuery: {
+        data: createWritableCanvasDraftReadModel(existingRecord),
+        isPending: false,
+        isError: false,
+      },
+    });
+
+    await executeCreateCanvasDocumentCommand(args);
+
+    expect(draftRepository.saveGraphDraft).toHaveBeenCalledTimes(1);
+    expect(draftRepository.saveGraphDraft).toHaveBeenCalledWith({
+      expectedRevision: 'rev-existing',
+      idempotencyKey: expect.any(String),
+      draft: {
+        projectedDraft: {
+          canvas: {
+            kind: 'dbt',
+            title: 'DBT canvas',
+          },
+          nodeIds: [],
+          nodePositions: {},
+          edges: [],
+        },
+        canonicalNodes: [],
+        canonicalEdges: [],
+        workspaceScope: WORKSPACE_SCOPE,
+        previewProvenanceConfig: PREVIEW_PROVENANCE_CONFIG,
+      },
+    });
+    expect(draftQueryCache.replaceRemoteDraftState).toHaveBeenCalledTimes(1);
+    expect(setDraftSaveStatus.mock.calls).toEqual([['saving'], ['saved']]);
   });
 
   it.each([

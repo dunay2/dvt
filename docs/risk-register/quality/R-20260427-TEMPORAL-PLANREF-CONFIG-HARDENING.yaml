@@ -14,16 +14,28 @@ context: >
   exposes the continue-as-new payload budget through API and worker composition roots, and rejects
   invalid governed Temporal numeric env overrides. A follow-up fix pass adds a real time-skipping
   continue-as-new integration proof and changes gateway dependency context resolution to fail closed
-  when a retained dependency fact is missing.
+  when a retained dependency fact is missing. QA1 adds a governed non-zero continue-as-new default,
+  an explicit drained-deploy cutover runbook, and deep-plan segment boundedness regression coverage.
+  QA2 rejects workflow input that omits the continue-as-new threshold, preventing malformed input
+  from silently disabling rollover. QA3 adds semantic module ownership docblocks, a PlanRef workflow
+  boundary component guide, and an architecture fitness test that guards API, invariants,
+  transitions, consumers, and diagrams.
 risk: >
-  AR-D-PLAN-POINTER still depends on runtime proofs that are not closed by this branch: replay or
-  drained-deploy cutover evidence, a governed continue-as-new threshold/SLA decision, and deep/wide
-  DAG segment-resolution cost bounds. If those remain untested, large-DAG readiness could still be
-  claimed before the provider runtime has mature operational proof.
+  AR-D-PLAN-POINTER still depends on runtime proofs that are not fully closed by this branch: the
+  full AR-D2 SLA for maximum workflow history size and segment count policy, deeper segment-scale
+  maturity beyond bounded return shape, and DBT adapter decoupling. If those remain untested,
+  large-DAG readiness could still be claimed before the provider runtime has mature operational
+  proof.
 mitigations:
-  - Keep AR-D-PLAN-POINTER in progress until replay/cutover and scale-readiness proof are added.
-  - Keep AR-D2 as the explicit owner for the continue-as-new threshold and SLA contract.
-  - Require replay/cutover evidence before treating workflow input-shape migration as runtime-ready.
-  - Add deep/wide DAG negative tests before closing scale readiness.
+  - Keep AR-D-PLAN-POINTER in progress until full SLA and segment-scale readiness proof are added.
+  - Keep AR-D2 as the explicit owner for the maximum workflow history and segment-count SLA.
+  - Use docs/runbooks/temporal-planref-drained-cutover-20260427.md for workflow input-shape changes
+    unless a versioned workflow path is implemented.
+  - Treat explicit TEMPORAL_CONTINUE_AS_NEW_AFTER_LAYERS=0 as a local or incident override, not as
+    large-DAG readiness.
+  - Keep deep/wide DAG boundedness tests in the adapter-temporal package before closing scale
+    readiness.
+  - Keep packages/@dvt/adapter-temporal/test/workflow-component-semantics.architecture.test.ts as
+    the drift guard for PlanRef workflow boundary ownership and component documentation.
 review_after: 2026-05-15
 ---

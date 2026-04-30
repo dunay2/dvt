@@ -170,7 +170,7 @@ async function dropSchemaIfExists(databaseUrl, schema) {
 }
 
 async function runCypress(args) {
-  const repoRoot = path.resolve(__dirname, '..').replace(/\\/g, '/');
+  const repoRoot = path.resolve(__dirname, '..').replaceAll('\\', '/');
   const dockerArgs = [
     'run',
     '--rm',
@@ -292,7 +292,7 @@ async function main() {
       {
         VITE_DATA_SOURCE: 'api',
         VITE_API_BASE_URL: `http://host.docker.internal:${DEFAULT_API_PORT}`,
-        VITE_API_BEARER_TOKEN: localProtectedRuntimeAuth.webEnv.VITE_API_BEARER_TOKEN,
+        ...localProtectedRuntimeAuth.webEnv,
         VITE_DEFAULT_TENANT_ID: localProtectedRuntimeAuth.workspaceScope.tenantId,
         VITE_DEFAULT_PROJECT_ID: localProtectedRuntimeAuth.workspaceScope.projectId,
         VITE_DEFAULT_ENVIRONMENT_ID: localProtectedRuntimeAuth.workspaceScope.environmentId,

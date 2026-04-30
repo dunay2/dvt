@@ -1,5 +1,6 @@
 /**
  * @file packages/@dvt/adapter-temporal/src/workflows/workflowInputParsingHelpers.ts
+ * @ownedConcern Deterministic workflow input primitive parsing
  * @baseline ADR-0001: Temporal Integration Test Policy
  * @baseline ADR-0003: Execution Model
  * @decision Parse workflow cursor and control values with deterministic validation before execution
@@ -11,6 +12,15 @@ export function parseOptionalNonNegativeInt(value: unknown, fieldName: string): 
     value,
     fieldName,
     fallback: 0,
+    isAccepted: (numberValue) => numberValue >= 0,
+    errorSuffix: 'must_be_non_negative_integer',
+  });
+}
+
+export function parseRequiredNonNegativeInt(value: unknown, fieldName: string): number {
+  return parseIntegerField({
+    value,
+    fieldName,
     isAccepted: (numberValue) => numberValue >= 0,
     errorSuffix: 'must_be_non_negative_integer',
   });

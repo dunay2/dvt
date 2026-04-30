@@ -56,7 +56,7 @@ export type EventEnvelope = EventInput & {
  */
 export interface StepArtifactRef {
   /**
-   * Canonical artifact discriminator, e.g. `dbt.compiled-sql`, `python.script`,
+   * Canonical artifact discriminator, e.g. `compiled-sql`, `python.script`,
    * `spark.job-spec`.
    */
   artifactKind: string;

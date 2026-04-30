@@ -22,7 +22,7 @@ const bootstrapState = {
 
 const workspaceBootstrap = resolveWorkspaceBootstrapConfig(getRuntimeDataSourceMode());
 
-const stalePersistedTargetAdapter = 'legacy-provider';
+const stalePersistedTargetAdapter = 'retired-provider';
 
 function pickValidPersistedScopeValue(
   options: Array<{ value: string }>,

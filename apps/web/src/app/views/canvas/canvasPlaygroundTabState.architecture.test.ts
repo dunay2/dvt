@@ -10,6 +10,14 @@ const TAB_STRIP_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'CanvasPlaygroundTabStrip.tsx'
 );
+const TAB_STRIP_TEMPLATE_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'CanvasPlaygroundTabStrip.templates.tsx'
+);
+const TAB_STRIP_PRESENTER_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'useCanvasPlaygroundTabStripPresenter.ts'
+);
 
 describe('canvasPlaygroundTabState architecture', () => {
   it('keeps host tab state as a draft-backed semantic seam instead of controller or JSX transport', () => {
@@ -26,11 +34,14 @@ describe('canvasPlaygroundTabState architecture', () => {
 
   it('renders the host tab strip from the semantic tab-state contract rather than route/controller props', () => {
     expect(TAB_STRIP_SOURCE).toContain(
-      'Owned concern: render host-owned Canvas tabs from authoritative draft-backed tab state.'
+      'Owned concern: mount the host-owned Canvas tab-strip presentation boundary.'
     );
-    expect(TAB_STRIP_SOURCE).toContain('CanvasPlaygroundTabState');
-    expect(TAB_STRIP_SOURCE).toContain('canvas-playground-tab-strip');
+    expect(TAB_STRIP_PRESENTER_SOURCE).toContain('CanvasPlaygroundTabState');
+    expect(TAB_STRIP_SOURCE).toContain('CanvasPlaygroundTabStripTemplate');
+    expect(TAB_STRIP_SOURCE).toContain('useCanvasPlaygroundTabStripPresenter');
+    expect(TAB_STRIP_TEMPLATE_SOURCE).toContain('canvas-playground-tab-strip');
     expect(TAB_STRIP_SOURCE).not.toContain("'./useCanvasController'");
     expect(TAB_STRIP_SOURCE).not.toContain('WorkspaceGraphDraft');
+    expect(TAB_STRIP_SOURCE).not.toContain('CanvasPlaygroundTabState');
   });
 });

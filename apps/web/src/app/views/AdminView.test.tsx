@@ -3,6 +3,7 @@
 import React, { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, waitFor } from '@testing-library/dom';
+import { createMemoryRouter, RouterProvider } from 'react-router';
 import type { IWorkspacePort } from '../ports/workspace';
 import { AppServicesProvider } from '../services/AppServicesContext';
 import { waitForReactQuery, withTestQueryClient } from '../../testing/reactQueryHarness';
@@ -76,6 +77,74 @@ function buildWorkspaceService(overrides?: Partial<IWorkspacePort>): IWorkspaceP
   };
 }
 
+function createAdminRouteElement(
+  initialTab?: 'platform' | 'roles' | 'permissions' | 'audit'
+): React.ReactElement {
+  return (
+    <AppServicesProvider
+      overrides={{
+        mode: 'mock',
+        capabilitiesPort: {
+          loadCapabilities: async () => ({
+            apiVersion: '1.0.0',
+            minFrontendVersion: '1.0.0',
+            plugins: { dbt: { available: true } },
+          }),
+        },
+        workspaceService: buildWorkspaceService(),
+      }}
+    >
+      <AdminView initialTab={initialTab} />
+    </AppServicesProvider>
+  );
+}
+
+function createAdminRouteRouter({
+  initialEntry = '/admin',
+  initialTab,
+}: {
+  initialEntry?: string;
+  initialTab?: 'platform' | 'roles' | 'permissions' | 'audit';
+} = {}): ReturnType<typeof createMemoryRouter> {
+  return createMemoryRouter(
+    [
+      {
+        path: '/admin',
+        element: createAdminRouteElement(initialTab),
+      },
+    ],
+    { initialEntries: [initialEntry] }
+  );
+}
+
+function readRequestUrl(input: RequestInfo | URL): string {
+  if (typeof input === 'string') {
+    return input;
+  }
+
+  if (input instanceof URL) {
+    return input.href;
+  }
+
+  return input.url;
+}
+
+class TestResizeObserver implements ResizeObserver {
+  private readonly observedElements = new Set<Element>();
+
+  observe(target: Element): void {
+    this.observedElements.add(target);
+  }
+
+  unobserve(target: Element): void {
+    this.observedElements.delete(target);
+  }
+
+  disconnect(): void {
+    this.observedElements.clear();
+  }
+}
+
 describe('AdminView', () => {
   let mounted: Awaited<ReturnType<typeof withTestQueryClient>> | null;
   let fetchMock: ReturnType<typeof vi.fn>;
@@ -86,14 +155,10 @@ describe('AdminView', () => {
       globalThis as typeof globalThis & {
         ResizeObserver?: new (callback: ResizeObserverCallback) => ResizeObserver;
       }
-    ).ResizeObserver = class ResizeObserver {
-      observe(): void {}
-      unobserve(): void {}
-      disconnect(): void {}
-    } as unknown as new (callback: ResizeObserverCallback) => ResizeObserver;
+    ).ResizeObserver = TestResizeObserver;
 
     fetchMock = vi.fn(async (input: RequestInfo | URL) => {
-      const url = String(input);
+      const url = readRequestUrl(input);
       if (url.includes('/api/capabilities')) {
         return new Response(
           JSON.stringify({
@@ -118,16 +183,8 @@ describe('AdminView', () => {
   });
 
   it('renders platform and roles data from services', async () => {
-    mounted = await withTestQueryClient(
-      <AppServicesProvider
-        overrides={{
-          mode: 'mock',
-          workspaceService: buildWorkspaceService(),
-        }}
-      >
-        <AdminView />
-      </AppServicesProvider>
-    );
+    const router = createAdminRouteRouter();
+    mounted = await withTestQueryClient(<RouterProvider router={router} />);
 
     await waitForReactQuery(() => mounted?.container.textContent?.includes('Admin') === true, {
       description: 'admin roles render',
@@ -139,16 +196,8 @@ describe('AdminView', () => {
   });
 
   it('filters audit entries by search query', async () => {
-    mounted = await withTestQueryClient(
-      <AppServicesProvider
-        overrides={{
-          mode: 'mock',
-          workspaceService: buildWorkspaceService(),
-        }}
-      >
-        <AdminView initialTab="audit" />
-      </AppServicesProvider>
-    );
+    const router = createAdminRouteRouter({ initialTab: 'audit' });
+    mounted = await withTestQueryClient(<RouterProvider router={router} />);
 
     await waitForReactQuery(() => mounted?.container.textContent?.includes('Admin') === true, {
       description: 'admin roles render before audit tab',
@@ -170,6 +219,35 @@ describe('AdminView', () => {
     await waitFor(() => {
       expect(mounted?.container.textContent).toContain('plan://alpha');
       expect(mounted?.container.textContent).not.toContain('rbac://admin');
+    });
+  });
+
+  it('records the selected tab in the route so F5 keeps the operator position', async () => {
+    const router = createAdminRouteRouter();
+    mounted = await withTestQueryClient(<RouterProvider router={router} />);
+
+    await waitForReactQuery(() => mounted?.container.textContent?.includes('Admin') === true, {
+      description: 'admin route ready before tab navigation',
+    });
+
+    const auditTab = Array.from(mounted?.container.querySelectorAll('button') ?? []).find(
+      (button) => button.textContent?.includes('Audit Log') === true
+    );
+
+    await act(async () => {
+      fireEvent.mouseDown(auditTab as HTMLElement, { button: 0 });
+      fireEvent.click(auditTab as HTMLElement);
+    });
+
+    expect(router.state.location.search).toBe('?tab=audit');
+  });
+
+  it('hydrates the selected tab from the route after a browser refresh', async () => {
+    const router = createAdminRouteRouter({ initialEntry: '/admin?tab=audit' });
+    mounted = await withTestQueryClient(<RouterProvider router={router} />);
+
+    await waitFor(() => {
+      expect(document.querySelector('input[placeholder="Search audit log..."]')).toBeTruthy();
     });
   });
 });

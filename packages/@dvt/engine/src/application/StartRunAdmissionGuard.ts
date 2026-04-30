@@ -1,3 +1,7 @@
+/**
+ * @ownedConcern Coordinate start-run admission orchestration across access,
+ * adapter, capability, and run-execution-context policies.
+ */
 import type {
   EngineRunRef,
   ExecutionPlan,
@@ -21,6 +25,14 @@ export interface StartRunAdmissionGuardDeps {
   adapters: Map<EngineRunRef['provider'], IProviderAdapter>;
   runExecutionContextResolver?: IRunExecutionContextResolver;
   runExecutionContextBindingPolicy?: IRunExecutionContextBindingPolicy;
+}
+
+export interface StartRunExecutionPolicyAdmission {
+  plan: ExecutionPlan;
+  planRef: PlanRef;
+  executionPolicy: RunExecutionPolicy;
+  context: ResolvedRunContext;
+  adapter: IProviderAdapter;
 }
 
 export class StartRunAdmissionGuard {
@@ -47,15 +59,16 @@ export class StartRunAdmissionGuard {
     this.deps.policy.checkRateLimit(context.tenantId);
   }
 
-  async assertExecutionPolicyAllowed(
-    plan: ExecutionPlan,
-    planRef: PlanRef,
-    executionPolicy: RunExecutionPolicy,
-    context: ResolvedRunContext,
-    adapter: IProviderAdapter
-  ): Promise<void> {
+  async assertExecutionPolicyAllowed(admission: StartRunExecutionPolicyAdmission): Promise<void> {
+    const { plan, planRef, executionPolicy, context, adapter } = admission;
+
     this.validationPolicy.validateCapabilitiesOrThrow(executionPolicy, adapter);
-    await this.runExecutionContextPolicy.assertAllowed(plan, planRef, executionPolicy, context);
+    await this.runExecutionContextPolicy.assertAllowed({
+      plan,
+      planRef,
+      executionPolicy,
+      context,
+    });
   }
 
   resolveAdapter(context: ResolvedRunContext): IProviderAdapter {

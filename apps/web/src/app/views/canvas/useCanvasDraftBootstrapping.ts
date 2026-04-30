@@ -1,5 +1,6 @@
 import type { Dispatch, SetStateAction } from 'react';
 
+import type { CanvasNodePositions } from './canvasAuthoringRuntime.types';
 import type { CanvasDraftSession } from './canvasDraftSession';
 import type {
   DraftSaveStatus,
@@ -18,10 +19,8 @@ type UseCanvasDraftBootstrappingArgs = {
   draftSession: CanvasDraftSession;
   setDraftSession: Dispatch<SetStateAction<CanvasDraftSession>>;
   canonicalSnapshot: CanvasDraftLifecycleCanonicalSnapshot;
-  setCanvasNodePositions: (
-    workspaceLayoutKey: string,
-    positions: Record<string, { x: number; y: number }>
-  ) => void;
+  persistedNodePositions: CanvasNodePositions;
+  setCanvasNodePositions: (workspaceLayoutKey: string, positions: CanvasNodePositions) => void;
   setDraftSaveStatus: Dispatch<SetStateAction<DraftSaveStatus>>;
   invalidateInFlightSaveAttempt: () => void;
   lastSavedSignatureRef: { current: string | null };
@@ -49,6 +48,7 @@ export function useCanvasDraftBootstrapping({
   draftSession,
   setDraftSession,
   canonicalSnapshot,
+  persistedNodePositions,
   setCanvasNodePositions,
   setDraftSaveStatus,
   invalidateInFlightSaveAttempt,
@@ -64,6 +64,7 @@ export function useCanvasDraftBootstrapping({
     draftSession,
     setDraftSession,
     canonicalSnapshot,
+    persistedNodePositions,
     setCanvasNodePositions,
     setDraftSaveStatus,
     lastSavedSignatureRef,

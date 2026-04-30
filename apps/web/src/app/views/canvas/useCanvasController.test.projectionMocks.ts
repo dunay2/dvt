@@ -2,10 +2,7 @@ import { vi } from 'vitest';
 
 import { DVT_AUTHORING_NODE_KINDS } from '../../plugins/dvt/dvtNodeTypeCatalog';
 import { DBT_NODE_KINDS } from '../../plugins/nodeTypeCatalog.dbt';
-import type {
-  CanvasHarnessMocks,
-  CanvasHarnessState,
-} from './useCanvasController.test.types';
+import type { CanvasHarnessMocks, CanvasHarnessState } from './useCanvasController.test.types';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 
 export function configureCanvasHarnessHookAndProjectionMocks(
@@ -79,13 +76,17 @@ export function configureCanvasHarnessHookAndProjectionMocks(
   mocks.buildOverlayContext.mockReturnValue({ overlay: 'ctx' });
   mocks.buildNodeDecorations.mockImplementation(() => state.overlayDecorations);
   mocks.mapCanonicalNodeToCanvasNode.mockImplementation(
-    (
-      node: CanonicalNode,
-      index: number,
-      showColumns: boolean,
-      _status: unknown,
-      persistedPosition?: { x: number; y: number }
-    ) => ({
+    ({
+      canonicalNode: node,
+      index,
+      showColumns,
+      persistedPosition,
+    }: {
+      canonicalNode: CanonicalNode;
+      index: number;
+      showColumns: boolean;
+      persistedPosition?: { x: number; y: number };
+    }) => ({
       id: node.id,
       type: 'dbtNode',
       position: persistedPosition ?? { x: index * 100, y: 0 },

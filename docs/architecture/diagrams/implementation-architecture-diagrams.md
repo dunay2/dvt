@@ -2,7 +2,7 @@
 title: Implementation Architecture Diagrams
 status: Active
 owner: Architecture / Docs
-last_reviewed: 2026-04-11
+last_reviewed: 2026-04-29
 ---
 
 # Implementation Architecture Diagrams
@@ -370,15 +370,15 @@ architecture, gathered from the section analyses above.
 
 **Identified bugs (from audit)**:
 
-| ID    | Component                 | Summary                                                       | Severity |
-| ----- | ------------------------- | ------------------------------------------------------------- | -------- |
-| E-02  | SignalTransitionGuard     | Asymmetric PAUSE/RESUME idempotency                           | Medium   |
-| E-04  | Engine ports              | `IPlanFetcher` declaration duplicated across two code anchors | Low      |
-| DL-01 | OutboxWorker.processBatch | Sequential record processing                                  | Medium   |
+| ID    | Component                 | Summary                             | Severity |
+| ----- | ------------------------- | ----------------------------------- | -------- |
+| E-02  | SignalTransitionGuard     | Asymmetric PAUSE/RESUME idempotency | Medium   |
+| DL-01 | OutboxWorker.processBatch | Sequential record processing        | Medium   |
 
 Closed audit items such as the earlier `DispatchedIntentReconciliationPolicy`
-outcome-key bug and the Temporal native-cancel cutover are intentionally
-omitted from the active inventory.
+outcome-key bug, the Temporal native-cancel cutover, and the WE-HX-1
+`IPlanFetcher` ownership split are intentionally omitted from the active
+inventory.
 
 **Design improvement opportunities (not previously identified):**
 

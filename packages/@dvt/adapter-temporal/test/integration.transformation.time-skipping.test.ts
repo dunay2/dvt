@@ -17,8 +17,8 @@ import { ApplicationFailure } from '@temporalio/activity';
 import { TestWorkflowEnvironment } from '@temporalio/testing';
 import { describe, expect, it } from 'vitest';
 
-import { DEFAULT_STEP_EXECUTORS, type DbtPluginRunner } from '../src/activities/stepActivities.js';
-import { loadTemporalAdapterConfig, TemporalAdapter } from '../src/index.js';
+import { DEFAULT_STEP_EXECUTORS } from '../src/activities/stepActivities.js';
+import { loadTemporalAdapterConfig, TemporalAdapter, type DbtPluginRunner } from '../src/index.js';
 
 import {
   createDbtActivityDeps,
@@ -77,16 +77,19 @@ async function createTransformationHarness(args: {
     TEMPORAL_IDENTITY: 'adapter-temporal-it',
   });
 
+  const activityDeps = createDbtActivityDeps({
+    store,
+    outbox,
+    bindings: [{ ctx, planRef, planBytes }],
+    dbtPluginRunner: args.dbtPluginRunner,
+  });
+
   const worker = createTenantWorkerHost({
     temporalConfig,
     tenantId: ctx.tenantId,
     workflowsPath: WORKFLOW_PATH,
-    activityDeps: createDbtActivityDeps({
-      store,
-      outbox,
-      bindings: [{ ctx, planRef, planBytes }],
-      dbtPluginRunner: args.dbtPluginRunner,
-    }),
+    activityDeps,
+    stepActivitiesByKind: activityDeps.stepActivitiesByKind,
     stepExecutors: DEFAULT_STEP_EXECUTORS,
   });
 

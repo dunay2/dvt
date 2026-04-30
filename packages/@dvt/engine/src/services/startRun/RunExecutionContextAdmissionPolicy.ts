@@ -1,7 +1,7 @@
+/**
+ * @ownedConcern Enforce generic run-execution-context admission without owning executor plugin semantics.
+ */
 import {
-  KNOWN_STEP_KINDS,
-  parseDbtPluginContext,
-  type DbtPluginContext,
   type ExecutionPlan,
   type PlanRef,
   type ResolvedRunContext,
@@ -11,9 +11,19 @@ import {
 } from '@dvt/contracts';
 
 import { RunExecutionContextRejectedError } from '../../contracts/errors.js';
-import type { IRunExecutionContextBindingPolicy } from '../../ports/IRunExecutionContextBindingPolicy.js';
+import type {
+  IRunExecutionContextBindingPolicy,
+  RunExecutionContextPluginRequirement,
+} from '../../ports/IRunExecutionContextBindingPolicy.js';
 import type { IRunExecutionContextResolver } from '../../ports/IRunExecutionContextResolver.js';
 import { toErrorMessage } from '../../utils/errorUtils.js';
+
+export type RunExecutionContextAdmissionRequest = Readonly<{
+  plan: ExecutionPlan;
+  planRef: PlanRef;
+  executionPolicy: RunExecutionPolicy;
+  context: ResolvedRunContext;
+}>;
 
 export class RunExecutionContextAdmissionPolicy {
   constructor(
@@ -23,18 +33,18 @@ export class RunExecutionContextAdmissionPolicy {
     } = {}
   ) {}
 
-  async assertAllowed(
-    plan: ExecutionPlan,
-    planRef: PlanRef,
-    executionPolicy: RunExecutionPolicy,
-    context: ResolvedRunContext
-  ): Promise<void> {
-    const requiresDbtPluginContext = plan.steps.some((step) => DBT_STEP_KINDS.has(step.kind));
+  async assertAllowed({
+    plan,
+    planRef,
+    executionPolicy,
+    context,
+  }: RunExecutionContextAdmissionRequest): Promise<void> {
+    const pluginRequirements = this.resolvePluginRequirements(plan);
     const ref = context.runExecutionContextRef;
     if (ref === undefined) {
-      if (requiresDbtPluginContext) {
+      if (pluginRequirements.length > 0) {
         throw new RunExecutionContextRejectedError(
-          'runExecutionContextRef required for DBT-bearing plan'
+          `runExecutionContextRef required for plugin-bearing plan: ${pluginRequirements.map((requirement) => requirement.pluginId).join(',')}`
         );
       }
       return;
@@ -84,10 +94,7 @@ export class RunExecutionContextAdmissionPolicy {
         `targetAdapter mismatch: context=${context.targetAdapter} runExecutionContext=${resolved.targetAdapter}`
       );
     }
-    if (requiresDbtPluginContext) {
-      const pluginContext = assertDbtPluginContext(resolved, context.tenantId);
-      await this.assertDbtProjectBundleBindingAllowed(pluginContext, context.tenantId);
-    }
+    await this.assertPluginContextsAllowed(pluginRequirements, resolved, context);
 
     this.assertPluginCompatibilityFingerprint(
       executionPolicy,
@@ -96,21 +103,54 @@ export class RunExecutionContextAdmissionPolicy {
     );
   }
 
-  private async assertDbtProjectBundleBindingAllowed(
-    pluginContext: DbtPluginContext,
-    expectedTenantId: string
+  private resolvePluginRequirements(
+    plan: ExecutionPlan
+  ): readonly RunExecutionContextPluginRequirement[] {
+    const stepKinds = new Set(plan.steps.map((step) => step.kind));
+    const requirements = this.deps.bindingPolicy?.pluginRequirements ?? [];
+    const selected = new Map<string, RunExecutionContextPluginRequirement>();
+
+    for (const requirement of requirements) {
+      if (requirement.stepKinds.some((kind) => stepKinds.has(kind))) {
+        selected.set(
+          `${requirement.pluginId}:${requirement.contextKey ?? requirement.pluginId}`,
+          requirement
+        );
+      }
+    }
+
+    return [...selected.values()];
+  }
+
+  private async assertPluginContextsAllowed(
+    requirements: readonly RunExecutionContextPluginRequirement[],
+    runExecutionContext: RunExecutionContext,
+    context: ResolvedRunContext
   ): Promise<void> {
-    if (this.deps.bindingPolicy === undefined) {
+    for (const requirement of requirements) {
+      await this.assertPluginContextAllowed(requirement, runExecutionContext, context);
+    }
+  }
+
+  private async assertPluginContextAllowed(
+    requirement: RunExecutionContextPluginRequirement,
+    runExecutionContext: RunExecutionContext,
+    context: ResolvedRunContext
+  ): Promise<void> {
+    const contextKey = requirement.contextKey ?? requirement.pluginId;
+    const pluginContext = runExecutionContext.pluginContexts[contextKey];
+    if (pluginContext === undefined) {
       throw new RunExecutionContextRejectedError(
-        'runExecutionContext DBT bundle binding policy is not configured'
+        `runExecutionContext.pluginContexts.${contextKey} required for plugin-bearing plan`
       );
     }
 
     try {
-      await this.deps.bindingPolicy.assertDbtProjectBundleRefAllowed(
-        pluginContext.projectBundleRef,
-        expectedTenantId
-      );
+      await requirement.assertPluginContextAllowed({
+        pluginContext,
+        runExecutionContext,
+        context,
+      });
     } catch (error) {
       if (error instanceof RunExecutionContextRejectedError) {
         throw error;
@@ -165,39 +205,3 @@ export class RunExecutionContextAdmissionPolicy {
     }
   }
 }
-
-function assertDbtPluginContext(
-  resolved: RunExecutionContext,
-  expectedTenantId: string
-): DbtPluginContext {
-  const pluginContextInput = resolved.pluginContexts['dbt'];
-  if (pluginContextInput === undefined) {
-    throw new RunExecutionContextRejectedError(
-      'runExecutionContext.pluginContexts.dbt required for DBT-bearing plan'
-    );
-  }
-
-  let pluginContext: ReturnType<typeof parseDbtPluginContext>;
-  try {
-    pluginContext = parseDbtPluginContext(pluginContextInput);
-  } catch {
-    throw new RunExecutionContextRejectedError(
-      'runExecutionContext.pluginContexts.dbt invalid for DBT-bearing plan'
-    );
-  }
-
-  const bundleTenantId = pluginContext.projectBundleRef.tenantId;
-  if (bundleTenantId !== expectedTenantId) {
-    throw new RunExecutionContextRejectedError(
-      `runExecutionContext.pluginContexts.dbt.projectBundleRef.tenantId mismatch: expected=${expectedTenantId} actual=${bundleTenantId}`
-    );
-  }
-
-  return pluginContext;
-}
-
-const DBT_STEP_KINDS = new Set<string>([
-  KNOWN_STEP_KINDS.DBT_MODEL,
-  KNOWN_STEP_KINDS.DBT_TEST,
-  KNOWN_STEP_KINDS.DBT_SNAPSHOT,
-]);

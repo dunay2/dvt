@@ -340,7 +340,7 @@ describe('WorkflowEngine + in-memory temporal provider adapter', () => {
       sha256: '0'.repeat(64),
       schemaVersion: 'v2.0', // invalid
       planId: 'p',
-      planVersion: '1',
+      planVersion: '1.0',
     };
     await expect(engine.startRun(badPlanRef2, baseCtx)).rejects.toMatchObject({
       messageKey: ENGINE_ERROR_MESSAGE_KEY.PLAN_SCHEMA_VERSION_UNKNOWN,

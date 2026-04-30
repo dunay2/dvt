@@ -208,9 +208,7 @@ For Canvas specifically, the boundary now governs two separate truths:
 This slice does not:
 
 - standardize query-key ownership or invalidation rules;
-- decompose `appStore`;
 - align runtime route drift such as `/runs` versus `/runs/start`;
-- remove legacy `GraphCanvas`;
 - deliver real live logs in the bottom console.
 
 ## Current Residual Gaps
@@ -218,8 +216,8 @@ This slice does not:
 After `F-04`, the boundary is cleaner, but some work remains intentionally
 outside this slice:
 
-- `GraphCanvas` still imports legacy mock data directly and remains governed by
-  `F-12`.
+- the retired `GraphCanvas` path has been removed from active source; future
+  graph changes must use the governed Canvas route.
 - `sessionStore`, `workspaceConfig`, and platform-health metadata still read
   data-source configuration outside the shell provider because they are config
   or capability surfaces rather than route consumers.

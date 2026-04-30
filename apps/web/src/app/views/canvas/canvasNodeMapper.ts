@@ -1,3 +1,4 @@
+/** Owned concern: project canonical graph primitives into React Flow nodes and edges. */
 import { MarkerType, type Edge, type Node } from '@xyflow/react';
 
 import { resolveNodeKindRegistration } from '../../plugins/nodeTypeRegistry';
@@ -5,24 +6,35 @@ import type { MergedNodeDecoration } from '../../plugins/contracts/NodeRendering
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { DbtNodeData } from '../../components/canvas/DbtNodeComponent';
 
+export const CANVAS_NODE_DRAG_HANDLE_SELECTOR = '.canvas-node-drag-surface';
+
 type ColumnMeta = Array<{ name: string; type: string }>;
+type CanvasNodePosition = { x: number; y: number };
+type MapCanonicalNodeToCanvasNodeArgs = {
+  canonicalNode: CanonicalNode;
+  index: number;
+  showColumns: boolean;
+  overlayDecoration?: MergedNodeDecoration | null;
+  persistedPosition?: CanvasNodePosition;
+};
 
 function resolveColumns(value: unknown): ColumnMeta | undefined {
   return Array.isArray(value) ? (value as ColumnMeta) : undefined;
 }
 
-export function mapCanonicalNodeToCanvasNode(
-  canonicalNode: CanonicalNode,
-  index: number,
-  showColumns: boolean,
-  overlayDecoration?: MergedNodeDecoration | null,
-  persistedPosition?: { x: number; y: number }
-): Node<DbtNodeData> {
+export function mapCanonicalNodeToCanvasNode({
+  canonicalNode,
+  index,
+  showColumns,
+  overlayDecoration,
+  persistedPosition,
+}: MapCanonicalNodeToCanvasNodeArgs): Node<DbtNodeData> {
   const kindRegistration = resolveNodeKindRegistration(canonicalNode.kind);
 
   return {
     id: canonicalNode.id,
     type: 'dbtNode',
+    dragHandle: CANVAS_NODE_DRAG_HANDLE_SELECTOR,
     position: persistedPosition ?? { x: (index % 3) * 250, y: Math.floor(index / 3) * 150 },
     data: {
       name: canonicalNode.name,
@@ -37,8 +49,7 @@ export function mapCanonicalNodeToCanvasNode(
       lastCost: canonicalNode.lastCost,
       overlayDecoration: overlayDecoration ?? null,
       tags: canonicalNode.tags,
-      metadata:
-        canonicalNode.metadata == null ? undefined : { ...canonicalNode.metadata },
+      metadata: canonicalNode.metadata == null ? undefined : { ...canonicalNode.metadata },
       columns: resolveColumns(canonicalNode.metadata?.columns),
       showColumns,
     },
@@ -95,6 +106,7 @@ export function mapDroppedCanonicalNodeToCanvasNode(
   return {
     id: canonicalNode.id,
     type: 'dbtNode',
+    dragHandle: CANVAS_NODE_DRAG_HANDLE_SELECTOR,
     position,
     data: {
       name: canonicalNode.name,
@@ -108,8 +120,7 @@ export function mapDroppedCanonicalNodeToCanvasNode(
       lastDuration: canonicalNode.lastDuration,
       lastCost: canonicalNode.lastCost,
       tags: canonicalNode.tags,
-      metadata:
-        canonicalNode.metadata == null ? undefined : { ...canonicalNode.metadata },
+      metadata: canonicalNode.metadata == null ? undefined : { ...canonicalNode.metadata },
       columns: resolveColumns(canonicalNode.metadata?.columns),
       showColumns,
     },

@@ -1,6 +1,7 @@
+/** Owned concern: publish Lineage workbench posture into the route bootstrap contract. */
 import {
   createCompleteRouteBootstrapPresentation,
-  createErrorRouteBootstrapPresentation,
+  createFailedRouteBootstrapPresentation,
   createPendingRouteBootstrapPresentation,
   createPublishedRouteBootstrapHandle,
   type RouteBootstrapPresentation,
@@ -18,15 +19,11 @@ export function deriveLineageRouteBootstrapPresentation(
 ): RouteBootstrapPresentation {
   switch (workbenchState.kind) {
     case 'loading':
-      return createPendingRouteBootstrapPresentation(
-        'Loading lineage graph for the route'
-      );
+      return createPendingRouteBootstrapPresentation('Loading lineage graph for the route');
     case 'error':
-      return createErrorRouteBootstrapPresentation(workbenchState.message);
+      return createFailedRouteBootstrapPresentation(workbenchState.message);
     case 'empty':
-      return createCompleteRouteBootstrapPresentation(
-        'Lineage route is ready with no focus node'
-      );
+      return createCompleteRouteBootstrapPresentation('Lineage route is ready with no focus node');
     case 'ready':
       return createCompleteRouteBootstrapPresentation('Lineage route is ready');
   }

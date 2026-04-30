@@ -11,7 +11,7 @@ export * from './contracts/runEvents.js';
 export * from './contracts/executionPlan.js';
 export * from './contracts/errors.js';
 export * from './contracts/engine/index.js';
-export * from './contracts/PlanVersionPolicy.js';
+export * from './contracts/PlanAdmissionPolicy.js';
 export * from './ports/IWorkflowEngine.js';
 
 export * from './core/SnapshotProjector.js';
@@ -24,8 +24,6 @@ export type {
   EventInput,
   IClock,
   IIdempotencyKeyBuilder,
-  IPlanFetcher,
-  IPlanIntegrityValidator,
   IRunStateStore,
   IRunStateStoreMaintenance,
   IRunStateStoreRead,
@@ -36,10 +34,14 @@ export type {
   RetryAttemptReservation,
   RunBootstrapInput,
   RunStateCommandPort,
-  StoredPlanArtifact,
   StepEventInput,
 } from './ports/IRunStateStore.js';
 export { CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION } from './ports/IRunStateStore.js';
+export type {
+  IPlanFetcher,
+  IPlanIntegrityValidator,
+  StoredPlanArtifact,
+} from './ports/IPlanArtifactReader.js';
 export * from './ports/IRunSnapshotStalenessQuery.js';
 export * from './ports/IRunMaintenanceService.js';
 export * from './ports/IStartRunIntentStore.js';

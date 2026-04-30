@@ -28,7 +28,7 @@ behavior in `mock` and `api` modes.
 - used for integration and operational validation
 - views consume backend-backed data through governed adapters
 - route behavior must follow runtime contracts exposed by `apps/api`
-- unsupported mutations must fail closed instead of being implied by legacy UI
+- unsupported mutations must fail closed instead of being implied by retired UI
   affordances
 
 Mode selection is done once at frontend composition boot. Views should not

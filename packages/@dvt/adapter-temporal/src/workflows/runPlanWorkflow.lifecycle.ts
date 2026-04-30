@@ -1,5 +1,6 @@
 /**
  * @file packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.lifecycle.ts
+ * @ownedConcern Workflow bootstrap, terminal, failure, and rollover outcomes
  * @baseline ADR-0001: Temporal Integration Test Policy
  * @baseline ADR-0003: Execution Model
  * @baseline ADR-0047: Runtime-Owned Realized Lifecycle For Signal-Driven Transitions

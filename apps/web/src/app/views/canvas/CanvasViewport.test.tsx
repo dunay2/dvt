@@ -22,44 +22,55 @@ const xyflowState = vi.hoisted(() => ({
   fitView: vi.fn(),
 }));
 
+type MockReactFlowProps = Readonly<{
+  children: React.ReactNode;
+}> &
+  Record<string, unknown>;
+
+type MockBackgroundProps = Readonly<{
+  color?: string;
+  gap: number;
+}>;
+
+type MockMiniMapProps = Readonly<{
+  nodeColor: (node: { data?: unknown }) => string;
+  pannable?: boolean;
+  zoomable?: boolean;
+  maskColor?: string;
+  maskStrokeColor?: string;
+  className?: string;
+}>;
+
 vi.mock('../../plugins/nodeTypeRegistry', () => ({
   resolveNodeKindRegistration: mockResolveNodeKindRegistration,
 }));
 
-vi.mock('@xyflow/react', () => ({
-  ReactFlow: ({
-    children,
-    ...props
-  }: {
-    children: React.ReactNode;
-  }) =>
-    (() => {
-      xyflowState.lastReactFlowProps = props;
-      return (
-        <div data-testid="react-flow">{children}</div>
-      );
-    })(),
-  Background: ({ color, gap }: { color?: string; gap: number }) => (
-    <div data-testid="background">
-      color:{color ?? 'none'}|gap:{gap}
-    </div>
-  ),
-  Controls: () => <div data-testid="controls" />,
-  MiniMap: ({
+vi.mock('@xyflow/react', () => {
+  function MockReactFlow({ children, ...props }: MockReactFlowProps): JSX.Element {
+    xyflowState.lastReactFlowProps = props;
+    return <div data-testid="react-flow">{children}</div>;
+  }
+
+  function MockBackground({ color, gap }: MockBackgroundProps): JSX.Element {
+    return (
+      <div data-testid="background">
+        color:{color ?? 'none'}|gap:{gap}
+      </div>
+    );
+  }
+
+  function MockControls(): JSX.Element {
+    return <div data-testid="controls" />;
+  }
+
+  function MockMiniMap({
     nodeColor,
-    pannable,
-    zoomable,
+    pannable = false,
+    zoomable = false,
     maskColor,
     maskStrokeColor,
     className,
-  }: {
-    nodeColor: (node: { data?: unknown }) => string;
-    pannable?: boolean;
-    zoomable?: boolean;
-    maskColor?: string;
-    maskStrokeColor?: string;
-    className?: string;
-  }) => {
+  }: MockMiniMapProps): JSX.Element {
     xyflowState.miniMapNodeColor = nodeColor;
     xyflowState.miniMapMaskColor = maskColor ?? null;
     xyflowState.miniMapMaskStrokeColor = maskStrokeColor ?? null;
@@ -67,16 +78,23 @@ vi.mock('@xyflow/react', () => ({
     return (
       <div
         data-testid="minimap"
-        data-pannable={String(Boolean(pannable))}
-        data-zoomable={String(Boolean(zoomable))}
+        data-pannable={String(pannable)}
+        data-zoomable={String(zoomable)}
       />
     );
-  },
-  useReactFlow: () => ({
-    setViewport: xyflowState.setViewport,
-    fitView: xyflowState.fitView,
-  }),
-}));
+  }
+
+  return {
+    ReactFlow: MockReactFlow,
+    Background: MockBackground,
+    Controls: MockControls,
+    MiniMap: MockMiniMap,
+    useReactFlow: () => ({
+      setViewport: xyflowState.setViewport,
+      fitView: xyflowState.fitView,
+    }),
+  };
+});
 
 function buildProps(
   overrides?: Partial<React.ComponentProps<typeof CanvasViewport>>
@@ -110,10 +128,7 @@ function buildProps(
   };
 }
 
-function requireButton(
-  value: HTMLButtonElement | undefined,
-  errorCode: string
-): HTMLButtonElement {
+function requireButton(value: HTMLButtonElement | undefined, errorCode: string): HTMLButtonElement {
   if (value === undefined) {
     throw new Error(errorCode);
   }
@@ -184,8 +199,8 @@ describe('CanvasViewport', () => {
   });
 
   it('hides restore buttons in focus mode and resolves minimap color from node registry', async () => {
-    const legacyCanvasPalette = 'blueprint';
-    const normalizedCanvasPalette = normalizeCanvasPaletteId(legacyCanvasPalette);
+    const requestedCanvasPalette = '#152033';
+    const normalizedCanvasPalette = normalizeCanvasPaletteId(requestedCanvasPalette);
     const expectedPaletteTokens = deriveCanvasPaletteTokens(normalizedCanvasPalette);
 
     await act(async () => {
@@ -196,8 +211,7 @@ describe('CanvasViewport', () => {
             explorerPanelVisible: false,
             inspectorPanelVisible: false,
             gridSize: 32,
-            canvasPalette:
-              legacyCanvasPalette as React.ComponentProps<typeof CanvasViewport>['canvasPalette'],
+            canvasPalette: requestedCanvasPalette,
           })}
         />
       );
@@ -228,8 +242,9 @@ describe('CanvasViewport', () => {
     expect(xyflowState.miniMapMaskColor).toBe('var(--canvas-minimap-mask)');
     expect(xyflowState.miniMapMaskStrokeColor).toBe('var(--canvas-minimap-mask-stroke)');
     expect(xyflowState.miniMapClassName).toBe('rounded-lg');
-    const minimapDataset = (container.querySelector('[data-testid="minimap"]') as HTMLDivElement | null)
-      ?.dataset;
+    const minimapDataset = (
+      container.querySelector('[data-testid="minimap"]') as HTMLDivElement | null
+    )?.dataset;
     expect(minimapDataset?.pannable).toBe('true');
     expect(minimapDataset?.zoomable).toBe('true');
   });
@@ -288,6 +303,7 @@ describe('CanvasViewport', () => {
 
     expect(xyflowState.lastReactFlowProps).toMatchObject({
       multiSelectionKeyCode: 'Shift',
+      selectNodesOnDrag: true,
     });
   });
 

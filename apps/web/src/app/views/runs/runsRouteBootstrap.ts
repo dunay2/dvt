@@ -1,6 +1,7 @@
+/** Owned concern: publish Runs list and run-detail posture into the route bootstrap contract. */
 import {
   createCompleteRouteBootstrapPresentation,
-  createErrorRouteBootstrapPresentation,
+  createFailedRouteBootstrapPresentation,
   createPendingRouteBootstrapPresentation,
   createPublishedRouteBootstrapHandle,
   type RouteBootstrapPresentation,
@@ -14,10 +15,9 @@ export const RUNS_ROUTE_BOOTSTRAP_HANDLE = createPublishedRouteBootstrapHandle({
   pendingDetail: 'Preparing Runs route',
 });
 
-export const RUN_DETAIL_ROUTE_BOOTSTRAP_HANDLE =
-  createPublishedRouteBootstrapHandle({
-    pendingDetail: 'Preparing Run detail route',
-  });
+export const RUN_DETAIL_ROUTE_BOOTSTRAP_HANDLE = createPublishedRouteBootstrapHandle({
+  pendingDetail: 'Preparing Run detail route',
+});
 
 export function deriveRunsRouteBootstrapPresentation(
   workbenchState: RunsWorkbenchState
@@ -25,23 +25,17 @@ export function deriveRunsRouteBootstrapPresentation(
   switch (workbenchState.kind) {
     case 'runs-error':
     case 'run-error':
-      return createErrorRouteBootstrapPresentation(workbenchState.message);
+      return createFailedRouteBootstrapPresentation(workbenchState.message);
     case 'run-loading':
-      return createPendingRouteBootstrapPresentation(
-        `Loading run ${workbenchState.runId}`
-      );
+      return createPendingRouteBootstrapPresentation(`Loading run ${workbenchState.runId}`);
     case 'runs-list':
       return workbenchState.isLoading && workbenchState.runs.length === 0
         ? createPendingRouteBootstrapPresentation('Loading runs for the route')
         : createCompleteRouteBootstrapPresentation('Runs route is ready');
     case 'runs-empty':
-      return createCompleteRouteBootstrapPresentation(
-        'Runs route is ready with no runs'
-      );
+      return createCompleteRouteBootstrapPresentation('Runs route is ready with no runs');
     case 'run-missing':
-      return createCompleteRouteBootstrapPresentation(
-        `Run ${workbenchState.runId} was not found`
-      );
+      return createCompleteRouteBootstrapPresentation(`Run ${workbenchState.runId} was not found`);
     case 'run-workspace':
       return createCompleteRouteBootstrapPresentation('Run detail route is ready');
   }

@@ -8,14 +8,14 @@ const ROUTE_VIEW_STATE_SOURCE = readArchitectureSiblingSource(
 );
 
 describe('canvasRouteViewState architecture', () => {
-  it('depends on direct model seams instead of a legacy presentation facade', () => {
+  it('depends on direct model seams instead of a retired presentation facade', () => {
     expect(ROUTE_VIEW_STATE_SOURCE).toContain("'./canvasDraftPresentationModel'");
     expect(ROUTE_VIEW_STATE_SOURCE).toContain("'./canvasRouteInteractionState'");
     expect(ROUTE_VIEW_STATE_SOURCE).toContain("'./canvasDraftTransportErrorState'");
     expect(ROUTE_VIEW_STATE_SOURCE).not.toContain('canvasDraftPresentationState');
   });
 
-  it('does not publish compatibility booleans once route posture is canonical', () => {
+  it('does not publish transition booleans once route posture is canonical', () => {
     expect(ROUTE_VIEW_STATE_SOURCE).not.toContain('showRecoveryBanner');
   });
 });

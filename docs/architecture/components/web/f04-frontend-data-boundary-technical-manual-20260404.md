@@ -30,13 +30,14 @@ flowchart TB
 
 1. `resolveDataSource()` is allowed only in composition-root/config ownership modules.
 2. Runtime query keys must come from `queryKeys.ts`.
-3. Runtime modules must not import `stores/appStore`.
+3. Runtime modules must not import removed aggregate store surfaces.
 4. Feature views must depend on ports (`app/ports/*`) and shared services from context.
 
 ## Current Technical Invariants
 
 - `queryKey` inline arrays are blocked by architecture test.
-- direct import of `stores/appStore` in runtime source is blocked by architecture test.
+- direct import of removed aggregate store surfaces in runtime source is blocked
+  by architecture test.
 - mode-resolution leakage outside owner modules is blocked by architecture test.
 - `startRun` must use `ExecutionPlan.planRef`; runtime start is rejected in UI when `planRef` is missing.
 
@@ -96,9 +97,11 @@ When a file exceeds policy target, split by responsibility:
 
 Avoid extracting only to move complexity; each split must reduce boundary width and improve testability.
 
-## Decommission Path for Legacy `appStore`
+## Aggregate Store Removal Status
 
-- keep as compatibility adapter only.
-- remove mirror writes first.
-- remove unused selectors/actions.
-- delete once runtime and test harnesses fully migrated.
+- `stores/appStore.ts` has been removed.
+- `stores/index.ts` has been removed.
+- active runtime state is owned by `sessionStore`, `uiLayoutStore`,
+  `executionStore`, and `canvasInteractionStore`.
+- new state concerns must extend a named slice or introduce a new bounded slice;
+  do not recreate an aggregate shell store or store barrel.

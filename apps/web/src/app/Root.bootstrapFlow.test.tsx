@@ -10,6 +10,7 @@ import { ApiError } from './services/api/createApiClient';
 import {
   createBlockedRouteBootstrapPresentation,
   createCompleteRouteBootstrapPresentation,
+  createFailedRouteBootstrapPresentation,
 } from './bootstrap/routeBootstrapContract';
 import { resetRouteBootstrapPresentation } from './bootstrap/routeBootstrapRegistry';
 import {
@@ -34,15 +35,15 @@ vi.mock('./bootstrap/appBootstrapScreen', () => ({
 }));
 
 async function expectRouteBootstrapStep(args: {
-  status: 'pending' | 'complete' | 'blocked' | 'error';
+  status: 'pending' | 'complete' | 'failed' | 'blocked' | 'error';
   detail: string;
 }): Promise<void> {
   await waitFor(() => {
-    expect(bootstrapScreenMocks.setBootstrapStepStatus).toHaveBeenCalledWith(
-      'route',
-      args.status,
-      args.detail
-    );
+    expect(bootstrapScreenMocks.setBootstrapStepStatus).toHaveBeenCalledWith({
+      step: 'route',
+      status: args.status,
+      detail: args.detail,
+    });
   });
 }
 
@@ -104,10 +105,10 @@ describe('RootShell bootstrap flow', () => {
       const view = within(mounted.container);
 
       await waitFor(() => {
-        expect(bootstrapScreenMocks.setBootstrapStepStatus).toHaveBeenCalledWith(
-          'health',
-          'pending'
-        );
+        expect(bootstrapScreenMocks.setBootstrapStepStatus).toHaveBeenCalledWith({
+          step: 'health',
+          status: 'pending',
+        });
       });
       expect(view.getByText('Checking')).toBeTruthy();
       expect(mounted.container.querySelector('[data-slot="app-shell-frame"]')).not.toBeNull();
@@ -135,11 +136,11 @@ describe('RootShell bootstrap flow', () => {
 
     try {
       await waitFor(() => {
-        expect(bootstrapScreenMocks.setBootstrapStepStatus).toHaveBeenCalledWith(
-          'health',
-          'failed',
-          expect.stringContaining('/healthz')
-        );
+        expect(bootstrapScreenMocks.setBootstrapStepStatus).toHaveBeenCalledWith({
+          step: 'health',
+          status: 'failed',
+          detail: expect.stringContaining('/healthz'),
+        });
       });
       await expectRouteBootstrapCompletion('Canvas backend block is routable');
     } finally {
@@ -163,10 +164,10 @@ describe('RootShell bootstrap flow', () => {
 
     try {
       await waitFor(() => {
-        expect(bootstrapScreenMocks.setBootstrapStepStatus).toHaveBeenCalledWith(
-          'capabilities',
-          'pending'
-        );
+        expect(bootstrapScreenMocks.setBootstrapStepStatus).toHaveBeenCalledWith({
+          step: 'capabilities',
+          status: 'pending',
+        });
       });
       expect(mounted.container.querySelector('[data-slot="app-shell-frame"]')).not.toBeNull();
     } finally {
@@ -183,11 +184,11 @@ describe('RootShell bootstrap flow', () => {
         status: 'pending',
         detail: 'Preparing canvas route',
       });
-      expect(bootstrapScreenMocks.setBootstrapStepStatus).not.toHaveBeenCalledWith(
-        'route',
-        'complete',
-        'Canvas workbench route is ready'
-      );
+      expect(bootstrapScreenMocks.setBootstrapStepStatus).not.toHaveBeenCalledWith({
+        step: 'route',
+        status: 'complete',
+        detail: 'Canvas workbench route is ready',
+      });
       expect(bootstrapScreenMocks.completeBootstrapScreen).not.toHaveBeenCalled();
     } finally {
       await mounted.cleanup();
@@ -219,6 +220,37 @@ describe('RootShell bootstrap flow', () => {
           'Canvas has paused draft editing because the persisted draft disappeared. Adopt the current protected draft authority before continuing.',
       });
       expect(bootstrapScreenMocks.completeBootstrapScreen).not.toHaveBeenCalled();
+    } finally {
+      await mounted.cleanup();
+    }
+  });
+
+  it('completes Raven startup when the route publishes a controlled failed posture', async () => {
+    const capability = createResolvedCapability();
+    const mounted = await withTestQueryClient(
+      createRootShellNode(
+        capability,
+        ['/canvas'],
+        undefined,
+        <RouteBootstrapProbe
+          registration={CANVAS_ROUTE_BOOTSTRAP_REGISTRATION}
+          presentationState={createFailedRouteBootstrapPresentation(
+            'Route rendered a governed error surface'
+          )}
+        >
+          <div>Canvas route error surface</div>
+        </RouteBootstrapProbe>
+      )
+    );
+
+    try {
+      await expectRouteBootstrapStep({
+        status: 'failed',
+        detail: 'Route rendered a governed error surface',
+      });
+      await waitFor(() => {
+        expect(bootstrapScreenMocks.completeBootstrapScreen).toHaveBeenCalled();
+      });
     } finally {
       await mounted.cleanup();
     }
