@@ -17,6 +17,7 @@ type UseCanvasViewportGraphModelArgs = {
 
 type VisibleViewportEdge = UseCanvasViewportGraphModelArgs['visibleEdges'][number];
 type PersistedNodePositions = UseCanvasViewportGraphModelArgs['persistedNodePositions'];
+type ViewportNodeById = ReadonlyMap<string, Node>;
 
 function resolveVisibleCanonicalNodes(
   visibleNodeIds: readonly string[],
@@ -32,23 +33,30 @@ function projectViewportNodes(args: {
   canonicalNodesById: ReadonlyMap<string, CanonicalNode>;
   columnLevelLineageEnabled: boolean;
   persistedNodePositions: PersistedNodePositions;
-  fallbackPositionsById?: ReadonlyMap<string, Node['position']>;
+  fallbackNodesById?: ViewportNodeById;
 }): Node[] {
   const {
     visibleNodeIds,
     canonicalNodesById,
     columnLevelLineageEnabled,
     persistedNodePositions,
-    fallbackPositionsById,
+    fallbackNodesById,
   } = args;
 
-  return resolveVisibleCanonicalNodes(visibleNodeIds, canonicalNodesById).map((node, index) =>
-    mapCanonicalNodeToCanvasNode({
-      canonicalNode: node,
-      index,
-      showColumns: columnLevelLineageEnabled,
-      persistedPosition: persistedNodePositions[node.id] ?? fallbackPositionsById?.get(node.id),
-    })
+  return resolveVisibleCanonicalNodes(visibleNodeIds, canonicalNodesById).map(
+    (canonicalNode, index) => {
+      const fallbackNode = fallbackNodesById?.get(canonicalNode.id);
+      const liveGesturePosition =
+        fallbackNode?.dragging === undefined ? undefined : fallbackNode.position;
+
+      return mapCanonicalNodeToCanvasNode({
+        canonicalNode,
+        index,
+        showColumns: columnLevelLineageEnabled,
+        persistedPosition:
+          liveGesturePosition ?? persistedNodePositions[canonicalNode.id] ?? fallbackNode?.position,
+      });
+    }
   );
 }
 
@@ -164,7 +172,7 @@ export function useCanvasViewportGraphModel({
         canonicalNodesById,
         columnLevelLineageEnabled,
         persistedNodePositions,
-        fallbackPositionsById: new Map(currentNodes.map((node) => [node.id, node.position])),
+        fallbackNodesById: new Map(currentNodes.map((node) => [node.id, node])),
       });
 
       return viewportNodesEqual(currentNodes, nextNodes) ? currentNodes : nextNodes;

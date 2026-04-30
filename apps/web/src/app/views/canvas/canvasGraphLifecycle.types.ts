@@ -1,9 +1,6 @@
-import type {
-  Edge,
-  EdgeChange,
-  Node,
-  NodeChange,
-} from '@xyflow/react';
+/** Owned concern: define Canvas graph lifecycle contracts for node and edge transition components. */
+
+import type { Edge, EdgeChange, Node, NodeChange } from '@xyflow/react';
 
 import type { CanvasDraftSession } from './canvasDraftSession';
 import type { CanonicalNode } from '../../types/canonical';
@@ -28,6 +25,7 @@ export type CanvasGraphLifecycleNodeRemovalResult =
     };
 
 export type CanvasGraphLifecycleNodeApi = {
+  applyLocalChanges: (nodes: Node[], changes: NodeChange[]) => Node[];
   applyChanges: (
     state: CanvasGraphLifecycleState,
     changes: NodeChange[]
@@ -40,10 +38,7 @@ export type CanvasGraphLifecycleNodeApi = {
     draftSession: CanvasDraftSession,
     canonicalNode: CanonicalNode
   ) => CanvasDraftSession;
-  queueImported: (
-    draftSession: CanvasDraftSession,
-    nodeIds: string[]
-  ) => CanvasDraftSession;
+  queueImported: (draftSession: CanvasDraftSession, nodeIds: string[]) => CanvasDraftSession;
 };
 
 export type CanvasGraphLifecycleEdgeApi = {

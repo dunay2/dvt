@@ -2,7 +2,7 @@
 title: Graph Architecture Docs
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-04-23
+last_reviewed: 2026-04-29
 ---
 
 # Graph Architecture Docs
@@ -26,6 +26,7 @@ Canonical navigation for the Graph and Canvas architecture pack.
 - [Canvas Execution Selection Component](./canvas-execution-selection-component.md)
 - [Canvas Empty Authoring Entrypoint Component](./canvas-empty-authoring-entrypoint-component.md)
 - [Canvas Playground Host Component](./canvas-playground-host-component.md)
+- [Canvas Layout Persistence Component](./canvas-layout-persistence-component.md)
 - [Canvas Startup And Draft Recovery Component](./canvas-startup-and-draft-recovery-component.md)
 - [Canvas Startup And Draft Recovery User Stories](./canvas-startup-and-draft-recovery-user-stories.md)
 - [Workspace Graph Draft Test Fixture Boundary Component](./workspace-graph-draft-test-fixture-boundary-component.md)

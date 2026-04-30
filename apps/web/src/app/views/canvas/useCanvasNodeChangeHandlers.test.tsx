@@ -190,4 +190,41 @@ describe('useCanvasNodeChangeHandlers', () => {
 
     harness.cleanup();
   });
+
+  it('applies drag-only node changes against the latest node state', async () => {
+    let currentNodes: Node[] = [
+      { id: 'source-node', data: { name: 'source-node' }, position: { x: 42, y: 24 } },
+      { id: 'sink-node', data: { name: 'sink-node' }, position: { x: 1, y: 1 } },
+    ];
+    const setNodes = vi.fn((nextNodes: Node[] | ((existingNodes: Node[]) => Node[])) => {
+      currentNodes = typeof nextNodes === 'function' ? nextNodes(currentNodes) : nextNodes;
+    });
+    const harness = renderHookHost({
+      nodes: buildNodes(),
+      setNodes,
+    });
+    await harness.render();
+
+    act(() => {
+      harness.latest()?.handleNodesChange([
+        {
+          id: 'source-node',
+          type: 'position',
+          dragging: true,
+        },
+      ]);
+    });
+
+    expect(setNodes).toHaveBeenCalledWith(expect.any(Function));
+    expect(currentNodes[0]).toMatchObject({
+      id: 'source-node',
+      dragging: true,
+      position: { x: 42, y: 24 },
+    });
+    expect(harness.spies.setDraftSession).not.toHaveBeenCalled();
+    expect(harness.spies.setSelectedNodes).not.toHaveBeenCalled();
+    expect(harness.spies.setInspectorNode).not.toHaveBeenCalled();
+
+    harness.cleanup();
+  });
 });

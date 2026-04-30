@@ -84,17 +84,40 @@ test('startLocalProtectedRuntimeAuth provides OIDC env and a bearer token for th
   }
 });
 
-test('startLocalProtectedRuntimeAuth issues a long-lived local dev bearer token by default', async () => {
+test('startLocalProtectedRuntimeAuth issues a bounded local dev bearer token by default', async () => {
   const bootstrap = await startLocalProtectedRuntimeAuth();
 
   try {
     const payload = decodeJwtPayload(bootstrap.webEnv.VITE_API_BEARER_TOKEN);
     assert.equal(typeof payload.iat, 'number');
     assert.equal(typeof payload.exp, 'number');
-    assert.ok(
-      payload.exp - payload.iat >= 24 * 60 * 60,
-      'expected the coordinated dev-stack bearer token to live at least 24 hours by default'
-    );
+    assert.equal(payload.exp - payload.iat, 24 * 60 * 60);
+  } finally {
+    await bootstrap.close();
+  }
+});
+
+test('startLocalProtectedRuntimeAuth exposes a local token refresh endpoint', async () => {
+  const bootstrap = await startLocalProtectedRuntimeAuth();
+
+  try {
+    const refreshUrl = bootstrap.webEnv.VITE_API_BEARER_TOKEN_REFRESH_URL;
+    assert.match(refreshUrl, /^http:\/\/127\.0\.0\.1:\d+\/__dvt\/local-protected-runtime\/token$/);
+
+    await new Promise((resolve) => setTimeout(resolve, 1100));
+    const response = await fetch(refreshUrl, {
+      method: 'POST',
+      headers: { Accept: 'application/json' },
+    });
+    assert.equal(response.status, 200);
+    assert.equal(response.headers.get('access-control-allow-origin'), '*');
+
+    const body = await response.json();
+    assert.equal(typeof body.bearerToken, 'string');
+    assert.notEqual(body.bearerToken, bootstrap.webEnv.VITE_API_BEARER_TOKEN);
+
+    const payload = decodeJwtPayload(body.bearerToken);
+    assert.equal(payload.exp - payload.iat, 24 * 60 * 60);
   } finally {
     await bootstrap.close();
   }

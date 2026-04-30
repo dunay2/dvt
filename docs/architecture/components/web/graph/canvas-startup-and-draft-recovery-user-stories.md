@@ -72,6 +72,33 @@ Acceptance criteria:
 - Canvas presenters resolve copy before rendering templates.
 - Passive templates do not import copy catalogs.
 
+### US-CANVAS-AUTH-001: refresh an expired local protected-runtime token
+
+As an operator using a long-lived local Canvas session, I want protected draft
+requests to use a fresh local dev-stack token, so the app does not present a
+false draft-denied state after an overnight token expiry.
+
+Acceptance criteria:
+
+- The frontend omits an expired configured bearer token when no refresh URL is
+  available.
+- When `VITE_API_BEARER_TOKEN_REFRESH_URL` exists, the API auth component
+  requests a fresh token before a protected runtime call.
+- Canvas route code does not decode JWTs or call the refresh endpoint directly.
+
+### US-CANVAS-AUTH-002: retry one safe protected request after 401
+
+As an operator whose local token expires between request preparation and API
+handling, I want the transport to refresh and retry once, so a recoverable
+auth race does not block Canvas startup.
+
+Acceptance criteria:
+
+- `createApiClient()` retries one `401` only when a refresh URL is available.
+- Retry is limited to absent or string-backed request bodies.
+- The retried request keeps session headers and normalized transport error
+  handling.
+
 ### US-CANVAS-DRAFT-001: read the protected workspace draft
 
 As an operator opening Canvas, I want the route to read the protected workspace
@@ -142,6 +169,41 @@ Acceptance criteria:
 - Recovery banner state is resolved in `canvasRecoveryBannerModel.ts`.
 - Recovery HTML is rendered in `CanvasRecoveryBanner.templates.tsx`.
 - Recovery templates do not import route presentation state or copy catalogs.
+
+### US-CANVAS-LAYOUT-001: persist drag-stop payload coordinates
+
+As an operator moving a Canvas card, I want the dropped coordinate to persist,
+so the card does not snap back after React Flow supplies a stale node array.
+
+Acceptance criteria:
+
+- `handleNodeDragStop` merges the `draggedNode` event payload over `allNodes`.
+- The persisted map contains every visible node position.
+- The persistence path writes route-local layout state, not protected draft
+  graph state.
+
+### US-CANVAS-LAYOUT-002: persist settled live drag positions
+
+As an operator completing a drag gesture, I want Canvas to persist the settled
+live viewport position, so the layout survives re-render and route reload.
+
+Acceptance criteria:
+
+- Active drag frames do not write persisted positions.
+- A settled observed drag frame writes changed node positions.
+- Equal persisted positions are not rewritten.
+
+### US-CANVAS-LAYOUT-003: block layout writes before route readiness
+
+As a maintainer, I want Canvas layout persistence disabled before hydration and
+graph-query readiness, so bootstrap and stale graph state cannot overwrite the
+operator layout.
+
+Acceptance criteria:
+
+- Node positions are not persisted while graph query is pending.
+- Viewport state is not persisted while graph query is pending.
+- Hydration state gates layout persistence.
 
 ### US-CANVAS-PRESENTATION-001: keep first-canvas HTML passive
 
@@ -214,12 +276,17 @@ Acceptance criteria:
 | US-CANVAS-BOOTSTRAP-002    | Health failure is visible and route-safe        | `appBootstrapPresentation.ts`, `Root.tsx`                                      | `appBootstrapPresentation.test.ts`, `Root.bootstrapFlow.test.tsx`                         |
 | US-CANVAS-BOOTSTRAP-003    | Capabilities settle before unsafe actions       | `Root.tsx`, capability query policy                                            | `Root.bootstrapFlow.test.tsx`, `queryKeyPolicy.architecture.test.ts`                      |
 | US-CANVAS-BOOTSTRAP-004    | Locale-backed startup and route copy            | `appBootstrapCopy.ts`, `copy/*`                                                | `appBootstrapCommands.test.ts`, `copy.test.ts`                                            |
+| US-CANVAS-AUTH-001         | Refresh expired local protected token           | `apiAuthConfig.ts`, `scripts/run-dev-stack.auth.cjs`                           | `createApiClient.test.ts`, `run-dev-stack.auth.test.cjs`                                  |
+| US-CANVAS-AUTH-002         | Retry one safe protected request after `401`    | `createApiClient.ts`                                                           | `createApiClient.test.ts`, `canvasStartupAndDraftRecovery.architecture.test.ts`           |
 | US-CANVAS-DRAFT-001        | Protected draft endpoint                        | `workspaceGraphDraftHttp.ts`                                                   | `canvasStartupAndDraftRecovery.architecture.test.ts`                                      |
 | US-CANVAS-DRAFT-002        | Semantic and DBT snapshot projection split      | `workspaceGraphDraftProjection.ts`, `workspaceGraphDraftSnapshotProjection.ts` | `workspaceGraphDraftSnapshotProjection.test.ts`                                           |
 | US-CANVAS-DRAFT-003        | Create first Canvas only when empty             | `canvasCreateCanvasDocumentCommandPolicy.ts`                                   | `canvasCreateCanvasDocumentCommand.test.ts`                                               |
 | US-CANVAS-DRAFT-004        | Confirmed replacement command                   | `useCanvasPlaygroundTabStripPresenter.ts`                                      | `CanvasPlaygroundTabStrip.test.tsx`                                                       |
 | US-CANVAS-DRAFT-005        | CAS-protected replacement                       | `canvasCreateCanvasDocumentCommandPolicy.ts`                                   | `canvasCreateCanvasDocumentCommand.test.ts`                                               |
 | US-CANVAS-DRAFT-006        | Recovery banner surfaces                        | `canvasRecoveryBannerModel.ts`, `CanvasRecoveryBanner.templates.tsx`           | `canvasStartupAndDraftRecovery.architecture.test.ts`                                      |
+| US-CANVAS-LAYOUT-001       | Drag-stop payload coordinates persist           | `useCanvasLayoutPersistence.ts`                                                | `useCanvasController.persistence.test.tsx`                                                |
+| US-CANVAS-LAYOUT-002       | Settled live drag positions persist             | `useCanvasLayoutPersistence.ts`, `useCanvasViewportGraphModel.ts`              | `useCanvasController.persistence.test.tsx`, `useCanvasViewportGraphModel.test.tsx`        |
+| US-CANVAS-LAYOUT-003       | Pending route state blocks layout writes        | `useCanvasLayoutPersistence.ts`                                                | `useCanvasController.persistence.test.tsx`                                                |
 | US-CANVAS-PRESENTATION-001 | Passive host template                           | `CanvasPlaygroundHost.templates.tsx`                                           | `canvasStartupAndDraftRecovery.architecture.test.ts`                                      |
 | US-CANVAS-PRESENTATION-002 | Passive tab-strip template                      | `CanvasPlaygroundTabStrip.templates.tsx`                                       | `CanvasPlaygroundTabStrip.test.tsx`, `canvasStartupAndDraftRecovery.architecture.test.ts` |
 | US-CANVAS-PRESENTATION-003 | Drag handle is explicit                         | `canvasNodeMapper.ts`, `DbtNodeComponent.tsx`                                  | `canvasStartupAndDraftRecovery.architecture.test.ts`                                      |
@@ -249,6 +316,22 @@ Green case for this follow-up:
 - add the review and stories;
 - link the stories from the component guide;
 - rerun the architecture guard and broader validation.
+
+Red case for the 2026-04-29 Canvas operability auth/layout follow-up:
+
+- the architecture guard expected local auth and layout component guides plus
+  a new Fowler mailbox review;
+- those files did not exist;
+- `apiAuthConfig.ts` and new layout/lifecycle participants did not yet satisfy
+  the short owned-concern docblock guard.
+
+Green case for the 2026-04-29 Canvas operability auth/layout follow-up:
+
+- add the auth and layout component guides;
+- add the mailbox review;
+- normalize owned-concern docblocks;
+- split layout persistence into named local persistence roles;
+- rerun the architecture guard and targeted behavior tests.
 
 ## Branch-Adjacent Scenario Notes
 

@@ -303,6 +303,7 @@ describe('CanvasViewport', () => {
 
     expect(xyflowState.lastReactFlowProps).toMatchObject({
       multiSelectionKeyCode: 'Shift',
+      selectNodesOnDrag: true,
     });
   });
 

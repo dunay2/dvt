@@ -31,6 +31,11 @@ whose first visible surface is already governed and safe to reveal.
 User-story coverage lives in
 [Canvas Startup And Draft Recovery User Stories](./canvas-startup-and-draft-recovery-user-stories.md).
 
+Local supporting guides for the current operability slice:
+
+- [API Client Auth Component](../api-client-auth-component.md)
+- [Canvas Layout Persistence Component](./canvas-layout-persistence-component.md)
+
 ## Public API
 
 | API                                                   | Owner                                        | Responsibility                                                                    |
@@ -211,7 +216,9 @@ because they belong to separate component owners.
 | Story group        | Local stories                                                     | Governing invariant                                                            |
 | ------------------ | ----------------------------------------------------------------- | ------------------------------------------------------------------------------ |
 | Startup gate       | `US-CANVAS-BOOTSTRAP-001` through `US-CANVAS-BOOTSTRAP-004`       | Route posture decides whether the shell may reveal a governed surface.         |
+| Protected auth     | `US-CANVAS-AUTH-001` through `US-CANVAS-AUTH-002`                 | API transport refreshes stale local auth before route recovery is shown.       |
 | Protected draft    | `US-CANVAS-DRAFT-001` through `US-CANVAS-DRAFT-006`               | Canvas reads and writes the protected draft authority with explicit CAS rules. |
+| Layout persistence | `US-CANVAS-LAYOUT-001` through `US-CANVAS-LAYOUT-003`             | Viewport coordinates remain route-local and separate from draft authority.     |
 | Presentation       | `US-CANVAS-PRESENTATION-001` through `US-CANVAS-PRESENTATION-003` | JSX templates render resolved view state and do not own command policy.        |
 | Architecture guard | `US-CANVAS-ARCH-001`                                              | Tests validate semantic promises and documentation traceability.               |
 
@@ -289,10 +296,15 @@ It validates semantics, not only barrel thinness:
 - tab strip confirmation stays tied to edit permission;
 - mapped and dropped nodes carry the explicit drag handle;
 - branch-owned modules keep owned-concern docblocks;
+- protected-runtime auth refresh stays inside the API client component;
+- Canvas layout persistence does not import draft-authoring ports;
 - this guide and the Fowler mailbox remain present and aligned.
 
 ## Drift to watch
 
+- Do not show draft-denial recovery for an expired local token before the API
+  client has attempted a bounded refresh.
+- Do not persist Canvas layout by writing the protected graph draft.
 - Do not add a second graph snapshot endpoint as a startup workaround.
 - Do not let `failed` route posture absorb startup contract errors.
 - Do not add local storage or database cleanup as a replacement path.

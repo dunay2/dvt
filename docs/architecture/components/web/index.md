@@ -2,7 +2,7 @@
 title: web component
 status: Active
 owner: Architecture / Docs
-last_reviewed: 2026-04-09
+last_reviewed: 2026-04-29
 ---
 
 # web component
@@ -25,6 +25,7 @@ out of the active tree.
 - shell and bootstrap:
   [Main workspace views and UX](./main-workspace-views-and-ux.md),
   [App bootstrap screen component](./app-bootstrap-screen-component.md),
+  [API client auth component](./api-client-auth-component.md),
   [App shell](./appshell/app-shell.md),
   [Data source service boundary](./appshell/data-source-service-boundary.md)
 - graph and authoring surfaces:
@@ -34,6 +35,7 @@ out of the active tree.
   [Graph canvas runtime model](./graph/graph-canvas-runtime-model.md),
   [Graph sequences and state machines](./graph/graph-sequences-and-state-machines.md),
   [Graph decision rationale and patterns](./graph/graph-decision-rationale-and-patterns.md),
+  [Canvas layout persistence component](./graph/canvas-layout-persistence-component.md),
   [Canvas controller current-to-target](./graph/canvas-controller-current-to-target-architecture.md)
 - runtime and run-inspection surfaces:
   [Runs architecture](./runs/dvt-runs-frontend-architecture.md),
