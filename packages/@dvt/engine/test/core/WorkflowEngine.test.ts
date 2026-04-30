@@ -190,18 +190,24 @@ describe('WorkflowEngine (basic failure modes)', () => {
   });
 
   it('keeps WorkflowEngine wired to delegated services instead of low-level collaborator regrowth', () => {
-    expect(WORKFLOW_ENGINE_SOURCE).toContain(
-      'startRunApplicationService: IStartRunApplicationService;'
-    );
-    expect(WORKFLOW_ENGINE_SOURCE).toContain('runRecoveryService: IRunRecoveryService;');
-    expect(WORKFLOW_ENGINE_SOURCE).toContain('runControlService: IRunControlService;');
-    expect(WORKFLOW_ENGINE_SOURCE).toContain('runStatusQueryService: IRunStatusQueryService;');
+    expect(WORKFLOW_ENGINE_SOURCE).toContain('startRunUseCase: IWorkflowStartRunUseCase;');
+    expect(WORKFLOW_ENGINE_SOURCE).toContain('recoverRunUseCase: IWorkflowRecoverRunUseCase;');
+    expect(WORKFLOW_ENGINE_SOURCE).toContain('cancelRunUseCase: IWorkflowCancelRunUseCase;');
+    expect(WORKFLOW_ENGINE_SOURCE).toContain('runStatusUseCase: IWorkflowRunStatusUseCase;');
+    expect(WORKFLOW_ENGINE_SOURCE).toContain('signalRunUseCase: IWorkflowSignalRunUseCase;');
 
-    expect(WORKFLOW_ENGINE_SOURCE).toContain('return this.runRecoveryService.recoverRun(');
+    expect(WORKFLOW_ENGINE_SOURCE).toContain('return this.recoverRunUseCase.recoverRun(');
     expect(WORKFLOW_ENGINE_SOURCE).toContain(
-      'return this.runStatusQueryService.getStatus(engineRunRef);'
+      'return this.runStatusUseCase.getRunStatus(engineRunRef);'
     );
 
+    expect(WORKFLOW_ENGINE_SOURCE).not.toContain('IStartRunApplicationService');
+    expect(WORKFLOW_ENGINE_SOURCE).not.toContain('IRunRecoveryService');
+    expect(WORKFLOW_ENGINE_SOURCE).not.toContain('IRunControlService');
+    expect(WORKFLOW_ENGINE_SOURCE).not.toContain('IRunStatusQueryService');
+    expect(WORKFLOW_ENGINE_SOURCE).not.toContain('IObservability');
+    expect(WORKFLOW_ENGINE_SOURCE).not.toContain('buildTraceContext');
+    expect(WORKFLOW_ENGINE_SOURCE).not.toContain('withSpan(');
     expect(WORKFLOW_ENGINE_SOURCE).not.toContain('getRunEnrichment(');
     expect(WORKFLOW_ENGINE_SOURCE).not.toContain('healthCheck(');
     expect(WORKFLOW_ENGINE_SOURCE).not.toContain('stateStoreRead');

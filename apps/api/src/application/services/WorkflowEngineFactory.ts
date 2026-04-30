@@ -9,6 +9,7 @@
  */
 import {
   buildWorkflowEngineFacade,
+  buildWorkflowEngineUseCases,
   buildRunHealthService,
   buildRunRecoveryService,
   buildRunControlService,
@@ -107,13 +108,9 @@ export function buildWorkflowEngine(config: EngineConfig): BuiltWorkflowEngineRu
     authorizer: config.security.authorizer,
     planRefPolicy: new PlanRefPolicy({
       allowedSchemes: config.security.planRefAllowedSchemes,
-      ...(config.security.planRefAllowedHosts !== undefined
-        ? { allowedHosts: config.security.planRefAllowedHosts }
-        : {}),
+      ...optionalConfig('allowedHosts', config.security.planRefAllowedHosts),
     }),
-    ...(config.security.outboxRateLimiter !== undefined
-      ? { outboxRateLimiter: config.security.outboxRateLimiter }
-      : {}),
+    ...optionalConfig('outboxRateLimiter', config.security.outboxRateLimiter),
   });
   const projector = new SnapshotProjector();
   const idempotency = new IdempotencyKeyBuilder();
@@ -123,15 +120,14 @@ export function buildWorkflowEngine(config: EngineConfig): BuiltWorkflowEngineRu
       policy,
       stateStoreRead: config.persistence.stateStoreRead,
       adapters: config.runtime.adapters,
-      ...(config.persistence.runExecutionContextResolver !== undefined
-        ? { runExecutionContextResolver: config.persistence.runExecutionContextResolver }
-        : {}),
-      ...(config.persistence.runExecutionContextBindingPolicy !== undefined
-        ? {
-            runExecutionContextBindingPolicy:
-              config.persistence.runExecutionContextBindingPolicy,
-          }
-        : {}),
+      ...optionalConfig(
+        'runExecutionContextResolver',
+        config.persistence.runExecutionContextResolver
+      ),
+      ...optionalConfig(
+        'runExecutionContextBindingPolicy',
+        config.persistence.runExecutionContextBindingPolicy
+      ),
     }),
     stateStoreRead: config.persistence.stateStoreRead,
     stateStoreWrite: config.persistence.stateStoreWrite,
@@ -140,7 +136,7 @@ export function buildWorkflowEngine(config: EngineConfig): BuiltWorkflowEngineRu
     intentStore: config.persistence.intentStore,
     planFetcher: config.persistence.planFetcher,
     observability: config.infrastructure.observability,
-    ...(config.runtime.timeouts !== undefined ? { timeouts: config.runtime.timeouts } : {}),
+    ...optionalConfig('timeouts', config.runtime.timeouts),
   });
   const runControlService = buildRunControlService({
     stateStoreRead: config.persistence.stateStoreRead,
@@ -149,7 +145,7 @@ export function buildWorkflowEngine(config: EngineConfig): BuiltWorkflowEngineRu
     policy,
     adapters: config.runtime.adapters,
     observability: config.infrastructure.observability,
-    ...(config.runtime.timeouts !== undefined ? { timeouts: config.runtime.timeouts } : {}),
+    ...optionalConfig('timeouts', config.runtime.timeouts),
     clock: config.infrastructure.clock,
   });
   const runStatusQueryService = buildRunStatusQueryService({
@@ -168,32 +164,31 @@ export function buildWorkflowEngine(config: EngineConfig): BuiltWorkflowEngineRu
     adapters: config.runtime.adapters,
     observability: config.infrastructure.observability,
     startRunApplicationService,
-    ...(config.persistence.runExecutionContextResolver !== undefined
-      ? { runExecutionContextResolver: config.persistence.runExecutionContextResolver }
-      : {}),
-    ...(config.persistence.runExecutionContextBindingPolicy !== undefined
-      ? {
-          runExecutionContextBindingPolicy:
-            config.persistence.runExecutionContextBindingPolicy,
-        }
-      : {}),
+    ...optionalConfig(
+      'runExecutionContextResolver',
+      config.persistence.runExecutionContextResolver
+    ),
+    ...optionalConfig(
+      'runExecutionContextBindingPolicy',
+      config.persistence.runExecutionContextBindingPolicy
+    ),
   });
   const runHealthService = buildRunHealthService({
     stateStoreRead: config.persistence.stateStoreRead,
     adapters: config.runtime.adapters,
   });
+  const workflowUseCases = buildWorkflowEngineUseCases({
+    observability: config.infrastructure.observability,
+    startRunApplicationService,
+    runRecoveryService,
+    runControlService,
+    runStatusQueryService,
+  });
   return {
     engine: buildWorkflowEngineFacade({
-      startRunApplicationService,
-      runRecoveryService,
-      runControlService,
-      runStatusQueryService,
+      ...workflowUseCases,
       adapters: config.runtime.adapters,
-      observability: config.infrastructure.observability,
-      ...(config.runtime.requiredProviders !== undefined
-        ? { requiredProviders: config.runtime.requiredProviders }
-        : {}),
-      ...(config.runtime.timeouts !== undefined ? { timeouts: config.runtime.timeouts } : {}),
+      ...optionalConfig('requiredProviders', config.runtime.requiredProviders),
     }),
     runHealthService,
     runEnrichmentService: new RunEnrichmentService({
@@ -202,9 +197,16 @@ export function buildWorkflowEngine(config: EngineConfig): BuiltWorkflowEngineRu
       policy,
       adapters: config.runtime.adapters,
       observability: config.infrastructure.observability,
-      ...(config.runtime.timeouts !== undefined ? { timeouts: config.runtime.timeouts } : {}),
+      ...optionalConfig('timeouts', config.runtime.timeouts),
     }),
   };
+}
+
+function optionalConfig<TKey extends string, TValue>(
+  key: TKey,
+  value: TValue | undefined
+): Partial<Record<TKey, TValue>> {
+  return value === undefined ? {} : ({ [key]: value } as Record<TKey, TValue>);
 }
 
 // Test seam -----------------------------------------------------------------

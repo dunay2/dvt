@@ -14,6 +14,7 @@ import type { IProviderAdapter } from '../../src/adapters/IProviderAdapter.js';
 import { buildRunRecoveryService } from '../../src/application/RecoverRunApplicationService.js';
 import { StartRunAdmissionGuard } from '../../src/application/StartRunAdmissionGuard.js';
 import { StartRunApplicationService } from '../../src/application/StartRunApplicationService.js';
+import { buildWorkflowEngineUseCases } from '../../src/application/workflow-engine-use-cases/index.js';
 import { buildWorkflowEngineFacade } from '../../src/core/buildWorkflowEngineFacade.js';
 import { IdempotencyKeyBuilder } from '../../src/core/idempotency.js';
 import { SnapshotProjector } from '../../src/core/SnapshotProjector.js';
@@ -182,12 +183,15 @@ export function createWorkflowEngineFixture(input?: {
       ? {}
       : { runExecutionContextBindingPolicy: input.runExecutionContextBindingPolicy }),
   });
-  const engine = buildWorkflowEngineFacade({
+  const workflowUseCases = buildWorkflowEngineUseCases({
+    observability,
     startRunApplicationService,
     runRecoveryService,
     runControlService,
     runStatusQueryService,
-    observability,
+  });
+  const engine = buildWorkflowEngineFacade({
+    ...workflowUseCases,
     adapters,
     requiredProviders: input?.requiredProviders,
   }) as WorkflowEngine;

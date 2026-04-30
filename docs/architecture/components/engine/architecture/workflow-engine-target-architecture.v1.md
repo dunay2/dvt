@@ -195,17 +195,21 @@ under already accepted principles from `ADR-0003` and `ADR-0014`.
 ## Current vs target gaps
 
 - Public boundary
-  Current: `WorkflowEngine` now exposes commands plus canonical read only.
+  Current: `WorkflowEngine` now exposes commands plus canonical read only and
+  delegates to explicit facade-facing use cases through
+  [WorkflowEngine Facade Use-Cases Component](./workflow-engine-facade-use-cases-component.md).
   Target: facade-only delegation plus separate enrichment/query services with no
   residual mixed responsibility in current docs.
-  Gap signal: start-run/control decomposition convergence.
+  Gap signal: deeper start-run/control decomposition convergence.
 - `startRun` application flow
   Current: coordinator/guard mix concerns.
   Target: split into narrow use cases plus policies.
   Gap signal: SRP drift.
 - status/read path
   Current: dedicated canonical query and enrichment services are now shipped,
-  but control operations still share one runtime-control service.
+  and the facade reaches the canonical query path through a named
+  `IWorkflowRunStatusUseCase`; control operations still share one runtime-control
+  service behind cancel/signal use-case adapters.
   Target: dedicated query vs enrichment services plus narrower control and
   telemetry seams.
   Gap signal: residual control-service breadth.

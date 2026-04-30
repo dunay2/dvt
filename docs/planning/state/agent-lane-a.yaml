@@ -1883,10 +1883,10 @@ tasks:
   - task_id: WE-HX-2
     parent_task: WE-HX
     priority: P1
-    status: queued
+    status: done
     complexity: M
     effort_points: 3
-    progress_pct: 0
+    progress_pct: 100
     objective: narrow WorkflowEngine to a compatibility facade over dedicated use-case services.
     dependency: WE-HX-1
     target: >-
@@ -1894,8 +1894,15 @@ tasks:
       semantic behavior hosted by explicit use-case services.
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
-    status_reason: Queued after ownership closure.
-    last_verified: '2026-04-03'
+      - docs/planning/closeouts/20260430-we-hx-2-facade-use-cases-closeout.md
+      - docs/evidence/ed-20260430-we-hx-2-facade-use-cases.md
+      - docs/risk-register/quality/R-20260430-WE-HX-2-FACADE-USE-CASES.yaml
+      - docs/architecture/components/engine/architecture/workflow-engine-facade-use-cases-component.md
+    status_reason: >-
+      WorkflowEngine is now a normalization-and-delegation facade over explicit facade-facing use
+      cases; start-run tracing and resolved-context construction live in WorkflowStartRunUseCase,
+      and semantic architecture coverage prevents facade regrowth.
+    last_verified: '2026-04-30'
   - task_id: WE-HX-3
     parent_task: WE-HX
     priority: P1
