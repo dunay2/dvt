@@ -283,7 +283,7 @@ jobs:
         image: postgres:15
         env:
           POSTGRES_USER: dvt_test
-          POSTGRES_PASSWORD: dvt_test
+          POSTGRES_PASSWORD: ${{ github.run_id }}-${{ github.run_attempt }}
           POSTGRES_DB: dvt_test
         options: >-
           --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
@@ -292,12 +292,17 @@ jobs:
     env:
       DVT_CI: '1'
       DVT_PG_INTEGRATION: '1'
-      DVT_PG_ADMIN_URL: postgresql://dvt_test:dvt_test@localhost:5432/dvt_test
+      DVT_PG_ADMIN_URL:
+        postgresql://dvt_test:${{ github.run_id }}-${{ github.run_attempt }}@localhost:5432/dvt_test
       DVT_PG_APP_USER: dvt_app
-      DVT_PG_APP_PASSWORD: dvt_app
-      DVT_PG_RLS_URL: postgresql://dvt_app:dvt_app@localhost:5432/dvt_test
-      DVT_PG_URL: postgresql://dvt_test:dvt_test@localhost:5432/dvt_test
-      DATABASE_URL: postgresql://dvt_test:dvt_test@localhost:5432/dvt_test
+      DVT_PG_APP_PASSWORD: ${{ github.run_id }}-${{ github.run_attempt }}-app
+      DVT_PG_RLS_URL:
+        postgresql://dvt_app:${{ github.run_id }}-${{ github.run_attempt
+        }}-app@localhost:5432/dvt_test
+      DVT_PG_URL:
+        postgresql://dvt_test:${{ github.run_id }}-${{ github.run_attempt }}@localhost:5432/dvt_test
+      DATABASE_URL:
+        postgresql://dvt_test:${{ github.run_id }}-${{ github.run_attempt }}@localhost:5432/dvt_test
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
