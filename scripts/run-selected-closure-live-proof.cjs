@@ -170,7 +170,7 @@ async function dropSchemaIfExists(databaseUrl, schema) {
 }
 
 async function runCypress(args) {
-  const repoRoot = path.resolve(__dirname, '..').replace(/\\/g, '/');
+  const repoRoot = path.resolve(__dirname, '..').replaceAll('\\', '/');
   const dockerArgs = [
     'run',
     '--rm',

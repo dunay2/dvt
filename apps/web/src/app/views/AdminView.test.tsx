@@ -117,6 +117,36 @@ function createAdminRouteRouter({
   );
 }
 
+function readRequestUrl(input: RequestInfo | URL): string {
+  if (typeof input === 'string') {
+    return input;
+  }
+
+  if (input instanceof URL) {
+    return input.href;
+  }
+
+  return input.url;
+}
+
+class TestResizeObserver implements ResizeObserver {
+  private readonly observedElements = new Set<Element>();
+
+  constructor(_callback: ResizeObserverCallback) {}
+
+  observe(target: Element): void {
+    this.observedElements.add(target);
+  }
+
+  unobserve(target: Element): void {
+    this.observedElements.delete(target);
+  }
+
+  disconnect(): void {
+    this.observedElements.clear();
+  }
+}
+
 describe('AdminView', () => {
   let mounted: Awaited<ReturnType<typeof withTestQueryClient>> | null;
   let fetchMock: ReturnType<typeof vi.fn>;
@@ -127,14 +157,10 @@ describe('AdminView', () => {
       globalThis as typeof globalThis & {
         ResizeObserver?: new (callback: ResizeObserverCallback) => ResizeObserver;
       }
-    ).ResizeObserver = class ResizeObserver {
-      observe(): void {}
-      unobserve(): void {}
-      disconnect(): void {}
-    } as unknown as new (callback: ResizeObserverCallback) => ResizeObserver;
+    ).ResizeObserver = TestResizeObserver;
 
     fetchMock = vi.fn(async (input: RequestInfo | URL) => {
-      const url = String(input);
+      const url = readRequestUrl(input);
       if (url.includes('/api/capabilities')) {
         return new Response(
           JSON.stringify({

@@ -44,6 +44,18 @@ function decodeJwtPayload(token: string): Record<string, unknown> | undefined {
   }
 }
 
+function isRecordPayload(payload: unknown): payload is Record<string, unknown> {
+  if (payload == null) {
+    return false;
+  }
+
+  if (typeof payload !== 'object') {
+    return false;
+  }
+
+  return !Array.isArray(payload);
+}
+
 function resolveJwtExpirationSeconds(token: string): number | undefined {
   const expiration = decodeJwtPayload(token)?.exp;
 
@@ -60,32 +72,69 @@ function isExpiredOrExpiring(token: string, nowSeconds = Math.floor(Date.now() /
 }
 
 function readBearerTokenRefreshPayload(payload: unknown): string | undefined {
-  if (payload == null || typeof payload !== 'object' || Array.isArray(payload)) {
+  if (!isRecordPayload(payload)) {
     return undefined;
   }
 
-  return readNonBlankEnv((payload as Record<string, unknown>).bearerToken);
+  return readNonBlankEnv(payload.bearerToken);
+}
+
+function matchesCachedApiBearerToken(
+  configuredToken: string | undefined,
+  refreshUrl: string | undefined
+): CachedApiBearerToken | undefined {
+  const cachedToken = cachedApiBearerToken;
+
+  if (cachedToken === undefined) {
+    return undefined;
+  }
+
+  if (refreshUrl === undefined) {
+    return undefined;
+  }
+
+  if (cachedToken.configuredToken !== configuredToken) {
+    return undefined;
+  }
+
+  return cachedToken.refreshUrl === refreshUrl ? cachedToken : undefined;
 }
 
 function readCachedApiBearerToken(
   configuredToken: string | undefined,
   refreshUrl: string | undefined
 ): string | undefined {
-  if (
-    cachedApiBearerToken === undefined ||
-    refreshUrl === undefined ||
-    cachedApiBearerToken.configuredToken !== configuredToken ||
-    cachedApiBearerToken.refreshUrl !== refreshUrl
-  ) {
+  const cachedToken = matchesCachedApiBearerToken(configuredToken, refreshUrl);
+
+  if (cachedToken === undefined) {
     return undefined;
   }
 
-  if (isExpiredOrExpiring(cachedApiBearerToken.token)) {
+  if (isExpiredOrExpiring(cachedToken.token)) {
     cachedApiBearerToken = undefined;
     return undefined;
   }
 
-  return cachedApiBearerToken.token;
+  return cachedToken.token;
+}
+
+function shouldRefreshApiBearerToken(
+  configuredToken: string | undefined,
+  forceRefresh: boolean | undefined
+): boolean {
+  if (forceRefresh) {
+    return true;
+  }
+
+  if (configuredToken === undefined) {
+    return true;
+  }
+
+  return isExpiredOrExpiring(configuredToken);
+}
+
+function canUseApiBearerTokenRefreshEndpoint(refreshUrl: string | undefined): refreshUrl is string {
+  return refreshUrl !== undefined && typeof globalThis.fetch === 'function';
 }
 
 function cacheApiBearerToken(
@@ -150,10 +199,9 @@ export async function resolveApiBearerTokenForRequest(
     return cachedToken;
   }
 
-  const shouldRefresh =
-    options.forceRefresh || configuredToken === undefined || isExpiredOrExpiring(configuredToken);
+  const shouldRefresh = shouldRefreshApiBearerToken(configuredToken, options.forceRefresh);
 
-  if (shouldRefresh && refreshUrl !== undefined && typeof globalThis.fetch === 'function') {
+  if (shouldRefresh && canUseApiBearerTokenRefreshEndpoint(refreshUrl)) {
     const refreshedToken = await refreshApiBearerToken(
       refreshUrl,
       options.fetcher ?? globalThis.fetch.bind(globalThis)

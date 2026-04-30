@@ -66,7 +66,7 @@ export default function AdminView({
           <ViewHeader
             className="border-0 bg-transparent px-0 py-0"
             title={copy.title}
-            icon={<Shield className="size-6 text-[var(--status-danger)]" />}
+            icon={<Shield className="size-6 text-(--status-danger)" />}
           />
         </div>
       }
