@@ -30,15 +30,11 @@ export function useCanvasDraftLifecycle({
     draftSession,
     setDraftSession,
     canonicalSnapshot,
+    persistedNodePositions,
     setCanvasNodePositions,
   } = session;
-  const {
-    graphNodes,
-    canonicalNodes,
-    canonicalEdges,
-    workspaceScope,
-    previewProvenanceConfig,
-  } = projection;
+  const { graphNodes, canonicalNodes, canonicalEdges, workspaceScope, previewProvenanceConfig } =
+    projection;
   const { canPersistGraphDraft } = policy;
   const [draftSaveStatus, setDraftSaveStatus] = useState<DraftSaveStatus>('idle');
   const { refs, invalidateInFlightSaveAttempt } = useCanvasDraftAttemptRefs();
@@ -61,6 +57,7 @@ export function useCanvasDraftLifecycle({
     draftSession,
     setDraftSession,
     canonicalSnapshot,
+    persistedNodePositions,
     setCanvasNodePositions,
     setDraftSaveStatus,
     invalidateInFlightSaveAttempt,

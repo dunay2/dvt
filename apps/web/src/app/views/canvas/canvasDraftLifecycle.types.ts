@@ -60,6 +60,7 @@ export type CanvasDraftLifecycleSessionDto = {
   draftSession: CanvasDraftSession;
   setDraftSession: Dispatch<SetStateAction<CanvasDraftSession>>;
   canonicalSnapshot: CanvasDraftLifecycleCanonicalSnapshot;
+  persistedNodePositions: CanvasNodePositions;
   setCanvasNodePositions: (workspaceLayoutKey: string, positions: CanvasNodePositions) => void;
 };
 

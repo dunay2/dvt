@@ -1,6 +1,8 @@
 import { useCallback, type Dispatch, type SetStateAction } from 'react';
 
 import type { WorkspaceGraphDraftSemanticGraph } from '../../services/workspace/workspaceGraphDraftProjection';
+import type { CanvasNodePositions } from './canvasAuthoringRuntime.types';
+import { shouldSeedCanvasLayoutFromRemoteDraft } from './canvasDraftLayoutHydrationPolicy';
 import type { DraftSaveStatus } from './canvasDraftLifecycle.types';
 import type { CanvasDraftLifecycleCanonicalSnapshot } from './canvasDraftLifecycleSnapshot';
 import { buildLocalNodeCatalogFromSemanticGraph } from './canvasDraftLocalNodeCatalog';
@@ -9,20 +11,12 @@ import type { CanvasDraftReadModel } from './canvasDraftReadModel';
 import { canvasDraftSession, type CanvasDraftSession } from './canvasDraftSession';
 import { serializeCanvasDraftAuthoringBaselineSignature } from './canvasDraftAuthoring';
 
-function hasPersistedNodePositions(
-  nodePositions: Record<string, { x: number; y: number }>
-): boolean {
-  return Object.keys(nodePositions).length > 0;
-}
-
 type UseCanvasDraftReloadHydrationArgs = {
   draftQueryCache: CanvasDraftQueryCache;
   workspaceLayoutKey: string;
   setDraftSession: Dispatch<SetStateAction<CanvasDraftSession>>;
-  setCanvasNodePositions: (
-    workspaceLayoutKey: string,
-    positions: Record<string, { x: number; y: number }>
-  ) => void;
+  persistedNodePositions: CanvasNodePositions;
+  setCanvasNodePositions: (workspaceLayoutKey: string, positions: CanvasNodePositions) => void;
   setDraftSaveStatus: Dispatch<SetStateAction<DraftSaveStatus>>;
   lastSavedSignatureRef: { current: string | null };
   lastAuthoritativeSemanticGraphRef: {
@@ -34,6 +28,7 @@ export function useCanvasDraftReloadHydration({
   draftQueryCache,
   workspaceLayoutKey,
   setDraftSession,
+  persistedNodePositions,
   setCanvasNodePositions,
   setDraftSaveStatus,
   lastSavedSignatureRef,
@@ -62,7 +57,12 @@ export function useCanvasDraftReloadHydration({
         return;
       }
 
-      if (hasPersistedNodePositions(remoteDraft.draft.nodePositions)) {
+      if (
+        shouldSeedCanvasLayoutFromRemoteDraft({
+          persistedNodePositions,
+          remoteNodePositions: remoteDraft.draft.nodePositions,
+        })
+      ) {
         setCanvasNodePositions(workspaceLayoutKey, remoteDraft.draft.nodePositions);
       }
       lastSavedSignatureRef.current = serializeCanvasDraftAuthoringBaselineSignature({
@@ -80,6 +80,7 @@ export function useCanvasDraftReloadHydration({
       draftQueryCache,
       lastAuthoritativeSemanticGraphRef,
       lastSavedSignatureRef,
+      persistedNodePositions,
       setCanvasNodePositions,
       setDraftSaveStatus,
       setDraftSession,
