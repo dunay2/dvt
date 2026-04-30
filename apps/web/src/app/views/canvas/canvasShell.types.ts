@@ -43,6 +43,7 @@ export type CanvasShellLayout = {
 
 export type CanvasShellPanels = {
   explorerNodes: CanonicalNode[];
+  authoringNodeKinds: readonly NodeKindRegistration[];
   inspectorNode: CanonicalNode | null;
   inspectorAuthoring: CanvasInspectorAuthoringContract;
   activeRunId: string | null;

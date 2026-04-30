@@ -7,9 +7,17 @@ const CANVAS_SHELL_TYPES_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'canvasShell.types.ts'
 );
+const CANVAS_SHELL_PANELS_BUILDER_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'canvasShellPanelsBuilder.ts'
+);
 const CANVAS_SHELL_MAIN_PANEL_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'CanvasShellMainPanel.tsx'
+);
+const DBT_EXPLORER_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  '../../components/DbtExplorer.tsx'
 );
 const CANVAS_PLAYGROUND_TAB_STRIP_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
@@ -57,5 +65,25 @@ describe('CanvasShell architecture', () => {
     expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).toContain(
       'defaultSize={resolveCanvasShellMainPanelDefaultSize(layout)}'
     );
+  });
+
+  it('keeps ready-canvas node creation semantically tied to the active canvas runtime catalog', () => {
+    expect(CANVAS_SHELL_TYPES_SOURCE).toContain(
+      'authoringNodeKinds: readonly NodeKindRegistration[];'
+    );
+    expect(CANVAS_SHELL_PANELS_BUILDER_SOURCE).toContain(
+      'function resolveExplorerAuthoringNodeKinds('
+    );
+    expect(CANVAS_SHELL_PANELS_BUILDER_SOURCE).toContain(
+      'registration.kind === routePresentation.canvasDocument?.kind'
+    );
+    expect(CANVAS_SHELL_PANELS_BUILDER_SOURCE).toContain('userPermissions.canEditEdges');
+    expect(CANVAS_SHELL_PANELS_BUILDER_SOURCE).not.toContain('getAllNodeKinds');
+    expect(CANVAS_SHELL_SOURCE).toContain('nodeKinds={authoringNodeKinds}');
+    expect(CANVAS_SHELL_SOURCE).toContain(
+      'onCreateAuthoringNode={graphCommands.onCreateAuthoringNode}'
+    );
+    expect(DBT_EXPLORER_SOURCE).toContain('onCreateAuthoringNode(registration)');
+    expect(DBT_EXPLORER_SOURCE).toContain('canCreateAuthoringNode');
   });
 });
