@@ -21,7 +21,11 @@ import type {
   WorkflowCtx,
   WorkflowPlanRef,
 } from './runPlanWorkflow.types.js';
-import { buildRunCompletedPayload, toOptionalPayload } from './workflowRuntimePayloadHelpers.js';
+import {
+  buildRunCompletedPayload,
+  buildWorkflowFailedPayload,
+  toOptionalPayload,
+} from './workflowRuntimePayloadHelpers.js';
 
 export async function resolveLayerLoopOutcome(args: {
   layerOutcome: LayerLoopOutcome;
@@ -92,7 +96,8 @@ export async function markWorkflowFailedIfNeeded(
   state: RuntimeWorkflowState,
   ctx: WorkflowCtx,
   planRef: WorkflowPlanRef,
-  runtimeExecutor?: TransformationExecutor
+  runtimeExecutor?: TransformationExecutor,
+  error?: unknown
 ): Promise<void> {
   if (state.status === 'CANCELLED' || state.status === 'FAILED') {
     return;
@@ -103,10 +108,7 @@ export async function markWorkflowFailedIfNeeded(
       ctx,
       planRef,
       eventType: 'RunFailed',
-      payload: {
-        reason: 'WORKFLOW_FAILURE',
-        ...(runtimeExecutor === undefined ? {} : { executor: runtimeExecutor }),
-      },
+      payload: buildWorkflowFailedPayload(runtimeExecutor, error),
     });
   } catch {
     // Best-effort only; do not mask the original error.

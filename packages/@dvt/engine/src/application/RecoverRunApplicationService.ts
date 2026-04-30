@@ -27,6 +27,7 @@ import type { IRunExecutionContextResolver } from '../ports/IRunExecutionContext
 import type { IRunStateStoreRead, IRunStateStoreWrite } from '../ports/IRunStateStore.js';
 import { PlanIntegrityValidator } from '../security/planIntegrity.js';
 import type { IRunAccessPolicy } from '../security/RunAccessPolicy.js';
+import type { IClock } from '../utils/clock.js';
 import { toErrorMessage } from '../utils/errorUtils.js';
 
 import { StartRunAdmissionGuard } from './StartRunAdmissionGuard.js';
@@ -41,6 +42,7 @@ export interface RecoverRunApplicationServiceDeps {
   planFetcher: IPlanFetcher;
   adapters: Map<EngineRunRef['provider'], IProviderAdapter>;
   observability: IObservability;
+  clock: IClock;
   startRunApplicationService: IStartRunApplicationService;
   planIntegrityValidator?: IPlanIntegrityValidator;
 }
@@ -60,7 +62,8 @@ export class RecoverRunApplicationService implements IRunRecoveryService {
   private readonly planIntegrityValidator: IPlanIntegrityValidator;
 
   constructor(private readonly deps: RecoverRunApplicationServiceDeps) {
-    this.planIntegrityValidator = deps.planIntegrityValidator ?? new PlanIntegrityValidator();
+    this.planIntegrityValidator =
+      deps.planIntegrityValidator ?? new PlanIntegrityValidator({ clock: deps.clock });
   }
 
   async recoverRun({

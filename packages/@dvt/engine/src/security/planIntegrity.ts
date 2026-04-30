@@ -17,13 +17,21 @@ import {
 import { jcsCanonicalize } from '@dvt/crypto';
 
 import type { IPlanFetcher } from '../ports/IPlanArtifactReader.js';
+import { type IClock, parseIsoUtcToEpochMs } from '../utils/clock.js';
 import { sha256Hex } from '../utils/sha256.js';
 
 export class PlanIntegrityValidator {
+  private readonly clock: IClock;
+
+  constructor(args: { clock: IClock }) {
+    this.clock = args.clock;
+  }
+
   async fetchAndValidate(
     planRef: PlanRef,
     fetcher: IPlanFetcher
   ): Promise<{ plan: ExecutionPlan; executionPolicy: RunExecutionPolicy }> {
+    assertPlanRefNotExpired(planRef, this.clock);
     const artifact = await fetcher.fetch(planRef);
     const bytes = artifact.bytes;
     validatePlanBytesAgainstRef(bytes, planRef);
@@ -37,6 +45,19 @@ export class PlanIntegrityValidator {
       plan,
       executionPolicy: artifact.executionPolicy,
     };
+  }
+}
+
+function assertPlanRefNotExpired(ref: PlanRef, clock: IClock): void {
+  if (ref.expiresAt === undefined) {
+    return;
+  }
+
+  const expiresAtEpochMs = parseIsoUtcToEpochMs(ref.expiresAt);
+  const nowIsoUtc = clock.nowIsoUtc();
+  const nowEpochMs = parseIsoUtcToEpochMs(nowIsoUtc);
+  if (expiresAtEpochMs <= nowEpochMs) {
+    throw new Error(`PLAN_REF_EXPIRED: expiresAt=${ref.expiresAt} now=${nowIsoUtc}`);
   }
 }
 

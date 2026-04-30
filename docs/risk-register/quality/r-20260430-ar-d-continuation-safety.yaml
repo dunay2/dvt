@@ -1,0 +1,25 @@
+---
+id: R-20260430-AR-D-CONTINUATION-SAFETY
+title: AR-D continuation safety still needs production SLA closure
+status: Open
+date: 2026-04-30
+owners:
+  - packages/@dvt/contracts
+  - packages/@dvt/engine
+  - packages/@dvt/adapter-temporal
+severity: Medium
+probability: Medium
+context: >
+  The continuation safety slice now gives expired PlanRef pointers, missing plan artifacts, and
+  cursor payload overflow explicit RunFailed reasons. It also bounds processed control-signal id
+  retention in continue-as-new cursor state.
+risk: >
+  This does not close the broader AR-D2 production SLA. Maximum workflow history size, segment count
+  targets, and deployment-profile plan retention policy still need explicit capacity proof before
+  AR-D-PLAN-POINTER can be treated as fully closed for large-DAG production readiness.
+mitigations:
+  - Keep AR-D2 open until maximum workflow history and segment-count SLA are documented and tested.
+  - Keep PlanRef retention duration greater than the expected maximum workflow duration per profile.
+  - Retain the continuation safety negative tests in contracts, engine, and adapter-temporal.
+review_after: 2026-05-15
+---

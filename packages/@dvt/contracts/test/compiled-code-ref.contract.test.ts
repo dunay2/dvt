@@ -233,6 +233,31 @@ describe('contracts: StepStarted compiledCodeRef fixtures (ADR-0032)', () => {
     expect(parsed.payload?.reason).toBe('STEP_FAILURE');
   });
 
+  it.each(['CURSOR_OVERFLOW', 'PLAN_REF_EXPIRED', 'PLAN_REF_UNAVAILABLE'])(
+    'accepts RunFailed write events with continuation safety reason %s',
+    (reason) => {
+      const parsed = parseRunEventWrite({
+        eventId: `evt-run-failed-${reason.toLowerCase().replaceAll('_', '-')}`,
+        eventType: 'RunFailed',
+        payloadVersion: 1,
+        emittedAt: '2026-03-07T10:00:00.000Z',
+        runId: 'run-continuation-safety-1',
+        tenantId: 'tenant-a',
+        projectId: 'project-analytics',
+        environmentId: 'prod',
+        planId: 'plan-continuation-safety-1',
+        planVersion: '1.0',
+        engineAttemptId: 1,
+        logicalAttemptId: 1,
+        idempotencyKey: `RunFailed|tenant-a|run-continuation-safety-1|1|${reason}`,
+        payload: { reason },
+      });
+
+      expect(parsed.eventType).toBe('RunFailed');
+      expect(parsed.payload?.reason).toBe(reason);
+    }
+  );
+
   it('accepts RunCompleted write events with executor and resultEvidence payload', () => {
     const parsed = parseRunEventWrite({
       eventId: 'evt-run-completed-1',

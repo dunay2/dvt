@@ -4,6 +4,7 @@ import { sha256Hex } from '@dvt/crypto';
 import {
   PlanIntegrityValidator,
   RunExecutionContextRejectedError,
+  SequenceClock,
   type RunStateCommandPort,
 } from '@dvt/engine';
 import { describe, expect, it } from 'vitest';
@@ -485,7 +486,9 @@ describe('stepActivities', () => {
     });
     const { acts } = setupActivities({
       depOverrides: {
-        integrity: new PlanIntegrityValidator(),
+        integrity: new PlanIntegrityValidator({
+          clock: new SequenceClock('2026-02-12T00:00:00.000Z'),
+        }),
         fetcher: {
           async fetch() {
             return {

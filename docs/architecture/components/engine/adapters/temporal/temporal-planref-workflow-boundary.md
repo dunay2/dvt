@@ -84,6 +84,12 @@ It does **not** own:
   control-signal ids, and latest result evidence.
 - Runtime segment resolution re-fetches plan material by `PlanRef` and verifies
   bytes against `PlanRef.sha256` before any step execution.
+- A `PlanRef` whose `expiresAt` is at or before the integrity-validator clock
+  fails closed as `PLAN_REF_EXPIRED` before plan bytes are fetched or a
+  provider segment is resolved.
+- Plan artifact absence during segment resolution is reported as
+  `PLAN_REF_UNAVAILABLE`; continuation failures caused by cursor payload budget
+  overflow are reported as `CURSOR_OVERFLOW`.
 - Workflow code remains deterministic; all provider side effects and StateStore
   writes go through activities.
 - Gateway dependency facts must be present when future gateway decisions depend
@@ -125,26 +131,27 @@ It does **not** own:
 
 ## Component map
 
-| Module                             | Owned concern                                                 |
-| ---------------------------------- | ------------------------------------------------------------- |
-| `RunPlanWorkflow.ts`               | Temporal PlanRef workflow orchestration entrypoint            |
-| `runPlanWorkflow.types.ts`         | Workflow public API contracts and runtime state model         |
-| `runPlanWorkflow.state.ts`         | Workflow control input parsing and cursor hydration           |
-| `workflowCursorHelpers.ts`         | Compact continue-as-new cursor construction and payload guard |
-| `executionSegmentResolver.ts`      | PlanRef execution-segment projection from canonical plans     |
-| `runPlanWorkflow.layers.ts`        | Deterministic workflow layer-loop orchestration               |
-| `runPlanWorkflow.layerHelpers.ts`  | Layer selection and continue-as-new decision helpers          |
-| `runPlanWorkflow.layerResults.ts`  | Layer result application and gateway fact retention           |
-| `runPlanWorkflow.stepExecution.ts` | Per-layer step activity execution orchestration               |
-| `runPlanWorkflow.activities.ts`    | Temporal activity proxy binding for workflow ports            |
-| `runPlanWorkflow.lifecycle.ts`     | Workflow bootstrap, terminal, failure, and rollover outcomes  |
-| `runPlanWorkflow.cancellation.ts`  | Runtime-owned cancellation lifecycle settlement               |
-| `runPlanWorkflow.signals.ts`       | Runtime control-signal registration and dedupe state          |
-| `workflowGatewayHelpers.ts`        | Gateway dependency validation and fact lookup                 |
-| `workflowArtifactHelpers.ts`       | Execution artifact payload interpretation                     |
-| `workflowRuntimePayloadHelpers.ts` | Runtime event payload shaping                                 |
-| `workflowErrorHelpers.ts`          | Workflow-safe error-message normalization                     |
-| `workflowInputParsingHelpers.ts`   | Deterministic workflow input primitive parsing                |
+| Module                                    | Owned concern                                                                       |
+| ----------------------------------------- | ----------------------------------------------------------------------------------- |
+| `RunPlanWorkflow.ts`                      | Temporal PlanRef workflow orchestration entrypoint                                  |
+| `runPlanWorkflow.types.ts`                | Workflow public API contracts and runtime state model                               |
+| `runPlanWorkflow.state.ts`                | Workflow control input parsing and cursor hydration                                 |
+| `workflowCursorHelpers.ts`                | Compact continue-as-new cursor construction and payload guard                       |
+| `executionSegmentResolver.ts`             | PlanRef execution-segment projection from canonical plans                           |
+| `runPlanWorkflow.layers.ts`               | Deterministic workflow layer-loop orchestration                                     |
+| `runPlanWorkflow.layerHelpers.ts`         | Layer selection and continue-as-new decision helpers                                |
+| `runPlanWorkflow.layerResults.ts`         | Layer result application and gateway fact retention                                 |
+| `runPlanWorkflow.stepExecution.ts`        | Per-layer step activity execution orchestration                                     |
+| `runPlanWorkflow.activities.ts`           | Temporal activity proxy binding for workflow ports                                  |
+| `runPlanWorkflow.lifecycle.ts`            | Workflow bootstrap, terminal, failure, and rollover outcomes                        |
+| `runPlanWorkflow.cancellation.ts`         | Runtime-owned cancellation lifecycle settlement                                     |
+| `runPlanWorkflow.signals.ts`              | Runtime control-signal registration and dedupe state                                |
+| `workflowGatewayHelpers.ts`               | Gateway dependency validation and fact lookup                                       |
+| `workflowArtifactHelpers.ts`              | Execution artifact payload interpretation                                           |
+| `workflowControlSignalRetentionPolicy.ts` | Bounded retention policy for control-signal dedupe ids across workflow continuation |
+| `workflowRuntimePayloadHelpers.ts`        | Runtime event payload shaping                                                       |
+| `workflowErrorHelpers.ts`                 | Workflow-safe error-message normalization                                           |
+| `workflowInputParsingHelpers.ts`          | Deterministic workflow input primitive parsing                                      |
 
 ## Diagrams
 
@@ -210,3 +217,7 @@ sequenceDiagram
   missing rollover input fails, payload budgets are enforced, gateway facts fail
   closed, hash drift rejects execution, and continue-as-new advances layer
   progress without carrying the full plan.
+- `workflowControlSignalRetentionPolicy.ts` keeps only the recent bounded
+  control-signal id window in cursor state so adversarial or long-lived
+  pause/resume/cancel traffic cannot make continue-as-new payloads grow without
+  limit.

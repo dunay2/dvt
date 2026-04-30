@@ -28,6 +28,8 @@ const WORKFLOW_COMPONENT_CONCERNS = {
   'runPlanWorkflow.stepExecution.ts': 'Per-layer step activity execution orchestration',
   'runPlanWorkflow.types.ts': 'Workflow public API contracts and runtime state model',
   'workflowArtifactHelpers.ts': 'Execution artifact payload interpretation',
+  'workflowControlSignalRetentionPolicy.ts':
+    'Bounded retention policy for control-signal dedupe ids across workflow continuation',
   'workflowCursorHelpers.ts': 'Compact continue-as-new cursor construction and payload guard',
   'workflowErrorHelpers.ts': 'Workflow-safe error-message normalization',
   'workflowGatewayHelpers.ts': 'Gateway dependency validation and fact lookup',

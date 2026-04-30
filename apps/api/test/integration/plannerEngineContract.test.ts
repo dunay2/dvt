@@ -199,6 +199,7 @@ function createStack(
     planFetcher,
     adapters,
     observability: createNoopObservability(),
+    clock,
     startRunApplicationService,
     ...(options?.runExecutionContextResolver === undefined
       ? {}

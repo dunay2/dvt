@@ -26,6 +26,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [ADR-0000 traceability gate can drift from workspace build closure](R-20260423-ADR0-TRACEABILITY-GATE-DRIFT.yaml)
 - [API start-run transport could drift back into app-local shadow contracts](R-20260412-AR-A10-START-RUN-BOUNDARY-CONTRACT-DRIFT.yaml)
 - [AR-C2 can be overstated as complete without dashboard and alert evidence](R-20260404-AR-C2-OPERABILITY-EVIDENCE-GAP.yaml)
+- [AR-D continuation safety still needs production SLA closure](r-20260430-ar-d-continuation-safety.yaml)
 - [Automatic lineage DLQ replay may requeue persistent poison events repeatedly](R-20260330-LINEAGE-DLQ-AUTO-REPLAY.md)
 - [Caller-visible freshness may be misinterpreted as read-your-writes guarantee](R-20260330-snapshot-staleness-caller-view.yaml)
 - [Cancel lifecycle ownership can regress to mixed engine/runtime emission](R-20260401-CANCEL-LIFECYCLE-OWNERSHIP-DRIFT.yaml)

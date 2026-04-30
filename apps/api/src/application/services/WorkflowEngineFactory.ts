@@ -128,8 +128,7 @@ export function buildWorkflowEngine(config: EngineConfig): BuiltWorkflowEngineRu
         : {}),
       ...(config.persistence.runExecutionContextBindingPolicy !== undefined
         ? {
-            runExecutionContextBindingPolicy:
-              config.persistence.runExecutionContextBindingPolicy,
+            runExecutionContextBindingPolicy: config.persistence.runExecutionContextBindingPolicy,
           }
         : {}),
     }),
@@ -167,14 +166,14 @@ export function buildWorkflowEngine(config: EngineConfig): BuiltWorkflowEngineRu
     planFetcher: config.persistence.planFetcher,
     adapters: config.runtime.adapters,
     observability: config.infrastructure.observability,
+    clock: config.infrastructure.clock,
     startRunApplicationService,
     ...(config.persistence.runExecutionContextResolver !== undefined
       ? { runExecutionContextResolver: config.persistence.runExecutionContextResolver }
       : {}),
     ...(config.persistence.runExecutionContextBindingPolicy !== undefined
       ? {
-          runExecutionContextBindingPolicy:
-            config.persistence.runExecutionContextBindingPolicy,
+          runExecutionContextBindingPolicy: config.persistence.runExecutionContextBindingPolicy,
         }
       : {}),
   });

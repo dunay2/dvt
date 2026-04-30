@@ -10,6 +10,8 @@
  */
 import type { MaterializationEvidence } from '@dvt/contracts';
 
+import { retainRecentControlSignalIds } from './workflowControlSignalRetentionPolicy.js';
+
 export interface WorkflowExecutionCursor {
   nextLayerIndex: number;
   continuedAsNewCount: number;
@@ -70,7 +72,7 @@ export function buildContinueAsNewInput<T extends object>(args: {
       gatewayDecisions: { ...args.gatewayDecisions },
       gatewayDependencyFacts: cloneStepResults(args.gatewayDependencyFacts),
       skippedStepIds: [...args.skippedStepIds],
-      processedControlSignalIds: [...args.processedControlSignalIds],
+      processedControlSignalIds: retainRecentControlSignalIds(args.processedControlSignalIds),
       ...(args.latestResultEvidence === undefined
         ? {}
         : { latestResultEvidence: args.latestResultEvidence }),

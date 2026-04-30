@@ -43,6 +43,12 @@ type PlanRef = {
 - The engine MUST reject unknown `schemaVersion` values before adapter dispatch.
 - Runtime segment resolution MUST reject fetched plan bytes whose hash differs
   from `PlanRef.sha256`.
+- A `PlanRef` whose optional `expiresAt` is at or before validation time MUST
+  fail closed as `PLAN_REF_EXPIRED` before provider dispatch or segment
+  resolution fetches plan bytes.
+- If plan bytes cannot be read for a valid, non-expired `PlanRef`, the workflow
+  terminal failure MUST use `PLAN_REF_UNAVAILABLE` rather than a generic
+  workflow failure reason.
 - Workflow input-shape changes MUST be handled by an explicit replay/cutover
   posture: drained deployment or Temporal workflow versioning. The active
   drained-deploy procedure is
@@ -320,8 +326,14 @@ if (shouldTriggerContinueAsNew(state)) {
   skipped step IDs, processed control signal IDs, and latest result evidence
 - no logs, expanded lists, large errors, or full `ExecutionPlan`
 
+The workflow MUST retain only a bounded recent window of processed
+control-signal ids in the continue-as-new cursor. This preserves practical
+dedupe protection for the active continuation window without allowing
+pause/resume/cancel traffic to make the cursor unbounded.
+
 The workflow MUST reject an oversized continue-as-new input before rollover
-using `TEMPORAL_MAX_CONTINUE_AS_NEW_PAYLOAD_BYTES`.
+using `TEMPORAL_MAX_CONTINUE_AS_NEW_PAYLOAD_BYTES` and report the terminal
+runtime reason as `CURSOR_OVERFLOW`.
 
 ---
 

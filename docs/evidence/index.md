@@ -70,6 +70,7 @@ Evidence documents that justify or validate relevant changes.
 - [Ed 20260427 Temporal Planref Config Hardening](ed-20260427-temporal-planref-config-hardening.md)
 - [Ed 20260427 Temporal Planref Qa1 Readiness](ed-20260427-temporal-planref-qa1-readiness.md)
 - [Ed 20260429 Engine Static Analysis Cleanup](ed-20260429-engine-static-analysis-cleanup.md)
+- [Ed 20260430 Ar D Continuation Safety](ed-20260430-ar-d-continuation-safety.md)
 - [ED-20260402 RC-G1 governance startup and health reconciliation](ED-20260402-rc-g1-governance-startup-reconciliation.md)
 - [ED-20260402 S05 envelope boundary hardening](ED-20260402-s05-envelope-boundary-hardening.md)
 - [ED-20260402 S08 contract-layer hardening](ED-20260402-s08-contract-layer-hardening.md)

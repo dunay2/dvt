@@ -35,8 +35,59 @@ export function buildRunFailedPayload(
   };
 }
 
+export function buildWorkflowFailedPayload(
+  runtimeExecutor: TransformationExecutor | undefined,
+  error: unknown
+): Record<string, unknown> {
+  const message = toErrorMessage(error);
+
+  return {
+    reason: resolveWorkflowFailureReason(message),
+    ...(runtimeExecutor === undefined ? {} : { executor: runtimeExecutor }),
+    ...(message === undefined ? {} : { message }),
+  };
+}
+
 export function toOptionalPayload(payload: Record<string, unknown> | undefined): {
   payload?: Record<string, unknown>;
 } {
   return payload === undefined ? {} : { payload };
+}
+
+function resolveWorkflowFailureReason(
+  message: string | undefined
+): 'WORKFLOW_FAILURE' | 'CURSOR_OVERFLOW' | 'PLAN_REF_EXPIRED' | 'PLAN_REF_UNAVAILABLE' {
+  if (message === undefined) {
+    return 'WORKFLOW_FAILURE';
+  }
+
+  if (message.includes('TEMPORAL_CONTINUE_AS_NEW_PAYLOAD_TOO_LARGE')) {
+    return 'CURSOR_OVERFLOW';
+  }
+
+  if (message.includes('PLAN_REF_EXPIRED')) {
+    return 'PLAN_REF_EXPIRED';
+  }
+
+  if (
+    message.includes('PLAN_BYTES_NOT_REGISTERED') ||
+    message.includes('PLAN_REF_UNAVAILABLE') ||
+    message.includes('PLAN_FETCH_UNAVAILABLE')
+  ) {
+    return 'PLAN_REF_UNAVAILABLE';
+  }
+
+  return 'WORKFLOW_FAILURE';
+}
+
+function toErrorMessage(error: unknown): string | undefined {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  if (typeof error === 'string' && error.trim().length > 0) {
+    return error;
+  }
+
+  return undefined;
 }

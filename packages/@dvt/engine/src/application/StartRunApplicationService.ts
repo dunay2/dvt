@@ -72,7 +72,8 @@ export class StartRunApplicationService {
       clock: deps.clock,
       ...(deps.timeouts ? { timeouts: deps.timeouts } : {}),
     });
-    this.planIntegrityValidator = deps.planIntegrityValidator ?? new PlanIntegrityValidator();
+    this.planIntegrityValidator =
+      deps.planIntegrityValidator ?? new PlanIntegrityValidator({ clock: deps.clock });
   }
 
   async startRun(

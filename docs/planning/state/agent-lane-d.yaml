@@ -273,7 +273,7 @@ tasks:
       in-flight workflows is explicit and replay-safe.
     complexity: L
     effort_points: 8
-    progress_pct: 96
+    progress_pct: 98
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260414-principal-architect-review-dvtplus.md
       - docs/planning/reviews/architecture-and-governance/20260420-dvt-plus-system-architecture-review.md
@@ -293,6 +293,10 @@ tasks:
       - docs/evidence/ed-20260427-temporal-planref-qa1-readiness.md
       - docs/risk-register/quality/R-20260427-TEMPORAL-PLANREF-CONFIG-HARDENING.yaml
       - docs/risk-register/quality/R-20260420-TEMPORAL-DBT-BUILTIN-COUPLING.yaml
+      - docs/adr/adr-0052-planref-continuation-safety.md
+      - docs/planning/closeouts/20260430-ar-d-continuation-safety-closeout.md
+      - docs/evidence/ed-20260430-ar-d-continuation-safety.md
+      - docs/risk-register/quality/r-20260430-ar-d-continuation-safety.yaml
     status_reason: >-
       Current QA confirms the active Temporal code path now starts workflows with `planRef` plus
       cursor-only runtime control input, bounded segment resolution, canonical `CANCEL` signal-id
@@ -307,10 +311,13 @@ tasks:
       docblocks, a local PlanRef workflow boundary guide, diagrams, and an architecture fitness test
       that validates API, invariants, transitions, and consumers. The DBT-core decoupling pass moves
       DBT step-kind ownership out of the Temporal core activity registry and into explicit worker
-      profile composition. The task remains open because full SLA threshold posture under AR-D2 is
-      not finished, segment-scale maturity is still first-cut, and package-level DBT plugin
-      extraction remains explicit as open risk instead of being treated as already closed.
-    last_verified: '2026-04-28'
+      profile composition. The continuation safety pass adds governed RunFailed reasons for cursor
+      overflow, expired PlanRef, and unavailable PlanRef artifacts; rejects expired PlanRef values
+      before fetching plan bytes; and bounds processed control-signal id retention in rollover
+      cursor state. The task remains open because full SLA threshold posture under AR-D2 is not
+      finished, segment-scale maturity is still first-cut, and package-level DBT plugin extraction
+      remains explicit as open risk instead of being treated as already closed.
+    last_verified: '2026-04-30'
   - task_id: AR-D3
     priority: P2
     status: queued

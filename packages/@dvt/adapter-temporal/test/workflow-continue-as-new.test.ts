@@ -184,6 +184,22 @@ describe('continue-as-new policy', () => {
       })
     ).toThrow('TEMPORAL_CONTINUE_AS_NEW_PAYLOAD_TOO_LARGE');
   });
+
+  it('retains only the bounded recent control-signal ids across continue-as-new rollover', () => {
+    const nextInput = buildContinueAsNewTestInput({
+      gatewayDecisions: {},
+      gatewayDependencyFacts: {},
+      latestResultEvidence: undefined,
+      skippedStepIds: new Set<string>(),
+      processedControlSignalIds: new Set(
+        Array.from({ length: 300 }, (_, index) => `control-signal-${index}`)
+      ),
+    });
+
+    expect(nextInput.cursor?.processedControlSignalIds).toHaveLength(256);
+    expect(nextInput.cursor?.processedControlSignalIds.at(0)).toBe('control-signal-44');
+    expect(nextInput.cursor?.processedControlSignalIds.at(-1)).toBe('control-signal-299');
+  });
 });
 
 describe('workflow input parsing', () => {
