@@ -26,7 +26,7 @@ export {
   WorkflowRunStatusUseCase,
   WorkflowSignalRunUseCase,
   WorkflowStartRunUseCase,
-} from './application/WorkflowEngineUseCases.js';
+} from './application/workflow-engine-use-cases/index.js';
 export type {
   IWorkflowCancelRunUseCase,
   IWorkflowRecoverRunUseCase,
@@ -35,7 +35,7 @@ export type {
   IWorkflowStartRunUseCase,
   WorkflowEngineUseCaseDeps,
   WorkflowEngineUseCases,
-} from './application/WorkflowEngineUseCases.js';
+} from './application/workflow-engine-use-cases/index.js';
 
 export type {
   EventInput,

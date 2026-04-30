@@ -123,8 +123,9 @@ adapters.
 
 ## Work Performed
 
-- Added `packages/@dvt/engine/src/application/WorkflowEngineUseCases.ts` with
-  explicit facade-facing use-case interfaces and adapters.
+- Added `packages/@dvt/engine/src/application/workflow-engine-use-cases/`
+  with explicit facade-facing use-case interfaces and one module per start,
+  recover, cancel, status, signal, and composition concern.
 - Moved start-run resolved-context construction, trace-context construction,
   span handling, and exception span recording out of `WorkflowEngine` and into
   `WorkflowStartRunUseCase`.
@@ -136,6 +137,10 @@ adapters.
   `buildWorkflowEngineUseCases`.
 - Added semantic architecture coverage and a local component guide for the
   facade use-case component.
+- Added local user stories in
+  `docs/architecture/components/engine/architecture/workflow-engine-facade-use-cases-user-stories.md`.
+- Added Fowler mailbox analysis in
+  `buzon/20260430-codex-fowler-we-hx-2-facade-use-cases-analysis-and-remediation.md`.
 - Added ARC-2 evidence and risk-register material.
 
 ## Validation Evidence
@@ -145,6 +150,10 @@ adapters.
   failed because `WorkflowEngineUseCases.ts` and the component guide were
   missing, and `WorkflowEngine` still contained tracing and internal service
   dependencies.
+- Red follow-up:
+  the same command failed when the component remained monolithic, the facade
+  lacked an `@ownedConcern` line, and local stories plus mailbox review were
+  missing.
 - Green:
   `pnpm --filter @dvt/engine test -- test/architecture/workflowEngineFacadeUseCases.architecture.test.ts`
   passed, 3 tests.

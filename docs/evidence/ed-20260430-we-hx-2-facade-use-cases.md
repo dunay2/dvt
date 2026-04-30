@@ -8,7 +8,7 @@ arc_level: ARC-2
 breaking: false
 code_refs:
   - packages/@dvt/engine/src/core/WorkflowEngine.ts
-  - packages/@dvt/engine/src/application/WorkflowEngineUseCases.ts
+  - packages/@dvt/engine/src/application/workflow-engine-use-cases/
   - apps/api/src/application/services/WorkflowEngineFactory.ts
 evidence:
   tests:
@@ -29,6 +29,10 @@ trace-context construction and observability span handling moved to
 `WorkflowStartRunUseCase`, and recovery, cancel, status, and signal behavior are
 adapted through named use-case services.
 
+The hard QA follow-up splits those use cases into a component folder, adds local
+stories, and records the Fowler mailbox analysis so the component is not just a
+thin barrel over a multi-reason module.
+
 ## Proof
 
 - Added semantic architecture coverage in
@@ -37,3 +41,7 @@ adapted through named use-case services.
   `docs/architecture/components/engine/architecture/workflow-engine-facade-use-cases-component.md`.
 - Updated API and engine test wiring to construct facade use cases through
   `buildWorkflowEngineUseCases`.
+- Added local user stories in
+  `docs/architecture/components/engine/architecture/workflow-engine-facade-use-cases-user-stories.md`.
+- Added Fowler mailbox analysis in
+  `buzon/20260430-codex-fowler-we-hx-2-facade-use-cases-analysis-and-remediation.md`.

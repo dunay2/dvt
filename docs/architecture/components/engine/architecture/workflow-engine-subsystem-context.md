@@ -131,8 +131,8 @@ Known concrete adapter families:
 Main components in the subsystem:
 
 - `WorkflowEngine` (public facade + explicit service delegation)
-- `WorkflowEngineUseCases` (facade-facing use-case adapters for start, recover,
-  cancel, status, and signal)
+- `workflow-engine-use-cases/` (facade-facing use-case adapters for start,
+  recover, cancel, status, and signal)
 - `StartRunAdmissionGuard` (admission/capability/adapter gate)
 - `StartRunApplicationService` (start-run application orchestration)
 - `RecoverRunApplicationService` (recover-run orchestration)

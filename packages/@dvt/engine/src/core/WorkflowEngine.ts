@@ -3,6 +3,7 @@
  * @baseline ADR-0003: Execution Model Sovereignty
  * @baseline ADR-0014: Run-Driven Adapter Model
  * @baseline ADR-0030: Pre-Dispatch Intent Log for startRun Crash Consistency
+ * @ownedConcern Normalize the public IWorkflowEngine contract and delegate behavior to facade use cases.
  * @decision WorkflowEngine is an application-facing facade that delegates
  *   startRun, recoverRun, canonical status reads, and control operations
  *   to explicit use-case services.
@@ -24,7 +25,7 @@ import type {
   IWorkflowRunStatusUseCase,
   IWorkflowSignalRunUseCase,
   IWorkflowStartRunUseCase,
-} from '../application/WorkflowEngineUseCases.js';
+} from '../application/workflow-engine-use-cases/index.js';
 import { AdapterNotRegisteredError } from '../contracts/errors.js';
 import type { IWorkflowEngine } from '../ports/IWorkflowEngine.js';
 

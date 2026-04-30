@@ -24,6 +24,19 @@ execution behavior.
 | `IWorkflowSignalRunUseCase`   | `@dvt/engine` | Delegates runtime signals to the run-control service.                  |
 | `buildWorkflowEngineUseCases` | `@dvt/engine` | Composition helper for wiring facade-facing use cases.                 |
 
+## Local Modules
+
+| Module                           | Owned concern                                   |
+| -------------------------------- | ----------------------------------------------- |
+| `types.ts`                       | facade-facing use-case contracts and shape      |
+| `WorkflowStartRunUseCase.ts`     | resolved context, tracing, and start delegation |
+| `WorkflowRecoverRunUseCase.ts`   | recovery command delegation                     |
+| `WorkflowCancelRunUseCase.ts`    | cancellation command delegation                 |
+| `WorkflowSignalRunUseCase.ts`    | canonical signal command delegation             |
+| `WorkflowRunStatusUseCase.ts`    | canonical status read delegation                |
+| `buildWorkflowEngineUseCases.ts` | internal-service to use-case composition        |
+| `index.ts`                       | local component API export                      |
+
 ## Invariants
 
 - `WorkflowEngine` owns public contract parsing and normalization only.
@@ -51,6 +64,11 @@ execution behavior.
 - `apps/api/src/application/services/WorkflowEngineFactory.ts`
 - `packages/@dvt/engine/test/helpers/workflowEngine.fixture.ts`
 - direct integration tests that construct `buildWorkflowEngineFacade`
+
+## Scenarios And Review
+
+- [Workflow engine facade use-case user stories](./workflow-engine-facade-use-cases-user-stories.md)
+- [Fowler WE-HX-2 mailbox analysis](../../../../../buzon/20260430-codex-fowler-we-hx-2-facade-use-cases-analysis-and-remediation.md)
 
 ## Diagrams
 
@@ -94,4 +112,5 @@ sequenceDiagram
   direct application-service dependencies, or direct control-service
   dependencies.
 - The same guard requires this component guide to keep API, invariants,
-  transitions, consumers, diagrams, and drift guards together.
+  transitions, consumers, user stories, mailbox analysis, diagrams, and drift
+  guards together.
