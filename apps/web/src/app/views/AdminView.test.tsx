@@ -132,8 +132,6 @@ function readRequestUrl(input: RequestInfo | URL): string {
 class TestResizeObserver implements ResizeObserver {
   private readonly observedElements = new Set<Element>();
 
-  constructor(_callback: ResizeObserverCallback) {}
-
   observe(target: Element): void {
     this.observedElements.add(target);
   }
