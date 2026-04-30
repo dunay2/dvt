@@ -1856,10 +1856,10 @@ tasks:
   - task_id: WE-HX-1
     parent_task: WE-HX
     priority: P1
-    status: queued
+    status: done
     complexity: M
     effort_points: 3
-    progress_pct: 0
+    progress_pct: 100
     objective: close boundary ownership mapping for WorkflowEngine external seams.
     dependency: S08-5-B, RC-G1-B
     target: >-
@@ -1867,8 +1867,19 @@ tasks:
       and artifacts reader seam across contracts/engine/artifacts/api boundaries.
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
-    status_reason: Sequenced behind S08-5-B and RC-G1-B.
-    last_verified: '2026-04-03'
+      - docs/architecture/components/engine/architecture/workflow-engine-boundary-ownership-component.md
+      - docs/architecture/components/engine/architecture/workflow-engine-boundary-ownership-user-stories.md
+      - docs/planning/reviews/architecture-and-governance/20260429-we-hx-1-fowler-architecture-review.md
+      - docs/evidence/ed-20260429-we-hx-1-boundary-ownership.md
+      - docs/risk-register/quality/R-20260429-WE-HX-1-BOUNDARY-OWNERSHIP.yaml
+      - packages/@dvt/engine/test/architecture/workflowEngineBoundaryOwnership.architecture.test.ts
+    status_reason: >-
+      Boundary ownership mapping is closed: PlanRef and runExecutionContextRef remain shared refs,
+      plan artifact reading is a dedicated engine-owned port, run-state persistence no longer
+      publishes plan-fetching concerns, API validation reuses the engine-owned artifact shape, and
+      semantic architecture coverage now guards docs, user stories, review analysis, module
+      owned-concern headers, and the engine/artifacts/API seam.
+    last_verified: '2026-04-29'
   - task_id: WE-HX-2
     parent_task: WE-HX
     priority: P1

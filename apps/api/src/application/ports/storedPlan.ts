@@ -1,9 +1,5 @@
-import type { PlanRefSchemaT, RunExecutionPolicy } from '@dvt/contracts';
-
-export interface StoredPlanArtifact {
-  bytes: Uint8Array;
-  executionPolicy: RunExecutionPolicy;
-}
+import type { PlanRefSchemaT } from '@dvt/contracts';
+import type { StoredPlanArtifact } from '@dvt/engine';
 
 export interface IStoredPlanValidationReader {
   fetchForValidation(planRef: PlanRefSchemaT): Promise<StoredPlanArtifact>;

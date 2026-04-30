@@ -3,13 +3,10 @@
  */
 
 import type {
-  ExecutionPlan as CanonicalExecutionPlan,
   EngineRunRef,
   IsoUtcString,
-  PlanRef,
   Provider,
   RunExecutionEvidence,
-  RunExecutionPolicy,
   RunStatus,
   StepId,
 } from '@dvt/contracts';
@@ -257,8 +254,6 @@ export interface RunStateCommandPort {
   appendTransitions(runId: string, events: EventInput[]): Promise<AppendResult>;
 }
 
-export type ExecutionPlan = CanonicalExecutionPlan;
-
 export interface IClock {
   nowIsoUtc(): IsoUtcString;
 }
@@ -286,20 +281,4 @@ export interface IIdempotencyKeyBuilder {
     targetAdapter?: Provider
   ): string;
   eventId(): string;
-}
-
-export interface IPlanFetcher {
-  fetch(planRef: PlanRef): Promise<StoredPlanArtifact>;
-}
-
-export interface IPlanIntegrityValidator {
-  fetchAndValidate(
-    planRef: PlanRef,
-    fetcher: IPlanFetcher
-  ): Promise<{ plan: ExecutionPlan; executionPolicy: RunExecutionPolicy }>;
-}
-
-export interface StoredPlanArtifact {
-  bytes: Uint8Array;
-  executionPolicy: RunExecutionPolicy;
 }

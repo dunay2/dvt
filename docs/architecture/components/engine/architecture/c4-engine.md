@@ -14,7 +14,7 @@
 - [IRunStateStore.ts](../../../../packages/@dvt/engine/src/ports/IRunStateStore.ts)
 - [IStartRunIntentStore.ts](../../../../packages/@dvt/engine/src/ports/IStartRunIntentStore.ts)
 - [IProviderAdapter.ts](../../../../packages/@dvt/engine/src/adapters/IProviderAdapter.ts)
-- [IPlanFetcher.ts](../../../../packages/@dvt/engine/src/adapters/IPlanFetcher.ts)
+- [IPlanArtifactReader.ts](../../../../packages/@dvt/engine/src/ports/IPlanArtifactReader.ts)
 - [IRunExecutionContextResolver.ts](../../../../packages/@dvt/engine/src/ports/IRunExecutionContextResolver.ts)
 - [IProjector.ts](../../../../packages/@dvt/engine/src/ports/IProjector.ts)
 - [IMetricsCollector.ts](../../../../packages/@dvt/engine/src/metrics/IMetricsCollector.ts)

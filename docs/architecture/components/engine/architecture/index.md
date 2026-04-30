@@ -2,7 +2,7 @@
 title: Engine architecture pack
 status: Active
 owner: Architecture / Engine
-last_reviewed: 2026-04-14
+last_reviewed: 2026-04-29
 ---
 
 # Engine architecture pack
@@ -25,6 +25,8 @@ Use it when the question is:
 - [C4 engine](./c4-engine.md)
 - [Workflow engine subsystem context](./workflow-engine-subsystem-context.md)
 - [Workflow engine target architecture](./workflow-engine-target-architecture.v1.md)
+- [Workflow engine boundary ownership component](./workflow-engine-boundary-ownership-component.md)
+- [Workflow engine boundary ownership user stories](./workflow-engine-boundary-ownership-user-stories.md)
 - [Start-run admission component](./start-run-admission-component.md)
 - [Start-run admission user stories](./start-run-admission-user-stories.md)
 
