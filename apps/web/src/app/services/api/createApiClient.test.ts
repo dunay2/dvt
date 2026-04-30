@@ -190,6 +190,46 @@ describe('createApiClient', () => {
     });
   });
 
+  it('caches a refreshed bearer token after an API rejection for later requests', async () => {
+    const refreshUrl = 'http://auth.example/__dvt/local-protected-runtime/token';
+    const configuredToken = buildJwtWithExpiration(Math.floor(Date.now() / 1000) + 7200);
+    vi.stubEnv('VITE_API_BEARER_TOKEN', configuredToken);
+    vi.stubEnv('VITE_API_BEARER_TOKEN_REFRESH_URL', refreshUrl);
+    let refreshRequestCount = 0;
+    const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      if (readRequestUrl(input) === refreshUrl) {
+        refreshRequestCount += 1;
+        return new Response(JSON.stringify({ bearerToken: 'fresh-dev-bearer-token' }), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        });
+      }
+
+      const authorization = (init?.headers as Record<string, string> | undefined)?.Authorization;
+      return new Response(null, {
+        status: authorization === 'Bearer fresh-dev-bearer-token' ? 204 : 401,
+      });
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    const apiClient = createApiClient('http://api.example');
+
+    await apiClient.requestRaw('/workspace/graph/draft', { method: 'GET' });
+    await apiClient.requestRaw('/workspace/graph/draft', { method: 'GET' });
+
+    expect(refreshRequestCount).toBe(1);
+    expect(fetchMock).toHaveBeenCalledTimes(4);
+    expect(fetchMock).toHaveBeenNthCalledWith(4, 'http://api.example/workspace/graph/draft', {
+      method: 'GET',
+      headers: {
+        Accept: 'application/json',
+        Authorization: 'Bearer fresh-dev-bearer-token',
+        'X-Project-Id': 'project-test',
+        'X-Tenant-Id': 'tenant-test',
+      },
+      body: undefined,
+    });
+  });
+
   it('returns an empty inferred base URL outside browser runtime', () => {
     vi.stubGlobal('window', undefined);
 

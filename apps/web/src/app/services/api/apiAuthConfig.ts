@@ -5,6 +5,14 @@ type FetchLike = (input: RequestInfo | URL, init?: RequestInit) => Promise<Respo
 
 const TOKEN_EXPIRATION_REFRESH_SKEW_SECONDS = 30;
 
+type CachedApiBearerToken = Readonly<{
+  configuredToken: string | undefined;
+  refreshUrl: string;
+  token: string;
+}>;
+
+let cachedApiBearerToken: CachedApiBearerToken | undefined;
+
 function readNonBlankEnv(value: unknown): string | undefined {
   if (typeof value !== 'string') {
     return undefined;
@@ -59,6 +67,39 @@ function readBearerTokenRefreshPayload(payload: unknown): string | undefined {
   return readNonBlankEnv((payload as Record<string, unknown>).bearerToken);
 }
 
+function readCachedApiBearerToken(
+  configuredToken: string | undefined,
+  refreshUrl: string | undefined
+): string | undefined {
+  if (
+    cachedApiBearerToken === undefined ||
+    refreshUrl === undefined ||
+    cachedApiBearerToken.configuredToken !== configuredToken ||
+    cachedApiBearerToken.refreshUrl !== refreshUrl
+  ) {
+    return undefined;
+  }
+
+  if (isExpiredOrExpiring(cachedApiBearerToken.token)) {
+    cachedApiBearerToken = undefined;
+    return undefined;
+  }
+
+  return cachedApiBearerToken.token;
+}
+
+function cacheApiBearerToken(
+  configuredToken: string | undefined,
+  refreshUrl: string,
+  token: string
+): void {
+  cachedApiBearerToken = {
+    configuredToken,
+    refreshUrl,
+    token,
+  };
+}
+
 export function resolveApiBearerToken(env: EnvSource = import.meta.env): string | undefined {
   return readNonBlankEnv(env.VITE_API_BEARER_TOKEN);
 }
@@ -103,6 +144,12 @@ export async function resolveApiBearerTokenForRequest(
 ): Promise<string | undefined> {
   const configuredToken = resolveApiBearerToken(env);
   const refreshUrl = resolveApiBearerTokenRefreshUrl(env);
+  const cachedToken = readCachedApiBearerToken(configuredToken, refreshUrl);
+
+  if (!options.forceRefresh && cachedToken !== undefined) {
+    return cachedToken;
+  }
+
   const shouldRefresh =
     options.forceRefresh || configuredToken === undefined || isExpiredOrExpiring(configuredToken);
 
@@ -113,6 +160,7 @@ export async function resolveApiBearerTokenForRequest(
     );
 
     if (refreshedToken !== undefined) {
+      cacheApiBearerToken(configuredToken, refreshUrl, refreshedToken);
       return refreshedToken;
     }
   }
