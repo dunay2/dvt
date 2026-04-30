@@ -1,4 +1,8 @@
+/** Owned concern: render the Admin/RBAC route and keep its tab position URL-addressable. */
+
+import { useCallback } from 'react';
 import { FileText, Server, Shield, Users } from 'lucide-react';
+import { useSearchParams } from 'react-router';
 import { ViewHeader } from '../components/domain';
 import {
   RouteWorkbenchFrame,
@@ -14,11 +18,24 @@ import { AdminRolesTab } from './admin/AdminRolesTab';
 import { adminViewCopy as copy } from './admin/copy';
 import { useAdminViewData } from './admin/useAdminViewData';
 
-type AdminTabId = 'platform' | 'roles' | 'permissions' | 'audit';
+const ADMIN_TAB_IDS = ['platform', 'roles', 'permissions', 'audit'] as const;
+
+type AdminTabId = (typeof ADMIN_TAB_IDS)[number];
+
+function isAdminTabId(value: string | null): value is AdminTabId {
+  return value !== null && ADMIN_TAB_IDS.includes(value as AdminTabId);
+}
+
+function resolveActiveAdminTab(searchParams: URLSearchParams, fallbackTab: AdminTabId): AdminTabId {
+  const routeTab = searchParams.get('tab');
+
+  return isAdminTabId(routeTab) ? routeTab : fallbackTab;
+}
 
 export default function AdminView({
   initialTab = 'platform',
 }: Readonly<{ initialTab?: AdminTabId }> = {}) {
+  const [searchParams, setSearchParams] = useSearchParams();
   const {
     searchQuery,
     setSearchQuery,
@@ -28,6 +45,19 @@ export default function AdminView({
     connectionStatus,
     filteredAuditLog,
   } = useAdminViewData();
+  const activeTab = resolveActiveAdminTab(searchParams, initialTab);
+  const handleTabChange = useCallback(
+    (nextTab: string) => {
+      if (!isAdminTabId(nextTab)) {
+        return;
+      }
+
+      const nextSearchParams = new URLSearchParams(searchParams);
+      nextSearchParams.set('tab', nextTab);
+      setSearchParams(nextSearchParams);
+    },
+    [searchParams, setSearchParams]
+  );
 
   return (
     <RouteWorkbenchFrame
@@ -42,7 +72,7 @@ export default function AdminView({
       }
       bodyClassName="p-6"
     >
-      <Tabs defaultValue={initialTab} className="mx-auto max-w-6xl">
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="mx-auto max-w-6xl">
         <TabsList className={cn(routeWorkbenchPanelClassName, 'border')}>
           <TabsTrigger value="platform">
             <Server className="mr-2 size-4" />
