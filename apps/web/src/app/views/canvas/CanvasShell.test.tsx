@@ -8,6 +8,7 @@ import CanvasShell from './CanvasShell';
 import { DEFAULT_CANVAS_PALETTE_ID } from './canvasPalette';
 import { canvasViewCopy } from './copy';
 import type { CanvasDraftToolbarState } from './canvasDraftToolbarState';
+import { buildTestNodeKind } from './canvasKindRegistration.testSupport';
 import type {
   CanvasShellChromeCommands,
   CanvasShellGraph,
@@ -96,6 +97,7 @@ function buildProps(overrides?: CanvasShellPropsOverrides): CanvasShellProps {
           tags: [],
         },
       ],
+      authoringNodeKinds: [buildTestNodeKind()],
       inspectorNode: null,
       inspectorAuthoring: {
         canEditNode: true,
@@ -257,6 +259,19 @@ describe('CanvasShell', () => {
       canEditGraph: true,
     });
     expect(shellState.dbtExplorerProps?.onOpenDataRegistry).toBeTypeOf('function');
+  });
+
+  it('wires explorer node creation through the shell contract in ready canvases', async () => {
+    const props = buildProps();
+
+    await act(async () => {
+      root.render(<CanvasShell {...props} />);
+    });
+
+    expect(shellState.dbtExplorerProps).toMatchObject({
+      nodeKinds: props.panels.authoringNodeKinds,
+      onCreateAuthoringNode: props.graphCommands.onCreateAuthoringNode,
+    });
   });
 
   it('hides explorer import affordances when source import is unavailable', async () => {

@@ -16,6 +16,11 @@ It is intentionally not a project-creation flow and not a source-import
 fallback. Project/resource inventory may enrich later authoring, but the empty
 Canvas state must be productive when the workspace has no nodes yet.
 
+The sibling ready-canvas entrypoint is documented in
+[Canvas Ready Node Authoring Entrypoint Component](./canvas-ready-node-authoring-entrypoint-component.md).
+Both entrypoints share the same `onCreateAuthoringNode` command and governed
+node admission path.
+
 ## Public API
 
 The public API is the route/shell command seam:
@@ -188,3 +193,4 @@ canvas document identity rather than a route-global transformation default.
 - Do not make import capability the only path out of empty Canvas.
 - Do not split empty copy, first-node catalog, graph strategy, and execution
   posture into separate route-level truth sources.
+- Do not fork the first-node command from the ready-canvas create command.

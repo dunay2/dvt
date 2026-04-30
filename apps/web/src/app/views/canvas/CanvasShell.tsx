@@ -21,8 +21,10 @@ type CanvasShellExplorerRailProps = Readonly<{
   focusMode: boolean;
   explorerPanelVisible: boolean;
   explorerNodes: CanvasShellPanels['explorerNodes'];
+  authoringNodeKinds: CanvasShellPanels['authoringNodeKinds'];
   canEditGraph: boolean;
   canOpenSourceImport: boolean;
+  onCreateAuthoringNode: CanvasShellProps['graphCommands']['onCreateAuthoringNode'];
   onHideExplorer: CanvasShellChromeCommands['onHideExplorer'];
   onOpenDataRegistry?: () => void;
 }>;
@@ -31,8 +33,10 @@ function CanvasShellExplorerRail({
   focusMode,
   explorerPanelVisible,
   explorerNodes,
+  authoringNodeKinds,
   canEditGraph,
   canOpenSourceImport,
+  onCreateAuthoringNode,
   onHideExplorer,
   onOpenDataRegistry,
 }: CanvasShellExplorerRailProps): JSX.Element | null {
@@ -45,7 +49,9 @@ function CanvasShellExplorerRail({
       <ResizablePanel defaultSize={17} minSize={12} maxSize={25}>
         <DbtExplorer
           nodes={explorerNodes}
+          nodeKinds={authoringNodeKinds}
           canEditGraph={canEditGraph}
+          onCreateAuthoringNode={onCreateAuthoringNode}
           onHide={onHideExplorer}
           onOpenDataRegistry={canOpenSourceImport ? onOpenDataRegistry : undefined}
         />
@@ -54,7 +60,6 @@ function CanvasShellExplorerRail({
     </>
   );
 }
-
 
 type CanvasShellInspectorRailProps = Readonly<{
   focusMode: boolean;
@@ -106,9 +111,7 @@ export default function CanvasShell({
   const [dataRegistryOpen, setDataRegistryOpen] = useState(false);
   const canEditGraph = panels.userPermissions.canEditEdges;
   const canOpenDataRegistry = canEditGraph && layout.canOpenSourceImport;
-  const handleOpenDataRegistry = canOpenDataRegistry
-    ? () => setDataRegistryOpen(true)
-    : undefined;
+  const handleOpenDataRegistry = canOpenDataRegistry ? () => setDataRegistryOpen(true) : undefined;
 
   useEffect(() => {
     if (!canOpenDataRegistry && dataRegistryOpen) {
@@ -122,8 +125,10 @@ export default function CanvasShell({
         focusMode={layout.focusMode}
         explorerPanelVisible={layout.explorerPanelVisible}
         explorerNodes={panels.explorerNodes}
+        authoringNodeKinds={panels.authoringNodeKinds}
         canEditGraph={canEditGraph}
         canOpenSourceImport={layout.canOpenSourceImport}
+        onCreateAuthoringNode={graphCommands.onCreateAuthoringNode}
         onHideExplorer={chromeCommands.onHideExplorer}
         onOpenDataRegistry={handleOpenDataRegistry}
       />

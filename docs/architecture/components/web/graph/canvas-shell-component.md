@@ -79,6 +79,10 @@ The shell contract is public through these grouped objects:
 The canonical route builds one `CanvasShellProps` value and passes it to
 `CanvasShell`.
 
+`CanvasShellPanels.authoringNodeKinds` is the ready-canvas node creation
+catalog exposed to the Explorer rail. It must be derived from the active
+`canvasDocument.kind` and its matching `CanvasKindRegistration.nodeKinds`.
+
 ## Contract rationale
 
 The hard cut replaces an anemic prop bag with grouped semantic ownership:
@@ -159,6 +163,19 @@ flowchart LR
   Shell --> ToolbarSurface["CanvasToolbar"]
 ```
 
+Ready-canvas authoring adds this narrower semantic flow:
+
+```mermaid
+flowchart LR
+  CanvasDoc["canvasDocument.kind"] --> PanelsBuilder["buildCanvasShellPanels"]
+  Runtime["availableCanvasKinds"] --> PanelsBuilder
+  Permissions["effective permissions"] --> PanelsBuilder
+  PanelsBuilder --> NodeKinds["panels.authoringNodeKinds"]
+  NodeKinds --> Shell["CanvasShell"]
+  Shell --> Explorer["DbtExplorer Add node"]
+  Explorer --> Command["graphCommands.onCreateAuthoringNode"]
+```
+
 ## Transitions
 
 The shell does not own domain transitions. It owns only UI composition
@@ -188,6 +205,10 @@ flowchart TD
   shell chrome command bags.
 - Explorer and inspector visibility belong to `layout`; node and permission
   context belong to `panels`.
+- Ready-canvas node creation choices belong to `panels.authoringNodeKinds` and
+  must be resolved from the active canvas runtime registration.
+- `CanvasShell.tsx` must pass ready-canvas creation through
+  `graphCommands.onCreateAuthoringNode`; it must not mutate draft state.
 - `CanvasShell.tsx` may compose local UI state such as import dialog openness,
   but it must not become a persistence or route-state authority.
 - `CanvasShell.tsx` must keep sizing and rail composition behind named local
@@ -198,6 +219,7 @@ flowchart TD
 - `Canvas.tsx`
 - `CanvasShell.tsx`
 - `CanvasShell.test.tsx`
+- `canvasShellPanelsBuilder.test.ts`
 
 ## Fitness functions
 
@@ -224,5 +246,7 @@ The canonical checks for this component are:
   semantic builder ownership has regressed
 - if `CanvasShell.tsx` starts deriving toolbar or route posture locally, shell
   composition has leaked into presentation policy
+- if `CanvasShell.tsx` or `DbtExplorer.tsx` starts constructing a global node
+  catalog, ready-canvas authoring has drifted away from runtime policy
 - if viewport and chrome callbacks mix again inside one command bag, command
   ownership has drifted backwards

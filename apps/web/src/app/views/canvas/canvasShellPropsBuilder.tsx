@@ -66,6 +66,10 @@ function buildCanvasShellPanelsArgs({
       importedNodeFocusIds: controller.importedNodeFocusIds,
     },
     userPermissions: routeViewState.effectiveUserPermissions,
+    routePresentation: {
+      canvasDocument: routeViewState.canvasDocument,
+      availableCanvasKinds: routeViewState.availableCanvasKinds,
+    },
   };
 }
 
@@ -147,9 +151,7 @@ function buildCanvasShellChromeCommandsArgs({
   };
 }
 
-export function buildCanvasShellProps(
-  args: CanvasShellRouteComposerArgs
-): CanvasShellProps {
+export function buildCanvasShellProps(args: CanvasShellRouteComposerArgs): CanvasShellProps {
   return {
     layout: buildCanvasShellLayout(buildCanvasShellLayoutArgs(args)),
     panels: buildCanvasShellPanels(buildCanvasShellPanelsArgs(args)),

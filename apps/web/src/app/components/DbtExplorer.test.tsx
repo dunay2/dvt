@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import DbtExplorer from './DbtExplorer';
 import type { CanonicalNode } from '../types/canonical';
+import { buildTestNodeKind } from '../views/canvas/canvasKindRegistration.testSupport';
 
 const mockResolveNodeKindRegistration = vi.hoisted(() => vi.fn());
 
@@ -108,5 +109,34 @@ describe('DbtExplorer', () => {
 
     expect(addDataButton).not.toBeNull();
     expect(addDataButton?.getAttribute('disabled')).toBeNull();
+  });
+
+  it('exposes editable node-kind creation actions beside project resources', async () => {
+    const nodeKind = buildTestNodeKind();
+    const onCreateAuthoringNode = vi.fn();
+
+    await act(async () => {
+      root.render(
+        <DbtExplorer
+          nodes={[buildNode()]}
+          canEditGraph={true}
+          nodeKinds={[nodeKind]}
+          onCreateAuthoringNode={onCreateAuthoringNode}
+        />
+      );
+    });
+
+    const createButton = Array.from(container.querySelectorAll('button')).find((button) =>
+      button.textContent?.includes('Source')
+    );
+
+    expect(container.textContent).toContain('Add node');
+    expect(createButton).not.toBeNull();
+
+    await act(async () => {
+      createButton?.click();
+    });
+
+    expect(onCreateAuthoringNode).toHaveBeenCalledWith(nodeKind);
   });
 });
