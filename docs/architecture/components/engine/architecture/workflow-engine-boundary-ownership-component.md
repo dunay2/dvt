@@ -59,7 +59,16 @@ implementations without importing engine internals.
 - `packages/@dvt/engine/src/security/planIntegrity.ts`
 - `apps/api/src/application/services/WorkflowEngineFactory.ts`
 - `apps/api/src/application/services/StoredExecutablePlanResolver.ts`
+- `apps/api/src/application/ports/storedPlan.ts`
 - `packages/@dvt/artifacts/src/ports/IRunExecutionContextReader.ts`
+
+## User Stories
+
+Executable user stories for this component live in
+[WorkflowEngine boundary ownership user stories](./workflow-engine-boundary-ownership-user-stories.md).
+They cover the engine-owned plan artifact reader, state-store separation,
+API artifact-shape reuse, documentation invariants, and negative drift
+scenarios.
 
 ## Diagrams
 

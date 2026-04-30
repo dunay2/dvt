@@ -1,3 +1,6 @@
+/**
+ * @ownedConcern Orchestrate governed run recovery from terminal source runs.
+ */
 import {
   asNonBlankString,
   type CanonicalRunStatus,

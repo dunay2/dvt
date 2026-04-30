@@ -21,6 +21,7 @@ component tree, while end-to-end lifecycle flow lives under
 - [WorkflowEngine subsystem context](./workflow-engine-subsystem-context.md)
 - [WorkflowEngine target architecture v1](./workflow-engine-target-architecture.v1.md)
 - [WorkflowEngine boundary ownership component](./workflow-engine-boundary-ownership-component.md)
+- [WorkflowEngine boundary ownership user stories](./workflow-engine-boundary-ownership-user-stories.md)
 - [Canonical C4 architecture](./c4-engine.md)
 - [Distributed consistency model](../../../system/distributed-consistency-model.md)
 - [Execution semantics](../contracts/engine/ExecutionSemantics.v1.md)

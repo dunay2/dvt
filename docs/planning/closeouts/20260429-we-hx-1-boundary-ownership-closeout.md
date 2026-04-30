@@ -132,6 +132,17 @@ checking only barrel thinness.
   semantic ownership, not only barrel thinness.
 - Added the local component guide
   `workflow-engine-boundary-ownership-component.md`.
+- Added local user stories in
+  `workflow-engine-boundary-ownership-user-stories.md`, including negative
+  scenarios for state-store drift, duplicate fetcher contracts, API DTO
+  redeclaration, missing review material, and missing owned-concern docblocks.
+- Added Fowler review mailbox analysis in
+  `docs/planning/reviews/architecture-and-governance/20260429-we-hx-1-fowler-architecture-review.md`.
+- Reused the engine-owned `StoredPlanArtifact` shape from
+  `apps/api/src/application/ports/storedPlan.ts` instead of keeping an
+  equivalent API-local interface.
+- Added `@ownedConcern` module headers to the start-run, recovery, and
+  plan-integrity modules touched by the boundary split.
 - Updated engine architecture docs, implementation diagrams, generated code
   status, evidence, risk, and Lane A planning state.
 
@@ -162,6 +173,15 @@ checking only barrel thinness.
   - Included docs generated-artifact checks, changed markdown lint, ARC evidence
     validation, changed-file checks, forbidden tracked-file check, and affected
     workspace typecheck for `@dvt/engine` plus downstream affected packages.
+- Follow-up TDD pass:
+  - Red:
+    `pnpm --filter @dvt/engine test -- test/architecture/workflowEngineBoundaryOwnership.architecture.test.ts`
+    failed because local user stories and the Fowler review were missing,
+    application/security modules lacked owned-concern docblocks, and API still
+    redeclared `StoredPlanArtifact`.
+  - Green:
+    passed with 5 tests after adding the stories, review, owned-concern
+    headers, and API artifact-shape reuse.
 
 ## No-Debt And No-Stub Evidence
 
@@ -170,3 +190,5 @@ checking only barrel thinness.
 - No lint, type, test, docs, or hook rules were relaxed.
 - No hooks were bypassed.
 - No CodeRabbit workflow was used.
+- No new ADR was required; this slice applies the accepted ADR baseline rather
+  than introducing a new architectural decision.

@@ -1,4 +1,5 @@
 /**
+ * @ownedConcern Verify executable plan bytes and metadata before provider dispatch.
  * @file packages/@dvt/engine/src/security/planIntegrity.ts
  * @baseline ADR-0003: Execution Model Sovereignty
  * @baseline ADR-0012: Plan Integrity Ownership

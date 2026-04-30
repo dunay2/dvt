@@ -1,3 +1,6 @@
+/**
+ * @ownedConcern Orchestrate start-run authorization, admission, integrity validation, and dispatch.
+ */
 import type { EngineRunRef, PlanRef, ResolvedRunContext } from '@dvt/contracts';
 import type { IObservability } from '@dvt/observability';
 
