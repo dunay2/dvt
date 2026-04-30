@@ -297,6 +297,8 @@ tasks:
       - docs/planning/closeouts/20260430-ar-d-continuation-safety-closeout.md
       - docs/evidence/ed-20260430-ar-d-continuation-safety.md
       - docs/risk-register/quality/r-20260430-ar-d-continuation-safety.yaml
+      - buzon/20260430-codex-fowler-ar-d-continuation-safety-analysis-and-remediation.md
+      - docs/architecture/components/engine/adapters/temporal/temporal-planref-workflow-boundary-user-stories.md
     status_reason: >-
       Current QA confirms the active Temporal code path now starts workflows with `planRef` plus
       cursor-only runtime control input, bounded segment resolution, canonical `CANCEL` signal-id
@@ -314,9 +316,12 @@ tasks:
       profile composition. The continuation safety pass adds governed RunFailed reasons for cursor
       overflow, expired PlanRef, and unavailable PlanRef artifacts; rejects expired PlanRef values
       before fetching plan bytes; and bounds processed control-signal id retention in rollover
-      cursor state. The task remains open because full SLA threshold posture under AR-D2 is not
-      finished, segment-scale maturity is still first-cut, and package-level DBT plugin extraction
-      remains explicit as open risk instead of being treated as already closed.
+      cursor state. The Fowler follow-up isolates continuation failure classification in a workflow
+      policy module, adds local user stories, and guards the component guide, mailbox, stories, and
+      owned-concern map with an architecture test. The task remains open because full SLA threshold
+      posture under AR-D2 is not finished, segment-scale maturity is still first-cut, and
+      package-level DBT plugin extraction remains explicit as open risk instead of being treated as
+      already closed.
     last_verified: '2026-04-30'
   - task_id: AR-D3
     priority: P2

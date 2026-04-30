@@ -19,10 +19,13 @@ Use this guide with:
 - [Temporal PlanRef drained cutover runbook](../../../../../runbooks/temporal-planref-drained-cutover-20260427.md)
 - [Temporal worker DBT plugin runtime runbook](../../../../../runbooks/temporal-worker-dbt-plugin-runtime-20260414.md)
 - [Fowler PlanRef architecture analysis](../../../../../../buzon/20260428-codex-fowler-temporal-planref-workflow-boundary-analysis-and-remediation.md)
+- [Fowler AR-D continuation safety analysis](../../../../../../buzon/20260430-codex-fowler-ar-d-continuation-safety-analysis-and-remediation.md)
+- [Temporal PlanRef workflow boundary user stories](./temporal-planref-workflow-boundary-user-stories.md)
 - [ADR-0001 Temporal integration test policy](../../../../../adr/adr-0001-temporal-integration-test-policy.md)
 - [ADR-0003 execution model](../../../../../adr/adr-0003-execution-model.md)
 - [ADR-0046 execution plan definition and run execution policy separation](../../../../../adr/adr-0046-execution-plan-definition-and-run-execution-policy-separation.md)
 - [ADR-0047 runtime-owned realized lifecycle](../../../../../adr/adr-0047-runtime-owned-realized-lifecycle-for-signal-driven-transitions.md)
+- [ADR-0052 PlanRef continuation safety](../../../../../adr/adr-0052-planref-continuation-safety.md)
 
 ## Owned concern
 
@@ -149,6 +152,7 @@ It does **not** own:
 | `workflowGatewayHelpers.ts`               | Gateway dependency validation and fact lookup                                       |
 | `workflowArtifactHelpers.ts`              | Execution artifact payload interpretation                                           |
 | `workflowControlSignalRetentionPolicy.ts` | Bounded retention policy for control-signal dedupe ids across workflow continuation |
+| `workflowFailureReasonPolicy.ts`          | Governed workflow failure reason classification from runtime error evidence         |
 | `workflowRuntimePayloadHelpers.ts`        | Runtime event payload shaping                                                       |
 | `workflowErrorHelpers.ts`                 | Workflow-safe error-message normalization                                           |
 | `workflowInputParsingHelpers.ts`          | Deterministic workflow input primitive parsing                                      |

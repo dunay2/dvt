@@ -12,7 +12,8 @@ probability: Medium
 context: >
   The continuation safety slice now gives expired PlanRef pointers, missing plan artifacts, and
   cursor payload overflow explicit RunFailed reasons. It also bounds processed control-signal id
-  retention in continue-as-new cursor state.
+  retention in continue-as-new cursor state, isolates workflow failure classification in a policy
+  module, and adds component-level stories plus mailbox traceability.
 risk: >
   This does not close the broader AR-D2 production SLA. Maximum workflow history size, segment count
   targets, and deployment-profile plan retention policy still need explicit capacity proof before
@@ -21,5 +22,7 @@ mitigations:
   - Keep AR-D2 open until maximum workflow history and segment-count SLA are documented and tested.
   - Keep PlanRef retention duration greater than the expected maximum workflow duration per profile.
   - Retain the continuation safety negative tests in contracts, engine, and adapter-temporal.
+  - Retain the semantic architecture test that guards component docs, user stories, mailbox, and
+    owned-concern module declarations.
 review_after: 2026-05-15
 ---

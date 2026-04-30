@@ -13,6 +13,14 @@ const COMPONENT_GUIDE_PATH = join(
   REPO_ROOT,
   'docs/architecture/components/engine/adapters/temporal/temporal-planref-workflow-boundary.md'
 );
+const USER_STORIES_PATH = join(
+  REPO_ROOT,
+  'docs/architecture/components/engine/adapters/temporal/temporal-planref-workflow-boundary-user-stories.md'
+);
+const MAILBOX_REVIEW_PATH = join(
+  REPO_ROOT,
+  'buzon/20260430-codex-fowler-ar-d-continuation-safety-analysis-and-remediation.md'
+);
 
 const WORKFLOW_COMPONENT_CONCERNS = {
   'RunPlanWorkflow.ts': 'Temporal PlanRef workflow orchestration entrypoint',
@@ -32,6 +40,8 @@ const WORKFLOW_COMPONENT_CONCERNS = {
     'Bounded retention policy for control-signal dedupe ids across workflow continuation',
   'workflowCursorHelpers.ts': 'Compact continue-as-new cursor construction and payload guard',
   'workflowErrorHelpers.ts': 'Workflow-safe error-message normalization',
+  'workflowFailureReasonPolicy.ts':
+    'Governed workflow failure reason classification from runtime error evidence',
   'workflowGatewayHelpers.ts': 'Gateway dependency validation and fact lookup',
   'workflowInputParsingHelpers.ts': 'Deterministic workflow input primitive parsing',
   'workflowRuntimePayloadHelpers.ts': 'Runtime event payload shaping',
@@ -67,6 +77,35 @@ describe('Temporal PlanRef workflow component semantics', () => {
     expect(guide).toContain('full `ExecutionPlan` MUST NOT cross');
     expect(guide).toContain('apps/api provider-adapter factory');
     expect(guide).toContain('apps/temporal-worker runtime host');
+    expect(guide).toContain('ADR-0052');
+    expect(guide).toContain('temporal-planref-workflow-boundary-user-stories.md');
+    expect(guide).toContain(
+      '20260430-codex-fowler-ar-d-continuation-safety-analysis-and-remediation.md'
+    );
+  });
+
+  it('publishes user stories and branch mailbox analysis for continuation safety', () => {
+    expect(existsSync(USER_STORIES_PATH)).toBe(true);
+    expect(existsSync(MAILBOX_REVIEW_PATH)).toBe(true);
+
+    const stories = readFileSync(USER_STORIES_PATH, 'utf8');
+    const mailbox = readFileSync(MAILBOX_REVIEW_PATH, 'utf8');
+
+    expect(stories).toContain('# Temporal PlanRef workflow boundary user stories');
+    expect(stories).toContain('## Story coverage matrix');
+    expect(stories).toContain('US-TPW-001');
+    expect(stories).toContain('US-TPW-002');
+    expect(stories).toContain('US-TPW-003');
+    expect(stories).toContain('PLAN_REF_EXPIRED');
+    expect(stories).toContain('PLAN_REF_UNAVAILABLE');
+    expect(stories).toContain('CURSOR_OVERFLOW');
+    expect(stories).toContain('```mermaid');
+
+    expect(mailbox).toContain('# Fowler architecture analysis - AR-D continuation safety');
+    expect(mailbox).toContain('## Fowler reading');
+    expect(mailbox).toContain('## Antipatterns detected');
+    expect(mailbox).toContain('## Remediation applied');
+    expect(mailbox).toContain('## Future teachings');
   });
 
   it('keeps durable workflow input on PlanRef plus control budget, not full ExecutionPlan', () => {

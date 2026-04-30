@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
+import {
+  TEMPORAL_CONTINUATION_FAILURE_PATTERNS,
+  resolveContinuationFailureReason,
+} from '../src/workflows/workflowFailureReasonPolicy.js';
 import { buildWorkflowFailedPayload } from '../src/workflows/workflowRuntimePayloadHelpers.js';
 
 describe('workflow runtime payload helpers', () => {
@@ -26,5 +30,21 @@ describe('workflow runtime payload helpers', () => {
       reason: expectedReason,
       message: error.message,
     });
+  });
+
+  it('keeps continuation failure classification in an explicit policy module', () => {
+    expect(TEMPORAL_CONTINUATION_FAILURE_PATTERNS).toEqual({
+      cursorOverflow: ['TEMPORAL_CONTINUE_AS_NEW_PAYLOAD_TOO_LARGE'],
+      planRefExpired: ['PLAN_REF_EXPIRED'],
+      planRefUnavailable: [
+        'PLAN_BYTES_NOT_REGISTERED',
+        'PLAN_REF_UNAVAILABLE',
+        'PLAN_FETCH_UNAVAILABLE',
+      ],
+    });
+
+    expect(resolveContinuationFailureReason('PLAN_FETCH_UNAVAILABLE: object store timeout')).toBe(
+      'PLAN_REF_UNAVAILABLE'
+    );
   });
 });

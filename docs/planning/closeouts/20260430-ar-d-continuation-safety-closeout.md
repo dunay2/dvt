@@ -50,7 +50,8 @@ Scope:
 - Engine: reject expired `PlanRef` values before fetching plan bytes.
 - Temporal adapter: bound cursor signal-id retention and map continuation
   failures to governed reasons.
-- Docs: ADR, component guide, spec, evidence, risk, and closeout.
+- Docs: ADR, component guide, user stories, mailbox analysis, spec, evidence,
+  risk, and closeout.
 
 Out of scope:
 
@@ -79,6 +80,12 @@ fetcher is called. Continue-as-new cursor construction now keeps only the
 recent bounded control-signal id window. Workflow failure payload shaping maps
 cursor overflow, expired PlanRef, and unavailable PlanRef artifact errors to
 governed `RunFailed` reasons.
+
+The Fowler follow-up separates runtime failure classification into
+`workflowFailureReasonPolicy.ts`, adds local user stories for all continuation
+safety scenarios, records the branch review in `buzon/`, and extends the
+semantic architecture test so the component guide, stories, mailbox, and
+owned-concern module map stay aligned.
 
 ## Residual Risk
 
