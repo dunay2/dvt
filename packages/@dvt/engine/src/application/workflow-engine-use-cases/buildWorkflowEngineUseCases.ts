@@ -26,6 +26,8 @@ export interface WorkflowEngineUseCaseDeps {
 export function buildWorkflowEngineUseCases(
   deps: WorkflowEngineUseCaseDeps
 ): WorkflowEngineUseCases {
+  assertWorkflowEngineUseCaseDeps(deps);
+
   return {
     startRunUseCase: new WorkflowStartRunUseCase({
       observability: deps.observability,
@@ -44,4 +46,20 @@ export function buildWorkflowEngineUseCases(
       runControlService: deps.runControlService,
     }),
   };
+}
+
+function assertWorkflowEngineUseCaseDeps(deps: WorkflowEngineUseCaseDeps): void {
+  const requiredDeps: Array<[name: keyof WorkflowEngineUseCaseDeps, value: unknown]> = [
+    ['observability', deps.observability],
+    ['startRunApplicationService', deps.startRunApplicationService],
+    ['runRecoveryService', deps.runRecoveryService],
+    ['runControlService', deps.runControlService],
+    ['runStatusQueryService', deps.runStatusQueryService],
+  ];
+
+  for (const [name, value] of requiredDeps) {
+    if (value === undefined || value === null) {
+      throw new Error(`${name} is required`);
+    }
+  }
 }
