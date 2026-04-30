@@ -2,7 +2,7 @@
 title: '@dvt/engine'
 status: Active
 owner: Architecture / Engine
-last_reviewed: 2026-04-12
+last_reviewed: 2026-04-29
 ---
 
 # @dvt/engine
@@ -29,7 +29,7 @@ not redefine which ports belong to the seven-port surface.
 | `IRunStateStore`               | `runtime-wired`               | Canonical run metadata, event log, snapshot, and maintenance store seam                       |
 | `IStartRunIntentStore`         | `runtime-wired`               | Crash-consistency seam for pre-dispatch start-run intents                                     |
 | `IProviderAdapter`             | `runtime-wired`               | Provider runtime seam                                                                         |
-| `IPlanFetcher`                 | `runtime-wired`               | Plan/artifact fetch seam on the start-run path                                                |
+| `IPlanFetcher`                 | `runtime-wired`               | Plan artifact reader seam on the start-run path, declared in `IPlanArtifactReader`            |
 | `IRunExecutionContextResolver` | `optional runtime wiring`     | Conditional seam when `runExecutionContextRef` is supplied                                    |
 | `IProjector`                   | `package-exposed target seam` | Kept visible as a projector seam even though mainline uses `SnapshotProjector` directly today |
 | `IMetricsCollector`            | `source-tree target seam`     | Declared in source; current runtime still injects `IObservability` instead                    |
@@ -89,6 +89,8 @@ Target note:
 - public contract:
   [IWorkflowEngine.ts](../../../../packages/@dvt/engine/src/ports/IWorkflowEngine.ts)
   with canonical consumer import `import type { IWorkflowEngine } from '@dvt/engine'`
+- plan artifact reader port:
+  [IPlanArtifactReader.ts](../../../../packages/@dvt/engine/src/ports/IPlanArtifactReader.ts)
 
 ## Component Topology
 

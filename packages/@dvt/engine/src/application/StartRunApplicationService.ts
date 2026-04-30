@@ -1,14 +1,13 @@
+/**
+ * @ownedConcern Orchestrate start-run authorization, admission, integrity validation, and dispatch.
+ */
 import type { EngineRunRef, PlanRef, ResolvedRunContext } from '@dvt/contracts';
 import type { IObservability } from '@dvt/observability';
 
 import type { IdempotencyKeyBuilder } from '../core/idempotency.js';
 import type { StartRunTraceContext } from '../core/lifecycle/StartRunTraceContext.js';
-import type {
-  IPlanFetcher,
-  IPlanIntegrityValidator,
-  IRunStateStoreRead,
-  IRunStateStoreWrite,
-} from '../ports/IRunStateStore.js';
+import type { IPlanFetcher, IPlanIntegrityValidator } from '../ports/IPlanArtifactReader.js';
+import type { IRunStateStoreRead, IRunStateStoreWrite } from '../ports/IRunStateStore.js';
 import type { IStartRunIntentStore } from '../ports/IStartRunIntentStore.js';
 import { PlanIntegrityValidator } from '../security/planIntegrity.js';
 import type { IRunAccessPolicy } from '../security/RunAccessPolicy.js';

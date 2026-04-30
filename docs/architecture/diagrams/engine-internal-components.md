@@ -2,7 +2,7 @@
 title: Engine Internal Components
 status: Active
 owner: Architecture / Docs
-last_reviewed: 2026-04-11
+last_reviewed: 2026-04-29
 ---
 
 # Engine Internal Components
@@ -70,11 +70,10 @@ carries the current posture.
   admission machinery implicitly**: the facade-width residual is closed, but
   recover-run and start-run still rely on a common guard/policy cluster that
   has not yet been decomposed to the target posture.
-- **`IPlanFetcher` declaration is duplicated**: the dedicated port lives in
-  `packages/@dvt/engine/src/adapters/IPlanFetcher.ts`, but a legacy declaration
-  still exists in `packages/@dvt/engine/src/ports/IRunStateStore.ts`. The
-  architectural seam is conceptually single, but the code anchor is not yet
-  normalized.
+- **Plan artifact reader ownership is now normalized**: `IPlanFetcher`,
+  `StoredPlanArtifact`, and `IPlanIntegrityValidator` live in
+  `packages/@dvt/engine/src/ports/IPlanArtifactReader.ts`. `IRunStateStore`
+  stays focused on run metadata, event log, snapshots, and maintenance.
 
 ## Unidentified Design Concerns
 

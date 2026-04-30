@@ -1,8 +1,8 @@
-import type { PlanRef, StoredPlanArtifact } from '@dvt/contracts';
+import type { PlanRef } from '@dvt/contracts';
 
-import type { IRawPlanFetcher } from '../../src/security/planIntegrity.js';
+import type { IPlanFetcher, StoredPlanArtifact } from '@dvt/engine';
 
-export class InMemoryPlanFetcher implements IRawPlanFetcher {
+export class InMemoryPlanFetcher implements IPlanFetcher {
   constructor(private readonly map: ReadonlyMap<string, Uint8Array>) {}
 
   async fetch(planRef: PlanRef): Promise<StoredPlanArtifact> {
