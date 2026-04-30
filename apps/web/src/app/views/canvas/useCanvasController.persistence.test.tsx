@@ -4,7 +4,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
   buildRemoteDraftRecord,
+  createUnrenderedHarness,
   createHarnessWithDraft,
+  setCanvasLayoutNodePositions,
+  setHarnessRemoteDraftRecord,
 } from './useCanvasController.draftLifecycle.test.support';
 import { setupCanvasControllerHarness } from './useCanvasController.test.harness';
 import { useCanvasLayoutPersistence } from './useCanvasLayoutPersistence';
@@ -189,6 +192,40 @@ describe('useCanvasController persistence guards', () => {
     const node = harness
       .getLatestResult()
       ?.nodesWithImpact.find((candidate) => candidate.id === 'node_1');
+    expect(node?.position).toEqual({ x: 320, y: 240 });
+  });
+
+  it('keeps locally persisted node positions when first bootstrap reads a remote draft', async () => {
+    harness.cleanup();
+    harness = createUnrenderedHarness();
+    setHarnessRemoteDraftRecord(
+      harness,
+      buildRemoteDraftRecord({
+        nodeIds: ['node_1'],
+        nodePositions: {
+          node_1: { x: 0, y: 0 },
+        },
+        edges: [],
+      })
+    );
+    setCanvasLayoutNodePositions(harness, {
+      node_1: { x: 320, y: 240 },
+    });
+    harness.state.store.setCanvasNodePositions.mockClear();
+
+    await harness.renderProbe();
+    await harness.renderProbe();
+
+    const node = harness
+      .getLatestResult()
+      ?.nodesWithImpact.find((candidate) => candidate.id === 'node_1');
+
+    expect(harness.state.store.setCanvasNodePositions).not.toHaveBeenCalledWith(
+      'tenant-a::project-a::dev',
+      {
+        node_1: { x: 0, y: 0 },
+      }
+    );
     expect(node?.position).toEqual({ x: 320, y: 240 });
   });
 });

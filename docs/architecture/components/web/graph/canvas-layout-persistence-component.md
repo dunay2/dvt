@@ -21,14 +21,15 @@ This distinction matters because Canvas has two truths:
 
 ## Public API
 
-| API                                | Owner                            | Responsibility                                                      |
-| ---------------------------------- | -------------------------------- | ------------------------------------------------------------------- |
-| `useCanvasLayoutPersistence(...)`  | `useCanvasLayoutPersistence.ts`  | Return node-position, node-drag, and viewport persistence handlers. |
-| `handleNodePositionsSave`          | `useCanvasLayoutPersistence.ts`  | Persist a complete node-position map for the active layout key.     |
-| `handleNodeDragStop`               | `useCanvasLayoutPersistence.ts`  | Persist the drag-stop event payload over stale React Flow arrays.   |
-| `handleViewportChange`             | `useCanvasLayoutPersistence.ts`  | Persist viewport only after hydration and graph readiness.          |
-| `useCanvasViewportGraphModel(...)` | `useCanvasViewportGraphModel.ts` | Project canonical graph nodes into live React Flow viewport nodes.  |
-| `CanvasViewport` callbacks         | `CanvasViewport.tsx`             | Forward governed React Flow gesture callbacks only.                 |
+| API                                          | Owner                                 | Responsibility                                                                               |
+| -------------------------------------------- | ------------------------------------- | -------------------------------------------------------------------------------------------- |
+| `useCanvasLayoutPersistence(...)`            | `useCanvasLayoutPersistence.ts`       | Return node-position, node-drag, and viewport persistence handlers.                          |
+| `handleNodePositionsSave`                    | `useCanvasLayoutPersistence.ts`       | Persist a complete node-position map for the active layout key.                              |
+| `handleNodeDragStop`                         | `useCanvasLayoutPersistence.ts`       | Persist the drag-stop event payload over stale React Flow arrays.                            |
+| `handleViewportChange`                       | `useCanvasLayoutPersistence.ts`       | Persist viewport only after hydration and graph readiness.                                   |
+| `shouldSeedCanvasLayoutFromRemoteDraft(...)` | `canvasDraftLayoutHydrationPolicy.ts` | Allow remote draft coordinates to seed local layout only when no local card positions exist. |
+| `useCanvasViewportGraphModel(...)`           | `useCanvasViewportGraphModel.ts`      | Project canonical graph nodes into live React Flow viewport nodes.                           |
+| `CanvasViewport` callbacks                   | `CanvasViewport.tsx`                  | Forward governed React Flow gesture callbacks only.                                          |
 
 ## Invariants
 
@@ -39,6 +40,11 @@ This distinction matters because Canvas has two truths:
 - Settled live drag frames may persist observed viewport-model positions.
 - Active drag frames must not rewrite persisted coordinates until the gesture
   settles.
+- Remote draft coordinates may seed route-local layout only when the active
+  workspace layout has no locally persisted node positions.
+- Bootstrap and reload must not overwrite operator-owned card positions after a
+  browser refresh. The protected draft remains authoritative for graph meaning,
+  but not for route-local card layout once the operator has persisted layout.
 - The component must not import draft-authoring ports, API clients, or
   protected draft save functions.
 - The controller must pass both `graphModel.nodes` and
@@ -75,6 +81,18 @@ stateDiagram-v2
   Persist --> ObserveNodes
 ```
 
+### Remote draft layout seeding
+
+```mermaid
+flowchart LR
+  RemoteDraft["Remote draft nodePositions"] --> Policy["canvasDraftLayoutHydrationPolicy"]
+  LocalLayout["Local workspace layout store"] --> Policy
+  Policy -->|local positions empty| Seed["seed canvasInteractionStore"]
+  Policy -->|local positions present| Preserve["preserve operator layout"]
+  Preserve --> Projection["viewport projection uses local positions first"]
+  RemoteDraft --> Projection
+```
+
 ## Consumers
 
 Direct consumers:
@@ -109,7 +127,8 @@ Primary tests:
 - `apps/web/src/app/views/canvas/canvasStartupAndDraftRecovery.architecture.test.ts`
 
 The tests cover pending-query denial, stale drag-stop payload replacement,
-settled live drag persistence, and semantic boundary rules.
+settled live drag persistence, remote-draft hydration not overwriting local
+layout after refresh/reload, and semantic boundary rules.
 
 ## Drift To Watch
 
@@ -117,4 +136,6 @@ settled live drag persistence, and semantic boundary rules.
 - Do not infer graph meaning from stored coordinates.
 - Do not allow React Flow's stale `allNodes` array to overwrite the event
   payload for the dragged card.
+- Do not let protected draft bootstrap or reload overwrite a workspace layout
+  that already contains local card positions.
 - Do not re-enable drag gestures outside `CanvasViewport` permission policy.

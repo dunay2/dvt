@@ -2,6 +2,7 @@ import { useRef, type Dispatch, type SetStateAction } from 'react';
 
 import type { CanvasDraftQueryCache } from './canvasDraftQueryCache';
 import type { CanvasDraftSession } from './canvasDraftSession';
+import type { CanvasNodePositions } from './canvasAuthoringRuntime.types';
 import type {
   DraftSaveStatus,
   GraphDraftQueryState,
@@ -21,10 +22,8 @@ type UseCanvasDraftBootstrapSyncArgs = {
   draftSession: CanvasDraftSession;
   setDraftSession: Dispatch<SetStateAction<CanvasDraftSession>>;
   canonicalSnapshot: CanvasDraftLifecycleCanonicalSnapshot;
-  setCanvasNodePositions: (
-    workspaceLayoutKey: string,
-    positions: Record<string, { x: number; y: number }>
-  ) => void;
+  persistedNodePositions: CanvasNodePositions;
+  setCanvasNodePositions: (workspaceLayoutKey: string, positions: CanvasNodePositions) => void;
   setDraftSaveStatus: Dispatch<SetStateAction<DraftSaveStatus>>;
   invalidateInFlightSaveAttempt: () => void;
   lastSavedSignatureRef: { current: string | null };
@@ -38,6 +37,7 @@ export function useCanvasDraftBootstrapSync({
   draftSession,
   setDraftSession,
   canonicalSnapshot,
+  persistedNodePositions,
   setCanvasNodePositions,
   setDraftSaveStatus,
   invalidateInFlightSaveAttempt,
@@ -49,6 +49,7 @@ export function useCanvasDraftBootstrapSync({
     draftQueryCache,
     workspaceLayoutKey,
     setDraftSession,
+    persistedNodePositions,
     setCanvasNodePositions,
     setDraftSaveStatus,
     lastSavedSignatureRef,
@@ -62,6 +63,7 @@ export function useCanvasDraftBootstrapSync({
     draftSession,
     setDraftSession,
     canonicalSnapshot,
+    persistedNodePositions,
     setCanvasNodePositions,
     setDraftSaveStatus,
     invalidateInFlightSaveAttempt,
