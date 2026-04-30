@@ -115,6 +115,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [Temporal PlanRef runtime still lacks full cutover and scale proof](R-20260427-TEMPORAL-PLANREF-CONFIG-HARDENING.yaml)
 - [Temporal runtime closure helper depends on PNPM JSON output shape](R-20260410-TEMPORAL-RUNTIME-CLOSURE-PNPM-JSON-COUPLING.yaml)
 - [Temporal SDK 1.16 upgrade could hide unsupported Nexus compatibility drift](R-20260413-TEMPORAL-SDK-1-16-COMPATIBILITY.yaml)
+- [Temporal SDK patch upgrades can drift from provider integration behavior](R-20260430-TEMPORAL-SDK-1-16-1-PATCH.yaml)
 - [TF-C2 local Postgres proof can drift from workspace and Docker CLI compatibility assumptions](R-20260413-TF-C2-LOCAL-POSTGRES-PROOF-COMPATIBILITY.yaml)
 - [TF-C2-B canonical contract docs can drift from the shipped execution read surface](R-20260409-TF-C2-B-CANONICAL-CONTRACT-DOC-DRIFT.yaml)
 - [TF-C2-B failed-run materialization semantics drift](R-20260409-TF-C2-B-FAILED-RUN-MATERIALIZATION-SEMANTICS.yaml)
