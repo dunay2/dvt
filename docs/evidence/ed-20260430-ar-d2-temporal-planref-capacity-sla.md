@@ -10,6 +10,7 @@ code_refs:
   - packages/@dvt/adapter-temporal/src/temporalPlanRefCapacitySlaPolicy.ts
   - packages/@dvt/adapter-temporal/test/temporalPlanRefCapacitySlaPolicy.test.ts
   - docs/architecture/components/engine/adapters/temporal/temporal-planref-capacity-sla.md
+  - buzon/20260430-codex-fowler-ar-d2-temporal-capacity-sla-analysis-and-remediation.md
 evidence:
   tests:
     - pnpm --filter @dvt/adapter-temporal exec vitest run test/temporalPlanRefCapacitySlaPolicy.test.ts test/workflow-component-semantics.architecture.test.ts
@@ -29,3 +30,7 @@ local or incident use while making it an explicit production-readiness
 violation. It also evaluates rollover payload budget, maximum layer count per
 segment, expected segment count, workflow-history estimates, and `PlanRef`
 retention margin.
+
+The Fowler follow-up records the architectural analysis in the mailbox and
+extends the semantic architecture test so the analysis, component guide, user
+stories, and executable policy remain aligned.

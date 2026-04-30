@@ -21,6 +21,14 @@ const CAPACITY_SLA_PATH = join(
   REPO_ROOT,
   'docs/architecture/components/engine/adapters/temporal/temporal-planref-capacity-sla.md'
 );
+const CAPACITY_POLICY_PATH = join(
+  import.meta.dirname,
+  '../src/temporalPlanRefCapacitySlaPolicy.ts'
+);
+const CAPACITY_MAILBOX_REVIEW_PATH = join(
+  REPO_ROOT,
+  'buzon/20260430-codex-fowler-ar-d2-temporal-capacity-sla-analysis-and-remediation.md'
+);
 const MAILBOX_REVIEW_PATH = join(
   REPO_ROOT,
   'buzon/20260430-codex-fowler-ar-d-continuation-safety-analysis-and-remediation.md'
@@ -116,17 +124,45 @@ describe('Temporal PlanRef workflow component semantics', () => {
     expect(existsSync(CAPACITY_SLA_PATH)).toBe(true);
 
     const sla = readFileSync(CAPACITY_SLA_PATH, 'utf8');
+    const policy = readFileSync(CAPACITY_POLICY_PATH, 'utf8');
     const stories = readFileSync(USER_STORIES_PATH, 'utf8');
 
     expect(sla).toContain('# Temporal PlanRef capacity SLA');
+    expect(sla).toContain('## Owned Concern');
+    expect(sla).toContain('## Public API');
+    expect(sla).toContain('## Invariants');
+    expect(sla).toContain('## Transitions');
+    expect(sla).toContain('## Consumers');
     expect(sla).toContain('## Production capacity profile');
     expect(sla).toContain('continueAsNewAfterLayerCount');
     expect(sla).toContain('maximum workflow history size');
     expect(sla).toContain('maximum segment count');
     expect(sla).toContain('PlanRef retention');
     expect(sla).toContain('```mermaid');
+    expect(policy).toMatch(
+      /^\/\*\*[\s\S]*\* @ownedConcern Evaluate Temporal PlanRef workflow budgets against governed production capacity SLAs[\s\S]*\*\//
+    );
     expect(stories).toContain('US-TPW-006');
     expect(stories).toContain('temporal-planref-capacity-sla.md');
+  });
+
+  it('keeps Fowler AR-D2 capacity analysis in the mailbox with mature-system comparison', () => {
+    expect(existsSync(CAPACITY_MAILBOX_REVIEW_PATH)).toBe(true);
+
+    const mailbox = readFileSync(CAPACITY_MAILBOX_REVIEW_PATH, 'utf8');
+
+    expect(mailbox).toContain('# Fowler architecture analysis - AR-D2 Temporal capacity SLA');
+    expect(mailbox).toContain('## Fowler reading');
+    expect(mailbox).toContain('## Mature-system comparison');
+    expect(mailbox).toContain('## Improved patterns');
+    expect(mailbox).toContain('## Antipatterns detected');
+    expect(mailbox).toContain('## Drift and remediation');
+    expect(mailbox).toContain('## Future teachings');
+    expect(mailbox).toContain('## User stories covered');
+    expect(mailbox).toContain('## ADR decision');
+    expect(mailbox).toContain('```mermaid');
+    expect(mailbox).toContain('temporalPlanRefCapacitySlaPolicy.ts');
+    expect(mailbox).toContain('temporal-planref-capacity-sla.md');
   });
 
   it('keeps durable workflow input on PlanRef plus control budget, not full ExecutionPlan', () => {
