@@ -92,6 +92,12 @@ const ownedConcernModules = [
     phrase: 'Owned concern: persist Canvas viewport and node-layout observations',
   },
   {
+    label: 'canvas draft layout hydration policy',
+    path: 'canvasDraftLayoutHydrationPolicy.ts',
+    phrase:
+      'Owned concern: decide when remote draft coordinates may seed local Canvas layout persistence',
+  },
+  {
     label: 'canvas viewport graph model',
     path: 'useCanvasViewportGraphModel.ts',
     phrase: 'Owned concern: project semantic authoring truth into React Flow viewport state',
@@ -249,6 +255,9 @@ describe('canvas startup and draft recovery architecture', () => {
     expect(layoutPersistenceSource).toContain('mergeDraggedNodePosition(allNodes, draggedNode)');
     expect(layoutPersistenceSource).not.toContain('workspaceGraphDraftAuthoringPort');
     expect(layoutPersistenceSource).not.toContain('saveGraphDraft');
+    expect(readAppSource('canvasDraftLayoutHydrationPolicy.ts')).toContain(
+      'function shouldSeedCanvasLayoutFromRemoteDraft('
+    );
     expect(controllerSource).toContain('nodes: graphModel.nodes');
     expect(controllerSource).toContain('persistedNodePositions: store.persistedNodePositions');
   });
