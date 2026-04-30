@@ -9,6 +9,7 @@
  */
 import {
   buildWorkflowEngineFacade,
+  buildWorkflowEngineUseCases,
   buildRunHealthService,
   buildRunRecoveryService,
   buildRunControlService,
@@ -128,8 +129,7 @@ export function buildWorkflowEngine(config: EngineConfig): BuiltWorkflowEngineRu
         : {}),
       ...(config.persistence.runExecutionContextBindingPolicy !== undefined
         ? {
-            runExecutionContextBindingPolicy:
-              config.persistence.runExecutionContextBindingPolicy,
+            runExecutionContextBindingPolicy: config.persistence.runExecutionContextBindingPolicy,
           }
         : {}),
     }),
@@ -173,8 +173,7 @@ export function buildWorkflowEngine(config: EngineConfig): BuiltWorkflowEngineRu
       : {}),
     ...(config.persistence.runExecutionContextBindingPolicy !== undefined
       ? {
-          runExecutionContextBindingPolicy:
-            config.persistence.runExecutionContextBindingPolicy,
+          runExecutionContextBindingPolicy: config.persistence.runExecutionContextBindingPolicy,
         }
       : {}),
   });
@@ -182,18 +181,20 @@ export function buildWorkflowEngine(config: EngineConfig): BuiltWorkflowEngineRu
     stateStoreRead: config.persistence.stateStoreRead,
     adapters: config.runtime.adapters,
   });
+  const workflowUseCases = buildWorkflowEngineUseCases({
+    observability: config.infrastructure.observability,
+    startRunApplicationService,
+    runRecoveryService,
+    runControlService,
+    runStatusQueryService,
+  });
   return {
     engine: buildWorkflowEngineFacade({
-      startRunApplicationService,
-      runRecoveryService,
-      runControlService,
-      runStatusQueryService,
+      ...workflowUseCases,
       adapters: config.runtime.adapters,
-      observability: config.infrastructure.observability,
       ...(config.runtime.requiredProviders !== undefined
         ? { requiredProviders: config.runtime.requiredProviders }
         : {}),
-      ...(config.runtime.timeouts !== undefined ? { timeouts: config.runtime.timeouts } : {}),
     }),
     runHealthService,
     runEnrichmentService: new RunEnrichmentService({

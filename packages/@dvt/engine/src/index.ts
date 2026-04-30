@@ -19,6 +19,23 @@ export * from './core/idempotency.js';
 export { buildWorkflowEngineFacade } from './core/buildWorkflowEngineFacade.js';
 export type { WorkflowEngineBuilder } from './core/buildWorkflowEngineFacade.js';
 export type { WorkflowEngineDeps } from './core/WorkflowEngine.js';
+export {
+  buildWorkflowEngineUseCases,
+  WorkflowCancelRunUseCase,
+  WorkflowRecoverRunUseCase,
+  WorkflowRunStatusUseCase,
+  WorkflowSignalRunUseCase,
+  WorkflowStartRunUseCase,
+} from './application/WorkflowEngineUseCases.js';
+export type {
+  IWorkflowCancelRunUseCase,
+  IWorkflowRecoverRunUseCase,
+  IWorkflowRunStatusUseCase,
+  IWorkflowSignalRunUseCase,
+  IWorkflowStartRunUseCase,
+  WorkflowEngineUseCaseDeps,
+  WorkflowEngineUseCases,
+} from './application/WorkflowEngineUseCases.js';
 
 export type {
   EventInput,

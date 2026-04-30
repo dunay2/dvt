@@ -128,6 +128,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [Turbo build cache or orchestration drift could hide missing dependency rebuilds](R-20260418-TURBO-BUILD-ORCHESTRATION-CACHE-DRIFT.yaml)
 - [Web workspace file-missing handling depends on a future backend canonical reason](R-20260411-WEB-WORKSPACE-FILE-NOT-FOUND-CONTRACT-GAP.yaml)
 - [WorkflowEngine external seam ownership can drift back into broad ports](R-20260429-WE-HX-1-BOUNDARY-OWNERSHIP.yaml)
+- [WorkflowEngine facade use-case drift can reintroduce orchestration into the facade](R-20260430-WE-HX-2-FACADE-USE-CASES.yaml)
 - [WorkflowSnapshot schema-version drift can reappear if version bumps are skipped](R-20260405-WORKFLOW-SNAPSHOT-SCHEMA-VERSION.yaml)
 - [Workspace authoring draft aggregate adoption can drift across API and web](R-20260423-WORKSPACE-AUTHORING-DRAFT-AGGREGATE.yaml)
 - [Workspace graph-draft callers can drift from shared capability and CAS semantics](R-20260416-TF-A2-WORKSPACE-GRAPH-DRAFT-ADOPTION-DRIFT.yaml)

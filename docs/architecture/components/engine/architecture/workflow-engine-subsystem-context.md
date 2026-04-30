@@ -131,6 +131,8 @@ Known concrete adapter families:
 Main components in the subsystem:
 
 - `WorkflowEngine` (public facade + explicit service delegation)
+- `WorkflowEngineUseCases` (facade-facing use-case adapters for start, recover,
+  cancel, status, and signal)
 - `StartRunAdmissionGuard` (admission/capability/adapter gate)
 - `StartRunApplicationService` (start-run application orchestration)
 - `RecoverRunApplicationService` (recover-run orchestration)
@@ -245,6 +247,8 @@ sequenceDiagram
 - ownership seams between engine resolver and artifacts reader now have one
   canonical mapping in
   [WorkflowEngine boundary ownership component](./workflow-engine-boundary-ownership-component.md)
+- public facade tracing drift is closed by
+  [WorkflowEngine Facade Use-Cases Component](./workflow-engine-facade-use-cases-component.md)
 
 ```mermaid
 flowchart LR
