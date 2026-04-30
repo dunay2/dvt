@@ -1,6 +1,6 @@
 ---
 id: R-20260430-AR-D-CONTINUATION-SAFETY
-title: AR-D continuation safety still needs production SLA closure
+title: AR-D continuation safety residual capacity tuning
 status: Open
 date: 2026-04-30
 owners:
@@ -15,11 +15,10 @@ context: >
   retention in continue-as-new cursor state, isolates workflow failure classification in a policy
   module, and adds component-level stories plus mailbox traceability.
 risk: >
-  This does not close the broader AR-D2 production SLA. Maximum workflow history size, segment count
-  targets, and deployment-profile plan retention policy still need explicit capacity proof before
-  AR-D-PLAN-POINTER can be treated as fully closed for large-DAG production readiness.
+  AR-D2 now has an executable standard production capacity SLA. Residual risk remains around
+  empirical production tuning for tenant-specific profiles and larger Temporal namespaces.
 mitigations:
-  - Keep AR-D2 open until maximum workflow history and segment-count SLA are documented and tested.
+  - Keep AR-D2 evidence linked to the capacity SLA policy and semantic architecture test.
   - Keep PlanRef retention duration greater than the expected maximum workflow duration per profile.
   - Retain the continuation safety negative tests in contracts, engine, and adapter-temporal.
   - Retain the semantic architecture test that guards component docs, user stories, mailbox, and

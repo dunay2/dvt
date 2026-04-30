@@ -17,6 +17,10 @@ const USER_STORIES_PATH = join(
   REPO_ROOT,
   'docs/architecture/components/engine/adapters/temporal/temporal-planref-workflow-boundary-user-stories.md'
 );
+const CAPACITY_SLA_PATH = join(
+  REPO_ROOT,
+  'docs/architecture/components/engine/adapters/temporal/temporal-planref-capacity-sla.md'
+);
 const MAILBOX_REVIEW_PATH = join(
   REPO_ROOT,
   'buzon/20260430-codex-fowler-ar-d-continuation-safety-analysis-and-remediation.md'
@@ -106,6 +110,23 @@ describe('Temporal PlanRef workflow component semantics', () => {
     expect(mailbox).toContain('## Antipatterns detected');
     expect(mailbox).toContain('## Remediation applied');
     expect(mailbox).toContain('## Future teachings');
+  });
+
+  it('publishes the AR-D2 capacity SLA and keeps it linked to PlanRef stories', () => {
+    expect(existsSync(CAPACITY_SLA_PATH)).toBe(true);
+
+    const sla = readFileSync(CAPACITY_SLA_PATH, 'utf8');
+    const stories = readFileSync(USER_STORIES_PATH, 'utf8');
+
+    expect(sla).toContain('# Temporal PlanRef capacity SLA');
+    expect(sla).toContain('## Production capacity profile');
+    expect(sla).toContain('continueAsNewAfterLayerCount');
+    expect(sla).toContain('maximum workflow history size');
+    expect(sla).toContain('maximum segment count');
+    expect(sla).toContain('PlanRef retention');
+    expect(sla).toContain('```mermaid');
+    expect(stories).toContain('US-TPW-006');
+    expect(stories).toContain('temporal-planref-capacity-sla.md');
   });
 
   it('keeps durable workflow input on PlanRef plus control budget, not full ExecutionPlan', () => {

@@ -12,6 +12,18 @@
 export { ADAPTER_SUPPORTED_SCHEMA } from './versioning.js';
 export type { TemporalAdapterConfig } from './config.js';
 export { loadTemporalAdapterConfig, validateTemporalAdapterConfig } from './config.js';
+export type {
+  TemporalPlanRefCapacityProfile,
+  TemporalPlanRefCapacityProfileName,
+  TemporalPlanRefCapacitySlaEvaluation,
+  TemporalPlanRefCapacitySlaInput,
+  TemporalPlanRefCapacityViolation,
+  TemporalPlanRefCapacityViolationCode,
+} from './temporalPlanRefCapacitySlaPolicy.js';
+export {
+  evaluateTemporalPlanRefCapacitySla,
+  TEMPORAL_PLANREF_CAPACITY_PROFILE,
+} from './temporalPlanRefCapacitySlaPolicy.js';
 
 export type { TemporalClientHandle } from './TemporalClient.js';
 export { TemporalClientManager } from './TemporalClient.js';

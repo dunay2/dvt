@@ -297,7 +297,15 @@ enabled and reached before all layers are processed:
 The governed default enables rollover after 100 execution layers. Explicit
 `continueAsNewAfterLayerCount = 0` disables rollover only for local diagnostics
 or incident rollback and is not large-DAG ready. The threshold and SLA remain
-governed by `AR-D2`.
+governed by `AR-D2` and documented in
+[Temporal PlanRef capacity SLA](./temporal-planref-capacity-sla.md).
+
+Production readiness for this policy is evaluated by
+`evaluateTemporalPlanRefCapacitySla`. The standard profile requires non-zero
+rollover, a continue-as-new payload budget that does not exceed workflow start
+admission, maximum workflow history size below 10,000 events or 40,000,000
+bytes, maximum segment count of 1,000, and `PlanRef` retention longer than the
+expected workflow duration plus a 24-hour safety margin.
 
 ```ts
 if (shouldTriggerContinueAsNew(state)) {

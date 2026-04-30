@@ -16,6 +16,7 @@ Use this guide with:
 
 - [Temporal adapter spec](./temporal-adapter-spec.md)
 - [Temporal DBT worker plugin profile](./temporal-dbt-worker-plugin-profile.md)
+- [Temporal PlanRef capacity SLA](./temporal-planref-capacity-sla.md)
 - [Temporal PlanRef drained cutover runbook](../../../../../runbooks/temporal-planref-drained-cutover-20260427.md)
 - [Temporal worker DBT plugin runtime runbook](../../../../../runbooks/temporal-worker-dbt-plugin-runtime-20260414.md)
 - [Fowler PlanRef architecture analysis](../../../../../../buzon/20260428-codex-fowler-temporal-planref-workflow-boundary-analysis-and-remediation.md)
@@ -75,6 +76,9 @@ It does **not** own:
 - `TEMPORAL_CONTINUE_AS_NEW_AFTER_LAYERS`
   Layer threshold injected into workflow input. `0` is allowed only as an
   explicit local diagnostic or incident rollback value.
+- `evaluateTemporalPlanRefCapacitySla(input)`
+  Pure AR-D2 policy that classifies configured rollover, payload, and PlanRef
+  retention budgets against the production capacity profile.
 
 ## Invariants
 
@@ -101,6 +105,9 @@ It does **not** own:
   before Temporal history becomes the hidden storage layer.
 - `continueAsNewAfterLayerCount = 0` disables rollover only when an operator has
   made that risk explicit outside large-DAG readiness.
+- Production readiness for rollover, maximum workflow history size, maximum
+  segment count, payload budget, and `PlanRef retention` is governed by
+  [Temporal PlanRef capacity SLA](./temporal-planref-capacity-sla.md).
 - The DBT plugin runtime remains outside this component. Its step-kind registry
   is composed by the Temporal worker DBT profile, not by the PlanRef workflow or
   the core activity registry.
@@ -154,6 +161,7 @@ It does **not** own:
 | `workflowControlSignalRetentionPolicy.ts` | Bounded retention policy for control-signal dedupe ids across workflow continuation |
 | `workflowFailureReasonPolicy.ts`          | Governed workflow failure reason classification from runtime error evidence         |
 | `workflowRuntimePayloadHelpers.ts`        | Runtime event payload shaping                                                       |
+| `temporalPlanRefCapacitySlaPolicy.ts`     | Production capacity SLA evaluation for PlanRef workflow budgets                     |
 | `workflowErrorHelpers.ts`                 | Workflow-safe error-message normalization                                           |
 | `workflowInputParsingHelpers.ts`          | Deterministic workflow input primitive parsing                                      |
 

@@ -26,6 +26,7 @@ cutover unless a separate versioned workflow line is introduced.
 - `docs/adr/ADR-0014-run-driven-adapter-model.md`
 - `docs/planning/proposals/mandatory/runtime-and-contracts/ar-d-plan-pointer-workflow-input-hardening-plan-20260420.md`
 - `docs/architecture/components/engine/adapters/temporal/temporal-adapter-spec.md`
+- `docs/architecture/components/engine/adapters/temporal/temporal-planref-capacity-sla.md`
 
 ## Applicability
 
@@ -55,6 +56,8 @@ Before deploying the new worker or adapter line:
    the governed default, or explicitly set to the approved environment value.
 5. Confirm `TEMPORAL_MAX_CONTINUE_AS_NEW_PAYLOAD_BYTES` is less than or equal to
    `TEMPORAL_MAX_START_PAYLOAD_BYTES`.
+6. Confirm the deployment profile evaluates as `production_ready` under
+   `evaluateTemporalPlanRefCapacitySla` before declaring large-DAG readiness.
 
 ## Drain Procedure
 
@@ -79,6 +82,7 @@ Run these repository checks before calling the cutover implementation ready:
 ```text
 pnpm --filter @dvt/adapter-temporal exec vitest run ./test/TemporalAdapter.startRun.test.ts
 pnpm --filter @dvt/adapter-temporal exec vitest run ./test/workflow-execution-segment.test.ts
+pnpm --filter @dvt/adapter-temporal exec vitest run ./test/temporalPlanRefCapacitySlaPolicy.test.ts
 pnpm --filter @dvt/adapter-temporal exec vitest run ./test/integration.time-skipping.test.ts -t "continues as new"
 ```
 

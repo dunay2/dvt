@@ -34,6 +34,9 @@ through Temporal continuation and failure settlement.
 - `US-TPW-005`: component docs drift from executable semantics. Outcome:
   architecture fitness test goes red. Primary test:
   `workflow-component-semantics.architecture.test.ts`.
+- `US-TPW-006`: production capacity profile is violated. Outcome:
+  explicit SLA violation codes. Primary test:
+  `temporalPlanRefCapacitySlaPolicy.test.ts`.
 
 ## User stories
 
@@ -102,6 +105,26 @@ Acceptance:
 - The architecture test fails if the docs or semantic module ownership are
   removed.
 
+### US-TPW-006 - Production capacity is evaluated before large-DAG readiness
+
+As a runtime operator, I want the Temporal PlanRef workflow budget to be checked
+against the governed [capacity SLA](./temporal-planref-capacity-sla.md), so that
+diagnostic overrides are not mistaken for a production-ready scale posture.
+
+Acceptance:
+
+- Non-zero `continueAsNewAfterLayerCount`, bounded continue-as-new payload, and
+  sufficient `PlanRef retention` evaluate as `production_ready`.
+- `continueAsNewAfterLayerCount = 0` evaluates as
+  `CONTINUE_AS_NEW_DISABLED` for production profiles.
+- A rollover payload budget greater than the start payload budget evaluates as
+  `CONTINUE_AS_NEW_PAYLOAD_EXCEEDS_START_BUDGET`.
+- `PlanRef retention` shorter than expected workflow duration plus profile
+  safety margin evaluates as `PLAN_REF_RETENTION_TOO_SHORT`.
+- Segment count, layer count, workflow-history event count, and
+  workflow-history byte estimates above the profile evaluate as explicit
+  profile maximum violations.
+
 ## Scenario diagram
 
 ```mermaid
@@ -118,6 +141,7 @@ flowchart TD
   Compact --> Budget{"payload <= budget?"}
   Budget -->|yes| Continue["continueAsNew PlanRef + cursor"]
   Budget -->|no| Overflow["RunFailed: CURSOR_OVERFLOW"]
+  Continue --> Capacity["AR-D2 capacity SLA policy"]
 ```
 
 ## Traceability
@@ -125,5 +149,7 @@ flowchart TD
 - ADR: `docs/adr/adr-0052-planref-continuation-safety.md`
 - Component guide:
   `docs/architecture/components/engine/adapters/temporal/temporal-planref-workflow-boundary.md`
+- Capacity SLA:
+  `docs/architecture/components/engine/adapters/temporal/temporal-planref-capacity-sla.md`
 - Mailbox:
   `buzon/20260430-codex-fowler-ar-d-continuation-safety-analysis-and-remediation.md`
