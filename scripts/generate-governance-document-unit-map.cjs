@@ -353,6 +353,13 @@ pnpm docs:governance:document-unit-map:check
 The check regenerates both outputs and fails if the committed map is stale.
 Every new tracked Markdown document under \`docs/**\` must therefore appear in
 the YAML index before the docs governance gate can pass.
+
+## Related Surfaces
+
+- [System Governance File Index](./system-governance-file-index-20260501.md)
+- [System Governance Component Index](./system-governance-component-index-20260501.md)
+- [System Governance Unit Index](./system-governance-unit-index-20260501.md)
+- [System Governance Unit Taxonomy](./system-governance-unit-taxonomy-20260501.md)
 `;
 }
 

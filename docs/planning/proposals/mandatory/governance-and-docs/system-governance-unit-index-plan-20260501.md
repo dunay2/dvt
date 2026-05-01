@@ -329,6 +329,152 @@ Initial guard candidates:
 - S08 closure cannot be claimed while `SYS-PLANSTORE-*` units remain
   `coverage-required`, `drift`, or `legacy`.
 
+## Feature Mechanization Manifest
+
+This plan owns the governance-index and file-fingerprint implementation
+surfaces. The manifest keeps the repository-level implementation guard from
+binding governance changes to unrelated frontend feature manifests.
+Because the file/component and fingerprint indexes are exhaustive generated
+artifacts, the integration PR may use the repository size-gate exemption marker
+when the generated YAML projections exceed the default PR line budget.
+
+```feature-mechanization
+version: 1
+featureId: SYS-GOV-UNIT-INDEX
+mechanizationStatus: closed
+noHumanDecisionsRemaining: true
+implementationPlan: docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
+componentGuides:
+  - docs/planning/status/system-governance-unit-taxonomy-20260501.md
+userStories:
+  - docs/planning/status/system-governance-unit-index-20260501.md
+governingSources:
+  - AGENTS.md
+  - docs/planning/status/governance-document-rule-inventory.md
+  - docs/guides/ai-work-protocol.md
+  - docs/architecture/command-query-rail-governance.md
+  - docs/architecture/fowler-opportunity-planning-governance.md
+  - docs/adr/ADR-0053-file-state-fingerprint-governance.md
+allowedImplementationSurfaces:
+  - .github/workflows/pr-quality-gate.yml
+  - docs/.manifest.json
+  - docs/adr/ADR-0053-file-state-fingerprint-governance.md
+  - docs/adr/index.md
+  - docs/generated-docs-policy.json
+  - docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
+  - docs/planning/status/**
+  - package.json
+  - scripts/check-governance-file-fingerprint-baseline.cjs
+  - scripts/check-governance-file-fingerprint-baseline.test.cjs
+  - scripts/check-governance-unit-coverage.cjs
+  - scripts/check-governance-unit-coverage.test.cjs
+  - scripts/generate-governance-document-unit-map.cjs
+  - scripts/generate-governance-file-component-index.cjs
+  - scripts/generate-governance-file-component-index.test.cjs
+forbiddenImplementationSurfaces:
+  - apps/**
+  - packages/**
+  - specs/contracts/**
+commandQueryRails:
+  - name: GenerateGovernanceUnitCoverage
+    type: command
+    dddOwner: Repository governance unit index
+  - name: GenerateGovernanceDocumentUnitMap
+    type: command
+    dddOwner: Repository governance document map
+  - name: GenerateGovernanceFileComponentIndex
+    type: command
+    dddOwner: Repository governance file/component index
+  - name: AcceptGovernanceFileFingerprintBaseline
+    type: command
+    dddOwner: Repository governance file fingerprint baseline
+  - name: CheckGovernanceFileFingerprintBaseline
+    type: query
+    dddOwner: Repository governance file fingerprint baseline
+  - name: RenderGovernanceFileFingerprintImpact
+    type: query
+    dddOwner: Repository governance file fingerprint impact report
+domainObjects:
+  - name: GovernanceUnitIndex
+    type: generated status aggregate
+    owner: SYS-DOCS-GOVERNANCE-ROOT
+  - name: GovernanceDocumentUnitMap
+    type: generated status projection
+    owner: SYS-DOCS-GOVERNANCE-ROOT
+  - name: GovernanceFileComponentIndex
+    type: generated status projection
+    owner: SYS-DOCS-GOVERNANCE-ROOT
+  - name: GovernanceFileFingerprintBaseline
+    type: accepted fingerprint baseline
+    owner: SYS-DOCS-GOVERNANCE-ROOT
+fowlerSignals:
+  - Documentation drift
+  - Hidden authority
+  - Boundary drift
+architectureGuards:
+  - pnpm docs:governance:unit-coverage
+  - pnpm docs:governance:document-unit-map:check
+  - pnpm docs:governance:file-component-index:check
+  - pnpm docs:governance:file-fingerprint-baseline:check
+  - pnpm docs:governance:file-fingerprint-impact:check
+cypressFlows:
+  - N/A - repository governance docs and CI only
+completionGate:
+  - pnpm test:docs:governance:unit-coverage
+  - pnpm test:docs:governance:document-unit-map
+  - pnpm test:docs:governance:file-component-index
+  - pnpm test:docs:governance:file-fingerprint-baseline
+  - pnpm ci:docs
+  - pnpm verify:prepush
+redGreenCycles:
+  - id: governance-unit-coverage
+    redTest: pnpm test:docs:governance:unit-coverage
+    expectedFailure: Unowned tracked files or invalid unit parent chains are rejected.
+    patchSurfaces:
+      - scripts/check-governance-unit-coverage.cjs
+      - docs/planning/status/system-governance-unit-index.units.yaml
+    greenTest: pnpm test:docs:governance:unit-coverage
+  - id: governance-file-component-index
+    redTest: pnpm test:docs:governance:file-component-index
+    expectedFailure: File/component index generation rejects stale or unstable ownership projections.
+    patchSurfaces:
+      - scripts/generate-governance-file-component-index.cjs
+      - docs/planning/status/system-governance-file-index.files.yaml
+    greenTest: pnpm test:docs:governance:file-component-index
+  - id: governance-file-fingerprint-baseline
+    redTest: pnpm test:docs:governance:file-fingerprint-baseline
+    expectedFailure: Accepted fingerprint baseline drift is reported before merge.
+    patchSurfaces:
+      - scripts/check-governance-file-fingerprint-baseline.cjs
+      - docs/planning/status/system-governance-file-fingerprint-baseline.yaml
+    greenTest: pnpm test:docs:governance:file-fingerprint-baseline
+symbols:
+  - name: GenerateGovernanceFileComponentIndex
+    path: scripts/generate-governance-file-component-index.cjs
+    dddOwner: Repository governance file/component index
+    cqRails:
+      - GenerateGovernanceFileComponentIndex
+    fowlerSignals:
+      - Documentation drift
+    architectureGuard: scripts/generate-governance-file-component-index.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/generate-governance-file-component-index.test.cjs
+  - name: CheckGovernanceFileFingerprintBaseline
+    path: scripts/check-governance-file-fingerprint-baseline.cjs
+    dddOwner: Repository governance file fingerprint baseline
+    cqRails:
+      - AcceptGovernanceFileFingerprintBaseline
+      - CheckGovernanceFileFingerprintBaseline
+      - RenderGovernanceFileFingerprintImpact
+    fowlerSignals:
+      - Hidden authority
+    architectureGuard: scripts/check-governance-file-fingerprint-baseline.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/check-governance-file-fingerprint-baseline.test.cjs
+```
+
 ## Validation Baseline
 
 Run after each document-changing slice:

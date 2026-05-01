@@ -128,6 +128,30 @@ test('findOwnerMatches returns the single owning unit for a tracked file', () =>
   );
 });
 
+test('findOwnerMatches honors excludes before reporting ownership', () => {
+  const units = [
+    {
+      id: 'SYS-API-ROOT',
+      owns: ['apps/api/**'],
+      excludes: ['apps/api/src/infrastructure/startRun/**'],
+    },
+    {
+      id: 'SYS-PLANSTORE-API-COMPOSITION',
+      owns: ['apps/api/src/infrastructure/startRun/**'],
+    },
+  ];
+
+  const matches = findOwnerMatches(
+    'apps/api/src/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.ts',
+    units
+  );
+
+  assert.deepEqual(
+    matches.map((unit) => unit.id),
+    ['SYS-PLANSTORE-API-COMPOSITION']
+  );
+});
+
 test('validateManifest passes when every tracked file has exactly one owner and a valid parent chain', () => {
   const result = validateManifest(manifest(), fixtureFiles);
 
@@ -159,6 +183,27 @@ test('validateManifest fails when ownership patterns overlap', () => {
   );
 
   assert.match(result.errors.join('\n'), /has multiple owning governance units/);
+});
+
+test('validateManifest fails when excludes are declared without ownership', () => {
+  const result = validateManifest(
+    manifest({
+      units: [
+        ...manifest().units,
+        {
+          id: 'SYS-API-EXCLUDE-ONLY',
+          parent: 'SYS-API',
+          level: 'component',
+          status: 'review',
+          excludes: ['apps/api/**'],
+          childrenRequired: false,
+        },
+      ],
+    }),
+    fixtureFiles
+  );
+
+  assert.match(result.errors.join('\n'), /excludes files but has no owns patterns/);
 });
 
 test('validateManifest fails when a child unit has no valid parent', () => {

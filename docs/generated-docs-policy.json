@@ -154,6 +154,38 @@
       "requiredMarkers": [
         "This artifact is machine-generated and should be referenced by AR-C2 closeout tasks."
       ]
+    },
+    {
+      "id": "tracked-governance-file-indexes",
+      "description": "Tracked file/component governance indexes.",
+      "artifacts": [
+        "docs/planning/status/system-governance-file-index.files.yaml",
+        "docs/planning/status/system-governance-file-index-20260501.md",
+        "docs/planning/status/system-governance-component-index.components.yaml",
+        "docs/planning/status/system-governance-component-index-20260501.md"
+      ],
+      "sourcePaths": [
+        "scripts/generate-governance-file-component-index.cjs",
+        "docs/planning/status/system-governance-unit-index.units.yaml"
+      ],
+      "generatorCommand": "pnpm docs:governance:file-component-index",
+      "tracking": "tracked",
+      "manualEditPolicy": "generator-owned"
+    },
+    {
+      "id": "tracked-governance-file-fingerprint-baseline",
+      "description": "Tracked accepted file-state fingerprint baseline and reviewer impact report.",
+      "artifacts": [
+        "docs/planning/status/system-governance-file-fingerprint-baseline.yaml",
+        "docs/planning/status/system-governance-file-fingerprint-impact-20260501.md"
+      ],
+      "sourcePaths": [
+        "scripts/check-governance-file-fingerprint-baseline.cjs",
+        "docs/planning/status/system-governance-file-index.files.yaml"
+      ],
+      "generatorCommand": "pnpm docs:governance:file-fingerprint-baseline",
+      "tracking": "tracked",
+      "manualEditPolicy": "generator-owned"
     }
   ]
 }

@@ -84,6 +84,12 @@ units:
       - packages/@dvt/dsl/**
       - packages/@dvt/cli/**
       - packages/cli/**
+    excludes:
+      - packages/@dvt/engine/src/ports/IPlanArtifactReader.ts
+      - packages/@dvt/engine/src/security/planRefPolicy.ts
+      - packages/@dvt/engine/src/security/planRefPolicyRules.ts
+      - packages/@dvt/engine/test/core/WorkflowEngine.planRef.test.ts
+      - packages/@dvt/engine/test/security/planRefPolicy.test.ts
     childrenRequired: true
     dddOwner: AS
     cqRails: runtime commands and queries
@@ -113,10 +119,9 @@ units:
     name: Plan-store root component
     parent: SYS-PLANSTORE
     level: component
-    status: coverage-required
-    owns:
-      - packages/@dvt/artifacts/**
-    childrenRequired: true
+    status: superseded
+    owns: []
+    childrenRequired: false
     dddOwner: PORT
     cqRails: PS-Cxx and PS-Qxx
     governance:
@@ -124,6 +129,182 @@ units:
     fowlerSignals:
       - coverage refinement
       - boundary drift
+
+  - id: SYS-PLANSTORE-CONTRACTS
+    name: Plan-store contracts
+    parent: SYS-PLANSTORE
+    level: component
+    status: drift
+    owns:
+      - docs/contracts/planner/PlanStoreRecords.v1.md
+      - packages/@dvt/artifacts/src/ports/IPlanStoreReader.ts
+      - packages/@dvt/artifacts/src/ports/IPlanStoreWriter.ts
+    childrenRequired: true
+    dddOwner: PORT
+    cqRails: PS-Q01, PS-C01
+    governance:
+      - docs/contracts/planner/PlanStoreRecords.v1.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+      - docs/risk-register/quality/R-20260402-S08-PLAN-STORE-CONTRACT-DRIFT.yaml
+    fowlerSignals:
+      - boundary drift
+      - duplicate semantics
+
+  - id: SYS-PLANSTORE-ARTIFACTS-PORTS
+    name: Plan-store artifacts ports and runtime readers
+    parent: SYS-PLANSTORE
+    level: component
+    status: review
+    owns:
+      - packages/@dvt/artifacts/**
+    excludes:
+      - packages/@dvt/artifacts/src/ports/IPlanStoreReader.ts
+      - packages/@dvt/artifacts/src/ports/IPlanStoreWriter.ts
+    childrenRequired: true
+    dddOwner: PORT
+    cqRails: PS-Q02
+    governance:
+      - docs/planning/closeouts/20260403-s08-3-artifacts-plan-store-ports-closeout.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+    fowlerSignals:
+      - coverage refinement
+      - boundary drift
+
+  - id: SYS-PLANSTORE-POSTGRES
+    name: Postgres plan-store adapter implementation
+    parent: SYS-PLANSTORE
+    level: component
+    status: drift
+    owns:
+      - packages/@dvt/adapter-postgres/src/PostgresPlanStore*.ts
+      - packages/@dvt/adapter-postgres/test/PostgresPlanStore*.ts
+    childrenRequired: true
+    dddOwner: ADP
+    cqRails: implements PS-Cxx and PS-Qxx
+    governance:
+      - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
+      - docs/planning/reviews/architecture-and-governance/20260403-s08-postgres-plan-store-hard-qa-review.md
+      - docs/risk-register/quality/R-20260408-ADAPTER-POSTGRES-PLANSTORE-TEST-DRIFT.yaml
+    fowlerSignals:
+      - responsibility overload
+      - test-only confidence
+
+  - id: SYS-PLANSTORE-API-COMPOSITION
+    name: API plan-store composition and resolvers
+    parent: SYS-PLANSTORE
+    level: component
+    status: drift
+    owns:
+      - apps/api/src/application/errors/ManifestArtifactResolutionError.ts
+      - apps/api/src/application/ports/storedPlan.ts
+      - apps/api/src/application/services/StoredExecutablePlanResolver.ts
+      - apps/api/src/application/services/StoredPlanExecutabilityValidator.ts
+      - apps/api/src/application/services/WorkflowEngineFactory.ts
+      - apps/api/src/entrypoints/http/planRefHttpMapper.ts
+      - apps/api/src/entrypoints/http/planRoutePlanRefParser.ts
+      - apps/api/src/infrastructure/planner/ManifestArtifactResolver.ts
+      - apps/api/src/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.ts
+      - apps/api/src/infrastructure/startRun/ArtifactStoreDbtProjectBundleBindingPolicy.ts
+      - apps/api/test/application/services/StoredExecutablePlanResolver.test.ts
+      - apps/api/test/application/services/StoredPlanExecutabilityValidator.test.ts
+      - apps/api/test/application/services/WorkflowEngineFactory.test.ts
+      - apps/api/test/application/services/storedPlanExecutabilityValidator/**
+      - apps/api/test/entrypoints/http/planRoutePlanSourcePolicy.test.ts
+      - apps/api/test/infrastructure/planner/ManifestArtifactResolver.test.ts
+      - apps/api/test/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.test.ts
+    childrenRequired: true
+    dddOwner: AS
+    cqRails: PS-Q03, PS-C02
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+    fowlerSignals:
+      - hidden authority
+      - boundary drift
+
+  - id: SYS-PLANSTORE-TEMPORAL-COMPOSITION
+    name: Temporal plan-store composition and plan-ref workflow boundary
+    parent: SYS-PLANSTORE
+    level: component
+    status: legacy
+    owns:
+      - apps/temporal-worker/src/runtime/runtimeTypes.ts
+      - apps/temporal-worker/src/runtime/temporalWorkerRuntimeHandle.ts
+      - apps/temporal-worker/src/runtime/temporalWorkerRuntimeResources.ts
+      - apps/temporal-worker/src/runtime/temporalWorkerStores.ts
+      - apps/temporal-worker/test/runtime/createTemporalWorkerRuntime.srp.architecture.test.ts
+      - packages/@dvt/adapter-temporal/src/temporalPlanRefCapacitySlaPolicy.ts
+      - packages/@dvt/adapter-temporal/src/workflows/workflowArtifactHelpers.ts
+      - packages/@dvt/adapter-temporal/test/temporalPlanRefCapacitySlaPolicy.test.ts
+      - packages/@dvt/adapter-temporal/test/workflow-component-semantics.architecture.test.ts
+    childrenRequired: true
+    dddOwner: ADP
+    cqRails: PS-Q04
+    governance:
+      - docs/architecture/components/engine/adapters/temporal/temporal-planref-workflow-boundary.md
+      - docs/risk-register/quality/R-20260427-TEMPORAL-PLANREF-CONFIG-HARDENING.yaml
+      - docs/planning/status/system-operations-inventory-20260501.md
+    fowlerSignals:
+      - hidden authority
+      - boundary drift
+
+  - id: SYS-PLANSTORE-ENGINE-FETCH
+    name: Engine plan artifact fetch and plan-ref policy
+    parent: SYS-PLANSTORE
+    level: component
+    status: drift
+    owns:
+      - packages/@dvt/engine/src/ports/IPlanArtifactReader.ts
+      - packages/@dvt/engine/src/security/planRefPolicy.ts
+      - packages/@dvt/engine/src/security/planRefPolicyRules.ts
+      - packages/@dvt/engine/test/core/WorkflowEngine.planRef.test.ts
+      - packages/@dvt/engine/test/security/planRefPolicy.test.ts
+    childrenRequired: true
+    dddOwner: PORT
+    cqRails: PS-Q05
+    governance:
+      - docs/adr/adr-0052-planref-continuation-safety.md
+      - docs/risk-register/quality/R-20260405-PLAN-STORE-CANONICAL-SHAPE-DRIFT.yaml
+    fowlerSignals:
+      - boundary drift
+      - hidden authority
+
+  - id: SYS-PLANSTORE-DOCS-RISK
+    name: Plan-store docs, reviews, risk, and evidence
+    parent: SYS-PLANSTORE
+    level: component
+    status: review
+    owns:
+      - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
+      - docs/adr/adr-0052-planref-continuation-safety.md
+      - docs/architecture/components/engine/adapters/temporal/temporal-planref*.md
+      - docs/evidence/ED-20260402-s08-contract-layer-hardening.md
+      - docs/evidence/ED-20260403-s08-*.md
+      - docs/evidence/ed-20260427-temporal-planref-*.md
+      - docs/evidence/ed-20260430-ar-d2-temporal-planref-capacity-sla.md
+      - docs/guides/postgres-plan-store-*.md
+      - docs/planning/closeouts/20260402-s08-*.md
+      - docs/planning/closeouts/20260403-s08-*.md
+      - docs/planning/closeouts/20260406-s08-*.md
+      - docs/planning/closeouts/20260427-temporal-planref-*.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/s08-*.md
+      - docs/planning/reviews/20260402-s08-plan-record-plan-store-gap-review.md
+      - docs/planning/reviews/architecture-and-governance/20260403-*plan-store*.md
+      - docs/planning/status/system-governance-planstore-file-ownership-20260501.md
+      - docs/risk-register/quality/R-20260402-S08-PLAN-STORE-CONTRACT-DRIFT.yaml
+      - docs/risk-register/quality/R-20260403-S08-*.yaml
+      - docs/risk-register/quality/R-20260405-PLAN-STORE-CANONICAL-SHAPE-DRIFT.yaml
+      - docs/risk-register/quality/R-20260408-ADAPTER-POSTGRES-PLANSTORE-TEST-DRIFT.yaml
+      - docs/risk-register/quality/R-20260427-TEMPORAL-PLANREF-CONFIG-HARDENING.yaml
+    childrenRequired: true
+    dddOwner: INFRA
+    cqRails: none - governance and evidence
+    governance:
+      - docs/planning/status/system-governance-unit-index-20260501.md
+      - docs/planning/status/system-governance-document-unit-map-20260501.md
+    fowlerSignals:
+      - documentation drift
+      - coverage refinement
 
   - id: SYS-API
     name: API workspace
@@ -146,6 +327,24 @@ units:
     status: coverage-required
     owns:
       - apps/api/**
+    excludes:
+      - apps/api/src/application/errors/ManifestArtifactResolutionError.ts
+      - apps/api/src/application/ports/storedPlan.ts
+      - apps/api/src/application/services/StoredExecutablePlanResolver.ts
+      - apps/api/src/application/services/StoredPlanExecutabilityValidator.ts
+      - apps/api/src/application/services/WorkflowEngineFactory.ts
+      - apps/api/src/entrypoints/http/planRefHttpMapper.ts
+      - apps/api/src/entrypoints/http/planRoutePlanRefParser.ts
+      - apps/api/src/infrastructure/planner/ManifestArtifactResolver.ts
+      - apps/api/src/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.ts
+      - apps/api/src/infrastructure/startRun/ArtifactStoreDbtProjectBundleBindingPolicy.ts
+      - apps/api/test/application/services/StoredExecutablePlanResolver.test.ts
+      - apps/api/test/application/services/StoredPlanExecutabilityValidator.test.ts
+      - apps/api/test/application/services/WorkflowEngineFactory.test.ts
+      - apps/api/test/application/services/storedPlanExecutabilityValidator/**
+      - apps/api/test/entrypoints/http/planRoutePlanSourcePolicy.test.ts
+      - apps/api/test/infrastructure/planner/ManifestArtifactResolver.test.ts
+      - apps/api/test/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.test.ts
     childrenRequired: true
     dddOwner: AS
     cqRails: API commands and queries
@@ -238,6 +437,13 @@ units:
     owns:
       - packages/@dvt/adapter-postgres/**
       - packages/@dvt/adapter-temporal/**
+    excludes:
+      - packages/@dvt/adapter-postgres/src/PostgresPlanStore*.ts
+      - packages/@dvt/adapter-postgres/test/PostgresPlanStore*.ts
+      - packages/@dvt/adapter-temporal/src/temporalPlanRefCapacitySlaPolicy.ts
+      - packages/@dvt/adapter-temporal/src/workflows/workflowArtifactHelpers.ts
+      - packages/@dvt/adapter-temporal/test/temporalPlanRefCapacitySlaPolicy.test.ts
+      - packages/@dvt/adapter-temporal/test/workflow-component-semantics.architecture.test.ts
     childrenRequired: true
     dddOwner: ADP
     cqRails: adapter implementations of owned ports
@@ -270,6 +476,12 @@ units:
       - apps/outbox-worker/**
       - apps/projector-worker/**
       - apps/lineage-worker/**
+    excludes:
+      - apps/temporal-worker/src/runtime/runtimeTypes.ts
+      - apps/temporal-worker/src/runtime/temporalWorkerRuntimeHandle.ts
+      - apps/temporal-worker/src/runtime/temporalWorkerRuntimeResources.ts
+      - apps/temporal-worker/src/runtime/temporalWorkerStores.ts
+      - apps/temporal-worker/test/runtime/createTemporalWorkerRuntime.srp.architecture.test.ts
     childrenRequired: true
     dddOwner: AS
     cqRails: worker commands and operational queries
@@ -404,6 +616,29 @@ units:
       - CLAUDE.md
       - CONTRIBUTING.md
       - CHANGELOG.md
+    excludes:
+      - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
+      - docs/adr/adr-0052-planref-continuation-safety.md
+      - docs/architecture/components/engine/adapters/temporal/temporal-planref*.md
+      - docs/contracts/planner/PlanStoreRecords.v1.md
+      - docs/evidence/ED-20260402-s08-contract-layer-hardening.md
+      - docs/evidence/ED-20260403-s08-*.md
+      - docs/evidence/ed-20260427-temporal-planref-*.md
+      - docs/evidence/ed-20260430-ar-d2-temporal-planref-capacity-sla.md
+      - docs/guides/postgres-plan-store-*.md
+      - docs/planning/closeouts/20260402-s08-*.md
+      - docs/planning/closeouts/20260403-s08-*.md
+      - docs/planning/closeouts/20260406-s08-*.md
+      - docs/planning/closeouts/20260427-temporal-planref-*.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/s08-*.md
+      - docs/planning/reviews/20260402-s08-plan-record-plan-store-gap-review.md
+      - docs/planning/reviews/architecture-and-governance/20260403-*plan-store*.md
+      - docs/planning/status/system-governance-planstore-file-ownership-20260501.md
+      - docs/risk-register/quality/R-20260402-S08-PLAN-STORE-CONTRACT-DRIFT.yaml
+      - docs/risk-register/quality/R-20260403-S08-*.yaml
+      - docs/risk-register/quality/R-20260405-PLAN-STORE-CANONICAL-SHAPE-DRIFT.yaml
+      - docs/risk-register/quality/R-20260408-ADAPTER-POSTGRES-PLANSTORE-TEST-DRIFT.yaml
+      - docs/risk-register/quality/R-20260427-TEMPORAL-PLANREF-CONFIG-HARDENING.yaml
     childrenRequired: true
     dddOwner: INFRA
     cqRails: none - documentation governance

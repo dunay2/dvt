@@ -1,7 +1,7 @@
 version: 1
 generatedFrom: git ls-files docs
 unitManifest: docs/planning/status/system-governance-unit-index.units.yaml
-documentCount: 1431
+documentCount: 1438
 documents:
   - path: docs/CONTRIBUTING.md
     classification: governs unit
@@ -165,7 +165,7 @@ documents:
     subjectUnit: SYS-DOCS-GOVERNANCE
   - path: docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
     classification: governs unit
-    documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
+    documentOwnerUnit: SYS-PLANSTORE-DOCS-RISK
     subjectUnit: SYS-PLANSTORE
   - path: docs/adr/ADR-0044-structured-contracts-error-metadata.md
     classification: governs unit
@@ -195,6 +195,10 @@ documents:
     classification: governs unit
     documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
     subjectUnit: SYS-ADAPTERS
+  - path: docs/adr/ADR-0053-file-state-fingerprint-governance.md
+    classification: governs unit
+    documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
+    subjectUnit: SYS-DOCS-GOVERNANCE
   - path: docs/adr/ADR-Implementation-Status.md
     classification: governs unit
     documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -225,7 +229,7 @@ documents:
     subjectUnit: SYS-DOCS-GOVERNANCE
   - path: docs/adr/adr-0052-planref-continuation-safety.md
     classification: governs unit
-    documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
+    documentOwnerUnit: SYS-PLANSTORE-DOCS-RISK
     subjectUnit: SYS-PLANSTORE
   - path: docs/adr/index.md
     classification: governs unit
@@ -401,16 +405,16 @@ documents:
     subjectUnit: SYS-ADAPTERS
   - path: docs/architecture/components/engine/adapters/temporal/temporal-planref-capacity-sla.md
     classification: governs unit
-    documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
+    documentOwnerUnit: SYS-PLANSTORE-DOCS-RISK
     subjectUnit: SYS-PLANSTORE
   - path: >-
       docs/architecture/components/engine/adapters/temporal/temporal-planref-workflow-boundary-user-stories.md
     classification: governs unit
-    documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
+    documentOwnerUnit: SYS-PLANSTORE-DOCS-RISK
     subjectUnit: SYS-PLANSTORE
   - path: docs/architecture/components/engine/adapters/temporal/temporal-planref-workflow-boundary.md
     classification: governs unit
-    documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
+    documentOwnerUnit: SYS-PLANSTORE-DOCS-RISK
     subjectUnit: SYS-PLANSTORE
   - path: docs/architecture/components/engine/adapters/temporal/temporal-step-plugin-profile.md
     classification: governs unit
@@ -1986,7 +1990,7 @@ documents:
     subjectUnit: SYS-CONTRACTS
   - path: docs/contracts/planner/PlanStoreRecords.v1.md
     classification: governs unit
-    documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
+    documentOwnerUnit: SYS-PLANSTORE-CONTRACTS
     subjectUnit: SYS-PLANSTORE
   - path: docs/contracts/planner/TransformationFlowCompiler.v1.md
     classification: governs unit
@@ -2046,19 +2050,19 @@ documents:
     subjectUnit: SYS-DOCS-GOVERNANCE
   - path: docs/evidence/ED-20260402-s08-contract-layer-hardening.md
     classification: proves evidence
-    documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
+    documentOwnerUnit: SYS-PLANSTORE-DOCS-RISK
     subjectUnit: SYS-PLANSTORE
   - path: docs/evidence/ED-20260403-s08-4-ci-regression-fix.md
     classification: proves evidence
-    documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
+    documentOwnerUnit: SYS-PLANSTORE-DOCS-RISK
     subjectUnit: SYS-PLANSTORE
   - path: docs/evidence/ED-20260403-s08-4-postgres-three-part-model-arc2.md
     classification: proves evidence
-    documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
+    documentOwnerUnit: SYS-PLANSTORE-DOCS-RISK
     subjectUnit: SYS-PLANSTORE
   - path: docs/evidence/ED-20260403-s08-5-b-run-execution-context-boundary.md
     classification: proves evidence
-    documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
+    documentOwnerUnit: SYS-PLANSTORE-DOCS-RISK
     subjectUnit: SYS-PLANSTORE
   - path: docs/evidence/ED-20260403-structured-contracts-error-model.md
     classification: proves evidence
@@ -2562,11 +2566,11 @@ documents:
     subjectUnit: SYS-PLANNER
   - path: docs/evidence/ed-20260427-temporal-planref-config-hardening.md
     classification: proves evidence
-    documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
+    documentOwnerUnit: SYS-PLANSTORE-DOCS-RISK
     subjectUnit: SYS-PLANSTORE
   - path: docs/evidence/ed-20260427-temporal-planref-qa1-readiness.md
     classification: proves evidence
-    documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
+    documentOwnerUnit: SYS-PLANSTORE-DOCS-RISK
     subjectUnit: SYS-PLANSTORE
   - path: docs/evidence/ed-20260429-dbt-cli-plugin-runner-srp.md
     classification: proves evidence
@@ -2602,7 +2606,7 @@ documents:
     subjectUnit: SYS-DOCS-GOVERNANCE
   - path: docs/evidence/ed-20260430-ar-d2-temporal-planref-capacity-sla.md
     classification: proves evidence
-    documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
+    documentOwnerUnit: SYS-PLANSTORE-DOCS-RISK
     subjectUnit: SYS-PLANSTORE
   - path: docs/evidence/ed-20260430-temporal-sdk-1-16-1-patch-upgrade.md
     classification: proves evidence
@@ -2746,11 +2750,11 @@ documents:
     subjectUnit: SYS-PLANNER
   - path: docs/guides/postgres-plan-store-technical-manual-20260403.md
     classification: describes unit
-    documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
+    documentOwnerUnit: SYS-PLANSTORE-DOCS-RISK
     subjectUnit: SYS-PLANSTORE
   - path: docs/guides/postgres-plan-store-user-manual-20260403.md
     classification: describes unit
-    documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
+    documentOwnerUnit: SYS-PLANSTORE-DOCS-RISK
     subjectUnit: SYS-PLANSTORE
   - path: docs/guides/pr-preflight-and-ci-triage.md
     classification: describes unit
@@ -3570,7 +3574,7 @@ documents:
     subjectUnit: SYS-DOCS-GOVERNANCE
   - path: docs/planning/closeouts/20260402-s08-contract-layer-hardening-closeout.md
     classification: governs unit
-    documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
+    documentOwnerUnit: SYS-PLANSTORE-DOCS-RISK
     subjectUnit: SYS-PLANSTORE
   - path: docs/planning/closeouts/20260403-api-current-to-target-architecture-closeout.md
     classification: tracks drift
@@ -3578,7 +3582,7 @@ documents:
     subjectUnit: SYS-API
   - path: docs/planning/closeouts/20260403-s08-3-artifacts-plan-store-ports-closeout.md
     classification: tracks drift
-    documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
+    documentOwnerUnit: SYS-PLANSTORE-DOCS-RISK
     subjectUnit: SYS-PLANSTORE
   - path: docs/planning/closeouts/20260404-ar-a9-planner-cycle-fail-closed-closeout.md
     classification: tracks drift
@@ -3638,11 +3642,11 @@ documents:
     subjectUnit: SYS-DOCS-GOVERNANCE
   - path: docs/planning/closeouts/20260406-s08-4c-fail-closed-admission-coverage-closeout.md
     classification: tracks drift
-    documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
+    documentOwnerUnit: SYS-PLANSTORE-DOCS-RISK
     subjectUnit: SYS-PLANSTORE
   - path: docs/planning/closeouts/20260406-s08-5c-plugin-compatibility-fingerprint-closeout.md
     classification: tracks drift
-    documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
+    documentOwnerUnit: SYS-PLANSTORE-DOCS-RISK
     subjectUnit: SYS-PLANSTORE
   - path: docs/planning/closeouts/20260407-ar-c1-t1-admin-route-test-harness-closeout.md
     classification: tracks drift
@@ -4351,7 +4355,7 @@ documents:
     subjectUnit: SYS-ADAPTERS
   - path: docs/planning/closeouts/20260427-temporal-planref-spec-config-hardening-closeout.md
     classification: tracks drift
-    documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
+    documentOwnerUnit: SYS-PLANSTORE-DOCS-RISK
     subjectUnit: SYS-PLANSTORE
   - path: docs/planning/closeouts/20260428-canvas-draft-replacement-and-drag-closeout.md
     classification: tracks drift
@@ -4826,12 +4830,12 @@ documents:
   - path: >-
       docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-record-plan-store-execution-plan-20260402.md
     classification: governs unit
-    documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
+    documentOwnerUnit: SYS-PLANSTORE-DOCS-RISK
     subjectUnit: SYS-PLANSTORE
   - path: >-
       docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
     classification: governs unit
-    documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
+    documentOwnerUnit: SYS-PLANSTORE-DOCS-RISK
     subjectUnit: SYS-PLANSTORE
   - path: >-
       docs/planning/proposals/mandatory/runtime-and-contracts/temporal-workflow-helper-artifact-facts-narrowing-slice-20260410.md
@@ -5036,7 +5040,7 @@ documents:
     subjectUnit: SYS-DOCS-GOVERNANCE
   - path: docs/planning/reviews/20260402-s08-plan-record-plan-store-gap-review.md
     classification: tracks drift
-    documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
+    documentOwnerUnit: SYS-PLANSTORE-DOCS-RISK
     subjectUnit: SYS-PLANSTORE
   - path: docs/planning/reviews/20260407-f04-f-capabilities-port-hard-qa-review.md
     classification: tracks drift
@@ -5103,12 +5107,12 @@ documents:
   - path: >-
       docs/planning/reviews/architecture-and-governance/20260403-postgres-plan-store-srp-remediation-target.md
     classification: tracks drift
-    documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
+    documentOwnerUnit: SYS-PLANSTORE-DOCS-RISK
     subjectUnit: SYS-PLANSTORE
   - path: >-
       docs/planning/reviews/architecture-and-governance/20260403-s08-postgres-plan-store-hard-qa-review.md
     classification: tracks drift
-    documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
+    documentOwnerUnit: SYS-PLANSTORE-DOCS-RISK
     subjectUnit: SYS-PLANSTORE
   - path: docs/planning/reviews/architecture-and-governance/20260404-ar-c2-fowler-hard-qa-review.md
     classification: tracks drift
@@ -5742,10 +5746,34 @@ documents:
     classification: describes unit
     documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
     subjectUnit: SYS-DOCS-GOVERNANCE
+  - path: docs/planning/status/system-governance-component-index-20260501.md
+    classification: governs unit
+    documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
+    subjectUnit: SYS-DOCS-GOVERNANCE
   - path: docs/planning/status/system-governance-document-unit-map-20260501.md
     classification: governs unit
     documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
     subjectUnit: SYS-DOCS-GOVERNANCE
+  - path: docs/planning/status/system-governance-document-unit-map-20260501.md
+    classification: governs unit
+    documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
+    subjectUnit: SYS-DOCS-GOVERNANCE
+  - path: docs/planning/status/system-governance-document-unit-map-20260501.md
+    classification: governs unit
+    documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
+    subjectUnit: SYS-DOCS-GOVERNANCE
+  - path: docs/planning/status/system-governance-file-fingerprint-impact-20260501.md
+    classification: governs unit
+    documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
+    subjectUnit: SYS-DOCS-GOVERNANCE
+  - path: docs/planning/status/system-governance-file-index-20260501.md
+    classification: governs unit
+    documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
+    subjectUnit: SYS-DOCS-GOVERNANCE
+  - path: docs/planning/status/system-governance-planstore-file-ownership-20260501.md
+    classification: governs unit
+    documentOwnerUnit: SYS-PLANSTORE-DOCS-RISK
+    subjectUnit: SYS-PLANSTORE
   - path: docs/planning/status/system-governance-unit-index-20260501.md
     classification: governs unit
     documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT

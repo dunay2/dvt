@@ -103,9 +103,17 @@ function globToRegExp(pattern) {
 }
 
 function findOwnerMatches(filePath, units) {
-  return units.filter((unit) =>
-    (unit.owns || []).some((pattern) => globToRegExp(pattern).test(toPosix(filePath)))
-  );
+  const normalizedPath = toPosix(filePath);
+  return units.filter((unit) => {
+    const ownsFile = (unit.owns || []).some((pattern) =>
+      globToRegExp(pattern).test(normalizedPath)
+    );
+    if (!ownsFile) {
+      return false;
+    }
+
+    return !(unit.excludes || []).some((pattern) => globToRegExp(pattern).test(normalizedPath));
+  });
 }
 
 function validateUnitShape(unit, unitIds, errors) {
@@ -128,6 +136,14 @@ function validateUnitShape(unit, unitIds, errors) {
 
   if (unit.owns && !Array.isArray(unit.owns)) {
     errors.push(`Unit ${unit.id} owns must be an array.`);
+  }
+
+  if (unit.excludes && !Array.isArray(unit.excludes)) {
+    errors.push(`Unit ${unit.id} excludes must be an array.`);
+  }
+
+  if ((unit.excludes || []).length > 0 && (unit.owns || []).length === 0) {
+    errors.push(`Unit ${unit.id} excludes files but has no owns patterns.`);
   }
 
   if ((unit.owns || []).length > 0 && !allowedOwnerLevels.has(unit.level)) {
