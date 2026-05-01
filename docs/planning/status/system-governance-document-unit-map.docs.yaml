@@ -1,7 +1,7 @@
 version: 1
 generatedFrom: git ls-files docs
 unitManifest: docs/planning/status/system-governance-unit-index.units.yaml
-documentCount: 1430
+documentCount: 1431
 documents:
   - path: docs/CONTRIBUTING.md
     classification: governs unit
@@ -5319,6 +5319,10 @@ documents:
     subjectUnit: SYS-DOCS-GOVERNANCE
   - path: >-
       docs/planning/reviews/architecture-and-governance/20260429-we-hx-1-fowler-architecture-review.md
+    classification: tracks drift
+    documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
+    subjectUnit: SYS-DOCS-GOVERNANCE
+  - path: docs/planning/reviews/architecture-and-governance/20260501-tf-e2-m-c-fowler-hard-qa-review.md
     classification: tracks drift
     documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
     subjectUnit: SYS-DOCS-GOVERNANCE
