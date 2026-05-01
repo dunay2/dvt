@@ -9,10 +9,17 @@ export function resolveLiveFirstAuthoringWorkspaceSession(
   variant: 'transformation' | 'dbt' = 'transformation'
 ): E2eWorkspaceSession {
   const session = resolveLiveWorkspaceSession();
+  const configuredRunId = Cypress.env('firstAuthoringRunId');
+  const runId =
+    typeof configuredRunId === 'string' && configuredRunId.trim().length > 0
+      ? configuredRunId.trim()
+      : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+
+  Cypress.env('firstAuthoringRunId', runId);
 
   return {
     tenantId: session.tenantId,
-    projectId: `${session.projectId}-tf-e2-m-c-first-authoring-${variant}`,
+    projectId: `${session.projectId}-tf-e2-m-c-first-authoring-${variant}-${runId}`,
     environmentId: session.environmentId,
   };
 }

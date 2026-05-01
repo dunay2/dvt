@@ -779,6 +779,7 @@ symbols:
     fowlerSignals:
       - repeatable acceptance fixture boundary
       - no direct success seeding
+      - run-unique live proof scope
     architectureGuard: apps/web/src/app/views/canvas/canvasStartupAndDraftRecovery.architecture.test.ts
     cypressCoverage: apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts
     unitTests:
@@ -862,6 +863,8 @@ pnpm verify:prepush
 - Dragging the first card from the intended handle persists the dropped
   coordinate and restores it after reload.
 - Cypress proves the full flow against live protected runtime draft requests.
+- Cypress live proof uses a run-unique project scope that is stable within the
+  spec and does not fail when a prior run saved a draft in the same environment.
 - Architecture tests prove the semantic proof model, DDD ownership, and no
   local duplicate semantics.
 - `pnpm verify:prepush` passes without skipped checks or relaxed rules.

@@ -75,7 +75,7 @@ The implementation introduces one pure proof module.
 | `deriveCanvasFirstAuthoringLiveProof(input)`  | `canvasFirstAuthoringLiveProof.ts` | Pure decision function for current proof state.                        |
 | `isCanvasFirstAuthoringProofComplete(proof)`  | `canvasFirstAuthoringLiveProof.ts` | Boolean completion helper for tests and route diagnostics.             |
 | `assertCanvasFirstAuthoringInvariant(proof)`  | `canvasFirstAuthoringLiveProof.ts` | Test helper that fails on impossible transition combinations.          |
-| `resolveLiveFirstAuthoringWorkspaceSession()` | `canvasFirstAuthoring.ts`          | Cypress-only test-owned workspace session resolver.                    |
+| `resolveLiveFirstAuthoringWorkspaceSession()` | `canvasFirstAuthoring.ts`          | Cypress-only test-owned, run-unique workspace session resolver.        |
 | `assertLiveFirstAuthoringDraftScopeIsClean()` | `canvasFirstAuthoring.ts`          | Cypress-only preflight that fails dirty scopes without mutating them.  |
 
 The API is intentionally passive. It does not mutate graph state, call HTTP,
@@ -111,6 +111,8 @@ implementation plan and repo command-query catalog are updated first.
 
 - A clean startup with no authoritative draft must render the create-canvas
   entrypoint and no seeded project nodes.
+- Live Cypress proof scopes must be unique per Cypress run and stable inside a
+  spec so reruns do not fail because a previous run already saved a draft.
 - `CreateCanvas` is valid only from `needs_canvas` with writable draft posture.
 - `CreateCanvasNode` is valid only after the first-canvas draft save settles.
 - `SaveWorkspaceGraphDraft` remains the only graph-authoritative write.

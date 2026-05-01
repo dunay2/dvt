@@ -299,7 +299,6 @@ class FeatureMechanizationGitDiffReader {
       ['diff', '--name-only', '--diff-filter=ACMR', this.baseRef],
       ['diff', '--cached', '--name-only', '--diff-filter=ACMR'],
       ['diff', '--name-only', '--diff-filter=ACMR'],
-      ['ls-files', '--others', '--exclude-standard'],
     ];
 
     for (const command of nameOnlyCommands) {
@@ -328,14 +327,6 @@ class FeatureMechanizationGitDiffReader {
       const absolutePath = path.join(this.repoRootPath, filePath);
       if (fs.existsSync(absolutePath) && !addedLinesByPath[filePath]) {
         addedLinesByPath[filePath] = [];
-      }
-    }
-
-    for (const filePath of this.readGitLines(['ls-files', '--others', '--exclude-standard'])) {
-      const normalizedFilePath = toPosix(filePath);
-      const absolutePath = path.join(this.repoRootPath, normalizedFilePath);
-      if (fs.existsSync(absolutePath)) {
-        addedLinesByPath[normalizedFilePath] = fs.readFileSync(absolutePath, 'utf8').split(/\r?\n/);
       }
     }
 

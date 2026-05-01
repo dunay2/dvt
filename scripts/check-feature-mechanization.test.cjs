@@ -3,6 +3,7 @@ const assert = require('node:assert/strict');
 
 const {
   extractFeatureMechanizationManifests,
+  FeatureMechanizationGitDiffReader,
   validateFeatureImplementationManifests,
   validateFeatureMechanizationManifest,
   validateFeatureMechanizationDocs,
@@ -398,4 +399,36 @@ test('validateFeatureImplementationManifests allows Cypress draft GET preflight 
   );
 
   assert.deepEqual(result.errors, []);
+});
+
+test('FeatureMechanizationGitDiffReader excludes untracked scratch files from implementation diffs', () => {
+  const reader = new FeatureMechanizationGitDiffReader({
+    baseRef: 'origin/main',
+    repoRootPath: process.cwd(),
+  });
+  const readGitCalls = [];
+
+  reader.readGitLines = (args) => {
+    readGitCalls.push(args.join(' '));
+
+    if (args[0] === 'diff') {
+      return ['apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.ts'];
+    }
+
+    if (args[0] === 'ls-files') {
+      return ['scratch/local-note.md'];
+    }
+
+    return [];
+  };
+
+  const changedFiles = reader.readChangedFiles();
+
+  assert.deepEqual(changedFiles, [
+    'apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.ts',
+  ]);
+  assert.equal(
+    readGitCalls.some((call) => call.startsWith('ls-files --others')),
+    false
+  );
 });

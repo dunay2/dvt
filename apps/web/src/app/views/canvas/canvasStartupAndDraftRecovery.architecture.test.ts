@@ -350,6 +350,7 @@ describe('canvas startup and draft recovery architecture', () => {
 
     expect(cypressHelperSource).toContain('resolveLiveFirstAuthoringWorkspaceSession');
     expect(cypressHelperSource).toContain('assertLiveFirstAuthoringDraftScopeIsClean');
+    expect(cypressHelperSource).toContain("Cypress.env('firstAuthoringRunId'");
     expect(cypressHelperSource).toContain("method: 'GET'");
     expect(cypressHelperSource).toContain('workspace_graph_draft_not_found');
     expect(cypressSpecSource).toContain('canvas-node-drag-handle');
