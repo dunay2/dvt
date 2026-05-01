@@ -2,7 +2,7 @@
 title: Canvas Startup And Draft Recovery User Stories
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-04-29
+last_reviewed: 2026-05-01
 planning_type: architecture
 ---
 
@@ -29,7 +29,7 @@ instead of a startup card that hides the app.
 Acceptance criteria:
 
 - Given the route publishes `failed`, when the bootstrap gate evaluates route
-  readiness, then it may complete.
+  readiness, then it completes only when the failure is governed.
 - Given the route publishes `error`, when the bootstrap gate evaluates startup,
   then it keeps the startup failure posture.
 - Given the route can render a blocker, then the shell does not reveal unsafe
@@ -44,7 +44,7 @@ can still inspect recovery state.
 Acceptance criteria:
 
 - Health transport failures publish failed health detail.
-- The shell may complete when the active route publishes a governed failure or
+- The shell completes when the active route publishes a governed failure or
   blocker.
 - The route owns backend-readiness interaction safety.
 
@@ -170,6 +170,87 @@ Acceptance criteria:
 - Recovery HTML is rendered in `CanvasRecoveryBanner.templates.tsx`.
 - Recovery templates do not import route presentation state or copy catalogs.
 
+### US-CANVAS-DRAFT-007: distinguish missing session from forbidden scope
+
+As an operator, I want Canvas to distinguish an expired or missing session from
+a real forbidden workspace scope, so I know whether to refresh session state or
+change permissions.
+
+Acceptance criteria:
+
+- A protected draft read with capability reason `unauthenticated` renders a
+  session-required posture.
+- A protected draft read with capability reason `workspace_scope_denied` or
+  `tenant_mismatch` renders a forbidden-scope posture.
+- The toolbar does not render the synced label in either posture.
+- Graph edit, plan, and run actions are disabled in both postures.
+- The recovery action for session denial is not the same as the action for
+  forbidden scope.
+
+### US-CANVAS-DRAFT-008: keep read-only draft access inspectable
+
+As a reviewer with read-only draft access, I want the Canvas graph to stay
+inspectable while writes are blocked, so I can review graph content without
+being offered unsafe mutation controls.
+
+Acceptance criteria:
+
+- Draft capability mode `read_only` does not render a forbidden center-surface
+  error.
+- The viewport remains visible when a graph can be projected.
+- Graph edits, plan, and run start remain disabled for read-only posture.
+- The toolbar says read-only rather than synced.
+- Read-only copy comes from Canvas copy catalogs.
+
+### US-CANVAS-DRAFT-009: keep governed format failures separate from auth denial
+
+As an operator, I want stored draft format failures to render as contract
+problems, so I do not retry session or permission flows for corrupt or
+unsupported data.
+
+Acceptance criteria:
+
+- Unsupported schema, corrupt payload, and migration failure render format
+  failure posture.
+- Format failure does not render session-required or forbidden-scope copy.
+- Format failure disables unsafe mutations.
+- Format failure remains a center-surface error rather than a reload-only
+  recovery banner.
+
+### US-CANVAS-DRAFT-010: resolve toolbar, banner, permissions, and bootstrap from one posture
+
+As an architect, I want draft access posture to be resolved once, so route
+surfaces cannot drift into contradictory states.
+
+Acceptance criteria:
+
+- `canvasDraftAccessPostureModel.ts` owns the posture discriminator.
+- `canvasDraftAuthTransportPosture.ts` owns normalized final `401` transport
+  input and does not inspect API tokens or refresh configuration.
+- Toolbar label, recovery banner state, center-surface transport state, and
+  mutation gating consume `CanvasDraftAccessPosture`.
+- Runtime command admission for graph edit, draft save, plan, and run consumes
+  `CanvasDraftAccessPosture`.
+- Recovery action callbacks are resolved outside JSX templates.
+- Route components do not decode JWTs or call token refresh endpoints.
+- Architecture tests reject duplicated local `forbidden` and `read_only`
+  branches outside the posture model.
+
+### US-CANVAS-DRAFT-011: prove denial and read-only posture in Cypress
+
+As a product owner, I want browser tests for denied and read-only draft posture,
+so the user-visible product behavior is protected beyond unit tests.
+
+Acceptance criteria:
+
+- Cypress proves session-required draft denial hides synced copy and disables
+  unsafe actions.
+- Cypress proves forbidden-scope draft denial hides synced copy and gives a
+  scope-oriented recovery action.
+- Cypress proves read-only draft access keeps inspection visible and disables
+  mutation controls.
+- Cypress does not rely on uncontrolled token expiry timing.
+
 ### US-CANVAS-LAYOUT-001: persist drag-stop payload coordinates
 
 As an operator moving a Canvas card, I want the dropped coordinate to persist,
@@ -284,6 +365,11 @@ Acceptance criteria:
 | US-CANVAS-DRAFT-004        | Confirmed replacement command                   | `useCanvasPlaygroundTabStripPresenter.ts`                                      | `CanvasPlaygroundTabStrip.test.tsx`                                                       |
 | US-CANVAS-DRAFT-005        | CAS-protected replacement                       | `canvasCreateCanvasDocumentCommandPolicy.ts`                                   | `canvasCreateCanvasDocumentCommand.test.ts`                                               |
 | US-CANVAS-DRAFT-006        | Recovery banner surfaces                        | `canvasRecoveryBannerModel.ts`, `CanvasRecoveryBanner.templates.tsx`           | `canvasStartupAndDraftRecovery.architecture.test.ts`                                      |
+| US-CANVAS-DRAFT-007        | Session denial versus forbidden scope           | `canvasDraftAccessPostureModel.ts`                                             | `canvasDraftAccessPostureModel.test.ts`, Cypress draft access posture spec                |
+| US-CANVAS-DRAFT-008        | Read-only draft inspection posture              | `canvasDraftAccessPostureModel.ts`, `canvasRouteInteractionState.ts`           | `canvasDraftAccessPostureModel.test.ts`, read-only route tests, Cypress spec              |
+| US-CANVAS-DRAFT-009        | Format failures stay separate                   | `canvasDraftAccessPostureModel.ts`, `canvasDraftTransportErrorState.ts`        | `canvasDraftAccessPostureModel.test.ts`, architecture guard                               |
+| US-CANVAS-DRAFT-010        | Single posture controls route surfaces          | auth posture, route state, authoring state, toolbar, banner models             | auth posture test, authoring state test, architecture guard                               |
+| US-CANVAS-DRAFT-011        | Browser proof for denied and read-only posture  | Cypress draft access spec                                                      | Cypress draft access posture spec                                                         |
 | US-CANVAS-LAYOUT-001       | Drag-stop payload coordinates persist           | `useCanvasLayoutPersistence.ts`                                                | `useCanvasController.persistence.test.tsx`                                                |
 | US-CANVAS-LAYOUT-002       | Settled live drag positions persist             | `useCanvasLayoutPersistence.ts`, `useCanvasViewportGraphModel.ts`              | `useCanvasController.persistence.test.tsx`, `useCanvasViewportGraphModel.test.tsx`        |
 | US-CANVAS-LAYOUT-003       | Pending route state blocks layout writes        | `useCanvasLayoutPersistence.ts`                                                | `useCanvasController.persistence.test.tsx`                                                |
