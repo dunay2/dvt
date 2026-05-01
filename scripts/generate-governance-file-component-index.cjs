@@ -36,6 +36,9 @@ const generatedOutputPaths = [
 
 const generatedFileYamlRelativePath = toPosix(path.relative(repoRoot, fileYamlPath));
 const fingerprintBaselineRelativePath = toPosix(path.relative(repoRoot, fingerprintBaselinePath));
+const fingerprintImpactReportRelativePath = toPosix(
+  path.relative(repoRoot, fingerprintImpactReportPath)
+);
 
 function toPosix(filePath) {
   return filePath.replace(/\\/g, '/');
@@ -158,6 +161,10 @@ function readTrackedFileBytes(filePath) {
 
   if (filePath === generatedFileYamlRelativePath || filePath === fingerprintBaselineRelativePath) {
     return normalizeGeneratedIndexBytesForHash(contentBytes);
+  }
+
+  if (filePath === fingerprintImpactReportRelativePath) {
+    return Buffer.from('dvt:generated-fingerprint-impact-report:v1\n', 'utf8');
   }
 
   return contentBytes;

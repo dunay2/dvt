@@ -14,22 +14,22 @@ baseline changes.
 
 ## Totals
 
-| Change type | Files |
-| --- | ---: |
-| `content` | 0 |
-| `governance` | 0 |
-| `both` | 0 |
-| `added` | 0 |
-| `removed` | 0 |
+| Change type  | Files |
+| ------------ | ----: |
+| `content`    |     0 |
+| `governance` |     0 |
+| `both`       |     0 |
+| `added`      |     0 |
+| `removed`    |     0 |
 
 ## Impacted Components
 
-| Root unit | Domain unit | Component unit | Flags | Files |
-| --- | --- | --- | --- | ---: |
-| _None_ | _None_ | _None_ | _None_ | 0 |
+| Root unit | Domain unit | Component unit | Flags  | Files |
+| --------- | ----------- | -------------- | ------ | ----: |
+| _None_    | _None_      | _None_         | _None_ |     0 |
 
 ## File Changes
 
-| Type | File | File ID | Root | Domain | Component | Owning unit |
-| --- | --- | --- | --- | --- | --- | --- |
-| _None_ | _None_ | _None_ | _None_ | _None_ | _None_ | _None_ |
+| Type   | File   | File ID | Root   | Domain | Component | Owning unit |
+| ------ | ------ | ------- | ------ | ------ | --------- | ----------- |
+| _None_ | _None_ | _None_  | _None_ | _None_ | _None_    | _None_      |

@@ -54,6 +54,11 @@ When the baseline check detects drift, tooling MUST be able to render impacted
 root/domain/component units and classify changes as `content`, `governance`,
 `both`, `added`, or `removed`.
 
+Because that report is generated from the baseline comparison, its own content
+MUST NOT create recursive file-state drift. The file index hashes it through a
+stable generated-report marker while still retaining its path and governance
+classification in the file index.
+
 ### Identity
 
 Each tracked file receives a deterministic `fileId`.

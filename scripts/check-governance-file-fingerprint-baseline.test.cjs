@@ -210,7 +210,7 @@ test('buildImpactReport renders reviewable fingerprint drift by component', () =
   });
 
   assert.match(renderImpactMarkdown(impactReport), /## Totals/);
-  assert.match(renderImpactMarkdown(impactReport), /\| `content` \| 1 \|/);
+  assert.match(renderImpactMarkdown(impactReport), /\| `content`\s+\|\s+1 \|/);
   assert.match(renderImpactMarkdown(impactReport), /apps\/api\/src\/main\.ts/);
   assert.match(renderImpactMarkdown(impactReport), /`SYS-ENGINE-ROOT`/);
 });

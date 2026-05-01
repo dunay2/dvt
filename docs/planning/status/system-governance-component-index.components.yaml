@@ -898,7 +898,7 @@ components:
     isDrift: false
     isLegacy: false
     childrenRequired: true
-    fileCount: 111
+    fileCount: 109
     dddOwner: INFRA
     cqRails: none - repository metadata
     owns:

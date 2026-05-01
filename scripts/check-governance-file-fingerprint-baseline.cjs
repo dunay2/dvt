@@ -273,26 +273,62 @@ function buildImpactReport(report) {
   };
 }
 
-function renderImpactMarkdown(impactReport) {
-  const totalRows = Object.entries(impactReport.totals)
-    .map(([type, count]) => `| \`${type}\` | ${count} |`)
-    .join('\n');
-  const componentRows = impactReport.components
+function padTableCell(value, width, alignRight = false) {
+  const text = String(value);
+  return alignRight ? text.padStart(width, ' ') : text.padEnd(width, ' ');
+}
+
+function renderMarkdownTable(headers, rows, alignRightColumns = new Set()) {
+  const allRows = [headers, ...rows];
+  const widths = headers.map((_, index) =>
+    Math.max(...allRows.map((row) => String(row[index] || '').length))
+  );
+  const separator = headers.map((_, index) => {
+    const width = Math.max(widths[index], 3);
+    return alignRightColumns.has(index) ? `${'-'.repeat(width - 1)}:` : '-'.repeat(width);
+  });
+
+  return [headers, separator, ...rows]
     .map(
-      (component) =>
-        `| \`${component.rootUnit}\` | \`${component.domainUnit}\` | \`${component.componentUnit}\` | ${
-          component.ownerFlags.map((flag) => `\`${flag}\``).join(', ') || '_None_'
-        } | ${component.changes.length} |`
+      (row, rowIndex) =>
+        `| ${row
+          .map((cell, index) =>
+            padTableCell(cell, widths[index], rowIndex !== 1 && alignRightColumns.has(index))
+          )
+          .join(' | ')} |`
     )
     .join('\n');
-  const changeRows = impactReport.components
-    .flatMap((component) =>
-      component.changes.map(
-        (change) =>
-          `| \`${change.changeType}\` | \`${change.path}\` | \`${change.fileId}\` | \`${component.rootUnit}\` | \`${component.domainUnit}\` | \`${component.componentUnit}\` | \`${change.owningUnit}\` |`
-      )
-    )
-    .join('\n');
+}
+
+function renderImpactMarkdown(impactReport) {
+  const totalRows = Object.entries(impactReport.totals).map(([type, count]) => [
+    `\`${type}\``,
+    String(count),
+  ]);
+  const componentRows =
+    impactReport.components.length > 0
+      ? impactReport.components.map((component) => [
+          `\`${component.rootUnit}\``,
+          `\`${component.domainUnit}\``,
+          `\`${component.componentUnit}\``,
+          component.ownerFlags.map((flag) => `\`${flag}\``).join(', ') || '_None_',
+          String(component.changes.length),
+        ])
+      : [['_None_', '_None_', '_None_', '_None_', '0']];
+  const changeRows =
+    impactReport.components.length > 0
+      ? impactReport.components.flatMap((component) =>
+          component.changes.map((change) => [
+            `\`${change.changeType}\``,
+            `\`${change.path}\``,
+            `\`${change.fileId}\``,
+            `\`${component.rootUnit}\``,
+            `\`${component.domainUnit}\``,
+            `\`${component.componentUnit}\``,
+            `\`${change.owningUnit}\``,
+          ])
+        )
+      : [['_None_', '_None_', '_None_', '_None_', '_None_', '_None_', '_None_']];
 
   return `---
 title: System Governance File Fingerprint Impact
@@ -310,21 +346,22 @@ baseline changes.
 
 ## Totals
 
-| Change type | Files |
-| --- | ---: |
-${totalRows}
+${renderMarkdownTable(['Change type', 'Files'], totalRows, new Set([1]))}
 
 ## Impacted Components
 
-| Root unit | Domain unit | Component unit | Flags | Files |
-| --- | --- | --- | --- | ---: |
-${componentRows || '| _None_ | _None_ | _None_ | _None_ | 0 |'}
+${renderMarkdownTable(
+  ['Root unit', 'Domain unit', 'Component unit', 'Flags', 'Files'],
+  componentRows,
+  new Set([4])
+)}
 
 ## File Changes
 
-| Type | File | File ID | Root | Domain | Component | Owning unit |
-| --- | --- | --- | --- | --- | --- | --- |
-${changeRows || '| _None_ | _None_ | _None_ | _None_ | _None_ | _None_ | _None_ |'}
+${renderMarkdownTable(
+  ['Type', 'File', 'File ID', 'Root', 'Domain', 'Component', 'Owning unit'],
+  changeRows
+)}
 `;
 }
 
