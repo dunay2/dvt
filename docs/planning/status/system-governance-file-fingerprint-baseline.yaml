@@ -35447,9 +35447,9 @@ files:
     owningUnit: SYS-CI-GOVERNANCE-ROOT
   - fileId: F-175EA08EDEE6
     path: scripts/check-governance-file-fingerprint-baseline.cjs
-    contentHash: 399c6a566c36dfe5032846aae154fda75524aab9eb25b54fcefbc7f3015c2987
+    contentHash: 343effda090132226a30fb0eb605ce47664ece4b346644955808703c938fdeac
     governanceHash: 3286d185b83c9c6dc1c5ccc7196e85d0020fdfcd5fad0eaeb783775bb31d71c2
-    stateFingerprint: 1fd4317367c398104b33056a3a4fe88c3c4d04269305af9d0f7419092e600f58
+    stateFingerprint: 70aa546de22faed1cac1e8f91fc9076154af4f650be3838cf459db0511c01715
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-CI-GOVERNANCE-ROOT
