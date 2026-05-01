@@ -20,7 +20,7 @@ export function selectCanvasClosure(nodeNames: string[]): void {
   });
 
   for (const nodeName of nodeNames) {
-    cy.contains('.react-flow__node', nodeName).click({ force: true });
+    cy.contains('.react-flow__node', nodeName).click({ force: true, shiftKey: true });
   }
 
   cy.get('body').trigger('keyup', {

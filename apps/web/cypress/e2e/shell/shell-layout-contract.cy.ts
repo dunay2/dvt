@@ -89,7 +89,9 @@ describe('Shell layout contract', () => {
   it('keeps the footer navigation pinned to the bottom of the full-height rail', () => {
     visitPluginsWithUiLayout();
 
-    cy.contains('Plugins').should('be.visible');
+    cy.get('[data-slot="app-shell-outlet"]')
+      .contains(/^Plugins$/)
+      .should('be.visible');
 
     cy.window().then((window) => {
       const body = window.document.querySelector('[data-slot="app-shell-body"]');
@@ -134,6 +136,8 @@ describe('Shell layout contract', () => {
     cy.get('[data-slot="left-navigation-rail"]').should('not.exist');
     cy.get('[data-slot="app-shell-main"]').should('exist');
     cy.get('[data-slot="app-shell-outlet"]').should('exist');
-    cy.contains('Plugins').should('be.visible');
+    cy.get('[data-slot="app-shell-outlet"]')
+      .contains(/^Plugins$/)
+      .should('be.visible');
   });
 });

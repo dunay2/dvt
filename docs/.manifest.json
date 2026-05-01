@@ -1,8 +1,8 @@
 {
   "summary": {
     "adrs": 47,
-    "evidenceDocs": 117,
-    "normativeDocs": 314,
+    "evidenceDocs": 115,
+    "normativeDocs": 341,
     "statusDocs": 58
   },
   "adrs": [
@@ -1408,24 +1408,6 @@
       "breaking": null
     },
     {
-      "path": "docs/evidence/ED-20260414-tf-c3-dbt-plugin-runtime-projection.md",
-      "filename": "ED-20260414-tf-c3-dbt-plugin-runtime-projection.md",
-      "title": "Project dbt plugin runtime seam at the Temporal adapter boundary",
-      "status": "Accepted",
-      "date": "2026-04-14",
-      "arc_level": "ARC-2",
-      "breaking": null
-    },
-    {
-      "path": "docs/evidence/ED-20260414-tf-c3-production-temporal-worker-dbt-host.md",
-      "filename": "ED-20260414-tf-c3-production-temporal-worker-dbt-host.md",
-      "title": "Compose production Temporal worker and DBT CLI host under TF-C3",
-      "status": "Accepted",
-      "date": "2026-04-14",
-      "arc_level": "ARC-2",
-      "breaking": null
-    },
-    {
       "path": "docs/evidence/ED-20260415-ar-c4-runtime-circuit-breaker-and-integration-hardening.md",
       "filename": "ED-20260415-ar-c4-runtime-circuit-breaker-and-integration-hardening.md",
       "title": "AR-C4 runtime circuit breaker and Temporal integration hardening",
@@ -1653,6 +1635,10 @@
       "filename": "code_completion_assessment_2026-03-06.md"
     },
     {
+      "path": "docs/architecture/command-query-rail-governance.md",
+      "filename": "command-query-rail-governance.md"
+    },
+    {
       "path": "docs/architecture/component-map.md",
       "filename": "component-map.md"
     },
@@ -1737,8 +1723,20 @@
       "filename": "index.md"
     },
     {
-      "path": "docs/architecture/components/engine/adapters/temporal/TemporalAdapter.spec.md",
-      "filename": "TemporalAdapter.spec.md"
+      "path": "docs/architecture/components/engine/adapters/temporal/temporal-adapter-spec.md",
+      "filename": "temporal-adapter-spec.md"
+    },
+    {
+      "path": "docs/architecture/components/engine/adapters/temporal/temporal-dbt-worker-plugin-profile.md",
+      "filename": "temporal-dbt-worker-plugin-profile.md"
+    },
+    {
+      "path": "docs/architecture/components/engine/adapters/temporal/temporal-planref-workflow-boundary.md",
+      "filename": "temporal-planref-workflow-boundary.md"
+    },
+    {
+      "path": "docs/architecture/components/engine/adapters/temporal/temporal-step-plugin-profile.md",
+      "filename": "temporal-step-plugin-profile.md"
     },
     {
       "path": "docs/architecture/components/engine/architecture/c4-engine.md",
@@ -1751,6 +1749,34 @@
     {
       "path": "docs/architecture/components/engine/architecture/index.md",
       "filename": "index.md"
+    },
+    {
+      "path": "docs/architecture/components/engine/architecture/run-execution-context-admission-policy-component.md",
+      "filename": "run-execution-context-admission-policy-component.md"
+    },
+    {
+      "path": "docs/architecture/components/engine/architecture/start-run-admission-component.md",
+      "filename": "start-run-admission-component.md"
+    },
+    {
+      "path": "docs/architecture/components/engine/architecture/start-run-admission-user-stories.md",
+      "filename": "start-run-admission-user-stories.md"
+    },
+    {
+      "path": "docs/architecture/components/engine/architecture/workflow-engine-boundary-ownership-component.md",
+      "filename": "workflow-engine-boundary-ownership-component.md"
+    },
+    {
+      "path": "docs/architecture/components/engine/architecture/workflow-engine-boundary-ownership-user-stories.md",
+      "filename": "workflow-engine-boundary-ownership-user-stories.md"
+    },
+    {
+      "path": "docs/architecture/components/engine/architecture/workflow-engine-facade-use-cases-component.md",
+      "filename": "workflow-engine-facade-use-cases-component.md"
+    },
+    {
+      "path": "docs/architecture/components/engine/architecture/workflow-engine-facade-use-cases-user-stories.md",
+      "filename": "workflow-engine-facade-use-cases-user-stories.md"
     },
     {
       "path": "docs/architecture/components/engine/architecture/workflow-engine-subsystem-context.md",
@@ -1843,6 +1869,18 @@
     {
       "path": "docs/architecture/components/engine/contracts/index.md",
       "filename": "index.md"
+    },
+    {
+      "path": "docs/architecture/components/engine/contracts/plan-admission-matrix.md",
+      "filename": "plan-admission-matrix.md"
+    },
+    {
+      "path": "docs/architecture/components/engine/contracts/plan-admission-user-stories.md",
+      "filename": "plan-admission-user-stories.md"
+    },
+    {
+      "path": "docs/architecture/components/engine/contracts/plan-verifier-admission.md",
+      "filename": "plan-verifier-admission.md"
     },
     {
       "path": "docs/architecture/components/engine/contracts/README.md",
@@ -1993,6 +2031,14 @@
       "filename": "index.md"
     },
     {
+      "path": "docs/architecture/components/lineage-worker/compiled-code-ref-lineage-extraction-component.md",
+      "filename": "compiled-code-ref-lineage-extraction-component.md"
+    },
+    {
+      "path": "docs/architecture/components/lineage-worker/compiled-code-ref-lineage-extraction-user-stories.md",
+      "filename": "compiled-code-ref-lineage-extraction-user-stories.md"
+    },
+    {
       "path": "docs/architecture/components/lineage-worker/index.md",
       "filename": "index.md"
     },
@@ -2041,6 +2087,10 @@
       "filename": "planner-functional.md"
     },
     {
+      "path": "docs/architecture/components/planner/planner-private-behavior-ports-component.md",
+      "filename": "planner-private-behavior-ports-component.md"
+    },
+    {
       "path": "docs/architecture/components/planner/planner-sequence.md",
       "filename": "planner-sequence.md"
     },
@@ -2051,6 +2101,18 @@
     {
       "path": "docs/architecture/components/projector-worker/index.md",
       "filename": "index.md"
+    },
+    {
+      "path": "docs/architecture/components/web/admin-route-position-component.md",
+      "filename": "admin-route-position-component.md"
+    },
+    {
+      "path": "docs/architecture/components/web/api-client-auth-component.md",
+      "filename": "api-client-auth-component.md"
+    },
+    {
+      "path": "docs/architecture/components/web/app-bootstrap-screen-component.md",
+      "filename": "app-bootstrap-screen-component.md"
     },
     {
       "path": "docs/architecture/components/web/appshell/app-shell.md",
@@ -2141,8 +2203,20 @@
       "filename": "canvas-inspector-authoring-component.md"
     },
     {
+      "path": "docs/architecture/components/web/graph/canvas-layout-persistence-component.md",
+      "filename": "canvas-layout-persistence-component.md"
+    },
+    {
       "path": "docs/architecture/components/web/graph/canvas-playground-host-component.md",
       "filename": "canvas-playground-host-component.md"
+    },
+    {
+      "path": "docs/architecture/components/web/graph/canvas-ready-node-authoring-entrypoint-component.md",
+      "filename": "canvas-ready-node-authoring-entrypoint-component.md"
+    },
+    {
+      "path": "docs/architecture/components/web/graph/canvas-ready-node-authoring-user-stories.md",
+      "filename": "canvas-ready-node-authoring-user-stories.md"
     },
     {
       "path": "docs/architecture/components/web/graph/canvas-route-composition-component.md",
@@ -2155,6 +2229,14 @@
     {
       "path": "docs/architecture/components/web/graph/canvas-shell-component.md",
       "filename": "canvas-shell-component.md"
+    },
+    {
+      "path": "docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-component.md",
+      "filename": "canvas-startup-and-draft-recovery-component.md"
+    },
+    {
+      "path": "docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-user-stories.md",
+      "filename": "canvas-startup-and-draft-recovery-user-stories.md"
     },
     {
       "path": "docs/architecture/components/web/graph/graph-canvas-runtime-model.md",
@@ -2179,6 +2261,14 @@
     {
       "path": "docs/architecture/components/web/graph/index.md",
       "filename": "index.md"
+    },
+    {
+      "path": "docs/architecture/components/web/graph/workspace-graph-draft-test-fixture-boundary-component.md",
+      "filename": "workspace-graph-draft-test-fixture-boundary-component.md"
+    },
+    {
+      "path": "docs/architecture/components/web/graph/workspace-graph-draft-test-fixture-boundary-user-stories.md",
+      "filename": "workspace-graph-draft-test-fixture-boundary-user-stories.md"
     },
     {
       "path": "docs/architecture/components/web/iconography-and-design-tokens-contract.md",
