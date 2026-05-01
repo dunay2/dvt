@@ -50,6 +50,7 @@ operations surface.
 - [DVT Domain Map](domain-map.md)
 - [DVT System Architecture](system-overview.md)
 - [Execution Domain](domain-execution.md)
+- [Fowler Opportunity Planning Governance](fowler-opportunity-planning-governance.md)
 - [Infra Domain](domain-infra.md)
 - [Planning Domain](domain-planning.md)
 - [Shared Boundary Domain](domain-shared.md)

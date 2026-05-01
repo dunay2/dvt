@@ -20,6 +20,10 @@ Canonical reference for DVT architectural principles, bounded contexts, and top-
   as one command or query before implementation; routes, workers, plugins,
   adapters, and UI actions implement that rail instead of inventing local
   behavior names.
+- Fowler opportunity planning: non-trivial behavior, boundary, workflow,
+  adapter, route, worker, plugin, or architecture-test changes must identify
+  root opportunities, apply a Fowler/DDD/hexagonal model, and name required
+  tests before implementation.
 - One runtime truth per boundary: command admission and plan compilation must
   reuse the same supported-adapter truth instead of keeping parallel allowlists.
 - Boundary enforcement must be mechanical where the repo can enforce it: `@dvt/engine`
@@ -112,6 +116,8 @@ Engine --> ObservabilityPort["IObservability"]
 - ADRs: [`docs/adr/`](../adr/index.md)
 - Command/query rail governance:
   [`docs/architecture/command-query-rail-governance.md`](./command-query-rail-governance.md)
+- Fowler opportunity planning governance:
+  [`docs/architecture/fowler-opportunity-planning-governance.md`](./fowler-opportunity-planning-governance.md)
 - Engine architecture: [`docs/architecture/components/engine/`](./components/engine/index.md)
 - Delivery status: [`docs/architecture/system-delivery-status.md`](./system-delivery-status.md)
 - Fowler follow-up review:
