@@ -65,7 +65,7 @@ describe('Temporal PlanRef workflow component semantics', () => {
       const source = readWorkflowSource(fileName);
 
       expect(source).toMatch(
-        new RegExp(`^/\\*\\*[\\s\\S]*\\* @ownedConcern ${escapeRegExp(concern)}[\\s\\S]*\\*/`)
+        new RegExp(String.raw`^/\*\*[\s\S]*\* @ownedConcern ${escapeRegExp(concern)}[\s\S]*\*/`)
       );
     }
   });
@@ -198,7 +198,9 @@ function readWorkflowSource(fileName: string): string {
 }
 
 function extractInterface(source: string, interfaceName: string): string {
-  const match = new RegExp(`export interface ${interfaceName} \\{[\\s\\S]*?\\n\\}`).exec(source);
+  const match = new RegExp(String.raw`export interface ${interfaceName} \{[\s\S]*?\n\}`).exec(
+    source
+  );
   if (match === null) {
     throw new Error(`Missing interface ${interfaceName}`);
   }
@@ -207,5 +209,5 @@ function extractInterface(source: string, interfaceName: string): string {
 }
 
 function escapeRegExp(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return value.replaceAll(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
 }

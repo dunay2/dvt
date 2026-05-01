@@ -8,29 +8,29 @@
  *     and an optional builder override, allowing unit tests to inject fakes.
  */
 import {
-  buildWorkflowEngineFacade,
+  buildRunControlService,
   buildRunHealthService,
   buildRunRecoveryService,
-  buildRunControlService,
   buildRunStatusQueryService,
+  buildWorkflowEngineFacade,
   IdempotencyKeyBuilder,
   PlanRefPolicy,
   RunAccessPolicy,
   RunEnrichmentService,
+  SnapshotProjector,
   StartRunAdmissionGuard,
   StartRunApplicationService,
-  SnapshotProjector,
   type EngineRunRef,
   type IAuthorizer,
   type IClock,
   type IOutboxRateLimiter,
   type IPlanFetcher,
   type IProviderAdapter,
+  type IRunAccessPolicy,
   type IRunEnrichmentService,
-  type IRunHealthService,
   type IRunExecutionContextBindingPolicy,
   type IRunExecutionContextResolver,
-  type IRunAccessPolicy,
+  type IRunHealthService,
   type IRunStateStoreRead,
   type IRunStateStoreWrite,
   type IStartRunIntentStore,
@@ -123,14 +123,14 @@ export function buildWorkflowEngine(config: EngineConfig): BuiltWorkflowEngineRu
       policy,
       stateStoreRead: config.persistence.stateStoreRead,
       adapters: config.runtime.adapters,
-      ...(config.persistence.runExecutionContextResolver !== undefined
-        ? { runExecutionContextResolver: config.persistence.runExecutionContextResolver }
-        : {}),
-      ...(config.persistence.runExecutionContextBindingPolicy !== undefined
-        ? {
+      ...(config.persistence.runExecutionContextResolver === undefined
+        ? {}
+        : { runExecutionContextResolver: config.persistence.runExecutionContextResolver }),
+      ...(config.persistence.runExecutionContextBindingPolicy === undefined
+        ? {}
+        : {
             runExecutionContextBindingPolicy: config.persistence.runExecutionContextBindingPolicy,
-          }
-        : {}),
+          }),
     }),
     stateStoreRead: config.persistence.stateStoreRead,
     stateStoreWrite: config.persistence.stateStoreWrite,
@@ -139,7 +139,7 @@ export function buildWorkflowEngine(config: EngineConfig): BuiltWorkflowEngineRu
     intentStore: config.persistence.intentStore,
     planFetcher: config.persistence.planFetcher,
     observability: config.infrastructure.observability,
-    ...(config.runtime.timeouts !== undefined ? { timeouts: config.runtime.timeouts } : {}),
+    ...(config.runtime.timeouts === undefined ? {} : { timeouts: config.runtime.timeouts }),
   });
   const runControlService = buildRunControlService({
     stateStoreRead: config.persistence.stateStoreRead,
@@ -148,7 +148,7 @@ export function buildWorkflowEngine(config: EngineConfig): BuiltWorkflowEngineRu
     policy,
     adapters: config.runtime.adapters,
     observability: config.infrastructure.observability,
-    ...(config.runtime.timeouts !== undefined ? { timeouts: config.runtime.timeouts } : {}),
+    ...(config.runtime.timeouts === undefined ? {} : { timeouts: config.runtime.timeouts }),
     clock: config.infrastructure.clock,
   });
   const runStatusQueryService = buildRunStatusQueryService({
@@ -168,14 +168,14 @@ export function buildWorkflowEngine(config: EngineConfig): BuiltWorkflowEngineRu
     observability: config.infrastructure.observability,
     clock: config.infrastructure.clock,
     startRunApplicationService,
-    ...(config.persistence.runExecutionContextResolver !== undefined
-      ? { runExecutionContextResolver: config.persistence.runExecutionContextResolver }
-      : {}),
-    ...(config.persistence.runExecutionContextBindingPolicy !== undefined
-      ? {
+    ...(config.persistence.runExecutionContextResolver === undefined
+      ? {}
+      : { runExecutionContextResolver: config.persistence.runExecutionContextResolver }),
+    ...(config.persistence.runExecutionContextBindingPolicy === undefined
+      ? {}
+      : {
           runExecutionContextBindingPolicy: config.persistence.runExecutionContextBindingPolicy,
-        }
-      : {}),
+        }),
   });
   const runHealthService = buildRunHealthService({
     stateStoreRead: config.persistence.stateStoreRead,
@@ -201,7 +201,7 @@ export function buildWorkflowEngine(config: EngineConfig): BuiltWorkflowEngineRu
       policy,
       adapters: config.runtime.adapters,
       observability: config.infrastructure.observability,
-      ...(config.runtime.timeouts !== undefined ? { timeouts: config.runtime.timeouts } : {}),
+      ...(config.runtime.timeouts === undefined ? {} : { timeouts: config.runtime.timeouts }),
     }),
   };
 }
