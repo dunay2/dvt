@@ -1,8 +1,8 @@
 {
   "summary": {
-    "adrs": 47,
+    "adrs": 48,
     "evidenceDocs": 115,
-    "normativeDocs": 341,
+    "normativeDocs": 343,
     "statusDocs": 58
   },
   "adrs": [
@@ -520,6 +520,17 @@
       "status": "Accepted",
       "date": "2026-04-23",
       "owners": "Architecture / API / Security",
+      "archived": false,
+      "draft": false
+    },
+    {
+      "path": "docs/adr/adr-0052-planref-continuation-safety.md",
+      "filename": "adr-0052-planref-continuation-safety.md",
+      "num": 52,
+      "id": "ADR-0052",
+      "status": "Accepted",
+      "date": "2026-04-30",
+      "owners": "packages/@dvt/contracts, packages/@dvt/engine, packages/@dvt/adapter-temporal",
       "archived": false,
       "draft": false
     }
@@ -1729,6 +1740,14 @@
     {
       "path": "docs/architecture/components/engine/adapters/temporal/temporal-dbt-worker-plugin-profile.md",
       "filename": "temporal-dbt-worker-plugin-profile.md"
+    },
+    {
+      "path": "docs/architecture/components/engine/adapters/temporal/temporal-planref-capacity-sla.md",
+      "filename": "temporal-planref-capacity-sla.md"
+    },
+    {
+      "path": "docs/architecture/components/engine/adapters/temporal/temporal-planref-workflow-boundary-user-stories.md",
+      "filename": "temporal-planref-workflow-boundary-user-stories.md"
     },
     {
       "path": "docs/architecture/components/engine/adapters/temporal/temporal-planref-workflow-boundary.md",
