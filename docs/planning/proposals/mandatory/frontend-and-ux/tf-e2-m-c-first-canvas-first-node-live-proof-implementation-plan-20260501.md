@@ -855,6 +855,60 @@ symbols:
     cypressCoverage: apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts
     unitTests:
       - apps/web/src/app/views/canvas/useCanvasController.core.test.tsx
+  - name: CanvasControllerStateDefaults
+    path: apps/web/src/app/views/Canvas.test.controller.defaults.ts
+    dddOwner: Canvas route presentation model
+    cqRails:
+      - CreateCanvas
+      - CreateCanvasNode
+      - PersistCanvasLayout
+    fowlerSignals:
+      - named controller test fixture boundary
+      - no ad hoc shell default duplication
+    architectureGuard: apps/web/src/app/views/canvas/canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts
+    unitTests:
+      - apps/web/src/app/views/canvas/CanvasShell.test.tsx
+  - name: graphChange
+    path: apps/web/src/app/views/canvas/canvasMutationHandlerContractBuilders.ts
+    dddOwner: CanvasAuthoringGraph aggregate
+    cqRails:
+      - CreateCanvasNode
+      - PersistCanvasLayout
+    fowlerSignals:
+      - sub-handler contract builder
+      - SRP split of broad mutation seam
+    architectureGuard: apps/web/src/app/views/canvas/useCanvasNodeChangeHandlers.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts
+    unitTests:
+      - apps/web/src/app/views/canvas/useCanvasNodeChangeHandlers.test.tsx
+  - name: sourceImport
+    path: apps/web/src/app/views/canvas/canvasMutationHandlerContractBuilders.ts
+    dddOwner: CanvasAuthoringGraph aggregate
+    cqRails:
+      - CreateCanvasNode
+    fowlerSignals:
+      - sub-handler contract builder
+      - source import seam isolation
+    architectureGuard: apps/web/src/app/views/canvas/useCanvasNodeChangeHandlers.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts
+    unitTests:
+      - apps/web/src/app/views/canvas/useCanvasNodeChangeHandlers.test.tsx
+  - name: deriveCanvasRouteViewState
+    path: apps/web/src/app/views/canvas/canvasRouteViewState.ts
+    dddOwner: Canvas route presentation model
+    cqRails:
+      - GetWorkspaceGraphDraft
+      - CreateCanvas
+      - CreateCanvasNode
+      - GetCanvasLayout
+    fowlerSignals:
+      - presentation model composition
+      - shell state anti-duplication
+    architectureGuard: apps/web/src/app/views/canvas/canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts
+    unitTests:
+      - apps/web/src/app/views/canvas/CanvasShell.test.tsx
   - name: CanvasInteractionPersistedState
     path: apps/web/src/app/stores/canvasInteractionStore.ts
     dddOwner: CanvasLayoutProjection value object
@@ -1328,6 +1382,54 @@ symbols:
       - one live walking skeleton runner
       - protected-runtime acceptance proof
       - no draft endpoint intercepts
+    architectureGuard: apps/web/src/app/views/canvas/canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts
+    unitTests:
+      - apps/web/src/app/views/canvas/canvasStartupAndDraftRecovery.architecture.test.ts
+  - name: http
+    path: scripts/run-canvas-first-authoring-live-proof.cjs
+    dddOwner: Repository protected-runtime browser proof runner
+    cqRails:
+      - RunCanvasFirstAuthoringLiveProof
+    fowlerSignals:
+      - local runtime health probe dependency
+      - explicit runner infrastructure import
+    architectureGuard: apps/web/src/app/views/canvas/canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts
+    unitTests:
+      - apps/web/src/app/views/canvas/canvasStartupAndDraftRecovery.architecture.test.ts
+  - name: https
+    path: scripts/run-canvas-first-authoring-live-proof.cjs
+    dddOwner: Repository protected-runtime browser proof runner
+    cqRails:
+      - RunCanvasFirstAuthoringLiveProof
+    fowlerSignals:
+      - local runtime health probe dependency
+      - explicit runner infrastructure import
+    architectureGuard: apps/web/src/app/views/canvas/canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts
+    unitTests:
+      - apps/web/src/app/views/canvas/canvasStartupAndDraftRecovery.architecture.test.ts
+  - name: path
+    path: scripts/run-canvas-first-authoring-live-proof.cjs
+    dddOwner: Repository protected-runtime browser proof runner
+    cqRails:
+      - RunCanvasFirstAuthoringLiveProof
+    fowlerSignals:
+      - deterministic script path resolution
+      - explicit runner infrastructure import
+    architectureGuard: apps/web/src/app/views/canvas/canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts
+    unitTests:
+      - apps/web/src/app/views/canvas/canvasStartupAndDraftRecovery.architecture.test.ts
+  - name: readline
+    path: scripts/run-canvas-first-authoring-live-proof.cjs
+    dddOwner: Repository protected-runtime browser proof runner
+    cqRails:
+      - RunCanvasFirstAuthoringLiveProof
+    fowlerSignals:
+      - prefixed process output boundary
+      - explicit runner infrastructure import
     architectureGuard: apps/web/src/app/views/canvas/canvasStartupAndDraftRecovery.architecture.test.ts
     cypressCoverage: apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts
     unitTests:
