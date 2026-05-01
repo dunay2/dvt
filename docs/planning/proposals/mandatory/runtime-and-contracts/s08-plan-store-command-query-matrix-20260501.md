@@ -32,6 +32,71 @@ matrix is drift until this document is updated and reviewed.
 - `docs/architecture/components/engine/security/SECURITY_INVARIANTS.v1.md`
 - `docs/architecture/components/engine/security/TENANT_ISOLATION_TESTS.v1.md`
 
+## Think-First Analysis
+
+### Problem Summary
+
+S08 cannot start from code changes because the current runtime graph exposes
+multiple plan-store meanings under unscoped method names. `storePlan`,
+`markValid`, `markInvalid`, `fetch(planRef)`, `fetchForValidation(planRef)`,
+`getPlanRecord(planId)`, and related repository helpers still make global
+`plan_id` or `plan_uri` look like product authority.
+
+The system-operations inventory confirms the same active drift cluster across
+contracts, artifacts ports, adapter-postgres, API composition, engine fetch,
+Temporal worker resources, and route/use-case handoff. That inventory was read
+as a current-state input for this matrix. The tracked repository governance
+remains the authority for implementation.
+
+### Root Cause
+
+The root cause is not a missing column alone. The storage model collapsed two
+different identities:
+
+- a tenant-neutral immutable artifact identity derived from content hash;
+- a tenant-owned plan-record identity that authorizes product behavior inside a
+  `(tenantId, projectId, environmentId)` scope.
+
+That collapse let lifecycle facade methods and unscoped fetch/query ports
+survive as if `PlanRef` or `plan_id` proved ownership. They do not. They prove
+only artifact identity and integrity.
+
+### Constraints And Invariants
+
+- ADR-0031 requires explicit tenant isolation at adapter boundaries.
+- ADR-0034 requires bounded-context ownership and forbids convenience boundary
+  shortcuts.
+- ADR-0041 requires explicit state models instead of implicit lifecycle state.
+- ADR-0042 keeps executable plan identity content-derived.
+- ADR-0043 places plan-store behavior ports in `@dvt/artifacts`, while engine
+  fetch remains engine-owned.
+- Command/query rail governance requires every externally observable behavior
+  to map to one DDD-owned command or query before implementation.
+- Fowler planning governance requires implementation surfaces, negative tests,
+  and out-of-scope items to be declared before code changes.
+
+### Options Considered
+
+| Option                                                | Result   | Reason                                                                                                                                                 |
+| ----------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Scope-leading artifact table only                     | Rejected | It would make artifact bytes tenant-owned and lose the intentional Model B dedupe boundary.                                                            |
+| Keep global `plan_id` and add policy checks around it | Rejected | It leaves authorization dependent on wrappers and lets legacy ports keep expressing global product reads.                                              |
+| Model B: tenant-neutral artifact plus scoped records  | Selected | It preserves content-addressed artifact reuse while making plan records, executability, admission, lineage, and dispatch materialization tenant-owned. |
+
+### Selected Option
+
+Use Model B and implement only the command/query catalog below. Any code path
+that cannot be expressed as one of these commands or queries is drift and must
+be removed or reclassified before implementation.
+
+### Out Of Scope For The First Implementation Slice
+
+- No frontend behavior.
+- No provider adapter semantics change.
+- No unrelated canonical hashing cleanup.
+- No retention or archive policy redesign beyond scoped plan-record archival.
+- No compatibility facade retained as runtime behavior.
+
 ## Scope Rule
 
 The allowed command/query set below is closed for the S08 tenancy slice.
@@ -76,6 +141,47 @@ Disallowed shapes:
 
 If a command or query cannot name its DDD owner, it is not approved for the S08
 tenancy slice.
+
+## Concrete Command And Query Catalog
+
+This catalog is the implementation authority. The shorter command/query matrix
+below is a summary view; implementation work must use the concrete names,
+inputs, outputs, allowed surfaces, and tests in this catalog.
+
+### Shared Value Objects
+
+| Value object           | Shape                                                            | Rule                                                                                          |
+| ---------------------- | ---------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `PlanStoreScope`       | `{ tenantId: string; projectId: string; environmentId: string }` | Required for every tenant-owned command and query. Empty fields are invalid.                  |
+| `ScopedPlanId`         | `PlanStoreScope + { planId: string }`                            | Identifies a tenant-owned plan record, not a tenant-neutral artifact.                         |
+| `ScopedPlanRef`        | `PlanStoreScope + { planRef: PlanRef }`                          | Authorizes materialization only after scoped record lookup succeeds.                          |
+| `PlanArtifactIdentity` | `{ artifactHash: string; planId: string }`                       | Tenant-neutral immutable artifact identity. It is never sufficient for product authorization. |
+
+### Commands
+
+| ID       | Concrete command             | Input                                                        | Output                                    | DDD owner                                                                           | Allowed implementation surfaces                                                                            | Required negative tests                                                                                                                            |
+| -------- | ---------------------------- | ------------------------------------------------------------ | ----------------------------------------- | ----------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `PS-C01` | `CreateStoredPlan`           | `PlanStoreScope + PlannerBuildResultV1`                      | `PlanRef` plus scoped plan-record receipt | Preview/start-run application service orchestrating `PlanRecord` aggregate creation | `@dvt/artifacts` write port, `@dvt/adapter-postgres` scoped write adapter, API preview/start-run use cases | Reject missing scope, missing plan ownership, ownership mismatch, artifact conflict, and legacy lifecycle call path.                               |
+| `PS-C02` | `CreatePlanRecord`           | `PlanRecord` with top-level scope tuple and artifact pointer | created receipt or duplicate rejection    | `PlanRecord` aggregate                                                              | `@dvt/contracts` record shape, `@dvt/artifacts` write port, adapter scoped repository                      | Reject unscoped payload, duplicate same scoped key, cross-scope lineage reference, and global `plan_id` collision assumptions.                     |
+| `PS-C03` | `RecordPlanExecutability`    | `PlanExecutabilityRecord` with scope tuple                   | upsert receipt                            | Plan executability domain service                                                   | Planner/API validation service, `@dvt/artifacts` write port, adapter scoped repository                     | Reject unscoped record, missing scoped plan record, lifecycle `markValid/markInvalid` fallback, and adapter state mismatch.                        |
+| `PS-C04` | `MarkPlanAdmitted`           | `PlanAdmissionLink` with scope tuple and run id              | admitted receipt                          | Runtime admission application service                                               | API start-run admission path, `@dvt/artifacts` write port, adapter scoped repository                       | Reject unscoped link, missing scoped plan record, missing executability, cross-tenant run/plan pair, and direct engine dispatch without admission. |
+| `PS-C05` | `MarkPlanSuperseded`         | `PlanStoreScope + { planId; supersededByPlanId }`            | supersession receipt                      | Plan lineage aggregate behavior                                                     | `@dvt/artifacts` write port and adapter scoped repository                                                  | Reject self-supersession, missing same-scope superseder, cross-scope supersession, archived superseder, and global lookup by `planId`.             |
+| `PS-C06` | `ArchivePlan`                | `PlanStoreScope + { planId; archivedAtIso }`                 | archive receipt                           | Plan archival aggregate behavior                                                    | `@dvt/artifacts` write port and adapter scoped repository                                                  | Reject missing same-scope record, cross-scope archive, invalid timestamp, and archive through unscoped port.                                       |
+| `PS-C07` | `RemoveLifecycleMarkValid`   | none                                                         | none                                      | Removal path owned by plan executability domain service                             | Contract exports, planner facade, API preview/start-run wiring, adapter facade                             | Architecture tests prove no runtime import/call of `markValid` remains.                                                                            |
+| `PS-C08` | `RemoveLifecycleMarkInvalid` | none                                                         | none                                      | Removal path owned by plan executability domain service                             | Contract exports, planner facade, API preview/start-run wiring, adapter facade                             | Architecture tests prove no runtime import/call of `markInvalid` remains.                                                                          |
+
+### Queries
+
+| ID       | Concrete query                   | Input                                                                      | Output                                          | DDD owner                                               | Allowed implementation surfaces                                                  | Required negative tests                                                                                                                |
+| -------- | -------------------------------- | -------------------------------------------------------------------------- | ----------------------------------------------- | ------------------------------------------------------- | -------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `PS-Q01` | `GetPlanRecord`                  | `ScopedPlanId`                                                             | `PlanRecord` or scoped miss                     | Plan record read model                                  | `@dvt/artifacts` read port, adapter scoped repository, API run-status enrichment | Cross-tenant miss is generic; unscoped `planId` query is impossible at port boundary.                                                  |
+| `PS-Q02` | `GetPlanRecordByRef`             | `ScopedPlanRef`                                                            | `PlanRecord` or scoped miss                     | Plan record read model                                  | `@dvt/artifacts` read port, adapter scoped repository                            | Reject mismatched `sourceRef`, version, schema, hash, or scope; do not reveal cross-tenant existence.                                  |
+| `PS-Q03` | `ListPlanExecutabilityByAdapter` | `PlanStoreScope + { planId; adapterId? }`                                  | scoped executability records                    | Executability read model                                | `@dvt/artifacts` read port and adapter scoped repository                         | Reject/miss cross-scope reads and global adapter history reads.                                                                        |
+| `PS-Q04` | `GetPlanAdmissionLinks`          | `ScopedPlanId`                                                             | scoped admission links                          | Admission read model                                    | `@dvt/artifacts` read port and adapter scoped repository                         | Reject/miss cross-scope reads and global admission history reads.                                                                      |
+| `PS-Q05` | `GetPlanSupersession`            | `ScopedPlanId`                                                             | scoped supersession relation or miss            | Plan lineage read model                                 | `@dvt/artifacts` read port and adapter scoped repository                         | Cross-scope supersession must be impossible by query shape and by storage constraint.                                                  |
+| `PS-Q06` | `RemoveValidationRecordQuery`    | none                                                                       | none                                            | Removal path owned by validation read-model replacement | Contract exports, adapter facade, tests/docs                                     | Architecture tests prove `getValidationRecord(planId)` is not a runtime query.                                                         |
+| `PS-Q07` | `FetchPlanForValidation`         | `ScopedPlanRef`                                                            | executable artifact bytes plus execution policy | Plan validation application service                     | API scoped validation reader, adapter scoped materializer                        | Reject unscoped fetch, missing scoped plan record, non-admitted ownership mismatch, and direct artifact lookup.                        |
+| `PS-Q08` | `FetchPlanForEngineDispatch`     | `ScopedPlanRef` or tenant-scoped fetcher constructed from `PlanStoreScope` | engine `StoredPlanArtifact`                     | Engine start/recovery application service               | Engine-owned fetch port, API/worker scoped wrapper, adapter scoped materializer  | Reject unscoped engine fetch, cross-tenant plan ref, URI-policy-only authorization, and dispatch before scoped record materialization. |
 
 ## No-Legacy Rule
 
