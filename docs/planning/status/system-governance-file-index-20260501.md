@@ -23,7 +23,7 @@ legacy status.
 
 ## Totals
 
-- Tracked files indexed: 4037
+- Tracked files indexed: 4035
 - Component/source owner units: 20
 - Ungoverned files: 0
 - Drift files: 44
@@ -34,7 +34,7 @@ legacy status.
 <!-- prettier-ignore-start -->
 | Status | Files |
 | --- | ---: |
-| `canonical` | 111 |
+| `canonical` | 109 |
 | `coverage-required` | 3819 |
 | `drift` | 44 |
 | `legacy` | 9 |
@@ -60,7 +60,7 @@ legacy status.
 | `SYS-PLANSTORE-ENGINE-FETCH` | 5 |
 | `SYS-PLANSTORE-POSTGRES` | 16 |
 | `SYS-PLANSTORE-TEMPORAL-COMPOSITION` | 9 |
-| `SYS-REPO-METADATA-ROOT` | 111 |
+| `SYS-REPO-METADATA-ROOT` | 109 |
 | `SYS-RUNTIME-ROOT` | 286 |
 | `SYS-TRACEABILITY-ROOT` | 65 |
 | `SYS-WEB-ROOT` | 783 |

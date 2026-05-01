@@ -1,7 +1,7 @@
 version: 1
 generatedFrom: git ls-files
 unitManifest: docs/planning/status/system-governance-unit-index.units.yaml
-fileCount: 4037
+fileCount: 4035
 files:
   - fileId: F-7C0FAC63D273
     pathHash: 16228f9cd18f5479d183ab61cb01d3cfc66645b3053a3d23dd9aef2069c3410a
@@ -65824,9 +65824,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-5293EA43A26A
     pathHash: 8b24735b0574e4a4affd5d6e72a0c610556d81979eb7c42391627739b2df44ca
-    contentHash: 1f4d3ca4fa1f07fbd11bb2f48d83ec4f249d241c551ad431fbedae4cd8c1a483
+    contentHash: fb34c8b8a372fff27a960d3c896157c624e7c862338a9fe00ee1b887f5977d94
     governanceHash: d9f768b3da4be04e83890eae632052f05a0776f4990c39b7b2ab2c3b6cc14524
-    stateFingerprint: 49d42acf611dbacbaebb677dddc7ba38a2cc53348f8d60e5c629b69ec9e51e4d
+    stateFingerprint: 99fcf2e09349832a171fb0e938562f1168f95ef681ca0dddaf266333073e5bb2
     path: docs/planning/status/system-governance-component-index-20260501.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
@@ -65847,9 +65847,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-65470A9009F7
     pathHash: 68ae073be56f8b4465649dfa1967e94f85737262e8851cd582d4f7c81e950839
-    contentHash: 05b6b837529443d58552c038f9fb314204c57c538f0bc229d5b7dfc5a943af5c
+    contentHash: 87e0373b07e1277c4dd6b24576bfdedaa364618c927837dbf6f6913edaa5e554
     governanceHash: d9f768b3da4be04e83890eae632052f05a0776f4990c39b7b2ab2c3b6cc14524
-    stateFingerprint: ee88dbd6188857fa6f2752aa352158bbafe9bd93cd56848807a003f75a320ed5
+    stateFingerprint: ac62ea0af6cfe30a5845bba512cd6b33c1d5b7e3f26330245c10b7514bc2ffbf
     path: docs/planning/status/system-governance-component-index.components.yaml
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
@@ -65916,9 +65916,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-8C3905234D4D
     pathHash: 9aa5662237a193b3e97f4926a7bc1081f9ea08b908b351f5327fd00add4ac0aa
-    contentHash: 2ea2d899f2e946eb72c0f0157b4ddab2ab40b411254174c4daac519e46f9aab0
+    contentHash: 11da1125ee48b420944be592ff0f86d2191750fdac43b938b5dc02795b926702
     governanceHash: d9f768b3da4be04e83890eae632052f05a0776f4990c39b7b2ab2c3b6cc14524
-    stateFingerprint: 0bffe90673ab31a6c0d0d8b0be155523a107e8fea61a33771cc4892ff317f601
+    stateFingerprint: fc3ba2978b6d0deff1cfca2dddc9ef7221a3b249f54cf24f91200cc373b17588
     path: docs/planning/status/system-governance-file-index-20260501.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
@@ -70751,52 +70751,6 @@ files:
     governanceHash: 4786f9cb07641fe381490b01e7b9e3730d9ec26231ae8e37424dc2be95ef313e
     stateFingerprint: 784adeeddd29b4f3d32c48e0c234d1950abb27d754d6864f7d745cccdd56dc80
     path: infra/prototypes/api/tsconfig.json
-    owningUnit: SYS-REPO-METADATA-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-DVT
-    componentUnit: SYS-REPO-METADATA-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-REPO-METADATA
-      - SYS-REPO-METADATA-ROOT
-    ownerLevel: component
-    unitStatus: canonical
-    isDrift: false
-    isLegacy: false
-    dddOwner: INFRA
-    cqRails: none - repository metadata
-    governance:
-      - package.json
-      - pnpm-workspace.yaml
-  - fileId: F-06DED848F0B8
-    pathHash: 848123a09f55c65b5ffef9e5ceb2956d2504d1465ee8d33859bc542035c55aee
-    contentHash: ad1839375de122585cac1cf3373ba18b7b1250a4fa4ac7e53019d049c6776567
-    governanceHash: 4786f9cb07641fe381490b01e7b9e3730d9ec26231ae8e37424dc2be95ef313e
-    stateFingerprint: b996710c2781c3f32a41e78abe720b92d44bbd84a80cae6145d35a632fcdaecc
-    path: package.json
-    owningUnit: SYS-REPO-METADATA-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-DVT
-    componentUnit: SYS-REPO-METADATA-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-REPO-METADATA
-      - SYS-REPO-METADATA-ROOT
-    ownerLevel: component
-    unitStatus: canonical
-    isDrift: false
-    isLegacy: false
-    dddOwner: INFRA
-    cqRails: none - repository metadata
-    governance:
-      - package.json
-      - pnpm-workspace.yaml
-  - fileId: F-06DED848F0B8
-    pathHash: 848123a09f55c65b5ffef9e5ceb2956d2504d1465ee8d33859bc542035c55aee
-    contentHash: ad1839375de122585cac1cf3373ba18b7b1250a4fa4ac7e53019d049c6776567
-    governanceHash: 4786f9cb07641fe381490b01e7b9e3730d9ec26231ae8e37424dc2be95ef313e
-    stateFingerprint: b996710c2781c3f32a41e78abe720b92d44bbd84a80cae6145d35a632fcdaecc
-    path: package.json
     owningUnit: SYS-REPO-METADATA-ROOT
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
