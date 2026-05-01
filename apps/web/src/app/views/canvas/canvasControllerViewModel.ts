@@ -52,11 +52,7 @@ function resolveCanvasGraphErrorMessage(authoringRuntime: CanvasAuthoringRuntime
 
 function buildCanvasShellViewModel(args: CanvasControllerViewModelArgs) {
   const {
-    environment: {
-      dataSourceMode,
-      capabilities,
-      store,
-    },
+    environment: { dataSourceMode, capabilities, store },
     graphPolicy: { canvasAuthoringMode, runtimePolicy },
     authoringRuntime: { backendPosture, graphModel, draftReadModel },
     overlayModel,
@@ -116,6 +112,7 @@ function buildCanvasInteractionViewModel(args: CanvasControllerViewModelArgs) {
     handleNodeClick: graphHandlers.handleNodeClick,
     onSelectionChange: graphHandlers.onSelectionChange,
     handleViewportChange: persistence.handleViewportChange,
+    handleNodeDrag: persistence.handleNodeDrag,
     handleNodeDragStop: persistence.handleNodeDragStop,
     handleDrop: graphHandlers.handleDrop,
     handleDragOver: graphHandlers.handleDragOver,

@@ -23,6 +23,7 @@ export function useCanvasMutationHandlers({
   setInspectorNode,
   showInspectorPanel,
   setCurrentPlan,
+  onLayoutComplete,
 }: UseCanvasMutationHandlersArgs) {
   const mutationState: CanvasMutationState = {
     graphModel,
@@ -36,6 +37,7 @@ export function useCanvasMutationHandlers({
     setInspectorNode,
     showInspectorPanel,
     setCurrentPlan,
+    onLayoutComplete,
   };
   const mutationPolicy: CanvasMutationPolicy = {
     canMutateGraph,

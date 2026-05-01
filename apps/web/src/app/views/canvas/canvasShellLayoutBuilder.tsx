@@ -75,6 +75,7 @@ export function buildCanvasShellLayout({
       draftTransportError: routePresentation.draftTransportError,
       workbenchErrorMessage: routePresentation.workbenchErrorMessage,
       canvasDocument: routePresentation.canvasDocument,
+      draftSaveStatus: routePresentation.draftSaveStatus,
       availableCanvasKinds: routePresentation.availableCanvasKinds,
       canEditEdges: routePresentation.effectiveUserPermissions.canEditEdges,
       canOpenSourceImport: layoutState.canOpenSourceImport,

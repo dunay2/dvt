@@ -132,66 +132,95 @@ function usePersistSettledNodePositions({
 }
 
 function useCanvasNodePositionSave({
-  canPersistLayout,
+  canPersistNodePositions,
   workspaceLayoutKey,
   setCanvasNodePositions,
 }: {
-  canPersistLayout: boolean;
+  canPersistNodePositions: boolean;
   workspaceLayoutKey: string;
   setCanvasNodePositions: (layoutKey: string, positions: CanvasNodePositions) => void;
 }): SaveCanvasNodePositions {
   return useCallback<SaveCanvasNodePositions>(
     (positions) => {
-      if (!canPersistLayout) {
+      if (!canPersistNodePositions) {
         return;
       }
 
       setCanvasNodePositions(workspaceLayoutKey, positions);
     },
-    [canPersistLayout, setCanvasNodePositions, workspaceLayoutKey]
+    [canPersistNodePositions, setCanvasNodePositions, workspaceLayoutKey]
   );
 }
 
 function useCanvasNodePositionPersistence({
-  canPersistLayout,
+  canPersistNodePositions,
   workspaceLayoutKey,
   nodes,
   persistedNodePositions,
   setCanvasNodePositions,
 }: {
-  canPersistLayout: boolean;
+  canPersistNodePositions: boolean;
   workspaceLayoutKey: string;
   nodes: readonly Node[];
   persistedNodePositions: CanvasNodePositions;
   setCanvasNodePositions: (layoutKey: string, positions: CanvasNodePositions) => void;
 }) {
+  const pendingNodePositionsRef = useRef<CanvasNodePositions | null>(null);
   const handleNodePositionsSave = useCanvasNodePositionSave({
-    canPersistLayout,
+    canPersistNodePositions,
     workspaceLayoutKey,
     setCanvasNodePositions,
   });
+  const saveOrQueueNodePositions = useCallback<SaveCanvasNodePositions>(
+    (positions) => {
+      if (!canPersistNodePositions) {
+        pendingNodePositionsRef.current = positions;
+        return;
+      }
+
+      pendingNodePositionsRef.current = null;
+      handleNodePositionsSave(positions);
+    },
+    [canPersistNodePositions, handleNodePositionsSave]
+  );
+
+  useEffect(() => {
+    if (!canPersistNodePositions || pendingNodePositionsRef.current == null) {
+      return;
+    }
+
+    const pendingNodePositions = pendingNodePositionsRef.current;
+    pendingNodePositionsRef.current = null;
+    handleNodePositionsSave(pendingNodePositions);
+  }, [canPersistNodePositions, handleNodePositionsSave]);
 
   usePersistSettledNodePositions({
     nodes,
     persistedNodePositions,
-    saveNodePositions: handleNodePositionsSave,
+    saveNodePositions: saveOrQueueNodePositions,
   });
 
-  const handleNodeDragStop = useCallback<NonNullable<ReactFlowProps['onNodeDragStop']>>(
+  const handleNodeDrag = useCallback<NonNullable<ReactFlowProps['onNodeDrag']>>(
     (_event, draggedNode, allNodes) => {
-      if (!canPersistLayout) {
-        return;
-      }
-
-      handleNodePositionsSave(
+      saveOrQueueNodePositions(
         extractNodePositions(mergeDraggedNodePosition(allNodes, draggedNode))
       );
     },
-    [canPersistLayout, handleNodePositionsSave]
+    [saveOrQueueNodePositions]
+  );
+
+  const handleNodeDragStop = useCallback<NonNullable<ReactFlowProps['onNodeDragStop']>>(
+    (_event, draggedNode, allNodes) => {
+      saveOrQueueNodePositions(
+        extractNodePositions(mergeDraggedNodePosition(allNodes, draggedNode))
+      );
+    },
+    [saveOrQueueNodePositions]
   );
 
   return {
-    handleNodePositionsSave,
+    handleNodePositionsSave: saveOrQueueNodePositions,
+    handleNodeDrag,
     handleNodeDragStop,
   };
 }
@@ -233,16 +262,18 @@ export function useCanvasLayoutPersistence({
   setCanvasViewport,
   setCanvasNodePositions,
 }: UseCanvasLayoutPersistenceArgs) {
-  const canPersistLayout = hasHydrated && !isGraphQueryPending;
-  const { handleNodePositionsSave, handleNodeDragStop } = useCanvasNodePositionPersistence({
-    canPersistLayout,
-    workspaceLayoutKey,
-    nodes,
-    persistedNodePositions,
-    setCanvasNodePositions,
-  });
+  const canPersistNodePositions = hasHydrated;
+  const canPersistViewport = hasHydrated && !isGraphQueryPending;
+  const { handleNodePositionsSave, handleNodeDrag, handleNodeDragStop } =
+    useCanvasNodePositionPersistence({
+      canPersistNodePositions,
+      workspaceLayoutKey,
+      nodes,
+      persistedNodePositions,
+      setCanvasNodePositions,
+    });
   const handleViewportChange = useCanvasViewportPersistenceHandler({
-    canPersistLayout,
+    canPersistLayout: canPersistViewport,
     workspaceLayoutKey,
     persistedViewport,
     setCanvasViewport,
@@ -250,6 +281,7 @@ export function useCanvasLayoutPersistence({
 
   return {
     handleNodePositionsSave,
+    handleNodeDrag,
     handleNodeDragStop,
     handleViewportChange,
   };

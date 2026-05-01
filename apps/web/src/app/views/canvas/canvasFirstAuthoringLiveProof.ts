@@ -8,6 +8,27 @@ export type CanvasFirstAuthoringLiveProofTransition =
   | 'restored'
   | 'blocked';
 
+export type CanvasFirstAuthoringDraftAccessBlockedReason =
+  | 'read_only'
+  | 'unauthenticated'
+  | 'forbidden_scope'
+  | 'format_error'
+  | 'stale_conflict'
+  | 'missing_remote'
+  | 'projection_gap'
+  | 'unknown_pending';
+
+export type CanvasFirstAuthoringBlockedReason =
+  | CanvasFirstAuthoringDraftAccessBlockedReason
+  | 'canvas_save_not_settled'
+  | 'draft_canvas_mismatch'
+  | 'first_node_mismatch'
+  | 'node_save_not_settled'
+  | 'restored_canvas_missing'
+  | 'restored_layout_missing'
+  | 'restored_node_missing'
+  | 'unsupported_canvas_kind';
+
 type CanvasFirstAuthoringCanvas = Readonly<{
   kind: string;
   title: string;
@@ -32,7 +53,7 @@ type CanvasFirstAuthoringRestoredDraft = Readonly<{
 
 type CanvasFirstAuthoringDraftAccess =
   | Readonly<{ kind: 'writable' }>
-  | Readonly<{ kind: 'blocked'; reason: string }>;
+  | Readonly<{ kind: 'blocked'; reason: CanvasFirstAuthoringDraftAccessBlockedReason }>;
 
 export type CanvasFirstAuthoringLiveProofInput = Readonly<{
   draftAccess: CanvasFirstAuthoringDraftAccess;
@@ -86,16 +107,7 @@ export type CanvasFirstAuthoringLiveProof =
       kind: 'blocked';
       transition: 'blocked';
       completed: false;
-      reason:
-        | 'canvas_save_not_settled'
-        | 'draft_canvas_mismatch'
-        | 'first_node_mismatch'
-        | 'node_save_not_settled'
-        | 'restored_canvas_missing'
-        | 'restored_layout_missing'
-        | 'restored_node_missing'
-        | 'unsupported_canvas_kind'
-        | string;
+      reason: CanvasFirstAuthoringBlockedReason;
       blockedCommand?: 'CreateCanvas' | 'CreateCanvasNode' | 'PersistCanvasLayout';
       blockedQuery?: 'GetWorkspaceGraphDraft' | 'GetCanvasLayout';
       expectedNode?: CanvasFirstAuthoringNode;

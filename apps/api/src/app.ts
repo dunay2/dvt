@@ -160,6 +160,7 @@ export async function buildApp(): Promise<{ app: FastifyInstance; ctx: AppContex
 
   app.register(cors, {
     origin: env.CORS_ORIGIN === '*' ? true : env.CORS_ORIGIN.split(',').map((s) => s.trim()),
+    methods: ['GET', 'HEAD', 'POST', 'PUT', 'OPTIONS'],
   });
 
   app.register(healthRoutes, {

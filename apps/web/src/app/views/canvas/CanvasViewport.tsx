@@ -77,6 +77,7 @@ type CanvasViewportProps = {
   readonly onNodeClick: NonNullable<ReactFlowProps<Node, Edge>['onNodeClick']>;
   readonly onSelectionChange: NonNullable<ReactFlowProps<Node, Edge>['onSelectionChange']>;
   readonly onViewportChange: (viewport: { x: number; y: number; zoom: number }) => void;
+  readonly onNodeDrag: NonNullable<ReactFlowProps<Node, Edge>['onNodeDrag']>;
   readonly onNodeDragStop: NonNullable<ReactFlowProps<Node, Edge>['onNodeDragStop']>;
   readonly onDrop: React.DragEventHandler<HTMLDivElement>;
   readonly onDragOver: React.DragEventHandler<HTMLDivElement>;
@@ -237,6 +238,7 @@ type CanvasViewportReactFlowSurfaceProps = Readonly<
     | 'onNodeClick'
     | 'onSelectionChange'
     | 'onViewportChange'
+    | 'onNodeDrag'
     | 'onNodeDragStop'
     | 'onDrop'
     | 'onDragOver'
@@ -256,6 +258,7 @@ function CanvasViewportReactFlowSurface({
   onNodeClick,
   onSelectionChange,
   onViewportChange,
+  onNodeDrag,
   onNodeDragStop,
   onDrop,
   onDragOver,
@@ -287,6 +290,7 @@ function CanvasViewportReactFlowSurface({
       minZoom={0.35}
       defaultViewport={viewport ?? undefined}
       onMoveEnd={(_event, nextViewport) => onViewportChange(nextViewport)}
+      onNodeDrag={onNodeDrag}
       onDrop={onDrop}
       onDragOver={onDragOver}
       className="bg-(--canvas-surface)"
@@ -334,6 +338,7 @@ function CanvasViewportSurface({
   onNodeClick,
   onSelectionChange,
   onViewportChange,
+  onNodeDrag,
   onNodeDragStop,
   onDrop,
   onDragOver,
@@ -368,6 +373,7 @@ function CanvasViewportSurface({
         onNodeClick={onNodeClick}
         onSelectionChange={onSelectionChange}
         onViewportChange={onViewportChange}
+        onNodeDrag={onNodeDrag}
         onNodeDragStop={onNodeDragStop}
         onDrop={onDrop}
         onDragOver={onDragOver}
@@ -411,6 +417,7 @@ export default function CanvasViewport(props: CanvasViewportProps): JSX.Element 
       onNodeClick={props.onNodeClick}
       onSelectionChange={props.onSelectionChange}
       onViewportChange={props.onViewportChange}
+      onNodeDrag={props.onNodeDrag}
       onNodeDragStop={props.onNodeDragStop}
       onDrop={props.onDrop}
       onDragOver={props.onDragOver}

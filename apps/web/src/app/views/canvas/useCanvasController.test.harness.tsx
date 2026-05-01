@@ -12,10 +12,7 @@ import {
   configureDefaultCanvasHarnessMocks,
   createDefaultCanvasHarnessState,
 } from './useCanvasController.test.fixtures';
-import type {
-  CanvasHarnessMocks,
-  CanvasHarnessState,
-} from './useCanvasController.test.types';
+import type { CanvasHarnessMocks, CanvasHarnessState } from './useCanvasController.test.types';
 
 const state = vi.hoisted(() => ({})) as CanvasHarnessState;
 const mocks = vi.hoisted(() => ({
@@ -48,8 +45,15 @@ vi.mock('@tanstack/react-query', () => ({
 vi.mock('@xyflow/react', async () => {
   const ReactModule = await import('react');
   return {
-    applyNodeChanges: <T extends { id: string },>(
-      changes: Array<{ id?: string; type?: string }>,
+    applyNodeChanges: <
+      T extends { id: string; position?: { x: number; y: number }; dragging?: boolean },
+    >(
+      changes: Array<{
+        id?: string;
+        type?: string;
+        position?: { x: number; y: number };
+        dragging?: boolean;
+      }>,
       nodes: T[]
     ) =>
       changes.reduce((currentNodes, change) => {
@@ -57,9 +61,21 @@ vi.mock('@xyflow/react', async () => {
           return currentNodes.filter((node) => node.id !== change.id);
         }
 
+        if (change.type === 'position' && change.id != null) {
+          return currentNodes.map((node) =>
+            node.id === change.id
+              ? {
+                  ...node,
+                  ...(change.position === undefined ? {} : { position: change.position }),
+                  ...(change.dragging === undefined ? {} : { dragging: change.dragging }),
+                }
+              : node
+          );
+        }
+
         return currentNodes;
       }, nodes),
-    applyEdgeChanges: <T extends { id: string },>(
+    applyEdgeChanges: <T extends { id: string }>(
       changes: Array<{ id?: string; type?: string }>,
       edges: T[]
     ) =>
