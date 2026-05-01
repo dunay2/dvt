@@ -20,6 +20,10 @@ const fingerprintBaselinePath = path.join(
   statusDir,
   'system-governance-file-fingerprint-baseline.yaml'
 );
+const fingerprintImpactReportPath = path.join(
+  statusDir,
+  'system-governance-file-fingerprint-impact-20260501.md'
+);
 
 const generatedOutputPaths = [
   fileYamlPath,
@@ -27,6 +31,7 @@ const generatedOutputPaths = [
   componentYamlPath,
   componentMarkdownPath,
   fingerprintBaselinePath,
+  fingerprintImpactReportPath,
 ].map((filePath) => toPosix(path.relative(repoRoot, filePath)));
 
 const generatedFileYamlRelativePath = toPosix(path.relative(repoRoot, fileYamlPath));

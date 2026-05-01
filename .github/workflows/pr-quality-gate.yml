@@ -144,6 +144,9 @@ jobs:
       - name: Validate governance fingerprint baseline
         run: pnpm docs:governance:file-fingerprint-baseline:check
 
+      - name: Validate governance fingerprint impact report
+        run: pnpm docs:governance:file-fingerprint-impact:check
+
       - name: Check PR title follows Conventional Commits
         if: github.event_name == 'pull_request'
         uses: amannn/action-semantic-pull-request@48f256284bd46cdaab1048c3721360e808335d50 # v6

@@ -11,6 +11,10 @@ const repoRoot = path.resolve(__dirname, '..');
 const statusDir = path.join(repoRoot, 'docs', 'planning', 'status');
 const fileIndexPath = path.join(statusDir, 'system-governance-file-index.files.yaml');
 const baselinePath = path.join(statusDir, 'system-governance-file-fingerprint-baseline.yaml');
+const impactReportPath = path.join(
+  statusDir,
+  'system-governance-file-fingerprint-impact-20260501.md'
+);
 const sourcePath = 'docs/planning/status/system-governance-file-index.files.yaml';
 
 function renderYaml(payload) {
@@ -155,6 +159,175 @@ function compareFingerprintBaseline(baseline, currentEntries) {
   };
 }
 
+function classifyChangedEntry(entry) {
+  if (entry.contentChanged && entry.governanceChanged) {
+    return 'both';
+  }
+  if (entry.governanceChanged) {
+    return 'governance';
+  }
+  return 'content';
+}
+
+function classifyOwnerFlags(change) {
+  const haystack = [
+    change.path,
+    change.rootUnit,
+    change.domainUnit,
+    change.componentUnit,
+    change.owningUnit,
+  ]
+    .join(' ')
+    .toLowerCase();
+  const flags = [];
+
+  for (const [flag, patterns] of [
+    ['legacy', ['legacy']],
+    ['drift', ['drift']],
+    ['engine', ['engine']],
+    ['contracts', ['contracts', 'specs/contracts']],
+    ['adapters', ['adapter-', 'adapters']],
+    ['ci', ['ci', '.github', 'scripts/', 'tools/ci']],
+    ['api', ['api']],
+    ['web', ['web', 'frontend']],
+  ]) {
+    if (patterns.some((pattern) => haystack.includes(pattern))) {
+      flags.push(flag);
+    }
+  }
+
+  return flags;
+}
+
+function buildImpactReport(report) {
+  const totals = {
+    content: 0,
+    governance: 0,
+    both: 0,
+    added: 0,
+    removed: 0,
+  };
+  const byComponent = new Map();
+
+  function addChange(change) {
+    totals[change.changeType] += 1;
+    const key = impactKey(change);
+    const component = byComponent.get(key) || {
+      rootUnit: change.rootUnit,
+      domainUnit: change.domainUnit,
+      componentUnit: change.componentUnit,
+      ownerFlags: [],
+      changes: [],
+    };
+
+    component.ownerFlags = [
+      ...new Set([...component.ownerFlags, ...classifyOwnerFlags(change)]),
+    ].sort();
+    component.changes.push({
+      changeType: change.changeType,
+      path: change.path,
+      fileId: change.fileId,
+      owningUnit: change.owningUnit,
+    });
+    byComponent.set(key, component);
+  }
+
+  for (const entry of report.changed) {
+    addChange({
+      ...entry,
+      changeType: classifyChangedEntry(entry),
+    });
+  }
+
+  for (const entry of report.extra) {
+    addChange({
+      ...entry,
+      changeType: 'added',
+    });
+  }
+
+  for (const entry of report.missing) {
+    addChange({
+      ...entry,
+      changeType: 'removed',
+    });
+  }
+
+  const components = [...byComponent.values()]
+    .map((component) => ({
+      ...component,
+      changes: component.changes.sort((left, right) => left.path.localeCompare(right.path)),
+    }))
+    .sort(
+      (left, right) =>
+        left.rootUnit.localeCompare(right.rootUnit) ||
+        left.domainUnit.localeCompare(right.domainUnit) ||
+        left.componentUnit.localeCompare(right.componentUnit)
+    );
+
+  return {
+    version: 1,
+    totalChanges: Object.values(totals).reduce((total, count) => total + count, 0),
+    totals,
+    components,
+  };
+}
+
+function renderImpactMarkdown(impactReport) {
+  const totalRows = Object.entries(impactReport.totals)
+    .map(([type, count]) => `| \`${type}\` | ${count} |`)
+    .join('\n');
+  const componentRows = impactReport.components
+    .map(
+      (component) =>
+        `| \`${component.rootUnit}\` | \`${component.domainUnit}\` | \`${component.componentUnit}\` | ${
+          component.ownerFlags.map((flag) => `\`${flag}\``).join(', ') || '_None_'
+        } | ${component.changes.length} |`
+    )
+    .join('\n');
+  const changeRows = impactReport.components
+    .flatMap((component) =>
+      component.changes.map(
+        (change) =>
+          `| \`${change.changeType}\` | \`${change.path}\` | \`${change.fileId}\` | \`${component.rootUnit}\` | \`${component.domainUnit}\` | \`${component.componentUnit}\` | \`${change.owningUnit}\` |`
+      )
+    )
+    .join('\n');
+
+  return `---
+title: System Governance File Fingerprint Impact
+status: Review
+owner: Architecture / Docs / Delivery
+last_reviewed: 2026-05-01
+planning_type: status
+---
+
+# System Governance File Fingerprint Impact
+
+This page is generated from the accepted fingerprint baseline and the current
+file governance index. It is the reviewer-facing impact report for legitimate
+baseline changes.
+
+## Totals
+
+| Change type | Files |
+| --- | ---: |
+${totalRows}
+
+## Impacted Components
+
+| Root unit | Domain unit | Component unit | Flags | Files |
+| --- | --- | --- | --- | ---: |
+${componentRows || '| _None_ | _None_ | _None_ | _None_ | 0 |'}
+
+## File Changes
+
+| Type | File | File ID | Root | Domain | Component | Owning unit |
+| --- | --- | --- | --- | --- | --- | --- |
+${changeRows || '| _None_ | _None_ | _None_ | _None_ | _None_ | _None_ | _None_ |'}
+`;
+}
+
 function readCurrentFileIndex() {
   const fileIndex = readYaml(fileIndexPath);
   if (!Array.isArray(fileIndex.files)) {
@@ -187,6 +360,7 @@ function printReport(report) {
 
 function main() {
   const writeMode = process.argv.includes('--write');
+  const reportMode = process.argv.includes('--report');
   const currentEntries = readCurrentFileIndex();
   const nextBaseline = buildFingerprintBaseline(currentEntries);
 
@@ -210,7 +384,23 @@ function main() {
 
   const baseline = readYaml(baselinePath);
   const report = compareFingerprintBaseline(baseline, currentEntries);
+  const impactReport = buildImpactReport(report);
+  const impactMarkdown = renderImpactMarkdown(impactReport);
+
+  if (reportMode) {
+    const changed = writeIfChanged(impactReportPath, impactMarkdown);
+    console.log(
+      `[docs:governance:file-fingerprint-impact] ${changed ? 'updated' : 'unchanged'} ${path.relative(
+        repoRoot,
+        impactReportPath
+      )}`
+    );
+  }
+
   if (!report.ok) {
+    if (!reportMode) {
+      console.error(impactMarkdown);
+    }
     printReport(report);
     process.exitCode = 1;
     return;
@@ -227,5 +417,7 @@ if (require.main === module) {
 
 module.exports = {
   buildFingerprintBaseline,
+  buildImpactReport,
   compareFingerprintBaseline,
+  renderImpactMarkdown,
 };

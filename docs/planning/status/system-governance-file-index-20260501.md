@@ -25,7 +25,7 @@ used by CI.
 
 ## Totals
 
-- Tracked files indexed: 4040
+- Tracked files indexed: 4041
 - Component/source owner units: 20
 - Ungoverned files: 0
 - Drift files: 44
@@ -37,7 +37,7 @@ used by CI.
 | Status | Files |
 | --- | ---: |
 | `canonical` | 111 |
-| `coverage-required` | 3822 |
+| `coverage-required` | 3823 |
 | `drift` | 44 |
 | `legacy` | 9 |
 | `review` | 54 |
@@ -52,7 +52,7 @@ used by CI.
 | `SYS-API-ROOT` | 362 |
 | `SYS-CI-GOVERNANCE-ROOT` | 168 |
 | `SYS-CONTRACTS-ROOT` | 127 |
-| `SYS-DOCS-GOVERNANCE-ROOT` | 1641 |
+| `SYS-DOCS-GOVERNANCE-ROOT` | 1642 |
 | `SYS-OBSERVABILITY-ROOT` | 15 |
 | `SYS-PLANNER-ROOT` | 76 |
 | `SYS-PLANSTORE-API-COMPOSITION` | 20 |

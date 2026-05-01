@@ -305,7 +305,8 @@ Usage rules already declared in the ADR index:
   Role: `accepted file-fingerprint baseline gate`
   Enforces: the generated file index cannot drift from the accepted
   `system-governance-file-fingerprint-baseline.yaml` without regenerating and
-  reviewing the baseline update.
+  reviewing the baseline update; can render a component-grouped impact report
+  for reviewer triage.
 
 Additional enforcement surface:
 
@@ -338,34 +339,35 @@ Additional enforcement surface:
 
 ## Status, Risk, Evidence, And Planning Surfaces
 
-| Source                                                                                                                        | Type                 | What it governs                                                                          |
-| ----------------------------------------------------------------------------------------------------------------------------- | -------------------- | ---------------------------------------------------------------------------------------- |
-| [docs/planning/status/governance-document-rule-inventory.md](./governance-document-rule-inventory.md)                         | `status entrypoint`  | Canonical planning-status entrypoint for tracked governance and route rules.             |
-| `docs/planning/status/index.md`                                                                                               | `derived local/CI`   | Generated planning-status landing page; do not treat as a tracked canonical doc.         |
-| `docs/planning/index.md`                                                                                                      | `derived local/CI`   | Generated planning landing page; do not treat as a tracked canonical doc.                |
-| `docs/planning/proposals/index.md`                                                                                            | `derived local/CI`   | Generated proposal landing page; proposal navigation should use the portfolio map.       |
-| `docs/planning/reviews/index.md`                                                                                              | `derived local/CI`   | Generated review landing page; review navigation should use the review status board.     |
-| `docs/planning/state/agent-lane-*.md`                                                                                         | `derived local/CI`   | Rendered lane views generated from `agent-lane-*.yaml`; never edit or commit directly.   |
-| `docs/planning/state/execution-workboard.md`                                                                                  | `derived local/CI`   | Generated execution summary view derived from lane YAML.                                 |
-| `docs/planning/state/open-task-route.md`                                                                                      | `derived local/CI`   | Generated routing view derived from lane YAML.                                           |
-| [docs/planning/status/generated-code-state.md](./generated-code-state.md)                                                     | `generated status`   | Current workspace, source, and test inventory.                                           |
-| [docs/planning/status/system-governance-unit-index-20260501.md](./system-governance-unit-index-20260501.md)                   | `status`             | Human navigation surface for governed system units.                                      |
-| [docs/planning/status/system-governance-unit-index.units.yaml](./system-governance-unit-index.units.yaml)                     | `generated status`   | Mechanical unit manifest: every tracked file must resolve to one component/source owner. |
-| [docs/planning/status/system-governance-file-index-20260501.md](./system-governance-file-index-20260501.md)                   | `generated status`   | Human summary for file-level ownership, drift, and legacy classification.                |
-| [docs/planning/status/system-governance-file-index.files.yaml](./system-governance-file-index.files.yaml)                     | `generated status`   | Exhaustive file-level ownership index with one row per tracked file.                     |
-| [docs/planning/status/system-governance-file-fingerprint-baseline.yaml](./system-governance-file-fingerprint-baseline.yaml)   | `generated status`   | Accepted file-state fingerprint baseline used to reject unreviewed drift.                |
-| [docs/planning/status/system-governance-component-index-20260501.md](./system-governance-component-index-20260501.md)         | `generated status`   | Human summary for component/source units, counts, and oversized buckets.                 |
-| [docs/planning/status/system-governance-component-index.components.yaml](./system-governance-component-index.components.yaml) | `generated status`   | Exhaustive component/source unit index with ownership counts and status.                 |
-| [docs/planning/status/system-governance-document-unit-map-20260501.md](./system-governance-document-unit-map-20260501.md)     | `generated status`   | Human summary for document-to-unit mapping.                                              |
-| [docs/planning/status/system-governance-document-unit-map.docs.yaml](./system-governance-document-unit-map.docs.yaml)         | `generated status`   | Exhaustive document-to-unit map for tracked docs Markdown files.                         |
-| [docs/planning/status/generated-capability-coverage.md](./generated-capability-coverage.md)                                   | `generated status`   | Capability coverage signal.                                                              |
-| [docs/planning/status/generated-spec-traceability.md](./generated-spec-traceability.md)                                       | `generated status`   | Generated spec traceability report.                                                      |
-| [docs/planning/status/release-please-continuous.md](./release-please-continuous.md)                                           | `status`             | Release process status.                                                                  |
-| [docs/architecture/system-delivery-status.md](../../architecture/system-delivery-status.md)                                   | `status`             | Current truth by layer, open follow-up work, and reading order.                          |
-| [docs/planning/gaps/index.md](../gaps/index.md)                                                                               | `planning reference` | Current tactical gap registers only; not the retired `G1`-`G10` program.                 |
-| [docs/risk-register/index.md](../../risk-register/index.md)                                                                   | `risk`               | Open risks that still require mitigation or acceptance.                                  |
-| [docs/evidence/index.md](../../evidence/index.md)                                                                             | `evidence`           | Validation proof for closed or hardened work.                                            |
-| [docs/runbooks/index.md](../../runbooks/index.md)                                                                             | `operations`         | Runtime procedures, incident response, and worker operation guidance.                    |
+| Source                                                                                                                                | Type                 | What it governs                                                                          |
+| ------------------------------------------------------------------------------------------------------------------------------------- | -------------------- | ---------------------------------------------------------------------------------------- |
+| [docs/planning/status/governance-document-rule-inventory.md](./governance-document-rule-inventory.md)                                 | `status entrypoint`  | Canonical planning-status entrypoint for tracked governance and route rules.             |
+| `docs/planning/status/index.md`                                                                                                       | `derived local/CI`   | Generated planning-status landing page; do not treat as a tracked canonical doc.         |
+| `docs/planning/index.md`                                                                                                              | `derived local/CI`   | Generated planning landing page; do not treat as a tracked canonical doc.                |
+| `docs/planning/proposals/index.md`                                                                                                    | `derived local/CI`   | Generated proposal landing page; proposal navigation should use the portfolio map.       |
+| `docs/planning/reviews/index.md`                                                                                                      | `derived local/CI`   | Generated review landing page; review navigation should use the review status board.     |
+| `docs/planning/state/agent-lane-*.md`                                                                                                 | `derived local/CI`   | Rendered lane views generated from `agent-lane-*.yaml`; never edit or commit directly.   |
+| `docs/planning/state/execution-workboard.md`                                                                                          | `derived local/CI`   | Generated execution summary view derived from lane YAML.                                 |
+| `docs/planning/state/open-task-route.md`                                                                                              | `derived local/CI`   | Generated routing view derived from lane YAML.                                           |
+| [docs/planning/status/generated-code-state.md](./generated-code-state.md)                                                             | `generated status`   | Current workspace, source, and test inventory.                                           |
+| [docs/planning/status/system-governance-unit-index-20260501.md](./system-governance-unit-index-20260501.md)                           | `status`             | Human navigation surface for governed system units.                                      |
+| [docs/planning/status/system-governance-unit-index.units.yaml](./system-governance-unit-index.units.yaml)                             | `generated status`   | Mechanical unit manifest: every tracked file must resolve to one component/source owner. |
+| [docs/planning/status/system-governance-file-index-20260501.md](./system-governance-file-index-20260501.md)                           | `generated status`   | Human summary for file-level ownership, drift, and legacy classification.                |
+| [docs/planning/status/system-governance-file-index.files.yaml](./system-governance-file-index.files.yaml)                             | `generated status`   | Exhaustive file-level ownership index with one row per tracked file.                     |
+| [docs/planning/status/system-governance-file-fingerprint-baseline.yaml](./system-governance-file-fingerprint-baseline.yaml)           | `generated status`   | Accepted file-state fingerprint baseline used to reject unreviewed drift.                |
+| [docs/planning/status/system-governance-file-fingerprint-impact-20260501.md](./system-governance-file-fingerprint-impact-20260501.md) | `generated status`   | Reviewer-facing impact report for file-state fingerprint drift.                          |
+| [docs/planning/status/system-governance-component-index-20260501.md](./system-governance-component-index-20260501.md)                 | `generated status`   | Human summary for component/source units, counts, and oversized buckets.                 |
+| [docs/planning/status/system-governance-component-index.components.yaml](./system-governance-component-index.components.yaml)         | `generated status`   | Exhaustive component/source unit index with ownership counts and status.                 |
+| [docs/planning/status/system-governance-document-unit-map-20260501.md](./system-governance-document-unit-map-20260501.md)             | `generated status`   | Human summary for document-to-unit mapping.                                              |
+| [docs/planning/status/system-governance-document-unit-map.docs.yaml](./system-governance-document-unit-map.docs.yaml)                 | `generated status`   | Exhaustive document-to-unit map for tracked docs Markdown files.                         |
+| [docs/planning/status/generated-capability-coverage.md](./generated-capability-coverage.md)                                           | `generated status`   | Capability coverage signal.                                                              |
+| [docs/planning/status/generated-spec-traceability.md](./generated-spec-traceability.md)                                               | `generated status`   | Generated spec traceability report.                                                      |
+| [docs/planning/status/release-please-continuous.md](./release-please-continuous.md)                                                   | `status`             | Release process status.                                                                  |
+| [docs/architecture/system-delivery-status.md](../../architecture/system-delivery-status.md)                                           | `status`             | Current truth by layer, open follow-up work, and reading order.                          |
+| [docs/planning/gaps/index.md](../gaps/index.md)                                                                                       | `planning reference` | Current tactical gap registers only; not the retired `G1`-`G10` program.                 |
+| [docs/risk-register/index.md](../../risk-register/index.md)                                                                           | `risk`               | Open risks that still require mitigation or acceptance.                                  |
+| [docs/evidence/index.md](../../evidence/index.md)                                                                                     | `evidence`           | Validation proof for closed or hardened work.                                            |
+| [docs/runbooks/index.md](../../runbooks/index.md)                                                                                     | `operations`         | Runtime procedures, incident response, and worker operation guidance.                    |
 
 ## Historical And Non-Authoritative Surfaces
 

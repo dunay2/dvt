@@ -2,7 +2,9 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const {
   buildFingerprintBaseline,
+  buildImpactReport,
   compareFingerprintBaseline,
+  renderImpactMarkdown,
 } = require('./check-governance-file-fingerprint-baseline.cjs');
 
 const currentEntries = [
@@ -146,4 +148,69 @@ test('compareFingerprintBaseline reports drift with component impact', () => {
       },
     ],
   });
+});
+
+test('buildImpactReport renders reviewable fingerprint drift by component', () => {
+  const baseline = buildFingerprintBaseline(currentEntries);
+  const report = compareFingerprintBaseline(baseline, [
+    {
+      ...currentEntries[0],
+      contentHash: 'content-a-next',
+      stateFingerprint: 'state-a-next',
+    },
+    {
+      ...currentEntries[1],
+      governanceHash: 'governance-b-next',
+      stateFingerprint: 'state-b-next',
+    },
+  ]);
+
+  const impactReport = buildImpactReport(report);
+
+  assert.deepEqual(impactReport, {
+    version: 1,
+    totalChanges: 2,
+    totals: {
+      content: 1,
+      governance: 1,
+      both: 0,
+      added: 0,
+      removed: 0,
+    },
+    components: [
+      {
+        rootUnit: 'SYS-DVT',
+        domainUnit: 'SYS-RUNTIME',
+        componentUnit: 'SYS-API-ROOT',
+        ownerFlags: ['api'],
+        changes: [
+          {
+            changeType: 'content',
+            path: 'apps/api/src/main.ts',
+            fileId: 'F-AAA111AAA111',
+            owningUnit: 'SYS-API-ROOT',
+          },
+        ],
+      },
+      {
+        rootUnit: 'SYS-DVT',
+        domainUnit: 'SYS-RUNTIME',
+        componentUnit: 'SYS-ENGINE-ROOT',
+        ownerFlags: ['engine'],
+        changes: [
+          {
+            changeType: 'governance',
+            path: 'packages/@dvt/engine/src/application/RecoverRunApplicationService.ts',
+            fileId: 'F-BBB222BBB222',
+            owningUnit: 'SYS-ENGINE-APPLICATION',
+          },
+        ],
+      },
+    ],
+  });
+
+  assert.match(renderImpactMarkdown(impactReport), /## Totals/);
+  assert.match(renderImpactMarkdown(impactReport), /\| `content` \| 1 \|/);
+  assert.match(renderImpactMarkdown(impactReport), /apps\/api\/src\/main\.ts/);
+  assert.match(renderImpactMarkdown(impactReport), /`SYS-ENGINE-ROOT`/);
 });

@@ -3,7 +3,7 @@
     "adrs": 49,
     "evidenceDocs": 115,
     "normativeDocs": 344,
-    "statusDocs": 65
+    "statusDocs": 66
   },
   "adrs": [
     {
@@ -3201,6 +3201,10 @@
     {
       "path": "docs/planning/status/system-governance-document-unit-map-20260501.md",
       "filename": "system-governance-document-unit-map-20260501.md"
+    },
+    {
+      "path": "docs/planning/status/system-governance-file-fingerprint-impact-20260501.md",
+      "filename": "system-governance-file-fingerprint-impact-20260501.md"
     },
     {
       "path": "docs/planning/status/system-governance-file-index-20260501.md",

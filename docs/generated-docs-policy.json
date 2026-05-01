@@ -174,9 +174,10 @@
     },
     {
       "id": "tracked-governance-file-fingerprint-baseline",
-      "description": "Tracked accepted file-state fingerprint baseline.",
+      "description": "Tracked accepted file-state fingerprint baseline and reviewer impact report.",
       "artifacts": [
-        "docs/planning/status/system-governance-file-fingerprint-baseline.yaml"
+        "docs/planning/status/system-governance-file-fingerprint-baseline.yaml",
+        "docs/planning/status/system-governance-file-fingerprint-impact-20260501.md"
       ],
       "sourcePaths": [
         "scripts/check-governance-file-fingerprint-baseline.cjs",
