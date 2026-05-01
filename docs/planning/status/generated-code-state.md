@@ -2,21 +2,21 @@
 title: Generated Code State
 status: Active
 owner: docs
-last_reviewed: 2026-04-30
+last_reviewed: 2026-05-01
 planning_type: status
 ---
 
 # Generated Code State
 
-Generated automatically from repository code on 2026-04-30.
+Generated automatically from repository code on 2026-05-01.
 
 ## Summary
 
 | Metric                       | Value |
 | ---------------------------- | ----- |
 | Total workspaces             | 24    |
-| Total source files           | 1207  |
-| Total test files             | 651   |
+| Total source files           | 1216  |
+| Total test files             | 654   |
 | Workspaces with build script | 24/24 |
 | Workspaces with test script  | 23/24 |
 
@@ -29,7 +29,7 @@ Generated automatically from repository code on 2026-04-30.
 | dvt-outbox-worker         | `apps/outbox-worker`                 | 25        | 29         | yes   | yes  | yes       | -                       |
 | dvt-projector-worker      | `apps/projector-worker`              | 2         | 1          | yes   | yes  | yes       | -                       |
 | dvt-temporal-worker       | `apps/temporal-worker`               | 13        | 5          | yes   | yes  | yes       | -                       |
-| @dvt/web                  | `apps/web`                           | 523       | 216        | yes   | yes  | yes       | -                       |
+| @dvt/web                  | `apps/web`                           | 524       | 217        | yes   | yes  | yes       | -                       |
 | @dvt/adapter-postgres     | `packages/@dvt/adapter-postgres`     | 57        | 42         | yes   | yes  | yes       | 26                      |
 | @dvt/adapter-temporal     | `packages/@dvt/adapter-temporal`     | 52        | 43         | yes   | yes  | yes       | 28                      |
 | @dvt/artifacts            | `packages/@dvt/artifacts`            | 19        | 3          | yes   | yes  | yes       | 17                      |
@@ -38,7 +38,7 @@ Generated automatically from repository code on 2026-04-30.
 | @dvt/contracts            | `packages/@dvt/contracts`            | 79        | 36         | yes   | yes  | yes       | 56                      |
 | @dvt/delivery             | `packages/@dvt/delivery`             | 13        | 8          | yes   | yes  | yes       | 5                       |
 | @dvt/dsl                  | `packages/@dvt/dsl`                  | 4         | 1          | yes   | yes  | yes       | 3                       |
-| @dvt/engine               | `packages/@dvt/engine`               | 106       | 53         | yes   | yes  | yes       | 44                      |
+| @dvt/engine               | `packages/@dvt/engine`               | 114       | 55         | yes   | yes  | yes       | 46                      |
 | @dvt/observability        | `packages/@dvt/observability`        | 5         | 1          | yes   | yes  | yes       | 4                       |
 | @dvt/observability-otel   | `packages/@dvt/observability-otel`   | 2         | 1          | yes   | yes  | yes       | 1                       |
 | @dvt/plan-interpreter     | `packages/@dvt/plan-interpreter`     | 4         | 1          | yes   | yes  | yes       | 3                       |

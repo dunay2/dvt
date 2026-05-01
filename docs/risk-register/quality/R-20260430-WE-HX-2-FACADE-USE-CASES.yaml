@@ -1,0 +1,18 @@
+---
+id: R-20260430-WE-HX-2-FACADE-USE-CASES
+title: WorkflowEngine facade use-case drift can reintroduce orchestration into the facade
+status: Open
+date: 2026-04-30
+owners:
+  - '@dvt/engine'
+severity: Low
+probability: Low
+context: >
+  WE-HX-2 narrows WorkflowEngine to public contract normalization and delegation over explicit
+  facade-facing use cases.
+risk: >
+  Future changes could reintroduce tracing, observability span handling, direct application-service
+  dependencies, or run-control service orchestration into WorkflowEngine.
+mitigation: >
+  packages/@dvt/engine/test/architecture/workflowEngineFacadeUseCases.architecture.test.ts fails if
+  the facade regrows those responsibilities or if the local component guide disappears.

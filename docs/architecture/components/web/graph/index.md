@@ -25,6 +25,8 @@ Canonical navigation for the Graph and Canvas architecture pack.
 - [Canvas Draft Session Component](./canvas-draft-session-component.md)
 - [Canvas Execution Selection Component](./canvas-execution-selection-component.md)
 - [Canvas Empty Authoring Entrypoint Component](./canvas-empty-authoring-entrypoint-component.md)
+- [Canvas Ready Node Authoring Entrypoint Component](./canvas-ready-node-authoring-entrypoint-component.md)
+- [Canvas Ready Node Authoring User Stories](./canvas-ready-node-authoring-user-stories.md)
 - [Canvas Playground Host Component](./canvas-playground-host-component.md)
 - [Canvas Layout Persistence Component](./canvas-layout-persistence-component.md)
 - [Canvas Startup And Draft Recovery Component](./canvas-startup-and-draft-recovery-component.md)

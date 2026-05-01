@@ -18,6 +18,7 @@ import {
 } from '@dvt/contracts';
 import {
   AllowAllAuthorizer,
+  buildWorkflowEngineUseCases,
   buildWorkflowEngineFacade,
   buildRunRecoveryService,
   buildRunControlService,
@@ -208,12 +209,15 @@ function createStack(
       ? {}
       : { runExecutionContextBindingPolicy: options.runExecutionContextBindingPolicy }),
   });
-  const engine = buildWorkflowEngineFacade({
+  const workflowUseCases = buildWorkflowEngineUseCases({
+    observability: createNoopObservability(),
     startRunApplicationService,
     runRecoveryService,
     runControlService,
     runStatusQueryService,
-    observability: createNoopObservability(),
+  });
+  const engine = buildWorkflowEngineFacade({
+    ...workflowUseCases,
     adapters,
   });
 

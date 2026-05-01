@@ -1,6 +1,8 @@
+/** Owned concern: render the project-node explorer plus active canvas node creation affordances. */
 import { PanelLeftClose, Upload } from 'lucide-react';
 import { useMemo } from 'react';
 
+import type { NodeKindRegistration } from '../plugins/nodeTypeContracts';
 import { resolveNodeKindRegistration } from '../plugins/nodeTypeRegistry';
 import type { CanonicalNode } from '../types/canonical';
 import { CANONICAL_NODE_DRAG_MIME_TYPE } from '../types/canonical';
@@ -13,7 +15,9 @@ import { cn } from './ui/utils';
 
 interface DbtExplorerProps {
   nodes: CanonicalNode[];
+  nodeKinds?: readonly NodeKindRegistration[];
   canEditGraph?: boolean;
+  onCreateAuthoringNode?: (registration: NodeKindRegistration) => void;
   onNodeDragStart?: (node: CanonicalNode) => void;
   onHide?: () => void;
   onOpenDataRegistry?: () => void;
@@ -35,11 +39,15 @@ function resolveNodeBadgeText(node: CanonicalNode): string {
 
 export default function DbtExplorer({
   nodes,
+  nodeKinds = [],
   canEditGraph = true,
+  onCreateAuthoringNode,
   onNodeDragStart,
   onHide,
   onOpenDataRegistry,
 }: Readonly<DbtExplorerProps>) {
+  const canCreateAuthoringNode =
+    canEditGraph && onCreateAuthoringNode != null && nodeKinds.length > 0;
   const groupedNodes = useMemo(() => {
     const groups: Record<string, CanonicalNode[]> = {};
 
@@ -116,6 +124,30 @@ export default function DbtExplorer({
           </div>
         )}
       </div>
+
+      {canCreateAuthoringNode ? (
+        <div className="border-b border-slate-700 px-4 py-3">
+          <h3 className="text-xs font-semibold uppercase text-slate-300">Add node</h3>
+          <div className="mt-2 grid gap-2">
+            {nodeKinds.map((registration) => {
+              const Icon = registration.icon;
+              return (
+                <Button
+                  key={registration.kind}
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-8 justify-start gap-2 border-slate-600 bg-slate-950/40 px-3 text-xs font-medium text-slate-100 hover:bg-slate-800 hover:text-white"
+                  onClick={() => onCreateAuthoringNode(registration)}
+                >
+                  <Icon className="size-3.5" />
+                  {registration.label}
+                </Button>
+              );
+            })}
+          </div>
+        </div>
+      ) : null}
 
       <ScrollArea className="flex-1">
         <Accordion

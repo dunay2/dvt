@@ -14,10 +14,7 @@ export type CanvasShellRouteComposerArgs = Readonly<{
 export type CanvasShellLayoutBuilderArgs = Readonly<{
   layoutState: Pick<
     CanvasRouteController,
-    | 'focusMode'
-    | 'explorerPanelVisible'
-    | 'inspectorPanelVisible'
-    | 'canOpenSourceImport'
+    'focusMode' | 'explorerPanelVisible' | 'inspectorPanelVisible' | 'canOpenSourceImport'
   >;
   recoveryCommands: Pick<CanvasRouteController, 'reloadLatestDraft'>;
   authoringCommands: Pick<
@@ -50,6 +47,7 @@ export type CanvasShellPanelsBuilderArgs = Readonly<{
     | 'importedNodeFocusIds'
   >;
   userPermissions: CanvasRouteViewState['effectiveUserPermissions'];
+  routePresentation: Pick<CanvasRouteViewState, 'canvasDocument' | 'availableCanvasKinds'>;
 }>;
 
 export type CanvasShellGraphBuilderArgs = Readonly<{

@@ -1,8 +1,6 @@
-import type { EngineRunRef, PlanRef, ResolvedRunContext, RunContext } from '@dvt/contracts';
-import { createNoopObservability } from '@dvt/observability';
+import type { EngineRunRef, PlanRef, RunContext } from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
-import type { StartRunTraceContext } from '../../src/core/lifecycle/StartRunTraceContext.js';
 import { WorkflowEngine } from '../../src/core/WorkflowEngine.js';
 
 function makePlanRef(): PlanRef {
@@ -31,34 +29,29 @@ describe('WorkflowEngine planRef normalization', () => {
       () =>
         new WorkflowEngine({
           adapters: new Map(),
-          observability: createNoopObservability(),
-          startRunApplicationService: {} as never,
-          runRecoveryService: {} as never,
-          runControlService: {} as never,
+          startRunUseCase: {} as never,
+          recoverRunUseCase: {} as never,
+          cancelRunUseCase: {} as never,
+          runStatusUseCase: {} as never,
         } as never)
-    ).toThrow(/runStatusQueryService is required/);
+    ).toThrow(/signalRunUseCase is required/);
   });
 
   it('does not reintroduce execution policy fields onto PlanRef', async () => {
-    const startRun = vi.fn<
-      (
-        planRef: PlanRef,
-        resolvedContext: ResolvedRunContext,
-        traceContext: StartRunTraceContext
-      ) => Promise<EngineRunRef>
-    >(async () => ({
-      provider: 'temporal',
-      tenantId: 'tenant-a',
-      namespace: 'default',
-      workflowId: 'wf-run-1',
-      runId: 'run-1',
-    }));
+    const startRun = vi.fn<(planRef: PlanRef, context: RunContext) => Promise<EngineRunRef>>(
+      async () => ({
+        provider: 'temporal',
+        tenantId: 'tenant-a',
+        namespace: 'default',
+        workflowId: 'wf-run-1',
+        runId: 'run-1',
+      })
+    );
 
     const engine = new WorkflowEngine({
       adapters: new Map(),
-      observability: createNoopObservability(),
-      startRunApplicationService: { startRun },
-      runRecoveryService: {
+      startRunUseCase: { startRun },
+      recoverRunUseCase: {
         recoverRun: async () => ({
           provider: 'temporal',
           tenantId: 'tenant-a',
@@ -67,12 +60,14 @@ describe('WorkflowEngine planRef normalization', () => {
           runId: 'run-1',
         }),
       },
-      runControlService: {
-        cancel: async () => {},
+      cancelRunUseCase: {
+        cancelRun: async () => {},
+      },
+      signalRunUseCase: {
         signal: async () => {},
       },
-      runStatusQueryService: {
-        getStatus: async () => ({ runId: 'run-1', status: 'PENDING' }),
+      runStatusUseCase: {
+        getRunStatus: async () => ({ runId: 'run-1', status: 'PENDING' }),
       },
     });
 

@@ -116,6 +116,10 @@ As of 2026-04-25:
   delegates to `useCanvasEdgeCommandRunner`; both runners serialize local
   command effects over the latest viewport graph and draft session before a
   React rerender can refresh hook inputs
+- the Explorer rail exposes the active canvas kind's node-kind creation catalog
+  while a canvas is ready, not only during the typed empty state; those buttons
+  call the same governed node admission command as empty-state first-node
+  creation and drag/drop
 - connection and transformation validation stay typed until presentation
 - route-visible operator copy is centralized instead of repeated across handlers
 - protected draft reads now project a semantic canonical graph,
@@ -573,6 +577,8 @@ string checks. Current semantic coverage includes:
 - typed empty-state catalog and copy derivation from the active runtime;
 - first-node authoring remains available even when source import capability is
   unavailable.
+- ready-canvas authoring exposes active node-kind creation in the Explorer rail,
+  so users can add more nodes after the first graph already exists;
 - explicit persisted-draft replacement through CAS saves, including the
   negative path that existing drafts are not overwritten without
   `replace_current`;

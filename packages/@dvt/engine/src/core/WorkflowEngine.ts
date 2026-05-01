@@ -3,92 +3,62 @@
  * @baseline ADR-0003: Execution Model Sovereignty
  * @baseline ADR-0014: Run-Driven Adapter Model
  * @baseline ADR-0030: Pre-Dispatch Intent Log for startRun Crash Consistency
+ * @ownedConcern Normalize the public IWorkflowEngine contract and delegate behavior to facade use cases.
  * @decision WorkflowEngine is an application-facing facade that delegates
  *   startRun, recoverRun, canonical status reads, and control operations
- *   to focused collaborators.
- * @consequence Runtime orchestration responsibilities are split into focused collaborators.
+ *   to explicit use-case services.
+ * @consequence Runtime orchestration responsibilities are hosted outside the facade.
  */
 import { parsePlanRef, parseRecoverRunCommand, parseRunContext } from '@dvt/contracts';
 import type {
   CanonicalRunStatus,
   EngineRunRef,
   PlanRef,
-  ResolvedRunContext,
   RunContext,
   SignalRequest,
 } from '@dvt/contracts';
-import type { IObservability } from '@dvt/observability';
 
 import type { IProviderAdapter } from '../adapters/IProviderAdapter.js';
-import type { IStartRunApplicationService } from '../application/IStartRunApplicationService.js';
+import type {
+  IWorkflowCancelRunUseCase,
+  IWorkflowRecoverRunUseCase,
+  IWorkflowRunStatusUseCase,
+  IWorkflowSignalRunUseCase,
+  IWorkflowStartRunUseCase,
+} from '../application/workflow-engine-use-cases/index.js';
 import { AdapterNotRegisteredError } from '../contracts/errors.js';
-import type { IRunControlService } from '../domain/IRunControlService.js';
-import type { IRunRecoveryService } from '../domain/IRunRecoveryService.js';
-import type { IRunStatusQueryService } from '../domain/IRunStatusQueryService.js';
 import type { IWorkflowEngine } from '../ports/IWorkflowEngine.js';
-import { toErrorMessage } from '../utils/errorUtils.js';
-
-import { buildTraceContext } from './lifecycle/coreRuntime.js';
 
 export interface WorkflowEngineDeps {
   adapters: Map<EngineRunRef['provider'], IProviderAdapter>;
   requiredProviders?: EngineRunRef['provider'][];
-  observability: IObservability;
-  startRunApplicationService: IStartRunApplicationService;
-  runRecoveryService: IRunRecoveryService;
-  runControlService: IRunControlService;
-  runStatusQueryService: IRunStatusQueryService;
+  startRunUseCase: IWorkflowStartRunUseCase;
+  recoverRunUseCase: IWorkflowRecoverRunUseCase;
+  cancelRunUseCase: IWorkflowCancelRunUseCase;
+  runStatusUseCase: IWorkflowRunStatusUseCase;
+  signalRunUseCase: IWorkflowSignalRunUseCase;
 }
 
 export class WorkflowEngine implements IWorkflowEngine {
-  private readonly observability: IObservability;
-  private readonly startRunApplicationService: IStartRunApplicationService;
-  private readonly runRecoveryService: IRunRecoveryService;
-  private readonly runControlService: IRunControlService;
-  private readonly runStatusQueryService: IRunStatusQueryService;
+  private readonly startRunUseCase: IWorkflowStartRunUseCase;
+  private readonly recoverRunUseCase: IWorkflowRecoverRunUseCase;
+  private readonly cancelRunUseCase: IWorkflowCancelRunUseCase;
+  private readonly runStatusUseCase: IWorkflowRunStatusUseCase;
+  private readonly signalRunUseCase: IWorkflowSignalRunUseCase;
 
   constructor(private readonly deps: WorkflowEngineDeps) {
     this.validateDependencies();
-    this.observability = deps.observability;
-    this.startRunApplicationService = deps.startRunApplicationService;
-    this.runRecoveryService = deps.runRecoveryService;
-    this.runControlService = deps.runControlService;
-    this.runStatusQueryService = deps.runStatusQueryService;
+    this.startRunUseCase = deps.startRunUseCase;
+    this.recoverRunUseCase = deps.recoverRunUseCase;
+    this.cancelRunUseCase = deps.cancelRunUseCase;
+    this.runStatusUseCase = deps.runStatusUseCase;
+    this.signalRunUseCase = deps.signalRunUseCase;
   }
 
   async startRun(planRef: PlanRef, context: RunContext): Promise<EngineRunRef> {
     const validatedPlanRef = normalizePlanRef(parsePlanRef(planRef));
     const validatedContext = normalizeRunContext(parseRunContext(context));
-    const resolvedContext = resolveInitialRunContext(validatedContext);
-    const traceContext = buildTraceContext(resolvedContext, validatedPlanRef.planId);
-
-    return this.observability.withContext(traceContext, () =>
-      this.observability.traces.withSpan(
-        'engine.startRun',
-        {
-          context: traceContext,
-          attributes: {
-            provider: resolvedContext.targetAdapter,
-            planUri: validatedPlanRef.uri,
-          },
-        },
-        async (span) => {
-          try {
-            const runRef = await this.startRunApplicationService.startRun(
-              validatedPlanRef,
-              resolvedContext,
-              traceContext
-            );
-            span.setStatus('ok');
-            return runRef;
-          } catch (error) {
-            span.recordException(error);
-            span.setStatus('error', toErrorMessage(error));
-            throw error;
-          }
-        }
-      )
-    );
+    return this.startRunUseCase.startRun(validatedPlanRef, validatedContext);
   }
 
   async recoverRun(
@@ -103,33 +73,33 @@ export class WorkflowEngine implements IWorkflowEngine {
     });
     const validatedPlanRef = normalizePlanRef(validated.planRef);
     const validatedContext = normalizeRunContext(validated.context);
-    return this.runRecoveryService.recoverRun({
-      sourceRunId: validated.sourceRunId,
-      planRef: validatedPlanRef,
-      context: validatedContext,
-    });
+    return this.recoverRunUseCase.recoverRun(
+      validated.sourceRunId,
+      validatedPlanRef,
+      validatedContext
+    );
   }
 
   async cancelRun(engineRunRef: EngineRunRef): Promise<void> {
-    await this.runControlService.cancel(engineRunRef);
+    await this.cancelRunUseCase.cancelRun(engineRunRef);
   }
 
   async getRunStatus(engineRunRef: EngineRunRef): Promise<CanonicalRunStatus> {
-    return this.runStatusQueryService.getStatus(engineRunRef);
+    return this.runStatusUseCase.getRunStatus(engineRunRef);
   }
 
   async signal(engineRunRef: EngineRunRef, request: SignalRequest): Promise<void> {
-    await this.runControlService.signal(engineRunRef, request);
+    await this.signalRunUseCase.signal(engineRunRef, request);
   }
 
   private validateDependencies(): void {
     const requiredDeps: Array<[name: string, value: unknown]> = [
       ['adapters', this.deps.adapters],
-      ['observability', this.deps.observability],
-      ['startRunApplicationService', this.deps.startRunApplicationService],
-      ['runRecoveryService', this.deps.runRecoveryService],
-      ['runControlService', this.deps.runControlService],
-      ['runStatusQueryService', this.deps.runStatusQueryService],
+      ['startRunUseCase', this.deps.startRunUseCase],
+      ['recoverRunUseCase', this.deps.recoverRunUseCase],
+      ['cancelRunUseCase', this.deps.cancelRunUseCase],
+      ['runStatusUseCase', this.deps.runStatusUseCase],
+      ['signalRunUseCase', this.deps.signalRunUseCase],
     ];
 
     for (const [name, value] of requiredDeps) {
@@ -170,12 +140,4 @@ function normalizeRunContext(input: ReturnType<typeof parseRunContext>): RunCont
     out.runExecutionContextRef = input.runExecutionContextRef;
   }
   return out;
-}
-
-function resolveInitialRunContext(ctx: RunContext): ResolvedRunContext {
-  return {
-    ...ctx,
-    logicalAttemptId: 1,
-    originRunId: ctx.runId,
-  };
 }

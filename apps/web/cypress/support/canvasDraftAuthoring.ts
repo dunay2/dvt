@@ -6,7 +6,10 @@ import {
   WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
   WORKSPACE_GRAPH_DRAFT_INITIAL_REVISION,
 } from '../../src/app/services/workspace/workspaceGraphDraftProtocol';
-import { buildDraftReadOkResponse } from '../../src/app/services/workspace/workspaceGraphDraftProtocol.test.fixtures';
+import {
+  buildDraftReadOkResponse,
+  buildDraftSaveSavedResponse,
+} from '../../src/app/services/workspace/workspaceGraphDraftProtocol.test.fixtures';
 
 import { stubE2eApi } from './e2eApiStub';
 import { E2E_WORKSPACE_SESSION } from './workspaceSession';
@@ -22,6 +25,7 @@ export type StubCanvasDraftReadOptions = {
   canvasKind?: 'transformation' | 'dbt';
   emptyCanvas?: boolean;
   title?: string;
+  readOnly?: boolean;
 };
 
 type CanvasAuthoringDraft = ReturnType<typeof buildWorkspaceGraphAuthoringDraft>;
@@ -183,7 +187,18 @@ export function buildCanvasDraftReadResponse(
   scope: CanvasDraftSessionScope,
   options: StubCanvasDraftReadOptions = {}
 ): CanvasDraftReadResponse {
+  const capability = options.readOnly
+    ? {
+        scope,
+        mode: 'read_only' as const,
+        canRead: true,
+        canWrite: false,
+        reason: 'write_denied' as const,
+      }
+    : undefined;
+
   return buildDraftReadOkResponse(scope, {
+    ...(capability ? { capability } : {}),
     record: buildProtectedDraftRecord(scope, {
       revision: 'rev-e2e-graph-ready',
       scope,
@@ -224,6 +239,90 @@ export function stubCanvasDraftRead(
     return {
       statusCode: 200,
       body: responseBody,
+    };
+  });
+}
+
+export function stubCanvasDraftSave(scope: CanvasDraftSessionScope = E2E_WORKSPACE_SESSION): void {
+  stubE2eApi('PUT', '/workspace/graph/draft', ({ body }) => {
+    expect(body).to.deep.include({
+      schemaVersion: WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
+      expectedRevision: 'rev-e2e-graph-ready',
+    });
+    expect((body as CanvasDraftSaveRequest).scope).to.deep.equal(scope);
+
+    return {
+      body: buildDraftSaveSavedResponse(scope, {
+        revision: 'rev-e2e-graph-ready-2',
+      }),
+    };
+  });
+}
+
+export function stubFailingCanvasDraftSave(
+  scope: CanvasDraftSessionScope = E2E_WORKSPACE_SESSION
+): void {
+  stubE2eApi('PUT', '/workspace/graph/draft', ({ body }) => {
+    expect(body).to.deep.include({
+      schemaVersion: WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
+      expectedRevision: 'rev-e2e-graph-ready',
+    });
+    expect((body as CanvasDraftSaveRequest).scope).to.deep.equal(scope);
+
+    return {
+      statusCode: 500,
+      body: {
+        error: {
+          type: 'internal_error',
+          reason: 'draft_save_failed',
+          message: 'Draft save failed in e2e fixture.',
+        },
+      },
+    };
+  });
+}
+
+export function stubStatefulCanvasDraftAuthoring(
+  options: StubCanvasDraftReadOptions = {},
+  scope: CanvasDraftSessionScope = E2E_WORKSPACE_SESSION
+): void {
+  let revision = 'rev-e2e-graph-ready';
+  let draft = buildCanvasAuthoringDraft(options);
+
+  stubE2eApi('GET', '/workspace/graph/draft', ({ url }) => {
+    expect(Object.fromEntries(url.searchParams.entries())).to.deep.include({
+      tenantId: scope.tenantId,
+      projectId: scope.projectId,
+      environmentId: scope.environmentId,
+    });
+
+    return {
+      statusCode: 200,
+      body: buildDraftReadOkResponse(scope, {
+        record: buildProtectedDraftRecord(scope, {
+          revision,
+          scope,
+          draft,
+        }),
+      }),
+    };
+  });
+
+  stubE2eApi('PUT', '/workspace/graph/draft', ({ body }) => {
+    const saveRequest = body as CanvasDraftSaveRequest;
+    expect(saveRequest).to.deep.include({
+      schemaVersion: WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
+      expectedRevision: revision,
+    });
+    expect(saveRequest.scope).to.deep.equal(scope);
+
+    draft = saveRequest.draft;
+    revision = `rev-e2e-graph-ready-${draft.nodeIds.join('-')}`;
+
+    return {
+      body: buildDraftSaveSavedResponse(scope, {
+        revision,
+      }),
     };
   });
 }
