@@ -45,6 +45,11 @@ describe('Temporal PlanRef capacity SLA policy', () => {
             'maxContinueAsNewPayloadBytes must be less than or equal to maxStartPayloadBytes',
         },
         {
+          code: 'CONTINUE_AS_NEW_PAYLOAD_EXCEEDS_PROFILE',
+          message:
+            'maxContinueAsNewPayloadBytes must be less than or equal to the profile continuation payload limit',
+        },
+        {
           code: 'PLAN_REF_RETENTION_TOO_SHORT',
           message:
             'planRefRetentionHours must be greater than expectedMaxWorkflowDurationHours plus the profile safety margin',
@@ -88,6 +93,28 @@ describe('Temporal PlanRef capacity SLA policy', () => {
           code: 'WORKFLOW_HISTORY_BYTES_EXCEEDS_PROFILE',
           message:
             'estimatedWorkflowHistoryBytes must be less than or equal to the profile byte limit',
+        },
+      ],
+    });
+  });
+
+  it('rejects continue-as-new payload budgets that exceed the governed profile cap', () => {
+    expect(
+      evaluateTemporalPlanRefCapacitySla({
+        profile: TEMPORAL_PLANREF_CAPACITY_PROFILE.standard,
+        continueAsNewAfterLayerCount: 100,
+        maxStartPayloadBytes: 2_000_000,
+        maxContinueAsNewPayloadBytes: 500_001,
+        expectedMaxWorkflowDurationHours: 24,
+        planRefRetentionHours: 72,
+      })
+    ).toEqual({
+      status: 'not_production_ready',
+      violations: [
+        {
+          code: 'CONTINUE_AS_NEW_PAYLOAD_EXCEEDS_PROFILE',
+          message:
+            'maxContinueAsNewPayloadBytes must be less than or equal to the profile continuation payload limit',
         },
       ],
     });

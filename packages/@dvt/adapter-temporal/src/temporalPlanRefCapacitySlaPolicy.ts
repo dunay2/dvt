@@ -7,6 +7,7 @@ export type TemporalPlanRefCapacityProfileName = 'standard';
 export type TemporalPlanRefCapacityViolationCode =
   | 'CONTINUE_AS_NEW_DISABLED'
   | 'LAYER_COUNT_EXCEEDS_PROFILE'
+  | 'CONTINUE_AS_NEW_PAYLOAD_EXCEEDS_PROFILE'
   | 'CONTINUE_AS_NEW_PAYLOAD_EXCEEDS_START_BUDGET'
   | 'PLAN_REF_RETENTION_TOO_SHORT'
   | 'SEGMENT_COUNT_EXCEEDS_PROFILE'
@@ -137,16 +138,24 @@ function evaluateOptionalMaximum(
 function evaluatePayloadBudget(
   input: TemporalPlanRefCapacitySlaInput
 ): TemporalPlanRefCapacityViolation[] {
-  if (input.maxContinueAsNewPayloadBytes <= input.maxStartPayloadBytes) {
-    return [];
-  }
+  const violations: TemporalPlanRefCapacityViolation[] = [];
 
-  return [
-    {
+  if (input.maxContinueAsNewPayloadBytes > input.maxStartPayloadBytes) {
+    violations.push({
       code: 'CONTINUE_AS_NEW_PAYLOAD_EXCEEDS_START_BUDGET',
       message: 'maxContinueAsNewPayloadBytes must be less than or equal to maxStartPayloadBytes',
-    },
-  ];
+    });
+  }
+
+  if (input.maxContinueAsNewPayloadBytes > input.profile.maxContinueAsNewPayloadBytes) {
+    violations.push({
+      code: 'CONTINUE_AS_NEW_PAYLOAD_EXCEEDS_PROFILE',
+      message:
+        'maxContinueAsNewPayloadBytes must be less than or equal to the profile continuation payload limit',
+    });
+  }
+
+  return violations;
 }
 
 function evaluatePlanRefRetentionBudget(
