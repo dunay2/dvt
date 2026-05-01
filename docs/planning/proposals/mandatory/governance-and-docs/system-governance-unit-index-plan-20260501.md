@@ -152,6 +152,9 @@ Create:
 
 - `docs/planning/status/system-governance-unit-taxonomy-20260501.md`
 - `docs/planning/status/system-governance-unit-index-20260501.md`
+- `docs/planning/status/system-governance-unit-index.units.yaml`
+- `scripts/check-governance-unit-coverage.cjs`
+- `scripts/check-governance-unit-coverage.test.cjs`
 
 Modify:
 
@@ -163,6 +166,7 @@ Generated:
 
 - run `pnpm docs:sync` after adding docs;
 - run `pnpm docs:workboard:generate` after lane YAML changes.
+- run `pnpm docs:governance:unit-coverage` after manifest changes.
 
 ## Phase 0: Existing Documentation Review
 
@@ -220,6 +224,8 @@ full content.
 - [ ] Define C&Q attachment rule: no command/query without DDD owner.
 - [ ] Define documentation attachment rule.
 - [ ] Define validation expectations for each status.
+- [ ] Define that every tracked file must be owned by exactly one `component`
+      or `source` unit.
 - [ ] Run markdown lint on the taxonomy.
 
 ## Phase 2: Create The Root Unit Index
@@ -243,6 +249,10 @@ full content.
       status, and next subdivision.
 - [ ] Mark `SYS-WEB` as `coverage-required`, not as drift.
 - [ ] Mark `SYS-PLANSTORE` as `review` with active S08 drift references.
+- [ ] Create the machine-readable unit manifest with broad component coverage
+      for every tracked repository file.
+- [ ] Add the unit coverage guard script and tests.
+- [ ] Wire `pnpm docs:governance:unit-coverage` into repository validation.
 - [ ] Run markdown lint on the index.
 
 ## Phase 3: Link Existing Inventory And Planning Surfaces
@@ -325,6 +335,8 @@ Run after each document-changing slice:
 
 - `pnpm docs:sync`
 - `pnpm docs:workboard:generate` when lane YAML changes
+- `pnpm docs:governance:unit-coverage`
+- `pnpm test:docs:governance:unit-coverage`
 - `pnpm exec markdownlint-cli2 "<changed-docs>"`
 - `pnpm verify:prepush`
 
@@ -333,7 +345,7 @@ Run after each document-changing slice:
 Use small PRs:
 
 1. **PR-1:** save this plan and reference it in the proposal portfolio.
-2. **PR-2:** create taxonomy and root unit index.
+2. **PR-2:** create taxonomy, root unit index, manifest, and coverage guard.
 3. **PR-3:** link existing documentation into the index.
 4. **PR-4:** subdivide `SYS-PLANSTORE`.
 5. **PR-5:** subdivide `SYS-WEB`.

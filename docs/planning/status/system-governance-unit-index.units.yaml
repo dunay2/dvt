@@ -1,0 +1,480 @@
+---
+version: 1
+rootUnit: SYS-DVT
+units:
+  - id: SYS-DVT
+    name: DVT system
+    level: system
+    status: review
+    owns: []
+    childrenRequired: true
+    dddOwner: system
+    cqRails: none - root governance unit
+    governance:
+      - docs/architecture/reference-architecture.md
+      - docs/concepts/domain-language.md
+      - docs/planning/status/governance-document-rule-inventory.md
+    fowlerSignals:
+      - coverage refinement
+
+  - id: SYS-CONTRACTS
+    name: Contracts workspace family
+    parent: SYS-DVT
+    level: workspace
+    status: coverage-required
+    owns: []
+    childrenRequired: true
+    dddOwner: PORT
+    cqRails: contract families, command/query DTOs, schemas
+    governance:
+      - docs/contracts/index.md
+      - docs/adr/ADR-0005-contract-formalization-tooling.md
+      - docs/adr/ADR-0006-contract-tooling-governance.md
+      - docs/adr/ADR-0018_Shared_Kernel_Ownership_Governance.md
+    fowlerSignals:
+      - coverage refinement
+
+  - id: SYS-CONTRACTS-ROOT
+    name: Contracts root component
+    parent: SYS-CONTRACTS
+    level: component
+    status: coverage-required
+    owns:
+      - packages/@dvt/contracts/**
+      - packages/@dvt/planner-contracts/**
+      - contracts/**
+    childrenRequired: true
+    dddOwner: PORT
+    cqRails: contract DTOs and port shapes
+    governance:
+      - docs/contracts/index.md
+    fowlerSignals:
+      - coverage refinement
+
+  - id: SYS-RUNTIME
+    name: Runtime domain
+    parent: SYS-DVT
+    level: domain
+    status: coverage-required
+    owns: []
+    childrenRequired: true
+    dddOwner: AS
+    cqRails: runtime commands and read models
+    governance:
+      - docs/planning/execution-model/dvt-execution-model.md
+      - docs/architecture/system-delivery-status.md
+      - docs/planning/status/system-operations-inventory-20260501.md
+    fowlerSignals:
+      - coverage refinement
+
+  - id: SYS-RUNTIME-ROOT
+    name: Runtime root component
+    parent: SYS-RUNTIME
+    level: component
+    status: coverage-required
+    owns:
+      - packages/@dvt/engine/**
+      - packages/@dvt/state-store/**
+      - packages/@dvt/run-domain/**
+      - packages/@dvt/delivery/**
+      - packages/@dvt/plan-interpreter/**
+      - packages/@dvt/plan-verifier/**
+      - packages/@dvt/canonical/**
+      - packages/@dvt/crypto/**
+      - packages/@dvt/dsl/**
+      - packages/@dvt/cli/**
+      - packages/cli/**
+    childrenRequired: true
+    dddOwner: AS
+    cqRails: runtime commands and queries
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+    fowlerSignals:
+      - coverage refinement
+
+  - id: SYS-PLANSTORE
+    name: Plan-store domain
+    parent: SYS-DVT
+    level: domain
+    status: review
+    owns: []
+    childrenRequired: true
+    dddOwner: PORT
+    cqRails: PS-Cxx and PS-Qxx
+    governance:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+      - docs/planning/status/system-operations-inventory-20260501.md
+      - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
+    fowlerSignals:
+      - boundary drift
+      - duplicate semantics
+
+  - id: SYS-PLANSTORE-ROOT
+    name: Plan-store root component
+    parent: SYS-PLANSTORE
+    level: component
+    status: coverage-required
+    owns:
+      - packages/@dvt/artifacts/**
+    childrenRequired: true
+    dddOwner: PORT
+    cqRails: PS-Cxx and PS-Qxx
+    governance:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+    fowlerSignals:
+      - coverage refinement
+      - boundary drift
+
+  - id: SYS-API
+    name: API workspace
+    parent: SYS-DVT
+    level: workspace
+    status: coverage-required
+    owns: []
+    childrenRequired: true
+    dddOwner: AS
+    cqRails: API command/query route rails
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+    fowlerSignals:
+      - coverage refinement
+
+  - id: SYS-API-ROOT
+    name: API root component
+    parent: SYS-API
+    level: component
+    status: coverage-required
+    owns:
+      - apps/api/**
+    childrenRequired: true
+    dddOwner: AS
+    cqRails: API commands and queries
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+    fowlerSignals:
+      - coverage refinement
+
+  - id: SYS-WEB
+    name: Web workspace
+    parent: SYS-DVT
+    level: workspace
+    status: coverage-required
+    owns: []
+    childrenRequired: true
+    dddOwner: ENTRY
+    cqRails: UI actions and API queries
+    governance:
+      - docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md
+      - docs/planning/proposals/web-user-stories-20260429.md
+    fowlerSignals:
+      - coverage refinement
+      - hidden authority
+
+  - id: SYS-WEB-ROOT
+    name: Web root component
+    parent: SYS-WEB
+    level: component
+    status: coverage-required
+    owns:
+      - apps/web/**
+    childrenRequired: true
+    dddOwner: ENTRY
+    cqRails: UI actions and API queries
+    governance:
+      - docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md
+    fowlerSignals:
+      - coverage refinement
+      - hidden authority
+
+  - id: SYS-PLANNER
+    name: Planner workspace family
+    parent: SYS-DVT
+    level: workspace
+    status: coverage-required
+    owns: []
+    childrenRequired: true
+    dddOwner: DS
+    cqRails: planner build and derivation rails
+    governance:
+      - docs/contracts/planner/index.md
+      - docs/planning/status/system-operations-inventory-20260501.md
+    fowlerSignals:
+      - coverage refinement
+
+  - id: SYS-PLANNER-ROOT
+    name: Planner root component
+    parent: SYS-PLANNER
+    level: component
+    status: coverage-required
+    owns:
+      - packages/@dvt/planner/**
+    childrenRequired: true
+    dddOwner: DS
+    cqRails: planner build and derivation rails
+    governance:
+      - docs/contracts/planner/index.md
+    fowlerSignals:
+      - coverage refinement
+
+  - id: SYS-ADAPTERS
+    name: Adapter domain
+    parent: SYS-DVT
+    level: domain
+    status: coverage-required
+    owns: []
+    childrenRequired: true
+    dddOwner: ADP
+    cqRails: adapter implementations of owned ports
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+    fowlerSignals:
+      - coverage refinement
+
+  - id: SYS-ADAPTERS-ROOT
+    name: Adapter root component
+    parent: SYS-ADAPTERS
+    level: component
+    status: coverage-required
+    owns:
+      - packages/@dvt/adapter-postgres/**
+      - packages/@dvt/adapter-temporal/**
+    childrenRequired: true
+    dddOwner: ADP
+    cqRails: adapter implementations of owned ports
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+    fowlerSignals:
+      - coverage refinement
+
+  - id: SYS-WORKERS
+    name: Worker domain
+    parent: SYS-DVT
+    level: domain
+    status: coverage-required
+    owns: []
+    childrenRequired: true
+    dddOwner: AS
+    cqRails: worker commands and operational queries
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+    fowlerSignals:
+      - coverage refinement
+
+  - id: SYS-WORKERS-ROOT
+    name: Worker root component
+    parent: SYS-WORKERS
+    level: component
+    status: coverage-required
+    owns:
+      - apps/temporal-worker/**
+      - apps/outbox-worker/**
+      - apps/projector-worker/**
+      - apps/lineage-worker/**
+    childrenRequired: true
+    dddOwner: AS
+    cqRails: worker commands and operational queries
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+    fowlerSignals:
+      - coverage refinement
+
+  - id: SYS-OBSERVABILITY
+    name: Observability domain
+    parent: SYS-DVT
+    level: domain
+    status: coverage-required
+    owns: []
+    childrenRequired: true
+    dddOwner: PORT
+    cqRails: telemetry commands and operational queries
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+    fowlerSignals:
+      - coverage refinement
+
+  - id: SYS-OBSERVABILITY-ROOT
+    name: Observability root component
+    parent: SYS-OBSERVABILITY
+    level: component
+    status: coverage-required
+    owns:
+      - packages/@dvt/observability/**
+      - packages/@dvt/observability-otel/**
+    childrenRequired: true
+    dddOwner: PORT
+    cqRails: telemetry commands and operational queries
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+    fowlerSignals:
+      - coverage refinement
+
+  - id: SYS-TRACEABILITY
+    name: Traceability domain
+    parent: SYS-DVT
+    level: domain
+    status: coverage-required
+    owns: []
+    childrenRequired: true
+    dddOwner: DS
+    cqRails: traceability commands and lineage queries
+    governance:
+      - docs/adr/ADR-0000-Code-generation-with-normative-traceability-required.en.md
+      - docs/planning/status/system-operations-inventory-20260501.md
+    fowlerSignals:
+      - coverage refinement
+
+  - id: SYS-TRACEABILITY-ROOT
+    name: Traceability root component
+    parent: SYS-TRACEABILITY
+    level: component
+    status: coverage-required
+    owns:
+      - packages/@dvt/traceability-service/**
+      - traceability.config.json
+      - traceability.issue-baseline.json
+      - traceability.manifest.json
+    childrenRequired: true
+    dddOwner: DS
+    cqRails: traceability commands and lineage queries
+    governance:
+      - docs/adr/ADR-0000-Code-generation-with-normative-traceability-required.en.md
+    fowlerSignals:
+      - coverage refinement
+
+  - id: SYS-CI-GOVERNANCE
+    name: CI and automation governance
+    parent: SYS-DVT
+    level: workspace
+    status: coverage-required
+    owns: []
+    childrenRequired: true
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+      - docs/planning/status/governance-document-rule-inventory.md
+    fowlerSignals:
+      - coverage refinement
+
+  - id: SYS-CI-GOVERNANCE-ROOT
+    name: CI and automation root component
+    parent: SYS-CI-GOVERNANCE
+    level: component
+    status: coverage-required
+    owns:
+      - .github/**
+      - .husky/**
+      - scripts/**
+      - tools/**
+      - packages/test/**
+      - vitest.config.ts
+    childrenRequired: true
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+    fowlerSignals:
+      - coverage refinement
+
+  - id: SYS-DOCS-GOVERNANCE
+    name: Documentation governance
+    parent: SYS-DVT
+    level: workspace
+    status: coverage-required
+    owns: []
+    childrenRequired: true
+    dddOwner: INFRA
+    cqRails: none - documentation governance
+    governance:
+      - docs/DOCS_README.md
+      - docs/planning/status/governance-document-rule-inventory.md
+    fowlerSignals:
+      - coverage refinement
+
+  - id: SYS-DOCS-GOVERNANCE-ROOT
+    name: Documentation governance root component
+    parent: SYS-DOCS-GOVERNANCE
+    level: component
+    status: coverage-required
+    owns:
+      - docs/**
+      - runbooks/**
+      - README.md
+      - AGENTS.md
+      - CLAUDE.md
+      - CONTRIBUTING.md
+      - CHANGELOG.md
+    childrenRequired: true
+    dddOwner: INFRA
+    cqRails: none - documentation governance
+    governance:
+      - docs/DOCS_README.md
+      - docs/planning/status/governance-document-rule-inventory.md
+    fowlerSignals:
+      - coverage refinement
+
+  - id: SYS-REPO-METADATA
+    name: Repository metadata
+    parent: SYS-DVT
+    level: workspace
+    status: canonical
+    owns: []
+    childrenRequired: true
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+    fowlerSignals:
+      - coverage refinement
+
+  - id: SYS-REPO-METADATA-ROOT
+    name: Repository metadata root component
+    parent: SYS-REPO-METADATA
+    level: component
+    status: canonical
+    owns:
+      - .claude/**
+      - .gh-comments/**
+      - .git.bfg-report/**
+      - .golden/**
+      - .vscode/**
+      - .arc-policy.yaml
+      - .editorconfig
+      - .gitattributes
+      - .gitignore
+      - .gitmessage
+      - .markdownlint.json
+      - .markdownlint-cli2.jsonc
+      - .markdownlintignore
+      - .node-version
+      - .npmrc
+      - .nvmrc
+      - .prettierignore
+      - .prettierrc.json
+      - .versionrc.json
+      - artifacts/**
+      - buzon/**
+      - commitlint.config.cjs
+      - dev.sh
+      - eslint.config.cjs
+      - infra/**
+      - package.json
+      - pnpm-lock.yaml
+      - pnpm-workspace.yaml
+      - tsconfig.eslint.base.json
+      - tsconfig.eslint.json
+      - tsconfig.json
+      - tsconfig.node-runtime.base.json
+      - tsconfig.package-bundler.base.json
+      - tsconfig.test.json
+      - turbo.json
+      - zensical.yml
+    childrenRequired: true
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+    fowlerSignals:
+      - coverage refinement
