@@ -790,12 +790,16 @@ tasks:
       - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
       - docs/planning/reviews/20260402-s08-plan-record-plan-store-gap-review.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-record-plan-store-execution-plan-20260402.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+      - docs/planning/status/system-operations-inventory-20260501.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/s08-4-stepkind-step-type-config-hardening-plan-20260403.md
     status_reason: >-
       ADR-0043 is accepted; S08-3, S08-4, and S08-5 (`A/B/C`) are now delivered with fail-closed
       admission, governed `runExecutionContext` boundary handling, and plan-level plugin
-      compatibility fingerprinting. Remaining S08 work is the Postgres migration arc.
-    last_verified: '2026-04-06'
+      compatibility fingerprinting. The remaining S08 work is now gated by the no-legacy plan-store
+      command/query matrix and system operations inventory review; implementation starts only after
+      the matrix is accepted or amended.
+    last_verified: '2026-05-01'
   - task_id: S08-3
     parent_task: S08
     priority: P0

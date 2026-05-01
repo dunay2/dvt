@@ -20,6 +20,7 @@ planning_type: proposal
 
 - [Governance And Docs](./mandatory/governance-and-docs/proposal-priority-triage-20260402.md)
 - [Doc-Driven Framework And Tooling Plan](./mandatory/governance-and-docs/doc-driven-framework-and-tooling-plan-20260404.md)
+- [System Governance Unit Index Plan](./mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md)
 - [Runtime And Contracts](./mandatory/runtime-and-contracts/s08-plan-record-plan-store-execution-plan-20260402.md)
 - [MW-A2 GenericGraphSource plan](./mandatory/runtime-and-contracts/mw-a2-generic-graph-source-plan-20260404.md)
 - [AR-C6 Temporal cancel semantics plan](./mandatory/runtime-and-contracts/ar-c6-temporal-cancel-semantics-plan-20260410.md)
