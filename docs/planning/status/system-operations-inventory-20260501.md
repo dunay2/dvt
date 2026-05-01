@@ -27,6 +27,8 @@ The inventory is **descriptive**, not prescriptive: it does not change behavior.
 It is a review-ready status surface intended to feed scoped C&Q matrices (see the S08
 plan-store matrix as the precedent template:
 `docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md`).
+It also feeds the broader system governance unit index:
+`docs/planning/status/system-governance-unit-index-20260501.md`.
 
 ## Governing Sources
 
