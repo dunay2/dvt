@@ -3,7 +3,7 @@
     "adrs": 48,
     "evidenceDocs": 115,
     "normativeDocs": 345,
-    "statusDocs": 61
+    "statusDocs": 62
   },
   "adrs": [
     {
@@ -3186,6 +3186,10 @@
     {
       "path": "docs/planning/status/root-local-doc-triage-20260417.md",
       "filename": "root-local-doc-triage-20260417.md"
+    },
+    {
+      "path": "docs/planning/status/system-governance-document-unit-map-20260501.md",
+      "filename": "system-governance-document-unit-map-20260501.md"
     },
     {
       "path": "docs/planning/status/system-governance-unit-index-20260501.md",
