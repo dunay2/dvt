@@ -2,7 +2,7 @@
   "summary": {
     "adrs": 48,
     "evidenceDocs": 115,
-    "normativeDocs": 343,
+    "normativeDocs": 344,
     "statusDocs": 58
   },
   "adrs": [
@@ -2452,6 +2452,10 @@
     {
       "path": "docs/architecture/domain-ui.md",
       "filename": "domain-ui.md"
+    },
+    {
+      "path": "docs/architecture/fowler-opportunity-planning-governance.md",
+      "filename": "fowler-opportunity-planning-governance.md"
     },
     {
       "path": "docs/architecture/index.md",

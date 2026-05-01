@@ -23,6 +23,7 @@ procedure. Both must be respected - they are not alternatives.
 - [Testing and CI Capabilities](./testing-and-ci-capabilities.md)
 - [Planning Control Tower](../planning/state/planning-control-tower.md)
 - [Command And Query Rail Governance](../architecture/command-query-rail-governance.md)
+- [Fowler Opportunity Planning Governance](../architecture/fowler-opportunity-planning-governance.md)
 
 ## Startup Router Rule
 
@@ -91,6 +92,10 @@ that already exists or reinventing what is already solved:
   constraints (ESM, TypeScript, no framework lock-in)
 - check whether the behavior is already represented by a command or query in
   the owning bounded context; reuse that rail instead of inventing a synonym
+- classify relevant findings as Fowler opportunities before implementation:
+  boundary drift, responsibility overload, primitive obsession, data clumps,
+  feature envy, duplicate semantics, hidden authority, anemic domain,
+  test-only confidence, or documentation drift
 - look for how comparable production projects solve the same class of problem
   (event sourcing, outbox pattern, hexagonal architecture) - document what was
   found and why it was accepted or rejected in the Think-First options
@@ -118,6 +123,10 @@ it to its destination. This is the gate between understanding and acting.
 - options considered - include libraries or patterns evaluated in Phase 0
 - selected option and rationale
 - rejected alternatives
+- Fowler opportunity matrix - for non-trivial slices, record scenario,
+  opportunity, Fowler pattern, DDD owner, command/query rail, allowed
+  implementation surfaces, unit or package tests, architecture tests,
+  user-flow tests, and out-of-scope behavior
 
 ### Phase 2: Pre-Implementation Brief
 
@@ -136,6 +145,9 @@ After the think-first is written, document the concrete implementation plan:
   were adopted (`None evaluated - no custom implementation` if not applicable)
 - command/query rail impact - commands or queries added, changed, reused, or
   explicitly out of scope; name the catalog surface that owns each rail
+- Fowler planning impact - opportunities addressed, patterns applied, repeated
+  semantics removed, drift removed, architecture guards required, and residual
+  opportunities left for later
 
 ### Phase 3: Normative Baseline Verification
 
@@ -264,6 +276,9 @@ AI-assisted work MUST NOT:
 - introduce route, service, adapter, UI, workflow, or Cypress behavior that is
   not mapped to a command or query rail when the behavior is externally
   observable
+- implement non-trivial behavior, boundary, workflow, adapter, route, worker,
+  plugin, or architecture-test changes that are not present in a planning
+  matrix governed by the Fowler Opportunity Planning Governance
 - create duplicate command/query names or local synonyms for an existing product
   intent
 - cover only the happy path in tests - negative paths are required for any new behavior
@@ -290,6 +305,7 @@ Pre-Implementation Brief
 - Test coverage plan (negative paths and edge cases):
 - Libraries evaluated:
 - Command/query rail impact:
+- Fowler opportunity matrix:
 
 Traceability (Full mode only)
 - Baseline ADRs (verified in Phase 3):

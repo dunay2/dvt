@@ -12,6 +12,12 @@ This document is the repository-wide rule for command and query design. It
 exists to prevent invented behavior, duplicated application seams, and route- or
 adapter-shaped product logic.
 
+The companion repository-wide planning rule is
+[Fowler Opportunity Planning Governance](./fowler-opportunity-planning-governance.md).
+Use it to identify improvement opportunities, compare against mature-system
+patterns, and decide which tests and implementation surfaces are required before
+code changes.
+
 ## Purpose
 
 DVT changes MUST flow through an explicit command or query rail before
@@ -122,13 +128,16 @@ When adding or changing behavior:
 2. Reuse the existing command or query when the intent is the same.
 3. If the intent is new, add or update the catalog entry before implementation.
 4. Map the entry to DDD objects, policies, ports, and outbound adapters.
-5. Add negative tests for denied permission, invalid scope, stale inputs,
+5. Add the behavior to the Fowler planning matrix when the slice is non-trivial
+   or touches a boundary, route, adapter, worker, plugin, workflow, or
+   architecture test.
+6. Add negative tests for denied permission, invalid scope, stale inputs,
    unavailable dependencies, malformed input, and duplicate delivery where
    applicable.
-6. Implement through the named rail, not through a direct route, store, or
+7. Implement through the named rail, not through a direct route, store, or
    component shortcut.
-7. Add an architecture guard when a boundary can be mechanically enforced.
-8. Update the governing documentation and generated indexes before closeout.
+8. Add an architecture guard when a boundary can be mechanically enforced.
+9. Update the governing documentation and generated indexes before closeout.
 
 ## Anti-Duplication Rules
 
@@ -263,4 +272,7 @@ Use this checklist in Fowler, SOLID, DDD, hexagonal, and QA reviews:
 - Are negative tests named in the catalog and present in the test suite?
 - Are mock, fixture, and demo paths prevented from becoming product truth?
 - Is there one canonical catalog entry instead of repeated local names?
+- Is the behavior present in the Fowler planning matrix before implementation?
+- Are opportunities, applied patterns, architecture tests, and user-flow tests
+  named when the change is non-trivial or user-visible?
 - Are docs, contracts, tests, and implementation surfaces aligned?
