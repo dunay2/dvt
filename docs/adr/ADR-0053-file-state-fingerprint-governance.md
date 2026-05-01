@@ -86,8 +86,11 @@ digest.
 
 Each file row records `contentHash`.
 
-`contentHash` is the full lowercase SHA-256 digest of the tracked file bytes as
-they exist in the working tree when the generator runs.
+`contentHash` is the full lowercase SHA-256 digest of the tracked file content
+as it exists in the working tree when the generator runs. Text files MUST be
+hashed after canonical line-ending normalization to LF so CI governance does not
+depend on the contributor operating system or Git checkout mode. Binary files
+MUST keep their raw bytes.
 
 The generator must fail rather than silently invent a content hash for a
 missing tracked file.

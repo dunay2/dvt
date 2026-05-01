@@ -5,6 +5,7 @@ const {
   buildComponentEntries,
   buildFileEntries,
   normalizeGeneratedIndexBytesForHash,
+  normalizeTextBytesForHash,
 } = require('./generate-governance-file-component-index.cjs');
 
 const units = [
@@ -289,5 +290,12 @@ test('normalizeGeneratedIndexBytesForHash removes recursive fingerprint values',
   assert.equal(
     normalizeGeneratedIndexBytesForHash(first).toString('utf8'),
     normalizeGeneratedIndexBytesForHash(second).toString('utf8')
+  );
+});
+
+test('normalizeTextBytesForHash canonicalizes text line endings', () => {
+  assert.equal(
+    normalizeTextBytesForHash(Buffer.from('a\r\nb\rc\n', 'utf8')).toString('utf8'),
+    'a\nb\nc\n'
   );
 });

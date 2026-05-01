@@ -134,8 +134,16 @@ function normalizeGeneratedIndexBytesForHash(contentBytes) {
   );
 }
 
+function normalizeTextBytesForHash(contentBytes) {
+  if (contentBytes.includes(0)) {
+    return contentBytes;
+  }
+
+  return Buffer.from(contentBytes.toString('utf8').replace(/\r\n?/g, '\n'), 'utf8');
+}
+
 function readTrackedFileBytes(filePath) {
-  const contentBytes = fs.readFileSync(path.join(repoRoot, filePath));
+  const contentBytes = normalizeTextBytesForHash(fs.readFileSync(path.join(repoRoot, filePath)));
 
   if (filePath === generatedFileYamlRelativePath) {
     return normalizeGeneratedIndexBytesForHash(contentBytes);
@@ -497,6 +505,7 @@ module.exports = {
   buildFileFingerprints,
   buildOutputs,
   normalizeGeneratedIndexBytesForHash,
+  normalizeTextBytesForHash,
   stableStringify,
   renderComponentMarkdown,
   renderFileMarkdown,
