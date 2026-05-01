@@ -108,7 +108,7 @@ export async function runPlanWorkflow(input: RunPlanWorkflowInput): Promise<RunP
       throw error;
     }
 
-    await markWorkflowFailedIfNeeded(state, ctx, planRef, runtimeExecutor);
+    await markWorkflowFailedIfNeeded(state, ctx, planRef, runtimeExecutor, error);
     throw error;
   }
 }

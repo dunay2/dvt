@@ -67,6 +67,7 @@ export function createTemporalWorkerActivityDeps(
   stateStore: StateStoreLike,
   planStore: PlanFetcherLike
 ): TemporalWorkerActivityDeps {
+  const clock = { nowIsoUtc: () => asIsoUtcString(new Date().toISOString()) };
   const runStateCircuit = new CircuitBreakingRunStateCommandPort({
     delegate: new PostgresRunStateCommandPortBridge(stateStore),
     failureThreshold: env.DVT_RUNSTATE_CIRCUIT_BREAKER_FAILURE_THRESHOLD,
@@ -75,10 +76,10 @@ export function createTemporalWorkerActivityDeps(
   });
   const activityDeps: ActivityDeps = {
     runStateCommandPort: runStateCircuit,
-    clock: { nowIsoUtc: () => asIsoUtcString(new Date().toISOString()) },
+    clock,
     idempotency: new IdempotencyKeyBuilder(),
     fetcher: planStore,
-    integrity: new PlanIntegrityValidator(),
+    integrity: new PlanIntegrityValidator({ clock }),
   };
 
   return {

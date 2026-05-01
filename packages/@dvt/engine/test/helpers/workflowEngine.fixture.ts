@@ -175,6 +175,7 @@ export function createWorkflowEngineFixture(input?: {
     planFetcher,
     adapters,
     observability,
+    clock,
     startRunApplicationService,
     ...(input?.runExecutionContextResolver === undefined
       ? {}

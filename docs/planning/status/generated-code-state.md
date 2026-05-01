@@ -2,21 +2,21 @@
 title: Generated Code State
 status: Active
 owner: docs
-last_reviewed: 2026-04-30
+last_reviewed: 2026-05-01
 planning_type: status
 ---
 
 # Generated Code State
 
-Generated automatically from repository code on 2026-04-30.
+Generated automatically from repository code on 2026-05-01.
 
 ## Summary
 
 | Metric                       | Value |
 | ---------------------------- | ----- |
 | Total workspaces             | 24    |
-| Total source files           | 1213  |
-| Total test files             | 652   |
+| Total source files           | 1216  |
+| Total test files             | 654   |
 | Workspaces with build script | 24/24 |
 | Workspaces with test script  | 23/24 |
 
@@ -31,7 +31,7 @@ Generated automatically from repository code on 2026-04-30.
 | dvt-temporal-worker       | `apps/temporal-worker`               | 13        | 5          | yes   | yes  | yes       | -                       |
 | @dvt/web                  | `apps/web`                           | 524       | 217        | yes   | yes  | yes       | -                       |
 | @dvt/adapter-postgres     | `packages/@dvt/adapter-postgres`     | 57        | 42         | yes   | yes  | yes       | 26                      |
-| @dvt/adapter-temporal     | `packages/@dvt/adapter-temporal`     | 49        | 41         | yes   | yes  | yes       | 26                      |
+| @dvt/adapter-temporal     | `packages/@dvt/adapter-temporal`     | 52        | 43         | yes   | yes  | yes       | 28                      |
 | @dvt/artifacts            | `packages/@dvt/artifacts`            | 19        | 3          | yes   | yes  | yes       | 17                      |
 | @dvt/crypto               | `packages/@dvt/canonical`            | 3         | 1          | yes   | yes  | yes       | 2                       |
 | @dvt/cli                  | `packages/@dvt/cli`                  | 1         | 1          | yes   | yes  | yes       | 1                       |

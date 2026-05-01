@@ -16,13 +16,18 @@ Use this guide with:
 
 - [Temporal adapter spec](./temporal-adapter-spec.md)
 - [Temporal DBT worker plugin profile](./temporal-dbt-worker-plugin-profile.md)
+- [Temporal PlanRef capacity SLA](./temporal-planref-capacity-sla.md)
 - [Temporal PlanRef drained cutover runbook](../../../../../runbooks/temporal-planref-drained-cutover-20260427.md)
 - [Temporal worker DBT plugin runtime runbook](../../../../../runbooks/temporal-worker-dbt-plugin-runtime-20260414.md)
 - [Fowler PlanRef architecture analysis](../../../../../../buzon/20260428-codex-fowler-temporal-planref-workflow-boundary-analysis-and-remediation.md)
+- [Fowler AR-D continuation safety analysis](../../../../../../buzon/20260430-codex-fowler-ar-d-continuation-safety-analysis-and-remediation.md)
+- [Fowler AR-D2 capacity SLA analysis](../../../../../../buzon/20260430-codex-fowler-ar-d2-temporal-capacity-sla-analysis-and-remediation.md)
+- [Temporal PlanRef workflow boundary user stories](./temporal-planref-workflow-boundary-user-stories.md)
 - [ADR-0001 Temporal integration test policy](../../../../../adr/adr-0001-temporal-integration-test-policy.md)
 - [ADR-0003 execution model](../../../../../adr/adr-0003-execution-model.md)
 - [ADR-0046 execution plan definition and run execution policy separation](../../../../../adr/adr-0046-execution-plan-definition-and-run-execution-policy-separation.md)
 - [ADR-0047 runtime-owned realized lifecycle](../../../../../adr/adr-0047-runtime-owned-realized-lifecycle-for-signal-driven-transitions.md)
+- [ADR-0052 PlanRef continuation safety](../../../../../adr/adr-0052-planref-continuation-safety.md)
 
 ## Owned concern
 
@@ -72,6 +77,9 @@ It does **not** own:
 - `TEMPORAL_CONTINUE_AS_NEW_AFTER_LAYERS`
   Layer threshold injected into workflow input. `0` is allowed only as an
   explicit local diagnostic or incident rollback value.
+- `evaluateTemporalPlanRefCapacitySla(input)`
+  Pure AR-D2 policy that classifies configured rollover, payload, and PlanRef
+  retention budgets against the production capacity profile.
 
 ## Invariants
 
@@ -84,6 +92,12 @@ It does **not** own:
   control-signal ids, and latest result evidence.
 - Runtime segment resolution re-fetches plan material by `PlanRef` and verifies
   bytes against `PlanRef.sha256` before any step execution.
+- A `PlanRef` whose `expiresAt` is at or before the integrity-validator clock
+  fails closed as `PLAN_REF_EXPIRED` before plan bytes are fetched or a
+  provider segment is resolved.
+- Plan artifact absence during segment resolution is reported as
+  `PLAN_REF_UNAVAILABLE`; continuation failures caused by cursor payload budget
+  overflow are reported as `CURSOR_OVERFLOW`.
 - Workflow code remains deterministic; all provider side effects and StateStore
   writes go through activities.
 - Gateway dependency facts must be present when future gateway decisions depend
@@ -92,6 +106,9 @@ It does **not** own:
   before Temporal history becomes the hidden storage layer.
 - `continueAsNewAfterLayerCount = 0` disables rollover only when an operator has
   made that risk explicit outside large-DAG readiness.
+- Production readiness for rollover, maximum workflow history size, maximum
+  segment count, payload budget, and `PlanRef retention` is governed by
+  [Temporal PlanRef capacity SLA](./temporal-planref-capacity-sla.md).
 - The DBT plugin runtime remains outside this component. Its step-kind registry
   is composed by the Temporal worker DBT profile, not by the PlanRef workflow or
   the core activity registry.
@@ -125,26 +142,29 @@ It does **not** own:
 
 ## Component map
 
-| Module                             | Owned concern                                                 |
-| ---------------------------------- | ------------------------------------------------------------- |
-| `RunPlanWorkflow.ts`               | Temporal PlanRef workflow orchestration entrypoint            |
-| `runPlanWorkflow.types.ts`         | Workflow public API contracts and runtime state model         |
-| `runPlanWorkflow.state.ts`         | Workflow control input parsing and cursor hydration           |
-| `workflowCursorHelpers.ts`         | Compact continue-as-new cursor construction and payload guard |
-| `executionSegmentResolver.ts`      | PlanRef execution-segment projection from canonical plans     |
-| `runPlanWorkflow.layers.ts`        | Deterministic workflow layer-loop orchestration               |
-| `runPlanWorkflow.layerHelpers.ts`  | Layer selection and continue-as-new decision helpers          |
-| `runPlanWorkflow.layerResults.ts`  | Layer result application and gateway fact retention           |
-| `runPlanWorkflow.stepExecution.ts` | Per-layer step activity execution orchestration               |
-| `runPlanWorkflow.activities.ts`    | Temporal activity proxy binding for workflow ports            |
-| `runPlanWorkflow.lifecycle.ts`     | Workflow bootstrap, terminal, failure, and rollover outcomes  |
-| `runPlanWorkflow.cancellation.ts`  | Runtime-owned cancellation lifecycle settlement               |
-| `runPlanWorkflow.signals.ts`       | Runtime control-signal registration and dedupe state          |
-| `workflowGatewayHelpers.ts`        | Gateway dependency validation and fact lookup                 |
-| `workflowArtifactHelpers.ts`       | Execution artifact payload interpretation                     |
-| `workflowRuntimePayloadHelpers.ts` | Runtime event payload shaping                                 |
-| `workflowErrorHelpers.ts`          | Workflow-safe error-message normalization                     |
-| `workflowInputParsingHelpers.ts`   | Deterministic workflow input primitive parsing                |
+| Module                                    | Owned concern                                                                       |
+| ----------------------------------------- | ----------------------------------------------------------------------------------- |
+| `RunPlanWorkflow.ts`                      | Temporal PlanRef workflow orchestration entrypoint                                  |
+| `runPlanWorkflow.types.ts`                | Workflow public API contracts and runtime state model                               |
+| `runPlanWorkflow.state.ts`                | Workflow control input parsing and cursor hydration                                 |
+| `workflowCursorHelpers.ts`                | Compact continue-as-new cursor construction and payload guard                       |
+| `executionSegmentResolver.ts`             | PlanRef execution-segment projection from canonical plans                           |
+| `runPlanWorkflow.layers.ts`               | Deterministic workflow layer-loop orchestration                                     |
+| `runPlanWorkflow.layerHelpers.ts`         | Layer selection and continue-as-new decision helpers                                |
+| `runPlanWorkflow.layerResults.ts`         | Layer result application and gateway fact retention                                 |
+| `runPlanWorkflow.stepExecution.ts`        | Per-layer step activity execution orchestration                                     |
+| `runPlanWorkflow.activities.ts`           | Temporal activity proxy binding for workflow ports                                  |
+| `runPlanWorkflow.lifecycle.ts`            | Workflow bootstrap, terminal, failure, and rollover outcomes                        |
+| `runPlanWorkflow.cancellation.ts`         | Runtime-owned cancellation lifecycle settlement                                     |
+| `runPlanWorkflow.signals.ts`              | Runtime control-signal registration and dedupe state                                |
+| `workflowGatewayHelpers.ts`               | Gateway dependency validation and fact lookup                                       |
+| `workflowArtifactHelpers.ts`              | Execution artifact payload interpretation                                           |
+| `workflowControlSignalRetentionPolicy.ts` | Bounded retention policy for control-signal dedupe ids across workflow continuation |
+| `workflowFailureReasonPolicy.ts`          | Governed workflow failure reason classification from runtime error evidence         |
+| `workflowRuntimePayloadHelpers.ts`        | Runtime event payload shaping                                                       |
+| `temporalPlanRefCapacitySlaPolicy.ts`     | Production capacity SLA evaluation for PlanRef workflow budgets                     |
+| `workflowErrorHelpers.ts`                 | Workflow-safe error-message normalization                                           |
+| `workflowInputParsingHelpers.ts`          | Deterministic workflow input primitive parsing                                      |
 
 ## Diagrams
 
@@ -210,3 +230,7 @@ sequenceDiagram
   missing rollover input fails, payload budgets are enforced, gateway facts fail
   closed, hash drift rejects execution, and continue-as-new advances layer
   progress without carrying the full plan.
+- `workflowControlSignalRetentionPolicy.ts` keeps only the recent bounded
+  control-signal id window in cursor state so adversarial or long-lived
+  pause/resume/cancel traffic cannot make continue-as-new payloads grow without
+  limit.

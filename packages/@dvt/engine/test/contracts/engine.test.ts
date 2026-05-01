@@ -243,7 +243,9 @@ describe('WorkflowEngine + in-memory temporal provider adapter', () => {
     };
 
     const fetcher = new InMemoryPlanFetcher(new Map([[uri, bytes]]));
-    const integrity = new PlanIntegrityValidator();
+    const integrity = new PlanIntegrityValidator({
+      clock: new SequenceClock('2026-02-12T00:00:00.000Z'),
+    });
 
     await expect(integrity.fetchAndValidate(badRef, fetcher)).rejects.toThrowError(
       /PLAN_ID_MISMATCH/
@@ -265,10 +267,37 @@ describe('WorkflowEngine + in-memory temporal provider adapter', () => {
     };
 
     const fetcher = new InMemoryPlanFetcher(new Map([[uri, bytes]]));
-    const integrity = new PlanIntegrityValidator();
+    const integrity = new PlanIntegrityValidator({
+      clock: new SequenceClock('2026-02-12T00:00:00.000Z'),
+    });
 
     await expect(integrity.fetchAndValidate(badRef, fetcher)).rejects.toThrowError(
       /PLAN_INTEGRITY_VALIDATION_FAILED/
+    );
+  });
+
+  it('Plan integrity validation: expired PlanRef fails before provider dispatch', async () => {
+    const plan = makeHelloWorldPlan();
+    const uri = 'https://plans.example.com/expired-plan.json';
+    const bytes = utf8(JSON.stringify(plan));
+
+    const expiredRef: PlanRef = {
+      uri,
+      sha256: sha256Hex(bytes),
+      schemaVersion: plan.metadata.schemaVersion,
+      planId: plan.metadata.planId,
+      planVersion: plan.metadata.planVersion,
+      sizeBytes: bytes.byteLength,
+      expiresAt: '2026-01-01T00:00:00.000Z',
+    };
+
+    const fetcher = new InMemoryPlanFetcher(new Map([[uri, bytes]]));
+    const integrity = new PlanIntegrityValidator({
+      clock: { nowIsoUtc: () => '2026-04-30T00:00:00.000Z' },
+    });
+
+    await expect(integrity.fetchAndValidate(expiredRef, fetcher)).rejects.toThrowError(
+      /PLAN_REF_EXPIRED/
     );
   });
 

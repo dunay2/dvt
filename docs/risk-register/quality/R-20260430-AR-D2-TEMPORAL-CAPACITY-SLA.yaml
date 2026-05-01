@@ -1,0 +1,24 @@
+---
+id: R-20260430-AR-D2-TEMPORAL-CAPACITY-SLA
+title: Temporal capacity SLA still needs empirical production tuning
+status: Open
+date: 2026-04-30
+owners:
+  - packages/@dvt/adapter-temporal
+severity: Low
+probability: Medium
+context: >
+  AR-D2 now has an executable standard production profile for PlanRef workflow capacity. The policy
+  checks non-zero continue-as-new rollover, payload budget ordering, layer count per segment,
+  expected segment count, workflow-history event and byte estimates, and PlanRef retention margin.
+risk: >
+  The standard thresholds are governed and testable, but they still require production telemetry and
+  tenant-profile tuning after larger DAGs run through real Temporal namespaces.
+mitigations:
+  - Keep the standard profile explicit in temporalPlanRefCapacitySlaPolicy.ts.
+  - Treat zero rollover as diagnostic or incident-only, not production-ready.
+  - Add empirical thresholds from Temporal namespace telemetry before introducing enterprise tenant
+    profile variants.
+  - Keep AR-D2 evidence linked to package tests, architecture tests, and pre-push validation.
+review_after: 2026-05-15
+---

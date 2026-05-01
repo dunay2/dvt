@@ -43,6 +43,12 @@ type PlanRef = {
 - The engine MUST reject unknown `schemaVersion` values before adapter dispatch.
 - Runtime segment resolution MUST reject fetched plan bytes whose hash differs
   from `PlanRef.sha256`.
+- A `PlanRef` whose optional `expiresAt` is at or before validation time MUST
+  fail closed as `PLAN_REF_EXPIRED` before provider dispatch or segment
+  resolution fetches plan bytes.
+- If plan bytes cannot be read for a valid, non-expired `PlanRef`, the workflow
+  terminal failure MUST use `PLAN_REF_UNAVAILABLE` rather than a generic
+  workflow failure reason.
 - Workflow input-shape changes MUST be handled by an explicit replay/cutover
   posture: drained deployment or Temporal workflow versioning. The active
   drained-deploy procedure is
@@ -291,7 +297,15 @@ enabled and reached before all layers are processed:
 The governed default enables rollover after 100 execution layers. Explicit
 `continueAsNewAfterLayerCount = 0` disables rollover only for local diagnostics
 or incident rollback and is not large-DAG ready. The threshold and SLA remain
-governed by `AR-D2`.
+governed by `AR-D2` and documented in
+[Temporal PlanRef capacity SLA](./temporal-planref-capacity-sla.md).
+
+Production readiness for this policy is evaluated by
+`evaluateTemporalPlanRefCapacitySla`. The standard profile requires non-zero
+rollover, a continue-as-new payload budget that does not exceed workflow start
+admission, maximum workflow history size below 10,000 events or 40,000,000
+bytes, maximum segment count of 1,000, and `PlanRef` retention longer than the
+expected workflow duration plus a 24-hour safety margin.
 
 ```ts
 if (shouldTriggerContinueAsNew(state)) {
@@ -320,8 +334,14 @@ if (shouldTriggerContinueAsNew(state)) {
   skipped step IDs, processed control signal IDs, and latest result evidence
 - no logs, expanded lists, large errors, or full `ExecutionPlan`
 
+The workflow MUST retain only a bounded recent window of processed
+control-signal ids in the continue-as-new cursor. This preserves practical
+dedupe protection for the active continuation window without allowing
+pause/resume/cancel traffic to make the cursor unbounded.
+
 The workflow MUST reject an oversized continue-as-new input before rollover
-using `TEMPORAL_MAX_CONTINUE_AS_NEW_PAYLOAD_BYTES`.
+using `TEMPORAL_MAX_CONTINUE_AS_NEW_PAYLOAD_BYTES` and report the terminal
+runtime reason as `CURSOR_OVERFLOW`.
 
 ---
 

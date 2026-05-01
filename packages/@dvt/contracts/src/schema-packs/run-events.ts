@@ -24,6 +24,9 @@ export const RunFailureReasonSchema = z.enum([
   'START_RUN_FAILURE',
   'STEP_FAILURE',
   'WORKFLOW_FAILURE',
+  'CURSOR_OVERFLOW',
+  'PLAN_REF_EXPIRED',
+  'PLAN_REF_UNAVAILABLE',
 ]);
 
 const RunStartedPayloadSchema = z

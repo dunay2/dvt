@@ -109,6 +109,17 @@ interface RunEventRecord extends RunEventWrite {
 - `RunCompleted` MAY include `{ executor, resultEvidence }`
 - `RunFailed` MUST include `{ reason }` and MAY include `{ executor, message }`
 
+Known `RunFailed.reason` values:
+
+- `QUEUED_TIMEOUT`
+- `CANCELLATION_TIMEOUT`
+- `START_RUN_FAILURE`
+- `STEP_FAILURE`
+- `WORKFLOW_FAILURE`
+- `CURSOR_OVERFLOW`
+- `PLAN_REF_EXPIRED`
+- `PLAN_REF_UNAVAILABLE`
+
 `resultEvidence` is the canonical payload key for caller-visible runtime
 outcome evidence.
 
