@@ -24,7 +24,7 @@
     "dev:api": "pnpm --filter dvt-api dev",
     "dev:app": "node scripts/run-dev-stack.cjs",
     "dev:app:test": "node scripts/run-dev-stack.cjs --test-only",
-    "ci:docs": "pnpm docs:workboard:check && pnpm docs:sync:check && pnpm docs:quality:check && pnpm docs:doctor && pnpm docs:gov:locations && pnpm docs:canonical:check && pnpm docs:status:check && pnpm docs:capability:check && pnpm docs:gov:manifest:check && pnpm docs:gov:generated-policy && pnpm docs:governance:unit-coverage && pnpm docs:feature-mechanization && pnpm docs:feature-mechanization:implementation",
+    "ci:docs": "pnpm docs:workboard:check && pnpm docs:sync:check && pnpm docs:quality:check && pnpm docs:doctor && pnpm docs:gov:locations && pnpm docs:canonical:check && pnpm docs:status:check && pnpm docs:capability:check && pnpm docs:gov:manifest:check && pnpm docs:gov:generated-policy && pnpm docs:governance:unit-coverage && pnpm docs:governance:document-unit-map:check && pnpm docs:governance:file-component-index:check && pnpm docs:feature-mechanization && pnpm docs:feature-mechanization:implementation",
     "ci:code": "pnpm type-check && pnpm test && pnpm lint:determinism",
     "ci:full": "pnpm ci:docs && pnpm ci:code && pnpm test:coverage:engine",
     "preflight:affected": "pnpm ci:affected:typecheck && pnpm ci:affected:test",

@@ -16,13 +16,14 @@ machine-readable source is:
 - [system-governance-file-index.files.yaml](./system-governance-file-index.files.yaml)
 
 Every tracked repository file has one row in that YAML file. Each row records
-the root unit, domain unit, component unit, owning unit, unit path, governing
-documents, DDD owner, command/query rail posture, drift status, and legacy
-status.
+the stable file id, path hash, content hash, governance hash, state
+fingerprint, root unit, domain unit, component unit, owning unit, unit path,
+governing documents, DDD owner, command/query rail posture, drift status, and
+legacy status.
 
 ## Totals
 
-- Tracked files indexed: 4035
+- Tracked files indexed: 4037
 - Component/source owner units: 20
 - Ungoverned files: 0
 - Drift files: 44
@@ -33,7 +34,7 @@ status.
 <!-- prettier-ignore-start -->
 | Status | Files |
 | --- | ---: |
-| `canonical` | 109 |
+| `canonical` | 111 |
 | `coverage-required` | 3819 |
 | `drift` | 44 |
 | `legacy` | 9 |
@@ -59,7 +60,7 @@ status.
 | `SYS-PLANSTORE-ENGINE-FETCH` | 5 |
 | `SYS-PLANSTORE-POSTGRES` | 16 |
 | `SYS-PLANSTORE-TEMPORAL-COMPOSITION` | 9 |
-| `SYS-REPO-METADATA-ROOT` | 109 |
+| `SYS-REPO-METADATA-ROOT` | 111 |
 | `SYS-RUNTIME-ROOT` | 286 |
 | `SYS-TRACEABILITY-ROOT` | 65 |
 | `SYS-WEB-ROOT` | 783 |

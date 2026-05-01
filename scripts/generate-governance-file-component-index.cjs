@@ -4,6 +4,7 @@
  */
 
 const { execFileSync } = require('node:child_process');
+const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
 const yaml = require('js-yaml');
@@ -23,8 +24,29 @@ const generatedOutputPaths = [
   componentMarkdownPath,
 ].map((filePath) => toPosix(path.relative(repoRoot, filePath)));
 
+const generatedFileYamlRelativePath = toPosix(path.relative(repoRoot, fileYamlPath));
+
 function toPosix(filePath) {
   return filePath.replace(/\\/g, '/');
+}
+
+function sha256(value) {
+  return crypto.createHash('sha256').update(value).digest('hex');
+}
+
+function stableStringify(value) {
+  if (Array.isArray(value)) {
+    return `[${value.map(stableStringify).join(',')}]`;
+  }
+
+  if (value && typeof value === 'object') {
+    return `{${Object.keys(value)
+      .sort()
+      .map((key) => `${JSON.stringify(key)}:${stableStringify(value[key])}`)
+      .join(',')}}`;
+  }
+
+  return JSON.stringify(value);
 }
 
 function getTrackedFiles() {
@@ -103,12 +125,70 @@ function buildHierarchy(unit, unitById) {
   };
 }
 
-function buildFileEntries(files, units, unitById = buildUnitIndex(units)) {
+function normalizeGeneratedIndexBytesForHash(contentBytes) {
+  return Buffer.from(
+    contentBytes
+      .toString('utf8')
+      .replace(/^(\s+(?:contentHash|stateFingerprint):\s+)[0-9a-f]{64}$/gm, '$1<normalized>'),
+    'utf8'
+  );
+}
+
+function readTrackedFileBytes(filePath) {
+  const contentBytes = fs.readFileSync(path.join(repoRoot, filePath));
+
+  if (filePath === generatedFileYamlRelativePath) {
+    return normalizeGeneratedIndexBytesForHash(contentBytes);
+  }
+
+  return contentBytes;
+}
+
+function buildGovernancePayload(entry) {
+  return {
+    componentUnit: entry.componentUnit,
+    cqRails: entry.cqRails,
+    dddOwner: entry.dddOwner,
+    domainUnit: entry.domainUnit,
+    governance: entry.governance,
+    isDrift: entry.isDrift,
+    isLegacy: entry.isLegacy,
+    ownerLevel: entry.ownerLevel,
+    owningUnit: entry.owningUnit,
+    rootUnit: entry.rootUnit,
+    unitPath: entry.unitPath,
+    unitStatus: entry.unitStatus,
+  };
+}
+
+function buildFileFingerprints(filePath, contentBytes, governancePayload) {
+  const pathHash = sha256(`dvt:file-path:v1:${filePath}`);
+  const contentHash = sha256(contentBytes);
+  const governanceHash = sha256(stableStringify(governancePayload));
+
+  return {
+    fileId: `F-${sha256(`dvt:file:v1:${filePath}`).slice(0, 12).toUpperCase()}`,
+    pathHash,
+    contentHash,
+    governanceHash,
+    stateFingerprint: sha256(
+      stableStringify({
+        contentHash,
+        governanceHash,
+        pathHash,
+      })
+    ),
+  };
+}
+
+function buildFileEntries(files, units, options = {}, unitById = buildUnitIndex(units)) {
+  const readFileBytes = options.readFileBytes || readTrackedFileBytes;
+
   return files.map((filePath) => {
     const matches = findOwnerMatches(filePath, units);
     const owner = matches[0];
     const hierarchy = buildHierarchy(owner, unitById);
-    return {
+    const entry = {
       path: filePath,
       owningUnit: owner?.id || 'UNOWNED',
       rootUnit: hierarchy.rootUnit,
@@ -122,6 +202,11 @@ function buildFileEntries(files, units, unitById = buildUnitIndex(units)) {
       dddOwner: owner?.dddOwner || 'unowned',
       cqRails: owner?.cqRails || 'unowned',
       governance: owner?.governance || [],
+    };
+
+    return {
+      ...buildFileFingerprints(filePath, readFileBytes(filePath), buildGovernancePayload(entry)),
+      ...entry,
     };
   });
 }
@@ -215,9 +300,10 @@ machine-readable source is:
 - [system-governance-file-index.files.yaml](./system-governance-file-index.files.yaml)
 
 Every tracked repository file has one row in that YAML file. Each row records
-the root unit, domain unit, component unit, owning unit, unit path, governing
-documents, DDD owner, command/query rail posture, drift status, and legacy
-status.
+the stable file id, path hash, content hash, governance hash, state
+fingerprint, root unit, domain unit, component unit, owning unit, unit path,
+governing documents, DDD owner, command/query rail posture, drift status, and
+legacy status.
 
 ## Totals
 
@@ -354,7 +440,7 @@ function buildOutputs() {
   const manifest = readManifest();
   const units = Array.isArray(manifest.units) ? manifest.units : [];
   const unitById = buildUnitIndex(units);
-  const fileEntries = buildFileEntries(getTrackedFiles(), units);
+  const fileEntries = buildFileEntries(getTrackedFiles(), units, {}, unitById);
   const componentEntries = buildComponentEntries(units, fileEntries, unitById);
 
   return {
@@ -408,7 +494,10 @@ if (require.main === module) {
 module.exports = {
   buildComponentEntries,
   buildFileEntries,
+  buildFileFingerprints,
   buildOutputs,
+  normalizeGeneratedIndexBytesForHash,
+  stableStringify,
   renderComponentMarkdown,
   renderFileMarkdown,
 };

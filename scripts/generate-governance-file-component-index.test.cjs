@@ -1,8 +1,10 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const crypto = require('node:crypto');
 const {
   buildComponentEntries,
   buildFileEntries,
+  normalizeGeneratedIndexBytesForHash,
 } = require('./generate-governance-file-component-index.cjs');
 
 const units = [
@@ -48,11 +50,94 @@ const units = [
   },
 ];
 
+function sha256(value) {
+  return crypto.createHash('sha256').update(value).digest('hex');
+}
+
+function stableStringify(value) {
+  if (Array.isArray(value)) {
+    return `[${value.map(stableStringify).join(',')}]`;
+  }
+
+  if (value && typeof value === 'object') {
+    return `{${Object.keys(value)
+      .sort()
+      .map((key) => `${JSON.stringify(key)}:${stableStringify(value[key])}`)
+      .join(',')}}`;
+  }
+
+  return JSON.stringify(value);
+}
+
+function expectedFingerprints(filePath, content, governancePayload) {
+  const pathHash = sha256(`dvt:file-path:v1:${filePath}`);
+  const contentHash = sha256(content);
+  const governanceHash = sha256(stableStringify(governancePayload));
+
+  return {
+    fileId: `F-${sha256(`dvt:file:v1:${filePath}`).slice(0, 12).toUpperCase()}`,
+    pathHash,
+    contentHash,
+    governanceHash,
+    stateFingerprint: sha256(
+      stableStringify({
+        contentHash,
+        governanceHash,
+        pathHash,
+      })
+    ),
+  };
+}
+
 test('buildFileEntries adds unit status and drift legacy booleans per file', () => {
-  const entries = buildFileEntries(['apps/api/src/main.ts', 'apps/api/src/legacy/store.ts'], units);
+  const fileContents = new Map([
+    ['apps/api/src/main.ts', 'export const main = true;\n'],
+    ['apps/api/src/legacy/store.ts', 'export const legacy = true;\n'],
+  ]);
+  const entries = buildFileEntries(
+    ['apps/api/src/main.ts', 'apps/api/src/legacy/store.ts'],
+    units,
+    {
+      readFileBytes: (filePath) => Buffer.from(fileContents.get(filePath), 'utf8'),
+    }
+  );
+
+  const mainGovernancePayload = {
+    componentUnit: 'SYS-API-ROOT',
+    cqRails: 'API commands and queries',
+    dddOwner: 'AS',
+    domainUnit: 'SYS-RUNTIME',
+    governance: ['docs/api.md'],
+    isDrift: false,
+    isLegacy: false,
+    ownerLevel: 'component',
+    owningUnit: 'SYS-API-ROOT',
+    rootUnit: 'SYS-DVT',
+    unitPath: ['SYS-DVT', 'SYS-RUNTIME', 'SYS-API-ROOT'],
+    unitStatus: 'coverage-required',
+  };
+  const legacyGovernancePayload = {
+    componentUnit: 'SYS-PLANSTORE-LEGACY',
+    cqRails: 'PS-Q04',
+    dddOwner: 'ADP',
+    domainUnit: 'SYS-DVT',
+    governance: ['docs/planstore.md'],
+    isDrift: false,
+    isLegacy: true,
+    ownerLevel: 'component',
+    owningUnit: 'SYS-PLANSTORE-LEGACY',
+    rootUnit: 'SYS-DVT',
+    unitPath: ['SYS-DVT', 'SYS-PLANSTORE-LEGACY'],
+    unitStatus: 'legacy',
+  };
 
   assert.deepEqual(entries, [
     {
+      ...expectedFingerprints(
+        'apps/api/src/main.ts',
+        'export const main = true;\n',
+        mainGovernancePayload
+      ),
       path: 'apps/api/src/main.ts',
       owningUnit: 'SYS-API-ROOT',
       rootUnit: 'SYS-DVT',
@@ -68,6 +153,11 @@ test('buildFileEntries adds unit status and drift legacy booleans per file', () 
       governance: ['docs/api.md'],
     },
     {
+      ...expectedFingerprints(
+        'apps/api/src/legacy/store.ts',
+        'export const legacy = true;\n',
+        legacyGovernancePayload
+      ),
       path: 'apps/api/src/legacy/store.ts',
       owningUnit: 'SYS-PLANSTORE-LEGACY',
       rootUnit: 'SYS-DVT',
@@ -86,9 +176,16 @@ test('buildFileEntries adds unit status and drift legacy booleans per file', () 
 });
 
 test('buildComponentEntries counts owned files per component', () => {
+  const fileContents = new Map([
+    ['apps/api/src/main.ts', 'export const main = true;\n'],
+    ['apps/api/src/legacy/store.ts', 'export const legacy = true;\n'],
+  ]);
   const fileEntries = buildFileEntries(
     ['apps/api/src/main.ts', 'apps/api/src/legacy/store.ts'],
-    units
+    units,
+    {
+      readFileBytes: (filePath) => Buffer.from(fileContents.get(filePath), 'utf8'),
+    }
   );
   const components = buildComponentEntries(units, fileEntries);
 
@@ -162,5 +259,35 @@ test('buildComponentEntries counts owned files per component', () => {
         isLegacy: true,
       },
     ]
+  );
+});
+
+test('normalizeGeneratedIndexBytesForHash removes recursive fingerprint values', () => {
+  const first = Buffer.from(
+    [
+      'files:',
+      '  - fileId: F-ABCDEF123456',
+      '    contentHash: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+      '    stateFingerprint: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
+      '    path: docs/planning/status/system-governance-file-index.files.yaml',
+      '',
+    ].join('\n'),
+    'utf8'
+  );
+  const second = Buffer.from(
+    [
+      'files:',
+      '  - fileId: F-ABCDEF123456',
+      '    contentHash: cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc',
+      '    stateFingerprint: dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd',
+      '    path: docs/planning/status/system-governance-file-index.files.yaml',
+      '',
+    ].join('\n'),
+    'utf8'
+  );
+
+  assert.equal(
+    normalizeGeneratedIndexBytesForHash(first).toString('utf8'),
+    normalizeGeneratedIndexBytesForHash(second).toString('utf8')
   );
 });

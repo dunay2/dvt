@@ -92,6 +92,12 @@ they exist in the working tree when the generator runs.
 The generator must fail rather than silently invent a content hash for a
 missing tracked file.
 
+Generated governance index files that contain their own volatile
+`contentHash` or `stateFingerprint` values MUST be hashed after deterministic
+normalization of those volatile scalar values. This prevents recursive
+self-hashing while still hashing the current generated structure and governed
+content.
+
 ### Governance Hash
 
 Each file row records `governanceHash`.

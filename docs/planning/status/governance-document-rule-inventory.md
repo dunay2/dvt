@@ -298,7 +298,8 @@ Usage rules already declared in the ADR index:
 - [scripts/generate-governance-file-component-index.cjs](../../../scripts/generate-governance-file-component-index.cjs)
   Role: `file and component governance index generator`
   Enforces: exhaustive generated projections for file-level ownership,
-  component/source ownership counts, and drift/legacy file visibility.
+  component/source ownership counts, drift/legacy file visibility, and
+  ADR-0053 file-state fingerprints.
 
 Additional enforcement surface:
 

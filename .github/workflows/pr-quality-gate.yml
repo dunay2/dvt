@@ -138,6 +138,9 @@ jobs:
           == 'true'
         run: pnpm docs:capability:check
 
+      - name: Validate governance file fingerprints
+        run: pnpm docs:governance:file-component-index:check
+
       - name: Check PR title follows Conventional Commits
         if: github.event_name == 'pull_request'
         uses: amannn/action-semantic-pull-request@48f256284bd46cdaab1048c3721360e808335d50 # v6
