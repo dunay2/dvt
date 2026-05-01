@@ -477,7 +477,7 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   [apps/api/src/infrastructure/backpressure/FileBackpressureFallbackStore.ts](../../../apps/api/src/infrastructure/backpressure/FileBackpressureFallbackStore.ts),
   [apps/api/src/infrastructure/auth/oidcAuthenticator.ts](../../../apps/api/src/infrastructure/auth/oidcAuthenticator.ts),
   [apps/api/src/infrastructure/auth/jwksJwtVerifier.ts](../../../apps/api/src/infrastructure/auth/jwksJwtVerifier.ts),
-  [apps/api/src/infrastructure/auth/postgresPrincipalAccessRepository.ts](../../../apps/api/src/infrastructure/auth/postgresPrincipalAccessRepository.ts)
+  [apps/api/src/infrastructure/auth/embeddedAccessDecisionService.ts](../../../apps/api/src/infrastructure/auth/embeddedAccessDecisionService.ts)
 - Key tests:
   [apps/api/test/app.test.ts](../../../apps/api/test/app.test.ts),
   [apps/api/test/app/healthReadiness.test.ts](../../../apps/api/test/app/healthReadiness.test.ts),
@@ -500,7 +500,7 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   [apps/api/test/infrastructure/backpressure/RawSqlBackpressureStore.test.ts](../../../apps/api/test/infrastructure/backpressure/RawSqlBackpressureStore.test.ts),
   [apps/api/test/infrastructure/backpressure/CachedBackpressureStore.test.ts](../../../apps/api/test/infrastructure/backpressure/CachedBackpressureStore.test.ts),
   [apps/api/test/infrastructure/backpressure/CircuitBreakingBackpressureStore.test.ts](../../../apps/api/test/infrastructure/backpressure/CircuitBreakingBackpressureStore.test.ts),
-  [apps/api/test/infrastructure/auth/postgresPrincipalAccessRepository.test.ts](../../../apps/api/test/infrastructure/auth/postgresPrincipalAccessRepository.test.ts),
+  [apps/api/test/infrastructure/auth/embeddedAccessDecisionService.test.ts](../../../apps/api/test/infrastructure/auth/embeddedAccessDecisionService.test.ts),
   [apps/api/test/integration/protectedRuntime.integration.test.ts](../../../apps/api/test/integration/protectedRuntime.integration.test.ts)
 - Evidence:
   [ED-20260320 - API runtime query integration](../../evidence/critical/ED-20260320-api-runtime-query-integration.md)
@@ -699,10 +699,12 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   and
   `pnpm --filter @dvt/web test:e2e`
 - Gap:
-  Mock-data paths still dominate the client surface via
-  [apps/web/src/app/data/mockData.ts](../../../apps/web/src/app/data/mockData.ts)
+  The retired broad `mockData.ts` surface is no longer present. Remaining
+  mock-data risk lives in explicit mock service and fixture surfaces such as
+  [apps/web/src/app/data/mockDbtData.ts](../../../apps/web/src/app/data/mockDbtData.ts),
+  [apps/web/src/app/services/workspace/workspaceService.mock.ts](../../../apps/web/src/app/services/workspace/workspaceService.mock.ts),
   and
-  [apps/web/src/app/data/mockDbtData.ts](../../../apps/web/src/app/data/mockDbtData.ts)
+  [apps/web/src/app/services/workspace/workspaceGraphDraftAuthoring.mock.ts](../../../apps/web/src/app/services/workspace/workspaceGraphDraftAuthoring.mock.ts)
 
 ### Plan integrity and admission verification
 

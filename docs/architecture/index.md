@@ -44,6 +44,7 @@ operations surface.
 - [System](system/index.md)
 - [API / Entry Domain](domain-api.md)
 - [Architecture Surface Inventory 2026-04-02](architecture-surface-inventory-20260402.md)
+- [Command And Query Rail Governance](command-query-rail-governance.md)
 - [Delivery Domain](domain-delivery.md)
 - [DVT Component Map](component-map.md)
 - [DVT Domain Map](domain-map.md)

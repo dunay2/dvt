@@ -18,6 +18,14 @@ function readRequiredEnv(name: string): string {
   return value.trim();
 }
 
+export function hasLiveProtectedRuntimeEnv(): boolean {
+  return ['apiBaseUrl', 'apiBearerToken'].every((name) => {
+    const value = Cypress.env(name);
+
+    return typeof value === 'string' && value.trim().length > 0;
+  });
+}
+
 export function resolveLiveWorkspaceSession(): CanvasDraftSessionScope {
   return {
     tenantId:

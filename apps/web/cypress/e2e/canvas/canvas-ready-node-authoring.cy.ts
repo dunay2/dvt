@@ -18,6 +18,7 @@ import {
 type CanvasDraftSaveRequestBody = {
   draft: {
     nodeIds: string[];
+    nodePositions: Record<string, { x: number; y: number }>;
     nodes: Array<{
       id: string;
       name: string;
@@ -72,6 +73,23 @@ function removeCanvasNode(nodeName: string): void {
   cy.contains('[role="menuitem"]', 'Remove node').click();
 }
 
+function assertNodeRendersBelow(nodeName: string, anchorNodeName: string): void {
+  cy.contains('.react-flow__node', anchorNodeName)
+    .should('be.visible')
+    .then(($anchorNode) => {
+      const anchorRect = $anchorNode[0].getBoundingClientRect();
+
+      cy.contains('.react-flow__node', nodeName)
+        .should('be.visible')
+        .then(($node) => {
+          const nodeRect = $node[0].getBoundingClientRect();
+
+          expect(nodeRect.top, `${nodeName} top`).to.be.greaterThan(anchorRect.top);
+          expect(Math.abs(nodeRect.left - anchorRect.left), `${nodeName} column`).to.be.lessThan(8);
+        });
+    });
+}
+
 describe('Canvas ready node authoring', () => {
   beforeEach(() => {
     stubShellBootstrapApis();
@@ -102,6 +120,10 @@ describe('Canvas ready node authoring', () => {
       const createdNode = saveBody?.draft.nodes.find((node) => node.id === 'dvt-sql-transform-1');
 
       expect(saveBody?.draft.nodeIds).to.include('dvt-sql-transform-1');
+      expect(saveBody?.draft.nodePositions['dvt-sql-transform-1']).to.deep.equal({
+        x: 320,
+        y: 360,
+      });
       expect(createdNode).to.deep.include({
         id: 'dvt-sql-transform-1',
         name: 'SQL transform 1',
@@ -118,11 +140,13 @@ describe('Canvas ready node authoring', () => {
 
     addSqlTransformNode();
     cy.contains('.react-flow__node', 'SQL transform 1').should('be.visible');
+    assertNodeRendersBelow('SQL transform 1', 'model_orders');
     waitForDraftSaveCount(1);
 
     visitReadyCanvas();
 
     cy.contains('.react-flow__node', 'SQL transform 1').should('be.visible');
+    assertNodeRendersBelow('SQL transform 1', 'model_orders');
     removeCanvasNode('SQL transform 1');
     cy.contains('.react-flow__node', 'SQL transform 1').should('not.exist');
     waitForDraftSaveCount(2);

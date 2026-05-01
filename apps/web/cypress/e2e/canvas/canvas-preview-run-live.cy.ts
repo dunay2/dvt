@@ -2,15 +2,13 @@
  * Owned concern: prove the selected-closure browser route against the live
  * protected runtime seams.
  */
-import {
-  clickButtonNatively,
-  selectCanvasClosure,
-} from '../../support/canvasExecutionSelection';
+import { clickButtonNatively, selectCanvasClosure } from '../../support/canvasExecutionSelection';
 import {
   stubSelectedClosurePreviewArtifacts,
   waitForSelectedClosurePreviewArtifacts,
 } from '../../support/canvasPreviewArtifacts';
 import {
+  hasLiveProtectedRuntimeEnv,
   readLiveRunEvents,
   readLiveRunSnapshot,
   seedLiveSelectedClosureDraft,
@@ -18,7 +16,12 @@ import {
 } from '../../support/liveProtectedRuntime';
 
 describe('Canvas preview-run live protected runtime', () => {
-  beforeEach(() => {
+  beforeEach(function () {
+    if (!hasLiveProtectedRuntimeEnv()) {
+      this.skip();
+      return;
+    }
+
     stubSelectedClosurePreviewArtifacts();
     seedLiveSelectedClosureDraft({ includeLooseNode: true });
   });

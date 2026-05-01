@@ -49,6 +49,24 @@ The agent MUST NOT:
 - present partial wiring, placeholders, or fake implementations as complete
   work
 
+## Command And Query Rail Rule
+
+Before implementing or documenting externally observable behavior, the agent
+MUST identify the governing command or query rail in the owning bounded context.
+
+If no rail exists, the agent MUST add or update the catalog before
+implementation. The catalog entry must name whether the behavior is a command or
+query, the owning bounded context, the DDD object or read model, the application
+port, the adapter surface, scope and authorization rules, and negative tests.
+
+The canonical repository rule is:
+
+- `docs/architecture/command-query-rail-governance.md`
+
+The agent MUST NOT create parallel commands, queries, services, route handlers,
+mock semantics, or documentation names for the same product intent. Reuse the
+existing rail when the intent already exists.
+
 ## Operational Playbooks
 
 Use these as procedural complements to this file. They do not override rules in

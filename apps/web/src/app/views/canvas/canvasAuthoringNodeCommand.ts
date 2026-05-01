@@ -9,6 +9,8 @@ type CanvasAuthoringNodeCommand = Readonly<{
   position: { x: number; y: number };
 }>;
 
+const CATALOG_NODE_VERTICAL_OFFSET = 220;
+
 function slugifyNodeKind(kind: string): string {
   const lastSegment = kind.slice(kind.lastIndexOf(':') + 1);
 
@@ -62,6 +64,55 @@ function resolveNextAuthoringNodeIndex(baseId: string, existingNodes: readonly N
   return nextIndex;
 }
 
+function normalizeNodeKind(kind: string): string {
+  return kind.slice(kind.lastIndexOf(':') + 1);
+}
+
+function readNodePluginKind(node: Node): string | null {
+  const data = node.data;
+  if (data == null || typeof data !== 'object' || !('pluginKind' in data)) {
+    return null;
+  }
+
+  const pluginKind = data.pluginKind;
+  return typeof pluginKind === 'string' ? pluginKind : null;
+}
+
+function resolveBottommostNode(nodes: readonly Node[]): Node | null {
+  return nodes.reduce<Node | null>((bottommost, node) => {
+    if (bottommost == null) {
+      return node;
+    }
+
+    return node.position.y > bottommost.position.y ? node : bottommost;
+  }, null);
+}
+
+function resolveCatalogAuthoringNodePosition(args: {
+  registration: NodeKindRegistration;
+  existingNodes: readonly Node[];
+}): {
+  x: number;
+  y: number;
+} {
+  const { registration, existingNodes } = args;
+  const normalizedRegistrationKind = normalizeNodeKind(registration.kind);
+  const sameKindNodes = existingNodes.filter((node) => {
+    const pluginKind = readNodePluginKind(node);
+    return pluginKind != null && normalizeNodeKind(pluginKind) === normalizedRegistrationKind;
+  });
+  const anchorNode = resolveBottommostNode(sameKindNodes) ?? resolveBottommostNode(existingNodes);
+
+  if (anchorNode == null) {
+    return { x: 0, y: 0 };
+  }
+
+  return {
+    x: anchorNode.position.x,
+    y: anchorNode.position.y + CATALOG_NODE_VERTICAL_OFFSET,
+  };
+}
+
 export function buildAuthoringNodeCommand(
   registration: NodeKindRegistration,
   existingNodes: readonly Node[]
@@ -83,9 +134,6 @@ export function buildAuthoringNodeCommand(
         typeLabel: registration.label,
       },
     },
-    position: {
-      x: (nextIndex - 1) * 220,
-      y: 0,
-    },
+    position: resolveCatalogAuthoringNodePosition({ registration, existingNodes }),
   };
 }

@@ -22,6 +22,7 @@ procedure. Both must be respected - they are not alternatives.
 - [RunEvents Contract](../architecture/components/engine/contracts/engine/RunEvents.v1.md)
 - [Testing and CI Capabilities](./testing-and-ci-capabilities.md)
 - [Planning Control Tower](../planning/state/planning-control-tower.md)
+- [Command And Query Rail Governance](../architecture/command-query-rail-governance.md)
 
 ## Startup Router Rule
 
@@ -88,6 +89,8 @@ that already exists or reinventing what is already solved:
 - check whether a maintained library already covers the need before designing a
   custom implementation - search npm/GitHub for packages that fit the architectural
   constraints (ESM, TypeScript, no framework lock-in)
+- check whether the behavior is already represented by a command or query in
+  the owning bounded context; reuse that rail instead of inventing a synonym
 - look for how comparable production projects solve the same class of problem
   (event sourcing, outbox pattern, hexagonal architecture) - document what was
   found and why it was accepted or rejected in the Think-First options
@@ -131,6 +134,8 @@ After the think-first is written, document the concrete implementation plan:
   addition to the happy path; a brief stating only the happy path is incomplete
 - libraries evaluated - which libraries were assessed in Phase 0 and whether any
   were adopted (`None evaluated - no custom implementation` if not applicable)
+- command/query rail impact - commands or queries added, changed, reused, or
+  explicitly out of scope; name the catalog surface that owns each rail
 
 ### Phase 3: Normative Baseline Verification
 
@@ -256,6 +261,11 @@ AI-assisted work MUST NOT:
 - point readers at generated `site/` output
 - leave implementation changes without matching documentation when the behavior changed
 - implement from scratch when a maintained library fits the architectural constraints
+- introduce route, service, adapter, UI, workflow, or Cypress behavior that is
+  not mapped to a command or query rail when the behavior is externally
+  observable
+- create duplicate command/query names or local synonyms for an existing product
+  intent
 - cover only the happy path in tests - negative paths are required for any new behavior
 - introduce `as any`, unjustified type assertions, or unexplained magic values
 
@@ -279,6 +289,7 @@ Pre-Implementation Brief
 - Validation plan:
 - Test coverage plan (negative paths and edge cases):
 - Libraries evaluated:
+- Command/query rail impact:
 
 Traceability (Full mode only)
 - Baseline ADRs (verified in Phase 3):

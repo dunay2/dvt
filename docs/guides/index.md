@@ -20,6 +20,7 @@ Developer guides, contribution guides, and quality standards.
 - [AR-C2 Automated Evidence User Manual](ar-c2-automated-evidence-user-manual-20260404.md)
 - [AR-C2 Observability Technical Manual](ar-c2-observability-technical-manual-20260404.md)
 - [AR-C2 Observability User Manual](ar-c2-observability-user-manual-20260404.md)
+- [Canvas Authoring User Manual](canvas-authoring-user-manual-20260501.md)
 - [Docs Markdown Governance Parser Component](docs-markdown-governance-parser-component.md)
 - [Documentation maintenance guide](documentation-maintenance-guide-20260407.md)
 - [DVT+ Design Guide](dvt-code-style-solid-hexagonal-cqrs.md)
