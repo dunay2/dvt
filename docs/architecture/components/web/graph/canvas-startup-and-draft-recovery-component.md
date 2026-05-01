@@ -191,10 +191,10 @@ flowchart LR
 ```mermaid
 flowchart LR
   Policy["effectiveUserPermissions.canEditEdges"] --> Viewport["CanvasViewport nodesDraggable"]
-  Mapper["canvasNodeMapper.ts"] --> Selector[".canvas-node-drag-surface"]
-  Selector --> NodeShell["DbtNodeComponent root shell"]
+  Mapper["canvasNodeMapper.ts"] --> Selector[".canvas-node-drag-handle"]
+  Selector --> NodeHandle["DbtNodeComponent visible drag handle"]
   Viewport --> Gesture["React Flow drag gesture"]
-  NodeShell --> Gesture
+  NodeHandle --> Gesture
 ```
 
 ### Recovery banner presentation

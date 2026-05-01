@@ -164,9 +164,9 @@ As of 2026-04-25:
   host tab strip: the action creates a blank canvas through the protected draft
   save boundary with the current revision as the compare-and-swap guard, so
   stale local demo data does not require manual database cleanup
-- React Flow node drag uses an explicit node drag surface on the visible node
-  shell, keeping drag affordance tied to effective mutation permission instead
-  of depending on incidental child event propagation
+- React Flow node drag uses an explicit visible node drag handle inside the
+  node shell, keeping drag affordance tied to effective mutation permission
+  instead of depending on incidental child event propagation
 
 ## Protected Draft Semantic Projection
 
@@ -347,13 +347,13 @@ Invariants:
 - read-only, backend-blocked, runtime-blocked, or recovery-blocked postures keep
   the replacement action disabled through effective route permissions.
 
-## Node Drag Surface
+## Node Drag Handle
 
 Graph mutation remains governed by `CanvasRuntimePolicy` and the effective route
 permissions. When mutation is allowed, the viewport passes
 `nodesDraggable=true`; each projected React Flow node declares
-`.canvas-node-drag-surface` as its drag handle, and the rendered DVT node shell
-owns that class.
+`.canvas-node-drag-handle` as its drag handle, and the rendered DVT node shell
+owns a visible handle with that class.
 
 ```mermaid
 flowchart LR
@@ -361,8 +361,8 @@ flowchart LR
   Effective --> Viewport["ReactFlow nodesDraggable"]
   Effective --> Toolbar["Layout / New canvas enabled state"]
   Mapper["canvasNodeMapper dragHandle"] --> Viewport
-  Viewport --> DragHandle["dragHandle=.canvas-node-drag-surface"]
-  Node["DbtNodeComponent shell"] --> DragHandle
+  Viewport --> DragHandle["dragHandle=.canvas-node-drag-handle"]
+  Node["DbtNodeComponent visible handle"] --> DragHandle
 ```
 
 This keeps drag behavior explicit while preserving the fail-closed rule: if the

@@ -42,6 +42,7 @@ function buildCanvasShellLayoutArgs({
       draftTransportError: routeViewState.draftTransportError,
       workbenchErrorMessage: routeViewState.workbenchErrorMessage,
       canvasDocument: routeViewState.canvasDocument,
+      draftSaveStatus: routeViewState.draftSaveStatus,
       availableCanvasKinds: routeViewState.availableCanvasKinds,
       canvasTabState: routeViewState.canvasTabState,
       effectiveUserPermissions: routeViewState.effectiveUserPermissions,
@@ -115,6 +116,7 @@ function buildCanvasShellGraphCommandsArgs({
   return {
     graphCommands: {
       onNodesChange: controller.onNodesChange,
+      handleNodeDrag: controller.handleNodeDrag,
       handleNodeDragStop: controller.handleNodeDragStop,
       onEdgesChange: controller.onEdgesChange,
       onConnect: controller.onConnect,

@@ -410,7 +410,7 @@ selecting text or interacting with ports does not accidentally move nodes.
 Acceptance criteria:
 
 - Mapped and dropped nodes include `CANVAS_NODE_DRAG_HANDLE_SELECTOR`.
-- `DbtNodeComponent.tsx` renders the named drag surface.
+- `DbtNodeComponent.tsx` renders the named visible drag handle.
 - Drag enablement remains governed by `CanvasViewport` permissions.
 
 ### US-CANVAS-ARCH-001: validate semantics, not only barrels
@@ -424,7 +424,7 @@ Acceptance criteria:
 
 - Architecture tests read the local component guide and this story document.
 - Tests check semantic strings such as `/workspace/graph/draft`,
-  `replace_current`, and `.canvas-node-drag-surface`.
+  `replace_current`, and `.canvas-node-drag-handle`.
 - Tests reject retired-route shims and duplicated authority paths.
 
 ### US-CANVAS-ARCH-002: keep workspace draft test fixtures bounded

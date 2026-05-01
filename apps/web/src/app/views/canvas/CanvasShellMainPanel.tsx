@@ -1,7 +1,5 @@
 /** Owned concern: compose Canvas toolbar, viewport, and center-surface overlay inside the main shell panel. */
-import {
-  ResizablePanel,
-} from '../../components/ui/resizable';
+import { ResizablePanel } from '../../components/ui/resizable';
 import CanvasToolbar from './CanvasToolbar';
 import CanvasViewport from './CanvasViewport';
 import type {
@@ -14,10 +12,7 @@ import type {
 } from './canvasShell.types';
 
 function resolveCanvasShellMainPanelDefaultSize(
-  layout: Pick<
-    CanvasShellLayout,
-    'focusMode' | 'explorerPanelVisible' | 'inspectorPanelVisible'
-  >
+  layout: Pick<CanvasShellLayout, 'focusMode' | 'explorerPanelVisible' | 'inspectorPanelVisible'>
 ): number {
   if (layout.focusMode) {
     return 100;
@@ -66,6 +61,7 @@ function CanvasShellViewport({
       canvasPalette={graph.canvasPalette}
       viewport={graph.viewport}
       onNodesChange={graphCommands.onNodesChange}
+      onNodeDrag={graphCommands.onNodeDrag}
       onNodeDragStop={graphCommands.onNodeDragStop}
       onEdgesChange={graphCommands.onEdgesChange}
       onConnect={graphCommands.onConnect}

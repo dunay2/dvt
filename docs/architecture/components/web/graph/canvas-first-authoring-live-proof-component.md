@@ -67,30 +67,39 @@ mechanical and tests cannot pick a different node kind.
 
 The implementation introduces one pure proof module.
 
-| API                                           | Owner                              | Responsibility                                                         |
-| --------------------------------------------- | ---------------------------------- | ---------------------------------------------------------------------- |
-| `CanvasFirstAuthoringLiveProof`               | `canvasFirstAuthoringLiveProof.ts` | Closed discriminated state for first-authoring proof.                  |
-| `CanvasFirstAuthoringLiveProofInput`          | `canvasFirstAuthoringLiveProof.ts` | Named input object for draft, active canvas, node, layout, and reload. |
-| `CanvasFirstAuthoringLiveProofTransition`     | `canvasFirstAuthoringLiveProof.ts` | Allowed transition names used by tests and diagnostics.                |
-| `deriveCanvasFirstAuthoringLiveProof(input)`  | `canvasFirstAuthoringLiveProof.ts` | Pure decision function for current proof state.                        |
-| `isCanvasFirstAuthoringProofComplete(proof)`  | `canvasFirstAuthoringLiveProof.ts` | Boolean completion helper for tests and route diagnostics.             |
-| `assertCanvasFirstAuthoringInvariant(proof)`  | `canvasFirstAuthoringLiveProof.ts` | Test helper that fails on impossible transition combinations.          |
-| `resolveLiveFirstAuthoringWorkspaceSession()` | `canvasFirstAuthoring.ts`          | Cypress-only test-owned, run-unique workspace session resolver.        |
-| `assertLiveFirstAuthoringDraftScopeIsClean()` | `canvasFirstAuthoring.ts`          | Cypress-only preflight that fails dirty scopes without mutating them.  |
+| API                                                 | Owner                              | Responsibility                                                           |
+| --------------------------------------------------- | ---------------------------------- | ------------------------------------------------------------------------ |
+| `CanvasFirstAuthoringLiveProof`                     | `canvasFirstAuthoringLiveProof.ts` | Closed discriminated state for first-authoring proof.                    |
+| `CanvasFirstAuthoringLiveProofInput`                | `canvasFirstAuthoringLiveProof.ts` | Named input object for draft, active canvas, node, layout, and reload.   |
+| `CanvasFirstAuthoringLiveProofTransition`           | `canvasFirstAuthoringLiveProof.ts` | Allowed transition names used by tests and diagnostics.                  |
+| `deriveCanvasFirstAuthoringLiveProof(input)`        | `canvasFirstAuthoringLiveProof.ts` | Pure decision function for current proof state.                          |
+| `isCanvasFirstAuthoringProofComplete(proof)`        | `canvasFirstAuthoringLiveProof.ts` | Boolean completion helper for tests and route diagnostics.               |
+| `assertCanvasFirstAuthoringInvariant(proof)`        | `canvasFirstAuthoringLiveProof.ts` | Test helper that fails on impossible transition combinations.            |
+| `requireLiveProtectedRuntimeEnv()`                  | `canvasFirstAuthoring.ts`          | Fails the mandatory live proof when API runtime env is missing.          |
+| `skipWhenFirstAuthoringLiveEnvIsMissing(ctx)`       | `canvasFirstAuthoring.ts`          | Allows optional local Cypress runs to skip only when live env is absent. |
+| `resolveLiveFirstAuthoringWorkspaceSession()`       | `canvasFirstAuthoring.ts`          | Cypress-only test-owned, run-unique workspace session resolver.          |
+| `assertLiveFirstAuthoringDraftScopeIsClean()`       | `canvasFirstAuthoring.ts`          | Cypress-only preflight that fails dirty scopes without mutating them.    |
+| `waitForLiveFirstAuthoringDraftNode()`              | `canvasFirstAuthoring.ts`          | Cypress-only protected query wait for the created graph node.            |
+| `waitForLiveFirstAuthoringLayoutPositionChange()`   | `canvasFirstAuthoring.ts`          | Cypress-only route-local layout wait using `dvt-web-canvas-interaction`. |
+| `scripts/run-canvas-first-authoring-live-proof.cjs` | proof runner                       | Boots protected runtime, web, grants, and Cypress for mandatory proof.   |
 
-The API is intentionally passive. It does not mutate graph state, call HTTP,
-call TanStack Query, or read browser storage.
+The pure proof module is intentionally passive. It does not mutate graph state,
+call HTTP, call TanStack Query, or read browser storage. The Cypress helpers
+may issue protected `GET /workspace/graph/draft` reads and inspect
+`dvt-web-canvas-interaction`; they must not mutate authoritative graph state
+outside the UI-owned command flow.
 
 ## Command And Query Rails
 
-| Rail                      | Type    | DDD owner                             | Component rule                                                 |
-| ------------------------- | ------- | ------------------------------------- | -------------------------------------------------------------- |
-| `GetWorkspaceGraphDraft`  | query   | `WorkspaceGraphDraft` read boundary   | source of clean, created, and restored authoritative truth     |
-| `CreateCanvas`            | command | `CanvasDocument` aggregate            | creates the first typed document from `needs_canvas`           |
-| `CreateCanvasNode`        | command | `CanvasAuthoringGraph` aggregate      | creates a node inside an existing active canvas                |
-| `SaveWorkspaceGraphDraft` | command | `WorkspaceGraphDraft` write boundary  | persists document and node graph through existing CAS behavior |
-| `PersistCanvasLayout`     | command | `CanvasLayoutProjection` value object | persists drag-stop coordinates outside graph authority         |
-| `GetCanvasLayout`         | query   | `CanvasLayoutProjection` value object | restores coordinates after route revisit or hard reload        |
+| Rail                               | Type    | DDD owner                             | Component rule                                                       |
+| ---------------------------------- | ------- | ------------------------------------- | -------------------------------------------------------------------- |
+| `GetWorkspaceGraphDraft`           | query   | `WorkspaceGraphDraft` read boundary   | source of clean, created, and restored graph-authoritative truth     |
+| `CreateCanvas`                     | command | `CanvasDocument` aggregate            | creates the first typed document from `needs_canvas`                 |
+| `CreateCanvasNode`                 | command | `CanvasAuthoringGraph` aggregate      | creates a node inside an existing active canvas                      |
+| `SaveWorkspaceGraphDraft`          | command | `WorkspaceGraphDraft` write boundary  | persists document and node graph through existing CAS behavior       |
+| `PersistCanvasLayout`              | command | `CanvasLayoutProjection` value object | persists active and stopped drag coordinates outside graph authority |
+| `GetCanvasLayout`                  | query   | `CanvasLayoutProjection` value object | restores coordinates after route revisit or hard reload              |
+| `RunCanvasFirstAuthoringLiveProof` | command | repository proof runner               | executes the protected-runtime Cypress proof without zero-pass skips |
 
 No new command or query may be implemented for this component unless the
 implementation plan and repo command-query catalog are updated first.
@@ -117,8 +126,14 @@ implementation plan and repo command-query catalog are updated first.
 - `CreateCanvasNode` is valid only after the first-canvas draft save settles.
 - `SaveWorkspaceGraphDraft` remains the only graph-authoritative write.
 - `PersistCanvasLayout` stores renderer coordinates only.
-- Drag persistence uses the drag-stop payload coordinate, not stale React Flow
-  node arrays.
+- Route-local layout persistence must wait for automatic
+  `dvt-web-canvas-interaction` hydration; node positions captured before
+  hydration must be queued and flushed after hydration.
+- Cypress must prove node creation by polling the protected draft and prove
+  drag persistence by polling the route-local `dvt-web-canvas-interaction`
+  layout key.
+- Drag persistence uses active `onNodeDrag` and `onNodeDragStop` payload
+  coordinates, not stale React Flow node arrays.
 - `CANVAS_NODE_DRAG_HANDLE_SELECTOR` points to a visible semantic handle inside
   the node shell, not to the whole node card.
 - The restored route state must be derived from a real protected draft query
@@ -126,6 +141,13 @@ implementation plan and repo command-query catalog are updated first.
 - Cypress proof must not intercept draft read or write endpoints.
 - Cypress proof must not seed success with a direct draft `PUT` before the UI
   create command runs.
+- The mandatory live proof must run through
+  `pnpm --filter @dvt/web test:e2e:first-authoring:live`, set
+  `CYPRESS_requireLiveProtectedRuntime=1`, and fail rather than skip when live
+  runtime configuration is missing.
+- The API composition root must allow browser CORS preflight for
+  `PUT /workspace/graph/draft`, because the proof exercises the UI-owned
+  `SaveWorkspaceGraphDraft` command instead of Cypress seeding.
 
 ## Transitions
 
@@ -150,6 +172,7 @@ sequenceDiagram
     participant DraftQuery as GetWorkspaceGraphDraft
     participant DraftSave as SaveWorkspaceGraphDraft
     participant Layout as CanvasLayoutProjection
+    participant LocalStore as dvt-web-canvas-interaction
     participant Proof as CanvasFirstAuthoringLiveProof
 
     User->>CanvasRoute: Open /canvas
@@ -163,10 +186,11 @@ sequenceDiagram
     CanvasRoute->>DraftSave: Save node graph
     DraftSave-->>CanvasRoute: Saved revision
     User->>CanvasRoute: Drag node from semantic handle
-    CanvasRoute->>Layout: Persist dropped coordinate
+    CanvasRoute->>Layout: Persist active and stopped drag coordinates
+    Layout->>LocalStore: Store route-local node position
     User->>CanvasRoute: Reload route
     CanvasRoute->>DraftQuery: Read protected draft
-    CanvasRoute->>Layout: Read layout projection
+    CanvasRoute->>LocalStore: Read route-local layout projection
     CanvasRoute->>Proof: restored
 ```
 
@@ -181,10 +205,13 @@ sequenceDiagram
 - `canvasNodeMapper.ts` owns the React Flow drag-handle selector.
 - `DbtNodeComponent.tsx` renders the visible node drag handle consumed by the
   selector.
-- `useCanvasLayoutPersistence.ts` persists route-local coordinates.
+- `useCanvasLayoutPersistence.ts` persists route-local coordinates after
+  automatic store hydration.
 - `canvasStartupAndDraftRecovery.architecture.test.ts` guards semantic
   ownership and prevents seeded startup nodes.
 - `canvas-first-authoring-live.cy.ts` proves the user-visible live journey.
+- `scripts/run-canvas-first-authoring-live-proof.cjs` executes the mandatory
+  protected-runtime proof lane.
 
 ## Negative Coverage
 
@@ -199,6 +226,8 @@ The implementation must prove these failures:
   postures block first authoring;
 - drag attempts outside the intended handle do not count as first-authoring
   proof;
+- layout persistence remains queued rather than lost if a drag observation is
+  captured before local store hydration finishes;
 - restored draft without the created node fails proof;
 - Cypress fails if draft endpoints are intercepted instead of using the live
   protected runtime.
@@ -226,6 +255,9 @@ The implementation must prove these failures:
 - Cypress fixtures must not intercept the authoritative draft endpoints.
 - Cypress setup must not write the authoritative draft before the first UI
   create command.
+- Cypress layout assertions must not poll `draft.nodePositions` for drag
+  movement. The protected draft proves graph authority only; route-local layout
+  proof belongs to `dvt-web-canvas-interaction`.
 - Route-local layout state must not become graph authority.
 - The drag-handle selector must not drift back to the whole node card.
 - Copy-only changes must not claim this feature is implemented.

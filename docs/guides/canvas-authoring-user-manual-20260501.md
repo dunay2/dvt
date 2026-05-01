@@ -149,8 +149,9 @@ they belong to its catalog.
 ## Troubleshooting
 
 - `Add node` is missing: check write permission and draft mode.
-- A node appears in the wrong place: check the persisted value in
-  `draft.nodePositions`.
+- A node appears in the wrong place after drag: check the route-local Canvas
+  layout value in `dvt-web-canvas-interaction`. `draft.nodePositions` only
+  seeds graph-authoritative coordinates when a remote draft provides them.
 - A node disappears after reload: check the draft save response and expected
   revision.
 - Node types from another vertical appear: check the active canvas kind and

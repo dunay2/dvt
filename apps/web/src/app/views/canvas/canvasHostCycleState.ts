@@ -60,11 +60,18 @@ function resolveTypedEmptyMessage(
   return activeCanvasKind?.emptyState.editableMessage ?? canvasViewCopy.routeEmptyEditableMessage;
 }
 
+function canCreateFirstNode(
+  args: Pick<CanvasWorkbenchSurfaceArgs, 'canEditEdges' | 'draftSaveStatus'>
+): boolean {
+  return args.canEditEdges && args.draftSaveStatus !== 'saving';
+}
+
 export function deriveCanvasHostCycleState(
   args: Pick<
     CanvasWorkbenchSurfaceArgs,
     | 'presentationState'
     | 'canvasDocument'
+    | 'draftSaveStatus'
     | 'availableCanvasKinds'
     | 'canEditEdges'
     | 'canOpenSourceImport'
@@ -95,6 +102,10 @@ export function deriveCanvasHostCycleState(
       canvasDocument,
       availableCanvasKinds,
     });
+    const canCreateNode = canCreateFirstNode({
+      canEditEdges,
+      draftSaveStatus: args.draftSaveStatus,
+    });
 
     return {
       kind: 'typed_empty',
@@ -109,8 +120,8 @@ export function deriveCanvasHostCycleState(
         activeCanvasKind?.emptyState.firstNodeLabel ?? canvasViewCopy.routeEmptyFirstNodeLabel,
       firstNodeHelper:
         activeCanvasKind?.emptyState.firstNodeHelper ?? canvasViewCopy.routeEmptyFirstNodeHelper,
-      nodeKinds: canEditEdges ? activeCanvasKind?.nodeKinds ?? [] : [],
-      onCreateAuthoringNode: canEditEdges ? onCreateAuthoringNode : undefined,
+      nodeKinds: canCreateNode ? (activeCanvasKind?.nodeKinds ?? []) : [],
+      onCreateAuthoringNode: canCreateNode ? onCreateAuthoringNode : undefined,
     };
   }
 

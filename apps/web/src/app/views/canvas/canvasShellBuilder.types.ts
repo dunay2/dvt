@@ -28,6 +28,7 @@ export type CanvasShellLayoutBuilderArgs = Readonly<{
     | 'draftTransportError'
     | 'workbenchErrorMessage'
     | 'canvasDocument'
+    | 'draftSaveStatus'
     | 'availableCanvasKinds'
     | 'canvasTabState'
     | 'effectiveUserPermissions'
@@ -76,6 +77,7 @@ export type CanvasShellGraphCommandsBuilderArgs = Readonly<{
   graphCommands: Pick<
     CanvasRouteController,
     | 'onNodesChange'
+    | 'handleNodeDrag'
     | 'handleNodeDragStop'
     | 'onEdgesChange'
     | 'onConnect'

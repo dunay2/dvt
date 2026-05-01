@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { useCanvasInteractionStore } from './canvasInteractionStore';
 
@@ -47,5 +47,12 @@ describe('useCanvasInteractionStore', () => {
     await useCanvasInteractionStore.persist.rehydrate();
 
     expect(useCanvasInteractionStore.getState()._hasHydrated).toBe(true);
+  });
+
+  it('marks a freshly created persisted store hydrated without a manual rehydrate call', async () => {
+    vi.resetModules();
+    const { useCanvasInteractionStore: freshStore } = await import('./canvasInteractionStore');
+
+    expect(freshStore.getState()._hasHydrated).toBe(true);
   });
 });
