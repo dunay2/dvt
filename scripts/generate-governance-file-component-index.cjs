@@ -114,7 +114,7 @@ function countBy(entries, key) {
 
 function renderYaml(payload) {
   return yaml.dump(payload, {
-    lineWidth: 120,
+    lineWidth: 100,
     noRefs: true,
     sortKeys: false,
   });
@@ -169,17 +169,23 @@ governing documentation.
 
 ## By Status
 
+<!-- prettier-ignore-start -->
 ${renderCountTable(statusCounts, 'Status')}
+<!-- prettier-ignore-end -->
 
 ## By Owning Unit
 
+<!-- prettier-ignore-start -->
 ${renderCountTable(ownerCounts, 'Owning unit')}
+<!-- prettier-ignore-end -->
 
 ## Drift And Legacy Files
 
+<!-- prettier-ignore-start -->
 | File | Owning unit | Status |
 | --- | --- | --- |
 ${driftRows || '| _None_ | _None_ | _None_ |'}
+<!-- prettier-ignore-end -->
 
 ## Related Surfaces
 
@@ -239,25 +245,33 @@ legacy.
 
 ## By Level
 
+<!-- prettier-ignore-start -->
 ${renderCountTable(levelCounts, 'Level')}
+<!-- prettier-ignore-end -->
 
 ## By Status
 
+<!-- prettier-ignore-start -->
 ${renderCountTable(statusCounts, 'Status')}
+<!-- prettier-ignore-end -->
 
 ## Oversized Components
 
 Components with \`childrenRequired: true\` and more than 100 files:
 
+<!-- prettier-ignore-start -->
 | Component | Files | Status |
 | --- | ---: | --- |
 ${oversizedRows || '| _None_ | 0 | _None_ |'}
+<!-- prettier-ignore-end -->
 
 ## Components
 
+<!-- prettier-ignore-start -->
 | Component | Level | Status | Files | DDD owner | Parent |
 | --- | --- | ---: | ---: | --- | --- |
 ${componentRows}
+<!-- prettier-ignore-end -->
 
 ## Related Surfaces
 

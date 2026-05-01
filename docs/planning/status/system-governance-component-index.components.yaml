@@ -222,7 +222,8 @@ components:
     excludes: []
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
-      - docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
     fowlerSignals:
       - hidden authority
       - boundary drift
@@ -244,7 +245,8 @@ components:
       - packages/@dvt/artifacts/src/ports/IPlanStoreWriter.ts
     governance:
       - docs/planning/closeouts/20260403-s08-3-artifacts-plan-store-ports-closeout.md
-      - docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
     fowlerSignals:
       - coverage refinement
       - boundary drift
@@ -266,7 +268,8 @@ components:
     excludes: []
     governance:
       - docs/contracts/planner/PlanStoreRecords.v1.md
-      - docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
       - docs/risk-register/quality/R-20260402-S08-PLAN-STORE-CONTRACT-DRIFT.yaml
     fowlerSignals:
       - boundary drift
@@ -352,7 +355,8 @@ components:
     excludes: []
     governance:
       - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
-      - docs/planning/reviews/architecture-and-governance/20260403-s08-postgres-plan-store-hard-qa-review.md
+      - >-
+        docs/planning/reviews/architecture-and-governance/20260403-s08-postgres-plan-store-hard-qa-review.md
       - docs/risk-register/quality/R-20260408-ADAPTER-POSTGRES-PLANSTORE-TEST-DRIFT.yaml
     fowlerSignals:
       - responsibility overload
@@ -371,7 +375,8 @@ components:
     owns: []
     excludes: []
     governance:
-      - docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
     fowlerSignals:
       - coverage refinement
       - boundary drift

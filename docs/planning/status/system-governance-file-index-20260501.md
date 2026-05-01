@@ -29,6 +29,7 @@ governing documentation.
 
 ## By Status
 
+<!-- prettier-ignore-start -->
 | Status | Files |
 | --- | ---: |
 | `canonical` | 109 |
@@ -36,9 +37,11 @@ governing documentation.
 | `drift` | 44 |
 | `legacy` | 9 |
 | `review` | 54 |
+<!-- prettier-ignore-end -->
 
 ## By Owning Unit
 
+<!-- prettier-ignore-start -->
 | Owning unit | Files |
 | --- | ---: |
 | `SYS-ADAPTERS-ROOT` | 196 |
@@ -60,9 +63,11 @@ governing documentation.
 | `SYS-TRACEABILITY-ROOT` | 65 |
 | `SYS-WEB-ROOT` | 783 |
 | `SYS-WORKERS-ROOT` | 103 |
+<!-- prettier-ignore-end -->
 
 ## Drift And Legacy Files
 
+<!-- prettier-ignore-start -->
 | File | Owning unit | Status |
 | --- | --- | --- |
 | `apps/api/src/application/errors/ManifestArtifactResolutionError.ts` | `SYS-PLANSTORE-API-COMPOSITION` | `drift` |
@@ -118,6 +123,7 @@ governing documentation.
 | `packages/@dvt/engine/src/security/planRefPolicyRules.ts` | `SYS-PLANSTORE-ENGINE-FETCH` | `drift` |
 | `packages/@dvt/engine/test/core/WorkflowEngine.planRef.test.ts` | `SYS-PLANSTORE-ENGINE-FETCH` | `drift` |
 | `packages/@dvt/engine/test/security/planRefPolicy.test.ts` | `SYS-PLANSTORE-ENGINE-FETCH` | `drift` |
+<!-- prettier-ignore-end -->
 
 ## Related Surfaces
 

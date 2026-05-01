@@ -987,7 +987,8 @@ files:
     cqRails: PS-Q03, PS-C02
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
-      - docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
   - path: apps/api/src/application/ports/AdmissionTelemetry.ts
     owningUnit: SYS-API-ROOT
     ownerLevel: component
@@ -1148,7 +1149,8 @@ files:
     cqRails: PS-Q03, PS-C02
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
-      - docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
   - path: apps/api/src/application/ports/workspaceGraphDraft.ts
     owningUnit: SYS-API-ROOT
     ownerLevel: component
@@ -1239,7 +1241,8 @@ files:
     cqRails: PS-Q03, PS-C02
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
-      - docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
   - path: apps/api/src/application/services/StoredPlanExecutabilityValidator.ts
     owningUnit: SYS-PLANSTORE-API-COMPOSITION
     ownerLevel: component
@@ -1250,7 +1253,8 @@ files:
     cqRails: PS-Q03, PS-C02
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
-      - docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
   - path: apps/api/src/application/services/WorkflowEngineFactory.ts
     owningUnit: SYS-PLANSTORE-API-COMPOSITION
     ownerLevel: component
@@ -1261,7 +1265,8 @@ files:
     cqRails: PS-Q03, PS-C02
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
-      - docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
   - path: apps/api/src/application/services/authorizeCommandScopeService.ts
     owningUnit: SYS-API-ROOT
     ownerLevel: component
@@ -1922,7 +1927,8 @@ files:
     cqRails: PS-Q03, PS-C02
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
-      - docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
   - path: apps/api/src/entrypoints/http/planRouteBodyParser.ts
     owningUnit: SYS-API-ROOT
     ownerLevel: component
@@ -1943,7 +1949,8 @@ files:
     cqRails: PS-Q03, PS-C02
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
-      - docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
   - path: apps/api/src/entrypoints/http/planRoutePlanSourcePolicy.ts
     owningUnit: SYS-API-ROOT
     ownerLevel: component
@@ -2474,7 +2481,8 @@ files:
     cqRails: PS-Q03, PS-C02
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
-      - docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
   - path: apps/api/src/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.ts
     owningUnit: SYS-PLANSTORE-API-COMPOSITION
     ownerLevel: component
@@ -2485,7 +2493,8 @@ files:
     cqRails: PS-Q03, PS-C02
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
-      - docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
   - path: apps/api/src/infrastructure/startRun/ArtifactStoreDbtProjectBundleBindingPolicy.ts
     owningUnit: SYS-PLANSTORE-API-COMPOSITION
     ownerLevel: component
@@ -2496,7 +2505,8 @@ files:
     cqRails: PS-Q03, PS-C02
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
-      - docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
   - path: apps/api/src/infrastructure/startRun/PostgresDuplicateRunProbe.ts
     owningUnit: SYS-API-ROOT
     ownerLevel: component
@@ -3107,7 +3117,8 @@ files:
     cqRails: API commands and queries
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
-  - path: apps/api/test/application/services/BackpressureAwareStartRunUseCase.executionCapacityReadyzBinding.test.ts
+  - path: >-
+      apps/api/test/application/services/BackpressureAwareStartRunUseCase.executionCapacityReadyzBinding.test.ts
     owningUnit: SYS-API-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -3177,7 +3188,8 @@ files:
     cqRails: PS-Q03, PS-C02
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
-      - docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
   - path: apps/api/test/application/services/StoredPlanExecutabilityValidator.test.ts
     owningUnit: SYS-PLANSTORE-API-COMPOSITION
     ownerLevel: component
@@ -3188,7 +3200,8 @@ files:
     cqRails: PS-Q03, PS-C02
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
-      - docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
   - path: apps/api/test/application/services/WorkflowEngineFactory.test.ts
     owningUnit: SYS-PLANSTORE-API-COMPOSITION
     ownerLevel: component
@@ -3199,7 +3212,8 @@ files:
     cqRails: PS-Q03, PS-C02
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
-      - docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
   - path: apps/api/test/application/services/applicationArchitectureAst.artifacts.ts
     owningUnit: SYS-API-ROOT
     ownerLevel: component
@@ -3470,7 +3484,8 @@ files:
     cqRails: PS-Q03, PS-C02
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
-      - docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
   - path: apps/api/test/application/services/storedPlanExecutabilityValidator/fetchAndAlignment.cases.ts
     owningUnit: SYS-PLANSTORE-API-COMPOSITION
     ownerLevel: component
@@ -3481,7 +3496,8 @@ files:
     cqRails: PS-Q03, PS-C02
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
-      - docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
   - path: apps/api/test/application/services/storedPlanExecutabilityValidator/harness.ts
     owningUnit: SYS-PLANSTORE-API-COMPOSITION
     ownerLevel: component
@@ -3492,7 +3508,8 @@ files:
     cqRails: PS-Q03, PS-C02
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
-      - docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
   - path: apps/api/test/application/services/storedPlanExecutabilityValidator/registry.cases.ts
     owningUnit: SYS-PLANSTORE-API-COMPOSITION
     ownerLevel: component
@@ -3503,8 +3520,10 @@ files:
     cqRails: PS-Q03, PS-C02
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
-      - docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
-  - path: apps/api/test/application/services/workspaceGraphDraftApplicationComponent.architecture.test.ts
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+  - path: >-
+      apps/api/test/application/services/workspaceGraphDraftApplicationComponent.architecture.test.ts
     owningUnit: SYS-API-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -3764,7 +3783,8 @@ files:
     cqRails: PS-Q03, PS-C02
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
-      - docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
   - path: apps/api/test/entrypoints/http/planRouteRequestResolver.test.ts
     owningUnit: SYS-API-ROOT
     ownerLevel: component
@@ -4075,7 +4095,8 @@ files:
     cqRails: API commands and queries
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
-  - path: apps/api/test/infrastructure/admissionTelemetry/ObservabilityBackpressureCapacityTelemetry.test.ts
+  - path: >-
+      apps/api/test/infrastructure/admissionTelemetry/ObservabilityBackpressureCapacityTelemetry.test.ts
     owningUnit: SYS-API-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -4155,7 +4176,8 @@ files:
     cqRails: API commands and queries
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
-  - path: apps/api/test/infrastructure/executionCapacity/TemporalWorkerReadyzExecutionCapacityPort.test.ts
+  - path: >-
+      apps/api/test/infrastructure/executionCapacity/TemporalWorkerReadyzExecutionCapacityPort.test.ts
     owningUnit: SYS-API-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -4175,7 +4197,8 @@ files:
     cqRails: PS-Q03, PS-C02
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
-      - docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
   - path: apps/api/test/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.test.ts
     owningUnit: SYS-PLANSTORE-API-COMPOSITION
     ownerLevel: component
@@ -4186,7 +4209,8 @@ files:
     cqRails: PS-Q03, PS-C02
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
-      - docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
   - path: apps/api/test/infrastructure/startRun/PostgresDuplicateRunProbe.test.ts
     owningUnit: SYS-API-ROOT
     ownerLevel: component
@@ -14081,7 +14105,8 @@ files:
     governance:
       - >-
         docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md
-  - path: apps/web/src/capabilities/runtime-capabilities/application/runtimeCapabilitiesCapability.test.ts
+  - path: >-
+      apps/web/src/capabilities/runtime-capabilities/application/runtimeCapabilitiesCapability.test.ts
     owningUnit: SYS-WEB-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -14125,7 +14150,8 @@ files:
     governance:
       - >-
         docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md
-  - path: apps/web/src/capabilities/runtime-capabilities/infrastructure/httpRuntimeCapabilitiesClient.test.ts
+  - path: >-
+      apps/web/src/capabilities/runtime-capabilities/infrastructure/httpRuntimeCapabilitiesClient.test.ts
     owningUnit: SYS-WEB-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -14147,7 +14173,8 @@ files:
     governance:
       - >-
         docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md
-  - path: apps/web/src/capabilities/runtime-capabilities/presentation/useRuntimeCapabilitiesQuery.test.ts
+  - path: >-
+      apps/web/src/capabilities/runtime-capabilities/presentation/useRuntimeCapabilitiesQuery.test.ts
     owningUnit: SYS-WEB-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -15773,7 +15800,8 @@ files:
     governance:
       - docs/planning/status/system-governance-unit-index-20260501.md
       - docs/planning/status/system-governance-document-unit-map-20260501.md
-  - path: docs/architecture/components/engine/adapters/temporal/temporal-planref-workflow-boundary-user-stories.md
+  - path: >-
+      docs/architecture/components/engine/adapters/temporal/temporal-planref-workflow-boundary-user-stories.md
     owningUnit: SYS-PLANSTORE-DOCS-RISK
     ownerLevel: component
     unitStatus: review
@@ -15839,7 +15867,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/architecture/components/engine/architecture/run-execution-context-admission-policy-component.md
+  - path: >-
+      docs/architecture/components/engine/architecture/run-execution-context-admission-policy-component.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -15872,7 +15901,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/architecture/components/engine/architecture/workflow-engine-boundary-ownership-component.md
+  - path: >-
+      docs/architecture/components/engine/architecture/workflow-engine-boundary-ownership-component.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -15883,7 +15913,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/architecture/components/engine/architecture/workflow-engine-boundary-ownership-user-stories.md
+  - path: >-
+      docs/architecture/components/engine/architecture/workflow-engine-boundary-ownership-user-stories.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -15905,7 +15936,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/architecture/components/engine/architecture/workflow-engine-facade-use-cases-user-stories.md
+  - path: >-
+      docs/architecture/components/engine/architecture/workflow-engine-facade-use-cases-user-stories.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -16884,7 +16916,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/architecture/components/lineage-worker/compiled-code-ref-lineage-extraction-user-stories.md
+  - path: >-
+      docs/architecture/components/lineage-worker/compiled-code-ref-lineage-extraction-user-stories.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -17533,7 +17566,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/architecture/components/web/graph/workspace-graph-draft-test-fixture-boundary-component.md
+  - path: >-
+      docs/architecture/components/web/graph/workspace-graph-draft-test-fixture-boundary-component.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -17544,7 +17578,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/architecture/components/web/graph/workspace-graph-draft-test-fixture-boundary-user-stories.md
+  - path: >-
+      docs/architecture/components/web/graph/workspace-graph-draft-test-fixture-boundary-user-stories.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -17753,7 +17788,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/architecture/components/web/views/workflow/workflow-graph-workbench-surfaces-and-operating-modes.md
+  - path: >-
+      docs/architecture/components/web/views/workflow/workflow-graph-workbench-surfaces-and-operating-modes.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -19952,7 +19988,9 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/archive/planning/gaps/gap5/1. g5_outbox_worker_v4_complete_docs/g5_outbox_worker_v4_complete_docs/README.md
+  - path: >-
+      docs/archive/planning/gaps/gap5/1.
+      g5_outbox_worker_v4_complete_docs/g5_outbox_worker_v4_complete_docs/README.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -20013,7 +20051,9 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/archive/planning/gaps/gap5/2. g5_outbox_worker_focused_topics_pack/docs/operations/OPS-G5-OUTBOX-WORKER.md
+  - path: >-
+      docs/archive/planning/gaps/gap5/2.
+      g5_outbox_worker_focused_topics_pack/docs/operations/OPS-G5-OUTBOX-WORKER.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -20076,7 +20116,9 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/archive/planning/gaps/gap5/3. g5_outbox_worker_final_tuning_only_requested/g5_focused_final_tuning/README.md
+  - path: >-
+      docs/archive/planning/gaps/gap5/3.
+      g5_outbox_worker_final_tuning_only_requested/g5_focused_final_tuning/README.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -20174,7 +20216,9 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/archive/planning/gaps/gap5/4. g5_outbox_worker_repo_ready_source/packages/@dvt/outbox-worker/package.json
+  - path: >-
+      docs/archive/planning/gaps/gap5/4.
+      g5_outbox_worker_repo_ready_source/packages/@dvt/outbox-worker/package.json
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -20458,7 +20502,9 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/archive/planning/gaps/gap5/4. g5_outbox_worker_repo_ready_source/packages/@dvt/outbox-worker/src/index.ts
+  - path: >-
+      docs/archive/planning/gaps/gap5/4.
+      g5_outbox_worker_repo_ready_source/packages/@dvt/outbox-worker/src/index.ts
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -20560,7 +20606,9 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/archive/planning/gaps/gap5/4. g5_outbox_worker_repo_ready_source/packages/@dvt/outbox-worker/src/types.ts
+  - path: >-
+      docs/archive/planning/gaps/gap5/4.
+      g5_outbox_worker_repo_ready_source/packages/@dvt/outbox-worker/src/types.ts
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -20662,7 +20710,9 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/archive/planning/gaps/gap5/4. g5_outbox_worker_repo_ready_source/packages/@dvt/outbox-worker/tsconfig.json
+  - path: >-
+      docs/archive/planning/gaps/gap5/4.
+      g5_outbox_worker_repo_ready_source/packages/@dvt/outbox-worker/tsconfig.json
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -20673,7 +20723,9 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/archive/planning/gaps/gap5/4. g5_outbox_worker_repo_ready_source/packages/@dvt/outbox-worker/vitest.config.ts
+  - path: >-
+      docs/archive/planning/gaps/gap5/4.
+      g5_outbox_worker_repo_ready_source/packages/@dvt/outbox-worker/vitest.config.ts
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -20881,7 +20933,8 @@ files:
     cqRails: PS-Q01, PS-C01
     governance:
       - docs/contracts/planner/PlanStoreRecords.v1.md
-      - docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
       - docs/risk-register/quality/R-20260402-S08-PLAN-STORE-CONTRACT-DRIFT.yaml
   - path: docs/contracts/planner/TransformationFlowCompiler.v1.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -23699,7 +23752,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/archive/proposals/gap4-backpressure-admission-pr5-projected-read-model-20260319.md
+  - path: >-
+      docs/planning/archive/proposals/gap4-backpressure-admission-pr5-projected-read-model-20260319.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -23798,7 +23852,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/archive/proposals/rc-d1a-health-contract-compat-and-watchdog-integration-20260323.md
+  - path: >-
+      docs/planning/archive/proposals/rc-d1a-health-contract-compat-and-watchdog-integration-20260323.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -23887,7 +23942,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/archive/reviews/architecture-and-governance/20260304-dvt-architectural-review-pass-2.md
+  - path: >-
+      docs/planning/archive/reviews/architecture-and-governance/20260304-dvt-architectural-review-pass-2.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -23898,7 +23954,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/archive/reviews/architecture-and-governance/20260305-dvt-architectural-review-consolidated.md
+  - path: >-
+      docs/planning/archive/reviews/architecture-and-governance/20260305-dvt-architectural-review-consolidated.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -23942,7 +23999,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/archive/reviews/architecture-and-governance/20260316-principal-architecture-review.md
+  - path: >-
+      docs/planning/archive/reviews/architecture-and-governance/20260316-principal-architecture-review.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -23965,7 +24023,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/archive/reviews/architecture-and-governance/20260322-dvt-corrected-code-grounded-review.md
+  - path: >-
+      docs/planning/archive/reviews/architecture-and-governance/20260322-dvt-corrected-code-grounded-review.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -23976,7 +24035,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/archive/reviews/architecture-and-governance/20260322-dvt-deep-architectural-review.md
+  - path: >-
+      docs/planning/archive/reviews/architecture-and-governance/20260322-dvt-deep-architectural-review.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -23998,7 +24058,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/archive/reviews/architecture-and-governance/20260322-rc-a2-architectural-review-hard-mode.md
+  - path: >-
+      docs/planning/archive/reviews/architecture-and-governance/20260322-rc-a2-architectural-review-hard-mode.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -24449,7 +24510,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/closeouts/20260317-stage-1-1-planner-canonicalization-ambition-reduction-closeout.md
+  - path: >-
+      docs/planning/closeouts/20260317-stage-1-1-planner-canonicalization-ambition-reduction-closeout.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -24460,7 +24522,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/closeouts/20260317-stage-1-1-planner-canonicalization-artifact-mapping-closeout.md
+  - path: >-
+      docs/planning/closeouts/20260317-stage-1-1-planner-canonicalization-artifact-mapping-closeout.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -24471,7 +24534,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/closeouts/20260317-stage-1-1-planner-canonicalization-binding-storage-contract-closeout.md
+  - path: >-
+      docs/planning/closeouts/20260317-stage-1-1-planner-canonicalization-binding-storage-contract-closeout.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -24482,7 +24546,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/closeouts/20260317-stage-1-1-planner-canonicalization-compiledcoderef-binding-gap-closeout.md
+  - path: >-
+      docs/planning/closeouts/20260317-stage-1-1-planner-canonicalization-compiledcoderef-binding-gap-closeout.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -24493,7 +24558,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/closeouts/20260317-stage-1-1-planner-canonicalization-custom-registration-authority-closeout.md
+  - path: >-
+      docs/planning/closeouts/20260317-stage-1-1-planner-canonicalization-custom-registration-authority-closeout.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -24504,7 +24570,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/closeouts/20260317-stage-1-1-planner-canonicalization-diagram-state-alignment-closeout.md
+  - path: >-
+      docs/planning/closeouts/20260317-stage-1-1-planner-canonicalization-diagram-state-alignment-closeout.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -24515,7 +24582,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/closeouts/20260317-stage-1-1-planner-canonicalization-evidence-format-closeout.md
+  - path: >-
+      docs/planning/closeouts/20260317-stage-1-1-planner-canonicalization-evidence-format-closeout.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -24526,7 +24594,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/closeouts/20260317-stage-1-1-planner-canonicalization-executability-gate-handoff-closeout.md
+  - path: >-
+      docs/planning/closeouts/20260317-stage-1-1-planner-canonicalization-executability-gate-handoff-closeout.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -24537,7 +24606,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/closeouts/20260317-stage-1-1-planner-canonicalization-human-alignment-closeout.md
+  - path: >-
+      docs/planning/closeouts/20260317-stage-1-1-planner-canonicalization-human-alignment-closeout.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -24548,7 +24618,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/closeouts/20260317-stage-1-1-planner-canonicalization-machine-readable-closeout.md
+  - path: >-
+      docs/planning/closeouts/20260317-stage-1-1-planner-canonicalization-machine-readable-closeout.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -24559,7 +24630,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/closeouts/20260317-stage-1-1-planner-canonicalization-manifest-thinning-closeout.md
+  - path: >-
+      docs/planning/closeouts/20260317-stage-1-1-planner-canonicalization-manifest-thinning-closeout.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -24570,7 +24642,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/closeouts/20260317-stage-1-1-planner-canonicalization-manifestref-hash-rule-closeout.md
+  - path: >-
+      docs/planning/closeouts/20260317-stage-1-1-planner-canonicalization-manifestref-hash-rule-closeout.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -24581,7 +24654,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/closeouts/20260317-stage-1-1-planner-canonicalization-policy-vocabulary-closeout.md
+  - path: >-
+      docs/planning/closeouts/20260317-stage-1-1-planner-canonicalization-policy-vocabulary-closeout.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -24603,7 +24677,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/closeouts/20260317-stage-1-1-planner-canonicalization-qualitative-alignment-closeout.md
+  - path: >-
+      docs/planning/closeouts/20260317-stage-1-1-planner-canonicalization-qualitative-alignment-closeout.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -24625,7 +24700,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/closeouts/20260317-stage-1-1-planner-canonicalization-remove-illustrative-interface-trap-closeout.md
+  - path: >-
+      docs/planning/closeouts/20260317-stage-1-1-planner-canonicalization-remove-illustrative-interface-trap-closeout.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -24636,7 +24712,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/closeouts/20260317-stage-1-1-planner-canonicalization-scope-claim-correction-closeout.md
+  - path: >-
+      docs/planning/closeouts/20260317-stage-1-1-planner-canonicalization-scope-claim-correction-closeout.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -24647,7 +24724,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/closeouts/20260317-stage-1-1-planner-canonicalization-stepid-nodeid-transitional-policy-closeout.md
+  - path: >-
+      docs/planning/closeouts/20260317-stage-1-1-planner-canonicalization-stepid-nodeid-transitional-policy-closeout.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -24658,7 +24736,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/closeouts/20260317-stage-1-1-planner-canonicalization-unknown-stepkind-bridge-closeout.md
+  - path: >-
+      docs/planning/closeouts/20260317-stage-1-1-planner-canonicalization-unknown-stepkind-bridge-closeout.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -24691,7 +24770,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/closeouts/20260318-stage-1-1-planner-canonicalization-baseline-snapshot-closeout.md
+  - path: >-
+      docs/planning/closeouts/20260318-stage-1-1-planner-canonicalization-baseline-snapshot-closeout.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -24702,7 +24782,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/closeouts/20260318-stage-1-1-planner-canonicalization-companion-boundary-closeout.md
+  - path: >-
+      docs/planning/closeouts/20260318-stage-1-1-planner-canonicalization-companion-boundary-closeout.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -24713,7 +24794,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/closeouts/20260318-stage-1-1-planner-canonicalization-contract-evolution-coordination-closeout.md
+  - path: >-
+      docs/planning/closeouts/20260318-stage-1-1-planner-canonicalization-contract-evolution-coordination-closeout.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -24724,7 +24806,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/closeouts/20260318-stage-1-1-planner-canonicalization-contract-evolution-protocol-closeout.md
+  - path: >-
+      docs/planning/closeouts/20260318-stage-1-1-planner-canonicalization-contract-evolution-protocol-closeout.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -24735,7 +24818,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/closeouts/20260318-stage-1-1-planner-canonicalization-executability-gate-sequence-closeout.md
+  - path: >-
+      docs/planning/closeouts/20260318-stage-1-1-planner-canonicalization-executability-gate-sequence-closeout.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -24746,7 +24830,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/closeouts/20260318-stage-1-1-planner-canonicalization-input-path-lifecycle-closeout.md
+  - path: >-
+      docs/planning/closeouts/20260318-stage-1-1-planner-canonicalization-input-path-lifecycle-closeout.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -24757,7 +24842,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/closeouts/20260318-stage-1-1-planner-canonicalization-plan-binding-record-closeout.md
+  - path: >-
+      docs/planning/closeouts/20260318-stage-1-1-planner-canonicalization-plan-binding-record-closeout.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -24768,7 +24854,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/closeouts/20260318-stage-1-1-planner-canonicalization-policy-class-vocabulary-closeout.md
+  - path: >-
+      docs/planning/closeouts/20260318-stage-1-1-planner-canonicalization-policy-class-vocabulary-closeout.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -24779,7 +24866,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/closeouts/20260318-stage-1-1-planner-canonicalization-policy-vocabulary-contracts-closeout.md
+  - path: >-
+      docs/planning/closeouts/20260318-stage-1-1-planner-canonicalization-policy-vocabulary-contracts-closeout.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -25221,7 +25309,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/closeouts/20260402-evidence-information-architecture-phase3-migration-closeout.md
+  - path: >-
+      docs/planning/closeouts/20260402-evidence-information-architecture-phase3-migration-closeout.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -25496,7 +25585,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/closeouts/20260407-ar-c1-t3-protected-runtime-admin-route-composition-closeout.md
+  - path: >-
+      docs/planning/closeouts/20260407-ar-c1-t3-protected-runtime-admin-route-composition-closeout.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -26486,7 +26576,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/closeouts/20260420-tf-a1-c18-plan-compile-boundary-ownership-convergence-closeout.md
+  - path: >-
+      docs/planning/closeouts/20260420-tf-a1-c18-plan-compile-boundary-ownership-convergence-closeout.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -26497,7 +26588,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/closeouts/20260420-tf-a1-c19-plan-route-policy-catalog-and-envelope-convergence-closeout.md
+  - path: >-
+      docs/planning/closeouts/20260420-tf-a1-c19-plan-route-policy-catalog-and-envelope-convergence-closeout.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -26541,7 +26633,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/closeouts/20260421-api-http-error-translation-facade-writer-refinement-closeout.md
+  - path: >-
+      docs/planning/closeouts/20260421-api-http-error-translation-facade-writer-refinement-closeout.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -26563,7 +26656,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/closeouts/20260421-api-http-error-translation-response-writer-unification-closeout.md
+  - path: >-
+      docs/planning/closeouts/20260421-api-http-error-translation-response-writer-unification-closeout.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -26574,7 +26668,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/closeouts/20260421-api-http-error-translation-route-static-error-convergence-closeout.md
+  - path: >-
+      docs/planning/closeouts/20260421-api-http-error-translation-route-static-error-convergence-closeout.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -26585,7 +26680,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/closeouts/20260421-api-http-runtime-error-translation-component-hardening-closeout.md
+  - path: >-
+      docs/planning/closeouts/20260421-api-http-runtime-error-translation-component-hardening-closeout.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -26750,7 +26846,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/closeouts/20260422-tf-e2-canvas-route-composition-and-projection-refactor-closeout.md
+  - path: >-
+      docs/planning/closeouts/20260422-tf-e2-canvas-route-composition-and-projection-refactor-closeout.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -27245,7 +27342,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/closeouts/20260424-tf-e2-k-i-authoritative-first-canvas-lifecycle-proof-closeout.md
+  - path: >-
+      docs/planning/closeouts/20260424-tf-e2-k-i-authoritative-first-canvas-lifecycle-proof-closeout.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -27861,7 +27959,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/proposals/disposable/experiments/tabs-workbench/dvt-vscode-workbench/REPO_ALIGNMENT.md
+  - path: >-
+      docs/planning/proposals/disposable/experiments/tabs-workbench/dvt-vscode-workbench/REPO_ALIGNMENT.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -28026,7 +28125,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/proposals/disposable/manifests/planner-stage-1-1-canonicalization.manifest.schema.json
+  - path: >-
+      docs/planning/proposals/disposable/manifests/planner-stage-1-1-canonicalization.manifest.schema.json
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -28048,7 +28148,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/data/benchmark-comparison.csv
+  - path: >-
+      docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/data/benchmark-comparison.csv
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -28059,7 +28160,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/data/component-impact-matrix.csv
+  - path: >-
+      docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/data/component-impact-matrix.csv
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -28070,7 +28172,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/data/component-impact-matrix.json
+  - path: >-
+      docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/data/component-impact-matrix.json
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -28081,7 +28184,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/docs/00-executive-summary.md
+  - path: >-
+      docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/docs/00-executive-summary.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -28092,7 +28196,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/docs/01-market-benchmarks.md
+  - path: >-
+      docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/docs/01-market-benchmarks.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -28103,7 +28208,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/docs/02-dvt-current-state-audit.md
+  - path: >-
+      docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/docs/02-dvt-current-state-audit.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -28150,7 +28256,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/docs/06-impact-matrix.md
+  - path: >-
+      docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/docs/06-impact-matrix.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -28161,7 +28268,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/docs/07-rollout-plan.md
+  - path: >-
+      docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/docs/07-rollout-plan.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -28172,7 +28280,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/docs/08-doc-and-code-drift-notes.md
+  - path: >-
+      docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/docs/08-doc-and-code-drift-notes.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -28183,7 +28292,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/docs/09-wireframes-and-layouts.md
+  - path: >-
+      docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/docs/09-wireframes-and-layouts.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -28206,7 +28316,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/references/repo-surfaces.md
+  - path: >-
+      docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/references/repo-surfaces.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -28217,7 +28328,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/references/source-list.md
+  - path: >-
+      docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/references/source-list.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -28228,7 +28340,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/styles/dvt-professional-density.css
+  - path: >-
+      docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/styles/dvt-professional-density.css
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -28251,7 +28364,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/styles/dvt-professional-typography.css
+  - path: >-
+      docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/styles/dvt-professional-typography.css
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -28297,7 +28411,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-canvas-empty-authoring-entrypoint-design-20260422.md
+  - path: >-
+      docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-canvas-empty-authoring-entrypoint-design-20260422.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -28308,7 +28423,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-canvas-target-architecture-execution-plan-20260417.md
+  - path: >-
+      docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-canvas-target-architecture-execution-plan-20260417.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -28319,7 +28435,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-e-selected-closure-ux-proof-stories-20260423.md
+  - path: >-
+      docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-e-selected-closure-ux-proof-stories-20260423.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -28330,7 +28447,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-inspector-authoring-and-lifecycle-closure-plan-20260425.md
+  - path: >-
+      docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-inspector-authoring-and-lifecycle-closure-plan-20260425.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -28341,7 +28459,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-k-playground-complete-cycle-stories-20260424.md
+  - path: >-
+      docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-k-playground-complete-cycle-stories-20260424.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -28376,7 +28495,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-node-and-edge-lifecycle-closure-plan-20260425.md
+  - path: >-
+      docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-node-and-edge-lifecycle-closure-plan-20260425.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -28387,7 +28507,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-production-node-authoring-and-persistence-plan-20260416.md
+  - path: >-
+      docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-production-node-authoring-and-persistence-plan-20260416.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -28398,7 +28519,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-project-playground-and-multi-canvas-host-plan-20260423.md
+  - path: >-
+      docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-project-playground-and-multi-canvas-host-plan-20260423.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -28409,7 +28531,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/proposals/mandatory/frontend-and-ux/web-auth-project-onboarding-and-actionable-gaps-20260501.md
+  - path: >-
+      docs/planning/proposals/mandatory/frontend-and-ux/web-auth-project-onboarding-and-actionable-gaps-20260501.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -28420,7 +28543,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/proposals/mandatory/governance-and-docs/architecture-doc-reconciliation-plan-20260402.md
+  - path: >-
+      docs/planning/proposals/mandatory/governance-and-docs/architecture-doc-reconciliation-plan-20260402.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -28431,7 +28555,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/proposals/mandatory/governance-and-docs/autogenerated-pages-extraction-plan-20260403.md
+  - path: >-
+      docs/planning/proposals/mandatory/governance-and-docs/autogenerated-pages-extraction-plan-20260403.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -28442,7 +28567,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/proposals/mandatory/governance-and-docs/ci-delivery-governance-consolidated-action-plan-20260331.md
+  - path: >-
+      docs/planning/proposals/mandatory/governance-and-docs/ci-delivery-governance-consolidated-action-plan-20260331.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -28453,7 +28579,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/proposals/mandatory/governance-and-docs/doc-driven-framework-and-tooling-plan-20260404.md
+  - path: >-
+      docs/planning/proposals/mandatory/governance-and-docs/doc-driven-framework-and-tooling-plan-20260404.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -28464,7 +28591,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/proposals/mandatory/governance-and-docs/documentation-usability-change-plan-20260308.md
+  - path: >-
+      docs/planning/proposals/mandatory/governance-and-docs/documentation-usability-change-plan-20260308.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -28475,7 +28603,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/proposals/mandatory/governance-and-docs/generated-planning-surfaces-extraction-plan-20260403.md
+  - path: >-
+      docs/planning/proposals/mandatory/governance-and-docs/generated-planning-surfaces-extraction-plan-20260403.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -28486,7 +28615,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/proposals/mandatory/governance-and-docs/governance-startup-card-router-plan-20260402.md
+  - path: >-
+      docs/planning/proposals/mandatory/governance-and-docs/governance-startup-card-router-plan-20260402.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -28508,7 +28638,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
+  - path: >-
+      docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -28519,7 +28650,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/proposals/mandatory/runtime-and-contracts/ar-a12-b-status-model-split-plan-20260411.md
+  - path: >-
+      docs/planning/proposals/mandatory/runtime-and-contracts/ar-a12-b-status-model-split-plan-20260411.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -28530,7 +28662,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/proposals/mandatory/runtime-and-contracts/ar-a12-c-read-boundary-purity-plan-20260411.md
+  - path: >-
+      docs/planning/proposals/mandatory/runtime-and-contracts/ar-a12-c-read-boundary-purity-plan-20260411.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -28541,7 +28674,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/proposals/mandatory/runtime-and-contracts/ar-b1-run-status-write-boundary-plan-20260404.md
+  - path: >-
+      docs/planning/proposals/mandatory/runtime-and-contracts/ar-b1-run-status-write-boundary-plan-20260404.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -28552,7 +28686,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/proposals/mandatory/runtime-and-contracts/ar-c2-automated-evidence-generation-plan-20260404.md
+  - path: >-
+      docs/planning/proposals/mandatory/runtime-and-contracts/ar-c2-automated-evidence-generation-plan-20260404.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -28563,7 +28698,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/proposals/mandatory/runtime-and-contracts/ar-c2-sla-operational-closure-plan-20260404.md
+  - path: >-
+      docs/planning/proposals/mandatory/runtime-and-contracts/ar-c2-sla-operational-closure-plan-20260404.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -28610,7 +28746,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/proposals/mandatory/runtime-and-contracts/ar-c6-temporal-cancel-semantics-plan-20260410.md
+  - path: >-
+      docs/planning/proposals/mandatory/runtime-and-contracts/ar-c6-temporal-cancel-semantics-plan-20260410.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -28633,7 +28770,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/proposals/mandatory/runtime-and-contracts/contract-pack-and-read-boundary-reset-plan-20260410.md
+  - path: >-
+      docs/planning/proposals/mandatory/runtime-and-contracts/contract-pack-and-read-boundary-reset-plan-20260410.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -28644,7 +28782,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/proposals/mandatory/runtime-and-contracts/contracts-domain-ownership-migration-plan-20260327.md
+  - path: >-
+      docs/planning/proposals/mandatory/runtime-and-contracts/contracts-domain-ownership-migration-plan-20260327.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -28655,7 +28794,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/proposals/mandatory/runtime-and-contracts/dvt-dbt-agnostic-generalization-plan-20260403.md
+  - path: >-
+      docs/planning/proposals/mandatory/runtime-and-contracts/dvt-dbt-agnostic-generalization-plan-20260403.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -28666,7 +28806,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/proposals/mandatory/runtime-and-contracts/f-07-frontend-runtime-contract-baseline-plan-20260404.md
+  - path: >-
+      docs/planning/proposals/mandatory/runtime-and-contracts/f-07-frontend-runtime-contract-baseline-plan-20260404.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -28677,7 +28818,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/proposals/mandatory/runtime-and-contracts/mw-a2-generic-graph-source-plan-20260404.md
+  - path: >-
+      docs/planning/proposals/mandatory/runtime-and-contracts/mw-a2-generic-graph-source-plan-20260404.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -28688,7 +28830,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/proposals/mandatory/runtime-and-contracts/mw-a2-hard-qa-remediation-roadmap-20260404.md
+  - path: >-
+      docs/planning/proposals/mandatory/runtime-and-contracts/mw-a2-hard-qa-remediation-roadmap-20260404.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -28711,7 +28854,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/proposals/mandatory/runtime-and-contracts/mw-d1-external-plan-definition-sdk-api-plan-20260417.md
+  - path: >-
+      docs/planning/proposals/mandatory/runtime-and-contracts/mw-d1-external-plan-definition-sdk-api-plan-20260417.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -28722,7 +28866,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/proposals/mandatory/runtime-and-contracts/plan-creation-interface-route-proposal-20260405.md
+  - path: >-
+      docs/planning/proposals/mandatory/runtime-and-contracts/plan-creation-interface-route-proposal-20260405.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -28733,7 +28878,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/proposals/mandatory/runtime-and-contracts/planner-generic-ingress-compatibility-slice-20260410.md
+  - path: >-
+      docs/planning/proposals/mandatory/runtime-and-contracts/planner-generic-ingress-compatibility-slice-20260410.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -28744,7 +28890,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/proposals/mandatory/runtime-and-contracts/planner-hard-cut-boundary-remediation-20260410.md
+  - path: >-
+      docs/planning/proposals/mandatory/runtime-and-contracts/planner-hard-cut-boundary-remediation-20260410.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -28767,7 +28914,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/proposals/mandatory/runtime-and-contracts/postgres-rls-fowler-qa-remediation-plan-20260426.md
+  - path: >-
+      docs/planning/proposals/mandatory/runtime-and-contracts/postgres-rls-fowler-qa-remediation-plan-20260426.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -28778,7 +28926,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/proposals/mandatory/runtime-and-contracts/postgres-rls-qa-remediation-plan-20260425.md
+  - path: >-
+      docs/planning/proposals/mandatory/runtime-and-contracts/postgres-rls-qa-remediation-plan-20260425.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -28825,7 +28974,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-record-plan-store-execution-plan-20260402.md
+  - path: >-
+      docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-record-plan-store-execution-plan-20260402.md
     owningUnit: SYS-PLANSTORE-DOCS-RISK
     ownerLevel: component
     unitStatus: review
@@ -28836,7 +28986,8 @@ files:
     governance:
       - docs/planning/status/system-governance-unit-index-20260501.md
       - docs/planning/status/system-governance-document-unit-map-20260501.md
-  - path: docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+  - path: >-
+      docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
     owningUnit: SYS-PLANSTORE-DOCS-RISK
     ownerLevel: component
     unitStatus: review
@@ -28859,7 +29010,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/proposals/mandatory/runtime-and-contracts/tenant-run-identity-platform-owned-run-id-plan-20260423.md
+  - path: >-
+      docs/planning/proposals/mandatory/runtime-and-contracts/tenant-run-identity-platform-owned-run-id-plan-20260423.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -28870,7 +29022,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/proposals/mandatory/runtime-and-contracts/tf-a1-c-srp-and-extensibility-hardening-plan-20260414.md
+  - path: >-
+      docs/planning/proposals/mandatory/runtime-and-contracts/tf-a1-c-srp-and-extensibility-hardening-plan-20260414.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -28917,7 +29070,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/proposals/mandatory/runtime-and-contracts/tf-c2-b-runtime-read-surface-evidence-plan-20260408.md
+  - path: >-
+      docs/planning/proposals/mandatory/runtime-and-contracts/tf-c2-b-runtime-read-surface-evidence-plan-20260408.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -28928,7 +29082,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/proposals/mandatory/runtime-and-contracts/tf-c3-production-plugin-host-composition-plan-20260414.md
+  - path: >-
+      docs/planning/proposals/mandatory/runtime-and-contracts/tf-c3-production-plugin-host-composition-plan-20260414.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -28939,7 +29094,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md
+  - path: >-
+      docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -28950,7 +29106,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
+  - path: >-
+      docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -28961,7 +29118,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-product-decisions-20260405.md
+  - path: >-
+      docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-product-decisions-20260405.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -28972,7 +29130,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
+  - path: >-
+      docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -28994,7 +29153,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/proposals/nice-to-have/architecture/DVT-plus-state-machine-transition-proposal.md
+  - path: >-
+      docs/planning/proposals/nice-to-have/architecture/DVT-plus-state-machine-transition-proposal.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -29016,7 +29176,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/proposals/nice-to-have/architecture/ddd-hexagonal-modularization-plan-20260323.md
+  - path: >-
+      docs/planning/proposals/nice-to-have/architecture/ddd-hexagonal-modularization-plan-20260323.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -29027,7 +29188,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/proposals/nice-to-have/architecture/evidence-information-architecture-plan-20260402.md
+  - path: >-
+      docs/planning/proposals/nice-to-have/architecture/evidence-information-architecture-plan-20260402.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -29038,7 +29200,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/proposals/nice-to-have/architecture/mvp-backend-operability-baseline-roadmap-20260329.md
+  - path: >-
+      docs/planning/proposals/nice-to-have/architecture/mvp-backend-operability-baseline-roadmap-20260329.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -29071,7 +29234,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/proposals/nice-to-have/frontend-and-ux/canvas-controller-document-first-hard-gate-20260404.md
+  - path: >-
+      docs/planning/proposals/nice-to-have/frontend-and-ux/canvas-controller-document-first-hard-gate-20260404.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -29082,7 +29246,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/proposals/nice-to-have/frontend-and-ux/canvas-controller-hardening-compliance-roadmap-20260404.md
+  - path: >-
+      docs/planning/proposals/nice-to-have/frontend-and-ux/canvas-controller-hardening-compliance-roadmap-20260404.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -29093,7 +29258,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/proposals/nice-to-have/frontend-and-ux/dvt-ui-workbench-architecture-proposal-20260404.md
+  - path: >-
+      docs/planning/proposals/nice-to-have/frontend-and-ux/dvt-ui-workbench-architecture-proposal-20260404.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -29104,7 +29270,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/proposals/nice-to-have/frontend-and-ux/dvt-ui-workbench-implementation-roadmap-20260404.md
+  - path: >-
+      docs/planning/proposals/nice-to-have/frontend-and-ux/dvt-ui-workbench-implementation-roadmap-20260404.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -29127,7 +29294,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/proposals/nice-to-have/frontend-and-ux/f-23-git-file-history-review-plan-20260407.md
+  - path: >-
+      docs/planning/proposals/nice-to-have/frontend-and-ux/f-23-git-file-history-review-plan-20260407.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -29194,7 +29362,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/proposals/superseded/runtime-and-contracts/ar-a9-planner-cycle-fail-closed-plan-20260404.md
+  - path: >-
+      docs/planning/proposals/superseded/runtime-and-contracts/ar-a9-planner-cycle-fail-closed-plan-20260404.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -29205,7 +29374,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/proposals/superseded/runtime-and-contracts/gap4-backpressure-admission-pr4-plan-20260326.md
+  - path: >-
+      docs/planning/proposals/superseded/runtime-and-contracts/gap4-backpressure-admission-pr4-plan-20260326.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -29216,7 +29386,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/proposals/superseded/runtime-and-contracts/mvp-a1-backend-contractual-inventory-20260329.md
+  - path: >-
+      docs/planning/proposals/superseded/runtime-and-contracts/mvp-a1-backend-contractual-inventory-20260329.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -29227,7 +29398,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/proposals/superseded/runtime-and-contracts/rc-c1-http-error-envelope-normalization-plan-20260331.md
+  - path: >-
+      docs/planning/proposals/superseded/runtime-and-contracts/rc-c1-http-error-envelope-normalization-plan-20260331.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -29238,7 +29410,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/proposals/superseded/runtime-and-delivery/dvt_production_readiness_corrected_review_and_roadmap.md
+  - path: >-
+      docs/planning/proposals/superseded/runtime-and-delivery/dvt_production_readiness_corrected_review_and_roadmap.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -29249,7 +29422,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/proposals/superseded/runtime-and-delivery/gap4-backpressure-admission-pr4-planb-20260326.md
+  - path: >-
+      docs/planning/proposals/superseded/runtime-and-delivery/gap4-backpressure-admission-pr4-planb-20260326.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -29403,7 +29577,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/reviews/architecture-and-governance/20260307-architecture-doc-consolidation-matrix-review.md
+  - path: >-
+      docs/planning/reviews/architecture-and-governance/20260307-architecture-doc-consolidation-matrix-review.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -29436,7 +29611,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/reviews/architecture-and-governance/20260323-solid-ddd-hexagonal-ci-and-adapters-review.md
+  - path: >-
+      docs/planning/reviews/architecture-and-governance/20260323-solid-ddd-hexagonal-ci-and-adapters-review.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -29447,7 +29623,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/reviews/architecture-and-governance/20260326-dvt-principal-architectural-review.md
+  - path: >-
+      docs/planning/reviews/architecture-and-governance/20260326-dvt-principal-architectural-review.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -29458,7 +29635,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/reviews/architecture-and-governance/20260331-principal-architecture-deep-review.md
+  - path: >-
+      docs/planning/reviews/architecture-and-governance/20260331-principal-architecture-deep-review.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -29469,7 +29647,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review-principal-architect.md
+  - path: >-
+      docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review-principal-architect.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -29491,7 +29670,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/reviews/architecture-and-governance/20260402-f03-shell-health-fowler-hard-review.md
+  - path: >-
+      docs/planning/reviews/architecture-and-governance/20260402-f03-shell-health-fowler-hard-review.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -29502,7 +29682,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/reviews/architecture-and-governance/20260403-postgres-plan-store-srp-remediation-target.md
+  - path: >-
+      docs/planning/reviews/architecture-and-governance/20260403-postgres-plan-store-srp-remediation-target.md
     owningUnit: SYS-PLANSTORE-DOCS-RISK
     ownerLevel: component
     unitStatus: review
@@ -29513,7 +29694,8 @@ files:
     governance:
       - docs/planning/status/system-governance-unit-index-20260501.md
       - docs/planning/status/system-governance-document-unit-map-20260501.md
-  - path: docs/planning/reviews/architecture-and-governance/20260403-s08-postgres-plan-store-hard-qa-review.md
+  - path: >-
+      docs/planning/reviews/architecture-and-governance/20260403-s08-postgres-plan-store-hard-qa-review.md
     owningUnit: SYS-PLANSTORE-DOCS-RISK
     ownerLevel: component
     unitStatus: review
@@ -29535,7 +29717,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/reviews/architecture-and-governance/20260404-f04-frontend-data-boundary-hard-qa-review.md
+  - path: >-
+      docs/planning/reviews/architecture-and-governance/20260404-f04-frontend-data-boundary-hard-qa-review.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -29568,7 +29751,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/reviews/architecture-and-governance/20260407-dvt-principles-boundaries-and-target-state-review.md
+  - path: >-
+      docs/planning/reviews/architecture-and-governance/20260407-dvt-principles-boundaries-and-target-state-review.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -29579,7 +29763,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/reviews/architecture-and-governance/20260407-engine-boundary-current-target-and-migration-review.md
+  - path: >-
+      docs/planning/reviews/architecture-and-governance/20260407-engine-boundary-current-target-and-migration-review.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -29602,7 +29787,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/reviews/architecture-and-governance/20260407-execution-plan-and-run-execution-policy-rationale.md
+  - path: >-
+      docs/planning/reviews/architecture-and-governance/20260407-execution-plan-and-run-execution-policy-rationale.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -29613,7 +29799,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/reviews/architecture-and-governance/20260407-plan-core-operational-consumption-design-spike.md
+  - path: >-
+      docs/planning/reviews/architecture-and-governance/20260407-plan-core-operational-consumption-design-spike.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -29624,7 +29811,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/reviews/architecture-and-governance/20260407-principal-architecture-review-progress-and-diagrams.md
+  - path: >-
+      docs/planning/reviews/architecture-and-governance/20260407-principal-architecture-review-progress-and-diagrams.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -29635,7 +29823,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/reviews/architecture-and-governance/20260407-retry-step-boundary-and-use-case-review.md
+  - path: >-
+      docs/planning/reviews/architecture-and-governance/20260407-retry-step-boundary-and-use-case-review.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -29646,7 +29835,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/reviews/architecture-and-governance/20260407-retry-step-boundary-hard-qa-review.md
+  - path: >-
+      docs/planning/reviews/architecture-and-governance/20260407-retry-step-boundary-hard-qa-review.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -29657,7 +29847,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/reviews/architecture-and-governance/20260408-retry-run-boundary-and-provider-signal-mapper-review.md
+  - path: >-
+      docs/planning/reviews/architecture-and-governance/20260408-retry-run-boundary-and-provider-signal-mapper-review.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -29668,7 +29859,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/reviews/architecture-and-governance/20260408-retry-run-boundary-hard-qa-review.md
+  - path: >-
+      docs/planning/reviews/architecture-and-governance/20260408-retry-run-boundary-hard-qa-review.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -29679,7 +29871,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/reviews/architecture-and-governance/20260409-dvt-monorepo-bug-audit-and-backend-valuation.md
+  - path: >-
+      docs/planning/reviews/architecture-and-governance/20260409-dvt-monorepo-bug-audit-and-backend-valuation.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -29690,7 +29883,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/reviews/architecture-and-governance/20260410-contract-pack-and-read-boundary-reset-fowler-review.md
+  - path: >-
+      docs/planning/reviews/architecture-and-governance/20260410-contract-pack-and-read-boundary-reset-fowler-review.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -29701,7 +29895,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/reviews/architecture-and-governance/20260410-runtime-and-shared-kernel-risk-triage-review.md
+  - path: >-
+      docs/planning/reviews/architecture-and-governance/20260410-runtime-and-shared-kernel-risk-triage-review.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -29712,7 +29907,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/reviews/architecture-and-governance/20260411-ar-a12-b-status-model-split-fowler-review.md
+  - path: >-
+      docs/planning/reviews/architecture-and-governance/20260411-ar-a12-b-status-model-split-fowler-review.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -29735,7 +29931,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/reviews/architecture-and-governance/20260413-dvt-plus-architectural-audit-review.md
+  - path: >-
+      docs/planning/reviews/architecture-and-governance/20260413-dvt-plus-architectural-audit-review.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -29746,7 +29943,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/reviews/architecture-and-governance/20260414-principal-architect-review-dvtplus.md
+  - path: >-
+      docs/planning/reviews/architecture-and-governance/20260414-principal-architect-review-dvtplus.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -29768,7 +29966,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/reviews/architecture-and-governance/20260418-mw-d1-external-compile-boundary-review.md
+  - path: >-
+      docs/planning/reviews/architecture-and-governance/20260418-mw-d1-external-compile-boundary-review.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -29779,7 +29978,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/reviews/architecture-and-governance/20260419-plan-route-boundary-remediation-review.md
+  - path: >-
+      docs/planning/reviews/architecture-and-governance/20260419-plan-route-boundary-remediation-review.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -29801,7 +30001,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/reviews/architecture-and-governance/20260420-dvt-plus-system-architecture-review.md
+  - path: >-
+      docs/planning/reviews/architecture-and-governance/20260420-dvt-plus-system-architecture-review.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -29812,7 +30013,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/reviews/architecture-and-governance/20260421-canvas-handler-seams-fowler-review.md
+  - path: >-
+      docs/planning/reviews/architecture-and-governance/20260421-canvas-handler-seams-fowler-review.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -29823,7 +30025,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/reviews/architecture-and-governance/20260421-canvas-route-composition-fowler-review.md
+  - path: >-
+      docs/planning/reviews/architecture-and-governance/20260421-canvas-route-composition-fowler-review.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -29834,7 +30037,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/reviews/architecture-and-governance/20260421-temporal-fowler-provider-truth-follow-up-review.md
+  - path: >-
+      docs/planning/reviews/architecture-and-governance/20260421-temporal-fowler-provider-truth-follow-up-review.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -29845,7 +30049,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/reviews/architecture-and-governance/20260422-canvas-component-governance-follow-up-review.md
+  - path: >-
+      docs/planning/reviews/architecture-and-governance/20260422-canvas-component-governance-follow-up-review.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -29856,7 +30061,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/reviews/architecture-and-governance/20260422-canvas-runtime-truth-hardcut-review.md
+  - path: >-
+      docs/planning/reviews/architecture-and-governance/20260422-canvas-runtime-truth-hardcut-review.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -29867,7 +30073,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/reviews/architecture-and-governance/20260422-dvt-plus-principal-architect-action-plan.md
+  - path: >-
+      docs/planning/reviews/architecture-and-governance/20260422-dvt-plus-principal-architect-action-plan.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -29878,7 +30085,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/reviews/architecture-and-governance/20260422-dvt-plus-principal-architect-deep-review.md
+  - path: >-
+      docs/planning/reviews/architecture-and-governance/20260422-dvt-plus-principal-architect-deep-review.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -29889,7 +30097,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/reviews/architecture-and-governance/20260423-dvt-plus-system-architecture-review.md
+  - path: >-
+      docs/planning/reviews/architecture-and-governance/20260423-dvt-plus-system-architecture-review.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -29900,7 +30109,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/reviews/architecture-and-governance/20260424-dvt-plus-hard-architecture-review.md
+  - path: >-
+      docs/planning/reviews/architecture-and-governance/20260424-dvt-plus-hard-architecture-review.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -29911,7 +30121,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/reviews/architecture-and-governance/20260425-canvas-graph-strategy-fowler-hard-qa-review.md
+  - path: >-
+      docs/planning/reviews/architecture-and-governance/20260425-canvas-graph-strategy-fowler-hard-qa-review.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -29933,7 +30144,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/reviews/architecture-and-governance/20260426-canvas-runtime-policy-architecture-review.md
+  - path: >-
+      docs/planning/reviews/architecture-and-governance/20260426-canvas-runtime-policy-architecture-review.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -29944,7 +30156,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/reviews/architecture-and-governance/20260427-ar-d-plan-pointer-fowler-hard-qa-review.md
+  - path: >-
+      docs/planning/reviews/architecture-and-governance/20260427-ar-d-plan-pointer-fowler-hard-qa-review.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -29966,7 +30179,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/reviews/architecture-and-governance/20260427-rc-g1-d-fowler-architecture-review.md
+  - path: >-
+      docs/planning/reviews/architecture-and-governance/20260427-rc-g1-d-fowler-architecture-review.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -29988,7 +30202,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/reviews/architecture-and-governance/20260429-dvt-plus-principal-deep-review-april-2026.md
+  - path: >-
+      docs/planning/reviews/architecture-and-governance/20260429-dvt-plus-principal-deep-review-april-2026.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -29999,7 +30214,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/reviews/architecture-and-governance/20260429-we-hx-1-fowler-architecture-review.md
+  - path: >-
+      docs/planning/reviews/architecture-and-governance/20260429-we-hx-1-fowler-architecture-review.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -30076,7 +30292,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/reviews/ci-and-delivery/20260401-lane-c-rc-c2-efficiency-institutionalization-review.md
+  - path: >-
+      docs/planning/reviews/ci-and-delivery/20260401-lane-c-rc-c2-efficiency-institutionalization-review.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -30142,7 +30359,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/reviews/event-contract-and-traceability/20260326-reconciler-runtime-solid-qa-review.md
+  - path: >-
+      docs/planning/reviews/event-contract-and-traceability/20260326-reconciler-runtime-solid-qa-review.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -30153,7 +30371,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/reviews/event-contract-and-traceability/20260328-lineage-outbox-fowler-qa-hard-review.md
+  - path: >-
+      docs/planning/reviews/event-contract-and-traceability/20260328-lineage-outbox-fowler-qa-hard-review.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -30164,7 +30383,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/reviews/event-contract-and-traceability/20260330-mvp-b1-claim-evidence-traceability-matrix.md
+  - path: >-
+      docs/planning/reviews/event-contract-and-traceability/20260330-mvp-b1-claim-evidence-traceability-matrix.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -30175,7 +30395,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/reviews/event-contract-and-traceability/20260404-s05-envelope-boundary-fowler-qa-review.md
+  - path: >-
+      docs/planning/reviews/event-contract-and-traceability/20260404-s05-envelope-boundary-fowler-qa-review.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -30186,7 +30407,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/reviews/event-contract-and-traceability/20260404-s05-envelope-boundary-hardening-plan-review.md
+  - path: >-
+      docs/planning/reviews/event-contract-and-traceability/20260404-s05-envelope-boundary-hardening-plan-review.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -30208,7 +30430,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/reviews/event-lifecycle-and-retention/20260329-run-event-retention-fowler-hard-review.md
+  - path: >-
+      docs/planning/reviews/event-lifecycle-and-retention/20260329-run-event-retention-fowler-hard-review.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -30219,7 +30442,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/reviews/event-lifecycle-and-retention/20260329-run-event-retention-risks-mitigations.md
+  - path: >-
+      docs/planning/reviews/event-lifecycle-and-retention/20260329-run-event-retention-risks-mitigations.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -30230,7 +30454,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/reviews/event-lifecycle-and-retention/20260329-run-event-retention-ttl-kickoff-review.md
+  - path: >-
+      docs/planning/reviews/event-lifecycle-and-retention/20260329-run-event-retention-ttl-kickoff-review.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -30241,7 +30466,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/reviews/event-lifecycle-and-retention/20260330-mvp-d1-residual-risk-baseline-review.md
+  - path: >-
+      docs/planning/reviews/event-lifecycle-and-retention/20260330-mvp-d1-residual-risk-baseline-review.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -30274,7 +30500,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/reviews/execution-runtime/20260315-postgres-state-store-adapter-refactor-review.md
+  - path: >-
+      docs/planning/reviews/execution-runtime/20260315-postgres-state-store-adapter-refactor-review.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -30296,7 +30523,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/reviews/execution-runtime/20260315-start-run-intent-schema-manager-architecture-review.md
+  - path: >-
+      docs/planning/reviews/execution-runtime/20260315-start-run-intent-schema-manager-architecture-review.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -30373,7 +30601,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/reviews/execution-runtime/20260331-mvp-a1-backend-contractual-inventory-review.md
+  - path: >-
+      docs/planning/reviews/execution-runtime/20260331-mvp-a1-backend-contractual-inventory-review.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -30538,7 +30767,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/reviews/sprints/sprint-2026-04b/board-009-retry-reservation-contract-mandatory.md
+  - path: >-
+      docs/planning/reviews/sprints/sprint-2026-04b/board-009-retry-reservation-contract-mandatory.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -30604,7 +30834,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/reviews/sprints/sprint-2026-04c/board-014-manifest-schema-validation-at-boundary.md
+  - path: >-
+      docs/planning/reviews/sprints/sprint-2026-04c/board-014-manifest-schema-validation-at-boundary.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -30626,7 +30857,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/planning/reviews/sprints/sprint-2026-04c/board-016-admission-backpressure-temporal-queue-depth.md
+  - path: >-
+      docs/planning/reviews/sprints/sprint-2026-04c/board-016-admission-backpressure-temporal-queue-depth.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -32265,7 +32497,8 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
-  - path: docs/risk-register/quality/R-20260409-CI-REBUILD-DEDUPE-AND-ADAPTER-POSTGRES-CONSOLIDATION.yaml
+  - path: >-
+      docs/risk-register/quality/R-20260409-CI-REBUILD-DEDUPE-AND-ADAPTER-POSTGRES-CONSOLIDATION.yaml
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -33833,7 +34066,8 @@ files:
     cqRails: implements PS-Cxx and PS-Qxx
     governance:
       - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
-      - docs/planning/reviews/architecture-and-governance/20260403-s08-postgres-plan-store-hard-qa-review.md
+      - >-
+        docs/planning/reviews/architecture-and-governance/20260403-s08-postgres-plan-store-hard-qa-review.md
       - docs/risk-register/quality/R-20260408-ADAPTER-POSTGRES-PLANSTORE-TEST-DRIFT.yaml
   - path: packages/@dvt/adapter-postgres/src/PostgresPlanStore.executability-repository.ts
     owningUnit: SYS-PLANSTORE-POSTGRES
@@ -33845,7 +34079,8 @@ files:
     cqRails: implements PS-Cxx and PS-Qxx
     governance:
       - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
-      - docs/planning/reviews/architecture-and-governance/20260403-s08-postgres-plan-store-hard-qa-review.md
+      - >-
+        docs/planning/reviews/architecture-and-governance/20260403-s08-postgres-plan-store-hard-qa-review.md
       - docs/risk-register/quality/R-20260408-ADAPTER-POSTGRES-PLANSTORE-TEST-DRIFT.yaml
   - path: packages/@dvt/adapter-postgres/src/PostgresPlanStore.executable-blob-repository.ts
     owningUnit: SYS-PLANSTORE-POSTGRES
@@ -33857,7 +34092,8 @@ files:
     cqRails: implements PS-Cxx and PS-Qxx
     governance:
       - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
-      - docs/planning/reviews/architecture-and-governance/20260403-s08-postgres-plan-store-hard-qa-review.md
+      - >-
+        docs/planning/reviews/architecture-and-governance/20260403-s08-postgres-plan-store-hard-qa-review.md
       - docs/risk-register/quality/R-20260408-ADAPTER-POSTGRES-PLANSTORE-TEST-DRIFT.yaml
   - path: packages/@dvt/adapter-postgres/src/PostgresPlanStore.mappers.ts
     owningUnit: SYS-PLANSTORE-POSTGRES
@@ -33869,7 +34105,8 @@ files:
     cqRails: implements PS-Cxx and PS-Qxx
     governance:
       - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
-      - docs/planning/reviews/architecture-and-governance/20260403-s08-postgres-plan-store-hard-qa-review.md
+      - >-
+        docs/planning/reviews/architecture-and-governance/20260403-s08-postgres-plan-store-hard-qa-review.md
       - docs/risk-register/quality/R-20260408-ADAPTER-POSTGRES-PLANSTORE-TEST-DRIFT.yaml
   - path: packages/@dvt/adapter-postgres/src/PostgresPlanStore.plan-record-repository.ts
     owningUnit: SYS-PLANSTORE-POSTGRES
@@ -33881,7 +34118,8 @@ files:
     cqRails: implements PS-Cxx and PS-Qxx
     governance:
       - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
-      - docs/planning/reviews/architecture-and-governance/20260403-s08-postgres-plan-store-hard-qa-review.md
+      - >-
+        docs/planning/reviews/architecture-and-governance/20260403-s08-postgres-plan-store-hard-qa-review.md
       - docs/risk-register/quality/R-20260408-ADAPTER-POSTGRES-PLANSTORE-TEST-DRIFT.yaml
   - path: packages/@dvt/adapter-postgres/src/PostgresPlanStore.schema-manager.ts
     owningUnit: SYS-PLANSTORE-POSTGRES
@@ -33893,7 +34131,8 @@ files:
     cqRails: implements PS-Cxx and PS-Qxx
     governance:
       - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
-      - docs/planning/reviews/architecture-and-governance/20260403-s08-postgres-plan-store-hard-qa-review.md
+      - >-
+        docs/planning/reviews/architecture-and-governance/20260403-s08-postgres-plan-store-hard-qa-review.md
       - docs/risk-register/quality/R-20260408-ADAPTER-POSTGRES-PLANSTORE-TEST-DRIFT.yaml
   - path: packages/@dvt/adapter-postgres/src/PostgresPlanStore.sql.ts
     owningUnit: SYS-PLANSTORE-POSTGRES
@@ -33905,7 +34144,8 @@ files:
     cqRails: implements PS-Cxx and PS-Qxx
     governance:
       - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
-      - docs/planning/reviews/architecture-and-governance/20260403-s08-postgres-plan-store-hard-qa-review.md
+      - >-
+        docs/planning/reviews/architecture-and-governance/20260403-s08-postgres-plan-store-hard-qa-review.md
       - docs/risk-register/quality/R-20260408-ADAPTER-POSTGRES-PLANSTORE-TEST-DRIFT.yaml
   - path: packages/@dvt/adapter-postgres/src/PostgresPlanStore.ts
     owningUnit: SYS-PLANSTORE-POSTGRES
@@ -33917,7 +34157,8 @@ files:
     cqRails: implements PS-Cxx and PS-Qxx
     governance:
       - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
-      - docs/planning/reviews/architecture-and-governance/20260403-s08-postgres-plan-store-hard-qa-review.md
+      - >-
+        docs/planning/reviews/architecture-and-governance/20260403-s08-postgres-plan-store-hard-qa-review.md
       - docs/risk-register/quality/R-20260408-ADAPTER-POSTGRES-PLANSTORE-TEST-DRIFT.yaml
   - path: packages/@dvt/adapter-postgres/src/PostgresPlanStore.tx.ts
     owningUnit: SYS-PLANSTORE-POSTGRES
@@ -33929,7 +34170,8 @@ files:
     cqRails: implements PS-Cxx and PS-Qxx
     governance:
       - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
-      - docs/planning/reviews/architecture-and-governance/20260403-s08-postgres-plan-store-hard-qa-review.md
+      - >-
+        docs/planning/reviews/architecture-and-governance/20260403-s08-postgres-plan-store-hard-qa-review.md
       - docs/risk-register/quality/R-20260408-ADAPTER-POSTGRES-PLANSTORE-TEST-DRIFT.yaml
   - path: packages/@dvt/adapter-postgres/src/PostgresPlanStoreComposer.ts
     owningUnit: SYS-PLANSTORE-POSTGRES
@@ -33941,7 +34183,8 @@ files:
     cqRails: implements PS-Cxx and PS-Qxx
     governance:
       - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
-      - docs/planning/reviews/architecture-and-governance/20260403-s08-postgres-plan-store-hard-qa-review.md
+      - >-
+        docs/planning/reviews/architecture-and-governance/20260403-s08-postgres-plan-store-hard-qa-review.md
       - docs/risk-register/quality/R-20260408-ADAPTER-POSTGRES-PLANSTORE-TEST-DRIFT.yaml
   - path: packages/@dvt/adapter-postgres/src/PostgresRelationalExecutionCapability.ts
     owningUnit: SYS-ADAPTERS-ROOT
@@ -34373,7 +34616,8 @@ files:
     cqRails: implements PS-Cxx and PS-Qxx
     governance:
       - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
-      - docs/planning/reviews/architecture-and-governance/20260403-s08-postgres-plan-store-hard-qa-review.md
+      - >-
+        docs/planning/reviews/architecture-and-governance/20260403-s08-postgres-plan-store-hard-qa-review.md
       - docs/risk-register/quality/R-20260408-ADAPTER-POSTGRES-PLANSTORE-TEST-DRIFT.yaml
   - path: packages/@dvt/adapter-postgres/test/PostgresPlanStore.invariants.unit.test.ts
     owningUnit: SYS-PLANSTORE-POSTGRES
@@ -34385,7 +34629,8 @@ files:
     cqRails: implements PS-Cxx and PS-Qxx
     governance:
       - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
-      - docs/planning/reviews/architecture-and-governance/20260403-s08-postgres-plan-store-hard-qa-review.md
+      - >-
+        docs/planning/reviews/architecture-and-governance/20260403-s08-postgres-plan-store-hard-qa-review.md
       - docs/risk-register/quality/R-20260408-ADAPTER-POSTGRES-PLANSTORE-TEST-DRIFT.yaml
   - path: packages/@dvt/adapter-postgres/test/PostgresPlanStore.lifecycle.integration.test.ts
     owningUnit: SYS-PLANSTORE-POSTGRES
@@ -34397,7 +34642,8 @@ files:
     cqRails: implements PS-Cxx and PS-Qxx
     governance:
       - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
-      - docs/planning/reviews/architecture-and-governance/20260403-s08-postgres-plan-store-hard-qa-review.md
+      - >-
+        docs/planning/reviews/architecture-and-governance/20260403-s08-postgres-plan-store-hard-qa-review.md
       - docs/risk-register/quality/R-20260408-ADAPTER-POSTGRES-PLANSTORE-TEST-DRIFT.yaml
   - path: packages/@dvt/adapter-postgres/test/PostgresPlanStore.records-core.integration.test.ts
     owningUnit: SYS-PLANSTORE-POSTGRES
@@ -34409,7 +34655,8 @@ files:
     cqRails: implements PS-Cxx and PS-Qxx
     governance:
       - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
-      - docs/planning/reviews/architecture-and-governance/20260403-s08-postgres-plan-store-hard-qa-review.md
+      - >-
+        docs/planning/reviews/architecture-and-governance/20260403-s08-postgres-plan-store-hard-qa-review.md
       - docs/risk-register/quality/R-20260408-ADAPTER-POSTGRES-PLANSTORE-TEST-DRIFT.yaml
   - path: packages/@dvt/adapter-postgres/test/PostgresPlanStore.records-guards.integration.test.ts
     owningUnit: SYS-PLANSTORE-POSTGRES
@@ -34421,7 +34668,8 @@ files:
     cqRails: implements PS-Cxx and PS-Qxx
     governance:
       - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
-      - docs/planning/reviews/architecture-and-governance/20260403-s08-postgres-plan-store-hard-qa-review.md
+      - >-
+        docs/planning/reviews/architecture-and-governance/20260403-s08-postgres-plan-store-hard-qa-review.md
       - docs/risk-register/quality/R-20260408-ADAPTER-POSTGRES-PLANSTORE-TEST-DRIFT.yaml
   - path: packages/@dvt/adapter-postgres/test/PostgresPlanStore.sql.test.ts
     owningUnit: SYS-PLANSTORE-POSTGRES
@@ -34433,7 +34681,8 @@ files:
     cqRails: implements PS-Cxx and PS-Qxx
     governance:
       - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
-      - docs/planning/reviews/architecture-and-governance/20260403-s08-postgres-plan-store-hard-qa-review.md
+      - >-
+        docs/planning/reviews/architecture-and-governance/20260403-s08-postgres-plan-store-hard-qa-review.md
       - docs/risk-register/quality/R-20260408-ADAPTER-POSTGRES-PLANSTORE-TEST-DRIFT.yaml
   - path: packages/@dvt/adapter-postgres/test/PostgresRunEventStore.test.ts
     owningUnit: SYS-ADAPTERS-ROOT
@@ -35773,7 +36022,8 @@ files:
     cqRails: PS-Q02
     governance:
       - docs/planning/closeouts/20260403-s08-3-artifacts-plan-store-ports-closeout.md
-      - docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
   - path: packages/@dvt/artifacts/src/compiledCode/adapters/FileSystemCompiledCodeStorage.ts
     owningUnit: SYS-PLANSTORE-ARTIFACTS-PORTS
     ownerLevel: component
@@ -35784,7 +36034,8 @@ files:
     cqRails: PS-Q02
     governance:
       - docs/planning/closeouts/20260403-s08-3-artifacts-plan-store-ports-closeout.md
-      - docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
   - path: packages/@dvt/artifacts/src/compiledCode/adapters/InMemoryCompiledCodeStorage.ts
     owningUnit: SYS-PLANSTORE-ARTIFACTS-PORTS
     ownerLevel: component
@@ -35795,7 +36046,8 @@ files:
     cqRails: PS-Q02
     governance:
       - docs/planning/closeouts/20260403-s08-3-artifacts-plan-store-ports-closeout.md
-      - docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
   - path: packages/@dvt/artifacts/src/compiledCode/adapters/MinioCompiledCodeStorage.ts
     owningUnit: SYS-PLANSTORE-ARTIFACTS-PORTS
     ownerLevel: component
@@ -35806,7 +36058,8 @@ files:
     cqRails: PS-Q02
     governance:
       - docs/planning/closeouts/20260403-s08-3-artifacts-plan-store-ports-closeout.md
-      - docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
   - path: packages/@dvt/artifacts/src/compiledCode/adapters/NoopCompiledCodeStorage.ts
     owningUnit: SYS-PLANSTORE-ARTIFACTS-PORTS
     ownerLevel: component
@@ -35817,7 +36070,8 @@ files:
     cqRails: PS-Q02
     governance:
       - docs/planning/closeouts/20260403-s08-3-artifacts-plan-store-ports-closeout.md
-      - docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
   - path: packages/@dvt/artifacts/src/compiledCode/adapters/S3CompiledCodeStorage.ts
     owningUnit: SYS-PLANSTORE-ARTIFACTS-PORTS
     ownerLevel: component
@@ -35828,7 +36082,8 @@ files:
     cqRails: PS-Q02
     governance:
       - docs/planning/closeouts/20260403-s08-3-artifacts-plan-store-ports-closeout.md
-      - docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
   - path: packages/@dvt/artifacts/src/compiledCode/attachCompiledCodeRefs.ts
     owningUnit: SYS-PLANSTORE-ARTIFACTS-PORTS
     ownerLevel: component
@@ -35839,7 +36094,8 @@ files:
     cqRails: PS-Q02
     governance:
       - docs/planning/closeouts/20260403-s08-3-artifacts-plan-store-ports-closeout.md
-      - docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
   - path: packages/@dvt/artifacts/src/compiledCode/sha256.ts
     owningUnit: SYS-PLANSTORE-ARTIFACTS-PORTS
     ownerLevel: component
@@ -35850,7 +36106,8 @@ files:
     cqRails: PS-Q02
     governance:
       - docs/planning/closeouts/20260403-s08-3-artifacts-plan-store-ports-closeout.md
-      - docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
   - path: packages/@dvt/artifacts/src/index.ts
     owningUnit: SYS-PLANSTORE-ARTIFACTS-PORTS
     ownerLevel: component
@@ -35861,7 +36118,8 @@ files:
     cqRails: PS-Q02
     governance:
       - docs/planning/closeouts/20260403-s08-3-artifacts-plan-store-ports-closeout.md
-      - docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
   - path: packages/@dvt/artifacts/src/ports/ICompiledCodeStorage.ts
     owningUnit: SYS-PLANSTORE-ARTIFACTS-PORTS
     ownerLevel: component
@@ -35872,7 +36130,8 @@ files:
     cqRails: PS-Q02
     governance:
       - docs/planning/closeouts/20260403-s08-3-artifacts-plan-store-ports-closeout.md
-      - docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
   - path: packages/@dvt/artifacts/src/ports/IDbtProjectBundleReader.ts
     owningUnit: SYS-PLANSTORE-ARTIFACTS-PORTS
     ownerLevel: component
@@ -35883,7 +36142,8 @@ files:
     cqRails: PS-Q02
     governance:
       - docs/planning/closeouts/20260403-s08-3-artifacts-plan-store-ports-closeout.md
-      - docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
   - path: packages/@dvt/artifacts/src/ports/IPlanStoreReader.ts
     owningUnit: SYS-PLANSTORE-CONTRACTS
     ownerLevel: component
@@ -35894,7 +36154,8 @@ files:
     cqRails: PS-Q01, PS-C01
     governance:
       - docs/contracts/planner/PlanStoreRecords.v1.md
-      - docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
       - docs/risk-register/quality/R-20260402-S08-PLAN-STORE-CONTRACT-DRIFT.yaml
   - path: packages/@dvt/artifacts/src/ports/IPlanStoreWriter.ts
     owningUnit: SYS-PLANSTORE-CONTRACTS
@@ -35906,7 +36167,8 @@ files:
     cqRails: PS-Q01, PS-C01
     governance:
       - docs/contracts/planner/PlanStoreRecords.v1.md
-      - docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
       - docs/risk-register/quality/R-20260402-S08-PLAN-STORE-CONTRACT-DRIFT.yaml
   - path: packages/@dvt/artifacts/src/ports/IRunExecutionContextReader.ts
     owningUnit: SYS-PLANSTORE-ARTIFACTS-PORTS
@@ -35918,7 +36180,8 @@ files:
     cqRails: PS-Q02
     governance:
       - docs/planning/closeouts/20260403-s08-3-artifacts-plan-store-ports-closeout.md
-      - docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
   - path: packages/@dvt/artifacts/src/runtime/ArtifactBackedDbtProjectBundleReader.ts
     owningUnit: SYS-PLANSTORE-ARTIFACTS-PORTS
     ownerLevel: component
@@ -35929,7 +36192,8 @@ files:
     cqRails: PS-Q02
     governance:
       - docs/planning/closeouts/20260403-s08-3-artifacts-plan-store-ports-closeout.md
-      - docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
   - path: packages/@dvt/artifacts/src/runtime/ArtifactBackedRunExecutionContextReader.ts
     owningUnit: SYS-PLANSTORE-ARTIFACTS-PORTS
     ownerLevel: component
@@ -35940,7 +36204,8 @@ files:
     cqRails: PS-Q02
     governance:
       - docs/planning/closeouts/20260403-s08-3-artifacts-plan-store-ports-closeout.md
-      - docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
   - path: packages/@dvt/artifacts/src/runtime/ArtifactReadError.ts
     owningUnit: SYS-PLANSTORE-ARTIFACTS-PORTS
     ownerLevel: component
@@ -35951,7 +36216,8 @@ files:
     cqRails: PS-Q02
     governance:
       - docs/planning/closeouts/20260403-s08-3-artifacts-plan-store-ports-closeout.md
-      - docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
   - path: packages/@dvt/artifacts/src/runtime/assertDbtProjectBundleBinding.ts
     owningUnit: SYS-PLANSTORE-ARTIFACTS-PORTS
     ownerLevel: component
@@ -35962,7 +36228,8 @@ files:
     cqRails: PS-Q02
     governance:
       - docs/planning/closeouts/20260403-s08-3-artifacts-plan-store-ports-closeout.md
-      - docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
   - path: packages/@dvt/artifacts/src/runtime/readArtifactBytes.ts
     owningUnit: SYS-PLANSTORE-ARTIFACTS-PORTS
     ownerLevel: component
@@ -35973,7 +36240,8 @@ files:
     cqRails: PS-Q02
     governance:
       - docs/planning/closeouts/20260403-s08-3-artifacts-plan-store-ports-closeout.md
-      - docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
   - path: packages/@dvt/artifacts/src/runtime/validateArtifactIntegrity.ts
     owningUnit: SYS-PLANSTORE-ARTIFACTS-PORTS
     ownerLevel: component
@@ -35984,7 +36252,8 @@ files:
     cqRails: PS-Q02
     governance:
       - docs/planning/closeouts/20260403-s08-3-artifacts-plan-store-ports-closeout.md
-      - docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
   - path: packages/@dvt/artifacts/test/artifactSurface.test.ts
     owningUnit: SYS-PLANSTORE-ARTIFACTS-PORTS
     ownerLevel: component
@@ -35995,7 +36264,8 @@ files:
     cqRails: PS-Q02
     governance:
       - docs/planning/closeouts/20260403-s08-3-artifacts-plan-store-ports-closeout.md
-      - docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
   - path: packages/@dvt/artifacts/test/runExecutionContextReaders.test.ts
     owningUnit: SYS-PLANSTORE-ARTIFACTS-PORTS
     ownerLevel: component
@@ -36006,7 +36276,8 @@ files:
     cqRails: PS-Q02
     governance:
       - docs/planning/closeouts/20260403-s08-3-artifacts-plan-store-ports-closeout.md
-      - docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
   - path: packages/@dvt/artifacts/test/validateArtifactIntegrity.test.ts
     owningUnit: SYS-PLANSTORE-ARTIFACTS-PORTS
     ownerLevel: component
@@ -36017,7 +36288,8 @@ files:
     cqRails: PS-Q02
     governance:
       - docs/planning/closeouts/20260403-s08-3-artifacts-plan-store-ports-closeout.md
-      - docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
   - path: packages/@dvt/artifacts/tsconfig.json
     owningUnit: SYS-PLANSTORE-ARTIFACTS-PORTS
     ownerLevel: component
@@ -36028,7 +36300,8 @@ files:
     cqRails: PS-Q02
     governance:
       - docs/planning/closeouts/20260403-s08-3-artifacts-plan-store-ports-closeout.md
-      - docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
   - path: packages/@dvt/artifacts/vitest.config.ts
     owningUnit: SYS-PLANSTORE-ARTIFACTS-PORTS
     ownerLevel: component
@@ -36039,7 +36312,8 @@ files:
     cqRails: PS-Q02
     governance:
       - docs/planning/closeouts/20260403-s08-3-artifacts-plan-store-ports-closeout.md
-      - docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
   - path: packages/@dvt/canonical/README.md
     owningUnit: SYS-RUNTIME-ROOT
     ownerLevel: component
@@ -39265,7 +39539,8 @@ files:
     cqRails: runtime commands and queries
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
-  - path: packages/@dvt/engine/test/services/RunExecutionContextAdmissionPolicy.plugin-requirements.test.ts
+  - path: >-
+      packages/@dvt/engine/test/services/RunExecutionContextAdmissionPolicy.plugin-requirements.test.ts
     owningUnit: SYS-RUNTIME-ROOT
     ownerLevel: component
     unitStatus: coverage-required
@@ -40145,7 +40420,8 @@ files:
     cqRails: planner build and derivation rails
     governance:
       - docs/contracts/planner/index.md
-  - path: packages/@dvt/planner/docs/planning/proposal/planner-slice4-artifact-boundary-extraction-plan.md
+  - path: >-
+      packages/@dvt/planner/docs/planning/proposal/planner-slice4-artifact-boundary-extraction-plan.md
     owningUnit: SYS-PLANNER-ROOT
     ownerLevel: component
     unitStatus: coverage-required

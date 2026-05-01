@@ -30,12 +30,15 @@ legacy.
 
 ## By Level
 
+<!-- prettier-ignore-start -->
 | Level | Files |
 | --- | ---: |
 | `component` | 20 |
+<!-- prettier-ignore-end -->
 
 ## By Status
 
+<!-- prettier-ignore-start -->
 | Status | Files |
 | --- | ---: |
 | `canonical` | 1 |
@@ -44,11 +47,13 @@ legacy.
 | `legacy` | 1 |
 | `review` | 2 |
 | `superseded` | 1 |
+<!-- prettier-ignore-end -->
 
 ## Oversized Components
 
 Components with `childrenRequired: true` and more than 100 files:
 
+<!-- prettier-ignore-start -->
 | Component | Files | Status |
 | --- | ---: | --- |
 | `SYS-DOCS-GOVERNANCE-ROOT` | 1639 | `coverage-required` |
@@ -60,9 +65,11 @@ Components with `childrenRequired: true` and more than 100 files:
 | `SYS-CONTRACTS-ROOT` | 127 | `coverage-required` |
 | `SYS-REPO-METADATA-ROOT` | 109 | `canonical` |
 | `SYS-WORKERS-ROOT` | 103 | `coverage-required` |
+<!-- prettier-ignore-end -->
 
 ## Components
 
+<!-- prettier-ignore-start -->
 | Component | Level | Status | Files | DDD owner | Parent |
 | --- | --- | ---: | ---: | --- | --- |
 | `SYS-ADAPTERS-ROOT` | `component` | `coverage-required` | 196 | `ADP` | `SYS-ADAPTERS` |
@@ -85,6 +92,7 @@ Components with `childrenRequired: true` and more than 100 files:
 | `SYS-TRACEABILITY-ROOT` | `component` | `coverage-required` | 65 | `DS` | `SYS-TRACEABILITY` |
 | `SYS-WEB-ROOT` | `component` | `coverage-required` | 783 | `ENTRY` | `SYS-WEB` |
 | `SYS-WORKERS-ROOT` | `component` | `coverage-required` | 103 | `AS` | `SYS-WORKERS` |
+<!-- prettier-ignore-end -->
 
 ## Related Surfaces
 
