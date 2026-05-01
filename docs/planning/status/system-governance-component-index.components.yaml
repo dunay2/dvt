@@ -1,0 +1,1160 @@
+version: 1
+generatedFrom: docs/planning/status/system-governance-unit-index.units.yaml
+fileIndex: docs/planning/status/system-governance-file-index.files.yaml
+componentCount: 20
+components:
+  - id: SYS-ADAPTERS-ROOT
+    name: Adapter root component
+    level: component
+    parent: SYS-ADAPTERS
+    rootUnit: SYS-DVT
+    domainUnit: SYS-ADAPTERS
+    unitPath:
+      - SYS-DVT
+      - SYS-ADAPTERS
+      - SYS-ADAPTERS-ROOT
+    unitReferences:
+      - id: SYS-DVT
+        name: DVT system
+        level: system
+        status: review
+        governance:
+          - docs/architecture/reference-architecture.md
+          - docs/concepts/domain-language.md
+          - docs/planning/status/governance-document-rule-inventory.md
+      - id: SYS-ADAPTERS
+        name: Adapter domain
+        level: domain
+        status: coverage-required
+        governance:
+          - docs/planning/status/system-operations-inventory-20260501.md
+      - id: SYS-ADAPTERS-ROOT
+        name: Adapter root component
+        level: component
+        status: coverage-required
+        governance:
+          - docs/planning/status/system-operations-inventory-20260501.md
+    status: coverage-required
+    isDrift: false
+    isLegacy: false
+    childrenRequired: true
+    fileCount: 196
+    dddOwner: ADP
+    cqRails: adapter implementations of owned ports
+    owns:
+      - packages/@dvt/adapter-postgres/**
+      - packages/@dvt/adapter-temporal/**
+    excludes:
+      - packages/@dvt/adapter-postgres/src/PostgresPlanStore*.ts
+      - packages/@dvt/adapter-postgres/test/PostgresPlanStore*.ts
+      - packages/@dvt/adapter-temporal/src/temporalPlanRefCapacitySlaPolicy.ts
+      - packages/@dvt/adapter-temporal/src/workflows/workflowArtifactHelpers.ts
+      - packages/@dvt/adapter-temporal/test/temporalPlanRefCapacitySlaPolicy.test.ts
+      - packages/@dvt/adapter-temporal/test/workflow-component-semantics.architecture.test.ts
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+    fowlerSignals:
+      - coverage refinement
+  - id: SYS-API-ROOT
+    name: API root component
+    level: component
+    parent: SYS-API
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    unitPath:
+      - SYS-DVT
+      - SYS-API
+      - SYS-API-ROOT
+    unitReferences:
+      - id: SYS-DVT
+        name: DVT system
+        level: system
+        status: review
+        governance:
+          - docs/architecture/reference-architecture.md
+          - docs/concepts/domain-language.md
+          - docs/planning/status/governance-document-rule-inventory.md
+      - id: SYS-API
+        name: API workspace
+        level: workspace
+        status: coverage-required
+        governance:
+          - docs/planning/status/system-operations-inventory-20260501.md
+      - id: SYS-API-ROOT
+        name: API root component
+        level: component
+        status: coverage-required
+        governance:
+          - docs/planning/status/system-operations-inventory-20260501.md
+    status: coverage-required
+    isDrift: false
+    isLegacy: false
+    childrenRequired: true
+    fileCount: 362
+    dddOwner: AS
+    cqRails: API commands and queries
+    owns:
+      - apps/api/**
+    excludes:
+      - apps/api/src/application/errors/ManifestArtifactResolutionError.ts
+      - apps/api/src/application/ports/storedPlan.ts
+      - apps/api/src/application/services/StoredExecutablePlanResolver.ts
+      - apps/api/src/application/services/StoredPlanExecutabilityValidator.ts
+      - apps/api/src/application/services/WorkflowEngineFactory.ts
+      - apps/api/src/entrypoints/http/planRefHttpMapper.ts
+      - apps/api/src/entrypoints/http/planRoutePlanRefParser.ts
+      - apps/api/src/infrastructure/planner/ManifestArtifactResolver.ts
+      - apps/api/src/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.ts
+      - apps/api/src/infrastructure/startRun/ArtifactStoreDbtProjectBundleBindingPolicy.ts
+      - apps/api/test/application/services/StoredExecutablePlanResolver.test.ts
+      - apps/api/test/application/services/StoredPlanExecutabilityValidator.test.ts
+      - apps/api/test/application/services/WorkflowEngineFactory.test.ts
+      - apps/api/test/application/services/storedPlanExecutabilityValidator/**
+      - apps/api/test/entrypoints/http/planRoutePlanSourcePolicy.test.ts
+      - apps/api/test/infrastructure/planner/ManifestArtifactResolver.test.ts
+      - apps/api/test/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.test.ts
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+    fowlerSignals:
+      - coverage refinement
+  - id: SYS-CI-GOVERNANCE-ROOT
+    name: CI and automation root component
+    level: component
+    parent: SYS-CI-GOVERNANCE
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    unitReferences:
+      - id: SYS-DVT
+        name: DVT system
+        level: system
+        status: review
+        governance:
+          - docs/architecture/reference-architecture.md
+          - docs/concepts/domain-language.md
+          - docs/planning/status/governance-document-rule-inventory.md
+      - id: SYS-CI-GOVERNANCE
+        name: CI and automation governance
+        level: workspace
+        status: coverage-required
+        governance:
+          - docs/guides/testing-and-ci-capabilities.md
+          - docs/planning/status/governance-document-rule-inventory.md
+      - id: SYS-CI-GOVERNANCE-ROOT
+        name: CI and automation root component
+        level: component
+        status: coverage-required
+        governance:
+          - docs/guides/testing-and-ci-capabilities.md
+    status: coverage-required
+    isDrift: false
+    isLegacy: false
+    childrenRequired: true
+    fileCount: 168
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    owns:
+      - .github/**
+      - .husky/**
+      - scripts/**
+      - tools/**
+      - packages/test/**
+      - vitest.config.ts
+    excludes: []
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+    fowlerSignals:
+      - coverage refinement
+  - id: SYS-CONTRACTS-ROOT
+    name: Contracts root component
+    level: component
+    parent: SYS-CONTRACTS
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    unitPath:
+      - SYS-DVT
+      - SYS-CONTRACTS
+      - SYS-CONTRACTS-ROOT
+    unitReferences:
+      - id: SYS-DVT
+        name: DVT system
+        level: system
+        status: review
+        governance:
+          - docs/architecture/reference-architecture.md
+          - docs/concepts/domain-language.md
+          - docs/planning/status/governance-document-rule-inventory.md
+      - id: SYS-CONTRACTS
+        name: Contracts workspace family
+        level: workspace
+        status: coverage-required
+        governance:
+          - docs/contracts/index.md
+          - docs/adr/ADR-0005-contract-formalization-tooling.md
+          - docs/adr/ADR-0006-contract-tooling-governance.md
+          - docs/adr/ADR-0018_Shared_Kernel_Ownership_Governance.md
+      - id: SYS-CONTRACTS-ROOT
+        name: Contracts root component
+        level: component
+        status: coverage-required
+        governance:
+          - docs/contracts/index.md
+    status: coverage-required
+    isDrift: false
+    isLegacy: false
+    childrenRequired: true
+    fileCount: 127
+    dddOwner: PORT
+    cqRails: contract DTOs and port shapes
+    owns:
+      - packages/@dvt/contracts/**
+      - packages/@dvt/planner-contracts/**
+      - contracts/**
+    excludes: []
+    governance:
+      - docs/contracts/index.md
+    fowlerSignals:
+      - coverage refinement
+  - id: SYS-DOCS-GOVERNANCE-ROOT
+    name: Documentation governance root component
+    level: component
+    parent: SYS-DOCS-GOVERNANCE
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    unitPath:
+      - SYS-DVT
+      - SYS-DOCS-GOVERNANCE
+      - SYS-DOCS-GOVERNANCE-ROOT
+    unitReferences:
+      - id: SYS-DVT
+        name: DVT system
+        level: system
+        status: review
+        governance:
+          - docs/architecture/reference-architecture.md
+          - docs/concepts/domain-language.md
+          - docs/planning/status/governance-document-rule-inventory.md
+      - id: SYS-DOCS-GOVERNANCE
+        name: Documentation governance
+        level: workspace
+        status: coverage-required
+        governance:
+          - docs/DOCS_README.md
+          - docs/planning/status/governance-document-rule-inventory.md
+      - id: SYS-DOCS-GOVERNANCE-ROOT
+        name: Documentation governance root component
+        level: component
+        status: coverage-required
+        governance:
+          - docs/DOCS_README.md
+          - docs/planning/status/governance-document-rule-inventory.md
+    status: coverage-required
+    isDrift: false
+    isLegacy: false
+    childrenRequired: true
+    fileCount: 1642
+    dddOwner: INFRA
+    cqRails: none - documentation governance
+    owns:
+      - docs/**
+      - runbooks/**
+      - README.md
+      - AGENTS.md
+      - CLAUDE.md
+      - CONTRIBUTING.md
+      - CHANGELOG.md
+    excludes:
+      - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
+      - docs/adr/adr-0052-planref-continuation-safety.md
+      - docs/architecture/components/engine/adapters/temporal/temporal-planref*.md
+      - docs/contracts/planner/PlanStoreRecords.v1.md
+      - docs/evidence/ED-20260402-s08-contract-layer-hardening.md
+      - docs/evidence/ED-20260403-s08-*.md
+      - docs/evidence/ed-20260427-temporal-planref-*.md
+      - docs/evidence/ed-20260430-ar-d2-temporal-planref-capacity-sla.md
+      - docs/guides/postgres-plan-store-*.md
+      - docs/planning/closeouts/20260402-s08-*.md
+      - docs/planning/closeouts/20260403-s08-*.md
+      - docs/planning/closeouts/20260406-s08-*.md
+      - docs/planning/closeouts/20260427-temporal-planref-*.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/s08-*.md
+      - docs/planning/reviews/20260402-s08-plan-record-plan-store-gap-review.md
+      - docs/planning/reviews/architecture-and-governance/20260403-*plan-store*.md
+      - docs/planning/status/system-governance-planstore-file-ownership-20260501.md
+      - docs/risk-register/quality/R-20260402-S08-PLAN-STORE-CONTRACT-DRIFT.yaml
+      - docs/risk-register/quality/R-20260403-S08-*.yaml
+      - docs/risk-register/quality/R-20260405-PLAN-STORE-CANONICAL-SHAPE-DRIFT.yaml
+      - docs/risk-register/quality/R-20260408-ADAPTER-POSTGRES-PLANSTORE-TEST-DRIFT.yaml
+      - docs/risk-register/quality/R-20260427-TEMPORAL-PLANREF-CONFIG-HARDENING.yaml
+    governance:
+      - docs/DOCS_README.md
+      - docs/planning/status/governance-document-rule-inventory.md
+    fowlerSignals:
+      - coverage refinement
+  - id: SYS-OBSERVABILITY-ROOT
+    name: Observability root component
+    level: component
+    parent: SYS-OBSERVABILITY
+    rootUnit: SYS-DVT
+    domainUnit: SYS-OBSERVABILITY
+    unitPath:
+      - SYS-DVT
+      - SYS-OBSERVABILITY
+      - SYS-OBSERVABILITY-ROOT
+    unitReferences:
+      - id: SYS-DVT
+        name: DVT system
+        level: system
+        status: review
+        governance:
+          - docs/architecture/reference-architecture.md
+          - docs/concepts/domain-language.md
+          - docs/planning/status/governance-document-rule-inventory.md
+      - id: SYS-OBSERVABILITY
+        name: Observability domain
+        level: domain
+        status: coverage-required
+        governance:
+          - docs/planning/status/system-operations-inventory-20260501.md
+      - id: SYS-OBSERVABILITY-ROOT
+        name: Observability root component
+        level: component
+        status: coverage-required
+        governance:
+          - docs/planning/status/system-operations-inventory-20260501.md
+    status: coverage-required
+    isDrift: false
+    isLegacy: false
+    childrenRequired: true
+    fileCount: 15
+    dddOwner: PORT
+    cqRails: telemetry commands and operational queries
+    owns:
+      - packages/@dvt/observability/**
+      - packages/@dvt/observability-otel/**
+    excludes: []
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+    fowlerSignals:
+      - coverage refinement
+  - id: SYS-PLANNER-ROOT
+    name: Planner root component
+    level: component
+    parent: SYS-PLANNER
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANNER
+      - SYS-PLANNER-ROOT
+    unitReferences:
+      - id: SYS-DVT
+        name: DVT system
+        level: system
+        status: review
+        governance:
+          - docs/architecture/reference-architecture.md
+          - docs/concepts/domain-language.md
+          - docs/planning/status/governance-document-rule-inventory.md
+      - id: SYS-PLANNER
+        name: Planner workspace family
+        level: workspace
+        status: coverage-required
+        governance:
+          - docs/contracts/planner/index.md
+          - docs/planning/status/system-operations-inventory-20260501.md
+      - id: SYS-PLANNER-ROOT
+        name: Planner root component
+        level: component
+        status: coverage-required
+        governance:
+          - docs/contracts/planner/index.md
+    status: coverage-required
+    isDrift: false
+    isLegacy: false
+    childrenRequired: true
+    fileCount: 76
+    dddOwner: DS
+    cqRails: planner build and derivation rails
+    owns:
+      - packages/@dvt/planner/**
+    excludes: []
+    governance:
+      - docs/contracts/planner/index.md
+    fowlerSignals:
+      - coverage refinement
+  - id: SYS-PLANSTORE-API-COMPOSITION
+    name: API plan-store composition and resolvers
+    level: component
+    parent: SYS-PLANSTORE
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-API-COMPOSITION
+    unitReferences:
+      - id: SYS-DVT
+        name: DVT system
+        level: system
+        status: review
+        governance:
+          - docs/architecture/reference-architecture.md
+          - docs/concepts/domain-language.md
+          - docs/planning/status/governance-document-rule-inventory.md
+      - id: SYS-PLANSTORE
+        name: Plan-store domain
+        level: domain
+        status: review
+        governance:
+          - >-
+            docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+          - docs/planning/status/system-operations-inventory-20260501.md
+          - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
+      - id: SYS-PLANSTORE-API-COMPOSITION
+        name: API plan-store composition and resolvers
+        level: component
+        status: drift
+        governance:
+          - docs/planning/status/system-operations-inventory-20260501.md
+          - >-
+            docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+    status: drift
+    isDrift: true
+    isLegacy: false
+    childrenRequired: true
+    fileCount: 20
+    dddOwner: AS
+    cqRails: PS-Q03, PS-C02
+    owns:
+      - apps/api/src/application/errors/ManifestArtifactResolutionError.ts
+      - apps/api/src/application/ports/storedPlan.ts
+      - apps/api/src/application/services/StoredExecutablePlanResolver.ts
+      - apps/api/src/application/services/StoredPlanExecutabilityValidator.ts
+      - apps/api/src/application/services/WorkflowEngineFactory.ts
+      - apps/api/src/entrypoints/http/planRefHttpMapper.ts
+      - apps/api/src/entrypoints/http/planRoutePlanRefParser.ts
+      - apps/api/src/infrastructure/planner/ManifestArtifactResolver.ts
+      - apps/api/src/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.ts
+      - apps/api/src/infrastructure/startRun/ArtifactStoreDbtProjectBundleBindingPolicy.ts
+      - apps/api/test/application/services/StoredExecutablePlanResolver.test.ts
+      - apps/api/test/application/services/StoredPlanExecutabilityValidator.test.ts
+      - apps/api/test/application/services/WorkflowEngineFactory.test.ts
+      - apps/api/test/application/services/storedPlanExecutabilityValidator/**
+      - apps/api/test/entrypoints/http/planRoutePlanSourcePolicy.test.ts
+      - apps/api/test/infrastructure/planner/ManifestArtifactResolver.test.ts
+      - apps/api/test/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.test.ts
+    excludes: []
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+    fowlerSignals:
+      - hidden authority
+      - boundary drift
+  - id: SYS-PLANSTORE-ARTIFACTS-PORTS
+    name: Plan-store artifacts ports and runtime readers
+    level: component
+    parent: SYS-PLANSTORE
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-ARTIFACTS-PORTS
+    unitReferences:
+      - id: SYS-DVT
+        name: DVT system
+        level: system
+        status: review
+        governance:
+          - docs/architecture/reference-architecture.md
+          - docs/concepts/domain-language.md
+          - docs/planning/status/governance-document-rule-inventory.md
+      - id: SYS-PLANSTORE
+        name: Plan-store domain
+        level: domain
+        status: review
+        governance:
+          - >-
+            docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+          - docs/planning/status/system-operations-inventory-20260501.md
+          - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
+      - id: SYS-PLANSTORE-ARTIFACTS-PORTS
+        name: Plan-store artifacts ports and runtime readers
+        level: component
+        status: review
+        governance:
+          - docs/planning/closeouts/20260403-s08-3-artifacts-plan-store-ports-closeout.md
+          - >-
+            docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+    status: review
+    isDrift: false
+    isLegacy: false
+    childrenRequired: true
+    fileCount: 23
+    dddOwner: PORT
+    cqRails: PS-Q02
+    owns:
+      - packages/@dvt/artifacts/**
+    excludes:
+      - packages/@dvt/artifacts/src/ports/IPlanStoreReader.ts
+      - packages/@dvt/artifacts/src/ports/IPlanStoreWriter.ts
+    governance:
+      - docs/planning/closeouts/20260403-s08-3-artifacts-plan-store-ports-closeout.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+    fowlerSignals:
+      - coverage refinement
+      - boundary drift
+  - id: SYS-PLANSTORE-CONTRACTS
+    name: Plan-store contracts
+    level: component
+    parent: SYS-PLANSTORE
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-CONTRACTS
+    unitReferences:
+      - id: SYS-DVT
+        name: DVT system
+        level: system
+        status: review
+        governance:
+          - docs/architecture/reference-architecture.md
+          - docs/concepts/domain-language.md
+          - docs/planning/status/governance-document-rule-inventory.md
+      - id: SYS-PLANSTORE
+        name: Plan-store domain
+        level: domain
+        status: review
+        governance:
+          - >-
+            docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+          - docs/planning/status/system-operations-inventory-20260501.md
+          - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
+      - id: SYS-PLANSTORE-CONTRACTS
+        name: Plan-store contracts
+        level: component
+        status: drift
+        governance:
+          - docs/contracts/planner/PlanStoreRecords.v1.md
+          - >-
+            docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+          - docs/risk-register/quality/R-20260402-S08-PLAN-STORE-CONTRACT-DRIFT.yaml
+    status: drift
+    isDrift: true
+    isLegacy: false
+    childrenRequired: true
+    fileCount: 3
+    dddOwner: PORT
+    cqRails: PS-Q01, PS-C01
+    owns:
+      - docs/contracts/planner/PlanStoreRecords.v1.md
+      - packages/@dvt/artifacts/src/ports/IPlanStoreReader.ts
+      - packages/@dvt/artifacts/src/ports/IPlanStoreWriter.ts
+    excludes: []
+    governance:
+      - docs/contracts/planner/PlanStoreRecords.v1.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+      - docs/risk-register/quality/R-20260402-S08-PLAN-STORE-CONTRACT-DRIFT.yaml
+    fowlerSignals:
+      - boundary drift
+      - duplicate semantics
+  - id: SYS-PLANSTORE-DOCS-RISK
+    name: Plan-store docs, reviews, risk, and evidence
+    level: component
+    parent: SYS-PLANSTORE
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-DOCS-RISK
+    unitReferences:
+      - id: SYS-DVT
+        name: DVT system
+        level: system
+        status: review
+        governance:
+          - docs/architecture/reference-architecture.md
+          - docs/concepts/domain-language.md
+          - docs/planning/status/governance-document-rule-inventory.md
+      - id: SYS-PLANSTORE
+        name: Plan-store domain
+        level: domain
+        status: review
+        governance:
+          - >-
+            docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+          - docs/planning/status/system-operations-inventory-20260501.md
+          - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
+      - id: SYS-PLANSTORE-DOCS-RISK
+        name: Plan-store docs, reviews, risk, and evidence
+        level: component
+        status: review
+        governance:
+          - docs/planning/status/system-governance-unit-index-20260501.md
+          - docs/planning/status/system-governance-document-unit-map-20260501.md
+    status: review
+    isDrift: false
+    isLegacy: false
+    childrenRequired: true
+    fileCount: 31
+    dddOwner: INFRA
+    cqRails: none - governance and evidence
+    owns:
+      - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
+      - docs/adr/adr-0052-planref-continuation-safety.md
+      - docs/architecture/components/engine/adapters/temporal/temporal-planref*.md
+      - docs/evidence/ED-20260402-s08-contract-layer-hardening.md
+      - docs/evidence/ED-20260403-s08-*.md
+      - docs/evidence/ed-20260427-temporal-planref-*.md
+      - docs/evidence/ed-20260430-ar-d2-temporal-planref-capacity-sla.md
+      - docs/guides/postgres-plan-store-*.md
+      - docs/planning/closeouts/20260402-s08-*.md
+      - docs/planning/closeouts/20260403-s08-*.md
+      - docs/planning/closeouts/20260406-s08-*.md
+      - docs/planning/closeouts/20260427-temporal-planref-*.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/s08-*.md
+      - docs/planning/reviews/20260402-s08-plan-record-plan-store-gap-review.md
+      - docs/planning/reviews/architecture-and-governance/20260403-*plan-store*.md
+      - docs/planning/status/system-governance-planstore-file-ownership-20260501.md
+      - docs/risk-register/quality/R-20260402-S08-PLAN-STORE-CONTRACT-DRIFT.yaml
+      - docs/risk-register/quality/R-20260403-S08-*.yaml
+      - docs/risk-register/quality/R-20260405-PLAN-STORE-CANONICAL-SHAPE-DRIFT.yaml
+      - docs/risk-register/quality/R-20260408-ADAPTER-POSTGRES-PLANSTORE-TEST-DRIFT.yaml
+      - docs/risk-register/quality/R-20260427-TEMPORAL-PLANREF-CONFIG-HARDENING.yaml
+    excludes: []
+    governance:
+      - docs/planning/status/system-governance-unit-index-20260501.md
+      - docs/planning/status/system-governance-document-unit-map-20260501.md
+    fowlerSignals:
+      - documentation drift
+      - coverage refinement
+  - id: SYS-PLANSTORE-ENGINE-FETCH
+    name: Engine plan artifact fetch and plan-ref policy
+    level: component
+    parent: SYS-PLANSTORE
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-ENGINE-FETCH
+    unitReferences:
+      - id: SYS-DVT
+        name: DVT system
+        level: system
+        status: review
+        governance:
+          - docs/architecture/reference-architecture.md
+          - docs/concepts/domain-language.md
+          - docs/planning/status/governance-document-rule-inventory.md
+      - id: SYS-PLANSTORE
+        name: Plan-store domain
+        level: domain
+        status: review
+        governance:
+          - >-
+            docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+          - docs/planning/status/system-operations-inventory-20260501.md
+          - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
+      - id: SYS-PLANSTORE-ENGINE-FETCH
+        name: Engine plan artifact fetch and plan-ref policy
+        level: component
+        status: drift
+        governance:
+          - docs/adr/adr-0052-planref-continuation-safety.md
+          - docs/risk-register/quality/R-20260405-PLAN-STORE-CANONICAL-SHAPE-DRIFT.yaml
+    status: drift
+    isDrift: true
+    isLegacy: false
+    childrenRequired: true
+    fileCount: 5
+    dddOwner: PORT
+    cqRails: PS-Q05
+    owns:
+      - packages/@dvt/engine/src/ports/IPlanArtifactReader.ts
+      - packages/@dvt/engine/src/security/planRefPolicy.ts
+      - packages/@dvt/engine/src/security/planRefPolicyRules.ts
+      - packages/@dvt/engine/test/core/WorkflowEngine.planRef.test.ts
+      - packages/@dvt/engine/test/security/planRefPolicy.test.ts
+    excludes: []
+    governance:
+      - docs/adr/adr-0052-planref-continuation-safety.md
+      - docs/risk-register/quality/R-20260405-PLAN-STORE-CANONICAL-SHAPE-DRIFT.yaml
+    fowlerSignals:
+      - boundary drift
+      - hidden authority
+  - id: SYS-PLANSTORE-POSTGRES
+    name: Postgres plan-store adapter implementation
+    level: component
+    parent: SYS-PLANSTORE
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-POSTGRES
+    unitReferences:
+      - id: SYS-DVT
+        name: DVT system
+        level: system
+        status: review
+        governance:
+          - docs/architecture/reference-architecture.md
+          - docs/concepts/domain-language.md
+          - docs/planning/status/governance-document-rule-inventory.md
+      - id: SYS-PLANSTORE
+        name: Plan-store domain
+        level: domain
+        status: review
+        governance:
+          - >-
+            docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+          - docs/planning/status/system-operations-inventory-20260501.md
+          - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
+      - id: SYS-PLANSTORE-POSTGRES
+        name: Postgres plan-store adapter implementation
+        level: component
+        status: drift
+        governance:
+          - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
+          - >-
+            docs/planning/reviews/architecture-and-governance/20260403-s08-postgres-plan-store-hard-qa-review.md
+          - docs/risk-register/quality/R-20260408-ADAPTER-POSTGRES-PLANSTORE-TEST-DRIFT.yaml
+    status: drift
+    isDrift: true
+    isLegacy: false
+    childrenRequired: true
+    fileCount: 16
+    dddOwner: ADP
+    cqRails: implements PS-Cxx and PS-Qxx
+    owns:
+      - packages/@dvt/adapter-postgres/src/PostgresPlanStore*.ts
+      - packages/@dvt/adapter-postgres/test/PostgresPlanStore*.ts
+    excludes: []
+    governance:
+      - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
+      - >-
+        docs/planning/reviews/architecture-and-governance/20260403-s08-postgres-plan-store-hard-qa-review.md
+      - docs/risk-register/quality/R-20260408-ADAPTER-POSTGRES-PLANSTORE-TEST-DRIFT.yaml
+    fowlerSignals:
+      - responsibility overload
+      - test-only confidence
+  - id: SYS-PLANSTORE-ROOT
+    name: Plan-store root component
+    level: component
+    parent: SYS-PLANSTORE
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-ROOT
+    unitReferences:
+      - id: SYS-DVT
+        name: DVT system
+        level: system
+        status: review
+        governance:
+          - docs/architecture/reference-architecture.md
+          - docs/concepts/domain-language.md
+          - docs/planning/status/governance-document-rule-inventory.md
+      - id: SYS-PLANSTORE
+        name: Plan-store domain
+        level: domain
+        status: review
+        governance:
+          - >-
+            docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+          - docs/planning/status/system-operations-inventory-20260501.md
+          - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
+      - id: SYS-PLANSTORE-ROOT
+        name: Plan-store root component
+        level: component
+        status: superseded
+        governance:
+          - >-
+            docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+    status: superseded
+    isDrift: false
+    isLegacy: false
+    childrenRequired: false
+    fileCount: 0
+    dddOwner: PORT
+    cqRails: PS-Cxx and PS-Qxx
+    owns: []
+    excludes: []
+    governance:
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+    fowlerSignals:
+      - coverage refinement
+      - boundary drift
+  - id: SYS-PLANSTORE-TEMPORAL-COMPOSITION
+    name: Temporal plan-store composition and plan-ref workflow boundary
+    level: component
+    parent: SYS-PLANSTORE
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-TEMPORAL-COMPOSITION
+    unitReferences:
+      - id: SYS-DVT
+        name: DVT system
+        level: system
+        status: review
+        governance:
+          - docs/architecture/reference-architecture.md
+          - docs/concepts/domain-language.md
+          - docs/planning/status/governance-document-rule-inventory.md
+      - id: SYS-PLANSTORE
+        name: Plan-store domain
+        level: domain
+        status: review
+        governance:
+          - >-
+            docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+          - docs/planning/status/system-operations-inventory-20260501.md
+          - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
+      - id: SYS-PLANSTORE-TEMPORAL-COMPOSITION
+        name: Temporal plan-store composition and plan-ref workflow boundary
+        level: component
+        status: legacy
+        governance:
+          - >-
+            docs/architecture/components/engine/adapters/temporal/temporal-planref-workflow-boundary.md
+          - docs/risk-register/quality/R-20260427-TEMPORAL-PLANREF-CONFIG-HARDENING.yaml
+          - docs/planning/status/system-operations-inventory-20260501.md
+    status: legacy
+    isDrift: false
+    isLegacy: true
+    childrenRequired: true
+    fileCount: 9
+    dddOwner: ADP
+    cqRails: PS-Q04
+    owns:
+      - apps/temporal-worker/src/runtime/runtimeTypes.ts
+      - apps/temporal-worker/src/runtime/temporalWorkerRuntimeHandle.ts
+      - apps/temporal-worker/src/runtime/temporalWorkerRuntimeResources.ts
+      - apps/temporal-worker/src/runtime/temporalWorkerStores.ts
+      - apps/temporal-worker/test/runtime/createTemporalWorkerRuntime.srp.architecture.test.ts
+      - packages/@dvt/adapter-temporal/src/temporalPlanRefCapacitySlaPolicy.ts
+      - packages/@dvt/adapter-temporal/src/workflows/workflowArtifactHelpers.ts
+      - packages/@dvt/adapter-temporal/test/temporalPlanRefCapacitySlaPolicy.test.ts
+      - packages/@dvt/adapter-temporal/test/workflow-component-semantics.architecture.test.ts
+    excludes: []
+    governance:
+      - docs/architecture/components/engine/adapters/temporal/temporal-planref-workflow-boundary.md
+      - docs/risk-register/quality/R-20260427-TEMPORAL-PLANREF-CONFIG-HARDENING.yaml
+      - docs/planning/status/system-operations-inventory-20260501.md
+    fowlerSignals:
+      - hidden authority
+      - boundary drift
+  - id: SYS-REPO-METADATA-ROOT
+    name: Repository metadata root component
+    level: component
+    parent: SYS-REPO-METADATA
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    unitReferences:
+      - id: SYS-DVT
+        name: DVT system
+        level: system
+        status: review
+        governance:
+          - docs/architecture/reference-architecture.md
+          - docs/concepts/domain-language.md
+          - docs/planning/status/governance-document-rule-inventory.md
+      - id: SYS-REPO-METADATA
+        name: Repository metadata
+        level: workspace
+        status: canonical
+        governance:
+          - package.json
+          - pnpm-workspace.yaml
+      - id: SYS-REPO-METADATA-ROOT
+        name: Repository metadata root component
+        level: component
+        status: canonical
+        governance:
+          - package.json
+          - pnpm-workspace.yaml
+    status: canonical
+    isDrift: false
+    isLegacy: false
+    childrenRequired: true
+    fileCount: 109
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    owns:
+      - .claude/**
+      - .gh-comments/**
+      - .git.bfg-report/**
+      - .golden/**
+      - .vscode/**
+      - .arc-policy.yaml
+      - .editorconfig
+      - .gitattributes
+      - .gitignore
+      - .gitmessage
+      - .markdownlint.json
+      - .markdownlint-cli2.jsonc
+      - .markdownlintignore
+      - .node-version
+      - .npmrc
+      - .nvmrc
+      - .prettierignore
+      - .prettierrc.json
+      - .versionrc.json
+      - artifacts/**
+      - buzon/**
+      - commitlint.config.cjs
+      - dev.sh
+      - eslint.config.cjs
+      - infra/**
+      - package.json
+      - pnpm-lock.yaml
+      - pnpm-workspace.yaml
+      - tsconfig.eslint.base.json
+      - tsconfig.eslint.json
+      - tsconfig.json
+      - tsconfig.node-runtime.base.json
+      - tsconfig.package-bundler.base.json
+      - tsconfig.test.json
+      - turbo.json
+      - zensical.yml
+    excludes: []
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+    fowlerSignals:
+      - coverage refinement
+  - id: SYS-RUNTIME-ROOT
+    name: Runtime root component
+    level: component
+    parent: SYS-RUNTIME
+    rootUnit: SYS-DVT
+    domainUnit: SYS-RUNTIME
+    unitPath:
+      - SYS-DVT
+      - SYS-RUNTIME
+      - SYS-RUNTIME-ROOT
+    unitReferences:
+      - id: SYS-DVT
+        name: DVT system
+        level: system
+        status: review
+        governance:
+          - docs/architecture/reference-architecture.md
+          - docs/concepts/domain-language.md
+          - docs/planning/status/governance-document-rule-inventory.md
+      - id: SYS-RUNTIME
+        name: Runtime domain
+        level: domain
+        status: coverage-required
+        governance:
+          - docs/planning/execution-model/dvt-execution-model.md
+          - docs/architecture/system-delivery-status.md
+          - docs/planning/status/system-operations-inventory-20260501.md
+      - id: SYS-RUNTIME-ROOT
+        name: Runtime root component
+        level: component
+        status: coverage-required
+        governance:
+          - docs/planning/status/system-operations-inventory-20260501.md
+    status: coverage-required
+    isDrift: false
+    isLegacy: false
+    childrenRequired: true
+    fileCount: 286
+    dddOwner: AS
+    cqRails: runtime commands and queries
+    owns:
+      - packages/@dvt/engine/**
+      - packages/@dvt/state-store/**
+      - packages/@dvt/run-domain/**
+      - packages/@dvt/delivery/**
+      - packages/@dvt/plan-interpreter/**
+      - packages/@dvt/plan-verifier/**
+      - packages/@dvt/canonical/**
+      - packages/@dvt/crypto/**
+      - packages/@dvt/dsl/**
+      - packages/@dvt/cli/**
+      - packages/cli/**
+    excludes:
+      - packages/@dvt/engine/src/ports/IPlanArtifactReader.ts
+      - packages/@dvt/engine/src/security/planRefPolicy.ts
+      - packages/@dvt/engine/src/security/planRefPolicyRules.ts
+      - packages/@dvt/engine/test/core/WorkflowEngine.planRef.test.ts
+      - packages/@dvt/engine/test/security/planRefPolicy.test.ts
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+    fowlerSignals:
+      - coverage refinement
+  - id: SYS-TRACEABILITY-ROOT
+    name: Traceability root component
+    level: component
+    parent: SYS-TRACEABILITY
+    rootUnit: SYS-DVT
+    domainUnit: SYS-TRACEABILITY
+    unitPath:
+      - SYS-DVT
+      - SYS-TRACEABILITY
+      - SYS-TRACEABILITY-ROOT
+    unitReferences:
+      - id: SYS-DVT
+        name: DVT system
+        level: system
+        status: review
+        governance:
+          - docs/architecture/reference-architecture.md
+          - docs/concepts/domain-language.md
+          - docs/planning/status/governance-document-rule-inventory.md
+      - id: SYS-TRACEABILITY
+        name: Traceability domain
+        level: domain
+        status: coverage-required
+        governance:
+          - docs/adr/ADR-0000-Code-generation-with-normative-traceability-required.en.md
+          - docs/planning/status/system-operations-inventory-20260501.md
+      - id: SYS-TRACEABILITY-ROOT
+        name: Traceability root component
+        level: component
+        status: coverage-required
+        governance:
+          - docs/adr/ADR-0000-Code-generation-with-normative-traceability-required.en.md
+    status: coverage-required
+    isDrift: false
+    isLegacy: false
+    childrenRequired: true
+    fileCount: 65
+    dddOwner: DS
+    cqRails: traceability commands and lineage queries
+    owns:
+      - packages/@dvt/traceability-service/**
+      - traceability.config.json
+      - traceability.issue-baseline.json
+      - traceability.manifest.json
+    excludes: []
+    governance:
+      - docs/adr/ADR-0000-Code-generation-with-normative-traceability-required.en.md
+    fowlerSignals:
+      - coverage refinement
+  - id: SYS-WEB-ROOT
+    name: Web root component
+    level: component
+    parent: SYS-WEB
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    unitPath:
+      - SYS-DVT
+      - SYS-WEB
+      - SYS-WEB-ROOT
+    unitReferences:
+      - id: SYS-DVT
+        name: DVT system
+        level: system
+        status: review
+        governance:
+          - docs/architecture/reference-architecture.md
+          - docs/concepts/domain-language.md
+          - docs/planning/status/governance-document-rule-inventory.md
+      - id: SYS-WEB
+        name: Web workspace
+        level: workspace
+        status: coverage-required
+        governance:
+          - >-
+            docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md
+          - docs/planning/proposals/web-user-stories-20260429.md
+      - id: SYS-WEB-ROOT
+        name: Web root component
+        level: component
+        status: coverage-required
+        governance:
+          - >-
+            docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md
+    status: coverage-required
+    isDrift: false
+    isLegacy: false
+    childrenRequired: true
+    fileCount: 783
+    dddOwner: ENTRY
+    cqRails: UI actions and API queries
+    owns:
+      - apps/web/**
+    excludes: []
+    governance:
+      - >-
+        docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md
+    fowlerSignals:
+      - coverage refinement
+      - hidden authority
+  - id: SYS-WORKERS-ROOT
+    name: Worker root component
+    level: component
+    parent: SYS-WORKERS
+    rootUnit: SYS-DVT
+    domainUnit: SYS-WORKERS
+    unitPath:
+      - SYS-DVT
+      - SYS-WORKERS
+      - SYS-WORKERS-ROOT
+    unitReferences:
+      - id: SYS-DVT
+        name: DVT system
+        level: system
+        status: review
+        governance:
+          - docs/architecture/reference-architecture.md
+          - docs/concepts/domain-language.md
+          - docs/planning/status/governance-document-rule-inventory.md
+      - id: SYS-WORKERS
+        name: Worker domain
+        level: domain
+        status: coverage-required
+        governance:
+          - docs/planning/status/system-operations-inventory-20260501.md
+      - id: SYS-WORKERS-ROOT
+        name: Worker root component
+        level: component
+        status: coverage-required
+        governance:
+          - docs/planning/status/system-operations-inventory-20260501.md
+    status: coverage-required
+    isDrift: false
+    isLegacy: false
+    childrenRequired: true
+    fileCount: 103
+    dddOwner: AS
+    cqRails: worker commands and operational queries
+    owns:
+      - apps/temporal-worker/**
+      - apps/outbox-worker/**
+      - apps/projector-worker/**
+      - apps/lineage-worker/**
+    excludes:
+      - apps/temporal-worker/src/runtime/runtimeTypes.ts
+      - apps/temporal-worker/src/runtime/temporalWorkerRuntimeHandle.ts
+      - apps/temporal-worker/src/runtime/temporalWorkerRuntimeResources.ts
+      - apps/temporal-worker/src/runtime/temporalWorkerStores.ts
+      - apps/temporal-worker/test/runtime/createTemporalWorkerRuntime.srp.architecture.test.ts
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+    fowlerSignals:
+      - coverage refinement

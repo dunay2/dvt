@@ -1,9 +1,9 @@
 {
   "summary": {
-    "adrs": 48,
+    "adrs": 49,
     "evidenceDocs": 115,
-    "normativeDocs": 346,
-    "statusDocs": 62
+    "normativeDocs": 344,
+    "statusDocs": 66
   },
   "adrs": [
     {
@@ -531,6 +531,17 @@
       "status": "Accepted",
       "date": "2026-04-30",
       "owners": "packages/@dvt/contracts, packages/@dvt/engine, packages/@dvt/adapter-temporal",
+      "archived": false,
+      "draft": false
+    },
+    {
+      "path": "docs/adr/ADR-0053-file-state-fingerprint-governance.md",
+      "filename": "ADR-0053-file-state-fingerprint-governance.md",
+      "num": 53,
+      "id": "ADR-0053",
+      "status": "Accepted",
+      "date": "2026-05-01",
+      "owners": "docs, architecture",
       "archived": false,
       "draft": false
     }
@@ -2198,10 +2209,6 @@
       "filename": "canvas-controller-current-to-target-architecture.md"
     },
     {
-      "path": "docs/architecture/components/web/graph/canvas-draft-access-posture-component.md",
-      "filename": "canvas-draft-access-posture-component.md"
-    },
-    {
       "path": "docs/architecture/components/web/graph/canvas-draft-session-component.md",
       "filename": "canvas-draft-session-component.md"
     },
@@ -2212,10 +2219,6 @@
     {
       "path": "docs/architecture/components/web/graph/canvas-execution-selection-component.md",
       "filename": "canvas-execution-selection-component.md"
-    },
-    {
-      "path": "docs/architecture/components/web/graph/canvas-first-authoring-live-proof-component.md",
-      "filename": "canvas-first-authoring-live-proof-component.md"
     },
     {
       "path": "docs/architecture/components/web/graph/canvas-graph-lifecycle-component.md",
@@ -3192,8 +3195,24 @@
       "filename": "root-local-doc-triage-20260417.md"
     },
     {
+      "path": "docs/planning/status/system-governance-component-index-20260501.md",
+      "filename": "system-governance-component-index-20260501.md"
+    },
+    {
       "path": "docs/planning/status/system-governance-document-unit-map-20260501.md",
       "filename": "system-governance-document-unit-map-20260501.md"
+    },
+    {
+      "path": "docs/planning/status/system-governance-file-fingerprint-impact-20260501.md",
+      "filename": "system-governance-file-fingerprint-impact-20260501.md"
+    },
+    {
+      "path": "docs/planning/status/system-governance-file-index-20260501.md",
+      "filename": "system-governance-file-index-20260501.md"
+    },
+    {
+      "path": "docs/planning/status/system-governance-planstore-file-ownership-20260501.md",
+      "filename": "system-governance-planstore-file-ownership-20260501.md"
     },
     {
       "path": "docs/planning/status/system-governance-unit-index-20260501.md",
