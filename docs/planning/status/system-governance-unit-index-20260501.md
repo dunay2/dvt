@@ -54,7 +54,13 @@ flowchart TB
   DVT --> Docs
   DVT --> Repo
 
-  PlanStore --> PlanStoreRoot["SYS-PLANSTORE-ROOT<br/>coverage-required"]
+  PlanStore --> PlanStoreContracts["SYS-PLANSTORE-CONTRACTS<br/>drift"]
+  PlanStore --> PlanStoreArtifacts["SYS-PLANSTORE-ARTIFACTS-PORTS<br/>review"]
+  PlanStore --> PlanStorePostgres["SYS-PLANSTORE-POSTGRES<br/>drift"]
+  PlanStore --> PlanStoreApi["SYS-PLANSTORE-API-COMPOSITION<br/>drift"]
+  PlanStore --> PlanStoreTemporal["SYS-PLANSTORE-TEMPORAL-COMPOSITION<br/>legacy"]
+  PlanStore --> PlanStoreEngine["SYS-PLANSTORE-ENGINE-FETCH<br/>drift"]
+  PlanStore --> PlanStoreDocs["SYS-PLANSTORE-DOCS-RISK<br/>review"]
   Web --> WebRoot["SYS-WEB-ROOT<br/>coverage-required"]
   Api --> ApiRoot["SYS-API-ROOT<br/>coverage-required"]
 ```
@@ -76,7 +82,7 @@ Every tracked file
 | `SYS-DVT`             | `system`    | `review`            | none                       | Reference architecture, domain language, governance inventory  |
 | `SYS-CONTRACTS`       | `workspace` | `coverage-required` | `SYS-CONTRACTS-ROOT`       | Contracts index, ADR-0005, ADR-0006, ADR-0018                  |
 | `SYS-RUNTIME`         | `domain`    | `coverage-required` | `SYS-RUNTIME-ROOT`         | Execution model, engine contracts, system operations inventory |
-| `SYS-PLANSTORE`       | `domain`    | `review`            | `SYS-PLANSTORE-ROOT`       | S08 C&Q matrix, system operations inventory, ADR-0043          |
+| `SYS-PLANSTORE`       | `domain`    | `review`            | `SYS-PLANSTORE-*` units    | S08 C&Q matrix, system operations inventory, ADR-0043          |
 | `SYS-API`             | `workspace` | `coverage-required` | `SYS-API-ROOT`             | API runtime docs and operations inventory                      |
 | `SYS-WEB`             | `workspace` | `coverage-required` | `SYS-WEB-ROOT`             | Frontend proposals and future UI/API C&Q inventory             |
 | `SYS-PLANNER`         | `workspace` | `coverage-required` | `SYS-PLANNER-ROOT`         | Planner contracts and planner proposals                        |
@@ -100,7 +106,7 @@ tracked file is covered mechanically. Broad component owners remain
 | `SYS-WEB-ROOT`             | `apps/web/**`                                               | views, API client, state, tests, workflows     |
 | `SYS-CONTRACTS-ROOT`       | `packages/@dvt/contracts/**`, `contracts/**`                | contract families and schema packs             |
 | `SYS-RUNTIME-ROOT`         | engine, state-store, delivery, run-domain packages          | engine core, state store, delivery projections |
-| `SYS-PLANSTORE-ROOT`       | plan-store docs and active plan-store package paths         | S08 child units                                |
+| `SYS-PLANSTORE-*`          | 107 plan-store files across code, tests, docs, risks        | source/symbol split and legacy removal         |
 | `SYS-ADAPTERS-ROOT`        | adapter packages                                            | Postgres, Temporal, adapter test surfaces      |
 | `SYS-WORKERS-ROOT`         | worker apps                                                 | Temporal, outbox, projector, lineage workers   |
 | `SYS-OBSERVABILITY-ROOT`   | observability packages                                      | ports, OTEL adapter, ops endpoints             |
@@ -113,7 +119,7 @@ tracked file is covered mechanically. Broad component owners remain
 
 ### `SYS-PLANSTORE`
 
-Required children:
+Current children:
 
 - `SYS-PLANSTORE-CONTRACTS`
 - `SYS-PLANSTORE-ARTIFACTS-PORTS`
@@ -121,8 +127,17 @@ Required children:
 - `SYS-PLANSTORE-API-COMPOSITION`
 - `SYS-PLANSTORE-TEMPORAL-COMPOSITION`
 - `SYS-PLANSTORE-ENGINE-FETCH`
-- `SYS-PLANSTORE-TESTS`
 - `SYS-PLANSTORE-DOCS-RISK`
+
+File ownership report:
+
+- [System Governance Plan-Store File Ownership](./system-governance-planstore-file-ownership-20260501.md)
+
+Current total:
+
+- repository tracked files: 4018;
+- plan-store governed files: 107;
+- ungoverned files: 0, enforced by `pnpm docs:governance:unit-coverage`.
 
 ### `SYS-WEB`
 

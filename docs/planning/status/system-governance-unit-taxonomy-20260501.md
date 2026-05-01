@@ -109,6 +109,7 @@ but has not yet decomposed it deeply enough to judge every child surface.
 | `parent`           | Required except for the root `system` unit                                            |
 | `status`           | One value from the status table                                                       |
 | `owns`             | Glob patterns; allowed only on `component` and `source` units                         |
+| `excludes`         | Glob patterns removed from this unit's broad `owns` patterns                          |
 | `childrenRequired` | `true` when the unit is too broad to claim final closure                              |
 | `dddOwner`         | Bounded context, `AGG`, `DS`, `AS`, `PORT`, `ADP`, `PROJ`, `INFRA`, `ENTRY`, or `N/A` |
 | `cqRails`          | Accepted/proposed command/query rails, or `none` with rationale                       |
@@ -127,6 +128,8 @@ The guard checks:
 
 - every tracked file returned by `git ls-files` has exactly one owning unit;
 - only `component` and `source` units own files;
+- broad owners may use `excludes` only when child or peer units own the
+  excluded files explicitly;
 - every non-root unit has a valid parent;
 - parent levels follow the hierarchy in this taxonomy;
 - source units have component parents;

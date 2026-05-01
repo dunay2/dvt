@@ -2,8 +2,8 @@
   "summary": {
     "adrs": 48,
     "evidenceDocs": 115,
-    "normativeDocs": 346,
-    "statusDocs": 62
+    "normativeDocs": 344,
+    "statusDocs": 63
   },
   "adrs": [
     {
@@ -2198,10 +2198,6 @@
       "filename": "canvas-controller-current-to-target-architecture.md"
     },
     {
-      "path": "docs/architecture/components/web/graph/canvas-draft-access-posture-component.md",
-      "filename": "canvas-draft-access-posture-component.md"
-    },
-    {
       "path": "docs/architecture/components/web/graph/canvas-draft-session-component.md",
       "filename": "canvas-draft-session-component.md"
     },
@@ -2212,10 +2208,6 @@
     {
       "path": "docs/architecture/components/web/graph/canvas-execution-selection-component.md",
       "filename": "canvas-execution-selection-component.md"
-    },
-    {
-      "path": "docs/architecture/components/web/graph/canvas-first-authoring-live-proof-component.md",
-      "filename": "canvas-first-authoring-live-proof-component.md"
     },
     {
       "path": "docs/architecture/components/web/graph/canvas-graph-lifecycle-component.md",
@@ -3194,6 +3186,10 @@
     {
       "path": "docs/planning/status/system-governance-document-unit-map-20260501.md",
       "filename": "system-governance-document-unit-map-20260501.md"
+    },
+    {
+      "path": "docs/planning/status/system-governance-planstore-file-ownership-20260501.md",
+      "filename": "system-governance-planstore-file-ownership-20260501.md"
     },
     {
       "path": "docs/planning/status/system-governance-unit-index-20260501.md",
