@@ -1,0 +1,340 @@
+#!/usr/bin/env node
+/**
+ * Generate the global governance file and component indexes.
+ */
+
+const { execFileSync } = require('node:child_process');
+const fs = require('node:fs');
+const path = require('node:path');
+const yaml = require('js-yaml');
+const { findOwnerMatches, readManifest } = require('./check-governance-unit-coverage.cjs');
+
+const repoRoot = path.resolve(__dirname, '..');
+const statusDir = path.join(repoRoot, 'docs', 'planning', 'status');
+const fileYamlPath = path.join(statusDir, 'system-governance-file-index.files.yaml');
+const fileMarkdownPath = path.join(statusDir, 'system-governance-file-index-20260501.md');
+const componentYamlPath = path.join(statusDir, 'system-governance-component-index.components.yaml');
+const componentMarkdownPath = path.join(statusDir, 'system-governance-component-index-20260501.md');
+
+const generatedOutputPaths = [
+  fileYamlPath,
+  fileMarkdownPath,
+  componentYamlPath,
+  componentMarkdownPath,
+].map((filePath) => toPosix(path.relative(repoRoot, filePath)));
+
+function toPosix(filePath) {
+  return filePath.replace(/\\/g, '/');
+}
+
+function getTrackedFiles() {
+  const output = execFileSync('git', ['ls-files'], {
+    cwd: repoRoot,
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+
+  const trackedFiles = output
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map(toPosix);
+
+  for (const generatedPath of generatedOutputPaths) {
+    if (
+      fs.existsSync(path.join(repoRoot, generatedPath)) &&
+      !trackedFiles.includes(generatedPath)
+    ) {
+      trackedFiles.push(generatedPath);
+    }
+  }
+
+  return trackedFiles.sort();
+}
+
+function buildUnitIndex(units) {
+  return new Map(units.map((unit) => [unit.id, unit]));
+}
+
+function buildFileEntries(files, units) {
+  return files.map((filePath) => {
+    const matches = findOwnerMatches(filePath, units);
+    const owner = matches[0];
+    return {
+      path: filePath,
+      owningUnit: owner?.id || 'UNOWNED',
+      ownerLevel: owner?.level || 'unowned',
+      unitStatus: owner?.status || 'unowned',
+      isDrift: owner?.status === 'drift',
+      isLegacy: owner?.status === 'legacy',
+      dddOwner: owner?.dddOwner || 'unowned',
+      cqRails: owner?.cqRails || 'unowned',
+      governance: owner?.governance || [],
+    };
+  });
+}
+
+function buildComponentEntries(units, fileEntries) {
+  const fileCountByUnit = new Map();
+  for (const fileEntry of fileEntries) {
+    fileCountByUnit.set(fileEntry.owningUnit, (fileCountByUnit.get(fileEntry.owningUnit) || 0) + 1);
+  }
+
+  return units
+    .filter((unit) => unit.level === 'component' || unit.level === 'source')
+    .map((unit) => ({
+      id: unit.id,
+      name: unit.name,
+      level: unit.level,
+      parent: unit.parent,
+      status: unit.status,
+      isDrift: unit.status === 'drift',
+      isLegacy: unit.status === 'legacy',
+      childrenRequired: Boolean(unit.childrenRequired),
+      fileCount: fileCountByUnit.get(unit.id) || 0,
+      dddOwner: unit.dddOwner || 'N/A',
+      cqRails: unit.cqRails || 'none',
+      owns: unit.owns || [],
+      excludes: unit.excludes || [],
+      governance: unit.governance || [],
+      fowlerSignals: unit.fowlerSignals || [],
+    }))
+    .sort((left, right) => left.id.localeCompare(right.id));
+}
+
+function countBy(entries, key) {
+  const counts = new Map();
+  for (const entry of entries) {
+    counts.set(entry[key], (counts.get(entry[key]) || 0) + 1);
+  }
+  return [...counts.entries()]
+    .sort(([left], [right]) => String(left).localeCompare(String(right)))
+    .map(([name, count]) => ({ name, count }));
+}
+
+function renderYaml(payload) {
+  return yaml.dump(payload, {
+    lineWidth: 120,
+    noRefs: true,
+    sortKeys: false,
+  });
+}
+
+function renderCountTable(counts, label) {
+  return [
+    `| ${label} | Files |`,
+    '| --- | ---: |',
+    ...counts.map((item) => `| \`${item.name}\` | ${item.count} |`),
+  ].join('\n');
+}
+
+function renderFileMarkdown(fileEntries, componentEntries) {
+  const driftFiles = fileEntries.filter((entry) => entry.isDrift || entry.isLegacy);
+  const ownerCounts = countBy(fileEntries, 'owningUnit');
+  const statusCounts = countBy(fileEntries, 'unitStatus');
+  const unowned = fileEntries.filter((entry) => entry.owningUnit === 'UNOWNED');
+
+  const driftRows = driftFiles
+    .map((entry) => `| \`${entry.path}\` | \`${entry.owningUnit}\` | \`${entry.unitStatus}\` |`)
+    .join('\n');
+
+  return `---
+title: System Governance File Index
+status: Review
+owner: Architecture / Docs / Delivery
+last_reviewed: 2026-05-01
+planning_type: status
+---
+
+# System Governance File Index
+
+## Purpose
+
+This is the human summary for the exhaustive file-level governance index. The
+machine-readable source is:
+
+- [system-governance-file-index.files.yaml](./system-governance-file-index.files.yaml)
+
+Every tracked repository file has one row in that YAML file. Each row records
+the owning unit, unit status, DDD owner, command/query rail posture, and
+governing documentation.
+
+## Totals
+
+- Tracked files indexed: ${fileEntries.length}
+- Component/source owner units: ${componentEntries.length}
+- Ungoverned files: ${unowned.length}
+- Drift files: ${fileEntries.filter((entry) => entry.isDrift).length}
+- Legacy files: ${fileEntries.filter((entry) => entry.isLegacy).length}
+
+## By Status
+
+${renderCountTable(statusCounts, 'Status')}
+
+## By Owning Unit
+
+${renderCountTable(ownerCounts, 'Owning unit')}
+
+## Drift And Legacy Files
+
+| File | Owning unit | Status |
+| --- | --- | --- |
+${driftRows || '| _None_ | _None_ | _None_ |'}
+
+## Related Surfaces
+
+- [System Governance Component Index](./system-governance-component-index-20260501.md)
+- [System Governance Unit Index](./system-governance-unit-index-20260501.md)
+- [System Governance Unit Taxonomy](./system-governance-unit-taxonomy-20260501.md)
+- [System Governance Document Unit Map](./system-governance-document-unit-map-20260501.md)
+`;
+}
+
+function renderComponentMarkdown(componentEntries) {
+  const statusCounts = countBy(componentEntries, 'status');
+  const levelCounts = countBy(componentEntries, 'level');
+  const oversized = componentEntries
+    .filter((entry) => entry.childrenRequired && entry.fileCount > 100)
+    .sort((left, right) => right.fileCount - left.fileCount);
+
+  const componentRows = componentEntries
+    .map(
+      (entry) =>
+        `| \`${entry.id}\` | \`${entry.level}\` | \`${entry.status}\` | ${entry.fileCount} | \`${entry.dddOwner}\` | \`${entry.parent}\` |`
+    )
+    .join('\n');
+  const oversizedRows = oversized
+    .map((entry) => `| \`${entry.id}\` | ${entry.fileCount} | \`${entry.status}\` |`)
+    .join('\n');
+
+  return `---
+title: System Governance Component Index
+status: Review
+owner: Architecture / Docs / Delivery
+last_reviewed: 2026-05-01
+planning_type: status
+---
+
+# System Governance Component Index
+
+## Purpose
+
+This is the human summary for component/source governance units. The
+machine-readable source is:
+
+- [system-governance-component-index.components.yaml](./system-governance-component-index.components.yaml)
+
+The index exposes how many components exist, how many files each component owns,
+which components still require subdivision, and which components are drift or
+legacy.
+
+## Totals
+
+- Component/source units: ${componentEntries.length}
+- Components: ${componentEntries.filter((entry) => entry.level === 'component').length}
+- Source units: ${componentEntries.filter((entry) => entry.level === 'source').length}
+- Drift components: ${componentEntries.filter((entry) => entry.isDrift).length}
+- Legacy components: ${componentEntries.filter((entry) => entry.isLegacy).length}
+- Components requiring children: ${componentEntries.filter((entry) => entry.childrenRequired).length}
+
+## By Level
+
+${renderCountTable(levelCounts, 'Level')}
+
+## By Status
+
+${renderCountTable(statusCounts, 'Status')}
+
+## Oversized Components
+
+Components with \`childrenRequired: true\` and more than 100 files:
+
+| Component | Files | Status |
+| --- | ---: | --- |
+${oversizedRows || '| _None_ | 0 | _None_ |'}
+
+## Components
+
+| Component | Level | Status | Files | DDD owner | Parent |
+| --- | --- | ---: | ---: | --- | --- |
+${componentRows}
+
+## Related Surfaces
+
+- [System Governance File Index](./system-governance-file-index-20260501.md)
+- [System Governance Unit Index](./system-governance-unit-index-20260501.md)
+- [System Governance Unit Taxonomy](./system-governance-unit-taxonomy-20260501.md)
+`;
+}
+
+function writeIfChanged(filePath, next) {
+  const current = fs.existsSync(filePath) ? fs.readFileSync(filePath, 'utf8') : null;
+  if (current === next) {
+    return false;
+  }
+  fs.writeFileSync(filePath, next, 'utf8');
+  return true;
+}
+
+function buildOutputs() {
+  const manifest = readManifest();
+  const units = Array.isArray(manifest.units) ? manifest.units : [];
+  const unitById = buildUnitIndex(units);
+  const fileEntries = buildFileEntries(getTrackedFiles(), units);
+  const componentEntries = buildComponentEntries(units, fileEntries, unitById);
+
+  return {
+    fileEntries,
+    componentEntries,
+    fileYaml: renderYaml({
+      version: 1,
+      generatedFrom: 'git ls-files',
+      unitManifest: 'docs/planning/status/system-governance-unit-index.units.yaml',
+      fileCount: fileEntries.length,
+      files: fileEntries,
+    }),
+    componentYaml: renderYaml({
+      version: 1,
+      generatedFrom: 'docs/planning/status/system-governance-unit-index.units.yaml',
+      fileIndex: 'docs/planning/status/system-governance-file-index.files.yaml',
+      componentCount: componentEntries.length,
+      components: componentEntries,
+    }),
+    fileMarkdown: renderFileMarkdown(fileEntries, componentEntries),
+    componentMarkdown: renderComponentMarkdown(componentEntries),
+  };
+}
+
+function main() {
+  const checkOnly = process.argv.includes('--check');
+  const outputs = buildOutputs();
+  const changed = [
+    writeIfChanged(fileYamlPath, outputs.fileYaml),
+    writeIfChanged(fileMarkdownPath, outputs.fileMarkdown),
+    writeIfChanged(componentYamlPath, outputs.componentYaml),
+    writeIfChanged(componentMarkdownPath, outputs.componentMarkdown),
+  ].some(Boolean);
+
+  if (checkOnly && changed) {
+    console.error('[docs:governance:file-component-index] FAILED');
+    console.error('File/component governance indexes were stale. Regenerate and commit outputs.');
+    process.exitCode = 1;
+    return;
+  }
+
+  console.log(
+    `[docs:governance:file-component-index] indexed ${outputs.fileEntries.length} files and ${outputs.componentEntries.length} component/source units`
+  );
+}
+
+if (require.main === module) {
+  main();
+}
+
+module.exports = {
+  buildComponentEntries,
+  buildFileEntries,
+  buildOutputs,
+  renderComponentMarkdown,
+  renderFileMarkdown,
+};

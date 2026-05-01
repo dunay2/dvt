@@ -21,6 +21,11 @@ The companion machine-readable manifest is
 The manifest is the mechanical source for coverage validation; this document is
 the human navigation surface.
 
+The exhaustive file and component projections are:
+
+- [System Governance File Index](./system-governance-file-index-20260501.md)
+- [System Governance Component Index](./system-governance-component-index-20260501.md)
+
 ## Target Shape
 
 ```mermaid
@@ -135,7 +140,7 @@ File ownership report:
 
 Current total:
 
-- repository tracked files: 4018;
+- repository tracked files: 4024;
 - plan-store governed files: 107;
 - ungoverned files: 0, enforced by `pnpm docs:governance:unit-coverage`.
 
@@ -160,3 +165,12 @@ pnpm docs:governance:unit-coverage
 
 This checks that every tracked file has exactly one owning component/source
 unit and that all units obey the taxonomy parent chain.
+
+Run:
+
+```bash
+pnpm docs:governance:file-component-index
+```
+
+This generates the exhaustive file-level and component-level indexes from the
+unit manifest.

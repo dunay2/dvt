@@ -16,10 +16,13 @@ specific plan-store units.
 
 The mechanical source is
 [system-governance-unit-index.units.yaml](./system-governance-unit-index.units.yaml).
+The global exhaustive projections are
+[System Governance File Index](./system-governance-file-index-20260501.md) and
+[System Governance Component Index](./system-governance-component-index-20260501.md).
 
 ## Totals
 
-- Repository tracked files: 4018
+- Repository tracked files: 4024
 - Files now governed by `SYS-PLANSTORE-*` units: 107
 - Ungoverned files: 0, enforced by `pnpm docs:governance:unit-coverage`
 

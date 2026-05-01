@@ -47,12 +47,12 @@ unit.
 
 ## Counts
 
-- Documents indexed: 1431
+- Documents indexed: 1433
 
 ### By Classification
 
 - `describes unit`: 74
-- `governs unit`: 508
+- `governs unit`: 510
 - `historical/reference only`: 254
 - `proves evidence`: 151
 - `tracks drift`: 412
@@ -64,7 +64,7 @@ unit.
 - `SYS-API`: 43
 - `SYS-CI-GOVERNANCE`: 15
 - `SYS-CONTRACTS`: 154
-- `SYS-DOCS-GOVERNANCE`: 652
+- `SYS-DOCS-GOVERNANCE`: 654
 - `SYS-OBSERVABILITY`: 24
 - `SYS-PLANNER`: 73
 - `SYS-PLANSTORE`: 29
@@ -101,3 +101,10 @@ pnpm docs:governance:document-unit-map:check
 The check regenerates both outputs and fails if the committed map is stale.
 Every new tracked Markdown document under `docs/**` must therefore appear in
 the YAML index before the docs governance gate can pass.
+
+## Related Surfaces
+
+- [System Governance File Index](./system-governance-file-index-20260501.md)
+- [System Governance Component Index](./system-governance-component-index-20260501.md)
+- [System Governance Unit Index](./system-governance-unit-index-20260501.md)
+- [System Governance Unit Taxonomy](./system-governance-unit-taxonomy-20260501.md)
