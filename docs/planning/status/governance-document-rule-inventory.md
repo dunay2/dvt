@@ -273,6 +273,11 @@ Usage rules already declared in the ADR index:
 - [scripts/docs-canonical-check.cjs](../../../scripts/docs-canonical-check.cjs)
   Role: `canonical path gate`
   Enforces: canonical docs path and legacy segment validation.
+- [scripts/check-feature-mechanization.cjs](../../../scripts/check-feature-mechanization.cjs)
+  Role: `feature mechanization gate`
+  Enforces: feature plans with `feature-mechanization` manifests must be
+  closed mechanically, including C&Q/DDD/Fowler binding, red-green cycles,
+  symbol coverage, architecture guard, Cypress coverage, and closeout gates.
 - [scripts/sync-docs.cjs](../../../scripts/sync-docs.cjs)
   Role: `docs generator`
   Enforces: regeneration of indexes and docs navigation surfaces.

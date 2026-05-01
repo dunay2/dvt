@@ -134,6 +134,30 @@ The guard checks:
 - parent chains are acyclic;
 - overlapping ownership patterns fail.
 
+Feature implementation closure is validated by:
+
+```bash
+pnpm docs:feature-mechanization
+```
+
+Feature-specific validation uses:
+
+```bash
+pnpm docs:feature-mechanization:tf-e2-m-b
+```
+
+The feature mechanization guard checks that a feature plan with a
+`feature-mechanization` manifest has:
+
+- a closed mechanization status;
+- `noHumanDecisionsRemaining: true`;
+- C&Q rails with DDD owners;
+- red/green cycles with red test command, expected failure, patch surfaces, and
+  green test command;
+- new symbols tied to C&Q, DDD, Fowler signals, architecture guard, Cypress
+  coverage, and unit tests;
+- completion gates including `pnpm verify:prepush`.
+
 ## Command And Query Rule
 
 Commands and queries must attach to DDD ownership. A unit may list
@@ -168,3 +192,7 @@ judgment is being made yet.
 No implementation closure may claim a system area is governed while any
 required child remains `coverage-required`, `drift`, or `legacy` without an
 accepted risk or explicit follow-up unit.
+
+No governed feature plan may claim fully mechanical implementation when the
+feature-specific mechanization guard fails or when a required
+`feature-mechanization` manifest is absent.

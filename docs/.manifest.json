@@ -2,8 +2,8 @@
   "summary": {
     "adrs": 48,
     "evidenceDocs": 115,
-    "normativeDocs": 344,
-    "statusDocs": 58
+    "normativeDocs": 345,
+    "statusDocs": 61
   },
   "adrs": [
     {
@@ -2198,6 +2198,10 @@
       "filename": "canvas-controller-current-to-target-architecture.md"
     },
     {
+      "path": "docs/architecture/components/web/graph/canvas-draft-access-posture-component.md",
+      "filename": "canvas-draft-access-posture-component.md"
+    },
+    {
       "path": "docs/architecture/components/web/graph/canvas-draft-session-component.md",
       "filename": "canvas-draft-session-component.md"
     },
@@ -3182,6 +3186,18 @@
     {
       "path": "docs/planning/status/root-local-doc-triage-20260417.md",
       "filename": "root-local-doc-triage-20260417.md"
+    },
+    {
+      "path": "docs/planning/status/system-governance-unit-index-20260501.md",
+      "filename": "system-governance-unit-index-20260501.md"
+    },
+    {
+      "path": "docs/planning/status/system-governance-unit-taxonomy-20260501.md",
+      "filename": "system-governance-unit-taxonomy-20260501.md"
+    },
+    {
+      "path": "docs/planning/status/system-operations-inventory-20260501.md",
+      "filename": "system-operations-inventory-20260501.md"
     }
   ]
 }

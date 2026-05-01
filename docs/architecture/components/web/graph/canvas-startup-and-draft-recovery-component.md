@@ -2,7 +2,7 @@
 title: Canvas Startup And Draft Recovery Component
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-04-29
+last_reviewed: 2026-05-01
 planning_type: architecture
 ---
 
@@ -35,12 +35,18 @@ Local supporting guides for the current operability slice:
 
 - [API Client Auth Component](../api-client-auth-component.md)
 - [Canvas Layout Persistence Component](./canvas-layout-persistence-component.md)
+- [Canvas Draft Access Posture Component](./canvas-draft-access-posture-component.md)
+
+`CanvasDraftAccessPosture` entries in this active guide are planned for
+`TF-E2-M-B` until
+[Canvas Draft Access Posture Component](./canvas-draft-access-posture-component.md)
+changes from `Proposed` to `Active`.
 
 ## Public API
 
 | API                                                   | Owner                                        | Responsibility                                                                    |
 | ----------------------------------------------------- | -------------------------------------------- | --------------------------------------------------------------------------------- |
-| `createFailedRouteBootstrapPresentation(detail)`      | `routeBootstrapContract.ts`                  | Publish controlled route-local failures that may reveal a governed route surface. |
+| `createFailedRouteBootstrapPresentation(detail)`      | `routeBootstrapContract.ts`                  | Publish controlled route-local failures that reveal only governed route surfaces. |
 | `WORKSPACE_GRAPH_DRAFT_ENDPOINT`                      | `workspaceGraphDraftHttp.ts`                 | Single protected draft HTTP endpoint for draft reads and saves.                   |
 | `buildWorkspaceGraphDraftEndpoint(scope)`             | `workspaceGraphDraftHttp.ts`                 | Attach tenant, project, and environment scope to protected draft reads.           |
 | `projectWorkspaceGraphDraftReadResponseSnapshot(...)` | `workspaceGraphDraftSnapshotProjection.ts`   | Project protected authoring truth into the DBT-shaped graph snapshot read model.  |
@@ -53,11 +59,14 @@ Local supporting guides for the current operability slice:
 | `CanvasPlaygroundTabStrip`                            | `CanvasPlaygroundTabStrip.tsx`               | Mount the host tab-strip presentation boundary.                                   |
 | `useCanvasPlaygroundTabStripPresenter(...)`           | `useCanvasPlaygroundTabStripPresenter.ts`    | Coordinate authoritative host tabs and confirmed replacement callbacks.           |
 | `resolveCanvasReplacementActionState(...)`            | `canvasPlaygroundTabStripModel.ts`           | Resolve locale-backed replacement labels, permission state, and active kind.      |
-| `CanvasReplacementActionViewState`                    | `canvasPlaygroundTabStripModel.ts`           | Carry only replacement labels and enablement that templates may render.           |
+| `CanvasReplacementActionViewState`                    | `canvasPlaygroundTabStripModel.ts`           | Carry only replacement labels and enablement that templates render.               |
 | `CanvasPlaygroundTabStripTemplate`                    | `CanvasPlaygroundTabStrip.templates.tsx`     | Render tab-strip HTML from resolved view state without command policy.            |
 | `CanvasPlaygroundHostTemplate`                        | `CanvasPlaygroundHost.templates.tsx`         | Render first-canvas host HTML without constructing draft command DTOs.            |
 | `resolveCanvasRecoveryBannerViewState(...)`           | `canvasRecoveryBannerModel.ts`               | Resolve route recovery reason into renderable banner state and copy.              |
 | `CanvasRecoveryBannerTemplate`                        | `CanvasRecoveryBanner.templates.tsx`         | Render recovery banner HTML from resolved view state only.                        |
+| `deriveCanvasDraftAuthTransportPosture(...)`          | `canvasDraftAuthTransportPosture.ts`         | Planned: normalize final draft auth errors for Canvas posture.                    |
+| `CanvasDraftAccessPosture`                            | `canvasDraftAccessPostureModel.ts`           | Planned: resolve protected draft access into one posture.                         |
+| `deriveCanvasDraftAccessPosture(...)`                 | `canvasDraftAccessPostureModel.ts`           | Planned: project draft read outcomes into one route-visible posture model.        |
 | `CANVAS_NODE_DRAG_HANDLE_SELECTOR`                    | `canvasNodeMapper.ts`                        | Name the React Flow drag handle shared by mapped nodes and rendered node shell.   |
 
 ## Invariants
@@ -107,12 +116,26 @@ Local supporting guides for the current operability slice:
 - Recovery-banner state must be resolved by `canvasRecoveryBannerModel.ts`.
   `CanvasRecoveryBanner.templates.tsx` must not import route presentation state
   or Canvas copy catalogs.
+- Draft access posture must be resolved once by
+  `canvasDraftAccessPostureModel.ts`. Toolbar labels, recovery banner state,
+  center-surface draft blockers, interaction gating, and route bootstrap must
+  consume that posture instead of re-deriving `forbidden`, `read_only`, format,
+  or recovery conditions locally.
+- Draft auth transport posture must be resolved by
+  `canvasDraftAuthTransportPosture.ts` from final protected draft query errors;
+  Canvas route modules must not import API token refresh helpers.
+- Draft access posture must feed runtime command admission before graph edit,
+  draft save, plan, or run controls become enabled.
+- Draft access recovery actions must be resolved before JSX template rendering.
+  Recovery templates render callbacks and labels only.
+- The toolbar synced label must be emitted only when the posture is writable and
+  no recovery, access-denial, read-only, format, or pending state is active.
 - The tab-strip replacement action must stay disabled when effective route
   permissions deny graph editing.
 - Node drag remains permission-gated by `CanvasViewport`; the drag handle only
   names the gesture surface when dragging is already allowed.
-- `DbtNodeComponent.tsx` may render node shell and plugin decorations, but it
-  must not own graph mutation policy or draft persistence.
+- `DbtNodeComponent.tsx` renders node shell and plugin decorations only; it must
+  not own graph mutation policy or draft persistence.
 
 ## Transitions
 
@@ -184,6 +207,28 @@ flowchart LR
   Template --> Banner["governed recovery banner"]
 ```
 
+### Draft access posture
+
+```mermaid
+flowchart TD
+  DraftRead["WorkspaceGraphDraftReadResponse"]
+  Auth["transport auth result"]
+  Session["CanvasDraftSession recovery"]
+  Posture["canvasDraftAccessPostureModel.ts"]
+  Toolbar["toolbar draft label"]
+  Banner["actionable recovery banner"]
+  Surface["center blocker or error"]
+  Interactions["effective permissions"]
+
+  DraftRead --> Posture
+  Auth --> Posture
+  Session --> Posture
+  Posture --> Toolbar
+  Posture --> Banner
+  Posture --> Surface
+  Posture --> Interactions
+```
+
 ## Consumers
 
 Direct consumers:
@@ -213,14 +258,15 @@ The component owns the Canvas scenarios below. Branch-adjacent engine,
 traceability, and adapter scenarios are recorded in the Fowler mailbox review
 because they belong to separate component owners.
 
-| Story group        | Local stories                                                     | Governing invariant                                                            |
-| ------------------ | ----------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| Startup gate       | `US-CANVAS-BOOTSTRAP-001` through `US-CANVAS-BOOTSTRAP-004`       | Route posture decides whether the shell may reveal a governed surface.         |
-| Protected auth     | `US-CANVAS-AUTH-001` through `US-CANVAS-AUTH-002`                 | API transport refreshes stale local auth before route recovery is shown.       |
-| Protected draft    | `US-CANVAS-DRAFT-001` through `US-CANVAS-DRAFT-006`               | Canvas reads and writes the protected draft authority with explicit CAS rules. |
-| Layout persistence | `US-CANVAS-LAYOUT-001` through `US-CANVAS-LAYOUT-003`             | Viewport coordinates remain route-local and separate from draft authority.     |
-| Presentation       | `US-CANVAS-PRESENTATION-001` through `US-CANVAS-PRESENTATION-003` | JSX templates render resolved view state and do not own command policy.        |
-| Architecture guard | `US-CANVAS-ARCH-001`                                              | Tests validate semantic promises and documentation traceability.               |
+| Story group          | Local stories                                                     | Governing invariant                                                            |
+| -------------------- | ----------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| Startup gate         | `US-CANVAS-BOOTSTRAP-001` through `US-CANVAS-BOOTSTRAP-004`       | Route posture decides whether the shell reveals a governed surface.            |
+| Protected auth       | `US-CANVAS-AUTH-001` through `US-CANVAS-AUTH-002`                 | API transport refreshes stale local auth before route recovery is shown.       |
+| Protected draft      | `US-CANVAS-DRAFT-001` through `US-CANVAS-DRAFT-006`               | Canvas reads and writes the protected draft authority with explicit CAS rules. |
+| Draft access posture | `US-CANVAS-DRAFT-007` through `US-CANVAS-DRAFT-011`               | Canvas distinguishes session, scope, read-only, format, and recovery states.   |
+| Layout persistence   | `US-CANVAS-LAYOUT-001` through `US-CANVAS-LAYOUT-003`             | Viewport coordinates remain route-local and separate from draft authority.     |
+| Presentation         | `US-CANVAS-PRESENTATION-001` through `US-CANVAS-PRESENTATION-003` | JSX templates render resolved view state and do not own command policy.        |
+| Architecture guard   | `US-CANVAS-ARCH-001`                                              | Tests validate semantic promises and documentation traceability.               |
 
 ```mermaid
 flowchart LR
@@ -251,6 +297,8 @@ flowchart LR
 | Presentation Template         | `CanvasPlaygroundHostTemplate`               | render host selection HTML without command DTOs    |
 | Presentation Model            | `CanvasRecoveryBannerViewState`              | reduce recovery reasons to renderable state        |
 | Presentation Template         | `CanvasRecoveryBannerTemplate`               | render recovery HTML without route state imports   |
+| Presentation Model            | `CanvasDraftAccessPosture`                   | keep draft access truth in one posture object      |
+| Policy Object                 | `isCanvasDraftPostureMutationBlocked`        | gate unsafe mutations from one semantic policy     |
 | Separated Domain Model        | `canvasPlaygroundTabStripModel.ts`           | test command and i18n state without React          |
 | Intention Revealing Interface | `CANVAS_NODE_DRAG_HANDLE_SELECTOR`           | gesture ownership is named and testable            |
 | Parameter Object              | `MapCanonicalNodeToCanvasNodeArgs`           | viewport projection options are named at callsite  |

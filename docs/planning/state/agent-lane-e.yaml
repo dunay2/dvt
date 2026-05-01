@@ -2652,7 +2652,7 @@ tasks:
   - task_id: TF-E2-M-B
     parent_task: TF-E2-M
     priority: P0
-    status: queued
+    status: in_progress
     objective: >-
       make Canvas draft-denial posture action-oriented and truthful when protected draft access is
       unauthenticated, forbidden, or read-only.
@@ -2663,17 +2663,23 @@ tasks:
       or restart guidance without enabling unsafe mutation controls.
     complexity: S
     effort_points: 3
-    progress_pct: 0
+    progress_pct: 20
     evidence_refs:
       - docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-user-stories.md
       - docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-component.md
+      - docs/architecture/components/web/graph/canvas-draft-access-posture-component.md
+      - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-m-b-canvas-draft-denial-posture-implementation-plan-20260501.md
       - apps/web/src/app/views/canvas/canvasRecoveryBannerModel.ts
       - apps/web/src/app/views/canvas/canvasToolbarViewModel.ts
     status_reason: >-
-      Intake from 2026-04-29 browser review. The current surface is fail-closed, but the toolbar
-      copy and disabled actions can look like a synchronized read-only document instead of an auth
-      recovery state.
-    last_verified: '2026-04-29'
+      Planning implementation gate is now active. The current surface is fail-closed, but toolbar
+      copy, recovery banner state, center-surface blockers, and mutation enablement can still derive
+      draft denial independently. The new design and implementation plan close the slice before code
+      by naming `CanvasDraftAccessPosture` as the single presentation model for session-required,
+      forbidden-scope, read-only, format-error, recovery, pending, and writable states. Code
+      implementation remains unstarted until the planned TDD, architecture, Cypress, and docs
+      validation tasks are executed.
+    last_verified: '2026-05-01'
   - task_id: TF-E2-M-C
     parent_task: TF-E2-M
     priority: P0
