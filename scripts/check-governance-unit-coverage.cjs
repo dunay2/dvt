@@ -161,7 +161,11 @@ function validateParentLevels(units, unitById, errors) {
 
     const parent = unitById.get(unit.parent);
     const allowedParentLevels = parentLevelByLevel.get(unit.level);
-    if (!allowedParentLevels || !allowedParentLevels.has(parent.level)) {
+    if (!allowedParentLevels) {
+      continue;
+    }
+
+    if (!allowedParentLevels.has(parent.level)) {
       errors.push(
         `${unit.level} unit ${unit.id} must have one of ${[...allowedParentLevels].join(
           ', '

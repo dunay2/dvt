@@ -173,6 +173,20 @@ test('validateManifest fails when a child unit has no valid parent', () => {
   assert.match(result.errors.join('\n'), /SYS-API references missing parent SYS-MISSING/);
 });
 
+test('validateManifest reports invalid unit levels without throwing', () => {
+  const broken = manifest({
+    units: manifest().units.map((unit) =>
+      unit.id === 'SYS-API' ? { ...unit, level: 'not-a-level' } : unit
+    ),
+  });
+
+  assert.doesNotThrow(() => validateManifest(broken, fixtureFiles));
+
+  const result = validateManifest(broken, fixtureFiles);
+
+  assert.match(result.errors.join('\n'), /Unit SYS-API has invalid level not-a-level/);
+});
+
 test('validateManifest fails when source units skip the component parent level', () => {
   const result = validateManifest(
     manifest({
