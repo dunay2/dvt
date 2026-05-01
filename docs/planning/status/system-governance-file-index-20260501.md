@@ -16,8 +16,9 @@ machine-readable source is:
 - [system-governance-file-index.files.yaml](./system-governance-file-index.files.yaml)
 
 Every tracked repository file has one row in that YAML file. Each row records
-the owning unit, unit status, DDD owner, command/query rail posture, and
-governing documentation.
+the root unit, domain unit, component unit, owning unit, unit path, governing
+documents, DDD owner, command/query rail posture, drift status, and legacy
+status.
 
 ## Totals
 

@@ -56,13 +56,65 @@ function buildUnitIndex(units) {
   return new Map(units.map((unit) => [unit.id, unit]));
 }
 
-function buildFileEntries(files, units) {
+function buildUnitPath(unit, unitById) {
+  if (!unit) {
+    return [];
+  }
+
+  const path = [];
+  const seen = new Set();
+  let current = unit;
+
+  while (current && !seen.has(current.id)) {
+    path.unshift(current);
+    seen.add(current.id);
+    current = current.parent ? unitById.get(current.parent) : null;
+  }
+
+  return path;
+}
+
+function buildUnitReferences(unitPath) {
+  return unitPath.map((unit) => ({
+    id: unit.id,
+    name: unit.name || unit.id,
+    level: unit.level || 'unknown',
+    status: unit.status || 'unknown',
+    governance: unit.governance || [],
+  }));
+}
+
+function findUnitByLevel(unitPath, level) {
+  return unitPath.find((unit) => unit.level === level)?.id;
+}
+
+function buildHierarchy(unit, unitById) {
+  const unitPath = buildUnitPath(unit, unitById);
+  const rootUnit = unitPath[0]?.id || unit?.id || 'UNOWNED';
+  const componentUnit = findUnitByLevel(unitPath, 'component') || unit?.id || 'UNOWNED';
+  const domainUnit = findUnitByLevel(unitPath, 'domain') || rootUnit;
+
+  return {
+    rootUnit,
+    domainUnit,
+    componentUnit,
+    unitPath: unitPath.map((entry) => entry.id),
+    unitReferences: buildUnitReferences(unitPath),
+  };
+}
+
+function buildFileEntries(files, units, unitById = buildUnitIndex(units)) {
   return files.map((filePath) => {
     const matches = findOwnerMatches(filePath, units);
     const owner = matches[0];
+    const hierarchy = buildHierarchy(owner, unitById);
     return {
       path: filePath,
       owningUnit: owner?.id || 'UNOWNED',
+      rootUnit: hierarchy.rootUnit,
+      domainUnit: hierarchy.domainUnit,
+      componentUnit: hierarchy.componentUnit,
+      unitPath: hierarchy.unitPath,
       ownerLevel: owner?.level || 'unowned',
       unitStatus: owner?.status || 'unowned',
       isDrift: owner?.status === 'drift',
@@ -74,7 +126,7 @@ function buildFileEntries(files, units) {
   });
 }
 
-function buildComponentEntries(units, fileEntries) {
+function buildComponentEntries(units, fileEntries, unitById = buildUnitIndex(units)) {
   const fileCountByUnit = new Map();
   for (const fileEntry of fileEntries) {
     fileCountByUnit.set(fileEntry.owningUnit, (fileCountByUnit.get(fileEntry.owningUnit) || 0) + 1);
@@ -82,23 +134,30 @@ function buildComponentEntries(units, fileEntries) {
 
   return units
     .filter((unit) => unit.level === 'component' || unit.level === 'source')
-    .map((unit) => ({
-      id: unit.id,
-      name: unit.name,
-      level: unit.level,
-      parent: unit.parent,
-      status: unit.status,
-      isDrift: unit.status === 'drift',
-      isLegacy: unit.status === 'legacy',
-      childrenRequired: Boolean(unit.childrenRequired),
-      fileCount: fileCountByUnit.get(unit.id) || 0,
-      dddOwner: unit.dddOwner || 'N/A',
-      cqRails: unit.cqRails || 'none',
-      owns: unit.owns || [],
-      excludes: unit.excludes || [],
-      governance: unit.governance || [],
-      fowlerSignals: unit.fowlerSignals || [],
-    }))
+    .map((unit) => {
+      const hierarchy = buildHierarchy(unit, unitById);
+      return {
+        id: unit.id,
+        name: unit.name,
+        level: unit.level,
+        parent: unit.parent,
+        rootUnit: hierarchy.rootUnit,
+        domainUnit: hierarchy.domainUnit,
+        unitPath: hierarchy.unitPath,
+        unitReferences: hierarchy.unitReferences,
+        status: unit.status,
+        isDrift: unit.status === 'drift',
+        isLegacy: unit.status === 'legacy',
+        childrenRequired: Boolean(unit.childrenRequired),
+        fileCount: fileCountByUnit.get(unit.id) || 0,
+        dddOwner: unit.dddOwner || 'N/A',
+        cqRails: unit.cqRails || 'none',
+        owns: unit.owns || [],
+        excludes: unit.excludes || [],
+        governance: unit.governance || [],
+        fowlerSignals: unit.fowlerSignals || [],
+      };
+    })
     .sort((left, right) => left.id.localeCompare(right.id));
 }
 
@@ -156,8 +215,9 @@ machine-readable source is:
 - [system-governance-file-index.files.yaml](./system-governance-file-index.files.yaml)
 
 Every tracked repository file has one row in that YAML file. Each row records
-the owning unit, unit status, DDD owner, command/query rail posture, and
-governing documentation.
+the root unit, domain unit, component unit, owning unit, unit path, governing
+documents, DDD owner, command/query rail posture, drift status, and legacy
+status.
 
 ## Totals
 
@@ -231,8 +291,8 @@ machine-readable source is:
 - [system-governance-component-index.components.yaml](./system-governance-component-index.components.yaml)
 
 The index exposes how many components exist, how many files each component owns,
-which components still require subdivision, and which components are drift or
-legacy.
+which root/domain chain each component belongs to, which components still
+require subdivision, and which components are drift or legacy.
 
 ## Totals
 

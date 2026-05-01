@@ -7,6 +7,33 @@ components:
     name: Adapter root component
     level: component
     parent: SYS-ADAPTERS
+    rootUnit: SYS-DVT
+    domainUnit: SYS-ADAPTERS
+    unitPath:
+      - SYS-DVT
+      - SYS-ADAPTERS
+      - SYS-ADAPTERS-ROOT
+    unitReferences:
+      - id: SYS-DVT
+        name: DVT system
+        level: system
+        status: review
+        governance:
+          - docs/architecture/reference-architecture.md
+          - docs/concepts/domain-language.md
+          - docs/planning/status/governance-document-rule-inventory.md
+      - id: SYS-ADAPTERS
+        name: Adapter domain
+        level: domain
+        status: coverage-required
+        governance:
+          - docs/planning/status/system-operations-inventory-20260501.md
+      - id: SYS-ADAPTERS-ROOT
+        name: Adapter root component
+        level: component
+        status: coverage-required
+        governance:
+          - docs/planning/status/system-operations-inventory-20260501.md
     status: coverage-required
     isDrift: false
     isLegacy: false
@@ -32,6 +59,33 @@ components:
     name: API root component
     level: component
     parent: SYS-API
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    unitPath:
+      - SYS-DVT
+      - SYS-API
+      - SYS-API-ROOT
+    unitReferences:
+      - id: SYS-DVT
+        name: DVT system
+        level: system
+        status: review
+        governance:
+          - docs/architecture/reference-architecture.md
+          - docs/concepts/domain-language.md
+          - docs/planning/status/governance-document-rule-inventory.md
+      - id: SYS-API
+        name: API workspace
+        level: workspace
+        status: coverage-required
+        governance:
+          - docs/planning/status/system-operations-inventory-20260501.md
+      - id: SYS-API-ROOT
+        name: API root component
+        level: component
+        status: coverage-required
+        governance:
+          - docs/planning/status/system-operations-inventory-20260501.md
     status: coverage-required
     isDrift: false
     isLegacy: false
@@ -67,6 +121,34 @@ components:
     name: CI and automation root component
     level: component
     parent: SYS-CI-GOVERNANCE
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    unitReferences:
+      - id: SYS-DVT
+        name: DVT system
+        level: system
+        status: review
+        governance:
+          - docs/architecture/reference-architecture.md
+          - docs/concepts/domain-language.md
+          - docs/planning/status/governance-document-rule-inventory.md
+      - id: SYS-CI-GOVERNANCE
+        name: CI and automation governance
+        level: workspace
+        status: coverage-required
+        governance:
+          - docs/guides/testing-and-ci-capabilities.md
+          - docs/planning/status/governance-document-rule-inventory.md
+      - id: SYS-CI-GOVERNANCE-ROOT
+        name: CI and automation root component
+        level: component
+        status: coverage-required
+        governance:
+          - docs/guides/testing-and-ci-capabilities.md
     status: coverage-required
     isDrift: false
     isLegacy: false
@@ -90,6 +172,36 @@ components:
     name: Contracts root component
     level: component
     parent: SYS-CONTRACTS
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    unitPath:
+      - SYS-DVT
+      - SYS-CONTRACTS
+      - SYS-CONTRACTS-ROOT
+    unitReferences:
+      - id: SYS-DVT
+        name: DVT system
+        level: system
+        status: review
+        governance:
+          - docs/architecture/reference-architecture.md
+          - docs/concepts/domain-language.md
+          - docs/planning/status/governance-document-rule-inventory.md
+      - id: SYS-CONTRACTS
+        name: Contracts workspace family
+        level: workspace
+        status: coverage-required
+        governance:
+          - docs/contracts/index.md
+          - docs/adr/ADR-0005-contract-formalization-tooling.md
+          - docs/adr/ADR-0006-contract-tooling-governance.md
+          - docs/adr/ADR-0018_Shared_Kernel_Ownership_Governance.md
+      - id: SYS-CONTRACTS-ROOT
+        name: Contracts root component
+        level: component
+        status: coverage-required
+        governance:
+          - docs/contracts/index.md
     status: coverage-required
     isDrift: false
     isLegacy: false
@@ -110,6 +222,35 @@ components:
     name: Documentation governance root component
     level: component
     parent: SYS-DOCS-GOVERNANCE
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    unitPath:
+      - SYS-DVT
+      - SYS-DOCS-GOVERNANCE
+      - SYS-DOCS-GOVERNANCE-ROOT
+    unitReferences:
+      - id: SYS-DVT
+        name: DVT system
+        level: system
+        status: review
+        governance:
+          - docs/architecture/reference-architecture.md
+          - docs/concepts/domain-language.md
+          - docs/planning/status/governance-document-rule-inventory.md
+      - id: SYS-DOCS-GOVERNANCE
+        name: Documentation governance
+        level: workspace
+        status: coverage-required
+        governance:
+          - docs/DOCS_README.md
+          - docs/planning/status/governance-document-rule-inventory.md
+      - id: SYS-DOCS-GOVERNANCE-ROOT
+        name: Documentation governance root component
+        level: component
+        status: coverage-required
+        governance:
+          - docs/DOCS_README.md
+          - docs/planning/status/governance-document-rule-inventory.md
     status: coverage-required
     isDrift: false
     isLegacy: false
@@ -157,6 +298,33 @@ components:
     name: Observability root component
     level: component
     parent: SYS-OBSERVABILITY
+    rootUnit: SYS-DVT
+    domainUnit: SYS-OBSERVABILITY
+    unitPath:
+      - SYS-DVT
+      - SYS-OBSERVABILITY
+      - SYS-OBSERVABILITY-ROOT
+    unitReferences:
+      - id: SYS-DVT
+        name: DVT system
+        level: system
+        status: review
+        governance:
+          - docs/architecture/reference-architecture.md
+          - docs/concepts/domain-language.md
+          - docs/planning/status/governance-document-rule-inventory.md
+      - id: SYS-OBSERVABILITY
+        name: Observability domain
+        level: domain
+        status: coverage-required
+        governance:
+          - docs/planning/status/system-operations-inventory-20260501.md
+      - id: SYS-OBSERVABILITY-ROOT
+        name: Observability root component
+        level: component
+        status: coverage-required
+        governance:
+          - docs/planning/status/system-operations-inventory-20260501.md
     status: coverage-required
     isDrift: false
     isLegacy: false
@@ -176,6 +344,34 @@ components:
     name: Planner root component
     level: component
     parent: SYS-PLANNER
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANNER
+      - SYS-PLANNER-ROOT
+    unitReferences:
+      - id: SYS-DVT
+        name: DVT system
+        level: system
+        status: review
+        governance:
+          - docs/architecture/reference-architecture.md
+          - docs/concepts/domain-language.md
+          - docs/planning/status/governance-document-rule-inventory.md
+      - id: SYS-PLANNER
+        name: Planner workspace family
+        level: workspace
+        status: coverage-required
+        governance:
+          - docs/contracts/planner/index.md
+          - docs/planning/status/system-operations-inventory-20260501.md
+      - id: SYS-PLANNER-ROOT
+        name: Planner root component
+        level: component
+        status: coverage-required
+        governance:
+          - docs/contracts/planner/index.md
     status: coverage-required
     isDrift: false
     isLegacy: false
@@ -194,6 +390,38 @@ components:
     name: API plan-store composition and resolvers
     level: component
     parent: SYS-PLANSTORE
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-API-COMPOSITION
+    unitReferences:
+      - id: SYS-DVT
+        name: DVT system
+        level: system
+        status: review
+        governance:
+          - docs/architecture/reference-architecture.md
+          - docs/concepts/domain-language.md
+          - docs/planning/status/governance-document-rule-inventory.md
+      - id: SYS-PLANSTORE
+        name: Plan-store domain
+        level: domain
+        status: review
+        governance:
+          - >-
+            docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+          - docs/planning/status/system-operations-inventory-20260501.md
+          - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
+      - id: SYS-PLANSTORE-API-COMPOSITION
+        name: API plan-store composition and resolvers
+        level: component
+        status: drift
+        governance:
+          - docs/planning/status/system-operations-inventory-20260501.md
+          - >-
+            docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
     status: drift
     isDrift: true
     isLegacy: false
@@ -231,6 +459,38 @@ components:
     name: Plan-store artifacts ports and runtime readers
     level: component
     parent: SYS-PLANSTORE
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-ARTIFACTS-PORTS
+    unitReferences:
+      - id: SYS-DVT
+        name: DVT system
+        level: system
+        status: review
+        governance:
+          - docs/architecture/reference-architecture.md
+          - docs/concepts/domain-language.md
+          - docs/planning/status/governance-document-rule-inventory.md
+      - id: SYS-PLANSTORE
+        name: Plan-store domain
+        level: domain
+        status: review
+        governance:
+          - >-
+            docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+          - docs/planning/status/system-operations-inventory-20260501.md
+          - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
+      - id: SYS-PLANSTORE-ARTIFACTS-PORTS
+        name: Plan-store artifacts ports and runtime readers
+        level: component
+        status: review
+        governance:
+          - docs/planning/closeouts/20260403-s08-3-artifacts-plan-store-ports-closeout.md
+          - >-
+            docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
     status: review
     isDrift: false
     isLegacy: false
@@ -254,6 +514,39 @@ components:
     name: Plan-store contracts
     level: component
     parent: SYS-PLANSTORE
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-CONTRACTS
+    unitReferences:
+      - id: SYS-DVT
+        name: DVT system
+        level: system
+        status: review
+        governance:
+          - docs/architecture/reference-architecture.md
+          - docs/concepts/domain-language.md
+          - docs/planning/status/governance-document-rule-inventory.md
+      - id: SYS-PLANSTORE
+        name: Plan-store domain
+        level: domain
+        status: review
+        governance:
+          - >-
+            docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+          - docs/planning/status/system-operations-inventory-20260501.md
+          - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
+      - id: SYS-PLANSTORE-CONTRACTS
+        name: Plan-store contracts
+        level: component
+        status: drift
+        governance:
+          - docs/contracts/planner/PlanStoreRecords.v1.md
+          - >-
+            docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+          - docs/risk-register/quality/R-20260402-S08-PLAN-STORE-CONTRACT-DRIFT.yaml
     status: drift
     isDrift: true
     isLegacy: false
@@ -278,6 +571,37 @@ components:
     name: Plan-store docs, reviews, risk, and evidence
     level: component
     parent: SYS-PLANSTORE
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-DOCS-RISK
+    unitReferences:
+      - id: SYS-DVT
+        name: DVT system
+        level: system
+        status: review
+        governance:
+          - docs/architecture/reference-architecture.md
+          - docs/concepts/domain-language.md
+          - docs/planning/status/governance-document-rule-inventory.md
+      - id: SYS-PLANSTORE
+        name: Plan-store domain
+        level: domain
+        status: review
+        governance:
+          - >-
+            docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+          - docs/planning/status/system-operations-inventory-20260501.md
+          - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
+      - id: SYS-PLANSTORE-DOCS-RISK
+        name: Plan-store docs, reviews, risk, and evidence
+        level: component
+        status: review
+        governance:
+          - docs/planning/status/system-governance-unit-index-20260501.md
+          - docs/planning/status/system-governance-document-unit-map-20260501.md
     status: review
     isDrift: false
     isLegacy: false
@@ -318,6 +642,37 @@ components:
     name: Engine plan artifact fetch and plan-ref policy
     level: component
     parent: SYS-PLANSTORE
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-ENGINE-FETCH
+    unitReferences:
+      - id: SYS-DVT
+        name: DVT system
+        level: system
+        status: review
+        governance:
+          - docs/architecture/reference-architecture.md
+          - docs/concepts/domain-language.md
+          - docs/planning/status/governance-document-rule-inventory.md
+      - id: SYS-PLANSTORE
+        name: Plan-store domain
+        level: domain
+        status: review
+        governance:
+          - >-
+            docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+          - docs/planning/status/system-operations-inventory-20260501.md
+          - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
+      - id: SYS-PLANSTORE-ENGINE-FETCH
+        name: Engine plan artifact fetch and plan-ref policy
+        level: component
+        status: drift
+        governance:
+          - docs/adr/adr-0052-planref-continuation-safety.md
+          - docs/risk-register/quality/R-20260405-PLAN-STORE-CANONICAL-SHAPE-DRIFT.yaml
     status: drift
     isDrift: true
     isLegacy: false
@@ -342,6 +697,39 @@ components:
     name: Postgres plan-store adapter implementation
     level: component
     parent: SYS-PLANSTORE
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-POSTGRES
+    unitReferences:
+      - id: SYS-DVT
+        name: DVT system
+        level: system
+        status: review
+        governance:
+          - docs/architecture/reference-architecture.md
+          - docs/concepts/domain-language.md
+          - docs/planning/status/governance-document-rule-inventory.md
+      - id: SYS-PLANSTORE
+        name: Plan-store domain
+        level: domain
+        status: review
+        governance:
+          - >-
+            docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+          - docs/planning/status/system-operations-inventory-20260501.md
+          - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
+      - id: SYS-PLANSTORE-POSTGRES
+        name: Postgres plan-store adapter implementation
+        level: component
+        status: drift
+        governance:
+          - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
+          - >-
+            docs/planning/reviews/architecture-and-governance/20260403-s08-postgres-plan-store-hard-qa-review.md
+          - docs/risk-register/quality/R-20260408-ADAPTER-POSTGRES-PLANSTORE-TEST-DRIFT.yaml
     status: drift
     isDrift: true
     isLegacy: false
@@ -365,6 +753,37 @@ components:
     name: Plan-store root component
     level: component
     parent: SYS-PLANSTORE
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-ROOT
+    unitReferences:
+      - id: SYS-DVT
+        name: DVT system
+        level: system
+        status: review
+        governance:
+          - docs/architecture/reference-architecture.md
+          - docs/concepts/domain-language.md
+          - docs/planning/status/governance-document-rule-inventory.md
+      - id: SYS-PLANSTORE
+        name: Plan-store domain
+        level: domain
+        status: review
+        governance:
+          - >-
+            docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+          - docs/planning/status/system-operations-inventory-20260501.md
+          - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
+      - id: SYS-PLANSTORE-ROOT
+        name: Plan-store root component
+        level: component
+        status: superseded
+        governance:
+          - >-
+            docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
     status: superseded
     isDrift: false
     isLegacy: false
@@ -384,6 +803,39 @@ components:
     name: Temporal plan-store composition and plan-ref workflow boundary
     level: component
     parent: SYS-PLANSTORE
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-TEMPORAL-COMPOSITION
+    unitReferences:
+      - id: SYS-DVT
+        name: DVT system
+        level: system
+        status: review
+        governance:
+          - docs/architecture/reference-architecture.md
+          - docs/concepts/domain-language.md
+          - docs/planning/status/governance-document-rule-inventory.md
+      - id: SYS-PLANSTORE
+        name: Plan-store domain
+        level: domain
+        status: review
+        governance:
+          - >-
+            docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+          - docs/planning/status/system-operations-inventory-20260501.md
+          - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
+      - id: SYS-PLANSTORE-TEMPORAL-COMPOSITION
+        name: Temporal plan-store composition and plan-ref workflow boundary
+        level: component
+        status: legacy
+        governance:
+          - >-
+            docs/architecture/components/engine/adapters/temporal/temporal-planref-workflow-boundary.md
+          - docs/risk-register/quality/R-20260427-TEMPORAL-PLANREF-CONFIG-HARDENING.yaml
+          - docs/planning/status/system-operations-inventory-20260501.md
     status: legacy
     isDrift: false
     isLegacy: true
@@ -413,6 +865,35 @@ components:
     name: Repository metadata root component
     level: component
     parent: SYS-REPO-METADATA
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    unitReferences:
+      - id: SYS-DVT
+        name: DVT system
+        level: system
+        status: review
+        governance:
+          - docs/architecture/reference-architecture.md
+          - docs/concepts/domain-language.md
+          - docs/planning/status/governance-document-rule-inventory.md
+      - id: SYS-REPO-METADATA
+        name: Repository metadata
+        level: workspace
+        status: canonical
+        governance:
+          - package.json
+          - pnpm-workspace.yaml
+      - id: SYS-REPO-METADATA-ROOT
+        name: Repository metadata root component
+        level: component
+        status: canonical
+        governance:
+          - package.json
+          - pnpm-workspace.yaml
     status: canonical
     isDrift: false
     isLegacy: false
@@ -467,6 +948,35 @@ components:
     name: Runtime root component
     level: component
     parent: SYS-RUNTIME
+    rootUnit: SYS-DVT
+    domainUnit: SYS-RUNTIME
+    unitPath:
+      - SYS-DVT
+      - SYS-RUNTIME
+      - SYS-RUNTIME-ROOT
+    unitReferences:
+      - id: SYS-DVT
+        name: DVT system
+        level: system
+        status: review
+        governance:
+          - docs/architecture/reference-architecture.md
+          - docs/concepts/domain-language.md
+          - docs/planning/status/governance-document-rule-inventory.md
+      - id: SYS-RUNTIME
+        name: Runtime domain
+        level: domain
+        status: coverage-required
+        governance:
+          - docs/planning/execution-model/dvt-execution-model.md
+          - docs/architecture/system-delivery-status.md
+          - docs/planning/status/system-operations-inventory-20260501.md
+      - id: SYS-RUNTIME-ROOT
+        name: Runtime root component
+        level: component
+        status: coverage-required
+        governance:
+          - docs/planning/status/system-operations-inventory-20260501.md
     status: coverage-required
     isDrift: false
     isLegacy: false
@@ -500,6 +1010,34 @@ components:
     name: Traceability root component
     level: component
     parent: SYS-TRACEABILITY
+    rootUnit: SYS-DVT
+    domainUnit: SYS-TRACEABILITY
+    unitPath:
+      - SYS-DVT
+      - SYS-TRACEABILITY
+      - SYS-TRACEABILITY-ROOT
+    unitReferences:
+      - id: SYS-DVT
+        name: DVT system
+        level: system
+        status: review
+        governance:
+          - docs/architecture/reference-architecture.md
+          - docs/concepts/domain-language.md
+          - docs/planning/status/governance-document-rule-inventory.md
+      - id: SYS-TRACEABILITY
+        name: Traceability domain
+        level: domain
+        status: coverage-required
+        governance:
+          - docs/adr/ADR-0000-Code-generation-with-normative-traceability-required.en.md
+          - docs/planning/status/system-operations-inventory-20260501.md
+      - id: SYS-TRACEABILITY-ROOT
+        name: Traceability root component
+        level: component
+        status: coverage-required
+        governance:
+          - docs/adr/ADR-0000-Code-generation-with-normative-traceability-required.en.md
     status: coverage-required
     isDrift: false
     isLegacy: false
@@ -521,6 +1059,36 @@ components:
     name: Web root component
     level: component
     parent: SYS-WEB
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    unitPath:
+      - SYS-DVT
+      - SYS-WEB
+      - SYS-WEB-ROOT
+    unitReferences:
+      - id: SYS-DVT
+        name: DVT system
+        level: system
+        status: review
+        governance:
+          - docs/architecture/reference-architecture.md
+          - docs/concepts/domain-language.md
+          - docs/planning/status/governance-document-rule-inventory.md
+      - id: SYS-WEB
+        name: Web workspace
+        level: workspace
+        status: coverage-required
+        governance:
+          - >-
+            docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md
+          - docs/planning/proposals/web-user-stories-20260429.md
+      - id: SYS-WEB-ROOT
+        name: Web root component
+        level: component
+        status: coverage-required
+        governance:
+          - >-
+            docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md
     status: coverage-required
     isDrift: false
     isLegacy: false
@@ -541,6 +1109,33 @@ components:
     name: Worker root component
     level: component
     parent: SYS-WORKERS
+    rootUnit: SYS-DVT
+    domainUnit: SYS-WORKERS
+    unitPath:
+      - SYS-DVT
+      - SYS-WORKERS
+      - SYS-WORKERS-ROOT
+    unitReferences:
+      - id: SYS-DVT
+        name: DVT system
+        level: system
+        status: review
+        governance:
+          - docs/architecture/reference-architecture.md
+          - docs/concepts/domain-language.md
+          - docs/planning/status/governance-document-rule-inventory.md
+      - id: SYS-WORKERS
+        name: Worker domain
+        level: domain
+        status: coverage-required
+        governance:
+          - docs/planning/status/system-operations-inventory-20260501.md
+      - id: SYS-WORKERS-ROOT
+        name: Worker root component
+        level: component
+        status: coverage-required
+        governance:
+          - docs/planning/status/system-operations-inventory-20260501.md
     status: coverage-required
     isDrift: false
     isLegacy: false

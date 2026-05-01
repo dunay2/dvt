@@ -16,8 +16,8 @@ machine-readable source is:
 - [system-governance-component-index.components.yaml](./system-governance-component-index.components.yaml)
 
 The index exposes how many components exist, how many files each component owns,
-which components still require subdivision, and which components are drift or
-legacy.
+which root/domain chain each component belongs to, which components still
+require subdivision, and which components are drift or legacy.
 
 ## Totals
 
