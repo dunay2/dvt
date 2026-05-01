@@ -1,6 +1,6 @@
 {
   "summary": {
-    "adrs": 48,
+    "adrs": 49,
     "evidenceDocs": 115,
     "normativeDocs": 344,
     "statusDocs": 65
@@ -531,6 +531,17 @@
       "status": "Accepted",
       "date": "2026-04-30",
       "owners": "packages/@dvt/contracts, packages/@dvt/engine, packages/@dvt/adapter-temporal",
+      "archived": false,
+      "draft": false
+    },
+    {
+      "path": "docs/adr/ADR-0053-file-state-fingerprint-governance.md",
+      "filename": "ADR-0053-file-state-fingerprint-governance.md",
+      "num": 53,
+      "id": "ADR-0053",
+      "status": "Accepted",
+      "date": "2026-05-01",
+      "owners": "docs, architecture",
       "archived": false,
       "draft": false
     }

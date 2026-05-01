@@ -149,6 +149,7 @@ Usage rules already declared in the ADR index:
 | `ADR-0036`  | Accepted   | ExecutionPlan planVersion registry and runtime admission matrix                                                 | [ADR-0036](../../adr/ADR-0036-execution-plan-planversion-registry-and-runtime-matrix.md)      |
 | `ADR-0037`  | Accepted   | Run-event lifecycle archival, verification, and restore model                                                   | [ADR-0037](../../adr/ADR-0037-run-event-lifecycle-archival-verification-and-restore-model.md) |
 | `ADR-0038`  | Accepted   | Delivery-buffer retention and purge policy                                                                      | [ADR-0038](../../adr/ADR-0038-delivery-buffer-retention-and-purge-policy.md)                  |
+| `ADR-0053`  | Accepted   | File identity, content hash, governance hash, and aggregate state fingerprint governance                        | [ADR-0053](../../adr/ADR-0053-file-state-fingerprint-governance.md)                           |
 
 ### Normative contract and execution documents
 

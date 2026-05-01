@@ -56,7 +56,7 @@ Components with `childrenRequired: true` and more than 100 files:
 <!-- prettier-ignore-start -->
 | Component | Files | Status |
 | --- | ---: | --- |
-| `SYS-DOCS-GOVERNANCE-ROOT` | 1639 | `coverage-required` |
+| `SYS-DOCS-GOVERNANCE-ROOT` | 1640 | `coverage-required` |
 | `SYS-WEB-ROOT` | 783 | `coverage-required` |
 | `SYS-API-ROOT` | 362 | `coverage-required` |
 | `SYS-RUNTIME-ROOT` | 286 | `coverage-required` |
@@ -76,7 +76,7 @@ Components with `childrenRequired: true` and more than 100 files:
 | `SYS-API-ROOT` | `component` | `coverage-required` | 362 | `AS` | `SYS-API` |
 | `SYS-CI-GOVERNANCE-ROOT` | `component` | `coverage-required` | 166 | `INFRA` | `SYS-CI-GOVERNANCE` |
 | `SYS-CONTRACTS-ROOT` | `component` | `coverage-required` | 127 | `PORT` | `SYS-CONTRACTS` |
-| `SYS-DOCS-GOVERNANCE-ROOT` | `component` | `coverage-required` | 1639 | `INFRA` | `SYS-DOCS-GOVERNANCE` |
+| `SYS-DOCS-GOVERNANCE-ROOT` | `component` | `coverage-required` | 1640 | `INFRA` | `SYS-DOCS-GOVERNANCE` |
 | `SYS-OBSERVABILITY-ROOT` | `component` | `coverage-required` | 15 | `PORT` | `SYS-OBSERVABILITY` |
 | `SYS-PLANNER-ROOT` | `component` | `coverage-required` | 76 | `DS` | `SYS-PLANNER` |
 | `SYS-PLANSTORE-API-COMPOSITION` | `component` | `drift` | 20 | `AS` | `SYS-PLANSTORE` |

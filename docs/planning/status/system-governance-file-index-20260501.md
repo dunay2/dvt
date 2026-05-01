@@ -22,7 +22,7 @@ status.
 
 ## Totals
 
-- Tracked files indexed: 4034
+- Tracked files indexed: 4035
 - Component/source owner units: 20
 - Ungoverned files: 0
 - Drift files: 44
@@ -34,7 +34,7 @@ status.
 | Status | Files |
 | --- | ---: |
 | `canonical` | 109 |
-| `coverage-required` | 3818 |
+| `coverage-required` | 3819 |
 | `drift` | 44 |
 | `legacy` | 9 |
 | `review` | 54 |
@@ -49,7 +49,7 @@ status.
 | `SYS-API-ROOT` | 362 |
 | `SYS-CI-GOVERNANCE-ROOT` | 166 |
 | `SYS-CONTRACTS-ROOT` | 127 |
-| `SYS-DOCS-GOVERNANCE-ROOT` | 1639 |
+| `SYS-DOCS-GOVERNANCE-ROOT` | 1640 |
 | `SYS-OBSERVABILITY-ROOT` | 15 |
 | `SYS-PLANNER-ROOT` | 76 |
 | `SYS-PLANSTORE-API-COMPOSITION` | 20 |
