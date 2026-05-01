@@ -139,12 +139,21 @@ jobs:
         run: pnpm docs:capability:check
 
       - name: Validate governance file fingerprints
+        if:
+          github.event_name == 'pull_request' || github.event_name == 'push' || (github.event_name
+          == 'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
         run: pnpm docs:governance:file-component-index:check
 
       - name: Validate governance fingerprint baseline
+        if:
+          github.event_name == 'pull_request' || github.event_name == 'push' || (github.event_name
+          == 'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
         run: pnpm docs:governance:file-fingerprint-baseline:check
 
       - name: Validate governance fingerprint impact report
+        if:
+          github.event_name == 'pull_request' || github.event_name == 'push' || (github.event_name
+          == 'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
         run: pnpm docs:governance:file-fingerprint-impact:check
 
       - name: Check PR title follows Conventional Commits
