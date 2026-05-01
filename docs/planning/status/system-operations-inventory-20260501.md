@@ -10,9 +10,10 @@ planning_type: status
 
 ## Purpose
 
-This is a per-file inventory of every operation (command, query, domain
-behavior, adapter call, application service, route handler) that the runtime
-graph of DVT+ exposes. For each operation it answers four questions:
+This is a grouped per-file inventory of the runtime/domain backbone operations
+(command, query, domain behavior, adapter call, application service, route
+handler) that the runtime graph of DVT+ exposes. For each covered operation it
+answers four questions:
 
 1. Is the operation **legacy**? If so, classify and mark for removal.
 2. Is the operation modeled as **C&Q (Command/Query Separation)**? If not,
@@ -90,7 +91,7 @@ plan-store matrix as the precedent template:
 
 The repository carries 1216 source files in 24 workspaces. This inventory
 covers the runtime/domain backbone first. Pending workspaces are listed at the
-bottom under "Coverage Gaps" and are explicit drift, not silent omission.
+bottom under "Coverage Gaps" as explicit coverage gaps, not silent omission.
 
 Covered in this pass:
 
@@ -111,7 +112,7 @@ Covered in this pass:
 - `apps/temporal-worker`, `apps/outbox-worker`, `apps/projector-worker`,
   `apps/lineage-worker`
 
-Pending in this pass (declared as coverage gap):
+Pending in this pass:
 
 - `apps/web` (524 files; frontend, deferred — see Coverage Gaps section)
 
@@ -144,7 +145,7 @@ ownership question to the package that implements them.
 | `IRunStateStore` (combined alias)                                   | `PORT` agg                                     | n/a          | **`SUPER`**        | Mixes write+read+maintenance concerns; ADR-0034 prefers narrowed segregated ports. Composition is acceptable for adapter classes but consumers should depend only on the narrowed face they need. |
 | `RunStateCommandPort.bootstrapRun(input)`                           | `PORT`                                         | `CMD`        | `OK`               | Public command façade for write side.                                                                                                                                                             |
 | `RunStateCommandPort.appendTransitions(runId, events)`              | `PORT`                                         | `CMD-RET`    | `OK`               | Public command façade.                                                                                                                                                                            |
-| `IPlanFetcher.fetch(planRef)`                                       | `PORT` (engine-owned executable fetch)         | `FETCH`      | **`LEGACY-DRIFT`** | Per S08-DRIFT-06/10: shape lacks `(tenantId, projectId, environmentId)`. Should become `fetch(scope, planRef)` or be supplied through scoped wrapper. See diagram §13.1.                          |
+| `IPlanFetcher.fetch(planRef)`                                       | `PORT` (engine-owned executable fetch)         | `FETCH`      | **`LEGACY-DRIFT`** | Per S08-DRIFT-06/10: shape lacks `(tenantId, projectId, environmentId)`. Should become `fetch(scope, planRef)` or be supplied through scoped wrapper. See diagram §18.1.                          |
 | `IPlanIntegrityValidator.fetchAndValidate(...)`                     | `DS` (engine integrity domain)                 | `FETCH`      | **`LEGACY-DRIFT`** | Same scope drift as `IPlanFetcher`.                                                                                                                                                               |
 | `IIdempotencyKeyBuilder.runEventKey/startRunIntentId/eventId`       | `DS` (deterministic identity)                  | `QRY` (pure) | `OK`               | Pure functions; `INV-INTENT-011`.                                                                                                                                                                 |
 | `IClock.nowIsoUtc()`                                                | `INFRA`                                        | `QRY`        | `OK`               | Determinism boundary.                                                                                                                                                                             |
@@ -638,7 +639,7 @@ use-case separation in the repo. Other packages should mirror this pattern.
 - **Active drift**: `IPlanFetcher`, `IPlanResolver`, `IPlanIntegrityValidator`
   port shapes are not scoped (S08-DRIFT-06/10/24/39). Plan-integrity validation
   and `PlanRefPolicy` are mistakenly used as plan-store ownership proof
-  (S08-DRIFT-39/40). See diagram §13.1.
+  (S08-DRIFT-39/40). See diagram §18.1.
 - **Code duplication drift**: `core/SnapshotProjector.applyRunEvent` and
   `utils/{jcs,sha256}.ts` shadow `@dvt/run-domain` and `@dvt/contracts/utils`
   respectively. Should be removed in favor of shared-kernel deps (ADR-0018).
@@ -1130,12 +1131,12 @@ long, so the table groups by responsibility while explicitly naming each file.
 
 ### 13.7 Health / db / capabilities — `src/routes/`, `src/db/`
 
-| File                                                          | DDD                          | C&Q     | Legacy | Notes |
-| ------------------------------------------------------------- | ---------------------------- | ------- | ------ | ----- |
-| `routes/health.ts` (+ contract/mapper/presenter/policy/ports) | `ENTRY` (health route)       | `QRY`   | `OK`   |       |
-| `routes/dbReady.ts`                                           | `ENTRY`                      | `QRY`   | `OK`   |       |
-| `routes/version.ts`, `httpStatus.ts`, `capabilities.ts`       | `ENTRY`                      | `QRY`   | `OK`   |       |
-| `db/*`                                                        | `ADP` (Postgres pool wiring) | `INFRA` | `OK`   |       |
+| File                                                          | DDD                          | C&Q   | Legacy | Notes |
+| ------------------------------------------------------------- | ---------------------------- | ----- | ------ | ----- |
+| `routes/health.ts` (+ contract/mapper/presenter/policy/ports) | `ENTRY` (health route)       | `QRY` | `OK`   |       |
+| `routes/dbReady.ts`                                           | `ENTRY`                      | `QRY` | `OK`   |       |
+| `routes/version.ts`, `httpStatus.ts`, `capabilities.ts`       | `ENTRY`                      | `QRY` | `OK`   |       |
+| `db/*`                                                        | `ADP` (Postgres pool wiring) | `QRY` | `OK`   |       |
 
 **Verdict for `apps/api`**:
 
@@ -1376,7 +1377,7 @@ on `@dvt/run-domain`. The current setup is a silent boundary violation
 
 | Cluster                                        | Where                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | Gating proposal                                                                      |
 | ---------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
-| Plan-store / lifecycle facade                  | `@dvt/contracts.PlanValidationLifecycle.v1`, `@dvt/planner.contracts.PlanValidationLifecycle`, `@dvt/artifacts.ports.{IPlanStoreReader,IPlanStoreWriter}`, `@dvt/adapter-postgres.PostgresPlanStore.*`, `apps/api.application.services.{PreviewPlanUseCase, PlannerBackedStartRunUseCase, ImportPlanUseCase, StoredExecutablePlanResolver, StoredPlanExecutabilityValidator, WorkflowEngineFactory, modules/types.ts}`, `apps/temporal-worker.runtime.{temporalWorkerStores, temporalWorkerRuntimeResources, temporalWorkerRuntimeHandle, runtimeTypes}` | **S08 Plan-Store C&Q Matrix** (this proposal) is the closure authority.              |
+| Plan-store / lifecycle facade                  | `@dvt/contracts.PlanValidationLifecycle.v1`, `@dvt/planner.contracts.PlanValidationLifecycle`, `@dvt/artifacts.ports.{IPlanStoreReader,IPlanStoreWriter}`, `@dvt/adapter-postgres.PostgresPlanStore.*`, `apps/api.application.services.{PreviewPlanUseCase, PlannerBackedStartRunUseCase, ImportPlanUseCase, StoredExecutablePlanResolver, StoredPlanExecutabilityValidator, WorkflowEngineFactory, modules/types.ts}`, `apps/temporal-worker.runtime.{temporalWorkerStores, temporalWorkerRuntimeResources, temporalWorkerRuntimeHandle, runtimeTypes}` | Points to the S08 plan-store C&Q matrix as the closure authority.                    |
 | Engine plan fetcher / integrity gate confusion | `@dvt/engine.ports.{IPlanResolver, IPlanArtifactReader.IPlanFetcher, IPlanArtifactReader.IPlanIntegrityValidator}`, `@dvt/engine.security.{planIntegrity, planRefPolicy, RunAccessPolicy}`                                                                                                                                                                                                                                                                                                                                                               | Same — plus update engine architecture tests to require scoped fetch (S08-DRIFT-24). |
 | Boundary / duplication drift                   | `@dvt/engine.core.SnapshotProjector` (duplicates `@dvt/run-domain.applyRunEvent`); `@dvt/engine.utils.{jcs,sha256}` (duplicates `@dvt/contracts.utils`); `@dvt/planner.domain.hashing` and `@dvt/artifacts.compiledCode.sha256` (duplicate `@dvt/canonical`)                                                                                                                                                                                                                                                                                             | New scoped ADR / planning slice covering shared-kernel cleanup (ADR-0018).           |
 | Error-code drift                               | `@dvt/state-store.inMemoryRunStateCommandPort` throws plain `Error('RUN_NOT_FOUND')` etc.                                                                                                                                                                                                                                                                                                                                                                                                                                                                | Replace with typed errors per ADR-0012A.                                             |
@@ -1414,7 +1415,8 @@ This inventory deliberately does NOT cover:
 - `apps/web` (524 src files). Reason: SPA frontend. C&Q at the API client / UI
   state level is a separate analysis; surfaces like Redux slices, React Query
   hooks, and form workflow components are not directly part of the runtime
-  domain graph. Marked as drift (per the No-Stub policy: declared, not hidden).
+  domain graph. This is a declared coverage gap, not evidence of drift by
+  itself.
 - Test files (654 across the repo). The S08 matrix already enumerates the
   tests that encode legacy expectations; this inventory points at the same
   body without re-listing them.
