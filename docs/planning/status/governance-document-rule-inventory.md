@@ -234,7 +234,8 @@ Usage rules already declared in the ADR index:
 - [package.json `verify:prepush`](../../../package.json)
   Role: `pre-push gate`
   Enforces: root type-check, planning workboard drift check, changed-markdown
-  validation, and changed-file checks.
+  validation, governance file-index freshness, accepted file-fingerprint
+  baseline validation, and changed-file checks.
 - [package.json `docs:pr:fast`](../../../package.json)
   Role: `local docs preflight`
   Enforces: local fast-path docs PR validation before push or PR creation.
@@ -300,6 +301,11 @@ Usage rules already declared in the ADR index:
   Enforces: exhaustive generated projections for file-level ownership,
   component/source ownership counts, drift/legacy file visibility, and
   ADR-0053 file-state fingerprints.
+- [scripts/check-governance-file-fingerprint-baseline.cjs](../../../scripts/check-governance-file-fingerprint-baseline.cjs)
+  Role: `accepted file-fingerprint baseline gate`
+  Enforces: the generated file index cannot drift from the accepted
+  `system-governance-file-fingerprint-baseline.yaml` without regenerating and
+  reviewing the baseline update.
 
 Additional enforcement surface:
 
@@ -317,9 +323,10 @@ Additional enforcement surface:
 - [.github/workflows/pr-quality-gate.yml](../../../.github/workflows/pr-quality-gate.yml)
   Role: `PR Quality Gate`
   Enforces: ARC policy evaluation, docs sync and workboard drift checks, docs
-  quality checks, canonical docs checks, generated status checks, optional
-  workspace type-check, PR title validation, PR body minimum length, PR size
-  warning, and Temporal integration routing.
+  quality checks, canonical docs checks, generated status checks, governance
+  file-index and accepted fingerprint baseline checks, optional workspace
+  type-check, PR title validation, PR body minimum length, PR size warning,
+  and Temporal integration routing.
 - [.github/workflows/test.yml](../../../.github/workflows/test.yml)
   Role: `Test Suite`
   Enforces: affected package tests, full suite on non-PR runs, determinism
@@ -346,6 +353,7 @@ Additional enforcement surface:
 | [docs/planning/status/system-governance-unit-index.units.yaml](./system-governance-unit-index.units.yaml)                     | `generated status`   | Mechanical unit manifest: every tracked file must resolve to one component/source owner. |
 | [docs/planning/status/system-governance-file-index-20260501.md](./system-governance-file-index-20260501.md)                   | `generated status`   | Human summary for file-level ownership, drift, and legacy classification.                |
 | [docs/planning/status/system-governance-file-index.files.yaml](./system-governance-file-index.files.yaml)                     | `generated status`   | Exhaustive file-level ownership index with one row per tracked file.                     |
+| [docs/planning/status/system-governance-file-fingerprint-baseline.yaml](./system-governance-file-fingerprint-baseline.yaml)   | `generated status`   | Accepted file-state fingerprint baseline used to reject unreviewed drift.                |
 | [docs/planning/status/system-governance-component-index-20260501.md](./system-governance-component-index-20260501.md)         | `generated status`   | Human summary for component/source units, counts, and oversized buckets.                 |
 | [docs/planning/status/system-governance-component-index.components.yaml](./system-governance-component-index.components.yaml) | `generated status`   | Exhaustive component/source unit index with ownership counts and status.                 |
 | [docs/planning/status/system-governance-document-unit-map-20260501.md](./system-governance-document-unit-map-20260501.md)     | `generated status`   | Human summary for document-to-unit mapping.                                              |

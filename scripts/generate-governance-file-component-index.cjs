@@ -16,15 +16,21 @@ const fileYamlPath = path.join(statusDir, 'system-governance-file-index.files.ya
 const fileMarkdownPath = path.join(statusDir, 'system-governance-file-index-20260501.md');
 const componentYamlPath = path.join(statusDir, 'system-governance-component-index.components.yaml');
 const componentMarkdownPath = path.join(statusDir, 'system-governance-component-index-20260501.md');
+const fingerprintBaselinePath = path.join(
+  statusDir,
+  'system-governance-file-fingerprint-baseline.yaml'
+);
 
 const generatedOutputPaths = [
   fileYamlPath,
   fileMarkdownPath,
   componentYamlPath,
   componentMarkdownPath,
+  fingerprintBaselinePath,
 ].map((filePath) => toPosix(path.relative(repoRoot, filePath)));
 
 const generatedFileYamlRelativePath = toPosix(path.relative(repoRoot, fileYamlPath));
+const fingerprintBaselineRelativePath = toPosix(path.relative(repoRoot, fingerprintBaselinePath));
 
 function toPosix(filePath) {
   return filePath.replace(/\\/g, '/');
@@ -145,7 +151,7 @@ function normalizeTextBytesForHash(contentBytes) {
 function readTrackedFileBytes(filePath) {
   const contentBytes = normalizeTextBytesForHash(fs.readFileSync(path.join(repoRoot, filePath)));
 
-  if (filePath === generatedFileYamlRelativePath) {
+  if (filePath === generatedFileYamlRelativePath || filePath === fingerprintBaselineRelativePath) {
     return normalizeGeneratedIndexBytesForHash(contentBytes);
   }
 
@@ -306,12 +312,14 @@ This is the human summary for the exhaustive file-level governance index. The
 machine-readable source is:
 
 - [system-governance-file-index.files.yaml](./system-governance-file-index.files.yaml)
+- [system-governance-file-fingerprint-baseline.yaml](./system-governance-file-fingerprint-baseline.yaml)
 
 Every tracked repository file has one row in that YAML file. Each row records
 the stable file id, path hash, content hash, governance hash, state
 fingerprint, root unit, domain unit, component unit, owning unit, unit path,
 governing documents, DDD owner, command/query rail posture, drift status, and
-legacy status.
+legacy status. The fingerprint baseline is the accepted drift-control snapshot
+used by CI.
 
 ## Totals
 

@@ -14,16 +14,18 @@ This is the human summary for the exhaustive file-level governance index. The
 machine-readable source is:
 
 - [system-governance-file-index.files.yaml](./system-governance-file-index.files.yaml)
+- [system-governance-file-fingerprint-baseline.yaml](./system-governance-file-fingerprint-baseline.yaml)
 
 Every tracked repository file has one row in that YAML file. Each row records
 the stable file id, path hash, content hash, governance hash, state
 fingerprint, root unit, domain unit, component unit, owning unit, unit path,
 governing documents, DDD owner, command/query rail posture, drift status, and
-legacy status.
+legacy status. The fingerprint baseline is the accepted drift-control snapshot
+used by CI.
 
 ## Totals
 
-- Tracked files indexed: 4035
+- Tracked files indexed: 4040
 - Component/source owner units: 20
 - Ungoverned files: 0
 - Drift files: 44
@@ -34,8 +36,8 @@ legacy status.
 <!-- prettier-ignore-start -->
 | Status | Files |
 | --- | ---: |
-| `canonical` | 109 |
-| `coverage-required` | 3819 |
+| `canonical` | 111 |
+| `coverage-required` | 3822 |
 | `drift` | 44 |
 | `legacy` | 9 |
 | `review` | 54 |
@@ -48,9 +50,9 @@ legacy status.
 | --- | ---: |
 | `SYS-ADAPTERS-ROOT` | 196 |
 | `SYS-API-ROOT` | 362 |
-| `SYS-CI-GOVERNANCE-ROOT` | 166 |
+| `SYS-CI-GOVERNANCE-ROOT` | 168 |
 | `SYS-CONTRACTS-ROOT` | 127 |
-| `SYS-DOCS-GOVERNANCE-ROOT` | 1640 |
+| `SYS-DOCS-GOVERNANCE-ROOT` | 1641 |
 | `SYS-OBSERVABILITY-ROOT` | 15 |
 | `SYS-PLANNER-ROOT` | 76 |
 | `SYS-PLANSTORE-API-COMPOSITION` | 20 |
@@ -60,7 +62,7 @@ legacy status.
 | `SYS-PLANSTORE-ENGINE-FETCH` | 5 |
 | `SYS-PLANSTORE-POSTGRES` | 16 |
 | `SYS-PLANSTORE-TEMPORAL-COMPOSITION` | 9 |
-| `SYS-REPO-METADATA-ROOT` | 109 |
+| `SYS-REPO-METADATA-ROOT` | 111 |
 | `SYS-RUNTIME-ROOT` | 286 |
 | `SYS-TRACEABILITY-ROOT` | 65 |
 | `SYS-WEB-ROOT` | 783 |

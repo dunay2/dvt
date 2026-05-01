@@ -42,6 +42,12 @@ The fingerprint model is generated metadata. It is not embedded into source
 files as comments or headers in the first implementation. The canonical record
 lives in `docs/planning/status/system-governance-file-index.files.yaml`.
 
+The accepted baseline for file-state fingerprints lives in
+`docs/planning/status/system-governance-file-fingerprint-baseline.yaml`. CI MUST
+compare the generated file index against that baseline. A content or governance
+classification change is not accepted unless the index and the baseline are
+both regenerated and reviewed together.
+
 ### Identity
 
 Each tracked file receives a deterministic `fileId`.
@@ -180,6 +186,8 @@ governance:
   files.
 - Content changes and governance-classification changes can be detected
   independently.
+- CI can reject unreviewed fingerprint drift by comparing the generated index
+  against the accepted baseline.
 - Component, domain, and root impact analysis can use the generated index as a
   stable input.
 - Rename tracking is intentionally not solved by the first implementation.
@@ -194,14 +202,18 @@ The first implementation must:
 - add test coverage proving deterministic `fileId`, content hash,
   governance hash, and aggregate state fingerprint behavior;
 - regenerate `system-governance-file-index.files.yaml`;
+- generate and validate `system-governance-file-fingerprint-baseline.yaml`;
 - keep `docs:governance:file-component-index:check` deterministic;
+- keep `docs:governance:file-fingerprint-baseline:check` deterministic;
 - keep `pnpm verify:prepush` green.
 
 ## Related Sources
 
 - `docs/planning/status/system-governance-file-index.files.yaml`
+- `docs/planning/status/system-governance-file-fingerprint-baseline.yaml`
 - `docs/planning/status/system-governance-file-index-20260501.md`
 - `docs/planning/status/system-governance-component-index.components.yaml`
 - `docs/planning/status/system-governance-unit-index.units.yaml`
 - `scripts/generate-governance-file-component-index.cjs`
+- `scripts/check-governance-file-fingerprint-baseline.cjs`
 - `docs/planning/status/governance-document-rule-inventory.md`
