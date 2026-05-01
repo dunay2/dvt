@@ -1,6 +1,6 @@
 ---
 title: S08 plan-store command and query matrix
-status: Draft
+status: Review
 owner: Architecture / Planner / Artifacts / API / Storage
 last_reviewed: 2026-05-01
 planning_type: proposal
@@ -16,6 +16,20 @@ No implementation in the S08 plan-store tenancy slice may add, remove, or
 change plan-store behavior unless it is listed in this matrix. Any discovered
 method, caller, SQL path, contract field, or documentation claim outside this
 matrix is drift until this document is updated and reviewed.
+
+## Review Gate
+
+This matrix is ready for architecture review, not implementation execution.
+Implementation remains blocked until this document is accepted or explicitly
+amended after review.
+
+Minimum review decisions:
+
+- accept or amend Model B as the S08 storage identity model;
+- accept or amend the closed `PS-Cxx` / `PS-Qxx` catalog;
+- confirm that no legacy lifecycle facade is allowed as retained runtime
+  behavior;
+- confirm the first implementation slice below.
 
 ## Governing Sources
 
@@ -96,6 +110,25 @@ be removed or reclassified before implementation.
 - No unrelated canonical hashing cleanup.
 - No retention or archive policy redesign beyond scoped plan-record archival.
 - No compatibility facade retained as runtime behavior.
+
+## First Implementation Slice Candidate
+
+`S08-IMPL-01` is the smallest closed implementation slice that can start after
+review acceptance.
+
+| Field                   | Decision                                                                                                                                                                                   |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Slice                   | `S08-IMPL-01` scoped plan-record contracts and ports                                                                                                                                       |
+| C&Q rows                | `PS-C02`, `PS-C03`, `PS-C04`, `PS-Q01`, `PS-Q02`, `PS-Q03`, `PS-Q04`, `PS-Q05`                                                                                                             |
+| DDD owners              | `PlanRecord` aggregate, plan executability domain service, runtime admission application service, plan record/executability/admission/lineage read models                                  |
+| Allowed surfaces        | `docs/contracts/planner/PlanStoreRecords.v1.md`, `packages/@dvt/contracts/**`, `packages/@dvt/artifacts/src/ports/**`, focused contract/architecture tests                                 |
+| Explicitly out of scope | API composition, Temporal worker composition, engine dispatch materialization, SQL migration, lifecycle facade deletion                                                                    |
+| Red tests first         | Contract shape rejects unscoped plan records; artifacts ports cannot express unscoped plan-record commands/queries; architecture guard rejects lifecycle facade as canonical S08 authority |
+| ARC posture             | ARC-2 is required once code under contracts/artifacts changes; evidence and risk entries must be created before PR creation                                                                |
+
+This slice does not claim S08 closure. It only creates the typed command/query
+boundary needed before storage, API, Temporal, and engine runtime rewiring can
+remove legacy behavior without reintroducing drift.
 
 ## Scope Rule
 
