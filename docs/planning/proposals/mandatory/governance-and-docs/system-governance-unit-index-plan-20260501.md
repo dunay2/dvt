@@ -334,6 +334,9 @@ Initial guard candidates:
 This plan owns the governance-index and file-fingerprint implementation
 surfaces. The manifest keeps the repository-level implementation guard from
 binding governance changes to unrelated frontend feature manifests.
+Because the file/component and fingerprint indexes are exhaustive generated
+artifacts, the integration PR may use the repository size-gate exemption marker
+when the generated YAML projections exceed the default PR line budget.
 
 ```feature-mechanization
 version: 1

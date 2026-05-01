@@ -23853,9 +23853,9 @@ files:
   - fileId: F-EF1F0DBBB1D8
     path: >-
       docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
-    contentHash: 8ad22853804757e7c059efdb595ccd9332e8093f8d1f6e7db1a8c308d56ff4dd
+    contentHash: 0a3f2bac061ec15bd2d83d69ba62cfe0451ce30df92ec3796a97ab265f29ad12
     governanceHash: d9f768b3da4be04e83890eae632052f05a0776f4990c39b7b2ab2c3b6cc14524
-    stateFingerprint: c75cf329458ed52ea19c9d86ab09b8179b25e1377ca26cd29525d4d728da1487
+    stateFingerprint: 125f6d892a8c071405c1f8454dcae14438c8faf1d50db15907bfe8ae2d87f443
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
