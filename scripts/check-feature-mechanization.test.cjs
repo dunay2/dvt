@@ -3,6 +3,7 @@ const assert = require('node:assert/strict');
 
 const {
   extractFeatureMechanizationManifests,
+  validateFeatureImplementationManifests,
   validateFeatureMechanizationManifest,
   validateFeatureMechanizationDocs,
 } = require('./check-feature-mechanization.cjs');
@@ -183,6 +184,216 @@ test('validateFeatureMechanizationDocs accepts requested closed feature manifest
     ],
     {
       requiredFeatureIds: ['TF-E2-M-B'],
+    }
+  );
+
+  assert.deepEqual(result.errors, []);
+});
+
+test('validateFeatureImplementationManifests rejects changed files outside allowed implementation surfaces', () => {
+  const result = validateFeatureImplementationManifests(
+    [
+      {
+        sourcePath: 'plan.md',
+        manifest: validManifest,
+      },
+    ],
+    {
+      changedFiles: ['apps/web/src/app/views/canvas/unplannedCanvasShortcut.ts'],
+    }
+  );
+
+  assert.match(result.errors.join('\n'), /outside allowedImplementationSurfaces/);
+});
+
+test('validateFeatureImplementationManifests rejects changed files on forbidden implementation surfaces', () => {
+  const result = validateFeatureImplementationManifests(
+    [
+      {
+        sourcePath: 'plan.md',
+        manifest: {
+          ...validManifest,
+          allowedImplementationSurfaces: [
+            ...validManifest.allowedImplementationSurfaces,
+            'apps/web/src/app/views/canvas/**',
+          ],
+        },
+      },
+    ],
+    {
+      changedFiles: ['apps/web/src/app/views/canvas/tokenRefreshShortcut.ts'],
+    }
+  );
+
+  assert.match(result.errors.join('\n'), /matches forbiddenImplementationSurfaces/);
+});
+
+test('validateFeatureImplementationManifests applies forbidden surfaces only from the owning feature manifest', () => {
+  const canvasFeatureManifest = {
+    ...validManifest,
+    featureId: 'TF-E2-M-C',
+    allowedImplementationSurfaces: [
+      'apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.ts',
+    ],
+    forbiddenImplementationSurfaces: ['apps/api/** backend authorization changes'],
+  };
+  const previousFeatureManifest = {
+    ...validManifest,
+    featureId: 'TF-E2-M-B',
+    allowedImplementationSurfaces: ['apps/web/src/app/services/api/**'],
+    forbiddenImplementationSurfaces: ['apps/web/src/app/views/canvas/** JWT decoding'],
+  };
+
+  const result = validateFeatureImplementationManifests(
+    [
+      {
+        sourcePath: 'previous-plan.md',
+        manifest: previousFeatureManifest,
+      },
+      {
+        sourcePath: 'current-plan.md',
+        manifest: canvasFeatureManifest,
+      },
+    ],
+    {
+      changedFiles: ['apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.ts'],
+    }
+  );
+
+  assert.deepEqual(result.errors, []);
+});
+
+test('validateFeatureImplementationManifests rejects added exported code symbols missing from the manifest', () => {
+  const result = validateFeatureImplementationManifests(
+    [
+      {
+        sourcePath: 'plan.md',
+        manifest: validManifest,
+      },
+    ],
+    {
+      changedFiles: ['apps/web/src/app/views/canvas/canvasDraftAccessPostureModel.ts'],
+      addedLinesByPath: {
+        'apps/web/src/app/views/canvas/canvasDraftAccessPostureModel.ts': [
+          'export function createUnplannedCanvasPosture() {',
+          "  return 'unsafe';",
+          '}',
+        ],
+      },
+    }
+  );
+
+  assert.match(result.errors.join('\n'), /createUnplannedCanvasPosture/);
+  assert.match(result.errors.join('\n'), /not declared in feature mechanization symbols/);
+});
+
+test('validateFeatureImplementationManifests accepts added exported code symbols declared in the manifest', () => {
+  const result = validateFeatureImplementationManifests(
+    [
+      {
+        sourcePath: 'plan.md',
+        manifest: {
+          ...validManifest,
+          forbiddenImplementationSurfaces: ['apps/web/src/app/services/api/** token refresh'],
+          symbols: [
+            ...validManifest.symbols,
+            {
+              ...validManifest.symbols[0],
+              name: 'createPlannedCanvasPosture',
+            },
+          ],
+        },
+      },
+    ],
+    {
+      changedFiles: ['apps/web/src/app/views/canvas/canvasDraftAccessPostureModel.ts'],
+      addedLinesByPath: {
+        'apps/web/src/app/views/canvas/canvasDraftAccessPostureModel.ts': [
+          'export function createPlannedCanvasPosture() {',
+          "  return 'safe';",
+          '}',
+        ],
+      },
+    }
+  );
+
+  assert.deepEqual(result.errors, []);
+});
+
+test('validateFeatureImplementationManifests rejects Cypress intercepts for workspace graph drafts', () => {
+  const result = validateFeatureImplementationManifests(
+    [
+      {
+        sourcePath: 'plan.md',
+        manifest: {
+          ...validManifest,
+          allowedImplementationSurfaces: [
+            ...validManifest.allowedImplementationSurfaces,
+            'apps/web/cypress/e2e/canvas/canvas-draft-access-posture.cy.ts',
+          ],
+        },
+      },
+    ],
+    {
+      changedFiles: ['apps/web/cypress/e2e/canvas/canvas-draft-access-posture.cy.ts'],
+      fileContentsByPath: {
+        'apps/web/cypress/e2e/canvas/canvas-draft-access-posture.cy.ts':
+          "cy.intercept('GET', '/workspace/graph/draft', { fixture: 'draft.json' });",
+      },
+    }
+  );
+
+  assert.match(result.errors.join('\n'), /must not use cy\.intercept\(\).*workspace\/graph\/draft/);
+});
+
+test('validateFeatureImplementationManifests rejects Cypress direct PUT seeding for workspace graph drafts', () => {
+  const result = validateFeatureImplementationManifests(
+    [
+      {
+        sourcePath: 'plan.md',
+        manifest: {
+          ...validManifest,
+          allowedImplementationSurfaces: [
+            ...validManifest.allowedImplementationSurfaces,
+            'apps/web/cypress/e2e/canvas/canvas-draft-access-posture.cy.ts',
+          ],
+        },
+      },
+    ],
+    {
+      changedFiles: ['apps/web/cypress/e2e/canvas/canvas-draft-access-posture.cy.ts'],
+      fileContentsByPath: {
+        'apps/web/cypress/e2e/canvas/canvas-draft-access-posture.cy.ts':
+          "cy.request('PUT', '/workspace/graph/draft', { nodes: [] });",
+      },
+    }
+  );
+
+  assert.match(result.errors.join('\n'), /must not issue direct PUT.*workspace\/graph\/draft/);
+});
+
+test('validateFeatureImplementationManifests allows Cypress draft GET preflight with unrelated PUT requests', () => {
+  const result = validateFeatureImplementationManifests(
+    [
+      {
+        sourcePath: 'plan.md',
+        manifest: {
+          ...validManifest,
+          allowedImplementationSurfaces: [
+            ...validManifest.allowedImplementationSurfaces,
+            'apps/web/cypress/e2e/canvas/canvas-draft-access-posture.cy.ts',
+          ],
+        },
+      },
+    ],
+    {
+      changedFiles: ['apps/web/cypress/e2e/canvas/canvas-draft-access-posture.cy.ts'],
+      fileContentsByPath: {
+        'apps/web/cypress/e2e/canvas/canvas-draft-access-posture.cy.ts': [
+          "cy.request('GET', '/workspace/graph/draft');",
+          "cy.request('PUT', '/workspace/session', { active: true });",
+        ].join('\n'),
+      },
     }
   );
 

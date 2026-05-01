@@ -6,7 +6,7 @@ import type { MergedNodeDecoration } from '../../plugins/contracts/NodeRendering
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { DbtNodeData } from '../../components/canvas/DbtNodeComponent';
 
-export const CANVAS_NODE_DRAG_HANDLE_SELECTOR = '.canvas-node-drag-surface';
+export const CANVAS_NODE_DRAG_HANDLE_SELECTOR = '.canvas-node-drag-handle';
 
 type ColumnMeta = Array<{ name: string; type: string }>;
 type CanvasNodePosition = { x: number; y: number };

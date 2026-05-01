@@ -5,6 +5,7 @@
 
 const fs = require('node:fs');
 const path = require('node:path');
+const { execFileSync } = require('node:child_process');
 const yaml = require('js-yaml');
 
 const repoRoot = path.resolve(__dirname, '..');
@@ -15,6 +16,391 @@ const allowedRailTypes = new Set(['command', 'query']);
 
 function toPosix(filePath) {
   return filePath.replace(/\\/g, '/');
+}
+
+class FeatureImplementationGuard {
+  constructor(manifestEntries, options = {}) {
+    this.manifestEntries = manifestEntries.filter(
+      (entry) => entry?.manifest && typeof entry.manifest === 'object'
+    );
+    this.changedFiles = Array.from(new Set((options.changedFiles || []).map(toPosix))).sort();
+    this.addedLinesByPath = this.normalizePathMap(options.addedLinesByPath || {});
+    this.fileContentsByPath = this.normalizePathMap(options.fileContentsByPath || {});
+  }
+
+  validate() {
+    const errors = [];
+
+    this.validateAllowedImplementationSurfaces(errors);
+    this.validateForbiddenImplementationSurfaces(errors);
+    this.validateDeclaredSymbols(errors);
+    this.validateCypressDraftBoundary(errors);
+
+    return { errors };
+  }
+
+  normalizePathMap(pathMap) {
+    const normalized = new Map();
+    for (const [filePath, value] of Object.entries(pathMap)) {
+      normalized.set(toPosix(filePath), value);
+    }
+    return normalized;
+  }
+
+  validateAllowedImplementationSurfaces(errors) {
+    const allowedPatterns = this.collectSurfacePatterns('allowedImplementationSurfaces');
+
+    for (const filePath of this.changedFiles) {
+      if (allowedPatterns.some((pattern) => this.matchesSurface(filePath, pattern))) {
+        continue;
+      }
+
+      errors.push(
+        `${filePath} is outside allowedImplementationSurfaces for selected feature mechanization manifests.`
+      );
+    }
+  }
+
+  validateForbiddenImplementationSurfaces(errors) {
+    for (const filePath of this.changedFiles) {
+      const forbiddenPatterns = this.collectSurfacePatterns(
+        'forbiddenImplementationSurfaces',
+        this.findManifestEntriesAllowingFile(filePath)
+      );
+      const matchingPattern = forbiddenPatterns.find((pattern) =>
+        this.matchesSurface(filePath, pattern)
+      );
+      if (!matchingPattern) {
+        continue;
+      }
+
+      errors.push(
+        `${filePath} matches forbiddenImplementationSurfaces pattern ${matchingPattern.raw}.`
+      );
+    }
+  }
+
+  validateDeclaredSymbols(errors) {
+    const declaredSymbols = this.collectDeclaredSymbols();
+
+    for (const filePath of this.changedFiles) {
+      const addedLines = this.addedLinesByPath.get(filePath) || [];
+      for (const symbolName of this.extractAddedCodeSymbols(filePath, addedLines)) {
+        if (declaredSymbols.has(`${filePath}#${symbolName}`)) {
+          continue;
+        }
+
+        errors.push(
+          `${filePath} adds code symbol ${symbolName} that is not declared in feature mechanization symbols.`
+        );
+      }
+    }
+  }
+
+  validateCypressDraftBoundary(errors) {
+    for (const filePath of this.changedFiles) {
+      if (!this.isCypressFile(filePath)) {
+        continue;
+      }
+
+      const fileContent =
+        this.fileContentsByPath.get(filePath) ||
+        (this.addedLinesByPath.get(filePath) || []).join('\n');
+
+      if (this.hasWorkspaceGraphDraftIntercept(fileContent)) {
+        errors.push(`${filePath} must not use cy.intercept() for /workspace/graph/draft.`);
+      }
+
+      if (this.hasDirectWorkspaceGraphDraftPut(fileContent)) {
+        errors.push(
+          `${filePath} must not issue direct PUT to /workspace/graph/draft; use the UI flow.`
+        );
+      }
+    }
+  }
+
+  collectSurfacePatterns(fieldName, manifestEntries = this.manifestEntries) {
+    const patterns = [];
+
+    for (const entry of manifestEntries) {
+      for (const rawPattern of entry.manifest[fieldName] || []) {
+        const normalized = this.normalizeSurfacePattern(rawPattern);
+        if (normalized) {
+          patterns.push({
+            raw: rawPattern,
+            normalized,
+          });
+        }
+      }
+    }
+
+    return patterns;
+  }
+
+  findManifestEntriesAllowingFile(filePath) {
+    return this.manifestEntries.filter((entry) =>
+      this.collectSurfacePatterns('allowedImplementationSurfaces', [entry]).some((pattern) =>
+        this.matchesSurface(filePath, pattern)
+      )
+    );
+  }
+
+  collectDeclaredSymbols() {
+    const declaredSymbols = new Set();
+
+    for (const entry of this.manifestEntries) {
+      for (const symbol of entry.manifest.symbols || []) {
+        if (!isNonEmptyString(symbol?.name) || !isNonEmptyString(symbol?.path)) {
+          continue;
+        }
+
+        declaredSymbols.add(`${toPosix(symbol.path)}#${symbol.name}`);
+      }
+    }
+
+    return declaredSymbols;
+  }
+
+  normalizeSurfacePattern(rawPattern) {
+    if (!isNonEmptyString(rawPattern)) {
+      return null;
+    }
+
+    return toPosix(rawPattern.trim().split(/\s+/)[0]).replace(/^\.\//, '');
+  }
+
+  matchesSurface(filePath, pattern) {
+    const normalizedFilePath = toPosix(filePath).replace(/^\.\//, '');
+    const normalizedPattern = pattern.normalized.replace(/^\.\//, '');
+    const regex = new RegExp(`^${this.globPatternToRegex(normalizedPattern)}$`);
+
+    return regex.test(normalizedFilePath);
+  }
+
+  globPatternToRegex(pattern) {
+    let regex = '';
+
+    for (let index = 0; index < pattern.length; index += 1) {
+      const char = pattern[index];
+      const nextChar = pattern[index + 1];
+
+      if (char === '*' && nextChar === '*') {
+        regex += '.*';
+        index += 1;
+        continue;
+      }
+
+      if (char === '*') {
+        regex += '[^/]*';
+        continue;
+      }
+
+      regex += this.escapeRegex(char);
+    }
+
+    return regex;
+  }
+
+  escapeRegex(value) {
+    return value.replace(/[\\^$.*+?()[\]{}|]/g, '\\$&');
+  }
+
+  extractAddedCodeSymbols(filePath, addedLines) {
+    if (!this.isCodeFile(filePath)) {
+      return [];
+    }
+
+    const symbols = new Set();
+
+    for (const line of addedLines) {
+      if (/^\s/.test(line)) {
+        continue;
+      }
+
+      const declarationMatch = line.match(
+        /^(?:export\s+)?(?:async\s+)?(?:function|class|interface|type|enum)\s+([A-Za-z_$][\w$]*)\b/
+      );
+      if (declarationMatch) {
+        symbols.add(declarationMatch[1]);
+        continue;
+      }
+
+      const constantMatch = line.match(/^(?:export\s+)?(?:const|let|var)\s+([A-Za-z_$][\w$]*)\b/);
+      if (constantMatch) {
+        symbols.add(constantMatch[1]);
+        continue;
+      }
+
+      const namedExportMatch = line.match(/^export\s+\{\s*([^}]+)\s*\}/);
+      if (!namedExportMatch) {
+        continue;
+      }
+
+      for (const exportedSymbol of namedExportMatch[1].split(',')) {
+        const parts = exportedSymbol.trim().split(/\s+as\s+/);
+        const symbolName = parts[1] || parts[0];
+        if (/^[A-Za-z_$][\w$]*$/.test(symbolName)) {
+          symbols.add(symbolName);
+        }
+      }
+    }
+
+    return Array.from(symbols).sort();
+  }
+
+  isCodeFile(filePath) {
+    return /\.(?:cjs|mjs|js|jsx|ts|tsx)$/.test(filePath);
+  }
+
+  isCypressFile(filePath) {
+    return /(^|\/)cypress\//.test(filePath) || /\.cy\.(?:js|jsx|ts|tsx)$/.test(filePath);
+  }
+
+  hasWorkspaceGraphDraftIntercept(fileContent) {
+    return /cy\.intercept\s*\([\s\S]{0,600}workspace\/graph\/draft/.test(fileContent);
+  }
+
+  hasDirectWorkspaceGraphDraftPut(fileContent) {
+    const positionalPutPattern =
+      /cy\.request\s*\(\s*['"`]PUT['"`]\s*,\s*['"`][^'"`]*workspace\/graph\/draft\b/i;
+    const objectMethodBeforeUrlPattern =
+      /cy\.request\s*\(\s*\{[\s\S]{0,800}method\s*:\s*['"`]PUT['"`][\s\S]{0,800}(?:url|path|pathname)\s*:\s*['"`][^'"`]*workspace\/graph\/draft\b/i;
+    const objectUrlBeforeMethodPattern =
+      /cy\.request\s*\(\s*\{[\s\S]{0,800}(?:url|path|pathname)\s*:\s*['"`][^'"`]*workspace\/graph\/draft\b[\s\S]{0,800}method\s*:\s*['"`]PUT['"`]/i;
+
+    return (
+      positionalPutPattern.test(fileContent) ||
+      objectMethodBeforeUrlPattern.test(fileContent) ||
+      objectUrlBeforeMethodPattern.test(fileContent)
+    );
+  }
+}
+
+class FeatureMechanizationGitDiffReader {
+  constructor(options = {}) {
+    this.baseRef = options.baseRef || process.env.GIT_BASE || 'origin/main';
+    this.repoRootPath = options.repoRootPath || repoRoot;
+  }
+
+  read() {
+    const changedFiles = this.readChangedFiles();
+
+    return {
+      changedFiles,
+      addedLinesByPath: this.readAddedLinesByPath(changedFiles),
+      fileContentsByPath: this.readFileContentsByPath(changedFiles),
+    };
+  }
+
+  readChangedFiles() {
+    const changedFiles = new Set();
+    const nameOnlyCommands = [
+      ['diff', '--name-only', '--diff-filter=ACMR', `${this.baseRef}...HEAD`],
+      ['diff', '--name-only', '--diff-filter=ACMR', this.baseRef],
+      ['diff', '--cached', '--name-only', '--diff-filter=ACMR'],
+      ['diff', '--name-only', '--diff-filter=ACMR'],
+      ['ls-files', '--others', '--exclude-standard'],
+    ];
+
+    for (const command of nameOnlyCommands) {
+      for (const filePath of this.readGitLines(command)) {
+        changedFiles.add(toPosix(filePath));
+      }
+    }
+
+    return Array.from(changedFiles).sort();
+  }
+
+  readAddedLinesByPath(changedFiles) {
+    const addedLinesByPath = {};
+    const diffCommands = [
+      ['diff', '--unified=0', '--no-ext-diff', '--diff-filter=ACMR', `${this.baseRef}...HEAD`],
+      ['diff', '--unified=0', '--no-ext-diff', '--diff-filter=ACMR', this.baseRef],
+      ['diff', '--cached', '--unified=0', '--no-ext-diff', '--diff-filter=ACMR'],
+      ['diff', '--unified=0', '--no-ext-diff', '--diff-filter=ACMR'],
+    ];
+
+    for (const command of diffCommands) {
+      this.mergeAddedLines(addedLinesByPath, this.parseAddedLines(this.runGit(command)));
+    }
+
+    for (const filePath of changedFiles) {
+      const absolutePath = path.join(this.repoRootPath, filePath);
+      if (fs.existsSync(absolutePath) && !addedLinesByPath[filePath]) {
+        addedLinesByPath[filePath] = [];
+      }
+    }
+
+    for (const filePath of this.readGitLines(['ls-files', '--others', '--exclude-standard'])) {
+      const normalizedFilePath = toPosix(filePath);
+      const absolutePath = path.join(this.repoRootPath, normalizedFilePath);
+      if (fs.existsSync(absolutePath)) {
+        addedLinesByPath[normalizedFilePath] = fs.readFileSync(absolutePath, 'utf8').split(/\r?\n/);
+      }
+    }
+
+    return addedLinesByPath;
+  }
+
+  readFileContentsByPath(changedFiles) {
+    const fileContentsByPath = {};
+
+    for (const filePath of changedFiles) {
+      const absolutePath = path.join(this.repoRootPath, filePath);
+      if (fs.existsSync(absolutePath) && fs.statSync(absolutePath).isFile()) {
+        fileContentsByPath[filePath] = fs.readFileSync(absolutePath, 'utf8');
+      }
+    }
+
+    return fileContentsByPath;
+  }
+
+  readGitLines(args) {
+    return this.runGit(args)
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(Boolean);
+  }
+
+  runGit(args) {
+    try {
+      return execFileSync('git', args, {
+        cwd: this.repoRootPath,
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'ignore'],
+      });
+    } catch {
+      return '';
+    }
+  }
+
+  parseAddedLines(diffText) {
+    const addedLinesByPath = {};
+    let currentFilePath = null;
+
+    for (const line of diffText.split(/\r?\n/)) {
+      if (line.startsWith('+++ b/')) {
+        currentFilePath = toPosix(line.slice('+++ b/'.length));
+        addedLinesByPath[currentFilePath] ||= [];
+        continue;
+      }
+
+      if (!currentFilePath || !line.startsWith('+') || line.startsWith('+++')) {
+        continue;
+      }
+
+      addedLinesByPath[currentFilePath].push(line.slice(1));
+    }
+
+    return addedLinesByPath;
+  }
+
+  mergeAddedLines(target, source) {
+    for (const [filePath, addedLines] of Object.entries(source)) {
+      target[filePath] ||= [];
+      target[filePath].push(...addedLines);
+    }
+  }
 }
 
 function isNonEmptyString(value) {
@@ -307,6 +693,7 @@ function validateFeatureMechanizationDocs(docs, options = {}) {
 
   return {
     errors,
+    manifestEntries: manifests,
     manifestCount: manifests.length,
     features: manifests
       .map((entry) => entry.manifest?.featureId)
@@ -314,12 +701,33 @@ function validateFeatureMechanizationDocs(docs, options = {}) {
   };
 }
 
+function validateFeatureImplementationManifests(manifestEntries, options = {}) {
+  return new FeatureImplementationGuard(manifestEntries, options).validate();
+}
+
 function parseArgs(argv) {
   const requiredFeatureIds = [];
   let scanRoot = defaultScanRoot;
+  let implementation = false;
+  let baseRef = process.env.GIT_BASE || 'origin/main';
 
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
+    if (arg === '--implementation') {
+      implementation = true;
+      continue;
+    }
+
+    if (arg === '--base') {
+      const requestedBaseRef = argv[index + 1];
+      if (!requestedBaseRef) {
+        throw new Error('--base requires a Git ref.');
+      }
+      baseRef = requestedBaseRef;
+      index += 1;
+      continue;
+    }
+
     if (arg === '--feature') {
       const featureId = argv[index + 1];
       if (!featureId) {
@@ -344,6 +752,8 @@ function parseArgs(argv) {
   }
 
   return {
+    baseRef,
+    implementation,
     requiredFeatureIds,
     scanRoot,
   };
@@ -362,10 +772,28 @@ function main() {
   const result = validateFeatureMechanizationDocs(readFeatureMechanizationDocs(args.scanRoot), {
     requiredFeatureIds: args.requiredFeatureIds,
   });
+  const allErrors = [...result.errors];
 
-  if (result.errors.length > 0) {
+  if (args.implementation) {
+    const requiredFeatureIds = new Set(args.requiredFeatureIds);
+    const selectedManifestEntries =
+      requiredFeatureIds.size === 0
+        ? result.manifestEntries
+        : result.manifestEntries.filter((entry) =>
+            requiredFeatureIds.has(entry.manifest.featureId)
+          );
+    const diff = new FeatureMechanizationGitDiffReader({ baseRef: args.baseRef }).read();
+    const implementationResult = validateFeatureImplementationManifests(
+      selectedManifestEntries,
+      diff
+    );
+
+    allErrors.push(...implementationResult.errors);
+  }
+
+  if (allErrors.length > 0) {
     console.error('[docs:feature-mechanization] FAILED');
-    for (const error of result.errors) {
+    for (const error of allErrors) {
       console.error(`- ${error}`);
     }
     process.exitCode = 1;
@@ -382,8 +810,11 @@ if (require.main === module) {
 }
 
 module.exports = {
+  FeatureImplementationGuard,
+  FeatureMechanizationGitDiffReader,
   extractFeatureMechanizationManifests,
   readFeatureMechanizationDocs,
+  validateFeatureImplementationManifests,
   validateFeatureMechanizationDocs,
   validateFeatureMechanizationManifest,
 };

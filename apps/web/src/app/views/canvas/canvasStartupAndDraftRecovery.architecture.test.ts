@@ -296,7 +296,7 @@ describe('canvas startup and draft recovery architecture', () => {
       { x: 120, y: 80 },
       false
     );
-    expect(CANVAS_NODE_DRAG_HANDLE_SELECTOR).toBe('.canvas-node-drag-surface');
+    expect(CANVAS_NODE_DRAG_HANDLE_SELECTOR).toBe('.canvas-node-drag-handle');
     expect(mappedNode.dragHandle).toBe(CANVAS_NODE_DRAG_HANDLE_SELECTOR);
     expect(droppedNode.dragHandle).toBe(CANVAS_NODE_DRAG_HANDLE_SELECTOR);
 
@@ -328,6 +328,39 @@ describe('canvas startup and draft recovery architecture', () => {
     expect(workspaceServiceSource).not.toContain(
       "getJson<WorkspaceGraphSnapshot>('/workspace/graph'"
     );
+  });
+
+  it('guards first-authoring live proof against Cypress draft-boundary shortcuts', () => {
+    const proofModelSource = readAppSource('canvasFirstAuthoringLiveProof.ts');
+    const cypressHelperPath = 'apps/web/cypress/support/canvasFirstAuthoring.ts';
+    const cypressSpecPath = 'apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts';
+
+    expect(proofModelSource).toContain('export type CanvasFirstAuthoringLiveProof');
+    expect(proofModelSource).toContain('export function deriveCanvasFirstAuthoringLiveProof');
+    expect(proofModelSource).toContain('FIRST_AUTHORING_DEFAULTS');
+    expect(proofModelSource).toContain("canvasKind: 'transformation'");
+    expect(proofModelSource).toContain("canvasKind: 'dbt'");
+
+    expect(repoFileExists(cypressHelperPath)).toBe(true);
+    expect(repoFileExists(cypressSpecPath)).toBe(true);
+
+    const cypressHelperSource = readRepoFile(cypressHelperPath);
+    const cypressSpecSource = readRepoFile(cypressSpecPath);
+    const cypressSources = [cypressHelperSource, cypressSpecSource];
+
+    expect(cypressHelperSource).toContain('resolveLiveFirstAuthoringWorkspaceSession');
+    expect(cypressHelperSource).toContain('assertLiveFirstAuthoringDraftScopeIsClean');
+    expect(cypressHelperSource).toContain("method: 'GET'");
+    expect(cypressHelperSource).toContain('workspace_graph_draft_not_found');
+    expect(cypressSpecSource).toContain('canvas-node-drag-handle');
+    expect(cypressSpecSource).toContain('Source 1');
+
+    for (const source of cypressSources) {
+      expect(source).not.toContain('cy.intercept(');
+      expect(source).not.toContain("method: 'PUT'");
+      expect(source).not.toContain('method: "PUT"');
+      expect(source).not.toContain('seedLiveSelectedClosureDraft');
+    }
   });
 
   it('keeps projection and replacement command decisions behind named semantic helpers', () => {

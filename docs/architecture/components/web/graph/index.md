@@ -32,6 +32,7 @@ Canonical navigation for the Graph and Canvas architecture pack.
 - [Canvas Startup And Draft Recovery Component](./canvas-startup-and-draft-recovery-component.md)
 - [Canvas Startup And Draft Recovery User Stories](./canvas-startup-and-draft-recovery-user-stories.md)
 - [Canvas Draft Access Posture Component](./canvas-draft-access-posture-component.md)
+- [Canvas First Authoring Live Proof Component](./canvas-first-authoring-live-proof-component.md)
 - [Workspace Graph Draft Test Fixture Boundary Component](./workspace-graph-draft-test-fixture-boundary-component.md)
 - [Workspace Graph Draft Test Fixture Boundary User Stories](./workspace-graph-draft-test-fixture-boundary-user-stories.md)
 - [Canvas Graph Lifecycle Component](./canvas-graph-lifecycle-component.md)

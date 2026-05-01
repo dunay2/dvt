@@ -2697,21 +2697,23 @@ tasks:
     effort_points: 3
     progress_pct: 35
     evidence_refs:
+      - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-m-c-first-canvas-first-node-live-proof-implementation-plan-20260501.md
       - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-k-playground-complete-cycle-stories-20260424.md
       - apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
       - scripts/run-selected-closure-live-proof.cjs
+      - docs/architecture/components/web/graph/canvas-first-authoring-live-proof-component.md
       - docs/architecture/components/web/graph/canvas-layout-persistence-component.md
       - apps/web/src/app/views/canvas/useCanvasNodeChangeHandlers.test.tsx
       - apps/web/src/app/views/canvas/useCanvasViewportGraphModel.test.tsx
       - apps/web/src/app/views/canvas/useCanvasController.persistence.test.tsx
       - apps/web/src/app/views/canvas/CanvasViewport.test.tsx
     status_reason: >-
-      Active from the same interface review. The restarted browser session now exposes the
-      create-canvas entrypoint and existing canvas nodes after a real protected draft read, and the
-      drag stack is covered against stale React Flow node snapshots, viewport reprojection resets,
-      selection suppression, and stale drag-stop payload persistence. Remaining proof still needs a
-      clean first-canvas and first-node browser lane against authoritative draft persistence.
-    last_verified: '2026-04-29'
+      Mechanized for implementation. The first-canvas and first-node live proof now has a closed
+      command/query rail, DDD object map, component guide, user stories, negative scenarios,
+      red/green sequence, and feature mechanization manifest. Code implementation remains open and
+      must follow the listed TDD, architecture, and Cypress gates without draft endpoint
+      interception.
+    last_verified: '2026-05-01'
   - task_id: TF-E2-M-D
     parent_task: TF-E2-M
     priority: P1
