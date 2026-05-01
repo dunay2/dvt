@@ -1,0 +1,904 @@
+---
+title: TF-E2-M-C first canvas and first node live proof implementation plan 2026-05-01
+status: Draft
+owner: Frontend / Architecture / Product
+last_reviewed: 2026-05-01
+planning_type: proposal
+lane: E
+task_ids:
+  - TF-E2-M-C
+---
+
+# TF-E2-M-C First Canvas And First Node Live Proof Implementation Plan
+
+> **For agentic workers:** REQUIRED SUB-SKILL: Use
+> superpowers:subagent-driven-development or superpowers:executing-plans to
+> implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for
+> tracking.
+
+**Goal:** Ship the first clean Canvas authoring lane through the live protected
+runtime. A user opens `/canvas` with no selected document, creates the first
+`transformation` or `dbt` canvas, adds the first node, drags it from the
+intended handle, saves through the authoritative draft boundary, reloads, and
+sees the same document and layout without Cypress intercepting draft requests.
+
+**Architecture:** Canvas remains a hexagonal route module. The route consumes
+the `GetWorkspaceGraphDraft` query rail, sends write intent through
+`CreateCanvas`, `CreateCanvasNode`, `SaveWorkspaceGraphDraft`, and the local
+layout persistence policy, then renders only the authoritative draft projection
+and route-local layout projection. A new first-authoring proof model owns the
+semantic definition of "first canvas and first node are ready" so Cypress,
+unit tests, architecture tests, and docs validate the same feature boundary.
+
+**Tech Stack:** React 18, TypeScript, Vitest, Cypress, TanStack Query, React
+Flow, existing Canvas copy catalogs, existing protected workspace graph draft
+HTTP boundary, and existing Canvas draft/session persistence seams.
+
+---
+
+## Governing Sources
+
+- `AGENTS.md`
+- `docs/planning/status/governance-document-rule-inventory.md`
+- `docs/guides/ai-work-protocol.md`
+- `docs/architecture/command-query-rail-governance.md`
+- `docs/architecture/fowler-opportunity-planning-governance.md`
+- `docs/planning/state/agent-lane-e.yaml`
+- `docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-k-playground-complete-cycle-stories-20260424.md`
+- `docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-m-b-canvas-draft-denial-posture-implementation-plan-20260501.md`
+- `docs/architecture/components/web/graph/canvas-first-authoring-live-proof-component.md`
+- `docs/architecture/components/web/graph/canvas-layout-persistence-component.md`
+- `docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-component.md`
+- `docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-user-stories.md`
+- `docs/architecture/components/web/graph/canvas-draft-access-posture-component.md`
+- `packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphDraft.v1.ts`
+
+## Closed Scope
+
+This plan implements only `TF-E2-M-C`.
+
+In scope:
+
+- clean first-canvas creation from the live protected Canvas route;
+- `transformation` and `dbt` first-canvas variants;
+- first-node creation only after an authoritative empty canvas save has
+  settled;
+- explicit drag-handle movement and route-local layout persistence;
+- replacing the current whole-card drag surface with a named node drag handle;
+- hard reload or route revisit proving authoritative draft and layout restore;
+- live Cypress proof with no intercepted draft reads or writes;
+- unit tests, architecture tests, component guide, user stories, and feature
+  mechanization manifest;
+- repository-level feature mechanization guard proving real diff surfaces,
+  forbidden surfaces, declared symbols, and Cypress draft-boundary discipline.
+
+Out of scope:
+
+- product login or tenant-admin management;
+- backend authorization changes;
+- planner preview or run-start behavior changes;
+- multi-user collaboration conflict resolution beyond existing CAS behavior;
+- new workspace graph draft contract versions;
+- new plugin execution behavior;
+- visual redesign of Canvas.
+
+## Root Cause
+
+The route now has protected draft reads, draft denial posture, and node/layout
+persistence pieces, but the first clean authoring lane is still not a single
+semantic feature. Existing tests prove parts of the path: create-canvas command
+eligibility, stale React Flow drag payload handling, viewport projection, and
+selected closure proof. They do not prove that a clean live workspace can create
+the first document, add the first node after authoritative save, persist a drag
+from the intended handle, and restore through the same protected draft boundary.
+
+The product risk is high because a user can see Canvas and still have no
+actionable first-authoring path. Mature systems normally protect this with a
+walking-skeleton acceptance lane: one end-to-end product path that crosses the
+real boundary and enough semantic tests to stop local UI shims from replacing
+domain behavior.
+
+## Selected Design
+
+Introduce a route-local proof model for first authoring and use it as the
+closed semantic anchor for implementation.
+
+```ts
+export type CanvasFirstAuthoringLiveProof =
+  | CanvasFirstAuthoringNeedsCanvasProof
+  | CanvasFirstAuthoringCanvasCreatedProof
+  | CanvasFirstAuthoringNodeCreatedProof
+  | CanvasFirstAuthoringLayoutPersistedProof
+  | CanvasFirstAuthoringRestoredProof;
+```
+
+The model is pure. It receives the settled draft projection, active canvas
+document, authoring command result, layout persistence result, and reload
+projection. It never reads React state directly and never calls HTTP. Consumers
+use it for assertions and diagnostics, not for inventing new behavior.
+
+```mermaid
+flowchart LR
+    Draft["GetWorkspaceGraphDraft query"]
+    Empty["needs_canvas route state"]
+    CreateCanvas["CreateCanvas command"]
+    EmptySave["SaveWorkspaceGraphDraft empty canvas"]
+    CreateNode["CreateCanvasNode command"]
+    NodeSave["SaveWorkspaceGraphDraft node graph"]
+    Drag["PersistCanvasLayout command"]
+    Reload["GetWorkspaceGraphDraft after reload"]
+    Proof["CanvasFirstAuthoringLiveProof"]
+    Cypress["Cypress live first-authoring spec"]
+
+    Draft --> Empty
+    Empty --> CreateCanvas
+    CreateCanvas --> EmptySave
+    EmptySave --> CreateNode
+    CreateNode --> NodeSave
+    NodeSave --> Drag
+    Drag --> Reload
+    Reload --> Proof
+    Proof --> Cypress
+```
+
+Rejected alternatives:
+
+- Patch Cypress only. Rejected because browser assertions without semantic
+  model ownership let route internals drift.
+- Treat seed nodes as acceptable first-canvas proof. Rejected because the user
+  reported seeded nodes as garbage when no project or canvas has been created.
+- Add backend fixtures for this slice. Rejected because the target explicitly
+  requires no intercepted draft requests and the existing protected runtime must
+  be exercised.
+- Fold the proof into the draft access posture model. Rejected because access
+  posture owns admission and denial, while first authoring owns product
+  progression after writable access is established.
+
+## Command And Query Catalog Binding
+
+No implementation is valid unless every externally visible behavior below is
+represented by this rail catalog and owned by a DDD object.
+
+| Rail                      | Type    | DDD owner                             | Slice rule                                                      |
+| ------------------------- | ------- | ------------------------------------- | --------------------------------------------------------------- |
+| `GetWorkspaceGraphDraft`  | query   | `WorkspaceGraphDraft` read boundary   | authoritative source for empty, created, and restored truth     |
+| `CreateCanvas`            | command | `CanvasDocument` aggregate            | creates exactly one typed first canvas from `needs_canvas`      |
+| `CreateCanvasNode`        | command | `CanvasAuthoringGraph` aggregate      | creates the first node only for an existing writable canvas     |
+| `SaveWorkspaceGraphDraft` | command | `WorkspaceGraphDraft` write boundary  | persists canvas and node graph through existing CAS policy      |
+| `PersistCanvasLayout`     | command | `CanvasLayoutProjection` value object | persists route-local drag-stop coordinates from intended handle |
+| `GetCanvasLayout`         | query   | `CanvasLayoutProjection` value object | restores route-local coordinates after reload or route revisit  |
+
+`PersistCanvasLayout` and `GetCanvasLayout` are route-local Canvas rails. If
+implementation moves layout authority to backend storage, the command-query
+catalog and this plan must be revised before code changes.
+
+## Closed First-Authoring Defaults
+
+The first-node path is closed so implementation does not choose node kinds at
+coding time.
+
+| Canvas kind      | Create button label | Command title           | First node kind | First node id  | First node label |
+| ---------------- | ------------------- | ----------------------- | --------------- | -------------- | ---------------- |
+| `transformation` | `Transformation`    | `Transformation canvas` | `dvt:source`    | `dvt-source-1` | `Source 1`       |
+| `dbt`            | `dbt`               | `dbt canvas`            | `dbt:source`    | `dbt-source-1` | `Source 1`       |
+
+These defaults come from the existing plugin registrations:
+
+- `apps/web/src/app/plugins/dvt/dvtContributions.ts`
+- `apps/web/src/app/plugins/dbt/dbtContributions.ts`
+- `apps/web/src/app/views/canvas/canvasAuthoringNodeCommand.ts`
+
+Any change to the first-node defaults must update this table, the component
+guide, the feature mechanization manifest, the user stories, the unit tests,
+the architecture guard, and the Cypress flow in the same branch.
+
+## Live Workspace Strategy
+
+The Cypress live proof must be repeatable without seeding first-authoring
+success.
+
+- The spec uses a test-owned workspace scope derived from
+  `resolveLiveWorkspaceSession()` and a deterministic suffix
+  `tf-e2-m-c-first-authoring`.
+- Before the UI flow starts, the helper may issue a protected `GET
+/workspace/graph/draft` for that scope only as a preflight.
+- If the preflight returns `404`, the test proceeds through the UI.
+- If the preflight returns `200`, the test fails with a dirty-scope message
+  before opening Canvas.
+- The helper must not issue `PUT /workspace/graph/draft` before the UI
+  `CreateCanvas` path runs.
+- The spec must not use `cy.intercept()` for `/workspace/graph/draft` reads or
+  writes.
+
+This keeps the acceptance proof honest. It proves the product path instead of
+creating the expected backend state outside the route.
+
+## DDD Objects
+
+| Object                          | Kind                 | Owner                                 | Invariant                                                       |
+| ------------------------------- | -------------------- | ------------------------------------- | --------------------------------------------------------------- |
+| `WorkspaceGraphDraft`           | Aggregate boundary   | protected draft contract              | route graph truth comes from the protected draft query          |
+| `CanvasDocument`                | Aggregate            | Canvas authoring                      | first document is typed and created once from empty draft truth |
+| `CanvasAuthoringGraph`          | Aggregate            | Canvas authoring                      | nodes belong to an active canvas document                       |
+| `CanvasNodeDraft`               | Entity               | Canvas authoring                      | node identity and type survive save and reload                  |
+| `CanvasLayoutProjection`        | Value object         | Canvas viewport layout                | coordinates are renderer-local and never overwrite graph truth  |
+| `CanvasFirstAuthoringLiveProof` | Domain service model | Canvas first-authoring proof          | each transition is observable and backed by tests               |
+| `CanvasDraftAccessPosture`      | Policy model         | Canvas draft access posture component | authoring commands run only when posture is writable            |
+| `WorkspaceGraphDraftRevision`   | Value object         | protected draft contract              | saves use existing revision and CAS behavior                    |
+
+## Implementation File Map
+
+| File                                                                                                                      | Action | Owned concern                                                                               |
+| ------------------------------------------------------------------------------------------------------------------------- | ------ | ------------------------------------------------------------------------------------------- |
+| `apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.ts`                                                          | Create | Pure proof model for first canvas, first node, layout persistence, and restore.             |
+| `apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.test.ts`                                                     | Create | Exhaustive positive and negative proof-state tests.                                         |
+| `apps/web/src/app/views/canvas/canvasHostCycleState.ts`                                                                   | Modify | Keep clean `needs_canvas` state distinct from seeded or restored document state.            |
+| `apps/web/src/app/views/canvas/canvasHostCycleState.test.ts`                                                              | Modify | Prove clean startup has no seeded nodes before document creation.                           |
+| `apps/web/src/app/views/canvas/canvasCreateCanvasDocumentCommand.ts`                                                      | Modify | Ensure first-canvas command emits typed, empty, saveable document intent.                   |
+| `apps/web/src/app/views/canvas/canvasCreateCanvasDocumentCommand.test.ts`                                                 | Modify | Prove transformation and dbt first-canvas variants plus negative duplicate path.            |
+| `apps/web/src/app/views/canvas/useCanvasController.ts`                                                                    | Modify | Compose first-canvas and first-node command flow through existing ports.                    |
+| `apps/web/src/app/views/canvas/useCanvasController.core.test.tsx`                                                         | Modify | Prove first-node creation waits for authoritative first-canvas save.                        |
+| `apps/web/src/app/views/canvas/useCanvasController.persistence.test.tsx`                                                  | Modify | Prove created node and layout persist through draft/session boundaries.                     |
+| `apps/web/src/app/views/canvas/useCanvasNodeAuthoringHandlers.ts`                                                         | Modify | Keep first-node creation behind writable draft posture and active canvas guard.             |
+| `apps/web/src/app/views/canvas/useCanvasNodeChangeHandlers.test.tsx`                                                      | Modify | Prove drag-stop payload coordinates survive stale React Flow node arrays.                   |
+| `apps/web/src/app/views/canvas/useCanvasViewportGraphModel.test.tsx`                                                      | Modify | Prove restored draft and local layout project into one visible node.                        |
+| `apps/web/src/app/views/canvas/canvasNodeMapper.ts`                                                                       | Modify | Point React Flow drag handle at a semantic node-handle selector.                            |
+| `apps/web/src/app/components/canvas/DbtNodeComponent.architecture.test.ts`                                                | Modify | Prove the drag selector points to a semantic visible handle.                                |
+| `apps/web/src/app/components/canvas/DbtNodeComponent.tsx`                                                                 | Modify | Render a visible semantic drag handle inside the node shell.                                |
+| `apps/web/src/app/components/canvas/DbtNodeComponent.module.css`                                                          | Modify | Keep the drag handle stable without changing graph semantics.                               |
+| `apps/web/src/app/views/canvas/CanvasViewport.test.tsx`                                                                   | Modify | Prove node drag uses the intended handle, not the whole card.                               |
+| `apps/web/src/app/views/canvas/canvasStartupAndDraftRecovery.architecture.test.ts`                                        | Modify | Guard semantic first-authoring proof ownership and no seeded startup nodes.                 |
+| `apps/web/cypress/support/canvasFirstAuthoring.ts`                                                                        | Create | Cypress helpers for live first-canvas and first-node assertions.                            |
+| `apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts`                                                           | Create | Live user flow: create, add, drag, save, reload, restore.                                   |
+| `docs/architecture/components/web/graph/canvas-first-authoring-live-proof-component.md`                                   | Create | Component API, invariants, transitions, consumers, and diagrams.                            |
+| `docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-user-stories.md`                                | Modify | Add TF-E2-M-C user stories and scenario matrix rows.                                        |
+| `docs/architecture/components/web/graph/index.md`                                                                         | Modify | Keep component navigation aligned.                                                          |
+| `docs/.manifest.json`                                                                                                     | Modify | Keep generated governance manifest aligned.                                                 |
+| `docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-m-b-canvas-draft-denial-posture-implementation-plan-20260501.md` | Modify | Narrow prior forbidden surfaces so Canvas feature work is not blocked by JWT wording drift. |
+| `docs/planning/proposals/portfolio-map-20260403.md`                                                                       | Modify | Keep mandatory proposal navigation aligned.                                                 |
+| `docs/planning/state/agent-lane-e.yaml`                                                                                   | Modify | Keep Lane E status and evidence refs aligned.                                               |
+| `docs/planning/status/generated-code-state.md`                                                                            | Modify | Keep generated source/test inventory aligned after Cypress additions.                       |
+| `docs/planning/status/governance-document-rule-inventory.md`                                                              | Modify | Document implementation-mode enforcement.                                                   |
+| `docs/planning/status/system-governance-document-unit-map-20260501.md`                                                    | Modify | Keep generated governance document unit map aligned after docs additions.                   |
+| `docs/planning/status/system-governance-document-unit-map.docs.yaml`                                                      | Modify | Keep generated governance document unit data aligned after docs additions.                  |
+| `package.json`                                                                                                            | Modify | Add and wire implementation-mode feature mechanization checks.                              |
+| `scripts/check-feature-mechanization.cjs`                                                                                 | Modify | Enforce real diff, surface, symbol, and Cypress draft-boundary rules.                       |
+| `scripts/check-feature-mechanization.test.cjs`                                                                            | Modify | Unit-test implementation-mode guard behavior and negative paths.                            |
+
+## Feature Mechanization Manifest
+
+This manifest is the machine-readable closure contract for the implementation
+plan. It is validated by:
+
+```powershell
+pnpm docs:feature-mechanization:tf-e2-m-c
+```
+
+```feature-mechanization
+version: 1
+featureId: TF-E2-M-C
+mechanizationStatus: closed
+noHumanDecisionsRemaining: true
+implementationPlan: docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-m-c-first-canvas-first-node-live-proof-implementation-plan-20260501.md
+componentGuides:
+  - docs/architecture/components/web/graph/canvas-first-authoring-live-proof-component.md
+userStories:
+  - docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-user-stories.md
+governingSources:
+  - AGENTS.md
+  - docs/planning/status/governance-document-rule-inventory.md
+  - docs/guides/ai-work-protocol.md
+  - docs/architecture/command-query-rail-governance.md
+  - docs/architecture/fowler-opportunity-planning-governance.md
+  - docs/planning/state/agent-lane-e.yaml
+  - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-k-playground-complete-cycle-stories-20260424.md
+  - docs/architecture/components/web/graph/canvas-layout-persistence-component.md
+  - docs/architecture/components/web/graph/canvas-draft-access-posture-component.md
+allowedImplementationSurfaces:
+  - apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.ts
+  - apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.test.ts
+  - apps/web/src/app/views/canvas/canvasHostCycleState.ts
+  - apps/web/src/app/views/canvas/canvasHostCycleState.test.ts
+  - apps/web/src/app/views/canvas/canvasCreateCanvasDocumentCommand.ts
+  - apps/web/src/app/views/canvas/canvasCreateCanvasDocumentCommand.test.ts
+  - apps/web/src/app/views/canvas/useCanvasController.ts
+  - apps/web/src/app/views/canvas/useCanvasController.core.test.tsx
+  - apps/web/src/app/views/canvas/useCanvasController.persistence.test.tsx
+  - apps/web/src/app/views/canvas/useCanvasNodeAuthoringHandlers.ts
+  - apps/web/src/app/views/canvas/useCanvasNodeChangeHandlers.test.tsx
+  - apps/web/src/app/views/canvas/useCanvasViewportGraphModel.test.tsx
+  - apps/web/src/app/views/canvas/canvasNodeMapper.ts
+  - apps/web/src/app/components/canvas/DbtNodeComponent.architecture.test.ts
+  - apps/web/src/app/components/canvas/DbtNodeComponent.tsx
+  - apps/web/src/app/components/canvas/DbtNodeComponent.module.css
+  - apps/web/src/app/views/canvas/CanvasViewport.test.tsx
+  - apps/web/src/app/views/canvas/canvasStartupAndDraftRecovery.architecture.test.ts
+  - apps/web/cypress/support/canvasFirstAuthoring.ts
+  - apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts
+  - docs/architecture/components/web/graph/canvas-first-authoring-live-proof-component.md
+  - docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-user-stories.md
+  - docs/architecture/components/web/graph/index.md
+  - docs/.manifest.json
+  - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-m-b-canvas-draft-denial-posture-implementation-plan-20260501.md
+  - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-m-c-first-canvas-first-node-live-proof-implementation-plan-20260501.md
+  - docs/planning/proposals/portfolio-map-20260403.md
+  - docs/planning/state/agent-lane-e.yaml
+  - docs/planning/status/generated-code-state.md
+  - docs/planning/status/governance-document-rule-inventory.md
+  - docs/planning/status/system-governance-document-unit-map-20260501.md
+  - docs/planning/status/system-governance-document-unit-map.docs.yaml
+  - package.json
+  - scripts/check-feature-mechanization.cjs
+  - scripts/check-feature-mechanization.test.cjs
+forbiddenImplementationSurfaces:
+  - apps/web/src/app/services/api/** token refresh behavior
+  - apps/api/** backend authorization or draft persistence behavior
+  - packages/@dvt/contracts/** contract changes
+  - packages/@dvt/engine/** runtime execution behavior
+  - apps/web/src/app/views/canvas/canvasDraftLocalNodeCatalog.ts seeded project nodes in clean startup
+commandQueryRails:
+  - name: GetWorkspaceGraphDraft
+    type: query
+    dddOwner: WorkspaceGraphDraft read boundary
+  - name: CreateCanvas
+    type: command
+    dddOwner: CanvasDocument aggregate
+  - name: CreateCanvasNode
+    type: command
+    dddOwner: CanvasAuthoringGraph aggregate
+  - name: SaveWorkspaceGraphDraft
+    type: command
+    dddOwner: WorkspaceGraphDraft write boundary
+  - name: PersistCanvasLayout
+    type: command
+    dddOwner: CanvasLayoutProjection value object
+  - name: GetCanvasLayout
+    type: query
+    dddOwner: CanvasLayoutProjection value object
+  - name: ValidateFeatureMechanizationImplementation
+    type: command
+    dddOwner: Repository feature mechanization guard
+domainObjects:
+  - WorkspaceGraphDraft
+  - CanvasDocument
+  - CanvasAuthoringGraph
+  - CanvasNodeDraft
+  - CanvasLayoutProjection
+  - CanvasFirstAuthoringLiveProof
+  - CanvasDraftAccessPosture
+  - WorkspaceGraphDraftRevision
+fowlerSignals:
+  - walking-skeleton user journey over the real boundary
+  - explicit domain service for first authoring proof
+  - semantic architecture guard instead of barrel-only tests
+  - no fake backend intercepts in acceptance coverage
+  - no direct draft seeding before first-authoring UI commands
+  - local layout projection separated from graph authority
+architectureGuards:
+  - apps/web/src/app/views/canvas/canvasStartupAndDraftRecovery.architecture.test.ts
+  - docs/architecture/components/web/graph/canvas-first-authoring-live-proof-component.md
+cypressFlows:
+  - apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts
+completionGate:
+  - pnpm docs:feature-mechanization:tf-e2-m-c
+  - pnpm docs:feature-mechanization:implementation
+  - pnpm test:docs:feature-mechanization
+  - pnpm --filter @dvt/web test -- canvasFirstAuthoringLiveProof.test.ts
+  - pnpm --filter @dvt/web test -- canvasHostCycleState.test.ts canvasCreateCanvasDocumentCommand.test.ts
+  - pnpm --filter @dvt/web test -- useCanvasController.core.test.tsx useCanvasController.persistence.test.tsx
+  - pnpm --filter @dvt/web test -- useCanvasNodeChangeHandlers.test.tsx useCanvasViewportGraphModel.test.tsx CanvasViewport.test.tsx
+  - pnpm --filter @dvt/web test -- DbtNodeComponent.architecture.test.ts
+  - pnpm --filter @dvt/web test -- canvasStartupAndDraftRecovery.architecture.test.ts
+  - pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/canvas/canvas-first-authoring-live.cy.ts
+  - pnpm verify:prepush
+redGreenCycles:
+  - id: tf-e2-m-c-mechanization-manifest
+    redTest: node scripts/check-feature-mechanization.cjs --feature TF-E2-M-C
+    expectedFailure: Required feature TF-E2-M-C has no feature mechanization manifest.
+    patchSurfaces:
+      - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-m-c-first-canvas-first-node-live-proof-implementation-plan-20260501.md
+      - package.json
+    greenTest: pnpm docs:feature-mechanization:tf-e2-m-c
+  - id: repository-implementation-mechanization-guard
+    redTest: pnpm test:docs:feature-mechanization
+    expectedFailure: validateFeatureImplementationManifests is not a function.
+    patchSurfaces:
+      - scripts/check-feature-mechanization.cjs
+      - scripts/check-feature-mechanization.test.cjs
+      - package.json
+      - docs/planning/status/governance-document-rule-inventory.md
+      - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-m-c-first-canvas-first-node-live-proof-implementation-plan-20260501.md
+    greenTest: pnpm test:docs:feature-mechanization
+  - id: first-authoring-proof-model
+    redTest: pnpm --filter @dvt/web test -- canvasFirstAuthoringLiveProof.test.ts
+    expectedFailure: first-authoring proof model and tests do not exist.
+    patchSurfaces:
+      - apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.ts
+      - apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.test.ts
+    greenTest: pnpm --filter @dvt/web test -- canvasFirstAuthoringLiveProof.test.ts
+  - id: clean-first-canvas-command
+    redTest: pnpm --filter @dvt/web test -- canvasHostCycleState.test.ts canvasCreateCanvasDocumentCommand.test.ts
+    expectedFailure: clean startup, typed first-canvas, and duplicate negative path are not proven together.
+    patchSurfaces:
+      - apps/web/src/app/views/canvas/canvasHostCycleState.ts
+      - apps/web/src/app/views/canvas/canvasHostCycleState.test.ts
+      - apps/web/src/app/views/canvas/canvasCreateCanvasDocumentCommand.ts
+      - apps/web/src/app/views/canvas/canvasCreateCanvasDocumentCommand.test.ts
+    greenTest: pnpm --filter @dvt/web test -- canvasHostCycleState.test.ts canvasCreateCanvasDocumentCommand.test.ts
+  - id: first-node-and-layout-persistence
+    redTest: pnpm --filter @dvt/web test -- useCanvasController.core.test.tsx useCanvasController.persistence.test.tsx useCanvasNodeChangeHandlers.test.tsx useCanvasViewportGraphModel.test.tsx CanvasViewport.test.tsx
+    expectedFailure: first-node creation after authoritative first-canvas save, semantic drag-handle behavior, and layout persistence are not closed.
+    patchSurfaces:
+      - apps/web/src/app/views/canvas/useCanvasController.ts
+      - apps/web/src/app/views/canvas/useCanvasController.core.test.tsx
+      - apps/web/src/app/views/canvas/useCanvasController.persistence.test.tsx
+      - apps/web/src/app/views/canvas/useCanvasNodeAuthoringHandlers.ts
+      - apps/web/src/app/views/canvas/useCanvasNodeChangeHandlers.test.tsx
+      - apps/web/src/app/views/canvas/useCanvasViewportGraphModel.test.tsx
+      - apps/web/src/app/views/canvas/canvasNodeMapper.ts
+      - apps/web/src/app/components/canvas/DbtNodeComponent.architecture.test.ts
+      - apps/web/src/app/components/canvas/DbtNodeComponent.tsx
+      - apps/web/src/app/components/canvas/DbtNodeComponent.module.css
+      - apps/web/src/app/views/canvas/CanvasViewport.test.tsx
+    greenTest: pnpm --filter @dvt/web test -- useCanvasController.core.test.tsx useCanvasController.persistence.test.tsx useCanvasNodeChangeHandlers.test.tsx useCanvasViewportGraphModel.test.tsx CanvasViewport.test.tsx
+  - id: semantic-architecture-guard
+    redTest: pnpm --filter @dvt/web test -- canvasStartupAndDraftRecovery.architecture.test.ts
+    expectedFailure: architecture guard does not require first-authoring proof ownership or no seeded clean startup nodes.
+    patchSurfaces:
+      - apps/web/src/app/views/canvas/canvasStartupAndDraftRecovery.architecture.test.ts
+      - docs/architecture/components/web/graph/canvas-first-authoring-live-proof-component.md
+      - docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-user-stories.md
+    greenTest: pnpm --filter @dvt/web test -- canvasStartupAndDraftRecovery.architecture.test.ts
+  - id: cypress-live-first-authoring
+    redTest: pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/canvas/canvas-first-authoring-live.cy.ts
+    expectedFailure: live Cypress proof for clean-scope preflight, create, add, drag, save, reload, and restore does not exist.
+    patchSurfaces:
+      - apps/web/cypress/support/canvasFirstAuthoring.ts
+      - apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts
+    greenTest: pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/canvas/canvas-first-authoring-live.cy.ts
+symbols:
+  - name: FeatureImplementationGuard
+    path: scripts/check-feature-mechanization.cjs
+    dddOwner: Repository feature mechanization guard
+    cqRails:
+      - ValidateFeatureMechanizationImplementation
+    fowlerSignals:
+      - mechanical feature implementation contract
+      - semantic architecture guard
+    architectureGuard: scripts/check-feature-mechanization.test.cjs
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts
+    unitTests:
+      - scripts/check-feature-mechanization.test.cjs
+  - name: FeatureMechanizationGitDiffReader
+    path: scripts/check-feature-mechanization.cjs
+    dddOwner: Repository feature mechanization guard
+    cqRails:
+      - ValidateFeatureMechanizationImplementation
+    fowlerSignals:
+      - real diff validation
+      - no local shortcut implementation
+    architectureGuard: scripts/check-feature-mechanization.test.cjs
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts
+    unitTests:
+      - scripts/check-feature-mechanization.test.cjs
+  - name: validateFeatureImplementationManifests
+    path: scripts/check-feature-mechanization.cjs
+    dddOwner: Repository feature mechanization guard
+    cqRails:
+      - ValidateFeatureMechanizationImplementation
+    fowlerSignals:
+      - C&Q and DDD bound implementation gate
+      - forbidden surface protection
+    architectureGuard: scripts/check-feature-mechanization.test.cjs
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts
+    unitTests:
+      - scripts/check-feature-mechanization.test.cjs
+  - name: CanvasFirstAuthoringLiveProofTransition
+    path: apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.ts
+    dddOwner: Canvas first-authoring proof domain service
+    cqRails:
+      - GetWorkspaceGraphDraft
+      - CreateCanvas
+      - CreateCanvasNode
+      - PersistCanvasLayout
+      - GetCanvasLayout
+    fowlerSignals:
+      - closed transition vocabulary
+      - semantic encapsulation
+    architectureGuard: apps/web/src/app/views/canvas/canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts
+    unitTests:
+      - apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.test.ts
+  - name: CanvasFirstAuthoringCanvas
+    path: apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.ts
+    dddOwner: CanvasDocument aggregate
+    cqRails:
+      - CreateCanvas
+    fowlerSignals:
+      - domain vocabulary
+      - typed first canvas
+    architectureGuard: apps/web/src/app/views/canvas/canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts
+    unitTests:
+      - apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.test.ts
+  - name: CanvasFirstAuthoringNode
+    path: apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.ts
+    dddOwner: CanvasNodeDraft entity
+    cqRails:
+      - CreateCanvasNode
+    fowlerSignals:
+      - first-node default proof
+      - entity invariant
+    architectureGuard: apps/web/src/app/views/canvas/canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts
+    unitTests:
+      - apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.test.ts
+  - name: CanvasFirstAuthoringLayout
+    path: apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.ts
+    dddOwner: CanvasLayoutProjection value object
+    cqRails:
+      - PersistCanvasLayout
+      - GetCanvasLayout
+    fowlerSignals:
+      - local projection separation
+      - layout invariant
+    architectureGuard: apps/web/src/app/views/canvas/canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts
+    unitTests:
+      - apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.test.ts
+  - name: CanvasFirstAuthoringRestoredDraft
+    path: apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.ts
+    dddOwner: WorkspaceGraphDraft read boundary
+    cqRails:
+      - GetWorkspaceGraphDraft
+      - GetCanvasLayout
+    fowlerSignals:
+      - reload proof
+      - real boundary restoration
+    architectureGuard: apps/web/src/app/views/canvas/canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts
+    unitTests:
+      - apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.test.ts
+  - name: CanvasFirstAuthoringDraftAccess
+    path: apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.ts
+    dddOwner: CanvasDraftAccessPosture policy model
+    cqRails:
+      - CreateCanvas
+    fowlerSignals:
+      - fail-closed command admission
+      - policy boundary
+    architectureGuard: apps/web/src/app/views/canvas/canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts
+    unitTests:
+      - apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.test.ts
+  - name: CanvasFirstAuthoringLiveProofInput
+    path: apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.ts
+    dddOwner: Canvas first-authoring proof domain service
+    cqRails:
+      - GetWorkspaceGraphDraft
+      - CreateCanvas
+      - CreateCanvasNode
+      - SaveWorkspaceGraphDraft
+      - PersistCanvasLayout
+      - GetCanvasLayout
+    fowlerSignals:
+      - named input object
+      - SRP proof boundary
+    architectureGuard: apps/web/src/app/views/canvas/canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts
+    unitTests:
+      - apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.test.ts
+  - name: CanvasFirstAuthoringDefault
+    path: apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.ts
+    dddOwner: Canvas first-authoring proof domain service
+    cqRails:
+      - CreateCanvasNode
+    fowlerSignals:
+      - closed first-node defaults
+      - no implementation-time choice
+    architectureGuard: apps/web/src/app/views/canvas/canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts
+    unitTests:
+      - apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.test.ts
+  - name: FIRST_AUTHORING_DEFAULTS
+    path: apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.ts
+    dddOwner: Canvas first-authoring proof domain service
+    cqRails:
+      - CreateCanvasNode
+    fowlerSignals:
+      - mechanical defaults
+      - dbt and transformation parity
+    architectureGuard: apps/web/src/app/views/canvas/canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts
+    unitTests:
+      - apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.test.ts
+  - name: CanvasFirstAuthoringLiveProof
+    path: apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.ts
+    dddOwner: Canvas first-authoring proof domain service
+    cqRails:
+      - GetWorkspaceGraphDraft
+      - SaveWorkspaceGraphDraft
+      - GetCanvasLayout
+    fowlerSignals:
+      - domain service
+      - walking skeleton
+    architectureGuard: apps/web/src/app/views/canvas/canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts
+    unitTests:
+      - apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.test.ts
+  - name: deriveCanvasFirstAuthoringLiveProof
+    path: apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.ts
+    dddOwner: Canvas first-authoring proof domain service
+    cqRails:
+      - GetWorkspaceGraphDraft
+      - CreateCanvas
+      - CreateCanvasNode
+      - PersistCanvasLayout
+    fowlerSignals:
+      - semantic encapsulation
+      - pure decision model
+    architectureGuard: apps/web/src/app/views/canvas/canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts
+    unitTests:
+      - apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.test.ts
+  - name: isCanvasFirstAuthoringProofComplete
+    path: apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.ts
+    dddOwner: Canvas first-authoring proof domain service
+    cqRails:
+      - GetWorkspaceGraphDraft
+      - GetCanvasLayout
+    fowlerSignals:
+      - semantic completion predicate
+      - testable route proof
+    architectureGuard: apps/web/src/app/views/canvas/canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts
+    unitTests:
+      - apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.test.ts
+  - name: assertCanvasFirstAuthoringInvariant
+    path: apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.ts
+    dddOwner: Canvas first-authoring proof domain service
+    cqRails:
+      - GetWorkspaceGraphDraft
+      - GetCanvasLayout
+    fowlerSignals:
+      - invariant assertion
+      - negative proof coverage
+    architectureGuard: apps/web/src/app/views/canvas/canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts
+    unitTests:
+      - apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.test.ts
+  - name: resolveExpectedFirstNode
+    path: apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.ts
+    dddOwner: Canvas first-authoring proof domain service
+    cqRails:
+      - CreateCanvasNode
+    fowlerSignals:
+      - closed first-node default lookup
+      - no implementation-time branching
+    architectureGuard: apps/web/src/app/views/canvas/canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts
+    unitTests:
+      - apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.test.ts
+  - name: matchesExpectedFirstNode
+    path: apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.ts
+    dddOwner: CanvasNodeDraft entity
+    cqRails:
+      - CreateCanvasNode
+    fowlerSignals:
+      - first-node invariant
+      - negative proof coverage
+    architectureGuard: apps/web/src/app/views/canvas/canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts
+    unitTests:
+      - apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.test.ts
+  - name: hasRestoredLayout
+    path: apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.ts
+    dddOwner: CanvasLayoutProjection value object
+    cqRails:
+      - GetCanvasLayout
+    fowlerSignals:
+      - route-local layout proof
+      - restored coordinate invariant
+    architectureGuard: apps/web/src/app/views/canvas/canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts
+    unitTests:
+      - apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.test.ts
+  - name: canvasHostCycleState.needs_canvas
+    path: apps/web/src/app/views/canvas/canvasHostCycleState.ts
+    dddOwner: Canvas document aggregate
+    cqRails:
+      - GetWorkspaceGraphDraft
+      - CreateCanvas
+    fowlerSignals:
+      - explicit lifecycle state
+      - fail-closed empty startup
+    architectureGuard: apps/web/src/app/views/canvas/canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts
+    unitTests:
+      - apps/web/src/app/views/canvas/canvasHostCycleState.test.ts
+      - apps/web/src/app/views/canvas/canvasCreateCanvasDocumentCommand.test.ts
+  - name: handleCreateCanvasDocument
+    path: apps/web/src/app/views/canvas/useCanvasController.ts
+    dddOwner: CanvasDocument aggregate
+    cqRails:
+      - CreateCanvas
+      - SaveWorkspaceGraphDraft
+    fowlerSignals:
+      - command handler
+      - boundary orchestration
+    architectureGuard: apps/web/src/app/views/canvas/canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts
+    unitTests:
+      - apps/web/src/app/views/canvas/useCanvasController.core.test.tsx
+      - apps/web/src/app/views/canvas/canvasCreateCanvasDocumentCommand.test.ts
+  - name: handleCreateAuthoringNode
+    path: apps/web/src/app/views/canvas/useCanvasNodeAuthoringHandlers.ts
+    dddOwner: CanvasAuthoringGraph aggregate
+    cqRails:
+      - CreateCanvasNode
+      - SaveWorkspaceGraphDraft
+    fowlerSignals:
+      - command handler
+      - invariant enforcement
+    architectureGuard: apps/web/src/app/views/canvas/canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts
+    unitTests:
+      - apps/web/src/app/views/canvas/useCanvasController.core.test.tsx
+  - name: useCanvasLayoutPersistence.handleNodeDragStop
+    path: apps/web/src/app/views/canvas/useCanvasLayoutPersistence.ts
+    dddOwner: CanvasLayoutProjection value object
+    cqRails:
+      - PersistCanvasLayout
+      - GetCanvasLayout
+    fowlerSignals:
+      - projection separation
+      - stale payload protection
+    architectureGuard: apps/web/src/app/views/canvas/canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts
+    unitTests:
+      - apps/web/src/app/views/canvas/useCanvasController.persistence.test.tsx
+      - apps/web/src/app/views/canvas/useCanvasNodeChangeHandlers.test.tsx
+      - apps/web/src/app/views/canvas/useCanvasViewportGraphModel.test.tsx
+  - name: CANVAS_NODE_DRAG_HANDLE_SELECTOR
+    path: apps/web/src/app/views/canvas/canvasNodeMapper.ts
+    dddOwner: CanvasLayoutProjection value object
+    cqRails:
+      - PersistCanvasLayout
+    fowlerSignals:
+      - semantic UI affordance
+      - interaction boundary
+    architectureGuard: apps/web/src/app/views/canvas/canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts
+    unitTests:
+      - apps/web/src/app/views/canvas/CanvasViewport.test.tsx
+  - name: resolveLiveFirstAuthoringWorkspaceSession
+    path: apps/web/cypress/support/canvasFirstAuthoring.ts
+    dddOwner: WorkspaceGraphDraft read boundary
+    cqRails:
+      - GetWorkspaceGraphDraft
+    fowlerSignals:
+      - repeatable acceptance fixture boundary
+      - no direct success seeding
+      - run-unique live proof scope
+    architectureGuard: apps/web/src/app/views/canvas/canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts
+    unitTests:
+      - apps/web/src/app/views/canvas/canvasStartupAndDraftRecovery.architecture.test.ts
+  - name: assertLiveFirstAuthoringDraftScopeIsClean
+    path: apps/web/cypress/support/canvasFirstAuthoring.ts
+    dddOwner: WorkspaceGraphDraft read boundary
+    cqRails:
+      - GetWorkspaceGraphDraft
+    fowlerSignals:
+      - fail-fast acceptance precondition
+      - no hidden fixture mutation
+    architectureGuard: apps/web/src/app/views/canvas/canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts
+    unitTests:
+      - apps/web/src/app/views/canvas/canvasStartupAndDraftRecovery.architecture.test.ts
+```
+
+## Mechanical Implementation Tasks
+
+- [ ] Add `canvasFirstAuthoringLiveProof.test.ts` red cases for
+      `needs_canvas`, typed canvas creation, first-node creation, persisted
+      layout, reload restore, missing active canvas, read-only posture, and
+      duplicate first-canvas attempts.
+- [ ] Add `canvasFirstAuthoringLiveProof.ts` with the closed discriminated
+      model and no React, HTTP, or Cypress imports.
+- [ ] Extend clean host-cycle tests so a protected empty draft produces an
+      empty entrypoint and no seeded project nodes.
+- [ ] Extend first-canvas command tests so `transformation` and `dbt` create
+      typed empty documents and duplicate creation fails closed.
+- [ ] Extend controller tests so first-node creation waits for the first-canvas
+      save, creates `dvt-source-1` for transformation, creates `dbt-source-1`
+      for dbt, and refuses to run when draft access posture is not writable.
+- [ ] Extend persistence tests so drag-stop payload coordinates survive stale
+      React Flow node arrays and hard reload restoration.
+- [ ] Replace whole-card drag with a visible semantic handle and extend
+      viewport tests so the node moves from that handle only.
+- [ ] Add semantic architecture guard assertions for proof ownership, no seeded
+      startup nodes, first-node defaults, no direct Cypress draft seeding, no
+      draft endpoint intercepts, and docs/implementation traceability.
+- [ ] Add Cypress live proof with clean-scope preflight, no direct draft `PUT`
+      before UI commands, and no `cy.intercept()` for draft read/write
+      endpoints.
+- [ ] Run all completion gates in the order listed by the manifest.
+
+## Test Plan
+
+Red tests are mandatory before implementation patches. Green tests must run
+after each patch group.
+
+```powershell
+node scripts/check-feature-mechanization.cjs --feature TF-E2-M-C
+pnpm docs:feature-mechanization:tf-e2-m-c
+pnpm docs:feature-mechanization:implementation
+pnpm test:docs:feature-mechanization
+pnpm --filter @dvt/web test -- canvasFirstAuthoringLiveProof.test.ts
+pnpm --filter @dvt/web test -- canvasHostCycleState.test.ts canvasCreateCanvasDocumentCommand.test.ts
+pnpm --filter @dvt/web test -- useCanvasController.core.test.tsx useCanvasController.persistence.test.tsx
+pnpm --filter @dvt/web test -- useCanvasNodeChangeHandlers.test.tsx useCanvasViewportGraphModel.test.tsx CanvasViewport.test.tsx
+pnpm --filter @dvt/web test -- canvasStartupAndDraftRecovery.architecture.test.ts
+pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/canvas/canvas-first-authoring-live.cy.ts
+pnpm --filter @dvt/web typecheck
+pnpm verify:prepush
+```
+
+## Completion Criteria
+
+- `docs:feature-mechanization:tf-e2-m-c` passes.
+- `docs:feature-mechanization:implementation` rejects unplanned diff surfaces,
+  forbidden surfaces, undeclared new code symbols, draft endpoint intercepts,
+  and Cypress direct draft `PUT` seeding.
+- The implementation creates no first-run seeded nodes when there is no
+  authoritative project or canvas document.
+- The first live document can be created as `transformation` and `dbt`.
+- The first live node can be created only after the first-canvas save has
+  settled.
+- The first transformation node is `dvt-source-1`; the first dbt node is
+  `dbt-source-1`.
+- The node shell exposes a semantic drag handle; the whole card is not the drag
+  handle.
+- Dragging the first card from the intended handle persists the dropped
+  coordinate and restores it after reload.
+- Cypress proves the full flow against live protected runtime draft requests.
+- Cypress live proof uses a run-unique project scope that is stable within the
+  spec and does not fail when a prior run saved a draft in the same environment.
+- Architecture tests prove the semantic proof model, DDD ownership, and no
+  local duplicate semantics.
+- `pnpm verify:prepush` passes without skipped checks or relaxed rules.
+
+## Fowler Review
+
+Improved patterns expected from the implementation:
+
+- Walking skeleton over the real boundary instead of fixture-only confidence.
+- Domain service encapsulation for first-authoring proof.
+- Explicit command/query rails for every user-visible action.
+- Projection separation between graph authority and viewport layout.
+- Semantic architecture guard that detects drift before Cypress does.
+
+Antipatterns this plan forbids:
+
+- seeded nodes on clean startup;
+- Cypress draft endpoint intercepts as success proof;
+- direct Cypress `PUT /workspace/graph/draft` seeding before the UI create
+  command;
+- JSX-level command branching;
+- duplicate first-canvas semantics in host, tab strip, and controller;
+- whole-card drag semantics hidden behind a misleading handle name;
+- layout persistence code that overwrites graph authority;
+- plan/run behavior changes inside this authoring slice.
+
+## Self-Review Iterations
+
+Pass 1 conclusion: the route can be mechanical only if the feature has a
+manifest and named symbols before implementation. This plan adds that contract.
+
+Pass 2 conclusion: C&Q rails are sufficient because every user-visible action
+maps to an existing product rail or an explicitly named route-local layout rail.
+
+Pass 3 conclusion: no human decision remains for implementation. The next
+worker can start at the listed red tests, patch only the allowed surfaces, and
+close with the manifest completion gate.

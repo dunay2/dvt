@@ -246,7 +246,7 @@ allowedImplementationSurfaces:
   - apps/web/cypress/e2e/canvas/canvas-draft-access-posture.cy.ts
 forbiddenImplementationSurfaces:
   - apps/web/src/app/services/api/** token refresh behavior
-  - apps/web/src/app/views/canvas/** JWT decoding
+  - apps/web/src/app/services/api/** JWT decoding
   - packages/@dvt/contracts/** contract changes
   - apps/api/** backend authorization changes
 commandQueryRails:

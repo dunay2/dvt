@@ -251,6 +251,98 @@ Acceptance criteria:
   mutation controls.
 - Cypress does not rely on uncontrolled token expiry timing.
 
+### US-CANVAS-FIRST-AUTHORING-001: create the first transformation canvas live
+
+As an operator in a clean workspace, I want to create the first transformation
+canvas through the live protected route, so Canvas becomes useful without seed
+data or hidden setup.
+
+Acceptance criteria:
+
+- A protected empty draft renders the typed create-canvas entrypoint.
+- The canvas surface renders no seeded project nodes before creation.
+- Selecting `transformation` sends `CreateCanvas` through the existing command
+  path.
+- The empty transformation canvas is saved with `SaveWorkspaceGraphDraft`.
+- The first transformation node is created from `dvt:source` and resolves to
+  `dvt-source-1` / `Source 1`.
+- Cypress proves the flow without intercepting draft read or write endpoints.
+- Cypress fails fast when the test-owned live workspace already contains a
+  draft instead of overwriting that draft directly.
+
+### US-CANVAS-FIRST-AUTHORING-002: create the first dbt canvas live
+
+As an operator in a clean workspace, I want to create the first dbt canvas
+through the same route, so dbt is a plugin canvas type instead of a special
+startup seed.
+
+Acceptance criteria:
+
+- Selecting `dbt` sends the same `CreateCanvas` command rail with dbt type
+  data.
+- The first dbt canvas contains no automatic project nodes until the user adds
+  one.
+- The dbt path shares the first-authoring proof model with transformation.
+- The first dbt node is created from `dbt:source` and resolves to
+  `dbt-source-1` / `Source 1`.
+- Unsupported or duplicate first-canvas attempts fail closed.
+
+### US-CANVAS-FIRST-AUTHORING-003: add the first node after authoritative save
+
+As an operator, I want the first node action to become available only after the
+first canvas has been saved, so node creation cannot race an unsaved document.
+
+Acceptance criteria:
+
+- `CreateCanvasNode` stays disabled while first-canvas save is pending.
+- `CreateCanvasNode` requires writable `CanvasDraftAccessPosture`.
+- The created node is persisted through `SaveWorkspaceGraphDraft`.
+- Reloaded protected draft truth contains the created node.
+
+### US-CANVAS-FIRST-AUTHORING-004: persist first-node drag from the intended handle
+
+As an operator moving the first node, I want Canvas to persist the dropped
+coordinate only from the intended drag handle, so the card does not move or
+snap back from accidental clicks.
+
+Acceptance criteria:
+
+- Dragging outside the handle does not count as first-authoring proof.
+- Dragging from the visible semantic handle uses the drag-stop payload
+  coordinate.
+- The whole node card is not the React Flow drag handle.
+- `PersistCanvasLayout` writes only route-local layout projection data.
+- `GetCanvasLayout` restores the coordinate after reload.
+
+### US-CANVAS-FIRST-AUTHORING-005: restore the first authored canvas after reload
+
+As an operator, I want the first authored canvas and first node to reload in
+the same place, so I can trust Canvas persistence before preview or run work.
+
+Acceptance criteria:
+
+- Hard reload performs a live `GetWorkspaceGraphDraft` query.
+- Cypress does not intercept draft read or write endpoints.
+- Cypress does not issue `PUT /workspace/graph/draft` before the UI
+  `CreateCanvas` path runs.
+- The restored route shows the created canvas and node.
+- The restored node uses the route-local persisted coordinate.
+- The proof is complete only when authoritative draft and layout restore agree.
+
+### US-CANVAS-FIRST-AUTHORING-006: block first authoring when draft access is unsafe
+
+As an operator without writable draft access, I want first-authoring actions to
+be unavailable, so Canvas does not imply that edits can be saved.
+
+Acceptance criteria:
+
+- Read-only, unauthenticated, forbidden-scope, pending, and format-error
+  postures disable first-canvas and first-node commands.
+- The route displays the governed recovery posture from
+  `CanvasDraftAccessPosture`.
+- No first-authoring proof state can be complete while draft posture is not
+  writable.
+
 ### US-CANVAS-LAYOUT-001: persist drag-stop payload coordinates
 
 As an operator moving a Canvas card, I want the dropped coordinate to persist,
@@ -351,33 +443,39 @@ Acceptance criteria:
 
 ## Scenario Coverage Matrix
 
-| Story                      | Scenario                                        | Primary implementation                                                         | Primary tests                                                                             |
-| -------------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------- |
-| US-CANVAS-BOOTSTRAP-001    | Governed route failure can reveal route surface | `routeBootstrapContract.ts`                                                    | `canvasStartupAndDraftRecovery.architecture.test.ts`, `Root.bootstrapFlow.test.tsx`       |
-| US-CANVAS-BOOTSTRAP-002    | Health failure is visible and route-safe        | `appBootstrapPresentation.ts`, `Root.tsx`                                      | `appBootstrapPresentation.test.ts`, `Root.bootstrapFlow.test.tsx`                         |
-| US-CANVAS-BOOTSTRAP-003    | Capabilities settle before unsafe actions       | `Root.tsx`, capability query policy                                            | `Root.bootstrapFlow.test.tsx`, `queryKeyPolicy.architecture.test.ts`                      |
-| US-CANVAS-BOOTSTRAP-004    | Locale-backed startup and route copy            | `appBootstrapCopy.ts`, `copy/*`                                                | `appBootstrapCommands.test.ts`, `copy.test.ts`                                            |
-| US-CANVAS-AUTH-001         | Refresh expired local protected token           | `apiAuthConfig.ts`, `scripts/run-dev-stack.auth.cjs`                           | `createApiClient.test.ts`, `run-dev-stack.auth.test.cjs`                                  |
-| US-CANVAS-AUTH-002         | Retry one safe protected request after `401`    | `createApiClient.ts`                                                           | `createApiClient.test.ts`, `canvasStartupAndDraftRecovery.architecture.test.ts`           |
-| US-CANVAS-DRAFT-001        | Protected draft endpoint                        | `workspaceGraphDraftHttp.ts`                                                   | `canvasStartupAndDraftRecovery.architecture.test.ts`                                      |
-| US-CANVAS-DRAFT-002        | Semantic and DBT snapshot projection split      | `workspaceGraphDraftProjection.ts`, `workspaceGraphDraftSnapshotProjection.ts` | `workspaceGraphDraftSnapshotProjection.test.ts`                                           |
-| US-CANVAS-DRAFT-003        | Create first Canvas only when empty             | `canvasCreateCanvasDocumentCommandPolicy.ts`                                   | `canvasCreateCanvasDocumentCommand.test.ts`                                               |
-| US-CANVAS-DRAFT-004        | Confirmed replacement command                   | `useCanvasPlaygroundTabStripPresenter.ts`                                      | `CanvasPlaygroundTabStrip.test.tsx`                                                       |
-| US-CANVAS-DRAFT-005        | CAS-protected replacement                       | `canvasCreateCanvasDocumentCommandPolicy.ts`                                   | `canvasCreateCanvasDocumentCommand.test.ts`                                               |
-| US-CANVAS-DRAFT-006        | Recovery banner surfaces                        | `canvasRecoveryBannerModel.ts`, `CanvasRecoveryBanner.templates.tsx`           | `canvasStartupAndDraftRecovery.architecture.test.ts`                                      |
-| US-CANVAS-DRAFT-007        | Session denial versus forbidden scope           | `canvasDraftAccessPostureModel.ts`                                             | `canvasDraftAccessPostureModel.test.ts`, Cypress draft access posture spec                |
-| US-CANVAS-DRAFT-008        | Read-only draft inspection posture              | `canvasDraftAccessPostureModel.ts`, `canvasRouteInteractionState.ts`           | `canvasDraftAccessPostureModel.test.ts`, read-only route tests, Cypress spec              |
-| US-CANVAS-DRAFT-009        | Format failures stay separate                   | `canvasDraftAccessPostureModel.ts`, `canvasDraftTransportErrorState.ts`        | `canvasDraftAccessPostureModel.test.ts`, architecture guard                               |
-| US-CANVAS-DRAFT-010        | Single posture controls route surfaces          | auth posture, route state, authoring state, toolbar, banner models             | auth posture test, authoring state test, architecture guard                               |
-| US-CANVAS-DRAFT-011        | Browser proof for denied and read-only posture  | Cypress draft access spec                                                      | Cypress draft access posture spec                                                         |
-| US-CANVAS-LAYOUT-001       | Drag-stop payload coordinates persist           | `useCanvasLayoutPersistence.ts`                                                | `useCanvasController.persistence.test.tsx`                                                |
-| US-CANVAS-LAYOUT-002       | Settled live drag positions persist             | `useCanvasLayoutPersistence.ts`, `useCanvasViewportGraphModel.ts`              | `useCanvasController.persistence.test.tsx`, `useCanvasViewportGraphModel.test.tsx`        |
-| US-CANVAS-LAYOUT-003       | Pending route state blocks layout writes        | `useCanvasLayoutPersistence.ts`                                                | `useCanvasController.persistence.test.tsx`                                                |
-| US-CANVAS-PRESENTATION-001 | Passive host template                           | `CanvasPlaygroundHost.templates.tsx`                                           | `canvasStartupAndDraftRecovery.architecture.test.ts`                                      |
-| US-CANVAS-PRESENTATION-002 | Passive tab-strip template                      | `CanvasPlaygroundTabStrip.templates.tsx`                                       | `CanvasPlaygroundTabStrip.test.tsx`, `canvasStartupAndDraftRecovery.architecture.test.ts` |
-| US-CANVAS-PRESENTATION-003 | Drag handle is explicit                         | `canvasNodeMapper.ts`, `DbtNodeComponent.tsx`                                  | `canvasStartupAndDraftRecovery.architecture.test.ts`                                      |
-| US-CANVAS-ARCH-001         | Semantic architecture guard                     | `canvasStartupAndDraftRecovery.architecture.test.ts`                           | `canvasStartupAndDraftRecovery.architecture.test.ts`                                      |
-| US-CANVAS-ARCH-002         | Fixture boundaries                              | `workspaceGraphDraftFixtureBoundaries.architecture.test.ts`                    | `workspaceGraphDraftFixtureBoundaries.architecture.test.ts`                               |
+| Story                         | Scenario                                        | Primary implementation                                                         | Primary tests                                                                             |
+| ----------------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------- |
+| US-CANVAS-BOOTSTRAP-001       | Governed route failure can reveal route surface | `routeBootstrapContract.ts`                                                    | `canvasStartupAndDraftRecovery.architecture.test.ts`, `Root.bootstrapFlow.test.tsx`       |
+| US-CANVAS-BOOTSTRAP-002       | Health failure is visible and route-safe        | `appBootstrapPresentation.ts`, `Root.tsx`                                      | `appBootstrapPresentation.test.ts`, `Root.bootstrapFlow.test.tsx`                         |
+| US-CANVAS-BOOTSTRAP-003       | Capabilities settle before unsafe actions       | `Root.tsx`, capability query policy                                            | `Root.bootstrapFlow.test.tsx`, `queryKeyPolicy.architecture.test.ts`                      |
+| US-CANVAS-BOOTSTRAP-004       | Locale-backed startup and route copy            | `appBootstrapCopy.ts`, `copy/*`                                                | `appBootstrapCommands.test.ts`, `copy.test.ts`                                            |
+| US-CANVAS-AUTH-001            | Refresh expired local protected token           | `apiAuthConfig.ts`, `scripts/run-dev-stack.auth.cjs`                           | `createApiClient.test.ts`, `run-dev-stack.auth.test.cjs`                                  |
+| US-CANVAS-AUTH-002            | Retry one safe protected request after `401`    | `createApiClient.ts`                                                           | `createApiClient.test.ts`, `canvasStartupAndDraftRecovery.architecture.test.ts`           |
+| US-CANVAS-DRAFT-001           | Protected draft endpoint                        | `workspaceGraphDraftHttp.ts`                                                   | `canvasStartupAndDraftRecovery.architecture.test.ts`                                      |
+| US-CANVAS-DRAFT-002           | Semantic and DBT snapshot projection split      | `workspaceGraphDraftProjection.ts`, `workspaceGraphDraftSnapshotProjection.ts` | `workspaceGraphDraftSnapshotProjection.test.ts`                                           |
+| US-CANVAS-DRAFT-003           | Create first Canvas only when empty             | `canvasCreateCanvasDocumentCommandPolicy.ts`                                   | `canvasCreateCanvasDocumentCommand.test.ts`                                               |
+| US-CANVAS-DRAFT-004           | Confirmed replacement command                   | `useCanvasPlaygroundTabStripPresenter.ts`                                      | `CanvasPlaygroundTabStrip.test.tsx`                                                       |
+| US-CANVAS-DRAFT-005           | CAS-protected replacement                       | `canvasCreateCanvasDocumentCommandPolicy.ts`                                   | `canvasCreateCanvasDocumentCommand.test.ts`                                               |
+| US-CANVAS-DRAFT-006           | Recovery banner surfaces                        | `canvasRecoveryBannerModel.ts`, `CanvasRecoveryBanner.templates.tsx`           | `canvasStartupAndDraftRecovery.architecture.test.ts`                                      |
+| US-CANVAS-DRAFT-007           | Session denial versus forbidden scope           | `canvasDraftAccessPostureModel.ts`                                             | `canvasDraftAccessPostureModel.test.ts`, Cypress draft access posture spec                |
+| US-CANVAS-DRAFT-008           | Read-only draft inspection posture              | `canvasDraftAccessPostureModel.ts`, `canvasRouteInteractionState.ts`           | `canvasDraftAccessPostureModel.test.ts`, read-only route tests, Cypress spec              |
+| US-CANVAS-DRAFT-009           | Format failures stay separate                   | `canvasDraftAccessPostureModel.ts`, `canvasDraftTransportErrorState.ts`        | `canvasDraftAccessPostureModel.test.ts`, architecture guard                               |
+| US-CANVAS-DRAFT-010           | Single posture controls route surfaces          | auth posture, route state, authoring state, toolbar, banner models             | auth posture test, authoring state test, architecture guard                               |
+| US-CANVAS-DRAFT-011           | Browser proof for denied and read-only posture  | Cypress draft access spec                                                      | Cypress draft access posture spec                                                         |
+| US-CANVAS-FIRST-AUTHORING-001 | Live transformation first canvas                | `canvasFirstAuthoringLiveProof.ts`, `canvasCreateCanvasDocumentCommand.ts`     | proof test, create-canvas command test, Cypress live first-authoring spec                 |
+| US-CANVAS-FIRST-AUTHORING-002 | Live dbt first canvas                           | `canvasFirstAuthoringLiveProof.ts`, `canvasCreateCanvasDocumentCommand.ts`     | proof test, create-canvas command test, Cypress live first-authoring spec                 |
+| US-CANVAS-FIRST-AUTHORING-003 | First node after authoritative save             | `useCanvasController.ts`, `useCanvasNodeAuthoringHandlers.ts`                  | controller core test, first-authoring proof test                                          |
+| US-CANVAS-FIRST-AUTHORING-004 | First-node drag-handle layout persistence       | `canvasNodeMapper.ts`, `DbtNodeComponent.tsx`, layout persistence              | layout tests, viewport drag-handle test, Cypress live first-authoring spec                |
+| US-CANVAS-FIRST-AUTHORING-005 | Reload restores first authored canvas           | protected draft query and layout projection                                    | controller persistence test, viewport graph model test, Cypress live proof                |
+| US-CANVAS-FIRST-AUTHORING-006 | Unsafe draft access blocks first authoring      | `CanvasDraftAccessPosture`, first-authoring proof model                        | draft access posture tests, first-authoring proof negative tests                          |
+| US-CANVAS-LAYOUT-001          | Drag-stop payload coordinates persist           | `useCanvasLayoutPersistence.ts`                                                | `useCanvasController.persistence.test.tsx`                                                |
+| US-CANVAS-LAYOUT-002          | Settled live drag positions persist             | `useCanvasLayoutPersistence.ts`, `useCanvasViewportGraphModel.ts`              | `useCanvasController.persistence.test.tsx`, `useCanvasViewportGraphModel.test.tsx`        |
+| US-CANVAS-LAYOUT-003          | Pending route state blocks layout writes        | `useCanvasLayoutPersistence.ts`                                                | `useCanvasController.persistence.test.tsx`                                                |
+| US-CANVAS-PRESENTATION-001    | Passive host template                           | `CanvasPlaygroundHost.templates.tsx`                                           | `canvasStartupAndDraftRecovery.architecture.test.ts`                                      |
+| US-CANVAS-PRESENTATION-002    | Passive tab-strip template                      | `CanvasPlaygroundTabStrip.templates.tsx`                                       | `CanvasPlaygroundTabStrip.test.tsx`, `canvasStartupAndDraftRecovery.architecture.test.ts` |
+| US-CANVAS-PRESENTATION-003    | Drag handle is explicit                         | `canvasNodeMapper.ts`, `DbtNodeComponent.tsx`                                  | `canvasStartupAndDraftRecovery.architecture.test.ts`                                      |
+| US-CANVAS-ARCH-001            | Semantic architecture guard                     | `canvasStartupAndDraftRecovery.architecture.test.ts`                           | `canvasStartupAndDraftRecovery.architecture.test.ts`                                      |
+| US-CANVAS-ARCH-002            | Fixture boundaries                              | `workspaceGraphDraftFixtureBoundaries.architecture.test.ts`                    | `workspaceGraphDraftFixtureBoundaries.architecture.test.ts`                               |
 
 ## TDD Traceability
 
@@ -418,6 +516,23 @@ Green case for the 2026-04-29 Canvas operability auth/layout follow-up:
 - normalize owned-concern docblocks;
 - split layout persistence into named local persistence roles;
 - rerun the architecture guard and targeted behavior tests.
+
+Red case for `TF-E2-M-C` first-authoring mechanization:
+
+- `node scripts/check-feature-mechanization.cjs --feature TF-E2-M-C` reported
+  that no feature mechanization manifest existed;
+- no local component guide named the first-authoring proof API, invariants,
+  transitions, or consumers;
+- the story catalog did not cover transformation/dbt first-canvas creation,
+  first-node creation, drag-handle persistence, reload restore, and unsafe
+  posture denial as one feature lane.
+
+Green case for `TF-E2-M-C` planning:
+
+- add the feature mechanization manifest and package script;
+- add the first-authoring live proof component guide;
+- add the user stories and scenario matrix rows;
+- regenerate governed docs and run the feature mechanization checks.
 
 ## Branch-Adjacent Scenario Notes
 

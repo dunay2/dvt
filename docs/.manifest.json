@@ -2,7 +2,7 @@
   "summary": {
     "adrs": 48,
     "evidenceDocs": 115,
-    "normativeDocs": 345,
+    "normativeDocs": 346,
     "statusDocs": 62
   },
   "adrs": [
@@ -2212,6 +2212,10 @@
     {
       "path": "docs/architecture/components/web/graph/canvas-execution-selection-component.md",
       "filename": "canvas-execution-selection-component.md"
+    },
+    {
+      "path": "docs/architecture/components/web/graph/canvas-first-authoring-live-proof-component.md",
+      "filename": "canvas-first-authoring-live-proof-component.md"
     },
     {
       "path": "docs/architecture/components/web/graph/canvas-graph-lifecycle-component.md",

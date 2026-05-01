@@ -278,6 +278,11 @@ Usage rules already declared in the ADR index:
   Enforces: feature plans with `feature-mechanization` manifests must be
   closed mechanically, including C&Q/DDD/Fowler binding, red-green cycles,
   symbol coverage, architecture guard, Cypress coverage, and closeout gates.
+  Its implementation mode also checks the real Git diff against
+  `allowedImplementationSurfaces`, blocks `forbiddenImplementationSurfaces`,
+  requires new top-level code symbols to be declared in the manifest, forbids
+  Cypress `cy.intercept()` for `/workspace/graph/draft`, and forbids Cypress
+  direct `PUT /workspace/graph/draft` seeding outside the UI flow.
 - [scripts/sync-docs.cjs](../../../scripts/sync-docs.cjs)
   Role: `docs generator`
   Enforces: regeneration of indexes and docs navigation surfaces.
