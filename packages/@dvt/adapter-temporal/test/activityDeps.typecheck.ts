@@ -2,13 +2,16 @@
  * @file packages/@dvt/adapter-temporal/test/activityDeps.typecheck.ts
  * @baseline ADR-0001: Temporal Integration Test Policy
  * @baseline ADR-0003: Execution Model
- * @decision Type-check activity dependency fixtures against the DVT engine and plan-fetcher ports
+ * @decision Type-check activity dependency fixtures against the scoped engine-dispatch plan query
  * @consequence Adapter activity wiring cannot silently depend on provider-owned lifecycle state
  * @version 1.2.0
  */
 import { asIsoUtcString } from '@dvt/contracts';
 
-import type { ActivityDeps } from '../src/activities/stepActivities.js';
+import {
+  createScopedTemporalPlanArtifactReader,
+  type ActivityDeps,
+} from '../src/activities/stepActivities.js';
 import type {
   IPlanFetcher,
   IPlanIntegrityValidator,
@@ -50,8 +53,7 @@ const validDeps: ActivityDeps = {
     runEventKey: () => 'run-event-key',
     startRunIntentId: () => 'intent-1',
   },
-  fetcher,
-  integrity,
+  planArtifactReader: createScopedTemporalPlanArtifactReader({ fetcher, integrity }),
 };
 
 // @ts-expect-error Segment resolution dependencies are mandatory in ActivityDeps.

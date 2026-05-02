@@ -6,6 +6,7 @@ import type {
   DbtPluginRunner,
   RunStateCommandCircuitSnapshot,
   TemporalAdapterConfig,
+  TemporalPlanArtifactReader,
   TemporalWorkerHostConfig,
 } from '@dvt/adapter-temporal';
 import type { IDbtProjectBundleReader, IRunExecutionContextReader } from '@dvt/artifacts';
@@ -27,10 +28,6 @@ export interface StateStoreLike {
   abortPendingOperations?(): void | Promise<void>;
 }
 
-export type PlanFetcherLike = Pick<ActivityDeps['fetcher'], 'fetch'> & {
-  close?(): Promise<void>;
-};
-
 export interface TemporalConnectionLike {
   close(): Promise<void>;
 }
@@ -48,7 +45,7 @@ export interface CreateTemporalWorkerRuntimeOptions {
     env: Env;
     bundleReader: IDbtProjectBundleReader;
   }) => DbtPluginRunner;
-  planFetcherFactory?: (env: Env) => PlanFetcherLike;
+  planArtifactReaderFactory?: (env: Env) => TemporalPlanArtifactReader;
   hostFactory?: (config: TemporalWorkerHostConfig) => TemporalWorkerHostLike;
   connectionFactory?: (config: TemporalAdapterConfig) => Promise<TemporalConnectionLike>;
   dbtAvailabilityProbe?: (dbtBin: string) => Promise<void>;
@@ -58,7 +55,7 @@ export interface TemporalWorkerRuntimeResources {
   runMigrations: boolean;
   temporalConfig: TemporalAdapterConfig;
   stateStore: StateStoreLike;
-  planStore: PlanFetcherLike;
+  planArtifactReader: TemporalPlanArtifactReader;
   activityDeps: ActivityDeps;
   runStateCircuit: {
     getSnapshot(): RunStateCommandCircuitSnapshot;

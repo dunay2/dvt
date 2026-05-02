@@ -165,7 +165,7 @@ Generated documentation sources:
 
 - code-state report: [`docs/planning/status/generated-code-state.md`](../planning/status/generated-code-state.md)
 - capability coverage report: [`docs/planning/status/generated-capability-coverage.md`](../planning/status/generated-capability-coverage.md)
-- docs governance manifest: [`docs/.manifest.json`](../../docs/.manifest.json)
+- compact docs governance manifest: [`docs/.manifest.json`](../../docs/.manifest.json)
 - generated-doc ownership policy: [`docs/generated-docs-policy.json`](../generated-docs-policy.json)
 
 Local docs PR preflight usage:
@@ -182,7 +182,7 @@ Command semantics:
 - `pnpm docs:planning:generated:check` regenerates planning-only derived pages, verifies required sections, checks determinism, and fails if those files are tracked in git again.
 - `pnpm docs:workboard:check` is the planning-generated artifact gate and currently delegates to `pnpm docs:planning:generated:check`.
 - `pnpm docs:status:check` and `pnpm docs:capability:check` remain strict drift gates for their tracked generated outputs.
-- `pnpm docs:gov:manifest` regenerates the tracked machine-readable docs inventory at `docs/.manifest.json`.
+- `pnpm docs:gov:manifest` regenerates the tracked compact docs inventory at `docs/.manifest.json`; use `pnpm exec tsx tools/docs/generate-docs-manifest.ts --full --stdout` for the exhaustive audit catalog.
 - `pnpm docs:gov:manifest:check` is the strict drift gate for that tracked docs governance manifest.
 - `pnpm docs:gov:generated-policy` validates the generated-doc single-writer registry, including source paths, generator commands, tracked versus untracked posture, and required generated markers.
 - `pnpm docs:gov` now includes the docs manifest generation step, so the aggregate governance command keeps the tracked manifest current during local-friendly docs validation.

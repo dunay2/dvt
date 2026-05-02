@@ -180,6 +180,7 @@ describe('Temporal PlanRef workflow component semantics', () => {
 
   it('parses control input before resolving the first segment and uses the cursor layer', () => {
     const workflowSource = readWorkflowSource('RunPlanWorkflow.ts');
+    const typesSource = readWorkflowSource('runPlanWorkflow.types.ts');
 
     const parseIndex = workflowSource.indexOf('const ctrl = parseWorkflowControlInput(input);');
     const firstResolveIndex = workflowSource.indexOf(
@@ -190,6 +191,23 @@ describe('Temporal PlanRef workflow component semantics', () => {
     expect(parseIndex).toBeGreaterThanOrEqual(0);
     expect(firstResolveIndex).toBeGreaterThan(parseIndex);
     expect(cursorLayerIndex).toBeGreaterThan(firstResolveIndex);
+    expect(typesSource).toContain('ctx: WorkflowCtx');
+    expect(workflowSource).toContain('ctx: input.ctx');
+  });
+
+  it('routes segment resolution through the scoped engine-dispatch plan query', () => {
+    const activityFactorySource = readFileSync(
+      join(REPO_ROOT, 'packages/@dvt/adapter-temporal/src/activities/activityFactory.ts'),
+      'utf8'
+    );
+    const activityTypesSource = readFileSync(
+      join(REPO_ROOT, 'packages/@dvt/adapter-temporal/src/activities/activityTypes.ts'),
+      'utf8'
+    );
+
+    expect(activityFactorySource).toContain('planArtifactReader.fetchForEngineDispatch');
+    expect(activityTypesSource).toContain('planArtifactReader: TemporalPlanArtifactReader');
+    expect(activityTypesSource).not.toContain('fetcher: IPlanFetcher');
   });
 });
 

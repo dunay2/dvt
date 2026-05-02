@@ -6,21 +6,22 @@ import {
   PostgresRunStateCommandPortBridge,
   PostgresStateStoreAdapter,
 } from '@dvt/adapter-postgres';
-import { CircuitBreakingRunStateCommandPort, type ActivityDeps } from '@dvt/adapter-temporal';
+import {
+  CircuitBreakingRunStateCommandPort,
+  createScopedTemporalPlanArtifactReader,
+  type ActivityDeps,
+  type TemporalPlanArtifactReader,
+} from '@dvt/adapter-temporal';
 import { asIsoUtcString } from '@dvt/contracts';
 import { IdempotencyKeyBuilder, PlanIntegrityValidator } from '@dvt/engine';
 
 import type { Env } from '../plugins/env.js';
 
-import type {
-  CreateTemporalWorkerRuntimeOptions,
-  PlanFetcherLike,
-  StateStoreLike,
-} from './runtimeTypes.js';
+import type { CreateTemporalWorkerRuntimeOptions, StateStoreLike } from './runtimeTypes.js';
 
 export interface TemporalWorkerStores {
   stateStore: StateStoreLike;
-  planStore: PlanFetcherLike;
+  planArtifactReader: TemporalPlanArtifactReader;
 }
 
 export interface TemporalWorkerActivityDeps {
@@ -42,30 +43,35 @@ export function createTemporalWorkerStores(
       queryTimeoutMs: env.DVT_PG_QUERY_TIMEOUT_MS,
       assumeSchemaReady: !runMigrations,
     });
-  const planStore =
-    options.planFetcherFactory?.(env) ??
-    new PostgresPlanStore({
-      connectionString: env.DATABASE_URL,
-      schema: env.DVT_PG_SCHEMA,
-      statementTimeoutMs: env.DVT_PG_STATEMENT_TIMEOUT_MS,
-      queryTimeoutMs: env.DVT_PG_QUERY_TIMEOUT_MS,
-      assumeSchemaReady: !runMigrations,
-      toExecutablePlan: (buildResult) => ({
-        schemaVersion: buildResult.plan.metadata.schemaVersion,
-        text: JSON.stringify(buildResult.plan),
+  const planArtifactReader =
+    options.planArtifactReaderFactory?.(env) ??
+    createScopedTemporalPlanArtifactReader({
+      fetcher: new PostgresPlanStore({
+        connectionString: env.DATABASE_URL,
+        schema: env.DVT_PG_SCHEMA,
+        statementTimeoutMs: env.DVT_PG_STATEMENT_TIMEOUT_MS,
+        queryTimeoutMs: env.DVT_PG_QUERY_TIMEOUT_MS,
+        assumeSchemaReady: !runMigrations,
+        toExecutablePlan: (buildResult) => ({
+          schemaVersion: buildResult.plan.metadata.schemaVersion,
+          text: JSON.stringify(buildResult.plan),
+        }),
+      }),
+      integrity: new PlanIntegrityValidator({
+        clock: { nowIsoUtc: () => asIsoUtcString(new Date().toISOString()) },
       }),
     });
 
   return {
     stateStore,
-    planStore,
+    planArtifactReader,
   };
 }
 
 export function createTemporalWorkerActivityDeps(
   env: Env,
   stateStore: StateStoreLike,
-  planStore: PlanFetcherLike
+  planArtifactReader: TemporalPlanArtifactReader
 ): TemporalWorkerActivityDeps {
   const clock = { nowIsoUtc: () => asIsoUtcString(new Date().toISOString()) };
   const runStateCircuit = new CircuitBreakingRunStateCommandPort({
@@ -78,8 +84,7 @@ export function createTemporalWorkerActivityDeps(
     runStateCommandPort: runStateCircuit,
     clock,
     idempotency: new IdempotencyKeyBuilder(),
-    fetcher: planStore,
-    integrity: new PlanIntegrityValidator({ clock }),
+    planArtifactReader,
   };
 
   return {

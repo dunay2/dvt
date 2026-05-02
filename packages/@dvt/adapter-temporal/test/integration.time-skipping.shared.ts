@@ -49,6 +49,8 @@ export {
   withDbtRunExecutionContext,
 } from './helpers/integration/dbtRuntimeFixtures.js';
 export {
+  INTEGRATION_PLAN_OWNERSHIP,
+  createPlanOwnershipFromContext,
   createPlanRef,
   mkLinearPlan,
   createRunContext,

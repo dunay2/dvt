@@ -1,7 +1,7 @@
 version: 1
 generatedFrom: git ls-files docs
 unitManifest: docs/planning/status/system-governance-unit-index.units.yaml
-documentCount: 1436
+documentCount: 1438
 documents:
   - path: docs/CONTRIBUTING.md
     classification: governs unit
@@ -2616,6 +2616,10 @@ documents:
     classification: proves evidence
     documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
     subjectUnit: SYS-DOCS-GOVERNANCE
+  - path: docs/evidence/ed-20260502-s08-temporal-legacy-removal.md
+    classification: proves evidence
+    documentOwnerUnit: SYS-PLANSTORE-DOCS-RISK
+    subjectUnit: SYS-PLANSTORE
   - path: docs/evidence/index.md
     classification: proves evidence
     documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -4385,6 +4389,10 @@ documents:
     classification: tracks drift
     documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
     subjectUnit: SYS-DOCS-GOVERNANCE
+  - path: docs/planning/closeouts/20260502-s08-temporal-legacy-removal-closeout.md
+    classification: tracks drift
+    documentOwnerUnit: SYS-PLANSTORE-DOCS-RISK
+    subjectUnit: SYS-PLANSTORE
   - path: docs/planning/closeouts/F-02-closeout.md
     classification: tracks drift
     documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT

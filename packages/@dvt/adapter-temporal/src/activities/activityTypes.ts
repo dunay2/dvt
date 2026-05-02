@@ -8,12 +8,11 @@ import type {
   ExecutionPlan,
   IClock,
   IIdempotencyKeyBuilder,
-  IPlanFetcher,
-  IPlanIntegrityValidator,
   RunStateCommandPort,
 } from '../engine-types.js';
 
 import { ActivityErrorCode } from './activityFailures.js';
+import type { TemporalPlanArtifactReader } from './temporalPlanArtifactReader.js';
 
 export type StepDefinition = ExecutionPlan['steps'][number];
 
@@ -35,8 +34,7 @@ export interface StepExecutionIdentity {
 }
 
 export interface ActivityDeps extends EventEmitterDeps, RunBootstrapperDeps {
-  fetcher: IPlanFetcher;
-  integrity: IPlanIntegrityValidator;
+  planArtifactReader: TemporalPlanArtifactReader;
 }
 
 export interface StepInput {

@@ -1,7 +1,7 @@
 version: 1
 generatedFrom: git ls-files
 unitManifest: docs/planning/status/system-governance-unit-index.units.yaml
-fileCount: 4041
+fileCount: 4046
 files:
   - fileId: F-7C0FAC63D273
     pathHash: 16228f9cd18f5479d183ab61cb01d3cfc66645b3053a3d23dd9aef2069c3410a
@@ -12073,9 +12073,9 @@ files:
       - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-EFD22BB3AB35
     pathHash: 3c95662fd4a2c8a92c28a6d5b7016b377ab05c951f52c08a5d6688d3e95f1fde
-    contentHash: 05156f21dd0bc5783578a207c443733e9a50f81eaa6727724910ca0dae92d67f
-    governanceHash: b6ab20b7c68f25a6651110f102060fd20395a4a6032155e142539b0bd23cba36
-    stateFingerprint: 3d4db62f39b26483961c89578a30cf71787b70ea47cd1f2c7b811cdc53573ccd
+    contentHash: 57bc05d26d079fb488fe098a70cf888cdf006d476a0955fd0a2b0f0d4a0eef7f
+    governanceHash: 71b449271d48e6c1e3580c2405c9fa5231b9508f9c5abd2faf9ff69c11c0abc7
+    stateFingerprint: 5edc054c3b576603c76df884ca27ae30a705c03176b6f0c984f5f7e1e0f6845d
     path: apps/temporal-worker/src/runtime/runtimeTypes.ts
     owningUnit: SYS-PLANSTORE-TEMPORAL-COMPOSITION
     rootUnit: SYS-DVT
@@ -12086,13 +12086,14 @@ files:
       - SYS-PLANSTORE
       - SYS-PLANSTORE-TEMPORAL-COMPOSITION
     ownerLevel: component
-    unitStatus: legacy
+    unitStatus: review
     isDrift: false
-    isLegacy: true
+    isLegacy: false
     dddOwner: ADP
-    cqRails: PS-Q04
+    cqRails: PS-Q08
     governance:
       - docs/architecture/components/engine/adapters/temporal/temporal-planref-workflow-boundary.md
+      - docs/planning/closeouts/20260502-s08-temporal-legacy-removal-closeout.md
       - docs/risk-register/quality/R-20260427-TEMPORAL-PLANREF-CONFIG-HARDENING.yaml
       - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-22634685CDDE
@@ -12141,9 +12142,9 @@ files:
       - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-7778F33448C7
     pathHash: faec69dab36cdb1da8164a1b89769bc908be772b095ed411f6ad1eab0047d20d
-    contentHash: b662b56f23be9b3297a1eda6d34385eef8b35081004258c0fe25bc1b80c581bf
+    contentHash: 9ab858c63b56b54b4f90b7bdfb9bcaa75160d5be1517f8acefa1e97e9db2ee7c
     governanceHash: 93bc831e9394eaf65bbfc04a368b6babed2866cf1760707816ad581f13ba582c
-    stateFingerprint: 84a72697817a00b279a0e9158e69485eb2f94b4e035742edbd572244b5cada15
+    stateFingerprint: 0ce33cc989a323ae22cfe4f56fdf29f0a3809026681db24dd94cf861fb0db3bc
     path: apps/temporal-worker/src/runtime/temporalWorkerLifecycle.ts
     owningUnit: SYS-WORKERS-ROOT
     rootUnit: SYS-DVT
@@ -12163,9 +12164,9 @@ files:
       - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-7FC6AC4ABFA8
     pathHash: b8114b908e9f5de1d2c0151a5e134056ad9c9595c0efc52a774c2f843c80e568
-    contentHash: cbccc1c0b08dabb4c339a7c804098d26360430ec0838437a9aa6f34d7bb0d788
-    governanceHash: b6ab20b7c68f25a6651110f102060fd20395a4a6032155e142539b0bd23cba36
-    stateFingerprint: 0b9bee21df1aec4b8461750734856254ab36325a63baf92d43f52738761e692a
+    contentHash: 5b10403eb29fa5c49cc07c73d93f09529d4c2eab6b2f3e6711c89449010564de
+    governanceHash: 71b449271d48e6c1e3580c2405c9fa5231b9508f9c5abd2faf9ff69c11c0abc7
+    stateFingerprint: aad95c21dad29baaf06a82047bb8701c6fee390a485cd0baef1ec65fd4c39ebf
     path: apps/temporal-worker/src/runtime/temporalWorkerRuntimeHandle.ts
     owningUnit: SYS-PLANSTORE-TEMPORAL-COMPOSITION
     rootUnit: SYS-DVT
@@ -12176,20 +12177,21 @@ files:
       - SYS-PLANSTORE
       - SYS-PLANSTORE-TEMPORAL-COMPOSITION
     ownerLevel: component
-    unitStatus: legacy
+    unitStatus: review
     isDrift: false
-    isLegacy: true
+    isLegacy: false
     dddOwner: ADP
-    cqRails: PS-Q04
+    cqRails: PS-Q08
     governance:
       - docs/architecture/components/engine/adapters/temporal/temporal-planref-workflow-boundary.md
+      - docs/planning/closeouts/20260502-s08-temporal-legacy-removal-closeout.md
       - docs/risk-register/quality/R-20260427-TEMPORAL-PLANREF-CONFIG-HARDENING.yaml
       - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-B64C19971E6B
     pathHash: 4ab55046ba8f5b52bb71f6c90a90c33086509b29e98eab42dffdc4107d0065c4
-    contentHash: 5ebd0e02ac25ab710141f8314569b77dbdbcdc5c4bfc57f31ad0dd61fbfb6ccf
-    governanceHash: b6ab20b7c68f25a6651110f102060fd20395a4a6032155e142539b0bd23cba36
-    stateFingerprint: 37a344341660632caa5969f61073760a687c8fe0d1ba7113f523f95606d1993a
+    contentHash: 1078c5a7606e9c11b3a0ab9b573f68cfe9772fd3f5a42b1a091e8bc6423243ab
+    governanceHash: 71b449271d48e6c1e3580c2405c9fa5231b9508f9c5abd2faf9ff69c11c0abc7
+    stateFingerprint: af7e7e5021a4296e0c7d10920c61ba069f2cf5e1f8d5285a833f6df009f85d68
     path: apps/temporal-worker/src/runtime/temporalWorkerRuntimeResources.ts
     owningUnit: SYS-PLANSTORE-TEMPORAL-COMPOSITION
     rootUnit: SYS-DVT
@@ -12200,20 +12202,21 @@ files:
       - SYS-PLANSTORE
       - SYS-PLANSTORE-TEMPORAL-COMPOSITION
     ownerLevel: component
-    unitStatus: legacy
+    unitStatus: review
     isDrift: false
-    isLegacy: true
+    isLegacy: false
     dddOwner: ADP
-    cqRails: PS-Q04
+    cqRails: PS-Q08
     governance:
       - docs/architecture/components/engine/adapters/temporal/temporal-planref-workflow-boundary.md
+      - docs/planning/closeouts/20260502-s08-temporal-legacy-removal-closeout.md
       - docs/risk-register/quality/R-20260427-TEMPORAL-PLANREF-CONFIG-HARDENING.yaml
       - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-FD9E55191B1C
     pathHash: 51e50f20c1c3d945a29a23d03622a68a30a11cf3a9e035da676af00867fcc970
-    contentHash: d4d0902751d1aba4ae85789222af3335e7735175ef0367a3ab6ec9c7d4bddd01
-    governanceHash: b6ab20b7c68f25a6651110f102060fd20395a4a6032155e142539b0bd23cba36
-    stateFingerprint: 7a71ac55ecf86674497086a2eed373ee87008b40b2529c522be82591c712fe0a
+    contentHash: d1402877964c87cceb1114bd01f0ff5e7ac13954c5e951118b8c46e4e146f526
+    governanceHash: 71b449271d48e6c1e3580c2405c9fa5231b9508f9c5abd2faf9ff69c11c0abc7
+    stateFingerprint: 52eb1dedb52882ca75f308e2063e46608e76e1fd5c6adb1d28a7668355ace8f7
     path: apps/temporal-worker/src/runtime/temporalWorkerStores.ts
     owningUnit: SYS-PLANSTORE-TEMPORAL-COMPOSITION
     rootUnit: SYS-DVT
@@ -12224,13 +12227,14 @@ files:
       - SYS-PLANSTORE
       - SYS-PLANSTORE-TEMPORAL-COMPOSITION
     ownerLevel: component
-    unitStatus: legacy
+    unitStatus: review
     isDrift: false
-    isLegacy: true
+    isLegacy: false
     dddOwner: ADP
-    cqRails: PS-Q04
+    cqRails: PS-Q08
     governance:
       - docs/architecture/components/engine/adapters/temporal/temporal-planref-workflow-boundary.md
+      - docs/planning/closeouts/20260502-s08-temporal-legacy-removal-closeout.md
       - docs/risk-register/quality/R-20260427-TEMPORAL-PLANREF-CONFIG-HARDENING.yaml
       - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-6C3668F0F5B8
@@ -12323,9 +12327,9 @@ files:
       - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-2BA103E368B5
     pathHash: c42aae1bc2862e19d0956eec4d4678c18fc6ec84229401871f30b1b8422deafd
-    contentHash: 315cc63a1c7a9922d790d831f1b6dce65426918679c0109c761eba34b6321caf
-    governanceHash: b6ab20b7c68f25a6651110f102060fd20395a4a6032155e142539b0bd23cba36
-    stateFingerprint: ea7538379e97746d498e6dbe0ad62b9d8268716b70bcfbe79344ca75252be35d
+    contentHash: b3b0de4308f524fc6d62c10091f817740728af23790adcdc72c38544be4410d0
+    governanceHash: 71b449271d48e6c1e3580c2405c9fa5231b9508f9c5abd2faf9ff69c11c0abc7
+    stateFingerprint: 74e0c2e7e82cfbb7a9729af72ad173da40194c257d558b0eaa36c5aaf23de15f
     path: apps/temporal-worker/test/runtime/createTemporalWorkerRuntime.srp.architecture.test.ts
     owningUnit: SYS-PLANSTORE-TEMPORAL-COMPOSITION
     rootUnit: SYS-DVT
@@ -12336,13 +12340,14 @@ files:
       - SYS-PLANSTORE
       - SYS-PLANSTORE-TEMPORAL-COMPOSITION
     ownerLevel: component
-    unitStatus: legacy
+    unitStatus: review
     isDrift: false
-    isLegacy: true
+    isLegacy: false
     dddOwner: ADP
-    cqRails: PS-Q04
+    cqRails: PS-Q08
     governance:
       - docs/architecture/components/engine/adapters/temporal/temporal-planref-workflow-boundary.md
+      - docs/planning/closeouts/20260502-s08-temporal-legacy-removal-closeout.md
       - docs/risk-register/quality/R-20260427-TEMPORAL-PLANREF-CONFIG-HARDENING.yaml
       - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-B640C41AFCF2
@@ -31204,9 +31209,9 @@ files:
       - pnpm-workspace.yaml
   - fileId: F-F3E0D3EF3EDF
     pathHash: 7ffef8a9564c20617afbac4f9951c8590b8f10d77fe0d6288233e79899376554
-    contentHash: 9e4a84f0c33486f1b59e4ada957206e57837e723c91ad8e587053ca7ba7fc993
+    contentHash: f56b7468d8119cc28f5993a69023bc7f8d325ade2e4f51946bfd020ebc465f49
     governanceHash: d9f768b3da4be04e83890eae632052f05a0776f4990c39b7b2ab2c3b6cc14524
-    stateFingerprint: 6742fc6088c92ddca122745d8752691eea3a0a2c7528ef8380f76a2c38bb6d89
+    stateFingerprint: 655a20f82b194760b97d5f6d270e5c955492e0888c81ea2ca1dac4a3316641dc
     path: docs/.manifest.json
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
@@ -47823,11 +47828,34 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
+  - fileId: F-EA92BD48853B
+    pathHash: 6b81a39ff8cad933d93810f1486454a378c0d6e05994a1a2f7eda329c74a52f7
+    contentHash: 4887ce08b50f36f3978f3c6ee6b0e56749bf75d0f00b84455b62dbb46bd49704
+    governanceHash: 689f8bfb2497e7ff01ff18ed84dbf5962357141d252b9b3f8220b737cc7ccf67
+    stateFingerprint: 74af5559f408f14a6a6863c591d91a229aad358650aac096c3699b28e4f6b852
+    path: docs/evidence/ed-20260502-s08-temporal-legacy-removal.md
+    owningUnit: SYS-PLANSTORE-DOCS-RISK
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-DOCS-RISK
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-DOCS-RISK
+    ownerLevel: component
+    unitStatus: review
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - governance and evidence
+    governance:
+      - docs/planning/status/system-governance-unit-index-20260501.md
+      - docs/planning/status/system-governance-document-unit-map-20260501.md
   - fileId: F-ED7F62424DAF
     pathHash: a71b304e1fb459253db909f95946561e192ae96fe28f92e0f92f3f4dd1f5126a
-    contentHash: 4526e3ec9bf954e7e58a409565a4184bf421d12db374a9bca9f69b2347fc427c
+    contentHash: cfd0504d34a0386e71ee378dd6bb956dbb79c171d550280b3caf41f653069e69
     governanceHash: d9f768b3da4be04e83890eae632052f05a0776f4990c39b7b2ab2c3b6cc14524
-    stateFingerprint: 486558e9f0432a9c3df9001f31231b70d389af59640d7346eee64bd4c3ba2830
+    stateFingerprint: 159ddf89e15e99d691754ea6a6d69b4ba00cbfacef0afcd064627bafa3d7a902
     path: docs/evidence/index.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
@@ -48906,9 +48934,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-B3CB3C334716
     pathHash: e5c7cd90bf748b62a283c0115677fda371cb5ae3a8d9de91b86c0e4bf364912f
-    contentHash: 13b6ef4cd8ac085b20614ce594251e33da8d093fc7696e74dfa0fb1e28e826b5
+    contentHash: 29cee259c46d66e49765a905a9665e63eeac5ed501dd0a64d006305e4a2b5185
     governanceHash: d9f768b3da4be04e83890eae632052f05a0776f4990c39b7b2ab2c3b6cc14524
-    stateFingerprint: 3a5f2ebaf92d3516dbb0d09f2eecbad6b04f68f0e65ebd260c406b7e0bceef39
+    stateFingerprint: c1d3045a14ce3d91f8669cfd9e740ca7cea3bb6faec01baa2a1bb782a8fd7e65
     path: docs/guides/testing-and-ci-capabilities.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
@@ -57969,6 +57997,29 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
+  - fileId: F-75119D249562
+    pathHash: 0b5b1f605359a289604f2930d2427f0b61107b314e5c93cfaf9015e22a3df0e9
+    contentHash: 9cddbf51183d83d496d97917e0a7552e25c6d39844b792701880354607be3efb
+    governanceHash: 689f8bfb2497e7ff01ff18ed84dbf5962357141d252b9b3f8220b737cc7ccf67
+    stateFingerprint: e71ade24a6b022e06fb28805512cd65b29f22ddfe8d2099fa53012ed4d320166
+    path: docs/planning/closeouts/20260502-s08-temporal-legacy-removal-closeout.md
+    owningUnit: SYS-PLANSTORE-DOCS-RISK
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-DOCS-RISK
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-DOCS-RISK
+    ownerLevel: component
+    unitStatus: review
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - governance and evidence
+    governance:
+      - docs/planning/status/system-governance-unit-index-20260501.md
+      - docs/planning/status/system-governance-document-unit-map-20260501.md
   - fileId: F-917A85C3F19A
     pathHash: f84a776c4cb3d3588e36d2e4b5889b65a2083bcf87f4f4d2c550adb7bcc2f653
     contentHash: e6b4637ecc422ae8afdf81c8cab834f5577aefd175cb92eae08240a6e453bade
@@ -60139,9 +60190,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-EF1F0DBBB1D8
     pathHash: d2ebbe3b36b0d4c10247d0bef16fe8e5b65b52ed226557be52d5d634cdd48c9c
-    contentHash: 0a3f2bac061ec15bd2d83d69ba62cfe0451ce30df92ec3796a97ab265f29ad12
+    contentHash: dc4f2173c03aee4c93e25e4f5e56300818d78e787fcc77a1c780af0e26f5715a
     governanceHash: d9f768b3da4be04e83890eae632052f05a0776f4990c39b7b2ab2c3b6cc14524
-    stateFingerprint: 125f6d892a8c071405c1f8454dcae14438c8faf1d50db15907bfe8ae2d87f443
+    stateFingerprint: 5845922962d72a772f1782a986b84a39de167ad281911ae1f4e84b32faa4ffaf
     path: >-
       docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -60835,9 +60886,9 @@ files:
       - docs/planning/status/system-governance-document-unit-map-20260501.md
   - fileId: F-5DB8E210931B
     pathHash: b846de26910dee57da406135873cb389c412c96fb21acc6f8f2753bee4b76fb7
-    contentHash: c8dead0cd19238d4b0be65aba6a4a73b2bc68cfee65bf171a496de7f88a6cd30
+    contentHash: 72caf50415ae1a0a51c1a640b410df52919f86b81bae404a3448f0a1a98f77fd
     governanceHash: 689f8bfb2497e7ff01ff18ed84dbf5962357141d252b9b3f8220b737cc7ccf67
-    stateFingerprint: 57db8a497c186f1ae5cb5b08e3ae8e8ac3e0fa9114cd1523b578e57728416c7b
+    stateFingerprint: 2f27f10778354e7342ee5addeb9a1eba99f191ce5c6307bde9771f821d572ad0
     path: >-
       docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
     owningUnit: SYS-PLANSTORE-DOCS-RISK
@@ -65640,9 +65691,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-3F8A5537DF6A
     pathHash: 23fee4584ae56d429bbb54476f895c4b88635857bb1b51814b4f5c0b49d2ee67
-    contentHash: 33b516bb2f8e7713e5fff05df99371472778b4a908e7cf6e0e3c8aa121664984
+    contentHash: 27023875b8c34f63d5b54bf49929dfe5a442eb4c21b4e3ab027da3e3dae92461
     governanceHash: d9f768b3da4be04e83890eae632052f05a0776f4990c39b7b2ab2c3b6cc14524
-    stateFingerprint: ca55022234c4a5198b1fe2299d8293f0b86e6e85414522a4adb0b60bcc163fbc
+    stateFingerprint: 4a32e4832ba6788e529fc7c381069845599c0ddd1b2aa745d1d0a31fe79e4757
     path: docs/planning/status/generated-code-state.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
@@ -65847,9 +65898,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-5293EA43A26A
     pathHash: 8b24735b0574e4a4affd5d6e72a0c610556d81979eb7c42391627739b2df44ca
-    contentHash: de1cf4f02425335f8d0d4d9beac31cef85b9d85e9a81f18054218fe78e7d2220
+    contentHash: baa8936e3aa2e3747928055231f86ce0bed5cfe862161cf350f755c5df047384
     governanceHash: d9f768b3da4be04e83890eae632052f05a0776f4990c39b7b2ab2c3b6cc14524
-    stateFingerprint: 6f585c423fcfcf92c4d5db87335d8ad51000c3abeb664f55aaa9648da9d83a9d
+    stateFingerprint: a4bc523c3875a34205603fd949273a5cf6bc38a7996bf951becaf37ece59ab94
     path: docs/planning/status/system-governance-component-index-20260501.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
@@ -65870,9 +65921,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-65470A9009F7
     pathHash: 68ae073be56f8b4465649dfa1967e94f85737262e8851cd582d4f7c81e950839
-    contentHash: 83fc89db8c84d32f4027356e901fbb94ffbac11d8997106d0e4f8ad93c363255
+    contentHash: cb2f0b684ba2b75cf12e5995b70aa32fa0785f8ea98c8ee928ea6346857376e6
     governanceHash: d9f768b3da4be04e83890eae632052f05a0776f4990c39b7b2ab2c3b6cc14524
-    stateFingerprint: 5c1061cc75a0cc3bc36adf5c779e7fa78f1dbe0889c8579f3483c08cbdc79c94
+    stateFingerprint: f17d4411eb6314580a5c02d24fcb61b596e51b442431bb2d87ca3746b6ba55c6
     path: docs/planning/status/system-governance-component-index.components.yaml
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
@@ -65893,9 +65944,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-5D25269D1180
     pathHash: c8ea11d63cfe1b8bdc0b0707aab7de15ebc29dada77087092c207440dd40a350
-    contentHash: 4e8c9d056ee64ea994c5a37bc2a183718125986a851edab3a51116a3784c9cef
+    contentHash: 6a91c575349cd24ea4526fd1d43711416563aa5f29b2291a1cb02dadaa13df39
     governanceHash: d9f768b3da4be04e83890eae632052f05a0776f4990c39b7b2ab2c3b6cc14524
-    stateFingerprint: e8c1a5bd66bbe31d51c6ca1b51f2c8e6888992385641f4092bebc3e15fe84a1b
+    stateFingerprint: 8a0f995c2e797241d689766856ba841f5364c35035d72713dc9d113ad771fa6b
     path: docs/planning/status/system-governance-document-unit-map-20260501.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
@@ -65916,9 +65967,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-E7EC54670607
     pathHash: f7d33bec5901a02423d9acc6f26ba2984884dc569b1b3fcde65c9e0b1b38cf59
-    contentHash: 5d5e51aa9fa0ccc5e877c1ce031052028eaf0e68a5b37137369e1d6ba15dc18b
+    contentHash: be5e112eadef666d0739d20a46fec1523a18aee7caef4c155bb5039da67a02a3
     governanceHash: d9f768b3da4be04e83890eae632052f05a0776f4990c39b7b2ab2c3b6cc14524
-    stateFingerprint: da446d4940869e808b0a1a02845031766148dc983e458c792f72fd4639d15480
+    stateFingerprint: 3dfd1bed38cf8b0e8ffdd7c8be4dbc6ccaa572c272a53c522f4c867a06db2b92
     path: docs/planning/status/system-governance-document-unit-map.docs.yaml
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
@@ -65939,9 +65990,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-6B8271C2051C
     pathHash: 4bd0ab5904eb54e02bb9f0957eed059b06dfd5cb253044a2b0c01cad2eb3a7ca
-    contentHash: 94995e7e926e9a2c55f28147d61fcf8d7b68978c2cea6fd211727f3deee5bcfb
+    contentHash: ceffba8510cf936667ce19afccbc15722e0a12bbd001eb1bd714188d6bfb1f89
     governanceHash: d9f768b3da4be04e83890eae632052f05a0776f4990c39b7b2ab2c3b6cc14524
-    stateFingerprint: 51df169c2115296796a00db1d185b03230e5587172bbf405d68ba49b3b4511cc
+    stateFingerprint: 50b306a8ffdfd60371a930d1976d75ef8f41cbe5bffdaa743075fb8969370e5b
     path: docs/planning/status/system-governance-file-fingerprint-baseline.yaml
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
@@ -65985,9 +66036,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-8C3905234D4D
     pathHash: 9aa5662237a193b3e97f4926a7bc1081f9ea08b908b351f5327fd00add4ac0aa
-    contentHash: 6fb615ce9ac11fd9f50e0386838a19e27c25d8b7e6f7033f5f27d5ed23381372
+    contentHash: c937c8cfaad3b4441faeba3db5057428a42d0d1a67ae0cdc13335cace18230b3
     governanceHash: d9f768b3da4be04e83890eae632052f05a0776f4990c39b7b2ab2c3b6cc14524
-    stateFingerprint: f78e3789450259770983a20bf8a2177b32ddecd174b0a749b13d323ba64892da
+    stateFingerprint: 0aef4e16f63b465a8aa9d5e0f1a6026bb4ca4ea66ba257513d335249955046b3
     path: docs/planning/status/system-governance-file-index-20260501.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
@@ -66008,9 +66059,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-9B87FBC12CBD
     pathHash: dba7e9c8e65a57616fcb6349019afe12870f7cfe88158c889f6b04cfabee354b
-    contentHash: aa05b87053f6d53e49fe9cc8c4cebc85a63187e2b42cbb2bd358812ac277112e
+    contentHash: 1db50526b4925547a0f591ab726782062ac2413c9c80469655407d42edc0ff9d
     governanceHash: d9f768b3da4be04e83890eae632052f05a0776f4990c39b7b2ab2c3b6cc14524
-    stateFingerprint: 27691a145bcb872c786886770aa887e419d11ef5578ea147215e60fb0e9fa0e2
+    stateFingerprint: 175981a24a41be63aa14dc35fb146f3ae15cd22201424cbdf000ed4e2a525d90
     path: docs/planning/status/system-governance-file-index.files.yaml
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
@@ -66031,9 +66082,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-04D13818BC81
     pathHash: 559a4819194227c3d93a2357a46ee679374ae08fe6032cec8286a004e6d66e99
-    contentHash: 7db1711b3c576b58fdcb3b8726efb6c7cfd634ff090c4e50860f9ac681388647
+    contentHash: d94d65723a26119734aee35da1adb6f5b0cbd82a3d6889b3cdc66ff80c677dca
     governanceHash: 689f8bfb2497e7ff01ff18ed84dbf5962357141d252b9b3f8220b737cc7ccf67
-    stateFingerprint: 71acb5b92d7f59281dc9a4be8dfdbad4a1ae2fe23261a6cdb34813f86f2feb27
+    stateFingerprint: b3f2fd848aa69539fe0782880e98e74b6c4c45812328d83a06ba6701fe19cefa
     path: docs/planning/status/system-governance-planstore-file-ownership-20260501.md
     owningUnit: SYS-PLANSTORE-DOCS-RISK
     rootUnit: SYS-DVT
@@ -66054,9 +66105,9 @@ files:
       - docs/planning/status/system-governance-document-unit-map-20260501.md
   - fileId: F-A6995D281DFD
     pathHash: 9ba319a7c2e3fe5e2ce223da852b6109d6a8fadd1c881f3803e1b69b000fe6fc
-    contentHash: a90bb5c9232156e7892cf2c6b85c4202b8ef5fa79cbfd50134c5774b2f61d8d2
+    contentHash: 7dcd52db32328b2817851e93953e328c259124d345ea008b42fa43fb4c121e3c
     governanceHash: d9f768b3da4be04e83890eae632052f05a0776f4990c39b7b2ab2c3b6cc14524
-    stateFingerprint: dfba93185e2f4da7ac7f34c52e36253f165d852495d030b3dbb34019f54b6e72
+    stateFingerprint: 4dca191899f8e66e71e17f63e9889738371f8a27a3d0a01af87537851dfcb0ff
     path: docs/planning/status/system-governance-unit-index-20260501.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
@@ -66077,9 +66128,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-AD720C708C3F
     pathHash: dec95112a57962a24482cc41702db78f640ae388bb57062fbc491a10ff74ae5e
-    contentHash: 654f642fdb417576977dd4ba89c5fab9a248b47fff97c412c5a6db51dbf056c5
+    contentHash: c40e043ee063ce7379e78a5eea9f907c88c234a36047acd94b5a355522a1df3a
     governanceHash: d9f768b3da4be04e83890eae632052f05a0776f4990c39b7b2ab2c3b6cc14524
-    stateFingerprint: ea660a20bc2a5ec8fca066039d5fd21805f15de3bf25636382a7195f68f73c5e
+    stateFingerprint: 37428197219331dcc9cc26aadaf1e6c19ff348a5abee0dfb6ff8380ae803939c
     path: docs/planning/status/system-governance-unit-index.units.yaml
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
@@ -66123,9 +66174,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-E5239C905626
     pathHash: 78afd5d8553b66b0e1baca3f67c2f512d4a62fd70c301bc866af50cb348374b6
-    contentHash: daada1a016cd8b6094fe9e5714572b7f23a591d83f4fbee19ec066c6a1b61569
+    contentHash: 0e954846bd952a0761453449741f7e2f50e1f1e63450c12ac1aceda7c968bb51
     governanceHash: d9f768b3da4be04e83890eae632052f05a0776f4990c39b7b2ab2c3b6cc14524
-    stateFingerprint: 5fd6b87ead6c82ad4c06f6a4407f2773dcf342eefcd5b7370c5553b82c053e59
+    stateFingerprint: 715836875d7253177cd6f16529789170d59c561573d77e8cff10bf2a38bcc956
     path: docs/planning/status/system-operations-inventory-20260501.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
@@ -69505,9 +69556,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-172E099564B9
     pathHash: 84b6b53afd0c2294fa7560db1f3e17f040f79f42a872e8d61d95a0131a5907c3
-    contentHash: 56462d9580a6376a4a4b363cb4d8c697d5e2d012bf7ce0614d85d2608b124d46
+    contentHash: 65053fe523b879575d9f7ca7ca59cf095141b2ac62ce799223c0e3654c49512b
     governanceHash: d9f768b3da4be04e83890eae632052f05a0776f4990c39b7b2ab2c3b6cc14524
-    stateFingerprint: bd4bf46fc9913d873164731b9e12d014623650e3e8dbf1a30e87d4a63eba4fca
+    stateFingerprint: 8e436644a67dd3e9ff2021cf389a65ef1439777494165a8532215327e501a14f
     path: docs/risk-register/quality/index.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
@@ -69572,6 +69623,29 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
+  - fileId: F-3354F659981A
+    pathHash: 5e8b81b799f3408cbe91e44478c939704c360034109fa79ac0ee5d9cf953cef9
+    contentHash: 9c665df36e93652fe312e5a1034710daf2c9a056f7c954de2d0d0ee55ac50805
+    governanceHash: 689f8bfb2497e7ff01ff18ed84dbf5962357141d252b9b3f8220b737cc7ccf67
+    stateFingerprint: 607aaf5cdc1a6288b354aa32ed2f5527988d3e03515d6977e904ff2eedc24b11
+    path: docs/risk-register/quality/r-20260502-s08-temporal-dispatch-scope.yaml
+    owningUnit: SYS-PLANSTORE-DOCS-RISK
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-DOCS-RISK
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-DOCS-RISK
+    ownerLevel: component
+    unitStatus: review
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - governance and evidence
+    governance:
+      - docs/planning/status/system-governance-unit-index-20260501.md
+      - docs/planning/status/system-governance-document-unit-map-20260501.md
   - fileId: F-B8E1EF9BD766
     pathHash: 6d845048a04ed6d1c269d80c90aae13eb20f2c99f2f4869465ff1a46d2ea773d
     contentHash: 2b9df7d483c4b5b2ba70a7f6a8bb9b8e2f2984510f5f9388b4d6fb26086529d2
@@ -73638,9 +73712,9 @@ files:
       - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-829061F8D84E
     pathHash: f4f2bae075c86c3d0a86feb73770a8ee86223f6da7ffff3227def30e80f1c66f
-    contentHash: 5ff07117100708c896e48255a01672a050b8aa09292af4cbc15a893842f5c9c9
+    contentHash: bdc18fc4e7efde0de69a3f97b44f323d0ce188e28a5e998b1360a2681b9720d5
     governanceHash: 802052ee2fb743c397a020199a2e52184945bc486c171030c10df1782ced93af
-    stateFingerprint: bfc761e6daaf83cd45d7397d1a5528773dbeb29908665623f76b88e0ccf030c2
+    stateFingerprint: fded27d206b0aa1eb512e667648ea579bd68abc06c77fdf8e85c710644b2c250
     path: packages/@dvt/adapter-temporal/src/activities/activityFactory.ts
     owningUnit: SYS-ADAPTERS-ROOT
     rootUnit: SYS-DVT
@@ -73682,9 +73756,9 @@ files:
       - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-1A52AD53DCA1
     pathHash: 64c5832b9052c3e2fc45a48ad84d4acdc431030f59eaa71f937dd469f4725f40
-    contentHash: f804b7bc7ebfe5036a0d4e81e2371a5e6c0769bf1325686da5788b12d773db65
+    contentHash: 50ccce47da87189bc22ceec3c2b442b7129f34a4eb9710457c63cd6d8c0955d3
     governanceHash: 802052ee2fb743c397a020199a2e52184945bc486c171030c10df1782ced93af
-    stateFingerprint: ecf18640a4ff66f918967ac74b9d1b43c78a3122dfbcb10a8c90874272756fc8
+    stateFingerprint: 15ced0661b2bfce4f6c65b861944d5473b93803e0a5ba346d98ff16feb990d1e
     path: packages/@dvt/adapter-temporal/src/activities/activityTypes.ts
     owningUnit: SYS-ADAPTERS-ROOT
     rootUnit: SYS-DVT
@@ -73726,9 +73800,9 @@ files:
       - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-E515300AEEF3
     pathHash: acecaa4d60beab4d8dddc86fc295c609bdb5daed8f50b202a6c2d62474248ebf
-    contentHash: 0d5e327b6ff6e7e824a272d47f12e5777057e18e6dc70ea4eaba6c398492726a
+    contentHash: 1db4a0d7a93cb84f5611236fdb0ef4f913f4faef3b6354969602a09d2ec44e38
     governanceHash: 802052ee2fb743c397a020199a2e52184945bc486c171030c10df1782ced93af
-    stateFingerprint: 7d2565d99e10e6c2512c452eb00adbb3a2f921c1f598199e06da98b423380b7c
+    stateFingerprint: da7faf7376db051aeff26be57978352bae05f84b85f63819c6a0a9c82cc5e54d
     path: packages/@dvt/adapter-temporal/src/activities/stepActivities.ts
     owningUnit: SYS-ADAPTERS-ROOT
     rootUnit: SYS-DVT
@@ -73790,6 +73864,31 @@ files:
     cqRails: adapter implementations of owned ports
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-6EF8ECA412B2
+    pathHash: a44d8a7cfe88c4e6826d14c840dec02fd8436d8397a5ee17309abcf0cec2db69
+    contentHash: 2851d86667b67e152a2abce520587e89ad3e6318295cdbd758d6d5e76f2a515e
+    governanceHash: 71b449271d48e6c1e3580c2405c9fa5231b9508f9c5abd2faf9ff69c11c0abc7
+    stateFingerprint: 94ce88df8f4ea102250e9c19bfed4d3585b50883a25715cb87fc1f671ae37b92
+    path: packages/@dvt/adapter-temporal/src/activities/temporalPlanArtifactReader.ts
+    owningUnit: SYS-PLANSTORE-TEMPORAL-COMPOSITION
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-TEMPORAL-COMPOSITION
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-TEMPORAL-COMPOSITION
+    ownerLevel: component
+    unitStatus: review
+    isDrift: false
+    isLegacy: false
+    dddOwner: ADP
+    cqRails: PS-Q08
+    governance:
+      - docs/architecture/components/engine/adapters/temporal/temporal-planref-workflow-boundary.md
+      - docs/planning/closeouts/20260502-s08-temporal-legacy-removal-closeout.md
+      - docs/risk-register/quality/R-20260427-TEMPORAL-PLANREF-CONFIG-HARDENING.yaml
+      - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-113F69BF2DFE
     pathHash: d7542414e1fb16b2726b50b6037a9d101ab0f24085cd1ba29ccf4d0084de9896
     contentHash: daf04ae576dbd08794be61189798791e37dd725f706bada9ed68ebea0cb187d7
@@ -73836,9 +73935,9 @@ files:
       - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-EA9444DC4B18
     pathHash: 0a51a8aa41eef204bf3363d778b321492db742adea76773a9587ceeb761f9a7b
-    contentHash: 4f0f4312a9da72a97a62c22e23a1f67c9f9b03197ef50aaaa8220367b0242f8a
+    contentHash: 99e563f1bba9594c3a03400edaaa95003bd92aecdd6520b246d73aba61bfbc6f
     governanceHash: 802052ee2fb743c397a020199a2e52184945bc486c171030c10df1782ced93af
-    stateFingerprint: 959e397c2fdae117c79fda4259fe4e4544a31241ac0b148eb23836ceaedf6d84
+    stateFingerprint: dc7d7f60514d01eda2f613c5be584cf02c02217db996c36e48fc540cf46398e1
     path: packages/@dvt/adapter-temporal/src/index.ts
     owningUnit: SYS-ADAPTERS-ROOT
     rootUnit: SYS-DVT
@@ -74145,8 +74244,8 @@ files:
   - fileId: F-86690133B407
     pathHash: 04c4438e28172d670b1dd21f953a6a7addb9c683c22e642f2caf58774b1a1ae5
     contentHash: e48cfa9e851dd275670e1c37fa6593b89f22430a9b16c58b7feaae4fd58758b4
-    governanceHash: b6ab20b7c68f25a6651110f102060fd20395a4a6032155e142539b0bd23cba36
-    stateFingerprint: af6a8d1e299e981695496d815b2bd93beb8546e0cd770c1eba6c70772fca4cc0
+    governanceHash: 71b449271d48e6c1e3580c2405c9fa5231b9508f9c5abd2faf9ff69c11c0abc7
+    stateFingerprint: cde4f371966c8710beddd33f350cde03441e6ae09a2cea8d26892646ad141869
     path: packages/@dvt/adapter-temporal/src/temporalPlanRefCapacitySlaPolicy.ts
     owningUnit: SYS-PLANSTORE-TEMPORAL-COMPOSITION
     rootUnit: SYS-DVT
@@ -74157,13 +74256,14 @@ files:
       - SYS-PLANSTORE
       - SYS-PLANSTORE-TEMPORAL-COMPOSITION
     ownerLevel: component
-    unitStatus: legacy
+    unitStatus: review
     isDrift: false
-    isLegacy: true
+    isLegacy: false
     dddOwner: ADP
-    cqRails: PS-Q04
+    cqRails: PS-Q08
     governance:
       - docs/architecture/components/engine/adapters/temporal/temporal-planref-workflow-boundary.md
+      - docs/planning/closeouts/20260502-s08-temporal-legacy-removal-closeout.md
       - docs/risk-register/quality/R-20260427-TEMPORAL-PLANREF-CONFIG-HARDENING.yaml
       - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-E1AF804210FD
@@ -74190,9 +74290,9 @@ files:
       - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-34057DE17195
     pathHash: 40ced8ca6ef00efaeba33a8ce5b1476deb4d70e8a6c2a1a7931a8d82354ec39b
-    contentHash: fa973117e5297f50549b0fe9e2ad0e1d877abb174930da1a63047321258fee6a
+    contentHash: b222bc9803ca4a95005b5ae142a622a71ca376ebf247b00c10b1df9d96cad719
     governanceHash: 802052ee2fb743c397a020199a2e52184945bc486c171030c10df1782ced93af
-    stateFingerprint: 4b1beeaaa6f2d8802ff55c064fbe2069f79b1f13179f64860b3cd418cfad367f
+    stateFingerprint: 23b1b03298b79fe819d8e1aadd9c587195a9caf1658e1e6da8831b39c5eda915
     path: packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts
     owningUnit: SYS-ADAPTERS-ROOT
     rootUnit: SYS-DVT
@@ -74322,9 +74422,9 @@ files:
       - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-03D5A583EB31
     pathHash: 73bee8270dd96befb0c74cea97c7e18f7d2b056c7cbfdd4f7dcbf537e6a96fca
-    contentHash: ead59fe5497cc45865d177ab870994bf34db23826fc30e5d24f535d0250c97ae
+    contentHash: 6f9f4f1b336a65e380f7a1585a5539f5b2c503f41bebc103b950be1c3e7e494f
     governanceHash: 802052ee2fb743c397a020199a2e52184945bc486c171030c10df1782ced93af
-    stateFingerprint: ef43c47e0c32284133552e67b89b3575e2f9a24e009ffa59b4b4f0221bf3bc33
+    stateFingerprint: 178a38879aab21e367950029b43d96b99d76bb4f91d41b9e48fdb74d512ec047
     path: packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.layers.ts
     owningUnit: SYS-ADAPTERS-ROOT
     rootUnit: SYS-DVT
@@ -74432,9 +74532,9 @@ files:
       - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-F989F885364E
     pathHash: a5469fcd3cee1312e838d6cee82cc2c478e7394dc39f719fcbca177a36716038
-    contentHash: 741400525683ec472ed67521aea9a59c2f529729076e4e281631829f45f3ef3b
+    contentHash: 354d33a3e41f1362493439a46ff067e27d11b648053f74e3cc28a9cb2d5461a2
     governanceHash: 802052ee2fb743c397a020199a2e52184945bc486c171030c10df1782ced93af
-    stateFingerprint: 669928cb28040f8b6745ad8e3971b365546ebdeaa88bb12b4c2a0c748f6d8001
+    stateFingerprint: 62cffc80fc4cbe1d67638dbbb608aa961da04a9050389c786989df78d4d899d9
     path: packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.types.ts
     owningUnit: SYS-ADAPTERS-ROOT
     rootUnit: SYS-DVT
@@ -74455,8 +74555,8 @@ files:
   - fileId: F-B4F823AD712E
     pathHash: 7e7b7f8ccc69cb8a636dc536bbdea26cc767b7f05b66f9fbfa2aa017e1e685cd
     contentHash: b47f59560eac729fb85b011ccc3f661a45a231ee898672eed778f3a71c0deeb1
-    governanceHash: b6ab20b7c68f25a6651110f102060fd20395a4a6032155e142539b0bd23cba36
-    stateFingerprint: 01c25ff3d9ebac99f1d3221fe5f64abdc4a1ea75eb1fbd0357367e909f9ed14f
+    governanceHash: 71b449271d48e6c1e3580c2405c9fa5231b9508f9c5abd2faf9ff69c11c0abc7
+    stateFingerprint: d068a015cc3675f279dda4f509ec167d292b5a2505a4de039e0cd0fded099072
     path: packages/@dvt/adapter-temporal/src/workflows/workflowArtifactHelpers.ts
     owningUnit: SYS-PLANSTORE-TEMPORAL-COMPOSITION
     rootUnit: SYS-DVT
@@ -74467,13 +74567,14 @@ files:
       - SYS-PLANSTORE
       - SYS-PLANSTORE-TEMPORAL-COMPOSITION
     ownerLevel: component
-    unitStatus: legacy
+    unitStatus: review
     isDrift: false
-    isLegacy: true
+    isLegacy: false
     dddOwner: ADP
-    cqRails: PS-Q04
+    cqRails: PS-Q08
     governance:
       - docs/architecture/components/engine/adapters/temporal/temporal-planref-workflow-boundary.md
+      - docs/planning/closeouts/20260502-s08-temporal-legacy-removal-closeout.md
       - docs/risk-register/quality/R-20260427-TEMPORAL-PLANREF-CONFIG-HARDENING.yaml
       - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-D26E47C1EC69
@@ -74808,9 +74909,9 @@ files:
       - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-B4402A5C56C4
     pathHash: cca48291ca3538dd11ab7956503db30e486e930007d8e8f51797ac3a8995a23f
-    contentHash: 0a9a8874777a82f475953ab539bb1b0eaa53c876a97997135cabe7a8b260a71f
+    contentHash: b9361584cd4b1dd32e57a31d1199414a3770a0e4398a80ae9388d95932fd6f3b
     governanceHash: 802052ee2fb743c397a020199a2e52184945bc486c171030c10df1782ced93af
-    stateFingerprint: d9c36f66456a43b46b1127867856124c84c50269083327874413cbd92305316b
+    stateFingerprint: 837ad94790001083664e932360d4000b589148e128ac329ee06398b9a431bcad
     path: packages/@dvt/adapter-temporal/test/TemporalWorkerHost.lifecycle.test.ts
     owningUnit: SYS-ADAPTERS-ROOT
     rootUnit: SYS-DVT
@@ -74830,9 +74931,9 @@ files:
       - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-F5E24197F12A
     pathHash: 787aff96ab81a49706e9bb3c22e9e78207f26d2da18fd42a61e5d0204df8c3b4
-    contentHash: 58f1e44d864137ef1c75f78925dc029c4adcb370a859eac7e674eb01d4213756
+    contentHash: 20f1ba525802efc6a0c7c44ca3d25dfa5b131642a303c78d74ca8ec3a510537a
     governanceHash: 802052ee2fb743c397a020199a2e52184945bc486c171030c10df1782ced93af
-    stateFingerprint: ae96dd34ddee445913f2533537e31787291d61767ad50951e66aee5fdbd45690
+    stateFingerprint: 2cb66965add79e0cabb2f76114b6d97389f65f89d3394b0810c19c09ae8d7053
     path: packages/@dvt/adapter-temporal/test/activities.test.ts
     owningUnit: SYS-ADAPTERS-ROOT
     rootUnit: SYS-DVT
@@ -74852,9 +74953,9 @@ files:
       - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-F9C785499A77
     pathHash: 3fab71c266d4d26e157b705cff7488b1f0f59247f9b4ef24f35306033d37fd02
-    contentHash: 03d27853a9d8c33325e314dac8cda431c5bcdc0d230610aae78e5689e40acc9f
+    contentHash: 13fe61e5a1759737a6ad031550803f9c31085fb6193a5b03b164e09a284204f9
     governanceHash: 802052ee2fb743c397a020199a2e52184945bc486c171030c10df1782ced93af
-    stateFingerprint: a6e86a59ec58de27f0525b42bdbbb4da40c8f2628c36ec2b986b55b7c070d625
+    stateFingerprint: 9a3c428d79a5cfb8d6ce0dcd99bc1b87686fb4a1b334455842aee364aaad8350
     path: packages/@dvt/adapter-temporal/test/activityDeps.typecheck.ts
     owningUnit: SYS-ADAPTERS-ROOT
     rootUnit: SYS-DVT
@@ -74940,9 +75041,9 @@ files:
       - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-0EB73DDBB37E
     pathHash: 7ce51ab2024ea51ee5afc1a608088629a8381a574446c58f418866af4c0fc8db
-    contentHash: 059f45eab2566d762a7c86a179a10142c055338860fa9b5496844c71ec437d57
+    contentHash: 945354a26a81b413008338c4308e0d3a7a3f545dd582739f9a62f598e30d74b5
     governanceHash: 802052ee2fb743c397a020199a2e52184945bc486c171030c10df1782ced93af
-    stateFingerprint: ae866de6af43045d37012e9a4ea3428f91936e6280560d88154ba20c937352a8
+    stateFingerprint: 8fa8b0627da5778b8b43057792bbf3e15d4050c926660c8428656f3d83aaa428
     path: packages/@dvt/adapter-temporal/test/helpers/contractFixtures.ts
     owningUnit: SYS-ADAPTERS-ROOT
     rootUnit: SYS-DVT
@@ -75006,9 +75107,9 @@ files:
       - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-291F22444D0D
     pathHash: 06cb0a7c912e13d4855f4dfa8865d8939486c333ca0b6b283825031b26f4ea4c
-    contentHash: 8353907cee20c447a862520f80ca35e08e2c2af84fac4930bee29a90eb27a3a4
+    contentHash: b1cd9d487b1d0f93c4c53dedba9679d3673164da90f2382999d3451b0838797d
     governanceHash: 802052ee2fb743c397a020199a2e52184945bc486c171030c10df1782ced93af
-    stateFingerprint: 1d7616ecdc4ddac76e9967ffe4a73bb62e34a5915d516c650c4dd35a72357643
+    stateFingerprint: 75df0f18d6d647c2f74730c7fd667cba2c118a323a81840a13c787e6d9ad0ad7
     path: packages/@dvt/adapter-temporal/test/helpers/integration/testActivities.ts
     owningUnit: SYS-ADAPTERS-ROOT
     rootUnit: SYS-DVT
@@ -75028,9 +75129,9 @@ files:
       - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-6D3EB19C090D
     pathHash: f0dd7a1be30b1caa87a703c7ae8567a958b16205fc119f713e09f26a7171324d
-    contentHash: 301b6c4fbe513ef74bc46dee0d699e9ec175acfa0a696323fe75995bef1a4c53
+    contentHash: f73cd87803482c8e4994a3a2bb19db2d8f274404173985d11a42e76168bd13f4
     governanceHash: 802052ee2fb743c397a020199a2e52184945bc486c171030c10df1782ced93af
-    stateFingerprint: d3519aead33833b702cc7bd221a03b16d409cd1dcf50e3049828179dc64b9780
+    stateFingerprint: 4b9a64ca98f77ea70d1190b919610f5fd5815eed6f84ad7034536a10e4207e94
     path: packages/@dvt/adapter-temporal/test/helpers/integration/testPlans.ts
     owningUnit: SYS-ADAPTERS-ROOT
     rootUnit: SYS-DVT
@@ -75160,9 +75261,9 @@ files:
       - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-10E99F538A35
     pathHash: 13b2c55acb67fd0d4c367968a1ea85061e8bcdb730453c9a4ab7be0f68a57d17
-    contentHash: bb52602d4c2116de71588965abd19f7253ecc9d89748f3c20925be9a8cb6cea3
+    contentHash: 1e0e6d522674acda7f82152f36b0e96c89aa4cef998e864b53587ccd3d566395
     governanceHash: 802052ee2fb743c397a020199a2e52184945bc486c171030c10df1782ced93af
-    stateFingerprint: 23102859adc246be8dc316ad5fa319870eb4e56d9b9ae4ee302ce9680206ddf1
+    stateFingerprint: 7935aa6a915a3601bdf0c1d3f6fe5c4311ff7ffde65caa14c66d2eaa36acca45
     path: packages/@dvt/adapter-temporal/test/integration.postgres.time-skipping.test.ts
     owningUnit: SYS-ADAPTERS-ROOT
     rootUnit: SYS-DVT
@@ -75182,9 +75283,9 @@ files:
       - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-711058709C5E
     pathHash: c96a4e711bef11e9a54631eb81654501edf784b7cb982f0f98133905398bd157
-    contentHash: 4864ce00a41456608a360abbeb8d68b02eb5422d057bbad5dd21138a620a6e7e
+    contentHash: fff21fa31af43849760cdf7f08ba664e1bb2eda91e95874b435fc7fa8b3b739a
     governanceHash: 802052ee2fb743c397a020199a2e52184945bc486c171030c10df1782ced93af
-    stateFingerprint: 1dde16d82ce6d9338973e432b2be40fc2e0f957a6a51b3e9719e1fbd2a990e89
+    stateFingerprint: a5971e17108a6d3230f643449d0f6ae07f89e708ebc3ca90b2c1f3b8cc4ccaa1
     path: packages/@dvt/adapter-temporal/test/integration.time-skipping.shared.ts
     owningUnit: SYS-ADAPTERS-ROOT
     rootUnit: SYS-DVT
@@ -75204,9 +75305,9 @@ files:
       - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-23585076E1BF
     pathHash: ca69bffd537c7d2b737203b0baca7713062801a9629099fdf1c5b56f163aaa45
-    contentHash: b0b821ae252db9f8515be01202adb3dd33b89ce2b0a2749ddd3af2bb80b522b8
+    contentHash: c55cfa5eac51bcf005f226efab6862fd1ffc7b07de8337ef6f52f9efa2aa3fa4
     governanceHash: 802052ee2fb743c397a020199a2e52184945bc486c171030c10df1782ced93af
-    stateFingerprint: 3b1afd76e049d72592b3ffc996cc8062cd5675b67dc101f7dcaafbc56956ec32
+    stateFingerprint: ee3ae2dd1e9a4c68025acf22ba0d076c89396bac2551a43283826dc10c9cf41b
     path: packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts
     owningUnit: SYS-ADAPTERS-ROOT
     rootUnit: SYS-DVT
@@ -75356,11 +75457,36 @@ files:
     cqRails: adapter implementations of owned ports
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-7DF2E77D03D3
+    pathHash: df79ab1e04edfaed8208ea4db344222515148a6eb8d26148b84aa73d44136e14
+    contentHash: e29637f10a11e9f47fde0c79009da45151be4998925747df4d1920025763777b
+    governanceHash: 71b449271d48e6c1e3580c2405c9fa5231b9508f9c5abd2faf9ff69c11c0abc7
+    stateFingerprint: 6720284423a423daecfc8dde666f2e6a8d74d963b23ce1c76f0b3a6aa9363e3f
+    path: packages/@dvt/adapter-temporal/test/temporalPlanArtifactReader.test.ts
+    owningUnit: SYS-PLANSTORE-TEMPORAL-COMPOSITION
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-TEMPORAL-COMPOSITION
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-TEMPORAL-COMPOSITION
+    ownerLevel: component
+    unitStatus: review
+    isDrift: false
+    isLegacy: false
+    dddOwner: ADP
+    cqRails: PS-Q08
+    governance:
+      - docs/architecture/components/engine/adapters/temporal/temporal-planref-workflow-boundary.md
+      - docs/planning/closeouts/20260502-s08-temporal-legacy-removal-closeout.md
+      - docs/risk-register/quality/R-20260427-TEMPORAL-PLANREF-CONFIG-HARDENING.yaml
+      - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-9F17D16D08A4
     pathHash: bda403e74b4bb181c00ea4a939986f98474fc9d798560c50f0b3791682af89f2
     contentHash: d6122622035cc56b2c796350447d720d2942a72478d675ccdc1f9f64ebf63560
-    governanceHash: b6ab20b7c68f25a6651110f102060fd20395a4a6032155e142539b0bd23cba36
-    stateFingerprint: 7d7a08a34a9099c609e44d1f523bbec683b96302be5dc777f43a145e3cb8bb11
+    governanceHash: 71b449271d48e6c1e3580c2405c9fa5231b9508f9c5abd2faf9ff69c11c0abc7
+    stateFingerprint: 1cb817a48b0389a20c41e0feed0d8144494c1b3bb35adfe4d8acd8e99be933ee
     path: packages/@dvt/adapter-temporal/test/temporalPlanRefCapacitySlaPolicy.test.ts
     owningUnit: SYS-PLANSTORE-TEMPORAL-COMPOSITION
     rootUnit: SYS-DVT
@@ -75371,13 +75497,14 @@ files:
       - SYS-PLANSTORE
       - SYS-PLANSTORE-TEMPORAL-COMPOSITION
     ownerLevel: component
-    unitStatus: legacy
+    unitStatus: review
     isDrift: false
-    isLegacy: true
+    isLegacy: false
     dddOwner: ADP
-    cqRails: PS-Q04
+    cqRails: PS-Q08
     governance:
       - docs/architecture/components/engine/adapters/temporal/temporal-planref-workflow-boundary.md
+      - docs/planning/closeouts/20260502-s08-temporal-legacy-removal-closeout.md
       - docs/risk-register/quality/R-20260427-TEMPORAL-PLANREF-CONFIG-HARDENING.yaml
       - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-B486BCA3891E
@@ -75404,9 +75531,9 @@ files:
       - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-A3422F8EFF35
     pathHash: 246fd0787eb957f328158a98a15f48104b69f023c54f22a5b50a8c15241c7005
-    contentHash: a014ca456e26df5ef70f2077bd5aab67007c44b4834f6fab85096d06131962f2
-    governanceHash: b6ab20b7c68f25a6651110f102060fd20395a4a6032155e142539b0bd23cba36
-    stateFingerprint: f1c4ac025785321465b1b7117ccbd4a45995dad7b8574e5aff818f56e85b0ad1
+    contentHash: bb3eaff6da6236c47ff3cd4adcc0cac9fae3b1c545c0ff414cdef3e9d7260fe4
+    governanceHash: 71b449271d48e6c1e3580c2405c9fa5231b9508f9c5abd2faf9ff69c11c0abc7
+    stateFingerprint: f0c0efcc4e61d1e30ed9eb4adeec0acb338bacdf6be7f299ad6d64c5676527a3
     path: packages/@dvt/adapter-temporal/test/workflow-component-semantics.architecture.test.ts
     owningUnit: SYS-PLANSTORE-TEMPORAL-COMPOSITION
     rootUnit: SYS-DVT
@@ -75417,13 +75544,14 @@ files:
       - SYS-PLANSTORE
       - SYS-PLANSTORE-TEMPORAL-COMPOSITION
     ownerLevel: component
-    unitStatus: legacy
+    unitStatus: review
     isDrift: false
-    isLegacy: true
+    isLegacy: false
     dddOwner: ADP
-    cqRails: PS-Q04
+    cqRails: PS-Q08
     governance:
       - docs/architecture/components/engine/adapters/temporal/temporal-planref-workflow-boundary.md
+      - docs/planning/closeouts/20260502-s08-temporal-legacy-removal-closeout.md
       - docs/risk-register/quality/R-20260427-TEMPORAL-PLANREF-CONFIG-HARDENING.yaml
       - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-1FE319A5CF1B
@@ -90780,9 +90908,9 @@ files:
       - docs/guides/testing-and-ci-capabilities.md
   - fileId: F-DD4EE8251E4A
     pathHash: e020042224b22eecd183a4079ccdd1e8c933f5d5a2a2ecd574401782f2cf24a1
-    contentHash: 5dd5a86eb0371add7cb12efcb11ebd29bfd9819524977603ae601339202cfca2
+    contentHash: 00ede77bc62853f756994701d46193023b604c307de113fd57ea1a7c9dc260c8
     governanceHash: 3286d185b83c9c6dc1c5ccc7196e85d0020fdfcd5fad0eaeb783775bb31d71c2
-    stateFingerprint: 0fe0a6cf1fb025897c46990ad4ba22d5300d729767c7445fc72c1619732eead4
+    stateFingerprint: 1591335faefdf8fe522da5e00c120a66a9f2e7de736d769928cb4318437f048b
     path: tools/ci/docs-manifest-contract.test.mjs
     owningUnit: SYS-CI-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
@@ -91484,9 +91612,9 @@ files:
       - docs/guides/testing-and-ci-capabilities.md
   - fileId: F-2A246DDDB109
     pathHash: f85e1c36f1464a6c627d2b38395e2e228c26a136d10c232104f4bcdc0b9090fa
-    contentHash: 3e3313d05a9fd24b0088e06767e8493778fafa232e5264700c0aeb16dabe0a67
+    contentHash: 937f9848e4a83eadb0ca4dccd2daa5f47945d1b6339abce06776ba0140222e84
     governanceHash: 3286d185b83c9c6dc1c5ccc7196e85d0020fdfcd5fad0eaeb783775bb31d71c2
-    stateFingerprint: 811da9241f35936ebca4d95ca3fc704b77b4c14133b05c909dfcc25ea06c7777
+    stateFingerprint: 543f9d5570e9976438b6ecdc48655a7f72314984c1fd60ebcb6b47113ff8a942
     path: tools/docs/generate-docs-manifest.ts
     owningUnit: SYS-CI-GOVERNANCE-ROOT
     rootUnit: SYS-DVT

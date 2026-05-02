@@ -361,6 +361,7 @@ allowedImplementationSurfaces:
   - docs/adr/ADR-0053-file-state-fingerprint-governance.md
   - docs/adr/index.md
   - docs/generated-docs-policy.json
+  - docs/guides/testing-and-ci-capabilities.md
   - docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
   - docs/planning/status/**
   - package.json
@@ -371,6 +372,8 @@ allowedImplementationSurfaces:
   - scripts/generate-governance-document-unit-map.cjs
   - scripts/generate-governance-file-component-index.cjs
   - scripts/generate-governance-file-component-index.test.cjs
+  - tools/ci/docs-manifest-contract.test.mjs
+  - tools/docs/generate-docs-manifest.ts
 forbiddenImplementationSurfaces:
   - apps/**
   - packages/**
@@ -394,6 +397,12 @@ commandQueryRails:
   - name: RenderGovernanceFileFingerprintImpact
     type: query
     dddOwner: Repository governance file fingerprint impact report
+  - name: GenerateDocsGovernanceManifest
+    type: command
+    dddOwner: Repository docs governance manifest
+  - name: QueryDocsGovernanceManifestAuditCatalog
+    type: query
+    dddOwner: Repository docs governance manifest
 domainObjects:
   - name: GovernanceUnitIndex
     type: generated status aggregate
@@ -407,6 +416,9 @@ domainObjects:
   - name: GovernanceFileFingerprintBaseline
     type: accepted fingerprint baseline
     owner: SYS-DOCS-GOVERNANCE-ROOT
+  - name: DocsGovernanceManifest
+    type: compact generated docs catalog
+    owner: SYS-DOCS-GOVERNANCE-ROOT
 fowlerSignals:
   - Documentation drift
   - Hidden authority
@@ -417,6 +429,8 @@ architectureGuards:
   - pnpm docs:governance:file-component-index:check
   - pnpm docs:governance:file-fingerprint-baseline:check
   - pnpm docs:governance:file-fingerprint-impact:check
+  - pnpm docs:gov:manifest:check
+  - pnpm exec node --test tools/ci/docs-manifest-contract.test.mjs
 cypressFlows:
   - N/A - repository governance docs and CI only
 completionGate:
@@ -448,6 +462,14 @@ redGreenCycles:
       - scripts/check-governance-file-fingerprint-baseline.cjs
       - docs/planning/status/system-governance-file-fingerprint-baseline.yaml
     greenTest: pnpm test:docs:governance:file-fingerprint-baseline
+  - id: docs-governance-manifest-compaction
+    redTest: pnpm exec node --test tools/ci/docs-manifest-contract.test.mjs
+    expectedFailure: Tracked docs manifest must stay compact while full audit output remains available on demand.
+    patchSurfaces:
+      - tools/docs/generate-docs-manifest.ts
+      - tools/ci/docs-manifest-contract.test.mjs
+      - docs/.manifest.json
+    greenTest: pnpm exec node --test tools/ci/docs-manifest-contract.test.mjs
 symbols:
   - name: GenerateGovernanceFileComponentIndex
     path: scripts/generate-governance-file-component-index.cjs
@@ -473,6 +495,62 @@ symbols:
     cypressCoverage: N/A - docs governance script
     unitTests:
       - scripts/check-governance-file-fingerprint-baseline.test.cjs
+  - name: FULL_OUTPUT
+    path: tools/docs/generate-docs-manifest.ts
+    dddOwner: Repository docs governance manifest
+    cqRails:
+      - GenerateDocsGovernanceManifest
+      - QueryDocsGovernanceManifestAuditCatalog
+    fowlerSignals:
+      - Documentation drift
+    architectureGuard: tools/ci/docs-manifest-contract.test.mjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - tools/ci/docs-manifest-contract.test.mjs
+  - name: FullManifest
+    path: tools/docs/generate-docs-manifest.ts
+    dddOwner: Repository docs governance manifest
+    cqRails:
+      - QueryDocsGovernanceManifestAuditCatalog
+    fowlerSignals:
+      - Documentation drift
+    architectureGuard: tools/ci/docs-manifest-contract.test.mjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - tools/ci/docs-manifest-contract.test.mjs
+  - name: CompactManifest
+    path: tools/docs/generate-docs-manifest.ts
+    dddOwner: Repository docs governance manifest
+    cqRails:
+      - GenerateDocsGovernanceManifest
+    fowlerSignals:
+      - Documentation drift
+    architectureGuard: tools/ci/docs-manifest-contract.test.mjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - tools/ci/docs-manifest-contract.test.mjs
+  - name: createCatalogDigest
+    path: tools/docs/generate-docs-manifest.ts
+    dddOwner: Repository docs governance manifest
+    cqRails:
+      - GenerateDocsGovernanceManifest
+    fowlerSignals:
+      - Hidden authority
+    architectureGuard: tools/ci/docs-manifest-contract.test.mjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - tools/ci/docs-manifest-contract.test.mjs
+  - name: isSha256Hex
+    path: tools/ci/docs-manifest-contract.test.mjs
+    dddOwner: Repository docs governance manifest test contract
+    cqRails:
+      - GenerateDocsGovernanceManifest
+    fowlerSignals:
+      - Coverage refinement
+    architectureGuard: tools/ci/docs-manifest-contract.test.mjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - tools/ci/docs-manifest-contract.test.mjs
 ```
 
 ## Validation Baseline

@@ -25,11 +25,11 @@ used by CI.
 
 ## Totals
 
-- Tracked files indexed: 4041
+- Tracked files indexed: 4046
 - Component/source owner units: 20
 - Ungoverned files: 0
 - Drift files: 44
-- Legacy files: 9
+- Legacy files: 0
 
 ## By Status
 
@@ -39,8 +39,7 @@ used by CI.
 | `canonical` | 109 |
 | `coverage-required` | 3825 |
 | `drift` | 44 |
-| `legacy` | 9 |
-| `review` | 54 |
+| `review` | 68 |
 <!-- prettier-ignore-end -->
 
 ## By Owning Unit
@@ -58,10 +57,10 @@ used by CI.
 | `SYS-PLANSTORE-API-COMPOSITION` | 20 |
 | `SYS-PLANSTORE-ARTIFACTS-PORTS` | 23 |
 | `SYS-PLANSTORE-CONTRACTS` | 3 |
-| `SYS-PLANSTORE-DOCS-RISK` | 31 |
+| `SYS-PLANSTORE-DOCS-RISK` | 34 |
 | `SYS-PLANSTORE-ENGINE-FETCH` | 5 |
 | `SYS-PLANSTORE-POSTGRES` | 16 |
-| `SYS-PLANSTORE-TEMPORAL-COMPOSITION` | 9 |
+| `SYS-PLANSTORE-TEMPORAL-COMPOSITION` | 11 |
 | `SYS-REPO-METADATA-ROOT` | 109 |
 | `SYS-RUNTIME-ROOT` | 286 |
 | `SYS-TRACEABILITY-ROOT` | 65 |
@@ -94,11 +93,6 @@ used by CI.
 | `apps/api/test/entrypoints/http/planRoutePlanSourcePolicy.test.ts` | `SYS-PLANSTORE-API-COMPOSITION` | `drift` |
 | `apps/api/test/infrastructure/planner/ManifestArtifactResolver.test.ts` | `SYS-PLANSTORE-API-COMPOSITION` | `drift` |
 | `apps/api/test/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.test.ts` | `SYS-PLANSTORE-API-COMPOSITION` | `drift` |
-| `apps/temporal-worker/src/runtime/runtimeTypes.ts` | `SYS-PLANSTORE-TEMPORAL-COMPOSITION` | `legacy` |
-| `apps/temporal-worker/src/runtime/temporalWorkerRuntimeHandle.ts` | `SYS-PLANSTORE-TEMPORAL-COMPOSITION` | `legacy` |
-| `apps/temporal-worker/src/runtime/temporalWorkerRuntimeResources.ts` | `SYS-PLANSTORE-TEMPORAL-COMPOSITION` | `legacy` |
-| `apps/temporal-worker/src/runtime/temporalWorkerStores.ts` | `SYS-PLANSTORE-TEMPORAL-COMPOSITION` | `legacy` |
-| `apps/temporal-worker/test/runtime/createTemporalWorkerRuntime.srp.architecture.test.ts` | `SYS-PLANSTORE-TEMPORAL-COMPOSITION` | `legacy` |
 | `docs/contracts/planner/PlanStoreRecords.v1.md` | `SYS-PLANSTORE-CONTRACTS` | `drift` |
 | `packages/@dvt/adapter-postgres/src/PostgresPlanStore.admission-repository.ts` | `SYS-PLANSTORE-POSTGRES` | `drift` |
 | `packages/@dvt/adapter-postgres/src/PostgresPlanStore.executability-repository.ts` | `SYS-PLANSTORE-POSTGRES` | `drift` |
@@ -116,10 +110,6 @@ used by CI.
 | `packages/@dvt/adapter-postgres/test/PostgresPlanStore.records-core.integration.test.ts` | `SYS-PLANSTORE-POSTGRES` | `drift` |
 | `packages/@dvt/adapter-postgres/test/PostgresPlanStore.records-guards.integration.test.ts` | `SYS-PLANSTORE-POSTGRES` | `drift` |
 | `packages/@dvt/adapter-postgres/test/PostgresPlanStore.sql.test.ts` | `SYS-PLANSTORE-POSTGRES` | `drift` |
-| `packages/@dvt/adapter-temporal/src/temporalPlanRefCapacitySlaPolicy.ts` | `SYS-PLANSTORE-TEMPORAL-COMPOSITION` | `legacy` |
-| `packages/@dvt/adapter-temporal/src/workflows/workflowArtifactHelpers.ts` | `SYS-PLANSTORE-TEMPORAL-COMPOSITION` | `legacy` |
-| `packages/@dvt/adapter-temporal/test/temporalPlanRefCapacitySlaPolicy.test.ts` | `SYS-PLANSTORE-TEMPORAL-COMPOSITION` | `legacy` |
-| `packages/@dvt/adapter-temporal/test/workflow-component-semantics.architecture.test.ts` | `SYS-PLANSTORE-TEMPORAL-COMPOSITION` | `legacy` |
 | `packages/@dvt/artifacts/src/ports/IPlanStoreReader.ts` | `SYS-PLANSTORE-CONTRACTS` | `drift` |
 | `packages/@dvt/artifacts/src/ports/IPlanStoreWriter.ts` | `SYS-PLANSTORE-CONTRACTS` | `drift` |
 | `packages/@dvt/engine/src/ports/IPlanArtifactReader.ts` | `SYS-PLANSTORE-ENGINE-FETCH` | `drift` |

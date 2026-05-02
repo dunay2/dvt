@@ -25,7 +25,7 @@ require subdivision, and which components are drift or legacy.
 - Components: 20
 - Source units: 0
 - Drift components: 4
-- Legacy components: 1
+- Legacy components: 0
 - Components requiring children: 19
 
 ## By Level
@@ -44,8 +44,7 @@ require subdivision, and which components are drift or legacy.
 | `canonical` | 1 |
 | `coverage-required` | 11 |
 | `drift` | 4 |
-| `legacy` | 1 |
-| `review` | 2 |
+| `review` | 3 |
 | `superseded` | 1 |
 <!-- prettier-ignore-end -->
 
@@ -82,11 +81,11 @@ Components with `childrenRequired: true` and more than 100 files:
 | `SYS-PLANSTORE-API-COMPOSITION` | `component` | `drift` | 20 | `AS` | `SYS-PLANSTORE` |
 | `SYS-PLANSTORE-ARTIFACTS-PORTS` | `component` | `review` | 23 | `PORT` | `SYS-PLANSTORE` |
 | `SYS-PLANSTORE-CONTRACTS` | `component` | `drift` | 3 | `PORT` | `SYS-PLANSTORE` |
-| `SYS-PLANSTORE-DOCS-RISK` | `component` | `review` | 31 | `INFRA` | `SYS-PLANSTORE` |
+| `SYS-PLANSTORE-DOCS-RISK` | `component` | `review` | 34 | `INFRA` | `SYS-PLANSTORE` |
 | `SYS-PLANSTORE-ENGINE-FETCH` | `component` | `drift` | 5 | `PORT` | `SYS-PLANSTORE` |
 | `SYS-PLANSTORE-POSTGRES` | `component` | `drift` | 16 | `ADP` | `SYS-PLANSTORE` |
 | `SYS-PLANSTORE-ROOT` | `component` | `superseded` | 0 | `PORT` | `SYS-PLANSTORE` |
-| `SYS-PLANSTORE-TEMPORAL-COMPOSITION` | `component` | `legacy` | 9 | `ADP` | `SYS-PLANSTORE` |
+| `SYS-PLANSTORE-TEMPORAL-COMPOSITION` | `component` | `review` | 11 | `ADP` | `SYS-PLANSTORE` |
 | `SYS-REPO-METADATA-ROOT` | `component` | `canonical` | 109 | `INFRA` | `SYS-REPO-METADATA` |
 | `SYS-RUNTIME-ROOT` | `component` | `coverage-required` | 286 | `AS` | `SYS-RUNTIME` |
 | `SYS-TRACEABILITY-ROOT` | `component` | `coverage-required` | 65 | `DS` | `SYS-TRACEABILITY` |

@@ -63,7 +63,7 @@ flowchart TB
   PlanStore --> PlanStoreArtifacts["SYS-PLANSTORE-ARTIFACTS-PORTS<br/>review"]
   PlanStore --> PlanStorePostgres["SYS-PLANSTORE-POSTGRES<br/>drift"]
   PlanStore --> PlanStoreApi["SYS-PLANSTORE-API-COMPOSITION<br/>drift"]
-  PlanStore --> PlanStoreTemporal["SYS-PLANSTORE-TEMPORAL-COMPOSITION<br/>legacy"]
+  PlanStore --> PlanStoreTemporal["SYS-PLANSTORE-TEMPORAL-COMPOSITION<br/>review"]
   PlanStore --> PlanStoreEngine["SYS-PLANSTORE-ENGINE-FETCH<br/>drift"]
   PlanStore --> PlanStoreDocs["SYS-PLANSTORE-DOCS-RISK<br/>review"]
   Web --> WebRoot["SYS-WEB-ROOT<br/>coverage-required"]
