@@ -1,8 +1,8 @@
 ---
 title: TF-E2-M-B Canvas draft denial posture implementation plan 2026-05-01
-status: Draft
+status: Accepted
 owner: Frontend / Architecture / Product
-last_reviewed: 2026-05-01
+last_reviewed: 2026-05-02
 planning_type: proposal
 lane: E
 task_ids:
@@ -223,27 +223,45 @@ governingSources:
   - docs/planning/status/system-governance-unit-taxonomy-20260501.md
 allowedImplementationSurfaces:
   - apps/web/src/app/views/canvas/canvasDraftAuthTransportPosture.ts
+  - apps/web/src/app/views/canvas/canvasDraftAuthTransportPosture.test.ts
   - apps/web/src/app/views/canvas/canvasDraftAccessPostureModel.ts
+  - apps/web/src/app/views/canvas/canvasDraftAccessPostureModel.test.ts
   - apps/web/src/app/views/canvas/CanvasDraftAccessRecovery.templates.tsx
   - apps/web/src/app/views/canvas/canvasDraftTransportErrorState.ts
   - apps/web/src/app/views/canvas/canvasRecoveryBannerModel.ts
+  - apps/web/src/app/views/canvas/canvasRecoveryBannerModel.test.ts
   - apps/web/src/app/views/canvas/canvasDraftToolbarState.ts
   - apps/web/src/app/views/canvas/canvasToolbarViewModel.ts
+  - apps/web/src/app/views/canvas/canvasToolbarViewModel.test.ts
   - apps/web/src/app/views/canvas/useCanvasAuthoringRuntime.ts
   - apps/web/src/app/views/canvas/canvasAuthoringState.ts
+  - apps/web/src/app/views/canvas/canvasAuthoringState.test.ts
   - apps/web/src/app/views/canvas/canvasRuntimePolicy.ts
+  - apps/web/src/app/views/canvas/canvasRuntimePolicy.test.ts
   - apps/web/src/app/views/canvas/useCanvasController.ts
   - apps/web/src/app/views/canvas/canvasControllerViewModel.ts
+  - apps/web/src/app/views/canvas/useCanvasController.core.test.tsx
   - apps/web/src/app/views/canvas/canvasRouteInteractionState.ts
+  - apps/web/src/app/views/canvas/canvasRouteInteractionState.test.ts
   - apps/web/src/app/views/canvas/canvasRouteViewState.ts
+  - apps/web/src/app/views/canvas/canvasRouteViewState.test.ts
+  - apps/web/src/app/views/canvas/canvasCenterSurfaceTransport.tsx
   - apps/web/src/app/views/canvas/CanvasRecoveryBanner.tsx
+  - apps/web/src/app/views/canvas/CanvasRecoveryBanner.test.tsx
   - apps/web/src/app/views/canvas/CanvasRecoveryBanner.templates.tsx
+  - apps/web/src/app/views/canvas/canvasShellBuilder.types.ts
   - apps/web/src/app/views/canvas/canvasShellLayoutBuilder.tsx
+  - apps/web/src/app/views/canvas/canvasShellPropsBuilder.tsx
+  - apps/web/src/app/views/Canvas.readOnlyStates.test.tsx
+  - apps/web/src/app/views/Canvas.test.controller.defaults.ts
   - apps/web/src/app/views/canvas/canvasCopy.types.ts
   - apps/web/src/app/views/canvas/canvasCopyCatalog.route.ts
   - apps/web/src/app/views/canvas/canvasCopyCatalog.route.es.ts
+  - apps/web/src/app/views/canvas/copy.test.ts
   - apps/web/src/app/views/canvas/canvasStartupAndDraftRecovery.architecture.test.ts
   - apps/web/cypress/e2e/canvas/canvas-draft-access-posture.cy.ts
+  - docs/architecture/components/web/graph/canvas-draft-access-posture-component.md
+  - buzon/20260502-tf-e2-m-b-canvas-draft-access-posture-fowler-review.md
 forbiddenImplementationSurfaces:
   - apps/web/src/app/services/api/** token refresh behavior
   - apps/web/src/app/services/api/** JWT decoding
@@ -555,6 +573,40 @@ symbols:
     cypressCoverage: canvas-draft-access-posture.cy.ts
     unitTests:
       - CanvasRecoveryBanner.test.tsx
+  - name: CanvasRecoveryBannerPostureArgs
+    path: apps/web/src/app/views/canvas/canvasRecoveryBannerModel.ts
+    dddOwner: Canvas draft access posture component
+    cqRails:
+      - GetWorkspaceGraphDraft
+    fowlerSignals:
+      - responsibility overload
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-draft-access-posture.cy.ts
+    unitTests:
+      - canvasRecoveryBannerModel.test.ts
+      - CanvasRecoveryBanner.test.tsx
+  - name: CanvasRecoveryBannerPresentationArgs
+    path: apps/web/src/app/views/canvas/canvasRecoveryBannerModel.ts
+    dddOwner: Canvas draft access posture component
+    cqRails:
+      - GetWorkspaceGraphDraft
+    fowlerSignals:
+      - data clump
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-draft-access-posture.cy.ts
+    unitTests:
+      - canvasRecoveryBannerModel.test.ts
+  - name: ResolveCanvasRecoveryBannerViewStateArgs
+    path: apps/web/src/app/views/canvas/canvasRecoveryBannerModel.ts
+    dddOwner: Canvas draft access posture component
+    cqRails:
+      - GetWorkspaceGraphDraft
+    fowlerSignals:
+      - primitive obsession
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-draft-access-posture.cy.ts
+    unitTests:
+      - canvasRecoveryBannerModel.test.ts
 completionGate:
   - pnpm --filter @dvt/web test -- canvasDraftAuthTransportPosture.test.ts
   - pnpm --filter @dvt/web test -- canvasDraftAccessPostureModel.test.ts

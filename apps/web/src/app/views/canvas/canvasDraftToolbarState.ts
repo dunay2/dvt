@@ -1,3 +1,4 @@
+/** Owned concern: resolve Canvas draft recovery reasons and toolbar labels from draft state. */
 import { canvasViewCopy } from './copy';
 
 export type CanvasDraftRecoveryReason =

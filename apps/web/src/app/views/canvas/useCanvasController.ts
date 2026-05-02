@@ -8,6 +8,7 @@ import {
   selectActiveCanvasGraphStrategy,
 } from './canvasActiveGraphStrategy';
 import { buildCanvasControllerViewModel } from './canvasControllerViewModel';
+import { applyCanvasDraftPostureToRuntimePolicyInput } from './canvasDraftAccessPostureModel';
 import { resolveCanvasRuntimePolicy } from './canvasRuntimePolicy';
 import { useCanvasAuthoringRuntime } from './useCanvasAuthoringRuntime';
 import { useCanvasControllerEnvironment } from './useCanvasControllerEnvironment';
@@ -70,6 +71,7 @@ export function useCanvasController() {
     isDraftRecoveryBlocked,
     canMutateGraph,
     draftReadModel,
+    draftAccessPosture,
   } = authoringRuntime;
   const activeCanvasGraphStrategyResolution = useMemo(
     () => resolveActiveCanvasGraphStrategy(draftReadModel, capabilities),
@@ -83,26 +85,33 @@ export function useCanvasController() {
     () => resolveActiveCanvasAuthoringMode(draftReadModel),
     [draftReadModel?.record?.draft.canvas.kind]
   );
-  const runtimePolicy = useMemo(
-    () =>
-      resolveCanvasRuntimePolicy({
-        activeRuntime: activeCanvasGraphStrategyResolution,
-        canMutateGraph,
-        canOpenSourceImport: workspaceServiceCapabilities.sourceImportAvailable,
-        canPlan: store.userPermissions.canPlan && !isDraftRecoveryBlocked,
-        canRun: store.userPermissions.canRun && !isDraftRecoveryBlocked,
-        canReloadLatestDraft: authoringRuntime.draftToolbarState.showReloadAction,
-      }),
-    [
-      activeCanvasGraphStrategyResolution,
-      authoringRuntime.draftToolbarState.showReloadAction,
+  const runtimePolicy = useMemo(() => {
+    const draftAdmission = applyCanvasDraftPostureToRuntimePolicyInput({
+      posture: draftAccessPosture,
       canMutateGraph,
-      isDraftRecoveryBlocked,
-      store.userPermissions.canPlan,
-      store.userPermissions.canRun,
-      workspaceServiceCapabilities.sourceImportAvailable,
-    ]
-  );
+      canPlan: store.userPermissions.canPlan && !isDraftRecoveryBlocked,
+      canRun: store.userPermissions.canRun && !isDraftRecoveryBlocked,
+      canReloadLatestDraft: authoringRuntime.draftToolbarState.showReloadAction,
+    });
+
+    return resolveCanvasRuntimePolicy({
+      activeRuntime: activeCanvasGraphStrategyResolution,
+      canMutateGraph: draftAdmission.canMutateGraph,
+      canOpenSourceImport: workspaceServiceCapabilities.sourceImportAvailable,
+      canPlan: draftAdmission.canPlan,
+      canRun: draftAdmission.canRun,
+      canReloadLatestDraft: draftAdmission.canReloadLatestDraft,
+    });
+  }, [
+    activeCanvasGraphStrategyResolution,
+    authoringRuntime.draftToolbarState.showReloadAction,
+    canMutateGraph,
+    draftAccessPosture,
+    isDraftRecoveryBlocked,
+    store.userPermissions.canPlan,
+    store.userPermissions.canRun,
+    workspaceServiceCapabilities.sourceImportAvailable,
+  ]);
   const canMutateActiveCanvas = runtimePolicy.commands.canMutateGraph;
 
   useCanvasSelectionSync({

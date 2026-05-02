@@ -1,7 +1,4 @@
-import {
-  getCanvasReadOnlyState,
-  getCanvasWorkbenchState,
-} from './canvasWorkbenchStateModel';
+import { getCanvasReadOnlyState, getCanvasWorkbenchState } from './canvasWorkbenchStateModel';
 import {
   deriveCanvasPlaygroundTabState,
   type CanvasPlaygroundTabState,
@@ -12,6 +9,7 @@ import {
   formatDisabledCanvasPluginMessage,
   formatUnsupportedCanvasKindMessage,
 } from './canvasCopyFormatting';
+import { isCanvasDraftPostureMutationBlocked } from './canvasDraftAccessPostureModel';
 import type { CanvasDraftTransportErrorState } from './canvasDraftTransportErrorState';
 import type { useCanvasController } from './useCanvasController';
 
@@ -82,8 +80,15 @@ function resolveEffectiveUserPermissions(args: {
 
   return {
     ...controller.userPermissions,
+    canPlan:
+      controller.userPermissions.canPlan &&
+      !isCanvasDraftPostureMutationBlocked(controller.draftAccessPosture),
+    canRun:
+      controller.userPermissions.canRun &&
+      !isCanvasDraftPostureMutationBlocked(controller.draftAccessPosture),
     canEditEdges:
-      controller.userPermissions.canEditEdges && controller.draftAccessMode !== 'read_only',
+      controller.userPermissions.canEditEdges &&
+      !isCanvasDraftPostureMutationBlocked(controller.draftAccessPosture),
   };
 }
 
@@ -133,8 +138,7 @@ export function deriveCanvasRouteInteractionState(
   controller: CanvasController,
   draftTransportError: CanvasDraftTransportErrorState | null
 ): CanvasRouteInteractionState {
-  const canvasDocumentRuntimeErrorMessage =
-    resolveCanvasDocumentRuntimeErrorMessage(controller);
+  const canvasDocumentRuntimeErrorMessage = resolveCanvasDocumentRuntimeErrorMessage(controller);
   const effectiveWorkbenchState = resolveEffectiveWorkbenchState(
     controller,
     draftTransportError,

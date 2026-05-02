@@ -1,4 +1,8 @@
 /** Owned concern: resolve Canvas recovery-banner state without rendering JSX. */
+import {
+  toCanvasDraftRecoveryBannerViewState,
+  type CanvasDraftAccessPosture,
+} from './canvasDraftAccessPostureModel';
 import type { CanvasDraftPresentationState } from './canvasDraftPresentationModel';
 import { canvasViewCopy } from './copy';
 
@@ -8,12 +12,39 @@ export type CanvasRecoveryBannerViewState = Readonly<{
   messageClassName: string;
   title: string;
   message: string;
-  reloadLabel: string;
+  actionLabel: string;
+  actionEnabled: boolean;
 }>;
 
+type CanvasRecoveryBannerPostureArgs = Readonly<{
+  draftAccessPosture: CanvasDraftAccessPosture;
+}> &
+  Partial<Pick<CanvasDraftPresentationState, 'recoveryReason' | 'routeState'>>;
+
+type CanvasRecoveryBannerPresentationArgs = Pick<
+  CanvasDraftPresentationState,
+  'recoveryReason' | 'routeState'
+> &
+  Readonly<{
+    draftAccessPosture?: undefined;
+  }>;
+
+type ResolveCanvasRecoveryBannerViewStateArgs =
+  | CanvasRecoveryBannerPostureArgs
+  | CanvasRecoveryBannerPresentationArgs;
+
 export function resolveCanvasRecoveryBannerViewState(
-  presentationState: Pick<CanvasDraftPresentationState, 'recoveryReason' | 'routeState'>
+  presentationState: ResolveCanvasRecoveryBannerViewStateArgs
 ): CanvasRecoveryBannerViewState | null {
+  if (presentationState.draftAccessPosture != null) {
+    const postureBanner = toCanvasDraftRecoveryBannerViewState(
+      presentationState.draftAccessPosture
+    );
+    if (postureBanner != null) {
+      return postureBanner;
+    }
+  }
+
   if (presentationState.routeState !== 'recovery') {
     return null;
   }
@@ -26,7 +57,8 @@ export function resolveCanvasRecoveryBannerViewState(
       messageClassName: 'text-amber-200',
       title: canvasViewCopy.staleDraftTitle,
       message: canvasViewCopy.staleDraftMessage,
-      reloadLabel: canvasViewCopy.reloadLatestDraftLabel,
+      actionLabel: canvasViewCopy.reloadLatestDraftLabel,
+      actionEnabled: true,
     };
   }
 
@@ -38,7 +70,8 @@ export function resolveCanvasRecoveryBannerViewState(
       messageClassName: 'text-rose-200',
       title: canvasViewCopy.missingRemoteDraftTitle,
       message: canvasViewCopy.missingRemoteDraftMessage,
-      reloadLabel: canvasViewCopy.reloadLatestDraftLabel,
+      actionLabel: canvasViewCopy.reloadLatestDraftLabel,
+      actionEnabled: true,
     };
   }
 
@@ -52,6 +85,7 @@ export function resolveCanvasRecoveryBannerViewState(
     messageClassName: 'text-sky-200',
     title: canvasViewCopy.draftProjectionGapTitle,
     message: canvasViewCopy.draftProjectionGapMessage,
-    reloadLabel: canvasViewCopy.reloadLatestDraftLabel,
+    actionLabel: canvasViewCopy.reloadLatestDraftLabel,
+    actionEnabled: true,
   };
 }

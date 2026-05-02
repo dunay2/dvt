@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { buildController } from '../Canvas.test.controller';
+import { deriveCanvasDraftAccessPosture } from './canvasDraftAccessPostureModel';
 import { deriveCanvasRouteInteractionState } from './canvasRouteInteractionState';
 
 describe('canvasRouteInteractionState', () => {
@@ -97,8 +98,17 @@ describe('canvasRouteInteractionState', () => {
   });
 
   it('keeps route interactions readable but non-editable for read-only draft access', () => {
+    const draftAccessPosture = deriveCanvasDraftAccessPosture({
+      draftAccessMode: 'read_only',
+      draftCapabilityReason: 'write_denied',
+      draftFormatError: null,
+      authTransportPosture: 'none',
+      recoveryReason: null,
+      draftSaveStatus: 'idle',
+    });
     const controller = buildController({
       draftAccessMode: 'read_only',
+      draftAccessPosture,
       userPermissions: {
         canPlan: true,
         canRun: true,
@@ -113,12 +123,12 @@ describe('canvasRouteInteractionState', () => {
     expect(interactionState.startupBlockState).toBeNull();
     expect(interactionState.effectiveWorkbenchState).toEqual({ kind: 'ready' });
     expect(interactionState.effectiveUserPermissions).toMatchObject({
-      canPlan: true,
-      canRun: true,
+      canPlan: false,
+      canRun: false,
       canEditEdges: false,
     });
     expect(interactionState.readOnlyState).toMatchObject({
-      title: 'Limited mutation access',
+      title: 'Read-only canvas',
     });
     expect(interactionState.workbenchErrorMessage).toBeNull();
   });

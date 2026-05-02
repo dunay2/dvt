@@ -142,15 +142,15 @@ function buildCanvasInteractionViewModel(args: CanvasControllerViewModelArgs) {
 function buildCanvasExecutionViewModel(args: CanvasControllerViewModelArgs) {
   const {
     environment: { store },
-    authoringRuntime: { isDraftRecoveryBlocked },
     executionActions,
+    graphPolicy: { runtimePolicy },
     readModel: { transformationValidation },
   } = args;
 
   return {
     handlePlan: executionActions.handlePlan,
     handleStartRun: executionActions.handleStartRun,
-    canStartRun: executionActions.canStartRun && !isDraftRecoveryBlocked,
+    canStartRun: executionActions.canStartRun && runtimePolicy.commands.canRun,
     planStatusSummary: executionActions.planStatusSummary,
     transformationValidation,
     planModalOpen: executionActions.planModalOpen,
@@ -163,6 +163,8 @@ function buildCanvasDraftViewModel(args: CanvasControllerViewModelArgs) {
   const {
     authoringRuntime: {
       draftSession,
+      draftAuthTransportPosture,
+      draftAccessPosture,
       draftSaveStatus,
       draftAccessMode,
       draftCapabilityReason,
@@ -179,6 +181,8 @@ function buildCanvasDraftViewModel(args: CanvasControllerViewModelArgs) {
 
   return {
     draftSaveStatus,
+    draftAuthTransportPosture,
+    draftAccessPosture,
     draftAccessMode,
     draftCapabilityReason,
     draftFormatError,

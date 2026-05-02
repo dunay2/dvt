@@ -6,6 +6,7 @@ import {
   createHarnessWithDraft,
   setHarnessRemoteDraftRecord,
 } from './useCanvasController.draftLifecycle.test.support';
+import { projectCanvasHarnessDraftReadModel } from './useCanvasController.test.draftAuthoring';
 import { setupCanvasControllerHarness } from './useCanvasController.test.harness';
 
 describe('useCanvasController core', () => {
@@ -210,6 +211,39 @@ describe('useCanvasController core', () => {
     expect(harness.mocks.useCanvasExecutionActions).toHaveBeenLastCalledWith(
       expect.objectContaining({
         executionStrategy: null,
+        canPlan: false,
+        canRun: false,
+      })
+    );
+  });
+
+  it('applies draft access posture before exposing graph and execution commands', async () => {
+    const projectedRemoteDraft = projectCanvasHarnessDraftReadModel(
+      harness.state.remoteDraftRecord
+    );
+
+    harness.state.graphDraftQueryData = {
+      ...projectedRemoteDraft,
+      accessMode: 'read_only',
+      capabilityReason: 'write_denied',
+    };
+
+    await harness.renderProbe();
+
+    expect(harness.getLatestResult()?.draftAccessPosture.kind).toBe('read_only');
+    expect(harness.getLatestResult()?.draftToolbarState.label).toBe('Read-only draft');
+    expect(harness.getLatestResult()?.userPermissions).toEqual(
+      expect.objectContaining({
+        canEditEdges: false,
+        canPlan: false,
+        canRun: false,
+      })
+    );
+    expect(harness.getLatestResult()?.canOpenSourceImport).toBe(false);
+    expect(harness.getLatestResult()?.canEditInspectorNode).toBe(false);
+    expect(harness.getLatestResult()?.canStartRun).toBe(false);
+    expect(harness.mocks.useCanvasExecutionActions).toHaveBeenLastCalledWith(
+      expect.objectContaining({
         canPlan: false,
         canRun: false,
       })

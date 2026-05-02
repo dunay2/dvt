@@ -6,6 +6,7 @@ import {
   getPrimaryCanvasButtons,
   renderCanvasRouteWithController,
 } from './Canvas.test.support';
+import { deriveCanvasDraftAccessPosture } from './canvas/canvasDraftAccessPostureModel';
 
 describe('Canvas route access states', () => {
   let harness: ReturnType<typeof createCanvasRouteHarness>;
@@ -50,6 +51,14 @@ describe('Canvas route access states', () => {
       canStartRun: true,
       draftAccessMode: 'read_only',
       draftCapabilityReason: 'write_denied',
+      draftAccessPosture: deriveCanvasDraftAccessPosture({
+        draftAccessMode: 'read_only',
+        draftCapabilityReason: 'write_denied',
+        draftFormatError: null,
+        authTransportPosture: 'none',
+        recoveryReason: null,
+        draftSaveStatus: 'idle',
+      }),
       transformationValidation: {
         valid: true,
         summaryCode: 'valid',
@@ -63,27 +72,36 @@ describe('Canvas route access states', () => {
 
     expect(harness.container.querySelector('[data-slot="canvas-viewport"]')).not.toBeNull();
     expect(harness.container.querySelector('[data-slot="canvas-readonly-state"]')).not.toBeNull();
-    expect(harness.container.textContent).toContain('Limited mutation access');
+    expect(harness.container.textContent).toContain('Read-only canvas');
     expect(harness.container.textContent).toContain('graph edits');
     expect(layoutButton).toBeDefined();
     expect(planButton).toBeDefined();
     expect(runButton).toBeDefined();
     expect(layoutButton?.getAttribute('disabled')).not.toBeNull();
-    expect(planButton?.getAttribute('disabled')).toBeNull();
-    expect(runButton?.getAttribute('disabled')).toBeNull();
+    expect(planButton?.getAttribute('disabled')).not.toBeNull();
+    expect(runButton?.getAttribute('disabled')).not.toBeNull();
+    expect(harness.container.textContent).toContain('Draft is read-only');
   });
 
   it('blocks the canvas with an explicit forbidden-draft message when the draft boundary denies reads', async () => {
     await renderCanvasRouteWithController(harness, {
       draftAccessMode: 'forbidden',
       draftCapabilityReason: 'workspace_scope_denied',
+      draftAccessPosture: deriveCanvasDraftAccessPosture({
+        draftAccessMode: 'forbidden',
+        draftCapabilityReason: 'workspace_scope_denied',
+        draftFormatError: null,
+        authTransportPosture: 'none',
+        recoveryReason: null,
+        draftSaveStatus: 'idle',
+      }),
     });
 
     expect(harness.container.querySelector('[data-slot="canvas-blocked-state"]')).not.toBeNull();
     expect(harness.container.querySelector('[data-slot="canvas-viewport"]')).toBeNull();
-    expect(harness.container.textContent).toContain('Draft access denied');
+    expect(harness.container.textContent).toContain('Draft scope is forbidden');
     expect(harness.container.textContent).toContain(
-      'Canvas cannot read the persisted draft for the current workspace scope.'
+      'Canvas cannot read this workspace draft with the current tenant, project, or permission scope.'
     );
   });
 
@@ -94,6 +112,17 @@ describe('Canvas route access states', () => {
         reason: 'unsupported_schema_version',
         storedSchemaVersion: 'workspace-graph-draft.v0',
       },
+      draftAccessPosture: deriveCanvasDraftAccessPosture({
+        draftAccessMode: 'writable',
+        draftCapabilityReason: 'authorized',
+        draftFormatError: {
+          reason: 'unsupported_schema_version',
+          storedSchemaVersion: 'workspace-graph-draft.v0',
+        },
+        authTransportPosture: 'none',
+        recoveryReason: null,
+        draftSaveStatus: 'idle',
+      }),
     });
 
     expect(harness.container.querySelector('[data-slot="canvas-error-state"]')).not.toBeNull();

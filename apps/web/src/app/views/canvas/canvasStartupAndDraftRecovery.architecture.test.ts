@@ -143,6 +143,26 @@ const ownedConcernModules = [
     phrase: 'Owned concern: render Canvas recovery-banner templates',
   },
   {
+    label: 'canvas draft auth transport posture',
+    path: 'canvasDraftAuthTransportPosture.ts',
+    phrase: 'Owned concern: normalize protected Canvas draft query auth transport failures',
+  },
+  {
+    label: 'canvas draft access posture model',
+    path: 'canvasDraftAccessPostureModel.ts',
+    phrase: 'Owned concern: resolve protected Canvas draft access into one route-visible posture',
+  },
+  {
+    label: 'canvas draft access recovery template',
+    path: 'CanvasDraftAccessRecovery.templates.tsx',
+    phrase: 'Owned concern: render passive Canvas draft-access recovery actions',
+  },
+  {
+    label: 'canvas draft toolbar state',
+    path: 'canvasDraftToolbarState.ts',
+    phrase: 'Owned concern: resolve Canvas draft recovery reasons and toolbar labels',
+  },
+  {
     label: 'DVT node renderer',
     path: '../../components/canvas/DbtNodeComponent.tsx',
     phrase: 'Owned concern: render canonical Canvas nodes',
@@ -511,6 +531,64 @@ describe('canvas startup and draft recovery architecture', () => {
     expect(recoveryTemplateSource).toContain('function CanvasRecoveryBannerTemplate(');
     expect(recoveryTemplateSource).not.toContain('CanvasDraftPresentationState');
     expect(recoveryTemplateSource).not.toContain('canvasViewCopy');
+  });
+
+  it('keeps Canvas draft access posture as the route-visible admission policy', () => {
+    const postureSource = readAppSource('canvasDraftAccessPostureModel.ts');
+    const authTransportSource = readAppSource('canvasDraftAuthTransportPosture.ts');
+    const authoringRuntimeSource = readAppSource('useCanvasAuthoringRuntime.ts');
+    const authoringStateSource = readAppSource('canvasAuthoringState.ts');
+    const controllerSource = readAppSource('useCanvasController.ts');
+    const routeStateSource = readAppSource('canvasRouteViewState.ts');
+    const interactionSource = readAppSource('canvasRouteInteractionState.ts');
+    const runtimePolicySource = readAppSource('canvasRuntimePolicy.ts');
+    const transportSurfaceSource = readAppSource('canvasDraftTransportErrorState.ts');
+    const recoveryBannerTemplateSource = readAppSource('CanvasRecoveryBanner.templates.tsx');
+    const postureGuide = readRepoFile(
+      'docs/architecture/components/web/graph/canvas-draft-access-posture-component.md'
+    );
+    const implementationPlan = readRepoFile(
+      'docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-m-b-canvas-draft-denial-posture-implementation-plan-20260501.md'
+    );
+
+    expect(postureSource).toContain('export type CanvasDraftAccessPosture');
+    expect(postureSource).toContain('deriveCanvasDraftAccessPosture');
+    expect(postureSource).toContain('toCanvasDraftToolbarState');
+    expect(postureSource).toContain('toCanvasDraftRecoveryBannerViewState');
+    expect(postureSource).toContain('toCanvasDraftTransportSurfaceState');
+    expect(postureSource).toContain('applyCanvasDraftPostureToRuntimePolicyInput');
+    expect(postureSource).toContain('resolveCanvasDraftAccessRecoveryCommand');
+    expect(postureSource).toContain("kind: 'unauthenticated'");
+    expect(postureSource).toContain("kind: 'forbidden_scope'");
+    expect(postureSource).toContain("kind: 'read_only'");
+
+    expect(authTransportSource).toContain('deriveCanvasDraftAuthTransportPosture');
+    expect(authTransportSource).not.toContain('canRefreshApiBearerToken');
+    expect(authTransportSource).not.toContain('resolveApiBearerTokenForRequest');
+    expect(authoringRuntimeSource).toContain('deriveCanvasDraftAuthTransportPosture');
+    expect(authoringStateSource).toContain('deriveCanvasDraftAccessPosture');
+    expect(authoringStateSource).toContain('isCanvasDraftPostureMutationBlocked');
+    expect(authoringStateSource).not.toContain('baseCanPlan');
+    expect(authoringStateSource).not.toContain('baseCanRun');
+
+    expect(controllerSource).toContain('applyCanvasDraftPostureToRuntimePolicyInput');
+    expect(routeStateSource).toContain('draftAccessPosture: controller.draftAccessPosture');
+    expect(routeStateSource).toContain('toCanvasDraftToolbarState(controller.draftAccessPosture)');
+    expect(interactionSource).toContain('isCanvasDraftPostureMutationBlocked');
+    expect(interactionSource).not.toContain("draftAccessMode === 'forbidden'");
+    expect(interactionSource).not.toContain("draftAccessMode !== 'read_only'");
+    expect(runtimePolicySource).not.toContain('draftAccessMode');
+    expect(runtimePolicySource).not.toContain('draftCapabilityReason');
+    expect(runtimePolicySource).not.toContain('draftFormatError');
+    expect(transportSurfaceSource).toContain('toCanvasDraftTransportSurfaceState');
+    expect(transportSurfaceSource).not.toContain('draftAccessMode');
+    expect(transportSurfaceSource).not.toContain('draftFormatError');
+    expect(recoveryBannerTemplateSource).toContain('CanvasDraftAccessRecoveryTemplate');
+
+    expect(postureGuide).toContain('## Public API');
+    expect(postureGuide).toContain('## Fowler Opportunity Matrix');
+    expect(implementationPlan).toContain('## TDD Tasks');
+    expect(implementationPlan).toContain('## Self-Review Iterations');
   });
 
   it('keeps Canvas viewport mocks in named test-local components for static analysis', () => {

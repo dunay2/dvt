@@ -24,6 +24,7 @@ export type CanvasShellLayoutBuilderArgs = Readonly<{
   routePresentation: Pick<
     CanvasRouteViewState,
     | 'presentationState'
+    | 'draftAccessPosture'
     | 'startupBlockState'
     | 'draftTransportError'
     | 'workbenchErrorMessage'

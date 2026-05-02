@@ -1,8 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  canvasDraftSession,
-} from './canvasDraftSession';
+import { canvasDraftSession } from './canvasDraftSession';
 import { deriveCanvasAuthoringState } from './canvasAuthoringState';
 
 describe('canvasAuthoringState', () => {
@@ -16,13 +14,16 @@ describe('canvasAuthoringState', () => {
       draftSaveStatus: 'idle',
       canPersistDraftTransport: true,
       draftReadModel: undefined,
+      authTransportPosture: 'none',
     });
 
     expect(authoringState.uiScope).toEqual({
       selectedNodeIds: ['node_1'],
       inspectorNodeId: 'node_1',
     });
-    expect(authoringState.canMutateGraph).toBe(true);
+    expect(authoringState.draftAccessPosture.kind).toBe('unknown_pending');
+    expect(authoringState.draftToolbarState.label).not.toBe('Draft synced');
+    expect(authoringState.canMutateGraph).toBe(false);
   });
 
   it('blocks mutation and reports missing_remote recovery explicitly', () => {
@@ -41,6 +42,7 @@ describe('canvasAuthoringState', () => {
       draftSaveStatus: 'idle',
       canPersistDraftTransport: true,
       draftReadModel: undefined,
+      authTransportPosture: 'none',
     });
 
     expect(authoringState.isMissingRemoteDraft).toBe(true);
@@ -70,8 +72,11 @@ describe('canvasAuthoringState', () => {
         record: null,
         semanticGraph: null,
       },
+      authTransportPosture: 'none',
     });
 
+    expect(authoringState.draftAccessPosture.kind).toBe('read_only');
+    expect(authoringState.draftToolbarState.label).toBe('Read-only draft');
     expect(authoringState.draftAccessMode).toBe('read_only');
     expect(authoringState.draftFormatError).toBeNull();
     expect(authoringState.isDraftAccessBlocked).toBe(false);
@@ -100,9 +105,34 @@ describe('canvasAuthoringState', () => {
         record: null,
         semanticGraph: null,
       },
+      authTransportPosture: 'none',
     });
 
+    expect(authoringState.draftAccessPosture.kind).toBe('forbidden_scope');
     expect(authoringState.draftAccessMode).toBe('forbidden');
+    expect(authoringState.isDraftAccessBlocked).toBe(true);
+    expect(authoringState.canMutateGraph).toBe(false);
+  });
+
+  it('maps final auth transport failure to session-required posture without draft contract truth', () => {
+    const authoringState = deriveCanvasAuthoringState({
+      draftSession: canvasDraftSession.machine.bootstrap({
+        remoteDraft: null,
+        canonicalNodeIds: ['node_1'],
+        canonicalEdges: [],
+      }),
+      canonicalNodes: [],
+      canonicalEdges: [],
+      selectedNodeIds: ['node_1'],
+      inspectorNodeId: 'node_1',
+      draftSaveStatus: 'idle',
+      canPersistDraftTransport: true,
+      draftReadModel: undefined,
+      authTransportPosture: 'unauthorized_final',
+    });
+
+    expect(authoringState.draftAccessPosture.kind).toBe('unauthenticated');
+    expect(authoringState.draftToolbarState.label).toBe('Session required');
     expect(authoringState.isDraftAccessBlocked).toBe(true);
     expect(authoringState.canMutateGraph).toBe(false);
   });

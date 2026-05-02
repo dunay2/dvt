@@ -26,14 +26,10 @@ export const canvasViewRouteCopyEs = {
   routeErrorFallbackMessage: 'No se ha podido cargar el grafo del workspace para Canvas.',
   routeErrorMessage:
     'Canvas no ha podido cargar el grafo actual del workspace. Reintenta cuando el servicio del workspace vuelva a estar disponible.',
-  unsupportedCanvasKindMessagePrefix:
-    'Canvas no puede abrir el tipo de canvas persistido ',
-  unsupportedCanvasKindMessageSuffix:
-    ' porque no hay un registro de runtime disponible.',
-  disabledCanvasPluginMessagePrefix:
-    'Canvas no puede abrir el tipo de canvas persistido ',
-  disabledCanvasPluginMessageSuffix:
-    ' porque su plugin esta deshabilitado o no disponible.',
+  unsupportedCanvasKindMessagePrefix: 'Canvas no puede abrir el tipo de canvas persistido ',
+  unsupportedCanvasKindMessageSuffix: ' porque no hay un registro de runtime disponible.',
+  disabledCanvasPluginMessagePrefix: 'Canvas no puede abrir el tipo de canvas persistido ',
+  disabledCanvasPluginMessageSuffix: ' porque su plugin esta deshabilitado o no disponible.',
   runtimeBlockedTitle: 'Runtime de Canvas no disponible',
   runtimeBlockedFallbackMessage:
     'Canvas authoring requiere modo API y acceso protegido al workspace draft.',
@@ -50,6 +46,23 @@ export const canvasViewRouteCopyEs = {
   draftAccessDeniedTitle: 'Acceso al draft denegado',
   draftAccessDeniedMessage:
     'Canvas no puede leer el draft persistido para el scope actual del workspace.',
+  sessionRequiredDraftLabel: 'Sesion requerida',
+  readOnlyDraftLabel: 'Draft en solo lectura',
+  forbiddenScopeDraftLabel: 'Acceso al draft denegado',
+  draftFormatBlockedLabel: 'Formato de draft bloqueado',
+  refreshSessionActionLabel: 'Refrescar sesion',
+  changeScopeActionLabel: 'Cambiar scope',
+  inspectOnlyActionLabel: 'Solo inspeccionar',
+  escalateFormatActionLabel: 'Escalar problema de formato del draft',
+  draftSessionRequiredTitle: 'Sesion requerida para acceder al draft',
+  draftSessionRequiredMessage:
+    'Canvas no puede leer el draft protegido porque la sesion actual falta o ha expirado. Refresca la sesion.',
+  draftForbiddenScopeTitle: 'El scope del draft esta denegado',
+  draftForbiddenScopeMessage:
+    'Canvas no puede leer este draft del workspace con el tenant, proyecto o permisos actuales. Cambia el scope o solicita acceso.',
+  draftReadOnlyTitle: 'El draft esta en solo lectura',
+  draftReadOnlyMessage:
+    'Canvas puede inspeccionar este draft, pero la edicion del grafo, la planificacion y el arranque de runs estan deshabilitados para el scope actual.',
   draftUnsupportedSchemaTitle: 'El formato del draft persistido no es compatible',
   draftUnsupportedSchemaMessage:
     'Canvas no puede cargar el draft persistido porque su version de esquema almacenada todavia no es compatible con esta ruta.',

@@ -38,6 +38,7 @@ function buildCanvasShellLayoutArgs({
     },
     routePresentation: {
       presentationState: routeViewState.presentationState,
+      draftAccessPosture: routeViewState.draftAccessPosture,
       startupBlockState: routeViewState.startupBlockState,
       draftTransportError: routeViewState.draftTransportError,
       workbenchErrorMessage: routeViewState.workbenchErrorMessage,

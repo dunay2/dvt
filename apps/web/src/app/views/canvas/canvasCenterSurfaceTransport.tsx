@@ -5,7 +5,10 @@ import type { CanvasDraftTransportErrorState } from './canvasDraftTransportError
 export function renderCanvasDraftTransportSurface(
   draftTransportError: CanvasDraftTransportErrorState | null
 ) {
-  if (draftTransportError?.kind === 'forbidden') {
+  if (
+    draftTransportError?.kind === 'unauthenticated' ||
+    draftTransportError?.kind === 'forbidden_scope'
+  ) {
     return (
       <CanvasBlockedStateView
         title={draftTransportError.title}

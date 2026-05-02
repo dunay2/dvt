@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import { deriveCanvasAuthoringState } from './canvasAuthoringState';
 import type { UseCanvasAuthoringRuntimeArgs } from './canvasAuthoringRuntime.types';
 import { deriveCanvasBackendPosture } from './canvasBackendPosture';
+import { deriveCanvasDraftAuthTransportPosture } from './canvasDraftAuthTransportPosture';
 import { useCanvasAuthoringRuntimeDraftFlow } from './useCanvasAuthoringRuntimeDraftFlow';
 
 export function useCanvasAuthoringRuntime({
@@ -29,8 +30,7 @@ export function useCanvasAuthoringRuntime({
       }),
     [dataSourceMode, platformHealthQuery]
   );
-  const canPersistDraftTransport =
-    canEditDraftTransport && backendPosture.backendAllowsMutations;
+  const canPersistDraftTransport = canEditDraftTransport && backendPosture.backendAllowsMutations;
   const draftFlow = useCanvasAuthoringRuntimeDraftFlow({
     workspaceService,
     workspaceGraphDraftAuthoringPort,
@@ -41,6 +41,9 @@ export function useCanvasAuthoringRuntime({
     workspaceScope,
     previewProvenanceConfig,
     setCanvasNodePositions,
+  });
+  const draftAuthTransportPosture = deriveCanvasDraftAuthTransportPosture({
+    draftReadError: draftFlow.graphModel.graphAuthorityQuery.error,
   });
   const authoringState = useMemo(
     () =>
@@ -53,9 +56,11 @@ export function useCanvasAuthoringRuntime({
         draftSaveStatus: draftFlow.draftSaveStatus,
         canPersistDraftTransport,
         draftReadModel: draftFlow.draftReadModel,
+        authTransportPosture: draftAuthTransportPosture,
       }),
     [
       canPersistDraftTransport,
+      draftAuthTransportPosture,
       draftFlow.draftReadModel,
       draftFlow.draftSaveStatus,
       draftFlow.draftSession,
@@ -68,6 +73,7 @@ export function useCanvasAuthoringRuntime({
 
   return {
     backendPosture,
+    draftAuthTransportPosture,
     ...draftFlow,
     ...authoringState,
   };
