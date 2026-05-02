@@ -8315,9 +8315,9 @@ files:
     owningUnit: SYS-WEB-ROOT
   - fileId: F-463EFCE86D43
     path: apps/web/src/app/views/Canvas.test.controller.ts
-    contentHash: 9ba45869f419e3b822e4154610856b1029f4c109137d99e2ba8480657b3a9119
+    contentHash: 2035287e37a4d5b4d0ed5c5b707a142985a3b6c75431df34ee45048bdd6786b0
     governanceHash: 17b9458eb491785470127e84e01e837244221c4479c7af2c70c15b49bb9cbb20
-    stateFingerprint: 005860f912a6a91cbb9d8ec483c72c8461057d8e9203a03725d9531748c67f79
+    stateFingerprint: 769332131804ac73e286d4339b7e5179bb7d9f7c8d1871dcc6907937d31d552d
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-WEB-ROOT
@@ -8702,18 +8702,18 @@ files:
     owningUnit: SYS-WEB-ROOT
   - fileId: F-D8189BF341C6
     path: apps/web/src/app/views/canvas/canvasDraftAccessPostureModel.test.ts
-    contentHash: 021c6d492d72e0d943f8a3152289835eaa28a4f9670132b59cab05bf884b107c
+    contentHash: 6e5e489759b1096d4470fc9c3ba7e122a29080a0ee8846f97d7949a757883077
     governanceHash: 17b9458eb491785470127e84e01e837244221c4479c7af2c70c15b49bb9cbb20
-    stateFingerprint: 8fb3022cef423c2b6dee9e84fd59eeca75089c2679466c915de9800df654fbfc
+    stateFingerprint: 4a0e8e7ee842009844fe5ec3ccf82bb58c9003d1fbd3de35e5b6b7b7c885aad5
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-WEB-ROOT
     owningUnit: SYS-WEB-ROOT
   - fileId: F-757FBB66C806
     path: apps/web/src/app/views/canvas/canvasDraftAccessPostureModel.ts
-    contentHash: f24cc06330f0df32e699e8dac55121c091a8436247daa8a242ea812fb613800e
+    contentHash: b41b8ff297ef81ee173d9591a6c2d901add93486c6ff85a30824cf4ef751970d
     governanceHash: 17b9458eb491785470127e84e01e837244221c4479c7af2c70c15b49bb9cbb20
-    stateFingerprint: 56389ade7e348b63a6ce2de12cc33d0f3517bc854cbc42d4aaf698ef736c75a6
+    stateFingerprint: 9e267ee2af35e0d3aca23ab85da8a7bbba582995b34f2fc3cdfbe2a407685a95
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-WEB-ROOT
@@ -9728,18 +9728,18 @@ files:
     owningUnit: SYS-WEB-ROOT
   - fileId: F-7D6E4E9563A6
     path: apps/web/src/app/views/canvas/canvasRecoveryBannerModel.test.ts
-    contentHash: e740786d48d268eb2d960191dab2a789cf392fabac6cf44f2d27b52058e545b0
+    contentHash: 52cead4bcc026a0684ef4101b80711a3b02e204928d17391421ae12f015ebab9
     governanceHash: 17b9458eb491785470127e84e01e837244221c4479c7af2c70c15b49bb9cbb20
-    stateFingerprint: 80ea0b26aa2e346381daf0636332112edccf35d0a1ccaeadbc58a37c0166e2e0
+    stateFingerprint: 12f725c00a91bce0f7fc0bb0d3edbfa2948c817885bffe9ec5e4ac0ba8e43b77
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-WEB-ROOT
     owningUnit: SYS-WEB-ROOT
   - fileId: F-5C6CE53EB3D1
     path: apps/web/src/app/views/canvas/canvasRecoveryBannerModel.ts
-    contentHash: f635d6da1f103cf4ca94b6144627c628ff5dd89ed0f0df1132f67a40f13cb8de
+    contentHash: f5277100b6f8d0bd750c69067312ec66fc9a4ef501f0637beebd9035db94805c
     governanceHash: 17b9458eb491785470127e84e01e837244221c4479c7af2c70c15b49bb9cbb20
-    stateFingerprint: e81b04df26b03e097bf762227c45365413ff0d4754209f346b14114fd0664e0b
+    stateFingerprint: aa2f86bfbc95191ee754f5abe0864ffe26cadaa9ffa292a7870b519bf156a216
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-WEB-ROOT
@@ -23930,9 +23930,9 @@ files:
   - fileId: F-521A4C0445C1
     path: >-
       docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-m-b-canvas-draft-denial-posture-implementation-plan-20260501.md
-    contentHash: 30a745690e21735d217c3f08d824c6e0263321faa66c30c4bc24edf3de713131
+    contentHash: 8b5586b25199f4abc0f8505c5790b5652609a3ecf1aebb8adbaf60c5031d28fa
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: d5d138488b278a9ac69e3c253be4ce45810a225c05d30e7e7e48674a395236e6
+    stateFingerprint: f3355e2f1f69f2d9c5e64dd4dca471fab5e638e69d34d21ead5b3c4c7cdba8b4
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT

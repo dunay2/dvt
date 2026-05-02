@@ -33,10 +33,26 @@ type ResolveCanvasRecoveryBannerViewStateArgs =
   | CanvasRecoveryBannerPostureArgs
   | CanvasRecoveryBannerPresentationArgs;
 
+function isRouteRecoveryPosture(posture: CanvasDraftAccessPosture): boolean {
+  return (
+    posture.kind === 'stale_conflict' ||
+    posture.kind === 'missing_remote' ||
+    posture.kind === 'projection_gap'
+  );
+}
+
 export function resolveCanvasRecoveryBannerViewState(
   presentationState: ResolveCanvasRecoveryBannerViewStateArgs
 ): CanvasRecoveryBannerViewState | null {
   if (presentationState.draftAccessPosture != null) {
+    if (
+      isRouteRecoveryPosture(presentationState.draftAccessPosture) &&
+      presentationState.routeState !== undefined &&
+      presentationState.routeState !== 'recovery'
+    ) {
+      return null;
+    }
+
     const postureBanner = toCanvasDraftRecoveryBannerViewState(
       presentationState.draftAccessPosture
     );

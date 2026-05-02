@@ -45,4 +45,34 @@ describe('canvasRecoveryBannerModel', () => {
       actionEnabled: true,
     });
   });
+
+  it('suppresses draft recovery banners when a higher-priority route state owns the surface', () => {
+    const posture = deriveCanvasDraftAccessPosture({
+      draftAccessMode: 'writable',
+      draftCapabilityReason: 'authorized',
+      draftFormatError: null,
+      authTransportPosture: 'none',
+      recoveryReason: 'missing_remote',
+      draftSaveStatus: 'idle',
+    });
+
+    expect(
+      resolveCanvasRecoveryBannerViewState({
+        routeState: 'blocked_backend',
+        recoveryReason: 'missing_remote',
+        draftAccessPosture: posture,
+      })
+    ).toBeNull();
+    expect(
+      resolveCanvasRecoveryBannerViewState({
+        routeState: 'recovery',
+        recoveryReason: 'missing_remote',
+        draftAccessPosture: posture,
+      })
+    ).toMatchObject({
+      dataSlot: 'canvas-missing-remote-draft-state',
+      actionLabel: 'Reload latest draft',
+      actionEnabled: true,
+    });
+  });
 });

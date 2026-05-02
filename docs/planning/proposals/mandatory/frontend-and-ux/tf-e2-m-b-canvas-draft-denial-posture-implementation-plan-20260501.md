@@ -288,6 +288,7 @@ allowedImplementationSurfaces:
   - apps/web/src/app/views/canvas/canvasShellLayoutBuilder.tsx
   - apps/web/src/app/views/canvas/canvasShellPropsBuilder.tsx
   - apps/web/src/app/views/Canvas.readOnlyStates.test.tsx
+  - apps/web/src/app/views/Canvas.test.controller.ts
   - apps/web/src/app/views/Canvas.test.controller.defaults.ts
   - apps/web/src/app/views/canvas/canvasCopy.types.ts
   - apps/web/src/app/views/canvas/canvasCopyCatalog.route.ts
@@ -807,6 +808,62 @@ symbols:
     cypressCoverage: canvas-draft-access-posture.cy.ts
     unitTests:
       - canvasRecoveryBannerModel.test.ts
+  - name: resolveCanvasDraftRecoveryBannerDataSlot
+    path: apps/web/src/app/views/canvas/canvasDraftAccessPostureModel.ts
+    dddOwner: Canvas draft access posture component
+    cqRails:
+      - GetWorkspaceGraphDraft
+    fowlerSignals:
+      - duplicate semantics
+      - testability seam
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-draft-access-posture.cy.ts
+    unitTests:
+      - canvasDraftAccessPostureModel.test.ts
+      - Canvas.draftRecovery.test.tsx
+      - Canvas.routeStates.test.tsx
+  - name: isRouteRecoveryPosture
+    path: apps/web/src/app/views/canvas/canvasRecoveryBannerModel.ts
+    dddOwner: Canvas route presentation component
+    cqRails:
+      - GetWorkspaceGraphDraft
+    fowlerSignals:
+      - boundary priority drift
+      - duplicate semantics
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-draft-access-posture.cy.ts
+    unitTests:
+      - canvasRecoveryBannerModel.test.ts
+      - Canvas.draftRecovery.test.tsx
+      - Canvas.routeStates.test.tsx
+  - name: normalizeCanvasDraftPosture
+    path: apps/web/src/app/views/Canvas.test.controller.ts
+    dddOwner: Canvas route test fixture rail
+    cqRails:
+      - GetWorkspaceGraphDraft
+    fowlerSignals:
+      - fixture drift
+      - duplicate semantics
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-draft-access-posture.cy.ts
+    unitTests:
+      - Canvas.draftRecovery.test.tsx
+      - Canvas.routeStates.test.tsx
+      - canvasRouteViewState.test.ts
+  - name: buildController
+    path: apps/web/src/app/views/Canvas.test.controller.ts
+    dddOwner: Canvas route test fixture rail
+    cqRails:
+      - GetWorkspaceGraphDraft
+    fowlerSignals:
+      - fixture drift
+      - hidden authority
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-draft-access-posture.cy.ts
+    unitTests:
+      - Canvas.draftRecovery.test.tsx
+      - Canvas.routeStates.test.tsx
+      - canvasRouteViewState.test.ts
   - name: DraftDeniedReason
     path: apps/web/cypress/e2e/canvas/canvas-draft-access-posture.cy.ts
     dddOwner: Canvas draft access posture Cypress user-flow fixture

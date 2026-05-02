@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   deriveCanvasDraftAccessPosture,
   isCanvasDraftPostureMutationBlocked,
+  toCanvasDraftRecoveryBannerViewState,
   toCanvasDraftToolbarState,
 } from './canvasDraftAccessPostureModel';
 
@@ -63,6 +64,12 @@ describe('canvasDraftAccessPostureModel', () => {
   });
 
   it('does not show synced for conflict, missing remote, or projection gap', () => {
+    const recoverySlots = {
+      stale_conflict: 'canvas-stale-draft-state',
+      missing_remote: 'canvas-missing-remote-draft-state',
+      projection_gap: 'canvas-draft-projection-gap-state',
+    } as const;
+
     for (const recoveryReason of ['stale_conflict', 'missing_remote', 'projection_gap'] as const) {
       const posture = deriveCanvasDraftAccessPosture({
         draftAccessMode: 'writable',
@@ -75,6 +82,9 @@ describe('canvasDraftAccessPostureModel', () => {
 
       expect(posture.kind).toBe(recoveryReason);
       expect(toCanvasDraftToolbarState(posture).label).not.toBe('Draft synced');
+      expect(toCanvasDraftRecoveryBannerViewState(posture)?.dataSlot).toBe(
+        recoverySlots[recoveryReason]
+      );
       expect(isCanvasDraftPostureMutationBlocked(posture)).toBe(true);
     }
   });

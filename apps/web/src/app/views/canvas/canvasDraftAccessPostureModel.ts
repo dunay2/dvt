@@ -344,6 +344,19 @@ function resolveCanvasDraftRecoveryActionLabel(posture: CanvasDraftAccessPosture
   }
 }
 
+function resolveCanvasDraftRecoveryBannerDataSlot(posture: CanvasDraftAccessPosture): string {
+  switch (posture.kind) {
+    case 'stale_conflict':
+      return 'canvas-stale-draft-state';
+    case 'missing_remote':
+      return 'canvas-missing-remote-draft-state';
+    case 'projection_gap':
+      return 'canvas-draft-projection-gap-state';
+    default:
+      return 'canvas-recovery-banner';
+  }
+}
+
 export function toCanvasDraftRecoveryBannerViewState(
   posture: CanvasDraftAccessPosture
 ): CanvasDraftRecoveryBannerState | null {
@@ -352,7 +365,7 @@ export function toCanvasDraftRecoveryBannerViewState(
   }
 
   return {
-    dataSlot: 'canvas-recovery-banner',
+    dataSlot: resolveCanvasDraftRecoveryBannerDataSlot(posture),
     containerClassName:
       'border-b border-slate-700/70 bg-slate-950/90 px-4 py-3 text-sm text-slate-100',
     messageClassName: 'text-slate-300',
