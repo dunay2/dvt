@@ -1867,9 +1867,9 @@ files:
     owningUnit: SYS-API-HTTP-ENTRYPOINTS
   - fileId: F-48138C72872A
     path: apps/api/src/entrypoints/http/registerProtectedRuntimeRoutes.ts
-    contentHash: 54d1772d234889202704db69089011f270db47764ff4e48263b4e8565bf97130
+    contentHash: 5b6a2e5aa4aaeea8c460a8406b8f08895eb436cc226b303075213709124ac3d4
     governanceHash: e9f4f50c8fbedbc683f60b1964499f3e89ed2f3163e91c8afffbd0d2dfdc3426
-    stateFingerprint: e5011ef47350731d554653c4e2b05ae1e1ab1cce5d1226948f7f82489056dc0a
+    stateFingerprint: 7cca166c6abe0974f245d353425cc257c2b1c4ccf08c829e76b6d93ca934e78a
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-API-HTTP-ENTRYPOINTS
@@ -3435,9 +3435,9 @@ files:
     owningUnit: SYS-API-HTTP-ENTRYPOINT-TESTS
   - fileId: F-85EC016D791E
     path: apps/api/test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts
-    contentHash: 221081e31b7eda38c2223621fd5f6631d8bb9c4253e9a8572472bf850f37d2cf
+    contentHash: 9f33df14ed06846b7d7297626c90c9702f7ec1ecd58cb869ebe739fbcad40bfa
     governanceHash: 70a48afaa48bf8a46d9cd323a046383bae1f0eefe5b7df2126e4c8e079563bd7
-    stateFingerprint: 585df96fec311de4f6e68efbb485edd6e218069e5f068ca2770f9bbc5161f026
+    stateFingerprint: 6037af336dce3b29a2c72a883d28c5d12ce1ded7c4843b6fa55dfe95f9e16241
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-API-HTTP-ENTRYPOINT-TESTS
@@ -4040,9 +4040,9 @@ files:
     owningUnit: SYS-API-TESTS
   - fileId: F-A8C0082D41E9
     path: apps/api/test/routes/registerOperationalRoutes.test.ts
-    contentHash: 45f54c478c170f41174bcdf85f6354a3fd1897d85e8908f9d53b22f2973a3b1e
+    contentHash: 9e090ad8b85f2ac2f4a6e5457a8ef9e9a7b3d1809528ddc64e1ce30a0c664e7f
     governanceHash: f78fcd00805e3ac4bb31cf806a152b0de73605e5e53a95d07d07aa84ebe026ac
-    stateFingerprint: 45a20db759c5539b7ba411bec3c16c8af8a77b443d87c9704515dd3605f668a1
+    stateFingerprint: 80177d675aa03b66d7623d57b463ad8f3d4d81c894d9f6b0bf50b9e5bae1cc3c
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-API-TESTS
