@@ -23894,9 +23894,9 @@ files:
   - fileId: F-521A4C0445C1
     path: >-
       docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-m-b-canvas-draft-denial-posture-implementation-plan-20260501.md
-    contentHash: b1f5ed3a6be3671aa6beb8b93719772b34f301ad962ffe2292ef08a7aee8a556
+    contentHash: fde718102989bd4345f9f388ac8da4d063852f702c0f7bb118126a69a7dfab8b
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 90f53ef52a8931fb00268c5b435419ce99d6d80882e963fdcedec5459ad69169
+    stateFingerprint: 3174a174da859a1b759ad8ba9ae2d9ca3c77a4df00105013049417843d2d3c94
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT

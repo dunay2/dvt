@@ -477,6 +477,29 @@ symbols:
     cypressCoverage: canvas-draft-access-posture.cy.ts
     unitTests:
       - canvasDraftAccessPostureModel.test.ts
+  - name: DeriveCanvasDraftAccessPostureArgs
+    path: apps/web/src/app/views/canvas/canvasDraftAccessPostureModel.ts
+    dddOwner: Canvas draft access posture component
+    cqRails:
+      - GetWorkspaceGraphDraft
+    fowlerSignals:
+      - data clump
+      - primitive obsession
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-draft-access-posture.cy.ts
+    unitTests:
+      - canvasDraftAccessPostureModel.test.ts
+  - name: CanvasDraftPostureFactoryArgs
+    path: apps/web/src/app/views/canvas/canvasDraftAccessPostureModel.ts
+    dddOwner: Canvas draft access posture component
+    cqRails:
+      - GetWorkspaceGraphDraft
+    fowlerSignals:
+      - data clump
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-draft-access-posture.cy.ts
+    unitTests:
+      - canvasDraftAccessPostureModel.test.ts
   - name: CanvasDraftRecoveryAction
     path: apps/web/src/app/views/canvas/canvasDraftAccessPostureModel.ts
     dddOwner: Canvas draft access posture component
@@ -484,6 +507,129 @@ symbols:
       - GetWorkspaceGraphDraft
     fowlerSignals:
       - duplicate semantics
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-draft-access-posture.cy.ts
+    unitTests:
+      - canvasDraftAccessPostureModel.test.ts
+  - name: CanvasDraftCommandAdmission
+    path: apps/web/src/app/views/canvas/canvasDraftAccessPostureModel.ts
+    dddOwner: CanvasDraftCommandAdmission policy projection
+    cqRails:
+      - CreateCanvasNode
+      - RemoveCanvasNode
+      - CreateCanvasEdge
+      - RemoveCanvasEdge
+      - SaveWorkspaceGraphDraft
+      - PreviewPlan
+      - StartRunInput
+    fowlerSignals:
+      - hidden authority
+      - duplicate semantics
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-draft-access-posture.cy.ts
+    unitTests:
+      - canvasDraftAccessPostureModel.test.ts
+      - canvasRuntimePolicy.test.ts
+  - name: CanvasDraftTransportSurfaceState
+    path: apps/web/src/app/views/canvas/canvasDraftAccessPostureModel.ts
+    dddOwner: Canvas draft access posture component
+    cqRails:
+      - GetWorkspaceGraphDraft
+    fowlerSignals:
+      - duplicate semantics
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-draft-access-posture.cy.ts
+    unitTests:
+      - canvasDraftAccessPostureModel.test.ts
+      - canvasRouteViewState.test.ts
+  - name: CanvasDraftRecoveryBannerState
+    path: apps/web/src/app/views/canvas/canvasDraftAccessPostureModel.ts
+    dddOwner: Canvas draft access posture component
+    cqRails:
+      - GetWorkspaceGraphDraft
+    fowlerSignals:
+      - duplicate semantics
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-draft-access-posture.cy.ts
+    unitTests:
+      - canvasDraftAccessPostureModel.test.ts
+      - canvasRecoveryBannerModel.test.ts
+  - name: createCanvasDraftAccessPosture
+    path: apps/web/src/app/views/canvas/canvasDraftAccessPostureModel.ts
+    dddOwner: Canvas draft access posture component
+    cqRails:
+      - GetWorkspaceGraphDraft
+    fowlerSignals:
+      - primitive obsession
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-draft-access-posture.cy.ts
+    unitTests:
+      - canvasDraftAccessPostureModel.test.ts
+  - name: deriveRecoveryDraftAccessPosture
+    path: apps/web/src/app/views/canvas/canvasDraftAccessPostureModel.ts
+    dddOwner: Canvas draft access posture component
+    cqRails:
+      - GetWorkspaceGraphDraft
+    fowlerSignals:
+      - duplicate semantics
+      - responsibility overload
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-draft-access-posture.cy.ts
+    unitTests:
+      - canvasDraftAccessPostureModel.test.ts
+  - name: isForbiddenScopeReason
+    path: apps/web/src/app/views/canvas/canvasDraftAccessPostureModel.ts
+    dddOwner: Canvas draft access posture component
+    cqRails:
+      - GetWorkspaceGraphDraft
+    fowlerSignals:
+      - primitive obsession
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-draft-access-posture.cy.ts
+    unitTests:
+      - canvasDraftAccessPostureModel.test.ts
+  - name: resolveCanvasDraftRecoveryActionLabel
+    path: apps/web/src/app/views/canvas/canvasDraftAccessPostureModel.ts
+    dddOwner: Canvas draft access posture component
+    cqRails:
+      - GetWorkspaceGraphDraft
+    fowlerSignals:
+      - duplicate semantics
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-draft-access-posture.cy.ts
+    unitTests:
+      - canvasDraftAccessPostureModel.test.ts
+  - name: resolveDraftFormatPostureContent
+    path: apps/web/src/app/views/canvas/canvasDraftAccessPostureModel.ts
+    dddOwner: Canvas draft access posture component
+    cqRails:
+      - GetWorkspaceGraphDraft
+    fowlerSignals:
+      - duplicate semantics
+      - primitive obsession
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-draft-access-posture.cy.ts
+    unitTests:
+      - canvasDraftAccessPostureModel.test.ts
+  - name: resolveWritableDraftToolbarLabel
+    path: apps/web/src/app/views/canvas/canvasDraftAccessPostureModel.ts
+    dddOwner: Canvas draft access posture component
+    cqRails:
+      - GetWorkspaceGraphDraft
+    fowlerSignals:
+      - duplicate semantics
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-draft-access-posture.cy.ts
+    unitTests:
+      - canvasDraftAccessPostureModel.test.ts
+      - canvasToolbarViewModel.test.ts
+  - name: resolveWritablePostureKind
+    path: apps/web/src/app/views/canvas/canvasDraftAccessPostureModel.ts
+    dddOwner: Canvas draft access posture component
+    cqRails:
+      - GetWorkspaceGraphDraft
+    fowlerSignals:
+      - primitive obsession
     architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
     cypressCoverage: canvas-draft-access-posture.cy.ts
     unitTests:
@@ -642,6 +788,99 @@ symbols:
     cypressCoverage: canvas-draft-access-posture.cy.ts
     unitTests:
       - canvasRecoveryBannerModel.test.ts
+  - name: DraftDeniedReason
+    path: apps/web/cypress/e2e/canvas/canvas-draft-access-posture.cy.ts
+    dddOwner: Canvas draft access posture Cypress user-flow fixture
+    cqRails:
+      - GetWorkspaceGraphDraft
+    fowlerSignals:
+      - test-only confidence
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-draft-access-posture.cy.ts
+    unitTests:
+      - canvasStartupAndDraftRecovery.architecture.test.ts
+  - name: buildDeniedDraftReadResponse
+    path: apps/web/cypress/e2e/canvas/canvas-draft-access-posture.cy.ts
+    dddOwner: Canvas draft access posture Cypress user-flow fixture
+    cqRails:
+      - GetWorkspaceGraphDraft
+    fowlerSignals:
+      - test-only confidence
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-draft-access-posture.cy.ts
+    unitTests:
+      - canvasStartupAndDraftRecovery.architecture.test.ts
+  - name: stubRuntimeCapabilities
+    path: apps/web/cypress/e2e/canvas/canvas-draft-access-posture.cy.ts
+    dddOwner: Canvas draft access posture Cypress user-flow fixture
+    cqRails:
+      - GetWorkspaceGraphDraft
+    fowlerSignals:
+      - test-only confidence
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-draft-access-posture.cy.ts
+    unitTests:
+      - canvasStartupAndDraftRecovery.architecture.test.ts
+  - name: stubDraftReadResponse
+    path: apps/web/cypress/e2e/canvas/canvas-draft-access-posture.cy.ts
+    dddOwner: Canvas draft access posture Cypress user-flow fixture
+    cqRails:
+      - GetWorkspaceGraphDraft
+    fowlerSignals:
+      - test-only confidence
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-draft-access-posture.cy.ts
+    unitTests:
+      - canvasStartupAndDraftRecovery.architecture.test.ts
+  - name: stubUnexpectedDraftSave
+    path: apps/web/cypress/e2e/canvas/canvas-draft-access-posture.cy.ts
+    dddOwner: Canvas draft access posture Cypress user-flow fixture
+    cqRails:
+      - SaveWorkspaceGraphDraft
+    fowlerSignals:
+      - hidden authority
+      - test-only confidence
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-draft-access-posture.cy.ts
+    unitTests:
+      - canvasStartupAndDraftRecovery.architecture.test.ts
+  - name: visitCanvasWithDraftRead
+    path: apps/web/cypress/e2e/canvas/canvas-draft-access-posture.cy.ts
+    dddOwner: Canvas draft access posture Cypress user-flow fixture
+    cqRails:
+      - GetWorkspaceGraphDraft
+    fowlerSignals:
+      - test-only confidence
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-draft-access-posture.cy.ts
+    unitTests:
+      - canvasStartupAndDraftRecovery.architecture.test.ts
+  - name: assertDraftReadScope
+    path: apps/web/cypress/e2e/canvas/canvas-draft-access-posture.cy.ts
+    dddOwner: Canvas draft access posture Cypress user-flow fixture
+    cqRails:
+      - GetWorkspaceGraphDraft
+    fowlerSignals:
+      - test-only confidence
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-draft-access-posture.cy.ts
+    unitTests:
+      - canvasStartupAndDraftRecovery.architecture.test.ts
+  - name: assertUnsafeCanvasCommandsAreDisabled
+    path: apps/web/cypress/e2e/canvas/canvas-draft-access-posture.cy.ts
+    dddOwner: Canvas draft access posture Cypress user-flow fixture
+    cqRails:
+      - CreateCanvasNode
+      - SaveWorkspaceGraphDraft
+      - PreviewPlan
+      - StartRunInput
+    fowlerSignals:
+      - hidden authority
+      - test-only confidence
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-draft-access-posture.cy.ts
+    unitTests:
+      - canvasStartupAndDraftRecovery.architecture.test.ts
 completionGate:
   - pnpm --filter @dvt/web test -- canvasDraftAuthTransportPosture.test.ts
   - pnpm --filter @dvt/web test -- canvasDraftAccessPostureModel.test.ts
