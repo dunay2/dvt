@@ -14,6 +14,19 @@ const policyPath = 'tools/ci/policy/adapter-postgres-relevance.json';
 const policy = JSON.parse(readFileSync(policyPath, 'utf8'));
 const workflowScopePolicyPath = 'tools/ci/policy/workflow-scope.json';
 const workflowScopePolicy = JSON.parse(readFileSync(workflowScopePolicyPath, 'utf8'));
+const PR_QUALITY_PREPUSH_GOVERNANCE_COMMANDS = [
+  'pnpm docs:gov:filenames:changed',
+  'pnpm docs:gov:frontmatter:changed',
+  'pnpm docs:governance:unit-coverage',
+  'pnpm docs:governance:document-unit-map:check',
+  'pnpm docs:governance:file-component-index:check',
+  'pnpm docs:governance:file-fingerprint-baseline:check',
+  'pnpm docs:governance:file-fingerprint-impact:check',
+  'pnpm docs:feature-mechanization',
+  'pnpm docs:feature-mechanization:implementation',
+  'pnpm qa:artifact:check',
+  'pnpm arch:deps',
+];
 
 function assertWorkflowContains(workflow, snippet) {
   assert.ok(workflow.includes(snippet), `workflow must include: ${snippet}`);
@@ -176,9 +189,19 @@ test('workflow scope policy stays wired into ci and pr quality workflows', () =>
   });
 });
 
+test('PR quality gate mirrors the merge-blocking governance prepush baseline', () => {
+  const prQualityGate = readFileSync('.github/workflows/pr-quality-gate.yml', 'utf8');
+
+  for (const command of PR_QUALITY_PREPUSH_GOVERNANCE_COMMANDS) {
+    assertWorkflowContains(prQualityGate, command);
+  }
+});
+
 test('security and nightly workflows stay wired to pinned actions and failure notification', () => {
   const dependencyReview = readFileSync('.github/workflows/dependency-review.yml', 'utf8');
   const codeql = readFileSync('.github/workflows/codeql.yml', 'utf8');
+  const contracts = readFileSync('.github/workflows/contracts.yml', 'utf8');
+  const createLabels = readFileSync('.github/workflows/create-labels.yml', 'utf8');
   const docsDeploy = readFileSync('.github/workflows/docs-deploy.yml', 'utf8');
   const nightly = readFileSync(
     '.github/workflows/adapter-postgres-integration-nightly.yml',
@@ -212,6 +235,23 @@ test('security and nightly workflows stay wired to pinned actions and failure no
     'pnpm --workspace-concurrency=4 --filter @dvt/adapter-postgres... --if-present run build'
   );
 
+  assertWorkflowContains(
+    createLabels,
+    'actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0'
+  );
+
   assertWorkflowContains(docsDeploy, 'timeout-minutes: 20');
+  assertWorkflowContains(docsDeploy, 'contents: write');
+  assertWorkflowContains(docsDeploy, 'python -m pip install zensical==0.0.39');
+  assertWorkflowContains(docsDeploy, "if: ${{ github.event.inputs.run_pages_deploy == 'true' }}");
+
+  assert.doesNotMatch(contracts, /POSTGRES_PASSWORD:\s+dvt_test/);
+  assert.doesNotMatch(contracts, /postgresql:\/\/dvt_test:dvt_test@/);
+  assert.match(contracts, /POSTGRES_PASSWORD:\s+\$\{\{\s*github\.run_id\s*\}\}/);
+  assert.match(
+    contracts,
+    /DATABASE_URL:\s+postgresql:\/\/dvt_test:\$\{\{\s*github\.run_id\s*\}\}@localhost:5432\/dvt_test/
+  );
+
   assertWorkflowContains(setupNodePnpm, 'tools/*/node_modules');
 });

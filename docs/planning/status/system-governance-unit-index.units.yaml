@@ -584,6 +584,7 @@ units:
     owns:
       - .github/**
       - .husky/**
+      - .dependency-cruiser.cjs
       - scripts/**
       - tools/**
       - packages/test/**
