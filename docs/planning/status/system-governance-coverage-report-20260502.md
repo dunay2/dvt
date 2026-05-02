@@ -29,13 +29,13 @@ Upstream indexes:
 
 ## Totals
 
-- Files: 4081
-- Governed files: 4081
+- Files: 4099
+- Governed files: 4099
 - Ungoverned files: 0
 - Drift files: 44
 - Legacy files: 0
-- Components/source units: 20
-- Components requiring subdivision: 19
+- Components/source units: 31
+- Components requiring subdivision: 18
 
 ## CI Posture
 
@@ -49,7 +49,7 @@ Upstream indexes:
 <!-- prettier-ignore-start -->
 | Root unit | Files |
 | --- | ---: |
-| `SYS-DVT` | 4081 |
+| `SYS-DVT` | 4099 |
 <!-- prettier-ignore-end -->
 
 ## By Domain Unit
@@ -58,7 +58,7 @@ Upstream indexes:
 | Domain unit | Files |
 | --- | ---: |
 | `SYS-ADAPTERS` | 196 |
-| `SYS-DVT` | 3304 |
+| `SYS-DVT` | 3322 |
 | `SYS-OBSERVABILITY` | 15 |
 | `SYS-PLANSTORE` | 112 |
 | `SYS-RUNTIME` | 286 |
@@ -71,12 +71,12 @@ Upstream indexes:
 <!-- prettier-ignore-start -->
 | DDD owner | Files |
 | --- | ---: |
-| `ADP` | 223 |
-| `AS` | 771 |
-| `DS` | 141 |
-| `ENTRY` | 797 |
-| `INFRA` | 1976 |
-| `PORT` | 173 |
+| `ADP` | 250 |
+| `AS` | 469 |
+| `DS` | 142 |
+| `ENTRY` | 885 |
+| `INFRA` | 2164 |
+| `PORT` | 189 |
 <!-- prettier-ignore-end -->
 
 ## By Status
@@ -85,7 +85,7 @@ Upstream indexes:
 | Status | Files |
 | --- | ---: |
 | `canonical` | 111 |
-| `coverage-required` | 3858 |
+| `coverage-required` | 3876 |
 | `drift` | 44 |
 | `review` | 68 |
 <!-- prettier-ignore-end -->
@@ -95,7 +95,7 @@ Upstream indexes:
 <!-- prettier-ignore-start -->
 | Governance state | Files |
 | --- | ---: |
-| `coverage-required` | 3858 |
+| `coverage-required` | 3876 |
 | `drift` | 44 |
 | `governed` | 111 |
 | `review` | 68 |
@@ -107,7 +107,7 @@ Upstream indexes:
 | Canonical role | Files |
 | --- | ---: |
 | `implementation-owner` | 111 |
-| `none` | 3970 |
+| `none` | 3988 |
 <!-- prettier-ignore-end -->
 
 ## By Evidence State
@@ -116,7 +116,7 @@ Upstream indexes:
 | Evidence state | Files |
 | --- | ---: |
 | `classification-only` | 111 |
-| `coverage-required` | 3858 |
+| `coverage-required` | 3876 |
 | `remediation-required` | 44 |
 | `review-required` | 68 |
 <!-- prettier-ignore-end -->
@@ -185,9 +185,8 @@ Upstream indexes:
 <!-- prettier-ignore-start -->
 | Component | Files | Status | DDD owner |
 | --- | ---: | --- | --- |
-| `SYS-DOCS-GOVERNANCE-ROOT` | 1651 | `coverage-required` | `INFRA` |
+| `SYS-DOCS-GOVERNANCE-ROOT` | 1665 | `coverage-required` | `INFRA` |
 | `SYS-WEB-ROOT` | 797 | `coverage-required` | `ENTRY` |
-| `SYS-API-ROOT` | 362 | `coverage-required` | `AS` |
 | `SYS-RUNTIME-ROOT` | 286 | `coverage-required` | `AS` |
 | `SYS-ADAPTERS-ROOT` | 196 | `coverage-required` | `ADP` |
 | `SYS-CI-GOVERNANCE-ROOT` | 180 | `coverage-required` | `INFRA` |
@@ -211,17 +210,19 @@ Upstream indexes:
 <!-- prettier-ignore-start -->
 | Governance source | Files |
 | --- | ---: |
-| `docs/DOCS_README.md` | 1651 |
-| `docs/planning/status/governance-document-rule-inventory.md` | 1651 |
-| `docs/planning/status/system-operations-inventory-20260501.md` | 993 |
+| `docs/DOCS_README.md` | 1679 |
+| `docs/planning/status/governance-document-rule-inventory.md` | 1665 |
+| `docs/planning/status/system-operations-inventory-20260501.md` | 947 |
 | `docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md` | 797 |
-| `docs/guides/testing-and-ci-capabilities.md` | 180 |
+| `docs/guides/testing-and-ci-capabilities.md` | 340 |
+| `docs/architecture/command-query-rail-governance.md` | 159 |
 | `docs/contracts/index.md` | 127 |
 | `package.json` | 111 |
 | `pnpm-workspace.yaml` | 111 |
 | `docs/contracts/planner/index.md` | 76 |
 | `docs/adr/ADR-0000-Code-generation-with-normative-traceability-required.en.md` | 65 |
 | `docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md` | 46 |
+| `docs/architecture/reference-architecture.md` | 44 |
 | `docs/planning/status/system-governance-document-unit-map-20260501.md` | 34 |
 | `docs/planning/status/system-governance-unit-index-20260501.md` | 34 |
 | `docs/planning/closeouts/20260403-s08-3-artifacts-plan-store-ports-closeout.md` | 23 |
@@ -231,10 +232,9 @@ Upstream indexes:
 | `docs/architecture/components/engine/adapters/temporal/temporal-planref-workflow-boundary.md` | 11 |
 | `docs/planning/closeouts/20260502-s08-temporal-legacy-removal-closeout.md` | 11 |
 | `docs/risk-register/quality/R-20260427-TEMPORAL-PLANREF-CONFIG-HARDENING.yaml` | 11 |
+| `docs/runbooks/api-runtime-sla-canonical-20260404.md` | 11 |
 | `docs/adr/adr-0052-planref-continuation-safety.md` | 5 |
 | `docs/risk-register/quality/R-20260405-PLAN-STORE-CANONICAL-SHAPE-DRIFT.yaml` | 5 |
-| `docs/contracts/planner/PlanStoreRecords.v1.md` | 3 |
-| `docs/risk-register/quality/R-20260402-S08-PLAN-STORE-CONTRACT-DRIFT.yaml` | 3 |
 <!-- prettier-ignore-end -->
 
 ## Related Surfaces

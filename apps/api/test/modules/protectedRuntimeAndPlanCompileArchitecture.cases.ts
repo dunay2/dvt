@@ -19,7 +19,10 @@ const PLAN_COMPILE_BOUNDARY_SOURCE = readFileSync(
   new URL('../../src/modules/planCompileBoundary.ts', import.meta.url),
   'utf8'
 );
-const APP_SOURCE = readFileSync(new URL('../../src/app.ts', import.meta.url), 'utf8');
+const PROTECTED_RUNTIME_ROUTES_SOURCE = readFileSync(
+  new URL('../../src/entrypoints/http/registerProtectedRuntimeRoutes.ts', import.meta.url),
+  'utf8'
+);
 const START_RUN_TARGET_ADAPTER_REGISTRY_SOURCE = readFileSync(
   new URL('../../src/application/services/startRunTargetAdapterRegistry.ts', import.meta.url),
   'utf8'
@@ -64,19 +67,17 @@ export function describeProtectedRuntimeAndPlanCompileArchitectureCases(): void 
 
     it('derives compile adapter truth from the canonical startRun contract', () => {
       expect(PLAN_COMPILE_BOUNDARY_SOURCE).toContain('SUPPORTED_START_RUN_TARGET_ADAPTERS');
-      expect(PLAN_COMPILE_BOUNDARY_SOURCE).not.toContain(
-        "['conductor', 'mock', 'temporal']"
-      );
+      expect(PLAN_COMPILE_BOUNDARY_SOURCE).not.toContain("['conductor', 'mock', 'temporal']");
     });
 
     it('keeps generic preview planning on the protected runtime planner while compile stays on the compile boundary', () => {
-      expect(APP_SOURCE).toMatch(
+      expect(PROTECTED_RUNTIME_ROUTES_SOURCE).toMatch(
         /const previewPlanUseCase = new PreviewPlanUseCase\(\{\s*planner: protectedModule\.planner,/s
       );
-      expect(APP_SOURCE).not.toMatch(
+      expect(PROTECTED_RUNTIME_ROUTES_SOURCE).not.toMatch(
         /const previewPlanUseCase = new PreviewPlanUseCase\(\{\s*planner: protectedModule\.planCompilePlanner,/s
       );
-      expect(APP_SOURCE).toMatch(
+      expect(PROTECTED_RUNTIME_ROUTES_SOURCE).toMatch(
         /const compilePlanUseCase = new CompilePlanUseCase\(\{\s*planner: protectedModule\.planCompilePlanner,/s
       );
     });

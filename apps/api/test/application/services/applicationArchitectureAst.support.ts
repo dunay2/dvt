@@ -58,10 +58,7 @@ export const START_RUN_ADMISSION_OBSERVABILITY_COMPONENT = {
       APPLICATION_ROOT,
       'ports/IBackpressureCapacityTelemetry.ts'
     ),
-    noopAdmissionTelemetry: defineArtifact(
-      APPLICATION_ROOT,
-      'services/NoopAdmissionTelemetry.ts'
-    ),
+    noopAdmissionTelemetry: defineArtifact(APPLICATION_ROOT, 'services/NoopAdmissionTelemetry.ts'),
     decisions: defineArtifact(APPLICATION_ROOT, 'services/startRunAdmissionDecisions.ts'),
     decisionTelemetry: defineArtifact(
       INFRA_ROOT,
@@ -175,19 +172,10 @@ export const WORKSPACE_GRAPH_DRAFT_APPLICATION_COMPONENT = {
       import.meta.dirname,
       'authorizeWorkspaceGraphDraftCapabilityService.test.ts'
     ),
-    componentGuide: defineArtifact(
-      DOCS_ROOT,
-      'workspace-graph-draft-application-component.md'
-    ),
-    getUseCase: defineArtifact(
-      APPLICATION_ROOT,
-      'services/getWorkspaceGraphDraftUseCase.ts'
-    ),
+    componentGuide: defineArtifact(DOCS_ROOT, 'workspace-graph-draft-application-component.md'),
+    getUseCase: defineArtifact(APPLICATION_ROOT, 'services/getWorkspaceGraphDraftUseCase.ts'),
     portFamily: defineArtifact(APPLICATION_ROOT, 'ports/workspaceGraphDraft.ts'),
-    saveUseCase: defineArtifact(
-      APPLICATION_ROOT,
-      'services/saveWorkspaceGraphDraftUseCase.ts'
-    ),
+    saveUseCase: defineArtifact(APPLICATION_ROOT, 'services/saveWorkspaceGraphDraftUseCase.ts'),
   },
   contracts: {
     canonicalBoundaryModule: '@dvt/contracts',
@@ -210,7 +198,10 @@ export const EXECUTABLE_SUBGRAPH_RESOLUTION_COMPONENT = {
       MODULES_ROOT,
       'startRun/buildProtectedStartRunRuntime.ts'
     ),
-    appRoot: defineArtifact(join(import.meta.dirname, '../../../src'), 'app.ts'),
+    appRoot: defineArtifact(
+      join(import.meta.dirname, '../../../src/entrypoints/http'),
+      'registerProtectedRuntimeRoutes.ts'
+    ),
   },
   contracts: {
     canonicalBoundaryModule: '@dvt/contracts',
