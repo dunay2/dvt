@@ -1,7 +1,7 @@
 version: 1
 generatedFrom: git ls-files docs
 unitManifest: docs/planning/status/system-governance-unit-index.units.yaml
-documentCount: 1450
+documentCount: 1444
 documents:
   - path: docs/CONTRIBUTING.md
     classification: governs unit
@@ -5777,14 +5777,6 @@ documents:
     classification: governs unit
     documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
     subjectUnit: SYS-DOCS-GOVERNANCE
-  - path: docs/planning/status/system-governance-component-index-20260501.md
-    classification: governs unit
-    documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
-    subjectUnit: SYS-DOCS-GOVERNANCE
-  - path: docs/planning/status/system-governance-component-index-20260501.md
-    classification: governs unit
-    documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
-    subjectUnit: SYS-DOCS-GOVERNANCE
   - path: docs/planning/status/system-governance-coverage-report-20260502.md
     classification: governs unit
     documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -5793,23 +5785,7 @@ documents:
     classification: governs unit
     documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
     subjectUnit: SYS-DOCS-GOVERNANCE
-  - path: docs/planning/status/system-governance-document-unit-map-20260501.md
-    classification: governs unit
-    documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
-    subjectUnit: SYS-DOCS-GOVERNANCE
-  - path: docs/planning/status/system-governance-document-unit-map-20260501.md
-    classification: governs unit
-    documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
-    subjectUnit: SYS-DOCS-GOVERNANCE
   - path: docs/planning/status/system-governance-file-fingerprint-impact-20260501.md
-    classification: governs unit
-    documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
-    subjectUnit: SYS-DOCS-GOVERNANCE
-  - path: docs/planning/status/system-governance-file-index-20260501.md
-    classification: governs unit
-    documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
-    subjectUnit: SYS-DOCS-GOVERNANCE
-  - path: docs/planning/status/system-governance-file-index-20260501.md
     classification: governs unit
     documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
     subjectUnit: SYS-DOCS-GOVERNANCE

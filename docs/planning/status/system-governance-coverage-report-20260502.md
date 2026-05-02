@@ -29,8 +29,8 @@ Upstream indexes:
 
 ## Totals
 
-- Files: 4082
-- Governed files: 4082
+- Files: 4068
+- Governed files: 4068
 - Ungoverned files: 0
 - Drift files: 44
 - Legacy files: 0
@@ -49,7 +49,7 @@ Upstream indexes:
 <!-- prettier-ignore-start -->
 | Root unit | Files |
 | --- | ---: |
-| `SYS-DVT` | 4082 |
+| `SYS-DVT` | 4068 |
 <!-- prettier-ignore-end -->
 
 ## By Domain Unit
@@ -58,7 +58,7 @@ Upstream indexes:
 | Domain unit | Files |
 | --- | ---: |
 | `SYS-ADAPTERS` | 196 |
-| `SYS-DVT` | 3305 |
+| `SYS-DVT` | 3291 |
 | `SYS-OBSERVABILITY` | 15 |
 | `SYS-PLANSTORE` | 112 |
 | `SYS-RUNTIME` | 286 |
@@ -75,7 +75,7 @@ Upstream indexes:
 | `AS` | 771 |
 | `DS` | 141 |
 | `ENTRY` | 787 |
-| `INFRA` | 1987 |
+| `INFRA` | 1973 |
 | `PORT` | 173 |
 <!-- prettier-ignore-end -->
 
@@ -85,7 +85,7 @@ Upstream indexes:
 | Status | Files |
 | --- | ---: |
 | `canonical` | 110 |
-| `coverage-required` | 3860 |
+| `coverage-required` | 3846 |
 | `drift` | 44 |
 | `review` | 68 |
 <!-- prettier-ignore-end -->
@@ -154,7 +154,7 @@ Upstream indexes:
 <!-- prettier-ignore-start -->
 | Component | Files | Status | DDD owner |
 | --- | ---: | --- | --- |
-| `SYS-DOCS-GOVERNANCE-ROOT` | 1665 | `coverage-required` | `INFRA` |
+| `SYS-DOCS-GOVERNANCE-ROOT` | 1651 | `coverage-required` | `INFRA` |
 | `SYS-WEB-ROOT` | 787 | `coverage-required` | `ENTRY` |
 | `SYS-API-ROOT` | 362 | `coverage-required` | `AS` |
 | `SYS-RUNTIME-ROOT` | 286 | `coverage-required` | `AS` |
@@ -180,8 +180,8 @@ Upstream indexes:
 <!-- prettier-ignore-start -->
 | Governance source | Files |
 | --- | ---: |
-| `docs/DOCS_README.md` | 1665 |
-| `docs/planning/status/governance-document-rule-inventory.md` | 1665 |
+| `docs/DOCS_README.md` | 1651 |
+| `docs/planning/status/governance-document-rule-inventory.md` | 1651 |
 | `docs/planning/status/system-operations-inventory-20260501.md` | 993 |
 | `docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md` | 787 |
 | `docs/guides/testing-and-ci-capabilities.md` | 178 |
