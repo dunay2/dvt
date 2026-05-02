@@ -16,7 +16,10 @@ import {
   readHttpEntrypointSource,
 } from './httpArchitectureAst.support.js';
 
-const APP_SOURCE_PATH = join(import.meta.dirname, '../../../src/app.ts');
+const APP_SOURCE_PATH = join(
+  import.meta.dirname,
+  '../../../src/entrypoints/http/registerProtectedRuntimeRoutes.ts'
+);
 const APP_SOURCE_TEXT = readFileSync(APP_SOURCE_PATH, 'utf8');
 const CONTROL_BOUNDARY_DOC_PATH = join(
   import.meta.dirname,

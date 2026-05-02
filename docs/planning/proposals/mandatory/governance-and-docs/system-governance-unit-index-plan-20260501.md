@@ -361,7 +361,10 @@ allowedImplementationSurfaces:
   - .github/workflows/pr-quality-gate.yml
   - apps/api/src/app.ts
   - apps/api/src/entrypoints/http/registerProtectedRuntimeRoutes.ts
+  - apps/api/test/application/services/applicationArchitectureAst.support.ts
+  - apps/api/test/entrypoints/http/startRunControlBoundary.architecture.test.ts
   - apps/api/test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts
+  - apps/api/test/modules/protectedRuntimeAndPlanCompileArchitecture.cases.ts
   - apps/api/src/routes/registerOperationalRoutes.ts
   - apps/api/test/routes/registerOperationalRoutes.test.ts
   - docs/.manifest.json
@@ -573,9 +576,34 @@ redGreenCycles:
     patchSurfaces:
       - apps/api/src/entrypoints/http/registerProtectedRuntimeRoutes.ts
       - apps/api/test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts
+      - apps/api/test/application/services/applicationArchitectureAst.support.ts
+      - apps/api/test/entrypoints/http/startRunControlBoundary.architecture.test.ts
+      - apps/api/test/modules/protectedRuntimeAndPlanCompileArchitecture.cases.ts
       - apps/api/src/app.ts
     greenTest: pnpm --filter dvt-api test -- test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts
 symbols:
+  - name: APP_SOURCE_PATH
+    path: apps/api/test/entrypoints/http/startRunControlBoundary.architecture.test.ts
+    dddOwner: API protected runtime HTTP entrypoint component architecture guard
+    cqRails:
+      - RegisterApiProtectedRuntimeRoutes
+    fowlerSignals:
+      - Boundary drift
+    architectureGuard: apps/api/test/entrypoints/http/startRunControlBoundary.architecture.test.ts
+    cypressCoverage: N/A - backend protected runtime route composition
+    unitTests:
+      - apps/api/test/entrypoints/http/startRunControlBoundary.architecture.test.ts
+  - name: PROTECTED_RUNTIME_ROUTES_SOURCE
+    path: apps/api/test/modules/protectedRuntimeAndPlanCompileArchitecture.cases.ts
+    dddOwner: API protected runtime HTTP entrypoint component architecture guard
+    cqRails:
+      - RegisterApiProtectedRuntimeRoutes
+    fowlerSignals:
+      - Boundary drift
+    architectureGuard: apps/api/test/modules.test.ts
+    cypressCoverage: N/A - backend protected runtime route composition
+    unitTests:
+      - apps/api/test/modules.test.ts
   - name: RegisterProtectedRuntimeRoutesOptions
     path: apps/api/src/entrypoints/http/registerProtectedRuntimeRoutes.ts
     dddOwner: API protected runtime HTTP entrypoint component

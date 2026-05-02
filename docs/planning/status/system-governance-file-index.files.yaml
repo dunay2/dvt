@@ -8481,9 +8481,9 @@ files:
       - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-BA6A126B9428
     pathHash: af3958a931a9254e7773c6b5984825f5a162ffad7104476ca116cfc98b874c88
-    contentHash: a84b9959f8dba300736e645734e9d4c638c3776792389995cb2f1e941a03f67f
+    contentHash: c020bab91f58d534a0103a6871a4f4a23936e26faddf5ae4e00f5ff8a4d80535
     governanceHash: f78fcd00805e3ac4bb31cf806a152b0de73605e5e53a95d07d07aa84ebe026ac
-    stateFingerprint: a2456e834339297f86106f874e4ef4a1e11f9185a9298fcb3153d149d88e19e1
+    stateFingerprint: bbde603cecc1a8b2b5083b7aa77344a41bba9a6aed81fbe49546467d498bfe1d
     path: apps/api/test/application/services/applicationArchitectureAst.support.ts
     owningUnit: SYS-API-TESTS
     rootUnit: SYS-DVT
@@ -10399,9 +10399,9 @@ files:
       - docs/architecture/command-query-rail-governance.md
   - fileId: F-9C10C7A1CF71
     pathHash: 4d88d69b1e371af81f1e3db8ef771ca855912a9cc3cd1e62275480bb3a687e4a
-    contentHash: aa6e818b44a2eff8dab351a126bb35220c53c2495f8249ef284e6baa58a6818f
+    contentHash: 10c4a5b72c2ffd9eff3876cd6a5c2c641960641ca748abe6de10f532831bfb61
     governanceHash: 70a48afaa48bf8a46d9cd323a046383bae1f0eefe5b7df2126e4c8e079563bd7
-    stateFingerprint: dcdf8552245279aa420e88f3b80be0eec247a40840478e5124c8228f02998c1e
+    stateFingerprint: adb6b6046c571c957f1279ed65c66c872cf841f13b195da1f781e7aaf2826580
     path: apps/api/test/entrypoints/http/startRunControlBoundary.architecture.test.ts
     owningUnit: SYS-API-HTTP-ENTRYPOINT-TESTS
     rootUnit: SYS-DVT
@@ -11778,9 +11778,9 @@ files:
       - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-EA0F53FD16EE
     pathHash: 88b17ab2dc5dd305fe02c15bb7308590d0898ed64ea61b935c81e0c6f50bb2d1
-    contentHash: 9aa1417a69a40500e5c839e3836cbfc2fc0661cf6adb1ab3a7da68856c1ce993
+    contentHash: 2b7b46f906afb48d8867582b007b744634903d138e3b57d1ad040f8c85975aa3
     governanceHash: f78fcd00805e3ac4bb31cf806a152b0de73605e5e53a95d07d07aa84ebe026ac
-    stateFingerprint: 8fccb085e57dde72942d759176514e6f10b4ae04698bbe0abd215a1af77517a4
+    stateFingerprint: d31d919e552f76340b79ea3b39d05042e866b9d0caac09eada84dcf608a3a417
     path: apps/api/test/modules/protectedRuntimeAndPlanCompileArchitecture.cases.ts
     owningUnit: SYS-API-TESTS
     rootUnit: SYS-DVT
@@ -69134,9 +69134,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-EF1F0DBBB1D8
     pathHash: d2ebbe3b36b0d4c10247d0bef16fe8e5b65b52ed226557be52d5d634cdd48c9c
-    contentHash: 6da5b87d229b332808f1a4279c80450fd1db3201005fd2853a18a494e43d4f70
+    contentHash: 912009ab80c9033bc85afdff8511760106d41b1908b5d6ec3dce45c9c9242f9a
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: ce2b28318c1b3a00d441900fcff7246beb5a5e555bf64f73142c707458f20018
+    stateFingerprint: bd4710af83730318b926f1e4ae67ee28b15bb9ecf8ff1516d289e8a125cd6dd3
     path: >-
       docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
