@@ -258,7 +258,7 @@ components:
     isDrift: false
     isLegacy: false
     childrenRequired: true
-    fileCount: 1652
+    fileCount: 1646
     dddOwner: INFRA
     cqRails: none - documentation governance
     owns:
