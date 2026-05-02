@@ -19422,9 +19422,9 @@ files:
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
   - fileId: F-B3CB3C334716
     path: docs/guides/testing-and-ci-capabilities.md
-    contentHash: 04c1a5f107f1cd62ef13ffec513f15394ccd55d9d84540ab223e8907668829db
+    contentHash: efcd4dad403e93c9b063d168ea1b43e0f7c80ef4d2c86d0275cbd3e1c5645849
     governanceHash: d9f768b3da4be04e83890eae632052f05a0776f4990c39b7b2ab2c3b6cc14524
-    stateFingerprint: 929e412fbd9226c21b3d4606ebfb0255bfcf02838003273a4a1a26f9d91fbc2e
+    stateFingerprint: af208bd469b6918c1bed5d031c94939c0bcc97353062a0fec5b4da6fa00b3621
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -35874,18 +35874,18 @@ files:
     owningUnit: SYS-CI-GOVERNANCE-ROOT
   - fileId: F-229E2DA7030B
     path: scripts/generate-governance-coverage-report.cjs
-    contentHash: d22cd08fdefdbab9d9048777a8f32042ed0b6b0d27a871c5782af40a68bbbe8e
+    contentHash: 4dfaba16f72c67fc3496cf9362992adc53423ac44a3fc45eb3b6142c4cee17c7
     governanceHash: 3286d185b83c9c6dc1c5ccc7196e85d0020fdfcd5fad0eaeb783775bb31d71c2
-    stateFingerprint: af4c43b4e5f5d700ca5639cc9c35aa66699b338240978632e972dc76a073ae63
+    stateFingerprint: 1740a2aa926277b4bc2e05e933d169a182c73c3d3940b8568ab283b19daa8655
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-CI-GOVERNANCE-ROOT
     owningUnit: SYS-CI-GOVERNANCE-ROOT
   - fileId: F-485C3848F39F
     path: scripts/generate-governance-coverage-report.test.cjs
-    contentHash: bec3fb5db36f893438f15bc5233285576128a90d2e5590de60fdf3149368a6bd
+    contentHash: 740bfdc6fecf1746d27c5974a1717fbb47de1a5b3b2dd06650a68324c311e64d
     governanceHash: 3286d185b83c9c6dc1c5ccc7196e85d0020fdfcd5fad0eaeb783775bb31d71c2
-    stateFingerprint: ae6a936df6ef561b20c3892e114b51f0436e1991d42cc9a21830c669f1be4f52
+    stateFingerprint: aae3a35b1cdbe22994ac72591444aad4c0e814ade7b34ced882726a3939bf05f
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-CI-GOVERNANCE-ROOT
