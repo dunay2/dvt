@@ -61,15 +61,18 @@ export function createTemporalWorkerRuntimeHandle(
     },
     stop: async () => {
       const pendingStartup = startPromise;
-      const closePlanStore = resources.planStore.close;
+      const closePlanArtifactReader = resources.planArtifactReader.close;
       stopPromise ??= stopTemporalWorkerRuntime({
         pendingStartup,
         host,
         getConnection: () => connection,
         stateStore: resources.stateStore,
-        ...(closePlanStore === undefined
+        ...(closePlanArtifactReader === undefined
           ? {}
-          : { closePlanStore: () => closePlanStore.call(resources.planStore) }),
+          : {
+              closePlanArtifactReader: () =>
+                closePlanArtifactReader.call(resources.planArtifactReader),
+            }),
       }).finally(() => {
         connection = null;
       });

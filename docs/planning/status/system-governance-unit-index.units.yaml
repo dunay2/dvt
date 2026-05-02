@@ -226,22 +226,25 @@ units:
     name: Temporal plan-store composition and plan-ref workflow boundary
     parent: SYS-PLANSTORE
     level: component
-    status: legacy
+    status: review
     owns:
       - apps/temporal-worker/src/runtime/runtimeTypes.ts
       - apps/temporal-worker/src/runtime/temporalWorkerRuntimeHandle.ts
       - apps/temporal-worker/src/runtime/temporalWorkerRuntimeResources.ts
       - apps/temporal-worker/src/runtime/temporalWorkerStores.ts
       - apps/temporal-worker/test/runtime/createTemporalWorkerRuntime.srp.architecture.test.ts
+      - packages/@dvt/adapter-temporal/src/activities/temporalPlanArtifactReader.ts
       - packages/@dvt/adapter-temporal/src/temporalPlanRefCapacitySlaPolicy.ts
       - packages/@dvt/adapter-temporal/src/workflows/workflowArtifactHelpers.ts
+      - packages/@dvt/adapter-temporal/test/temporalPlanArtifactReader.test.ts
       - packages/@dvt/adapter-temporal/test/temporalPlanRefCapacitySlaPolicy.test.ts
       - packages/@dvt/adapter-temporal/test/workflow-component-semantics.architecture.test.ts
     childrenRequired: true
     dddOwner: ADP
-    cqRails: PS-Q04
+    cqRails: PS-Q08
     governance:
       - docs/architecture/components/engine/adapters/temporal/temporal-planref-workflow-boundary.md
+      - docs/planning/closeouts/20260502-s08-temporal-legacy-removal-closeout.md
       - docs/risk-register/quality/R-20260427-TEMPORAL-PLANREF-CONFIG-HARDENING.yaml
       - docs/planning/status/system-operations-inventory-20260501.md
     fowlerSignals:
@@ -282,11 +285,13 @@ units:
       - docs/evidence/ED-20260403-s08-*.md
       - docs/evidence/ed-20260427-temporal-planref-*.md
       - docs/evidence/ed-20260430-ar-d2-temporal-planref-capacity-sla.md
+      - docs/evidence/ed-20260502-s08-temporal-legacy-removal.md
       - docs/guides/postgres-plan-store-*.md
       - docs/planning/closeouts/20260402-s08-*.md
       - docs/planning/closeouts/20260403-s08-*.md
       - docs/planning/closeouts/20260406-s08-*.md
       - docs/planning/closeouts/20260427-temporal-planref-*.md
+      - docs/planning/closeouts/20260502-s08-temporal-legacy-removal-closeout.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/s08-*.md
       - docs/planning/reviews/20260402-s08-plan-record-plan-store-gap-review.md
       - docs/planning/reviews/architecture-and-governance/20260403-*plan-store*.md
@@ -296,6 +301,7 @@ units:
       - docs/risk-register/quality/R-20260405-PLAN-STORE-CANONICAL-SHAPE-DRIFT.yaml
       - docs/risk-register/quality/R-20260408-ADAPTER-POSTGRES-PLANSTORE-TEST-DRIFT.yaml
       - docs/risk-register/quality/R-20260427-TEMPORAL-PLANREF-CONFIG-HARDENING.yaml
+      - docs/risk-register/quality/r-20260502-s08-temporal-dispatch-scope.yaml
     childrenRequired: true
     dddOwner: INFRA
     cqRails: none - governance and evidence
@@ -440,8 +446,10 @@ units:
     excludes:
       - packages/@dvt/adapter-postgres/src/PostgresPlanStore*.ts
       - packages/@dvt/adapter-postgres/test/PostgresPlanStore*.ts
+      - packages/@dvt/adapter-temporal/src/activities/temporalPlanArtifactReader.ts
       - packages/@dvt/adapter-temporal/src/temporalPlanRefCapacitySlaPolicy.ts
       - packages/@dvt/adapter-temporal/src/workflows/workflowArtifactHelpers.ts
+      - packages/@dvt/adapter-temporal/test/temporalPlanArtifactReader.test.ts
       - packages/@dvt/adapter-temporal/test/temporalPlanRefCapacitySlaPolicy.test.ts
       - packages/@dvt/adapter-temporal/test/workflow-component-semantics.architecture.test.ts
     childrenRequired: true
@@ -626,11 +634,13 @@ units:
       - docs/evidence/ED-20260403-s08-*.md
       - docs/evidence/ed-20260427-temporal-planref-*.md
       - docs/evidence/ed-20260430-ar-d2-temporal-planref-capacity-sla.md
+      - docs/evidence/ed-20260502-s08-temporal-legacy-removal.md
       - docs/guides/postgres-plan-store-*.md
       - docs/planning/closeouts/20260402-s08-*.md
       - docs/planning/closeouts/20260403-s08-*.md
       - docs/planning/closeouts/20260406-s08-*.md
       - docs/planning/closeouts/20260427-temporal-planref-*.md
+      - docs/planning/closeouts/20260502-s08-*.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/s08-*.md
       - docs/planning/reviews/20260402-s08-plan-record-plan-store-gap-review.md
       - docs/planning/reviews/architecture-and-governance/20260403-*plan-store*.md
@@ -640,6 +650,7 @@ units:
       - docs/risk-register/quality/R-20260405-PLAN-STORE-CANONICAL-SHAPE-DRIFT.yaml
       - docs/risk-register/quality/R-20260408-ADAPTER-POSTGRES-PLANSTORE-TEST-DRIFT.yaml
       - docs/risk-register/quality/R-20260427-TEMPORAL-PLANREF-CONFIG-HARDENING.yaml
+      - docs/risk-register/quality/r-20260502-s08-temporal-dispatch-scope.yaml
     childrenRequired: true
     dddOwner: INFRA
     cqRails: none - documentation governance

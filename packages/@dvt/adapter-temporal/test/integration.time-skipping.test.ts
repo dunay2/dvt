@@ -33,6 +33,7 @@ import {
   createRunContext,
   createSingleRunDbtTimeSkippingHarness,
   createTenantWorkerHost,
+  INTEGRATION_PLAN_OWNERSHIP,
   INTEGRATION_TEST_TIMEOUT,
   mkLinearPlan,
   mkLinearThreeStepPlan,
@@ -168,6 +169,7 @@ function createBlockingExecutor(targetStepId: string): {
 function mkGatewaySkipPlan(): ExecutionPlan {
   return createExecutionPlan({
     inputHashSha256: 'b'.repeat(64),
+    ownership: INTEGRATION_PLAN_OWNERSHIP,
     steps: [
       { stepId: 's-1', kind: 'DBT_MODEL', dependsOn: [] },
       {

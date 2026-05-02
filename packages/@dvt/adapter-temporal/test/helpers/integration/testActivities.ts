@@ -8,7 +8,10 @@ import {
 } from '@dvt/contracts';
 import type { RunStateCommandPort } from '@dvt/engine';
 
-import type { ActivityDeps } from '../../../src/activities/stepActivities.js';
+import {
+  createScopedTemporalPlanArtifactReader,
+  type ActivityDeps,
+} from '../../../src/activities/stepActivities.js';
 
 import { TestClock, TestIdempotency, TestOutbox, TestStateStore } from './runtimeState.js';
 
@@ -92,12 +95,18 @@ export function createActivityDeps(
   options?: CreateActivityDepsOptions
 ): TestActivityDeps {
   const runStateCommandPort = createRunStateCommandPort(store);
+  const fetcher = createPlanFetcher(planBytes, options);
+  const integrity = new TestIntegrity();
 
   return {
     runStateCommandPort,
     clock: new TestClock(),
     idempotency: new TestIdempotency(),
-    fetcher: createPlanFetcher(planBytes, options),
-    integrity: new TestIntegrity(),
+    fetcher,
+    integrity,
+    planArtifactReader: createScopedTemporalPlanArtifactReader({
+      fetcher,
+      integrity,
+    }),
   };
 }
