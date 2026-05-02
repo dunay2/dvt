@@ -2,7 +2,7 @@
 title: App Bootstrap Screen Component
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-04-27
+last_reviewed: 2026-05-02
 ---
 
 # App Bootstrap Screen Component
@@ -27,6 +27,9 @@ The component is split into a pure Presentation Model and a DOM adapter:
   static ARIA contract shared by the adapter and tests.
 - `appBootstrapScreen.ts` owns DOM lookup, ARIA writes, metadata writes, and
   the exported control API used by the rest of the app.
+- `routeBootstrapStartupReadiness.ts` owns the route readiness read model that
+  adapts active-route publication and runtime capability cold-start posture into
+  the single route-step command accepted by the bootstrap screen.
 
 It does not own route-specific readiness, backend contract semantics, or Canvas
 draft truth. Those concerns publish into this component through typed route and
@@ -44,6 +47,14 @@ health/bootstrap adapters.
 | `renderBootstrapProgress()`       | Renders progress from an already resolved bootstrap snapshot                |
 | `BootstrapStepStatusCommand`      | Public command object for step, status, and optional detail copy            |
 | `BootstrapFailureCommand`         | Public command object for controlled startup failure copy                   |
+
+## Route Readiness Policy API
+
+| API                                                  | Owned behavior                                                                |
+| ---------------------------------------------------- | ----------------------------------------------------------------------------- |
+| `RouteBootstrapStartupReadinessState`                | Browser-local read model for same-route stable route posture                  |
+| `createInitialRouteBootstrapStartupReadinessState()` | Creates an empty route-readiness state before the active route publishes      |
+| `resolveRouteBootstrapStartupReadiness(args)`        | Resolves the effective route command and can-complete posture for `RootShell` |
 
 ## Domain Command API
 
@@ -90,6 +101,13 @@ positional tuples directly.
 - Once a platform-health probe has failed, automatic retries must not demote
   the visible startup posture back to cold-start `pending`; retries update
   detail copy in place while the gate stays settled.
+- A route `complete` publication must not appear as route-ready while runtime
+  capabilities are still in cold-start `pending`.
+- A same-route stable route posture, including `complete`, `failed`, `blocked`,
+  or `error`, must not regress to `pending` just because a route seam republishes
+  its initial posture.
+- Route-readiness stability is scoped to the active route id. Navigating to a
+  different route resets the stable route posture.
 - `completeBootstrapScreen()` is a guard, not a command override; it cannot
   remove the screen until all steps are terminally allowed.
 - ARIA state is owned by the bootstrap state machine: `aria-busy="true"` before
@@ -108,6 +126,8 @@ stateDiagram-v2
   Loading --> Loading: step pending
   Loading --> Loading: step degraded
   Loading --> Loading: non-critical step failed
+  Loading --> Loading: route complete suppressed while capabilities pending
+  Loading --> Loading: same-route pending demotion ignored after stable route posture
   Loading --> Blocked: any step blocked
   Loading --> Error: any step error
   Blocked --> Loading: blocked step returns pending
@@ -124,6 +144,8 @@ stateDiagram-v2
 flowchart LR
   Publishers["main / providers / root / route errors"] --> Screen["appBootstrapScreen.ts\nDOM adapter"]
   Publishers --> Commands["appBootstrapCommands.ts\nDomain commands"]
+  Publishers --> RouteReadiness["routeBootstrapStartupReadiness.ts\nRoute readiness policy"]
+  RouteReadiness --> Commands
   Commands --> Screen
   Commands --> Copy["appBootstrapCopy.ts\nLocale catalog"]
   Screen --> DomContract["appBootstrapDomContract.ts\nDOM contract"]
@@ -148,7 +170,12 @@ flowchart LR
   Bootstrap --> Presentation["appBootstrapPresentation.ts"]
   Root --> RouteBootstrap["routeBootstrapRegistry.ts"]
   Root --> Health["platform-health query"]
+  Root --> Capabilities["runtime capabilities query"]
+  Root --> RouteReadiness["routeBootstrapStartupReadiness.ts"]
   RouteBootstrap --> Bootstrap
+  Capabilities --> RouteReadiness
+  RouteBootstrap --> RouteReadiness
+  RouteReadiness --> Bootstrap
   Health --> Bootstrap
   Bootstrap --> Progress["bootstrapProgressBar.ts"]
 ```
@@ -172,7 +199,24 @@ flowchart LR
   failure, production HTML shell contract, centralized DOM contract ownership,
   metadata, completion, and ARIA busy-state semantics.
 - `apps/web/src/app/Root.bootstrapFlow.test.tsx` covers root-to-bootstrap
-  integration for health, capabilities, route blocks, and route completion.
+  integration for health, capabilities, route blocks, route completion, and
+  route completion suppression while capabilities are pending.
+- `apps/web/src/app/bootstrap/routeBootstrapStartupReadiness.test.ts` covers
+  policy-level negative paths for capability ordering, same-route pending
+  demotion, failure recovery, and route-id reset.
+- `apps/web/src/app/bootstrap/routeBootstrapStartupReadiness.architecture.test.ts`
+  guards policy ownership, Root wiring, and documentation alignment.
+- `apps/web/cypress/e2e/shell/startup-route-readiness.cy.ts` proves the
+  user-visible startup gate does not show the fifth check as ready before
+  runtime capabilities settle.
+
+## Command/Query Rail
+
+| Rail                                | Type    | DDD owner                                        | Consumers               |
+| ----------------------------------- | ------- | ------------------------------------------------ | ----------------------- |
+| `ObserveAppBootstrapRouteReadiness` | query   | `RouteBootstrapStartupReadinessState` read model | `RootShell`             |
+| `PublishAppBootstrapStepStatus`     | command | `BootstrapStepStatusCommand` value object        | `appBootstrapScreen.ts` |
+| `CompleteAppBootstrapScreen`        | command | `BootstrapScreenState` presentation aggregate    | `appBootstrapScreen.ts` |
 
 ## Governance Drift Guard
 

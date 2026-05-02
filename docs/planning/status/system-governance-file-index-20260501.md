@@ -25,7 +25,7 @@ used by CI.
 
 ## Totals
 
-- Tracked files indexed: 4051
+- Tracked files indexed: 4057
 - Component/source owner units: 20
 - Ungoverned files: 0
 - Drift files: 44
@@ -36,8 +36,8 @@ used by CI.
 <!-- prettier-ignore-start -->
 | Status | Files |
 | --- | ---: |
-| `canonical` | 109 |
-| `coverage-required` | 3830 |
+| `canonical` | 110 |
+| `coverage-required` | 3835 |
 | `drift` | 44 |
 | `review` | 68 |
 <!-- prettier-ignore-end -->
@@ -51,7 +51,7 @@ used by CI.
 | `SYS-API-ROOT` | 362 |
 | `SYS-CI-GOVERNANCE-ROOT` | 172 |
 | `SYS-CONTRACTS-ROOT` | 127 |
-| `SYS-DOCS-GOVERNANCE-ROOT` | 1645 |
+| `SYS-DOCS-GOVERNANCE-ROOT` | 1646 |
 | `SYS-OBSERVABILITY-ROOT` | 15 |
 | `SYS-PLANNER-ROOT` | 76 |
 | `SYS-PLANSTORE-API-COMPOSITION` | 20 |
@@ -61,10 +61,10 @@ used by CI.
 | `SYS-PLANSTORE-ENGINE-FETCH` | 5 |
 | `SYS-PLANSTORE-POSTGRES` | 16 |
 | `SYS-PLANSTORE-TEMPORAL-COMPOSITION` | 11 |
-| `SYS-REPO-METADATA-ROOT` | 109 |
+| `SYS-REPO-METADATA-ROOT` | 110 |
 | `SYS-RUNTIME-ROOT` | 286 |
 | `SYS-TRACEABILITY-ROOT` | 65 |
-| `SYS-WEB-ROOT` | 783 |
+| `SYS-WEB-ROOT` | 787 |
 | `SYS-WORKERS-ROOT` | 103 |
 <!-- prettier-ignore-end -->
 

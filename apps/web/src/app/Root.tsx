@@ -1,5 +1,5 @@
 /** Owned concern: compose the Raven shell frame and publish root bootstrap posture. */
-import { useEffect, useMemo, useSyncExternalStore } from 'react';
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { Outlet } from 'react-router';
 import {
   buildShellHealthPresentationModel,
@@ -20,7 +20,6 @@ import {
   createHealthFailedBootstrapCommand,
   createHealthPendingBootstrapCommand,
   createHealthReadyBootstrapCommand,
-  createRouteBootstrapStepCommand,
 } from './bootstrap/appBootstrapCommands';
 import { resolveAppBootstrapCopy } from './bootstrap/appBootstrapCopy';
 import { completeBootstrapScreen, setBootstrapStepStatus } from './bootstrap/appBootstrapScreen';
@@ -30,6 +29,10 @@ import {
 } from './bootstrap/routeBootstrapRegistry';
 import { detectRouteBootstrapLocale } from './bootstrap/routeBootstrapErrorCopy';
 import { RouteBootstrapActiveRegistrationMissingError } from './bootstrap/routeBootstrapErrors';
+import {
+  createInitialRouteBootstrapStartupReadinessState,
+  resolveRouteBootstrapStartupReadiness,
+} from './bootstrap/routeBootstrapStartupReadiness';
 import { useActiveRouteBootstrapRegistration } from './bootstrap/useActiveRouteBootstrapRegistration';
 import { useCapabilitiesQuery } from './queries/useCapabilitiesQuery';
 import { useUiLayoutStore } from './stores/uiLayoutStore';
@@ -82,6 +85,10 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
   const shellHealthRestState = shellHealth.connectionState?.rest;
   const isInitialCapabilitiesBootstrapPending =
     capabilitiesQuery.isPending && !capabilitiesQuery.data && !capabilitiesQuery.isError;
+  const routeBootstrapStartupReadinessRef = useRef(
+    createInitialRouteBootstrapStartupReadinessState()
+  );
+  const [routeBootstrapCanComplete, setRouteBootstrapCanComplete] = useState(false);
 
   useEffect(() => {
     if (shellHealth.connectionState === null) {
@@ -161,11 +168,32 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
   ]);
 
   useEffect(() => {
-    setBootstrapStepStatus(createRouteBootstrapStepCommand(routeBootstrapPresentation));
-  }, [routeBootstrapPresentation.detail, routeBootstrapPresentation.status]);
+    if (!activeRouteBootstrapRegistration) {
+      return;
+    }
+
+    const routeBootstrapStartupReadiness = resolveRouteBootstrapStartupReadiness({
+      activeRouteId: activeRouteBootstrapRegistration.routeId,
+      capabilitiesColdStartPending: isInitialCapabilitiesBootstrapPending,
+      capabilitiesPendingDetail: appBootstrapCopy.routeWaitingForCapabilitiesDetail,
+      presentation: routeBootstrapPresentation,
+      previousState: routeBootstrapStartupReadinessRef.current,
+    });
+
+    routeBootstrapStartupReadinessRef.current = routeBootstrapStartupReadiness.nextState;
+    setRouteBootstrapCanComplete(routeBootstrapStartupReadiness.canComplete);
+    setBootstrapStepStatus(routeBootstrapStartupReadiness.command);
+  }, [
+    activeRouteBootstrapRegistration,
+    appBootstrapCopy.routeWaitingForCapabilitiesDetail,
+    isInitialCapabilitiesBootstrapPending,
+    routeBootstrapPresentation.canComplete,
+    routeBootstrapPresentation.detail,
+    routeBootstrapPresentation.status,
+  ]);
 
   useEffect(() => {
-    if (!routeBootstrapPresentation.canComplete) {
+    if (isInitialCapabilitiesBootstrapPending || !routeBootstrapCanComplete) {
       return;
     }
 
@@ -174,7 +202,7 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
     capabilitiesQuery.isError,
     capabilitiesQuery.isPending,
     capabilitiesQuery.data,
-    routeBootstrapPresentation.canComplete,
+    routeBootstrapCanComplete,
     isInitialCapabilitiesBootstrapPending,
     platformHealth.isError,
     shellHealth.connectionDetail,
