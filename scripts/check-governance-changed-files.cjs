@@ -21,7 +21,7 @@ function toPosix(filePath) {
 
 function parseArgs(argv) {
   const args = {
-    base: process.env.GIT_BASE || 'origin/main',
+    base: process.env.GIT_BASE,
     head: process.env.GIT_HEAD || 'HEAD',
   };
 
@@ -54,14 +54,28 @@ function readYamlFromGit(ref, repoPath) {
   return yaml.load(output);
 }
 
-function readNameStatusDiff(base, head) {
-  const outputs = [
-    execGit(['diff', '--name-status', '--find-renames', `${base}...${head}`]),
-    execGit(['diff', '--cached', '--name-status', '--find-renames']),
-    execGit(['diff', '--name-status', '--find-renames']),
-  ];
+function readNameStatusDiff(base, head, git = execGit) {
+  return dedupeChanges(
+    parseNameStatus(git(['diff', '--name-status', '--find-renames', `${base}...${head}`]))
+  );
+}
 
-  return dedupeChanges(outputs.flatMap(parseNameStatus));
+function resolveBaseRef(candidates, git = execGit) {
+  const errors = [];
+  for (const candidate of candidates.filter(Boolean)) {
+    try {
+      git(['rev-parse', '--verify', `${candidate}^{commit}`]);
+      return candidate;
+    } catch (error) {
+      errors.push(`${candidate}: ${error.message}`);
+    }
+  }
+
+  throw new Error(
+    `Unable to resolve governance changed-files base ref. Tried: ${candidates.join(
+      ', '
+    )}. ${errors.join(' | ')}`
+  );
 }
 
 function execGit(args) {
@@ -291,10 +305,11 @@ function printResult(result) {
 
 function main() {
   const args = parseArgs(process.argv.slice(2));
-  const changes = readNameStatusDiff(args.base, args.head);
+  const base = resolveBaseRef([args.base, 'origin/main', 'upstream/main', 'main']);
+  const changes = readNameStatusDiff(base, args.head);
   const result = validateChangedFiles({
     changes,
-    baseBaseline: readYamlFromGit(args.base, baselineRepoPath),
+    baseBaseline: readYamlFromGit(base, baselineRepoPath),
     currentBaseline: readYaml(baselinePath),
     currentFileIndex: readYaml(fileIndexPath),
   });
@@ -312,5 +327,7 @@ if (require.main === module) {
 
 module.exports = {
   parseNameStatus,
+  readNameStatusDiff,
+  resolveBaseRef,
   validateChangedFiles,
 };

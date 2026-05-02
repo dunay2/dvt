@@ -1,7 +1,12 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 
-const { parseNameStatus, validateChangedFiles } = require('./check-governance-changed-files.cjs');
+const {
+  parseNameStatus,
+  readNameStatusDiff,
+  resolveBaseRef,
+  validateChangedFiles,
+} = require('./check-governance-changed-files.cjs');
 
 const baseBaseline = {
   files: [
@@ -100,6 +105,34 @@ test('parseNameStatus understands modified, added, deleted and renamed rows', ()
       },
     ]
   );
+});
+
+test('resolveBaseRef falls back when origin/main is unavailable', () => {
+  const calls = [];
+  const result = resolveBaseRef(['origin/main', 'upstream/main', 'main'], (args) => {
+    calls.push(args);
+    if (args.includes('origin/main^{commit}')) {
+      throw new Error('missing ref');
+    }
+    return 'upstream/main\n';
+  });
+
+  assert.equal(result, 'upstream/main');
+  assert.deepEqual(calls, [
+    ['rev-parse', '--verify', 'origin/main^{commit}'],
+    ['rev-parse', '--verify', 'upstream/main^{commit}'],
+  ]);
+});
+
+test('readNameStatusDiff scans only the committed revision range by default', () => {
+  const calls = [];
+  const result = readNameStatusDiff('origin/main', 'HEAD', (args) => {
+    calls.push(args);
+    return 'M\tapps/api/src/app.ts\n';
+  });
+
+  assert.deepEqual(result, [{ status: 'M', path: 'apps/api/src/app.ts' }]);
+  assert.deepEqual(calls, [['diff', '--name-status', '--find-renames', 'origin/main...HEAD']]);
 });
 
 test('validateChangedFiles accepts governed added, modified, deleted and renamed files', () => {

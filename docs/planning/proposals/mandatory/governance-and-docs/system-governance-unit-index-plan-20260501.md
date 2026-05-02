@@ -570,6 +570,17 @@ symbols:
     cypressCoverage: N/A - docs governance script
     unitTests:
       - scripts/check-governance-changed-files.test.cjs
+  - name: resolveBaseRef
+    path: scripts/check-governance-changed-files.cjs
+    dddOwner: Repository governance changed-file gate
+    cqRails:
+      - CheckGovernanceChangedFiles
+    fowlerSignals:
+      - Hidden authority
+    architectureGuard: scripts/check-governance-changed-files.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/check-governance-changed-files.test.cjs
   - name: execGit
     path: scripts/check-governance-changed-files.cjs
     dddOwner: Repository governance changed-file gate

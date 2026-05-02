@@ -23900,9 +23900,9 @@ files:
   - fileId: F-EF1F0DBBB1D8
     path: >-
       docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
-    contentHash: 307a8b7b84f6ddfe8a4759d019aba4392472eed209ca3d426c896ff53d1279fc
+    contentHash: 1de9f6a54b95dadabe84d51c460b59c33b0715c9af220659776483b2ecdeafa4
     governanceHash: d9f768b3da4be04e83890eae632052f05a0776f4990c39b7b2ab2c3b6cc14524
-    stateFingerprint: 43928bd596b3d5ea752b0348e314c43628c649b15ecd9e0cd90cbdadb013335f
+    stateFingerprint: b97380dee0dbc77f9209379a0fe8ceba60963d2d4c9fb86ea9ea95d0ce19da60
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -35631,18 +35631,18 @@ files:
     owningUnit: SYS-CI-GOVERNANCE-ROOT
   - fileId: F-29F5B2A2EF39
     path: scripts/check-governance-changed-files.cjs
-    contentHash: fae600064ae6861a2fbee0281e6b5a90a797d25c35e9b8c35c26f21a60ded5ec
+    contentHash: 6f47b8265279d35d0ff16cc101f1f5ca0b2f3ecaa35a42539056a2a6359b7147
     governanceHash: 3286d185b83c9c6dc1c5ccc7196e85d0020fdfcd5fad0eaeb783775bb31d71c2
-    stateFingerprint: 3abb6fc10604a9d6e24a362876ab77f8fcbcc950593dbf2a88a8861053fd2923
+    stateFingerprint: a4f468a740c1d8abf8561c6738af33a4225530a399bd75c2814d2eb9b95e1391
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-CI-GOVERNANCE-ROOT
     owningUnit: SYS-CI-GOVERNANCE-ROOT
   - fileId: F-2108831C9F5F
     path: scripts/check-governance-changed-files.test.cjs
-    contentHash: cd025944950b97090617d913fdf325707b18e6221d8385fb29c94a1cac04f55d
+    contentHash: fd6f46e97d0d77c7d69509f820d029a9e1f47d4dffb2b801b1c420de1c62836e
     governanceHash: 3286d185b83c9c6dc1c5ccc7196e85d0020fdfcd5fad0eaeb783775bb31d71c2
-    stateFingerprint: de1f4391bce434ae0d0925a0d9195bf008a39fe980cd7c0c82b9883083bd7313
+    stateFingerprint: bd6ff1e5d78dc2e0551bf662cf6e6ff76ab03fcf25d36b72fbab9f08112f3d42
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-CI-GOVERNANCE-ROOT
