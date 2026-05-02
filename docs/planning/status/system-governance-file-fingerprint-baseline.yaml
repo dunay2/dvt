@@ -35874,9 +35874,9 @@ files:
     owningUnit: SYS-CI-GOVERNANCE-ROOT
   - fileId: F-229E2DA7030B
     path: scripts/generate-governance-coverage-report.cjs
-    contentHash: a8d970b7d06a614ace19283be62a463b5df40e688c2df95f69a9680e91927480
+    contentHash: be1e472c7b07bbd7add1b8e4d65121f5f8bd0f8d16ad35e899cc19dba934b285
     governanceHash: 3286d185b83c9c6dc1c5ccc7196e85d0020fdfcd5fad0eaeb783775bb31d71c2
-    stateFingerprint: 3c9ae2535680a308705907f8c44da65ffb6acc12eb161eebcd3a67fbf0e3dd41
+    stateFingerprint: 2e290fa929839e7459b5df3bd85719fa81615f67fc834eaf5a21aec1fc0b221f
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-CI-GOVERNANCE-ROOT
