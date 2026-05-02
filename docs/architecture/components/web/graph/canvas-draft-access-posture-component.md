@@ -22,6 +22,41 @@ toolbar labels, center-surface errors, recovery banners, interaction gating, and
 read-only posture. That split can produce a false product signal such as a
 synced toolbar while the protected draft read is denied.
 
+## Pre-Implementation Discovery Baseline
+
+Design before implementation is part of this component boundary. The component
+guide is not a place to document a code object after finding it; it is the
+contract that decides whether a new object is needed.
+
+Before the `TF-E2-M-B` implementation, the branch was checked for an existing
+single owner of protected draft access posture. The discovery result was:
+
+- No implemented Canvas draft access posture component existed in the active
+  Canvas route code.
+- Related behavior did exist, but it was split across
+  `canvasAuthoringState.ts`, `canvasDraftTransportErrorState.ts`,
+  `canvasRecoveryBannerModel.ts`, toolbar state, route interaction state, and
+  runtime policy.
+- The authoritative command/query rail already existed as
+  `GetWorkspaceGraphDraft`; this component therefore could only add an
+  admission and presentation model over that rail, not a parallel query,
+  command, or backend contract.
+
+The discovery check that justifies this component is:
+
+```powershell
+git grep -n "draftAccessPosture\|CanvasDraftAccess\|unauthorized_final\|forbidden_scope" HEAD^ -- apps/web/src/app/views/canvas docs/architecture/components/web/graph docs/planning/proposals/mandatory/frontend-and-ux
+```
+
+Expected interpretation:
+
+- matches in docs are acceptable when they are the planned component guide,
+  implementation plan, or user-story rail;
+- matches in active code before the implementation are acceptable only when
+  they show scattered existing behavior, such as `CanvasDraftAccessMode`;
+- if an implemented single owner already exists, the correct action is to reuse
+  and extend that owner instead of creating this component.
+
 ## Governing Sources
 
 - `AGENTS.md`

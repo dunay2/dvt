@@ -586,7 +586,15 @@ describe('canvas startup and draft recovery architecture', () => {
     expect(recoveryBannerTemplateSource).toContain('CanvasDraftAccessRecoveryTemplate');
 
     expect(postureGuide).toContain('## Public API');
+    expect(postureGuide).toContain('## Pre-Implementation Discovery Baseline');
+    expect(postureGuide).toContain('No implemented Canvas draft access posture component existed');
+    expect(postureGuide).toContain('Design before implementation');
     expect(postureGuide).toContain('## Fowler Opportunity Matrix');
+    expect(implementationPlan).toContain('## Pre-Implementation Discovery Gate');
+    expect(implementationPlan).toContain(
+      'The implementation is not allowed to create this component'
+    );
+    expect(implementationPlan).toContain('without first proving the existing code lacks one owner');
     expect(implementationPlan).toContain('## TDD Tasks');
     expect(implementationPlan).toContain('## Self-Review Iterations');
   });

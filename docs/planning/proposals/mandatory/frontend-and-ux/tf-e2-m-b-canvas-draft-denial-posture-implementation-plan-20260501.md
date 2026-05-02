@@ -85,6 +85,41 @@ generic denied surface or a synced toolbar label when the protected draft read
 has not produced writable truth, and it can leave plan/run command inputs
 enabled through a policy path that did not consume draft-access posture.
 
+## Pre-Implementation Discovery Gate
+
+The implementation is not allowed to create this component or add new posture
+symbols without first proving the existing code lacks one owner for the same
+product intent.
+
+Required order:
+
+1. Scan the current branch for existing Canvas draft access posture ownership.
+2. Record whether the behavior is absent, scattered, or already owned.
+3. If it is already owned, extend the owner instead of adding new symbols.
+4. If it is absent or scattered, document the intended owner, public API,
+   invariants, transitions, consumers, and command/query rails.
+5. Only then write the failing tests and implementation patches.
+
+Discovery command:
+
+```powershell
+git grep -n "draftAccessPosture\|CanvasDraftAccess\|unauthorized_final\|forbidden_scope" HEAD^ -- apps/web/src/app/views/canvas docs/architecture/components/web/graph docs/planning/proposals/mandatory/frontend-and-ux
+```
+
+Discovery result for `TF-E2-M-B`:
+
+- The documentation rail and component guide were already present before the
+  code patch.
+- No implemented single-owner Canvas draft access posture model existed in the
+  active route code before this slice.
+- Active code had scattered access and recovery decisions in
+  `canvasAuthoringState.ts`, `canvasDraftTransportErrorState.ts`,
+  `canvasRecoveryBannerModel.ts`, toolbar state, route interaction state, and
+  runtime policy.
+- The existing query rail was `GetWorkspaceGraphDraft`; the implementation
+  therefore had to reuse that rail and gate existing commands rather than add a
+  parallel command/query path.
+
 ## Selected Design
 
 Use one presentation model:
