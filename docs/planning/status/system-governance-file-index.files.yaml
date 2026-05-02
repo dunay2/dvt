@@ -1,7 +1,7 @@
 version: 1
 generatedFrom: git ls-files
 unitManifest: docs/planning/status/system-governance-unit-index.units.yaml
-fileCount: 4071
+fileCount: 4082
 files:
   - fileId: F-7C0FAC63D273
     pathHash: 16228f9cd18f5479d183ab61cb01d3cfc66645b3053a3d23dd9aef2069c3410a
@@ -42649,9 +42649,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-73DB7B50F4C0
     pathHash: 56bbf207710193aba776b39f5dadd88f26a4b5536b671e215b9d494c14e01502
-    contentHash: 213df9640b33ed77ffcd6cd6e7d682bcfc04bfc6bf1e02bf56de704fea7a5e8a
+    contentHash: 9534c6d10665390555549c1ef02457230315d7f92f5f4992220a138c73ccb32b
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 2e4b485a7b8b59bf6d28520a9661730b5c0170e153ca7754b32ce289f6b388df
+    stateFingerprint: 2e0797d766cf85f64baf65ff0db7f4210fc375e5e55bccabc6a4afe4b059fb65
     path: docs/architecture/components/web/graph/canvas-first-authoring-live-proof-component.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
@@ -66581,6 +66581,32 @@ files:
     governance:
       - docs/planning/status/system-governance-unit-index-20260501.md
       - docs/planning/status/system-governance-document-unit-map-20260501.md
+  - fileId: F-3AB6318982DD
+    pathHash: 90fd2af85101ee9bf70ed12ec31bf79859e95b7ca6a2ef3211523428606c27eb
+    contentHash: 455260c6c987860fc81de5866ecffdbe6e4cf55c0dc0ca1c836983870fa85db0
+    governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
+    stateFingerprint: c98d185ecb00094ad772bacfb5bf915be4809eda7220c3feb187d2e516d8206f
+    path: docs/planning/closeouts/20260502-tf-e2-m-c-first-authoring-live-proof-closeout.md
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-DOCS-GOVERNANCE
+      - SYS-DOCS-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - documentation governance
+    governance:
+      - docs/DOCS_README.md
+      - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-917A85C3F19A
     pathHash: f84a776c4cb3d3588e36d2e4b5889b65a2083bcf87f4f4d2c550adb7bcc2f653
     contentHash: e6b4637ecc422ae8afdf81c8cab834f5577aefd175cb92eae08240a6e453bade
@@ -66817,9 +66843,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-3B0747818991
     pathHash: e4c135838254657d988f3c8bbaa65ef2bd806140163a5a695d56e569f6328657
-    contentHash: a2e633a1a9aabb8c92afaa8ab15b00c8a2603f24de35b071be67ef0fbb55da10
+    contentHash: c928ded4b7b876ffa8dee14b106739756c82a86fda7bc835f4723578915669ec
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: e5856c1d49fffced8dc83d3fd6734f549ea5e939001f02069c456e019a732f90
+    stateFingerprint: a7b605d3851fe66b3d348a4df6cbc16aae4592614b638d3aa49d9754a302b348
     path: docs/planning/closeouts/index.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
@@ -68677,9 +68703,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-FA77E00DF09A
     pathHash: 803bc970219794af1c256aca0e00cea9733ea7a06047ace74b8fcb387f95cc82
-    contentHash: f1bc940eed32aa6d4ecc8506e840755d4001236ead9be3f177f3e65446ae92df
+    contentHash: d09d80eb63a870bf7a93976f3687db88fb13e795e5a0e20f8ea8cc41974ad482
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 592c14957ed6d6d11f5965d433fff76395e74fea08ab0b76d89e0b09397193fa
+    stateFingerprint: e4414250059cfdbc4a46bd2af2d964e833c47ef5b98a56b2adb7fbc8f4b7e888
     path: >-
       docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-m-c-first-canvas-first-node-live-proof-implementation-plan-20260501.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -72721,9 +72747,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-888C6174A984
     pathHash: 974868e0ffd18285694d5412430eab6eeae5c054b7111a7336e00d1688d0d6cc
-    contentHash: a3e6af625bef4e1900de16a0b58b52c4ef6f0eb461fda962b9df40be3d9a1236
+    contentHash: a9eac830d52d3463c93dd7a961a101033b879c0f35b369555cf70a72fd064df6
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 4448befa9298a384cc213d3b26d8499e0366ddc2af47c8da90e1d0ed9294f433
+    stateFingerprint: 9457d1f33abde377b1676ba31ac3a75ba34735aa6c6a9c0465a41746e854d83f
     path: docs/planning/reviews/architecture-and-governance/20260501-tf-e2-m-c-fowler-hard-qa-review.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
@@ -74869,9 +74895,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-BE72D9875033
     pathHash: 243f2fed3b766fd91464d8f5fd7c8236758e98801e91b0c59ebc309d8d0ecc6f
-    contentHash: 5f6f12a5d16e3a6fc7c2255c6b399212b68b94cad0b063b079f23c3351022043
+    contentHash: aa10d4decc7bf95d67a7afa4fac768b40eee6e6a930d87175a64c75ea8d21d1d
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 6b198d9d3708a745ad47916e8fada33854b3d3cd613ef33263d52b17b5668bd8
+    stateFingerprint: cbf96fbb236c42458965392ab61248cbf956f8602dc355c1ecdfc5133c8fbf9d
     path: docs/planning/state/agent-lane-e.yaml
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
@@ -75545,9 +75571,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-5293EA43A26A
     pathHash: 8b24735b0574e4a4affd5d6e72a0c610556d81979eb7c42391627739b2df44ca
-    contentHash: 8a22cfa20b5fc5780af0953ae37548af2e733789d87f78d947c3fbc2bdeee472
+    contentHash: 9ccd28300642b459d21d47000b6f3b1bb209447ff5d01ab31324c8bffc885d0e
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 954bdfb8d10963d67be82c16196c34c32128b4666f31371581c4484e6d63d421
+    stateFingerprint: 6d00c0342c29ccff55d1c32533a3bc7bddcdb495b47909e143ca5d8edd000c73
     path: docs/planning/status/system-governance-component-index-20260501.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
@@ -75571,9 +75597,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-65470A9009F7
     pathHash: 68ae073be56f8b4465649dfa1967e94f85737262e8851cd582d4f7c81e950839
-    contentHash: 5eb0db97ae3cbb5acb70007460c7c94f8740254405144b722ca8ac3e7849ae56
+    contentHash: 3ceb6d9a97bb3811b832983c7b65c3aaef3722f0b3ed636c8bc0c0dc777ebdd4
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 04886612a473a1190d016da9efc26a9a07e6e5c02076aee76324af81179a114c
+    stateFingerprint: 0c09005a0525b8833b9865eee2ccb6a8af66b5ccadd063e22843dbf85d0a0dbd
     path: docs/planning/status/system-governance-component-index.components.yaml
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
@@ -75597,9 +75623,61 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-990BF10AAD94
     pathHash: 6a67be9c35ed2f9a617eb90c52da30b17200d6f02a2b644eec36143d6448d566
-    contentHash: 3aa69e880bd1cc49110906c2a1f74a722189da95b153a17801f7a50776786b68
+    contentHash: 3205961642a8006283dc57898b9e444fce56cf8cc0777fe61eaa2ca48bdab884
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 104ae8f5b21f08a033a839acf7d027860ed8f7dfad5094166982d46b14dd62b9
+    stateFingerprint: 520cfdd897b4d227223c68500241fa572eb43cd4dea8930102b46b61dab78ee9
+    path: docs/planning/status/system-governance-coverage-report-20260502.md
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-DOCS-GOVERNANCE
+      - SYS-DOCS-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - documentation governance
+    governance:
+      - docs/DOCS_README.md
+      - docs/planning/status/governance-document-rule-inventory.md
+  - fileId: F-990BF10AAD94
+    pathHash: 6a67be9c35ed2f9a617eb90c52da30b17200d6f02a2b644eec36143d6448d566
+    contentHash: 3205961642a8006283dc57898b9e444fce56cf8cc0777fe61eaa2ca48bdab884
+    governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
+    stateFingerprint: 520cfdd897b4d227223c68500241fa572eb43cd4dea8930102b46b61dab78ee9
+    path: docs/planning/status/system-governance-coverage-report-20260502.md
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-DOCS-GOVERNANCE
+      - SYS-DOCS-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - documentation governance
+    governance:
+      - docs/DOCS_README.md
+      - docs/planning/status/governance-document-rule-inventory.md
+  - fileId: F-990BF10AAD94
+    pathHash: 6a67be9c35ed2f9a617eb90c52da30b17200d6f02a2b644eec36143d6448d566
+    contentHash: 3205961642a8006283dc57898b9e444fce56cf8cc0777fe61eaa2ca48bdab884
+    governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
+    stateFingerprint: 520cfdd897b4d227223c68500241fa572eb43cd4dea8930102b46b61dab78ee9
     path: docs/planning/status/system-governance-coverage-report-20260502.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
@@ -75623,9 +75701,61 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-ACC58DCFEB8C
     pathHash: 8ba943b89ee6764c97ba514c18768a02ebb2317576fadd0422fcbde3969c6fdc
-    contentHash: afad77c0fcceddd6ff6f625ac20802170e5cd0699a4f375769cd39dc2f884279
+    contentHash: b7b27c8a280a00d88865e0a40056674d07cb4e4c3e6fee75ffe6318c94ecbc06
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: dcc51b74a3cdd229c0d96f80df821bb4b416bd4eeb283f4f93d00c04a2f6abd5
+    stateFingerprint: 0f2594c581dced27ac3dc9a4e4a6fc51897073e97e0049416ec27d60fd6cfc8c
+    path: docs/planning/status/system-governance-coverage-report.coverage.yaml
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-DOCS-GOVERNANCE
+      - SYS-DOCS-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - documentation governance
+    governance:
+      - docs/DOCS_README.md
+      - docs/planning/status/governance-document-rule-inventory.md
+  - fileId: F-ACC58DCFEB8C
+    pathHash: 8ba943b89ee6764c97ba514c18768a02ebb2317576fadd0422fcbde3969c6fdc
+    contentHash: b7b27c8a280a00d88865e0a40056674d07cb4e4c3e6fee75ffe6318c94ecbc06
+    governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
+    stateFingerprint: 0f2594c581dced27ac3dc9a4e4a6fc51897073e97e0049416ec27d60fd6cfc8c
+    path: docs/planning/status/system-governance-coverage-report.coverage.yaml
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-DOCS-GOVERNANCE
+      - SYS-DOCS-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - documentation governance
+    governance:
+      - docs/DOCS_README.md
+      - docs/planning/status/governance-document-rule-inventory.md
+  - fileId: F-ACC58DCFEB8C
+    pathHash: 8ba943b89ee6764c97ba514c18768a02ebb2317576fadd0422fcbde3969c6fdc
+    contentHash: b7b27c8a280a00d88865e0a40056674d07cb4e4c3e6fee75ffe6318c94ecbc06
+    governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
+    stateFingerprint: 0f2594c581dced27ac3dc9a4e4a6fc51897073e97e0049416ec27d60fd6cfc8c
     path: docs/planning/status/system-governance-coverage-report.coverage.yaml
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
@@ -75649,9 +75779,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-5D25269D1180
     pathHash: c8ea11d63cfe1b8bdc0b0707aab7de15ebc29dada77087092c207440dd40a350
-    contentHash: 996eadb3bd5857a0250391e19aa795ecd84d6377f2aca6cc13c44a2aa2a7581c
+    contentHash: 95cf894a1c8182eb12f381a603cb487f4699239aa61bdcb24618a8431b923afb
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 8db740035967e0710ecc561aad62a24b6553a231198cd16b2a6ec251795a9f17
+    stateFingerprint: 744deb0cf9f70404378a1baadd8ce4cb63f247004645067c1ab24a02a23be546
     path: docs/planning/status/system-governance-document-unit-map-20260501.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
@@ -75675,9 +75805,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-E7EC54670607
     pathHash: f7d33bec5901a02423d9acc6f26ba2984884dc569b1b3fcde65c9e0b1b38cf59
-    contentHash: 2ba4599fbda8aed9cdb8c58c7dbbfc8d054f57f97fcd70fb12595e900ab2cb72
+    contentHash: 3ca71248e30d239bb9720776caacb728c75d1f733ad0a6b99b921479f56df963
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: f48732b9f3bc6321541a63ded528563992c1609b8cc0122f8f28e01859660cb2
+    stateFingerprint: 8f4953a9bf2f2d00b7e14b9949a34a55d08b10c0df48a1685b12ff6cf24beec4
     path: docs/planning/status/system-governance-document-unit-map.docs.yaml
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
@@ -75701,9 +75831,61 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-6B8271C2051C
     pathHash: 4bd0ab5904eb54e02bb9f0957eed059b06dfd5cb253044a2b0c01cad2eb3a7ca
-    contentHash: 25a7cd63711cc02cef5cdfebf0578b7009874a6f88c99240fda2ea4d5db24280
+    contentHash: e198014cd45aeabc52c00930ebdc1345f8c975ec364012b18b3c42d79f2dba61
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 6af63972fb54eac419cf9f922e99bb44a8ac37d32aaf1912e82a5f118f39195b
+    stateFingerprint: 3849051e4521f99164cced17bdfb9da618fd4211f8d6aa24407d962f5bb97827
+    path: docs/planning/status/system-governance-file-fingerprint-baseline.yaml
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-DOCS-GOVERNANCE
+      - SYS-DOCS-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - documentation governance
+    governance:
+      - docs/DOCS_README.md
+      - docs/planning/status/governance-document-rule-inventory.md
+  - fileId: F-6B8271C2051C
+    pathHash: 4bd0ab5904eb54e02bb9f0957eed059b06dfd5cb253044a2b0c01cad2eb3a7ca
+    contentHash: e198014cd45aeabc52c00930ebdc1345f8c975ec364012b18b3c42d79f2dba61
+    governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
+    stateFingerprint: 3849051e4521f99164cced17bdfb9da618fd4211f8d6aa24407d962f5bb97827
+    path: docs/planning/status/system-governance-file-fingerprint-baseline.yaml
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-DOCS-GOVERNANCE
+      - SYS-DOCS-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - documentation governance
+    governance:
+      - docs/DOCS_README.md
+      - docs/planning/status/governance-document-rule-inventory.md
+  - fileId: F-6B8271C2051C
+    pathHash: 4bd0ab5904eb54e02bb9f0957eed059b06dfd5cb253044a2b0c01cad2eb3a7ca
+    contentHash: e198014cd45aeabc52c00930ebdc1345f8c975ec364012b18b3c42d79f2dba61
+    governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
+    stateFingerprint: 3849051e4521f99164cced17bdfb9da618fd4211f8d6aa24407d962f5bb97827
     path: docs/planning/status/system-governance-file-fingerprint-baseline.yaml
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
@@ -75753,9 +75935,61 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-8C3905234D4D
     pathHash: 9aa5662237a193b3e97f4926a7bc1081f9ea08b908b351f5327fd00add4ac0aa
-    contentHash: 94a85ac62af37c8445e4e1c005f4df7c24959eb46091af52a5e68e484ca6653b
+    contentHash: d367d5af83b10e342a13218e487d764c9b3c61bc626683c103b832b77c463658
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 0f10964150afcbfac26808463e0a922c6ba37e18829b0b0de1bf875a5d2a4799
+    stateFingerprint: 6f20b6a03a313f99fe622467096fb19d52551105f4bd746064deed7c883c373e
+    path: docs/planning/status/system-governance-file-index-20260501.md
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-DOCS-GOVERNANCE
+      - SYS-DOCS-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - documentation governance
+    governance:
+      - docs/DOCS_README.md
+      - docs/planning/status/governance-document-rule-inventory.md
+  - fileId: F-8C3905234D4D
+    pathHash: 9aa5662237a193b3e97f4926a7bc1081f9ea08b908b351f5327fd00add4ac0aa
+    contentHash: d367d5af83b10e342a13218e487d764c9b3c61bc626683c103b832b77c463658
+    governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
+    stateFingerprint: 6f20b6a03a313f99fe622467096fb19d52551105f4bd746064deed7c883c373e
+    path: docs/planning/status/system-governance-file-index-20260501.md
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-DOCS-GOVERNANCE
+      - SYS-DOCS-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - documentation governance
+    governance:
+      - docs/DOCS_README.md
+      - docs/planning/status/governance-document-rule-inventory.md
+  - fileId: F-8C3905234D4D
+    pathHash: 9aa5662237a193b3e97f4926a7bc1081f9ea08b908b351f5327fd00add4ac0aa
+    contentHash: d367d5af83b10e342a13218e487d764c9b3c61bc626683c103b832b77c463658
+    governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
+    stateFingerprint: 6f20b6a03a313f99fe622467096fb19d52551105f4bd746064deed7c883c373e
     path: docs/planning/status/system-governance-file-index-20260501.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
@@ -75779,9 +76013,61 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-9B87FBC12CBD
     pathHash: dba7e9c8e65a57616fcb6349019afe12870f7cfe88158c889f6b04cfabee354b
-    contentHash: 4e49afa6ed7aace8b34c9e07a2ec764f202e75125803b72a7923b3b589cac4a5
+    contentHash: 45cfe647a377953bb343c4c7f4d2a37e3b2f740eb7b5baca9f821407db5e31cf
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 739cf0f0a05f4b0482a02f1307c8ecc1fcda72fc145447ee87a85e80aede6448
+    stateFingerprint: 8730912be166118f5bade3600b8bc57b75f5e53f5377826e23b04a6c4d2e97a0
+    path: docs/planning/status/system-governance-file-index.files.yaml
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-DOCS-GOVERNANCE
+      - SYS-DOCS-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - documentation governance
+    governance:
+      - docs/DOCS_README.md
+      - docs/planning/status/governance-document-rule-inventory.md
+  - fileId: F-9B87FBC12CBD
+    pathHash: dba7e9c8e65a57616fcb6349019afe12870f7cfe88158c889f6b04cfabee354b
+    contentHash: 45cfe647a377953bb343c4c7f4d2a37e3b2f740eb7b5baca9f821407db5e31cf
+    governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
+    stateFingerprint: 8730912be166118f5bade3600b8bc57b75f5e53f5377826e23b04a6c4d2e97a0
+    path: docs/planning/status/system-governance-file-index.files.yaml
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-DOCS-GOVERNANCE
+      - SYS-DOCS-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - documentation governance
+    governance:
+      - docs/DOCS_README.md
+      - docs/planning/status/governance-document-rule-inventory.md
+  - fileId: F-9B87FBC12CBD
+    pathHash: dba7e9c8e65a57616fcb6349019afe12870f7cfe88158c889f6b04cfabee354b
+    contentHash: 45cfe647a377953bb343c4c7f4d2a37e3b2f740eb7b5baca9f821407db5e31cf
+    governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
+    stateFingerprint: 8730912be166118f5bade3600b8bc57b75f5e53f5377826e23b04a6c4d2e97a0
     path: docs/planning/status/system-governance-file-index.files.yaml
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
@@ -75831,9 +76117,9 @@ files:
       - docs/planning/status/system-governance-document-unit-map-20260501.md
   - fileId: F-F36907BA18F7
     pathHash: 27cc5e7c273626250eb8507590212260232be519f00ad9e09a5c20bb4f8f31f3
-    contentHash: 07c512ec11b85fef78b0e21625a7f73e784859fd81c8315a8d97bb8aff742c96
+    contentHash: 6e3a7920153a3fcf4d14495e44191e72d669049c5ccbcace34efcbc08bc4d45c
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 73d64bae6ce35471e7a900efaf95fc104c51aa730ab380858cfe47472ddcc5db
+    stateFingerprint: f18cc70d5e9c53e3dde0da38366f8c785ab3d973a441a3d62703e1e8fbaf99a6
     path: docs/planning/status/system-governance-remediation-queue-20260502.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
@@ -75857,9 +76143,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-E5771D91E8FF
     pathHash: 3cda4b7f55968fa00ba6ae27005ef1029742c209639a1b2080af188877dba628
-    contentHash: 28e30167dd6a8d3400d07e080a475b9340cd260fd7d2730e1f48d5fa2c550a38
+    contentHash: 9507cb7afc4b17b8cf72ff1055a115844cd8962c70951f40697978c1644433a7
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: d7c371b47da9b06ea36b2cef30016a9018beb98fc3f5b7f4e441c80fb9a9c23d
+    stateFingerprint: 9ba73dfbb2880f301a79b6bb804a782a5fb7236b8e0cd1979dc8d91f34c3877c
     path: docs/planning/status/system-governance-remediation-queue.queue.yaml
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT

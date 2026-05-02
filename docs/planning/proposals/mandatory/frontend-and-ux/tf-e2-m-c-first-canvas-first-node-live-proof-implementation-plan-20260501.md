@@ -1,8 +1,8 @@
 ---
 title: TF-E2-M-C first canvas and first node live proof implementation plan 2026-05-01
-status: Draft
+status: Accepted
 owner: Frontend / Architecture / Product
-last_reviewed: 2026-05-01
+last_reviewed: 2026-05-02
 planning_type: proposal
 lane: E
 task_ids:
@@ -373,12 +373,19 @@ allowedImplementationSurfaces:
   - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-m-b-canvas-draft-denial-posture-implementation-plan-20260501.md
   - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-m-c-first-canvas-first-node-live-proof-implementation-plan-20260501.md
   - docs/planning/proposals/portfolio-map-20260403.md
+  - docs/planning/closeouts/20260502-tf-e2-m-c-first-authoring-live-proof-closeout.md
+  - docs/planning/closeouts/index.md
   - docs/planning/state/agent-lane-e.yaml
   - docs/planning/reviews/architecture-and-governance/20260501-tf-e2-m-c-fowler-hard-qa-review.md
   - docs/planning/status/generated-code-state.md
   - docs/planning/status/governance-document-rule-inventory.md
+  - docs/planning/status/system-governance-component-index-20260501.md
+  - docs/planning/status/system-governance-component-index.components.yaml
   - docs/planning/status/system-governance-document-unit-map-20260501.md
   - docs/planning/status/system-governance-document-unit-map.docs.yaml
+  - docs/planning/status/system-governance-file-fingerprint-baseline.yaml
+  - docs/planning/status/system-governance-file-index-20260501.md
+  - docs/planning/status/system-governance-file-index.files.yaml
   - package.json
   - scripts/run-canvas-first-authoring-live-proof.cjs
   - scripts/check-feature-mechanization.cjs
@@ -1450,32 +1457,32 @@ symbols:
 
 ## Mechanical Implementation Tasks
 
-- [ ] Add `canvasFirstAuthoringLiveProof.test.ts` red cases for
+- [x] Add `canvasFirstAuthoringLiveProof.test.ts` red cases for
       `needs_canvas`, typed canvas creation, first-node creation, persisted
       layout, reload restore, missing active canvas, read-only posture, and
       duplicate first-canvas attempts.
-- [ ] Add `canvasFirstAuthoringLiveProof.ts` with the closed discriminated
+- [x] Add `canvasFirstAuthoringLiveProof.ts` with the closed discriminated
       model and no React, HTTP, or Cypress imports.
-- [ ] Extend clean host-cycle tests so a protected empty draft produces an
+- [x] Extend clean host-cycle tests so a protected empty draft produces an
       empty entrypoint and no seeded project nodes.
-- [ ] Extend first-canvas command tests so `transformation` and `dbt` create
+- [x] Extend first-canvas command tests so `transformation` and `dbt` create
       typed empty documents and duplicate creation fails closed.
-- [ ] Extend controller tests so first-node creation waits for the first-canvas
+- [x] Extend controller tests so first-node creation waits for the first-canvas
       save, creates `dvt-source-1` for transformation, creates `dbt-source-1`
       for dbt, and refuses to run when draft access posture is not writable.
-- [ ] Extend persistence tests so drag-stop payload coordinates survive stale
+- [x] Extend persistence tests so drag-stop payload coordinates survive stale
       React Flow node arrays and hard reload restoration.
-- [ ] Extend route-local store tests so automatic persistence hydration marks
+- [x] Extend route-local store tests so automatic persistence hydration marks
       the layout store ready without manual test-only rehydrate calls.
-- [ ] Replace whole-card drag with a visible semantic handle and extend
+- [x] Replace whole-card drag with a visible semantic handle and extend
       viewport tests so the node moves from that handle only.
-- [ ] Add semantic architecture guard assertions for proof ownership, no seeded
+- [x] Add semantic architecture guard assertions for proof ownership, no seeded
       startup nodes, first-node defaults, no direct Cypress draft seeding, no
       draft endpoint intercepts, and docs/implementation traceability.
-- [ ] Add Cypress live proof with clean-scope preflight, no direct draft `PUT`
+- [x] Add Cypress live proof with clean-scope preflight, no direct draft `PUT`
       before UI commands, and no `cy.intercept()` for draft read/write
       endpoints.
-- [ ] Run all completion gates in the order listed by the manifest.
+- [x] Run all completion gates in the order listed by the manifest.
 
 ## Test Plan
 
@@ -1557,6 +1564,7 @@ manifest and named symbols before implementation. This plan adds that contract.
 Pass 2 conclusion: C&Q rails are sufficient because every user-visible action
 maps to an existing product rail or an explicitly named route-local layout rail.
 
-Pass 3 conclusion: no human decision remains for implementation. The next
-worker can start at the listed red tests, patch only the allowed surfaces, and
-close with the manifest completion gate.
+Pass 3 conclusion: no human decision remains for this slice. The implementation
+is closed through the listed red/green surfaces, allowed-surface manifest, live
+Cypress proof, architecture guard, generated governance artifacts, and closeout
+evidence.

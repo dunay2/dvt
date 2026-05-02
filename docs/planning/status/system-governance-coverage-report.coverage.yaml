@@ -3,8 +3,8 @@ generatedFrom:
   - docs/planning/status/system-governance-file-index.files.yaml
   - docs/planning/status/system-governance-component-index.components.yaml
 totals:
-  files: 4071
-  governedFiles: 4071
+  files: 4082
+  governedFiles: 4082
   ungovernedFiles: 0
   driftFiles: 44
   legacyFiles: 0
@@ -22,12 +22,12 @@ ciPosture:
     - legacyFiles records removal targets until owning work removes them
 byRootUnit:
   - name: SYS-DVT
-    count: 4071
+    count: 4082
 byDomainUnit:
   - name: SYS-ADAPTERS
     count: 196
   - name: SYS-DVT
-    count: 3294
+    count: 3305
   - name: SYS-OBSERVABILITY
     count: 15
   - name: SYS-PLANSTORE
@@ -70,7 +70,7 @@ byComponentUnit:
   - name: SYS-CONTRACTS-ROOT
     count: 127
   - name: SYS-DOCS-GOVERNANCE-ROOT
-    count: 1650
+    count: 1661
   - name: SYS-OBSERVABILITY-ROOT
     count: 15
   - name: SYS-PLANNER-ROOT
@@ -103,14 +103,14 @@ byStatus:
   - name: canonical
     count: 110
   - name: coverage-required
-    count: 3849
+    count: 3860
   - name: drift
     count: 44
   - name: review
     count: 68
 byGovernanceState:
   - name: coverage-required
-    count: 3849
+    count: 3860
   - name: drift
     count: 44
   - name: governed
@@ -121,12 +121,12 @@ byCanonicalRole:
   - name: implementation-owner
     count: 110
   - name: none
-    count: 3961
+    count: 3972
 byEvidenceState:
   - name: classification-only
     count: 110
   - name: coverage-required
-    count: 3849
+    count: 3860
   - name: remediation-required
     count: 44
   - name: review-required
@@ -141,14 +141,14 @@ byDddOwner:
   - name: ENTRY
     count: 875
   - name: INFRA
-    count: 2146
+    count: 2157
   - name: PORT
     count: 189
 governanceDocuments:
   - path: docs/DOCS_README.md
-    fileCount: 1664
+    fileCount: 1675
   - path: docs/planning/status/governance-document-rule-inventory.md
-    fileCount: 1650
+    fileCount: 1661
   - path: docs/planning/status/system-operations-inventory-20260501.md
     fileCount: 947
   - path: >-
@@ -213,7 +213,7 @@ componentCoverage:
     evidenceState: coverage-required
     dddOwner: INFRA
     cqRails: none - documentation governance
-    fileCount: 1650
+    fileCount: 1661
     isDrift: false
     isLegacy: false
     childrenRequired: true
@@ -911,7 +911,7 @@ findings:
   legacyFiles: []
   componentsRequiringSubdivision:
     - id: SYS-DOCS-GOVERNANCE-ROOT
-      fileCount: 1650
+      fileCount: 1661
       status: coverage-required
       dddOwner: INFRA
     - id: SYS-WEB-ROOT

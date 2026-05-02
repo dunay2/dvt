@@ -78,7 +78,7 @@ Machine-readable source:
 | `GRQ-COMPONENT_SUBDIVISION-SYS-PLANSTORE-POSTGRES` | `P1` | `component-subdivision` | `SYS-PLANSTORE-POSTGRES` | 0 | 0 | Component is known but still too broad for source-level governance. |
 | `GRQ-COMPONENT_SUBDIVISION-SYS-RUNTIME-ROOT` | `P1` | `component-subdivision` | `SYS-RUNTIME-ROOT` | 0 | 0 | Component is known but still too broad for source-level governance. |
 | `GRQ-COMPONENT_SUBDIVISION-SYS-WEB-ROOT` | `P1` | `component-subdivision` | `SYS-WEB-ROOT` | 0 | 0 | Component is known but still too broad for source-level governance. |
-| `GRQ-DOC_ALIGNMENT-SYS-DOCS-GOVERNANCE` | `P2` | `doc-alignment` | `SYS-DOCS-GOVERNANCE` | 0 | 255 | Documents track drift or require disposition and need alignment with active units. |
+| `GRQ-DOC_ALIGNMENT-SYS-DOCS-GOVERNANCE` | `P2` | `doc-alignment` | `SYS-DOCS-GOVERNANCE` | 0 | 256 | Documents track drift or require disposition and need alignment with active units. |
 | `GRQ-DOC_ALIGNMENT-SYS-RUNTIME` | `P2` | `doc-alignment` | `SYS-RUNTIME` | 0 | 44 | Documents track drift or require disposition and need alignment with active units. |
 | `GRQ-DOC_ALIGNMENT-SYS-PLANNER` | `P2` | `doc-alignment` | `SYS-PLANNER` | 0 | 40 | Documents track drift or require disposition and need alignment with active units. |
 | `GRQ-COMPONENT_SUBDIVISION-SYS-ADAPTERS-ROOT` | `P3` | `component-subdivision` | `SYS-ADAPTERS-ROOT` | 0 | 0 | Component is known but still too broad for source-level governance. |
