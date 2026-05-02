@@ -30768,9 +30768,9 @@ files:
         docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md
   - fileId: F-4EC3696459B8
     pathHash: d724862ed698c3e5cda0c85ef2e0f7df347f21a9be64ea869c7ef27d2905353d
-    contentHash: 1c087d7d013d67f5d076746a4443da91155cc91b432d80334d8bae7f6f8aa5c5
+    contentHash: cd6f8a5b6b0b89a1c91be269e38ac5bb3a5edcdb613b6fef864c5097c17e51d0
     governanceHash: 17b9458eb491785470127e84e01e837244221c4479c7af2c70c15b49bb9cbb20
-    stateFingerprint: b197a43cc81e9239406dbdbfb0ab4ed2c6849be83dec4e171e0459e02037ef96
+    stateFingerprint: 8ede80d56a58e922ceaaf5025212556a99f02a8cdbda68174342ec1fed5f88f2
     path: apps/web/src/app/views/canvas/canvasShellPropsBuilder.architecture.test.ts
     owningUnit: SYS-WEB-ROOT
     rootUnit: SYS-DVT
@@ -106113,9 +106113,9 @@ files:
       - docs/guides/testing-and-ci-capabilities.md
   - fileId: F-FCD9E91E7D98
     pathHash: ab554124e1b425e50fded495f2d686824d166c15478ef8ea793ef0473c776579
-    contentHash: beb92ae3dfb0b1d6fa039b43c3b55c1bfebb411b1d4c5f36f3779c31a73398c1
+    contentHash: d99ac104e2c973667e1315b5233cf44e3f53fbf999d2bdbaf07dc981fc788db4
     governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
-    stateFingerprint: 29402a41fd831e434f97b4081ee35a29c08c71a0e3f537d9630850c8761900b0
+    stateFingerprint: bd106445181954128caffe0b63a01123fbd5837c5de11141eae79acce728f44f
     path: tools/ci/run-web-cypress-native.test.mjs
     owningUnit: SYS-CI-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
