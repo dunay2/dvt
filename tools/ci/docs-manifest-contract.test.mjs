@@ -48,9 +48,51 @@ function isSortedByPath(entries) {
   );
 }
 
-test('docs manifest generation is deterministic and excludes timestamp noise', () => {
+function isSha256Hex(value) {
+  return typeof value === 'string' && /^[a-f0-9]{64}$/.test(value);
+}
+
+test('docs manifest generation is deterministic, compact, and excludes timestamp noise', () => {
   const first = runPnpm(['exec', 'tsx', 'tools/docs/generate-docs-manifest.ts', '--stdout']);
   const second = runPnpm(['exec', 'tsx', 'tools/docs/generate-docs-manifest.ts', '--stdout']);
+
+  assert.equal(first, second);
+
+  const manifest = JSON.parse(first);
+
+  assert.equal('generatedAt' in manifest, false);
+  assert.equal('adrs' in manifest, false);
+  assert.equal('evidenceDocs' in manifest, false);
+  assert.equal('normativeDocs' in manifest, false);
+  assert.equal('statusDocs' in manifest, false);
+  assert.equal(
+    manifest.summary.total,
+    manifest.catalogs.reduce((sum, entry) => sum + entry.count, 0)
+  );
+  assert.deepEqual(
+    manifest.catalogs.map((entry) => entry.name),
+    ['adrs', 'evidenceDocs', 'normativeDocs', 'statusDocs']
+  );
+  for (const entry of manifest.catalogs) {
+    assert.equal(isSha256Hex(entry.contentSha256), true);
+  }
+});
+
+test('docs manifest full audit output stays deterministic and sorted', () => {
+  const first = runPnpm([
+    'exec',
+    'tsx',
+    'tools/docs/generate-docs-manifest.ts',
+    '--stdout',
+    '--full',
+  ]);
+  const second = runPnpm([
+    'exec',
+    'tsx',
+    'tools/docs/generate-docs-manifest.ts',
+    '--stdout',
+    '--full',
+  ]);
 
   assert.equal(first, second);
 
@@ -61,6 +103,13 @@ test('docs manifest generation is deterministic and excludes timestamp noise', (
   assert.equal(manifest.summary.evidenceDocs, manifest.evidenceDocs.length);
   assert.equal(manifest.summary.normativeDocs, manifest.normativeDocs.length);
   assert.equal(manifest.summary.statusDocs, manifest.statusDocs.length);
+  assert.equal(
+    manifest.summary.total,
+    manifest.adrs.length +
+      manifest.evidenceDocs.length +
+      manifest.normativeDocs.length +
+      manifest.statusDocs.length
+  );
   assert.equal(isSortedByPath(manifest.evidenceDocs), true);
   assert.equal(isSortedByPath(manifest.normativeDocs), true);
   assert.equal(isSortedByPath(manifest.statusDocs), true);

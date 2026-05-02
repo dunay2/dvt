@@ -3,21 +3,21 @@
  * @file tools/docs/generate-docs-manifest.ts
  * Generates docs/.manifest.json — a machine-readable catalog of all normative docs.
  *
- * Output shape:
+ * Tracked output shape:
  *   {
- *     summary: { adrs, evidenceDocs, normativeDocs, statusDocs }
- *     adrs: AdrEntry[]
- *     evidenceDocs: EvidenceEntry[]
- *     normativeDocs: DocEntry[]
- *     statusDocs: DocEntry[]
+ *     summary: { adrs, evidenceDocs, normativeDocs, statusDocs, total }
+ *     catalogs: [{ name, count, contentSha256 }]
  *   }
+ *
+ * Full audit output remains available with --full --stdout.
  *
  * Used for: auditing, drift detection, dashboards, PR comments.
  *
  * Usage:
- *   tsx tools/docs/generate-docs-manifest.ts [--stdout]
+ *   tsx tools/docs/generate-docs-manifest.ts [--stdout] [--full]
  *   (--stdout prints to stdout instead of writing docs/.manifest.json)
  */
+import { createHash } from 'node:crypto';
 import { writeFileSync } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -36,6 +36,7 @@ const REPO_ROOT = resolve(__dirname, '..', '..');
 const DOCS_DIR = join(REPO_ROOT, 'docs');
 
 const STDOUT_ONLY = process.argv.includes('--stdout');
+const FULL_OUTPUT = process.argv.includes('--full');
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -66,17 +67,27 @@ interface DocEntry {
   filename: string;
 }
 
-interface Manifest {
+interface FullManifest {
   summary: {
     adrs: number;
     evidenceDocs: number;
     normativeDocs: number;
     statusDocs: number;
+    total: number;
   };
   adrs: AdrEntry[];
   evidenceDocs: EvidenceEntry[];
   normativeDocs: DocEntry[];
   statusDocs: DocEntry[];
+}
+
+interface CompactManifest {
+  summary: FullManifest['summary'];
+  catalogs: Array<{
+    name: keyof Omit<FullManifest, 'summary'>;
+    count: number;
+    contentSha256: string;
+  }>;
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -171,19 +182,33 @@ function main(): void {
   normativeDocs.sort((left, right) => left.path.localeCompare(right.path));
   statusDocs.sort((left, right) => left.path.localeCompare(right.path));
 
-  const manifest: Manifest = {
-    summary: {
-      adrs: adrs.length,
-      evidenceDocs: evidenceDocs.length,
-      normativeDocs: normativeDocs.length,
-      statusDocs: statusDocs.length,
-    },
+  const summary = {
+    adrs: adrs.length,
+    evidenceDocs: evidenceDocs.length,
+    normativeDocs: normativeDocs.length,
+    statusDocs: statusDocs.length,
+    total: adrs.length + evidenceDocs.length + normativeDocs.length + statusDocs.length,
+  };
+
+  const fullManifest: FullManifest = {
+    summary,
     adrs,
     evidenceDocs,
     normativeDocs,
     statusDocs,
   };
 
+  const compactManifest: CompactManifest = {
+    summary,
+    catalogs: [
+      createCatalogDigest('adrs', adrs),
+      createCatalogDigest('evidenceDocs', evidenceDocs),
+      createCatalogDigest('normativeDocs', normativeDocs),
+      createCatalogDigest('statusDocs', statusDocs),
+    ],
+  };
+
+  const manifest = FULL_OUTPUT ? fullManifest : compactManifest;
   const json = JSON.stringify(manifest, null, 2) + '\n';
 
   if (STDOUT_ONLY) {
@@ -191,10 +216,21 @@ function main(): void {
   } else {
     const outPath = join(DOCS_DIR, '.manifest.json');
     writeFileSync(outPath, json);
-    const { adrs: a, evidenceDocs: e, normativeDocs: n, statusDocs: s } = manifest.summary;
+    const { adrs: a, evidenceDocs: e, normativeDocs: n, statusDocs: s } = summary;
     process.stderr.write(`Manifest written → ${outPath}\n`);
     process.stderr.write(`  ${a} ADRs · ${e} evidence docs · ${n} normative · ${s} status\n`);
   }
+}
+
+function createCatalogDigest<T>(
+  name: keyof Omit<FullManifest, 'summary'>,
+  entries: readonly T[]
+): CompactManifest['catalogs'][number] {
+  return {
+    name,
+    count: entries.length,
+    contentSha256: createHash('sha256').update(JSON.stringify(entries)).digest('hex'),
+  };
 }
 
 main();
