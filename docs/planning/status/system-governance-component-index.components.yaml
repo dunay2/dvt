@@ -155,12 +155,13 @@ components:
     isDrift: false
     isLegacy: false
     childrenRequired: true
-    fileCount: 171
+    fileCount: 174
     dddOwner: INFRA
     cqRails: none - repository automation
     owns:
       - .github/**
       - .husky/**
+      - .dependency-cruiser.cjs
       - scripts/**
       - tools/**
       - packages/test/**
@@ -257,7 +258,7 @@ components:
     isDrift: false
     isLegacy: false
     childrenRequired: true
-    fileCount: 1643
+    fileCount: 1645
     dddOwner: INFRA
     cqRails: none - documentation governance
     owns:

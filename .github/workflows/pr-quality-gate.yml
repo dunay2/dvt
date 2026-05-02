@@ -126,6 +126,14 @@ jobs:
         if: github.event_name == 'pull_request' && steps.scope.outputs.docs_changed == 'true'
         run: pnpm docs:canonical:check
 
+      - name: Enforce changed docs filename policy
+        if: github.event_name == 'pull_request' && steps.scope.outputs.docs_changed == 'true'
+        run: pnpm docs:gov:filenames:changed
+
+      - name: Enforce changed docs frontmatter policy
+        if: github.event_name == 'pull_request' && steps.scope.outputs.docs_changed == 'true'
+        run: pnpm docs:gov:frontmatter:changed
+
       - name: Validate generated code-state status doc
         if:
           github.event_name == 'pull_request' && steps.scope.outputs.generated_status_relevant ==
@@ -137,6 +145,18 @@ jobs:
           github.event_name == 'pull_request' && steps.scope.outputs.generated_capability_relevant
           == 'true'
         run: pnpm docs:capability:check
+
+      - name: Validate governance unit coverage
+        if:
+          github.event_name == 'pull_request' || github.event_name == 'push' || (github.event_name
+          == 'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
+        run: pnpm docs:governance:unit-coverage
+
+      - name: Validate governance document unit map
+        if:
+          github.event_name == 'pull_request' || github.event_name == 'push' || (github.event_name
+          == 'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
+        run: pnpm docs:governance:document-unit-map:check
 
       - name: Validate governance file fingerprints
         if:
@@ -162,6 +182,30 @@ jobs:
         env:
           GIT_BASE: origin/${{ github.base_ref }}
           GIT_HEAD: ${{ github.sha }}
+
+      - name: Validate feature mechanization manifests
+        if:
+          github.event_name == 'pull_request' || github.event_name == 'push' || (github.event_name
+          == 'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
+        run: pnpm docs:feature-mechanization
+
+      - name: Validate feature implementation mechanization
+        if:
+          github.event_name == 'pull_request' || github.event_name == 'push' || (github.event_name
+          == 'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
+        run: pnpm docs:feature-mechanization:implementation
+
+      - name: Validate QA artifacts
+        if:
+          github.event_name == 'pull_request' || github.event_name == 'push' || (github.event_name
+          == 'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
+        run: pnpm qa:artifact:check
+
+      - name: Validate architecture dependency boundaries
+        if:
+          github.event_name == 'pull_request' || github.event_name == 'push' || (github.event_name
+          == 'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
+        run: pnpm arch:deps
 
       - name: Check PR title follows Conventional Commits
         if: github.event_name == 'pull_request'
