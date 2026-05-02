@@ -48934,9 +48934,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-B3CB3C334716
     pathHash: e5c7cd90bf748b62a283c0115677fda371cb5ae3a8d9de91b86c0e4bf364912f
-    contentHash: 216735c7bda68aa35692455122942415819a9b7b9ae41edfd10f675f54c823f9
+    contentHash: 93f0a28418130a506cbf7b3b3f0dfac313e3cf2921248d887b040c5aaaa72c9b
     governanceHash: d9f768b3da4be04e83890eae632052f05a0776f4990c39b7b2ab2c3b6cc14524
-    stateFingerprint: bf733ec68bea14c92f3deaa7e8d4e0abab5653a68cd4881b21c6dc1cba0d5c58
+    stateFingerprint: 63e3c0ae82edc076a206d46ecd4551d40241c0765097ea4c09da99b1b8c9c5d2
     path: docs/guides/testing-and-ci-capabilities.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
@@ -89236,9 +89236,9 @@ files:
       - docs/guides/testing-and-ci-capabilities.md
   - fileId: F-29F5B2A2EF39
     pathHash: e34092d87391689639a7813bd0abf34911cd78d52409cc6d78d5b2aca42c966e
-    contentHash: da4458d4ac1ef9445302c59bda807d1330c78cf4a05e810d4ac311d1900fd76e
+    contentHash: fae600064ae6861a2fbee0281e6b5a90a797d25c35e9b8c35c26f21a60ded5ec
     governanceHash: 3286d185b83c9c6dc1c5ccc7196e85d0020fdfcd5fad0eaeb783775bb31d71c2
-    stateFingerprint: 4144e780af21d779c84e1d3951ec86862566f331a00ca04333390eb5786200b1
+    stateFingerprint: 3abb6fc10604a9d6e24a362876ab77f8fcbcc950593dbf2a88a8861053fd2923
     path: scripts/check-governance-changed-files.cjs
     owningUnit: SYS-CI-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
@@ -89258,9 +89258,9 @@ files:
       - docs/guides/testing-and-ci-capabilities.md
   - fileId: F-2108831C9F5F
     pathHash: fed77374b96d541e02a780f4977c262e6f5478bdd63de7caac833cc7f502351a
-    contentHash: 5cc06f025397e411cde79601074aefca8941906b6a8d3aadd2099d145483f2ae
+    contentHash: cd025944950b97090617d913fdf325707b18e6221d8385fb29c94a1cac04f55d
     governanceHash: 3286d185b83c9c6dc1c5ccc7196e85d0020fdfcd5fad0eaeb783775bb31d71c2
-    stateFingerprint: 364cd548634858fdde391f0bcc5592469b0710689dd22d64a1d27f36abf5d1b9
+    stateFingerprint: de1f4391bce434ae0d0925a0d9195bf008a39fe980cd7c0c82b9883083bd7313
     path: scripts/check-governance-changed-files.test.cjs
     owningUnit: SYS-CI-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
