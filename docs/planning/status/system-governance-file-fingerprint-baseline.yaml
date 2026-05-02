@@ -19467,9 +19467,9 @@ files:
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
   - fileId: F-B3CB3C334716
     path: docs/guides/testing-and-ci-capabilities.md
-    contentHash: 3777ec431f264c6736d64fcddfa2b88ddb4960bbba8a78ec8ca3456640dcd02e
+    contentHash: 0b092a9fffcbc7ace7e8266f76b63b1f63b19950226bc1853bdb768813ff6ffe
     governanceHash: d9f768b3da4be04e83890eae632052f05a0776f4990c39b7b2ab2c3b6cc14524
-    stateFingerprint: a5ccdd57cb486a46327408b6427164328de4e16a7f98a4e28450fd79e3c63755
+    stateFingerprint: 227a90e45013bd4a568b1e56f152c9c58cdd39330f5bf9c7a69221def0a78fa4
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -36001,18 +36001,18 @@ files:
     owningUnit: SYS-CI-GOVERNANCE-ROOT
   - fileId: F-C21A8D62E06A
     path: scripts/generate-governance-remediation-queue.cjs
-    contentHash: 4911c89818419b727155ff0b8ab73f4e81dbf7da73fa8cabe7c5fb6b38f08a08
+    contentHash: 0e8acf25862dc71745ae9ac8e95f5489a51121f2cea3fbc9307d7345486a58f8
     governanceHash: 3286d185b83c9c6dc1c5ccc7196e85d0020fdfcd5fad0eaeb783775bb31d71c2
-    stateFingerprint: 992139c47f1a1a14612a7b1d629e95aaa2efe4e2783e9176de4d249354a17884
+    stateFingerprint: e815de8430c415fa188be99a8517cc6ca87f887dacff0e07fe8e1b7e8e4d68a8
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-CI-GOVERNANCE-ROOT
     owningUnit: SYS-CI-GOVERNANCE-ROOT
   - fileId: F-CA3701ECA908
     path: scripts/generate-governance-remediation-queue.test.cjs
-    contentHash: 413e1f4c8057b07007c7395fe8151acd158c12ffaccb14652eab10f00aa11ae0
+    contentHash: eb3bc17300bf77d06399142cd92e84704cfb9c4f516c5f961e2a06ade5e521a9
     governanceHash: 3286d185b83c9c6dc1c5ccc7196e85d0020fdfcd5fad0eaeb783775bb31d71c2
-    stateFingerprint: 342ae2d424cb22fc52a521fe5ad209c0d60c8e648547057761f6070054b02548
+    stateFingerprint: e750ca9ac49570649649eb23c68075a739249f2439bd4c29821b2b4c732d539d
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-CI-GOVERNANCE-ROOT
