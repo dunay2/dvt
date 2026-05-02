@@ -322,6 +322,7 @@ units:
     dddOwner: AS
     cqRails: API command/query route rails
     governance:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
       - docs/planning/status/system-operations-inventory-20260501.md
     fowlerSignals:
       - coverage refinement
@@ -336,6 +337,7 @@ units:
     dddOwner: AS
     cqRails: API commands and queries
     governance:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
       - docs/planning/status/system-operations-inventory-20260501.md
     fowlerSignals:
       - coverage refinement
@@ -384,6 +386,7 @@ units:
     dddOwner: ENTRY
     cqRails: API process bootstrap commands
     governance:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
       - docs/planning/status/system-operations-inventory-20260501.md
     fowlerSignals:
       - coverage refinement
@@ -402,6 +405,7 @@ units:
     dddOwner: ENTRY
     cqRails: API HTTP command/query route rails
     governance:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
       - docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
       - docs/architecture/command-query-rail-governance.md
       - docs/planning/status/system-operations-inventory-20260501.md
@@ -421,6 +425,7 @@ units:
     dddOwner: PORT
     cqRails: API application command/query ports
     governance:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
       - docs/architecture/reference-architecture.md
       - docs/planning/status/system-operations-inventory-20260501.md
     fowlerSignals:
@@ -441,6 +446,7 @@ units:
     dddOwner: AS
     cqRails: API application commands and queries
     governance:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
       - docs/architecture/command-query-rail-governance.md
       - docs/planning/status/system-operations-inventory-20260501.md
     fowlerSignals:
@@ -457,6 +463,7 @@ units:
     dddOwner: DS
     cqRails: API authorization policy model
     governance:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
       - docs/architecture/reference-architecture.md
       - docs/planning/status/system-operations-inventory-20260501.md
     fowlerSignals:
@@ -479,6 +486,7 @@ units:
     dddOwner: ADP
     cqRails: API adapter-backed command/query support
     governance:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
       - docs/architecture/reference-architecture.md
       - docs/planning/status/system-operations-inventory-20260501.md
     fowlerSignals:
@@ -496,6 +504,7 @@ units:
     dddOwner: AS
     cqRails: API runtime composition commands and queries
     governance:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
       - docs/planning/status/system-operations-inventory-20260501.md
     fowlerSignals:
       - coverage refinement
@@ -511,6 +520,7 @@ units:
     dddOwner: ENTRY
     cqRails: API operational readiness queries
     governance:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
       - docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
       - docs/runbooks/api-runtime-sla-canonical-20260404.md
       - docs/planning/status/system-operations-inventory-20260501.md
@@ -536,6 +546,7 @@ units:
     dddOwner: INFRA
     cqRails: API validation suites
     governance:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
       - docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
       - docs/guides/testing-and-ci-capabilities.md
       - docs/planning/status/system-operations-inventory-20260501.md
@@ -555,6 +566,7 @@ units:
     dddOwner: INFRA
     cqRails: API HTTP command/query route validation
     governance:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
       - docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
       - docs/guides/testing-and-ci-capabilities.md
       - docs/architecture/command-query-rail-governance.md

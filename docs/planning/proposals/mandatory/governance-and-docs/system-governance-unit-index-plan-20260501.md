@@ -394,6 +394,7 @@ allowedImplementationSurfaces:
   - docs/generated-docs-policy.json
   - docs/guides/testing-and-ci-capabilities.md
   - docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
+  - docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
   - docs/planning/status/**
   - package.json
   - pnpm-lock.yaml
