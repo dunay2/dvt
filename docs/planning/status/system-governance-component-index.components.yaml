@@ -385,6 +385,8 @@ components:
         level: component
         status: coverage-required
         governance:
+          - >-
+            docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
           - docs/guides/testing-and-ci-capabilities.md
           - docs/architecture/command-query-rail-governance.md
     status: coverage-required
@@ -402,6 +404,8 @@ components:
     excludes:
       - apps/api/test/entrypoints/http/planRoutePlanSourcePolicy.test.ts
     governance:
+      - >-
+        docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
       - docs/guides/testing-and-ci-capabilities.md
       - docs/architecture/command-query-rail-governance.md
     fowlerSignals:
@@ -443,6 +447,8 @@ components:
         level: component
         status: coverage-required
         governance:
+          - >-
+            docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
           - docs/architecture/command-query-rail-governance.md
           - docs/planning/status/system-operations-inventory-20260501.md
     status: coverage-required
@@ -461,6 +467,8 @@ components:
       - apps/api/src/entrypoints/http/planRefHttpMapper.ts
       - apps/api/src/entrypoints/http/planRoutePlanRefParser.ts
     governance:
+      - >-
+        docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
       - docs/architecture/command-query-rail-governance.md
       - docs/planning/status/system-operations-inventory-20260501.md
     fowlerSignals:
@@ -564,6 +572,8 @@ components:
         level: component
         status: coverage-required
         governance:
+          - >-
+            docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
           - docs/runbooks/api-runtime-sla-canonical-20260404.md
           - docs/planning/status/system-operations-inventory-20260501.md
     status: coverage-required
@@ -580,6 +590,8 @@ components:
       - apps/api/src/routes/**
     excludes: []
     governance:
+      - >-
+        docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
       - docs/runbooks/api-runtime-sla-canonical-20260404.md
       - docs/planning/status/system-operations-inventory-20260501.md
     fowlerSignals:
@@ -734,6 +746,8 @@ components:
         level: component
         status: coverage-required
         governance:
+          - >-
+            docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
           - docs/guides/testing-and-ci-capabilities.md
           - docs/planning/status/system-operations-inventory-20260501.md
     status: coverage-required
@@ -757,6 +771,8 @@ components:
       - apps/api/test/infrastructure/planner/ManifestArtifactResolver.test.ts
       - apps/api/test/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.test.ts
     governance:
+      - >-
+        docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
       - docs/guides/testing-and-ci-capabilities.md
       - docs/planning/status/system-operations-inventory-20260501.md
     fowlerSignals:

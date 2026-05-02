@@ -329,11 +329,28 @@ Initial guard candidates:
 - S08 closure cannot be claimed while `SYS-PLANSTORE-*` units remain
   `coverage-required`, `drift`, or `legacy`.
 
+## API Component Planning Correction
+
+This plan does not authorize ad hoc component creation inside `apps/api`.
+The API route-registration extraction is classified as module/source work
+inside already planned API units:
+
+| Implementation file                                                     | Planned owning unit             | Classification                                        | DDD owner | C&Q posture                                                                                    | Validation                                                                                   |
+| ----------------------------------------------------------------------- | ------------------------------- | ----------------------------------------------------- | --------- | ---------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| `apps/api/src/routes/registerOperationalRoutes.ts`                      | `SYS-API-OPS-ROUTES`            | source/module registrar under existing component      | `ENTRY`   | Implements existing API operational readiness queries; does not define a new product rail      | `pnpm --filter dvt-api test -- test/routes/registerOperationalRoutes.test.ts`                |
+| `apps/api/src/entrypoints/http/registerProtectedRuntimeRoutes.ts`       | `SYS-API-HTTP-ENTRYPOINTS`      | source/module registrar under existing component      | `ENTRY`   | Wires existing protected runtime command/query route rails; does not define a new product rail | `pnpm --filter dvt-api test -- test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts` |
+| `apps/api/test/routes/registerOperationalRoutes.test.ts`                | `SYS-API-TESTS`                 | source-level validation under API test component      | `INFRA`   | Validates operational-route registration semantics                                             | `pnpm --filter dvt-api test -- test/routes/registerOperationalRoutes.test.ts`                |
+| `apps/api/test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts` | `SYS-API-HTTP-ENTRYPOINT-TESTS` | source-level validation under API HTTP test component | `INFRA`   | Validates protected runtime route registration semantics                                       | `pnpm --filter dvt-api test -- test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts` |
+
+No new API component IDs are accepted by this correction. A future API
+component subdivision must be planned first in the unit index or a mandatory
+proposal, then implemented after review.
+
 ## Feature Mechanization Manifest
 
 This plan owns the governance-index and file-fingerprint implementation
-surfaces and the first API operational-route component extraction that proves
-unit subdivision is not documentation-only. The manifest keeps the
+surfaces and the API route-registration module extraction that proves unit
+subdivision is not documentation-only. The manifest keeps the
 repository-level implementation guard from binding governance changes to
 unrelated frontend feature manifests.
 Because the file/component and fingerprint indexes are exhaustive generated
@@ -438,12 +455,12 @@ commandQueryRails:
   - name: QueryDocsGovernanceManifestAuditCatalog
     type: query
     dddOwner: Repository docs governance manifest
-  - name: RegisterApiOperationalRoutes
+  - name: RegisterApiOperationalRoutesModule
     type: command
-    dddOwner: API operational routes component
-  - name: RegisterApiProtectedRuntimeRoutes
+    dddOwner: SYS-API-OPS-ROUTES source/module registrar
+  - name: RegisterApiProtectedRuntimeRoutesModule
     type: command
-    dddOwner: API protected runtime HTTP entrypoint component
+    dddOwner: SYS-API-HTTP-ENTRYPOINTS source/module registrar
 domainObjects:
   - name: GovernanceUnitIndex
     type: generated status aggregate
@@ -567,17 +584,17 @@ redGreenCycles:
       - tools/ci/docs-manifest-contract.test.mjs
       - docs/.manifest.json
     greenTest: pnpm exec node --test tools/ci/docs-manifest-contract.test.mjs
-  - id: api-operational-routes-component
+  - id: api-operational-routes-module
     redTest: pnpm --filter dvt-api test -- test/routes/registerOperationalRoutes.test.ts
-    expectedFailure: API operational routes are not mounted through a component-level registrar.
+    expectedFailure: API operational routes are not mounted through a planned source/module registrar.
     patchSurfaces:
       - apps/api/src/routes/registerOperationalRoutes.ts
       - apps/api/test/routes/registerOperationalRoutes.test.ts
       - apps/api/src/app.ts
     greenTest: pnpm --filter dvt-api test -- test/routes/registerOperationalRoutes.test.ts
-  - id: api-protected-runtime-routes-component
+  - id: api-protected-runtime-routes-module
     redTest: pnpm --filter dvt-api test -- test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts
-    expectedFailure: API protected runtime routes are not mounted through a component-level registrar.
+    expectedFailure: API protected runtime routes are not mounted through a planned source/module registrar.
     patchSurfaces:
       - apps/api/src/entrypoints/http/registerProtectedRuntimeRoutes.ts
       - apps/api/test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts
@@ -589,9 +606,9 @@ redGreenCycles:
 symbols:
   - name: APP_SOURCE_PATH
     path: apps/api/test/entrypoints/http/startRunControlBoundary.architecture.test.ts
-    dddOwner: API protected runtime HTTP entrypoint component architecture guard
+    dddOwner: API protected runtime HTTP entrypoint source/module architecture guard
     cqRails:
-      - RegisterApiProtectedRuntimeRoutes
+      - RegisterApiProtectedRuntimeRoutesModule
     fowlerSignals:
       - Boundary drift
     architectureGuard: apps/api/test/entrypoints/http/startRunControlBoundary.architecture.test.ts
@@ -600,9 +617,9 @@ symbols:
       - apps/api/test/entrypoints/http/startRunControlBoundary.architecture.test.ts
   - name: PROTECTED_RUNTIME_ROUTES_SOURCE
     path: apps/api/test/modules/protectedRuntimeAndPlanCompileArchitecture.cases.ts
-    dddOwner: API protected runtime HTTP entrypoint component architecture guard
+    dddOwner: API protected runtime HTTP entrypoint source/module architecture guard
     cqRails:
-      - RegisterApiProtectedRuntimeRoutes
+      - RegisterApiProtectedRuntimeRoutesModule
     fowlerSignals:
       - Boundary drift
     architectureGuard: apps/api/test/modules.test.ts
@@ -611,9 +628,9 @@ symbols:
       - apps/api/test/modules.test.ts
   - name: RegisterProtectedRuntimeRoutesOptions
     path: apps/api/src/entrypoints/http/registerProtectedRuntimeRoutes.ts
-    dddOwner: API protected runtime HTTP entrypoint component
+    dddOwner: API protected runtime HTTP entrypoint source/module
     cqRails:
-      - RegisterApiProtectedRuntimeRoutes
+      - RegisterApiProtectedRuntimeRoutesModule
     fowlerSignals:
       - Boundary drift
     architectureGuard: apps/api/test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts
@@ -622,9 +639,9 @@ symbols:
       - apps/api/test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts
   - name: registerProtectedRuntimeRoutes
     path: apps/api/src/entrypoints/http/registerProtectedRuntimeRoutes.ts
-    dddOwner: API protected runtime HTTP entrypoint component
+    dddOwner: API protected runtime HTTP entrypoint source/module
     cqRails:
-      - RegisterApiProtectedRuntimeRoutes
+      - RegisterApiProtectedRuntimeRoutesModule
     fowlerSignals:
       - Boundary drift
     architectureGuard: apps/api/test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts
@@ -633,9 +650,9 @@ symbols:
       - apps/api/test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts
   - name: RuntimeAuth
     path: apps/api/src/entrypoints/http/registerProtectedRuntimeRoutes.ts
-    dddOwner: API protected runtime HTTP entrypoint component
+    dddOwner: API protected runtime HTTP entrypoint source/module
     cqRails:
-      - RegisterApiProtectedRuntimeRoutes
+      - RegisterApiProtectedRuntimeRoutesModule
     fowlerSignals:
       - Boundary drift
     architectureGuard: apps/api/test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts
@@ -644,9 +661,9 @@ symbols:
       - apps/api/test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts
   - name: ProtectedRuntimeRouteDependencies
     path: apps/api/src/entrypoints/http/registerProtectedRuntimeRoutes.ts
-    dddOwner: API protected runtime HTTP entrypoint component
+    dddOwner: API protected runtime HTTP entrypoint source/module
     cqRails:
-      - RegisterApiProtectedRuntimeRoutes
+      - RegisterApiProtectedRuntimeRoutesModule
     fowlerSignals:
       - Boundary drift
     architectureGuard: apps/api/test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts
@@ -655,9 +672,9 @@ symbols:
       - apps/api/test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts
   - name: buildProtectedRuntimeRouteDependencies
     path: apps/api/src/entrypoints/http/registerProtectedRuntimeRoutes.ts
-    dddOwner: API protected runtime HTTP entrypoint component
+    dddOwner: API protected runtime HTTP entrypoint source/module
     cqRails:
-      - RegisterApiProtectedRuntimeRoutes
+      - RegisterApiProtectedRuntimeRoutesModule
     fowlerSignals:
       - Boundary drift
     architectureGuard: apps/api/test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts
@@ -666,9 +683,9 @@ symbols:
       - apps/api/test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts
   - name: registerProtectedPlanRoutes
     path: apps/api/src/entrypoints/http/registerProtectedRuntimeRoutes.ts
-    dddOwner: API protected runtime HTTP entrypoint component
+    dddOwner: API protected runtime HTTP entrypoint source/module
     cqRails:
-      - RegisterApiProtectedRuntimeRoutes
+      - RegisterApiProtectedRuntimeRoutesModule
     fowlerSignals:
       - Boundary drift
     architectureGuard: apps/api/test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts
@@ -677,9 +694,9 @@ symbols:
       - apps/api/test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts
   - name: registerProtectedWorkspaceGraphDraftRouteGroup
     path: apps/api/src/entrypoints/http/registerProtectedRuntimeRoutes.ts
-    dddOwner: API protected runtime HTTP entrypoint component
+    dddOwner: API protected runtime HTTP entrypoint source/module
     cqRails:
-      - RegisterApiProtectedRuntimeRoutes
+      - RegisterApiProtectedRuntimeRoutesModule
     fowlerSignals:
       - Boundary drift
     architectureGuard: apps/api/test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts
@@ -688,9 +705,9 @@ symbols:
       - apps/api/test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts
   - name: registerProtectedRunRoutes
     path: apps/api/src/entrypoints/http/registerProtectedRuntimeRoutes.ts
-    dddOwner: API protected runtime HTTP entrypoint component
+    dddOwner: API protected runtime HTTP entrypoint source/module
     cqRails:
-      - RegisterApiProtectedRuntimeRoutes
+      - RegisterApiProtectedRuntimeRoutesModule
     fowlerSignals:
       - Boundary drift
     architectureGuard: apps/api/test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts
@@ -699,9 +716,9 @@ symbols:
       - apps/api/test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts
   - name: registerProtectedAdminRouteGroup
     path: apps/api/src/entrypoints/http/registerProtectedRuntimeRoutes.ts
-    dddOwner: API protected runtime HTTP entrypoint component
+    dddOwner: API protected runtime HTTP entrypoint source/module
     cqRails:
-      - RegisterApiProtectedRuntimeRoutes
+      - RegisterApiProtectedRuntimeRoutesModule
     fowlerSignals:
       - Boundary drift
     architectureGuard: apps/api/test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts
@@ -710,9 +727,9 @@ symbols:
       - apps/api/test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts
   - name: protectedRuntimeModule
     path: apps/api/test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts
-    dddOwner: API protected runtime HTTP entrypoint component test fixture
+    dddOwner: API protected runtime HTTP entrypoint source/module test fixture
     cqRails:
-      - RegisterApiProtectedRuntimeRoutes
+      - RegisterApiProtectedRuntimeRoutesModule
     fowlerSignals:
       - Boundary drift
     architectureGuard: apps/api/test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts
@@ -721,9 +738,9 @@ symbols:
       - apps/api/test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts
   - name: observability
     path: apps/api/test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts
-    dddOwner: API protected runtime HTTP entrypoint component test fixture
+    dddOwner: API protected runtime HTTP entrypoint source/module test fixture
     cqRails:
-      - RegisterApiProtectedRuntimeRoutes
+      - RegisterApiProtectedRuntimeRoutesModule
     fowlerSignals:
       - Boundary drift
     architectureGuard: apps/api/test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts
@@ -732,9 +749,9 @@ symbols:
       - apps/api/test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts
   - name: RegisterOperationalRoutesOptions
     path: apps/api/src/routes/registerOperationalRoutes.ts
-    dddOwner: API operational routes component
+    dddOwner: API operational routes source/module
     cqRails:
-      - RegisterApiOperationalRoutes
+      - RegisterApiOperationalRoutesModule
     fowlerSignals:
       - Boundary drift
     architectureGuard: apps/api/test/routes/registerOperationalRoutes.test.ts
@@ -743,9 +760,9 @@ symbols:
       - apps/api/test/routes/registerOperationalRoutes.test.ts
   - name: registerOperationalRoutes
     path: apps/api/src/routes/registerOperationalRoutes.ts
-    dddOwner: API operational routes component
+    dddOwner: API operational routes source/module
     cqRails:
-      - RegisterApiOperationalRoutes
+      - RegisterApiOperationalRoutesModule
     fowlerSignals:
       - Boundary drift
     architectureGuard: apps/api/test/routes/registerOperationalRoutes.test.ts
