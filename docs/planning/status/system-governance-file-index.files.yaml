@@ -70313,9 +70313,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-D7B979170553
     pathHash: f897fab0a48c65f86c12536e36f2cb1c89c0989abdf3da22463d3cd85a7bb891
-    contentHash: 44f2a9ec793d1115ab032d9fef3247d91a68575088afa5f92a7093d156319d76
+    contentHash: 93ff9641d2f39d9f4a22c7e9162626f20ce167f768ce799d223562b6a39d758c
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 798a9679c905b42c442cf6e2612d690e653bb9b22eeb318d002e7bc6c73da93e
+    stateFingerprint: 40a5104b8372a5f8d0b99776ca3fdddb40aa3f09999fd8825af8b7a3c7ff3587
     path: >-
       docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
