@@ -31209,9 +31209,9 @@ files:
       - pnpm-workspace.yaml
   - fileId: F-F3E0D3EF3EDF
     pathHash: 7ffef8a9564c20617afbac4f9951c8590b8f10d77fe0d6288233e79899376554
-    contentHash: 9e4a84f0c33486f1b59e4ada957206e57837e723c91ad8e587053ca7ba7fc993
+    contentHash: f56b7468d8119cc28f5993a69023bc7f8d325ade2e4f51946bfd020ebc465f49
     governanceHash: d9f768b3da4be04e83890eae632052f05a0776f4990c39b7b2ab2c3b6cc14524
-    stateFingerprint: 6742fc6088c92ddca122745d8752691eea3a0a2c7528ef8380f76a2c38bb6d89
+    stateFingerprint: 655a20f82b194760b97d5f6d270e5c955492e0888c81ea2ca1dac4a3316641dc
     path: docs/.manifest.json
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
@@ -48934,9 +48934,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-B3CB3C334716
     pathHash: e5c7cd90bf748b62a283c0115677fda371cb5ae3a8d9de91b86c0e4bf364912f
-    contentHash: 13b6ef4cd8ac085b20614ce594251e33da8d093fc7696e74dfa0fb1e28e826b5
+    contentHash: 29cee259c46d66e49765a905a9665e63eeac5ed501dd0a64d006305e4a2b5185
     governanceHash: d9f768b3da4be04e83890eae632052f05a0776f4990c39b7b2ab2c3b6cc14524
-    stateFingerprint: 3a5f2ebaf92d3516dbb0d09f2eecbad6b04f68f0e65ebd260c406b7e0bceef39
+    stateFingerprint: c1d3045a14ce3d91f8669cfd9e740ca7cea3bb6faec01baa2a1bb782a8fd7e65
     path: docs/guides/testing-and-ci-capabilities.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
@@ -90908,9 +90908,9 @@ files:
       - docs/guides/testing-and-ci-capabilities.md
   - fileId: F-DD4EE8251E4A
     pathHash: e020042224b22eecd183a4079ccdd1e8c933f5d5a2a2ecd574401782f2cf24a1
-    contentHash: 5dd5a86eb0371add7cb12efcb11ebd29bfd9819524977603ae601339202cfca2
+    contentHash: 00ede77bc62853f756994701d46193023b604c307de113fd57ea1a7c9dc260c8
     governanceHash: 3286d185b83c9c6dc1c5ccc7196e85d0020fdfcd5fad0eaeb783775bb31d71c2
-    stateFingerprint: 0fe0a6cf1fb025897c46990ad4ba22d5300d729767c7445fc72c1619732eead4
+    stateFingerprint: 1591335faefdf8fe522da5e00c120a66a9f2e7de736d769928cb4318437f048b
     path: tools/ci/docs-manifest-contract.test.mjs
     owningUnit: SYS-CI-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
@@ -91612,9 +91612,9 @@ files:
       - docs/guides/testing-and-ci-capabilities.md
   - fileId: F-2A246DDDB109
     pathHash: f85e1c36f1464a6c627d2b38395e2e228c26a136d10c232104f4bcdc0b9090fa
-    contentHash: 3e3313d05a9fd24b0088e06767e8493778fafa232e5264700c0aeb16dabe0a67
+    contentHash: 937f9848e4a83eadb0ca4dccd2daa5f47945d1b6339abce06776ba0140222e84
     governanceHash: 3286d185b83c9c6dc1c5ccc7196e85d0020fdfcd5fad0eaeb783775bb31d71c2
-    stateFingerprint: 811da9241f35936ebca4d95ca3fc704b77b4c14133b05c909dfcc25ea06c7777
+    stateFingerprint: 543f9d5570e9976438b6ecdc48655a7f72314984c1fd60ebcb6b47113ff8a942
     path: tools/docs/generate-docs-manifest.ts
     owningUnit: SYS-CI-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
