@@ -23,20 +23,20 @@ Machine-readable source:
 
 ## Totals
 
-- Tasks: 43
+- Tasks: 44
 - P0 tasks: 4
 - P1 tasks: 16
 - P2 tasks: 3
-- P3 tasks: 20
+- P3 tasks: 21
 - Drift files represented: 44
-- Components requiring subdivision: 18
+- Components requiring subdivision: 19
 
 ## By Type
 
 <!-- prettier-ignore-start -->
 | Type | Count |
 | --- | ---: |
-| `component-subdivision` | 18 |
+| `component-subdivision` | 19 |
 | `cq-rail-gap` | 9 |
 | `doc-alignment` | 12 |
 | `drift-removal` | 4 |
@@ -50,7 +50,7 @@ Machine-readable source:
 | `P0` | 4 |
 | `P1` | 16 |
 | `P2` | 3 |
-| `P3` | 20 |
+| `P3` | 21 |
 <!-- prettier-ignore-end -->
 
 ## Queue
@@ -82,6 +82,7 @@ Machine-readable source:
 | `GRQ-DOC_ALIGNMENT-SYS-RUNTIME` | `P2` | `doc-alignment` | `SYS-RUNTIME` | 0 | 44 | Documents track drift or require disposition and need alignment with active units. |
 | `GRQ-DOC_ALIGNMENT-SYS-PLANNER` | `P2` | `doc-alignment` | `SYS-PLANNER` | 0 | 40 | Documents track drift or require disposition and need alignment with active units. |
 | `GRQ-COMPONENT_SUBDIVISION-SYS-ADAPTERS-ROOT` | `P3` | `component-subdivision` | `SYS-ADAPTERS-ROOT` | 0 | 0 | Component is known but still too broad for source-level governance. |
+| `GRQ-COMPONENT_SUBDIVISION-SYS-API-OPS-ROUTES` | `P3` | `component-subdivision` | `SYS-API-OPS-ROUTES` | 0 | 0 | Component is known but still too broad for source-level governance. |
 | `GRQ-COMPONENT_SUBDIVISION-SYS-CI-GOVERNANCE-ROOT` | `P3` | `component-subdivision` | `SYS-CI-GOVERNANCE-ROOT` | 0 | 0 | Component is known but still too broad for source-level governance. |
 | `GRQ-COMPONENT_SUBDIVISION-SYS-CONTRACTS-ROOT` | `P3` | `component-subdivision` | `SYS-CONTRACTS-ROOT` | 0 | 0 | Component is known but still too broad for source-level governance. |
 | `GRQ-COMPONENT_SUBDIVISION-SYS-OBSERVABILITY-ROOT` | `P3` | `component-subdivision` | `SYS-OBSERVABILITY-ROOT` | 0 | 0 | Component is known but still too broad for source-level governance. |

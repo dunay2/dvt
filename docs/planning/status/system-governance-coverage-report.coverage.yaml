@@ -3,13 +3,13 @@ generatedFrom:
   - docs/planning/status/system-governance-file-index.files.yaml
   - docs/planning/status/system-governance-component-index.components.yaml
 totals:
-  files: 4086
-  governedFiles: 4086
+  files: 4096
+  governedFiles: 4096
   ungovernedFiles: 0
   driftFiles: 44
   legacyFiles: 0
-  components: 31
-  componentsRequiringSubdivision: 18
+  components: 32
+  componentsRequiringSubdivision: 19
 ciPosture:
   blockingStatus: gaps-present
   blockingReason: coverage report exposes governance gaps
@@ -22,12 +22,12 @@ ciPosture:
     - legacyFiles records removal targets until owning work removes them
 byRootUnit:
   - name: SYS-DVT
-    count: 4086
+    count: 4096
 byDomainUnit:
   - name: SYS-ADAPTERS
     count: 196
   - name: SYS-DVT
-    count: 3309
+    count: 3319
   - name: SYS-OBSERVABILITY
     count: 15
   - name: SYS-PLANSTORE
@@ -70,7 +70,7 @@ byComponentUnit:
   - name: SYS-CONTRACTS-ROOT
     count: 127
   - name: SYS-DOCS-GOVERNANCE-ROOT
-    count: 1652
+    count: 1662
   - name: SYS-OBSERVABILITY-ROOT
     count: 15
   - name: SYS-PLANNER-ROOT
@@ -103,34 +103,34 @@ byStatus:
   - name: canonical
     count: 111
   - name: coverage-required
-    count: 3863
+    count: 3862
   - name: drift
     count: 44
   - name: review
-    count: 68
+    count: 79
 byGovernanceState:
   - name: coverage-required
-    count: 3863
+    count: 3862
   - name: drift
     count: 44
   - name: governed
     count: 111
   - name: review
-    count: 68
+    count: 79
 byCanonicalRole:
   - name: implementation-owner
     count: 111
   - name: none
-    count: 3975
+    count: 3985
 byEvidenceState:
   - name: classification-only
     count: 111
   - name: coverage-required
-    count: 3863
+    count: 3862
   - name: remediation-required
     count: 44
   - name: review-required
-    count: 68
+    count: 79
 byDddOwner:
   - name: ADP
     count: 250
@@ -141,14 +141,14 @@ byDddOwner:
   - name: ENTRY
     count: 885
   - name: INFRA
-    count: 2151
+    count: 2161
   - name: PORT
     count: 189
 governanceDocuments:
   - path: docs/DOCS_README.md
-    fileCount: 1666
+    fileCount: 1676
   - path: docs/planning/status/governance-document-rule-inventory.md
-    fileCount: 1652
+    fileCount: 1662
   - path: docs/planning/status/system-operations-inventory-20260501.md
     fileCount: 947
   - path: >-
@@ -161,7 +161,7 @@ governanceDocuments:
     fileCount: 340
   - path: >-
       docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
-    fileCount: 235
+    fileCount: 224
   - path: docs/architecture/command-query-rail-governance.md
     fileCount: 159
   - path: docs/contracts/index.md
@@ -219,7 +219,7 @@ componentCoverage:
     evidenceState: coverage-required
     dddOwner: INFRA
     cqRails: none - documentation governance
-    fileCount: 1652
+    fileCount: 1662
     isDrift: false
     isLegacy: false
     childrenRequired: true
@@ -615,6 +615,25 @@ componentCoverage:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/system-operations-inventory-20260501.md
+  - id: SYS-API-OPS-HEALTH
+    name: API operational health and readiness routes
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    status: review
+    governanceState: review
+    canonicalRole: none
+    evidenceState: review-required
+    dddOwner: ENTRY
+    cqRails: ApiOperationalReadinessQuery
+    fileCount: 11
+    isDrift: false
+    isLegacy: false
+    childrenRequired: false
+    governance:
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
+      - docs/runbooks/api-runtime-sla-canonical-20260404.md
+      - docs/planning/status/system-operations-inventory-20260501.md
   - id: SYS-API-OPS-ROUTES
     name: API operational health routes
     rootUnit: SYS-DVT
@@ -623,12 +642,12 @@ componentCoverage:
     governanceState: coverage-required
     canonicalRole: none
     evidenceState: coverage-required
-    dddOwner: ENTRY
-    cqRails: API operational readiness queries
+    dddOwner: INFRA
+    cqRails: none - grouping component for operational route source units
     fileCount: 11
     isDrift: false
     isLegacy: false
-    childrenRequired: false
+    childrenRequired: true
     governance:
       - >-
         docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
@@ -945,7 +964,7 @@ findings:
   legacyFiles: []
   componentsRequiringSubdivision:
     - id: SYS-DOCS-GOVERNANCE-ROOT
-      fileCount: 1652
+      fileCount: 1662
       status: coverage-required
       dddOwner: INFRA
     - id: SYS-WEB-ROOT
@@ -1016,3 +1035,7 @@ findings:
       fileCount: 3
       status: drift
       dddOwner: PORT
+    - id: SYS-API-OPS-ROUTES
+      fileCount: 0
+      status: coverage-required
+      dddOwner: INFRA

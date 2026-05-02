@@ -514,14 +514,30 @@ units:
     parent: SYS-API-ROOT
     level: component
     status: coverage-required
+    owns: []
+    childrenRequired: true
+    dddOwner: INFRA
+    cqRails: none - grouping component for operational route source units
+    governance:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
+      - docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
+      - docs/runbooks/api-runtime-sla-canonical-20260404.md
+      - docs/planning/status/system-operations-inventory-20260501.md
+    fowlerSignals:
+      - coverage refinement
+
+  - id: SYS-API-OPS-HEALTH
+    name: API operational health and readiness routes
+    parent: SYS-API-OPS-ROUTES
+    level: source
+    status: review
     owns:
       - apps/api/src/routes/**
     childrenRequired: false
     dddOwner: ENTRY
-    cqRails: API operational readiness queries
+    cqRails: ApiOperationalReadinessQuery
     governance:
       - docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
-      - docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
       - docs/runbooks/api-runtime-sla-canonical-20260404.md
       - docs/planning/status/system-operations-inventory-20260501.md
     fowlerSignals:

@@ -30,8 +30,8 @@ itself prove verified semantic maturity. `governanceState`,
 
 ## Totals
 
-- Tracked files indexed: 4086
-- Component/source owner units: 31
+- Tracked files indexed: 4096
+- Component/source owner units: 32
 - Ungoverned files: 0
 - Drift files: 44
 - Legacy files: 0
@@ -42,9 +42,9 @@ itself prove verified semantic maturity. `governanceState`,
 | Status | Files |
 | --- | ---: |
 | `canonical` | 111 |
-| `coverage-required` | 3863 |
+| `coverage-required` | 3862 |
 | `drift` | 44 |
-| `review` | 68 |
+| `review` | 79 |
 <!-- prettier-ignore-end -->
 
 ## By Governance State
@@ -52,10 +52,10 @@ itself prove verified semantic maturity. `governanceState`,
 <!-- prettier-ignore-start -->
 | Governance state | Files |
 | --- | ---: |
-| `coverage-required` | 3863 |
+| `coverage-required` | 3862 |
 | `drift` | 44 |
 | `governed` | 111 |
-| `review` | 68 |
+| `review` | 79 |
 <!-- prettier-ignore-end -->
 
 ## By Canonical Role
@@ -64,7 +64,7 @@ itself prove verified semantic maturity. `governanceState`,
 | Canonical role | Files |
 | --- | ---: |
 | `implementation-owner` | 111 |
-| `none` | 3975 |
+| `none` | 3985 |
 <!-- prettier-ignore-end -->
 
 ## By Owning Unit
@@ -81,13 +81,13 @@ itself prove verified semantic maturity. `governanceState`,
 | `SYS-API-HTTP-ENTRYPOINT-TESTS` | 50 |
 | `SYS-API-HTTP-ENTRYPOINTS` | 75 |
 | `SYS-API-INFRASTRUCTURE` | 27 |
-| `SYS-API-OPS-ROUTES` | 11 |
+| `SYS-API-OPS-HEALTH` | 11 |
 | `SYS-API-REPO-CONFIG` | 11 |
 | `SYS-API-RUNTIME-COMPOSITION` | 26 |
 | `SYS-API-TESTS` | 99 |
 | `SYS-CI-GOVERNANCE-ROOT` | 180 |
 | `SYS-CONTRACTS-ROOT` | 127 |
-| `SYS-DOCS-GOVERNANCE-ROOT` | 1652 |
+| `SYS-DOCS-GOVERNANCE-ROOT` | 1662 |
 | `SYS-OBSERVABILITY-ROOT` | 15 |
 | `SYS-PLANNER-ROOT` | 76 |
 | `SYS-PLANSTORE-API-COMPOSITION` | 20 |
