@@ -120,6 +120,7 @@
     "docs:feature-mechanization": "node scripts/check-feature-mechanization.cjs",
     "docs:feature-mechanization:tf-e2-m-b": "node scripts/check-feature-mechanization.cjs --feature TF-E2-M-B",
     "docs:feature-mechanization:tf-e2-m-c": "node scripts/check-feature-mechanization.cjs --feature TF-E2-M-C --implementation",
+    "docs:feature-mechanization:tf-e2-m-d": "node scripts/check-feature-mechanization.cjs --feature TF-E2-M-D",
     "docs:feature-mechanization:implementation": "node scripts/check-feature-mechanization.cjs --implementation",
     "test:docs:feature-mechanization": "node --test scripts/check-feature-mechanization.test.cjs",
     "docs:governance:document-unit-map": "node scripts/generate-governance-document-unit-map.cjs",

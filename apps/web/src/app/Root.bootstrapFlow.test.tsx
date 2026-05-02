@@ -175,6 +175,48 @@ describe('RootShell bootstrap flow', () => {
     }
   });
 
+  it('keeps route readiness pending when the route completes before capabilities settle', async () => {
+    const capability = createResolvedCapability();
+    const pendingCapabilitiesPort: CapabilitiesPort = {
+      loadCapabilities: vi.fn().mockImplementation(
+        () =>
+          new Promise(() => {
+            // Intentionally unresolved so route readiness cannot complete first.
+          })
+      ),
+    };
+    const mounted = await withTestQueryClient(
+      createRootShellNode(
+        capability,
+        ['/canvas'],
+        pendingCapabilitiesPort,
+        <RouteBootstrapProbe
+          registration={CANVAS_ROUTE_BOOTSTRAP_REGISTRATION}
+          presentationState={createCompleteRouteBootstrapPresentation(
+            'Canvas route is ready before capabilities'
+          )}
+        >
+          <div>Canvas route</div>
+        </RouteBootstrapProbe>
+      )
+    );
+
+    try {
+      await expectRouteBootstrapStep({
+        status: 'pending',
+        detail: 'Waiting for runtime capabilities before route readiness.',
+      });
+      expect(bootstrapScreenMocks.setBootstrapStepStatus).not.toHaveBeenCalledWith({
+        step: 'route',
+        status: 'complete',
+        detail: 'Canvas route is ready before capabilities',
+      });
+      expect(bootstrapScreenMocks.completeBootstrapScreen).not.toHaveBeenCalled();
+    } finally {
+      await mounted.cleanup();
+    }
+  });
+
   it('keeps canvas route bootstrap pending until the route presentation seam publishes operability', async () => {
     const capability = createResolvedCapability();
     const mounted = await withTestQueryClient(createRootShellNode(capability, ['/canvas']));
