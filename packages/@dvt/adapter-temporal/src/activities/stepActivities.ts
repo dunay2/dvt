@@ -26,4 +26,10 @@ export type {
   StepInput,
   StepResult,
 } from './activityTypes.js';
+export type {
+  FetchPlanForEngineDispatchInput,
+  FetchPlanForEngineDispatchResult,
+  TemporalPlanArtifactReader,
+} from './temporalPlanArtifactReader.js';
+export { createScopedTemporalPlanArtifactReader } from './temporalPlanArtifactReader.js';
 export { UnsupportedStepKindError } from './activityTypes.js';

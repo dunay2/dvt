@@ -39,6 +39,7 @@ export async function executePlanLayers(args: ExecutePlanLayersArgs): Promise<La
     if (layerIndex !== currentSegment.layerIndex) {
       currentSegment = await segmentActivities.resolveExecutionSegment({
         planRef: args.planRef,
+        ctx: args.ctx,
         layerIndex,
       });
     }

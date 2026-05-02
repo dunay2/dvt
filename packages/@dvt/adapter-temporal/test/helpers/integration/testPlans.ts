@@ -13,6 +13,12 @@ import { createExecutionPlan } from '../contractFixtures.js';
 
 import { RunId } from './runtimeState.js';
 
+const INTEGRATION_PLAN_OWNERSHIP = {
+  tenantId: 't-it',
+  projectId: 'p-it',
+  environmentId: 'test',
+} as const;
+
 export function createPlanRef(
   planId: string,
   planBytes: Uint8Array,
@@ -70,6 +76,7 @@ function createDbtModelStep(
 export function mkPlan(stepCount: number): ExecutionPlan {
   return createExecutionPlan({
     inputHashSha256: sha256Hex(Buffer.from('fixture:it-plan', 'utf-8')),
+    ownership: INTEGRATION_PLAN_OWNERSHIP,
     steps: Array.from({ length: stepCount }, (_, index) => createDbtModelStep(`s-${index + 1}`)),
   });
 }
@@ -77,6 +84,7 @@ export function mkPlan(stepCount: number): ExecutionPlan {
 export function mkLinearPlan(stepCount: number): ExecutionPlan {
   return createExecutionPlan({
     inputHashSha256: sha256Hex(Buffer.from('fixture:it-plan-linear', 'utf-8')),
+    ownership: INTEGRATION_PLAN_OWNERSHIP,
     steps: Array.from({ length: stepCount }, (_, index) =>
       createDbtModelStep(`s-${index + 1}`, index === 0 ? [] : [`s-${index}`])
     ),
@@ -86,6 +94,7 @@ export function mkLinearPlan(stepCount: number): ExecutionPlan {
 export function mkLinearThreeStepPlan(): ExecutionPlan {
   return createExecutionPlan({
     inputHashSha256: sha256Hex(Buffer.from('fixture:it-plan-linear-3', 'utf-8')),
+    ownership: INTEGRATION_PLAN_OWNERSHIP,
     steps: Array.from({ length: 3 }, (_, index) =>
       createDbtModelStep(`s-${index + 1}`, index === 0 ? [] : [`s-${index}`])
     ),
@@ -95,6 +104,7 @@ export function mkLinearThreeStepPlan(): ExecutionPlan {
 export function mkPermanentFailurePlan(): ExecutionPlan {
   return createExecutionPlan({
     inputHashSha256: sha256Hex(Buffer.from('fixture:it-plan-permanent-failure', 'utf-8')),
+    ownership: INTEGRATION_PLAN_OWNERSHIP,
     steps: [createDbtModelStep('s-fail')],
   });
 }
@@ -103,6 +113,7 @@ export function mkPostgresTransformationPlan(schema: string, sinkTable: string):
   return withTransformationRuntimeBinding(
     createExecutionPlan({
       inputHashSha256: sha256Hex(Buffer.from('fixture:it-plan-postgres-transform', 'utf-8')),
+      ownership: INTEGRATION_PLAN_OWNERSHIP,
       steps: [
         {
           stepId: 's-1',

@@ -90,6 +90,26 @@ describe('createTemporalWorkerRuntime SRP boundary', () => {
       expect(source).not.toMatch(/[A-Za-z0-9_$\])}]!\./);
     }
   });
+
+  it('does not expose legacy unscoped plan-store resources in worker runtime composition', () => {
+    for (const fileName of [
+      'runtimeTypes.ts',
+      'temporalWorkerRuntimeResources.ts',
+      'temporalWorkerStores.ts',
+      'temporalWorkerRuntimeHandle.ts',
+    ]) {
+      const source = readRuntimeSource(fileName);
+
+      expect(source).not.toContain('PlanFetcherLike');
+      expect(source).not.toContain('planStore');
+      expect(source).not.toContain('planFetcherFactory');
+    }
+
+    expect(readRuntimeSource('temporalWorkerStores.ts')).toContain('planArtifactReader');
+    expect(readRuntimeSource('temporalWorkerStores.ts')).toContain(
+      'createScopedTemporalPlanArtifactReader'
+    );
+  });
 });
 
 function readRuntimeSource(fileName: string): string {

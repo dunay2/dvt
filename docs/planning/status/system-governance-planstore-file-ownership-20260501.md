@@ -22,8 +22,8 @@ The global exhaustive projections are
 
 ## Totals
 
-- Repository tracked files: 4024
-- Files now governed by `SYS-PLANSTORE-*` units: 107
+- Repository tracked files: 4044
+- Files now governed by `SYS-PLANSTORE-*` units: 110
 - Ungoverned files: 0, enforced by `pnpm docs:governance:unit-coverage`
 
 ## Unit Counts
@@ -34,9 +34,9 @@ The global exhaustive projections are
 | `SYS-PLANSTORE-ARTIFACTS-PORTS`      |    23 | `review` | `packages/@dvt/artifacts`                                |
 | `SYS-PLANSTORE-POSTGRES`             |    16 | `drift`  | `packages/@dvt/adapter-postgres`                         |
 | `SYS-PLANSTORE-API-COMPOSITION`      |    20 | `drift`  | `apps/api`                                               |
-| `SYS-PLANSTORE-TEMPORAL-COMPOSITION` |     9 | `legacy` | `apps/temporal-worker`, `packages/@dvt/adapter-temporal` |
+| `SYS-PLANSTORE-TEMPORAL-COMPOSITION` |    11 | `review` | `apps/temporal-worker`, `packages/@dvt/adapter-temporal` |
 | `SYS-PLANSTORE-ENGINE-FETCH`         |     5 | `drift`  | `packages/@dvt/engine`                                   |
-| `SYS-PLANSTORE-DOCS-RISK`            |    31 | `review` | docs, ADRs, evidence, risk, reviews                      |
+| `SYS-PLANSTORE-DOCS-RISK`            |    32 | `review` | docs, ADRs, evidence, risk, reviews                      |
 
 ## File Ownership
 
@@ -107,6 +107,7 @@ The global exhaustive projections are
 | `SYS-PLANSTORE-DOCS-RISK`            | `docs/planning/closeouts/20260406-s08-4c-fail-closed-admission-coverage-closeout.md`                            |
 | `SYS-PLANSTORE-DOCS-RISK`            | `docs/planning/closeouts/20260406-s08-5c-plugin-compatibility-fingerprint-closeout.md`                          |
 | `SYS-PLANSTORE-DOCS-RISK`            | `docs/planning/closeouts/20260427-temporal-planref-spec-config-hardening-closeout.md`                           |
+| `SYS-PLANSTORE-DOCS-RISK`            | `docs/planning/closeouts/20260502-s08-temporal-legacy-removal-closeout.md`                                      |
 | `SYS-PLANSTORE-DOCS-RISK`            | `docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-record-plan-store-execution-plan-20260402.md` |
 | `SYS-PLANSTORE-DOCS-RISK`            | `docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md`       |
 | `SYS-PLANSTORE-DOCS-RISK`            | `docs/planning/reviews/20260402-s08-plan-record-plan-store-gap-review.md`                                       |
@@ -145,7 +146,9 @@ The global exhaustive projections are
 | `SYS-PLANSTORE-TEMPORAL-COMPOSITION` | `apps/temporal-worker/src/runtime/temporalWorkerRuntimeResources.ts`                                            |
 | `SYS-PLANSTORE-TEMPORAL-COMPOSITION` | `apps/temporal-worker/src/runtime/temporalWorkerStores.ts`                                                      |
 | `SYS-PLANSTORE-TEMPORAL-COMPOSITION` | `apps/temporal-worker/test/runtime/createTemporalWorkerRuntime.srp.architecture.test.ts`                        |
+| `SYS-PLANSTORE-TEMPORAL-COMPOSITION` | `packages/@dvt/adapter-temporal/src/activities/temporalPlanArtifactReader.ts`                                   |
 | `SYS-PLANSTORE-TEMPORAL-COMPOSITION` | `packages/@dvt/adapter-temporal/src/temporalPlanRefCapacitySlaPolicy.ts`                                        |
 | `SYS-PLANSTORE-TEMPORAL-COMPOSITION` | `packages/@dvt/adapter-temporal/src/workflows/workflowArtifactHelpers.ts`                                       |
+| `SYS-PLANSTORE-TEMPORAL-COMPOSITION` | `packages/@dvt/adapter-temporal/test/temporalPlanArtifactReader.test.ts`                                        |
 | `SYS-PLANSTORE-TEMPORAL-COMPOSITION` | `packages/@dvt/adapter-temporal/test/temporalPlanRefCapacitySlaPolicy.test.ts`                                  |
 | `SYS-PLANSTORE-TEMPORAL-COMPOSITION` | `packages/@dvt/adapter-temporal/test/workflow-component-semantics.architecture.test.ts`                         |

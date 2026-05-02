@@ -41,6 +41,7 @@ export function createActivities(
   emitEvent(input: EmitEventInput): Promise<void>;
   resolveExecutionSegment(input: {
     planRef: EmitEventInput['planRef'];
+    ctx: EmitEventInput['ctx'];
     layerIndex: number;
   }): Promise<ResolvedExecutionSegment>;
 } {
@@ -109,14 +110,18 @@ export function createActivities(
 
     async resolveExecutionSegment(input): Promise<ResolvedExecutionSegment> {
       const validatedPlanRef = parsePlanRef(input.planRef);
-      const { plan } = await deps.integrity.fetchAndValidate(validatedPlanRef, deps.fetcher);
+      const ctx = parseResolvedRunContext(input.ctx);
+      const { plan } = await deps.planArtifactReader.fetchForEngineDispatch({
+        planRef: validatedPlanRef,
+        ctx,
+      });
       return resolveExecutionSegmentFromPlan(plan, input.layerIndex);
     },
   };
 }
 
 function assertSegmentResolverConfigured(deps: ActivityDeps): void {
-  if (deps.fetcher === undefined || deps.integrity === undefined) {
+  if (deps.planArtifactReader === undefined) {
     throw new Error('PLAN_SEGMENT_RESOLVER_NOT_CONFIGURED');
   }
 }

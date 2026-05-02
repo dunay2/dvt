@@ -87,8 +87,7 @@ function mkActivityDeps(): {
     startRunIntentId: ReturnType<typeof vi.fn>;
     eventId: ReturnType<typeof vi.fn>;
   };
-  fetcher: { fetch: ReturnType<typeof vi.fn> };
-  integrity: { fetchAndValidate: ReturnType<typeof vi.fn> };
+  planArtifactReader: { fetchForEngineDispatch: ReturnType<typeof vi.fn> };
 } {
   return {
     runStateCommandPort: {
@@ -101,14 +100,8 @@ function mkActivityDeps(): {
       startRunIntentId: vi.fn(() => 'start-run-intent'),
       eventId: vi.fn(() => 'event-id'),
     },
-    fetcher: {
-      fetch: vi.fn(async () => ({
-        bytes: new Uint8Array(),
-        executionPolicy: {},
-      })),
-    },
-    integrity: {
-      fetchAndValidate: vi.fn(async () => ({
+    planArtifactReader: {
+      fetchForEngineDispatch: vi.fn(async () => ({
         plan: {
           schemaVersion: '1.0',
           planId: 'plan-1',

@@ -34,11 +34,15 @@ export function createTemporalWorkerRuntimeResources(
     TEMPORAL_MAX_CONTINUE_AS_NEW_PAYLOAD_BYTES: env.TEMPORAL_MAX_CONTINUE_AS_NEW_PAYLOAD_BYTES,
     TEMPORAL_CONTINUE_AS_NEW_AFTER_LAYERS: env.TEMPORAL_CONTINUE_AS_NEW_AFTER_LAYERS,
   });
-  const { stateStore, planStore } = createTemporalWorkerStores(env, options, runMigrations);
+  const { stateStore, planArtifactReader } = createTemporalWorkerStores(
+    env,
+    options,
+    runMigrations
+  );
   const { activityDeps, runStateCircuit } = createTemporalWorkerActivityDeps(
     env,
     stateStore,
-    planStore
+    planArtifactReader
   );
   const dbtProfile = createTemporalWorkerDbtProfile(env, options);
   const pluginProfiles = dbtProfile.pluginProfile === undefined ? [] : [dbtProfile.pluginProfile];
@@ -49,7 +53,7 @@ export function createTemporalWorkerRuntimeResources(
     runMigrations,
     temporalConfig,
     stateStore,
-    planStore,
+    planArtifactReader,
     activityDeps,
     runStateCircuit,
     ...(dbtProfile.dbtAvailabilityProbe === undefined

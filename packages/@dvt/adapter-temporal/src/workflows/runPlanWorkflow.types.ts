@@ -44,6 +44,7 @@ export type WorkflowActivitiesPort = {
   }): Promise<void>;
   resolveExecutionSegment(input: {
     planRef: WorkflowPlanRef;
+    ctx: WorkflowCtx;
     layerIndex: number;
   }): Promise<ResolvedExecutionSegment>;
 };

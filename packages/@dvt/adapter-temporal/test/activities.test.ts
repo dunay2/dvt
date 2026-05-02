@@ -11,6 +11,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   createActivities,
+  createScopedTemporalPlanArtifactReader,
   DEFAULT_STEP_ACTIVITY_REGISTRY,
   type Activities,
   type ActivityDeps,
@@ -97,6 +98,11 @@ const RUN_EXECUTION_CONTEXT: RunExecutionContext = {
 
 const SEGMENT_RESOLVER_PLAN = createExecutionPlan({
   steps: [{ stepId: 'segment-step', kind: 'DBT_TEST', dependsOn: [] }],
+  ownership: {
+    tenantId: CTX.tenantId,
+    projectId: CTX.projectId,
+    environmentId: CTX.environmentId,
+  },
 });
 
 const DEFAULT_LOGICAL_ATTEMPT_ID = 1;
@@ -278,14 +284,22 @@ class FailingFirstAppendStateStore extends TestTxStore {
 
 interface TestActivityDeps extends ActivityDeps {
   testStore: TestTxStore;
+  fetcher?: Parameters<typeof createScopedTemporalPlanArtifactReader>[0]['fetcher'];
+  integrity?: Parameters<typeof createScopedTemporalPlanArtifactReader>[0]['integrity'];
 }
 
 type SetupActivitiesOptions = Readonly<{
   store?: TestTxStore;
   stepExecutors?: readonly StepExecutor[];
   stepActivitiesByKind?: ReadonlyMap<string, StepActivity>;
-  depOverrides?: Partial<ActivityDeps>;
+  depOverrides?: ActivityDepOverrides;
 }>;
+
+type ActivityDepOverrides = Partial<ActivityDeps> &
+  Partial<{
+    fetcher: Parameters<typeof createScopedTemporalPlanArtifactReader>[0]['fetcher'];
+    integrity: Parameters<typeof createScopedTemporalPlanArtifactReader>[0]['integrity'];
+  }>;
 
 class FakeRunExecutionContextReader implements IRunExecutionContextReader {
   constructor(private readonly runExecutionContext: RunExecutionContext = RUN_EXECUTION_CONTEXT) {}
@@ -322,23 +336,27 @@ class RecordingDbtPluginRunner implements DbtPluginRunner {
 
 function buildDeps(
   store: TestTxStore = new TestTxStore(),
-  overrides: Partial<ActivityDeps> = {}
+  overrides: ActivityDepOverrides = {}
 ): TestActivityDeps {
   const runStateCommandPort: RunStateCommandPort = {
     bootstrapRun: (input) => store.bootstrapRunTx(input),
     appendTransitions: (runId, events) => store.appendAndEnqueueTx(runId, events),
   };
 
-  const fetcher = Object.hasOwn(overrides, 'fetcher')
-    ? overrides.fetcher
+  const legacyOverrides = overrides as Partial<{
+    fetcher: Parameters<typeof createScopedTemporalPlanArtifactReader>[0]['fetcher'];
+    integrity: Parameters<typeof createScopedTemporalPlanArtifactReader>[0]['integrity'];
+  }>;
+  const fetcher = Object.hasOwn(legacyOverrides, 'fetcher')
+    ? legacyOverrides.fetcher
     : {
         fetch: async () => ({
           bytes: new Uint8Array(),
           executionPolicy: {},
         }),
       };
-  const integrity = Object.hasOwn(overrides, 'integrity')
-    ? overrides.integrity
+  const integrity = Object.hasOwn(legacyOverrides, 'integrity')
+    ? legacyOverrides.integrity
     : {
         fetchAndValidate: async () => ({
           plan: SEGMENT_RESOLVER_PLAN,
@@ -351,6 +369,10 @@ function buildDeps(
     testStore: store,
     clock: new TestClock(),
     idempotency: new TestIdempotencyKeyBuilder(),
+    planArtifactReader: createScopedTemporalPlanArtifactReader({
+      fetcher,
+      integrity,
+    }),
     fetcher,
     integrity,
     ...(overrides.getEngineAttemptId === undefined
@@ -453,8 +475,7 @@ describe('stepActivities', () => {
   it('fails fast when segment resolver deps are missing', () => {
     const invalidDeps = {
       ...buildDeps(),
-      fetcher: undefined,
-      integrity: undefined,
+      planArtifactReader: undefined,
     } as unknown as ActivityDeps;
 
     expect(() => createActivities(invalidDeps)).toThrow(
@@ -504,6 +525,7 @@ describe('stepActivities', () => {
       acts.resolveExecutionSegment({
         planRef,
         layerIndex: 0,
+        ctx: CTX,
       })
     ).rejects.toThrow('PLAN_INTEGRITY_VALIDATION_FAILED');
   });

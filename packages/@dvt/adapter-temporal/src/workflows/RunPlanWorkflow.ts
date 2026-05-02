@@ -63,6 +63,7 @@ export async function runPlanWorkflow(input: RunPlanWorkflowInput): Promise<RunP
   try {
     const firstSegment = await segmentActivities.resolveExecutionSegment({
       planRef,
+      ctx: input.ctx,
       layerIndex: ctrl.nextLayerIndex,
     });
     runtimeExecutor = firstSegment.runtimeExecutor;

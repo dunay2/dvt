@@ -93,6 +93,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [R-20260426-START-RUN-INTENT-ROLLBACK-ASYMMETRY](r-20260426-start-run-intent-rollback-asymmetry.md)
 - [RC-C1 boundary hardening could regress if typed not-found errors drift back to string parsing](R-20260331-RC-C1-BOUNDARY-LEGACY-HARDENING.yaml)
 - [RC-G1 contract ownership migration can drift between tracker, proposal, and package moves](R-20260402-RC-G1-CONTRACT-OWNERSHIP-EXECUTION-DRIFT.yaml)
+- [Residual S08 scoped dispatch depends on upstream plan-record migration](r-20260502-s08-temporal-dispatch-scope.yaml)
 - [Riesgo de inconsistencia en guards de transición y shape-checking entre run-domain y](R-20260404-guards-alignment-adapter-postgres.yaml)
 - [Run execution context provenance drift at start-run boundary](R-20260403-RUN-EXECUTION-CONTEXT-BOUNDARY.yaml)
 - [Run read evidence derivation can regress if attempt authority and event-history scope diverge](R-20260409-TF-C2-B-RUN-READ-EVIDENCE-ATTEMPT-SAFETY.yaml)

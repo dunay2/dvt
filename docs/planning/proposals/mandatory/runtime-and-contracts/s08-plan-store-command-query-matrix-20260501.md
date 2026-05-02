@@ -557,3 +557,280 @@ authorization proof.
 - `pnpm docs:sync`
 - `pnpm exec markdownlint-cli2 "docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md"`
 - `pnpm verify:prepush`
+
+## Feature Mechanization Manifest: S08 Temporal Legacy Removal
+
+This manifest binds the Temporal local S08 removal slice to its exact files,
+command/query rail, DDD owner, and declared symbols. It exists so implementation
+mode cannot accidentally treat the slice as part of unrelated feature manifests.
+
+```feature-mechanization
+version: 1
+featureId: S08-TEMPORAL-LEGACY-REMOVAL
+mechanizationStatus: implemented
+noHumanDecisionsRemaining: true
+implementationPlan: docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+componentGuides:
+  - docs/architecture/components/engine/adapters/temporal/temporal-planref-workflow-boundary.md
+  - docs/planning/status/system-operations-inventory-20260501.md
+userStories:
+  - docs/planning/closeouts/20260502-s08-temporal-legacy-removal-closeout.md
+governingSources:
+  - AGENTS.md
+  - docs/planning/status/governance-document-rule-inventory.md
+  - docs/guides/ai-work-protocol.md
+  - docs/architecture/command-query-rail-governance.md
+  - docs/architecture/fowler-opportunity-planning-governance.md
+  - docs/adr/ADR-0031-tenant-isolation.md
+  - docs/adr/ADR-0034-bounded-context-ports.md
+  - docs/adr/ADR-0039-hexagonal-solid-remediation.md
+  - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
+  - docs/adr/adr-0052-planref-continuation-safety.md
+allowedImplementationSurfaces:
+  - apps/temporal-worker/src/runtime/runtimeTypes.ts
+  - apps/temporal-worker/src/runtime/temporalWorkerLifecycle.ts
+  - apps/temporal-worker/src/runtime/temporalWorkerRuntimeHandle.ts
+  - apps/temporal-worker/src/runtime/temporalWorkerRuntimeResources.ts
+  - apps/temporal-worker/src/runtime/temporalWorkerStores.ts
+  - apps/temporal-worker/test/runtime/createTemporalWorkerRuntime.srp.architecture.test.ts
+  - docs/evidence/ed-20260502-s08-temporal-legacy-removal.md
+  - docs/evidence/index.md
+  - docs/planning/closeouts/20260502-s08-temporal-legacy-removal-closeout.md
+  - docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+  - docs/planning/status/**
+  - docs/risk-register/quality/index.md
+  - docs/risk-register/quality/r-20260502-s08-temporal-dispatch-scope.yaml
+  - packages/@dvt/adapter-temporal/src/activities/activityFactory.ts
+  - packages/@dvt/adapter-temporal/src/activities/activityTypes.ts
+  - packages/@dvt/adapter-temporal/src/activities/stepActivities.ts
+  - packages/@dvt/adapter-temporal/src/activities/temporalPlanArtifactReader.ts
+  - packages/@dvt/adapter-temporal/src/index.ts
+  - packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts
+  - packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.layers.ts
+  - packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.types.ts
+  - packages/@dvt/adapter-temporal/test/TemporalWorkerHost.lifecycle.test.ts
+  - packages/@dvt/adapter-temporal/test/activities.test.ts
+  - packages/@dvt/adapter-temporal/test/activityDeps.typecheck.ts
+  - packages/@dvt/adapter-temporal/test/helpers/contractFixtures.ts
+  - packages/@dvt/adapter-temporal/test/helpers/integration/testActivities.ts
+  - packages/@dvt/adapter-temporal/test/helpers/integration/testPlans.ts
+  - packages/@dvt/adapter-temporal/test/temporalPlanArtifactReader.test.ts
+  - packages/@dvt/adapter-temporal/test/workflow-component-semantics.architecture.test.ts
+forbiddenImplementationSurfaces:
+  - apps/api/**
+  - apps/web/**
+  - packages/@dvt/adapter-postgres/**
+  - packages/@dvt/contracts/**
+  - packages/@dvt/engine/**
+  - packages/@dvt/planner/**
+commandQueryRails:
+  - name: FetchPlanForEngineDispatch
+    type: query
+    dddOwner: Temporal plan-store composition activity boundary
+domainObjects:
+  - name: TemporalPlanArtifactReader
+    type: application query gateway
+    owner: SYS-PLANSTORE-TEMPORAL-COMPOSITION
+  - name: FetchPlanForEngineDispatch
+    type: scoped dispatch materialization query
+    owner: SYS-PLANSTORE-TEMPORAL-COMPOSITION
+fowlerSignals:
+  - Hidden authority
+  - Boundary drift
+  - Responsibility overload
+architectureGuards:
+  - pnpm --filter @dvt/adapter-temporal test -- test/temporalPlanArtifactReader.test.ts test/workflow-component-semantics.architecture.test.ts test/activities.test.ts
+  - pnpm --filter dvt-temporal-worker test -- test/runtime/createTemporalWorkerRuntime.srp.architecture.test.ts
+cypressFlows:
+  - N/A - Temporal worker and adapter boundary slice
+completionGate:
+  - pnpm --filter @dvt/adapter-temporal test -- test/temporalPlanArtifactReader.test.ts test/workflow-component-semantics.architecture.test.ts test/activities.test.ts
+  - pnpm --filter dvt-temporal-worker test
+  - pnpm --filter @dvt/adapter-temporal typecheck
+  - pnpm --filter dvt-temporal-worker typecheck
+  - pnpm lint:determinism
+  - pnpm verify:prepush
+redGreenCycles:
+  - id: temporal-dispatch-scope-query
+    redTest: pnpm --filter @dvt/adapter-temporal test -- test/temporalPlanArtifactReader.test.ts test/workflow-component-semantics.architecture.test.ts
+    expectedFailure: Temporal dispatch materialization lacks a scoped reader and workflow segment resolution does not pass ctx.
+    patchSurfaces:
+      - packages/@dvt/adapter-temporal/src/activities/temporalPlanArtifactReader.ts
+      - packages/@dvt/adapter-temporal/src/activities/activityFactory.ts
+      - packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts
+    greenTest: pnpm --filter @dvt/adapter-temporal test -- test/temporalPlanArtifactReader.test.ts test/workflow-component-semantics.architecture.test.ts test/activities.test.ts
+  - id: temporal-worker-runtime-legacy-removal
+    redTest: pnpm --filter dvt-temporal-worker test -- test/runtime/createTemporalWorkerRuntime.srp.architecture.test.ts
+    expectedFailure: Temporal worker runtime still exposes PlanFetcherLike, planFetcherFactory, or planStore.
+    patchSurfaces:
+      - apps/temporal-worker/src/runtime/runtimeTypes.ts
+      - apps/temporal-worker/src/runtime/temporalWorkerStores.ts
+      - apps/temporal-worker/src/runtime/temporalWorkerRuntimeResources.ts
+    greenTest: pnpm --filter dvt-temporal-worker test -- test/runtime/createTemporalWorkerRuntime.srp.architecture.test.ts
+symbols:
+  - name: createScopedTemporalPlanArtifactReader
+    path: packages/@dvt/adapter-temporal/src/activities/stepActivities.ts
+    dddOwner: Temporal adapter public activity exports
+    cqRails:
+      - FetchPlanForEngineDispatch
+    fowlerSignals:
+      - Boundary drift
+    architectureGuard: packages/@dvt/adapter-temporal/test/workflow-component-semantics.architecture.test.ts
+    cypressCoverage: N/A - Temporal activity boundary
+    unitTests:
+      - packages/@dvt/adapter-temporal/test/temporalPlanArtifactReader.test.ts
+  - name: CreateScopedTemporalPlanArtifactReaderArgs
+    path: packages/@dvt/adapter-temporal/src/activities/temporalPlanArtifactReader.ts
+    dddOwner: Temporal plan-store composition activity boundary
+    cqRails:
+      - FetchPlanForEngineDispatch
+    fowlerSignals:
+      - Boundary drift
+    architectureGuard: packages/@dvt/adapter-temporal/test/workflow-component-semantics.architecture.test.ts
+    cypressCoverage: N/A - Temporal activity boundary
+    unitTests:
+      - packages/@dvt/adapter-temporal/test/temporalPlanArtifactReader.test.ts
+  - name: FetchPlanForEngineDispatchInput
+    path: packages/@dvt/adapter-temporal/src/activities/temporalPlanArtifactReader.ts
+    dddOwner: Temporal plan-store composition activity boundary
+    cqRails:
+      - FetchPlanForEngineDispatch
+    fowlerSignals:
+      - Hidden authority
+    architectureGuard: packages/@dvt/adapter-temporal/test/workflow-component-semantics.architecture.test.ts
+    cypressCoverage: N/A - Temporal activity boundary
+    unitTests:
+      - packages/@dvt/adapter-temporal/test/temporalPlanArtifactReader.test.ts
+  - name: FetchPlanForEngineDispatchResult
+    path: packages/@dvt/adapter-temporal/src/activities/temporalPlanArtifactReader.ts
+    dddOwner: Temporal plan-store composition activity boundary
+    cqRails:
+      - FetchPlanForEngineDispatch
+    fowlerSignals:
+      - Hidden authority
+    architectureGuard: packages/@dvt/adapter-temporal/test/workflow-component-semantics.architecture.test.ts
+    cypressCoverage: N/A - Temporal activity boundary
+    unitTests:
+      - packages/@dvt/adapter-temporal/test/temporalPlanArtifactReader.test.ts
+  - name: TemporalPlanArtifactReader
+    path: packages/@dvt/adapter-temporal/src/activities/temporalPlanArtifactReader.ts
+    dddOwner: Temporal plan-store composition activity boundary
+    cqRails:
+      - FetchPlanForEngineDispatch
+    fowlerSignals:
+      - Boundary drift
+    architectureGuard: packages/@dvt/adapter-temporal/test/workflow-component-semantics.architecture.test.ts
+    cypressCoverage: N/A - Temporal activity boundary
+    unitTests:
+      - packages/@dvt/adapter-temporal/test/temporalPlanArtifactReader.test.ts
+  - name: assertPlanOwnershipMatchesContext
+    path: packages/@dvt/adapter-temporal/src/activities/temporalPlanArtifactReader.ts
+    dddOwner: Temporal plan-store composition activity boundary
+    cqRails:
+      - FetchPlanForEngineDispatch
+    fowlerSignals:
+      - Hidden authority
+    architectureGuard: packages/@dvt/adapter-temporal/test/workflow-component-semantics.architecture.test.ts
+    cypressCoverage: N/A - Temporal activity boundary
+    unitTests:
+      - packages/@dvt/adapter-temporal/test/temporalPlanArtifactReader.test.ts
+  - name: createScopedTemporalPlanArtifactReader
+    path: packages/@dvt/adapter-temporal/src/activities/temporalPlanArtifactReader.ts
+    dddOwner: Temporal plan-store composition activity boundary
+    cqRails:
+      - FetchPlanForEngineDispatch
+    fowlerSignals:
+      - Boundary drift
+    architectureGuard: packages/@dvt/adapter-temporal/test/workflow-component-semantics.architecture.test.ts
+    cypressCoverage: N/A - Temporal activity boundary
+    unitTests:
+      - packages/@dvt/adapter-temporal/test/temporalPlanArtifactReader.test.ts
+  - name: ActivityDepOverrides
+    path: packages/@dvt/adapter-temporal/test/activities.test.ts
+    dddOwner: Temporal adapter test fixture
+    cqRails:
+      - FetchPlanForEngineDispatch
+    fowlerSignals:
+      - Coverage refinement
+    architectureGuard: packages/@dvt/adapter-temporal/test/workflow-component-semantics.architecture.test.ts
+    cypressCoverage: N/A - unit test fixture
+    unitTests:
+      - packages/@dvt/adapter-temporal/test/activities.test.ts
+  - name: INTEGRATION_PLAN_OWNERSHIP
+    path: packages/@dvt/adapter-temporal/test/helpers/integration/testPlans.ts
+    dddOwner: Temporal adapter integration fixture
+    cqRails:
+      - FetchPlanForEngineDispatch
+    fowlerSignals:
+      - Coverage refinement
+    architectureGuard: packages/@dvt/adapter-temporal/test/workflow-component-semantics.architecture.test.ts
+    cypressCoverage: N/A - integration fixture
+    unitTests:
+      - packages/@dvt/adapter-temporal/test/activities.test.ts
+  - name: BASE_PLAN
+    path: packages/@dvt/adapter-temporal/test/temporalPlanArtifactReader.test.ts
+    dddOwner: Temporal plan artifact reader test fixture
+    cqRails:
+      - FetchPlanForEngineDispatch
+    fowlerSignals:
+      - Coverage refinement
+    architectureGuard: packages/@dvt/adapter-temporal/test/workflow-component-semantics.architecture.test.ts
+    cypressCoverage: N/A - unit test fixture
+    unitTests:
+      - packages/@dvt/adapter-temporal/test/temporalPlanArtifactReader.test.ts
+  - name: EXECUTION_POLICY
+    path: packages/@dvt/adapter-temporal/test/temporalPlanArtifactReader.test.ts
+    dddOwner: Temporal plan artifact reader test fixture
+    cqRails:
+      - FetchPlanForEngineDispatch
+    fowlerSignals:
+      - Coverage refinement
+    architectureGuard: packages/@dvt/adapter-temporal/test/workflow-component-semantics.architecture.test.ts
+    cypressCoverage: N/A - unit test fixture
+    unitTests:
+      - packages/@dvt/adapter-temporal/test/temporalPlanArtifactReader.test.ts
+  - name: PLAN
+    path: packages/@dvt/adapter-temporal/test/temporalPlanArtifactReader.test.ts
+    dddOwner: Temporal plan artifact reader test fixture
+    cqRails:
+      - FetchPlanForEngineDispatch
+    fowlerSignals:
+      - Coverage refinement
+    architectureGuard: packages/@dvt/adapter-temporal/test/workflow-component-semantics.architecture.test.ts
+    cypressCoverage: N/A - unit test fixture
+    unitTests:
+      - packages/@dvt/adapter-temporal/test/temporalPlanArtifactReader.test.ts
+  - name: PLAN_REF
+    path: packages/@dvt/adapter-temporal/test/temporalPlanArtifactReader.test.ts
+    dddOwner: Temporal plan artifact reader test fixture
+    cqRails:
+      - FetchPlanForEngineDispatch
+    fowlerSignals:
+      - Coverage refinement
+    architectureGuard: packages/@dvt/adapter-temporal/test/workflow-component-semantics.architecture.test.ts
+    cypressCoverage: N/A - unit test fixture
+    unitTests:
+      - packages/@dvt/adapter-temporal/test/temporalPlanArtifactReader.test.ts
+  - name: createIntegrityValidator
+    path: packages/@dvt/adapter-temporal/test/temporalPlanArtifactReader.test.ts
+    dddOwner: Temporal plan artifact reader test fixture
+    cqRails:
+      - FetchPlanForEngineDispatch
+    fowlerSignals:
+      - Coverage refinement
+    architectureGuard: packages/@dvt/adapter-temporal/test/workflow-component-semantics.architecture.test.ts
+    cypressCoverage: N/A - unit test fixture
+    unitTests:
+      - packages/@dvt/adapter-temporal/test/temporalPlanArtifactReader.test.ts
+  - name: createUnusedFetcher
+    path: packages/@dvt/adapter-temporal/test/temporalPlanArtifactReader.test.ts
+    dddOwner: Temporal plan artifact reader test fixture
+    cqRails:
+      - FetchPlanForEngineDispatch
+    fowlerSignals:
+      - Coverage refinement
+    architectureGuard: packages/@dvt/adapter-temporal/test/workflow-component-semantics.architecture.test.ts
+    cypressCoverage: N/A - unit test fixture
+    unitTests:
+      - packages/@dvt/adapter-temporal/test/temporalPlanArtifactReader.test.ts
+```

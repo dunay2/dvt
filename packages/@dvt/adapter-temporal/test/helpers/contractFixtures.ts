@@ -104,6 +104,7 @@ export function createExecutionPlan(args: {
   steps: ExecutionPlan['steps'];
   inputHashSha256?: string;
   createdAtIso?: string;
+  ownership?: ExecutionPlan['metadata']['ownership'];
   observability?: ExecutionPlan['observability'];
 }): ExecutionPlan {
   const inputHashSha256 = args.inputHashSha256 ?? 'a'.repeat(64);
@@ -125,6 +126,7 @@ export function createExecutionPlan(args: {
       contractVersion: CURRENT_EXECUTION_PLAN_CONTRACT_VERSION,
       inputHashSha256,
       createdAtIso: args.createdAtIso ?? '2026-04-20T00:00:00.000Z',
+      ...(args.ownership === undefined ? {} : { ownership: args.ownership }),
     },
     ...(args.observability === undefined ? {} : { observability: args.observability }),
     steps: args.steps,
