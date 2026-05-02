@@ -8481,9 +8481,9 @@ files:
       - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-BA6A126B9428
     pathHash: af3958a931a9254e7773c6b5984825f5a162ffad7104476ca116cfc98b874c88
-    contentHash: c020bab91f58d534a0103a6871a4f4a23936e26faddf5ae4e00f5ff8a4d80535
+    contentHash: 4617fdc9651729d9115f09770641604adbddc6cd9acc8e1422f3a0159aa79b89
     governanceHash: f78fcd00805e3ac4bb31cf806a152b0de73605e5e53a95d07d07aa84ebe026ac
-    stateFingerprint: bbde603cecc1a8b2b5083b7aa77344a41bba9a6aed81fbe49546467d498bfe1d
+    stateFingerprint: 19ff177574909f91b1668d2ba4eb29c5dba514b0774f734abd223a7ee6611809
     path: apps/api/test/application/services/applicationArchitectureAst.support.ts
     owningUnit: SYS-API-TESTS
     rootUnit: SYS-DVT
@@ -11778,9 +11778,9 @@ files:
       - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-EA0F53FD16EE
     pathHash: 88b17ab2dc5dd305fe02c15bb7308590d0898ed64ea61b935c81e0c6f50bb2d1
-    contentHash: 2b7b46f906afb48d8867582b007b744634903d138e3b57d1ad040f8c85975aa3
+    contentHash: 3b2ac543f76f119222d971d1bbcea1e7ce603f54e811fd89fd449ef6e7ca11e2
     governanceHash: f78fcd00805e3ac4bb31cf806a152b0de73605e5e53a95d07d07aa84ebe026ac
-    stateFingerprint: d31d919e552f76340b79ea3b39d05042e866b9d0caac09eada84dcf608a3a417
+    stateFingerprint: 2f79eeeda7ca9383c441513817a83eb44c0305aa2d48b41dba911e4186ef1112
     path: apps/api/test/modules/protectedRuntimeAndPlanCompileArchitecture.cases.ts
     owningUnit: SYS-API-TESTS
     rootUnit: SYS-DVT
