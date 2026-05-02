@@ -13,6 +13,9 @@ import { setupCanvasControllerHarness } from './useCanvasController.test.harness
 import { useCanvasLayoutPersistence } from './useCanvasLayoutPersistence';
 
 type LayoutPersistenceArgs = Parameters<typeof useCanvasLayoutPersistence>[0];
+type NodeDragController = {
+  handleNodeDrag?: (event: never, draggedNode: never, allNodes: never) => void;
+};
 
 function LayoutPersistenceProbe({ args }: Readonly<{ args: LayoutPersistenceArgs }>): null {
   useCanvasLayoutPersistence(args);
@@ -58,7 +61,7 @@ describe('useCanvasController persistence guards', () => {
     harness.cleanup();
   });
 
-  it('does not persist node positions while graph query is pending', async () => {
+  it('persists node positions while graph query is pending after layout hydration', async () => {
     harness.mocks.useQuery.mockReturnValue({
       data: harness.state.graphData,
       isPending: true,
@@ -69,7 +72,7 @@ describe('useCanvasController persistence guards', () => {
     await act(async () => {
       harness.getLatestResult()?.handleNodeDragStop?.(
         {} as never,
-        {} as never,
+        { id: 'node_1', position: { x: 10, y: 20 } } as never,
         [
           { id: 'node_1', position: { x: 10, y: 20 } },
           { id: 'node_2', position: { x: 40, y: 80 } },
@@ -77,7 +80,52 @@ describe('useCanvasController persistence guards', () => {
       );
     });
 
+    expect(harness.state.store.setCanvasNodePositions).toHaveBeenCalledWith(
+      'tenant-a::project-a::dev',
+      {
+        node_1: { x: 10, y: 20 },
+        node_2: { x: 40, y: 80 },
+      }
+    );
+  });
+
+  it('queues a drag-stop payload until layout hydration settles', async () => {
+    harness.state.store._hasHydrated = false;
+    harness.mocks.useQuery.mockReturnValue({
+      data: harness.state.graphData,
+      isPending: false,
+      isError: false,
+    });
+    await harness.renderProbe();
+
+    await act(async () => {
+      harness.getLatestResult()?.handleNodeDragStop?.(
+        {} as never,
+        { id: 'node_1', position: { x: 225, y: 210 } } as never,
+        [
+          { id: 'node_1', position: { x: 0, y: 0 } },
+          { id: 'node_2', position: { x: 100, y: 0 } },
+        ] as never
+      );
+    });
+
     expect(harness.state.store.setCanvasNodePositions).not.toHaveBeenCalled();
+
+    harness.state.store._hasHydrated = true;
+    harness.mocks.useQuery.mockReturnValue({
+      data: harness.state.graphData,
+      isPending: false,
+      isError: false,
+    });
+    await harness.renderProbe();
+
+    expect(harness.state.store.setCanvasNodePositions).toHaveBeenCalledWith(
+      'tenant-a::project-a::dev',
+      {
+        node_1: { x: 225, y: 210 },
+        node_2: { x: 100, y: 0 },
+      }
+    );
   });
 
   it('does not persist viewport while graph query is pending', async () => {
@@ -112,6 +160,62 @@ describe('useCanvasController persistence guards', () => {
       {
         node_1: { x: 225, y: 210 },
         node_2: { x: 100, y: 0 },
+      }
+    );
+  });
+
+  it('persists the observed node-drag payload before a drag-stop event is available', async () => {
+    const controller = harness.getLatestResult() as NodeDragController | null;
+
+    await act(async () => {
+      controller?.handleNodeDrag?.(
+        {} as never,
+        { id: 'node_1', position: { x: 225, y: 210 } } as never,
+        [
+          { id: 'node_1', position: { x: 0, y: 0 } },
+          { id: 'node_2', position: { x: 100, y: 0 } },
+        ] as never
+      );
+    });
+
+    expect(harness.state.store.setCanvasNodePositions).toHaveBeenCalledWith(
+      'tenant-a::project-a::dev',
+      {
+        node_1: { x: 225, y: 210 },
+        node_2: { x: 100, y: 0 },
+      }
+    );
+  });
+
+  it('persists settled node-change coordinates through the controller layout rail', async () => {
+    harness.cleanup();
+    harness = await createHarnessWithDraft(
+      buildRemoteDraftRecord({
+        nodeIds: ['node_1', 'node_2'],
+        nodePositions: {
+          node_1: { x: 0, y: 0 },
+          node_2: { x: 250, y: 0 },
+        },
+        edges: [{ sourceId: 'node_1', targetId: 'node_2' }],
+      })
+    );
+
+    await act(async () => {
+      harness.getLatestResult()?.onNodesChange?.([
+        {
+          id: 'node_1',
+          type: 'position',
+          dragging: false,
+          position: { x: 225, y: 210 },
+        },
+      ]);
+    });
+
+    expect(harness.state.store.setCanvasNodePositions).toHaveBeenCalledWith(
+      'tenant-a::project-a::dev',
+      {
+        node_1: { x: 225, y: 210 },
+        node_2: { x: 250, y: 0 },
       }
     );
   });

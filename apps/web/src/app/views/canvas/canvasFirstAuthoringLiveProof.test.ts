@@ -247,6 +247,80 @@ describe('canvasFirstAuthoringLiveProof', () => {
     });
   });
 
+  it('blocks first-node proof for unsupported canvas kinds', () => {
+    expect(
+      deriveCanvasFirstAuthoringLiveProof(
+        baseInput({
+          activeCanvas: { kind: 'sql', title: 'SQL canvas' },
+          createdCanvas: {
+            canvas: { kind: 'sql', title: 'SQL canvas' },
+            saveSettled: true,
+          },
+          createdNode: {
+            node: transformationNode,
+            saveSettled: true,
+          },
+        })
+      )
+    ).toMatchObject({
+      kind: 'blocked',
+      reason: 'unsupported_canvas_kind',
+      blockedCommand: 'CreateCanvasNode',
+    });
+  });
+
+  it('blocks layout persistence before the first node save settles', () => {
+    expect(
+      deriveCanvasFirstAuthoringLiveProof(
+        baseInput({
+          activeCanvas: transformationCanvas,
+          createdCanvas: {
+            canvas: transformationCanvas,
+            saveSettled: true,
+          },
+          createdNode: {
+            node: transformationNode,
+            saveSettled: false,
+          },
+        })
+      )
+    ).toMatchObject({
+      kind: 'blocked',
+      reason: 'node_save_not_settled',
+      blockedCommand: 'PersistCanvasLayout',
+    });
+  });
+
+  it('blocks restored proof when the reloaded draft omits the canvas', () => {
+    expect(
+      deriveCanvasFirstAuthoringLiveProof(
+        baseInput({
+          activeCanvas: transformationCanvas,
+          createdCanvas: {
+            canvas: transformationCanvas,
+            saveSettled: true,
+          },
+          createdNode: {
+            node: transformationNode,
+            saveSettled: true,
+          },
+          persistedLayout,
+          restoredDraft: {
+            canvas: null,
+            nodeIds: ['dvt-source-1'],
+            nodePositions: {
+              'dvt-source-1': { x: 320, y: 180 },
+            },
+          },
+        })
+      )
+    ).toMatchObject({
+      kind: 'blocked',
+      reason: 'restored_canvas_missing',
+      blockedQuery: 'GetWorkspaceGraphDraft',
+    });
+  });
+
   it('blocks restored proof when the reloaded draft omits the created node', () => {
     expect(
       deriveCanvasFirstAuthoringLiveProof(
@@ -272,6 +346,36 @@ describe('canvasFirstAuthoringLiveProof', () => {
       kind: 'blocked',
       reason: 'restored_node_missing',
       blockedQuery: 'GetWorkspaceGraphDraft',
+    });
+  });
+
+  it('blocks restored proof when the reloaded layout omits the persisted node coordinate', () => {
+    expect(
+      deriveCanvasFirstAuthoringLiveProof(
+        baseInput({
+          activeCanvas: transformationCanvas,
+          createdCanvas: {
+            canvas: transformationCanvas,
+            saveSettled: true,
+          },
+          createdNode: {
+            node: transformationNode,
+            saveSettled: true,
+          },
+          persistedLayout,
+          restoredDraft: {
+            canvas: transformationCanvas,
+            nodeIds: ['dvt-source-1'],
+            nodePositions: {
+              'dvt-source-1': { x: 1, y: 2 },
+            },
+          },
+        })
+      )
+    ).toMatchObject({
+      kind: 'blocked',
+      reason: 'restored_layout_missing',
+      blockedQuery: 'GetCanvasLayout',
     });
   });
 

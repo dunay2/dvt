@@ -62,8 +62,7 @@ type CanvasExecutionDefaultsDto = {
   confirmEdgeModal: CanvasController['confirmEdgeModal'];
 };
 
-type CanvasControllerStateDefaults =
-  CanvasWorkbenchDefaultsDto &
+type CanvasControllerStateDefaults = CanvasWorkbenchDefaultsDto &
   CanvasDraftDefaultsDto &
   CanvasExecutionDefaultsDto;
 
@@ -224,6 +223,7 @@ export function buildDefaultCanvasControllerCallbacks(): Pick<
   | 'handleNodeClick'
   | 'onSelectionChange'
   | 'handleViewportChange'
+  | 'handleNodeDrag'
   | 'handleNodeDragStop'
   | 'handleDrop'
   | 'handleDragOver'
@@ -256,6 +256,7 @@ export function buildDefaultCanvasControllerCallbacks(): Pick<
     handleNodeClick: vi.fn(),
     onSelectionChange: vi.fn(),
     handleViewportChange: vi.fn(),
+    handleNodeDrag: vi.fn(),
     handleNodeDragStop: vi.fn(),
     handleDrop: vi.fn(),
     handleDragOver: vi.fn(),

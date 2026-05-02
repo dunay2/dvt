@@ -26,4 +26,25 @@ describe('buildApp composition root smoke', () => {
       });
     });
   });
+
+  it('allows browser preflight for workspace graph draft writes', async () => {
+    await withAppEnv(BASE_APP_ENV, async ({ app }) => {
+      const res = await app.inject({
+        method: 'OPTIONS',
+        url: '/workspace/graph/draft',
+        headers: {
+          origin: 'http://localhost:4174',
+          'access-control-request-method': 'PUT',
+          'access-control-request-headers': 'authorization,content-type,x-tenant-id,x-project-id',
+        },
+      });
+
+      expect(res.statusCode).toBe(204);
+      expect(res.headers['access-control-allow-methods']).toContain('PUT');
+      expect(res.headers['access-control-allow-headers']).toContain('authorization');
+      expect(res.headers['access-control-allow-headers']).toContain('content-type');
+      expect(res.headers['access-control-allow-headers']).toContain('x-tenant-id');
+      expect(res.headers['access-control-allow-headers']).toContain('x-project-id');
+    });
+  });
 });

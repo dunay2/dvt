@@ -1,3 +1,5 @@
+/** Owned concern: persist route-local Canvas interaction state and hydration readiness. */
+
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 
@@ -51,7 +53,43 @@ interface CanvasInteractionState {
   setInspectorNode: (nodeId: string | null) => void;
 }
 
+type CanvasInteractionPersistedState = Partial<
+  Pick<
+    CanvasInteractionState,
+    'impactOverlayEnabled' | 'columnLevelLineageEnabled' | 'canvasLayouts'
+  >
+>;
+
 export type { CanvasPosition, CanvasViewportState, WorkspaceCanvasLayout };
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function mergeCanvasInteractionPersistedState(
+  persistedState: unknown,
+  currentState: CanvasInteractionState
+): CanvasInteractionState {
+  const persisted = isRecord(persistedState)
+    ? (persistedState as CanvasInteractionPersistedState)
+    : {};
+
+  return {
+    ...currentState,
+    impactOverlayEnabled:
+      typeof persisted.impactOverlayEnabled === 'boolean'
+        ? persisted.impactOverlayEnabled
+        : currentState.impactOverlayEnabled,
+    columnLevelLineageEnabled:
+      typeof persisted.columnLevelLineageEnabled === 'boolean'
+        ? persisted.columnLevelLineageEnabled
+        : currentState.columnLevelLineageEnabled,
+    canvasLayouts: isRecord(persisted.canvasLayouts)
+      ? (persisted.canvasLayouts as Record<string, WorkspaceCanvasLayout>)
+      : currentState.canvasLayouts,
+    _hasHydrated: true,
+  };
+}
 
 export const useCanvasInteractionStore = create<CanvasInteractionState>()(
   persist(
@@ -102,9 +140,7 @@ export const useCanvasInteractionStore = create<CanvasInteractionState>()(
     {
       name: 'dvt-web-canvas-interaction',
       storage: createJSONStorage(() => localStorage),
-      onRehydrateStorage: () => () => {
-        useCanvasInteractionStore.setState({ _hasHydrated: true });
-      },
+      merge: mergeCanvasInteractionPersistedState,
       partialize: (state) => ({
         impactOverlayEnabled: state.impactOverlayEnabled,
         columnLevelLineageEnabled: state.columnLevelLineageEnabled,

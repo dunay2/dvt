@@ -14,6 +14,7 @@ export function renderCanvasCenterSurface(args: RenderCanvasCenterSurfaceArgs) {
     startupBlockState: args.startupBlockState,
     workbenchErrorMessage: args.workbenchErrorMessage,
     canvasDocument: args.canvasDocument,
+    draftSaveStatus: args.draftSaveStatus,
     availableCanvasKinds: args.availableCanvasKinds,
     canEditEdges: args.canEditEdges,
     canOpenSourceImport: args.canOpenSourceImport,

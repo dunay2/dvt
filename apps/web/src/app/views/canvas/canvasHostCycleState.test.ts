@@ -75,6 +75,7 @@ function buildArgs(
     startupBlockState: null,
     workbenchErrorMessage: null,
     canvasDocument: null,
+    draftSaveStatus: 'saved',
     availableCanvasKinds: buildCanvasKinds(),
     canEditEdges: true,
     canOpenSourceImport: true,
@@ -119,6 +120,32 @@ describe('canvasHostCycleState', () => {
       firstNodeHelper: 'Choose a transformation node',
       nodeKinds: buildCanvasKinds()[1]?.nodeKinds,
       onCreateAuthoringNode,
+    });
+  });
+
+  it('keeps first-node creation closed until the first canvas save settles', () => {
+    const cycle = deriveCanvasHostCycleState({
+      ...buildArgs({
+        presentationState: {
+          ...buildArgs().presentationState,
+          routeState: 'empty',
+        },
+        canvasDocument: {
+          kind: 'transformation',
+          title: 'Main canvas',
+        },
+      }),
+      draftSaveStatus: 'saving',
+    });
+
+    expect(cycle).toEqual({
+      kind: 'typed_empty',
+      title: 'Start transformation canvas',
+      message: 'Start transformation authoring',
+      firstNodeLabel: 'Add first transformation node',
+      firstNodeHelper: 'Choose a transformation node',
+      nodeKinds: [],
+      onCreateAuthoringNode: undefined,
     });
   });
 

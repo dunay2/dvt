@@ -47,6 +47,7 @@ type NodeChangeHarness = {
     setDraftSession: ReturnType<typeof vi.fn>;
     setSelectedNodes: ReturnType<typeof vi.fn>;
     setInspectorNode: ReturnType<typeof vi.fn>;
+    onLayoutComplete: ReturnType<typeof vi.fn>;
   };
 };
 
@@ -61,6 +62,7 @@ function renderHookHost({
   setDraftSession = vi.fn(),
   setSelectedNodes = vi.fn(),
   setInspectorNode = vi.fn(),
+  onLayoutComplete = vi.fn(),
 }: {
   draftSession?: CanvasDraftSession;
   nodes?: Node[];
@@ -72,6 +74,7 @@ function renderHookHost({
   setDraftSession?: ReturnType<typeof vi.fn>;
   setSelectedNodes?: ReturnType<typeof vi.fn>;
   setInspectorNode?: ReturnType<typeof vi.fn>;
+  onLayoutComplete?: ReturnType<typeof vi.fn>;
 }): NodeChangeHarness {
   let latest: LatestHook = null;
   const container = document.createElement('div');
@@ -98,6 +101,7 @@ function renderHookHost({
         setDraftSession,
         setSelectedNodes,
         setInspectorNode,
+        onLayoutComplete,
       },
     });
     return null;
@@ -122,6 +126,7 @@ function renderHookHost({
       setDraftSession,
       setSelectedNodes,
       setInspectorNode,
+      onLayoutComplete,
     },
   };
 }
@@ -187,6 +192,7 @@ describe('useCanvasNodeChangeHandlers', () => {
     expect(harness.spies.setDraftSession).not.toHaveBeenCalled();
     expect(harness.spies.setSelectedNodes).not.toHaveBeenCalled();
     expect(harness.spies.setInspectorNode).not.toHaveBeenCalled();
+    expect(harness.spies.onLayoutComplete).not.toHaveBeenCalled();
 
     harness.cleanup();
   });
@@ -224,6 +230,97 @@ describe('useCanvasNodeChangeHandlers', () => {
     expect(harness.spies.setDraftSession).not.toHaveBeenCalled();
     expect(harness.spies.setSelectedNodes).not.toHaveBeenCalled();
     expect(harness.spies.setInspectorNode).not.toHaveBeenCalled();
+    expect(harness.spies.onLayoutComplete).not.toHaveBeenCalled();
+
+    harness.cleanup();
+  });
+
+  it('publishes settled position changes to the route-local layout rail', async () => {
+    let currentNodes: Node[] = buildNodes();
+    const setNodes = vi.fn((nextNodes: Node[] | ((existingNodes: Node[]) => Node[])) => {
+      currentNodes = typeof nextNodes === 'function' ? nextNodes(currentNodes) : nextNodes;
+    });
+    const harness = renderHookHost({
+      setNodes,
+    });
+    await harness.render();
+
+    act(() => {
+      harness.latest()?.handleNodesChange([
+        {
+          id: 'source-node',
+          type: 'position',
+          dragging: false,
+          position: { x: 225, y: 210 },
+        },
+      ]);
+    });
+
+    expect(currentNodes[0]?.position).toEqual({ x: 225, y: 210 });
+    expect(harness.spies.onLayoutComplete).toHaveBeenCalledWith({
+      'source-node': { x: 225, y: 210 },
+      'sink-node': { x: 1, y: 1 },
+    });
+    expect(harness.spies.setDraftSession).not.toHaveBeenCalled();
+
+    harness.cleanup();
+  });
+
+  it('publishes active drag coordinates to the route-local layout rail when the stop frame is absent', async () => {
+    let currentNodes: Node[] = buildNodes();
+    const setNodes = vi.fn((nextNodes: Node[] | ((existingNodes: Node[]) => Node[])) => {
+      currentNodes = typeof nextNodes === 'function' ? nextNodes(currentNodes) : nextNodes;
+    });
+    const harness = renderHookHost({
+      setNodes,
+    });
+    await harness.render();
+
+    act(() => {
+      harness.latest()?.handleNodesChange([
+        {
+          id: 'source-node',
+          type: 'position',
+          dragging: true,
+          position: { x: 96, y: 72 },
+        },
+      ]);
+    });
+
+    expect(currentNodes[0]?.position).toEqual({ x: 96, y: 72 });
+    expect(harness.spies.onLayoutComplete).toHaveBeenCalledWith({
+      'source-node': { x: 96, y: 72 },
+      'sink-node': { x: 1, y: 1 },
+    });
+    expect(harness.spies.setDraftSession).not.toHaveBeenCalled();
+
+    harness.cleanup();
+  });
+
+  it('publishes settled drag completion when React Flow omits the final position payload', async () => {
+    const harness = renderHookHost({
+      nodes: [
+        { id: 'source-node', data: { name: 'source-node' }, position: { x: 225, y: 210 } },
+        { id: 'sink-node', data: { name: 'sink-node' }, position: { x: 1, y: 1 } },
+      ],
+    });
+    await harness.render();
+
+    act(() => {
+      harness.latest()?.handleNodesChange([
+        {
+          id: 'source-node',
+          type: 'position',
+          dragging: false,
+        },
+      ]);
+    });
+
+    expect(harness.spies.onLayoutComplete).toHaveBeenCalledWith({
+      'source-node': { x: 225, y: 210 },
+      'sink-node': { x: 1, y: 1 },
+    });
+    expect(harness.spies.setDraftSession).not.toHaveBeenCalled();
 
     harness.cleanup();
   });

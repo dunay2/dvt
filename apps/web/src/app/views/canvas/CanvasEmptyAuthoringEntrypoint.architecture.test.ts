@@ -63,6 +63,7 @@ function buildWorkbenchArgs(
       kind: 'transformation',
       title: 'Transformation canvas',
     },
+    draftSaveStatus: 'saved',
     availableCanvasKinds: getCanvasRuntimeRegistrations(),
     canEditEdges: true,
     canOpenSourceImport: true,
@@ -205,14 +206,10 @@ describe('Canvas empty authoring entrypoint architecture', () => {
   it('keeps narrow source tripwires for handler ownership boundaries', () => {
     expect(CENTER_WORKBENCH_SOURCE).toContain('deriveCanvasHostCycleState');
     expect(NODE_CREATION_HANDLER_SOURCE).toContain('useCanvasNodeAdmissionCommandRunner');
-    expect(NODE_CREATION_HANDLER_SOURCE).not.toContain(
-      'resolveCanvasNodeAdmissionTransaction'
-    );
+    expect(NODE_CREATION_HANDLER_SOURCE).not.toContain('resolveCanvasNodeAdmissionTransaction');
     expect(NODE_CREATION_HANDLER_SOURCE).not.toContain('WorkspaceGraphDraft');
     expect(NODE_CREATION_HANDLER_SOURCE).not.toContain('DesignGraphDraft');
-    expect(NODE_ADMISSION_COMMAND_RUNNER_SOURCE).toContain(
-      'resolveCanvasNodeAdmissionTransaction'
-    );
+    expect(NODE_ADMISSION_COMMAND_RUNNER_SOURCE).toContain('resolveCanvasNodeAdmissionTransaction');
     expect(NODE_ADMISSION_COMMAND_RUNNER_SOURCE).toContain('latestDraftSessionRef');
     expect(NODE_AUTHORING_HANDLER_SOURCE).toContain('useCanvasNodeDropHandlers');
     expect(NODE_AUTHORING_HANDLER_SOURCE).toContain('useCanvasAuthoringNodeCreationHandlers');

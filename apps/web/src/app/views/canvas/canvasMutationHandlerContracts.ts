@@ -7,6 +7,8 @@ import type { CanvasUiScope } from './canvasDraftScope';
 /** Owned concern: semantic contracts for Canvas mutation handler seams. */
 
 type CanvasDraftSessionSetter = Dispatch<SetStateAction<CanvasDraftSession>>;
+type CanvasNodePositions = Record<string, { x: number; y: number }>;
+type CanvasLayoutCompletionHandler = (positions: CanvasNodePositions) => void;
 
 export type CanvasGraphModelLike = {
   nodes: Node[];
@@ -28,6 +30,7 @@ export type CanvasMutationEffects = {
   setInspectorNode: (nodeId: string | null) => void;
   showInspectorPanel: () => void;
   setCurrentPlan: (value: null) => void;
+  onLayoutComplete: CanvasLayoutCompletionHandler;
 };
 
 export type CanvasMutationPolicy = {
@@ -52,6 +55,7 @@ export type CanvasGraphChangeEffects = {
   setDraftSession: CanvasDraftSessionSetter;
   setSelectedNodes: (nodeIds: string[]) => void;
   setInspectorNode: (nodeId: string | null) => void;
+  onLayoutComplete: CanvasLayoutCompletionHandler;
 };
 
 export type CanvasGraphChangeContracts = {
@@ -70,6 +74,7 @@ export type CanvasNodeChangeEffects = {
   setDraftSession: CanvasDraftSessionSetter;
   setSelectedNodes: (nodeIds: string[]) => void;
   setInspectorNode: (nodeId: string | null) => void;
+  onLayoutComplete: CanvasLayoutCompletionHandler;
 };
 
 export type CanvasNodeChangeContracts = {

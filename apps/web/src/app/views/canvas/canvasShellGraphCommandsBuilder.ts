@@ -9,6 +9,7 @@ export function buildCanvasShellGraphCommands({
 }: CanvasShellGraphCommandsBuilderArgs): CanvasShellGraphCommands {
   return {
     onNodesChange: graphCommands.onNodesChange,
+    onNodeDrag: graphCommands.handleNodeDrag,
     onNodeDragStop: graphCommands.handleNodeDragStop,
     onEdgesChange: graphCommands.onEdgesChange,
     onConnect: graphCommands.onConnect,

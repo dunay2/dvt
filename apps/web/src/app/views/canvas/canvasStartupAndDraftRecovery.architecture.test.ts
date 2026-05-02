@@ -334,8 +334,20 @@ describe('canvas startup and draft recovery architecture', () => {
     const proofModelSource = readAppSource('canvasFirstAuthoringLiveProof.ts');
     const cypressHelperPath = 'apps/web/cypress/support/canvasFirstAuthoring.ts';
     const cypressSpecPath = 'apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts';
+    const liveRunnerPath = 'scripts/run-canvas-first-authoring-live-proof.cjs';
+    const rootPackage = JSON.parse(readRepoFile('package.json')) as {
+      scripts: Record<string, string>;
+    };
+    const webPackage = JSON.parse(readRepoFile('apps/web/package.json')) as {
+      scripts: Record<string, string>;
+    };
+    const implementationPlanSource = readRepoFile(
+      'docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-m-c-first-canvas-first-node-live-proof-implementation-plan-20260501.md'
+    );
 
     expect(proofModelSource).toContain('export type CanvasFirstAuthoringLiveProof');
+    expect(proofModelSource).toContain('export type CanvasFirstAuthoringBlockedReason');
+    expect(proofModelSource).not.toContain('| string;');
     expect(proofModelSource).toContain('export function deriveCanvasFirstAuthoringLiveProof');
     expect(proofModelSource).toContain('FIRST_AUTHORING_DEFAULTS');
     expect(proofModelSource).toContain("canvasKind: 'transformation'");
@@ -343,18 +355,41 @@ describe('canvas startup and draft recovery architecture', () => {
 
     expect(repoFileExists(cypressHelperPath)).toBe(true);
     expect(repoFileExists(cypressSpecPath)).toBe(true);
+    expect(repoFileExists(liveRunnerPath)).toBe(true);
+
+    expect(rootPackage.scripts['test:web:e2e:first-authoring:live']).toBe(
+      'pnpm --filter @dvt/web test:e2e:first-authoring:live'
+    );
+    expect(webPackage.scripts['test:e2e:first-authoring:live']).toBe(
+      'node ../../scripts/run-canvas-first-authoring-live-proof.cjs'
+    );
 
     const cypressHelperSource = readRepoFile(cypressHelperPath);
     const cypressSpecSource = readRepoFile(cypressSpecPath);
+    const liveRunnerSource = readRepoFile(liveRunnerPath);
     const cypressSources = [cypressHelperSource, cypressSpecSource];
 
     expect(cypressHelperSource).toContain('resolveLiveFirstAuthoringWorkspaceSession');
     expect(cypressHelperSource).toContain('assertLiveFirstAuthoringDraftScopeIsClean');
+    expect(cypressHelperSource).toContain('requireLiveProtectedRuntimeEnv');
+    expect(cypressHelperSource).toContain('skipWhenFirstAuthoringLiveEnvIsMissing');
     expect(cypressHelperSource).toContain("Cypress.env('firstAuthoringRunId'");
     expect(cypressHelperSource).toContain("method: 'GET'");
     expect(cypressHelperSource).toContain('workspace_graph_draft_not_found');
+    expect(cypressHelperSource).toContain('dvt-web-canvas-interaction');
+    expect(cypressHelperSource).toContain('waitForLiveFirstAuthoringLayoutPositionChange');
     expect(cypressSpecSource).toContain('canvas-node-drag-handle');
+    expect(cypressSpecSource).toContain('skipWhenFirstAuthoringLiveEnvIsMissing');
+    expect(cypressSpecSource).not.toContain('this.skip()');
+    expect(cypressSpecSource).toContain('waitForLiveFirstAuthoringLayoutPositionChange');
+    expect(cypressSpecSource).not.toContain('waitForLiveFirstAuthoringDraftNodePositionChange');
     expect(cypressSpecSource).toContain('Source 1');
+    expect(liveRunnerSource).toContain('CYPRESS_requireLiveProtectedRuntime=1');
+    expect(liveRunnerSource).toContain('VITE_PROJECT_OPTIONS');
+    expect(liveRunnerSource).toContain('canvas-first-authoring-live.cy.ts');
+    expect(implementationPlanSource).toContain(
+      'pnpm --filter @dvt/web test:e2e:first-authoring:live'
+    );
 
     for (const source of cypressSources) {
       expect(source).not.toContain('cy.intercept(');

@@ -111,6 +111,7 @@ function buildProps(
     canvasPalette: DEFAULT_CANVAS_PALETTE_ID,
     viewport: null,
     onNodesChange: vi.fn(),
+    onNodeDrag: vi.fn(),
     onNodeDragStop: vi.fn(),
     onEdgesChange: vi.fn(),
     onConnect: vi.fn(),
