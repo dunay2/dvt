@@ -23896,9 +23896,9 @@ files:
   - fileId: F-E49C27D1091C
     path: >-
       docs/planning/proposals/mandatory/governance-and-docs/ci-governance-parity-implementation-plan-20260502.md
-    contentHash: cb93679e5e7b3063bca8f918cbe6e1d54dfad9bbd25e0fe4791a68af65cb82ca
+    contentHash: 32a321d9068ad0be5a4c34e92fb46c612cdec5c0b8c4aab21d22be291b54a30c
     governanceHash: d9f768b3da4be04e83890eae632052f05a0776f4990c39b7b2ab2c3b6cc14524
-    stateFingerprint: 830757344f5dc203e9b4fbf83ac7d5ea13ca0f936bc6019194a356c1b210ad81
+    stateFingerprint: 5fffe7a0449cab3ec84e2c7717910a590f35e4f51c1d974ce4e6ac39149b3feb
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
