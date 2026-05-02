@@ -5,18 +5,18 @@ generatedFrom:
   - docs/planning/status/system-governance-component-index.components.yaml
   - docs/planning/status/system-governance-document-unit-map.docs.yaml
 totals:
-  tasks: 45
+  tasks: 43
   p0: 4
-  p1: 18
+  p1: 16
   p2: 3
   p3: 20
   driftFiles: 44
-  componentsRequiringSubdivision: 19
+  componentsRequiringSubdivision: 18
 byType:
   - name: component-subdivision
-    count: 19
+    count: 18
   - name: cq-rail-gap
-    count: 10
+    count: 9
   - name: doc-alignment
     count: 12
   - name: drift-removal
@@ -25,7 +25,7 @@ byPriority:
   - name: P0
     count: 4
   - name: P1
-    count: 18
+    count: 16
   - name: P2
     count: 3
   - name: P3
@@ -254,24 +254,6 @@ tasks:
       - pnpm docs:governance:remediation-queue:check
       - pnpm docs:governance:coverage-report:check
       - pnpm docs:governance:file-component-index:check
-  - id: GRQ-CQ_RAIL_GAP-SYS-API-ROOT
-    type: cq-rail-gap
-    priority: P1
-    componentUnit: SYS-API-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-DVT
-    dddOwner: AS
-    cqRails: API commands and queries
-    blocking: reporting-only
-    reason: Component has generic command/query language instead of specific rail rows.
-    fileCount: 0
-    documentCount: 0
-    files: []
-    documents: []
-    expectedValidation:
-      - pnpm docs:governance:remediation-queue:check
-      - pnpm docs:governance:coverage-report:check
-      - pnpm docs:governance:file-component-index:check
   - id: GRQ-CQ_RAIL_GAP-SYS-CONTRACTS-ROOT
     type: cq-rail-gap
     priority: P1
@@ -408,24 +390,6 @@ tasks:
     cqRails: worker commands and operational queries
     blocking: reporting-only
     reason: Component has generic command/query language instead of specific rail rows.
-    fileCount: 0
-    documentCount: 0
-    files: []
-    documents: []
-    expectedValidation:
-      - pnpm docs:governance:remediation-queue:check
-      - pnpm docs:governance:coverage-report:check
-      - pnpm docs:governance:file-component-index:check
-  - id: GRQ-COMPONENT_SUBDIVISION-SYS-API-ROOT
-    type: component-subdivision
-    priority: P1
-    componentUnit: SYS-API-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-DVT
-    dddOwner: AS
-    cqRails: API commands and queries
-    blocking: reporting-only
-    reason: Component is known but still too broad for source-level governance.
     fileCount: 0
     documentCount: 0
     files: []

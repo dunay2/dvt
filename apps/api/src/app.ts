@@ -4,50 +4,19 @@ import helmet from '@fastify/helmet';
 import sensible from '@fastify/sensible';
 import Fastify, { type FastifyInstance, type FastifyRequest } from 'fastify';
 
-import { CancelRunUseCase } from './application/services/cancelRunUseCase.js';
-import { CompilePlanUseCase } from './application/services/CompilePlanUseCase.js';
-import { GetRunEventsUseCase } from './application/services/getRunEventsUseCase.js';
-import { GetRunStatusUseCase } from './application/services/getRunStatusUseCase.js';
-import { ImportPlanUseCase } from './application/services/ImportPlanUseCase.js';
-import { ListRunsUseCase } from './application/services/listRunsUseCase.js';
-import { PreviewPlanUseCase } from './application/services/PreviewPlanUseCase.js';
-import { RecoverRunUseCase } from './application/services/recoverRunUseCase.js';
-import { ResolveAuthorizedExecutableSubgraphService } from './application/services/resolveAuthorizedExecutableSubgraph.js';
-import { SignalRunUseCase } from './application/services/signalRunUseCase.js';
-import { registerAdminRoutes } from './entrypoints/http/adminRoutes.js';
-import { cancelRunRoute } from './entrypoints/http/cancelRunRoute.js';
-import { compilePlanRoute } from './entrypoints/http/compilePlanRoute.js';
-import { getRunEventsRoute } from './entrypoints/http/getRunEventsRoute.js';
-import { getRunRoute } from './entrypoints/http/getRunRoute.js';
-import { importPlanRoute } from './entrypoints/http/importPlanRoute.js';
-import { listRunsRoute } from './entrypoints/http/listRunsRoute.js';
-import { previewPlanRoute } from './entrypoints/http/previewPlanRoute.js';
-import { recoverRunRoute } from './entrypoints/http/recoverRunRoute.js';
-import {
-  PROTECTED_RUNTIME_ROUTE_SUMMARY,
-  RUNTIME_ROUTE_PATH,
-} from './entrypoints/http/runtimeRoutes.constants.js';
-import { signalRunRoute } from './entrypoints/http/signalRunRoute.js';
-import { startRunRoute } from './entrypoints/http/startRunRoute.js';
-import { registerWorkspaceGraphDraftRoutes } from './entrypoints/http/workspaceGraphDraftRoutes.js';
-import { ObservabilityRunStatusStalenessTelemetry } from './infrastructure/telemetry/ObservabilityRunStatusStalenessTelemetry.js';
-import { ObservabilityWorkspaceGraphDraftTelemetry } from './infrastructure/telemetry/ObservabilityWorkspaceGraphDraftTelemetry.js';
-import { SafeRunSnapshotStalenessReader } from './infrastructure/telemetry/SafeRunSnapshotStalenessReader.js';
+import { registerProtectedRuntimeRoutes } from './entrypoints/http/registerProtectedRuntimeRoutes.js';
 import { buildProtectedRuntimeModule } from './modules/buildProtectedRuntimeModule.js';
 import { registerOperationalHooks } from './modules/registerOperationalHooks.js';
 import { loadEnv, type Env } from './plugins/env.js';
 import { buildLoggerOptions } from './plugins/logger.js';
 import { buildObservability } from './plugins/observability.js';
-import { capabilitiesRoutes } from './routes/capabilities.js';
-import { dbReadyRoutes } from './routes/dbReady.js';
-import { healthRoutes } from './routes/health.js';
 import {
   createHealthReadinessPorts,
   HEALTH_READINESS_EVENTS,
   READINESS_PROBE_STATUS,
   type ReadinessProbeStatus,
 } from './routes/healthReadinessPorts.js';
-import { versionRoutes } from './routes/version.js';
+import { registerOperationalRoutes } from './routes/registerOperationalRoutes.js';
 import {
   RECONCILER_HEALTH_STATUS,
   type ReconcilerHealthState,
@@ -163,17 +132,11 @@ export async function buildApp(): Promise<{ app: FastifyInstance; ctx: AppContex
     methods: ['GET', 'HEAD', 'POST', 'PUT', 'OPTIONS'],
   });
 
-  app.register(healthRoutes, {
-    prefix: '/',
+  await registerOperationalRoutes(app, {
     env,
     getIntentReconcilerHealth: ctx.getIntentReconcilerHealth,
     readinessPorts,
   });
-  app.register(capabilitiesRoutes, { prefix: '/' });
-  app.register(versionRoutes, { prefix: '/', env });
-  app.register(dbReadyRoutes, { prefix: '/', env });
-
-  app.get('/', async () => ({ service: env.SERVICE_NAME, ok: true }));
 
   if (env.OIDC_JWKS_URI && env.OIDC_ISSUER && env.OIDC_AUDIENCE) {
     const protectedModule = await buildProtectedRuntimeModule(app, env, observability);
@@ -184,119 +147,11 @@ export async function buildApp(): Promise<{ app: FastifyInstance; ctx: AppContex
     };
     registerOperationalHooks(app, protectedModule);
 
-    const runtimeAuth = {
-      authenticator: protectedModule.authenticator,
-      authorizer: protectedModule.authorizer,
-    };
-    const getRunStatusUseCase = new GetRunStatusUseCase(
-      protectedModule.engine,
-      protectedModule.runEnrichmentService,
-      protectedModule.stateStore.read,
-      new SafeRunSnapshotStalenessReader(
-        protectedModule.stateStore.snapshotStaleness,
-        observability
-      ),
-      new ObservabilityRunStatusStalenessTelemetry({ observability }),
-      protectedModule.planStore as unknown as ConstructorParameters<typeof GetRunStatusUseCase>[5]
-    );
-    const listRunsUseCase = new ListRunsUseCase(protectedModule.stateStore.read);
-    const getRunEventsUseCase = new GetRunEventsUseCase(protectedModule.stateStore.read);
-    const compilePlanUseCase = new CompilePlanUseCase({
-      planner: protectedModule.planCompilePlanner,
-    });
-    const previewPlanUseCase = new PreviewPlanUseCase({
-      planner: protectedModule.planner,
-      planStore: protectedModule.planStore,
-      planValidator: protectedModule.planValidator,
-      executableSubgraphResolver: new ResolveAuthorizedExecutableSubgraphService({
-        planner: protectedModule.planner,
-        workspaceGraphDraftStore: protectedModule.workspaceGraphDraftStore,
-      }),
-    });
-    const importPlanUseCase = new ImportPlanUseCase({
-      planResolver: protectedModule.executablePlanResolver,
-    });
-    const signalRunUseCase = new SignalRunUseCase(
-      protectedModule.engine,
-      protectedModule.stateStore.read
-    );
-    const cancelRunUseCase = new CancelRunUseCase(
-      protectedModule.engine,
-      protectedModule.stateStore.read
-    );
-    const recoverRunUseCase = new RecoverRunUseCase(
-      protectedModule.engine,
-      protectedModule.stateStore.read
-    );
-    const workspaceGraphDraftTelemetry = new ObservabilityWorkspaceGraphDraftTelemetry({
+    await registerProtectedRuntimeRoutes(app, {
+      env,
       observability,
+      protectedModule,
     });
-
-    app.post<{ Body: Parameters<typeof startRunRoute>[0]['body'] }>(
-      RUNTIME_ROUTE_PATH.start,
-      async (request, reply) =>
-        startRunRoute(request as never, reply, protectedModule.facade, {
-          adapterRegistry: protectedModule.startRunTargetAdapterRegistry,
-        })
-    );
-    app.post(RUNTIME_ROUTE_PATH.plansPreview, async (request, reply) =>
-      previewPlanRoute(request as never, reply, {
-        authenticator: protectedModule.authenticator,
-        authorizer: protectedModule.authorizer,
-        useCase: previewPlanUseCase,
-      })
-    );
-    app.post(RUNTIME_ROUTE_PATH.plansCompile, async (request, reply) =>
-      compilePlanRoute(request as never, reply, {
-        authenticator: protectedModule.authenticator,
-        authorizer: protectedModule.authorizer,
-        useCase: compilePlanUseCase,
-      })
-    );
-    app.post(RUNTIME_ROUTE_PATH.plansImport, async (request, reply) =>
-      importPlanRoute(request as never, reply, {
-        authenticator: protectedModule.authenticator,
-        authorizer: protectedModule.authorizer,
-        useCase: importPlanUseCase,
-      })
-    );
-    registerWorkspaceGraphDraftRoutes(app, {
-      capabilityService: protectedModule.workspaceGraphDraftCapabilityService,
-      getUseCase: protectedModule.getWorkspaceGraphDraftUseCase,
-      saveUseCase: protectedModule.saveWorkspaceGraphDraftUseCase,
-      telemetry: workspaceGraphDraftTelemetry,
-      observability,
-    });
-
-    app.get(RUNTIME_ROUTE_PATH.list, async (request, reply) =>
-      listRunsRoute(request as never, reply, { ...runtimeAuth, useCase: listRunsUseCase })
-    );
-    app.get(RUNTIME_ROUTE_PATH.get, async (request, reply) =>
-      getRunRoute(request as never, reply, { ...runtimeAuth, useCase: getRunStatusUseCase })
-    );
-    app.get(RUNTIME_ROUTE_PATH.events, async (request, reply) =>
-      getRunEventsRoute(request as never, reply, { ...runtimeAuth, useCase: getRunEventsUseCase })
-    );
-    app.post(RUNTIME_ROUTE_PATH.signal, async (request, reply) =>
-      signalRunRoute(request as never, reply, {
-        ...runtimeAuth,
-        useCase: signalRunUseCase,
-        compatibilityPolicy: { allowCancelSignalType: env.DVT_SIGNAL_ROUTE_ALLOW_CANCEL },
-      })
-    );
-    app.post(RUNTIME_ROUTE_PATH.cancel, async (request, reply) =>
-      cancelRunRoute(request as never, reply, { ...runtimeAuth, useCase: cancelRunUseCase })
-    );
-    app.post(RUNTIME_ROUTE_PATH.recover, async (request, reply) =>
-      recoverRunRoute(request as never, reply, { ...runtimeAuth, useCase: recoverRunUseCase })
-    );
-
-    if (env.DVT_ADMIN_ROUTES_ENABLED) {
-      registerAdminRoutes(app, protectedModule.stateStore.maintenance, runtimeAuth);
-      app.log.warn('admin routes enabled: POST /admin/runs/:runId/rebuild-snapshot');
-    }
-
-    app.log.info(`protected runtime routes registered: ${PROTECTED_RUNTIME_ROUTE_SUMMARY}`);
   } else {
     app.log.warn(
       'OIDC not configured (OIDC_JWKS_URI, OIDC_ISSUER, OIDC_AUDIENCE) — protected runtime endpoints are disabled'

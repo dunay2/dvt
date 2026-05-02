@@ -332,8 +332,10 @@ Initial guard candidates:
 ## Feature Mechanization Manifest
 
 This plan owns the governance-index and file-fingerprint implementation
-surfaces. The manifest keeps the repository-level implementation guard from
-binding governance changes to unrelated frontend feature manifests.
+surfaces and the first API operational-route component extraction that proves
+unit subdivision is not documentation-only. The manifest keeps the
+repository-level implementation guard from binding governance changes to
+unrelated frontend feature manifests.
 Because the file/component and fingerprint indexes are exhaustive generated
 artifacts, the integration PR may use the repository size-gate exemption marker
 when the generated YAML projections exceed the default PR line budget.
@@ -357,6 +359,11 @@ governingSources:
   - docs/adr/ADR-0053-file-state-fingerprint-governance.md
 allowedImplementationSurfaces:
   - .github/workflows/pr-quality-gate.yml
+  - apps/api/src/app.ts
+  - apps/api/src/entrypoints/http/registerProtectedRuntimeRoutes.ts
+  - apps/api/test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts
+  - apps/api/src/routes/registerOperationalRoutes.ts
+  - apps/api/test/routes/registerOperationalRoutes.test.ts
   - docs/.manifest.json
   - docs/adr/ADR-0053-file-state-fingerprint-governance.md
   - docs/adr/index.md
@@ -382,7 +389,11 @@ allowedImplementationSurfaces:
   - tools/ci/workflow-pattern-parity.test.mjs
   - tools/docs/generate-docs-manifest.ts
 forbiddenImplementationSurfaces:
-  - apps/**
+  - apps/web/**
+  - apps/temporal-worker/**
+  - apps/outbox-worker/**
+  - apps/projector-worker/**
+  - apps/lineage-worker/**
   - packages/**
   - specs/contracts/**
 commandQueryRails:
@@ -419,6 +430,12 @@ commandQueryRails:
   - name: QueryDocsGovernanceManifestAuditCatalog
     type: query
     dddOwner: Repository docs governance manifest
+  - name: RegisterApiOperationalRoutes
+    type: command
+    dddOwner: API operational routes component
+  - name: RegisterApiProtectedRuntimeRoutes
+    type: command
+    dddOwner: API protected runtime HTTP entrypoint component
 domainObjects:
   - name: GovernanceUnitIndex
     type: generated status aggregate
@@ -444,6 +461,12 @@ domainObjects:
   - name: DocsGovernanceManifest
     type: compact generated docs catalog
     owner: SYS-DOCS-GOVERNANCE-ROOT
+  - name: ApiOperationalRoutesComponent
+    type: API route composition component
+    owner: SYS-API-OPS-ROUTES
+  - name: ApiProtectedRuntimeRoutesComponent
+    type: API protected runtime route composition component
+    owner: SYS-API-HTTP-ENTRYPOINTS
 fowlerSignals:
   - Documentation drift
   - Hidden authority
@@ -462,6 +485,9 @@ architectureGuards:
   - pnpm test:docs:governance:remediation-queue
   - pnpm test:docs:governance:changed-files
   - pnpm exec node --test tools/ci/docs-manifest-contract.test.mjs
+  - pnpm --filter dvt-api test -- test/routes/registerOperationalRoutes.test.ts
+  - pnpm --filter dvt-api test -- test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts
+  - pnpm --filter dvt-api typecheck
 cypressFlows:
   - N/A - repository governance docs and CI only
 completionGate:
@@ -472,6 +498,9 @@ completionGate:
   - pnpm test:docs:governance:coverage-report
   - pnpm test:docs:governance:remediation-queue
   - pnpm test:docs:governance:changed-files
+  - pnpm --filter dvt-api test -- test/routes/registerOperationalRoutes.test.ts
+  - pnpm --filter dvt-api test -- test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts
+  - pnpm --filter dvt-api typecheck
   - pnpm ci:docs
   - pnpm verify:prepush
 redGreenCycles:
@@ -530,7 +559,166 @@ redGreenCycles:
       - tools/ci/docs-manifest-contract.test.mjs
       - docs/.manifest.json
     greenTest: pnpm exec node --test tools/ci/docs-manifest-contract.test.mjs
+  - id: api-operational-routes-component
+    redTest: pnpm --filter dvt-api test -- test/routes/registerOperationalRoutes.test.ts
+    expectedFailure: API operational routes are not mounted through a component-level registrar.
+    patchSurfaces:
+      - apps/api/src/routes/registerOperationalRoutes.ts
+      - apps/api/test/routes/registerOperationalRoutes.test.ts
+      - apps/api/src/app.ts
+    greenTest: pnpm --filter dvt-api test -- test/routes/registerOperationalRoutes.test.ts
+  - id: api-protected-runtime-routes-component
+    redTest: pnpm --filter dvt-api test -- test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts
+    expectedFailure: API protected runtime routes are not mounted through a component-level registrar.
+    patchSurfaces:
+      - apps/api/src/entrypoints/http/registerProtectedRuntimeRoutes.ts
+      - apps/api/test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts
+      - apps/api/src/app.ts
+    greenTest: pnpm --filter dvt-api test -- test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts
 symbols:
+  - name: RegisterProtectedRuntimeRoutesOptions
+    path: apps/api/src/entrypoints/http/registerProtectedRuntimeRoutes.ts
+    dddOwner: API protected runtime HTTP entrypoint component
+    cqRails:
+      - RegisterApiProtectedRuntimeRoutes
+    fowlerSignals:
+      - Boundary drift
+    architectureGuard: apps/api/test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts
+    cypressCoverage: N/A - backend protected runtime route composition
+    unitTests:
+      - apps/api/test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts
+  - name: registerProtectedRuntimeRoutes
+    path: apps/api/src/entrypoints/http/registerProtectedRuntimeRoutes.ts
+    dddOwner: API protected runtime HTTP entrypoint component
+    cqRails:
+      - RegisterApiProtectedRuntimeRoutes
+    fowlerSignals:
+      - Boundary drift
+    architectureGuard: apps/api/test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts
+    cypressCoverage: N/A - backend protected runtime route composition
+    unitTests:
+      - apps/api/test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts
+  - name: RuntimeAuth
+    path: apps/api/src/entrypoints/http/registerProtectedRuntimeRoutes.ts
+    dddOwner: API protected runtime HTTP entrypoint component
+    cqRails:
+      - RegisterApiProtectedRuntimeRoutes
+    fowlerSignals:
+      - Boundary drift
+    architectureGuard: apps/api/test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts
+    cypressCoverage: N/A - backend protected runtime route composition
+    unitTests:
+      - apps/api/test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts
+  - name: ProtectedRuntimeRouteDependencies
+    path: apps/api/src/entrypoints/http/registerProtectedRuntimeRoutes.ts
+    dddOwner: API protected runtime HTTP entrypoint component
+    cqRails:
+      - RegisterApiProtectedRuntimeRoutes
+    fowlerSignals:
+      - Boundary drift
+    architectureGuard: apps/api/test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts
+    cypressCoverage: N/A - backend protected runtime route composition
+    unitTests:
+      - apps/api/test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts
+  - name: buildProtectedRuntimeRouteDependencies
+    path: apps/api/src/entrypoints/http/registerProtectedRuntimeRoutes.ts
+    dddOwner: API protected runtime HTTP entrypoint component
+    cqRails:
+      - RegisterApiProtectedRuntimeRoutes
+    fowlerSignals:
+      - Boundary drift
+    architectureGuard: apps/api/test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts
+    cypressCoverage: N/A - backend protected runtime route composition
+    unitTests:
+      - apps/api/test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts
+  - name: registerProtectedPlanRoutes
+    path: apps/api/src/entrypoints/http/registerProtectedRuntimeRoutes.ts
+    dddOwner: API protected runtime HTTP entrypoint component
+    cqRails:
+      - RegisterApiProtectedRuntimeRoutes
+    fowlerSignals:
+      - Boundary drift
+    architectureGuard: apps/api/test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts
+    cypressCoverage: N/A - backend protected runtime route composition
+    unitTests:
+      - apps/api/test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts
+  - name: registerProtectedWorkspaceGraphDraftRouteGroup
+    path: apps/api/src/entrypoints/http/registerProtectedRuntimeRoutes.ts
+    dddOwner: API protected runtime HTTP entrypoint component
+    cqRails:
+      - RegisterApiProtectedRuntimeRoutes
+    fowlerSignals:
+      - Boundary drift
+    architectureGuard: apps/api/test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts
+    cypressCoverage: N/A - backend protected runtime route composition
+    unitTests:
+      - apps/api/test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts
+  - name: registerProtectedRunRoutes
+    path: apps/api/src/entrypoints/http/registerProtectedRuntimeRoutes.ts
+    dddOwner: API protected runtime HTTP entrypoint component
+    cqRails:
+      - RegisterApiProtectedRuntimeRoutes
+    fowlerSignals:
+      - Boundary drift
+    architectureGuard: apps/api/test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts
+    cypressCoverage: N/A - backend protected runtime route composition
+    unitTests:
+      - apps/api/test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts
+  - name: registerProtectedAdminRouteGroup
+    path: apps/api/src/entrypoints/http/registerProtectedRuntimeRoutes.ts
+    dddOwner: API protected runtime HTTP entrypoint component
+    cqRails:
+      - RegisterApiProtectedRuntimeRoutes
+    fowlerSignals:
+      - Boundary drift
+    architectureGuard: apps/api/test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts
+    cypressCoverage: N/A - backend protected runtime route composition
+    unitTests:
+      - apps/api/test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts
+  - name: protectedRuntimeModule
+    path: apps/api/test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts
+    dddOwner: API protected runtime HTTP entrypoint component test fixture
+    cqRails:
+      - RegisterApiProtectedRuntimeRoutes
+    fowlerSignals:
+      - Boundary drift
+    architectureGuard: apps/api/test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts
+    cypressCoverage: N/A - backend protected runtime route composition
+    unitTests:
+      - apps/api/test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts
+  - name: observability
+    path: apps/api/test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts
+    dddOwner: API protected runtime HTTP entrypoint component test fixture
+    cqRails:
+      - RegisterApiProtectedRuntimeRoutes
+    fowlerSignals:
+      - Boundary drift
+    architectureGuard: apps/api/test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts
+    cypressCoverage: N/A - backend protected runtime route composition
+    unitTests:
+      - apps/api/test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts
+  - name: RegisterOperationalRoutesOptions
+    path: apps/api/src/routes/registerOperationalRoutes.ts
+    dddOwner: API operational routes component
+    cqRails:
+      - RegisterApiOperationalRoutes
+    fowlerSignals:
+      - Boundary drift
+    architectureGuard: apps/api/test/routes/registerOperationalRoutes.test.ts
+    cypressCoverage: N/A - backend operational route composition
+    unitTests:
+      - apps/api/test/routes/registerOperationalRoutes.test.ts
+  - name: registerOperationalRoutes
+    path: apps/api/src/routes/registerOperationalRoutes.ts
+    dddOwner: API operational routes component
+    cqRails:
+      - RegisterApiOperationalRoutes
+    fowlerSignals:
+      - Boundary drift
+    architectureGuard: apps/api/test/routes/registerOperationalRoutes.test.ts
+    cypressCoverage: N/A - backend operational route composition
+    unitTests:
+      - apps/api/test/routes/registerOperationalRoutes.test.ts
   - name: fs
     path: scripts/generate-governance-remediation-queue.cjs
     dddOwner: Repository governance remediation queue dependency

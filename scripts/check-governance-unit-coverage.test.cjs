@@ -5,6 +5,7 @@ const {
   validateManifest,
   findOwnerMatches,
   globToRegExp,
+  readManifest,
 } = require('./check-governance-unit-coverage.cjs');
 
 const fixtureFiles = [
@@ -253,5 +254,33 @@ test('validateManifest fails when source units skip the component parent level',
   assert.match(
     result.errors.join('\n'),
     /source unit SYS-WEB-ADMIN-VIEW-SOURCE must have a component parent/
+  );
+});
+
+test('real manifest subdivides API files below the API root module', () => {
+  const realManifest = readManifest();
+  const units = realManifest.units;
+  const apiRoot = units.find((unit) => unit.id === 'SYS-API-ROOT');
+
+  assert.equal(apiRoot.level, 'module');
+  assert.deepEqual(apiRoot.owns || [], []);
+
+  assert.deepEqual(
+    findOwnerMatches('apps/api/src/entrypoints/http/startRunRoute.ts', units).map(
+      (unit) => unit.id
+    ),
+    ['SYS-API-HTTP-ENTRYPOINTS']
+  );
+  assert.deepEqual(
+    findOwnerMatches('apps/api/src/application/services/cancelRunUseCase.ts', units).map(
+      (unit) => unit.id
+    ),
+    ['SYS-API-APPLICATION-SERVICES']
+  );
+  assert.deepEqual(
+    findOwnerMatches('apps/api/test/entrypoints/http/startRunRoute.test.ts', units).map(
+      (unit) => unit.id
+    ),
+    ['SYS-API-HTTP-ENTRYPOINT-TESTS']
   );
 });
