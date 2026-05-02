@@ -376,7 +376,10 @@ allowedImplementationSurfaces:
   - scripts/generate-governance-document-unit-map.cjs
   - scripts/generate-governance-file-component-index.cjs
   - scripts/generate-governance-file-component-index.test.cjs
+  - scripts/generate-governance-remediation-queue.cjs
+  - scripts/generate-governance-remediation-queue.test.cjs
   - tools/ci/docs-manifest-contract.test.mjs
+  - tools/ci/workflow-pattern-parity.test.mjs
   - tools/docs/generate-docs-manifest.ts
 forbiddenImplementationSurfaces:
   - apps/**
@@ -404,6 +407,9 @@ commandQueryRails:
   - name: GenerateGovernanceCoverageReport
     type: query
     dddOwner: Repository governance coverage report
+  - name: GenerateGovernanceRemediationQueue
+    type: query
+    dddOwner: Repository governance remediation queue
   - name: CheckGovernanceChangedFiles
     type: query
     dddOwner: Repository governance changed-file gate
@@ -429,6 +435,9 @@ domainObjects:
   - name: GovernanceCoverageReport
     type: generated coverage read model
     owner: SYS-DOCS-GOVERNANCE-ROOT
+  - name: GovernanceRemediationQueue
+    type: generated remediation read model
+    owner: SYS-DOCS-GOVERNANCE-ROOT
   - name: GovernanceChangedFileSet
     type: pull-request diff read model
     owner: SYS-DOCS-GOVERNANCE-ROOT
@@ -446,9 +455,11 @@ architectureGuards:
   - pnpm docs:governance:file-fingerprint-baseline:check
   - pnpm docs:governance:file-fingerprint-impact:check
   - pnpm docs:governance:coverage-report:check
+  - pnpm docs:governance:remediation-queue:check
   - pnpm docs:governance:changed-files:check
   - pnpm docs:gov:manifest:check
   - pnpm test:docs:governance:coverage-report
+  - pnpm test:docs:governance:remediation-queue
   - pnpm test:docs:governance:changed-files
   - pnpm exec node --test tools/ci/docs-manifest-contract.test.mjs
 cypressFlows:
@@ -459,6 +470,7 @@ completionGate:
   - pnpm test:docs:governance:file-component-index
   - pnpm test:docs:governance:file-fingerprint-baseline
   - pnpm test:docs:governance:coverage-report
+  - pnpm test:docs:governance:remediation-queue
   - pnpm test:docs:governance:changed-files
   - pnpm ci:docs
   - pnpm verify:prepush
@@ -493,6 +505,15 @@ redGreenCycles:
       - docs/planning/status/system-governance-coverage-report.coverage.yaml
       - docs/planning/status/system-governance-coverage-report-20260502.md
     greenTest: pnpm test:docs:governance:coverage-report
+  - id: governance-remediation-queue
+    redTest: pnpm test:docs:governance:remediation-queue
+    expectedFailure: Coverage gaps must become component-scoped remediation tasks.
+    patchSurfaces:
+      - scripts/generate-governance-remediation-queue.cjs
+      - scripts/generate-governance-remediation-queue.test.cjs
+      - docs/planning/status/system-governance-remediation-queue.queue.yaml
+      - docs/planning/status/system-governance-remediation-queue-20260502.md
+    greenTest: pnpm test:docs:governance:remediation-queue
   - id: governance-changed-files
     redTest: pnpm test:docs:governance:changed-files
     expectedFailure: Changed files without accepted file-index and fingerprint state are rejected.
@@ -510,6 +531,468 @@ redGreenCycles:
       - docs/.manifest.json
     greenTest: pnpm exec node --test tools/ci/docs-manifest-contract.test.mjs
 symbols:
+  - name: fs
+    path: scripts/generate-governance-remediation-queue.cjs
+    dddOwner: Repository governance remediation queue dependency
+    cqRails:
+      - GenerateGovernanceRemediationQueue
+    fowlerSignals:
+      - Hidden authority
+    architectureGuard: scripts/generate-governance-remediation-queue.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/generate-governance-remediation-queue.test.cjs
+  - name: path
+    path: scripts/generate-governance-remediation-queue.cjs
+    dddOwner: Repository governance remediation queue dependency
+    cqRails:
+      - GenerateGovernanceRemediationQueue
+    fowlerSignals:
+      - Hidden authority
+    architectureGuard: scripts/generate-governance-remediation-queue.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/generate-governance-remediation-queue.test.cjs
+  - name: yaml
+    path: scripts/generate-governance-remediation-queue.cjs
+    dddOwner: Repository governance remediation queue dependency
+    cqRails:
+      - GenerateGovernanceRemediationQueue
+    fowlerSignals:
+      - Hidden authority
+    architectureGuard: scripts/generate-governance-remediation-queue.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/generate-governance-remediation-queue.test.cjs
+  - name: repoRoot
+    path: scripts/generate-governance-remediation-queue.cjs
+    dddOwner: Repository governance remediation queue path policy
+    cqRails:
+      - GenerateGovernanceRemediationQueue
+    fowlerSignals:
+      - Hidden authority
+    architectureGuard: scripts/generate-governance-remediation-queue.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/generate-governance-remediation-queue.test.cjs
+  - name: statusDir
+    path: scripts/generate-governance-remediation-queue.cjs
+    dddOwner: Repository governance remediation queue path policy
+    cqRails:
+      - GenerateGovernanceRemediationQueue
+    fowlerSignals:
+      - Hidden authority
+    architectureGuard: scripts/generate-governance-remediation-queue.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/generate-governance-remediation-queue.test.cjs
+  - name: coverageReportPath
+    path: scripts/generate-governance-remediation-queue.cjs
+    dddOwner: Repository governance remediation queue input contract
+    cqRails:
+      - GenerateGovernanceRemediationQueue
+    fowlerSignals:
+      - Documentation drift
+    architectureGuard: scripts/generate-governance-remediation-queue.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/generate-governance-remediation-queue.test.cjs
+  - name: fileIndexPath
+    path: scripts/generate-governance-remediation-queue.cjs
+    dddOwner: Repository governance remediation queue input contract
+    cqRails:
+      - GenerateGovernanceRemediationQueue
+    fowlerSignals:
+      - Documentation drift
+    architectureGuard: scripts/generate-governance-remediation-queue.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/generate-governance-remediation-queue.test.cjs
+  - name: componentIndexPath
+    path: scripts/generate-governance-remediation-queue.cjs
+    dddOwner: Repository governance remediation queue input contract
+    cqRails:
+      - GenerateGovernanceRemediationQueue
+    fowlerSignals:
+      - Documentation drift
+    architectureGuard: scripts/generate-governance-remediation-queue.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/generate-governance-remediation-queue.test.cjs
+  - name: documentMapPath
+    path: scripts/generate-governance-remediation-queue.cjs
+    dddOwner: Repository governance remediation queue input contract
+    cqRails:
+      - GenerateGovernanceRemediationQueue
+    fowlerSignals:
+      - Documentation drift
+    architectureGuard: scripts/generate-governance-remediation-queue.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/generate-governance-remediation-queue.test.cjs
+  - name: queueYamlPath
+    path: scripts/generate-governance-remediation-queue.cjs
+    dddOwner: Repository governance remediation queue output contract
+    cqRails:
+      - GenerateGovernanceRemediationQueue
+    fowlerSignals:
+      - Documentation drift
+    architectureGuard: scripts/generate-governance-remediation-queue.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/generate-governance-remediation-queue.test.cjs
+  - name: queueMarkdownPath
+    path: scripts/generate-governance-remediation-queue.cjs
+    dddOwner: Repository governance remediation queue output contract
+    cqRails:
+      - GenerateGovernanceRemediationQueue
+    fowlerSignals:
+      - Documentation drift
+    architectureGuard: scripts/generate-governance-remediation-queue.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/generate-governance-remediation-queue.test.cjs
+  - name: readYaml
+    path: scripts/generate-governance-remediation-queue.cjs
+    dddOwner: Repository governance remediation queue input parser
+    cqRails:
+      - GenerateGovernanceRemediationQueue
+    fowlerSignals:
+      - Hidden authority
+    architectureGuard: scripts/generate-governance-remediation-queue.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/generate-governance-remediation-queue.test.cjs
+  - name: renderYaml
+    path: scripts/generate-governance-remediation-queue.cjs
+    dddOwner: Repository governance remediation queue renderer
+    cqRails:
+      - GenerateGovernanceRemediationQueue
+    fowlerSignals:
+      - Documentation drift
+    architectureGuard: scripts/generate-governance-remediation-queue.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/generate-governance-remediation-queue.test.cjs
+  - name: asArray
+    path: scripts/generate-governance-remediation-queue.cjs
+    dddOwner: Repository governance remediation queue normalizer
+    cqRails:
+      - GenerateGovernanceRemediationQueue
+    fowlerSignals:
+      - Hidden authority
+    architectureGuard: scripts/generate-governance-remediation-queue.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/generate-governance-remediation-queue.test.cjs
+  - name: groupBy
+    path: scripts/generate-governance-remediation-queue.cjs
+    dddOwner: Repository governance remediation queue grouping policy
+    cqRails:
+      - GenerateGovernanceRemediationQueue
+    fowlerSignals:
+      - Boundary drift
+    architectureGuard: scripts/generate-governance-remediation-queue.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/generate-governance-remediation-queue.test.cjs
+  - name: sortByPath
+    path: scripts/generate-governance-remediation-queue.cjs
+    dddOwner: Repository governance remediation queue ordering policy
+    cqRails:
+      - GenerateGovernanceRemediationQueue
+    fowlerSignals:
+      - Documentation drift
+    architectureGuard: scripts/generate-governance-remediation-queue.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/generate-governance-remediation-queue.test.cjs
+  - name: componentById
+    path: scripts/generate-governance-remediation-queue.cjs
+    dddOwner: Repository governance remediation queue component lookup
+    cqRails:
+      - GenerateGovernanceRemediationQueue
+    fowlerSignals:
+      - Boundary drift
+    architectureGuard: scripts/generate-governance-remediation-queue.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/generate-governance-remediation-queue.test.cjs
+  - name: classifyPriority
+    path: scripts/generate-governance-remediation-queue.cjs
+    dddOwner: Repository governance remediation queue priority policy
+    cqRails:
+      - GenerateGovernanceRemediationQueue
+    fowlerSignals:
+      - Boundary drift
+    architectureGuard: scripts/generate-governance-remediation-queue.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/generate-governance-remediation-queue.test.cjs
+  - name: isSpecificRail
+    path: scripts/generate-governance-remediation-queue.cjs
+    dddOwner: Repository governance remediation queue rail classifier
+    cqRails:
+      - GenerateGovernanceRemediationQueue
+    fowlerSignals:
+      - Duplicate semantics
+    architectureGuard: scripts/generate-governance-remediation-queue.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/generate-governance-remediation-queue.test.cjs
+  - name: taskId
+    path: scripts/generate-governance-remediation-queue.cjs
+    dddOwner: Repository governance remediation queue identity policy
+    cqRails:
+      - GenerateGovernanceRemediationQueue
+    fowlerSignals:
+      - Documentation drift
+    architectureGuard: scripts/generate-governance-remediation-queue.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/generate-governance-remediation-queue.test.cjs
+  - name: taskValidation
+    path: scripts/generate-governance-remediation-queue.cjs
+    dddOwner: Repository governance remediation queue validation policy
+    cqRails:
+      - GenerateGovernanceRemediationQueue
+    fowlerSignals:
+      - Test-only confidence
+    architectureGuard: scripts/generate-governance-remediation-queue.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/generate-governance-remediation-queue.test.cjs
+  - name: buildTask
+    path: scripts/generate-governance-remediation-queue.cjs
+    dddOwner: Repository governance remediation queue task model
+    cqRails:
+      - GenerateGovernanceRemediationQueue
+    fowlerSignals:
+      - Boundary drift
+    architectureGuard: scripts/generate-governance-remediation-queue.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/generate-governance-remediation-queue.test.cjs
+  - name: buildDriftTasks
+    path: scripts/generate-governance-remediation-queue.cjs
+    dddOwner: Repository governance remediation queue drift policy
+    cqRails:
+      - GenerateGovernanceRemediationQueue
+    fowlerSignals:
+      - Boundary drift
+    architectureGuard: scripts/generate-governance-remediation-queue.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/generate-governance-remediation-queue.test.cjs
+  - name: buildSubdivisionTasks
+    path: scripts/generate-governance-remediation-queue.cjs
+    dddOwner: Repository governance remediation queue subdivision policy
+    cqRails:
+      - GenerateGovernanceRemediationQueue
+    fowlerSignals:
+      - Responsibility overload
+    architectureGuard: scripts/generate-governance-remediation-queue.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/generate-governance-remediation-queue.test.cjs
+  - name: buildRailGapTasks
+    path: scripts/generate-governance-remediation-queue.cjs
+    dddOwner: Repository governance remediation queue rail gap policy
+    cqRails:
+      - GenerateGovernanceRemediationQueue
+    fowlerSignals:
+      - Duplicate semantics
+    architectureGuard: scripts/generate-governance-remediation-queue.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/generate-governance-remediation-queue.test.cjs
+  - name: buildDocumentAlignmentTasks
+    path: scripts/generate-governance-remediation-queue.cjs
+    dddOwner: Repository governance remediation queue docs policy
+    cqRails:
+      - GenerateGovernanceRemediationQueue
+    fowlerSignals:
+      - Documentation drift
+    architectureGuard: scripts/generate-governance-remediation-queue.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/generate-governance-remediation-queue.test.cjs
+  - name: buildFingerprintReviewTasks
+    path: scripts/generate-governance-remediation-queue.cjs
+    dddOwner: Repository governance remediation queue fingerprint policy
+    cqRails:
+      - GenerateGovernanceRemediationQueue
+    fowlerSignals:
+      - Hidden authority
+    architectureGuard: scripts/generate-governance-remediation-queue.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/generate-governance-remediation-queue.test.cjs
+  - name: sortTasks
+    path: scripts/generate-governance-remediation-queue.cjs
+    dddOwner: Repository governance remediation queue ordering policy
+    cqRails:
+      - GenerateGovernanceRemediationQueue
+    fowlerSignals:
+      - Documentation drift
+    architectureGuard: scripts/generate-governance-remediation-queue.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/generate-governance-remediation-queue.test.cjs
+  - name: countBy
+    path: scripts/generate-governance-remediation-queue.cjs
+    dddOwner: Repository governance remediation queue summary policy
+    cqRails:
+      - GenerateGovernanceRemediationQueue
+    fowlerSignals:
+      - Documentation drift
+    architectureGuard: scripts/generate-governance-remediation-queue.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/generate-governance-remediation-queue.test.cjs
+  - name: buildRemediationQueue
+    path: scripts/generate-governance-remediation-queue.cjs
+    dddOwner: Repository governance remediation queue
+    cqRails:
+      - GenerateGovernanceRemediationQueue
+    fowlerSignals:
+      - Boundary drift
+    architectureGuard: scripts/generate-governance-remediation-queue.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/generate-governance-remediation-queue.test.cjs
+  - name: renderTaskRows
+    path: scripts/generate-governance-remediation-queue.cjs
+    dddOwner: Repository governance remediation queue markdown renderer
+    cqRails:
+      - GenerateGovernanceRemediationQueue
+    fowlerSignals:
+      - Documentation drift
+    architectureGuard: scripts/generate-governance-remediation-queue.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/generate-governance-remediation-queue.test.cjs
+  - name: renderCountTable
+    path: scripts/generate-governance-remediation-queue.cjs
+    dddOwner: Repository governance remediation queue markdown renderer
+    cqRails:
+      - GenerateGovernanceRemediationQueue
+    fowlerSignals:
+      - Documentation drift
+    architectureGuard: scripts/generate-governance-remediation-queue.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/generate-governance-remediation-queue.test.cjs
+  - name: renderMarkdown
+    path: scripts/generate-governance-remediation-queue.cjs
+    dddOwner: Repository governance remediation queue markdown renderer
+    cqRails:
+      - GenerateGovernanceRemediationQueue
+    fowlerSignals:
+      - Documentation drift
+    architectureGuard: scripts/generate-governance-remediation-queue.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/generate-governance-remediation-queue.test.cjs
+  - name: writeIfChanged
+    path: scripts/generate-governance-remediation-queue.cjs
+    dddOwner: Repository governance remediation queue drift gate
+    cqRails:
+      - GenerateGovernanceRemediationQueue
+    fowlerSignals:
+      - Hidden authority
+    architectureGuard: scripts/generate-governance-remediation-queue.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/generate-governance-remediation-queue.test.cjs
+  - name: buildOutputs
+    path: scripts/generate-governance-remediation-queue.cjs
+    dddOwner: Repository governance remediation queue generator
+    cqRails:
+      - GenerateGovernanceRemediationQueue
+    fowlerSignals:
+      - Documentation drift
+    architectureGuard: scripts/generate-governance-remediation-queue.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/generate-governance-remediation-queue.test.cjs
+  - name: main
+    path: scripts/generate-governance-remediation-queue.cjs
+    dddOwner: Repository governance remediation queue CLI
+    cqRails:
+      - GenerateGovernanceRemediationQueue
+    fowlerSignals:
+      - Documentation drift
+    architectureGuard: scripts/generate-governance-remediation-queue.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/generate-governance-remediation-queue.test.cjs
+  - name: assert
+    path: scripts/generate-governance-remediation-queue.test.cjs
+    dddOwner: Repository governance remediation queue test contract
+    cqRails:
+      - GenerateGovernanceRemediationQueue
+    fowlerSignals:
+      - Coverage refinement
+    architectureGuard: scripts/generate-governance-remediation-queue.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/generate-governance-remediation-queue.test.cjs
+  - name: test
+    path: scripts/generate-governance-remediation-queue.test.cjs
+    dddOwner: Repository governance remediation queue test contract
+    cqRails:
+      - GenerateGovernanceRemediationQueue
+    fowlerSignals:
+      - Coverage refinement
+    architectureGuard: scripts/generate-governance-remediation-queue.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/generate-governance-remediation-queue.test.cjs
+  - name: coverageReport
+    path: scripts/generate-governance-remediation-queue.test.cjs
+    dddOwner: Repository governance remediation queue test fixture
+    cqRails:
+      - GenerateGovernanceRemediationQueue
+    fowlerSignals:
+      - Coverage refinement
+    architectureGuard: scripts/generate-governance-remediation-queue.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/generate-governance-remediation-queue.test.cjs
+  - name: fileIndex
+    path: scripts/generate-governance-remediation-queue.test.cjs
+    dddOwner: Repository governance remediation queue test fixture
+    cqRails:
+      - GenerateGovernanceRemediationQueue
+    fowlerSignals:
+      - Coverage refinement
+    architectureGuard: scripts/generate-governance-remediation-queue.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/generate-governance-remediation-queue.test.cjs
+  - name: componentIndex
+    path: scripts/generate-governance-remediation-queue.test.cjs
+    dddOwner: Repository governance remediation queue test fixture
+    cqRails:
+      - GenerateGovernanceRemediationQueue
+    fowlerSignals:
+      - Coverage refinement
+    architectureGuard: scripts/generate-governance-remediation-queue.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/generate-governance-remediation-queue.test.cjs
+  - name: documentMap
+    path: scripts/generate-governance-remediation-queue.test.cjs
+    dddOwner: Repository governance remediation queue test fixture
+    cqRails:
+      - GenerateGovernanceRemediationQueue
+    fowlerSignals:
+      - Coverage refinement
+    architectureGuard: scripts/generate-governance-remediation-queue.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/generate-governance-remediation-queue.test.cjs
   - name: GenerateGovernanceFileComponentIndex
     path: scripts/generate-governance-file-component-index.cjs
     dddOwner: Repository governance file/component index

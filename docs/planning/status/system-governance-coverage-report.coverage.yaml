@@ -3,8 +3,8 @@ generatedFrom:
   - docs/planning/status/system-governance-file-index.files.yaml
   - docs/planning/status/system-governance-component-index.components.yaml
 totals:
-  files: 4063
-  governedFiles: 4063
+  files: 4067
+  governedFiles: 4067
   ungovernedFiles: 0
   driftFiles: 44
   legacyFiles: 0
@@ -22,12 +22,12 @@ ciPosture:
     - legacyFiles records removal targets until owning work removes them
 byRootUnit:
   - name: SYS-DVT
-    count: 4063
+    count: 4067
 byDomainUnit:
   - name: SYS-ADAPTERS
     count: 196
   - name: SYS-DVT
-    count: 3286
+    count: 3290
   - name: SYS-OBSERVABILITY
     count: 15
   - name: SYS-PLANSTORE
@@ -44,11 +44,11 @@ byComponentUnit:
   - name: SYS-API-ROOT
     count: 362
   - name: SYS-CI-GOVERNANCE-ROOT
-    count: 176
+    count: 178
   - name: SYS-CONTRACTS-ROOT
     count: 127
   - name: SYS-DOCS-GOVERNANCE-ROOT
-    count: 1648
+    count: 1650
   - name: SYS-OBSERVABILITY-ROOT
     count: 15
   - name: SYS-PLANNER-ROOT
@@ -81,7 +81,7 @@ byStatus:
   - name: canonical
     count: 110
   - name: coverage-required
-    count: 3841
+    count: 3845
   - name: drift
     count: 44
   - name: review
@@ -96,21 +96,21 @@ byDddOwner:
   - name: ENTRY
     count: 787
   - name: INFRA
-    count: 1968
+    count: 1972
   - name: PORT
     count: 173
 governanceDocuments:
   - path: docs/DOCS_README.md
-    fileCount: 1648
+    fileCount: 1650
   - path: docs/planning/status/governance-document-rule-inventory.md
-    fileCount: 1648
+    fileCount: 1650
   - path: docs/planning/status/system-operations-inventory-20260501.md
     fileCount: 993
   - path: >-
       docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md
     fileCount: 787
   - path: docs/guides/testing-and-ci-capabilities.md
-    fileCount: 176
+    fileCount: 178
   - path: docs/contracts/index.md
     fileCount: 127
   - path: package.json
@@ -159,7 +159,7 @@ componentCoverage:
     status: coverage-required
     dddOwner: INFRA
     cqRails: none - documentation governance
-    fileCount: 1648
+    fileCount: 1650
     isDrift: false
     isLegacy: false
     childrenRequired: true
@@ -226,7 +226,7 @@ componentCoverage:
     status: coverage-required
     dddOwner: INFRA
     cqRails: none - repository automation
-    fileCount: 176
+    fileCount: 178
     isDrift: false
     isLegacy: false
     childrenRequired: true
@@ -614,7 +614,7 @@ findings:
   legacyFiles: []
   componentsRequiringSubdivision:
     - id: SYS-DOCS-GOVERNANCE-ROOT
-      fileCount: 1648
+      fileCount: 1650
       status: coverage-required
       dddOwner: INFRA
     - id: SYS-WEB-ROOT
@@ -634,7 +634,7 @@ findings:
       status: coverage-required
       dddOwner: ADP
     - id: SYS-CI-GOVERNANCE-ROOT
-      fileCount: 176
+      fileCount: 178
       status: coverage-required
       dddOwner: INFRA
     - id: SYS-CONTRACTS-ROOT
