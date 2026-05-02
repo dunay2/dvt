@@ -155,7 +155,7 @@ components:
     isDrift: false
     isLegacy: false
     childrenRequired: true
-    fileCount: 174
+    fileCount: 176
     dddOwner: INFRA
     cqRails: none - repository automation
     owns:
@@ -258,7 +258,7 @@ components:
     isDrift: false
     isLegacy: false
     childrenRequired: true
-    fileCount: 1646
+    fileCount: 1648
     dddOwner: INFRA
     cqRails: none - documentation governance
     owns:

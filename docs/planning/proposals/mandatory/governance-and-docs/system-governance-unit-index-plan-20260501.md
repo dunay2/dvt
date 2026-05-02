@@ -371,6 +371,8 @@ allowedImplementationSurfaces:
   - scripts/check-governance-file-fingerprint-baseline.test.cjs
   - scripts/check-governance-unit-coverage.cjs
   - scripts/check-governance-unit-coverage.test.cjs
+  - scripts/generate-governance-coverage-report.cjs
+  - scripts/generate-governance-coverage-report.test.cjs
   - scripts/generate-governance-document-unit-map.cjs
   - scripts/generate-governance-file-component-index.cjs
   - scripts/generate-governance-file-component-index.test.cjs
@@ -399,6 +401,9 @@ commandQueryRails:
   - name: RenderGovernanceFileFingerprintImpact
     type: query
     dddOwner: Repository governance file fingerprint impact report
+  - name: GenerateGovernanceCoverageReport
+    type: query
+    dddOwner: Repository governance coverage report
   - name: CheckGovernanceChangedFiles
     type: query
     dddOwner: Repository governance changed-file gate
@@ -421,6 +426,9 @@ domainObjects:
   - name: GovernanceFileFingerprintBaseline
     type: accepted fingerprint baseline
     owner: SYS-DOCS-GOVERNANCE-ROOT
+  - name: GovernanceCoverageReport
+    type: generated coverage read model
+    owner: SYS-DOCS-GOVERNANCE-ROOT
   - name: GovernanceChangedFileSet
     type: pull-request diff read model
     owner: SYS-DOCS-GOVERNANCE-ROOT
@@ -437,8 +445,10 @@ architectureGuards:
   - pnpm docs:governance:file-component-index:check
   - pnpm docs:governance:file-fingerprint-baseline:check
   - pnpm docs:governance:file-fingerprint-impact:check
+  - pnpm docs:governance:coverage-report:check
   - pnpm docs:governance:changed-files:check
   - pnpm docs:gov:manifest:check
+  - pnpm test:docs:governance:coverage-report
   - pnpm test:docs:governance:changed-files
   - pnpm exec node --test tools/ci/docs-manifest-contract.test.mjs
 cypressFlows:
@@ -448,6 +458,7 @@ completionGate:
   - pnpm test:docs:governance:document-unit-map
   - pnpm test:docs:governance:file-component-index
   - pnpm test:docs:governance:file-fingerprint-baseline
+  - pnpm test:docs:governance:coverage-report
   - pnpm test:docs:governance:changed-files
   - pnpm ci:docs
   - pnpm verify:prepush
@@ -473,6 +484,15 @@ redGreenCycles:
       - scripts/check-governance-file-fingerprint-baseline.cjs
       - docs/planning/status/system-governance-file-fingerprint-baseline.yaml
     greenTest: pnpm test:docs:governance:file-fingerprint-baseline
+  - id: governance-coverage-report
+    redTest: pnpm test:docs:governance:coverage-report
+    expectedFailure: Governance coverage report must expose totals, drift, legacy, and subdivision gaps.
+    patchSurfaces:
+      - scripts/generate-governance-coverage-report.cjs
+      - scripts/generate-governance-coverage-report.test.cjs
+      - docs/planning/status/system-governance-coverage-report.coverage.yaml
+      - docs/planning/status/system-governance-coverage-report-20260502.md
+    greenTest: pnpm test:docs:governance:coverage-report
   - id: governance-changed-files
     redTest: pnpm test:docs:governance:changed-files
     expectedFailure: Changed files without accepted file-index and fingerprint state are rejected.
@@ -526,6 +546,327 @@ symbols:
     cypressCoverage: N/A - docs governance script
     unitTests:
       - scripts/check-governance-changed-files.test.cjs
+  - name: GenerateGovernanceCoverageReport
+    path: scripts/generate-governance-coverage-report.cjs
+    dddOwner: Repository governance coverage report
+    cqRails:
+      - GenerateGovernanceCoverageReport
+    fowlerSignals:
+      - Documentation drift
+      - Hidden authority
+    architectureGuard: scripts/generate-governance-coverage-report.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/generate-governance-coverage-report.test.cjs
+  - name: fs
+    path: scripts/generate-governance-coverage-report.cjs
+    dddOwner: Repository governance coverage report dependency
+    cqRails:
+      - GenerateGovernanceCoverageReport
+    fowlerSignals:
+      - Hidden authority
+    architectureGuard: scripts/generate-governance-coverage-report.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/generate-governance-coverage-report.test.cjs
+  - name: path
+    path: scripts/generate-governance-coverage-report.cjs
+    dddOwner: Repository governance coverage report dependency
+    cqRails:
+      - GenerateGovernanceCoverageReport
+    fowlerSignals:
+      - Hidden authority
+    architectureGuard: scripts/generate-governance-coverage-report.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/generate-governance-coverage-report.test.cjs
+  - name: yaml
+    path: scripts/generate-governance-coverage-report.cjs
+    dddOwner: Repository governance coverage report dependency
+    cqRails:
+      - GenerateGovernanceCoverageReport
+    fowlerSignals:
+      - Hidden authority
+    architectureGuard: scripts/generate-governance-coverage-report.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/generate-governance-coverage-report.test.cjs
+  - name: repoRoot
+    path: scripts/generate-governance-coverage-report.cjs
+    dddOwner: Repository governance coverage report path configuration
+    cqRails:
+      - GenerateGovernanceCoverageReport
+    fowlerSignals:
+      - Hidden authority
+    architectureGuard: scripts/generate-governance-coverage-report.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/generate-governance-coverage-report.test.cjs
+  - name: statusDir
+    path: scripts/generate-governance-coverage-report.cjs
+    dddOwner: Repository governance coverage report path configuration
+    cqRails:
+      - GenerateGovernanceCoverageReport
+    fowlerSignals:
+      - Hidden authority
+    architectureGuard: scripts/generate-governance-coverage-report.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/generate-governance-coverage-report.test.cjs
+  - name: fileIndexPath
+    path: scripts/generate-governance-coverage-report.cjs
+    dddOwner: Repository governance coverage report path configuration
+    cqRails:
+      - GenerateGovernanceCoverageReport
+    fowlerSignals:
+      - Hidden authority
+    architectureGuard: scripts/generate-governance-coverage-report.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/generate-governance-coverage-report.test.cjs
+  - name: componentIndexPath
+    path: scripts/generate-governance-coverage-report.cjs
+    dddOwner: Repository governance coverage report path configuration
+    cqRails:
+      - GenerateGovernanceCoverageReport
+    fowlerSignals:
+      - Hidden authority
+    architectureGuard: scripts/generate-governance-coverage-report.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/generate-governance-coverage-report.test.cjs
+  - name: coverageYamlPath
+    path: scripts/generate-governance-coverage-report.cjs
+    dddOwner: Repository governance coverage report output path
+    cqRails:
+      - GenerateGovernanceCoverageReport
+    fowlerSignals:
+      - Hidden authority
+    architectureGuard: scripts/generate-governance-coverage-report.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/generate-governance-coverage-report.test.cjs
+  - name: coverageMarkdownPath
+    path: scripts/generate-governance-coverage-report.cjs
+    dddOwner: Repository governance coverage report output path
+    cqRails:
+      - GenerateGovernanceCoverageReport
+    fowlerSignals:
+      - Hidden authority
+    architectureGuard: scripts/generate-governance-coverage-report.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/generate-governance-coverage-report.test.cjs
+  - name: readYaml
+    path: scripts/generate-governance-coverage-report.cjs
+    dddOwner: Repository governance coverage report input adapter
+    cqRails:
+      - GenerateGovernanceCoverageReport
+    fowlerSignals:
+      - Hidden authority
+    architectureGuard: scripts/generate-governance-coverage-report.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/generate-governance-coverage-report.test.cjs
+  - name: renderYaml
+    path: scripts/generate-governance-coverage-report.cjs
+    dddOwner: Repository governance coverage report output adapter
+    cqRails:
+      - GenerateGovernanceCoverageReport
+    fowlerSignals:
+      - Documentation drift
+    architectureGuard: scripts/generate-governance-coverage-report.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/generate-governance-coverage-report.test.cjs
+  - name: countBy
+    path: scripts/generate-governance-coverage-report.cjs
+    dddOwner: Repository governance coverage report read model
+    cqRails:
+      - GenerateGovernanceCoverageReport
+    fowlerSignals:
+      - Documentation drift
+    architectureGuard: scripts/generate-governance-coverage-report.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/generate-governance-coverage-report.test.cjs
+  - name: countGovernanceDocuments
+    path: scripts/generate-governance-coverage-report.cjs
+    dddOwner: Repository governance coverage report read model
+    cqRails:
+      - GenerateGovernanceCoverageReport
+    fowlerSignals:
+      - Documentation drift
+    architectureGuard: scripts/generate-governance-coverage-report.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/generate-governance-coverage-report.test.cjs
+  - name: buildComponentCoverage
+    path: scripts/generate-governance-coverage-report.cjs
+    dddOwner: Repository governance coverage report read model
+    cqRails:
+      - GenerateGovernanceCoverageReport
+    fowlerSignals:
+      - Responsibility overload
+    architectureGuard: scripts/generate-governance-coverage-report.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/generate-governance-coverage-report.test.cjs
+  - name: buildOpenGovernanceFindings
+    path: scripts/generate-governance-coverage-report.cjs
+    dddOwner: Repository governance coverage report read model
+    cqRails:
+      - GenerateGovernanceCoverageReport
+    fowlerSignals:
+      - Boundary drift
+    architectureGuard: scripts/generate-governance-coverage-report.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/generate-governance-coverage-report.test.cjs
+  - name: buildCoverageReport
+    path: scripts/generate-governance-coverage-report.cjs
+    dddOwner: Repository governance coverage report read model
+    cqRails:
+      - GenerateGovernanceCoverageReport
+    fowlerSignals:
+      - Documentation drift
+      - Boundary drift
+    architectureGuard: scripts/generate-governance-coverage-report.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/generate-governance-coverage-report.test.cjs
+  - name: renderCountTable
+    path: scripts/generate-governance-coverage-report.cjs
+    dddOwner: Repository governance coverage report markdown projection
+    cqRails:
+      - GenerateGovernanceCoverageReport
+    fowlerSignals:
+      - Documentation drift
+    architectureGuard: scripts/generate-governance-coverage-report.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/generate-governance-coverage-report.test.cjs
+  - name: renderFileFindingRows
+    path: scripts/generate-governance-coverage-report.cjs
+    dddOwner: Repository governance coverage report markdown projection
+    cqRails:
+      - GenerateGovernanceCoverageReport
+    fowlerSignals:
+      - Documentation drift
+    architectureGuard: scripts/generate-governance-coverage-report.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/generate-governance-coverage-report.test.cjs
+  - name: renderComponentRows
+    path: scripts/generate-governance-coverage-report.cjs
+    dddOwner: Repository governance coverage report markdown projection
+    cqRails:
+      - GenerateGovernanceCoverageReport
+    fowlerSignals:
+      - Documentation drift
+    architectureGuard: scripts/generate-governance-coverage-report.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/generate-governance-coverage-report.test.cjs
+  - name: renderGovernanceRows
+    path: scripts/generate-governance-coverage-report.cjs
+    dddOwner: Repository governance coverage report markdown projection
+    cqRails:
+      - GenerateGovernanceCoverageReport
+    fowlerSignals:
+      - Documentation drift
+    architectureGuard: scripts/generate-governance-coverage-report.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/generate-governance-coverage-report.test.cjs
+  - name: renderMarkdown
+    path: scripts/generate-governance-coverage-report.cjs
+    dddOwner: Repository governance coverage report markdown projection
+    cqRails:
+      - GenerateGovernanceCoverageReport
+    fowlerSignals:
+      - Documentation drift
+    architectureGuard: scripts/generate-governance-coverage-report.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/generate-governance-coverage-report.test.cjs
+  - name: writeIfChanged
+    path: scripts/generate-governance-coverage-report.cjs
+    dddOwner: Repository governance coverage report output adapter
+    cqRails:
+      - GenerateGovernanceCoverageReport
+    fowlerSignals:
+      - Hidden authority
+    architectureGuard: scripts/generate-governance-coverage-report.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/generate-governance-coverage-report.test.cjs
+  - name: buildOutputs
+    path: scripts/generate-governance-coverage-report.cjs
+    dddOwner: Repository governance coverage report application command
+    cqRails:
+      - GenerateGovernanceCoverageReport
+    fowlerSignals:
+      - Documentation drift
+    architectureGuard: scripts/generate-governance-coverage-report.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/generate-governance-coverage-report.test.cjs
+  - name: main
+    path: scripts/generate-governance-coverage-report.cjs
+    dddOwner: Repository governance coverage report CLI entrypoint
+    cqRails:
+      - GenerateGovernanceCoverageReport
+    fowlerSignals:
+      - Hidden authority
+    architectureGuard: scripts/generate-governance-coverage-report.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/generate-governance-coverage-report.test.cjs
+  - name: test
+    path: scripts/generate-governance-coverage-report.test.cjs
+    dddOwner: Repository governance coverage report test contract
+    cqRails:
+      - GenerateGovernanceCoverageReport
+    fowlerSignals:
+      - Coverage refinement
+    architectureGuard: scripts/generate-governance-coverage-report.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/generate-governance-coverage-report.test.cjs
+  - name: assert
+    path: scripts/generate-governance-coverage-report.test.cjs
+    dddOwner: Repository governance coverage report test contract
+    cqRails:
+      - GenerateGovernanceCoverageReport
+    fowlerSignals:
+      - Coverage refinement
+    architectureGuard: scripts/generate-governance-coverage-report.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/generate-governance-coverage-report.test.cjs
+  - name: fileIndex
+    path: scripts/generate-governance-coverage-report.test.cjs
+    dddOwner: Repository governance coverage report test fixture
+    cqRails:
+      - GenerateGovernanceCoverageReport
+    fowlerSignals:
+      - Coverage refinement
+    architectureGuard: scripts/generate-governance-coverage-report.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/generate-governance-coverage-report.test.cjs
+  - name: componentIndex
+    path: scripts/generate-governance-coverage-report.test.cjs
+    dddOwner: Repository governance coverage report test fixture
+    cqRails:
+      - GenerateGovernanceCoverageReport
+    fowlerSignals:
+      - Coverage refinement
+    architectureGuard: scripts/generate-governance-coverage-report.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/generate-governance-coverage-report.test.cjs
   - name: parseNameStatus
     path: scripts/check-governance-changed-files.cjs
     dddOwner: Repository governance changed-file gate
