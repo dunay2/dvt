@@ -365,6 +365,8 @@ allowedImplementationSurfaces:
   - docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
   - docs/planning/status/**
   - package.json
+  - scripts/check-governance-changed-files.cjs
+  - scripts/check-governance-changed-files.test.cjs
   - scripts/check-governance-file-fingerprint-baseline.cjs
   - scripts/check-governance-file-fingerprint-baseline.test.cjs
   - scripts/check-governance-unit-coverage.cjs
@@ -397,6 +399,9 @@ commandQueryRails:
   - name: RenderGovernanceFileFingerprintImpact
     type: query
     dddOwner: Repository governance file fingerprint impact report
+  - name: CheckGovernanceChangedFiles
+    type: query
+    dddOwner: Repository governance changed-file gate
   - name: GenerateDocsGovernanceManifest
     type: command
     dddOwner: Repository docs governance manifest
@@ -416,6 +421,9 @@ domainObjects:
   - name: GovernanceFileFingerprintBaseline
     type: accepted fingerprint baseline
     owner: SYS-DOCS-GOVERNANCE-ROOT
+  - name: GovernanceChangedFileSet
+    type: pull-request diff read model
+    owner: SYS-DOCS-GOVERNANCE-ROOT
   - name: DocsGovernanceManifest
     type: compact generated docs catalog
     owner: SYS-DOCS-GOVERNANCE-ROOT
@@ -429,7 +437,9 @@ architectureGuards:
   - pnpm docs:governance:file-component-index:check
   - pnpm docs:governance:file-fingerprint-baseline:check
   - pnpm docs:governance:file-fingerprint-impact:check
+  - pnpm docs:governance:changed-files:check
   - pnpm docs:gov:manifest:check
+  - pnpm test:docs:governance:changed-files
   - pnpm exec node --test tools/ci/docs-manifest-contract.test.mjs
 cypressFlows:
   - N/A - repository governance docs and CI only
@@ -438,6 +448,7 @@ completionGate:
   - pnpm test:docs:governance:document-unit-map
   - pnpm test:docs:governance:file-component-index
   - pnpm test:docs:governance:file-fingerprint-baseline
+  - pnpm test:docs:governance:changed-files
   - pnpm ci:docs
   - pnpm verify:prepush
 redGreenCycles:
@@ -462,6 +473,14 @@ redGreenCycles:
       - scripts/check-governance-file-fingerprint-baseline.cjs
       - docs/planning/status/system-governance-file-fingerprint-baseline.yaml
     greenTest: pnpm test:docs:governance:file-fingerprint-baseline
+  - id: governance-changed-files
+    redTest: pnpm test:docs:governance:changed-files
+    expectedFailure: Changed files without accepted file-index and fingerprint state are rejected.
+    patchSurfaces:
+      - scripts/check-governance-changed-files.cjs
+      - scripts/check-governance-changed-files.test.cjs
+      - .github/workflows/pr-quality-gate.yml
+    greenTest: pnpm test:docs:governance:changed-files
   - id: docs-governance-manifest-compaction
     redTest: pnpm exec node --test tools/ci/docs-manifest-contract.test.mjs
     expectedFailure: Tracked docs manifest must stay compact while full audit output remains available on demand.
@@ -495,6 +514,403 @@ symbols:
     cypressCoverage: N/A - docs governance script
     unitTests:
       - scripts/check-governance-file-fingerprint-baseline.test.cjs
+  - name: CheckGovernanceChangedFiles
+    path: scripts/check-governance-changed-files.cjs
+    dddOwner: Repository governance changed-file gate
+    cqRails:
+      - CheckGovernanceChangedFiles
+    fowlerSignals:
+      - Documentation drift
+      - Hidden authority
+    architectureGuard: scripts/check-governance-changed-files.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/check-governance-changed-files.test.cjs
+  - name: parseNameStatus
+    path: scripts/check-governance-changed-files.cjs
+    dddOwner: Repository governance changed-file gate
+    cqRails:
+      - CheckGovernanceChangedFiles
+    fowlerSignals:
+      - Hidden authority
+    architectureGuard: scripts/check-governance-changed-files.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/check-governance-changed-files.test.cjs
+  - name: validateChangedFiles
+    path: scripts/check-governance-changed-files.cjs
+    dddOwner: Repository governance changed-file gate
+    cqRails:
+      - CheckGovernanceChangedFiles
+    fowlerSignals:
+      - Documentation drift
+    architectureGuard: scripts/check-governance-changed-files.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/check-governance-changed-files.test.cjs
+  - name: parseArgs
+    path: scripts/check-governance-changed-files.cjs
+    dddOwner: Repository governance changed-file gate
+    cqRails:
+      - CheckGovernanceChangedFiles
+    fowlerSignals:
+      - Hidden authority
+    architectureGuard: scripts/check-governance-changed-files.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/check-governance-changed-files.test.cjs
+  - name: readNameStatusDiff
+    path: scripts/check-governance-changed-files.cjs
+    dddOwner: Repository governance changed-file gate
+    cqRails:
+      - CheckGovernanceChangedFiles
+    fowlerSignals:
+      - Documentation drift
+    architectureGuard: scripts/check-governance-changed-files.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/check-governance-changed-files.test.cjs
+  - name: resolveBaseRef
+    path: scripts/check-governance-changed-files.cjs
+    dddOwner: Repository governance changed-file gate
+    cqRails:
+      - CheckGovernanceChangedFiles
+    fowlerSignals:
+      - Hidden authority
+    architectureGuard: scripts/check-governance-changed-files.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/check-governance-changed-files.test.cjs
+  - name: execGit
+    path: scripts/check-governance-changed-files.cjs
+    dddOwner: Repository governance changed-file gate
+    cqRails:
+      - CheckGovernanceChangedFiles
+    fowlerSignals:
+      - Hidden authority
+    architectureGuard: scripts/check-governance-changed-files.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/check-governance-changed-files.test.cjs
+  - name: changeKey
+    path: scripts/check-governance-changed-files.cjs
+    dddOwner: Repository governance changed-file gate
+    cqRails:
+      - CheckGovernanceChangedFiles
+    fowlerSignals:
+      - Hidden authority
+    architectureGuard: scripts/check-governance-changed-files.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/check-governance-changed-files.test.cjs
+  - name: dedupeChanges
+    path: scripts/check-governance-changed-files.cjs
+    dddOwner: Repository governance changed-file gate
+    cqRails:
+      - CheckGovernanceChangedFiles
+    fowlerSignals:
+      - Hidden authority
+    architectureGuard: scripts/check-governance-changed-files.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/check-governance-changed-files.test.cjs
+  - name: requireActiveGovernance
+    path: scripts/check-governance-changed-files.cjs
+    dddOwner: Repository governance changed-file gate
+    cqRails:
+      - CheckGovernanceChangedFiles
+    fowlerSignals:
+      - Boundary drift
+    architectureGuard: scripts/check-governance-changed-files.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/check-governance-changed-files.test.cjs
+  - name: validateAdded
+    path: scripts/check-governance-changed-files.cjs
+    dddOwner: Repository governance changed-file gate
+    cqRails:
+      - CheckGovernanceChangedFiles
+    fowlerSignals:
+      - Boundary drift
+    architectureGuard: scripts/check-governance-changed-files.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/check-governance-changed-files.test.cjs
+  - name: validateModified
+    path: scripts/check-governance-changed-files.cjs
+    dddOwner: Repository governance changed-file gate
+    cqRails:
+      - CheckGovernanceChangedFiles
+    fowlerSignals:
+      - Documentation drift
+    architectureGuard: scripts/check-governance-changed-files.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/check-governance-changed-files.test.cjs
+  - name: validateDeleted
+    path: scripts/check-governance-changed-files.cjs
+    dddOwner: Repository governance changed-file gate
+    cqRails:
+      - CheckGovernanceChangedFiles
+    fowlerSignals:
+      - Documentation drift
+    architectureGuard: scripts/check-governance-changed-files.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/check-governance-changed-files.test.cjs
+  - name: validateRenamed
+    path: scripts/check-governance-changed-files.cjs
+    dddOwner: Repository governance changed-file gate
+    cqRails:
+      - CheckGovernanceChangedFiles
+    fowlerSignals:
+      - Boundary drift
+    architectureGuard: scripts/check-governance-changed-files.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/check-governance-changed-files.test.cjs
+  - name: isUngoverned
+    path: scripts/check-governance-changed-files.cjs
+    dddOwner: Repository governance changed-file gate
+    cqRails:
+      - CheckGovernanceChangedFiles
+    fowlerSignals:
+      - Hidden authority
+    architectureGuard: scripts/check-governance-changed-files.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/check-governance-changed-files.test.cjs
+  - name: isLegacyOrDrift
+    path: scripts/check-governance-changed-files.cjs
+    dddOwner: Repository governance changed-file gate
+    cqRails:
+      - CheckGovernanceChangedFiles
+    fowlerSignals:
+      - Boundary drift
+    architectureGuard: scripts/check-governance-changed-files.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/check-governance-changed-files.test.cjs
+  - name: entriesByPath
+    path: scripts/check-governance-changed-files.cjs
+    dddOwner: Repository governance changed-file gate
+    cqRails:
+      - CheckGovernanceChangedFiles
+    fowlerSignals:
+      - Hidden authority
+    architectureGuard: scripts/check-governance-changed-files.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/check-governance-changed-files.test.cjs
+  - name: printResult
+    path: scripts/check-governance-changed-files.cjs
+    dddOwner: Repository governance changed-file gate
+    cqRails:
+      - CheckGovernanceChangedFiles
+    fowlerSignals:
+      - Documentation drift
+    architectureGuard: scripts/check-governance-changed-files.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/check-governance-changed-files.test.cjs
+  - name: main
+    path: scripts/check-governance-changed-files.cjs
+    dddOwner: Repository governance changed-file gate
+    cqRails:
+      - CheckGovernanceChangedFiles
+    fowlerSignals:
+      - Documentation drift
+    architectureGuard: scripts/check-governance-changed-files.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/check-governance-changed-files.test.cjs
+  - name: toPosix
+    path: scripts/check-governance-changed-files.cjs
+    dddOwner: Repository governance changed-file gate
+    cqRails:
+      - CheckGovernanceChangedFiles
+    fowlerSignals:
+      - Hidden authority
+    architectureGuard: scripts/check-governance-changed-files.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/check-governance-changed-files.test.cjs
+  - name: readYaml
+    path: scripts/check-governance-changed-files.cjs
+    dddOwner: Repository governance changed-file gate
+    cqRails:
+      - CheckGovernanceChangedFiles
+    fowlerSignals:
+      - Hidden authority
+    architectureGuard: scripts/check-governance-changed-files.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/check-governance-changed-files.test.cjs
+  - name: readYamlFromGit
+    path: scripts/check-governance-changed-files.cjs
+    dddOwner: Repository governance changed-file gate
+    cqRails:
+      - CheckGovernanceChangedFiles
+    fowlerSignals:
+      - Documentation drift
+    architectureGuard: scripts/check-governance-changed-files.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/check-governance-changed-files.test.cjs
+  - name: repoRoot
+    path: scripts/check-governance-changed-files.cjs
+    dddOwner: Repository governance changed-file gate
+    cqRails:
+      - CheckGovernanceChangedFiles
+    fowlerSignals:
+      - Hidden authority
+    architectureGuard: scripts/check-governance-changed-files.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/check-governance-changed-files.test.cjs
+  - name: statusDir
+    path: scripts/check-governance-changed-files.cjs
+    dddOwner: Repository governance changed-file gate
+    cqRails:
+      - CheckGovernanceChangedFiles
+    fowlerSignals:
+      - Hidden authority
+    architectureGuard: scripts/check-governance-changed-files.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/check-governance-changed-files.test.cjs
+  - name: fileIndexPath
+    path: scripts/check-governance-changed-files.cjs
+    dddOwner: Repository governance changed-file gate
+    cqRails:
+      - CheckGovernanceChangedFiles
+    fowlerSignals:
+      - Hidden authority
+    architectureGuard: scripts/check-governance-changed-files.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/check-governance-changed-files.test.cjs
+  - name: baselinePath
+    path: scripts/check-governance-changed-files.cjs
+    dddOwner: Repository governance changed-file gate
+    cqRails:
+      - CheckGovernanceChangedFiles
+    fowlerSignals:
+      - Hidden authority
+    architectureGuard: scripts/check-governance-changed-files.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/check-governance-changed-files.test.cjs
+  - name: baselineRepoPath
+    path: scripts/check-governance-changed-files.cjs
+    dddOwner: Repository governance changed-file gate
+    cqRails:
+      - CheckGovernanceChangedFiles
+    fowlerSignals:
+      - Hidden authority
+    architectureGuard: scripts/check-governance-changed-files.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/check-governance-changed-files.test.cjs
+  - name: gitOutputMaxBuffer
+    path: scripts/check-governance-changed-files.cjs
+    dddOwner: Repository governance changed-file gate
+    cqRails:
+      - CheckGovernanceChangedFiles
+    fowlerSignals:
+      - Hidden authority
+    architectureGuard: scripts/check-governance-changed-files.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/check-governance-changed-files.test.cjs
+  - name: fs
+    path: scripts/check-governance-changed-files.cjs
+    dddOwner: Repository governance changed-file gate dependency
+    cqRails:
+      - CheckGovernanceChangedFiles
+    fowlerSignals:
+      - Hidden authority
+    architectureGuard: scripts/check-governance-changed-files.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/check-governance-changed-files.test.cjs
+  - name: path
+    path: scripts/check-governance-changed-files.cjs
+    dddOwner: Repository governance changed-file gate dependency
+    cqRails:
+      - CheckGovernanceChangedFiles
+    fowlerSignals:
+      - Hidden authority
+    architectureGuard: scripts/check-governance-changed-files.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/check-governance-changed-files.test.cjs
+  - name: yaml
+    path: scripts/check-governance-changed-files.cjs
+    dddOwner: Repository governance changed-file gate dependency
+    cqRails:
+      - CheckGovernanceChangedFiles
+    fowlerSignals:
+      - Hidden authority
+    architectureGuard: scripts/check-governance-changed-files.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/check-governance-changed-files.test.cjs
+  - name: assert
+    path: scripts/check-governance-changed-files.test.cjs
+    dddOwner: Repository governance changed-file gate test contract
+    cqRails:
+      - CheckGovernanceChangedFiles
+    fowlerSignals:
+      - Coverage refinement
+    architectureGuard: scripts/check-governance-changed-files.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/check-governance-changed-files.test.cjs
+  - name: test
+    path: scripts/check-governance-changed-files.test.cjs
+    dddOwner: Repository governance changed-file gate test contract
+    cqRails:
+      - CheckGovernanceChangedFiles
+    fowlerSignals:
+      - Coverage refinement
+    architectureGuard: scripts/check-governance-changed-files.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/check-governance-changed-files.test.cjs
+  - name: baseBaseline
+    path: scripts/check-governance-changed-files.test.cjs
+    dddOwner: Repository governance changed-file gate test fixture
+    cqRails:
+      - CheckGovernanceChangedFiles
+    fowlerSignals:
+      - Coverage refinement
+    architectureGuard: scripts/check-governance-changed-files.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/check-governance-changed-files.test.cjs
+  - name: currentFileIndex
+    path: scripts/check-governance-changed-files.test.cjs
+    dddOwner: Repository governance changed-file gate test fixture
+    cqRails:
+      - CheckGovernanceChangedFiles
+    fowlerSignals:
+      - Coverage refinement
+    architectureGuard: scripts/check-governance-changed-files.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/check-governance-changed-files.test.cjs
+  - name: currentBaseline
+    path: scripts/check-governance-changed-files.test.cjs
+    dddOwner: Repository governance changed-file gate test fixture
+    cqRails:
+      - CheckGovernanceChangedFiles
+    fowlerSignals:
+      - Coverage refinement
+    architectureGuard: scripts/check-governance-changed-files.test.cjs
+    cypressCoverage: N/A - docs governance script
+    unitTests:
+      - scripts/check-governance-changed-files.test.cjs
   - name: FULL_OUTPUT
     path: tools/docs/generate-docs-manifest.ts
     dddOwner: Repository docs governance manifest
