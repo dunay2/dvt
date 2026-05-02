@@ -2406,9 +2406,9 @@ files:
       - docs/guides/testing-and-ci-capabilities.md
   - fileId: F-A4D2F934D368
     pathHash: 7945ff2693058651e495b2120f54b3b15f6300de18956a3988d26784fcfb704d
-    contentHash: cea0a405be3472e32801d5a941a2c1f92aafd4eddda05913e9cabea885609b29
+    contentHash: 80923ddbf45409568fc7cc1ee4e9de0344c0dbfdea5d469b5f1eca25bb860057
     governanceHash: a2b44182281a0cb85047c82c32eb5b7971f481f8a2fe031dd88ab4bf0a449af3
-    stateFingerprint: cdb48dafc15103319191b117c60cb736a8edc96169d474347bcc686192f0bcb7
+    stateFingerprint: 8a28f078028a7a6a38136a64fd694a3b9942a5f955f1e376078688555daaadd5
     path: apps/api/package.json
     owningUnit: SYS-API-REPO-CONFIG
     rootUnit: SYS-DVT
@@ -2433,9 +2433,9 @@ files:
       - docs/guides/testing-and-ci-capabilities.md
   - fileId: F-D41266903B65
     pathHash: 715530118d41a7fd2f232df7acbdde7445f5e9318f4c81369d116f93759c4546
-    contentHash: 9254f7e673205302462ffc94895c9f1c624a08ba9bf896c33832e84bfeff47d6
+    contentHash: 903594a592483f78159f2af0f9773e54b24961899f54296f70b7d8b03891fd26
     governanceHash: 6157c58277eed3a7aaca58c5332bbee527489868b8aefa3c9e85f1056ffe5517
-    stateFingerprint: 097bf9be623a1c3bb31ccf6eafa87c0e8f99b3b3d41ed6eb3e24c6eb7cb63f71
+    stateFingerprint: 4bef0b4d1455df3620fa64b8aa8540901f747d82f68dd79bb922266bd0e306da
     path: apps/api/src/app.ts
     owningUnit: SYS-API-BOOTSTRAP
     rootUnit: SYS-DVT
@@ -5591,9 +5591,9 @@ files:
       - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-48138C72872A
     pathHash: 560c556518788ae4626cf9483253a7af12dc9e1fc9072bceb6fc70041fcad474
-    contentHash: 5b6a2e5aa4aaeea8c460a8406b8f08895eb436cc226b303075213709124ac3d4
+    contentHash: f4355d2cde1efac6172e831b41b730930b965d30a4fea618f4a26db3596c0897
     governanceHash: e9f4f50c8fbedbc683f60b1964499f3e89ed2f3163e91c8afffbd0d2dfdc3426
-    stateFingerprint: 7cca166c6abe0974f245d353425cc257c2b1c4ccf08c829e76b6d93ca934e78a
+    stateFingerprint: 4e6168aa2883472c891d5fc42d5218d3a5e8ca1fbfc0e5a0b3773b8656b141bc
     path: apps/api/src/entrypoints/http/registerProtectedRuntimeRoutes.ts
     owningUnit: SYS-API-HTTP-ENTRYPOINTS
     rootUnit: SYS-DVT
@@ -7195,9 +7195,9 @@ files:
       - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-B18BC25F3BA6
     pathHash: 730a6b90b8cf951740ade10ecf88d2a24e2d17b352b9aa21082f8712f94087e6
-    contentHash: ca4acc1e0a50e0b8a10b8fb36e8d6b044c010b41ba7640050230be21aefc8789
+    contentHash: 753cf7a62a5982e2e0e184e432e815538b3dde96015103cc00c479652bb48c21
     governanceHash: 87ab868ab52cd5d5fcc70d92cf8fc04f3290f9f050b6173bd41b9d99216b682d
-    stateFingerprint: 3a0cc23c916e12d018f5cb43af13b37257b4f9b879783738516e569922780e1c
+    stateFingerprint: c2ca017ea457a6c06b187972f510d2a1af1dc20a77578435b4e496a34ac85181
     path: apps/api/src/plugins/env.ts
     owningUnit: SYS-API-INFRASTRUCTURE
     rootUnit: SYS-DVT
@@ -10264,9 +10264,9 @@ files:
       - docs/architecture/command-query-rail-governance.md
   - fileId: F-85EC016D791E
     pathHash: d5b489474794ac6572da536a33c592e47dc5599da05dd881dc23870f942186d6
-    contentHash: 9f33df14ed06846b7d7297626c90c9702f7ec1ecd58cb869ebe739fbcad40bfa
+    contentHash: 518c6be36b47fa26d2178c7af61f1ec8f996fcf9163fdddf75e2aa4710debefb
     governanceHash: 70a48afaa48bf8a46d9cd323a046383bae1f0eefe5b7df2126e4c8e079563bd7
-    stateFingerprint: 6037af336dce3b29a2c72a883d28c5d12ce1ded7c4843b6fa55dfe95f9e16241
+    stateFingerprint: 36ab3e5f0b26f9bbaa117d7a5589611bb0ea08a5c7b883951ec6c46803004fd4
     path: apps/api/test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts
     owningUnit: SYS-API-HTTP-ENTRYPOINT-TESTS
     rootUnit: SYS-DVT
@@ -11967,9 +11967,9 @@ files:
       - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-D6A6A2A7310F
     pathHash: efd7d2433082b83b96650c1f781ee252cca51da112d5aa9747907978e6fa7c37
-    contentHash: 1f9ecc1b7933b70ea4430a78ec688aecb27d66ed9b0b919bdccb6286aed639df
+    contentHash: ce1d055d056ae918e4af110a8f59e3999d6a86ffa8b9d7bd461362f571cc8b1b
     governanceHash: f78fcd00805e3ac4bb31cf806a152b0de73605e5e53a95d07d07aa84ebe026ac
-    stateFingerprint: b536cb5d84cc4db9bf293d5cfa9a2e782e52d4a8ddb7478a98d7b6beaf598e33
+    stateFingerprint: 4d939503083a18313c58989830106f601a1e601e3284b0d2a32d8cec3b9eb916
     path: apps/api/test/plugins/env.test.ts
     owningUnit: SYS-API-TESTS
     rootUnit: SYS-DVT
@@ -11994,9 +11994,9 @@ files:
       - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-3FE5BBCC4277
     pathHash: 5ac4000b68d9ca1e659b29b8e548211538d0f05013e036977038be89dfa21c0e
-    contentHash: 36bf41aa15af8a44b10328b73dddd6ae190fddb39827086c293fc5eaa23c2a86
+    contentHash: ab1dee9c0245c58e95a9f4e3f6feb80d310541c1051a090559cb145cfc106b52
     governanceHash: f78fcd00805e3ac4bb31cf806a152b0de73605e5e53a95d07d07aa84ebe026ac
-    stateFingerprint: 15de13d1e6db02e8a86f633f0b1faa2906503b679b73b589ac606dc3540626b1
+    stateFingerprint: 62211f456acbdd8d499fbb8d3b1f568cbfcabcc0402804d209056ea98fc54444
     path: apps/api/test/plugins/observability.test.ts
     owningUnit: SYS-API-TESTS
     rootUnit: SYS-DVT
@@ -69134,9 +69134,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-EF1F0DBBB1D8
     pathHash: d2ebbe3b36b0d4c10247d0bef16fe8e5b65b52ed226557be52d5d634cdd48c9c
-    contentHash: 912009ab80c9033bc85afdff8511760106d41b1908b5d6ec3dce45c9c9242f9a
+    contentHash: 3e07398e73a7a1222888e0bb45ed0f8e3f780e226cc89cc5fb2b9d7c776829f8
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: bd4710af83730318b926f1e4ae67ee28b15bb9ecf8ff1516d289e8a125cd6dd3
+    stateFingerprint: 0e3a0e5ffb510835965f0a695884d4063be817c4262febe34752a682c29d7432
     path: >-
       docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -101820,9 +101820,9 @@ files:
       - docs/guides/testing-and-ci-capabilities.md
   - fileId: F-0C0FA331D146
     pathHash: e04481fc976fee884ae2637f6cb9d3627ee83c08bdd0ed7108c8be425a6e175c
-    contentHash: fbb1b7e929153fdb1ad5984fe003b372e7d76c1b98454f331d329bc6dc9839ae
+    contentHash: 50a1164f466c7469f55e086ef0a263a97f8dca5dd90571ccf1585478454c5379
     governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
-    stateFingerprint: d960a792cde076bda92aabc6423b700dd765a972db75c2ba6b0060df57de4361
+    stateFingerprint: e9241baf569f8223ebeec643499fe2631872ad6392bd972a00d5a8396ed233e2
     path: pnpm-lock.yaml
     owningUnit: SYS-REPO-METADATA-ROOT
     rootUnit: SYS-DVT

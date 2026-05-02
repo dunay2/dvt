@@ -1,4 +1,5 @@
 import type { IObservability } from '@dvt/observability';
+import rateLimit from '@fastify/rate-limit';
 import Fastify from 'fastify';
 import { describe, expect, it } from 'vitest';
 
@@ -106,5 +107,39 @@ describe('registerProtectedRuntimeRoutes', () => {
     await app.ready();
 
     expect(app.hasRoute({ method: 'POST', url: '/admin/runs/:runId/rebuild-snapshot' })).toBe(true);
+  });
+
+  it('rate limits protected runtime routes before repeated authorization attempts continue', async () => {
+    const app = Fastify({ logger: false });
+    const env = loadEnv(
+      mergeEnv(BASE_APP_ENV, {
+        DVT_PROTECTED_RUNTIME_RATE_LIMIT_MAX: '1',
+        DVT_PROTECTED_RUNTIME_RATE_LIMIT_TIME_WINDOW_MS: '60000',
+      })
+    );
+    await app.register(rateLimit, {
+      global: false,
+      max: env.DVT_PROTECTED_RUNTIME_RATE_LIMIT_MAX,
+      timeWindow: env.DVT_PROTECTED_RUNTIME_RATE_LIMIT_TIME_WINDOW_MS,
+    });
+
+    await registerProtectedRuntimeRoutes(app, {
+      env,
+      observability,
+      protectedModule: protectedRuntimeModule(),
+    });
+    await app.ready();
+
+    const first = await app.inject({
+      method: 'GET',
+      url: '/runs?tenantId=tenant-a',
+    });
+    const second = await app.inject({
+      method: 'GET',
+      url: '/runs?tenantId=tenant-a',
+    });
+
+    expect(first.statusCode).not.toBe(429);
+    expect(second.statusCode).toBe(429);
   });
 });

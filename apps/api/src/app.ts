@@ -1,6 +1,7 @@
 ﻿import type { ISpan } from '@dvt/observability';
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
+import rateLimit from '@fastify/rate-limit';
 import sensible from '@fastify/sensible';
 import Fastify, { type FastifyInstance, type FastifyRequest } from 'fastify';
 
@@ -126,6 +127,11 @@ export async function buildApp(): Promise<{ app: FastifyInstance; ctx: AppContex
 
   app.register(helmet);
   app.register(sensible);
+  await app.register(rateLimit, {
+    global: false,
+    max: env.DVT_PROTECTED_RUNTIME_RATE_LIMIT_MAX,
+    timeWindow: env.DVT_PROTECTED_RUNTIME_RATE_LIMIT_TIME_WINDOW_MS,
+  });
 
   app.register(cors, {
     origin: env.CORS_ORIGIN === '*' ? true : env.CORS_ORIGIN.split(',').map((s) => s.trim()),

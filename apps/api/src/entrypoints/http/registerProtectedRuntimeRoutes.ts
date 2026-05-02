@@ -51,7 +51,7 @@ export async function registerProtectedRuntimeRoutes(
   const { env, observability, protectedModule } = options;
   const dependencies = buildProtectedRuntimeRouteDependencies(options);
 
-  registerProtectedPlanRoutes(app, protectedModule, dependencies);
+  registerProtectedPlanRoutes(app, env, protectedModule, dependencies);
   registerProtectedWorkspaceGraphDraftRouteGroup(app, observability, protectedModule, dependencies);
   registerProtectedRunRoutes(app, env, protectedModule, dependencies);
   registerProtectedAdminRouteGroup(app, env, protectedModule, dependencies.runtimeAuth);
@@ -123,36 +123,75 @@ function buildProtectedRuntimeRouteDependencies(options: RegisterProtectedRuntim
 
 function registerProtectedPlanRoutes(
   app: FastifyInstance,
+  env: Env,
   protectedModule: ProtectedRuntimeModule,
   dependencies: ProtectedRuntimeRouteDependencies
 ): void {
   app.post<{ Body: Parameters<typeof startRunRoute>[0]['body'] }>(
     RUNTIME_ROUTE_PATH.start,
+    {
+      config: {
+        rateLimit: {
+          max: env.DVT_PROTECTED_RUNTIME_RATE_LIMIT_MAX,
+          timeWindow: env.DVT_PROTECTED_RUNTIME_RATE_LIMIT_TIME_WINDOW_MS,
+        },
+      },
+    },
     async (request, reply) =>
       startRunRoute(request as never, reply, protectedModule.facade, {
         adapterRegistry: protectedModule.startRunTargetAdapterRegistry,
       })
   );
-  app.post(RUNTIME_ROUTE_PATH.plansPreview, async (request, reply) =>
-    previewPlanRoute(request as never, reply, {
-      authenticator: protectedModule.authenticator,
-      authorizer: protectedModule.authorizer,
-      useCase: dependencies.previewPlanUseCase,
-    })
+  app.post(
+    RUNTIME_ROUTE_PATH.plansPreview,
+    {
+      config: {
+        rateLimit: {
+          max: env.DVT_PROTECTED_RUNTIME_RATE_LIMIT_MAX,
+          timeWindow: env.DVT_PROTECTED_RUNTIME_RATE_LIMIT_TIME_WINDOW_MS,
+        },
+      },
+    },
+    async (request, reply) =>
+      previewPlanRoute(request as never, reply, {
+        authenticator: protectedModule.authenticator,
+        authorizer: protectedModule.authorizer,
+        useCase: dependencies.previewPlanUseCase,
+      })
   );
-  app.post(RUNTIME_ROUTE_PATH.plansCompile, async (request, reply) =>
-    compilePlanRoute(request as never, reply, {
-      authenticator: protectedModule.authenticator,
-      authorizer: protectedModule.authorizer,
-      useCase: dependencies.compilePlanUseCase,
-    })
+  app.post(
+    RUNTIME_ROUTE_PATH.plansCompile,
+    {
+      config: {
+        rateLimit: {
+          max: env.DVT_PROTECTED_RUNTIME_RATE_LIMIT_MAX,
+          timeWindow: env.DVT_PROTECTED_RUNTIME_RATE_LIMIT_TIME_WINDOW_MS,
+        },
+      },
+    },
+    async (request, reply) =>
+      compilePlanRoute(request as never, reply, {
+        authenticator: protectedModule.authenticator,
+        authorizer: protectedModule.authorizer,
+        useCase: dependencies.compilePlanUseCase,
+      })
   );
-  app.post(RUNTIME_ROUTE_PATH.plansImport, async (request, reply) =>
-    importPlanRoute(request as never, reply, {
-      authenticator: protectedModule.authenticator,
-      authorizer: protectedModule.authorizer,
-      useCase: dependencies.importPlanUseCase,
-    })
+  app.post(
+    RUNTIME_ROUTE_PATH.plansImport,
+    {
+      config: {
+        rateLimit: {
+          max: env.DVT_PROTECTED_RUNTIME_RATE_LIMIT_MAX,
+          timeWindow: env.DVT_PROTECTED_RUNTIME_RATE_LIMIT_TIME_WINDOW_MS,
+        },
+      },
+    },
+    async (request, reply) =>
+      importPlanRoute(request as never, reply, {
+        authenticator: protectedModule.authenticator,
+        authorizer: protectedModule.authorizer,
+        useCase: dependencies.importPlanUseCase,
+      })
   );
 }
 
@@ -179,42 +218,102 @@ function registerProtectedRunRoutes(
 ): void {
   const { runtimeAuth } = dependencies;
 
-  app.get(RUNTIME_ROUTE_PATH.list, async (request, reply) =>
-    listRunsRoute(request as never, reply, {
-      ...runtimeAuth,
-      useCase: dependencies.listRunsUseCase,
-    })
+  app.get(
+    RUNTIME_ROUTE_PATH.list,
+    {
+      config: {
+        rateLimit: {
+          max: env.DVT_PROTECTED_RUNTIME_RATE_LIMIT_MAX,
+          timeWindow: env.DVT_PROTECTED_RUNTIME_RATE_LIMIT_TIME_WINDOW_MS,
+        },
+      },
+    },
+    async (request, reply) =>
+      listRunsRoute(request as never, reply, {
+        ...runtimeAuth,
+        useCase: dependencies.listRunsUseCase,
+      })
   );
-  app.get(RUNTIME_ROUTE_PATH.get, async (request, reply) =>
-    getRunRoute(request as never, reply, {
-      ...runtimeAuth,
-      useCase: dependencies.getRunStatusUseCase,
-    })
+  app.get(
+    RUNTIME_ROUTE_PATH.get,
+    {
+      config: {
+        rateLimit: {
+          max: env.DVT_PROTECTED_RUNTIME_RATE_LIMIT_MAX,
+          timeWindow: env.DVT_PROTECTED_RUNTIME_RATE_LIMIT_TIME_WINDOW_MS,
+        },
+      },
+    },
+    async (request, reply) =>
+      getRunRoute(request as never, reply, {
+        ...runtimeAuth,
+        useCase: dependencies.getRunStatusUseCase,
+      })
   );
-  app.get(RUNTIME_ROUTE_PATH.events, async (request, reply) =>
-    getRunEventsRoute(request as never, reply, {
-      ...runtimeAuth,
-      useCase: dependencies.getRunEventsUseCase,
-    })
+  app.get(
+    RUNTIME_ROUTE_PATH.events,
+    {
+      config: {
+        rateLimit: {
+          max: env.DVT_PROTECTED_RUNTIME_RATE_LIMIT_MAX,
+          timeWindow: env.DVT_PROTECTED_RUNTIME_RATE_LIMIT_TIME_WINDOW_MS,
+        },
+      },
+    },
+    async (request, reply) =>
+      getRunEventsRoute(request as never, reply, {
+        ...runtimeAuth,
+        useCase: dependencies.getRunEventsUseCase,
+      })
   );
-  app.post(RUNTIME_ROUTE_PATH.signal, async (request, reply) =>
-    signalRunRoute(request as never, reply, {
-      ...runtimeAuth,
-      useCase: dependencies.signalRunUseCase,
-      compatibilityPolicy: { allowCancelSignalType: env.DVT_SIGNAL_ROUTE_ALLOW_CANCEL },
-    })
+  app.post(
+    RUNTIME_ROUTE_PATH.signal,
+    {
+      config: {
+        rateLimit: {
+          max: env.DVT_PROTECTED_RUNTIME_RATE_LIMIT_MAX,
+          timeWindow: env.DVT_PROTECTED_RUNTIME_RATE_LIMIT_TIME_WINDOW_MS,
+        },
+      },
+    },
+    async (request, reply) =>
+      signalRunRoute(request as never, reply, {
+        ...runtimeAuth,
+        useCase: dependencies.signalRunUseCase,
+        compatibilityPolicy: { allowCancelSignalType: env.DVT_SIGNAL_ROUTE_ALLOW_CANCEL },
+      })
   );
-  app.post(RUNTIME_ROUTE_PATH.cancel, async (request, reply) =>
-    cancelRunRoute(request as never, reply, {
-      ...runtimeAuth,
-      useCase: dependencies.cancelRunUseCase,
-    })
+  app.post(
+    RUNTIME_ROUTE_PATH.cancel,
+    {
+      config: {
+        rateLimit: {
+          max: env.DVT_PROTECTED_RUNTIME_RATE_LIMIT_MAX,
+          timeWindow: env.DVT_PROTECTED_RUNTIME_RATE_LIMIT_TIME_WINDOW_MS,
+        },
+      },
+    },
+    async (request, reply) =>
+      cancelRunRoute(request as never, reply, {
+        ...runtimeAuth,
+        useCase: dependencies.cancelRunUseCase,
+      })
   );
-  app.post(RUNTIME_ROUTE_PATH.recover, async (request, reply) =>
-    recoverRunRoute(request as never, reply, {
-      ...runtimeAuth,
-      useCase: dependencies.recoverRunUseCase,
-    })
+  app.post(
+    RUNTIME_ROUTE_PATH.recover,
+    {
+      config: {
+        rateLimit: {
+          max: env.DVT_PROTECTED_RUNTIME_RATE_LIMIT_MAX,
+          timeWindow: env.DVT_PROTECTED_RUNTIME_RATE_LIMIT_TIME_WINDOW_MS,
+        },
+      },
+    },
+    async (request, reply) =>
+      recoverRunRoute(request as never, reply, {
+        ...runtimeAuth,
+        useCase: dependencies.recoverRunUseCase,
+      })
   );
 }
 

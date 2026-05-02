@@ -359,11 +359,15 @@ governingSources:
   - docs/adr/ADR-0053-file-state-fingerprint-governance.md
 allowedImplementationSurfaces:
   - .github/workflows/pr-quality-gate.yml
+  - apps/api/package.json
   - apps/api/src/app.ts
   - apps/api/src/entrypoints/http/registerProtectedRuntimeRoutes.ts
+  - apps/api/src/plugins/env.ts
   - apps/api/test/application/services/applicationArchitectureAst.support.ts
   - apps/api/test/entrypoints/http/startRunControlBoundary.architecture.test.ts
   - apps/api/test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts
+  - apps/api/test/plugins/env.test.ts
+  - apps/api/test/plugins/observability.test.ts
   - apps/api/test/modules/protectedRuntimeAndPlanCompileArchitecture.cases.ts
   - apps/api/src/routes/registerOperationalRoutes.ts
   - apps/api/test/routes/registerOperationalRoutes.test.ts
@@ -375,6 +379,7 @@ allowedImplementationSurfaces:
   - docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
   - docs/planning/status/**
   - package.json
+  - pnpm-lock.yaml
   - scripts/check-governance-changed-files.cjs
   - scripts/check-governance-changed-files.test.cjs
   - scripts/check-governance-file-fingerprint-baseline.cjs
