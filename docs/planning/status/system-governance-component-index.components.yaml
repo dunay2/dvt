@@ -35,6 +35,9 @@ components:
         governance:
           - docs/planning/status/system-operations-inventory-20260501.md
     status: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
     isDrift: false
     isLegacy: false
     childrenRequired: true
@@ -89,6 +92,9 @@ components:
         governance:
           - docs/planning/status/system-operations-inventory-20260501.md
     status: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
     isDrift: false
     isLegacy: false
     childrenRequired: true
@@ -152,6 +158,9 @@ components:
         governance:
           - docs/guides/testing-and-ci-capabilities.md
     status: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
     isDrift: false
     isLegacy: false
     childrenRequired: true
@@ -206,6 +215,9 @@ components:
         governance:
           - docs/contracts/index.md
     status: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
     isDrift: false
     isLegacy: false
     childrenRequired: true
@@ -255,6 +267,9 @@ components:
           - docs/DOCS_README.md
           - docs/planning/status/governance-document-rule-inventory.md
     status: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
     isDrift: false
     isLegacy: false
     childrenRequired: true
@@ -332,6 +347,9 @@ components:
         governance:
           - docs/planning/status/system-operations-inventory-20260501.md
     status: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
     isDrift: false
     isLegacy: false
     childrenRequired: true
@@ -379,6 +397,9 @@ components:
         governance:
           - docs/contracts/planner/index.md
     status: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
     isDrift: false
     isLegacy: false
     childrenRequired: true
@@ -429,6 +450,9 @@ components:
           - >-
             docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
     status: drift
+    governanceState: drift
+    canonicalRole: none
+    evidenceState: remediation-required
     isDrift: true
     isLegacy: false
     childrenRequired: true
@@ -498,6 +522,9 @@ components:
           - >-
             docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
     status: review
+    governanceState: review
+    canonicalRole: none
+    evidenceState: review-required
     isDrift: false
     isLegacy: false
     childrenRequired: true
@@ -554,6 +581,9 @@ components:
             docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
           - docs/risk-register/quality/R-20260402-S08-PLAN-STORE-CONTRACT-DRIFT.yaml
     status: drift
+    governanceState: drift
+    canonicalRole: none
+    evidenceState: remediation-required
     isDrift: true
     isLegacy: false
     childrenRequired: true
@@ -609,6 +639,9 @@ components:
           - docs/planning/status/system-governance-unit-index-20260501.md
           - docs/planning/status/system-governance-document-unit-map-20260501.md
     status: review
+    governanceState: review
+    canonicalRole: none
+    evidenceState: review-required
     isDrift: false
     isLegacy: false
     childrenRequired: true
@@ -683,6 +716,9 @@ components:
           - docs/adr/adr-0052-planref-continuation-safety.md
           - docs/risk-register/quality/R-20260405-PLAN-STORE-CANONICAL-SHAPE-DRIFT.yaml
     status: drift
+    governanceState: drift
+    canonicalRole: none
+    evidenceState: remediation-required
     isDrift: true
     isLegacy: false
     childrenRequired: true
@@ -740,6 +776,9 @@ components:
             docs/planning/reviews/architecture-and-governance/20260403-s08-postgres-plan-store-hard-qa-review.md
           - docs/risk-register/quality/R-20260408-ADAPTER-POSTGRES-PLANSTORE-TEST-DRIFT.yaml
     status: drift
+    governanceState: drift
+    canonicalRole: none
+    evidenceState: remediation-required
     isDrift: true
     isLegacy: false
     childrenRequired: true
@@ -794,6 +833,9 @@ components:
           - >-
             docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
     status: superseded
+    governanceState: superseded
+    canonicalRole: none
+    evidenceState: retired
     isDrift: false
     isLegacy: false
     childrenRequired: false
@@ -847,6 +889,9 @@ components:
           - docs/risk-register/quality/R-20260427-TEMPORAL-PLANREF-CONFIG-HARDENING.yaml
           - docs/planning/status/system-operations-inventory-20260501.md
     status: review
+    governanceState: review
+    canonicalRole: none
+    evidenceState: review-required
     isDrift: false
     isLegacy: false
     childrenRequired: true
@@ -908,6 +953,9 @@ components:
           - package.json
           - pnpm-workspace.yaml
     status: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
     isDrift: false
     isLegacy: false
     childrenRequired: true
@@ -991,6 +1039,9 @@ components:
         governance:
           - docs/planning/status/system-operations-inventory-20260501.md
     status: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
     isDrift: false
     isLegacy: false
     childrenRequired: true
@@ -1052,6 +1103,9 @@ components:
         governance:
           - docs/adr/ADR-0000-Code-generation-with-normative-traceability-required.en.md
     status: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
     isDrift: false
     isLegacy: false
     childrenRequired: true
@@ -1103,6 +1157,9 @@ components:
           - >-
             docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md
     status: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
     isDrift: false
     isLegacy: false
     childrenRequired: true
@@ -1150,6 +1207,9 @@ components:
         governance:
           - docs/planning/status/system-operations-inventory-20260501.md
     status: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
     isDrift: false
     isLegacy: false
     childrenRequired: true

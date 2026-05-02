@@ -71,6 +71,9 @@ function buildComponentCoverage(files, components) {
         rootUnit: component.rootUnit,
         domainUnit: component.domainUnit,
         status: component.status,
+        governanceState: component.governanceState || 'unknown',
+        canonicalRole: component.canonicalRole || 'unknown',
+        evidenceState: component.evidenceState || 'unknown',
         dddOwner: component.dddOwner,
         cqRails: component.cqRails,
         fileCount,
@@ -177,6 +180,9 @@ function buildCoverageReport(fileIndex, componentIndex) {
     byDomainUnit: countBy(files, 'domainUnit'),
     byComponentUnit: countBy(files, 'componentUnit'),
     byStatus: countBy(files, 'unitStatus'),
+    byGovernanceState: countBy(files, 'governanceState'),
+    byCanonicalRole: countBy(files, 'canonicalRole'),
+    byEvidenceState: countBy(files, 'evidenceState'),
     byDddOwner: countBy(files, 'dddOwner'),
     governanceDocuments: countGovernanceDocuments(files),
     componentCoverage: buildComponentCoverage(files, components),
@@ -291,6 +297,24 @@ ${renderCountTable(report.byDddOwner, 'DDD owner')}
 
 <!-- prettier-ignore-start -->
 ${renderCountTable(report.byStatus, 'Status')}
+<!-- prettier-ignore-end -->
+
+## By Governance State
+
+<!-- prettier-ignore-start -->
+${renderCountTable(report.byGovernanceState, 'Governance state')}
+<!-- prettier-ignore-end -->
+
+## By Canonical Role
+
+<!-- prettier-ignore-start -->
+${renderCountTable(report.byCanonicalRole, 'Canonical role')}
+<!-- prettier-ignore-end -->
+
+## By Evidence State
+
+<!-- prettier-ignore-start -->
+${renderCountTable(report.byEvidenceState, 'Evidence state')}
 <!-- prettier-ignore-end -->
 
 ## Drift Files

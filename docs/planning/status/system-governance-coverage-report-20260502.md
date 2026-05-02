@@ -90,6 +90,37 @@ Upstream indexes:
 | `review` | 68 |
 <!-- prettier-ignore-end -->
 
+## By Governance State
+
+<!-- prettier-ignore-start -->
+| Governance state | Files |
+| --- | ---: |
+| `coverage-required` | 3846 |
+| `drift` | 44 |
+| `governed` | 110 |
+| `review` | 68 |
+<!-- prettier-ignore-end -->
+
+## By Canonical Role
+
+<!-- prettier-ignore-start -->
+| Canonical role | Files |
+| --- | ---: |
+| `implementation-owner` | 110 |
+| `none` | 3958 |
+<!-- prettier-ignore-end -->
+
+## By Evidence State
+
+<!-- prettier-ignore-start -->
+| Evidence state | Files |
+| --- | ---: |
+| `classification-only` | 110 |
+| `coverage-required` | 3846 |
+| `remediation-required` | 44 |
+| `review-required` | 68 |
+<!-- prettier-ignore-end -->
+
 ## Drift Files
 
 <!-- prettier-ignore-start -->
