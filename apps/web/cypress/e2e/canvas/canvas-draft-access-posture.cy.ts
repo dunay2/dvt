@@ -17,6 +17,14 @@ import {
 
 type DraftDeniedReason = 'unauthenticated' | 'workspace_scope_denied';
 
+const DRAFT_SYNCED_COPY = /Draft synced|Draft sincronizado/;
+const SESSION_REQUIRED_TITLE =
+  /Session required for draft access|Sesion requerida para acceder al draft/;
+const REFRESH_SESSION_ACTION = /Refresh session|Refrescar sesion/;
+const FORBIDDEN_SCOPE_TITLE = /Draft scope is forbidden|El scope del draft esta denegado/;
+const CHANGE_SCOPE_ACTION = /Change scope|Cambiar scope/;
+const READ_ONLY_TITLE = /Draft is read-only|El draft esta en solo lectura/;
+
 function stubRuntimeCapabilities(): void {
   stubE2eJsonApi('GET', '/capabilities', {
     apiVersion: '1.0.0',
@@ -85,22 +93,26 @@ function assertUnsafeCanvasCommandsAreDisabled(): void {
   });
 }
 
+function assertDraftSyncedCopyIsHidden(): void {
+  cy.get('body').invoke('text').should('not.match', DRAFT_SYNCED_COPY);
+}
+
 describe('Canvas draft access posture', () => {
   it('shows session recovery and disables unsafe Canvas actions when draft access is unauthenticated', () => {
     visitCanvasWithDraftRead(buildDeniedDraftReadResponse('unauthenticated'));
 
-    cy.contains('Session required for draft access').should('be.visible');
-    cy.contains('button', 'Refresh session').should('be.visible').and('be.enabled');
-    cy.get('body').should('not.contain', 'Draft synced');
+    cy.contains(SESSION_REQUIRED_TITLE).should('be.visible');
+    cy.contains('button', REFRESH_SESSION_ACTION).should('be.visible').and('be.enabled');
+    assertDraftSyncedCopyIsHidden();
     assertUnsafeCanvasCommandsAreDisabled();
   });
 
   it('shows forbidden-scope recovery when workspace scope is denied', () => {
     visitCanvasWithDraftRead(buildDeniedDraftReadResponse('workspace_scope_denied'));
 
-    cy.contains('Draft scope is forbidden').should('be.visible');
-    cy.contains('button', 'Change scope').should('be.visible').and('be.enabled');
-    cy.get('body').should('not.contain', 'Draft synced');
+    cy.contains(FORBIDDEN_SCOPE_TITLE).should('be.visible');
+    cy.contains('button', CHANGE_SCOPE_ACTION).should('be.visible').and('be.enabled');
+    assertDraftSyncedCopyIsHidden();
     assertUnsafeCanvasCommandsAreDisabled();
   });
 
@@ -109,9 +121,9 @@ describe('Canvas draft access posture', () => {
       buildCanvasDraftReadResponse(E2E_WORKSPACE_SESSION, { readOnly: true })
     );
 
-    cy.contains('Draft is read-only').should('be.visible');
+    cy.contains(READ_ONLY_TITLE).should('be.visible');
     cy.get('.react-flow').should('be.visible');
-    cy.get('body').should('not.contain', 'Draft synced');
+    assertDraftSyncedCopyIsHidden();
     assertUnsafeCanvasCommandsAreDisabled();
 
     cy.get('[aria-label="Show explorer panel"]').click();

@@ -29,8 +29,8 @@ Upstream indexes:
 
 ## Totals
 
-- Files: 4079
-- Governed files: 4079
+- Files: 4081
+- Governed files: 4081
 - Ungoverned files: 0
 - Drift files: 44
 - Legacy files: 0
@@ -49,7 +49,7 @@ Upstream indexes:
 <!-- prettier-ignore-start -->
 | Root unit | Files |
 | --- | ---: |
-| `SYS-DVT` | 4079 |
+| `SYS-DVT` | 4081 |
 <!-- prettier-ignore-end -->
 
 ## By Domain Unit
@@ -58,7 +58,7 @@ Upstream indexes:
 | Domain unit | Files |
 | --- | ---: |
 | `SYS-ADAPTERS` | 196 |
-| `SYS-DVT` | 3302 |
+| `SYS-DVT` | 3304 |
 | `SYS-OBSERVABILITY` | 15 |
 | `SYS-PLANSTORE` | 112 |
 | `SYS-RUNTIME` | 286 |
@@ -75,7 +75,7 @@ Upstream indexes:
 | `AS` | 771 |
 | `DS` | 141 |
 | `ENTRY` | 797 |
-| `INFRA` | 1974 |
+| `INFRA` | 1976 |
 | `PORT` | 173 |
 <!-- prettier-ignore-end -->
 
@@ -85,7 +85,7 @@ Upstream indexes:
 | Status | Files |
 | --- | ---: |
 | `canonical` | 111 |
-| `coverage-required` | 3856 |
+| `coverage-required` | 3858 |
 | `drift` | 44 |
 | `review` | 68 |
 <!-- prettier-ignore-end -->
@@ -95,7 +95,7 @@ Upstream indexes:
 <!-- prettier-ignore-start -->
 | Governance state | Files |
 | --- | ---: |
-| `coverage-required` | 3856 |
+| `coverage-required` | 3858 |
 | `drift` | 44 |
 | `governed` | 111 |
 | `review` | 68 |
@@ -107,7 +107,7 @@ Upstream indexes:
 | Canonical role | Files |
 | --- | ---: |
 | `implementation-owner` | 111 |
-| `none` | 3968 |
+| `none` | 3970 |
 <!-- prettier-ignore-end -->
 
 ## By Evidence State
@@ -116,7 +116,7 @@ Upstream indexes:
 | Evidence state | Files |
 | --- | ---: |
 | `classification-only` | 111 |
-| `coverage-required` | 3856 |
+| `coverage-required` | 3858 |
 | `remediation-required` | 44 |
 | `review-required` | 68 |
 <!-- prettier-ignore-end -->
@@ -190,7 +190,7 @@ Upstream indexes:
 | `SYS-API-ROOT` | 362 | `coverage-required` | `AS` |
 | `SYS-RUNTIME-ROOT` | 286 | `coverage-required` | `AS` |
 | `SYS-ADAPTERS-ROOT` | 196 | `coverage-required` | `ADP` |
-| `SYS-CI-GOVERNANCE-ROOT` | 178 | `coverage-required` | `INFRA` |
+| `SYS-CI-GOVERNANCE-ROOT` | 180 | `coverage-required` | `INFRA` |
 | `SYS-CONTRACTS-ROOT` | 127 | `coverage-required` | `PORT` |
 | `SYS-REPO-METADATA-ROOT` | 111 | `canonical` | `INFRA` |
 | `SYS-WORKERS-ROOT` | 103 | `coverage-required` | `AS` |
@@ -215,7 +215,7 @@ Upstream indexes:
 | `docs/planning/status/governance-document-rule-inventory.md` | 1651 |
 | `docs/planning/status/system-operations-inventory-20260501.md` | 993 |
 | `docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md` | 797 |
-| `docs/guides/testing-and-ci-capabilities.md` | 178 |
+| `docs/guides/testing-and-ci-capabilities.md` | 180 |
 | `docs/contracts/index.md` | 127 |
 | `package.json` | 111 |
 | `pnpm-workspace.yaml` | 111 |

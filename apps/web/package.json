@@ -12,9 +12,9 @@
     "test:e2e": "pnpm build:e2e && start-server-and-test preview:e2e http://127.0.0.1:4173 \"node ./scripts/run-cypress-docker.mjs\"",
     "test:e2e:first-authoring:live": "node ../../scripts/run-canvas-first-authoring-live-proof.cjs",
     "test:e2e:selected-closure:live": "node ../../scripts/run-selected-closure-live-proof.cjs",
-    "test:e2e:native": "pnpm build:e2e && start-server-and-test preview:e2e http://127.0.0.1:4173 \"cypress run --config-file cypress.config.ts\"",
-    "test:e2e:startup-route-readiness": "pnpm build:e2e && start-server-and-test preview:e2e http://127.0.0.1:4173 \"cypress run --config-file cypress.config.ts --spec cypress/e2e/shell/startup-route-readiness.cy.ts\"",
-    "test:e2e:open": "pnpm build:e2e && start-server-and-test \"pnpm preview:e2e\" http://127.0.0.1:4173 \"cypress open --config-file cypress.config.ts\"",
+    "test:e2e:native": "node ../../tools/ci/run-web-cypress-native.mjs",
+    "test:e2e:startup-route-readiness": "node ../../tools/ci/run-web-cypress-native.mjs --spec cypress/e2e/shell/startup-route-readiness.cy.ts",
+    "test:e2e:open": "node ../../tools/ci/run-web-cypress-native.mjs open",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run --config vitest.config.ts",
     "test:watch": "vitest --config vitest.config.ts"
