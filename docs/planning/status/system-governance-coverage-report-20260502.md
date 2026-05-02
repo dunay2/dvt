@@ -39,7 +39,8 @@ Upstream indexes:
 
 ## CI Posture
 
-- Blocking posture: coverage report exposes governance gaps; changed-files gate decides pushed-range blocking
+- Blocking status: gaps-present
+- Blocking reason: coverage report exposes governance gaps
 - Enforced by: `pnpm docs:governance:coverage-report:check`, `pnpm docs:governance:changed-files:check`, `pnpm docs:governance:file-fingerprint-baseline:check`
 - Reporting-only posture: componentsRequiringSubdivision records known large units for follow-up decomposition; legacyFiles records removal targets until owning work removes them
 

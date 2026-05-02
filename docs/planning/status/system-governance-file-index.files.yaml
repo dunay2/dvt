@@ -66014,9 +66014,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-990BF10AAD94
     pathHash: 6a67be9c35ed2f9a617eb90c52da30b17200d6f02a2b644eec36143d6448d566
-    contentHash: 0dc8ab416bdb2bc001fe9062531eebd3511637194a66c9c33b84d48808218f7e
+    contentHash: cf5c441528a17fdca09e5d39ae61202719d2a3c126ab20bedf655bcf13c6fbfa
     governanceHash: d9f768b3da4be04e83890eae632052f05a0776f4990c39b7b2ab2c3b6cc14524
-    stateFingerprint: 9af9a466d044c153247c3194ec0ba0e1466043182432e06e0c550cac854bb250
+    stateFingerprint: 8f0bf434d7e69fa6227291dec7b2d3b06952859e7c63728b90db19599d066ae5
     path: docs/planning/status/system-governance-coverage-report-20260502.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
@@ -66037,9 +66037,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-ACC58DCFEB8C
     pathHash: 8ba943b89ee6764c97ba514c18768a02ebb2317576fadd0422fcbde3969c6fdc
-    contentHash: c81f8fbc891cc598f80b106ec1c0e5c205913384beebb5d64c2852f4ee799f92
+    contentHash: 37fbf4414510a1fbbf74a9893f4ce6159ab27a04f004998d00401d5b9061fc66
     governanceHash: d9f768b3da4be04e83890eae632052f05a0776f4990c39b7b2ab2c3b6cc14524
-    stateFingerprint: 8d50cf7829415aa2de6bcb21875bc14aab75a2076a31a17688e9f470e23f5111
+    stateFingerprint: ef9a7acd26a1a031df33d8fca7fcc86661b825c6a507da370164e826622c5eb1
     path: docs/planning/status/system-governance-coverage-report.coverage.yaml
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
@@ -89902,9 +89902,9 @@ files:
       - docs/guides/testing-and-ci-capabilities.md
   - fileId: F-229E2DA7030B
     pathHash: 866cf7e94fb6d3bb5a01895f7d27831d397570d722e3cdcf677b3aeedc0044aa
-    contentHash: 4dfaba16f72c67fc3496cf9362992adc53423ac44a3fc45eb3b6142c4cee17c7
+    contentHash: a8d970b7d06a614ace19283be62a463b5df40e688c2df95f69a9680e91927480
     governanceHash: 3286d185b83c9c6dc1c5ccc7196e85d0020fdfcd5fad0eaeb783775bb31d71c2
-    stateFingerprint: 1740a2aa926277b4bc2e05e933d169a182c73c3d3940b8568ab283b19daa8655
+    stateFingerprint: 3c9ae2535680a308705907f8c44da65ffb6acc12eb161eebcd3a67fbf0e3dd41
     path: scripts/generate-governance-coverage-report.cjs
     owningUnit: SYS-CI-GOVERNANCE-ROOT
     rootUnit: SYS-DVT

@@ -11,8 +11,8 @@ totals:
   components: 20
   componentsRequiringSubdivision: 19
 ciPosture:
-  blocking:
-    coverage report exposes governance gaps; changed-files gate decides pushed-range blocking
+  blockingStatus: gaps-present
+  blockingReason: coverage report exposes governance gaps
   enforcedBy:
     - pnpm docs:governance:coverage-report:check
     - pnpm docs:governance:changed-files:check

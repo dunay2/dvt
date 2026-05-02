@@ -157,10 +157,12 @@ function buildCoverageReport(fileIndex, componentIndex) {
       componentsRequiringSubdivision: findings.componentsRequiringSubdivision.length,
     },
     ciPosture: {
-      blocking:
+      blockingStatus:
+        ungovernedFiles.length === 0 && driftFiles.length === 0 ? 'clean' : 'gaps-present',
+      blockingReason:
         ungovernedFiles.length === 0 && driftFiles.length === 0
           ? 'coverage report is clean'
-          : 'coverage report exposes governance gaps; changed-files gate decides pushed-range blocking',
+          : 'coverage report exposes governance gaps',
       enforcedBy: [
         'pnpm docs:governance:coverage-report:check',
         'pnpm docs:governance:changed-files:check',
@@ -262,7 +264,8 @@ Upstream indexes:
 
 ## CI Posture
 
-- Blocking posture: ${report.ciPosture.blocking}
+- Blocking status: ${report.ciPosture.blockingStatus}
+- Blocking reason: ${report.ciPosture.blockingReason}
 - Enforced by: ${report.ciPosture.enforcedBy.map((command) => `\`${command}\``).join(', ')}
 - Reporting-only posture: ${report.ciPosture.reportingOnly.join('; ')}
 
