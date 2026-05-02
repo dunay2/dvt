@@ -307,6 +307,10 @@ Usage rules already declared in the ADR index:
   `system-governance-file-fingerprint-baseline.yaml` without regenerating and
   reviewing the baseline update; can render a component-grouped impact report
   for reviewer triage.
+- [scripts/generate-governance-remediation-queue.cjs](../../../scripts/generate-governance-remediation-queue.cjs)
+  Role: `governance remediation queue generator`
+  Enforces: coverage gaps, drift files, broad components, generic C&Q rails,
+  and drift-tracking docs are projected into component-scoped remediation work.
 
 Additional enforcement surface:
 
@@ -360,6 +364,8 @@ Additional enforcement surface:
 | [docs/planning/status/system-governance-component-index.components.yaml](./system-governance-component-index.components.yaml)         | `generated status`   | Exhaustive component/source unit index with ownership counts and status.                 |
 | [docs/planning/status/system-governance-document-unit-map-20260501.md](./system-governance-document-unit-map-20260501.md)             | `generated status`   | Human summary for document-to-unit mapping.                                              |
 | [docs/planning/status/system-governance-document-unit-map.docs.yaml](./system-governance-document-unit-map.docs.yaml)                 | `generated status`   | Exhaustive document-to-unit map for tracked docs Markdown files.                         |
+| [docs/planning/status/system-governance-remediation-queue-20260502.md](./system-governance-remediation-queue-20260502.md)             | `generated status`   | Human queue for component-scoped governance remediation tasks.                           |
+| [docs/planning/status/system-governance-remediation-queue.queue.yaml](./system-governance-remediation-queue.queue.yaml)               | `generated status`   | Machine-readable governance remediation queue.                                           |
 | [docs/planning/status/generated-capability-coverage.md](./generated-capability-coverage.md)                                           | `generated status`   | Capability coverage signal.                                                              |
 | [docs/planning/status/generated-spec-traceability.md](./generated-spec-traceability.md)                                               | `generated status`   | Generated spec traceability report.                                                      |
 | [docs/planning/status/release-please-continuous.md](./release-please-continuous.md)                                                   | `status`             | Release process status.                                                                  |

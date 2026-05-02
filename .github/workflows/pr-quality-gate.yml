@@ -176,6 +176,18 @@ jobs:
           == 'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
         run: pnpm docs:governance:file-fingerprint-impact:check
 
+      - name: Validate governance coverage report
+        if:
+          github.event_name == 'pull_request' || github.event_name == 'push' || (github.event_name
+          == 'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
+        run: pnpm docs:governance:coverage-report:check
+
+      - name: Validate governance remediation queue
+        if:
+          github.event_name == 'pull_request' || github.event_name == 'push' || (github.event_name
+          == 'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
+        run: pnpm docs:governance:remediation-queue:check
+
       - name: Validate governed changed files
         if: github.event_name == 'pull_request'
         run: pnpm docs:governance:changed-files:check

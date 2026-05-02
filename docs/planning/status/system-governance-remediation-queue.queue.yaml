@@ -1,0 +1,1916 @@
+version: 1
+generatedFrom:
+  - docs/planning/status/system-governance-coverage-report.coverage.yaml
+  - docs/planning/status/system-governance-file-index.files.yaml
+  - docs/planning/status/system-governance-component-index.components.yaml
+  - docs/planning/status/system-governance-document-unit-map.docs.yaml
+totals:
+  tasks: 45
+  p0: 4
+  p1: 18
+  p2: 3
+  p3: 20
+  driftFiles: 44
+  componentsRequiringSubdivision: 19
+byType:
+  - name: component-subdivision
+    count: 19
+  - name: cq-rail-gap
+    count: 10
+  - name: doc-alignment
+    count: 12
+  - name: drift-removal
+    count: 4
+byPriority:
+  - name: P0
+    count: 4
+  - name: P1
+    count: 18
+  - name: P2
+    count: 3
+  - name: P3
+    count: 20
+tasks:
+  - id: GRQ-DRIFT_REMOVAL-SYS-PLANSTORE-API-COMPOSITION
+    type: drift-removal
+    priority: P0
+    componentUnit: SYS-PLANSTORE-API-COMPOSITION
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    dddOwner: AS
+    cqRails: PS-Q03, PS-C02
+    blocking: changed-files gate blocks touched drift files
+    reason: Files are marked drift in the governed file index.
+    fileCount: 20
+    documentCount: 0
+    files:
+      - path: apps/api/src/application/errors/ManifestArtifactResolutionError.ts
+        fileId: F-A1CFFA6F1622
+        status: drift
+      - path: apps/api/src/application/ports/storedPlan.ts
+        fileId: F-F8569DF8443D
+        status: drift
+      - path: apps/api/src/application/services/StoredExecutablePlanResolver.ts
+        fileId: F-2E614BC38C0A
+        status: drift
+      - path: apps/api/src/application/services/StoredPlanExecutabilityValidator.ts
+        fileId: F-6EF1886E2357
+        status: drift
+      - path: apps/api/src/application/services/WorkflowEngineFactory.ts
+        fileId: F-9081E19C97C8
+        status: drift
+      - path: apps/api/src/entrypoints/http/planRefHttpMapper.ts
+        fileId: F-679B0A61B9DB
+        status: drift
+      - path: apps/api/src/entrypoints/http/planRoutePlanRefParser.ts
+        fileId: F-71412BDB89AE
+        status: drift
+      - path: apps/api/src/infrastructure/planner/ManifestArtifactResolver.ts
+        fileId: F-33D700BB33A0
+        status: drift
+      - path: apps/api/src/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.ts
+        fileId: F-934B7BE6FAE6
+        status: drift
+      - path: apps/api/src/infrastructure/startRun/ArtifactStoreDbtProjectBundleBindingPolicy.ts
+        fileId: F-2BC34B27BB08
+        status: drift
+      - path: apps/api/test/application/services/StoredExecutablePlanResolver.test.ts
+        fileId: F-FEB615BE555C
+        status: drift
+      - path: apps/api/test/application/services/StoredPlanExecutabilityValidator.test.ts
+        fileId: F-7B210CC05844
+        status: drift
+      - path: apps/api/test/application/services/storedPlanExecutabilityValidator/capabilities.cases.ts
+        fileId: F-4DE9531159D3
+        status: drift
+      - path: >-
+          apps/api/test/application/services/storedPlanExecutabilityValidator/fetchAndAlignment.cases.ts
+        fileId: F-C64E09854515
+        status: drift
+      - path: apps/api/test/application/services/storedPlanExecutabilityValidator/harness.ts
+        fileId: F-B411AE175CFA
+        status: drift
+      - path: apps/api/test/application/services/storedPlanExecutabilityValidator/registry.cases.ts
+        fileId: F-10084A3099E8
+        status: drift
+      - path: apps/api/test/application/services/WorkflowEngineFactory.test.ts
+        fileId: F-E6462049F467
+        status: drift
+      - path: apps/api/test/entrypoints/http/planRoutePlanSourcePolicy.test.ts
+        fileId: F-25C5D96CF336
+        status: drift
+      - path: apps/api/test/infrastructure/planner/ManifestArtifactResolver.test.ts
+        fileId: F-637BBD9DF5D5
+        status: drift
+      - path: apps/api/test/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.test.ts
+        fileId: F-B8BAA092F981
+        status: drift
+    documents: []
+    expectedValidation:
+      - pnpm docs:governance:remediation-queue:check
+      - pnpm docs:governance:coverage-report:check
+      - pnpm docs:governance:changed-files:check
+  - id: GRQ-DRIFT_REMOVAL-SYS-PLANSTORE-POSTGRES
+    type: drift-removal
+    priority: P0
+    componentUnit: SYS-PLANSTORE-POSTGRES
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    dddOwner: ADP
+    cqRails: implements PS-Cxx and PS-Qxx
+    blocking: changed-files gate blocks touched drift files
+    reason: Files are marked drift in the governed file index.
+    fileCount: 16
+    documentCount: 0
+    files:
+      - path: packages/@dvt/adapter-postgres/src/PostgresPlanStore.admission-repository.ts
+        fileId: F-1D1A7C253060
+        status: drift
+      - path: packages/@dvt/adapter-postgres/src/PostgresPlanStore.executability-repository.ts
+        fileId: F-A829FE9721E5
+        status: drift
+      - path: packages/@dvt/adapter-postgres/src/PostgresPlanStore.executable-blob-repository.ts
+        fileId: F-8303893DF44C
+        status: drift
+      - path: packages/@dvt/adapter-postgres/src/PostgresPlanStore.mappers.ts
+        fileId: F-20B699BF9793
+        status: drift
+      - path: packages/@dvt/adapter-postgres/src/PostgresPlanStore.plan-record-repository.ts
+        fileId: F-9A56B77D2D73
+        status: drift
+      - path: packages/@dvt/adapter-postgres/src/PostgresPlanStore.schema-manager.ts
+        fileId: F-C11B0636836D
+        status: drift
+      - path: packages/@dvt/adapter-postgres/src/PostgresPlanStore.sql.ts
+        fileId: F-702D83ACD755
+        status: drift
+      - path: packages/@dvt/adapter-postgres/src/PostgresPlanStore.ts
+        fileId: F-7C7D17C1CDD7
+        status: drift
+      - path: packages/@dvt/adapter-postgres/src/PostgresPlanStore.tx.ts
+        fileId: F-73FF4812E33D
+        status: drift
+      - path: packages/@dvt/adapter-postgres/src/PostgresPlanStoreComposer.ts
+        fileId: F-856C25C10E5A
+        status: drift
+      - path: packages/@dvt/adapter-postgres/test/PostgresPlanStore.integration.helpers.ts
+        fileId: F-0244D9284E0B
+        status: drift
+      - path: packages/@dvt/adapter-postgres/test/PostgresPlanStore.invariants.unit.test.ts
+        fileId: F-F1029D58119A
+        status: drift
+      - path: packages/@dvt/adapter-postgres/test/PostgresPlanStore.lifecycle.integration.test.ts
+        fileId: F-ED5BB0B7CC9F
+        status: drift
+      - path: packages/@dvt/adapter-postgres/test/PostgresPlanStore.records-core.integration.test.ts
+        fileId: F-6AA5B24C4C8C
+        status: drift
+      - path: packages/@dvt/adapter-postgres/test/PostgresPlanStore.records-guards.integration.test.ts
+        fileId: F-C22CDA4D729C
+        status: drift
+      - path: packages/@dvt/adapter-postgres/test/PostgresPlanStore.sql.test.ts
+        fileId: F-41BDEA1761B1
+        status: drift
+    documents: []
+    expectedValidation:
+      - pnpm docs:governance:remediation-queue:check
+      - pnpm docs:governance:coverage-report:check
+      - pnpm docs:governance:changed-files:check
+  - id: GRQ-DRIFT_REMOVAL-SYS-PLANSTORE-ENGINE-FETCH
+    type: drift-removal
+    priority: P0
+    componentUnit: SYS-PLANSTORE-ENGINE-FETCH
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    dddOwner: PORT
+    cqRails: PS-Q05
+    blocking: changed-files gate blocks touched drift files
+    reason: Files are marked drift in the governed file index.
+    fileCount: 5
+    documentCount: 0
+    files:
+      - path: packages/@dvt/engine/src/ports/IPlanArtifactReader.ts
+        fileId: F-5A9A950078B8
+        status: drift
+      - path: packages/@dvt/engine/src/security/planRefPolicy.ts
+        fileId: F-AB121E8BEBB9
+        status: drift
+      - path: packages/@dvt/engine/src/security/planRefPolicyRules.ts
+        fileId: F-F0B4EAC1E8C5
+        status: drift
+      - path: packages/@dvt/engine/test/core/WorkflowEngine.planRef.test.ts
+        fileId: F-3D639593C497
+        status: drift
+      - path: packages/@dvt/engine/test/security/planRefPolicy.test.ts
+        fileId: F-F36BE1E295E4
+        status: drift
+    documents: []
+    expectedValidation:
+      - pnpm docs:governance:remediation-queue:check
+      - pnpm docs:governance:coverage-report:check
+      - pnpm docs:governance:changed-files:check
+  - id: GRQ-DRIFT_REMOVAL-SYS-PLANSTORE-CONTRACTS
+    type: drift-removal
+    priority: P0
+    componentUnit: SYS-PLANSTORE-CONTRACTS
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    dddOwner: PORT
+    cqRails: PS-Q01, PS-C01
+    blocking: changed-files gate blocks touched drift files
+    reason: Files are marked drift in the governed file index.
+    fileCount: 3
+    documentCount: 0
+    files:
+      - path: docs/contracts/planner/PlanStoreRecords.v1.md
+        fileId: F-3AA698AF1593
+        status: drift
+      - path: packages/@dvt/artifacts/src/ports/IPlanStoreReader.ts
+        fileId: F-41A2D9667B0D
+        status: drift
+      - path: packages/@dvt/artifacts/src/ports/IPlanStoreWriter.ts
+        fileId: F-6CF12F62ED37
+        status: drift
+    documents: []
+    expectedValidation:
+      - pnpm docs:governance:remediation-queue:check
+      - pnpm docs:governance:coverage-report:check
+      - pnpm docs:governance:changed-files:check
+  - id: GRQ-CQ_RAIL_GAP-SYS-ADAPTERS-ROOT
+    type: cq-rail-gap
+    priority: P1
+    componentUnit: SYS-ADAPTERS-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-ADAPTERS
+    dddOwner: ADP
+    cqRails: adapter implementations of owned ports
+    blocking: reporting-only
+    reason: Component has generic command/query language instead of specific rail rows.
+    fileCount: 0
+    documentCount: 0
+    files: []
+    documents: []
+    expectedValidation:
+      - pnpm docs:governance:remediation-queue:check
+      - pnpm docs:governance:coverage-report:check
+      - pnpm docs:governance:file-component-index:check
+  - id: GRQ-CQ_RAIL_GAP-SYS-API-ROOT
+    type: cq-rail-gap
+    priority: P1
+    componentUnit: SYS-API-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    dddOwner: AS
+    cqRails: API commands and queries
+    blocking: reporting-only
+    reason: Component has generic command/query language instead of specific rail rows.
+    fileCount: 0
+    documentCount: 0
+    files: []
+    documents: []
+    expectedValidation:
+      - pnpm docs:governance:remediation-queue:check
+      - pnpm docs:governance:coverage-report:check
+      - pnpm docs:governance:file-component-index:check
+  - id: GRQ-CQ_RAIL_GAP-SYS-CONTRACTS-ROOT
+    type: cq-rail-gap
+    priority: P1
+    componentUnit: SYS-CONTRACTS-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    dddOwner: PORT
+    cqRails: contract DTOs and port shapes
+    blocking: reporting-only
+    reason: Component has generic command/query language instead of specific rail rows.
+    fileCount: 0
+    documentCount: 0
+    files: []
+    documents: []
+    expectedValidation:
+      - pnpm docs:governance:remediation-queue:check
+      - pnpm docs:governance:coverage-report:check
+      - pnpm docs:governance:file-component-index:check
+  - id: GRQ-CQ_RAIL_GAP-SYS-OBSERVABILITY-ROOT
+    type: cq-rail-gap
+    priority: P1
+    componentUnit: SYS-OBSERVABILITY-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-OBSERVABILITY
+    dddOwner: PORT
+    cqRails: telemetry commands and operational queries
+    blocking: reporting-only
+    reason: Component has generic command/query language instead of specific rail rows.
+    fileCount: 0
+    documentCount: 0
+    files: []
+    documents: []
+    expectedValidation:
+      - pnpm docs:governance:remediation-queue:check
+      - pnpm docs:governance:coverage-report:check
+      - pnpm docs:governance:file-component-index:check
+  - id: GRQ-CQ_RAIL_GAP-SYS-PLANNER-ROOT
+    type: cq-rail-gap
+    priority: P1
+    componentUnit: SYS-PLANNER-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    dddOwner: DS
+    cqRails: planner build and derivation rails
+    blocking: reporting-only
+    reason: Component has generic command/query language instead of specific rail rows.
+    fileCount: 0
+    documentCount: 0
+    files: []
+    documents: []
+    expectedValidation:
+      - pnpm docs:governance:remediation-queue:check
+      - pnpm docs:governance:coverage-report:check
+      - pnpm docs:governance:file-component-index:check
+  - id: GRQ-CQ_RAIL_GAP-SYS-PLANSTORE-POSTGRES
+    type: cq-rail-gap
+    priority: P1
+    componentUnit: SYS-PLANSTORE-POSTGRES
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    dddOwner: ADP
+    cqRails: implements PS-Cxx and PS-Qxx
+    blocking: reporting-only
+    reason: Component has generic command/query language instead of specific rail rows.
+    fileCount: 0
+    documentCount: 0
+    files: []
+    documents: []
+    expectedValidation:
+      - pnpm docs:governance:remediation-queue:check
+      - pnpm docs:governance:coverage-report:check
+      - pnpm docs:governance:file-component-index:check
+  - id: GRQ-CQ_RAIL_GAP-SYS-RUNTIME-ROOT
+    type: cq-rail-gap
+    priority: P1
+    componentUnit: SYS-RUNTIME-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-RUNTIME
+    dddOwner: AS
+    cqRails: runtime commands and queries
+    blocking: reporting-only
+    reason: Component has generic command/query language instead of specific rail rows.
+    fileCount: 0
+    documentCount: 0
+    files: []
+    documents: []
+    expectedValidation:
+      - pnpm docs:governance:remediation-queue:check
+      - pnpm docs:governance:coverage-report:check
+      - pnpm docs:governance:file-component-index:check
+  - id: GRQ-CQ_RAIL_GAP-SYS-TRACEABILITY-ROOT
+    type: cq-rail-gap
+    priority: P1
+    componentUnit: SYS-TRACEABILITY-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-TRACEABILITY
+    dddOwner: DS
+    cqRails: traceability commands and lineage queries
+    blocking: reporting-only
+    reason: Component has generic command/query language instead of specific rail rows.
+    fileCount: 0
+    documentCount: 0
+    files: []
+    documents: []
+    expectedValidation:
+      - pnpm docs:governance:remediation-queue:check
+      - pnpm docs:governance:coverage-report:check
+      - pnpm docs:governance:file-component-index:check
+  - id: GRQ-CQ_RAIL_GAP-SYS-WEB-ROOT
+    type: cq-rail-gap
+    priority: P1
+    componentUnit: SYS-WEB-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    dddOwner: ENTRY
+    cqRails: UI actions and API queries
+    blocking: reporting-only
+    reason: Component has generic command/query language instead of specific rail rows.
+    fileCount: 0
+    documentCount: 0
+    files: []
+    documents: []
+    expectedValidation:
+      - pnpm docs:governance:remediation-queue:check
+      - pnpm docs:governance:coverage-report:check
+      - pnpm docs:governance:file-component-index:check
+  - id: GRQ-CQ_RAIL_GAP-SYS-WORKERS-ROOT
+    type: cq-rail-gap
+    priority: P1
+    componentUnit: SYS-WORKERS-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-WORKERS
+    dddOwner: AS
+    cqRails: worker commands and operational queries
+    blocking: reporting-only
+    reason: Component has generic command/query language instead of specific rail rows.
+    fileCount: 0
+    documentCount: 0
+    files: []
+    documents: []
+    expectedValidation:
+      - pnpm docs:governance:remediation-queue:check
+      - pnpm docs:governance:coverage-report:check
+      - pnpm docs:governance:file-component-index:check
+  - id: GRQ-COMPONENT_SUBDIVISION-SYS-API-ROOT
+    type: component-subdivision
+    priority: P1
+    componentUnit: SYS-API-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    dddOwner: AS
+    cqRails: API commands and queries
+    blocking: reporting-only
+    reason: Component is known but still too broad for source-level governance.
+    fileCount: 0
+    documentCount: 0
+    files: []
+    documents: []
+    expectedValidation:
+      - pnpm docs:governance:remediation-queue:check
+      - pnpm docs:governance:coverage-report:check
+      - pnpm docs:governance:file-component-index:check
+  - id: GRQ-COMPONENT_SUBDIVISION-SYS-DOCS-GOVERNANCE-ROOT
+    type: component-subdivision
+    priority: P1
+    componentUnit: SYS-DOCS-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    dddOwner: INFRA
+    cqRails: none - documentation governance
+    blocking: reporting-only
+    reason: Component is known but still too broad for source-level governance.
+    fileCount: 0
+    documentCount: 0
+    files: []
+    documents: []
+    expectedValidation:
+      - pnpm docs:governance:remediation-queue:check
+      - pnpm docs:governance:coverage-report:check
+      - pnpm docs:governance:file-component-index:check
+  - id: GRQ-COMPONENT_SUBDIVISION-SYS-PLANSTORE-API-COMPOSITION
+    type: component-subdivision
+    priority: P1
+    componentUnit: SYS-PLANSTORE-API-COMPOSITION
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    dddOwner: AS
+    cqRails: PS-Q03, PS-C02
+    blocking: reporting-only
+    reason: Component is known but still too broad for source-level governance.
+    fileCount: 0
+    documentCount: 0
+    files: []
+    documents: []
+    expectedValidation:
+      - pnpm docs:governance:remediation-queue:check
+      - pnpm docs:governance:coverage-report:check
+      - pnpm docs:governance:file-component-index:check
+  - id: GRQ-COMPONENT_SUBDIVISION-SYS-PLANSTORE-CONTRACTS
+    type: component-subdivision
+    priority: P1
+    componentUnit: SYS-PLANSTORE-CONTRACTS
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    dddOwner: PORT
+    cqRails: PS-Q01, PS-C01
+    blocking: reporting-only
+    reason: Component is known but still too broad for source-level governance.
+    fileCount: 0
+    documentCount: 0
+    files: []
+    documents: []
+    expectedValidation:
+      - pnpm docs:governance:remediation-queue:check
+      - pnpm docs:governance:coverage-report:check
+      - pnpm docs:governance:file-component-index:check
+  - id: GRQ-COMPONENT_SUBDIVISION-SYS-PLANSTORE-ENGINE-FETCH
+    type: component-subdivision
+    priority: P1
+    componentUnit: SYS-PLANSTORE-ENGINE-FETCH
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    dddOwner: PORT
+    cqRails: PS-Q05
+    blocking: reporting-only
+    reason: Component is known but still too broad for source-level governance.
+    fileCount: 0
+    documentCount: 0
+    files: []
+    documents: []
+    expectedValidation:
+      - pnpm docs:governance:remediation-queue:check
+      - pnpm docs:governance:coverage-report:check
+      - pnpm docs:governance:file-component-index:check
+  - id: GRQ-COMPONENT_SUBDIVISION-SYS-PLANSTORE-POSTGRES
+    type: component-subdivision
+    priority: P1
+    componentUnit: SYS-PLANSTORE-POSTGRES
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    dddOwner: ADP
+    cqRails: implements PS-Cxx and PS-Qxx
+    blocking: reporting-only
+    reason: Component is known but still too broad for source-level governance.
+    fileCount: 0
+    documentCount: 0
+    files: []
+    documents: []
+    expectedValidation:
+      - pnpm docs:governance:remediation-queue:check
+      - pnpm docs:governance:coverage-report:check
+      - pnpm docs:governance:file-component-index:check
+  - id: GRQ-COMPONENT_SUBDIVISION-SYS-RUNTIME-ROOT
+    type: component-subdivision
+    priority: P1
+    componentUnit: SYS-RUNTIME-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-RUNTIME
+    dddOwner: AS
+    cqRails: runtime commands and queries
+    blocking: reporting-only
+    reason: Component is known but still too broad for source-level governance.
+    fileCount: 0
+    documentCount: 0
+    files: []
+    documents: []
+    expectedValidation:
+      - pnpm docs:governance:remediation-queue:check
+      - pnpm docs:governance:coverage-report:check
+      - pnpm docs:governance:file-component-index:check
+  - id: GRQ-COMPONENT_SUBDIVISION-SYS-WEB-ROOT
+    type: component-subdivision
+    priority: P1
+    componentUnit: SYS-WEB-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    dddOwner: ENTRY
+    cqRails: UI actions and API queries
+    blocking: reporting-only
+    reason: Component is known but still too broad for source-level governance.
+    fileCount: 0
+    documentCount: 0
+    files: []
+    documents: []
+    expectedValidation:
+      - pnpm docs:governance:remediation-queue:check
+      - pnpm docs:governance:coverage-report:check
+      - pnpm docs:governance:file-component-index:check
+  - id: GRQ-DOC_ALIGNMENT-SYS-DOCS-GOVERNANCE
+    type: doc-alignment
+    priority: P2
+    componentUnit: SYS-DOCS-GOVERNANCE
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DOCS-GOVERNANCE
+    dddOwner: INFRA
+    cqRails: documentation alignment
+    blocking: reporting-only
+    reason: Documents track drift or require disposition and need alignment with active units.
+    fileCount: 0
+    documentCount: 256
+    files: []
+    documents:
+      - path: docs/planning/closeouts/20260315-architecture-components-map-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260315-architecture-review-docs-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260315-docs-governance-hardening-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260315-intent-store-bug-fixes-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260315-markdown-location-governance-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260315-review-markdown-relocation-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260315-run-domain-projection-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260316-docs-governance-tooling-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260316-g7-provider-ref-reconciliation-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260316-outbox-cleanup-serialization-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260316-phase2-arch-roadmap-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260316-platform-baseline-lock-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260316-principal-architecture-review-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260316-workspace-build-baseline-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260316-workspace-script-graph-dedup-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260317-app-workspace-script-dedup-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260317-package-module-build-policy-proposal-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260317-package-tsconfig-base-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260317-principal-architecture-review-execution-plan-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260317-proposal-set-alignment-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260317-repo-rule-git-commit-escalation-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260317-tsconfig-app-base-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260318-ts-esm-monorepo-m02-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260318-typescript-package-classification-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260319-planversion-governance-thinkfirst.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260320-gap-5-pr1-terminal-snapshot-pinning-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260320-gap4-pr3-resilience-envelope-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260320-planning-archive-sweep-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260321-gap-5-pr1-export-verifier-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260321-gap-5-pr2-deferred-deletion-restore-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260321-s06-migration-version-table-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260324-rc-a1-simulate-error-production-hardening-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260324-rc-a2-deterministic-start-run-intent-id-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260324-s14-gateway-context-across-continue-as-new-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260324-s15-run-snapshot-cas-guard-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260324-s15f1-stale-snapshot-discard-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260324-s18-follow-up-proposal-capture-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260331-rc-c1-http-error-envelope-normalization-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260331-s1-manifestref-production-path-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260331-zensical-single-config-migration-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260401-dhm-ws1-start-run-boundary-residual-hardening-closeout.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/closeouts/20260402-evidence-information-architecture-classification-closeout.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/closeouts/20260402-evidence-information-architecture-phase3-migration-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260402-evidence-information-architecture-proposal-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260402-rc-c2-operational-friction-intake-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260402-rc-g1-governance-startup-reconciliation-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260404-f04-findings-todo.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260404-f04-qa-hardening-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260404-f04-w4-decomposition-manifest.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260404-plan-qa-tareas-mvp.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260406-mw-a1-step-kind-registry-governance-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260406-mw-a2-e-determinism-and-integration-hardening-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260406-mw-a3-step-artifact-ref-generalization-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260406-mw-a4-step-kind-extension-guide-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260407-ar-c1-t1-admin-route-test-harness-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260407-doc-arch-01-documentation-governance-audit-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260407-f23-git-file-history-docs-first-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260407-snapshot-prewarm-active-runs-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260408-tf-c2-b-read-surface-evidence-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260408-tf-c2-b-run-read-evidence-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260411-pr911-merge-conflict-resolution-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260411-s05-truth-sync-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260412-tf-b1-b-provenance-evidence-linkage-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260413-ar-a12-b-status-model-split-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260413-ar-c6-provider-status-convergence-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260413-f22-sql-first-transformation-handoff-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260413-tf-d1-proof-environment-lifecycle-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260414-ar-b2-distributed-consistency-model-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260414-hotfix-app-services-context-hmr-stability-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260414-hotfix-dev-stack-local-postgres-bootstrap-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260414-shell-chrome-signal-compaction-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260414-tf-a1-b-compiler-mapping-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260414-tf-a1-c-srp-hardening-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260414-tf-c1-preview-persist-convergence-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260414-tf-c3-production-plugin-host-composition-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260414-tf-c3-run-execution-context-resolver-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260414-unified-raven-startup-bootstrap-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260415-ar-c4-run-state-circuit-breaker-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260415-tf-e1-selection-scoped-authoring-mvp-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260416-ar-b1-write-boundary-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260416-ar-d1-incremental-snapshot-projection-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260416-shell-session-context-persistence-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260416-shell-session-context-rehydration-guard-closeout.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/closeouts/20260416-tf-c4-workspace-graph-draft-protected-boundary-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260416-tf-e2-canvas-draft-cas-hardening-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260417-graph-architecture-doc-pack-split-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260417-mw-d1-planning-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260417-planning-gaps-governance-refresh-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260417-root-local-doc-canonicalization-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260417-root-local-doc-english-integration-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260417-tf-e2-canvas-bootstrap-presentation-handoff-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260417-tf-e2-canvas-draft-aggregate-alignment-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260417-tf-e2-canvas-draft-followup-qa-hardening-closeout.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/closeouts/20260417-tf-e2-canvas-draft-race-and-import-edge-hardening-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260417-tf-e2-canvas-draft-reload-recovery-hardening-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260417-tf-e2-canvas-draft-scope-fowler-refactor-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260417-tf-e2-canvas-draft-session-refactor-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260417-tf-e2-route-bootstrap-srp-refactor-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260418-local-build-hook-warm-cache-p0-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260418-rc-c2-turbo-build-orchestrator-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260418-tf-e2-canvas-draft-repository-seam-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260418-tf-e2-canvas-interaction-command-seam-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260418-tf-e2-canvas-srp-seams-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260419-lane-e-remediation-backlog-alignment-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260419-mw-d1-external-compile-boundary-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260419-rc-g1-c-owner-package-migration-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260419-tf-a1-c10-preview-route-facade-finalization-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260419-tf-a1-c11-plan-route-grammar-ownership-closeout.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/closeouts/20260419-tf-a1-c12-plan-route-facade-regression-hardening-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260419-tf-a1-c12-plan-route-facade-standardization-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260419-tf-a1-c13-import-ownership-canonicalization-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260419-tf-a1-c6-preview-route-facade-realignment-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260419-tf-a1-c7-import-route-facade-realignment-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260419-tf-a1-c8-preview-route-helper-seams-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260420-ar-d-plan-pointer-follow-up-hardening-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260420-tf-a1-c15-c16-plan-route-seam-hardening-closeout.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/closeouts/20260420-tf-a1-c17-plan-route-request-resolution-recipe-closeout.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/closeouts/20260420-tf-a1-c19-plan-route-policy-catalog-and-envelope-convergence-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260420-tf-e2-canvas-typed-authoring-port-hard-cut-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260421-tf-e2-canvas-handler-component-semantics-closeout.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/closeouts/20260421-tf-e2-canvas-route-composer-and-shell-subbuilders-closeout.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/closeouts/20260421-tf-e2-canvas-route-composition-semantic-component-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260421-tf-e2-canvas-route-presentation-hard-cut-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260421-tf-e2-canvas-shell-composition-slimming-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260421-tf-e2-graph-lifecycle-hard-cut-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260422-rc-c2-wave-1-node-precommit-turbo-cache-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260422-tf-e2-canvas-component-governance-follow-up-closeout.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/closeouts/20260422-tf-e2-canvas-route-composition-and-projection-refactor-closeout.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/closeouts/20260422-tf-e2-canvas-source-import-capability-hardening-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260422-tf-e2-semantic-protected-draft-projection-cut-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260423-access-decision-embedded-first-closeout.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/closeouts/20260423-ar-c3-c-execution-capacity-operational-closure-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260423-docs-frontmatter-bom-governance-fix-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260423-docs-markdown-parser-componentization-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260423-rc-c2-wave-2b-turbo-affected-task-routing-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260423-rc-c2-wave-3a-docs-manifest-determinism-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260423-rc-c2-wave-3b-changed-doc-governance-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260423-rc-c2-wave-3c-generated-doc-single-writer-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260423-tenant-run-identity-platform-owned-run-id-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260423-tf-a2-c-execution-selection-proposal-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260423-tf-a2-c2-executable-subgraph-derivation-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260423-tf-a2-c5-selected-closure-end-to-end-proof-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260423-tf-e2-k-a-first-canvas-playground-host-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260423-tf-e2-k-b-host-tab-restoration-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260423-tf-e2-k-c-typed-empty-canvas-posture-closeout.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/closeouts/20260423-tf-e2-project-playground-host-proposal-capture-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260423-workspace-graph-draft-application-component-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260424-ar-a8-provider-vocabulary-hard-cut-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260424-hard-cut-auth-mock-cleanup-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260424-tf-e2-e-a-b-c-selected-closure-browser-proof-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260424-tf-e2-e-d-live-selected-closure-browser-proof-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260424-tf-e2-k-cycle-story-capture-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260424-tf-e2-k-d-host-cycle-dto-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260424-tf-e2-k-d-transformation-host-cycle-proof-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260424-tf-e2-k-e-dbt-host-cycle-proof-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260424-tf-e2-k-f-authoritative-restore-proof-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260424-tf-e2-k-g-typed-canvas-preview-run-proof-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260424-tf-e2-k-h-blocked-readonly-host-cycle-proof-closeout.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/closeouts/20260424-tf-e2-k-i-authoritative-first-canvas-lifecycle-proof-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260424-tf-e2-k-supporting-cycle-story-expansion-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260425-canvas-graph-strategy-policy-qa-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260425-production-tenant-isolation-baseline-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260425-tf-e2-b-c-node-edge-lifecycle-closure-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260425-tf-e2-d-inspector-authoring-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260426-rc-g1-c-truth-sync-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260426-tf-e2-l-canvas-strategy-boundary-truth-sync-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260427-ar-d-plan-pointer-qa1-readiness-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260428-canvas-draft-replacement-and-drag-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260429-bootstrap-presentation-separation-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260429-plan-admission-semantic-architecture-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260429-static-analysis-followup-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260429-we-hx-1-boundary-ownership-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260430-ar-d-continuation-safety-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260430-we-hx-2-facade-use-cases-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260502-tf-e2-m-c-first-authoring-live-proof-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/F-02-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/F-04-D-E-composition-root-foundation-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/F-04-F-capabilities-port-and-route-query-boundary-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/F-04-RESIDUAL-A-root-provider-guard-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/F-04-RESIDUAL-B-provider-override-test-seams-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/F-04-RISK-B-mock-workspace-isolation-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/G7.1-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/index.md
+        classification: tracks drift
+      - path: docs/planning/gaps/index.md
+        classification: tracks drift
+      - path: docs/planning/reviews/20260402-f03-shell-health-banner-hard-qa-review.md
+        classification: tracks drift
+      - path: docs/planning/reviews/20260407-f04-f-capabilities-port-hard-qa-review.md
+        classification: tracks drift
+      - path: docs/planning/reviews/20260407-f04-risk-b-mock-workspace-isolation-hard-qa-review.md
+        classification: tracks drift
+      - path: docs/planning/reviews/20260408-f04-residual-a-root-provider-guard-hard-qa-review.md
+        classification: tracks drift
+      - path: docs/planning/reviews/20260417-dvt-plus-deep-architectural-review.md
+        classification: tracks drift
+      - path: docs/planning/reviews/20260419-dvt-plus-deep-architectural-review.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/reviews/architecture-and-governance/20260307-architecture-doc-consolidation-matrix-review.md
+        classification: tracks drift
+      - path: docs/planning/reviews/architecture-and-governance/20260314-domain-cohesion-review.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/reviews/architecture-and-governance/20260322-ddd-hexagonal-port-audit-review.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/reviews/architecture-and-governance/20260326-dvt-principal-architectural-review.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/reviews/architecture-and-governance/20260331-principal-architecture-deep-review.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review-principal-architect.md
+        classification: tracks drift
+      - path: docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/reviews/architecture-and-governance/20260402-f03-shell-health-fowler-hard-review.md
+        classification: tracks drift
+      - path: docs/planning/reviews/architecture-and-governance/20260404-mvp-e1-f03-hard-qa-review.md
+        classification: tracks drift
+      - path: docs/planning/reviews/architecture-and-governance/20260405-f04-risk-a-hard-qa-review.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/reviews/architecture-and-governance/20260407-dvt-principles-boundaries-and-target-state-review.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/reviews/architecture-and-governance/20260407-execution-plan-and-run-execution-policy-hard-qa-review.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/reviews/architecture-and-governance/20260407-execution-plan-and-run-execution-policy-rationale.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/reviews/architecture-and-governance/20260407-plan-core-operational-consumption-design-spike.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/reviews/architecture-and-governance/20260407-principal-architecture-review-progress-and-diagrams.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/reviews/architecture-and-governance/20260407-retry-step-boundary-and-use-case-review.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/reviews/architecture-and-governance/20260407-retry-step-boundary-hard-qa-review.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/reviews/architecture-and-governance/20260408-retry-run-boundary-and-provider-signal-mapper-review.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/reviews/architecture-and-governance/20260408-retry-run-boundary-hard-qa-review.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/reviews/architecture-and-governance/20260409-dvt-monorepo-bug-audit-and-backend-valuation.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/reviews/architecture-and-governance/20260411-ar-a12-b-status-model-split-fowler-review.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/reviews/architecture-and-governance/20260411-project-architecture-strengths-weaknesses-fowler-review.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/reviews/architecture-and-governance/20260413-dvt-plus-architectural-audit-review.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/reviews/architecture-and-governance/20260414-principal-architect-review-dvtplus.md
+        classification: tracks drift
+      - path: docs/planning/reviews/architecture-and-governance/20260417-dvt-artifacts-review.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/reviews/architecture-and-governance/20260418-mw-d1-external-compile-boundary-review.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/reviews/architecture-and-governance/20260419-plan-route-boundary-remediation-review.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/reviews/architecture-and-governance/20260419-post-rc-g1-c-architecture-review.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/reviews/architecture-and-governance/20260420-dvt-plus-system-architecture-review.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/reviews/architecture-and-governance/20260421-canvas-handler-seams-fowler-review.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/reviews/architecture-and-governance/20260421-canvas-route-composition-fowler-review.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/reviews/architecture-and-governance/20260422-canvas-component-governance-follow-up-review.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/reviews/architecture-and-governance/20260422-dvt-plus-principal-architect-action-plan.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/reviews/architecture-and-governance/20260422-dvt-plus-principal-architect-deep-review.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/reviews/architecture-and-governance/20260423-dvt-plus-system-architecture-review.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/reviews/architecture-and-governance/20260424-dvt-plus-hard-architecture-review.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/reviews/architecture-and-governance/20260425-canvas-graph-strategy-fowler-hard-qa-review.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/reviews/architecture-and-governance/20260427-ar-d-plan-pointer-fowler-hard-qa-review.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/reviews/architecture-and-governance/20260427-dvt-deep-architectural-review.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/reviews/architecture-and-governance/20260427-rc-g1-d-fowler-architecture-review.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/reviews/architecture-and-governance/20260429-dvt-plus-principal-deep-review-april-2026.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/reviews/architecture-and-governance/20260429-we-hx-1-fowler-architecture-review.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/reviews/architecture-and-governance/20260501-tf-e2-m-c-fowler-hard-qa-review.md
+        classification: tracks drift
+      - path: docs/planning/reviews/architecture-and-governance/index.md
+        classification: tracks drift
+      - path: docs/planning/reviews/canvas-controller-fowler-hard-qa-20260404.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/reviews/event-lifecycle-and-retention/20260330-mvp-d1-residual-risk-baseline-review.md
+        classification: tracks drift
+      - path: docs/planning/reviews/event-lifecycle-and-retention/index.md
+        classification: tracks drift
+      - path: docs/planning/reviews/review-naming-policy.md
+        classification: tracks drift
+      - path: docs/planning/reviews/review-status-board.md
+        classification: tracks drift
+      - path: docs/planning/reviews/sprints/index.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/reviews/sprints/sprint-2026-04a/board-001-start-run-coordinator-extraction.md
+        classification: tracks drift
+      - path: docs/planning/reviews/sprints/sprint-2026-04a/board-003-rc-c2-cycle-closure.md
+        classification: tracks drift
+      - path: docs/planning/reviews/sprints/sprint-2026-04a/board-004-lint-staged-script-coverage.md
+        classification: tracks drift
+      - path: docs/planning/reviews/sprints/sprint-2026-04a/board-005-diff-semantics-consistency.md
+        classification: tracks drift
+      - path: docs/planning/reviews/sprints/sprint-2026-04a/board-006-review-link-stability-hardening.md
+        classification: tracks drift
+      - path: docs/planning/reviews/sprints/sprint-2026-04a/index.md
+        classification: tracks drift
+      - path: docs/planning/reviews/sprints/sprint-2026-04b/board-010-step-executor-port-definition.md
+        classification: tracks drift
+      - path: docs/planning/reviews/sprints/sprint-2026-04b/index.md
+        classification: tracks drift
+      - path: docs/planning/reviews/sprints/sprint-2026-04c/board-012-input-hash-plan-cache-port.md
+        classification: tracks drift
+      - path: docs/planning/reviews/sprints/sprint-2026-04c/board-013-per-step-kind-policy-vocabulary.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/reviews/sprints/sprint-2026-04c/board-015-intent-reconciler-distributed-lease.md
+        classification: tracks drift
+      - path: docs/planning/reviews/sprints/sprint-2026-04c/index.md
+        classification: tracks drift
+      - path: docs/reviews/architectural-review-dvtplus-2026-03-24.md
+        classification: tracks drift
+      - path: docs/reviews/dvt-top3-gaps-roadmap-20260319.md
+        classification: tracks drift
+      - path: docs/reviews/DVT+_Architectural_Review_20260319.md
+        classification: tracks drift
+      - path: docs/reviews/prioritized-gaps-20260319.md
+        classification: tracks drift
+    expectedValidation:
+      - pnpm docs:governance:remediation-queue:check
+      - pnpm docs:governance:coverage-report:check
+      - pnpm docs:governance:document-unit-map:check
+  - id: GRQ-DOC_ALIGNMENT-SYS-RUNTIME
+    type: doc-alignment
+    priority: P2
+    componentUnit: SYS-RUNTIME
+    rootUnit: SYS-DVT
+    domainUnit: SYS-RUNTIME
+    dddOwner: INFRA
+    cqRails: documentation alignment
+    blocking: reporting-only
+    reason: Documents track drift or require disposition and need alignment with active units.
+    fileCount: 0
+    documentCount: 44
+    files: []
+    documents:
+      - path: docs/planning/closeouts/20260316-engine-docs-current-state-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260316-monorepo-peer-runtime-policy-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260321-gap-5-pr3-delivery-buffer-retention-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260324-s12-remove-deprecated-state-store-methods-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260324-s18-explicit-state-store-root-bindings-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260329-run-event-retention-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260331-dhm-ws5-b-engine-test-fixture-modularization-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260331-zensical-primary-docs-runtime-closeout.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/closeouts/20260407-ar-c1-t3-protected-runtime-admin-route-composition-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260407-engine-entrypoint-plan-integrity-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260413-tf-c2-runtime-vertical-acceptance-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260414-tf-c3-dbt-plugin-runtime-projection-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260418-protected-runtime-integration-seam-split-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260422-tf-e2-protected-runtime-dev-auth-alignment-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260423-engine-capability-validation-fail-closed-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/engine-deps-refactor-closeout.md
+        classification: tracks drift
+      - path: docs/planning/gaps/runtime-architecture-gap-register-20260331.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/reviews/architecture-and-governance/20260407-engine-boundary-current-target-and-migration-review.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/reviews/architecture-and-governance/20260410-runtime-and-shared-kernel-risk-triage-review.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/reviews/architecture-and-governance/20260422-canvas-runtime-truth-hardcut-review.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/reviews/architecture-and-governance/20260426-canvas-runtime-policy-architecture-review.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/reviews/architecture-and-governance/20260429-dvt-engine-package-audit-review.md
+        classification: tracks drift
+      - path: docs/planning/reviews/ci-and-delivery/20260328-lane-c-ai-efficiency-and-cost-review.md
+        classification: tracks drift
+      - path: docs/planning/reviews/ci-and-delivery/20260330-ci-performance-review-and-action-plan.md
+        classification: tracks drift
+      - path: docs/planning/reviews/ci-and-delivery/20260330-ci-prepush-pr-process-observations.md
+        classification: tracks drift
+      - path: docs/planning/reviews/ci-and-delivery/20260401-ci-process-review.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/reviews/ci-and-delivery/20260401-lane-c-rc-c2-efficiency-institutionalization-review.md
+        classification: tracks drift
+      - path: docs/planning/reviews/ci-and-delivery/20260402-rc-c2-operational-friction-intake-review.md
+        classification: tracks drift
+      - path: docs/planning/reviews/ci-and-delivery/20260422-environment-configuration-audit-review.md
+        classification: tracks drift
+      - path: docs/planning/reviews/ci-and-delivery/index.md
+        classification: tracks drift
+      - path: docs/planning/reviews/engine/20260404-s19f1-snapshot-optimization-plan-review.md
+        classification: tracks drift
+      - path: docs/planning/reviews/engine/20260405-mw-a2-policy-first-fowler-qa-review.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/reviews/event-lifecycle-and-retention/20260329-run-event-retention-fowler-hard-review.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/reviews/event-lifecycle-and-retention/20260329-run-event-retention-risks-mitigations.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/reviews/event-lifecycle-and-retention/20260329-run-event-retention-ttl-kickoff-review.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/reviews/execution-runtime/20260315-postgres-start-run-intent-store-qa-review.md
+        classification: tracks drift
+      - path: docs/planning/reviews/execution-runtime/20260315-run-plan-workflow-architecture-review.md
+        classification: tracks drift
+      - path: docs/planning/reviews/execution-runtime/20260315-workflow-helpers-architecture-review.md
+        classification: tracks drift
+      - path: docs/planning/reviews/execution-runtime/20260323-start-run-route-parser-qa-review.md
+        classification: tracks drift
+      - path: docs/planning/reviews/execution-runtime/20260326-run-maintenance-service-srp-review.md
+        classification: tracks drift
+      - path: docs/planning/reviews/execution-runtime/20260326-s03-hard-qa-review.md
+        classification: tracks drift
+      - path: docs/planning/reviews/execution-runtime/20260328-runtime-command-rbac-review.md
+        classification: tracks drift
+      - path: docs/planning/reviews/execution-runtime/20260409-tf-c2-b-read-surface-hard-qa-review.md
+        classification: tracks drift
+      - path: docs/planning/reviews/execution-runtime/index.md
+        classification: tracks drift
+    expectedValidation:
+      - pnpm docs:governance:remediation-queue:check
+      - pnpm docs:governance:coverage-report:check
+      - pnpm docs:governance:document-unit-map:check
+  - id: GRQ-DOC_ALIGNMENT-SYS-PLANNER
+    type: doc-alignment
+    priority: P2
+    componentUnit: SYS-PLANNER
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANNER
+    dddOwner: INFRA
+    cqRails: documentation alignment
+    blocking: reporting-only
+    reason: Documents track drift or require disposition and need alignment with active units.
+    fileCount: 0
+    documentCount: 40
+    files: []
+    documents:
+      - path: >-
+          docs/planning/closeouts/20260317-stage-1-1-planner-canonicalization-ambition-reduction-closeout.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/closeouts/20260317-stage-1-1-planner-canonicalization-artifact-mapping-closeout.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/closeouts/20260317-stage-1-1-planner-canonicalization-compiledcoderef-binding-gap-closeout.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/closeouts/20260317-stage-1-1-planner-canonicalization-custom-registration-authority-closeout.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/closeouts/20260317-stage-1-1-planner-canonicalization-diagram-state-alignment-closeout.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/closeouts/20260317-stage-1-1-planner-canonicalization-evidence-format-closeout.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/closeouts/20260317-stage-1-1-planner-canonicalization-executability-gate-handoff-closeout.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/closeouts/20260317-stage-1-1-planner-canonicalization-human-alignment-closeout.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/closeouts/20260317-stage-1-1-planner-canonicalization-machine-readable-closeout.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/closeouts/20260317-stage-1-1-planner-canonicalization-manifest-thinning-closeout.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/closeouts/20260317-stage-1-1-planner-canonicalization-manifestref-hash-rule-closeout.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/closeouts/20260317-stage-1-1-planner-canonicalization-policy-vocabulary-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260317-stage-1-1-planner-canonicalization-proposal-closeout.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/closeouts/20260317-stage-1-1-planner-canonicalization-qualitative-alignment-closeout.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/closeouts/20260317-stage-1-1-planner-canonicalization-real-artifact-closeout.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/closeouts/20260317-stage-1-1-planner-canonicalization-remove-illustrative-interface-trap-closeout.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/closeouts/20260317-stage-1-1-planner-canonicalization-scope-claim-correction-closeout.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/closeouts/20260317-stage-1-1-planner-canonicalization-stepid-nodeid-transitional-policy-closeout.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/closeouts/20260317-stage-1-1-planner-canonicalization-unknown-stepkind-bridge-closeout.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/closeouts/20260318-stage-1-1-planner-canonicalization-baseline-snapshot-closeout.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/closeouts/20260318-stage-1-1-planner-canonicalization-companion-boundary-closeout.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/closeouts/20260318-stage-1-1-planner-canonicalization-executability-gate-sequence-closeout.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/closeouts/20260318-stage-1-1-planner-canonicalization-input-path-lifecycle-closeout.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/closeouts/20260318-stage-1-1-planner-canonicalization-plan-binding-record-closeout.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/closeouts/20260318-stage-1-1-planner-canonicalization-policy-class-vocabulary-closeout.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/closeouts/20260318-stage-1-1-planner-canonicalization-stepkind-registry-and-baseline-prereq-closeout.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/closeouts/20260318-stage-1-1-planner-canonicalization-unknown-stepkind-allowlist-authority-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260318-stage-1-1-planner-policy-boundary-migration-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260320-planner-assessment-roadmap-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260320-planner-r1-doc-triage-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260320-planner-r2-redefinition-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260320-planner-r2-typed-graph-source-boundary-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260404-ar-a9-planner-cycle-fail-closed-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260406-mw-a2-c-planner-boundary-evolution-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260410-mw-a6-planner-hard-cut-boundary-remediation-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260419-tf-a1-c14-plan-compile-language-alignment-closeout.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/closeouts/20260420-tf-a1-c18-plan-compile-boundary-ownership-convergence-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260427-rc-g1-d-planner-ownership-migration-closeout.md
+        classification: tracks drift
+      - path: docs/planning/reviews/execution-runtime/20260321-planner-backed-start-run-qa-review.md
+        classification: tracks drift
+      - path: docs/reviews/dvt_planner_technical_vision.md
+        classification: tracks drift
+    expectedValidation:
+      - pnpm docs:governance:remediation-queue:check
+      - pnpm docs:governance:coverage-report:check
+      - pnpm docs:governance:document-unit-map:check
+  - id: GRQ-COMPONENT_SUBDIVISION-SYS-ADAPTERS-ROOT
+    type: component-subdivision
+    priority: P3
+    componentUnit: SYS-ADAPTERS-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-ADAPTERS
+    dddOwner: ADP
+    cqRails: adapter implementations of owned ports
+    blocking: reporting-only
+    reason: Component is known but still too broad for source-level governance.
+    fileCount: 0
+    documentCount: 0
+    files: []
+    documents: []
+    expectedValidation:
+      - pnpm docs:governance:remediation-queue:check
+      - pnpm docs:governance:coverage-report:check
+      - pnpm docs:governance:file-component-index:check
+  - id: GRQ-COMPONENT_SUBDIVISION-SYS-CI-GOVERNANCE-ROOT
+    type: component-subdivision
+    priority: P3
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    blocking: reporting-only
+    reason: Component is known but still too broad for source-level governance.
+    fileCount: 0
+    documentCount: 0
+    files: []
+    documents: []
+    expectedValidation:
+      - pnpm docs:governance:remediation-queue:check
+      - pnpm docs:governance:coverage-report:check
+      - pnpm docs:governance:file-component-index:check
+  - id: GRQ-COMPONENT_SUBDIVISION-SYS-CONTRACTS-ROOT
+    type: component-subdivision
+    priority: P3
+    componentUnit: SYS-CONTRACTS-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    dddOwner: PORT
+    cqRails: contract DTOs and port shapes
+    blocking: reporting-only
+    reason: Component is known but still too broad for source-level governance.
+    fileCount: 0
+    documentCount: 0
+    files: []
+    documents: []
+    expectedValidation:
+      - pnpm docs:governance:remediation-queue:check
+      - pnpm docs:governance:coverage-report:check
+      - pnpm docs:governance:file-component-index:check
+  - id: GRQ-COMPONENT_SUBDIVISION-SYS-OBSERVABILITY-ROOT
+    type: component-subdivision
+    priority: P3
+    componentUnit: SYS-OBSERVABILITY-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-OBSERVABILITY
+    dddOwner: PORT
+    cqRails: telemetry commands and operational queries
+    blocking: reporting-only
+    reason: Component is known but still too broad for source-level governance.
+    fileCount: 0
+    documentCount: 0
+    files: []
+    documents: []
+    expectedValidation:
+      - pnpm docs:governance:remediation-queue:check
+      - pnpm docs:governance:coverage-report:check
+      - pnpm docs:governance:file-component-index:check
+  - id: GRQ-COMPONENT_SUBDIVISION-SYS-PLANNER-ROOT
+    type: component-subdivision
+    priority: P3
+    componentUnit: SYS-PLANNER-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    dddOwner: DS
+    cqRails: planner build and derivation rails
+    blocking: reporting-only
+    reason: Component is known but still too broad for source-level governance.
+    fileCount: 0
+    documentCount: 0
+    files: []
+    documents: []
+    expectedValidation:
+      - pnpm docs:governance:remediation-queue:check
+      - pnpm docs:governance:coverage-report:check
+      - pnpm docs:governance:file-component-index:check
+  - id: GRQ-COMPONENT_SUBDIVISION-SYS-PLANSTORE-ARTIFACTS-PORTS
+    type: component-subdivision
+    priority: P3
+    componentUnit: SYS-PLANSTORE-ARTIFACTS-PORTS
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    dddOwner: PORT
+    cqRails: PS-Q02
+    blocking: reporting-only
+    reason: Component is known but still too broad for source-level governance.
+    fileCount: 0
+    documentCount: 0
+    files: []
+    documents: []
+    expectedValidation:
+      - pnpm docs:governance:remediation-queue:check
+      - pnpm docs:governance:coverage-report:check
+      - pnpm docs:governance:file-component-index:check
+  - id: GRQ-COMPONENT_SUBDIVISION-SYS-PLANSTORE-DOCS-RISK
+    type: component-subdivision
+    priority: P3
+    componentUnit: SYS-PLANSTORE-DOCS-RISK
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    dddOwner: INFRA
+    cqRails: none - governance and evidence
+    blocking: reporting-only
+    reason: Component is known but still too broad for source-level governance.
+    fileCount: 0
+    documentCount: 0
+    files: []
+    documents: []
+    expectedValidation:
+      - pnpm docs:governance:remediation-queue:check
+      - pnpm docs:governance:coverage-report:check
+      - pnpm docs:governance:file-component-index:check
+  - id: GRQ-COMPONENT_SUBDIVISION-SYS-PLANSTORE-TEMPORAL-COMPOSITION
+    type: component-subdivision
+    priority: P3
+    componentUnit: SYS-PLANSTORE-TEMPORAL-COMPOSITION
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    dddOwner: ADP
+    cqRails: PS-Q08
+    blocking: reporting-only
+    reason: Component is known but still too broad for source-level governance.
+    fileCount: 0
+    documentCount: 0
+    files: []
+    documents: []
+    expectedValidation:
+      - pnpm docs:governance:remediation-queue:check
+      - pnpm docs:governance:coverage-report:check
+      - pnpm docs:governance:file-component-index:check
+  - id: GRQ-COMPONENT_SUBDIVISION-SYS-REPO-METADATA-ROOT
+    type: component-subdivision
+    priority: P3
+    componentUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    blocking: reporting-only
+    reason: Component is known but still too broad for source-level governance.
+    fileCount: 0
+    documentCount: 0
+    files: []
+    documents: []
+    expectedValidation:
+      - pnpm docs:governance:remediation-queue:check
+      - pnpm docs:governance:coverage-report:check
+      - pnpm docs:governance:file-component-index:check
+  - id: GRQ-COMPONENT_SUBDIVISION-SYS-TRACEABILITY-ROOT
+    type: component-subdivision
+    priority: P3
+    componentUnit: SYS-TRACEABILITY-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-TRACEABILITY
+    dddOwner: DS
+    cqRails: traceability commands and lineage queries
+    blocking: reporting-only
+    reason: Component is known but still too broad for source-level governance.
+    fileCount: 0
+    documentCount: 0
+    files: []
+    documents: []
+    expectedValidation:
+      - pnpm docs:governance:remediation-queue:check
+      - pnpm docs:governance:coverage-report:check
+      - pnpm docs:governance:file-component-index:check
+  - id: GRQ-COMPONENT_SUBDIVISION-SYS-WORKERS-ROOT
+    type: component-subdivision
+    priority: P3
+    componentUnit: SYS-WORKERS-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-WORKERS
+    dddOwner: AS
+    cqRails: worker commands and operational queries
+    blocking: reporting-only
+    reason: Component is known but still too broad for source-level governance.
+    fileCount: 0
+    documentCount: 0
+    files: []
+    documents: []
+    expectedValidation:
+      - pnpm docs:governance:remediation-queue:check
+      - pnpm docs:governance:coverage-report:check
+      - pnpm docs:governance:file-component-index:check
+  - id: GRQ-DOC_ALIGNMENT-SYS-API
+    type: doc-alignment
+    priority: P3
+    componentUnit: SYS-API
+    rootUnit: SYS-DVT
+    domainUnit: SYS-API
+    dddOwner: INFRA
+    cqRails: documentation alignment
+    blocking: reporting-only
+    reason: Documents track drift or require disposition and need alignment with active units.
+    fileCount: 0
+    documentCount: 18
+    files: []
+    documents:
+      - path: docs/planning/closeouts/20260315-api-protected-runtime-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260315-task8-intent-reconciliation-and-api-flags-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260315-task8-intent-reconciliation-and-api-flags-thinkfirst.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260316-api-start-run-adapter-config-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260320-api-runtime-query-integration-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260403-api-current-to-target-architecture-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260406-mw-a2-d-api-ref-resolution-alignment-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260420-api-http-error-mapper-srp-decomposition-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260421-api-http-entrypoint-response-componentization-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260421-api-http-error-translation-ast-seam-guard-closeout.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/closeouts/20260421-api-http-error-translation-facade-writer-refinement-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260421-api-http-error-translation-public-api-facade-closeout.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/closeouts/20260421-api-http-error-translation-response-writer-unification-closeout.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/closeouts/20260421-api-http-error-translation-route-static-error-convergence-closeout.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/closeouts/20260421-api-http-runtime-error-translation-component-hardening-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260422-api-start-run-execution-capacity-admission-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260426-api-tenant-qa-hardening-closeout.md
+        classification: tracks drift
+      - path: docs/planning/reviews/architecture-and-governance/20260426-api-tenant-review.md
+        classification: tracks drift
+    expectedValidation:
+      - pnpm docs:governance:remediation-queue:check
+      - pnpm docs:governance:coverage-report:check
+      - pnpm docs:governance:document-unit-map:check
+  - id: GRQ-DOC_ALIGNMENT-SYS-ADAPTERS
+    type: doc-alignment
+    priority: P3
+    componentUnit: SYS-ADAPTERS
+    rootUnit: SYS-DVT
+    domainUnit: SYS-ADAPTERS
+    dddOwner: INFRA
+    cqRails: documentation alignment
+    blocking: reporting-only
+    reason: Documents track drift or require disposition and need alignment with active units.
+    fileCount: 0
+    documentCount: 17
+    files: []
+    documents:
+      - path: docs/planning/closeouts/20260315-adapter-postgres-phase1-extraction-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260315-adapter-postgres-schema-timeout-fixes-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260317-adapter-dependency-graph-alignment-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260317-adapter-temporal-pretest-split-closeout.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/closeouts/20260410-mw-a5-temporal-helper-artifact-facts-narrowing-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260413-pr-925-temporal-arc2-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260420-adapter-temporal-canonical-test-route-cleanup-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260420-adapter-temporal-test-fixture-alignment-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260420-adapter-temporal-test-seams-hardening-closeout.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/closeouts/20260420-adapter-temporal-workflowhelpers-decomposition-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260420-temporal-fowler-architecture-drift-follow-up-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260423-ar-c3-b-temporal-readyz-capacity-binding-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260427-temporal-continue-payload-env-propagation-closeout.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/reviews/architecture-and-governance/20260323-solid-ddd-hexagonal-ci-and-adapters-review.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/reviews/architecture-and-governance/20260421-temporal-fowler-provider-truth-follow-up-review.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/reviews/execution-runtime/20260315-postgres-state-store-adapter-refactor-review.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/reviews/sprints/sprint-2026-04c/board-016-admission-backpressure-temporal-queue-depth.md
+        classification: tracks drift
+    expectedValidation:
+      - pnpm docs:governance:remediation-queue:check
+      - pnpm docs:governance:coverage-report:check
+      - pnpm docs:governance:document-unit-map:check
+  - id: GRQ-DOC_ALIGNMENT-SYS-WEB
+    type: doc-alignment
+    priority: P3
+    componentUnit: SYS-WEB
+    rootUnit: SYS-DVT
+    domainUnit: SYS-WEB
+    dddOwner: INFRA
+    cqRails: documentation alignment
+    blocking: reporting-only
+    reason: Documents track drift or require disposition and need alignment with active units.
+    fileCount: 0
+    documentCount: 12
+    files: []
+    documents:
+      - path: docs/planning/closeouts/20260413-pr-926-web-toolchain-compatibility-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260413-web-config-hardening-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260414-hotfix-frontend-app-services-provider-startup-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260414-tf-a1-d-web-plan-anti-corruption-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260416-tf-e2-web-typecheck-hardening-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260421-web-xyflow-12-10-2-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260422-web-canvas-sonar-maintenance-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260423-selected-closure-ux-proof-story-capture-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260423-tf-a2-c3-c4-api-web-adoption-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260427-frontend-policy-drift-and-bootstrap-closeout.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/docs/08-doc-and-code-drift-notes.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/reviews/architecture-and-governance/20260404-f04-frontend-data-boundary-hard-qa-review.md
+        classification: tracks drift
+    expectedValidation:
+      - pnpm docs:governance:remediation-queue:check
+      - pnpm docs:governance:coverage-report:check
+      - pnpm docs:governance:document-unit-map:check
+  - id: GRQ-DOC_ALIGNMENT-SYS-PLANSTORE
+    type: doc-alignment
+    priority: P3
+    componentUnit: SYS-PLANSTORE
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    dddOwner: INFRA
+    cqRails: documentation alignment
+    blocking: reporting-only
+    reason: Documents track drift or require disposition and need alignment with active units.
+    fileCount: 0
+    documentCount: 9
+    files: []
+    documents:
+      - path: docs/planning/closeouts/20260403-s08-3-artifacts-plan-store-ports-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260406-s08-4c-fail-closed-admission-coverage-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260406-s08-5c-plugin-compatibility-fingerprint-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260427-temporal-planref-spec-config-hardening-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260502-s08-temporal-legacy-removal-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/F-04-RISK-A-QA-03-backend-owned-planref-closeout.md
+        classification: tracks drift
+      - path: docs/planning/reviews/20260402-s08-plan-record-plan-store-gap-review.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/reviews/architecture-and-governance/20260403-postgres-plan-store-srp-remediation-target.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/reviews/architecture-and-governance/20260403-s08-postgres-plan-store-hard-qa-review.md
+        classification: tracks drift
+    expectedValidation:
+      - pnpm docs:governance:remediation-queue:check
+      - pnpm docs:governance:coverage-report:check
+      - pnpm docs:governance:document-unit-map:check
+  - id: GRQ-DOC_ALIGNMENT-SYS-CI-GOVERNANCE
+    type: doc-alignment
+    priority: P3
+    componentUnit: SYS-CI-GOVERNANCE
+    rootUnit: SYS-DVT
+    domainUnit: SYS-CI-GOVERNANCE
+    dddOwner: INFRA
+    cqRails: documentation alignment
+    blocking: reporting-only
+    reason: Documents track drift or require disposition and need alignment with active units.
+    fileCount: 0
+    documentCount: 5
+    files: []
+    documents:
+      - path: docs/planning/closeouts/20260401-rc-c2-preflight-and-log-triage-rollout-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260413-pr-895-release-branch-reconciliation-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260423-rc-c2-post-merge-ci-measurement.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260423-rc-c2-wave-2c-prepush-affected-typecheck-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260423-rc-c2-wave-4a-ci-tools-merge-gate-closeout.md
+        classification: tracks drift
+    expectedValidation:
+      - pnpm docs:governance:remediation-queue:check
+      - pnpm docs:governance:coverage-report:check
+      - pnpm docs:governance:document-unit-map:check
+  - id: GRQ-DOC_ALIGNMENT-SYS-CONTRACTS
+    type: doc-alignment
+    priority: P3
+    componentUnit: SYS-CONTRACTS
+    rootUnit: SYS-DVT
+    domainUnit: SYS-CONTRACTS
+    dddOwner: INFRA
+    cqRails: documentation alignment
+    blocking: reporting-only
+    reason: Documents track drift or require disposition and need alignment with active units.
+    fileCount: 0
+    documentCount: 5
+    files: []
+    documents:
+      - path: docs/planning/closeouts/20260324-schema-migration-rollback-closeout.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/reviews/execution-runtime/20260315-start-run-intent-schema-manager-architecture-review.md
+        classification: tracks drift
+      - path: docs/planning/reviews/sprints/sprint-2026-04a/board-002-event-payload-versioning.md
+        classification: tracks drift
+      - path: docs/planning/reviews/sprints/sprint-2026-04b/board-011-snapshot-schema-versioning.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/reviews/sprints/sprint-2026-04c/board-014-manifest-schema-validation-at-boundary.md
+        classification: tracks drift
+    expectedValidation:
+      - pnpm docs:governance:remediation-queue:check
+      - pnpm docs:governance:coverage-report:check
+      - pnpm docs:governance:document-unit-map:check
+  - id: GRQ-DOC_ALIGNMENT-SYS-OBSERVABILITY
+    type: doc-alignment
+    priority: P3
+    componentUnit: SYS-OBSERVABILITY
+    rootUnit: SYS-DVT
+    domainUnit: SYS-OBSERVABILITY
+    dddOwner: INFRA
+    cqRails: documentation alignment
+    blocking: reporting-only
+    reason: Documents track drift or require disposition and need alignment with active units.
+    fileCount: 0
+    documentCount: 5
+    files: []
+    documents:
+      - path: docs/planning/closeouts/20260404-ar-c2-sla-and-manuals-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260404-ar-c2-sla-operational-closure-closeout.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/closeouts/20260424-ar-c3-admission-observability-semantic-hardening-closeout.md
+        classification: tracks drift
+      - path: docs/planning/reviews/architecture-and-governance/20260404-ar-c2-fowler-hard-qa-review.md
+        classification: tracks drift
+      - path: docs/planning/reviews/sprints/sprint-2026-04b/board-008-observability-hash-decoupling.md
+        classification: tracks drift
+    expectedValidation:
+      - pnpm docs:governance:remediation-queue:check
+      - pnpm docs:governance:coverage-report:check
+      - pnpm docs:governance:document-unit-map:check
+  - id: GRQ-DOC_ALIGNMENT-SYS-WORKERS
+    type: doc-alignment
+    priority: P3
+    componentUnit: SYS-WORKERS
+    rootUnit: SYS-DVT
+    domainUnit: SYS-WORKERS
+    dddOwner: INFRA
+    cqRails: documentation alignment
+    blocking: reporting-only
+    reason: Documents track drift or require disposition and need alignment with active units.
+    fileCount: 0
+    documentCount: 3
+    files: []
+    documents:
+      - path: docs/planning/closeouts/20260316-g7-projector-worker-runtime-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260317-outbox-worker-script-dedup-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260420-temporal-worker-runtime-config-shape-closeout.md
+        classification: tracks drift
+    expectedValidation:
+      - pnpm docs:governance:remediation-queue:check
+      - pnpm docs:governance:coverage-report:check
+      - pnpm docs:governance:document-unit-map:check
+  - id: GRQ-DOC_ALIGNMENT-SYS-TRACEABILITY
+    type: doc-alignment
+    priority: P3
+    componentUnit: SYS-TRACEABILITY
+    rootUnit: SYS-DVT
+    domainUnit: SYS-TRACEABILITY
+    dddOwner: INFRA
+    cqRails: documentation alignment
+    blocking: reporting-only
+    reason: Documents track drift or require disposition and need alignment with active units.
+    fileCount: 0
+    documentCount: 1
+    files: []
+    documents:
+      - path: docs/planning/closeouts/20260315-g10-lineage-runtime-closeout.md
+        classification: tracks drift
+    expectedValidation:
+      - pnpm docs:governance:remediation-queue:check
+      - pnpm docs:governance:coverage-report:check
+      - pnpm docs:governance:document-unit-map:check

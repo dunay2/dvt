@@ -22,6 +22,8 @@ const PR_QUALITY_PREPUSH_GOVERNANCE_COMMANDS = [
   'pnpm docs:governance:file-component-index:check',
   'pnpm docs:governance:file-fingerprint-baseline:check',
   'pnpm docs:governance:file-fingerprint-impact:check',
+  'pnpm docs:governance:coverage-report:check',
+  'pnpm docs:governance:remediation-queue:check',
   'pnpm docs:feature-mechanization',
   'pnpm docs:feature-mechanization:implementation',
   'pnpm qa:artifact:check',
