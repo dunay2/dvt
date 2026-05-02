@@ -136,6 +136,65 @@ export const canvasViewRouteCopyByKey = {
     key: 'canvas.draft.accessDeniedMessage',
     fallback: 'Canvas cannot read the persisted draft for the current workspace scope.',
   },
+  sessionRequiredDraftLabel: {
+    key: 'canvas.draft.sessionRequiredLabel',
+    fallback: 'Session required',
+  },
+  readOnlyDraftLabel: {
+    key: 'canvas.draft.readOnlyLabel',
+    fallback: 'Read-only draft',
+  },
+  forbiddenScopeDraftLabel: {
+    key: 'canvas.draft.forbiddenScopeLabel',
+    fallback: 'Draft access denied',
+  },
+  draftFormatBlockedLabel: {
+    key: 'canvas.draft.formatBlockedLabel',
+    fallback: 'Draft format blocked',
+  },
+  refreshSessionActionLabel: {
+    key: 'canvas.draft.refreshSessionAction',
+    fallback: 'Refresh session',
+  },
+  changeScopeActionLabel: {
+    key: 'canvas.draft.changeScopeAction',
+    fallback: 'Change scope',
+  },
+  inspectOnlyActionLabel: {
+    key: 'canvas.draft.inspectOnlyAction',
+    fallback: 'Inspect only',
+  },
+  escalateFormatActionLabel: {
+    key: 'canvas.draft.escalateFormatAction',
+    fallback: 'Escalate draft format issue',
+  },
+  draftSessionRequiredTitle: {
+    key: 'canvas.draft.sessionRequiredTitle',
+    fallback: 'Session required for draft access',
+  },
+  draftSessionRequiredMessage: {
+    key: 'canvas.draft.sessionRequiredMessage',
+    fallback:
+      'Canvas cannot read the protected draft because the current session is missing or expired. Refresh the session.',
+  },
+  draftForbiddenScopeTitle: {
+    key: 'canvas.draft.forbiddenScopeTitle',
+    fallback: 'Draft scope is forbidden',
+  },
+  draftForbiddenScopeMessage: {
+    key: 'canvas.draft.forbiddenScopeMessage',
+    fallback:
+      'Canvas cannot read this workspace draft with the current tenant, project, or permission scope. Change scope or request access.',
+  },
+  draftReadOnlyTitle: {
+    key: 'canvas.draft.readOnlyTitle',
+    fallback: 'Draft is read-only',
+  },
+  draftReadOnlyMessage: {
+    key: 'canvas.draft.readOnlyMessage',
+    fallback:
+      'Canvas can inspect this draft, but graph edits, planning, and run start are disabled for the current scope.',
+  },
   draftUnsupportedSchemaTitle: {
     key: 'canvas.draft.unsupportedSchemaTitle',
     fallback: 'Persisted draft format is unsupported',

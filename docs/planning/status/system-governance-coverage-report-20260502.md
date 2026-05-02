@@ -29,8 +29,8 @@ Upstream indexes:
 
 ## Totals
 
-- Files: 4073
-- Governed files: 4073
+- Files: 4086
+- Governed files: 4086
 - Ungoverned files: 0
 - Drift files: 44
 - Legacy files: 0
@@ -49,7 +49,7 @@ Upstream indexes:
 <!-- prettier-ignore-start -->
 | Root unit | Files |
 | --- | ---: |
-| `SYS-DVT` | 4073 |
+| `SYS-DVT` | 4086 |
 <!-- prettier-ignore-end -->
 
 ## By Domain Unit
@@ -58,7 +58,7 @@ Upstream indexes:
 | Domain unit | Files |
 | --- | ---: |
 | `SYS-ADAPTERS` | 196 |
-| `SYS-DVT` | 3296 |
+| `SYS-DVT` | 3309 |
 | `SYS-OBSERVABILITY` | 15 |
 | `SYS-PLANSTORE` | 112 |
 | `SYS-RUNTIME` | 286 |
@@ -74,8 +74,8 @@ Upstream indexes:
 | `ADP` | 250 |
 | `AS` | 469 |
 | `DS` | 142 |
-| `ENTRY` | 875 |
-| `INFRA` | 2148 |
+| `ENTRY` | 885 |
+| `INFRA` | 2151 |
 | `PORT` | 189 |
 <!-- prettier-ignore-end -->
 
@@ -84,8 +84,8 @@ Upstream indexes:
 <!-- prettier-ignore-start -->
 | Status | Files |
 | --- | ---: |
-| `canonical` | 110 |
-| `coverage-required` | 3851 |
+| `canonical` | 111 |
+| `coverage-required` | 3863 |
 | `drift` | 44 |
 | `review` | 68 |
 <!-- prettier-ignore-end -->
@@ -95,9 +95,9 @@ Upstream indexes:
 <!-- prettier-ignore-start -->
 | Governance state | Files |
 | --- | ---: |
-| `coverage-required` | 3851 |
+| `coverage-required` | 3863 |
 | `drift` | 44 |
-| `governed` | 110 |
+| `governed` | 111 |
 | `review` | 68 |
 <!-- prettier-ignore-end -->
 
@@ -106,8 +106,8 @@ Upstream indexes:
 <!-- prettier-ignore-start -->
 | Canonical role | Files |
 | --- | ---: |
-| `implementation-owner` | 110 |
-| `none` | 3963 |
+| `implementation-owner` | 111 |
+| `none` | 3975 |
 <!-- prettier-ignore-end -->
 
 ## By Evidence State
@@ -115,8 +115,8 @@ Upstream indexes:
 <!-- prettier-ignore-start -->
 | Evidence state | Files |
 | --- | ---: |
-| `classification-only` | 110 |
-| `coverage-required` | 3851 |
+| `classification-only` | 111 |
+| `coverage-required` | 3863 |
 | `remediation-required` | 44 |
 | `review-required` | 68 |
 <!-- prettier-ignore-end -->
@@ -186,12 +186,12 @@ Upstream indexes:
 | Component | Files | Status | DDD owner |
 | --- | ---: | --- | --- |
 | `SYS-DOCS-GOVERNANCE-ROOT` | 1652 | `coverage-required` | `INFRA` |
-| `SYS-WEB-ROOT` | 787 | `coverage-required` | `ENTRY` |
+| `SYS-WEB-ROOT` | 797 | `coverage-required` | `ENTRY` |
 | `SYS-RUNTIME-ROOT` | 286 | `coverage-required` | `AS` |
 | `SYS-ADAPTERS-ROOT` | 196 | `coverage-required` | `ADP` |
-| `SYS-CI-GOVERNANCE-ROOT` | 178 | `coverage-required` | `INFRA` |
+| `SYS-CI-GOVERNANCE-ROOT` | 180 | `coverage-required` | `INFRA` |
 | `SYS-CONTRACTS-ROOT` | 127 | `coverage-required` | `PORT` |
-| `SYS-REPO-METADATA-ROOT` | 110 | `canonical` | `INFRA` |
+| `SYS-REPO-METADATA-ROOT` | 111 | `canonical` | `INFRA` |
 | `SYS-WORKERS-ROOT` | 103 | `coverage-required` | `AS` |
 | `SYS-PLANNER-ROOT` | 76 | `coverage-required` | `DS` |
 | `SYS-TRACEABILITY-ROOT` | 65 | `coverage-required` | `DS` |
@@ -213,14 +213,14 @@ Upstream indexes:
 | `docs/DOCS_README.md` | 1666 |
 | `docs/planning/status/governance-document-rule-inventory.md` | 1652 |
 | `docs/planning/status/system-operations-inventory-20260501.md` | 947 |
-| `docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md` | 787 |
+| `docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md` | 797 |
 | `docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md` | 341 |
-| `docs/guides/testing-and-ci-capabilities.md` | 338 |
+| `docs/guides/testing-and-ci-capabilities.md` | 340 |
 | `docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md` | 235 |
 | `docs/architecture/command-query-rail-governance.md` | 159 |
 | `docs/contracts/index.md` | 127 |
-| `package.json` | 110 |
-| `pnpm-workspace.yaml` | 110 |
+| `package.json` | 111 |
+| `pnpm-workspace.yaml` | 111 |
 | `docs/contracts/planner/index.md` | 76 |
 | `docs/adr/ADR-0000-Code-generation-with-normative-traceability-required.en.md` | 65 |
 | `docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md` | 46 |

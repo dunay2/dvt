@@ -83,6 +83,7 @@ Warm-build note:
 | ---------------------------------- | -------------------------------------------------------------------------- | ------------------------------------ | ---------------------------------------------------------------------------------- |
 | Web app tests                      | `pnpm test:web` or `pnpm --filter @dvt/web test`                           | `apps/web`                           | [`apps/web/package.json`](../../apps/web/package.json)                             |
 | Web app E2E (Cypress)              | `pnpm --filter @dvt/web test:e2e`                                          | `apps/web` browser runtime contract  | [`apps/web/package.json`](../../apps/web/package.json)                             |
+| Web app E2E native (Cypress)       | `pnpm --filter @dvt/web test:e2e:native -- --spec <path>`                  | `apps/web` local browser proof       | [`tools/ci/run-web-cypress-native.mjs`](../../tools/ci/run-web-cypress-native.mjs) |
 | Engine package tests               | `pnpm test:engine`                                                         | `@dvt/engine`                        | [`package.json`](../../package.json)                                               |
 | Contracts package tests            | `pnpm test:contracts`                                                      | `@dvt/contracts`                     | [`package.json`](../../package.json)                                               |
 | Contracts compile gate             | `pnpm test:contracts:compile`                                              | `@dvt/contracts`                     | [`package.json`](../../package.json)                                               |
@@ -204,6 +205,11 @@ Command semantics:
   - run full `pnpm type-check` when root or cross-workspace TypeScript graph inputs changed
 - `pnpm verify:prepush` also runs `pnpm arch:deps`, the root
   dependency-cruiser gate for repository architecture dependency boundaries.
+- `pnpm --filter @dvt/web test:e2e:native` uses the repository-owned native
+  Cypress runner in `tools/ci/run-web-cypress-native.mjs`. The runner builds
+  the web app in E2E mode, starts and cleans up the Vite preview process tree,
+  forwards Cypress arguments after `--`, and removes `ELECTRON_RUN_AS_NODE`
+  from the Cypress child process so Electron does not run as Node.
 - GitHub workflows keep using explicit strict checks rather than relying on `pnpm docs:ci` as a merge gate.
 - `pnpm traceability:adr0` remains a blocking governance gate on push to `main`, but it now compares current ADR-0000 issues against the tracked baseline in [`traceability.issue-baseline.json`](../../traceability.issue-baseline.json) so CI fails on regressions rather than re-reporting the known historical backlog on every run.
 

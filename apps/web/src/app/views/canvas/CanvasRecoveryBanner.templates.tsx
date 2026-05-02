@@ -1,15 +1,15 @@
 /** Owned concern: render Canvas recovery-banner templates from resolved banner state. */
-import { Button } from '../../components/ui/button';
+import { CanvasDraftAccessRecoveryTemplate } from './CanvasDraftAccessRecovery.templates';
 import type { CanvasRecoveryBannerViewState } from './canvasRecoveryBannerModel';
 
 export type CanvasRecoveryBannerTemplateProps = Readonly<{
   viewState: CanvasRecoveryBannerViewState;
-  onReloadLatestDraft: () => void;
+  onAction: (() => void) | null;
 }>;
 
 export function CanvasRecoveryBannerTemplate({
   viewState,
-  onReloadLatestDraft,
+  onAction,
 }: CanvasRecoveryBannerTemplateProps): JSX.Element {
   return (
     <div data-slot={viewState.dataSlot} className={viewState.containerClassName}>
@@ -19,9 +19,7 @@ export function CanvasRecoveryBannerTemplate({
           <p className={viewState.messageClassName}>{viewState.message}</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Button size="sm" variant="outline" onClick={onReloadLatestDraft}>
-            {viewState.reloadLabel}
-          </Button>
+          <CanvasDraftAccessRecoveryTemplate viewState={viewState} onAction={onAction} />
         </div>
       </div>
     </div>

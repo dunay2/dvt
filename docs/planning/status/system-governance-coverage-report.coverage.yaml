@@ -3,8 +3,8 @@ generatedFrom:
   - docs/planning/status/system-governance-file-index.files.yaml
   - docs/planning/status/system-governance-component-index.components.yaml
 totals:
-  files: 4073
-  governedFiles: 4073
+  files: 4086
+  governedFiles: 4086
   ungovernedFiles: 0
   driftFiles: 44
   legacyFiles: 0
@@ -22,12 +22,12 @@ ciPosture:
     - legacyFiles records removal targets until owning work removes them
 byRootUnit:
   - name: SYS-DVT
-    count: 4073
+    count: 4086
 byDomainUnit:
   - name: SYS-ADAPTERS
     count: 196
   - name: SYS-DVT
-    count: 3296
+    count: 3309
   - name: SYS-OBSERVABILITY
     count: 15
   - name: SYS-PLANSTORE
@@ -66,7 +66,7 @@ byComponentUnit:
   - name: SYS-API-TESTS
     count: 99
   - name: SYS-CI-GOVERNANCE-ROOT
-    count: 178
+    count: 180
   - name: SYS-CONTRACTS-ROOT
     count: 127
   - name: SYS-DOCS-GOVERNANCE-ROOT
@@ -90,43 +90,43 @@ byComponentUnit:
   - name: SYS-PLANSTORE-TEMPORAL-COMPOSITION
     count: 11
   - name: SYS-REPO-METADATA-ROOT
-    count: 110
+    count: 111
   - name: SYS-RUNTIME-ROOT
     count: 286
   - name: SYS-TRACEABILITY-ROOT
     count: 65
   - name: SYS-WEB-ROOT
-    count: 787
+    count: 797
   - name: SYS-WORKERS-ROOT
     count: 103
 byStatus:
   - name: canonical
-    count: 110
+    count: 111
   - name: coverage-required
-    count: 3851
+    count: 3863
   - name: drift
     count: 44
   - name: review
     count: 68
 byGovernanceState:
   - name: coverage-required
-    count: 3851
+    count: 3863
   - name: drift
     count: 44
   - name: governed
-    count: 110
+    count: 111
   - name: review
     count: 68
 byCanonicalRole:
   - name: implementation-owner
-    count: 110
+    count: 111
   - name: none
-    count: 3963
+    count: 3975
 byEvidenceState:
   - name: classification-only
-    count: 110
+    count: 111
   - name: coverage-required
-    count: 3851
+    count: 3863
   - name: remediation-required
     count: 44
   - name: review-required
@@ -139,9 +139,9 @@ byDddOwner:
   - name: DS
     count: 142
   - name: ENTRY
-    count: 875
+    count: 885
   - name: INFRA
-    count: 2148
+    count: 2151
   - name: PORT
     count: 189
 governanceDocuments:
@@ -153,12 +153,12 @@ governanceDocuments:
     fileCount: 947
   - path: >-
       docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md
-    fileCount: 787
+    fileCount: 797
   - path: >-
       docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
     fileCount: 341
   - path: docs/guides/testing-and-ci-capabilities.md
-    fileCount: 338
+    fileCount: 340
   - path: >-
       docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
     fileCount: 235
@@ -167,9 +167,9 @@ governanceDocuments:
   - path: docs/contracts/index.md
     fileCount: 127
   - path: package.json
-    fileCount: 110
+    fileCount: 111
   - path: pnpm-workspace.yaml
-    fileCount: 110
+    fileCount: 111
   - path: docs/contracts/planner/index.md
     fileCount: 76
   - path: docs/adr/ADR-0000-Code-generation-with-normative-traceability-required.en.md
@@ -236,7 +236,7 @@ componentCoverage:
     evidenceState: coverage-required
     dddOwner: ENTRY
     cqRails: UI actions and API queries
-    fileCount: 787
+    fileCount: 797
     isDrift: false
     isLegacy: false
     childrenRequired: true
@@ -285,7 +285,7 @@ componentCoverage:
     evidenceState: coverage-required
     dddOwner: INFRA
     cqRails: none - repository automation
-    fileCount: 178
+    fileCount: 180
     isDrift: false
     isLegacy: false
     childrenRequired: true
@@ -317,7 +317,7 @@ componentCoverage:
     evidenceState: classification-only
     dddOwner: INFRA
     cqRails: none - repository metadata
-    fileCount: 110
+    fileCount: 111
     isDrift: false
     isLegacy: false
     childrenRequired: true
@@ -949,7 +949,7 @@ findings:
       status: coverage-required
       dddOwner: INFRA
     - id: SYS-WEB-ROOT
-      fileCount: 787
+      fileCount: 797
       status: coverage-required
       dddOwner: ENTRY
     - id: SYS-RUNTIME-ROOT
@@ -961,7 +961,7 @@ findings:
       status: coverage-required
       dddOwner: ADP
     - id: SYS-CI-GOVERNANCE-ROOT
-      fileCount: 178
+      fileCount: 180
       status: coverage-required
       dddOwner: INFRA
     - id: SYS-CONTRACTS-ROOT
@@ -969,7 +969,7 @@ findings:
       status: coverage-required
       dddOwner: PORT
     - id: SYS-REPO-METADATA-ROOT
-      fileCount: 110
+      fileCount: 111
       status: canonical
       dddOwner: INFRA
     - id: SYS-WORKERS-ROOT

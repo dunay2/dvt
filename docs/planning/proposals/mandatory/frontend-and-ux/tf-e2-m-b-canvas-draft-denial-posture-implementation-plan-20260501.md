@@ -1,8 +1,8 @@
 ---
 title: TF-E2-M-B Canvas draft denial posture implementation plan 2026-05-01
-status: Draft
+status: Accepted
 owner: Frontend / Architecture / Product
-last_reviewed: 2026-05-01
+last_reviewed: 2026-05-02
 planning_type: proposal
 lane: E
 task_ids:
@@ -84,6 +84,41 @@ command enablement are derived in separate modules. That lets the route show a
 generic denied surface or a synced toolbar label when the protected draft read
 has not produced writable truth, and it can leave plan/run command inputs
 enabled through a policy path that did not consume draft-access posture.
+
+## Pre-Implementation Discovery Gate
+
+The implementation is not allowed to create this component or add new posture
+symbols without first proving the existing code lacks one owner for the same
+product intent.
+
+Required order:
+
+1. Scan the current branch for existing Canvas draft access posture ownership.
+2. Record whether the behavior is absent, scattered, or already owned.
+3. If it is already owned, extend the owner instead of adding new symbols.
+4. If it is absent or scattered, document the intended owner, public API,
+   invariants, transitions, consumers, and command/query rails.
+5. Only then write the failing tests and implementation patches.
+
+Discovery command:
+
+```powershell
+git grep -n "draftAccessPosture\|CanvasDraftAccess\|unauthorized_final\|forbidden_scope" HEAD^ -- apps/web/src/app/views/canvas docs/architecture/components/web/graph docs/planning/proposals/mandatory/frontend-and-ux
+```
+
+Discovery result for `TF-E2-M-B`:
+
+- The documentation rail and component guide were already present before the
+  code patch.
+- No implemented single-owner Canvas draft access posture model existed in the
+  active route code before this slice.
+- Active code had scattered access and recovery decisions in
+  `canvasAuthoringState.ts`, `canvasDraftTransportErrorState.ts`,
+  `canvasRecoveryBannerModel.ts`, toolbar state, route interaction state, and
+  runtime policy.
+- The existing query rail was `GetWorkspaceGraphDraft`; the implementation
+  therefore had to reuse that rail and gate existing commands rather than add a
+  parallel command/query path.
 
 ## Selected Design
 
@@ -223,27 +258,51 @@ governingSources:
   - docs/planning/status/system-governance-unit-taxonomy-20260501.md
 allowedImplementationSurfaces:
   - apps/web/src/app/views/canvas/canvasDraftAuthTransportPosture.ts
+  - apps/web/src/app/views/canvas/canvasDraftAuthTransportPosture.test.ts
   - apps/web/src/app/views/canvas/canvasDraftAccessPostureModel.ts
+  - apps/web/src/app/views/canvas/canvasDraftAccessPostureModel.test.ts
   - apps/web/src/app/views/canvas/CanvasDraftAccessRecovery.templates.tsx
   - apps/web/src/app/views/canvas/canvasDraftTransportErrorState.ts
   - apps/web/src/app/views/canvas/canvasRecoveryBannerModel.ts
+  - apps/web/src/app/views/canvas/canvasRecoveryBannerModel.test.ts
   - apps/web/src/app/views/canvas/canvasDraftToolbarState.ts
   - apps/web/src/app/views/canvas/canvasToolbarViewModel.ts
+  - apps/web/src/app/views/canvas/canvasToolbarViewModel.test.ts
   - apps/web/src/app/views/canvas/useCanvasAuthoringRuntime.ts
   - apps/web/src/app/views/canvas/canvasAuthoringState.ts
+  - apps/web/src/app/views/canvas/canvasAuthoringState.test.ts
   - apps/web/src/app/views/canvas/canvasRuntimePolicy.ts
+  - apps/web/src/app/views/canvas/canvasRuntimePolicy.test.ts
   - apps/web/src/app/views/canvas/useCanvasController.ts
   - apps/web/src/app/views/canvas/canvasControllerViewModel.ts
+  - apps/web/src/app/views/canvas/useCanvasController.core.test.tsx
   - apps/web/src/app/views/canvas/canvasRouteInteractionState.ts
+  - apps/web/src/app/views/canvas/canvasRouteInteractionState.test.ts
   - apps/web/src/app/views/canvas/canvasRouteViewState.ts
+  - apps/web/src/app/views/canvas/canvasRouteViewState.test.ts
+  - apps/web/src/app/views/canvas/canvasCenterSurfaceTransport.tsx
   - apps/web/src/app/views/canvas/CanvasRecoveryBanner.tsx
+  - apps/web/src/app/views/canvas/CanvasRecoveryBanner.test.tsx
   - apps/web/src/app/views/canvas/CanvasRecoveryBanner.templates.tsx
+  - apps/web/src/app/views/canvas/canvasShellBuilder.types.ts
   - apps/web/src/app/views/canvas/canvasShellLayoutBuilder.tsx
+  - apps/web/src/app/views/canvas/canvasShellPropsBuilder.architecture.test.ts
+  - apps/web/src/app/views/canvas/canvasShellPropsBuilder.tsx
+  - apps/web/src/app/views/Canvas.readOnlyStates.test.tsx
+  - apps/web/src/app/views/Canvas.test.controller.ts
+  - apps/web/src/app/views/Canvas.test.controller.defaults.ts
   - apps/web/src/app/views/canvas/canvasCopy.types.ts
   - apps/web/src/app/views/canvas/canvasCopyCatalog.route.ts
   - apps/web/src/app/views/canvas/canvasCopyCatalog.route.es.ts
+  - apps/web/src/app/views/canvas/copy.test.ts
   - apps/web/src/app/views/canvas/canvasStartupAndDraftRecovery.architecture.test.ts
   - apps/web/cypress/e2e/canvas/canvas-draft-access-posture.cy.ts
+  - apps/web/package.json
+  - tools/ci/run-web-cypress-native.mjs
+  - tools/ci/run-web-cypress-native.test.mjs
+  - docs/guides/testing-and-ci-capabilities.md
+  - docs/architecture/components/web/graph/canvas-draft-access-posture-component.md
+  - buzon/20260502-tf-e2-m-b-canvas-draft-access-posture-fowler-review.md
 forbiddenImplementationSurfaces:
   - apps/web/src/app/services/api/** token refresh behavior
   - apps/web/src/app/services/api/** JWT decoding
@@ -277,6 +336,9 @@ commandQueryRails:
   - name: StartRunInput
     type: command
     dddOwner: Runtime execution boundary
+  - name: RunWebCypressNative
+    type: command
+    dddOwner: Web Cypress native runner support boundary
 domainObjects:
   - name: WorkspaceGraphDraft
     type: aggregate read boundary
@@ -293,6 +355,9 @@ domainObjects:
   - name: CanvasDraftAuthTransportPosture
     type: value object
     owner: API client auth to Canvas posture boundary
+  - name: WebCypressNativeRunner
+    type: CI support boundary
+    owner: Web browser proof execution harness
 fowlerSignals:
   - boundary drift
   - duplicate semantics
@@ -301,6 +366,7 @@ fowlerSignals:
   - responsibility overload
   - test-only confidence
   - documentation drift
+  - hidden environment coupling
 architectureGuards:
   - name: canvasStartupAndDraftRecovery.architecture.test.ts
     command: pnpm --filter @dvt/web test -- canvasStartupAndDraftRecovery.architecture.test.ts
@@ -365,6 +431,14 @@ redGreenCycles:
     patchSurfaces:
       - apps/web/cypress/e2e/canvas/canvas-draft-access-posture.cy.ts
     greenTest: pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/canvas/canvas-draft-access-posture.cy.ts
+  - id: cypress-native-runner
+    redTest: node --test tools/ci/run-web-cypress-native.test.mjs
+    expectedFailure: native Cypress runner does not remove Electron node mode or forward spec args
+    patchSurfaces:
+      - tools/ci/run-web-cypress-native.mjs
+      - tools/ci/run-web-cypress-native.test.mjs
+      - apps/web/package.json
+    greenTest: node --test tools/ci/run-web-cypress-native.test.mjs
   - id: docs-and-status-closeout
     redTest: pnpm docs:feature-mechanization:tf-e2-m-b
     expectedFailure: implementation truth is not marked complete in component docs and Lane E
@@ -424,6 +498,29 @@ symbols:
     cypressCoverage: canvas-draft-access-posture.cy.ts
     unitTests:
       - canvasDraftAccessPostureModel.test.ts
+  - name: DeriveCanvasDraftAccessPostureArgs
+    path: apps/web/src/app/views/canvas/canvasDraftAccessPostureModel.ts
+    dddOwner: Canvas draft access posture component
+    cqRails:
+      - GetWorkspaceGraphDraft
+    fowlerSignals:
+      - data clump
+      - primitive obsession
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-draft-access-posture.cy.ts
+    unitTests:
+      - canvasDraftAccessPostureModel.test.ts
+  - name: CanvasDraftPostureFactoryArgs
+    path: apps/web/src/app/views/canvas/canvasDraftAccessPostureModel.ts
+    dddOwner: Canvas draft access posture component
+    cqRails:
+      - GetWorkspaceGraphDraft
+    fowlerSignals:
+      - data clump
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-draft-access-posture.cy.ts
+    unitTests:
+      - canvasDraftAccessPostureModel.test.ts
   - name: CanvasDraftRecoveryAction
     path: apps/web/src/app/views/canvas/canvasDraftAccessPostureModel.ts
     dddOwner: Canvas draft access posture component
@@ -431,6 +528,129 @@ symbols:
       - GetWorkspaceGraphDraft
     fowlerSignals:
       - duplicate semantics
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-draft-access-posture.cy.ts
+    unitTests:
+      - canvasDraftAccessPostureModel.test.ts
+  - name: CanvasDraftCommandAdmission
+    path: apps/web/src/app/views/canvas/canvasDraftAccessPostureModel.ts
+    dddOwner: CanvasDraftCommandAdmission policy projection
+    cqRails:
+      - CreateCanvasNode
+      - RemoveCanvasNode
+      - CreateCanvasEdge
+      - RemoveCanvasEdge
+      - SaveWorkspaceGraphDraft
+      - PreviewPlan
+      - StartRunInput
+    fowlerSignals:
+      - hidden authority
+      - duplicate semantics
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-draft-access-posture.cy.ts
+    unitTests:
+      - canvasDraftAccessPostureModel.test.ts
+      - canvasRuntimePolicy.test.ts
+  - name: CanvasDraftTransportSurfaceState
+    path: apps/web/src/app/views/canvas/canvasDraftAccessPostureModel.ts
+    dddOwner: Canvas draft access posture component
+    cqRails:
+      - GetWorkspaceGraphDraft
+    fowlerSignals:
+      - duplicate semantics
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-draft-access-posture.cy.ts
+    unitTests:
+      - canvasDraftAccessPostureModel.test.ts
+      - canvasRouteViewState.test.ts
+  - name: CanvasDraftRecoveryBannerState
+    path: apps/web/src/app/views/canvas/canvasDraftAccessPostureModel.ts
+    dddOwner: Canvas draft access posture component
+    cqRails:
+      - GetWorkspaceGraphDraft
+    fowlerSignals:
+      - duplicate semantics
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-draft-access-posture.cy.ts
+    unitTests:
+      - canvasDraftAccessPostureModel.test.ts
+      - canvasRecoveryBannerModel.test.ts
+  - name: createCanvasDraftAccessPosture
+    path: apps/web/src/app/views/canvas/canvasDraftAccessPostureModel.ts
+    dddOwner: Canvas draft access posture component
+    cqRails:
+      - GetWorkspaceGraphDraft
+    fowlerSignals:
+      - primitive obsession
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-draft-access-posture.cy.ts
+    unitTests:
+      - canvasDraftAccessPostureModel.test.ts
+  - name: deriveRecoveryDraftAccessPosture
+    path: apps/web/src/app/views/canvas/canvasDraftAccessPostureModel.ts
+    dddOwner: Canvas draft access posture component
+    cqRails:
+      - GetWorkspaceGraphDraft
+    fowlerSignals:
+      - duplicate semantics
+      - responsibility overload
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-draft-access-posture.cy.ts
+    unitTests:
+      - canvasDraftAccessPostureModel.test.ts
+  - name: isForbiddenScopeReason
+    path: apps/web/src/app/views/canvas/canvasDraftAccessPostureModel.ts
+    dddOwner: Canvas draft access posture component
+    cqRails:
+      - GetWorkspaceGraphDraft
+    fowlerSignals:
+      - primitive obsession
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-draft-access-posture.cy.ts
+    unitTests:
+      - canvasDraftAccessPostureModel.test.ts
+  - name: resolveCanvasDraftRecoveryActionLabel
+    path: apps/web/src/app/views/canvas/canvasDraftAccessPostureModel.ts
+    dddOwner: Canvas draft access posture component
+    cqRails:
+      - GetWorkspaceGraphDraft
+    fowlerSignals:
+      - duplicate semantics
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-draft-access-posture.cy.ts
+    unitTests:
+      - canvasDraftAccessPostureModel.test.ts
+  - name: resolveDraftFormatPostureContent
+    path: apps/web/src/app/views/canvas/canvasDraftAccessPostureModel.ts
+    dddOwner: Canvas draft access posture component
+    cqRails:
+      - GetWorkspaceGraphDraft
+    fowlerSignals:
+      - duplicate semantics
+      - primitive obsession
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-draft-access-posture.cy.ts
+    unitTests:
+      - canvasDraftAccessPostureModel.test.ts
+  - name: resolveWritableDraftToolbarLabel
+    path: apps/web/src/app/views/canvas/canvasDraftAccessPostureModel.ts
+    dddOwner: Canvas draft access posture component
+    cqRails:
+      - GetWorkspaceGraphDraft
+    fowlerSignals:
+      - duplicate semantics
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-draft-access-posture.cy.ts
+    unitTests:
+      - canvasDraftAccessPostureModel.test.ts
+      - canvasToolbarViewModel.test.ts
+  - name: resolveWritablePostureKind
+    path: apps/web/src/app/views/canvas/canvasDraftAccessPostureModel.ts
+    dddOwner: Canvas draft access posture component
+    cqRails:
+      - GetWorkspaceGraphDraft
+    fowlerSignals:
+      - primitive obsession
     architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
     cypressCoverage: canvas-draft-access-posture.cy.ts
     unitTests:
@@ -555,7 +775,440 @@ symbols:
     cypressCoverage: canvas-draft-access-posture.cy.ts
     unitTests:
       - CanvasRecoveryBanner.test.tsx
+  - name: CanvasRecoveryBannerPostureArgs
+    path: apps/web/src/app/views/canvas/canvasRecoveryBannerModel.ts
+    dddOwner: Canvas draft access posture component
+    cqRails:
+      - GetWorkspaceGraphDraft
+    fowlerSignals:
+      - responsibility overload
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-draft-access-posture.cy.ts
+    unitTests:
+      - canvasRecoveryBannerModel.test.ts
+      - CanvasRecoveryBanner.test.tsx
+  - name: CanvasRecoveryBannerPresentationArgs
+    path: apps/web/src/app/views/canvas/canvasRecoveryBannerModel.ts
+    dddOwner: Canvas draft access posture component
+    cqRails:
+      - GetWorkspaceGraphDraft
+    fowlerSignals:
+      - data clump
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-draft-access-posture.cy.ts
+    unitTests:
+      - canvasRecoveryBannerModel.test.ts
+  - name: ResolveCanvasRecoveryBannerViewStateArgs
+    path: apps/web/src/app/views/canvas/canvasRecoveryBannerModel.ts
+    dddOwner: Canvas draft access posture component
+    cqRails:
+      - GetWorkspaceGraphDraft
+    fowlerSignals:
+      - primitive obsession
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-draft-access-posture.cy.ts
+    unitTests:
+      - canvasRecoveryBannerModel.test.ts
+  - name: resolveCanvasDraftRecoveryBannerDataSlot
+    path: apps/web/src/app/views/canvas/canvasDraftAccessPostureModel.ts
+    dddOwner: Canvas draft access posture component
+    cqRails:
+      - GetWorkspaceGraphDraft
+    fowlerSignals:
+      - duplicate semantics
+      - testability seam
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-draft-access-posture.cy.ts
+    unitTests:
+      - canvasDraftAccessPostureModel.test.ts
+      - Canvas.draftRecovery.test.tsx
+      - Canvas.routeStates.test.tsx
+  - name: isRouteRecoveryPosture
+    path: apps/web/src/app/views/canvas/canvasRecoveryBannerModel.ts
+    dddOwner: Canvas route presentation component
+    cqRails:
+      - GetWorkspaceGraphDraft
+    fowlerSignals:
+      - boundary priority drift
+      - duplicate semantics
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-draft-access-posture.cy.ts
+    unitTests:
+      - canvasRecoveryBannerModel.test.ts
+      - Canvas.draftRecovery.test.tsx
+      - Canvas.routeStates.test.tsx
+  - name: normalizeCanvasDraftPosture
+    path: apps/web/src/app/views/Canvas.test.controller.ts
+    dddOwner: Canvas route test fixture rail
+    cqRails:
+      - GetWorkspaceGraphDraft
+    fowlerSignals:
+      - fixture drift
+      - duplicate semantics
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-draft-access-posture.cy.ts
+    unitTests:
+      - Canvas.draftRecovery.test.tsx
+      - Canvas.routeStates.test.tsx
+      - canvasRouteViewState.test.ts
+  - name: buildController
+    path: apps/web/src/app/views/Canvas.test.controller.ts
+    dddOwner: Canvas route test fixture rail
+    cqRails:
+      - GetWorkspaceGraphDraft
+    fowlerSignals:
+      - fixture drift
+      - hidden authority
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-draft-access-posture.cy.ts
+    unitTests:
+      - Canvas.draftRecovery.test.tsx
+      - Canvas.routeStates.test.tsx
+      - canvasRouteViewState.test.ts
+  - name: DraftDeniedReason
+    path: apps/web/cypress/e2e/canvas/canvas-draft-access-posture.cy.ts
+    dddOwner: Canvas draft access posture Cypress user-flow fixture
+    cqRails:
+      - GetWorkspaceGraphDraft
+    fowlerSignals:
+      - test-only confidence
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-draft-access-posture.cy.ts
+    unitTests:
+      - canvasStartupAndDraftRecovery.architecture.test.ts
+  - name: buildDeniedDraftReadResponse
+    path: apps/web/cypress/e2e/canvas/canvas-draft-access-posture.cy.ts
+    dddOwner: Canvas draft access posture Cypress user-flow fixture
+    cqRails:
+      - GetWorkspaceGraphDraft
+    fowlerSignals:
+      - test-only confidence
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-draft-access-posture.cy.ts
+    unitTests:
+      - canvasStartupAndDraftRecovery.architecture.test.ts
+  - name: stubRuntimeCapabilities
+    path: apps/web/cypress/e2e/canvas/canvas-draft-access-posture.cy.ts
+    dddOwner: Canvas draft access posture Cypress user-flow fixture
+    cqRails:
+      - GetWorkspaceGraphDraft
+    fowlerSignals:
+      - test-only confidence
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-draft-access-posture.cy.ts
+    unitTests:
+      - canvasStartupAndDraftRecovery.architecture.test.ts
+  - name: stubDraftReadResponse
+    path: apps/web/cypress/e2e/canvas/canvas-draft-access-posture.cy.ts
+    dddOwner: Canvas draft access posture Cypress user-flow fixture
+    cqRails:
+      - GetWorkspaceGraphDraft
+    fowlerSignals:
+      - test-only confidence
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-draft-access-posture.cy.ts
+    unitTests:
+      - canvasStartupAndDraftRecovery.architecture.test.ts
+  - name: stubUnexpectedDraftSave
+    path: apps/web/cypress/e2e/canvas/canvas-draft-access-posture.cy.ts
+    dddOwner: Canvas draft access posture Cypress user-flow fixture
+    cqRails:
+      - SaveWorkspaceGraphDraft
+    fowlerSignals:
+      - hidden authority
+      - test-only confidence
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-draft-access-posture.cy.ts
+    unitTests:
+      - canvasStartupAndDraftRecovery.architecture.test.ts
+  - name: visitCanvasWithDraftRead
+    path: apps/web/cypress/e2e/canvas/canvas-draft-access-posture.cy.ts
+    dddOwner: Canvas draft access posture Cypress user-flow fixture
+    cqRails:
+      - GetWorkspaceGraphDraft
+    fowlerSignals:
+      - test-only confidence
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-draft-access-posture.cy.ts
+    unitTests:
+      - canvasStartupAndDraftRecovery.architecture.test.ts
+  - name: assertDraftReadScope
+    path: apps/web/cypress/e2e/canvas/canvas-draft-access-posture.cy.ts
+    dddOwner: Canvas draft access posture Cypress user-flow fixture
+    cqRails:
+      - GetWorkspaceGraphDraft
+    fowlerSignals:
+      - test-only confidence
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-draft-access-posture.cy.ts
+    unitTests:
+      - canvasStartupAndDraftRecovery.architecture.test.ts
+  - name: assertUnsafeCanvasCommandsAreDisabled
+    path: apps/web/cypress/e2e/canvas/canvas-draft-access-posture.cy.ts
+    dddOwner: Canvas draft access posture Cypress user-flow fixture
+    cqRails:
+      - CreateCanvasNode
+      - SaveWorkspaceGraphDraft
+      - PreviewPlan
+      - StartRunInput
+    fowlerSignals:
+      - hidden authority
+      - test-only confidence
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-draft-access-posture.cy.ts
+    unitTests:
+      - canvasStartupAndDraftRecovery.architecture.test.ts
+  - name: DRAFT_SYNCED_COPY
+    path: apps/web/cypress/e2e/canvas/canvas-draft-access-posture.cy.ts
+    dddOwner: Canvas draft access posture Cypress user-flow fixture
+    cqRails:
+      - GetWorkspaceGraphDraft
+    fowlerSignals:
+      - documentation drift
+      - test-only confidence
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-draft-access-posture.cy.ts
+    unitTests:
+      - canvasStartupAndDraftRecovery.architecture.test.ts
+  - name: SESSION_REQUIRED_TITLE
+    path: apps/web/cypress/e2e/canvas/canvas-draft-access-posture.cy.ts
+    dddOwner: Canvas draft access posture Cypress user-flow fixture
+    cqRails:
+      - GetWorkspaceGraphDraft
+    fowlerSignals:
+      - documentation drift
+      - test-only confidence
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-draft-access-posture.cy.ts
+    unitTests:
+      - canvasStartupAndDraftRecovery.architecture.test.ts
+  - name: REFRESH_SESSION_ACTION
+    path: apps/web/cypress/e2e/canvas/canvas-draft-access-posture.cy.ts
+    dddOwner: Canvas draft access posture Cypress user-flow fixture
+    cqRails:
+      - GetWorkspaceGraphDraft
+    fowlerSignals:
+      - documentation drift
+      - test-only confidence
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-draft-access-posture.cy.ts
+    unitTests:
+      - canvasStartupAndDraftRecovery.architecture.test.ts
+  - name: FORBIDDEN_SCOPE_TITLE
+    path: apps/web/cypress/e2e/canvas/canvas-draft-access-posture.cy.ts
+    dddOwner: Canvas draft access posture Cypress user-flow fixture
+    cqRails:
+      - GetWorkspaceGraphDraft
+    fowlerSignals:
+      - documentation drift
+      - test-only confidence
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-draft-access-posture.cy.ts
+    unitTests:
+      - canvasStartupAndDraftRecovery.architecture.test.ts
+  - name: CHANGE_SCOPE_ACTION
+    path: apps/web/cypress/e2e/canvas/canvas-draft-access-posture.cy.ts
+    dddOwner: Canvas draft access posture Cypress user-flow fixture
+    cqRails:
+      - GetWorkspaceGraphDraft
+    fowlerSignals:
+      - documentation drift
+      - test-only confidence
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-draft-access-posture.cy.ts
+    unitTests:
+      - canvasStartupAndDraftRecovery.architecture.test.ts
+  - name: READ_ONLY_TITLE
+    path: apps/web/cypress/e2e/canvas/canvas-draft-access-posture.cy.ts
+    dddOwner: Canvas draft access posture Cypress user-flow fixture
+    cqRails:
+      - GetWorkspaceGraphDraft
+    fowlerSignals:
+      - documentation drift
+      - test-only confidence
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-draft-access-posture.cy.ts
+    unitTests:
+      - canvasStartupAndDraftRecovery.architecture.test.ts
+  - name: assertDraftSyncedCopyIsHidden
+    path: apps/web/cypress/e2e/canvas/canvas-draft-access-posture.cy.ts
+    dddOwner: Canvas draft access posture Cypress user-flow fixture
+    cqRails:
+      - GetWorkspaceGraphDraft
+    fowlerSignals:
+      - duplicate semantics
+      - test-only confidence
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-draft-access-posture.cy.ts
+    unitTests:
+      - canvasStartupAndDraftRecovery.architecture.test.ts
+  - name: scriptDir
+    path: tools/ci/run-web-cypress-native.mjs
+    dddOwner: Web Cypress native runner support boundary
+    cqRails:
+      - RunWebCypressNative
+    fowlerSignals:
+      - hidden environment coupling
+    architectureGuard: run-web-cypress-native.test.mjs
+    cypressCoverage: canvas-draft-access-posture.cy.ts
+    unitTests:
+      - run-web-cypress-native.test.mjs
+  - name: repoRoot
+    path: tools/ci/run-web-cypress-native.mjs
+    dddOwner: Web Cypress native runner support boundary
+    cqRails:
+      - RunWebCypressNative
+    fowlerSignals:
+      - hidden environment coupling
+    architectureGuard: run-web-cypress-native.test.mjs
+    cypressCoverage: canvas-draft-access-posture.cy.ts
+    unitTests:
+      - run-web-cypress-native.test.mjs
+  - name: defaultWebDir
+    path: tools/ci/run-web-cypress-native.mjs
+    dddOwner: Web Cypress native runner support boundary
+    cqRails:
+      - RunWebCypressNative
+    fowlerSignals:
+      - hidden environment coupling
+    architectureGuard: run-web-cypress-native.test.mjs
+    cypressCoverage: canvas-draft-access-posture.cy.ts
+    unitTests:
+      - run-web-cypress-native.test.mjs
+  - name: defaultPreviewUrl
+    path: tools/ci/run-web-cypress-native.mjs
+    dddOwner: Web Cypress native runner support boundary
+    cqRails:
+      - RunWebCypressNative
+    fowlerSignals:
+      - hidden environment coupling
+    architectureGuard: run-web-cypress-native.test.mjs
+    cypressCoverage: canvas-draft-access-posture.cy.ts
+    unitTests:
+      - run-web-cypress-native.test.mjs
+  - name: createCypressProcessEnv
+    path: tools/ci/run-web-cypress-native.mjs
+    dddOwner: Web Cypress native runner support boundary
+    cqRails:
+      - RunWebCypressNative
+    fowlerSignals:
+      - hidden environment coupling
+    architectureGuard: run-web-cypress-native.test.mjs
+    cypressCoverage: canvas-draft-access-posture.cy.ts
+    unitTests:
+      - run-web-cypress-native.test.mjs
+  - name: parseCypressRunnerArgs
+    path: tools/ci/run-web-cypress-native.mjs
+    dddOwner: Web Cypress native runner support boundary
+    cqRails:
+      - RunWebCypressNative
+    fowlerSignals:
+      - hidden environment coupling
+    architectureGuard: run-web-cypress-native.test.mjs
+    cypressCoverage: canvas-draft-access-posture.cy.ts
+    unitTests:
+      - run-web-cypress-native.test.mjs
+  - name: buildCypressInvocation
+    path: tools/ci/run-web-cypress-native.mjs
+    dddOwner: Web Cypress native runner support boundary
+    cqRails:
+      - RunWebCypressNative
+    fowlerSignals:
+      - hidden environment coupling
+    architectureGuard: run-web-cypress-native.test.mjs
+    cypressCoverage: canvas-draft-access-posture.cy.ts
+    unitTests:
+      - run-web-cypress-native.test.mjs
+  - name: resolvePnpmCommand
+    path: tools/ci/run-web-cypress-native.mjs
+    dddOwner: Web Cypress native runner support boundary
+    cqRails:
+      - RunWebCypressNative
+    fowlerSignals:
+      - hidden environment coupling
+    architectureGuard: run-web-cypress-native.test.mjs
+    cypressCoverage: canvas-draft-access-posture.cy.ts
+    unitTests:
+      - run-web-cypress-native.test.mjs
+  - name: buildSpawnOptions
+    path: tools/ci/run-web-cypress-native.mjs
+    dddOwner: Web Cypress native runner support boundary
+    cqRails:
+      - RunWebCypressNative
+    fowlerSignals:
+      - hidden environment coupling
+    architectureGuard: run-web-cypress-native.test.mjs
+    cypressCoverage: canvas-draft-access-posture.cy.ts
+    unitTests:
+      - run-web-cypress-native.test.mjs
+  - name: runCommand
+    path: tools/ci/run-web-cypress-native.mjs
+    dddOwner: Web Cypress native runner support boundary
+    cqRails:
+      - RunWebCypressNative
+    fowlerSignals:
+      - hidden environment coupling
+    architectureGuard: run-web-cypress-native.test.mjs
+    cypressCoverage: canvas-draft-access-posture.cy.ts
+    unitTests:
+      - run-web-cypress-native.test.mjs
+  - name: waitForPreview
+    path: tools/ci/run-web-cypress-native.mjs
+    dddOwner: Web Cypress native runner support boundary
+    cqRails:
+      - RunWebCypressNative
+    fowlerSignals:
+      - hidden environment coupling
+    architectureGuard: run-web-cypress-native.test.mjs
+    cypressCoverage: canvas-draft-access-posture.cy.ts
+    unitTests:
+      - run-web-cypress-native.test.mjs
+  - name: isPreviewReachable
+    path: tools/ci/run-web-cypress-native.mjs
+    dddOwner: Web Cypress native runner support boundary
+    cqRails:
+      - RunWebCypressNative
+    fowlerSignals:
+      - hidden environment coupling
+    architectureGuard: run-web-cypress-native.test.mjs
+    cypressCoverage: canvas-draft-access-posture.cy.ts
+    unitTests:
+      - run-web-cypress-native.test.mjs
+  - name: buildWindowsProcessTreeKillInvocation
+    path: tools/ci/run-web-cypress-native.mjs
+    dddOwner: Web Cypress native runner support boundary
+    cqRails:
+      - RunWebCypressNative
+    fowlerSignals:
+      - hidden environment coupling
+    architectureGuard: run-web-cypress-native.test.mjs
+    cypressCoverage: canvas-draft-access-posture.cy.ts
+    unitTests:
+      - run-web-cypress-native.test.mjs
+  - name: stopPreview
+    path: tools/ci/run-web-cypress-native.mjs
+    dddOwner: Web Cypress native runner support boundary
+    cqRails:
+      - RunWebCypressNative
+    fowlerSignals:
+      - hidden environment coupling
+    architectureGuard: run-web-cypress-native.test.mjs
+    cypressCoverage: canvas-draft-access-posture.cy.ts
+    unitTests:
+      - run-web-cypress-native.test.mjs
+  - name: runWebCypressNative
+    path: tools/ci/run-web-cypress-native.mjs
+    dddOwner: Web Cypress native runner support boundary
+    cqRails:
+      - RunWebCypressNative
+    fowlerSignals:
+      - hidden environment coupling
+    architectureGuard: run-web-cypress-native.test.mjs
+    cypressCoverage: canvas-draft-access-posture.cy.ts
+    unitTests:
+      - run-web-cypress-native.test.mjs
 completionGate:
+  - node --test tools/ci/run-web-cypress-native.test.mjs
   - pnpm --filter @dvt/web test -- canvasDraftAuthTransportPosture.test.ts
   - pnpm --filter @dvt/web test -- canvasDraftAccessPostureModel.test.ts
   - pnpm --filter @dvt/web test -- canvasAuthoringState.test.ts canvasRouteInteractionState.test.ts canvasRecoveryBannerModel.test.ts canvasToolbarViewModel.test.ts canvasRuntimePolicy.test.ts useCanvasController.core.test.tsx canvasRouteViewState.test.ts

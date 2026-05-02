@@ -1,8 +1,8 @@
 ---
 title: Canvas Draft Access Posture Component
-status: Proposed
+status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-05-01
+last_reviewed: 2026-05-02
 planning_type: architecture
 task_id: TF-E2-M-B
 ---
@@ -21,6 +21,41 @@ The component exists because Canvas currently has related decisions split across
 toolbar labels, center-surface errors, recovery banners, interaction gating, and
 read-only posture. That split can produce a false product signal such as a
 synced toolbar while the protected draft read is denied.
+
+## Pre-Implementation Discovery Baseline
+
+Design before implementation is part of this component boundary. The component
+guide is not a place to document a code object after finding it; it is the
+contract that decides whether a new object is needed.
+
+Before the `TF-E2-M-B` implementation, the branch was checked for an existing
+single owner of protected draft access posture. The discovery result was:
+
+- No implemented Canvas draft access posture component existed in the active
+  Canvas route code.
+- Related behavior did exist, but it was split across
+  `canvasAuthoringState.ts`, `canvasDraftTransportErrorState.ts`,
+  `canvasRecoveryBannerModel.ts`, toolbar state, route interaction state, and
+  runtime policy.
+- The authoritative command/query rail already existed as
+  `GetWorkspaceGraphDraft`; this component therefore could only add an
+  admission and presentation model over that rail, not a parallel query,
+  command, or backend contract.
+
+The discovery check that justifies this component is:
+
+```powershell
+git grep -n "draftAccessPosture\|CanvasDraftAccess\|unauthorized_final\|forbidden_scope" HEAD^ -- apps/web/src/app/views/canvas docs/architecture/components/web/graph docs/planning/proposals/mandatory/frontend-and-ux
+```
+
+Expected interpretation:
+
+- matches in docs are acceptable when they are the planned component guide,
+  implementation plan, or user-story rail;
+- matches in active code before the implementation are acceptable only when
+  they show scattered existing behavior, such as `CanvasDraftAccessMode`;
+- if an implemented single owner already exists, the correct action is to reuse
+  and extend that owner instead of creating this component.
 
 ## Governing Sources
 
@@ -59,19 +94,19 @@ Those concerns stay in their existing components and ports.
 The implementation introduces two pure model modules and one small template
 module.
 
-| API                                                   | Owner                                     | Responsibility                                                                                                                                       |
-| ----------------------------------------------------- | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `CanvasDraftAccessPosture`                            | `canvasDraftAccessPostureModel.ts`        | Discriminated route posture consumed by Canvas UI and startup surfaces.                                                                              |
-| `CanvasDraftAccessPostureKind`                        | `canvasDraftAccessPostureModel.ts`        | Exhaustive posture discriminator.                                                                                                                    |
-| `deriveCanvasDraftAuthTransportPosture(args)`         | `canvasDraftAuthTransportPosture.ts`      | Converts protected draft query errors into the small Canvas auth-transport input without token inspection.                                           |
-| `deriveCanvasDraftAccessPosture(args)`                | `canvasDraftAccessPostureModel.ts`        | Converts draft access mode, capability reason, format error, route recovery, and transport auth detail into one posture.                             |
-| `isCanvasDraftPostureMutationBlocked(posture)`        | `canvasDraftAccessPostureModel.ts`        | Shared mutation gate for Canvas interaction state.                                                                                                   |
-| `applyCanvasDraftPostureToRuntimePolicyInput(args)`   | `canvasDraftAccessPostureModel.ts`        | Applies posture admission to graph mutation, plan, run, and reload command inputs before `canvasRuntimePolicy.ts` resolves final command enablement. |
-| `resolveCanvasDraftAccessRecoveryCommand(posture)`    | `canvasDraftAccessPostureModel.ts`        | Maps posture recovery actions to route-owned command callbacks without JSX command branching.                                                        |
-| `toCanvasDraftToolbarState(posture, draftSaveStatus)` | `canvasDraftAccessPostureModel.ts`        | Converts posture into toolbar copy and tone.                                                                                                         |
-| `toCanvasDraftRecoveryBannerViewState(posture)`       | `canvasDraftAccessPostureModel.ts`        | Converts actionable postures into banner view state.                                                                                                 |
-| `toCanvasDraftTransportSurfaceState(posture)`         | `canvasDraftAccessPostureModel.ts`        | Converts blocking postures into center-surface state.                                                                                                |
-| `CanvasDraftAccessRecoveryTemplate`                   | `CanvasDraftAccessRecovery.templates.tsx` | Passive rendering for the action-oriented recovery banner.                                                                                           |
+| API                                                 | Owner                                     | Responsibility                                                                                                                                       |
+| --------------------------------------------------- | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `CanvasDraftAccessPosture`                          | `canvasDraftAccessPostureModel.ts`        | Discriminated route posture consumed by Canvas UI and startup surfaces.                                                                              |
+| `CanvasDraftAccessPostureKind`                      | `canvasDraftAccessPostureModel.ts`        | Exhaustive posture discriminator.                                                                                                                    |
+| `deriveCanvasDraftAuthTransportPosture(args)`       | `canvasDraftAuthTransportPosture.ts`      | Converts protected draft query errors into the small Canvas auth-transport input without token inspection.                                           |
+| `deriveCanvasDraftAccessPosture(args)`              | `canvasDraftAccessPostureModel.ts`        | Converts draft access mode, capability reason, format error, route recovery, and transport auth detail into one posture.                             |
+| `isCanvasDraftPostureMutationBlocked(posture)`      | `canvasDraftAccessPostureModel.ts`        | Shared mutation gate for Canvas interaction state.                                                                                                   |
+| `applyCanvasDraftPostureToRuntimePolicyInput(args)` | `canvasDraftAccessPostureModel.ts`        | Applies posture admission to graph mutation, plan, run, and reload command inputs before `canvasRuntimePolicy.ts` resolves final command enablement. |
+| `resolveCanvasDraftAccessRecoveryCommand(args)`     | `canvasDraftAccessPostureModel.ts`        | Maps posture recovery actions to route-owned command callbacks without JSX command branching.                                                        |
+| `toCanvasDraftToolbarState(posture)`                | `canvasDraftAccessPostureModel.ts`        | Converts posture into toolbar copy and tone.                                                                                                         |
+| `toCanvasDraftRecoveryBannerViewState(posture)`     | `canvasDraftAccessPostureModel.ts`        | Converts actionable postures into banner view state.                                                                                                 |
+| `toCanvasDraftTransportSurfaceState(posture)`       | `canvasDraftAccessPostureModel.ts`        | Converts blocking postures into center-surface state.                                                                                                |
+| `CanvasDraftAccessRecoveryTemplate`                 | `CanvasDraftAccessRecovery.templates.tsx` | Passive rendering for the action-oriented recovery banner.                                                                                           |
 
 Existing consumers are changed to use the new model instead of deriving the
 same truth locally:
@@ -263,7 +298,7 @@ Recovery command callbacks are resolved outside templates:
 | Recovery action       | Route command callback                                                          |
 | --------------------- | ------------------------------------------------------------------------------- |
 | `refresh_session`     | invalidate/refetch protected draft query after API client auth refresh boundary |
-| `change_scope`        | focus/select tenant, project, and environment scope controls                    |
+| `change_scope`        | focus the first shell workspace scope selector so the operator can change scope |
 | `reload_latest_draft` | existing `reloadLatestDraft` callback                                           |
 | `inspect_only`        | no callback                                                                     |
 | `escalate_format`     | no destructive callback; show escalation guidance                               |
@@ -308,16 +343,16 @@ Testing impact:
 
 ## Risks And Mitigations
 
-| Risk                                              | Consequence                                               | Mitigation                                                                                                                     |
-| ------------------------------------------------- | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| `401` and `403` collapse into the same copy       | User cannot tell session recovery from permission denial. | Posture model maps `unauthenticated` and `forbidden_scope` to different kinds and tests assert both.                           |
-| Read-only becomes a hard error                    | Reviewers lose graph inspection value.                    | `read_only` posture disables mutations but does not create a transport error surface.                                          |
-| Toolbar keeps independent draft labels            | False synced state can return.                            | `canvasDraftToolbarState.ts` delegates labels to posture conversion.                                                           |
-| Banner and center surface duplicate conditions    | Future fixes patch only one visual surface.               | Both consume `CanvasDraftAccessPosture` conversions.                                                                           |
-| Runtime policy ignores posture                    | UI hides errors but command callbacks stay enabled.       | `canvasRuntimePolicy.ts` receives posture-admitted command inputs and tests assert graph edit, plan, and run are disabled.     |
-| Recovery actions are JSX branches                 | Templates recreate command policy.                        | `resolveCanvasDraftAccessRecoveryCommand(posture)` maps actions to route callbacks before rendering.                           |
-| Cypress relies on uncontrolled local token expiry | Test becomes time-dependent.                              | Cypress uses controlled intercepted or fixture-backed denials for UI posture and keeps live token proof in existing live lane. |
-| New copy appears only in one locale               | Route mixes languages or missing keys.                    | Copy keys are added to `CanvasViewCopy`, English catalog, and Spanish catalog in the same task.                                |
+| Risk                                              | Consequence                                               | Mitigation                                                                                                                                                             |
+| ------------------------------------------------- | --------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `401` and `403` collapse into the same copy       | User cannot tell session recovery from permission denial. | Posture model maps `unauthenticated` and `forbidden_scope` to different kinds and tests assert both.                                                                   |
+| Read-only becomes a hard error                    | Reviewers lose graph inspection value.                    | `read_only` posture disables mutations but does not create a transport error surface.                                                                                  |
+| Toolbar keeps independent draft labels            | False synced state can return.                            | `canvasDraftToolbarState.ts` delegates labels to posture conversion.                                                                                                   |
+| Banner and center surface duplicate conditions    | Future fixes patch only one visual surface.               | Both consume `CanvasDraftAccessPosture` conversions.                                                                                                                   |
+| Runtime policy ignores posture                    | UI hides errors but command callbacks stay enabled.       | `canvasRuntimePolicy.ts` receives posture-admitted command inputs and tests assert graph edit, plan, and run are disabled.                                             |
+| Recovery actions are JSX branches                 | Templates recreate command policy.                        | `resolveCanvasDraftAccessRecoveryCommand(posture)` maps actions to route callbacks before rendering.                                                                   |
+| Cypress relies on uncontrolled local token expiry | Test becomes time-dependent.                              | Cypress uses the existing e2e fetch stub for draft read responses, does not call `cy.intercept()` for `/workspace/graph/draft`, and does not seed direct draft writes. |
+| New copy appears only in one locale               | Route mixes languages or missing keys.                    | Copy keys are added to `CanvasViewCopy`, English catalog, and Spanish catalog in the same task.                                                                        |
 
 ## Architecture Rules
 
@@ -357,24 +392,24 @@ Testing impact:
 
 ## Acceptance Checklist
 
-- [ ] `CanvasDraftAccessPosture` is the only source for draft denial copy,
+- [x] `CanvasDraftAccessPosture` is the only source for draft denial copy,
       toolbar draft label, recovery banner, and mutation blocking.
-- [ ] `CanvasDraftAuthTransportPosture` is derived from final draft query
+- [x] `CanvasDraftAuthTransportPosture` is derived from final draft query
       errors without API token-helper imports in Canvas route code.
-- [ ] Runtime policy command inputs are admitted through
+- [x] Runtime policy command inputs are admitted through
       `CanvasDraftAccessPosture` before graph edits, draft save, plan, or run
       become enabled.
-- [ ] `canvasAuthoringState.ts` does not own plan/run permission inputs; those
+- [x] `canvasAuthoringState.ts` does not own plan/run permission inputs; those
       are admitted in `useCanvasController.ts` before runtime policy
       resolution.
-- [ ] Recovery action callbacks are resolved outside JSX templates.
-- [ ] `unauthenticated`, `forbidden_scope`, `read_only`, and `format_error`
+- [x] Recovery action callbacks are resolved outside JSX templates.
+- [x] `unauthenticated`, `forbidden_scope`, `read_only`, and `format_error`
       have distinct tests and visible outcomes.
-- [ ] Toolbar does not display the synced label for denied, read-only, recovery,
+- [x] Toolbar does not display the synced label for denied, read-only, recovery,
       or format-error postures.
-- [ ] Read-only keeps inspection available and blocks unsafe mutations.
-- [ ] Cypress proves the user-visible denied and read-only states.
-- [ ] Architecture tests prevent route-level JWT decoding and duplicated denial
+- [x] Read-only keeps inspection available and blocks unsafe mutations.
+- [x] Cypress spec covers the user-visible denied and read-only states.
+- [x] Architecture tests prevent route-level JWT decoding and duplicated denial
       conditionals.
-- [ ] Docs, user stories, implementation plan, lane YAML, and generated indexes
+- [x] Docs, user stories, implementation plan, lane YAML, and generated indexes
       reference the same slice.

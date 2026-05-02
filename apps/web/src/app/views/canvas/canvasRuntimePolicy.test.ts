@@ -3,6 +3,10 @@ import { describe, expect, it } from 'vitest';
 import { DBT_NODE_KINDS } from '../../plugins/nodeTypeCatalog.dbt';
 import { DVT_AUTHORING_NODE_KINDS } from '../../plugins/dvt/dvtNodeTypeCatalog';
 import type { CanonicalNode } from '../../types/canonical';
+import {
+  applyCanvasDraftPostureToRuntimePolicyInput,
+  deriveCanvasDraftAccessPosture,
+} from './canvasDraftAccessPostureModel';
 import { resolveCanvasRuntimePolicy } from './canvasRuntimePolicy';
 
 function buildCanonicalNode(overrides: Partial<CanonicalNode>): CanonicalNode {
@@ -206,5 +210,43 @@ describe('resolveCanvasRuntimePolicy', () => {
         })
       )
     ).toBe(false);
+  });
+
+  it('keeps runtime command policy closed when draft posture is read-only', () => {
+    const draftAdmission = applyCanvasDraftPostureToRuntimePolicyInput({
+      posture: deriveCanvasDraftAccessPosture({
+        draftAccessMode: 'read_only',
+        draftCapabilityReason: 'write_denied',
+        draftFormatError: null,
+        authTransportPosture: 'none',
+        recoveryReason: null,
+        draftSaveStatus: 'idle',
+      }),
+      canMutateGraph: true,
+      canPlan: true,
+      canRun: true,
+      canReloadLatestDraft: false,
+    });
+    const policy = resolveCanvasRuntimePolicy({
+      activeRuntime: {
+        kind: 'ready',
+        canvasKind: 'transformation',
+        executionStrategy: {
+          kind: 'transformation_preview',
+          previewProfile: 'transformation-sql-first-v1',
+        },
+        nodeKinds: DVT_AUTHORING_NODE_KINDS,
+      },
+      canOpenSourceImport: true,
+      ...draftAdmission,
+    });
+
+    expect(policy.commands).toMatchObject({
+      canMutateGraph: false,
+      canEditInspectorNode: false,
+      canOpenSourceImport: false,
+      canPlan: false,
+      canRun: false,
+    });
   });
 });

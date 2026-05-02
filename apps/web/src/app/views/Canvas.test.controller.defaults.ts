@@ -4,6 +4,8 @@ import { vi } from 'vitest';
 import { DVT_AUTHORING_NODE_KINDS } from '../plugins/dvt/dvtNodeTypeCatalog';
 import { DBT_NODE_KINDS } from '../plugins/nodeTypeCatalog.dbt';
 import { DEFAULT_CANVAS_PALETTE_ID } from './canvas/canvasPalette';
+import { deriveCanvasDraftAccessPosture } from './canvas/canvasDraftAccessPostureModel';
+import type { CanvasDraftAuthTransportPosture } from './canvas/canvasDraftAuthTransportPosture';
 import type { CanvasDraftToolbarState } from './canvas/canvasDraftToolbarState';
 import type { CanvasController } from './Canvas.test.controller';
 
@@ -37,6 +39,8 @@ type CanvasWorkbenchDefaultsDto = {
 
 type CanvasDraftDefaultsDto = {
   draftSaveStatus: CanvasController['draftSaveStatus'];
+  draftAuthTransportPosture: CanvasDraftAuthTransportPosture;
+  draftAccessPosture: CanvasController['draftAccessPosture'];
   draftAccessMode: CanvasController['draftAccessMode'];
   draftCapabilityReason: CanvasController['draftCapabilityReason'];
   draftFormatError: CanvasController['draftFormatError'];
@@ -176,10 +180,21 @@ function buildDefaultCanvasWorkbenchState(): CanvasWorkbenchDefaultsDto {
 }
 
 function buildDefaultCanvasDraftState(): CanvasDraftDefaultsDto {
+  const draftAccessPosture = deriveCanvasDraftAccessPosture({
+    draftAccessMode: 'writable',
+    draftCapabilityReason: 'authorized',
+    draftFormatError: null,
+    authTransportPosture: 'none',
+    recoveryReason: null,
+    draftSaveStatus: 'idle',
+  });
+
   return {
     draftSaveStatus: 'idle',
-    draftAccessMode: 'unknown',
-    draftCapabilityReason: null,
+    draftAuthTransportPosture: 'none',
+    draftAccessPosture,
+    draftAccessMode: 'writable',
+    draftCapabilityReason: 'authorized',
     draftFormatError: null,
     draftFormatMeta: null,
     draftRecoveryReason: null,

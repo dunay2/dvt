@@ -5,6 +5,7 @@ import {
   deriveCanvasDraftPresentationState,
   type CanvasDraftPresentationState,
 } from './canvasDraftPresentationModel';
+import { toCanvasDraftToolbarState } from './canvasDraftAccessPostureModel';
 import {
   resolveCanvasDraftTransportErrorState,
   type CanvasDraftTransportErrorState,
@@ -18,6 +19,7 @@ import type { useCanvasController } from './useCanvasController';
 type CanvasController = ReturnType<typeof useCanvasController>;
 
 export type CanvasRouteViewState = {
+  draftAccessPosture: CanvasController['draftAccessPosture'];
   draftTransportError: CanvasDraftTransportErrorState | null;
   startupBlockState: CanvasRouteInteractionState['startupBlockState'];
   workbenchErrorMessage: CanvasRouteInteractionState['workbenchErrorMessage'];
@@ -38,10 +40,11 @@ export function deriveCanvasRouteViewState(controller: CanvasController): Canvas
     startupBlockState: interactionState.startupBlockState,
     workbenchState: interactionState.effectiveWorkbenchState,
     recoveryReason: controller.draftRecoveryReason,
-    draftToolbarState: controller.draftToolbarState,
+    draftToolbarState: toCanvasDraftToolbarState(controller.draftAccessPosture),
   });
 
   return {
+    draftAccessPosture: controller.draftAccessPosture,
     draftTransportError,
     startupBlockState: interactionState.startupBlockState,
     workbenchErrorMessage: interactionState.workbenchErrorMessage,

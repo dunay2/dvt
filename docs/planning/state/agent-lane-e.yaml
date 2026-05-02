@@ -221,7 +221,7 @@ tasks:
     last_verified: '2026-03-31'
   - task_id: F-03
     priority: P0
-    status: in_progress
+    status: review
     objective: >-
       wire real backend health state into the top bar, a global degraded/offline banner, and the
       unified Raven startup bootstrap that gates the first route.
@@ -726,7 +726,7 @@ tasks:
       registry.
     complexity: M
     effort_points: 5
-    progress_pct: 20
+    progress_pct: 90
     evidence_refs:
       - docs/planning/proposals/frontend-roadmap-20260219.md
       - docs/planning/state/lane-e-shell-baseline-target-guide.md
@@ -2670,17 +2670,23 @@ tasks:
       - docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-component.md
       - docs/architecture/components/web/graph/canvas-draft-access-posture-component.md
       - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-m-b-canvas-draft-denial-posture-implementation-plan-20260501.md
+      - buzon/20260502-tf-e2-m-b-canvas-draft-access-posture-fowler-review.md
+      - apps/web/src/app/views/canvas/canvasDraftAccessPostureModel.ts
+      - apps/web/src/app/views/canvas/canvasDraftAuthTransportPosture.ts
+      - apps/web/src/app/views/canvas/canvasDraftAccessPostureModel.test.ts
+      - apps/web/src/app/views/canvas/canvasDraftAuthTransportPosture.test.ts
+      - apps/web/src/app/views/canvas/canvasStartupAndDraftRecovery.architecture.test.ts
+      - apps/web/cypress/e2e/canvas/canvas-draft-access-posture.cy.ts
       - apps/web/src/app/views/canvas/canvasRecoveryBannerModel.ts
       - apps/web/src/app/views/canvas/canvasToolbarViewModel.ts
     status_reason: >-
-      Planning implementation gate is now active. The current surface is fail-closed, but toolbar
-      copy, recovery banner state, center-surface blockers, and mutation enablement can still derive
-      draft denial independently. The new design and implementation plan close the slice before code
-      by naming `CanvasDraftAccessPosture` as the single presentation model for session-required,
-      forbidden-scope, read-only, format-error, recovery, pending, and writable states. Code
-      implementation remains unstarted until the planned TDD, architecture, Cypress, and docs
-      validation tasks are executed.
-    last_verified: '2026-05-01'
+      Implementation review is active. `CanvasDraftAccessPosture` now drives toolbar copy, recovery
+      banner state, center-surface transport state, mutation admission, and Plan/Run command inputs.
+      Unit, route-composition, architecture, typecheck, and feature-mechanization checks have passed
+      locally. The Cypress spec for unauthenticated, forbidden-scope, and read-only browser posture
+      has been added and mechanically checked for no draft intercepts or direct draft PUT seeding;
+      local Cypress execution is still blocked by the machine Cypress binary before specs run.
+    last_verified: '2026-05-02'
   - task_id: TF-E2-M-C
     parent_task: TF-E2-M
     priority: P0

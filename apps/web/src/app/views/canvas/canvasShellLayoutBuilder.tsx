@@ -5,6 +5,7 @@ import { CanvasReadOnlyBannerView } from './CanvasStateViews';
 import { CanvasPlaygroundTabStrip } from './CanvasPlaygroundTabStrip';
 import { renderCanvasCenterSurface } from './CanvasCenterSurface';
 import { CanvasRecoveryBanner } from './CanvasRecoveryBanner';
+import { resolveCanvasDraftAccessRecoveryCommand } from './canvasDraftAccessPostureModel';
 import type { CanvasShellLayoutBuilderArgs } from './canvasShellBuilder.types';
 import type { CanvasShellLayout } from './canvasShell.types';
 
@@ -12,14 +13,22 @@ function renderCanvasShellReadOnlyBanner(
   recoveryCommands: CanvasShellLayoutBuilderArgs['recoveryCommands'],
   routePresentation: Pick<
     CanvasShellLayoutBuilderArgs['routePresentation'],
-    'presentationState' | 'readOnlyState'
+    'presentationState' | 'draftAccessPosture' | 'readOnlyState'
   >
 ): ReactNode {
   return (
     <>
       <CanvasRecoveryBanner
         presentationState={routePresentation.presentationState}
-        onReloadLatestDraft={recoveryCommands.reloadLatestDraft}
+        draftAccessPosture={routePresentation.draftAccessPosture}
+        onDraftAccessRecoveryAction={resolveCanvasDraftAccessRecoveryCommand({
+          posture: routePresentation.draftAccessPosture,
+          reloadLatestDraft: recoveryCommands.reloadLatestDraft,
+          refetchDraftAfterAuthRefresh: recoveryCommands.refetchDraftAfterAuthRefresh,
+          focusScopeControls: () => {
+            document.querySelector<HTMLElement>('[data-slot="select-trigger"]')?.focus();
+          },
+        })}
       />
       <CanvasReadOnlyBannerView state={routePresentation.readOnlyState} />
     </>

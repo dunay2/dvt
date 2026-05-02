@@ -1,51 +1,13 @@
-import { canvasViewCopy } from './copy';
+import { toCanvasDraftTransportSurfaceState } from './canvasDraftAccessPostureModel';
 import type { useCanvasController } from './useCanvasController';
 
 export type CanvasDraftTransportErrorState =
-  | { kind: 'forbidden'; title: string; message: string }
+  | { kind: 'unauthenticated'; title: string; message: string }
+  | { kind: 'forbidden_scope'; title: string; message: string }
   | { kind: 'format_error'; title: string; message: string };
 
 export function resolveCanvasDraftTransportErrorState(
-  controller: Pick<
-    ReturnType<typeof useCanvasController>,
-    'draftAccessMode' | 'draftFormatError'
-  >
+  controller: Pick<ReturnType<typeof useCanvasController>, 'draftAccessPosture'>
 ): CanvasDraftTransportErrorState | null {
-  if (controller.draftAccessMode === 'forbidden') {
-    return {
-      kind: 'forbidden',
-      title: canvasViewCopy.draftAccessDeniedTitle,
-      message: canvasViewCopy.draftAccessDeniedMessage,
-    };
-  }
-
-  if (controller.draftFormatError == null) {
-    return null;
-  }
-
-  if (controller.draftFormatError.reason === 'unsupported_schema_version') {
-    const storedSchemaVersion =
-      controller.draftFormatError.storedSchemaVersion == null
-        ? ''
-        : ` Stored schema version: ${controller.draftFormatError.storedSchemaVersion}.`;
-    return {
-      kind: 'format_error',
-      title: canvasViewCopy.draftUnsupportedSchemaTitle,
-      message: `${canvasViewCopy.draftUnsupportedSchemaMessage}${storedSchemaVersion}`,
-    };
-  }
-
-  if (controller.draftFormatError.reason === 'migration_failed') {
-    return {
-      kind: 'format_error',
-      title: canvasViewCopy.draftMigrationFailedTitle,
-      message: canvasViewCopy.draftMigrationFailedMessage,
-    };
-  }
-
-  return {
-    kind: 'format_error',
-    title: canvasViewCopy.draftCorruptPayloadTitle,
-    message: canvasViewCopy.draftCorruptPayloadMessage,
-  };
+  return toCanvasDraftTransportSurfaceState(controller.draftAccessPosture);
 }
