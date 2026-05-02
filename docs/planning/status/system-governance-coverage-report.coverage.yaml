@@ -86,6 +86,29 @@ byStatus:
     count: 44
   - name: review
     count: 68
+byGovernanceState:
+  - name: coverage-required
+    count: 3845
+  - name: drift
+    count: 44
+  - name: governed
+    count: 110
+  - name: review
+    count: 68
+byCanonicalRole:
+  - name: implementation-owner
+    count: 110
+  - name: none
+    count: 3957
+byEvidenceState:
+  - name: classification-only
+    count: 110
+  - name: coverage-required
+    count: 3845
+  - name: remediation-required
+    count: 44
+  - name: review-required
+    count: 68
 byDddOwner:
   - name: ADP
     count: 223
@@ -157,6 +180,9 @@ componentCoverage:
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     status: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
     dddOwner: INFRA
     cqRails: none - documentation governance
     fileCount: 1650
@@ -171,6 +197,9 @@ componentCoverage:
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     status: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
     dddOwner: ENTRY
     cqRails: UI actions and API queries
     fileCount: 787
@@ -185,6 +214,9 @@ componentCoverage:
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     status: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
     dddOwner: AS
     cqRails: API commands and queries
     fileCount: 362
@@ -198,6 +230,9 @@ componentCoverage:
     rootUnit: SYS-DVT
     domainUnit: SYS-RUNTIME
     status: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
     dddOwner: AS
     cqRails: runtime commands and queries
     fileCount: 286
@@ -211,6 +246,9 @@ componentCoverage:
     rootUnit: SYS-DVT
     domainUnit: SYS-ADAPTERS
     status: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
     dddOwner: ADP
     cqRails: adapter implementations of owned ports
     fileCount: 196
@@ -224,6 +262,9 @@ componentCoverage:
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     status: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
     dddOwner: INFRA
     cqRails: none - repository automation
     fileCount: 178
@@ -237,6 +278,9 @@ componentCoverage:
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     status: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
     dddOwner: PORT
     cqRails: contract DTOs and port shapes
     fileCount: 127
@@ -250,6 +294,9 @@ componentCoverage:
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     status: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
     dddOwner: INFRA
     cqRails: none - repository metadata
     fileCount: 110
@@ -264,6 +311,9 @@ componentCoverage:
     rootUnit: SYS-DVT
     domainUnit: SYS-WORKERS
     status: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
     dddOwner: AS
     cqRails: worker commands and operational queries
     fileCount: 103
@@ -277,6 +327,9 @@ componentCoverage:
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     status: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
     dddOwner: DS
     cqRails: planner build and derivation rails
     fileCount: 76
@@ -290,6 +343,9 @@ componentCoverage:
     rootUnit: SYS-DVT
     domainUnit: SYS-TRACEABILITY
     status: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
     dddOwner: DS
     cqRails: traceability commands and lineage queries
     fileCount: 65
@@ -303,6 +359,9 @@ componentCoverage:
     rootUnit: SYS-DVT
     domainUnit: SYS-PLANSTORE
     status: review
+    governanceState: review
+    canonicalRole: none
+    evidenceState: review-required
     dddOwner: INFRA
     cqRails: none - governance and evidence
     fileCount: 34
@@ -317,6 +376,9 @@ componentCoverage:
     rootUnit: SYS-DVT
     domainUnit: SYS-PLANSTORE
     status: review
+    governanceState: review
+    canonicalRole: none
+    evidenceState: review-required
     dddOwner: PORT
     cqRails: PS-Q02
     fileCount: 23
@@ -332,6 +394,9 @@ componentCoverage:
     rootUnit: SYS-DVT
     domainUnit: SYS-PLANSTORE
     status: drift
+    governanceState: drift
+    canonicalRole: none
+    evidenceState: remediation-required
     dddOwner: AS
     cqRails: PS-Q03, PS-C02
     fileCount: 20
@@ -347,6 +412,9 @@ componentCoverage:
     rootUnit: SYS-DVT
     domainUnit: SYS-PLANSTORE
     status: drift
+    governanceState: drift
+    canonicalRole: none
+    evidenceState: remediation-required
     dddOwner: ADP
     cqRails: implements PS-Cxx and PS-Qxx
     fileCount: 16
@@ -363,6 +431,9 @@ componentCoverage:
     rootUnit: SYS-DVT
     domainUnit: SYS-OBSERVABILITY
     status: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
     dddOwner: PORT
     cqRails: telemetry commands and operational queries
     fileCount: 15
@@ -376,6 +447,9 @@ componentCoverage:
     rootUnit: SYS-DVT
     domainUnit: SYS-PLANSTORE
     status: review
+    governanceState: review
+    canonicalRole: none
+    evidenceState: review-required
     dddOwner: ADP
     cqRails: PS-Q08
     fileCount: 11
@@ -392,6 +466,9 @@ componentCoverage:
     rootUnit: SYS-DVT
     domainUnit: SYS-PLANSTORE
     status: drift
+    governanceState: drift
+    canonicalRole: none
+    evidenceState: remediation-required
     dddOwner: PORT
     cqRails: PS-Q05
     fileCount: 5
@@ -406,6 +483,9 @@ componentCoverage:
     rootUnit: SYS-DVT
     domainUnit: SYS-PLANSTORE
     status: drift
+    governanceState: drift
+    canonicalRole: none
+    evidenceState: remediation-required
     dddOwner: PORT
     cqRails: PS-Q01, PS-C01
     fileCount: 3
@@ -422,6 +502,9 @@ componentCoverage:
     rootUnit: SYS-DVT
     domainUnit: SYS-PLANSTORE
     status: superseded
+    governanceState: superseded
+    canonicalRole: none
+    evidenceState: retired
     dddOwner: PORT
     cqRails: PS-Cxx and PS-Qxx
     fileCount: 0

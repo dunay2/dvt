@@ -172,11 +172,14 @@ function readTrackedFileBytes(filePath) {
 
 function buildGovernancePayload(entry) {
   return {
+    canonicalRole: entry.canonicalRole,
     componentUnit: entry.componentUnit,
     cqRails: entry.cqRails,
     dddOwner: entry.dddOwner,
     domainUnit: entry.domainUnit,
+    evidenceState: entry.evidenceState,
     governance: entry.governance,
+    governanceState: entry.governanceState,
     isDrift: entry.isDrift,
     isLegacy: entry.isLegacy,
     ownerLevel: entry.ownerLevel,
@@ -184,6 +187,59 @@ function buildGovernancePayload(entry) {
     rootUnit: entry.rootUnit,
     unitPath: entry.unitPath,
     unitStatus: entry.unitStatus,
+  };
+}
+
+function deriveGovernanceSemantics(unitStatus, ownerLevel) {
+  const status = unitStatus || 'unowned';
+
+  if (status === 'canonical') {
+    return {
+      governanceState: 'governed',
+      canonicalRole:
+        ownerLevel === 'component' || ownerLevel === 'source'
+          ? 'implementation-owner'
+          : 'governance-owner',
+      evidenceState: 'classification-only',
+    };
+  }
+
+  if (status === 'coverage-required') {
+    return {
+      governanceState: 'coverage-required',
+      canonicalRole: 'none',
+      evidenceState: 'coverage-required',
+    };
+  }
+
+  if (status === 'drift' || status === 'legacy') {
+    return {
+      governanceState: status,
+      canonicalRole: 'none',
+      evidenceState: 'remediation-required',
+    };
+  }
+
+  if (status === 'review') {
+    return {
+      governanceState: 'review',
+      canonicalRole: 'none',
+      evidenceState: 'review-required',
+    };
+  }
+
+  if (status === 'superseded') {
+    return {
+      governanceState: 'superseded',
+      canonicalRole: 'none',
+      evidenceState: 'retired',
+    };
+  }
+
+  return {
+    governanceState: 'ungoverned',
+    canonicalRole: 'none',
+    evidenceState: 'remediation-required',
   };
 }
 
@@ -214,6 +270,7 @@ function buildFileEntries(files, units, options = {}, unitById = buildUnitIndex(
     const matches = findOwnerMatches(filePath, units);
     const owner = matches[0];
     const hierarchy = buildHierarchy(owner, unitById);
+    const semantics = deriveGovernanceSemantics(owner?.status, owner?.level || 'unowned');
     const entry = {
       path: filePath,
       owningUnit: owner?.id || 'UNOWNED',
@@ -223,6 +280,7 @@ function buildFileEntries(files, units, options = {}, unitById = buildUnitIndex(
       unitPath: hierarchy.unitPath,
       ownerLevel: owner?.level || 'unowned',
       unitStatus: owner?.status || 'unowned',
+      ...semantics,
       isDrift: owner?.status === 'drift',
       isLegacy: owner?.status === 'legacy',
       dddOwner: owner?.dddOwner || 'unowned',
@@ -247,6 +305,7 @@ function buildComponentEntries(units, fileEntries, unitById = buildUnitIndex(uni
     .filter((unit) => unit.level === 'component' || unit.level === 'source')
     .map((unit) => {
       const hierarchy = buildHierarchy(unit, unitById);
+      const semantics = deriveGovernanceSemantics(unit.status, unit.level);
       return {
         id: unit.id,
         name: unit.name,
@@ -257,6 +316,7 @@ function buildComponentEntries(units, fileEntries, unitById = buildUnitIndex(uni
         unitPath: hierarchy.unitPath,
         unitReferences: hierarchy.unitReferences,
         status: unit.status,
+        ...semantics,
         isDrift: unit.status === 'drift',
         isLegacy: unit.status === 'legacy',
         childrenRequired: Boolean(unit.childrenRequired),
@@ -302,6 +362,8 @@ function renderFileMarkdown(fileEntries, componentEntries) {
   const driftFiles = fileEntries.filter((entry) => entry.isDrift || entry.isLegacy);
   const ownerCounts = countBy(fileEntries, 'owningUnit');
   const statusCounts = countBy(fileEntries, 'unitStatus');
+  const governanceStateCounts = countBy(fileEntries, 'governanceState');
+  const canonicalRoleCounts = countBy(fileEntries, 'canonicalRole');
   const unowned = fileEntries.filter((entry) => entry.owningUnit === 'UNOWNED');
 
   const driftRows = driftFiles
@@ -333,6 +395,11 @@ governing documents, DDD owner, command/query rail posture, drift status, and
 legacy status. The fingerprint baseline is the accepted drift-control snapshot
 used by CI.
 
+Fowler semantics are split from the raw unit status: \`unitStatus: canonical\`
+means the file belongs to a governed owner classification. It does not by
+itself prove verified semantic maturity. \`governanceState\`,
+\`canonicalRole\`, and \`evidenceState\` carry that distinction explicitly.
+
 ## Totals
 
 - Tracked files indexed: ${fileEntries.length}
@@ -345,6 +412,18 @@ used by CI.
 
 <!-- prettier-ignore-start -->
 ${renderCountTable(statusCounts, 'Status')}
+<!-- prettier-ignore-end -->
+
+## By Governance State
+
+<!-- prettier-ignore-start -->
+${renderCountTable(governanceStateCounts, 'Governance state')}
+<!-- prettier-ignore-end -->
+
+## By Canonical Role
+
+<!-- prettier-ignore-start -->
+${renderCountTable(canonicalRoleCounts, 'Canonical role')}
 <!-- prettier-ignore-end -->
 
 ## By Owning Unit
@@ -372,6 +451,8 @@ ${driftRows || '| _None_ | _None_ | _None_ |'}
 
 function renderComponentMarkdown(componentEntries) {
   const statusCounts = countBy(componentEntries, 'status');
+  const governanceStateCounts = countBy(componentEntries, 'governanceState');
+  const canonicalRoleCounts = countBy(componentEntries, 'canonicalRole');
   const levelCounts = countBy(componentEntries, 'level');
   const oversized = componentEntries
     .filter((entry) => entry.childrenRequired && entry.fileCount > 100)
@@ -380,7 +461,7 @@ function renderComponentMarkdown(componentEntries) {
   const componentRows = componentEntries
     .map(
       (entry) =>
-        `| \`${entry.id}\` | \`${entry.level}\` | \`${entry.status}\` | ${entry.fileCount} | \`${entry.dddOwner}\` | \`${entry.parent}\` |`
+        `| \`${entry.id}\` | \`${entry.level}\` | \`${entry.status}\` | \`${entry.governanceState}\` | \`${entry.canonicalRole}\` | \`${entry.evidenceState}\` | ${entry.fileCount} | \`${entry.dddOwner}\` | \`${entry.parent}\` |`
     )
     .join('\n');
   const oversizedRows = oversized
@@ -408,6 +489,12 @@ The index exposes how many components exist, how many files each component owns,
 which root/domain chain each component belongs to, which components still
 require subdivision, and which components are drift or legacy.
 
+Fowler semantics are split from raw status so \`canonical\` does not act as a
+hidden authority signal. \`governanceState\` says whether the unit is governed
+or remediation-bound, \`canonicalRole\` says what kind of canonical role it
+plays, and \`evidenceState\` says whether the row is verified or only
+classified.
+
 ## Totals
 
 - Component/source units: ${componentEntries.length}
@@ -429,6 +516,18 @@ ${renderCountTable(levelCounts, 'Level')}
 ${renderCountTable(statusCounts, 'Status')}
 <!-- prettier-ignore-end -->
 
+## By Governance State
+
+<!-- prettier-ignore-start -->
+${renderCountTable(governanceStateCounts, 'Governance state')}
+<!-- prettier-ignore-end -->
+
+## By Canonical Role
+
+<!-- prettier-ignore-start -->
+${renderCountTable(canonicalRoleCounts, 'Canonical role')}
+<!-- prettier-ignore-end -->
+
 ## Oversized Components
 
 Components with \`childrenRequired: true\` and more than 100 files:
@@ -442,8 +541,8 @@ ${oversizedRows || '| _None_ | 0 | _None_ |'}
 ## Components
 
 <!-- prettier-ignore-start -->
-| Component | Level | Status | Files | DDD owner | Parent |
-| --- | --- | ---: | ---: | --- | --- |
+| Component | Level | Status | Governance state | Canonical role | Evidence state | Files | DDD owner | Parent |
+| --- | --- | ---: | --- | --- | --- | ---: | --- | --- |
 ${componentRows}
 <!-- prettier-ignore-end -->
 
@@ -524,6 +623,7 @@ module.exports = {
   buildFileEntries,
   buildFileFingerprints,
   buildOutputs,
+  deriveGovernanceSemantics,
   normalizeGeneratedIndexBytesForHash,
   normalizeTextBytesForHash,
   stableStringify,
