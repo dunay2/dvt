@@ -139,6 +139,29 @@ The guard checks:
 - parent chains are acyclic;
 - overlapping ownership patterns fail.
 
+## Component Planning Rule
+
+Components and source units are governance boundaries, not refactoring
+by-products. A file extraction may create a module, registrar, helper, test
+fixture, or source file under an existing component, but it must not create a
+new component identity unless the component was planned first.
+
+Before adding a new `component` or `source` unit to the manifest, the planning
+surface must already name:
+
+- the parent unit and root chain;
+- the DDD owner;
+- the command/query rail posture, including `none` with rationale;
+- owned paths and excluded paths;
+- allowed and forbidden dependencies;
+- validation and negative tests;
+- drift, legacy, or coverage posture.
+
+If that planning does not exist, the correct classification is an internal
+module/source under the nearest existing planned component. The component
+index must not be used as a retroactive label generator for implementation
+work that has not been planned.
+
 Feature implementation closure is validated by:
 
 ```bash

@@ -215,6 +215,7 @@ Upstream indexes:
 | `docs/planning/status/system-operations-inventory-20260501.md` | 947 |
 | `docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md` | 787 |
 | `docs/guides/testing-and-ci-capabilities.md` | 338 |
+| `docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md` | 235 |
 | `docs/architecture/command-query-rail-governance.md` | 159 |
 | `docs/contracts/index.md` | 127 |
 | `package.json` | 110 |
@@ -234,7 +235,6 @@ Upstream indexes:
 | `docs/risk-register/quality/R-20260427-TEMPORAL-PLANREF-CONFIG-HARDENING.yaml` | 11 |
 | `docs/runbooks/api-runtime-sla-canonical-20260404.md` | 11 |
 | `docs/adr/adr-0052-planref-continuation-safety.md` | 5 |
-| `docs/risk-register/quality/R-20260405-PLAN-STORE-CANONICAL-SHAPE-DRIFT.yaml` | 5 |
 <!-- prettier-ignore-end -->
 
 ## Related Surfaces

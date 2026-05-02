@@ -284,3 +284,26 @@ test('real manifest subdivides API files below the API root module', () => {
     ['SYS-API-HTTP-ENTRYPOINT-TESTS']
   );
 });
+
+test('real manifest keeps API route registrars under planned API components', () => {
+  const realManifest = readManifest();
+  const units = realManifest.units;
+  const routeRegistrationPlan =
+    'docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md';
+
+  const operationalOwner = findOwnerMatches(
+    'apps/api/src/routes/registerOperationalRoutes.ts',
+    units
+  )[0];
+  const protectedRuntimeOwner = findOwnerMatches(
+    'apps/api/src/entrypoints/http/registerProtectedRuntimeRoutes.ts',
+    units
+  )[0];
+
+  assert.equal(operationalOwner.id, 'SYS-API-OPS-ROUTES');
+  assert.equal(protectedRuntimeOwner.id, 'SYS-API-HTTP-ENTRYPOINTS');
+  assert.match(operationalOwner.name, /routes/i);
+  assert.match(protectedRuntimeOwner.name, /entrypoints/i);
+  assert.ok(operationalOwner.governance.includes(routeRegistrationPlan));
+  assert.ok(protectedRuntimeOwner.governance.includes(routeRegistrationPlan));
+});

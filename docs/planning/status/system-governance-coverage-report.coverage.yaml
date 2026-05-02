@@ -156,6 +156,9 @@ governanceDocuments:
     fileCount: 787
   - path: docs/guides/testing-and-ci-capabilities.md
     fileCount: 338
+  - path: >-
+      docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
+    fileCount: 235
   - path: docs/architecture/command-query-rail-governance.md
     fileCount: 159
   - path: docs/contracts/index.md
@@ -349,6 +352,8 @@ componentCoverage:
     isLegacy: false
     childrenRequired: false
     governance:
+      - >-
+        docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
       - docs/guides/testing-and-ci-capabilities.md
       - docs/planning/status/system-operations-inventory-20260501.md
   - id: SYS-PLANNER-ROOT
@@ -382,6 +387,8 @@ componentCoverage:
     isLegacy: false
     childrenRequired: false
     governance:
+      - >-
+        docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
       - docs/architecture/command-query-rail-governance.md
       - docs/planning/status/system-operations-inventory-20260501.md
   - id: SYS-TRACEABILITY-ROOT
@@ -415,6 +422,8 @@ componentCoverage:
     isLegacy: false
     childrenRequired: false
     governance:
+      - >-
+        docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
       - docs/guides/testing-and-ci-capabilities.md
       - docs/architecture/command-query-rail-governance.md
   - id: SYS-API-APPLICATION-SERVICES
@@ -604,6 +613,8 @@ componentCoverage:
     isLegacy: false
     childrenRequired: false
     governance:
+      - >-
+        docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
       - docs/runbooks/api-runtime-sla-canonical-20260404.md
       - docs/planning/status/system-operations-inventory-20260501.md
   - id: SYS-API-REPO-CONFIG
