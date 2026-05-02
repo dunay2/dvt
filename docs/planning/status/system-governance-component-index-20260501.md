@@ -55,14 +55,14 @@ Components with `childrenRequired: true` and more than 100 files:
 <!-- prettier-ignore-start -->
 | Component | Files | Status |
 | --- | ---: | --- |
-| `SYS-DOCS-GOVERNANCE-ROOT` | 1645 | `coverage-required` |
-| `SYS-WEB-ROOT` | 783 | `coverage-required` |
+| `SYS-DOCS-GOVERNANCE-ROOT` | 1646 | `coverage-required` |
+| `SYS-WEB-ROOT` | 787 | `coverage-required` |
 | `SYS-API-ROOT` | 362 | `coverage-required` |
 | `SYS-RUNTIME-ROOT` | 286 | `coverage-required` |
 | `SYS-ADAPTERS-ROOT` | 196 | `coverage-required` |
 | `SYS-CI-GOVERNANCE-ROOT` | 174 | `coverage-required` |
 | `SYS-CONTRACTS-ROOT` | 127 | `coverage-required` |
-| `SYS-REPO-METADATA-ROOT` | 109 | `canonical` |
+| `SYS-REPO-METADATA-ROOT` | 110 | `canonical` |
 | `SYS-WORKERS-ROOT` | 103 | `coverage-required` |
 <!-- prettier-ignore-end -->
 
@@ -75,7 +75,7 @@ Components with `childrenRequired: true` and more than 100 files:
 | `SYS-API-ROOT` | `component` | `coverage-required` | 362 | `AS` | `SYS-API` |
 | `SYS-CI-GOVERNANCE-ROOT` | `component` | `coverage-required` | 174 | `INFRA` | `SYS-CI-GOVERNANCE` |
 | `SYS-CONTRACTS-ROOT` | `component` | `coverage-required` | 127 | `PORT` | `SYS-CONTRACTS` |
-| `SYS-DOCS-GOVERNANCE-ROOT` | `component` | `coverage-required` | 1645 | `INFRA` | `SYS-DOCS-GOVERNANCE` |
+| `SYS-DOCS-GOVERNANCE-ROOT` | `component` | `coverage-required` | 1646 | `INFRA` | `SYS-DOCS-GOVERNANCE` |
 | `SYS-OBSERVABILITY-ROOT` | `component` | `coverage-required` | 15 | `PORT` | `SYS-OBSERVABILITY` |
 | `SYS-PLANNER-ROOT` | `component` | `coverage-required` | 76 | `DS` | `SYS-PLANNER` |
 | `SYS-PLANSTORE-API-COMPOSITION` | `component` | `drift` | 20 | `AS` | `SYS-PLANSTORE` |
@@ -86,10 +86,10 @@ Components with `childrenRequired: true` and more than 100 files:
 | `SYS-PLANSTORE-POSTGRES` | `component` | `drift` | 16 | `ADP` | `SYS-PLANSTORE` |
 | `SYS-PLANSTORE-ROOT` | `component` | `superseded` | 0 | `PORT` | `SYS-PLANSTORE` |
 | `SYS-PLANSTORE-TEMPORAL-COMPOSITION` | `component` | `review` | 11 | `ADP` | `SYS-PLANSTORE` |
-| `SYS-REPO-METADATA-ROOT` | `component` | `canonical` | 109 | `INFRA` | `SYS-REPO-METADATA` |
+| `SYS-REPO-METADATA-ROOT` | `component` | `canonical` | 110 | `INFRA` | `SYS-REPO-METADATA` |
 | `SYS-RUNTIME-ROOT` | `component` | `coverage-required` | 286 | `AS` | `SYS-RUNTIME` |
 | `SYS-TRACEABILITY-ROOT` | `component` | `coverage-required` | 65 | `DS` | `SYS-TRACEABILITY` |
-| `SYS-WEB-ROOT` | `component` | `coverage-required` | 783 | `ENTRY` | `SYS-WEB` |
+| `SYS-WEB-ROOT` | `component` | `coverage-required` | 787 | `ENTRY` | `SYS-WEB` |
 | `SYS-WORKERS-ROOT` | `component` | `coverage-required` | 103 | `AS` | `SYS-WORKERS` |
 <!-- prettier-ignore-end -->
 

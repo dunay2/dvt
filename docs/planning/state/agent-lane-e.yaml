@@ -166,7 +166,7 @@ tasks:
     last_verified: '2026-04-04'
   - task_id: F-01
     priority: P1
-    status: in_progress
+    status: done
     objective: >-
       clean up shell chrome so the top bar keeps only global context, the Canvas toolbar uses
       compact signals instead of verbose prose, and secondary controls live in a contextual menu.
@@ -1790,7 +1790,7 @@ tasks:
       work for identity-first startup and clean project onboarding.
     complexity: M
     effort_points: 5
-    progress_pct: 45
+    progress_pct: 100
     evidence_refs:
       - docs/planning/proposals/mandatory/frontend-and-ux/web-auth-project-onboarding-and-actionable-gaps-20260501.md
       - docs/guides/canvas-authoring-user-manual-20260501.md
@@ -2717,7 +2717,7 @@ tasks:
   - task_id: TF-E2-M-D
     parent_task: TF-E2-M
     priority: P1
-    status: queued
+    status: in_progress
     objective: >-
       harden startup observability for the fifth bootstrap step so route readiness cannot look like
       a bouncing or half-loaded startup module.
@@ -2729,16 +2729,23 @@ tasks:
       progress display.
     complexity: S
     effort_points: 2
-    progress_pct: 0
+    progress_pct: 45
     evidence_refs:
+      - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-m-d-startup-route-readiness-implementation-plan-20260502.md
       - docs/architecture/components/web/app-bootstrap-screen-component.md
+      - buzon/20260502-tf-e2-m-d-startup-route-readiness-fowler-review.md
+      - apps/web/src/app/bootstrap/routeBootstrapStartupReadiness.ts
+      - apps/web/src/app/bootstrap/routeBootstrapStartupReadiness.test.ts
+      - apps/web/src/app/bootstrap/routeBootstrapStartupReadiness.architecture.test.ts
       - apps/web/src/app/bootstrap/appBootstrapPresentation.ts
       - apps/web/src/app/Root.bootstrapFlow.test.tsx
+      - apps/web/cypress/e2e/shell/startup-route-readiness.cy.ts
     status_reason: >-
-      Intake from user report that the fifth startup element did not load. The current architecture
-      allows governed route failures to reveal Canvas, but the visible route check still needs
-      stronger operator diagnostics.
-    last_verified: '2026-04-29'
+      Implemented. The route-readiness policy now keeps the fifth startup check pending while
+      runtime capabilities are still in cold-start pending, prevents same-route stable posture
+      demotion back to pending, and is covered by unit, Root integration, architecture,
+      mechanization, typecheck, and Cypress startup-route-readiness proof.
+    last_verified: '2026-05-02'
   - task_id: TF-E2-E-B
     parent_task: TF-E2-E
     priority: P0

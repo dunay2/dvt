@@ -38,6 +38,7 @@ export type AppBootstrapCopy = Readonly<{
   routeLabel: string;
   routePendingDetail: string;
   routeCompleteDetail: string;
+  routeWaitingForCapabilitiesDetail: string;
   degradedStepDetailSuffix: string;
   failedStepDetailSuffix: string;
   blockedStepDetailSuffix: string;
@@ -150,6 +151,10 @@ const COPY_BY_KEY: Record<AppBootstrapCopyKey, LocalizableString> = {
     key: 'app.bootstrap.routeCompleteDetail',
     fallback: 'Initial route is ready',
   },
+  routeWaitingForCapabilitiesDetail: {
+    key: 'app.bootstrap.routeWaitingForCapabilitiesDetail',
+    fallback: 'Waiting for runtime capabilities before route readiness.',
+  },
   degradedStepDetailSuffix: {
     key: 'app.bootstrap.degradedStepDetailSuffix',
     fallback: 'settled with degraded startup conditions.',
@@ -207,6 +212,8 @@ const SPANISH_COPY: AppBootstrapCopy = {
   routeLabel: 'Preparando ruta inicial',
   routePendingDetail: 'Preparando la superficie activa del workspace',
   routeCompleteDetail: 'Ruta inicial preparada',
+  routeWaitingForCapabilitiesDetail:
+    'Esperando las capacidades de runtime antes de resolver la ruta.',
   degradedStepDetailSuffix: 'quedo resuelto con condiciones de arranque degradadas.',
   failedStepDetailSuffix: 'fallo pero no bloquea el arranque de la shell.',
   blockedStepDetailSuffix: 'esta bloqueado por un prerrequisito de arranque requerido.',
