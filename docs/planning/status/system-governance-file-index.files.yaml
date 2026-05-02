@@ -75105,9 +75105,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-990BF10AAD94
     pathHash: 6a67be9c35ed2f9a617eb90c52da30b17200d6f02a2b644eec36143d6448d566
-    contentHash: 3205961642a8006283dc57898b9e444fce56cf8cc0777fe61eaa2ca48bdab884
+    contentHash: eb2e1aeab251eb9b5365245ffe265f9e4434b04f5ccdfba1035dd48d3a82cc83
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 520cfdd897b4d227223c68500241fa572eb43cd4dea8930102b46b61dab78ee9
+    stateFingerprint: 2ecff97b3451aa50403b41b62c68de749794bc51a4af920fecfce31d6b1236a4
     path: docs/planning/status/system-governance-coverage-report-20260502.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
@@ -75131,9 +75131,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-ACC58DCFEB8C
     pathHash: 8ba943b89ee6764c97ba514c18768a02ebb2317576fadd0422fcbde3969c6fdc
-    contentHash: b7b27c8a280a00d88865e0a40056674d07cb4e4c3e6fee75ffe6318c94ecbc06
+    contentHash: ba6bcf957bb5ecbefc4b6bcb703017aa2b1714f720d7a5ba92132687160f116e
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 0f2594c581dced27ac3dc9a4e4a6fc51897073e97e0049416ec27d60fd6cfc8c
+    stateFingerprint: d6653190a3aa8367db82afcaf28896e4d0c28f8af7a3e63d7caea94578271229
     path: docs/planning/status/system-governance-coverage-report.coverage.yaml
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
@@ -75209,9 +75209,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-6B8271C2051C
     pathHash: 4bd0ab5904eb54e02bb9f0957eed059b06dfd5cb253044a2b0c01cad2eb3a7ca
-    contentHash: e198014cd45aeabc52c00930ebdc1345f8c975ec364012b18b3c42d79f2dba61
+    contentHash: 2be1bb3a7c18add0f54e329b83579de790f16d2dc87d60ccf57f873a1f55451a
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 3849051e4521f99164cced17bdfb9da618fd4211f8d6aa24407d962f5bb97827
+    stateFingerprint: 19bde119d1924f707571974d734d37074eea5940837aeaeabf85d04fae421ee0
     path: docs/planning/status/system-governance-file-fingerprint-baseline.yaml
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
