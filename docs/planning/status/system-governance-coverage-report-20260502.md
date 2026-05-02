@@ -29,8 +29,8 @@ Upstream indexes:
 
 ## Totals
 
-- Files: 4082
-- Governed files: 4082
+- Files: 4072
+- Governed files: 4072
 - Ungoverned files: 0
 - Drift files: 44
 - Legacy files: 0
@@ -49,7 +49,7 @@ Upstream indexes:
 <!-- prettier-ignore-start -->
 | Root unit | Files |
 | --- | ---: |
-| `SYS-DVT` | 4082 |
+| `SYS-DVT` | 4072 |
 <!-- prettier-ignore-end -->
 
 ## By Domain Unit
@@ -58,7 +58,7 @@ Upstream indexes:
 | Domain unit | Files |
 | --- | ---: |
 | `SYS-ADAPTERS` | 196 |
-| `SYS-DVT` | 3305 |
+| `SYS-DVT` | 3295 |
 | `SYS-OBSERVABILITY` | 15 |
 | `SYS-PLANSTORE` | 112 |
 | `SYS-RUNTIME` | 286 |
@@ -75,7 +75,7 @@ Upstream indexes:
 | `AS` | 469 |
 | `DS` | 142 |
 | `ENTRY` | 875 |
-| `INFRA` | 2157 |
+| `INFRA` | 2147 |
 | `PORT` | 189 |
 <!-- prettier-ignore-end -->
 
@@ -85,7 +85,7 @@ Upstream indexes:
 | Status | Files |
 | --- | ---: |
 | `canonical` | 110 |
-| `coverage-required` | 3860 |
+| `coverage-required` | 3850 |
 | `drift` | 44 |
 | `review` | 68 |
 <!-- prettier-ignore-end -->
@@ -95,7 +95,7 @@ Upstream indexes:
 <!-- prettier-ignore-start -->
 | Governance state | Files |
 | --- | ---: |
-| `coverage-required` | 3860 |
+| `coverage-required` | 3850 |
 | `drift` | 44 |
 | `governed` | 110 |
 | `review` | 68 |
@@ -107,7 +107,7 @@ Upstream indexes:
 | Canonical role | Files |
 | --- | ---: |
 | `implementation-owner` | 110 |
-| `none` | 3972 |
+| `none` | 3962 |
 <!-- prettier-ignore-end -->
 
 ## By Evidence State
@@ -116,7 +116,7 @@ Upstream indexes:
 | Evidence state | Files |
 | --- | ---: |
 | `classification-only` | 110 |
-| `coverage-required` | 3860 |
+| `coverage-required` | 3850 |
 | `remediation-required` | 44 |
 | `review-required` | 68 |
 <!-- prettier-ignore-end -->
@@ -185,7 +185,7 @@ Upstream indexes:
 <!-- prettier-ignore-start -->
 | Component | Files | Status | DDD owner |
 | --- | ---: | --- | --- |
-| `SYS-DOCS-GOVERNANCE-ROOT` | 1661 | `coverage-required` | `INFRA` |
+| `SYS-DOCS-GOVERNANCE-ROOT` | 1651 | `coverage-required` | `INFRA` |
 | `SYS-WEB-ROOT` | 787 | `coverage-required` | `ENTRY` |
 | `SYS-RUNTIME-ROOT` | 286 | `coverage-required` | `AS` |
 | `SYS-ADAPTERS-ROOT` | 196 | `coverage-required` | `ADP` |
@@ -210,8 +210,8 @@ Upstream indexes:
 <!-- prettier-ignore-start -->
 | Governance source | Files |
 | --- | ---: |
-| `docs/DOCS_README.md` | 1675 |
-| `docs/planning/status/governance-document-rule-inventory.md` | 1661 |
+| `docs/DOCS_README.md` | 1665 |
+| `docs/planning/status/governance-document-rule-inventory.md` | 1651 |
 | `docs/planning/status/system-operations-inventory-20260501.md` | 947 |
 | `docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md` | 787 |
 | `docs/guides/testing-and-ci-capabilities.md` | 338 |
