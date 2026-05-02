@@ -19,6 +19,12 @@ The index exposes how many components exist, how many files each component owns,
 which root/domain chain each component belongs to, which components still
 require subdivision, and which components are drift or legacy.
 
+Fowler semantics are split from raw status so `canonical` does not act as a
+hidden authority signal. `governanceState` says whether the unit is governed
+or remediation-bound, `canonicalRole` says what kind of canonical role it
+plays, and `evidenceState` says whether the row is verified or only
+classified.
+
 ## Totals
 
 - Component/source units: 20
@@ -48,6 +54,27 @@ require subdivision, and which components are drift or legacy.
 | `superseded` | 1 |
 <!-- prettier-ignore-end -->
 
+## By Governance State
+
+<!-- prettier-ignore-start -->
+| Governance state | Files |
+| --- | ---: |
+| `coverage-required` | 11 |
+| `drift` | 4 |
+| `governed` | 1 |
+| `review` | 3 |
+| `superseded` | 1 |
+<!-- prettier-ignore-end -->
+
+## By Canonical Role
+
+<!-- prettier-ignore-start -->
+| Canonical role | Files |
+| --- | ---: |
+| `implementation-owner` | 1 |
+| `none` | 19 |
+<!-- prettier-ignore-end -->
+
 ## Oversized Components
 
 Components with `childrenRequired: true` and more than 100 files:
@@ -69,28 +96,28 @@ Components with `childrenRequired: true` and more than 100 files:
 ## Components
 
 <!-- prettier-ignore-start -->
-| Component | Level | Status | Files | DDD owner | Parent |
-| --- | --- | ---: | ---: | --- | --- |
-| `SYS-ADAPTERS-ROOT` | `component` | `coverage-required` | 196 | `ADP` | `SYS-ADAPTERS` |
-| `SYS-API-ROOT` | `component` | `coverage-required` | 362 | `AS` | `SYS-API` |
-| `SYS-CI-GOVERNANCE-ROOT` | `component` | `coverage-required` | 178 | `INFRA` | `SYS-CI-GOVERNANCE` |
-| `SYS-CONTRACTS-ROOT` | `component` | `coverage-required` | 127 | `PORT` | `SYS-CONTRACTS` |
-| `SYS-DOCS-GOVERNANCE-ROOT` | `component` | `coverage-required` | 1650 | `INFRA` | `SYS-DOCS-GOVERNANCE` |
-| `SYS-OBSERVABILITY-ROOT` | `component` | `coverage-required` | 15 | `PORT` | `SYS-OBSERVABILITY` |
-| `SYS-PLANNER-ROOT` | `component` | `coverage-required` | 76 | `DS` | `SYS-PLANNER` |
-| `SYS-PLANSTORE-API-COMPOSITION` | `component` | `drift` | 20 | `AS` | `SYS-PLANSTORE` |
-| `SYS-PLANSTORE-ARTIFACTS-PORTS` | `component` | `review` | 23 | `PORT` | `SYS-PLANSTORE` |
-| `SYS-PLANSTORE-CONTRACTS` | `component` | `drift` | 3 | `PORT` | `SYS-PLANSTORE` |
-| `SYS-PLANSTORE-DOCS-RISK` | `component` | `review` | 34 | `INFRA` | `SYS-PLANSTORE` |
-| `SYS-PLANSTORE-ENGINE-FETCH` | `component` | `drift` | 5 | `PORT` | `SYS-PLANSTORE` |
-| `SYS-PLANSTORE-POSTGRES` | `component` | `drift` | 16 | `ADP` | `SYS-PLANSTORE` |
-| `SYS-PLANSTORE-ROOT` | `component` | `superseded` | 0 | `PORT` | `SYS-PLANSTORE` |
-| `SYS-PLANSTORE-TEMPORAL-COMPOSITION` | `component` | `review` | 11 | `ADP` | `SYS-PLANSTORE` |
-| `SYS-REPO-METADATA-ROOT` | `component` | `canonical` | 110 | `INFRA` | `SYS-REPO-METADATA` |
-| `SYS-RUNTIME-ROOT` | `component` | `coverage-required` | 286 | `AS` | `SYS-RUNTIME` |
-| `SYS-TRACEABILITY-ROOT` | `component` | `coverage-required` | 65 | `DS` | `SYS-TRACEABILITY` |
-| `SYS-WEB-ROOT` | `component` | `coverage-required` | 787 | `ENTRY` | `SYS-WEB` |
-| `SYS-WORKERS-ROOT` | `component` | `coverage-required` | 103 | `AS` | `SYS-WORKERS` |
+| Component | Level | Status | Governance state | Canonical role | Evidence state | Files | DDD owner | Parent |
+| --- | --- | ---: | --- | --- | --- | ---: | --- | --- |
+| `SYS-ADAPTERS-ROOT` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 196 | `ADP` | `SYS-ADAPTERS` |
+| `SYS-API-ROOT` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 362 | `AS` | `SYS-API` |
+| `SYS-CI-GOVERNANCE-ROOT` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 178 | `INFRA` | `SYS-CI-GOVERNANCE` |
+| `SYS-CONTRACTS-ROOT` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 127 | `PORT` | `SYS-CONTRACTS` |
+| `SYS-DOCS-GOVERNANCE-ROOT` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 1650 | `INFRA` | `SYS-DOCS-GOVERNANCE` |
+| `SYS-OBSERVABILITY-ROOT` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 15 | `PORT` | `SYS-OBSERVABILITY` |
+| `SYS-PLANNER-ROOT` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 76 | `DS` | `SYS-PLANNER` |
+| `SYS-PLANSTORE-API-COMPOSITION` | `component` | `drift` | `drift` | `none` | `remediation-required` | 20 | `AS` | `SYS-PLANSTORE` |
+| `SYS-PLANSTORE-ARTIFACTS-PORTS` | `component` | `review` | `review` | `none` | `review-required` | 23 | `PORT` | `SYS-PLANSTORE` |
+| `SYS-PLANSTORE-CONTRACTS` | `component` | `drift` | `drift` | `none` | `remediation-required` | 3 | `PORT` | `SYS-PLANSTORE` |
+| `SYS-PLANSTORE-DOCS-RISK` | `component` | `review` | `review` | `none` | `review-required` | 34 | `INFRA` | `SYS-PLANSTORE` |
+| `SYS-PLANSTORE-ENGINE-FETCH` | `component` | `drift` | `drift` | `none` | `remediation-required` | 5 | `PORT` | `SYS-PLANSTORE` |
+| `SYS-PLANSTORE-POSTGRES` | `component` | `drift` | `drift` | `none` | `remediation-required` | 16 | `ADP` | `SYS-PLANSTORE` |
+| `SYS-PLANSTORE-ROOT` | `component` | `superseded` | `superseded` | `none` | `retired` | 0 | `PORT` | `SYS-PLANSTORE` |
+| `SYS-PLANSTORE-TEMPORAL-COMPOSITION` | `component` | `review` | `review` | `none` | `review-required` | 11 | `ADP` | `SYS-PLANSTORE` |
+| `SYS-REPO-METADATA-ROOT` | `component` | `canonical` | `governed` | `implementation-owner` | `classification-only` | 110 | `INFRA` | `SYS-REPO-METADATA` |
+| `SYS-RUNTIME-ROOT` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 286 | `AS` | `SYS-RUNTIME` |
+| `SYS-TRACEABILITY-ROOT` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 65 | `DS` | `SYS-TRACEABILITY` |
+| `SYS-WEB-ROOT` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 787 | `ENTRY` | `SYS-WEB` |
+| `SYS-WORKERS-ROOT` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 103 | `AS` | `SYS-WORKERS` |
 <!-- prettier-ignore-end -->
 
 ## Related Surfaces

@@ -4,6 +4,7 @@ const crypto = require('node:crypto');
 const {
   buildComponentEntries,
   buildFileEntries,
+  deriveGovernanceSemantics,
   normalizeGeneratedIndexBytesForHash,
   normalizeTextBytesForHash,
 } = require('./generate-governance-file-component-index.cjs');
@@ -36,6 +37,18 @@ const units = [
     dddOwner: 'AS',
     cqRails: 'API commands and queries',
     governance: ['docs/api.md'],
+  },
+  {
+    id: 'SYS-REPO-METADATA-ROOT',
+    name: 'Repository metadata root',
+    parent: 'SYS-DVT',
+    level: 'component',
+    status: 'canonical',
+    owns: ['package.json'],
+    childrenRequired: true,
+    dddOwner: 'INFRA',
+    cqRails: 'none - repository metadata',
+    governance: ['package.json'],
   },
   {
     id: 'SYS-PLANSTORE-LEGACY',
@@ -94,9 +107,10 @@ test('buildFileEntries adds unit status and drift legacy booleans per file', () 
   const fileContents = new Map([
     ['apps/api/src/main.ts', 'export const main = true;\n'],
     ['apps/api/src/legacy/store.ts', 'export const legacy = true;\n'],
+    ['package.json', '{"name":"dvt"}\n'],
   ]);
   const entries = buildFileEntries(
-    ['apps/api/src/main.ts', 'apps/api/src/legacy/store.ts'],
+    ['apps/api/src/main.ts', 'apps/api/src/legacy/store.ts', 'package.json'],
     units,
     {
       readFileBytes: (filePath) => Buffer.from(fileContents.get(filePath), 'utf8'),
@@ -116,6 +130,26 @@ test('buildFileEntries adds unit status and drift legacy booleans per file', () 
     rootUnit: 'SYS-DVT',
     unitPath: ['SYS-DVT', 'SYS-RUNTIME', 'SYS-API-ROOT'],
     unitStatus: 'coverage-required',
+    governanceState: 'coverage-required',
+    canonicalRole: 'none',
+    evidenceState: 'coverage-required',
+  };
+  const canonicalGovernancePayload = {
+    componentUnit: 'SYS-REPO-METADATA-ROOT',
+    cqRails: 'none - repository metadata',
+    dddOwner: 'INFRA',
+    domainUnit: 'SYS-DVT',
+    governance: ['package.json'],
+    isDrift: false,
+    isLegacy: false,
+    ownerLevel: 'component',
+    owningUnit: 'SYS-REPO-METADATA-ROOT',
+    rootUnit: 'SYS-DVT',
+    unitPath: ['SYS-DVT', 'SYS-REPO-METADATA-ROOT'],
+    unitStatus: 'canonical',
+    governanceState: 'governed',
+    canonicalRole: 'implementation-owner',
+    evidenceState: 'classification-only',
   };
   const legacyGovernancePayload = {
     componentUnit: 'SYS-PLANSTORE-LEGACY',
@@ -130,6 +164,9 @@ test('buildFileEntries adds unit status and drift legacy booleans per file', () 
     rootUnit: 'SYS-DVT',
     unitPath: ['SYS-DVT', 'SYS-PLANSTORE-LEGACY'],
     unitStatus: 'legacy',
+    governanceState: 'legacy',
+    canonicalRole: 'none',
+    evidenceState: 'remediation-required',
   };
 
   assert.deepEqual(entries, [
@@ -147,6 +184,9 @@ test('buildFileEntries adds unit status and drift legacy booleans per file', () 
       unitPath: ['SYS-DVT', 'SYS-RUNTIME', 'SYS-API-ROOT'],
       ownerLevel: 'component',
       unitStatus: 'coverage-required',
+      governanceState: 'coverage-required',
+      canonicalRole: 'none',
+      evidenceState: 'coverage-required',
       isDrift: false,
       isLegacy: false,
       dddOwner: 'AS',
@@ -167,11 +207,33 @@ test('buildFileEntries adds unit status and drift legacy booleans per file', () 
       unitPath: ['SYS-DVT', 'SYS-PLANSTORE-LEGACY'],
       ownerLevel: 'component',
       unitStatus: 'legacy',
+      governanceState: 'legacy',
+      canonicalRole: 'none',
+      evidenceState: 'remediation-required',
       isDrift: false,
       isLegacy: true,
       dddOwner: 'ADP',
       cqRails: 'PS-Q04',
       governance: ['docs/planstore.md'],
+    },
+    {
+      ...expectedFingerprints('package.json', '{"name":"dvt"}\n', canonicalGovernancePayload),
+      path: 'package.json',
+      owningUnit: 'SYS-REPO-METADATA-ROOT',
+      rootUnit: 'SYS-DVT',
+      domainUnit: 'SYS-DVT',
+      componentUnit: 'SYS-REPO-METADATA-ROOT',
+      unitPath: ['SYS-DVT', 'SYS-REPO-METADATA-ROOT'],
+      ownerLevel: 'component',
+      unitStatus: 'canonical',
+      governanceState: 'governed',
+      canonicalRole: 'implementation-owner',
+      evidenceState: 'classification-only',
+      isDrift: false,
+      isLegacy: false,
+      dddOwner: 'INFRA',
+      cqRails: 'none - repository metadata',
+      governance: ['package.json'],
     },
   ]);
 });
@@ -180,9 +242,10 @@ test('buildComponentEntries counts owned files per component', () => {
   const fileContents = new Map([
     ['apps/api/src/main.ts', 'export const main = true;\n'],
     ['apps/api/src/legacy/store.ts', 'export const legacy = true;\n'],
+    ['package.json', '{"name":"dvt"}\n'],
   ]);
   const fileEntries = buildFileEntries(
-    ['apps/api/src/main.ts', 'apps/api/src/legacy/store.ts'],
+    ['apps/api/src/main.ts', 'apps/api/src/legacy/store.ts', 'package.json'],
     units,
     {
       readFileBytes: (filePath) => Buffer.from(fileContents.get(filePath), 'utf8'),
@@ -199,6 +262,9 @@ test('buildComponentEntries counts owned files per component', () => {
       unitReferences: entry.unitReferences,
       fileCount: entry.fileCount,
       status: entry.status,
+      governanceState: entry.governanceState,
+      canonicalRole: entry.canonicalRole,
+      evidenceState: entry.evidenceState,
       isLegacy: entry.isLegacy,
     })),
     [
@@ -232,6 +298,9 @@ test('buildComponentEntries counts owned files per component', () => {
         ],
         fileCount: 1,
         status: 'coverage-required',
+        governanceState: 'coverage-required',
+        canonicalRole: 'none',
+        evidenceState: 'coverage-required',
         isLegacy: false,
       },
       {
@@ -257,7 +326,38 @@ test('buildComponentEntries counts owned files per component', () => {
         ],
         fileCount: 1,
         status: 'legacy',
+        governanceState: 'legacy',
+        canonicalRole: 'none',
+        evidenceState: 'remediation-required',
         isLegacy: true,
+      },
+      {
+        id: 'SYS-REPO-METADATA-ROOT',
+        rootUnit: 'SYS-DVT',
+        domainUnit: 'SYS-DVT',
+        unitPath: ['SYS-DVT', 'SYS-REPO-METADATA-ROOT'],
+        unitReferences: [
+          {
+            id: 'SYS-DVT',
+            name: 'DVT system',
+            level: 'system',
+            status: 'review',
+            governance: ['docs/root.md'],
+          },
+          {
+            id: 'SYS-REPO-METADATA-ROOT',
+            name: 'Repository metadata root',
+            level: 'component',
+            status: 'canonical',
+            governance: ['package.json'],
+          },
+        ],
+        fileCount: 1,
+        status: 'canonical',
+        governanceState: 'governed',
+        canonicalRole: 'implementation-owner',
+        evidenceState: 'classification-only',
+        isLegacy: false,
       },
     ]
   );
@@ -291,6 +391,14 @@ test('normalizeGeneratedIndexBytesForHash removes recursive fingerprint values',
     normalizeGeneratedIndexBytesForHash(first).toString('utf8'),
     normalizeGeneratedIndexBytesForHash(second).toString('utf8')
   );
+});
+
+test('deriveGovernanceSemantics preserves superseded as retired governance state', () => {
+  assert.deepEqual(deriveGovernanceSemantics('superseded', 'component'), {
+    governanceState: 'superseded',
+    canonicalRole: 'none',
+    evidenceState: 'retired',
+  });
 });
 
 test('normalizeTextBytesForHash canonicalizes text line endings', () => {

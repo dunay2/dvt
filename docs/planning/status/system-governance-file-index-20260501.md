@@ -23,6 +23,11 @@ governing documents, DDD owner, command/query rail posture, drift status, and
 legacy status. The fingerprint baseline is the accepted drift-control snapshot
 used by CI.
 
+Fowler semantics are split from the raw unit status: `unitStatus: canonical`
+means the file belongs to a governed owner classification. It does not by
+itself prove verified semantic maturity. `governanceState`,
+`canonicalRole`, and `evidenceState` carry that distinction explicitly.
+
 ## Totals
 
 - Tracked files indexed: 4067
@@ -40,6 +45,26 @@ used by CI.
 | `coverage-required` | 3845 |
 | `drift` | 44 |
 | `review` | 68 |
+<!-- prettier-ignore-end -->
+
+## By Governance State
+
+<!-- prettier-ignore-start -->
+| Governance state | Files |
+| --- | ---: |
+| `coverage-required` | 3845 |
+| `drift` | 44 |
+| `governed` | 110 |
+| `review` | 68 |
+<!-- prettier-ignore-end -->
+
+## By Canonical Role
+
+<!-- prettier-ignore-start -->
+| Canonical role | Files |
+| --- | ---: |
+| `implementation-owner` | 110 |
+| `none` | 3957 |
 <!-- prettier-ignore-end -->
 
 ## By Owning Unit
