@@ -29,8 +29,8 @@ Upstream indexes:
 
 ## Totals
 
-- Files: 4063
-- Governed files: 4063
+- Files: 4067
+- Governed files: 4067
 - Ungoverned files: 0
 - Drift files: 44
 - Legacy files: 0
@@ -49,7 +49,7 @@ Upstream indexes:
 <!-- prettier-ignore-start -->
 | Root unit | Files |
 | --- | ---: |
-| `SYS-DVT` | 4063 |
+| `SYS-DVT` | 4067 |
 <!-- prettier-ignore-end -->
 
 ## By Domain Unit
@@ -58,7 +58,7 @@ Upstream indexes:
 | Domain unit | Files |
 | --- | ---: |
 | `SYS-ADAPTERS` | 196 |
-| `SYS-DVT` | 3286 |
+| `SYS-DVT` | 3290 |
 | `SYS-OBSERVABILITY` | 15 |
 | `SYS-PLANSTORE` | 112 |
 | `SYS-RUNTIME` | 286 |
@@ -75,7 +75,7 @@ Upstream indexes:
 | `AS` | 771 |
 | `DS` | 141 |
 | `ENTRY` | 787 |
-| `INFRA` | 1968 |
+| `INFRA` | 1972 |
 | `PORT` | 173 |
 <!-- prettier-ignore-end -->
 
@@ -85,7 +85,7 @@ Upstream indexes:
 | Status | Files |
 | --- | ---: |
 | `canonical` | 110 |
-| `coverage-required` | 3841 |
+| `coverage-required` | 3845 |
 | `drift` | 44 |
 | `review` | 68 |
 <!-- prettier-ignore-end -->
@@ -154,12 +154,12 @@ Upstream indexes:
 <!-- prettier-ignore-start -->
 | Component | Files | Status | DDD owner |
 | --- | ---: | --- | --- |
-| `SYS-DOCS-GOVERNANCE-ROOT` | 1648 | `coverage-required` | `INFRA` |
+| `SYS-DOCS-GOVERNANCE-ROOT` | 1650 | `coverage-required` | `INFRA` |
 | `SYS-WEB-ROOT` | 787 | `coverage-required` | `ENTRY` |
 | `SYS-API-ROOT` | 362 | `coverage-required` | `AS` |
 | `SYS-RUNTIME-ROOT` | 286 | `coverage-required` | `AS` |
 | `SYS-ADAPTERS-ROOT` | 196 | `coverage-required` | `ADP` |
-| `SYS-CI-GOVERNANCE-ROOT` | 176 | `coverage-required` | `INFRA` |
+| `SYS-CI-GOVERNANCE-ROOT` | 178 | `coverage-required` | `INFRA` |
 | `SYS-CONTRACTS-ROOT` | 127 | `coverage-required` | `PORT` |
 | `SYS-REPO-METADATA-ROOT` | 110 | `canonical` | `INFRA` |
 | `SYS-WORKERS-ROOT` | 103 | `coverage-required` | `AS` |
@@ -180,11 +180,11 @@ Upstream indexes:
 <!-- prettier-ignore-start -->
 | Governance source | Files |
 | --- | ---: |
-| `docs/DOCS_README.md` | 1648 |
-| `docs/planning/status/governance-document-rule-inventory.md` | 1648 |
+| `docs/DOCS_README.md` | 1650 |
+| `docs/planning/status/governance-document-rule-inventory.md` | 1650 |
 | `docs/planning/status/system-operations-inventory-20260501.md` | 993 |
 | `docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md` | 787 |
-| `docs/guides/testing-and-ci-capabilities.md` | 176 |
+| `docs/guides/testing-and-ci-capabilities.md` | 178 |
 | `docs/contracts/index.md` | 127 |
 | `package.json` | 110 |
 | `pnpm-workspace.yaml` | 110 |

@@ -1,7 +1,7 @@
 version: 1
 generatedFrom: git ls-files docs
 unitManifest: docs/planning/status/system-governance-unit-index.units.yaml
-documentCount: 1442
+documentCount: 1443
 documents:
   - path: docs/CONTRIBUTING.md
     classification: governs unit
@@ -5793,6 +5793,10 @@ documents:
     classification: governs unit
     documentOwnerUnit: SYS-PLANSTORE-DOCS-RISK
     subjectUnit: SYS-PLANSTORE
+  - path: docs/planning/status/system-governance-remediation-queue-20260502.md
+    classification: governs unit
+    documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
+    subjectUnit: SYS-DOCS-GOVERNANCE
   - path: docs/planning/status/system-governance-unit-index-20260501.md
     classification: governs unit
     documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
