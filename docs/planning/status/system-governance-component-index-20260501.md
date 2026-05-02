@@ -83,13 +83,13 @@ Components with `childrenRequired: true` and more than 100 files:
 | Component | Files | Status |
 | --- | ---: | --- |
 | `SYS-DOCS-GOVERNANCE-ROOT` | 1651 | `coverage-required` |
-| `SYS-WEB-ROOT` | 787 | `coverage-required` |
+| `SYS-WEB-ROOT` | 797 | `coverage-required` |
 | `SYS-API-ROOT` | 362 | `coverage-required` |
 | `SYS-RUNTIME-ROOT` | 286 | `coverage-required` |
 | `SYS-ADAPTERS-ROOT` | 196 | `coverage-required` |
 | `SYS-CI-GOVERNANCE-ROOT` | 178 | `coverage-required` |
 | `SYS-CONTRACTS-ROOT` | 127 | `coverage-required` |
-| `SYS-REPO-METADATA-ROOT` | 110 | `canonical` |
+| `SYS-REPO-METADATA-ROOT` | 111 | `canonical` |
 | `SYS-WORKERS-ROOT` | 103 | `coverage-required` |
 <!-- prettier-ignore-end -->
 
@@ -113,10 +113,10 @@ Components with `childrenRequired: true` and more than 100 files:
 | `SYS-PLANSTORE-POSTGRES` | `component` | `drift` | `drift` | `none` | `remediation-required` | 16 | `ADP` | `SYS-PLANSTORE` |
 | `SYS-PLANSTORE-ROOT` | `component` | `superseded` | `superseded` | `none` | `retired` | 0 | `PORT` | `SYS-PLANSTORE` |
 | `SYS-PLANSTORE-TEMPORAL-COMPOSITION` | `component` | `review` | `review` | `none` | `review-required` | 11 | `ADP` | `SYS-PLANSTORE` |
-| `SYS-REPO-METADATA-ROOT` | `component` | `canonical` | `governed` | `implementation-owner` | `classification-only` | 110 | `INFRA` | `SYS-REPO-METADATA` |
+| `SYS-REPO-METADATA-ROOT` | `component` | `canonical` | `governed` | `implementation-owner` | `classification-only` | 111 | `INFRA` | `SYS-REPO-METADATA` |
 | `SYS-RUNTIME-ROOT` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 286 | `AS` | `SYS-RUNTIME` |
 | `SYS-TRACEABILITY-ROOT` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 65 | `DS` | `SYS-TRACEABILITY` |
-| `SYS-WEB-ROOT` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 787 | `ENTRY` | `SYS-WEB` |
+| `SYS-WEB-ROOT` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 797 | `ENTRY` | `SYS-WEB` |
 | `SYS-WORKERS-ROOT` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 103 | `AS` | `SYS-WORKERS` |
 <!-- prettier-ignore-end -->
 
