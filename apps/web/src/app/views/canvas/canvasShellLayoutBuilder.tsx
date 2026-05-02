@@ -24,7 +24,7 @@ function renderCanvasShellReadOnlyBanner(
         onDraftAccessRecoveryAction={resolveCanvasDraftAccessRecoveryCommand({
           posture: routePresentation.draftAccessPosture,
           reloadLatestDraft: recoveryCommands.reloadLatestDraft,
-          refetchDraftAfterAuthRefresh: recoveryCommands.reloadLatestDraft,
+          refetchDraftAfterAuthRefresh: recoveryCommands.refetchDraftAfterAuthRefresh,
           focusScopeControls: () => {
             document.querySelector<HTMLElement>('[data-slot="select-trigger"]')?.focus();
           },

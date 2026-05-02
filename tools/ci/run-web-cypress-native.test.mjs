@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
 import test from 'node:test';
 
 import {
@@ -77,4 +78,17 @@ test('native Cypress runner kills the Windows preview process tree', () => {
     command: 'taskkill',
     args: ['/PID', '4173', '/T', '/F'],
   });
+});
+
+test('native Cypress runner can be imported when Node does not provide argv[1]', () => {
+  const result = spawnSync(
+    process.execPath,
+    ['-e', "process.argv.splice(1); import('./tools/ci/run-web-cypress-native.mjs')"],
+    {
+      cwd: process.cwd(),
+      encoding: 'utf8',
+    }
+  );
+
+  assert.equal(result.status, 0, result.stderr);
 });

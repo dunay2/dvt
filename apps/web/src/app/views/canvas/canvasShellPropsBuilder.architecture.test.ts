@@ -27,6 +27,7 @@ describe('canvasShellPropsBuilder architecture', () => {
     expect(SHELL_PROPS_BUILDER_SOURCE).toContain(
       'layout: buildCanvasShellLayout(buildCanvasShellLayoutArgs(args)),'
     );
+    expect(SHELL_PROPS_BUILDER_SOURCE).toContain('refetchDraftAfterAuthRefresh:');
     expect(SHELL_PROPS_BUILDER_SOURCE).toContain(
       'panels: buildCanvasShellPanels(buildCanvasShellPanelsArgs(args)),'
     );
@@ -43,11 +44,12 @@ describe('canvasShellPropsBuilder architecture', () => {
       'chromeCommands: buildCanvasShellChromeCommands(buildCanvasShellChromeCommandsArgs(args)),'
     );
     expect(SHELL_PROPS_BUILDER_SOURCE).not.toContain('layout: buildCanvasShellLayout(args),');
+    expect(SHELL_PROPS_BUILDER_SOURCE).not.toContain(
+      'refetchDraftAfterAuthRefresh: controller.reloadLatestDraft'
+    );
     expect(SHELL_PROPS_BUILDER_SOURCE).not.toContain('panels: buildCanvasShellPanels(args),');
     expect(SHELL_PROPS_BUILDER_SOURCE).not.toContain('graph: buildCanvasShellGraph(args),');
-    expect(SHELL_PROPS_BUILDER_SOURCE).not.toContain(
-      'toolbar: buildCanvasShellToolbar(args),'
-    );
+    expect(SHELL_PROPS_BUILDER_SOURCE).not.toContain('toolbar: buildCanvasShellToolbar(args),');
     expect(SHELL_PROPS_BUILDER_SOURCE).not.toContain(
       'graphCommands: buildCanvasShellGraphCommands(args),'
     );

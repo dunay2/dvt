@@ -9890,9 +9890,9 @@ files:
     owningUnit: SYS-WEB-ROOT
   - fileId: F-9BC58372C71D
     path: apps/web/src/app/views/canvas/canvasShellBuilder.types.ts
-    contentHash: 6d3c96897f955509d312985df8d680b1b501b9ce32292a6b7c50bcbfea36ddca
+    contentHash: 0604ba89056bdb85f6c423dcdb90a64fbc1b776a770d611df26ccece5f25b342
     governanceHash: 17b9458eb491785470127e84e01e837244221c4479c7af2c70c15b49bb9cbb20
-    stateFingerprint: 4d9a95243014e45bb41f8d2aa41d4633b86b189f93efa294624be1fe4e6b22f0
+    stateFingerprint: 18cc7851d986664376a025057242be0a7f6ff3eef0337842e9217cb7d8060fdd
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-WEB-ROOT
@@ -9926,9 +9926,9 @@ files:
     owningUnit: SYS-WEB-ROOT
   - fileId: F-9E022F33D317
     path: apps/web/src/app/views/canvas/canvasShellLayoutBuilder.tsx
-    contentHash: 2508dbf917788f9853ad217974d13da9775f80e9dc99d5fbb19c7310f9860f90
+    contentHash: c0c34397ece4f46bb31acce63c0f15b289745322c48b5ab61ab47a427aff885b
     governanceHash: 17b9458eb491785470127e84e01e837244221c4479c7af2c70c15b49bb9cbb20
-    stateFingerprint: b254fcb329b56643f598ce238e98b0cfd70c07d5db554a2e46d2c92776615cf5
+    stateFingerprint: d7c7c33151c4a711d6b64bda5f958cfd6583c80fcbd270e61caef4e29fb3c491
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-WEB-ROOT
@@ -9962,18 +9962,18 @@ files:
     owningUnit: SYS-WEB-ROOT
   - fileId: F-4EC3696459B8
     path: apps/web/src/app/views/canvas/canvasShellPropsBuilder.architecture.test.ts
-    contentHash: 83d01c10b7f70816ecb574db160c2f7bf8c25799afa61247660d0aa7950821ec
+    contentHash: 1c087d7d013d67f5d076746a4443da91155cc91b432d80334d8bae7f6f8aa5c5
     governanceHash: 17b9458eb491785470127e84e01e837244221c4479c7af2c70c15b49bb9cbb20
-    stateFingerprint: 06c54140ddbc7a8a678aa2dd7a072d08b0fe02d7b48f96c8826403559e55c375
+    stateFingerprint: b197a43cc81e9239406dbdbfb0ab4ed2c6849be83dec4e171e0459e02037ef96
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-WEB-ROOT
     owningUnit: SYS-WEB-ROOT
   - fileId: F-016436996D49
     path: apps/web/src/app/views/canvas/canvasShellPropsBuilder.tsx
-    contentHash: bd69c7859b5f4dd13532cbe7825924b9117814f1a49b422cc28344bab64f9710
+    contentHash: e91a0379430f1b48c38dc30e227a3e8ae8dd4e66bea8003e90453b90e4d6619d
     governanceHash: 17b9458eb491785470127e84e01e837244221c4479c7af2c70c15b49bb9cbb20
-    stateFingerprint: e9b4b35a7c964d1e387042e843023d2fb253c00992ab7324510c1efedeacbe75
+    stateFingerprint: 4348c13f9cf6d3e01a1a0f1adc4ff281d7a29cb0529cfdd1a594c15d0eb60db0
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-WEB-ROOT
@@ -23930,9 +23930,9 @@ files:
   - fileId: F-521A4C0445C1
     path: >-
       docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-m-b-canvas-draft-denial-posture-implementation-plan-20260501.md
-    contentHash: 8b5586b25199f4abc0f8505c5790b5652609a3ecf1aebb8adbaf60c5031d28fa
+    contentHash: 6a8947af304474dcbbba0ad7c7d8c3d9a83dccc12c209a41c47e7c7bbaf12df4
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: f3355e2f1f69f2d9c5e64dd4dca471fab5e638e69d34d21ead5b3c4c7cdba8b4
+    stateFingerprint: 6b4f4fe96a5de0d76facb4def687a964e14ff866ffcda5b40aab6dba19f095d8
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -36776,18 +36776,18 @@ files:
     owningUnit: SYS-CI-GOVERNANCE-ROOT
   - fileId: F-F27050473C16
     path: tools/ci/run-web-cypress-native.mjs
-    contentHash: 4bfb5b2dd60c97d5f6fdaa53da92810195ee7d434878528e46bc68b702ddefbc
+    contentHash: 80dfd0e178f6c7cb36f04a9158049c8b8fdb759c815e4c2e14a1cb9d7f6180fc
     governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
-    stateFingerprint: 4aac32c3431b9bb88ea937b2d5e73d99966d60e67e26e14b869d97328aabef0a
+    stateFingerprint: f3ee0a897f85ec65a3c00f20f7061c6a261c544e7418a735572d4f2312b86406
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-CI-GOVERNANCE-ROOT
     owningUnit: SYS-CI-GOVERNANCE-ROOT
   - fileId: F-FCD9E91E7D98
     path: tools/ci/run-web-cypress-native.test.mjs
-    contentHash: 33613faffddbd42a56ad3ee8bbe99afde1f664ec3b4064d8d110b102d1f80261
+    contentHash: beb92ae3dfb0b1d6fa039b43c3b55c1bfebb411b1d4c5f36f3779c31a73398c1
     governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
-    stateFingerprint: 500b8bd0cb7449af401f79a93d1cc6d4083b84e9eec7887377f31d12552cf314
+    stateFingerprint: 29402a41fd831e434f97b4081ee35a29c08c71a0e3f537d9630850c8761900b0
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-CI-GOVERNANCE-ROOT

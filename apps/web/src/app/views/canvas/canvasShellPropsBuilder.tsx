@@ -31,6 +31,10 @@ function buildCanvasShellLayoutArgs({
     },
     recoveryCommands: {
       reloadLatestDraft: controller.reloadLatestDraft,
+      // The API client owns token refresh; Canvas only re-enters the protected draft port.
+      refetchDraftAfterAuthRefresh: () => {
+        controller.reloadLatestDraft();
+      },
     },
     authoringCommands: {
       handleCreateAuthoringNode: controller.handleCreateAuthoringNode,

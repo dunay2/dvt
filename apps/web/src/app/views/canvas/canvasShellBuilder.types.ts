@@ -16,7 +16,10 @@ export type CanvasShellLayoutBuilderArgs = Readonly<{
     CanvasRouteController,
     'focusMode' | 'explorerPanelVisible' | 'inspectorPanelVisible' | 'canOpenSourceImport'
   >;
-  recoveryCommands: Pick<CanvasRouteController, 'reloadLatestDraft'>;
+  recoveryCommands: Pick<CanvasRouteController, 'reloadLatestDraft'> &
+    Readonly<{
+      refetchDraftAfterAuthRefresh: () => void;
+    }>;
   authoringCommands: Pick<
     CanvasRouteController,
     'handleCreateAuthoringNode' | 'handleCreateCanvasDocument'

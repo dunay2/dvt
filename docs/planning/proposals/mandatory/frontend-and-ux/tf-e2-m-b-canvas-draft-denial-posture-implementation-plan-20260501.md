@@ -286,6 +286,7 @@ allowedImplementationSurfaces:
   - apps/web/src/app/views/canvas/CanvasRecoveryBanner.templates.tsx
   - apps/web/src/app/views/canvas/canvasShellBuilder.types.ts
   - apps/web/src/app/views/canvas/canvasShellLayoutBuilder.tsx
+  - apps/web/src/app/views/canvas/canvasShellPropsBuilder.architecture.test.ts
   - apps/web/src/app/views/canvas/canvasShellPropsBuilder.tsx
   - apps/web/src/app/views/Canvas.readOnlyStates.test.tsx
   - apps/web/src/app/views/Canvas.test.controller.ts
