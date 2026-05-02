@@ -327,35 +327,233 @@ units:
       - coverage refinement
 
   - id: SYS-API-ROOT
-    name: API root component
+    name: API root module
     parent: SYS-API
-    level: component
+    level: module
     status: coverage-required
-    owns:
-      - apps/api/**
-    excludes:
-      - apps/api/src/application/errors/ManifestArtifactResolutionError.ts
-      - apps/api/src/application/ports/storedPlan.ts
-      - apps/api/src/application/services/StoredExecutablePlanResolver.ts
-      - apps/api/src/application/services/StoredPlanExecutabilityValidator.ts
-      - apps/api/src/application/services/WorkflowEngineFactory.ts
-      - apps/api/src/entrypoints/http/planRefHttpMapper.ts
-      - apps/api/src/entrypoints/http/planRoutePlanRefParser.ts
-      - apps/api/src/infrastructure/planner/ManifestArtifactResolver.ts
-      - apps/api/src/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.ts
-      - apps/api/src/infrastructure/startRun/ArtifactStoreDbtProjectBundleBindingPolicy.ts
-      - apps/api/test/application/services/StoredExecutablePlanResolver.test.ts
-      - apps/api/test/application/services/StoredPlanExecutabilityValidator.test.ts
-      - apps/api/test/application/services/WorkflowEngineFactory.test.ts
-      - apps/api/test/application/services/storedPlanExecutabilityValidator/**
-      - apps/api/test/entrypoints/http/planRoutePlanSourcePolicy.test.ts
-      - apps/api/test/infrastructure/planner/ManifestArtifactResolver.test.ts
-      - apps/api/test/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.test.ts
+    owns: []
     childrenRequired: true
     dddOwner: AS
     cqRails: API commands and queries
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
+    fowlerSignals:
+      - coverage refinement
+
+  - id: SYS-API-REPO-CONFIG
+    name: API repository configuration and app metadata
+    parent: SYS-API-ROOT
+    level: component
+    status: coverage-required
+    owns:
+      - apps/api/*
+    childrenRequired: false
+    dddOwner: INFRA
+    cqRails: none - API app configuration
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+      - docs/guides/testing-and-ci-capabilities.md
+    fowlerSignals:
+      - coverage refinement
+
+  - id: SYS-API-DOCS
+    name: API local documentation
+    parent: SYS-API-ROOT
+    level: component
+    status: coverage-required
+    owns:
+      - apps/api/docs/**
+    childrenRequired: false
+    dddOwner: INFRA
+    cqRails: none - API local documentation
+    governance:
+      - docs/DOCS_README.md
+      - docs/planning/status/system-operations-inventory-20260501.md
+    fowlerSignals:
+      - coverage refinement
+
+  - id: SYS-API-BOOTSTRAP
+    name: API bootstrap and composition entry
+    parent: SYS-API-ROOT
+    level: component
+    status: coverage-required
+    owns:
+      - apps/api/src/app.ts
+      - apps/api/src/server.ts
+    childrenRequired: false
+    dddOwner: ENTRY
+    cqRails: API process bootstrap commands
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+    fowlerSignals:
+      - coverage refinement
+
+  - id: SYS-API-HTTP-ENTRYPOINTS
+    name: API HTTP entrypoints and route mappers
+    parent: SYS-API-ROOT
+    level: component
+    status: coverage-required
+    owns:
+      - apps/api/src/entrypoints/**
+    excludes:
+      - apps/api/src/entrypoints/http/planRefHttpMapper.ts
+      - apps/api/src/entrypoints/http/planRoutePlanRefParser.ts
+    childrenRequired: false
+    dddOwner: ENTRY
+    cqRails: API HTTP command/query route rails
+    governance:
+      - docs/architecture/command-query-rail-governance.md
+      - docs/planning/status/system-operations-inventory-20260501.md
+    fowlerSignals:
+      - coverage refinement
+
+  - id: SYS-API-APPLICATION-PORTS
+    name: API application ports
+    parent: SYS-API-ROOT
+    level: component
+    status: coverage-required
+    owns:
+      - apps/api/src/application/ports/**
+    excludes:
+      - apps/api/src/application/ports/storedPlan.ts
+    childrenRequired: false
+    dddOwner: PORT
+    cqRails: API application command/query ports
+    governance:
+      - docs/architecture/reference-architecture.md
+      - docs/planning/status/system-operations-inventory-20260501.md
+    fowlerSignals:
+      - coverage refinement
+
+  - id: SYS-API-APPLICATION-SERVICES
+    name: API application services and use cases
+    parent: SYS-API-ROOT
+    level: component
+    status: coverage-required
+    owns:
+      - apps/api/src/application/services/**
+    excludes:
+      - apps/api/src/application/services/StoredExecutablePlanResolver.ts
+      - apps/api/src/application/services/StoredPlanExecutabilityValidator.ts
+      - apps/api/src/application/services/WorkflowEngineFactory.ts
+    childrenRequired: false
+    dddOwner: AS
+    cqRails: API application commands and queries
+    governance:
+      - docs/architecture/command-query-rail-governance.md
+      - docs/planning/status/system-operations-inventory-20260501.md
+    fowlerSignals:
+      - coverage refinement
+
+  - id: SYS-API-DOMAIN-AUTH
+    name: API domain auth model
+    parent: SYS-API-ROOT
+    level: component
+    status: coverage-required
+    owns:
+      - apps/api/src/domain/**
+    childrenRequired: false
+    dddOwner: DS
+    cqRails: API authorization policy model
+    governance:
+      - docs/architecture/reference-architecture.md
+      - docs/planning/status/system-operations-inventory-20260501.md
+    fowlerSignals:
+      - coverage refinement
+
+  - id: SYS-API-INFRASTRUCTURE
+    name: API infrastructure adapters
+    parent: SYS-API-ROOT
+    level: component
+    status: coverage-required
+    owns:
+      - apps/api/src/db/**
+      - apps/api/src/infrastructure/**
+      - apps/api/src/plugins/**
+    excludes:
+      - apps/api/src/infrastructure/planner/ManifestArtifactResolver.ts
+      - apps/api/src/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.ts
+      - apps/api/src/infrastructure/startRun/ArtifactStoreDbtProjectBundleBindingPolicy.ts
+    childrenRequired: false
+    dddOwner: ADP
+    cqRails: API adapter-backed command/query support
+    governance:
+      - docs/architecture/reference-architecture.md
+      - docs/planning/status/system-operations-inventory-20260501.md
+    fowlerSignals:
+      - coverage refinement
+
+  - id: SYS-API-RUNTIME-COMPOSITION
+    name: API runtime composition modules
+    parent: SYS-API-ROOT
+    level: component
+    status: coverage-required
+    owns:
+      - apps/api/src/modules/**
+      - apps/api/src/runtime/**
+    childrenRequired: false
+    dddOwner: AS
+    cqRails: API runtime composition commands and queries
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+    fowlerSignals:
+      - coverage refinement
+
+  - id: SYS-API-OPS-ROUTES
+    name: API operational health routes
+    parent: SYS-API-ROOT
+    level: component
+    status: coverage-required
+    owns:
+      - apps/api/src/routes/**
+    childrenRequired: false
+    dddOwner: ENTRY
+    cqRails: API operational readiness queries
+    governance:
+      - docs/runbooks/api-runtime-sla-canonical-20260404.md
+      - docs/planning/status/system-operations-inventory-20260501.md
+    fowlerSignals:
+      - coverage refinement
+
+  - id: SYS-API-TESTS
+    name: API app, integration, module, infrastructure, and fixture tests
+    parent: SYS-API-ROOT
+    level: component
+    status: coverage-required
+    owns:
+      - apps/api/test/**
+    excludes:
+      - apps/api/test/application/services/StoredExecutablePlanResolver.test.ts
+      - apps/api/test/application/services/StoredPlanExecutabilityValidator.test.ts
+      - apps/api/test/application/services/WorkflowEngineFactory.test.ts
+      - apps/api/test/application/services/storedPlanExecutabilityValidator/**
+      - apps/api/test/entrypoints/http/**
+      - apps/api/test/infrastructure/planner/ManifestArtifactResolver.test.ts
+      - apps/api/test/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.test.ts
+    childrenRequired: false
+    dddOwner: INFRA
+    cqRails: API validation suites
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+      - docs/planning/status/system-operations-inventory-20260501.md
+    fowlerSignals:
+      - coverage refinement
+
+  - id: SYS-API-HTTP-ENTRYPOINT-TESTS
+    name: API HTTP entrypoint tests
+    parent: SYS-API-ROOT
+    level: component
+    status: coverage-required
+    owns:
+      - apps/api/test/entrypoints/http/**
+    excludes:
+      - apps/api/test/entrypoints/http/planRoutePlanSourcePolicy.test.ts
+    childrenRequired: false
+    dddOwner: INFRA
+    cqRails: API HTTP command/query route validation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+      - docs/architecture/command-query-rail-governance.md
     fowlerSignals:
       - coverage refinement
 

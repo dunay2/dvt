@@ -27,19 +27,19 @@ classified.
 
 ## Totals
 
-- Component/source units: 20
-- Components: 20
+- Component/source units: 31
+- Components: 31
 - Source units: 0
 - Drift components: 4
 - Legacy components: 0
-- Components requiring children: 19
+- Components requiring children: 18
 
 ## By Level
 
 <!-- prettier-ignore-start -->
 | Level | Files |
 | --- | ---: |
-| `component` | 20 |
+| `component` | 31 |
 <!-- prettier-ignore-end -->
 
 ## By Status
@@ -48,7 +48,7 @@ classified.
 | Status | Files |
 | --- | ---: |
 | `canonical` | 1 |
-| `coverage-required` | 11 |
+| `coverage-required` | 22 |
 | `drift` | 4 |
 | `review` | 3 |
 | `superseded` | 1 |
@@ -59,7 +59,7 @@ classified.
 <!-- prettier-ignore-start -->
 | Governance state | Files |
 | --- | ---: |
-| `coverage-required` | 11 |
+| `coverage-required` | 22 |
 | `drift` | 4 |
 | `governed` | 1 |
 | `review` | 3 |
@@ -72,7 +72,7 @@ classified.
 | Canonical role | Files |
 | --- | ---: |
 | `implementation-owner` | 1 |
-| `none` | 19 |
+| `none` | 30 |
 <!-- prettier-ignore-end -->
 
 ## Oversized Components
@@ -84,7 +84,6 @@ Components with `childrenRequired: true` and more than 100 files:
 | --- | ---: | --- |
 | `SYS-DOCS-GOVERNANCE-ROOT` | 1651 | `coverage-required` |
 | `SYS-WEB-ROOT` | 787 | `coverage-required` |
-| `SYS-API-ROOT` | 362 | `coverage-required` |
 | `SYS-RUNTIME-ROOT` | 286 | `coverage-required` |
 | `SYS-ADAPTERS-ROOT` | 196 | `coverage-required` |
 | `SYS-CI-GOVERNANCE-ROOT` | 178 | `coverage-required` |
@@ -99,7 +98,18 @@ Components with `childrenRequired: true` and more than 100 files:
 | Component | Level | Status | Governance state | Canonical role | Evidence state | Files | DDD owner | Parent |
 | --- | --- | ---: | --- | --- | --- | ---: | --- | --- |
 | `SYS-ADAPTERS-ROOT` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 196 | `ADP` | `SYS-ADAPTERS` |
-| `SYS-API-ROOT` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 362 | `AS` | `SYS-API` |
+| `SYS-API-APPLICATION-PORTS` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 16 | `PORT` | `SYS-API-ROOT` |
+| `SYS-API-APPLICATION-SERVICES` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 34 | `AS` | `SYS-API-ROOT` |
+| `SYS-API-BOOTSTRAP` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 2 | `ENTRY` | `SYS-API-ROOT` |
+| `SYS-API-DOCS` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 14 | `INFRA` | `SYS-API-ROOT` |
+| `SYS-API-DOMAIN-AUTH` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 1 | `DS` | `SYS-API-ROOT` |
+| `SYS-API-HTTP-ENTRYPOINT-TESTS` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 50 | `INFRA` | `SYS-API-ROOT` |
+| `SYS-API-HTTP-ENTRYPOINTS` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 75 | `ENTRY` | `SYS-API-ROOT` |
+| `SYS-API-INFRASTRUCTURE` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 27 | `ADP` | `SYS-API-ROOT` |
+| `SYS-API-OPS-ROUTES` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 11 | `ENTRY` | `SYS-API-ROOT` |
+| `SYS-API-REPO-CONFIG` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 11 | `INFRA` | `SYS-API-ROOT` |
+| `SYS-API-RUNTIME-COMPOSITION` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 26 | `AS` | `SYS-API-ROOT` |
+| `SYS-API-TESTS` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 99 | `INFRA` | `SYS-API-ROOT` |
 | `SYS-CI-GOVERNANCE-ROOT` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 178 | `INFRA` | `SYS-CI-GOVERNANCE` |
 | `SYS-CONTRACTS-ROOT` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 127 | `PORT` | `SYS-CONTRACTS` |
 | `SYS-DOCS-GOVERNANCE-ROOT` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 1651 | `INFRA` | `SYS-DOCS-GOVERNANCE` |

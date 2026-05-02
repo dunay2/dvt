@@ -1,7 +1,7 @@
 version: 1
 generatedFrom: docs/planning/status/system-governance-unit-index.units.yaml
 fileIndex: docs/planning/status/system-governance-file-index.files.yaml
-componentCount: 20
+componentCount: 31
 components:
   - id: SYS-ADAPTERS-ROOT
     name: Adapter root component
@@ -60,16 +60,17 @@ components:
       - docs/planning/status/system-operations-inventory-20260501.md
     fowlerSignals:
       - coverage refinement
-  - id: SYS-API-ROOT
-    name: API root component
+  - id: SYS-API-APPLICATION-PORTS
+    name: API application ports
     level: component
-    parent: SYS-API
+    parent: SYS-API-ROOT
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     unitPath:
       - SYS-DVT
       - SYS-API
       - SYS-API-ROOT
+      - SYS-API-APPLICATION-PORTS
     unitReferences:
       - id: SYS-DVT
         name: DVT system
@@ -86,7 +87,131 @@ components:
         governance:
           - docs/planning/status/system-operations-inventory-20260501.md
       - id: SYS-API-ROOT
-        name: API root component
+        name: API root module
+        level: module
+        status: coverage-required
+        governance:
+          - docs/planning/status/system-operations-inventory-20260501.md
+      - id: SYS-API-APPLICATION-PORTS
+        name: API application ports
+        level: component
+        status: coverage-required
+        governance:
+          - docs/architecture/reference-architecture.md
+          - docs/planning/status/system-operations-inventory-20260501.md
+    status: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    childrenRequired: false
+    fileCount: 16
+    dddOwner: PORT
+    cqRails: API application command/query ports
+    owns:
+      - apps/api/src/application/ports/**
+    excludes:
+      - apps/api/src/application/ports/storedPlan.ts
+    governance:
+      - docs/architecture/reference-architecture.md
+      - docs/planning/status/system-operations-inventory-20260501.md
+    fowlerSignals:
+      - coverage refinement
+  - id: SYS-API-APPLICATION-SERVICES
+    name: API application services and use cases
+    level: component
+    parent: SYS-API-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    unitPath:
+      - SYS-DVT
+      - SYS-API
+      - SYS-API-ROOT
+      - SYS-API-APPLICATION-SERVICES
+    unitReferences:
+      - id: SYS-DVT
+        name: DVT system
+        level: system
+        status: review
+        governance:
+          - docs/architecture/reference-architecture.md
+          - docs/concepts/domain-language.md
+          - docs/planning/status/governance-document-rule-inventory.md
+      - id: SYS-API
+        name: API workspace
+        level: workspace
+        status: coverage-required
+        governance:
+          - docs/planning/status/system-operations-inventory-20260501.md
+      - id: SYS-API-ROOT
+        name: API root module
+        level: module
+        status: coverage-required
+        governance:
+          - docs/planning/status/system-operations-inventory-20260501.md
+      - id: SYS-API-APPLICATION-SERVICES
+        name: API application services and use cases
+        level: component
+        status: coverage-required
+        governance:
+          - docs/architecture/command-query-rail-governance.md
+          - docs/planning/status/system-operations-inventory-20260501.md
+    status: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    childrenRequired: false
+    fileCount: 34
+    dddOwner: AS
+    cqRails: API application commands and queries
+    owns:
+      - apps/api/src/application/services/**
+    excludes:
+      - apps/api/src/application/services/StoredExecutablePlanResolver.ts
+      - apps/api/src/application/services/StoredPlanExecutabilityValidator.ts
+      - apps/api/src/application/services/WorkflowEngineFactory.ts
+    governance:
+      - docs/architecture/command-query-rail-governance.md
+      - docs/planning/status/system-operations-inventory-20260501.md
+    fowlerSignals:
+      - coverage refinement
+  - id: SYS-API-BOOTSTRAP
+    name: API bootstrap and composition entry
+    level: component
+    parent: SYS-API-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    unitPath:
+      - SYS-DVT
+      - SYS-API
+      - SYS-API-ROOT
+      - SYS-API-BOOTSTRAP
+    unitReferences:
+      - id: SYS-DVT
+        name: DVT system
+        level: system
+        status: review
+        governance:
+          - docs/architecture/reference-architecture.md
+          - docs/concepts/domain-language.md
+          - docs/planning/status/governance-document-rule-inventory.md
+      - id: SYS-API
+        name: API workspace
+        level: workspace
+        status: coverage-required
+        governance:
+          - docs/planning/status/system-operations-inventory-20260501.md
+      - id: SYS-API-ROOT
+        name: API root module
+        level: module
+        status: coverage-required
+        governance:
+          - docs/planning/status/system-operations-inventory-20260501.md
+      - id: SYS-API-BOOTSTRAP
+        name: API bootstrap and composition entry
         level: component
         status: coverage-required
         governance:
@@ -97,31 +222,542 @@ components:
     evidenceState: coverage-required
     isDrift: false
     isLegacy: false
-    childrenRequired: true
-    fileCount: 362
-    dddOwner: AS
-    cqRails: API commands and queries
+    childrenRequired: false
+    fileCount: 2
+    dddOwner: ENTRY
+    cqRails: API process bootstrap commands
     owns:
-      - apps/api/**
+      - apps/api/src/app.ts
+      - apps/api/src/server.ts
+    excludes: []
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+    fowlerSignals:
+      - coverage refinement
+  - id: SYS-API-DOCS
+    name: API local documentation
+    level: component
+    parent: SYS-API-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    unitPath:
+      - SYS-DVT
+      - SYS-API
+      - SYS-API-ROOT
+      - SYS-API-DOCS
+    unitReferences:
+      - id: SYS-DVT
+        name: DVT system
+        level: system
+        status: review
+        governance:
+          - docs/architecture/reference-architecture.md
+          - docs/concepts/domain-language.md
+          - docs/planning/status/governance-document-rule-inventory.md
+      - id: SYS-API
+        name: API workspace
+        level: workspace
+        status: coverage-required
+        governance:
+          - docs/planning/status/system-operations-inventory-20260501.md
+      - id: SYS-API-ROOT
+        name: API root module
+        level: module
+        status: coverage-required
+        governance:
+          - docs/planning/status/system-operations-inventory-20260501.md
+      - id: SYS-API-DOCS
+        name: API local documentation
+        level: component
+        status: coverage-required
+        governance:
+          - docs/DOCS_README.md
+          - docs/planning/status/system-operations-inventory-20260501.md
+    status: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    childrenRequired: false
+    fileCount: 14
+    dddOwner: INFRA
+    cqRails: none - API local documentation
+    owns:
+      - apps/api/docs/**
+    excludes: []
+    governance:
+      - docs/DOCS_README.md
+      - docs/planning/status/system-operations-inventory-20260501.md
+    fowlerSignals:
+      - coverage refinement
+  - id: SYS-API-DOMAIN-AUTH
+    name: API domain auth model
+    level: component
+    parent: SYS-API-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    unitPath:
+      - SYS-DVT
+      - SYS-API
+      - SYS-API-ROOT
+      - SYS-API-DOMAIN-AUTH
+    unitReferences:
+      - id: SYS-DVT
+        name: DVT system
+        level: system
+        status: review
+        governance:
+          - docs/architecture/reference-architecture.md
+          - docs/concepts/domain-language.md
+          - docs/planning/status/governance-document-rule-inventory.md
+      - id: SYS-API
+        name: API workspace
+        level: workspace
+        status: coverage-required
+        governance:
+          - docs/planning/status/system-operations-inventory-20260501.md
+      - id: SYS-API-ROOT
+        name: API root module
+        level: module
+        status: coverage-required
+        governance:
+          - docs/planning/status/system-operations-inventory-20260501.md
+      - id: SYS-API-DOMAIN-AUTH
+        name: API domain auth model
+        level: component
+        status: coverage-required
+        governance:
+          - docs/architecture/reference-architecture.md
+          - docs/planning/status/system-operations-inventory-20260501.md
+    status: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    childrenRequired: false
+    fileCount: 1
+    dddOwner: DS
+    cqRails: API authorization policy model
+    owns:
+      - apps/api/src/domain/**
+    excludes: []
+    governance:
+      - docs/architecture/reference-architecture.md
+      - docs/planning/status/system-operations-inventory-20260501.md
+    fowlerSignals:
+      - coverage refinement
+  - id: SYS-API-HTTP-ENTRYPOINT-TESTS
+    name: API HTTP entrypoint tests
+    level: component
+    parent: SYS-API-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    unitPath:
+      - SYS-DVT
+      - SYS-API
+      - SYS-API-ROOT
+      - SYS-API-HTTP-ENTRYPOINT-TESTS
+    unitReferences:
+      - id: SYS-DVT
+        name: DVT system
+        level: system
+        status: review
+        governance:
+          - docs/architecture/reference-architecture.md
+          - docs/concepts/domain-language.md
+          - docs/planning/status/governance-document-rule-inventory.md
+      - id: SYS-API
+        name: API workspace
+        level: workspace
+        status: coverage-required
+        governance:
+          - docs/planning/status/system-operations-inventory-20260501.md
+      - id: SYS-API-ROOT
+        name: API root module
+        level: module
+        status: coverage-required
+        governance:
+          - docs/planning/status/system-operations-inventory-20260501.md
+      - id: SYS-API-HTTP-ENTRYPOINT-TESTS
+        name: API HTTP entrypoint tests
+        level: component
+        status: coverage-required
+        governance:
+          - docs/guides/testing-and-ci-capabilities.md
+          - docs/architecture/command-query-rail-governance.md
+    status: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    childrenRequired: false
+    fileCount: 50
+    dddOwner: INFRA
+    cqRails: API HTTP command/query route validation
+    owns:
+      - apps/api/test/entrypoints/http/**
     excludes:
-      - apps/api/src/application/errors/ManifestArtifactResolutionError.ts
-      - apps/api/src/application/ports/storedPlan.ts
-      - apps/api/src/application/services/StoredExecutablePlanResolver.ts
-      - apps/api/src/application/services/StoredPlanExecutabilityValidator.ts
-      - apps/api/src/application/services/WorkflowEngineFactory.ts
+      - apps/api/test/entrypoints/http/planRoutePlanSourcePolicy.test.ts
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+      - docs/architecture/command-query-rail-governance.md
+    fowlerSignals:
+      - coverage refinement
+  - id: SYS-API-HTTP-ENTRYPOINTS
+    name: API HTTP entrypoints and route mappers
+    level: component
+    parent: SYS-API-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    unitPath:
+      - SYS-DVT
+      - SYS-API
+      - SYS-API-ROOT
+      - SYS-API-HTTP-ENTRYPOINTS
+    unitReferences:
+      - id: SYS-DVT
+        name: DVT system
+        level: system
+        status: review
+        governance:
+          - docs/architecture/reference-architecture.md
+          - docs/concepts/domain-language.md
+          - docs/planning/status/governance-document-rule-inventory.md
+      - id: SYS-API
+        name: API workspace
+        level: workspace
+        status: coverage-required
+        governance:
+          - docs/planning/status/system-operations-inventory-20260501.md
+      - id: SYS-API-ROOT
+        name: API root module
+        level: module
+        status: coverage-required
+        governance:
+          - docs/planning/status/system-operations-inventory-20260501.md
+      - id: SYS-API-HTTP-ENTRYPOINTS
+        name: API HTTP entrypoints and route mappers
+        level: component
+        status: coverage-required
+        governance:
+          - docs/architecture/command-query-rail-governance.md
+          - docs/planning/status/system-operations-inventory-20260501.md
+    status: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    childrenRequired: false
+    fileCount: 75
+    dddOwner: ENTRY
+    cqRails: API HTTP command/query route rails
+    owns:
+      - apps/api/src/entrypoints/**
+    excludes:
       - apps/api/src/entrypoints/http/planRefHttpMapper.ts
       - apps/api/src/entrypoints/http/planRoutePlanRefParser.ts
+    governance:
+      - docs/architecture/command-query-rail-governance.md
+      - docs/planning/status/system-operations-inventory-20260501.md
+    fowlerSignals:
+      - coverage refinement
+  - id: SYS-API-INFRASTRUCTURE
+    name: API infrastructure adapters
+    level: component
+    parent: SYS-API-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    unitPath:
+      - SYS-DVT
+      - SYS-API
+      - SYS-API-ROOT
+      - SYS-API-INFRASTRUCTURE
+    unitReferences:
+      - id: SYS-DVT
+        name: DVT system
+        level: system
+        status: review
+        governance:
+          - docs/architecture/reference-architecture.md
+          - docs/concepts/domain-language.md
+          - docs/planning/status/governance-document-rule-inventory.md
+      - id: SYS-API
+        name: API workspace
+        level: workspace
+        status: coverage-required
+        governance:
+          - docs/planning/status/system-operations-inventory-20260501.md
+      - id: SYS-API-ROOT
+        name: API root module
+        level: module
+        status: coverage-required
+        governance:
+          - docs/planning/status/system-operations-inventory-20260501.md
+      - id: SYS-API-INFRASTRUCTURE
+        name: API infrastructure adapters
+        level: component
+        status: coverage-required
+        governance:
+          - docs/architecture/reference-architecture.md
+          - docs/planning/status/system-operations-inventory-20260501.md
+    status: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    childrenRequired: false
+    fileCount: 27
+    dddOwner: ADP
+    cqRails: API adapter-backed command/query support
+    owns:
+      - apps/api/src/db/**
+      - apps/api/src/infrastructure/**
+      - apps/api/src/plugins/**
+    excludes:
       - apps/api/src/infrastructure/planner/ManifestArtifactResolver.ts
       - apps/api/src/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.ts
       - apps/api/src/infrastructure/startRun/ArtifactStoreDbtProjectBundleBindingPolicy.ts
+    governance:
+      - docs/architecture/reference-architecture.md
+      - docs/planning/status/system-operations-inventory-20260501.md
+    fowlerSignals:
+      - coverage refinement
+  - id: SYS-API-OPS-ROUTES
+    name: API operational health routes
+    level: component
+    parent: SYS-API-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    unitPath:
+      - SYS-DVT
+      - SYS-API
+      - SYS-API-ROOT
+      - SYS-API-OPS-ROUTES
+    unitReferences:
+      - id: SYS-DVT
+        name: DVT system
+        level: system
+        status: review
+        governance:
+          - docs/architecture/reference-architecture.md
+          - docs/concepts/domain-language.md
+          - docs/planning/status/governance-document-rule-inventory.md
+      - id: SYS-API
+        name: API workspace
+        level: workspace
+        status: coverage-required
+        governance:
+          - docs/planning/status/system-operations-inventory-20260501.md
+      - id: SYS-API-ROOT
+        name: API root module
+        level: module
+        status: coverage-required
+        governance:
+          - docs/planning/status/system-operations-inventory-20260501.md
+      - id: SYS-API-OPS-ROUTES
+        name: API operational health routes
+        level: component
+        status: coverage-required
+        governance:
+          - docs/runbooks/api-runtime-sla-canonical-20260404.md
+          - docs/planning/status/system-operations-inventory-20260501.md
+    status: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    childrenRequired: false
+    fileCount: 11
+    dddOwner: ENTRY
+    cqRails: API operational readiness queries
+    owns:
+      - apps/api/src/routes/**
+    excludes: []
+    governance:
+      - docs/runbooks/api-runtime-sla-canonical-20260404.md
+      - docs/planning/status/system-operations-inventory-20260501.md
+    fowlerSignals:
+      - coverage refinement
+  - id: SYS-API-REPO-CONFIG
+    name: API repository configuration and app metadata
+    level: component
+    parent: SYS-API-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    unitPath:
+      - SYS-DVT
+      - SYS-API
+      - SYS-API-ROOT
+      - SYS-API-REPO-CONFIG
+    unitReferences:
+      - id: SYS-DVT
+        name: DVT system
+        level: system
+        status: review
+        governance:
+          - docs/architecture/reference-architecture.md
+          - docs/concepts/domain-language.md
+          - docs/planning/status/governance-document-rule-inventory.md
+      - id: SYS-API
+        name: API workspace
+        level: workspace
+        status: coverage-required
+        governance:
+          - docs/planning/status/system-operations-inventory-20260501.md
+      - id: SYS-API-ROOT
+        name: API root module
+        level: module
+        status: coverage-required
+        governance:
+          - docs/planning/status/system-operations-inventory-20260501.md
+      - id: SYS-API-REPO-CONFIG
+        name: API repository configuration and app metadata
+        level: component
+        status: coverage-required
+        governance:
+          - docs/planning/status/system-operations-inventory-20260501.md
+          - docs/guides/testing-and-ci-capabilities.md
+    status: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    childrenRequired: false
+    fileCount: 11
+    dddOwner: INFRA
+    cqRails: none - API app configuration
+    owns:
+      - apps/api/*
+    excludes: []
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+      - docs/guides/testing-and-ci-capabilities.md
+    fowlerSignals:
+      - coverage refinement
+  - id: SYS-API-RUNTIME-COMPOSITION
+    name: API runtime composition modules
+    level: component
+    parent: SYS-API-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    unitPath:
+      - SYS-DVT
+      - SYS-API
+      - SYS-API-ROOT
+      - SYS-API-RUNTIME-COMPOSITION
+    unitReferences:
+      - id: SYS-DVT
+        name: DVT system
+        level: system
+        status: review
+        governance:
+          - docs/architecture/reference-architecture.md
+          - docs/concepts/domain-language.md
+          - docs/planning/status/governance-document-rule-inventory.md
+      - id: SYS-API
+        name: API workspace
+        level: workspace
+        status: coverage-required
+        governance:
+          - docs/planning/status/system-operations-inventory-20260501.md
+      - id: SYS-API-ROOT
+        name: API root module
+        level: module
+        status: coverage-required
+        governance:
+          - docs/planning/status/system-operations-inventory-20260501.md
+      - id: SYS-API-RUNTIME-COMPOSITION
+        name: API runtime composition modules
+        level: component
+        status: coverage-required
+        governance:
+          - docs/planning/status/system-operations-inventory-20260501.md
+    status: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    childrenRequired: false
+    fileCount: 26
+    dddOwner: AS
+    cqRails: API runtime composition commands and queries
+    owns:
+      - apps/api/src/modules/**
+      - apps/api/src/runtime/**
+    excludes: []
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+    fowlerSignals:
+      - coverage refinement
+  - id: SYS-API-TESTS
+    name: API app, integration, module, infrastructure, and fixture tests
+    level: component
+    parent: SYS-API-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    unitPath:
+      - SYS-DVT
+      - SYS-API
+      - SYS-API-ROOT
+      - SYS-API-TESTS
+    unitReferences:
+      - id: SYS-DVT
+        name: DVT system
+        level: system
+        status: review
+        governance:
+          - docs/architecture/reference-architecture.md
+          - docs/concepts/domain-language.md
+          - docs/planning/status/governance-document-rule-inventory.md
+      - id: SYS-API
+        name: API workspace
+        level: workspace
+        status: coverage-required
+        governance:
+          - docs/planning/status/system-operations-inventory-20260501.md
+      - id: SYS-API-ROOT
+        name: API root module
+        level: module
+        status: coverage-required
+        governance:
+          - docs/planning/status/system-operations-inventory-20260501.md
+      - id: SYS-API-TESTS
+        name: API app, integration, module, infrastructure, and fixture tests
+        level: component
+        status: coverage-required
+        governance:
+          - docs/guides/testing-and-ci-capabilities.md
+          - docs/planning/status/system-operations-inventory-20260501.md
+    status: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    childrenRequired: false
+    fileCount: 99
+    dddOwner: INFRA
+    cqRails: API validation suites
+    owns:
+      - apps/api/test/**
+    excludes:
       - apps/api/test/application/services/StoredExecutablePlanResolver.test.ts
       - apps/api/test/application/services/StoredPlanExecutabilityValidator.test.ts
       - apps/api/test/application/services/WorkflowEngineFactory.test.ts
       - apps/api/test/application/services/storedPlanExecutabilityValidator/**
-      - apps/api/test/entrypoints/http/planRoutePlanSourcePolicy.test.ts
+      - apps/api/test/entrypoints/http/**
       - apps/api/test/infrastructure/planner/ManifestArtifactResolver.test.ts
       - apps/api/test/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.test.ts
     governance:
+      - docs/guides/testing-and-ci-capabilities.md
       - docs/planning/status/system-operations-inventory-20260501.md
     fowlerSignals:
       - coverage refinement

@@ -31,6 +31,7 @@
     "@dvt/planner": "workspace:*",
     "@fastify/cors": "^11.2.0",
     "@fastify/helmet": "^12.0.0",
+    "@fastify/rate-limit": "^10.3.0",
     "@fastify/sensible": "^6.0.0",
     "fastify": "^5.0.0",
     "jose": "^6.2.0",

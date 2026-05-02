@@ -23,21 +23,21 @@ Machine-readable source:
 
 ## Totals
 
-- Tasks: 45
+- Tasks: 43
 - P0 tasks: 4
-- P1 tasks: 18
+- P1 tasks: 16
 - P2 tasks: 3
 - P3 tasks: 20
 - Drift files represented: 44
-- Components requiring subdivision: 19
+- Components requiring subdivision: 18
 
 ## By Type
 
 <!-- prettier-ignore-start -->
 | Type | Count |
 | --- | ---: |
-| `component-subdivision` | 19 |
-| `cq-rail-gap` | 10 |
+| `component-subdivision` | 18 |
+| `cq-rail-gap` | 9 |
 | `doc-alignment` | 12 |
 | `drift-removal` | 4 |
 <!-- prettier-ignore-end -->
@@ -48,7 +48,7 @@ Machine-readable source:
 | Priority | Count |
 | --- | ---: |
 | `P0` | 4 |
-| `P1` | 18 |
+| `P1` | 16 |
 | `P2` | 3 |
 | `P3` | 20 |
 <!-- prettier-ignore-end -->
@@ -63,7 +63,6 @@ Machine-readable source:
 | `GRQ-DRIFT_REMOVAL-SYS-PLANSTORE-ENGINE-FETCH` | `P0` | `drift-removal` | `SYS-PLANSTORE-ENGINE-FETCH` | 5 | 0 | Files are marked drift in the governed file index. |
 | `GRQ-DRIFT_REMOVAL-SYS-PLANSTORE-CONTRACTS` | `P0` | `drift-removal` | `SYS-PLANSTORE-CONTRACTS` | 3 | 0 | Files are marked drift in the governed file index. |
 | `GRQ-CQ_RAIL_GAP-SYS-ADAPTERS-ROOT` | `P1` | `cq-rail-gap` | `SYS-ADAPTERS-ROOT` | 0 | 0 | Component has generic command/query language instead of specific rail rows. |
-| `GRQ-CQ_RAIL_GAP-SYS-API-ROOT` | `P1` | `cq-rail-gap` | `SYS-API-ROOT` | 0 | 0 | Component has generic command/query language instead of specific rail rows. |
 | `GRQ-CQ_RAIL_GAP-SYS-CONTRACTS-ROOT` | `P1` | `cq-rail-gap` | `SYS-CONTRACTS-ROOT` | 0 | 0 | Component has generic command/query language instead of specific rail rows. |
 | `GRQ-CQ_RAIL_GAP-SYS-OBSERVABILITY-ROOT` | `P1` | `cq-rail-gap` | `SYS-OBSERVABILITY-ROOT` | 0 | 0 | Component has generic command/query language instead of specific rail rows. |
 | `GRQ-CQ_RAIL_GAP-SYS-PLANNER-ROOT` | `P1` | `cq-rail-gap` | `SYS-PLANNER-ROOT` | 0 | 0 | Component has generic command/query language instead of specific rail rows. |
@@ -72,7 +71,6 @@ Machine-readable source:
 | `GRQ-CQ_RAIL_GAP-SYS-TRACEABILITY-ROOT` | `P1` | `cq-rail-gap` | `SYS-TRACEABILITY-ROOT` | 0 | 0 | Component has generic command/query language instead of specific rail rows. |
 | `GRQ-CQ_RAIL_GAP-SYS-WEB-ROOT` | `P1` | `cq-rail-gap` | `SYS-WEB-ROOT` | 0 | 0 | Component has generic command/query language instead of specific rail rows. |
 | `GRQ-CQ_RAIL_GAP-SYS-WORKERS-ROOT` | `P1` | `cq-rail-gap` | `SYS-WORKERS-ROOT` | 0 | 0 | Component has generic command/query language instead of specific rail rows. |
-| `GRQ-COMPONENT_SUBDIVISION-SYS-API-ROOT` | `P1` | `component-subdivision` | `SYS-API-ROOT` | 0 | 0 | Component is known but still too broad for source-level governance. |
 | `GRQ-COMPONENT_SUBDIVISION-SYS-DOCS-GOVERNANCE-ROOT` | `P1` | `component-subdivision` | `SYS-DOCS-GOVERNANCE-ROOT` | 0 | 0 | Component is known but still too broad for source-level governance. |
 | `GRQ-COMPONENT_SUBDIVISION-SYS-PLANSTORE-API-COMPOSITION` | `P1` | `component-subdivision` | `SYS-PLANSTORE-API-COMPOSITION` | 0 | 0 | Component is known but still too broad for source-level governance. |
 | `GRQ-COMPONENT_SUBDIVISION-SYS-PLANSTORE-CONTRACTS` | `P1` | `component-subdivision` | `SYS-PLANSTORE-CONTRACTS` | 0 | 0 | Component is known but still too broad for source-level governance. |
