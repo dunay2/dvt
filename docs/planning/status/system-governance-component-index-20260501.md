@@ -60,7 +60,7 @@ Components with `childrenRequired: true` and more than 100 files:
 | `SYS-API-ROOT` | 362 | `coverage-required` |
 | `SYS-RUNTIME-ROOT` | 286 | `coverage-required` |
 | `SYS-ADAPTERS-ROOT` | 196 | `coverage-required` |
-| `SYS-CI-GOVERNANCE-ROOT` | 169 | `coverage-required` |
+| `SYS-CI-GOVERNANCE-ROOT` | 171 | `coverage-required` |
 | `SYS-CONTRACTS-ROOT` | 127 | `coverage-required` |
 | `SYS-REPO-METADATA-ROOT` | 109 | `canonical` |
 | `SYS-WORKERS-ROOT` | 103 | `coverage-required` |
@@ -73,7 +73,7 @@ Components with `childrenRequired: true` and more than 100 files:
 | --- | --- | ---: | ---: | --- | --- |
 | `SYS-ADAPTERS-ROOT` | `component` | `coverage-required` | 196 | `ADP` | `SYS-ADAPTERS` |
 | `SYS-API-ROOT` | `component` | `coverage-required` | 362 | `AS` | `SYS-API` |
-| `SYS-CI-GOVERNANCE-ROOT` | `component` | `coverage-required` | 169 | `INFRA` | `SYS-CI-GOVERNANCE` |
+| `SYS-CI-GOVERNANCE-ROOT` | `component` | `coverage-required` | 171 | `INFRA` | `SYS-CI-GOVERNANCE` |
 | `SYS-CONTRACTS-ROOT` | `component` | `coverage-required` | 127 | `PORT` | `SYS-CONTRACTS` |
 | `SYS-DOCS-GOVERNANCE-ROOT` | `component` | `coverage-required` | 1643 | `INFRA` | `SYS-DOCS-GOVERNANCE` |
 | `SYS-OBSERVABILITY-ROOT` | `component` | `coverage-required` | 15 | `PORT` | `SYS-OBSERVABILITY` |

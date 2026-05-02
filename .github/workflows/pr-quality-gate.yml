@@ -156,6 +156,13 @@ jobs:
           == 'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
         run: pnpm docs:governance:file-fingerprint-impact:check
 
+      - name: Validate governed changed files
+        if: github.event_name == 'pull_request'
+        run: pnpm docs:governance:changed-files:check
+        env:
+          GIT_BASE: origin/${{ github.base_ref }}
+          GIT_HEAD: ${{ github.sha }}
+
       - name: Check PR title follows Conventional Commits
         if: github.event_name == 'pull_request'
         uses: amannn/action-semantic-pull-request@48f256284bd46cdaab1048c3721360e808335d50 # v6
