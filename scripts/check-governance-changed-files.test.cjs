@@ -176,6 +176,41 @@ test('validateChangedFiles rejects modified files when the accepted fingerprint 
   assert.match(result.errors.join('\n'), /modified but its accepted fingerprint did not change/);
 });
 
+test('validateChangedFiles accepts normalized governance generated artifacts when their own fingerprint is stable', () => {
+  const generatedPaths = [
+    'docs/planning/status/system-governance-file-fingerprint-baseline.yaml',
+    'docs/planning/status/system-governance-file-index.files.yaml',
+  ];
+  const generatedIndexEntries = generatedPaths.map((pathName, index) => ({
+    path: pathName,
+    fileId: `F-GENERATED-${index}`,
+    stateFingerprint: 'stable-generated-fingerprint',
+    owningUnit: 'SYS-DOCS-GOVERNANCE-ROOT',
+    rootUnit: 'SYS-DVT',
+    domainUnit: 'SYS-DVT',
+    componentUnit: 'SYS-DOCS-GOVERNANCE-ROOT',
+    unitStatus: 'canonical',
+    dddOwner: 'DOCS',
+    cqRails: 'DOCS',
+    isDrift: false,
+    isLegacy: false,
+  }));
+  const generatedBaselineEntries = generatedIndexEntries.map((entry) => ({
+    path: entry.path,
+    fileId: entry.fileId,
+    stateFingerprint: entry.stateFingerprint,
+  }));
+
+  const result = validateChangedFiles({
+    changes: generatedPaths.map((pathName) => ({ status: 'M', path: pathName })),
+    baseBaseline: { files: generatedBaselineEntries },
+    currentBaseline: { files: generatedBaselineEntries },
+    currentFileIndex: { files: generatedIndexEntries },
+  });
+
+  assert.deepEqual(result.errors, []);
+});
+
 test('validateChangedFiles rejects active legacy or drift files without prior cleanup', () => {
   const result = validateChangedFiles({
     changes: [{ status: 'M', path: 'apps/web/src/legacy.ts' }],

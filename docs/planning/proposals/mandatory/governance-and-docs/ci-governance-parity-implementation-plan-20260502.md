@@ -98,6 +98,7 @@ below.
 | `pnpm docs:governance:file-fingerprint-impact:check`   | Parity baseline                                                                              | Asserted by `workflow-pattern-parity.test.mjs`.        |
 | `pnpm docs:feature-mechanization`                      | Parity baseline                                                                              | Asserted by `workflow-pattern-parity.test.mjs`.        |
 | `pnpm docs:feature-mechanization:implementation`       | Parity baseline                                                                              | Asserted by `workflow-pattern-parity.test.mjs`.        |
+| `pnpm arch:deps`                                       | Parity baseline                                                                              | Asserted by `workflow-pattern-parity.test.mjs`.        |
 | `pnpm docs:arc:evidence:check -- --changed-only`       | `ARC docs / evidence validate` (`tools/ci/doc-check.mjs`) in `pr-quality-gate.yml`           | Remote uses ARC JSON instead of `--changed-only`.      |
 | `pnpm qa:artifact:check`                               | Parity baseline                                                                              | Asserted by `workflow-pattern-parity.test.mjs`.        |
 | `pnpm lint:md:changed`                                 | `Lint changed Markdown` (`pnpm lint:md:changed`) in `ci.yml`                                 | Same script, scoped to PR diff.                        |
@@ -241,6 +242,8 @@ allowedImplementationSurfaces:
   - docs/guides/testing-and-ci-capabilities.md
   - docs/planning/proposals/mandatory/governance-and-docs/ci-governance-parity-implementation-plan-20260502.md
   - docs/planning/status/**
+  - scripts/check-governance-changed-files.cjs
+  - scripts/check-governance-changed-files.test.cjs
   - tools/ci/workflow-pattern-parity.test.mjs
 forbiddenImplementationSurfaces:
   - apps/**
@@ -338,6 +341,15 @@ redGreenCycles:
       - docs/.manifest.json
       - docs/planning/status/**
     greenTest: pnpm docs:feature-mechanization:implementation
+  - id: changed-files-normalized-generated-artifacts
+    redTest: node --test scripts/check-governance-changed-files.test.cjs
+    expectedFailure: Governance generated index artifacts that only update normalized hash fields are rejected as modified files without changed self-fingerprints.
+    patchSurfaces:
+      - scripts/check-governance-changed-files.cjs
+      - scripts/check-governance-changed-files.test.cjs
+      - docs/planning/proposals/mandatory/governance-and-docs/ci-governance-parity-implementation-plan-20260502.md
+      - docs/planning/status/**
+    greenTest: node --test scripts/check-governance-changed-files.test.cjs
 symbols:
   - name: PR_QUALITY_PREPUSH_GOVERNANCE_COMMANDS
     path: tools/ci/workflow-pattern-parity.test.mjs
@@ -351,6 +363,18 @@ symbols:
     cypressCoverage: N/A - repository CI governance workflow only
     unitTests:
       - tools/ci/workflow-pattern-parity.test.mjs
+  - name: selfNormalizedGeneratedPaths
+    path: scripts/check-governance-changed-files.cjs
+    dddOwner: Repository CI governance baseline
+    cqRails:
+      - CheckPrQualityGovernanceParity
+    fowlerSignals:
+      - False-positive gate drift
+      - Generated artifact self-reference
+    architectureGuard: scripts/check-governance-changed-files.test.cjs
+    cypressCoverage: N/A - repository CI governance workflow only
+    unitTests:
+      - scripts/check-governance-changed-files.test.cjs
 ```
 
 ## Validation Plan
@@ -360,6 +384,7 @@ rules:
 
 ```powershell
 node --test tools/ci/workflow-pattern-parity.test.mjs
+node --test scripts/check-governance-changed-files.test.cjs
 pnpm test:ci-tools
 pnpm docs:sync
 pnpm docs:gov:manifest

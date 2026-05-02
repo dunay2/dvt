@@ -14,6 +14,10 @@ const fileIndexPath = path.join(statusDir, 'system-governance-file-index.files.y
 const baselinePath = path.join(statusDir, 'system-governance-file-fingerprint-baseline.yaml');
 const baselineRepoPath = 'docs/planning/status/system-governance-file-fingerprint-baseline.yaml';
 const gitOutputMaxBuffer = 16 * 1024 * 1024;
+const selfNormalizedGeneratedPaths = new Set([
+  baselineRepoPath,
+  'docs/planning/status/system-governance-file-index.files.yaml',
+]);
 
 function toPosix(filePath) {
   return filePath.replace(/\\/g, '/');
@@ -208,7 +212,10 @@ function validateModified(change, context, errors) {
     return;
   }
 
-  if (current?.baselineEntry?.stateFingerprint === baseEntry.stateFingerprint) {
+  if (
+    current?.baselineEntry?.stateFingerprint === baseEntry.stateFingerprint &&
+    !selfNormalizedGeneratedPaths.has(change.path)
+  ) {
     errors.push(`${change.path} is modified but its accepted fingerprint did not change.`);
   }
 }
