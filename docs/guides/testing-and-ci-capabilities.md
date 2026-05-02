@@ -344,8 +344,9 @@ Current workflow consumers:
   imports, engine-to-adapter imports, adapter-owned canonical/versioned
   contract definitions, adapter contract internals, web-to-backend-adapter
   imports, presentation-to-infrastructure imports, domain-to-framework/runtime
-  imports, DVT package cycles, cross-package deep imports outside public API
-  surfaces, and runtime package imports from repository scripts/tools.
+  imports, DVT package cycles, app/runtime-source cross-package deep imports
+  outside public API surfaces, and runtime package imports from repository
+  scripts/tools.
 - `Test Suite` now uses the same Turbo workspace wrapper for non-root PR
   affected dependency builds. Root-config PRs still use `pnpm build` to exercise
   the full root graph.

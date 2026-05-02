@@ -71,8 +71,8 @@ The first global rule set is intentionally small and enforceable:
 7. Domain folders cannot import React, HTTP, filesystem, PostgreSQL, or
    Temporal runtime dependencies.
 8. Cycles between `packages/@dvt/*` source files are forbidden.
-9. Cross-package deep imports are forbidden except package roots and explicit
-   public API subpaths.
+9. Cross-package deep imports from app/runtime package source are forbidden
+   except package roots and explicit public API subpaths.
 10. Runtime package source cannot import repository scripts or tools.
 
 ## DDD Objects
@@ -111,6 +111,8 @@ Out of scope:
 - This feature does not remove legitimate adapter-to-engine port dependencies.
 - This feature does not add Cypress coverage because no user-visible behavior
   changes.
+- This feature does not migrate historical package tests that import another
+  package's internals; this cut enforces app and runtime source boundaries.
 
 ## Feature Mechanization Manifest
 

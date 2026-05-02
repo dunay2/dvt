@@ -13,6 +13,7 @@ const REQUIRED_ARCH_DEPENDENCY_RULES = [
   'no-contracts-to-dvt-runtime',
   'no-planner-to-engine-or-adapters',
   'no-engine-to-concrete-adapters',
+  'no-adapters-to-contract-internals',
   'no-web-to-backend-adapters',
   'no-presentation-to-infrastructure',
   'no-domain-to-framework-or-infrastructure',
@@ -50,6 +51,14 @@ const DEPENDENCY_RULE_FIXTURES = [
     },
   },
   {
+    ruleName: 'no-adapters-to-contract-internals',
+    files: {
+      'packages/@dvt/adapter-postgres/src/index.ts':
+        "import internalContract from '../../contracts/src/internal.js'; export default internalContract;\n",
+      'packages/@dvt/contracts/src/internal.ts': 'export default 1;\n',
+    },
+  },
+  {
     ruleName: 'no-web-to-backend-adapters',
     files: {
       'apps/web/src/index.ts':
@@ -84,6 +93,14 @@ const DEPENDENCY_RULE_FIXTURES = [
     files: {
       'packages/@dvt/planner/src/index.ts':
         "import privateContract from '@dvt/contracts/src/contracts/private.js'; export default privateContract;\n",
+      'packages/@dvt/contracts/src/contracts/private.ts': 'export default 1;\n',
+    },
+  },
+  {
+    ruleName: 'no-cross-package-deep-imports',
+    files: {
+      'packages/@dvt/planner/src/index.ts':
+        "import privateContract from '../../contracts/src/contracts/private.js'; export default privateContract;\n",
       'packages/@dvt/contracts/src/contracts/private.ts': 'export default 1;\n',
     },
   },
