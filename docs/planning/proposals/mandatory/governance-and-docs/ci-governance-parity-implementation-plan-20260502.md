@@ -98,6 +98,7 @@ below.
 | `pnpm docs:governance:file-fingerprint-impact:check`   | Parity baseline                                                                              | Asserted by `workflow-pattern-parity.test.mjs`.        |
 | `pnpm docs:feature-mechanization`                      | Parity baseline                                                                              | Asserted by `workflow-pattern-parity.test.mjs`.        |
 | `pnpm docs:feature-mechanization:implementation`       | Parity baseline                                                                              | Asserted by `workflow-pattern-parity.test.mjs`.        |
+| `pnpm arch:deps`                                       | Parity baseline                                                                              | Asserted by `workflow-pattern-parity.test.mjs`.        |
 | `pnpm docs:arc:evidence:check -- --changed-only`       | `ARC docs / evidence validate` (`tools/ci/doc-check.mjs`) in `pr-quality-gate.yml`           | Remote uses ARC JSON instead of `--changed-only`.      |
 | `pnpm qa:artifact:check`                               | Parity baseline                                                                              | Asserted by `workflow-pattern-parity.test.mjs`.        |
 | `pnpm lint:md:changed`                                 | `Lint changed Markdown` (`pnpm lint:md:changed`) in `ci.yml`                                 | Same script, scoped to PR diff.                        |
