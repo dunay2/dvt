@@ -14,8 +14,10 @@ task_ids:
 ## Purpose
 
 Record the hard QA performed after `feat(web): Add first canvas authoring live
-proof (#1067)` and convert the findings into a closed fix plan. The review
-focuses on whether the merged change is product-proof, doc-aligned,
+proof (#1067)` and convert the findings into a closed fix plan. The original
+finding sections capture the pre-fix state observed during review; the final
+verdict section records the current accepted state after the corrective slice.
+The review focuses on whether the merged change is product-proof, doc-aligned,
 mechanically executable, and consistent with Fowler-style walking skeleton,
 DDD, SOLID, hexagonal boundaries, command-query rail governance, and local repo
 invariants.
@@ -59,10 +61,10 @@ Reviewed implementation surfaces:
 
 - `docs/planning/reviews/architecture-and-governance/20260501-tf-e2-m-c-fowler-hard-qa-review.md`
 
-## Executive Judgment
+## Original Executive Judgment Before Corrective Slice
 
-The change improves the architecture direction, but it is not yet at mature
-system closure.
+The reviewed change improved the architecture direction, but it was not yet at
+mature system closure before the corrective slice.
 
 Positive signals:
 
@@ -75,35 +77,35 @@ Positive signals:
 - Unit and architecture tests exist for the new proof model and drag-handle
   selector.
 
-Blocking signals:
+Blocking signals observed before correction:
 
-- The live Cypress proof can return green with zero tests passing and two tests
+- The live Cypress proof could return green with zero tests passing and two tests
   pending when live protected runtime env is absent.
-- The merged code has no first-authoring live-proof runner equivalent to
+- The merged code had no first-authoring live-proof runner equivalent to
   `scripts/run-selected-closure-live-proof.cjs`.
-- The canonical lane still says TF-E2-M-C is `in_progress`, `35%`, and that code
+- The canonical lane still said TF-E2-M-C was `in_progress`, `35%`, and that code
   implementation remains open.
-- Component and implementation docs claim target/proposed/draft state after
+- Component and implementation docs claimed target/proposed/draft state after
   implementation exists.
-- The proof model is not consumed by the live Cypress spec or route code despite
+- The proof model was not consumed by the live Cypress spec or route code despite
   docs claiming a shared semantic proof boundary.
-- Several negative scenarios promised by the component guide are not covered by
+- Several negative scenarios promised by the component guide were not covered by
   direct tests.
 
-The net result is a classic Fowler warning sign: a walking-skeleton claim exists
-in documentation, but the executable path can still be skipped. Mature systems
-do not let optional environment posture satisfy product proof.
+The net result was a classic Fowler warning sign: a walking-skeleton claim
+existed in documentation, but the executable path could still be skipped.
+Mature systems do not let optional environment posture satisfy product proof.
 
 ## Alignment
 
-- Doc vs code: drift exists in plan/component status, live workspace suffix,
+- Doc vs code: drift existed in plan/component status, live workspace suffix,
   lane state, and drag-handle selector docs.
-- Promise vs implementation: the branch promises a live protected proof, but
-  the executable Cypress path can skip every proof test.
-- Tests vs claims: unit tests and architecture tests pass, but they do not
+- Promise vs implementation: the branch promised a live protected proof, but
+  the executable Cypress path could skip every proof test.
+- Tests vs claims: unit tests and architecture tests passed, but they did not
   prove mandatory live-route execution.
-- Current truth vs planned truth: code is merged while canonical planning still
-  describes implementation as open.
+- Current truth vs planned truth: code was merged while canonical planning still
+  described implementation as open.
 - Documentation update status: new QA review exists; the corrective docs remain
   part of the fix plan.
 - Evidence and risk-doc status: no ARC trigger was introduced by this review
@@ -157,7 +159,7 @@ do not let optional environment posture satisfy product proof.
 
 ## Mermaid Diagram
 
-## Current-State Diagram
+## Original-State Diagram Before Corrective Slice
 
 ```mermaid
 flowchart LR
@@ -226,6 +228,10 @@ This is the main false-green finding.
 
 ## Findings
 
+The findings below are the original findings before the corrective slice. They
+are retained as review evidence; the current accepted state is recorded in the
+final verdict.
+
 ### F-01: False-green Cypress live proof
 
 Severity: P0.
@@ -243,9 +249,9 @@ Evidence:
 
 Impact:
 
-- The feature can be marked green without proving the product path.
-- The walking skeleton is optional instead of mandatory.
-- The completion gate currently verifies the existence of a spec, not that the
+- The feature could be marked green without proving the product path.
+- The walking skeleton was optional instead of mandatory.
+- The completion gate then verified the existence of a spec, not that the
   spec executed a live protected route.
 
 Required fix:
@@ -309,11 +315,11 @@ Severity: P1.
 
 Evidence:
 
-- The implementation plan frontmatter remains `status: Draft`.
-- The component guide frontmatter remains `status: Proposed`.
-- The component guide says it defines the target design, while the code is
+- The implementation plan frontmatter remained `status: Draft`.
+- The component guide frontmatter remained `status: Proposed`.
+- The component guide said it defined the target design, while the code was
   already merged.
-- The live workspace strategy says the suffix is deterministic
+- The live workspace strategy said the suffix was deterministic
   `tf-e2-m-c-first-authoring`, while the implementation appends a run-unique
   value through `firstAuthoringRunId`.
 
@@ -788,11 +794,20 @@ aligned through
 
 Validation evidence recorded during closure:
 
+- `pnpm docs:gov:manifest:check`
+- `pnpm docs:governance:document-unit-map:check`
+- `pnpm docs:governance:file-component-index:check`
+- `pnpm docs:governance:file-fingerprint-baseline:check`
 - `pnpm docs:feature-mechanization:tf-e2-m-c`
+- `pnpm docs:feature-mechanization:implementation`
+- `pnpm test:docs:feature-mechanization`
 - `pnpm --filter @dvt/web test -- canvasFirstAuthoringLiveProof.test.ts`
 - `pnpm --filter @dvt/web test -- canvasStartupAndDraftRecovery.architecture.test.ts`
+- `pnpm --filter @dvt/web test -- DbtNodeComponent.architecture.test.ts`
 - `pnpm --filter @dvt/web test -- canvasHostCycleState.test.ts canvasCreateCanvasDocumentCommand.test.ts`
 - `pnpm --filter @dvt/web test -- useCanvasController.core.test.tsx useCanvasController.persistence.test.tsx`
 - `pnpm --filter @dvt/web test -- useCanvasNodeChangeHandlers.test.tsx useCanvasViewportGraphModel.test.tsx CanvasViewport.test.tsx canvasInteractionStore.test.ts`
 - `pnpm --filter dvt-api test -- app.test.ts`
 - `pnpm --filter @dvt/web test:e2e:first-authoring:live`
+- `pnpm --filter @dvt/web typecheck`
+- `pnpm verify:prepush`

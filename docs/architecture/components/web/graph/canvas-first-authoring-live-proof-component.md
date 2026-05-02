@@ -1,8 +1,8 @@
 ---
 title: Canvas First Authoring Live Proof Component
-status: Proposed
+status: Accepted
 owner: Frontend / Architecture
-last_reviewed: 2026-05-01
+last_reviewed: 2026-05-02
 planning_type: architecture
 task_id: TF-E2-M-C
 ---
@@ -11,7 +11,7 @@ task_id: TF-E2-M-C
 
 ## Purpose
 
-This component defines the target design for `TF-E2-M-C`.
+This component defines the implemented design for `TF-E2-M-C`.
 
 It owns the semantic proof that Canvas can move from a clean protected draft
 read to the first typed canvas, first node, persisted drag position, and
@@ -60,12 +60,13 @@ not as implementation-time choices.
 | `dbt`            | `dbt:source`    | `dbt-source-1` | `Source 1`       | `apps/web/src/app/plugins/dbt/dbtContributions.ts` |
 
 `canvasAuthoringNodeCommand.ts` owns the id and label construction. This
-component guide fixes the expected first values so the implementation is
-mechanical and tests cannot pick a different node kind.
+component guide fixes the implemented first values so later changes cannot pick
+a different node kind without updating the rail and tests.
 
 ## Public API
 
-The implementation introduces one pure proof module.
+The implementation owns one pure proof module and Cypress-owned live proof
+helpers.
 
 | API                                                 | Owner                              | Responsibility                                                           |
 | --------------------------------------------------- | ---------------------------------- | ------------------------------------------------------------------------ |
@@ -215,7 +216,7 @@ sequenceDiagram
 
 ## Negative Coverage
 
-The implementation must prove these failures:
+The implementation proves these failures:
 
 - duplicate first-canvas creation is rejected when an authoritative document
   already exists;

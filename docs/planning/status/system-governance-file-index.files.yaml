@@ -36964,9 +36964,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-73DB7B50F4C0
     pathHash: 56bbf207710193aba776b39f5dadd88f26a4b5536b671e215b9d494c14e01502
-    contentHash: 213df9640b33ed77ffcd6cd6e7d682bcfc04bfc6bf1e02bf56de704fea7a5e8a
+    contentHash: 9534c6d10665390555549c1ef02457230315d7f92f5f4992220a138c73ccb32b
     governanceHash: d9f768b3da4be04e83890eae632052f05a0776f4990c39b7b2ab2c3b6cc14524
-    stateFingerprint: d9aa255ebe0af6520f2ed8777d050bf6aaf20ec7840c7a39b6ab5c074b512ee8
+    stateFingerprint: 6e999158cb6df1d6cb7298e1516cfa345b62949412bf3ed5aa1ac7b66bd96e54
     path: docs/architecture/components/web/graph/canvas-first-authoring-live-proof-component.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
@@ -58159,9 +58159,9 @@ files:
       - docs/planning/status/system-governance-document-unit-map-20260501.md
   - fileId: F-3AB6318982DD
     pathHash: 90fd2af85101ee9bf70ed12ec31bf79859e95b7ca6a2ef3211523428606c27eb
-    contentHash: e4ca2b7601a35e3e56ea2ac6ff3ffe6e685d69ae3eebdfe7ace7a0d23b0296c6
+    contentHash: 455260c6c987860fc81de5866ecffdbe6e4cf55c0dc0ca1c836983870fa85db0
     governanceHash: d9f768b3da4be04e83890eae632052f05a0776f4990c39b7b2ab2c3b6cc14524
-    stateFingerprint: d06aece6f7228f6a1c22c12c31b8e0de7476c496c8a4a28fe735a71047317190
+    stateFingerprint: 84c37addfb5a07211acbc23ec274845baee59c4e0d552bf485885ccd24a0198f
     path: docs/planning/closeouts/20260502-tf-e2-m-c-first-authoring-live-proof-closeout.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
@@ -60039,9 +60039,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-FA77E00DF09A
     pathHash: 803bc970219794af1c256aca0e00cea9733ea7a06047ace74b8fcb387f95cc82
-    contentHash: 1ebfc39f11bb6988f863d68dc1a34375cf55dcfa7cfc573675993d8feea63131
+    contentHash: d09d80eb63a870bf7a93976f3687db88fb13e795e5a0e20f8ea8cc41974ad482
     governanceHash: d9f768b3da4be04e83890eae632052f05a0776f4990c39b7b2ab2c3b6cc14524
-    stateFingerprint: cc5dce0513f109c9f9517228239f165b640a3bb71bb9d626de942a9296a6cefd
+    stateFingerprint: 40f337bb6cc6e789d81e98387befc847406a87ee85f88abf3f4dca0d57b500e6
     path: >-
       docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-m-c-first-canvas-first-node-live-proof-implementation-plan-20260501.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -63630,9 +63630,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-888C6174A984
     pathHash: 974868e0ffd18285694d5412430eab6eeae5c054b7111a7336e00d1688d0d6cc
-    contentHash: f588fcc5062f092b6a5766b9fbaf61b3d837d99439da2f8afbf63b0809a76ba7
+    contentHash: a9eac830d52d3463c93dd7a961a101033b879c0f35b369555cf70a72fd064df6
     governanceHash: d9f768b3da4be04e83890eae632052f05a0776f4990c39b7b2ab2c3b6cc14524
-    stateFingerprint: c578025de5603c63385a14cc9d89e00ee402b50abe8e306b24de83f6d5a13e8a
+    stateFingerprint: 9643209258a1b2ca20406a1274bfacaf3d73433e9aab2b92c80ba9355d38126f
     path: docs/planning/reviews/architecture-and-governance/20260501-tf-e2-m-c-fowler-hard-qa-review.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT

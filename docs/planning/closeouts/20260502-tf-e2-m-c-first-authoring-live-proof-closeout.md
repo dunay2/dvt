@@ -65,14 +65,27 @@ slice as implementation-open.
 
 ## Validation
 
+- `pnpm docs:sync`
+- `pnpm docs:workboard:generate`
+- `pnpm docs:status:generate`
+- `pnpm docs:gov:manifest`
+- `pnpm docs:gov:manifest:check`
+- `pnpm docs:governance:document-unit-map:check`
+- `pnpm docs:governance:file-component-index:check`
+- `pnpm docs:governance:file-fingerprint-baseline:check`
 - `pnpm docs:feature-mechanization:tf-e2-m-c`
+- `pnpm docs:feature-mechanization:implementation`
+- `pnpm test:docs:feature-mechanization`
 - `pnpm --filter @dvt/web test -- canvasFirstAuthoringLiveProof.test.ts`
 - `pnpm --filter @dvt/web test -- canvasStartupAndDraftRecovery.architecture.test.ts`
+- `pnpm --filter @dvt/web test -- DbtNodeComponent.architecture.test.ts`
 - `pnpm --filter @dvt/web test -- canvasHostCycleState.test.ts canvasCreateCanvasDocumentCommand.test.ts`
 - `pnpm --filter @dvt/web test -- useCanvasController.core.test.tsx useCanvasController.persistence.test.tsx`
 - `pnpm --filter @dvt/web test -- useCanvasNodeChangeHandlers.test.tsx useCanvasViewportGraphModel.test.tsx CanvasViewport.test.tsx canvasInteractionStore.test.ts`
 - `pnpm --filter dvt-api test -- app.test.ts`
 - `pnpm --filter @dvt/web test:e2e:first-authoring:live`
+- `pnpm --filter @dvt/web typecheck`
+- `pnpm verify:prepush`
 
 The live Cypress proof executed two passing scenarios and zero skipped tests:
 first transformation canvas/node and first dbt canvas/node.
