@@ -2597,7 +2597,7 @@ tasks:
       setup.
     complexity: M
     effort_points: 5
-    progress_pct: 35
+    progress_pct: 65
     evidence_refs:
       - docs/architecture/components/web/screen-manuals-and-user-stories.md
       - docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-user-stories.md
@@ -2615,9 +2615,10 @@ tasks:
       freshness blocker is now fixed and the restarted local app can read draft state, load
       capabilities, show the create-canvas entrypoint, and keep dragged cards stable. The current
       follow-up adds local component guides and user stories for protected-token refresh and layout
-      persistence. Remaining backlog work covers truthful denied-draft recovery copy, complete
-      first-canvas/first-node live proof, and stronger fifth-step startup diagnostics.
-    last_verified: '2026-04-29'
+      persistence. `TF-E2-M-C` now closes the complete first-canvas/first-node live proof through a
+      mandatory protected-runtime Cypress runner. Remaining backlog work covers truthful
+      denied-draft recovery copy and any additional startup diagnostics.
+    last_verified: '2026-05-02'
   - task_id: TF-E2-M-A
     parent_task: TF-E2-M
     priority: P0
@@ -2683,7 +2684,7 @@ tasks:
   - task_id: TF-E2-M-C
     parent_task: TF-E2-M
     priority: P0
-    status: in_progress
+    status: done
     objective: >-
       prove the first-canvas and first-node flow through the live UI after bootstrap completes with
       protected runtime enabled.
@@ -2695,25 +2696,31 @@ tasks:
       requests.
     complexity: S
     effort_points: 3
-    progress_pct: 35
+    progress_pct: 100
     evidence_refs:
       - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-m-c-first-canvas-first-node-live-proof-implementation-plan-20260501.md
       - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-k-playground-complete-cycle-stories-20260424.md
-      - apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
-      - scripts/run-selected-closure-live-proof.cjs
+      - docs/planning/closeouts/20260502-tf-e2-m-c-first-authoring-live-proof-closeout.md
+      - docs/planning/reviews/architecture-and-governance/20260501-tf-e2-m-c-fowler-hard-qa-review.md
+      - apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts
+      - apps/web/cypress/support/canvasFirstAuthoring.ts
+      - scripts/run-canvas-first-authoring-live-proof.cjs
+      - apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.ts
+      - apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.test.ts
       - docs/architecture/components/web/graph/canvas-first-authoring-live-proof-component.md
       - docs/architecture/components/web/graph/canvas-layout-persistence-component.md
+      - apps/web/src/app/views/canvas/canvasStartupAndDraftRecovery.architecture.test.ts
       - apps/web/src/app/views/canvas/useCanvasNodeChangeHandlers.test.tsx
       - apps/web/src/app/views/canvas/useCanvasViewportGraphModel.test.tsx
       - apps/web/src/app/views/canvas/useCanvasController.persistence.test.tsx
       - apps/web/src/app/views/canvas/CanvasViewport.test.tsx
     status_reason: >-
-      Mechanized for implementation. The first-canvas and first-node live proof now has a closed
-      command/query rail, DDD object map, component guide, user stories, negative scenarios,
-      red/green sequence, and feature mechanization manifest. Code implementation remains open and
-      must follow the listed TDD, architecture, and Cypress gates without draft endpoint
-      interception.
-    last_verified: '2026-05-01'
+      Closed. The first-canvas and first-node live proof has a closed command/query rail, DDD object
+      map, component guide, user stories, negative scenarios, proof model, architecture guard, and
+      mandatory protected-runtime Cypress runner. Validation on 2026-05-02 proved the transformation
+      and dbt variants through live browser UI with two passing Cypress scenarios, zero skipped
+      tests, no draft endpoint intercepts, and no direct draft PUT seeding before the UI flow.
+    last_verified: '2026-05-02'
   - task_id: TF-E2-M-D
     parent_task: TF-E2-M
     priority: P1

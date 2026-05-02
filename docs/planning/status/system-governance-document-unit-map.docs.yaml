@@ -1,7 +1,7 @@
 version: 1
 generatedFrom: git ls-files docs
 unitManifest: docs/planning/status/system-governance-unit-index.units.yaml
-documentCount: 1441
+documentCount: 1442
 documents:
   - path: docs/CONTRIBUTING.md
     classification: governs unit
@@ -4393,6 +4393,10 @@ documents:
     classification: tracks drift
     documentOwnerUnit: SYS-PLANSTORE-DOCS-RISK
     subjectUnit: SYS-PLANSTORE
+  - path: docs/planning/closeouts/20260502-tf-e2-m-c-first-authoring-live-proof-closeout.md
+    classification: tracks drift
+    documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
+    subjectUnit: SYS-DOCS-GOVERNANCE
   - path: docs/planning/closeouts/F-02-closeout.md
     classification: tracks drift
     documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT

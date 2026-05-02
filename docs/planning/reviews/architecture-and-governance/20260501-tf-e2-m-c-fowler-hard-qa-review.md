@@ -1,8 +1,8 @@
 ---
 title: TF-E2-M-C Fowler hard QA review
-status: Review
+status: Accepted
 owner: Frontend / Architecture
-last_reviewed: 2026-05-01
+last_reviewed: 2026-05-02
 planning_type: review
 qa_artifact: true
 task_ids:
@@ -548,12 +548,12 @@ Target:
 
 ### Task Checklist
 
-- [ ] `TF-E2-M-C-QA-1` Add mandatory first-authoring live proof runner
-- [ ] `TF-E2-M-C-QA-2` Add semantic architecture guard for false-green Cypress
-- [ ] `TF-E2-M-C-QA-3` Close blocked reasons and missing negative tests
-- [ ] `TF-E2-M-C-QA-4` Wire or reclassify the first-authoring proof oracle
-- [ ] `TF-E2-M-C-QA-5` Repair docs, lane state, workboard, and closeout
-- [ ] `TF-E2-M-C-QA-6` Re-run full validation and record evidence
+- [x] `TF-E2-M-C-QA-1` Add mandatory first-authoring live proof runner
+- [x] `TF-E2-M-C-QA-2` Add semantic architecture guard for false-green Cypress
+- [x] `TF-E2-M-C-QA-3` Close blocked reasons and missing negative tests
+- [x] `TF-E2-M-C-QA-4` Wire or reclassify the first-authoring proof oracle
+- [x] `TF-E2-M-C-QA-5` Repair docs, lane state, workboard, and closeout
+- [x] `TF-E2-M-C-QA-6` Re-run full validation and record evidence
 
 ### Task Details
 
@@ -778,7 +778,21 @@ Required final commands:
 
 ## Final Verdict
 
-Not ready. The implementation has good direction, but TF-E2-M-C should not be
-treated as mature-system complete until the live Cypress proof is mandatory,
-the semantic proof model is closed and covered, and the planning/docs state is
-aligned with the merged implementation.
+Accepted on 2026-05-02.
+
+The corrective slice is now mature-system complete for `TF-E2-M-C`: the live
+Cypress proof is mandatory, the semantic proof model is closed and covered, the
+architecture guard rejects false-green shortcuts, and planning/docs state is
+aligned through
+[TF-E2-M-C First Authoring Live Proof Closeout](../../closeouts/20260502-tf-e2-m-c-first-authoring-live-proof-closeout.md).
+
+Validation evidence recorded during closure:
+
+- `pnpm docs:feature-mechanization:tf-e2-m-c`
+- `pnpm --filter @dvt/web test -- canvasFirstAuthoringLiveProof.test.ts`
+- `pnpm --filter @dvt/web test -- canvasStartupAndDraftRecovery.architecture.test.ts`
+- `pnpm --filter @dvt/web test -- canvasHostCycleState.test.ts canvasCreateCanvasDocumentCommand.test.ts`
+- `pnpm --filter @dvt/web test -- useCanvasController.core.test.tsx useCanvasController.persistence.test.tsx`
+- `pnpm --filter @dvt/web test -- useCanvasNodeChangeHandlers.test.tsx useCanvasViewportGraphModel.test.tsx CanvasViewport.test.tsx canvasInteractionStore.test.ts`
+- `pnpm --filter dvt-api test -- app.test.ts`
+- `pnpm --filter @dvt/web test:e2e:first-authoring:live`

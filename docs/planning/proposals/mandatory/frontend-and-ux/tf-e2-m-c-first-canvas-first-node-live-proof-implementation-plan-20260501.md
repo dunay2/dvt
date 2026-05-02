@@ -373,12 +373,19 @@ allowedImplementationSurfaces:
   - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-m-b-canvas-draft-denial-posture-implementation-plan-20260501.md
   - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-m-c-first-canvas-first-node-live-proof-implementation-plan-20260501.md
   - docs/planning/proposals/portfolio-map-20260403.md
+  - docs/planning/closeouts/20260502-tf-e2-m-c-first-authoring-live-proof-closeout.md
+  - docs/planning/closeouts/index.md
   - docs/planning/state/agent-lane-e.yaml
   - docs/planning/reviews/architecture-and-governance/20260501-tf-e2-m-c-fowler-hard-qa-review.md
   - docs/planning/status/generated-code-state.md
   - docs/planning/status/governance-document-rule-inventory.md
+  - docs/planning/status/system-governance-component-index-20260501.md
+  - docs/planning/status/system-governance-component-index.components.yaml
   - docs/planning/status/system-governance-document-unit-map-20260501.md
   - docs/planning/status/system-governance-document-unit-map.docs.yaml
+  - docs/planning/status/system-governance-file-fingerprint-baseline.yaml
+  - docs/planning/status/system-governance-file-index-20260501.md
+  - docs/planning/status/system-governance-file-index.files.yaml
   - package.json
   - scripts/run-canvas-first-authoring-live-proof.cjs
   - scripts/check-feature-mechanization.cjs
