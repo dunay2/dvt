@@ -85,18 +85,24 @@ components:
         level: workspace
         status: coverage-required
         governance:
+          - >-
+            docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
           - docs/planning/status/system-operations-inventory-20260501.md
       - id: SYS-API-ROOT
         name: API root module
         level: module
         status: coverage-required
         governance:
+          - >-
+            docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
           - docs/planning/status/system-operations-inventory-20260501.md
       - id: SYS-API-APPLICATION-PORTS
         name: API application ports
         level: component
         status: coverage-required
         governance:
+          - >-
+            docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
           - docs/architecture/reference-architecture.md
           - docs/planning/status/system-operations-inventory-20260501.md
     status: coverage-required
@@ -114,6 +120,8 @@ components:
     excludes:
       - apps/api/src/application/ports/storedPlan.ts
     governance:
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
       - docs/architecture/reference-architecture.md
       - docs/planning/status/system-operations-inventory-20260501.md
     fowlerSignals:
@@ -143,18 +151,24 @@ components:
         level: workspace
         status: coverage-required
         governance:
+          - >-
+            docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
           - docs/planning/status/system-operations-inventory-20260501.md
       - id: SYS-API-ROOT
         name: API root module
         level: module
         status: coverage-required
         governance:
+          - >-
+            docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
           - docs/planning/status/system-operations-inventory-20260501.md
       - id: SYS-API-APPLICATION-SERVICES
         name: API application services and use cases
         level: component
         status: coverage-required
         governance:
+          - >-
+            docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
           - docs/architecture/command-query-rail-governance.md
           - docs/planning/status/system-operations-inventory-20260501.md
     status: coverage-required
@@ -174,6 +188,8 @@ components:
       - apps/api/src/application/services/StoredPlanExecutabilityValidator.ts
       - apps/api/src/application/services/WorkflowEngineFactory.ts
     governance:
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
       - docs/architecture/command-query-rail-governance.md
       - docs/planning/status/system-operations-inventory-20260501.md
     fowlerSignals:
@@ -203,18 +219,24 @@ components:
         level: workspace
         status: coverage-required
         governance:
+          - >-
+            docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
           - docs/planning/status/system-operations-inventory-20260501.md
       - id: SYS-API-ROOT
         name: API root module
         level: module
         status: coverage-required
         governance:
+          - >-
+            docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
           - docs/planning/status/system-operations-inventory-20260501.md
       - id: SYS-API-BOOTSTRAP
         name: API bootstrap and composition entry
         level: component
         status: coverage-required
         governance:
+          - >-
+            docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
           - docs/planning/status/system-operations-inventory-20260501.md
     status: coverage-required
     governanceState: coverage-required
@@ -231,6 +253,8 @@ components:
       - apps/api/src/server.ts
     excludes: []
     governance:
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
       - docs/planning/status/system-operations-inventory-20260501.md
     fowlerSignals:
       - coverage refinement
@@ -259,12 +283,16 @@ components:
         level: workspace
         status: coverage-required
         governance:
+          - >-
+            docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
           - docs/planning/status/system-operations-inventory-20260501.md
       - id: SYS-API-ROOT
         name: API root module
         level: module
         status: coverage-required
         governance:
+          - >-
+            docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
           - docs/planning/status/system-operations-inventory-20260501.md
       - id: SYS-API-DOCS
         name: API local documentation
@@ -316,18 +344,24 @@ components:
         level: workspace
         status: coverage-required
         governance:
+          - >-
+            docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
           - docs/planning/status/system-operations-inventory-20260501.md
       - id: SYS-API-ROOT
         name: API root module
         level: module
         status: coverage-required
         governance:
+          - >-
+            docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
           - docs/planning/status/system-operations-inventory-20260501.md
       - id: SYS-API-DOMAIN-AUTH
         name: API domain auth model
         level: component
         status: coverage-required
         governance:
+          - >-
+            docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
           - docs/architecture/reference-architecture.md
           - docs/planning/status/system-operations-inventory-20260501.md
     status: coverage-required
@@ -344,6 +378,8 @@ components:
       - apps/api/src/domain/**
     excludes: []
     governance:
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
       - docs/architecture/reference-architecture.md
       - docs/planning/status/system-operations-inventory-20260501.md
     fowlerSignals:
@@ -373,18 +409,24 @@ components:
         level: workspace
         status: coverage-required
         governance:
+          - >-
+            docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
           - docs/planning/status/system-operations-inventory-20260501.md
       - id: SYS-API-ROOT
         name: API root module
         level: module
         status: coverage-required
         governance:
+          - >-
+            docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
           - docs/planning/status/system-operations-inventory-20260501.md
       - id: SYS-API-HTTP-ENTRYPOINT-TESTS
         name: API HTTP entrypoint tests
         level: component
         status: coverage-required
         governance:
+          - >-
+            docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
           - >-
             docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
           - docs/guides/testing-and-ci-capabilities.md
@@ -404,6 +446,8 @@ components:
     excludes:
       - apps/api/test/entrypoints/http/planRoutePlanSourcePolicy.test.ts
     governance:
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
       - >-
         docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
       - docs/guides/testing-and-ci-capabilities.md
@@ -435,18 +479,24 @@ components:
         level: workspace
         status: coverage-required
         governance:
+          - >-
+            docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
           - docs/planning/status/system-operations-inventory-20260501.md
       - id: SYS-API-ROOT
         name: API root module
         level: module
         status: coverage-required
         governance:
+          - >-
+            docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
           - docs/planning/status/system-operations-inventory-20260501.md
       - id: SYS-API-HTTP-ENTRYPOINTS
         name: API HTTP entrypoints and route mappers
         level: component
         status: coverage-required
         governance:
+          - >-
+            docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
           - >-
             docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
           - docs/architecture/command-query-rail-governance.md
@@ -467,6 +517,8 @@ components:
       - apps/api/src/entrypoints/http/planRefHttpMapper.ts
       - apps/api/src/entrypoints/http/planRoutePlanRefParser.ts
     governance:
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
       - >-
         docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
       - docs/architecture/command-query-rail-governance.md
@@ -498,18 +550,24 @@ components:
         level: workspace
         status: coverage-required
         governance:
+          - >-
+            docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
           - docs/planning/status/system-operations-inventory-20260501.md
       - id: SYS-API-ROOT
         name: API root module
         level: module
         status: coverage-required
         governance:
+          - >-
+            docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
           - docs/planning/status/system-operations-inventory-20260501.md
       - id: SYS-API-INFRASTRUCTURE
         name: API infrastructure adapters
         level: component
         status: coverage-required
         governance:
+          - >-
+            docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
           - docs/architecture/reference-architecture.md
           - docs/planning/status/system-operations-inventory-20260501.md
     status: coverage-required
@@ -531,6 +589,8 @@ components:
       - apps/api/src/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.ts
       - apps/api/src/infrastructure/startRun/ArtifactStoreDbtProjectBundleBindingPolicy.ts
     governance:
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
       - docs/architecture/reference-architecture.md
       - docs/planning/status/system-operations-inventory-20260501.md
     fowlerSignals:
@@ -560,18 +620,24 @@ components:
         level: workspace
         status: coverage-required
         governance:
+          - >-
+            docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
           - docs/planning/status/system-operations-inventory-20260501.md
       - id: SYS-API-ROOT
         name: API root module
         level: module
         status: coverage-required
         governance:
+          - >-
+            docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
           - docs/planning/status/system-operations-inventory-20260501.md
       - id: SYS-API-OPS-ROUTES
         name: API operational health routes
         level: component
         status: coverage-required
         governance:
+          - >-
+            docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
           - >-
             docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
           - docs/runbooks/api-runtime-sla-canonical-20260404.md
@@ -590,6 +656,8 @@ components:
       - apps/api/src/routes/**
     excludes: []
     governance:
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
       - >-
         docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
       - docs/runbooks/api-runtime-sla-canonical-20260404.md
@@ -621,12 +689,16 @@ components:
         level: workspace
         status: coverage-required
         governance:
+          - >-
+            docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
           - docs/planning/status/system-operations-inventory-20260501.md
       - id: SYS-API-ROOT
         name: API root module
         level: module
         status: coverage-required
         governance:
+          - >-
+            docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
           - docs/planning/status/system-operations-inventory-20260501.md
       - id: SYS-API-REPO-CONFIG
         name: API repository configuration and app metadata
@@ -678,18 +750,24 @@ components:
         level: workspace
         status: coverage-required
         governance:
+          - >-
+            docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
           - docs/planning/status/system-operations-inventory-20260501.md
       - id: SYS-API-ROOT
         name: API root module
         level: module
         status: coverage-required
         governance:
+          - >-
+            docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
           - docs/planning/status/system-operations-inventory-20260501.md
       - id: SYS-API-RUNTIME-COMPOSITION
         name: API runtime composition modules
         level: component
         status: coverage-required
         governance:
+          - >-
+            docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
           - docs/planning/status/system-operations-inventory-20260501.md
     status: coverage-required
     governanceState: coverage-required
@@ -706,6 +784,8 @@ components:
       - apps/api/src/runtime/**
     excludes: []
     governance:
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
       - docs/planning/status/system-operations-inventory-20260501.md
     fowlerSignals:
       - coverage refinement
@@ -734,18 +814,24 @@ components:
         level: workspace
         status: coverage-required
         governance:
+          - >-
+            docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
           - docs/planning/status/system-operations-inventory-20260501.md
       - id: SYS-API-ROOT
         name: API root module
         level: module
         status: coverage-required
         governance:
+          - >-
+            docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
           - docs/planning/status/system-operations-inventory-20260501.md
       - id: SYS-API-TESTS
         name: API app, integration, module, infrastructure, and fixture tests
         level: component
         status: coverage-required
         governance:
+          - >-
+            docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
           - >-
             docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
           - docs/guides/testing-and-ci-capabilities.md
@@ -771,6 +857,8 @@ components:
       - apps/api/test/infrastructure/planner/ManifestArtifactResolver.test.ts
       - apps/api/test/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.test.ts
     governance:
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
       - >-
         docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
       - docs/guides/testing-and-ci-capabilities.md
@@ -925,7 +1013,7 @@ components:
     isDrift: false
     isLegacy: false
     childrenRequired: true
-    fileCount: 1651
+    fileCount: 1652
     dddOwner: INFRA
     cqRails: none - documentation governance
     owns:

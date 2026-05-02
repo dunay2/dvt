@@ -3,8 +3,8 @@ generatedFrom:
   - docs/planning/status/system-governance-file-index.files.yaml
   - docs/planning/status/system-governance-component-index.components.yaml
 totals:
-  files: 4085
-  governedFiles: 4085
+  files: 4086
+  governedFiles: 4086
   ungovernedFiles: 0
   driftFiles: 44
   legacyFiles: 0
@@ -22,12 +22,12 @@ ciPosture:
     - legacyFiles records removal targets until owning work removes them
 byRootUnit:
   - name: SYS-DVT
-    count: 4085
+    count: 4086
 byDomainUnit:
   - name: SYS-ADAPTERS
     count: 196
   - name: SYS-DVT
-    count: 3308
+    count: 3309
   - name: SYS-OBSERVABILITY
     count: 15
   - name: SYS-PLANSTORE
@@ -70,7 +70,7 @@ byComponentUnit:
   - name: SYS-CONTRACTS-ROOT
     count: 127
   - name: SYS-DOCS-GOVERNANCE-ROOT
-    count: 1651
+    count: 1652
   - name: SYS-OBSERVABILITY-ROOT
     count: 15
   - name: SYS-PLANNER-ROOT
@@ -103,14 +103,14 @@ byStatus:
   - name: canonical
     count: 111
   - name: coverage-required
-    count: 3862
+    count: 3863
   - name: drift
     count: 44
   - name: review
     count: 68
 byGovernanceState:
   - name: coverage-required
-    count: 3862
+    count: 3863
   - name: drift
     count: 44
   - name: governed
@@ -121,12 +121,12 @@ byCanonicalRole:
   - name: implementation-owner
     count: 111
   - name: none
-    count: 3974
+    count: 3975
 byEvidenceState:
   - name: classification-only
     count: 111
   - name: coverage-required
-    count: 3862
+    count: 3863
   - name: remediation-required
     count: 44
   - name: review-required
@@ -141,19 +141,22 @@ byDddOwner:
   - name: ENTRY
     count: 885
   - name: INFRA
-    count: 2150
+    count: 2151
   - name: PORT
     count: 189
 governanceDocuments:
   - path: docs/DOCS_README.md
-    fileCount: 1665
+    fileCount: 1666
   - path: docs/planning/status/governance-document-rule-inventory.md
-    fileCount: 1651
+    fileCount: 1652
   - path: docs/planning/status/system-operations-inventory-20260501.md
     fileCount: 947
   - path: >-
       docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md
     fileCount: 797
+  - path: >-
+      docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
+    fileCount: 341
   - path: docs/guides/testing-and-ci-capabilities.md
     fileCount: 340
   - path: >-
@@ -216,7 +219,7 @@ componentCoverage:
     evidenceState: coverage-required
     dddOwner: INFRA
     cqRails: none - documentation governance
-    fileCount: 1651
+    fileCount: 1652
     isDrift: false
     isLegacy: false
     childrenRequired: true
@@ -353,6 +356,8 @@ componentCoverage:
     childrenRequired: false
     governance:
       - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
+      - >-
         docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
       - docs/guides/testing-and-ci-capabilities.md
       - docs/planning/status/system-operations-inventory-20260501.md
@@ -387,6 +392,8 @@ componentCoverage:
     isLegacy: false
     childrenRequired: false
     governance:
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
       - >-
         docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
       - docs/architecture/command-query-rail-governance.md
@@ -423,6 +430,8 @@ componentCoverage:
     childrenRequired: false
     governance:
       - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
+      - >-
         docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
       - docs/guides/testing-and-ci-capabilities.md
       - docs/architecture/command-query-rail-governance.md
@@ -441,6 +450,8 @@ componentCoverage:
     isLegacy: false
     childrenRequired: false
     governance:
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
       - docs/architecture/command-query-rail-governance.md
       - docs/planning/status/system-operations-inventory-20260501.md
   - id: SYS-PLANSTORE-DOCS-RISK
@@ -475,6 +486,8 @@ componentCoverage:
     isLegacy: false
     childrenRequired: false
     governance:
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
       - docs/architecture/reference-architecture.md
       - docs/planning/status/system-operations-inventory-20260501.md
   - id: SYS-API-RUNTIME-COMPOSITION
@@ -492,6 +505,8 @@ componentCoverage:
     isLegacy: false
     childrenRequired: false
     governance:
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
       - docs/planning/status/system-operations-inventory-20260501.md
   - id: SYS-PLANSTORE-ARTIFACTS-PORTS
     name: Plan-store artifacts ports and runtime readers
@@ -544,6 +559,8 @@ componentCoverage:
     isLegacy: false
     childrenRequired: false
     governance:
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
       - docs/architecture/reference-architecture.md
       - docs/planning/status/system-operations-inventory-20260501.md
   - id: SYS-PLANSTORE-POSTGRES
@@ -613,6 +630,8 @@ componentCoverage:
     isLegacy: false
     childrenRequired: false
     governance:
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
       - >-
         docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
       - docs/runbooks/api-runtime-sla-canonical-20260404.md
@@ -704,6 +723,8 @@ componentCoverage:
     isLegacy: false
     childrenRequired: false
     governance:
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
       - docs/planning/status/system-operations-inventory-20260501.md
   - id: SYS-API-DOMAIN-AUTH
     name: API domain auth model
@@ -720,6 +741,8 @@ componentCoverage:
     isLegacy: false
     childrenRequired: false
     governance:
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
       - docs/architecture/reference-architecture.md
       - docs/planning/status/system-operations-inventory-20260501.md
   - id: SYS-PLANSTORE-ROOT
@@ -922,7 +945,7 @@ findings:
   legacyFiles: []
   componentsRequiringSubdivision:
     - id: SYS-DOCS-GOVERNANCE-ROOT
-      fileCount: 1651
+      fileCount: 1652
       status: coverage-required
       dddOwner: INFRA
     - id: SYS-WEB-ROOT
