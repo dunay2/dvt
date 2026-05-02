@@ -16,6 +16,7 @@ import { loadTemporalAdapterConfig, TemporalAdapter } from '../src/index.js';
 import {
   assertWorkflowArtifactPresentInCi,
   createActivityDeps,
+  createPlanOwnershipFromContext,
   createPlanRef,
   createRunContext,
   createTenantWorkerHost,
@@ -68,7 +69,9 @@ async function createPostgresCapabilityHarness(connectionString: string): Promis
   });
   const schema = `it_runtime_${ctx.runId.replaceAll(/\W/g, '_')}`;
   const sinkTable = 'orders_daily';
-  const plan = mkPostgresTransformationPlan(schema, sinkTable);
+  const plan = mkPostgresTransformationPlan(schema, sinkTable, {
+    ownership: createPlanOwnershipFromContext(ctx),
+  });
   const planBytes = Buffer.from(JSON.stringify(plan), 'utf-8');
   const planRef = createPlanRef('it-plan-postgres-transform', planBytes);
   const { PostgresRelationalExecutionCapability } = await import('@dvt/adapter-postgres');

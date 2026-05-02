@@ -614,6 +614,9 @@ allowedImplementationSurfaces:
   - packages/@dvt/adapter-temporal/test/helpers/contractFixtures.ts
   - packages/@dvt/adapter-temporal/test/helpers/integration/testActivities.ts
   - packages/@dvt/adapter-temporal/test/helpers/integration/testPlans.ts
+  - packages/@dvt/adapter-temporal/test/integration.postgres.time-skipping.test.ts
+  - packages/@dvt/adapter-temporal/test/integration.time-skipping.shared.ts
+  - packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts
   - packages/@dvt/adapter-temporal/test/temporalPlanArtifactReader.test.ts
   - packages/@dvt/adapter-temporal/test/workflow-component-semantics.architecture.test.ts
 forbiddenImplementationSurfaces:
@@ -767,6 +770,30 @@ symbols:
     cypressCoverage: N/A - integration fixture
     unitTests:
       - packages/@dvt/adapter-temporal/test/activities.test.ts
+      - packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts
+      - packages/@dvt/adapter-temporal/test/integration.postgres.time-skipping.test.ts
+  - name: createPlanOwnershipFromContext
+    path: packages/@dvt/adapter-temporal/test/helpers/integration/testPlans.ts
+    dddOwner: Temporal adapter integration fixture
+    cqRails:
+      - FetchPlanForEngineDispatch
+    fowlerSignals:
+      - Coverage refinement
+    architectureGuard: packages/@dvt/adapter-temporal/test/workflow-component-semantics.architecture.test.ts
+    cypressCoverage: N/A - integration fixture
+    unitTests:
+      - packages/@dvt/adapter-temporal/test/integration.postgres.time-skipping.test.ts
+  - name: mkPostgresTransformationPlan
+    path: packages/@dvt/adapter-temporal/test/helpers/integration/testPlans.ts
+    dddOwner: Temporal adapter Postgres integration fixture
+    cqRails:
+      - FetchPlanForEngineDispatch
+    fowlerSignals:
+      - Coverage refinement
+    architectureGuard: packages/@dvt/adapter-temporal/test/workflow-component-semantics.architecture.test.ts
+    cypressCoverage: N/A - integration fixture
+    unitTests:
+      - packages/@dvt/adapter-temporal/test/integration.postgres.time-skipping.test.ts
   - name: BASE_PLAN
     path: packages/@dvt/adapter-temporal/test/temporalPlanArtifactReader.test.ts
     dddOwner: Temporal plan artifact reader test fixture

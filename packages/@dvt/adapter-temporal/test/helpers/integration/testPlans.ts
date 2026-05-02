@@ -13,11 +13,21 @@ import { createExecutionPlan } from '../contractFixtures.js';
 
 import { RunId } from './runtimeState.js';
 
-const INTEGRATION_PLAN_OWNERSHIP = {
+export const INTEGRATION_PLAN_OWNERSHIP = {
   tenantId: 't-it',
   projectId: 'p-it',
   environmentId: 'test',
 } as const;
+
+export function createPlanOwnershipFromContext(
+  ctx: Pick<ResolvedRunContext, 'tenantId' | 'projectId' | 'environmentId'>
+): NonNullable<ExecutionPlan['metadata']['ownership']> {
+  return {
+    tenantId: ctx.tenantId,
+    projectId: ctx.projectId,
+    environmentId: ctx.environmentId,
+  };
+}
 
 export function createPlanRef(
   planId: string,
@@ -109,11 +119,17 @@ export function mkPermanentFailurePlan(): ExecutionPlan {
   });
 }
 
-export function mkPostgresTransformationPlan(schema: string, sinkTable: string): ExecutionPlan {
+export function mkPostgresTransformationPlan(
+  schema: string,
+  sinkTable: string,
+  options: {
+    ownership?: NonNullable<ExecutionPlan['metadata']['ownership']>;
+  } = {}
+): ExecutionPlan {
   return withTransformationRuntimeBinding(
     createExecutionPlan({
       inputHashSha256: sha256Hex(Buffer.from('fixture:it-plan-postgres-transform', 'utf-8')),
-      ownership: INTEGRATION_PLAN_OWNERSHIP,
+      ownership: options.ownership ?? INTEGRATION_PLAN_OWNERSHIP,
       steps: [
         {
           stepId: 's-1',

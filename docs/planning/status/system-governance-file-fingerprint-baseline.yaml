@@ -24161,9 +24161,9 @@ files:
   - fileId: F-5DB8E210931B
     path: >-
       docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
-    contentHash: 1dd588c287d8c1a8df6d8c8b810d2430cba79ea9fcf00c169044b119c52d9a85
+    contentHash: 72caf50415ae1a0a51c1a640b410df52919f86b81bae404a3448f0a1a98f77fd
     governanceHash: 689f8bfb2497e7ff01ff18ed84dbf5962357141d252b9b3f8220b737cc7ccf67
-    stateFingerprint: ab5a0dfaad473218cb62fae9efaf2cf03a771cccb698e007750e4d5a563ea6b4
+    stateFingerprint: 2f27f10778354e7342ee5addeb9a1eba99f191ce5c6307bde9771f821d572ad0
     rootUnit: SYS-DVT
     domainUnit: SYS-PLANSTORE
     componentUnit: SYS-PLANSTORE-DOCS-RISK
@@ -29786,9 +29786,9 @@ files:
     owningUnit: SYS-ADAPTERS-ROOT
   - fileId: F-6D3EB19C090D
     path: packages/@dvt/adapter-temporal/test/helpers/integration/testPlans.ts
-    contentHash: 4a750f8cafbc2edbcda579f041f24a6fb9ef84c3f110ed515d17bacd827f62db
+    contentHash: f73cd87803482c8e4994a3a2bb19db2d8f274404173985d11a42e76168bd13f4
     governanceHash: 802052ee2fb743c397a020199a2e52184945bc486c171030c10df1782ced93af
-    stateFingerprint: 35ba3abb9799385750d9bfae4d74f811663620fb065d007ed1dc68d8432baaa0
+    stateFingerprint: 4b9a64ca98f77ea70d1190b919610f5fd5815eed6f84ad7034536a10e4207e94
     rootUnit: SYS-DVT
     domainUnit: SYS-ADAPTERS
     componentUnit: SYS-ADAPTERS-ROOT
@@ -29840,27 +29840,27 @@ files:
     owningUnit: SYS-ADAPTERS-ROOT
   - fileId: F-10E99F538A35
     path: packages/@dvt/adapter-temporal/test/integration.postgres.time-skipping.test.ts
-    contentHash: bb52602d4c2116de71588965abd19f7253ecc9d89748f3c20925be9a8cb6cea3
+    contentHash: 1e0e6d522674acda7f82152f36b0e96c89aa4cef998e864b53587ccd3d566395
     governanceHash: 802052ee2fb743c397a020199a2e52184945bc486c171030c10df1782ced93af
-    stateFingerprint: 23102859adc246be8dc316ad5fa319870eb4e56d9b9ae4ee302ce9680206ddf1
+    stateFingerprint: 7935aa6a915a3601bdf0c1d3f6fe5c4311ff7ffde65caa14c66d2eaa36acca45
     rootUnit: SYS-DVT
     domainUnit: SYS-ADAPTERS
     componentUnit: SYS-ADAPTERS-ROOT
     owningUnit: SYS-ADAPTERS-ROOT
   - fileId: F-711058709C5E
     path: packages/@dvt/adapter-temporal/test/integration.time-skipping.shared.ts
-    contentHash: 4864ce00a41456608a360abbeb8d68b02eb5422d057bbad5dd21138a620a6e7e
+    contentHash: fff21fa31af43849760cdf7f08ba664e1bb2eda91e95874b435fc7fa8b3b739a
     governanceHash: 802052ee2fb743c397a020199a2e52184945bc486c171030c10df1782ced93af
-    stateFingerprint: 1dde16d82ce6d9338973e432b2be40fc2e0f957a6a51b3e9719e1fbd2a990e89
+    stateFingerprint: a5971e17108a6d3230f643449d0f6ae07f89e708ebc3ca90b2c1f3b8cc4ccaa1
     rootUnit: SYS-DVT
     domainUnit: SYS-ADAPTERS
     componentUnit: SYS-ADAPTERS-ROOT
     owningUnit: SYS-ADAPTERS-ROOT
   - fileId: F-23585076E1BF
     path: packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts
-    contentHash: b0b821ae252db9f8515be01202adb3dd33b89ce2b0a2749ddd3af2bb80b522b8
+    contentHash: c55cfa5eac51bcf005f226efab6862fd1ffc7b07de8337ef6f52f9efa2aa3fa4
     governanceHash: 802052ee2fb743c397a020199a2e52184945bc486c171030c10df1782ced93af
-    stateFingerprint: 3b1afd76e049d72592b3ffc996cc8062cd5675b67dc101f7dcaafbc56956ec32
+    stateFingerprint: ee3ae2dd1e9a4c68025acf22ba0d076c89396bac2551a43283826dc10c9cf41b
     rootUnit: SYS-DVT
     domainUnit: SYS-ADAPTERS
     componentUnit: SYS-ADAPTERS-ROOT
