@@ -26250,9 +26250,9 @@ files:
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
   - fileId: F-6B8271C2051C
     path: docs/planning/status/system-governance-file-fingerprint-baseline.yaml
-    contentHash: 517c6e7bd382480dd3ab07b5f31d0326ab4f133de65d8bc0a9bde185f215ace1
+    contentHash: 8909f0cd89e05fbaa131952fffeee0d3fb8b25340f2fbce1660ba9bd7713236d
     governanceHash: d9f768b3da4be04e83890eae632052f05a0776f4990c39b7b2ab2c3b6cc14524
-    stateFingerprint: 2990793667fe60fb0222bb948232c28aab1d072e9c60f287922fbb9ebd84861e
+    stateFingerprint: 0923bf729bec0f47cd583111ad793d6719dbf6ccc0ceec0f82bc494d8a37549a
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
