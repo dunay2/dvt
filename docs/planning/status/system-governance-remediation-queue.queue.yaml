@@ -571,7 +571,7 @@ tasks:
     blocking: reporting-only
     reason: Documents track drift or require disposition and need alignment with active units.
     fileCount: 0
-    documentCount: 255
+    documentCount: 256
     files: []
     documents:
       - path: docs/planning/closeouts/20260315-architecture-components-map-closeout.md
@@ -935,6 +935,8 @@ tasks:
       - path: docs/planning/closeouts/20260430-ar-d-continuation-safety-closeout.md
         classification: tracks drift
       - path: docs/planning/closeouts/20260430-we-hx-2-facade-use-cases-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260502-tf-e2-m-c-first-authoring-live-proof-closeout.md
         classification: tracks drift
       - path: docs/planning/closeouts/F-02-closeout.md
         classification: tracks drift
