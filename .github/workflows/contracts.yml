@@ -204,7 +204,7 @@ jobs:
         image: postgres:15
         env:
           POSTGRES_USER: dvt_test
-          POSTGRES_PASSWORD: dvt_test
+          POSTGRES_PASSWORD: ${{ github.run_id }}
           POSTGRES_DB: dvt_test
         options: >-
           --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
@@ -226,12 +226,12 @@ jobs:
       - name: Run database migrations
         run: node scripts/db-migrate.cjs
         env:
-          DATABASE_URL: postgresql://dvt_test:dvt_test@localhost:5432/dvt_test
+          DATABASE_URL: postgresql://dvt_test:${{ github.run_id }}@localhost:5432/dvt_test
 
       - name: Execute golden paths
         run: pnpm golden:validate
         env:
-          DATABASE_URL: postgresql://dvt_test:dvt_test@localhost:5432/dvt_test
+          DATABASE_URL: postgresql://dvt_test:${{ github.run_id }}@localhost:5432/dvt_test
         timeout-minutes: 5
 
       - name: Detect hash-compare scope (PR only)

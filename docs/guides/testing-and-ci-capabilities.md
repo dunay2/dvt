@@ -194,6 +194,8 @@ Command semantics:
   - skip when no TypeScript-affecting files changed
   - run `pnpm ci:affected:typecheck` when the diff is workspace-scoped
   - run full `pnpm type-check` when root or cross-workspace TypeScript graph inputs changed
+- `pnpm verify:prepush` also runs `pnpm arch:deps`, the root
+  dependency-cruiser gate for repository architecture dependency boundaries.
 - GitHub workflows keep using explicit strict checks rather than relying on `pnpm docs:ci` as a merge gate.
 - `pnpm traceability:adr0` remains a blocking governance gate on push to `main`, but it now compares current ADR-0000 issues against the tracked baseline in [`traceability.issue-baseline.json`](../../traceability.issue-baseline.json) so CI fails on regressions rather than re-reporting the known historical backlog on every run.
 
@@ -218,8 +220,8 @@ Planning-generated pages that are intentionally untracked:
 - `Contracts & Determinism`: schema validation, determinism scan, contract
   compile, golden validation, hash comparison.
   Source: [`.github/workflows/contracts.yml`](../../.github/workflows/contracts.yml)
-- `PR Quality Gate`: docs sync/workboard drift, docs gates, type-check
-  fast-fail, PR metadata checks, Temporal integration.
+- `PR Quality Gate`: docs sync/workboard drift, docs governance parity gates
+  from `verify:prepush`, PR metadata checks, and Temporal integration.
   Source: [`.github/workflows/pr-quality-gate.yml`](../../.github/workflows/pr-quality-gate.yml)
 - `Dependency Review`: pull-request dependency review with pinned action usage
   and high-severity failure policy.
@@ -267,6 +269,12 @@ Current workflow consumers:
   `@dvt/adapter-postgres` remains on its dedicated PostgreSQL-backed lane.
 - [`.github/workflows/pr-quality-gate.yml`](../../.github/workflows/pr-quality-gate.yml) uses the
   same shared scope surfaces for workflow/global change routing and Temporal capability lanes.
+  It also runs the merge-blocking governance subset from `pnpm verify:prepush`
+  on PRs and pushes: changed-doc filename/frontmatter checks when docs changed,
+  governance unit coverage, document-unit map, file fingerprints,
+  feature-mechanization manifests, implementation mechanization, and QA artifact
+  validation. It also runs `pnpm arch:deps` so package/app dependency-boundary
+  drift fails remotely, not only on local prepush.
 
 ## Notes
 
@@ -330,12 +338,23 @@ Current workflow consumers:
 - `CI - Code Quality` now uses the same Turbo workspace wrapper for its
   affected build/typecheck matrix, keeping the local command and the lightweight
   CI lane on one orchestration path.
+- `pnpm arch:deps` is the root architecture dependency guard for package and
+  app boundaries. It runs dependency-cruiser plus repository semantic ownership
+  checks. It forbids contract-to-runtime imports, planner-to-engine/adapter
+  imports, engine-to-adapter imports, adapter-owned canonical/versioned
+  contract definitions, adapter contract internals, web-to-backend-adapter
+  imports, presentation-to-infrastructure imports, domain-to-framework/runtime
+  imports, DVT package cycles, cross-package deep imports outside public API
+  surfaces, and runtime package imports from repository scripts/tools.
 - `Test Suite` now uses the same Turbo workspace wrapper for non-root PR
   affected dependency builds. Root-config PRs still use `pnpm build` to exercise
   the full root graph.
 - Dependency review and CodeQL workflows provide the current dependency/SAST
-  baseline. Remote Turbo cache is still not configured because it requires
-  repository secret ownership for `TURBO_TOKEN` and `TURBO_TEAM`.
+  baseline. The manual docs deploy workflow pins the Zensical package version
+  used to build the site, and the label-bootstrap workflow uses a SHA-pinned
+  `actions/github-script` reference like the other active workflows. Remote
+  Turbo cache is still not configured because it requires repository secret
+  ownership for `TURBO_TOKEN` and `TURBO_TEAM`.
 - Current branch-protection status checks are repository settings, not tracked
   YAML. Verify in GitHub settings that `CI - Code Quality`, `Test Suite`,
   `PR Quality Gate`, `Contracts & Determinism`, `Dependency Review`, and
