@@ -74,8 +74,12 @@ describe('CanvasShell architecture', () => {
     expect(CANVAS_SHELL_PANELS_BUILDER_SOURCE).toContain(
       'function resolveExplorerAuthoringNodeKinds('
     );
+    expect(CANVAS_SHELL_PANELS_BUILDER_SOURCE).toContain('function normalizeCanvasKind(');
     expect(CANVAS_SHELL_PANELS_BUILDER_SOURCE).toContain(
-      'registration.kind === routePresentation.canvasDocument?.kind'
+      'const activeCanvasKind = normalizeCanvasKind(routePresentation.canvasDocument.kind)'
+    );
+    expect(CANVAS_SHELL_PANELS_BUILDER_SOURCE).toContain(
+      'normalizeCanvasKind(registration.kind) === activeCanvasKind'
     );
     expect(CANVAS_SHELL_PANELS_BUILDER_SOURCE).toContain('userPermissions.canEditEdges');
     expect(CANVAS_SHELL_PANELS_BUILDER_SOURCE).not.toContain('getAllNodeKinds');

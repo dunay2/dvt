@@ -9908,9 +9908,9 @@ files:
     owningUnit: SYS-WEB-ROOT
   - fileId: F-AAAB02A8DE14
     path: apps/web/src/app/views/canvas/CanvasShell.architecture.test.tsx
-    contentHash: 45a230cc134dd49c827ea04f3346699cddc4bf2e1ffc17c1285bc7a9733239e4
+    contentHash: d87a505094468f9bdd5a7db156cbd65a317fb880787d9813e3a3401ec6d6aab7
     governanceHash: 17b9458eb491785470127e84e01e837244221c4479c7af2c70c15b49bb9cbb20
-    stateFingerprint: ed2922a08cdded8f955ce03a79a3e2bef3b34d9145d5bf52ad51b2ba246881e6
+    stateFingerprint: 14be7d89dd1e225cfa484d2419e91ca742b9c60ffc86c530323bd68ca1501866
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-WEB-ROOT
