@@ -1,7 +1,7 @@
 version: 1
 generatedFrom: git ls-files docs
 unitManifest: docs/planning/status/system-governance-unit-index.units.yaml
-documentCount: 1446
+documentCount: 1447
 documents:
   - path: docs/CONTRIBUTING.md
     classification: governs unit
@@ -5781,6 +5781,10 @@ documents:
     subjectUnit: SYS-CI-GOVERNANCE
   - path: docs/planning/status/root-local-doc-triage-20260417.md
     classification: describes unit
+    documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
+    subjectUnit: SYS-DOCS-GOVERNANCE
+  - path: docs/planning/status/system-governance-component-file-map-20260503.md
+    classification: governs unit
     documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
     subjectUnit: SYS-DOCS-GOVERNANCE
   - path: docs/planning/status/system-governance-component-index-20260501.md
