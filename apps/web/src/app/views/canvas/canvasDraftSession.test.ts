@@ -250,6 +250,36 @@ describe('canvasDraftSession', () => {
     expect(session.baseline.record?.revision).toBe('rev-saved');
     expect(session.workingSet.visibleNodeIds).toEqual(['node_1', 'node_2']);
     expect(session.workingSet.visibleEdges).toEqual([{ sourceId: 'node_1', targetId: 'node_2' }]);
+    expect(session.savingWorkingSet).toBeUndefined();
+  });
+
+  it('preserves local edits made while a save request is in flight', () => {
+    const savingSession = canvasDraftSession.machine.markSaving(
+      canvasDraftSession.machine.bootstrap({
+        remoteDraft: null,
+        canonicalNodeIds: ['node_1'],
+        canonicalEdges: [],
+      })
+    );
+    const editedWhileSavingSession = canvasDraftSession.workingSet.queueExplicitNodeIds(
+      savingSession,
+      ['node_local']
+    );
+
+    const session = canvasDraftSession.machine.applySaveSuccess(
+      editedWhileSavingSession,
+      buildRemoteDraftRecord({ revision: 'rev-saved' })
+    );
+
+    expect(session.syncState).toBe('editing');
+    expect(session.draftRevision).toBe('rev-saved');
+    expect(session.baseline.record?.revision).toBe('rev-saved');
+    expect(session.workingSet).toEqual({
+      visibleNodeIds: ['node_1'],
+      visibleEdges: [],
+      pendingExplicitNodeIds: ['node_local'],
+    });
+    expect(session.savingWorkingSet).toBeUndefined();
   });
 
   it('transitions to missing_remote when the persisted draft disappears', () => {

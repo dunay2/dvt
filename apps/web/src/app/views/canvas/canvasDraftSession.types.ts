@@ -25,6 +25,7 @@ export type CanvasDraftSession = {
   baseline: CanvasDraftBaseline;
   workingSet: CanvasDraftWorkingSet;
   draftRevision: string | null;
+  savingWorkingSet?: CanvasDraftWorkingSet;
   localNodeCatalog?: Record<string, CanonicalNode>;
 };
 

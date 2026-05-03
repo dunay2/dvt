@@ -170,9 +170,7 @@ function reconcileSnapshot(
     ...reconciledSession.workingSet.pendingExplicitNodeIds,
   ]);
   const nextLocalNodeCatalog = Object.fromEntries(
-    Object.entries(currentLocalNodeCatalog).filter(([nodeId]) =>
-      retainedLocalNodeIds.has(nodeId)
-    )
+    Object.entries(currentLocalNodeCatalog).filter(([nodeId]) => retainedLocalNodeIds.has(nodeId))
   );
 
   return withLocalNodeCatalog(reconciledSession, nextLocalNodeCatalog);
@@ -204,10 +202,7 @@ function addExplicitNode(
   return upsertNode(session, canonicalNode);
 }
 
-function upsertNode(
-  session: CanvasDraftSession,
-  canonicalNode: CanonicalNode
-): CanvasDraftSession {
+function upsertNode(session: CanvasDraftSession, canonicalNode: CanonicalNode): CanvasDraftSession {
   const nodeId = canonicalNode.id;
   const nextVisibleNodeIds = session.workingSet.visibleNodeIds.includes(nodeId)
     ? session.workingSet.visibleNodeIds
@@ -264,6 +259,7 @@ function replaceEdges(session: CanvasDraftSession, edges: CanvasDraftEdge[]): Ca
 export const canvasDraftSessionWorkingSet = {
   buildCanonical,
   buildFromDraft,
+  equals: workingSetsEqual,
   reconcileSnapshot,
   queueExplicitNodeIds,
   addExplicitNode,

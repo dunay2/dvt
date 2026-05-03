@@ -31,6 +31,7 @@ function transition(
     baseline: canvasDraftSessionBaseline.create(record),
     workingSet,
     draftRevision: record?.revision ?? null,
+    savingWorkingSet: undefined,
     localNodeCatalog,
   };
 }
@@ -70,6 +71,7 @@ function markSaving(session: CanvasDraftSession): CanvasDraftSession {
   return {
     ...session,
     syncState: 'saving',
+    savingWorkingSet: session.workingSet,
   };
 }
 
@@ -99,11 +101,16 @@ function applySaveSuccess(
   session: CanvasDraftSession,
   record: WorkspaceGraphDraftRecord
 ): CanvasDraftSession {
+  const persistedWorkingSet = canvasDraftSessionWorkingSet.buildFromDraft(record.draft);
+  const hasEditsWhileSaving =
+    session.savingWorkingSet != null &&
+    !canvasDraftSessionWorkingSet.equals(session.savingWorkingSet, session.workingSet);
+
   return transitionWithRecord(
     session,
     'editing',
     record,
-    canvasDraftSessionWorkingSet.buildFromDraft(record.draft)
+    hasEditsWhileSaving ? session.workingSet : persistedWorkingSet
   );
 }
 

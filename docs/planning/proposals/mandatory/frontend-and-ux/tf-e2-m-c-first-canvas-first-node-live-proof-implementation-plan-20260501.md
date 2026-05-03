@@ -247,6 +247,10 @@ creating the expected backend state outside the route.
 | `apps/web/src/app/views/canvas/canvasHostCycleState.test.ts`                                                              | Modify | Prove clean startup has no seeded nodes before document creation.                            |
 | `apps/web/src/app/views/canvas/canvasCreateCanvasDocumentCommand.ts`                                                      | Modify | Ensure first-canvas command emits typed, empty, saveable document intent.                    |
 | `apps/web/src/app/views/canvas/canvasCreateCanvasDocumentCommand.test.ts`                                                 | Modify | Prove transformation and dbt first-canvas variants plus negative duplicate path.             |
+| `apps/web/src/app/views/canvas/canvasDraftSession.types.ts`                                                               | Modify | Carry the save-window working-set snapshot needed to protect local edits in flight.          |
+| `apps/web/src/app/views/canvas/canvasDraftSessionMachine.ts`                                                              | Modify | Preserve writable draft-session transitions after authoritative save success.                |
+| `apps/web/src/app/views/canvas/canvasDraftSessionWorkingSet.ts`                                                           | Modify | Reuse canonical working-set equality for save-window drift detection.                        |
+| `apps/web/src/app/views/canvas/canvasDraftSession.test.ts`                                                                | Modify | Prove save success hydrates persisted draft truth unless local edits happened in flight.     |
 | `apps/web/src/app/views/canvas/useCanvasController.ts`                                                                    | Modify | Compose first-canvas and first-node command flow through existing ports.                     |
 | `apps/web/src/app/views/canvas/useCanvasController.core.test.tsx`                                                         | Modify | Prove first-node creation waits for authoritative first-canvas save.                         |
 | `apps/web/src/app/views/canvas/useCanvasController.persistence.test.tsx`                                                  | Modify | Prove created node and layout persist through draft/session boundaries.                      |
@@ -339,7 +343,9 @@ allowedImplementationSurfaces:
   - apps/web/src/app/views/canvas/canvasShellPropsBuilder.tsx
   - apps/web/src/app/views/canvas/canvasCreateCanvasDocumentCommand.ts
   - apps/web/src/app/views/canvas/canvasCreateCanvasDocumentCommand.test.ts
+  - apps/web/src/app/views/canvas/canvasDraftSession.types.ts
   - apps/web/src/app/views/canvas/canvasDraftSessionMachine.ts
+  - apps/web/src/app/views/canvas/canvasDraftSessionWorkingSet.ts
   - apps/web/src/app/views/canvas/canvasDraftSession.test.ts
   - apps/web/src/app/views/canvas/useCanvasController.ts
   - apps/web/src/app/views/canvas/useCanvasController.core.test.tsx
