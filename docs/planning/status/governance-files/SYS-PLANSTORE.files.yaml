@@ -818,8 +818,8 @@ files:
   - fileId: F-3AA698AF1593
     pathHash: a8385abd693221ddf75c21b39f292a6ec1abca7f656c0594358fe6f8eacd6bb5
     contentHash: 6ab5c375b96e78bc8ca822ef5dc261937773fad6c36d37ee90bc505f8eebdc61
-    governanceHash: 21062ec04d1e686ebf8cb8fc0e60379284760dccd18989a04d2e4d0be31268bf
-    stateFingerprint: becc87f16be3444eb30799c5d3cec74f5ef29c7dc353b4b03c0960ece7aacbbf
+    governanceHash: d28c9f0af015cbcdbd47180a5df7b3e60b23d618a27c111a813b795a6bfe7317
+    stateFingerprint: 1a57f30006a251b12ccbe799c576f1ed3654411da2f41afff1cb5624dba56d2d
     path: docs/contracts/planner/PlanStoreRecords.v1.md
     owningUnit: SYS-PLANSTORE-CONTRACTS
     rootUnit: SYS-DVT
@@ -830,11 +830,11 @@ files:
       - SYS-PLANSTORE
       - SYS-PLANSTORE-CONTRACTS
     ownerLevel: component
-    unitStatus: drift
-    governanceState: drift
+    unitStatus: review
+    governanceState: review
     canonicalRole: none
-    evidenceState: remediation-required
-    isDrift: true
+    evidenceState: review-required
+    isDrift: false
     isLegacy: false
     dddOwner: PORT
     cqRails: PS-Q01, PS-C01
@@ -1288,9 +1288,9 @@ files:
       - docs/planning/status/system-governance-document-unit-map-20260501.md
   - fileId: F-5DB8E210931B
     pathHash: b846de26910dee57da406135873cb389c412c96fb21acc6f8f2753bee4b76fb7
-    contentHash: 72caf50415ae1a0a51c1a640b410df52919f86b81bae404a3448f0a1a98f77fd
+    contentHash: a27f1550c61f76d9ccaf470a22f5707d64a7516d53d4630668b758281673859f
     governanceHash: 34b4c9841cf358c2da3550b3f784889c7148ae4f3bcaf11542c8cfd8d96029c1
-    stateFingerprint: 1532802e248f7cae634a5553de355f05a5ccc22111a45b6b784d5931bb910086
+    stateFingerprint: 3d1cebbc60a25e5aff4cebe15ae755e65041c346f85b649008e644baafd1bc73
     path: >-
       docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
     owningUnit: SYS-PLANSTORE-DOCS-RISK
@@ -1421,9 +1421,9 @@ files:
       - docs/planning/status/system-governance-document-unit-map-20260501.md
   - fileId: F-02E0F7A67550
     pathHash: 8b4e9c3c0034ffb62cca0b31c6d77702ef5ec4af9c001597fff3fba35598102e
-    contentHash: e2c0934d1d1ab9739e552700db67e457e1c29c9c5ebb9a210165cfb2405dffad
+    contentHash: fe808e31533cd9a489bd15c23de2e1be2a1dcae9cbda1a98118c6b59f2da6149
     governanceHash: 34b4c9841cf358c2da3550b3f784889c7148ae4f3bcaf11542c8cfd8d96029c1
-    stateFingerprint: 442003425fb96529298cfc7ed7138053ac4bed9f7cf37a46187d827aa2b9bed9
+    stateFingerprint: 248efd8ddc07d57c4f0a0471a496430b71fa0d0cb787dfe2f4a6d0ab5d6dbc74
     path: docs/risk-register/quality/R-20260402-S08-PLAN-STORE-CONTRACT-DRIFT.yaml
     owningUnit: SYS-PLANSTORE-DOCS-RISK
     rootUnit: SYS-DVT
@@ -2517,8 +2517,8 @@ files:
   - fileId: F-41A2D9667B0D
     pathHash: c3732ee1e9c8b2287b30d84297bcdd57cdb9382d3256c9cf1bd3219248b33292
     contentHash: d9fdffe0a8b9d3b16d4482df2262dfa40c7e761cd9ad9c25e4da5cc2b4ae340b
-    governanceHash: 21062ec04d1e686ebf8cb8fc0e60379284760dccd18989a04d2e4d0be31268bf
-    stateFingerprint: b47fe1a03399ebf34ced274337fad370fb7fad8f68410951e7eacb86a1851512
+    governanceHash: d28c9f0af015cbcdbd47180a5df7b3e60b23d618a27c111a813b795a6bfe7317
+    stateFingerprint: cdf024d2719ac7cd68997dcbf6919313a076f2b632b16cfa4606521b537a5c9f
     path: packages/@dvt/artifacts/src/ports/IPlanStoreReader.ts
     owningUnit: SYS-PLANSTORE-CONTRACTS
     rootUnit: SYS-DVT
@@ -2529,11 +2529,11 @@ files:
       - SYS-PLANSTORE
       - SYS-PLANSTORE-CONTRACTS
     ownerLevel: component
-    unitStatus: drift
-    governanceState: drift
+    unitStatus: review
+    governanceState: review
     canonicalRole: none
-    evidenceState: remediation-required
-    isDrift: true
+    evidenceState: review-required
+    isDrift: false
     isLegacy: false
     dddOwner: PORT
     cqRails: PS-Q01, PS-C01
@@ -2545,8 +2545,8 @@ files:
   - fileId: F-6CF12F62ED37
     pathHash: ceb233c3ea3b75fbf0ea7bca0db273a394d87445b5a49a9c47de89ee405e32b4
     contentHash: 0af0fa29d4bcc2473b2fac818a9ddeb38801c4f65fe45ba89c6a29fb13eda212
-    governanceHash: 21062ec04d1e686ebf8cb8fc0e60379284760dccd18989a04d2e4d0be31268bf
-    stateFingerprint: 3c516ad5c265b53347b4689a86ec463f89e629e0caa1217dafc7c1cc99213da8
+    governanceHash: d28c9f0af015cbcdbd47180a5df7b3e60b23d618a27c111a813b795a6bfe7317
+    stateFingerprint: bf2ae3e883ed75be6b95eb8051e9594f6b0f7191cad81289fe48bb0cc24340dc
     path: packages/@dvt/artifacts/src/ports/IPlanStoreWriter.ts
     owningUnit: SYS-PLANSTORE-CONTRACTS
     rootUnit: SYS-DVT
@@ -2557,11 +2557,11 @@ files:
       - SYS-PLANSTORE
       - SYS-PLANSTORE-CONTRACTS
     ownerLevel: component
-    unitStatus: drift
-    governanceState: drift
+    unitStatus: review
+    governanceState: review
     canonicalRole: none
-    evidenceState: remediation-required
-    isDrift: true
+    evidenceState: review-required
+    isDrift: false
     isLegacy: false
     dddOwner: PORT
     cqRails: PS-Q01, PS-C01

@@ -23,12 +23,12 @@ Machine-readable source:
 
 ## Totals
 
-- Tasks: 44
-- P0 tasks: 4
-- P1 tasks: 16
+- Tasks: 43
+- P0 tasks: 3
+- P1 tasks: 15
 - P2 tasks: 3
-- P3 tasks: 21
-- Drift files represented: 44
+- P3 tasks: 22
+- Drift files represented: 41
 - Components requiring subdivision: 19
 
 ## By Type
@@ -39,7 +39,7 @@ Machine-readable source:
 | `component-subdivision` | 19 |
 | `cq-rail-gap` | 9 |
 | `doc-alignment` | 12 |
-| `drift-removal` | 4 |
+| `drift-removal` | 3 |
 <!-- prettier-ignore-end -->
 
 ## By Priority
@@ -47,10 +47,10 @@ Machine-readable source:
 <!-- prettier-ignore-start -->
 | Priority | Count |
 | --- | ---: |
-| `P0` | 4 |
-| `P1` | 16 |
+| `P0` | 3 |
+| `P1` | 15 |
 | `P2` | 3 |
-| `P3` | 21 |
+| `P3` | 22 |
 <!-- prettier-ignore-end -->
 
 ## Queue
@@ -61,7 +61,6 @@ Machine-readable source:
 | `GRQ-DRIFT_REMOVAL-SYS-PLANSTORE-API-COMPOSITION` | `P0` | `drift-removal` | `SYS-PLANSTORE-API-COMPOSITION` | 20 | 0 | Files are marked drift in the governed file index. |
 | `GRQ-DRIFT_REMOVAL-SYS-PLANSTORE-POSTGRES` | `P0` | `drift-removal` | `SYS-PLANSTORE-POSTGRES` | 16 | 0 | Files are marked drift in the governed file index. |
 | `GRQ-DRIFT_REMOVAL-SYS-PLANSTORE-ENGINE-FETCH` | `P0` | `drift-removal` | `SYS-PLANSTORE-ENGINE-FETCH` | 5 | 0 | Files are marked drift in the governed file index. |
-| `GRQ-DRIFT_REMOVAL-SYS-PLANSTORE-CONTRACTS` | `P0` | `drift-removal` | `SYS-PLANSTORE-CONTRACTS` | 3 | 0 | Files are marked drift in the governed file index. |
 | `GRQ-CQ_RAIL_GAP-SYS-ADAPTERS-ROOT` | `P1` | `cq-rail-gap` | `SYS-ADAPTERS-ROOT` | 0 | 0 | Component has generic command/query language instead of specific rail rows. |
 | `GRQ-CQ_RAIL_GAP-SYS-CONTRACTS-ROOT` | `P1` | `cq-rail-gap` | `SYS-CONTRACTS-ROOT` | 0 | 0 | Component has generic command/query language instead of specific rail rows. |
 | `GRQ-CQ_RAIL_GAP-SYS-OBSERVABILITY-ROOT` | `P1` | `cq-rail-gap` | `SYS-OBSERVABILITY-ROOT` | 0 | 0 | Component has generic command/query language instead of specific rail rows. |
@@ -73,7 +72,6 @@ Machine-readable source:
 | `GRQ-CQ_RAIL_GAP-SYS-WORKERS-ROOT` | `P1` | `cq-rail-gap` | `SYS-WORKERS-ROOT` | 0 | 0 | Component has generic command/query language instead of specific rail rows. |
 | `GRQ-COMPONENT_SUBDIVISION-SYS-DOCS-GOVERNANCE-ROOT` | `P1` | `component-subdivision` | `SYS-DOCS-GOVERNANCE-ROOT` | 0 | 0 | Component is known but still too broad for source-level governance. |
 | `GRQ-COMPONENT_SUBDIVISION-SYS-PLANSTORE-API-COMPOSITION` | `P1` | `component-subdivision` | `SYS-PLANSTORE-API-COMPOSITION` | 0 | 0 | Component is known but still too broad for source-level governance. |
-| `GRQ-COMPONENT_SUBDIVISION-SYS-PLANSTORE-CONTRACTS` | `P1` | `component-subdivision` | `SYS-PLANSTORE-CONTRACTS` | 0 | 0 | Component is known but still too broad for source-level governance. |
 | `GRQ-COMPONENT_SUBDIVISION-SYS-PLANSTORE-ENGINE-FETCH` | `P1` | `component-subdivision` | `SYS-PLANSTORE-ENGINE-FETCH` | 0 | 0 | Component is known but still too broad for source-level governance. |
 | `GRQ-COMPONENT_SUBDIVISION-SYS-PLANSTORE-POSTGRES` | `P1` | `component-subdivision` | `SYS-PLANSTORE-POSTGRES` | 0 | 0 | Component is known but still too broad for source-level governance. |
 | `GRQ-COMPONENT_SUBDIVISION-SYS-RUNTIME-ROOT` | `P1` | `component-subdivision` | `SYS-RUNTIME-ROOT` | 0 | 0 | Component is known but still too broad for source-level governance. |
@@ -88,6 +86,7 @@ Machine-readable source:
 | `GRQ-COMPONENT_SUBDIVISION-SYS-OBSERVABILITY-ROOT` | `P3` | `component-subdivision` | `SYS-OBSERVABILITY-ROOT` | 0 | 0 | Component is known but still too broad for source-level governance. |
 | `GRQ-COMPONENT_SUBDIVISION-SYS-PLANNER-ROOT` | `P3` | `component-subdivision` | `SYS-PLANNER-ROOT` | 0 | 0 | Component is known but still too broad for source-level governance. |
 | `GRQ-COMPONENT_SUBDIVISION-SYS-PLANSTORE-ARTIFACTS-PORTS` | `P3` | `component-subdivision` | `SYS-PLANSTORE-ARTIFACTS-PORTS` | 0 | 0 | Component is known but still too broad for source-level governance. |
+| `GRQ-COMPONENT_SUBDIVISION-SYS-PLANSTORE-CONTRACTS` | `P3` | `component-subdivision` | `SYS-PLANSTORE-CONTRACTS` | 0 | 0 | Component is known but still too broad for source-level governance. |
 | `GRQ-COMPONENT_SUBDIVISION-SYS-PLANSTORE-DOCS-RISK` | `P3` | `component-subdivision` | `SYS-PLANSTORE-DOCS-RISK` | 0 | 0 | Component is known but still too broad for source-level governance. |
 | `GRQ-COMPONENT_SUBDIVISION-SYS-PLANSTORE-TEMPORAL-COMPOSITION` | `P3` | `component-subdivision` | `SYS-PLANSTORE-TEMPORAL-COMPOSITION` | 0 | 0 | Component is known but still too broad for source-level governance. |
 | `GRQ-COMPONENT_SUBDIVISION-SYS-REPO-METADATA-ROOT` | `P3` | `component-subdivision` | `SYS-REPO-METADATA-ROOT` | 0 | 0 | Component is known but still too broad for source-level governance. |

@@ -135,9 +135,9 @@ components:
   - id: SYS-PLANSTORE-CONTRACTS
     path: docs/planning/status/governance-components/SYS-PLANSTORE-CONTRACTS.component-files.yaml
     fileCount: 3
-    driftFileCount: 3
+    driftFileCount: 0
     legacyFileCount: 0
-    contentHash: f068d10ed5d9e9a50a7cfaaccc25f6b78331dd1deb541f12ce584d189fe485ab
+    contentHash: bd9d2fdb8a8964b57917528e8936fab84115f794fef1a1adb2c810eb7798a599
   - id: SYS-PLANSTORE-DOCS-RISK
     path: docs/planning/status/governance-components/SYS-PLANSTORE-DOCS-RISK.component-files.yaml
     fileCount: 34

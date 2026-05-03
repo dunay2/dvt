@@ -6,7 +6,7 @@ totals:
   files: 4134
   governedFiles: 4134
   ungovernedFiles: 0
-  driftFiles: 44
+  driftFiles: 41
   legacyFiles: 0
   components: 32
   componentsRequiringSubdivision: 19
@@ -105,18 +105,18 @@ byStatus:
   - name: coverage-required
     count: 3900
   - name: drift
-    count: 44
+    count: 41
   - name: review
-    count: 79
+    count: 82
 byGovernanceState:
   - name: coverage-required
     count: 3900
   - name: drift
-    count: 44
+    count: 41
   - name: governed
     count: 111
   - name: review
-    count: 79
+    count: 82
 byCanonicalRole:
   - name: implementation-owner
     count: 111
@@ -128,9 +128,9 @@ byEvidenceState:
   - name: coverage-required
     count: 3900
   - name: remediation-required
-    count: 44
+    count: 41
   - name: review-required
-    count: 79
+    count: 82
 byDddOwner:
   - name: ADP
     count: 250
@@ -712,14 +712,14 @@ componentCoverage:
     name: Plan-store contracts
     rootUnit: SYS-DVT
     domainUnit: SYS-PLANSTORE
-    status: drift
-    governanceState: drift
+    status: review
+    governanceState: review
     canonicalRole: none
-    evidenceState: remediation-required
+    evidenceState: review-required
     dddOwner: PORT
     cqRails: PS-Q01, PS-C01
     fileCount: 3
-    isDrift: true
+    isDrift: false
     isLegacy: false
     childrenRequired: true
     governance:
@@ -865,10 +865,6 @@ findings:
       owningUnit: SYS-PLANSTORE-API-COMPOSITION
       status: drift
       componentUnit: SYS-PLANSTORE-API-COMPOSITION
-    - path: docs/contracts/planner/PlanStoreRecords.v1.md
-      owningUnit: SYS-PLANSTORE-CONTRACTS
-      status: drift
-      componentUnit: SYS-PLANSTORE-CONTRACTS
     - path: packages/@dvt/adapter-postgres/src/PostgresPlanStore.admission-repository.ts
       owningUnit: SYS-PLANSTORE-POSTGRES
       status: drift
@@ -933,14 +929,6 @@ findings:
       owningUnit: SYS-PLANSTORE-POSTGRES
       status: drift
       componentUnit: SYS-PLANSTORE-POSTGRES
-    - path: packages/@dvt/artifacts/src/ports/IPlanStoreReader.ts
-      owningUnit: SYS-PLANSTORE-CONTRACTS
-      status: drift
-      componentUnit: SYS-PLANSTORE-CONTRACTS
-    - path: packages/@dvt/artifacts/src/ports/IPlanStoreWriter.ts
-      owningUnit: SYS-PLANSTORE-CONTRACTS
-      status: drift
-      componentUnit: SYS-PLANSTORE-CONTRACTS
     - path: packages/@dvt/engine/src/ports/IPlanArtifactReader.ts
       owningUnit: SYS-PLANSTORE-ENGINE-FETCH
       status: drift
@@ -1033,7 +1021,7 @@ findings:
       dddOwner: PORT
     - id: SYS-PLANSTORE-CONTRACTS
       fileCount: 3
-      status: drift
+      status: review
       dddOwner: PORT
     - id: SYS-API-OPS-ROUTES
       fileCount: 0
