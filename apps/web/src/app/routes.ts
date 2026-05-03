@@ -14,8 +14,10 @@ import { usePublishedRouteBootstrap } from './bootstrap/usePublishedRouteBootstr
 import type { ViewContribution } from './plugins/contracts/PluginManifest';
 import { getAllViews } from './plugins/registry';
 import Root from './Root';
+import AuthRouteGate from './bootstrap/AuthRouteGate';
 import { useShellRuntime } from './shell/useShellRuntime';
 import AdminView from './views/AdminView';
+import LoginView from './views/LoginView';
 import PluginsView from './views/PluginsView';
 
 function normalizeChildPath(path: string): string {
@@ -53,10 +55,7 @@ const DEFAULT_CORE_REDIRECT_PRESENTATION = createPendingRouteBootstrapPresentati
 );
 
 function DefaultCoreRouteRedirect() {
-  usePublishedRouteBootstrap(
-    DEFAULT_CORE_REDIRECT_ROUTE_ID,
-    DEFAULT_CORE_REDIRECT_PRESENTATION
-  );
+  usePublishedRouteBootstrap(DEFAULT_CORE_REDIRECT_ROUTE_ID, DEFAULT_CORE_REDIRECT_PRESENTATION);
   const { defaultCoreViewPath } = useShellRuntime();
 
   return createElement(Navigate, { to: defaultCoreViewPath, replace: true });
@@ -92,9 +91,7 @@ function requireViewRouteHandle(view: ViewContribution): AppRouteHandle {
     return view.handle;
   }
 
-  throw new Error(
-    `View contribution ${view.id} must declare handle.routeBootstrap explicitly.`
-  );
+  throw new Error(`View contribution ${view.id} must declare handle.routeBootstrap explicitly.`);
 }
 
 function createPluginRoute(
@@ -154,7 +151,7 @@ export function createAppRoutes(): RouteObject[] {
   return [
     {
       path: '/',
-      Component: Root,
+      element: createElement(AuthRouteGate, { children: createElement(Root) }),
       errorElement: createElement(AppRouteErrorBoundary),
       children: [
         {
@@ -170,6 +167,10 @@ export function createAppRoutes(): RouteObject[] {
         ...pluginRoutes,
         ...shellRoutes,
       ],
+    },
+    {
+      path: '/login',
+      Component: LoginView,
     },
   ];
 }

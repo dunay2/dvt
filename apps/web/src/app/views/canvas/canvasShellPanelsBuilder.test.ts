@@ -62,4 +62,25 @@ describe('buildCanvasShellPanels', () => {
 
     expect(panels.authoringNodeKinds).toEqual([]);
   });
+
+  it('resolves authoring node kinds when canvas kind casing differs', () => {
+    const panels = buildCanvasShellPanels(
+      buildArgs({
+        routePresentation: {
+          canvasDocument: {
+            kind: ' Transformation ',
+            title: 'Transformation canvas',
+          },
+          availableCanvasKinds: [
+            buildTestCanvasKind('dbt', [buildTestNodeKind('dbt:model', 'Model')]),
+            buildTestCanvasKind('transformation', [buildTestNodeKind('dvt:source', 'Source')]),
+          ],
+        },
+      })
+    );
+
+    expect(panels.authoringNodeKinds.map((registration) => registration.kind)).toEqual([
+      'dvt:source',
+    ]);
+  });
 });

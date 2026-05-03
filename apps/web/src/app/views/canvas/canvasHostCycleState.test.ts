@@ -123,6 +123,33 @@ describe('canvasHostCycleState', () => {
     });
   });
 
+  it('matches typed empty cycle when canvas kind has casing and whitespace drift', () => {
+    const onCreateAuthoringNode = vi.fn();
+    const cycle = deriveCanvasHostCycleState(
+      buildArgs({
+        presentationState: {
+          ...buildArgs().presentationState,
+          routeState: 'empty',
+        },
+        canvasDocument: {
+          kind: ' Transformation ',
+          title: 'Main canvas',
+        },
+        onCreateAuthoringNode,
+      })
+    );
+
+    expect(cycle).toEqual({
+      kind: 'typed_empty',
+      title: 'Start transformation canvas',
+      message: 'Start transformation authoring',
+      firstNodeLabel: 'Add first transformation node',
+      firstNodeHelper: 'Choose a transformation node',
+      nodeKinds: buildCanvasKinds()[1]?.nodeKinds,
+      onCreateAuthoringNode,
+    });
+  });
+
   it('keeps first-node creation closed until the first canvas save settles', () => {
     const cycle = deriveCanvasHostCycleState({
       ...buildArgs({
