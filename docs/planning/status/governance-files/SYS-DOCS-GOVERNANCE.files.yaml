@@ -31935,9 +31935,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-24B80677BA62
     pathHash: 2bd1ea3f54d0b1dd94d1a3126d3ce7c274bab438df8a0cf6572b7c20a0094b43
-    contentHash: 333901310c8a8b5e9a70d0154f1f18608df59a7ca2a952bee4211907cfbbca18
+    contentHash: 7bd6b3fcb2937c1b3442fbf01355d705c1ff4d1a270079cd3c72bc0dd5f142a7
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 329d0c70a39a210fbb1ed0bae7aa1a81d1e7c9c76f8fab3d570e95c686ff6437
+    stateFingerprint: b78f2bf684026d40436d8a2ae1e41381a3291eba207a2afa667ef48c4494f572
     path: >-
       docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-a-authoring-draft-hard-cut-implementation-plan-20260503.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT

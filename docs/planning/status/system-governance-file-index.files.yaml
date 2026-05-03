@@ -23,7 +23,7 @@ shards:
   - id: SYS-DOCS-GOVERNANCE
     path: docs/planning/status/governance-files/SYS-DOCS-GOVERNANCE.files.yaml
     fileCount: 1709
-    contentHash: a514bdabe0691365cd7eeea27630fe64c26a23167e490c79c8a756352b039f32
+    contentHash: 087ff013aa7a74f195f33ba8f9e3e2a0b90fdaeecdf6514b172f719aa5815895
   - id: SYS-OBSERVABILITY
     path: docs/planning/status/governance-files/SYS-OBSERVABILITY.files.yaml
     fileCount: 15
