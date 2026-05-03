@@ -976,6 +976,14 @@ symbols:
     architectureGuard: pnpm --filter @dvt/web test -- canvasStartupAndDraftRecovery.architecture.test.ts
     cypressCoverage: Existing first-authoring live proof.
     unitTests: [pnpm --filter @dvt/web test -- canvasDraftAuthoring.test.ts]
+  - name: compareAuthoringNodes
+    path: apps/web/src/app/views/canvas/canvasDraftStructuralSignature.ts
+    dddOwner: Canvas authoring signature policy
+    cqRails: [SaveCanvasAuthoringDraft]
+    fowlerSignals: [Parallel model]
+    architectureGuard: pnpm --filter @dvt/web test -- canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: Existing first-authoring live proof.
+    unitTests: [pnpm --filter @dvt/web test -- canvasDraftAuthoring.test.ts]
   - name: serializeWorkspaceGraphAuthoringDraftStructuralSignature
     path: apps/web/src/app/views/canvas/canvasDraftStructuralSignature.ts
     dddOwner: Canvas authoring signature policy
