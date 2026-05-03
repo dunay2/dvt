@@ -387,7 +387,7 @@ tasks:
   - task_id: AR-C1-T4
     parent_task: AR-C1
     priority: P1
-    status: queued
+    status: in_progress
     objective: >-
       extract a shared API-test snapshot fixture helper so admin/runtime tests stop embedding local
       WorkflowSnapshot builders.
@@ -397,7 +397,7 @@ tasks:
       construction in admin route coverage.
     complexity: S
     effort_points: 2
-    progress_pct: 0
+    progress_pct: 20
     evidence_refs:
       - apps/api/test/entrypoints/http/adminRoutes.test.ts
       - apps/api/test/integration/protectedRuntime.integration.test.ts
@@ -1189,15 +1189,18 @@ tasks:
       - docs/planning/proposals/mandatory/runtime-and-contracts/protected-runtime-rail-closure-plan-20260503.md
       - docs/risk-register/quality/R-20260503-PROTECTED-RUNTIME-RAIL-CLOSURE.yaml
       - docs/architecture/command-query-rail-governance.md
+      - apps/api/docs/protected-runtime-route-group-component.md
       - apps/api/src/entrypoints/http/registerProtectedRuntimeRoutes.ts
       - apps/api/src/entrypoints/http/runtimeRoutes.constants.ts
+      - apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
       - apps/api/test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts
       - apps/api/test/integration/protectedRuntime.integration.test.ts
     status_reason: >-
-      Registered from managed risk `R-20260503-PROTECTED-RUNTIME-RAIL-CLOSURE`: individual protected
-      runtime rails such as start-run identity and access-decision vocabulary are already closed,
-      but the full protected route group still needs one executable command/query matrix,
-      negative-test closure pass, and legacy/compatibility classification before the risk can close.
+      `AR-C10-A` is now mechanized: the protected runtime route group has a local component guide
+      and an architecture test that binds `runtimeRoutes.constants.ts` to the documented
+      command/query rail matrix, including explicit CANCEL-through-/signal compatibility posture.
+      Remaining closure is `AR-C10-B` negative-test coverage inventory/patching and `AR-C10-C`
+      legacy/compatibility classification before the risk can close.
     last_verified: '2026-05-03'
   - task_id: TF-C3
     priority: P1

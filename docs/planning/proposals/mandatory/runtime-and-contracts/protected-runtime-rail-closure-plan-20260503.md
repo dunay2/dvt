@@ -287,6 +287,8 @@ governingSources:
   - docs/planning/state/agent-lane-c.yaml
   - docs/risk-register/quality/R-20260503-PROTECTED-RUNTIME-RAIL-CLOSURE.yaml
 allowedImplementationSurfaces:
+  - apps/api/docs/protected-runtime-route-group-component.md
+  - apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
   - docs/planning/proposals/mandatory/runtime-and-contracts/protected-runtime-rail-closure-plan-20260503.md
   - docs/planning/state/agent-lane-c.yaml
   - docs/planning/state/agent-lane-c.md
@@ -295,7 +297,8 @@ allowedImplementationSurfaces:
   - docs/planning/status/**
   - docs/risk-register/quality/R-20260503-PROTECTED-RUNTIME-RAIL-CLOSURE.yaml
 forbiddenImplementationSurfaces:
-  - apps/**
+  - apps/web/**
+  - apps/api/src/**
   - packages/**
   - specs/**
   - .github/**
@@ -365,4 +368,27 @@ symbols:
     unitTests:
       - pnpm docs:feature-mechanization --feature PROTECTED-RUNTIME-RAIL-CLOSURE
       - pnpm docs:feature-mechanization:implementation
+  - name: DOC_PATH
+    path: apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
+    dddOwner: Protected runtime route group architecture test
+    cqRails:
+      - ClassifyProtectedRuntimeRouteRails
+    fowlerSignals:
+      - Boundary drift
+    architectureGuard: pnpm --filter dvt-api exec vitest run test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
+    cypressCoverage: N/A - API architecture guard
+    unitTests:
+      - pnpm --filter dvt-api exec vitest run test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
+  - name: GOVERNED_ROUTE_RAILS
+    path: apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
+    dddOwner: Protected runtime route group architecture test
+    cqRails:
+      - ClassifyProtectedRuntimeRouteRails
+    fowlerSignals:
+      - Boundary drift
+      - Divergent change
+    architectureGuard: pnpm --filter dvt-api exec vitest run test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
+    cypressCoverage: N/A - API architecture guard
+    unitTests:
+      - pnpm --filter dvt-api exec vitest run test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
 ```
