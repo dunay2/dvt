@@ -407,7 +407,7 @@ tasks:
   - task_id: CFG-TS-T1
     parent_task: AR-C1
     priority: P2
-    status: queued
+    status: in_progress
     objective: >-
       produce a staged migration plan for TypeScript `baseUrl` deprecation covering inventory,
       compatibility risks, rollout waves, and rollback points before any config change lands.
@@ -417,7 +417,7 @@ tasks:
       validation baseline (`typecheck`, tests, `verify:prepush`) for each wave.
     complexity: M
     effort_points: 5
-    progress_pct: 0
+    progress_pct: 65
     evidence_refs:
       - tsconfig.node-runtime.base.json
       - tsconfig.package-bundler.base.json
@@ -1190,17 +1190,18 @@ tasks:
       - docs/risk-register/quality/R-20260503-PROTECTED-RUNTIME-RAIL-CLOSURE.yaml
       - docs/architecture/command-query-rail-governance.md
       - apps/api/docs/protected-runtime-route-group-component.md
+      - apps/api/src/application/ports/protectedRuntimeCommandQueryRails.ts
       - apps/api/src/entrypoints/http/registerProtectedRuntimeRoutes.ts
       - apps/api/src/entrypoints/http/runtimeRoutes.constants.ts
       - apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
       - apps/api/test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts
       - apps/api/test/integration/protectedRuntime.integration.test.ts
     status_reason: >-
-      `AR-C10-A` is now mechanized: the protected runtime route group has a local component guide
-      and an architecture test that binds `runtimeRoutes.constants.ts` to the documented
-      command/query rail matrix, including explicit CANCEL-through-/signal compatibility posture.
-      Remaining closure is `AR-C10-B` negative-test coverage inventory/patching and `AR-C10-C`
-      legacy/compatibility classification before the risk can close.
+      `AR-C10-A` and `AR-C10-B` are now mechanized: the protected runtime route group has a local
+      component guide, an application-owned command/query rail catalog, and an architecture test
+      that binds `runtimeRoutes.constants.ts` to the rail catalog, required negative cases,
+      executable test-evidence refs, and explicit CANCEL-through-/signal compatibility posture.
+      Remaining closure is `AR-C10-C` legacy/compatibility classification before the risk can close.
     last_verified: '2026-05-03'
   - task_id: TF-C3
     priority: P1

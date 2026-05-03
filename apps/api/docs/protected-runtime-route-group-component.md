@@ -53,7 +53,8 @@ It does **not** own:
 - `PROTECTED_RUNTIME_COMMAND_QUERY_RAILS`
   Application-owned command/query rail catalog. It is the source that names
   product-intent rails, DDD ownership, application ports, adapter surfaces,
-  authorization posture, and required negative tests for this route group.
+  authorization posture, required negative tests, and executable test evidence
+  for this route group.
 - `registerWorkspaceGraphDraftRoutes(...)`
   Delegated route group for the workspace graph draft read/write boundary.
 - `registerAdminRoutes(...)`
@@ -64,6 +65,8 @@ It does **not** own:
 - Every route in `runtimeRoutes.constants.ts` has exactly one row in
   `PROTECTED_RUNTIME_COMMAND_QUERY_RAILS` and in the command/query rail matrix
   below.
+- Every required negative test case in `PROTECTED_RUNTIME_COMMAND_QUERY_RAILS`
+  has at least one `apps/api/test/**/*.ts` evidence reference.
 - Each matrix row names the owning application service or delegated route group.
 - Routes remain HTTP adapters; they do not own planner, engine, state-store, or
   access-decision backend semantics.
@@ -146,6 +149,7 @@ sequenceDiagram
 - `apps/api/src/app.ts`
 - `apps/api/src/entrypoints/http/registerProtectedRuntimeRoutes.ts`
 - `apps/api/src/entrypoints/http/runtimeRoutes.constants.ts`
+- `apps/api/src/application/ports/protectedRuntimeCommandQueryRails.ts`
 - `apps/api/test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts`
 - `apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts`
 - `apps/api/test/integration/protectedRuntime.integration.test.ts`

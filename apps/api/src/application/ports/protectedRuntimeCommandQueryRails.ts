@@ -9,6 +9,11 @@
 
 export type ProtectedRuntimeRailKind = 'command' | 'query';
 
+export type ProtectedRuntimeNegativeCoverage = {
+  readonly case: string;
+  readonly testRefs: readonly string[];
+};
+
 export type ProtectedRuntimeCommandQueryRail = {
   readonly name: string;
   readonly kind: ProtectedRuntimeRailKind;
@@ -18,6 +23,7 @@ export type ProtectedRuntimeCommandQueryRail = {
   readonly adapterSurface: string;
   readonly scopeAndAuthorization: string;
   readonly negativeTests: readonly string[];
+  readonly negativeCoverage: readonly ProtectedRuntimeNegativeCoverage[];
   readonly compatibility?: string;
 };
 
@@ -37,6 +43,28 @@ export const PROTECTED_RUNTIME_COMMAND_QUERY_RAILS = [
       'client runId',
       'invalid plan source',
     ],
+    negativeCoverage: [
+      {
+        case: 'missing token',
+        testRefs: ['apps/api/test/entrypoints/http/startRunRoute.authAndSuccess.test.ts'],
+      },
+      {
+        case: 'missing action',
+        testRefs: ['apps/api/test/application/services/startRunAuthorizedFacade.auth.test.ts'],
+      },
+      {
+        case: 'tenant mismatch',
+        testRefs: ['apps/api/test/entrypoints/http/startRunRoute.authAndSuccess.test.ts'],
+      },
+      {
+        case: 'client runId',
+        testRefs: ['apps/api/test/entrypoints/http/startRunRoute.validation.test.ts'],
+      },
+      {
+        case: 'invalid plan source',
+        testRefs: ['apps/api/test/entrypoints/http/startRunRoute.planSourcePolicy.test.ts'],
+      },
+    ],
   },
   {
     name: 'PreviewExecutablePlan',
@@ -53,6 +81,28 @@ export const PROTECTED_RUNTIME_COMMAND_QUERY_RAILS = [
       'invalid graph source',
       'invalid selection',
     ],
+    negativeCoverage: [
+      {
+        case: 'missing token',
+        testRefs: ['apps/api/test/entrypoints/http/previewPlanRoute.auth.test.ts'],
+      },
+      {
+        case: 'missing action',
+        testRefs: ['apps/api/test/entrypoints/http/previewPlanRoute.auth.test.ts'],
+      },
+      {
+        case: 'tenant mismatch',
+        testRefs: ['apps/api/test/entrypoints/http/planRouteRequestResolver.test.ts'],
+      },
+      {
+        case: 'invalid graph source',
+        testRefs: ['apps/api/test/entrypoints/http/previewPlanRoute.inputPolicy.test.ts'],
+      },
+      {
+        case: 'invalid selection',
+        testRefs: ['apps/api/test/entrypoints/http/planRouteSelectionParser.test.ts'],
+      },
+    ],
   },
   {
     name: 'CompileExecutablePlan',
@@ -63,6 +113,24 @@ export const PROTECTED_RUNTIME_COMMAND_QUERY_RAILS = [
     adapterSurface: 'POST /plans/compile',
     scopeAndAuthorization: 'run:start compatibility authorization, tenant scope',
     negativeTests: ['missing token', 'missing action', 'tenant mismatch', 'unsupported adapter'],
+    negativeCoverage: [
+      {
+        case: 'missing token',
+        testRefs: ['apps/api/test/entrypoints/http/planRouteRequestResolver.test.ts'],
+      },
+      {
+        case: 'missing action',
+        testRefs: ['apps/api/test/entrypoints/http/planRouteRequestResolver.test.ts'],
+      },
+      {
+        case: 'tenant mismatch',
+        testRefs: ['apps/api/test/entrypoints/http/planRouteRequestResolver.test.ts'],
+      },
+      {
+        case: 'unsupported adapter',
+        testRefs: ['apps/api/test/entrypoints/http/compilePlanRoute.test.ts'],
+      },
+    ],
   },
   {
     name: 'ImportExecutablePlan',
@@ -73,6 +141,24 @@ export const PROTECTED_RUNTIME_COMMAND_QUERY_RAILS = [
     adapterSurface: 'POST /plans/import',
     scopeAndAuthorization: 'run:start compatibility authorization, tenant scope',
     negativeTests: ['missing token', 'missing action', 'tenant mismatch', 'invalid plan ref'],
+    negativeCoverage: [
+      {
+        case: 'missing token',
+        testRefs: ['apps/api/test/entrypoints/http/planRouteRequestResolver.test.ts'],
+      },
+      {
+        case: 'missing action',
+        testRefs: ['apps/api/test/entrypoints/http/planRouteRequestResolver.test.ts'],
+      },
+      {
+        case: 'tenant mismatch',
+        testRefs: ['apps/api/test/entrypoints/http/importPlanRoute.test.ts'],
+      },
+      {
+        case: 'invalid plan ref',
+        testRefs: ['apps/api/test/entrypoints/http/importPlanRoute.test.ts'],
+      },
+    ],
   },
   {
     name: 'GetWorkspaceGraphDraft',
@@ -83,6 +169,24 @@ export const PROTECTED_RUNTIME_COMMAND_QUERY_RAILS = [
     adapterSurface: 'GET /workspace/graph/draft',
     scopeAndAuthorization: 'workspace:graph-draft:view, tenant/project/environment scope',
     negativeTests: ['missing token', 'missing action', 'tenant/workspace mismatch'],
+    negativeCoverage: [
+      {
+        case: 'missing token',
+        testRefs: ['apps/api/test/entrypoints/http/workspaceGraphDraftRoutes.test.ts'],
+      },
+      {
+        case: 'missing action',
+        testRefs: [
+          'apps/api/test/application/services/authorizeWorkspaceGraphDraftCapabilityService.test.ts',
+        ],
+      },
+      {
+        case: 'tenant/workspace mismatch',
+        testRefs: [
+          'apps/api/test/application/services/authorizeWorkspaceGraphDraftCapabilityService.test.ts',
+        ],
+      },
+    ],
   },
   {
     name: 'SaveWorkspaceGraphDraft',
@@ -98,6 +202,28 @@ export const PROTECTED_RUNTIME_COMMAND_QUERY_RAILS = [
       'tenant/workspace mismatch',
       'stale authority',
     ],
+    negativeCoverage: [
+      {
+        case: 'missing token',
+        testRefs: ['apps/api/test/entrypoints/http/workspaceGraphDraftRoutes.test.ts'],
+      },
+      {
+        case: 'missing action',
+        testRefs: [
+          'apps/api/test/application/services/authorizeWorkspaceGraphDraftCapabilityService.test.ts',
+        ],
+      },
+      {
+        case: 'tenant/workspace mismatch',
+        testRefs: [
+          'apps/api/test/application/services/authorizeWorkspaceGraphDraftCapabilityService.test.ts',
+        ],
+      },
+      {
+        case: 'stale authority',
+        testRefs: ['apps/api/test/entrypoints/http/workspaceGraphDraftRoutes.test.ts'],
+      },
+    ],
   },
   {
     name: 'ListRuns',
@@ -108,6 +234,20 @@ export const PROTECTED_RUNTIME_COMMAND_QUERY_RAILS = [
     adapterSurface: 'GET /runs',
     scopeAndAuthorization: 'run:list, tenant scope',
     negativeTests: ['missing token', 'missing action', 'tenant mismatch'],
+    negativeCoverage: [
+      {
+        case: 'missing token',
+        testRefs: ['apps/api/test/entrypoints/http/listRunsRoute.test.ts'],
+      },
+      {
+        case: 'missing action',
+        testRefs: ['apps/api/test/entrypoints/http/listRunsRoute.test.ts'],
+      },
+      {
+        case: 'tenant mismatch',
+        testRefs: ['apps/api/test/entrypoints/http/listRunsRoute.test.ts'],
+      },
+    ],
   },
   {
     name: 'GetRunStatus',
@@ -118,6 +258,24 @@ export const PROTECTED_RUNTIME_COMMAND_QUERY_RAILS = [
     adapterSurface: 'GET /runs/:runId',
     scopeAndAuthorization: 'run:view, tenant scope',
     negativeTests: ['missing token', 'missing action', 'tenant mismatch', 'unknown run'],
+    negativeCoverage: [
+      {
+        case: 'missing token',
+        testRefs: ['apps/api/test/entrypoints/http/getRunRoute.test.ts'],
+      },
+      {
+        case: 'missing action',
+        testRefs: ['apps/api/test/entrypoints/http/getRunRoute.test.ts'],
+      },
+      {
+        case: 'tenant mismatch',
+        testRefs: ['apps/api/test/entrypoints/http/getRunRoute.test.ts'],
+      },
+      {
+        case: 'unknown run',
+        testRefs: ['apps/api/test/entrypoints/http/getRunRoute.test.ts'],
+      },
+    ],
   },
   {
     name: 'GetRunEvents',
@@ -128,6 +286,24 @@ export const PROTECTED_RUNTIME_COMMAND_QUERY_RAILS = [
     adapterSurface: 'GET /runs/:runId/events',
     scopeAndAuthorization: 'run:logs:view, tenant scope',
     negativeTests: ['missing token', 'missing action', 'tenant mismatch', 'unknown run'],
+    negativeCoverage: [
+      {
+        case: 'missing token',
+        testRefs: ['apps/api/test/entrypoints/http/getRunEventsRoute.test.ts'],
+      },
+      {
+        case: 'missing action',
+        testRefs: ['apps/api/test/entrypoints/http/getRunEventsRoute.test.ts'],
+      },
+      {
+        case: 'tenant mismatch',
+        testRefs: ['apps/api/test/entrypoints/http/getRunEventsRoute.test.ts'],
+      },
+      {
+        case: 'unknown run',
+        testRefs: ['apps/api/test/entrypoints/http/getRunEventsRoute.test.ts'],
+      },
+    ],
   },
   {
     name: 'SignalRun',
@@ -144,6 +320,28 @@ export const PROTECTED_RUNTIME_COMMAND_QUERY_RAILS = [
       'unsupported signal',
       'compatibility disabled',
     ],
+    negativeCoverage: [
+      {
+        case: 'missing token',
+        testRefs: ['apps/api/test/entrypoints/http/signalRunRoute.test.ts'],
+      },
+      {
+        case: 'missing action',
+        testRefs: ['apps/api/test/entrypoints/http/signalRunRoute.test.ts'],
+      },
+      {
+        case: 'tenant mismatch',
+        testRefs: ['apps/api/test/entrypoints/http/signalRunRoute.test.ts'],
+      },
+      {
+        case: 'unsupported signal',
+        testRefs: ['apps/api/test/entrypoints/http/signalRunRouteParser.test.ts'],
+      },
+      {
+        case: 'compatibility disabled',
+        testRefs: ['apps/api/test/entrypoints/http/signalRunRouteParser.test.ts'],
+      },
+    ],
     compatibility: 'CANCEL through signal is compatibility behavior',
   },
   {
@@ -155,6 +353,24 @@ export const PROTECTED_RUNTIME_COMMAND_QUERY_RAILS = [
     adapterSurface: 'POST /runs/:runId/cancel',
     scopeAndAuthorization: 'run:cancel, tenant scope',
     negativeTests: ['missing token', 'missing action', 'tenant mismatch', 'non-empty reason'],
+    negativeCoverage: [
+      {
+        case: 'missing token',
+        testRefs: ['apps/api/test/entrypoints/http/cancelRunRoute.test.ts'],
+      },
+      {
+        case: 'missing action',
+        testRefs: ['apps/api/test/entrypoints/http/cancelRunRoute.test.ts'],
+      },
+      {
+        case: 'tenant mismatch',
+        testRefs: ['apps/api/test/entrypoints/http/cancelRunRouteParser.test.ts'],
+      },
+      {
+        case: 'non-empty reason',
+        testRefs: ['apps/api/test/entrypoints/http/cancelRunRouteParser.test.ts'],
+      },
+    ],
   },
   {
     name: 'RecoverRun',
@@ -170,6 +386,24 @@ export const PROTECTED_RUNTIME_COMMAND_QUERY_RAILS = [
       'tenant mismatch',
       'invalid recovery source',
     ],
+    negativeCoverage: [
+      {
+        case: 'missing token',
+        testRefs: ['apps/api/test/entrypoints/http/recoverRunRoute.test.ts'],
+      },
+      {
+        case: 'missing action',
+        testRefs: ['apps/api/test/entrypoints/http/recoverRunRoute.test.ts'],
+      },
+      {
+        case: 'tenant mismatch',
+        testRefs: ['apps/api/test/entrypoints/http/recoverRunRouteParser.test.ts'],
+      },
+      {
+        case: 'invalid recovery source',
+        testRefs: ['apps/api/test/entrypoints/http/recoverRunRouteParser.test.ts'],
+      },
+    ],
   },
   {
     name: 'RebuildRunSnapshot',
@@ -180,5 +414,23 @@ export const PROTECTED_RUNTIME_COMMAND_QUERY_RAILS = [
     adapterSurface: 'POST /admin/runs/:runId/rebuild-snapshot',
     scopeAndAuthorization: 'admin:rebuild-snapshot, tenant/admin scope',
     negativeTests: ['disabled route', 'missing token', 'missing action', 'tenant mismatch'],
+    negativeCoverage: [
+      {
+        case: 'disabled route',
+        testRefs: ['apps/api/test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts'],
+      },
+      {
+        case: 'missing token',
+        testRefs: ['apps/api/test/entrypoints/http/adminRoutes.test.ts'],
+      },
+      {
+        case: 'missing action',
+        testRefs: ['apps/api/test/entrypoints/http/adminRoutes.test.ts'],
+      },
+      {
+        case: 'tenant mismatch',
+        testRefs: ['apps/api/test/contracts/adminRebuildSnapshotAccessContract.test.ts'],
+      },
+    ],
   },
 ] as const satisfies readonly ProtectedRuntimeCommandQueryRail[];

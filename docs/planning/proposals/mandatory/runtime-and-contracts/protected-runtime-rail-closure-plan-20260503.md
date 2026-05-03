@@ -413,6 +413,18 @@ symbols:
     cypressCoverage: N/A - API architecture guard
     unitTests:
       - pnpm --filter dvt-api exec vitest run test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
+  - name: ProtectedRuntimeNegativeCoverage
+    path: apps/api/src/application/ports/protectedRuntimeCommandQueryRails.ts
+    dddOwner: Protected runtime rail matrix
+    cqRails:
+      - ClassifyProtectedRuntimeRouteRails
+    fowlerSignals:
+      - Boundary drift
+      - Divergent change
+    architectureGuard: pnpm --filter dvt-api exec vitest run test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
+    cypressCoverage: N/A - API architecture guard
+    unitTests:
+      - pnpm --filter dvt-api exec vitest run test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
   - name: ProtectedRuntimeRailKind
     path: apps/api/src/application/ports/protectedRuntimeCommandQueryRails.ts
     dddOwner: Protected runtime rail matrix

@@ -79,6 +79,26 @@ describe('protected runtime route group architecture', () => {
     expect(docText).toContain('PROTECTED_RUNTIME_COMMAND_QUERY_RAILS');
   });
 
+  it('maps every required negative rail case to executable test evidence', () => {
+    for (const rail of PROTECTED_RUNTIME_COMMAND_QUERY_RAILS) {
+      expect(rail.negativeCoverage).toHaveLength(rail.negativeTests.length);
+
+      for (const negativeCase of rail.negativeTests) {
+        const coverage = rail.negativeCoverage.find((entry) => entry.case === negativeCase);
+
+        expect(coverage, `${rail.name} missing coverage for ${negativeCase}`).toBeDefined();
+        expect(coverage?.testRefs.length).toBeGreaterThan(0);
+        for (const testRef of coverage?.testRefs ?? []) {
+          expect(testRef).toMatch(/^apps\/api\/test\/.+\.ts$/);
+          expect(
+            existsSync(join(import.meta.dirname, '../../../../..', testRef)),
+            `${rail.name} references missing test evidence ${testRef}`
+          ).toBe(true);
+        }
+      }
+    }
+  });
+
   it('documents CANCEL through /signal as compatibility, not a second canonical cancel rail', () => {
     const docText = readFileSync(DOC_PATH, 'utf8');
 
