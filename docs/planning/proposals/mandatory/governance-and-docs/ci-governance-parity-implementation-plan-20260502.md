@@ -244,6 +244,7 @@ allowedImplementationSurfaces:
   - docs/planning/status/**
   - scripts/check-governance-changed-files.cjs
   - scripts/check-governance-changed-files.test.cjs
+  - scripts/check-generated-docs-policy.cjs
   - tools/ci/workflow-pattern-parity.test.mjs
 forbiddenImplementationSurfaces:
   - apps/**
@@ -375,6 +376,18 @@ symbols:
     cypressCoverage: N/A - repository CI governance workflow only
     unitTests:
       - scripts/check-governance-changed-files.test.cjs
+  - name: validateArtifactSize
+    path: scripts/check-generated-docs-policy.cjs
+    dddOwner: Repository CI governance baseline
+    cqRails:
+      - CheckPrQualityGovernanceParity
+    fowlerSignals:
+      - Configuration drift
+      - Non-reproducible workflow dependency
+    architectureGuard: pnpm docs:gov:generated-policy
+    cypressCoverage: N/A - repository CI governance workflow only
+    unitTests:
+      - pnpm docs:gov:generated-policy
 ```
 
 ## Validation Plan

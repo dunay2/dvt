@@ -18876,9 +18876,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-3E16BC4495CF
     pathHash: 6a2ca58d6d97bbe54e6df4199696ed88bf25995adf0b6ecc2c57fb542b63ce81
-    contentHash: ac965dd0bd458c45fd87faf2b449506a13b5d6553729a281de6ce324eb1d1d46
+    contentHash: 04d82111029bfc7bebd9e24c71cc5e59b26a57c0704c513421b7af1cbe898ace
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: a7c137844d0ad3af7e4f5898a0578ab27d3272645623a65a84007072c1fcb5f4
+    stateFingerprint: 0ee0e07334af950b69ab595ca2173b0f4130b9a571914e652e4b14e676c4e675
     path: docs/generated-docs-policy.json
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
@@ -32578,9 +32578,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-E49C27D1091C
     pathHash: ba77ae7b1b229f3090a64df86c5f76c9892aac87bde14198635e7f3c9ad05bd0
-    contentHash: 32a321d9068ad0be5a4c34e92fb46c612cdec5c0b8c4aab21d22be291b54a30c
+    contentHash: 64e04f4e9eddb3739f996eb8b4f7a84bbc1d83ecb0c162a2b758264613e41672
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: c27459508ba2c83e7d5e2d690da930213747a5e72cfb9c6bf767d18fc5450fc3
+    stateFingerprint: 0324083b23266766366f4e0a78b45038c915c867da77543587b2674b61c45355
     path: >-
       docs/planning/proposals/mandatory/governance-and-docs/ci-governance-parity-implementation-plan-20260502.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -32686,9 +32686,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-1563B24E701F
     pathHash: 72cf6e11bfcda18dee85566a05eaf24c7a682f8e4e89bbf7313cc67fee1490d0
-    contentHash: 4acea906ac6fb501ddcc630599d74432d2cd3c5aa4cd69d8c88492550ba4baa1
+    contentHash: b1940388f83b75db68f8430a87445cfc3728fbb7db3530a83eb9c3593a66ed19
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 5ec08c0d09dd0228d49a55a1b54da83e07f050c97420bf7c6cb4ffc1b95d832f
+    stateFingerprint: a60a73f54368173281f787e8f5ab8cd1ce73192eaa8cca657d2202a0487b16ca
     path: >-
       docs/planning/proposals/mandatory/governance-and-docs/governance-file-index-sharding-plan-20260503.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
