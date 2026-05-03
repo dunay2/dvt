@@ -83,7 +83,7 @@ Components with `childrenRequired: true` and more than 100 files:
 <!-- prettier-ignore-start -->
 | Component | Files | Status |
 | --- | ---: | --- |
-| `SYS-DOCS-GOVERNANCE-ROOT` | 1717 | `coverage-required` |
+| `SYS-DOCS-GOVERNANCE-ROOT` | 1718 | `coverage-required` |
 | `SYS-WEB-ROOT` | 801 | `coverage-required` |
 | `SYS-RUNTIME-ROOT` | 286 | `coverage-required` |
 | `SYS-ADAPTERS-ROOT` | 196 | `coverage-required` |
@@ -99,12 +99,12 @@ Components with `childrenRequired: true` and more than 100 files:
 | Component | Level | Status | Governance state | Canonical role | Evidence state | Files | DDD owner | Parent |
 | --- | --- | ---: | --- | --- | --- | ---: | --- | --- |
 | `SYS-ADAPTERS-ROOT` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 196 | `ADP` | `SYS-ADAPTERS` |
-| `SYS-API-APPLICATION-PORTS` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 16 | `PORT` | `SYS-API-ROOT` |
+| `SYS-API-APPLICATION-PORTS` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 17 | `PORT` | `SYS-API-ROOT` |
 | `SYS-API-APPLICATION-SERVICES` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 34 | `AS` | `SYS-API-ROOT` |
 | `SYS-API-BOOTSTRAP` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 2 | `ENTRY` | `SYS-API-ROOT` |
-| `SYS-API-DOCS` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 14 | `INFRA` | `SYS-API-ROOT` |
+| `SYS-API-DOCS` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 15 | `INFRA` | `SYS-API-ROOT` |
 | `SYS-API-DOMAIN-AUTH` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 1 | `DS` | `SYS-API-ROOT` |
-| `SYS-API-HTTP-ENTRYPOINT-TESTS` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 51 | `INFRA` | `SYS-API-ROOT` |
+| `SYS-API-HTTP-ENTRYPOINT-TESTS` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 52 | `INFRA` | `SYS-API-ROOT` |
 | `SYS-API-HTTP-ENTRYPOINTS` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 76 | `ENTRY` | `SYS-API-ROOT` |
 | `SYS-API-INFRASTRUCTURE` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 27 | `ADP` | `SYS-API-ROOT` |
 | `SYS-API-OPS-HEALTH` | `source` | `review` | `review` | `none` | `review-required` | 11 | `ENTRY` | `SYS-API-OPS-ROUTES` |
@@ -114,7 +114,7 @@ Components with `childrenRequired: true` and more than 100 files:
 | `SYS-API-TESTS` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 99 | `INFRA` | `SYS-API-ROOT` |
 | `SYS-CI-GOVERNANCE-ROOT` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 180 | `INFRA` | `SYS-CI-GOVERNANCE` |
 | `SYS-CONTRACTS-ROOT` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 127 | `PORT` | `SYS-CONTRACTS` |
-| `SYS-DOCS-GOVERNANCE-ROOT` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 1717 | `INFRA` | `SYS-DOCS-GOVERNANCE` |
+| `SYS-DOCS-GOVERNANCE-ROOT` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 1718 | `INFRA` | `SYS-DOCS-GOVERNANCE` |
 | `SYS-OBSERVABILITY-ROOT` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 15 | `PORT` | `SYS-OBSERVABILITY` |
 | `SYS-PLANNER-ROOT` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 76 | `DS` | `SYS-PLANNER` |
 | `SYS-PLANSTORE-API-COMPOSITION` | `component` | `drift` | `drift` | `none` | `remediation-required` | 20 | `AS` | `SYS-PLANSTORE` |

@@ -1,7 +1,7 @@
 ---
 id: R-20260503-PROTECTED-RUNTIME-RAIL-CLOSURE
-title: Protected runtime rail closure remains pending as managed debt
-status: Open
+title: Protected runtime rail closure is governed by executable C&Q evidence
+status: Closed
 date: 2026-05-03
 owners:
   - dvt-api
@@ -10,25 +10,29 @@ severity: Medium
 probability: Medium
 ---
 summary: >
-  The protected runtime HTTP rail closure is not yet tracked as an executable lane task with a
-  complete command/query closure objective across start, recover, preview, signal, and cancel route
-  boundaries. The scope is intentionally deferred and registered as explicit debt to avoid unplanned
-  implementation drift.
+  The protected runtime HTTP rail closure is now tracked and implemented as an executable
+  command/query rail catalog across start, recover, preview, signal, cancel, workspace draft,
+  run-query, and admin-repair route boundaries. The catalog names each DDD owner, application port,
+  adapter surface, authorization posture, required negative tests, executable test evidence, and
+  compatibility posture.
 
 mitigation:
-  - Keep dedicated lane task `AR-C10` registered before any implementation change in protected
-    runtime route composition.
+  - Keep dedicated lane task `AR-C10` as the historical closure record for protected runtime route
+    composition.
   - Use
     `docs/planning/proposals/mandatory/runtime-and-contracts/protected-runtime-rail-closure-plan-20260503.md`
     as the implementation entry point for the closure slice.
   - Keep route-level behavior aligned with existing canonical command/query rails; do not introduce
     parallel route semantics while the closure task is pending.
-  - Require negative authorization and tenant-scope coverage in the future closure task definition.
+  - Require negative authorization and tenant-scope coverage in the executable rail catalog for any
+    future protected runtime route change.
+  - Keep `CANCEL` through `/signal` classified as compatibility and mapped back to canonical
+    `CancelRun` until a governed deprecation plan removes it.
 
 monitoring:
   cadence: per PR touching apps/api protected runtime entrypoints or modules
   signals:
-    - 'docs/planning/state/open-task-route.md includes an explicit task for protected runtime rail
-      closure'
-    - 'apps/api/test/entrypoints/http/*Route*.test.ts coverage includes negative auth and
-      tenant-scope outcomes'
+    - 'apps/api/src/application/ports/protectedRuntimeCommandQueryRails.ts includes every protected
+      runtime route'
+    - 'apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts verifies rail,
+      negative-evidence, and compatibility-posture coverage'

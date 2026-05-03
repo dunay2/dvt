@@ -87,8 +87,10 @@ flowchart LR
   Register["registerProtectedRuntimeRoutes"] --> Plan["Plan routes"]
   Register --> Draft["Workspace graph draft routes"]
   Register --> Runs["Run routes"]
+  Register --> Session["Session route"]
   Register --> Admin["Admin routes"]
 
+  Session --> SessionGet["GET /session"]
   Plan --> Start["POST /runs/start"]
   Plan --> Preview["POST /plans/preview"]
   Plan --> Compile["POST /plans/compile"]
@@ -141,6 +143,7 @@ flowchart LR
   Commands --> AdminRepair["Admin repair"]
 
   Queries --> PlanCompile["Compile plan"]
+  Queries --> SessionRead["Read authenticated session"]
   Queries --> DraftRead["Read workspace graph draft"]
   Queries --> RunRead["List/get/events"]
 
@@ -167,6 +170,7 @@ each protected runtime route:
 
 | Route                                      | Rail    | Bounded context              | DDD object/read model       | Application owner                                | Adapter surface                             | Authorization                                                 | Required negative tests                                                                    |
 | ------------------------------------------ | ------- | ---------------------------- | --------------------------- | ------------------------------------------------ | ------------------------------------------- | ------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `GET /session`                             | Query   | Runtime session admission    | authenticated session       | `IAuthenticator`                                 | protected HTTP route                        | authenticated principal bearer token                          | missing token, authentication failed                                                       |
 | `POST /runs/start`                         | Command | Runtime safety and admission | `Run` command admission     | `StartRunAuthorizedFacade` / start-run use cases | protected HTTP route                        | `run:start`, tenant scope                                     | missing token, missing action, tenant mismatch, client `runId`, invalid plan source        |
 | `POST /plans/preview`                      | Command | Planner/runtime admission    | executable plan draft       | `PreviewPlanUseCase`                             | protected HTTP route                        | planner/runtime command scope, tenant scope                   | missing token, missing action, tenant mismatch, invalid graph source, invalid selection    |
 | `POST /plans/compile`                      | Query   | Planner boundary             | compiled plan response      | `CompilePlanUseCase`                             | protected HTTP route                        | planner query/action scope, tenant scope                      | missing token, missing action, tenant mismatch, unsupported adapter                        |
@@ -243,6 +247,9 @@ Disallowed without a separate plan:
   row and component owner.
 - Every matrix row has at least one positive test and the required negative
   tests, or an explicit blocker tracked in the lane task.
+- Every rail declares a compatibility posture: either canonical with no legacy
+  behavior accepted, or explicit compatibility mapped back to its canonical
+  rail and removal plan.
 - No route handler owns domain behavior that belongs in an application service.
 - No new command, query, service, route, or mock semantics are introduced for an
   intent that already has a rail.
@@ -287,10 +294,13 @@ governingSources:
   - docs/planning/state/agent-lane-c.yaml
   - docs/risk-register/quality/R-20260503-PROTECTED-RUNTIME-RAIL-CLOSURE.yaml
 allowedImplementationSurfaces:
+  - apps/api/docs/protected-runtime-route-group-component.md
   - apps/api/src/entrypoints/http/runtimeRoutes.constants.ts
   - apps/api/src/entrypoints/http/registerProtectedRuntimeRoutes.ts
   - apps/api/src/entrypoints/http/sessionRoute.ts
+  - apps/api/src/application/ports/protectedRuntimeCommandQueryRails.ts
   - apps/api/test/entrypoints/http/sessionRoute.test.ts
+  - apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
   - apps/web/src/app/bootstrap/AuthRouteGate.tsx
   - apps/web/src/app/routes.ts
   - apps/web/src/app/routes.test.tsx
@@ -302,6 +312,7 @@ allowedImplementationSurfaces:
   - docs/planning/state/open-task-route.md
   - docs/planning/status/**
   - docs/risk-register/quality/R-20260503-PROTECTED-RUNTIME-RAIL-CLOSURE.yaml
+  - docs/risk-register/quality/R-20260503-PROTECTED-RUNTIME-RAIL-SSOT-DEBT.yaml
 forbiddenImplementationSurfaces:
   - packages/**
   - specs/**
@@ -444,4 +455,143 @@ symbols:
     unitTests:
       - pnpm docs:feature-mechanization --feature PROTECTED-RUNTIME-RAIL-CLOSURE
       - pnpm docs:feature-mechanization:implementation
+  - name: DOC_PATH
+    path: apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
+    dddOwner: Protected runtime route group architecture test
+    cqRails:
+      - ClassifyProtectedRuntimeRouteRails
+    fowlerSignals:
+      - Boundary drift
+    architectureGuard: pnpm --filter dvt-api exec vitest run test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
+    cypressCoverage: N/A - API architecture guard
+    unitTests:
+      - pnpm --filter dvt-api exec vitest run test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
+  - name: CATALOG_PATH
+    path: apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
+    dddOwner: Protected runtime route group architecture test
+    cqRails:
+      - ClassifyProtectedRuntimeRouteRails
+    fowlerSignals:
+      - Boundary drift
+    architectureGuard: pnpm --filter dvt-api exec vitest run test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
+    cypressCoverage: N/A - API architecture guard
+    unitTests:
+      - pnpm --filter dvt-api exec vitest run test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
+  - name: PROTECTED_RUNTIME_COMMAND_QUERY_RAILS
+    path: apps/api/src/application/ports/protectedRuntimeCommandQueryRails.ts
+    dddOwner: Protected runtime rail matrix
+    cqRails:
+      - ClassifyProtectedRuntimeRouteRails
+    fowlerSignals:
+      - Boundary drift
+      - Divergent change
+    architectureGuard: pnpm --filter dvt-api exec vitest run test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
+    cypressCoverage: N/A - API architecture guard
+    unitTests:
+      - pnpm --filter dvt-api exec vitest run test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
+  - name: ProtectedRuntimeCommandQueryRail
+    path: apps/api/src/application/ports/protectedRuntimeCommandQueryRails.ts
+    dddOwner: Protected runtime rail matrix
+    cqRails:
+      - ClassifyProtectedRuntimeRouteRails
+    fowlerSignals:
+      - Boundary drift
+    architectureGuard: pnpm --filter dvt-api exec vitest run test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
+    cypressCoverage: N/A - API architecture guard
+    unitTests:
+      - pnpm --filter dvt-api exec vitest run test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
+  - name: ProtectedRuntimeNegativeCoverage
+    path: apps/api/src/application/ports/protectedRuntimeCommandQueryRails.ts
+    dddOwner: Protected runtime rail matrix
+    cqRails:
+      - ClassifyProtectedRuntimeRouteRails
+    fowlerSignals:
+      - Boundary drift
+      - Divergent change
+    architectureGuard: pnpm --filter dvt-api exec vitest run test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
+    cypressCoverage: N/A - API architecture guard
+    unitTests:
+      - pnpm --filter dvt-api exec vitest run test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
+  - name: ProtectedRuntimeCompatibilityPosture
+    path: apps/api/src/application/ports/protectedRuntimeCommandQueryRails.ts
+    dddOwner: Protected runtime rail matrix
+    cqRails:
+      - ClassifyProtectedRuntimeRouteRails
+    fowlerSignals:
+      - Boundary drift
+      - Divergent change
+    architectureGuard: pnpm --filter dvt-api exec vitest run test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
+    cypressCoverage: N/A - API architecture guard
+    unitTests:
+      - pnpm --filter dvt-api exec vitest run test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
+  - name: CANONICAL_PROTECTED_RUNTIME_RAIL_POSTURE
+    path: apps/api/src/application/ports/protectedRuntimeCommandQueryRails.ts
+    dddOwner: Protected runtime rail matrix
+    cqRails:
+      - ClassifyProtectedRuntimeRouteRails
+    fowlerSignals:
+      - Boundary drift
+    architectureGuard: pnpm --filter dvt-api exec vitest run test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
+    cypressCoverage: N/A - API architecture guard
+    unitTests:
+      - pnpm --filter dvt-api exec vitest run test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
+  - name: ProtectedRuntimeRailKind
+    path: apps/api/src/application/ports/protectedRuntimeCommandQueryRails.ts
+    dddOwner: Protected runtime rail matrix
+    cqRails:
+      - ClassifyProtectedRuntimeRouteRails
+    fowlerSignals:
+      - Boundary drift
+    architectureGuard: pnpm --filter dvt-api exec vitest run test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
+    cypressCoverage: N/A - API architecture guard
+    unitTests:
+      - pnpm --filter dvt-api exec vitest run test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
+  - name: GOVERNED_ROUTE_RAILS
+    path: apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
+    dddOwner: Protected runtime route group architecture test
+    cqRails:
+      - ClassifyProtectedRuntimeRouteRails
+    fowlerSignals:
+      - Boundary drift
+      - Divergent change
+    architectureGuard: pnpm --filter dvt-api exec vitest run test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
+    cypressCoverage: N/A - API architecture guard
+    unitTests:
+      - pnpm --filter dvt-api exec vitest run test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
+  - name: RUNTIME_ROUTE_METHOD_BY_KEY
+    path: apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
+    dddOwner: Protected runtime route group architecture test
+    cqRails:
+      - ClassifyProtectedRuntimeRouteRails
+    fowlerSignals:
+      - Boundary drift
+      - Divergent change
+    architectureGuard: pnpm --filter dvt-api exec vitest run test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
+    cypressCoverage: N/A - API architecture guard
+    unitTests:
+      - pnpm --filter dvt-api exec vitest run test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
+  - name: PROTECTED_RUNTIME_ADAPTER_SURFACES
+    path: apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
+    dddOwner: Protected runtime route group architecture test
+    cqRails:
+      - ClassifyProtectedRuntimeRouteRails
+    fowlerSignals:
+      - Boundary drift
+      - Divergent change
+    architectureGuard: pnpm --filter dvt-api exec vitest run test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
+    cypressCoverage: N/A - API architecture guard
+    unitTests:
+      - pnpm --filter dvt-api exec vitest run test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
+  - name: findCommandQueryMatrixRow
+    path: apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
+    dddOwner: Protected runtime route group architecture test
+    cqRails:
+      - ClassifyProtectedRuntimeRouteRails
+    fowlerSignals:
+      - Boundary drift
+      - Divergent change
+    architectureGuard: pnpm --filter dvt-api exec vitest run test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
+    cypressCoverage: N/A - API architecture guard
+    unitTests:
+      - pnpm --filter dvt-api exec vitest run test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
 ```

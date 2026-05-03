@@ -7,7 +7,7 @@ governanceState: coverage-required
 dddOwner: PORT
 cqRails: API application command/query ports
 childrenRequired: false
-fileCount: 16
+fileCount: 17
 driftFileCount: 0
 legacyFileCount: 0
 files:
@@ -83,6 +83,13 @@ files:
     isLegacy: false
   - path: apps/api/src/application/ports/authContract.ts
     fileId: F-BC982286150A
+    owningUnit: SYS-API-APPLICATION-PORTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/src/application/ports/protectedRuntimeCommandQueryRails.ts
+    fileId: F-2B1EF0304696
     owningUnit: SYS-API-APPLICATION-PORTS
     unitStatus: coverage-required
     governanceState: coverage-required

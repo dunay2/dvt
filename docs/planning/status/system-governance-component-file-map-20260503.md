@@ -25,7 +25,7 @@ Machine-readable sources:
 ## Totals
 
 - Components: 32
-- Files mapped: 4159
+- Files mapped: 4163
 - Components with drift or legacy files: 3
 
 ## Largest Components
@@ -33,7 +33,7 @@ Machine-readable sources:
 <!-- prettier-ignore-start -->
 | Component | Files | Drift files | Legacy files |
 | --- | ---: | ---: | ---: |
-| `SYS-DOCS-GOVERNANCE-ROOT` | 1717 | 0 | 0 |
+| `SYS-DOCS-GOVERNANCE-ROOT` | 1718 | 0 | 0 |
 | `SYS-WEB-ROOT` | 801 | 0 | 0 |
 | `SYS-RUNTIME-ROOT` | 286 | 0 | 0 |
 | `SYS-ADAPTERS-ROOT` | 196 | 0 | 0 |
@@ -45,14 +45,14 @@ Machine-readable sources:
 | `SYS-API-HTTP-ENTRYPOINTS` | 76 | 0 | 0 |
 | `SYS-PLANNER-ROOT` | 76 | 0 | 0 |
 | `SYS-TRACEABILITY-ROOT` | 65 | 0 | 0 |
-| `SYS-API-HTTP-ENTRYPOINT-TESTS` | 51 | 0 | 0 |
+| `SYS-API-HTTP-ENTRYPOINT-TESTS` | 52 | 0 | 0 |
 | `SYS-API-APPLICATION-SERVICES` | 34 | 0 | 0 |
 | `SYS-PLANSTORE-DOCS-RISK` | 34 | 0 | 0 |
 | `SYS-API-INFRASTRUCTURE` | 27 | 0 | 0 |
 | `SYS-API-RUNTIME-COMPOSITION` | 26 | 0 | 0 |
 | `SYS-PLANSTORE-ARTIFACTS-PORTS` | 23 | 0 | 0 |
 | `SYS-PLANSTORE-API-COMPOSITION` | 20 | 20 | 0 |
-| `SYS-API-APPLICATION-PORTS` | 16 | 0 | 0 |
+| `SYS-API-APPLICATION-PORTS` | 17 | 0 | 0 |
 <!-- prettier-ignore-end -->
 
 ## Drift And Legacy Components
@@ -71,12 +71,12 @@ Machine-readable sources:
 | Component | Files | Drift files | Legacy files | Shard |
 | --- | ---: | ---: | ---: | --- |
 | `SYS-ADAPTERS-ROOT` | 196 | 0 | 0 | [shard](./governance-components/SYS-ADAPTERS-ROOT.component-files.yaml) |
-| `SYS-API-APPLICATION-PORTS` | 16 | 0 | 0 | [shard](./governance-components/SYS-API-APPLICATION-PORTS.component-files.yaml) |
+| `SYS-API-APPLICATION-PORTS` | 17 | 0 | 0 | [shard](./governance-components/SYS-API-APPLICATION-PORTS.component-files.yaml) |
 | `SYS-API-APPLICATION-SERVICES` | 34 | 0 | 0 | [shard](./governance-components/SYS-API-APPLICATION-SERVICES.component-files.yaml) |
 | `SYS-API-BOOTSTRAP` | 2 | 0 | 0 | [shard](./governance-components/SYS-API-BOOTSTRAP.component-files.yaml) |
-| `SYS-API-DOCS` | 14 | 0 | 0 | [shard](./governance-components/SYS-API-DOCS.component-files.yaml) |
+| `SYS-API-DOCS` | 15 | 0 | 0 | [shard](./governance-components/SYS-API-DOCS.component-files.yaml) |
 | `SYS-API-DOMAIN-AUTH` | 1 | 0 | 0 | [shard](./governance-components/SYS-API-DOMAIN-AUTH.component-files.yaml) |
-| `SYS-API-HTTP-ENTRYPOINT-TESTS` | 51 | 0 | 0 | [shard](./governance-components/SYS-API-HTTP-ENTRYPOINT-TESTS.component-files.yaml) |
+| `SYS-API-HTTP-ENTRYPOINT-TESTS` | 52 | 0 | 0 | [shard](./governance-components/SYS-API-HTTP-ENTRYPOINT-TESTS.component-files.yaml) |
 | `SYS-API-HTTP-ENTRYPOINTS` | 76 | 0 | 0 | [shard](./governance-components/SYS-API-HTTP-ENTRYPOINTS.component-files.yaml) |
 | `SYS-API-INFRASTRUCTURE` | 27 | 0 | 0 | [shard](./governance-components/SYS-API-INFRASTRUCTURE.component-files.yaml) |
 | `SYS-API-OPS-HEALTH` | 11 | 0 | 0 | [shard](./governance-components/SYS-API-OPS-HEALTH.component-files.yaml) |
@@ -86,7 +86,7 @@ Machine-readable sources:
 | `SYS-API-TESTS` | 99 | 0 | 0 | [shard](./governance-components/SYS-API-TESTS.component-files.yaml) |
 | `SYS-CI-GOVERNANCE-ROOT` | 180 | 0 | 0 | [shard](./governance-components/SYS-CI-GOVERNANCE-ROOT.component-files.yaml) |
 | `SYS-CONTRACTS-ROOT` | 127 | 0 | 0 | [shard](./governance-components/SYS-CONTRACTS-ROOT.component-files.yaml) |
-| `SYS-DOCS-GOVERNANCE-ROOT` | 1717 | 0 | 0 | [shard](./governance-components/SYS-DOCS-GOVERNANCE-ROOT.component-files.yaml) |
+| `SYS-DOCS-GOVERNANCE-ROOT` | 1718 | 0 | 0 | [shard](./governance-components/SYS-DOCS-GOVERNANCE-ROOT.component-files.yaml) |
 | `SYS-OBSERVABILITY-ROOT` | 15 | 0 | 0 | [shard](./governance-components/SYS-OBSERVABILITY-ROOT.component-files.yaml) |
 | `SYS-PLANNER-ROOT` | 76 | 0 | 0 | [shard](./governance-components/SYS-PLANNER-ROOT.component-files.yaml) |
 | `SYS-PLANSTORE-API-COMPOSITION` | 20 | 20 | 0 | [shard](./governance-components/SYS-PLANSTORE-API-COMPOSITION.component-files.yaml) |

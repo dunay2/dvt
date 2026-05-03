@@ -4,7 +4,7 @@ generatedFrom:
   - docs/planning/status/system-governance-component-index.components.yaml
 shardDirectory: docs/planning/status/governance-components
 componentCount: 32
-fileCount: 4159
+fileCount: 4163
 components:
   - id: SYS-ADAPTERS-ROOT
     path: docs/planning/status/governance-components/SYS-ADAPTERS-ROOT.component-files.yaml
@@ -14,10 +14,10 @@ components:
     contentHash: 3a8d3198e1e15a19a2f04a79776489de799e7dc8b7e87dfd635529105fa28a97
   - id: SYS-API-APPLICATION-PORTS
     path: docs/planning/status/governance-components/SYS-API-APPLICATION-PORTS.component-files.yaml
-    fileCount: 16
+    fileCount: 17
     driftFileCount: 0
     legacyFileCount: 0
-    contentHash: ac7ece34258c9a528b6fe36bf08801676f22326c13e2b5dc6b68d2334fbb4a1b
+    contentHash: 22b3e1dde40763332064147863e44a6c65c4d5b72c1528a0512fa2406907bfa5
   - id: SYS-API-APPLICATION-SERVICES
     path: docs/planning/status/governance-components/SYS-API-APPLICATION-SERVICES.component-files.yaml
     fileCount: 34
@@ -32,10 +32,10 @@ components:
     contentHash: 5201dba41c2c0e563c0b698d625dbeebf03489af174c6216a5e6b33be2af40dd
   - id: SYS-API-DOCS
     path: docs/planning/status/governance-components/SYS-API-DOCS.component-files.yaml
-    fileCount: 14
+    fileCount: 15
     driftFileCount: 0
     legacyFileCount: 0
-    contentHash: 4d204cee51ae2741cb014f1efd3d1fd9e3b3511b37e58b4380ad0d5e9e7692ae
+    contentHash: 7411ca8e7cef876bff1db0fa1a558161c552cca62abbb3ca5df135ec317addbc
   - id: SYS-API-DOMAIN-AUTH
     path: docs/planning/status/governance-components/SYS-API-DOMAIN-AUTH.component-files.yaml
     fileCount: 1
@@ -44,10 +44,10 @@ components:
     contentHash: f72cd78c2c1436c8ddb35cd89d9ce8a6b62353e29eb26c1438201dcfd4ec043c
   - id: SYS-API-HTTP-ENTRYPOINT-TESTS
     path: docs/planning/status/governance-components/SYS-API-HTTP-ENTRYPOINT-TESTS.component-files.yaml
-    fileCount: 51
+    fileCount: 52
     driftFileCount: 0
     legacyFileCount: 0
-    contentHash: d114decfa39e91437af5579ec710a17de15a14a9900c37ffde778ebf86bb9765
+    contentHash: 9cc995691e9d242b6a8c6818af1f359a883afaad5a35019efbd546678509812c
   - id: SYS-API-HTTP-ENTRYPOINTS
     path: docs/planning/status/governance-components/SYS-API-HTTP-ENTRYPOINTS.component-files.yaml
     fileCount: 76
@@ -104,10 +104,10 @@ components:
     contentHash: fa1299dd144e2f14a9e3b3491fd17636c0f59e41f50e1195db9bd9b50111eb0e
   - id: SYS-DOCS-GOVERNANCE-ROOT
     path: docs/planning/status/governance-components/SYS-DOCS-GOVERNANCE-ROOT.component-files.yaml
-    fileCount: 1717
+    fileCount: 1718
     driftFileCount: 0
     legacyFileCount: 0
-    contentHash: e9eabc702cf887dc42fcd0be9c98328afb55d551a85db0187a617c0750a1a03e
+    contentHash: 55d9264f3a9adc1a09aca095c4a98dc136eb0df0a9799a5137036e224089b938
   - id: SYS-OBSERVABILITY-ROOT
     path: docs/planning/status/governance-components/SYS-OBSERVABILITY-ROOT.component-files.yaml
     fileCount: 15

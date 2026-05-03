@@ -7,7 +7,7 @@ governanceState: coverage-required
 dddOwner: INFRA
 cqRails: none - API local documentation
 childrenRequired: false
-fileCount: 14
+fileCount: 15
 driftFileCount: 0
 legacyFileCount: 0
 files:
@@ -34,6 +34,13 @@ files:
     isLegacy: false
   - path: apps/api/docs/protected-runtime-dependency-builders-component.md
     fileId: F-6989C03A3A7D
+    owningUnit: SYS-API-DOCS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/docs/protected-runtime-route-group-component.md
+    fileId: F-69DC2D5403A1
     owningUnit: SYS-API-DOCS
     unitStatus: coverage-required
     governanceState: coverage-required

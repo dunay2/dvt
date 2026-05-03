@@ -112,7 +112,7 @@ components:
     isDrift: false
     isLegacy: false
     childrenRequired: false
-    fileCount: 16
+    fileCount: 17
     dddOwner: PORT
     cqRails: API application command/query ports
     owns:
@@ -308,7 +308,7 @@ components:
     isDrift: false
     isLegacy: false
     childrenRequired: false
-    fileCount: 14
+    fileCount: 15
     dddOwner: INFRA
     cqRails: none - API local documentation
     owns:
@@ -438,7 +438,7 @@ components:
     isDrift: false
     isLegacy: false
     childrenRequired: false
-    fileCount: 51
+    fileCount: 52
     dddOwner: INFRA
     cqRails: API HTTP command/query route validation
     owns:
@@ -1089,7 +1089,7 @@ components:
     isDrift: false
     isLegacy: false
     childrenRequired: true
-    fileCount: 1717
+    fileCount: 1718
     dddOwner: INFRA
     cqRails: none - documentation governance
     owns:
