@@ -23954,9 +23954,9 @@ files:
   - fileId: F-24B80677BA62
     path: >-
       docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-a-authoring-draft-hard-cut-implementation-plan-20260503.md
-    contentHash: afb0adeb442776649c82e67e69df0204052274a69c77a88f71a2e9717d878355
+    contentHash: 333901310c8a8b5e9a70d0154f1f18608df59a7ca2a952bee4211907cfbbca18
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: dabe400069565b8425e6a343287a9c5e6dd42654c9ccfe4170864f334bb130ce
+    stateFingerprint: 329d0c70a39a210fbb1ed0bae7aa1a81d1e7c9c76f8fab3d570e95c686ff6437
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
