@@ -6,6 +6,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const yaml = require('js-yaml');
+const { readFileIndexFromDisk } = require('./generate-governance-file-component-index.cjs');
 
 const repoRoot = path.resolve(__dirname, '..');
 const statusDir = path.join(repoRoot, 'docs', 'planning', 'status');
@@ -369,7 +370,10 @@ function writeIfChanged(filePath, content) {
 }
 
 function buildOutputs() {
-  const report = buildCoverageReport(readYaml(fileIndexPath), readYaml(componentIndexPath));
+  const report = buildCoverageReport(
+    { files: readFileIndexFromDisk(fileIndexPath) },
+    readYaml(componentIndexPath)
+  );
   return {
     report,
     yaml: renderYaml(report),

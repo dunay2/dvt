@@ -1,0 +1,381 @@
+version: 1
+shardId: SYS-OBSERVABILITY
+generatedFrom: git ls-files
+unitManifest: docs/planning/status/system-governance-unit-index.units.yaml
+fileCount: 15
+files:
+  - fileId: F-E837520353EC
+    pathHash: 89565a23acd9c0a4f00815d39d28f604dcf20fc786e099603827259503776578
+    contentHash: d07c86661f31d950f3fcf370c709911e583ae5073695b57b39caf4359be576ad
+    governanceHash: 83da418ce22ce6313c050ff2a413e4da015a18047f215869d792bdd0b53b5d0b
+    stateFingerprint: e6830b6e647516761c4747c6a124f32db6c0e43300a58d583e2803f855ecd3c1
+    path: packages/@dvt/observability-otel/package.json
+    owningUnit: SYS-OBSERVABILITY-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-OBSERVABILITY
+    componentUnit: SYS-OBSERVABILITY-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-OBSERVABILITY
+      - SYS-OBSERVABILITY-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: PORT
+    cqRails: telemetry commands and operational queries
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-DAB6BC9E800C
+    pathHash: 97ad1b00975428417d7a42e6af5971c332b4c3f76ca3fba56b4531e253996ea5
+    contentHash: 2c4167338a05c55f4a7ceb447ceed1022770b4b550c0b93b83661c61f73df678
+    governanceHash: 83da418ce22ce6313c050ff2a413e4da015a18047f215869d792bdd0b53b5d0b
+    stateFingerprint: 285287f8e9ae701ae6576bcffd1b5d624b1814a267404852bb7b8157a9ee2482
+    path: packages/@dvt/observability-otel/README.md
+    owningUnit: SYS-OBSERVABILITY-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-OBSERVABILITY
+    componentUnit: SYS-OBSERVABILITY-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-OBSERVABILITY
+      - SYS-OBSERVABILITY-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: PORT
+    cqRails: telemetry commands and operational queries
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-C66EE8B4CE07
+    pathHash: ec3babad1e443337b1c982844adaaab190d248d891f15eb215ffa63f3971507d
+    contentHash: cc2998fbef65fe7b8e0c2a1d04127a1c449eb54770053a965b0a7c0c43bfc633
+    governanceHash: 83da418ce22ce6313c050ff2a413e4da015a18047f215869d792bdd0b53b5d0b
+    stateFingerprint: f7091125f241872ba66bb1a1a715f6c7ce318f00e7743762ca6964a054ce7073
+    path: packages/@dvt/observability-otel/src/index.ts
+    owningUnit: SYS-OBSERVABILITY-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-OBSERVABILITY
+    componentUnit: SYS-OBSERVABILITY-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-OBSERVABILITY
+      - SYS-OBSERVABILITY-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: PORT
+    cqRails: telemetry commands and operational queries
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-7B6AF7AC72C8
+    pathHash: 51c325e2544656280ce50348f32f4b85751b71eaa78899dcba703014c370b30b
+    contentHash: cf670cbdd0067cbd6e325527f3c2b6e1db334516d37895e6a29ad89b54dd9e65
+    governanceHash: 83da418ce22ce6313c050ff2a413e4da015a18047f215869d792bdd0b53b5d0b
+    stateFingerprint: fb8316988efd7efd06c2188ed7f9cc35861cc1bae989bea49d348d451a239d26
+    path: packages/@dvt/observability-otel/src/OtelObservability.ts
+    owningUnit: SYS-OBSERVABILITY-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-OBSERVABILITY
+    componentUnit: SYS-OBSERVABILITY-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-OBSERVABILITY
+      - SYS-OBSERVABILITY-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: PORT
+    cqRails: telemetry commands and operational queries
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-44F7D0D2BCA0
+    pathHash: ee5fbf0ff91bc8c12e8bdc7c884e371689866a2066231cf53631f7842e7841b6
+    contentHash: c8990b4e1b40ddd18ea388e9f345fad37c55b96b794ba1185418851f91f797e4
+    governanceHash: 83da418ce22ce6313c050ff2a413e4da015a18047f215869d792bdd0b53b5d0b
+    stateFingerprint: c017461750c8b5914a6f8516d6d020556452bd04345cee1361d9625bc7613a72
+    path: packages/@dvt/observability-otel/test/OtelObservability.test.ts
+    owningUnit: SYS-OBSERVABILITY-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-OBSERVABILITY
+    componentUnit: SYS-OBSERVABILITY-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-OBSERVABILITY
+      - SYS-OBSERVABILITY-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: PORT
+    cqRails: telemetry commands and operational queries
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-4479E5C07786
+    pathHash: 8b444a30dbba1cd69f09f3aa7ac9ca442def711bc9ff42a931319b8608e86cb2
+    contentHash: 563b08bcb6fc1c349da0ccdec1da3ab3f9a3e33b547fb9fc8f9b77a7b664e6cb
+    governanceHash: 83da418ce22ce6313c050ff2a413e4da015a18047f215869d792bdd0b53b5d0b
+    stateFingerprint: 1979827e5f3bfaafe5d2b4022b3fee651a1ed385a47e08fda9d72d488d4abaaf
+    path: packages/@dvt/observability-otel/tsconfig.json
+    owningUnit: SYS-OBSERVABILITY-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-OBSERVABILITY
+    componentUnit: SYS-OBSERVABILITY-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-OBSERVABILITY
+      - SYS-OBSERVABILITY-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: PORT
+    cqRails: telemetry commands and operational queries
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-A9666182B071
+    pathHash: 8eaad03f6180e211fc037e4eb92d246328623f3d821cab63fccc0f89105ab699
+    contentHash: dddd215c0043e49211f544ce07f0f02df40b7a7a0d583a66686f6441a2c4fd87
+    governanceHash: 83da418ce22ce6313c050ff2a413e4da015a18047f215869d792bdd0b53b5d0b
+    stateFingerprint: 456cf63b92ce3f8d91ce3485f212a09f840d95bcdb33c2a17efbec9904bca154
+    path: packages/@dvt/observability/package.json
+    owningUnit: SYS-OBSERVABILITY-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-OBSERVABILITY
+    componentUnit: SYS-OBSERVABILITY-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-OBSERVABILITY
+      - SYS-OBSERVABILITY-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: PORT
+    cqRails: telemetry commands and operational queries
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-DFDA6C13C2BB
+    pathHash: cf0d6ee0852a9add3a736ac71787e1fe6e1eab6016df61d5ef382ab360ab053e
+    contentHash: 3fd63dd4e7dd49fdeff86dfaff425538750b87bfac21358e7b66ad1cb86ac63e
+    governanceHash: 83da418ce22ce6313c050ff2a413e4da015a18047f215869d792bdd0b53b5d0b
+    stateFingerprint: e70601817d6a48035e2cfd3e4b1920c4b12f450b7f3c3f761cf6c3616ac7240e
+    path: packages/@dvt/observability/README.md
+    owningUnit: SYS-OBSERVABILITY-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-OBSERVABILITY
+    componentUnit: SYS-OBSERVABILITY-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-OBSERVABILITY
+      - SYS-OBSERVABILITY-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: PORT
+    cqRails: telemetry commands and operational queries
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-68F6B629C250
+    pathHash: bad2c076ac3cf99dbd587fb887a0bd593930241ef5eb0ade03bb94dc42a062ef
+    contentHash: 589f91e988bbf991cb674dd4a89156ea9c706658ea490435fb96c4edab1f3397
+    governanceHash: 83da418ce22ce6313c050ff2a413e4da015a18047f215869d792bdd0b53b5d0b
+    stateFingerprint: 8edef2d99335ee002f863758cdd9776165cc4091c44d57a3041935deb9e1cc2f
+    path: packages/@dvt/observability/src/contracts/IObservability.ts
+    owningUnit: SYS-OBSERVABILITY-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-OBSERVABILITY
+    componentUnit: SYS-OBSERVABILITY-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-OBSERVABILITY
+      - SYS-OBSERVABILITY-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: PORT
+    cqRails: telemetry commands and operational queries
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-2900D5CF9A75
+    pathHash: 523adb541b6fa4ab64271b44018b8ff19c15916f261e95f71af2c0cb587d6efc
+    contentHash: d3bf2d2b300ead601c89f8b26a080d9a729c8220a4a754834cd26c4f3d9f711d
+    governanceHash: 83da418ce22ce6313c050ff2a413e4da015a18047f215869d792bdd0b53b5d0b
+    stateFingerprint: 755067d5abcc8ae24a9c89ee5d14df88f41969ee54fc6def444140dc89419911
+    path: packages/@dvt/observability/src/contracts/ObservabilityContext.ts
+    owningUnit: SYS-OBSERVABILITY-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-OBSERVABILITY
+    componentUnit: SYS-OBSERVABILITY-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-OBSERVABILITY
+      - SYS-OBSERVABILITY-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: PORT
+    cqRails: telemetry commands and operational queries
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-7C48067DE67B
+    pathHash: 6a60cb2efe88e512e6f44360a240486b7558ad4065b708f34239ca2eb95367a7
+    contentHash: 8740640b6509565ae9a7559a85c20dd6588241496f3fa1166592f77e28f2a252
+    governanceHash: 83da418ce22ce6313c050ff2a413e4da015a18047f215869d792bdd0b53b5d0b
+    stateFingerprint: a17f75d8580c3f109366b07cdc652d80ea6de012b7e1b69bd6e24d390a51b55a
+    path: packages/@dvt/observability/src/index.ts
+    owningUnit: SYS-OBSERVABILITY-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-OBSERVABILITY
+    componentUnit: SYS-OBSERVABILITY-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-OBSERVABILITY
+      - SYS-OBSERVABILITY-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: PORT
+    cqRails: telemetry commands and operational queries
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-A61DD60C6BA6
+    pathHash: fb23c5f818c595f48a6edf7a921792c7681c4e4f2e99474c1f38ef955612afd2
+    contentHash: 689b5b6ac84e0e0ba645f011698d7a565dbdd087cc4442f638f9061a93b9cacd
+    governanceHash: 83da418ce22ce6313c050ff2a413e4da015a18047f215869d792bdd0b53b5d0b
+    stateFingerprint: e5fc4dc4ee06bb783a5d9d9157b3257aa3e972d53e1f624e0e5036171fcbf9ad
+    path: packages/@dvt/observability/src/noopObservability.ts
+    owningUnit: SYS-OBSERVABILITY-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-OBSERVABILITY
+    componentUnit: SYS-OBSERVABILITY-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-OBSERVABILITY
+      - SYS-OBSERVABILITY-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: PORT
+    cqRails: telemetry commands and operational queries
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-2FD0F17C50AD
+    pathHash: c7b4acf001b1e7ca7df56f3811035cdb732be03b507e856ace8feba39a2bd1b4
+    contentHash: ed14a3340a5434e75f5b45d5853c34b20f36fc2e0e3a3f26026a2b3945f0363f
+    governanceHash: 83da418ce22ce6313c050ff2a413e4da015a18047f215869d792bdd0b53b5d0b
+    stateFingerprint: c4341d59b715846f4a5ec7c3fd3871b1d85f32caa59513a20c7145d1c933970e
+    path: packages/@dvt/observability/src/policy/cardinalityPolicy.ts
+    owningUnit: SYS-OBSERVABILITY-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-OBSERVABILITY
+    componentUnit: SYS-OBSERVABILITY-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-OBSERVABILITY
+      - SYS-OBSERVABILITY-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: PORT
+    cqRails: telemetry commands and operational queries
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-C3AD999E032A
+    pathHash: 26543a31680f7d63a983b72818fd79dabe02bf8a780f0b87c70a142a0ef69656
+    contentHash: 94c9ed9eb60d1823ca409646e5f5eba9ea1af9877e59abfa1b2385ff702b0ccc
+    governanceHash: 83da418ce22ce6313c050ff2a413e4da015a18047f215869d792bdd0b53b5d0b
+    stateFingerprint: e614c6ffec2f25ec1ef5d717f3f25621b74f8d46fa268f33b76298a78bfe2429
+    path: packages/@dvt/observability/test/cardinalityPolicy.test.ts
+    owningUnit: SYS-OBSERVABILITY-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-OBSERVABILITY
+    componentUnit: SYS-OBSERVABILITY-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-OBSERVABILITY
+      - SYS-OBSERVABILITY-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: PORT
+    cqRails: telemetry commands and operational queries
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-520BCE193B45
+    pathHash: a62423d0f7d7b61fedba56f4fb91042fed7c2d9af7539e6529a4c651a0fa634d
+    contentHash: 5436ce1225780e5d1fb3903e40eaf86e98a23e45680c6c0e2df8cdf3af5dd8e5
+    governanceHash: 83da418ce22ce6313c050ff2a413e4da015a18047f215869d792bdd0b53b5d0b
+    stateFingerprint: fe7e70b07167d74565b2ba57809904b5305d4aee62c79fba27ae82c5c931c69b
+    path: packages/@dvt/observability/tsconfig.json
+    owningUnit: SYS-OBSERVABILITY-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-OBSERVABILITY
+    componentUnit: SYS-OBSERVABILITY-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-OBSERVABILITY
+      - SYS-OBSERVABILITY-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: PORT
+    cqRails: telemetry commands and operational queries
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md

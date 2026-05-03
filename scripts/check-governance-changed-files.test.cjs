@@ -180,6 +180,7 @@ test('validateChangedFiles accepts normalized governance generated artifacts whe
   const generatedPaths = [
     'docs/planning/status/system-governance-file-fingerprint-baseline.yaml',
     'docs/planning/status/system-governance-file-index.files.yaml',
+    'docs/planning/status/governance-files/SYS-API.files.yaml',
   ];
   const generatedIndexEntries = generatedPaths.map((pathName, index) => ({
     path: pathName,

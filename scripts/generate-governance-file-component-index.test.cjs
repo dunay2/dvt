@@ -3,8 +3,10 @@ const assert = require('node:assert/strict');
 const crypto = require('node:crypto');
 const {
   buildComponentEntries,
+  buildFileIndexManifest,
   buildFileEntries,
   deriveGovernanceSemantics,
+  expandFileIndexFromManifest,
   normalizeGeneratedIndexBytesForHash,
   normalizeTextBytesForHash,
 } = require('./generate-governance-file-component-index.cjs');
@@ -360,6 +362,114 @@ test('buildComponentEntries counts owned files per component', () => {
         isLegacy: false,
       },
     ]
+  );
+});
+
+test('buildFileIndexManifest splits file rows into deterministic unit shards', () => {
+  const fileEntries = [
+    {
+      path: 'apps/api/src/main.ts',
+      fileId: 'F-API',
+      unitPath: ['SYS-DVT', 'SYS-API', 'SYS-API-ROOT'],
+    },
+    {
+      path: 'apps/web/src/main.tsx',
+      fileId: 'F-WEB',
+      unitPath: ['SYS-DVT', 'SYS-WEB', 'SYS-WEB-ROOT'],
+    },
+    {
+      path: 'package.json',
+      fileId: 'F-REPO',
+      unitPath: ['SYS-DVT', 'SYS-REPO-METADATA', 'SYS-REPO-METADATA-ROOT'],
+    },
+  ];
+
+  const output = buildFileIndexManifest(fileEntries, {
+    shardDirectory: 'docs/planning/status/governance-files',
+  });
+
+  assert.deepEqual(output.manifest, {
+    version: 1,
+    generatedFrom: 'git ls-files',
+    unitManifest: 'docs/planning/status/system-governance-unit-index.units.yaml',
+    shardDirectory: 'docs/planning/status/governance-files',
+    fileCount: 3,
+    shards: [
+      {
+        id: 'SYS-API',
+        path: 'docs/planning/status/governance-files/SYS-API.files.yaml',
+        fileCount: 1,
+        contentHash: output.manifest.shards[0].contentHash,
+      },
+      {
+        id: 'SYS-REPO-METADATA',
+        path: 'docs/planning/status/governance-files/SYS-REPO-METADATA.files.yaml',
+        fileCount: 1,
+        contentHash: output.manifest.shards[1].contentHash,
+      },
+      {
+        id: 'SYS-WEB',
+        path: 'docs/planning/status/governance-files/SYS-WEB.files.yaml',
+        fileCount: 1,
+        contentHash: output.manifest.shards[2].contentHash,
+      },
+    ],
+  });
+  assert.deepEqual(Object.keys(output.shards), [
+    'docs/planning/status/governance-files/SYS-API.files.yaml',
+    'docs/planning/status/governance-files/SYS-REPO-METADATA.files.yaml',
+    'docs/planning/status/governance-files/SYS-WEB.files.yaml',
+  ]);
+  assert.deepEqual(
+    expandFileIndexFromManifest(output.manifest, output.shards).map((entry) => entry.path),
+    ['apps/api/src/main.ts', 'package.json', 'apps/web/src/main.tsx']
+  );
+});
+
+test('expandFileIndexFromManifest rejects duplicate paths across shards', () => {
+  assert.throws(
+    () =>
+      expandFileIndexFromManifest(
+        {
+          version: 1,
+          fileCount: 2,
+          shards: [
+            { id: 'SYS-API', path: 'SYS-API.files.yaml', fileCount: 1, contentHash: 'a' },
+            { id: 'SYS-WEB', path: 'SYS-WEB.files.yaml', fileCount: 1, contentHash: 'b' },
+          ],
+        },
+        {
+          'SYS-API.files.yaml': {
+            files: [{ path: 'apps/shared.ts', fileId: 'F-ONE' }],
+          },
+          'SYS-WEB.files.yaml': {
+            files: [{ path: 'apps/shared.ts', fileId: 'F-TWO' }],
+          },
+        }
+      ),
+    /Duplicate file path in governance shards: apps\/shared\.ts/
+  );
+});
+
+test('expandFileIndexFromManifest rejects missing tracked paths', () => {
+  assert.throws(
+    () =>
+      expandFileIndexFromManifest(
+        {
+          version: 1,
+          fileCount: 1,
+          shards: [{ id: 'SYS-API', path: 'SYS-API.files.yaml', fileCount: 1, contentHash: 'a' }],
+        },
+        {
+          'SYS-API.files.yaml': {
+            files: [{ path: 'apps/api/src/main.ts', fileId: 'F-API' }],
+          },
+        },
+        {
+          expectedPaths: ['apps/api/src/main.ts', 'apps/api/src/missing.ts'],
+        }
+      ),
+    /Missing file path from governance shards: apps\/api\/src\/missing\.ts/
   );
 });
 

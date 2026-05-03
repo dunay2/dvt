@@ -1,0 +1,4506 @@
+version: 1
+shardId: SYS-CI-GOVERNANCE
+generatedFrom: git ls-files
+unitManifest: docs/planning/status/system-governance-unit-index.units.yaml
+fileCount: 180
+files:
+  - fileId: F-80B99D37F6EB
+    pathHash: 80447532cb5366e8cb4a64e0bfee2f37470cbbe4cd91304510c8bf02e79a976b
+    contentHash: cd9534e064bc995b48b387a7a90e39f3afc0dd7764869a15dbf96768f512fd7b
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 63cdf178aaffbe520690ecbf45b5804018609ce3a9fe78543869a81655883369
+    path: .dependency-cruiser.cjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-932168D75887
+    pathHash: c493e9435181396a8df1436b8220780837e89d1caaf32d1d854f3713cfde2455
+    contentHash: 0008b645bdebae01535eb9c3624f5a72e1d4c2da28cba841d0eac4947b9a0931
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: e00828fac9833c9657778c6e890b0853da14f9f609fe7892f6a01c41da59a76e
+    path: .github/actions/setup-node-pnpm/action.yml
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-13E833744460
+    pathHash: 748e22ed0dc5d1f34c1bb2b66dedb4725f8b5913a83ce19042f5e284871f898b
+    contentHash: 8d00a50f3efbc6573304f470966f2190885ace7c5dd30de5c3c61f92186f142b
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 43d90d241a083dfe39bc21cb5226a23925b01b91338ea5ae829a629d3296f290
+    path: .github/CODEOWNERS
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-0930BE6264D5
+    pathHash: 155f9828526e8f46bb76c1f4f18faa2cee474b7c417c8fdae945e3ea9f90eabb
+    contentHash: 25c57238b4c75a263c090cad8b4468ea303ca7a36d76f7184bb5461cc42a3024
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 6ad3cc8b54efc87acb92939af187ff1b42c16c7b71b1321d39932a1ef11e3fea
+    path: .github/COMMIT_CONVENTION.md
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-DF12D3CA3D61
+    pathHash: b406083f0b7871809672d3259e9b8c71c250e6072713e28eb59e779b3329f6c5
+    contentHash: 53f7607e72b4b67dba97418b2082f2ee44dddbfe390236325abd5edfd1d561cf
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: b9b1d017390ad793b3754c00a620b7fcac806488e835d4b9ffc4c195488fe8c6
+    path: .github/dependabot.yml
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-CF6A25EB6BF8
+    pathHash: 1f93e02544dc5afc69ab98cb839a1a830e07f4140524355bf0716750c1323420
+    contentHash: 1f605d8de79c02d0a558264607cdf5ef3f551fa89307c2ebd62f6388524aef2f
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 424fa722ef162c8fea17cf37d9b8c40555e73b6cca2dddf10616a8d62fe340bc
+    path: .github/ISSUE_MONOREPO_REFACTOR.md
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-6206F23E9A4E
+    pathHash: 188f382011f7323ea80e035efce4e1a1a124c381498513a2100cfd6aa905c8f6
+    contentHash: 9c79f389da006518db7083d3017da2b086b4f0ac638fa542df4788462467a486
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: fe7b1bfd324acd56fc5b7bd5f067f9f2fc1f9fbe1dddbdf615f7dd1b2e8c71aa
+    path: .github/ISSUE_refactor_monorepo_OptionA.md
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-625E0A121C4A
+    pathHash: d2578670f657557f77a74d767d3be93e0379844e3a41f78c3ee9faaeb70dc4bc
+    contentHash: 430fbf12361e42a544c2c4a7412d67f113d6f9ddff6acab29199296e474b6231
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: ed3a74498f028d8e0dc70ab743e76d7154f935f58c87c0cf657f63fa108c5cad
+    path: .github/ISSUE_TEMPLATE/bug_report.yml
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-0B95EEF7E0C4
+    pathHash: a6449c09ed1ce4c44cd7bccc636ca4c9ab74fa6f9c20ddebcc8488c0c24b19c6
+    contentHash: 43cbb47b6a0d4353c7b48110a59d5abd17bd2c4582073c25f68da7d5695c4552
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 5989cff58911b6b4969f8f6d68cba724b50bde5a8dd998e1c9c5c825b44a51e0
+    path: .github/ISSUE_TEMPLATE/config.yml
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-52FF464FB69C
+    pathHash: 4376870e617e2bcce20b76cec2a2dcaa71ae1bbdaf0a82223314f38e5aee1073
+    contentHash: 41aaf5a4b70cde354ec6beea338b13d7d2155e1a936c8bd8f52d89d54adf3a60
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: f57fd34872e998bb193e92f258ac691787b4753f437bf16188d0de7742b34001
+    path: .github/ISSUE_TEMPLATE/contract_proposal.yml
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-F77DAE4BA713
+    pathHash: 92a182384dd8ea90b49faee3ee55e468c5d015938c18ae65941bd7318cdd2c81
+    contentHash: 646b08775c3d89ab84727659a246e2c7e6b67b646cc45469850304ffe29bcfc9
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 6ebe857998645df16a38256886bd381cd2b032c7d7e9393e8ddd481712cb0dc4
+    path: .github/ISSUE_TEMPLATE/feature_request.yml
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-8B86C8ADA12C
+    pathHash: 2107e7510975da42deb70759abb28e9b1ef93877b712dc1e9aab033bf32b7a4b
+    contentHash: d3f7fe0cc3758863bcf8e98dbf6b985fc9b9b805dc1b6b9661a47fa223fce72c
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 28f8fb413160771befd5a6360b1e7a2759c7d3101b80968d38f2baebb4036e9e
+    path: .github/ISSUE_TEMPLATE/fix-determinism-sequenceclock-datefree.md
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-E6B2002AB414
+    pathHash: e81fb4662e28e673e8d690a703363b4056c55da343f3801f01e04604424c8f13
+    contentHash: 9aabe8d9e8f553704c7e7114425a0857de6747143052cda078e92320358e4cb7
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: f0e2bb0e574e29c2dc6e41e725ea6754a1c483ede1040567166d3772661c143c
+    path: .github/ISSUE_TEMPLATE/refactor-monorepo.md
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-4D063DBBB0FC
+    pathHash: 87adbb944c72189197ce9831fed99c0d7b19dcd9cda97f1191498f16106d8391
+    contentHash: 86b16bb2f6a342b2301469ee63e08a522e1b72b8b5a0cc51a3d322dc3facd481
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 2bfaea6f8fb3772f71e0b6e5c7eab97ef83af02fad14a986e78085283f7ce2bb
+    path: .github/ISSUE_TEMPLATE/security_threat_model_update.md
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-193B8FCE6851
+    pathHash: 916efafeacc8410478b1fb8190feba723bd3c7e27e0bfaed35d37a1c496a7e47
+    contentHash: 3aa3c9d7a71113410563f9c38cb3cd4ffd9f3162c0d25eee8d1e15bb11f7bcec
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: d527c46412a1bc68fe68ad55b686210620496a0a49fe23e6cf4e24b39d2767a1
+    path: .github/labeler.yml
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-A1DF8109A2F7
+    pathHash: 016ed500511d77394c085efcdeb9a6b88a7b932c4613ae83154547a49f2f7fd7
+    contentHash: 8c2b9a70775e605e5f1cf8043dfd6a096dd6a601462e919740965666298fe602
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 380edd50b77c171d7afcca189647264b19f4880471fc623910d9da4b86143fb7
+    path: .github/MIGRATION_GUIDE.md
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-5D90E48F3117
+    pathHash: 7e193a5b04b9638ea61bf18c3303c355f9864644286b08933c718aeff8abb438
+    contentHash: 9fbfcd0ee30d127e5f35596cd0dad3abf574b0a518b7924f73bd3cd754a75185
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: eecbb933dce8cbed04a7bf63cd05f674718e1df11c24abe34abf20cd86290898
+    path: .github/PR_BODY.md
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-8FFA4A8A6195
+    pathHash: f51f549a54d5e6111add86b3f46f707acf691f8cf02803e731a1e6fc0babb269
+    contentHash: b5d54ac6f38fa427065dbc15c609e18900b3cd339ece52941feab6e2bfecf9cd
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 20694103e6ea770518dfac4ad97cec6d1036cfc75fc5f50469da35982086289a
+    path: .github/PR_INSTRUCTIONS.md
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-7A68FF51D2DD
+    pathHash: f3dc99b8709953f5dc45660a01971cb7eedfaeb1ee3920c204a96fb0ed5e09da
+    contentHash: 656660d376215e54778bcb7de453e03914c10839e9a0d0811db6ae5d1c22d3a0
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 325b458ae8b5ca3e8ebe7d239c435adebab92e94d91cd186e1def6457b200a7a
+    path: .github/PR_TEMPLATE.md
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-C428567F4914
+    pathHash: 335e01565ad4adca3ead0ac8337c4b515b90c2a1454d8fb1a7dda8f6c1db9c22
+    contentHash: b6730cf86c89e52277f50557ed607c77fc387a982c032ff6e46d9e57d9fa1ea3
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 0f0dcfdc7194545121fc36f1461f6886aeb345ae1a4c72f2e250f3fc562c03d5
+    path: .github/pull_request_template.md
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-7180788A6AE4
+    pathHash: d42b565b4c84614af1e27dc97a07b9ee9261f2d0577965de676306e232c125f2
+    contentHash: f9dd003e4daae21d4ee0736f18f33a7459125848f03e050af09e3867e8b8a6b8
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 1610a48f38b8eb7431b494ef7eeb2403820835aa398b87994da0225e508495b3
+    path: .github/ROLLBACK.md
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-2344C8B7365A
+    pathHash: 78d5aa99f8bc9064bc661e3e393093b84e58e64753cb8b365a88aa11b6bddfa3
+    contentHash: acd6dd64a80c2e5947af5aa17bbe63ceb58e1e73bffc5aad42f0c1e10543701c
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: ef105285d6a9990c519d06bbdb7648248d0f4373ce004cd46c3e3a4df103d624
+    path: .github/scripts/generate_pr_manifest.sh
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-CA6018AE3A84
+    pathHash: a47fd0000024401849386c9521330ce5b3f3827370115c5e488e1cc402c7c058
+    contentHash: 788f5c6f0bfcc76f55dced4ea13286cdda9efc63e895bd05d94b71d466e4f91d
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 5632f676f84288f81554a376336563620cccff943f614022be528f817846c155
+    path: .github/scripts/generate-paths-filter.js
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-1FE2707EF949
+    pathHash: 0ed9d163fecd2e4c0076158cec91857df252749db18444214f934cc69e40b43d
+    contentHash: 718075e6ce47da0813addad643061f44dd8340e5301935d2971fb59ffffb5314
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 374ac72cf9c505f378a1d173f9fe0f3576a4893b30a91433368d5963401f9ee7
+    path: .github/workflows/adapter-postgres-integration-nightly.yml
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-D0664F52BD86
+    pathHash: a01b8262b65d3ab9489cd6cad7bd5a1a69eeb12a791d0031d4a39d724766e9e4
+    contentHash: deda3c37ddad70c7e4c4048e37488c1c6f3d6aaa0b735a1b8d10ce6a316195ac
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 9a7a5465a6983d053c88c05ec683c6a8700885d8b5d86b07fb4c53f94695550e
+    path: .github/workflows/ci.yml
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-FA660D9E9D56
+    pathHash: 35fc0fb3a577ca6dea45873c958bc6900775f0ee18d2980386e2980c07f5c6e7
+    contentHash: b2e45bd5d5cd9e7def247be10236d9b53cec654d22686034f147e0706da5c374
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: d027c26071f3fc27d24ad1d4a4a2de774e920bc8c573b406462f9641f76e3c8e
+    path: .github/workflows/codeql.yml
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-0692FE5388DA
+    pathHash: f4a3a256eb2518b10e66ea65adc5d49988e4760c8c2aaf3de5677ead20402979
+    contentHash: e255047206043720c4b14410dbbc7a1afbe1ef80c5caa718bab31446a1cdf7be
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 030321ab106dac648dcec7f51ff53ff208a6ed6b37dc2bbec4f61290e45f1cc9
+    path: .github/workflows/contracts.yml
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-FBB4D95418AA
+    pathHash: bd5afb3e85fbf44537d9e8d20d644df8c97276542c71d9f2c912249135f25bc2
+    contentHash: ccf2c09e9386c37bd8d5b2666f82f6aa1c4ef6c385c98a1b1d36a83a0fc6376b
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: d0b28cafaa2b1617edaba8454e14e31fc592055f89625206c0964d4f326d9e8f
+    path: .github/workflows/create-labels.yml
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-BA500E18A90D
+    pathHash: 01e99773df04931f3d7ce64acf098983dff25e302ae42412371b594f7426e5e5
+    contentHash: 1c2e482892f858561e4f4342a2354138a213e1105773e384f6d39f7579629831
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 10e17b0f708ad79b8b020ad203deef1dc24fddda7dd025f427ceb3e334018613
+    path: .github/workflows/dependency-review.yml
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-4024C5A65C61
+    pathHash: b86a09f7341be9746d8b4826651f6cf66a61a1de4045c434c5e4b31c315bfdab
+    contentHash: 9644b4c5027140f5ce53558f3bd1c143ad4a84f2dac9b1ee6a675b79c5a1d0a4
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: c5a4937813a33d1841d1dedee0a5114a5d32905ce54c22318df94d7713831926
+    path: .github/workflows/docs-deploy.yml
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-20E5B75B2EF2
+    pathHash: 8d082605f9f2307af4fc5af00b1035f9c85eb9737f84ff71535023c4405a42ce
+    contentHash: 3ac391b00822547c0c6b404262d5710c67980f6031da6d67cd8e24b9d2b44f5f
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 460c8aafcb16eed8ce039bbb904b9024c8c04d3583bfbc89cb25feab126e72d2
+    path: .github/workflows/pr-quality-gate.yml
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-BFBB908487B0
+    pathHash: 595e43810ce495487853759d66ec8c6fe1f4b87b135d8d13ab3b2eb83ff59613
+    contentHash: 243361e20c7a148aa855d9c7abdb693d2fb8ec69f5d6f06cab443ef1524d072e
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 92fe620cfc3505674947faecf0d50f729689195caef5be5a7c7530aa748ef5e3
+    path: .github/workflows/release.yml
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-04459B76724D
+    pathHash: 9f1afc1814fd16ab625e3fa6a8258eecad90c519e22b53622ce603641397106e
+    contentHash: 7e323c0787eacf424f4ee9403c93959516226f5e35b03d71a060c75b5b8e80c5
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: b85b5962f74198cbe5d7b801f2406fc45e45d52beed940a7d988184a971a397b
+    path: .github/workflows/test.yml
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-326102A840A0
+    pathHash: 88f50aaebd6ea363b6965ac1a37623466083ed41673d6dac926334620a040b80
+    contentHash: a90616a1ce4298cfc7bee4ec8425ffb715857b8b90373743784540768f6fa58d
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: d4e837849afb8083bec56da6cdd73543726b50cea69376a4608fbff8c5b966a9
+    path: .husky/commit-msg
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-083FB96C3555
+    pathHash: bd58f7fca762da4aac0951a344e97bd6ce54a18d4f9f8d4509eb0e31780ce37f
+    contentHash: 6e98f9fe9f11852aae9a137a8059359373c079014451a81d2c5511c9c6399e9c
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 18781cdf673705b0ee4c45876c5171777cca6d64091d7af38cbeb4d10098d845
+    path: .husky/post-checkout
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-788A30E70E4A
+    pathHash: 74cc01f99a8962997e3db46b7ae82deaa452a0b647c2196d77e8618b556a8b54
+    contentHash: 6aea786247a8b3e59d63250752c0a5cd721befcfe11133bd1cf40370d4c506c5
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: f953ec33a9c93dbe832db2a6f3308086d658c6a3c7113a5c70b9b37a095022ca
+    path: .husky/post-merge
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-9D912C5F65B3
+    pathHash: 2f4b267a80c7303481b5228bddb653748ad5c13f948a7e02fec48b7bac34c0c2
+    contentHash: 2c382fc33b058d31b79d2f985ff5b35db155abad44457a4a80ec94812058473a
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 61a8c01bcb23c76d42cfedf7642c3e3f6e083431a6dba5453d603c75033fb76c
+    path: .husky/pre-commit
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-2980B50B5096
+    pathHash: 4ca267943b1bf69624c69ed5a8f773872127a37e0beb93f58f913ebc00e52b61
+    contentHash: a486c7b5dabc4d2a5b1969f896d588a604e8355b129a12ea80350170384487d4
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 5cc3c6a2019d9e8a248e09afb857364dbe10b7e468065ee2c0a046ac5a0720b8
+    path: .husky/pre-push
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-E91F23E0BCAD
+    pathHash: cbb27f1352e7561ed63999a6374fdaef5d3ab67e3d1de0561893fdb510540279
+    contentHash: a73d854ac41b92797babf75bc954f2fa7f089a4a5ad1602754c39c15323a4712
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 5497bf613c95ab657252390d4dc46e50fbf0ebddb7a465db27a48799fb357786
+    path: packages/test/matrix-alignment.test.ts
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-59B391BFC7BC
+    pathHash: fc25a5ae43d659290a93cec48daf89f29361a6532dade16da4addc970d27b896
+    contentHash: 6cd6e736c3ea166d0dee87f2f427d8579fad5b071d6d32cea897ea893b7a009d
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: c0bb61c55cab0db440e85d7b57822f92ebf0e60a05da27bf24bd27925bc9fc2e
+    path: scripts/AI_INDEX_README.md
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-C45D3DAFB0EB
+    pathHash: 5d30481ff9f13aca6a244e45272a72e13596825e74889b0a52afca2d427a2779
+    contentHash: 5bd14288d6abc0f40f7a65ee8227be802266061851887d15c06f612910b47ff3
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 673122f1104e765bf3764193af63fd5d4949e99ef5db1e1072fcc3d19a9d56ad
+    path: scripts/align-markdown-tables.cjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-7E68C2492C40
+    pathHash: 3f5ec652663005afc8b337cb16ef0e72849e2f143f8c7f17d058ef1f541bf039
+    contentHash: 21a3503180aaa1e2e1c3a8b713b30e0d0a4b55f122a40ef41716ea6921e3e85a
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 592e4ba4e257996d2254faa671a5fe00e380bdf2ed373afe063dc373a9ab22da
+    path: scripts/backfill-planning-last-reviewed.cjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-41655D0E5D3E
+    pathHash: 506ea3de2ed25e72f141d209c709fe4cc8377baf3a452b65f1787853c03ee36c
+    contentHash: f7b1ea272739a677a90a26d44e334dfad50a2abe019e3b4b92a5e4fdb134772a
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 1836d926d022eab845e7e9602d20bc27b968ff602bc7e195b454cea830841906
+    path: scripts/build-workspace-runtime-deps.cjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-EFFBEDCEF781
+    pathHash: f09f9e8a69fce09c53e93c8715c9cbb0c62b829659e9537b6f175758d72266d6
+    contentHash: 323a5dbc467b58ccfc37289d42e8909e6e13d22271458cf71b794e9387dbed6c
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: aba99200a1fc5c75c8b52a975dbe81ad224b1da1cd62e5debcafc9201d4e9d4a
+    path: scripts/check-changed.cjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-7F4AEBA8D4DC
+    pathHash: 3b54ec1ca3e913efd81c5c7a7946c46dc28b738f301cf6173b59f128606a3fea
+    contentHash: 83aeaffcf7db042f4b69b6591d1bbcb78243043184760065ed09f1af6e7c403b
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 5d36ed2c3f1d6bd40e03d3912b8fb3591e89f63038482b352033041b2fa3cec8
+    path: scripts/check-feature-mechanization.cjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-8E0B81F5FBE5
+    pathHash: 5a6ad4077e68f695dbd67f70edc86c47e5400255b52fe542925543bf2b82535b
+    contentHash: 254e91869dc1dc554877da8be3bdf51938711f7e04e3a9325f249f294f07e967
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 0be88f89432a3ba337a3118e2cfba10bbeae12f7e951f8c7a066564653976780
+    path: scripts/check-feature-mechanization.test.cjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-C4816B58340E
+    pathHash: 860fa9589e60e1c3c9f3b2ccbc1545fde9fd7a6373ad4075f73cafc0977d95f1
+    contentHash: c61cfefe58867047c21a6bdb0f7f497e56eb02a5e0f4b01d84f010baed80f850
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 4475fd6f1179c649739bc1d0f69c6b0b6b0f9cf11f9b28338e7f37acbd8ac163
+    path: scripts/check-forbidden-tracked-files.cjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-B8B535FB5857
+    pathHash: 9e23c8bc5e7bdd10c22e29efd499d6e4f2024502a514978fbcfa8027e24f89c1
+    contentHash: c74e631757dce5a0815031c5d909e57a2d6007f256d9d8628f0c943fa5591116
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 7b5c9b6262efbf1b0328b237c86e66c524862353182ad39dbd5545c628572a2f
+    path: scripts/check-generated-docs-policy.cjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-29F5B2A2EF39
+    pathHash: e34092d87391689639a7813bd0abf34911cd78d52409cc6d78d5b2aca42c966e
+    contentHash: 3713a717093cd88f44841c1bf54d6241be1c2b3886ddfed7cb4319d0d6156586
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: e536a3758699ef61c76f7880819604cb8b7cc3e97f79d10e79d96cf4290d8f02
+    path: scripts/check-governance-changed-files.cjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-2108831C9F5F
+    pathHash: fed77374b96d541e02a780f4977c262e6f5478bdd63de7caac833cc7f502351a
+    contentHash: 9ba3e0055597d4d0a0ce24fd3b6f82a20b03506df7b00071a3cbea56d1a25a18
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 6d431b0ede8061aeb84c37e92584702a1d62d1c7264c87e9bd95934a2900d62d
+    path: scripts/check-governance-changed-files.test.cjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-175EA08EDEE6
+    pathHash: 141349b8d7f9f7ce5e9265d28dc213702c5bae3bb13eb9f4c2efd56f97f0eb73
+    contentHash: 96e95ed616dfaa7298d44f23cf71869f64ecb586e168117d7b9b6874cf6ce49f
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 0d877957a11b729bc8fcfb095a409be502bf6fa439a2bcca51655fcfaa312133
+    path: scripts/check-governance-file-fingerprint-baseline.cjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-ACD6F7C91932
+    pathHash: 6236914f911297b2022dd6d8a5276b09fec85703418f63efc2135291c8e705ee
+    contentHash: 9e5c17ef3c7fc94a88786ab83c3f2c4346d34ded66b592a29328eb464ab6929b
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 9025067d39a9003576a9383bbeecc6de003da1da2c035dd02fc58383ae21963d
+    path: scripts/check-governance-file-fingerprint-baseline.test.cjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-D2E8607A6EA7
+    pathHash: 6e246072468005f43e4dff2fb41216f05cd0898b70fcc09520728bd77a914405
+    contentHash: 46fa00de2afce0a40525fdb27e69c16c3640476da1f06564c1230f6c5a65ec60
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 00ce8bd579e03aa0e8477fb6946ad6f0e7ad6f7d673dcbcd2b581234c2067e7f
+    path: scripts/check-governance-unit-coverage.cjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-3FD12D083F4B
+    pathHash: dc8bb9d4f1b887d751cbc7c9e2ea8b919867e01a42390d8a7d9716642febdd2b
+    contentHash: 63039ddfea9ba85a09170a0c6f38e66ceacecce9f333bb94f485cc09c0033916
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 8747db9f23d2b930f321d7c84a2c5ae1ced82e78555e8127c42fdf5b1303bdf5
+    path: scripts/check-governance-unit-coverage.test.cjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-75A72AEE023B
+    pathHash: 5c7da02f52c79a0f80c7687379fc1bb7e4a5a518f332b1c1f03b63e521d2bc2a
+    contentHash: 6455b148a076ea2ed6fa967f8701a6db03f93a8a8a4e1440d520b72c2d436037
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 82569ed5499335b564d7d752af89a16daad2ce698faa7f33f76c96e56aa0789b
+    path: scripts/check-markdown-locations.cjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-1A10F5BBDD28
+    pathHash: 00d5d50d677f39695a32b71f8112da1c6f9b051d0049a58c61c8b8934da8bc8e
+    contentHash: b6d310b6a8414532aeb1b4b0b26f4e312fac0b749dfe3bb1f30842a93efc53c7
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 523b1e7756bf0b8ca5a1f07dc183a181a0c5996f945de2c0b25a5d1e47506dc2
+    path: scripts/commit.cjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-49A90BDD0A74
+    pathHash: bddc23969bd3ca867127b6bda0af31470a529df861ef67fedaccc85a1823adb4
+    contentHash: 7fe0f67ac80113c603e981d2fd995dd9bad5d3832fe10a963784ac213fc33681
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 3d65ffb92a4823abf01680bc9fd3bc91a9b52e0bed618c2cb2dc936599eb7d8b
+    path: scripts/compare-hashes.cjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-04582B78EB0A
+    pathHash: 68f7894098e0b50faeea71d8ea8aa2f976e46ce86bc66d900f358e4aabbb981b
+    contentHash: aebadaba1f972c0b291ad4c5f2df33cd3f0f790ed27e1388fe0f20bd87c9463f
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 16eb0bcadbff7f63d32c921cc375f2795f7e80956624044c49b17a178eb52d95
+    path: scripts/db-migrate.cjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-10A35A5ACF82
+    pathHash: 498361ce8d6fd97404a66fa89d97eae9807ad6111f7e59fca5918ff85e14d375
+    contentHash: 1dd2ce8223584300f0513e21abfb5f5b57b0d815d98b831416a060fd4734c3c2
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 986d28be3182668c0655d65969368d91ec2f9e37f36e7975fb7d246d6dae856b
+    path: scripts/docs-canonical-check.cjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-DE17C807C8B3
+    pathHash: 31b3f41fe82176dd69a8c84e624707993dc19fc45826eeccab352f59a780c105
+    contentHash: 03670295ae6f6722c32ee214bf9134cafe6c5eaf1597a1762a4c7c34da0ae311
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 6de87afb1d07138f49723ccb3a7d5ed0ae5badb54eeac57be8923fbc20d8db72
+    path: scripts/docs-canonical-fix.cjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-079052F8DC0D
+    pathHash: 6f5c239b0358ede4fced58d97a9851ecb5e2642272032b0ad664edba0a982520
+    contentHash: eedc774a6dd73e0fef786d7961fe70f2c02e46a5212b14f1ad8f943ffbbaf076
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: cb5bc75aadde4b79da18b121918ce0e548f0b0afcc1b708be79f729e0131012c
+    path: scripts/docs-doctor.cjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-029F27E753F4
+    pathHash: 4bfe6a7528dac5c9626abdc18dfb40e04041b9cbb925fe8aa42bbe291141ad77
+    contentHash: 76ad0904a2a1f989f49ac60f7e9e72388f187cc86211775431aa96759442b617
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 752914144018eb77686d4bb95700375bf211585812488b8aef2447fd6b8485ba
+    path: scripts/docs-planning-generated-check.cjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-0D398E8EAC47
+    pathHash: c96ccd6b23590df2f05dc20a33d5715e569cc4124696ff90bf25a9f6447199ee
+    contentHash: 83cf6c7604e4a46a37cfb0f8d231d9439b3aa796ce4a3670bafcf97168ae3c8c
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 24c7ba7cbf7fccc1cc143c7883561e510b1dab4f910cce106a8cd7ca07bccc48
+    path: scripts/docs-pr-create.cjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-1298ACABFB8D
+    pathHash: d180e983142413fa4a28ba8b943effb6bc43bf790f2d2cda7b9b92ca466ce75e
+    contentHash: 6d79d95e6249bfad6d036e6ace27a5ed06e64ae9b2a17a38d67f996ac58341a5
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: fb3796a13f55ed2ffed4527cf15bf2cca11cf91ad83257c6fddd5b0196ed2b8d
+    path: scripts/docs-pr-local.cjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-53790E6F33A2
+    pathHash: a59d5f5600428078efef411fc8099c9c8eea4398c126bb71bbb3c62bf08e07af
+    contentHash: 55ae48b4d2c746765002114a9b6e869d1659a41da48374bbfbbdbd026a93a07d
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 8dbe192356ef19d3246014f24a6c0d9ecf7cfd7df0719116f35439ce545f2bc2
+    path: scripts/docs-quality-check.cjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-FD8EA256A8C2
+    pathHash: aeed707a9f753dff3958eeb84d66a2e86616bd600a4b9d07470bd7fc0aed3ca3
+    contentHash: b0cf5d30596ad6fcf9e48e1eeb234def862029c0908ee4597275d412f75b29d9
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 7108f2f298eec552911edd7f01a283b5e8daec8f83856b5d9037cb4ba491a659
+    path: scripts/docs-workboard-check-changed.cjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-99185AF35A8C
+    pathHash: 720e4304036f4bb70e0233a9703203d28ac31def6bd0784435e1fe591f044f14
+    contentHash: 7013b8fdc221345d416b706c29a068fe6fee78b2504cf75d315cda87f4d78edf
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 64fed4f2e8b1ae4ed2ee0e80abd52f59d956ddcaab32b59b2d43f4546a785ad0
+    path: scripts/enable-workflow.sh
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-82DE775CAC41
+    pathHash: d5d83815f93ef09edfe52fd09ce21cfdba66968f87cf1d1117e4006ab5101c03
+    contentHash: a560471a0f787ab605fb5d53e08814ac2d1cfe409ee6967946e234d7b758da14
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 5f7daaa32130132e628f1fee484e9775293e7b36960510f14c5ca0bad800f020
+    path: scripts/fix-changed.cjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-C77920FE3423
+    pathHash: 9c999fcec7a29fdd5d90a6753f12fbed24a45933ccf64a3552486c90bb97b642
+    contentHash: 245482875bdea8c286ebda1f4c7ff0210670af62787024330e28a85f25f71d2b
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 3bb41c860effcfc3ca68e0ea8bb83ca5910d7cdeda00a914e2aeeb247e3a515d
+    path: scripts/format-markdown-changed.cjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-E0E5109ED4F4
+    pathHash: b7405922f65bbc0d0ace11bc308860499482a0dfc6aaa5272da3a19375d4e4c1
+    contentHash: 02b173a3a29ef342291d63f4eb0dfde4b56a2d34b2e1d9e8080d588b3dc1c211
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: ed69959b19a5d535704d8fb02aeea81340fc0a4cb74573c7d026492817d364e8
+    path: scripts/gen-ai-index.js
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-34E8188F80A8
+    pathHash: 0578a9f2f0b48b4d95ab4f2b46277ad49cc6d6b1bfb673c42f6f0ff718ed329e
+    contentHash: 519c079e0d2a46b011a7de28933f46207d23d4450486a05ef4ce75bb2487228a
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: e90a5ffe5f92807e3c3103a092dac964a79e048dfe06b5785060d7fa74abbae0
+    path: scripts/generate-capability-coverage.cjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-E71E966D2C26
+    pathHash: 63c55319b4e2d7b7fd70e70eea060f80a318fbeba7fd207360c1cefdd3489e4b
+    contentHash: 8e5fdc9236f61afcc3d378f78c04492baac7eefe17e2dfcd28f0755c4151da4d
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 1f566cc076babc190398d5417a56108bec5bf140194e079f3d54c8a5d1c7e53a
+    path: scripts/generate-code-status.cjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-1716A4B10BC5
+    pathHash: 0714792d4344a5dee798795ca42a44e6303b951016a8d053d51668ccab71c685
+    contentHash: 17ee0923ec166fd4088ad983fbc271b4a682ec0e0c7d81997b004a73b6666d18
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 658dbf9426db82a34edb057cfdac6cafe71502abb42c6bdface59e4491b494db
+    path: scripts/generate-contract-index.cjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-229E2DA7030B
+    pathHash: 866cf7e94fb6d3bb5a01895f7d27831d397570d722e3cdcf677b3aeedc0044aa
+    contentHash: 46252bae58ef89c56c6f62877c9520683177cf29f6f6a7eaa1fd29ce7559f949
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 7f02cf30f2d9e84c219de1ece56ab4260a773361c5c81518010635202f7180ec
+    path: scripts/generate-governance-coverage-report.cjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-485C3848F39F
+    pathHash: 1ddbd2949f705825a6931e24cb19aefd2f537abb6dfa920c283e3473d5fcd2ae
+    contentHash: 6dd2b665494fe2f8e7b2c03dbd2d93556de5c14acb62cb8bfe36f6da7b9fea9d
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 38bb15c047ffbc7e9842f48e80c40dc20eb7d1f83f465447e665ab247dd9b4d4
+    path: scripts/generate-governance-coverage-report.test.cjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-8E3C5F5D515D
+    pathHash: e208a377b5b0da38e57ce93b9c7a9b7fd1a114a00924118511e3fe4fa254af73
+    contentHash: af1e1c3ee36f556a686e709897f17411995045b582e15e4920715d5c67f5db06
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 790d21476c1ab5f653373670f2e2c1db464f76242ebe0725b3714c522c89e81f
+    path: scripts/generate-governance-document-unit-map.cjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-0CDAD61BDF2F
+    pathHash: 9f81870b6f9a1b6126d6565bd1bb4df2cd953d57c2dd1bb52823da223ab997f8
+    contentHash: 56e7e9313d94d50f58b5f5af870b67e5c6a3200e0299330d9fc2325823c105c4
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: ad3fc760cdb4ad38f5bbd2b980c6e0ca1cf13c86c4466e5697395364b8fb04db
+    path: scripts/generate-governance-document-unit-map.test.cjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-5B42FC3A41F3
+    pathHash: 53aa9284005edb38d24ba02037cdfd5b1d08a8e85333b0ade5c37b89bc985d46
+    contentHash: fe6fe0d5af5f9a42ec7f3a16bfa5eb20d3ca9537e9107415d75edd68eb24b103
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 4e35f01c80593beea8a82e65dbd2534ee79b138d49bcd8b4c9fe135a4ab3aee2
+    path: scripts/generate-governance-file-component-index.cjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-97E84920D8B6
+    pathHash: 88c25b3fceeed875d05b794f1af15d644a82514e655562692a1fcf26ebffd8da
+    contentHash: 09eeab878dac8ce9342a32cc6348bd8f536984065787db65932d542c729ba4c0
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 4e7057575f544227dbd576f617e1ca7faf401923bdd2d3fcb7bece07d843e07d
+    path: scripts/generate-governance-file-component-index.test.cjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-C21A8D62E06A
+    pathHash: 46fed0b9485e569eb151489a9295a748adf7d84dbfa675619ef822accfd756d9
+    contentHash: 14383c9c967688a464dd7f8a5278fd6d3df92911b9fd7b1f5c1c0542f0331e9e
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 0fd550b565018a843a2e6583eee076ea5464235a4cd7e3c9f1dbfe047d8c9d85
+    path: scripts/generate-governance-remediation-queue.cjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-CA3701ECA908
+    pathHash: 4abdf1a0a8db9cf2a843be7966e0d9122bd6c994f6f5fed5bc0ee7cd36e6f3fd
+    contentHash: eb3bc17300bf77d06399142cd92e84704cfb9c4f516c5f961e2a06ade5e521a9
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 14a89308c38ffebb91c8dcb111e14897ddaeacb712871c56e1a3d2c4b1d9a4dd
+    path: scripts/generate-governance-remediation-queue.test.cjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-EA88A4651E39
+    pathHash: 27db957aae6d40e92449f4640abb34665fe99a0c55546bd9274211d9c787b50d
+    contentHash: 81446a1118a080339a7a270bd114e70fefdd5cd184ec760d7ef54b4c4d893375
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 25a8e3b374ed57cf283c0b658158a4c95926227a834ff375e3c58edbe2bed70d
+    path: scripts/generate-planning-lanes.cjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-32148D9D2BC1
+    pathHash: 6628e8f55c245b3e7fe5f701266c056414a0feb16fba4d84bdc18084d0e935da
+    contentHash: c15f181fbfbbb90fc49e5831f7f24bc65f4c264fcda5872cc5de26a8b7d7f1c3
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: cce7f853d82670b07b7b9c4567951cfa78ab01767c2a554960c43520baa827eb
+    path: scripts/generate-spec-traceability-report.cjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-9A8F978E863E
+    pathHash: 61a744808400a66e4f02dc5845b0e9cf757abac5ebc54612acd6c1009cfc3e17
+    contentHash: 7ce4882d2cdaf67cc8faa744b0e99c5af0aba12b7c39d94a53caff26d93681ac
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 1ecce622f324b1e2d5b044cda3ed41ab84097cdb66389923c9a7c38245722e8a
+    path: scripts/generate-workboard.cjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-4A57036E661E
+    pathHash: dba3889cd986344d62eceed22ddc232a44a00d913d893d334c15e01ec4254865
+    contentHash: 1b13c8879b4c209626124b3c412a5161777416ecbb366f6cc37fdf37ffeaf894
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 876da41989baf57810e20f91fd84426984bcca7e48151291ae28966ec2b6b7d5
+    path: scripts/generated-doc-date.cjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-42803C2BD485
+    pathHash: ac4bf693cd216f2f1eb5d9168123c8a0982292a45d7a60131cd3e590e686fa57
+    contentHash: cbab6b8beea90fe1bf3a2f4b433cc0e83bef0d66fcfafbbe21769019ca27ca09
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 2fedaa4ce37ec961b44c7ba4596ad48e1af8c9f531c7cd4b29f219a32538a212
+    path: scripts/hygiene.ps1
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-B0F151B0A23B
+    pathHash: e93767d766577c9ca1ffe42488520683936fa0c77c70bcb501db4bc1a1be2c38
+    contentHash: 8efb16908589d04e20eca549a692535f2a7d71d425aa5d60f66d9e2c97a5a4a0
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 6fc92d85cfab37972b13a1316b6327751ea964f5c3efe84b6c94587469df29c7
+    path: scripts/jsconfig.json
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-3A5D3B90B994
+    pathHash: 93e3336974be8f82ca7ca1516a41a9a0289df8709f34379f3d9433e2491c5b8f
+    contentHash: c08299f3c50d60ca872ae39f942b0fdd71119d1367d49213bbdb96e12190f55b
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 30a73dc0952b3a9c539db07b55c061cd397c84c713a93670af74e5b50f2bcc2a
+    path: scripts/lint-markdown-changed.cjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-17B0417AAFE4
+    pathHash: da51972fce7fd9f666e0316b04732e708febf50e74656ddebfb8b257036b1e11
+    contentHash: 53949058dd78cc97cab165f94f1c2b1f087e842b83386af721a9ba94c9df9a62
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: a473fecdb4b1536a43b17d4cfd178dcfcf752bf52b2fd2b28884236392487435
+    path: scripts/outbox-worker-canary-evidence.ps1
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-E9E6CCFEB7A4
+    pathHash: 56f1b2836c7d323d0a55a4c6f398de87161bcebbbf7b6003a0bf331e21161264
+    contentHash: 1240b8d4759409141fe23effa1c1bbd9520bf2e4375b6ad45f770f613590f121
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 3c151976b7fed3483fb702994b2f9e76f4a7af9ad90e688ea58d1f6a206026f0
+    path: scripts/provision-postgres-app-role.cjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-2F0720973BB2
+    pathHash: 757318c475fb853e81c73f675af4666dbb9b34771544deeb1506dee85b371190
+    contentHash: 9022926cde986d9c7cec7a2aea2735c8697ff7ff63d076a5086067b7be0c30c6
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: ecfb7c6905a39e579beafbd2ef96b393997a99a9c8b2a5cb8f97041973528400
+    path: scripts/qa-artifact-check.cjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-8CB8E7E2BB1C
+    pathHash: 3f1735ab5503a9fe6584c30672cabf8a8a64cf3eb27f21a88202877b8edfe9c7
+    contentHash: a33327a86a777b24a8351698e7fba8e84e8b0d499ac4834c0229159f86c563f1
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: de7e58e5f001004f11f43ca588e554fb07d2163f38195e11e099c4e900512ea9
+    path: scripts/README.md
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-74C0BF2C962B
+    pathHash: a4aafd19aa06456c5298ebd010f89798226c23e58eb0a4dc79b6598fd9036140
+    contentHash: 631cef1ce59abdea00369fa5b23e85b2615398a4d19bce7414b4dbc9cc344dc8
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 74480a2985d0da6da96f67182375d87245801e9d4f7ba3e623b82dc4240e22fa
+    path: scripts/rebuild-snapshots.js
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-0962D8DEAD60
+    pathHash: 9c1c512f6363836ed6b636342cc183dc3ca58bd0628355e15f6784c6f20b5d48
+    contentHash: f5a4b1a1bf94f902ee0a2c2e8b42b0ca085412cf679f44490abc61554b9f650a
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 68e36999d40b1e0c5408ed21f26e7b572a528fcaf64a8657bcd834074071ba8a
+    path: scripts/rehome-architecture-docs.cjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-9C57828FAD0A
+    pathHash: 6692da724b5a8fcb533e70d14d48b268dd08b8b65c820dfc1f772906aee88f97
+    contentHash: 2df762145ab993ea8cdfca2b4ab3b6a5710963c00f2e938bcf6b2932651adffd
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 04830d1c4d0873ae0859f56d835f1e87ec1c944eca10f5e8e5ccf6cc89934faf
+    path: scripts/rewrite-active-architecture-paths.cjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-D5EA59EED0B2
+    pathHash: c64337bac6200e2ea1cd42daa537ed90eb471975ebcefe9a0053cb92f0536844
+    contentHash: 0c7fc759d5b29db702501c9e74b7bc71b0517693b4ba1a870bf115fd343810ae
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 93767af6b95335103b43e84a15e36e7ab519a6b15e8d7390c3e657842a7d56d2
+    path: scripts/run-canvas-first-authoring-live-proof.cjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-D5743F182AB9
+    pathHash: 82e45de08d1123ce0e8c8522e4171592ae32bd81c194e141617e8a82e6014039
+    contentHash: e22ec09b5cdeba8fcffcf5ce5637262537dfe27c7771dae2071a406bb7b7f0b5
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: f1553446d7d5d936e24b90ba2e57f8f59480dee8aa787973ffc7cd399854af39
+    path: scripts/run-determinism-precommit.cjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-8E49752209D6
+    pathHash: bffc9845c5f0adb9cc6a3eccb45d02a21c3ebb12ecb1f07a505be52c19bcb1f8
+    contentHash: 4e88b19b22be8415babe54ee97fec32bb8f40942fb85d8683377f3cacbe09926
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 04f59de6e970d3dba295e59516f51710354ec5cb2cf443fb2852c4bcc94a5155
+    path: scripts/run-dev-stack.auth.cjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-DEF8B571A2CC
+    pathHash: ff92f8000f5ab446bce67613c6e8055a70098f3fbc44f109a8d447acd4691794
+    contentHash: 7d7a164737c915c2fbb0b9e2a096f4c19dc8ff71e2773924f9014fe1645e1242
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 6048d585d7bb29abfcdc364c7a16595caf4949e1c1a141f34505106bb5019a90
+    path: scripts/run-dev-stack.auth.test.cjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-F63C4F567ECF
+    pathHash: 18cbc1c46593dce1312aa0d0d3d91733c65e2d6170afc911014276757f6575c5
+    contentHash: 34aa6748bda06149c3ba5af99d07eb0c08d4323fa9ce35d82cb2c42bc50f9cf9
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 27bfead0bb6bcc664b366a7113d7fc0d4acaf1b0d78696e36a313dcaace245c6
+    path: scripts/run-dev-stack.cjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-197EE4862032
+    pathHash: 264c7ba31b750b3839cb247e0967b30243ce0844edf6d195a1ea4733ef711f78
+    contentHash: 866ed18a66d393ff4a525a8f0f39f7228b51f14a5a606211fa6137dc7c1f7864
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 45e3861a1a48e732595dcfd940e5ae7390f36b775625cbae3f990a7f284c18f4
+    path: scripts/run-dev-stack.temporal.cjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-88102DAEC972
+    pathHash: 20f64d46925db54d39c15c1fc0533506d8ad4831cc81bfb419e6aee95ffb3c86
+    contentHash: 13d0bf9f1fb21b5a0d0e712f774730b760afe32c501c041338dc04ad1d9eda8a
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 5fbb59a06b167673df457fde89c43aa5bdb9f880a430af5c2343263edb4993ab
+    path: scripts/run-dev-stack.test.cjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-6715650BF83A
+    pathHash: a0e8a4428aaed0b622a7532d7f633877371da4a3a9ad3de4745906621dd487c2
+    contentHash: f6ef095df8deb5da3d88b506780fa967fe85b5f0476832e3005ac8f1dc6d301a
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 812051471baedc3aedaff46accb439250aabdf90ffa418d5fbf8848d58355d5f
+    path: scripts/run-golden-paths.cjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-BAAEA8751004
+    pathHash: 13039b9821f333a839764bfde0d2cae2b2b474b740a64b710b4d8745600a6914
+    contentHash: 710ab04a8e055ce9b49ed930f73dadad0de774cabe2a8a2cac86de86a599db81
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: d731eb232022f371646c0cc9d22fb95ed2cb3b0dae4193f47cd5aad940a42d32
+    path: scripts/run-selected-closure-live-proof.cjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-C7740E1CBB5A
+    pathHash: f518902d38f9a25e8f9e8dd84c3d3e3595565a2ed49fd423212b8dfab6edff3a
+    contentHash: 93e1457afad252a5b04b3e982f3eb6da8471472710c57721382731fc0cb0f2a0
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 315daf0b567a1015da344bee41f0ba7186c5fd15a5be7f9fb05ae4b714d783e7
+    path: scripts/run-temporal-postgres-proof.cjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-2308856A7BD3
+    pathHash: c36858255d4e5bb17912110b27e0988c52768ed27f01f7080bc6ec002209ee44
+    contentHash: 0118105a3d4f8c190e06a2bdd7abafb9ee89ef570e27a513c00345bb48c199e8
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: f566df1a1a31836f90b7806c984ce586596b2693afd3f175057b755ba66c418b
+    path: scripts/run-temporal-postgres-proof.test.cjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-8F98C37F50FA
+    pathHash: d2488ef37985b11771f573b07fb75aa065d337f6e7061f22c0bd624dc11b3b38
+    contentHash: 6bdf6243f461ff36e2db9f62406b9e2b424e75ab4d68b68d36f2c79484db21b8
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 335b98c2c1be7059c92123d16f5914b6b41b1f297d9d1c9d09156a4560864d80
+    path: scripts/run-turbo-workspace-task.cjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-7E9483410529
+    pathHash: 3169488ef41500a50cb254f59fcadfba6ad10510c1db1c273743a6bf891dc330
+    contentHash: 86bd84ce04e785d7b6fbb12d598485675e59bf0bc5942e8abb04e2f2d6844127
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 4fbdc3fa1c2acea01394a0bcc90edc6515355d6eaac1a62083e47550f1cca85b
+    path: scripts/setup-git-hooks.cjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-707566696CC2
+    pathHash: 01c0f03c12541dff2fcaa3ca1839951337aa834d1acb2b38e1a1e39d24ff3d28
+    contentHash: 384b74e42e7c2a2470493e50bffb7fabf0bb07dc121026da90951490a97bced9
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: b42e4e7b072ae45219fb62ca8bc30cd04f061edfa29c954692b79b6702c43e91
+    path: scripts/skip-prebuild-if-orchestrated.cjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-64B680CAC915
+    pathHash: 6338c86db96458e7cd57c8d35b6c2ca26a826174ea7f22faa7ea142162f3ba57
+    contentHash: 2ecb88f97031a4ec848e03fb4c0800858f8357aeec4289ebfa62462f513cf4b7
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: ffb0a7d467390dba802ef9ef1b3678de123d3380395d3f534c5fae970ed0303c
+    path: scripts/skip-pretest-if-ci.cjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-0E85707A13F1
+    pathHash: 882c2237f48c9f0c8a3f0690d32fa6731f4110d8523d06bf9396f1e36a7087be
+    contentHash: e47aea2981e581adf30bf8bc1c59786796913b2f6d4a0fa61c177b543a50eb44
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 47d6ff68c27ccf7f3384ee8fdebb020cf49d0de60e3cf28b06dfcdc32f6384ba
+    path: scripts/sync-docs.cjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-7F9BF7844D94
+    pathHash: d1d4007695902154f85cc745a9eab728c73a1b249827166310e4788a58bd5494
+    contentHash: 8953cb8eddd78ddf3357ca5a8124b88f7a0c80f6ae7a314392cfcde690d24c34
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 42fb044cd7e897409db9c17d70cc51497e121735e5da8ef322b1c9f6483021ae
+    path: scripts/type-check-prepush.cjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-5492A2DD52BB
+    pathHash: 07c3c3a4505b475c986fa4a2c525c3afa25fb5af9e9938c1ee18a482225c7dfd
+    contentHash: f57a70eaa27e6fde3a8a5f21beb8dabace171e7d99b72b47ba84f906a834344f
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 04ec48d4f7c4a944602efde0d9d50e93a8f01aa86d3ede6a88c82c168e885329
+    path: scripts/validate-arc-evidence-frontmatter.cjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-069B3F519817
+    pathHash: 4b733e93d525cb30b8921a48154640c8ccbf5acff26ea33f59aad07db2b0c2aa
+    contentHash: b96c4d30ec49565822b3e4a73efea619616ca8ba7ded938b00b018138f911376
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 3c48fee0626802c120c16787f27889eafc07753f90bd1e1e108da0a657f9897f
+    path: scripts/validate-contracts.cjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-1015D4ACB356
+    pathHash: dca7a37de0a45de2cfb3737b965754195dbff12533ca1d1041d65360d261c1eb
+    contentHash: da6e3189ccb18b734d0c6166667e67ad189dd5c3657d406e26f46913317a9955
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: ccbee474a3290424dbd626dc4f810a502e4371940e553fee0c4aadcfe69f2862
+    path: scripts/validate-executable-examples.cjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-87955278D985
+    pathHash: b29c6304d1ad814f08b12b61017ceed1e1b230da43315535da143e23eac8ef9a
+    contentHash: 1b6c262665d1c232125696c47169c65f29624a38f394c1f50815dc73191ab181
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: d77f084e457b5f45acf101da1f40d96b64e05d0a77a534ac2c9dfb0c0e694620
+    path: scripts/validate-glossary-usage.cjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-47958275A5E2
+    pathHash: 5186342caa58625ae93513d1af88a69067e025b3461a49db8d127e4ad491ad92
+    contentHash: a05101ebb037cd2fab5c78dcc63996a1842931fabd91c7c392661dd8c4c572a2
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: cb98576deb25423ec1a5ef855a07eb97ab71479a9bce006d1282077d08a9524e
+    path: scripts/validate-idempotency-vectors.cjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-9EED0ACFC461
+    pathHash: 08d54639f4cb6753760612edfc1e76038287589da738456ade03ef6380346573
+    contentHash: f5eaabdfe47e58c24d513ea014f182a853e53ba793213d3b635435014e053ba2
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 7f04561f0de9a57c10e2134f37c9bce862126c8ebc67e490b6acf230c4b88e5e
+    path: scripts/validate-pr-title.cjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-8BA6CBA21C49
+    pathHash: d628f90cbf38f98950549aef84893d3c12c5520771bb90fb6b44d2ad0f1a9050
+    contentHash: 45d6179a9b3d7f1fae0f640a631ab02fef410da589858aec3d9515b027767e74
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: a624a13a41623e3efdfed6e90b1046b2206ef7d56eba6b9869848a7886c88946
+    path: scripts/validate-references.cjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-CB4430FF48B6
+    pathHash: d96677f8320e73d7045911183bbeb05f327e4647ff5b9b151f169699aa8ea55a
+    contentHash: d3435de639e1dbbe4276a8ec0b93579b46600914f78c63374a2dc5a89a819b71
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 4023eb459d2e5295ae639fa7485973c3b3b2d5749d7903cd94e0016a7aa8cf2f
+    path: scripts/validate-rfc2119.cjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-5D638113A3C3
+    pathHash: c4b769262ca2b0b10296f4ebbefa43c6829cdb0a5440cd4918b13914bfa2fe42
+    contentHash: b44a9ff2667a5403dd8a7def39defdcf3f8d1bece044092ca04550991424e70a
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: a0e479fe8dcdaba1e13f1bcabffc94ba1ba43748dc5c573b24dee88865f4197b
+    path: scripts/verify-changed.cjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-07AD1226B3F6
+    pathHash: dc9a9bfe10007ad4e583cfddb0ab90d712ac3089a76d49b857b426d2da7acfb1
+    contentHash: 9d96e0fd619c43a2bd0a988441d9d77eba713b4fc31efefe79932e41afb77090
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: f3b2d87c1795c4761ca49df875a7289c1d48af50fc61988992ff0b310c8ac47d
+    path: tools/ci/adapter-postgres-import-alias-regression.test.mjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-A99C8D6BEE67
+    pathHash: 51d60fd5d8ce4d621fad4a4fc3d46a68777b159fb9571fd02fe0f95d31259e40
+    contentHash: 3db4d54bfad63be4f3e0e195b125cf8368865055ce2f59a90e50da55168936ed
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: c607fb42394634fb51d5cb03ea75e31c0a45f6222a087c3d0611a29ae93532cd
+    path: tools/ci/arc-check.mjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-B7FFFD470FFE
+    pathHash: 6a4aab42558c880e6d7db433f81fea4f3ceb789b1a15dfd4fac0206984a88a84
+    contentHash: 692780061f7a6c2c2014dc3a9310d4d7617b297b1110fded37fcd36550f3852e
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 4a4d1f9975d929555169fb35cf0ea78f47a32fbfd659a36e617cd6d20724b593
+    path: tools/ci/architecture-dependency-guard.test.mjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-19A31C8397E0
+    pathHash: 662adf3df3cdffb3f60096eb057c977438c42fc30da81c2c2e6b09988483bd02
+    contentHash: 84f9056ed6b238819a90a0f793fe0d98f7df43de53134deb386c8908a7eab433
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 71b53a5d1a0aa6b44df259f237f255d7143307c570d09778f40ad3c21aace411
+    path: tools/ci/check-architecture-dependencies.mjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-F07201AB0D4A
+    pathHash: b40ece60ad8c5e65d81142963c127ee5c08666df72f561e95ecd546aa94ed0c1
+    contentHash: 408370e20f8a94309aaccca01b70262a49b69547c79ed387b85e2fa838950662
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: f056cdf2b79f9f940221a25891f4b76ec1c13a0c6b71904f785d707378a83ed5
+    path: tools/ci/check-determinism.mjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-897FE6D0486F
+    pathHash: 20a8f4f109e1d337e1d3903361025301ff7f704bdebba0ef5b66ad76b3c958ba
+    contentHash: 10a2558a21e964d6963b1c9230308d0063862054dcb332aa2423eea308b5b7a9
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 4609a954df8260acac1ec3657665b98641853c90af45de7a9f778e561dcd617e
+    path: tools/ci/check-pr-description.mjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-F10E350F26E2
+    pathHash: ed82d1999b3d1a0e59dab66a914023609fc211b35adcdbfdfa4286a154e95e5e
+    contentHash: 41552698187fe6c17f1aca583a276507ea8bfa18b42a2f5e3c8de8bbed5296e7
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 0db78a50b3750a1e9e986a898c884ea141a44518a448eca5b5efbd8b5e321cf9
+    path: tools/ci/check-pr-size.mjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-10137E86E630
+    pathHash: 657d3f96dc1aaa27d1168eab603a1d6bfe7bb15f4a0c38f7e3e1bc0d33899c6b
+    contentHash: 50a1684d504e31f3d86205b486b6f4aad4ad8649a7e27fa64ee4ca0a111327a6
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: e7984f78372437dc18ef2317bef5f97e7efd40a9ef709dce2c1a4d6f9801755b
+    path: tools/ci/check-run-guard.mjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-0EA88397B101
+    pathHash: cff33bf9100738ece2ca6d1e29bde5d18b535db820c5b6739d41d09478bc0003
+    contentHash: cb03e1fea3525e4458bf5cf224c802d78f708e0974dc9d43c031e7decee9680d
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 6ee61a145c0686297262587e315ac7336ab697b154884526574a0db200af0b63
+    path: tools/ci/check-run-guard.test.mjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-A4CD0FAFE345
+    pathHash: f0c6e098ecd382a9e446689bd2f9984155d9c085fb5d68ed48f40a58bad9c260
+    contentHash: 74b57d11801f03d2733f97e950b685dbe5f1fcee7849c6b11fcc8d855281f7b3
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 641ecd5ae2241aefb12386d6d9960f7177f96d23b5badfa93bc2b61eb89179c1
+    path: tools/ci/doc-check.mjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-8CADBDD67B36
+    pathHash: 4da75a717fc4b73eee761c361bc9bb9e965417c6401e88fd7b55883bae14ff7e
+    contentHash: d79ebf105db1de2cb69622ab2d42ecc19a317f67abe2c2ad801661dd53a9c425
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 8e15aab7c781c81af9946ef008d744b05cd9fbb89b7865653c2a01d668ddd56f
+    path: tools/ci/docs-changed-governance-policy.test.mjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-1EF3A579EF06
+    pathHash: b66166ee0a81cfd648df5bb09e5a476c42d8fb6e0b24a30d054bfec2a5fca812
+    contentHash: 100aa41514ee41daf6ce11b3befc2c00810c73b11a78223274843df0694da024
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 5e5b7892a9646ce5052731fa2373ff5fa2d2da628f227fe2f5e7b383c5885672
+    path: tools/ci/docs-frontmatter-bom.test.mjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-DD4EE8251E4A
+    pathHash: e020042224b22eecd183a4079ccdd1e8c933f5d5a2a2ecd574401782f2cf24a1
+    contentHash: 00ede77bc62853f756994701d46193023b604c307de113fd57ea1a7c9dc260c8
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: c259844b7d5eb43fa4745594374654a6e57aed62c38e8cc7d0f552d72672bb72
+    path: tools/ci/docs-manifest-contract.test.mjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-7927B4CD90B3
+    pathHash: b302d4de9b55d05d9245ca8b2158c853ac33b0c467d99e0689a18a5ee13cf865
+    contentHash: 8479258ad652fdd5fbfd1040c89cee4a875a292361433710c2b049c2d345ebc8
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: e9fdad6253cc13d82eca282940d81aefd7e5695a96c5c977c1949d0adc71dee2
+    path: tools/ci/docs-markdown-component-architecture.test.mjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-B2A671883BFB
+    pathHash: e50808744a9da13299415de332a29cc571403295a30fa970d07d47a7b2d56541
+    contentHash: 4bdd3e13184694f7da5a1115cc025f0cab14f959605f37f0bc8758deee306de1
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 750667b8e138d9fe6dcfb3ac0fdfb038917fa51a8750397a274244edab954c96
+    path: tools/ci/emit-scope.mjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-F3CF3F8C89E4
+    pathHash: db832e899441ed970f546b019dbfb9d5f30ba28e032ca989e2407921a383f90e
+    contentHash: 5758208201776b788b4d9916a43fb8b215695beadd69d75178e0255485fe29a2
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 7fe02b38c33f7b388f07929aac6afe1c32d95b3a43026dcc850513b8a503bfa0
+    path: tools/ci/emit-workspace-matrix.mjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-79C65AC50E12
+    pathHash: 4468baeece68f0e5a81e47541fc132a6a399b8703625735effc47697b568e1ef
+    contentHash: aa7ca61dc40a0fa8e49aa321326d1fb0967eb6dc10fcda6b7effe01bf347d5ea
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 9da284b6625f7c96a0e44f7e876b93d73c5ecb1883f9ff88e78f357d07427f32
+    path: tools/ci/generated-docs-single-writer-policy.test.mjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-6DE2F71ABC99
+    pathHash: 2b32ddc43343be82131929d4e7dd3a9c45abe4523698ff8747cf18e6d6d432b3
+    contentHash: 4a40b114e40cd789d38576666f1c980becef951e68314c6e499dc5d04c4bc802
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: be981958b19c2b274555f4086fd402dd3fb477cc7228d818e6119684f4d2bfe6
+    path: tools/ci/jsconfig.json
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-404CBCFF524A
+    pathHash: 561f7f3b012c2a63ada6f442d20b85b4c2f9fe22212920172e5d9657053a8442
+    contentHash: aec28b7c091f3c15cda965b449fd613374717ff72367e4c33c99aeee5cc94290
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 67e360c348dfcd1c85bf32bbd49f35ff948484cfeb3e3fa0c352885c49b60ffd
+    path: tools/ci/planning-truth-sync.test.mjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-C4133D4CA92E
+    pathHash: 4d41c1967bc14cfc7ebd18f791a9fefb6ea51ceddc0eac97422bc054fc15bf09
+    contentHash: d13108751db4597599ce2bafccb68ea029dc532cb2717cd812ae2395e0e65ef8
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: f4a03791a27027dbc303953e83ce7157864242d637d9ffeb2a6c358aa2a23f84
+    path: tools/ci/policy/adapter-postgres-relevance.json
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-51B079FD809C
+    pathHash: 95df051fc3fe6354b07524351724a7bae08937e72ef1ea0b2416a32239e526f4
+    contentHash: 70551ac45da3fa2dd76dcdb1383f881ef89f3206f20fa32b63b1f779d3b38e75
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 229e0069f1e035f56296a6e636faa3c55a768a1473cc074649487e923a8a3b93
+    path: tools/ci/policy/workflow-scope.json
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-543DE4E661C8
+    pathHash: e2d4fdafc5809b540a65e729c427277aed0aeff015acc27abb3e17f0090d455a
+    contentHash: cb43e7cb7844ebb3c1a9a79d66e185255e6c2e7040de829f86b03077ecdf12bb
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: a5f8f4824be8608362f6cc5a3b81009c314088c06d249d9fb73b4aae8da52ed1
+    path: tools/ci/pr-check-triage.mjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-89D4E5CF7004
+    pathHash: 249d4552018b2ca64a6aaaab916f2d855ba6ca1f095de9e77b150dd3ba421258
+    contentHash: 513aabc743277f42ea7be8d5da772972a13304e47cf64bf8ea89f5c260e5ebaa
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: a0eeb2aba4b002d709b4dbd2d8e9037ba2fce16333c2a020a5a6f70a535f39dd
+    path: tools/ci/pr-check-triage.test.mjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-ABD4DB903557
+    pathHash: d8b3cffc68597591433f914ca99309f1be68d1aaa79407bd1a0fd228eca86c58
+    contentHash: c56759ff46e89fb0735a9600d1b8d0a117364ee3a135888fbbafd17dc88fc6a5
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 3681bd315c929f04d3ce26bc696626be2681be9bfe7eb2fbae4a52e3d80ff150
+    path: tools/ci/prepush-typecheck-scope.mjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-C86232C186C3
+    pathHash: 98ba7a54c8640f4b94b2800cdcac1bd4a152e9555f777ccf7d32e69a0146f5e0
+    contentHash: 98206a25fd207dc4d96d218ceba6809417c47c8c641d12ee410b45bb374f5c75
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: d666ce44b25e4eeba55bc4959ae3e1725ecadcb3d59ba4f9e85fb460a702b674
+    path: tools/ci/prepush-typecheck-scope.test.mjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-3FD122941497
+    pathHash: 231d43f90fe548731c85fdf589df97e336776bd330d43d521fc9b9e48ed2cd95
+    contentHash: 874cb46c2fe719ad298387083f01c3cb8c365526eb7d062d809f941e65010112
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 0344ed122aca46203e7159f30261164f78423003591812fe485a35239eeb54df
+    path: tools/ci/quality-format-config.test.mjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-0A43190961B3
+    pathHash: c706baa959a43d910afcbab6c6197b8d74c104f3b1e13f9b0706d03d45e5a5ab
+    contentHash: 2ef59fe8821cdc07c93ef89b50b37d18b033951c21ec380b67a0d572c85db0cd
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 3b4df6f5adeeed8a5a18ae8908dd5a3c879093da8ac8e22c0f535dfd19be7a2e
+    path: tools/ci/run-determinism-precommit.test.mjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-F27050473C16
+    pathHash: b0888fc23fa7955b30664a84861b943ffb52b31c260956c23d85e00e7f89d667
+    contentHash: 80dfd0e178f6c7cb36f04a9158049c8b8fdb759c815e4c2e14a1cb9d7f6180fc
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: f3ee0a897f85ec65a3c00f20f7061c6a261c544e7418a735572d4f2312b86406
+    path: tools/ci/run-web-cypress-native.mjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-FCD9E91E7D98
+    pathHash: ab554124e1b425e50fded495f2d686824d166c15478ef8ea793ef0473c776579
+    contentHash: d99ac104e2c973667e1315b5233cf44e3f53fbf999d2bdbaf07dc981fc788db4
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: bd106445181954128caffe0b63a01123fbd5837c5de11141eae79acce728f44f
+    path: tools/ci/run-web-cypress-native.test.mjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-D98266EB6290
+    pathHash: a186bc39874680332d1ed65e91fec034fb37d83250aa44cc905ea6608f822ee9
+    contentHash: bdfd0372c1bf38c71f4eba6a40d6ab7c8da24d528cdf75bc9b0d7f717e7cce30
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: ca457eec69790dee946f50f5e05956b2df2e9adab98fefd6b63f3dfda246bde2
+    path: tools/ci/scope-config.mjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-5E37789B36CF
+    pathHash: bb8f6059561f83098220608b28fcace53d58da6ef09000d12e03ec362c9b0ad9
+    contentHash: 0a3d8fdf172a7c367cbd7632b82dc7d54ed596fb85f870ccc2b854d681ecaec3
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 2e864ab7daaff80d8aee4f2bdd97bb6afe81e92d0c2eae6c6419c1253e140984
+    path: tools/ci/skip-pretest-if-ci-contract.test.mjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-A097526B7ABF
+    pathHash: 39c06aba088f8cfc1072c478b755fe315595b371bd5b112665e9f6696a47ff33
+    contentHash: 9fba19fdb69742078ea7392760740988dc45d0e383e6b4f9648655f1b5c60b6a
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 2bf53390dcbe0776bac38d1f1d35d70508f3cb2d476fba78a98faba2ab553767
+    path: tools/ci/static-analysis-followup-branch-architecture.test.mjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-1A7EB52D809A
+    pathHash: 751dedc26b60782cfebd767bc811d8e61cdfa7e8b14f7cc75b4947f7a0659a98
+    contentHash: 6231cf07fa3d87bf94a787b9772ebbdef927205f41edc9ba9ae24ad7f14683b3
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 5ebc88a84bfc7a70bbbba5384aa29c8b052151ad6027ac98d126d93f5bb7df84
+    path: tools/ci/sync-docs-status-policy.test.mjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-AF5421D07940
+    pathHash: 2dff2a723288c2b62d4cbc5e6690b806351ee815937c0001cd0ee43b2a4f155a
+    contentHash: 56453e4d86b77e66b12b8a4c60e61b8276130f579fe764d9c30de6de90dd9dc4
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: d3c2990b047950ae90d80bcc4c52d640492edd47fc5baf740591e66b4b72d279
+    path: tools/ci/test/adapter-postgres-policy.test.mjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-3A979217B52E
+    pathHash: d5a2f42f46bfb8241d3031337a956a1a2831f802ae888878d44a3cf564a310f9
+    contentHash: 6a792d82c10ff0c82559e763d285ca22cecd90d1aa9d7c0477bb7c2b41a40952
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 829e9e5b35349608f40614a8c705df34f6bdfafa1d9027ee81ce5b53b9e7c69c
+    path: tools/ci/test/path-matcher.test.mjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-154B3B2B32F5
+    pathHash: 4cc9b23206359ee37ccef4183f47d89f37425b598613a3d0a4519928dc4d6880
+    contentHash: f85db36dc5f1af4fd54318276f5adc5804807e6803e299ec11e85b7b3abdef42
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 9c7618fbbe75cc74573bf3100c0e7947a453b7e7f88cb271f2b4f5b0baaf39cb
+    path: tools/ci/turbo-workspace-task-contract.test.mjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-4C25CDDBC58B
+    pathHash: 876a431a0b4a1ec183fd46187eff356df26ce6290260719f9ef67ab687f04914
+    contentHash: f0de94fbf8d130cccf7178bcf3cf0b81a49c1c8bc14afc0fa005f0ecdab564f8
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: dad929840d1096b46a4ede2eb4c29cee33c84a35bbec28b76ef76d7167da92a5
+    path: tools/ci/validate-policy.js
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-A1497E492F57
+    pathHash: fd9f54cb3e868ffada48970e66d23e8fe1cfeeb3074973c5acedaae5466060e4
+    contentHash: 315db92dcefd96b8dbb4b9ecf0f17d6cfbf42a362dc37841a4fc98523485e791
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 656654eda033d979f70985c321400bef178087e8398b5a28c57f32f1b1c8ea1e
+    path: tools/ci/web-bootstrap-docs.test.mjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-2E787BCE617D
+    pathHash: 192f7c3bc3fb65ebe3de5e7ca55b3cc4bd1645e7284956b1a8a74ccbb785c333
+    contentHash: f8681e14de39760b40f8736b79cb8f991078facfe0ea12d4742de2b5e964f7b5
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 1354514527b0016cba731ed8d5e16e6f4f1b132571a98fd63695cc0ecbf8dd6e
+    path: tools/ci/workflow-pattern-parity.test.mjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-9B3F9FF66A10
+    pathHash: 725cad3268c8cec33db5e585382443753e718ce714dad2059fc82da0d6f2f4a9
+    contentHash: b643155217602e6267f6d5280f6ba14a92a85c5236ca8b2150e392ed3479ebdc
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: eb2105cfee030ef1dabd0bb9c2426781c54b5b1ca1406bcd63fe188306f1e91b
+    path: tools/ci/workflow-scope-classification.test.mjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-40486CA24D4B
+    pathHash: 6e402bcec40587b7d151c27e469bb5966e4041982c1188368a62827ae616b794
+    contentHash: 50a19136c7dbb84061a17ebad1ce3a888511d42f35591a369ac84bf10a60812e
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: bf99859319ac25344947626807c24dcf3f2105d823fbf8e8dd98de91d81a0fd7
+    path: tools/ci/workspace-typecheck-contract.test.mjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-0182C7491ABB
+    pathHash: fcb1510b082e447c78614f460fd5af07389330bbda3a7f41c3a6edf8868575ab
+    contentHash: cf9ee1787d54699958ebb24f13c9fc5fd9c6348b75ff7ba4e684d9b7ad44adcf
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 8eb02dafc47fd0227da77a0dbd2337fe1b3e7a4794f1ad77b418221badd719bd
+    path: tools/docs/check-adr-catalog.ts
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-D049FA4F881A
+    pathHash: e64fbb589afaa028e6edd001a4ca5fbe799e842aa32c3f420d4c69ba33b23656
+    contentHash: 204f57b896571ad90576fa9336f242df959b3b16d7a8671d5ae336d05a33cd25
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: e69804ec39b10b5f480db809d64aff3c7c18f18e6cdae792585e0eda78c454b0
+    path: tools/docs/check-filenames.ts
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-85120AEEFB17
+    pathHash: 971a4bb9727c35fa6c5818ea4410b305744fa6eaea6480e48a263c4bc029254e
+    contentHash: 0ceb73b5bca98b0da4286d99741895b6b65bb096375be16c883410971e339164
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 8a9bccaaccde9d8fddc8dbfcb897f2e4477e578894ec754820327ced615b2402
+    path: tools/docs/check-frontmatter.ts
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-27A41F727264
+    pathHash: 0c2bc3b672c09fb54f75013b81888a201d122766fede3680e3fa99260c621d28
+    contentHash: d681f2ec0cbc71530a4169e8239e5f95ecb8c3242d73d8eb8b6efa3ce600590d
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 2e7d252247effc57f73335029739aba6c512609b362891adca36c3ae789e3c16
+    path: tools/docs/check-governance-references.ts
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-D817161B8286
+    pathHash: 7db67771aac4084e38d160538be15641caaaad9089f1975a9dbedf5072b6fc29
+    contentHash: f6c8d15efdf1d73f45461fe997b5c3f0f0bd048ea918e3895d6b3d6b46a6cb4b
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 444a6c2f6bd76143bbd7529367d9c5589ddd3dccb56e4898a444b1478572f010
+    path: tools/docs/check-links.ts
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-2A246DDDB109
+    pathHash: f85e1c36f1464a6c627d2b38395e2e228c26a136d10c232104f4bcdc0b9090fa
+    contentHash: 937f9848e4a83eadb0ca4dccd2daa5f47945d1b6339abce06776ba0140222e84
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 5869df9abad1edbf4db6d23f91e7f9beca614cf22ad8c07453d262c1dba5beb7
+    path: tools/docs/generate-docs-manifest.ts
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-CAF31E164E41
+    pathHash: 1db9c3f987a14f7665349a2a13675418d3b83a107b21eba0693ce5ef323d7970
+    contentHash: e6b442e7190ea7190f5ea4f189c6e7273109890afdf05c814006e29e2cb10133
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 9b638037a2e8ba5b955bce9d43a082253b09d12b6fb0497dcd26274c9c4acabf
+    path: tools/docs/lib/adr.ts
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-BAB52688ACED
+    pathHash: bec4dfe6d4e3c9458e333e5b7514411d0549e4b5b5c32863251f94f4d0eac1e9
+    contentHash: b00093561d9148961ad118cca39f12fbbdd3c68466620eb4c380a33bfc4a526c
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 0b20232264a4a13fca6a464f04f693994be0e6082d8b06328dd110b8ad7851cd
+    path: tools/docs/lib/markdown.ts
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-34A2D7E974FC
+    pathHash: 879d80b909d65877e3535efd319346f56dd67c652542c8cf4182a6b4bb6c54bd
+    contentHash: 59b3645fb3613e80e148e15bd3ffb08b8651c878683efb8efe2762ca6bc5c0a6
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 34ac6717618048363bf7221380ee58680232e85b6593ad92f0eb02cc3607d0e1
+    path: tools/docs/lib/markdownAdrFields.ts
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-5244A4A50DC0
+    pathHash: 4657a93c77114cbfac689d1dd5c5498a82f211738a9d9c046ab329e5a5160cf5
+    contentHash: 13a524ed58400c873b5b9621689130da39b7e127706c10769214ffbbc53a4b5c
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 4ca78e3042f7b46a7cb55968687281acd5beb96f3601c4dd6ab9d5cc1b38a952
+    path: tools/docs/lib/markdownAnchors.ts
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-6888962FA44F
+    pathHash: dd942984886f61f66f77b43233d0e0f598d401ed58e037867c6ad32c3f844e2e
+    contentHash: bfb8971ee69d859a4b6f43f320e05c41bf93de32d0efc1bf513b2d4a15c6439b
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 80ad99e3334720f0df3f030624930e9b11b3293c28329d33cf6ebe7137fbd498
+    path: tools/docs/lib/markdownFrontmatter.ts
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-4CDA6984816E
+    pathHash: 34417c94fa183e13b344004a9c21a600251e8b2fd9934fcecb3f647f058e78bb
+    contentHash: 319d2b848545dd3cf50e5875c44e111f39a5a953fa710045b129758fe7596f77
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: ff5c836c01ae0a59130b29e8c0b7a4187e4c29332c0bef4774c26af99af1fac2
+    path: tools/docs/lib/markdownLinks.ts
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-19E1C0352895
+    pathHash: 0e3eea52fecd415c105ad4500ea59c2eab647aec02e5ab1b220591fda5037bce
+    contentHash: a976c7ae5eb0ff4271f48e5394faecf864a5e23dca8f1a44b001053e956fb559
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: cff0b14746b1579f1660d32fcd488d42f2788dd68a8f9df3b6a219d0a98ed530
+    path: tools/docs/lib/markdownRegex.ts
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-619AB5EEBDF9
+    pathHash: cc82fb9490824dc987e01b29fc7d978234adfbb7a3251c28f5007f5458819280
+    contentHash: 28ec42e19e3d0875042bae498b38f55c750006747eeb89c0aaf260ddd5460d73
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 8d4640bbff85c3d3f27d6b78afc7597df00fa6d8ec2b1a7373eadb3cf3c3451d
+    path: tools/docs/lib/report.ts
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-22BAE7BC0E12
+    pathHash: 02e65f13b5ec237d086491fd7e251b02c0c3414c0b6160ec05a795bb85b45c58
+    contentHash: 93c5bc539f9c4e97de03f25e1575be4d6925c53a62b40a2d9071ff9bdfc3611d
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: bef38570823c417b44c6acbe09282a49e30ae32ad961e6054251aa903f3bf633
+    path: tools/docs/lib/walkDocs.ts
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-9F1738FC1D9C
+    pathHash: a5ece3bff02bf7944fad1de9a3488944ca8768e3f45c732ce96f45fca3e7f286
+    contentHash: 64d1429d9f99247eb6e48991b2dad5645b0bc717e759b4e4ca08f69f260b5228
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 07c00ff58fd39b51da0b44ca995cce758062e6c9b5a29e3217b3646a5a4d099f
+    path: tools/docs/validate-planner-stage-1-1-manifest.ts
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-86F75B9A6E65
+    pathHash: 3ecac8069c106ceb188430ab13e9e082ebca878acd6be0cf476f7731764f0bd6
+    contentHash: 6c272d6c2f2483779db96bbef30803b3d236899bfa84e0b714d3f69f22d2f125
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 87049c011ae1b681b7ebbd22998a69df94dd6a6ae1aa509c99f97378952574c6
+    path: tools/ops/ar-c2-evidence-collector.mjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-E5EDC9C54F1D
+    pathHash: 6937b6f3229c94816e4b7cf986ccd084e09a30d17fda1ab067ff7e5bfc642e43
+    contentHash: cc40108842299a1814635a9fff11e26fe8ab491af5021fd812cad7bdbcafcc98
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 112465f51b95eef119a911db2f64bdc1438409e8cab29c89a416e8bd61662b1f
+    path: vitest.config.ts
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md

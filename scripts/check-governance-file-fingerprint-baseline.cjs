@@ -6,6 +6,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const yaml = require('js-yaml');
+const { readFileIndexFromDisk } = require('./generate-governance-file-component-index.cjs');
 
 const repoRoot = path.resolve(__dirname, '..');
 const statusDir = path.join(repoRoot, 'docs', 'planning', 'status');
@@ -366,11 +367,7 @@ ${renderMarkdownTable(
 }
 
 function readCurrentFileIndex() {
-  const fileIndex = readYaml(fileIndexPath);
-  if (!Array.isArray(fileIndex.files)) {
-    throw new Error(`${sourcePath} must contain a files array`);
-  }
-  return fileIndex.files;
+  return readFileIndexFromDisk(fileIndexPath);
 }
 
 function writeIfChanged(filePath, next) {

@@ -1,0 +1,3026 @@
+version: 1
+shardId: SYS-PLANSTORE
+generatedFrom: git ls-files
+unitManifest: docs/planning/status/system-governance-unit-index.units.yaml
+fileCount: 112
+files:
+  - fileId: F-A1CFFA6F1622
+    pathHash: 323476f377d9de97a36c94958a72fe629397ab4bb9362e68605d7c4929dd10b9
+    contentHash: e6a04d1a3452d9373ac4833c98127be7d16f9d1a2b872590fc1582d91b5be21d
+    governanceHash: 54da081658647c39656c7b80fec808b7a58b2fd9fa512ecbb2f7686642c9e7f7
+    stateFingerprint: 4809b2716acce982a00c64ad65eacc7f24900b8cb80fc5550ea74df457a8234e
+    path: apps/api/src/application/errors/ManifestArtifactResolutionError.ts
+    owningUnit: SYS-PLANSTORE-API-COMPOSITION
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-API-COMPOSITION
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-API-COMPOSITION
+    ownerLevel: component
+    unitStatus: drift
+    governanceState: drift
+    canonicalRole: none
+    evidenceState: remediation-required
+    isDrift: true
+    isLegacy: false
+    dddOwner: AS
+    cqRails: PS-Q03, PS-C02
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+  - fileId: F-F8569DF8443D
+    pathHash: efed7c68ac8f07ea6155e59b69f0c0c1a7b16077c667da7afc53d787a4b08c64
+    contentHash: 690e208d51b04256b160932e9012fcbbd0f3f83269481f7fb84ff9032ad58d9e
+    governanceHash: 54da081658647c39656c7b80fec808b7a58b2fd9fa512ecbb2f7686642c9e7f7
+    stateFingerprint: dfb45979b754a392aea888043ce422d99409772954c584c98aef31cfac310f0a
+    path: apps/api/src/application/ports/storedPlan.ts
+    owningUnit: SYS-PLANSTORE-API-COMPOSITION
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-API-COMPOSITION
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-API-COMPOSITION
+    ownerLevel: component
+    unitStatus: drift
+    governanceState: drift
+    canonicalRole: none
+    evidenceState: remediation-required
+    isDrift: true
+    isLegacy: false
+    dddOwner: AS
+    cqRails: PS-Q03, PS-C02
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+  - fileId: F-2E614BC38C0A
+    pathHash: 7f154749215e71ce960d4503150529132433aec948a9980723d385f24b33ec05
+    contentHash: 7fbdacdbe6fcd591e80a36ec78cfa084787ec115bf0a4629ebd5237731a1b00e
+    governanceHash: 54da081658647c39656c7b80fec808b7a58b2fd9fa512ecbb2f7686642c9e7f7
+    stateFingerprint: 8dadb928e52f7574e837de895ab1f3e53973e2ab13c0f2bfcbefa69c8c106821
+    path: apps/api/src/application/services/StoredExecutablePlanResolver.ts
+    owningUnit: SYS-PLANSTORE-API-COMPOSITION
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-API-COMPOSITION
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-API-COMPOSITION
+    ownerLevel: component
+    unitStatus: drift
+    governanceState: drift
+    canonicalRole: none
+    evidenceState: remediation-required
+    isDrift: true
+    isLegacy: false
+    dddOwner: AS
+    cqRails: PS-Q03, PS-C02
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+  - fileId: F-6EF1886E2357
+    pathHash: dce98fc7bc4c41793ef7e96ca8a1e7ece501b2399977d7c5fb41edb0e67f74b3
+    contentHash: 12dfaa1e2536f5ab268555dfa78a7c3bcdb8a0f7d24bbc5a290a198d99b9ebbc
+    governanceHash: 54da081658647c39656c7b80fec808b7a58b2fd9fa512ecbb2f7686642c9e7f7
+    stateFingerprint: a5ba92757ed955c646b669b388d9e0ce5f3e3b75aed2c9e09d1af11f8af6b121
+    path: apps/api/src/application/services/StoredPlanExecutabilityValidator.ts
+    owningUnit: SYS-PLANSTORE-API-COMPOSITION
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-API-COMPOSITION
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-API-COMPOSITION
+    ownerLevel: component
+    unitStatus: drift
+    governanceState: drift
+    canonicalRole: none
+    evidenceState: remediation-required
+    isDrift: true
+    isLegacy: false
+    dddOwner: AS
+    cqRails: PS-Q03, PS-C02
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+  - fileId: F-9081E19C97C8
+    pathHash: 0a98f887253c758e237993b80e797ba2f78ed13623b646aebb383e9828d95f4e
+    contentHash: 63fd207879362dc29f9a2da7c7a054fe492512cae5e0f64180ed6d0e714f49b0
+    governanceHash: 54da081658647c39656c7b80fec808b7a58b2fd9fa512ecbb2f7686642c9e7f7
+    stateFingerprint: b08709870791304b52a983828812297867a625af24fe0d2376b1252b4cb1d4cb
+    path: apps/api/src/application/services/WorkflowEngineFactory.ts
+    owningUnit: SYS-PLANSTORE-API-COMPOSITION
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-API-COMPOSITION
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-API-COMPOSITION
+    ownerLevel: component
+    unitStatus: drift
+    governanceState: drift
+    canonicalRole: none
+    evidenceState: remediation-required
+    isDrift: true
+    isLegacy: false
+    dddOwner: AS
+    cqRails: PS-Q03, PS-C02
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+  - fileId: F-679B0A61B9DB
+    pathHash: 81db0c6bf62100255cde4f1468b16d5fb1f6f817cd2dc68811a717592a53e62a
+    contentHash: 81f33467244380d31869c3141f5750de077b866e25be05308005a260f0aeb93b
+    governanceHash: 54da081658647c39656c7b80fec808b7a58b2fd9fa512ecbb2f7686642c9e7f7
+    stateFingerprint: b71ba42027ec257c582931ca56a3da6739f9b655bdd62a64663a8be490c1dab3
+    path: apps/api/src/entrypoints/http/planRefHttpMapper.ts
+    owningUnit: SYS-PLANSTORE-API-COMPOSITION
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-API-COMPOSITION
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-API-COMPOSITION
+    ownerLevel: component
+    unitStatus: drift
+    governanceState: drift
+    canonicalRole: none
+    evidenceState: remediation-required
+    isDrift: true
+    isLegacy: false
+    dddOwner: AS
+    cqRails: PS-Q03, PS-C02
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+  - fileId: F-71412BDB89AE
+    pathHash: 73f7550df1cb38b34e055461e846dba3deae80b2c4e470653a9c0b99f3adbfd1
+    contentHash: 07a00eda74f1f4c357c9b973d9364f281a9e32fa0d8760650cbdf8a89ce7f0b1
+    governanceHash: 54da081658647c39656c7b80fec808b7a58b2fd9fa512ecbb2f7686642c9e7f7
+    stateFingerprint: bc23e4f3e087c66617c3e4aca2a00f9f66125ecf032cc173fc23e2d3326b6a51
+    path: apps/api/src/entrypoints/http/planRoutePlanRefParser.ts
+    owningUnit: SYS-PLANSTORE-API-COMPOSITION
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-API-COMPOSITION
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-API-COMPOSITION
+    ownerLevel: component
+    unitStatus: drift
+    governanceState: drift
+    canonicalRole: none
+    evidenceState: remediation-required
+    isDrift: true
+    isLegacy: false
+    dddOwner: AS
+    cqRails: PS-Q03, PS-C02
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+  - fileId: F-33D700BB33A0
+    pathHash: bce8daf0e7123393404a869070758d68bf8f99cb4028fc2fda9f56279635b940
+    contentHash: 36c3a99eed1e41d5403f9d4099f63e3c74fb7a42ffb75e7067d21d356f590d80
+    governanceHash: 54da081658647c39656c7b80fec808b7a58b2fd9fa512ecbb2f7686642c9e7f7
+    stateFingerprint: df2a1887543497da4e76f761e2b5223b1251380d776b6e8ece4175f004be1942
+    path: apps/api/src/infrastructure/planner/ManifestArtifactResolver.ts
+    owningUnit: SYS-PLANSTORE-API-COMPOSITION
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-API-COMPOSITION
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-API-COMPOSITION
+    ownerLevel: component
+    unitStatus: drift
+    governanceState: drift
+    canonicalRole: none
+    evidenceState: remediation-required
+    isDrift: true
+    isLegacy: false
+    dddOwner: AS
+    cqRails: PS-Q03, PS-C02
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+  - fileId: F-934B7BE6FAE6
+    pathHash: 0acd4057775954c5cf213bbfd048316b01ddd77819f6b7332ea1a748afa9f3e5
+    contentHash: 37d4c98d5aaf5ef9704abf90bad4af7f7a2be9462648aa493c951dcd6fc58c70
+    governanceHash: 54da081658647c39656c7b80fec808b7a58b2fd9fa512ecbb2f7686642c9e7f7
+    stateFingerprint: 6d52b3493125c68fc8fb40a5d2f124282b271ed4703912961c63c7b6ec4a743e
+    path: apps/api/src/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.ts
+    owningUnit: SYS-PLANSTORE-API-COMPOSITION
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-API-COMPOSITION
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-API-COMPOSITION
+    ownerLevel: component
+    unitStatus: drift
+    governanceState: drift
+    canonicalRole: none
+    evidenceState: remediation-required
+    isDrift: true
+    isLegacy: false
+    dddOwner: AS
+    cqRails: PS-Q03, PS-C02
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+  - fileId: F-2BC34B27BB08
+    pathHash: 25b106d909fd2a0f33b0bf7485ee94b444b5321816da3ae4e0cc0bae694079c0
+    contentHash: af0d55ef43dd4cf83eac9992168fe32c8a153e3cbf5dad4d05be38557eed6de9
+    governanceHash: 54da081658647c39656c7b80fec808b7a58b2fd9fa512ecbb2f7686642c9e7f7
+    stateFingerprint: 90c59472077896dad37aeddc7214a0c98ba08a02c8c62dbb5c83052e2d7d0837
+    path: apps/api/src/infrastructure/startRun/ArtifactStoreDbtProjectBundleBindingPolicy.ts
+    owningUnit: SYS-PLANSTORE-API-COMPOSITION
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-API-COMPOSITION
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-API-COMPOSITION
+    ownerLevel: component
+    unitStatus: drift
+    governanceState: drift
+    canonicalRole: none
+    evidenceState: remediation-required
+    isDrift: true
+    isLegacy: false
+    dddOwner: AS
+    cqRails: PS-Q03, PS-C02
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+  - fileId: F-FEB615BE555C
+    pathHash: 66f84ba93d50c1008da7be8620a3aa54aab628710ae6ad75c5c21863eb9d10d6
+    contentHash: b58260156dbd4c5ff8530862bc1c8eecbcd6bff4e9aee223ba4276f9ad93fb07
+    governanceHash: 54da081658647c39656c7b80fec808b7a58b2fd9fa512ecbb2f7686642c9e7f7
+    stateFingerprint: ad02d756dd4eb187d57e49553375a1fbc448048760945d71089ac86f2445311b
+    path: apps/api/test/application/services/StoredExecutablePlanResolver.test.ts
+    owningUnit: SYS-PLANSTORE-API-COMPOSITION
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-API-COMPOSITION
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-API-COMPOSITION
+    ownerLevel: component
+    unitStatus: drift
+    governanceState: drift
+    canonicalRole: none
+    evidenceState: remediation-required
+    isDrift: true
+    isLegacy: false
+    dddOwner: AS
+    cqRails: PS-Q03, PS-C02
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+  - fileId: F-7B210CC05844
+    pathHash: 618fe5e72ca0980b13d037cc54456413d816540caec8f25cbf55e32fe2b263ba
+    contentHash: 5c306102e142bc0a60d830f0a4bd38264e5043cdaf0f0dbdac9fd2acf7a8d010
+    governanceHash: 54da081658647c39656c7b80fec808b7a58b2fd9fa512ecbb2f7686642c9e7f7
+    stateFingerprint: 0b56706caf88919805fca5983a5492938e30db5b8b2305f13c5af5abeb1c0f33
+    path: apps/api/test/application/services/StoredPlanExecutabilityValidator.test.ts
+    owningUnit: SYS-PLANSTORE-API-COMPOSITION
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-API-COMPOSITION
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-API-COMPOSITION
+    ownerLevel: component
+    unitStatus: drift
+    governanceState: drift
+    canonicalRole: none
+    evidenceState: remediation-required
+    isDrift: true
+    isLegacy: false
+    dddOwner: AS
+    cqRails: PS-Q03, PS-C02
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+  - fileId: F-4DE9531159D3
+    pathHash: 56319c942b48563411a79871ae3fc98b92055921e3051d371c24f98136063875
+    contentHash: e4c820e1951a9dbd2b0ba30f70efbba16fd99155770934ebdd2069363592a1cf
+    governanceHash: 54da081658647c39656c7b80fec808b7a58b2fd9fa512ecbb2f7686642c9e7f7
+    stateFingerprint: 16bf0629b035a831fcf15c18ccf5bc45e481ef00f543cee68a9e91fd7dc2b668
+    path: apps/api/test/application/services/storedPlanExecutabilityValidator/capabilities.cases.ts
+    owningUnit: SYS-PLANSTORE-API-COMPOSITION
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-API-COMPOSITION
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-API-COMPOSITION
+    ownerLevel: component
+    unitStatus: drift
+    governanceState: drift
+    canonicalRole: none
+    evidenceState: remediation-required
+    isDrift: true
+    isLegacy: false
+    dddOwner: AS
+    cqRails: PS-Q03, PS-C02
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+  - fileId: F-C64E09854515
+    pathHash: 0da6a43db29094630ceebba44ecc3a9019e4457ba6360a5bb124a9073321c8dd
+    contentHash: 78001d624098d93a9db89ee26df1e54467cae87d246b5f5052bb09952c5a3a80
+    governanceHash: 54da081658647c39656c7b80fec808b7a58b2fd9fa512ecbb2f7686642c9e7f7
+    stateFingerprint: 123276c3baff88b71573a18efb47e477023dba3ec2c2b78ef89c605728a8ff09
+    path: apps/api/test/application/services/storedPlanExecutabilityValidator/fetchAndAlignment.cases.ts
+    owningUnit: SYS-PLANSTORE-API-COMPOSITION
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-API-COMPOSITION
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-API-COMPOSITION
+    ownerLevel: component
+    unitStatus: drift
+    governanceState: drift
+    canonicalRole: none
+    evidenceState: remediation-required
+    isDrift: true
+    isLegacy: false
+    dddOwner: AS
+    cqRails: PS-Q03, PS-C02
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+  - fileId: F-B411AE175CFA
+    pathHash: b1f8e0ebd65053d0a09d669caefa810d578b2babd7619b1ad1a873e8e09dc300
+    contentHash: d115906d99154be6fdab5198f04112797aeec88ca102231450754aab51a6919c
+    governanceHash: 54da081658647c39656c7b80fec808b7a58b2fd9fa512ecbb2f7686642c9e7f7
+    stateFingerprint: 302931be5862bc99668487610d4d6190e7c8236b66830a129430546f7302f9ee
+    path: apps/api/test/application/services/storedPlanExecutabilityValidator/harness.ts
+    owningUnit: SYS-PLANSTORE-API-COMPOSITION
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-API-COMPOSITION
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-API-COMPOSITION
+    ownerLevel: component
+    unitStatus: drift
+    governanceState: drift
+    canonicalRole: none
+    evidenceState: remediation-required
+    isDrift: true
+    isLegacy: false
+    dddOwner: AS
+    cqRails: PS-Q03, PS-C02
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+  - fileId: F-10084A3099E8
+    pathHash: 2566c07cbcbec47d6589f2ae7dfd9b0d98e1fc90b0ebb639490e85326393b4ca
+    contentHash: 483ed69f6a7d84c9ae82108960082bdcda719822fe40a28166c2fa52a359a4ea
+    governanceHash: 54da081658647c39656c7b80fec808b7a58b2fd9fa512ecbb2f7686642c9e7f7
+    stateFingerprint: 2067fcd154f09cbcde2c22a8a35f37d41ef283d7f206a9811e0303593736723a
+    path: apps/api/test/application/services/storedPlanExecutabilityValidator/registry.cases.ts
+    owningUnit: SYS-PLANSTORE-API-COMPOSITION
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-API-COMPOSITION
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-API-COMPOSITION
+    ownerLevel: component
+    unitStatus: drift
+    governanceState: drift
+    canonicalRole: none
+    evidenceState: remediation-required
+    isDrift: true
+    isLegacy: false
+    dddOwner: AS
+    cqRails: PS-Q03, PS-C02
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+  - fileId: F-E6462049F467
+    pathHash: 444b547361ef347e555cc863268ed75cee91d94cbd1d751289e23cc17ca4c962
+    contentHash: 03e74894ed24ebbf5faf2e126da56db136731314090ea376c13dbdfaa0a8ec7c
+    governanceHash: 54da081658647c39656c7b80fec808b7a58b2fd9fa512ecbb2f7686642c9e7f7
+    stateFingerprint: 329f2c1af7c66cfda8b8aa84421c1c6b794c004a644f049f333885693e757bc1
+    path: apps/api/test/application/services/WorkflowEngineFactory.test.ts
+    owningUnit: SYS-PLANSTORE-API-COMPOSITION
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-API-COMPOSITION
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-API-COMPOSITION
+    ownerLevel: component
+    unitStatus: drift
+    governanceState: drift
+    canonicalRole: none
+    evidenceState: remediation-required
+    isDrift: true
+    isLegacy: false
+    dddOwner: AS
+    cqRails: PS-Q03, PS-C02
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+  - fileId: F-25C5D96CF336
+    pathHash: 5b09517c0a1f2caa20098f35401c00118d4fca9f128c0398b5572981c21943c4
+    contentHash: b69a7253f3b437bdb8300ce02e30d23591ca279ab2e0aa91428d9bf65d4deab8
+    governanceHash: 54da081658647c39656c7b80fec808b7a58b2fd9fa512ecbb2f7686642c9e7f7
+    stateFingerprint: 91b263b1caa5583ad66c444ee95acfe53e3e644da5829cf79f6feabfb2c6b844
+    path: apps/api/test/entrypoints/http/planRoutePlanSourcePolicy.test.ts
+    owningUnit: SYS-PLANSTORE-API-COMPOSITION
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-API-COMPOSITION
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-API-COMPOSITION
+    ownerLevel: component
+    unitStatus: drift
+    governanceState: drift
+    canonicalRole: none
+    evidenceState: remediation-required
+    isDrift: true
+    isLegacy: false
+    dddOwner: AS
+    cqRails: PS-Q03, PS-C02
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+  - fileId: F-637BBD9DF5D5
+    pathHash: 312627845779d1e036aa0390cb5ae6965bf4835d14fa5f1b526fe09da1066175
+    contentHash: c22d18a24b2e8dc6641a1f26b1fcfb23eab3c5fa14eb277dad9ea859e280401b
+    governanceHash: 54da081658647c39656c7b80fec808b7a58b2fd9fa512ecbb2f7686642c9e7f7
+    stateFingerprint: e4d6174d3a61ab919915cad70a7afac4a632ee48957eda68df9173438a8d5f3c
+    path: apps/api/test/infrastructure/planner/ManifestArtifactResolver.test.ts
+    owningUnit: SYS-PLANSTORE-API-COMPOSITION
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-API-COMPOSITION
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-API-COMPOSITION
+    ownerLevel: component
+    unitStatus: drift
+    governanceState: drift
+    canonicalRole: none
+    evidenceState: remediation-required
+    isDrift: true
+    isLegacy: false
+    dddOwner: AS
+    cqRails: PS-Q03, PS-C02
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+  - fileId: F-B8BAA092F981
+    pathHash: 0e971d64f3f25b9c4f87716a0920e88d774492be49dd899b6bbe1c0e602426a4
+    contentHash: bbd59b215093b5a248d338c65daac2cec6d962245438cf503938e00934d5c19d
+    governanceHash: 54da081658647c39656c7b80fec808b7a58b2fd9fa512ecbb2f7686642c9e7f7
+    stateFingerprint: 4c736e1f16d3caae83cc386f303583631f2310e13edbd5392ab4ae15964e8e96
+    path: apps/api/test/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.test.ts
+    owningUnit: SYS-PLANSTORE-API-COMPOSITION
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-API-COMPOSITION
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-API-COMPOSITION
+    ownerLevel: component
+    unitStatus: drift
+    governanceState: drift
+    canonicalRole: none
+    evidenceState: remediation-required
+    isDrift: true
+    isLegacy: false
+    dddOwner: AS
+    cqRails: PS-Q03, PS-C02
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+  - fileId: F-EFD22BB3AB35
+    pathHash: 3c95662fd4a2c8a92c28a6d5b7016b377ab05c951f52c08a5d6688d3e95f1fde
+    contentHash: 57bc05d26d079fb488fe098a70cf888cdf006d476a0955fd0a2b0f0d4a0eef7f
+    governanceHash: 9fd18f455a27b78379f51bc03a695d6a37a33af50ae41c9dad5f8c6b31ec8cee
+    stateFingerprint: c2befd4cc2c39b6918b20b853cb2ba8a7d48d34fe02e042aa49b709d5acadc31
+    path: apps/temporal-worker/src/runtime/runtimeTypes.ts
+    owningUnit: SYS-PLANSTORE-TEMPORAL-COMPOSITION
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-TEMPORAL-COMPOSITION
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-TEMPORAL-COMPOSITION
+    ownerLevel: component
+    unitStatus: review
+    governanceState: review
+    canonicalRole: none
+    evidenceState: review-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: ADP
+    cqRails: PS-Q08
+    governance:
+      - docs/architecture/components/engine/adapters/temporal/temporal-planref-workflow-boundary.md
+      - docs/planning/closeouts/20260502-s08-temporal-legacy-removal-closeout.md
+      - docs/risk-register/quality/R-20260427-TEMPORAL-PLANREF-CONFIG-HARDENING.yaml
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-7FC6AC4ABFA8
+    pathHash: b8114b908e9f5de1d2c0151a5e134056ad9c9595c0efc52a774c2f843c80e568
+    contentHash: 5b10403eb29fa5c49cc07c73d93f09529d4c2eab6b2f3e6711c89449010564de
+    governanceHash: 9fd18f455a27b78379f51bc03a695d6a37a33af50ae41c9dad5f8c6b31ec8cee
+    stateFingerprint: 54b12947016e9a02e1136bbc752905c58ea5f94303ba3fd06ad3419bd216a172
+    path: apps/temporal-worker/src/runtime/temporalWorkerRuntimeHandle.ts
+    owningUnit: SYS-PLANSTORE-TEMPORAL-COMPOSITION
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-TEMPORAL-COMPOSITION
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-TEMPORAL-COMPOSITION
+    ownerLevel: component
+    unitStatus: review
+    governanceState: review
+    canonicalRole: none
+    evidenceState: review-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: ADP
+    cqRails: PS-Q08
+    governance:
+      - docs/architecture/components/engine/adapters/temporal/temporal-planref-workflow-boundary.md
+      - docs/planning/closeouts/20260502-s08-temporal-legacy-removal-closeout.md
+      - docs/risk-register/quality/R-20260427-TEMPORAL-PLANREF-CONFIG-HARDENING.yaml
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-B64C19971E6B
+    pathHash: 4ab55046ba8f5b52bb71f6c90a90c33086509b29e98eab42dffdc4107d0065c4
+    contentHash: 1078c5a7606e9c11b3a0ab9b573f68cfe9772fd3f5a42b1a091e8bc6423243ab
+    governanceHash: 9fd18f455a27b78379f51bc03a695d6a37a33af50ae41c9dad5f8c6b31ec8cee
+    stateFingerprint: 1094d5858ceb947bc10f1c821139dc63cd2841b39857d918d1ac06e4bcb3ba5b
+    path: apps/temporal-worker/src/runtime/temporalWorkerRuntimeResources.ts
+    owningUnit: SYS-PLANSTORE-TEMPORAL-COMPOSITION
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-TEMPORAL-COMPOSITION
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-TEMPORAL-COMPOSITION
+    ownerLevel: component
+    unitStatus: review
+    governanceState: review
+    canonicalRole: none
+    evidenceState: review-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: ADP
+    cqRails: PS-Q08
+    governance:
+      - docs/architecture/components/engine/adapters/temporal/temporal-planref-workflow-boundary.md
+      - docs/planning/closeouts/20260502-s08-temporal-legacy-removal-closeout.md
+      - docs/risk-register/quality/R-20260427-TEMPORAL-PLANREF-CONFIG-HARDENING.yaml
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-FD9E55191B1C
+    pathHash: 51e50f20c1c3d945a29a23d03622a68a30a11cf3a9e035da676af00867fcc970
+    contentHash: d1402877964c87cceb1114bd01f0ff5e7ac13954c5e951118b8c46e4e146f526
+    governanceHash: 9fd18f455a27b78379f51bc03a695d6a37a33af50ae41c9dad5f8c6b31ec8cee
+    stateFingerprint: 1b143c9ee4ac5dc396681c7b42c209b3d2b3ec3f0f57a2233b29e272b46488c9
+    path: apps/temporal-worker/src/runtime/temporalWorkerStores.ts
+    owningUnit: SYS-PLANSTORE-TEMPORAL-COMPOSITION
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-TEMPORAL-COMPOSITION
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-TEMPORAL-COMPOSITION
+    ownerLevel: component
+    unitStatus: review
+    governanceState: review
+    canonicalRole: none
+    evidenceState: review-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: ADP
+    cqRails: PS-Q08
+    governance:
+      - docs/architecture/components/engine/adapters/temporal/temporal-planref-workflow-boundary.md
+      - docs/planning/closeouts/20260502-s08-temporal-legacy-removal-closeout.md
+      - docs/risk-register/quality/R-20260427-TEMPORAL-PLANREF-CONFIG-HARDENING.yaml
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-2BA103E368B5
+    pathHash: c42aae1bc2862e19d0956eec4d4678c18fc6ec84229401871f30b1b8422deafd
+    contentHash: b3b0de4308f524fc6d62c10091f817740728af23790adcdc72c38544be4410d0
+    governanceHash: 9fd18f455a27b78379f51bc03a695d6a37a33af50ae41c9dad5f8c6b31ec8cee
+    stateFingerprint: 1c90cc2f86371e6aa376c0227def8e46096fce4ddd5135d6c99e122125d2c549
+    path: apps/temporal-worker/test/runtime/createTemporalWorkerRuntime.srp.architecture.test.ts
+    owningUnit: SYS-PLANSTORE-TEMPORAL-COMPOSITION
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-TEMPORAL-COMPOSITION
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-TEMPORAL-COMPOSITION
+    ownerLevel: component
+    unitStatus: review
+    governanceState: review
+    canonicalRole: none
+    evidenceState: review-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: ADP
+    cqRails: PS-Q08
+    governance:
+      - docs/architecture/components/engine/adapters/temporal/temporal-planref-workflow-boundary.md
+      - docs/planning/closeouts/20260502-s08-temporal-legacy-removal-closeout.md
+      - docs/risk-register/quality/R-20260427-TEMPORAL-PLANREF-CONFIG-HARDENING.yaml
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-D7C67291E852
+    pathHash: 4922630f47cc97fa71c0da95c01d66ccdbeeb1749f56b8fde651f37a5a638e0d
+    contentHash: 146ff375ec4d5378c424ffc20231defd9b7edbd31525f00cd350989cbf6e7136
+    governanceHash: 34b4c9841cf358c2da3550b3f784889c7148ae4f3bcaf11542c8cfd8d96029c1
+    stateFingerprint: 4377c6f375096238094d20ce05da4de4de6b7a4791dfe618760381bb1d84690d
+    path: docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
+    owningUnit: SYS-PLANSTORE-DOCS-RISK
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-DOCS-RISK
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-DOCS-RISK
+    ownerLevel: component
+    unitStatus: review
+    governanceState: review
+    canonicalRole: none
+    evidenceState: review-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - governance and evidence
+    governance:
+      - docs/planning/status/system-governance-unit-index-20260501.md
+      - docs/planning/status/system-governance-document-unit-map-20260501.md
+  - fileId: F-032F5F48B416
+    pathHash: e641d9e4b998c3aa92bdf7986ba5f1f9a41b677ccbdf1712aa84dcd7f02fdf4e
+    contentHash: 8939ff210446836de2dec4c6b6d052c50eaadc15c09e72dff49e8c23f7696845
+    governanceHash: 34b4c9841cf358c2da3550b3f784889c7148ae4f3bcaf11542c8cfd8d96029c1
+    stateFingerprint: ea67842fa390538ae1f6b2bd11ab67c8711ce3b5cb1be0237adb80e3016b0df2
+    path: docs/adr/adr-0052-planref-continuation-safety.md
+    owningUnit: SYS-PLANSTORE-DOCS-RISK
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-DOCS-RISK
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-DOCS-RISK
+    ownerLevel: component
+    unitStatus: review
+    governanceState: review
+    canonicalRole: none
+    evidenceState: review-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - governance and evidence
+    governance:
+      - docs/planning/status/system-governance-unit-index-20260501.md
+      - docs/planning/status/system-governance-document-unit-map-20260501.md
+  - fileId: F-21A8A7922224
+    pathHash: 13ccb2641c5e3db3c44cace5107ad84239915a4082b0b0bb0679f7e954f53e5b
+    contentHash: c8f165cf20e384f0cb375fbe38523b6eaeb1690a597bfc616d8485a56321a0e8
+    governanceHash: 34b4c9841cf358c2da3550b3f784889c7148ae4f3bcaf11542c8cfd8d96029c1
+    stateFingerprint: d69d9aac5f915471afcc71fcbe33fc9d5d0b6af4bb61506fc9e6d484c0b32c05
+    path: docs/architecture/components/engine/adapters/temporal/temporal-planref-capacity-sla.md
+    owningUnit: SYS-PLANSTORE-DOCS-RISK
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-DOCS-RISK
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-DOCS-RISK
+    ownerLevel: component
+    unitStatus: review
+    governanceState: review
+    canonicalRole: none
+    evidenceState: review-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - governance and evidence
+    governance:
+      - docs/planning/status/system-governance-unit-index-20260501.md
+      - docs/planning/status/system-governance-document-unit-map-20260501.md
+  - fileId: F-95EDA4995D50
+    pathHash: 54630a7b94cf74dadda518e136035c8d57cd9a66fc2c4f020703777a64179eec
+    contentHash: 7b93b3af7b9cb2dc61ceeca19a31b0c219d2f29c0a555f5c0206a3e9acde7088
+    governanceHash: 34b4c9841cf358c2da3550b3f784889c7148ae4f3bcaf11542c8cfd8d96029c1
+    stateFingerprint: ffcfdcb56a211c5712a8e2c176d6000f2bce1c25f66851f463c9bdf5b5d7b5da
+    path: >-
+      docs/architecture/components/engine/adapters/temporal/temporal-planref-workflow-boundary-user-stories.md
+    owningUnit: SYS-PLANSTORE-DOCS-RISK
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-DOCS-RISK
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-DOCS-RISK
+    ownerLevel: component
+    unitStatus: review
+    governanceState: review
+    canonicalRole: none
+    evidenceState: review-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - governance and evidence
+    governance:
+      - docs/planning/status/system-governance-unit-index-20260501.md
+      - docs/planning/status/system-governance-document-unit-map-20260501.md
+  - fileId: F-26EBDDEF0DFB
+    pathHash: c3b227e6afb5306a103e30bb818cd9778155350128528936992f30633d8ccfd9
+    contentHash: d696ae8c038e77a5d3294c74f6ea8df08ae8f66df829e9c5bd70088ce9704962
+    governanceHash: 34b4c9841cf358c2da3550b3f784889c7148ae4f3bcaf11542c8cfd8d96029c1
+    stateFingerprint: 8b79075c13317e9e269b37fd43fedb72c7ef14dbf566c42550d4b4693feb8f57
+    path: docs/architecture/components/engine/adapters/temporal/temporal-planref-workflow-boundary.md
+    owningUnit: SYS-PLANSTORE-DOCS-RISK
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-DOCS-RISK
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-DOCS-RISK
+    ownerLevel: component
+    unitStatus: review
+    governanceState: review
+    canonicalRole: none
+    evidenceState: review-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - governance and evidence
+    governance:
+      - docs/planning/status/system-governance-unit-index-20260501.md
+      - docs/planning/status/system-governance-document-unit-map-20260501.md
+  - fileId: F-3AA698AF1593
+    pathHash: a8385abd693221ddf75c21b39f292a6ec1abca7f656c0594358fe6f8eacd6bb5
+    contentHash: 6ab5c375b96e78bc8ca822ef5dc261937773fad6c36d37ee90bc505f8eebdc61
+    governanceHash: 21062ec04d1e686ebf8cb8fc0e60379284760dccd18989a04d2e4d0be31268bf
+    stateFingerprint: becc87f16be3444eb30799c5d3cec74f5ef29c7dc353b4b03c0960ece7aacbbf
+    path: docs/contracts/planner/PlanStoreRecords.v1.md
+    owningUnit: SYS-PLANSTORE-CONTRACTS
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-CONTRACTS
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-CONTRACTS
+    ownerLevel: component
+    unitStatus: drift
+    governanceState: drift
+    canonicalRole: none
+    evidenceState: remediation-required
+    isDrift: true
+    isLegacy: false
+    dddOwner: PORT
+    cqRails: PS-Q01, PS-C01
+    governance:
+      - docs/contracts/planner/PlanStoreRecords.v1.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+      - docs/risk-register/quality/R-20260402-S08-PLAN-STORE-CONTRACT-DRIFT.yaml
+  - fileId: F-280A759EBA86
+    pathHash: 45f75d21f0ca6ad39ce074802dcf7e297e0f26ae5eadcc70947221513e3e42b9
+    contentHash: 363cfd70d970260d80d2fae55d451f2fe10ff9a54fbf7598c1c4de30e3300c45
+    governanceHash: 34b4c9841cf358c2da3550b3f784889c7148ae4f3bcaf11542c8cfd8d96029c1
+    stateFingerprint: a226c3f490d98b5332a9a51426e76543f71f3ce11589715138249ae0703f9cf9
+    path: docs/evidence/ED-20260402-s08-contract-layer-hardening.md
+    owningUnit: SYS-PLANSTORE-DOCS-RISK
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-DOCS-RISK
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-DOCS-RISK
+    ownerLevel: component
+    unitStatus: review
+    governanceState: review
+    canonicalRole: none
+    evidenceState: review-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - governance and evidence
+    governance:
+      - docs/planning/status/system-governance-unit-index-20260501.md
+      - docs/planning/status/system-governance-document-unit-map-20260501.md
+  - fileId: F-BD05C45F6631
+    pathHash: cffdc468477b63a411b658984036094a4200da2eabf4f0905b29b4bb43a9bd05
+    contentHash: d7f85d2729b457f351b8bf60acd1212cde6e74393c6fc79e2083287b5866f3b0
+    governanceHash: 34b4c9841cf358c2da3550b3f784889c7148ae4f3bcaf11542c8cfd8d96029c1
+    stateFingerprint: 2cf256cf0ce59ca8df96a89806584c24d24cbcf6b26b8d5e5d2e3b0f5204714c
+    path: docs/evidence/ED-20260403-s08-4-ci-regression-fix.md
+    owningUnit: SYS-PLANSTORE-DOCS-RISK
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-DOCS-RISK
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-DOCS-RISK
+    ownerLevel: component
+    unitStatus: review
+    governanceState: review
+    canonicalRole: none
+    evidenceState: review-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - governance and evidence
+    governance:
+      - docs/planning/status/system-governance-unit-index-20260501.md
+      - docs/planning/status/system-governance-document-unit-map-20260501.md
+  - fileId: F-0776511D57ED
+    pathHash: 98b04248c86a066277ca05c1e6e2a97e926699d1dc81ebce28f36cfd9f6d27e1
+    contentHash: 1f8fd3776bfeeb7234ed557c94733f6055c707e0aeb1fe5486f6922069638214
+    governanceHash: 34b4c9841cf358c2da3550b3f784889c7148ae4f3bcaf11542c8cfd8d96029c1
+    stateFingerprint: 457b539ea8edd393e7924d0bc4b9f02e846e600b1b1b943355862ff88338e0ab
+    path: docs/evidence/ED-20260403-s08-4-postgres-three-part-model-arc2.md
+    owningUnit: SYS-PLANSTORE-DOCS-RISK
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-DOCS-RISK
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-DOCS-RISK
+    ownerLevel: component
+    unitStatus: review
+    governanceState: review
+    canonicalRole: none
+    evidenceState: review-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - governance and evidence
+    governance:
+      - docs/planning/status/system-governance-unit-index-20260501.md
+      - docs/planning/status/system-governance-document-unit-map-20260501.md
+  - fileId: F-363C97CD4BDC
+    pathHash: 003a11ff2c3a7686c6995ecabc74ede75347395b61800d4c5c7534f3f9f17b82
+    contentHash: 351cc104db179e63d6f276e8c215e6ee9474ccf1626115d4c55eb02cae694586
+    governanceHash: 34b4c9841cf358c2da3550b3f784889c7148ae4f3bcaf11542c8cfd8d96029c1
+    stateFingerprint: ce750b65f260056d43e7f0ec063d6a71cb00f7a336548ba77c2b8c71aa23c0a9
+    path: docs/evidence/ED-20260403-s08-5-b-run-execution-context-boundary.md
+    owningUnit: SYS-PLANSTORE-DOCS-RISK
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-DOCS-RISK
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-DOCS-RISK
+    ownerLevel: component
+    unitStatus: review
+    governanceState: review
+    canonicalRole: none
+    evidenceState: review-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - governance and evidence
+    governance:
+      - docs/planning/status/system-governance-unit-index-20260501.md
+      - docs/planning/status/system-governance-document-unit-map-20260501.md
+  - fileId: F-DDEABC93BD2E
+    pathHash: 55e1821139d9b2ec3b7cae3de2161fd1ea9a67384182a9c52db1a99be95578af
+    contentHash: 53f2306a7fd80654f574c2d9e10f36f0a677b2dff1c13176676d1af8a7cc52ec
+    governanceHash: 34b4c9841cf358c2da3550b3f784889c7148ae4f3bcaf11542c8cfd8d96029c1
+    stateFingerprint: bd8c3265f6d6237e6ec31d60c43f78ce093c27a5f29df796946446d7e63d238a
+    path: docs/evidence/ed-20260427-temporal-planref-config-hardening.md
+    owningUnit: SYS-PLANSTORE-DOCS-RISK
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-DOCS-RISK
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-DOCS-RISK
+    ownerLevel: component
+    unitStatus: review
+    governanceState: review
+    canonicalRole: none
+    evidenceState: review-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - governance and evidence
+    governance:
+      - docs/planning/status/system-governance-unit-index-20260501.md
+      - docs/planning/status/system-governance-document-unit-map-20260501.md
+  - fileId: F-FAE6F1878D03
+    pathHash: e82eb5511ad25cada9f0b684dfb193d1e2bd9062b44cf8a9494a9fca928ee6d6
+    contentHash: 5a7d148587e64ef6b0978d1501009cc0c7acdfd37d5f1bce2c845f1c8f27f24d
+    governanceHash: 34b4c9841cf358c2da3550b3f784889c7148ae4f3bcaf11542c8cfd8d96029c1
+    stateFingerprint: af2cb4f1e76bc3391b0fb3bc3cfd2d8de542324a7ddd0adb99c6f6330d964ecc
+    path: docs/evidence/ed-20260427-temporal-planref-qa1-readiness.md
+    owningUnit: SYS-PLANSTORE-DOCS-RISK
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-DOCS-RISK
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-DOCS-RISK
+    ownerLevel: component
+    unitStatus: review
+    governanceState: review
+    canonicalRole: none
+    evidenceState: review-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - governance and evidence
+    governance:
+      - docs/planning/status/system-governance-unit-index-20260501.md
+      - docs/planning/status/system-governance-document-unit-map-20260501.md
+  - fileId: F-7F52034F6ACE
+    pathHash: cc67dc65422a6e0594d2cd9a65403e93d6a7226887117d6111eb8fa74ffc3398
+    contentHash: c60aef84d8a506eee21eb5f3089377f9ffabe82e4ae0e0a4fd8d42a9581f6341
+    governanceHash: 34b4c9841cf358c2da3550b3f784889c7148ae4f3bcaf11542c8cfd8d96029c1
+    stateFingerprint: 2b3aa7e4d69dfcc779711ff2a3fb684ebe40a33065d8bc8eb64c058c912a2055
+    path: docs/evidence/ed-20260430-ar-d2-temporal-planref-capacity-sla.md
+    owningUnit: SYS-PLANSTORE-DOCS-RISK
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-DOCS-RISK
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-DOCS-RISK
+    ownerLevel: component
+    unitStatus: review
+    governanceState: review
+    canonicalRole: none
+    evidenceState: review-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - governance and evidence
+    governance:
+      - docs/planning/status/system-governance-unit-index-20260501.md
+      - docs/planning/status/system-governance-document-unit-map-20260501.md
+  - fileId: F-EA92BD48853B
+    pathHash: 6b81a39ff8cad933d93810f1486454a378c0d6e05994a1a2f7eda329c74a52f7
+    contentHash: 4887ce08b50f36f3978f3c6ee6b0e56749bf75d0f00b84455b62dbb46bd49704
+    governanceHash: 34b4c9841cf358c2da3550b3f784889c7148ae4f3bcaf11542c8cfd8d96029c1
+    stateFingerprint: 35be9692d53f7797d9943eace819688827ae682d532401e1166f8c1644c7f314
+    path: docs/evidence/ed-20260502-s08-temporal-legacy-removal.md
+    owningUnit: SYS-PLANSTORE-DOCS-RISK
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-DOCS-RISK
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-DOCS-RISK
+    ownerLevel: component
+    unitStatus: review
+    governanceState: review
+    canonicalRole: none
+    evidenceState: review-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - governance and evidence
+    governance:
+      - docs/planning/status/system-governance-unit-index-20260501.md
+      - docs/planning/status/system-governance-document-unit-map-20260501.md
+  - fileId: F-01E656513E11
+    pathHash: 8e8220791cc7db2e901b995ca23de83b1e267e1b30484239d9a867a80e84ebe1
+    contentHash: 5dd5f9b9b22b8ad14425acf59e2b5f54e48b5d1defe709deae2de4c2a9e1a8b4
+    governanceHash: 34b4c9841cf358c2da3550b3f784889c7148ae4f3bcaf11542c8cfd8d96029c1
+    stateFingerprint: 4b40deea4d8817098e09619c0370793da81765e31159feea528e82e8dea6009d
+    path: docs/guides/postgres-plan-store-technical-manual-20260403.md
+    owningUnit: SYS-PLANSTORE-DOCS-RISK
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-DOCS-RISK
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-DOCS-RISK
+    ownerLevel: component
+    unitStatus: review
+    governanceState: review
+    canonicalRole: none
+    evidenceState: review-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - governance and evidence
+    governance:
+      - docs/planning/status/system-governance-unit-index-20260501.md
+      - docs/planning/status/system-governance-document-unit-map-20260501.md
+  - fileId: F-EC304B2A1404
+    pathHash: 8f2f8ca797dfad9b6b221bec79c6fee51c29b956a01ad5a458e2018032735a7a
+    contentHash: 5bed1411a78e3572b1a3aa72d1fd9bc2c9c4bbc55f248460f791dd40f9c2521a
+    governanceHash: 34b4c9841cf358c2da3550b3f784889c7148ae4f3bcaf11542c8cfd8d96029c1
+    stateFingerprint: 400a38d37d27515ee2dda7e9077050582e489c7f57ee14a2d6e6911944fc6808
+    path: docs/guides/postgres-plan-store-user-manual-20260403.md
+    owningUnit: SYS-PLANSTORE-DOCS-RISK
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-DOCS-RISK
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-DOCS-RISK
+    ownerLevel: component
+    unitStatus: review
+    governanceState: review
+    canonicalRole: none
+    evidenceState: review-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - governance and evidence
+    governance:
+      - docs/planning/status/system-governance-unit-index-20260501.md
+      - docs/planning/status/system-governance-document-unit-map-20260501.md
+  - fileId: F-7D63D8716708
+    pathHash: 2bf7031eb1848bc6c00740c966bcd5e3c28a0ebd3e7fa7c809d4cc9e430c9bd9
+    contentHash: 2666b2b22577f50692a3d90965ac5c8fca8e4460eaecfe274605100430f4c695
+    governanceHash: 34b4c9841cf358c2da3550b3f784889c7148ae4f3bcaf11542c8cfd8d96029c1
+    stateFingerprint: 3c6372120c48f5795069e88de72c0d31199458ec97eea4650e5ab4eb0de27cd1
+    path: docs/planning/closeouts/20260402-s08-contract-layer-hardening-closeout.md
+    owningUnit: SYS-PLANSTORE-DOCS-RISK
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-DOCS-RISK
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-DOCS-RISK
+    ownerLevel: component
+    unitStatus: review
+    governanceState: review
+    canonicalRole: none
+    evidenceState: review-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - governance and evidence
+    governance:
+      - docs/planning/status/system-governance-unit-index-20260501.md
+      - docs/planning/status/system-governance-document-unit-map-20260501.md
+  - fileId: F-138BC0C4C1BC
+    pathHash: 6155780b3324cceea42dfad8ae1f5d659854a902477870abaf886f8cdfe77d48
+    contentHash: 64011710727ba3ad29d34077d1ec31097ca63f1289b32bdfab7adc1d6b9c792c
+    governanceHash: 34b4c9841cf358c2da3550b3f784889c7148ae4f3bcaf11542c8cfd8d96029c1
+    stateFingerprint: 20253afd416713ae53eb1f1392c153d53ee99852891d2dac25262e77b9b441d5
+    path: docs/planning/closeouts/20260403-s08-3-artifacts-plan-store-ports-closeout.md
+    owningUnit: SYS-PLANSTORE-DOCS-RISK
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-DOCS-RISK
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-DOCS-RISK
+    ownerLevel: component
+    unitStatus: review
+    governanceState: review
+    canonicalRole: none
+    evidenceState: review-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - governance and evidence
+    governance:
+      - docs/planning/status/system-governance-unit-index-20260501.md
+      - docs/planning/status/system-governance-document-unit-map-20260501.md
+  - fileId: F-92E5868F4E7E
+    pathHash: d227a71356834f82681d37967eb3ca76f63dde3cecba2c9e5853980787aa0ef0
+    contentHash: e6623f1fb1bd7d4bcfa1e61ac7a5246b530d8d51131cf2beb802a82f1f5418a8
+    governanceHash: 34b4c9841cf358c2da3550b3f784889c7148ae4f3bcaf11542c8cfd8d96029c1
+    stateFingerprint: 969e1d07a8da89e7002eb3bea1a3b112d62a8b2da2e6b65081efeee20b514634
+    path: docs/planning/closeouts/20260406-s08-4c-fail-closed-admission-coverage-closeout.md
+    owningUnit: SYS-PLANSTORE-DOCS-RISK
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-DOCS-RISK
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-DOCS-RISK
+    ownerLevel: component
+    unitStatus: review
+    governanceState: review
+    canonicalRole: none
+    evidenceState: review-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - governance and evidence
+    governance:
+      - docs/planning/status/system-governance-unit-index-20260501.md
+      - docs/planning/status/system-governance-document-unit-map-20260501.md
+  - fileId: F-84EA6571985E
+    pathHash: 4371ba98f9a62419f1d2e18109167cb7fceb1dfb93248cec0fa3f7696cdbc8cb
+    contentHash: 8f068b99cdde38e3687210bf400081d9ee055868195ef4b71bcce797d27379de
+    governanceHash: 34b4c9841cf358c2da3550b3f784889c7148ae4f3bcaf11542c8cfd8d96029c1
+    stateFingerprint: cd0ad2e8e9ccca7c99980a185adaced8962dbc02b61d39e27dded7b85241ecce
+    path: docs/planning/closeouts/20260406-s08-5c-plugin-compatibility-fingerprint-closeout.md
+    owningUnit: SYS-PLANSTORE-DOCS-RISK
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-DOCS-RISK
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-DOCS-RISK
+    ownerLevel: component
+    unitStatus: review
+    governanceState: review
+    canonicalRole: none
+    evidenceState: review-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - governance and evidence
+    governance:
+      - docs/planning/status/system-governance-unit-index-20260501.md
+      - docs/planning/status/system-governance-document-unit-map-20260501.md
+  - fileId: F-7B125CA72988
+    pathHash: a97789b04602f3bfb9628ed8b7403803aef4428c2ed8222d3857f9921eae3833
+    contentHash: 8f30efc0f58f1ccbde67e3c2afb5f88b9f6d072027dc82c2f80297183e71448c
+    governanceHash: 34b4c9841cf358c2da3550b3f784889c7148ae4f3bcaf11542c8cfd8d96029c1
+    stateFingerprint: 8b512d6015c8f708666be864ecbe961ac83dc23761825c5d2bedb75000f4f5df
+    path: docs/planning/closeouts/20260427-temporal-planref-spec-config-hardening-closeout.md
+    owningUnit: SYS-PLANSTORE-DOCS-RISK
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-DOCS-RISK
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-DOCS-RISK
+    ownerLevel: component
+    unitStatus: review
+    governanceState: review
+    canonicalRole: none
+    evidenceState: review-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - governance and evidence
+    governance:
+      - docs/planning/status/system-governance-unit-index-20260501.md
+      - docs/planning/status/system-governance-document-unit-map-20260501.md
+  - fileId: F-75119D249562
+    pathHash: 0b5b1f605359a289604f2930d2427f0b61107b314e5c93cfaf9015e22a3df0e9
+    contentHash: 9cddbf51183d83d496d97917e0a7552e25c6d39844b792701880354607be3efb
+    governanceHash: 34b4c9841cf358c2da3550b3f784889c7148ae4f3bcaf11542c8cfd8d96029c1
+    stateFingerprint: a6aaa23d86adc650dcedcdde35a4ea33b4bf3212803b383e48380ebef3e46d89
+    path: docs/planning/closeouts/20260502-s08-temporal-legacy-removal-closeout.md
+    owningUnit: SYS-PLANSTORE-DOCS-RISK
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-DOCS-RISK
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-DOCS-RISK
+    ownerLevel: component
+    unitStatus: review
+    governanceState: review
+    canonicalRole: none
+    evidenceState: review-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - governance and evidence
+    governance:
+      - docs/planning/status/system-governance-unit-index-20260501.md
+      - docs/planning/status/system-governance-document-unit-map-20260501.md
+  - fileId: F-22B3B608AEEC
+    pathHash: fa193fe76b92cd0d52fc3efabb2118b5ce0d8407beadc9759a7c95ed60738197
+    contentHash: 8c93ade7a8877dcf48d246bb44d87419bc2fe7221f67fefa4e210a8f02e4a532
+    governanceHash: 34b4c9841cf358c2da3550b3f784889c7148ae4f3bcaf11542c8cfd8d96029c1
+    stateFingerprint: aecb5c957f477379e760af332ea4311e2b9792287694617e4f5eba3e59e54c68
+    path: >-
+      docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-record-plan-store-execution-plan-20260402.md
+    owningUnit: SYS-PLANSTORE-DOCS-RISK
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-DOCS-RISK
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-DOCS-RISK
+    ownerLevel: component
+    unitStatus: review
+    governanceState: review
+    canonicalRole: none
+    evidenceState: review-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - governance and evidence
+    governance:
+      - docs/planning/status/system-governance-unit-index-20260501.md
+      - docs/planning/status/system-governance-document-unit-map-20260501.md
+  - fileId: F-5DB8E210931B
+    pathHash: b846de26910dee57da406135873cb389c412c96fb21acc6f8f2753bee4b76fb7
+    contentHash: 72caf50415ae1a0a51c1a640b410df52919f86b81bae404a3448f0a1a98f77fd
+    governanceHash: 34b4c9841cf358c2da3550b3f784889c7148ae4f3bcaf11542c8cfd8d96029c1
+    stateFingerprint: 1532802e248f7cae634a5553de355f05a5ccc22111a45b6b784d5931bb910086
+    path: >-
+      docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+    owningUnit: SYS-PLANSTORE-DOCS-RISK
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-DOCS-RISK
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-DOCS-RISK
+    ownerLevel: component
+    unitStatus: review
+    governanceState: review
+    canonicalRole: none
+    evidenceState: review-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - governance and evidence
+    governance:
+      - docs/planning/status/system-governance-unit-index-20260501.md
+      - docs/planning/status/system-governance-document-unit-map-20260501.md
+  - fileId: F-2882DDF8E84A
+    pathHash: 2e29bee2756d81dca148707d0e105016eb9e126cdfedb28b1a3514fd00c345d5
+    contentHash: 5a5d2735220ef127b0d40af40ed12ce7339366bd949e298e2e2110e296345ebf
+    governanceHash: 34b4c9841cf358c2da3550b3f784889c7148ae4f3bcaf11542c8cfd8d96029c1
+    stateFingerprint: 517fab79daae3ee20e7b1083c7346f93d1f82dc888acba92c4e0fdab6023accb
+    path: docs/planning/reviews/20260402-s08-plan-record-plan-store-gap-review.md
+    owningUnit: SYS-PLANSTORE-DOCS-RISK
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-DOCS-RISK
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-DOCS-RISK
+    ownerLevel: component
+    unitStatus: review
+    governanceState: review
+    canonicalRole: none
+    evidenceState: review-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - governance and evidence
+    governance:
+      - docs/planning/status/system-governance-unit-index-20260501.md
+      - docs/planning/status/system-governance-document-unit-map-20260501.md
+  - fileId: F-9E10625297EF
+    pathHash: 313f17ec6a31c93e58c3483c009be7dd709509343c7756ab8dd185e227e40332
+    contentHash: 63d010246db9cba0453b33805f542714eae8b4d1732b51123c5fc8806f318b5c
+    governanceHash: 34b4c9841cf358c2da3550b3f784889c7148ae4f3bcaf11542c8cfd8d96029c1
+    stateFingerprint: 3a4a8ab731fc3666d8d1bce350534562e42b4c1fc7b188ad22fb9774a8e76b28
+    path: >-
+      docs/planning/reviews/architecture-and-governance/20260403-postgres-plan-store-srp-remediation-target.md
+    owningUnit: SYS-PLANSTORE-DOCS-RISK
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-DOCS-RISK
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-DOCS-RISK
+    ownerLevel: component
+    unitStatus: review
+    governanceState: review
+    canonicalRole: none
+    evidenceState: review-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - governance and evidence
+    governance:
+      - docs/planning/status/system-governance-unit-index-20260501.md
+      - docs/planning/status/system-governance-document-unit-map-20260501.md
+  - fileId: F-4237BB1E7711
+    pathHash: 133de5a91ba48443fcbc310642ed60853a4ba03bf57f82a1291aebfb66ea55d6
+    contentHash: 78b6fc686b6c3dedaa13eaeaffedab58e8a22487242d5daccbd473c3b817f5b5
+    governanceHash: 34b4c9841cf358c2da3550b3f784889c7148ae4f3bcaf11542c8cfd8d96029c1
+    stateFingerprint: 7a5a06cdf275efd64640a1dc37e1d85cfe2809ec6cb7656899900673e086312d
+    path: >-
+      docs/planning/reviews/architecture-and-governance/20260403-s08-postgres-plan-store-hard-qa-review.md
+    owningUnit: SYS-PLANSTORE-DOCS-RISK
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-DOCS-RISK
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-DOCS-RISK
+    ownerLevel: component
+    unitStatus: review
+    governanceState: review
+    canonicalRole: none
+    evidenceState: review-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - governance and evidence
+    governance:
+      - docs/planning/status/system-governance-unit-index-20260501.md
+      - docs/planning/status/system-governance-document-unit-map-20260501.md
+  - fileId: F-04D13818BC81
+    pathHash: 559a4819194227c3d93a2357a46ee679374ae08fe6032cec8286a004e6d66e99
+    contentHash: d94d65723a26119734aee35da1adb6f5b0cbd82a3d6889b3cdc66ff80c677dca
+    governanceHash: 34b4c9841cf358c2da3550b3f784889c7148ae4f3bcaf11542c8cfd8d96029c1
+    stateFingerprint: f371db7287e2cea9d8de754342d90cd937cc481ca8efbc2275e47682582fad4c
+    path: docs/planning/status/system-governance-planstore-file-ownership-20260501.md
+    owningUnit: SYS-PLANSTORE-DOCS-RISK
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-DOCS-RISK
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-DOCS-RISK
+    ownerLevel: component
+    unitStatus: review
+    governanceState: review
+    canonicalRole: none
+    evidenceState: review-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - governance and evidence
+    governance:
+      - docs/planning/status/system-governance-unit-index-20260501.md
+      - docs/planning/status/system-governance-document-unit-map-20260501.md
+  - fileId: F-02E0F7A67550
+    pathHash: 8b4e9c3c0034ffb62cca0b31c6d77702ef5ec4af9c001597fff3fba35598102e
+    contentHash: e2c0934d1d1ab9739e552700db67e457e1c29c9c5ebb9a210165cfb2405dffad
+    governanceHash: 34b4c9841cf358c2da3550b3f784889c7148ae4f3bcaf11542c8cfd8d96029c1
+    stateFingerprint: 442003425fb96529298cfc7ed7138053ac4bed9f7cf37a46187d827aa2b9bed9
+    path: docs/risk-register/quality/R-20260402-S08-PLAN-STORE-CONTRACT-DRIFT.yaml
+    owningUnit: SYS-PLANSTORE-DOCS-RISK
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-DOCS-RISK
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-DOCS-RISK
+    ownerLevel: component
+    unitStatus: review
+    governanceState: review
+    canonicalRole: none
+    evidenceState: review-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - governance and evidence
+    governance:
+      - docs/planning/status/system-governance-unit-index-20260501.md
+      - docs/planning/status/system-governance-document-unit-map-20260501.md
+  - fileId: F-9240F14C0BA9
+    pathHash: cf72d507f958a4b15de1f50c4fb9d0f521c65c49f602dc6371ee1d4514ba0384
+    contentHash: cf89542c0ca2a64c956fae6db509b5abf85fe59c61df924547dcd27de473e25e
+    governanceHash: 34b4c9841cf358c2da3550b3f784889c7148ae4f3bcaf11542c8cfd8d96029c1
+    stateFingerprint: 4f274921d99ab163498df4ec63d46615dac2477a4e4a7de9c8db685f0ab6cdc9
+    path: docs/risk-register/quality/R-20260403-S08-4-CI-REGRESSION-FIX.yaml
+    owningUnit: SYS-PLANSTORE-DOCS-RISK
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-DOCS-RISK
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-DOCS-RISK
+    ownerLevel: component
+    unitStatus: review
+    governanceState: review
+    canonicalRole: none
+    evidenceState: review-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - governance and evidence
+    governance:
+      - docs/planning/status/system-governance-unit-index-20260501.md
+      - docs/planning/status/system-governance-document-unit-map-20260501.md
+  - fileId: F-6D1A1B496920
+    pathHash: 3da789994bcbef3bd3fd2e09ab11f243b2242aa4c530c0eb2232a4071abcc351
+    contentHash: 02c2d2c483efda205adcb14b1c7f3291e6e455ca51bf4d3df391871f623788a9
+    governanceHash: 34b4c9841cf358c2da3550b3f784889c7148ae4f3bcaf11542c8cfd8d96029c1
+    stateFingerprint: 891ddfbc1bcabac20a833d78e7a1efcaad32f0be72903fb93d280a30d900f8a4
+    path: docs/risk-register/quality/R-20260403-S08-4-POSTGRES-THREE-PART-MODEL.yaml
+    owningUnit: SYS-PLANSTORE-DOCS-RISK
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-DOCS-RISK
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-DOCS-RISK
+    ownerLevel: component
+    unitStatus: review
+    governanceState: review
+    canonicalRole: none
+    evidenceState: review-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - governance and evidence
+    governance:
+      - docs/planning/status/system-governance-unit-index-20260501.md
+      - docs/planning/status/system-governance-document-unit-map-20260501.md
+  - fileId: F-98F09EC5D494
+    pathHash: dcf6729cd73b85f3d6a7197ab86cfc1319caf0084101c2ae7c3828a7c4edabac
+    contentHash: 7d00bfb34094b520bd21cac04ed52f8b2dec6b7792b6c367e244a7810b97ffe6
+    governanceHash: 34b4c9841cf358c2da3550b3f784889c7148ae4f3bcaf11542c8cfd8d96029c1
+    stateFingerprint: ef78f4e8f3c78dd73ac71bdfccfc0aab47100ee96633763ca7f0315768391161
+    path: docs/risk-register/quality/R-20260405-PLAN-STORE-CANONICAL-SHAPE-DRIFT.yaml
+    owningUnit: SYS-PLANSTORE-DOCS-RISK
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-DOCS-RISK
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-DOCS-RISK
+    ownerLevel: component
+    unitStatus: review
+    governanceState: review
+    canonicalRole: none
+    evidenceState: review-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - governance and evidence
+    governance:
+      - docs/planning/status/system-governance-unit-index-20260501.md
+      - docs/planning/status/system-governance-document-unit-map-20260501.md
+  - fileId: F-55938154F80B
+    pathHash: 84ed640deab4f2c36e9c1a18e3b915dfee2b9a658627fb02f214885ff75a24b3
+    contentHash: 6bbc7760c5454c9270bae62dee498e0b63032689d0be0123d441349b958c9a41
+    governanceHash: 34b4c9841cf358c2da3550b3f784889c7148ae4f3bcaf11542c8cfd8d96029c1
+    stateFingerprint: 6ba55a0c8144212c6af4cfe851e359101782001fefc636af3abde285233d7bc9
+    path: docs/risk-register/quality/R-20260408-ADAPTER-POSTGRES-PLANSTORE-TEST-DRIFT.yaml
+    owningUnit: SYS-PLANSTORE-DOCS-RISK
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-DOCS-RISK
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-DOCS-RISK
+    ownerLevel: component
+    unitStatus: review
+    governanceState: review
+    canonicalRole: none
+    evidenceState: review-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - governance and evidence
+    governance:
+      - docs/planning/status/system-governance-unit-index-20260501.md
+      - docs/planning/status/system-governance-document-unit-map-20260501.md
+  - fileId: F-7BF3464566A6
+    pathHash: fcc923f5cb169a3ff5bbaecb7a8666aecdc942dbf19c289d4f63c4056a4dfd0b
+    contentHash: ac847292632051897565c88c5a57c273694117b4058083bb1d7a79484ed8ddfa
+    governanceHash: 34b4c9841cf358c2da3550b3f784889c7148ae4f3bcaf11542c8cfd8d96029c1
+    stateFingerprint: 72afe32bea41d466ca85fcc38ed7323becf61519342117990bf49f35f8cdbd9e
+    path: docs/risk-register/quality/R-20260427-TEMPORAL-PLANREF-CONFIG-HARDENING.yaml
+    owningUnit: SYS-PLANSTORE-DOCS-RISK
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-DOCS-RISK
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-DOCS-RISK
+    ownerLevel: component
+    unitStatus: review
+    governanceState: review
+    canonicalRole: none
+    evidenceState: review-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - governance and evidence
+    governance:
+      - docs/planning/status/system-governance-unit-index-20260501.md
+      - docs/planning/status/system-governance-document-unit-map-20260501.md
+  - fileId: F-3354F659981A
+    pathHash: 5e8b81b799f3408cbe91e44478c939704c360034109fa79ac0ee5d9cf953cef9
+    contentHash: 9c665df36e93652fe312e5a1034710daf2c9a056f7c954de2d0d0ee55ac50805
+    governanceHash: 34b4c9841cf358c2da3550b3f784889c7148ae4f3bcaf11542c8cfd8d96029c1
+    stateFingerprint: 2e0bde9049eb4394e37918b202613aed0a4675df89ee795ccb4ffac15c398151
+    path: docs/risk-register/quality/r-20260502-s08-temporal-dispatch-scope.yaml
+    owningUnit: SYS-PLANSTORE-DOCS-RISK
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-DOCS-RISK
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-DOCS-RISK
+    ownerLevel: component
+    unitStatus: review
+    governanceState: review
+    canonicalRole: none
+    evidenceState: review-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - governance and evidence
+    governance:
+      - docs/planning/status/system-governance-unit-index-20260501.md
+      - docs/planning/status/system-governance-document-unit-map-20260501.md
+  - fileId: F-1D1A7C253060
+    pathHash: 0b07e3edb577465da2e37f55b70dd576588ee725eafb7f474868bb89998d165e
+    contentHash: 262181dbf3710ac99cdd58379e82cc3c84441bb987532ccdd40e01748e4e984c
+    governanceHash: 7b28b2d5cfc0f13c06554f466e463adf1d1c637566e0954b21c1a0eacf530d0a
+    stateFingerprint: ebc048f5022c98ab6bc81109850e00daa6c934876222dc9f1f503e7e0e3c0dcb
+    path: packages/@dvt/adapter-postgres/src/PostgresPlanStore.admission-repository.ts
+    owningUnit: SYS-PLANSTORE-POSTGRES
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-POSTGRES
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-POSTGRES
+    ownerLevel: component
+    unitStatus: drift
+    governanceState: drift
+    canonicalRole: none
+    evidenceState: remediation-required
+    isDrift: true
+    isLegacy: false
+    dddOwner: ADP
+    cqRails: implements PS-Cxx and PS-Qxx
+    governance:
+      - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
+      - >-
+        docs/planning/reviews/architecture-and-governance/20260403-s08-postgres-plan-store-hard-qa-review.md
+      - docs/risk-register/quality/R-20260408-ADAPTER-POSTGRES-PLANSTORE-TEST-DRIFT.yaml
+  - fileId: F-A829FE9721E5
+    pathHash: d68c6f919f2c6c2f4513d6cc406baf20853341471112d4c55745a206aa169584
+    contentHash: 1bf2a698cb34822e37218bf97f155f548ed2aef7b4e22051ad9103b6d4bb7d88
+    governanceHash: 7b28b2d5cfc0f13c06554f466e463adf1d1c637566e0954b21c1a0eacf530d0a
+    stateFingerprint: 9172f2d17930229c42ccf7e5bf12cfa1cce9c44ed42c744ce47301f13cc92b9b
+    path: packages/@dvt/adapter-postgres/src/PostgresPlanStore.executability-repository.ts
+    owningUnit: SYS-PLANSTORE-POSTGRES
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-POSTGRES
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-POSTGRES
+    ownerLevel: component
+    unitStatus: drift
+    governanceState: drift
+    canonicalRole: none
+    evidenceState: remediation-required
+    isDrift: true
+    isLegacy: false
+    dddOwner: ADP
+    cqRails: implements PS-Cxx and PS-Qxx
+    governance:
+      - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
+      - >-
+        docs/planning/reviews/architecture-and-governance/20260403-s08-postgres-plan-store-hard-qa-review.md
+      - docs/risk-register/quality/R-20260408-ADAPTER-POSTGRES-PLANSTORE-TEST-DRIFT.yaml
+  - fileId: F-8303893DF44C
+    pathHash: bb238c3367a97014eed52a3dba06abeac239a0e18fdcd4cfc7f614582dd0c634
+    contentHash: e2cd85ed7a4d9dc82d57c6d51503fc34e9c014f08d9c0af861dd3eeb8ec387e8
+    governanceHash: 7b28b2d5cfc0f13c06554f466e463adf1d1c637566e0954b21c1a0eacf530d0a
+    stateFingerprint: 6daedd1e075f9282475fe6a0e4817099aff31f8e2810f6b96fa764b26f597d0f
+    path: packages/@dvt/adapter-postgres/src/PostgresPlanStore.executable-blob-repository.ts
+    owningUnit: SYS-PLANSTORE-POSTGRES
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-POSTGRES
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-POSTGRES
+    ownerLevel: component
+    unitStatus: drift
+    governanceState: drift
+    canonicalRole: none
+    evidenceState: remediation-required
+    isDrift: true
+    isLegacy: false
+    dddOwner: ADP
+    cqRails: implements PS-Cxx and PS-Qxx
+    governance:
+      - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
+      - >-
+        docs/planning/reviews/architecture-and-governance/20260403-s08-postgres-plan-store-hard-qa-review.md
+      - docs/risk-register/quality/R-20260408-ADAPTER-POSTGRES-PLANSTORE-TEST-DRIFT.yaml
+  - fileId: F-20B699BF9793
+    pathHash: 7ace11c5bb4ee2885a87b7c0e9cade4e28b88aa5c9ca81c8c33ed21ca82da9fa
+    contentHash: 04779cba3ed87b4ebbec9cf2f55a084468e4f640ff8e75b0953bb83c40cc6f00
+    governanceHash: 7b28b2d5cfc0f13c06554f466e463adf1d1c637566e0954b21c1a0eacf530d0a
+    stateFingerprint: 87a203467dcf50fb3baa05550f550952abc29d10f62efaba202f97e42211c032
+    path: packages/@dvt/adapter-postgres/src/PostgresPlanStore.mappers.ts
+    owningUnit: SYS-PLANSTORE-POSTGRES
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-POSTGRES
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-POSTGRES
+    ownerLevel: component
+    unitStatus: drift
+    governanceState: drift
+    canonicalRole: none
+    evidenceState: remediation-required
+    isDrift: true
+    isLegacy: false
+    dddOwner: ADP
+    cqRails: implements PS-Cxx and PS-Qxx
+    governance:
+      - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
+      - >-
+        docs/planning/reviews/architecture-and-governance/20260403-s08-postgres-plan-store-hard-qa-review.md
+      - docs/risk-register/quality/R-20260408-ADAPTER-POSTGRES-PLANSTORE-TEST-DRIFT.yaml
+  - fileId: F-9A56B77D2D73
+    pathHash: 833363f4aa36403de9f28578d90eb878662e15b2394d00cb91f18f4fb36d80bf
+    contentHash: 06d4ecbe21c59a8adb0242d23a939b6fe6e163e1e168334991a8967cd66e4cea
+    governanceHash: 7b28b2d5cfc0f13c06554f466e463adf1d1c637566e0954b21c1a0eacf530d0a
+    stateFingerprint: 42999c56294a3ecb40d3cf23d283485d3957012331df8d5e20efb0077a4a73f3
+    path: packages/@dvt/adapter-postgres/src/PostgresPlanStore.plan-record-repository.ts
+    owningUnit: SYS-PLANSTORE-POSTGRES
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-POSTGRES
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-POSTGRES
+    ownerLevel: component
+    unitStatus: drift
+    governanceState: drift
+    canonicalRole: none
+    evidenceState: remediation-required
+    isDrift: true
+    isLegacy: false
+    dddOwner: ADP
+    cqRails: implements PS-Cxx and PS-Qxx
+    governance:
+      - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
+      - >-
+        docs/planning/reviews/architecture-and-governance/20260403-s08-postgres-plan-store-hard-qa-review.md
+      - docs/risk-register/quality/R-20260408-ADAPTER-POSTGRES-PLANSTORE-TEST-DRIFT.yaml
+  - fileId: F-C11B0636836D
+    pathHash: cf416d8f318bd404cc56fec8e739797227ec69a56e251bbfc7863e5e5a87cac8
+    contentHash: 6c3904355102e8e8416deb6f00dcedd26b32272ea551a737aac0a7816b3fcd84
+    governanceHash: 7b28b2d5cfc0f13c06554f466e463adf1d1c637566e0954b21c1a0eacf530d0a
+    stateFingerprint: cffc29cef8e8a596b6e77612d90a954e5bc5afcd84c19ee42b9655c0a0e8b8db
+    path: packages/@dvt/adapter-postgres/src/PostgresPlanStore.schema-manager.ts
+    owningUnit: SYS-PLANSTORE-POSTGRES
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-POSTGRES
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-POSTGRES
+    ownerLevel: component
+    unitStatus: drift
+    governanceState: drift
+    canonicalRole: none
+    evidenceState: remediation-required
+    isDrift: true
+    isLegacy: false
+    dddOwner: ADP
+    cqRails: implements PS-Cxx and PS-Qxx
+    governance:
+      - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
+      - >-
+        docs/planning/reviews/architecture-and-governance/20260403-s08-postgres-plan-store-hard-qa-review.md
+      - docs/risk-register/quality/R-20260408-ADAPTER-POSTGRES-PLANSTORE-TEST-DRIFT.yaml
+  - fileId: F-702D83ACD755
+    pathHash: 34c5601dc54133ecaa93dfe6586c0980d263dea3e9a83a9f2ce615a1c5bc8812
+    contentHash: a47b71d9c1263d49915388ba3e120432a0d5b7c65b7a209446930d8a292ec616
+    governanceHash: 7b28b2d5cfc0f13c06554f466e463adf1d1c637566e0954b21c1a0eacf530d0a
+    stateFingerprint: 633438e8bc419f7b266184f36a6137cbc50798d4a8b2956c36449bb005477e5c
+    path: packages/@dvt/adapter-postgres/src/PostgresPlanStore.sql.ts
+    owningUnit: SYS-PLANSTORE-POSTGRES
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-POSTGRES
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-POSTGRES
+    ownerLevel: component
+    unitStatus: drift
+    governanceState: drift
+    canonicalRole: none
+    evidenceState: remediation-required
+    isDrift: true
+    isLegacy: false
+    dddOwner: ADP
+    cqRails: implements PS-Cxx and PS-Qxx
+    governance:
+      - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
+      - >-
+        docs/planning/reviews/architecture-and-governance/20260403-s08-postgres-plan-store-hard-qa-review.md
+      - docs/risk-register/quality/R-20260408-ADAPTER-POSTGRES-PLANSTORE-TEST-DRIFT.yaml
+  - fileId: F-7C7D17C1CDD7
+    pathHash: a47f014b98d73dcadd10a65405067604993b407334c7116fe5e50bb39973d817
+    contentHash: b814a39924145770fa56fbd622fdcb875d87b7a80220c48c185fc9ad8b433520
+    governanceHash: 7b28b2d5cfc0f13c06554f466e463adf1d1c637566e0954b21c1a0eacf530d0a
+    stateFingerprint: 3a99ca158de5fec2f79e30e3f5ebf0f40c3768fa84aaa6b05d23d05b3f0ba06d
+    path: packages/@dvt/adapter-postgres/src/PostgresPlanStore.ts
+    owningUnit: SYS-PLANSTORE-POSTGRES
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-POSTGRES
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-POSTGRES
+    ownerLevel: component
+    unitStatus: drift
+    governanceState: drift
+    canonicalRole: none
+    evidenceState: remediation-required
+    isDrift: true
+    isLegacy: false
+    dddOwner: ADP
+    cqRails: implements PS-Cxx and PS-Qxx
+    governance:
+      - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
+      - >-
+        docs/planning/reviews/architecture-and-governance/20260403-s08-postgres-plan-store-hard-qa-review.md
+      - docs/risk-register/quality/R-20260408-ADAPTER-POSTGRES-PLANSTORE-TEST-DRIFT.yaml
+  - fileId: F-73FF4812E33D
+    pathHash: ab47b3b9b2f89ddf6b3be103b2dd00978efacd0d35728019d62eab14dcf10a79
+    contentHash: 4560522059913034f721d4f0fd25e55fb9ada2b9f3aed1973191029dbc23d08d
+    governanceHash: 7b28b2d5cfc0f13c06554f466e463adf1d1c637566e0954b21c1a0eacf530d0a
+    stateFingerprint: 773103d4f8efcf711aeec8011d30be5b788e36a1b7226adcfe6aca23e4023eeb
+    path: packages/@dvt/adapter-postgres/src/PostgresPlanStore.tx.ts
+    owningUnit: SYS-PLANSTORE-POSTGRES
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-POSTGRES
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-POSTGRES
+    ownerLevel: component
+    unitStatus: drift
+    governanceState: drift
+    canonicalRole: none
+    evidenceState: remediation-required
+    isDrift: true
+    isLegacy: false
+    dddOwner: ADP
+    cqRails: implements PS-Cxx and PS-Qxx
+    governance:
+      - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
+      - >-
+        docs/planning/reviews/architecture-and-governance/20260403-s08-postgres-plan-store-hard-qa-review.md
+      - docs/risk-register/quality/R-20260408-ADAPTER-POSTGRES-PLANSTORE-TEST-DRIFT.yaml
+  - fileId: F-856C25C10E5A
+    pathHash: 7a8d78507e989e5a0d02521bce87da7e50c3a95dc5fc78d67d959c8a0b25515e
+    contentHash: 81cee83addda445dc6e3843e7cc5bd28f63415acb239c47a36394eb759c7c092
+    governanceHash: 7b28b2d5cfc0f13c06554f466e463adf1d1c637566e0954b21c1a0eacf530d0a
+    stateFingerprint: 2b819e6291a5cc2b0f7cdd9d0eeef99006c7faa2494c634a010f286606cd1356
+    path: packages/@dvt/adapter-postgres/src/PostgresPlanStoreComposer.ts
+    owningUnit: SYS-PLANSTORE-POSTGRES
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-POSTGRES
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-POSTGRES
+    ownerLevel: component
+    unitStatus: drift
+    governanceState: drift
+    canonicalRole: none
+    evidenceState: remediation-required
+    isDrift: true
+    isLegacy: false
+    dddOwner: ADP
+    cqRails: implements PS-Cxx and PS-Qxx
+    governance:
+      - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
+      - >-
+        docs/planning/reviews/architecture-and-governance/20260403-s08-postgres-plan-store-hard-qa-review.md
+      - docs/risk-register/quality/R-20260408-ADAPTER-POSTGRES-PLANSTORE-TEST-DRIFT.yaml
+  - fileId: F-0244D9284E0B
+    pathHash: 3975fded682916b227dc9694014667415d3610a31392b9a27ded851b65d398ce
+    contentHash: 89facd05c354d59b037a7077412ff8324175e26bb4446a53b810ebfb544342bc
+    governanceHash: 7b28b2d5cfc0f13c06554f466e463adf1d1c637566e0954b21c1a0eacf530d0a
+    stateFingerprint: 462e66f140d18ccfab9cce25a864a6f23f868c3d47e3b4432ff20430aa268279
+    path: packages/@dvt/adapter-postgres/test/PostgresPlanStore.integration.helpers.ts
+    owningUnit: SYS-PLANSTORE-POSTGRES
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-POSTGRES
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-POSTGRES
+    ownerLevel: component
+    unitStatus: drift
+    governanceState: drift
+    canonicalRole: none
+    evidenceState: remediation-required
+    isDrift: true
+    isLegacy: false
+    dddOwner: ADP
+    cqRails: implements PS-Cxx and PS-Qxx
+    governance:
+      - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
+      - >-
+        docs/planning/reviews/architecture-and-governance/20260403-s08-postgres-plan-store-hard-qa-review.md
+      - docs/risk-register/quality/R-20260408-ADAPTER-POSTGRES-PLANSTORE-TEST-DRIFT.yaml
+  - fileId: F-F1029D58119A
+    pathHash: 24c216749654fa46a7e2897139b5c85b3bc74da0d87610132e18d16df411bc89
+    contentHash: 5216d58df38738abde2805399836d975396d7db81c468827bc7c3b9bbb032c6b
+    governanceHash: 7b28b2d5cfc0f13c06554f466e463adf1d1c637566e0954b21c1a0eacf530d0a
+    stateFingerprint: efecb23c4e1542024155470a7b1204dcb1647b676175bbbcab3a2dd7c40a5257
+    path: packages/@dvt/adapter-postgres/test/PostgresPlanStore.invariants.unit.test.ts
+    owningUnit: SYS-PLANSTORE-POSTGRES
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-POSTGRES
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-POSTGRES
+    ownerLevel: component
+    unitStatus: drift
+    governanceState: drift
+    canonicalRole: none
+    evidenceState: remediation-required
+    isDrift: true
+    isLegacy: false
+    dddOwner: ADP
+    cqRails: implements PS-Cxx and PS-Qxx
+    governance:
+      - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
+      - >-
+        docs/planning/reviews/architecture-and-governance/20260403-s08-postgres-plan-store-hard-qa-review.md
+      - docs/risk-register/quality/R-20260408-ADAPTER-POSTGRES-PLANSTORE-TEST-DRIFT.yaml
+  - fileId: F-ED5BB0B7CC9F
+    pathHash: 239095d91800c14be9e31a02d04766989c25ac955bfa403b7dc9a13a8eb4054b
+    contentHash: c71f60f21d752ca0c89f857d0d931be26924a95d573cf6435cef30c6108020e3
+    governanceHash: 7b28b2d5cfc0f13c06554f466e463adf1d1c637566e0954b21c1a0eacf530d0a
+    stateFingerprint: b029d4c0dbc5c86640221e52c774430baba4ec6516d71f8022652a14e42033c9
+    path: packages/@dvt/adapter-postgres/test/PostgresPlanStore.lifecycle.integration.test.ts
+    owningUnit: SYS-PLANSTORE-POSTGRES
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-POSTGRES
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-POSTGRES
+    ownerLevel: component
+    unitStatus: drift
+    governanceState: drift
+    canonicalRole: none
+    evidenceState: remediation-required
+    isDrift: true
+    isLegacy: false
+    dddOwner: ADP
+    cqRails: implements PS-Cxx and PS-Qxx
+    governance:
+      - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
+      - >-
+        docs/planning/reviews/architecture-and-governance/20260403-s08-postgres-plan-store-hard-qa-review.md
+      - docs/risk-register/quality/R-20260408-ADAPTER-POSTGRES-PLANSTORE-TEST-DRIFT.yaml
+  - fileId: F-6AA5B24C4C8C
+    pathHash: a044f8945068e821868df4df857539e3dcda3ff3fcc5c179ce19a3ed18835fd6
+    contentHash: 9d573b81e7a93815b13a915e341f21de3c06093a1fb967d4be53a5f6255e8e77
+    governanceHash: 7b28b2d5cfc0f13c06554f466e463adf1d1c637566e0954b21c1a0eacf530d0a
+    stateFingerprint: 23621d51ee1c687978962e04a0a53b6d0393c05360c1302f2fe5d7274fe1620f
+    path: packages/@dvt/adapter-postgres/test/PostgresPlanStore.records-core.integration.test.ts
+    owningUnit: SYS-PLANSTORE-POSTGRES
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-POSTGRES
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-POSTGRES
+    ownerLevel: component
+    unitStatus: drift
+    governanceState: drift
+    canonicalRole: none
+    evidenceState: remediation-required
+    isDrift: true
+    isLegacy: false
+    dddOwner: ADP
+    cqRails: implements PS-Cxx and PS-Qxx
+    governance:
+      - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
+      - >-
+        docs/planning/reviews/architecture-and-governance/20260403-s08-postgres-plan-store-hard-qa-review.md
+      - docs/risk-register/quality/R-20260408-ADAPTER-POSTGRES-PLANSTORE-TEST-DRIFT.yaml
+  - fileId: F-C22CDA4D729C
+    pathHash: caef985d7b085e9519a5865d181b6a6d33802dba3a97c92f67584fa2be3ade1a
+    contentHash: f7c4de44d9f8bf1040c9636862afe552691cc360aed2a90823415937eeee73cb
+    governanceHash: 7b28b2d5cfc0f13c06554f466e463adf1d1c637566e0954b21c1a0eacf530d0a
+    stateFingerprint: 7ed1c5d546b2ef7119be607e063291cdbb4ba4a3a20f599d18418d10a0803fa7
+    path: packages/@dvt/adapter-postgres/test/PostgresPlanStore.records-guards.integration.test.ts
+    owningUnit: SYS-PLANSTORE-POSTGRES
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-POSTGRES
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-POSTGRES
+    ownerLevel: component
+    unitStatus: drift
+    governanceState: drift
+    canonicalRole: none
+    evidenceState: remediation-required
+    isDrift: true
+    isLegacy: false
+    dddOwner: ADP
+    cqRails: implements PS-Cxx and PS-Qxx
+    governance:
+      - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
+      - >-
+        docs/planning/reviews/architecture-and-governance/20260403-s08-postgres-plan-store-hard-qa-review.md
+      - docs/risk-register/quality/R-20260408-ADAPTER-POSTGRES-PLANSTORE-TEST-DRIFT.yaml
+  - fileId: F-41BDEA1761B1
+    pathHash: ca3491a410c9a6fcc94761bca59017e3bf2b8cf686030579d59873c99b5ed52d
+    contentHash: cc69e995ac924f9140e966f4c925c8f1bc430f0fc47ffef419befa70c35d16ea
+    governanceHash: 7b28b2d5cfc0f13c06554f466e463adf1d1c637566e0954b21c1a0eacf530d0a
+    stateFingerprint: 81a087e67090c958bcd9ea81ba3575a5ec94aac7212520380de7daf2763bd134
+    path: packages/@dvt/adapter-postgres/test/PostgresPlanStore.sql.test.ts
+    owningUnit: SYS-PLANSTORE-POSTGRES
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-POSTGRES
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-POSTGRES
+    ownerLevel: component
+    unitStatus: drift
+    governanceState: drift
+    canonicalRole: none
+    evidenceState: remediation-required
+    isDrift: true
+    isLegacy: false
+    dddOwner: ADP
+    cqRails: implements PS-Cxx and PS-Qxx
+    governance:
+      - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
+      - >-
+        docs/planning/reviews/architecture-and-governance/20260403-s08-postgres-plan-store-hard-qa-review.md
+      - docs/risk-register/quality/R-20260408-ADAPTER-POSTGRES-PLANSTORE-TEST-DRIFT.yaml
+  - fileId: F-6EF8ECA412B2
+    pathHash: a44d8a7cfe88c4e6826d14c840dec02fd8436d8397a5ee17309abcf0cec2db69
+    contentHash: 2851d86667b67e152a2abce520587e89ad3e6318295cdbd758d6d5e76f2a515e
+    governanceHash: 9fd18f455a27b78379f51bc03a695d6a37a33af50ae41c9dad5f8c6b31ec8cee
+    stateFingerprint: 4d931d8f1987674316ae53ed8e212f385864ab9a7f9a159f0fda36c7ff2f62c8
+    path: packages/@dvt/adapter-temporal/src/activities/temporalPlanArtifactReader.ts
+    owningUnit: SYS-PLANSTORE-TEMPORAL-COMPOSITION
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-TEMPORAL-COMPOSITION
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-TEMPORAL-COMPOSITION
+    ownerLevel: component
+    unitStatus: review
+    governanceState: review
+    canonicalRole: none
+    evidenceState: review-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: ADP
+    cqRails: PS-Q08
+    governance:
+      - docs/architecture/components/engine/adapters/temporal/temporal-planref-workflow-boundary.md
+      - docs/planning/closeouts/20260502-s08-temporal-legacy-removal-closeout.md
+      - docs/risk-register/quality/R-20260427-TEMPORAL-PLANREF-CONFIG-HARDENING.yaml
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-86690133B407
+    pathHash: 04c4438e28172d670b1dd21f953a6a7addb9c683c22e642f2caf58774b1a1ae5
+    contentHash: e48cfa9e851dd275670e1c37fa6593b89f22430a9b16c58b7feaae4fd58758b4
+    governanceHash: 9fd18f455a27b78379f51bc03a695d6a37a33af50ae41c9dad5f8c6b31ec8cee
+    stateFingerprint: fabdb7053b6d0f7716944f11b9a0119c5c0bba7684b82937feadb9f2321cf3a0
+    path: packages/@dvt/adapter-temporal/src/temporalPlanRefCapacitySlaPolicy.ts
+    owningUnit: SYS-PLANSTORE-TEMPORAL-COMPOSITION
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-TEMPORAL-COMPOSITION
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-TEMPORAL-COMPOSITION
+    ownerLevel: component
+    unitStatus: review
+    governanceState: review
+    canonicalRole: none
+    evidenceState: review-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: ADP
+    cqRails: PS-Q08
+    governance:
+      - docs/architecture/components/engine/adapters/temporal/temporal-planref-workflow-boundary.md
+      - docs/planning/closeouts/20260502-s08-temporal-legacy-removal-closeout.md
+      - docs/risk-register/quality/R-20260427-TEMPORAL-PLANREF-CONFIG-HARDENING.yaml
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-B4F823AD712E
+    pathHash: 7e7b7f8ccc69cb8a636dc536bbdea26cc767b7f05b66f9fbfa2aa017e1e685cd
+    contentHash: b47f59560eac729fb85b011ccc3f661a45a231ee898672eed778f3a71c0deeb1
+    governanceHash: 9fd18f455a27b78379f51bc03a695d6a37a33af50ae41c9dad5f8c6b31ec8cee
+    stateFingerprint: d939bb1eb7631390107b01dfebf6a817445d9771007410b06febe8326a03e186
+    path: packages/@dvt/adapter-temporal/src/workflows/workflowArtifactHelpers.ts
+    owningUnit: SYS-PLANSTORE-TEMPORAL-COMPOSITION
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-TEMPORAL-COMPOSITION
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-TEMPORAL-COMPOSITION
+    ownerLevel: component
+    unitStatus: review
+    governanceState: review
+    canonicalRole: none
+    evidenceState: review-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: ADP
+    cqRails: PS-Q08
+    governance:
+      - docs/architecture/components/engine/adapters/temporal/temporal-planref-workflow-boundary.md
+      - docs/planning/closeouts/20260502-s08-temporal-legacy-removal-closeout.md
+      - docs/risk-register/quality/R-20260427-TEMPORAL-PLANREF-CONFIG-HARDENING.yaml
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-7DF2E77D03D3
+    pathHash: df79ab1e04edfaed8208ea4db344222515148a6eb8d26148b84aa73d44136e14
+    contentHash: e29637f10a11e9f47fde0c79009da45151be4998925747df4d1920025763777b
+    governanceHash: 9fd18f455a27b78379f51bc03a695d6a37a33af50ae41c9dad5f8c6b31ec8cee
+    stateFingerprint: 37d060e9bf7d738bc13490b4bdaff6300626e32a26ea248129ec47a351ebf195
+    path: packages/@dvt/adapter-temporal/test/temporalPlanArtifactReader.test.ts
+    owningUnit: SYS-PLANSTORE-TEMPORAL-COMPOSITION
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-TEMPORAL-COMPOSITION
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-TEMPORAL-COMPOSITION
+    ownerLevel: component
+    unitStatus: review
+    governanceState: review
+    canonicalRole: none
+    evidenceState: review-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: ADP
+    cqRails: PS-Q08
+    governance:
+      - docs/architecture/components/engine/adapters/temporal/temporal-planref-workflow-boundary.md
+      - docs/planning/closeouts/20260502-s08-temporal-legacy-removal-closeout.md
+      - docs/risk-register/quality/R-20260427-TEMPORAL-PLANREF-CONFIG-HARDENING.yaml
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-9F17D16D08A4
+    pathHash: bda403e74b4bb181c00ea4a939986f98474fc9d798560c50f0b3791682af89f2
+    contentHash: d6122622035cc56b2c796350447d720d2942a72478d675ccdc1f9f64ebf63560
+    governanceHash: 9fd18f455a27b78379f51bc03a695d6a37a33af50ae41c9dad5f8c6b31ec8cee
+    stateFingerprint: 1431704d178fcb0cc7ae024a06ea038fd1dec0d79bafe69486cd1231ac9b8426
+    path: packages/@dvt/adapter-temporal/test/temporalPlanRefCapacitySlaPolicy.test.ts
+    owningUnit: SYS-PLANSTORE-TEMPORAL-COMPOSITION
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-TEMPORAL-COMPOSITION
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-TEMPORAL-COMPOSITION
+    ownerLevel: component
+    unitStatus: review
+    governanceState: review
+    canonicalRole: none
+    evidenceState: review-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: ADP
+    cqRails: PS-Q08
+    governance:
+      - docs/architecture/components/engine/adapters/temporal/temporal-planref-workflow-boundary.md
+      - docs/planning/closeouts/20260502-s08-temporal-legacy-removal-closeout.md
+      - docs/risk-register/quality/R-20260427-TEMPORAL-PLANREF-CONFIG-HARDENING.yaml
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-A3422F8EFF35
+    pathHash: 246fd0787eb957f328158a98a15f48104b69f023c54f22a5b50a8c15241c7005
+    contentHash: bb3eaff6da6236c47ff3cd4adcc0cac9fae3b1c545c0ff414cdef3e9d7260fe4
+    governanceHash: 9fd18f455a27b78379f51bc03a695d6a37a33af50ae41c9dad5f8c6b31ec8cee
+    stateFingerprint: 2f049b8f65b11f1da44d95fa4e929d05af9fcce472ccdd8b566d05534ae58692
+    path: packages/@dvt/adapter-temporal/test/workflow-component-semantics.architecture.test.ts
+    owningUnit: SYS-PLANSTORE-TEMPORAL-COMPOSITION
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-TEMPORAL-COMPOSITION
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-TEMPORAL-COMPOSITION
+    ownerLevel: component
+    unitStatus: review
+    governanceState: review
+    canonicalRole: none
+    evidenceState: review-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: ADP
+    cqRails: PS-Q08
+    governance:
+      - docs/architecture/components/engine/adapters/temporal/temporal-planref-workflow-boundary.md
+      - docs/planning/closeouts/20260502-s08-temporal-legacy-removal-closeout.md
+      - docs/risk-register/quality/R-20260427-TEMPORAL-PLANREF-CONFIG-HARDENING.yaml
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-FB4D6C21BDB9
+    pathHash: b01c5a982cf6347a972b7ec34ed042e7a90a0b73bcfeb2398c03950edae5570b
+    contentHash: a7ee623eebe2566013edbd73b06fb4aaaa1a71d0bb2adaad2caf3d53952cb9e3
+    governanceHash: 3a12903c562d75d9200f52fa197beb3b82de04f27cde741e15000b39d83f144e
+    stateFingerprint: 22dae78d9677d729707ddfd63293bf844d9a1b16166613fca0928ced94e39f71
+    path: packages/@dvt/artifacts/package.json
+    owningUnit: SYS-PLANSTORE-ARTIFACTS-PORTS
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-ARTIFACTS-PORTS
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-ARTIFACTS-PORTS
+    ownerLevel: component
+    unitStatus: review
+    governanceState: review
+    canonicalRole: none
+    evidenceState: review-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: PORT
+    cqRails: PS-Q02
+    governance:
+      - docs/planning/closeouts/20260403-s08-3-artifacts-plan-store-ports-closeout.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+  - fileId: F-17505D730B61
+    pathHash: c89214f98a3109bfbb6ac2aee83d477c6dda2e9041d8de3e9d0f3ac72a65199e
+    contentHash: 15c4ba6d175ce8dbe5af3fa56c6a3d6b5bc99fafb12b0979b6339bd93bed9a14
+    governanceHash: 3a12903c562d75d9200f52fa197beb3b82de04f27cde741e15000b39d83f144e
+    stateFingerprint: 69b2f96c2cb34383b6e990804f4470c4dc8b0ca05944dda8580d7502736c3349
+    path: packages/@dvt/artifacts/src/compiledCode/adapters/FileSystemCompiledCodeStorage.ts
+    owningUnit: SYS-PLANSTORE-ARTIFACTS-PORTS
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-ARTIFACTS-PORTS
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-ARTIFACTS-PORTS
+    ownerLevel: component
+    unitStatus: review
+    governanceState: review
+    canonicalRole: none
+    evidenceState: review-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: PORT
+    cqRails: PS-Q02
+    governance:
+      - docs/planning/closeouts/20260403-s08-3-artifacts-plan-store-ports-closeout.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+  - fileId: F-0908561BB030
+    pathHash: 9befa449a0f2821575405f0e0cb700ffbd6a4161f9c1eb0ee6457fb4529372fc
+    contentHash: ab6a5536ee81624d61e50c68152bb6a881dfacd5da5f0fd8a739dc073c1a45d2
+    governanceHash: 3a12903c562d75d9200f52fa197beb3b82de04f27cde741e15000b39d83f144e
+    stateFingerprint: e5b6ade6780d3f7ed305c199d95b4233aef67f88043c61de07a4d6dac0a1b50c
+    path: packages/@dvt/artifacts/src/compiledCode/adapters/InMemoryCompiledCodeStorage.ts
+    owningUnit: SYS-PLANSTORE-ARTIFACTS-PORTS
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-ARTIFACTS-PORTS
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-ARTIFACTS-PORTS
+    ownerLevel: component
+    unitStatus: review
+    governanceState: review
+    canonicalRole: none
+    evidenceState: review-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: PORT
+    cqRails: PS-Q02
+    governance:
+      - docs/planning/closeouts/20260403-s08-3-artifacts-plan-store-ports-closeout.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+  - fileId: F-E581EBAFD0E6
+    pathHash: 9d1e5566f484bf57b94055cafc0d2487a1e9319d9a8afaf79c73127bc0025697
+    contentHash: 734f86532bc2998ebd77cdfbfe7ae94247796862479acff3d987abe92b78d6b5
+    governanceHash: 3a12903c562d75d9200f52fa197beb3b82de04f27cde741e15000b39d83f144e
+    stateFingerprint: 9aa6d017c4612487e3ab0444f4d65dcd978beea307d72156a3aa36a0dcc81076
+    path: packages/@dvt/artifacts/src/compiledCode/adapters/MinioCompiledCodeStorage.ts
+    owningUnit: SYS-PLANSTORE-ARTIFACTS-PORTS
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-ARTIFACTS-PORTS
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-ARTIFACTS-PORTS
+    ownerLevel: component
+    unitStatus: review
+    governanceState: review
+    canonicalRole: none
+    evidenceState: review-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: PORT
+    cqRails: PS-Q02
+    governance:
+      - docs/planning/closeouts/20260403-s08-3-artifacts-plan-store-ports-closeout.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+  - fileId: F-344D669F9C1A
+    pathHash: f22b7ba104f58f443845cb0272486cb4764fc73dc80890c34b0d01099e3e754c
+    contentHash: af60e0f65f2e66f8b4a54249e3e11dc42197e1124401c3d9200e86f4e8f562d1
+    governanceHash: 3a12903c562d75d9200f52fa197beb3b82de04f27cde741e15000b39d83f144e
+    stateFingerprint: 8fd946d13eacb333090777d4a303c8a437c3468ed5ed47a877fe3327d1a91e3c
+    path: packages/@dvt/artifacts/src/compiledCode/adapters/NoopCompiledCodeStorage.ts
+    owningUnit: SYS-PLANSTORE-ARTIFACTS-PORTS
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-ARTIFACTS-PORTS
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-ARTIFACTS-PORTS
+    ownerLevel: component
+    unitStatus: review
+    governanceState: review
+    canonicalRole: none
+    evidenceState: review-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: PORT
+    cqRails: PS-Q02
+    governance:
+      - docs/planning/closeouts/20260403-s08-3-artifacts-plan-store-ports-closeout.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+  - fileId: F-30BFCC59C8FC
+    pathHash: 8f9b2027668a05136db68a149b775aab6de01bd80ca8ec36e7cdd0cd8f93aea2
+    contentHash: ba8beefd9a6e0f0dd59d48d53578a93f6fb8d08c350bd4bfa2caa9bc814f0ed9
+    governanceHash: 3a12903c562d75d9200f52fa197beb3b82de04f27cde741e15000b39d83f144e
+    stateFingerprint: b278ae66de1c17a6ef638eefb5db946837032e7e8f5c2c3e234586bc408219da
+    path: packages/@dvt/artifacts/src/compiledCode/adapters/S3CompiledCodeStorage.ts
+    owningUnit: SYS-PLANSTORE-ARTIFACTS-PORTS
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-ARTIFACTS-PORTS
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-ARTIFACTS-PORTS
+    ownerLevel: component
+    unitStatus: review
+    governanceState: review
+    canonicalRole: none
+    evidenceState: review-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: PORT
+    cqRails: PS-Q02
+    governance:
+      - docs/planning/closeouts/20260403-s08-3-artifacts-plan-store-ports-closeout.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+  - fileId: F-64928BAE06C8
+    pathHash: 8a999ef0f61139d7f38fcc36614956dd2deae0099cd7105dc03cf0e3094005c3
+    contentHash: 0338ffa3cf5e78fdddd1fc91cb3c58ccf3146284ffbbf1dfeabecb5d6aa5860c
+    governanceHash: 3a12903c562d75d9200f52fa197beb3b82de04f27cde741e15000b39d83f144e
+    stateFingerprint: 76ab37360cba6d29945c91deb41a21523a9e89d896315457913fd34ea8ff00e4
+    path: packages/@dvt/artifacts/src/compiledCode/attachCompiledCodeRefs.ts
+    owningUnit: SYS-PLANSTORE-ARTIFACTS-PORTS
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-ARTIFACTS-PORTS
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-ARTIFACTS-PORTS
+    ownerLevel: component
+    unitStatus: review
+    governanceState: review
+    canonicalRole: none
+    evidenceState: review-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: PORT
+    cqRails: PS-Q02
+    governance:
+      - docs/planning/closeouts/20260403-s08-3-artifacts-plan-store-ports-closeout.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+  - fileId: F-32EB8AA7ADB0
+    pathHash: 519b4c9b9a303995560f940a31e5090f9df55c2b83ad406e441a65a5043683f8
+    contentHash: fac06cc55501b9e095667ff7bf4794cfc5abc2ab0a2245e7394f073c5a4efd56
+    governanceHash: 3a12903c562d75d9200f52fa197beb3b82de04f27cde741e15000b39d83f144e
+    stateFingerprint: 6aa57b8359d5462288f761ea39081d91abe06802311f0d14ee47ca4e83241c66
+    path: packages/@dvt/artifacts/src/compiledCode/sha256.ts
+    owningUnit: SYS-PLANSTORE-ARTIFACTS-PORTS
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-ARTIFACTS-PORTS
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-ARTIFACTS-PORTS
+    ownerLevel: component
+    unitStatus: review
+    governanceState: review
+    canonicalRole: none
+    evidenceState: review-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: PORT
+    cqRails: PS-Q02
+    governance:
+      - docs/planning/closeouts/20260403-s08-3-artifacts-plan-store-ports-closeout.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+  - fileId: F-7E0723804985
+    pathHash: d068c012ca1e2defa0551ccf64612df69319324c98bf7fd256921876c6b39027
+    contentHash: 235e52ebfe8011355018f82fbafd26772fdacf7ea593f10df8fdb3a44883f24d
+    governanceHash: 3a12903c562d75d9200f52fa197beb3b82de04f27cde741e15000b39d83f144e
+    stateFingerprint: 27e19968777cd18028b9da995b8d29f64be8ea62e6ff013ef88ff02bebea78a1
+    path: packages/@dvt/artifacts/src/index.ts
+    owningUnit: SYS-PLANSTORE-ARTIFACTS-PORTS
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-ARTIFACTS-PORTS
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-ARTIFACTS-PORTS
+    ownerLevel: component
+    unitStatus: review
+    governanceState: review
+    canonicalRole: none
+    evidenceState: review-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: PORT
+    cqRails: PS-Q02
+    governance:
+      - docs/planning/closeouts/20260403-s08-3-artifacts-plan-store-ports-closeout.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+  - fileId: F-8E78983FC1A1
+    pathHash: 7dc3da88d3e7092052cdbf8fa59f5f083970e9d2b478d46e258d577e8f6a1631
+    contentHash: f0d8eecbc9a08c81a6a3d5cc8c5abb893c3a5ded6c27e5b239d24238316456d8
+    governanceHash: 3a12903c562d75d9200f52fa197beb3b82de04f27cde741e15000b39d83f144e
+    stateFingerprint: 70c7d74ccc5cc6da5bcf333269155d725bba4d6affa8c24d865c3a845412fa0d
+    path: packages/@dvt/artifacts/src/ports/ICompiledCodeStorage.ts
+    owningUnit: SYS-PLANSTORE-ARTIFACTS-PORTS
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-ARTIFACTS-PORTS
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-ARTIFACTS-PORTS
+    ownerLevel: component
+    unitStatus: review
+    governanceState: review
+    canonicalRole: none
+    evidenceState: review-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: PORT
+    cqRails: PS-Q02
+    governance:
+      - docs/planning/closeouts/20260403-s08-3-artifacts-plan-store-ports-closeout.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+  - fileId: F-A3D7DBC417B5
+    pathHash: c6421e5857068d61953c161a7f5e21a32bc055eb5b0a47c00733193ae580c495
+    contentHash: d13d432fdd77486929a56a6335f8ef0cfb22d0d2a17f1130860dcc46e2c16c1e
+    governanceHash: 3a12903c562d75d9200f52fa197beb3b82de04f27cde741e15000b39d83f144e
+    stateFingerprint: a61d44fce505228bee57f42eab10222c96f2cbb8a3334493f910a2a8fc1019a7
+    path: packages/@dvt/artifacts/src/ports/IDbtProjectBundleReader.ts
+    owningUnit: SYS-PLANSTORE-ARTIFACTS-PORTS
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-ARTIFACTS-PORTS
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-ARTIFACTS-PORTS
+    ownerLevel: component
+    unitStatus: review
+    governanceState: review
+    canonicalRole: none
+    evidenceState: review-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: PORT
+    cqRails: PS-Q02
+    governance:
+      - docs/planning/closeouts/20260403-s08-3-artifacts-plan-store-ports-closeout.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+  - fileId: F-41A2D9667B0D
+    pathHash: c3732ee1e9c8b2287b30d84297bcdd57cdb9382d3256c9cf1bd3219248b33292
+    contentHash: d9fdffe0a8b9d3b16d4482df2262dfa40c7e761cd9ad9c25e4da5cc2b4ae340b
+    governanceHash: 21062ec04d1e686ebf8cb8fc0e60379284760dccd18989a04d2e4d0be31268bf
+    stateFingerprint: b47fe1a03399ebf34ced274337fad370fb7fad8f68410951e7eacb86a1851512
+    path: packages/@dvt/artifacts/src/ports/IPlanStoreReader.ts
+    owningUnit: SYS-PLANSTORE-CONTRACTS
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-CONTRACTS
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-CONTRACTS
+    ownerLevel: component
+    unitStatus: drift
+    governanceState: drift
+    canonicalRole: none
+    evidenceState: remediation-required
+    isDrift: true
+    isLegacy: false
+    dddOwner: PORT
+    cqRails: PS-Q01, PS-C01
+    governance:
+      - docs/contracts/planner/PlanStoreRecords.v1.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+      - docs/risk-register/quality/R-20260402-S08-PLAN-STORE-CONTRACT-DRIFT.yaml
+  - fileId: F-6CF12F62ED37
+    pathHash: ceb233c3ea3b75fbf0ea7bca0db273a394d87445b5a49a9c47de89ee405e32b4
+    contentHash: 0af0fa29d4bcc2473b2fac818a9ddeb38801c4f65fe45ba89c6a29fb13eda212
+    governanceHash: 21062ec04d1e686ebf8cb8fc0e60379284760dccd18989a04d2e4d0be31268bf
+    stateFingerprint: 3c516ad5c265b53347b4689a86ec463f89e629e0caa1217dafc7c1cc99213da8
+    path: packages/@dvt/artifacts/src/ports/IPlanStoreWriter.ts
+    owningUnit: SYS-PLANSTORE-CONTRACTS
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-CONTRACTS
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-CONTRACTS
+    ownerLevel: component
+    unitStatus: drift
+    governanceState: drift
+    canonicalRole: none
+    evidenceState: remediation-required
+    isDrift: true
+    isLegacy: false
+    dddOwner: PORT
+    cqRails: PS-Q01, PS-C01
+    governance:
+      - docs/contracts/planner/PlanStoreRecords.v1.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+      - docs/risk-register/quality/R-20260402-S08-PLAN-STORE-CONTRACT-DRIFT.yaml
+  - fileId: F-AA65ACCEA8E3
+    pathHash: c3b78d3fd402fd2f84b20b610f13ff0deaf92608f00d25bc6155a2cc7ad2d282
+    contentHash: 5b27c8083ce2e2d1254375969d1356c81a4e75bed370dc0b1d8efdd1b8f3bf29
+    governanceHash: 3a12903c562d75d9200f52fa197beb3b82de04f27cde741e15000b39d83f144e
+    stateFingerprint: 0b17bc1bd729366ebcd06778a5d9b8a57d5f1a2bac146d735fff71e0665f5c10
+    path: packages/@dvt/artifacts/src/ports/IRunExecutionContextReader.ts
+    owningUnit: SYS-PLANSTORE-ARTIFACTS-PORTS
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-ARTIFACTS-PORTS
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-ARTIFACTS-PORTS
+    ownerLevel: component
+    unitStatus: review
+    governanceState: review
+    canonicalRole: none
+    evidenceState: review-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: PORT
+    cqRails: PS-Q02
+    governance:
+      - docs/planning/closeouts/20260403-s08-3-artifacts-plan-store-ports-closeout.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+  - fileId: F-77E68EE0B870
+    pathHash: 05dfab83a63dce2e7a28aadeba85ad70dd417fb9af37d693da3f77ebae2a88e9
+    contentHash: adafe97e915d5afb4c096872621fe7c18a52d68c28221fe37d5cc9cde30b1caf
+    governanceHash: 3a12903c562d75d9200f52fa197beb3b82de04f27cde741e15000b39d83f144e
+    stateFingerprint: 72f4a68881358ed2d587211c0f587df213fd884e6a75b37202020c60f22bc4a9
+    path: packages/@dvt/artifacts/src/runtime/ArtifactBackedDbtProjectBundleReader.ts
+    owningUnit: SYS-PLANSTORE-ARTIFACTS-PORTS
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-ARTIFACTS-PORTS
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-ARTIFACTS-PORTS
+    ownerLevel: component
+    unitStatus: review
+    governanceState: review
+    canonicalRole: none
+    evidenceState: review-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: PORT
+    cqRails: PS-Q02
+    governance:
+      - docs/planning/closeouts/20260403-s08-3-artifacts-plan-store-ports-closeout.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+  - fileId: F-F51328ECD5F8
+    pathHash: 5dba28985b590e41ad37d61a9e9d62d670ffa745ba743da249dba9fe8d2ea296
+    contentHash: bf9678efda303de1d57e9a114b193ea44b4516c89de5820cadc28904aae4fe46
+    governanceHash: 3a12903c562d75d9200f52fa197beb3b82de04f27cde741e15000b39d83f144e
+    stateFingerprint: f34691cfe654452a95df4111c8e5a31a44dd7c153d92c0443c6c3a29b6364ffe
+    path: packages/@dvt/artifacts/src/runtime/ArtifactBackedRunExecutionContextReader.ts
+    owningUnit: SYS-PLANSTORE-ARTIFACTS-PORTS
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-ARTIFACTS-PORTS
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-ARTIFACTS-PORTS
+    ownerLevel: component
+    unitStatus: review
+    governanceState: review
+    canonicalRole: none
+    evidenceState: review-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: PORT
+    cqRails: PS-Q02
+    governance:
+      - docs/planning/closeouts/20260403-s08-3-artifacts-plan-store-ports-closeout.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+  - fileId: F-080354E0694D
+    pathHash: a86dcbb9b13b1f35685b7291e8897adba14b37f1a06ee4f45d22cede3ea8adc6
+    contentHash: f980be8edbe798f10d012f3b894e79df7b498dc4fae9f8ead28ceb3f701dab39
+    governanceHash: 3a12903c562d75d9200f52fa197beb3b82de04f27cde741e15000b39d83f144e
+    stateFingerprint: 202e19216840e56cd6122911e4b335fad6917cdce0275c15e20f23ad9e3cdf32
+    path: packages/@dvt/artifacts/src/runtime/ArtifactReadError.ts
+    owningUnit: SYS-PLANSTORE-ARTIFACTS-PORTS
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-ARTIFACTS-PORTS
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-ARTIFACTS-PORTS
+    ownerLevel: component
+    unitStatus: review
+    governanceState: review
+    canonicalRole: none
+    evidenceState: review-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: PORT
+    cqRails: PS-Q02
+    governance:
+      - docs/planning/closeouts/20260403-s08-3-artifacts-plan-store-ports-closeout.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+  - fileId: F-37907909EDC2
+    pathHash: 2aecef53ba8347f7883956f30fc50659b2a671402ccbda4e8a4e41950c81d287
+    contentHash: a7a9329fbe35ea3ee922f2d35c1287f8af7c8275c4ff9591c1dea26fcc1ded49
+    governanceHash: 3a12903c562d75d9200f52fa197beb3b82de04f27cde741e15000b39d83f144e
+    stateFingerprint: c5b6907cf7854164b9f46d6089048bf09849be85cc3243d2c826d85987a79bea
+    path: packages/@dvt/artifacts/src/runtime/assertDbtProjectBundleBinding.ts
+    owningUnit: SYS-PLANSTORE-ARTIFACTS-PORTS
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-ARTIFACTS-PORTS
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-ARTIFACTS-PORTS
+    ownerLevel: component
+    unitStatus: review
+    governanceState: review
+    canonicalRole: none
+    evidenceState: review-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: PORT
+    cqRails: PS-Q02
+    governance:
+      - docs/planning/closeouts/20260403-s08-3-artifacts-plan-store-ports-closeout.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+  - fileId: F-D646455B54EA
+    pathHash: b8a9f04d39a9f2e31c3d99e114e27ab2b84f3589c80ad05125b4f4b086d1dfc7
+    contentHash: 4362f023ffa36ddbe8120a6c69f211a27e5e7b5ca7f83c304c025f30241327ea
+    governanceHash: 3a12903c562d75d9200f52fa197beb3b82de04f27cde741e15000b39d83f144e
+    stateFingerprint: 6c4e326446dae7490c515f9a601c25eedc3daa3b31d1d60e962548bbd2b50eb8
+    path: packages/@dvt/artifacts/src/runtime/readArtifactBytes.ts
+    owningUnit: SYS-PLANSTORE-ARTIFACTS-PORTS
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-ARTIFACTS-PORTS
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-ARTIFACTS-PORTS
+    ownerLevel: component
+    unitStatus: review
+    governanceState: review
+    canonicalRole: none
+    evidenceState: review-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: PORT
+    cqRails: PS-Q02
+    governance:
+      - docs/planning/closeouts/20260403-s08-3-artifacts-plan-store-ports-closeout.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+  - fileId: F-F610B5545559
+    pathHash: 1b54a25c2ba727378ec6abb6edf011b6585bd26aba06e494f676d615c516355b
+    contentHash: d287a401c02a29e837f79c43979e5602eb90e5bf1b9e1fdbf3b0987cd7328f9c
+    governanceHash: 3a12903c562d75d9200f52fa197beb3b82de04f27cde741e15000b39d83f144e
+    stateFingerprint: b2d93eb6b25a2374fe847299067e27093d0dd9d7dd64f8ad0cfe862b4980f908
+    path: packages/@dvt/artifacts/src/runtime/validateArtifactIntegrity.ts
+    owningUnit: SYS-PLANSTORE-ARTIFACTS-PORTS
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-ARTIFACTS-PORTS
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-ARTIFACTS-PORTS
+    ownerLevel: component
+    unitStatus: review
+    governanceState: review
+    canonicalRole: none
+    evidenceState: review-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: PORT
+    cqRails: PS-Q02
+    governance:
+      - docs/planning/closeouts/20260403-s08-3-artifacts-plan-store-ports-closeout.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+  - fileId: F-259EB45B91D4
+    pathHash: 35e65d6da3dcf43244a9edfcc02e09f05b1f6dd1ea66206c2032421555b9d4c1
+    contentHash: 1551963a0148b06a3fe933a22db762c832678a86ef38c77bed2e0315f04e827b
+    governanceHash: 3a12903c562d75d9200f52fa197beb3b82de04f27cde741e15000b39d83f144e
+    stateFingerprint: 042eb196f94683d375e654a51b39b55128fa1599600340a8bbe55a34574fe4d8
+    path: packages/@dvt/artifacts/test/artifactSurface.test.ts
+    owningUnit: SYS-PLANSTORE-ARTIFACTS-PORTS
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-ARTIFACTS-PORTS
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-ARTIFACTS-PORTS
+    ownerLevel: component
+    unitStatus: review
+    governanceState: review
+    canonicalRole: none
+    evidenceState: review-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: PORT
+    cqRails: PS-Q02
+    governance:
+      - docs/planning/closeouts/20260403-s08-3-artifacts-plan-store-ports-closeout.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+  - fileId: F-623117CB9EB9
+    pathHash: 322b5cc963b825ffb7acc8b5d73fc6fd67a0b0942e96299cae6537f6962a2220
+    contentHash: cb4d06e93916e0afbc21952ed8058c2191a90e1f6f68722e132a9092ca5b91ef
+    governanceHash: 3a12903c562d75d9200f52fa197beb3b82de04f27cde741e15000b39d83f144e
+    stateFingerprint: c9998968773d4bd1dd02e801599db98eb7dcabb886bcbd3677dd2dee4d3ab0ea
+    path: packages/@dvt/artifacts/test/runExecutionContextReaders.test.ts
+    owningUnit: SYS-PLANSTORE-ARTIFACTS-PORTS
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-ARTIFACTS-PORTS
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-ARTIFACTS-PORTS
+    ownerLevel: component
+    unitStatus: review
+    governanceState: review
+    canonicalRole: none
+    evidenceState: review-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: PORT
+    cqRails: PS-Q02
+    governance:
+      - docs/planning/closeouts/20260403-s08-3-artifacts-plan-store-ports-closeout.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+  - fileId: F-F8C5A03D3A56
+    pathHash: c74c8e0c9fc7f9206a06c5f172badc7112d1955020fc7a2f75c696c8f7fb6542
+    contentHash: f11d20f67a1950d462add97983aa3b19a736c0bb1af8997e1c6ed03cf68e9677
+    governanceHash: 3a12903c562d75d9200f52fa197beb3b82de04f27cde741e15000b39d83f144e
+    stateFingerprint: 47d8f53d7417b037b7c85a1e68d47624041b68f20f2c7ec5416793caadc965f9
+    path: packages/@dvt/artifacts/test/validateArtifactIntegrity.test.ts
+    owningUnit: SYS-PLANSTORE-ARTIFACTS-PORTS
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-ARTIFACTS-PORTS
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-ARTIFACTS-PORTS
+    ownerLevel: component
+    unitStatus: review
+    governanceState: review
+    canonicalRole: none
+    evidenceState: review-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: PORT
+    cqRails: PS-Q02
+    governance:
+      - docs/planning/closeouts/20260403-s08-3-artifacts-plan-store-ports-closeout.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+  - fileId: F-0C833B48AA2F
+    pathHash: 23f246be8aa7e70b413e40be0eb9f36a15045d2c4c2130fe9e5d8382ae22e16c
+    contentHash: 770bc38403b5da013237f780d08643ac6602b5dd2208221f770ecea161dfaa2f
+    governanceHash: 3a12903c562d75d9200f52fa197beb3b82de04f27cde741e15000b39d83f144e
+    stateFingerprint: 866ac8899620883428e23e65bd3cefd8ed12618cc54dfba593b1da2c1e74b66d
+    path: packages/@dvt/artifacts/tsconfig.json
+    owningUnit: SYS-PLANSTORE-ARTIFACTS-PORTS
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-ARTIFACTS-PORTS
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-ARTIFACTS-PORTS
+    ownerLevel: component
+    unitStatus: review
+    governanceState: review
+    canonicalRole: none
+    evidenceState: review-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: PORT
+    cqRails: PS-Q02
+    governance:
+      - docs/planning/closeouts/20260403-s08-3-artifacts-plan-store-ports-closeout.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+  - fileId: F-22362B717235
+    pathHash: 2e6a8042c2c7a1437f8c567aa313c14ad842a7265348ca307833f5085acb071e
+    contentHash: e414c0fab4bf829152f6b6c4e4504d8b6c7088731b7e3af0a0005191ddc64650
+    governanceHash: 3a12903c562d75d9200f52fa197beb3b82de04f27cde741e15000b39d83f144e
+    stateFingerprint: ad739cd56ea618dfb21f62025fb4eda0f2d37dcb52468587339858a07f0fe65f
+    path: packages/@dvt/artifacts/vitest.config.ts
+    owningUnit: SYS-PLANSTORE-ARTIFACTS-PORTS
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-ARTIFACTS-PORTS
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-ARTIFACTS-PORTS
+    ownerLevel: component
+    unitStatus: review
+    governanceState: review
+    canonicalRole: none
+    evidenceState: review-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: PORT
+    cqRails: PS-Q02
+    governance:
+      - docs/planning/closeouts/20260403-s08-3-artifacts-plan-store-ports-closeout.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+  - fileId: F-5A9A950078B8
+    pathHash: 7d7b6f2206725acbda05c1a7c737fe6dc9f47599d06a6c89e05b201a40c4a51c
+    contentHash: d8959bf99c636cfc7725e1a78bbadaede7f816a2ef90d33727451f064c63447b
+    governanceHash: 34d378ad91741c999c3e96ddb9ec3754a6fad3a02153dc00e0de17763d7ea104
+    stateFingerprint: 12d9763da5d8a68ce2ed7d92294b38ab5a649f47593b067396acec185328048d
+    path: packages/@dvt/engine/src/ports/IPlanArtifactReader.ts
+    owningUnit: SYS-PLANSTORE-ENGINE-FETCH
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-ENGINE-FETCH
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-ENGINE-FETCH
+    ownerLevel: component
+    unitStatus: drift
+    governanceState: drift
+    canonicalRole: none
+    evidenceState: remediation-required
+    isDrift: true
+    isLegacy: false
+    dddOwner: PORT
+    cqRails: PS-Q05
+    governance:
+      - docs/adr/adr-0052-planref-continuation-safety.md
+      - docs/risk-register/quality/R-20260405-PLAN-STORE-CANONICAL-SHAPE-DRIFT.yaml
+  - fileId: F-AB121E8BEBB9
+    pathHash: 4f5d74f11b558de334fdc9484f3cb73132cf5e49481c1829a6bb77ed8f4726ea
+    contentHash: d662b93c74a45608ebe8caabe47f64a651a8bec331f8baa50f13d1b69fbae0f0
+    governanceHash: 34d378ad91741c999c3e96ddb9ec3754a6fad3a02153dc00e0de17763d7ea104
+    stateFingerprint: d9b1a6cab1283a46ac787120b39a49d842473c5c474f107daa7b87c316d55c26
+    path: packages/@dvt/engine/src/security/planRefPolicy.ts
+    owningUnit: SYS-PLANSTORE-ENGINE-FETCH
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-ENGINE-FETCH
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-ENGINE-FETCH
+    ownerLevel: component
+    unitStatus: drift
+    governanceState: drift
+    canonicalRole: none
+    evidenceState: remediation-required
+    isDrift: true
+    isLegacy: false
+    dddOwner: PORT
+    cqRails: PS-Q05
+    governance:
+      - docs/adr/adr-0052-planref-continuation-safety.md
+      - docs/risk-register/quality/R-20260405-PLAN-STORE-CANONICAL-SHAPE-DRIFT.yaml
+  - fileId: F-F0B4EAC1E8C5
+    pathHash: 36a4e05212adaa6f683b725878c79bf815fd246a40f61df6ef461ff904fc416a
+    contentHash: b8858e011b8c251cd008466adbf34a6fc3e2baa2a362506a241633117111768d
+    governanceHash: 34d378ad91741c999c3e96ddb9ec3754a6fad3a02153dc00e0de17763d7ea104
+    stateFingerprint: 2abdcd5eb6e5e432b3cd69a092d93c8cc22b55d0412d29f7e84c8f06d576e04f
+    path: packages/@dvt/engine/src/security/planRefPolicyRules.ts
+    owningUnit: SYS-PLANSTORE-ENGINE-FETCH
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-ENGINE-FETCH
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-ENGINE-FETCH
+    ownerLevel: component
+    unitStatus: drift
+    governanceState: drift
+    canonicalRole: none
+    evidenceState: remediation-required
+    isDrift: true
+    isLegacy: false
+    dddOwner: PORT
+    cqRails: PS-Q05
+    governance:
+      - docs/adr/adr-0052-planref-continuation-safety.md
+      - docs/risk-register/quality/R-20260405-PLAN-STORE-CANONICAL-SHAPE-DRIFT.yaml
+  - fileId: F-3D639593C497
+    pathHash: 60056b387ee28a6d28fb2530067e405f0e990871b1d26fc0d65506b7f0dd3017
+    contentHash: 3c9a057ead2431395496acc024132f24d2ed4966c4713f7c7541ea92feb1e2af
+    governanceHash: 34d378ad91741c999c3e96ddb9ec3754a6fad3a02153dc00e0de17763d7ea104
+    stateFingerprint: 7dc729409f1737d201ae0ca0f5ed47f6846cb24aa0753585d75949c445af565e
+    path: packages/@dvt/engine/test/core/WorkflowEngine.planRef.test.ts
+    owningUnit: SYS-PLANSTORE-ENGINE-FETCH
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-ENGINE-FETCH
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-ENGINE-FETCH
+    ownerLevel: component
+    unitStatus: drift
+    governanceState: drift
+    canonicalRole: none
+    evidenceState: remediation-required
+    isDrift: true
+    isLegacy: false
+    dddOwner: PORT
+    cqRails: PS-Q05
+    governance:
+      - docs/adr/adr-0052-planref-continuation-safety.md
+      - docs/risk-register/quality/R-20260405-PLAN-STORE-CANONICAL-SHAPE-DRIFT.yaml
+  - fileId: F-F36BE1E295E4
+    pathHash: 10d733624d04d76a026526e4eb9e64943a67ecebee80215706c1c1239831e5bc
+    contentHash: cdcc230612ce0a6b9f8b242c2bf8b032cf08ce825340a8f5f996c7c559e53457
+    governanceHash: 34d378ad91741c999c3e96ddb9ec3754a6fad3a02153dc00e0de17763d7ea104
+    stateFingerprint: a4b5fd0a6a5a6fcac61cc339d9b3f113cc9f0b52ee2354d9719da0b1caa03c4c
+    path: packages/@dvt/engine/test/security/planRefPolicy.test.ts
+    owningUnit: SYS-PLANSTORE-ENGINE-FETCH
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-ENGINE-FETCH
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-ENGINE-FETCH
+    ownerLevel: component
+    unitStatus: drift
+    governanceState: drift
+    canonicalRole: none
+    evidenceState: remediation-required
+    isDrift: true
+    isLegacy: false
+    dddOwner: PORT
+    cqRails: PS-Q05
+    governance:
+      - docs/adr/adr-0052-planref-continuation-safety.md
+      - docs/risk-register/quality/R-20260405-PLAN-STORE-CANONICAL-SHAPE-DRIFT.yaml

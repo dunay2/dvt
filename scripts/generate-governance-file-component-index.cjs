@@ -12,6 +12,7 @@ const { findOwnerMatches, readManifest } = require('./check-governance-unit-cove
 
 const repoRoot = path.resolve(__dirname, '..');
 const statusDir = path.join(repoRoot, 'docs', 'planning', 'status');
+const shardDir = path.join(statusDir, 'governance-files');
 const fileYamlPath = path.join(statusDir, 'system-governance-file-index.files.yaml');
 const fileMarkdownPath = path.join(statusDir, 'system-governance-file-index-20260501.md');
 const componentYamlPath = path.join(statusDir, 'system-governance-component-index.components.yaml');
@@ -35,6 +36,7 @@ const generatedOutputPaths = [
 ].map((filePath) => toPosix(path.relative(repoRoot, filePath)));
 
 const generatedFileYamlRelativePath = toPosix(path.relative(repoRoot, fileYamlPath));
+const generatedShardDirRelativePath = toPosix(path.relative(repoRoot, shardDir));
 const fingerprintBaselineRelativePath = toPosix(path.relative(repoRoot, fingerprintBaselinePath));
 const fingerprintImpactReportRelativePath = toPosix(
   path.relative(repoRoot, fingerprintImpactReportPath)
@@ -82,6 +84,18 @@ function getTrackedFiles() {
       !trackedFiles.includes(generatedPath)
     ) {
       trackedFiles.push(generatedPath);
+    }
+  }
+
+  if (fs.existsSync(shardDir)) {
+    for (const entry of fs.readdirSync(shardDir, { withFileTypes: true })) {
+      if (!entry.isFile() || !entry.name.endsWith('.files.yaml')) {
+        continue;
+      }
+      const generatedShardPath = toPosix(path.relative(repoRoot, path.join(shardDir, entry.name)));
+      if (!trackedFiles.includes(generatedShardPath)) {
+        trackedFiles.push(generatedShardPath);
+      }
     }
   }
 
@@ -159,7 +173,11 @@ function normalizeTextBytesForHash(contentBytes) {
 function readTrackedFileBytes(filePath) {
   const contentBytes = normalizeTextBytesForHash(fs.readFileSync(path.join(repoRoot, filePath)));
 
-  if (filePath === generatedFileYamlRelativePath || filePath === fingerprintBaselineRelativePath) {
+  if (
+    filePath === generatedFileYamlRelativePath ||
+    filePath === fingerprintBaselineRelativePath ||
+    filePath.startsWith(`${generatedShardDirRelativePath}/`)
+  ) {
     return normalizeGeneratedIndexBytesForHash(contentBytes);
   }
 
@@ -350,6 +368,131 @@ function renderYaml(payload) {
   });
 }
 
+function shardIdForFileEntry(entry) {
+  return entry.unitPath?.[1] || entry.domainUnit || entry.rootUnit || 'UNOWNED';
+}
+
+function buildShardPayload(shardId, files) {
+  return {
+    version: 1,
+    shardId,
+    generatedFrom: 'git ls-files',
+    unitManifest: 'docs/planning/status/system-governance-unit-index.units.yaml',
+    fileCount: files.length,
+    files,
+  };
+}
+
+function buildFileIndexManifest(fileEntries, options = {}) {
+  const shardDirectory = options.shardDirectory || generatedShardDirRelativePath;
+  const entriesByShard = new Map();
+
+  for (const entry of fileEntries) {
+    const shardId = shardIdForFileEntry(entry);
+    const shardEntries = entriesByShard.get(shardId) || [];
+    shardEntries.push(entry);
+    entriesByShard.set(shardId, shardEntries);
+  }
+
+  const shards = {};
+  const shardRows = [...entriesByShard.entries()]
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([shardId, entries]) => {
+      const files = [...entries].sort((left, right) => left.path.localeCompare(right.path));
+      const shardPath = `${shardDirectory}/${shardId}.files.yaml`;
+      const payload = buildShardPayload(shardId, files);
+      const content = renderYaml(payload);
+
+      shards[shardPath] = payload;
+
+      return {
+        id: shardId,
+        path: shardPath,
+        fileCount: files.length,
+        contentHash: sha256(content),
+      };
+    });
+
+  return {
+    manifest: {
+      version: 1,
+      generatedFrom: 'git ls-files',
+      unitManifest: 'docs/planning/status/system-governance-unit-index.units.yaml',
+      shardDirectory,
+      fileCount: fileEntries.length,
+      shards: shardRows,
+    },
+    shards,
+  };
+}
+
+function expandFileIndexFromManifest(manifest, shardsByPath, options = {}) {
+  if (Array.isArray(manifest.files)) {
+    return manifest.files;
+  }
+
+  const shardRows = Array.isArray(manifest.shards) ? manifest.shards : [];
+  const files = [];
+  const seenPaths = new Set();
+
+  for (const shard of shardRows) {
+    const shardPayload = shardsByPath[shard.path];
+    if (!shardPayload) {
+      throw new Error(`Missing governance shard: ${shard.path}`);
+    }
+
+    const shardFiles = Array.isArray(shardPayload.files) ? shardPayload.files : [];
+    if (shard.fileCount !== shardFiles.length) {
+      throw new Error(
+        `Governance shard ${shard.path} expected ${shard.fileCount} files but contained ${shardFiles.length}`
+      );
+    }
+
+    for (const file of shardFiles) {
+      if (seenPaths.has(file.path)) {
+        throw new Error(`Duplicate file path in governance shards: ${file.path}`);
+      }
+      seenPaths.add(file.path);
+      files.push(file);
+    }
+  }
+
+  if (manifest.fileCount !== files.length) {
+    throw new Error(
+      `Governance file manifest expected ${manifest.fileCount} files but shards contained ${files.length}`
+    );
+  }
+
+  if (options.expectedPaths) {
+    for (const expectedPath of options.expectedPaths) {
+      if (!seenPaths.has(expectedPath)) {
+        throw new Error(`Missing file path from governance shards: ${expectedPath}`);
+      }
+    }
+  }
+
+  return files;
+}
+
+function readFileIndexFromDisk(manifestPath = fileYamlPath, options = {}) {
+  const manifest = yaml.load(fs.readFileSync(manifestPath, 'utf8'));
+  if (Array.isArray(manifest.files)) {
+    return manifest.files;
+  }
+
+  const shardsByPath = {};
+  for (const shard of Array.isArray(manifest.shards) ? manifest.shards : []) {
+    const shardPath = path.join(repoRoot, shard.path);
+    const content = fs.readFileSync(shardPath, 'utf8');
+    if (shard.contentHash && sha256(content) !== shard.contentHash) {
+      throw new Error(`Governance shard hash mismatch: ${shard.path}`);
+    }
+    shardsByPath[shard.path] = yaml.load(content);
+  }
+
+  return expandFileIndexFromManifest(manifest, shardsByPath, options);
+}
+
 function renderCountTable(counts, label) {
   return [
     `| ${label} | Files |`,
@@ -383,17 +526,18 @@ planning_type: status
 ## Purpose
 
 This is the human summary for the exhaustive file-level governance index. The
-machine-readable source is:
+machine-readable source is the compact manifest plus deterministic shard files:
 
 - [system-governance-file-index.files.yaml](./system-governance-file-index.files.yaml)
+- [governance-files/](./governance-files/)
 - [system-governance-file-fingerprint-baseline.yaml](./system-governance-file-fingerprint-baseline.yaml)
 
-Every tracked repository file has one row in that YAML file. Each row records
-the stable file id, path hash, content hash, governance hash, state
+Every tracked repository file has one row in exactly one shard. Each row
+records the stable file id, path hash, content hash, governance hash, state
 fingerprint, root unit, domain unit, component unit, owning unit, unit path,
 governing documents, DDD owner, command/query rail posture, drift status, and
-legacy status. The fingerprint baseline is the accepted drift-control snapshot
-used by CI.
+legacy status. The root manifest records shard paths, counts, and hashes. The
+fingerprint baseline is the accepted drift-control snapshot used by CI.
 
 Fowler semantics are split from the raw unit status: \`unitStatus: canonical\`
 means the file belongs to a governed owner classification. It does not by
@@ -569,17 +713,18 @@ function buildOutputs() {
   const unitById = buildUnitIndex(units);
   const fileEntries = buildFileEntries(getTrackedFiles(), units, {}, unitById);
   const componentEntries = buildComponentEntries(units, fileEntries, unitById);
+  const fileIndex = buildFileIndexManifest(fileEntries);
 
   return {
     fileEntries,
     componentEntries,
-    fileYaml: renderYaml({
-      version: 1,
-      generatedFrom: 'git ls-files',
-      unitManifest: 'docs/planning/status/system-governance-unit-index.units.yaml',
-      fileCount: fileEntries.length,
-      files: fileEntries,
-    }),
+    fileYaml: renderYaml(fileIndex.manifest),
+    fileShards: Object.fromEntries(
+      Object.entries(fileIndex.shards).map(([shardPath, payload]) => [
+        shardPath,
+        renderYaml(payload),
+      ])
+    ),
     componentYaml: renderYaml({
       version: 1,
       generatedFrom: 'docs/planning/status/system-governance-unit-index.units.yaml',
@@ -595,8 +740,13 @@ function buildOutputs() {
 function main() {
   const checkOnly = process.argv.includes('--check');
   const outputs = buildOutputs();
+  fs.mkdirSync(shardDir, { recursive: true });
+  const shardWrites = Object.entries(outputs.fileShards).map(([relativePath, content]) =>
+    writeIfChanged(path.join(repoRoot, relativePath), content)
+  );
   const changed = [
     writeIfChanged(fileYamlPath, outputs.fileYaml),
+    ...shardWrites,
     writeIfChanged(fileMarkdownPath, outputs.fileMarkdown),
     writeIfChanged(componentYamlPath, outputs.componentYaml),
     writeIfChanged(componentMarkdownPath, outputs.componentMarkdown),
@@ -620,12 +770,15 @@ if (require.main === module) {
 
 module.exports = {
   buildComponentEntries,
+  buildFileIndexManifest,
   buildFileEntries,
   buildFileFingerprints,
   buildOutputs,
   deriveGovernanceSemantics,
+  expandFileIndexFromManifest,
   normalizeGeneratedIndexBytesForHash,
   normalizeTextBytesForHash,
+  readFileIndexFromDisk,
   stableStringify,
   renderComponentMarkdown,
   renderFileMarkdown,
