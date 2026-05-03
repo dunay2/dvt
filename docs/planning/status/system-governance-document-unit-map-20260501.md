@@ -47,12 +47,12 @@ unit.
 
 ## Counts
 
-- Documents indexed: 1452
+- Documents indexed: 1446
 
 ### By Classification
 
 - `describes unit`: 74
-- `governs unit`: 525
+- `governs unit`: 519
 - `historical/reference only`: 254
 - `proves evidence`: 152
 - `tracks drift`: 415
@@ -64,7 +64,7 @@ unit.
 - `SYS-API`: 44
 - `SYS-CI-GOVERNANCE`: 16
 - `SYS-CONTRACTS`: 154
-- `SYS-DOCS-GOVERNANCE`: 668
+- `SYS-DOCS-GOVERNANCE`: 662
 - `SYS-OBSERVABILITY`: 24
 - `SYS-PLANNER`: 73
 - `SYS-PLANSTORE`: 31
