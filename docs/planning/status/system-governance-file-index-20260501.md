@@ -11,17 +11,18 @@ planning_type: status
 ## Purpose
 
 This is the human summary for the exhaustive file-level governance index. The
-machine-readable source is:
+machine-readable source is the compact manifest plus deterministic shard files:
 
 - [system-governance-file-index.files.yaml](./system-governance-file-index.files.yaml)
+- [governance-files/](./governance-files/)
 - [system-governance-file-fingerprint-baseline.yaml](./system-governance-file-fingerprint-baseline.yaml)
 
-Every tracked repository file has one row in that YAML file. Each row records
-the stable file id, path hash, content hash, governance hash, state
+Every tracked repository file has one row in exactly one shard. Each row
+records the stable file id, path hash, content hash, governance hash, state
 fingerprint, root unit, domain unit, component unit, owning unit, unit path,
 governing documents, DDD owner, command/query rail posture, drift status, and
-legacy status. The fingerprint baseline is the accepted drift-control snapshot
-used by CI.
+legacy status. The root manifest records shard paths, counts, and hashes. The
+fingerprint baseline is the accepted drift-control snapshot used by CI.
 
 Fowler semantics are split from the raw unit status: `unitStatus: canonical`
 means the file belongs to a governed owner classification. It does not by
@@ -30,7 +31,7 @@ itself prove verified semantic maturity. `governanceState`,
 
 ## Totals
 
-- Tracked files indexed: 4087
+- Tracked files indexed: 4100
 - Component/source owner units: 32
 - Ungoverned files: 0
 - Drift files: 44
@@ -42,7 +43,7 @@ itself prove verified semantic maturity. `governanceState`,
 | Status | Files |
 | --- | ---: |
 | `canonical` | 111 |
-| `coverage-required` | 3853 |
+| `coverage-required` | 3866 |
 | `drift` | 44 |
 | `review` | 79 |
 <!-- prettier-ignore-end -->
@@ -52,7 +53,7 @@ itself prove verified semantic maturity. `governanceState`,
 <!-- prettier-ignore-start -->
 | Governance state | Files |
 | --- | ---: |
-| `coverage-required` | 3853 |
+| `coverage-required` | 3866 |
 | `drift` | 44 |
 | `governed` | 111 |
 | `review` | 79 |
@@ -64,7 +65,7 @@ itself prove verified semantic maturity. `governanceState`,
 | Canonical role | Files |
 | --- | ---: |
 | `implementation-owner` | 111 |
-| `none` | 3976 |
+| `none` | 3989 |
 <!-- prettier-ignore-end -->
 
 ## By Owning Unit
@@ -87,7 +88,7 @@ itself prove verified semantic maturity. `governanceState`,
 | `SYS-API-TESTS` | 99 |
 | `SYS-CI-GOVERNANCE-ROOT` | 180 |
 | `SYS-CONTRACTS-ROOT` | 127 |
-| `SYS-DOCS-GOVERNANCE-ROOT` | 1653 |
+| `SYS-DOCS-GOVERNANCE-ROOT` | 1666 |
 | `SYS-OBSERVABILITY-ROOT` | 15 |
 | `SYS-PLANNER-ROOT` | 76 |
 | `SYS-PLANSTORE-API-COMPOSITION` | 20 |

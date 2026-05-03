@@ -7,6 +7,7 @@ const { execFileSync } = require('node:child_process');
 const fs = require('node:fs');
 const path = require('node:path');
 const yaml = require('js-yaml');
+const { readFileIndexFromDisk } = require('./generate-governance-file-component-index.cjs');
 
 const repoRoot = path.resolve(__dirname, '..');
 const statusDir = path.join(repoRoot, 'docs', 'planning', 'status');
@@ -18,6 +19,7 @@ const selfNormalizedGeneratedPaths = new Set([
   baselineRepoPath,
   'docs/planning/status/system-governance-file-index.files.yaml',
 ]);
+const selfNormalizedGeneratedPrefixes = ['docs/planning/status/governance-files/'];
 
 function toPosix(filePath) {
   return filePath.replace(/\\/g, '/');
@@ -159,6 +161,13 @@ function isLegacyOrDrift(entry) {
   );
 }
 
+function isSelfNormalizedGeneratedPath(pathName) {
+  return (
+    selfNormalizedGeneratedPaths.has(pathName) ||
+    selfNormalizedGeneratedPrefixes.some((prefix) => pathName.startsWith(prefix))
+  );
+}
+
 function requireActiveGovernance(pathName, currentIndexByPath, currentBaselineByPath, errors) {
   const indexEntry = currentIndexByPath.get(pathName);
   const baselineEntry = currentBaselineByPath.get(pathName);
@@ -214,7 +223,7 @@ function validateModified(change, context, errors) {
 
   if (
     current?.baselineEntry?.stateFingerprint === baseEntry.stateFingerprint &&
-    !selfNormalizedGeneratedPaths.has(change.path)
+    !isSelfNormalizedGeneratedPath(change.path)
   ) {
     errors.push(`${change.path} is modified but its accepted fingerprint did not change.`);
   }
@@ -318,7 +327,7 @@ function main() {
     changes,
     baseBaseline: readYamlFromGit(base, baselineRepoPath),
     currentBaseline: readYaml(baselinePath),
-    currentFileIndex: readYaml(fileIndexPath),
+    currentFileIndex: { files: readFileIndexFromDisk(fileIndexPath) },
   });
 
   printResult(result);
