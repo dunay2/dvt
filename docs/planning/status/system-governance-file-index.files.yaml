@@ -11,7 +11,7 @@ shards:
   - id: SYS-API
     path: docs/planning/status/governance-files/SYS-API.files.yaml
     fileCount: 368
-    contentHash: 61dfa58adb44a391474e727e48dfb6d6c6cd984ca82a3f093a64ac5ef12fbd0d
+    contentHash: b034732e7267c9897919bfed1a5418770dd92a8c97afb45bf88d93bfa3e7a039
   - id: SYS-CI-GOVERNANCE
     path: docs/planning/status/governance-files/SYS-CI-GOVERNANCE.files.yaml
     fileCount: 180
