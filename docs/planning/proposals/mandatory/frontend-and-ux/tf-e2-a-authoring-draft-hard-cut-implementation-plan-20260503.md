@@ -1,6 +1,6 @@
 ---
 title: TF-E2-A Authoring Draft Hard Cut Implementation Plan
-status: Proposed
+status: Accepted
 owner: Frontend / Architecture / Product
 last_reviewed: 2026-05-03
 planning_type: proposal
@@ -264,6 +264,7 @@ flowchart LR
 - `apps/web/src/app/views/canvas/useCanvasAuthoringProjection.ts`
 - `apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts`
 - `apps/web/cypress/e2e/canvas/canvas-draft-access-posture.cy.ts`
+- `apps/web/cypress/support/workspaceSession.ts`
 - `buzon/20260503-tf-e2-a-authoring-draft-hard-cut-fowler-review.md`
 - `docs/architecture/components/web/graph/canvas-authoring-draft-boundary-component.md`
 - `docs/architecture/components/web/graph/index.md`
@@ -556,6 +557,7 @@ allowedImplementationSurfaces:
   - buzon/20260503-tf-e2-a-fowler-hard-qa-review-followup.md
   - docs/architecture/components/web/graph/canvas-authoring-draft-boundary-component.md
   - docs/architecture/components/web/graph/index.md
+  - docs/planning/closeouts/20260503-tf-e2-a-authoring-draft-hard-cut-closeout.md
   - docs/planning/closeouts/20260503-tf-e2-m-b-canvas-draft-access-posture-closeout.md
   - docs/planning/closeouts/20260503-tf-e2-m-d-startup-route-readiness-closeout.md
   - docs/planning/closeouts/index.md
@@ -731,11 +733,12 @@ allowedImplementationSurfaces:
   - apps/web/src/app/services/workspace/workspaceGraphDraftProjection*.ts
   - apps/web/src/app/services/workspace/workspaceService.ts
   - apps/web/src/app/views/canvas/**
+  - apps/web/cypress/support/workspaceSession.ts
   - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-a-authoring-draft-hard-cut-implementation-plan-20260503.md
 forbiddenImplementationSurfaces:
   - .github/**
   - apps/api/**
-  - apps/web/cypress/**
+  - apps/web/cypress/e2e/**
   - packages/**
   - scripts/**
   - specs/**

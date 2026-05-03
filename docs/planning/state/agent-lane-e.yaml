@@ -2019,7 +2019,7 @@ tasks:
   - task_id: TF-E2-A
     parent_task: TF-E2
     priority: P0
-    status: in_progress
+    status: done
     objective: >-
       adopt the shared workspace graph authoring-draft contract inside Canvas so editable graph
       reads and writes stop depending on browser-local or route-local persistence semantics, while
@@ -2036,7 +2036,7 @@ tasks:
       editable payload.
     complexity: S
     effort_points: 3
-    progress_pct: 92
+    progress_pct: 100
     evidence_refs:
       - docs/planning/closeouts/20260418-tf-e2-canvas-draft-repository-seam-closeout.md
       - docs/planning/closeouts/20260418-tf-e2-canvas-srp-seams-closeout.md
@@ -2056,17 +2056,15 @@ tasks:
       - apps/web/src/app/views/canvas/canvasAuthoringState.ts
       - apps/web/src/app/views/canvas/useCanvasDraftLifecycle.ts
     status_reason: >-
-      Execution has materially advanced on the web side. The earlier repository and lifecycle seams
-      remain in place, `AppServices` composes `workspaceGraphDraftAuthoringPort`,
-      `useCanvasController` threads it through the authoring runtime, the route renders explicit
-      `read_only`, `forbidden`, and typed `format_error` postures from boundary outcomes, and
-      snapshot-backed active-authoring fallback has been cut back substantially. The 2026-05-03
-      Fowler review found the current code no longer saves compile-shaped `DesignGraphDraft`
-      payloads, but it still passes active saves through a web-local `WorkspaceGraphDraft`
-      projection and reconstructs `WorkspaceGraphAuthoringDraft` from side-channel semantic graph
-      arrays. The next hard cut is therefore mechanical: make the active save path authoring-draft
-      native, keep projections read-only, and add architecture tests preventing route-local draft
-      DTO authority from returning.
+      Closed. Canvas now consumes `WorkspaceGraphAuthoringDraft` directly in the active save path:
+      the generic workspace port and workspace service no longer export route-local
+      `WorkspaceGraphDraft` DTOs, `canvasDraftRepository.ts` saves the authoring aggregate through
+      `IWorkspaceGraphDraftAuthoringPort`, `canvasDraftReadModel.ts` owns
+      `CanvasAuthoringDraftRecord` and `CanvasAuthoringSemanticGraph`, and
+      `canvasStartupAndDraftRecovery.architecture.test.ts` guards the hard cut so `DesignGraphDraft`
+      remains confined to preview/run projection modules. Focused validation on 2026-05-03 passed
+      the authoring read model, repository read/write, conflict, authoring, create-canvas,
+      controller persistence, controller core, and preview provenance/freshness suites.
     last_verified: '2026-05-03'
   - task_id: TF-E2-B
     parent_task: TF-E2
