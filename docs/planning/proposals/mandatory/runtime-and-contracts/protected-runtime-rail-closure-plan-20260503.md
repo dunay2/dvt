@@ -265,3 +265,104 @@ Implementation PR:
 - `pnpm --filter dvt-api exec vitest run test/modules/protectedRuntimeAndPlanCompileArchitecture.cases.ts test/modules/protectedRuntimeDependencyBuilders.cases.ts`
 - `pnpm --filter dvt-api typecheck`
 - `pnpm verify:prepush`
+
+## Feature Mechanization Manifest
+
+```feature-mechanization
+version: 1
+featureId: PROTECTED-RUNTIME-RAIL-CLOSURE
+mechanizationStatus: implemented
+noHumanDecisionsRemaining: true
+implementationPlan: docs/planning/proposals/mandatory/runtime-and-contracts/protected-runtime-rail-closure-plan-20260503.md
+componentGuides:
+  - docs/planning/proposals/mandatory/runtime-and-contracts/protected-runtime-rail-closure-plan-20260503.md
+userStories:
+  - docs/planning/proposals/web-user-stories-20260429.md
+governingSources:
+  - AGENTS.md
+  - docs/planning/status/governance-document-rule-inventory.md
+  - docs/guides/ai-work-protocol.md
+  - docs/architecture/command-query-rail-governance.md
+  - docs/architecture/fowler-opportunity-planning-governance.md
+  - docs/planning/state/agent-lane-c.yaml
+  - docs/risk-register/quality/R-20260503-PROTECTED-RUNTIME-RAIL-CLOSURE.yaml
+allowedImplementationSurfaces:
+  - docs/planning/proposals/mandatory/runtime-and-contracts/protected-runtime-rail-closure-plan-20260503.md
+  - docs/planning/state/agent-lane-c.yaml
+  - docs/planning/state/agent-lane-c.md
+  - docs/planning/state/execution-workboard.md
+  - docs/planning/state/open-task-route.md
+  - docs/planning/status/**
+  - docs/risk-register/quality/R-20260503-PROTECTED-RUNTIME-RAIL-CLOSURE.yaml
+forbiddenImplementationSurfaces:
+  - apps/**
+  - packages/**
+  - specs/**
+  - .github/**
+  - scripts/**
+  - tools/**
+commandQueryRails:
+  - name: RegisterProtectedRuntimeRailClosureTask
+    type: command
+    dddOwner: Runtime safety planning state
+  - name: ClassifyProtectedRuntimeRouteRails
+    type: query
+    dddOwner: Protected runtime rail matrix
+  - name: UpdateProtectedRuntimeRailRiskMitigation
+    type: command
+    dddOwner: Protected runtime risk register
+domainObjects:
+  - name: ProtectedRuntimeRailMatrix
+    type: component map
+    owner: Architecture / API / Runtime
+  - name: AR-C10ProtectedRuntimeRailClosureTask
+    type: planning aggregate
+    owner: Lane C
+  - name: ProtectedRuntimeRailClosureRisk
+    type: risk register entry
+    owner: Architecture / API / Runtime
+fowlerSignals:
+  - Boundary drift
+  - Divergent change
+  - Shotgun surgery risk
+architectureGuards:
+  - pnpm docs:feature-mechanization --feature PROTECTED-RUNTIME-RAIL-CLOSURE
+  - pnpm docs:feature-mechanization:implementation
+cypressFlows:
+  - N/A - protected runtime planning and governance only
+completionGate:
+  - pnpm docs:workboard:generate
+  - pnpm docs:sync
+  - pnpm docs:governance:file-component-index:check
+  - pnpm docs:governance:coverage-report:check
+  - pnpm docs:governance:file-fingerprint-baseline:check
+  - pnpm docs:feature-mechanization --feature PROTECTED-RUNTIME-RAIL-CLOSURE
+  - pnpm docs:feature-mechanization:implementation
+  - pnpm verify:prepush
+redGreenCycles:
+  - id: protected-runtime-rail-planning-registration
+    redTest: pnpm docs:feature-mechanization:implementation
+    expectedFailure: Protected runtime rail planning files are outside allowedImplementationSurfaces before this manifest declares them.
+    patchSurfaces:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/protected-runtime-rail-closure-plan-20260503.md
+      - docs/planning/state/agent-lane-c.yaml
+      - docs/risk-register/quality/R-20260503-PROTECTED-RUNTIME-RAIL-CLOSURE.yaml
+    greenTest: pnpm docs:feature-mechanization:implementation
+symbols:
+  - name: ProtectedRuntimeRailClosurePlan
+    path: docs/planning/proposals/mandatory/runtime-and-contracts/protected-runtime-rail-closure-plan-20260503.md
+    dddOwner: Protected runtime rail matrix
+    cqRails:
+      - RegisterProtectedRuntimeRailClosureTask
+      - ClassifyProtectedRuntimeRouteRails
+      - UpdateProtectedRuntimeRailRiskMitigation
+    fowlerSignals:
+      - Boundary drift
+      - Divergent change
+      - Shotgun surgery risk
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - protected runtime planning and governance only
+    unitTests:
+      - pnpm docs:feature-mechanization --feature PROTECTED-RUNTIME-RAIL-CLOSURE
+      - pnpm docs:feature-mechanization:implementation
+```

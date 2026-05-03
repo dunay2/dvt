@@ -24537,9 +24537,9 @@ files:
   - fileId: F-E6CB1F688A41
     path: >-
       docs/planning/proposals/mandatory/runtime-and-contracts/protected-runtime-rail-closure-plan-20260503.md
-    contentHash: 0a3d72551fb0d079f0ad3c7eac10bdec8a30735fc93f78ca3589cbd43ff8f402
+    contentHash: 2baff91e230dbdf9ad08d82baf52d411d5d9c8acc556337778748c76de1605f0
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 2b2759d51160d1ee274ece0cdf1daa41c3a1b8e507c9dcc168dffdf148b58fbc
+    stateFingerprint: 648ef82c94e7a557490f75182558e8b04eea0a586bf26b3f9c12828ca7b92356
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
