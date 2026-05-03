@@ -726,6 +726,7 @@ governingSources:
   - docs/architecture/components/planner/workspace-authoring-draft-aggregate.md
   - docs/architecture/components/web/graph/canvas-authoring-draft-boundary-component.md
 allowedImplementationSurfaces:
+  - CHANGELOG.md
   - apps/web/src/app/ports/workspace.ts
   - apps/web/src/app/services/workspace/workspaceGraphDraftProjection*.ts
   - apps/web/src/app/services/workspace/workspaceService.ts
@@ -1135,6 +1136,22 @@ symbols:
     architectureGuard: pnpm --filter @dvt/web test -- canvasStartupAndDraftRecovery.architecture.test.ts
     cypressCoverage: N/A - unit fixture.
     unitTests: [pnpm --filter @dvt/web test -- useCanvasController.core.test.tsx]
+  - name: WORKSPACE_SCOPE
+    path: apps/web/src/app/views/canvas/canvasDraftRepository.test.fixtures.ts
+    dddOwner: Canvas draft repository fixture boundary
+    cqRails: [ReadCanvasAuthoringDraft, SaveCanvasAuthoringDraft]
+    fowlerSignals: [Test-only confidence]
+    architectureGuard: pnpm --filter @dvt/web test -- canvasDraftRepository.readWrite.test.ts
+    cypressCoverage: N/A - unit fixture.
+    unitTests: [pnpm --filter @dvt/web test -- canvasDraftRepository.readWrite.test.ts]
+  - name: upsertNode
+    path: apps/web/src/app/views/canvas/canvasDraftSessionWorkingSet.ts
+    dddOwner: Canvas draft session working-set policy
+    cqRails: [SaveCanvasAuthoringDraft]
+    fowlerSignals: [Data clump]
+    architectureGuard: pnpm --filter @dvt/web test -- canvasDraftSession.test.ts
+    cypressCoverage: Existing first-authoring live proof.
+    unitTests: [pnpm --filter @dvt/web test -- canvasDraftSession.test.ts]
 ```
 
 ## Self-Review

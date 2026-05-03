@@ -1,0 +1,546 @@
+version: 1
+componentUnit: SYS-PLANNER-ROOT
+rootUnit: SYS-DVT
+domainUnit: SYS-DVT
+status: coverage-required
+governanceState: coverage-required
+dddOwner: DS
+cqRails: planner build and derivation rails
+childrenRequired: true
+fileCount: 76
+driftFileCount: 0
+legacyFileCount: 0
+files:
+  - path: packages/@dvt/planner/docs/PLANNER_IMPLEMENTATION_REVIEW_v2_3_2.md
+    fileId: F-23503236D7FF
+    owningUnit: SYS-PLANNER-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/planner/docs/README.md
+    fileId: F-67543CEF7501
+    owningUnit: SYS-PLANNER-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/planner/docs/adr/ADR-0000-scope-and-compat.md
+    fileId: F-583017DAC86B
+    owningUnit: SYS-PLANNER-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/planner/docs/adr/ADR-0001-rfc8785-jcs.md
+    fileId: F-3C2E30B5D3A1
+    owningUnit: SYS-PLANNER-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/planner/docs/adr/ADR-0002-plan-core-hash.md
+    fileId: F-864F6C09270C
+    owningUnit: SYS-PLANNER-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/planner/docs/adr/ADR-0003-typed-errors.md
+    fileId: F-CA5A54433D2F
+    owningUnit: SYS-PLANNER-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/planner/docs/adr/ADR-0004-security-limits.md
+    fileId: F-3A72C34E5942
+    owningUnit: SYS-PLANNER-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/planner/docs/adr/ADR-0005-metrics.md
+    fileId: F-C0825F9163FE
+    owningUnit: SYS-PLANNER-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/planner/docs/adr/ADR-0006-extensibility.md
+    fileId: F-F5F81A01448F
+    owningUnit: SYS-PLANNER-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/planner/docs/audit/planner_v2_3_2_audit.commented.ts
+    fileId: F-83C49DE3B05D
+    owningUnit: SYS-PLANNER-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/planner/docs/contracts/ExecutionPlanV2.schema.json
+    fileId: F-EE2F1AA44001
+    owningUnit: SYS-PLANNER-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/planner/docs/contracts/PlanCore.schema.json
+    fileId: F-D3AF5EA8E501
+    owningUnit: SYS-PLANNER-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/planner/docs/contracts/PlannerContracts.v2.3.1.md
+    fileId: F-288E85EAFDB5
+    owningUnit: SYS-PLANNER-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/planner/docs/contracts/PlannerInputEnvelopeV2.schema.json
+    fileId: F-96FA8BF40692
+    owningUnit: SYS-PLANNER-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/planner/docs/contracts/PlannerPolicyClassSet.schema.json
+    fileId: F-4FC2D9AD09C6
+    owningUnit: SYS-PLANNER-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/planner/docs/grimorio.md
+    fileId: F-D351FE836DAF
+    owningUnit: SYS-PLANNER-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/planner/docs/planning/Stage-1.1-Planner-Canonicalization.md
+    fileId: F-88EEB73D9533
+    owningUnit: SYS-PLANNER-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/planner/docs/planning/proposal/planner-corrected-baseline-facade-branch.md
+    fileId: F-609C73AB6071
+    owningUnit: SYS-PLANNER-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/planner/docs/planning/proposal/planner-slice3-physical-reorganization-plan.md
+    fileId: F-BEFC84411348
+    owningUnit: SYS-PLANNER-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: >-
+      packages/@dvt/planner/docs/planning/proposal/planner-slice4-artifact-boundary-extraction-plan.md
+    fileId: F-A4ED01A8AE79
+    owningUnit: SYS-PLANNER-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/planner/examples/dbt-workflow.ts
+    fileId: F-5551204BDF12
+    owningUnit: SYS-PLANNER-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/planner/examples/generic-pipeline.ts
+    fileId: F-AB6FD0D423E1
+    owningUnit: SYS-PLANNER-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/planner/package.json
+    fileId: F-4C75186D4189
+    owningUnit: SYS-PLANNER-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/planner/src/application/ExecutableSubgraphDeriver.ts
+    fileId: F-1175F93C4CFF
+    owningUnit: SYS-PLANNER-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/planner/src/application/PlannerEnvelopeMapper.ts
+    fileId: F-BBA185684DFE
+    owningUnit: SYS-PLANNER-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/planner/src/application/PlannerFacade.ts
+    fileId: F-4C01417C296F
+    owningUnit: SYS-PLANNER-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/planner/src/application/derivePlannerGraphSourceFromManifest.ts
+    fileId: F-05B1EF76D389
+    owningUnit: SYS-PLANNER-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/planner/src/contracts/CustomPolicyNamespaceRegistry.ts
+    fileId: F-F2CE3719774D
+    owningUnit: SYS-PLANNER-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/planner/src/contracts/ExecutionBindingVerification.ts
+    fileId: F-E8E9BB434BB3
+    owningUnit: SYS-PLANNER-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/planner/src/contracts/PlanExecutabilityValidation.ts
+    fileId: F-B3321F0A291E
+    owningUnit: SYS-PLANNER-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/planner/src/contracts/PlanValidationLifecycle.ts
+    fileId: F-7B186525D396
+    owningUnit: SYS-PLANNER-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/planner/src/domain/InputEnvelopeValidator.ts
+    fileId: F-80C29969266A
+    owningUnit: SYS-PLANNER-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/planner/src/domain/NodeSelector.ts
+    fileId: F-991C1398C3A4
+    owningUnit: SYS-PLANNER-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/planner/src/domain/PlanAssembler.ts
+    fileId: F-657FA8BFE47C
+    owningUnit: SYS-PLANNER-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/planner/src/domain/Planner.ts
+    fileId: F-6ADF597F4E4F
+    owningUnit: SYS-PLANNER-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/planner/src/domain/errors.ts
+    fileId: F-232F41759103
+    owningUnit: SYS-PLANNER-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/planner/src/domain/graph/Depth.ts
+    fileId: F-DBD042623B4D
+    owningUnit: SYS-PLANNER-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/planner/src/domain/graph/GraphBuilder.ts
+    fileId: F-A6D5E3E81648
+    owningUnit: SYS-PLANNER-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/planner/src/domain/graph/TopoSort.ts
+    fileId: F-47A941900E12
+    owningUnit: SYS-PLANNER-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/planner/src/domain/hashing.ts
+    fileId: F-C323AE66FC70
+    owningUnit: SYS-PLANNER-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/planner/src/domain/limits.ts
+    fileId: F-0F22FFF630A9
+    owningUnit: SYS-PLANNER-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/planner/src/domain/manifest.ts
+    fileId: F-BDC6F0865662
+    owningUnit: SYS-PLANNER-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/planner/src/domain/metrics.ts
+    fileId: F-26270DA9A38E
+    owningUnit: SYS-PLANNER-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/planner/src/domain/policies.ts
+    fileId: F-97F943789EA8
+    owningUnit: SYS-PLANNER-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/planner/src/domain/sorting.ts
+    fileId: F-E25DD9B4729F
+    owningUnit: SYS-PLANNER-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/planner/src/domain/stepFactory/StepFactory.ts
+    fileId: F-1ED593344B1D
+    owningUnit: SYS-PLANNER-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/planner/src/domain/stepFactory/dbtStepFactory.ts
+    fileId: F-137D53699B18
+    owningUnit: SYS-PLANNER-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/planner/src/domain/types.ts
+    fileId: F-562E8D90DA1E
+    owningUnit: SYS-PLANNER-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/planner/src/index.ts
+    fileId: F-EF2923A06EFD
+    owningUnit: SYS-PLANNER-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/planner/src/ports/ICompiledCodeStorage.ts
+    fileId: F-0AE803684DA6
+    owningUnit: SYS-PLANNER-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/planner/src/runtime/time.ts
+    fileId: F-495431E583B7
+    owningUnit: SYS-PLANNER-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/planner/test/compiledCode/FileSystemCompiledCodeStorage.test.ts
+    fileId: F-5545A48DB13D
+    owningUnit: SYS-PLANNER-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/planner/test/compiledCode/InMemoryCompiledCodeStorage.test.ts
+    fileId: F-4C5F91DB580F
+    owningUnit: SYS-PLANNER-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/planner/test/compiledCode/attachCompiledCodeRefs.test.ts
+    fileId: F-CF48F103098B
+    owningUnit: SYS-PLANNER-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/planner/test/compiledCode/sha256.test.ts
+    fileId: F-4CA7E3D209C0
+    owningUnit: SYS-PLANNER-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/planner/test/cross-runtime-print-planid.ts
+    fileId: F-D781F92838FA
+    owningUnit: SYS-PLANNER-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/planner/test/cross-runtime.sh
+    fileId: F-E314C9EF58B4
+    owningUnit: SYS-PLANNER-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/planner/test/fixtures/dbt-manifest.fixtures.ts
+    fileId: F-B9EFF6D0C0E6
+    owningUnit: SYS-PLANNER-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/planner/test/slow/load.test.ts
+    fileId: F-CA70742F0C0F
+    owningUnit: SYS-PLANNER-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/planner/test/unit/dbt-step-factory.test.ts
+    fileId: F-A9B1E937CDD0
+    owningUnit: SYS-PLANNER-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/planner/test/unit/determinism.test.ts
+    fileId: F-9900CBFAF946
+    owningUnit: SYS-PLANNER-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/planner/test/unit/executable-subgraph-deriver.architecture.test.ts
+    fileId: F-6236C3A6D7C7
+    owningUnit: SYS-PLANNER-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/planner/test/unit/executable-subgraph-deriver.test.ts
+    fileId: F-4A982B714509
+    owningUnit: SYS-PLANNER-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/planner/test/unit/graph.test.ts
+    fileId: F-678F77E7F067
+    owningUnit: SYS-PLANNER-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/planner/test/unit/input-envelope-validator.test.ts
+    fileId: F-8C165763DF05
+    owningUnit: SYS-PLANNER-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/planner/test/unit/limits.test.ts
+    fileId: F-B471BE44DA12
+    owningUnit: SYS-PLANNER-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/planner/test/unit/manifest-graph-source.test.ts
+    fileId: F-1BA2A9833A53
+    owningUnit: SYS-PLANNER-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/planner/test/unit/manifest-mvp.test.ts
+    fileId: F-E0E335AFC922
+    owningUnit: SYS-PLANNER-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/planner/test/unit/planner-facade.test.ts
+    fileId: F-DDB84783F335
+    owningUnit: SYS-PLANNER-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/planner/test/unit/planner-private-ownership.architecture.test.ts
+    fileId: F-33DFF81A88AB
+    owningUnit: SYS-PLANNER-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/planner/test/unit/policies.test.ts
+    fileId: F-61A5F1A565FE
+    owningUnit: SYS-PLANNER-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/planner/test/unit/step-registry-integration.test.ts
+    fileId: F-3392A917FF63
+    owningUnit: SYS-PLANNER-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/planner/test/vectors/fixed-vector.inline.ts
+    fileId: F-519DEEBAD5A2
+    owningUnit: SYS-PLANNER-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/planner/test/vectors/fixed-vector.json
+    fileId: F-225FEC1A2B75
+    owningUnit: SYS-PLANNER-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/planner/tsconfig.json
+    fileId: F-A0535CB66320
+    owningUnit: SYS-PLANNER-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/planner/vitest.config.ts
+    fileId: F-E2E75239DF81
+    owningUnit: SYS-PLANNER-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false

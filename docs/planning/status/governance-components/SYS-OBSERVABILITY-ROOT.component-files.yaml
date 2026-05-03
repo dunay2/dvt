@@ -1,0 +1,118 @@
+version: 1
+componentUnit: SYS-OBSERVABILITY-ROOT
+rootUnit: SYS-DVT
+domainUnit: SYS-OBSERVABILITY
+status: coverage-required
+governanceState: coverage-required
+dddOwner: PORT
+cqRails: telemetry commands and operational queries
+childrenRequired: true
+fileCount: 15
+driftFileCount: 0
+legacyFileCount: 0
+files:
+  - path: packages/@dvt/observability-otel/README.md
+    fileId: F-DAB6BC9E800C
+    owningUnit: SYS-OBSERVABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/observability-otel/package.json
+    fileId: F-E837520353EC
+    owningUnit: SYS-OBSERVABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/observability-otel/src/OtelObservability.ts
+    fileId: F-7B6AF7AC72C8
+    owningUnit: SYS-OBSERVABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/observability-otel/src/index.ts
+    fileId: F-C66EE8B4CE07
+    owningUnit: SYS-OBSERVABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/observability-otel/test/OtelObservability.test.ts
+    fileId: F-44F7D0D2BCA0
+    owningUnit: SYS-OBSERVABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/observability-otel/tsconfig.json
+    fileId: F-4479E5C07786
+    owningUnit: SYS-OBSERVABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/observability/README.md
+    fileId: F-DFDA6C13C2BB
+    owningUnit: SYS-OBSERVABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/observability/package.json
+    fileId: F-A9666182B071
+    owningUnit: SYS-OBSERVABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/observability/src/contracts/IObservability.ts
+    fileId: F-68F6B629C250
+    owningUnit: SYS-OBSERVABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/observability/src/contracts/ObservabilityContext.ts
+    fileId: F-2900D5CF9A75
+    owningUnit: SYS-OBSERVABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/observability/src/index.ts
+    fileId: F-7C48067DE67B
+    owningUnit: SYS-OBSERVABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/observability/src/noopObservability.ts
+    fileId: F-A61DD60C6BA6
+    owningUnit: SYS-OBSERVABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/observability/src/policy/cardinalityPolicy.ts
+    fileId: F-2FD0F17C50AD
+    owningUnit: SYS-OBSERVABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/observability/test/cardinalityPolicy.test.ts
+    fileId: F-C3AD999E032A
+    owningUnit: SYS-OBSERVABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/observability/tsconfig.json
+    fileId: F-520BCE193B45
+    owningUnit: SYS-OBSERVABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false

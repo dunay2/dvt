@@ -1,0 +1,202 @@
+version: 1
+componentUnit: SYS-API-INFRASTRUCTURE
+rootUnit: SYS-DVT
+domainUnit: SYS-DVT
+status: coverage-required
+governanceState: coverage-required
+dddOwner: ADP
+cqRails: API adapter-backed command/query support
+childrenRequired: false
+fileCount: 27
+driftFileCount: 0
+legacyFileCount: 0
+files:
+  - path: apps/api/src/db/pool.ts
+    fileId: F-EFDBC65CF0CC
+    owningUnit: SYS-API-INFRASTRUCTURE
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/src/infrastructure/admissionTelemetry/ObservabilityAdmissionTelemetry.ts
+    fileId: F-8E2F725EA401
+    owningUnit: SYS-API-INFRASTRUCTURE
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/src/infrastructure/admissionTelemetry/ObservabilityBackpressureCapacityTelemetry.ts
+    fileId: F-AB1522911DB0
+    owningUnit: SYS-API-INFRASTRUCTURE
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/src/infrastructure/admissionTelemetry/admissionTelemetryMetrics.ts
+    fileId: F-826D9892242E
+    owningUnit: SYS-API-INFRASTRUCTURE
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/src/infrastructure/admissionTelemetry/safeWarn.ts
+    fileId: F-09104CAB72FB
+    owningUnit: SYS-API-INFRASTRUCTURE
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/src/infrastructure/audit/structuredAuditLogger.ts
+    fileId: F-C53A3817D6F9
+    owningUnit: SYS-API-INFRASTRUCTURE
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/src/infrastructure/auth/embeddedAccessDecisionService.ts
+    fileId: F-B9B8C6203E81
+    owningUnit: SYS-API-INFRASTRUCTURE
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/src/infrastructure/auth/jwksJwtVerifier.ts
+    fileId: F-B61B843FF25B
+    owningUnit: SYS-API-INFRASTRUCTURE
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/src/infrastructure/auth/oidcAuthenticator.ts
+    fileId: F-0361E5039913
+    owningUnit: SYS-API-INFRASTRUCTURE
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/src/infrastructure/backpressure/CachedBackpressureStore.ts
+    fileId: F-D42AD135C4E8
+    owningUnit: SYS-API-INFRASTRUCTURE
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/src/infrastructure/backpressure/CircuitBreakingBackpressureStore.ts
+    fileId: F-B2717495B490
+    owningUnit: SYS-API-INFRASTRUCTURE
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/src/infrastructure/backpressure/FileBackpressureFallbackStore.ts
+    fileId: F-A2B2EEFF2C97
+    owningUnit: SYS-API-INFRASTRUCTURE
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/src/infrastructure/backpressure/MetricsEmittingBackpressureStore.ts
+    fileId: F-0B79DD9779CB
+    owningUnit: SYS-API-INFRASTRUCTURE
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/src/infrastructure/backpressure/RawSqlBackpressureStore.ts
+    fileId: F-0E0187FF982C
+    owningUnit: SYS-API-INFRASTRUCTURE
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/src/infrastructure/backpressure/types.ts
+    fileId: F-8B43B99E9547
+    owningUnit: SYS-API-INFRASTRUCTURE
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/src/infrastructure/executionCapacity/TemporalWorkerReadyzExecutionCapacityPort.ts
+    fileId: F-B223EC1ABFD6
+    owningUnit: SYS-API-INFRASTRUCTURE
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/src/infrastructure/startRun/PostgresDuplicateRunProbe.ts
+    fileId: F-421954CC679C
+    owningUnit: SYS-API-INFRASTRUCTURE
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/src/infrastructure/telemetry/ObservabilityRunStatusStalenessTelemetry.ts
+    fileId: F-BB74021FA77F
+    owningUnit: SYS-API-INFRASTRUCTURE
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/src/infrastructure/telemetry/ObservabilityStartRunSlaTelemetry.ts
+    fileId: F-9A5BA0EBEBE9
+    owningUnit: SYS-API-INFRASTRUCTURE
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/src/infrastructure/telemetry/ObservabilityWorkspaceGraphDraftTelemetry.ts
+    fileId: F-5468DED30115
+    owningUnit: SYS-API-INFRASTRUCTURE
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/src/infrastructure/telemetry/SafeRunSnapshotStalenessReader.ts
+    fileId: F-928C4CAEA60C
+    owningUnit: SYS-API-INFRASTRUCTURE
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/src/infrastructure/telemetry/startRunSlaMetrics.ts
+    fileId: F-DEDF38930CAB
+    owningUnit: SYS-API-INFRASTRUCTURE
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/src/infrastructure/workspaceGraphDraft/PostgresWorkspaceGraphDraftStore.ts
+    fileId: F-C737B8BE571C
+    owningUnit: SYS-API-INFRASTRUCTURE
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/src/infrastructure/workspaceGraphDraft/StructuredWorkspaceGraphDraftAuditLogger.ts
+    fileId: F-4412124B0331
+    owningUnit: SYS-API-INFRASTRUCTURE
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/src/plugins/env.ts
+    fileId: F-B18BC25F3BA6
+    owningUnit: SYS-API-INFRASTRUCTURE
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/src/plugins/logger.ts
+    fileId: F-9654BC860A37
+    owningUnit: SYS-API-INFRASTRUCTURE
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/src/plugins/observability.ts
+    fileId: F-79B636C384E3
+    owningUnit: SYS-API-INFRASTRUCTURE
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false

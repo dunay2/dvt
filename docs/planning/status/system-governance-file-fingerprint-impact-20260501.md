@@ -16,7 +16,7 @@ baseline changes.
 
 | Change type  | Files |
 | ------------ | ----: |
-| `content`    |     0 |
+| `content`    |     6 |
 | `governance` |     0 |
 | `both`       |     0 |
 | `added`      |     0 |
@@ -24,12 +24,17 @@ baseline changes.
 
 ## Impacted Components
 
-| Root unit | Domain unit | Component unit | Flags  | Files |
-| --------- | ----------- | -------------- | ------ | ----: |
-| _None_    | _None_      | _None_         | _None_ |     0 |
+| Root unit | Domain unit | Component unit             | Flags  | Files |
+| --------- | ----------- | -------------------------- | ------ | ----: |
+| `SYS-DVT` | `SYS-DVT`   | `SYS-DOCS-GOVERNANCE-ROOT` | _None_ |     6 |
 
 ## File Changes
 
-| Type   | File   | File ID | Root   | Domain | Component | Owning unit |
-| ------ | ------ | ------- | ------ | ------ | --------- | ----------- |
-| _None_ | _None_ | _None_  | _None_ | _None_ | _None_    | _None_      |
+| Type      | File                                                                    | File ID          | Root      | Domain    | Component                  | Owning unit                |
+| --------- | ----------------------------------------------------------------------- | ---------------- | --------- | --------- | -------------------------- | -------------------------- |
+| `content` | `docs/planning/status/governance-files/SYS-DOCS-GOVERNANCE.files.yaml`  | `F-781675A6593B` | `SYS-DVT` | `SYS-DVT` | `SYS-DOCS-GOVERNANCE-ROOT` | `SYS-DOCS-GOVERNANCE-ROOT` |
+| `content` | `docs/planning/status/system-governance-coverage-report-20260502.md`    | `F-990BF10AAD94` | `SYS-DVT` | `SYS-DVT` | `SYS-DOCS-GOVERNANCE-ROOT` | `SYS-DOCS-GOVERNANCE-ROOT` |
+| `content` | `docs/planning/status/system-governance-coverage-report.coverage.yaml`  | `F-ACC58DCFEB8C` | `SYS-DVT` | `SYS-DVT` | `SYS-DOCS-GOVERNANCE-ROOT` | `SYS-DOCS-GOVERNANCE-ROOT` |
+| `content` | `docs/planning/status/system-governance-document-unit-map-20260501.md`  | `F-5D25269D1180` | `SYS-DVT` | `SYS-DVT` | `SYS-DOCS-GOVERNANCE-ROOT` | `SYS-DOCS-GOVERNANCE-ROOT` |
+| `content` | `docs/planning/status/system-governance-document-unit-map.docs.yaml`    | `F-E7EC54670607` | `SYS-DVT` | `SYS-DVT` | `SYS-DOCS-GOVERNANCE-ROOT` | `SYS-DOCS-GOVERNANCE-ROOT` |
+| `content` | `docs/planning/status/system-governance-file-fingerprint-baseline.yaml` | `F-6B8271C2051C` | `SYS-DVT` | `SYS-DVT` | `SYS-DOCS-GOVERNANCE-ROOT` | `SYS-DOCS-GOVERNANCE-ROOT` |

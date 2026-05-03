@@ -599,6 +599,7 @@ allowedImplementationSurfaces:
   - docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
   - docs/planning/status/**
   - docs/risk-register/quality/index.md
+  - docs/risk-register/quality/R-20260402-S08-PLAN-STORE-CONTRACT-DRIFT.yaml
   - docs/risk-register/quality/r-20260502-s08-temporal-dispatch-scope.yaml
   - packages/@dvt/adapter-temporal/src/activities/activityFactory.ts
   - packages/@dvt/adapter-temporal/src/activities/activityTypes.ts

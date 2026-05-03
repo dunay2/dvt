@@ -3,38 +3,40 @@ generatedFrom:
   - docs/planning/status/system-governance-coverage-report.coverage.yaml
   - docs/planning/status/system-governance-file-index.files.yaml
   - docs/planning/status/system-governance-component-index.components.yaml
+  - docs/planning/status/system-governance-component-file-map.components.yaml
   - docs/planning/status/system-governance-document-unit-map.docs.yaml
 totals:
   tasks: 43
-  p0: 4
-  p1: 16
+  p0: 3
+  p1: 15
   p2: 3
-  p3: 20
-  driftFiles: 44
-  componentsRequiringSubdivision: 18
+  p3: 22
+  driftFiles: 41
+  componentsRequiringSubdivision: 19
 byType:
   - name: component-subdivision
-    count: 18
+    count: 19
   - name: cq-rail-gap
     count: 9
   - name: doc-alignment
     count: 12
   - name: drift-removal
-    count: 4
+    count: 3
 byPriority:
   - name: P0
-    count: 4
+    count: 3
   - name: P1
-    count: 16
+    count: 15
   - name: P2
     count: 3
   - name: P3
-    count: 20
+    count: 22
 tasks:
   - id: GRQ-DRIFT_REMOVAL-SYS-PLANSTORE-API-COMPOSITION
     type: drift-removal
     priority: P0
     componentUnit: SYS-PLANSTORE-API-COMPOSITION
+    componentFileMap: docs/planning/status/governance-components/SYS-PLANSTORE-API-COMPOSITION.component-files.yaml
     rootUnit: SYS-DVT
     domainUnit: SYS-PLANSTORE
     dddOwner: AS
@@ -114,6 +116,7 @@ tasks:
     type: drift-removal
     priority: P0
     componentUnit: SYS-PLANSTORE-POSTGRES
+    componentFileMap: docs/planning/status/governance-components/SYS-PLANSTORE-POSTGRES.component-files.yaml
     rootUnit: SYS-DVT
     domainUnit: SYS-PLANSTORE
     dddOwner: ADP
@@ -180,6 +183,7 @@ tasks:
     type: drift-removal
     priority: P0
     componentUnit: SYS-PLANSTORE-ENGINE-FETCH
+    componentFileMap: docs/planning/status/governance-components/SYS-PLANSTORE-ENGINE-FETCH.component-files.yaml
     rootUnit: SYS-DVT
     domainUnit: SYS-PLANSTORE
     dddOwner: PORT
@@ -209,37 +213,11 @@ tasks:
       - pnpm docs:governance:remediation-queue:check
       - pnpm docs:governance:coverage-report:check
       - pnpm docs:governance:changed-files:check
-  - id: GRQ-DRIFT_REMOVAL-SYS-PLANSTORE-CONTRACTS
-    type: drift-removal
-    priority: P0
-    componentUnit: SYS-PLANSTORE-CONTRACTS
-    rootUnit: SYS-DVT
-    domainUnit: SYS-PLANSTORE
-    dddOwner: PORT
-    cqRails: PS-Q01, PS-C01
-    blocking: changed-files gate blocks touched drift files
-    reason: Files are marked drift in the governed file index.
-    fileCount: 3
-    documentCount: 0
-    files:
-      - path: docs/contracts/planner/PlanStoreRecords.v1.md
-        fileId: F-3AA698AF1593
-        status: drift
-      - path: packages/@dvt/artifacts/src/ports/IPlanStoreReader.ts
-        fileId: F-41A2D9667B0D
-        status: drift
-      - path: packages/@dvt/artifacts/src/ports/IPlanStoreWriter.ts
-        fileId: F-6CF12F62ED37
-        status: drift
-    documents: []
-    expectedValidation:
-      - pnpm docs:governance:remediation-queue:check
-      - pnpm docs:governance:coverage-report:check
-      - pnpm docs:governance:changed-files:check
   - id: GRQ-CQ_RAIL_GAP-SYS-ADAPTERS-ROOT
     type: cq-rail-gap
     priority: P1
     componentUnit: SYS-ADAPTERS-ROOT
+    componentFileMap: docs/planning/status/governance-components/SYS-ADAPTERS-ROOT.component-files.yaml
     rootUnit: SYS-DVT
     domainUnit: SYS-ADAPTERS
     dddOwner: ADP
@@ -258,6 +236,7 @@ tasks:
     type: cq-rail-gap
     priority: P1
     componentUnit: SYS-CONTRACTS-ROOT
+    componentFileMap: docs/planning/status/governance-components/SYS-CONTRACTS-ROOT.component-files.yaml
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     dddOwner: PORT
@@ -276,6 +255,7 @@ tasks:
     type: cq-rail-gap
     priority: P1
     componentUnit: SYS-OBSERVABILITY-ROOT
+    componentFileMap: docs/planning/status/governance-components/SYS-OBSERVABILITY-ROOT.component-files.yaml
     rootUnit: SYS-DVT
     domainUnit: SYS-OBSERVABILITY
     dddOwner: PORT
@@ -294,6 +274,7 @@ tasks:
     type: cq-rail-gap
     priority: P1
     componentUnit: SYS-PLANNER-ROOT
+    componentFileMap: docs/planning/status/governance-components/SYS-PLANNER-ROOT.component-files.yaml
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     dddOwner: DS
@@ -312,6 +293,7 @@ tasks:
     type: cq-rail-gap
     priority: P1
     componentUnit: SYS-PLANSTORE-POSTGRES
+    componentFileMap: docs/planning/status/governance-components/SYS-PLANSTORE-POSTGRES.component-files.yaml
     rootUnit: SYS-DVT
     domainUnit: SYS-PLANSTORE
     dddOwner: ADP
@@ -330,6 +312,7 @@ tasks:
     type: cq-rail-gap
     priority: P1
     componentUnit: SYS-RUNTIME-ROOT
+    componentFileMap: docs/planning/status/governance-components/SYS-RUNTIME-ROOT.component-files.yaml
     rootUnit: SYS-DVT
     domainUnit: SYS-RUNTIME
     dddOwner: AS
@@ -348,6 +331,7 @@ tasks:
     type: cq-rail-gap
     priority: P1
     componentUnit: SYS-TRACEABILITY-ROOT
+    componentFileMap: docs/planning/status/governance-components/SYS-TRACEABILITY-ROOT.component-files.yaml
     rootUnit: SYS-DVT
     domainUnit: SYS-TRACEABILITY
     dddOwner: DS
@@ -366,6 +350,7 @@ tasks:
     type: cq-rail-gap
     priority: P1
     componentUnit: SYS-WEB-ROOT
+    componentFileMap: docs/planning/status/governance-components/SYS-WEB-ROOT.component-files.yaml
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     dddOwner: ENTRY
@@ -384,6 +369,7 @@ tasks:
     type: cq-rail-gap
     priority: P1
     componentUnit: SYS-WORKERS-ROOT
+    componentFileMap: docs/planning/status/governance-components/SYS-WORKERS-ROOT.component-files.yaml
     rootUnit: SYS-DVT
     domainUnit: SYS-WORKERS
     dddOwner: AS
@@ -402,6 +388,7 @@ tasks:
     type: component-subdivision
     priority: P1
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
+    componentFileMap: docs/planning/status/governance-components/SYS-DOCS-GOVERNANCE-ROOT.component-files.yaml
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     dddOwner: INFRA
@@ -420,6 +407,7 @@ tasks:
     type: component-subdivision
     priority: P1
     componentUnit: SYS-PLANSTORE-API-COMPOSITION
+    componentFileMap: docs/planning/status/governance-components/SYS-PLANSTORE-API-COMPOSITION.component-files.yaml
     rootUnit: SYS-DVT
     domainUnit: SYS-PLANSTORE
     dddOwner: AS
@@ -434,28 +422,11 @@ tasks:
       - pnpm docs:governance:remediation-queue:check
       - pnpm docs:governance:coverage-report:check
       - pnpm docs:governance:file-component-index:check
-  - id: GRQ-COMPONENT_SUBDIVISION-SYS-PLANSTORE-CONTRACTS
-    type: component-subdivision
-    priority: P1
-    componentUnit: SYS-PLANSTORE-CONTRACTS
-    rootUnit: SYS-DVT
-    domainUnit: SYS-PLANSTORE
-    dddOwner: PORT
-    cqRails: PS-Q01, PS-C01
-    blocking: reporting-only
-    reason: Component is known but still too broad for source-level governance.
-    fileCount: 0
-    documentCount: 0
-    files: []
-    documents: []
-    expectedValidation:
-      - pnpm docs:governance:remediation-queue:check
-      - pnpm docs:governance:coverage-report:check
-      - pnpm docs:governance:file-component-index:check
   - id: GRQ-COMPONENT_SUBDIVISION-SYS-PLANSTORE-ENGINE-FETCH
     type: component-subdivision
     priority: P1
     componentUnit: SYS-PLANSTORE-ENGINE-FETCH
+    componentFileMap: docs/planning/status/governance-components/SYS-PLANSTORE-ENGINE-FETCH.component-files.yaml
     rootUnit: SYS-DVT
     domainUnit: SYS-PLANSTORE
     dddOwner: PORT
@@ -474,6 +445,7 @@ tasks:
     type: component-subdivision
     priority: P1
     componentUnit: SYS-PLANSTORE-POSTGRES
+    componentFileMap: docs/planning/status/governance-components/SYS-PLANSTORE-POSTGRES.component-files.yaml
     rootUnit: SYS-DVT
     domainUnit: SYS-PLANSTORE
     dddOwner: ADP
@@ -492,6 +464,7 @@ tasks:
     type: component-subdivision
     priority: P1
     componentUnit: SYS-RUNTIME-ROOT
+    componentFileMap: docs/planning/status/governance-components/SYS-RUNTIME-ROOT.component-files.yaml
     rootUnit: SYS-DVT
     domainUnit: SYS-RUNTIME
     dddOwner: AS
@@ -510,6 +483,7 @@ tasks:
     type: component-subdivision
     priority: P1
     componentUnit: SYS-WEB-ROOT
+    componentFileMap: docs/planning/status/governance-components/SYS-WEB-ROOT.component-files.yaml
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     dddOwner: ENTRY
@@ -528,6 +502,7 @@ tasks:
     type: doc-alignment
     priority: P2
     componentUnit: SYS-DOCS-GOVERNANCE
+    componentFileMap: docs/planning/status/governance-components/SYS-DOCS-GOVERNANCE.component-files.yaml
     rootUnit: SYS-DVT
     domainUnit: SYS-DOCS-GOVERNANCE
     dddOwner: INFRA
@@ -1120,6 +1095,7 @@ tasks:
     type: doc-alignment
     priority: P2
     componentUnit: SYS-RUNTIME
+    componentFileMap: docs/planning/status/governance-components/SYS-RUNTIME.component-files.yaml
     rootUnit: SYS-DVT
     domainUnit: SYS-RUNTIME
     dddOwner: INFRA
@@ -1237,6 +1213,7 @@ tasks:
     type: doc-alignment
     priority: P2
     componentUnit: SYS-PLANNER
+    componentFileMap: docs/planning/status/governance-components/SYS-PLANNER.component-files.yaml
     rootUnit: SYS-DVT
     domainUnit: SYS-PLANNER
     dddOwner: INFRA
@@ -1362,6 +1339,7 @@ tasks:
     type: component-subdivision
     priority: P3
     componentUnit: SYS-ADAPTERS-ROOT
+    componentFileMap: docs/planning/status/governance-components/SYS-ADAPTERS-ROOT.component-files.yaml
     rootUnit: SYS-DVT
     domainUnit: SYS-ADAPTERS
     dddOwner: ADP
@@ -1376,10 +1354,30 @@ tasks:
       - pnpm docs:governance:remediation-queue:check
       - pnpm docs:governance:coverage-report:check
       - pnpm docs:governance:file-component-index:check
+  - id: GRQ-COMPONENT_SUBDIVISION-SYS-API-OPS-ROUTES
+    type: component-subdivision
+    priority: P3
+    componentUnit: SYS-API-OPS-ROUTES
+    componentFileMap: docs/planning/status/governance-components/SYS-API-OPS-ROUTES.component-files.yaml
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    dddOwner: INFRA
+    cqRails: none - grouping component for operational route source units
+    blocking: reporting-only
+    reason: Component is known but still too broad for source-level governance.
+    fileCount: 0
+    documentCount: 0
+    files: []
+    documents: []
+    expectedValidation:
+      - pnpm docs:governance:remediation-queue:check
+      - pnpm docs:governance:coverage-report:check
+      - pnpm docs:governance:file-component-index:check
   - id: GRQ-COMPONENT_SUBDIVISION-SYS-CI-GOVERNANCE-ROOT
     type: component-subdivision
     priority: P3
     componentUnit: SYS-CI-GOVERNANCE-ROOT
+    componentFileMap: docs/planning/status/governance-components/SYS-CI-GOVERNANCE-ROOT.component-files.yaml
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     dddOwner: INFRA
@@ -1398,6 +1396,7 @@ tasks:
     type: component-subdivision
     priority: P3
     componentUnit: SYS-CONTRACTS-ROOT
+    componentFileMap: docs/planning/status/governance-components/SYS-CONTRACTS-ROOT.component-files.yaml
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     dddOwner: PORT
@@ -1416,6 +1415,7 @@ tasks:
     type: component-subdivision
     priority: P3
     componentUnit: SYS-OBSERVABILITY-ROOT
+    componentFileMap: docs/planning/status/governance-components/SYS-OBSERVABILITY-ROOT.component-files.yaml
     rootUnit: SYS-DVT
     domainUnit: SYS-OBSERVABILITY
     dddOwner: PORT
@@ -1434,6 +1434,7 @@ tasks:
     type: component-subdivision
     priority: P3
     componentUnit: SYS-PLANNER-ROOT
+    componentFileMap: docs/planning/status/governance-components/SYS-PLANNER-ROOT.component-files.yaml
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     dddOwner: DS
@@ -1452,6 +1453,7 @@ tasks:
     type: component-subdivision
     priority: P3
     componentUnit: SYS-PLANSTORE-ARTIFACTS-PORTS
+    componentFileMap: docs/planning/status/governance-components/SYS-PLANSTORE-ARTIFACTS-PORTS.component-files.yaml
     rootUnit: SYS-DVT
     domainUnit: SYS-PLANSTORE
     dddOwner: PORT
@@ -1466,10 +1468,30 @@ tasks:
       - pnpm docs:governance:remediation-queue:check
       - pnpm docs:governance:coverage-report:check
       - pnpm docs:governance:file-component-index:check
+  - id: GRQ-COMPONENT_SUBDIVISION-SYS-PLANSTORE-CONTRACTS
+    type: component-subdivision
+    priority: P3
+    componentUnit: SYS-PLANSTORE-CONTRACTS
+    componentFileMap: docs/planning/status/governance-components/SYS-PLANSTORE-CONTRACTS.component-files.yaml
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    dddOwner: PORT
+    cqRails: PS-Q01, PS-C01
+    blocking: reporting-only
+    reason: Component is known but still too broad for source-level governance.
+    fileCount: 0
+    documentCount: 0
+    files: []
+    documents: []
+    expectedValidation:
+      - pnpm docs:governance:remediation-queue:check
+      - pnpm docs:governance:coverage-report:check
+      - pnpm docs:governance:file-component-index:check
   - id: GRQ-COMPONENT_SUBDIVISION-SYS-PLANSTORE-DOCS-RISK
     type: component-subdivision
     priority: P3
     componentUnit: SYS-PLANSTORE-DOCS-RISK
+    componentFileMap: docs/planning/status/governance-components/SYS-PLANSTORE-DOCS-RISK.component-files.yaml
     rootUnit: SYS-DVT
     domainUnit: SYS-PLANSTORE
     dddOwner: INFRA
@@ -1488,6 +1510,8 @@ tasks:
     type: component-subdivision
     priority: P3
     componentUnit: SYS-PLANSTORE-TEMPORAL-COMPOSITION
+    componentFileMap: >-
+      docs/planning/status/governance-components/SYS-PLANSTORE-TEMPORAL-COMPOSITION.component-files.yaml
     rootUnit: SYS-DVT
     domainUnit: SYS-PLANSTORE
     dddOwner: ADP
@@ -1506,6 +1530,7 @@ tasks:
     type: component-subdivision
     priority: P3
     componentUnit: SYS-REPO-METADATA-ROOT
+    componentFileMap: docs/planning/status/governance-components/SYS-REPO-METADATA-ROOT.component-files.yaml
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     dddOwner: INFRA
@@ -1524,6 +1549,7 @@ tasks:
     type: component-subdivision
     priority: P3
     componentUnit: SYS-TRACEABILITY-ROOT
+    componentFileMap: docs/planning/status/governance-components/SYS-TRACEABILITY-ROOT.component-files.yaml
     rootUnit: SYS-DVT
     domainUnit: SYS-TRACEABILITY
     dddOwner: DS
@@ -1542,6 +1568,7 @@ tasks:
     type: component-subdivision
     priority: P3
     componentUnit: SYS-WORKERS-ROOT
+    componentFileMap: docs/planning/status/governance-components/SYS-WORKERS-ROOT.component-files.yaml
     rootUnit: SYS-DVT
     domainUnit: SYS-WORKERS
     dddOwner: AS
@@ -1560,6 +1587,7 @@ tasks:
     type: doc-alignment
     priority: P3
     componentUnit: SYS-API
+    componentFileMap: docs/planning/status/governance-components/SYS-API.component-files.yaml
     rootUnit: SYS-DVT
     domainUnit: SYS-API
     dddOwner: INFRA
@@ -1618,6 +1646,7 @@ tasks:
     type: doc-alignment
     priority: P3
     componentUnit: SYS-ADAPTERS
+    componentFileMap: docs/planning/status/governance-components/SYS-ADAPTERS.component-files.yaml
     rootUnit: SYS-DVT
     domainUnit: SYS-ADAPTERS
     dddOwner: INFRA
@@ -1676,6 +1705,7 @@ tasks:
     type: doc-alignment
     priority: P3
     componentUnit: SYS-WEB
+    componentFileMap: docs/planning/status/governance-components/SYS-WEB.component-files.yaml
     rootUnit: SYS-DVT
     domainUnit: SYS-WEB
     dddOwner: INFRA
@@ -1720,6 +1750,7 @@ tasks:
     type: doc-alignment
     priority: P3
     componentUnit: SYS-PLANSTORE
+    componentFileMap: docs/planning/status/governance-components/SYS-PLANSTORE.component-files.yaml
     rootUnit: SYS-DVT
     domainUnit: SYS-PLANSTORE
     dddOwner: INFRA
@@ -1758,6 +1789,7 @@ tasks:
     type: doc-alignment
     priority: P3
     componentUnit: SYS-CI-GOVERNANCE
+    componentFileMap: docs/planning/status/governance-components/SYS-CI-GOVERNANCE.component-files.yaml
     rootUnit: SYS-DVT
     domainUnit: SYS-CI-GOVERNANCE
     dddOwner: INFRA
@@ -1786,6 +1818,7 @@ tasks:
     type: doc-alignment
     priority: P3
     componentUnit: SYS-CONTRACTS
+    componentFileMap: docs/planning/status/governance-components/SYS-CONTRACTS.component-files.yaml
     rootUnit: SYS-DVT
     domainUnit: SYS-CONTRACTS
     dddOwner: INFRA
@@ -1816,6 +1849,7 @@ tasks:
     type: doc-alignment
     priority: P3
     componentUnit: SYS-OBSERVABILITY
+    componentFileMap: docs/planning/status/governance-components/SYS-OBSERVABILITY.component-files.yaml
     rootUnit: SYS-DVT
     domainUnit: SYS-OBSERVABILITY
     dddOwner: INFRA
@@ -1845,6 +1879,7 @@ tasks:
     type: doc-alignment
     priority: P3
     componentUnit: SYS-WORKERS
+    componentFileMap: docs/planning/status/governance-components/SYS-WORKERS.component-files.yaml
     rootUnit: SYS-DVT
     domainUnit: SYS-WORKERS
     dddOwner: INFRA
@@ -1869,6 +1904,7 @@ tasks:
     type: doc-alignment
     priority: P3
     componentUnit: SYS-TRACEABILITY
+    componentFileMap: docs/planning/status/governance-components/SYS-TRACEABILITY.component-files.yaml
     rootUnit: SYS-DVT
     domainUnit: SYS-TRACEABILITY
     dddOwner: INFRA

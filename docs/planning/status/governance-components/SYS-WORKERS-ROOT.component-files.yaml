@@ -1,0 +1,734 @@
+version: 1
+componentUnit: SYS-WORKERS-ROOT
+rootUnit: SYS-DVT
+domainUnit: SYS-WORKERS
+status: coverage-required
+governanceState: coverage-required
+dddOwner: AS
+cqRails: worker commands and operational queries
+childrenRequired: true
+fileCount: 103
+driftFileCount: 0
+legacyFileCount: 0
+files:
+  - path: apps/lineage-worker/package.json
+    fileId: F-64B325E5FCDC
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/lineage-worker/src/bootstrap.ts
+    fileId: F-DFB3CECB4C43
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/lineage-worker/src/compiled-code-resolver/S3UriCompiledCodeReader.ts
+    fileId: F-48C7959EADCB
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/lineage-worker/src/compiled-code-resolver/errorMapping.ts
+    fileId: F-90FA39C4A321
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/lineage-worker/src/compiled-code-resolver/policy.ts
+    fileId: F-BA00F28D3A6E
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/lineage-worker/src/compiled-code-resolver/types.ts
+    fileId: F-EB8B63CFEA67
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/lineage-worker/src/compiledCodeResolver.ts
+    fileId: F-9814CAC1A39C
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/lineage-worker/src/env.ts
+    fileId: F-7C2010A0FDEC
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/lineage-worker/src/server.ts
+    fileId: F-C77C8AFDC98E
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/lineage-worker/src/types/pg.d.ts
+    fileId: F-726B1EC98EE6
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/lineage-worker/test/bootstrap.test.ts
+    fileId: F-DC069185F7FB
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/lineage-worker/test/compiledCodeResolver.test.ts
+    fileId: F-E42BA0000ACE
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/lineage-worker/test/env.test.ts
+    fileId: F-6514495F62A1
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/lineage-worker/test/server.bootstrap.test.ts
+    fileId: F-948B48DBB590
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/lineage-worker/test/server.lineage-mapper-wiring.test.ts
+    fileId: F-83A7514A35D5
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/lineage-worker/tsconfig.json
+    fileId: F-C6C2C1A132C1
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/lineage-worker/vitest.config.ts
+    fileId: F-9393977601AE
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/outbox-worker/.dependency-cruiser.cjs
+    fileId: F-A9A377F141E2
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/outbox-worker/.env.example
+    fileId: F-71744E489156
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/outbox-worker/.gitignore
+    fileId: F-933759609F06
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/outbox-worker/README.md
+    fileId: F-E9BE4D950815
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/outbox-worker/package.json
+    fileId: F-6176A820CCC8
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/outbox-worker/src/bus/HttpEventBus.ts
+    fileId: F-066212E98527
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/outbox-worker/src/bus/LoggingEventBus.ts
+    fileId: F-1A96B51ADDBB
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/outbox-worker/src/db/pool.ts
+    fileId: F-BF99746EEA69
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/outbox-worker/src/host/runOutboxWorkerHost.ts
+    fileId: F-A0997363A8CA
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/outbox-worker/src/lifecycle/stopRuntimeAndOperationalServer.ts
+    fileId: F-1739C2EE4EEE
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/outbox-worker/src/ops/OperationalServer.ts
+    fileId: F-8F4E5BD838D6
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/outbox-worker/src/ops/OutboxWorkerMonitor.ts
+    fileId: F-4E5D99DA3EE4
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/outbox-worker/src/ops/monitor/OutboxDeliveryTelemetry.ts
+    fileId: F-216C406EBE8C
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/outbox-worker/src/ops/monitor/OutboxRuntimeHealthTracker.ts
+    fileId: F-AC386CC1A7C8
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/outbox-worker/src/ops/monitor/RunEventRetentionTelemetry.ts
+    fileId: F-3CDAC9BA197B
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/outbox-worker/src/ops/monitor/model.ts
+    fileId: F-E332FB546721
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/outbox-worker/src/ops/monitor/renderOutboxWorkerMetrics.ts
+    fileId: F-04823FE1BE15
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/outbox-worker/src/ops/monitor/support.ts
+    fileId: F-BF1F7A362A52
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/outbox-worker/src/ops/resolveReadyStaleAfterMs.ts
+    fileId: F-CA51EFFD488D
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/outbox-worker/src/ownership/PgShardOwnershipGate.ts
+    fileId: F-06FE5A38E833
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/outbox-worker/src/plugins/env.ts
+    fileId: F-E98484F3391F
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/outbox-worker/src/runtime/DeliveryBufferPurgeRuntime.ts
+    fileId: F-10E73AD8A9FE
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/outbox-worker/src/runtime/OutboxWorkerRuntime.ts
+    fileId: F-8CB6B7A25E3B
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/outbox-worker/src/runtime/RunEventRetentionRuntime.ts
+    fileId: F-C217E6855711
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/outbox-worker/src/runtime/buildDeliveryBufferPurgeRuntime.ts
+    fileId: F-D837634D6C6E
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/outbox-worker/src/runtime/buildRunEventRetentionRuntime.ts
+    fileId: F-A61D9252B025
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/outbox-worker/src/runtime/createOutboxEventBus.ts
+    fileId: F-E447D2D97F16
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/outbox-worker/src/runtime/createOutboxWorkerRuntime.ts
+    fileId: F-323B06190AD3
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/outbox-worker/src/runtime/outboxRuntimeResourceLifecycle.ts
+    fileId: F-13C96E2D7D68
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/outbox-worker/src/server.ts
+    fileId: F-D794F85CE204
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/outbox-worker/test/bus/HttpEventBus.test.ts
+    fileId: F-EC86E4A6028B
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/outbox-worker/test/canary/standaloneCanaryAcceptance.health.test.ts
+    fileId: F-C634849D501C
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/outbox-worker/test/canary/standaloneCanaryAcceptance.idempotency.test.ts
+    fileId: F-26A33E82911B
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/outbox-worker/test/canary/standaloneCanaryAcceptance.ordering.test.ts
+    fileId: F-13166DCE7D80
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/outbox-worker/test/canary/support/standaloneCanaryEventSupport.ts
+    fileId: F-EA13409FC906
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/outbox-worker/test/canary/support/standaloneCanaryHostSupport.ts
+    fileId: F-1951A5D07E7A
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/outbox-worker/test/canary/support/standaloneCanaryHttpSink.ts
+    fileId: F-F6275B70A54D
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/outbox-worker/test/canary/support/standaloneCanaryOutboxFixture.ts
+    fileId: F-AA89EB2AFEFE
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/outbox-worker/test/db/pool.test.ts
+    fileId: F-2C1D7F9A70B9
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/outbox-worker/test/host/runOutboxWorkerHost.test.ts
+    fileId: F-89B06A595A6E
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/outbox-worker/test/integration/workerEndToEnd.integration.test.ts
+    fileId: F-D15902198460
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/outbox-worker/test/lifecycle/stopRuntimeAndOperationalServer.test.ts
+    fileId: F-575120783768
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/outbox-worker/test/ops/OperationalServer.test.ts
+    fileId: F-793B166F7F53
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/outbox-worker/test/ops/OutboxWorkerMonitor.test.ts
+    fileId: F-61578867EEB8
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/outbox-worker/test/ops/outboxWorkerMonitorTestSupport.ts
+    fileId: F-4AEDAF4C6E96
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/outbox-worker/test/ops/resolveReadyStaleAfterMs.test.ts
+    fileId: F-B45C2C5C5E31
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/outbox-worker/test/ownership/PgShardOwnershipGate.integration.test.ts
+    fileId: F-D27F16F05C06
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/outbox-worker/test/ownership/PgShardOwnershipGate.test.ts
+    fileId: F-45663822AD9F
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/outbox-worker/test/plugins/env.test.ts
+    fileId: F-21A7B0AFDFBC
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/outbox-worker/test/runtime/DeliveryBufferPurgeRuntime.test.ts
+    fileId: F-AEA4002D59DF
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/outbox-worker/test/runtime/OutboxWorkerRuntime.failure.test.ts
+    fileId: F-039BEAF26D9C
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/outbox-worker/test/runtime/OutboxWorkerRuntime.lifecycle.test.ts
+    fileId: F-1CEFEBF00290
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/outbox-worker/test/runtime/OutboxWorkerRuntime.ordering.test.ts
+    fileId: F-CCD05F7274E9
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/outbox-worker/test/runtime/RunEventRetentionRuntime.test.ts
+    fileId: F-2F1F5BB993E8
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/outbox-worker/test/runtime/buildRunEventRetentionRuntime.test.ts
+    fileId: F-B06A6E25A33C
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/outbox-worker/test/runtime/createOutboxWorkerRuntime.test.ts
+    fileId: F-1B80E09AF623
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/outbox-worker/test/runtime/runtimeTestSupport.ts
+    fileId: F-3E3611CC5B96
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/outbox-worker/test/runtime/runtimeTestUtils.ts
+    fileId: F-9D9DBE2BE77A
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/outbox-worker/test/sharding/concurrentWorkerOrdering.test.ts
+    fileId: F-D4E5563911B6
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/outbox-worker/test/tsconfig.json
+    fileId: F-DC2C7CB12D6B
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/outbox-worker/tsconfig.json
+    fileId: F-D0941F9FC6E0
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/outbox-worker/vitest.config.ts
+    fileId: F-D0A99B705474
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/projector-worker/package.json
+    fileId: F-0C637007FAEE
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/projector-worker/src/env.ts
+    fileId: F-856D724B26E3
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/projector-worker/src/server.ts
+    fileId: F-323EA0564341
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/projector-worker/test/env.test.ts
+    fileId: F-0C9FBE437E90
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/projector-worker/test/tsconfig.json
+    fileId: F-DD1E9840D215
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/projector-worker/tsconfig.json
+    fileId: F-BA93F83820DC
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/projector-worker/vitest.config.ts
+    fileId: F-FA11009F5F5A
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/temporal-worker/package.json
+    fileId: F-6B197F4B1D38
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/temporal-worker/src/host/runTemporalWorkerHost.ts
+    fileId: F-52E7285E425C
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/temporal-worker/src/ops/OperationalServer.ts
+    fileId: F-25B681D67796
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/temporal-worker/src/ops/TemporalWorkerMonitor.ts
+    fileId: F-1F62BE79F853
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/temporal-worker/src/plugins/env.ts
+    fileId: F-C1D81D6A832F
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/temporal-worker/src/runtime/createTemporalWorkerRuntime.ts
+    fileId: F-C85A67E9A512
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/temporal-worker/src/runtime/temporalWorkerDbtProfile.ts
+    fileId: F-22634685CDDE
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/temporal-worker/src/runtime/temporalWorkerHost.ts
+    fileId: F-5A3617EBC910
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/temporal-worker/src/runtime/temporalWorkerLifecycle.ts
+    fileId: F-7778F33448C7
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/temporal-worker/src/server.ts
+    fileId: F-6C3668F0F5B8
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/temporal-worker/test/host/runTemporalWorkerHost.test.ts
+    fileId: F-FAD1748C73AB
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/temporal-worker/test/ops/OperationalServer.test.ts
+    fileId: F-3E61ECBAABF1
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/temporal-worker/test/plugins/env.test.ts
+    fileId: F-C79368DB444F
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/temporal-worker/test/runtime/createTemporalWorkerRuntime.test.ts
+    fileId: F-B640C41AFCF2
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/temporal-worker/test/tsconfig.json
+    fileId: F-1C6506DA2A61
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/temporal-worker/tsconfig.json
+    fileId: F-A90BA0B57E45
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/temporal-worker/vitest.config.ts
+    fileId: F-9431740E5275
+    owningUnit: SYS-WORKERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false

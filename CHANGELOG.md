@@ -1,5 +1,29 @@
 # Changelog
 
+## [5.19.0](https://github.com/dunay2/dvt/compare/v5.18.0...v5.19.0) (2026-05-03)
+
+
+### Features
+
+* **docs:** Add component file governance map ([#1085](https://github.com/dunay2/dvt/issues/1085)) ([5d5012f](https://github.com/dunay2/dvt/commit/5d5012f6e8fa40a2f225d94c7848363997c36009))
+* **docs:** Shard governance file index ([#1084](https://github.com/dunay2/dvt/issues/1084)) ([294150c](https://github.com/dunay2/dvt/commit/294150cc16febcfa7533a08bde204e998b2c6620))
+* **temporal:** Add PlanRef continuation safety ([b60fefa](https://github.com/dunay2/dvt/commit/b60fefa3e5ad5415c7396887d0bca68ffcf9d3e2))
+* **web:** Add first canvas authoring live proof ([#1067](https://github.com/dunay2/dvt/issues/1067)) ([2bb02b1](https://github.com/dunay2/dvt/commit/2bb02b1b64da502ac87630dff4dc6bb8a998d69f))
+* **web:** Add ready canvas node authoring ([1f224e6](https://github.com/dunay2/dvt/commit/1f224e654af0aa1353c6db9dd37fe97df9539180))
+* **web:** Harden canvas authoring and command query governance ([#1061](https://github.com/dunay2/dvt/issues/1061)) ([5e2eabf](https://github.com/dunay2/dvt/commit/5e2eabf3b537e832baff9f134b327eb8b014354b))
+
+
+### Bug Fixes
+
+* **ci:** Accept normalized governance generated artifacts ([f320dcd](https://github.com/dunay2/dvt/commit/f320dcd873bfc748f3023314d0be263bd9c42bf6))
+* **temporal:** Remove Temporal scoped plan dispatch legacy ([#1070](https://github.com/dunay2/dvt/issues/1070)) ([10e80b8](https://github.com/dunay2/dvt/commit/10e80b8b3f40f6fa11f415c9916d5ffda9d94daa))
+* **web:** Clean Canvas static analysis warnings ([97b6a91](https://github.com/dunay2/dvt/commit/97b6a91493acf09386c89e55c0bb990bd0ccd99d))
+* **web:** Close first-authoring live proof persistence ([028c15c](https://github.com/dunay2/dvt/commit/028c15c7961846429f0d4da9939ba48f524995ea))
+* **web:** Harden canvas auth and layout operability ([813494f](https://github.com/dunay2/dvt/commit/813494fc5f3828411175a555c2c566d81933dc24))
+* **web:** Harden startup route readiness ([6e21eff](https://github.com/dunay2/dvt/commit/6e21eff5222eca5e76cff8c345444fb838a7638e))
+* **web:** Preserve frontend operator position ([6c0726a](https://github.com/dunay2/dvt/commit/6c0726a1215b25dea4df9aa7901d1d97eba1a06a))
+* **web:** Stabilize native Cypress execution ([#1080](https://github.com/dunay2/dvt/issues/1080)) ([15f65de](https://github.com/dunay2/dvt/commit/15f65deb8c1f203a3f076e3dcebfc5fd6cab57b6))
+
 ## [5.18.0](https://github.com/dunay2/dvt/compare/v5.17.0...v5.18.0) (2026-04-29)
 
 

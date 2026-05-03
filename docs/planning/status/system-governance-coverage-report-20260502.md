@@ -29,13 +29,13 @@ Upstream indexes:
 
 ## Totals
 
-- Files: 4098
-- Governed files: 4098
+- Files: 4146
+- Governed files: 4146
 - Ungoverned files: 0
-- Drift files: 44
+- Drift files: 41
 - Legacy files: 0
-- Components/source units: 31
-- Components requiring subdivision: 18
+- Components/source units: 32
+- Components requiring subdivision: 19
 
 ## CI Posture
 
@@ -49,7 +49,7 @@ Upstream indexes:
 <!-- prettier-ignore-start -->
 | Root unit | Files |
 | --- | ---: |
-| `SYS-DVT` | 4098 |
+| `SYS-DVT` | 4146 |
 <!-- prettier-ignore-end -->
 
 ## By Domain Unit
@@ -58,7 +58,7 @@ Upstream indexes:
 | Domain unit | Files |
 | --- | ---: |
 | `SYS-ADAPTERS` | 196 |
-| `SYS-DVT` | 3321 |
+| `SYS-DVT` | 3369 |
 | `SYS-OBSERVABILITY` | 15 |
 | `SYS-PLANSTORE` | 112 |
 | `SYS-RUNTIME` | 286 |
@@ -75,7 +75,7 @@ Upstream indexes:
 | `AS` | 469 |
 | `DS` | 142 |
 | `ENTRY` | 886 |
-| `INFRA` | 2162 |
+| `INFRA` | 2210 |
 | `PORT` | 189 |
 <!-- prettier-ignore-end -->
 
@@ -85,9 +85,9 @@ Upstream indexes:
 | Status | Files |
 | --- | ---: |
 | `canonical` | 113 |
-| `coverage-required` | 3873 |
-| `drift` | 44 |
-| `review` | 68 |
+| `coverage-required` | 3910 |
+| `drift` | 41 |
+| `review` | 82 |
 <!-- prettier-ignore-end -->
 
 ## By Governance State
@@ -95,10 +95,10 @@ Upstream indexes:
 <!-- prettier-ignore-start -->
 | Governance state | Files |
 | --- | ---: |
-| `coverage-required` | 3873 |
-| `drift` | 44 |
+| `coverage-required` | 3910 |
+| `drift` | 41 |
 | `governed` | 113 |
-| `review` | 68 |
+| `review` | 82 |
 <!-- prettier-ignore-end -->
 
 ## By Canonical Role
@@ -107,7 +107,7 @@ Upstream indexes:
 | Canonical role | Files |
 | --- | ---: |
 | `implementation-owner` | 113 |
-| `none` | 3985 |
+| `none` | 4033 |
 <!-- prettier-ignore-end -->
 
 ## By Evidence State
@@ -116,9 +116,9 @@ Upstream indexes:
 | Evidence state | Files |
 | --- | ---: |
 | `classification-only` | 113 |
-| `coverage-required` | 3873 |
-| `remediation-required` | 44 |
-| `review-required` | 68 |
+| `coverage-required` | 3910 |
+| `remediation-required` | 41 |
+| `review-required` | 82 |
 <!-- prettier-ignore-end -->
 
 ## Drift Files
@@ -146,7 +146,6 @@ Upstream indexes:
 | `apps/api/test/entrypoints/http/planRoutePlanSourcePolicy.test.ts` | `SYS-PLANSTORE-API-COMPOSITION` | `SYS-PLANSTORE-API-COMPOSITION` | `drift` |
 | `apps/api/test/infrastructure/planner/ManifestArtifactResolver.test.ts` | `SYS-PLANSTORE-API-COMPOSITION` | `SYS-PLANSTORE-API-COMPOSITION` | `drift` |
 | `apps/api/test/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.test.ts` | `SYS-PLANSTORE-API-COMPOSITION` | `SYS-PLANSTORE-API-COMPOSITION` | `drift` |
-| `docs/contracts/planner/PlanStoreRecords.v1.md` | `SYS-PLANSTORE-CONTRACTS` | `SYS-PLANSTORE-CONTRACTS` | `drift` |
 | `packages/@dvt/adapter-postgres/src/PostgresPlanStore.admission-repository.ts` | `SYS-PLANSTORE-POSTGRES` | `SYS-PLANSTORE-POSTGRES` | `drift` |
 | `packages/@dvt/adapter-postgres/src/PostgresPlanStore.executability-repository.ts` | `SYS-PLANSTORE-POSTGRES` | `SYS-PLANSTORE-POSTGRES` | `drift` |
 | `packages/@dvt/adapter-postgres/src/PostgresPlanStore.executable-blob-repository.ts` | `SYS-PLANSTORE-POSTGRES` | `SYS-PLANSTORE-POSTGRES` | `drift` |
@@ -163,8 +162,6 @@ Upstream indexes:
 | `packages/@dvt/adapter-postgres/test/PostgresPlanStore.records-core.integration.test.ts` | `SYS-PLANSTORE-POSTGRES` | `SYS-PLANSTORE-POSTGRES` | `drift` |
 | `packages/@dvt/adapter-postgres/test/PostgresPlanStore.records-guards.integration.test.ts` | `SYS-PLANSTORE-POSTGRES` | `SYS-PLANSTORE-POSTGRES` | `drift` |
 | `packages/@dvt/adapter-postgres/test/PostgresPlanStore.sql.test.ts` | `SYS-PLANSTORE-POSTGRES` | `SYS-PLANSTORE-POSTGRES` | `drift` |
-| `packages/@dvt/artifacts/src/ports/IPlanStoreReader.ts` | `SYS-PLANSTORE-CONTRACTS` | `SYS-PLANSTORE-CONTRACTS` | `drift` |
-| `packages/@dvt/artifacts/src/ports/IPlanStoreWriter.ts` | `SYS-PLANSTORE-CONTRACTS` | `SYS-PLANSTORE-CONTRACTS` | `drift` |
 | `packages/@dvt/engine/src/ports/IPlanArtifactReader.ts` | `SYS-PLANSTORE-ENGINE-FETCH` | `SYS-PLANSTORE-ENGINE-FETCH` | `drift` |
 | `packages/@dvt/engine/src/security/planRefPolicy.ts` | `SYS-PLANSTORE-ENGINE-FETCH` | `SYS-PLANSTORE-ENGINE-FETCH` | `drift` |
 | `packages/@dvt/engine/src/security/planRefPolicyRules.ts` | `SYS-PLANSTORE-ENGINE-FETCH` | `SYS-PLANSTORE-ENGINE-FETCH` | `drift` |
@@ -185,7 +182,7 @@ Upstream indexes:
 <!-- prettier-ignore-start -->
 | Component | Files | Status | DDD owner |
 | --- | ---: | --- | --- |
-| `SYS-DOCS-GOVERNANCE-ROOT` | 1661 | `coverage-required` | `INFRA` |
+| `SYS-DOCS-GOVERNANCE-ROOT` | 1709 | `coverage-required` | `INFRA` |
 | `SYS-WEB-ROOT` | 798 | `coverage-required` | `ENTRY` |
 | `SYS-RUNTIME-ROOT` | 286 | `coverage-required` | `AS` |
 | `SYS-ADAPTERS-ROOT` | 196 | `coverage-required` | `ADP` |
@@ -202,7 +199,8 @@ Upstream indexes:
 | `SYS-OBSERVABILITY-ROOT` | 15 | `coverage-required` | `PORT` |
 | `SYS-PLANSTORE-TEMPORAL-COMPOSITION` | 11 | `review` | `ADP` |
 | `SYS-PLANSTORE-ENGINE-FETCH` | 5 | `drift` | `PORT` |
-| `SYS-PLANSTORE-CONTRACTS` | 3 | `drift` | `PORT` |
+| `SYS-PLANSTORE-CONTRACTS` | 3 | `review` | `PORT` |
+| `SYS-API-OPS-ROUTES` | 0 | `coverage-required` | `INFRA` |
 <!-- prettier-ignore-end -->
 
 ## Top Governance Sources
@@ -210,13 +208,13 @@ Upstream indexes:
 <!-- prettier-ignore-start -->
 | Governance source | Files |
 | --- | ---: |
-| `docs/DOCS_README.md` | 1675 |
-| `docs/planning/status/governance-document-rule-inventory.md` | 1661 |
+| `docs/DOCS_README.md` | 1723 |
+| `docs/planning/status/governance-document-rule-inventory.md` | 1709 |
 | `docs/planning/status/system-operations-inventory-20260501.md` | 947 |
 | `docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md` | 798 |
 | `docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md` | 341 |
 | `docs/guides/testing-and-ci-capabilities.md` | 340 |
-| `docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md` | 235 |
+| `docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md` | 224 |
 | `docs/architecture/command-query-rail-governance.md` | 159 |
 | `docs/contracts/index.md` | 127 |
 | `package.json` | 113 |

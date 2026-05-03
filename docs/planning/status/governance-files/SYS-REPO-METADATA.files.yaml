@@ -1,0 +1,2944 @@
+version: 1
+shardId: SYS-REPO-METADATA
+generatedFrom: git ls-files
+unitManifest: docs/planning/status/system-governance-unit-index.units.yaml
+fileCount: 113
+files:
+  - fileId: F-7C0FAC63D273
+    pathHash: 16228f9cd18f5479d183ab61cb01d3cfc66645b3053a3d23dd9aef2069c3410a
+    contentHash: 713437323ab8a48cb9c19aa8b04557acf1a3845c8a0f915703b62b47b444821f
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: cfd462b879259e95abc7ff6a7cd692d650d4b3b0930d9dde7037f6f208a24b96
+    path: .arc-policy.yaml
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-F305D06CE81F
+    pathHash: a2357a95f26b7b581ca887019e3e4d1aa13dd38221b2f1c1b6c395988b6fb2f1
+    contentHash: fb6cf1c90cbe6ee93a285c99f38b9f3812fc14fdd7b98dacff34b515b5dcd96d
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: 99b27966a30b0a3f440e7317e8266cc7ad8ca53bee290b7eb3c3821c6a7810dd
+    path: .claude/settings.local.json
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-DF09B586B9AE
+    pathHash: 1179f1d68933ac85eb35182c9c311af963e088a21027a21f63263266620d7720
+    contentHash: 520975797621de5565c58716e3189cd21e2c8adebd1aef59fa7b728cb8aef19e
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: c7b794b18d28f946a1a347cd8183f69488a20b46cdf50a9c95d2d8a9f8ec02fd
+    path: .editorconfig
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-5C2AD57F14DF
+    pathHash: ae4227c9e1ba749fd92b5c4b279b68fff941809abe1447e86b9beea0db834c41
+    contentHash: a5350c2d63d383d9e829d3c63e24faa64c4e8ded1028ed0b277846692241e22b
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: e61ef636687c20ef0f73bce5e6058bc0ecf2e1ca76d0b4f8d5f994b863455b5b
+    path: .gh-comments/normalize_issues_v2.ps1
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-6642FD66F5C1
+    pathHash: 5a16caa76a43aad05374ade70bdc5e112f7241d356b4c5005d06061546446d73
+    contentHash: 14458418ebe3fc39aae059ef278cdc5a8785a223b7bba1b24779acf3ef9c7368
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: 87f430da9b0a0230b241645799f655e3fcb4973e3f3f497711b85f37274e7f02
+    path: .gh-comments/pr-117.md
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-FE3524FC745C
+    pathHash: 6d75972516ec28221ffb303176ff6d79336c776d168b4bb5ca1d8825c61a3596
+    contentHash: 2d8246782e0526a676e41f0d60a1f363486e03d6989140a7bd2c47aa4eee4364
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: f791803cf5685d592a571f6978c7eab6a7423308b128923bfe97f490d7ee9dd5
+    path: .gh-comments/pr-221.md
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-6CBF1602CE6B
+    pathHash: e04aefb885f0eeb5ff508d67cb87df0088befdaac23274226ad42e51a5b4f42a
+    contentHash: af246a674e2b9d6052fe5efe82a8f986a37ac8abae61b62846e4452528f054f0
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: d6666d0eacaad04fb2ea3eb9e4087aaac194dc868ec004d7ad39f1d7feb66ecd
+    path: .gh-comments/pr-226-glossary-and-postgres-hardening-2026-02-19.md
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-5E2428142127
+    pathHash: 0ce20c621dca57dd134d5f2aeeb06079ea4b2b369b1fdcb64e64055ee64f5a55
+    contentHash: cfb686e143076af3c89f2f7afc87e8dad3817d393fed3bb9cae8f9e65e64a82b
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: a6a4e9c296cfc516ce81c1074a01646e1eed0823e92c77814a24e4d308df49e1
+    path: .gh-comments/pr-9.md
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-4121CC3E9D26
+    pathHash: d09224f1e080d714a0d1055e2007025137cd7465b580aa2097918f255c972a71
+    contentHash: 627d80d2080a753017294711701829120b262d49accb7ffd79246086cc32a557
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: 58d3530a35d91db136d01f994c2afcc5a4d4523cea94c07358ea9e05db30821b
+    path: .gh-comments/pr-closure-notes-14-15.md
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-73383A3D35F6
+    pathHash: e9d38bf3c6f2ed10a74a078d5293d52d11851becd9475013a3c26d6eb4067a7e
+    contentHash: b326dba7f3d313082baedeeb4c86f1c29041ed1dd720ffba33df4cbf193d4683
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: 71faeb3a233e0bb56e385f754d91fb0a808f46b5f3e3a46c7f148ea1806a799a
+    path: .gh-comments/pr-postgres-hardening-p0-p2-2026-02-19.md
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-894FE61C703E
+    pathHash: 2f1588e84069cc7c89eff496eb5b45863a4b35182506802dd971d5eba2c1072b
+    contentHash: 825fd3fb15a321da6ac3d4f1c4626464bca41a4e7f5d936b3adb7ccc6060b199
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: 1a9934d0b95fd9d8ca1812fa136c5e4bcf66bb8fc67ac61710f59fea70aad914
+    path: .gh-comments/pr-roadmap-status-refresh-2026-02-15.md
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-BDD7895D43DF
+    pathHash: 0ef0ed4dd7e874ed693dbdf544181f31abfabe334d071fa97b8e4a202c97b80c
+    contentHash: 54f28a28b46f73ddbe963022c330738ead5e1dd536c9bf9682996932e0911580
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: 6a29489932dcccd6a385fd5db3b7785a9eeed17674c0a1a4be47d2df026f6fd8
+    path: .git.bfg-report/2026-02-19/14-48-28/cache-stats.txt
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-13EE6A05E4B2
+    pathHash: 588e3908ebab8b65e1bbb7d1ef115711b876cec5b93d0a2571a9eecd980933a3
+    contentHash: b838716dae95e67065dd3030e0e6c4b64ea0f65ec6232f0dfe44314a52985e79
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: 0ba13ae48784bdb7fffa86657286d2d55273f59baf157bc0321d3aef8c92d374
+    path: .git.bfg-report/2026-02-19/14-48-28/object-id-map.old-new.txt
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-B282623D682B
+    pathHash: aec81848ca0bba6b4e3a61d35edcb472dace45ee45fbb34cb87589612dd85e4f
+    contentHash: 954beba85b44b0a3a8d1e56de9a5556bd5045192c1852ff8986c80f4739981a6
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: cc70c5fa1a8e6007afeea8d53edf544e5424ec9a9f7d8ad8e53e628a9e7c1361
+    path: .gitattributes
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-7E1405087E27
+    pathHash: 53cf590556fb0261ef6baed1bd24e9a5d9e9e09ee1c3b211391f1d5ccd775afb
+    contentHash: 6fbe5fa7e0be84cb89bfa3101a8c7ad9941ecec52c78af919e6dde19f86f9ba9
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: 91849bec904f1a5129c2e2a950d02642cd8b131c8ac14df250e75c13dcc6b63c
+    path: .gitignore
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-CE29E11C42A8
+    pathHash: 17a38735e23c1b1d9620b47e3483e74380ffb751c1e79096893e972d8e93aebe
+    contentHash: b94df1c77352478d4c851583193278c527b5efade1aafea0e1e3bff6a271ccc2
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: 94006ec024141c88ff45ff1b43a8a3972b36e5bd0c24797e5ec035faca82be31
+    path: .gitmessage
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-375B6D9020A7
+    pathHash: 5bf05ce393a06959dbc7fa077286dfb55486f5b670753b864e229a46ff528501
+    contentHash: cb6d22c68b56ae9ed08f224cde85a93b59474ca5e1982b4df6c15441c3390d7c
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: 067e0754e7327f1df0289fa8146e8599612c44fbb9a1267df8cdce83633fcc2d
+    path: .golden/README.md
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-479612B85848
+    pathHash: 44c92ae8c4ef144ee2d0106d1daab75885995bf8e74869656e43ba40cd7a1034
+    contentHash: 7a0fc577589dab92b8a08324e06fd85e7c04c963e80eb1a9aba5f555c24b0783
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: 2cc6de5a57e1189bc275847abc136c0c0861beafe48977a3fc25a04488c746f2
+    path: .golden/hashes.json
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-A009592B8F5A
+    pathHash: 533bc34c9457242ecd84cb1e715aefc33281a6938b077ee6a43b9eb966077646
+    contentHash: ca8bcb033dda3d32778a7c35b91fbcb469e663df703aa393ca7ebcc5c7281fc9
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: 87d6c0facc93d0528ea468f987c5c6a4282665c59d19c742579089e6dff45669
+    path: .markdownlint-cli2.jsonc
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-FEDDC240FF88
+    pathHash: 2b3e7b9de75dc60571c51cbbaebbc795c6871b13bada92c59276d5c3a0432b02
+    contentHash: 07541cd494c5d06bd6cbe745896108831f6458d6541134c973b91f0e82a0255f
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: dff83b195c32ab8fe9555ad534d8d36b76567335327a67750c0fbdaaa6c7fd3c
+    path: .markdownlint.json
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-E8E020D1DA5E
+    pathHash: 7ef8583119b0f1afc161ebc553e3ccb8ba74d56b50cb620157948e357542fb33
+    contentHash: aab493975313e6b80dd089cbb20571b9d1f37ae642bb0f15156dcd6c103c9fcb
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: 3ec67d806b94e33a5571d194c6d6dbcd779a2c040b98d906c7b21d5b52548e05
+    path: .markdownlintignore
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-F9F6F5720AF6
+    pathHash: 83f5bfd52917943c9da34ec2bb06e3b65dc6e34c1442afc66d7d856ce62058a0
+    contentHash: f14b4987904bcb5814e4459a057ed4d20f58a633152288a761214dcd28780b56
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: 89925d52119c6031388855f7268bf75f7738194540c80946df80f846c736d872
+    path: .node-version
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-8CE6D2AE6330
+    pathHash: 05903b1b19547bcede01d0ab6225c500f8dbb5289f42b1ed77610b92500d034d
+    contentHash: 54c747bb6558ccacbd2da917cfcd8f1beaa007c3bfbfe986fb5ca8ca2387391e
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: bcc4b66fc4725dd6420b13e8705995227ba53bf457acedb34763a6e9a18d249a
+    path: .npmrc
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-65B3EC7DCA4E
+    pathHash: 3b245e67c7a318bc88a55ee5a9930f69d2f8553ebe4c3fbfcf5522ca4d3007d1
+    contentHash: f14b4987904bcb5814e4459a057ed4d20f58a633152288a761214dcd28780b56
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: c54959e23e2a2d7259c4e5cd8303b702dae91844f927de6a76ac129cb3eebadf
+    path: .nvmrc
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-DF56843DB37E
+    pathHash: d007c579eeaf9f43849dd61b638ff4e3f07c30dafc34f271738f01b6200aab0b
+    contentHash: 7266e72256abc50fc1e90af6a52153242dacd4934b133db83fa53527132fe89f
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: 282192ce51bb74af106589c1a15c55c2f9fd452029719c4554d6539008da548a
+    path: .prettierignore
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-43E210606E2B
+    pathHash: 7314edf9da7648cc1186eb361f01fce6c26bc034e1feb0a985df96fba11c3a92
+    contentHash: 5c22a218fbf9f7f4be353bb3e9aa910eabcad4d6d9414cc3a35dd9ff33e0337e
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: 3f04fc793d43c8fe0b3989081c92688f41cbc3fbba6bf574f5f3cd33227084bc
+    path: .prettierrc.json
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-2346F86ED641
+    pathHash: 67a95b614a30c5e4a04addc898e0aa853daea6da63da31bd316e183a64fee978
+    contentHash: 5fc9815ed2c4d57b4563f03dc58372cca56e05a1c808268b9f2d0f447d5035c5
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: 2ea0b7bf42da8b724b6cfe077be112531ced54009c72e2420fc31ee57574f75e
+    path: .versionrc.json
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-657BAB8DACB9
+    pathHash: 03270892431cd20a289d32f5e03d1fad4d25f0655e6067ffb739c31cb6b44e9b
+    contentHash: b61a98fe974804d02815d69b4266288f8943d9a232ca54fa7fafd60b66c8d887
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: fcfd36758d81b4656d782f98355e5047a5bdafb1dfa0e0de6b5b6905153c7bde
+    path: .vscode/extensions.json
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-41CA6153AEAF
+    pathHash: 7578c6b8510a44a493e029c571cb0639437e8c777a5ab97785af1a32e77e0e3b
+    contentHash: 680a33751689216c795af958cf92fa4c58b61fa1827717c7bdede0054957cb36
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: 6ce4c2e693d64b6875e4dcfe29bbf3ad8bffe8afacf715f5565f14ddf5d78ad3
+    path: .vscode/settings.json
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-164D6E620D5D
+    pathHash: d3b19bd02159792b48be4380145734faf29ce7dabdb6f9042dcfe76a68c9ffef
+    contentHash: bc699317ea37562dd6d9aa18b48dfa0040a25c74d076e37dc5c891ff4be7996b
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: 0dbd18ec7f4f6794950fece732a76179b4ceb4680cb4280cccf46bb63b1a8cf9
+    path: artifacts/canary/g5-canary-trigger.sql
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-4FE2003E964E
+    pathHash: 32f1081f9786bd90abfec09555f5bfe70aeba224dd81868d52bf8e9c840445ea
+    contentHash: eb9053efb91c9157bf635e3cbd489079aa19736064b10efa611371c55b870c38
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: 5d7a460f1e0fe63402c62176eb7bbaa07a7088811c56bdf7bbe449250729f742
+    path: buzon/20260421-codex-fowler-branch-analysis-http-error-translation-stack.md
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-34300E6F81F8
+    pathHash: 82db697853fabae2715e60f9d95ca7994832c65801e1d9461e483b143e76ccdf
+    contentHash: 69cf3aab73d48fd601213e6cc7f911db3f0640194a219c0fe0cea6b7ab47ecb8
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: 1e1ee596b103e250140663fe37af3c932a84f08a89333f61aa76f2fdf8e522bc
+    path: buzon/20260421-codex-fowler-http-entrypoint-component-analysis-and-remediation.md
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-58DFA7B78671
+    pathHash: 7355de7c90fd5ae57bf710f6701c91b27534bdcbce5e7f95a228e7419e61ca2e
+    contentHash: 558dc660d2334fe39f24d8aa6b25991d5eb4ac75cbf0c9ae8c5eb5bae72e4607
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: 226071edf6a92a3b9d3438f90da2de0a3c5c074efe3f0985f92e9500712edfef
+    path: buzon/20260421-codex-fowler-http-runtime-error-translation-analysis.md
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-5C4C5157638C
+    pathHash: abf9c2ad9cb2f800d0692d7308969dc84b094a5fba00c85748d3341d7146b498
+    contentHash: a4a53d45b0582da781384a19c2289351dff1f0c652ea8821c6351bd38bb5060a
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: 3dd0c072d8c5d4d2f69f93d6c75442b650aede126da83a17cf2111c7331114d6
+    path: buzon/20260422-codex-fowler-apps-api-runtime-composition-analysis-and-remediation.md
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-9BBB9A96B52E
+    pathHash: b83de613326e18e94b3e3da2822e2d6599352ec6a1f69d348960a20c8b219e20
+    contentHash: b46edefad6293aea72bdebc19c774af0ed60c71d48013b0ebf44e896581c8ba2
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: 27aa81f695e87f175da50135191961ec658474278de0180b5470220aaccd4ab4
+    path: buzon/20260422-codex-fowler-start-run-application-component-analysis-and-remediation.md
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-22E4ABE692C5
+    pathHash: 1263e753b38ecbb9a70d2f68d2028470340c460f39acdbbea73a4b95b6a18a5b
+    contentHash: 4ab3af45be2a7da1ed1d47bf3ede9ed049b5fc41e897b202c8392589fb94a81b
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: b5b1cdf20caf741626277f0bdb94b2edfdeb48b49c6db9566d27eb2a2c6c1c58
+    path: buzon/20260422-codex-fowler-start-run-boundary-and-admission-analysis.md
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-833F897ADFDE
+    pathHash: 60db87116c1837a63257eaa9adf3143c346f75543396cb22718a9a2f4bc4736c
+    contentHash: 8ce23c2b8918d51425f5d28b1efef846aade759ef963bda340d7d5f2fab2fac8
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: b8079bf03083a8d40d72a05e53b2af145c3f3260923c3316b61bc0a64c008d9e
+    path: buzon/20260423-codex-fowler-access-decision-component-analysis-and-remediation.md
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-0DFE5DAB70C0
+    pathHash: 953e8e827925f14abc890f34758a36835f2d6cb790aef36a4cbecfca696d10c2
+    contentHash: 51682eebd4188ddda6d1cd0e35e3184f809eaa817dd8a7c8724653372c7d354c
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: b8b2c6eade89d31b189cae882fcf4df6ec18c6f659753dbff0e7d0122c8632d4
+    path: buzon/20260423-codex-fowler-ar-c3-execution-capacity-admission-analysis-and-remediation.md
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-BD91CBC4012D
+    pathHash: 9b5be0c1f68ccf96989a2efeb3981158d31c637566d6df708ddcebe49d440a7e
+    contentHash: 09213dafc945a3e026f1f4a83fa10e95bff0c7f954b8d7620ab00abd3f3570b7
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: 81f2c2e5327b7d04515b51031c2d81c5055dfae1222773041ebed388eb19987e
+    path: buzon/20260423-codex-fowler-branch-start-run-control-boundary-analysis-and-remediation.md
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-D9FDC70155D8
+    pathHash: 1f15ac81e85f83efbf0a281c79884a2d55e12d2508d0f3ad011aee21b0e796cd
+    contentHash: 41fa05448a930e96e6c1815fbc3630f1c34c6920db346f139ebc793bb8f5d6d7
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: 9b869771fb44e3dcb6f21f3919285c0e11460e8b69b0f0b669e54e92b8af3614
+    path: buzon/20260423-codex-fowler-run-id-uuidv7-migration-analysis-and-remediation.md
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-A74C8DE91A0B
+    pathHash: 1c96c2d1fad9202844c2227cd187bf72e1024f09dd1486019a64dbb1e13b284e
+    contentHash: 27546290947b34727819927e0bcd7d6caace2046a5561c1d19a814839cf9e942
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: 1d79e6a6d67c72c861e6346e6b50c246af464b8f4f4bf4d3c47b166bbe96f54c
+    path: buzon/20260423-codex-fowler-tenant-run-identity-analysis-and-remediation.md
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-B845C0474658
+    pathHash: 24b5b6262fac9b2704af49e980a1037f415f4b08ab7ac392759508b9cab3181d
+    contentHash: e17ae38a65582a53f660898264f356bfbf31989979308ff2f91ec1faa3bdcf94
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: 82549ca5388a1b3f612b3bc63294cd44be6e19f422a114ceb51126ae98213bce
+    path: buzon/20260423-codex-fowler-workspace-authoring-draft-aggregate-analysis.md
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-BA07A90E68FF
+    pathHash: b827891a06002ff3a4a013150e60d93bb2406f15f41f1d05ef8a8015206ae332
+    contentHash: 1d6db0950fe3a15137f8b92dbe97408be5d986cb881440f5db2c2e48d67bc03e
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: 56a5cf386dd45b1762a79283662813dc98313aaaf3cdff1e399bdef2d27b6231
+    path: buzon/20260424-codex-fowler-ar-c3-admission-observability-analysis-and-remediation.md
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-10A678DE9255
+    pathHash: eb4adda75c33b04d5d299e161485e13fd05d802058cf42cd07d0be8f4bde918a
+    contentHash: 94b61f01b491306277b09068cc0a977f0c834586067a7e853b7a8a01a2b751a6
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: 7cc9f9e65589708adbb3a4b3f28b74d2c891d893f8c8cc27fcc14a33e3886e04
+    path: buzon/20260424-codex-fowler-provider-vocabulary-hard-cut-qa.md
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-E166B8BCA772
+    pathHash: aa11673110e23b6f2acec3abbc8a55251685b45951ad89a2f80aa111aada10fe
+    contentHash: db9c7ad1c476de7cb2d0e401e73c4e5d90837940c6a270a16622fd9723b2e7ed
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: 1280d667aabcc7632fe23989282d7b7529e3a63b17ff98ea07e33c5697f38604
+    path: buzon/20260424-codex-fowler-temporal-plan-ref-contract-qa.md
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-FB76C442FC2C
+    pathHash: 492c16a218b4e0108ff32da7e5d83c26cdbad0f2beccd69e82004b5b70b4aeef
+    contentHash: ba6450dd144d49494a6c71a504a7c9cfe9e2d40dfaa688230869dcf3ab572aef
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: eafbd51e23af5806a4c3d7706fa9fd131e7120a8a5486d16aadb00a466c59ecc
+    path: buzon/20260428-codex-fowler-temporal-dbt-core-decoupling-analysis-and-remediation.md
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-BB6138F1CD0E
+    pathHash: 9d226710b8f737866a7f3a01492cd7787338a76b1485c9655a78e4b1d9b4956f
+    contentHash: dde7bdf21a2c5959cd1f60ca80a287462996a9fc4c7ba483113fc54a2a0a9a2e
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: f846001a64f56dc60388d6119fb649f2414f77659a164b48ffe0c2fc6e859eb0
+    path: buzon/20260428-codex-fowler-temporal-planref-workflow-boundary-analysis-and-remediation.md
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-2D74862886FB
+    pathHash: 66dbbbb65b53630e4d8c2896a51806d7502e1e054a3612a82d77da8bc62e6108
+    contentHash: 35fc89249cfaca4bf59c4c3d679677bc5e8c789ac01350823c4d5fb4b1708574
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: 5b236fc0c4d6e3d333eed01aeb02778967ef1565e24ead8e37422e1c4972b26d
+    path: buzon/20260428-codex-fowler-web-graph-startup-and-draft-recovery-analysis.md
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-1178FACCBB92
+    pathHash: d3bcd178699f6deca4c7edd5e8211ec629b4749c1ce06fbabc1143e965e5f5b7
+    contentHash: 5f9dcfe5da332e1e45c0b1560e0168ff510cd40a77f8eb47f2c7c6bc5274d7ac
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: cd309725381e8d6bfbd1065e29035ebcb7e7d549a25336e8d09cdd60301e9aa7
+    path: buzon/20260429-codex-canvas-operability-auth-and-drag-fowler-review.md
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-D72F32520A22
+    pathHash: f8341c734f0246ed4d2da99d9c30b63779d7f36f16c8ebebe9b80745c9969f48
+    contentHash: fdddfda31876262227937563c5a161feafcaf4a46c74328f578e469495200613
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: 03e4f672e27ac7d82b973f6b5816a40650919ab3f8aa4a9c411af1624811facf
+    path: buzon/20260429-codex-fowler-branch-architecture-post-codescene-analysis-and-remediation.md
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-38EDE52E24DE
+    pathHash: 73cb7cb42a2064040f62c06b6cb4475b068d3949f26728e3beda4627c151ea38
+    contentHash: 3340813caa2e2a7dfd817467bbcd84feffd027a44debf4177006170fda460ace
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: 09f5583e9b9e411b03a65f76a8d9a257803df42b660d073c932ecf3b4e782555
+    path: buzon/20260429-codex-fowler-plan-admission-hard-cut-analysis-and-remediation.md
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-03F58915694E
+    pathHash: 058c64392841b4b3b0799beff80f05d201d177ccc208a52cd28f44e2b87481b9
+    contentHash: adf789ef57fce25d95989e289dc45eef8450a52f939634bb59df892308c6d4e9
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: acba7fa69ed04d7b2121c1e2f9e52d949b57a8c09c2f447559b123478b8b9399
+    path: buzon/20260429-codex-fowler-temporal-step-plugin-architecture-analysis-and-remediation.md
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-18F4B512A5BF
+    pathHash: a8ed0164419b99a77a3ffa08582e22a9a5d0f752d149f20c604f2e5785f1d47c
+    contentHash: c23ee1f8d6cbe2c14a130b5b6d235b3e392ab7d7aac826b036afadbae20627d6
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: 9660dafcd3126a691aab053f7ecd50b0897c8527cfe3b8ef941aeca715edd685
+    path: buzon/20260429-codex-static-analysis-followup-fowler-architecture-review.md
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-5278401078A0
+    pathHash: e092351691005cff24756517d1b1471ac35f51e2104598ea2965c5da52754b88
+    contentHash: 9c3667f315c287642401dd3d8ac2f044df02d5a6f61178d89fdd88b13f58e45c
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: 25359fc15b24e2d9818c53bf440d7c74d1758c7ba3f6dea1919de2f0eeaaf4de
+    path: buzon/20260430-codex-fowler-ar-d-continuation-safety-analysis-and-remediation.md
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-A72ECEEFCD17
+    pathHash: 90cb32f6be7de2b6a15cd099b2df37762456abf685cd02db7692433d364b7177
+    contentHash: d2616de599a98e1b7f920fbd268f26db6f751800284b0740a77bca2da08ee209
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: be4737e0ac90b10ff7fea1977d3d635d177a4eb87c66d2f3cf13c7b166e17c7b
+    path: buzon/20260430-codex-fowler-ar-d2-temporal-capacity-sla-analysis-and-remediation.md
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-D7A93A960A68
+    pathHash: 695d058c18e16ea36a72db9d2ef4d31ad742fcff0275528ce0d38808c85a49d1
+    contentHash: d82238850c8a55d55f8259c20315d7a06dac32173f9fb84e38cc4900615a27a7
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: 302818cd400cf544d0049e7e666212a56335c7890e068cf7453ccde7d7a91677
+    path: buzon/20260430-codex-fowler-canvas-ready-node-authoring-analysis.md
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-37EE0C47982A
+    pathHash: 5a2e902a2557ed6b176682be2085648f3818e9dca75fc1fafbd50cbe2c6b7bba
+    contentHash: c9b0d3ed298d5873f6c3214df02c2314905b4bd46d88e0513803619f9fd5f41e
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: c95de53f79798ab4e6b9c44b6063fcc3e1df00970659a0501f0ad86d9ce18d0c
+    path: buzon/20260430-codex-fowler-we-hx-2-facade-use-cases-analysis-and-remediation.md
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-72ACE0CDA1A5
+    pathHash: 941f2fa06cf16230b74c1ce8415897798ad66f42f94d7b32b14330c417961743
+    contentHash: 0979fb8c00e667747d6d8bec0217fde6af1ee0e8edbd55896404fe1eae524520
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: a4b0c1ec2c741dd6fd87c7a2dd36e4d499eb475a30814f1d310c7cea4fc45f55
+    path: buzon/20260430-codex-frontend-operability-fowler-review.md
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-23678C141142
+    pathHash: 8d4964c349e999708d5891e8888c9f1ee8d2f33468249a8dc4768c399877e459
+    contentHash: 3cf929042555492bd25621d13a06b0c775df092152f7a6fa60c744d781e784dd
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: 81737f193055b4c32680ff7f733511deea0f01809880d28db5ae653378305314
+    path: buzon/20260502-tf-e2-m-b-canvas-draft-access-posture-fowler-review.md
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-85BD5B352DE5
+    pathHash: b817ba98bcfa6114dd3d71e78f5c3ad08d3dc6d4ea7086a400c949c63de321d8
+    contentHash: 43a754faeb6e97bb310d2d7d74a04cf8fa59218629d8c56647a30826a775d85c
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: bee84d54b255112a3d8c3542b2eaf1f31f5caa6f0f2e3de34495bfd2d145586c
+    path: buzon/20260502-tf-e2-m-d-startup-route-readiness-fowler-review.md
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-B77FAF8BA094
+    pathHash: b1bf9b896e66ba2aabc129f90193e4a2fe43222a8c62e36c607e1ccb82c2c17e
+    contentHash: fc22a93392805d36a71a6081292f82b4836801d77d8981d750e56831d41a434c
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: f7105c0d423f8f07a7cfc4e0ce4d649675fac1d9ea2250cd959d86a269d6a39a
+    path: buzon/20260503-tf-e2-a-authoring-draft-hard-cut-fowler-review.md
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-F6722E96C038
+    pathHash: aedd34dd05ffc0b7ad686200043e58f922c12f63d611bfb9272f9d8c279d3d80
+    contentHash: 0802d07d6208ca57330c202f2c6d2b5344342f67402ced06e2def124ed49e87f
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: dd73e0f67df13de8e7c467087b03e30730435dc22ce64ce1c16c1a5b2e6319e4
+    path: buzon/20260503-tf-e2-a-fowler-hard-qa-review-followup.md
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-54CE1B6002DA
+    pathHash: a7c596097103a175307f96798ed3db79b3400635e7b789fa337d78c8a362376f
+    contentHash: 01c9c58df20d6c4781076b0755e156b80d979c1c0516295d536be76a512fcdb8
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: eeb700ecb3407163170bfdf788ce2ee66d8ed32426858dfa3ca6f0711711ce90
+    path: commitlint.config.cjs
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-D92DECAEAD0D
+    pathHash: f6b17bcc4949e42bffc89923362616bddd2b1ef8b002550ebe041957d6a5e7cc
+    contentHash: 8ba2d8d0de45de1925f0b13a472f9ad0e98c587aec6c03b93545adef588b3992
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: 6f4d33ae843cddb924abf545b3bb6bff932bc6399bebbbdc5425ed19f3e81085
+    path: dev.sh
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-48FF668751ED
+    pathHash: 5db1b47f89e5553c2d6a671c83193b47d3d40b80aa761cdb1bb750019ddeedbc
+    contentHash: a10b238023b78add199afa3af197dd8a2f2a6a8b07d0c598c8f164c1a6597c96
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: db92ba0b56945dfa44b0e0d4a715676a9795bc0c0a4c93d734b39abdc94575ed
+    path: eslint.config.cjs
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-F56E0FB00FE4
+    pathHash: ecde7594be1fdd9f6e8f3efe123d4471f729df3612c0e6b492882441d6f9d29c
+    contentHash: f4bbfbbf4bb74bff356fafafdda7b13902996acffb35cf0c1cdea4ea6c0cffb8
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: 6ae1675a3157f9265e8ac4566a4169e3be318c7ea2298e2843aca86f8cee17a9
+    path: infra/README.md
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-74C7CAEE2AE0
+    pathHash: 99b5bbcfe09d2b593790939474ad59364c6a0b9d8fd663a32d40bbe1ccb3d670
+    contentHash: 5c9b691183c44e8f103c2bee186987ebd0ae4a78fdbde9da4a1894842e100105
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: 20aaa781dfff582cde6e4a469be74a2e2c26d10b12dfab8afe33575b0e2223b8
+    path: infra/db/migrations/2026-03-04_g3_start_run_intent.sql
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-A5A52F113A29
+    pathHash: e2b3113d8699eca2f471f3e83d5efd9b13e5e3ae4cf6c6879947a71b52eb801d
+    contentHash: 14213ddd54bc2df3f30327a9660ee89d2ec873547b23a466b749fd0475ba55e3
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: f5eb9ed34293c8b34e599b878a4061f4c56492bf182f846a00604ba83397db29
+    path: infra/db/migrations/2026-03-06_artifact_store.sql
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-29F9E637EA58
+    pathHash: e82f0433ccb7115dede1b8c49c3a0ab12e0294e8c4683d9b6366afbc3f055ab3
+    contentHash: 0c7bedc31b53a1028752a202224f7dca7af3554d6c11c8ce19efdb63e6bf58a9
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: 41ce7df6895f06f9d9719063560291358b2acf92f5f4a5d9b40737de881085ea
+    path: infra/docker/postgres/docker-compose.yml
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-FD2D84B25958
+    pathHash: ea74b31acc0ded580857c0791cc0bb8416e5c426fea63e91ab78b9a2119736da
+    contentHash: ddebf0aadf4a5dd88152239700eb4b514546779a55b01c6f70db8507f3b10db6
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: 65e0c105dc20608d39fa4462e18eafedeb578bc8516adce41d6c8461378a60cd
+    path: infra/docker/postgres/init/001_bootstrap.sql
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-4FCBA2FA0395
+    pathHash: 591dcb9d80e6c60c9c660905bb602e2375832d1022716b48efa87be45c41a0ec
+    contentHash: 3c09125ce0f5b34b190ad27ddf2d93ab5276717c30fe2bfa0de8f4b82d9372a6
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: bdd54c5da196ff393181146c921ecad93b9a4a53f670ba57bb436c67c7ad1998
+    path: infra/docker/postgres/redpanda/README.md
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-9A6DFCE4617D
+    pathHash: b5d428217b4f9505f8cff842c7a45b38d10b91f0113efed811865f268bfc1c77
+    contentHash: 08795b3ebc51e169134e1e495e34edb9edd21c0c4c979ffc12fd8eaae3976c4c
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: 5b7b77322c7f801f902da9f8e06c819faef8d45a887545d869babdb268adad14
+    path: infra/docker/postgres/redpanda/docker-compose.yml
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-880D53C85B4B
+    pathHash: da8a3f94db7ed03916b8353329da115f5a6bbf8f99090d4dd459042e0b249632
+    contentHash: 83cd63575f9bc95572b996d9368f5c9b714e5c02118b2cf64ee46f9b0102c03f
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: 7a35f97b2acb960cb2bb46082c69101b201449c0a0ee3213548407f61ed7fc2f
+    path: infra/docker/postgres/redpanda/docs/DECISIONS.md
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-1B62CD1EA3F7
+    pathHash: 62c491be05299a22b6d563922660ed4553091675a340c18f68cbe9913c9526f3
+    contentHash: 5a674766e6c0ee1021da76e6083973297dbf70fc20ec9657e9d954f000bf4f7d
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: d145d7d9cbb9a0dc8f96c3c614159fdf34a2989677833817adebd76b9d038c57
+    path: infra/docker/postgres/redpanda/docs/adr/ADR-0001-sse-first.md
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-5EF8B563F787
+    pathHash: 7280221d7140aaafa639f636502ec2751064a004ee5db87de98cd9ecf7f3b93c
+    contentHash: 84f80fadf7e4f0e7021cfb7ace4ce1bc6ff1137a911ed7211b69da7677853aa0
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: 1407164991e99697699b84d856383e1a3c73c6b346a980160be4a527234f90af
+    path: infra/docker/postgres/redpanda/docs/adr/ADR-0002-postgres-authority-kafka-bus.md
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-3A7C1BB23005
+    pathHash: 4ec9d751d7fabb3ce28a68274e920527e37110d4abfbdbc93383ae6045bb9b4f
+    contentHash: d31e7ff10ee0ec266b901257d7f8003c34b67b6732e68f1fc7e1137dee08ff4d
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: 35c91b42de8ba2afa0ae23e1f991c2cfa50803d1bd53a7c6132508c7f3200894
+    path: infra/docker/postgres/redpanda/docs/adr/ADR-0003-transactional-outbox.md
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-D97CDF125A53
+    pathHash: b97b94e8a34969c874ce98191fd576d9f673bddc263cbae1ec3f51152a62e85e
+    contentHash: 1559b6ae939dd35b75e0c77507d31d1ac2e70e79e05c2f4c07941ac7169d5701
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: 0cf5116fcf447ae899d052d3709db9f0f396d6d2c6254f63cacb3d5a7a1d4bec
+    path: infra/docker/postgres/redpanda/docs/adr/ADR-0004-run-seq-allocation.md
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-87020F88EEB6
+    pathHash: 5e9aa04f5544e5ec56597253b639b96764ddba19c663ead06f4a22cac48e972b
+    contentHash: 9b6c96dce2a7420c9fb791592ba9394fb538e42bfdd30e1f0fafeff9c59ceede
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: b0dfe4f6b683996d2dac42ca66d76198e59b96dd11245dc8d030721ef858c019
+    path: infra/docker/postgres/redpanda/docs/adr/ADR-0005-single-service-mvp.md
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-0AD25AD4421E
+    pathHash: b9bc097152ebebf015d18e7a30db4f6d98d94b49965ed0981e390429a0de03ae
+    contentHash: 11fee242cdee712c9e7f859a6d92271a14eaa7b6fe53171a4db09fd24237effe
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: 4c522ea254cdf008b1ea845dbfd7fb9441514457034ed3bc24ecab4722c6f222
+    path: infra/docker/postgres/redpanda/docs/adr/ADR-0006-debian-node-image.md
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-D559B6429A12
+    pathHash: 9507f8e4bfc16a7687dc9708dc722adb17f01cb3867cb4226d8d84b90cbc35af
+    contentHash: 89e28a60225912eb6da1d4f7868be12d1d88cac69a4501ff272823e79ef0f77e
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: 105588a41960eeae71bf1ca6ab75e33701a796630ee89dc5ef747cecbec3ebc1
+    path: infra/docker/postgres/redpanda/docs/ai/AI-OPERATIONS.md
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-13A9C489FBF6
+    pathHash: 5191ff55d84a5c6ce962ce66e69ea25d423e2df4e1ae4eabe0733c4eb94449ca
+    contentHash: 4ff946e2b82b25d70698860e1edd8afd5da4ff5239da6653652ed1fbee061edc
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: 9075cacd69ab3047c70ba853a4b2e34a66df7a9a97a7607b8750d51a6ccebd22
+    path: infra/docker/postgres/redpanda/migrations/001_init.sql
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-25F3C0DBE720
+    pathHash: 4223a99f4fa1f1f54a3da759948bf3b1346a6fbf926d927b5b49d5e3f707e5dc
+    contentHash: 6399a486d724de84a30931a4a2e06eb6b00156b895fa9dd6f1d5b7a4eefd79b5
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: f43bd953254e2a2e7ceb0b33e5603f56a7d0b0e491923cbf367aad676310a07b
+    path: infra/prototypes/api/README.md
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-6A6007215F4F
+    pathHash: 96c0857faf65e874ab6f6078abade8cfc8fe5f1012d743ed19bfbc66d7a45c92
+    contentHash: 16bfd59456c98542847351c91353eaa339d607f9f8cd588157e620f8144879d0
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: 2923ca29504638ac35607915867ced341e0e8e52fb464eedbca1522a95611797
+    path: infra/prototypes/api/package.json
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-096DEBC175C9
+    pathHash: 408fcc3c92e4c94089b43f946c3210b7071a2f990566330b1eda2f1824bbb4e2
+    contentHash: e33ac1f46ed9f8b3c36c00bb96f9291f8d59f63b9f147043c4b0316c651d10f4
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: 9f4b04f67323adb17557c14e587acc4d8e21076bf92b0cbeb4b7c7f4eda8eeda
+    path: infra/prototypes/api/pnpm-lock.yaml
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-F9BF6A8CA7F5
+    pathHash: 440f5315dc0b1639a033995a558d75cbb43b695392b945cf5224fbf44e34259c
+    contentHash: 3667774e769eff534ac176084b260246e98abedac4e9bba035e8668ee5ff91dc
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: 2b5a40dd7df0d8d585c0d174f7de93b5d65ccf2e70a51fa8290a79263db520c0
+    path: infra/prototypes/api/src/catchup.ts
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-457C0B344D21
+    pathHash: 6a436640e358e1e8ea4e6aad0c3797548eb0ec98a14e4ca8800f1771d1c9b4f8
+    contentHash: 18ebe083a005000e55a6e64c0757414966a4c0ccf9059b8e3db4036f180784c4
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: 79e0d89a2912a21c6e44ee19c728044c3bc4858eba110466840abf953c4c01de
+    path: infra/prototypes/api/src/config.ts
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-9B101D8143AC
+    pathHash: a310379313bd0312479e5814d46a60c0a22a70954dce3e3906e53c9ce3a8519f
+    contentHash: 47e1f33150a4084cc56b9e349487b48ab6e032d99c2997b341db166db1921ba5
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: 3127f6bf4adc0cf8a7399eb7cab54dcc62aabae371cb8c552e62bbc8fdf8168b
+    path: infra/prototypes/api/src/connections/kafkaConnection.ts
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-0F23275AB069
+    pathHash: a8998b0567153afacaa58717185176da500ea45c4417806ccd4dcd9894661ae7
+    contentHash: b1d6ff6eb2fa8929c9f6023bdcd38194719048b876a769ad661d1e75ea8bb6e4
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: 4908ad5c2fe49d72bbddd712549214ec8698f94031527116297cd71e1fbc9e76
+    path: infra/prototypes/api/src/connections/pgConnection.ts
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-0CA9D7ADBD64
+    pathHash: 9817f72eae031ae0d43ba5d14a3ad3df9ede97df93d6eb5f9d73cae6cecb667a
+    contentHash: afd480d23d0e9c1f4d7964def29f02854caab41c36115eefc8205a38ec29cb4a
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: f455a797295ffa870370c93e1371dfabbc7e3ce6ccedf04ead606b008684a887
+    path: infra/prototypes/api/src/contracts.ts
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-E9BEE9F19BA5
+    pathHash: 39e934b2b5edd3991d63bb42378d889b031cc0098a19a085773d5a8649d03902
+    contentHash: f88f6f10ce29fbb90331bfaf10a07d7f5f5c9d635c31f6a84713232882f41a8c
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: fe3b1d1af6f08c377e4dfed2cf7990cf2601f69e0994bfc26ce0362fd87c656d
+    path: infra/prototypes/api/src/db.ts
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-05B27B24A608
+    pathHash: 213a230c68321d6a3f2841f83240cb1ef39bd4c448830e1b618888a96eeaba2f
+    contentHash: c2716309be61380cf11ac4b8cf12157fb303c22f08eac80274124de918f5154c
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: 05f2c3d43372da30ea818348f463c757d033c251c206d712d94e0d955611c91f
+    path: infra/prototypes/api/src/kafka.ts
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-DA774D75A9E2
+    pathHash: ce06d44b54e413b96a1acee46ce3ae31f2e2c48cf3fd0a5a31a5489c58770543
+    contentHash: 8dbd22b1f08642653bd0257815982da5baa919404e4879b2cca34b093f5b4177
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: e893886fba691f06e913332e3d06fe34e2433c4663b50d65a33edeb2bb11ddf9
+    path: infra/prototypes/api/src/kafkaTail.ts
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-EDCC8F955E15
+    pathHash: 0315207643f3bbe3e9dfc0a5c0b0e5563da8d9a6146ae7f84ca00a2ec980f3d5
+    contentHash: 25bd305fb0fe4905d65243fe159d1d2b87c103961be4483359d3f6c099df9791
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: 90ab6be1d8ffe8216ffb375997c5f133bf97038e0456593a214ea0c80deb10bf
+    path: infra/prototypes/api/src/outboxPublisher.ts
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-B3C06B67F94A
+    pathHash: 6d398fbac9edf098643c7d2037bcacce7a51bc6ea71b9ad408d07e9d458cdac5
+    contentHash: e490aa929135bbee79873d5969f25ae657468d458a171d54a96ab2531181ce60
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: c63ece5fb77459503708db39f7e63bd409f0ebdd597febdce5bf68b03dee0aeb
+    path: infra/prototypes/api/src/reconciler.test.ts
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-B9A3B46F84AE
+    pathHash: 57af1199e20c9208c672c2de0348a59ea44dad58740b8db21fc701bfcf52cc5b
+    contentHash: f7018d7765c5ce662b47687d04e0cd04fe0f0bba989d5cd94a626ce84c77e31d
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: 5fd8c1ac0796d764866685f7c95e654972d506addbc6a8b0bc2c02c18d988320
+    path: infra/prototypes/api/src/reconciler.ts
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-646E46524DC4
+    pathHash: c74fb6e3a1d77e48ef909f1eb5c39021af53b128b4a4f4aa0481eb1dc43d24b8
+    contentHash: beb5388e3775626f3560111d5a3a58e984f43a8da3a31888c031acd53a7290d1
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: 1ce8f532ceab957452d88020525d22d20e14850f3b9b8f158a967ef9d967720a
+    path: infra/prototypes/api/src/runEventsRepo.ts
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-5C76E5F09C87
+    pathHash: b63a4042df1ad5835dcd96d99c28114d8013c14464703d5c3d5fb087bd5f1b05
+    contentHash: a9c1cf4f43d8c0115619a913e1966d746675fd64da8c966bdc18465ab4d6994f
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: 455857599d88dd5850f9e0be982a461c244167b7a423b11a6492b9e4652e8453
+    path: infra/prototypes/api/src/runStreamHub.ts
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-57AA4F2F97DE
+    pathHash: a4c225d0b9a195a8a5c3d929eb729df5f3e1f8c1653d33506e28a4db526d81c6
+    contentHash: ae436a15ccb46b74fdae151be6da283cfda3f7460bb205a3e9d5bd363a98217b
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: e5701923474c90d54c8a06d9255d9e17f2d9c172103a4f80bb8b0286f38bb1ca
+    path: infra/prototypes/api/src/runtimeIntegration.ts
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-E0D455784A4D
+    pathHash: 7b5d51a9daee168fde3b084b4d5d8c8e2f7a0bf080ace772b4f545c89d1e9b07
+    contentHash: 584c4e003b6c35806d65028f6113c6306814f2612e98f7ce2ad79638cb3ce5d1
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: 2f4381520015c951c1bc6c8532d33da5742d8df2cdface9650c7e1fa0f95225c
+    path: infra/prototypes/api/src/server.ts
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-4571D6EC79C9
+    pathHash: 51ccb4a28e7ba208ed0373f666881d5b7239eaa709aeec8b4ac868d79dbef68c
+    contentHash: c0178601a7ee4adb4cf3929f8dc0c2e092e309fc08d358df4b4c4d406e39f17f
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: 9f9bd6756262ac3fc157b29664cf1c559fa42fbc1aa3b734f2f342a8335d0da6
+    path: infra/prototypes/api/src/sse.ts
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-E392D1910D41
+    pathHash: 8e02a225e1058e7616adcf78145dd9f8540f9deb078b398e1ed3e020dc74e370
+    contentHash: fbe84c3b42ca889ee8342476cbb94e6279d8fc7a29ef9f567060b79c7e5f0261
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: acdcab58fd964b3bfb4789fbf4c5f5136156418e757a02cf802ee7c9741b80f5
+    path: infra/prototypes/api/src/wiring.ts
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-FEC6BAAEBFBA
+    pathHash: eb5babfe8760d07db1bc76231ee3249dc6dcba92d069382a54c9bcc7ed23cc71
+    contentHash: d497a46d8c08dae92607701e15f958650b0a7384e04863933cb1e1f65954f656
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: ac10732ebb932bb7cc5f8f4f58e889907f21b4d7548d6d4de78b3e9074ecd04d
+    path: infra/prototypes/api/tsconfig.json
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-06DED848F0B8
+    pathHash: 848123a09f55c65b5ffef9e5ceb2956d2504d1465ee8d33859bc542035c55aee
+    contentHash: c656995aa7bc4899a634bf9f530556d5927c7801acc8b442d017cfb7c9e835d7
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: e6f7a8b13527404cb229fc95f56305a3b41e21d36a9b9799d4451b6ad08b58ed
+    path: package.json
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-0C0FA331D146
+    pathHash: e04481fc976fee884ae2637f6cb9d3627ee83c08bdd0ed7108c8be425a6e175c
+    contentHash: 50a1164f466c7469f55e086ef0a263a97f8dca5dd90571ccf1585478454c5379
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: e9241baf569f8223ebeec643499fe2631872ad6392bd972a00d5a8396ed233e2
+    path: pnpm-lock.yaml
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-2921AC30634E
+    pathHash: f7db6c9d6c4c751b42d42fff89412830362e204e0e8b500868cc74f166305571
+    contentHash: 314a9f4ed8981e26fc7f7d3ab943152bb90f2061642fd257c764702448a7f68b
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: 41ecd31e0d3edf397727a89424aa41c389ffc542acffcd171e8ab63254aea2f0
+    path: pnpm-workspace.yaml
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-61FB8C089B5F
+    pathHash: ab7d6194f4cc84b5fce0670a3948ef1f8b4bc3f1f0aa61990728c7aeb2f8914e
+    contentHash: 994a9583c01ad80700c90a78b9af55721d368c5d22aebd885fc372f52871e62c
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: c5181481959906373f39c1a790cdb3def915bd8b676542cdd74d7a09b2c15c05
+    path: tsconfig.eslint.base.json
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-0C1E0581AD5B
+    pathHash: 37a87a70ceca34eb0602a24e7887c1ed89e0267f2b5d4c85e07fb99cf8bcdf2d
+    contentHash: 5467eeff424f7e07bea3a0fa0836839c22e4f338e5cd21aba0d97331d99918a1
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: 5439c3af9a4ad470879395a2a32c996ff9644defef631ffbb0259b7c97d091a2
+    path: tsconfig.eslint.json
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-04CBAD199A0C
+    pathHash: 47b81fbf397edc7042b284461007e56818b055bfa7eb661ae07f883e381e50f6
+    contentHash: 253ddeb44b95277a7e9b96c2bf25907567b4d970cb9f5125b7bfff44d9c2ea0e
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: ba06547b7364bcba2759f161e62e970494d20e82b2f9cc3aef3f965271670bb8
+    path: tsconfig.json
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-2DD60FA0595D
+    pathHash: 9e291f13eb7fbae4c241dceb7984f53eb801bbf33b3595e1a20f17eb0aea19bf
+    contentHash: 27035f9ca2381eb0abe134b069162100d6c2568c0b9bec3d016374c5d2f1f038
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: 1d417e8d950370619a60e5e363fd49844914496ec85a952123b8f5b60c647561
+    path: tsconfig.node-runtime.base.json
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-644D7EBD3BD9
+    pathHash: e6fd3a980aed809d037a425c822a548068bba351297bd962996a2b8411bac101
+    contentHash: 9689457ecf78f9dd3c5b91aaedabd981e46163ceede4786bc9d5b2459ea5a520
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: 2097e2329fdcbfa4906814a2263f1eb7e32a218f821450dd2aad6c8cc5d4f1cf
+    path: tsconfig.package-bundler.base.json
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-C427E7500E06
+    pathHash: 8f02fe75440e91b8e7aecaef59ce56b184a317decc47698253c87f66efea5cf4
+    contentHash: 60a5e492a1ac88f5b6530fca8b73f0ac1fe9f3e16b91751f451ed04b61905166
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: 0772a2b4de4985647f922e29357b816fa41536f890d88c4a0441d07591cb417f
+    path: tsconfig.test.json
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-EE033928FEDD
+    pathHash: 339fc802f88d68ab584f71e60978ced7dcef827a3b6d694efe2fb4824dfdee98
+    contentHash: 328344c90c0ea0e6fa803aeb51d2a38510acbbecc782275add2194108f4384f5
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: 777e5c30531d2348b3ab5f2b1f9983696555d1ebd0f7affa26ecadfc038b9918
+    path: turbo.json
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-B21003528A26
+    pathHash: 5b0bbed64bcf325009dde9f03d810fc816b70f0a46ceb33fc58b5a9f75db78c8
+    contentHash: 182439ad9f3f401bb199380c11a2269c016b2b7dce8072310edfde44a7bd7856
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: a1cb8b038f593ab72a22a814c74c872016eef7e33208ad02d0d65e6ae0c593fc
+    path: zensical.yml
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml

@@ -144,6 +144,17 @@ added to `system-governance-unit-index.units.yaml`.
 | `SYS-API-RUNTIME-RECONCILER`       | `SYS-API-RUNTIME-COMPOSITION`   | `INFRA`         | Intent reconciler lifecycle and health      | `src/runtime/**`                                                                   | Review | Operational runtime only                                                                 | stale health, lifecycle stop/start failure                                     |
 | `SYS-API-OPS-HEALTH`               | `SYS-API-OPS-ROUTES`            | `ENTRY` / `QRY` | Health, readiness, version, capabilities    | `src/routes/**`, `registerOperationalRoutes.ts`                                    | Review | No product component split without separate ops plan                                     | db down, stale reconciler, disabled capability                                 |
 
+## Accepted Subdivisions
+
+| Unit                 | Parent               | Acceptance date | Manifest level | Manifest status | Scope                    | Rationale                                                                                  |
+| -------------------- | -------------------- | --------------- | -------------- | --------------- | ------------------------ | ------------------------------------------------------------------------------------------ |
+| `SYS-API-OPS-HEALTH` | `SYS-API-OPS-ROUTES` | 2026-05-03      | `source`       | `review`        | `apps/api/src/routes/**` | Smallest reviewed API cut with existing route-registration tests and no S08 implementation |
+
+`SYS-API-OPS-ROUTES` remains as the component-level parent. It does not own
+files directly after this acceptance; file ownership is held by
+`SYS-API-OPS-HEALTH` at `source` level because the taxonomy allows component
+parents to decompose into source units, not into nested components.
+
 ## Command And Query Rails
 
 | Rail                                | Type    | Owning DDD object                   | Transport surface                        | App surface                                                         | Notes                                                          |

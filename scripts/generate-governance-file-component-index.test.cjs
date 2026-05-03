@@ -3,8 +3,12 @@ const assert = require('node:assert/strict');
 const crypto = require('node:crypto');
 const {
   buildComponentEntries,
+  buildComponentFileMapManifest,
+  buildFileIndexManifest,
   buildFileEntries,
   deriveGovernanceSemantics,
+  expandComponentFileMapFromManifest,
+  expandFileIndexFromManifest,
   normalizeGeneratedIndexBytesForHash,
   normalizeTextBytesForHash,
 } = require('./generate-governance-file-component-index.cjs');
@@ -360,6 +364,327 @@ test('buildComponentEntries counts owned files per component', () => {
         isLegacy: false,
       },
     ]
+  );
+});
+
+test('buildFileIndexManifest splits file rows into deterministic unit shards', () => {
+  const fileEntries = [
+    {
+      path: 'apps/api/src/main.ts',
+      fileId: 'F-API',
+      unitPath: ['SYS-DVT', 'SYS-API', 'SYS-API-ROOT'],
+    },
+    {
+      path: 'apps/web/src/main.tsx',
+      fileId: 'F-WEB',
+      unitPath: ['SYS-DVT', 'SYS-WEB', 'SYS-WEB-ROOT'],
+    },
+    {
+      path: 'package.json',
+      fileId: 'F-REPO',
+      unitPath: ['SYS-DVT', 'SYS-REPO-METADATA', 'SYS-REPO-METADATA-ROOT'],
+    },
+  ];
+
+  const output = buildFileIndexManifest(fileEntries, {
+    shardDirectory: 'docs/planning/status/governance-files',
+  });
+
+  assert.deepEqual(output.manifest, {
+    version: 1,
+    generatedFrom: 'git ls-files',
+    unitManifest: 'docs/planning/status/system-governance-unit-index.units.yaml',
+    shardDirectory: 'docs/planning/status/governance-files',
+    fileCount: 3,
+    shards: [
+      {
+        id: 'SYS-API',
+        path: 'docs/planning/status/governance-files/SYS-API.files.yaml',
+        fileCount: 1,
+        contentHash: output.manifest.shards[0].contentHash,
+      },
+      {
+        id: 'SYS-REPO-METADATA',
+        path: 'docs/planning/status/governance-files/SYS-REPO-METADATA.files.yaml',
+        fileCount: 1,
+        contentHash: output.manifest.shards[1].contentHash,
+      },
+      {
+        id: 'SYS-WEB',
+        path: 'docs/planning/status/governance-files/SYS-WEB.files.yaml',
+        fileCount: 1,
+        contentHash: output.manifest.shards[2].contentHash,
+      },
+    ],
+  });
+  assert.deepEqual(Object.keys(output.shards), [
+    'docs/planning/status/governance-files/SYS-API.files.yaml',
+    'docs/planning/status/governance-files/SYS-REPO-METADATA.files.yaml',
+    'docs/planning/status/governance-files/SYS-WEB.files.yaml',
+  ]);
+  assert.deepEqual(
+    expandFileIndexFromManifest(output.manifest, output.shards).map((entry) => entry.path),
+    ['apps/api/src/main.ts', 'package.json', 'apps/web/src/main.tsx']
+  );
+});
+
+test('buildComponentFileMapManifest creates deterministic component shards with drift counts', () => {
+  const componentEntries = [
+    {
+      id: 'SYS-API-ROOT',
+      rootUnit: 'SYS-RUNTIME',
+      domainUnit: 'SYS-RUNTIME',
+      status: 'coverage-required',
+      governanceState: 'coverage-required',
+      dddOwner: 'AS',
+      cqRails: 'API-C01',
+      fileCount: 2,
+      childrenRequired: true,
+    },
+    {
+      id: 'SYS-API-OPS-HEALTH',
+      rootUnit: 'SYS-RUNTIME',
+      domainUnit: 'SYS-RUNTIME',
+      status: 'canonical',
+      governanceState: 'governed',
+      dddOwner: 'AS',
+      cqRails: 'API-Q02',
+      fileCount: 1,
+      childrenRequired: false,
+    },
+    {
+      id: 'SYS-WEB-ROOT',
+      rootUnit: 'SYS-WEB',
+      domainUnit: 'SYS-WEB',
+      status: 'canonical',
+      governanceState: 'governed',
+      dddOwner: 'PRES',
+      cqRails: 'WEB-Q01',
+      fileCount: 1,
+      childrenRequired: false,
+    },
+  ];
+  const fileEntries = [
+    {
+      path: 'apps/api/src/app.ts',
+      fileId: 'F-API-APP',
+      componentUnit: 'SYS-API-ROOT',
+      owningUnit: 'SYS-API-ROOT',
+      unitStatus: 'coverage-required',
+      governanceState: 'coverage-required',
+      isDrift: false,
+      isLegacy: false,
+    },
+    {
+      path: 'apps/api/src/legacy.ts',
+      fileId: 'F-API-LEGACY',
+      componentUnit: 'SYS-API-ROOT',
+      owningUnit: 'SYS-API-ROOT',
+      unitStatus: 'drift',
+      governanceState: 'drift',
+      isDrift: true,
+      isLegacy: false,
+    },
+    {
+      path: 'apps/api/src/entrypoints/http/health.ts',
+      fileId: 'F-API-HEALTH',
+      componentUnit: 'SYS-API-OPS-ROUTES',
+      owningUnit: 'SYS-API-OPS-HEALTH',
+      unitStatus: 'canonical',
+      governanceState: 'governed',
+      isDrift: false,
+      isLegacy: false,
+    },
+    {
+      path: 'apps/web/src/App.tsx',
+      fileId: 'F-WEB-APP',
+      componentUnit: 'SYS-WEB-ROOT',
+      owningUnit: 'SYS-WEB-ROOT',
+      unitStatus: 'canonical',
+      governanceState: 'governed',
+      isDrift: false,
+      isLegacy: false,
+    },
+  ];
+
+  const output = buildComponentFileMapManifest(componentEntries, fileEntries, {
+    shardDirectory: 'docs/planning/status/governance-components',
+  });
+
+  assert.deepEqual(output.manifest, {
+    version: 1,
+    generatedFrom: [
+      'docs/planning/status/system-governance-file-index.files.yaml',
+      'docs/planning/status/system-governance-component-index.components.yaml',
+    ],
+    shardDirectory: 'docs/planning/status/governance-components',
+    componentCount: 3,
+    fileCount: 4,
+    components: [
+      {
+        id: 'SYS-API-OPS-HEALTH',
+        path: 'docs/planning/status/governance-components/SYS-API-OPS-HEALTH.component-files.yaml',
+        fileCount: 1,
+        driftFileCount: 0,
+        legacyFileCount: 0,
+        contentHash: output.manifest.components[0].contentHash,
+      },
+      {
+        id: 'SYS-API-ROOT',
+        path: 'docs/planning/status/governance-components/SYS-API-ROOT.component-files.yaml',
+        fileCount: 2,
+        driftFileCount: 1,
+        legacyFileCount: 0,
+        contentHash: output.manifest.components[1].contentHash,
+      },
+      {
+        id: 'SYS-WEB-ROOT',
+        path: 'docs/planning/status/governance-components/SYS-WEB-ROOT.component-files.yaml',
+        fileCount: 1,
+        driftFileCount: 0,
+        legacyFileCount: 0,
+        contentHash: output.manifest.components[2].contentHash,
+      },
+    ],
+  });
+  assert.deepEqual(Object.keys(output.shards), [
+    'docs/planning/status/governance-components/SYS-API-OPS-HEALTH.component-files.yaml',
+    'docs/planning/status/governance-components/SYS-API-ROOT.component-files.yaml',
+    'docs/planning/status/governance-components/SYS-WEB-ROOT.component-files.yaml',
+  ]);
+  assert.deepEqual(
+    expandComponentFileMapFromManifest(output.manifest, output.shards).flatMap(
+      (component) => component.files
+    ),
+    [
+      {
+        path: 'apps/api/src/entrypoints/http/health.ts',
+        fileId: 'F-API-HEALTH',
+        owningUnit: 'SYS-API-OPS-HEALTH',
+        unitStatus: 'canonical',
+        governanceState: 'governed',
+        isDrift: false,
+        isLegacy: false,
+      },
+      {
+        path: 'apps/api/src/app.ts',
+        fileId: 'F-API-APP',
+        owningUnit: 'SYS-API-ROOT',
+        unitStatus: 'coverage-required',
+        governanceState: 'coverage-required',
+        isDrift: false,
+        isLegacy: false,
+      },
+      {
+        path: 'apps/api/src/legacy.ts',
+        fileId: 'F-API-LEGACY',
+        owningUnit: 'SYS-API-ROOT',
+        unitStatus: 'drift',
+        governanceState: 'drift',
+        isDrift: true,
+        isLegacy: false,
+      },
+      {
+        path: 'apps/web/src/App.tsx',
+        fileId: 'F-WEB-APP',
+        owningUnit: 'SYS-WEB-ROOT',
+        unitStatus: 'canonical',
+        governanceState: 'governed',
+        isDrift: false,
+        isLegacy: false,
+      },
+    ]
+  );
+});
+
+test('expandComponentFileMapFromManifest rejects duplicate component shards', () => {
+  assert.throws(
+    () =>
+      expandComponentFileMapFromManifest(
+        {
+          version: 1,
+          componentCount: 2,
+          fileCount: 0,
+          components: [
+            { id: 'SYS-API-ROOT', path: 'api-one.yaml', fileCount: 0 },
+            { id: 'SYS-API-ROOT', path: 'api-two.yaml', fileCount: 0 },
+          ],
+        },
+        {
+          'api-one.yaml': { componentUnit: 'SYS-API-ROOT', fileCount: 0, files: [] },
+          'api-two.yaml': { componentUnit: 'SYS-API-ROOT', fileCount: 0, files: [] },
+        }
+      ),
+    /Duplicate component shard in governance component file map: SYS-API-ROOT/
+  );
+});
+
+test('expandComponentFileMapFromManifest rejects file rows in the wrong component shard', () => {
+  assert.throws(
+    () =>
+      expandComponentFileMapFromManifest(
+        {
+          version: 1,
+          componentCount: 1,
+          fileCount: 1,
+          components: [{ id: 'SYS-API-ROOT', path: 'api.yaml', fileCount: 1 }],
+        },
+        {
+          'api.yaml': {
+            componentUnit: 'SYS-API-ROOT',
+            fileCount: 1,
+            files: [{ path: 'apps/web/src/App.tsx', componentUnit: 'SYS-WEB-ROOT' }],
+          },
+        }
+      ),
+    /File apps\/web\/src\/App\.tsx is in component shard SYS-API-ROOT but belongs to SYS-WEB-ROOT/
+  );
+});
+
+test('expandFileIndexFromManifest rejects duplicate paths across shards', () => {
+  assert.throws(
+    () =>
+      expandFileIndexFromManifest(
+        {
+          version: 1,
+          fileCount: 2,
+          shards: [
+            { id: 'SYS-API', path: 'SYS-API.files.yaml', fileCount: 1, contentHash: 'a' },
+            { id: 'SYS-WEB', path: 'SYS-WEB.files.yaml', fileCount: 1, contentHash: 'b' },
+          ],
+        },
+        {
+          'SYS-API.files.yaml': {
+            files: [{ path: 'apps/shared.ts', fileId: 'F-ONE' }],
+          },
+          'SYS-WEB.files.yaml': {
+            files: [{ path: 'apps/shared.ts', fileId: 'F-TWO' }],
+          },
+        }
+      ),
+    /Duplicate file path in governance shards: apps\/shared\.ts/
+  );
+});
+
+test('expandFileIndexFromManifest rejects missing tracked paths', () => {
+  assert.throws(
+    () =>
+      expandFileIndexFromManifest(
+        {
+          version: 1,
+          fileCount: 1,
+          shards: [{ id: 'SYS-API', path: 'SYS-API.files.yaml', fileCount: 1, contentHash: 'a' }],
+        },
+        {
+          'SYS-API.files.yaml': {
+            files: [{ path: 'apps/api/src/main.ts', fileId: 'F-API' }],
+          },
+        },
+        {
+          expectedPaths: ['apps/api/src/main.ts', 'apps/api/src/missing.ts'],
+        }
+      ),
+    /Missing file path from governance shards: apps\/api\/src\/missing\.ts/
   );
 });
 

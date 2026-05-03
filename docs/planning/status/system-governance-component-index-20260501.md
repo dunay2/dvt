@@ -27,12 +27,12 @@ classified.
 
 ## Totals
 
-- Component/source units: 31
+- Component/source units: 32
 - Components: 31
-- Source units: 0
-- Drift components: 4
+- Source units: 1
+- Drift components: 3
 - Legacy components: 0
-- Components requiring children: 18
+- Components requiring children: 19
 
 ## By Level
 
@@ -40,6 +40,7 @@ classified.
 | Level | Files |
 | --- | ---: |
 | `component` | 31 |
+| `source` | 1 |
 <!-- prettier-ignore-end -->
 
 ## By Status
@@ -49,8 +50,8 @@ classified.
 | --- | ---: |
 | `canonical` | 1 |
 | `coverage-required` | 22 |
-| `drift` | 4 |
-| `review` | 3 |
+| `drift` | 3 |
+| `review` | 5 |
 | `superseded` | 1 |
 <!-- prettier-ignore-end -->
 
@@ -60,9 +61,9 @@ classified.
 | Governance state | Files |
 | --- | ---: |
 | `coverage-required` | 22 |
-| `drift` | 4 |
+| `drift` | 3 |
 | `governed` | 1 |
-| `review` | 3 |
+| `review` | 5 |
 | `superseded` | 1 |
 <!-- prettier-ignore-end -->
 
@@ -72,7 +73,7 @@ classified.
 | Canonical role | Files |
 | --- | ---: |
 | `implementation-owner` | 1 |
-| `none` | 30 |
+| `none` | 31 |
 <!-- prettier-ignore-end -->
 
 ## Oversized Components
@@ -82,7 +83,7 @@ Components with `childrenRequired: true` and more than 100 files:
 <!-- prettier-ignore-start -->
 | Component | Files | Status |
 | --- | ---: | --- |
-| `SYS-DOCS-GOVERNANCE-ROOT` | 1661 | `coverage-required` |
+| `SYS-DOCS-GOVERNANCE-ROOT` | 1709 | `coverage-required` |
 | `SYS-WEB-ROOT` | 798 | `coverage-required` |
 | `SYS-RUNTIME-ROOT` | 286 | `coverage-required` |
 | `SYS-ADAPTERS-ROOT` | 196 | `coverage-required` |
@@ -106,18 +107,19 @@ Components with `childrenRequired: true` and more than 100 files:
 | `SYS-API-HTTP-ENTRYPOINT-TESTS` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 50 | `INFRA` | `SYS-API-ROOT` |
 | `SYS-API-HTTP-ENTRYPOINTS` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 75 | `ENTRY` | `SYS-API-ROOT` |
 | `SYS-API-INFRASTRUCTURE` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 27 | `ADP` | `SYS-API-ROOT` |
-| `SYS-API-OPS-ROUTES` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 11 | `ENTRY` | `SYS-API-ROOT` |
+| `SYS-API-OPS-HEALTH` | `source` | `review` | `review` | `none` | `review-required` | 11 | `ENTRY` | `SYS-API-OPS-ROUTES` |
+| `SYS-API-OPS-ROUTES` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 0 | `INFRA` | `SYS-API-ROOT` |
 | `SYS-API-REPO-CONFIG` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 11 | `INFRA` | `SYS-API-ROOT` |
 | `SYS-API-RUNTIME-COMPOSITION` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 26 | `AS` | `SYS-API-ROOT` |
 | `SYS-API-TESTS` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 99 | `INFRA` | `SYS-API-ROOT` |
 | `SYS-CI-GOVERNANCE-ROOT` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 180 | `INFRA` | `SYS-CI-GOVERNANCE` |
 | `SYS-CONTRACTS-ROOT` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 127 | `PORT` | `SYS-CONTRACTS` |
-| `SYS-DOCS-GOVERNANCE-ROOT` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 1661 | `INFRA` | `SYS-DOCS-GOVERNANCE` |
+| `SYS-DOCS-GOVERNANCE-ROOT` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 1709 | `INFRA` | `SYS-DOCS-GOVERNANCE` |
 | `SYS-OBSERVABILITY-ROOT` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 15 | `PORT` | `SYS-OBSERVABILITY` |
 | `SYS-PLANNER-ROOT` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 76 | `DS` | `SYS-PLANNER` |
 | `SYS-PLANSTORE-API-COMPOSITION` | `component` | `drift` | `drift` | `none` | `remediation-required` | 20 | `AS` | `SYS-PLANSTORE` |
 | `SYS-PLANSTORE-ARTIFACTS-PORTS` | `component` | `review` | `review` | `none` | `review-required` | 23 | `PORT` | `SYS-PLANSTORE` |
-| `SYS-PLANSTORE-CONTRACTS` | `component` | `drift` | `drift` | `none` | `remediation-required` | 3 | `PORT` | `SYS-PLANSTORE` |
+| `SYS-PLANSTORE-CONTRACTS` | `component` | `review` | `review` | `none` | `review-required` | 3 | `PORT` | `SYS-PLANSTORE` |
 | `SYS-PLANSTORE-DOCS-RISK` | `component` | `review` | `review` | `none` | `review-required` | 34 | `INFRA` | `SYS-PLANSTORE` |
 | `SYS-PLANSTORE-ENGINE-FETCH` | `component` | `drift` | `drift` | `none` | `remediation-required` | 5 | `PORT` | `SYS-PLANSTORE` |
 | `SYS-PLANSTORE-POSTGRES` | `component` | `drift` | `drift` | `none` | `remediation-required` | 16 | `ADP` | `SYS-PLANSTORE` |
@@ -133,5 +135,6 @@ Components with `childrenRequired: true` and more than 100 files:
 ## Related Surfaces
 
 - [System Governance File Index](./system-governance-file-index-20260501.md)
+- [System Governance Component File Map](./system-governance-component-file-map-20260503.md)
 - [System Governance Unit Index](./system-governance-unit-index-20260501.md)
 - [System Governance Unit Taxonomy](./system-governance-unit-taxonomy-20260501.md)

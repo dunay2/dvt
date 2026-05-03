@@ -299,8 +299,8 @@ Usage rules already declared in the ADR index:
 - [scripts/generate-governance-file-component-index.cjs](../../../scripts/generate-governance-file-component-index.cjs)
   Role: `file and component governance index generator`
   Enforces: exhaustive generated projections for file-level ownership,
-  component/source ownership counts, drift/legacy file visibility, and
-  ADR-0053 file-state fingerprints.
+  component/source ownership counts, component-to-file shards, drift/legacy
+  file visibility, and ADR-0053 file-state fingerprints.
 - [scripts/check-governance-file-fingerprint-baseline.cjs](../../../scripts/check-governance-file-fingerprint-baseline.cjs)
   Role: `accepted file-fingerprint baseline gate`
   Enforces: the generated file index cannot drift from the accepted
@@ -362,6 +362,8 @@ Additional enforcement surface:
 | [docs/planning/status/system-governance-file-fingerprint-impact-20260501.md](./system-governance-file-fingerprint-impact-20260501.md) | `generated status`   | Reviewer-facing impact report for file-state fingerprint drift.                          |
 | [docs/planning/status/system-governance-component-index-20260501.md](./system-governance-component-index-20260501.md)                 | `generated status`   | Human summary for component/source units, counts, and oversized buckets.                 |
 | [docs/planning/status/system-governance-component-index.components.yaml](./system-governance-component-index.components.yaml)         | `generated status`   | Exhaustive component/source unit index with ownership counts and status.                 |
+| [docs/planning/status/system-governance-component-file-map-20260503.md](./system-governance-component-file-map-20260503.md)           | `generated status`   | Human component-to-file shard map for exact owner inspection.                            |
+| [docs/planning/status/system-governance-component-file-map.components.yaml](./system-governance-component-file-map.components.yaml)   | `generated status`   | Machine-readable manifest for component file shards under `governance-components/`.      |
 | [docs/planning/status/system-governance-document-unit-map-20260501.md](./system-governance-document-unit-map-20260501.md)             | `generated status`   | Human summary for document-to-unit mapping.                                              |
 | [docs/planning/status/system-governance-document-unit-map.docs.yaml](./system-governance-document-unit-map.docs.yaml)                 | `generated status`   | Exhaustive document-to-unit map for tracked docs Markdown files.                         |
 | [docs/planning/status/system-governance-remediation-queue-20260502.md](./system-governance-remediation-queue-20260502.md)             | `generated status`   | Human queue for component-scoped governance remediation tasks.                           |

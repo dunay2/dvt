@@ -6,6 +6,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const yaml = require('js-yaml');
+const { readFileIndexFromDisk } = require('./generate-governance-file-component-index.cjs');
 
 const repoRoot = path.resolve(__dirname, '..');
 const statusDir = path.join(repoRoot, 'docs', 'planning', 'status');
@@ -14,6 +15,10 @@ const fileIndexPath = path.join(statusDir, 'system-governance-file-index.files.y
 const componentIndexPath = path.join(
   statusDir,
   'system-governance-component-index.components.yaml'
+);
+const componentFileMapPath = path.join(
+  statusDir,
+  'system-governance-component-file-map.components.yaml'
 );
 const documentMapPath = path.join(statusDir, 'system-governance-document-unit-map.docs.yaml');
 const queueYamlPath = path.join(statusDir, 'system-governance-remediation-queue.queue.yaml');
@@ -52,6 +57,19 @@ function sortByPath(entries) {
 
 function componentById(components) {
   return new Map(components.map((component) => [component.id, component]));
+}
+
+function withComponentFileMapPaths(components, componentFileMap) {
+  const pathsByComponent = new Map(
+    asArray(componentFileMap?.components).map((component) => [component.id, component.path])
+  );
+
+  return components.map((component) => ({
+    ...component,
+    componentFileMap:
+      pathsByComponent.get(component.id) ||
+      `docs/planning/status/governance-components/${component.id}.component-files.yaml`,
+  }));
 }
 
 function classifyPriority(type, component, count) {
@@ -132,6 +150,9 @@ function buildTask({
     type,
     priority: classifyPriority(type, component, workItemCount),
     componentUnit: component.id,
+    componentFileMap:
+      component.componentFileMap ||
+      `docs/planning/status/governance-components/${component.id}.component-files.yaml`,
     rootUnit: component.rootUnit,
     domainUnit: component.domainUnit,
     dddOwner: component.dddOwner,
@@ -287,9 +308,18 @@ function countBy(entries, key) {
     .map(([name, count]) => ({ name, count }));
 }
 
-function buildRemediationQueue({ coverageReport, fileIndex, componentIndex, documentMap }) {
+function buildRemediationQueue({
+  coverageReport,
+  fileIndex,
+  componentIndex,
+  componentFileMap,
+  documentMap,
+}) {
   const files = asArray(fileIndex.files);
-  const components = asArray(componentIndex.components);
+  const components = withComponentFileMapPaths(
+    asArray(componentIndex.components),
+    componentFileMap
+  );
   const documents = asArray(documentMap.documents);
   const componentsById = componentById(components);
   const tasks = sortTasks([
@@ -306,6 +336,7 @@ function buildRemediationQueue({ coverageReport, fileIndex, componentIndex, docu
       'docs/planning/status/system-governance-coverage-report.coverage.yaml',
       'docs/planning/status/system-governance-file-index.files.yaml',
       'docs/planning/status/system-governance-component-index.components.yaml',
+      'docs/planning/status/system-governance-component-file-map.components.yaml',
       'docs/planning/status/system-governance-document-unit-map.docs.yaml',
     ],
     totals: {
@@ -420,8 +451,9 @@ function writeIfChanged(filePath, content) {
 function buildOutputs() {
   const queue = buildRemediationQueue({
     coverageReport: readYaml(coverageReportPath),
-    fileIndex: readYaml(fileIndexPath),
+    fileIndex: { files: readFileIndexFromDisk(fileIndexPath) },
     componentIndex: readYaml(componentIndexPath),
+    componentFileMap: readYaml(componentFileMapPath),
     documentMap: readYaml(documentMapPath),
   });
 

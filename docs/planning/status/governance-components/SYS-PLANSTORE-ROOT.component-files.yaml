@@ -1,0 +1,13 @@
+version: 1
+componentUnit: SYS-PLANSTORE-ROOT
+rootUnit: SYS-DVT
+domainUnit: SYS-PLANSTORE
+status: superseded
+governanceState: superseded
+dddOwner: PORT
+cqRails: PS-Cxx and PS-Qxx
+childrenRequired: false
+fileCount: 0
+driftFileCount: 0
+legacyFileCount: 0
+files: []

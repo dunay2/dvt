@@ -160,9 +160,13 @@
       "description": "Tracked file/component governance indexes.",
       "artifacts": [
         "docs/planning/status/system-governance-file-index.files.yaml",
+        "docs/planning/status/governance-files/*.files.yaml",
         "docs/planning/status/system-governance-file-index-20260501.md",
         "docs/planning/status/system-governance-component-index.components.yaml",
-        "docs/planning/status/system-governance-component-index-20260501.md"
+        "docs/planning/status/system-governance-component-index-20260501.md",
+        "docs/planning/status/system-governance-component-file-map.components.yaml",
+        "docs/planning/status/governance-components/*.component-files.yaml",
+        "docs/planning/status/system-governance-component-file-map-20260503.md"
       ],
       "sourcePaths": [
         "scripts/generate-governance-file-component-index.cjs",
@@ -181,7 +185,10 @@
       ],
       "sourcePaths": [
         "scripts/check-governance-file-fingerprint-baseline.cjs",
-        "docs/planning/status/system-governance-file-index.files.yaml"
+        "docs/planning/status/system-governance-file-index.files.yaml",
+        "docs/planning/status/governance-files/*.files.yaml",
+        "docs/planning/status/system-governance-component-file-map.components.yaml",
+        "docs/planning/status/governance-components/*.component-files.yaml"
       ],
       "generatorCommand": "pnpm docs:governance:file-fingerprint-baseline",
       "tracking": "tracked",
@@ -197,7 +204,10 @@
       "sourcePaths": [
         "scripts/generate-governance-coverage-report.cjs",
         "docs/planning/status/system-governance-file-index.files.yaml",
-        "docs/planning/status/system-governance-component-index.components.yaml"
+        "docs/planning/status/governance-files/*.files.yaml",
+        "docs/planning/status/system-governance-component-index.components.yaml",
+        "docs/planning/status/system-governance-component-file-map.components.yaml",
+        "docs/planning/status/governance-components/*.component-files.yaml"
       ],
       "generatorCommand": "pnpm docs:governance:coverage-report",
       "tracking": "tracked",
@@ -217,7 +227,10 @@
         "scripts/generate-governance-remediation-queue.cjs",
         "docs/planning/status/system-governance-coverage-report.coverage.yaml",
         "docs/planning/status/system-governance-file-index.files.yaml",
+        "docs/planning/status/governance-files/*.files.yaml",
         "docs/planning/status/system-governance-component-index.components.yaml",
+        "docs/planning/status/system-governance-component-file-map.components.yaml",
+        "docs/planning/status/governance-components/*.component-files.yaml",
         "docs/planning/status/system-governance-document-unit-map.docs.yaml"
       ],
       "generatorCommand": "pnpm docs:governance:remediation-queue",
