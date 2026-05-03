@@ -44482,9 +44482,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-0CE6D624C7C7
     pathHash: 9e3159703f3519a7e840ad1a1dcd938d16f13bdb171a7ec64d671db494e2d34c
-    contentHash: b32f82d2d79ddb668aa26c31b4358cc6ba58b880dcdb545d421d6d30ca7824c4
+    contentHash: a19af848737c1c7d35f2b53f1d8b7d53169a42f2c4bedbdbdcef1c60454e71d2
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: d6c60d9c0a046035671b3e8035f9d31f0ba60813df95c83ad3c70ec308cfbf41
+    stateFingerprint: e1cffb3eb85ebf63698d767c28c270bb69253999a7660ce449ff4a38d7d766c9
     path: docs/risk-register/quality/R-20260503-PROTECTED-RUNTIME-RAIL-SSOT-DEBT.yaml
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
