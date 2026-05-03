@@ -287,6 +287,14 @@ governingSources:
   - docs/planning/state/agent-lane-c.yaml
   - docs/risk-register/quality/R-20260503-PROTECTED-RUNTIME-RAIL-CLOSURE.yaml
 allowedImplementationSurfaces:
+  - apps/api/src/entrypoints/http/runtimeRoutes.constants.ts
+  - apps/api/src/entrypoints/http/registerProtectedRuntimeRoutes.ts
+  - apps/api/src/entrypoints/http/sessionRoute.ts
+  - apps/api/test/entrypoints/http/sessionRoute.test.ts
+  - apps/web/src/app/bootstrap/AuthRouteGate.tsx
+  - apps/web/src/app/routes.ts
+  - apps/web/src/app/routes.test.tsx
+  - apps/web/src/app/views/LoginView.tsx
   - docs/planning/proposals/mandatory/runtime-and-contracts/protected-runtime-rail-closure-plan-20260503.md
   - docs/planning/state/agent-lane-c.yaml
   - docs/planning/state/agent-lane-c.md
@@ -295,7 +303,6 @@ allowedImplementationSurfaces:
   - docs/planning/status/**
   - docs/risk-register/quality/R-20260503-PROTECTED-RUNTIME-RAIL-CLOSURE.yaml
 forbiddenImplementationSurfaces:
-  - apps/**
   - packages/**
   - specs/**
   - .github/**
@@ -349,6 +356,78 @@ redGreenCycles:
       - docs/risk-register/quality/R-20260503-PROTECTED-RUNTIME-RAIL-CLOSURE.yaml
     greenTest: pnpm docs:feature-mechanization:implementation
 symbols:
+  - name: SessionRouteDeps
+    path: apps/api/src/entrypoints/http/sessionRoute.ts
+    dddOwner: Runtime session admission query
+    cqRails:
+      - ClassifyProtectedRuntimeRouteRails
+    fowlerSignals:
+      - boundary closure
+      - explicit dependency seam
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - backend route and web gate coverage
+    unitTests:
+      - apps/api/test/entrypoints/http/sessionRoute.test.ts
+  - name: extractBearerToken
+    path: apps/api/src/entrypoints/http/sessionRoute.ts
+    dddOwner: Runtime session admission query
+    cqRails:
+      - ClassifyProtectedRuntimeRouteRails
+    fowlerSignals:
+      - explicit auth extraction rule
+      - fail-closed missing token handling
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - backend route and web gate coverage
+    unitTests:
+      - apps/api/test/entrypoints/http/sessionRoute.test.ts
+  - name: sessionRoute
+    path: apps/api/src/entrypoints/http/sessionRoute.ts
+    dddOwner: Runtime session admission query
+    cqRails:
+      - ClassifyProtectedRuntimeRouteRails
+    fowlerSignals:
+      - protected runtime boundary unification
+      - explicit admission endpoint
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - backend route and web gate coverage
+    unitTests:
+      - apps/api/test/entrypoints/http/sessionRoute.test.ts
+  - name: createReply
+    path: apps/api/test/entrypoints/http/sessionRoute.test.ts
+    dddOwner: Runtime session admission test fixture
+    cqRails:
+      - ClassifyProtectedRuntimeRouteRails
+    fowlerSignals:
+      - deterministic reply fixture
+      - boundary test isolation
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - backend route and web gate coverage
+    unitTests:
+      - apps/api/test/entrypoints/http/sessionRoute.test.ts
+  - name: AuthGateState
+    path: apps/web/src/app/bootstrap/AuthRouteGate.tsx
+    dddOwner: Web protected route admission projection
+    cqRails:
+      - ClassifyProtectedRuntimeRouteRails
+    fowlerSignals:
+      - explicit route admission state machine
+      - fail-closed sessionless startup
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: apps/web/cypress/e2e/shell/startup-route-readiness.cy.ts
+    unitTests:
+      - apps/web/src/app/routes.test.tsx
+  - name: sessionApiClient
+    path: apps/web/src/app/bootstrap/AuthRouteGate.tsx
+    dddOwner: Web protected route admission adapter
+    cqRails:
+      - ClassifyProtectedRuntimeRouteRails
+    fowlerSignals:
+      - explicit query port
+      - no implicit global fetch semantics
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: apps/web/cypress/e2e/shell/startup-route-readiness.cy.ts
+    unitTests:
+      - apps/web/src/app/routes.test.tsx
   - name: ProtectedRuntimeRailClosurePlan
     path: docs/planning/proposals/mandatory/runtime-and-contracts/protected-runtime-rail-closure-plan-20260503.md
     dddOwner: Protected runtime rail matrix

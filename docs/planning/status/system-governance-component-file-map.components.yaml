@@ -4,7 +4,7 @@ generatedFrom:
   - docs/planning/status/system-governance-component-index.components.yaml
 shardDirectory: docs/planning/status/governance-components
 componentCount: 32
-fileCount: 4155
+fileCount: 4159
 components:
   - id: SYS-ADAPTERS-ROOT
     path: docs/planning/status/governance-components/SYS-ADAPTERS-ROOT.component-files.yaml
@@ -44,16 +44,16 @@ components:
     contentHash: f72cd78c2c1436c8ddb35cd89d9ce8a6b62353e29eb26c1438201dcfd4ec043c
   - id: SYS-API-HTTP-ENTRYPOINT-TESTS
     path: docs/planning/status/governance-components/SYS-API-HTTP-ENTRYPOINT-TESTS.component-files.yaml
-    fileCount: 50
+    fileCount: 51
     driftFileCount: 0
     legacyFileCount: 0
-    contentHash: b0e8589d9fce7908ce42838ba27c92f8161b35e04408d4cdeeb309ddbb767982
+    contentHash: d114decfa39e91437af5579ec710a17de15a14a9900c37ffde778ebf86bb9765
   - id: SYS-API-HTTP-ENTRYPOINTS
     path: docs/planning/status/governance-components/SYS-API-HTTP-ENTRYPOINTS.component-files.yaml
-    fileCount: 75
+    fileCount: 76
     driftFileCount: 0
     legacyFileCount: 0
-    contentHash: 0d7a52399de451e14efc5b9bbf982b8ee4f46f771b7aea332bca576be443c170
+    contentHash: 5418fdac40d2722475efcdf06aca58e7431f0e2ed32c24acef37c87b0b5c201c
   - id: SYS-API-INFRASTRUCTURE
     path: docs/planning/status/governance-components/SYS-API-INFRASTRUCTURE.component-files.yaml
     fileCount: 27
@@ -189,10 +189,10 @@ components:
     contentHash: 83855c9fcd947c9177b687699e216dab41e1fd92a52e1a017ca4aff0983e01b1
   - id: SYS-WEB-ROOT
     path: docs/planning/status/governance-components/SYS-WEB-ROOT.component-files.yaml
-    fileCount: 799
+    fileCount: 801
     driftFileCount: 0
     legacyFileCount: 0
-    contentHash: 7426ae728d558f926d817ae90b5c3b98073414577623dbe41c4c4fcf83729022
+    contentHash: b09e93097bee006bcb383d15dea410ce85fb536ce8850147ab4edd5922a9dc9f
   - id: SYS-WORKERS-ROOT
     path: docs/planning/status/governance-components/SYS-WORKERS-ROOT.component-files.yaml
     fileCount: 103
