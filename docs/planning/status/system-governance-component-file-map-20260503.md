@@ -80,8 +80,8 @@ Machine-readable sources:
 | `SYS-API-HTTP-ENTRYPOINT-TESTS` | 50 | 0 | 0 | [shard](./governance-components/SYS-API-HTTP-ENTRYPOINT-TESTS.component-files.yaml) |
 | `SYS-API-HTTP-ENTRYPOINTS` | 75 | 0 | 0 | [shard](./governance-components/SYS-API-HTTP-ENTRYPOINTS.component-files.yaml) |
 | `SYS-API-INFRASTRUCTURE` | 27 | 0 | 0 | [shard](./governance-components/SYS-API-INFRASTRUCTURE.component-files.yaml) |
-| `SYS-API-OPS-HEALTH` | 0 | 0 | 0 | [shard](./governance-components/SYS-API-OPS-HEALTH.component-files.yaml) |
-| `SYS-API-OPS-ROUTES` | 11 | 0 | 0 | [shard](./governance-components/SYS-API-OPS-ROUTES.component-files.yaml) |
+| `SYS-API-OPS-HEALTH` | 11 | 0 | 0 | [shard](./governance-components/SYS-API-OPS-HEALTH.component-files.yaml) |
+| `SYS-API-OPS-ROUTES` | 0 | 0 | 0 | [shard](./governance-components/SYS-API-OPS-ROUTES.component-files.yaml) |
 | `SYS-API-REPO-CONFIG` | 11 | 0 | 0 | [shard](./governance-components/SYS-API-REPO-CONFIG.component-files.yaml) |
 | `SYS-API-RUNTIME-COMPOSITION` | 26 | 0 | 0 | [shard](./governance-components/SYS-API-RUNTIME-COMPOSITION.component-files.yaml) |
 | `SYS-API-TESTS` | 99 | 0 | 0 | [shard](./governance-components/SYS-API-TESTS.component-files.yaml) |

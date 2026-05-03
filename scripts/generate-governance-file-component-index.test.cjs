@@ -442,6 +442,17 @@ test('buildComponentFileMapManifest creates deterministic component shards with 
       childrenRequired: true,
     },
     {
+      id: 'SYS-API-OPS-HEALTH',
+      rootUnit: 'SYS-RUNTIME',
+      domainUnit: 'SYS-RUNTIME',
+      status: 'canonical',
+      governanceState: 'governed',
+      dddOwner: 'AS',
+      cqRails: 'API-Q02',
+      fileCount: 1,
+      childrenRequired: false,
+    },
+    {
       id: 'SYS-WEB-ROOT',
       rootUnit: 'SYS-WEB',
       domainUnit: 'SYS-WEB',
@@ -475,6 +486,16 @@ test('buildComponentFileMapManifest creates deterministic component shards with 
       isLegacy: false,
     },
     {
+      path: 'apps/api/src/entrypoints/http/health.ts',
+      fileId: 'F-API-HEALTH',
+      componentUnit: 'SYS-API-OPS-ROUTES',
+      owningUnit: 'SYS-API-OPS-HEALTH',
+      unitStatus: 'canonical',
+      governanceState: 'governed',
+      isDrift: false,
+      isLegacy: false,
+    },
+    {
       path: 'apps/web/src/App.tsx',
       fileId: 'F-WEB-APP',
       componentUnit: 'SYS-WEB-ROOT',
@@ -497,16 +518,24 @@ test('buildComponentFileMapManifest creates deterministic component shards with 
       'docs/planning/status/system-governance-component-index.components.yaml',
     ],
     shardDirectory: 'docs/planning/status/governance-components',
-    componentCount: 2,
-    fileCount: 3,
+    componentCount: 3,
+    fileCount: 4,
     components: [
+      {
+        id: 'SYS-API-OPS-HEALTH',
+        path: 'docs/planning/status/governance-components/SYS-API-OPS-HEALTH.component-files.yaml',
+        fileCount: 1,
+        driftFileCount: 0,
+        legacyFileCount: 0,
+        contentHash: output.manifest.components[0].contentHash,
+      },
       {
         id: 'SYS-API-ROOT',
         path: 'docs/planning/status/governance-components/SYS-API-ROOT.component-files.yaml',
         fileCount: 2,
         driftFileCount: 1,
         legacyFileCount: 0,
-        contentHash: output.manifest.components[0].contentHash,
+        contentHash: output.manifest.components[1].contentHash,
       },
       {
         id: 'SYS-WEB-ROOT',
@@ -514,11 +543,12 @@ test('buildComponentFileMapManifest creates deterministic component shards with 
         fileCount: 1,
         driftFileCount: 0,
         legacyFileCount: 0,
-        contentHash: output.manifest.components[1].contentHash,
+        contentHash: output.manifest.components[2].contentHash,
       },
     ],
   });
   assert.deepEqual(Object.keys(output.shards), [
+    'docs/planning/status/governance-components/SYS-API-OPS-HEALTH.component-files.yaml',
     'docs/planning/status/governance-components/SYS-API-ROOT.component-files.yaml',
     'docs/planning/status/governance-components/SYS-WEB-ROOT.component-files.yaml',
   ]);
@@ -527,6 +557,15 @@ test('buildComponentFileMapManifest creates deterministic component shards with 
       (component) => component.files
     ),
     [
+      {
+        path: 'apps/api/src/entrypoints/http/health.ts',
+        fileId: 'F-API-HEALTH',
+        owningUnit: 'SYS-API-OPS-HEALTH',
+        unitStatus: 'canonical',
+        governanceState: 'governed',
+        isDrift: false,
+        isLegacy: false,
+      },
       {
         path: 'apps/api/src/app.ts',
         fileId: 'F-API-APP',

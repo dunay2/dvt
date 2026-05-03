@@ -499,7 +499,7 @@ function buildComponentFileMapManifest(componentEntries, fileEntries, options = 
   const shardDirectory = options.shardDirectory || generatedComponentShardDirRelativePath;
   const filesByComponent = new Map();
   for (const entry of fileEntries) {
-    const componentId = entry.componentUnit || entry.owningUnit || 'UNOWNED';
+    const componentId = entry.owningUnit || entry.componentUnit || 'UNOWNED';
     const files = filesByComponent.get(componentId) || [];
     files.push(entry);
     filesByComponent.set(componentId, files);

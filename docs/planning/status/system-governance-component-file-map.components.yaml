@@ -62,16 +62,16 @@ components:
     contentHash: 3cbfea9b806b7303131f3e4e57b2d2bdfed722646e85bc42f5fea366e6999474
   - id: SYS-API-OPS-HEALTH
     path: docs/planning/status/governance-components/SYS-API-OPS-HEALTH.component-files.yaml
-    fileCount: 0
-    driftFileCount: 0
-    legacyFileCount: 0
-    contentHash: d81573aaba19b5ddd8f31b63bfe6c0874f92f8fb72c6210bf6220cd23c9bbc9a
-  - id: SYS-API-OPS-ROUTES
-    path: docs/planning/status/governance-components/SYS-API-OPS-ROUTES.component-files.yaml
     fileCount: 11
     driftFileCount: 0
     legacyFileCount: 0
-    contentHash: 7fc1cca1aa45a7604552dd9eeb5be57c0af2fad46df4d2a5943a14eaa17b6cd8
+    contentHash: f2941f524b7c5084bb9960d7ff1e2e37ca2213b295021ea275a177d20249f5d0
+  - id: SYS-API-OPS-ROUTES
+    path: docs/planning/status/governance-components/SYS-API-OPS-ROUTES.component-files.yaml
+    fileCount: 0
+    driftFileCount: 0
+    legacyFileCount: 0
+    contentHash: ac54bca7a76c56465f81039d445571552bccdba6b808d7c24a10f6e87fa2a13c
   - id: SYS-API-REPO-CONFIG
     path: docs/planning/status/governance-components/SYS-API-REPO-CONFIG.component-files.yaml
     fileCount: 11

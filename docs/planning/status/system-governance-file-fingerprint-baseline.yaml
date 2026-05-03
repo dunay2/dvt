@@ -26451,18 +26451,18 @@ files:
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
   - fileId: F-C9AEFACE92C6
     path: docs/planning/status/governance-components/SYS-API-OPS-HEALTH.component-files.yaml
-    contentHash: d81573aaba19b5ddd8f31b63bfe6c0874f92f8fb72c6210bf6220cd23c9bbc9a
+    contentHash: f2941f524b7c5084bb9960d7ff1e2e37ca2213b295021ea275a177d20249f5d0
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 36ca2c9b4b5b7b26fc21f099e44df82269fa99df04d1742c00f7f930730586a4
+    stateFingerprint: 846f9ae0c5cbb6608c9beb3967df4be2dc24a58089f4bf35e2c2cc43a51eb4aa
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
   - fileId: F-89FAC19FFC2F
     path: docs/planning/status/governance-components/SYS-API-OPS-ROUTES.component-files.yaml
-    contentHash: 7fc1cca1aa45a7604552dd9eeb5be57c0af2fad46df4d2a5943a14eaa17b6cd8
+    contentHash: ac54bca7a76c56465f81039d445571552bccdba6b808d7c24a10f6e87fa2a13c
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 6982bc2796a4c3cb54f6a5bf976656834286c0dc7455e56b4f7e8308cc3793f2
+    stateFingerprint: dc512bee0d46f00e8eafc36b8f276b34abd59780c2f603730bd8cb5f908af144
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -26839,18 +26839,18 @@ files:
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
   - fileId: F-B9E9126015C3
     path: docs/planning/status/system-governance-component-file-map-20260503.md
-    contentHash: fedc2de60d8aea06302d20e7d072fc5046ec6beac5732d3513d2c6666881f0ae
+    contentHash: 8f3669c7c53be393a3c2b4dd79d156aa4419c9b26c113244ede9bfd672d5738b
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: c8b7a90ace5c6f39464f4b567555a49dd9bdf096aa9255d7b57e5cfcd8f475a1
+    stateFingerprint: 6ce2664edee69f8cb72b20d9a926ec137f0469885c687a621a3a410a16cb561f
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
   - fileId: F-0F3FC4384ABC
     path: docs/planning/status/system-governance-component-file-map.components.yaml
-    contentHash: e93c7cfb8abd9e773c6f1a74b2544665db6d327d28786e5a384ea1e0a801781c
+    contentHash: 1665f5c1c75495ed52cedf88d1309b91c19989498db7a1f019aefd7e48e62214
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 26313dc0d17ebe4c945fedb60ffa1df32219219777fc0def87a052e0ce047d9d
+    stateFingerprint: 1e6040b0008d8c7e614148165a65bb3b537a6fa08762f97164490c307b7ee89c
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -36571,18 +36571,18 @@ files:
     owningUnit: SYS-CI-GOVERNANCE-ROOT
   - fileId: F-5B42FC3A41F3
     path: scripts/generate-governance-file-component-index.cjs
-    contentHash: 80bd1762f6e91cbd4951b0d93fbfeb8e2d327fe6c357ef3542904d6b3b411745
+    contentHash: 04dae68900a10ff93afbab0e51483626a5eb5bb90587b69189033cd33b70b230
     governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
-    stateFingerprint: b1b6a14136725a66ca3029cb2b8e81987a97f5df72cbac771dd0abff6c072de2
+    stateFingerprint: a05ecbc01de2d3cb2d9117084a1ecf27256e8d87b46d12f6eb0c3eceb7cea60c
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-CI-GOVERNANCE-ROOT
     owningUnit: SYS-CI-GOVERNANCE-ROOT
   - fileId: F-97E84920D8B6
     path: scripts/generate-governance-file-component-index.test.cjs
-    contentHash: 0448b02337ed36e63c35fdd5364578771a2a3ca8c78fb7cb06a2025221628991
+    contentHash: ff2cc9387c07e0045375601e6c6641ed535592744fd3de210487ebe9b75e4f76
     governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
-    stateFingerprint: 839905e72a912458e6b888f59c3db8dae7c256402cdd0f87d2ee653b3175acb5
+    stateFingerprint: c5e25abd64d8f7997ca9b94d1be1ee722666d51f7fe8ff6911e265663aeed549
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-CI-GOVERNANCE-ROOT
