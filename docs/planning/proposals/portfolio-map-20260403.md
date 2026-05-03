@@ -21,6 +21,8 @@ planning_type: proposal
 - [Governance And Docs](./mandatory/governance-and-docs/proposal-priority-triage-20260402.md)
 - [Doc-Driven Framework And Tooling Plan](./mandatory/governance-and-docs/doc-driven-framework-and-tooling-plan-20260404.md)
 - [System Governance Unit Index Plan](./mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md)
+- [Governance file index sharding plan
+  2026-05-03](./mandatory/governance-and-docs/governance-file-index-sharding-plan-20260503.md)
 - [Runtime And Contracts](./mandatory/runtime-and-contracts/s08-plan-record-plan-store-execution-plan-20260402.md)
 - [API governance subdivision plan
   2026-05-02](./mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md)

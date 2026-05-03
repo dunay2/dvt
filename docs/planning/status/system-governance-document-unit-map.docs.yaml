@@ -1,7 +1,7 @@
 version: 1
 generatedFrom: git ls-files docs
 unitManifest: docs/planning/status/system-governance-unit-index.units.yaml
-documentCount: 1445
+documentCount: 1452
 documents:
   - path: docs/CONTRIBUTING.md
     classification: governs unit
@@ -4706,6 +4706,11 @@ documents:
     documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
     subjectUnit: SYS-DOCS-GOVERNANCE
   - path: >-
+      docs/planning/proposals/mandatory/governance-and-docs/governance-file-index-sharding-plan-20260503.md
+    classification: governs unit
+    documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
+    subjectUnit: SYS-DOCS-GOVERNANCE
+  - path: >-
       docs/planning/proposals/mandatory/governance-and-docs/governance-startup-card-router-plan-20260402.md
     classification: governs unit
     documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -5782,6 +5787,22 @@ documents:
     classification: governs unit
     documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
     subjectUnit: SYS-DOCS-GOVERNANCE
+  - path: docs/planning/status/system-governance-component-index-20260501.md
+    classification: governs unit
+    documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
+    subjectUnit: SYS-DOCS-GOVERNANCE
+  - path: docs/planning/status/system-governance-component-index-20260501.md
+    classification: governs unit
+    documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
+    subjectUnit: SYS-DOCS-GOVERNANCE
+  - path: docs/planning/status/system-governance-coverage-report-20260502.md
+    classification: governs unit
+    documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
+    subjectUnit: SYS-DOCS-GOVERNANCE
+  - path: docs/planning/status/system-governance-coverage-report-20260502.md
+    classification: governs unit
+    documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
+    subjectUnit: SYS-DOCS-GOVERNANCE
   - path: docs/planning/status/system-governance-coverage-report-20260502.md
     classification: governs unit
     documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -5791,6 +5812,14 @@ documents:
     documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
     subjectUnit: SYS-DOCS-GOVERNANCE
   - path: docs/planning/status/system-governance-file-fingerprint-impact-20260501.md
+    classification: governs unit
+    documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
+    subjectUnit: SYS-DOCS-GOVERNANCE
+  - path: docs/planning/status/system-governance-file-index-20260501.md
+    classification: governs unit
+    documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
+    subjectUnit: SYS-DOCS-GOVERNANCE
+  - path: docs/planning/status/system-governance-file-index-20260501.md
     classification: governs unit
     documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
     subjectUnit: SYS-DOCS-GOVERNANCE
