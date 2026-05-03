@@ -27179,18 +27179,18 @@ files:
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
   - fileId: F-990BF10AAD94
     path: docs/planning/status/system-governance-coverage-report-20260502.md
-    contentHash: 44bc7143ba5d5852ef8cf7e252161c6b956afdfd3f981851e430a7c866c77f21
+    contentHash: 0d4b29e6c9b5decf04991117d3c5c0c62d0f009dbb3d726a19b6cc6cc8dcb336
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 4a10d1097ee9fa791a37c97661448dbc8e4751feec2b007221af9e8cee50b975
+    stateFingerprint: f7733494c74955b9e9e18fba5957906eba621eeda569990aae102e6fb69a3650
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
   - fileId: F-ACC58DCFEB8C
     path: docs/planning/status/system-governance-coverage-report.coverage.yaml
-    contentHash: b7b9af0a3ced9f86b036c16d481b29935eb0169fe67cf554959aedaa8546e289
+    contentHash: 6255351e475da50106501ab4e29b33ed767e5e3f5503170fee7a3991a77c8935
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: ef5ce5262af2c775d9b159e8637f5f3161a5a50d568ec3b6b4fd8bf6e788bacf
+    stateFingerprint: 7c420ceb82e50ec727ab1c40a870ff83065a4adb391f43a7dd6e482936eaecd5
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
