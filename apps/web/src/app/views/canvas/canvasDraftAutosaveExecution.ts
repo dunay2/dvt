@@ -1,11 +1,8 @@
 import type { Dispatch, SetStateAction } from 'react';
+import type { WorkspaceGraphAuthoringDraft } from '@dvt/contracts';
 
 import type { CanvasDraftQueryCache } from './canvasDraftQueryCache';
-import type {
-  CanvasDraftRepository,
-  CanvasDraftSaveResult,
-} from './canvasDraftRepository';
-import type { CanvasDraftAuthoringPayload } from './canvasDraftAuthoring';
+import type { CanvasDraftRepository, CanvasDraftSaveResult } from './canvasDraftRepository';
 import type { CanvasDraftSession } from './canvasDraftSession';
 import type { DraftAttemptRefs, DraftSaveStatus } from './canvasDraftLifecycle.types';
 import {
@@ -40,7 +37,7 @@ type SaveFailureContext = {
 export type PerformCanvasDraftAutosaveArgs = {
   refs: DraftAttemptRefs;
   draftRepository: CanvasDraftRepository;
-  currentDraftPayload: CanvasDraftAuthoringPayload;
+  currentDraftPayload: WorkspaceGraphAuthoringDraft;
   draftSession: CanvasDraftSession;
   createDraftIdempotencyKey: () => string;
   setDraftSession: SetDraftSession;

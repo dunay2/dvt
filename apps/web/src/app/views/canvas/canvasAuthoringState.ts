@@ -22,7 +22,7 @@ import {
   type CanvasDraftRecoveryReason,
   type CanvasDraftToolbarState,
 } from './canvasDraftToolbarState';
-import type { CanvasDraftAccessMode, CanvasDraftReadModel } from './canvasDraftReadModel';
+import type { CanvasDraftAccessMode, CanvasAuthoringDraftReadModel } from './canvasDraftReadModel';
 import type { DraftSaveStatus } from './canvasDraftLifecycle.types';
 
 type DeriveCanvasAuthoringStateArgs = {
@@ -33,7 +33,7 @@ type DeriveCanvasAuthoringStateArgs = {
   inspectorNodeId: string | null;
   draftSaveStatus: DraftSaveStatus;
   canPersistDraftTransport: boolean;
-  draftReadModel: CanvasDraftReadModel | undefined;
+  draftReadModel: CanvasAuthoringDraftReadModel | undefined;
   authTransportPosture: CanvasDraftAuthTransportPosture;
 };
 
@@ -42,9 +42,9 @@ export type CanvasAuthoringState = {
   uiScope: CanvasUiScope;
   executionScope: ExecutionCanvasScope;
   draftAccessMode: CanvasDraftAccessMode;
-  draftCapabilityReason: CanvasDraftReadModel['capabilityReason'];
-  draftFormatError: CanvasDraftReadModel['formatError'];
-  draftFormatMeta: CanvasDraftReadModel['formatMeta'];
+  draftCapabilityReason: CanvasAuthoringDraftReadModel['capabilityReason'];
+  draftFormatError: CanvasAuthoringDraftReadModel['formatError'];
+  draftFormatMeta: CanvasAuthoringDraftReadModel['formatMeta'];
   draftAccessPosture: CanvasDraftAccessPosture;
   isMissingRemoteDraft: boolean;
   isStaleDraftConflict: boolean;
@@ -99,7 +99,7 @@ function deriveCanvasUiScope(
 }
 
 function deriveCanvasDraftAccessState(
-  draftReadModel: CanvasDraftReadModel | undefined,
+  draftReadModel: CanvasAuthoringDraftReadModel | undefined,
   draftAccessPosture: CanvasDraftAccessPosture
 ): CanvasDraftAccessState {
   const draftAccessMode = draftReadModel?.accessMode ?? 'unknown';

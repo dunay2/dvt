@@ -52,7 +52,6 @@ export function useCanvasDraftInitialBootstrap({
       }
       lastSavedSignatureRef.current = serializeCanvasDraftAuthoringBaselineSignature({
         record: remoteDraft,
-        semanticGraph: graphDraftQuery.data?.semanticGraph ?? null,
       });
     }
 

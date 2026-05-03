@@ -1,30 +1,27 @@
-import type { WorkspaceGraphDraftRecord } from '../../ports/workspace';
 import { queryKeys } from '../../queries/queryKeys';
 import type { CanvasDraftRepository } from './canvasDraftRepository';
 import {
-  createUnknownCanvasDraftReadModel,
-  createWritableCanvasDraftReadModel,
-  type CanvasDraftReadModel,
+  createUnknownCanvasAuthoringDraftReadModel,
+  createWritableCanvasAuthoringDraftReadModel,
+  type CanvasAuthoringDraftRecord,
+  type CanvasAuthoringDraftReadModel,
 } from './canvasDraftReadModel';
-import type { WorkspaceGraphDraftSemanticGraph } from '../../services/workspace/workspaceGraphDraftProjection';
+import type { CanvasAuthoringSemanticGraph } from '../../services/workspace/workspaceGraphDraftProjection';
 
 type CanvasDraftQueryClient = {
   cancelQueries: (args: { queryKey: readonly unknown[] }) => Promise<unknown>;
-  fetchQuery: <T>(args: {
-    queryKey: readonly unknown[];
-    queryFn: () => Promise<T>;
-  }) => Promise<T>;
+  fetchQuery: <T>(args: { queryKey: readonly unknown[]; queryFn: () => Promise<T> }) => Promise<T>;
   setQueryData: (queryKey: readonly unknown[], value: unknown) => void;
 };
 
 export type CanvasDraftQueryCache = {
-  fetchLatestRemoteDraftState: () => Promise<CanvasDraftReadModel>;
-  fetchLatestRemoteDraft: () => Promise<WorkspaceGraphDraftRecord | null>;
+  fetchLatestRemoteDraftState: () => Promise<CanvasAuthoringDraftReadModel>;
+  fetchLatestRemoteDraft: () => Promise<CanvasAuthoringDraftRecord | null>;
   replaceRemoteDraft: (
-    record: WorkspaceGraphDraftRecord | null,
-    semanticGraph?: WorkspaceGraphDraftSemanticGraph | null
+    record: CanvasAuthoringDraftRecord | null,
+    semanticGraph?: CanvasAuthoringSemanticGraph | null
   ) => void;
-  replaceRemoteDraftState: (state: CanvasDraftReadModel) => void;
+  replaceRemoteDraftState: (state: CanvasAuthoringDraftReadModel) => void;
 };
 
 export function createCanvasDraftQueryCache(
@@ -55,8 +52,8 @@ export function createCanvasDraftQueryCache(
       queryClient.setQueryData(
         graphDraftKey,
         record == null
-          ? createUnknownCanvasDraftReadModel()
-          : createWritableCanvasDraftReadModel(record, semanticGraph)
+          ? createUnknownCanvasAuthoringDraftReadModel()
+          : createWritableCanvasAuthoringDraftReadModel(record, semanticGraph)
       );
     },
     replaceRemoteDraftState: (state) => {

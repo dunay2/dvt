@@ -7,7 +7,7 @@ governanceState: coverage-required
 dddOwner: INFRA
 cqRails: none - documentation governance
 childrenRequired: true
-fileCount: 1707
+fileCount: 1716
 driftFileCount: 0
 legacyFileCount: 0
 files:
@@ -1663,6 +1663,13 @@ files:
     isLegacy: false
   - path: docs/architecture/components/web/git/git-mode-architecture.md
     fileId: F-C1ED15C2027A
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/architecture/components/web/graph/canvas-authoring-draft-boundary-component.md
+    fileId: F-607D7C350249
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -8225,6 +8232,20 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
+  - path: docs/planning/closeouts/20260503-tf-e2-m-b-canvas-draft-access-posture-closeout.md
+    fileId: F-C16051A3CF99
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/planning/closeouts/20260503-tf-e2-m-d-startup-route-readiness-closeout.md
+    fileId: F-9878E81F7B83
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
   - path: docs/planning/closeouts/F-02-closeout.md
     fileId: F-917A85C3F19A
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -8763,6 +8784,14 @@ files:
     isDrift: false
     isLegacy: false
   - path: >-
+      docs/planning/proposals/mandatory/frontend-and-ux/canvas-draft-persistence-runtime-debt-plan-20260503.md
+    fileId: F-DC232A640423
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: >-
       docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md
     fileId: F-09D8F50F6E96
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -8773,6 +8802,22 @@ files:
   - path: >-
       docs/planning/proposals/mandatory/frontend-and-ux/f05-store-domain-ownership-closure-plan-20260503.md
     fileId: F-636F2B1BDCCD
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: >-
+      docs/planning/proposals/mandatory/frontend-and-ux/source-import-provider-extensibility-debt-plan-20260503.md
+    fileId: F-7FB5ECA7FE1D
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: >-
+      docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-a-authoring-draft-hard-cut-implementation-plan-20260503.md
+    fileId: F-24B80677BA62
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -8869,6 +8914,21 @@ files:
   - path: >-
       docs/planning/proposals/mandatory/frontend-and-ux/web-auth-project-onboarding-and-actionable-gaps-20260501.md
     fileId: F-C2403244325D
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/planning/proposals/mandatory/frontend-and-ux/web-sonarqube-findings-debt-plan-20260503.md
+    fileId: F-0384D6FEC242
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: >-
+      docs/planning/proposals/mandatory/frontend-and-ux/workspace-graph-projection-fixture-composability-debt-plan-20260503.md
+    fileId: F-A2D0F7EC6534
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -9980,6 +10040,14 @@ files:
     isLegacy: false
   - path: docs/planning/reviews/architecture-and-governance/20260501-tf-e2-m-c-fowler-hard-qa-review.md
     fileId: F-888C6174A984
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: >-
+      docs/planning/reviews/architecture-and-governance/20260503-source-import-provider-extensibility-debt-review.md
+    fileId: F-8BA49DE6919A
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required

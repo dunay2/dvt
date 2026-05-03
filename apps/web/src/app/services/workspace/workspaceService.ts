@@ -1,10 +1,7 @@
 import type { IWorkspacePort } from '../../ports/workspace';
 import { type ApiClient, createApiClient } from '../api/createApiClient';
 import type { DataSourceMode } from '../config/dataSource';
-import {
-  apiWorkspaceServiceCapabilities,
-  createApiWorkspaceService,
-} from './workspaceService.api';
+import { apiWorkspaceServiceCapabilities, createApiWorkspaceService } from './workspaceService.api';
 import {
   createMockWorkspaceService,
   mockWorkspaceServiceCapabilities,
@@ -12,10 +9,6 @@ import {
 
 export type {
   WorkspaceGraphSnapshot,
-  WorkspaceGraphDraft,
-  WorkspaceGraphDraftRecord,
-  SaveWorkspaceGraphDraftInput,
-  SaveWorkspaceGraphDraftResult,
   WarehouseConnection,
   WarehouseColumn,
   WarehouseTable,

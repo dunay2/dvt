@@ -4,45 +4,39 @@ import type {
   IWorkspaceGraphDraftAuthoringPort,
   WorkspaceGraphDraftAuthoringSaveResult,
 } from '../../ports/workspaceGraphDraftAuthoring';
-import type {
-  WorkspaceGraphDraftRecord,
-} from '../../ports/workspace';
 import {
   projectWorkspaceGraphAuthoringDraftSemanticGraph,
-  type WorkspaceGraphDraftSemanticGraph,
+  type CanvasAuthoringSemanticGraph,
 } from '../../services/workspace/workspaceGraphDraftProjection';
 import {
-  buildCanvasDraftAuthoringGraph,
-  type CanvasDraftAuthoringPayload,
-} from './canvasDraftAuthoring';
-import {
-  createWritableCanvasDraftReadModel,
-  projectCanvasDraftReadModel,
-  type CanvasDraftReadModel,
+  createWritableCanvasAuthoringDraftReadModel,
+  projectCanvasAuthoringDraftReadModel,
+  type CanvasAuthoringDraftRecord,
+  type CanvasAuthoringDraftReadModel,
 } from './canvasDraftReadModel';
 import { toCanvasAuthoringMetadata } from './canvasAuthoringMetadata';
 
 export type SaveCanvasDraftInput = {
   expectedRevision: string | null;
   idempotencyKey: string;
-  draft: CanvasDraftAuthoringPayload;
+  draft: WorkspaceGraphAuthoringDraft;
 };
 
 export type CanvasDraftSaveResult =
   | {
       outcome: 'saved';
-      record: WorkspaceGraphDraftRecord;
-      remoteDraftState: CanvasDraftReadModel;
+      record: CanvasAuthoringDraftRecord;
+      remoteDraftState: CanvasAuthoringDraftReadModel;
     }
   | {
       outcome: 'conflict';
-      current: WorkspaceGraphDraftRecord;
-      remoteDraftState: CanvasDraftReadModel;
+      current: CanvasAuthoringDraftRecord;
+      remoteDraftState: CanvasAuthoringDraftReadModel;
     };
 
 export interface CanvasDraftRepository {
-  readGraphDraftState: () => Promise<CanvasDraftReadModel>;
-  readGraphDraft: () => Promise<WorkspaceGraphDraftRecord | null>;
+  readGraphDraftState: () => Promise<CanvasAuthoringDraftReadModel>;
+  readGraphDraft: () => Promise<CanvasAuthoringDraftRecord | null>;
   saveGraphDraft: (input: SaveCanvasDraftInput) => Promise<CanvasDraftSaveResult>;
 }
 
@@ -55,8 +49,8 @@ type NonRecoverableCanvasDraftSaveResult = Exclude<
 >;
 
 function cloneSemanticGraph(
-  semanticGraph: WorkspaceGraphDraftSemanticGraph
-): WorkspaceGraphDraftSemanticGraph {
+  semanticGraph: CanvasAuthoringSemanticGraph
+): CanvasAuthoringSemanticGraph {
   return {
     canonicalNodes: semanticGraph.canonicalNodes.map((node) => ({
       ...node,
@@ -72,30 +66,29 @@ function cloneSemanticGraph(
 
 function buildSavedCanvasDraftResult(args: {
   input: SaveCanvasDraftInput;
-  authoringDraft: WorkspaceGraphAuthoringDraft;
   revision: string;
 }): CanvasDraftSaveResult {
-  const { input, authoringDraft, revision } = args;
+  const { input, revision } = args;
   const record = {
     revision,
     savedAt: new Date().toISOString(),
-    draft: input.draft.projectedDraft,
+    draft: input.draft,
   };
 
   return {
     outcome: 'saved',
     record,
-    remoteDraftState: createWritableCanvasDraftReadModel(
+    remoteDraftState: createWritableCanvasAuthoringDraftReadModel(
       record,
-      cloneSemanticGraph(projectWorkspaceGraphAuthoringDraftSemanticGraph(authoringDraft))
+      cloneSemanticGraph(projectWorkspaceGraphAuthoringDraftSemanticGraph(input.draft))
     ),
   };
 }
 
 async function resolveCanvasDraftConflictResult(
-  readGraphDraftState: () => Promise<CanvasDraftReadModel>
+  readGraphDraftState: () => Promise<CanvasAuthoringDraftReadModel>
 ): Promise<CanvasDraftSaveResult> {
-  let currentState: CanvasDraftReadModel;
+  let currentState: CanvasAuthoringDraftReadModel;
 
   try {
     currentState = await readGraphDraftState();
@@ -133,16 +126,14 @@ function throwCanvasDraftSaveFailure(result: NonRecoverableCanvasDraftSaveResult
 
 async function resolveCanvasDraftSaveResult(args: {
   input: SaveCanvasDraftInput;
-  authoringDraft: WorkspaceGraphAuthoringDraft;
   result: WorkspaceGraphDraftAuthoringSaveResult;
-  readGraphDraftState: () => Promise<CanvasDraftReadModel>;
+  readGraphDraftState: () => Promise<CanvasAuthoringDraftReadModel>;
 }): Promise<CanvasDraftSaveResult> {
-  const { input, authoringDraft, result, readGraphDraftState } = args;
+  const { input, result, readGraphDraftState } = args;
 
   if (result.kind === 'saved') {
     return buildSavedCanvasDraftResult({
       input,
-      authoringDraft,
       revision: result.revision,
     });
   }
@@ -157,16 +148,16 @@ async function resolveCanvasDraftSaveResult(args: {
 export function createCanvasDraftRepository(
   workspaceGraphDraftAuthoringPort: IWorkspaceGraphDraftAuthoringPort
 ): CanvasDraftRepository {
-  async function readGraphDraftState(): Promise<CanvasDraftReadModel> {
-    return projectCanvasDraftReadModel(await workspaceGraphDraftAuthoringPort.readGraphDraft());
+  async function readGraphDraftState(): Promise<CanvasAuthoringDraftReadModel> {
+    return projectCanvasAuthoringDraftReadModel(
+      await workspaceGraphDraftAuthoringPort.readGraphDraft()
+    );
   }
 
-  async function readProjectedDraftRecord(): Promise<WorkspaceGraphDraftRecord | null> {
+  async function readAuthoringDraftRecord(): Promise<CanvasAuthoringDraftRecord | null> {
     const draftState = await readGraphDraftState();
     if (draftState.formatError != null) {
-      throw new Error(
-        `Workspace graph draft read failed with ${draftState.formatError.reason}.`
-      );
+      throw new Error(`Workspace graph draft read failed with ${draftState.formatError.reason}.`);
     }
 
     if (draftState.accessMode === 'forbidden') {
@@ -178,19 +169,15 @@ export function createCanvasDraftRepository(
 
   return {
     readGraphDraftState,
-    readGraphDraft: readProjectedDraftRecord,
+    readGraphDraft: readAuthoringDraftRecord,
     saveGraphDraft: async (input) => {
-      const authoringDraft = await buildCanvasDraftAuthoringGraph({
-        payload: input.draft,
-      });
       const result = await workspaceGraphDraftAuthoringPort.saveGraphDraft({
         expectedRevision: input.expectedRevision,
         idempotencyKey: input.idempotencyKey,
-        draft: authoringDraft,
+        draft: input.draft,
       });
       return resolveCanvasDraftSaveResult({
         input,
-        authoringDraft,
         result,
         readGraphDraftState,
       });

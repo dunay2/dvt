@@ -12,7 +12,7 @@ describe('Startup route readiness', () => {
   });
 
   it('keeps the fifth startup check pending until capabilities settle', () => {
-    let releaseCapabilities = () => undefined;
+    let releaseCapabilities: () => void = () => undefined;
     stubE2eApi(
       'GET',
       '/capabilities',

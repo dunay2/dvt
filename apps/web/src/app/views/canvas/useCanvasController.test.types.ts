@@ -9,7 +9,7 @@ import type { IWorkspaceGraphDraftAuthoringPort } from '../../ports/workspaceGra
 import type { IWorkspacePort } from '../../ports/workspace';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { PlanViewModel } from '../../types/plans';
-import type { CanvasDraftReadModel } from './canvasDraftReadModel';
+import type { CanvasAuthoringDraftReadModel } from './canvasDraftReadModel';
 
 export type OverlayDecoration = { borderColor?: string; dimmed?: boolean } | null;
 
@@ -18,7 +18,7 @@ export type MockFn = Mock;
 export type CanvasHarnessState = {
   graphData: { nodes: Array<{ id: string }>; edges: Array<{ id: string }> };
   remoteDraftRecord: ProtectedWorkspaceGraphDraftRecord | null;
-  graphDraftQueryData: CanvasDraftReadModel | undefined;
+  graphDraftQueryData: CanvasAuthoringDraftReadModel | undefined;
   canonicalNodes: CanonicalNode[];
   canonicalEdges: CanonicalEdge[];
   overlayDecorations: Map<string, OverlayDecoration>;

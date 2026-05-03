@@ -1,4 +1,4 @@
-import type { WorkspaceGraphDraft } from '../../ports/workspace';
+import type { WorkspaceGraphAuthoringDraft } from '@dvt/contracts';
 import type { CanonicalNode } from '../../types/canonical';
 import type {
   CanvasDraftEdge,
@@ -67,7 +67,7 @@ function buildCanonical({
 }: CanonicalSnapshotArgs): CanvasDraftWorkingSet {
   return buildWorkingSet(canonicalNodeIds, canonicalEdges);
 }
-function buildFromDraft(draft: WorkspaceGraphDraft): CanvasDraftWorkingSet {
+function buildFromDraft(draft: WorkspaceGraphAuthoringDraft): CanvasDraftWorkingSet {
   return buildWorkingSet(draft.nodeIds, draft.edges);
 }
 function workingSetsEqual(left: CanvasDraftWorkingSet, right: CanvasDraftWorkingSet): boolean {

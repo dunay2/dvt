@@ -70,31 +70,21 @@ export function resolveCreateCanvasDocumentCommandEligibility({
 export function buildBlankCanvasDocumentDraftInput({
   command,
   expectedRevision,
-  workspaceScope,
-  previewProvenanceConfig,
-}: Pick<
-  CanvasCreateCanvasDocumentCommandDto,
-  'command' | 'workspaceScope' | 'previewProvenanceConfig'
-> & {
+}: Pick<CanvasCreateCanvasDocumentCommandDto, 'command'> & {
   expectedRevision: string | null;
 }): SaveGraphDraftInput {
   return {
     expectedRevision,
     idempotencyKey: createCanvasDraftIdempotencyKey(),
     draft: {
-      projectedDraft: {
-        canvas: {
-          kind: command.kind,
-          title: command.title,
-        },
-        nodeIds: [],
-        nodePositions: {},
-        edges: [],
+      canvas: {
+        kind: command.kind,
+        title: command.title,
       },
-      canonicalNodes: [],
-      canonicalEdges: [],
-      workspaceScope,
-      previewProvenanceConfig,
+      nodeIds: [],
+      nodePositions: {},
+      nodes: [],
+      edges: [],
     },
   };
 }

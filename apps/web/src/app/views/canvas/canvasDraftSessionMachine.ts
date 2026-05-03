@@ -1,7 +1,7 @@
-import type { WorkspaceGraphDraftRecord } from '../../ports/workspace';
 import type { CanonicalNode } from '../../types/canonical';
 import { canvasDraftSessionBaseline } from './canvasDraftSessionBaseline';
 import { canvasDraftSessionWorkingSet, EMPTY_WORKING_SET } from './canvasDraftSessionWorkingSet';
+import type { CanvasAuthoringDraftRecord } from './canvasDraftReadModel';
 import type {
   BootstrapSessionArgs,
   CanvasDraftSession,
@@ -11,7 +11,7 @@ import type {
 
 type BaselineTransitionArgs = {
   nextSyncState: Exclude<CanvasDraftSyncState, 'bootstrapping' | 'saving'>;
-  record: WorkspaceGraphDraftRecord | null;
+  record: CanvasAuthoringDraftRecord | null;
   workingSet: CanvasDraftWorkingSet | undefined;
   localNodeCatalog: Record<string, CanonicalNode> | undefined;
 };
@@ -86,7 +86,7 @@ function normalizeLocalNodeCatalog(
 function transitionWithRecord(
   session: CanvasDraftSession,
   nextSyncState: Exclude<CanvasDraftSyncState, 'bootstrapping' | 'saving' | 'missing_remote'>,
-  record: WorkspaceGraphDraftRecord,
+  record: CanvasAuthoringDraftRecord,
   workingSet?: CanvasDraftWorkingSet
 ): CanvasDraftSession {
   return transition(session, {
@@ -99,7 +99,7 @@ function transitionWithRecord(
 
 function applySaveSuccess(
   session: CanvasDraftSession,
-  record: WorkspaceGraphDraftRecord
+  record: CanvasAuthoringDraftRecord
 ): CanvasDraftSession {
   const persistedWorkingSet = canvasDraftSessionWorkingSet.buildFromDraft(record.draft);
   const hasEditsWhileSaving =
@@ -116,7 +116,7 @@ function applySaveSuccess(
 
 function applyConflict(
   session: CanvasDraftSession,
-  currentRecord: WorkspaceGraphDraftRecord
+  currentRecord: CanvasAuthoringDraftRecord
 ): CanvasDraftSession {
   return transitionWithRecord(session, 'conflict', currentRecord);
 }
@@ -135,7 +135,7 @@ function markRemoteDraftMissing(
 
 function reloadFromRemote(
   session: CanvasDraftSession,
-  record: WorkspaceGraphDraftRecord
+  record: CanvasAuthoringDraftRecord
 ): CanvasDraftSession {
   return transitionWithRecord(
     session,

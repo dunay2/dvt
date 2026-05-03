@@ -2,7 +2,7 @@ version: 1
 shardId: SYS-REPO-METADATA
 generatedFrom: git ls-files
 unitManifest: docs/planning/status/system-governance-unit-index.units.yaml
-fileCount: 111
+fileCount: 113
 files:
   - fileId: F-7C0FAC63D273
     pathHash: 16228f9cd18f5479d183ab61cb01d3cfc66645b3053a3d23dd9aef2069c3410a
@@ -1544,6 +1544,58 @@ files:
     governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
     stateFingerprint: bee84d54b255112a3d8c3542b2eaf1f31f5caa6f0f2e3de34495bfd2d145586c
     path: buzon/20260502-tf-e2-m-d-startup-route-readiness-fowler-review.md
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-B77FAF8BA094
+    pathHash: b1bf9b896e66ba2aabc129f90193e4a2fe43222a8c62e36c607e1ccb82c2c17e
+    contentHash: fc22a93392805d36a71a6081292f82b4836801d77d8981d750e56831d41a434c
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: f7105c0d423f8f07a7cfc4e0ce4d649675fac1d9ea2250cd959d86a269d6a39a
+    path: buzon/20260503-tf-e2-a-authoring-draft-hard-cut-fowler-review.md
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-F6722E96C038
+    pathHash: aedd34dd05ffc0b7ad686200043e58f922c12f63d611bfb9272f9d8c279d3d80
+    contentHash: 0802d07d6208ca57330c202f2c6d2b5344342f67402ced06e2def124ed49e87f
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: dd73e0f67df13de8e7c467087b03e30730435dc22ce64ce1c16c1a5b2e6319e4
+    path: buzon/20260503-tf-e2-a-fowler-hard-qa-review-followup.md
     owningUnit: SYS-REPO-METADATA-ROOT
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT

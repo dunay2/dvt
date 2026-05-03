@@ -94,8 +94,6 @@ export function useCanvasDraftLifecycle({
         setDraftSession,
         setDraftSaveStatus,
         lastSavedSignatureRef: refs.lastSavedSignatureRef,
-        workspaceScope,
-        previewProvenanceConfig,
       }),
     [
       canPersistGraphDraft,
@@ -104,11 +102,9 @@ export function useCanvasDraftLifecycle({
       graphDraftQuery.data,
       graphDraftQuery.isError,
       graphDraftQuery.isPending,
-      previewProvenanceConfig,
       refs.lastSavedSignatureRef,
       setDraftSession,
       setDraftSaveStatus,
-      workspaceScope,
     ]
   );
 

@@ -7,7 +7,7 @@ governanceState: coverage-required
 dddOwner: ENTRY
 cqRails: UI actions and API queries
 childrenRequired: true
-fileCount: 798
+fileCount: 799
 driftFileCount: 0
 legacyFileCount: 0
 files:
@@ -3282,6 +3282,13 @@ files:
     isLegacy: false
   - path: apps/web/src/app/views/canvas/canvasDraftQueryCache.ts
     fileId: F-1953B5B8BFF1
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/views/canvas/canvasDraftReadModel.test.ts
+    fileId: F-51668804DE6D
     owningUnit: SYS-WEB-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required

@@ -1,6 +1,6 @@
 import { useEffect, type Dispatch, type SetStateAction } from 'react';
 
-import type { WorkspaceGraphDraftSemanticGraph } from '../../services/workspace/workspaceGraphDraftProjection';
+import type { CanvasAuthoringSemanticGraph } from '../../services/workspace/workspaceGraphDraftProjection';
 import { canvasDraftSession, type CanvasDraftSession } from './canvasDraftSession';
 import { buildLocalNodeCatalogFromSemanticGraph } from './canvasDraftLocalNodeCatalog';
 import type { DraftSaveStatus, GraphDraftQueryState } from './canvasDraftLifecycle.types';
@@ -14,7 +14,7 @@ type UseCanvasDraftMissingRemoteSyncArgs = {
   invalidateInFlightSaveAttempt: () => void;
   lastSavedSignatureRef: { current: string | null };
   lastAuthoritativeSemanticGraphRef: {
-    current: WorkspaceGraphDraftSemanticGraph | null;
+    current: CanvasAuthoringSemanticGraph | null;
   };
 };
 

@@ -1,9 +1,7 @@
-import type {
-  WorkspaceGraphDraftRecord,
-} from '../../ports/workspace';
+import type { CanvasAuthoringDraftRecord } from './canvasDraftReadModel';
 import type { CanvasDraftBaseline } from './canvasDraftSession.types';
 
-function create(record: WorkspaceGraphDraftRecord | null): CanvasDraftBaseline {
+function createCanvasDraftBaseline(record: CanvasAuthoringDraftRecord | null): CanvasDraftBaseline {
   return {
     record,
   };
@@ -11,5 +9,5 @@ function create(record: WorkspaceGraphDraftRecord | null): CanvasDraftBaseline {
 
 // Baseline owns the current remote draft record for session transitions.
 export const canvasDraftSessionBaseline = {
-  create,
+  create: createCanvasDraftBaseline,
 } as const;
