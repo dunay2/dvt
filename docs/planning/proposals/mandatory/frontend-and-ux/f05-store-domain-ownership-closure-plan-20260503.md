@@ -444,6 +444,66 @@ symbols:
     cypressCoverage: none
     unitTests:
       - webStoreDomainOwnership.architecture.test.ts
+  - name: REPO_ROOT
+    path: apps/web/src/app/stores/webStoreDomainOwnership.architecture.test.ts
+    dddOwner: Web store domain ownership map
+    cqRails:
+      - ClassifyWebStoreDomainOwnership
+    fowlerSignals:
+      - Test-only confidence
+      - Documentation drift
+    architectureGuard: webStoreDomainOwnership.architecture.test.ts
+    cypressCoverage: none
+    unitTests:
+      - webStoreDomainOwnership.architecture.test.ts
+  - name: STORE_MODULES
+    path: apps/web/src/app/stores/webStoreDomainOwnership.architecture.test.ts
+    dddOwner: Web store domain ownership map
+    cqRails:
+      - ClassifyWebStoreDomainOwnership
+    fowlerSignals:
+      - Test-only confidence
+      - Documentation drift
+    architectureGuard: webStoreDomainOwnership.architecture.test.ts
+    cypressCoverage: none
+    unitTests:
+      - webStoreDomainOwnership.architecture.test.ts
+  - name: StoreModuleExpectation
+    path: apps/web/src/app/stores/webStoreDomainOwnership.architecture.test.ts
+    dddOwner: Web store domain ownership map
+    cqRails:
+      - ClassifyWebStoreDomainOwnership
+    fowlerSignals:
+      - Test-only confidence
+      - Documentation drift
+    architectureGuard: webStoreDomainOwnership.architecture.test.ts
+    cypressCoverage: none
+    unitTests:
+      - webStoreDomainOwnership.architecture.test.ts
+  - name: readRepoFile
+    path: apps/web/src/app/stores/webStoreDomainOwnership.architecture.test.ts
+    dddOwner: Web store domain ownership map
+    cqRails:
+      - ClassifyWebStoreDomainOwnership
+    fowlerSignals:
+      - Test-only confidence
+      - Documentation drift
+    architectureGuard: webStoreDomainOwnership.architecture.test.ts
+    cypressCoverage: none
+    unitTests:
+      - webStoreDomainOwnership.architecture.test.ts
+  - name: repoFileExists
+    path: apps/web/src/app/stores/webStoreDomainOwnership.architecture.test.ts
+    dddOwner: Web store domain ownership map
+    cqRails:
+      - ClassifyWebStoreDomainOwnership
+    fowlerSignals:
+      - Test-only confidence
+      - Documentation drift
+    architectureGuard: webStoreDomainOwnership.architecture.test.ts
+    cypressCoverage: none
+    unitTests:
+      - webStoreDomainOwnership.architecture.test.ts
   - name: setRootShellConsoleDrawer
     path: apps/web/src/app/Root.test.support.tsx
     dddOwner: Web shell layout aggregate

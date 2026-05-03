@@ -24115,9 +24115,9 @@ files:
   - fileId: F-636F2B1BDCCD
     path: >-
       docs/planning/proposals/mandatory/frontend-and-ux/f05-store-domain-ownership-closure-plan-20260503.md
-    contentHash: c09cad76c9d0ce7cb034f87d77566b333b39dce5d0d2b9ad73134b84b8bbc2ab
+    contentHash: 05c39896f71883feffdeeaa43f362f4681fdf54717744019ee3613ec22bf8fe2
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: ec2a7b690c9c2c389dd0e64116c1429c029de0de3ce537c8e7fb0f81405a46ad
+    stateFingerprint: e8b23eb5a03f1019c3a74263e93d9dd734be3463b0c6d4403b85c07411fb2cf0
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
