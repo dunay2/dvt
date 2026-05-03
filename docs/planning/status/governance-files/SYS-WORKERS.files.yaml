@@ -54,6 +54,31 @@ files:
     cqRails: worker commands and operational queries
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-48C7959EADCB
+    pathHash: 677eddb6b1281f2ebe46be64d3d00087c57d5aa743ae86462c2b164d852b9b87
+    contentHash: 74ceb5f3bdb0cf5633cabc6ec918106c9f41970d532622d2af4924189cd3cca6
+    governanceHash: 90594345f2cb61d2a732249db7c0e359253a400879823e9adbb15a101ee2ae8a
+    stateFingerprint: e7f3fad3b6e2a1ab9ff40d2a5f681fe5fe40606e90a27f26845ca80146f4c555
+    path: apps/lineage-worker/src/compiled-code-resolver/S3UriCompiledCodeReader.ts
+    owningUnit: SYS-WORKERS-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-WORKERS
+    componentUnit: SYS-WORKERS-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-WORKERS
+      - SYS-WORKERS-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: AS
+    cqRails: worker commands and operational queries
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-90FA39C4A321
     pathHash: 5acfb3654dfcb9bd61eac3b8fc60d32c38adb2fcbf3a2d09dcaa27e0157b988e
     contentHash: f5b7e3d952b7364b08e4c7129674a64247d07f6b885ddc4351c5ef36d33b1326
@@ -85,31 +110,6 @@ files:
     governanceHash: 90594345f2cb61d2a732249db7c0e359253a400879823e9adbb15a101ee2ae8a
     stateFingerprint: 8bd28b20673e77ec02a2ecc0023ec50e52eaa14d652da47b007344d688198b6f
     path: apps/lineage-worker/src/compiled-code-resolver/policy.ts
-    owningUnit: SYS-WORKERS-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-WORKERS
-    componentUnit: SYS-WORKERS-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-WORKERS
-      - SYS-WORKERS-ROOT
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: AS
-    cqRails: worker commands and operational queries
-    governance:
-      - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-48C7959EADCB
-    pathHash: 677eddb6b1281f2ebe46be64d3d00087c57d5aa743ae86462c2b164d852b9b87
-    contentHash: 74ceb5f3bdb0cf5633cabc6ec918106c9f41970d532622d2af4924189cd3cca6
-    governanceHash: 90594345f2cb61d2a732249db7c0e359253a400879823e9adbb15a101ee2ae8a
-    stateFingerprint: e7f3fad3b6e2a1ab9ff40d2a5f681fe5fe40606e90a27f26845ca80146f4c555
-    path: apps/lineage-worker/src/compiled-code-resolver/S3UriCompiledCodeReader.ts
     owningUnit: SYS-WORKERS-ROOT
     rootUnit: SYS-DVT
     domainUnit: SYS-WORKERS
@@ -504,12 +504,12 @@ files:
     cqRails: worker commands and operational queries
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-6176A820CCC8
-    pathHash: 4f4652d3ab051e6fbabc6e0f28e446c311fdba613571ea19a54bf417cdb37794
-    contentHash: a8d9cc535cc665b43659d00b25079e12c365fcb931b57d251da7c45b29ba9123
+  - fileId: F-E9BE4D950815
+    pathHash: d0b5798e6976f008b20c9b921a069d0b374a067e3c735c44d821190603b5acc4
+    contentHash: b98cfb6534539fc8fbccb59cb6633d32c3f2410e651a8fcd5a2468714162b419
     governanceHash: 90594345f2cb61d2a732249db7c0e359253a400879823e9adbb15a101ee2ae8a
-    stateFingerprint: d023d8a2274507ba2bfc35dcaaab46e2135de3de3b0517823090ee808a56129f
-    path: apps/outbox-worker/package.json
+    stateFingerprint: 26dcc87755093c873a7a753e8cc27d0190d2ab70a2c17839d5f2205771c50d3d
+    path: apps/outbox-worker/README.md
     owningUnit: SYS-WORKERS-ROOT
     rootUnit: SYS-DVT
     domainUnit: SYS-WORKERS
@@ -529,12 +529,12 @@ files:
     cqRails: worker commands and operational queries
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-E9BE4D950815
-    pathHash: d0b5798e6976f008b20c9b921a069d0b374a067e3c735c44d821190603b5acc4
-    contentHash: b98cfb6534539fc8fbccb59cb6633d32c3f2410e651a8fcd5a2468714162b419
+  - fileId: F-6176A820CCC8
+    pathHash: 4f4652d3ab051e6fbabc6e0f28e446c311fdba613571ea19a54bf417cdb37794
+    contentHash: a8d9cc535cc665b43659d00b25079e12c365fcb931b57d251da7c45b29ba9123
     governanceHash: 90594345f2cb61d2a732249db7c0e359253a400879823e9adbb15a101ee2ae8a
-    stateFingerprint: 26dcc87755093c873a7a753e8cc27d0190d2ab70a2c17839d5f2205771c50d3d
-    path: apps/outbox-worker/README.md
+    stateFingerprint: d023d8a2274507ba2bfc35dcaaab46e2135de3de3b0517823090ee808a56129f
+    path: apps/outbox-worker/package.json
     owningUnit: SYS-WORKERS-ROOT
     rootUnit: SYS-DVT
     domainUnit: SYS-WORKERS
@@ -679,12 +679,37 @@ files:
     cqRails: worker commands and operational queries
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-E332FB546721
-    pathHash: d3793d6c39ce8e3c6a677f893598c9c0c23bab6b067e49b209c160ca145550f5
-    contentHash: 670ff2b77d01dde66402694da1d65aba9f962c272bd21774a98132f6c00983ab
+  - fileId: F-8F4E5BD838D6
+    pathHash: c8f46e41db7ccc3a4a540a90335913ab442f5d30952ba7c58acd75ebbb7a346c
+    contentHash: 6ddac0a01aaad8ce8ee04f56e85b98662bc3493dd556bfe066a559e1656731d3
     governanceHash: 90594345f2cb61d2a732249db7c0e359253a400879823e9adbb15a101ee2ae8a
-    stateFingerprint: 3861590ec856ea4b6e4c32fbb18d8fb94a8e64fdd8ced987c8bc960c8c4d788e
-    path: apps/outbox-worker/src/ops/monitor/model.ts
+    stateFingerprint: e2077ae31d77de10a546af4093a2b458d29e632004b8e96a23d2d91ac8d06591
+    path: apps/outbox-worker/src/ops/OperationalServer.ts
+    owningUnit: SYS-WORKERS-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-WORKERS
+    componentUnit: SYS-WORKERS-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-WORKERS
+      - SYS-WORKERS-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: AS
+    cqRails: worker commands and operational queries
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-4E5D99DA3EE4
+    pathHash: 0ed5dc59c6fc7485c04ce8b894d92a2dc75202424d3b6878b92a8f1b819534fe
+    contentHash: fc2f4bf636f866d27e63a4aa8ff834febe023b85ec1c435be596c03cfad7b5e7
+    governanceHash: 90594345f2cb61d2a732249db7c0e359253a400879823e9adbb15a101ee2ae8a
+    stateFingerprint: 737bcc3069cac493e6631b273ba4b3b5edbe7d14e7d2292a2c0552383811465b
+    path: apps/outbox-worker/src/ops/OutboxWorkerMonitor.ts
     owningUnit: SYS-WORKERS-ROOT
     rootUnit: SYS-DVT
     domainUnit: SYS-WORKERS
@@ -754,31 +779,6 @@ files:
     cqRails: worker commands and operational queries
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-04823FE1BE15
-    pathHash: 71afa210e3be02c3eaf925a312115a256dd090922ea6e0c22705d6d464bb1447
-    contentHash: a84621ef2280d9cabb21512da25f654615d7ff446e658c258cc98c96c991a0f6
-    governanceHash: 90594345f2cb61d2a732249db7c0e359253a400879823e9adbb15a101ee2ae8a
-    stateFingerprint: 4c02132ebcf988464ae2b87beff491102edf1c6e88c3737daadf71c16747235e
-    path: apps/outbox-worker/src/ops/monitor/renderOutboxWorkerMetrics.ts
-    owningUnit: SYS-WORKERS-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-WORKERS
-    componentUnit: SYS-WORKERS-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-WORKERS
-      - SYS-WORKERS-ROOT
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: AS
-    cqRails: worker commands and operational queries
-    governance:
-      - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-3CDAC9BA197B
     pathHash: 6c448ded217b50e4ec1f650ce54050701d802ec3430e83cc63331103c7d87cb8
     contentHash: 71a0a3ab04f142c08117fbbefcfe2bb1db71bf1c7606745035e900f9b16d3193
@@ -804,62 +804,62 @@ files:
     cqRails: worker commands and operational queries
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-E332FB546721
+    pathHash: d3793d6c39ce8e3c6a677f893598c9c0c23bab6b067e49b209c160ca145550f5
+    contentHash: 670ff2b77d01dde66402694da1d65aba9f962c272bd21774a98132f6c00983ab
+    governanceHash: 90594345f2cb61d2a732249db7c0e359253a400879823e9adbb15a101ee2ae8a
+    stateFingerprint: 3861590ec856ea4b6e4c32fbb18d8fb94a8e64fdd8ced987c8bc960c8c4d788e
+    path: apps/outbox-worker/src/ops/monitor/model.ts
+    owningUnit: SYS-WORKERS-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-WORKERS
+    componentUnit: SYS-WORKERS-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-WORKERS
+      - SYS-WORKERS-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: AS
+    cqRails: worker commands and operational queries
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-04823FE1BE15
+    pathHash: 71afa210e3be02c3eaf925a312115a256dd090922ea6e0c22705d6d464bb1447
+    contentHash: a84621ef2280d9cabb21512da25f654615d7ff446e658c258cc98c96c991a0f6
+    governanceHash: 90594345f2cb61d2a732249db7c0e359253a400879823e9adbb15a101ee2ae8a
+    stateFingerprint: 4c02132ebcf988464ae2b87beff491102edf1c6e88c3737daadf71c16747235e
+    path: apps/outbox-worker/src/ops/monitor/renderOutboxWorkerMetrics.ts
+    owningUnit: SYS-WORKERS-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-WORKERS
+    componentUnit: SYS-WORKERS-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-WORKERS
+      - SYS-WORKERS-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: AS
+    cqRails: worker commands and operational queries
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-BF1F7A362A52
     pathHash: 499bb5c0614160fd81d306ca695d79dc73b7a78e72eda39eff4735906fee1fe8
     contentHash: 511242ccf4205d2267ec503f8e1d017bcf2d0ca7c60417b5140089a31d429300
     governanceHash: 90594345f2cb61d2a732249db7c0e359253a400879823e9adbb15a101ee2ae8a
     stateFingerprint: 27b56e56dee676c3a37481cad19aa4406a0d0306cfe8d3ea39e93765acfc328d
     path: apps/outbox-worker/src/ops/monitor/support.ts
-    owningUnit: SYS-WORKERS-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-WORKERS
-    componentUnit: SYS-WORKERS-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-WORKERS
-      - SYS-WORKERS-ROOT
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: AS
-    cqRails: worker commands and operational queries
-    governance:
-      - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-8F4E5BD838D6
-    pathHash: c8f46e41db7ccc3a4a540a90335913ab442f5d30952ba7c58acd75ebbb7a346c
-    contentHash: 6ddac0a01aaad8ce8ee04f56e85b98662bc3493dd556bfe066a559e1656731d3
-    governanceHash: 90594345f2cb61d2a732249db7c0e359253a400879823e9adbb15a101ee2ae8a
-    stateFingerprint: e2077ae31d77de10a546af4093a2b458d29e632004b8e96a23d2d91ac8d06591
-    path: apps/outbox-worker/src/ops/OperationalServer.ts
-    owningUnit: SYS-WORKERS-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-WORKERS
-    componentUnit: SYS-WORKERS-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-WORKERS
-      - SYS-WORKERS-ROOT
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: AS
-    cqRails: worker commands and operational queries
-    governance:
-      - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-4E5D99DA3EE4
-    pathHash: 0ed5dc59c6fc7485c04ce8b894d92a2dc75202424d3b6878b92a8f1b819534fe
-    contentHash: fc2f4bf636f866d27e63a4aa8ff834febe023b85ec1c435be596c03cfad7b5e7
-    governanceHash: 90594345f2cb61d2a732249db7c0e359253a400879823e9adbb15a101ee2ae8a
-    stateFingerprint: 737bcc3069cac493e6631b273ba4b3b5edbe7d14e7d2292a2c0552383811465b
-    path: apps/outbox-worker/src/ops/OutboxWorkerMonitor.ts
     owningUnit: SYS-WORKERS-ROOT
     rootUnit: SYS-DVT
     domainUnit: SYS-WORKERS
@@ -935,6 +935,81 @@ files:
     governanceHash: 90594345f2cb61d2a732249db7c0e359253a400879823e9adbb15a101ee2ae8a
     stateFingerprint: 53efce958f001928408e280455f89759ee65cb08e5d84635a324e3dc58bbab28
     path: apps/outbox-worker/src/plugins/env.ts
+    owningUnit: SYS-WORKERS-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-WORKERS
+    componentUnit: SYS-WORKERS-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-WORKERS
+      - SYS-WORKERS-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: AS
+    cqRails: worker commands and operational queries
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-10E73AD8A9FE
+    pathHash: d584401ef3d205e88ac9e0044634fd5c55ef2ba4fbcffb1fe94d4e10e03bee71
+    contentHash: bdad663b67a7bbbfbb6ad58c03d3733a77ec345fc2cf771459b1eec775bb953b
+    governanceHash: 90594345f2cb61d2a732249db7c0e359253a400879823e9adbb15a101ee2ae8a
+    stateFingerprint: a5df22f0f57a4a820acf34dbe52df4b69813ec67c486d330d636d658b3d9ccfa
+    path: apps/outbox-worker/src/runtime/DeliveryBufferPurgeRuntime.ts
+    owningUnit: SYS-WORKERS-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-WORKERS
+    componentUnit: SYS-WORKERS-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-WORKERS
+      - SYS-WORKERS-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: AS
+    cqRails: worker commands and operational queries
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-8CB6B7A25E3B
+    pathHash: 83feb99660c1a78339b4a3a5646437ba05473cff209be2475c169ce5957b38d4
+    contentHash: 48413a8df17651bed163c7a617c7fe9d9eab02836678755b2f26c059775c57e5
+    governanceHash: 90594345f2cb61d2a732249db7c0e359253a400879823e9adbb15a101ee2ae8a
+    stateFingerprint: e90d906dcf1801433a90a4bc6eeb6246b97b16eb08ad911c60a5ca615e1e326a
+    path: apps/outbox-worker/src/runtime/OutboxWorkerRuntime.ts
+    owningUnit: SYS-WORKERS-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-WORKERS
+    componentUnit: SYS-WORKERS-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-WORKERS
+      - SYS-WORKERS-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: AS
+    cqRails: worker commands and operational queries
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-C217E6855711
+    pathHash: dbbbaf7726dde1a4fd80ff8c16f6ade058cce3c4d3d411509dbc94575a0a440e
+    contentHash: 9340232648cc4670f9949fbfa6f3b6a4ed53d39f0a9c0cb83cfaaf2a7b5ec915
+    governanceHash: 90594345f2cb61d2a732249db7c0e359253a400879823e9adbb15a101ee2ae8a
+    stateFingerprint: 3b1948fd913de39b3ab48f8cc891f3439172be29c67a1682bc869c54e03ee255
+    path: apps/outbox-worker/src/runtime/RunEventRetentionRuntime.ts
     owningUnit: SYS-WORKERS-ROOT
     rootUnit: SYS-DVT
     domainUnit: SYS-WORKERS
@@ -1054,87 +1129,12 @@ files:
     cqRails: worker commands and operational queries
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-10E73AD8A9FE
-    pathHash: d584401ef3d205e88ac9e0044634fd5c55ef2ba4fbcffb1fe94d4e10e03bee71
-    contentHash: bdad663b67a7bbbfbb6ad58c03d3733a77ec345fc2cf771459b1eec775bb953b
-    governanceHash: 90594345f2cb61d2a732249db7c0e359253a400879823e9adbb15a101ee2ae8a
-    stateFingerprint: a5df22f0f57a4a820acf34dbe52df4b69813ec67c486d330d636d658b3d9ccfa
-    path: apps/outbox-worker/src/runtime/DeliveryBufferPurgeRuntime.ts
-    owningUnit: SYS-WORKERS-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-WORKERS
-    componentUnit: SYS-WORKERS-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-WORKERS
-      - SYS-WORKERS-ROOT
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: AS
-    cqRails: worker commands and operational queries
-    governance:
-      - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-13C96E2D7D68
     pathHash: b191ab4d480b76b47e921ddde8016b4d558786e4cf24b604602dd98b4cc025fe
     contentHash: 7cc62b83c24565c48e361d8caa9916a02b708305db64e49fcd503d52e876b743
     governanceHash: 90594345f2cb61d2a732249db7c0e359253a400879823e9adbb15a101ee2ae8a
     stateFingerprint: 7b351b338f1067d15391da3b12d15ec02d4c71373c6359fe47e2a1d8ad3f7d0c
     path: apps/outbox-worker/src/runtime/outboxRuntimeResourceLifecycle.ts
-    owningUnit: SYS-WORKERS-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-WORKERS
-    componentUnit: SYS-WORKERS-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-WORKERS
-      - SYS-WORKERS-ROOT
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: AS
-    cqRails: worker commands and operational queries
-    governance:
-      - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-8CB6B7A25E3B
-    pathHash: 83feb99660c1a78339b4a3a5646437ba05473cff209be2475c169ce5957b38d4
-    contentHash: 48413a8df17651bed163c7a617c7fe9d9eab02836678755b2f26c059775c57e5
-    governanceHash: 90594345f2cb61d2a732249db7c0e359253a400879823e9adbb15a101ee2ae8a
-    stateFingerprint: e90d906dcf1801433a90a4bc6eeb6246b97b16eb08ad911c60a5ca615e1e326a
-    path: apps/outbox-worker/src/runtime/OutboxWorkerRuntime.ts
-    owningUnit: SYS-WORKERS-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-WORKERS
-    componentUnit: SYS-WORKERS-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-WORKERS
-      - SYS-WORKERS-ROOT
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: AS
-    cqRails: worker commands and operational queries
-    governance:
-      - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-C217E6855711
-    pathHash: dbbbaf7726dde1a4fd80ff8c16f6ade058cce3c4d3d411509dbc94575a0a440e
-    contentHash: 9340232648cc4670f9949fbfa6f3b6a4ed53d39f0a9c0cb83cfaaf2a7b5ec915
-    governanceHash: 90594345f2cb61d2a732249db7c0e359253a400879823e9adbb15a101ee2ae8a
-    stateFingerprint: 3b1948fd913de39b3ab48f8cc891f3439172be29c67a1682bc869c54e03ee255
-    path: apps/outbox-worker/src/runtime/RunEventRetentionRuntime.ts
     owningUnit: SYS-WORKERS-ROOT
     rootUnit: SYS-DVT
     domainUnit: SYS-WORKERS
@@ -1654,56 +1654,6 @@ files:
     cqRails: worker commands and operational queries
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-B06A6E25A33C
-    pathHash: 47f5c406bc26c16980ce22fa97d7045e0b38c54046c3eebcaa521ec4cdef2a77
-    contentHash: c117ea210d05692c964729dea2df9b98fd38699b39b5f50d23c6da35b1c2ef26
-    governanceHash: 90594345f2cb61d2a732249db7c0e359253a400879823e9adbb15a101ee2ae8a
-    stateFingerprint: f29489fa4c1d9a85a77113f889144457d8ccde026c9b9b6ba4ea51b06c377aed
-    path: apps/outbox-worker/test/runtime/buildRunEventRetentionRuntime.test.ts
-    owningUnit: SYS-WORKERS-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-WORKERS
-    componentUnit: SYS-WORKERS-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-WORKERS
-      - SYS-WORKERS-ROOT
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: AS
-    cqRails: worker commands and operational queries
-    governance:
-      - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-1B80E09AF623
-    pathHash: bb7f1553ee5dae06fcda35c2802b5e2bf5a0000a4f7fee48ac86bb94ed25fc5b
-    contentHash: 3ad13cd9b9f1c9dbd187586ed2383d75a4b668f92855784114ea42702af3fb1c
-    governanceHash: 90594345f2cb61d2a732249db7c0e359253a400879823e9adbb15a101ee2ae8a
-    stateFingerprint: 623d373f77a1421adf4199478a7861eff513ff5bc27cb2a2e26a4a318653f6d6
-    path: apps/outbox-worker/test/runtime/createOutboxWorkerRuntime.test.ts
-    owningUnit: SYS-WORKERS-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-WORKERS
-    componentUnit: SYS-WORKERS-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-WORKERS
-      - SYS-WORKERS-ROOT
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: AS
-    cqRails: worker commands and operational queries
-    governance:
-      - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-AEA4002D59DF
     pathHash: ed36a0b9b6c928bea2ec05ba8bd1a302aa9e4debf92c360e2e38acaad71ad30c
     contentHash: 3b5da42f3a6b04e1bec5aba30e64a3a6cdf749a4287ed0bdfc6515e6735b24fa
@@ -1810,6 +1760,56 @@ files:
     governanceHash: 90594345f2cb61d2a732249db7c0e359253a400879823e9adbb15a101ee2ae8a
     stateFingerprint: 93fa22dfa89bb0c32936c140881e95ca5250625f0c44ece0f792aa6cefab73f6
     path: apps/outbox-worker/test/runtime/RunEventRetentionRuntime.test.ts
+    owningUnit: SYS-WORKERS-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-WORKERS
+    componentUnit: SYS-WORKERS-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-WORKERS
+      - SYS-WORKERS-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: AS
+    cqRails: worker commands and operational queries
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-B06A6E25A33C
+    pathHash: 47f5c406bc26c16980ce22fa97d7045e0b38c54046c3eebcaa521ec4cdef2a77
+    contentHash: c117ea210d05692c964729dea2df9b98fd38699b39b5f50d23c6da35b1c2ef26
+    governanceHash: 90594345f2cb61d2a732249db7c0e359253a400879823e9adbb15a101ee2ae8a
+    stateFingerprint: f29489fa4c1d9a85a77113f889144457d8ccde026c9b9b6ba4ea51b06c377aed
+    path: apps/outbox-worker/test/runtime/buildRunEventRetentionRuntime.test.ts
+    owningUnit: SYS-WORKERS-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-WORKERS
+    componentUnit: SYS-WORKERS-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-WORKERS
+      - SYS-WORKERS-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: AS
+    cqRails: worker commands and operational queries
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-1B80E09AF623
+    pathHash: bb7f1553ee5dae06fcda35c2802b5e2bf5a0000a4f7fee48ac86bb94ed25fc5b
+    contentHash: 3ad13cd9b9f1c9dbd187586ed2383d75a4b668f92855784114ea42702af3fb1c
+    governanceHash: 90594345f2cb61d2a732249db7c0e359253a400879823e9adbb15a101ee2ae8a
+    stateFingerprint: 623d373f77a1421adf4199478a7861eff513ff5bc27cb2a2e26a4a318653f6d6
+    path: apps/outbox-worker/test/runtime/createOutboxWorkerRuntime.test.ts
     owningUnit: SYS-WORKERS-ROOT
     rootUnit: SYS-DVT
     domainUnit: SYS-WORKERS

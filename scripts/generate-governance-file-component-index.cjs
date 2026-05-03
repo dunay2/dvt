@@ -61,6 +61,13 @@ function toPosix(filePath) {
   return filePath.replace(/\\/g, '/');
 }
 
+function compareText(left, right) {
+  if (left === right) {
+    return 0;
+  }
+  return left < right ? -1 : 1;
+}
+
 function sha256(value) {
   return crypto.createHash('sha256').update(value).digest('hex');
 }
@@ -378,7 +385,7 @@ function buildComponentEntries(units, fileEntries, unitById = buildUnitIndex(uni
         fowlerSignals: unit.fowlerSignals || [],
       };
     })
-    .sort((left, right) => left.id.localeCompare(right.id));
+    .sort((left, right) => compareText(left.id, right.id));
 }
 
 function countBy(entries, key) {
@@ -387,7 +394,7 @@ function countBy(entries, key) {
     counts.set(entry[key], (counts.get(entry[key]) || 0) + 1);
   }
   return [...counts.entries()]
-    .sort(([left], [right]) => String(left).localeCompare(String(right)))
+    .sort(([left], [right]) => compareText(String(left), String(right)))
     .map(([name, count]) => ({ name, count }));
 }
 
@@ -427,9 +434,9 @@ function buildFileIndexManifest(fileEntries, options = {}) {
 
   const shards = {};
   const shardRows = [...entriesByShard.entries()]
-    .sort(([left], [right]) => left.localeCompare(right))
+    .sort(([left], [right]) => compareText(left, right))
     .map(([shardId, entries]) => {
-      const files = [...entries].sort((left, right) => left.path.localeCompare(right.path));
+      const files = [...entries].sort((left, right) => compareText(left.path, right.path));
       const shardPath = `${shardDirectory}/${shardId}.files.yaml`;
       const payload = buildShardPayload(shardId, files);
       const content = renderYaml(payload);
@@ -463,7 +470,7 @@ function componentShardPath(componentId, shardDirectory) {
 
 function buildComponentFileRows(files) {
   return [...files]
-    .sort((left, right) => left.path.localeCompare(right.path))
+    .sort((left, right) => compareText(left.path, right.path))
     .map((file) => ({
       path: file.path,
       fileId: file.fileId,
@@ -507,7 +514,7 @@ function buildComponentFileMapManifest(componentEntries, fileEntries, options = 
 
   const shards = {};
   const componentRows = [...componentEntries]
-    .sort((left, right) => left.id.localeCompare(right.id))
+    .sort((left, right) => compareText(left.id, right.id))
     .map((component) => {
       const files = filesByComponent.get(component.id) || [];
       const shardPath = componentShardPath(component.id, shardDirectory);
@@ -881,10 +888,10 @@ function renderComponentFileMapMarkdown(componentFileMap) {
       (left, right) =>
         right.driftFileCount +
           right.legacyFileCount -
-          (left.driftFileCount + left.legacyFileCount) || left.id.localeCompare(right.id)
+          (left.driftFileCount + left.legacyFileCount) || compareText(left.id, right.id)
     );
   const largestComponents = [...componentFileMap.manifest.components]
-    .sort((left, right) => right.fileCount - left.fileCount || left.id.localeCompare(right.id))
+    .sort((left, right) => right.fileCount - left.fileCount || compareText(left.id, right.id))
     .slice(0, 20);
 
   const componentRows = componentFileMap.manifest.components

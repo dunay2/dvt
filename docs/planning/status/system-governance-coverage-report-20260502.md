@@ -32,7 +32,7 @@ Upstream indexes:
 - Files: 4134
 - Governed files: 4134
 - Ungoverned files: 0
-- Drift files: 44
+- Drift files: 41
 - Legacy files: 0
 - Components/source units: 32
 - Components requiring subdivision: 19
@@ -86,8 +86,8 @@ Upstream indexes:
 | --- | ---: |
 | `canonical` | 111 |
 | `coverage-required` | 3900 |
-| `drift` | 44 |
-| `review` | 79 |
+| `drift` | 41 |
+| `review` | 82 |
 <!-- prettier-ignore-end -->
 
 ## By Governance State
@@ -96,9 +96,9 @@ Upstream indexes:
 | Governance state | Files |
 | --- | ---: |
 | `coverage-required` | 3900 |
-| `drift` | 44 |
+| `drift` | 41 |
 | `governed` | 111 |
-| `review` | 79 |
+| `review` | 82 |
 <!-- prettier-ignore-end -->
 
 ## By Canonical Role
@@ -117,8 +117,8 @@ Upstream indexes:
 | --- | ---: |
 | `classification-only` | 111 |
 | `coverage-required` | 3900 |
-| `remediation-required` | 44 |
-| `review-required` | 79 |
+| `remediation-required` | 41 |
+| `review-required` | 82 |
 <!-- prettier-ignore-end -->
 
 ## Drift Files
@@ -146,7 +146,6 @@ Upstream indexes:
 | `apps/api/test/entrypoints/http/planRoutePlanSourcePolicy.test.ts` | `SYS-PLANSTORE-API-COMPOSITION` | `SYS-PLANSTORE-API-COMPOSITION` | `drift` |
 | `apps/api/test/infrastructure/planner/ManifestArtifactResolver.test.ts` | `SYS-PLANSTORE-API-COMPOSITION` | `SYS-PLANSTORE-API-COMPOSITION` | `drift` |
 | `apps/api/test/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.test.ts` | `SYS-PLANSTORE-API-COMPOSITION` | `SYS-PLANSTORE-API-COMPOSITION` | `drift` |
-| `docs/contracts/planner/PlanStoreRecords.v1.md` | `SYS-PLANSTORE-CONTRACTS` | `SYS-PLANSTORE-CONTRACTS` | `drift` |
 | `packages/@dvt/adapter-postgres/src/PostgresPlanStore.admission-repository.ts` | `SYS-PLANSTORE-POSTGRES` | `SYS-PLANSTORE-POSTGRES` | `drift` |
 | `packages/@dvt/adapter-postgres/src/PostgresPlanStore.executability-repository.ts` | `SYS-PLANSTORE-POSTGRES` | `SYS-PLANSTORE-POSTGRES` | `drift` |
 | `packages/@dvt/adapter-postgres/src/PostgresPlanStore.executable-blob-repository.ts` | `SYS-PLANSTORE-POSTGRES` | `SYS-PLANSTORE-POSTGRES` | `drift` |
@@ -163,8 +162,6 @@ Upstream indexes:
 | `packages/@dvt/adapter-postgres/test/PostgresPlanStore.records-core.integration.test.ts` | `SYS-PLANSTORE-POSTGRES` | `SYS-PLANSTORE-POSTGRES` | `drift` |
 | `packages/@dvt/adapter-postgres/test/PostgresPlanStore.records-guards.integration.test.ts` | `SYS-PLANSTORE-POSTGRES` | `SYS-PLANSTORE-POSTGRES` | `drift` |
 | `packages/@dvt/adapter-postgres/test/PostgresPlanStore.sql.test.ts` | `SYS-PLANSTORE-POSTGRES` | `SYS-PLANSTORE-POSTGRES` | `drift` |
-| `packages/@dvt/artifacts/src/ports/IPlanStoreReader.ts` | `SYS-PLANSTORE-CONTRACTS` | `SYS-PLANSTORE-CONTRACTS` | `drift` |
-| `packages/@dvt/artifacts/src/ports/IPlanStoreWriter.ts` | `SYS-PLANSTORE-CONTRACTS` | `SYS-PLANSTORE-CONTRACTS` | `drift` |
 | `packages/@dvt/engine/src/ports/IPlanArtifactReader.ts` | `SYS-PLANSTORE-ENGINE-FETCH` | `SYS-PLANSTORE-ENGINE-FETCH` | `drift` |
 | `packages/@dvt/engine/src/security/planRefPolicy.ts` | `SYS-PLANSTORE-ENGINE-FETCH` | `SYS-PLANSTORE-ENGINE-FETCH` | `drift` |
 | `packages/@dvt/engine/src/security/planRefPolicyRules.ts` | `SYS-PLANSTORE-ENGINE-FETCH` | `SYS-PLANSTORE-ENGINE-FETCH` | `drift` |
@@ -202,7 +199,7 @@ Upstream indexes:
 | `SYS-OBSERVABILITY-ROOT` | 15 | `coverage-required` | `PORT` |
 | `SYS-PLANSTORE-TEMPORAL-COMPOSITION` | 11 | `review` | `ADP` |
 | `SYS-PLANSTORE-ENGINE-FETCH` | 5 | `drift` | `PORT` |
-| `SYS-PLANSTORE-CONTRACTS` | 3 | `drift` | `PORT` |
+| `SYS-PLANSTORE-CONTRACTS` | 3 | `review` | `PORT` |
 | `SYS-API-OPS-ROUTES` | 0 | `coverage-required` | `INFRA` |
 <!-- prettier-ignore-end -->
 

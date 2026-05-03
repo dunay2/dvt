@@ -1390,17 +1390,17 @@ components:
       - id: SYS-PLANSTORE-CONTRACTS
         name: Plan-store contracts
         level: component
-        status: drift
+        status: review
         governance:
           - docs/contracts/planner/PlanStoreRecords.v1.md
           - >-
             docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
           - docs/risk-register/quality/R-20260402-S08-PLAN-STORE-CONTRACT-DRIFT.yaml
-    status: drift
-    governanceState: drift
+    status: review
+    governanceState: review
     canonicalRole: none
-    evidenceState: remediation-required
-    isDrift: true
+    evidenceState: review-required
+    isDrift: false
     isLegacy: false
     childrenRequired: true
     fileCount: 3
@@ -1417,8 +1417,7 @@ components:
         docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
       - docs/risk-register/quality/R-20260402-S08-PLAN-STORE-CONTRACT-DRIFT.yaml
     fowlerSignals:
-      - boundary drift
-      - duplicate semantics
+      - coverage refinement
   - id: SYS-PLANSTORE-DOCS-RISK
     name: Plan-store docs, reviews, risk, and evidence
     level: component

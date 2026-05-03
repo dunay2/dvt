@@ -34,7 +34,7 @@ itself prove verified semantic maturity. `governanceState`,
 - Tracked files indexed: 4134
 - Component/source owner units: 32
 - Ungoverned files: 0
-- Drift files: 44
+- Drift files: 41
 - Legacy files: 0
 
 ## By Status
@@ -44,8 +44,8 @@ itself prove verified semantic maturity. `governanceState`,
 | --- | ---: |
 | `canonical` | 111 |
 | `coverage-required` | 3900 |
-| `drift` | 44 |
-| `review` | 79 |
+| `drift` | 41 |
+| `review` | 82 |
 <!-- prettier-ignore-end -->
 
 ## By Governance State
@@ -54,9 +54,9 @@ itself prove verified semantic maturity. `governanceState`,
 | Governance state | Files |
 | --- | ---: |
 | `coverage-required` | 3900 |
-| `drift` | 44 |
+| `drift` | 41 |
 | `governed` | 111 |
-| `review` | 79 |
+| `review` | 82 |
 <!-- prettier-ignore-end -->
 
 ## By Canonical Role
@@ -130,7 +130,6 @@ itself prove verified semantic maturity. `governanceState`,
 | `apps/api/test/entrypoints/http/planRoutePlanSourcePolicy.test.ts` | `SYS-PLANSTORE-API-COMPOSITION` | `drift` |
 | `apps/api/test/infrastructure/planner/ManifestArtifactResolver.test.ts` | `SYS-PLANSTORE-API-COMPOSITION` | `drift` |
 | `apps/api/test/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.test.ts` | `SYS-PLANSTORE-API-COMPOSITION` | `drift` |
-| `docs/contracts/planner/PlanStoreRecords.v1.md` | `SYS-PLANSTORE-CONTRACTS` | `drift` |
 | `packages/@dvt/adapter-postgres/src/PostgresPlanStore.admission-repository.ts` | `SYS-PLANSTORE-POSTGRES` | `drift` |
 | `packages/@dvt/adapter-postgres/src/PostgresPlanStore.executability-repository.ts` | `SYS-PLANSTORE-POSTGRES` | `drift` |
 | `packages/@dvt/adapter-postgres/src/PostgresPlanStore.executable-blob-repository.ts` | `SYS-PLANSTORE-POSTGRES` | `drift` |
@@ -147,8 +146,6 @@ itself prove verified semantic maturity. `governanceState`,
 | `packages/@dvt/adapter-postgres/test/PostgresPlanStore.records-core.integration.test.ts` | `SYS-PLANSTORE-POSTGRES` | `drift` |
 | `packages/@dvt/adapter-postgres/test/PostgresPlanStore.records-guards.integration.test.ts` | `SYS-PLANSTORE-POSTGRES` | `drift` |
 | `packages/@dvt/adapter-postgres/test/PostgresPlanStore.sql.test.ts` | `SYS-PLANSTORE-POSTGRES` | `drift` |
-| `packages/@dvt/artifacts/src/ports/IPlanStoreReader.ts` | `SYS-PLANSTORE-CONTRACTS` | `drift` |
-| `packages/@dvt/artifacts/src/ports/IPlanStoreWriter.ts` | `SYS-PLANSTORE-CONTRACTS` | `drift` |
 | `packages/@dvt/engine/src/ports/IPlanArtifactReader.ts` | `SYS-PLANSTORE-ENGINE-FETCH` | `drift` |
 | `packages/@dvt/engine/src/security/planRefPolicy.ts` | `SYS-PLANSTORE-ENGINE-FETCH` | `drift` |
 | `packages/@dvt/engine/src/security/planRefPolicyRules.ts` | `SYS-PLANSTORE-ENGINE-FETCH` | `drift` |

@@ -4,6 +4,56 @@ generatedFrom: git ls-files
 unitManifest: docs/planning/status/system-governance-unit-index.units.yaml
 fileCount: 76
 files:
+  - fileId: F-23503236D7FF
+    pathHash: 6e5ba16f1ee6f534955a98f5fe37e800407f08df5091dac03b3d060844ed2d93
+    contentHash: d3cd4b4aeaaae47a243e1654a418b9591684cb72eadbe3a71175117686bdde8e
+    governanceHash: 56cac211b5273dc7d1bc39c41436659c414685483ef8674c6ec71516a310f14c
+    stateFingerprint: a29bcf31c16ecdea82daf7e36b11fc9ddb4684815239d9144622b32452122591
+    path: packages/@dvt/planner/docs/PLANNER_IMPLEMENTATION_REVIEW_v2_3_2.md
+    owningUnit: SYS-PLANNER-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-PLANNER-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANNER
+      - SYS-PLANNER-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: DS
+    cqRails: planner build and derivation rails
+    governance:
+      - docs/contracts/planner/index.md
+  - fileId: F-67543CEF7501
+    pathHash: 5fcccf31d515556b7bce2e1a9c1fe0bbf6f60503d228ab8cfa985601f69d9424
+    contentHash: 3a9ace401a314fa25052e6dbe9d967f76232c079bb818038675f6642e6ba0134
+    governanceHash: 56cac211b5273dc7d1bc39c41436659c414685483ef8674c6ec71516a310f14c
+    stateFingerprint: 169d26d033e24a55269f018de152a3ad6f9433ee280b3c6af23b2d9ddc55f59b
+    path: packages/@dvt/planner/docs/README.md
+    owningUnit: SYS-PLANNER-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-PLANNER-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANNER
+      - SYS-PLANNER-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: DS
+    cqRails: planner build and derivation rails
+    governance:
+      - docs/contracts/planner/index.md
   - fileId: F-583017DAC86B
     pathHash: 7a64b77b55a19f31b88de47a3c4b53913c9ed163fac440937853cec3dcd59522
     contentHash: a756a0b5983914c7beba6e1ee6734e2d7e86216db68075c91a53d304c63686f8
@@ -354,12 +404,12 @@ files:
     cqRails: planner build and derivation rails
     governance:
       - docs/contracts/planner/index.md
-  - fileId: F-23503236D7FF
-    pathHash: 6e5ba16f1ee6f534955a98f5fe37e800407f08df5091dac03b3d060844ed2d93
-    contentHash: d3cd4b4aeaaae47a243e1654a418b9591684cb72eadbe3a71175117686bdde8e
+  - fileId: F-88EEB73D9533
+    pathHash: b991119c9438337890b388504595f2d373fb85f1a8d2a5ee2bbbb59e3849f8a7
+    contentHash: b3e18f99ac585a22bfc7c1eecd3aca2e5ffb0519b95f3af7da642551d78e59f6
     governanceHash: 56cac211b5273dc7d1bc39c41436659c414685483ef8674c6ec71516a310f14c
-    stateFingerprint: a29bcf31c16ecdea82daf7e36b11fc9ddb4684815239d9144622b32452122591
-    path: packages/@dvt/planner/docs/PLANNER_IMPLEMENTATION_REVIEW_v2_3_2.md
+    stateFingerprint: 9d0d970fa761a76a5b8f3b40b64e50c488a3dc6fda731e0e31d942ddcba615b4
+    path: packages/@dvt/planner/docs/planning/Stage-1.1-Planner-Canonicalization.md
     owningUnit: SYS-PLANNER-ROOT
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
@@ -455,56 +505,6 @@ files:
     cqRails: planner build and derivation rails
     governance:
       - docs/contracts/planner/index.md
-  - fileId: F-88EEB73D9533
-    pathHash: b991119c9438337890b388504595f2d373fb85f1a8d2a5ee2bbbb59e3849f8a7
-    contentHash: b3e18f99ac585a22bfc7c1eecd3aca2e5ffb0519b95f3af7da642551d78e59f6
-    governanceHash: 56cac211b5273dc7d1bc39c41436659c414685483ef8674c6ec71516a310f14c
-    stateFingerprint: 9d0d970fa761a76a5b8f3b40b64e50c488a3dc6fda731e0e31d942ddcba615b4
-    path: packages/@dvt/planner/docs/planning/Stage-1.1-Planner-Canonicalization.md
-    owningUnit: SYS-PLANNER-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-DVT
-    componentUnit: SYS-PLANNER-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-PLANNER
-      - SYS-PLANNER-ROOT
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: DS
-    cqRails: planner build and derivation rails
-    governance:
-      - docs/contracts/planner/index.md
-  - fileId: F-67543CEF7501
-    pathHash: 5fcccf31d515556b7bce2e1a9c1fe0bbf6f60503d228ab8cfa985601f69d9424
-    contentHash: 3a9ace401a314fa25052e6dbe9d967f76232c079bb818038675f6642e6ba0134
-    governanceHash: 56cac211b5273dc7d1bc39c41436659c414685483ef8674c6ec71516a310f14c
-    stateFingerprint: 169d26d033e24a55269f018de152a3ad6f9433ee280b3c6af23b2d9ddc55f59b
-    path: packages/@dvt/planner/docs/README.md
-    owningUnit: SYS-PLANNER-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-DVT
-    componentUnit: SYS-PLANNER-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-PLANNER
-      - SYS-PLANNER-ROOT
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: DS
-    cqRails: planner build and derivation rails
-    governance:
-      - docs/contracts/planner/index.md
   - fileId: F-5551204BDF12
     pathHash: 4f6af53012fa92ffba1639d20c4e510bab20e5335f02611cd937ddbcc036a24d
     contentHash: ee8ba424c2b77c9128c32073614b23465cdcb2494e39500570511f16ba0345e3
@@ -580,31 +580,6 @@ files:
     cqRails: planner build and derivation rails
     governance:
       - docs/contracts/planner/index.md
-  - fileId: F-05B1EF76D389
-    pathHash: dd5a5a67dd50ffd3defaf8a2163b126addcaffbb771b369c97992cc4eeaa5725
-    contentHash: 4442a561272bbf3baf5db97ea8d76b38fc63d8ec471e37eaf70b2d383859a7de
-    governanceHash: 56cac211b5273dc7d1bc39c41436659c414685483ef8674c6ec71516a310f14c
-    stateFingerprint: 3056ed7c06e3c106ebf976d99a339996e120cb857b3382adc436f082259cb8d0
-    path: packages/@dvt/planner/src/application/derivePlannerGraphSourceFromManifest.ts
-    owningUnit: SYS-PLANNER-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-DVT
-    componentUnit: SYS-PLANNER-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-PLANNER
-      - SYS-PLANNER-ROOT
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: DS
-    cqRails: planner build and derivation rails
-    governance:
-      - docs/contracts/planner/index.md
   - fileId: F-1175F93C4CFF
     pathHash: 54ea183ba2e7c0262f59c07b671576ab5cac0ab7ec265a255ce905b7cb6596cb
     contentHash: 10308cd49ae33cbac5108688decb52505fb015b4ea207fb5d5905ee8e50ff537
@@ -661,6 +636,31 @@ files:
     governanceHash: 56cac211b5273dc7d1bc39c41436659c414685483ef8674c6ec71516a310f14c
     stateFingerprint: f84c994960ca00d3b4a4e3df2dc283ecc7f05f118828d02fad308b4772edf63f
     path: packages/@dvt/planner/src/application/PlannerFacade.ts
+    owningUnit: SYS-PLANNER-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-PLANNER-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANNER
+      - SYS-PLANNER-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: DS
+    cqRails: planner build and derivation rails
+    governance:
+      - docs/contracts/planner/index.md
+  - fileId: F-05B1EF76D389
+    pathHash: dd5a5a67dd50ffd3defaf8a2163b126addcaffbb771b369c97992cc4eeaa5725
+    contentHash: 4442a561272bbf3baf5db97ea8d76b38fc63d8ec471e37eaf70b2d383859a7de
+    governanceHash: 56cac211b5273dc7d1bc39c41436659c414685483ef8674c6ec71516a310f14c
+    stateFingerprint: 3056ed7c06e3c106ebf976d99a339996e120cb857b3382adc436f082259cb8d0
+    path: packages/@dvt/planner/src/application/derivePlannerGraphSourceFromManifest.ts
     owningUnit: SYS-PLANNER-ROOT
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
@@ -761,6 +761,106 @@ files:
     governanceHash: 56cac211b5273dc7d1bc39c41436659c414685483ef8674c6ec71516a310f14c
     stateFingerprint: c817f5d06b1bf3166637bc5409914aa327ef57f711ead91e5a95f16a6df34942
     path: packages/@dvt/planner/src/contracts/PlanValidationLifecycle.ts
+    owningUnit: SYS-PLANNER-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-PLANNER-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANNER
+      - SYS-PLANNER-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: DS
+    cqRails: planner build and derivation rails
+    governance:
+      - docs/contracts/planner/index.md
+  - fileId: F-80C29969266A
+    pathHash: 48b26aa32208e1b96b80a46deefc446530a65b56b96bbbf11d4de6349da10323
+    contentHash: 5f6484b707b24af3bf408b63f88217f5c5764bfb0015c53cd271dc0e1bb9ddac
+    governanceHash: 56cac211b5273dc7d1bc39c41436659c414685483ef8674c6ec71516a310f14c
+    stateFingerprint: df0f74691d1a5cd1de3f6f65d2d3b5e7ffbb3e94927ac82eec66c36c6a7fb74b
+    path: packages/@dvt/planner/src/domain/InputEnvelopeValidator.ts
+    owningUnit: SYS-PLANNER-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-PLANNER-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANNER
+      - SYS-PLANNER-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: DS
+    cqRails: planner build and derivation rails
+    governance:
+      - docs/contracts/planner/index.md
+  - fileId: F-991C1398C3A4
+    pathHash: e108dd2a2a127f8e21b58f7684b26af558d0417605647e37588e3fe9179f4430
+    contentHash: bb3bf7aca3964b11866ea4653cfb1854f34119ec46267aaa0eaabba8be27c9c2
+    governanceHash: 56cac211b5273dc7d1bc39c41436659c414685483ef8674c6ec71516a310f14c
+    stateFingerprint: 97b2dcf34da2ca70e683a5d142d74986aa6f7c4d4dfe02c34e943d2ad0c9a6f5
+    path: packages/@dvt/planner/src/domain/NodeSelector.ts
+    owningUnit: SYS-PLANNER-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-PLANNER-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANNER
+      - SYS-PLANNER-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: DS
+    cqRails: planner build and derivation rails
+    governance:
+      - docs/contracts/planner/index.md
+  - fileId: F-657FA8BFE47C
+    pathHash: 719afa7025de08a9d956933165e224e7d5c0192cd757949d176246018f05231d
+    contentHash: 6a8bcc6be5af49ba23c637700fb7ae9ac47f1d71d6abd6f7e809bc82b166b55f
+    governanceHash: 56cac211b5273dc7d1bc39c41436659c414685483ef8674c6ec71516a310f14c
+    stateFingerprint: 1eb348403453873cec900d3121517afadffaef261f73c518040cdab5c271814f
+    path: packages/@dvt/planner/src/domain/PlanAssembler.ts
+    owningUnit: SYS-PLANNER-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-PLANNER-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANNER
+      - SYS-PLANNER-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: DS
+    cqRails: planner build and derivation rails
+    governance:
+      - docs/contracts/planner/index.md
+  - fileId: F-6ADF597F4E4F
+    pathHash: 9d09de85b850fee87917578c0d9495ae8e714a449229b75aff47a3e2abbac9a4
+    contentHash: add0f4d82d423ce32f8be44e765908007a4995ee129f02f2852c048b84401549
+    governanceHash: 56cac211b5273dc7d1bc39c41436659c414685483ef8674c6ec71516a310f14c
+    stateFingerprint: 74f239de82776b664bc15748feafb7f7e2c7600f22eb2589134350f39b3fc6a7
+    path: packages/@dvt/planner/src/domain/Planner.ts
     owningUnit: SYS-PLANNER-ROOT
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
@@ -905,31 +1005,6 @@ files:
     cqRails: planner build and derivation rails
     governance:
       - docs/contracts/planner/index.md
-  - fileId: F-80C29969266A
-    pathHash: 48b26aa32208e1b96b80a46deefc446530a65b56b96bbbf11d4de6349da10323
-    contentHash: 5f6484b707b24af3bf408b63f88217f5c5764bfb0015c53cd271dc0e1bb9ddac
-    governanceHash: 56cac211b5273dc7d1bc39c41436659c414685483ef8674c6ec71516a310f14c
-    stateFingerprint: df0f74691d1a5cd1de3f6f65d2d3b5e7ffbb3e94927ac82eec66c36c6a7fb74b
-    path: packages/@dvt/planner/src/domain/InputEnvelopeValidator.ts
-    owningUnit: SYS-PLANNER-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-DVT
-    componentUnit: SYS-PLANNER-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-PLANNER
-      - SYS-PLANNER-ROOT
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: DS
-    cqRails: planner build and derivation rails
-    governance:
-      - docs/contracts/planner/index.md
   - fileId: F-0F22FFF630A9
     pathHash: 5132094e319d742351fe5bf664496f8bdeea49301c80a36388367559b09c027b
     contentHash: b799e135abb9149aba0e53286aae79a353215dc792e5a5317c03db69d7a99174
@@ -1005,81 +1080,6 @@ files:
     cqRails: planner build and derivation rails
     governance:
       - docs/contracts/planner/index.md
-  - fileId: F-991C1398C3A4
-    pathHash: e108dd2a2a127f8e21b58f7684b26af558d0417605647e37588e3fe9179f4430
-    contentHash: bb3bf7aca3964b11866ea4653cfb1854f34119ec46267aaa0eaabba8be27c9c2
-    governanceHash: 56cac211b5273dc7d1bc39c41436659c414685483ef8674c6ec71516a310f14c
-    stateFingerprint: 97b2dcf34da2ca70e683a5d142d74986aa6f7c4d4dfe02c34e943d2ad0c9a6f5
-    path: packages/@dvt/planner/src/domain/NodeSelector.ts
-    owningUnit: SYS-PLANNER-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-DVT
-    componentUnit: SYS-PLANNER-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-PLANNER
-      - SYS-PLANNER-ROOT
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: DS
-    cqRails: planner build and derivation rails
-    governance:
-      - docs/contracts/planner/index.md
-  - fileId: F-657FA8BFE47C
-    pathHash: 719afa7025de08a9d956933165e224e7d5c0192cd757949d176246018f05231d
-    contentHash: 6a8bcc6be5af49ba23c637700fb7ae9ac47f1d71d6abd6f7e809bc82b166b55f
-    governanceHash: 56cac211b5273dc7d1bc39c41436659c414685483ef8674c6ec71516a310f14c
-    stateFingerprint: 1eb348403453873cec900d3121517afadffaef261f73c518040cdab5c271814f
-    path: packages/@dvt/planner/src/domain/PlanAssembler.ts
-    owningUnit: SYS-PLANNER-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-DVT
-    componentUnit: SYS-PLANNER-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-PLANNER
-      - SYS-PLANNER-ROOT
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: DS
-    cqRails: planner build and derivation rails
-    governance:
-      - docs/contracts/planner/index.md
-  - fileId: F-6ADF597F4E4F
-    pathHash: 9d09de85b850fee87917578c0d9495ae8e714a449229b75aff47a3e2abbac9a4
-    contentHash: add0f4d82d423ce32f8be44e765908007a4995ee129f02f2852c048b84401549
-    governanceHash: 56cac211b5273dc7d1bc39c41436659c414685483ef8674c6ec71516a310f14c
-    stateFingerprint: 74f239de82776b664bc15748feafb7f7e2c7600f22eb2589134350f39b3fc6a7
-    path: packages/@dvt/planner/src/domain/Planner.ts
-    owningUnit: SYS-PLANNER-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-DVT
-    componentUnit: SYS-PLANNER-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-PLANNER
-      - SYS-PLANNER-ROOT
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: DS
-    cqRails: planner build and derivation rails
-    governance:
-      - docs/contracts/planner/index.md
   - fileId: F-97F943789EA8
     pathHash: 105f531b88fb6fb2920a6afce3063dcafc8ee34fcb6a8b8208cb1e7b7b0474be
     contentHash: 105c15c07dbca57be224bba45a17fa56b491d2d8bdf75b73e98d384b3e31b663
@@ -1130,12 +1130,12 @@ files:
     cqRails: planner build and derivation rails
     governance:
       - docs/contracts/planner/index.md
-  - fileId: F-137D53699B18
-    pathHash: 741cf5a9ba507cd9606c2e06a27581b784b3d906d50957e82778b1e30042d2f3
-    contentHash: 9404f233ef4f53b89af35645d108b93b1bd31a71069c38091a2dd7bc8f068af5
+  - fileId: F-1ED593344B1D
+    pathHash: e6509be6ac4f047bb06adee31c35a1e0f045dbd2600829e49549d41bd23c73b4
+    contentHash: 8fc28ab4c113c0a48b8371e195225df10869725360b6a651ef4cc6d74308434e
     governanceHash: 56cac211b5273dc7d1bc39c41436659c414685483ef8674c6ec71516a310f14c
-    stateFingerprint: a9a4db3ca54e623f59c5ccff391a5448b9ff777c24e71b533bc8a4fd1f6f1314
-    path: packages/@dvt/planner/src/domain/stepFactory/dbtStepFactory.ts
+    stateFingerprint: 45fe508660a0fd30c6839b733bec8f759170bad034903cb96c3f78a65882016e
+    path: packages/@dvt/planner/src/domain/stepFactory/StepFactory.ts
     owningUnit: SYS-PLANNER-ROOT
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
@@ -1155,12 +1155,12 @@ files:
     cqRails: planner build and derivation rails
     governance:
       - docs/contracts/planner/index.md
-  - fileId: F-1ED593344B1D
-    pathHash: e6509be6ac4f047bb06adee31c35a1e0f045dbd2600829e49549d41bd23c73b4
-    contentHash: 8fc28ab4c113c0a48b8371e195225df10869725360b6a651ef4cc6d74308434e
+  - fileId: F-137D53699B18
+    pathHash: 741cf5a9ba507cd9606c2e06a27581b784b3d906d50957e82778b1e30042d2f3
+    contentHash: 9404f233ef4f53b89af35645d108b93b1bd31a71069c38091a2dd7bc8f068af5
     governanceHash: 56cac211b5273dc7d1bc39c41436659c414685483ef8674c6ec71516a310f14c
-    stateFingerprint: 45fe508660a0fd30c6839b733bec8f759170bad034903cb96c3f78a65882016e
-    path: packages/@dvt/planner/src/domain/stepFactory/StepFactory.ts
+    stateFingerprint: a9a4db3ca54e623f59c5ccff391a5448b9ff777c24e71b533bc8a4fd1f6f1314
+    path: packages/@dvt/planner/src/domain/stepFactory/dbtStepFactory.ts
     owningUnit: SYS-PLANNER-ROOT
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
@@ -1280,31 +1280,6 @@ files:
     cqRails: planner build and derivation rails
     governance:
       - docs/contracts/planner/index.md
-  - fileId: F-CF48F103098B
-    pathHash: 28b144864711419206d29191a695d4a3e480dbacc29464cf6ba1d020fc25d209
-    contentHash: 6eabf8441536231e5cf35426f7ccfe5e20b76b3cf22c0fd827582f4b104e23e8
-    governanceHash: 56cac211b5273dc7d1bc39c41436659c414685483ef8674c6ec71516a310f14c
-    stateFingerprint: bebc758da5d7aab8192f23401315e917916ed7ede6726ead11241121c3e03582
-    path: packages/@dvt/planner/test/compiledCode/attachCompiledCodeRefs.test.ts
-    owningUnit: SYS-PLANNER-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-DVT
-    componentUnit: SYS-PLANNER-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-PLANNER
-      - SYS-PLANNER-ROOT
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: DS
-    cqRails: planner build and derivation rails
-    governance:
-      - docs/contracts/planner/index.md
   - fileId: F-5545A48DB13D
     pathHash: fb96c4362eafb0c37534eac0a80ea4c13e58ab87819225f3b6e216e0c1698d5d
     contentHash: 332f2ebaec06d579c67fddd91b218df7a01856fece44551199dc6ee5ee2cde93
@@ -1336,6 +1311,31 @@ files:
     governanceHash: 56cac211b5273dc7d1bc39c41436659c414685483ef8674c6ec71516a310f14c
     stateFingerprint: d2ced0cc92666eab223a5319b0042e3025a702eaf1f445f4de625d72a9fd80fe
     path: packages/@dvt/planner/test/compiledCode/InMemoryCompiledCodeStorage.test.ts
+    owningUnit: SYS-PLANNER-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-PLANNER-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANNER
+      - SYS-PLANNER-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: DS
+    cqRails: planner build and derivation rails
+    governance:
+      - docs/contracts/planner/index.md
+  - fileId: F-CF48F103098B
+    pathHash: 28b144864711419206d29191a695d4a3e480dbacc29464cf6ba1d020fc25d209
+    contentHash: 6eabf8441536231e5cf35426f7ccfe5e20b76b3cf22c0fd827582f4b104e23e8
+    governanceHash: 56cac211b5273dc7d1bc39c41436659c414685483ef8674c6ec71516a310f14c
+    stateFingerprint: bebc758da5d7aab8192f23401315e917916ed7ede6726ead11241121c3e03582
+    path: packages/@dvt/planner/test/compiledCode/attachCompiledCodeRefs.test.ts
     owningUnit: SYS-PLANNER-ROOT
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT

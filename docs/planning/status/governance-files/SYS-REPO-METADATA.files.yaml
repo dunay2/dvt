@@ -420,12 +420,12 @@ files:
     governance:
       - package.json
       - pnpm-workspace.yaml
-  - fileId: F-479612B85848
-    pathHash: 44c92ae8c4ef144ee2d0106d1daab75885995bf8e74869656e43ba40cd7a1034
-    contentHash: 7a0fc577589dab92b8a08324e06fd85e7c04c963e80eb1a9aba5f555c24b0783
+  - fileId: F-375B6D9020A7
+    pathHash: 5bf05ce393a06959dbc7fa077286dfb55486f5b670753b864e229a46ff528501
+    contentHash: cb6d22c68b56ae9ed08f224cde85a93b59474ca5e1982b4df6c15441c3390d7c
     governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
-    stateFingerprint: 2cc6de5a57e1189bc275847abc136c0c0861beafe48977a3fc25a04488c746f2
-    path: .golden/hashes.json
+    stateFingerprint: 067e0754e7327f1df0289fa8146e8599612c44fbb9a1267df8cdce83633fcc2d
+    path: .golden/README.md
     owningUnit: SYS-REPO-METADATA-ROOT
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
@@ -446,12 +446,12 @@ files:
     governance:
       - package.json
       - pnpm-workspace.yaml
-  - fileId: F-375B6D9020A7
-    pathHash: 5bf05ce393a06959dbc7fa077286dfb55486f5b670753b864e229a46ff528501
-    contentHash: cb6d22c68b56ae9ed08f224cde85a93b59474ca5e1982b4df6c15441c3390d7c
+  - fileId: F-479612B85848
+    pathHash: 44c92ae8c4ef144ee2d0106d1daab75885995bf8e74869656e43ba40cd7a1034
+    contentHash: 7a0fc577589dab92b8a08324e06fd85e7c04c963e80eb1a9aba5f555c24b0783
     governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
-    stateFingerprint: 067e0754e7327f1df0289fa8146e8599612c44fbb9a1267df8cdce83633fcc2d
-    path: .golden/README.md
+    stateFingerprint: 2cc6de5a57e1189bc275847abc136c0c0861beafe48977a3fc25a04488c746f2
+    path: .golden/hashes.json
     owningUnit: SYS-REPO-METADATA-ROOT
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
@@ -1642,6 +1642,32 @@ files:
     governance:
       - package.json
       - pnpm-workspace.yaml
+  - fileId: F-F56E0FB00FE4
+    pathHash: ecde7594be1fdd9f6e8f3efe123d4471f729df3612c0e6b492882441d6f9d29c
+    contentHash: f4bbfbbf4bb74bff356fafafdda7b13902996acffb35cf0c1cdea4ea6c0cffb8
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: 6ae1675a3157f9265e8ac4566a4169e3be318c7ea2298e2843aca86f8cee17a9
+    path: infra/README.md
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
   - fileId: F-74C7CAEE2AE0
     pathHash: 99b5bbcfe09d2b593790939474ad59364c6a0b9d8fd663a32d40bbe1ccb3d670
     contentHash: 5c9b691183c44e8f103c2bee186987ebd0ae4a78fdbde9da4a1894842e100105
@@ -1746,12 +1772,64 @@ files:
     governance:
       - package.json
       - pnpm-workspace.yaml
+  - fileId: F-4FCBA2FA0395
+    pathHash: 591dcb9d80e6c60c9c660905bb602e2375832d1022716b48efa87be45c41a0ec
+    contentHash: 3c09125ce0f5b34b190ad27ddf2d93ab5276717c30fe2bfa0de8f4b82d9372a6
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: bdd54c5da196ff393181146c921ecad93b9a4a53f670ba57bb436c67c7ad1998
+    path: infra/docker/postgres/redpanda/README.md
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
   - fileId: F-9A6DFCE4617D
     pathHash: b5d428217b4f9505f8cff842c7a45b38d10b91f0113efed811865f268bfc1c77
     contentHash: 08795b3ebc51e169134e1e495e34edb9edd21c0c4c979ffc12fd8eaae3976c4c
     governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
     stateFingerprint: 5b7b77322c7f801f902da9f8e06c819faef8d45a887545d869babdb268adad14
     path: infra/docker/postgres/redpanda/docker-compose.yml
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-880D53C85B4B
+    pathHash: da8a3f94db7ed03916b8353329da115f5a6bbf8f99090d4dd459042e0b249632
+    contentHash: 83cd63575f9bc95572b996d9368f5c9b714e5c02118b2cf64ee46f9b0102c03f
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: 7a35f97b2acb960cb2bb46082c69101b201449c0a0ee3213548407f61ed7fc2f
+    path: infra/docker/postgres/redpanda/docs/DECISIONS.md
     owningUnit: SYS-REPO-METADATA-ROOT
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
@@ -1954,32 +2032,6 @@ files:
     governance:
       - package.json
       - pnpm-workspace.yaml
-  - fileId: F-880D53C85B4B
-    pathHash: da8a3f94db7ed03916b8353329da115f5a6bbf8f99090d4dd459042e0b249632
-    contentHash: 83cd63575f9bc95572b996d9368f5c9b714e5c02118b2cf64ee46f9b0102c03f
-    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
-    stateFingerprint: 7a35f97b2acb960cb2bb46082c69101b201449c0a0ee3213548407f61ed7fc2f
-    path: infra/docker/postgres/redpanda/docs/DECISIONS.md
-    owningUnit: SYS-REPO-METADATA-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-DVT
-    componentUnit: SYS-REPO-METADATA-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-REPO-METADATA
-      - SYS-REPO-METADATA-ROOT
-    ownerLevel: component
-    unitStatus: canonical
-    governanceState: governed
-    canonicalRole: implementation-owner
-    evidenceState: classification-only
-    isDrift: false
-    isLegacy: false
-    dddOwner: INFRA
-    cqRails: none - repository metadata
-    governance:
-      - package.json
-      - pnpm-workspace.yaml
   - fileId: F-13A9C489FBF6
     pathHash: 5191ff55d84a5c6ce962ce66e69ea25d423e2df4e1ae4eabe0733c4eb94449ca
     contentHash: 4ff946e2b82b25d70698860e1edd8afd5da4ff5239da6653652ed1fbee061edc
@@ -2006,12 +2058,12 @@ files:
     governance:
       - package.json
       - pnpm-workspace.yaml
-  - fileId: F-4FCBA2FA0395
-    pathHash: 591dcb9d80e6c60c9c660905bb602e2375832d1022716b48efa87be45c41a0ec
-    contentHash: 3c09125ce0f5b34b190ad27ddf2d93ab5276717c30fe2bfa0de8f4b82d9372a6
+  - fileId: F-25F3C0DBE720
+    pathHash: 4223a99f4fa1f1f54a3da759948bf3b1346a6fbf926d927b5b49d5e3f707e5dc
+    contentHash: 6399a486d724de84a30931a4a2e06eb6b00156b895fa9dd6f1d5b7a4eefd79b5
     governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
-    stateFingerprint: bdd54c5da196ff393181146c921ecad93b9a4a53f670ba57bb436c67c7ad1998
-    path: infra/docker/postgres/redpanda/README.md
+    stateFingerprint: f43bd953254e2a2e7ceb0b33e5603f56a7d0b0e491923cbf367aad676310a07b
+    path: infra/prototypes/api/README.md
     owningUnit: SYS-REPO-METADATA-ROOT
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
@@ -2064,32 +2116,6 @@ files:
     governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
     stateFingerprint: 9f4b04f67323adb17557c14e587acc4d8e21076bf92b0cbeb4b7c7f4eda8eeda
     path: infra/prototypes/api/pnpm-lock.yaml
-    owningUnit: SYS-REPO-METADATA-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-DVT
-    componentUnit: SYS-REPO-METADATA-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-REPO-METADATA
-      - SYS-REPO-METADATA-ROOT
-    ownerLevel: component
-    unitStatus: canonical
-    governanceState: governed
-    canonicalRole: implementation-owner
-    evidenceState: classification-only
-    isDrift: false
-    isLegacy: false
-    dddOwner: INFRA
-    cqRails: none - repository metadata
-    governance:
-      - package.json
-      - pnpm-workspace.yaml
-  - fileId: F-25F3C0DBE720
-    pathHash: 4223a99f4fa1f1f54a3da759948bf3b1346a6fbf926d927b5b49d5e3f707e5dc
-    contentHash: 6399a486d724de84a30931a4a2e06eb6b00156b895fa9dd6f1d5b7a4eefd79b5
-    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
-    stateFingerprint: f43bd953254e2a2e7ceb0b33e5603f56a7d0b0e491923cbf367aad676310a07b
-    path: infra/prototypes/api/README.md
     owningUnit: SYS-REPO-METADATA-ROOT
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
@@ -2558,32 +2584,6 @@ files:
     governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
     stateFingerprint: ac10732ebb932bb7cc5f8f4f58e889907f21b4d7548d6d4de78b3e9074ecd04d
     path: infra/prototypes/api/tsconfig.json
-    owningUnit: SYS-REPO-METADATA-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-DVT
-    componentUnit: SYS-REPO-METADATA-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-REPO-METADATA
-      - SYS-REPO-METADATA-ROOT
-    ownerLevel: component
-    unitStatus: canonical
-    governanceState: governed
-    canonicalRole: implementation-owner
-    evidenceState: classification-only
-    isDrift: false
-    isLegacy: false
-    dddOwner: INFRA
-    cqRails: none - repository metadata
-    governance:
-      - package.json
-      - pnpm-workspace.yaml
-  - fileId: F-F56E0FB00FE4
-    pathHash: ecde7594be1fdd9f6e8f3efe123d4471f729df3612c0e6b492882441d6f9d29c
-    contentHash: f4bbfbbf4bb74bff356fafafdda7b13902996acffb35cf0c1cdea4ea6c0cffb8
-    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
-    stateFingerprint: 6ae1675a3157f9265e8ac4566a4169e3be318c7ea2298e2843aca86f8cee17a9
-    path: infra/README.md
     owningUnit: SYS-REPO-METADATA-ROOT
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT

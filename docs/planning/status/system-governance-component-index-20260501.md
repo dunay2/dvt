@@ -30,7 +30,7 @@ classified.
 - Component/source units: 32
 - Components: 31
 - Source units: 1
-- Drift components: 4
+- Drift components: 3
 - Legacy components: 0
 - Components requiring children: 19
 
@@ -50,8 +50,8 @@ classified.
 | --- | ---: |
 | `canonical` | 1 |
 | `coverage-required` | 22 |
-| `drift` | 4 |
-| `review` | 4 |
+| `drift` | 3 |
+| `review` | 5 |
 | `superseded` | 1 |
 <!-- prettier-ignore-end -->
 
@@ -61,9 +61,9 @@ classified.
 | Governance state | Files |
 | --- | ---: |
 | `coverage-required` | 22 |
-| `drift` | 4 |
+| `drift` | 3 |
 | `governed` | 1 |
-| `review` | 4 |
+| `review` | 5 |
 | `superseded` | 1 |
 <!-- prettier-ignore-end -->
 
@@ -119,7 +119,7 @@ Components with `childrenRequired: true` and more than 100 files:
 | `SYS-PLANNER-ROOT` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 76 | `DS` | `SYS-PLANNER` |
 | `SYS-PLANSTORE-API-COMPOSITION` | `component` | `drift` | `drift` | `none` | `remediation-required` | 20 | `AS` | `SYS-PLANSTORE` |
 | `SYS-PLANSTORE-ARTIFACTS-PORTS` | `component` | `review` | `review` | `none` | `review-required` | 23 | `PORT` | `SYS-PLANSTORE` |
-| `SYS-PLANSTORE-CONTRACTS` | `component` | `drift` | `drift` | `none` | `remediation-required` | 3 | `PORT` | `SYS-PLANSTORE` |
+| `SYS-PLANSTORE-CONTRACTS` | `component` | `review` | `review` | `none` | `review-required` | 3 | `PORT` | `SYS-PLANSTORE` |
 | `SYS-PLANSTORE-DOCS-RISK` | `component` | `review` | `review` | `none` | `review-required` | 34 | `INFRA` | `SYS-PLANSTORE` |
 | `SYS-PLANSTORE-ENGINE-FETCH` | `component` | `drift` | `drift` | `none` | `remediation-required` | 5 | `PORT` | `SYS-PLANSTORE` |
 | `SYS-PLANSTORE-POSTGRES` | `component` | `drift` | `drift` | `none` | `remediation-required` | 16 | `ADP` | `SYS-PLANSTORE` |

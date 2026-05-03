@@ -18,13 +18,6 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: apps/api/src/infrastructure/admissionTelemetry/admissionTelemetryMetrics.ts
-    fileId: F-826D9892242E
-    owningUnit: SYS-API-INFRASTRUCTURE
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
   - path: apps/api/src/infrastructure/admissionTelemetry/ObservabilityAdmissionTelemetry.ts
     fileId: F-8E2F725EA401
     owningUnit: SYS-API-INFRASTRUCTURE
@@ -34,6 +27,13 @@ files:
     isLegacy: false
   - path: apps/api/src/infrastructure/admissionTelemetry/ObservabilityBackpressureCapacityTelemetry.ts
     fileId: F-AB1522911DB0
+    owningUnit: SYS-API-INFRASTRUCTURE
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/src/infrastructure/admissionTelemetry/admissionTelemetryMetrics.ts
+    fileId: F-826D9892242E
     owningUnit: SYS-API-INFRASTRUCTURE
     unitStatus: coverage-required
     governanceState: coverage-required

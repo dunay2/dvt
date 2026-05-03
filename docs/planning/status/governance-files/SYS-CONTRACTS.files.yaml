@@ -579,31 +579,6 @@ files:
     cqRails: contract DTOs and port shapes
     governance:
       - docs/contracts/index.md
-  - fileId: F-D9B12049DC82
-    pathHash: 64bfc3f2f112bc19c6bd39c10112317921371ab91dc9da519fa88294ffe3e744
-    contentHash: f69a14c209c8d9411fd4aba45d2041de06b56e49a10120db2d049f4442b85605
-    governanceHash: 63491c80713509ac3cf47404f263dc7b0a139c8fbde0fa75ca9934149bd7d518
-    stateFingerprint: b31cb754b9560d95aaf74099731b19c01bd01f58e67ee61e03d46a2c0dac7f02
-    path: packages/@dvt/contracts/src/contracts/planner/index.ts
-    owningUnit: SYS-CONTRACTS-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-DVT
-    componentUnit: SYS-CONTRACTS-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-CONTRACTS
-      - SYS-CONTRACTS-ROOT
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: PORT
-    cqRails: contract DTOs and port shapes
-    governance:
-      - docs/contracts/index.md
   - fileId: F-57747982CFFF
     pathHash: 42b402b6364a12a27b587c391d75d3f8352056750cf49b5845ecff9ac7187601
     contentHash: 52f13be61e278ff3c79ca68b03772377b5d84a75ed057343833023b5d87246af
@@ -779,81 +754,6 @@ files:
     cqRails: contract DTOs and port shapes
     governance:
       - docs/contracts/index.md
-  - fileId: F-9B2101A7C372
-    pathHash: a5da8c8e3dcd93c98576c0d68032e3ff8b5cda04b35b0619761b00af90c235b1
-    contentHash: d661d3e60dd3e64a7372b760734d2abf621e9c089ca68a60abecfc8f0eb03c30
-    governanceHash: 63491c80713509ac3cf47404f263dc7b0a139c8fbde0fa75ca9934149bd7d518
-    stateFingerprint: af7229d6b65b1d3aef14ffc0317c9f05bda670f137b40671e3d815a5236890cb
-    path: packages/@dvt/contracts/src/contracts/planner/PlannerInputEnvelopeV1.schema.json
-    owningUnit: SYS-CONTRACTS-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-DVT
-    componentUnit: SYS-CONTRACTS-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-CONTRACTS
-      - SYS-CONTRACTS-ROOT
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: PORT
-    cqRails: contract DTOs and port shapes
-    governance:
-      - docs/contracts/index.md
-  - fileId: F-F4948F9A4E88
-    pathHash: 925e841700549b1e285e98b3955b21218174ab1bc927d3609694c73cf9bd4f85
-    contentHash: 5bc09db49a2c0c45884ffd1148989732b7678cc30a5ad85b234bc781500c7192
-    governanceHash: 63491c80713509ac3cf47404f263dc7b0a139c8fbde0fa75ca9934149bd7d518
-    stateFingerprint: a9d8813010c0f5bf1f94c9ad0051c692b0b4bc26ce52364b5495c773b7d91657
-    path: packages/@dvt/contracts/src/contracts/planner/PlannerPolicyClassSet.v2.schema.json
-    owningUnit: SYS-CONTRACTS-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-DVT
-    componentUnit: SYS-CONTRACTS-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-CONTRACTS
-      - SYS-CONTRACTS-ROOT
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: PORT
-    cqRails: contract DTOs and port shapes
-    governance:
-      - docs/contracts/index.md
-  - fileId: F-A749956C3AC8
-    pathHash: 8e5dd87598dd6188af97417699cfa846c287b9ad3a229989fcf7067c5c40aced
-    contentHash: a33371cc278562a1bb023c5218f4dc7e11318dee843702e12635e1b1f327ce2d
-    governanceHash: 63491c80713509ac3cf47404f263dc7b0a139c8fbde0fa75ca9934149bd7d518
-    stateFingerprint: df7dcc98f4513bfa9d1418bc66191db7991fe54d20a8584fca3d48c3c8a9a70a
-    path: packages/@dvt/contracts/src/contracts/planner/PlannerPolicyVocabulary.v2.ts
-    owningUnit: SYS-CONTRACTS-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-DVT
-    componentUnit: SYS-CONTRACTS-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-CONTRACTS
-      - SYS-CONTRACTS-ROOT
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: PORT
-    cqRails: contract DTOs and port shapes
-    governance:
-      - docs/contracts/index.md
   - fileId: F-B55AA9E4E7B7
     pathHash: b933091fa6fc57f35959e94cb1e1defe83a4f9d3bd54576daecfa96bbe5b220b
     contentHash: be29aa4352dc25c8fea3efe23744e415cd9d9e58f0b2ded783ea1aaf484ec777
@@ -935,6 +835,81 @@ files:
     governanceHash: 63491c80713509ac3cf47404f263dc7b0a139c8fbde0fa75ca9934149bd7d518
     stateFingerprint: bed0b54caa368186d451ab37108de9b85edf2adcd285ad65086090966b017a88
     path: packages/@dvt/contracts/src/contracts/planner/PlanVersion.v1.ts
+    owningUnit: SYS-CONTRACTS-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CONTRACTS-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CONTRACTS
+      - SYS-CONTRACTS-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: PORT
+    cqRails: contract DTOs and port shapes
+    governance:
+      - docs/contracts/index.md
+  - fileId: F-9B2101A7C372
+    pathHash: a5da8c8e3dcd93c98576c0d68032e3ff8b5cda04b35b0619761b00af90c235b1
+    contentHash: d661d3e60dd3e64a7372b760734d2abf621e9c089ca68a60abecfc8f0eb03c30
+    governanceHash: 63491c80713509ac3cf47404f263dc7b0a139c8fbde0fa75ca9934149bd7d518
+    stateFingerprint: af7229d6b65b1d3aef14ffc0317c9f05bda670f137b40671e3d815a5236890cb
+    path: packages/@dvt/contracts/src/contracts/planner/PlannerInputEnvelopeV1.schema.json
+    owningUnit: SYS-CONTRACTS-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CONTRACTS-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CONTRACTS
+      - SYS-CONTRACTS-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: PORT
+    cqRails: contract DTOs and port shapes
+    governance:
+      - docs/contracts/index.md
+  - fileId: F-F4948F9A4E88
+    pathHash: 925e841700549b1e285e98b3955b21218174ab1bc927d3609694c73cf9bd4f85
+    contentHash: 5bc09db49a2c0c45884ffd1148989732b7678cc30a5ad85b234bc781500c7192
+    governanceHash: 63491c80713509ac3cf47404f263dc7b0a139c8fbde0fa75ca9934149bd7d518
+    stateFingerprint: a9d8813010c0f5bf1f94c9ad0051c692b0b4bc26ce52364b5495c773b7d91657
+    path: packages/@dvt/contracts/src/contracts/planner/PlannerPolicyClassSet.v2.schema.json
+    owningUnit: SYS-CONTRACTS-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CONTRACTS-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CONTRACTS
+      - SYS-CONTRACTS-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: PORT
+    cqRails: contract DTOs and port shapes
+    governance:
+      - docs/contracts/index.md
+  - fileId: F-A749956C3AC8
+    pathHash: 8e5dd87598dd6188af97417699cfa846c287b9ad3a229989fcf7067c5c40aced
+    contentHash: a33371cc278562a1bb023c5218f4dc7e11318dee843702e12635e1b1f327ce2d
+    governanceHash: 63491c80713509ac3cf47404f263dc7b0a139c8fbde0fa75ca9934149bd7d518
+    stateFingerprint: df7dcc98f4513bfa9d1418bc66191db7991fe54d20a8584fca3d48c3c8a9a70a
+    path: packages/@dvt/contracts/src/contracts/planner/PlannerPolicyVocabulary.v2.ts
     owningUnit: SYS-CONTRACTS-ROOT
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
@@ -1210,6 +1185,31 @@ files:
     governanceHash: 63491c80713509ac3cf47404f263dc7b0a139c8fbde0fa75ca9934149bd7d518
     stateFingerprint: f9b929b853af60d37ea12f9bbb94ca2de0ad0256681f0d4c9a782012d6603bf6
     path: packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphDraft.v1.ts
+    owningUnit: SYS-CONTRACTS-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CONTRACTS-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CONTRACTS
+      - SYS-CONTRACTS-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: PORT
+    cqRails: contract DTOs and port shapes
+    governance:
+      - docs/contracts/index.md
+  - fileId: F-D9B12049DC82
+    pathHash: 64bfc3f2f112bc19c6bd39c10112317921371ab91dc9da519fa88294ffe3e744
+    contentHash: f69a14c209c8d9411fd4aba45d2041de06b56e49a10120db2d049f4442b85605
+    governanceHash: 63491c80713509ac3cf47404f263dc7b0a139c8fbde0fa75ca9934149bd7d518
+    stateFingerprint: b31cb754b9560d95aaf74099731b19c01bd01f58e67ee61e03d46a2c0dac7f02
+    path: packages/@dvt/contracts/src/contracts/planner/index.ts
     owningUnit: SYS-CONTRACTS-ROOT
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT

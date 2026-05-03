@@ -11,13 +11,6 @@ fileCount: 15
 driftFileCount: 0
 legacyFileCount: 0
 files:
-  - path: packages/@dvt/observability-otel/package.json
-    fileId: F-E837520353EC
-    owningUnit: SYS-OBSERVABILITY-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
   - path: packages/@dvt/observability-otel/README.md
     fileId: F-DAB6BC9E800C
     owningUnit: SYS-OBSERVABILITY-ROOT
@@ -25,8 +18,8 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: packages/@dvt/observability-otel/src/index.ts
-    fileId: F-C66EE8B4CE07
+  - path: packages/@dvt/observability-otel/package.json
+    fileId: F-E837520353EC
     owningUnit: SYS-OBSERVABILITY-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -34,6 +27,13 @@ files:
     isLegacy: false
   - path: packages/@dvt/observability-otel/src/OtelObservability.ts
     fileId: F-7B6AF7AC72C8
+    owningUnit: SYS-OBSERVABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/observability-otel/src/index.ts
+    fileId: F-C66EE8B4CE07
     owningUnit: SYS-OBSERVABILITY-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -53,15 +53,15 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: packages/@dvt/observability/package.json
-    fileId: F-A9666182B071
+  - path: packages/@dvt/observability/README.md
+    fileId: F-DFDA6C13C2BB
     owningUnit: SYS-OBSERVABILITY-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: packages/@dvt/observability/README.md
-    fileId: F-DFDA6C13C2BB
+  - path: packages/@dvt/observability/package.json
+    fileId: F-A9666182B071
     owningUnit: SYS-OBSERVABILITY-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required

@@ -4,12 +4,12 @@ generatedFrom: git ls-files
 unitManifest: docs/planning/status/system-governance-unit-index.units.yaml
 fileCount: 286
 files:
-  - fileId: F-E0BCA2C44471
-    pathHash: 48ccf74c9895530c061e7fe40f7d843c651f9fd18c168f8f69a7c6d7e916723f
-    contentHash: 16332ec7f71f8a6c0e25425d1d8c61733a88f5dbf2eafd68e94c52debd2e030e
+  - fileId: F-D4BDA01896F5
+    pathHash: f85de480f5ce07f4f8b9baa136244e1f0204411956a634c3ee824730939c8e46
+    contentHash: a042a3d730423f7a1a84a4e6571943d9959ccf03e2e5d8ed5859120c112939b6
     governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
-    stateFingerprint: 14838a1b5c685306114d1d7526acd3f279720d4d3dae0f6b0ea09056ffeac754
-    path: packages/@dvt/canonical/package.json
+    stateFingerprint: 43ae0c14685041345d0ac35f409b9b776911d861c07e3f9962c8700fdb60d84c
+    path: packages/@dvt/canonical/README.md
     owningUnit: SYS-RUNTIME-ROOT
     rootUnit: SYS-DVT
     domainUnit: SYS-RUNTIME
@@ -29,12 +29,12 @@ files:
     cqRails: runtime commands and queries
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-D4BDA01896F5
-    pathHash: f85de480f5ce07f4f8b9baa136244e1f0204411956a634c3ee824730939c8e46
-    contentHash: a042a3d730423f7a1a84a4e6571943d9959ccf03e2e5d8ed5859120c112939b6
+  - fileId: F-E0BCA2C44471
+    pathHash: 48ccf74c9895530c061e7fe40f7d843c651f9fd18c168f8f69a7c6d7e916723f
+    contentHash: 16332ec7f71f8a6c0e25425d1d8c61733a88f5dbf2eafd68e94c52debd2e030e
     governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
-    stateFingerprint: 43ae0c14685041345d0ac35f409b9b776911d861c07e3f9962c8700fdb60d84c
-    path: packages/@dvt/canonical/README.md
+    stateFingerprint: 14838a1b5c685306114d1d7526acd3f279720d4d3dae0f6b0ea09056ffeac754
+    path: packages/@dvt/canonical/package.json
     owningUnit: SYS-RUNTIME-ROOT
     rootUnit: SYS-DVT
     domainUnit: SYS-RUNTIME
@@ -179,6 +179,31 @@ files:
     cqRails: runtime commands and queries
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-51FE1DBB7829
+    pathHash: d821581fbd390dc2dd6797388323a4a71bdf8723667547b2ae9d0584c630d9ec
+    contentHash: af4b859e364cea702fe5ba504166d56be33a25c7cb8611a14d981c5302bcc167
+    governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
+    stateFingerprint: 4ec5da8542df48eba699f71361ddb55df8b7e61f98c8703f7c1b9f2981b81291
+    path: packages/@dvt/cli/README.md
+    owningUnit: SYS-RUNTIME-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-RUNTIME
+    componentUnit: SYS-RUNTIME-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-RUNTIME
+      - SYS-RUNTIME-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: AS
+    cqRails: runtime commands and queries
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-84D384786221
     pathHash: 8958d73e6dc574f06cbf97ffce23bc679e268af953d326c6cce04e639e9c1a4a
     contentHash: 4eca941f87c59ce5089f5dc6670a35a8df453fb1966ec26833a71b98b1dc3464
@@ -260,31 +285,6 @@ files:
     governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
     stateFingerprint: d8e75dc281c11582d4db4e0d6b1aa53c0b63a4d30f14a4090a568919865fc4e1
     path: packages/@dvt/cli/package.json
-    owningUnit: SYS-RUNTIME-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-RUNTIME
-    componentUnit: SYS-RUNTIME-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-RUNTIME
-      - SYS-RUNTIME-ROOT
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: AS
-    cqRails: runtime commands and queries
-    governance:
-      - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-51FE1DBB7829
-    pathHash: d821581fbd390dc2dd6797388323a4a71bdf8723667547b2ae9d0584c630d9ec
-    contentHash: af4b859e364cea702fe5ba504166d56be33a25c7cb8611a14d981c5302bcc167
-    governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
-    stateFingerprint: 4ec5da8542df48eba699f71361ddb55df8b7e61f98c8703f7c1b9f2981b81291
-    path: packages/@dvt/cli/README.md
     owningUnit: SYS-RUNTIME-ROOT
     rootUnit: SYS-DVT
     domainUnit: SYS-RUNTIME
@@ -504,31 +504,6 @@ files:
     cqRails: runtime commands and queries
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-1D4FDB1A9656
-    pathHash: b6900d40d075936f36aa42083bc1009dd80217f870cfaff7edf1c9b463a77fef
-    contentHash: bd788699dc11411dfb4ff8a98b2ef1bf2a32d56375096c93f27f80f6f40fba20
-    governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
-    stateFingerprint: 84be6a9f1829730a4503da934a267f9944b6e5a31c9a804d224075f0916f3b59
-    path: packages/@dvt/delivery/src/application/outboxWorkerRuntimeErrorSupport.ts
-    owningUnit: SYS-RUNTIME-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-RUNTIME
-    componentUnit: SYS-RUNTIME-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-RUNTIME
-      - SYS-RUNTIME-ROOT
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: AS
-    cqRails: runtime commands and queries
-    governance:
-      - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-3A6F9D23AE70
     pathHash: cdbbe3998359b3c36e3ed16953877ab11988a366bc19f9f65ffad5ce1b6f56f5
     contentHash: 671f37a2f1d2f5abcb5c8e0216a5a05f88926364c7f6eca42e1d56b5efbd569f
@@ -585,6 +560,31 @@ files:
     governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
     stateFingerprint: db4e3ba1bbeaf2dbf939952beffe7b9b069a721ecf0c8da641c48377d931a122
     path: packages/@dvt/delivery/src/application/ProjectorWorkerRuntime.ts
+    owningUnit: SYS-RUNTIME-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-RUNTIME
+    componentUnit: SYS-RUNTIME-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-RUNTIME
+      - SYS-RUNTIME-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: AS
+    cqRails: runtime commands and queries
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-1D4FDB1A9656
+    pathHash: b6900d40d075936f36aa42083bc1009dd80217f870cfaff7edf1c9b463a77fef
+    contentHash: bd788699dc11411dfb4ff8a98b2ef1bf2a32d56375096c93f27f80f6f40fba20
+    governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
+    stateFingerprint: 84be6a9f1829730a4503da934a267f9944b6e5a31c9a804d224075f0916f3b59
+    path: packages/@dvt/delivery/src/application/outboxWorkerRuntimeErrorSupport.ts
     owningUnit: SYS-RUNTIME-ROOT
     rootUnit: SYS-DVT
     domainUnit: SYS-RUNTIME
@@ -779,31 +779,6 @@ files:
     cqRails: runtime commands and queries
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-8C00CC9BAB4B
-    pathHash: aa23f410493cc38702796ac821e17f34a1c70cc179a70f79190e026377cb5a0a
-    contentHash: c07bf8e195f2f4a6b2617925b77687cd1459da224d5f4e777617f9b4f017c044
-    governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
-    stateFingerprint: bd3c2e115eaaf23d2f487f5620953ffcd0bd0c30e71b5db598c4bda1be2e8f1f
-    path: packages/@dvt/delivery/test/gaps/StartRunAdmissionGuard.test.ts
-    owningUnit: SYS-RUNTIME-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-RUNTIME
-    componentUnit: SYS-RUNTIME-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-RUNTIME
-      - SYS-RUNTIME-ROOT
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: AS
-    cqRails: runtime commands and queries
-    governance:
-      - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-A346A2C9AF6B
     pathHash: 762027fd59dc016de663b630be308f2b821f15f81e477884503ff37b8769a8eb
     contentHash: 580b3ce878534f62aede0db614ec3163723171f412cb84c6b30d3fdb5486d951
@@ -954,6 +929,31 @@ files:
     cqRails: runtime commands and queries
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-8C00CC9BAB4B
+    pathHash: aa23f410493cc38702796ac821e17f34a1c70cc179a70f79190e026377cb5a0a
+    contentHash: c07bf8e195f2f4a6b2617925b77687cd1459da224d5f4e777617f9b4f017c044
+    governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
+    stateFingerprint: bd3c2e115eaaf23d2f487f5620953ffcd0bd0c30e71b5db598c4bda1be2e8f1f
+    path: packages/@dvt/delivery/test/gaps/StartRunAdmissionGuard.test.ts
+    owningUnit: SYS-RUNTIME-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-RUNTIME
+    componentUnit: SYS-RUNTIME-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-RUNTIME
+      - SYS-RUNTIME-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: AS
+    cqRails: runtime commands and queries
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-1B60B0869467
     pathHash: 48a3dc2938f67c811cce3f78391b52276481d43926ad74940f40860bfe4b8a58
     contentHash: 5b39fbbf1dda2edb9ee4d89b40a8f79094e073b2c1d02f05c60441f7041664aa
@@ -1029,12 +1029,12 @@ files:
     cqRails: runtime commands and queries
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-726BBE3C974B
-    pathHash: 8454e8ecf082833ce4190d40ca898e1a637c945ba6af135e9a023802a7dfa171
-    contentHash: 2a80a7c5a945d04bb11927efa0034309dec3d83d8c75b68b7ba6ed62e15eae96
+  - fileId: F-40F57AAD1ACF
+    pathHash: 0cd52fe9f1f2c0c695611b0b92e861972dba43e7aac2eec8df1154563abac5ce
+    contentHash: 62dbe901c7f479ee1828fcdc5f77745ad9146a17c26624c0ca6076109f842f39
     governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
-    stateFingerprint: 2d3f66a999fb1bfc3679b586696ecb14110fe460ff3d7e4e3e3067a15c6ef3aa
-    path: packages/@dvt/dsl/package.json
+    stateFingerprint: d7ee6efc1321b04c5c235c8f315797475faf3e7a8efaa2c45bd09db037a426ae
+    path: packages/@dvt/dsl/README.md
     owningUnit: SYS-RUNTIME-ROOT
     rootUnit: SYS-DVT
     domainUnit: SYS-RUNTIME
@@ -1054,12 +1054,12 @@ files:
     cqRails: runtime commands and queries
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-40F57AAD1ACF
-    pathHash: 0cd52fe9f1f2c0c695611b0b92e861972dba43e7aac2eec8df1154563abac5ce
-    contentHash: 62dbe901c7f479ee1828fcdc5f77745ad9146a17c26624c0ca6076109f842f39
+  - fileId: F-726BBE3C974B
+    pathHash: 8454e8ecf082833ce4190d40ca898e1a637c945ba6af135e9a023802a7dfa171
+    contentHash: 2a80a7c5a945d04bb11927efa0034309dec3d83d8c75b68b7ba6ed62e15eae96
     governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
-    stateFingerprint: d7ee6efc1321b04c5c235c8f315797475faf3e7a8efaa2c45bd09db037a426ae
-    path: packages/@dvt/dsl/README.md
+    stateFingerprint: 2d3f66a999fb1bfc3679b586696ecb14110fe460ff3d7e4e3e3067a15c6ef3aa
+    path: packages/@dvt/dsl/package.json
     owningUnit: SYS-RUNTIME-ROOT
     rootUnit: SYS-DVT
     domainUnit: SYS-RUNTIME
@@ -1279,31 +1279,6 @@ files:
     cqRails: runtime commands and queries
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-B365E24BF20A
-    pathHash: 56bda80527f9793e70b7113fc47ea76d628507a6d9252e0f2dc2eade73e9bd09
-    contentHash: 9d672510feccfa1cc0908f4e890eca8d0adffc24cec60738f742491aa6cb7ac4
-    governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
-    stateFingerprint: ecce3de3f28679905280e7181c77a062e3e40561f239f267bb12cccddf1fca1e
-    path: packages/@dvt/engine/src/adapters/inMemory/InMemoryProviderAdapter.ts
-    owningUnit: SYS-RUNTIME-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-RUNTIME
-    componentUnit: SYS-RUNTIME-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-RUNTIME
-      - SYS-RUNTIME-ROOT
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: AS
-    cqRails: runtime commands and queries
-    governance:
-      - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-BA01226D68F5
     pathHash: f80da7101037ddb65ac5afaefbb9af068e791b6445853c6bb083b51d03e320ed
     contentHash: 6e1a3a0d83b8463ee11cfd376b31a021e3a6ab153ff499147828b870e3249d9e
@@ -1329,12 +1304,12 @@ files:
     cqRails: runtime commands and queries
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-F50DA470E70A
-    pathHash: 8294b39b06d336f5b69a61be77fa7e6e675216bf94d77d33ae5abff9566e9ae7
-    contentHash: 864c3646298de2887f3ccb41f615ab122ff3b59d2205ce434d758d9ca7e46a01
+  - fileId: F-B365E24BF20A
+    pathHash: 56bda80527f9793e70b7113fc47ea76d628507a6d9252e0f2dc2eade73e9bd09
+    contentHash: 9d672510feccfa1cc0908f4e890eca8d0adffc24cec60738f742491aa6cb7ac4
     governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
-    stateFingerprint: 1e98b4c957ae19f230f09c7e332b85311813c00d43e09be8c5ae1120386b4966
-    path: packages/@dvt/engine/src/application/IStartRunApplicationService.ts
+    stateFingerprint: ecce3de3f28679905280e7181c77a062e3e40561f239f267bb12cccddf1fca1e
+    path: packages/@dvt/engine/src/adapters/inMemory/InMemoryProviderAdapter.ts
     owningUnit: SYS-RUNTIME-ROOT
     rootUnit: SYS-DVT
     domainUnit: SYS-RUNTIME
@@ -1354,12 +1329,12 @@ files:
     cqRails: runtime commands and queries
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-DEBE87274FB5
-    pathHash: e85c2d831c220a1eae96637ff9a35b68246fb29c47beddad2754e3bd921011cd
-    contentHash: ea80456e2aaba838d9ab02ea09202ef02a8cabcf0833606e9629ef2bdaeba315
+  - fileId: F-F50DA470E70A
+    pathHash: 8294b39b06d336f5b69a61be77fa7e6e675216bf94d77d33ae5abff9566e9ae7
+    contentHash: 864c3646298de2887f3ccb41f615ab122ff3b59d2205ce434d758d9ca7e46a01
     governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
-    stateFingerprint: 32b19ed870bb6682fb96f3f9518e05dbc32ea9cce66fec8dbcd9cab579a5afcd
-    path: packages/@dvt/engine/src/application/providerSelection.ts
+    stateFingerprint: 1e98b4c957ae19f230f09c7e332b85311813c00d43e09be8c5ae1120386b4966
+    path: packages/@dvt/engine/src/application/IStartRunApplicationService.ts
     owningUnit: SYS-RUNTIME-ROOT
     rootUnit: SYS-DVT
     domainUnit: SYS-RUNTIME
@@ -1454,62 +1429,12 @@ files:
     cqRails: runtime commands and queries
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-79A29A6629A5
-    pathHash: a4dab40c6235efe9c6ac84c392fafbfc90e1d11015cb66fb7e1e9edd51faa872
-    contentHash: 64fbb50d79d867fb12cb1d13d4800e697a3b5b0f309cd1e3d6b22beedb416ad2
+  - fileId: F-DEBE87274FB5
+    pathHash: e85c2d831c220a1eae96637ff9a35b68246fb29c47beddad2754e3bd921011cd
+    contentHash: ea80456e2aaba838d9ab02ea09202ef02a8cabcf0833606e9629ef2bdaeba315
     governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
-    stateFingerprint: 216e7a1c5145780e5e144a200e804ee744b66cc1271410d90b8340b3eda4582a
-    path: packages/@dvt/engine/src/application/workflow-engine-use-cases/buildWorkflowEngineUseCases.ts
-    owningUnit: SYS-RUNTIME-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-RUNTIME
-    componentUnit: SYS-RUNTIME-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-RUNTIME
-      - SYS-RUNTIME-ROOT
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: AS
-    cqRails: runtime commands and queries
-    governance:
-      - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-984FD66FC6ED
-    pathHash: 313f6d59376914a2f58f48950440a65f72ee98337996f7b70269711c53bbd2f8
-    contentHash: 7a95d9e0c697d4c6ce3be400b28d73e55eccf0bce8162204000e2be743f35e5a
-    governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
-    stateFingerprint: ae6c311405e05dd26e7762c62eb4b4c570893ac63403dbfe0122f77d273963df
-    path: packages/@dvt/engine/src/application/workflow-engine-use-cases/index.ts
-    owningUnit: SYS-RUNTIME-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-RUNTIME
-    componentUnit: SYS-RUNTIME-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-RUNTIME
-      - SYS-RUNTIME-ROOT
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: AS
-    cqRails: runtime commands and queries
-    governance:
-      - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-B1CD82C91567
-    pathHash: ca54c2f8a2150322c11047886b7968c131eb30a0ca731eeb0c9c0e1dd6139d32
-    contentHash: a347a498ac0aeec8a4319c8824344476e1968745596a6430368bd2da5f41c650
-    governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
-    stateFingerprint: b516badcb6743643f83efb954f0dab60c9c574283ad65036aea9d01d4072ca6c
-    path: packages/@dvt/engine/src/application/workflow-engine-use-cases/types.ts
+    stateFingerprint: 32b19ed870bb6682fb96f3f9518e05dbc32ea9cce66fec8dbcd9cab579a5afcd
+    path: packages/@dvt/engine/src/application/providerSelection.ts
     owningUnit: SYS-RUNTIME-ROOT
     rootUnit: SYS-DVT
     domainUnit: SYS-RUNTIME
@@ -1654,6 +1579,131 @@ files:
     cqRails: runtime commands and queries
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-79A29A6629A5
+    pathHash: a4dab40c6235efe9c6ac84c392fafbfc90e1d11015cb66fb7e1e9edd51faa872
+    contentHash: 64fbb50d79d867fb12cb1d13d4800e697a3b5b0f309cd1e3d6b22beedb416ad2
+    governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
+    stateFingerprint: 216e7a1c5145780e5e144a200e804ee744b66cc1271410d90b8340b3eda4582a
+    path: packages/@dvt/engine/src/application/workflow-engine-use-cases/buildWorkflowEngineUseCases.ts
+    owningUnit: SYS-RUNTIME-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-RUNTIME
+    componentUnit: SYS-RUNTIME-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-RUNTIME
+      - SYS-RUNTIME-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: AS
+    cqRails: runtime commands and queries
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-984FD66FC6ED
+    pathHash: 313f6d59376914a2f58f48950440a65f72ee98337996f7b70269711c53bbd2f8
+    contentHash: 7a95d9e0c697d4c6ce3be400b28d73e55eccf0bce8162204000e2be743f35e5a
+    governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
+    stateFingerprint: ae6c311405e05dd26e7762c62eb4b4c570893ac63403dbfe0122f77d273963df
+    path: packages/@dvt/engine/src/application/workflow-engine-use-cases/index.ts
+    owningUnit: SYS-RUNTIME-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-RUNTIME
+    componentUnit: SYS-RUNTIME-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-RUNTIME
+      - SYS-RUNTIME-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: AS
+    cqRails: runtime commands and queries
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-B1CD82C91567
+    pathHash: ca54c2f8a2150322c11047886b7968c131eb30a0ca731eeb0c9c0e1dd6139d32
+    contentHash: a347a498ac0aeec8a4319c8824344476e1968745596a6430368bd2da5f41c650
+    governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
+    stateFingerprint: b516badcb6743643f83efb954f0dab60c9c574283ad65036aea9d01d4072ca6c
+    path: packages/@dvt/engine/src/application/workflow-engine-use-cases/types.ts
+    owningUnit: SYS-RUNTIME-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-RUNTIME
+    componentUnit: SYS-RUNTIME-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-RUNTIME
+      - SYS-RUNTIME-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: AS
+    cqRails: runtime commands and queries
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-A51F0F1C2841
+    pathHash: 04865b526026f2a5df2ecc545cf33de536c3e0243bd111e486b7c3fe2f82614b
+    contentHash: 8911243326bfa445bfe38d7c8007f947aa8390fb69ca18aa29f47199bcc2afff
+    governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
+    stateFingerprint: 17b395b6aa82c73c99b0acb952b012f18db810790f688853ed24df8818c26d74
+    path: packages/@dvt/engine/src/contracts/IRunEnrichmentService.v1.ts
+    owningUnit: SYS-RUNTIME-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-RUNTIME
+    componentUnit: SYS-RUNTIME-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-RUNTIME
+      - SYS-RUNTIME-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: AS
+    cqRails: runtime commands and queries
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-051E16284E7E
+    pathHash: 8f1c24c2cc832befc822f0b18d694a44f1c39f9cc5bc07339d2f700e7a478f65
+    contentHash: 214923ff6c1636ee3d0baa6221e07797caea835aa531070cf26e912199a6e714
+    governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
+    stateFingerprint: 505e96a689b9dfe72ad0c2bf30e3d6a7d7a38f6076dd2f9d6286f73958f41001
+    path: packages/@dvt/engine/src/contracts/PlanAdmissionPolicy.ts
+    owningUnit: SYS-RUNTIME-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-RUNTIME
+    componentUnit: SYS-RUNTIME-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-RUNTIME
+      - SYS-RUNTIME-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: AS
+    cqRails: runtime commands and queries
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-03F27A047936
     pathHash: bff12a35f5ab4ec0b31b5a1d536c591ee5730bd88f5bd9738c7500c56d983bda
     contentHash: 633910ff3d7da54aea5bc2af01ddf4f2ef8971323ede368388f681184b3baa8b
@@ -1685,31 +1735,6 @@ files:
     governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
     stateFingerprint: f7e4aeb212260f32accc32b4429a1815ee9c1a6ad253230e7e8e70b194d8e516
     path: packages/@dvt/engine/src/contracts/engine/ExecutionSemantics.v1.ts
-    owningUnit: SYS-RUNTIME-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-RUNTIME
-    componentUnit: SYS-RUNTIME-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-RUNTIME
-      - SYS-RUNTIME-ROOT
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: AS
-    cqRails: runtime commands and queries
-    governance:
-      - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-CA7BBBCC1A9A
-    pathHash: 6f459610e009f35f5ef6559c14ae3c5553bdc9163f882ad98f20fe995931b42e
-    contentHash: 384359b72ca099077494135bcf15f4255649ddfc753378c8d308d24024ea4294
-    governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
-    stateFingerprint: 638bb69b9a8965cc383e858d0e60d526e1fcab2d6f75c73c305b912d641189a0
-    path: packages/@dvt/engine/src/contracts/engine/index.ts
     owningUnit: SYS-RUNTIME-ROOT
     rootUnit: SYS-DVT
     domainUnit: SYS-RUNTIME
@@ -1810,6 +1835,31 @@ files:
     governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
     stateFingerprint: c58905bc2ca1b63f86f3d470d050c71bd8ff01cd61b158f1f4d59fd0f014b561
     path: packages/@dvt/engine/src/contracts/engine/RunEvents.v1.ts
+    owningUnit: SYS-RUNTIME-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-RUNTIME
+    componentUnit: SYS-RUNTIME-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-RUNTIME
+      - SYS-RUNTIME-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: AS
+    cqRails: runtime commands and queries
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-CA7BBBCC1A9A
+    pathHash: 6f459610e009f35f5ef6559c14ae3c5553bdc9163f882ad98f20fe995931b42e
+    contentHash: 384359b72ca099077494135bcf15f4255649ddfc753378c8d308d24024ea4294
+    governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
+    stateFingerprint: 638bb69b9a8965cc383e858d0e60d526e1fcab2d6f75c73c305b912d641189a0
+    path: packages/@dvt/engine/src/contracts/engine/index.ts
     owningUnit: SYS-RUNTIME-ROOT
     rootUnit: SYS-DVT
     domainUnit: SYS-RUNTIME
@@ -2079,56 +2129,6 @@ files:
     cqRails: runtime commands and queries
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-A51F0F1C2841
-    pathHash: 04865b526026f2a5df2ecc545cf33de536c3e0243bd111e486b7c3fe2f82614b
-    contentHash: 8911243326bfa445bfe38d7c8007f947aa8390fb69ca18aa29f47199bcc2afff
-    governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
-    stateFingerprint: 17b395b6aa82c73c99b0acb952b012f18db810790f688853ed24df8818c26d74
-    path: packages/@dvt/engine/src/contracts/IRunEnrichmentService.v1.ts
-    owningUnit: SYS-RUNTIME-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-RUNTIME
-    componentUnit: SYS-RUNTIME-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-RUNTIME
-      - SYS-RUNTIME-ROOT
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: AS
-    cqRails: runtime commands and queries
-    governance:
-      - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-051E16284E7E
-    pathHash: 8f1c24c2cc832befc822f0b18d694a44f1c39f9cc5bc07339d2f700e7a478f65
-    contentHash: 214923ff6c1636ee3d0baa6221e07797caea835aa531070cf26e912199a6e714
-    governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
-    stateFingerprint: 505e96a689b9dfe72ad0c2bf30e3d6a7d7a38f6076dd2f9d6286f73958f41001
-    path: packages/@dvt/engine/src/contracts/PlanAdmissionPolicy.ts
-    owningUnit: SYS-RUNTIME-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-RUNTIME
-    componentUnit: SYS-RUNTIME-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-RUNTIME
-      - SYS-RUNTIME-ROOT
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: AS
-    cqRails: runtime commands and queries
-    governance:
-      - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-C68EA93E4F8B
     pathHash: 5baadc16d8f8a33f4ddcb5a629c83f77a1eb77aa4f0232d22690a0464e033d4a
     contentHash: f85cd0755f37934b7295fe7acc4bc57ec459e3e548518d64b46affb87eb340e4
@@ -2185,6 +2185,81 @@ files:
     governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
     stateFingerprint: 820d5683f2737e0b9297032812325a6fb1081c009547c5e35ff6ac6b987b3cdc
     path: packages/@dvt/engine/src/contracts/types.ts
+    owningUnit: SYS-RUNTIME-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-RUNTIME
+    componentUnit: SYS-RUNTIME-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-RUNTIME
+      - SYS-RUNTIME-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: AS
+    cqRails: runtime commands and queries
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-8480A1A39408
+    pathHash: 4381bc5edcee431c2543ca9da83b394cebc665ac97e3fbf8f40a4cf872d06876
+    contentHash: 6ee4dac4a3fa5735b7ac68f1610c2613a3177f1adfa0ebae8f691372f25ce8f3
+    governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
+    stateFingerprint: f32103ad5792d38fa37be81c63bb63661d6bcb50e340710b948274c00234e46c
+    path: packages/@dvt/engine/src/core/SnapshotProjector.ts
+    owningUnit: SYS-RUNTIME-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-RUNTIME
+    componentUnit: SYS-RUNTIME-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-RUNTIME
+      - SYS-RUNTIME-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: AS
+    cqRails: runtime commands and queries
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-23E7662AF16E
+    pathHash: 07f2e1ffc37b469550b71b1953aa7e9cb353f1e30c579cf7b7f8c7c258ae29ff
+    contentHash: 00105368b678c93a817751c312a033c680561534673364f47f8a78c1ef86f264
+    governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
+    stateFingerprint: 1af7fd8d1e18291543a69ddf2fbd1247b8b26221fdc57e738329327d46832129
+    path: packages/@dvt/engine/src/core/WorkflowEngine.ts
+    owningUnit: SYS-RUNTIME-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-RUNTIME
+    componentUnit: SYS-RUNTIME-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-RUNTIME
+      - SYS-RUNTIME-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: AS
+    cqRails: runtime commands and queries
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-3F234C2AED10
+    pathHash: 31f40d72a92bde79571fe804dd9bca89e203e15d2433773c69356ebd17851746
+    contentHash: c0a58b92548e04e903400fbd35bf8d552d50e2337c54a4fbcbb3098eb824e8e4
+    governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
+    stateFingerprint: 0f625e198ba980fcb01cf79c7d0a756372f1eebb4cb745d4d700ce4d7e6481d2
+    path: packages/@dvt/engine/src/core/WorkflowEngineCoreService.ts
     owningUnit: SYS-RUNTIME-ROOT
     rootUnit: SYS-DVT
     domainUnit: SYS-RUNTIME
@@ -2279,6 +2354,31 @@ files:
     cqRails: runtime commands and queries
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-071E54084FB0
+    pathHash: afa902fd17da83b12868f35dd7c3696f1bc3214a399d19190179156d87eeceaf
+    contentHash: 515b249b6116b00df7a23838a245bf0143f866368888c7278f5c086ef659c1f0
+    governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
+    stateFingerprint: 0a9095bbe0825c77ae13d9e75aaa5204a0e09f96af09f35b90ffdb1dc8495251
+    path: packages/@dvt/engine/src/core/lifecycle/StartRunTraceContext.ts
+    owningUnit: SYS-RUNTIME-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-RUNTIME
+    componentUnit: SYS-RUNTIME-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-RUNTIME
+      - SYS-RUNTIME-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: AS
+    cqRails: runtime commands and queries
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-67EE639576BC
     pathHash: cbf624f8fa0dc70bf70d914f808b741dd7f902293570c9246fd1fdb71ad23d5c
     contentHash: 5eba195c723a76fad6dcd8e64a8bae78b074274d5aef605f5d76dbf838bbc7cb
@@ -2329,112 +2429,12 @@ files:
     cqRails: runtime commands and queries
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-071E54084FB0
-    pathHash: afa902fd17da83b12868f35dd7c3696f1bc3214a399d19190179156d87eeceaf
-    contentHash: 515b249b6116b00df7a23838a245bf0143f866368888c7278f5c086ef659c1f0
-    governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
-    stateFingerprint: 0a9095bbe0825c77ae13d9e75aaa5204a0e09f96af09f35b90ffdb1dc8495251
-    path: packages/@dvt/engine/src/core/lifecycle/StartRunTraceContext.ts
-    owningUnit: SYS-RUNTIME-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-RUNTIME
-    componentUnit: SYS-RUNTIME-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-RUNTIME
-      - SYS-RUNTIME-ROOT
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: AS
-    cqRails: runtime commands and queries
-    governance:
-      - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-8480A1A39408
-    pathHash: 4381bc5edcee431c2543ca9da83b394cebc665ac97e3fbf8f40a4cf872d06876
-    contentHash: 6ee4dac4a3fa5735b7ac68f1610c2613a3177f1adfa0ebae8f691372f25ce8f3
-    governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
-    stateFingerprint: f32103ad5792d38fa37be81c63bb63661d6bcb50e340710b948274c00234e46c
-    path: packages/@dvt/engine/src/core/SnapshotProjector.ts
-    owningUnit: SYS-RUNTIME-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-RUNTIME
-    componentUnit: SYS-RUNTIME-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-RUNTIME
-      - SYS-RUNTIME-ROOT
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: AS
-    cqRails: runtime commands and queries
-    governance:
-      - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-09579B349F98
     pathHash: e70342c847104863e3a8fa84499a9b24258b6c660f17fd87d22631693ced47ab
     contentHash: 1f2bf3cf90b5fb4176d5e8009db22d2c17f6ee3d83c6373c022a2a1e766a8ac8
     governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
     stateFingerprint: c917113aa4e96e444372d8aaaacb13ff1bbb1c66ece6a97e2e22266561a2df0e
     path: packages/@dvt/engine/src/core/types.ts
-    owningUnit: SYS-RUNTIME-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-RUNTIME
-    componentUnit: SYS-RUNTIME-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-RUNTIME
-      - SYS-RUNTIME-ROOT
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: AS
-    cqRails: runtime commands and queries
-    governance:
-      - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-23E7662AF16E
-    pathHash: 07f2e1ffc37b469550b71b1953aa7e9cb353f1e30c579cf7b7f8c7c258ae29ff
-    contentHash: 00105368b678c93a817751c312a033c680561534673364f47f8a78c1ef86f264
-    governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
-    stateFingerprint: 1af7fd8d1e18291543a69ddf2fbd1247b8b26221fdc57e738329327d46832129
-    path: packages/@dvt/engine/src/core/WorkflowEngine.ts
-    owningUnit: SYS-RUNTIME-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-RUNTIME
-    componentUnit: SYS-RUNTIME-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-RUNTIME
-      - SYS-RUNTIME-ROOT
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: AS
-    cqRails: runtime commands and queries
-    governance:
-      - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-3F234C2AED10
-    pathHash: 31f40d72a92bde79571fe804dd9bca89e203e15d2433773c69356ebd17851746
-    contentHash: c0a58b92548e04e903400fbd35bf8d552d50e2337c54a4fbcbb3098eb824e8e4
-    governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
-    stateFingerprint: 0f625e198ba980fcb01cf79c7d0a756372f1eebb4cb745d4d700ce4d7e6481d2
-    path: packages/@dvt/engine/src/core/WorkflowEngineCoreService.ts
     owningUnit: SYS-RUNTIME-ROOT
     rootUnit: SYS-DVT
     domainUnit: SYS-RUNTIME
@@ -2929,6 +2929,31 @@ files:
     cqRails: runtime commands and queries
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-58069CD7EF4D
+    pathHash: c6c42ccc48ec0aec7f3300d6cd89f371a3c7cfda04cb32f3d954ddcc9bb20508
+    contentHash: a90f56e857e87ec785173dd3c0f878d096531545b5a18efb1014655cb9e9b43f
+    governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
+    stateFingerprint: b65e0f1f9e38252abad468e5e1639ec6e12a5f13b642bce62dc3f000792c1023
+    path: packages/@dvt/engine/src/security/RunAccessPolicy.ts
+    owningUnit: SYS-RUNTIME-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-RUNTIME
+    componentUnit: SYS-RUNTIME-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-RUNTIME
+      - SYS-RUNTIME-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: AS
+    cqRails: runtime commands and queries
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-C4B66E35A39F
     pathHash: 77e65aa21d6513a2b8137f8ae375ce4e40a9f31859b09fe3274e657cf8f00a32
     contentHash: 85e232b781abd7d2de4fa40272fbfad4020f1d1e11c1df0cbc2f877487a38d07
@@ -3029,31 +3054,6 @@ files:
     cqRails: runtime commands and queries
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-58069CD7EF4D
-    pathHash: c6c42ccc48ec0aec7f3300d6cd89f371a3c7cfda04cb32f3d954ddcc9bb20508
-    contentHash: a90f56e857e87ec785173dd3c0f878d096531545b5a18efb1014655cb9e9b43f
-    governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
-    stateFingerprint: b65e0f1f9e38252abad468e5e1639ec6e12a5f13b642bce62dc3f000792c1023
-    path: packages/@dvt/engine/src/security/RunAccessPolicy.ts
-    owningUnit: SYS-RUNTIME-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-RUNTIME
-    componentUnit: SYS-RUNTIME-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-RUNTIME
-      - SYS-RUNTIME-ROOT
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: AS
-    cqRails: runtime commands and queries
-    governance:
-      - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-CCA6D50CC07D
     pathHash: c81234ace60a017dbc8a7d80217893c91e3cd5f640bae973143dedb28a3dd5f3
     contentHash: 88dc3914cb2af5b62cf451f5c4bf2f4941e9b3bebd4bd59fd50ea8bed314c7e4
@@ -3085,6 +3085,56 @@ files:
     governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
     stateFingerprint: 45af83adb980d1284a196eaa658caf2b1f8ee167823a4c573260246b95cafe14
     path: packages/@dvt/engine/src/services/RunHealthService.ts
+    owningUnit: SYS-RUNTIME-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-RUNTIME
+    componentUnit: SYS-RUNTIME-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-RUNTIME
+      - SYS-RUNTIME-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: AS
+    cqRails: runtime commands and queries
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-90A6F4464BCE
+    pathHash: 0aea46995b89682a6203933c8f33d4e81a96cd1e87431e69132eb077f4999662
+    contentHash: b47af4ed1660c162079bfb15f7766eb5e80075427a6fb583498a35997660bd4e
+    governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
+    stateFingerprint: 1a4d6e70552388be4a030be578c627d300e37e1c586500f69d5ea3bec831d9fc
+    path: packages/@dvt/engine/src/services/RunMaintenanceService.ts
+    owningUnit: SYS-RUNTIME-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-RUNTIME
+    componentUnit: SYS-RUNTIME-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-RUNTIME
+      - SYS-RUNTIME-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: AS
+    cqRails: runtime commands and queries
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-8DB33326A54E
+    pathHash: a46f2cbc5b565fe0d530399afa4de169c36549e38cf6dc5e2ebc3c1551543c33
+    contentHash: 064f285d7c6d5cd0ceb6251026cd5f81dac3922acf55eb59b9eee890ccbf488a
+    governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
+    stateFingerprint: c868208c0296df14fcd7f06d4f07584fc80a62b1f3472a661c252d88651dd9f3
+    path: packages/@dvt/engine/src/services/RunStatusQueryService.ts
     owningUnit: SYS-RUNTIME-ROOT
     rootUnit: SYS-DVT
     domainUnit: SYS-RUNTIME
@@ -3285,56 +3335,6 @@ files:
     governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
     stateFingerprint: 1706f288b123a8bc63d9bd99ed0413b717b124538b4687e40f526c871396aba9
     path: packages/@dvt/engine/src/services/runMaintenance/RunMaintenanceStuckRunService.ts
-    owningUnit: SYS-RUNTIME-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-RUNTIME
-    componentUnit: SYS-RUNTIME-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-RUNTIME
-      - SYS-RUNTIME-ROOT
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: AS
-    cqRails: runtime commands and queries
-    governance:
-      - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-90A6F4464BCE
-    pathHash: 0aea46995b89682a6203933c8f33d4e81a96cd1e87431e69132eb077f4999662
-    contentHash: b47af4ed1660c162079bfb15f7766eb5e80075427a6fb583498a35997660bd4e
-    governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
-    stateFingerprint: 1a4d6e70552388be4a030be578c627d300e37e1c586500f69d5ea3bec831d9fc
-    path: packages/@dvt/engine/src/services/RunMaintenanceService.ts
-    owningUnit: SYS-RUNTIME-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-RUNTIME
-    componentUnit: SYS-RUNTIME-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-RUNTIME
-      - SYS-RUNTIME-ROOT
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: AS
-    cqRails: runtime commands and queries
-    governance:
-      - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-8DB33326A54E
-    pathHash: a46f2cbc5b565fe0d530399afa4de169c36549e38cf6dc5e2ebc3c1551543c33
-    contentHash: 064f285d7c6d5cd0ceb6251026cd5f81dac3922acf55eb59b9eee890ccbf488a
-    governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
-    stateFingerprint: c868208c0296df14fcd7f06d4f07584fc80a62b1f3472a661c252d88651dd9f3
-    path: packages/@dvt/engine/src/services/RunStatusQueryService.ts
     owningUnit: SYS-RUNTIME-ROOT
     rootUnit: SYS-DVT
     domainUnit: SYS-RUNTIME
@@ -4179,6 +4179,31 @@ files:
     cqRails: runtime commands and queries
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-4C166579F5CD
+    pathHash: a6fbbd27d419634833368dd8a8c3c067954f2fd75377b39c9f0098a22efae863
+    contentHash: 5cb22bf85011539d47458fa1aaad0a677d5e5418f6419945bb33cb3c17a8aae0
+    governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
+    stateFingerprint: c31eb34508283f41b11c41e5c7342c13da2041844aabe1070eaa7a947c57128a
+    path: packages/@dvt/engine/test/contracts/IWorkflowEngine.types.test.ts
+    owningUnit: SYS-RUNTIME-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-RUNTIME
+    componentUnit: SYS-RUNTIME-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-RUNTIME
+      - SYS-RUNTIME-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: AS
+    cqRails: runtime commands and queries
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-859305F52C3C
     pathHash: 5d5ca1d0c065f181c53b506a5955390d35d2a932e30807ad2b7996017007ec97
     contentHash: bf0513a5337753f648e64b2a7dde08a3b1b3b3da9e4b14c95be2bef796bb03d4
@@ -4285,31 +4310,6 @@ files:
     governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
     stateFingerprint: 24165616d61e743337eef69c443cb480905f3282cb599dc801da5c7f1ab6e155
     path: packages/@dvt/engine/test/contracts/helpers.ts
-    owningUnit: SYS-RUNTIME-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-RUNTIME
-    componentUnit: SYS-RUNTIME-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-RUNTIME
-      - SYS-RUNTIME-ROOT
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: AS
-    cqRails: runtime commands and queries
-    governance:
-      - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-4C166579F5CD
-    pathHash: a6fbbd27d419634833368dd8a8c3c067954f2fd75377b39c9f0098a22efae863
-    contentHash: 5cb22bf85011539d47458fa1aaad0a677d5e5418f6419945bb33cb3c17a8aae0
-    governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
-    stateFingerprint: c31eb34508283f41b11c41e5c7342c13da2041844aabe1070eaa7a947c57128a
-    path: packages/@dvt/engine/test/contracts/IWorkflowEngine.types.test.ts
     owningUnit: SYS-RUNTIME-ROOT
     rootUnit: SYS-DVT
     domainUnit: SYS-RUNTIME
@@ -4879,31 +4879,6 @@ files:
     cqRails: runtime commands and queries
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-4D2EC43222B5
-    pathHash: 320c22835d8079b7550d0c9dfc29a4c59b395b8e7c8ad467f69b4589e91528cb
-    contentHash: 649c51eb08d041373443db2cf70ec25dec3f1b41f240e10135dfb79f4fcb1c74
-    governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
-    stateFingerprint: e78a6aea3467f1aaeba7e1058acbf4ed722ea7d7eeb3d26da2258937113e33c0
-    path: packages/@dvt/engine/test/services/runExecutionContextAdmissionPolicy.fixtures.ts
-    owningUnit: SYS-RUNTIME-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-RUNTIME
-    componentUnit: SYS-RUNTIME-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-RUNTIME
-      - SYS-RUNTIME-ROOT
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: AS
-    cqRails: runtime commands and queries
-    governance:
-      - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-AC69CCD83AE9
     pathHash: 72a494f80b7df95ddc0d5c4eca8aeb6abc2b8ca56d126b0d26ba81806b808656
     contentHash: e1ca3ac4631ba84cb10ce6d93034c0dbd32e1901712a7c7e740c06d334e279e3
@@ -5105,12 +5080,12 @@ files:
     cqRails: runtime commands and queries
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-D3A5A2D414B4
-    pathHash: f0fc63122c4bfea364f4690d7c8535463dcd040229dd2a05ad285f76d3e9c490
-    contentHash: 89c246bf6450aa2253c9eff655e4def78604ebfb58461c9b104e8ae3a089b223
+  - fileId: F-4D2EC43222B5
+    pathHash: 320c22835d8079b7550d0c9dfc29a4c59b395b8e7c8ad467f69b4589e91528cb
+    contentHash: 649c51eb08d041373443db2cf70ec25dec3f1b41f240e10135dfb79f4fcb1c74
     governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
-    stateFingerprint: d06eedf4b45b7c0710059592c1d02c42e0be4d5e131ed5440ea638d533d9362f
-    path: packages/@dvt/engine/test/state/bootstrapRunTx.atomicity.test.ts
+    stateFingerprint: e78a6aea3467f1aaeba7e1058acbf4ed722ea7d7eeb3d26da2258937113e33c0
+    path: packages/@dvt/engine/test/services/runExecutionContextAdmissionPolicy.fixtures.ts
     owningUnit: SYS-RUNTIME-ROOT
     rootUnit: SYS-DVT
     domainUnit: SYS-RUNTIME
@@ -5311,6 +5286,31 @@ files:
     governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
     stateFingerprint: 3b4d3add3461aa6dc2f705d131e6f88eed227a48740a566f0b25b8f6489a061a
     path: packages/@dvt/engine/test/state/InMemoryTxStore.staleSnapshotRuns.test.ts
+    owningUnit: SYS-RUNTIME-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-RUNTIME
+    componentUnit: SYS-RUNTIME-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-RUNTIME
+      - SYS-RUNTIME-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: AS
+    cqRails: runtime commands and queries
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-D3A5A2D414B4
+    pathHash: f0fc63122c4bfea364f4690d7c8535463dcd040229dd2a05ad285f76d3e9c490
+    contentHash: 89c246bf6450aa2253c9eff655e4def78604ebfb58461c9b104e8ae3a089b223
+    governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
+    stateFingerprint: d06eedf4b45b7c0710059592c1d02c42e0be4d5e131ed5440ea638d533d9362f
+    path: packages/@dvt/engine/test/state/bootstrapRunTx.atomicity.test.ts
     owningUnit: SYS-RUNTIME-ROOT
     rootUnit: SYS-DVT
     domainUnit: SYS-RUNTIME
@@ -5580,12 +5580,12 @@ files:
     cqRails: runtime commands and queries
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-C98D2FE577EA
-    pathHash: 426e68052772c87cc688ac8fe9100dfdc1415ab6b5694c84555edf347b306fb9
-    contentHash: 936168647ce18b6baeafe27a61aa55bd935bc2149b6a0c8d74ea994392deb8b2
+  - fileId: F-E7A9DD761504
+    pathHash: 377a85c5291ca15f53a9f123fec992cf077e2806abf160779c53fd1a1231bab7
+    contentHash: b9fecdf1891077ca5b8df5029851bbde6661eb4756fc973da0cc6b0dda8a1482
     governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
-    stateFingerprint: 584d2e172f8eeea0c7d4aa039ada3a4e18dc9895055a256e3d39a1f139917fb8
-    path: packages/@dvt/plan-interpreter/package.json
+    stateFingerprint: 2b0aa30fd30d15df77508ba08270a1831f0cd07f23a1337043aeaff22d25ca51
+    path: packages/@dvt/plan-interpreter/README.md
     owningUnit: SYS-RUNTIME-ROOT
     rootUnit: SYS-DVT
     domainUnit: SYS-RUNTIME
@@ -5605,12 +5605,12 @@ files:
     cqRails: runtime commands and queries
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-E7A9DD761504
-    pathHash: 377a85c5291ca15f53a9f123fec992cf077e2806abf160779c53fd1a1231bab7
-    contentHash: b9fecdf1891077ca5b8df5029851bbde6661eb4756fc973da0cc6b0dda8a1482
+  - fileId: F-C98D2FE577EA
+    pathHash: 426e68052772c87cc688ac8fe9100dfdc1415ab6b5694c84555edf347b306fb9
+    contentHash: 936168647ce18b6baeafe27a61aa55bd935bc2149b6a0c8d74ea994392deb8b2
     governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
-    stateFingerprint: 2b0aa30fd30d15df77508ba08270a1831f0cd07f23a1337043aeaff22d25ca51
-    path: packages/@dvt/plan-interpreter/README.md
+    stateFingerprint: 584d2e172f8eeea0c7d4aa039ada3a4e18dc9895055a256e3d39a1f139917fb8
+    path: packages/@dvt/plan-interpreter/package.json
     owningUnit: SYS-RUNTIME-ROOT
     rootUnit: SYS-DVT
     domainUnit: SYS-RUNTIME
@@ -5805,12 +5805,12 @@ files:
     cqRails: runtime commands and queries
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-270AD193B743
-    pathHash: a3848a7469ef3e75fbfc06c9f7a4d288f2ddcba799b54a6781bb9de9b4f180bf
-    contentHash: c57f2a2d6dd4555b71a09519277b97ecbb0f74c5478ae500086d4208f91db4d0
+  - fileId: F-D82D455CD3C6
+    pathHash: e93fc6aa7ab19eea7d6bdbf01401c9c3dca0e6949d605f97a3c6b236550ab704
+    contentHash: 1f292106c5ecf9d6c87a213c6268993835d580b140943da5c746be3d697405f3
     governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
-    stateFingerprint: 292f6493525c2ec850055d7f1e955f77959276324ef7ce689996c696e01b61c2
-    path: packages/@dvt/plan-verifier/package.json
+    stateFingerprint: 351a5b5a04f4624d30d39b816c9b1b7dbf5094b87472c4ffac32b791062236a2
+    path: packages/@dvt/plan-verifier/README.md
     owningUnit: SYS-RUNTIME-ROOT
     rootUnit: SYS-DVT
     domainUnit: SYS-RUNTIME
@@ -5830,12 +5830,12 @@ files:
     cqRails: runtime commands and queries
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-D82D455CD3C6
-    pathHash: e93fc6aa7ab19eea7d6bdbf01401c9c3dca0e6949d605f97a3c6b236550ab704
-    contentHash: 1f292106c5ecf9d6c87a213c6268993835d580b140943da5c746be3d697405f3
+  - fileId: F-270AD193B743
+    pathHash: a3848a7469ef3e75fbfc06c9f7a4d288f2ddcba799b54a6781bb9de9b4f180bf
+    contentHash: c57f2a2d6dd4555b71a09519277b97ecbb0f74c5478ae500086d4208f91db4d0
     governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
-    stateFingerprint: 351a5b5a04f4624d30d39b816c9b1b7dbf5094b87472c4ffac32b791062236a2
-    path: packages/@dvt/plan-verifier/README.md
+    stateFingerprint: 292f6493525c2ec850055d7f1e955f77959276324ef7ce689996c696e01b61c2
+    path: packages/@dvt/plan-verifier/package.json
     owningUnit: SYS-RUNTIME-ROOT
     rootUnit: SYS-DVT
     domainUnit: SYS-RUNTIME
@@ -6430,31 +6430,6 @@ files:
     cqRails: runtime commands and queries
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-4BD83CE9D875
-    pathHash: 93505fb8dcf5b38a36464b948eaddb7dbdf503497bf268cebf4c218ee8122012
-    contentHash: f6816944d782cf437b2eb3c38cda52dbac4745e7d41d992fceff28d0781d0941
-    governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
-    stateFingerprint: f51ef73f0da0ce68dee1c66aff99e8cedb3906362bf2efeaebedab69a6f3b10b
-    path: packages/@dvt/state-store/src/index.ts
-    owningUnit: SYS-RUNTIME-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-RUNTIME
-    componentUnit: SYS-RUNTIME-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-RUNTIME
-      - SYS-RUNTIME-ROOT
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: AS
-    cqRails: runtime commands and queries
-    governance:
-      - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-749A0808CB1B
     pathHash: caf24ea73e4abb03f3b5b3ed0cc5d170854e0981753fe33ae29eaaf26cbbea37
     contentHash: 6052528b46a09e6539335cdb2ae9ca784bc32c1b9106ab57f1991651cc894c27
@@ -6480,87 +6455,12 @@ files:
     cqRails: runtime commands and queries
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-810E53E67A14
-    pathHash: 18f80429a249a5dedbeaa312f8597b1b222313a35b2a5979bdc4a9628f0684e2
-    contentHash: d2f80b90f50be8cbfd28ab3a4ec0fb323c492eb86e46569fe812ecb9c4616357
+  - fileId: F-4BD83CE9D875
+    pathHash: 93505fb8dcf5b38a36464b948eaddb7dbdf503497bf268cebf4c218ee8122012
+    contentHash: f6816944d782cf437b2eb3c38cda52dbac4745e7d41d992fceff28d0781d0941
     governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
-    stateFingerprint: 712aba1a350cb5e4ce4cede9a5732614755d5dad4be2d13ca74ae7865fe6a802
-    path: packages/@dvt/state-store/src/lifecycle/adapters/FileSystemArchiveObjectStore.ts
-    owningUnit: SYS-RUNTIME-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-RUNTIME
-    componentUnit: SYS-RUNTIME-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-RUNTIME
-      - SYS-RUNTIME-ROOT
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: AS
-    cqRails: runtime commands and queries
-    governance:
-      - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-8AC6314EDE18
-    pathHash: ff93323a88bfcbeeab6826213b504ab4e5f7e5866d833112e7cf1c3dc5231a30
-    contentHash: d12d67964107bdf275e61a351ab8de05221b1557eed7769f56acf8a30dc16375
-    governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
-    stateFingerprint: 76f4dfa5aa4a844ce312a7d1ad2e2133cc341ed5c87e0a876b3f1c8c199d645a
-    path: packages/@dvt/state-store/src/lifecycle/adapters/S3ArchiveObjectStore.ts
-    owningUnit: SYS-RUNTIME-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-RUNTIME
-    componentUnit: SYS-RUNTIME-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-RUNTIME
-      - SYS-RUNTIME-ROOT
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: AS
-    cqRails: runtime commands and queries
-    governance:
-      - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-26A4B90AC260
-    pathHash: 49ab03d6f6aa2237657937ea2cfefbd12ce6505f30feedb7fde35141df6b17f7
-    contentHash: 3c5e975528d54d648f32a6dd57bd2cb142bd1e98a715d15feed3d8990918d16b
-    governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
-    stateFingerprint: e410b81d1694d76f27f02ed4aa3d745c5f3f725377bd7f28f2c6c4a31587f289
-    path: packages/@dvt/state-store/src/lifecycle/archiveArtifacts.ts
-    owningUnit: SYS-RUNTIME-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-RUNTIME
-    componentUnit: SYS-RUNTIME-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-RUNTIME
-      - SYS-RUNTIME-ROOT
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: AS
-    cqRails: runtime commands and queries
-    governance:
-      - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-1ABEF387EC84
-    pathHash: a57b6ff0be41e29803395857bd5a1775255acf585e3c6420a01ee7f2c4797b91
-    contentHash: 940e39fd896a8dd6e13812ddb5c35a51e4dd46e66f379a389616a6054f0730d1
-    governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
-    stateFingerprint: 635b7ef9908abb0f31b93ad7876cfb8088dfbe8893334f6f0e1c75ad6e365cc2
-    path: packages/@dvt/state-store/src/lifecycle/archiveRuntime.ts
+    stateFingerprint: f51ef73f0da0ce68dee1c66aff99e8cedb3906362bf2efeaebedab69a6f3b10b
+    path: packages/@dvt/state-store/src/index.ts
     owningUnit: SYS-RUNTIME-ROOT
     rootUnit: SYS-DVT
     domainUnit: SYS-RUNTIME
@@ -6586,31 +6486,6 @@ files:
     governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
     stateFingerprint: 5bb56003cdeeac4353828166f7813e58db83e94e81f357a72058a0f3fc6f0753
     path: packages/@dvt/state-store/src/lifecycle/DeliveryBufferPurger.ts
-    owningUnit: SYS-RUNTIME-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-RUNTIME
-    componentUnit: SYS-RUNTIME-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-RUNTIME
-      - SYS-RUNTIME-ROOT
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: AS
-    cqRails: runtime commands and queries
-    governance:
-      - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-B111F801D42A
-    pathHash: ad68dfae3ba70258d7d9459e895ea794b710dd156c97416397c538a48502c8d4
-    contentHash: 878e3147d57d42fafbcd782ebd6dcc6a93c2435e852e4ebf075bdbdb2ff3fac8
-    governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
-    stateFingerprint: 262cb785b6ce21d05f2c58091b8fe6bcc8f05ef20de09ea0a68c5266ba6f0429
-    path: packages/@dvt/state-store/src/lifecycle/deliveryBufferRuntime.ts
     owningUnit: SYS-RUNTIME-ROOT
     rootUnit: SYS-DVT
     domainUnit: SYS-RUNTIME
@@ -6755,112 +6630,137 @@ files:
     cqRails: runtime commands and queries
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-810E53E67A14
+    pathHash: 18f80429a249a5dedbeaa312f8597b1b222313a35b2a5979bdc4a9628f0684e2
+    contentHash: d2f80b90f50be8cbfd28ab3a4ec0fb323c492eb86e46569fe812ecb9c4616357
+    governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
+    stateFingerprint: 712aba1a350cb5e4ce4cede9a5732614755d5dad4be2d13ca74ae7865fe6a802
+    path: packages/@dvt/state-store/src/lifecycle/adapters/FileSystemArchiveObjectStore.ts
+    owningUnit: SYS-RUNTIME-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-RUNTIME
+    componentUnit: SYS-RUNTIME-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-RUNTIME
+      - SYS-RUNTIME-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: AS
+    cqRails: runtime commands and queries
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-8AC6314EDE18
+    pathHash: ff93323a88bfcbeeab6826213b504ab4e5f7e5866d833112e7cf1c3dc5231a30
+    contentHash: d12d67964107bdf275e61a351ab8de05221b1557eed7769f56acf8a30dc16375
+    governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
+    stateFingerprint: 76f4dfa5aa4a844ce312a7d1ad2e2133cc341ed5c87e0a876b3f1c8c199d645a
+    path: packages/@dvt/state-store/src/lifecycle/adapters/S3ArchiveObjectStore.ts
+    owningUnit: SYS-RUNTIME-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-RUNTIME
+    componentUnit: SYS-RUNTIME-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-RUNTIME
+      - SYS-RUNTIME-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: AS
+    cqRails: runtime commands and queries
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-26A4B90AC260
+    pathHash: 49ab03d6f6aa2237657937ea2cfefbd12ce6505f30feedb7fde35141df6b17f7
+    contentHash: 3c5e975528d54d648f32a6dd57bd2cb142bd1e98a715d15feed3d8990918d16b
+    governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
+    stateFingerprint: e410b81d1694d76f27f02ed4aa3d745c5f3f725377bd7f28f2c6c4a31587f289
+    path: packages/@dvt/state-store/src/lifecycle/archiveArtifacts.ts
+    owningUnit: SYS-RUNTIME-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-RUNTIME
+    componentUnit: SYS-RUNTIME-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-RUNTIME
+      - SYS-RUNTIME-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: AS
+    cqRails: runtime commands and queries
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-1ABEF387EC84
+    pathHash: a57b6ff0be41e29803395857bd5a1775255acf585e3c6420a01ee7f2c4797b91
+    contentHash: 940e39fd896a8dd6e13812ddb5c35a51e4dd46e66f379a389616a6054f0730d1
+    governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
+    stateFingerprint: 635b7ef9908abb0f31b93ad7876cfb8088dfbe8893334f6f0e1c75ad6e365cc2
+    path: packages/@dvt/state-store/src/lifecycle/archiveRuntime.ts
+    owningUnit: SYS-RUNTIME-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-RUNTIME
+    componentUnit: SYS-RUNTIME-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-RUNTIME
+      - SYS-RUNTIME-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: AS
+    cqRails: runtime commands and queries
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-B111F801D42A
+    pathHash: ad68dfae3ba70258d7d9459e895ea794b710dd156c97416397c538a48502c8d4
+    contentHash: 878e3147d57d42fafbcd782ebd6dcc6a93c2435e852e4ebf075bdbdb2ff3fac8
+    governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
+    stateFingerprint: 262cb785b6ce21d05f2c58091b8fe6bcc8f05ef20de09ea0a68c5266ba6f0429
+    path: packages/@dvt/state-store/src/lifecycle/deliveryBufferRuntime.ts
+    owningUnit: SYS-RUNTIME-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-RUNTIME
+    componentUnit: SYS-RUNTIME-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-RUNTIME
+      - SYS-RUNTIME-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: AS
+    cqRails: runtime commands and queries
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-346F27185224
     pathHash: 030540b8789eee0fce20b0bc4f482d88005b97fc2e7bfa7f9944ca2ea060db4e
     contentHash: 5f09be1dbff051fc4855614e5bd70e5b52ce4c421d9397325b44d0fb4bc6b208
     governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
     stateFingerprint: 3fd738ebb1f0a30e7f435bf32c8fb4ab7fe0891119b05abde0178f89163b9a44
     path: packages/@dvt/state-store/src/types.ts
-    owningUnit: SYS-RUNTIME-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-RUNTIME
-    componentUnit: SYS-RUNTIME-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-RUNTIME
-      - SYS-RUNTIME-ROOT
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: AS
-    cqRails: runtime commands and queries
-    governance:
-      - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-1E3C3B251D55
-    pathHash: c407710caba60e85bea3069f2e0b06696711482e3c9f6e8cf49c991246858bd4
-    contentHash: c59eabd96ddd58bd8eb4dc1430c0412f15107669aae4ed207e4a816e26779cbf
-    governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
-    stateFingerprint: aa027a3924b47ef33a373aa0c9ecf8c1757b1cdb8f03d73bad97a50aa60bfcd4
-    path: packages/@dvt/state-store/test/archiveArtifacts.test.ts
-    owningUnit: SYS-RUNTIME-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-RUNTIME
-    componentUnit: SYS-RUNTIME-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-RUNTIME
-      - SYS-RUNTIME-ROOT
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: AS
-    cqRails: runtime commands and queries
-    governance:
-      - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-E41E0F8B937B
-    pathHash: a394fd3c8f3ecae472bb505b5626da2047c1c1a6639df2c64b74e9c070616e5a
-    contentHash: eca793bb8a3c271867bc0ac3f1327fe60db0d8bca845c02750756f185d8c6b1f
-    governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
-    stateFingerprint: 02631f66c4ae98ff451d82b65995e118496e7af319e46791c3e8640930564d7e
-    path: packages/@dvt/state-store/test/archiveLifecycle.test.ts
-    owningUnit: SYS-RUNTIME-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-RUNTIME
-    componentUnit: SYS-RUNTIME-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-RUNTIME
-      - SYS-RUNTIME-ROOT
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: AS
-    cqRails: runtime commands and queries
-    governance:
-      - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-C23FE08E0D36
-    pathHash: d9e4e523b49c158c23b45d7e3cb2c54f23f31392de94e53bc0ae2e56f64fd8cf
-    contentHash: 97fa22b7713227afd9cedcd08a2bbc7536ddf695ea3c4ea839e47d7878ba0324
-    governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
-    stateFingerprint: 5cfd834f3c9fa024e331431f53c5a8a9fee6d8e486cedc267b50dc013c13ee92
-    path: packages/@dvt/state-store/test/archiveRuntime.test.ts
-    owningUnit: SYS-RUNTIME-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-RUNTIME
-    componentUnit: SYS-RUNTIME-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-RUNTIME
-      - SYS-RUNTIME-ROOT
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: AS
-    cqRails: runtime commands and queries
-    governance:
-      - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-11FFA5754DF5
-    pathHash: 723f2b0ebfbf4340d7b939cab5ee329db7cbfb7bab30dd3d83f8665e6a6549ed
-    contentHash: f9e2beeb93355319208f94f8cb7246691c1b3f811359719e9b99f347e99829d9
-    governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
-    stateFingerprint: 2ead936e147b67cd0d7365804a9f43f91bf39c40726e48f033e6489835fd88a0
-    path: packages/@dvt/state-store/test/command-port.test.ts
     owningUnit: SYS-RUNTIME-ROOT
     rootUnit: SYS-DVT
     domainUnit: SYS-RUNTIME
@@ -7061,6 +6961,106 @@ files:
     governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
     stateFingerprint: 3871757cdcd3879a21dc73108a644d6b595a2cb4dde2b3e487aaec26b7d85239
     path: packages/@dvt/state-store/test/S3ArchiveObjectStore.test.ts
+    owningUnit: SYS-RUNTIME-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-RUNTIME
+    componentUnit: SYS-RUNTIME-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-RUNTIME
+      - SYS-RUNTIME-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: AS
+    cqRails: runtime commands and queries
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-1E3C3B251D55
+    pathHash: c407710caba60e85bea3069f2e0b06696711482e3c9f6e8cf49c991246858bd4
+    contentHash: c59eabd96ddd58bd8eb4dc1430c0412f15107669aae4ed207e4a816e26779cbf
+    governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
+    stateFingerprint: aa027a3924b47ef33a373aa0c9ecf8c1757b1cdb8f03d73bad97a50aa60bfcd4
+    path: packages/@dvt/state-store/test/archiveArtifacts.test.ts
+    owningUnit: SYS-RUNTIME-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-RUNTIME
+    componentUnit: SYS-RUNTIME-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-RUNTIME
+      - SYS-RUNTIME-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: AS
+    cqRails: runtime commands and queries
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-E41E0F8B937B
+    pathHash: a394fd3c8f3ecae472bb505b5626da2047c1c1a6639df2c64b74e9c070616e5a
+    contentHash: eca793bb8a3c271867bc0ac3f1327fe60db0d8bca845c02750756f185d8c6b1f
+    governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
+    stateFingerprint: 02631f66c4ae98ff451d82b65995e118496e7af319e46791c3e8640930564d7e
+    path: packages/@dvt/state-store/test/archiveLifecycle.test.ts
+    owningUnit: SYS-RUNTIME-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-RUNTIME
+    componentUnit: SYS-RUNTIME-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-RUNTIME
+      - SYS-RUNTIME-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: AS
+    cqRails: runtime commands and queries
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-C23FE08E0D36
+    pathHash: d9e4e523b49c158c23b45d7e3cb2c54f23f31392de94e53bc0ae2e56f64fd8cf
+    contentHash: 97fa22b7713227afd9cedcd08a2bbc7536ddf695ea3c4ea839e47d7878ba0324
+    governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
+    stateFingerprint: 5cfd834f3c9fa024e331431f53c5a8a9fee6d8e486cedc267b50dc013c13ee92
+    path: packages/@dvt/state-store/test/archiveRuntime.test.ts
+    owningUnit: SYS-RUNTIME-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-RUNTIME
+    componentUnit: SYS-RUNTIME-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-RUNTIME
+      - SYS-RUNTIME-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: AS
+    cqRails: runtime commands and queries
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-11FFA5754DF5
+    pathHash: 723f2b0ebfbf4340d7b939cab5ee329db7cbfb7bab30dd3d83f8665e6a6549ed
+    contentHash: f9e2beeb93355319208f94f8cb7246691c1b3f811359719e9b99f347e99829d9
+    governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
+    stateFingerprint: 2ead936e147b67cd0d7365804a9f43f91bf39c40726e48f033e6489835fd88a0
+    path: packages/@dvt/state-store/test/command-port.test.ts
     owningUnit: SYS-RUNTIME-ROOT
     rootUnit: SYS-DVT
     domainUnit: SYS-RUNTIME

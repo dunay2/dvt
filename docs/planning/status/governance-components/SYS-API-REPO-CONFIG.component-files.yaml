@@ -39,20 +39,6 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: apps/api/nixpacks.toml
-    fileId: F-5E334BA6055A
-    owningUnit: SYS-API-REPO-CONFIG
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/api/package.json
-    fileId: F-A4D2F934D368
-    owningUnit: SYS-API-REPO-CONFIG
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
   - path: apps/api/Procfile
     fileId: F-070EA4CF1E61
     owningUnit: SYS-API-REPO-CONFIG
@@ -62,6 +48,20 @@ files:
     isLegacy: false
   - path: apps/api/README.md
     fileId: F-80AA08DF329D
+    owningUnit: SYS-API-REPO-CONFIG
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/nixpacks.toml
+    fileId: F-5E334BA6055A
+    owningUnit: SYS-API-REPO-CONFIG
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/package.json
+    fileId: F-A4D2F934D368
     owningUnit: SYS-API-REPO-CONFIG
     unitStatus: coverage-required
     governanceState: coverage-required

@@ -172,13 +172,6 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: packages/@dvt/contracts/src/contracts/planner/index.ts
-    fileId: F-D9B12049DC82
-    owningUnit: SYS-CONTRACTS-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
   - path: packages/@dvt/contracts/src/contracts/planner/PlanAdmission.v1.ts
     fileId: F-57747982CFFF
     owningUnit: SYS-CONTRACTS-ROOT
@@ -228,27 +221,6 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: packages/@dvt/contracts/src/contracts/planner/PlannerInputEnvelopeV1.schema.json
-    fileId: F-9B2101A7C372
-    owningUnit: SYS-CONTRACTS-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: packages/@dvt/contracts/src/contracts/planner/PlannerPolicyClassSet.v2.schema.json
-    fileId: F-F4948F9A4E88
-    owningUnit: SYS-CONTRACTS-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: packages/@dvt/contracts/src/contracts/planner/PlannerPolicyVocabulary.v2.ts
-    fileId: F-A749956C3AC8
-    owningUnit: SYS-CONTRACTS-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
   - path: packages/@dvt/contracts/src/contracts/planner/PlanRecord.v1.schema.json
     fileId: F-B55AA9E4E7B7
     owningUnit: SYS-CONTRACTS-ROOT
@@ -272,6 +244,27 @@ files:
     isLegacy: false
   - path: packages/@dvt/contracts/src/contracts/planner/PlanVersion.v1.ts
     fileId: F-FC60E3AB15E5
+    owningUnit: SYS-CONTRACTS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/contracts/src/contracts/planner/PlannerInputEnvelopeV1.schema.json
+    fileId: F-9B2101A7C372
+    owningUnit: SYS-CONTRACTS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/contracts/src/contracts/planner/PlannerPolicyClassSet.v2.schema.json
+    fileId: F-F4948F9A4E88
+    owningUnit: SYS-CONTRACTS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/contracts/src/contracts/planner/PlannerPolicyVocabulary.v2.ts
+    fileId: F-A749956C3AC8
     owningUnit: SYS-CONTRACTS-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -349,6 +342,13 @@ files:
     isLegacy: false
   - path: packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphDraft.v1.ts
     fileId: F-EF96FE25D1B0
+    owningUnit: SYS-CONTRACTS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/contracts/src/contracts/planner/index.ts
+    fileId: F-D9B12049DC82
     owningUnit: SYS-CONTRACTS-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required

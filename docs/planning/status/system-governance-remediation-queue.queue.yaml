@@ -6,12 +6,12 @@ generatedFrom:
   - docs/planning/status/system-governance-component-file-map.components.yaml
   - docs/planning/status/system-governance-document-unit-map.docs.yaml
 totals:
-  tasks: 44
-  p0: 4
-  p1: 16
+  tasks: 43
+  p0: 3
+  p1: 15
   p2: 3
-  p3: 21
-  driftFiles: 44
+  p3: 22
+  driftFiles: 41
   componentsRequiringSubdivision: 19
 byType:
   - name: component-subdivision
@@ -21,16 +21,16 @@ byType:
   - name: doc-alignment
     count: 12
   - name: drift-removal
-    count: 4
+    count: 3
 byPriority:
   - name: P0
-    count: 4
+    count: 3
   - name: P1
-    count: 16
+    count: 15
   - name: P2
     count: 3
   - name: P3
-    count: 21
+    count: 22
 tasks:
   - id: GRQ-DRIFT_REMOVAL-SYS-PLANSTORE-API-COMPOSITION
     type: drift-removal
@@ -207,34 +207,6 @@ tasks:
         status: drift
       - path: packages/@dvt/engine/test/security/planRefPolicy.test.ts
         fileId: F-F36BE1E295E4
-        status: drift
-    documents: []
-    expectedValidation:
-      - pnpm docs:governance:remediation-queue:check
-      - pnpm docs:governance:coverage-report:check
-      - pnpm docs:governance:changed-files:check
-  - id: GRQ-DRIFT_REMOVAL-SYS-PLANSTORE-CONTRACTS
-    type: drift-removal
-    priority: P0
-    componentUnit: SYS-PLANSTORE-CONTRACTS
-    componentFileMap: docs/planning/status/governance-components/SYS-PLANSTORE-CONTRACTS.component-files.yaml
-    rootUnit: SYS-DVT
-    domainUnit: SYS-PLANSTORE
-    dddOwner: PORT
-    cqRails: PS-Q01, PS-C01
-    blocking: changed-files gate blocks touched drift files
-    reason: Files are marked drift in the governed file index.
-    fileCount: 3
-    documentCount: 0
-    files:
-      - path: docs/contracts/planner/PlanStoreRecords.v1.md
-        fileId: F-3AA698AF1593
-        status: drift
-      - path: packages/@dvt/artifacts/src/ports/IPlanStoreReader.ts
-        fileId: F-41A2D9667B0D
-        status: drift
-      - path: packages/@dvt/artifacts/src/ports/IPlanStoreWriter.ts
-        fileId: F-6CF12F62ED37
         status: drift
     documents: []
     expectedValidation:
@@ -440,25 +412,6 @@ tasks:
     domainUnit: SYS-PLANSTORE
     dddOwner: AS
     cqRails: PS-Q03, PS-C02
-    blocking: reporting-only
-    reason: Component is known but still too broad for source-level governance.
-    fileCount: 0
-    documentCount: 0
-    files: []
-    documents: []
-    expectedValidation:
-      - pnpm docs:governance:remediation-queue:check
-      - pnpm docs:governance:coverage-report:check
-      - pnpm docs:governance:file-component-index:check
-  - id: GRQ-COMPONENT_SUBDIVISION-SYS-PLANSTORE-CONTRACTS
-    type: component-subdivision
-    priority: P1
-    componentUnit: SYS-PLANSTORE-CONTRACTS
-    componentFileMap: docs/planning/status/governance-components/SYS-PLANSTORE-CONTRACTS.component-files.yaml
-    rootUnit: SYS-DVT
-    domainUnit: SYS-PLANSTORE
-    dddOwner: PORT
-    cqRails: PS-Q01, PS-C01
     blocking: reporting-only
     reason: Component is known but still too broad for source-level governance.
     fileCount: 0
@@ -1498,6 +1451,25 @@ tasks:
     domainUnit: SYS-PLANSTORE
     dddOwner: PORT
     cqRails: PS-Q02
+    blocking: reporting-only
+    reason: Component is known but still too broad for source-level governance.
+    fileCount: 0
+    documentCount: 0
+    files: []
+    documents: []
+    expectedValidation:
+      - pnpm docs:governance:remediation-queue:check
+      - pnpm docs:governance:coverage-report:check
+      - pnpm docs:governance:file-component-index:check
+  - id: GRQ-COMPONENT_SUBDIVISION-SYS-PLANSTORE-CONTRACTS
+    type: component-subdivision
+    priority: P3
+    componentUnit: SYS-PLANSTORE-CONTRACTS
+    componentFileMap: docs/planning/status/governance-components/SYS-PLANSTORE-CONTRACTS.component-files.yaml
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    dddOwner: PORT
+    cqRails: PS-Q01, PS-C01
     blocking: reporting-only
     reason: Component is known but still too broad for source-level governance.
     fileCount: 0

@@ -2,33 +2,33 @@ version: 1
 componentUnit: SYS-PLANSTORE-CONTRACTS
 rootUnit: SYS-DVT
 domainUnit: SYS-PLANSTORE
-status: drift
-governanceState: drift
+status: review
+governanceState: review
 dddOwner: PORT
 cqRails: PS-Q01, PS-C01
 childrenRequired: true
 fileCount: 3
-driftFileCount: 3
+driftFileCount: 0
 legacyFileCount: 0
 files:
   - path: docs/contracts/planner/PlanStoreRecords.v1.md
     fileId: F-3AA698AF1593
     owningUnit: SYS-PLANSTORE-CONTRACTS
-    unitStatus: drift
-    governanceState: drift
-    isDrift: true
+    unitStatus: review
+    governanceState: review
+    isDrift: false
     isLegacy: false
   - path: packages/@dvt/artifacts/src/ports/IPlanStoreReader.ts
     fileId: F-41A2D9667B0D
     owningUnit: SYS-PLANSTORE-CONTRACTS
-    unitStatus: drift
-    governanceState: drift
-    isDrift: true
+    unitStatus: review
+    governanceState: review
+    isDrift: false
     isLegacy: false
   - path: packages/@dvt/artifacts/src/ports/IPlanStoreWriter.ts
     fileId: F-6CF12F62ED37
     owningUnit: SYS-PLANSTORE-CONTRACTS
-    unitStatus: drift
-    governanceState: drift
-    isDrift: true
+    unitStatus: review
+    governanceState: review
+    isDrift: false
     isLegacy: false

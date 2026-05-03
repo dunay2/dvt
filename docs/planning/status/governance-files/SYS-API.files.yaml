@@ -112,6 +112,60 @@ files:
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
       - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-070EA4CF1E61
+    pathHash: 4ff753fe8b56a3fb33a7c967ebe8616cb59c48098962547ce2765b0624b1efbe
+    contentHash: 19b36046e4bff17f06bf72d11a26713a72b9b771482288b1b5f9c96512576c8e
+    governanceHash: a2b44182281a0cb85047c82c32eb5b7971f481f8a2fe031dd88ab4bf0a449af3
+    stateFingerprint: 5ef9d1f3d685d3a6df9ca7774b5c377d26584ace1108a0ac682112c624e5f0ea
+    path: apps/api/Procfile
+    owningUnit: SYS-API-REPO-CONFIG
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-API-REPO-CONFIG
+    unitPath:
+      - SYS-DVT
+      - SYS-API
+      - SYS-API-ROOT
+      - SYS-API-REPO-CONFIG
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - API app configuration
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-80AA08DF329D
+    pathHash: f31c38bd147e62b7aa7626a55473f43274f02778706a2572a6553e86a94041ef
+    contentHash: bf0c051098f0a49bad31781996ff157e8fbba8e388a92372af33c27059fc9c6a
+    governanceHash: a2b44182281a0cb85047c82c32eb5b7971f481f8a2fe031dd88ab4bf0a449af3
+    stateFingerprint: 2bcec856f89600b0b16c159939af7ec4436500e23433b17efe3d68397131e225
+    path: apps/api/README.md
+    owningUnit: SYS-API-REPO-CONFIG
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-API-REPO-CONFIG
+    unitPath:
+      - SYS-DVT
+      - SYS-API
+      - SYS-API-ROOT
+      - SYS-API-REPO-CONFIG
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - API app configuration
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+      - docs/guides/testing-and-ci-capabilities.md
   - fileId: F-5897F733DC09
     pathHash: 702ca925305aef68e42dd144c6d7039a9c5ee10bd24933bcf6254d6fb9921b58
     contentHash: d38f9d8fcbad8beab7b218ebd8d937cf50e4e099e7fbda91968f6861f3746b43
@@ -544,60 +598,6 @@ files:
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
       - docs/guides/testing-and-ci-capabilities.md
-  - fileId: F-070EA4CF1E61
-    pathHash: 4ff753fe8b56a3fb33a7c967ebe8616cb59c48098962547ce2765b0624b1efbe
-    contentHash: 19b36046e4bff17f06bf72d11a26713a72b9b771482288b1b5f9c96512576c8e
-    governanceHash: a2b44182281a0cb85047c82c32eb5b7971f481f8a2fe031dd88ab4bf0a449af3
-    stateFingerprint: 5ef9d1f3d685d3a6df9ca7774b5c377d26584ace1108a0ac682112c624e5f0ea
-    path: apps/api/Procfile
-    owningUnit: SYS-API-REPO-CONFIG
-    rootUnit: SYS-DVT
-    domainUnit: SYS-DVT
-    componentUnit: SYS-API-REPO-CONFIG
-    unitPath:
-      - SYS-DVT
-      - SYS-API
-      - SYS-API-ROOT
-      - SYS-API-REPO-CONFIG
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: INFRA
-    cqRails: none - API app configuration
-    governance:
-      - docs/planning/status/system-operations-inventory-20260501.md
-      - docs/guides/testing-and-ci-capabilities.md
-  - fileId: F-80AA08DF329D
-    pathHash: f31c38bd147e62b7aa7626a55473f43274f02778706a2572a6553e86a94041ef
-    contentHash: bf0c051098f0a49bad31781996ff157e8fbba8e388a92372af33c27059fc9c6a
-    governanceHash: a2b44182281a0cb85047c82c32eb5b7971f481f8a2fe031dd88ab4bf0a449af3
-    stateFingerprint: 2bcec856f89600b0b16c159939af7ec4436500e23433b17efe3d68397131e225
-    path: apps/api/README.md
-    owningUnit: SYS-API-REPO-CONFIG
-    rootUnit: SYS-DVT
-    domainUnit: SYS-DVT
-    componentUnit: SYS-API-REPO-CONFIG
-    unitPath:
-      - SYS-DVT
-      - SYS-API
-      - SYS-API-ROOT
-      - SYS-API-REPO-CONFIG
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: INFRA
-    cqRails: none - API app configuration
-    governance:
-      - docs/planning/status/system-operations-inventory-20260501.md
-      - docs/guides/testing-and-ci-capabilities.md
   - fileId: F-D41266903B65
     pathHash: 715530118d41a7fd2f232df7acbdde7445f5e9318f4c81369d116f93759c4546
     contentHash: 903594a592483f78159f2af0f9773e54b24961899f54296f70b7d8b03891fd26
@@ -626,99 +626,12 @@ files:
       - >-
         docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
       - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-209CDC707539
-    pathHash: cbc1cc830a217616c2544b068f0509d5d1f06243b3b090472fc555e92ee4389b
-    contentHash: df56428e75ddf657eda3cca65c6bfd6a84b6ead012b9ba1e4c94cdc721b7c96b
-    governanceHash: 1387389fa277ea5c65a5742be079571cbccb7468809328bf23814e0c5ec2da3b
-    stateFingerprint: ef9818eda0d5fb7668510c27d63e3209bd969a8e231c9fc247b6414783146946
-    path: apps/api/src/application/ports/accessDecision.ts
-    owningUnit: SYS-API-APPLICATION-PORTS
-    rootUnit: SYS-DVT
-    domainUnit: SYS-DVT
-    componentUnit: SYS-API-APPLICATION-PORTS
-    unitPath:
-      - SYS-DVT
-      - SYS-API
-      - SYS-API-ROOT
-      - SYS-API-APPLICATION-PORTS
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: PORT
-    cqRails: API application command/query ports
-    governance:
-      - >-
-        docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
-      - docs/architecture/reference-architecture.md
-      - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-D39328F6F6C3
     pathHash: ea61a591c0b8ab3cf363a22073d3a84c2713cda9355bd14f1c96a00b6324a36b
     contentHash: e104f973b5023722440486524e1ad43602f39374168bf139313eb293c2f18846
     governanceHash: 1387389fa277ea5c65a5742be079571cbccb7468809328bf23814e0c5ec2da3b
     stateFingerprint: 2acc909342a43fe199ccdf7b4e7fff10eb2b6f5703214876eef3656222959a97
     path: apps/api/src/application/ports/AdmissionTelemetry.ts
-    owningUnit: SYS-API-APPLICATION-PORTS
-    rootUnit: SYS-DVT
-    domainUnit: SYS-DVT
-    componentUnit: SYS-API-APPLICATION-PORTS
-    unitPath:
-      - SYS-DVT
-      - SYS-API
-      - SYS-API-ROOT
-      - SYS-API-APPLICATION-PORTS
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: PORT
-    cqRails: API application command/query ports
-    governance:
-      - >-
-        docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
-      - docs/architecture/reference-architecture.md
-      - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-FD9E6AAC5601
-    pathHash: fac2a7af51c1ba5ec55dfaa8b85cc817398d6fb0ee7979cd3cc96381dc19a77b
-    contentHash: 59e38b70de3a8463a5318c48d50eeb95e88fafd553b377632bdfd76b93d5e459
-    governanceHash: 1387389fa277ea5c65a5742be079571cbccb7468809328bf23814e0c5ec2da3b
-    stateFingerprint: ce100a0fb7bd9f70bc03bc6623008909725da0580a42114dd1acf8e089f1f081
-    path: apps/api/src/application/ports/auth.ts
-    owningUnit: SYS-API-APPLICATION-PORTS
-    rootUnit: SYS-DVT
-    domainUnit: SYS-DVT
-    componentUnit: SYS-API-APPLICATION-PORTS
-    unitPath:
-      - SYS-DVT
-      - SYS-API
-      - SYS-API-ROOT
-      - SYS-API-APPLICATION-PORTS
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: PORT
-    cqRails: API application command/query ports
-    governance:
-      - >-
-        docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
-      - docs/architecture/reference-architecture.md
-      - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-BC982286150A
-    pathHash: a708ee9e19ec49a323e58a2fd336e6dd53d5d91931e837285b356ef4735f4be2
-    contentHash: 4026d351786c7248a14e999ec1197ac894452e94530cb4b95b9641d015a773e7
-    governanceHash: 1387389fa277ea5c65a5742be079571cbccb7468809328bf23814e0c5ec2da3b
-    stateFingerprint: 858396c5f50dab623eb55f5a2240ca314825328586778f02b2e301365089989f
-    path: apps/api/src/application/ports/authContract.ts
     owningUnit: SYS-API-APPLICATION-PORTS
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
@@ -916,6 +829,122 @@ files:
         docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
       - docs/architecture/reference-architecture.md
       - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-AF5408280599
+    pathHash: 24620197293c5fe7ca05985e8b92189fa406d2684e048711cef5b944fab67600
+    contentHash: 3b913d00e3ea9554361da7108d5d8d6d2f2dbd9d4642de75b47b56e097721e53
+    governanceHash: 1387389fa277ea5c65a5742be079571cbccb7468809328bf23814e0c5ec2da3b
+    stateFingerprint: 47b65105014cfa460523db3107735ec767bf42391ce8fe03f8f59bb005485cdc
+    path: apps/api/src/application/ports/StartRunSlaTelemetry.ts
+    owningUnit: SYS-API-APPLICATION-PORTS
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-API-APPLICATION-PORTS
+    unitPath:
+      - SYS-DVT
+      - SYS-API
+      - SYS-API-ROOT
+      - SYS-API-APPLICATION-PORTS
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: PORT
+    cqRails: API application command/query ports
+    governance:
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
+      - docs/architecture/reference-architecture.md
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-209CDC707539
+    pathHash: cbc1cc830a217616c2544b068f0509d5d1f06243b3b090472fc555e92ee4389b
+    contentHash: df56428e75ddf657eda3cca65c6bfd6a84b6ead012b9ba1e4c94cdc721b7c96b
+    governanceHash: 1387389fa277ea5c65a5742be079571cbccb7468809328bf23814e0c5ec2da3b
+    stateFingerprint: ef9818eda0d5fb7668510c27d63e3209bd969a8e231c9fc247b6414783146946
+    path: apps/api/src/application/ports/accessDecision.ts
+    owningUnit: SYS-API-APPLICATION-PORTS
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-API-APPLICATION-PORTS
+    unitPath:
+      - SYS-DVT
+      - SYS-API
+      - SYS-API-ROOT
+      - SYS-API-APPLICATION-PORTS
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: PORT
+    cqRails: API application command/query ports
+    governance:
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
+      - docs/architecture/reference-architecture.md
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-FD9E6AAC5601
+    pathHash: fac2a7af51c1ba5ec55dfaa8b85cc817398d6fb0ee7979cd3cc96381dc19a77b
+    contentHash: 59e38b70de3a8463a5318c48d50eeb95e88fafd553b377632bdfd76b93d5e459
+    governanceHash: 1387389fa277ea5c65a5742be079571cbccb7468809328bf23814e0c5ec2da3b
+    stateFingerprint: ce100a0fb7bd9f70bc03bc6623008909725da0580a42114dd1acf8e089f1f081
+    path: apps/api/src/application/ports/auth.ts
+    owningUnit: SYS-API-APPLICATION-PORTS
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-API-APPLICATION-PORTS
+    unitPath:
+      - SYS-DVT
+      - SYS-API
+      - SYS-API-ROOT
+      - SYS-API-APPLICATION-PORTS
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: PORT
+    cqRails: API application command/query ports
+    governance:
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
+      - docs/architecture/reference-architecture.md
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-BC982286150A
+    pathHash: a708ee9e19ec49a323e58a2fd336e6dd53d5d91931e837285b356ef4735f4be2
+    contentHash: 4026d351786c7248a14e999ec1197ac894452e94530cb4b95b9641d015a773e7
+    governanceHash: 1387389fa277ea5c65a5742be079571cbccb7468809328bf23814e0c5ec2da3b
+    stateFingerprint: 858396c5f50dab623eb55f5a2240ca314825328586778f02b2e301365089989f
+    path: apps/api/src/application/ports/authContract.ts
+    owningUnit: SYS-API-APPLICATION-PORTS
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-API-APPLICATION-PORTS
+    unitPath:
+      - SYS-DVT
+      - SYS-API
+      - SYS-API-ROOT
+      - SYS-API-APPLICATION-PORTS
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: PORT
+    cqRails: API application command/query ports
+    governance:
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
+      - docs/architecture/reference-architecture.md
+      - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-A7BFE1F2C8E9
     pathHash: 55e34c30af931706c69ebf2df13f2f9917137b666052fadf70cfc68108a811df
     contentHash: 4f6c378b4119727865ccc80e8971aaef385861d23d7be09d6d472bef97afeee9
@@ -1003,35 +1032,6 @@ files:
         docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
       - docs/architecture/reference-architecture.md
       - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-AF5408280599
-    pathHash: 24620197293c5fe7ca05985e8b92189fa406d2684e048711cef5b944fab67600
-    contentHash: 3b913d00e3ea9554361da7108d5d8d6d2f2dbd9d4642de75b47b56e097721e53
-    governanceHash: 1387389fa277ea5c65a5742be079571cbccb7468809328bf23814e0c5ec2da3b
-    stateFingerprint: 47b65105014cfa460523db3107735ec767bf42391ce8fe03f8f59bb005485cdc
-    path: apps/api/src/application/ports/StartRunSlaTelemetry.ts
-    owningUnit: SYS-API-APPLICATION-PORTS
-    rootUnit: SYS-DVT
-    domainUnit: SYS-DVT
-    componentUnit: SYS-API-APPLICATION-PORTS
-    unitPath:
-      - SYS-DVT
-      - SYS-API
-      - SYS-API-ROOT
-      - SYS-API-APPLICATION-PORTS
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: PORT
-    cqRails: API application command/query ports
-    governance:
-      - >-
-        docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
-      - docs/architecture/reference-architecture.md
-      - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-01D7171B2B40
     pathHash: 0ad042c0ae12f049aea94dc21685dc548a0385115f5723b75f8ec681549da7bb
     contentHash: 1ca7cfcbfe203282b8932640f5af2b016c23256da8e33d0fd7a45af908c9337c
@@ -1089,6 +1089,209 @@ files:
       - >-
         docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
       - docs/architecture/reference-architecture.md
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-E00B6986203E
+    pathHash: 99c06584737bbc86e5d96b1d791c68faf6563e3a0abca26edb6b6fb7e4c3f234
+    contentHash: a4193c366434f559848a15064fba1417f6348867303ced182fe1c0ad937f892e
+    governanceHash: eefac6964faf71a07c9bb8e3cc92576c0d9dc7536ec47dc70520c4ca80c6c378
+    stateFingerprint: 045ab286062e218a6a72849caad2c3724101ee91c4d0b5a9fefcaabc3e16fde9
+    path: apps/api/src/application/services/BackpressureAwareStartRunUseCase.ts
+    owningUnit: SYS-API-APPLICATION-SERVICES
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-API-APPLICATION-SERVICES
+    unitPath:
+      - SYS-DVT
+      - SYS-API
+      - SYS-API-ROOT
+      - SYS-API-APPLICATION-SERVICES
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: AS
+    cqRails: API application commands and queries
+    governance:
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
+      - docs/architecture/command-query-rail-governance.md
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-E2C586B2F600
+    pathHash: 3cb9d96d1bb0227d3177b50eaa30d438eb0098ccdabb900087af6355cf7a143c
+    contentHash: 8b12f762516b543d2911d8d51b5bfcc82323e693f89a29b80fb3f7fe61605836
+    governanceHash: eefac6964faf71a07c9bb8e3cc92576c0d9dc7536ec47dc70520c4ca80c6c378
+    stateFingerprint: 33c3455e965d9607a570df78bf5c9b258cd84eae5e2ec8ef319d111d9bf9dd3f
+    path: apps/api/src/application/services/CompilePlanUseCase.ts
+    owningUnit: SYS-API-APPLICATION-SERVICES
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-API-APPLICATION-SERVICES
+    unitPath:
+      - SYS-DVT
+      - SYS-API
+      - SYS-API-ROOT
+      - SYS-API-APPLICATION-SERVICES
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: AS
+    cqRails: API application commands and queries
+    governance:
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
+      - docs/architecture/command-query-rail-governance.md
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-DA79FFADC8AB
+    pathHash: 08edc5f97660ee8c7c0d3cf74d511723868ffa005d37cf869bf98760ff787f72
+    contentHash: 4d914b3f5094fbc23739b11f0a970c0550e9a3a7964ab8c94486990f9519c2a3
+    governanceHash: eefac6964faf71a07c9bb8e3cc92576c0d9dc7536ec47dc70520c4ca80c6c378
+    stateFingerprint: b5c06e7036538c69347dde13daa7b254bf87efd23982d90f360551491fb78748
+    path: apps/api/src/application/services/ImportPlanUseCase.ts
+    owningUnit: SYS-API-APPLICATION-SERVICES
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-API-APPLICATION-SERVICES
+    unitPath:
+      - SYS-DVT
+      - SYS-API
+      - SYS-API-ROOT
+      - SYS-API-APPLICATION-SERVICES
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: AS
+    cqRails: API application commands and queries
+    governance:
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
+      - docs/architecture/command-query-rail-governance.md
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-BF5DA500A822
+    pathHash: cefeb6a36fe50603e709b076cddfda1f3ae6b13b547c47eb560307ddbfe15960
+    contentHash: 89f0df65ad96ef47b36514599188d9f3e3f236114ad02889b20b01958eac957a
+    governanceHash: eefac6964faf71a07c9bb8e3cc92576c0d9dc7536ec47dc70520c4ca80c6c378
+    stateFingerprint: 48c38446995f5eca3664954970f53baffab026c88f786aca3330c071f3898a2b
+    path: apps/api/src/application/services/NoopAdmissionTelemetry.ts
+    owningUnit: SYS-API-APPLICATION-SERVICES
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-API-APPLICATION-SERVICES
+    unitPath:
+      - SYS-DVT
+      - SYS-API
+      - SYS-API-ROOT
+      - SYS-API-APPLICATION-SERVICES
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: AS
+    cqRails: API application commands and queries
+    governance:
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
+      - docs/architecture/command-query-rail-governance.md
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-BA3EBF1F9A5C
+    pathHash: 14bd6273f1de8b132c9397c63638ce0572d2629dd08d9a6651110cde68f7e02c
+    contentHash: 5d747e693b302c490a95090a0263d14a0d3601ad469b16b29b2a20bf9c6bac0e
+    governanceHash: eefac6964faf71a07c9bb8e3cc92576c0d9dc7536ec47dc70520c4ca80c6c378
+    stateFingerprint: 70c8cfb8dd5efbb3a021350aa6fb13699c88b863ae94c6e5a76cfaa8004eb887
+    path: apps/api/src/application/services/NoopDuplicateRunProbe.ts
+    owningUnit: SYS-API-APPLICATION-SERVICES
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-API-APPLICATION-SERVICES
+    unitPath:
+      - SYS-DVT
+      - SYS-API
+      - SYS-API-ROOT
+      - SYS-API-APPLICATION-SERVICES
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: AS
+    cqRails: API application commands and queries
+    governance:
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
+      - docs/architecture/command-query-rail-governance.md
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-E41C46B9FDC2
+    pathHash: d2862b118e43c1777eb45ec59506ee70c7fb8d8ea25fe87f030ee4bf02be5101
+    contentHash: 6854e0da9c0dc611dfe37f4b41b59eb3a30fb9e55880687acb504bc10350235a
+    governanceHash: eefac6964faf71a07c9bb8e3cc92576c0d9dc7536ec47dc70520c4ca80c6c378
+    stateFingerprint: f96f2bfe43b5b25ceb0ddee3d06b7bd1b2688fb61bc0b4415149e8e0696dc1a8
+    path: apps/api/src/application/services/PlannerBackedStartRunUseCase.ts
+    owningUnit: SYS-API-APPLICATION-SERVICES
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-API-APPLICATION-SERVICES
+    unitPath:
+      - SYS-DVT
+      - SYS-API
+      - SYS-API-ROOT
+      - SYS-API-APPLICATION-SERVICES
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: AS
+    cqRails: API application commands and queries
+    governance:
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
+      - docs/architecture/command-query-rail-governance.md
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-C4D3E4E88B24
+    pathHash: 954c0b59b9d940477058a93c0de2f9e5001bbe9da780eb610bc3a6fe4f0f94ab
+    contentHash: 09faec2cf8125567cc1bb7fd514a13d2aa8c315a417a87212c2cf7b37d9c0f68
+    governanceHash: eefac6964faf71a07c9bb8e3cc92576c0d9dc7536ec47dc70520c4ca80c6c378
+    stateFingerprint: eaafc07d1bb35442e06356c19b1851a1a8873db94f8dd80e3d11e7def0560f4e
+    path: apps/api/src/application/services/PreviewPlanUseCase.ts
+    owningUnit: SYS-API-APPLICATION-SERVICES
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-API-APPLICATION-SERVICES
+    unitPath:
+      - SYS-DVT
+      - SYS-API
+      - SYS-API-ROOT
+      - SYS-API-APPLICATION-SERVICES
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: AS
+    cqRails: API application commands and queries
+    governance:
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
+      - docs/architecture/command-query-rail-governance.md
       - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-CE70D31194AD
     pathHash: c620541fd5d85d13859e5ce28ef42530f7d717405b683bfa04f75ba3d1f6f2cf
@@ -1148,70 +1351,12 @@ files:
         docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
       - docs/architecture/command-query-rail-governance.md
       - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-E00B6986203E
-    pathHash: 99c06584737bbc86e5d96b1d791c68faf6563e3a0abca26edb6b6fb7e4c3f234
-    contentHash: a4193c366434f559848a15064fba1417f6348867303ced182fe1c0ad937f892e
-    governanceHash: eefac6964faf71a07c9bb8e3cc92576c0d9dc7536ec47dc70520c4ca80c6c378
-    stateFingerprint: 045ab286062e218a6a72849caad2c3724101ee91c4d0b5a9fefcaabc3e16fde9
-    path: apps/api/src/application/services/BackpressureAwareStartRunUseCase.ts
-    owningUnit: SYS-API-APPLICATION-SERVICES
-    rootUnit: SYS-DVT
-    domainUnit: SYS-DVT
-    componentUnit: SYS-API-APPLICATION-SERVICES
-    unitPath:
-      - SYS-DVT
-      - SYS-API
-      - SYS-API-ROOT
-      - SYS-API-APPLICATION-SERVICES
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: AS
-    cqRails: API application commands and queries
-    governance:
-      - >-
-        docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
-      - docs/architecture/command-query-rail-governance.md
-      - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-56A08741D194
     pathHash: c6ae5f31d46152a81998afce13a1fe6383b6ba07a3574d5838eb584f05cc3a5f
     contentHash: 007cd418e2fb483931feb2d566ba847fe78feb3b75856162de5b6a3ddd57d39a
     governanceHash: eefac6964faf71a07c9bb8e3cc92576c0d9dc7536ec47dc70520c4ca80c6c378
     stateFingerprint: 071a35f4f348930e63d50f1e6fef81bb1ba2cb82d30ba27c3b0cb0d5ed56b97f
     path: apps/api/src/application/services/cancelRunUseCase.ts
-    owningUnit: SYS-API-APPLICATION-SERVICES
-    rootUnit: SYS-DVT
-    domainUnit: SYS-DVT
-    componentUnit: SYS-API-APPLICATION-SERVICES
-    unitPath:
-      - SYS-DVT
-      - SYS-API
-      - SYS-API-ROOT
-      - SYS-API-APPLICATION-SERVICES
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: AS
-    cqRails: API application commands and queries
-    governance:
-      - >-
-        docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
-      - docs/architecture/command-query-rail-governance.md
-      - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-E2C586B2F600
-    pathHash: 3cb9d96d1bb0227d3177b50eaa30d438eb0098ccdabb900087af6355cf7a143c
-    contentHash: 8b12f762516b543d2911d8d51b5bfcc82323e693f89a29b80fb3f7fe61605836
-    governanceHash: eefac6964faf71a07c9bb8e3cc92576c0d9dc7536ec47dc70520c4ca80c6c378
-    stateFingerprint: 33c3455e965d9607a570df78bf5c9b258cd84eae5e2ec8ef319d111d9bf9dd3f
-    path: apps/api/src/application/services/CompilePlanUseCase.ts
     owningUnit: SYS-API-APPLICATION-SERVICES
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
@@ -1380,99 +1525,12 @@ files:
         docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
       - docs/architecture/command-query-rail-governance.md
       - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-DA79FFADC8AB
-    pathHash: 08edc5f97660ee8c7c0d3cf74d511723868ffa005d37cf869bf98760ff787f72
-    contentHash: 4d914b3f5094fbc23739b11f0a970c0550e9a3a7964ab8c94486990f9519c2a3
-    governanceHash: eefac6964faf71a07c9bb8e3cc92576c0d9dc7536ec47dc70520c4ca80c6c378
-    stateFingerprint: b5c06e7036538c69347dde13daa7b254bf87efd23982d90f360551491fb78748
-    path: apps/api/src/application/services/ImportPlanUseCase.ts
-    owningUnit: SYS-API-APPLICATION-SERVICES
-    rootUnit: SYS-DVT
-    domainUnit: SYS-DVT
-    componentUnit: SYS-API-APPLICATION-SERVICES
-    unitPath:
-      - SYS-DVT
-      - SYS-API
-      - SYS-API-ROOT
-      - SYS-API-APPLICATION-SERVICES
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: AS
-    cqRails: API application commands and queries
-    governance:
-      - >-
-        docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
-      - docs/architecture/command-query-rail-governance.md
-      - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-3ADA6E1C5ECA
     pathHash: d5f78c777a5f9c9023d3a483fe85a3c7f45cbf87d5862964b8123e7fe4825712
     contentHash: 0769bf4f289189917e701858504bddd48b35446202b9f0daa63fada7f6f4cbd6
     governanceHash: eefac6964faf71a07c9bb8e3cc92576c0d9dc7536ec47dc70520c4ca80c6c378
     stateFingerprint: ac3f8365547ad62fa3abb539bc17a41a9ad4888a346564f5816d511e913c5f56
     path: apps/api/src/application/services/listRunsUseCase.ts
-    owningUnit: SYS-API-APPLICATION-SERVICES
-    rootUnit: SYS-DVT
-    domainUnit: SYS-DVT
-    componentUnit: SYS-API-APPLICATION-SERVICES
-    unitPath:
-      - SYS-DVT
-      - SYS-API
-      - SYS-API-ROOT
-      - SYS-API-APPLICATION-SERVICES
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: AS
-    cqRails: API application commands and queries
-    governance:
-      - >-
-        docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
-      - docs/architecture/command-query-rail-governance.md
-      - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-BF5DA500A822
-    pathHash: cefeb6a36fe50603e709b076cddfda1f3ae6b13b547c47eb560307ddbfe15960
-    contentHash: 89f0df65ad96ef47b36514599188d9f3e3f236114ad02889b20b01958eac957a
-    governanceHash: eefac6964faf71a07c9bb8e3cc92576c0d9dc7536ec47dc70520c4ca80c6c378
-    stateFingerprint: 48c38446995f5eca3664954970f53baffab026c88f786aca3330c071f3898a2b
-    path: apps/api/src/application/services/NoopAdmissionTelemetry.ts
-    owningUnit: SYS-API-APPLICATION-SERVICES
-    rootUnit: SYS-DVT
-    domainUnit: SYS-DVT
-    componentUnit: SYS-API-APPLICATION-SERVICES
-    unitPath:
-      - SYS-DVT
-      - SYS-API
-      - SYS-API-ROOT
-      - SYS-API-APPLICATION-SERVICES
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: AS
-    cqRails: API application commands and queries
-    governance:
-      - >-
-        docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
-      - docs/architecture/command-query-rail-governance.md
-      - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-BA3EBF1F9A5C
-    pathHash: 14bd6273f1de8b132c9397c63638ce0572d2629dd08d9a6651110cde68f7e02c
-    contentHash: 5d747e693b302c490a95090a0263d14a0d3601ad469b16b29b2a20bf9c6bac0e
-    governanceHash: eefac6964faf71a07c9bb8e3cc92576c0d9dc7536ec47dc70520c4ca80c6c378
-    stateFingerprint: 70c8cfb8dd5efbb3a021350aa6fb13699c88b863ae94c6e5a76cfaa8004eb887
-    path: apps/api/src/application/services/NoopDuplicateRunProbe.ts
     owningUnit: SYS-API-APPLICATION-SERVICES
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
@@ -1525,64 +1583,6 @@ files:
         docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
       - docs/architecture/command-query-rail-governance.md
       - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-E41C46B9FDC2
-    pathHash: d2862b118e43c1777eb45ec59506ee70c7fb8d8ea25fe87f030ee4bf02be5101
-    contentHash: 6854e0da9c0dc611dfe37f4b41b59eb3a30fb9e55880687acb504bc10350235a
-    governanceHash: eefac6964faf71a07c9bb8e3cc92576c0d9dc7536ec47dc70520c4ca80c6c378
-    stateFingerprint: f96f2bfe43b5b25ceb0ddee3d06b7bd1b2688fb61bc0b4415149e8e0696dc1a8
-    path: apps/api/src/application/services/PlannerBackedStartRunUseCase.ts
-    owningUnit: SYS-API-APPLICATION-SERVICES
-    rootUnit: SYS-DVT
-    domainUnit: SYS-DVT
-    componentUnit: SYS-API-APPLICATION-SERVICES
-    unitPath:
-      - SYS-DVT
-      - SYS-API
-      - SYS-API-ROOT
-      - SYS-API-APPLICATION-SERVICES
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: AS
-    cqRails: API application commands and queries
-    governance:
-      - >-
-        docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
-      - docs/architecture/command-query-rail-governance.md
-      - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-0A049EB964CD
-    pathHash: 33f184b78ebb3f7f2e957721dd4e97bf09d30a54f4bf0210e4f432e4f99e8336
-    contentHash: f85b9469ae819504da1480489d6696031732932acf62226d21eaf933f11366c8
-    governanceHash: eefac6964faf71a07c9bb8e3cc92576c0d9dc7536ec47dc70520c4ca80c6c378
-    stateFingerprint: ae01061d35e7ca52b5dadfefb877b025548034a2b6179d70b1dc402201933cb8
-    path: apps/api/src/application/services/plannerExecutionPlanBridge.ts
-    owningUnit: SYS-API-APPLICATION-SERVICES
-    rootUnit: SYS-DVT
-    domainUnit: SYS-DVT
-    componentUnit: SYS-API-APPLICATION-SERVICES
-    unitPath:
-      - SYS-DVT
-      - SYS-API
-      - SYS-API-ROOT
-      - SYS-API-APPLICATION-SERVICES
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: AS
-    cqRails: API application commands and queries
-    governance:
-      - >-
-        docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
-      - docs/architecture/command-query-rail-governance.md
-      - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-BAEA72A8B6D5
     pathHash: 8ca43be249743be66c9b591482c8f935cf427cd0362a8cba0db04d30328b23ec
     contentHash: 19bc6f628fc455cffbad5f9e2fd74c2653c95c0581dd7f9a9b591e9b6179c347
@@ -1612,12 +1612,12 @@ files:
         docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
       - docs/architecture/command-query-rail-governance.md
       - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-C4D3E4E88B24
-    pathHash: 954c0b59b9d940477058a93c0de2f9e5001bbe9da780eb610bc3a6fe4f0f94ab
-    contentHash: 09faec2cf8125567cc1bb7fd514a13d2aa8c315a417a87212c2cf7b37d9c0f68
+  - fileId: F-0A049EB964CD
+    pathHash: 33f184b78ebb3f7f2e957721dd4e97bf09d30a54f4bf0210e4f432e4f99e8336
+    contentHash: f85b9469ae819504da1480489d6696031732932acf62226d21eaf933f11366c8
     governanceHash: eefac6964faf71a07c9bb8e3cc92576c0d9dc7536ec47dc70520c4ca80c6c378
-    stateFingerprint: eaafc07d1bb35442e06356c19b1851a1a8873db94f8dd80e3d11e7def0560f4e
-    path: apps/api/src/application/services/PreviewPlanUseCase.ts
+    stateFingerprint: ae01061d35e7ca52b5dadfefb877b025548034a2b6179d70b1dc402201933cb8
+    path: apps/api/src/application/services/plannerExecutionPlanBridge.ts
     owningUnit: SYS-API-APPLICATION-SERVICES
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
@@ -3281,12 +3281,12 @@ files:
         docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
       - docs/architecture/command-query-rail-governance.md
       - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-EDFD27F161D7
-    pathHash: 364896db335eebab5cda3bc6faf4c08bb37513a39365322aba59fbb64b7f2eac
-    contentHash: 6c66a50dd8f494a6c153ad1eb9284ea18cf0e1148dd995724d151077db6619e3
+  - fileId: F-E8F8994D4525
+    pathHash: 7761b534e5d6eb43c257fc99e12fdd5f844dd0cc605ce9d52c1d1d2179492783
+    contentHash: d41706211cbdbeefaee68b0201170482cfe79e5104005dd22efccc2c1106b781
     governanceHash: 951b6623c89f0f7b1639e266272b3a82a5073e07f14871601afcb4dcfc9c274e
-    stateFingerprint: 551c713878f96a58ddb5da40ea260e87014203491781d580755b216a3ddd1f0c
-    path: apps/api/src/entrypoints/http/planRoutePlannerEnvelopeParser.ts
+    stateFingerprint: 9f4ac70b1adeda3c94b64dd475c8e1c64401739b718e0e1053046c15d03a458c
+    path: apps/api/src/entrypoints/http/planRoutePlanSourcePolicy.ts
     owningUnit: SYS-API-HTTP-ENTRYPOINTS
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
@@ -3312,12 +3312,12 @@ files:
         docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
       - docs/architecture/command-query-rail-governance.md
       - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-E8F8994D4525
-    pathHash: 7761b534e5d6eb43c257fc99e12fdd5f844dd0cc605ce9d52c1d1d2179492783
-    contentHash: d41706211cbdbeefaee68b0201170482cfe79e5104005dd22efccc2c1106b781
+  - fileId: F-EDFD27F161D7
+    pathHash: 364896db335eebab5cda3bc6faf4c08bb37513a39365322aba59fbb64b7f2eac
+    contentHash: 6c66a50dd8f494a6c153ad1eb9284ea18cf0e1148dd995724d151077db6619e3
     governanceHash: 951b6623c89f0f7b1639e266272b3a82a5073e07f14871601afcb4dcfc9c274e
-    stateFingerprint: 9f4ac70b1adeda3c94b64dd475c8e1c64401739b718e0e1053046c15d03a458c
-    path: apps/api/src/entrypoints/http/planRoutePlanSourcePolicy.ts
+    stateFingerprint: 551c713878f96a58ddb5da40ea260e87014203491781d580755b216a3ddd1f0c
+    path: apps/api/src/entrypoints/http/planRoutePlannerEnvelopeParser.ts
     owningUnit: SYS-API-HTTP-ENTRYPOINTS
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
@@ -4459,35 +4459,6 @@ files:
         docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
       - docs/architecture/command-query-rail-governance.md
       - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-826D9892242E
-    pathHash: 7bf72ef947572aaa4f51f90b6136e13e20363aad93ff7d7eea858774efa7401a
-    contentHash: f2cb9ac888b91b3b56115cddd539f2e291a7e9b0850fc3eedae9067818a329ad
-    governanceHash: 394d290ccf31ced7b0e1efd8b93e23c1440e5737fbb4acbff8918311131e4b73
-    stateFingerprint: b79d5a94de9c7e02dedf600a47dc2c2331b2f14409dd3aa54782e8458c277f47
-    path: apps/api/src/infrastructure/admissionTelemetry/admissionTelemetryMetrics.ts
-    owningUnit: SYS-API-INFRASTRUCTURE
-    rootUnit: SYS-DVT
-    domainUnit: SYS-DVT
-    componentUnit: SYS-API-INFRASTRUCTURE
-    unitPath:
-      - SYS-DVT
-      - SYS-API
-      - SYS-API-ROOT
-      - SYS-API-INFRASTRUCTURE
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: ADP
-    cqRails: API adapter-backed command/query support
-    governance:
-      - >-
-        docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
-      - docs/architecture/reference-architecture.md
-      - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-8E2F725EA401
     pathHash: 645df501296d1523562bf25eebddd215765db5f9ba71577538658010ff029bb8
     contentHash: bc3c19fd7e11752bd22f408fc36c77faaf4b2724b083abda537f5d94d0acdaf0
@@ -4523,6 +4494,35 @@ files:
     governanceHash: 394d290ccf31ced7b0e1efd8b93e23c1440e5737fbb4acbff8918311131e4b73
     stateFingerprint: 004a48339ee2798037200915264a15db24689bc45f5073e4ba190f50c6a048ed
     path: apps/api/src/infrastructure/admissionTelemetry/ObservabilityBackpressureCapacityTelemetry.ts
+    owningUnit: SYS-API-INFRASTRUCTURE
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-API-INFRASTRUCTURE
+    unitPath:
+      - SYS-DVT
+      - SYS-API
+      - SYS-API-ROOT
+      - SYS-API-INFRASTRUCTURE
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: ADP
+    cqRails: API adapter-backed command/query support
+    governance:
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
+      - docs/architecture/reference-architecture.md
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-826D9892242E
+    pathHash: 7bf72ef947572aaa4f51f90b6136e13e20363aad93ff7d7eea858774efa7401a
+    contentHash: f2cb9ac888b91b3b56115cddd539f2e291a7e9b0850fc3eedae9067818a329ad
+    governanceHash: 394d290ccf31ced7b0e1efd8b93e23c1440e5737fbb4acbff8918311131e4b73
+    stateFingerprint: b79d5a94de9c7e02dedf600a47dc2c2331b2f14409dd3aa54782e8458c277f47
+    path: apps/api/src/infrastructure/admissionTelemetry/admissionTelemetryMetrics.ts
     owningUnit: SYS-API-INFRASTRUCTURE
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
@@ -6454,12 +6454,12 @@ files:
         docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
       - docs/guides/testing-and-ci-capabilities.md
       - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-36BF3AB0ECD7
-    pathHash: ad88e3bf4367667d08daac519eba36b28e6a01d59333f08285384f657141e11e
-    contentHash: 448e6e6bb6653b2d0f4290a6e016d92855622ca532be000d69a651f40c793fcb
+  - fileId: F-1492B31E4A9B
+    pathHash: 9b5c4e70cd9cb14431efc7a2063f8212b8bca8a1e705362e5284cb797525e9b6
+    contentHash: b962c7e44578204a7c34bd15f08afb302546d1c0b47e2fce48c33a42654ad34c
     governanceHash: c689088998e690c4fa4111c9fed8b3b010bc43c35045201ed844a73b327d3b31
-    stateFingerprint: c321ed19e55e35766700965a05385081a71df63f3646390e579895333553977a
-    path: apps/api/test/app/protectedRouteMounting.test.ts
+    stateFingerprint: b3624c86928d24c7a2e6f64b2c48649570e1d7d5577b705cae0fdee082d5e9a8
+    path: apps/api/test/app/protectedRouteMountTestSupport.ts
     owningUnit: SYS-API-TESTS
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
@@ -6485,12 +6485,12 @@ files:
         docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
       - docs/guides/testing-and-ci-capabilities.md
       - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-1492B31E4A9B
-    pathHash: 9b5c4e70cd9cb14431efc7a2063f8212b8bca8a1e705362e5284cb797525e9b6
-    contentHash: b962c7e44578204a7c34bd15f08afb302546d1c0b47e2fce48c33a42654ad34c
+  - fileId: F-36BF3AB0ECD7
+    pathHash: ad88e3bf4367667d08daac519eba36b28e6a01d59333f08285384f657141e11e
+    contentHash: 448e6e6bb6653b2d0f4290a6e016d92855622ca532be000d69a651f40c793fcb
     governanceHash: c689088998e690c4fa4111c9fed8b3b010bc43c35045201ed844a73b327d3b31
-    stateFingerprint: b3624c86928d24c7a2e6f64b2c48649570e1d7d5577b705cae0fdee082d5e9a8
-    path: apps/api/test/app/protectedRouteMountTestSupport.ts
+    stateFingerprint: c321ed19e55e35766700965a05385081a71df63f3646390e579895333553977a
+    path: apps/api/test/app/protectedRouteMounting.test.ts
     owningUnit: SYS-API-TESTS
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
@@ -6584,130 +6584,6 @@ files:
     governanceHash: c689088998e690c4fa4111c9fed8b3b010bc43c35045201ed844a73b327d3b31
     stateFingerprint: 39215433e398210bb37c3da9da68fe14a259e5ab5e971a64db5b122d441d099b
     path: apps/api/test/application/ports/accessDecision.test.ts
-    owningUnit: SYS-API-TESTS
-    rootUnit: SYS-DVT
-    domainUnit: SYS-DVT
-    componentUnit: SYS-API-TESTS
-    unitPath:
-      - SYS-DVT
-      - SYS-API
-      - SYS-API-ROOT
-      - SYS-API-TESTS
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: INFRA
-    cqRails: API validation suites
-    governance:
-      - >-
-        docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
-      - >-
-        docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
-      - docs/guides/testing-and-ci-capabilities.md
-      - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-5F6F031BFBF0
-    pathHash: 0cbcef983e46f25b4a23d118b28c1dd84c19589c7795aa58ff44c850e69a5ae7
-    contentHash: d063116ba0ebb70e2e1d42a568656008f87ec349f9d315a1c3d251045ceb638c
-    governanceHash: c689088998e690c4fa4111c9fed8b3b010bc43c35045201ed844a73b327d3b31
-    stateFingerprint: 3a434b288ab94e396303e9988080ffa0663d3a674e5985fb22a7d9ab475433ce
-    path: apps/api/test/application/services/applicationArchitectureAst.artifacts.ts
-    owningUnit: SYS-API-TESTS
-    rootUnit: SYS-DVT
-    domainUnit: SYS-DVT
-    componentUnit: SYS-API-TESTS
-    unitPath:
-      - SYS-DVT
-      - SYS-API
-      - SYS-API-ROOT
-      - SYS-API-TESTS
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: INFRA
-    cqRails: API validation suites
-    governance:
-      - >-
-        docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
-      - >-
-        docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
-      - docs/guides/testing-and-ci-capabilities.md
-      - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-BA6A126B9428
-    pathHash: af3958a931a9254e7773c6b5984825f5a162ffad7104476ca116cfc98b874c88
-    contentHash: 4617fdc9651729d9115f09770641604adbddc6cd9acc8e1422f3a0159aa79b89
-    governanceHash: c689088998e690c4fa4111c9fed8b3b010bc43c35045201ed844a73b327d3b31
-    stateFingerprint: 5d84ef1b4485ed66bc2d23deb9d1f9e82f3feaa58c2fd79d49dc3c339139b541
-    path: apps/api/test/application/services/applicationArchitectureAst.support.ts
-    owningUnit: SYS-API-TESTS
-    rootUnit: SYS-DVT
-    domainUnit: SYS-DVT
-    componentUnit: SYS-API-TESTS
-    unitPath:
-      - SYS-DVT
-      - SYS-API
-      - SYS-API-ROOT
-      - SYS-API-TESTS
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: INFRA
-    cqRails: API validation suites
-    governance:
-      - >-
-        docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
-      - >-
-        docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
-      - docs/guides/testing-and-ci-capabilities.md
-      - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-1EDE6B48472F
-    pathHash: aecba391c93e0fef90c91095bb7ec283bcc97010a5cb46d72fa22b2b02f57ac2
-    contentHash: 0e9bd4cc2f786e86114a611be705381f0b8f02b5baf6a19d53332d0cc4d7d62b
-    governanceHash: c689088998e690c4fa4111c9fed8b3b010bc43c35045201ed844a73b327d3b31
-    stateFingerprint: 8669b98310ad73ff9bd987164b9f9baf05e883d4292797c9d596d5277967a48c
-    path: apps/api/test/application/services/authorizeCommandScopeService.test.ts
-    owningUnit: SYS-API-TESTS
-    rootUnit: SYS-DVT
-    domainUnit: SYS-DVT
-    componentUnit: SYS-API-TESTS
-    unitPath:
-      - SYS-DVT
-      - SYS-API
-      - SYS-API-ROOT
-      - SYS-API-TESTS
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: INFRA
-    cqRails: API validation suites
-    governance:
-      - >-
-        docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
-      - >-
-        docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
-      - docs/guides/testing-and-ci-capabilities.md
-      - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-035D492220A6
-    pathHash: 9d2a49339ebc739a686fc497fc2d92fd6c5bf5af01052bbfd1a2460b052f4fed
-    contentHash: af4d114152ec8239d1f6de921bc459e0505b86f62711266b5e30ef8efab0892c
-    governanceHash: c689088998e690c4fa4111c9fed8b3b010bc43c35045201ed844a73b327d3b31
-    stateFingerprint: 6f5ce130e48e02836950629ce68def3948d90c1c867d50a8336280dea6bde343
-    path: apps/api/test/application/services/authorizeWorkspaceGraphDraftCapabilityService.test.ts
     owningUnit: SYS-API-TESTS
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
@@ -6889,12 +6765,12 @@ files:
         docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
       - docs/guides/testing-and-ci-capabilities.md
       - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-EA830AB73509
-    pathHash: 9438a12f5fe7f811ad2e0722ca81c9db194cd3e0193136c57d32288a12bedd38
-    contentHash: bb986e06bf9949ad81d09759abb51c5a6e0b9295d595f356e8ad551e53811b10
+  - fileId: F-A157A20BE68E
+    pathHash: 3d44cd8cae82b7cac2335037ef4338afd9480f1f3a93a917280c4012f8699a1c
+    contentHash: da30af03970d781ee7d3e3123e578cc49629186f1b26ccd856212880daacc4b5
     governanceHash: c689088998e690c4fa4111c9fed8b3b010bc43c35045201ed844a73b327d3b31
-    stateFingerprint: d7e4d5e1f2a27312a9cf0821b406ebe7fb1ce0a21d6253c5908334874ecf52a2
-    path: apps/api/test/application/services/cancelRunUseCase.test.ts
+    stateFingerprint: df78a6af5becfcb9e608682b3df49ef07d1ae011df4479c2fc5aead667813073
+    path: apps/api/test/application/services/CompilePlanUseCase.test.ts
     owningUnit: SYS-API-TESTS
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
@@ -6920,12 +6796,229 @@ files:
         docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
       - docs/guides/testing-and-ci-capabilities.md
       - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-A157A20BE68E
-    pathHash: 3d44cd8cae82b7cac2335037ef4338afd9480f1f3a93a917280c4012f8699a1c
-    contentHash: da30af03970d781ee7d3e3123e578cc49629186f1b26ccd856212880daacc4b5
+  - fileId: F-3CF63E6FAF49
+    pathHash: e68de9263e184b311a2acdb46493e6e9474c6ed0c8e266284b0685065654a635
+    contentHash: fa8484b70c5cc761319cedfb13c0b352e644eb52a57e87e6aab0a43f36583ed2
     governanceHash: c689088998e690c4fa4111c9fed8b3b010bc43c35045201ed844a73b327d3b31
-    stateFingerprint: df78a6af5becfcb9e608682b3df49ef07d1ae011df4479c2fc5aead667813073
-    path: apps/api/test/application/services/CompilePlanUseCase.test.ts
+    stateFingerprint: 1b758403fcb8857ded597453d4357da809ffb9641ed396c4dc998c255d305ee3
+    path: apps/api/test/application/services/NoopAdmissionTelemetry.test.ts
+    owningUnit: SYS-API-TESTS
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-API-TESTS
+    unitPath:
+      - SYS-DVT
+      - SYS-API
+      - SYS-API-ROOT
+      - SYS-API-TESTS
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: API validation suites
+    governance:
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
+      - >-
+        docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
+      - docs/guides/testing-and-ci-capabilities.md
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-402B66DA6AC8
+    pathHash: c91243e24032ec6fa5cd278bc5cef72757e18c8d0050ccea18650839ea5a80f1
+    contentHash: 33355c12992dacc43db642367ee605589484db2316ab7aa5e04cde78a1da40e5
+    governanceHash: c689088998e690c4fa4111c9fed8b3b010bc43c35045201ed844a73b327d3b31
+    stateFingerprint: 386b90f1f4daa465362681285226ba094b4ee7652c6931d1f4bf81105b386f4a
+    path: apps/api/test/application/services/NoopDuplicateRunProbe.test.ts
+    owningUnit: SYS-API-TESTS
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-API-TESTS
+    unitPath:
+      - SYS-DVT
+      - SYS-API
+      - SYS-API-ROOT
+      - SYS-API-TESTS
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: API validation suites
+    governance:
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
+      - >-
+        docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
+      - docs/guides/testing-and-ci-capabilities.md
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-7F6BC07B4C84
+    pathHash: 6628298fea6d6dca24180437428517418efc56df1428bf5119f4af4b1e26fde0
+    contentHash: 72cacd1d645f47b2e52210e6d4ee899d806d6e35ac2ec2ec512936174d8d4b2e
+    governanceHash: c689088998e690c4fa4111c9fed8b3b010bc43c35045201ed844a73b327d3b31
+    stateFingerprint: 5239d3f6b1a6bdb185157ec427bc2b3cf67754b93d679a60609239e44ee565ac
+    path: apps/api/test/application/services/PlannerBackedStartRunUseCase.test.ts
+    owningUnit: SYS-API-TESTS
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-API-TESTS
+    unitPath:
+      - SYS-DVT
+      - SYS-API
+      - SYS-API-ROOT
+      - SYS-API-TESTS
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: API validation suites
+    governance:
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
+      - >-
+        docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
+      - docs/guides/testing-and-ci-capabilities.md
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-5F6F031BFBF0
+    pathHash: 0cbcef983e46f25b4a23d118b28c1dd84c19589c7795aa58ff44c850e69a5ae7
+    contentHash: d063116ba0ebb70e2e1d42a568656008f87ec349f9d315a1c3d251045ceb638c
+    governanceHash: c689088998e690c4fa4111c9fed8b3b010bc43c35045201ed844a73b327d3b31
+    stateFingerprint: 3a434b288ab94e396303e9988080ffa0663d3a674e5985fb22a7d9ab475433ce
+    path: apps/api/test/application/services/applicationArchitectureAst.artifacts.ts
+    owningUnit: SYS-API-TESTS
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-API-TESTS
+    unitPath:
+      - SYS-DVT
+      - SYS-API
+      - SYS-API-ROOT
+      - SYS-API-TESTS
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: API validation suites
+    governance:
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
+      - >-
+        docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
+      - docs/guides/testing-and-ci-capabilities.md
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-BA6A126B9428
+    pathHash: af3958a931a9254e7773c6b5984825f5a162ffad7104476ca116cfc98b874c88
+    contentHash: 4617fdc9651729d9115f09770641604adbddc6cd9acc8e1422f3a0159aa79b89
+    governanceHash: c689088998e690c4fa4111c9fed8b3b010bc43c35045201ed844a73b327d3b31
+    stateFingerprint: 5d84ef1b4485ed66bc2d23deb9d1f9e82f3feaa58c2fd79d49dc3c339139b541
+    path: apps/api/test/application/services/applicationArchitectureAst.support.ts
+    owningUnit: SYS-API-TESTS
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-API-TESTS
+    unitPath:
+      - SYS-DVT
+      - SYS-API
+      - SYS-API-ROOT
+      - SYS-API-TESTS
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: API validation suites
+    governance:
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
+      - >-
+        docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
+      - docs/guides/testing-and-ci-capabilities.md
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-1EDE6B48472F
+    pathHash: aecba391c93e0fef90c91095bb7ec283bcc97010a5cb46d72fa22b2b02f57ac2
+    contentHash: 0e9bd4cc2f786e86114a611be705381f0b8f02b5baf6a19d53332d0cc4d7d62b
+    governanceHash: c689088998e690c4fa4111c9fed8b3b010bc43c35045201ed844a73b327d3b31
+    stateFingerprint: 8669b98310ad73ff9bd987164b9f9baf05e883d4292797c9d596d5277967a48c
+    path: apps/api/test/application/services/authorizeCommandScopeService.test.ts
+    owningUnit: SYS-API-TESTS
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-API-TESTS
+    unitPath:
+      - SYS-DVT
+      - SYS-API
+      - SYS-API-ROOT
+      - SYS-API-TESTS
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: API validation suites
+    governance:
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
+      - >-
+        docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
+      - docs/guides/testing-and-ci-capabilities.md
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-035D492220A6
+    pathHash: 9d2a49339ebc739a686fc497fc2d92fd6c5bf5af01052bbfd1a2460b052f4fed
+    contentHash: af4d114152ec8239d1f6de921bc459e0505b86f62711266b5e30ef8efab0892c
+    governanceHash: c689088998e690c4fa4111c9fed8b3b010bc43c35045201ed844a73b327d3b31
+    stateFingerprint: 6f5ce130e48e02836950629ce68def3948d90c1c867d50a8336280dea6bde343
+    path: apps/api/test/application/services/authorizeWorkspaceGraphDraftCapabilityService.test.ts
+    owningUnit: SYS-API-TESTS
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-API-TESTS
+    unitPath:
+      - SYS-DVT
+      - SYS-API
+      - SYS-API-ROOT
+      - SYS-API-TESTS
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: API validation suites
+    governance:
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
+      - >-
+        docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
+      - docs/guides/testing-and-ci-capabilities.md
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-EA830AB73509
+    pathHash: 9438a12f5fe7f811ad2e0722ca81c9db194cd3e0193136c57d32288a12bedd38
+    contentHash: bb986e06bf9949ad81d09759abb51c5a6e0b9295d595f356e8ad551e53811b10
+    governanceHash: c689088998e690c4fa4111c9fed8b3b010bc43c35045201ed844a73b327d3b31
+    stateFingerprint: d7e4d5e1f2a27312a9cf0821b406ebe7fb1ce0a21d6253c5908334874ecf52a2
+    path: apps/api/test/application/services/cancelRunUseCase.test.ts
     owningUnit: SYS-API-TESTS
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
@@ -7174,99 +7267,6 @@ files:
     governanceHash: c689088998e690c4fa4111c9fed8b3b010bc43c35045201ed844a73b327d3b31
     stateFingerprint: e803e603629fb2c1fbf0d8a94ed722da776753ec4d3133bf2dd5151c9b281e33
     path: apps/api/test/application/services/listRunsUseCase.test.ts
-    owningUnit: SYS-API-TESTS
-    rootUnit: SYS-DVT
-    domainUnit: SYS-DVT
-    componentUnit: SYS-API-TESTS
-    unitPath:
-      - SYS-DVT
-      - SYS-API
-      - SYS-API-ROOT
-      - SYS-API-TESTS
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: INFRA
-    cqRails: API validation suites
-    governance:
-      - >-
-        docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
-      - >-
-        docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
-      - docs/guides/testing-and-ci-capabilities.md
-      - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-3CF63E6FAF49
-    pathHash: e68de9263e184b311a2acdb46493e6e9474c6ed0c8e266284b0685065654a635
-    contentHash: fa8484b70c5cc761319cedfb13c0b352e644eb52a57e87e6aab0a43f36583ed2
-    governanceHash: c689088998e690c4fa4111c9fed8b3b010bc43c35045201ed844a73b327d3b31
-    stateFingerprint: 1b758403fcb8857ded597453d4357da809ffb9641ed396c4dc998c255d305ee3
-    path: apps/api/test/application/services/NoopAdmissionTelemetry.test.ts
-    owningUnit: SYS-API-TESTS
-    rootUnit: SYS-DVT
-    domainUnit: SYS-DVT
-    componentUnit: SYS-API-TESTS
-    unitPath:
-      - SYS-DVT
-      - SYS-API
-      - SYS-API-ROOT
-      - SYS-API-TESTS
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: INFRA
-    cqRails: API validation suites
-    governance:
-      - >-
-        docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
-      - >-
-        docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
-      - docs/guides/testing-and-ci-capabilities.md
-      - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-402B66DA6AC8
-    pathHash: c91243e24032ec6fa5cd278bc5cef72757e18c8d0050ccea18650839ea5a80f1
-    contentHash: 33355c12992dacc43db642367ee605589484db2316ab7aa5e04cde78a1da40e5
-    governanceHash: c689088998e690c4fa4111c9fed8b3b010bc43c35045201ed844a73b327d3b31
-    stateFingerprint: 386b90f1f4daa465362681285226ba094b4ee7652c6931d1f4bf81105b386f4a
-    path: apps/api/test/application/services/NoopDuplicateRunProbe.test.ts
-    owningUnit: SYS-API-TESTS
-    rootUnit: SYS-DVT
-    domainUnit: SYS-DVT
-    componentUnit: SYS-API-TESTS
-    unitPath:
-      - SYS-DVT
-      - SYS-API
-      - SYS-API-ROOT
-      - SYS-API-TESTS
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: INFRA
-    cqRails: API validation suites
-    governance:
-      - >-
-        docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
-      - >-
-        docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
-      - docs/guides/testing-and-ci-capabilities.md
-      - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-7F6BC07B4C84
-    pathHash: 6628298fea6d6dca24180437428517418efc56df1428bf5119f4af4b1e26fde0
-    contentHash: 72cacd1d645f47b2e52210e6d4ee899d806d6e35ac2ec2ec512936174d8d4b2e
-    governanceHash: c689088998e690c4fa4111c9fed8b3b010bc43c35045201ed844a73b327d3b31
-    stateFingerprint: 5239d3f6b1a6bdb185157ec427bc2b3cf67754b93d679a60609239e44ee565ac
-    path: apps/api/test/application/services/PlannerBackedStartRunUseCase.test.ts
     owningUnit: SYS-API-TESTS
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT

@@ -26,7 +26,7 @@ Machine-readable sources:
 
 - Components: 32
 - Files mapped: 4134
-- Components with drift or legacy files: 4
+- Components with drift or legacy files: 3
 
 ## Largest Components
 
@@ -63,7 +63,6 @@ Machine-readable sources:
 | `SYS-PLANSTORE-API-COMPOSITION` | 20 | 20 | 0 | [shard](./governance-components/SYS-PLANSTORE-API-COMPOSITION.component-files.yaml) |
 | `SYS-PLANSTORE-POSTGRES` | 16 | 16 | 0 | [shard](./governance-components/SYS-PLANSTORE-POSTGRES.component-files.yaml) |
 | `SYS-PLANSTORE-ENGINE-FETCH` | 5 | 5 | 0 | [shard](./governance-components/SYS-PLANSTORE-ENGINE-FETCH.component-files.yaml) |
-| `SYS-PLANSTORE-CONTRACTS` | 3 | 3 | 0 | [shard](./governance-components/SYS-PLANSTORE-CONTRACTS.component-files.yaml) |
 <!-- prettier-ignore-end -->
 
 ## Component Shards
@@ -92,7 +91,7 @@ Machine-readable sources:
 | `SYS-PLANNER-ROOT` | 76 | 0 | 0 | [shard](./governance-components/SYS-PLANNER-ROOT.component-files.yaml) |
 | `SYS-PLANSTORE-API-COMPOSITION` | 20 | 20 | 0 | [shard](./governance-components/SYS-PLANSTORE-API-COMPOSITION.component-files.yaml) |
 | `SYS-PLANSTORE-ARTIFACTS-PORTS` | 23 | 0 | 0 | [shard](./governance-components/SYS-PLANSTORE-ARTIFACTS-PORTS.component-files.yaml) |
-| `SYS-PLANSTORE-CONTRACTS` | 3 | 3 | 0 | [shard](./governance-components/SYS-PLANSTORE-CONTRACTS.component-files.yaml) |
+| `SYS-PLANSTORE-CONTRACTS` | 3 | 0 | 0 | [shard](./governance-components/SYS-PLANSTORE-CONTRACTS.component-files.yaml) |
 | `SYS-PLANSTORE-DOCS-RISK` | 34 | 0 | 0 | [shard](./governance-components/SYS-PLANSTORE-DOCS-RISK.component-files.yaml) |
 | `SYS-PLANSTORE-ENGINE-FETCH` | 5 | 5 | 0 | [shard](./governance-components/SYS-PLANSTORE-ENGINE-FETCH.component-files.yaml) |
 | `SYS-PLANSTORE-POSTGRES` | 16 | 16 | 0 | [shard](./governance-components/SYS-PLANSTORE-POSTGRES.component-files.yaml) |

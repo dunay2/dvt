@@ -95,6 +95,13 @@ files:
     governanceState: drift
     isDrift: true
     isLegacy: false
+  - path: apps/api/test/application/services/WorkflowEngineFactory.test.ts
+    fileId: F-E6462049F467
+    owningUnit: SYS-PLANSTORE-API-COMPOSITION
+    unitStatus: drift
+    governanceState: drift
+    isDrift: true
+    isLegacy: false
   - path: apps/api/test/application/services/storedPlanExecutabilityValidator/capabilities.cases.ts
     fileId: F-4DE9531159D3
     owningUnit: SYS-PLANSTORE-API-COMPOSITION
@@ -118,13 +125,6 @@ files:
     isLegacy: false
   - path: apps/api/test/application/services/storedPlanExecutabilityValidator/registry.cases.ts
     fileId: F-10084A3099E8
-    owningUnit: SYS-PLANSTORE-API-COMPOSITION
-    unitStatus: drift
-    governanceState: drift
-    isDrift: true
-    isLegacy: false
-  - path: apps/api/test/application/services/WorkflowEngineFactory.test.ts
-    fileId: F-E6462049F467
     owningUnit: SYS-PLANSTORE-API-COMPOSITION
     unitStatus: drift
     governanceState: drift

@@ -11,19 +11,19 @@ components:
     fileCount: 196
     driftFileCount: 0
     legacyFileCount: 0
-    contentHash: 04a04f153b5180e6db2da294547b665e4a164dd65266fe6abc9237141ff5b386
+    contentHash: 3a8d3198e1e15a19a2f04a79776489de799e7dc8b7e87dfd635529105fa28a97
   - id: SYS-API-APPLICATION-PORTS
     path: docs/planning/status/governance-components/SYS-API-APPLICATION-PORTS.component-files.yaml
     fileCount: 16
     driftFileCount: 0
     legacyFileCount: 0
-    contentHash: 4ed48f2f4699d031afd161b8879953ef874ff1bab709f48749572621f213ffc0
+    contentHash: ac7ece34258c9a528b6fe36bf08801676f22326c13e2b5dc6b68d2334fbb4a1b
   - id: SYS-API-APPLICATION-SERVICES
     path: docs/planning/status/governance-components/SYS-API-APPLICATION-SERVICES.component-files.yaml
     fileCount: 34
     driftFileCount: 0
     legacyFileCount: 0
-    contentHash: 70e1b932e6bc374b14d69ae564396d776b33aa855782472b5f3b00e5d208b45e
+    contentHash: 920038d11c9074f841c7561bc4e6e3172a6a4a6c8a31d0cf9ccc7c49a406d14a
   - id: SYS-API-BOOTSTRAP
     path: docs/planning/status/governance-components/SYS-API-BOOTSTRAP.component-files.yaml
     fileCount: 2
@@ -53,13 +53,13 @@ components:
     fileCount: 75
     driftFileCount: 0
     legacyFileCount: 0
-    contentHash: 9940edb4d858b4436b325bf34a0a5fbde6bc0c389f260cb0f809db42069e0102
+    contentHash: 0d7a52399de451e14efc5b9bbf982b8ee4f46f771b7aea332bca576be443c170
   - id: SYS-API-INFRASTRUCTURE
     path: docs/planning/status/governance-components/SYS-API-INFRASTRUCTURE.component-files.yaml
     fileCount: 27
     driftFileCount: 0
     legacyFileCount: 0
-    contentHash: 3cbfea9b806b7303131f3e4e57b2d2bdfed722646e85bc42f5fea366e6999474
+    contentHash: 0c930495c050c2994315fc3297aa5c09c57baa593959b7a83b9181223d92df8c
   - id: SYS-API-OPS-HEALTH
     path: docs/planning/status/governance-components/SYS-API-OPS-HEALTH.component-files.yaml
     fileCount: 11
@@ -77,7 +77,7 @@ components:
     fileCount: 11
     driftFileCount: 0
     legacyFileCount: 0
-    contentHash: de35aab70c944fc37a37d7cf74ea3ad711e0c8e00426ad37f9d19c5338cfa21c
+    contentHash: 9fdb87e58bf4a68574567e908eae80e4e14ec2a2ebdd876b5935b663169de740
   - id: SYS-API-RUNTIME-COMPOSITION
     path: docs/planning/status/governance-components/SYS-API-RUNTIME-COMPOSITION.component-files.yaml
     fileCount: 26
@@ -89,43 +89,43 @@ components:
     fileCount: 99
     driftFileCount: 0
     legacyFileCount: 0
-    contentHash: 9bc83a2ac6b4978a887256852f1db56340afdfd5164252c6d2c27364dd173232
+    contentHash: 0f3467732356bffe56523570b29d60d0a8ea25f81ce99b499c7708ce9b805603
   - id: SYS-CI-GOVERNANCE-ROOT
     path: docs/planning/status/governance-components/SYS-CI-GOVERNANCE-ROOT.component-files.yaml
     fileCount: 180
     driftFileCount: 0
     legacyFileCount: 0
-    contentHash: 18a5ccdcef5bdad5e0e41d611692e7cbeb47090c16dcd7884ba448780b581f36
+    contentHash: 13e8dacf8f15ff025030965ad315de27460bb984be8e69005bd6e8350745b2de
   - id: SYS-CONTRACTS-ROOT
     path: docs/planning/status/governance-components/SYS-CONTRACTS-ROOT.component-files.yaml
     fileCount: 127
     driftFileCount: 0
     legacyFileCount: 0
-    contentHash: e1dcfc79e9fe465a323c69bad824358f403b1cb2c32ed9fcf095f7df2cfacfd5
+    contentHash: fa1299dd144e2f14a9e3b3491fd17636c0f59e41f50e1195db9bd9b50111eb0e
   - id: SYS-DOCS-GOVERNANCE-ROOT
     path: docs/planning/status/governance-components/SYS-DOCS-GOVERNANCE-ROOT.component-files.yaml
     fileCount: 1700
     driftFileCount: 0
     legacyFileCount: 0
-    contentHash: f76ac290e7c347a46ac54a105984146b3320f4c0c87c1bec17ed4f5616340a2c
+    contentHash: 3d4a9d428e0c7369c70c58804ef0dd69f79d388c4d8ec6d2b3baccfeedefc44d
   - id: SYS-OBSERVABILITY-ROOT
     path: docs/planning/status/governance-components/SYS-OBSERVABILITY-ROOT.component-files.yaml
     fileCount: 15
     driftFileCount: 0
     legacyFileCount: 0
-    contentHash: c32a6f170599b1c77e03d739df8ba5a9b069c146187a05e5195219e9eed6c108
+    contentHash: 6ce5d2ea585569160a43b0a967a3dd2840d6f836b56841a91fbca57722395cce
   - id: SYS-PLANNER-ROOT
     path: docs/planning/status/governance-components/SYS-PLANNER-ROOT.component-files.yaml
     fileCount: 76
     driftFileCount: 0
     legacyFileCount: 0
-    contentHash: 1859ed3c5bccd5996cc44cb52139170ef892e36a5e9951080d1d5d5023db811c
+    contentHash: 8dcc4004d440d7bddff27329c576ac3c62648a11c30d93faa52980fc64f30b70
   - id: SYS-PLANSTORE-API-COMPOSITION
     path: docs/planning/status/governance-components/SYS-PLANSTORE-API-COMPOSITION.component-files.yaml
     fileCount: 20
     driftFileCount: 20
     legacyFileCount: 0
-    contentHash: 22f996343bed0b2bdf86c5a41b76749dea3d7930357a8d987c2f8f65a6b5d4d5
+    contentHash: 856061bf91807b0bd8b8b912dcef32a792bbfcfeea437f6f3762a530d341afb0
   - id: SYS-PLANSTORE-ARTIFACTS-PORTS
     path: docs/planning/status/governance-components/SYS-PLANSTORE-ARTIFACTS-PORTS.component-files.yaml
     fileCount: 23
@@ -135,9 +135,9 @@ components:
   - id: SYS-PLANSTORE-CONTRACTS
     path: docs/planning/status/governance-components/SYS-PLANSTORE-CONTRACTS.component-files.yaml
     fileCount: 3
-    driftFileCount: 3
+    driftFileCount: 0
     legacyFileCount: 0
-    contentHash: f068d10ed5d9e9a50a7cfaaccc25f6b78331dd1deb541f12ce584d189fe485ab
+    contentHash: bd9d2fdb8a8964b57917528e8936fab84115f794fef1a1adb2c810eb7798a599
   - id: SYS-PLANSTORE-DOCS-RISK
     path: docs/planning/status/governance-components/SYS-PLANSTORE-DOCS-RISK.component-files.yaml
     fileCount: 34
@@ -174,28 +174,28 @@ components:
     fileCount: 111
     driftFileCount: 0
     legacyFileCount: 0
-    contentHash: 148378bda7dbd8dbab01133deb30db847f2e7677316896ceb1d1521ef708a22a
+    contentHash: f5e76e457458ab383ffb7ba89e1efcbae26a171ba3e143fe68bc3f5807845283
   - id: SYS-RUNTIME-ROOT
     path: docs/planning/status/governance-components/SYS-RUNTIME-ROOT.component-files.yaml
     fileCount: 286
     driftFileCount: 0
     legacyFileCount: 0
-    contentHash: 02ebbc9e7fc09a8e44bdee254691f18c57b8801c9a8b64aa9f9952309ace1613
+    contentHash: 318b5106aeff74ce410e1f28ad207d405bca530c9dda6d54a36e35969999f3ed
   - id: SYS-TRACEABILITY-ROOT
     path: docs/planning/status/governance-components/SYS-TRACEABILITY-ROOT.component-files.yaml
     fileCount: 65
     driftFileCount: 0
     legacyFileCount: 0
-    contentHash: 2175dfcf36eb5f8e512dd9ba1f0930c29abebd1040a44fbd6525e7867717a89c
+    contentHash: 83855c9fcd947c9177b687699e216dab41e1fd92a52e1a017ca4aff0983e01b1
   - id: SYS-WEB-ROOT
     path: docs/planning/status/governance-components/SYS-WEB-ROOT.component-files.yaml
     fileCount: 797
     driftFileCount: 0
     legacyFileCount: 0
-    contentHash: 2a16900a55131b8a4fa1d78f738dd22a801869765812289659451cb4cc968b87
+    contentHash: 0702b911f35523aa0e90c9d503c72b614ee921dfd9955b79e897ea2e1514528a
   - id: SYS-WORKERS-ROOT
     path: docs/planning/status/governance-components/SYS-WORKERS-ROOT.component-files.yaml
     fileCount: 103
     driftFileCount: 0
     legacyFileCount: 0
-    contentHash: 538cb00d7f72395be9c710e429ab86893164e0e76d24fb3d3adeebd4d59fa9d4
+    contentHash: 801841da6297f58b9b5f4942f4ef07e1c13998ff1c67b5f3ca1f7965c4ec6781

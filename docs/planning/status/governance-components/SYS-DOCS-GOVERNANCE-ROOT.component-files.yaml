@@ -39,6 +39,13 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
+  - path: README.md
+    fileId: F-9A817629A05F
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
   - path: docs/.manifest.json
     fileId: F-F3E0D3EF3EDF
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -46,36 +53,22 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: docs/adr/_archive/index.md
-    fileId: F-B3614E7D27FA
+  - path: docs/CONTRIBUTING.md
+    fileId: F-7E757DE594A8
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: docs/adr/_drafts/18 pendiente revision.txt
-    fileId: F-E0F34F140AF4
+  - path: docs/DOCS_README.md
+    fileId: F-96F773EACC49
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: docs/adr/_drafts/ADR-G5-independent-outbox-worker-runtime.md
-    fileId: F-CEA3F370C2C5
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/adr/_drafts/index.md
-    fileId: F-F249BE167037
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/adr/ADR_Status_Board_Extensive.md
-    fileId: F-D0E43779907C
+  - path: docs/SPANISH_TEXTS.md
+    fileId: F-754AAA239BDC
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -382,13 +375,6 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: docs/adr/adr-0050-platform-owned-start-run-identity.md
-    fileId: F-9A7B177E45AF
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
   - path: docs/adr/ADR-0051-access-decision-service-and-openfga-adapter.md
     fileId: F-32A9F347F472
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -412,6 +398,48 @@ files:
     isLegacy: false
   - path: docs/adr/ADR-Index.md
     fileId: F-E9154DF218D2
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/adr/ADR_Status_Board_Extensive.md
+    fileId: F-D0E43779907C
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/adr/_archive/index.md
+    fileId: F-B3614E7D27FA
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/adr/_drafts/18 pendiente revision.txt
+    fileId: F-E0F34F140AF4
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/adr/_drafts/ADR-G5-independent-outbox-worker-runtime.md
+    fileId: F-CEA3F370C2C5
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/adr/_drafts/index.md
+    fileId: F-F249BE167037
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/adr/adr-0050-platform-owned-start-run-identity.md
+    fileId: F-9A7B177E45AF
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -515,6 +543,13 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
+  - path: docs/architecture/atlas/README.md
+    fileId: F-1B9954DBE38D
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
   - path: docs/architecture/atlas/architecture/architecture_atlas.md
     fileId: F-CC7D475918A7
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -531,13 +566,6 @@ files:
     isLegacy: false
   - path: docs/architecture/atlas/index.md
     fileId: F-E2710B2679E8
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/architecture/atlas/README.md
-    fileId: F-1B9954DBE38D
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -662,13 +690,6 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: docs/architecture/components/engine/adapters/state-store/postgres/index.md
-    fileId: F-F8A10C512A9E
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
   - path: docs/architecture/components/engine/adapters/state-store/postgres/StateStoreAdapter.md
     fileId: F-A62AB0F278D7
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -676,8 +697,8 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: docs/architecture/components/engine/adapters/state-store/snowflake/index.md
-    fileId: F-0F1454D655DA
+  - path: docs/architecture/components/engine/adapters/state-store/postgres/index.md
+    fileId: F-F8A10C512A9E
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -685,6 +706,13 @@ files:
     isLegacy: false
   - path: docs/architecture/components/engine/adapters/state-store/snowflake/StateStoreAdapter.md
     fileId: F-0F1FEF46417A
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/architecture/components/engine/adapters/state-store/snowflake/index.md
+    fileId: F-0F1454D655DA
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -820,6 +848,34 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
+  - path: docs/architecture/components/engine/contracts/CONTRACT_TEMPLATE.v1.md
+    fileId: F-8ECF0950D9C6
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/architecture/components/engine/contracts/README.md
+    fileId: F-691BA61273A0
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/architecture/components/engine/contracts/VERSIONING.md
+    fileId: F-C7737B60BC0F
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/architecture/components/engine/contracts/capabilities/README.md
+    fileId: F-06F105A0EBCE
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
   - path: docs/architecture/components/engine/contracts/capabilities/adapters.capabilities.json
     fileId: F-0A79E90726F6
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -841,71 +897,8 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: docs/architecture/components/engine/contracts/capabilities/README.md
-    fileId: F-06F105A0EBCE
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
   - path: docs/architecture/components/engine/contracts/capabilities/validation-report.schema.json
     fileId: F-A626774EA121
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/architecture/components/engine/contracts/CONTRACT_TEMPLATE.v1.md
-    fileId: F-8ECF0950D9C6
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/architecture/components/engine/contracts/engine/events/index.md
-    fileId: F-3783165200A7
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/architecture/components/engine/contracts/engine/events/RunEventRecord.v1.schema.json
-    fileId: F-816A8A586ACE
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/architecture/components/engine/contracts/engine/events/RunEventWrite.v1.schema.json
-    fileId: F-6B219909E49E
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/architecture/components/engine/contracts/engine/events/RunStarted.schema.json
-    fileId: F-A598E5D7F509
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/architecture/components/engine/contracts/engine/events/StepCompleted.schema.json
-    fileId: F-24C2895815BF
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/architecture/components/engine/contracts/engine/events/StepFailed.schema.json
-    fileId: F-540EE705AD9A
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/architecture/components/engine/contracts/engine/events/StepStarted.schema.json
-    fileId: F-D1B232DB00C2
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -920,13 +913,6 @@ files:
     isLegacy: false
   - path: docs/architecture/components/engine/contracts/engine/GlossaryContract.v1.md
     fileId: F-28238F01E384
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/architecture/components/engine/contracts/engine/index.md
-    fileId: F-5844AD6A2D83
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -974,15 +960,78 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: docs/architecture/components/engine/contracts/engine/runtime-provider-vocabulary-component.md
-    fileId: F-AD0CAC9A66BB
+  - path: docs/architecture/components/engine/contracts/engine/SignalsAndAuth.v1.md
+    fileId: F-D1905F53C4AA
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: docs/architecture/components/engine/contracts/engine/SignalsAndAuth.v1.md
-    fileId: F-D1905F53C4AA
+  - path: docs/architecture/components/engine/contracts/engine/StartRunProtocol.v1.md
+    fileId: F-4BC1A9E194EB
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/architecture/components/engine/contracts/engine/events/RunEventRecord.v1.schema.json
+    fileId: F-816A8A586ACE
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/architecture/components/engine/contracts/engine/events/RunEventWrite.v1.schema.json
+    fileId: F-6B219909E49E
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/architecture/components/engine/contracts/engine/events/RunStarted.schema.json
+    fileId: F-A598E5D7F509
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/architecture/components/engine/contracts/engine/events/StepCompleted.schema.json
+    fileId: F-24C2895815BF
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/architecture/components/engine/contracts/engine/events/StepFailed.schema.json
+    fileId: F-540EE705AD9A
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/architecture/components/engine/contracts/engine/events/StepStarted.schema.json
+    fileId: F-D1B232DB00C2
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/architecture/components/engine/contracts/engine/events/index.md
+    fileId: F-3783165200A7
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/architecture/components/engine/contracts/engine/index.md
+    fileId: F-5844AD6A2D83
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/architecture/components/engine/contracts/engine/runtime-provider-vocabulary-component.md
+    fileId: F-AD0CAC9A66BB
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -1002,8 +1051,8 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: docs/architecture/components/engine/contracts/engine/StartRunProtocol.v1.md
-    fileId: F-4BC1A9E194EB
+  - path: docs/architecture/components/engine/contracts/extensions/PluginSandbox.v1.md
+    fileId: F-7430358FAF83
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -1011,13 +1060,6 @@ files:
     isLegacy: false
   - path: docs/architecture/components/engine/contracts/extensions/index.md
     fileId: F-BECB2204BBE8
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/architecture/components/engine/contracts/extensions/PluginSandbox.v1.md
-    fileId: F-7430358FAF83
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -1046,13 +1088,6 @@ files:
     isLegacy: false
   - path: docs/architecture/components/engine/contracts/plan-verifier-admission.md
     fileId: F-62A86F6E4F9E
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/architecture/components/engine/contracts/README.md
-    fileId: F-691BA61273A0
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -1107,13 +1142,6 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: docs/architecture/components/engine/contracts/state-store/index.md
-    fileId: F-387DEB39E46A
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
   - path: docs/architecture/components/engine/contracts/state-store/IRunStateStore.v1.md
     fileId: F-9C080426A2EA
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -1128,13 +1156,6 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: docs/architecture/components/engine/contracts/state-store/overview.md
-    fileId: F-10643EA1245F
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
   - path: docs/architecture/components/engine/contracts/state-store/README.md
     fileId: F-9D65875D5447
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -1142,8 +1163,15 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: docs/architecture/components/engine/contracts/VERSIONING.md
-    fileId: F-C7737B60BC0F
+  - path: docs/architecture/components/engine/contracts/state-store/index.md
+    fileId: F-387DEB39E46A
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/architecture/components/engine/contracts/state-store/overview.md
+    fileId: F-10643EA1245F
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -1296,13 +1324,6 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: docs/architecture/components/engine/schemas/signal/index.md
-    fileId: F-E649D73364E7
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
   - path: docs/architecture/components/engine/schemas/signal/InjectOverride.v1.json
     fileId: F-97462CE3CF50
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -1359,8 +1380,8 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: docs/architecture/components/engine/security/index.md
-    fileId: F-CD8206D6D495
+  - path: docs/architecture/components/engine/schemas/signal/index.md
+    fileId: F-E649D73364E7
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -1396,6 +1417,13 @@ files:
     isLegacy: false
   - path: docs/architecture/components/engine/security/THREAT_MODEL.md
     fileId: F-9D8B4D297574
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/architecture/components/engine/security/index.md
+    fileId: F-CD8206D6D495
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -1584,15 +1612,15 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: docs/architecture/components/web/dvt_frontend_architecture_blueprint.md
-    fileId: F-74D3395DB563
+  - path: docs/architecture/components/web/dvt-frontend-architecture-introduction.md
+    fileId: F-99F499A57DE4
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: docs/architecture/components/web/dvt-frontend-architecture-introduction.md
-    fileId: F-99F499A57DE4
+  - path: docs/architecture/components/web/dvt_frontend_architecture_blueprint.md
+    fileId: F-74D3395DB563
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -2259,6 +2287,118 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
+  - path: docs/archive/CHANGE_IMPACT_ADR0030_20260304.md
+    fileId: F-7F3A29045BF1
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/archive/CI_CD_ROLLBACK_PLAN_20260228.md
+    fileId: F-2D19121FF92C
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/archive/DEFINE_THE_OUTBOX_CONSUMER_20260305.md
+    fileId: F-318FA6679399
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/archive/DVT+_Architectural_Review_20260225.md
+    fileId: F-D46179D6F4D5
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/archive/DVT+_Architectural_Review_20260226_AI.en.md
+    fileId: F-897394B69CA6
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/archive/DVT_ARCHITECTURE_HANDBOOK_20260307.md
+    fileId: F-43F20B5025D1
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/archive/DVT_ENGINE_REMEDIATION_AI_PLAN_20260304.md
+    fileId: F-FD5DA184B313
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/archive/DVT_REMEDIATION_PLAN.md
+    fileId: F-9A2BCEB6795B
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/archive/DVT_STRATEGIC_ASSESSMENT_20260306.md
+    fileId: F-10B549440EFC
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/archive/DVT_SYSTEM_MAP_GOD_STATUS_20260307.md
+    fileId: F-3C95D1C40301
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/archive/GOLDEN_PATH_COVERAGE_DEBT_ASSESSMENT_20260307.md
+    fileId: F-3F141259FDE0
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/archive/HITO_0_ESTABILIZACION_INMEDIATA_PLAN.md
+    fileId: F-8A3576C2AA00
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/archive/OPENLINEAGE_MARQUEZ_DIAGNOSTIC_COMPARISON_20260307.md
+    fileId: F-7552CECAEFF3
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/archive/PR_301_RELAUNCH_BATCH_PLAN_20260228.md
+    fileId: F-F04512DAB40A
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/archive/PR_313_STABILIZATION_EXECUTION_REPORT_20260228.md
+    fileId: F-BD33C7555EA1
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/archive/WF_REDUNDANCY_SIMPLIFICATION_PASS1_20260228.md
+    fileId: F-D400721AD629
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
   - path: docs/archive/architecture/components/adapter-postgres/adapter-postgres-constraints.md
     fileId: F-216F2E19890A
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -2791,97 +2931,6 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: docs/archive/CHANGE_IMPACT_ADR0030_20260304.md
-    fileId: F-7F3A29045BF1
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/archive/CI_CD_ROLLBACK_PLAN_20260228.md
-    fileId: F-2D19121FF92C
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/archive/DEFINE_THE_OUTBOX_CONSUMER_20260305.md
-    fileId: F-318FA6679399
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/archive/DVT_ARCHITECTURE_HANDBOOK_20260307.md
-    fileId: F-43F20B5025D1
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/archive/dvt_artifact_store_spec_pack/docs/adr/ADR-030-artifact-content-addressing.md
-    fileId: F-706258864AB6
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/archive/dvt_artifact_store_spec_pack/docs/architecture/artifact-store-spec.md
-    fileId: F-4EE57134C0F0
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/archive/dvt_artifact_store_spec_pack/index.md
-    fileId: F-4A47A4365DAF
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/archive/dvt_artifact_store_spec_pack/specs/contracts/artifact-ref.schema.json
-    fileId: F-1588F969A7AA
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/archive/dvt_artifact_store_spec_pack/sql/artifact_store_reference.sql
-    fileId: F-789F9C84D7AE
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/archive/DVT_ENGINE_REMEDIATION_AI_PLAN_20260304.md
-    fileId: F-FD5DA184B313
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/archive/DVT_REMEDIATION_PLAN.md
-    fileId: F-9A2BCEB6795B
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/archive/DVT_STRATEGIC_ASSESSMENT_20260306.md
-    fileId: F-10B549440EFC
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/archive/DVT_SYSTEM_MAP_GOD_STATUS_20260307.md
-    fileId: F-3C95D1C40301
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
   - path: docs/archive/dvt-traceability-pack-v2-lite-R6/.arc-policy.yaml
     fileId: F-411E4AE2AE1E
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -2919,6 +2968,90 @@ files:
     isLegacy: false
   - path: docs/archive/dvt-traceability-pack-v2-lite-R6/AI-GUIDE-doc-generation.md
     fileId: F-40CFC03191AB
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/archive/dvt-traceability-pack-v2-lite-R6/EXAMPLE-arc3-breaking-change.md
+    fileId: F-1C6F112D7B35
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/archive/dvt-traceability-pack-v2-lite-R6/EXAMPLE-real-change.md
+    fileId: F-124AC835E451
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/archive/dvt-traceability-pack-v2-lite-R6/GUIDE-adr012-self-eval.md
+    fileId: F-AEC5F9946828
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/archive/dvt-traceability-pack-v2-lite-R6/GUIDE-ci-implementation.md
+    fileId: F-FE316EC2C783
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/archive/dvt-traceability-pack-v2-lite-R6/GUIDE-risk-register.md
+    fileId: F-A28CADB3E66C
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/archive/dvt-traceability-pack-v2-lite-R6/POLICY-arc-policy.yaml.md
+    fileId: F-1BFA58CA06D3
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/archive/dvt-traceability-pack-v2-lite-R6/QUICKSTART-dev.md
+    fileId: F-B78FD66946AF
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/archive/dvt-traceability-pack-v2-lite-R6/README.md
+    fileId: F-0FFE69638505
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/archive/dvt-traceability-pack-v2-lite-R6/TEMPLATE-evidence-doc.md
+    fileId: F-747A431A3242
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/archive/dvt-traceability-pack-v2-lite-R6/TEMPLATE-pr-checklist.md
+    fileId: F-06D38B16338F
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/archive/dvt-traceability-pack-v2-lite-R6/TEMPLATE-risk-register.md
+    fileId: F-551C8D3935B4
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/archive/dvt-traceability-pack-v2-lite-R6/TOOLS-vscode-productivity.md
+    fileId: F-E54E6B4624AF
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -3008,41 +3141,6 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: docs/archive/dvt-traceability-pack-v2-lite-R6/EXAMPLE-arc3-breaking-change.md
-    fileId: F-1C6F112D7B35
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/archive/dvt-traceability-pack-v2-lite-R6/EXAMPLE-real-change.md
-    fileId: F-124AC835E451
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/archive/dvt-traceability-pack-v2-lite-R6/GUIDE-adr012-self-eval.md
-    fileId: F-AEC5F9946828
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/archive/dvt-traceability-pack-v2-lite-R6/GUIDE-ci-implementation.md
-    fileId: F-FE316EC2C783
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/archive/dvt-traceability-pack-v2-lite-R6/GUIDE-risk-register.md
-    fileId: F-A28CADB3E66C
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
   - path: docs/archive/dvt-traceability-pack-v2-lite-R6/index.md
     fileId: F-E22F7FBA4F32
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -3050,50 +3148,8 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: docs/archive/dvt-traceability-pack-v2-lite-R6/POLICY-arc-policy.yaml.md
-    fileId: F-1BFA58CA06D3
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/archive/dvt-traceability-pack-v2-lite-R6/QUICKSTART-dev.md
-    fileId: F-B78FD66946AF
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/archive/dvt-traceability-pack-v2-lite-R6/README.md
-    fileId: F-0FFE69638505
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/archive/dvt-traceability-pack-v2-lite-R6/TEMPLATE-evidence-doc.md
-    fileId: F-747A431A3242
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/archive/dvt-traceability-pack-v2-lite-R6/TEMPLATE-pr-checklist.md
-    fileId: F-06D38B16338F
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/archive/dvt-traceability-pack-v2-lite-R6/TEMPLATE-risk-register.md
-    fileId: F-551C8D3935B4
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/archive/dvt-traceability-pack-v2-lite-R6/TOOLS-vscode-productivity.md
-    fileId: F-E54E6B4624AF
+  - path: docs/archive/dvt-traceability-pack-v2-lite-R6/tools/ci/README.md
+    fileId: F-D373B5B4CA5E
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -3113,8 +3169,8 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: docs/archive/dvt-traceability-pack-v2-lite-R6/tools/ci/README.md
-    fileId: F-D373B5B4CA5E
+  - path: docs/archive/dvt-traceability-pack-v2-lite-R6/tools/risk/README.md
+    fileId: F-CDA2BBE32E87
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -3127,29 +3183,36 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: docs/archive/dvt-traceability-pack-v2-lite-R6/tools/risk/README.md
-    fileId: F-CDA2BBE32E87
+  - path: docs/archive/dvt_artifact_store_spec_pack/docs/adr/ADR-030-artifact-content-addressing.md
+    fileId: F-706258864AB6
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: docs/archive/DVT+_Architectural_Review_20260225.md
-    fileId: F-D46179D6F4D5
+  - path: docs/archive/dvt_artifact_store_spec_pack/docs/architecture/artifact-store-spec.md
+    fileId: F-4EE57134C0F0
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: docs/archive/DVT+_Architectural_Review_20260226_AI.en.md
-    fileId: F-897394B69CA6
+  - path: docs/archive/dvt_artifact_store_spec_pack/index.md
+    fileId: F-4A47A4365DAF
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: docs/archive/GOLDEN_PATH_COVERAGE_DEBT_ASSESSMENT_20260307.md
-    fileId: F-3F141259FDE0
+  - path: docs/archive/dvt_artifact_store_spec_pack/specs/contracts/artifact-ref.schema.json
+    fileId: F-1588F969A7AA
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/archive/dvt_artifact_store_spec_pack/sql/artifact_store_reference.sql
+    fileId: F-789F9C84D7AE
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -3169,22 +3232,8 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: docs/archive/HITO_0_ESTABILIZACION_INMEDIATA_PLAN.md
-    fileId: F-8A3576C2AA00
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
   - path: docs/archive/index.md
     fileId: F-B7D5CED48AF9
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/archive/OPENLINEAGE_MARQUEZ_DIAGNOSTIC_COMPARISON_20260307.md
-    fileId: F-7552CECAEFF3
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -3373,6 +3422,22 @@ files:
     isLegacy: false
   - path: >-
       docs/archive/planning/gaps/gap5/2.
+      g5_outbox_worker_focused_topics_pack/G5_OUTBOX_WORKER_FOCUSED_TOPICS_FULL_REVIEW.md
+    fileId: F-5AB21D9A2899
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/archive/planning/gaps/gap5/2. g5_outbox_worker_focused_topics_pack/README.md
+    fileId: F-09E169797E1D
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: >-
+      docs/archive/planning/gaps/gap5/2.
       g5_outbox_worker_focused_topics_pack/docs/adr/ADR-G5-002-focused-topics-addendum.md
     fileId: F-A3E1064CE024
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -3426,16 +3491,18 @@ files:
     isDrift: false
     isLegacy: false
   - path: >-
-      docs/archive/planning/gaps/gap5/2.
-      g5_outbox_worker_focused_topics_pack/G5_OUTBOX_WORKER_FOCUSED_TOPICS_FULL_REVIEW.md
-    fileId: F-5AB21D9A2899
+      docs/archive/planning/gaps/gap5/3.
+      g5_outbox_worker_final_tuning_only_requested/g5_focused_final_tuning/G5_OUTBOX_WORKER_FOCUSED_FINAL_TUNING.md
+    fileId: F-A9F4FC489A1E
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: docs/archive/planning/gaps/gap5/2. g5_outbox_worker_focused_topics_pack/README.md
-    fileId: F-09E169797E1D
+  - path: >-
+      docs/archive/planning/gaps/gap5/3.
+      g5_outbox_worker_final_tuning_only_requested/g5_focused_final_tuning/README.md
+    fileId: F-6A82342CF28F
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -3477,26 +3544,15 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: >-
-      docs/archive/planning/gaps/gap5/3.
-      g5_outbox_worker_final_tuning_only_requested/g5_focused_final_tuning/G5_OUTBOX_WORKER_FOCUSED_FINAL_TUNING.md
-    fileId: F-A9F4FC489A1E
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: >-
-      docs/archive/planning/gaps/gap5/3.
-      g5_outbox_worker_final_tuning_only_requested/g5_focused_final_tuning/README.md
-    fileId: F-6A82342CF28F
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
   - path: docs/archive/planning/gaps/gap5/4. g5_outbox_worker_repo_ready_source/INTEGRATION_NOTES.md
     fileId: F-DA9BEFF8B2B5
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/archive/planning/gaps/gap5/4. g5_outbox_worker_repo_ready_source/README.md
+    fileId: F-8904CAF08D0A
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -3871,13 +3927,6 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: docs/archive/planning/gaps/gap5/4. g5_outbox_worker_repo_ready_source/README.md
-    fileId: F-8904CAF08D0A
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
   - path: docs/archive/planning/gaps/gap5/G5_OUTBOX_WORKER_FOCUSED_TOPICS_FULL_PACK.md
     fileId: F-085CAD3C131E
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -3922,27 +3971,6 @@ files:
     isLegacy: false
   - path: docs/archive/planning/proposals/ts-esm-monorepo-audit-and-migration-20260318.md
     fileId: F-6AF2CB561809
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/archive/PR_301_RELAUNCH_BATCH_PLAN_20260228.md
-    fileId: F-F04512DAB40A
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/archive/PR_313_STABILIZATION_EXECUTION_REPORT_20260228.md
-    fileId: F-BD33C7555EA1
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/archive/WF_REDUNDANCY_SIMPLIFICATION_PASS1_20260228.md
-    fileId: F-D400721AD629
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -4018,20 +4046,6 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: docs/contracts/planner/execution-selection-and-executable-subgraph-v1.md
-    fileId: F-89403D486E38
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/contracts/planner/index.md
-    fileId: F-52F0BD4FA54E
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
   - path: docs/contracts/planner/TransformationFlowCompiler.v1.md
     fileId: F-CC02B8256F41
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -4041,6 +4055,20 @@ files:
     isLegacy: false
   - path: docs/contracts/planner/TransformationFlowPreview.v1.md
     fileId: F-976E8BA94265
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/contracts/planner/execution-selection-and-executable-subgraph-v1.md
+    fileId: F-89403D486E38
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/contracts/planner/index.md
+    fileId: F-52F0BD4FA54E
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -4102,13 +4130,6 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: docs/contracts/traceability/facets/openlineage/index.md
-    fileId: F-2CA0397B315D
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
   - path: docs/contracts/traceability/facets/openlineage/SqlJobFacet.1-0-0.schema.json
     fileId: F-C474EF3E3501
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -4116,358 +4137,15 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
+  - path: docs/contracts/traceability/facets/openlineage/index.md
+    fileId: F-2CA0397B315D
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
   - path: docs/contracts/traceability/index.md
     fileId: F-71B7C5A92749
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/CONTRIBUTING.md
-    fileId: F-7E757DE594A8
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/DOCS_README.md
-    fileId: F-96F773EACC49
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/evidence/archive/index.md
-    fileId: F-9DFF4E02F03B
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/evidence/context/ED-20260311-execution-core-assessment.md
-    fileId: F-C6CC45C84A54
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/evidence/context/ED-20260321-planner-start-run-qa-rationale.md
-    fileId: F-FFD88FC1939D
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/evidence/context/ED-20260329-mvp-backend-operability-roadmap-reset.md
-    fileId: F-EFEA665419D3
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/evidence/context/ED-20260331-api-parse-error-coupling-inventory.md
-    fileId: F-10B250F2345F
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/evidence/context/index.md
-    fileId: F-CE55D157B822
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/evidence/critical/ED-20260304-compiledcoderef-ownership.md
-    fileId: F-8F6EEBE3B091
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/evidence/critical/ED-20260304-g3-intentstore-postgres-reconciler.md
-    fileId: F-352C61DE87B5
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/evidence/critical/ED-20260304-temporal-lookup-run-ref.md
-    fileId: F-8F33EA7E2A0B
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/evidence/critical/ED-20260308-g6-us-g6-1-facet-contract-surface.md
-    fileId: F-1C0386E854D7
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/evidence/critical/ED-20260308-g6-us-g6-2-lineage-contract-artifacts.md
-    fileId: F-A5C628E1A1C0
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/evidence/critical/ED-20260308-temporal-operational-close-out.md
-    fileId: F-E9AF59EC9FDB
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/evidence/critical/ED-20260312-g6-golden-schema-closeout.md
-    fileId: F-E2AC5AF04302
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/evidence/critical/ED-20260312-g8-arch-tests-engine-wiring.md
-    fileId: F-BE97E20D02F5
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/evidence/critical/ED-20260314-g9-step-type-registry-closeout.md
-    fileId: F-7BDED726051B
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/evidence/critical/ED-20260315-adapter-postgres-phase1-items5-7.md
-    fileId: F-3646F0DE802C
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/evidence/critical/ED-20260315-api-modules-protected-runtime.md
-    fileId: F-4307502B30BA
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/evidence/critical/ED-20260315-g10-closeout.md
-    fileId: F-3D1C25BD320E
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/evidence/critical/ED-20260315-intent-store-bug-fixes.md
-    fileId: F-2761D783C6EC
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/evidence/critical/ED-20260316-g7-closeout.md
-    fileId: F-D410A9F48B87
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/evidence/critical/ED-20260316-g7-provider-ref-reconciliation.md
-    fileId: F-7D8D774EC427
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/evidence/critical/ED-20260318-stage-1-1-planner-canonicalization-boundary-contracts.md
-    fileId: F-AF46E38915BD
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/evidence/critical/ED-20260319-planner-slice4-artifact-boundary-extraction.md
-    fileId: F-3AF365C0DE05
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/evidence/critical/ED-20260320-api-runtime-query-integration.md
-    fileId: F-27C8D0C1EE39
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/evidence/critical/ED-20260320-planner-r2-typed-graph-source-boundary.md
-    fileId: F-576E5E958F17
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/evidence/critical/ED-20260328-lineage-outbox-retry-scheduling.md
-    fileId: F-D9B9F3F1D90E
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/evidence/critical/ED-20260328-planner-version-reset-signal-policy-wiring.md
-    fileId: F-6D61D9645723
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/evidence/critical/ED-20260328-rc-b5-f2-lineage-claim-timeout-race-integration.md
-    fileId: F-4FFA1521DA16
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/evidence/critical/ED-20260329-lane-c-rbac-operation-level-closeout.md
-    fileId: F-038FF69DC467
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/evidence/critical/ED-20260330-lane-a-ws5-intent-log-fixture-modularization.md
-    fileId: F-9A69990F560D
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/evidence/critical/ED-20260330-lineage-dlq-alerting-auto-replay.md
-    fileId: F-85F0152BFC39
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/evidence/critical/ED-20260330-planner-manifest-ref-cache.md
-    fileId: F-D42D5A17F583
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/evidence/critical/ED-20260330-retention-archive-object-store-hardening.md
-    fileId: F-2A1BD5A76634
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/evidence/critical/ED-20260330-s19f1-phase1-phase2-snapshot-work-queue.md
-    fileId: F-65EDF3D64CCD
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/evidence/critical/ED-20260330-snapshot-staleness-api-surface.md
-    fileId: F-F4733A57ECE1
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/evidence/critical/ED-20260331-lane-a-ws5-b-engine-test-fixture-modularization.md
-    fileId: F-0A50E7FF2F79
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/evidence/critical/ED-20260331-manifestref-production-path.md
-    fileId: F-7141F9EAC851
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/evidence/critical/ED-20260331-mvp-a1-backend-contractual-inventory.md
-    fileId: F-11BD039CEC28
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/evidence/critical/ED-20260331-planner-determinism-hash-pin.md
-    fileId: F-CA31B4A4E704
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/evidence/critical/ED-20260331-rc-c1-boundary-legacy-hardening.md
-    fileId: F-C45C76E80BD3
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/evidence/critical/ED-20260401-admission-telemetry-contract-and-runtime-teardown.md
-    fileId: F-4D8B0DD30085
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/evidence/critical/ED-20260401-cancel-lifecycle-workflow-owned-ordering.md
-    fileId: F-A5BFCC67CF1B
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/evidence/critical/ED-20260401-execution-plan-canonical-identity-unification.md
-    fileId: F-3102565E8763
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/evidence/critical/ED-20260401-executionplanv2-canonical-name-phase2.md
-    fileId: F-DE48EF67CE65
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/evidence/critical/ED-20260401-temporal-live-status-query.md
-    fileId: F-A8382F8D8CD2
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/evidence/critical/ED-20260402-snapshot-retry-and-projector-fallback-hardening.md
-    fileId: F-EA0DBEEEFEF3
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/evidence/critical/ED-20260407-engine-entrypoint-plan-integrity.md
-    fileId: F-AF91910BC5BA
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/evidence/critical/index.md
-    fileId: F-756CCFEEB9A5
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -4816,20 +4494,6 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: docs/evidence/ed-20260414-tf-c3-dbt-plugin-runtime-projection.md
-    fileId: F-5E9C1097B96D
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/evidence/ed-20260414-tf-c3-production-temporal-worker-dbt-host.md
-    fileId: F-4E6955B176F8
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
   - path: docs/evidence/ED-20260415-ar-c4-runtime-circuit-breaker-and-integration-hardening.md
     fileId: F-21F03FA7ED3E
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -4846,13 +4510,6 @@ files:
     isLegacy: false
   - path: docs/evidence/ED-20260416-ar-d1-incremental-snapshot-projection.md
     fileId: F-1705FD8DA7BC
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/evidence/ed-20260416-tf-a2-workspace-graph-draft-boundary.md
-    fileId: F-FD7B21D8E401
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -4916,6 +4573,363 @@ files:
     isLegacy: false
   - path: docs/evidence/ED-20260422-start-run-boundary-and-runtime-seams.md
     fileId: F-760FA06A91E9
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/evidence/archive/index.md
+    fileId: F-9DFF4E02F03B
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/evidence/context/ED-20260311-execution-core-assessment.md
+    fileId: F-C6CC45C84A54
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/evidence/context/ED-20260321-planner-start-run-qa-rationale.md
+    fileId: F-FFD88FC1939D
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/evidence/context/ED-20260329-mvp-backend-operability-roadmap-reset.md
+    fileId: F-EFEA665419D3
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/evidence/context/ED-20260331-api-parse-error-coupling-inventory.md
+    fileId: F-10B250F2345F
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/evidence/context/index.md
+    fileId: F-CE55D157B822
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/evidence/critical/ED-20260304-compiledcoderef-ownership.md
+    fileId: F-8F6EEBE3B091
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/evidence/critical/ED-20260304-g3-intentstore-postgres-reconciler.md
+    fileId: F-352C61DE87B5
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/evidence/critical/ED-20260304-temporal-lookup-run-ref.md
+    fileId: F-8F33EA7E2A0B
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/evidence/critical/ED-20260308-g6-us-g6-1-facet-contract-surface.md
+    fileId: F-1C0386E854D7
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/evidence/critical/ED-20260308-g6-us-g6-2-lineage-contract-artifacts.md
+    fileId: F-A5C628E1A1C0
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/evidence/critical/ED-20260308-temporal-operational-close-out.md
+    fileId: F-E9AF59EC9FDB
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/evidence/critical/ED-20260312-g6-golden-schema-closeout.md
+    fileId: F-E2AC5AF04302
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/evidence/critical/ED-20260312-g8-arch-tests-engine-wiring.md
+    fileId: F-BE97E20D02F5
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/evidence/critical/ED-20260314-g9-step-type-registry-closeout.md
+    fileId: F-7BDED726051B
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/evidence/critical/ED-20260315-adapter-postgres-phase1-items5-7.md
+    fileId: F-3646F0DE802C
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/evidence/critical/ED-20260315-api-modules-protected-runtime.md
+    fileId: F-4307502B30BA
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/evidence/critical/ED-20260315-g10-closeout.md
+    fileId: F-3D1C25BD320E
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/evidence/critical/ED-20260315-intent-store-bug-fixes.md
+    fileId: F-2761D783C6EC
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/evidence/critical/ED-20260316-g7-closeout.md
+    fileId: F-D410A9F48B87
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/evidence/critical/ED-20260316-g7-provider-ref-reconciliation.md
+    fileId: F-7D8D774EC427
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/evidence/critical/ED-20260318-stage-1-1-planner-canonicalization-boundary-contracts.md
+    fileId: F-AF46E38915BD
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/evidence/critical/ED-20260319-planner-slice4-artifact-boundary-extraction.md
+    fileId: F-3AF365C0DE05
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/evidence/critical/ED-20260320-api-runtime-query-integration.md
+    fileId: F-27C8D0C1EE39
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/evidence/critical/ED-20260320-planner-r2-typed-graph-source-boundary.md
+    fileId: F-576E5E958F17
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/evidence/critical/ED-20260328-lineage-outbox-retry-scheduling.md
+    fileId: F-D9B9F3F1D90E
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/evidence/critical/ED-20260328-planner-version-reset-signal-policy-wiring.md
+    fileId: F-6D61D9645723
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/evidence/critical/ED-20260328-rc-b5-f2-lineage-claim-timeout-race-integration.md
+    fileId: F-4FFA1521DA16
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/evidence/critical/ED-20260329-lane-c-rbac-operation-level-closeout.md
+    fileId: F-038FF69DC467
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/evidence/critical/ED-20260330-lane-a-ws5-intent-log-fixture-modularization.md
+    fileId: F-9A69990F560D
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/evidence/critical/ED-20260330-lineage-dlq-alerting-auto-replay.md
+    fileId: F-85F0152BFC39
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/evidence/critical/ED-20260330-planner-manifest-ref-cache.md
+    fileId: F-D42D5A17F583
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/evidence/critical/ED-20260330-retention-archive-object-store-hardening.md
+    fileId: F-2A1BD5A76634
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/evidence/critical/ED-20260330-s19f1-phase1-phase2-snapshot-work-queue.md
+    fileId: F-65EDF3D64CCD
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/evidence/critical/ED-20260330-snapshot-staleness-api-surface.md
+    fileId: F-F4733A57ECE1
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/evidence/critical/ED-20260331-lane-a-ws5-b-engine-test-fixture-modularization.md
+    fileId: F-0A50E7FF2F79
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/evidence/critical/ED-20260331-manifestref-production-path.md
+    fileId: F-7141F9EAC851
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/evidence/critical/ED-20260331-mvp-a1-backend-contractual-inventory.md
+    fileId: F-11BD039CEC28
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/evidence/critical/ED-20260331-planner-determinism-hash-pin.md
+    fileId: F-CA31B4A4E704
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/evidence/critical/ED-20260331-rc-c1-boundary-legacy-hardening.md
+    fileId: F-C45C76E80BD3
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/evidence/critical/ED-20260401-admission-telemetry-contract-and-runtime-teardown.md
+    fileId: F-4D8B0DD30085
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/evidence/critical/ED-20260401-cancel-lifecycle-workflow-owned-ordering.md
+    fileId: F-A5BFCC67CF1B
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/evidence/critical/ED-20260401-execution-plan-canonical-identity-unification.md
+    fileId: F-3102565E8763
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/evidence/critical/ED-20260401-executionplanv2-canonical-name-phase2.md
+    fileId: F-DE48EF67CE65
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/evidence/critical/ED-20260401-temporal-live-status-query.md
+    fileId: F-A8382F8D8CD2
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/evidence/critical/ED-20260402-snapshot-retry-and-projector-fallback-hardening.md
+    fileId: F-EA0DBEEEFEF3
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/evidence/critical/ED-20260407-engine-entrypoint-plan-integrity.md
+    fileId: F-AF91910BC5BA
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/evidence/critical/index.md
+    fileId: F-756CCFEEB9A5
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/evidence/ed-20260414-tf-c3-dbt-plugin-runtime-projection.md
+    fileId: F-5E9C1097B96D
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/evidence/ed-20260414-tf-c3-production-temporal-worker-dbt-host.md
+    fileId: F-4E6955B176F8
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/evidence/ed-20260416-tf-a2-workspace-graph-draft-boundary.md
+    fileId: F-FD7B21D8E401
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -5453,6 +5467,20 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
+  - path: docs/planning/archive/ENGINE_DVT_SPEC_CHECKLIST_STATUS.en.md
+    fileId: F-1E394D7B667F
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/planning/archive/architecture/RunPlanWorkflow_Refactor_Analysis.md
+    fileId: F-52F2916426DB
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
   - path: docs/planning/archive/architecture/aggregate-model.md
     fileId: F-AA9E233EA8AC
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -5474,22 +5502,8 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: docs/planning/archive/architecture/RunPlanWorkflow_Refactor_Analysis.md
-    fileId: F-52F2916426DB
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
   - path: docs/planning/archive/dvt-top-5-gaps-corrected-20260319.md
     fileId: F-C7B28E02BBB7
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/planning/archive/ENGINE_DVT_SPEC_CHECKLIST_STATUS.en.md
-    fileId: F-1E394D7B667F
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -5537,13 +5551,6 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: docs/planning/archive/gaps/g5-outbox-worker-guide.md
-    fileId: F-8538DBF86F4D
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
   - path: docs/planning/archive/gaps/G5-US-G5.3-CORRECTNESS-HARDENING-PLAN.md
     fileId: F-69B7561308EB
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -5560,27 +5567,6 @@ files:
     isLegacy: false
   - path: docs/planning/archive/gaps/G5-US-G5.5-SHARDING-AND-FENCING-PLAN.md
     fileId: F-75E6344A0385
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/planning/archive/gaps/g6/G6-ARCHITECTURE-QA-REVIEW-20260308.md
-    fileId: F-8095AFE44735
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/planning/archive/gaps/g6/G6-OPENLINEAGE-CI-SCHEMA-PIN-PLAN.md
-    fileId: F-E910BA3D16FA
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/planning/archive/gaps/g6/index.md
-    fileId: F-73DD43A7C740
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -5616,6 +5602,34 @@ files:
     isLegacy: false
   - path: docs/planning/archive/gaps/README.md
     fileId: F-FD74A5785C3A
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/planning/archive/gaps/g5-outbox-worker-guide.md
+    fileId: F-8538DBF86F4D
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/planning/archive/gaps/g6/G6-ARCHITECTURE-QA-REVIEW-20260308.md
+    fileId: F-8095AFE44735
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/planning/archive/gaps/g6/G6-OPENLINEAGE-CI-SCHEMA-PIN-PLAN.md
+    fileId: F-E910BA3D16FA
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/planning/archive/gaps/g6/index.md
+    fileId: F-73DD43A7C740
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -8183,13 +8197,6 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: docs/planning/closeouts/engine-deps-refactor-closeout.md
-    fileId: F-F2F734460247
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
   - path: docs/planning/closeouts/F-02-closeout.md
     fileId: F-917A85C3F19A
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -8241,6 +8248,13 @@ files:
     isLegacy: false
   - path: docs/planning/closeouts/G7.1-closeout.md
     fileId: F-D0A97D4C3828
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/planning/closeouts/engine-deps-refactor-closeout.md
+    fileId: F-F2F734460247
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -8351,6 +8365,13 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
+  - path: docs/planning/proposals/README.md
+    fileId: F-D07739A8C124
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
   - path: docs/planning/proposals/contract-mapper-event-boundary-study-20260409.md
     fileId: F-B25B4FEA8368
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -8400,6 +8421,35 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
+  - path: docs/planning/proposals/disposable/experiments/tabs-workbench/README.md
+    fileId: F-7B5E2498D4FF
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/planning/proposals/disposable/experiments/tabs-workbench/REPO_ALIGNMENT.md
+    fileId: F-55E9C73B8466
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/planning/proposals/disposable/experiments/tabs-workbench/dvt-vscode-workbench/README.md
+    fileId: F-49FF35869489
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: >-
+      docs/planning/proposals/disposable/experiments/tabs-workbench/dvt-vscode-workbench/REPO_ALIGNMENT.md
+    fileId: F-D0DD9749813C
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
   - path: >-
       docs/planning/proposals/disposable/experiments/tabs-workbench/dvt-vscode-workbench/apps/web/package.monaco.patch.diff
     fileId: F-DE58953C6C6A
@@ -8441,14 +8491,6 @@ files:
     isDrift: false
     isLegacy: false
   - path: >-
-      docs/planning/proposals/disposable/experiments/tabs-workbench/dvt-vscode-workbench/apps/web/src/app/views/canvas/workbenchArtifacts.ts
-    fileId: F-C5C6BA2EFEAB
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: >-
       docs/planning/proposals/disposable/experiments/tabs-workbench/dvt-vscode-workbench/apps/web/src/app/views/canvas/WorkbenchSidebar.tsx
     fileId: F-987734BB5CF3
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -8465,16 +8507,24 @@ files:
     isDrift: false
     isLegacy: false
   - path: >-
-      docs/planning/proposals/disposable/experiments/tabs-workbench/dvt-vscode-workbench/apps/web/src/app/views/canvas/workbenchStore.ts
-    fileId: F-B15119FC141B
+      docs/planning/proposals/disposable/experiments/tabs-workbench/dvt-vscode-workbench/apps/web/src/app/views/canvas/WorkbenchTabs.tsx
+    fileId: F-77B8BAA6C0CD
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
   - path: >-
-      docs/planning/proposals/disposable/experiments/tabs-workbench/dvt-vscode-workbench/apps/web/src/app/views/canvas/WorkbenchTabs.tsx
-    fileId: F-77B8BAA6C0CD
+      docs/planning/proposals/disposable/experiments/tabs-workbench/dvt-vscode-workbench/apps/web/src/app/views/canvas/workbenchArtifacts.ts
+    fileId: F-C5C6BA2EFEAB
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: >-
+      docs/planning/proposals/disposable/experiments/tabs-workbench/dvt-vscode-workbench/apps/web/src/app/views/canvas/workbenchStore.ts
+    fileId: F-B15119FC141B
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -8488,37 +8538,8 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: docs/planning/proposals/disposable/experiments/tabs-workbench/dvt-vscode-workbench/README.md
-    fileId: F-49FF35869489
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: >-
-      docs/planning/proposals/disposable/experiments/tabs-workbench/dvt-vscode-workbench/REPO_ALIGNMENT.md
-    fileId: F-D0DD9749813C
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
   - path: docs/planning/proposals/disposable/experiments/tabs-workbench/package.monaco.patch.diff
     fileId: F-E7C9DE989A3E
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/planning/proposals/disposable/experiments/tabs-workbench/README.md
-    fileId: F-7B5E2498D4FF
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/planning/proposals/disposable/experiments/tabs-workbench/REPO_ALIGNMENT.md
-    fileId: F-55E9C73B8466
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -8534,6 +8555,13 @@ files:
   - path: >-
       docs/planning/proposals/disposable/manifests/planner-stage-1-1-canonicalization.manifest.schema.json
     fileId: F-DA9A10F40E45
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/README.md
+    fileId: F-B95AB2DAA21F
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -8646,13 +8674,6 @@ files:
   - path: >-
       docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/docs/10-governed-slice-extraction-and-lane-e-mapping.md
     fileId: F-9D169D59CC95
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/README.md
-    fileId: F-B95AB2DAA21F
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -9239,6 +9260,14 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
+  - path: >-
+      docs/planning/proposals/nice-to-have/architecture/DVT-plus-state-machine-transition-proposal.md
+    fileId: F-E419F7A2B20D
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
   - path: docs/planning/proposals/nice-to-have/architecture/datamode_proposal.md
     fileId: F-140FA4191985
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -9249,14 +9278,6 @@ files:
   - path: >-
       docs/planning/proposals/nice-to-have/architecture/ddd-hexagonal-modularization-plan-20260323.md
     fileId: F-A4EA78EB81D8
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: >-
-      docs/planning/proposals/nice-to-have/architecture/DVT-plus-state-machine-transition-proposal.md
-    fileId: F-E419F7A2B20D
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -9364,13 +9385,6 @@ files:
     isLegacy: false
   - path: docs/planning/proposals/portfolio-map-20260403.md
     fileId: F-FCCEA76C44CF
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/planning/proposals/README.md
-    fileId: F-D07739A8C124
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -11142,15 +11156,22 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: docs/planning/templates/index.md
-    fileId: F-60ED0E8CA771
+  - path: docs/planning/templates/TEMPLATE_EXECUTION_WORK_ITEM.md
+    fileId: F-08A0CE5CE9DA
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: docs/planning/templates/qa/index.md
-    fileId: F-A7D2DBDC7E23
+  - path: docs/planning/templates/TEMPLATE_PLANNING_DOC.md
+    fileId: F-52799D9605C7
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/planning/templates/index.md
+    fileId: F-60ED0E8CA771
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -11177,36 +11198,8 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: docs/planning/templates/TEMPLATE_EXECUTION_WORK_ITEM.md
-    fileId: F-08A0CE5CE9DA
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/planning/templates/TEMPLATE_PLANNING_DOC.md
-    fileId: F-52799D9605C7
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/reviews/architectural-review-dvtplus-2026-03-24.md
-    fileId: F-D92368E13C27
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/reviews/dvt_planner_technical_vision.md
-    fileId: F-05084660DB6E
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/reviews/dvt-top3-gaps-roadmap-20260319.md
-    fileId: F-5E73BE819069
+  - path: docs/planning/templates/qa/index.md
+    fileId: F-A7D2DBDC7E23
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -11219,15 +11212,29 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: docs/reviews/prioritized-gaps-20260319.md
-    fileId: F-864073634056
+  - path: docs/reviews/architectural-review-dvtplus-2026-03-24.md
+    fileId: F-D92368E13C27
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: docs/risk-register/adapters/index.md
-    fileId: F-D76A0401A373
+  - path: docs/reviews/dvt-top3-gaps-roadmap-20260319.md
+    fileId: F-5E73BE819069
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/reviews/dvt_planner_technical_vision.md
+    fileId: F-05084660DB6E
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/reviews/prioritized-gaps-20260319.md
+    fileId: F-864073634056
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -11296,15 +11303,15 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: docs/risk-register/index.md
-    fileId: F-9AF0D65E3165
+  - path: docs/risk-register/adapters/index.md
+    fileId: F-D76A0401A373
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: docs/risk-register/quality/index.md
-    fileId: F-172E099564B9
+  - path: docs/risk-register/index.md
+    fileId: F-9AF0D65E3165
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -11387,15 +11394,15 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: docs/risk-register/quality/R-20260328-planner-schema-version-sync-governance.md
-    fileId: F-525C0E3BAB7A
+  - path: docs/risk-register/quality/R-20260328-RCB5F2-LINEAGE-CLAIM-RACE.md
+    fileId: F-1E5BF3DC6043
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: docs/risk-register/quality/R-20260328-RCB5F2-LINEAGE-CLAIM-RACE.md
-    fileId: F-1E5BF3DC6043
+  - path: docs/risk-register/quality/R-20260328-planner-schema-version-sync-governance.md
+    fileId: F-525C0E3BAB7A
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -11443,13 +11450,6 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: docs/risk-register/quality/R-20260330-snapshot-staleness-caller-view.yaml
-    fileId: F-FA743A639936
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
   - path: docs/risk-register/quality/R-20260330-STALENESS-PARALLEL-TELEMETRY-ON-ENGINE-FAILURE.yaml
     fileId: F-F899CAB4A29E
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -11459,6 +11459,13 @@ files:
     isLegacy: false
   - path: docs/risk-register/quality/R-20260330-WS5-ENGINE-TEST-FIXTURE-DRIFT.md
     fileId: F-87C0A16128D5
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/risk-register/quality/R-20260330-snapshot-staleness-caller-view.yaml
+    fileId: F-FA743A639936
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -11569,13 +11576,6 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: docs/risk-register/quality/R-20260404-guards-alignment-adapter-postgres.yaml
-    fileId: F-F12FBBF2EB90
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
   - path: docs/risk-register/quality/R-20260404-INMEMORY-STATE-STORE-INVARIANTS.yaml
     fileId: F-550AFFC3A24D
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -11592,6 +11592,13 @@ files:
     isLegacy: false
   - path: docs/risk-register/quality/R-20260404-PLANNER-V1-CONTRACT-NORMALIZATION.yaml
     fileId: F-BE98EFB28125
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/risk-register/quality/R-20260404-guards-alignment-adapter-postgres.yaml
+    fileId: F-F12FBBF2EB90
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -12067,13 +12074,6 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: docs/risk-register/quality/r-20260426-start-run-intent-rollback-asymmetry.md
-    fileId: F-309B4D5F6CF1
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
   - path: docs/risk-register/quality/R-20260427-DEV-STACK-TEMPORAL-BOOTSTRAP.yaml
     fileId: F-B6EB6CF9CC91
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -12116,13 +12116,6 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: docs/risk-register/quality/r-20260430-ar-d-continuation-safety.yaml
-    fileId: F-D0D6CF842FB6
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
   - path: docs/risk-register/quality/R-20260430-AR-D2-TEMPORAL-CAPACITY-SLA.yaml
     fileId: F-375E3BECFA8D
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -12139,6 +12132,27 @@ files:
     isLegacy: false
   - path: docs/risk-register/quality/R-20260430-WE-HX-2-FACADE-USE-CASES.yaml
     fileId: F-49BFFA6566BB
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/risk-register/quality/index.md
+    fileId: F-172E099564B9
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/risk-register/quality/r-20260426-start-run-intent-rollback-asymmetry.md
+    fileId: F-309B4D5F6CF1
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/risk-register/quality/r-20260430-ar-d-continuation-safety.yaml
+    fileId: F-D0D6CF842FB6
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -12258,20 +12272,6 @@ files:
     isLegacy: false
   - path: docs/runbooks/workspace-graph-draft-protected-boundary-20260416.md
     fileId: F-FD890AEDA3B2
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/SPANISH_TEXTS.md
-    fileId: F-754AAA239BDC
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: README.md
-    fileId: F-9A817629A05F
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required

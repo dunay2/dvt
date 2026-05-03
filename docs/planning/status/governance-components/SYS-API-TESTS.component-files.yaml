@@ -46,15 +46,15 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: apps/api/test/app/protectedRouteMounting.test.ts
-    fileId: F-36BF3AB0ECD7
+  - path: apps/api/test/app/protectedRouteMountTestSupport.ts
+    fileId: F-1492B31E4A9B
     owningUnit: SYS-API-TESTS
     unitStatus: coverage-required
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: apps/api/test/app/protectedRouteMountTestSupport.ts
-    fileId: F-1492B31E4A9B
+  - path: apps/api/test/app/protectedRouteMounting.test.ts
+    fileId: F-36BF3AB0ECD7
     owningUnit: SYS-API-TESTS
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -76,34 +76,6 @@ files:
     isLegacy: false
   - path: apps/api/test/application/ports/accessDecision.test.ts
     fileId: F-8A61B03D53FB
-    owningUnit: SYS-API-TESTS
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/api/test/application/services/applicationArchitectureAst.artifacts.ts
-    fileId: F-5F6F031BFBF0
-    owningUnit: SYS-API-TESTS
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/api/test/application/services/applicationArchitectureAst.support.ts
-    fileId: F-BA6A126B9428
-    owningUnit: SYS-API-TESTS
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/api/test/application/services/authorizeCommandScopeService.test.ts
-    fileId: F-1EDE6B48472F
-    owningUnit: SYS-API-TESTS
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/api/test/application/services/authorizeWorkspaceGraphDraftCapabilityService.test.ts
-    fileId: F-035D492220A6
     owningUnit: SYS-API-TESTS
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -145,15 +117,64 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: apps/api/test/application/services/cancelRunUseCase.test.ts
-    fileId: F-EA830AB73509
+  - path: apps/api/test/application/services/CompilePlanUseCase.test.ts
+    fileId: F-A157A20BE68E
     owningUnit: SYS-API-TESTS
     unitStatus: coverage-required
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: apps/api/test/application/services/CompilePlanUseCase.test.ts
-    fileId: F-A157A20BE68E
+  - path: apps/api/test/application/services/NoopAdmissionTelemetry.test.ts
+    fileId: F-3CF63E6FAF49
+    owningUnit: SYS-API-TESTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/test/application/services/NoopDuplicateRunProbe.test.ts
+    fileId: F-402B66DA6AC8
+    owningUnit: SYS-API-TESTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/test/application/services/PlannerBackedStartRunUseCase.test.ts
+    fileId: F-7F6BC07B4C84
+    owningUnit: SYS-API-TESTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/test/application/services/applicationArchitectureAst.artifacts.ts
+    fileId: F-5F6F031BFBF0
+    owningUnit: SYS-API-TESTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/test/application/services/applicationArchitectureAst.support.ts
+    fileId: F-BA6A126B9428
+    owningUnit: SYS-API-TESTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/test/application/services/authorizeCommandScopeService.test.ts
+    fileId: F-1EDE6B48472F
+    owningUnit: SYS-API-TESTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/test/application/services/authorizeWorkspaceGraphDraftCapabilityService.test.ts
+    fileId: F-035D492220A6
+    owningUnit: SYS-API-TESTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/test/application/services/cancelRunUseCase.test.ts
+    fileId: F-EA830AB73509
     owningUnit: SYS-API-TESTS
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -210,27 +231,6 @@ files:
     isLegacy: false
   - path: apps/api/test/application/services/listRunsUseCase.test.ts
     fileId: F-93C5E3571DA2
-    owningUnit: SYS-API-TESTS
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/api/test/application/services/NoopAdmissionTelemetry.test.ts
-    fileId: F-3CF63E6FAF49
-    owningUnit: SYS-API-TESTS
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/api/test/application/services/NoopDuplicateRunProbe.test.ts
-    fileId: F-402B66DA6AC8
-    owningUnit: SYS-API-TESTS
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/api/test/application/services/PlannerBackedStartRunUseCase.test.ts
-    fileId: F-7F6BC07B4C84
     owningUnit: SYS-API-TESTS
     unitStatus: coverage-required
     governanceState: coverage-required

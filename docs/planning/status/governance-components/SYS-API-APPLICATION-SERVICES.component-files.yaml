@@ -11,6 +11,55 @@ fileCount: 34
 driftFileCount: 0
 legacyFileCount: 0
 files:
+  - path: apps/api/src/application/services/BackpressureAwareStartRunUseCase.ts
+    fileId: F-E00B6986203E
+    owningUnit: SYS-API-APPLICATION-SERVICES
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/src/application/services/CompilePlanUseCase.ts
+    fileId: F-E2C586B2F600
+    owningUnit: SYS-API-APPLICATION-SERVICES
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/src/application/services/ImportPlanUseCase.ts
+    fileId: F-DA79FFADC8AB
+    owningUnit: SYS-API-APPLICATION-SERVICES
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/src/application/services/NoopAdmissionTelemetry.ts
+    fileId: F-BF5DA500A822
+    owningUnit: SYS-API-APPLICATION-SERVICES
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/src/application/services/NoopDuplicateRunProbe.ts
+    fileId: F-BA3EBF1F9A5C
+    owningUnit: SYS-API-APPLICATION-SERVICES
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/src/application/services/PlannerBackedStartRunUseCase.ts
+    fileId: F-E41C46B9FDC2
+    owningUnit: SYS-API-APPLICATION-SERVICES
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/src/application/services/PreviewPlanUseCase.ts
+    fileId: F-C4D3E4E88B24
+    owningUnit: SYS-API-APPLICATION-SERVICES
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
   - path: apps/api/src/application/services/authorizeCommandScopeService.ts
     fileId: F-CE70D31194AD
     owningUnit: SYS-API-APPLICATION-SERVICES
@@ -25,22 +74,8 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: apps/api/src/application/services/BackpressureAwareStartRunUseCase.ts
-    fileId: F-E00B6986203E
-    owningUnit: SYS-API-APPLICATION-SERVICES
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
   - path: apps/api/src/application/services/cancelRunUseCase.ts
     fileId: F-56A08741D194
-    owningUnit: SYS-API-APPLICATION-SERVICES
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/api/src/application/services/CompilePlanUseCase.ts
-    fileId: F-E2C586B2F600
     owningUnit: SYS-API-APPLICATION-SERVICES
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -81,29 +116,8 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: apps/api/src/application/services/ImportPlanUseCase.ts
-    fileId: F-DA79FFADC8AB
-    owningUnit: SYS-API-APPLICATION-SERVICES
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
   - path: apps/api/src/application/services/listRunsUseCase.ts
     fileId: F-3ADA6E1C5ECA
-    owningUnit: SYS-API-APPLICATION-SERVICES
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/api/src/application/services/NoopAdmissionTelemetry.ts
-    fileId: F-BF5DA500A822
-    owningUnit: SYS-API-APPLICATION-SERVICES
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/api/src/application/services/NoopDuplicateRunProbe.ts
-    fileId: F-BA3EBF1F9A5C
     owningUnit: SYS-API-APPLICATION-SERVICES
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -116,20 +130,6 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: apps/api/src/application/services/PlannerBackedStartRunUseCase.ts
-    fileId: F-E41C46B9FDC2
-    owningUnit: SYS-API-APPLICATION-SERVICES
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/api/src/application/services/plannerExecutionPlanBridge.ts
-    fileId: F-0A049EB964CD
-    owningUnit: SYS-API-APPLICATION-SERVICES
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
   - path: apps/api/src/application/services/planRoutePolicyCatalog.ts
     fileId: F-BAEA72A8B6D5
     owningUnit: SYS-API-APPLICATION-SERVICES
@@ -137,8 +137,8 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: apps/api/src/application/services/PreviewPlanUseCase.ts
-    fileId: F-C4D3E4E88B24
+  - path: apps/api/src/application/services/plannerExecutionPlanBridge.ts
+    fileId: F-0A049EB964CD
     owningUnit: SYS-API-APPLICATION-SERVICES
     unitStatus: coverage-required
     governanceState: coverage-required

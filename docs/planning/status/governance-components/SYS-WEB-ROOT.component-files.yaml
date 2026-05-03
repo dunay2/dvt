@@ -25,6 +25,13 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
+  - path: apps/web/README.md
+    fileId: F-3DA8501BE3DC
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
   - path: apps/web/cypress.config.ts
     fileId: F-7A8FB76C6B8B
     owningUnit: SYS-WEB-ROOT
@@ -221,13 +228,6 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: apps/web/README.md
-    fileId: F-3DA8501BE3DC
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
   - path: apps/web/scripts/run-cypress-docker.mjs
     fileId: F-05401BFA3B90
     owningUnit: SYS-WEB-ROOT
@@ -256,15 +256,71 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: apps/web/src/app/appRoute.test.support.ts
-    fileId: F-BB35B0090172
+  - path: apps/web/src/app/AppRouteErrorBoundary.tsx
+    fileId: F-6C82F5253BED
     owningUnit: SYS-WEB-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: apps/web/src/app/AppRouteErrorBoundary.tsx
-    fileId: F-6C82F5253BED
+  - path: apps/web/src/app/Root.bootstrapFlow.test.tsx
+    fileId: F-6B13BA790BD7
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/Root.bootstrapRoute.test.support.tsx
+    fileId: F-A8A10A51EE91
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/Root.platformHealthBanner.test.tsx
+    fileId: F-5591EB2E7482
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/Root.shellChrome.test.support.ts
+    fileId: F-9FF121564259
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/Root.shellChrome.test.tsx
+    fileId: F-27212A53E3A4
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/Root.test.support.tsx
+    fileId: F-15F508CE97B3
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/Root.test.tsx
+    fileId: F-8DCFB7C5B21B
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/Root.tsx
+    fileId: F-66C184906A9A
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/appRoute.test.support.ts
+    fileId: F-BB35B0090172
     owningUnit: SYS-WEB-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -279,6 +335,13 @@ files:
     isLegacy: false
   - path: apps/web/src/app/appRouteErrorBoundaryCopy.ts
     fileId: F-C14989C8AE06
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/bootstrap/StaticRouteBootstrapBoundary.tsx
+    fileId: F-883091D98BB8
     owningUnit: SYS-WEB-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -424,13 +487,6 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: apps/web/src/app/bootstrap/StaticRouteBootstrapBoundary.tsx
-    fileId: F-883091D98BB8
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
   - path: apps/web/src/app/bootstrap/useActiveRouteBootstrapRegistration.test.tsx
     fileId: F-EDA655C715F0
     owningUnit: SYS-WEB-ROOT
@@ -466,6 +522,90 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
+  - path: apps/web/src/app/components/Console.test.tsx
+    fileId: F-F9F52A627817
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/components/Console.tsx
+    fileId: F-52A6A642E2DB
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/components/DbtExplorer.test.tsx
+    fileId: F-B7C270C99555
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/components/DbtExplorer.tsx
+    fileId: F-F715D60ADC8E
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/components/InspectorPanel.tsx
+    fileId: F-2A8E2FF69B00
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/components/LeftNavigation.tsx
+    fileId: F-EF23B8F89A61
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/components/Modals.test.tsx
+    fileId: F-49859A95A624
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/components/Modals.tsx
+    fileId: F-09A66B7BF20D
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/components/ShellHealthBanner.tsx
+    fileId: F-B04290E73C3A
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/components/SourceImportWizard.test.tsx
+    fileId: F-0699E5A3C9B6
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/components/SourceImportWizard.tsx
+    fileId: F-0A3261F5AD34
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/components/TopAppBar.tsx
+    fileId: F-D674640041D0
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
   - path: apps/web/src/app/components/canvas/DbtNodeComponent.architecture.test.ts
     fileId: F-446582269B7B
     owningUnit: SYS-WEB-ROOT
@@ -487,15 +627,8 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: apps/web/src/app/components/Console.test.tsx
-    fileId: F-F9F52A627817
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/components/Console.tsx
-    fileId: F-52A6A642E2DB
+  - path: apps/web/src/app/components/console/XtermConsole.tsx
+    fileId: F-ACE6DE3FF71C
     owningUnit: SYS-WEB-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -517,41 +650,6 @@ files:
     isLegacy: false
   - path: apps/web/src/app/components/console/useConsoleLogStream.ts
     fileId: F-275506F4CFB4
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/components/console/XtermConsole.tsx
-    fileId: F-ACE6DE3FF71C
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/components/DbtExplorer.test.tsx
-    fileId: F-B7C270C99555
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/components/DbtExplorer.tsx
-    fileId: F-F715D60ADC8E
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/components/domain/domainComponents.test.tsx
-    fileId: F-71963A82CB68
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/components/domain/index.ts
-    fileId: F-773DFCFC2341
     owningUnit: SYS-WEB-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -585,36 +683,22 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
+  - path: apps/web/src/app/components/domain/domainComponents.test.tsx
+    fileId: F-71963A82CB68
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/components/domain/index.ts
+    fileId: F-773DFCFC2341
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
   - path: apps/web/src/app/components/figma/ImageWithFallback.tsx
     fileId: F-D9B25716D4E9
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/components/InspectorPanel.tsx
-    fileId: F-2A8E2FF69B00
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/components/LeftNavigation.tsx
-    fileId: F-EF23B8F89A61
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/components/Modals.test.tsx
-    fileId: F-49859A95A624
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/components/Modals.tsx
-    fileId: F-09A66B7BF20D
     owningUnit: SYS-WEB-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -669,34 +753,6 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: apps/web/src/app/components/shell/bottomConsoleDrawerModel.test.ts
-    fileId: F-5C5A82C9B4CB
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/components/shell/bottomConsoleDrawerModel.ts
-    fileId: F-98F424800D3F
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/components/shell/chrome.ts
-    fileId: F-08196DF3AF7A
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/components/shell/copy.ts
-    fileId: F-E1B74E032605
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
   - path: apps/web/src/app/components/shell/ShellConnectionStatus.tsx
     fileId: F-60DE3B5E2E16
     owningUnit: SYS-WEB-ROOT
@@ -725,6 +781,34 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
+  - path: apps/web/src/app/components/shell/bottomConsoleDrawerModel.test.ts
+    fileId: F-5C5A82C9B4CB
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/components/shell/bottomConsoleDrawerModel.ts
+    fileId: F-98F424800D3F
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/components/shell/chrome.ts
+    fileId: F-08196DF3AF7A
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/components/shell/copy.ts
+    fileId: F-E1B74E032605
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
   - path: apps/web/src/app/components/shell/types.ts
     fileId: F-FF388755A77D
     owningUnit: SYS-WEB-ROOT
@@ -732,43 +816,8 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: apps/web/src/app/components/ShellHealthBanner.tsx
-    fileId: F-B04290E73C3A
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/components/SourceImportWizard.test.tsx
-    fileId: F-0699E5A3C9B6
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/components/SourceImportWizard.tsx
-    fileId: F-0A3261F5AD34
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
   - path: apps/web/src/app/components/sourceImportWizard/ConnectionStep.tsx
     fileId: F-2D96FB18445F
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/components/sourceImportWizard/constants.ts
-    fileId: F-055174E5681F
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/components/sourceImportWizard/copy.ts
-    fileId: F-E85E9A889F1A
     owningUnit: SYS-WEB-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -809,6 +858,41 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
+  - path: apps/web/src/app/components/sourceImportWizard/SourceTypeStep.tsx
+    fileId: F-3D8F15867161
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/components/sourceImportWizard/WizardProgress.tsx
+    fileId: F-C5F9EEF2CD24
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/components/sourceImportWizard/WizardStepContent.tsx
+    fileId: F-711395408A82
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/components/sourceImportWizard/constants.ts
+    fileId: F-055174E5681F
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/components/sourceImportWizard/copy.ts
+    fileId: F-E85E9A889F1A
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
   - path: apps/web/src/app/components/sourceImportWizard/sourceImportWizardModel.test.ts
     fileId: F-CD539DD656B4
     owningUnit: SYS-WEB-ROOT
@@ -818,13 +902,6 @@ files:
     isLegacy: false
   - path: apps/web/src/app/components/sourceImportWizard/sourceImportWizardModel.ts
     fileId: F-B1B5752EBB05
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/components/sourceImportWizard/SourceTypeStep.tsx
-    fileId: F-3D8F15867161
     owningUnit: SYS-WEB-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -846,27 +923,6 @@ files:
     isLegacy: false
   - path: apps/web/src/app/components/sourceImportWizard/useSourceImportWizardDataLoaders.ts
     fileId: F-EC8E21E69127
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/components/sourceImportWizard/WizardProgress.tsx
-    fileId: F-C5F9EEF2CD24
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/components/sourceImportWizard/WizardStepContent.tsx
-    fileId: F-711395408A82
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/components/TopAppBar.tsx
-    fileId: F-D674640041D0
     owningUnit: SYS-WEB-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -1257,6 +1313,34 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
+  - path: apps/web/src/app/plugins/FallbackNodeRenderer.tsx
+    fileId: F-14F63371E40D
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/plugins/PluginEventBus.ts
+    fileId: F-840FF6C1382B
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/plugins/PluginRegistry.ts
+    fileId: F-41D854CAF99E
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/plugins/PluginRegistryContext.tsx
+    fileId: F-5BB2B373F0E0
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
   - path: apps/web/src/app/plugins/canvasExecutionStrategyContracts.ts
     fileId: F-FE1D9A2725C6
     owningUnit: SYS-WEB-ROOT
@@ -1320,6 +1404,13 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
+  - path: apps/web/src/app/plugins/dbt/DbtNodeRenderer.tsx
+    fileId: F-44B0EC57B894
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
   - path: apps/web/src/app/plugins/dbt/dbtContributions.connectionRules.test.ts
     fileId: F-6803C64D367B
     owningUnit: SYS-WEB-ROOT
@@ -1343,13 +1434,6 @@ files:
     isLegacy: false
   - path: apps/web/src/app/plugins/dbt/dbtNodeAdapter.ts
     fileId: F-6B28893ABAE6
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/plugins/dbt/DbtNodeRenderer.tsx
-    fileId: F-44B0EC57B894
     owningUnit: SYS-WEB-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -1385,13 +1469,6 @@ files:
     isLegacy: false
   - path: apps/web/src/app/plugins/dvt/transformationGraphStrategy.ts
     fileId: F-D51070F55B52
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/plugins/FallbackNodeRenderer.tsx
-    fileId: F-14F63371E40D
     owningUnit: SYS-WEB-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -1462,27 +1539,6 @@ files:
     isLegacy: false
   - path: apps/web/src/app/plugins/nodeTypeRegistry.ts
     fileId: F-F7AAD5FCE157
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/plugins/PluginEventBus.ts
-    fileId: F-840FF6C1382B
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/plugins/PluginRegistry.ts
-    fileId: F-41D854CAF99E
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/plugins/PluginRegistryContext.tsx
-    fileId: F-5BB2B373F0E0
     owningUnit: SYS-WEB-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -1607,62 +1663,6 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: apps/web/src/app/Root.bootstrapFlow.test.tsx
-    fileId: F-6B13BA790BD7
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/Root.bootstrapRoute.test.support.tsx
-    fileId: F-A8A10A51EE91
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/Root.platformHealthBanner.test.tsx
-    fileId: F-5591EB2E7482
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/Root.shellChrome.test.support.ts
-    fileId: F-9FF121564259
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/Root.shellChrome.test.tsx
-    fileId: F-27212A53E3A4
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/Root.test.support.tsx
-    fileId: F-15F508CE97B3
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/Root.test.tsx
-    fileId: F-8DCFB7C5B21B
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/Root.tsx
-    fileId: F-66C184906A9A
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
   - path: apps/web/src/app/routes.test.tsx
     fileId: F-DD76DC44810E
     owningUnit: SYS-WEB-ROOT
@@ -1672,6 +1672,20 @@ files:
     isLegacy: false
   - path: apps/web/src/app/routes.ts
     fileId: F-1B7C88EFEB87
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/services/AppServicesContext.test.tsx
+    fileId: F-9ACD420BDB63
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/services/AppServicesContext.tsx
+    fileId: F-4BA864EF4D23
     owningUnit: SYS-WEB-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -1700,20 +1714,6 @@ files:
     isLegacy: false
   - path: apps/web/src/app/services/api/protectedRuntimeRejection.ts
     fileId: F-364A0F38C570
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/services/AppServicesContext.test.tsx
-    fileId: F-9ACD420BDB63
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/services/AppServicesContext.tsx
-    fileId: F-4BA864EF4D23
     owningUnit: SYS-WEB-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -1831,6 +1831,20 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
+  - path: apps/web/src/app/services/runs/runWorkspaceFacade.test.ts
+    fileId: F-79592E539DCB
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/services/runs/runWorkspaceFacade.ts
+    fileId: F-1544AB7D649C
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
   - path: apps/web/src/app/services/runs/runsApiDecoders.ts
     fileId: F-534855946017
     owningUnit: SYS-WEB-ROOT
@@ -1875,20 +1889,6 @@ files:
     isLegacy: false
   - path: apps/web/src/app/services/runs/runsService.ts
     fileId: F-B4E0ACB15949
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/services/runs/runWorkspaceFacade.test.ts
-    fileId: F-79592E539DCB
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/services/runs/runWorkspaceFacade.ts
-    fileId: F-1544AB7D649C
     owningUnit: SYS-WEB-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -2223,6 +2223,195 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
+  - path: apps/web/src/app/views/AdminView.architecture.test.ts
+    fileId: F-4F39CF06E530
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/views/AdminView.test.tsx
+    fileId: F-8E8DB7265CF0
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/views/AdminView.tsx
+    fileId: F-D049E4685736
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/views/ArtifactsView.test.tsx
+    fileId: F-18E4F1683429
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/views/ArtifactsView.tsx
+    fileId: F-0E93EF857A5C
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/views/Canvas.architecture.test.tsx
+    fileId: F-0D44D861DA2A
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/views/Canvas.authoringRoute.integration.test.tsx
+    fileId: F-9098EC87BC85
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/views/Canvas.draftRecovery.test.tsx
+    fileId: F-73023B89A20B
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/views/Canvas.readOnlyStates.test.tsx
+    fileId: F-4474923E5425
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/views/Canvas.routeStates.test.tsx
+    fileId: F-8F36FFEFF875
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/views/Canvas.test.controller.defaults.ts
+    fileId: F-95FD353073B5
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/views/Canvas.test.controller.ts
+    fileId: F-463EFCE86D43
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/views/Canvas.test.hostCycleScenario.ts
+    fileId: F-0286C6F0170C
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/views/Canvas.test.support.tsx
+    fileId: F-170FD1D0BB21
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/views/Canvas.tsx
+    fileId: F-39A571B0F25A
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/views/CodeView.test.tsx
+    fileId: F-4DF7A4CCD249
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/views/CodeView.tsx
+    fileId: F-6C4514675000
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/views/CostView.test.tsx
+    fileId: F-523211BF5363
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/views/CostView.tsx
+    fileId: F-D7D315A06506
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/views/DiffView.test.tsx
+    fileId: F-3BA73C716F2B
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/views/DiffView.tsx
+    fileId: F-89A1F3CDF2A1
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/views/LineageView.test.tsx
+    fileId: F-FFF69FBB45B8
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/views/LineageView.tsx
+    fileId: F-BF9D299BCDAD
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/views/PluginsView.test.tsx
+    fileId: F-858CA17B8462
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/views/PluginsView.tsx
+    fileId: F-79CAF71B6EEE
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/views/RunsView.test.tsx
+    fileId: F-684D4851DB0B
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/views/RunsView.tsx
+    fileId: F-03141DC282CA
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
   - path: apps/web/src/app/views/admin/AdminAuditTab.tsx
     fileId: F-BC1CB0D787BC
     owningUnit: SYS-WEB-ROOT
@@ -2314,27 +2503,6 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: apps/web/src/app/views/AdminView.architecture.test.ts
-    fileId: F-4F39CF06E530
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/views/AdminView.test.tsx
-    fileId: F-8E8DB7265CF0
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/views/AdminView.tsx
-    fileId: F-D049E4685736
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
   - path: apps/web/src/app/views/architecture.test.support.ts
     fileId: F-82C7FE6363CD
     owningUnit: SYS-WEB-ROOT
@@ -2363,6 +2531,20 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
+  - path: apps/web/src/app/views/artifacts/ArtifactsStateViews.tsx
+    fileId: F-A79399E00C16
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/views/artifacts/ManifestImportPanel.tsx
+    fileId: F-02FFE3941FF0
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
   - path: apps/web/src/app/views/artifacts/artifactsRouteBootstrap.test.ts
     fileId: F-B3F2796E2616
     owningUnit: SYS-WEB-ROOT
@@ -2372,13 +2554,6 @@ files:
     isLegacy: false
   - path: apps/web/src/app/views/artifacts/artifactsRouteBootstrap.ts
     fileId: F-810D108F48B7
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/views/artifacts/ArtifactsStateViews.tsx
-    fileId: F-A79399E00C16
     owningUnit: SYS-WEB-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -2407,13 +2582,6 @@ files:
     isLegacy: false
   - path: apps/web/src/app/views/artifacts/copy.ts
     fileId: F-EFBFEE4ECEF9
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/views/artifacts/ManifestImportPanel.tsx
-    fileId: F-02FFE3941FF0
     owningUnit: SYS-WEB-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -2482,85 +2650,218 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: apps/web/src/app/views/ArtifactsView.test.tsx
-    fileId: F-18E4F1683429
+  - path: apps/web/src/app/views/canvas/CanvasCenterSurface.architecture.test.ts
+    fileId: F-22A175ED5F65
     owningUnit: SYS-WEB-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: apps/web/src/app/views/ArtifactsView.tsx
-    fileId: F-0E93EF857A5C
+  - path: apps/web/src/app/views/canvas/CanvasCenterSurface.tsx
+    fileId: F-2CC7316C498E
     owningUnit: SYS-WEB-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: apps/web/src/app/views/Canvas.architecture.test.tsx
-    fileId: F-0D44D861DA2A
+  - path: apps/web/src/app/views/canvas/CanvasDraftAccessRecovery.templates.tsx
+    fileId: F-D5B6F5412E96
     owningUnit: SYS-WEB-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: apps/web/src/app/views/Canvas.authoringRoute.integration.test.tsx
-    fileId: F-9098EC87BC85
+  - path: apps/web/src/app/views/canvas/CanvasEmptyAuthoringEntrypoint.architecture.test.ts
+    fileId: F-C80608C5C008
     owningUnit: SYS-WEB-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: apps/web/src/app/views/Canvas.draftRecovery.test.tsx
-    fileId: F-73023B89A20B
+  - path: apps/web/src/app/views/canvas/CanvasInspectorAuthoringSection.tsx
+    fileId: F-3C40239035F8
     owningUnit: SYS-WEB-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: apps/web/src/app/views/Canvas.readOnlyStates.test.tsx
-    fileId: F-4474923E5425
+  - path: apps/web/src/app/views/canvas/CanvasInspectorPanel.test.tsx
+    fileId: F-1438F3909895
     owningUnit: SYS-WEB-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: apps/web/src/app/views/Canvas.routeStates.test.tsx
-    fileId: F-8F36FFEFF875
+  - path: apps/web/src/app/views/canvas/CanvasInspectorPanel.tsx
+    fileId: F-DA62BC48AC86
     owningUnit: SYS-WEB-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: apps/web/src/app/views/Canvas.test.controller.defaults.ts
-    fileId: F-95FD353073B5
+  - path: apps/web/src/app/views/canvas/CanvasModalHost.architecture.test.tsx
+    fileId: F-77FC7107A761
     owningUnit: SYS-WEB-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: apps/web/src/app/views/Canvas.test.controller.ts
-    fileId: F-463EFCE86D43
+  - path: apps/web/src/app/views/canvas/CanvasModalHost.tsx
+    fileId: F-8F94AA3DDC3B
     owningUnit: SYS-WEB-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: apps/web/src/app/views/Canvas.test.hostCycleScenario.ts
-    fileId: F-0286C6F0170C
+  - path: apps/web/src/app/views/canvas/CanvasPlaygroundHost.architecture.test.tsx
+    fileId: F-DD9282C1AE31
     owningUnit: SYS-WEB-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: apps/web/src/app/views/Canvas.test.support.tsx
-    fileId: F-170FD1D0BB21
+  - path: apps/web/src/app/views/canvas/CanvasPlaygroundHost.templates.tsx
+    fileId: F-BB335F414FD4
     owningUnit: SYS-WEB-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: apps/web/src/app/views/Canvas.tsx
-    fileId: F-39A571B0F25A
+  - path: apps/web/src/app/views/canvas/CanvasPlaygroundHost.tsx
+    fileId: F-1A19A3008B6A
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/views/canvas/CanvasPlaygroundTabStrip.templates.tsx
+    fileId: F-D4D315C20E4B
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/views/canvas/CanvasPlaygroundTabStrip.test.tsx
+    fileId: F-4239E3735C40
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/views/canvas/CanvasPlaygroundTabStrip.tsx
+    fileId: F-F666C243C48B
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/views/canvas/CanvasRecoveryBanner.architecture.test.tsx
+    fileId: F-EF5DB13346D1
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/views/canvas/CanvasRecoveryBanner.templates.tsx
+    fileId: F-146B25872E41
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/views/canvas/CanvasRecoveryBanner.test.tsx
+    fileId: F-242C24826727
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/views/canvas/CanvasRecoveryBanner.tsx
+    fileId: F-9908E18FFBED
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/views/canvas/CanvasShell.architecture.test.tsx
+    fileId: F-AAAB02A8DE14
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/views/canvas/CanvasShell.test.tsx
+    fileId: F-94593B60CD23
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/views/canvas/CanvasShell.tsx
+    fileId: F-7FE534525BE2
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/views/canvas/CanvasShellMainPanel.tsx
+    fileId: F-C689EE73AFC8
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/views/canvas/CanvasStateViews.tsx
+    fileId: F-C126ADD90023
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/views/canvas/CanvasToolbar.architecture.test.tsx
+    fileId: F-F9159A4CA60D
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/views/canvas/CanvasToolbar.test.tsx
+    fileId: F-176C17CFE471
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/views/canvas/CanvasToolbar.tsx
+    fileId: F-09A7FD4A26DE
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/views/canvas/CanvasToolbarDraftStatus.tsx
+    fileId: F-9A437CD9F899
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/views/canvas/CanvasToolbarPrimaryControls.tsx
+    fileId: F-06FF28ACBC09
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/views/canvas/CanvasViewport.test.tsx
+    fileId: F-EA9AB038FC1A
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/views/canvas/CanvasViewport.tsx
+    fileId: F-DEF970FFEF81
     owningUnit: SYS-WEB-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -2666,20 +2967,6 @@ files:
     isLegacy: false
   - path: apps/web/src/app/views/canvas/canvasCanonicalSnapshot.ts
     fileId: F-AC6178621927
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/views/canvas/CanvasCenterSurface.architecture.test.ts
-    fileId: F-22A175ED5F65
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/views/canvas/CanvasCenterSurface.tsx
-    fileId: F-2CC7316C498E
     owningUnit: SYS-WEB-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -2853,8 +3140,15 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: apps/web/src/app/views/canvas/CanvasDraftAccessRecovery.templates.tsx
-    fileId: F-D5B6F5412E96
+  - path: apps/web/src/app/views/canvas/canvasDraftAuthTransportPosture.test.ts
+    fileId: F-F32D17E39D95
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/views/canvas/canvasDraftAuthTransportPosture.ts
+    fileId: F-B5BB7BE5A631
     owningUnit: SYS-WEB-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -2876,20 +3170,6 @@ files:
     isLegacy: false
   - path: apps/web/src/app/views/canvas/canvasDraftAuthoringComponent.architecture.test.ts
     fileId: F-C5E8900035BA
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/views/canvas/canvasDraftAuthTransportPosture.test.ts
-    fileId: F-F32D17E39D95
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/views/canvas/canvasDraftAuthTransportPosture.ts
-    fileId: F-B5BB7BE5A631
     owningUnit: SYS-WEB-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -3161,13 +3441,6 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: apps/web/src/app/views/canvas/CanvasEmptyAuthoringEntrypoint.architecture.test.ts
-    fileId: F-C80608C5C008
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
   - path: apps/web/src/app/views/canvas/canvasExecutionActions.types.ts
     fileId: F-FFFFB2065F77
     owningUnit: SYS-WEB-ROOT
@@ -3357,43 +3630,8 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: apps/web/src/app/views/canvas/CanvasInspectorAuthoringSection.tsx
-    fileId: F-3C40239035F8
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/views/canvas/CanvasInspectorPanel.test.tsx
-    fileId: F-1438F3909895
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/views/canvas/CanvasInspectorPanel.tsx
-    fileId: F-DA62BC48AC86
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
   - path: apps/web/src/app/views/canvas/canvasKindRegistration.testSupport.ts
     fileId: F-4D2161E8A3F0
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/views/canvas/CanvasModalHost.architecture.test.tsx
-    fileId: F-77FC7107A761
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/views/canvas/CanvasModalHost.tsx
-    fileId: F-8F94AA3DDC3B
     owningUnit: SYS-WEB-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -3525,27 +3763,6 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: apps/web/src/app/views/canvas/CanvasPlaygroundHost.architecture.test.tsx
-    fileId: F-DD9282C1AE31
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/views/canvas/CanvasPlaygroundHost.templates.tsx
-    fileId: F-BB335F414FD4
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/views/canvas/CanvasPlaygroundHost.tsx
-    fileId: F-1A19A3008B6A
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
   - path: apps/web/src/app/views/canvas/canvasPlaygroundTabState.architecture.test.ts
     fileId: F-1B3FF599CBA5
     owningUnit: SYS-WEB-ROOT
@@ -3567,27 +3784,6 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: apps/web/src/app/views/canvas/CanvasPlaygroundTabStrip.templates.tsx
-    fileId: F-D4D315C20E4B
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/views/canvas/CanvasPlaygroundTabStrip.test.tsx
-    fileId: F-4239E3735C40
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/views/canvas/CanvasPlaygroundTabStrip.tsx
-    fileId: F-F666C243C48B
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
   - path: apps/web/src/app/views/canvas/canvasPlaygroundTabStripModel.test.ts
     fileId: F-34A40DC29CF8
     owningUnit: SYS-WEB-ROOT
@@ -3604,34 +3800,6 @@ files:
     isLegacy: false
   - path: apps/web/src/app/views/canvas/canvasPreviewProvenance.ts
     fileId: F-6DE4DA2E8DEA
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/views/canvas/CanvasRecoveryBanner.architecture.test.tsx
-    fileId: F-EF5DB13346D1
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/views/canvas/CanvasRecoveryBanner.templates.tsx
-    fileId: F-146B25872E41
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/views/canvas/CanvasRecoveryBanner.test.tsx
-    fileId: F-242C24826727
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/views/canvas/CanvasRecoveryBanner.tsx
-    fileId: F-9908E18FFBED
     owningUnit: SYS-WEB-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -3721,27 +3889,6 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: apps/web/src/app/views/canvas/CanvasShell.architecture.test.tsx
-    fileId: F-AAAB02A8DE14
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/views/canvas/CanvasShell.test.tsx
-    fileId: F-94593B60CD23
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/views/canvas/CanvasShell.tsx
-    fileId: F-7FE534525BE2
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
   - path: apps/web/src/app/views/canvas/canvasShell.types.architecture.test.ts
     fileId: F-75FE08C14C0C
     owningUnit: SYS-WEB-ROOT
@@ -3798,13 +3945,6 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: apps/web/src/app/views/canvas/CanvasShellMainPanel.tsx
-    fileId: F-C689EE73AFC8
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
   - path: apps/web/src/app/views/canvas/canvasShellPanelsBuilder.test.ts
     fileId: F-E0D9AA7D6A0E
     owningUnit: SYS-WEB-ROOT
@@ -3847,48 +3987,6 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: apps/web/src/app/views/canvas/CanvasStateViews.tsx
-    fileId: F-C126ADD90023
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/views/canvas/CanvasToolbar.architecture.test.tsx
-    fileId: F-F9159A4CA60D
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/views/canvas/CanvasToolbar.test.tsx
-    fileId: F-176C17CFE471
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/views/canvas/CanvasToolbar.tsx
-    fileId: F-09A7FD4A26DE
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/views/canvas/CanvasToolbarDraftStatus.tsx
-    fileId: F-9A437CD9F899
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/views/canvas/CanvasToolbarPrimaryControls.tsx
-    fileId: F-06FF28ACBC09
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
   - path: apps/web/src/app/views/canvas/canvasToolbarViewModel.test.ts
     fileId: F-EF081AD8129D
     owningUnit: SYS-WEB-ROOT
@@ -3898,20 +3996,6 @@ files:
     isLegacy: false
   - path: apps/web/src/app/views/canvas/canvasToolbarViewModel.ts
     fileId: F-E286A7946D03
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/views/canvas/CanvasViewport.test.tsx
-    fileId: F-EA9AB038FC1A
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/views/canvas/CanvasViewport.tsx
-    fileId: F-DEF970FFEF81
     owningUnit: SYS-WEB-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -4323,20 +4407,6 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: apps/web/src/app/views/canvas/useCanvasDraftBootstrapping.architecture.test.ts
-    fileId: F-D5676F69BA06
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/views/canvas/useCanvasDraftBootstrapping.ts
-    fileId: F-AE3CAABBDD22
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
   - path: apps/web/src/app/views/canvas/useCanvasDraftBootstrapSync.architecture.test.ts
     fileId: F-D7176362EAC6
     owningUnit: SYS-WEB-ROOT
@@ -4346,6 +4416,20 @@ files:
     isLegacy: false
   - path: apps/web/src/app/views/canvas/useCanvasDraftBootstrapSync.ts
     fileId: F-2F2FBD5F217E
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/views/canvas/useCanvasDraftBootstrapping.architecture.test.ts
+    fileId: F-D5676F69BA06
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/views/canvas/useCanvasDraftBootstrapping.ts
+    fileId: F-AE3CAABBDD22
     owningUnit: SYS-WEB-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -4820,6 +4904,20 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
+  - path: apps/web/src/app/views/code/CodeStateViews.tsx
+    fileId: F-A404F496B409
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/views/code/FileTreePanel.tsx
+    fileId: F-928DCBAB3576
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
   - path: apps/web/src/app/views/code/codeRouteBootstrap.test.ts
     fileId: F-726FEA03BC48
     owningUnit: SYS-WEB-ROOT
@@ -4829,13 +4927,6 @@ files:
     isLegacy: false
   - path: apps/web/src/app/views/code/codeRouteBootstrap.ts
     fileId: F-2CE337C74D66
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/views/code/CodeStateViews.tsx
-    fileId: F-A404F496B409
     owningUnit: SYS-WEB-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -4857,41 +4948,6 @@ files:
     isLegacy: false
   - path: apps/web/src/app/views/code/codeWorkbenchErrorModel.ts
     fileId: F-5A4C6C920006
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/views/code/FileTreePanel.tsx
-    fileId: F-928DCBAB3576
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/views/CodeView.test.tsx
-    fileId: F-4DF7A4CCD249
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/views/CodeView.tsx
-    fileId: F-6C4514675000
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/views/cost/copy.test.ts
-    fileId: F-49C10FF41630
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/views/cost/copy.ts
-    fileId: F-D1345651E920
     owningUnit: SYS-WEB-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -4925,6 +4981,27 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
+  - path: apps/web/src/app/views/cost/CostStatGrid.tsx
+    fileId: F-6CC8CE1089F4
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/views/cost/copy.test.ts
+    fileId: F-49C10FF41630
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/views/cost/copy.ts
+    fileId: F-D1345651E920
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
   - path: apps/web/src/app/views/cost/costRouteBootstrap.test.ts
     fileId: F-544F63A58245
     owningUnit: SYS-WEB-ROOT
@@ -4934,13 +5011,6 @@ files:
     isLegacy: false
   - path: apps/web/src/app/views/cost/costRouteBootstrap.ts
     fileId: F-2CBB3B0DC20B
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/views/cost/CostStatGrid.tsx
-    fileId: F-6CC8CE1089F4
     owningUnit: SYS-WEB-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -4967,20 +5037,6 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: apps/web/src/app/views/CostView.test.tsx
-    fileId: F-523211BF5363
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/views/CostView.tsx
-    fileId: F-D7D315A06506
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
   - path: apps/web/src/app/views/diff/CatalogDiffPanel.tsx
     fileId: F-ACC69D0ADCE6
     owningUnit: SYS-WEB-ROOT
@@ -4988,36 +5044,8 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: apps/web/src/app/views/diff/copy.ts
-    fileId: F-076D325947AD
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
   - path: apps/web/src/app/views/diff/DiffHeader.tsx
     fileId: F-B4C00B3EAECC
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/views/diff/diffReviewModel.ts
-    fileId: F-149D59586385
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/views/diff/diffRouteBootstrap.test.ts
-    fileId: F-9CB046883BA8
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/views/diff/diffRouteBootstrap.ts
-    fileId: F-09CDF0FDBE97
     owningUnit: SYS-WEB-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -5039,6 +5067,48 @@ files:
     isLegacy: false
   - path: apps/web/src/app/views/diff/DiffTabs.tsx
     fileId: F-1066015569F9
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/views/diff/GraphDiffPanel.tsx
+    fileId: F-A3252D3EB57E
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/views/diff/SqlDiffPanel.tsx
+    fileId: F-76439ACE019A
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/views/diff/copy.ts
+    fileId: F-076D325947AD
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/views/diff/diffReviewModel.ts
+    fileId: F-149D59586385
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/views/diff/diffRouteBootstrap.test.ts
+    fileId: F-9CB046883BA8
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/views/diff/diffRouteBootstrap.ts
+    fileId: F-09CDF0FDBE97
     owningUnit: SYS-WEB-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -5072,43 +5142,8 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: apps/web/src/app/views/diff/GraphDiffPanel.tsx
-    fileId: F-A3252D3EB57E
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/views/diff/SqlDiffPanel.tsx
-    fileId: F-76439ACE019A
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
   - path: apps/web/src/app/views/diff/useDiffData.ts
     fileId: F-3898A6924AD3
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/views/DiffView.test.tsx
-    fileId: F-3BA73C716F2B
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/views/DiffView.tsx
-    fileId: F-89A1F3CDF2A1
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/views/lineage/copy.ts
-    fileId: F-7C94A9EC8A80
     owningUnit: SYS-WEB-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -5135,13 +5170,6 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: apps/web/src/app/views/lineage/lineageGraphStrategyBoundary.architecture.test.ts
-    fileId: F-A48B9D705483
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
   - path: apps/web/src/app/views/lineage/LineageHeader.tsx
     fileId: F-6548590D1702
     owningUnit: SYS-WEB-ROOT
@@ -5151,6 +5179,27 @@ files:
     isLegacy: false
   - path: apps/web/src/app/views/lineage/LineageImpactSummary.tsx
     fileId: F-F7E27C0DB683
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/views/lineage/LineageStateViews.tsx
+    fileId: F-2A724489F523
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/views/lineage/copy.ts
+    fileId: F-7C94A9EC8A80
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/views/lineage/lineageGraphStrategyBoundary.architecture.test.ts
+    fileId: F-A48B9D705483
     owningUnit: SYS-WEB-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -5184,13 +5233,6 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: apps/web/src/app/views/lineage/LineageStateViews.tsx
-    fileId: F-2A724489F523
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
   - path: apps/web/src/app/views/lineage/lineageWorkbenchStateModel.test.ts
     fileId: F-F2C55A8D64AE
     owningUnit: SYS-WEB-ROOT
@@ -5212,34 +5254,6 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: apps/web/src/app/views/LineageView.test.tsx
-    fileId: F-FFF69FBB45B8
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/views/LineageView.tsx
-    fileId: F-BF9D299BCDAD
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/views/PluginsView.test.tsx
-    fileId: F-858CA17B8462
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/views/PluginsView.tsx
-    fileId: F-79CAF71B6EEE
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
   - path: apps/web/src/app/views/runs/RunDetailStateViews.tsx
     fileId: F-AC21A098EAD0
     owningUnit: SYS-WEB-ROOT
@@ -5254,20 +5268,6 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: apps/web/src/app/views/runs/runsRouteBootstrap.test.ts
-    fileId: F-8CA1AA1F9F17
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/views/runs/runsRouteBootstrap.ts
-    fileId: F-39B06894FE4B
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
   - path: apps/web/src/app/views/runs/RunStates.test.tsx
     fileId: F-5B74D274B035
     owningUnit: SYS-WEB-ROOT
@@ -5277,6 +5277,13 @@ files:
     isLegacy: false
   - path: apps/web/src/app/views/runs/RunStates.tsx
     fileId: F-EBD416F68AD0
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/views/runs/RunWorkspaceStateView.tsx
+    fileId: F-DC80A7876DB8
     owningUnit: SYS-WEB-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -5317,8 +5324,15 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: apps/web/src/app/views/runs/RunWorkspaceStateView.tsx
-    fileId: F-DC80A7876DB8
+  - path: apps/web/src/app/views/runs/runsRouteBootstrap.test.ts
+    fileId: F-8CA1AA1F9F17
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/views/runs/runsRouteBootstrap.ts
+    fileId: F-39B06894FE4B
     owningUnit: SYS-WEB-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -5333,20 +5347,6 @@ files:
     isLegacy: false
   - path: apps/web/src/app/views/runs/useRunWorkspace.ts
     fileId: F-C9426E3E307C
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/views/RunsView.test.tsx
-    fileId: F-684D4851DB0B
-    owningUnit: SYS-WEB-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/web/src/app/views/RunsView.tsx
-    fileId: F-03141DC282CA
     owningUnit: SYS-WEB-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
