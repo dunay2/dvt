@@ -1206,9 +1206,9 @@ files:
       - docs/guides/testing-and-ci-capabilities.md
   - fileId: F-B8B535FB5857
     pathHash: 9e23c8bc5e7bdd10c22e29efd499d6e4f2024502a514978fbcfa8027e24f89c1
-    contentHash: c74e631757dce5a0815031c5d909e57a2d6007f256d9d8628f0c943fa5591116
+    contentHash: 7db7a5aa66d63fbc250e951030d4df65ae5b4ead39f99bb2aa266d32069dd4ab
     governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
-    stateFingerprint: 7b5c9b6262efbf1b0328b237c86e66c524862353182ad39dbd5545c628572a2f
+    stateFingerprint: 674ee3ecee5381fcd5991f87e992c3d40711fbe0958d8bfc4e0fa1e50fdd292c
     path: scripts/check-generated-docs-policy.cjs
     owningUnit: SYS-CI-GOVERNANCE-ROOT
     rootUnit: SYS-DVT

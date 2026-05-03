@@ -117,3 +117,14 @@ all drift and legacy flags remain visible in generated summaries
 The file governance system remains deterministic, reviewable, and offline
 capable, while humans and AI agents can inspect the affected shard instead of a
 repository-wide generated file.
+
+## Implemented Guardrail
+
+Generated-doc policy now enforces hard size limits for governance generated
+artifacts via `pnpm docs:gov:generated-policy`:
+
+- `tracked-governance-file-indexes`: `maxBytes = 1,900,000`
+- `tracked-governance-file-fingerprint-baseline`: `maxBytes = 2,100,000`
+
+This makes unbounded growth a mechanical failure in local and CI validation
+instead of a manual review concern.

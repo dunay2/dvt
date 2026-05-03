@@ -164,6 +164,26 @@ function validateArtifactMarkers(entry, artifactPath, failures) {
   }
 }
 
+function validateArtifactSize(entry, artifactPath, failures) {
+  const absolutePath = path.join(repoRoot, ...artifactPath.split('/'));
+  if (!fs.existsSync(absolutePath)) {
+    return;
+  }
+
+  if (
+    typeof entry.maxBytes !== 'number' ||
+    !Number.isFinite(entry.maxBytes) ||
+    entry.maxBytes <= 0
+  ) {
+    return;
+  }
+
+  const { size } = fs.statSync(absolutePath);
+  if (size > entry.maxBytes) {
+    failures.push(`${entry.id}: ${artifactPath} exceeds maxBytes (${size} > ${entry.maxBytes}).`);
+  }
+}
+
 function validatePolicy(policy, trackedFiles, existingFiles, packageScripts) {
   const failures = [];
 
@@ -217,6 +237,15 @@ function validatePolicy(policy, trackedFiles, existingFiles, packageScripts) {
       );
     }
 
+    if (
+      entry.maxBytes !== undefined &&
+      (typeof entry.maxBytes !== 'number' ||
+        !Number.isFinite(entry.maxBytes) ||
+        entry.maxBytes <= 0)
+    ) {
+      failures.push(`${id}: maxBytes must be a positive number when declared`);
+    }
+
     const artifactPatterns = Array.isArray(entry.artifacts) ? entry.artifacts : [];
     for (const artifactPattern of artifactPatterns) {
       const trackedMatches = expandPattern(artifactPattern, trackedFiles);
@@ -240,6 +269,7 @@ function validatePolicy(policy, trackedFiles, existingFiles, packageScripts) {
       const markerTargets = [...new Set([...trackedMatches, ...existingMatches])];
       for (const artifactPath of markerTargets) {
         validateArtifactMarkers(entry, artifactPath, failures);
+        validateArtifactSize(entry, artifactPath, failures);
       }
     }
   }
