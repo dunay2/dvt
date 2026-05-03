@@ -4,7 +4,7 @@ generatedFrom:
   - docs/planning/status/system-governance-component-index.components.yaml
 shardDirectory: docs/planning/status/governance-components
 componentCount: 32
-fileCount: 4157
+fileCount: 4158
 components:
   - id: SYS-ADAPTERS-ROOT
     path: docs/planning/status/governance-components/SYS-ADAPTERS-ROOT.component-files.yaml
@@ -14,10 +14,10 @@ components:
     contentHash: 3a8d3198e1e15a19a2f04a79776489de799e7dc8b7e87dfd635529105fa28a97
   - id: SYS-API-APPLICATION-PORTS
     path: docs/planning/status/governance-components/SYS-API-APPLICATION-PORTS.component-files.yaml
-    fileCount: 16
+    fileCount: 17
     driftFileCount: 0
     legacyFileCount: 0
-    contentHash: ac7ece34258c9a528b6fe36bf08801676f22326c13e2b5dc6b68d2334fbb4a1b
+    contentHash: 22b3e1dde40763332064147863e44a6c65c4d5b72c1528a0512fa2406907bfa5
   - id: SYS-API-APPLICATION-SERVICES
     path: docs/planning/status/governance-components/SYS-API-APPLICATION-SERVICES.component-files.yaml
     fileCount: 34

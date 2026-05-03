@@ -99,7 +99,7 @@ Components with `childrenRequired: true` and more than 100 files:
 | Component | Level | Status | Governance state | Canonical role | Evidence state | Files | DDD owner | Parent |
 | --- | --- | ---: | --- | --- | --- | ---: | --- | --- |
 | `SYS-ADAPTERS-ROOT` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 196 | `ADP` | `SYS-ADAPTERS` |
-| `SYS-API-APPLICATION-PORTS` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 16 | `PORT` | `SYS-API-ROOT` |
+| `SYS-API-APPLICATION-PORTS` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 17 | `PORT` | `SYS-API-ROOT` |
 | `SYS-API-APPLICATION-SERVICES` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 34 | `AS` | `SYS-API-ROOT` |
 | `SYS-API-BOOTSTRAP` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 2 | `ENTRY` | `SYS-API-ROOT` |
 | `SYS-API-DOCS` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 15 | `INFRA` | `SYS-API-ROOT` |

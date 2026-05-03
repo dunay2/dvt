@@ -3,8 +3,8 @@ generatedFrom:
   - docs/planning/status/system-governance-file-index.files.yaml
   - docs/planning/status/system-governance-component-index.components.yaml
 totals:
-  files: 4157
-  governedFiles: 4157
+  files: 4158
+  governedFiles: 4158
   ungovernedFiles: 0
   driftFiles: 41
   legacyFiles: 0
@@ -22,12 +22,12 @@ ciPosture:
     - legacyFiles records removal targets until owning work removes them
 byRootUnit:
   - name: SYS-DVT
-    count: 4157
+    count: 4158
 byDomainUnit:
   - name: SYS-ADAPTERS
     count: 196
   - name: SYS-DVT
-    count: 3380
+    count: 3381
   - name: SYS-OBSERVABILITY
     count: 15
   - name: SYS-PLANSTORE
@@ -42,7 +42,7 @@ byComponentUnit:
   - name: SYS-ADAPTERS-ROOT
     count: 196
   - name: SYS-API-APPLICATION-PORTS
-    count: 16
+    count: 17
   - name: SYS-API-APPLICATION-SERVICES
     count: 34
   - name: SYS-API-BOOTSTRAP
@@ -103,14 +103,14 @@ byStatus:
   - name: canonical
     count: 113
   - name: coverage-required
-    count: 3921
+    count: 3922
   - name: drift
     count: 41
   - name: review
     count: 82
 byGovernanceState:
   - name: coverage-required
-    count: 3921
+    count: 3922
   - name: drift
     count: 41
   - name: governed
@@ -121,12 +121,12 @@ byCanonicalRole:
   - name: implementation-owner
     count: 113
   - name: none
-    count: 4044
+    count: 4045
 byEvidenceState:
   - name: classification-only
     count: 113
   - name: coverage-required
-    count: 3921
+    count: 3922
   - name: remediation-required
     count: 41
   - name: review-required
@@ -143,20 +143,20 @@ byDddOwner:
   - name: INFRA
     count: 2220
   - name: PORT
-    count: 189
+    count: 190
 governanceDocuments:
   - path: docs/DOCS_README.md
     fileCount: 1732
   - path: docs/planning/status/governance-document-rule-inventory.md
     fileCount: 1717
   - path: docs/planning/status/system-operations-inventory-20260501.md
-    fileCount: 948
+    fileCount: 949
   - path: >-
       docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md
     fileCount: 799
   - path: >-
       docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
-    fileCount: 342
+    fileCount: 343
   - path: docs/guides/testing-and-ci-capabilities.md
     fileCount: 341
   - path: >-
@@ -178,7 +178,7 @@ governanceDocuments:
       docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
     fileCount: 46
   - path: docs/architecture/reference-architecture.md
-    fileCount: 44
+    fileCount: 45
   - path: docs/planning/status/system-governance-document-unit-map-20260501.md
     fileCount: 34
   - path: docs/planning/status/system-governance-unit-index-20260501.md
@@ -554,7 +554,7 @@ componentCoverage:
     evidenceState: coverage-required
     dddOwner: PORT
     cqRails: API application command/query ports
-    fileCount: 16
+    fileCount: 17
     isDrift: false
     isLegacy: false
     childrenRequired: false

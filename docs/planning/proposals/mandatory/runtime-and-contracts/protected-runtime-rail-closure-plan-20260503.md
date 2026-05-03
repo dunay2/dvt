@@ -288,6 +288,7 @@ governingSources:
   - docs/risk-register/quality/R-20260503-PROTECTED-RUNTIME-RAIL-CLOSURE.yaml
 allowedImplementationSurfaces:
   - apps/api/docs/protected-runtime-route-group-component.md
+  - apps/api/src/application/ports/protectedRuntimeCommandQueryRails.ts
   - apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
   - docs/planning/proposals/mandatory/runtime-and-contracts/protected-runtime-rail-closure-plan-20260503.md
   - docs/planning/state/agent-lane-c.yaml
@@ -298,7 +299,6 @@ allowedImplementationSurfaces:
   - docs/risk-register/quality/R-20260503-PROTECTED-RUNTIME-RAIL-CLOSURE.yaml
 forbiddenImplementationSurfaces:
   - apps/web/**
-  - apps/api/src/**
   - packages/**
   - specs/**
   - .github/**
@@ -379,7 +379,64 @@ symbols:
     cypressCoverage: N/A - API architecture guard
     unitTests:
       - pnpm --filter dvt-api exec vitest run test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
+  - name: CATALOG_PATH
+    path: apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
+    dddOwner: Protected runtime route group architecture test
+    cqRails:
+      - ClassifyProtectedRuntimeRouteRails
+    fowlerSignals:
+      - Boundary drift
+    architectureGuard: pnpm --filter dvt-api exec vitest run test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
+    cypressCoverage: N/A - API architecture guard
+    unitTests:
+      - pnpm --filter dvt-api exec vitest run test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
+  - name: PROTECTED_RUNTIME_COMMAND_QUERY_RAILS
+    path: apps/api/src/application/ports/protectedRuntimeCommandQueryRails.ts
+    dddOwner: Protected runtime rail matrix
+    cqRails:
+      - ClassifyProtectedRuntimeRouteRails
+    fowlerSignals:
+      - Boundary drift
+      - Divergent change
+    architectureGuard: pnpm --filter dvt-api exec vitest run test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
+    cypressCoverage: N/A - API architecture guard
+    unitTests:
+      - pnpm --filter dvt-api exec vitest run test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
+  - name: ProtectedRuntimeCommandQueryRail
+    path: apps/api/src/application/ports/protectedRuntimeCommandQueryRails.ts
+    dddOwner: Protected runtime rail matrix
+    cqRails:
+      - ClassifyProtectedRuntimeRouteRails
+    fowlerSignals:
+      - Boundary drift
+    architectureGuard: pnpm --filter dvt-api exec vitest run test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
+    cypressCoverage: N/A - API architecture guard
+    unitTests:
+      - pnpm --filter dvt-api exec vitest run test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
+  - name: ProtectedRuntimeRailKind
+    path: apps/api/src/application/ports/protectedRuntimeCommandQueryRails.ts
+    dddOwner: Protected runtime rail matrix
+    cqRails:
+      - ClassifyProtectedRuntimeRouteRails
+    fowlerSignals:
+      - Boundary drift
+    architectureGuard: pnpm --filter dvt-api exec vitest run test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
+    cypressCoverage: N/A - API architecture guard
+    unitTests:
+      - pnpm --filter dvt-api exec vitest run test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
   - name: GOVERNED_ROUTE_RAILS
+    path: apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
+    dddOwner: Protected runtime route group architecture test
+    cqRails:
+      - ClassifyProtectedRuntimeRouteRails
+    fowlerSignals:
+      - Boundary drift
+      - Divergent change
+    architectureGuard: pnpm --filter dvt-api exec vitest run test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
+    cypressCoverage: N/A - API architecture guard
+    unitTests:
+      - pnpm --filter dvt-api exec vitest run test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
+  - name: PROTECTED_RUNTIME_ADAPTER_SURFACES
     path: apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
     dddOwner: Protected runtime route group architecture test
     cqRails:

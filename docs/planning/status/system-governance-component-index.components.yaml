@@ -112,7 +112,7 @@ components:
     isDrift: false
     isLegacy: false
     childrenRequired: false
-    fileCount: 16
+    fileCount: 17
     dddOwner: PORT
     cqRails: API application command/query ports
     owns:

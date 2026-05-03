@@ -50,6 +50,10 @@ It does **not** own:
 - `runtimeRoutes.constants.ts`
   Route path and summary constants that define the protected runtime route
   inventory.
+- `PROTECTED_RUNTIME_COMMAND_QUERY_RAILS`
+  Application-owned command/query rail catalog. It is the source that names
+  product-intent rails, DDD ownership, application ports, adapter surfaces,
+  authorization posture, and required negative tests for this route group.
 - `registerWorkspaceGraphDraftRoutes(...)`
   Delegated route group for the workspace graph draft read/write boundary.
 - `registerAdminRoutes(...)`
@@ -57,8 +61,9 @@ It does **not** own:
 
 ## Invariants
 
-- Every route in `runtimeRoutes.constants.ts` has exactly one row in the
-  command/query rail matrix below.
+- Every route in `runtimeRoutes.constants.ts` has exactly one row in
+  `PROTECTED_RUNTIME_COMMAND_QUERY_RAILS` and in the command/query rail matrix
+  below.
 - Each matrix row names the owning application service or delegated route group.
 - Routes remain HTTP adapters; they do not own planner, engine, state-store, or
   access-decision backend semantics.
@@ -91,21 +96,21 @@ flowchart LR
 
 ## Command/query rail matrix
 
-| Route                                      | Rail    | Bounded context              | Application owner              | Authorization posture                                         | Required negative coverage                                                                 |
-| ------------------------------------------ | ------- | ---------------------------- | ------------------------------ | ------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
-| `POST /runs/start`                         | Command | Runtime safety and admission | StartRunAuthorizedFacade       | `run:start`, tenant scope                                     | missing token, missing action, tenant mismatch, client `runId`, invalid plan source        |
-| `POST /plans/preview`                      | Command | Planner/runtime admission    | PreviewPlanUseCase             | planner/runtime command scope, tenant scope                   | missing token, missing action, tenant mismatch, invalid graph source, invalid selection    |
-| `POST /plans/compile`                      | Query   | Planner boundary             | CompilePlanUseCase             | planner query/action scope, tenant scope                      | missing token, missing action, tenant mismatch, unsupported adapter                        |
-| `POST /plans/import`                       | Command | Runtime plan ingestion       | ImportPlanUseCase              | plan import command scope, tenant scope                       | missing token, missing action, tenant mismatch, invalid plan ref                           |
-| `GET /workspace/graph/draft`               | Query   | Workspace graph drafting     | getWorkspaceGraphDraftUseCase  | workspace draft read scope                                    | missing token, missing action, tenant/workspace mismatch                                   |
-| `PUT /workspace/graph/draft`               | Command | Workspace graph drafting     | saveWorkspaceGraphDraftUseCase | workspace draft save scope                                    | missing token, missing action, tenant/workspace mismatch, stale authority                  |
-| `GET /runs`                                | Query   | Runtime read model           | ListRunsUseCase                | `run:list`, tenant scope                                      | missing token, missing action, tenant mismatch                                             |
-| `GET /runs/:runId`                         | Query   | Runtime read model           | GetRunStatusUseCase            | `run:view`, tenant scope                                      | missing token, missing action, tenant mismatch, unknown run                                |
-| `GET /runs/:runId/events`                  | Query   | Runtime read model           | GetRunEventsUseCase            | `run:logs:view`, tenant scope                                 | missing token, missing action, tenant mismatch, unknown run                                |
-| `POST /runs/:runId/signal`                 | Command | Runtime control              | SignalRunUseCase               | `run:signal`, or `run:cancel` only for compatibility `CANCEL` | missing token, missing action, tenant mismatch, unsupported signal, compatibility disabled |
-| `POST /runs/:runId/cancel`                 | Command | Runtime control              | CancelRunUseCase               | `run:cancel`, tenant scope                                    | missing token, missing action, tenant mismatch, non-empty reason                           |
-| `POST /runs/:runId/recover`                | Command | Runtime recovery             | RecoverRunUseCase              | recovery command scope, tenant scope                          | missing token, missing action, tenant mismatch, invalid recovery source                    |
-| `POST /admin/runs/:runId/rebuild-snapshot` | Command | Runtime repair operations    | registerAdminRoutes            | admin repair action, tenant/admin scope                       | disabled route, missing token, missing action, tenant mismatch                             |
+| Rail name                 | Route                                      | Rail    | Bounded context              | DDD object                  | Application owner                    | Authorization posture                                         | Required negative coverage                                                                 |
+| ------------------------- | ------------------------------------------ | ------- | ---------------------------- | --------------------------- | ------------------------------------ | ------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `StartRun`                | `POST /runs/start`                         | Command | Runtime safety and admission | Run command admission       | StartRunAuthorizedFacade             | `run:start`, tenant scope                                     | missing token, missing action, tenant mismatch, client `runId`, invalid plan source        |
+| `PreviewExecutablePlan`   | `POST /plans/preview`                      | Command | Planner/runtime admission    | Executable plan draft       | PreviewPlanUseCase                   | `run:start` compatibility authorization, tenant scope         | missing token, missing action, tenant mismatch, invalid graph source, invalid selection    |
+| `CompileExecutablePlan`   | `POST /plans/compile`                      | Query   | Planner boundary             | Compiled plan read model    | CompilePlanUseCase                   | `run:start` compatibility authorization, tenant scope         | missing token, missing action, tenant mismatch, unsupported adapter                        |
+| `ImportExecutablePlan`    | `POST /plans/import`                       | Command | Runtime plan ingestion       | Imported executable plan    | ImportPlanUseCase                    | `run:start` compatibility authorization, tenant scope         | missing token, missing action, tenant mismatch, invalid plan ref                           |
+| `GetWorkspaceGraphDraft`  | `GET /workspace/graph/draft`               | Query   | Workspace graph drafting     | Workspace draft read model  | getWorkspaceGraphDraftUseCase        | `workspace:graph-draft:view`, tenant/project/environment      | missing token, missing action, tenant/workspace mismatch                                   |
+| `SaveWorkspaceGraphDraft` | `PUT /workspace/graph/draft`               | Command | Workspace graph drafting     | Workspace draft aggregate   | saveWorkspaceGraphDraftUseCase       | `workspace:graph-draft:save`, tenant/project/environment      | missing token, missing action, tenant/workspace mismatch, stale authority                  |
+| `ListRuns`                | `GET /runs`                                | Query   | Runtime read model           | Run list read model         | ListRunsUseCase                      | `run:list`, tenant scope                                      | missing token, missing action, tenant mismatch                                             |
+| `GetRunStatus`            | `GET /runs/:runId`                         | Query   | Runtime read model           | Run status read model       | GetRunStatusUseCase                  | `run:view`, tenant scope                                      | missing token, missing action, tenant mismatch, unknown run                                |
+| `GetRunEvents`            | `GET /runs/:runId/events`                  | Query   | Runtime read model           | Run event stream read model | GetRunEventsUseCase                  | `run:logs:view`, tenant scope                                 | missing token, missing action, tenant mismatch, unknown run                                |
+| `SignalRun`               | `POST /runs/:runId/signal`                 | Command | Runtime control              | Run signal command          | SignalRunUseCase                     | `run:signal`, or `run:cancel` only for compatibility `CANCEL` | missing token, missing action, tenant mismatch, unsupported signal, compatibility disabled |
+| `CancelRun`               | `POST /runs/:runId/cancel`                 | Command | Runtime control              | Run cancel command          | CancelRunUseCase                     | `run:cancel`, tenant scope                                    | missing token, missing action, tenant mismatch, non-empty reason                           |
+| `RecoverRun`              | `POST /runs/:runId/recover`                | Command | Runtime recovery             | Run recovery command        | RecoverRunUseCase                    | `run:retry`, tenant scope                                     | missing token, missing action, tenant mismatch, invalid recovery source                    |
+| `RebuildRunSnapshot`      | `POST /admin/runs/:runId/rebuild-snapshot` | Command | Runtime repair operations    | Snapshot rebuild command    | registerAdminRoutes maintenance port | `admin:rebuild-snapshot`, tenant/admin scope                  | disabled route, missing token, missing action, tenant mismatch                             |
 
 ## Compatibility posture
 

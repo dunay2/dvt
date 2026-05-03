@@ -3,63 +3,33 @@ import { join } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
+import { PROTECTED_RUNTIME_COMMAND_QUERY_RAILS } from '../../../src/application/ports/protectedRuntimeCommandQueryRails.js';
 import { RUNTIME_ROUTE_PATH } from '../../../src/entrypoints/http/runtimeRoutes.constants.js';
 
 const DOC_PATH = join(
   import.meta.dirname,
   '../../../docs/protected-runtime-route-group-component.md'
 );
+const CATALOG_PATH = join(
+  import.meta.dirname,
+  '../../../src/application/ports/protectedRuntimeCommandQueryRails.ts'
+);
 
-const GOVERNED_ROUTE_RAILS = [
-  {
-    method: 'POST',
-    path: RUNTIME_ROUTE_PATH.start,
-    rail: 'Command',
-    owner: 'StartRunAuthorizedFacade',
-  },
-  {
-    method: 'POST',
-    path: RUNTIME_ROUTE_PATH.plansPreview,
-    rail: 'Command',
-    owner: 'PreviewPlanUseCase',
-  },
-  {
-    method: 'POST',
-    path: RUNTIME_ROUTE_PATH.plansCompile,
-    rail: 'Query',
-    owner: 'CompilePlanUseCase',
-  },
-  {
-    method: 'POST',
-    path: RUNTIME_ROUTE_PATH.plansImport,
-    rail: 'Command',
-    owner: 'ImportPlanUseCase',
-  },
-  {
-    method: 'GET',
-    path: RUNTIME_ROUTE_PATH.workspaceGraphDraft,
-    rail: 'Query',
-    owner: 'getWorkspaceGraphDraftUseCase',
-  },
-  {
-    method: 'PUT',
-    path: RUNTIME_ROUTE_PATH.workspaceGraphDraft,
-    rail: 'Command',
-    owner: 'saveWorkspaceGraphDraftUseCase',
-  },
-  { method: 'GET', path: RUNTIME_ROUTE_PATH.list, rail: 'Query', owner: 'ListRunsUseCase' },
-  { method: 'GET', path: RUNTIME_ROUTE_PATH.get, rail: 'Query', owner: 'GetRunStatusUseCase' },
-  { method: 'GET', path: RUNTIME_ROUTE_PATH.events, rail: 'Query', owner: 'GetRunEventsUseCase' },
-  { method: 'POST', path: RUNTIME_ROUTE_PATH.signal, rail: 'Command', owner: 'SignalRunUseCase' },
-  { method: 'POST', path: RUNTIME_ROUTE_PATH.cancel, rail: 'Command', owner: 'CancelRunUseCase' },
-  { method: 'POST', path: RUNTIME_ROUTE_PATH.recover, rail: 'Command', owner: 'RecoverRunUseCase' },
-  {
-    method: 'POST',
-    path: '/admin/runs/:runId/rebuild-snapshot',
-    rail: 'Command',
-    owner: 'registerAdminRoutes',
-  },
-] as const;
+const PROTECTED_RUNTIME_ADAPTER_SURFACES = new Set([
+  `POST ${RUNTIME_ROUTE_PATH.start}`,
+  `POST ${RUNTIME_ROUTE_PATH.plansPreview}`,
+  `POST ${RUNTIME_ROUTE_PATH.plansCompile}`,
+  `POST ${RUNTIME_ROUTE_PATH.plansImport}`,
+  `GET ${RUNTIME_ROUTE_PATH.workspaceGraphDraft}`,
+  `PUT ${RUNTIME_ROUTE_PATH.workspaceGraphDraft}`,
+  `GET ${RUNTIME_ROUTE_PATH.list}`,
+  `GET ${RUNTIME_ROUTE_PATH.get}`,
+  `GET ${RUNTIME_ROUTE_PATH.events}`,
+  `POST ${RUNTIME_ROUTE_PATH.signal}`,
+  `POST ${RUNTIME_ROUTE_PATH.cancel}`,
+  `POST ${RUNTIME_ROUTE_PATH.recover}`,
+  'POST /admin/runs/:runId/rebuild-snapshot',
+]);
 
 describe('protected runtime route group architecture', () => {
   it('ships a local component guide with the mandatory component sections', () => {
@@ -81,11 +51,32 @@ describe('protected runtime route group architecture', () => {
   it('keeps every protected runtime route in the documented command/query rail matrix', () => {
     const docText = readFileSync(DOC_PATH, 'utf8');
 
-    for (const route of GOVERNED_ROUTE_RAILS) {
-      expect(docText).toContain(`\`${route.method} ${route.path}\``);
-      expect(docText).toContain(`| \`${route.method} ${route.path}\` | ${route.rail} |`);
-      expect(docText).toContain(`| ${route.owner} |`);
+    for (const rail of PROTECTED_RUNTIME_COMMAND_QUERY_RAILS) {
+      expect(docText).toContain(`\`${rail.adapterSurface}\``);
+      expect(docText).toContain(rail.kind === 'command' ? '| Command |' : '| Query   |');
+      expect(docText).toContain(rail.applicationPort);
     }
+  });
+
+  it('ships the protected runtime command/query rails as an application catalog', () => {
+    expect(existsSync(CATALOG_PATH)).toBe(true);
+
+    expect(PROTECTED_RUNTIME_COMMAND_QUERY_RAILS).toHaveLength(
+      PROTECTED_RUNTIME_ADAPTER_SURFACES.size
+    );
+    for (const rail of PROTECTED_RUNTIME_COMMAND_QUERY_RAILS) {
+      expect(PROTECTED_RUNTIME_ADAPTER_SURFACES.has(rail.adapterSurface)).toBe(true);
+      expect(rail.name).toMatch(/^[A-Z][A-Za-z0-9]+$/);
+      expect(['command', 'query']).toContain(rail.kind);
+      expect(rail.boundedContext).not.toHaveLength(0);
+      expect(rail.dddObject).not.toHaveLength(0);
+      expect(rail.applicationPort).not.toHaveLength(0);
+      expect(rail.scopeAndAuthorization).not.toHaveLength(0);
+      expect(rail.negativeTests.length).toBeGreaterThan(0);
+    }
+
+    const docText = readFileSync(DOC_PATH, 'utf8');
+    expect(docText).toContain('PROTECTED_RUNTIME_COMMAND_QUERY_RAILS');
   });
 
   it('documents CANCEL through /signal as compatibility, not a second canonical cancel rail', () => {

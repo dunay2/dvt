@@ -2,7 +2,7 @@ version: 1
 shardId: SYS-API
 generatedFrom: git ls-files
 unitManifest: docs/planning/status/system-governance-unit-index.units.yaml
-fileCount: 368
+fileCount: 369
 files:
   - fileId: F-CD95C55B5B9C
     pathHash: 751eb3d622d669d3b3ff7b8ab9240132ac4f3bbd70ebc4541d40ac15d83b1844
@@ -276,9 +276,9 @@ files:
       - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-69DC2D5403A1
     pathHash: aa0683860e3e8d9e287039885738eb1953d8d37b19c94481fe3e61cd4d24097b
-    contentHash: b18e81023a4e71ebbe9db363965244014d780629337f198699151c41a5574e86
+    contentHash: 56fc99613d7612d16b35b301d50f011ca3de9a866a6e3e5581455ec8e4551273
     governanceHash: 9e036ab883eceba766b232f57216ba1ec58666aa399b148c02e4e894f13951ac
-    stateFingerprint: 2ef6d3f3dc585e37c97b1ef1f2a880100387a20cf60b52de60da9860f676dc8b
+    stateFingerprint: 7d709dc848e812332a48562251e9d95cdef7527e0fa008e48eba964cf425ab11
     path: apps/api/docs/protected-runtime-route-group-component.md
     owningUnit: SYS-API-DOCS
     rootUnit: SYS-DVT
@@ -949,6 +949,35 @@ files:
     governanceHash: 1387389fa277ea5c65a5742be079571cbccb7468809328bf23814e0c5ec2da3b
     stateFingerprint: 858396c5f50dab623eb55f5a2240ca314825328586778f02b2e301365089989f
     path: apps/api/src/application/ports/authContract.ts
+    owningUnit: SYS-API-APPLICATION-PORTS
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-API-APPLICATION-PORTS
+    unitPath:
+      - SYS-DVT
+      - SYS-API
+      - SYS-API-ROOT
+      - SYS-API-APPLICATION-PORTS
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: PORT
+    cqRails: API application command/query ports
+    governance:
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
+      - docs/architecture/reference-architecture.md
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-2B1EF0304696
+    pathHash: 6e863ca9e32a8242b1903c46dabcca2f93e8b72fea33926619518ac9fe91ae55
+    contentHash: d2efcd406dc2bb586600ad122a15f0b3ce380e583283c280d6444dda864d2648
+    governanceHash: 1387389fa277ea5c65a5742be079571cbccb7468809328bf23814e0c5ec2da3b
+    stateFingerprint: a33bdd54b38b82774279c9bfecc70d4b0d032409c37fd5a812e135a8b90cdfad
+    path: apps/api/src/application/ports/protectedRuntimeCommandQueryRails.ts
     owningUnit: SYS-API-APPLICATION-PORTS
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
@@ -8779,9 +8808,9 @@ files:
       - docs/architecture/command-query-rail-governance.md
   - fileId: F-4BD92CDCD2AC
     pathHash: b84a1a97942bcee1df8a92ffc766a67b53e908c47550f2341116a76a102da795
-    contentHash: afeb2ec0f3475fe29a8d124a3471488d83d564fee7c703aaa626c26a90311053
+    contentHash: 7f149b11812949c7b32b73de20d9485b1a3f5e967fdfd85901eeb07a1b981d2c
     governanceHash: 873a3e8188b761eed0fdc743a443315e07f0d3f7ea5ff164faedccc3e1f7964e
-    stateFingerprint: d6c69b01816bdacbdc40df8b048d4ef07cd2b47b0c11fcacca6c51be4a770edc
+    stateFingerprint: 23601d0e3a9279813706771cce3b88f8d434cfad522a8e8e091c4356375b7098
     path: apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
     owningUnit: SYS-API-HTTP-ENTRYPOINT-TESTS
     rootUnit: SYS-DVT

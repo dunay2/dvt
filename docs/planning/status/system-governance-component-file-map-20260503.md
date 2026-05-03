@@ -25,7 +25,7 @@ Machine-readable sources:
 ## Totals
 
 - Components: 32
-- Files mapped: 4157
+- Files mapped: 4158
 - Components with drift or legacy files: 3
 
 ## Largest Components
@@ -52,7 +52,7 @@ Machine-readable sources:
 | `SYS-API-RUNTIME-COMPOSITION` | 26 | 0 | 0 |
 | `SYS-PLANSTORE-ARTIFACTS-PORTS` | 23 | 0 | 0 |
 | `SYS-PLANSTORE-API-COMPOSITION` | 20 | 20 | 0 |
-| `SYS-API-APPLICATION-PORTS` | 16 | 0 | 0 |
+| `SYS-API-APPLICATION-PORTS` | 17 | 0 | 0 |
 <!-- prettier-ignore-end -->
 
 ## Drift And Legacy Components
@@ -71,7 +71,7 @@ Machine-readable sources:
 | Component | Files | Drift files | Legacy files | Shard |
 | --- | ---: | ---: | ---: | --- |
 | `SYS-ADAPTERS-ROOT` | 196 | 0 | 0 | [shard](./governance-components/SYS-ADAPTERS-ROOT.component-files.yaml) |
-| `SYS-API-APPLICATION-PORTS` | 16 | 0 | 0 | [shard](./governance-components/SYS-API-APPLICATION-PORTS.component-files.yaml) |
+| `SYS-API-APPLICATION-PORTS` | 17 | 0 | 0 | [shard](./governance-components/SYS-API-APPLICATION-PORTS.component-files.yaml) |
 | `SYS-API-APPLICATION-SERVICES` | 34 | 0 | 0 | [shard](./governance-components/SYS-API-APPLICATION-SERVICES.component-files.yaml) |
 | `SYS-API-BOOTSTRAP` | 2 | 0 | 0 | [shard](./governance-components/SYS-API-BOOTSTRAP.component-files.yaml) |
 | `SYS-API-DOCS` | 15 | 0 | 0 | [shard](./governance-components/SYS-API-DOCS.component-files.yaml) |

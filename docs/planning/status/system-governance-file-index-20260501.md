@@ -31,7 +31,7 @@ itself prove verified semantic maturity. `governanceState`,
 
 ## Totals
 
-- Tracked files indexed: 4157
+- Tracked files indexed: 4158
 - Component/source owner units: 32
 - Ungoverned files: 0
 - Drift files: 41
@@ -43,7 +43,7 @@ itself prove verified semantic maturity. `governanceState`,
 | Status | Files |
 | --- | ---: |
 | `canonical` | 113 |
-| `coverage-required` | 3921 |
+| `coverage-required` | 3922 |
 | `drift` | 41 |
 | `review` | 82 |
 <!-- prettier-ignore-end -->
@@ -53,7 +53,7 @@ itself prove verified semantic maturity. `governanceState`,
 <!-- prettier-ignore-start -->
 | Governance state | Files |
 | --- | ---: |
-| `coverage-required` | 3921 |
+| `coverage-required` | 3922 |
 | `drift` | 41 |
 | `governed` | 113 |
 | `review` | 82 |
@@ -65,7 +65,7 @@ itself prove verified semantic maturity. `governanceState`,
 | Canonical role | Files |
 | --- | ---: |
 | `implementation-owner` | 113 |
-| `none` | 4044 |
+| `none` | 4045 |
 <!-- prettier-ignore-end -->
 
 ## By Owning Unit
@@ -74,7 +74,7 @@ itself prove verified semantic maturity. `governanceState`,
 | Owning unit | Files |
 | --- | ---: |
 | `SYS-ADAPTERS-ROOT` | 196 |
-| `SYS-API-APPLICATION-PORTS` | 16 |
+| `SYS-API-APPLICATION-PORTS` | 17 |
 | `SYS-API-APPLICATION-SERVICES` | 34 |
 | `SYS-API-BOOTSTRAP` | 2 |
 | `SYS-API-DOCS` | 15 |
