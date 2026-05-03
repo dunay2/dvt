@@ -5,16 +5,16 @@ generatedFrom:
   - docs/planning/status/system-governance-component-index.components.yaml
   - docs/planning/status/system-governance-document-unit-map.docs.yaml
 totals:
-  tasks: 43
+  tasks: 44
   p0: 4
   p1: 16
   p2: 3
-  p3: 20
+  p3: 21
   driftFiles: 44
-  componentsRequiringSubdivision: 18
+  componentsRequiringSubdivision: 19
 byType:
   - name: component-subdivision
-    count: 18
+    count: 19
   - name: cq-rail-gap
     count: 9
   - name: doc-alignment
@@ -29,7 +29,7 @@ byPriority:
   - name: P2
     count: 3
   - name: P3
-    count: 20
+    count: 21
 tasks:
   - id: GRQ-DRIFT_REMOVAL-SYS-PLANSTORE-API-COMPOSITION
     type: drift-removal
@@ -1359,6 +1359,24 @@ tasks:
     domainUnit: SYS-ADAPTERS
     dddOwner: ADP
     cqRails: adapter implementations of owned ports
+    blocking: reporting-only
+    reason: Component is known but still too broad for source-level governance.
+    fileCount: 0
+    documentCount: 0
+    files: []
+    documents: []
+    expectedValidation:
+      - pnpm docs:governance:remediation-queue:check
+      - pnpm docs:governance:coverage-report:check
+      - pnpm docs:governance:file-component-index:check
+  - id: GRQ-COMPONENT_SUBDIVISION-SYS-API-OPS-ROUTES
+    type: component-subdivision
+    priority: P3
+    componentUnit: SYS-API-OPS-ROUTES
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    dddOwner: INFRA
+    cqRails: none - grouping component for operational route source units
     blocking: reporting-only
     reason: Component is known but still too broad for source-level governance.
     fileCount: 0

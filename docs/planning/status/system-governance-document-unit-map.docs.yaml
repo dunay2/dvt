@@ -1,7 +1,7 @@
 version: 1
 generatedFrom: git ls-files docs
 unitManifest: docs/planning/status/system-governance-unit-index.units.yaml
-documentCount: 1445
+documentCount: 1446
 documents:
   - path: docs/CONTRIBUTING.md
     classification: governs unit
@@ -4702,6 +4702,11 @@ documents:
     subjectUnit: SYS-DOCS-GOVERNANCE
   - path: >-
       docs/planning/proposals/mandatory/governance-and-docs/generated-planning-surfaces-extraction-plan-20260403.md
+    classification: governs unit
+    documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
+    subjectUnit: SYS-DOCS-GOVERNANCE
+  - path: >-
+      docs/planning/proposals/mandatory/governance-and-docs/governance-file-index-sharding-plan-20260503.md
     classification: governs unit
     documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
     subjectUnit: SYS-DOCS-GOVERNANCE

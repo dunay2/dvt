@@ -1,7 +1,7 @@
 version: 1
 generatedFrom: docs/planning/status/system-governance-unit-index.units.yaml
 fileIndex: docs/planning/status/system-governance-file-index.files.yaml
-componentCount: 31
+componentCount: 32
 components:
   - id: SYS-ADAPTERS-ROOT
     name: Adapter root component
@@ -595,6 +595,83 @@ components:
       - docs/planning/status/system-operations-inventory-20260501.md
     fowlerSignals:
       - coverage refinement
+  - id: SYS-API-OPS-HEALTH
+    name: API operational health and readiness routes
+    level: source
+    parent: SYS-API-OPS-ROUTES
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    unitPath:
+      - SYS-DVT
+      - SYS-API
+      - SYS-API-ROOT
+      - SYS-API-OPS-ROUTES
+      - SYS-API-OPS-HEALTH
+    unitReferences:
+      - id: SYS-DVT
+        name: DVT system
+        level: system
+        status: review
+        governance:
+          - docs/architecture/reference-architecture.md
+          - docs/concepts/domain-language.md
+          - docs/planning/status/governance-document-rule-inventory.md
+      - id: SYS-API
+        name: API workspace
+        level: workspace
+        status: coverage-required
+        governance:
+          - >-
+            docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
+          - docs/planning/status/system-operations-inventory-20260501.md
+      - id: SYS-API-ROOT
+        name: API root module
+        level: module
+        status: coverage-required
+        governance:
+          - >-
+            docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
+          - docs/planning/status/system-operations-inventory-20260501.md
+      - id: SYS-API-OPS-ROUTES
+        name: API operational health routes
+        level: component
+        status: coverage-required
+        governance:
+          - >-
+            docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
+          - >-
+            docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
+          - docs/runbooks/api-runtime-sla-canonical-20260404.md
+          - docs/planning/status/system-operations-inventory-20260501.md
+      - id: SYS-API-OPS-HEALTH
+        name: API operational health and readiness routes
+        level: source
+        status: review
+        governance:
+          - >-
+            docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
+          - docs/runbooks/api-runtime-sla-canonical-20260404.md
+          - docs/planning/status/system-operations-inventory-20260501.md
+    status: review
+    governanceState: review
+    canonicalRole: none
+    evidenceState: review-required
+    isDrift: false
+    isLegacy: false
+    childrenRequired: false
+    fileCount: 11
+    dddOwner: ENTRY
+    cqRails: ApiOperationalReadinessQuery
+    owns:
+      - apps/api/src/routes/**
+    excludes: []
+    governance:
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
+      - docs/runbooks/api-runtime-sla-canonical-20260404.md
+      - docs/planning/status/system-operations-inventory-20260501.md
+    fowlerSignals:
+      - coverage refinement
   - id: SYS-API-OPS-ROUTES
     name: API operational health routes
     level: component
@@ -648,12 +725,11 @@ components:
     evidenceState: coverage-required
     isDrift: false
     isLegacy: false
-    childrenRequired: false
-    fileCount: 11
-    dddOwner: ENTRY
-    cqRails: API operational readiness queries
-    owns:
-      - apps/api/src/routes/**
+    childrenRequired: true
+    fileCount: 0
+    dddOwner: INFRA
+    cqRails: none - grouping component for operational route source units
+    owns: []
     excludes: []
     governance:
       - >-
@@ -1013,7 +1089,7 @@ components:
     isDrift: false
     isLegacy: false
     childrenRequired: true
-    fileCount: 1652
+    fileCount: 1653
     dddOwner: INFRA
     cqRails: none - documentation governance
     owns:

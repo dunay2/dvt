@@ -1,7 +1,7 @@
 version: 1
 generatedFrom: git ls-files
 unitManifest: docs/planning/status/system-governance-unit-index.units.yaml
-fileCount: 4086
+fileCount: 4087
 files:
   - fileId: F-7C0FAC63D273
     pathHash: 16228f9cd18f5479d183ab61cb01d3cfc66645b3053a3d23dd9aef2069c3410a
@@ -7767,10 +7767,10 @@ files:
   - fileId: F-4015F841B57C
     pathHash: a0c2a17351d5dae4adde19234797b7a6336e436d690702bb5206ad32e57433da
     contentHash: aa6dc79af3e328eb7bf9a49bf20010a2796a5471f62f045d8087eea96724c78d
-    governanceHash: 8311beb5582a06fba7004c3e4c3d4ef7bbce1edb42d9ae97743b104113bd4486
-    stateFingerprint: e859143d501caae83b5a83fbe6513fa8d800c276932b6d32f1397f83ec504aad
+    governanceHash: 5dae453cc269e3f3d4a9419f915ec06dcb5ded78b26f85da0485d4518f32df74
+    stateFingerprint: 5708078b2cb15f5369102c4be734d8eac31771463f87ba525b3dc5b147c3a569
     path: apps/api/src/routes/capabilities.ts
-    owningUnit: SYS-API-OPS-ROUTES
+    owningUnit: SYS-API-OPS-HEALTH
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-API-OPS-ROUTES
@@ -7779,29 +7779,28 @@ files:
       - SYS-API
       - SYS-API-ROOT
       - SYS-API-OPS-ROUTES
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
+      - SYS-API-OPS-HEALTH
+    ownerLevel: source
+    unitStatus: review
+    governanceState: review
     canonicalRole: none
-    evidenceState: coverage-required
+    evidenceState: review-required
     isDrift: false
     isLegacy: false
     dddOwner: ENTRY
-    cqRails: API operational readiness queries
+    cqRails: ApiOperationalReadinessQuery
     governance:
       - >-
         docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
-      - >-
-        docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
       - docs/runbooks/api-runtime-sla-canonical-20260404.md
       - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-25FD3E34272F
     pathHash: d1187132ad43b3e7e729120522af6cfc30b54a8e9b593eaabdc1cee2fdaeaab1
     contentHash: b65c5d16a95d7f7b2bc87089791fa0eebfab45e7d6e3bbc12f476ad9ad7e6e23
-    governanceHash: 8311beb5582a06fba7004c3e4c3d4ef7bbce1edb42d9ae97743b104113bd4486
-    stateFingerprint: 1c1c206939344e18d4ebee41d9c96e9a12ee9074f788fb624716b6680fe0b989
+    governanceHash: 5dae453cc269e3f3d4a9419f915ec06dcb5ded78b26f85da0485d4518f32df74
+    stateFingerprint: f244c6d9ae7de97981f789e96852f66e43770ff96c055d995250aec5c7e64861
     path: apps/api/src/routes/dbReady.ts
-    owningUnit: SYS-API-OPS-ROUTES
+    owningUnit: SYS-API-OPS-HEALTH
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-API-OPS-ROUTES
@@ -7810,29 +7809,28 @@ files:
       - SYS-API
       - SYS-API-ROOT
       - SYS-API-OPS-ROUTES
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
+      - SYS-API-OPS-HEALTH
+    ownerLevel: source
+    unitStatus: review
+    governanceState: review
     canonicalRole: none
-    evidenceState: coverage-required
+    evidenceState: review-required
     isDrift: false
     isLegacy: false
     dddOwner: ENTRY
-    cqRails: API operational readiness queries
+    cqRails: ApiOperationalReadinessQuery
     governance:
       - >-
         docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
-      - >-
-        docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
       - docs/runbooks/api-runtime-sla-canonical-20260404.md
       - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-E4ABC9FB6069
     pathHash: 5375f26aa5685267f30ed9ddac8e6c5cd2f7c2fc12cd55c292dc6617809f7e76
     contentHash: 53b10961f476b9c3ec1c71db82925b6d36d80727997c622211b889044df533c6
-    governanceHash: 8311beb5582a06fba7004c3e4c3d4ef7bbce1edb42d9ae97743b104113bd4486
-    stateFingerprint: f45a3ef3522c5f7e6ca624826cdfe400449e6143d5d550e5b3c92373d4cb4431
+    governanceHash: 5dae453cc269e3f3d4a9419f915ec06dcb5ded78b26f85da0485d4518f32df74
+    stateFingerprint: ab0ff3acd36fd2127398e8c59b6fd3a22979b68d71ff771cef3eb875a8c8fd4a
     path: apps/api/src/routes/health.ts
-    owningUnit: SYS-API-OPS-ROUTES
+    owningUnit: SYS-API-OPS-HEALTH
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-API-OPS-ROUTES
@@ -7841,29 +7839,28 @@ files:
       - SYS-API
       - SYS-API-ROOT
       - SYS-API-OPS-ROUTES
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
+      - SYS-API-OPS-HEALTH
+    ownerLevel: source
+    unitStatus: review
+    governanceState: review
     canonicalRole: none
-    evidenceState: coverage-required
+    evidenceState: review-required
     isDrift: false
     isLegacy: false
     dddOwner: ENTRY
-    cqRails: API operational readiness queries
+    cqRails: ApiOperationalReadinessQuery
     governance:
       - >-
         docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
-      - >-
-        docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
       - docs/runbooks/api-runtime-sla-canonical-20260404.md
       - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-1CD8B10FFC9E
     pathHash: f8c8e6a4028235fe3754fbc2022de831ae47358414b305ac0f8d8c02c1d5f843
     contentHash: 355f593bb80f62d16457a59dabb6303ccc7e2aa1db5cf5aec0f99961839ed93a
-    governanceHash: 8311beb5582a06fba7004c3e4c3d4ef7bbce1edb42d9ae97743b104113bd4486
-    stateFingerprint: 41a6ed7af80c4efaf4dbd83e79b593bcda4ed0160d184af3b3e1950a9f86bcad
+    governanceHash: 5dae453cc269e3f3d4a9419f915ec06dcb5ded78b26f85da0485d4518f32df74
+    stateFingerprint: 6ba64aa33b7f4aed3ad0eabf918735dad6659f0b1d1c0b4dc8b37f1d51828411
     path: apps/api/src/routes/healthContract.ts
-    owningUnit: SYS-API-OPS-ROUTES
+    owningUnit: SYS-API-OPS-HEALTH
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-API-OPS-ROUTES
@@ -7872,29 +7869,28 @@ files:
       - SYS-API
       - SYS-API-ROOT
       - SYS-API-OPS-ROUTES
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
+      - SYS-API-OPS-HEALTH
+    ownerLevel: source
+    unitStatus: review
+    governanceState: review
     canonicalRole: none
-    evidenceState: coverage-required
+    evidenceState: review-required
     isDrift: false
     isLegacy: false
     dddOwner: ENTRY
-    cqRails: API operational readiness queries
+    cqRails: ApiOperationalReadinessQuery
     governance:
       - >-
         docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
-      - >-
-        docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
       - docs/runbooks/api-runtime-sla-canonical-20260404.md
       - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-C418C2E65805
     pathHash: a171d72f0d0def3187bc49c930900562ccf707c7f6134f07e102800f201f2fb6
     contentHash: 695a82e4f76850207cd5d00603d15b9d36a89ac3a76b4f708271f9cf62a34fbd
-    governanceHash: 8311beb5582a06fba7004c3e4c3d4ef7bbce1edb42d9ae97743b104113bd4486
-    stateFingerprint: 1cfdbe17615a242f9f33bb1870832d3f22dcb198c5f9758e8b83a2c5ee44ef89
+    governanceHash: 5dae453cc269e3f3d4a9419f915ec06dcb5ded78b26f85da0485d4518f32df74
+    stateFingerprint: 5b769481fa4f67fc4e60a8fdb2401738cedd02e6cf8716ed9cc150318cd15149
     path: apps/api/src/routes/healthContractMapper.ts
-    owningUnit: SYS-API-OPS-ROUTES
+    owningUnit: SYS-API-OPS-HEALTH
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-API-OPS-ROUTES
@@ -7903,29 +7899,28 @@ files:
       - SYS-API
       - SYS-API-ROOT
       - SYS-API-OPS-ROUTES
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
+      - SYS-API-OPS-HEALTH
+    ownerLevel: source
+    unitStatus: review
+    governanceState: review
     canonicalRole: none
-    evidenceState: coverage-required
+    evidenceState: review-required
     isDrift: false
     isLegacy: false
     dddOwner: ENTRY
-    cqRails: API operational readiness queries
+    cqRails: ApiOperationalReadinessQuery
     governance:
       - >-
         docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
-      - >-
-        docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
       - docs/runbooks/api-runtime-sla-canonical-20260404.md
       - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-065B6AC3F585
     pathHash: cbc102ca5e2362f4efe2bca4920aa0c917671b346341502cb55cc3cbe7f0d49f
     contentHash: fc28a4395cd8ae1848fe1459f78fd6eb903f5f64fb29f046fd1d08c2ced4954f
-    governanceHash: 8311beb5582a06fba7004c3e4c3d4ef7bbce1edb42d9ae97743b104113bd4486
-    stateFingerprint: 9fbbb74a44010a65480a6e98281831bb92cca322a4eab520e81db00a6df66504
+    governanceHash: 5dae453cc269e3f3d4a9419f915ec06dcb5ded78b26f85da0485d4518f32df74
+    stateFingerprint: 553525f74b36850669f8bf3247b523ba746394fda2f8fde2bcef3c021a597303
     path: apps/api/src/routes/healthPresenter.ts
-    owningUnit: SYS-API-OPS-ROUTES
+    owningUnit: SYS-API-OPS-HEALTH
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-API-OPS-ROUTES
@@ -7934,29 +7929,28 @@ files:
       - SYS-API
       - SYS-API-ROOT
       - SYS-API-OPS-ROUTES
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
+      - SYS-API-OPS-HEALTH
+    ownerLevel: source
+    unitStatus: review
+    governanceState: review
     canonicalRole: none
-    evidenceState: coverage-required
+    evidenceState: review-required
     isDrift: false
     isLegacy: false
     dddOwner: ENTRY
-    cqRails: API operational readiness queries
+    cqRails: ApiOperationalReadinessQuery
     governance:
       - >-
         docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
-      - >-
-        docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
       - docs/runbooks/api-runtime-sla-canonical-20260404.md
       - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-08173C80286E
     pathHash: cf6ecd05d5b8e50f577d14fe380cf967b15d108aca7e583912d8d83f79ba2675
     contentHash: d6ccb6edd7d4757602db46f70611b492ec7444e83bfef1c61f52d9abc24f1b3b
-    governanceHash: 8311beb5582a06fba7004c3e4c3d4ef7bbce1edb42d9ae97743b104113bd4486
-    stateFingerprint: c81f775397799136bd70280011fcf11d657609ed6c6241bfc3641169a1b67648
+    governanceHash: 5dae453cc269e3f3d4a9419f915ec06dcb5ded78b26f85da0485d4518f32df74
+    stateFingerprint: 0fc2fec6aa077f12fb872777eeeabfd0db9e0184024ea4a2791b0fcc1ba5b01b
     path: apps/api/src/routes/healthReadinessPolicy.ts
-    owningUnit: SYS-API-OPS-ROUTES
+    owningUnit: SYS-API-OPS-HEALTH
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-API-OPS-ROUTES
@@ -7965,29 +7959,28 @@ files:
       - SYS-API
       - SYS-API-ROOT
       - SYS-API-OPS-ROUTES
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
+      - SYS-API-OPS-HEALTH
+    ownerLevel: source
+    unitStatus: review
+    governanceState: review
     canonicalRole: none
-    evidenceState: coverage-required
+    evidenceState: review-required
     isDrift: false
     isLegacy: false
     dddOwner: ENTRY
-    cqRails: API operational readiness queries
+    cqRails: ApiOperationalReadinessQuery
     governance:
       - >-
         docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
-      - >-
-        docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
       - docs/runbooks/api-runtime-sla-canonical-20260404.md
       - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-10FD06CCF21E
     pathHash: 0861e9dac0991e70292569679112ef12b11c4873b1407a148d6f7d7a80aa13e5
     contentHash: 1d5bf8b1134d44a584835ae3343f3113175eb98096ef62d8a4b76f5b67e33267
-    governanceHash: 8311beb5582a06fba7004c3e4c3d4ef7bbce1edb42d9ae97743b104113bd4486
-    stateFingerprint: 54005541b3ef34c2ad90c75bb817812d466aee2144b9c8c0471e3dec98c11354
+    governanceHash: 5dae453cc269e3f3d4a9419f915ec06dcb5ded78b26f85da0485d4518f32df74
+    stateFingerprint: 01de75962cfef6ee3d9cae3b42e80dde68bd7dad0a83a788227480a8416848c6
     path: apps/api/src/routes/healthReadinessPorts.ts
-    owningUnit: SYS-API-OPS-ROUTES
+    owningUnit: SYS-API-OPS-HEALTH
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-API-OPS-ROUTES
@@ -7996,29 +7989,28 @@ files:
       - SYS-API
       - SYS-API-ROOT
       - SYS-API-OPS-ROUTES
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
+      - SYS-API-OPS-HEALTH
+    ownerLevel: source
+    unitStatus: review
+    governanceState: review
     canonicalRole: none
-    evidenceState: coverage-required
+    evidenceState: review-required
     isDrift: false
     isLegacy: false
     dddOwner: ENTRY
-    cqRails: API operational readiness queries
+    cqRails: ApiOperationalReadinessQuery
     governance:
       - >-
         docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
-      - >-
-        docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
       - docs/runbooks/api-runtime-sla-canonical-20260404.md
       - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-DC653613A2C6
     pathHash: 1a766caa752c611e0f4f75c26d91b92c8ab22caa3d9219a58a6480d0705f4b33
     contentHash: 323e1dc5ebe9a52e0dbfd8207e798742472a99cc53eabccb3d145ff4410da349
-    governanceHash: 8311beb5582a06fba7004c3e4c3d4ef7bbce1edb42d9ae97743b104113bd4486
-    stateFingerprint: 37dca5b8ce6a6c2ba742c1abe2c26e0ac3d7e5581c86555f9dfa157c26845e7d
+    governanceHash: 5dae453cc269e3f3d4a9419f915ec06dcb5ded78b26f85da0485d4518f32df74
+    stateFingerprint: 0ea861a34f087cc04313063a9d1bef09829764ebf38ce225a8b1702718e85fa7
     path: apps/api/src/routes/httpStatus.ts
-    owningUnit: SYS-API-OPS-ROUTES
+    owningUnit: SYS-API-OPS-HEALTH
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-API-OPS-ROUTES
@@ -8027,29 +8019,28 @@ files:
       - SYS-API
       - SYS-API-ROOT
       - SYS-API-OPS-ROUTES
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
+      - SYS-API-OPS-HEALTH
+    ownerLevel: source
+    unitStatus: review
+    governanceState: review
     canonicalRole: none
-    evidenceState: coverage-required
+    evidenceState: review-required
     isDrift: false
     isLegacy: false
     dddOwner: ENTRY
-    cqRails: API operational readiness queries
+    cqRails: ApiOperationalReadinessQuery
     governance:
       - >-
         docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
-      - >-
-        docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
       - docs/runbooks/api-runtime-sla-canonical-20260404.md
       - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-7F96E6A41BEF
     pathHash: 8c9fb87a72062fcab74b416bc21c3f8e9cc9464b76f4ee5c8287c1d2e951101a
     contentHash: 90882d5425ed532d9e7a6807788cf9747fc866599e5b86c36b82f99ab5c9973c
-    governanceHash: 8311beb5582a06fba7004c3e4c3d4ef7bbce1edb42d9ae97743b104113bd4486
-    stateFingerprint: 5d491c655f933435f67caca35bce6f441b28857be5cf65c3ce5622eb3dd24846
+    governanceHash: 5dae453cc269e3f3d4a9419f915ec06dcb5ded78b26f85da0485d4518f32df74
+    stateFingerprint: f1af4e5b47cc3408662b9e785d706d1f0378e938bb5b45c5a2c53a8bcab90fa7
     path: apps/api/src/routes/registerOperationalRoutes.ts
-    owningUnit: SYS-API-OPS-ROUTES
+    owningUnit: SYS-API-OPS-HEALTH
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-API-OPS-ROUTES
@@ -8058,29 +8049,28 @@ files:
       - SYS-API
       - SYS-API-ROOT
       - SYS-API-OPS-ROUTES
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
+      - SYS-API-OPS-HEALTH
+    ownerLevel: source
+    unitStatus: review
+    governanceState: review
     canonicalRole: none
-    evidenceState: coverage-required
+    evidenceState: review-required
     isDrift: false
     isLegacy: false
     dddOwner: ENTRY
-    cqRails: API operational readiness queries
+    cqRails: ApiOperationalReadinessQuery
     governance:
       - >-
         docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
-      - >-
-        docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
       - docs/runbooks/api-runtime-sla-canonical-20260404.md
       - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-9735328DD649
     pathHash: cbd03a177d5b747d62bb21f3aa2a428cd4472555ee5b973aa4b6ace73211812e
     contentHash: f0c7bdcea2c6c344181a886c3fdff8863b1d056a38afef472b03a6a465245cdb
-    governanceHash: 8311beb5582a06fba7004c3e4c3d4ef7bbce1edb42d9ae97743b104113bd4486
-    stateFingerprint: 11c3f2698022ed0475a18ad142a08fa82ead4509d9d4113d5727da1aa1db45ab
+    governanceHash: 5dae453cc269e3f3d4a9419f915ec06dcb5ded78b26f85da0485d4518f32df74
+    stateFingerprint: 109277a3f5ed5a0f1440003f64588cf4d372ce193c594017dc0768546ca4b002
     path: apps/api/src/routes/version.ts
-    owningUnit: SYS-API-OPS-ROUTES
+    owningUnit: SYS-API-OPS-HEALTH
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-API-OPS-ROUTES
@@ -8089,20 +8079,19 @@ files:
       - SYS-API
       - SYS-API-ROOT
       - SYS-API-OPS-ROUTES
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
+      - SYS-API-OPS-HEALTH
+    ownerLevel: source
+    unitStatus: review
+    governanceState: review
     canonicalRole: none
-    evidenceState: coverage-required
+    evidenceState: review-required
     isDrift: false
     isLegacy: false
     dddOwner: ENTRY
-    cqRails: API operational readiness queries
+    cqRails: ApiOperationalReadinessQuery
     governance:
       - >-
         docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
-      - >-
-        docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
       - docs/runbooks/api-runtime-sla-canonical-20260404.md
       - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-E799BF9616CF
@@ -70517,6 +70506,33 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
+  - fileId: F-1563B24E701F
+    pathHash: 72cf6e11bfcda18dee85566a05eaf24c7a682f8e4e89bbf7313cc67fee1490d0
+    contentHash: 4acea906ac6fb501ddcc630599d74432d2cd3c5aa4cd69d8c88492550ba4baa1
+    governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
+    stateFingerprint: 5ec08c0d09dd0228d49a55a1b54da83e07f050c97420bf7c6cb4ffc1b95d832f
+    path: >-
+      docs/planning/proposals/mandatory/governance-and-docs/governance-file-index-sharding-plan-20260503.md
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-DOCS-GOVERNANCE
+      - SYS-DOCS-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - documentation governance
+    governance:
+      - docs/DOCS_README.md
+      - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-6B7109FAC413
     pathHash: 782744985b5a21f2d36cf87244bf31ee4c62c70b652a5075016cc682616fd47c
     contentHash: ec2e5133cf067ab442efb104d5327b3f9d43048657eeb0a9686d116212440b2e
@@ -70572,9 +70588,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-EF1F0DBBB1D8
     pathHash: d2ebbe3b36b0d4c10247d0bef16fe8e5b65b52ed226557be52d5d634cdd48c9c
-    contentHash: 6ac5a48be6ec40f724dab7b201ddb423f62e41fe602ded7656aa92f6397354af
+    contentHash: dd3ad89d32d5cab2cd62d7a0420f541f6902e7edffbaed5a9900f26857ab59d0
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: e1ebcfb170d477f51e559ab07222c817e2afeb0c2d7cdd40689c8c4f4951411c
+    stateFingerprint: af87a49f0957c98dfdfb96cc8bee3ef1d11ddeb84485de877cd460eccdfc0a21
     path: >-
       docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -70599,9 +70615,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-D7B979170553
     pathHash: f897fab0a48c65f86c12536e36f2cb1c89c0989abdf3da22463d3cd85a7bb891
-    contentHash: 93ff9641d2f39d9f4a22c7e9162626f20ce167f768ce799d223562b6a39d758c
+    contentHash: 46f43d4b74841019d21db6294f78903d40871d1091e26fe2968a72b101cd114e
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 40a5104b8372a5f8d0b99776ca3fdddb40aa3f09999fd8825af8b7a3c7ff3587
+    stateFingerprint: 53d51efe0593f2630f549dc5c86c3554518b8043451a958c06594cd576441c0d
     path: >-
       docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -72186,9 +72202,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-FCCEA76C44CF
     pathHash: 1ede43442eb9d70057b7546ff52596d5db6a30ba96eb42411544e5088aa221d6
-    contentHash: 45bbb1fab965c0c4205be3c0f8b4d5e74d457d6c4a31fdfd92e18fa3df4c3e18
+    contentHash: 3367cf7b864f7e77715cf8f368262c09b4ae879cbe8aeccabb4410860c530f1a
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: f6cfc93cb4547888c10a21f0efda5b1d85a675e1dd07dd71824ab0f7bc2538c2
+    stateFingerprint: 85dbbc4e04fced54a31dcddec64102db8ada1bda6371238d064a55d439dbf5d7
     path: docs/planning/proposals/portfolio-map-20260403.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
@@ -77036,9 +77052,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-5293EA43A26A
     pathHash: 8b24735b0574e4a4affd5d6e72a0c610556d81979eb7c42391627739b2df44ca
-    contentHash: 4f41742bc9fc749191cac00d6de6b8da23e4a37072c628d9dd7a116b30ce461f
+    contentHash: 9e1393c74f9322102c4ce20c8450a9298b9bf5f3ccdb824705053b83ff0a16d5
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: f2e4a2e65f2fab198609284d746cfb62a16facc8d11f1accaf152f39538a4f3a
+    stateFingerprint: 38ae414c19774692299b92a530ce7646ca44a770ac9717b277120702c1fee8f7
     path: docs/planning/status/system-governance-component-index-20260501.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
@@ -77062,9 +77078,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-65470A9009F7
     pathHash: 68ae073be56f8b4465649dfa1967e94f85737262e8851cd582d4f7c81e950839
-    contentHash: e2c3bcb2c30a560a430b253bdc81326d82e718a0ddf87a0a0df29fff7825add0
+    contentHash: a5f1e93b7df306f34fd4033445db30674dbc2a2ffa55f8f5d38704ca026cfefe
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 23283ccb359a4b76022222fd0538efa895c16cbf068d524a6c1acc495731a520
+    stateFingerprint: a0267a5f71a0757038684eef8ecfedd95fac0530c3decfbc91c5036b438f2c2d
     path: docs/planning/status/system-governance-component-index.components.yaml
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
@@ -77088,9 +77104,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-990BF10AAD94
     pathHash: 6a67be9c35ed2f9a617eb90c52da30b17200d6f02a2b644eec36143d6448d566
-    contentHash: fcb41b878dc9b4841092f4ad066fd7846cd1863c6f4b7801455175b71734bc2b
+    contentHash: 69e588e261ffe19330f35761794680d5d1c8c33a2d018b7b2e1f150527cd0e6a
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: ac2ed0befa7a2982e0b998a58c8cf2b4a3a653270def23c2f7340f1ff483f9a1
+    stateFingerprint: 97ecbac6e5e223dcc62c69e06da74f2afcff0194cd9a160fd49301250bc604f9
     path: docs/planning/status/system-governance-coverage-report-20260502.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
@@ -77114,9 +77130,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-ACC58DCFEB8C
     pathHash: 8ba943b89ee6764c97ba514c18768a02ebb2317576fadd0422fcbde3969c6fdc
-    contentHash: 114065cb5f404865564595c951d2db87a4a962aa221c955acb28e36168dc4122
+    contentHash: 612272053d07eaca86f9c3473f41ef746d5bae3dbed0eff67e01437846446d40
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 07cd684aed9491e4958c69cb81b2b5db99d9b2903ccf3aee68365f1fe45ee898
+    stateFingerprint: 0b8dc92ad08034f07d2694f4adcc3c57d9526e2284d84b9a4802f5ffddece60c
     path: docs/planning/status/system-governance-coverage-report.coverage.yaml
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
@@ -77140,9 +77156,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-5D25269D1180
     pathHash: c8ea11d63cfe1b8bdc0b0707aab7de15ebc29dada77087092c207440dd40a350
-    contentHash: de711df1f729ec88e66340fcfa1d942807e03f3dce284462e51af531161296c5
+    contentHash: 0c81391e38221d0d6eb7695f65288cdb573a2d6618ab9fcba9dd04692ec3c117
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: f52041252d8579ef5caca98516491b99e88c6fbb146fe07b399d7cc81866898d
+    stateFingerprint: 0ef8baca82b06d4c0d00c192f1568dac02f398c9442cdc99770aedf06469ce7d
     path: docs/planning/status/system-governance-document-unit-map-20260501.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
@@ -77166,9 +77182,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-E7EC54670607
     pathHash: f7d33bec5901a02423d9acc6f26ba2984884dc569b1b3fcde65c9e0b1b38cf59
-    contentHash: bc13a1f208386732225d0b0f53f46ca94fe82cbbf287d326a2c146e3ffc67a8d
+    contentHash: b634f45bca0a1ac90d4fe4fdd0b392b2f05ef9729d70f3bd531033fd934cb8f5
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: af98b5dec98ce1906cefd5022bc77cb177486477751df13216ec61ee66a760aa
+    stateFingerprint: e8b005dfb3e2558a15817ae92d7dc44f91b28f936af5cfda4b9b7e2e0128bd19
     path: docs/planning/status/system-governance-document-unit-map.docs.yaml
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
@@ -77192,9 +77208,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-6B8271C2051C
     pathHash: 4bd0ab5904eb54e02bb9f0957eed059b06dfd5cb253044a2b0c01cad2eb3a7ca
-    contentHash: 27b59314375aa71bc80425896e47562fd9ec0351e45ca1d3f63f3441011d8325
+    contentHash: 8bcd9217a5b40562982220a1598d08e2e56371053e2968758fc4bc9f4102d0bc
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 3171050084f399bbe8b497c43ac1f4180a52ab7647d9d42c6b54746979ff0e52
+    stateFingerprint: 88d187feb12afbc3129f4bd8b04c396dc77a5b75d7ce88dc417106c337c2481d
     path: docs/planning/status/system-governance-file-fingerprint-baseline.yaml
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
@@ -77244,9 +77260,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-8C3905234D4D
     pathHash: 9aa5662237a193b3e97f4926a7bc1081f9ea08b908b351f5327fd00add4ac0aa
-    contentHash: 132e86bceb9d246783d62aaac83f72287d0ab09213ceb3c59814c37fd90294c5
+    contentHash: 8174bdf2f08b2dee10d951d1f1ab03832502ff64e0a40a93be7d72ac81eb2da7
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 1c144f149cea57394461f60ebe947a956cf2b424e0d64cafde8646821c89f8c1
+    stateFingerprint: e08a9fcfb19a4791db2936f4aaaccad1df180099f647598d240e5ba351cf89fb
     path: docs/planning/status/system-governance-file-index-20260501.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
@@ -77270,9 +77286,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-9B87FBC12CBD
     pathHash: dba7e9c8e65a57616fcb6349019afe12870f7cfe88158c889f6b04cfabee354b
-    contentHash: 9eacfe1c25024fd383ada5c44ae835beb419a29b1c83181ab8bbf2139e7ee105
+    contentHash: ce92e80d474af8bee8a2f1b0c6eb4dab66594deefb179c2fb40c59e3a56cdf0f
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 42c1c7ab77fbe2d5196884fb896f553ffce6ac70cad51339969d598b72615ba1
+    stateFingerprint: 7b61a4f16d3911b1a357f3943c0ded4083ff980d7810d07e2b16c719bdb1c61e
     path: docs/planning/status/system-governance-file-index.files.yaml
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
@@ -77322,9 +77338,9 @@ files:
       - docs/planning/status/system-governance-document-unit-map-20260501.md
   - fileId: F-F36907BA18F7
     pathHash: 27cc5e7c273626250eb8507590212260232be519f00ad9e09a5c20bb4f8f31f3
-    contentHash: 6e3a7920153a3fcf4d14495e44191e72d669049c5ccbcace34efcbc08bc4d45c
+    contentHash: 71528af4993dc5292edbbc818ff00f3ac06ffe2767671a4bbecae5ce52074d34
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: f18cc70d5e9c53e3dde0da38366f8c785ab3d973a441a3d62703e1e8fbaf99a6
+    stateFingerprint: 07c5734b92edf532c6e37f2e39e4b84e833902b0a717cae8e5a9d4e070d4930b
     path: docs/planning/status/system-governance-remediation-queue-20260502.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
@@ -77348,9 +77364,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-E5771D91E8FF
     pathHash: 3cda4b7f55968fa00ba6ae27005ef1029742c209639a1b2080af188877dba628
-    contentHash: 9507cb7afc4b17b8cf72ff1055a115844cd8962c70951f40697978c1644433a7
+    contentHash: 984d6f38a0dfc7d6cfab6437c66d83efb691a74ee60e3ca865f0c4fca1df3a4b
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 9ba73dfbb2880f301a79b6bb804a782a5fb7236b8e0cd1979dc8d91f34c3877c
+    stateFingerprint: 6540b5942ff3ad0160cce4d6d9e80cb88b0fef5dbdcabaf894a776e1b73ebbf4
     path: docs/planning/status/system-governance-remediation-queue.queue.yaml
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
@@ -77400,9 +77416,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-AD720C708C3F
     pathHash: dec95112a57962a24482cc41702db78f640ae388bb57062fbc491a10ff74ae5e
-    contentHash: df5a7c9148efa4694984942e00a12f45047fe682e89a2ad70528bc0b3cc6935e
+    contentHash: 7ca8aba3645c915397df01f7c120bb038d52c437f1e6e61bd297785c2ee901b5
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 9e3a1c2bacacf8be8fbe043568e6aeeb1ef46b292a7975592e6fed7648b3a77e
+    stateFingerprint: 3de04bac4b90b4b9c14846a73fbb537f7e325b3c17b325265b4dbc4618bcbb01
     path: docs/planning/status/system-governance-unit-index.units.yaml
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
