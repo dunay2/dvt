@@ -2,7 +2,7 @@ version: 1
 shardId: SYS-WEB
 generatedFrom: git ls-files
 unitManifest: docs/planning/status/system-governance-unit-index.units.yaml
-fileCount: 803
+fileCount: 804
 files:
   - fileId: F-76C868437FA7
     pathHash: 0e84cc225ac7ad73b75b40d07ec39fc3d385993334ceac8c74e6901de6549d41
@@ -8066,9 +8066,9 @@ files:
         docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md
   - fileId: F-9A4CE83CBDDE
     pathHash: 0c27cc211e5b0b6dcb5fb36705108ed71346c13e1b87eeeba8034dec25cb52d6
-    contentHash: f7b0a049bab2343475cfae12800ea1179c3fb78ab7140f7ac32c4f37eedbad4a
+    contentHash: b63a725df3bd737d554140fe1ba5e351ba8b96efe2a4590253b2a8cd22b04426
     governanceHash: 17b9458eb491785470127e84e01e837244221c4479c7af2c70c15b49bb9cbb20
-    stateFingerprint: 8a0f6506055aa40fbc377478dbdd87d25b54e5f24834ae9c3b17184caf497874
+    stateFingerprint: cf75fd21e510aacee19eefeb0c026e94d22db686cfaccb9b096c170dcaed5c1a
     path: apps/web/src/app/stores/sessionStore.ts
     owningUnit: SYS-WEB-ROOT
     rootUnit: SYS-DVT
@@ -8122,6 +8122,32 @@ files:
     governanceHash: 17b9458eb491785470127e84e01e837244221c4479c7af2c70c15b49bb9cbb20
     stateFingerprint: 9ad65a7d49a00b1f61a76b3fea4e60ac1e61d7f0128eb8ccbc01cfc75d5f1b9b
     path: apps/web/src/app/stores/uiLayoutStore.ts
+    owningUnit: SYS-WEB-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-WEB-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-WEB
+      - SYS-WEB-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: ENTRY
+    cqRails: UI actions and API queries
+    governance:
+      - >-
+        docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md
+  - fileId: F-9A67B7BA44D2
+    pathHash: 19fd6b15fda4031fc28a33ccf345d7bbfb7d1325e34c453d8e965844bbf31519
+    contentHash: b3b411d4dfd8da0bafcb422b7de3f75b5a92a4f404c1da7f108c4f536b9e0ccc
+    governanceHash: 17b9458eb491785470127e84e01e837244221c4479c7af2c70c15b49bb9cbb20
+    stateFingerprint: ed01090b7d67c20deaf9c910b8265c7256d77c1eabce4fbccd05afefaa14051f
+    path: apps/web/src/app/stores/webStoreDomainOwnership.architecture.test.ts
     owningUnit: SYS-WEB-ROOT
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT

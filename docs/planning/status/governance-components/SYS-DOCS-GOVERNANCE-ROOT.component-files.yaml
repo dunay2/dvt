@@ -7,7 +7,7 @@ governanceState: coverage-required
 dddOwner: INFRA
 cqRails: none - documentation governance
 childrenRequired: true
-fileCount: 1719
+fileCount: 1721
 driftFileCount: 0
 legacyFileCount: 0
 files:
@@ -2044,6 +2044,20 @@ files:
     isLegacy: false
   - path: docs/architecture/components/web/web-store-domain-ownership-component.md
     fileId: F-1F29E3A80D83
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/architecture/components/web/web-store-domain-ownership-local-guide.md
+    fileId: F-760483516079
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/architecture/components/web/web-store-domain-ownership-user-stories.md
+    fileId: F-4DF126137DB0
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
