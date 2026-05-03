@@ -174,7 +174,8 @@
       ],
       "generatorCommand": "pnpm docs:governance:file-component-index",
       "tracking": "tracked",
-      "manualEditPolicy": "generator-owned"
+      "manualEditPolicy": "generator-owned",
+      "maxBytes": 1900000
     },
     {
       "id": "tracked-governance-file-fingerprint-baseline",
@@ -192,7 +193,8 @@
       ],
       "generatorCommand": "pnpm docs:governance:file-fingerprint-baseline",
       "tracking": "tracked",
-      "manualEditPolicy": "generator-owned"
+      "manualEditPolicy": "generator-owned",
+      "maxBytes": 2100000
     },
     {
       "id": "tracked-governance-coverage-report",

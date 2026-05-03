@@ -25,7 +25,7 @@ Machine-readable sources:
 ## Totals
 
 - Components: 32
-- Files mapped: 4159
+- Files mapped: 4163
 - Components with drift or legacy files: 3
 
 ## Largest Components
@@ -34,7 +34,7 @@ Machine-readable sources:
 | Component | Files | Drift files | Legacy files |
 | --- | ---: | ---: | ---: |
 | `SYS-DOCS-GOVERNANCE-ROOT` | 1718 | 0 | 0 |
-| `SYS-WEB-ROOT` | 799 | 0 | 0 |
+| `SYS-WEB-ROOT` | 801 | 0 | 0 |
 | `SYS-RUNTIME-ROOT` | 286 | 0 | 0 |
 | `SYS-ADAPTERS-ROOT` | 196 | 0 | 0 |
 | `SYS-CI-GOVERNANCE-ROOT` | 180 | 0 | 0 |
@@ -42,10 +42,10 @@ Machine-readable sources:
 | `SYS-REPO-METADATA-ROOT` | 113 | 0 | 0 |
 | `SYS-WORKERS-ROOT` | 103 | 0 | 0 |
 | `SYS-API-TESTS` | 99 | 0 | 0 |
+| `SYS-API-HTTP-ENTRYPOINTS` | 76 | 0 | 0 |
 | `SYS-PLANNER-ROOT` | 76 | 0 | 0 |
-| `SYS-API-HTTP-ENTRYPOINTS` | 75 | 0 | 0 |
 | `SYS-TRACEABILITY-ROOT` | 65 | 0 | 0 |
-| `SYS-API-HTTP-ENTRYPOINT-TESTS` | 51 | 0 | 0 |
+| `SYS-API-HTTP-ENTRYPOINT-TESTS` | 52 | 0 | 0 |
 | `SYS-API-APPLICATION-SERVICES` | 34 | 0 | 0 |
 | `SYS-PLANSTORE-DOCS-RISK` | 34 | 0 | 0 |
 | `SYS-API-INFRASTRUCTURE` | 27 | 0 | 0 |
@@ -76,8 +76,8 @@ Machine-readable sources:
 | `SYS-API-BOOTSTRAP` | 2 | 0 | 0 | [shard](./governance-components/SYS-API-BOOTSTRAP.component-files.yaml) |
 | `SYS-API-DOCS` | 15 | 0 | 0 | [shard](./governance-components/SYS-API-DOCS.component-files.yaml) |
 | `SYS-API-DOMAIN-AUTH` | 1 | 0 | 0 | [shard](./governance-components/SYS-API-DOMAIN-AUTH.component-files.yaml) |
-| `SYS-API-HTTP-ENTRYPOINT-TESTS` | 51 | 0 | 0 | [shard](./governance-components/SYS-API-HTTP-ENTRYPOINT-TESTS.component-files.yaml) |
-| `SYS-API-HTTP-ENTRYPOINTS` | 75 | 0 | 0 | [shard](./governance-components/SYS-API-HTTP-ENTRYPOINTS.component-files.yaml) |
+| `SYS-API-HTTP-ENTRYPOINT-TESTS` | 52 | 0 | 0 | [shard](./governance-components/SYS-API-HTTP-ENTRYPOINT-TESTS.component-files.yaml) |
+| `SYS-API-HTTP-ENTRYPOINTS` | 76 | 0 | 0 | [shard](./governance-components/SYS-API-HTTP-ENTRYPOINTS.component-files.yaml) |
 | `SYS-API-INFRASTRUCTURE` | 27 | 0 | 0 | [shard](./governance-components/SYS-API-INFRASTRUCTURE.component-files.yaml) |
 | `SYS-API-OPS-HEALTH` | 11 | 0 | 0 | [shard](./governance-components/SYS-API-OPS-HEALTH.component-files.yaml) |
 | `SYS-API-OPS-ROUTES` | 0 | 0 | 0 | [shard](./governance-components/SYS-API-OPS-ROUTES.component-files.yaml) |
@@ -100,7 +100,7 @@ Machine-readable sources:
 | `SYS-REPO-METADATA-ROOT` | 113 | 0 | 0 | [shard](./governance-components/SYS-REPO-METADATA-ROOT.component-files.yaml) |
 | `SYS-RUNTIME-ROOT` | 286 | 0 | 0 | [shard](./governance-components/SYS-RUNTIME-ROOT.component-files.yaml) |
 | `SYS-TRACEABILITY-ROOT` | 65 | 0 | 0 | [shard](./governance-components/SYS-TRACEABILITY-ROOT.component-files.yaml) |
-| `SYS-WEB-ROOT` | 799 | 0 | 0 | [shard](./governance-components/SYS-WEB-ROOT.component-files.yaml) |
+| `SYS-WEB-ROOT` | 801 | 0 | 0 | [shard](./governance-components/SYS-WEB-ROOT.component-files.yaml) |
 | `SYS-WORKERS-ROOT` | 103 | 0 | 0 | [shard](./governance-components/SYS-WORKERS-ROOT.component-files.yaml) |
 <!-- prettier-ignore-end -->
 

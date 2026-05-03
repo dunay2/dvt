@@ -2,7 +2,7 @@ version: 1
 shardId: SYS-API
 generatedFrom: git ls-files
 unitManifest: docs/planning/status/system-governance-unit-index.units.yaml
-fileCount: 369
+fileCount: 371
 files:
   - fileId: F-CD95C55B5B9C
     pathHash: 751eb3d622d669d3b3ff7b8ab9240132ac4f3bbd70ebc4541d40ac15d83b1844
@@ -276,9 +276,9 @@ files:
       - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-69DC2D5403A1
     pathHash: aa0683860e3e8d9e287039885738eb1953d8d37b19c94481fe3e61cd4d24097b
-    contentHash: 2a914443b19e04833ce790c17084e29bbf3c53f5ccfff263e75a559b785abea9
+    contentHash: 94814585053a7bbe90cb0d202ebfcc4876bb3fcb98cfdb311f713ffb27f71fb6
     governanceHash: 9e036ab883eceba766b232f57216ba1ec58666aa399b148c02e4e894f13951ac
-    stateFingerprint: 7d19556a63cf580f8b9b76f441f9cbab6d9ff95b5e2bef9fd5c14982357191ec
+    stateFingerprint: 4ceaa7f7c354dcdbc9679c24f5487b50d721a67a5be0e489e7bda2d4f8ca2810
     path: apps/api/docs/protected-runtime-route-group-component.md
     owningUnit: SYS-API-DOCS
     rootUnit: SYS-DVT
@@ -974,9 +974,9 @@ files:
       - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-2B1EF0304696
     pathHash: 6e863ca9e32a8242b1903c46dabcca2f93e8b72fea33926619518ac9fe91ae55
-    contentHash: 042a758fa1f23d3be98702f3ef32052af36981197917530aa2ce54a9d6e5f97f
+    contentHash: 3b6ec0ceb6f74eb5bc4e9a4e4e2928501080fa3112083fdd38317a5988d66d2f
     governanceHash: 1387389fa277ea5c65a5742be079571cbccb7468809328bf23814e0c5ec2da3b
-    stateFingerprint: bc28c2a8f7cfff3b6caa5d12aeb24bd2fb44d0038df541ecab8b841c4695cf6f
+    stateFingerprint: 1c94d9eda851f42405370f9f30f28a80c97710228e51db32110f286e1202c762
     path: apps/api/src/application/ports/protectedRuntimeCommandQueryRails.ts
     owningUnit: SYS-API-APPLICATION-PORTS
     rootUnit: SYS-DVT
@@ -3959,9 +3959,9 @@ files:
       - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-48138C72872A
     pathHash: 560c556518788ae4626cf9483253a7af12dc9e1fc9072bceb6fc70041fcad474
-    contentHash: f4355d2cde1efac6172e831b41b730930b965d30a4fea618f4a26db3596c0897
+    contentHash: 03a98b769e55b27bb9639119b356f8e9d89ac9af8ddb288c1ee9a8d6c2cd1c3f
     governanceHash: 951b6623c89f0f7b1639e266272b3a82a5073e07f14871601afcb4dcfc9c274e
-    stateFingerprint: 95d26921789dec81e6f6b6544985b64dc3136f340a12f01be040cd896d9b0ec5
+    stateFingerprint: c9ed1956550621c231071e11e106abdd60b6038eb568511e665bd6e0e1949cb0
     path: apps/api/src/entrypoints/http/registerProtectedRuntimeRoutes.ts
     owningUnit: SYS-API-HTTP-ENTRYPOINTS
     rootUnit: SYS-DVT
@@ -4145,10 +4145,41 @@ files:
       - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-18BBD7F374AE
     pathHash: f9c3af27ef4a80f2c53b37c119b0f8c134a58d50600d68478e534cc4a801ba1a
-    contentHash: 18dcc9f8ed1fb2946a066a1a2f164591df295f815840fcf01b03072bad9e3030
+    contentHash: 46bfc31ea34101d8a1766526f6a44b0b70a557fe3a328654400b7ac48262825f
     governanceHash: 951b6623c89f0f7b1639e266272b3a82a5073e07f14871601afcb4dcfc9c274e
-    stateFingerprint: 510ff7767a91c398c1461c0f9b963929039997c8bac33fdda93cab99b4262bf0
+    stateFingerprint: 4f5d9e720b2aa1d943cb6ec7d44fc0f338446ee034bf931d6c98b0d86d5afe85
     path: apps/api/src/entrypoints/http/runtimeRoutes.constants.ts
+    owningUnit: SYS-API-HTTP-ENTRYPOINTS
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-API-HTTP-ENTRYPOINTS
+    unitPath:
+      - SYS-DVT
+      - SYS-API
+      - SYS-API-ROOT
+      - SYS-API-HTTP-ENTRYPOINTS
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: ENTRY
+    cqRails: API HTTP command/query route rails
+    governance:
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
+      - >-
+        docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
+      - docs/architecture/command-query-rail-governance.md
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-D3FF5FE5D0A3
+    pathHash: 2050c9dbe516deb5e28f0f1c7712e0fc454ccce35e723d3b6aa0c249b8772727
+    contentHash: 40e05e591c82374dbe87535a8c4231e089d0d056fb1ce2211ff776a7fd73dfda
+    governanceHash: 951b6623c89f0f7b1639e266272b3a82a5073e07f14871601afcb4dcfc9c274e
+    stateFingerprint: b8eec70c65fae57c1887aedf25c043e9be7af90e5588ec81144e0f624b50be3a
+    path: apps/api/src/entrypoints/http/sessionRoute.ts
     owningUnit: SYS-API-HTTP-ENTRYPOINTS
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
@@ -8808,9 +8839,9 @@ files:
       - docs/architecture/command-query-rail-governance.md
   - fileId: F-4BD92CDCD2AC
     pathHash: b84a1a97942bcee1df8a92ffc766a67b53e908c47550f2341116a76a102da795
-    contentHash: c9530334450e7ce79d48bd5579e54c82d7366e4590420def4ec22d31943629b7
+    contentHash: c3db10b5acc2880599617441239dcf46b274e94b9416151b92523f9407cf2296
     governanceHash: 873a3e8188b761eed0fdc743a443315e07f0d3f7ea5ff164faedccc3e1f7964e
-    stateFingerprint: e9e7798722773974d5f36834b5d46d3e405b7e09e60cd3a9f30aaaa14d6f4fe9
+    stateFingerprint: 6bb555db09a2787ce4d97539963dc2510d612f952baf87de2d30ac140f5ad0d4
     path: apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
     owningUnit: SYS-API-HTTP-ENTRYPOINT-TESTS
     rootUnit: SYS-DVT
@@ -8967,6 +8998,37 @@ files:
     governanceHash: 873a3e8188b761eed0fdc743a443315e07f0d3f7ea5ff164faedccc3e1f7964e
     stateFingerprint: 18523e9b9c8067444a1298e1968fca8c983f6cf44e225d2a533f3fb2cda99756
     path: apps/api/test/entrypoints/http/runCommandRouteExecutor.test.ts
+    owningUnit: SYS-API-HTTP-ENTRYPOINT-TESTS
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-API-HTTP-ENTRYPOINT-TESTS
+    unitPath:
+      - SYS-DVT
+      - SYS-API
+      - SYS-API-ROOT
+      - SYS-API-HTTP-ENTRYPOINT-TESTS
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: API HTTP command/query route validation
+    governance:
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
+      - >-
+        docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
+      - docs/guides/testing-and-ci-capabilities.md
+      - docs/architecture/command-query-rail-governance.md
+  - fileId: F-F4979A4ED01D
+    pathHash: dd85f7eaf117598fc69b53399c276ff10b2bc0489ad1dd9ef0afcdb55d8d4330
+    contentHash: f60125f0b72973e4b9e3b11465a7f27c7a447aaad9f1e58aed2b59b8dd4dac85
+    governanceHash: 873a3e8188b761eed0fdc743a443315e07f0d3f7ea5ff164faedccc3e1f7964e
+    stateFingerprint: 73aea2222291b0d9eb2497ddea282275081642d4ce296c8ded10d09666f98ac1
+    path: apps/api/test/entrypoints/http/sessionRoute.test.ts
     owningUnit: SYS-API-HTTP-ENTRYPOINT-TESTS
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT

@@ -87,8 +87,10 @@ flowchart LR
   Register["registerProtectedRuntimeRoutes"] --> Plan["Plan routes"]
   Register --> Draft["Workspace graph draft routes"]
   Register --> Runs["Run routes"]
+  Register --> Session["Session route"]
   Register --> Admin["Admin routes"]
 
+  Session --> SessionGet["GET /session"]
   Plan --> Start["POST /runs/start"]
   Plan --> Preview["POST /plans/preview"]
   Plan --> Compile["POST /plans/compile"]
@@ -141,6 +143,7 @@ flowchart LR
   Commands --> AdminRepair["Admin repair"]
 
   Queries --> PlanCompile["Compile plan"]
+  Queries --> SessionRead["Read authenticated session"]
   Queries --> DraftRead["Read workspace graph draft"]
   Queries --> RunRead["List/get/events"]
 
@@ -167,6 +170,7 @@ each protected runtime route:
 
 | Route                                      | Rail    | Bounded context              | DDD object/read model       | Application owner                                | Adapter surface                             | Authorization                                                 | Required negative tests                                                                    |
 | ------------------------------------------ | ------- | ---------------------------- | --------------------------- | ------------------------------------------------ | ------------------------------------------- | ------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `GET /session`                             | Query   | Runtime session admission    | authenticated session       | `IAuthenticator`                                 | protected HTTP route                        | authenticated principal bearer token                          | missing token, authentication failed                                                       |
 | `POST /runs/start`                         | Command | Runtime safety and admission | `Run` command admission     | `StartRunAuthorizedFacade` / start-run use cases | protected HTTP route                        | `run:start`, tenant scope                                     | missing token, missing action, tenant mismatch, client `runId`, invalid plan source        |
 | `POST /plans/preview`                      | Command | Planner/runtime admission    | executable plan draft       | `PreviewPlanUseCase`                             | protected HTTP route                        | planner/runtime command scope, tenant scope                   | missing token, missing action, tenant mismatch, invalid graph source, invalid selection    |
 | `POST /plans/compile`                      | Query   | Planner boundary             | compiled plan response      | `CompilePlanUseCase`                             | protected HTTP route                        | planner query/action scope, tenant scope                      | missing token, missing action, tenant mismatch, unsupported adapter                        |
@@ -291,8 +295,16 @@ governingSources:
   - docs/risk-register/quality/R-20260503-PROTECTED-RUNTIME-RAIL-CLOSURE.yaml
 allowedImplementationSurfaces:
   - apps/api/docs/protected-runtime-route-group-component.md
+  - apps/api/src/entrypoints/http/runtimeRoutes.constants.ts
+  - apps/api/src/entrypoints/http/registerProtectedRuntimeRoutes.ts
+  - apps/api/src/entrypoints/http/sessionRoute.ts
   - apps/api/src/application/ports/protectedRuntimeCommandQueryRails.ts
+  - apps/api/test/entrypoints/http/sessionRoute.test.ts
   - apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
+  - apps/web/src/app/bootstrap/AuthRouteGate.tsx
+  - apps/web/src/app/routes.ts
+  - apps/web/src/app/routes.test.tsx
+  - apps/web/src/app/views/LoginView.tsx
   - docs/planning/proposals/mandatory/runtime-and-contracts/protected-runtime-rail-closure-plan-20260503.md
   - docs/planning/state/agent-lane-c.yaml
   - docs/planning/state/agent-lane-c.md
@@ -302,7 +314,6 @@ allowedImplementationSurfaces:
   - docs/risk-register/quality/R-20260503-PROTECTED-RUNTIME-RAIL-CLOSURE.yaml
   - docs/risk-register/quality/R-20260503-PROTECTED-RUNTIME-RAIL-SSOT-DEBT.yaml
 forbiddenImplementationSurfaces:
-  - apps/web/**
   - packages/**
   - specs/**
   - .github/**
@@ -356,6 +367,78 @@ redGreenCycles:
       - docs/risk-register/quality/R-20260503-PROTECTED-RUNTIME-RAIL-CLOSURE.yaml
     greenTest: pnpm docs:feature-mechanization:implementation
 symbols:
+  - name: SessionRouteDeps
+    path: apps/api/src/entrypoints/http/sessionRoute.ts
+    dddOwner: Runtime session admission query
+    cqRails:
+      - ClassifyProtectedRuntimeRouteRails
+    fowlerSignals:
+      - boundary closure
+      - explicit dependency seam
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - backend route and web gate coverage
+    unitTests:
+      - apps/api/test/entrypoints/http/sessionRoute.test.ts
+  - name: extractBearerToken
+    path: apps/api/src/entrypoints/http/sessionRoute.ts
+    dddOwner: Runtime session admission query
+    cqRails:
+      - ClassifyProtectedRuntimeRouteRails
+    fowlerSignals:
+      - explicit auth extraction rule
+      - fail-closed missing token handling
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - backend route and web gate coverage
+    unitTests:
+      - apps/api/test/entrypoints/http/sessionRoute.test.ts
+  - name: sessionRoute
+    path: apps/api/src/entrypoints/http/sessionRoute.ts
+    dddOwner: Runtime session admission query
+    cqRails:
+      - ClassifyProtectedRuntimeRouteRails
+    fowlerSignals:
+      - protected runtime boundary unification
+      - explicit admission endpoint
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - backend route and web gate coverage
+    unitTests:
+      - apps/api/test/entrypoints/http/sessionRoute.test.ts
+  - name: createReply
+    path: apps/api/test/entrypoints/http/sessionRoute.test.ts
+    dddOwner: Runtime session admission test fixture
+    cqRails:
+      - ClassifyProtectedRuntimeRouteRails
+    fowlerSignals:
+      - deterministic reply fixture
+      - boundary test isolation
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - backend route and web gate coverage
+    unitTests:
+      - apps/api/test/entrypoints/http/sessionRoute.test.ts
+  - name: AuthGateState
+    path: apps/web/src/app/bootstrap/AuthRouteGate.tsx
+    dddOwner: Web protected route admission projection
+    cqRails:
+      - ClassifyProtectedRuntimeRouteRails
+    fowlerSignals:
+      - explicit route admission state machine
+      - fail-closed sessionless startup
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: apps/web/cypress/e2e/shell/startup-route-readiness.cy.ts
+    unitTests:
+      - apps/web/src/app/routes.test.tsx
+  - name: sessionApiClient
+    path: apps/web/src/app/bootstrap/AuthRouteGate.tsx
+    dddOwner: Web protected route admission adapter
+    cqRails:
+      - ClassifyProtectedRuntimeRouteRails
+    fowlerSignals:
+      - explicit query port
+      - no implicit global fetch semantics
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: apps/web/cypress/e2e/shell/startup-route-readiness.cy.ts
+    unitTests:
+      - apps/web/src/app/routes.test.tsx
   - name: ProtectedRuntimeRailClosurePlan
     path: docs/planning/proposals/mandatory/runtime-and-contracts/protected-runtime-rail-closure-plan-20260503.md
     dddOwner: Protected runtime rail matrix

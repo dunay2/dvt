@@ -83,10 +83,12 @@ It does **not** own:
 ```mermaid
 flowchart LR
   Register["registerProtectedRuntimeRoutes.ts"] --> Plan["Plan routes"]
+  Register --> Session["Session route"]
   Register --> Draft["Workspace draft route group"]
   Register --> Runs["Run route group"]
   Register --> Admin["Admin repair route group"]
 
+  Session --> SessionRead["GET /session"]
   Plan --> Start["POST /runs/start"]
   Plan --> Preview["POST /plans/preview"]
   Plan --> Compile["POST /plans/compile"]
@@ -102,6 +104,7 @@ flowchart LR
 
 | Rail name                 | Route                                      | Rail    | Bounded context              | DDD object                  | Application owner                    | Authorization posture                                         | Required negative coverage                                                                 |
 | ------------------------- | ------------------------------------------ | ------- | ---------------------------- | --------------------------- | ------------------------------------ | ------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `GetRuntimeSession`       | `GET /session`                             | Query   | Runtime session admission    | Authenticated session       | IAuthenticator                       | authenticated principal bearer token                          | missing token, authentication failed                                                       |
 | `StartRun`                | `POST /runs/start`                         | Command | Runtime safety and admission | Run command admission       | StartRunAuthorizedFacade             | `run:start`, tenant scope                                     | missing token, missing action, tenant mismatch, client `runId`, invalid plan source        |
 | `PreviewExecutablePlan`   | `POST /plans/preview`                      | Command | Planner/runtime admission    | Executable plan draft       | PreviewPlanUseCase                   | `run:start` compatibility authorization, tenant scope         | missing token, missing action, tenant mismatch, invalid graph source, invalid selection    |
 | `CompileExecutablePlan`   | `POST /plans/compile`                      | Query   | Planner boundary             | Compiled plan read model    | CompilePlanUseCase                   | `run:start` compatibility authorization, tenant scope         | missing token, missing action, tenant mismatch, unsupported adapter                        |

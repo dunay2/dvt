@@ -16,6 +16,7 @@ const CATALOG_PATH = join(
 );
 
 const RUNTIME_ROUTE_METHOD_BY_KEY = {
+  session: ['GET'],
   start: ['POST'],
   plansCompile: ['POST'],
   plansPreview: ['POST'],

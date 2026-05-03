@@ -7,7 +7,7 @@ governanceState: coverage-required
 dddOwner: ENTRY
 cqRails: API HTTP command/query route rails
 childrenRequired: false
-fileCount: 75
+fileCount: 76
 driftFileCount: 0
 legacyFileCount: 0
 files:
@@ -454,6 +454,13 @@ files:
     isLegacy: false
   - path: apps/api/src/entrypoints/http/runtimeRoutes.constants.ts
     fileId: F-18BBD7F374AE
+    owningUnit: SYS-API-HTTP-ENTRYPOINTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/src/entrypoints/http/sessionRoute.ts
+    fileId: F-D3FF5FE5D0A3
     owningUnit: SYS-API-HTTP-ENTRYPOINTS
     unitStatus: coverage-required
     governanceState: coverage-required

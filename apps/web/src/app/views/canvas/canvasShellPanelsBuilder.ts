@@ -4,6 +4,10 @@
 import type { CanvasShellPanelsBuilderArgs } from './canvasShellBuilder.types';
 import type { CanvasShellPanels } from './canvasShell.types';
 
+function normalizeCanvasKind(kind: string): string {
+  return kind.trim().toLowerCase();
+}
+
 function resolveExplorerAuthoringNodeKinds({
   routePresentation,
   userPermissions,
@@ -15,9 +19,10 @@ function resolveExplorerAuthoringNodeKinds({
     return [];
   }
 
+  const activeCanvasKind = normalizeCanvasKind(routePresentation.canvasDocument.kind);
   return (
     routePresentation.availableCanvasKinds.find(
-      (registration) => registration.kind === routePresentation.canvasDocument?.kind
+      (registration) => normalizeCanvasKind(registration.kind) === activeCanvasKind
     )?.nodeKinds ?? []
   );
 }

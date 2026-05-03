@@ -27,6 +27,7 @@ import { listRunsRoute } from './listRunsRoute.js';
 import { previewPlanRoute } from './previewPlanRoute.js';
 import { recoverRunRoute } from './recoverRunRoute.js';
 import { PROTECTED_RUNTIME_ROUTE_SUMMARY, RUNTIME_ROUTE_PATH } from './runtimeRoutes.constants.js';
+import { sessionRoute } from './sessionRoute.js';
 import { signalRunRoute } from './signalRunRoute.js';
 import { startRunRoute } from './startRunRoute.js';
 import { registerWorkspaceGraphDraftRoutes } from './workspaceGraphDraftRoutes.js';
@@ -127,6 +128,22 @@ function registerProtectedPlanRoutes(
   protectedModule: ProtectedRuntimeModule,
   dependencies: ProtectedRuntimeRouteDependencies
 ): void {
+  app.get(
+    RUNTIME_ROUTE_PATH.session,
+    {
+      config: {
+        rateLimit: {
+          max: env.DVT_PROTECTED_RUNTIME_RATE_LIMIT_MAX,
+          timeWindow: env.DVT_PROTECTED_RUNTIME_RATE_LIMIT_TIME_WINDOW_MS,
+        },
+      },
+    },
+    async (request, reply) =>
+      sessionRoute(request as never, reply as never, {
+        authenticator: protectedModule.authenticator,
+      })
+  );
+
   app.post<{ Body: Parameters<typeof startRunRoute>[0]['body'] }>(
     RUNTIME_ROUTE_PATH.start,
     {

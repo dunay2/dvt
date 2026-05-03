@@ -2,7 +2,7 @@ version: 1
 generatedFrom: git ls-files
 unitManifest: docs/planning/status/system-governance-unit-index.units.yaml
 shardDirectory: docs/planning/status/governance-files
-fileCount: 4159
+fileCount: 4163
 shards:
   - id: SYS-ADAPTERS
     path: docs/planning/status/governance-files/SYS-ADAPTERS.files.yaml
@@ -10,12 +10,12 @@ shards:
     contentHash: 4cf38ccc8f9b0d3e29f94420e51d3cbaeab09224bee92be734c03486ad1fdf3b
   - id: SYS-API
     path: docs/planning/status/governance-files/SYS-API.files.yaml
-    fileCount: 369
-    contentHash: 289099435d431ca5b465b83709ec0ee7035b2a44fbed6e03c874d9c64dbfc3e7
+    fileCount: 371
+    contentHash: 9e5412bdba16d3e8ca7f18e6aae08f7fd9f1fe670d332d8859e18b8e89a13e84
   - id: SYS-CI-GOVERNANCE
     path: docs/planning/status/governance-files/SYS-CI-GOVERNANCE.files.yaml
     fileCount: 180
-    contentHash: 6a13d3a94b870d11d853fc67a8ad04ff9a52c2137fb6f71eb43942c2b3da319f
+    contentHash: 2cbbfdd28f2d5a6425a459f306e073bb6de4c8479a427f117ef8c5008ef1c5e8
   - id: SYS-CONTRACTS
     path: docs/planning/status/governance-files/SYS-CONTRACTS.files.yaml
     fileCount: 127
@@ -23,7 +23,7 @@ shards:
   - id: SYS-DOCS-GOVERNANCE
     path: docs/planning/status/governance-files/SYS-DOCS-GOVERNANCE.files.yaml
     fileCount: 1718
-    contentHash: 139da6b09124cf75aeb6bda49503e6d6c5328e026a1d5fcf47c1c0048acc2c87
+    contentHash: 3f258e5c470baaf38c2a494c6c9abee4157f4c4d852d74ea4e80f28045b7fd1c
   - id: SYS-OBSERVABILITY
     path: docs/planning/status/governance-files/SYS-OBSERVABILITY.files.yaml
     fileCount: 15
@@ -50,8 +50,8 @@ shards:
     contentHash: 28c604c9c6b9d737cc7cae1aade9baebaca3778e930e5ccf0fb1c367d011c57e
   - id: SYS-WEB
     path: docs/planning/status/governance-files/SYS-WEB.files.yaml
-    fileCount: 799
-    contentHash: ac8648e2aebdd503b303dd3c498e5964202afd6984575f06c9c9d55ec0f5cd2a
+    fileCount: 801
+    contentHash: e3fc07dbcf1a1086496ee9c98c88b671cc7bcefc54977400257667cd413f2192
   - id: SYS-WORKERS
     path: docs/planning/status/governance-files/SYS-WORKERS.files.yaml
     fileCount: 103

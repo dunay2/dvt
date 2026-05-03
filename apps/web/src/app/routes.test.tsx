@@ -9,8 +9,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 const mockUsePublishedRouteBootstrap = vi.hoisted(() => vi.fn());
 
 vi.mock('./bootstrap/usePublishedRouteBootstrap', () => ({
-  usePublishedRouteBootstrap: (...args: unknown[]) =>
-    mockUsePublishedRouteBootstrap(...args),
+  usePublishedRouteBootstrap: (...args: unknown[]) => mockUsePublishedRouteBootstrap(...args),
 }));
 
 import AppProviders from './AppProviders';
@@ -56,7 +55,7 @@ describe('app routes', () => {
     }
   });
 
-  it('renders a controlled fallback when route runtime dependencies are missing', async () => {
+  it('redirects protected routes to login when session resolution is unavailable', async () => {
     const router = createMemoryRouter(createAppRoutes(), {
       initialEntries: ['/canvas'],
     });
@@ -70,17 +69,11 @@ describe('app routes', () => {
       );
     });
 
-    await waitForReactQuery(
-      () =>
-        container.querySelector('[data-slot="app-route-error-boundary"]') !== null &&
-        container.textContent?.includes('The application hit an unexpected error.') === true,
-      {
-        description: 'route error boundary fallback',
-      }
-    );
+    await waitForReactQuery(() => container.textContent?.includes('Login required') === true, {
+      description: 'login gate fallback',
+    });
 
-    expect(container.textContent).toContain('AppServicesProvider is required to consume app services.');
-    expect(container.textContent).not.toContain('Unexpected Application Error!');
+    expect(container.textContent).toContain('Login required');
   });
 
   it('renders the canvas route when app providers are present', async () => {
@@ -201,8 +194,7 @@ describe('app routes', () => {
             presentation &&
             typeof presentation === 'object' &&
             (presentation as { status?: string }).status === 'pending' &&
-            (presentation as { detail?: string }).detail ===
-              'Selecting initial workspace route' &&
+            (presentation as { detail?: string }).detail === 'Selecting initial workspace route' &&
             (presentation as { canComplete?: boolean }).canComplete === false
         ),
       {

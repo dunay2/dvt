@@ -48,6 +48,27 @@ const CANONICAL_PROTECTED_RUNTIME_RAIL_POSTURE = {
 
 export const PROTECTED_RUNTIME_COMMAND_QUERY_RAILS = [
   {
+    name: 'GetRuntimeSession',
+    kind: 'query',
+    boundedContext: 'Runtime session admission',
+    dddObject: 'Authenticated session read model',
+    applicationPort: 'IAuthenticator',
+    adapterSurface: 'GET /session',
+    scopeAndAuthorization: 'authenticated principal bearer token',
+    negativeTests: ['missing token', 'authentication failed'],
+    negativeCoverage: [
+      {
+        case: 'missing token',
+        testRefs: ['apps/api/test/entrypoints/http/sessionRoute.test.ts'],
+      },
+      {
+        case: 'authentication failed',
+        testRefs: ['apps/api/test/entrypoints/http/sessionRoute.test.ts'],
+      },
+    ],
+    compatibilityPosture: CANONICAL_PROTECTED_RUNTIME_RAIL_POSTURE,
+  },
+  {
     name: 'StartRun',
     kind: 'command',
     boundedContext: 'Runtime safety and admission',

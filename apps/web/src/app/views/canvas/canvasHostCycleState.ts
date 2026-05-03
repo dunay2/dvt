@@ -7,6 +7,10 @@ import type { CanvasAuthoringCanvasDocument } from './canvasDraftReadModel';
 type CreateCanvasDocumentCommand = CanvasWorkbenchSurfaceArgs['onCreateCanvasDocument'];
 type CreateAuthoringNodeCommand = CanvasWorkbenchSurfaceArgs['onCreateAuthoringNode'];
 
+function normalizeCanvasKind(kind: string): string {
+  return kind.trim().toLowerCase();
+}
+
 export type CanvasHostCycleState =
   | {
       kind: 'needs_canvas';
@@ -35,8 +39,11 @@ function resolveCanvasKindRegistration(
     return null;
   }
 
+  const activeCanvasKind = normalizeCanvasKind(canvasDocument.kind);
   return (
-    availableCanvasKinds.find((registration) => registration.kind === canvasDocument.kind) ?? null
+    availableCanvasKinds.find(
+      (registration) => normalizeCanvasKind(registration.kind) === activeCanvasKind
+    ) ?? null
   );
 }
 

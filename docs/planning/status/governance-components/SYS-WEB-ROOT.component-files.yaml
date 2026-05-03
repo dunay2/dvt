@@ -7,7 +7,7 @@ governanceState: coverage-required
 dddOwner: ENTRY
 cqRails: UI actions and API queries
 childrenRequired: true
-fileCount: 799
+fileCount: 801
 driftFileCount: 0
 legacyFileCount: 0
 files:
@@ -342,6 +342,13 @@ files:
     isLegacy: false
   - path: apps/web/src/app/appRouteErrorBoundaryCopy.ts
     fileId: F-C14989C8AE06
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/bootstrap/AuthRouteGate.tsx
+    fileId: F-4D8B03C0DD17
     owningUnit: SYS-WEB-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -2386,6 +2393,13 @@ files:
     isLegacy: false
   - path: apps/web/src/app/views/LineageView.tsx
     fileId: F-BF9D299BCDAD
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/views/LoginView.tsx
+    fileId: F-D6F2A8D6B1BB
     owningUnit: SYS-WEB-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
