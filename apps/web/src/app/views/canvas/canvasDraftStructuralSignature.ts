@@ -18,9 +18,17 @@ function compareAuthoringEdges(
   );
 }
 
+function compareAuthoringNodes(
+  left: WorkspaceGraphAuthoringDraft['nodes'][number],
+  right: WorkspaceGraphAuthoringDraft['nodes'][number]
+): number {
+  return left.id.localeCompare(right.id);
+}
+
 export function serializeWorkspaceGraphAuthoringDraftStructuralSignature(
   draft: WorkspaceGraphAuthoringDraft
 ): string {
+  const nodes = [...draft.nodes].sort(compareAuthoringNodes);
   const edges = [...draft.edges].sort(compareAuthoringEdges);
   const signaturePayload = toCanvasAuthoringSerializableValue({
     canvas: {
@@ -28,7 +36,7 @@ export function serializeWorkspaceGraphAuthoringDraftStructuralSignature(
       title: draft.canvas.title,
     },
     nodeIds: [...draft.nodeIds],
-    nodes: draft.nodes,
+    nodes,
     edges,
   });
 

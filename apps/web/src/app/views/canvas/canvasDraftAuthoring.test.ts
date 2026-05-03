@@ -93,6 +93,18 @@ describe('canvasDraftAuthoring', () => {
     );
   });
 
+  it('keeps the persistence signature stable when node transport order changes only', () => {
+    const draft = buildSaveInput().draft;
+    const reorderedNodesDraft = {
+      ...draft,
+      nodes: [...draft.nodes].reverse(),
+    };
+
+    expect(serializeCanvasDraftAuthoringSignature(reorderedNodesDraft)).toBe(
+      serializeCanvasDraftAuthoringSignature(draft)
+    );
+  });
+
   it('uses the same semantic signature policy for remote draft baselines', () => {
     const draft = buildSaveInput().draft;
 
