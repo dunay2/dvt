@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import type { WorkspaceGraphDraftRecord } from '../../ports/workspace';
 import {
-  createUnknownCanvasDraftReadModel,
-  type CanvasDraftReadModel,
+  type CanvasAuthoringDraftRecord,
+  createUnknownCanvasAuthoringDraftReadModel,
+  type CanvasAuthoringDraftReadModel,
 } from './canvasDraftReadModel';
 import {
   resolveActiveCanvasAuthoringMode,
@@ -12,8 +12,8 @@ import {
   selectActiveCanvasGraphStrategy,
 } from './canvasActiveGraphStrategy';
 
-function buildDraftReadModelWithCanvasKind(kind: string): CanvasDraftReadModel {
-  const record: WorkspaceGraphDraftRecord = {
+function buildDraftReadModelWithCanvasKind(kind: string): CanvasAuthoringDraftReadModel {
+  const record: CanvasAuthoringDraftRecord = {
     revision: 'rev-1',
     savedAt: '2026-04-25T00:00:00Z',
     draft: {
@@ -23,25 +23,26 @@ function buildDraftReadModelWithCanvasKind(kind: string): CanvasDraftReadModel {
       },
       nodeIds: [],
       nodePositions: {},
+      nodes: [],
       edges: [],
     },
   };
 
-  return createUnknownCanvasDraftReadModel(record);
+  return createUnknownCanvasAuthoringDraftReadModel(record);
 }
 
 describe('resolveActiveCanvasGraphStrategy', () => {
   it('uses the current draft canvas kind as the graph strategy selector', () => {
-    expect(resolveActiveCanvasGraphStrategy(buildDraftReadModelWithCanvasKind('dbt'))).toMatchObject({
+    expect(
+      resolveActiveCanvasGraphStrategy(buildDraftReadModelWithCanvasKind('dbt'))
+    ).toMatchObject({
       kind: 'ready',
       canvasKind: 'dbt',
       strategy: {
         id: 'dbt',
       },
     });
-    expect(resolveActiveCanvasAuthoringMode(buildDraftReadModelWithCanvasKind('dbt'))).toBe(
-      'dbt'
-    );
+    expect(resolveActiveCanvasAuthoringMode(buildDraftReadModelWithCanvasKind('dbt'))).toBe('dbt');
   });
 
   it('falls back to the transformation strategy before a canvas document exists', () => {
@@ -101,16 +102,13 @@ describe('resolveActiveCanvasGraphStrategy', () => {
     const unsupported = resolveActiveCanvasGraphStrategy(
       buildDraftReadModelWithCanvasKind('unknown')
     );
-    const disabled = resolveActiveCanvasGraphStrategy(
-      buildDraftReadModelWithCanvasKind('dbt'),
-      {
-        plugins: {
-          dbt: {
-            available: false,
-          },
+    const disabled = resolveActiveCanvasGraphStrategy(buildDraftReadModelWithCanvasKind('dbt'), {
+      plugins: {
+        dbt: {
+          available: false,
         },
-      }
-    );
+      },
+    });
 
     expect(selectActiveCanvasGraphStrategy(unsupported)).toBeNull();
     expect(selectActiveCanvasExecutionStrategy(unsupported)).toBeNull();

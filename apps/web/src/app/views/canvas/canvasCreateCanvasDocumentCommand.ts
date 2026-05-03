@@ -18,8 +18,6 @@ export async function executeCreateCanvasDocumentCommand({
   setDraftSession,
   setDraftSaveStatus,
   lastSavedSignatureRef,
-  workspaceScope,
-  previewProvenanceConfig,
 }: CanvasCreateCanvasDocumentCommandDto): Promise<void> {
   const eligibility = resolveCreateCanvasDocumentCommandEligibility({
     command,
@@ -37,8 +35,6 @@ export async function executeCreateCanvasDocumentCommand({
       buildBlankCanvasDocumentDraftInput({
         command,
         expectedRevision: eligibility.expectedRevision,
-        workspaceScope,
-        previewProvenanceConfig,
       })
     );
 

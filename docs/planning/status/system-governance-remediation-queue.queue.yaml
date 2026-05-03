@@ -535,7 +535,7 @@ tasks:
     blocking: reporting-only
     reason: Documents track drift or require disposition and need alignment with active units.
     fileCount: 0
-    documentCount: 256
+    documentCount: 259
     files: []
     documents:
       - path: docs/planning/closeouts/20260315-architecture-components-map-closeout.md
@@ -902,6 +902,10 @@ tasks:
         classification: tracks drift
       - path: docs/planning/closeouts/20260502-tf-e2-m-c-first-authoring-live-proof-closeout.md
         classification: tracks drift
+      - path: docs/planning/closeouts/20260503-tf-e2-m-b-canvas-draft-access-posture-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260503-tf-e2-m-d-startup-route-readiness-closeout.md
+        classification: tracks drift
       - path: docs/planning/closeouts/F-02-closeout.md
         classification: tracks drift
       - path: docs/planning/closeouts/F-04-D-E-composition-root-foundation-closeout.md
@@ -1055,6 +1059,9 @@ tasks:
         classification: tracks drift
       - path: >-
           docs/planning/reviews/architecture-and-governance/20260501-tf-e2-m-c-fowler-hard-qa-review.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/reviews/architecture-and-governance/20260503-source-import-provider-extensibility-debt-review.md
         classification: tracks drift
       - path: docs/planning/reviews/architecture-and-governance/index.md
         classification: tracks drift

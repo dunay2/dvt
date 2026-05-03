@@ -6,13 +6,14 @@ import type {
 } from '@dvt/contracts';
 
 import type { WorkspaceGraphDraftAuthoringReadResult } from '../../ports/workspaceGraphDraftAuthoring';
-import type { WorkspaceGraphDraft, WorkspaceGraphDraftRecord } from '../../ports/workspace';
 import { buildProtectedDraftRecord } from '../../services/workspace/workspaceGraphDraftAuthoring.test.fixtures';
 import { buildDraftReadOkResponse } from '../../services/workspace/workspaceGraphDraftProtocol.test.fixtures';
 import {
-  createUnknownCanvasDraftReadModel,
-  projectCanvasDraftReadModel,
-  type CanvasDraftReadModel,
+  createUnknownCanvasAuthoringDraftReadModel,
+  projectCanvasAuthoringDraftReadModel,
+  projectProtectedCanvasAuthoringDraftRecord,
+  type CanvasAuthoringDraftReadModel,
+  type CanvasAuthoringDraftRecord,
 } from './canvasDraftReadModel';
 
 const DEFAULT_PROTECTED_SCOPE = {
@@ -26,8 +27,13 @@ const DEFAULT_CANVAS_DOCUMENT = {
 } as const;
 
 type AuthoringDraftNodeKind = WorkspaceGraphAuthoringNode['kind'];
-type CanvasHarnessDraftInput = Omit<WorkspaceGraphDraft, 'canvas'> & {
-  canvas?: WorkspaceGraphDraft['canvas'];
+type CanvasHarnessVisibleEdgeInput = Pick<
+  WorkspaceGraphAuthoringDraft['edges'][number],
+  'sourceId' | 'targetId'
+>;
+type CanvasHarnessDraftInput = Pick<WorkspaceGraphAuthoringDraft, 'nodeIds' | 'nodePositions'> & {
+  canvas?: WorkspaceGraphAuthoringDraft['canvas'];
+  edges: CanvasHarnessVisibleEdgeInput[];
 };
 
 const EXPLICIT_NODE_KIND_BY_ID: Readonly<Record<string, AuthoringDraftNodeKind>> = {
@@ -120,35 +126,22 @@ function resolveAuthoringDraftNodeKind(
   return 'sql_transform';
 }
 
-function withCanvasDocument(draft: CanvasHarnessDraftInput): WorkspaceGraphDraft {
-  return {
-    canvas: draft.canvas ?? DEFAULT_CANVAS_DOCUMENT,
-    nodeIds: [...draft.nodeIds],
-    nodePositions: { ...draft.nodePositions },
-    edges: draft.edges.map((edge) => ({
-      sourceId: edge.sourceId,
-      targetId: edge.targetId,
-    })),
-  };
-}
-
-function buildAuthoringDraftFromProjectedDraft(
+function buildCanvasHarnessAuthoringDraft(
   draft: CanvasHarnessDraftInput
 ): WorkspaceGraphAuthoringDraft {
-  const draftWithCanvas = withCanvasDocument(draft);
   const totalNodeCount = draft.nodeIds.length;
 
   return {
     canvas: {
-      kind: draftWithCanvas.canvas.kind,
-      title: draftWithCanvas.canvas.title,
+      kind: draft.canvas?.kind ?? DEFAULT_CANVAS_DOCUMENT.kind,
+      title: draft.canvas?.title ?? DEFAULT_CANVAS_DOCUMENT.title,
     },
-    nodeIds: [...draftWithCanvas.nodeIds],
-    nodePositions: { ...draftWithCanvas.nodePositions },
-    nodes: draftWithCanvas.nodeIds.map((nodeId, index) =>
+    nodeIds: [...draft.nodeIds],
+    nodePositions: { ...draft.nodePositions },
+    nodes: draft.nodeIds.map((nodeId, index) =>
       buildAuthoringDraftNode(nodeId, resolveAuthoringDraftNodeKind(nodeId, index, totalNodeCount))
     ),
-    edges: draftWithCanvas.edges.map((edge) => ({
+    edges: draft.edges.map((edge) => ({
       id: `draft_edge_${edge.sourceId}_${edge.targetId}`,
       sourceId: edge.sourceId,
       targetId: edge.targetId,
@@ -166,33 +159,18 @@ export function buildCanvasHarnessRemoteDraftRecord(
   return buildProtectedDraftRecord(scope, {
     revision,
     updatedAt,
-    draft: buildAuthoringDraftFromProjectedDraft(draft),
+    draft: buildCanvasHarnessAuthoringDraft(draft),
   });
 }
 
 export function projectCanvasHarnessRemoteDraftRecord(
   record: ProtectedWorkspaceGraphDraftRecord | null
-): WorkspaceGraphDraftRecord | null {
+): CanvasAuthoringDraftRecord | null {
   if (record == null) {
     return null;
   }
 
-  return {
-    revision: record.revision,
-    savedAt: record.updatedAt,
-    draft: {
-      canvas: {
-        kind: record.draft.canvas.kind,
-        title: record.draft.canvas.title,
-      },
-      nodeIds: [...record.draft.nodeIds],
-      nodePositions: { ...record.draft.nodePositions },
-      edges: record.draft.edges.map((edge) => ({
-        sourceId: edge.sourceId,
-        targetId: edge.targetId,
-      })),
-    },
-  };
+  return projectProtectedCanvasAuthoringDraftRecord(record);
 }
 
 export function buildCanvasHarnessDraftReadResult(
@@ -203,10 +181,10 @@ export function buildCanvasHarnessDraftReadResult(
 
 export function projectCanvasHarnessDraftReadModel(
   record: ProtectedWorkspaceGraphDraftRecord | null
-): CanvasDraftReadModel {
+): CanvasAuthoringDraftReadModel {
   if (record == null) {
-    return createUnknownCanvasDraftReadModel();
+    return createUnknownCanvasAuthoringDraftReadModel();
   }
 
-  return projectCanvasDraftReadModel(buildCanvasHarnessDraftReadResult(record));
+  return projectCanvasAuthoringDraftReadModel(buildCanvasHarnessDraftReadResult(record));
 }

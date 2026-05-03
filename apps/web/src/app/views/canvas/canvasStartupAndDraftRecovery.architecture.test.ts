@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
@@ -33,6 +33,31 @@ function repoFileExists(relativePath: string): boolean {
 
 function readAppSource(relativePathFromCanvas: string): string {
   return readFileSync(path.resolve(import.meta.dirname, relativePathFromCanvas), 'utf8');
+}
+
+function listCanvasSourceFiles(): string[] {
+  const canvasRoot = import.meta.dirname;
+  const files: string[] = [];
+
+  function visit(directory: string): void {
+    for (const entry of readdirSync(directory)) {
+      const absolutePath = path.join(directory, entry);
+      const stats = statSync(absolutePath);
+      if (stats.isDirectory()) {
+        visit(absolutePath);
+        continue;
+      }
+
+      if (!/\.(?:ts|tsx)$/.test(entry)) {
+        continue;
+      }
+
+      files.push(path.relative(canvasRoot, absolutePath).replace(/\\/g, '/'));
+    }
+  }
+
+  visit(canvasRoot);
+  return files.sort();
 }
 
 const ownedConcernModules = [
@@ -447,6 +472,57 @@ describe('canvas startup and draft recovery architecture', () => {
     expect(createCommandSource).not.toContain(
       'function resolveCreateCanvasDocumentCommandEligibility('
     );
+  });
+
+  it('keeps Canvas authoring draft persistence on aggregate-native types', () => {
+    const workspacePortSource = readAppSource('../../ports/workspace.ts');
+    const workspaceServiceSource = readAppSource('../../services/workspace/workspaceService.ts');
+    const repositorySource = readAppSource('canvasDraftRepository.ts');
+    const authoringSource = readAppSource('canvasDraftAuthoring.ts');
+    const structuralSignatureSource = readAppSource('canvasDraftStructuralSignature.ts');
+
+    for (const retiredExport of [
+      'export type WorkspaceGraphDraft',
+      'export type WorkspaceGraphDraftRecord',
+      'export type SaveWorkspaceGraphDraftInput',
+      'export type SaveWorkspaceGraphDraftResult',
+    ]) {
+      expect(workspacePortSource).not.toContain(retiredExport);
+      expect(workspaceServiceSource).not.toContain(retiredExport.replace('export type ', ''));
+    }
+
+    expect(repositorySource).toContain('draft: WorkspaceGraphAuthoringDraft');
+    expect(repositorySource).not.toContain('CanvasDraftAuthoringPayload');
+    expect(repositorySource).not.toContain('buildCanvasDraftAuthoringGraph');
+    expect(repositorySource).not.toContain('projectedDraft');
+
+    expect(authoringSource).not.toContain('CanvasDraftAuthoringPayload');
+    expect(authoringSource).not.toContain('projectedDraft');
+    expect(authoringSource).not.toContain("from '../../ports/workspace'");
+    expect(structuralSignatureSource).toContain('WorkspaceGraphAuthoringDraft');
+    expect(structuralSignatureSource).not.toContain('WorkspaceGraphDraft');
+
+    const bannedWorkspaceDraftImport =
+      /import\s+type\s+\{[^}]*\b(?:WorkspaceGraphDraft|WorkspaceGraphDraftRecord)\b[^}]*\}\s+from\s+['"]\.\.\/\.\.\/ports\/workspace['"]/;
+    for (const relativePath of listCanvasSourceFiles()) {
+      const source = readAppSource(relativePath);
+      expect(source, relativePath).not.toMatch(bannedWorkspaceDraftImport);
+    }
+
+    const allowedDesignGraphDraftFiles = new Set([
+      'previewDesignGraphArtifact.ts',
+      'previewGraphNodePayloads.ts',
+    ]);
+    const designGraphDraftContractImport =
+      /import\s+type\s+\{[^}]*\bDesignGraphDraft\b[^}]*\}\s+from\s+['"]@dvt\/contracts['"]/;
+    for (const relativePath of listCanvasSourceFiles()) {
+      const source = readAppSource(relativePath);
+      if (!designGraphDraftContractImport.test(source)) {
+        continue;
+      }
+
+      expect(allowedDesignGraphDraftFiles.has(relativePath), relativePath).toBe(true);
+    }
   });
 
   it('keeps canvas node viewport projection options behind a named argument object', () => {

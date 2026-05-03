@@ -1,33 +1,51 @@
 /** Owned concern: translate protected draft-authoring outcomes into the Canvas route read model and semantic graph handoff. */
 import type {
+  WorkspaceGraphAuthoringDraft,
   WorkspaceGraphDraftCapabilityMode,
   WorkspaceGraphDraftCapabilityReason,
   WorkspaceGraphDraftFormatError,
   WorkspaceGraphDraftFormatMeta,
+  WorkspaceGraphDraftRecord as ProtectedWorkspaceGraphDraftRecord,
 } from '@dvt/contracts';
 
-import type { WorkspaceGraphDraftRecord } from '../../ports/workspace';
 import type { WorkspaceGraphDraftAuthoringReadResult } from '../../ports/workspaceGraphDraftAuthoring';
 import {
   projectWorkspaceGraphAuthoringDraftSemanticGraph,
-  projectProtectedWorkspaceGraphDraftRecord,
-  type WorkspaceGraphDraftSemanticGraph,
+  type CanvasAuthoringSemanticGraph,
 } from '../../services/workspace/workspaceGraphDraftProjection';
 
 export type CanvasDraftAccessMode = WorkspaceGraphDraftCapabilityMode | 'unknown';
 
-export type CanvasDraftReadModel = {
+export type CanvasAuthoringCanvasDocument = WorkspaceGraphAuthoringDraft['canvas'];
+
+export type CanvasAuthoringDraftRecord = {
+  revision: string;
+  draft: WorkspaceGraphAuthoringDraft;
+  savedAt: string;
+};
+
+export type CanvasAuthoringDraftReadModel = {
   accessMode: CanvasDraftAccessMode;
   capabilityReason: WorkspaceGraphDraftCapabilityReason | null;
   formatError: WorkspaceGraphDraftFormatError | null;
   formatMeta: WorkspaceGraphDraftFormatMeta | null;
-  record: WorkspaceGraphDraftRecord | null;
-  semanticGraph: WorkspaceGraphDraftSemanticGraph | null;
+  record: CanvasAuthoringDraftRecord | null;
+  semanticGraph: CanvasAuthoringSemanticGraph | null;
 };
 
-export function createUnknownCanvasDraftReadModel(
-  record: WorkspaceGraphDraftRecord | null = null
-): CanvasDraftReadModel {
+export function projectProtectedCanvasAuthoringDraftRecord(
+  record: ProtectedWorkspaceGraphDraftRecord
+): CanvasAuthoringDraftRecord {
+  return {
+    revision: record.revision,
+    savedAt: record.updatedAt,
+    draft: record.draft,
+  };
+}
+
+export function createUnknownCanvasAuthoringDraftReadModel(
+  record: CanvasAuthoringDraftRecord | null = null
+): CanvasAuthoringDraftReadModel {
   return {
     accessMode: 'unknown',
     capabilityReason: null,
@@ -38,10 +56,10 @@ export function createUnknownCanvasDraftReadModel(
   };
 }
 
-export function createWritableCanvasDraftReadModel(
-  record: WorkspaceGraphDraftRecord,
-  semanticGraph: WorkspaceGraphDraftSemanticGraph | null = null
-): CanvasDraftReadModel {
+export function createWritableCanvasAuthoringDraftReadModel(
+  record: CanvasAuthoringDraftRecord,
+  semanticGraph: CanvasAuthoringSemanticGraph | null = null
+): CanvasAuthoringDraftReadModel {
   return {
     accessMode: 'writable',
     capabilityReason: 'authorized',
@@ -52,19 +70,19 @@ export function createWritableCanvasDraftReadModel(
   };
 }
 
-export function projectCanvasDraftReadModel(
+export function projectCanvasAuthoringDraftReadModel(
   result: WorkspaceGraphDraftAuthoringReadResult
-): CanvasDraftReadModel {
+): CanvasAuthoringDraftReadModel {
   switch (result.kind) {
     case 'not_found':
-      return createUnknownCanvasDraftReadModel();
+      return createUnknownCanvasAuthoringDraftReadModel();
     case 'ok':
       return {
         accessMode: result.capability.mode,
         capabilityReason: result.capability.reason,
         formatError: null,
         formatMeta: result.formatMeta,
-        record: projectProtectedWorkspaceGraphDraftRecord(result.record),
+        record: projectProtectedCanvasAuthoringDraftRecord(result.record),
         semanticGraph: projectWorkspaceGraphAuthoringDraftSemanticGraph(result.record.draft),
       };
     case 'denied':

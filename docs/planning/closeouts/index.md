@@ -22,6 +22,8 @@ navigation. The folder contains additional historical entries.
 
 ## Representative Recent Closeouts
 
+- [20260503 TF-E2-M-D Startup Route Readiness Closeout](./20260503-tf-e2-m-d-startup-route-readiness-closeout.md)
+- [20260503 TF-E2-M-B Canvas Draft Access Posture Closeout](./20260503-tf-e2-m-b-canvas-draft-access-posture-closeout.md)
 - [20260502 TF-E2-M-C First Authoring Live Proof Closeout](./20260502-tf-e2-m-c-first-authoring-live-proof-closeout.md)
 - [20260425 TF-E2-B/C Node And Edge Lifecycle Closure Closeout](./20260425-tf-e2-b-c-node-edge-lifecycle-closure-closeout.md)
 - [20260424 TF-E2-E-D Live Selected-Closure Browser Proof Closeout](./20260424-tf-e2-e-d-live-selected-closure-browser-proof-closeout.md)

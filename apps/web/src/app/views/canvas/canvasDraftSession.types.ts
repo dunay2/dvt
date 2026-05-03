@@ -1,5 +1,5 @@
-import type { WorkspaceGraphDraftRecord } from '../../ports/workspace';
 import type { CanonicalNode } from '../../types/canonical';
+import type { CanvasAuthoringDraftRecord } from './canvasDraftReadModel';
 
 export type CanvasDraftSyncState =
   | 'bootstrapping'
@@ -11,7 +11,7 @@ export type CanvasDraftSyncState =
 export type CanvasDraftEdge = { sourceId: string; targetId: string };
 
 export type CanvasDraftBaseline = {
-  record: WorkspaceGraphDraftRecord | null;
+  record: CanvasAuthoringDraftRecord | null;
 };
 
 export type CanvasDraftWorkingSet = {
@@ -29,7 +29,7 @@ export type CanvasDraftSession = {
 };
 
 export type BootstrapSessionArgs = {
-  remoteDraft: WorkspaceGraphDraftRecord | null;
+  remoteDraft: CanvasAuthoringDraftRecord | null;
   canonicalNodeIds: string[];
   canonicalEdges: CanvasDraftEdge[];
 };

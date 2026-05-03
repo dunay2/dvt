@@ -1,4 +1,4 @@
-import type { WorkspaceGraphDraft } from '../../ports/workspace';
+import type { WorkspaceGraphAuthoringDraft } from '@dvt/contracts';
 import type { CanonicalNode } from '../../types/canonical';
 import type {
   CanvasDraftEdge,
@@ -67,7 +67,7 @@ function buildCanonical({
 }: CanonicalSnapshotArgs): CanvasDraftWorkingSet {
   return buildWorkingSet(canonicalNodeIds, canonicalEdges);
 }
-function buildFromDraft(draft: WorkspaceGraphDraft): CanvasDraftWorkingSet {
+function buildFromDraft(draft: WorkspaceGraphAuthoringDraft): CanvasDraftWorkingSet {
   return buildWorkingSet(draft.nodeIds, draft.edges);
 }
 function workingSetsEqual(left: CanvasDraftWorkingSet, right: CanvasDraftWorkingSet): boolean {
@@ -170,9 +170,7 @@ function reconcileSnapshot(
     ...reconciledSession.workingSet.pendingExplicitNodeIds,
   ]);
   const nextLocalNodeCatalog = Object.fromEntries(
-    Object.entries(currentLocalNodeCatalog).filter(([nodeId]) =>
-      retainedLocalNodeIds.has(nodeId)
-    )
+    Object.entries(currentLocalNodeCatalog).filter(([nodeId]) => retainedLocalNodeIds.has(nodeId))
   );
 
   return withLocalNodeCatalog(reconciledSession, nextLocalNodeCatalog);
@@ -204,10 +202,7 @@ function addExplicitNode(
   return upsertNode(session, canonicalNode);
 }
 
-function upsertNode(
-  session: CanvasDraftSession,
-  canonicalNode: CanonicalNode
-): CanvasDraftSession {
+function upsertNode(session: CanvasDraftSession, canonicalNode: CanonicalNode): CanvasDraftSession {
   const nodeId = canonicalNode.id;
   const nextVisibleNodeIds = session.workingSet.visibleNodeIds.includes(nodeId)
     ? session.workingSet.visibleNodeIds

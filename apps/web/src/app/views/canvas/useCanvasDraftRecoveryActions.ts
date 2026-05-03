@@ -1,7 +1,7 @@
 import { useCallback, type Dispatch, type SetStateAction } from 'react';
 
 import type { CanvasDraftQueryCache } from './canvasDraftQueryCache';
-import type { CanvasDraftReadModel } from './canvasDraftReadModel';
+import type { CanvasAuthoringDraftReadModel } from './canvasDraftReadModel';
 import type { DraftAttemptRefs, DraftSaveStatus } from './canvasDraftLifecycle.types';
 import { buildCanvasCanonicalSnapshot } from './canvasCanonicalSnapshot';
 import type { CanvasDraftLifecycleCanonicalSnapshot } from './canvasDraftLifecycleSnapshot';
@@ -13,13 +13,13 @@ type UseCanvasDraftRecoveryActionsArgs = {
   setDraftSaveStatus: Dispatch<SetStateAction<DraftSaveStatus>>;
   invalidateInFlightSaveAttempt: () => void;
   applyReloadedRemoteDraft: (
-    remoteDraftState: CanvasDraftReadModel,
+    remoteDraftState: CanvasAuthoringDraftReadModel,
     reloadedCanonicalSnapshot: CanvasDraftLifecycleCanonicalSnapshot
   ) => void;
 };
 
 function buildCanonicalSnapshotFromDraftState(
-  remoteDraftState: CanvasDraftReadModel
+  remoteDraftState: CanvasAuthoringDraftReadModel
 ): CanvasDraftLifecycleCanonicalSnapshot {
   if (remoteDraftState.semanticGraph != null) {
     return buildCanvasCanonicalSnapshot(

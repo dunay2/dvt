@@ -24,38 +24,6 @@ export type WorkspaceGraphSnapshot = {
   edges: DbtEdge[];
 };
 
-export type WorkspaceGraphDraft = {
-  canvas: {
-    kind: string;
-    title: string;
-  };
-  nodeIds: string[];
-  nodePositions: Record<string, { x: number; y: number }>;
-  edges: Array<{ sourceId: string; targetId: string }>;
-};
-
-export type WorkspaceGraphDraftRecord = {
-  revision: string;
-  draft: WorkspaceGraphDraft;
-  savedAt: string;
-};
-
-export type SaveWorkspaceGraphDraftInput = {
-  expectedRevision: string | null;
-  idempotencyKey: string;
-  draft: WorkspaceGraphDraft;
-};
-
-export type SaveWorkspaceGraphDraftResult =
-  | {
-      outcome: 'saved';
-      record: WorkspaceGraphDraftRecord;
-    }
-  | {
-      outcome: 'conflict';
-      current: WorkspaceGraphDraftRecord;
-    };
-
 export type WarehouseConnection = {
   id: string;
   name: string;

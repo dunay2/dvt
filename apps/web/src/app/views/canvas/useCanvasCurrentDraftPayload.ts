@@ -1,10 +1,9 @@
-/** Owned concern: derive the current Canvas draft payload and persistence posture from one semantic DTO. */
+/** Owned concern: derive the current Canvas authoring draft aggregate and persistence posture. */
 import { useMemo } from 'react';
 
 import {
-  canPersistCanvasDraftAuthoringPayload,
+  canPersistWorkspaceGraphAuthoringDraft,
   serializeCanvasDraftAuthoringSignature,
-  type CanvasDraftAuthoringPayload,
 } from './canvasDraftAuthoring';
 import {
   buildCurrentDraftPayload,
@@ -18,43 +17,31 @@ export function useCanvasCurrentDraftPayload({
   canvasDocument,
   canonicalNodes,
   canonicalEdges,
-  workspaceScope,
-  previewProvenanceConfig,
 }: CanvasCurrentDraftPayloadDto) {
   const currentDraftPayload = useMemo(
     () =>
-      buildCurrentDraftPayload(graphNodes, draftSession, canvasDocument ?? { kind: '', title: '' }),
-    [canvasDocument, draftSession, graphNodes]
-  );
-  const currentDraftAuthoringPayload = useMemo<CanvasDraftAuthoringPayload>(
-    () => ({
-      projectedDraft: currentDraftPayload,
-      canonicalNodes,
-      canonicalEdges,
-      workspaceScope,
-      previewProvenanceConfig,
-    }),
-    [
-      canonicalEdges,
-      canonicalNodes,
-      currentDraftPayload,
-      previewProvenanceConfig,
-      workspaceScope,
-    ]
+      buildCurrentDraftPayload(
+        graphNodes,
+        draftSession,
+        canvasDocument ?? { kind: '', title: '' },
+        canonicalNodes,
+        canonicalEdges
+      ),
+    [canvasDocument, canonicalEdges, canonicalNodes, draftSession, graphNodes]
   );
   const currentDraftPayloadSignature = useMemo(
-    () => serializeCanvasDraftAuthoringSignature(currentDraftAuthoringPayload),
-    [currentDraftAuthoringPayload]
+    () => serializeCanvasDraftAuthoringSignature(currentDraftPayload),
+    [currentDraftPayload]
   );
   const canPersistCurrentDraft = useMemo(
     () =>
       isCurrentDraftProjectable(currentDraftPayload, draftSession) &&
-      canPersistCanvasDraftAuthoringPayload(currentDraftAuthoringPayload),
-    [currentDraftAuthoringPayload, currentDraftPayload, draftSession]
+      canPersistWorkspaceGraphAuthoringDraft(currentDraftPayload),
+    [currentDraftPayload, draftSession]
   );
 
   return {
-    currentDraftPayload: currentDraftAuthoringPayload,
+    currentDraftPayload,
     currentDraftPayloadSignature,
     canPersistCurrentDraft,
   };

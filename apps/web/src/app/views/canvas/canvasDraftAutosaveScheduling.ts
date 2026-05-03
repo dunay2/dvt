@@ -1,8 +1,8 @@
 import type { Dispatch, SetStateAction } from 'react';
+import type { WorkspaceGraphAuthoringDraft } from '@dvt/contracts';
 
 import type { CanvasDraftQueryCache } from './canvasDraftQueryCache';
 import type { CanvasDraftRepository } from './canvasDraftRepository';
-import type { CanvasDraftAuthoringPayload } from './canvasDraftAuthoring';
 import type { CanvasDraftSession } from './canvasDraftSession';
 import type {
   DraftAttemptRefs,
@@ -35,7 +35,7 @@ export type CanvasDraftAutosaveSchedulingArgs = {
   draftSession: CanvasDraftSession;
   setDraftSession: SetDraftSession;
   currentDraftPayloadSignature: string;
-  currentDraftPayload: CanvasDraftAuthoringPayload;
+  currentDraftPayload: WorkspaceGraphAuthoringDraft;
   canPersistGraphDraft: boolean;
   canPersistCurrentDraft: boolean;
   refs: DraftAttemptRefs;
@@ -107,7 +107,7 @@ function applyAutosaveNonSchedulingOutcome(
 function scheduleCanvasDraftAutosave(args: {
   refs: DraftAttemptRefs;
   draftRepository: CanvasDraftRepository;
-  currentDraftPayload: CanvasDraftAuthoringPayload;
+  currentDraftPayload: WorkspaceGraphAuthoringDraft;
   draftSession: CanvasDraftSession;
   createDraftIdempotencyKey: () => string;
   setDraftSession: SetDraftSession;

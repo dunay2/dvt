@@ -1,7 +1,5 @@
 /** Owned concern: resolve the active Canvas graph strategy from the current draft document. */
-import {
-  findCanvasRuntimeRegistration,
-} from '../../plugins/graphStrategyRegistry';
+import { findCanvasRuntimeRegistration } from '../../plugins/graphStrategyRegistry';
 import type { CanvasExecutionStrategy } from '../../plugins/canvasExecutionStrategyContracts';
 import type { CanvasGraphStrategy } from '../../plugins/graphStrategyContracts';
 import type {
@@ -9,7 +7,7 @@ import type {
   NodeKindRegistration,
 } from '../../plugins/nodeTypeContracts';
 import type { RuntimeCapabilities } from '../../plugins/registry';
-import type { CanvasDraftReadModel } from './canvasDraftReadModel';
+import type { CanvasAuthoringDraftReadModel } from './canvasDraftReadModel';
 
 const DEFAULT_CANVAS_AUTHORING_MODE: CanvasGraphAuthoringMode = 'transformation';
 
@@ -43,7 +41,7 @@ function normalizeCanvasKind(kind: string): CanvasGraphAuthoringMode {
 }
 
 function resolveDraftCanvasKind(
-  draftReadModel: CanvasDraftReadModel | undefined
+  draftReadModel: CanvasAuthoringDraftReadModel | undefined
 ): CanvasGraphAuthoringMode | null {
   const canvasKind = draftReadModel?.record?.draft.canvas.kind;
   if (!canvasKind) {
@@ -55,7 +53,7 @@ function resolveDraftCanvasKind(
 }
 
 export function resolveActiveCanvasGraphStrategy(
-  draftReadModel: CanvasDraftReadModel | undefined,
+  draftReadModel: CanvasAuthoringDraftReadModel | undefined,
   capabilities?: RuntimeCapabilities
 ): ActiveCanvasGraphStrategyResolution {
   const canvasKind = resolveDraftCanvasKind(draftReadModel);
@@ -147,7 +145,7 @@ export function isActiveCanvasGraphStrategySupported(
 }
 
 export function resolveActiveCanvasAuthoringMode(
-  draftReadModel: CanvasDraftReadModel | undefined
+  draftReadModel: CanvasAuthoringDraftReadModel | undefined
 ): CanvasGraphAuthoringMode {
   return resolveDraftCanvasKind(draftReadModel) ?? DEFAULT_CANVAS_AUTHORING_MODE;
 }

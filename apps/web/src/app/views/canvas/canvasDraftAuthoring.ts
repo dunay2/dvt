@@ -12,46 +12,39 @@ import {
   type WorkspaceGraphAuthoringNode,
 } from '@dvt/contracts';
 
-import type { WorkspaceScope } from '../../ports/sessionContext';
-import type {
-  WorkspaceGraphDraft,
-  WorkspaceGraphDraftRecord,
-} from '../../ports/workspace';
-import type { WorkspaceBootstrapConfig } from '../../services/config/workspaceConfig';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
-import {
-  toCanvasAuthoringMetadata,
-  toCanvasAuthoringSerializableValue,
-} from './canvasAuthoringMetadata';
-import { serializeWorkspaceGraphDraftStructuralSignature } from './canvasDraftStructuralSignature';
+import { toCanvasAuthoringMetadata } from './canvasAuthoringMetadata';
+import type { CanvasAuthoringDraftRecord } from './canvasDraftReadModel';
+import { serializeWorkspaceGraphAuthoringDraftStructuralSignature } from './canvasDraftStructuralSignature';
 
-export type CanvasDraftAuthoringPayload = {
-  projectedDraft: WorkspaceGraphDraft;
+export type CanvasAuthoringDraftBuildInput = {
+  canvas: WorkspaceGraphAuthoringDraft['canvas'];
+  nodeIds: readonly string[];
+  nodePositions: WorkspaceGraphAuthoringDraft['nodePositions'];
+  visibleEdges: ReadonlyArray<Pick<WorkspaceGraphAuthoringEdge, 'sourceId' | 'targetId'>>;
   canonicalNodes: readonly CanonicalNode[];
   canonicalEdges: readonly CanonicalEdge[];
-  workspaceScope: WorkspaceScope;
-  previewProvenanceConfig: Pick<WorkspaceBootstrapConfig, 'gitBranch' | 'gitSha' | 'gitRepo'>;
 };
 
-export type CanvasDraftAuthoringSignatureInput = Pick<
-  CanvasDraftAuthoringPayload,
-  'projectedDraft' | 'canonicalNodes' | 'canonicalEdges'
->;
+export type CanvasDraftAuthoringSignatureInput = WorkspaceGraphAuthoringDraft;
 
 export type CanvasDraftAuthoringBaselineSignatureInput = {
-  record: WorkspaceGraphDraftRecord | null;
-  semanticGraph: {
-    canonicalNodes: readonly CanonicalNode[];
-    canonicalEdges: readonly CanonicalEdge[];
-  } | null;
+  record: CanvasAuthoringDraftRecord | null;
 };
 
-function projectCanonicalNodeToAuthoringNode(node: CanonicalNode): WorkspaceGraphAuthoringNode {
+function toWorkspaceGraphAuthoringNodeKind(node: CanonicalNode): string {
+  const pluginPrefix = `${node.pluginId}:`;
+  return node.kind.startsWith(pluginPrefix) ? node.kind.slice(pluginPrefix.length) : node.kind;
+}
+
+export function projectCanonicalNodeToAuthoringNode(
+  node: CanonicalNode
+): WorkspaceGraphAuthoringNode {
   const authoringNode: WorkspaceGraphAuthoringNode = {
     id: node.id,
     name: node.name,
     pluginId: node.pluginId,
-    kind: node.kind,
+    kind: toWorkspaceGraphAuthoringNodeKind(node),
     role: node.role,
     status: node.status,
     tags: [...node.tags],
@@ -88,7 +81,7 @@ function buildCanonicalEdgeLookup(
 }
 
 function projectDraftEdgeToAuthoringEdge(
-  edge: WorkspaceGraphDraft['edges'][number],
+  edge: Pick<WorkspaceGraphAuthoringEdge, 'sourceId' | 'targetId'>,
   canonicalEdgeLookup: ReadonlyMap<string, CanonicalEdge>
 ): WorkspaceGraphAuthoringEdge {
   const canonicalEdge = canonicalEdgeLookup.get(`${edge.sourceId}::${edge.targetId}`);
@@ -103,93 +96,46 @@ function projectDraftEdgeToAuthoringEdge(
   };
 }
 
-export function canPersistCanvasDraftAuthoringPayload(
-  payload: CanvasDraftAuthoringPayload
+export function canPersistWorkspaceGraphAuthoringDraft(
+  draft: WorkspaceGraphAuthoringDraft
 ): boolean {
   try {
-    return WorkspaceGraphAuthoringDraftSchema.safeParse(
-      buildCanvasDraftAuthoringGraphSync(payload)
-    ).success;
+    return WorkspaceGraphAuthoringDraftSchema.safeParse(draft).success;
   } catch {
     return false;
   }
 }
 
-function compareAuthoringEdges(
-  left: WorkspaceGraphAuthoringEdge,
-  right: WorkspaceGraphAuthoringEdge
-): number {
-  return (
-    left.sourceId.localeCompare(right.sourceId) ||
-    left.targetId.localeCompare(right.targetId) ||
-    left.relation.localeCompare(right.relation) ||
-    left.id.localeCompare(right.id)
-  );
-}
-
 export function serializeCanvasDraftAuthoringSignature(
   input: CanvasDraftAuthoringSignatureInput
 ): string {
-  const canonicalNodesById = new Map(input.canonicalNodes.map((node) => [node.id, node]));
-  const canonicalEdgeLookup = buildCanonicalEdgeLookup(input.canonicalEdges);
-  const edges = input.projectedDraft.edges
-    .map((edge) => projectDraftEdgeToAuthoringEdge(edge, canonicalEdgeLookup))
-    .sort(compareAuthoringEdges);
-
-  const signaturePayload = toCanvasAuthoringSerializableValue({
-    canvas: {
-      kind: input.projectedDraft.canvas.kind,
-      title: input.projectedDraft.canvas.title,
-    },
-    nodeIds: input.projectedDraft.nodeIds,
-    nodes: input.projectedDraft.nodeIds.map((nodeId) => {
-      const node = canonicalNodesById.get(nodeId);
-      return node == null
-        ? {
-            id: nodeId,
-            missing: true,
-          }
-        : projectCanonicalNodeToAuthoringNode(node);
-    }),
-    edges,
-  });
-
-  return JSON.stringify(signaturePayload);
+  return serializeWorkspaceGraphAuthoringDraftStructuralSignature(input);
 }
 
 export function serializeCanvasDraftAuthoringBaselineSignature({
   record,
-  semanticGraph,
 }: CanvasDraftAuthoringBaselineSignatureInput): string | null {
   if (record == null) {
     return null;
   }
 
-  if (semanticGraph == null) {
-    return serializeWorkspaceGraphDraftStructuralSignature(record.draft);
-  }
-
-  return serializeCanvasDraftAuthoringSignature({
-    projectedDraft: record.draft,
-    canonicalNodes: semanticGraph.canonicalNodes,
-    canonicalEdges: semanticGraph.canonicalEdges,
-  });
+  return serializeWorkspaceGraphAuthoringDraftStructuralSignature(record.draft);
 }
 
-function buildCanvasDraftAuthoringGraphSync(
-  payload: CanvasDraftAuthoringPayload
+export function buildCanvasAuthoringDraft(
+  input: CanvasAuthoringDraftBuildInput
 ): WorkspaceGraphAuthoringDraft {
-  const canonicalNodesById = new Map(payload.canonicalNodes.map((node) => [node.id, node]));
-  const canonicalEdgeLookup = buildCanonicalEdgeLookup(payload.canonicalEdges);
+  const canonicalNodesById = new Map(input.canonicalNodes.map((node) => [node.id, node]));
+  const canonicalEdgeLookup = buildCanonicalEdgeLookup(input.canonicalEdges);
 
   return {
     canvas: {
-      kind: payload.projectedDraft.canvas.kind,
-      title: payload.projectedDraft.canvas.title,
+      kind: input.canvas.kind,
+      title: input.canvas.title,
     },
-    nodeIds: [...payload.projectedDraft.nodeIds],
-    nodePositions: { ...payload.projectedDraft.nodePositions },
-    nodes: payload.projectedDraft.nodeIds.map((nodeId) => {
+    nodeIds: [...input.nodeIds],
+    nodePositions: { ...input.nodePositions },
+    nodes: input.nodeIds.map((nodeId) => {
       const node = canonicalNodesById.get(nodeId);
       if (node == null) {
         throw new Error(`Workspace graph draft references unknown node ${nodeId}.`);
@@ -197,14 +143,8 @@ function buildCanvasDraftAuthoringGraphSync(
 
       return projectCanonicalNodeToAuthoringNode(node);
     }),
-    edges: payload.projectedDraft.edges.map((edge) =>
+    edges: input.visibleEdges.map((edge) =>
       projectDraftEdgeToAuthoringEdge(edge, canonicalEdgeLookup)
     ),
   };
-}
-
-export async function buildCanvasDraftAuthoringGraph(args: {
-  payload: CanvasDraftAuthoringPayload;
-}): Promise<WorkspaceGraphAuthoringDraft> {
-  return buildCanvasDraftAuthoringGraphSync(args.payload);
 }

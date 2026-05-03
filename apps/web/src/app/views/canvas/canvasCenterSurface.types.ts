@@ -7,14 +7,14 @@ import type {
 } from './canvasDraftLifecycle.types';
 import type { CanvasDraftTransportErrorState } from './canvasDraftTransportErrorState';
 import type { CanvasRouteStartupBlockState } from './canvasRouteInteractionState';
-import type { WorkspaceGraphDraft } from '../../ports/workspace';
+import type { CanvasAuthoringCanvasDocument } from './canvasDraftReadModel';
 
 export type RenderCanvasCenterSurfaceArgs = {
   presentationState: CanvasDraftPresentationState;
   startupBlockState: CanvasRouteStartupBlockState | null;
   draftTransportError: CanvasDraftTransportErrorState | null;
   workbenchErrorMessage: string | null;
-  canvasDocument: WorkspaceGraphDraft['canvas'] | null;
+  canvasDocument: CanvasAuthoringCanvasDocument | null;
   draftSaveStatus: DraftSaveStatus;
   availableCanvasKinds: readonly CanvasKindRegistration[];
   canEditEdges: boolean;

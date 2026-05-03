@@ -1,14 +1,9 @@
 /** Owned concern: project the protected workspace-graph-draft boundary into route-facing draft and semantic graph models. */
-import type {
-  WorkspaceGraphAuthoringDraft,
-  WorkspaceGraphAuthoringNode,
-  WorkspaceGraphDraftRecord as ProtectedWorkspaceGraphDraftRecord,
-} from '@dvt/contracts';
+import type { WorkspaceGraphAuthoringDraft, WorkspaceGraphAuthoringNode } from '@dvt/contracts';
 
-import type { WorkspaceGraphDraft, WorkspaceGraphDraftRecord } from '../../ports/workspace';
 import type { CanonicalEdge, CanonicalNode, PluginNodeKind } from '../../types/canonical';
 
-export type WorkspaceGraphDraftSemanticGraph = {
+export type CanvasAuthoringSemanticGraph = {
   canonicalNodes: CanonicalNode[];
   canonicalEdges: CanonicalEdge[];
 };
@@ -76,38 +71,11 @@ function buildCanonicalEdgeProjection(
   return canonicalEdge;
 }
 
-export function projectWorkspaceGraphAuthoringDraft(
-  draft: WorkspaceGraphAuthoringDraft
-): WorkspaceGraphDraft {
-  return {
-    canvas: {
-      kind: draft.canvas.kind,
-      title: draft.canvas.title,
-    },
-    nodeIds: [...draft.nodeIds],
-    nodePositions: { ...draft.nodePositions },
-    edges: draft.edges.map((edge) => ({
-      sourceId: edge.sourceId,
-      targetId: edge.targetId,
-    })),
-  };
-}
-
 export function projectWorkspaceGraphAuthoringDraftSemanticGraph(
   draft: WorkspaceGraphAuthoringDraft
-): WorkspaceGraphDraftSemanticGraph {
+): CanvasAuthoringSemanticGraph {
   return {
     canonicalNodes: draft.nodes.map((node) => projectAuthoringNodeToCanonical(node)),
     canonicalEdges: draft.edges.map((edge) => buildCanonicalEdgeProjection(edge)),
-  };
-}
-
-export function projectProtectedWorkspaceGraphDraftRecord(
-  record: ProtectedWorkspaceGraphDraftRecord
-): WorkspaceGraphDraftRecord {
-  return {
-    revision: record.revision,
-    savedAt: record.updatedAt,
-    draft: projectWorkspaceGraphAuthoringDraft(record.draft),
   };
 }

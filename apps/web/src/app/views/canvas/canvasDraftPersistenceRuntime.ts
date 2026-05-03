@@ -1,9 +1,6 @@
 import type { CanvasDraftQueryCache } from './canvasDraftQueryCache';
-import type { CanvasDraftReadModel } from './canvasDraftReadModel';
-import {
-  canvasDraftSession,
-  type CanvasDraftSession,
-} from './canvasDraftSession';
+import type { CanvasAuthoringDraftReadModel } from './canvasDraftReadModel';
+import { canvasDraftSession, type CanvasDraftSession } from './canvasDraftSession';
 import type { DraftAttemptRefs } from './canvasDraftLifecycle.types';
 
 export const DRAFT_SAVE_DEBOUNCE_MS = 400;
@@ -65,7 +62,7 @@ export function applyConflictResolution(args: {
   draftQueryCache: CanvasDraftQueryCache;
   setDraftSession: (updater: (currentSession: CanvasDraftSession) => CanvasDraftSession) => void;
   setDraftSaveStatus: (status: 'idle') => void;
-  currentState: CanvasDraftReadModel;
+  currentState: CanvasAuthoringDraftReadModel;
 }) {
   const currentRecord = args.currentState.record;
   if (currentRecord == null) {
@@ -85,7 +82,7 @@ export function applySavedDraftResolution(args: {
   refs: DraftAttemptRefs;
   setDraftSession: (updater: (currentSession: CanvasDraftSession) => CanvasDraftSession) => void;
   setDraftSaveStatus: (status: 'saved') => void;
-  remoteDraftState: CanvasDraftReadModel;
+  remoteDraftState: CanvasAuthoringDraftReadModel;
 }) {
   const record = args.remoteDraftState.record;
   if (record == null) {

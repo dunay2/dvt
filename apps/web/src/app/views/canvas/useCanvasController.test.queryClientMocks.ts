@@ -1,12 +1,9 @@
 import { resolveCurrentGraphDraftQueryData } from './useCanvasController.test.graphQuery';
-import type {
-  CanvasHarnessMocks,
-  CanvasHarnessState,
-} from './useCanvasController.test.types';
-import type { CanvasDraftReadModel } from './canvasDraftReadModel';
+import type { CanvasHarnessMocks, CanvasHarnessState } from './useCanvasController.test.types';
+import type { CanvasAuthoringDraftReadModel } from './canvasDraftReadModel';
 
 type CanvasGraphQueryData = CanvasHarnessState['graphData'];
-type CanvasHarnessQueryData = CanvasDraftReadModel | CanvasGraphQueryData;
+type CanvasHarnessQueryData = CanvasAuthoringDraftReadModel | CanvasGraphQueryData;
 type CanvasHarnessQueryConfig = {
   queryKey?: readonly unknown[];
   queryFn?: () => Promise<unknown>;
@@ -18,7 +15,7 @@ function applyCanvasHarnessQueryData(
   value: CanvasHarnessQueryData
 ): void {
   if (queryKey[1] === 'graph-draft') {
-    state.graphDraftQueryData = value as CanvasDraftReadModel;
+    state.graphDraftQueryData = value as CanvasAuthoringDraftReadModel;
     return;
   }
 

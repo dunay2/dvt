@@ -7,20 +7,20 @@ import type { CanvasDraftEdge } from './canvasDraftSession';
 import type { GraphAuthorityQueryState } from './canvasDraftLifecycle.types';
 import { useCanvasViewportGraphModel } from './useCanvasViewportGraphModel';
 import type { CanonicalNode } from '../../types/canonical';
-import type { WorkspaceGraphDraftSemanticGraph } from '../../services/workspace/workspaceGraphDraftProjection';
+import type { CanvasAuthoringSemanticGraph } from '../../services/workspace/workspaceGraphDraftProjection';
 
 type UseCanvasAuthoringProjectionArgs = {
   graphAuthorityQuery: GraphAuthorityQueryState;
   visibleNodeIds: string[];
   visibleEdges: Array<{ sourceId: string; targetId: string }>;
-  draftSemanticGraph: WorkspaceGraphDraftSemanticGraph | null;
+  draftSemanticGraph: CanvasAuthoringSemanticGraph | null;
   localCanonicalNodes: readonly CanonicalNode[];
   columnLevelLineageEnabled: boolean;
   persistedNodePositions: Record<string, { x: number; y: number }>;
 };
 
 function buildAuthoringReconcileSnapshot(args: {
-  draftSemanticGraph: WorkspaceGraphDraftSemanticGraph | null;
+  draftSemanticGraph: CanvasAuthoringSemanticGraph | null;
   localCanonicalNodes: readonly CanonicalNode[];
 }) {
   const { draftSemanticGraph, localCanonicalNodes } = args;

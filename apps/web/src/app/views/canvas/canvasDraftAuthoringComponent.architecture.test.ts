@@ -3,14 +3,14 @@ import { describe, expect, it } from 'vitest';
 
 import { getCanvasRuntimeRegistrations } from '../../plugins/graphStrategyRegistry';
 import type { CanonicalNode } from '../../types/canonical';
-import type { WorkspaceGraphDraftRecord } from '../../ports/workspace';
 import { buildController } from '../Canvas.test.controller';
 import { readArchitectureSiblingSource } from '../architecture.test.support';
 import { resolveActiveCanvasGraphStrategy } from './canvasActiveGraphStrategy';
 import { resolveCanvasRuntimePolicy } from './canvasRuntimePolicy';
 import {
-  createUnknownCanvasDraftReadModel,
-  type CanvasDraftReadModel,
+  createUnknownCanvasAuthoringDraftReadModel,
+  type CanvasAuthoringDraftRecord,
+  type CanvasAuthoringDraftReadModel,
 } from './canvasDraftReadModel';
 import type { CanvasDraftSession } from './canvasDraftSession';
 import { resolveCanvasNodeAdmissionTransaction } from './canvasNodeAdmissionTransaction';
@@ -54,8 +54,8 @@ const CANVAS_SHELL_PROPS_BUILDER_SOURCE = readArchitectureSiblingSource(
   'canvasShellPropsBuilder.tsx'
 );
 
-function buildDraftReadModelWithCanvasKind(kind: string): CanvasDraftReadModel {
-  const record: WorkspaceGraphDraftRecord = {
+function buildDraftReadModelWithCanvasKind(kind: string): CanvasAuthoringDraftReadModel {
+  const record: CanvasAuthoringDraftRecord = {
     revision: 'rev-1',
     savedAt: '2026-04-25T00:00:00Z',
     draft: {
@@ -65,11 +65,12 @@ function buildDraftReadModelWithCanvasKind(kind: string): CanvasDraftReadModel {
       },
       nodeIds: [],
       nodePositions: {},
+      nodes: [],
       edges: [],
     },
   };
 
-  return createUnknownCanvasDraftReadModel(record);
+  return createUnknownCanvasAuthoringDraftReadModel(record);
 }
 
 function buildDraftSession(visibleNodeIds: string[] = []): CanvasDraftSession {
@@ -145,9 +146,7 @@ describe('canvas draft authoring component architecture', () => {
   });
 
   it('fails closed for unsupported persisted canvas kinds before route mutation is allowed', () => {
-    expect(
-      resolveActiveCanvasGraphStrategy(buildDraftReadModelWithCanvasKind('unknown'))
-    ).toEqual({
+    expect(resolveActiveCanvasGraphStrategy(buildDraftReadModelWithCanvasKind('unknown'))).toEqual({
       kind: 'unsupported_kind',
       canvasKind: 'unknown',
     });
@@ -279,9 +278,7 @@ describe('canvas draft authoring component architecture', () => {
     expect(dbtPolicy.admission.allowsNodeKind('dvt:source')).toBe(false);
     expect(transformationPolicy.admission.allowsNodeKind('dvt:source')).toBe(true);
     expect(USE_CANVAS_CONTROLLER_SOURCE).toContain('resolveCanvasRuntimePolicy');
-    expect(USE_CANVAS_CONTROLLER_SOURCE).toContain(
-      'runtimePolicy.admission.allowsCanonicalNode'
-    );
+    expect(USE_CANVAS_CONTROLLER_SOURCE).toContain('runtimePolicy.admission.allowsCanonicalNode');
     expect(CANVAS_CONTROLLER_VIEW_MODEL_SOURCE).toContain(
       'runtimePolicy.commands.canEditInspectorNode'
     );
@@ -340,9 +337,7 @@ describe('canvas draft authoring component architecture', () => {
   });
 
   it('keeps source-text tripwires only for import ownership that runtime tests cannot observe', () => {
-    expect(GRAPH_HANDLER_CONTRACTS_SOURCE).toContain(
-      "from '../../plugins/graphStrategyContracts'"
-    );
+    expect(GRAPH_HANDLER_CONTRACTS_SOURCE).toContain("from '../../plugins/graphStrategyContracts'");
     expect(DBT_NODE_ADAPTER_SOURCE).toContain("from '../graphStrategyContracts'");
     expect(DVT_TRANSFORMATION_STRATEGY_SOURCE).toContain(
       'export const transformationCanvasGraphStrategy'

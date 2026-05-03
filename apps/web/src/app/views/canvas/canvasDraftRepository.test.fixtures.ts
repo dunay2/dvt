@@ -1,15 +1,19 @@
 import { vi } from 'vitest';
 
+import type { WorkspaceGraphAuthoringDraft } from '@dvt/contracts';
 import type {
   IWorkspaceGraphDraftAuthoringPort,
   WorkspaceGraphDraftAuthoringReadResult,
   WorkspaceGraphDraftAuthoringSaveResult,
 } from '../../ports/workspaceGraphDraftAuthoring';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
-import type { WorkspaceGraphAuthoringDraft } from '@dvt/contracts';
 
-export const WORKSPACE_SCOPE = { tenantId: 'tenant-a', projectId: 'project-a', environmentId: 'dev' } as const;
-export const PROJECTED_DRAFT = {
+export const WORKSPACE_SCOPE = {
+  tenantId: 'tenant-a',
+  projectId: 'project-a',
+  environmentId: 'dev',
+} as const;
+const DEFAULT_AUTHORING_DRAFT_LAYOUT = {
   canvas: {
     kind: 'transformation',
     title: 'Main canvas',
@@ -20,10 +24,6 @@ export const PROJECTED_DRAFT = {
     'transform-node': { x: 120, y: 0 },
     'sink-node': { x: 240, y: 0 },
   },
-  edges: [
-    { sourceId: 'source-node', targetId: 'transform-node' },
-    { sourceId: 'transform-node', targetId: 'sink-node' },
-  ],
 };
 const CANONICAL_NODES = [
   {
@@ -70,14 +70,14 @@ const CANONICAL_EDGES = [
   { id: 'edge-2', sourceId: 'transform-node', targetId: 'sink-node', relation: 'lineage' },
 ] satisfies CanonicalEdge[];
 
-function buildAuthoringDraft(): WorkspaceGraphAuthoringDraft {
+export function buildAuthoringDraft(): WorkspaceGraphAuthoringDraft {
   return {
     canvas: {
-      kind: 'transformation',
-      title: 'Main canvas',
+      kind: DEFAULT_AUTHORING_DRAFT_LAYOUT.canvas.kind,
+      title: DEFAULT_AUTHORING_DRAFT_LAYOUT.canvas.title,
     },
-    nodeIds: [...PROJECTED_DRAFT.nodeIds],
-    nodePositions: { ...PROJECTED_DRAFT.nodePositions },
+    nodeIds: [...DEFAULT_AUTHORING_DRAFT_LAYOUT.nodeIds],
+    nodePositions: { ...DEFAULT_AUTHORING_DRAFT_LAYOUT.nodePositions },
     nodes: CANONICAL_NODES.map((node) => ({
       ...node,
       kind: node.kind.split(':').at(-1) ?? node.kind,
@@ -156,15 +156,6 @@ export function buildSaveInput() {
   return {
     expectedRevision: 'rev-1',
     idempotencyKey: 'idem-1',
-    draft: {
-      projectedDraft: { ...PROJECTED_DRAFT },
-      canonicalNodes: CANONICAL_NODES,
-      canonicalEdges: CANONICAL_EDGES,
-      workspaceScope: {
-        ...WORKSPACE_SCOPE,
-        targetAdapter: 'temporal' as const,
-      },
-      previewProvenanceConfig: { gitBranch: 'main', gitSha: 'local', gitRepo: 'dunay2/dvt' },
-    },
+    draft: buildAuthoringDraft(),
   };
 }
