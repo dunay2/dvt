@@ -1169,6 +1169,36 @@ tasks:
       embedded backend consumes explicit `resource` ownership; and the protected-security component
       now has a mailbox review, local guide, and semantic architecture test.
     last_verified: '2026-04-23'
+  - task_id: AR-C10
+    priority: P0
+    status: queued
+    objective: >-
+      close protected runtime route governance as one command/query rail matrix across start,
+      preview, compile, import, workspace draft, run query, signal, cancel, recover, and admin
+      repair boundaries.
+    dependency: none
+    target: >-
+      Every protected runtime route maps to one DDD-owned command/query rail with concrete source
+      file, application owner, adapter surface, authorization rule, tenant-scope rule, positive
+      test, and required negative tests; compatibility behavior is explicitly classified instead of
+      remaining implicit route drift.
+    complexity: L
+    effort_points: 8
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/protected-runtime-rail-closure-plan-20260503.md
+      - docs/risk-register/quality/R-20260503-PROTECTED-RUNTIME-RAIL-CLOSURE.yaml
+      - docs/architecture/command-query-rail-governance.md
+      - apps/api/src/entrypoints/http/registerProtectedRuntimeRoutes.ts
+      - apps/api/src/entrypoints/http/runtimeRoutes.constants.ts
+      - apps/api/test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts
+      - apps/api/test/integration/protectedRuntime.integration.test.ts
+    status_reason: >-
+      Registered from managed risk `R-20260503-PROTECTED-RUNTIME-RAIL-CLOSURE`: individual protected
+      runtime rails such as start-run identity and access-decision vocabulary are already closed,
+      but the full protected route group still needs one executable command/query matrix,
+      negative-test closure pass, and legacy/compatibility classification before the risk can close.
+    last_verified: '2026-05-03'
   - task_id: TF-C3
     priority: P1
     status: in_progress

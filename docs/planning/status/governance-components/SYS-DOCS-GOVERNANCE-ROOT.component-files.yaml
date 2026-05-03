@@ -7,7 +7,7 @@ governanceState: coverage-required
 dddOwner: INFRA
 cqRails: none - documentation governance
 childrenRequired: true
-fileCount: 1716
+fileCount: 1717
 driftFileCount: 0
 legacyFileCount: 0
 files:
@@ -9232,6 +9232,14 @@ files:
   - path: >-
       docs/planning/proposals/mandatory/runtime-and-contracts/postgres-tenant-isolation-service-access-remediation-plan-20260425.md
     fileId: F-2E26A664C930
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: >-
+      docs/planning/proposals/mandatory/runtime-and-contracts/protected-runtime-rail-closure-plan-20260503.md
+    fileId: F-E6CB1F688A41
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required

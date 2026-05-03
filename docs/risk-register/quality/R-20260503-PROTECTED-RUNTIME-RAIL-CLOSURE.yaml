@@ -16,8 +16,11 @@ summary: >
   implementation drift.
 
 mitigation:
-  - Register a dedicated lane task before any implementation change in protected runtime route
-    composition.
+  - Keep dedicated lane task `AR-C10` registered before any implementation change in protected
+    runtime route composition.
+  - Use
+    `docs/planning/proposals/mandatory/runtime-and-contracts/protected-runtime-rail-closure-plan-20260503.md`
+    as the implementation entry point for the closure slice.
   - Keep route-level behavior aligned with existing canonical command/query rails; do not introduce
     parallel route semantics while the closure task is pending.
   - Require negative authorization and tenant-scope coverage in the future closure task definition.
