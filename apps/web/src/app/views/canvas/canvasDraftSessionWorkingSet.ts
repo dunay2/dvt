@@ -259,6 +259,7 @@ function replaceEdges(session: CanvasDraftSession, edges: CanvasDraftEdge[]): Ca
 export const canvasDraftSessionWorkingSet = {
   buildCanonical,
   buildFromDraft,
+  equals: workingSetsEqual,
   reconcileSnapshot,
   queueExplicitNodeIds,
   addExplicitNode,

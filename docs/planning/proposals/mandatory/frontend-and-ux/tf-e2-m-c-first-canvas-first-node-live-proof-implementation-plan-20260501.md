@@ -247,6 +247,10 @@ creating the expected backend state outside the route.
 | `apps/web/src/app/views/canvas/canvasHostCycleState.test.ts`                                                              | Modify | Prove clean startup has no seeded nodes before document creation.                            |
 | `apps/web/src/app/views/canvas/canvasCreateCanvasDocumentCommand.ts`                                                      | Modify | Ensure first-canvas command emits typed, empty, saveable document intent.                    |
 | `apps/web/src/app/views/canvas/canvasCreateCanvasDocumentCommand.test.ts`                                                 | Modify | Prove transformation and dbt first-canvas variants plus negative duplicate path.             |
+| `apps/web/src/app/views/canvas/canvasDraftSession.types.ts`                                                               | Modify | Carry the save-window working-set snapshot needed to protect local edits in flight.          |
+| `apps/web/src/app/views/canvas/canvasDraftSessionMachine.ts`                                                              | Modify | Preserve writable draft-session transitions after authoritative save success.                |
+| `apps/web/src/app/views/canvas/canvasDraftSessionWorkingSet.ts`                                                           | Modify | Reuse canonical working-set equality for save-window drift detection.                        |
+| `apps/web/src/app/views/canvas/canvasDraftSession.test.ts`                                                                | Modify | Prove save success hydrates persisted draft truth unless local edits happened in flight.     |
 | `apps/web/src/app/views/canvas/useCanvasController.ts`                                                                    | Modify | Compose first-canvas and first-node command flow through existing ports.                     |
 | `apps/web/src/app/views/canvas/useCanvasController.core.test.tsx`                                                         | Modify | Prove first-node creation waits for authoritative first-canvas save.                         |
 | `apps/web/src/app/views/canvas/useCanvasController.persistence.test.tsx`                                                  | Modify | Prove created node and layout persist through draft/session boundaries.                      |
@@ -339,6 +343,10 @@ allowedImplementationSurfaces:
   - apps/web/src/app/views/canvas/canvasShellPropsBuilder.tsx
   - apps/web/src/app/views/canvas/canvasCreateCanvasDocumentCommand.ts
   - apps/web/src/app/views/canvas/canvasCreateCanvasDocumentCommand.test.ts
+  - apps/web/src/app/views/canvas/canvasDraftSession.types.ts
+  - apps/web/src/app/views/canvas/canvasDraftSessionMachine.ts
+  - apps/web/src/app/views/canvas/canvasDraftSessionWorkingSet.ts
+  - apps/web/src/app/views/canvas/canvasDraftSession.test.ts
   - apps/web/src/app/views/canvas/useCanvasController.ts
   - apps/web/src/app/views/canvas/useCanvasController.core.test.tsx
   - apps/web/src/app/views/canvas/useCanvasController.persistence.test.tsx
@@ -361,6 +369,7 @@ allowedImplementationSurfaces:
   - apps/web/src/app/views/canvas/canvasStartupAndDraftRecovery.architecture.test.ts
   - apps/web/cypress/support/canvasFirstAuthoring.ts
   - apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts
+  - apps/web/cypress/e2e/canvas/canvas-happy-path-draggable.cy.ts
   - apps/web/package.json
   - docs/architecture/components/web/graph/canvas-first-authoring-live-proof-component.md
   - docs/architecture/components/web/graph/canvas-layout-persistence-component.md
@@ -369,6 +378,11 @@ allowedImplementationSurfaces:
   - docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-user-stories.md
   - docs/architecture/components/web/graph/index.md
   - docs/guides/canvas-authoring-user-manual-20260501.md
+  - docs/evidence/assets/20260503-canvas-happy-path-draggable/**
+  - docs/evidence/ed-20260503-canvas-happy-path-draggable-proof.md
+  - docs/evidence/index.md
+  - docs/risk-register/quality/R-20260503-CANVAS-EMPTY-STATE-MESSAGE-AMBIGUITY.yaml
+  - docs/risk-register/quality/index.md
   - docs/.manifest.json
   - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-m-b-canvas-draft-denial-posture-implementation-plan-20260501.md
   - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-m-c-first-canvas-first-node-live-proof-implementation-plan-20260501.md
@@ -534,6 +548,129 @@ redGreenCycles:
       - scripts/run-canvas-first-authoring-live-proof.cjs
     greenTest: pnpm --filter @dvt/web test:e2e:first-authoring:live
 symbols:
+  - name: DragPoint
+    path: apps/web/cypress/e2e/canvas/canvas-happy-path-draggable.cy.ts
+    dddOwner: Canvas happy-path draggable Cypress proof
+    cqRails:
+      - CreateCanvas
+      - CreateCanvasNode
+      - PersistCanvasLayout
+    fowlerSignals:
+      - browser-level regression proof
+      - writable Canvas happy path
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-happy-path-draggable.cy.ts
+    unitTests:
+      - canvasDraftSession.test.ts
+  - name: addSourceNodeIfMissing
+    path: apps/web/cypress/e2e/canvas/canvas-happy-path-draggable.cy.ts
+    dddOwner: Canvas happy-path draggable Cypress proof
+    cqRails:
+      - CreateCanvasNode
+    fowlerSignals:
+      - browser-level regression proof
+      - writable Canvas happy path
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-happy-path-draggable.cy.ts
+    unitTests:
+      - canvasDraftSession.test.ts
+  - name: assertSourceNodeMovedFrom
+    path: apps/web/cypress/e2e/canvas/canvas-happy-path-draggable.cy.ts
+    dddOwner: Canvas happy-path draggable Cypress proof
+    cqRails:
+      - PersistCanvasLayout
+    fowlerSignals:
+      - browser-level regression proof
+      - writable Canvas happy path
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-happy-path-draggable.cy.ts
+    unitTests:
+      - canvasDraftSession.test.ts
+  - name: buildMouseDragEvent
+    path: apps/web/cypress/e2e/canvas/canvas-happy-path-draggable.cy.ts
+    dddOwner: Canvas happy-path draggable Cypress proof
+    cqRails:
+      - PersistCanvasLayout
+    fowlerSignals:
+      - browser-level regression proof
+      - writable Canvas happy path
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-happy-path-draggable.cy.ts
+    unitTests:
+      - canvasDraftSession.test.ts
+  - name: createTransformationCanvasIfEmpty
+    path: apps/web/cypress/e2e/canvas/canvas-happy-path-draggable.cy.ts
+    dddOwner: Canvas happy-path draggable Cypress proof
+    cqRails:
+      - CreateCanvas
+    fowlerSignals:
+      - browser-level regression proof
+      - writable Canvas happy path
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-happy-path-draggable.cy.ts
+    unitTests:
+      - canvasDraftSession.test.ts
+  - name: dispatchMouseDragEvent
+    path: apps/web/cypress/e2e/canvas/canvas-happy-path-draggable.cy.ts
+    dddOwner: Canvas happy-path draggable Cypress proof
+    cqRails:
+      - PersistCanvasLayout
+    fowlerSignals:
+      - browser-level regression proof
+      - writable Canvas happy path
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-happy-path-draggable.cy.ts
+    unitTests:
+      - canvasDraftSession.test.ts
+  - name: dragSourceNode
+    path: apps/web/cypress/e2e/canvas/canvas-happy-path-draggable.cy.ts
+    dddOwner: Canvas happy-path draggable Cypress proof
+    cqRails:
+      - PersistCanvasLayout
+    fowlerSignals:
+      - browser-level regression proof
+      - writable Canvas happy path
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-happy-path-draggable.cy.ts
+    unitTests:
+      - canvasDraftSession.test.ts
+  - name: stubRuntimeCapabilities
+    path: apps/web/cypress/e2e/canvas/canvas-happy-path-draggable.cy.ts
+    dddOwner: Canvas happy-path draggable Cypress proof
+    cqRails:
+      - GetWorkspaceGraphDraft
+    fowlerSignals:
+      - browser-level regression proof
+      - protected backend capability stub
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-happy-path-draggable.cy.ts
+    unitTests:
+      - canvasDraftSession.test.ts
+  - name: upsertNode
+    path: apps/web/src/app/views/canvas/canvasDraftSessionWorkingSet.ts
+    dddOwner: CanvasAuthoringGraph aggregate
+    cqRails:
+      - CreateCanvasNode
+      - SaveWorkspaceGraphDraft
+    fowlerSignals:
+      - explicit domain mutation over route-local draft session
+      - no parallel node mutation helper
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-happy-path-draggable.cy.ts
+    unitTests:
+      - canvasDraftSession.test.ts
+  - name: visitCanvasWithStubbedBackend
+    path: apps/web/cypress/e2e/canvas/canvas-happy-path-draggable.cy.ts
+    dddOwner: Canvas happy-path draggable Cypress proof
+    cqRails:
+      - GetWorkspaceGraphDraft
+    fowlerSignals:
+      - browser-level regression proof
+      - protected backend capability stub
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-happy-path-draggable.cy.ts
+    unitTests:
+      - canvasDraftSession.test.ts
   - name: FeatureImplementationGuard
     path: scripts/check-feature-mechanization.cjs
     dddOwner: Repository feature mechanization guard

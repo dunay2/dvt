@@ -1,0 +1,27 @@
+---
+id: R-20260503-CANVAS-EMPTY-STATE-MESSAGE-AMBIGUITY
+title: Canvas empty-state copy is ambiguous and can be interpreted as connectivity failure
+status: Open
+date: 2026-05-03
+owners:
+  - web
+  - frontend-and-ui
+severity: Low
+probability: High
+---
+summary: >
+  The Canvas empty-state message can be read as backend or runtime failure even when the real state
+  is simply an empty workspace graph. This creates operator confusion and false incident perception
+  in the happy path.
+
+mitigation:
+  - Replace current empty-state wording with explicit "workspace/canvas empty" language.
+  - Keep technical runtime limitations as secondary note, not primary headline.
+  - Validate updated copy in ES/EN route catalogs and add regression screenshot proof.
+
+monitoring:
+  cadence: per PR touching Canvas empty-state copy or startup-route presentation
+  signals:
+    - 'apps/web/src/app/views/canvas/canvasCopyCatalog.route.ts'
+    - 'apps/web/src/app/views/canvas/canvasCopyCatalog.route.es.ts'
+    - 'apps/web/cypress/e2e/canvas/*empty*'

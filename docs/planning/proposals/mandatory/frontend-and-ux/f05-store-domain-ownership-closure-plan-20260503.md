@@ -1,0 +1,316 @@
+---
+title: F-05 Store Domain Ownership Closure Plan
+status: Proposed
+date: 2026-05-03
+owners:
+  - web
+planning_type: mandatory
+related_tasks:
+  - F-05
+governing_sources:
+  - docs/architecture/command-query-rail-governance.md
+  - docs/architecture/fowler-opportunity-planning-governance.md
+  - docs/architecture/components/web/web-store-domain-ownership-component.md
+  - docs/planning/state/agent-lane-e.yaml
+  - docs/architecture/components/web/f04-frontend-data-boundary-technical-manual-20260404.md
+---
+
+# F-05 Store Domain Ownership Closure Plan
+
+## Purpose
+
+F-05 no longer starts from a live `appStore.ts` monolith. The file has already
+been removed from active `apps/web` code and an architecture test now guards
+that removal. The remaining work is to close the product and architecture truth
+around the stores that actually exist, remove stale documentation claims, and
+finish the domain ownership cuts that are still mixed.
+
+This plan is the governed entry point for that closure. No store rename,
+extraction, or cross-store behavior change should land under F-05 unless it is
+represented here first.
+
+The current component truth is maintained in
+`docs/architecture/components/web/web-store-domain-ownership-component.md`.
+
+## Current State
+
+Active store files under `apps/web/src/app/stores`:
+
+| Store                       | Current responsibility                                                                  | Primary consumers                                                                | Current verdict                                                                            |
+| --------------------------- | --------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `sessionStore.ts`           | Workspace scope and run context construction.                                           | `TopAppBar`, session context port, API client, workspace services, dbt renderer. | Canonical owner for tenant/project/environment selection.                                  |
+| `canvasInteractionStore.ts` | Route-local Canvas interaction and persisted workspace layout.                          | `useCanvasStoreFacade`, Canvas controller tests.                                 | Canonical owner for Canvas selection, inspector, overlays, viewport, and node positions.   |
+| `executionStore.ts`         | Current plan, current run, and user permissions.                                        | Canvas facade, Runs, Cost, console log stream.                                   | Mixed runtime evidence and authorization projection; needs explicit domain split decision. |
+| `uiLayoutStore.ts`          | Shell panels, tabs, focus, Canvas visual preferences, and connection status projection. | Root, TopAppBar, Console, Canvas facade.                                         | Mixed shell layout and platform status; needs status ownership closure.                    |
+
+Architecture guards already assert that `appStore.ts` is not part of active
+runtime ownership:
+
+- `apps/web/src/app/views/canvas/canvasStartupAndDraftRecovery.architecture.test.ts`
+- `apps/web/src/app/queries/queryKeyPolicy.architecture.test.ts`
+
+## Drift Register
+
+| Drift id       | Surface                                 | Current status                                                                                              | Closure target                                                                                                  |
+| -------------- | --------------------------------------- | ----------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `F05-DRIFT-01` | `docs/planning/state/agent-lane-e.yaml` | Closed in this slice: F-05 now points at the actual four-store topology and this plan.                      | Keep Lane E aligned when store ownership changes.                                                               |
+| `F05-DRIFT-02` | generated workboard views               | Closed in this slice: generated views were regenerated from Lane E.                                         | Regenerate workboard after future Lane E changes.                                                               |
+| `F05-DRIFT-03` | `lane-e-shell-baseline-target-guide.md` | Closed in this slice: active baseline now lists the current stores, not `useAppStore`.                      | Keep the guide current with the component map.                                                                  |
+| `F05-DRIFT-04` | `executionStore.ts`                     | Open design item: runtime evidence (`currentPlan`, `currentRun`) and permission projection share one store. | Decide whether `runStore` and `authorizationStore` are separate or if execution remains the bounded projection. |
+| `F05-DRIFT-05` | `uiLayoutStore.ts`                      | Open design item: `connectionStatus` is platform health/status state inside shell layout.                   | Move to status ownership or document a deliberate read-model projection.                                        |
+| `F05-DRIFT-06` | historical planning/review docs         | Informational only: old reviews and closeouts may describe `appStore` because they captured earlier states. | Do not rewrite historical evidence; active docs route to this plan and the component map.                       |
+
+## Command And Query Rail
+
+F-05 store ownership is not an externally observable product workflow by itself.
+It governs presentation-state ownership behind existing UI commands and queries:
+
+| Rail                        | Type    | Owning bounded context        | Store impact                                                                                    |
+| --------------------------- | ------- | ----------------------------- | ----------------------------------------------------------------------------------------------- |
+| Workspace scope selection   | command | Web shell / workspace session | `sessionStore` remains the command-side owner for local scope selection.                        |
+| Build run context           | query   | Web shell / workspace session | `sessionStore.buildRunContext` remains the read projection for run commands.                    |
+| Canvas interaction updates  | command | Canvas authoring session      | `canvasInteractionStore` owns selected nodes, inspector node, overlays, and layout persistence. |
+| Shell panel/layout updates  | command | Workbench shell               | `uiLayoutStore` owns panels, focus mode, tabs, and visual preferences only.                     |
+| Platform connection display | query   | Platform health               | Must not be silently owned by shell layout after F-05 closure.                                  |
+| Current run/plan display    | query   | Runtime evidence              | Must be named as execution read model or split into a dedicated run/evidence store.             |
+
+If a future implementation changes externally visible behavior, the owning rail
+must be updated before code changes.
+
+## Current Topology
+
+```mermaid
+flowchart LR
+  Session["sessionStore<br/>workspace scope + RunContext"]
+  Canvas["canvasInteractionStore<br/>Canvas interaction + layout"]
+  Execution["executionStore<br/>current plan/run + permissions"]
+  Layout["uiLayoutStore<br/>shell layout + tabs + visual prefs + status"]
+
+  Facade["useCanvasStoreFacade"]
+  Root["Root / TopAppBar"]
+  Views["Runs / Cost / Console"]
+  Api["API and workspace services"]
+
+  Session --> Facade
+  Canvas --> Facade
+  Execution --> Facade
+  Layout --> Facade
+  Layout --> Root
+  Execution --> Views
+  Session --> Api
+
+  Layout -. drift .-> Status["Platform health status"]
+  Execution -. decision needed .-> Auth["Permissions projection"]
+```
+
+## Target Topology
+
+```mermaid
+flowchart LR
+  Session["sessionStore<br/>workspace/session aggregate"]
+  Canvas["canvasInteractionStore<br/>Canvas interaction aggregate"]
+  Shell["uiLayoutStore<br/>shell layout only"]
+  Status["status/health projection<br/>platform connection state"]
+  Runtime["runtime evidence projection<br/>current run/plan"]
+  Auth["authorization projection<br/>effective UI capabilities"]
+
+  Facade["route facades<br/>compose stores explicitly"]
+  Views["presentation views"]
+  Health["platform-health capability"]
+
+  Session --> Facade
+  Canvas --> Facade
+  Shell --> Facade
+  Runtime --> Facade
+  Auth --> Facade
+  Status --> Views
+  Health --> Status
+```
+
+The target does not require every conceptual box to become a new Zustand file.
+The required result is stronger ownership: each store field has one declared
+bounded context, one reason to change, and tests that prevent reintroducing a
+mixed `appStore`-style surface.
+
+## Implementation Sequence
+
+### Phase 0 - Truth Reconciliation
+
+Status: completed by this documentation slice.
+
+1. `docs/planning/state/agent-lane-e.yaml` describes the current four-store
+   topology instead of a live `appStore`.
+2. Planning views are regenerated from Lane E.
+3. Active docs route readers to the current component map.
+4. Historical reviews remain historical; they are not rewritten as if produced
+   today.
+
+### Phase 1 - Status Ownership Cut
+
+1. Decide whether platform connection state is a `statusStore`, a platform
+   health capability projection, or direct query state from `Root`.
+2. Remove `connectionStatus` from `uiLayoutStore` unless an explicit read-model
+   rationale is documented.
+3. Add negative tests proving persisted layout storage does not persist or own
+   platform connectivity.
+4. Verify `TopAppBar`, `Console`, and `Root` still render degraded/offline
+   states from the authoritative platform-health surface.
+
+### Phase 2 - Execution And Authorization Ownership
+
+1. Classify `currentPlan` and `currentRun` as runtime evidence read models or
+   split them into a dedicated run/evidence store.
+2. Classify `userPermissions` as authorization projection, not general
+   execution state.
+3. Add tests for default permissions, permission updates, and negative cases
+   where Canvas actions are not enabled by stale defaults.
+4. Keep route facades explicit; do not recreate a monolithic facade under a new
+   name.
+
+### Phase 3 - Guardrails
+
+1. Keep the no-`appStore.ts` architecture guard.
+2. Add store-field ownership tests or static checks for fields known to drift:
+   `connectionStatus`, `userPermissions`, `currentPlan`, `currentRun`.
+3. Ensure query and mutation ownership remains under the F-06 query-key policy.
+4. Run the web test slice plus `pnpm verify:prepush` before claiming closure.
+
+## Required Tests
+
+| Area               | Required proof                                                                           |
+| ------------------ | ---------------------------------------------------------------------------------------- |
+| Store topology     | Architecture test still fails if `apps/web/src/app/stores/appStore.ts` returns.          |
+| Layout persistence | `uiLayoutStore` persists layout preferences only, not runtime health.                    |
+| Status projection  | Offline/degraded/connected UI renders from platform-health authority.                    |
+| Runtime evidence   | Current run/plan display remains correct after store ownership changes.                  |
+| Authorization      | UI actions do not become enabled from stale permission defaults.                         |
+| Canvas facade      | `useCanvasStoreFacade` composes stores explicitly and does not become a hidden monolith. |
+
+## Exit Criteria
+
+F-05 is closure-ready only when:
+
+1. Active planning docs no longer claim `appStore.ts` is live.
+2. Every active store field is classified by bounded context and command/query
+   role.
+3. Remaining mixed fields are either moved or explicitly documented as read
+   projections with tests.
+4. Generated planning views match Lane E.
+5. Web validation and repository pre-push validation have been run and reported.
+
+## Feature Mechanization Manifest
+
+```feature-mechanization
+version: 1
+featureId: F05-STORE-DOMAIN-OWNERSHIP
+mechanizationStatus: implemented
+noHumanDecisionsRemaining: true
+implementationPlan: docs/planning/proposals/mandatory/frontend-and-ux/f05-store-domain-ownership-closure-plan-20260503.md
+componentGuides:
+  - docs/architecture/components/web/web-store-domain-ownership-component.md
+userStories:
+  - docs/planning/state/lane-e-shell-baseline-target-guide.md
+governingSources:
+  - AGENTS.md
+  - docs/planning/status/governance-document-rule-inventory.md
+  - docs/guides/ai-work-protocol.md
+  - docs/architecture/command-query-rail-governance.md
+  - docs/architecture/fowler-opportunity-planning-governance.md
+  - docs/architecture/components/web/web-store-domain-ownership-component.md
+  - docs/planning/state/agent-lane-e.yaml
+allowedImplementationSurfaces:
+  - docs/architecture/components/web/index.md
+  - docs/architecture/components/web/web-store-domain-ownership-component.md
+  - docs/planning/proposals/mandatory/frontend-and-ux/f05-store-domain-ownership-closure-plan-20260503.md
+  - docs/planning/state/agent-lane-e.yaml
+  - docs/planning/state/agent-lane-e.md
+  - docs/planning/state/lane-e-shell-baseline-target-guide.md
+  - docs/planning/state/execution-workboard.md
+  - docs/planning/state/open-task-route.md
+  - docs/planning/status/**
+forbiddenImplementationSurfaces:
+  - apps/api/**
+  - apps/web/src/**
+  - packages/**
+  - specs/contracts/**
+commandQueryRails:
+  - name: ClassifyWebStoreDomainOwnership
+    type: query
+    dddOwner: Web store domain ownership map
+  - name: AcceptF05StoreOwnershipPlan
+    type: command
+    dddOwner: F-05 planning state
+domainObjects:
+  - name: WebStoreDomainOwnershipMap
+    type: component map
+    owner: Web / Architecture
+  - name: StoreOwnershipDrift
+    type: planning finding
+    owner: Lane E
+  - name: F05StoreOwnershipPlan
+    type: planning aggregate
+    owner: Lane E
+fowlerSignals:
+  - Documentation drift
+  - Boundary drift
+  - Shotgun surgery risk
+  - Hidden aggregate store risk
+architectureGuards:
+  - pnpm --filter @dvt/web test -- canvasStartupAndDraftRecovery.architecture.test.ts
+  - pnpm --filter @dvt/web test -- queryKeyPolicy.architecture.test.ts
+  - pnpm docs:feature-mechanization --feature F05-STORE-DOMAIN-OWNERSHIP
+cypressFlows:
+  - none: documentation and ownership-map slice only
+completionGate:
+  - pnpm docs:feature-mechanization --feature F05-STORE-DOMAIN-OWNERSHIP
+  - pnpm docs:feature-mechanization:implementation
+  - pnpm docs:governance:file-component-index:check
+  - pnpm docs:governance:coverage-report:check
+  - pnpm docs:governance:file-fingerprint-baseline:check
+  - pnpm verify:prepush
+redGreenCycles:
+  - id: f05-store-component-map
+    redTest: pnpm docs:feature-mechanization --feature F05-STORE-DOMAIN-OWNERSHIP
+    expectedFailure: F-05 store ownership has no current component guide or mechanized allowed surfaces.
+    patchSurfaces:
+      - docs/architecture/components/web/web-store-domain-ownership-component.md
+      - docs/architecture/components/web/index.md
+      - docs/planning/proposals/mandatory/frontend-and-ux/f05-store-domain-ownership-closure-plan-20260503.md
+    greenTest: pnpm docs:feature-mechanization --feature F05-STORE-DOMAIN-OWNERSHIP
+  - id: f05-lane-truth-reconciliation
+    redTest: pnpm docs:workboard:check
+    expectedFailure: Lane E still describes the retired appStore surface as current implementation truth.
+    patchSurfaces:
+      - docs/planning/state/agent-lane-e.yaml
+      - docs/planning/state/lane-e-shell-baseline-target-guide.md
+      - docs/planning/state/agent-lane-e.md
+      - docs/planning/state/execution-workboard.md
+      - docs/planning/state/open-task-route.md
+    greenTest: pnpm docs:workboard:check
+symbols:
+  - name: WebStoreDomainOwnershipMap
+    path: docs/architecture/components/web/web-store-domain-ownership-component.md
+    dddOwner: Web store domain ownership map
+    cqRails:
+      - ClassifyWebStoreDomainOwnership
+    fowlerSignals:
+      - Documentation drift
+      - Boundary drift
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: none
+    unitTests:
+      - canvasInteractionStore.test.ts
+      - uiLayoutStore.test.ts
+  - name: F05StoreOwnershipPlan
+    path: docs/planning/proposals/mandatory/frontend-and-ux/f05-store-domain-ownership-closure-plan-20260503.md
+    dddOwner: F-05 planning state
+    cqRails:
+      - AcceptF05StoreOwnershipPlan
+    fowlerSignals:
+      - Documentation drift
+      - Hidden aggregate store risk
+    architectureGuard: queryKeyPolicy.architecture.test.ts
+    cypressCoverage: none
+    unitTests:
+      - docs feature mechanization
+```

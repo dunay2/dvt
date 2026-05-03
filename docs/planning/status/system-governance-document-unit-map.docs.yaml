@@ -1,7 +1,7 @@
 version: 1
 generatedFrom: git ls-files docs
 unitManifest: docs/planning/status/system-governance-unit-index.units.yaml
-documentCount: 1456
+documentCount: 1459
 documents:
   - path: docs/CONTRIBUTING.md
     classification: governs unit
@@ -1061,6 +1061,10 @@ documents:
     documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
     subjectUnit: SYS-WEB
   - path: docs/architecture/components/web/web-sequence.md
+    classification: governs unit
+    documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
+    subjectUnit: SYS-WEB
+  - path: docs/architecture/components/web/web-store-domain-ownership-component.md
     classification: governs unit
     documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
     subjectUnit: SYS-WEB
@@ -2624,6 +2628,10 @@ documents:
     classification: proves evidence
     documentOwnerUnit: SYS-PLANSTORE-DOCS-RISK
     subjectUnit: SYS-PLANSTORE
+  - path: docs/evidence/ed-20260503-canvas-happy-path-draggable-proof.md
+    classification: proves evidence
+    documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
+    subjectUnit: SYS-DOCS-GOVERNANCE
   - path: docs/evidence/index.md
     classification: proves evidence
     documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -4619,6 +4627,11 @@ documents:
     subjectUnit: SYS-WEB
   - path: >-
       docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md
+    classification: governs unit
+    documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
+    subjectUnit: SYS-WEB
+  - path: >-
+      docs/planning/proposals/mandatory/frontend-and-ux/f05-store-domain-ownership-closure-plan-20260503.md
     classification: governs unit
     documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
     subjectUnit: SYS-WEB

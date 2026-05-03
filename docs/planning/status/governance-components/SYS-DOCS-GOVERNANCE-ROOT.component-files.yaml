@@ -7,7 +7,7 @@ governanceState: coverage-required
 dddOwner: INFRA
 cqRails: none - documentation governance
 childrenRequired: true
-fileCount: 1709
+fileCount: 1716
 driftFileCount: 0
 legacyFileCount: 0
 files:
@@ -2037,6 +2037,13 @@ files:
     isLegacy: false
   - path: docs/architecture/components/web/web-sequence.md
     fileId: F-E5FCE47B842D
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/architecture/components/web/web-store-domain-ownership-component.md
+    fileId: F-1F29E3A80D83
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -4592,6 +4599,20 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
+  - path: docs/evidence/assets/20260503-canvas-happy-path-draggable/after-drag.png
+    fileId: F-E6DF8F71A38C
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/evidence/assets/20260503-canvas-happy-path-draggable/before-drag.png
+    fileId: F-FE292DF0065B
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
   - path: docs/evidence/context/ED-20260311-execution-core-assessment.md
     fileId: F-C6CC45C84A54
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -5119,6 +5140,13 @@ files:
     isLegacy: false
   - path: docs/evidence/ed-20260430-we-hx-2-facade-use-cases.md
     fileId: F-7FFC2E9C5765
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/evidence/ed-20260503-canvas-happy-path-draggable-proof.md
+    fileId: F-C7194880ACC5
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -8772,6 +8800,14 @@ files:
     isDrift: false
     isLegacy: false
   - path: >-
+      docs/planning/proposals/mandatory/frontend-and-ux/f05-store-domain-ownership-closure-plan-20260503.md
+    fileId: F-636F2B1BDCCD
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: >-
       docs/planning/proposals/mandatory/frontend-and-ux/source-import-provider-extensibility-debt-plan-20260503.md
     fileId: F-7FB5ECA7FE1D
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -12200,6 +12236,20 @@ files:
     isLegacy: false
   - path: docs/risk-register/quality/R-20260430-WE-HX-2-FACADE-USE-CASES.yaml
     fileId: F-49BFFA6566BB
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/risk-register/quality/R-20260503-CANVAS-EMPTY-STATE-MESSAGE-AMBIGUITY.yaml
+    fileId: F-F19C76AE76F5
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/risk-register/quality/R-20260503-PROTECTED-RUNTIME-RAIL-CLOSURE.yaml
+    fileId: F-91F77F4BD54D
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required

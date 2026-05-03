@@ -2,7 +2,7 @@ version: 1
 generatedFrom: git ls-files
 unitManifest: docs/planning/status/system-governance-unit-index.units.yaml
 shardDirectory: docs/planning/status/governance-files
-fileCount: 4146
+fileCount: 4154
 shards:
   - id: SYS-ADAPTERS
     path: docs/planning/status/governance-files/SYS-ADAPTERS.files.yaml
@@ -22,8 +22,8 @@ shards:
     contentHash: 42800f035fcd96c0dd877fbf1657fcf41f075e9e59bd4d17e53f962b8e7169b3
   - id: SYS-DOCS-GOVERNANCE
     path: docs/planning/status/governance-files/SYS-DOCS-GOVERNANCE.files.yaml
-    fileCount: 1709
-    contentHash: 087ff013aa7a74f195f33ba8f9e3e2a0b90fdaeecdf6514b172f719aa5815895
+    fileCount: 1716
+    contentHash: e6270cdb357e9a506909b6106a300b14a84f2343f6e12ccea72615ae3d7b8366
   - id: SYS-OBSERVABILITY
     path: docs/planning/status/governance-files/SYS-OBSERVABILITY.files.yaml
     fileCount: 15
@@ -50,8 +50,8 @@ shards:
     contentHash: 28c604c9c6b9d737cc7cae1aade9baebaca3778e930e5ccf0fb1c367d011c57e
   - id: SYS-WEB
     path: docs/planning/status/governance-files/SYS-WEB.files.yaml
-    fileCount: 798
-    contentHash: 44492fa247308e9b637cee75735008efe8b158594f4f1bfd5b2b2a6603238b29
+    fileCount: 799
+    contentHash: ac8648e2aebdd503b303dd3c498e5964202afd6984575f06c9c9d55ec0f5cd2a
   - id: SYS-WORKERS
     path: docs/planning/status/governance-files/SYS-WORKERS.files.yaml
     fileCount: 103
