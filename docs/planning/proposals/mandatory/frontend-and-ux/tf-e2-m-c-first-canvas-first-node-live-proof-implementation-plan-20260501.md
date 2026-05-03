@@ -339,6 +339,8 @@ allowedImplementationSurfaces:
   - apps/web/src/app/views/canvas/canvasShellPropsBuilder.tsx
   - apps/web/src/app/views/canvas/canvasCreateCanvasDocumentCommand.ts
   - apps/web/src/app/views/canvas/canvasCreateCanvasDocumentCommand.test.ts
+  - apps/web/src/app/views/canvas/canvasDraftSessionMachine.ts
+  - apps/web/src/app/views/canvas/canvasDraftSession.test.ts
   - apps/web/src/app/views/canvas/useCanvasController.ts
   - apps/web/src/app/views/canvas/useCanvasController.core.test.tsx
   - apps/web/src/app/views/canvas/useCanvasController.persistence.test.tsx
@@ -361,6 +363,7 @@ allowedImplementationSurfaces:
   - apps/web/src/app/views/canvas/canvasStartupAndDraftRecovery.architecture.test.ts
   - apps/web/cypress/support/canvasFirstAuthoring.ts
   - apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts
+  - apps/web/cypress/e2e/canvas/canvas-happy-path-draggable.cy.ts
   - apps/web/package.json
   - docs/architecture/components/web/graph/canvas-first-authoring-live-proof-component.md
   - docs/architecture/components/web/graph/canvas-layout-persistence-component.md
@@ -369,6 +372,11 @@ allowedImplementationSurfaces:
   - docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-user-stories.md
   - docs/architecture/components/web/graph/index.md
   - docs/guides/canvas-authoring-user-manual-20260501.md
+  - docs/evidence/assets/20260503-canvas-happy-path-draggable/**
+  - docs/evidence/ed-20260503-canvas-happy-path-draggable-proof.md
+  - docs/evidence/index.md
+  - docs/risk-register/quality/R-20260503-CANVAS-EMPTY-STATE-MESSAGE-AMBIGUITY.yaml
+  - docs/risk-register/quality/index.md
   - docs/.manifest.json
   - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-m-b-canvas-draft-denial-posture-implementation-plan-20260501.md
   - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-m-c-first-canvas-first-node-live-proof-implementation-plan-20260501.md

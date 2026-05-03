@@ -99,7 +99,12 @@ function applySaveSuccess(
   session: CanvasDraftSession,
   record: WorkspaceGraphDraftRecord
 ): CanvasDraftSession {
-  return transitionWithRecord(session, 'editing', record);
+  return transitionWithRecord(
+    session,
+    'editing',
+    record,
+    canvasDraftSessionWorkingSet.buildFromDraft(record.draft)
+  );
 }
 
 function applyConflict(

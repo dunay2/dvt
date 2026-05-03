@@ -1,9 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { WorkspaceGraphDraftRecord } from '../../ports/workspace';
-import {
-  canvasDraftSession,
-} from './canvasDraftSession';
+import { canvasDraftSession } from './canvasDraftSession';
 
 function buildRemoteDraftRecord(
   overrides?: Partial<WorkspaceGraphDraftRecord>
@@ -250,6 +248,8 @@ describe('canvasDraftSession', () => {
     expect(session.syncState).toBe('editing');
     expect(session.draftRevision).toBe('rev-saved');
     expect(session.baseline.record?.revision).toBe('rev-saved');
+    expect(session.workingSet.visibleNodeIds).toEqual(['node_1', 'node_2']);
+    expect(session.workingSet.visibleEdges).toEqual([{ sourceId: 'node_1', targetId: 'node_2' }]);
   });
 
   it('transitions to missing_remote when the persisted draft disappears', () => {
@@ -292,5 +292,4 @@ describe('canvasDraftSession', () => {
       }),
     });
   });
-
 });

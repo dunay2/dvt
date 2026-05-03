@@ -1,0 +1,31 @@
+---
+id: R-20260503-PROTECTED-RUNTIME-RAIL-CLOSURE
+title: Protected runtime rail closure remains pending as managed debt
+status: Open
+date: 2026-05-03
+owners:
+  - dvt-api
+  - architecture
+severity: Medium
+probability: Medium
+---
+summary: >
+  The protected runtime HTTP rail closure is not yet tracked as an executable lane task with a
+  complete command/query closure objective across start, recover, preview, signal, and cancel route
+  boundaries. The scope is intentionally deferred and registered as explicit debt to avoid unplanned
+  implementation drift.
+
+mitigation:
+  - Register a dedicated lane task before any implementation change in protected runtime route
+    composition.
+  - Keep route-level behavior aligned with existing canonical command/query rails; do not introduce
+    parallel route semantics while the closure task is pending.
+  - Require negative authorization and tenant-scope coverage in the future closure task definition.
+
+monitoring:
+  cadence: per PR touching apps/api protected runtime entrypoints or modules
+  signals:
+    - 'docs/planning/state/open-task-route.md includes an explicit task for protected runtime rail
+      closure'
+    - 'apps/api/test/entrypoints/http/*Route*.test.ts coverage includes negative auth and
+      tenant-scope outcomes'
