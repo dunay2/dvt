@@ -1,0 +1,90 @@
+version: 1
+componentUnit: SYS-API-REPO-CONFIG
+rootUnit: SYS-DVT
+domainUnit: SYS-DVT
+status: coverage-required
+governanceState: coverage-required
+dddOwner: INFRA
+cqRails: none - API app configuration
+childrenRequired: false
+fileCount: 11
+driftFileCount: 0
+legacyFileCount: 0
+files:
+  - path: apps/api/.dependency-cruiser.cjs
+    fileId: F-CD95C55B5B9C
+    owningUnit: SYS-API-REPO-CONFIG
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/.env.example
+    fileId: F-9117FFF68FB4
+    owningUnit: SYS-API-REPO-CONFIG
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/.gitignore
+    fileId: F-90D56B491A2A
+    owningUnit: SYS-API-REPO-CONFIG
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/Dockerfile
+    fileId: F-EEDA1AE5AAF1
+    owningUnit: SYS-API-REPO-CONFIG
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/nixpacks.toml
+    fileId: F-5E334BA6055A
+    owningUnit: SYS-API-REPO-CONFIG
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/package.json
+    fileId: F-A4D2F934D368
+    owningUnit: SYS-API-REPO-CONFIG
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/Procfile
+    fileId: F-070EA4CF1E61
+    owningUnit: SYS-API-REPO-CONFIG
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/README.md
+    fileId: F-80AA08DF329D
+    owningUnit: SYS-API-REPO-CONFIG
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/tsconfig.json
+    fileId: F-B387CB718030
+    owningUnit: SYS-API-REPO-CONFIG
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/vitest.config.ts
+    fileId: F-776F5C633795
+    owningUnit: SYS-API-REPO-CONFIG
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/vitest.integration.config.ts
+    fileId: F-65DE7D236443
+    owningUnit: SYS-API-REPO-CONFIG
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false

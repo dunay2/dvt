@@ -1,0 +1,125 @@
+version: 1
+componentUnit: SYS-PLANSTORE-POSTGRES
+rootUnit: SYS-DVT
+domainUnit: SYS-PLANSTORE
+status: drift
+governanceState: drift
+dddOwner: ADP
+cqRails: implements PS-Cxx and PS-Qxx
+childrenRequired: true
+fileCount: 16
+driftFileCount: 16
+legacyFileCount: 0
+files:
+  - path: packages/@dvt/adapter-postgres/src/PostgresPlanStore.admission-repository.ts
+    fileId: F-1D1A7C253060
+    owningUnit: SYS-PLANSTORE-POSTGRES
+    unitStatus: drift
+    governanceState: drift
+    isDrift: true
+    isLegacy: false
+  - path: packages/@dvt/adapter-postgres/src/PostgresPlanStore.executability-repository.ts
+    fileId: F-A829FE9721E5
+    owningUnit: SYS-PLANSTORE-POSTGRES
+    unitStatus: drift
+    governanceState: drift
+    isDrift: true
+    isLegacy: false
+  - path: packages/@dvt/adapter-postgres/src/PostgresPlanStore.executable-blob-repository.ts
+    fileId: F-8303893DF44C
+    owningUnit: SYS-PLANSTORE-POSTGRES
+    unitStatus: drift
+    governanceState: drift
+    isDrift: true
+    isLegacy: false
+  - path: packages/@dvt/adapter-postgres/src/PostgresPlanStore.mappers.ts
+    fileId: F-20B699BF9793
+    owningUnit: SYS-PLANSTORE-POSTGRES
+    unitStatus: drift
+    governanceState: drift
+    isDrift: true
+    isLegacy: false
+  - path: packages/@dvt/adapter-postgres/src/PostgresPlanStore.plan-record-repository.ts
+    fileId: F-9A56B77D2D73
+    owningUnit: SYS-PLANSTORE-POSTGRES
+    unitStatus: drift
+    governanceState: drift
+    isDrift: true
+    isLegacy: false
+  - path: packages/@dvt/adapter-postgres/src/PostgresPlanStore.schema-manager.ts
+    fileId: F-C11B0636836D
+    owningUnit: SYS-PLANSTORE-POSTGRES
+    unitStatus: drift
+    governanceState: drift
+    isDrift: true
+    isLegacy: false
+  - path: packages/@dvt/adapter-postgres/src/PostgresPlanStore.sql.ts
+    fileId: F-702D83ACD755
+    owningUnit: SYS-PLANSTORE-POSTGRES
+    unitStatus: drift
+    governanceState: drift
+    isDrift: true
+    isLegacy: false
+  - path: packages/@dvt/adapter-postgres/src/PostgresPlanStore.ts
+    fileId: F-7C7D17C1CDD7
+    owningUnit: SYS-PLANSTORE-POSTGRES
+    unitStatus: drift
+    governanceState: drift
+    isDrift: true
+    isLegacy: false
+  - path: packages/@dvt/adapter-postgres/src/PostgresPlanStore.tx.ts
+    fileId: F-73FF4812E33D
+    owningUnit: SYS-PLANSTORE-POSTGRES
+    unitStatus: drift
+    governanceState: drift
+    isDrift: true
+    isLegacy: false
+  - path: packages/@dvt/adapter-postgres/src/PostgresPlanStoreComposer.ts
+    fileId: F-856C25C10E5A
+    owningUnit: SYS-PLANSTORE-POSTGRES
+    unitStatus: drift
+    governanceState: drift
+    isDrift: true
+    isLegacy: false
+  - path: packages/@dvt/adapter-postgres/test/PostgresPlanStore.integration.helpers.ts
+    fileId: F-0244D9284E0B
+    owningUnit: SYS-PLANSTORE-POSTGRES
+    unitStatus: drift
+    governanceState: drift
+    isDrift: true
+    isLegacy: false
+  - path: packages/@dvt/adapter-postgres/test/PostgresPlanStore.invariants.unit.test.ts
+    fileId: F-F1029D58119A
+    owningUnit: SYS-PLANSTORE-POSTGRES
+    unitStatus: drift
+    governanceState: drift
+    isDrift: true
+    isLegacy: false
+  - path: packages/@dvt/adapter-postgres/test/PostgresPlanStore.lifecycle.integration.test.ts
+    fileId: F-ED5BB0B7CC9F
+    owningUnit: SYS-PLANSTORE-POSTGRES
+    unitStatus: drift
+    governanceState: drift
+    isDrift: true
+    isLegacy: false
+  - path: packages/@dvt/adapter-postgres/test/PostgresPlanStore.records-core.integration.test.ts
+    fileId: F-6AA5B24C4C8C
+    owningUnit: SYS-PLANSTORE-POSTGRES
+    unitStatus: drift
+    governanceState: drift
+    isDrift: true
+    isLegacy: false
+  - path: packages/@dvt/adapter-postgres/test/PostgresPlanStore.records-guards.integration.test.ts
+    fileId: F-C22CDA4D729C
+    owningUnit: SYS-PLANSTORE-POSTGRES
+    unitStatus: drift
+    governanceState: drift
+    isDrift: true
+    isLegacy: false
+  - path: packages/@dvt/adapter-postgres/test/PostgresPlanStore.sql.test.ts
+    fileId: F-41BDEA1761B1
+    owningUnit: SYS-PLANSTORE-POSTGRES
+    unitStatus: drift
+    governanceState: drift
+    isDrift: true
+    isLegacy: false

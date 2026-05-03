@@ -1,0 +1,468 @@
+version: 1
+componentUnit: SYS-TRACEABILITY-ROOT
+rootUnit: SYS-DVT
+domainUnit: SYS-TRACEABILITY
+status: coverage-required
+governanceState: coverage-required
+dddOwner: DS
+cqRails: traceability commands and lineage queries
+childrenRequired: true
+fileCount: 65
+driftFileCount: 0
+legacyFileCount: 0
+files:
+  - path: packages/@dvt/traceability-service/docs/adr/ADR-0000.md
+    fileId: F-74133B0A2D00
+    owningUnit: SYS-TRACEABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/traceability-service/docs/ci/github-actions.yml
+    fileId: F-5766F09ED2F6
+    owningUnit: SYS-TRACEABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/traceability-service/docs/Examples.md
+    fileId: F-C33085DF030B
+    owningUnit: SYS-TRACEABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/traceability-service/docs/README.md
+    fileId: F-669413953CEC
+    owningUnit: SYS-TRACEABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/traceability-service/docs/Traceability-Service-Design.md
+    fileId: F-5C7A0CF6A017
+    owningUnit: SYS-TRACEABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/traceability-service/package.json
+    fileId: F-17237A02FEB5
+    owningUnit: SYS-TRACEABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/traceability-service/pnpm-workspace.yaml
+    fileId: F-3949ABEED0B1
+    owningUnit: SYS-TRACEABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/traceability-service/README.md
+    fileId: F-4DEEC440215C
+    owningUnit: SYS-TRACEABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/traceability-service/src/adapters/adr-catalog-filesystem.ts
+    fileId: F-7755DD9936B2
+    owningUnit: SYS-TRACEABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/traceability-service/src/adapters/header-scanner-glob.ts
+    fileId: F-CF7656EB9E12
+    owningUnit: SYS-TRACEABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/traceability-service/src/cli.ts
+    fileId: F-0F6F099A304E
+    owningUnit: SYS-TRACEABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/traceability-service/src/contracts.ts
+    fileId: F-1B48F43429F7
+    owningUnit: SYS-TRACEABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/traceability-service/src/core/header-parser.ts
+    fileId: F-25ADC3FE618B
+    owningUnit: SYS-TRACEABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/traceability-service/src/core/issue-baseline.ts
+    fileId: F-CBA89F7A46CE
+    owningUnit: SYS-TRACEABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/traceability-service/src/core/manifest.ts
+    fileId: F-6B0E5735DA94
+    owningUnit: SYS-TRACEABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/traceability-service/src/core/validator.ts
+    fileId: F-C35A8E2B969B
+    owningUnit: SYS-TRACEABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/traceability-service/src/index.ts
+    fileId: F-B44764A7E8D2
+    owningUnit: SYS-TRACEABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/traceability-service/src/lineage/cache/InMemoryCompiledCodeCache.ts
+    fileId: F-671718A5591F
+    owningUnit: SYS-TRACEABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/traceability-service/src/lineage/compiledCodeRef.ts
+    fileId: F-4E3CEEF35970
+    owningUnit: SYS-TRACEABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/traceability-service/src/lineage/contracts.ts
+    fileId: F-CDB1156CE04B
+    owningUnit: SYS-TRACEABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/traceability-service/src/lineage/errorContract.ts
+    fileId: F-A7B4BE0A55B7
+    owningUnit: SYS-TRACEABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/traceability-service/src/lineage/errorPersistenceSupport.ts
+    fileId: F-6CEFA546710B
+    owningUnit: SYS-TRACEABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/traceability-service/src/lineage/errors.ts
+    fileId: F-CD8C1FE2BE9B
+    owningUnit: SYS-TRACEABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/traceability-service/src/lineage/errorSupport.ts
+    fileId: F-ADE2CE39AC2D
+    owningUnit: SYS-TRACEABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/traceability-service/src/lineage/facets/SqlJobFacetBuilder.ts
+    fileId: F-6A2CBDD96499
+    owningUnit: SYS-TRACEABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/traceability-service/src/lineage/HttpOpenLineageSink.ts
+    fileId: F-8B22716CAFBD
+    owningUnit: SYS-TRACEABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/traceability-service/src/lineage/index.ts
+    fileId: F-04B2F7B35E49
+    owningUnit: SYS-TRACEABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/traceability-service/src/lineage/LineageOutboxObserver.ts
+    fileId: F-FE4EDA7D3D25
+    owningUnit: SYS-TRACEABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/traceability-service/src/lineage/LineageWorkerRuntime.ts
+    fileId: F-55E92375692A
+    owningUnit: SYS-TRACEABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/traceability-service/src/lineage/logMessages.ts
+    fileId: F-C9AF595D79E1
+    owningUnit: SYS-TRACEABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/traceability-service/src/lineage/mapper/mapCompiledCodeResolutionWarning.ts
+    fileId: F-61EF7E7C48AD
+    owningUnit: SYS-TRACEABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/traceability-service/src/lineage/mapper/StepStartedLineageMapper.ts
+    fileId: F-78AA09AA7380
+    owningUnit: SYS-TRACEABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/traceability-service/src/lineage/openlineageSchema.ts
+    fileId: F-A3A7D98D08BB
+    owningUnit: SYS-TRACEABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/traceability-service/src/lineage/readers/CompositeCompiledCodeReader.ts
+    fileId: F-5D81D011CCE4
+    owningUnit: SYS-TRACEABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/traceability-service/src/lineage/readers/FileUriCompiledCodeReader.ts
+    fileId: F-5BB9F0B8CC72
+    owningUnit: SYS-TRACEABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/traceability-service/src/lineage/readers/InMemoryCompiledCodeReader.ts
+    fileId: F-2F4F013FA5C9
+    owningUnit: SYS-TRACEABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/traceability-service/src/lineage/resolver/CachedRetryCompiledCodeResolver.ts
+    fileId: F-B888E8EB3C86
+    owningUnit: SYS-TRACEABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/traceability-service/src/lineage/runtime/lineageWorkerDeadLetterSupport.ts
+    fileId: F-918FDF52668A
+    owningUnit: SYS-TRACEABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/traceability-service/src/lineage/runtime/lineageWorkerRecordProcessor.ts
+    fileId: F-D252430B93D0
+    owningUnit: SYS-TRACEABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/traceability-service/src/lineage/runtime/lineageWorkerRuntimeConfig.ts
+    fileId: F-52A72526A729
+    owningUnit: SYS-TRACEABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/traceability-service/src/lineage/types.ts
+    fileId: F-8D5B5D3CE9BE
+    owningUnit: SYS-TRACEABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/traceability-service/src/lineage/warningContract.ts
+    fileId: F-D65DF88DE1CB
+    owningUnit: SYS-TRACEABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/traceability-service/src/service.ts
+    fileId: F-AA479B8AF992
+    owningUnit: SYS-TRACEABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/traceability-service/src/types.ts
+    fileId: F-5D75DBE73856
+    owningUnit: SYS-TRACEABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/traceability-service/test/fixtures/lineage/mapper-fail-open.json
+    fileId: F-B2593435A1E2
+    owningUnit: SYS-TRACEABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/traceability-service/test/fixtures/lineage/mapper-no-ref.json
+    fileId: F-C010C86C2003
+    owningUnit: SYS-TRACEABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/traceability-service/test/fixtures/lineage/mapper-success.json
+    fileId: F-CBF2BD8FF1E1
+    owningUnit: SYS-TRACEABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/traceability-service/test/lineage/CachedRetryCompiledCodeResolver.test.ts
+    fileId: F-315D707BB5EB
+    owningUnit: SYS-TRACEABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/traceability-service/test/lineage/compiledCodeRef.test.ts
+    fileId: F-5F328FB4E1C8
+    owningUnit: SYS-TRACEABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/traceability-service/test/lineage/errorSupport.test.ts
+    fileId: F-0C1C714EB816
+    owningUnit: SYS-TRACEABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/traceability-service/test/lineage/facetSchema.validation.test.ts
+    fileId: F-EB0A8823C4D1
+    owningUnit: SYS-TRACEABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/traceability-service/test/lineage/LineageOutboxObserver.test.ts
+    fileId: F-EE6A9603B879
+    owningUnit: SYS-TRACEABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/traceability-service/test/lineage/LineageWorkerRuntime.configuration.test.ts
+    fileId: F-0EA743E053FC
+    owningUnit: SYS-TRACEABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/traceability-service/test/lineage/LineageWorkerRuntime.lifecycle.test.ts
+    fileId: F-62EB7392C4F6
+    owningUnit: SYS-TRACEABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/traceability-service/test/lineage/LineageWorkerRuntime.runOnce.test.ts
+    fileId: F-1B4352EBD5A8
+    owningUnit: SYS-TRACEABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/traceability-service/test/lineage/StepStartedLineageMapper.golden.test.ts
+    fileId: F-431B4F4528AA
+    owningUnit: SYS-TRACEABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/traceability-service/test/lineage/StepStartedLineageMapper.test.ts
+    fileId: F-416C6B92506D
+    owningUnit: SYS-TRACEABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/traceability-service/test/lineage/support/lineageRuntimeTestSupport.ts
+    fileId: F-5F587CD786FB
+    owningUnit: SYS-TRACEABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/traceability-service/test/TraceabilityService.test.ts
+    fileId: F-6FD1C2BF360D
+    owningUnit: SYS-TRACEABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/traceability-service/traceability.config.example.json
+    fileId: F-FA337368EA19
+    owningUnit: SYS-TRACEABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/traceability-service/tsconfig.json
+    fileId: F-77BD84D9588F
+    owningUnit: SYS-TRACEABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/traceability-service/vitest.config.ts
+    fileId: F-81BC343B1DD8
+    owningUnit: SYS-TRACEABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: traceability.config.json
+    fileId: F-F0F7B4821E6F
+    owningUnit: SYS-TRACEABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: traceability.issue-baseline.json
+    fileId: F-A41D60FFA468
+    owningUnit: SYS-TRACEABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: traceability.manifest.json
+    fileId: F-93999BE64A07
+    owningUnit: SYS-TRACEABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false

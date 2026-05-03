@@ -1,0 +1,363 @@
+version: 1
+componentUnit: SYS-API-HTTP-ENTRYPOINT-TESTS
+rootUnit: SYS-DVT
+domainUnit: SYS-DVT
+status: coverage-required
+governanceState: coverage-required
+dddOwner: INFRA
+cqRails: API HTTP command/query route validation
+childrenRequired: false
+fileCount: 50
+driftFileCount: 0
+legacyFileCount: 0
+files:
+  - path: apps/api/test/entrypoints/http/adminRoutes.test.ts
+    fileId: F-338A9608E6FF
+    owningUnit: SYS-API-HTTP-ENTRYPOINT-TESTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/test/entrypoints/http/cancelRunRoute.test.ts
+    fileId: F-B2204D255D1B
+    owningUnit: SYS-API-HTTP-ENTRYPOINT-TESTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/test/entrypoints/http/cancelRunRouteParser.test.ts
+    fileId: F-2DCF21639A85
+    owningUnit: SYS-API-HTTP-ENTRYPOINT-TESTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/test/entrypoints/http/capabilitiesRoutes.test.ts
+    fileId: F-3AD37AE0460F
+    owningUnit: SYS-API-HTTP-ENTRYPOINT-TESTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/test/entrypoints/http/compilePlanRoute.test.ts
+    fileId: F-3E9A527C1A12
+    owningUnit: SYS-API-HTTP-ENTRYPOINT-TESTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/test/entrypoints/http/executePlanRouteFacade.test.ts
+    fileId: F-B4C3401AC808
+    owningUnit: SYS-API-HTTP-ENTRYPOINT-TESTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/test/entrypoints/http/getRunEventsRoute.test.ts
+    fileId: F-1553F30827AD
+    owningUnit: SYS-API-HTTP-ENTRYPOINT-TESTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/test/entrypoints/http/getRunRoute.test.ts
+    fileId: F-C583931BC2C1
+    owningUnit: SYS-API-HTTP-ENTRYPOINT-TESTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/test/entrypoints/http/getRunRouteParser.test.ts
+    fileId: F-9B9411C3E6B2
+    owningUnit: SYS-API-HTTP-ENTRYPOINT-TESTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/test/entrypoints/http/httpArchitectureAst.support.ts
+    fileId: F-4E9E27DC42BF
+    owningUnit: SYS-API-HTTP-ENTRYPOINT-TESTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/test/entrypoints/http/httpErrorTranslation.respondAndStatic.test.ts
+    fileId: F-0C52C8FED4D0
+    owningUnit: SYS-API-HTTP-ENTRYPOINT-TESTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/test/entrypoints/http/httpErrorTranslation.runtimeDomain.test.ts
+    fileId: F-20DB3B2BD327
+    owningUnit: SYS-API-HTTP-ENTRYPOINT-TESTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/test/entrypoints/http/httpErrorTranslation.startRunEngineError.test.ts
+    fileId: F-00E6C5600558
+    owningUnit: SYS-API-HTTP-ENTRYPOINT-TESTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/test/entrypoints/http/httpErrorTranslation.startRunFacade.test.ts
+    fileId: F-087540062F13
+    owningUnit: SYS-API-HTTP-ENTRYPOINT-TESTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/test/entrypoints/http/httpErrorTranslation.test.support.ts
+    fileId: F-332AEB2B5BE2
+    owningUnit: SYS-API-HTTP-ENTRYPOINT-TESTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/test/entrypoints/http/httpRuntimeErrorTranslation.architecture.test.ts
+    fileId: F-8877D27CD02B
+    owningUnit: SYS-API-HTTP-ENTRYPOINT-TESTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/test/entrypoints/http/importPlanRoute.test.ts
+    fileId: F-DB2F59A8D410
+    owningUnit: SYS-API-HTTP-ENTRYPOINT-TESTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/test/entrypoints/http/listRunsRoute.test.ts
+    fileId: F-E1E34C1D7A37
+    owningUnit: SYS-API-HTTP-ENTRYPOINT-TESTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/test/entrypoints/http/listRunsRouteParser.test.ts
+    fileId: F-A2928DF69806
+    owningUnit: SYS-API-HTTP-ENTRYPOINT-TESTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/test/entrypoints/http/planRouteFixtures.ts
+    fileId: F-1B109327F670
+    owningUnit: SYS-API-HTTP-ENTRYPOINT-TESTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/test/entrypoints/http/planRouteHttpTestSupport.ts
+    fileId: F-36D8EFA837A6
+    owningUnit: SYS-API-HTTP-ENTRYPOINT-TESTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/test/entrypoints/http/planRouteParserHelpers.test.ts
+    fileId: F-4A3DE8CE6226
+    owningUnit: SYS-API-HTTP-ENTRYPOINT-TESTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/test/entrypoints/http/planRouteRequestResolver.test.ts
+    fileId: F-B07F47EECB3F
+    owningUnit: SYS-API-HTTP-ENTRYPOINT-TESTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/test/entrypoints/http/planRouteResponseTranslation.architecture.test.ts
+    fileId: F-15D8C4979C9D
+    owningUnit: SYS-API-HTTP-ENTRYPOINT-TESTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/test/entrypoints/http/planRouteResponseTranslation.test.ts
+    fileId: F-AA9A9B3B2339
+    owningUnit: SYS-API-HTTP-ENTRYPOINT-TESTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/test/entrypoints/http/planRouteScope.test.ts
+    fileId: F-0164AAC36B82
+    owningUnit: SYS-API-HTTP-ENTRYPOINT-TESTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/test/entrypoints/http/planRouteSelectionParser.test.ts
+    fileId: F-D377C74A8460
+    owningUnit: SYS-API-HTTP-ENTRYPOINT-TESTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/test/entrypoints/http/previewPlanRoute.auth.test.ts
+    fileId: F-B327D2BB7758
+    owningUnit: SYS-API-HTTP-ENTRYPOINT-TESTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/test/entrypoints/http/previewPlanRoute.inputPolicy.test.ts
+    fileId: F-A226FEDDE1B6
+    owningUnit: SYS-API-HTTP-ENTRYPOINT-TESTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/test/entrypoints/http/previewPlanRoute.outcomes.test.ts
+    fileId: F-B51B508684DB
+    owningUnit: SYS-API-HTTP-ENTRYPOINT-TESTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/test/entrypoints/http/previewPlanRouteTestSupport.ts
+    fileId: F-BA2A79940A53
+    owningUnit: SYS-API-HTTP-ENTRYPOINT-TESTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/test/entrypoints/http/recoverRunRoute.test.ts
+    fileId: F-1F8569CAF08C
+    owningUnit: SYS-API-HTTP-ENTRYPOINT-TESTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/test/entrypoints/http/recoverRunRouteParser.test.ts
+    fileId: F-2CE2E48F3F94
+    owningUnit: SYS-API-HTTP-ENTRYPOINT-TESTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts
+    fileId: F-85EC016D791E
+    owningUnit: SYS-API-HTTP-ENTRYPOINT-TESTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/test/entrypoints/http/runCommandFieldParsers.test.ts
+    fileId: F-813F55098990
+    owningUnit: SYS-API-HTTP-ENTRYPOINT-TESTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/test/entrypoints/http/runCommandRouteExecutor.test.ts
+    fileId: F-3C61612A3921
+    owningUnit: SYS-API-HTTP-ENTRYPOINT-TESTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/test/entrypoints/http/signalRunRoute.test.ts
+    fileId: F-A48524BC5692
+    owningUnit: SYS-API-HTTP-ENTRYPOINT-TESTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/test/entrypoints/http/signalRunRouteParser.test.ts
+    fileId: F-DB6AAE83984D
+    owningUnit: SYS-API-HTTP-ENTRYPOINT-TESTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/test/entrypoints/http/startRunControlBoundary.architecture.test.ts
+    fileId: F-9C10C7A1CF71
+    owningUnit: SYS-API-HTTP-ENTRYPOINT-TESTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/test/entrypoints/http/startRunHttpEntrypointComponent.architecture.test.ts
+    fileId: F-2559D2E34A00
+    owningUnit: SYS-API-HTTP-ENTRYPOINT-TESTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/test/entrypoints/http/startRunIdentity.architecture.test.ts
+    fileId: F-A5C889EC0254
+    owningUnit: SYS-API-HTTP-ENTRYPOINT-TESTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/test/entrypoints/http/startRunRoute.authAndSuccess.test.ts
+    fileId: F-A9A2813F477F
+    owningUnit: SYS-API-HTTP-ENTRYPOINT-TESTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/test/entrypoints/http/startRunRoute.engineErrorTranslation.test.ts
+    fileId: F-DE53D7B150BC
+    owningUnit: SYS-API-HTTP-ENTRYPOINT-TESTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/test/entrypoints/http/startRunRoute.facadeResultTranslation.test.ts
+    fileId: F-1749B7BA3BDD
+    owningUnit: SYS-API-HTTP-ENTRYPOINT-TESTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/test/entrypoints/http/startRunRoute.planSourcePolicy.test.ts
+    fileId: F-F832B429B80C
+    owningUnit: SYS-API-HTTP-ENTRYPOINT-TESTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/test/entrypoints/http/startRunRoute.test.support.ts
+    fileId: F-7FD1096469EB
+    owningUnit: SYS-API-HTTP-ENTRYPOINT-TESTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/test/entrypoints/http/startRunRoute.validation.test.ts
+    fileId: F-4A9CD00F6E9F
+    owningUnit: SYS-API-HTTP-ENTRYPOINT-TESTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/test/entrypoints/http/startRunRouteCommandBuilder.test.ts
+    fileId: F-A87CF187ED94
+    owningUnit: SYS-API-HTTP-ENTRYPOINT-TESTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/test/entrypoints/http/startRunRouteTargetAdapterParser.test.ts
+    fileId: F-A9E2E80F25B2
+    owningUnit: SYS-API-HTTP-ENTRYPOINT-TESTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/test/entrypoints/http/workspaceGraphDraftRoutes.test.ts
+    fileId: F-3DEF3AF424CB
+    owningUnit: SYS-API-HTTP-ENTRYPOINT-TESTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false

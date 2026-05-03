@@ -1,0 +1,90 @@
+version: 1
+componentUnit: SYS-PLANSTORE-TEMPORAL-COMPOSITION
+rootUnit: SYS-DVT
+domainUnit: SYS-PLANSTORE
+status: review
+governanceState: review
+dddOwner: ADP
+cqRails: PS-Q08
+childrenRequired: true
+fileCount: 11
+driftFileCount: 0
+legacyFileCount: 0
+files:
+  - path: apps/temporal-worker/src/runtime/runtimeTypes.ts
+    fileId: F-EFD22BB3AB35
+    owningUnit: SYS-PLANSTORE-TEMPORAL-COMPOSITION
+    unitStatus: review
+    governanceState: review
+    isDrift: false
+    isLegacy: false
+  - path: apps/temporal-worker/src/runtime/temporalWorkerRuntimeHandle.ts
+    fileId: F-7FC6AC4ABFA8
+    owningUnit: SYS-PLANSTORE-TEMPORAL-COMPOSITION
+    unitStatus: review
+    governanceState: review
+    isDrift: false
+    isLegacy: false
+  - path: apps/temporal-worker/src/runtime/temporalWorkerRuntimeResources.ts
+    fileId: F-B64C19971E6B
+    owningUnit: SYS-PLANSTORE-TEMPORAL-COMPOSITION
+    unitStatus: review
+    governanceState: review
+    isDrift: false
+    isLegacy: false
+  - path: apps/temporal-worker/src/runtime/temporalWorkerStores.ts
+    fileId: F-FD9E55191B1C
+    owningUnit: SYS-PLANSTORE-TEMPORAL-COMPOSITION
+    unitStatus: review
+    governanceState: review
+    isDrift: false
+    isLegacy: false
+  - path: apps/temporal-worker/test/runtime/createTemporalWorkerRuntime.srp.architecture.test.ts
+    fileId: F-2BA103E368B5
+    owningUnit: SYS-PLANSTORE-TEMPORAL-COMPOSITION
+    unitStatus: review
+    governanceState: review
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/adapter-temporal/src/activities/temporalPlanArtifactReader.ts
+    fileId: F-6EF8ECA412B2
+    owningUnit: SYS-PLANSTORE-TEMPORAL-COMPOSITION
+    unitStatus: review
+    governanceState: review
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/adapter-temporal/src/temporalPlanRefCapacitySlaPolicy.ts
+    fileId: F-86690133B407
+    owningUnit: SYS-PLANSTORE-TEMPORAL-COMPOSITION
+    unitStatus: review
+    governanceState: review
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/adapter-temporal/src/workflows/workflowArtifactHelpers.ts
+    fileId: F-B4F823AD712E
+    owningUnit: SYS-PLANSTORE-TEMPORAL-COMPOSITION
+    unitStatus: review
+    governanceState: review
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/adapter-temporal/test/temporalPlanArtifactReader.test.ts
+    fileId: F-7DF2E77D03D3
+    owningUnit: SYS-PLANSTORE-TEMPORAL-COMPOSITION
+    unitStatus: review
+    governanceState: review
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/adapter-temporal/test/temporalPlanRefCapacitySlaPolicy.test.ts
+    fileId: F-9F17D16D08A4
+    owningUnit: SYS-PLANSTORE-TEMPORAL-COMPOSITION
+    unitStatus: review
+    governanceState: review
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/adapter-temporal/test/workflow-component-semantics.architecture.test.ts
+    fileId: F-A3422F8EFF35
+    owningUnit: SYS-PLANSTORE-TEMPORAL-COMPOSITION
+    unitStatus: review
+    governanceState: review
+    isDrift: false
+    isLegacy: false
