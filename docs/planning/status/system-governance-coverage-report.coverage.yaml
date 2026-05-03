@@ -3,8 +3,8 @@ generatedFrom:
   - docs/planning/status/system-governance-file-index.files.yaml
   - docs/planning/status/system-governance-component-index.components.yaml
 totals:
-  files: 4155
-  governedFiles: 4155
+  files: 4159
+  governedFiles: 4159
   ungovernedFiles: 0
   driftFiles: 41
   legacyFiles: 0
@@ -22,12 +22,12 @@ ciPosture:
     - legacyFiles records removal targets until owning work removes them
 byRootUnit:
   - name: SYS-DVT
-    count: 4155
+    count: 4159
 byDomainUnit:
   - name: SYS-ADAPTERS
     count: 196
   - name: SYS-DVT
-    count: 3378
+    count: 3382
   - name: SYS-OBSERVABILITY
     count: 15
   - name: SYS-PLANSTORE
@@ -52,9 +52,9 @@ byComponentUnit:
   - name: SYS-API-DOMAIN-AUTH
     count: 1
   - name: SYS-API-HTTP-ENTRYPOINT-TESTS
-    count: 50
+    count: 51
   - name: SYS-API-HTTP-ENTRYPOINTS
-    count: 75
+    count: 76
   - name: SYS-API-INFRASTRUCTURE
     count: 27
   - name: SYS-API-OPS-ROUTES
@@ -96,21 +96,21 @@ byComponentUnit:
   - name: SYS-TRACEABILITY-ROOT
     count: 65
   - name: SYS-WEB-ROOT
-    count: 799
+    count: 801
   - name: SYS-WORKERS-ROOT
     count: 103
 byStatus:
   - name: canonical
     count: 113
   - name: coverage-required
-    count: 3919
+    count: 3923
   - name: drift
     count: 41
   - name: review
     count: 82
 byGovernanceState:
   - name: coverage-required
-    count: 3919
+    count: 3923
   - name: drift
     count: 41
   - name: governed
@@ -121,12 +121,12 @@ byCanonicalRole:
   - name: implementation-owner
     count: 113
   - name: none
-    count: 4042
+    count: 4046
 byEvidenceState:
   - name: classification-only
     count: 113
   - name: coverage-required
-    count: 3919
+    count: 3923
   - name: remediation-required
     count: 41
   - name: review-required
@@ -139,9 +139,9 @@ byDddOwner:
   - name: DS
     count: 142
   - name: ENTRY
-    count: 887
+    count: 890
   - name: INFRA
-    count: 2218
+    count: 2219
   - name: PORT
     count: 189
 governanceDocuments:
@@ -150,20 +150,20 @@ governanceDocuments:
   - path: docs/planning/status/governance-document-rule-inventory.md
     fileCount: 1717
   - path: docs/planning/status/system-operations-inventory-20260501.md
-    fileCount: 947
+    fileCount: 948
   - path: >-
       docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md
-    fileCount: 799
+    fileCount: 801
   - path: >-
       docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
-    fileCount: 341
+    fileCount: 343
   - path: docs/guides/testing-and-ci-capabilities.md
-    fileCount: 340
+    fileCount: 341
   - path: >-
       docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
-    fileCount: 224
+    fileCount: 226
   - path: docs/architecture/command-query-rail-governance.md
-    fileCount: 159
+    fileCount: 161
   - path: docs/contracts/index.md
     fileCount: 127
   - path: package.json
@@ -236,7 +236,7 @@ componentCoverage:
     evidenceState: coverage-required
     dddOwner: ENTRY
     cqRails: UI actions and API queries
-    fileCount: 799
+    fileCount: 801
     isDrift: false
     isLegacy: false
     childrenRequired: true
@@ -361,6 +361,27 @@ componentCoverage:
         docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
       - docs/guides/testing-and-ci-capabilities.md
       - docs/planning/status/system-operations-inventory-20260501.md
+  - id: SYS-API-HTTP-ENTRYPOINTS
+    name: API HTTP entrypoints and route mappers
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    status: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    dddOwner: ENTRY
+    cqRails: API HTTP command/query route rails
+    fileCount: 76
+    isDrift: false
+    isLegacy: false
+    childrenRequired: false
+    governance:
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
+      - >-
+        docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
+      - docs/architecture/command-query-rail-governance.md
+      - docs/planning/status/system-operations-inventory-20260501.md
   - id: SYS-PLANNER-ROOT
     name: Planner root component
     rootUnit: SYS-DVT
@@ -377,27 +398,6 @@ componentCoverage:
     childrenRequired: true
     governance:
       - docs/contracts/planner/index.md
-  - id: SYS-API-HTTP-ENTRYPOINTS
-    name: API HTTP entrypoints and route mappers
-    rootUnit: SYS-DVT
-    domainUnit: SYS-DVT
-    status: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    dddOwner: ENTRY
-    cqRails: API HTTP command/query route rails
-    fileCount: 75
-    isDrift: false
-    isLegacy: false
-    childrenRequired: false
-    governance:
-      - >-
-        docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
-      - >-
-        docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
-      - docs/architecture/command-query-rail-governance.md
-      - docs/planning/status/system-operations-inventory-20260501.md
   - id: SYS-TRACEABILITY-ROOT
     name: Traceability root component
     rootUnit: SYS-DVT
@@ -424,7 +424,7 @@ componentCoverage:
     evidenceState: coverage-required
     dddOwner: INFRA
     cqRails: API HTTP command/query route validation
-    fileCount: 50
+    fileCount: 51
     isDrift: false
     isLegacy: false
     childrenRequired: false
@@ -956,7 +956,7 @@ findings:
       status: coverage-required
       dddOwner: INFRA
     - id: SYS-WEB-ROOT
-      fileCount: 799
+      fileCount: 801
       status: coverage-required
       dddOwner: ENTRY
     - id: SYS-RUNTIME-ROOT

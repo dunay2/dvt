@@ -972,6 +972,30 @@ symbols:
     cypressCoverage: apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts
     unitTests:
       - apps/web/src/app/views/canvas/canvasHostCycleState.test.ts
+  - name: normalizeCanvasKind
+    path: apps/web/src/app/views/canvas/canvasHostCycleState.ts
+    dddOwner: Canvas authoring kind normalization policy
+    cqRails:
+      - CreateCanvasNode
+    fowlerSignals:
+      - semantic normalization
+      - anti-drift guard
+    architectureGuard: apps/web/src/app/views/canvas/canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts
+    unitTests:
+      - apps/web/src/app/views/canvas/canvasHostCycleState.test.ts
+  - name: normalizeCanvasKind
+    path: apps/web/src/app/views/canvas/canvasShellPanelsBuilder.ts
+    dddOwner: Canvas authoring kind normalization policy
+    cqRails:
+      - CreateCanvasNode
+    fowlerSignals:
+      - semantic normalization
+      - anti-drift guard
+    architectureGuard: apps/web/src/app/views/canvas/canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts
+    unitTests:
+      - apps/web/src/app/views/canvas/canvasShellPanelsBuilder.test.ts
   - name: handleCreateCanvasDocument
     path: apps/web/src/app/views/canvas/useCanvasController.ts
     dddOwner: CanvasDocument aggregate

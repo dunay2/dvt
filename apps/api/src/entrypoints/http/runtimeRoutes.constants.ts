@@ -1,4 +1,5 @@
 export const RUNTIME_ROUTE_PATH = {
+  session: '/session',
   start: '/runs/start',
   plansCompile: '/plans/compile',
   plansPreview: '/plans/preview',
@@ -13,6 +14,7 @@ export const RUNTIME_ROUTE_PATH = {
 } as const;
 
 export const PROTECTED_RUNTIME_ROUTE_SUMMARY = [
+  `GET ${RUNTIME_ROUTE_PATH.session}`,
   `POST ${RUNTIME_ROUTE_PATH.start}`,
   `POST ${RUNTIME_ROUTE_PATH.plansCompile}`,
   `POST ${RUNTIME_ROUTE_PATH.plansPreview}`,

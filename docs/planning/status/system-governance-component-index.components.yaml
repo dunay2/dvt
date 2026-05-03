@@ -438,7 +438,7 @@ components:
     isDrift: false
     isLegacy: false
     childrenRequired: false
-    fileCount: 50
+    fileCount: 51
     dddOwner: INFRA
     cqRails: API HTTP command/query route validation
     owns:
@@ -508,7 +508,7 @@ components:
     isDrift: false
     isLegacy: false
     childrenRequired: false
-    fileCount: 75
+    fileCount: 76
     dddOwner: ENTRY
     cqRails: API HTTP command/query route rails
     owns:
@@ -1978,7 +1978,7 @@ components:
     isDrift: false
     isLegacy: false
     childrenRequired: true
-    fileCount: 799
+    fileCount: 801
     dddOwner: ENTRY
     cqRails: UI actions and API queries
     owns:
