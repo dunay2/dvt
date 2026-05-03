@@ -329,81 +329,6 @@ files:
     cqRails: adapter implementations of owned ports
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-58B80660D291
-    pathHash: 37f211e35e7d637cbd9a1fa5690c0a5c6bf4c4d0bc492f91fd82698133ef74eb
-    contentHash: 151aef75c666af3b284fe56226c3190f00d46378660f9f6e8b7db0efb8fdff8f
-    governanceHash: 20f9cb4336cda98a3c1235480a09c666c48b06c05134af5b06fbf14c178c528b
-    stateFingerprint: ee1ddc61d99cfb32515282847102a9ccd8108f324cb42fede06465f3b50a3d07
-    path: packages/@dvt/adapter-postgres/src/index.ts
-    owningUnit: SYS-ADAPTERS-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-ADAPTERS
-    componentUnit: SYS-ADAPTERS-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-ADAPTERS
-      - SYS-ADAPTERS-ROOT
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: ADP
-    cqRails: adapter implementations of owned ports
-    governance:
-      - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-B7DD446FE5F8
-    pathHash: 5d86a3a1ee9b52224bda7eb25657fe49801b7e7c4c3fad03bdd28fa88b6d6e2c
-    contentHash: 911054ee0dd2f714140ee9f0ca0fee0f9ce5aa8d8d8132d23acf879563958e67
-    governanceHash: 20f9cb4336cda98a3c1235480a09c666c48b06c05134af5b06fbf14c178c528b
-    stateFingerprint: 7644631456a1d082e5df0c83e3b1b8157a50b94196ec46cebc8b1a93effafe4b
-    path: packages/@dvt/adapter-postgres/src/lineageOutboxStorePolicy.ts
-    owningUnit: SYS-ADAPTERS-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-ADAPTERS
-    componentUnit: SYS-ADAPTERS-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-ADAPTERS
-      - SYS-ADAPTERS-ROOT
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: ADP
-    cqRails: adapter implementations of owned ports
-    governance:
-      - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-71B578FEC315
-    pathHash: d523725f54fe30d76b0dc7192cb3752b82532a930bc51b2f7dd85ddf2eba65c0
-    contentHash: 3fca8d902c857290833f2e8cdd3b0ef12f347666a7c5127475f919efb450c338
-    governanceHash: 20f9cb4336cda98a3c1235480a09c666c48b06c05134af5b06fbf14c178c528b
-    stateFingerprint: 8f0dfe0c28e631fbbb5904250ae806200b69704ee8713aeadf10c50296089834
-    path: packages/@dvt/adapter-postgres/src/migratePostgresRuntimeStores.ts
-    owningUnit: SYS-ADAPTERS-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-ADAPTERS
-    componentUnit: SYS-ADAPTERS-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-ADAPTERS
-      - SYS-ADAPTERS-ROOT
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: ADP
-    cqRails: adapter implementations of owned ports
-    governance:
-      - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-3669C9D21512
     pathHash: 44a31e55c266b4889a7f9eb89238101ba4da64d02c2c88a23e412b9417144ca2
     contentHash: f7955bcdc8adc3d5a1d23278d2c71948935dfc2f601a346214af428101a79bff
@@ -1329,6 +1254,131 @@ files:
     cqRails: adapter implementations of owned ports
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-53E2044556B1
+    pathHash: b0f3551457c52cdc235fe5a74525da8483f8ef3a982c25907ac6bde16f5516bf
+    contentHash: 3751aabbfb9db1c7d9a001da1c459e4440c8834b62b869eee707f0dfdf5f8c60
+    governanceHash: 20f9cb4336cda98a3c1235480a09c666c48b06c05134af5b06fbf14c178c528b
+    stateFingerprint: b47f89072bb285b675478ca1788726f7a41fb84a668d0fc3cbac3f32dbc52541
+    path: packages/@dvt/adapter-postgres/src/RunEventWriteRepository.ts
+    owningUnit: SYS-ADAPTERS-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-ADAPTERS
+    componentUnit: SYS-ADAPTERS-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-ADAPTERS
+      - SYS-ADAPTERS-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: ADP
+    cqRails: adapter implementations of owned ports
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-D682DFB364A1
+    pathHash: 3561cca51350730909631cb8c118fc3f6d363adecbc9f87d40edd97f934f805f
+    contentHash: 9ce0912c491316179f2204e1fc4b3bb7f9be2c320c5110e738fe04821b36056a
+    governanceHash: 20f9cb4336cda98a3c1235480a09c666c48b06c05134af5b06fbf14c178c528b
+    stateFingerprint: c4458d735787e694532bc946a71d419af1fd596c47cf1b5b41e52beb6a243d93
+    path: packages/@dvt/adapter-postgres/src/StartRunIntentSchemaManager.ts
+    owningUnit: SYS-ADAPTERS-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-ADAPTERS
+    componentUnit: SYS-ADAPTERS-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-ADAPTERS
+      - SYS-ADAPTERS-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: ADP
+    cqRails: adapter implementations of owned ports
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-58B80660D291
+    pathHash: 37f211e35e7d637cbd9a1fa5690c0a5c6bf4c4d0bc492f91fd82698133ef74eb
+    contentHash: 151aef75c666af3b284fe56226c3190f00d46378660f9f6e8b7db0efb8fdff8f
+    governanceHash: 20f9cb4336cda98a3c1235480a09c666c48b06c05134af5b06fbf14c178c528b
+    stateFingerprint: ee1ddc61d99cfb32515282847102a9ccd8108f324cb42fede06465f3b50a3d07
+    path: packages/@dvt/adapter-postgres/src/index.ts
+    owningUnit: SYS-ADAPTERS-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-ADAPTERS
+    componentUnit: SYS-ADAPTERS-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-ADAPTERS
+      - SYS-ADAPTERS-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: ADP
+    cqRails: adapter implementations of owned ports
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-B7DD446FE5F8
+    pathHash: 5d86a3a1ee9b52224bda7eb25657fe49801b7e7c4c3fad03bdd28fa88b6d6e2c
+    contentHash: 911054ee0dd2f714140ee9f0ca0fee0f9ce5aa8d8d8132d23acf879563958e67
+    governanceHash: 20f9cb4336cda98a3c1235480a09c666c48b06c05134af5b06fbf14c178c528b
+    stateFingerprint: 7644631456a1d082e5df0c83e3b1b8157a50b94196ec46cebc8b1a93effafe4b
+    path: packages/@dvt/adapter-postgres/src/lineageOutboxStorePolicy.ts
+    owningUnit: SYS-ADAPTERS-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-ADAPTERS
+    componentUnit: SYS-ADAPTERS-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-ADAPTERS
+      - SYS-ADAPTERS-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: ADP
+    cqRails: adapter implementations of owned ports
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-71B578FEC315
+    pathHash: d523725f54fe30d76b0dc7192cb3752b82532a930bc51b2f7dd85ddf2eba65c0
+    contentHash: 3fca8d902c857290833f2e8cdd3b0ef12f347666a7c5127475f919efb450c338
+    governanceHash: 20f9cb4336cda98a3c1235480a09c666c48b06c05134af5b06fbf14c178c528b
+    stateFingerprint: 8f0dfe0c28e631fbbb5904250ae806200b69704ee8713aeadf10c50296089834
+    path: packages/@dvt/adapter-postgres/src/migratePostgresRuntimeStores.ts
+    owningUnit: SYS-ADAPTERS-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-ADAPTERS
+    componentUnit: SYS-ADAPTERS-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-ADAPTERS
+      - SYS-ADAPTERS-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: ADP
+    cqRails: adapter implementations of owned ports
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-037A12DCEF89
     pathHash: 460e526042232546df2d492be080acf4a4a7902ee854dac9bcb0c83691978119
     contentHash: 7706c4717f7b7d2a9216cddc5b3bc6317555e2d18f4c93148a8368259eb2f06c
@@ -1360,31 +1410,6 @@ files:
     governanceHash: 20f9cb4336cda98a3c1235480a09c666c48b06c05134af5b06fbf14c178c528b
     stateFingerprint: a493473816217323224b34c7e4d22f315a89eedbd0b9954acb327a5deb4fb543
     path: packages/@dvt/adapter-postgres/src/runEventStoreErrors.ts
-    owningUnit: SYS-ADAPTERS-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-ADAPTERS
-    componentUnit: SYS-ADAPTERS-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-ADAPTERS
-      - SYS-ADAPTERS-ROOT
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: ADP
-    cqRails: adapter implementations of owned ports
-    governance:
-      - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-53E2044556B1
-    pathHash: b0f3551457c52cdc235fe5a74525da8483f8ef3a982c25907ac6bde16f5516bf
-    contentHash: 3751aabbfb9db1c7d9a001da1c459e4440c8834b62b869eee707f0dfdf5f8c60
-    governanceHash: 20f9cb4336cda98a3c1235480a09c666c48b06c05134af5b06fbf14c178c528b
-    stateFingerprint: b47f89072bb285b675478ca1788726f7a41fb84a668d0fc3cbac3f32dbc52541
-    path: packages/@dvt/adapter-postgres/src/RunEventWriteRepository.ts
     owningUnit: SYS-ADAPTERS-ROOT
     rootUnit: SYS-DVT
     domainUnit: SYS-ADAPTERS
@@ -1454,187 +1479,12 @@ files:
     cqRails: adapter implementations of owned ports
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-D682DFB364A1
-    pathHash: 3561cca51350730909631cb8c118fc3f6d363adecbc9f87d40edd97f934f805f
-    contentHash: 9ce0912c491316179f2204e1fc4b3bb7f9be2c320c5110e738fe04821b36056a
-    governanceHash: 20f9cb4336cda98a3c1235480a09c666c48b06c05134af5b06fbf14c178c528b
-    stateFingerprint: c4458d735787e694532bc946a71d419af1fd596c47cf1b5b41e52beb6a243d93
-    path: packages/@dvt/adapter-postgres/src/StartRunIntentSchemaManager.ts
-    owningUnit: SYS-ADAPTERS-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-ADAPTERS
-    componentUnit: SYS-ADAPTERS-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-ADAPTERS
-      - SYS-ADAPTERS-ROOT
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: ADP
-    cqRails: adapter implementations of owned ports
-    governance:
-      - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-6FF49A36EB04
     pathHash: 70f61dd11a540da244dae9985879b206a989e9125170d531c8d5819a7f327dcf
     contentHash: 922b44135909d96b05ee12d6b5a6b51485236e8514c3120785b0167aa840a7d7
     governanceHash: 20f9cb4336cda98a3c1235480a09c666c48b06c05134af5b06fbf14c178c528b
     stateFingerprint: a70e590d87910c88577148d6148c4210b0d47f6c170ca90731572206487612fb
     path: packages/@dvt/adapter-postgres/src/types.ts
-    owningUnit: SYS-ADAPTERS-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-ADAPTERS
-    componentUnit: SYS-ADAPTERS-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-ADAPTERS
-      - SYS-ADAPTERS-ROOT
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: ADP
-    cqRails: adapter implementations of owned ports
-    governance:
-      - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-485E0A093160
-    pathHash: d7822e0e7dbbf7cdddff3ad1b82b2e7953ece98f7938bd79a1a4ad97125848a8
-    contentHash: 43a6f52f865aae60d9e89a4869dbc481e72ddacec0a6fe1a940c34984de571b9
-    governanceHash: 20f9cb4336cda98a3c1235480a09c666c48b06c05134af5b06fbf14c178c528b
-    stateFingerprint: c4d387d1a64aa0ed5455d4903ca9a1466d139aec4c983a9b9e8ae88bfa67851e
-    path: packages/@dvt/adapter-postgres/test/helpers/lineageOutboxIntegrationHarness.ts
-    owningUnit: SYS-ADAPTERS-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-ADAPTERS
-    componentUnit: SYS-ADAPTERS-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-ADAPTERS
-      - SYS-ADAPTERS-ROOT
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: ADP
-    cqRails: adapter implementations of owned ports
-    governance:
-      - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-A1A97C78EDEA
-    pathHash: 2b63680c22504020c236628d853fb0ee5e53c8fcc9573e3b4960dacb1a5eea30
-    contentHash: 6a474ea73df6465636d7745712d5a3c00fc9a0828970fb03e7a0453fb6ee0231
-    governanceHash: 20f9cb4336cda98a3c1235480a09c666c48b06c05134af5b06fbf14c178c528b
-    stateFingerprint: 4545f99b1296fe84aa9b5f2f2cbc9e77e42f1dad35d47a8088504e9953075828
-    path: packages/@dvt/adapter-postgres/test/helpers/lineageOutboxUnitSupport.ts
-    owningUnit: SYS-ADAPTERS-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-ADAPTERS
-    componentUnit: SYS-ADAPTERS-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-ADAPTERS
-      - SYS-ADAPTERS-ROOT
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: ADP
-    cqRails: adapter implementations of owned ports
-    governance:
-      - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-DA985BD75922
-    pathHash: 1c74bf7383905b1d03de7111e8ab32301f92dab4ddbf7cae5843f882ec883ba0
-    contentHash: ab7caee1b8801019fc9525da46ec32fd88c2f4c4de325874f14305d960e77713
-    governanceHash: 20f9cb4336cda98a3c1235480a09c666c48b06c05134af5b06fbf14c178c528b
-    stateFingerprint: 40d88a061b70fdce2bd0efe89f39f152b2b703c2ea1adf2466a3a8ae43a6cc84
-    path: packages/@dvt/adapter-postgres/test/helpers/postgresIntegrationHarness.ts
-    owningUnit: SYS-ADAPTERS-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-ADAPTERS
-    componentUnit: SYS-ADAPTERS-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-ADAPTERS
-      - SYS-ADAPTERS-ROOT
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: ADP
-    cqRails: adapter implementations of owned ports
-    governance:
-      - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-83125D733727
-    pathHash: 590fe39bf9db3fcb21de47f9b9c36aeea41b766ed9ff4f4902f16b07117de5a7
-    contentHash: 490bceb6f2f0a9f5ac3912da9c5d100689c0e1a602e8de62ee0d2d5f78982376
-    governanceHash: 20f9cb4336cda98a3c1235480a09c666c48b06c05134af5b06fbf14c178c528b
-    stateFingerprint: ad068ba155287f2f916731b002b4fece72890e08d1acc12746c3fae388663f63
-    path: packages/@dvt/adapter-postgres/test/helpers/postgresRlsProofHarness.ts
-    owningUnit: SYS-ADAPTERS-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-ADAPTERS
-    componentUnit: SYS-ADAPTERS-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-ADAPTERS
-      - SYS-ADAPTERS-ROOT
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: ADP
-    cqRails: adapter implementations of owned ports
-    governance:
-      - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-A4CEE43A000F
-    pathHash: e4cf7b6535bf020bc59735a367c00358d3ccf00f262dc52e8f0b8e6378055513
-    contentHash: 57fc289d40dbc83891c0b4339ffd8d625ecfa312449253c7c666fc4777661b80
-    governanceHash: 20f9cb4336cda98a3c1235480a09c666c48b06c05134af5b06fbf14c178c528b
-    stateFingerprint: 2e884e99025022511bbded72f22550effd0f448f8d5b1711b070a97e2972c35c
-    path: packages/@dvt/adapter-postgres/test/helpers/runEventFixtures.ts
-    owningUnit: SYS-ADAPTERS-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-ADAPTERS
-    componentUnit: SYS-ADAPTERS-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-ADAPTERS
-      - SYS-ADAPTERS-ROOT
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: ADP
-    cqRails: adapter implementations of owned ports
-    governance:
-      - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-8CD79AF9326B
-    pathHash: b3ea0788b4ec136590cb6911451a0b09db712022a70225554018c1195d61b958
-    contentHash: e8647bdabe908d4f4c07a3a71d21eb05792a545f0cbce1a1bdbe59f7529e013e
-    governanceHash: 20f9cb4336cda98a3c1235480a09c666c48b06c05134af5b06fbf14c178c528b
-    stateFingerprint: 58f2f93da258e9c3e6baf4f2d946c154d2197cce223af37da2c4fb3067e748c9
-    path: packages/@dvt/adapter-postgres/test/migratePostgresRuntimeStores.test.ts
     owningUnit: SYS-ADAPTERS-ROOT
     rootUnit: SYS-DVT
     domainUnit: SYS-ADAPTERS
@@ -2304,31 +2154,6 @@ files:
     cqRails: adapter implementations of owned ports
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-80A9AF82F45F
-    pathHash: 5ad59fee2c086ba8478ef8993d0843a2b83242c95d30ce37e41be9eb9ae9ef07
-    contentHash: bb766fe3509761523948c1191529e0420d1b4d9b15461f06cb0a37d89d687b74
-    governanceHash: 20f9cb4336cda98a3c1235480a09c666c48b06c05134af5b06fbf14c178c528b
-    stateFingerprint: da605c5ba8f4ffdd0d228f3af8958481139bafa65e90077f1fc4ca2f0ad1337d
-    path: packages/@dvt/adapter-postgres/test/runStateCommandPortBridge.test.ts
-    owningUnit: SYS-ADAPTERS-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-ADAPTERS
-    componentUnit: SYS-ADAPTERS-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-ADAPTERS
-      - SYS-ADAPTERS-ROOT
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: ADP
-    cqRails: adapter implementations of owned ports
-    governance:
-      - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-ADA6894006AB
     pathHash: 18b13e4d3c2e7c013431febfa512da2f2039e26b286004c14b64e3027e59118c
     contentHash: 7fe1ccbc38883381000d3a6916d280eaa3dc15faec7bbcb5b56bc775561994cc
@@ -2354,12 +2179,12 @@ files:
     cqRails: adapter implementations of owned ports
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-8D0DC2BAA16E
-    pathHash: e61c015b15c450d7ad5ce30ba86bf3b1764507a165e086b98943a7b68dba809f
-    contentHash: 461c12d1e2cb467abbeb3f43a014c5bf04807c0ab5cb94782ed4bb3f8e7c42c0
+  - fileId: F-A645D616588F
+    pathHash: 5c339474eb044af74aec682f6e233b1eb835e106ded9447f332a8b6c87620d29
+    contentHash: a7fcec84fbbbfdc113709f8c043419cb6d170a4f41f9bc634ef26feba09b32bd
     governanceHash: 20f9cb4336cda98a3c1235480a09c666c48b06c05134af5b06fbf14c178c528b
-    stateFingerprint: 655746bd16ccecf72390ee2c7e371b9f157df62b43e0e527cf192666c97d9759
-    path: packages/@dvt/adapter-postgres/test/smoke.test.ts
+    stateFingerprint: 086d23dad5d1120a2274ebfa02e224c4471cf512adc7449babae128149cfd7d9
+    path: packages/@dvt/adapter-postgres/test/StartRunIntentSchemaManager.test.ts
     owningUnit: SYS-ADAPTERS-ROOT
     rootUnit: SYS-DVT
     domainUnit: SYS-ADAPTERS
@@ -2379,12 +2204,187 @@ files:
     cqRails: adapter implementations of owned ports
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-A645D616588F
-    pathHash: 5c339474eb044af74aec682f6e233b1eb835e106ded9447f332a8b6c87620d29
-    contentHash: a7fcec84fbbbfdc113709f8c043419cb6d170a4f41f9bc634ef26feba09b32bd
+  - fileId: F-485E0A093160
+    pathHash: d7822e0e7dbbf7cdddff3ad1b82b2e7953ece98f7938bd79a1a4ad97125848a8
+    contentHash: 43a6f52f865aae60d9e89a4869dbc481e72ddacec0a6fe1a940c34984de571b9
     governanceHash: 20f9cb4336cda98a3c1235480a09c666c48b06c05134af5b06fbf14c178c528b
-    stateFingerprint: 086d23dad5d1120a2274ebfa02e224c4471cf512adc7449babae128149cfd7d9
-    path: packages/@dvt/adapter-postgres/test/StartRunIntentSchemaManager.test.ts
+    stateFingerprint: c4d387d1a64aa0ed5455d4903ca9a1466d139aec4c983a9b9e8ae88bfa67851e
+    path: packages/@dvt/adapter-postgres/test/helpers/lineageOutboxIntegrationHarness.ts
+    owningUnit: SYS-ADAPTERS-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-ADAPTERS
+    componentUnit: SYS-ADAPTERS-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-ADAPTERS
+      - SYS-ADAPTERS-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: ADP
+    cqRails: adapter implementations of owned ports
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-A1A97C78EDEA
+    pathHash: 2b63680c22504020c236628d853fb0ee5e53c8fcc9573e3b4960dacb1a5eea30
+    contentHash: 6a474ea73df6465636d7745712d5a3c00fc9a0828970fb03e7a0453fb6ee0231
+    governanceHash: 20f9cb4336cda98a3c1235480a09c666c48b06c05134af5b06fbf14c178c528b
+    stateFingerprint: 4545f99b1296fe84aa9b5f2f2cbc9e77e42f1dad35d47a8088504e9953075828
+    path: packages/@dvt/adapter-postgres/test/helpers/lineageOutboxUnitSupport.ts
+    owningUnit: SYS-ADAPTERS-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-ADAPTERS
+    componentUnit: SYS-ADAPTERS-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-ADAPTERS
+      - SYS-ADAPTERS-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: ADP
+    cqRails: adapter implementations of owned ports
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-DA985BD75922
+    pathHash: 1c74bf7383905b1d03de7111e8ab32301f92dab4ddbf7cae5843f882ec883ba0
+    contentHash: ab7caee1b8801019fc9525da46ec32fd88c2f4c4de325874f14305d960e77713
+    governanceHash: 20f9cb4336cda98a3c1235480a09c666c48b06c05134af5b06fbf14c178c528b
+    stateFingerprint: 40d88a061b70fdce2bd0efe89f39f152b2b703c2ea1adf2466a3a8ae43a6cc84
+    path: packages/@dvt/adapter-postgres/test/helpers/postgresIntegrationHarness.ts
+    owningUnit: SYS-ADAPTERS-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-ADAPTERS
+    componentUnit: SYS-ADAPTERS-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-ADAPTERS
+      - SYS-ADAPTERS-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: ADP
+    cqRails: adapter implementations of owned ports
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-83125D733727
+    pathHash: 590fe39bf9db3fcb21de47f9b9c36aeea41b766ed9ff4f4902f16b07117de5a7
+    contentHash: 490bceb6f2f0a9f5ac3912da9c5d100689c0e1a602e8de62ee0d2d5f78982376
+    governanceHash: 20f9cb4336cda98a3c1235480a09c666c48b06c05134af5b06fbf14c178c528b
+    stateFingerprint: ad068ba155287f2f916731b002b4fece72890e08d1acc12746c3fae388663f63
+    path: packages/@dvt/adapter-postgres/test/helpers/postgresRlsProofHarness.ts
+    owningUnit: SYS-ADAPTERS-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-ADAPTERS
+    componentUnit: SYS-ADAPTERS-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-ADAPTERS
+      - SYS-ADAPTERS-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: ADP
+    cqRails: adapter implementations of owned ports
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-A4CEE43A000F
+    pathHash: e4cf7b6535bf020bc59735a367c00358d3ccf00f262dc52e8f0b8e6378055513
+    contentHash: 57fc289d40dbc83891c0b4339ffd8d625ecfa312449253c7c666fc4777661b80
+    governanceHash: 20f9cb4336cda98a3c1235480a09c666c48b06c05134af5b06fbf14c178c528b
+    stateFingerprint: 2e884e99025022511bbded72f22550effd0f448f8d5b1711b070a97e2972c35c
+    path: packages/@dvt/adapter-postgres/test/helpers/runEventFixtures.ts
+    owningUnit: SYS-ADAPTERS-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-ADAPTERS
+    componentUnit: SYS-ADAPTERS-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-ADAPTERS
+      - SYS-ADAPTERS-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: ADP
+    cqRails: adapter implementations of owned ports
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-8CD79AF9326B
+    pathHash: b3ea0788b4ec136590cb6911451a0b09db712022a70225554018c1195d61b958
+    contentHash: e8647bdabe908d4f4c07a3a71d21eb05792a545f0cbce1a1bdbe59f7529e013e
+    governanceHash: 20f9cb4336cda98a3c1235480a09c666c48b06c05134af5b06fbf14c178c528b
+    stateFingerprint: 58f2f93da258e9c3e6baf4f2d946c154d2197cce223af37da2c4fb3067e748c9
+    path: packages/@dvt/adapter-postgres/test/migratePostgresRuntimeStores.test.ts
+    owningUnit: SYS-ADAPTERS-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-ADAPTERS
+    componentUnit: SYS-ADAPTERS-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-ADAPTERS
+      - SYS-ADAPTERS-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: ADP
+    cqRails: adapter implementations of owned ports
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-80A9AF82F45F
+    pathHash: 5ad59fee2c086ba8478ef8993d0843a2b83242c95d30ce37e41be9eb9ae9ef07
+    contentHash: bb766fe3509761523948c1191529e0420d1b4d9b15461f06cb0a37d89d687b74
+    governanceHash: 20f9cb4336cda98a3c1235480a09c666c48b06c05134af5b06fbf14c178c528b
+    stateFingerprint: da605c5ba8f4ffdd0d228f3af8958481139bafa65e90077f1fc4ca2f0ad1337d
+    path: packages/@dvt/adapter-postgres/test/runStateCommandPortBridge.test.ts
+    owningUnit: SYS-ADAPTERS-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-ADAPTERS
+    componentUnit: SYS-ADAPTERS-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-ADAPTERS
+      - SYS-ADAPTERS-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: ADP
+    cqRails: adapter implementations of owned ports
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-8D0DC2BAA16E
+    pathHash: e61c015b15c450d7ad5ce30ba86bf3b1764507a165e086b98943a7b68dba809f
+    contentHash: 461c12d1e2cb467abbeb3f43a014c5bf04807c0ab5cb94782ed4bb3f8e7c42c0
+    governanceHash: 20f9cb4336cda98a3c1235480a09c666c48b06c05134af5b06fbf14c178c528b
+    stateFingerprint: 655746bd16ccecf72390ee2c7e371b9f157df62b43e0e527cf192666c97d9759
+    path: packages/@dvt/adapter-postgres/test/smoke.test.ts
     owningUnit: SYS-ADAPTERS-ROOT
     rootUnit: SYS-DVT
     domainUnit: SYS-ADAPTERS
@@ -2510,6 +2510,181 @@ files:
     governanceHash: 20f9cb4336cda98a3c1235480a09c666c48b06c05134af5b06fbf14c178c528b
     stateFingerprint: a9a052e5e073ff2677f1488b4d2c8711c5e37b2b89123a6d2656b5d3e3505ce8
     path: packages/@dvt/adapter-temporal/scripts/run-postgres-integration.cjs
+    owningUnit: SYS-ADAPTERS-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-ADAPTERS
+    componentUnit: SYS-ADAPTERS-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-ADAPTERS
+      - SYS-ADAPTERS-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: ADP
+    cqRails: adapter implementations of owned ports
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-44E13DA4D102
+    pathHash: 9080cafe9b021d51afcd5405e9859f22389b5fcd2b138764267709b1bcef6bec
+    contentHash: f6c00e1d9ad9023a2116579eb0335f13575d8437b19f4ec457371af0703898a0
+    governanceHash: 20f9cb4336cda98a3c1235480a09c666c48b06c05134af5b06fbf14c178c528b
+    stateFingerprint: 10fd563bab6bd75f2530c7ffeab04674f81321cdd6d076e3f84c582963ff6e34
+    path: packages/@dvt/adapter-temporal/src/ObservedTemporalAdapter.ts
+    owningUnit: SYS-ADAPTERS-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-ADAPTERS
+    componentUnit: SYS-ADAPTERS-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-ADAPTERS
+      - SYS-ADAPTERS-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: ADP
+    cqRails: adapter implementations of owned ports
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-BC532CA9508A
+    pathHash: c622adda0b035c8d9af406e1e5b44741fd6c759584c8e6fcad05e598a372220e
+    contentHash: 6e76bd3b798ababd6cace98a7857a0a266ffa3ceace4955ac61e191af6953705
+    governanceHash: 20f9cb4336cda98a3c1235480a09c666c48b06c05134af5b06fbf14c178c528b
+    stateFingerprint: e06fe00d432a4a26fd4760f75ba8808f99622ef5efef711defd13a983c91c668
+    path: packages/@dvt/adapter-temporal/src/RunStateCommandPortCircuitBreaker.ts
+    owningUnit: SYS-ADAPTERS-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-ADAPTERS
+    componentUnit: SYS-ADAPTERS-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-ADAPTERS
+      - SYS-ADAPTERS-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: ADP
+    cqRails: adapter implementations of owned ports
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-069AB1FA727E
+    pathHash: 628755d12329d8b3d94900d1e2fe797ed85b163a5be42d5645b02694d560d671
+    contentHash: 3d033c190992294355e4e5b6142c2f2a67a192771cb1fc2f094ac458230fcffe
+    governanceHash: 20f9cb4336cda98a3c1235480a09c666c48b06c05134af5b06fbf14c178c528b
+    stateFingerprint: 2d1759174363fabcef2aa9310ee21fed01bccc52bf80724f23c012c936ebad7d
+    path: packages/@dvt/adapter-temporal/src/TemporalAdapter.ts
+    owningUnit: SYS-ADAPTERS-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-ADAPTERS
+    componentUnit: SYS-ADAPTERS-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-ADAPTERS
+      - SYS-ADAPTERS-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: ADP
+    cqRails: adapter implementations of owned ports
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-EB7C1DA8A092
+    pathHash: 9a1978268021e4666946fc7f1956342c42a74a6e9d00c13c077ceb14d1a44be2
+    contentHash: 0a8a17c6ed69069d2c9206e7b3c9b41ee3500b6a535e94887a8b7ed4c8417d3d
+    governanceHash: 20f9cb4336cda98a3c1235480a09c666c48b06c05134af5b06fbf14c178c528b
+    stateFingerprint: 2f9da37e7c3bacd50ba1ccb787232a49c42cd1098ca8e697b64c86cb0f149b63
+    path: packages/@dvt/adapter-temporal/src/TemporalClient.ts
+    owningUnit: SYS-ADAPTERS-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-ADAPTERS
+    componentUnit: SYS-ADAPTERS-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-ADAPTERS
+      - SYS-ADAPTERS-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: ADP
+    cqRails: adapter implementations of owned ports
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-9084B1061CAE
+    pathHash: a7d763503ccb077ff445dd2d8d9487bf89105579fb74c929cc00a1ba27acfb05
+    contentHash: ac43700d51bc825853de3e256fdc87168734d23f21cc3ba5e720151ce8e6445b
+    governanceHash: 20f9cb4336cda98a3c1235480a09c666c48b06c05134af5b06fbf14c178c528b
+    stateFingerprint: db0596ebedd9c8134998f24456d446472efaa20dc4bb4e83a47bdfb67e46ce30
+    path: packages/@dvt/adapter-temporal/src/TemporalPolicyMapper.ts
+    owningUnit: SYS-ADAPTERS-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-ADAPTERS
+    componentUnit: SYS-ADAPTERS-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-ADAPTERS
+      - SYS-ADAPTERS-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: ADP
+    cqRails: adapter implementations of owned ports
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-3A7C13DB5A63
+    pathHash: a922c5a2df2d7dcb3912aa6592a8ead4d94e666902c69a14dc46ef1a490d821d
+    contentHash: 2c6d9cf31671022e8667aae9a61c6c680b8c0d5f1cc0f6c3a3c3ced4570b256b
+    governanceHash: 20f9cb4336cda98a3c1235480a09c666c48b06c05134af5b06fbf14c178c528b
+    stateFingerprint: b8a33b5810da9b47d68e1092255808a964ef671e963e06c444ec27d9e7514f16
+    path: packages/@dvt/adapter-temporal/src/TemporalWorkerHost.ts
+    owningUnit: SYS-ADAPTERS-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-ADAPTERS
+    componentUnit: SYS-ADAPTERS-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-ADAPTERS
+      - SYS-ADAPTERS-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: ADP
+    cqRails: adapter implementations of owned ports
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-52BDE92BB467
+    pathHash: a14739522fdad5264f80dd31a76035c1b313e029a362a0484e829364bd51c90d
+    contentHash: d4b7534576db2d77a06c619bc2965fec5216fc1643f31d28787270938a445093
+    governanceHash: 20f9cb4336cda98a3c1235480a09c666c48b06c05134af5b06fbf14c178c528b
+    stateFingerprint: 3a6abdea426cbb96bba89aa0f5985547ec7140c21d57c5814d89439e75fb0e88
+    path: packages/@dvt/adapter-temporal/src/WorkflowMapper.ts
     owningUnit: SYS-ADAPTERS-ROOT
     rootUnit: SYS-DVT
     domainUnit: SYS-ADAPTERS
@@ -2779,12 +2954,87 @@ files:
     cqRails: adapter implementations of owned ports
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-44E13DA4D102
-    pathHash: 9080cafe9b021d51afcd5405e9859f22389b5fcd2b138764267709b1bcef6bec
-    contentHash: f6c00e1d9ad9023a2116579eb0335f13575d8437b19f4ec457371af0703898a0
+  - fileId: F-8FF360400763
+    pathHash: 716eab505bbe9ee90837a2f26a58302fccd333f3ac22e61b68e9d2598c5e5787
+    contentHash: 892628cfa90dde09617a2adb1b11355f09d937abb6a1bc326129f6f339946d87
     governanceHash: 20f9cb4336cda98a3c1235480a09c666c48b06c05134af5b06fbf14c178c528b
-    stateFingerprint: 10fd563bab6bd75f2530c7ffeab04674f81321cdd6d076e3f84c582963ff6e34
-    path: packages/@dvt/adapter-temporal/src/ObservedTemporalAdapter.ts
+    stateFingerprint: eb2a6e2da8e1b13f3985134d93a9a9023d71459b8be3d97b7b9191797ce67aa8
+    path: packages/@dvt/adapter-temporal/src/plugins/TemporalStepPluginProfile.ts
+    owningUnit: SYS-ADAPTERS-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-ADAPTERS
+    componentUnit: SYS-ADAPTERS-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-ADAPTERS
+      - SYS-ADAPTERS-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: ADP
+    cqRails: adapter implementations of owned ports
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-CCF9540DFBE3
+    pathHash: 4a3beb4a70c0f0815499d69f35649ff9c00e63e46d58a34646234fa08b689852
+    contentHash: 676db08db3442e2c3b150f964ca77e3979b9eb844e7c5095bf52e99ebd6981e2
+    governanceHash: 20f9cb4336cda98a3c1235480a09c666c48b06c05134af5b06fbf14c178c528b
+    stateFingerprint: 493457ccd1d5fe7a2d00f10656b792da7add86acfdf25b99ff798bf5b3825c39
+    path: packages/@dvt/adapter-temporal/src/plugins/TemporalStepPluginRunner.ts
+    owningUnit: SYS-ADAPTERS-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-ADAPTERS
+    componentUnit: SYS-ADAPTERS-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-ADAPTERS
+      - SYS-ADAPTERS-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: ADP
+    cqRails: adapter implementations of owned ports
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-732220AF0EAD
+    pathHash: dbf32f083c43f1629e203ee83057db3551c6b4b888f8ddabdc40cef3fd942340
+    contentHash: 4cd2492f23c97d550b301b28c804df89768418a475a3ed0c5f5082c2e7eda5a2
+    governanceHash: 20f9cb4336cda98a3c1235480a09c666c48b06c05134af5b06fbf14c178c528b
+    stateFingerprint: e0a2b892bc109512c977457966eff67252b0b4cc7577487ab455e29ffe3e4f1e
+    path: packages/@dvt/adapter-temporal/src/plugins/dbt/DbtCliPluginRunner.ts
+    owningUnit: SYS-ADAPTERS-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-ADAPTERS
+    componentUnit: SYS-ADAPTERS-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-ADAPTERS
+      - SYS-ADAPTERS-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: ADP
+    cqRails: adapter implementations of owned ports
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-DFB7D9DE7E11
+    pathHash: decf22880d2b95f837e982492a7a37482bfb5bed2ab8b0ff81a47c6bf1a24282
+    contentHash: 048c73fa7104255cd39d94c8c6b5ff9da7997cb6544b3cd0993324acf30a0f80
+    governanceHash: 20f9cb4336cda98a3c1235480a09c666c48b06c05134af5b06fbf14c178c528b
+    stateFingerprint: 2eadb35b6cd7f0914f26e5b3c7cbf4dd6831506f2f769dd3adf104aa30e43139
+    path: packages/@dvt/adapter-temporal/src/plugins/dbt/DbtStepActivity.ts
     owningUnit: SYS-ADAPTERS-ROOT
     rootUnit: SYS-DVT
     domainUnit: SYS-ADAPTERS
@@ -2835,31 +3085,6 @@ files:
     governanceHash: 20f9cb4336cda98a3c1235480a09c666c48b06c05134af5b06fbf14c178c528b
     stateFingerprint: 874f40f55a1b471c2790637148a18a14881cb2d619f897633a0be13fb9ae7288
     path: packages/@dvt/adapter-temporal/src/plugins/dbt/dbtCliFailures.ts
-    owningUnit: SYS-ADAPTERS-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-ADAPTERS
-    componentUnit: SYS-ADAPTERS-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-ADAPTERS
-      - SYS-ADAPTERS-ROOT
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: ADP
-    cqRails: adapter implementations of owned ports
-    governance:
-      - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-732220AF0EAD
-    pathHash: dbf32f083c43f1629e203ee83057db3551c6b4b888f8ddabdc40cef3fd942340
-    contentHash: 4cd2492f23c97d550b301b28c804df89768418a475a3ed0c5f5082c2e7eda5a2
-    governanceHash: 20f9cb4336cda98a3c1235480a09c666c48b06c05134af5b06fbf14c178c528b
-    stateFingerprint: e0a2b892bc109512c977457966eff67252b0b4cc7577487ab455e29ffe3e4f1e
-    path: packages/@dvt/adapter-temporal/src/plugins/dbt/DbtCliPluginRunner.ts
     owningUnit: SYS-ADAPTERS-ROOT
     rootUnit: SYS-DVT
     domainUnit: SYS-ADAPTERS
@@ -3004,156 +3229,6 @@ files:
     cqRails: adapter implementations of owned ports
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-DFB7D9DE7E11
-    pathHash: decf22880d2b95f837e982492a7a37482bfb5bed2ab8b0ff81a47c6bf1a24282
-    contentHash: 048c73fa7104255cd39d94c8c6b5ff9da7997cb6544b3cd0993324acf30a0f80
-    governanceHash: 20f9cb4336cda98a3c1235480a09c666c48b06c05134af5b06fbf14c178c528b
-    stateFingerprint: 2eadb35b6cd7f0914f26e5b3c7cbf4dd6831506f2f769dd3adf104aa30e43139
-    path: packages/@dvt/adapter-temporal/src/plugins/dbt/DbtStepActivity.ts
-    owningUnit: SYS-ADAPTERS-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-ADAPTERS
-    componentUnit: SYS-ADAPTERS-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-ADAPTERS
-      - SYS-ADAPTERS-ROOT
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: ADP
-    cqRails: adapter implementations of owned ports
-    governance:
-      - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-8FF360400763
-    pathHash: 716eab505bbe9ee90837a2f26a58302fccd333f3ac22e61b68e9d2598c5e5787
-    contentHash: 892628cfa90dde09617a2adb1b11355f09d937abb6a1bc326129f6f339946d87
-    governanceHash: 20f9cb4336cda98a3c1235480a09c666c48b06c05134af5b06fbf14c178c528b
-    stateFingerprint: eb2a6e2da8e1b13f3985134d93a9a9023d71459b8be3d97b7b9191797ce67aa8
-    path: packages/@dvt/adapter-temporal/src/plugins/TemporalStepPluginProfile.ts
-    owningUnit: SYS-ADAPTERS-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-ADAPTERS
-    componentUnit: SYS-ADAPTERS-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-ADAPTERS
-      - SYS-ADAPTERS-ROOT
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: ADP
-    cqRails: adapter implementations of owned ports
-    governance:
-      - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-CCF9540DFBE3
-    pathHash: 4a3beb4a70c0f0815499d69f35649ff9c00e63e46d58a34646234fa08b689852
-    contentHash: 676db08db3442e2c3b150f964ca77e3979b9eb844e7c5095bf52e99ebd6981e2
-    governanceHash: 20f9cb4336cda98a3c1235480a09c666c48b06c05134af5b06fbf14c178c528b
-    stateFingerprint: 493457ccd1d5fe7a2d00f10656b792da7add86acfdf25b99ff798bf5b3825c39
-    path: packages/@dvt/adapter-temporal/src/plugins/TemporalStepPluginRunner.ts
-    owningUnit: SYS-ADAPTERS-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-ADAPTERS
-    componentUnit: SYS-ADAPTERS-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-ADAPTERS
-      - SYS-ADAPTERS-ROOT
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: ADP
-    cqRails: adapter implementations of owned ports
-    governance:
-      - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-BC532CA9508A
-    pathHash: c622adda0b035c8d9af406e1e5b44741fd6c759584c8e6fcad05e598a372220e
-    contentHash: 6e76bd3b798ababd6cace98a7857a0a266ffa3ceace4955ac61e191af6953705
-    governanceHash: 20f9cb4336cda98a3c1235480a09c666c48b06c05134af5b06fbf14c178c528b
-    stateFingerprint: e06fe00d432a4a26fd4760f75ba8808f99622ef5efef711defd13a983c91c668
-    path: packages/@dvt/adapter-temporal/src/RunStateCommandPortCircuitBreaker.ts
-    owningUnit: SYS-ADAPTERS-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-ADAPTERS
-    componentUnit: SYS-ADAPTERS-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-ADAPTERS
-      - SYS-ADAPTERS-ROOT
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: ADP
-    cqRails: adapter implementations of owned ports
-    governance:
-      - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-069AB1FA727E
-    pathHash: 628755d12329d8b3d94900d1e2fe797ed85b163a5be42d5645b02694d560d671
-    contentHash: 3d033c190992294355e4e5b6142c2f2a67a192771cb1fc2f094ac458230fcffe
-    governanceHash: 20f9cb4336cda98a3c1235480a09c666c48b06c05134af5b06fbf14c178c528b
-    stateFingerprint: 2d1759174363fabcef2aa9310ee21fed01bccc52bf80724f23c012c936ebad7d
-    path: packages/@dvt/adapter-temporal/src/TemporalAdapter.ts
-    owningUnit: SYS-ADAPTERS-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-ADAPTERS
-    componentUnit: SYS-ADAPTERS-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-ADAPTERS
-      - SYS-ADAPTERS-ROOT
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: ADP
-    cqRails: adapter implementations of owned ports
-    governance:
-      - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-EB7C1DA8A092
-    pathHash: 9a1978268021e4666946fc7f1956342c42a74a6e9d00c13c077ceb14d1a44be2
-    contentHash: 0a8a17c6ed69069d2c9206e7b3c9b41ee3500b6a535e94887a8b7ed4c8417d3d
-    governanceHash: 20f9cb4336cda98a3c1235480a09c666c48b06c05134af5b06fbf14c178c528b
-    stateFingerprint: 2f9da37e7c3bacd50ba1ccb787232a49c42cd1098ca8e697b64c86cb0f149b63
-    path: packages/@dvt/adapter-temporal/src/TemporalClient.ts
-    owningUnit: SYS-ADAPTERS-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-ADAPTERS
-    componentUnit: SYS-ADAPTERS-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-ADAPTERS
-      - SYS-ADAPTERS-ROOT
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: ADP
-    cqRails: adapter implementations of owned ports
-    governance:
-      - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-753CA8ED2421
     pathHash: 094bab5ce597383667c3a227aa3faea27e038de86d287e859c1f1e9c7a01d81e
     contentHash: 6f874cd1ff491ed77f091c25c11b0082b8b094372d2ee8676f86cdb444b3a32d
@@ -3204,56 +3279,6 @@ files:
     cqRails: adapter implementations of owned ports
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-9084B1061CAE
-    pathHash: a7d763503ccb077ff445dd2d8d9487bf89105579fb74c929cc00a1ba27acfb05
-    contentHash: ac43700d51bc825853de3e256fdc87168734d23f21cc3ba5e720151ce8e6445b
-    governanceHash: 20f9cb4336cda98a3c1235480a09c666c48b06c05134af5b06fbf14c178c528b
-    stateFingerprint: db0596ebedd9c8134998f24456d446472efaa20dc4bb4e83a47bdfb67e46ce30
-    path: packages/@dvt/adapter-temporal/src/TemporalPolicyMapper.ts
-    owningUnit: SYS-ADAPTERS-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-ADAPTERS
-    componentUnit: SYS-ADAPTERS-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-ADAPTERS
-      - SYS-ADAPTERS-ROOT
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: ADP
-    cqRails: adapter implementations of owned ports
-    governance:
-      - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-3A7C13DB5A63
-    pathHash: a922c5a2df2d7dcb3912aa6592a8ead4d94e666902c69a14dc46ef1a490d821d
-    contentHash: 2c6d9cf31671022e8667aae9a61c6c680b8c0d5f1cc0f6c3a3c3ced4570b256b
-    governanceHash: 20f9cb4336cda98a3c1235480a09c666c48b06c05134af5b06fbf14c178c528b
-    stateFingerprint: b8a33b5810da9b47d68e1092255808a964ef671e963e06c444ec27d9e7514f16
-    path: packages/@dvt/adapter-temporal/src/TemporalWorkerHost.ts
-    owningUnit: SYS-ADAPTERS-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-ADAPTERS
-    componentUnit: SYS-ADAPTERS-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-ADAPTERS
-      - SYS-ADAPTERS-ROOT
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: ADP
-    cqRails: adapter implementations of owned ports
-    governance:
-      - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-E1AF804210FD
     pathHash: e5ead2e5ab289f4cf35aa96cb96e007d311b2073bca86abda81ca1e3c6851237
     contentHash: 8bcb5a6d4a26512c0898e1f50daebad2fd90dfaa0f8c32a0e9c80eddc547d316
@@ -3279,12 +3304,12 @@ files:
     cqRails: adapter implementations of owned ports
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-52BDE92BB467
-    pathHash: a14739522fdad5264f80dd31a76035c1b313e029a362a0484e829364bd51c90d
-    contentHash: d4b7534576db2d77a06c619bc2965fec5216fc1643f31d28787270938a445093
+  - fileId: F-34057DE17195
+    pathHash: 40ced8ca6ef00efaeba33a8ce5b1476deb4d70e8a6c2a1a7931a8d82354ec39b
+    contentHash: b222bc9803ca4a95005b5ae142a622a71ca376ebf247b00c10b1df9d96cad719
     governanceHash: 20f9cb4336cda98a3c1235480a09c666c48b06c05134af5b06fbf14c178c528b
-    stateFingerprint: 3a6abdea426cbb96bba89aa0f5985547ec7140c21d57c5814d89439e75fb0e88
-    path: packages/@dvt/adapter-temporal/src/WorkflowMapper.ts
+    stateFingerprint: 5e7a76d52472def12ede1e72041ad14153ae5591c3beb9d987cd41966332a7e3
+    path: packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts
     owningUnit: SYS-ADAPTERS-ROOT
     rootUnit: SYS-DVT
     domainUnit: SYS-ADAPTERS
@@ -3554,31 +3579,6 @@ files:
     cqRails: adapter implementations of owned ports
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-34057DE17195
-    pathHash: 40ced8ca6ef00efaeba33a8ce5b1476deb4d70e8a6c2a1a7931a8d82354ec39b
-    contentHash: b222bc9803ca4a95005b5ae142a622a71ca376ebf247b00c10b1df9d96cad719
-    governanceHash: 20f9cb4336cda98a3c1235480a09c666c48b06c05134af5b06fbf14c178c528b
-    stateFingerprint: 5e7a76d52472def12ede1e72041ad14153ae5591c3beb9d987cd41966332a7e3
-    path: packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts
-    owningUnit: SYS-ADAPTERS-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-ADAPTERS
-    componentUnit: SYS-ADAPTERS-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-ADAPTERS
-      - SYS-ADAPTERS-ROOT
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: ADP
-    cqRails: adapter implementations of owned ports
-    governance:
-      - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-F989F885364E
     pathHash: a5469fcd3cee1312e838d6cee82cc2c478e7394dc39f719fcbca177a36716038
     contentHash: 354d33a3e41f1362493439a46ff067e27d11b648053f74e3cc28a9cb2d5461a2
@@ -3779,6 +3779,231 @@ files:
     cqRails: adapter implementations of owned ports
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-A80E6D000D8E
+    pathHash: 49012c3364688e270dab70ea78692d5809206af435905d1ff5e2d705585d8f06
+    contentHash: a85eb5511b155bb0801e2ee1f421adebe2f1d0a2881ca1e2dfce01ad34f06613
+    governanceHash: 20f9cb4336cda98a3c1235480a09c666c48b06c05134af5b06fbf14c178c528b
+    stateFingerprint: cf1e54f3a497ef484151544a4dbdb119cde947ad725f7efd809d2b22bef4ece0
+    path: packages/@dvt/adapter-temporal/test/DbtCliPluginRunner.test.ts
+    owningUnit: SYS-ADAPTERS-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-ADAPTERS
+    componentUnit: SYS-ADAPTERS-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-ADAPTERS
+      - SYS-ADAPTERS-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: ADP
+    cqRails: adapter implementations of owned ports
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-8852435B186A
+    pathHash: e599cbe1e54c31d9d880c686954b0b19d53d88c6c0417f5ffa9d8dfc90d5fe3a
+    contentHash: a5cf53a0037c7808159b05044399bf60c37e70b84a42cd7dab99fa1684402cb2
+    governanceHash: 20f9cb4336cda98a3c1235480a09c666c48b06c05134af5b06fbf14c178c528b
+    stateFingerprint: acd87dc0533954bfae3735c8c831386c0e3f2835fb7ee40406b0269420cda379
+    path: packages/@dvt/adapter-temporal/test/ObservedTemporalAdapter.test.ts
+    owningUnit: SYS-ADAPTERS-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-ADAPTERS
+    componentUnit: SYS-ADAPTERS-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-ADAPTERS
+      - SYS-ADAPTERS-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: ADP
+    cqRails: adapter implementations of owned ports
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-786D44C0A530
+    pathHash: 441be1023758aab4cc9cbfceec5356f3f8327f1d299abece4a79cac674610d4c
+    contentHash: f36ba78902f2d68d7b5b9c4406c5da48c3ef43bda3438c9d7696598b8a3bc948
+    governanceHash: 20f9cb4336cda98a3c1235480a09c666c48b06c05134af5b06fbf14c178c528b
+    stateFingerprint: 966c7201b4ace7998e7c4d16edbe5f0a7561bf3c5adf6fa826e0d9657e6f3d2a
+    path: packages/@dvt/adapter-temporal/test/RunStateCommandPortCircuitBreaker.test.ts
+    owningUnit: SYS-ADAPTERS-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-ADAPTERS
+    componentUnit: SYS-ADAPTERS-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-ADAPTERS
+      - SYS-ADAPTERS-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: ADP
+    cqRails: adapter implementations of owned ports
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-D65A49529918
+    pathHash: b80c48851ef85d8dc0babd4b09c398bacb319ec53b66d1ddcaa04a22b5ba3535
+    contentHash: edcaf069ec688c3135c6da866897c0a34a0084b7156cbb73d76ab7be083aac46
+    governanceHash: 20f9cb4336cda98a3c1235480a09c666c48b06c05134af5b06fbf14c178c528b
+    stateFingerprint: ccfc79482402e1c2f473ca6f84e03aa6fb89162fa67a643a475aac54416bc4f9
+    path: packages/@dvt/adapter-temporal/test/TemporalAdapter.control.test.ts
+    owningUnit: SYS-ADAPTERS-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-ADAPTERS
+    componentUnit: SYS-ADAPTERS-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-ADAPTERS
+      - SYS-ADAPTERS-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: ADP
+    cqRails: adapter implementations of owned ports
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-FF18F1A24809
+    pathHash: 40fe7cac2a6201cec86233143a3388d287eea5fc2af24f48ba4aad8ea0182edd
+    contentHash: 565604b9608a4cee0a096d947e450f8eb652b762214c845d44d9851793bd718e
+    governanceHash: 20f9cb4336cda98a3c1235480a09c666c48b06c05134af5b06fbf14c178c528b
+    stateFingerprint: 6c81d7860d712c3e57831a28fd7fc697a5dc4a4e53e63f8d8bb3f92b995213c8
+    path: packages/@dvt/adapter-temporal/test/TemporalAdapter.getProviderStatusView.test.ts
+    owningUnit: SYS-ADAPTERS-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-ADAPTERS
+    componentUnit: SYS-ADAPTERS-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-ADAPTERS
+      - SYS-ADAPTERS-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: ADP
+    cqRails: adapter implementations of owned ports
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-DC278AE8BCE6
+    pathHash: c6351fbadcc2bab60f9430aa8d1f69a6318b4fdbd1343920b84cd2c57671106a
+    contentHash: 5b2122ca2b6389b13887bbc463fcb875c48002c26c89d7305d6e7a05b4158261
+    governanceHash: 20f9cb4336cda98a3c1235480a09c666c48b06c05134af5b06fbf14c178c528b
+    stateFingerprint: 42b70434fe1c360b5a910ededc290c68065f9e987bb6c28df3be15037c7d3c53
+    path: packages/@dvt/adapter-temporal/test/TemporalAdapter.lookupRunRef.test.ts
+    owningUnit: SYS-ADAPTERS-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-ADAPTERS
+    componentUnit: SYS-ADAPTERS-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-ADAPTERS
+      - SYS-ADAPTERS-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: ADP
+    cqRails: adapter implementations of owned ports
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-667098768F64
+    pathHash: 1c4cb16bf7eb17515fad7305a5367c606c1a2311b5a49fc8ec3829bf8c740465
+    contentHash: 1d37da9123e1db47073cd8a9996d7d5bedc0950e253688d1f439b0866dca635c
+    governanceHash: 20f9cb4336cda98a3c1235480a09c666c48b06c05134af5b06fbf14c178c528b
+    stateFingerprint: 6ff8f29aa323b628a8436dd5503678c9be0074289ee3867b2628fa3abf32f4b7
+    path: packages/@dvt/adapter-temporal/test/TemporalAdapter.startRun.test.ts
+    owningUnit: SYS-ADAPTERS-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-ADAPTERS
+    componentUnit: SYS-ADAPTERS-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-ADAPTERS
+      - SYS-ADAPTERS-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: ADP
+    cqRails: adapter implementations of owned ports
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-C533189726CB
+    pathHash: b71171eccd1570aabd69f70e89d56a8adba341fca5ec513dec8b1e5984ec9197
+    contentHash: 7ed4fe1c4bc649947fe30b46c56d05f79bb36d61dd2f8f75f72fcf8912874a45
+    governanceHash: 20f9cb4336cda98a3c1235480a09c666c48b06c05134af5b06fbf14c178c528b
+    stateFingerprint: 9ffdf4006cbe5514d888ce7d708a8bcb1162eb87dc722c02738e52e2127a4d2d
+    path: packages/@dvt/adapter-temporal/test/TemporalPolicyMapper.test.ts
+    owningUnit: SYS-ADAPTERS-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-ADAPTERS
+    componentUnit: SYS-ADAPTERS-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-ADAPTERS
+      - SYS-ADAPTERS-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: ADP
+    cqRails: adapter implementations of owned ports
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - fileId: F-B4402A5C56C4
+    pathHash: cca48291ca3538dd11ab7956503db30e486e930007d8e8f51797ac3a8995a23f
+    contentHash: b9361584cd4b1dd32e57a31d1199414a3770a0e4398a80ae9388d95932fd6f3b
+    governanceHash: 20f9cb4336cda98a3c1235480a09c666c48b06c05134af5b06fbf14c178c528b
+    stateFingerprint: 5abc9d60770ace43ba3e7359e124627db324fae359937c12ed46d089d44b8cfd
+    path: packages/@dvt/adapter-temporal/test/TemporalWorkerHost.lifecycle.test.ts
+    owningUnit: SYS-ADAPTERS-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-ADAPTERS
+    componentUnit: SYS-ADAPTERS-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-ADAPTERS
+      - SYS-ADAPTERS-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: ADP
+    cqRails: adapter implementations of owned ports
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-F5E24197F12A
     pathHash: 787aff96ab81a49706e9bb3c22e9e78207f26d2da18fd42a61e5d0204df8c3b4
     contentHash: 20f1ba525802efc6a0c7c44ca3d25dfa5b131642a303c78d74ca8ec3a510537a
@@ -3835,31 +4060,6 @@ files:
     governanceHash: 20f9cb4336cda98a3c1235480a09c666c48b06c05134af5b06fbf14c178c528b
     stateFingerprint: cadf3df3574bccff6d22a376febd95b832ba16503bf951d8c27449ca4abdc064
     path: packages/@dvt/adapter-temporal/test/dbt-core-decoupling.architecture.test.ts
-    owningUnit: SYS-ADAPTERS-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-ADAPTERS
-    componentUnit: SYS-ADAPTERS-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-ADAPTERS
-      - SYS-ADAPTERS-ROOT
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: ADP
-    cqRails: adapter implementations of owned ports
-    governance:
-      - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-A80E6D000D8E
-    pathHash: 49012c3364688e270dab70ea78692d5809206af435905d1ff5e2d705585d8f06
-    contentHash: a85eb5511b155bb0801e2ee1f421adebe2f1d0a2881ca1e2dfce01ad34f06613
-    governanceHash: 20f9cb4336cda98a3c1235480a09c666c48b06c05134af5b06fbf14c178c528b
-    stateFingerprint: cf1e54f3a497ef484151544a4dbdb119cde947ad725f7efd809d2b22bef4ece0
-    path: packages/@dvt/adapter-temporal/test/DbtCliPluginRunner.test.ts
     owningUnit: SYS-ADAPTERS-ROOT
     rootUnit: SYS-DVT
     domainUnit: SYS-ADAPTERS
@@ -4279,31 +4479,6 @@ files:
     cqRails: adapter implementations of owned ports
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-8852435B186A
-    pathHash: e599cbe1e54c31d9d880c686954b0b19d53d88c6c0417f5ffa9d8dfc90d5fe3a
-    contentHash: a5cf53a0037c7808159b05044399bf60c37e70b84a42cd7dab99fa1684402cb2
-    governanceHash: 20f9cb4336cda98a3c1235480a09c666c48b06c05134af5b06fbf14c178c528b
-    stateFingerprint: acd87dc0533954bfae3735c8c831386c0e3f2835fb7ee40406b0269420cda379
-    path: packages/@dvt/adapter-temporal/test/ObservedTemporalAdapter.test.ts
-    owningUnit: SYS-ADAPTERS-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-ADAPTERS
-    componentUnit: SYS-ADAPTERS-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-ADAPTERS
-      - SYS-ADAPTERS-ROOT
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: ADP
-    cqRails: adapter implementations of owned ports
-    governance:
-      - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-D66673A40EC7
     pathHash: ef4e0b8a2350439937b73e93484b512b6540049968c2fa40631a9444a8696414
     contentHash: 9fc1e208a892330fd8cfb35c033652cd305e431865d509dd93c3f331ecdeb734
@@ -4379,31 +4554,6 @@ files:
     cqRails: adapter implementations of owned ports
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-786D44C0A530
-    pathHash: 441be1023758aab4cc9cbfceec5356f3f8327f1d299abece4a79cac674610d4c
-    contentHash: f36ba78902f2d68d7b5b9c4406c5da48c3ef43bda3438c9d7696598b8a3bc948
-    governanceHash: 20f9cb4336cda98a3c1235480a09c666c48b06c05134af5b06fbf14c178c528b
-    stateFingerprint: 966c7201b4ace7998e7c4d16edbe5f0a7561bf3c5adf6fa826e0d9657e6f3d2a
-    path: packages/@dvt/adapter-temporal/test/RunStateCommandPortCircuitBreaker.test.ts
-    owningUnit: SYS-ADAPTERS-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-ADAPTERS
-    componentUnit: SYS-ADAPTERS-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-ADAPTERS
-      - SYS-ADAPTERS-ROOT
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: ADP
-    cqRails: adapter implementations of owned ports
-    governance:
-      - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-3D59EA1AA656
     pathHash: c18f173376aba39b19b604bc27b392b973608e8e3fac01bd07fb98f648eef1fc
     contentHash: 900781c4f22d2999d5c07d6a9ac6d0b78e72f1911c0f471580d302223bc57bdf
@@ -4429,162 +4579,12 @@ files:
     cqRails: adapter implementations of owned ports
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-D65A49529918
-    pathHash: b80c48851ef85d8dc0babd4b09c398bacb319ec53b66d1ddcaa04a22b5ba3535
-    contentHash: edcaf069ec688c3135c6da866897c0a34a0084b7156cbb73d76ab7be083aac46
-    governanceHash: 20f9cb4336cda98a3c1235480a09c666c48b06c05134af5b06fbf14c178c528b
-    stateFingerprint: ccfc79482402e1c2f473ca6f84e03aa6fb89162fa67a643a475aac54416bc4f9
-    path: packages/@dvt/adapter-temporal/test/TemporalAdapter.control.test.ts
-    owningUnit: SYS-ADAPTERS-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-ADAPTERS
-    componentUnit: SYS-ADAPTERS-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-ADAPTERS
-      - SYS-ADAPTERS-ROOT
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: ADP
-    cqRails: adapter implementations of owned ports
-    governance:
-      - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-FF18F1A24809
-    pathHash: 40fe7cac2a6201cec86233143a3388d287eea5fc2af24f48ba4aad8ea0182edd
-    contentHash: 565604b9608a4cee0a096d947e450f8eb652b762214c845d44d9851793bd718e
-    governanceHash: 20f9cb4336cda98a3c1235480a09c666c48b06c05134af5b06fbf14c178c528b
-    stateFingerprint: 6c81d7860d712c3e57831a28fd7fc697a5dc4a4e53e63f8d8bb3f92b995213c8
-    path: packages/@dvt/adapter-temporal/test/TemporalAdapter.getProviderStatusView.test.ts
-    owningUnit: SYS-ADAPTERS-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-ADAPTERS
-    componentUnit: SYS-ADAPTERS-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-ADAPTERS
-      - SYS-ADAPTERS-ROOT
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: ADP
-    cqRails: adapter implementations of owned ports
-    governance:
-      - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-DC278AE8BCE6
-    pathHash: c6351fbadcc2bab60f9430aa8d1f69a6318b4fdbd1343920b84cd2c57671106a
-    contentHash: 5b2122ca2b6389b13887bbc463fcb875c48002c26c89d7305d6e7a05b4158261
-    governanceHash: 20f9cb4336cda98a3c1235480a09c666c48b06c05134af5b06fbf14c178c528b
-    stateFingerprint: 42b70434fe1c360b5a910ededc290c68065f9e987bb6c28df3be15037c7d3c53
-    path: packages/@dvt/adapter-temporal/test/TemporalAdapter.lookupRunRef.test.ts
-    owningUnit: SYS-ADAPTERS-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-ADAPTERS
-    componentUnit: SYS-ADAPTERS-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-ADAPTERS
-      - SYS-ADAPTERS-ROOT
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: ADP
-    cqRails: adapter implementations of owned ports
-    governance:
-      - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-667098768F64
-    pathHash: 1c4cb16bf7eb17515fad7305a5367c606c1a2311b5a49fc8ec3829bf8c740465
-    contentHash: 1d37da9123e1db47073cd8a9996d7d5bedc0950e253688d1f439b0866dca635c
-    governanceHash: 20f9cb4336cda98a3c1235480a09c666c48b06c05134af5b06fbf14c178c528b
-    stateFingerprint: 6ff8f29aa323b628a8436dd5503678c9be0074289ee3867b2628fa3abf32f4b7
-    path: packages/@dvt/adapter-temporal/test/TemporalAdapter.startRun.test.ts
-    owningUnit: SYS-ADAPTERS-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-ADAPTERS
-    componentUnit: SYS-ADAPTERS-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-ADAPTERS
-      - SYS-ADAPTERS-ROOT
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: ADP
-    cqRails: adapter implementations of owned ports
-    governance:
-      - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-711035BF9B77
     pathHash: a3a09a8d6c031223f70048dbcdb44250205d595129c10753f1954051a89d0a6e
     contentHash: 62503ea03b09b52fa597110367bd8cecc94b1d56b5727a8ff30c8cc5a6095116
     governanceHash: 20f9cb4336cda98a3c1235480a09c666c48b06c05134af5b06fbf14c178c528b
     stateFingerprint: 72585630e114ecdfe600b4a92e4d483ddcc4d99e1a0e4784f23d75fb5eede49d
     path: packages/@dvt/adapter-temporal/test/temporalErrorPolicy.test.ts
-    owningUnit: SYS-ADAPTERS-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-ADAPTERS
-    componentUnit: SYS-ADAPTERS-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-ADAPTERS
-      - SYS-ADAPTERS-ROOT
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: ADP
-    cqRails: adapter implementations of owned ports
-    governance:
-      - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-C533189726CB
-    pathHash: b71171eccd1570aabd69f70e89d56a8adba341fca5ec513dec8b1e5984ec9197
-    contentHash: 7ed4fe1c4bc649947fe30b46c56d05f79bb36d61dd2f8f75f72fcf8912874a45
-    governanceHash: 20f9cb4336cda98a3c1235480a09c666c48b06c05134af5b06fbf14c178c528b
-    stateFingerprint: 9ffdf4006cbe5514d888ce7d708a8bcb1162eb87dc722c02738e52e2127a4d2d
-    path: packages/@dvt/adapter-temporal/test/TemporalPolicyMapper.test.ts
-    owningUnit: SYS-ADAPTERS-ROOT
-    rootUnit: SYS-DVT
-    domainUnit: SYS-ADAPTERS
-    componentUnit: SYS-ADAPTERS-ROOT
-    unitPath:
-      - SYS-DVT
-      - SYS-ADAPTERS
-      - SYS-ADAPTERS-ROOT
-    ownerLevel: component
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    isDrift: false
-    isLegacy: false
-    dddOwner: ADP
-    cqRails: adapter implementations of owned ports
-    governance:
-      - docs/planning/status/system-operations-inventory-20260501.md
-  - fileId: F-B4402A5C56C4
-    pathHash: cca48291ca3538dd11ab7956503db30e486e930007d8e8f51797ac3a8995a23f
-    contentHash: b9361584cd4b1dd32e57a31d1199414a3770a0e4398a80ae9388d95932fd6f3b
-    governanceHash: 20f9cb4336cda98a3c1235480a09c666c48b06c05134af5b06fbf14c178c528b
-    stateFingerprint: 5abc9d60770ace43ba3e7359e124627db324fae359937c12ed46d089d44b8cfd
-    path: packages/@dvt/adapter-temporal/test/TemporalWorkerHost.lifecycle.test.ts
     owningUnit: SYS-ADAPTERS-ROOT
     rootUnit: SYS-DVT
     domainUnit: SYS-ADAPTERS

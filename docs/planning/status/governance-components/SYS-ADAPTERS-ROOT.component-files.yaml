@@ -102,27 +102,6 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: packages/@dvt/adapter-postgres/src/index.ts
-    fileId: F-58B80660D291
-    owningUnit: SYS-ADAPTERS-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: packages/@dvt/adapter-postgres/src/lineageOutboxStorePolicy.ts
-    fileId: F-B7DD446FE5F8
-    owningUnit: SYS-ADAPTERS-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: packages/@dvt/adapter-postgres/src/migratePostgresRuntimeStores.ts
-    fileId: F-71B578FEC315
-    owningUnit: SYS-ADAPTERS-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
   - path: packages/@dvt/adapter-postgres/src/PostgresAdapterClientSession.ts
     fileId: F-3669C9D21512
     owningUnit: SYS-ADAPTERS-ROOT
@@ -382,6 +361,41 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
+  - path: packages/@dvt/adapter-postgres/src/RunEventWriteRepository.ts
+    fileId: F-53E2044556B1
+    owningUnit: SYS-ADAPTERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/adapter-postgres/src/StartRunIntentSchemaManager.ts
+    fileId: F-D682DFB364A1
+    owningUnit: SYS-ADAPTERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/adapter-postgres/src/index.ts
+    fileId: F-58B80660D291
+    owningUnit: SYS-ADAPTERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/adapter-postgres/src/lineageOutboxStorePolicy.ts
+    fileId: F-B7DD446FE5F8
+    owningUnit: SYS-ADAPTERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/adapter-postgres/src/migratePostgresRuntimeStores.ts
+    fileId: F-71B578FEC315
+    owningUnit: SYS-ADAPTERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
   - path: packages/@dvt/adapter-postgres/src/runEventEnvelopePolicy.ts
     fileId: F-037A12DCEF89
     owningUnit: SYS-ADAPTERS-ROOT
@@ -391,13 +405,6 @@ files:
     isLegacy: false
   - path: packages/@dvt/adapter-postgres/src/runEventStoreErrors.ts
     fileId: F-AAB75238FFC4
-    owningUnit: SYS-ADAPTERS-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: packages/@dvt/adapter-postgres/src/RunEventWriteRepository.ts
-    fileId: F-53E2044556B1
     owningUnit: SYS-ADAPTERS-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -417,57 +424,8 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: packages/@dvt/adapter-postgres/src/StartRunIntentSchemaManager.ts
-    fileId: F-D682DFB364A1
-    owningUnit: SYS-ADAPTERS-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
   - path: packages/@dvt/adapter-postgres/src/types.ts
     fileId: F-6FF49A36EB04
-    owningUnit: SYS-ADAPTERS-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: packages/@dvt/adapter-postgres/test/helpers/lineageOutboxIntegrationHarness.ts
-    fileId: F-485E0A093160
-    owningUnit: SYS-ADAPTERS-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: packages/@dvt/adapter-postgres/test/helpers/lineageOutboxUnitSupport.ts
-    fileId: F-A1A97C78EDEA
-    owningUnit: SYS-ADAPTERS-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: packages/@dvt/adapter-postgres/test/helpers/postgresIntegrationHarness.ts
-    fileId: F-DA985BD75922
-    owningUnit: SYS-ADAPTERS-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: packages/@dvt/adapter-postgres/test/helpers/postgresRlsProofHarness.ts
-    fileId: F-83125D733727
-    owningUnit: SYS-ADAPTERS-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: packages/@dvt/adapter-postgres/test/helpers/runEventFixtures.ts
-    fileId: F-A4CEE43A000F
-    owningUnit: SYS-ADAPTERS-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: packages/@dvt/adapter-postgres/test/migratePostgresRuntimeStores.test.ts
-    fileId: F-8CD79AF9326B
     owningUnit: SYS-ADAPTERS-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -655,13 +613,6 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: packages/@dvt/adapter-postgres/test/runStateCommandPortBridge.test.ts
-    fileId: F-80A9AF82F45F
-    owningUnit: SYS-ADAPTERS-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
   - path: packages/@dvt/adapter-postgres/test/S19F1SnapshotWorkQueueClosure.integration.test.ts
     fileId: F-ADA6894006AB
     owningUnit: SYS-ADAPTERS-ROOT
@@ -669,15 +620,64 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: packages/@dvt/adapter-postgres/test/smoke.test.ts
-    fileId: F-8D0DC2BAA16E
+  - path: packages/@dvt/adapter-postgres/test/StartRunIntentSchemaManager.test.ts
+    fileId: F-A645D616588F
     owningUnit: SYS-ADAPTERS-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: packages/@dvt/adapter-postgres/test/StartRunIntentSchemaManager.test.ts
-    fileId: F-A645D616588F
+  - path: packages/@dvt/adapter-postgres/test/helpers/lineageOutboxIntegrationHarness.ts
+    fileId: F-485E0A093160
+    owningUnit: SYS-ADAPTERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/adapter-postgres/test/helpers/lineageOutboxUnitSupport.ts
+    fileId: F-A1A97C78EDEA
+    owningUnit: SYS-ADAPTERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/adapter-postgres/test/helpers/postgresIntegrationHarness.ts
+    fileId: F-DA985BD75922
+    owningUnit: SYS-ADAPTERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/adapter-postgres/test/helpers/postgresRlsProofHarness.ts
+    fileId: F-83125D733727
+    owningUnit: SYS-ADAPTERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/adapter-postgres/test/helpers/runEventFixtures.ts
+    fileId: F-A4CEE43A000F
+    owningUnit: SYS-ADAPTERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/adapter-postgres/test/migratePostgresRuntimeStores.test.ts
+    fileId: F-8CD79AF9326B
+    owningUnit: SYS-ADAPTERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/adapter-postgres/test/runStateCommandPortBridge.test.ts
+    fileId: F-80A9AF82F45F
+    owningUnit: SYS-ADAPTERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/adapter-postgres/test/smoke.test.ts
+    fileId: F-8D0DC2BAA16E
     owningUnit: SYS-ADAPTERS-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -713,6 +713,55 @@ files:
     isLegacy: false
   - path: packages/@dvt/adapter-temporal/scripts/run-postgres-integration.cjs
     fileId: F-2FEE84BE5FDA
+    owningUnit: SYS-ADAPTERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/adapter-temporal/src/ObservedTemporalAdapter.ts
+    fileId: F-44E13DA4D102
+    owningUnit: SYS-ADAPTERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/adapter-temporal/src/RunStateCommandPortCircuitBreaker.ts
+    fileId: F-BC532CA9508A
+    owningUnit: SYS-ADAPTERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/adapter-temporal/src/TemporalAdapter.ts
+    fileId: F-069AB1FA727E
+    owningUnit: SYS-ADAPTERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/adapter-temporal/src/TemporalClient.ts
+    fileId: F-EB7C1DA8A092
+    owningUnit: SYS-ADAPTERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/adapter-temporal/src/TemporalPolicyMapper.ts
+    fileId: F-9084B1061CAE
+    owningUnit: SYS-ADAPTERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/adapter-temporal/src/TemporalWorkerHost.ts
+    fileId: F-3A7C13DB5A63
+    owningUnit: SYS-ADAPTERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/adapter-temporal/src/WorkflowMapper.ts
+    fileId: F-52BDE92BB467
     owningUnit: SYS-ADAPTERS-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -788,8 +837,29 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: packages/@dvt/adapter-temporal/src/ObservedTemporalAdapter.ts
-    fileId: F-44E13DA4D102
+  - path: packages/@dvt/adapter-temporal/src/plugins/TemporalStepPluginProfile.ts
+    fileId: F-8FF360400763
+    owningUnit: SYS-ADAPTERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/adapter-temporal/src/plugins/TemporalStepPluginRunner.ts
+    fileId: F-CCF9540DFBE3
+    owningUnit: SYS-ADAPTERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/adapter-temporal/src/plugins/dbt/DbtCliPluginRunner.ts
+    fileId: F-732220AF0EAD
+    owningUnit: SYS-ADAPTERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/adapter-temporal/src/plugins/dbt/DbtStepActivity.ts
+    fileId: F-DFB7D9DE7E11
     owningUnit: SYS-ADAPTERS-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -804,13 +874,6 @@ files:
     isLegacy: false
   - path: packages/@dvt/adapter-temporal/src/plugins/dbt/dbtCliFailures.ts
     fileId: F-73E9C3E526AF
-    owningUnit: SYS-ADAPTERS-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: packages/@dvt/adapter-temporal/src/plugins/dbt/DbtCliPluginRunner.ts
-    fileId: F-732220AF0EAD
     owningUnit: SYS-ADAPTERS-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -851,48 +914,6 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: packages/@dvt/adapter-temporal/src/plugins/dbt/DbtStepActivity.ts
-    fileId: F-DFB7D9DE7E11
-    owningUnit: SYS-ADAPTERS-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: packages/@dvt/adapter-temporal/src/plugins/TemporalStepPluginProfile.ts
-    fileId: F-8FF360400763
-    owningUnit: SYS-ADAPTERS-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: packages/@dvt/adapter-temporal/src/plugins/TemporalStepPluginRunner.ts
-    fileId: F-CCF9540DFBE3
-    owningUnit: SYS-ADAPTERS-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: packages/@dvt/adapter-temporal/src/RunStateCommandPortCircuitBreaker.ts
-    fileId: F-BC532CA9508A
-    owningUnit: SYS-ADAPTERS-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: packages/@dvt/adapter-temporal/src/TemporalAdapter.ts
-    fileId: F-069AB1FA727E
-    owningUnit: SYS-ADAPTERS-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: packages/@dvt/adapter-temporal/src/TemporalClient.ts
-    fileId: F-EB7C1DA8A092
-    owningUnit: SYS-ADAPTERS-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
   - path: packages/@dvt/adapter-temporal/src/temporalErrorPolicy.ts
     fileId: F-753CA8ED2421
     owningUnit: SYS-ADAPTERS-ROOT
@@ -907,20 +928,6 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: packages/@dvt/adapter-temporal/src/TemporalPolicyMapper.ts
-    fileId: F-9084B1061CAE
-    owningUnit: SYS-ADAPTERS-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: packages/@dvt/adapter-temporal/src/TemporalWorkerHost.ts
-    fileId: F-3A7C13DB5A63
-    owningUnit: SYS-ADAPTERS-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
   - path: packages/@dvt/adapter-temporal/src/versioning.ts
     fileId: F-E1AF804210FD
     owningUnit: SYS-ADAPTERS-ROOT
@@ -928,8 +935,8 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: packages/@dvt/adapter-temporal/src/WorkflowMapper.ts
-    fileId: F-52BDE92BB467
+  - path: packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts
+    fileId: F-34057DE17195
     owningUnit: SYS-ADAPTERS-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -1005,13 +1012,6 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts
-    fileId: F-34057DE17195
-    owningUnit: SYS-ADAPTERS-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
   - path: packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.types.ts
     fileId: F-F989F885364E
     owningUnit: SYS-ADAPTERS-ROOT
@@ -1068,6 +1068,69 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
+  - path: packages/@dvt/adapter-temporal/test/DbtCliPluginRunner.test.ts
+    fileId: F-A80E6D000D8E
+    owningUnit: SYS-ADAPTERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/adapter-temporal/test/ObservedTemporalAdapter.test.ts
+    fileId: F-8852435B186A
+    owningUnit: SYS-ADAPTERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/adapter-temporal/test/RunStateCommandPortCircuitBreaker.test.ts
+    fileId: F-786D44C0A530
+    owningUnit: SYS-ADAPTERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/adapter-temporal/test/TemporalAdapter.control.test.ts
+    fileId: F-D65A49529918
+    owningUnit: SYS-ADAPTERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/adapter-temporal/test/TemporalAdapter.getProviderStatusView.test.ts
+    fileId: F-FF18F1A24809
+    owningUnit: SYS-ADAPTERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/adapter-temporal/test/TemporalAdapter.lookupRunRef.test.ts
+    fileId: F-DC278AE8BCE6
+    owningUnit: SYS-ADAPTERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/adapter-temporal/test/TemporalAdapter.startRun.test.ts
+    fileId: F-667098768F64
+    owningUnit: SYS-ADAPTERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/adapter-temporal/test/TemporalPolicyMapper.test.ts
+    fileId: F-C533189726CB
+    owningUnit: SYS-ADAPTERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/adapter-temporal/test/TemporalWorkerHost.lifecycle.test.ts
+    fileId: F-B4402A5C56C4
+    owningUnit: SYS-ADAPTERS-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
   - path: packages/@dvt/adapter-temporal/test/activities.test.ts
     fileId: F-F5E24197F12A
     owningUnit: SYS-ADAPTERS-ROOT
@@ -1084,13 +1147,6 @@ files:
     isLegacy: false
   - path: packages/@dvt/adapter-temporal/test/dbt-core-decoupling.architecture.test.ts
     fileId: F-EAA4A9D6F05B
-    owningUnit: SYS-ADAPTERS-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: packages/@dvt/adapter-temporal/test/DbtCliPluginRunner.test.ts
-    fileId: F-A80E6D000D8E
     owningUnit: SYS-ADAPTERS-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -1208,13 +1264,6 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: packages/@dvt/adapter-temporal/test/ObservedTemporalAdapter.test.ts
-    fileId: F-8852435B186A
-    owningUnit: SYS-ADAPTERS-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
   - path: packages/@dvt/adapter-temporal/test/runPlanWorkflow.cancellation.test.ts
     fileId: F-D66673A40EC7
     owningUnit: SYS-ADAPTERS-ROOT
@@ -1236,13 +1285,6 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: packages/@dvt/adapter-temporal/test/RunStateCommandPortCircuitBreaker.test.ts
-    fileId: F-786D44C0A530
-    owningUnit: SYS-ADAPTERS-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
   - path: packages/@dvt/adapter-temporal/test/smoke.test.ts
     fileId: F-3D59EA1AA656
     owningUnit: SYS-ADAPTERS-ROOT
@@ -1250,50 +1292,8 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: packages/@dvt/adapter-temporal/test/TemporalAdapter.control.test.ts
-    fileId: F-D65A49529918
-    owningUnit: SYS-ADAPTERS-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: packages/@dvt/adapter-temporal/test/TemporalAdapter.getProviderStatusView.test.ts
-    fileId: F-FF18F1A24809
-    owningUnit: SYS-ADAPTERS-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: packages/@dvt/adapter-temporal/test/TemporalAdapter.lookupRunRef.test.ts
-    fileId: F-DC278AE8BCE6
-    owningUnit: SYS-ADAPTERS-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: packages/@dvt/adapter-temporal/test/TemporalAdapter.startRun.test.ts
-    fileId: F-667098768F64
-    owningUnit: SYS-ADAPTERS-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
   - path: packages/@dvt/adapter-temporal/test/temporalErrorPolicy.test.ts
     fileId: F-711035BF9B77
-    owningUnit: SYS-ADAPTERS-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: packages/@dvt/adapter-temporal/test/TemporalPolicyMapper.test.ts
-    fileId: F-C533189726CB
-    owningUnit: SYS-ADAPTERS-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: packages/@dvt/adapter-temporal/test/TemporalWorkerHost.lifecycle.test.ts
-    fileId: F-B4402A5C56C4
     owningUnit: SYS-ADAPTERS-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required

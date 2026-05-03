@@ -11,29 +11,8 @@ fileCount: 16
 driftFileCount: 0
 legacyFileCount: 0
 files:
-  - path: apps/api/src/application/ports/accessDecision.ts
-    fileId: F-209CDC707539
-    owningUnit: SYS-API-APPLICATION-PORTS
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
   - path: apps/api/src/application/ports/AdmissionTelemetry.ts
     fileId: F-D39328F6F6C3
-    owningUnit: SYS-API-APPLICATION-PORTS
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/api/src/application/ports/auth.ts
-    fileId: F-FD9E6AAC5601
-    owningUnit: SYS-API-APPLICATION-PORTS
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/api/src/application/ports/authContract.ts
-    fileId: F-BC982286150A
     owningUnit: SYS-API-APPLICATION-PORTS
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -81,6 +60,34 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
+  - path: apps/api/src/application/ports/StartRunSlaTelemetry.ts
+    fileId: F-AF5408280599
+    owningUnit: SYS-API-APPLICATION-PORTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/src/application/ports/accessDecision.ts
+    fileId: F-209CDC707539
+    owningUnit: SYS-API-APPLICATION-PORTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/src/application/ports/auth.ts
+    fileId: F-FD9E6AAC5601
+    owningUnit: SYS-API-APPLICATION-PORTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/src/application/ports/authContract.ts
+    fileId: F-BC982286150A
+    owningUnit: SYS-API-APPLICATION-PORTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
   - path: apps/api/src/application/ports/runtime.ts
     fileId: F-A7BFE1F2C8E9
     owningUnit: SYS-API-APPLICATION-PORTS
@@ -97,13 +104,6 @@ files:
     isLegacy: false
   - path: apps/api/src/application/ports/startRunFacadePort.ts
     fileId: F-83993369B1B8
-    owningUnit: SYS-API-APPLICATION-PORTS
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: apps/api/src/application/ports/StartRunSlaTelemetry.ts
-    fileId: F-AF5408280599
     owningUnit: SYS-API-APPLICATION-PORTS
     unitStatus: coverage-required
     governanceState: coverage-required

@@ -123,15 +123,15 @@ files:
     governanceState: governed
     isDrift: false
     isLegacy: false
-  - path: .golden/hashes.json
-    fileId: F-479612B85848
+  - path: .golden/README.md
+    fileId: F-375B6D9020A7
     owningUnit: SYS-REPO-METADATA-ROOT
     unitStatus: canonical
     governanceState: governed
     isDrift: false
     isLegacy: false
-  - path: .golden/README.md
-    fileId: F-375B6D9020A7
+  - path: .golden/hashes.json
+    fileId: F-479612B85848
     owningUnit: SYS-REPO-METADATA-ROOT
     unitStatus: canonical
     governanceState: governed
@@ -452,6 +452,13 @@ files:
     governanceState: governed
     isDrift: false
     isLegacy: false
+  - path: infra/README.md
+    fileId: F-F56E0FB00FE4
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
   - path: infra/db/migrations/2026-03-04_g3_start_run_intent.sql
     fileId: F-74C7CAEE2AE0
     owningUnit: SYS-REPO-METADATA-ROOT
@@ -480,8 +487,22 @@ files:
     governanceState: governed
     isDrift: false
     isLegacy: false
+  - path: infra/docker/postgres/redpanda/README.md
+    fileId: F-4FCBA2FA0395
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
   - path: infra/docker/postgres/redpanda/docker-compose.yml
     fileId: F-9A6DFCE4617D
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: infra/docker/postgres/redpanda/docs/DECISIONS.md
+    fileId: F-880D53C85B4B
     owningUnit: SYS-REPO-METADATA-ROOT
     unitStatus: canonical
     governanceState: governed
@@ -536,13 +557,6 @@ files:
     governanceState: governed
     isDrift: false
     isLegacy: false
-  - path: infra/docker/postgres/redpanda/docs/DECISIONS.md
-    fileId: F-880D53C85B4B
-    owningUnit: SYS-REPO-METADATA-ROOT
-    unitStatus: canonical
-    governanceState: governed
-    isDrift: false
-    isLegacy: false
   - path: infra/docker/postgres/redpanda/migrations/001_init.sql
     fileId: F-13A9C489FBF6
     owningUnit: SYS-REPO-METADATA-ROOT
@@ -550,8 +564,8 @@ files:
     governanceState: governed
     isDrift: false
     isLegacy: false
-  - path: infra/docker/postgres/redpanda/README.md
-    fileId: F-4FCBA2FA0395
+  - path: infra/prototypes/api/README.md
+    fileId: F-25F3C0DBE720
     owningUnit: SYS-REPO-METADATA-ROOT
     unitStatus: canonical
     governanceState: governed
@@ -566,13 +580,6 @@ files:
     isLegacy: false
   - path: infra/prototypes/api/pnpm-lock.yaml
     fileId: F-096DEBC175C9
-    owningUnit: SYS-REPO-METADATA-ROOT
-    unitStatus: canonical
-    governanceState: governed
-    isDrift: false
-    isLegacy: false
-  - path: infra/prototypes/api/README.md
-    fileId: F-25F3C0DBE720
     owningUnit: SYS-REPO-METADATA-ROOT
     unitStatus: canonical
     governanceState: governed
@@ -699,13 +706,6 @@ files:
     isLegacy: false
   - path: infra/prototypes/api/tsconfig.json
     fileId: F-FEC6BAAEBFBA
-    owningUnit: SYS-REPO-METADATA-ROOT
-    unitStatus: canonical
-    governanceState: governed
-    isDrift: false
-    isLegacy: false
-  - path: infra/README.md
-    fileId: F-F56E0FB00FE4
     owningUnit: SYS-REPO-METADATA-ROOT
     unitStatus: canonical
     governanceState: governed

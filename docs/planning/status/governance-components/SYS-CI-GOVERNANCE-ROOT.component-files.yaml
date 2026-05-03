@@ -18,13 +18,6 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: .github/actions/setup-node-pnpm/action.yml
-    fileId: F-932168D75887
-    owningUnit: SYS-CI-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
   - path: .github/CODEOWNERS
     fileId: F-13E833744460
     owningUnit: SYS-CI-GOVERNANCE-ROOT
@@ -39,22 +32,8 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: .github/dependabot.yml
-    fileId: F-DF12D3CA3D61
-    owningUnit: SYS-CI-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
   - path: .github/ISSUE_MONOREPO_REFACTOR.md
     fileId: F-CF6A25EB6BF8
-    owningUnit: SYS-CI-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: .github/ISSUE_refactor_monorepo_OptionA.md
-    fileId: F-6206F23E9A4E
     owningUnit: SYS-CI-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -109,8 +88,8 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: .github/labeler.yml
-    fileId: F-193B8FCE6851
+  - path: .github/ISSUE_refactor_monorepo_OptionA.md
+    fileId: F-6206F23E9A4E
     owningUnit: SYS-CI-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -144,13 +123,6 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: .github/pull_request_template.md
-    fileId: F-C428567F4914
-    owningUnit: SYS-CI-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
   - path: .github/ROLLBACK.md
     fileId: F-7180788A6AE4
     owningUnit: SYS-CI-GOVERNANCE-ROOT
@@ -158,8 +130,29 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: .github/scripts/generate_pr_manifest.sh
-    fileId: F-2344C8B7365A
+  - path: .github/actions/setup-node-pnpm/action.yml
+    fileId: F-932168D75887
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: .github/dependabot.yml
+    fileId: F-DF12D3CA3D61
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: .github/labeler.yml
+    fileId: F-193B8FCE6851
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: .github/pull_request_template.md
+    fileId: F-C428567F4914
     owningUnit: SYS-CI-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -167,6 +160,13 @@ files:
     isLegacy: false
   - path: .github/scripts/generate-paths-filter.js
     fileId: F-CA6018AE3A84
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: .github/scripts/generate_pr_manifest.sh
+    fileId: F-2344C8B7365A
     owningUnit: SYS-CI-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -286,6 +286,13 @@ files:
     isLegacy: false
   - path: scripts/AI_INDEX_README.md
     fileId: F-59B391BFC7BC
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: scripts/README.md
+    fileId: F-8CB8E7E2BB1C
     owningUnit: SYS-CI-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -643,13 +650,6 @@ files:
     isLegacy: false
   - path: scripts/qa-artifact-check.cjs
     fileId: F-2F0720973BB2
-    owningUnit: SYS-CI-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: scripts/README.md
-    fileId: F-8CB8E7E2BB1C
     owningUnit: SYS-CI-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required

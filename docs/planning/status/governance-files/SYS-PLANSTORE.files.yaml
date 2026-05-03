@@ -328,6 +328,33 @@ files:
       - docs/planning/status/system-operations-inventory-20260501.md
       - >-
         docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+  - fileId: F-E6462049F467
+    pathHash: 444b547361ef347e555cc863268ed75cee91d94cbd1d751289e23cc17ca4c962
+    contentHash: 03e74894ed24ebbf5faf2e126da56db136731314090ea376c13dbdfaa0a8ec7c
+    governanceHash: 54da081658647c39656c7b80fec808b7a58b2fd9fa512ecbb2f7686642c9e7f7
+    stateFingerprint: 329f2c1af7c66cfda8b8aa84421c1c6b794c004a644f049f333885693e757bc1
+    path: apps/api/test/application/services/WorkflowEngineFactory.test.ts
+    owningUnit: SYS-PLANSTORE-API-COMPOSITION
+    rootUnit: SYS-DVT
+    domainUnit: SYS-PLANSTORE
+    componentUnit: SYS-PLANSTORE-API-COMPOSITION
+    unitPath:
+      - SYS-DVT
+      - SYS-PLANSTORE
+      - SYS-PLANSTORE-API-COMPOSITION
+    ownerLevel: component
+    unitStatus: drift
+    governanceState: drift
+    canonicalRole: none
+    evidenceState: remediation-required
+    isDrift: true
+    isLegacy: false
+    dddOwner: AS
+    cqRails: PS-Q03, PS-C02
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
   - fileId: F-4DE9531159D3
     pathHash: 56319c942b48563411a79871ae3fc98b92055921e3051d371c24f98136063875
     contentHash: e4c820e1951a9dbd2b0ba30f70efbba16fd99155770934ebdd2069363592a1cf
@@ -415,33 +442,6 @@ files:
     governanceHash: 54da081658647c39656c7b80fec808b7a58b2fd9fa512ecbb2f7686642c9e7f7
     stateFingerprint: 2067fcd154f09cbcde2c22a8a35f37d41ef283d7f206a9811e0303593736723a
     path: apps/api/test/application/services/storedPlanExecutabilityValidator/registry.cases.ts
-    owningUnit: SYS-PLANSTORE-API-COMPOSITION
-    rootUnit: SYS-DVT
-    domainUnit: SYS-PLANSTORE
-    componentUnit: SYS-PLANSTORE-API-COMPOSITION
-    unitPath:
-      - SYS-DVT
-      - SYS-PLANSTORE
-      - SYS-PLANSTORE-API-COMPOSITION
-    ownerLevel: component
-    unitStatus: drift
-    governanceState: drift
-    canonicalRole: none
-    evidenceState: remediation-required
-    isDrift: true
-    isLegacy: false
-    dddOwner: AS
-    cqRails: PS-Q03, PS-C02
-    governance:
-      - docs/planning/status/system-operations-inventory-20260501.md
-      - >-
-        docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
-  - fileId: F-E6462049F467
-    pathHash: 444b547361ef347e555cc863268ed75cee91d94cbd1d751289e23cc17ca4c962
-    contentHash: 03e74894ed24ebbf5faf2e126da56db136731314090ea376c13dbdfaa0a8ec7c
-    governanceHash: 54da081658647c39656c7b80fec808b7a58b2fd9fa512ecbb2f7686642c9e7f7
-    stateFingerprint: 329f2c1af7c66cfda8b8aa84421c1c6b794c004a644f049f333885693e757bc1
-    path: apps/api/test/application/services/WorkflowEngineFactory.test.ts
     owningUnit: SYS-PLANSTORE-API-COMPOSITION
     rootUnit: SYS-DVT
     domainUnit: SYS-PLANSTORE
@@ -1421,9 +1421,9 @@ files:
       - docs/planning/status/system-governance-document-unit-map-20260501.md
   - fileId: F-02E0F7A67550
     pathHash: 8b4e9c3c0034ffb62cca0b31c6d77702ef5ec4af9c001597fff3fba35598102e
-    contentHash: fe808e31533cd9a489bd15c23de2e1be2a1dcae9cbda1a98118c6b59f2da6149
+    contentHash: b34a8a083bc99d0d2efd0408ba85c9b1cfe4d3c9c5032ebafcee8fa4786fefd1
     governanceHash: 34b4c9841cf358c2da3550b3f784889c7148ae4f3bcaf11542c8cfd8d96029c1
-    stateFingerprint: 248efd8ddc07d57c4f0a0471a496430b71fa0d0cb787dfe2f4a6d0ab5d6dbc74
+    stateFingerprint: e79be5120abcdb5da95ddd333dc527a87ee9ae04334e96770cadd11d3c425279
     path: docs/risk-register/quality/R-20260402-S08-PLAN-STORE-CONTRACT-DRIFT.yaml
     owningUnit: SYS-PLANSTORE-DOCS-RISK
     rootUnit: SYS-DVT
