@@ -526,9 +526,9 @@ files:
         docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md
   - fileId: F-BCAAECBE50B5
     pathHash: ad1d1dc61992e7618d725ded157d89ab1198fe1f49fae65a11cb2458c8c7a61a
-    contentHash: fe7ce0151fb1ae0e31746ea603f12eaf4feb753e5c0fa9b686595ac9470572d2
+    contentHash: c9f1fc646573633be34bd2470ffb8b208fce102f739af3294ca4d88fdf88c814
     governanceHash: 17b9458eb491785470127e84e01e837244221c4479c7af2c70c15b49bb9cbb20
-    stateFingerprint: 36b168e182c043d688eda4bb28aa10cb7dca53800a7d69018cd3ac5bcf616fa8
+    stateFingerprint: 3d4efa75a3abbb19f064e063c5607d34a43abe5c9d7827676edc5a9141887db7
     path: apps/web/cypress/support/workspaceSession.ts
     owningUnit: SYS-WEB-ROOT
     rootUnit: SYS-DVT

@@ -1,6 +1,6 @@
 ---
 title: Canvas Authoring Draft Boundary Component
-status: Proposed
+status: Active
 owner: Frontend / Architecture
 last_reviewed: 2026-05-03
 planning_type: architecture

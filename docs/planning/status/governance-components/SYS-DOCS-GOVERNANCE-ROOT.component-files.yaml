@@ -7,7 +7,7 @@ governanceState: coverage-required
 dddOwner: INFRA
 cqRails: none - documentation governance
 childrenRequired: true
-fileCount: 1718
+fileCount: 1719
 driftFileCount: 0
 legacyFileCount: 0
 files:
@@ -8227,6 +8227,13 @@ files:
     isLegacy: false
   - path: docs/planning/closeouts/20260502-tf-e2-m-c-first-authoring-live-proof-closeout.md
     fileId: F-3AB6318982DD
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/planning/closeouts/20260503-tf-e2-a-authoring-draft-hard-cut-closeout.md
+    fileId: F-887D7CD99F1B
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required

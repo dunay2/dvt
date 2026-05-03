@@ -67,6 +67,22 @@ export function visitWithLiveWorkspaceSession(
 export function stubShellBootstrapApis(): void {
   resetE2eApiStubs();
 
+  stubE2eJsonApi('GET', '/session', {
+    principal: {
+      principalId: 'e2e-principal',
+      subjectId: 'e2e-subject',
+      principalType: 'user',
+      issuer: 'e2e',
+      audience: 'dvt-web',
+      expiresAtIso: '2030-01-01T00:00:00.000Z',
+    },
+    grants: {
+      tenantIds: [E2E_WORKSPACE_SESSION.tenantId],
+      projectIds: [E2E_WORKSPACE_SESSION.projectId],
+      scopes: ['workspace:graph-draft:view', 'workspace:graph-draft:save'],
+    },
+  });
+
   stubE2eJsonApi('GET', '/healthz', {
     ok: true,
     status: 'healthy',
