@@ -1,3 +1,4 @@
+/** Owned concern: own workbench shell layout commands and visual preferences. */
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import {

@@ -1,3 +1,4 @@
+/** Owned concern: own web workspace session scope and run context projection. */
 import { create } from 'zustand';
 import { asNonBlankString } from '@dvt/contracts';
 import { createJSONStorage, persist } from 'zustand/middleware';
@@ -46,7 +47,9 @@ function resolvePersistedScopeValue(
     return currentValue;
   }
 
-  return options.some((option) => option.value === normalizedValue) ? normalizedValue : currentValue;
+  return options.some((option) => option.value === normalizedValue)
+    ? normalizedValue
+    : currentValue;
 }
 
 export const useSessionStore = create<SessionState>()(
@@ -84,8 +87,8 @@ export const useSessionStore = create<SessionState>()(
       merge: (persistedState, currentState) => {
         const persistedSessionState =
           typeof persistedState === 'object' && persistedState != null
-            ? (persistedState as { state?: Partial<PersistedSessionState> }).state ??
-              (persistedState as Partial<PersistedSessionState>)
+            ? ((persistedState as { state?: Partial<PersistedSessionState> }).state ??
+              (persistedState as Partial<PersistedSessionState>))
             : {};
 
         return {

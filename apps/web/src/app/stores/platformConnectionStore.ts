@@ -1,3 +1,4 @@
+/** Owned concern: own the ProjectPlatformConnectionStatus read model for shell presentation. */
 import { create } from 'zustand';
 
 import type { PlatformConnectionState } from '../../capabilities/platform-health';

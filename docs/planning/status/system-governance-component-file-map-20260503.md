@@ -25,7 +25,7 @@ Machine-readable sources:
 ## Totals
 
 - Components: 32
-- Files mapped: 4164
+- Files mapped: 4166
 - Components with drift or legacy files: 3
 
 ## Largest Components
@@ -34,7 +34,7 @@ Machine-readable sources:
 | Component | Files | Drift files | Legacy files |
 | --- | ---: | ---: | ---: |
 | `SYS-DOCS-GOVERNANCE-ROOT` | 1719 | 0 | 0 |
-| `SYS-WEB-ROOT` | 801 | 0 | 0 |
+| `SYS-WEB-ROOT` | 803 | 0 | 0 |
 | `SYS-RUNTIME-ROOT` | 286 | 0 | 0 |
 | `SYS-ADAPTERS-ROOT` | 196 | 0 | 0 |
 | `SYS-CI-GOVERNANCE-ROOT` | 180 | 0 | 0 |
@@ -100,7 +100,7 @@ Machine-readable sources:
 | `SYS-REPO-METADATA-ROOT` | 113 | 0 | 0 | [shard](./governance-components/SYS-REPO-METADATA-ROOT.component-files.yaml) |
 | `SYS-RUNTIME-ROOT` | 286 | 0 | 0 | [shard](./governance-components/SYS-RUNTIME-ROOT.component-files.yaml) |
 | `SYS-TRACEABILITY-ROOT` | 65 | 0 | 0 | [shard](./governance-components/SYS-TRACEABILITY-ROOT.component-files.yaml) |
-| `SYS-WEB-ROOT` | 801 | 0 | 0 | [shard](./governance-components/SYS-WEB-ROOT.component-files.yaml) |
+| `SYS-WEB-ROOT` | 803 | 0 | 0 | [shard](./governance-components/SYS-WEB-ROOT.component-files.yaml) |
 | `SYS-WORKERS-ROOT` | 103 | 0 | 0 | [shard](./governance-components/SYS-WORKERS-ROOT.component-files.yaml) |
 <!-- prettier-ignore-end -->
 

@@ -11,6 +11,30 @@ This page is the current component map for the active Zustand store surfaces in
 `apps/web`. It exists so F-05 can be reviewed against the code that exists now,
 not against the retired `appStore.ts` aggregate.
 
+Use this guide with:
+
+- [Local component guide](./web-store-domain-ownership-local-guide.md)
+- [User stories](./web-store-domain-ownership-user-stories.md)
+- [Fowler analysis mailbox](../../../../buzon/20260503-codex-fowler-web-store-domain-ownership-analysis-and-remediation.md)
+- [F-05 closure plan](../../../planning/proposals/mandatory/frontend-and-ux/f05-store-domain-ownership-closure-plan-20260503.md)
+
+Canonical local paths:
+
+- `docs/architecture/components/web/web-store-domain-ownership-local-guide.md`
+- `docs/architecture/components/web/web-store-domain-ownership-user-stories.md`
+- `buzon/20260503-codex-fowler-web-store-domain-ownership-analysis-and-remediation.md`
+
+## Local Guide Boundary
+
+This component page is the review index and ownership map. Detailed public API,
+invariants, transitions, consumers, and semantic encapsulation rules live in the
+[local component guide](./web-store-domain-ownership-local-guide.md).
+
+The local guide is canonical for method-level usage rules. This page repeats
+only the review-critical ownership hook: `connectionStatus is not layout state`.
+The detailed transition from the authoritative `PlatformConnectionState` query
+into `ProjectPlatformConnectionStatus` is owned by the local guide.
+
 ## Current Component Map
 
 | Store                        | Component role              | DDD owner                          | Command/query role | Reason to exist                                                                                                     |

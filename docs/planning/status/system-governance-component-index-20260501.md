@@ -84,7 +84,7 @@ Components with `childrenRequired: true` and more than 100 files:
 | Component | Files | Status |
 | --- | ---: | --- |
 | `SYS-DOCS-GOVERNANCE-ROOT` | 1719 | `coverage-required` |
-| `SYS-WEB-ROOT` | 801 | `coverage-required` |
+| `SYS-WEB-ROOT` | 803 | `coverage-required` |
 | `SYS-RUNTIME-ROOT` | 286 | `coverage-required` |
 | `SYS-ADAPTERS-ROOT` | 196 | `coverage-required` |
 | `SYS-CI-GOVERNANCE-ROOT` | 180 | `coverage-required` |
@@ -128,7 +128,7 @@ Components with `childrenRequired: true` and more than 100 files:
 | `SYS-REPO-METADATA-ROOT` | `component` | `canonical` | `governed` | `implementation-owner` | `classification-only` | 113 | `INFRA` | `SYS-REPO-METADATA` |
 | `SYS-RUNTIME-ROOT` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 286 | `AS` | `SYS-RUNTIME` |
 | `SYS-TRACEABILITY-ROOT` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 65 | `DS` | `SYS-TRACEABILITY` |
-| `SYS-WEB-ROOT` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 801 | `ENTRY` | `SYS-WEB` |
+| `SYS-WEB-ROOT` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 803 | `ENTRY` | `SYS-WEB` |
 | `SYS-WORKERS-ROOT` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 103 | `AS` | `SYS-WORKERS` |
 <!-- prettier-ignore-end -->
 

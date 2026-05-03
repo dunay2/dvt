@@ -1978,7 +1978,7 @@ components:
     isDrift: false
     isLegacy: false
     childrenRequired: true
-    fileCount: 801
+    fileCount: 803
     dddOwner: ENTRY
     cqRails: UI actions and API queries
     owns:

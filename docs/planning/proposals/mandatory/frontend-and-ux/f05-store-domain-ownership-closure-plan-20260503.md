@@ -213,8 +213,10 @@ noHumanDecisionsRemaining: true
 implementationPlan: docs/planning/proposals/mandatory/frontend-and-ux/f05-store-domain-ownership-closure-plan-20260503.md
 componentGuides:
   - docs/architecture/components/web/web-store-domain-ownership-component.md
+  - docs/architecture/components/web/web-store-domain-ownership-local-guide.md
 userStories:
   - docs/planning/state/lane-e-shell-baseline-target-guide.md
+  - docs/architecture/components/web/web-store-domain-ownership-user-stories.md
 governingSources:
   - AGENTS.md
   - docs/planning/status/governance-document-rule-inventory.md
@@ -226,6 +228,9 @@ governingSources:
 allowedImplementationSurfaces:
   - docs/architecture/components/web/index.md
   - docs/architecture/components/web/web-store-domain-ownership-component.md
+  - docs/architecture/components/web/web-store-domain-ownership-local-guide.md
+  - docs/architecture/components/web/web-store-domain-ownership-user-stories.md
+  - buzon/20260503-codex-fowler-web-store-domain-ownership-analysis-and-remediation.md
   - docs/planning/proposals/mandatory/frontend-and-ux/f05-store-domain-ownership-closure-plan-20260503.md
   - docs/planning/state/agent-lane-e.yaml
   - docs/planning/state/agent-lane-e.md
@@ -237,10 +242,14 @@ allowedImplementationSurfaces:
   - apps/web/src/app/Root.test.support.tsx
   - apps/web/src/app/components/Console.test.tsx
   - apps/web/src/app/components/TopAppBar.tsx
+  - apps/web/src/app/stores/canvasInteractionStore.ts
+  - apps/web/src/app/stores/executionStore.ts
   - apps/web/src/app/stores/platformConnectionStore.ts
   - apps/web/src/app/stores/platformConnectionStore.test.ts
+  - apps/web/src/app/stores/sessionStore.ts
   - apps/web/src/app/stores/uiLayoutStore.ts
   - apps/web/src/app/stores/uiLayoutStore.test.ts
+  - apps/web/src/app/stores/webStoreDomainOwnership.architecture.test.ts
 forbiddenImplementationSurfaces:
   - apps/api/**
   - packages/**
@@ -273,6 +282,7 @@ fowlerSignals:
 architectureGuards:
   - pnpm --filter @dvt/web test -- canvasStartupAndDraftRecovery.architecture.test.ts
   - pnpm --filter @dvt/web test -- queryKeyPolicy.architecture.test.ts
+  - pnpm --filter @dvt/web test -- webStoreDomainOwnership.architecture.test.ts
   - pnpm docs:feature-mechanization --feature F05-STORE-DOMAIN-OWNERSHIP
 cypressFlows:
   - none: documentation and ownership-map slice only
@@ -302,6 +312,21 @@ redGreenCycles:
       - docs/planning/state/execution-workboard.md
       - docs/planning/state/open-task-route.md
     greenTest: pnpm docs:workboard:check
+  - id: f05-store-semantic-architecture
+    redTest: pnpm --filter @dvt/web test -- webStoreDomainOwnership.architecture.test.ts
+    expectedFailure: Store ownership lacks branch Fowler analysis, local component guide, user stories, owned-concern docblocks, and semantic drift guards.
+    patchSurfaces:
+      - buzon/20260503-codex-fowler-web-store-domain-ownership-analysis-and-remediation.md
+      - docs/architecture/components/web/web-store-domain-ownership-component.md
+      - docs/architecture/components/web/web-store-domain-ownership-local-guide.md
+      - docs/architecture/components/web/web-store-domain-ownership-user-stories.md
+      - apps/web/src/app/stores/sessionStore.ts
+      - apps/web/src/app/stores/canvasInteractionStore.ts
+      - apps/web/src/app/stores/executionStore.ts
+      - apps/web/src/app/stores/uiLayoutStore.ts
+      - apps/web/src/app/stores/platformConnectionStore.ts
+      - apps/web/src/app/stores/webStoreDomainOwnership.architecture.test.ts
+    greenTest: pnpm --filter @dvt/web test -- webStoreDomainOwnership.architecture.test.ts
 symbols:
   - name: WebStoreDomainOwnershipMap
     path: docs/architecture/components/web/web-store-domain-ownership-component.md
@@ -317,6 +342,43 @@ symbols:
       - canvasInteractionStore.test.ts
       - uiLayoutStore.test.ts
       - platformConnectionStore.test.ts
+      - webStoreDomainOwnership.architecture.test.ts
+  - name: WebStoreDomainOwnershipLocalGuide
+    path: docs/architecture/components/web/web-store-domain-ownership-local-guide.md
+    dddOwner: Web store domain ownership map
+    cqRails:
+      - ClassifyWebStoreDomainOwnership
+    fowlerSignals:
+      - Documentation drift
+      - Boundary drift
+    architectureGuard: webStoreDomainOwnership.architecture.test.ts
+    cypressCoverage: none
+    unitTests:
+      - webStoreDomainOwnership.architecture.test.ts
+  - name: WebStoreDomainOwnershipUserStories
+    path: docs/architecture/components/web/web-store-domain-ownership-user-stories.md
+    dddOwner: Web store domain ownership map
+    cqRails:
+      - ClassifyWebStoreDomainOwnership
+    fowlerSignals:
+      - Documentation drift
+      - Test-only confidence
+    architectureGuard: webStoreDomainOwnership.architecture.test.ts
+    cypressCoverage: none
+    unitTests:
+      - webStoreDomainOwnership.architecture.test.ts
+  - name: WebStoreDomainOwnershipFowlerAnalysis
+    path: buzon/20260503-codex-fowler-web-store-domain-ownership-analysis-and-remediation.md
+    dddOwner: Web store domain ownership map
+    cqRails:
+      - ClassifyWebStoreDomainOwnership
+    fowlerSignals:
+      - Responsibility overload
+      - Documentation drift
+    architectureGuard: webStoreDomainOwnership.architecture.test.ts
+    cypressCoverage: none
+    unitTests:
+      - webStoreDomainOwnership.architecture.test.ts
   - name: PlatformConnectionState
     path: apps/web/src/app/stores/platformConnectionStore.ts
     dddOwner: Platform health
@@ -330,6 +392,33 @@ symbols:
     unitTests:
       - platformConnectionStore.test.ts
       - uiLayoutStore.test.ts
+      - webStoreDomainOwnership.architecture.test.ts
+  - name: PlatformConnectionStoreState
+    path: apps/web/src/app/stores/platformConnectionStore.ts
+    dddOwner: Platform health
+    cqRails:
+      - ProjectPlatformConnectionStatus
+    fowlerSignals:
+      - Boundary drift
+      - Hidden aggregate store risk
+    architectureGuard: webStoreDomainOwnership.architecture.test.ts
+    cypressCoverage: none
+    unitTests:
+      - platformConnectionStore.test.ts
+      - webStoreDomainOwnership.architecture.test.ts
+  - name: usePlatformConnectionStore
+    path: apps/web/src/app/stores/platformConnectionStore.ts
+    dddOwner: Platform health
+    cqRails:
+      - ProjectPlatformConnectionStatus
+    fowlerSignals:
+      - Boundary drift
+      - Hidden aggregate store risk
+    architectureGuard: webStoreDomainOwnership.architecture.test.ts
+    cypressCoverage: none
+    unitTests:
+      - platformConnectionStore.test.ts
+      - webStoreDomainOwnership.architecture.test.ts
   - name: PersistedUiLayoutState
     path: apps/web/src/app/stores/uiLayoutStore.ts
     dddOwner: Web shell layout aggregate
@@ -342,6 +431,30 @@ symbols:
     cypressCoverage: none
     unitTests:
       - uiLayoutStore.test.ts
+      - webStoreDomainOwnership.architecture.test.ts
+  - name: StoreOwnedConcernDocblocks
+    path: apps/web/src/app/stores/webStoreDomainOwnership.architecture.test.ts
+    dddOwner: Web store domain ownership map
+    cqRails:
+      - ClassifyWebStoreDomainOwnership
+    fowlerSignals:
+      - Test-only confidence
+      - Documentation drift
+    architectureGuard: webStoreDomainOwnership.architecture.test.ts
+    cypressCoverage: none
+    unitTests:
+      - webStoreDomainOwnership.architecture.test.ts
+  - name: setRootShellConsoleDrawer
+    path: apps/web/src/app/Root.test.support.tsx
+    dddOwner: Web shell layout aggregate
+    cqRails:
+      - Shell panel/layout updates
+    fowlerSignals:
+      - Boundary drift
+    architectureGuard: webStoreDomainOwnership.architecture.test.ts
+    cypressCoverage: none
+    unitTests:
+      - Root.shellChrome.test.tsx
   - name: F05StoreOwnershipPlan
     path: docs/planning/proposals/mandatory/frontend-and-ux/f05-store-domain-ownership-closure-plan-20260503.md
     dddOwner: F-05 planning state

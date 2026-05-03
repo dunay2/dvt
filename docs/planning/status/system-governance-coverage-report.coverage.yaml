@@ -3,8 +3,8 @@ generatedFrom:
   - docs/planning/status/system-governance-file-index.files.yaml
   - docs/planning/status/system-governance-component-index.components.yaml
 totals:
-  files: 4164
-  governedFiles: 4164
+  files: 4166
+  governedFiles: 4166
   ungovernedFiles: 0
   driftFiles: 41
   legacyFiles: 0
@@ -22,12 +22,12 @@ ciPosture:
     - legacyFiles records removal targets until owning work removes them
 byRootUnit:
   - name: SYS-DVT
-    count: 4164
+    count: 4166
 byDomainUnit:
   - name: SYS-ADAPTERS
     count: 196
   - name: SYS-DVT
-    count: 3387
+    count: 3389
   - name: SYS-OBSERVABILITY
     count: 15
   - name: SYS-PLANSTORE
@@ -96,21 +96,21 @@ byComponentUnit:
   - name: SYS-TRACEABILITY-ROOT
     count: 65
   - name: SYS-WEB-ROOT
-    count: 801
+    count: 803
   - name: SYS-WORKERS-ROOT
     count: 103
 byStatus:
   - name: canonical
     count: 113
   - name: coverage-required
-    count: 3928
+    count: 3930
   - name: drift
     count: 41
   - name: review
     count: 82
 byGovernanceState:
   - name: coverage-required
-    count: 3928
+    count: 3930
   - name: drift
     count: 41
   - name: governed
@@ -121,12 +121,12 @@ byCanonicalRole:
   - name: implementation-owner
     count: 113
   - name: none
-    count: 4051
+    count: 4053
 byEvidenceState:
   - name: classification-only
     count: 113
   - name: coverage-required
-    count: 3928
+    count: 3930
   - name: remediation-required
     count: 41
   - name: review-required
@@ -139,7 +139,7 @@ byDddOwner:
   - name: DS
     count: 142
   - name: ENTRY
-    count: 890
+    count: 892
   - name: INFRA
     count: 2223
   - name: PORT
@@ -153,7 +153,7 @@ governanceDocuments:
     fileCount: 950
   - path: >-
       docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md
-    fileCount: 801
+    fileCount: 803
   - path: >-
       docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
     fileCount: 345
@@ -236,7 +236,7 @@ componentCoverage:
     evidenceState: coverage-required
     dddOwner: ENTRY
     cqRails: UI actions and API queries
-    fileCount: 801
+    fileCount: 803
     isDrift: false
     isLegacy: false
     childrenRequired: true
@@ -956,7 +956,7 @@ findings:
       status: coverage-required
       dddOwner: INFRA
     - id: SYS-WEB-ROOT
-      fileCount: 801
+      fileCount: 803
       status: coverage-required
       dddOwner: ENTRY
     - id: SYS-RUNTIME-ROOT
