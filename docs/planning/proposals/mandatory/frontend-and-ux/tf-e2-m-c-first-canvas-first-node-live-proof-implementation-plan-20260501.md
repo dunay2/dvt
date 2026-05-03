@@ -646,6 +646,19 @@ symbols:
     cypressCoverage: canvas-happy-path-draggable.cy.ts
     unitTests:
       - canvasDraftSession.test.ts
+  - name: upsertNode
+    path: apps/web/src/app/views/canvas/canvasDraftSessionWorkingSet.ts
+    dddOwner: CanvasAuthoringGraph aggregate
+    cqRails:
+      - CreateCanvasNode
+      - SaveWorkspaceGraphDraft
+    fowlerSignals:
+      - explicit domain mutation over route-local draft session
+      - no parallel node mutation helper
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-happy-path-draggable.cy.ts
+    unitTests:
+      - canvasDraftSession.test.ts
   - name: visitCanvasWithStubbedBackend
     path: apps/web/cypress/e2e/canvas/canvas-happy-path-draggable.cy.ts
     dddOwner: Canvas happy-path draggable Cypress proof

@@ -9044,9 +9044,9 @@ files:
     owningUnit: SYS-WEB-ROOT
   - fileId: F-2698E8BBB1DB
     path: apps/web/src/app/views/canvas/canvasDraftSessionWorkingSet.ts
-    contentHash: 4a4f6ff713e0a18f6df64e6f56cec9fa66b1f88b90b0d9dc74da9bb042130d35
+    contentHash: 5895c7081a6ed8da917dc87f879a9a7f4595ceefcf602dadfb56dee7f1b675f6
     governanceHash: 17b9458eb491785470127e84e01e837244221c4479c7af2c70c15b49bb9cbb20
-    stateFingerprint: beeb26f1e69074c383c0682b1c4fb2dc1b56861eac5d43d83ea2af1d98f92d23
+    stateFingerprint: 068e2d3b589ff02cedc25b278aa28387119705a0506e90df94cbe8f87aa73dcb
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-WEB-ROOT
@@ -23995,9 +23995,9 @@ files:
   - fileId: F-FA77E00DF09A
     path: >-
       docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-m-c-first-canvas-first-node-live-proof-implementation-plan-20260501.md
-    contentHash: 5c6cfac72eb940711ac591a50f72b68422b034a63d4e6c49956315900b7d3ec9
+    contentHash: cdbc7fc26a3af716fbceaa14f0ffd36a33dfac616278530d4844ed6767e6060b
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 971a6ce4bb01a10b2af7e6d1a8b882df2623ae375d66a2667cb41860f813d172
+    stateFingerprint: 9934ba9db30a6e5fa782b2127fbf78976897178e8f2223052c74c6e6a17f3dec
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
