@@ -101,8 +101,28 @@ describe('protected runtime route group architecture', () => {
 
   it('documents CANCEL through /signal as compatibility, not a second canonical cancel rail', () => {
     const docText = readFileSync(DOC_PATH, 'utf8');
+    const compatibilityRails = PROTECTED_RUNTIME_COMMAND_QUERY_RAILS.filter(
+      (rail) => rail.compatibilityPosture.status === 'compatibility'
+    );
 
+    expect(compatibilityRails).toHaveLength(1);
+    const signalCompatibilityRail = compatibilityRails[0];
+    expect(signalCompatibilityRail?.name).toBe('SignalRun');
+    if (signalCompatibilityRail?.compatibilityPosture.status !== 'compatibility') {
+      throw new Error('SignalRun must declare compatibility posture');
+    }
+    expect(signalCompatibilityRail.compatibilityPosture.canonicalRail).toBe('CancelRun');
+    expect(signalCompatibilityRail.compatibilityPosture.removalRequires).toContain(
+      'governed deprecation plan'
+    );
+    for (const rail of PROTECTED_RUNTIME_COMMAND_QUERY_RAILS) {
+      expect(['canonical', 'compatibility']).toContain(rail.compatibilityPosture.status);
+      if (rail.compatibilityPosture.status === 'canonical') {
+        expect(rail.compatibilityPosture.legacyAccepted).toBe(false);
+      }
+    }
     expect(docText).toContain('`POST /runs/:runId/signal` with `CANCEL` is compatibility behavior');
     expect(docText).toContain('`POST /runs/:runId/cancel` is the canonical cancel command route');
+    expect(docText).toContain('No protected runtime rail accepts legacy behavior as canonical');
   });
 });

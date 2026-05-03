@@ -14,6 +14,20 @@ export type ProtectedRuntimeNegativeCoverage = {
   readonly testRefs: readonly string[];
 };
 
+export type ProtectedRuntimeCompatibilityPosture =
+  | {
+      readonly status: 'canonical';
+      readonly legacyAccepted: false;
+    }
+  | {
+      readonly status: 'compatibility';
+      readonly legacyAccepted: false;
+      readonly compatibilityCase: string;
+      readonly canonicalRail: string;
+      readonly policy: string;
+      readonly removalRequires: string;
+    };
+
 export type ProtectedRuntimeCommandQueryRail = {
   readonly name: string;
   readonly kind: ProtectedRuntimeRailKind;
@@ -24,8 +38,13 @@ export type ProtectedRuntimeCommandQueryRail = {
   readonly scopeAndAuthorization: string;
   readonly negativeTests: readonly string[];
   readonly negativeCoverage: readonly ProtectedRuntimeNegativeCoverage[];
-  readonly compatibility?: string;
+  readonly compatibilityPosture: ProtectedRuntimeCompatibilityPosture;
 };
+
+const CANONICAL_PROTECTED_RUNTIME_RAIL_POSTURE = {
+  status: 'canonical',
+  legacyAccepted: false,
+} as const satisfies ProtectedRuntimeCompatibilityPosture;
 
 export const PROTECTED_RUNTIME_COMMAND_QUERY_RAILS = [
   {
@@ -65,6 +84,7 @@ export const PROTECTED_RUNTIME_COMMAND_QUERY_RAILS = [
         testRefs: ['apps/api/test/entrypoints/http/startRunRoute.planSourcePolicy.test.ts'],
       },
     ],
+    compatibilityPosture: CANONICAL_PROTECTED_RUNTIME_RAIL_POSTURE,
   },
   {
     name: 'PreviewExecutablePlan',
@@ -103,6 +123,7 @@ export const PROTECTED_RUNTIME_COMMAND_QUERY_RAILS = [
         testRefs: ['apps/api/test/entrypoints/http/planRouteSelectionParser.test.ts'],
       },
     ],
+    compatibilityPosture: CANONICAL_PROTECTED_RUNTIME_RAIL_POSTURE,
   },
   {
     name: 'CompileExecutablePlan',
@@ -131,6 +152,7 @@ export const PROTECTED_RUNTIME_COMMAND_QUERY_RAILS = [
         testRefs: ['apps/api/test/entrypoints/http/compilePlanRoute.test.ts'],
       },
     ],
+    compatibilityPosture: CANONICAL_PROTECTED_RUNTIME_RAIL_POSTURE,
   },
   {
     name: 'ImportExecutablePlan',
@@ -159,6 +181,7 @@ export const PROTECTED_RUNTIME_COMMAND_QUERY_RAILS = [
         testRefs: ['apps/api/test/entrypoints/http/importPlanRoute.test.ts'],
       },
     ],
+    compatibilityPosture: CANONICAL_PROTECTED_RUNTIME_RAIL_POSTURE,
   },
   {
     name: 'GetWorkspaceGraphDraft',
@@ -187,6 +210,7 @@ export const PROTECTED_RUNTIME_COMMAND_QUERY_RAILS = [
         ],
       },
     ],
+    compatibilityPosture: CANONICAL_PROTECTED_RUNTIME_RAIL_POSTURE,
   },
   {
     name: 'SaveWorkspaceGraphDraft',
@@ -224,6 +248,7 @@ export const PROTECTED_RUNTIME_COMMAND_QUERY_RAILS = [
         testRefs: ['apps/api/test/entrypoints/http/workspaceGraphDraftRoutes.test.ts'],
       },
     ],
+    compatibilityPosture: CANONICAL_PROTECTED_RUNTIME_RAIL_POSTURE,
   },
   {
     name: 'ListRuns',
@@ -248,6 +273,7 @@ export const PROTECTED_RUNTIME_COMMAND_QUERY_RAILS = [
         testRefs: ['apps/api/test/entrypoints/http/listRunsRoute.test.ts'],
       },
     ],
+    compatibilityPosture: CANONICAL_PROTECTED_RUNTIME_RAIL_POSTURE,
   },
   {
     name: 'GetRunStatus',
@@ -276,6 +302,7 @@ export const PROTECTED_RUNTIME_COMMAND_QUERY_RAILS = [
         testRefs: ['apps/api/test/entrypoints/http/getRunRoute.test.ts'],
       },
     ],
+    compatibilityPosture: CANONICAL_PROTECTED_RUNTIME_RAIL_POSTURE,
   },
   {
     name: 'GetRunEvents',
@@ -304,6 +331,7 @@ export const PROTECTED_RUNTIME_COMMAND_QUERY_RAILS = [
         testRefs: ['apps/api/test/entrypoints/http/getRunEventsRoute.test.ts'],
       },
     ],
+    compatibilityPosture: CANONICAL_PROTECTED_RUNTIME_RAIL_POSTURE,
   },
   {
     name: 'SignalRun',
@@ -342,7 +370,14 @@ export const PROTECTED_RUNTIME_COMMAND_QUERY_RAILS = [
         testRefs: ['apps/api/test/entrypoints/http/signalRunRouteParser.test.ts'],
       },
     ],
-    compatibility: 'CANCEL through signal is compatibility behavior',
+    compatibilityPosture: {
+      status: 'compatibility',
+      legacyAccepted: false,
+      compatibilityCase: 'CANCEL through POST /runs/:runId/signal',
+      canonicalRail: 'CancelRun',
+      policy: 'DVT_SIGNAL_ROUTE_ALLOW_CANCEL gates the compatibility signal type.',
+      removalRequires: 'separate governed deprecation plan',
+    },
   },
   {
     name: 'CancelRun',
@@ -371,6 +406,7 @@ export const PROTECTED_RUNTIME_COMMAND_QUERY_RAILS = [
         testRefs: ['apps/api/test/entrypoints/http/cancelRunRouteParser.test.ts'],
       },
     ],
+    compatibilityPosture: CANONICAL_PROTECTED_RUNTIME_RAIL_POSTURE,
   },
   {
     name: 'RecoverRun',
@@ -404,6 +440,7 @@ export const PROTECTED_RUNTIME_COMMAND_QUERY_RAILS = [
         testRefs: ['apps/api/test/entrypoints/http/recoverRunRouteParser.test.ts'],
       },
     ],
+    compatibilityPosture: CANONICAL_PROTECTED_RUNTIME_RAIL_POSTURE,
   },
   {
     name: 'RebuildRunSnapshot',
@@ -432,5 +469,6 @@ export const PROTECTED_RUNTIME_COMMAND_QUERY_RAILS = [
         testRefs: ['apps/api/test/contracts/adminRebuildSnapshotAccessContract.test.ts'],
       },
     ],
+    compatibilityPosture: CANONICAL_PROTECTED_RUNTIME_RAIL_POSTURE,
   },
 ] as const satisfies readonly ProtectedRuntimeCommandQueryRail[];

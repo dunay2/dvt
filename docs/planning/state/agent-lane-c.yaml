@@ -530,7 +530,7 @@ tasks:
   - task_id: AR-C2-T4
     parent_task: AR-C2
     priority: P0
-    status: queued
+    status: done
     objective: >-
       capture sustained threshold-validation evidence and update AR-C2 lane posture for closure.
     dependency: AR-C2-T2, AR-C2-T3
@@ -539,7 +539,7 @@ tasks:
       done when closure criteria are met.
     complexity: S
     effort_points: 2
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/ar-c2-sla-operational-closure-plan-20260404.md
       - docs/planning/state/agent-lane-c.yaml
@@ -1197,11 +1197,13 @@ tasks:
       - apps/api/test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts
       - apps/api/test/integration/protectedRuntime.integration.test.ts
     status_reason: >-
-      `AR-C10-A` and `AR-C10-B` are now mechanized: the protected runtime route group has a local
-      component guide, an application-owned command/query rail catalog, and an architecture test
+      `AR-C10-A`, `AR-C10-B`, and `AR-C10-C` are mechanized: the protected runtime route group has a
+      local component guide, an application-owned command/query rail catalog, an architecture test
       that binds `runtimeRoutes.constants.ts` to the rail catalog, required negative cases,
-      executable test-evidence refs, and explicit CANCEL-through-/signal compatibility posture.
-      Remaining closure is `AR-C10-C` legacy/compatibility classification before the risk can close.
+      executable test-evidence refs, and a required compatibility posture for every rail. The only
+      active compatibility path is `CANCEL` through `/signal`, mapped back to canonical `CancelRun`
+      and gated by `DVT_SIGNAL_ROUTE_ALLOW_CANCEL`; no protected runtime rail accepts legacy
+      behavior as canonical.
     last_verified: '2026-05-03'
   - task_id: TF-C3
     priority: P1

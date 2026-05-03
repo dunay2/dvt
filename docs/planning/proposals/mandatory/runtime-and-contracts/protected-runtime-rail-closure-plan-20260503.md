@@ -243,6 +243,9 @@ Disallowed without a separate plan:
   row and component owner.
 - Every matrix row has at least one positive test and the required negative
   tests, or an explicit blocker tracked in the lane task.
+- Every rail declares a compatibility posture: either canonical with no legacy
+  behavior accepted, or explicit compatibility mapped back to its canonical
+  rail and removal plan.
 - No route handler owns domain behavior that belongs in an application service.
 - No new command, query, service, route, or mock semantics are introduced for an
   intent that already has a rail.
@@ -421,6 +424,29 @@ symbols:
     fowlerSignals:
       - Boundary drift
       - Divergent change
+    architectureGuard: pnpm --filter dvt-api exec vitest run test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
+    cypressCoverage: N/A - API architecture guard
+    unitTests:
+      - pnpm --filter dvt-api exec vitest run test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
+  - name: ProtectedRuntimeCompatibilityPosture
+    path: apps/api/src/application/ports/protectedRuntimeCommandQueryRails.ts
+    dddOwner: Protected runtime rail matrix
+    cqRails:
+      - ClassifyProtectedRuntimeRouteRails
+    fowlerSignals:
+      - Boundary drift
+      - Divergent change
+    architectureGuard: pnpm --filter dvt-api exec vitest run test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
+    cypressCoverage: N/A - API architecture guard
+    unitTests:
+      - pnpm --filter dvt-api exec vitest run test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
+  - name: CANONICAL_PROTECTED_RUNTIME_RAIL_POSTURE
+    path: apps/api/src/application/ports/protectedRuntimeCommandQueryRails.ts
+    dddOwner: Protected runtime rail matrix
+    cqRails:
+      - ClassifyProtectedRuntimeRouteRails
+    fowlerSignals:
+      - Boundary drift
     architectureGuard: pnpm --filter dvt-api exec vitest run test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
     cypressCoverage: N/A - API architecture guard
     unitTests:

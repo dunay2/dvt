@@ -72,6 +72,7 @@ It does **not** own:
   access-decision backend semantics.
 - `POST /runs/:runId/signal` with `CANCEL` is compatibility behavior.
 - `POST /runs/:runId/cancel` is the canonical cancel command route.
+- No protected runtime rail accepts legacy behavior as canonical behavior.
 - Admin repair routes are registered only when `DVT_ADMIN_ROUTES_ENABLED` is
   true.
 - New protected runtime routes require an update to this component guide, the
@@ -123,6 +124,11 @@ not the canonical cancel command rail.
 
 `POST /runs/:runId/cancel` is the canonical cancel command route. Removing the
 signal compatibility path requires a separate governed deprecation plan.
+
+No protected runtime rail accepts legacy behavior as canonical behavior. The
+only active compatibility posture in this component is `CANCEL` through
+`POST /runs/:runId/signal`, gated by `DVT_SIGNAL_ROUTE_ALLOW_CANCEL` and mapped
+back to the `CancelRun` rail.
 
 ## Transitions
 
