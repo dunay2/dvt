@@ -300,6 +300,7 @@ allowedImplementationSurfaces:
   - docs/planning/state/open-task-route.md
   - docs/planning/status/**
   - docs/risk-register/quality/R-20260503-PROTECTED-RUNTIME-RAIL-CLOSURE.yaml
+  - docs/risk-register/quality/R-20260503-PROTECTED-RUNTIME-RAIL-SSOT-DEBT.yaml
 forbiddenImplementationSurfaces:
   - apps/web/**
   - packages/**
