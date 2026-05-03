@@ -4,7 +4,7 @@ generatedFrom:
   - docs/planning/status/system-governance-component-index.components.yaml
 shardDirectory: docs/planning/status/governance-components
 componentCount: 32
-fileCount: 4164
+fileCount: 4170
 components:
   - id: SYS-ADAPTERS-ROOT
     path: docs/planning/status/governance-components/SYS-ADAPTERS-ROOT.component-files.yaml
@@ -104,10 +104,10 @@ components:
     contentHash: fa1299dd144e2f14a9e3b3491fd17636c0f59e41f50e1195db9bd9b50111eb0e
   - id: SYS-DOCS-GOVERNANCE-ROOT
     path: docs/planning/status/governance-components/SYS-DOCS-GOVERNANCE-ROOT.component-files.yaml
-    fileCount: 1719
+    fileCount: 1721
     driftFileCount: 0
     legacyFileCount: 0
-    contentHash: 183c3fee9372b3ff224551f2f7f3f9e88aa808fbc95c6675ccc2cf13fa4e1b28
+    contentHash: 61be1d6e5d84aa63d7ddb5907de15a0c39ce280b22b95922e2872a786cb7e957
   - id: SYS-OBSERVABILITY-ROOT
     path: docs/planning/status/governance-components/SYS-OBSERVABILITY-ROOT.component-files.yaml
     fileCount: 15
@@ -171,10 +171,10 @@ components:
     contentHash: 921ab5c7caa9f5ed9f061513a84192bdf155c79d5b8f66af044563f6968b28ab
   - id: SYS-REPO-METADATA-ROOT
     path: docs/planning/status/governance-components/SYS-REPO-METADATA-ROOT.component-files.yaml
-    fileCount: 113
+    fileCount: 114
     driftFileCount: 0
     legacyFileCount: 0
-    contentHash: 49aeee44228aa27f4928953b98ab1f42a7ecf99247b5c4a12be1f80f9001019e
+    contentHash: 36dd39a01ff70baf34089dcd69df17a8ce3371dabaef3e21b0cdc8b29afa1fc8
   - id: SYS-RUNTIME-ROOT
     path: docs/planning/status/governance-components/SYS-RUNTIME-ROOT.component-files.yaml
     fileCount: 286
@@ -189,10 +189,10 @@ components:
     contentHash: 83855c9fcd947c9177b687699e216dab41e1fd92a52e1a017ca4aff0983e01b1
   - id: SYS-WEB-ROOT
     path: docs/planning/status/governance-components/SYS-WEB-ROOT.component-files.yaml
-    fileCount: 801
+    fileCount: 804
     driftFileCount: 0
     legacyFileCount: 0
-    contentHash: b09e93097bee006bcb383d15dea410ce85fb536ce8850147ab4edd5922a9dc9f
+    contentHash: ff5c8d3f727741761a0ee98229795f889f5cfb0b80eb7f45813f27c510dd67cb
   - id: SYS-WORKERS-ROOT
     path: docs/planning/status/governance-components/SYS-WORKERS-ROOT.component-files.yaml
     fileCount: 103

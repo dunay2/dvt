@@ -1,6 +1,6 @@
+/** Owned concern: own workbench shell layout commands and visual preferences. */
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { PlatformConnectionState } from '../../capabilities/platform-health';
 import {
   DEFAULT_CANVAS_PALETTE_ID,
   normalizeCanvasPaletteId,
@@ -29,8 +29,6 @@ interface UiLayoutState {
   }>;
   activeTabId: string | null;
 
-  connectionStatus: PlatformConnectionState;
-
   toggleLeftNav: () => void;
   setExplorerPanelWidth: (width: number) => void;
   setInspectorPanelWidth: (width: number) => void;
@@ -49,8 +47,23 @@ interface UiLayoutState {
   addTab: (tab: { id: string; type: TabType; label: string; data?: unknown }) => void;
   closeTab: (tabId: string) => void;
   setActiveTab: (tabId: string) => void;
-  setConnectionStatus: (status: Partial<PlatformConnectionState>) => void;
 }
+
+type PersistedUiLayoutState = Partial<
+  Pick<
+    UiLayoutState,
+    | 'leftNavCollapsed'
+    | 'explorerPanelWidth'
+    | 'explorerPanelVisible'
+    | 'inspectorPanelWidth'
+    | 'inspectorPanelVisible'
+    | 'consolePanelHeight'
+    | 'consolePanelVisible'
+    | 'focusMode'
+    | 'gridSize'
+    | 'canvasPalette'
+  >
+>;
 
 export const useUiLayoutStore = create<UiLayoutState>()(
   persist(
@@ -68,8 +81,6 @@ export const useUiLayoutStore = create<UiLayoutState>()(
 
       activeTabs: [{ id: 'main-canvas', type: 'canvas' as TabType, label: 'Main Graph' }],
       activeTabId: 'main-canvas',
-
-      connectionStatus: { rest: 'ok', liveEvents: 'connected' },
 
       toggleLeftNav: () => set((state) => ({ leftNavCollapsed: !state.leftNavCollapsed })),
       setExplorerPanelWidth: (width) => set({ explorerPanelWidth: width }),
@@ -107,8 +118,6 @@ export const useUiLayoutStore = create<UiLayoutState>()(
           return { activeTabs: newTabs, activeTabId: newActiveId };
         }),
       setActiveTab: (tabId) => set({ activeTabId: tabId }),
-      setConnectionStatus: (status) =>
-        set((state) => ({ connectionStatus: { ...state.connectionStatus, ...status } })),
     }),
     {
       name: 'dvt-web-ui-layout',
@@ -116,12 +125,26 @@ export const useUiLayoutStore = create<UiLayoutState>()(
       merge: (persistedState, currentState) => {
         const persistedLayoutState =
           typeof persistedState === 'object' && persistedState != null
-            ? (persistedState as Partial<UiLayoutState>)
+            ? (persistedState as PersistedUiLayoutState)
             : {};
-        const mergedState = { ...currentState, ...persistedLayoutState };
 
         return {
-          ...mergedState,
+          ...currentState,
+          leftNavCollapsed: persistedLayoutState.leftNavCollapsed ?? currentState.leftNavCollapsed,
+          explorerPanelWidth:
+            persistedLayoutState.explorerPanelWidth ?? currentState.explorerPanelWidth,
+          explorerPanelVisible:
+            persistedLayoutState.explorerPanelVisible ?? currentState.explorerPanelVisible,
+          inspectorPanelWidth:
+            persistedLayoutState.inspectorPanelWidth ?? currentState.inspectorPanelWidth,
+          inspectorPanelVisible:
+            persistedLayoutState.inspectorPanelVisible ?? currentState.inspectorPanelVisible,
+          consolePanelHeight:
+            persistedLayoutState.consolePanelHeight ?? currentState.consolePanelHeight,
+          consolePanelVisible:
+            persistedLayoutState.consolePanelVisible ?? currentState.consolePanelVisible,
+          focusMode: persistedLayoutState.focusMode ?? currentState.focusMode,
+          gridSize: persistedLayoutState.gridSize ?? currentState.gridSize,
           canvasPalette: normalizeCanvasPaletteId(
             persistedLayoutState.canvasPalette ?? currentState.canvasPalette
           ),

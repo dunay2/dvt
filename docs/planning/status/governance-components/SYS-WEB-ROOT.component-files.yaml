@@ -7,7 +7,7 @@ governanceState: coverage-required
 dddOwner: ENTRY
 cqRails: UI actions and API queries
 childrenRequired: true
-fileCount: 801
+fileCount: 804
 driftFileCount: 0
 legacyFileCount: 0
 files:
@@ -2160,6 +2160,20 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
+  - path: apps/web/src/app/stores/platformConnectionStore.test.ts
+    fileId: F-D664A22ECB5B
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/stores/platformConnectionStore.ts
+    fileId: F-981D100B2C0B
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
   - path: apps/web/src/app/stores/sessionStore.test.ts
     fileId: F-7F7879E8BE84
     owningUnit: SYS-WEB-ROOT
@@ -2183,6 +2197,13 @@ files:
     isLegacy: false
   - path: apps/web/src/app/stores/uiLayoutStore.ts
     fileId: F-F50F7A907C9D
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/stores/webStoreDomainOwnership.architecture.test.ts
+    fileId: F-9A67B7BA44D2
     owningUnit: SYS-WEB-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required

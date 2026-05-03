@@ -1,3 +1,4 @@
+/** Owned concern: expose current runtime evidence and the pending authorization projection. */
 import { create } from 'zustand';
 import type { Run } from '../types/dbt';
 import type { PlanViewModel } from '../types/plans';
